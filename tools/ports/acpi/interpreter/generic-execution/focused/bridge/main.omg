@@ -1,0 +1,42 @@
+use aml::model::Value;
+use aml::model::Span;
+use aml::model::BufferStorage;
+use aml::model::ObjectStore;
+use execution::execution_model::Frame;
+use execution::execution_model::Operand;
+use execution::execution_model::Binding;
+use execution::execution_model::Target;
+use execution::execution_model::ExecutionOutcome;
+use integer_helpers::integers::IntegerSize;
+use execution::generic_target_bridge::write_generic_target;
+data Suite {}
+machine br_bytes(wanted:u64)->i32 {
+ let mut input:[u8;1024];input[0]=17;
+ let mut store:ObjectStore=ObjectStore {};store.space.object_count=1;
+ store.space.objects[0].value=Value::Buffer {buffer_storage:BufferStorage::Source {declared_size:1,buffer_initializer:Span {unit:7,end:1}}};
+ let mut frame:Frame=Frame {source_length:1,body:Span {unit:7,end:1},end:1,size:IntegerSize::EightBytes};
+ let outcome:ExecutionOutcome=write_generic_target(&input,&mut store,&mut frame,Target::Local {local_index:0},Operand::Object {object_id:0},true);
+ let id:u64=br_cell(frame.locals[0]);
+ let copied:bool=br_payload(&store);
+ transition outcome==ExecutionOutcome::Success && id==wanted && copied {true -> (0) _ -> (1)}
+}
+machine br_cell(value:Binding)->u64 {transition value {Binding::Cell {cell_id} -> (cell_id) _ -> (999)}}
+machine br_integer(value:Binding)->u64 {transition value {Binding::Integer {number} -> (number) _ -> (999)}}
+machine br_payload(store:&ObjectStore)->bool {store.space.object_count==2 && store.bytes.blocks[1].initialized && store.bytes.blocks[1].length==1 && store.bytes.blocks[1].bytes[0]==17}
+machine br_scalar(argument:bool,wanted:u64)->i32 {
+ let input:[u8;1024];let mut store:ObjectStore=ObjectStore {};store.space.object_count=1;store.space.objects[0].value=Value::Integer {number:11};
+ let mut frame:Frame=Frame {size:IntegerSize::FourBytes};frame.arguments[0]=Binding::Shared {shared_id:0};
+ let target:Target=br_target(argument);
+ let outcome:ExecutionOutcome=write_generic_target(&input,&mut store,&mut frame,target,Operand::Integer {number:4294967319},true);
+ let binding:Binding=br_selected(&frame,argument);let number:u64=br_integer(binding);let original:bool=br_original(&store);
+ transition outcome==ExecutionOutcome::Success && number==wanted && original {true -> (0) _ -> (1)}
+}
+machine br_target(argument:bool)->Target {transition argument {true -> (Target::Argument {argument_index:0}) _ -> (Target::Local {local_index:0})}}
+machine br_selected(frame:&Frame,argument:bool)->Binding {transition argument {true -> (frame.arguments[0]) _ -> (frame.locals[0])}}
+machine br_original(store:&ObjectStore)->bool {let valid:bool=store.space.object_count==1;transition store.space.objects[0].value {Value::Integer {number} -> (valid && number==11) _ -> (false)}}
+machine Suite::bridge_bytes_0(&mut self)->i32 {let result:i32=br_bytes(1);result}
+machine Suite::bridge_bytes_1(&mut self)->i32 {let result:i32=br_bytes(2);result}
+machine Suite::bridge_local_0(&mut self)->i32 {let result:i32=br_scalar(false,23);result}
+machine Suite::bridge_local_1(&mut self)->i32 {let result:i32=br_scalar(false,24);result}
+machine Suite::bridge_arg_0(&mut self)->i32 {let result:i32=br_scalar(true,23);result}
+machine Suite::bridge_arg_1(&mut self)->i32 {let result:i32=br_scalar(true,24);result}

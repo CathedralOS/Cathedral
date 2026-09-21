@@ -1,0 +1,83 @@
+{
+  "interpretation": "Plain argument caller mutation differs from primary binding isolation; late named read23 is retained observation. Other cases have their own explicit metadata.",
+  "receipt_path": "/Users/zcanann/Documents/projects/Cathedral/tools/ports/acpi/aml-public-execution/generic-observations.json",
+  "receipt_sha256": "82e116390515fcd75ec6604d3b54b74226c0ca8efe7e9f91893fc989c066efaf",
+  "rows": {
+    "copy_arg_plain_local": {
+      "after": [],
+      "name": "copy_arg_plain_local",
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "integer:22"
+      },
+      "review_note": "",
+      "revision": 2,
+      "table_hex": "14114d41494e00700a0b6043414c5f60a460140c43414c5f019d0a1668a468"
+    },
+    "copy_arg_plain_named": {
+      "after": [
+        "X"
+      ],
+      "name": "copy_arg_plain_named",
+      "observed": {
+        "after:X": "integer:22",
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "integer:22"
+      },
+      "review_note": "",
+      "revision": 2,
+      "table_hex": "08585f5f5f0a0b140f4d41494e00a443414c5f585f5f5f140c43414c5f019d0a1668a468"
+    },
+    "late_named_operand_read": {
+      "after": [
+        "X"
+      ],
+      "name": "late_named_operand_read",
+      "observed": {
+        "after:X": "integer:22",
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "integer:23"
+      },
+      "review_note": "",
+      "revision": 2,
+      "table_hex": "08585f5f5f0a0b14114d41494e00a472585f5f5f43414c5f00140f43414c5f00700a16585f5f5fa401"
+    },
+    "store_arg_plain_local": {
+      "after": [],
+      "name": "store_arg_plain_local",
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "integer:22"
+      },
+      "review_note": "",
+      "revision": 2,
+      "table_hex": "14114d41494e00700a0b6043414c5f60a460140c43414c5f01700a1668a468"
+    },
+    "store_arg_plain_named": {
+      "after": [
+        "X"
+      ],
+      "name": "store_arg_plain_named",
+      "observed": {
+        "after:X": "integer:22",
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "integer:22"
+      },
+      "review_note": "",
+      "revision": 2,
+      "table_hex": "08585f5f5f0a0b140f4d41494e00a443414c5f585f5f5f140c43414c5f01700a1668a468"
+    }
+  },
+  "stage": "supplementary existing actual public Rust observations; not Omega execution",
+  "upstream_revision": "257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5"
+}

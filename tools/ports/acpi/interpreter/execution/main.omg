@@ -4,6 +4,7 @@ use aml::model::Value;
 use aml::model::Path;
 use aml::model::Span;
 use aml::model::Namespace;
+use aml::model::ObjectStore;
 use aml::model::Object;
 use aml::model::Entry;
 use integer_helpers::integers::IntegerSize;
@@ -29,7 +30,9 @@ machine test_result() -> i32 {
     space.entries[1] = Entry { path: path_0, has_object: true, object: 0, alias: false };
     space.objects[0] = Object { value: Value::Method { flags: 0, body: Span { unit: 7, start: 0, end: 7 } } };
     definitions[0] = MethodDefinition { present: true, object_id: 0, scope: path_0, flags: 0, body: Span { unit: 7, start: 0, end: 7 } };
-    let result: ExecutionResult = run_method(&input, 7, 7, &mut space, &definitions, path_0, &arguments, 0, IntegerSize::FourBytes, 16);
+    let mut store:ObjectStore=ObjectStore {space:space};
+    let result: ExecutionResult = run_method(&input, 7, 7, &mut store, &definitions, path_0, &arguments, 0, IntegerSize::FourBytes, 16);
+    space=store.space;
     transition result.outcome == ExecutionOutcome::Success && result.value.initialized == true && result.value.number == 42 { true -> (0) _ -> (1) }
 }
 const TEST_RESULT: i32 = test_result();

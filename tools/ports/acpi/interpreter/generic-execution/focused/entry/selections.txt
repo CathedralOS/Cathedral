@@ -1,0 +1,14 @@
+Suite::buffer_0=0
+Suite::buffer_1=1
+Suite::package_0=0
+Suite::package_1=1
+Suite::chain_rebinding_0=0
+Suite::chain_rebinding_1=1
+Suite::late_owned_0=0
+Suite::late_owned_1=1
+Suite::bad_arity_0=0
+Suite::bad_arity_1=1
+Suite::source_mismatch_0=0
+Suite::source_mismatch_1=1
+Suite::capacity_0=0
+Suite::capacity_1=1

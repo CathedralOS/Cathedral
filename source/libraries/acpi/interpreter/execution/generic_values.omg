@@ -1,0 +1,268 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Bounded canonical data transport. Object IDs are relative to the supplied
+// ObjectStore. Byte copies own their destination block; Package copies retain
+// child IDs (explicit shallow-copy profile, not general ACPI package cloning).
+module generic_values;
+use aml::model::Value;
+use aml::model::ObjectStore;
+use aml::model::Object;
+use aml::model::ByteBlock;
+use aml::model::StringStorage;
+use aml::model::BufferStorage;
+use aml::model::ReferenceKind;
+use aml::model::ReferenceState;
+use aml::model::Outcome;
+use aml::object_references::unwrap_transparent;
+use aml::object_references::package_element;
+use aml::byte_storage::ByteRead;
+use aml::byte_storage::ByteKind;
+use aml::byte_storage::ByteOutcome;
+use aml::byte_storage::read_bytes;
+use execution_model::ExecutionOutcome;
+use execution_model::Operand;
+use execution_model::OperandResult;
+use execution_model::Binding;
+use execution_model::BindingResult;
+use execution_model::ValueResult;
+use execution_model::SlotResult;
+use frames::scalar_slot;
+use integer_helpers::integers::IntegerSize;
+use integer_helpers::integers::normalize;
+
+pub machine binding_operand(binding:Binding)->Operand {
+ transition binding {Binding::Uninitialized -> (Operand::Uninitialized) Binding::Integer {number} -> (Operand::Integer {number:number}) Binding::Shared {shared_id} -> (Operand::Object {object_id:shared_id}) Binding::Cell {cell_id} -> (Operand::Object {object_id:cell_id})}
+}
+pub machine object_outcome(outcome:Outcome)->ExecutionOutcome {
+ transition outcome {Outcome::Success -> (ExecutionOutcome::Success) Outcome::Capacity -> (ExecutionOutcome::Capacity) Outcome::WorkLimit -> (ExecutionOutcome::WorkLimit) Outcome::MissingObject -> (ExecutionOutcome::MissingObject) _ -> (ExecutionOutcome::InvalidState)}
+}
+pub machine bytes_outcome(outcome:ByteOutcome)->ExecutionOutcome {
+ transition outcome {ByteOutcome::Success -> (ExecutionOutcome::Success) ByteOutcome::Capacity -> (ExecutionOutcome::Capacity) ByteOutcome::WorkLimit -> (ExecutionOutcome::WorkLimit) ByteOutcome::UnsupportedValue -> (ExecutionOutcome::UnsupportedValue) _ -> (ExecutionOutcome::InvalidState)}
+}
+pub machine read_value(store:&ObjectStore,operand:Operand)->ValueResult {
+ transition operand {Operand::Uninitialized -> (ValueResult {value:Value::Uninitialized}) Operand::Integer {number} -> (ValueResult {value:Value::Integer {number:number}}) Operand::Object {object_id} -> object_value(store,object_id)}
+ state object_value(store:&ObjectStore,id:u64)->ValueResult {
+  let found:ReferenceState=unwrap_transparent(&store.space,id,64);
+  let outcome:ExecutionOutcome=object_outcome(found.outcome);
+  transition outcome==ExecutionOutcome::Success && found.object<64 {true -> selected(store,found.object) _ -> (ValueResult {outcome:outcome})}
+ }
+ state selected(store:&ObjectStore,id:u64)->ValueResult {ValueResult {value:store.space.objects[id].value,has_object:true,object:id}}
+}
+// Runtime integer projection never transports canonical ValueResult.
+pub machine integer_operand(store:&ObjectStore,size:IntegerSize,operand:Operand)->SlotResult {
+ transition operand {Operand::Uninitialized -> (SlotResult {outcome:ExecutionOutcome::Uninitialized}) Operand::Integer {number} -> scalar(size,number) Operand::Object {object_id} -> object(store,size,object_id)}
+ state scalar(size:IntegerSize,number:u64)->SlotResult {let value:u64=normalize(size,number);SlotResult {slot:execution_model::Slot {initialized:true,number:value}}}
+ state object(store:&ObjectStore,size:IntegerSize,id:u64)->SlotResult {
+  let found:ReferenceState=unwrap_transparent(&store.space,id,64);let outcome:ExecutionOutcome=object_outcome(found.outcome);let id_found:u64=found.object;
+  transition outcome==ExecutionOutcome::Success && id_found<64 {true -> selected(store,size,id_found) _ -> (SlotResult {outcome:outcome})}
+ }
+ state selected(store:&ObjectStore,size:IntegerSize,id:u64)->SlotResult {let result:SlotResult=scalar_slot(size,store.space.objects[id].value);result}
+}
+// Validation returns only the typed outcome. Runtime callers need no admitted
+// canonical payload carried through byte/package/reference validation states.
+pub machine validate_operand(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,operand:Operand)->ExecutionOutcome {
+ transition operand {Operand::Uninitialized -> (ExecutionOutcome::Uninitialized) Operand::Integer {number} -> (ExecutionOutcome::Success) Operand::Object {object_id} -> object(input,length,unit,store,object_id)}
+ state object(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,id:u64)->ExecutionOutcome {
+  let found:ReferenceState=unwrap_transparent(&store.space,id,64);let outcome:ExecutionOutcome=object_outcome(found.outcome);let id_found:u64=found.object;
+  transition outcome==ExecutionOutcome::Success && id_found<64 {true -> value(input,length,unit,store,id_found,store.space.objects[id_found].value) _ -> (outcome)}
+ }
+ state value(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,id:u64,value:Value)->ExecutionOutcome {
+  let outcome:ExecutionOutcome=validate_payload(input,length,unit,store,true,id,value);outcome
+ }
+}
+// One payload policy serves both runtime scalar outcomes and external rich
+// metadata. Only the rich wrapper retains the admitted ValueResult.
+machine validate_payload(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,has_object:bool,id:u64,value:Value)->ExecutionOutcome {
+ transition value {
+  Value::Integer {number} -> (ExecutionOutcome::Success)
+  Value::String {string_storage} -> bytes(input,length,unit,store,has_object,id,value)
+  Value::Buffer {buffer_storage} -> bytes(input,length,unit,store,has_object,id,value)
+  Value::Package {first,count} -> package(store,first,count)
+  Value::Reference {kind,object_id} -> reference(store,object_id)
+  Value::Uninitialized -> (ExecutionOutcome::Uninitialized)
+  Value::OperationRegion {space,base,length,scope} -> (ExecutionOutcome::UnresolvedRegion)
+  _ -> (ExecutionOutcome::UnsupportedValue)
+ }
+ state bytes(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,has_object:bool,id:u64,value:Value)->ExecutionOutcome {
+  let snapshot:ByteRead=byte_snapshot(input,length,unit,store,ValueResult {value:value,has_object:has_object,object:id});let outcome:ExecutionOutcome=bytes_outcome(snapshot.outcome);outcome
+ }
+ state reference(store:&ObjectStore,id:u64)->ExecutionOutcome {let count:u64=store.space.object_count;transition count<=64 && id<count && id<64 {true -> (ExecutionOutcome::Success) _ -> (ExecutionOutcome::InvalidState)}}
+ state package(store:&ObjectStore,first:u64,count:u64)->ExecutionOutcome {transition {count>64 -> (ExecutionOutcome::Capacity) count==0 -> (ExecutionOutcome::Success) _ -> chain(store,first,count)}}
+ state chain(store:&ObjectStore,first:u64,count:u64)->ExecutionOutcome {let checked:PackageCheck=gv_package_walk(store,0,count,PackageCheck {object:first});checked.outcome}
+}
+pub machine byte_snapshot(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,value:ValueResult)->ByteRead {
+ transition value.has_object {true -> object(input,length,unit,store,value.object) _ -> inline_value(input,length,unit,value.value)}
+ state object(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,id:u64)->ByteRead {let result:ByteRead=read_bytes(input,length,unit,store,id);result}
+ state inline_value(input:&[u8;1024],length:u64,unit:u64,value:Value)->ByteRead {
+  // Only immutable Source descriptors may be transported inline. An Owned
+  // locator without its containing ObjectStore slot cannot establish ownership.
+  transition value {Value::String {string_storage} -> string_source(input,length,unit,value,string_storage) Value::Buffer {buffer_storage} -> buffer_source(input,length,unit,value,buffer_storage) _ -> (ByteRead {outcome:ByteOutcome::UnsupportedValue})}
+ }
+ state string_source(input:&[u8;1024],length:u64,unit:u64,value:Value,storage:StringStorage)->ByteRead {
+  transition storage {StringStorage::Source {string_source} -> snapshot(input,length,unit,value) _ -> (ByteRead {outcome:ByteOutcome::InvalidState})}
+ }
+ state buffer_source(input:&[u8;1024],length:u64,unit:u64,value:Value,storage:BufferStorage)->ByteRead {
+  transition storage {BufferStorage::Source {declared_size,buffer_initializer} -> snapshot(input,length,unit,value) _ -> (ByteRead {outcome:ByteOutcome::InvalidState})}
+ }
+ state snapshot(input:&[u8;1024],length:u64,unit:u64,value:Value)->ByteRead {
+  let mut local:ObjectStore=ObjectStore {};local.space.object_count=1;local.space.objects[0].value=value;
+  let result:ByteRead=read_bytes(input,length,unit,&local,0);result
+ }
+}
+pub machine admit_data(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,operand:Operand)->ValueResult {
+ let found:ValueResult=read_value(store,operand);
+ let result:ValueResult=admit_value(input,length,unit,store,found);result
+}
+// External canonical values are admitted outside the scalar/ID Runtime.
+pub machine admit_value(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,found:ValueResult)->ValueResult {
+ transition found.outcome==ExecutionOutcome::Success {true -> validate(input,length,unit,store,found) _ -> (found)}
+ state validate(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,found:ValueResult)->ValueResult {
+  let outcome:ExecutionOutcome=validate_payload(input,length,unit,store,found.has_object,found.object,found.value);
+  let mut admitted:ValueResult=found;admitted.outcome=outcome;admitted
+ }
+}
+data PackageCheck [copy] {outcome:ExecutionOutcome;object:u64;visited:u64;}
+machine gv_package_walk(store:&ObjectStore,index:u64,count:u64,prior:PackageCheck)
+terminates by(index,count)->Nat::BoundedDistance;
+->PackageCheck {
+ let next:PackageCheck=gv_package_step(store,index,count,prior);
+ transition index<count {true -> gv_package_walk(store,index+1,count,next) _ -> (prior)}
+}
+machine gv_package_step(store:&ObjectStore,index:u64,count:u64,prior:PackageCheck)->PackageCheck {
+ transition prior.outcome==ExecutionOutcome::Success && index<count {true -> bounded(store,index,count,prior,prior.object) _ -> (prior)}
+ state bounded(store:&ObjectStore,index:u64,count:u64,prior:PackageCheck,id:u64)->PackageCheck {
+  let capacity:u64=store.space.object_count;
+  transition index<64 && id<64 && capacity<=64 && id<capacity {true -> inspect(store,index,count,prior,id) _ -> (PackageCheck {outcome:ExecutionOutcome::InvalidState})}
+ }
+ state inspect(store:&ObjectStore,index:u64,count:u64,prior:PackageCheck,id:u64)->PackageCheck {
+  let bit:u64=((1 as u64 in Wrapping) << (id as u64 in Wrapping)) as u64;
+  transition (prior.visited & bit)==0 {true -> link(store,index,count,prior.visited|bit,id) _ -> (PackageCheck {outcome:ExecutionOutcome::InvalidState})}
+ }
+ state link(store:&ObjectStore,index:u64,count:u64,visited:u64,id:u64)->PackageCheck {
+  let object:Object=store.space.objects[id];
+  transition {index+1==count && !object.has_next -> (PackageCheck {visited:visited})
+   index+1<count && object.has_next -> (PackageCheck {object:object.next,visited:visited})
+   _ -> (PackageCheck {outcome:ExecutionOutcome::InvalidState})}
+ }
+}
+pub machine destination_allowed(store:&ObjectStore,id:u64)->ExecutionOutcome {
+ let count:u64=store.space.object_count;
+ transition count<=64 && id<count && id<64 {true -> value(store.space.objects[id].value) _ -> (ExecutionOutcome::MissingObject)}
+ state value(value:Value)->ExecutionOutcome {
+  transition value {Value::Integer {number} -> (ExecutionOutcome::Success) Value::Uninitialized -> (ExecutionOutcome::Success) Value::String {string_storage} -> (ExecutionOutcome::Success) Value::Buffer {buffer_storage} -> (ExecutionOutcome::Success) Value::Package {first,count} -> (ExecutionOutcome::Success) Value::Reference {kind,object_id} -> (ExecutionOutcome::Success) Value::OperationRegion {space,base,length,scope} -> (ExecutionOutcome::UnresolvedRegion) _ -> (ExecutionOutcome::UnsupportedValue)}
+ }
+}
+// Validate and stage source bytes before modifying destination, including self-copy.
+pub machine copy_into(input:&[u8;1024],length:u64,unit:u64,store:&mut ObjectStore,destination:u64,operand:Operand)->ExecutionOutcome {
+ let permitted:ExecutionOutcome=gv_destination_valid(input,length,unit,store,destination);
+ transition permitted==ExecutionOutcome::Success {true -> source(input,length,unit,store,destination,operand) _ -> (permitted)}
+ state source(input:&[u8;1024],length:u64,unit:u64,store:&mut ObjectStore,destination:u64,operand:Operand)->ExecutionOutcome {
+  let found:ValueResult=admit_data(input,length,unit,store,operand);
+  transition found.outcome==ExecutionOutcome::Success {true -> kind(input,length,unit,store,destination,found,found.value) _ -> (found.outcome)}
+ }
+ state kind(input:&[u8;1024],length:u64,unit:u64,store:&mut ObjectStore,destination:u64,found:ValueResult,value:Value)->ExecutionOutcome {
+  transition value {Value::String {string_storage} -> bytes(input,length,unit,store,destination,found) Value::Buffer {buffer_storage} -> bytes(input,length,unit,store,destination,found) _ -> plain(store,destination,value)}
+ }
+ state bytes(input:&[u8;1024],length:u64,unit:u64,store:&mut ObjectStore,destination:u64,found:ValueResult)->ExecutionOutcome {
+  let snapshot:ByteRead=byte_snapshot(input,length,unit,store,found);
+  let result:ExecutionOutcome=gv_install_bytes(store,destination,snapshot);result
+ }
+ state plain(store:&mut ObjectStore,destination:u64,value:Value)->ExecutionOutcome {
+  let outcome:ExecutionOutcome=gv_publish_plain(store,destination,value);outcome
+ }
+}
+machine gv_install_bytes(store:&mut ObjectStore,destination:u64,snapshot:ByteRead)->ExecutionOutcome {
+ let permitted:ExecutionOutcome=destination_allowed(store,destination);
+ let size:u64=snapshot.length;
+ transition {permitted!=ExecutionOutcome::Success -> (permitted) snapshot.outcome!=ByteOutcome::Success -> bytes_error(snapshot.outcome) size>256 -> (ExecutionOutcome::Capacity) _ -> commit(store,destination,snapshot)}
+ state bytes_error(outcome:ByteOutcome)->ExecutionOutcome {let result:ExecutionOutcome=bytes_outcome(outcome);result}
+ state commit(store:&mut ObjectStore,destination:u64,snapshot:ByteRead)->ExecutionOutcome {
+  transition destination<64 {true -> validated(store,destination,snapshot) _ -> (ExecutionOutcome::InvalidState)}
+ }
+ state validated(store:&mut ObjectStore,destination:u64,snapshot:ByteRead)->ExecutionOutcome {
+  let good:bool=gv_snapshot_ascii(&snapshot.bytes,0,snapshot.length,true);
+  transition destination<64 && (snapshot.kind!=ByteKind::String || good) {true -> write_bytes(store,destination,snapshot) _ -> (ExecutionOutcome::InvalidState)}
+ }
+ state write_bytes(store:&mut ObjectStore,destination:u64,snapshot:ByteRead)->ExecutionOutcome {
+  let value:Value=gv_owned_payload(snapshot.kind,destination);
+  store.bytes.blocks[destination]=ByteBlock {initialized:true,length:snapshot.length,bytes:snapshot.bytes};
+  store.space.objects[destination].value=value;ExecutionOutcome::Success
+ }
+}
+machine gv_owned_payload(kind:ByteKind,id:u64)->Value {
+ transition kind {ByteKind::String -> (Value::String {string_storage:StringStorage::Owned {string_owner:id}}) ByteKind::Buffer -> (Value::Buffer {buffer_storage:BufferStorage::Owned {buffer_owner:id}})}
+}
+pub machine copied_binding(input:&[u8;1024],length:u64,unit:u64,store:&mut ObjectStore,old:Binding,operand:Operand)->BindingResult {
+ transition old {Binding::Cell {cell_id} -> existing(input,length,unit,store,old,cell_id,operand) _ -> detached(input,length,unit,store,operand)}
+ state existing(input:&[u8;1024],length:u64,unit:u64,store:&mut ObjectStore,old:Binding,id:u64,operand:Operand)->BindingResult {
+  let outcome:ExecutionOutcome=copy_into(input,length,unit,store,id,operand);BindingResult {outcome:outcome,binding:old}
+ }
+ state detached(input:&[u8;1024],length:u64,unit:u64,store:&mut ObjectStore,operand:Operand)->BindingResult {
+  let found:ValueResult=admit_data(input,length,unit,store,operand);
+  transition found.outcome==ExecutionOutcome::Success {true -> kind(input,length,unit,store,found,found.value) _ -> (BindingResult {outcome:found.outcome})}
+ }
+ state kind(input:&[u8;1024],length:u64,unit:u64,store:&mut ObjectStore,found:ValueResult,value:Value)->BindingResult {
+  transition value {Value::String {string_storage} -> bytes(input,length,unit,store,found) Value::Buffer {buffer_storage} -> bytes(input,length,unit,store,found) Value::Integer {number} -> (BindingResult {binding:Binding::Integer {number:number}}) _ -> plain(store,value)}
+ }
+ state plain(store:&mut ObjectStore,value:Value)->BindingResult {
+  let count:u64=store.space.object_count;
+  transition count<64 {true -> plain_commit(store,value,count) _ -> (BindingResult {outcome:ExecutionOutcome::Capacity})}
+ }
+ state plain_commit(store:&mut ObjectStore,value:Value,id:u64)->BindingResult {
+  transition id<64 {true -> plain_write(store,value,id) _ -> (BindingResult {outcome:ExecutionOutcome::Capacity})}
+ }
+ state plain_write(store:&mut ObjectStore,value:Value,id:u64)->BindingResult {
+  store.space.objects[id]=Object {value:value};store.bytes.blocks[id]=ByteBlock {};store.space.object_count=id+1;
+  BindingResult {binding:Binding::Cell {cell_id:id}}
+ }
+ state bytes(input:&[u8;1024],length:u64,unit:u64,store:&mut ObjectStore,found:ValueResult)->BindingResult {
+  let count:u64=store.space.object_count;
+  transition count<64 {true -> stage(input,length,unit,store,found,count) _ -> (BindingResult {outcome:ExecutionOutcome::Capacity})}
+ }
+ state stage(input:&[u8;1024],length:u64,unit:u64,store:&mut ObjectStore,found:ValueResult,id:u64)->BindingResult {
+  let snapshot:ByteRead=byte_snapshot(input,length,unit,store,found);
+  transition snapshot.outcome==ByteOutcome::Success {true -> commit(store,id,snapshot) _ -> (BindingResult {outcome:ExecutionOutcome::InvalidState})}
+ }
+ state commit(store:&mut ObjectStore,id:u64,snapshot:ByteRead)->BindingResult {
+  transition id<64 {true -> write_new(store,id,snapshot) _ -> (BindingResult {outcome:ExecutionOutcome::Capacity})}
+ }
+ state write_new(store:&mut ObjectStore,id:u64,snapshot:ByteRead)->BindingResult {
+  // All possible failures precede publication of this new byte object.
+  let value:Value=gv_owned_payload(snapshot.kind,id);
+  store.space.objects[id]=Object {value:value};store.bytes.blocks[id]=ByteBlock {initialized:true,length:snapshot.length,bytes:snapshot.bytes};store.space.object_count=id+1;
+  BindingResult {binding:Binding::Cell {cell_id:id}}
+ }
+}
+
+machine gv_snapshot_ascii(bytes:&[u8;256],index:u64,count:u64,prior:bool)
+terminates by(index,count)->Nat::BoundedDistance;
+->bool {let good:bool=gv_snapshot_byte(bytes,index,count);transition index<count {true -> gv_snapshot_ascii(bytes,index+1,count,prior && good) _ -> (prior)}}
+machine gv_snapshot_byte(bytes:&[u8;256],index:u64,count:u64)->bool {transition index<count && index<256 {true -> (bytes[index]>0 && bytes[index]<128) _ -> (true)}}
+
+// Width normalization creates only an inline scalar, never a new object identity.
+pub machine normalized_operand(store:&ObjectStore,size:IntegerSize,operand:Operand)->Operand {
+ let result:SlotResult=integer_operand(store,size,operand);
+ transition result.outcome==ExecutionOutcome::Success {true -> (Operand::Integer {number:result.slot.number}) _ -> (operand)}
+}
+
+machine gv_destination_valid(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,id:u64)->ExecutionOutcome {
+ let kind:ExecutionOutcome=destination_allowed(store,id);
+ transition kind==ExecutionOutcome::Success && id<64 {true -> value(input,length,unit,store,id,store.space.objects[id].value) _ -> (kind)}
+ state value(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,id:u64,value:Value)->ExecutionOutcome {
+  transition value {Value::String {string_storage} -> bytes(input,length,unit,store,id) Value::Buffer {buffer_storage} -> bytes(input,length,unit,store,id) _ -> (ExecutionOutcome::Success)}
+ }
+ state bytes(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,id:u64)->ExecutionOutcome {let snapshot:ByteRead=read_bytes(input,length,unit,store,id);let outcome:ExecutionOutcome=bytes_outcome(snapshot.outcome);outcome}
+}
+
+// Integer source is already admitted and normalized by the caller. Destination
+// validation and plain publication are shared with the generic copy path.
+pub machine copy_integer_into(input:&[u8;1024],length:u64,unit:u64,store:&mut ObjectStore,destination:u64,number:u64)->ExecutionOutcome {
+ let permitted:ExecutionOutcome=gv_destination_valid(input,length,unit,store,destination);
+ transition permitted==ExecutionOutcome::Success {true -> publish(store,destination,number) _ -> (permitted)}
+ state publish(store:&mut ObjectStore,destination:u64,number:u64)->ExecutionOutcome {let outcome:ExecutionOutcome=gv_publish_plain(store,destination,Value::Integer {number:number});outcome}
+}
+machine gv_publish_plain(store:&mut ObjectStore,destination:u64,value:Value)->ExecutionOutcome {
+ transition destination<64 {true -> commit(store,destination,value) _ -> (ExecutionOutcome::InvalidState)}
+ state commit(store:&mut ObjectStore,destination:u64,value:Value)->ExecutionOutcome {
+  store.space.objects[destination].value=value;store.bytes.blocks[destination]=ByteBlock {};ExecutionOutcome::Success
+ }
+}

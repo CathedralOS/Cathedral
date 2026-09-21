@@ -1,0 +1,6 @@
+{
+  "pairs": 8,
+  "stage": "checked-interpreter",
+  "control": "changes expected field or binding kind, including inactive physical tail slots",
+  "native_execution": false
+}

@@ -1,0 +1,179 @@
+use aml::model::Value;
+use aml::model::Span;
+use aml::model::Path;
+use aml::model::Entry;
+use aml::model::Namespace;
+use aml::model::Object;
+use aml::model::ObjectStore;
+use aml::model::ByteBlock;
+use aml::model::StringStorage;
+use aml::model::BufferStorage;
+use aml::model::ReferenceKind;
+use execution::execution_model::ExecutionOutcome;
+use execution::execution_model::Operand;
+use execution::generic_values::copy_into;
+use execution::generic_values::copy_integer_into;
+data Suite {}
+machine fx_bytes_equal(a:&[u8;256],b:&[u8;256],i:u64,n:u64,prior:bool)
+terminates by(i,n)->Nat::BoundedDistance;
+->bool {let good:bool=fx_byte_equal(a,b,i,n);transition i<n {true -> fx_bytes_equal(a,b,i+1,n,prior && good) _ -> (prior)}}
+machine fx_byte_equal(a:&[u8;256],b:&[u8;256],i:u64,n:u64)->bool {transition i<n && i<256 {true -> (a[i]==b[i]) _ -> (true)}}
+machine fx_span(a:Span,b:Span)->bool {a.unit==b.unit && a.start==b.start && a.end==b.end}
+machine fx_path(a:Path,b:Path)->bool {let good:bool=fx_segments(&a.segments,&b.segments,0,16,true);a.absolute==b.absolute && a.parents==b.parents && a.count==b.count && good}
+machine fx_segments(a:&[u32;16],b:&[u32;16],i:u64,n:u64,prior:bool)
+terminates by(i,n)->Nat::BoundedDistance;
+->bool {let good:bool=fx_segment(a,b,i,n);transition i<n {true -> fx_segments(a,b,i+1,n,prior && good) _ -> (prior)}}
+machine fx_segment(a:&[u32;16],b:&[u32;16],i:u64,n:u64)->bool {transition i<n && i<16 {true -> (a[i]==b[i]) _ -> (true)}}
+machine fx_string(a:StringStorage,b:StringStorage)->bool {
+ transition a {StringStorage::Source {string_source} -> source(string_source,b) StringStorage::Owned {string_owner} -> owned(string_owner,b)}
+ state source(a:Span,b:StringStorage)->bool {transition b {StringStorage::Source {string_source} -> span(a,string_source) _ -> (false)}}
+ state span(a:Span,b:Span)->bool {let good:bool=fx_span(a,b);good}
+ state owned(a:u64,b:StringStorage)->bool {transition b {StringStorage::Owned {string_owner} -> (a==string_owner) _ -> (false)}}
+}
+machine fx_buffer(a:BufferStorage,b:BufferStorage)->bool {
+ transition a {BufferStorage::Source {declared_size,buffer_initializer} -> source(declared_size,buffer_initializer,b) BufferStorage::Owned {buffer_owner} -> owned(buffer_owner,b)}
+ state source(size:u64,a:Span,b:BufferStorage)->bool {transition b {BufferStorage::Source {declared_size,buffer_initializer} -> span(size,a,declared_size,buffer_initializer) _ -> (false)}}
+ state span(size:u64,a:Span,other:u64,b:Span)->bool {let good:bool=fx_span(a,b);size==other && good}
+ state owned(a:u64,b:BufferStorage)->bool {transition b {BufferStorage::Owned {buffer_owner} -> (a==buffer_owner) _ -> (false)}}
+}
+machine fx_value(a:Value,b:Value)->bool {transition a {
+Value::Uninitialized -> c_uninitialized(b)
+Value::Integer {number} -> c_integer(number,b)
+Value::String {string_storage} -> c_string(string_storage,b)
+Value::Buffer {buffer_storage} -> c_buffer(buffer_storage,b)
+Value::BufferField {backing_object,bit_offset,bit_length} -> c_bufferfield(backing_object,bit_offset,bit_length,b)
+Value::Package {first,count} -> c_package(first,count,b)
+Value::NameReference {name,scope} -> c_namereference(name,scope,b)
+Value::Reference {kind,object_id} -> c_reference(kind,object_id,b)
+Value::Method {flags,body} -> c_method(flags,body,b)
+Value::Device -> c_device(b)
+Value::Processor {id,address,length} -> c_processor(id,address,length,b)
+Value::PowerResource {system_level,order} -> c_powerresource(system_level,order,b)
+Value::ThermalZone -> c_thermalzone(b)
+Value::Mutex {sync_level} -> c_mutex(sync_level,b)
+Value::Event -> c_event(b)
+Value::OperationRegion {space,base,length,scope} -> c_operationregion(space,base,length,scope,b)
+}
+state c_uninitialized(b:Value)->bool {transition b {Value::Uninitialized -> (true) _ -> (false)}}
+state c_integer(a_number:u64,b:Value)->bool {transition b {Value::Integer {number} -> (a_number==number) _ -> (false)}}
+state c_string(a_string_storage:StringStorage,b:Value)->bool {transition b {Value::String {string_storage} -> check_c_string(a_string_storage,string_storage) _ -> (false)}}
+state check_c_string(a_string_storage:StringStorage,string_storage:StringStorage)->bool {let good_string_storage:bool=fx_string(a_string_storage,string_storage);good_string_storage}
+state c_buffer(a_buffer_storage:BufferStorage,b:Value)->bool {transition b {Value::Buffer {buffer_storage} -> check_c_buffer(a_buffer_storage,buffer_storage) _ -> (false)}}
+state check_c_buffer(a_buffer_storage:BufferStorage,buffer_storage:BufferStorage)->bool {let good_buffer_storage:bool=fx_buffer(a_buffer_storage,buffer_storage);good_buffer_storage}
+state c_bufferfield(a_backing_object:u64,a_bit_offset:u64,a_bit_length:u64,b:Value)->bool {transition b {Value::BufferField {backing_object,bit_offset,bit_length} -> (a_backing_object==backing_object && a_bit_offset==bit_offset && a_bit_length==bit_length) _ -> (false)}}
+state c_package(a_first:u64,a_count:u64,b:Value)->bool {transition b {Value::Package {first,count} -> (a_first==first && a_count==count) _ -> (false)}}
+state c_namereference(a_name:Path,a_scope:Path,b:Value)->bool {transition b {Value::NameReference {name,scope} -> check_c_namereference(a_name,a_scope,name,scope) _ -> (false)}}
+state check_c_namereference(a_name:Path,a_scope:Path,name:Path,scope:Path)->bool {let good_name:bool=fx_path(a_name,name);let good_scope:bool=fx_path(a_scope,scope);good_name && good_scope}
+state c_reference(a_kind:ReferenceKind,a_object_id:u64,b:Value)->bool {transition b {Value::Reference {kind,object_id} -> (a_kind==kind && a_object_id==object_id) _ -> (false)}}
+state c_method(a_flags:u8,a_body:Span,b:Value)->bool {transition b {Value::Method {flags,body} -> check_c_method(a_flags,a_body,flags,body) _ -> (false)}}
+state check_c_method(a_flags:u8,a_body:Span,flags:u8,body:Span)->bool {let good_body:bool=fx_span(a_body,body);a_flags==flags && good_body}
+state c_device(b:Value)->bool {transition b {Value::Device -> (true) _ -> (false)}}
+state c_processor(a_id:u8,a_address:u32,a_length:u8,b:Value)->bool {transition b {Value::Processor {id,address,length} -> (a_id==id && a_address==address && a_length==length) _ -> (false)}}
+state c_powerresource(a_system_level:u8,a_order:u16,b:Value)->bool {transition b {Value::PowerResource {system_level,order} -> (a_system_level==system_level && a_order==order) _ -> (false)}}
+state c_thermalzone(b:Value)->bool {transition b {Value::ThermalZone -> (true) _ -> (false)}}
+state c_mutex(a_sync_level:u8,b:Value)->bool {transition b {Value::Mutex {sync_level} -> (a_sync_level==sync_level) _ -> (false)}}
+state c_event(b:Value)->bool {transition b {Value::Event -> (true) _ -> (false)}}
+state c_operationregion(a_space:u8,a_base:u64,a_length:u64,a_scope:Path,b:Value)->bool {transition b {Value::OperationRegion {space,base,length,scope} -> check_c_operationregion(a_space,a_base,a_length,a_scope,space,base,length,scope) _ -> (false)}}
+state check_c_operationregion(a_space:u8,a_base:u64,a_length:u64,a_scope:Path,space:u8,base:u64,length:u64,scope:Path)->bool {let good_scope:bool=fx_path(a_scope,scope);a_space==space && a_base==base && a_length==length && good_scope}
+}
+machine fx_store(a:&ObjectStore,b:&ObjectStore)->bool {
+ let objects:bool=fx_objects(a,b,0,64,true);let entries:bool=fx_entries(&a.space,&b.space,0,32,true);
+ a.space.object_count==b.space.object_count && a.space.count==b.space.count && objects && entries
+}
+machine fx_objects(a:&ObjectStore,b:&ObjectStore,i:u64,n:u64,prior:bool)
+terminates by(i,n)->Nat::BoundedDistance;
+->bool {let good:bool=fx_object(a,b,i,n);transition i<n {true -> fx_objects(a,b,i+1,n,prior && good) _ -> (prior)}}
+machine fx_object(a:&ObjectStore,b:&ObjectStore,i:u64,n:u64)->bool {
+ transition i<n && i<64 {true -> item(a,b,i) _ -> (true)}
+ state item(a:&ObjectStore,b:&ObjectStore,i:u64)->bool {
+  let left:Object=a.space.objects[i];let right:Object=b.space.objects[i];let first:ByteBlock=a.bytes.blocks[i];let second:ByteBlock=b.bytes.blocks[i];
+  let payload:bool=fx_value(left.value,right.value);
+  let bytes:bool=fx_bytes_equal(&first.bytes,&second.bytes,0,256,true);
+  payload && bytes && left.has_next==right.has_next && left.next==right.next && first.initialized==second.initialized && first.length==second.length
+ }
+}
+machine fx_entries(a:&Namespace,b:&Namespace,i:u64,n:u64,prior:bool)
+terminates by(i,n)->Nat::BoundedDistance;
+->bool {let good:bool=fx_entry(a,b,i,n);transition i<n {true -> fx_entries(a,b,i+1,n,prior && good) _ -> (prior)}}
+machine fx_entry(a:&Namespace,b:&Namespace,i:u64,n:u64)->bool {
+ transition i<n && i<32 {true -> item(a.entries[i],b.entries[i]) _ -> (true)}
+ state item(a:Entry,b:Entry)->bool {let path:bool=fx_path(a.path,b.path);path && a.has_level==b.has_level && a.level==b.level && a.has_object==b.has_object && a.object==b.object && a.alias==b.alias}
+}
+
+
+machine ip_fixture(row:u64)->ObjectStore {
+ let mut store:ObjectStore=ObjectStore {};store.space.object_count=2;
+ store.space.objects[0]=Object {value:ip_payload(row),has_next:true,next:1};store.space.objects[1].value=Value::Integer {number:77};
+ store.bytes.blocks[0]=ByteBlock {initialized:true,length:1};store.bytes.blocks[0].bytes[0]=65;store.bytes.blocks[0].bytes[255]=93;store.bytes.blocks[63].bytes[255]=77;
+ transition row {12 -> uninitialized(store) 18 -> overflow_count(store) _ -> (store)}
+ state uninitialized(store:ObjectStore)->ObjectStore {let mut result:ObjectStore=store;result.bytes.blocks[0].initialized=false;result}
+ state overflow_count(store:ObjectStore)->ObjectStore {let mut result:ObjectStore=store;result.space.object_count=18446744073709551615;result}
+}
+machine ip_payload(row:u64)->Value {transition row {
+ 0 -> (Value::Integer {number:11}) 1 -> (Value::Uninitialized)
+ 2 -> (Value::String {string_storage:StringStorage::Source {string_source:Span {unit:7,end:1}}})
+ 3 -> (Value::Buffer {buffer_storage:BufferStorage::Source {declared_size:1,buffer_initializer:Span {unit:7,end:1}}})
+ 4 -> (Value::String {string_storage:StringStorage::Owned {string_owner:0}})
+ 5 -> (Value::Buffer {buffer_storage:BufferStorage::Owned {buffer_owner:0}})
+ 6 -> (Value::Package {first:18446744073709551615,count:64})
+ 7 -> (Value::Reference {kind:ReferenceKind::RefOf,object_id:18446744073709551615})
+ 8 -> (Value::Method {}) 9 -> (Value::BufferField {}) 10 -> (Value::OperationRegion {})
+ 11 -> (Value::Buffer {buffer_storage:BufferStorage::Owned {buffer_owner:1}})
+ 12 -> (Value::Buffer {buffer_storage:BufferStorage::Owned {buffer_owner:0}})
+ 13 -> (Value::String {string_storage:StringStorage::Source {string_source:Span {unit:8,end:1}}})
+ 14 -> (Value::String {string_storage:StringStorage::Source {string_source:Span {unit:7,end:1}}})
+ 15 -> (Value::String {string_storage:StringStorage::Source {string_source:Span {unit:7,end:1}}})
+ 16 -> (Value::Buffer {buffer_storage:BufferStorage::Source {declared_size:257,buffer_initializer:Span {unit:7,end:1}}})
+ _ -> (Value::Integer {number:11})}}
+machine ip_case(row:u64,wanted:ExecutionOutcome,control:bool)->i32 {
+ let mut input:[u8;1024];input[0]=ip_byte(row);
+ let original:ObjectStore=ip_fixture(row);let mut generic:ObjectStore=original;let mut integer:ObjectStore=original;
+ let destination:u64=ip_destination(row);
+ let broad:ExecutionOutcome=copy_into(&input,1,7,&mut generic,destination,Operand::Integer {number:18446744073709551615});
+ let narrow:ExecutionOutcome=copy_integer_into(&input,1,7,&mut integer,destination,18446744073709551615);
+ let mut expected:ObjectStore=ip_expected(original,wanted);expected.bytes.blocks[63].bytes[255]=ip_sentinel(control);
+ let parity:bool=fx_store(&generic,&integer);let exact:bool=fx_store(&integer,&expected);
+ transition broad==wanted && narrow==wanted && parity && exact {true -> (0) _ -> (1)}
+}
+machine ip_byte(row:u64)->u8 {transition row {14 -> (128) 15 -> (0) _ -> (65)}}
+machine ip_destination(row:u64)->u64 {transition row==17 {true -> (18446744073709551615) _ -> (0)}}
+machine ip_sentinel(control:bool)->u8 {transition control {true -> (78) _ -> (77)}}
+machine ip_expected(original:ObjectStore,outcome:ExecutionOutcome)->ObjectStore {transition outcome==ExecutionOutcome::Success {true -> changed(original) _ -> (original)} state changed(original:ObjectStore)->ObjectStore {let mut result:ObjectStore=original;result.space.objects[0].value=Value::Integer {number:18446744073709551615};result.bytes.blocks[0]=ByteBlock {};result}}
+machine Suite::integer_copy_0_0(&mut self)->i32 {let result:i32=ip_case(0,ExecutionOutcome::Success,false);result}
+machine Suite::integer_copy_0_1(&mut self)->i32 {let result:i32=ip_case(0,ExecutionOutcome::Success,true);result}
+machine Suite::integer_copy_1_0(&mut self)->i32 {let result:i32=ip_case(1,ExecutionOutcome::Success,false);result}
+machine Suite::integer_copy_1_1(&mut self)->i32 {let result:i32=ip_case(1,ExecutionOutcome::Success,true);result}
+machine Suite::integer_copy_2_0(&mut self)->i32 {let result:i32=ip_case(2,ExecutionOutcome::Success,false);result}
+machine Suite::integer_copy_2_1(&mut self)->i32 {let result:i32=ip_case(2,ExecutionOutcome::Success,true);result}
+machine Suite::integer_copy_3_0(&mut self)->i32 {let result:i32=ip_case(3,ExecutionOutcome::Success,false);result}
+machine Suite::integer_copy_3_1(&mut self)->i32 {let result:i32=ip_case(3,ExecutionOutcome::Success,true);result}
+machine Suite::integer_copy_4_0(&mut self)->i32 {let result:i32=ip_case(4,ExecutionOutcome::Success,false);result}
+machine Suite::integer_copy_4_1(&mut self)->i32 {let result:i32=ip_case(4,ExecutionOutcome::Success,true);result}
+machine Suite::integer_copy_5_0(&mut self)->i32 {let result:i32=ip_case(5,ExecutionOutcome::Success,false);result}
+machine Suite::integer_copy_5_1(&mut self)->i32 {let result:i32=ip_case(5,ExecutionOutcome::Success,true);result}
+machine Suite::integer_copy_6_0(&mut self)->i32 {let result:i32=ip_case(6,ExecutionOutcome::Success,false);result}
+machine Suite::integer_copy_6_1(&mut self)->i32 {let result:i32=ip_case(6,ExecutionOutcome::Success,true);result}
+machine Suite::integer_copy_7_0(&mut self)->i32 {let result:i32=ip_case(7,ExecutionOutcome::Success,false);result}
+machine Suite::integer_copy_7_1(&mut self)->i32 {let result:i32=ip_case(7,ExecutionOutcome::Success,true);result}
+machine Suite::integer_copy_8_0(&mut self)->i32 {let result:i32=ip_case(8,ExecutionOutcome::UnsupportedValue,false);result}
+machine Suite::integer_copy_8_1(&mut self)->i32 {let result:i32=ip_case(8,ExecutionOutcome::UnsupportedValue,true);result}
+machine Suite::integer_copy_9_0(&mut self)->i32 {let result:i32=ip_case(9,ExecutionOutcome::UnsupportedValue,false);result}
+machine Suite::integer_copy_9_1(&mut self)->i32 {let result:i32=ip_case(9,ExecutionOutcome::UnsupportedValue,true);result}
+machine Suite::integer_copy_10_0(&mut self)->i32 {let result:i32=ip_case(10,ExecutionOutcome::UnresolvedRegion,false);result}
+machine Suite::integer_copy_10_1(&mut self)->i32 {let result:i32=ip_case(10,ExecutionOutcome::UnresolvedRegion,true);result}
+machine Suite::integer_copy_11_0(&mut self)->i32 {let result:i32=ip_case(11,ExecutionOutcome::InvalidState,false);result}
+machine Suite::integer_copy_11_1(&mut self)->i32 {let result:i32=ip_case(11,ExecutionOutcome::InvalidState,true);result}
+machine Suite::integer_copy_12_0(&mut self)->i32 {let result:i32=ip_case(12,ExecutionOutcome::InvalidState,false);result}
+machine Suite::integer_copy_12_1(&mut self)->i32 {let result:i32=ip_case(12,ExecutionOutcome::InvalidState,true);result}
+machine Suite::integer_copy_13_0(&mut self)->i32 {let result:i32=ip_case(13,ExecutionOutcome::InvalidState,false);result}
+machine Suite::integer_copy_13_1(&mut self)->i32 {let result:i32=ip_case(13,ExecutionOutcome::InvalidState,true);result}
+machine Suite::integer_copy_14_0(&mut self)->i32 {let result:i32=ip_case(14,ExecutionOutcome::InvalidState,false);result}
+machine Suite::integer_copy_14_1(&mut self)->i32 {let result:i32=ip_case(14,ExecutionOutcome::InvalidState,true);result}
+machine Suite::integer_copy_15_0(&mut self)->i32 {let result:i32=ip_case(15,ExecutionOutcome::InvalidState,false);result}
+machine Suite::integer_copy_15_1(&mut self)->i32 {let result:i32=ip_case(15,ExecutionOutcome::InvalidState,true);result}
+machine Suite::integer_copy_16_0(&mut self)->i32 {let result:i32=ip_case(16,ExecutionOutcome::Capacity,false);result}
+machine Suite::integer_copy_16_1(&mut self)->i32 {let result:i32=ip_case(16,ExecutionOutcome::Capacity,true);result}
+machine Suite::integer_copy_17_0(&mut self)->i32 {let result:i32=ip_case(17,ExecutionOutcome::MissingObject,false);result}
+machine Suite::integer_copy_17_1(&mut self)->i32 {let result:i32=ip_case(17,ExecutionOutcome::MissingObject,true);result}
+machine Suite::integer_copy_18_0(&mut self)->i32 {let result:i32=ip_case(18,ExecutionOutcome::MissingObject,false);result}
+machine Suite::integer_copy_18_1(&mut self)->i32 {let result:i32=ip_case(18,ExecutionOutcome::MissingObject,true);result}

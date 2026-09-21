@@ -2,9 +2,9 @@
 module runtime_model;
 use execution_model::ExecutionOutcome;
 use execution_model::Frame;
-use execution_model::Slot;
+use execution_model::Operand;
 pub data Runtime [copy] {
     outcome: ExecutionOutcome; frames: [Frame; 4]; count: u64;
-    unit: u64; length: u64; steps: u64; finished: bool; result: Slot;
+    unit: u64; length: u64; steps: u64; finished: bool; has_result:bool; result: Operand;
     fault_offset: u64;
 }

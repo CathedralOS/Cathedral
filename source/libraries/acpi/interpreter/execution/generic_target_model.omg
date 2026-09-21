@@ -1,0 +1,25 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+module generic_target_model;
+use execution_model::Binding;
+use execution_model::ExecutionOutcome;
+pub data TargetSelection [copy] {
+ case Null; case Debug; case Named(object_id:u64);
+ case Local(local_index:u64,local_binding:Binding);
+ case Argument(argument_index:u64,argument_binding:Binding);
+ case Failure(outcome:ExecutionOutcome);
+}
+
+// Inert result of read-only argument target classification.
+pub data ArgumentAction [copy] {
+ case Replace(binding:Binding);
+ case CopyReferent(binding:Binding,object_id:u64);
+ case Failure(outcome:ExecutionOutcome);
+}
+
+// Inert target policy decision, not a writable capability.
+pub data TargetAction [copy] {
+ case NoWrite;
+ case Replace(binding:Binding);
+ case CopyTo(object_id:u64,result_binding:Binding);
+ case Failure(outcome:ExecutionOutcome);
+}

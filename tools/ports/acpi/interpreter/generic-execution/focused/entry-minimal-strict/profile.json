@@ -1,0 +1,6 @@
+{
+  "pairs": 4,
+  "stage": "checked-interpreter",
+  "control": "independently changes expected Operand case or numeric payload, retaining exact source-kind/allocation checks",
+  "native_execution": false
+}

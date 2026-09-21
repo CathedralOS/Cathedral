@@ -1,0 +1,109 @@
+use aml::model::Value;
+use aml::model::Span;
+use aml::model::Path;
+use aml::model::MethodDefinition;
+use execution::execution_model::Operand;
+use execution::execution_model::Binding;
+use execution::execution_model::FrameResult;
+use execution::execution_model::ExecutionOutcome;
+use execution::frames::observed_frame;
+use integer_helpers::integers::IntegerSize;
+data Suite {}
+machine fc_case(args:&[Operand;7],definitions:&[MethodDefinition;64],flags:u8,body:Span,count:u64,size:IntegerSize,wanted:ExecutionOutcome,number:u64,length:u64)->i32 {
+ let result:FrameResult=observed_frame(Value::Method {flags:flags,body:body},0,definitions,args,count,size,7,1);
+ let payload:u64=fc_payload(result.frame.arguments[0]);
+ let good:bool=fc_assert(result.outcome,wanted,payload,number,result.frame.source_length,length,result.frame.operation_count,result.frame.pc);
+ transition good {true -> (0) _ -> (1)}
+}
+machine fc_assert(actual:ExecutionOutcome,wanted:ExecutionOutcome,payload:u64,expected:u64,length:u64,want_length:u64,operations:u64,pc:u64)->bool {actual==wanted && payload==expected && length==want_length && operations==0 && pc==0}
+machine fc_payload(binding:Binding)->u64 {transition binding {Binding::Uninitialized -> (999) Binding::Integer {number} -> (number) Binding::Shared {shared_id} -> (shared_id) Binding::Cell {cell_id} -> (998)}}
+machine Suite::constructor_0_0(&mut self)->i32 {
+let mut args:[Operand;7];
+args[0]=Operand::Integer {number:18446744073709551615};
+let mut definitions:[MethodDefinition;64];definitions[0]=MethodDefinition {present:true,object_id:0,flags:1,body:Span {unit:7,end:1},scope:Path {absolute:true}};
+let result:i32=fc_case(&args,&definitions,1,Span {unit:7,end:1},1,IntegerSize::FourBytes,ExecutionOutcome::Success,4294967295,1);result}
+machine Suite::constructor_0_1(&mut self)->i32 {
+let mut args:[Operand;7];
+args[0]=Operand::Integer {number:18446744073709551615};
+let mut definitions:[MethodDefinition;64];definitions[0]=MethodDefinition {present:true,object_id:0,flags:1,body:Span {unit:7,end:1},scope:Path {absolute:true}};
+let result:i32=fc_case(&args,&definitions,1,Span {unit:7,end:1},1,IntegerSize::FourBytes,ExecutionOutcome::Success,4294967296,1);result}
+machine Suite::constructor_1_0(&mut self)->i32 {
+let mut args:[Operand;7];
+args[0]=Operand::Integer {number:18446744073709551615};
+let mut definitions:[MethodDefinition;64];definitions[0]=MethodDefinition {present:true,object_id:0,flags:1,body:Span {unit:7,end:1},scope:Path {absolute:true}};
+let result:i32=fc_case(&args,&definitions,1,Span {unit:7,end:1},1,IntegerSize::EightBytes,ExecutionOutcome::Success,18446744073709551615,1);result}
+machine Suite::constructor_1_1(&mut self)->i32 {
+let mut args:[Operand;7];
+args[0]=Operand::Integer {number:18446744073709551615};
+let mut definitions:[MethodDefinition;64];definitions[0]=MethodDefinition {present:true,object_id:0,flags:1,body:Span {unit:7,end:1},scope:Path {absolute:true}};
+let result:i32=fc_case(&args,&definitions,1,Span {unit:7,end:1},1,IntegerSize::EightBytes,ExecutionOutcome::Success,0,1);result}
+machine Suite::constructor_2_0(&mut self)->i32 {
+let mut args:[Operand;7];
+args[0]=Operand::Object {object_id:5};
+let mut definitions:[MethodDefinition;64];definitions[0]=MethodDefinition {present:true,object_id:0,flags:1,body:Span {unit:7,end:1},scope:Path {absolute:true}};
+let result:i32=fc_case(&args,&definitions,1,Span {unit:7,end:1},1,IntegerSize::EightBytes,ExecutionOutcome::Success,5,1);result}
+machine Suite::constructor_2_1(&mut self)->i32 {
+let mut args:[Operand;7];
+args[0]=Operand::Object {object_id:5};
+let mut definitions:[MethodDefinition;64];definitions[0]=MethodDefinition {present:true,object_id:0,flags:1,body:Span {unit:7,end:1},scope:Path {absolute:true}};
+let result:i32=fc_case(&args,&definitions,1,Span {unit:7,end:1},1,IntegerSize::EightBytes,ExecutionOutcome::Success,6,1);result}
+machine Suite::constructor_3_0(&mut self)->i32 {
+let mut args:[Operand;7];
+args[0]=Operand::Integer {number:18446744073709551615};
+let mut definitions:[MethodDefinition;64];definitions[0]=MethodDefinition {present:true,object_id:0,flags:1,body:Span {unit:8,end:1},scope:Path {absolute:true}};
+let result:i32=fc_case(&args,&definitions,1,Span {unit:8,end:1},1,IntegerSize::EightBytes,ExecutionOutcome::SourceUnit,999,0);result}
+machine Suite::constructor_3_1(&mut self)->i32 {
+let mut args:[Operand;7];
+args[0]=Operand::Integer {number:18446744073709551615};
+let mut definitions:[MethodDefinition;64];definitions[0]=MethodDefinition {present:true,object_id:0,flags:1,body:Span {unit:8,end:1},scope:Path {absolute:true}};
+let result:i32=fc_case(&args,&definitions,1,Span {unit:8,end:1},1,IntegerSize::EightBytes,ExecutionOutcome::Success,999,0);result}
+machine Suite::constructor_4_0(&mut self)->i32 {
+let mut args:[Operand;7];
+args[0]=Operand::Integer {number:18446744073709551615};
+let mut definitions:[MethodDefinition;64];definitions[0]=MethodDefinition {present:true,object_id:0,flags:2,body:Span {unit:7,end:1},scope:Path {absolute:true}};
+let result:i32=fc_case(&args,&definitions,1,Span {unit:7,end:1},1,IntegerSize::EightBytes,ExecutionOutcome::MethodDefinition,999,0);result}
+machine Suite::constructor_4_1(&mut self)->i32 {
+let mut args:[Operand;7];
+args[0]=Operand::Integer {number:18446744073709551615};
+let mut definitions:[MethodDefinition;64];definitions[0]=MethodDefinition {present:true,object_id:0,flags:2,body:Span {unit:7,end:1},scope:Path {absolute:true}};
+let result:i32=fc_case(&args,&definitions,1,Span {unit:7,end:1},1,IntegerSize::EightBytes,ExecutionOutcome::Success,999,0);result}
+machine Suite::constructor_5_0(&mut self)->i32 {
+let mut args:[Operand;7];
+args[0]=Operand::Integer {number:18446744073709551615};
+let mut definitions:[MethodDefinition;64];definitions[0]=MethodDefinition {present:true,object_id:0,flags:1,body:Span {unit:7,end:1},scope:Path {absolute:true}};
+let result:i32=fc_case(&args,&definitions,1,Span {unit:7,end:1},2,IntegerSize::EightBytes,ExecutionOutcome::ArgumentCount,999,0);result}
+machine Suite::constructor_5_1(&mut self)->i32 {
+let mut args:[Operand;7];
+args[0]=Operand::Integer {number:18446744073709551615};
+let mut definitions:[MethodDefinition;64];definitions[0]=MethodDefinition {present:true,object_id:0,flags:1,body:Span {unit:7,end:1},scope:Path {absolute:true}};
+let result:i32=fc_case(&args,&definitions,1,Span {unit:7,end:1},2,IntegerSize::EightBytes,ExecutionOutcome::Success,999,0);result}
+machine Suite::constructor_6_0(&mut self)->i32 {
+let mut args:[Operand;7];
+args[0]=Operand::Integer {number:18446744073709551615};
+let mut definitions:[MethodDefinition;64];definitions[0]=MethodDefinition {present:true,object_id:0,flags:9,body:Span {unit:7,end:1},scope:Path {absolute:true}};
+let result:i32=fc_case(&args,&definitions,9,Span {unit:7,end:1},1,IntegerSize::EightBytes,ExecutionOutcome::UnresolvedSynchronization,999,0);result}
+machine Suite::constructor_6_1(&mut self)->i32 {
+let mut args:[Operand;7];
+args[0]=Operand::Integer {number:18446744073709551615};
+let mut definitions:[MethodDefinition;64];definitions[0]=MethodDefinition {present:true,object_id:0,flags:9,body:Span {unit:7,end:1},scope:Path {absolute:true}};
+let result:i32=fc_case(&args,&definitions,9,Span {unit:7,end:1},1,IntegerSize::EightBytes,ExecutionOutcome::Success,999,0);result}
+machine Suite::constructor_7_0(&mut self)->i32 {
+let mut args:[Operand;7];
+args[0]=Operand::Integer {number:18446744073709551615};
+let mut definitions:[MethodDefinition;64];definitions[0]=MethodDefinition {present:true,object_id:0,flags:1,body:Span {unit:7,end:18446744073709551615},scope:Path {absolute:true}};
+let result:i32=fc_case(&args,&definitions,1,Span {unit:7,end:18446744073709551615},1,IntegerSize::EightBytes,ExecutionOutcome::Truncated,999,0);result}
+machine Suite::constructor_7_1(&mut self)->i32 {
+let mut args:[Operand;7];
+args[0]=Operand::Integer {number:18446744073709551615};
+let mut definitions:[MethodDefinition;64];definitions[0]=MethodDefinition {present:true,object_id:0,flags:1,body:Span {unit:7,end:18446744073709551615},scope:Path {absolute:true}};
+let result:i32=fc_case(&args,&definitions,1,Span {unit:7,end:18446744073709551615},1,IntegerSize::EightBytes,ExecutionOutcome::Success,999,0);result}
+machine Suite::constructor_8_0(&mut self)->i32 {
+let mut args:[Operand;7];
+args[0]=Operand::Integer {number:18446744073709551615};
+let mut definitions:[MethodDefinition;64];definitions[0]=MethodDefinition {present:true,object_id:0,flags:0,body:Span {unit:7,end:1},scope:Path {absolute:true}};
+let result:i32=fc_case(&args,&definitions,0,Span {unit:7,end:1},0,IntegerSize::EightBytes,ExecutionOutcome::Success,999,1);result}
+machine Suite::constructor_8_1(&mut self)->i32 {
+let mut args:[Operand;7];
+args[0]=Operand::Integer {number:18446744073709551615};
+let mut definitions:[MethodDefinition;64];definitions[0]=MethodDefinition {present:true,object_id:0,flags:0,body:Span {unit:7,end:1},scope:Path {absolute:true}};
+let result:i32=fc_case(&args,&definitions,0,Span {unit:7,end:1},0,IntegerSize::EightBytes,ExecutionOutcome::Success,1000,1);result}

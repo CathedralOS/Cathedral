@@ -1,0 +1,80 @@
+use aml::model::ObjectStore;
+use aml::model::Value;
+use aml::model::Span;
+use aml::model::StringStorage;
+use aml::model::ReferenceKind;
+use aml::byte_storage::ByteRead;
+use execution::execution_model::Binding;
+use execution::execution_model::BindingResult;
+use execution::execution_model::Operand;
+use execution::execution_model::ExecutionOutcome;
+use execution::execution_model::ValueResult;
+use execution::generic_target_model::TargetSelection;
+use execution::generic_target_values::apply_selected;
+use execution::generic_values::read_value;
+use execution::generic_values::binding_operand;
+use execution::generic_values::byte_snapshot;
+use integer_helpers::integers::IntegerSize;
+data Suite {}
+machine dt_number(input:&[u8;1024],store:&ObjectStore,operand:Operand)->u64 {
+ let result:ValueResult=read_value(store,operand);
+ transition result.value {Value::Integer {number} -> (number) Value::String {string_storage} -> bytes(input,store,result) _ -> (999)}
+ state bytes(input:&[u8;1024],store:&ObjectStore,result:ValueResult)->u64 {let bytes:ByteRead=byte_snapshot(input,1,7,store,result);bytes.bytes[0] as u64}
+}
+machine dt_case(mode:u64,expected:u64)->i32 {
+ let mut input:[u8;1024];input[0]=65;
+ let mut store:ObjectStore=ObjectStore {};store.space.object_count=3;
+ store.space.objects[0].value=Value::Integer {number:11};
+ store.space.objects[1].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:0};
+ store.space.objects[2].value=Value::String {string_storage:StringStorage::Source {string_source:Span {unit:7,end:1}}};
+ let selected:TargetSelection=dt_select(mode);let operand:Operand=dt_source(mode);
+ let result:BindingResult=apply_selected(&input,1,7,IntegerSize::EightBytes,&mut store,selected,operand,mode==3 || mode==5 || mode==9);
+ let observed:u64=dt_observation(&input,&store,result.binding,mode);
+ let original:u64=dt_number(&input,&store,Operand::Object {object_id:0});
+ let expected_outcome:ExecutionOutcome=dt_expected(mode);
+ let count:u64=dt_count(mode);
+ let good:bool=dt_result(mode,observed,expected,original,result.outcome,expected_outcome,store.space.object_count,count);
+ transition good {true -> (0) _ -> (1)}
+}
+machine dt_result(mode:u64,observed:u64,expected:u64,original:u64,outcome:ExecutionOutcome,wanted:ExecutionOutcome,count:u64,expected_count:u64)->bool {observed==expected && outcome==wanted && count==expected_count && ((mode==2 || mode==3 || mode==5) || original==11)}
+machine dt_expected(mode:u64)->ExecutionOutcome {transition mode {4 -> (ExecutionOutcome::UnsupportedValue) 6 -> (ExecutionOutcome::InvalidTarget) 7 -> (ExecutionOutcome::InvalidTarget) 8 -> (ExecutionOutcome::MissingObject) _ -> (ExecutionOutcome::Success)}}
+machine dt_count(mode:u64)->u64 {transition mode==9 {true -> (4) _ -> (3)}}
+machine dt_source(mode:u64)->Operand {transition mode<2 {true -> (Operand::Integer {number:22}) _ -> (Operand::Object {object_id:2})}}
+machine dt_select(mode:u64)->TargetSelection {
+ transition mode {
+ 0 -> (TargetSelection::Argument {argument_index:0,argument_binding:Binding::Shared {shared_id:0}})
+ 1 -> (TargetSelection::Local {local_index:0,local_binding:Binding::Cell {cell_id:1}})
+ 2 -> (TargetSelection::Argument {argument_index:0,argument_binding:Binding::Shared {shared_id:1}})
+ 3 -> (TargetSelection::Argument {argument_index:0,argument_binding:Binding::Shared {shared_id:1}})
+ 6 -> (TargetSelection::Local {local_index:8,local_binding:Binding::Uninitialized})
+ 7 -> (TargetSelection::Argument {argument_index:18446744073709551615,argument_binding:Binding::Uninitialized})
+ 8 -> (TargetSelection::Named {object_id:18446744073709551615})
+ 9 -> (TargetSelection::Local {local_index:0,local_binding:Binding::Uninitialized})
+ _ -> (TargetSelection::Named {object_id:0})
+ }
+}
+machine dt_observation(input:&[u8;1024],store:&ObjectStore,binding:Binding,mode:u64)->u64 {
+ transition mode<2 || mode==9 {true -> binding(input,store,binding) _ -> object(input,store)}
+ state binding(input:&[u8;1024],store:&ObjectStore,binding:Binding)->u64 {let operand:Operand=binding_operand(binding);let result:u64=dt_number(input,store,operand);result}
+ state object(input:&[u8;1024],store:&ObjectStore)->u64 {let result:u64=dt_number(input,store,Operand::Object {object_id:0});result}
+}
+machine Suite::target_0_0(&mut self)->i32 {let result:i32=dt_case(0,22);result}
+machine Suite::target_0_1(&mut self)->i32 {let result:i32=dt_case(0,23);result}
+machine Suite::target_1_0(&mut self)->i32 {let result:i32=dt_case(1,22);result}
+machine Suite::target_1_1(&mut self)->i32 {let result:i32=dt_case(1,23);result}
+machine Suite::target_2_0(&mut self)->i32 {let result:i32=dt_case(2,65);result}
+machine Suite::target_2_1(&mut self)->i32 {let result:i32=dt_case(2,66);result}
+machine Suite::target_3_0(&mut self)->i32 {let result:i32=dt_case(3,65);result}
+machine Suite::target_3_1(&mut self)->i32 {let result:i32=dt_case(3,66);result}
+machine Suite::target_4_0(&mut self)->i32 {let result:i32=dt_case(4,11);result}
+machine Suite::target_4_1(&mut self)->i32 {let result:i32=dt_case(4,12);result}
+machine Suite::target_5_0(&mut self)->i32 {let result:i32=dt_case(5,65);result}
+machine Suite::target_5_1(&mut self)->i32 {let result:i32=dt_case(5,66);result}
+machine Suite::target_6_0(&mut self)->i32 {let result:i32=dt_case(6,11);result}
+machine Suite::target_6_1(&mut self)->i32 {let result:i32=dt_case(6,12);result}
+machine Suite::target_7_0(&mut self)->i32 {let result:i32=dt_case(7,11);result}
+machine Suite::target_7_1(&mut self)->i32 {let result:i32=dt_case(7,12);result}
+machine Suite::target_8_0(&mut self)->i32 {let result:i32=dt_case(8,11);result}
+machine Suite::target_8_1(&mut self)->i32 {let result:i32=dt_case(8,12);result}
+machine Suite::target_9_0(&mut self)->i32 {let result:i32=dt_case(9,65);result}
+machine Suite::target_9_1(&mut self)->i32 {let result:i32=dt_case(9,66);result}

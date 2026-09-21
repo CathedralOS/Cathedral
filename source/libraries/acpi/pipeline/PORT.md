@@ -1,6 +1,6 @@
 # AML declaration capture and single-source execution
 
-This package connects the bounded static loader to the bounded integer method
+This package connects the bounded static loader to the bounded generic method
 executor. It adds no hardware access, firmware invocation, physical mapping or
 production boot import. Full ACPI-005/006 interpreter coverage remains pending.
 
@@ -13,7 +13,7 @@ Isaac Woods. The existing [AML port](../aml/PORT.md), its inventory, and
 This adapter and its synthetic test inputs are original Cathedral code. Its
 method declaration semantics reuse the translated loader in `aml/loader.omg`;
 execution remains the partial translation documented by
-[the executor](../interpreter/execution/PORT.md). No upstream source symbol is
+[the executor](../interpreter/execution/generic.PORT.md). No upstream source symbol is
 newly classified as fully translated solely because this adapter exists.
 
 ## Declaration capture
@@ -52,9 +52,9 @@ byte identity. It supplies no multi-unit source registry.
 ## Owned source wrapper
 
 `prepare_program` takes an initialized `[u8; 1024]` by value, length, unit and
-loader budgets. It retains that source snapshot, the namespace and observations
+loader budgets. It retains that source snapshot, the ObjectStore and observations
 in `Program`. `run_program` accepts no replacement input buffer: it executes
-against the retained snapshot and mutates the retained namespace. Changing the
+against the retained snapshot and mutates the retained ObjectStore. Changing the
 caller's original input after preparation cannot replace this snapshot.
 
 A failed preparation produces an unloaded program which execution rejects.
@@ -77,9 +77,13 @@ are not rolled back on method failure; only static load is transactional.
 
 ## Verification stages
 
-**Tested:** all 22 pipeline cases and 22 body controls pass on the final source
+**Current generic replay:** the unchanged 22 pipeline scenario/control pairs pass
+against the current ObjectStore execution bridge. See the source-bound
+[generic manifest](../../../../tools/ports/acpi/interpreter/generic-execution/manifest.json).
+
+**Historical declaration milestone:** all 22 pipeline cases and 22 body controls pass on the final source
 (380.560 seconds, maximum 75,688 evaluator units, zero filesystem attempts).
-Current regressions also pass 27 parser, 79 executor and 18 field-parser pairs.
+That milestone also passed 27 parser, 79 executor and 18 field-parser pairs.
 The existing load-method/load-rollback and frame-admission/MAX-offset constant
 proofs each pass their changed-body controls. Historical full const records
 retain their original hashes; current full regressions use the distinct checked

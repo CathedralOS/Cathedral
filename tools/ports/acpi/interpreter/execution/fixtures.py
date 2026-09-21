@@ -131,7 +131,7 @@ def render(row,evaluate=True):
  objects={key:i for i,key in enumerate([*methods,*row['globals']])}
  entries=[*objects,*row['aliases']]
  out=['// SPDX-License-Identifier: MIT OR Apache-2.0','// '+row['origin'],
- 'use aml::model::Value;','use aml::model::Path;','use aml::model::Span;','use aml::model::Namespace;','use aml::model::Object;','use aml::model::Entry;',
+ 'use aml::model::Value;','use aml::model::Path;','use aml::model::Span;','use aml::model::Namespace;','use aml::model::ObjectStore;','use aml::model::Object;','use aml::model::Entry;',
  'use integer_helpers::integers::IntegerSize;','use execution::engine::run_method;','use execution::engine::ExecutionResult;','use execution::execution_model::ExecutionOutcome;', 'use aml::model::MethodDefinition;',
  'machine namespace_integer(value: Value, expected: u64) -> bool { transition value { Value::Integer { number } -> (number == expected) _ -> (false) } }',
  'machine test_result() -> i32 {','    let mut input: [u8; 1024];']
@@ -150,7 +150,9 @@ def render(row,evaluate=True):
    out +=[f'    definitions[{index}] = MethodDefinition {{ present: true, object_id: {index}, scope: path_{entries.index(key)}, flags: {methods[key]["flags"]}, body: Span {{ unit: {patch.get("span_unit",7)}, start: {a}, end: {b} }} }};']
  for text in row.get('omega_setup',[]):out +=['    '+text]
 
- out +=[f'    let result: ExecutionResult = run_method(&input, {patch.get("length",len(data))}, 7, &mut space, &definitions, path_0, &arguments, {len(row["args"])}, IntegerSize::{"FourBytes"if row["bits"]==32 else"EightBytes"}, {row["budget"]});']
+ out +=['    let mut store:ObjectStore=ObjectStore {space:space};']
+ out +=[f'    let result: ExecutionResult = run_method(&input, {patch.get("length",len(data))}, 7, &mut store, &definitions, path_0, &arguments, {len(row["args"])}, IntegerSize::{"FourBytes"if row["bits"]==32 else"EightBytes"}, {row["budget"]});']
+ out +=['    space=store.space;']
  checks=[f'result.outcome == ExecutionOutcome::{row["error"]}']
  if row['error']=='Success':checks +=[f'result.value.initialized == {str(row["expected"]is not None).lower()}']+([f'result.value.number == {row["expected"]}']if row['expected']is not None else[])
  for i,(key,value)in enumerate(row['after'].items()):

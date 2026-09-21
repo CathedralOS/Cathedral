@@ -1,0 +1,75 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Independent canonical copy kernels; no engine or pipeline import.
+use aml::model::ObjectStore;
+use aml::model::Value;
+use aml::model::Object;
+use aml::model::StringStorage;
+use aml::model::BufferStorage;
+use aml::model::Span;
+use aml::model::ByteBlock;
+use aml::byte_storage::ByteRead;
+use aml::byte_storage::ByteOutcome;
+use aml::byte_storage::read_bytes;
+use execution::execution_model::Operand;
+use execution::execution_model::Binding;
+use execution::execution_model::BindingResult;
+use execution::execution_model::ExecutionOutcome;
+use execution::generic_values::copy_into;
+use execution::generic_values::copied_binding;
+machine gk_integer(value:Value,expected:u64)->bool {transition value {Value::Integer {number} -> (number==expected) _ -> (false)}}
+machine gk_package(value:Value,expected:u64)->bool {transition value {Value::Package {first,count} -> (first==expected && count==2) _ -> (false)}}
+machine gk_check(kind:u64,expected:u64)->i32 {
+ let mut input:[u8;1024];input[0]=65;input[1]=66;
+ let mut store:ObjectStore=ObjectStore {};store.space.object_count=4;
+ store.space.objects[0].value=Value::String {string_storage:StringStorage::Source {string_source:Span {unit:7,start:0,end:2}}};
+ store.space.objects[1].value=Value::Integer {number:9};
+ let result:bool=gk_operation(&input,&mut store,kind,expected);
+ transition result {true -> (0) _ -> (1)}
+}
+machine gk_operation(input:&[u8;1024],store:&mut ObjectStore,kind:u64,expected:u64)->bool {
+ transition kind {0 -> bytes(input,store,expected) 1 -> self_copy(input,store,expected) 2 -> clear_owned(input,store,expected) 3 -> invalid_owner(input,store,expected) 4 -> package(input,store,expected) 5 -> capacity(input,store,expected) _ -> (false)}
+ state bytes(input:&[u8;1024],store:&mut ObjectStore,expected:u64)->bool {
+  let outcome:ExecutionOutcome=copy_into(input,2,7,store,1,Operand::Object {object_id:0});
+  let read:ByteRead=read_bytes(input,2,7,store,1);
+  outcome==ExecutionOutcome::Success && read.outcome==ByteOutcome::Success && read.length==2 && read.bytes[0] as u64==expected && store.bytes.blocks[1].initialized
+ }
+ state self_copy(input:&[u8;1024],store:&mut ObjectStore,expected:u64)->bool {
+  store.space.objects[0].value=Value::Buffer {buffer_storage:BufferStorage::Owned {buffer_owner:0}};
+  store.bytes.blocks[0]=ByteBlock {initialized:true,length:2};store.bytes.blocks[0].bytes[0]=17;store.bytes.blocks[0].bytes[1]=34;
+  let outcome:ExecutionOutcome=copy_into(input,2,7,store,0,Operand::Object {object_id:0});let read:ByteRead=read_bytes(input,2,7,store,0);
+  outcome==ExecutionOutcome::Success && read.outcome==ByteOutcome::Success && read.length==2 && read.bytes[0] as u64==expected && read.bytes[1]==34
+ }
+ state clear_owned(input:&[u8;1024],store:&mut ObjectStore,expected:u64)->bool {
+  store.space.objects[1].value=Value::Buffer {buffer_storage:BufferStorage::Owned {buffer_owner:1}};store.bytes.blocks[1]=ByteBlock {initialized:true,length:1};store.bytes.blocks[1].bytes[0]=99;
+  let outcome:ExecutionOutcome=copy_into(input,2,7,store,1,Operand::Integer {number:22});let value:bool=gk_integer(store.space.objects[1].value,expected);
+  outcome==ExecutionOutcome::Success && value && !store.bytes.blocks[1].initialized
+ }
+ state invalid_owner(input:&[u8;1024],store:&mut ObjectStore,expected:u64)->bool {
+  store.space.objects[0].value=Value::Buffer {buffer_storage:BufferStorage::Owned {buffer_owner:1}};
+  let outcome:ExecutionOutcome=copy_into(input,2,7,store,1,Operand::Object {object_id:0});let value:bool=gk_integer(store.space.objects[1].value,expected);
+  outcome==ExecutionOutcome::InvalidState && value && !store.bytes.blocks[1].initialized
+ }
+ state package(input:&[u8;1024],store:&mut ObjectStore,expected:u64)->bool {
+  store.space.objects[0].value=Value::Package {first:1,count:2};store.space.objects[1]=Object {value:Value::Integer {number:11},has_next:true,next:2};store.space.objects[2].value=Value::Integer {number:22};
+  let outcome:ExecutionOutcome=copy_into(input,2,7,store,3,Operand::Object {object_id:0});let changed:ExecutionOutcome=copy_into(input,2,7,store,1,Operand::Integer {number:99});
+  let same:bool=gk_package(store.space.objects[3].value,expected);let value:bool=gk_integer(store.space.objects[1].value,99);
+  outcome==ExecutionOutcome::Success && changed==ExecutionOutcome::Success && same && value && store.space.objects[1].has_next && store.space.objects[1].next==2
+ }
+ state capacity(input:&[u8;1024],store:&mut ObjectStore,expected:u64)->bool {
+  store.space.object_count=64;let copied:BindingResult=copied_binding(input,2,7,store,Binding::Uninitialized,Operand::Object {object_id:0});
+  copied.outcome==ExecutionOutcome::Capacity && store.space.object_count==expected && !store.bytes.blocks[0].initialized
+ }
+}
+data Kernels {}
+machine Kernels::bytes_positive(&mut self)->i32 {let result:i32=gk_check(0,65);result}
+machine Kernels::bytes_control(&mut self)->i32 {let result:i32=gk_check(0,66);result}
+machine Kernels::self_positive(&mut self)->i32 {let result:i32=gk_check(1,17);result}
+machine Kernels::self_control(&mut self)->i32 {let result:i32=gk_check(1,18);result}
+machine Kernels::clear_positive(&mut self)->i32 {let result:i32=gk_check(2,22);result}
+machine Kernels::clear_control(&mut self)->i32 {let result:i32=gk_check(2,23);result}
+machine Kernels::invalid_positive(&mut self)->i32 {let result:i32=gk_check(3,9);result}
+machine Kernels::invalid_control(&mut self)->i32 {let result:i32=gk_check(3,10);result}
+machine Kernels::package_positive(&mut self)->i32 {let result:i32=gk_check(4,1);result}
+machine Kernels::package_control(&mut self)->i32 {let result:i32=gk_check(4,2);result}
+machine Kernels::capacity_positive(&mut self)->i32 {let result:i32=gk_check(5,64);result}
+machine Kernels::capacity_control(&mut self)->i32 {let result:i32=gk_check(5,63);result}

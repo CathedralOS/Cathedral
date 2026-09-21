@@ -1,0 +1,78 @@
+use aml::model::ObjectStore;
+use aml::model::Value;
+use aml::model::ReferenceKind;
+use execution::execution_model::Binding;
+use execution::execution_model::Operand;
+use execution::execution_model::BindingResult;
+use execution::execution_model::ExecutionOutcome;
+use execution::generic_target_model::ArgumentAction;
+use execution::generic_target_values::classify_argument;
+use execution::generic_target_values::apply_argument;
+data Suite {}
+machine aa_classify(kind:u64,wanted:u64)->i32 {
+ let store:ObjectStore=aa_store(kind);let binding:Binding=aa_binding(kind);
+ let action:ArgumentAction=classify_argument(&store,binding);
+ let result:u64=aa_action(action,binding);
+ transition result==wanted {true -> (0) _ -> (1)}
+}
+machine aa_store(kind:u64)->ObjectStore {
+ let mut store:ObjectStore=ObjectStore {};store.space.object_count=3;
+ store.space.objects[0].value=Value::Integer {number:11};store.space.objects[1].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:0};store.space.objects[2].value=Value::Reference {kind:ReferenceKind::Named,object_id:1};
+ transition kind {4 -> index(store) 7 -> cycle(store) 8 -> dangling(store) _ -> (store)}
+ state index(store:ObjectStore)->ObjectStore {let mut result:ObjectStore=store;result.space.objects[1].value=Value::Reference {kind:ReferenceKind::Index,object_id:0};result}
+ state cycle(store:ObjectStore)->ObjectStore {let mut result:ObjectStore=store;result.space.objects[1].value=Value::Reference {kind:ReferenceKind::Named,object_id:1};result}
+ state dangling(store:ObjectStore)->ObjectStore {let mut result:ObjectStore=store;result.space.objects[1].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:18446744073709551615};result}
+}
+machine aa_binding(kind:u64)->Binding {transition kind {0 -> (Binding::Uninitialized) 1 -> (Binding::Integer {number:9}) 2 -> (Binding::Shared {shared_id:0}) 3 -> (Binding::Cell {cell_id:1}) 5 -> (Binding::Shared {shared_id:2}) 6 -> (Binding::Shared {shared_id:18446744073709551615}) _ -> (Binding::Shared {shared_id:1})}}
+machine aa_same(a:Binding,b:Binding)->bool {transition a {
+ Binding::Uninitialized -> uninitialized(b)
+ Binding::Integer {number} -> integer(b,number)
+ Binding::Shared {shared_id} -> shared(b,shared_id)
+ Binding::Cell {cell_id} -> cell(b,cell_id)}
+ state uninitialized(b:Binding)->bool {transition b {Binding::Uninitialized -> (true) _ -> (false)}}
+ state integer(b:Binding,a:u64)->bool {transition b {Binding::Integer {number} -> (a==number) _ -> (false)}}
+ state shared(b:Binding,a:u64)->bool {transition b {Binding::Shared {shared_id} -> (a==shared_id) _ -> (false)}}
+ state cell(b:Binding,a:u64)->bool {transition b {Binding::Cell {cell_id} -> (a==cell_id) _ -> (false)}}
+}
+machine aa_action(action:ArgumentAction,original:Binding)->u64 {
+ transition action {ArgumentAction::Replace {binding} -> replacement(binding,original) ArgumentAction::CopyReferent {binding,object_id} -> reference(binding,original,object_id) ArgumentAction::Failure {outcome} -> failure(outcome)}
+ state replacement(binding:Binding,original:Binding)->u64 {let same:bool=aa_same(binding,original);transition same {true -> (10) _ -> (99)}}
+ state reference(binding:Binding,original:Binding,id:u64)->u64 {let same:bool=aa_same(binding,original);transition { !same -> (99) id==0 -> (20) id==18446744073709551615 -> (21) _ -> (98)}}
+ state failure(outcome:ExecutionOutcome)->u64 {transition outcome {ExecutionOutcome::InvalidState -> (30) _ -> (97)}}
+}
+machine aa_apply(kind:u64,wanted:u64)->i32 {
+ let input:[u8;1024];let mut store:ObjectStore=aa_store(0);let action:ArgumentAction=aa_selected(kind);
+ let result:BindingResult=apply_argument(&input,0,7,&mut store,action,Operand::Integer {number:22});
+ let valid:bool=aa_applied(result,kind);let number:u64=aa_number(store.space.objects[0].value);
+ transition valid && number==wanted && store.space.object_count==3 {true -> (0) _ -> (1)}
+}
+machine aa_selected(kind:u64)->ArgumentAction {transition kind {0 -> (ArgumentAction::Replace {binding:Binding::Shared {shared_id:0}}) 1 -> (ArgumentAction::CopyReferent {binding:Binding::Shared {shared_id:1},object_id:0}) _ -> (ArgumentAction::Failure {outcome:ExecutionOutcome::InvalidTarget})}}
+machine aa_applied(result:BindingResult,kind:u64)->bool {transition kind {0 -> integer(result.outcome,result.binding) 1 -> reference(result.outcome,result.binding) _ -> (result.outcome==ExecutionOutcome::InvalidTarget)}
+ state integer(outcome:ExecutionOutcome,binding:Binding)->bool {transition binding {Binding::Integer {number} -> (outcome==ExecutionOutcome::Success && number==22) _ -> (false)}}
+ state reference(outcome:ExecutionOutcome,binding:Binding)->bool {transition binding {Binding::Shared {shared_id} -> (outcome==ExecutionOutcome::Success && shared_id==1) _ -> (false)}}
+}
+machine aa_number(value:Value)->u64 {transition value {Value::Integer {number} -> (number) _ -> (999)}}
+machine Suite::classify_0_0(&mut self)->i32 {let result:i32=aa_classify(0,10);result}
+machine Suite::classify_0_1(&mut self)->i32 {let result:i32=aa_classify(0,11);result}
+machine Suite::classify_1_0(&mut self)->i32 {let result:i32=aa_classify(1,10);result}
+machine Suite::classify_1_1(&mut self)->i32 {let result:i32=aa_classify(1,11);result}
+machine Suite::classify_2_0(&mut self)->i32 {let result:i32=aa_classify(2,10);result}
+machine Suite::classify_2_1(&mut self)->i32 {let result:i32=aa_classify(2,11);result}
+machine Suite::classify_3_0(&mut self)->i32 {let result:i32=aa_classify(3,20);result}
+machine Suite::classify_3_1(&mut self)->i32 {let result:i32=aa_classify(3,21);result}
+machine Suite::classify_4_0(&mut self)->i32 {let result:i32=aa_classify(4,20);result}
+machine Suite::classify_4_1(&mut self)->i32 {let result:i32=aa_classify(4,21);result}
+machine Suite::classify_5_0(&mut self)->i32 {let result:i32=aa_classify(5,20);result}
+machine Suite::classify_5_1(&mut self)->i32 {let result:i32=aa_classify(5,21);result}
+machine Suite::classify_6_0(&mut self)->i32 {let result:i32=aa_classify(6,30);result}
+machine Suite::classify_6_1(&mut self)->i32 {let result:i32=aa_classify(6,31);result}
+machine Suite::classify_7_0(&mut self)->i32 {let result:i32=aa_classify(7,30);result}
+machine Suite::classify_7_1(&mut self)->i32 {let result:i32=aa_classify(7,31);result}
+machine Suite::classify_8_0(&mut self)->i32 {let result:i32=aa_classify(8,21);result}
+machine Suite::classify_8_1(&mut self)->i32 {let result:i32=aa_classify(8,22);result}
+machine Suite::apply_0_0(&mut self)->i32 {let result:i32=aa_apply(0,11);result}
+machine Suite::apply_0_1(&mut self)->i32 {let result:i32=aa_apply(0,12);result}
+machine Suite::apply_1_0(&mut self)->i32 {let result:i32=aa_apply(1,22);result}
+machine Suite::apply_1_1(&mut self)->i32 {let result:i32=aa_apply(1,23);result}
+machine Suite::apply_2_0(&mut self)->i32 {let result:i32=aa_apply(2,11);result}
+machine Suite::apply_2_1(&mut self)->i32 {let result:i32=aa_apply(2,12);result}

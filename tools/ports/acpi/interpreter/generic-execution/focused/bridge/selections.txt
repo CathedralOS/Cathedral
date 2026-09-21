@@ -1,0 +1,6 @@
+Suite::bridge_bytes_0=0
+Suite::bridge_bytes_1=1
+Suite::bridge_local_0=0
+Suite::bridge_local_1=1
+Suite::bridge_arg_0=0
+Suite::bridge_arg_1=1

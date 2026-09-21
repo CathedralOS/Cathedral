@@ -1,0 +1,6 @@
+{
+  "stage": "checked-interpreter",
+  "pairs": 14,
+  "control": "changes an inactive expected Frame cache slot or expected store byte; exact full Frame and ObjectStore comparison",
+  "native_execution": false
+}

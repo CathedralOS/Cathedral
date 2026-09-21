@@ -4,6 +4,7 @@
 module execution_model;
 use aml::model::Path;
 use aml::model::Span;
+use aml::model::Value;
 use integer_helpers::integers::IntegerSize;
 pub data ExecutionOutcome [copy] {
     case Success; case Truncated; case BadEncoding; case UnsupportedValue;
@@ -13,6 +14,12 @@ pub data ExecutionOutcome [copy] {
     case MissingObject; case InvalidTarget; case DivideByZero; case SourceUnit;
     case ControlOutsideLoop; case MethodDefinition;
 }
+// Slot is only the legacy integer result projection; it never drives generic execution.
+pub data Operand [copy] { case Uninitialized; case Integer(number:u64); case Object(object_id:u64); }
+pub data Binding [copy] { case Uninitialized; case Integer(number:u64); case Shared(shared_id:u64); case Cell(cell_id:u64); }
+pub data OperandResult [copy] { outcome:ExecutionOutcome; operand:Operand; }
+pub data BindingResult [copy] { outcome:ExecutionOutcome; binding:Binding; }
+pub data ValueResult [copy] { outcome:ExecutionOutcome; value:Value; has_object:bool; object:u64; }
 pub data Slot [copy] { initialized: bool; number: u64; }
 pub data Target [copy] {
     case Null; case Local(local_index: u64); case Argument(argument_index: u64);
@@ -22,16 +29,16 @@ pub data SlotResult [copy] { outcome: ExecutionOutcome; slot: Slot; }
 pub data TargetResult [copy] { outcome: ExecutionOutcome; target: Target; next: u64; }
 pub data Block [copy] { looping: bool; parent_end: u64; after: u64; predicate: u64; end: u64; }
 pub data Operation [copy] {
-    opcode: u64; count: u64; value_arity: u64; target_arity: u64; operands: [u64; 7]; first_target: Target; second_target: Target;
+    opcode: u64; count: u64; value_arity: u64; target_arity: u64; operands: [Operand; 7]; first_target: Target; second_target: Target;
     body_end: u64; predicate: u64; parent_end: u64; method_id: u64; method_body: Span; method_flags: u8;
 }
 pub data NameCache [copy] { at: u64; next: u64; object_id: u64; entry_index: u64; }
 pub data Frame [copy] {
-    scope: Path; body: Span; size: IntegerSize; pc: u64; end: u64;
-    arguments: [Slot; 7]; locals: [Slot; 8];
+    scope: Path; body: Span; source_length:u64; size: IntegerSize; pc: u64; end: u64;
+    arguments: [Binding; 7]; locals: [Binding; 8];
     block_count: u64; blocks: [Block; 8];
     operation_count: u64; operations: [Operation; 16];
     cache_count: u64; lookup_cache: [NameCache; 16];
-    returned: bool; return_value: Slot;
+    returned: bool; has_return_value:bool; return_value: Operand;
 }
 pub data FrameResult [copy] { outcome: ExecutionOutcome; frame: Frame; }

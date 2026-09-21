@@ -1,0 +1,12 @@
+Suite::decoder_constant_full_positive=0
+Suite::decoder_constant_full_control=1
+Suite::decoder_local_full_positive=0
+Suite::decoder_local_full_control=1
+Suite::decoder_operation_full_positive=0
+Suite::decoder_operation_full_control=1
+Suite::decoder_named_value_full_positive=0
+Suite::decoder_named_value_full_control=1
+Suite::decoder_named_method_full_positive=0
+Suite::decoder_named_method_full_control=1
+Suite::decoder_target_full_positive=0
+Suite::decoder_target_full_control=1

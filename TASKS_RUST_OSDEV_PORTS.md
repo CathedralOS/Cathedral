@@ -721,6 +721,15 @@ are retained; full-value byte storage is reset or replaced atomically. The bound
 Buffer exclusions, generic target selection and opcode retirement remain pending;
 aggregate source counts are unchanged.
 
+[Generic method execution](source/libraries/acpi/interpreter/execution/generic.PORT.md) transports preloaded Integer/String/Buffer/Package/reference data through methods,
+Return, Store and CopyObject using stable ObjectStore IDs and private bindings.
+Canonical replay passes 55 generic, 79 unchanged integer and 22 unchanged pipeline
+pairs, plus 103 boundary pairs and one constant-evaluator pair. Argument writes
+preserve the primary binding rules; byte copies own their backing, while Package
+children remain explicitly shallow. Dynamic literals, conversion opcodes, general
+reference/field evaluation and services remain pending. ACPI-005 stays partial;
+aggregate source counts are unchanged.
+
 ## Phase 5 — only after the corpus above is healthy
 
 - [ ] Port selected pure pieces and tests from APIC, xHCI, USB, PS/2, VGA, and

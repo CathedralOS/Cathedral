@@ -3,15 +3,14 @@
 // in one retained method span, not executable machine addresses.
 module control;
 use execution_model::ExecutionOutcome;
-use execution_model::Slot;
+use execution_model::Operand;
+use aml::model::Value;
 use execution_model::Frame;
 use execution_model::Block;
 use integer_helpers::integers::normalize;
-pub machine return_integer(frame: &mut Frame, number: u64) -> ExecutionOutcome {
-    let value: u64 = normalize(frame.size, number);
-    frame.returned = true; frame.return_value = Slot { initialized: true, number: value };
-    frame.operation_count = 0; frame.block_count = 0;
-    ExecutionOutcome::Success
+pub machine return_operand(frame:&mut Frame,value:Operand)->ExecutionOutcome {
+    frame.returned=true;frame.has_return_value=true;frame.return_value=value;
+    frame.operation_count=0;frame.block_count=0;ExecutionOutcome::Success
 }
 pub machine enter_block(frame: &mut Frame, start: u64, end: u64, after: u64, looping: bool, predicate: u64) -> ExecutionOutcome {
     transition frame.block_count < 8 { true -> bounds(frame, start, end, after, looping, predicate) _ -> (ExecutionOutcome::Depth) }
@@ -43,7 +42,7 @@ pub machine finish_block(frame: &mut Frame) -> ExecutionOutcome {
         frame.block_count <= 8 -> pop(frame, frame.block_count - 1)
         _ -> (ExecutionOutcome::InvalidState) }
     state finish_method(frame: &mut Frame) -> ExecutionOutcome {
-        frame.returned = true; frame.return_value = Slot {}; ExecutionOutcome::Success
+        frame.returned = true; frame.has_return_value=false;frame.return_value = Operand::Uninitialized; ExecutionOutcome::Success
     }
     state pop(frame: &mut Frame, index: u64) -> ExecutionOutcome {
         transition index < 8 { true -> selected(frame, index) _ -> (ExecutionOutcome::InvalidState) }

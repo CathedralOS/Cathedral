@@ -1,0 +1,6 @@
+{
+  "stage": "checked-interpreter",
+  "pairs": 64,
+  "control": "changes expected binding payload on success or an unused backing byte in complete expected store on failure",
+  "native_execution": false
+}

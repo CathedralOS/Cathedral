@@ -1,0 +1,4 @@
+Suite::retire_0_0=0
+Suite::retire_0_1=1
+Suite::retire_1_0=0
+Suite::retire_1_1=1

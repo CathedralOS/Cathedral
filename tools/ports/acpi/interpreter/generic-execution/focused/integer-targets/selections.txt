@@ -1,0 +1,10 @@
+Suite::integer_target_0_0=0
+Suite::integer_target_0_1=1
+Suite::integer_target_1_0=0
+Suite::integer_target_1_1=1
+Suite::integer_target_2_0=0
+Suite::integer_target_2_1=1
+Suite::integer_target_3_0=0
+Suite::integer_target_3_1=1
+Suite::integer_target_4_0=0
+Suite::integer_target_4_1=1

@@ -1,0 +1,6 @@
+{
+  "stage": "checked-interpreter",
+  "pairs": 19,
+  "control": "changes an expected unused backing byte in the complete expected ObjectStore",
+  "native_execution": false
+}

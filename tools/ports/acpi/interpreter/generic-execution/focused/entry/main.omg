@@ -1,0 +1,165 @@
+use aml::model::Value;
+use aml::model::Span;
+use aml::model::Path;
+use aml::model::Entry;
+use aml::model::ObjectStore;
+use aml::model::MethodDefinition;
+use aml::model::BufferStorage;
+use aml::model::ReferenceKind;
+use execution::engine::run_method;
+use execution::engine::ExecutionResult;
+use execution::execution_model::Operand;
+use execution::execution_model::ValueResult;
+use execution::execution_model::ExecutionOutcome;
+use execution::generic_values::read_value;
+use integer_helpers::integers::IntegerSize;
+data Suite {}
+machine xe_assert(store:&ObjectStore,result:ExecutionResult,status:ExecutionOutcome,tag:u64,number:u64,count:u64)->bool {
+ let found:ValueResult=read_value(store,result.operand);let matched:bool=xe_kind(found.value,tag,number);
+ result.outcome==status && store.space.object_count==count && ((status==ExecutionOutcome::Success && result.has_value && matched) || (status!=ExecutionOutcome::Success && !result.has_value && result.steps==0 && result.fault_offset==0))
+}
+machine xe_kind(value:Value,tag:u64,expected:u64)->bool {transition value {Value::Integer {number} -> (tag==1 && number==expected) Value::Buffer {buffer_storage} -> (tag==2) Value::Package {first,count} -> (tag==3 && count==expected) _ -> (false)}}
+machine Suite::buffer_0(&mut self)->i32 {
+let mut input:[u8;1024];input[0]=164;input[1]=104;input[2]=17;
+let mut path:Path=Path {absolute:true,count:1};path.segments[0]=1313423693;let mut x:Path=Path {absolute:true,count:1};x.segments[0]=1600085848;let mut alias:Path=Path {absolute:true,count:1};alias.segments[0]=1600085842;
+let body:Span=Span {unit:7,end:2};let mut store:ObjectStore=ObjectStore {};store.space.count=3;store.space.object_count=3;
+store.space.entries[0]=Entry {path:path,has_object:true,object:0};store.space.entries[1]=Entry {path:x,has_object:true,object:1};store.space.entries[2]=Entry {path:alias,has_object:true,object:2};
+store.space.objects[0].value=Value::Method {flags:1,body:body};store.space.objects[1].value=Value::Integer {number:11};store.space.objects[2].value=Value::Reference {kind:ReferenceKind::Named,object_id:1};
+let mut definitions:[MethodDefinition;64];definitions[0]=MethodDefinition {present:true,object_id:0,flags:1,body:body,scope:Path {absolute:true}};
+let mut arguments:[Value;7];arguments[0]=Value::Buffer {buffer_storage:BufferStorage::Source {declared_size:1,buffer_initializer:Span {unit:7,start:2,end:3}}};
+let result:ExecutionResult=run_method(&input,3,7,&mut store,&definitions,path,&arguments,1,IntegerSize::EightBytes,64);let good:bool=xe_assert(&store,result,ExecutionOutcome::Success,2,0,4);transition good {true -> (0) _ -> (1)}
+}
+machine Suite::buffer_1(&mut self)->i32 {
+let mut input:[u8;1024];input[0]=164;input[1]=104;input[2]=17;
+let mut path:Path=Path {absolute:true,count:1};path.segments[0]=1313423693;let mut x:Path=Path {absolute:true,count:1};x.segments[0]=1600085848;let mut alias:Path=Path {absolute:true,count:1};alias.segments[0]=1600085842;
+let body:Span=Span {unit:7,end:2};let mut store:ObjectStore=ObjectStore {};store.space.count=3;store.space.object_count=3;
+store.space.entries[0]=Entry {path:path,has_object:true,object:0};store.space.entries[1]=Entry {path:x,has_object:true,object:1};store.space.entries[2]=Entry {path:alias,has_object:true,object:2};
+store.space.objects[0].value=Value::Method {flags:1,body:body};store.space.objects[1].value=Value::Integer {number:11};store.space.objects[2].value=Value::Reference {kind:ReferenceKind::Named,object_id:1};
+let mut definitions:[MethodDefinition;64];definitions[0]=MethodDefinition {present:true,object_id:0,flags:1,body:body,scope:Path {absolute:true}};
+let mut arguments:[Value;7];arguments[0]=Value::Buffer {buffer_storage:BufferStorage::Source {declared_size:1,buffer_initializer:Span {unit:7,start:2,end:3}}};
+let result:ExecutionResult=run_method(&input,3,7,&mut store,&definitions,path,&arguments,1,IntegerSize::EightBytes,64);let good:bool=xe_assert(&store,result,ExecutionOutcome::Success,2,0,5);transition good {true -> (0) _ -> (1)}
+}
+machine Suite::package_0(&mut self)->i32 {
+let mut input:[u8;1024];input[0]=164;input[1]=104;input[2]=17;
+let mut path:Path=Path {absolute:true,count:1};path.segments[0]=1313423693;let mut x:Path=Path {absolute:true,count:1};x.segments[0]=1600085848;let mut alias:Path=Path {absolute:true,count:1};alias.segments[0]=1600085842;
+let body:Span=Span {unit:7,end:2};let mut store:ObjectStore=ObjectStore {};store.space.count=3;store.space.object_count=3;
+store.space.entries[0]=Entry {path:path,has_object:true,object:0};store.space.entries[1]=Entry {path:x,has_object:true,object:1};store.space.entries[2]=Entry {path:alias,has_object:true,object:2};
+store.space.objects[0].value=Value::Method {flags:1,body:body};store.space.objects[1].value=Value::Integer {number:11};store.space.objects[2].value=Value::Reference {kind:ReferenceKind::Named,object_id:1};
+let mut definitions:[MethodDefinition;64];definitions[0]=MethodDefinition {present:true,object_id:0,flags:1,body:body,scope:Path {absolute:true}};
+let mut arguments:[Value;7];arguments[0]=Value::Package {first:1,count:1};
+let result:ExecutionResult=run_method(&input,3,7,&mut store,&definitions,path,&arguments,1,IntegerSize::EightBytes,64);let good:bool=xe_assert(&store,result,ExecutionOutcome::Success,3,1,4);transition good {true -> (0) _ -> (1)}
+}
+machine Suite::package_1(&mut self)->i32 {
+let mut input:[u8;1024];input[0]=164;input[1]=104;input[2]=17;
+let mut path:Path=Path {absolute:true,count:1};path.segments[0]=1313423693;let mut x:Path=Path {absolute:true,count:1};x.segments[0]=1600085848;let mut alias:Path=Path {absolute:true,count:1};alias.segments[0]=1600085842;
+let body:Span=Span {unit:7,end:2};let mut store:ObjectStore=ObjectStore {};store.space.count=3;store.space.object_count=3;
+store.space.entries[0]=Entry {path:path,has_object:true,object:0};store.space.entries[1]=Entry {path:x,has_object:true,object:1};store.space.entries[2]=Entry {path:alias,has_object:true,object:2};
+store.space.objects[0].value=Value::Method {flags:1,body:body};store.space.objects[1].value=Value::Integer {number:11};store.space.objects[2].value=Value::Reference {kind:ReferenceKind::Named,object_id:1};
+let mut definitions:[MethodDefinition;64];definitions[0]=MethodDefinition {present:true,object_id:0,flags:1,body:body,scope:Path {absolute:true}};
+let mut arguments:[Value;7];arguments[0]=Value::Package {first:1,count:1};
+let result:ExecutionResult=run_method(&input,3,7,&mut store,&definitions,path,&arguments,1,IntegerSize::EightBytes,64);let good:bool=xe_assert(&store,result,ExecutionOutcome::Success,3,1,5);transition good {true -> (0) _ -> (1)}
+}
+machine Suite::chain_rebinding_0(&mut self)->i32 {
+let mut input:[u8;1024];input[0]=164;input[1]=104;input[2]=17;
+input[0]=157;input[1]=10;input[2]=99;input[3]=82;input[4]=95;input[5]=95;input[6]=95;input[7]=164;input[8]=104;
+let mut path:Path=Path {absolute:true,count:1};path.segments[0]=1313423693;let mut x:Path=Path {absolute:true,count:1};x.segments[0]=1600085848;let mut alias:Path=Path {absolute:true,count:1};alias.segments[0]=1600085842;
+let body:Span=Span {unit:7,end:9};let mut store:ObjectStore=ObjectStore {};store.space.count=3;store.space.object_count=3;
+store.space.entries[0]=Entry {path:path,has_object:true,object:0};store.space.entries[1]=Entry {path:x,has_object:true,object:1};store.space.entries[2]=Entry {path:alias,has_object:true,object:2};
+store.space.objects[0].value=Value::Method {flags:1,body:body};store.space.objects[1].value=Value::Integer {number:11};store.space.objects[2].value=Value::Reference {kind:ReferenceKind::Named,object_id:1};
+let mut definitions:[MethodDefinition;64];definitions[0]=MethodDefinition {present:true,object_id:0,flags:1,body:body,scope:Path {absolute:true}};
+let mut arguments:[Value;7];arguments[0]=Value::Reference {kind:ReferenceKind::Named,object_id:2};
+let result:ExecutionResult=run_method(&input,9,7,&mut store,&definitions,path,&arguments,1,IntegerSize::EightBytes,64);let good:bool=xe_assert(&store,result,ExecutionOutcome::Success,1,99,3);transition good {true -> (0) _ -> (1)}
+}
+machine Suite::chain_rebinding_1(&mut self)->i32 {
+let mut input:[u8;1024];input[0]=164;input[1]=104;input[2]=17;
+input[0]=157;input[1]=10;input[2]=99;input[3]=82;input[4]=95;input[5]=95;input[6]=95;input[7]=164;input[8]=104;
+let mut path:Path=Path {absolute:true,count:1};path.segments[0]=1313423693;let mut x:Path=Path {absolute:true,count:1};x.segments[0]=1600085848;let mut alias:Path=Path {absolute:true,count:1};alias.segments[0]=1600085842;
+let body:Span=Span {unit:7,end:9};let mut store:ObjectStore=ObjectStore {};store.space.count=3;store.space.object_count=3;
+store.space.entries[0]=Entry {path:path,has_object:true,object:0};store.space.entries[1]=Entry {path:x,has_object:true,object:1};store.space.entries[2]=Entry {path:alias,has_object:true,object:2};
+store.space.objects[0].value=Value::Method {flags:1,body:body};store.space.objects[1].value=Value::Integer {number:11};store.space.objects[2].value=Value::Reference {kind:ReferenceKind::Named,object_id:1};
+let mut definitions:[MethodDefinition;64];definitions[0]=MethodDefinition {present:true,object_id:0,flags:1,body:body,scope:Path {absolute:true}};
+let mut arguments:[Value;7];arguments[0]=Value::Reference {kind:ReferenceKind::Named,object_id:2};
+let result:ExecutionResult=run_method(&input,9,7,&mut store,&definitions,path,&arguments,1,IntegerSize::EightBytes,64);let good:bool=xe_assert(&store,result,ExecutionOutcome::Success,1,99,4);transition good {true -> (0) _ -> (1)}
+}
+machine Suite::late_owned_0(&mut self)->i32 {
+let mut input:[u8;1024];input[0]=164;input[1]=104;input[2]=17;
+let mut path:Path=Path {absolute:true,count:1};path.segments[0]=1313423693;let mut x:Path=Path {absolute:true,count:1};x.segments[0]=1600085848;let mut alias:Path=Path {absolute:true,count:1};alias.segments[0]=1600085842;
+let body:Span=Span {unit:7,end:2};let mut store:ObjectStore=ObjectStore {};store.space.count=3;store.space.object_count=3;
+store.space.entries[0]=Entry {path:path,has_object:true,object:0};store.space.entries[1]=Entry {path:x,has_object:true,object:1};store.space.entries[2]=Entry {path:alias,has_object:true,object:2};
+store.space.objects[0].value=Value::Method {flags:2,body:body};store.space.objects[1].value=Value::Integer {number:11};store.space.objects[2].value=Value::Reference {kind:ReferenceKind::Named,object_id:1};
+let mut definitions:[MethodDefinition;64];definitions[0]=MethodDefinition {present:true,object_id:0,flags:2,body:body,scope:Path {absolute:true}};
+let mut arguments:[Value;7];arguments[0]=Value::Buffer {buffer_storage:BufferStorage::Source {declared_size:1,buffer_initializer:Span {unit:7,start:2,end:3}}};
+arguments[1]=Value::Buffer {buffer_storage:BufferStorage::Owned {buffer_owner:1}};
+let result:ExecutionResult=run_method(&input,3,7,&mut store,&definitions,path,&arguments,2,IntegerSize::EightBytes,64);let good:bool=xe_assert(&store,result,ExecutionOutcome::InvalidState,0,0,3);transition good {true -> (0) _ -> (1)}
+}
+machine Suite::late_owned_1(&mut self)->i32 {
+let mut input:[u8;1024];input[0]=164;input[1]=104;input[2]=17;
+let mut path:Path=Path {absolute:true,count:1};path.segments[0]=1313423693;let mut x:Path=Path {absolute:true,count:1};x.segments[0]=1600085848;let mut alias:Path=Path {absolute:true,count:1};alias.segments[0]=1600085842;
+let body:Span=Span {unit:7,end:2};let mut store:ObjectStore=ObjectStore {};store.space.count=3;store.space.object_count=3;
+store.space.entries[0]=Entry {path:path,has_object:true,object:0};store.space.entries[1]=Entry {path:x,has_object:true,object:1};store.space.entries[2]=Entry {path:alias,has_object:true,object:2};
+store.space.objects[0].value=Value::Method {flags:2,body:body};store.space.objects[1].value=Value::Integer {number:11};store.space.objects[2].value=Value::Reference {kind:ReferenceKind::Named,object_id:1};
+let mut definitions:[MethodDefinition;64];definitions[0]=MethodDefinition {present:true,object_id:0,flags:2,body:body,scope:Path {absolute:true}};
+let mut arguments:[Value;7];arguments[0]=Value::Buffer {buffer_storage:BufferStorage::Source {declared_size:1,buffer_initializer:Span {unit:7,start:2,end:3}}};
+arguments[1]=Value::Buffer {buffer_storage:BufferStorage::Owned {buffer_owner:1}};
+let result:ExecutionResult=run_method(&input,3,7,&mut store,&definitions,path,&arguments,2,IntegerSize::EightBytes,64);let good:bool=xe_assert(&store,result,ExecutionOutcome::InvalidState,0,0,4);transition good {true -> (0) _ -> (1)}
+}
+machine Suite::bad_arity_0(&mut self)->i32 {
+let mut input:[u8;1024];input[0]=164;input[1]=104;input[2]=17;
+let mut path:Path=Path {absolute:true,count:1};path.segments[0]=1313423693;let mut x:Path=Path {absolute:true,count:1};x.segments[0]=1600085848;let mut alias:Path=Path {absolute:true,count:1};alias.segments[0]=1600085842;
+let body:Span=Span {unit:7,end:2};let mut store:ObjectStore=ObjectStore {};store.space.count=3;store.space.object_count=3;
+store.space.entries[0]=Entry {path:path,has_object:true,object:0};store.space.entries[1]=Entry {path:x,has_object:true,object:1};store.space.entries[2]=Entry {path:alias,has_object:true,object:2};
+store.space.objects[0].value=Value::Method {flags:2,body:body};store.space.objects[1].value=Value::Integer {number:11};store.space.objects[2].value=Value::Reference {kind:ReferenceKind::Named,object_id:1};
+let mut definitions:[MethodDefinition;64];definitions[0]=MethodDefinition {present:true,object_id:0,flags:2,body:body,scope:Path {absolute:true}};
+let mut arguments:[Value;7];arguments[0]=Value::Buffer {buffer_storage:BufferStorage::Source {declared_size:1,buffer_initializer:Span {unit:7,start:2,end:3}}};
+let result:ExecutionResult=run_method(&input,3,7,&mut store,&definitions,path,&arguments,1,IntegerSize::EightBytes,64);let good:bool=xe_assert(&store,result,ExecutionOutcome::ArgumentCount,0,0,3);transition good {true -> (0) _ -> (1)}
+}
+machine Suite::bad_arity_1(&mut self)->i32 {
+let mut input:[u8;1024];input[0]=164;input[1]=104;input[2]=17;
+let mut path:Path=Path {absolute:true,count:1};path.segments[0]=1313423693;let mut x:Path=Path {absolute:true,count:1};x.segments[0]=1600085848;let mut alias:Path=Path {absolute:true,count:1};alias.segments[0]=1600085842;
+let body:Span=Span {unit:7,end:2};let mut store:ObjectStore=ObjectStore {};store.space.count=3;store.space.object_count=3;
+store.space.entries[0]=Entry {path:path,has_object:true,object:0};store.space.entries[1]=Entry {path:x,has_object:true,object:1};store.space.entries[2]=Entry {path:alias,has_object:true,object:2};
+store.space.objects[0].value=Value::Method {flags:2,body:body};store.space.objects[1].value=Value::Integer {number:11};store.space.objects[2].value=Value::Reference {kind:ReferenceKind::Named,object_id:1};
+let mut definitions:[MethodDefinition;64];definitions[0]=MethodDefinition {present:true,object_id:0,flags:2,body:body,scope:Path {absolute:true}};
+let mut arguments:[Value;7];arguments[0]=Value::Buffer {buffer_storage:BufferStorage::Source {declared_size:1,buffer_initializer:Span {unit:7,start:2,end:3}}};
+let result:ExecutionResult=run_method(&input,3,7,&mut store,&definitions,path,&arguments,1,IntegerSize::EightBytes,64);let good:bool=xe_assert(&store,result,ExecutionOutcome::ArgumentCount,0,0,4);transition good {true -> (0) _ -> (1)}
+}
+machine Suite::source_mismatch_0(&mut self)->i32 {
+let mut input:[u8;1024];input[0]=164;input[1]=104;input[2]=17;
+let mut path:Path=Path {absolute:true,count:1};path.segments[0]=1313423693;let mut x:Path=Path {absolute:true,count:1};x.segments[0]=1600085848;let mut alias:Path=Path {absolute:true,count:1};alias.segments[0]=1600085842;
+let body:Span=Span {unit:8,end:2};let mut store:ObjectStore=ObjectStore {};store.space.count=3;store.space.object_count=3;
+store.space.entries[0]=Entry {path:path,has_object:true,object:0};store.space.entries[1]=Entry {path:x,has_object:true,object:1};store.space.entries[2]=Entry {path:alias,has_object:true,object:2};
+store.space.objects[0].value=Value::Method {flags:1,body:body};store.space.objects[1].value=Value::Integer {number:11};store.space.objects[2].value=Value::Reference {kind:ReferenceKind::Named,object_id:1};
+let mut definitions:[MethodDefinition;64];definitions[0]=MethodDefinition {present:true,object_id:0,flags:1,body:body,scope:Path {absolute:true}};
+let mut arguments:[Value;7];arguments[0]=Value::Buffer {buffer_storage:BufferStorage::Source {declared_size:1,buffer_initializer:Span {unit:7,start:2,end:3}}};
+let result:ExecutionResult=run_method(&input,3,7,&mut store,&definitions,path,&arguments,1,IntegerSize::EightBytes,64);let good:bool=xe_assert(&store,result,ExecutionOutcome::SourceUnit,0,0,3);transition good {true -> (0) _ -> (1)}
+}
+machine Suite::source_mismatch_1(&mut self)->i32 {
+let mut input:[u8;1024];input[0]=164;input[1]=104;input[2]=17;
+let mut path:Path=Path {absolute:true,count:1};path.segments[0]=1313423693;let mut x:Path=Path {absolute:true,count:1};x.segments[0]=1600085848;let mut alias:Path=Path {absolute:true,count:1};alias.segments[0]=1600085842;
+let body:Span=Span {unit:8,end:2};let mut store:ObjectStore=ObjectStore {};store.space.count=3;store.space.object_count=3;
+store.space.entries[0]=Entry {path:path,has_object:true,object:0};store.space.entries[1]=Entry {path:x,has_object:true,object:1};store.space.entries[2]=Entry {path:alias,has_object:true,object:2};
+store.space.objects[0].value=Value::Method {flags:1,body:body};store.space.objects[1].value=Value::Integer {number:11};store.space.objects[2].value=Value::Reference {kind:ReferenceKind::Named,object_id:1};
+let mut definitions:[MethodDefinition;64];definitions[0]=MethodDefinition {present:true,object_id:0,flags:1,body:body,scope:Path {absolute:true}};
+let mut arguments:[Value;7];arguments[0]=Value::Buffer {buffer_storage:BufferStorage::Source {declared_size:1,buffer_initializer:Span {unit:7,start:2,end:3}}};
+let result:ExecutionResult=run_method(&input,3,7,&mut store,&definitions,path,&arguments,1,IntegerSize::EightBytes,64);let good:bool=xe_assert(&store,result,ExecutionOutcome::SourceUnit,0,0,4);transition good {true -> (0) _ -> (1)}
+}
+machine Suite::capacity_0(&mut self)->i32 {
+let mut input:[u8;1024];input[0]=164;input[1]=104;input[2]=17;
+let mut path:Path=Path {absolute:true,count:1};path.segments[0]=1313423693;let mut x:Path=Path {absolute:true,count:1};x.segments[0]=1600085848;let mut alias:Path=Path {absolute:true,count:1};alias.segments[0]=1600085842;
+let body:Span=Span {unit:7,end:2};let mut store:ObjectStore=ObjectStore {};store.space.count=3;store.space.object_count=64;
+store.space.entries[0]=Entry {path:path,has_object:true,object:0};store.space.entries[1]=Entry {path:x,has_object:true,object:1};store.space.entries[2]=Entry {path:alias,has_object:true,object:2};
+store.space.objects[0].value=Value::Method {flags:1,body:body};store.space.objects[1].value=Value::Integer {number:11};store.space.objects[2].value=Value::Reference {kind:ReferenceKind::Named,object_id:1};
+let mut definitions:[MethodDefinition;64];definitions[0]=MethodDefinition {present:true,object_id:0,flags:1,body:body,scope:Path {absolute:true}};
+let mut arguments:[Value;7];arguments[0]=Value::Buffer {buffer_storage:BufferStorage::Source {declared_size:1,buffer_initializer:Span {unit:7,start:2,end:3}}};
+let result:ExecutionResult=run_method(&input,3,7,&mut store,&definitions,path,&arguments,1,IntegerSize::EightBytes,64);let good:bool=xe_assert(&store,result,ExecutionOutcome::Capacity,0,0,64);transition good {true -> (0) _ -> (1)}
+}
+machine Suite::capacity_1(&mut self)->i32 {
+let mut input:[u8;1024];input[0]=164;input[1]=104;input[2]=17;
+let mut path:Path=Path {absolute:true,count:1};path.segments[0]=1313423693;let mut x:Path=Path {absolute:true,count:1};x.segments[0]=1600085848;let mut alias:Path=Path {absolute:true,count:1};alias.segments[0]=1600085842;
+let body:Span=Span {unit:7,end:2};let mut store:ObjectStore=ObjectStore {};store.space.count=3;store.space.object_count=64;
+store.space.entries[0]=Entry {path:path,has_object:true,object:0};store.space.entries[1]=Entry {path:x,has_object:true,object:1};store.space.entries[2]=Entry {path:alias,has_object:true,object:2};
+store.space.objects[0].value=Value::Method {flags:1,body:body};store.space.objects[1].value=Value::Integer {number:11};store.space.objects[2].value=Value::Reference {kind:ReferenceKind::Named,object_id:1};
+let mut definitions:[MethodDefinition;64];definitions[0]=MethodDefinition {present:true,object_id:0,flags:1,body:body,scope:Path {absolute:true}};
+let mut arguments:[Value;7];arguments[0]=Value::Buffer {buffer_storage:BufferStorage::Source {declared_size:1,buffer_initializer:Span {unit:7,start:2,end:3}}};
+let result:ExecutionResult=run_method(&input,3,7,&mut store,&definitions,path,&arguments,1,IntegerSize::EightBytes,64);let good:bool=xe_assert(&store,result,ExecutionOutcome::Capacity,0,0,65);transition good {true -> (0) _ -> (1)}
+}

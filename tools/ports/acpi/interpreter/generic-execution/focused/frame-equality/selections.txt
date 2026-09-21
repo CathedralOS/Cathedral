@@ -1,0 +1,16 @@
+Suite::equality_0_0=0
+Suite::equality_0_1=1
+Suite::equality_1_0=0
+Suite::equality_1_1=1
+Suite::equality_2_0=0
+Suite::equality_2_1=1
+Suite::equality_3_0=0
+Suite::equality_3_1=1
+Suite::equality_4_0=0
+Suite::equality_4_1=1
+Suite::equality_5_0=0
+Suite::equality_5_1=1
+Suite::equality_6_0=0
+Suite::equality_6_1=1
+Suite::equality_7_0=0
+Suite::equality_7_1=1

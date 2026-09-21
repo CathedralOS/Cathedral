@@ -1,0 +1,72 @@
+[
+  {
+    "name": "uninitialized",
+    "outcome": "Uninitialized",
+    "success_copy": false
+  },
+  {
+    "name": "capacity",
+    "outcome": "Capacity",
+    "success_copy": false
+  },
+  {
+    "name": "cell_max",
+    "outcome": "MissingObject",
+    "success_copy": false
+  },
+  {
+    "name": "referent_owner",
+    "outcome": "InvalidState",
+    "success_copy": false
+  },
+  {
+    "name": "local_max",
+    "outcome": "InvalidTarget",
+    "success_copy": false
+  },
+  {
+    "name": "argument_max",
+    "outcome": "InvalidTarget",
+    "success_copy": false
+  },
+  {
+    "name": "null_copy",
+    "outcome": "InvalidTarget",
+    "success_copy": false
+  },
+  {
+    "name": "debug_store",
+    "outcome": "UnresolvedService",
+    "success_copy": false
+  },
+  {
+    "name": "null_store",
+    "outcome": "Success",
+    "success_copy": false
+  },
+  {
+    "name": "refof_copy",
+    "outcome": "Success",
+    "success_copy": true
+  },
+  {
+    "name": "index_store",
+    "outcome": "Success",
+    "success_copy": true
+  },
+  {
+    "name": "named_copy",
+    "outcome": "Success",
+    "success_copy": true
+  },
+  {
+    "name": "method_destination",
+    "outcome": "UnsupportedValue",
+    "success_copy": false
+  },
+  {
+    "name": "dangling_referent",
+    "outcome": "MissingObject",
+    "success_copy": false
+  }
+]

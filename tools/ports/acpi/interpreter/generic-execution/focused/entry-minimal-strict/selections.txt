@@ -1,0 +1,8 @@
+Suite::strict_0_number_0=0
+Suite::strict_0_number_1=1
+Suite::strict_0_kind_0=0
+Suite::strict_0_kind_1=1
+Suite::strict_1_number_0=0
+Suite::strict_1_number_1=1
+Suite::strict_1_kind_0=0
+Suite::strict_1_kind_1=1

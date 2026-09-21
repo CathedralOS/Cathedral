@@ -144,12 +144,12 @@ and commands; do not infer those later stages from semantic checking.
 
 The child executor passes 79 checked-interpreter cases and 79 changed-body
 controls for integer methods, arguments/locals, existing named targets, aliases
-and bounded control flow. Its current frame-admission constant proof also passes
-a changed-body control; the complete final bytecode suite uses the distinct
-checked-interpreter stage. See its PORT for exact hashes and evidence.
+and bounded control flow. The original frame-admission constant proof is historical; the current
+generic executor replay retains the unchanged 79 bytecode assertions in the distinct
+checked-interpreter stage. See its generic PORT for exact hashes and evidence.
 
-Complete ACPI-005 still needs generic values/conversions and references, packages,
-fields, dynamic namespace binding, multi-unit source
+Complete ACPI-005 still needs conversion opcodes, general reference/field evaluation,
+dynamic literals and namespace binding, complete Package copy semantics, multi-unit source
 management and comprehensive upstream semantic scenarios. Current loops are bounded but do not establish the
 whole ACPI-006 resource-limit milestone. Large cases may also exceed the
 compiler evaluator's own work budget; that is separate from a runtime profile.
@@ -333,4 +333,13 @@ and publishes only after success. All 305 whole-store checked pairs, three const
 pairs and 297 actual public Store observations pass. Destination identity and links
 are retained; full-value byte storage is reset or replaced atomically. The bounded
 Buffer exclusions, generic target selection and opcode retirement remain pending;
+aggregate source counts are unchanged.
+
+[Generic method execution](execution/generic.PORT.md) transports preloaded Integer/String/Buffer/Package/reference data through methods,
+Return, Store and CopyObject using stable ObjectStore IDs and private bindings.
+Canonical replay passes 55 generic, 79 unchanged integer and 22 unchanged pipeline
+pairs, plus 103 boundary pairs and one constant-evaluator pair. Argument writes
+preserve the primary binding rules; byte copies own their backing, while Package
+children remain explicitly shallow. Dynamic literals, conversion opcodes, general
+reference/field evaluation and services remain pending. ACPI-005 stays partial;
 aggregate source counts are unchanged.

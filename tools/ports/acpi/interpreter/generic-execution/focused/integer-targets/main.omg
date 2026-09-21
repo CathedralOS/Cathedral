@@ -1,0 +1,48 @@
+use aml::model::ObjectStore;
+use aml::model::Value;
+use aml::model::Span;
+use aml::model::BufferStorage;
+use aml::model::ReferenceKind;
+use execution::execution_model::Frame;
+use execution::execution_model::Binding;
+use execution::execution_model::Target;
+use execution::execution_model::ExecutionOutcome;
+use execution::integer_target_bridge::write_integer_target;
+use integer_helpers::integers::IntegerSize;
+data Suite {}
+machine it_case(row:u64,wanted:u64)->i32 {
+ let mut input:[u8;1024];input[0]=17;
+ let mut store:ObjectStore=it_store(row);let mut frame:Frame=Frame {source_length:1,body:Span {unit:7,end:1},end:1,size:IntegerSize::FourBytes};frame.arguments[0]=it_arg(row);frame.locals[0]=it_local(row);
+ let target:Target=it_target(row);
+ let outcome:ExecutionOutcome=write_integer_target(&input,&mut store,&mut frame,target,4294967319,false);
+ let local:Binding=frame.locals[0];let argument:Binding=frame.arguments[0];let payload:u64=it_number(store.space.objects[0].value);let count:u64=store.space.object_count;
+ let initialized:bool=store.bytes.blocks[0].initialized;let tail:u8=store.bytes.blocks[0].bytes[255];let next:bool=store.space.objects[0].has_next;
+ let good:bool=it_result(row,local,argument,payload,count,initialized,tail,next,wanted);
+ transition outcome==ExecutionOutcome::Success && good && frame.pc==0 && frame.end==1 && frame.operation_count==0 {true -> (0) _ -> (1)}
+}
+machine it_store(row:u64)->ObjectStore {
+ let mut store:ObjectStore=ObjectStore {};store.space.object_count=2;store.space.objects[0].value=Value::Integer {number:11};store.space.objects[0].has_next=true;store.space.objects[0].next=1;store.space.objects[1].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:0};store.bytes.blocks[0].bytes[255]=93;
+ transition row==3 {true -> bytes(store) _ -> (store)}
+ state bytes(store:ObjectStore)->ObjectStore {let mut result:ObjectStore=store;result.space.objects[0].value=Value::Buffer {buffer_storage:BufferStorage::Source {declared_size:1,buffer_initializer:Span {unit:7,end:1}}};result}
+}
+machine it_arg(row:u64)->Binding {transition row==2 {true -> (Binding::Shared {shared_id:1}) _ -> (Binding::Shared {shared_id:0})}}
+machine it_local(row:u64)->Binding {transition row==3 {true -> (Binding::Cell {cell_id:0}) _ -> (Binding::Uninitialized)}}
+machine it_target(row:u64)->Target {transition row {1 -> (Target::Argument {argument_index:0}) 2 -> (Target::Argument {argument_index:0}) 4 -> (Target::Named {object_id:0}) _ -> (Target::Local {local_index:0})}}
+machine it_number(value:Value)->u64 {transition value {Value::Integer {number} -> (number) _ -> (999)}}
+machine it_binding_integer(value:Binding)->u64 {transition value {Binding::Integer {number} -> (number) _ -> (999)}}
+machine it_shared(value:Binding,id:u64)->bool {transition value {Binding::Shared {shared_id} -> (shared_id==id) _ -> (false)}}
+machine it_cell(value:Binding,id:u64)->bool {transition value {Binding::Cell {cell_id} -> (cell_id==id) _ -> (false)}}
+machine it_result(row:u64,local:Binding,argument:Binding,payload:u64,count:u64,initialized:bool,tail:u8,next:bool,wanted:u64)->bool {
+ let local_number:u64=it_binding_integer(local);let arg_number:u64=it_binding_integer(argument);let shared_zero:bool=it_shared(argument,0);let shared_one:bool=it_shared(argument,1);let cell:bool=it_cell(local,0);
+ transition row {0 -> (local_number==wanted && shared_zero && payload==11 && count==2 && tail==93 && next) 1 -> (arg_number==wanted && payload==11 && count==2 && tail==93 && next) 2 -> (shared_one && payload==wanted && count==2 && !initialized && tail==0 && next) 3 -> (cell && shared_zero && payload==wanted && count==2 && !initialized && tail==0 && next) _ -> (shared_zero && payload==wanted && count==2 && !initialized && tail==0 && next)}
+}
+machine Suite::integer_target_0_0(&mut self)->i32 {let result:i32=it_case(0,23);result}
+machine Suite::integer_target_0_1(&mut self)->i32 {let result:i32=it_case(0,24);result}
+machine Suite::integer_target_1_0(&mut self)->i32 {let result:i32=it_case(1,23);result}
+machine Suite::integer_target_1_1(&mut self)->i32 {let result:i32=it_case(1,24);result}
+machine Suite::integer_target_2_0(&mut self)->i32 {let result:i32=it_case(2,23);result}
+machine Suite::integer_target_2_1(&mut self)->i32 {let result:i32=it_case(2,24);result}
+machine Suite::integer_target_3_0(&mut self)->i32 {let result:i32=it_case(3,23);result}
+machine Suite::integer_target_3_1(&mut self)->i32 {let result:i32=it_case(3,24);result}
+machine Suite::integer_target_4_0(&mut self)->i32 {let result:i32=it_case(4,23);result}
+machine Suite::integer_target_4_1(&mut self)->i32 {let result:i32=it_case(4,24);result}

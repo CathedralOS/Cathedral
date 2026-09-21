@@ -1,0 +1,39 @@
+use aml::model::Value;
+use aml::model::Span;
+use aml::model::BufferStorage;
+use aml::model::ObjectStore;
+use execution::execution_model::Frame;
+use execution::execution_model::Operation;
+use execution::execution_model::Operand;
+use execution::execution_model::Binding;
+use execution::execution_model::Target;
+use execution::execution_model::ExecutionOutcome;
+use execution::retire::retire_operation;
+use integer_helpers::integers::IntegerSize;
+data Suite {}
+machine rt_case(copy:bool,wanted:u64)->i32 {
+ let mut input:[u8;1024];input[0]=17;
+ let mut store:ObjectStore=ObjectStore {};store.space.object_count=1;
+ store.space.objects[0].value=Value::Buffer {buffer_storage:BufferStorage::Source {declared_size:1,buffer_initializer:Span {unit:7,end:1}}};
+ let mut frame:Frame=Frame {source_length:1,body:Span {unit:7,end:1},end:1,size:IntegerSize::EightBytes};
+ let operation:Operation=rt_operation(copy);
+ let outcome:ExecutionOutcome=retire_operation(&input,&mut store,&mut frame,operation);
+ let checked:bool=rt_result(&store,&frame,copy,wanted);
+ transition outcome==ExecutionOutcome::Success && checked {true -> (0) _ -> (1)}
+}
+machine rt_operation(copy:bool)->Operation {
+ let mut operation:Operation=Operation {opcode:0xa4,value_arity:1,count:1};operation.operands[0]=Operand::Object {object_id:0};
+ transition copy {true -> copying(operation) _ -> (operation)}
+ state copying(operation:Operation)->Operation {let mut result:Operation=operation;result.opcode=0x9d;result.target_arity=1;result.count=2;result.first_target=Target::Local {local_index:0};result}
+}
+machine rt_result(store:&ObjectStore,frame:&Frame,copy:bool,wanted:u64)->bool {
+ transition copy {true -> copied(store,frame,wanted) _ -> returned(store,frame,wanted)}
+ state returned(store:&ObjectStore,frame:&Frame,wanted:u64)->bool {let id:u64=rt_operand(frame.return_value);frame.returned && frame.has_return_value && id==wanted && store.space.object_count==1}
+ state copied(store:&ObjectStore,frame:&Frame,wanted:u64)->bool {let id:u64=rt_binding(frame.locals[0]);id==wanted && store.space.object_count==2 && store.bytes.blocks[1].initialized && store.bytes.blocks[1].length==1 && store.bytes.blocks[1].bytes[0]==17}
+}
+machine rt_operand(value:Operand)->u64 {transition value {Operand::Object {object_id} -> (object_id) _ -> (999)}}
+machine rt_binding(value:Binding)->u64 {transition value {Binding::Cell {cell_id} -> (cell_id) _ -> (999)}}
+machine Suite::retire_0_0(&mut self)->i32 {let result:i32=rt_case(false,0);result}
+machine Suite::retire_0_1(&mut self)->i32 {let result:i32=rt_case(false,1);result}
+machine Suite::retire_1_0(&mut self)->i32 {let result:i32=rt_case(true,1);result}
+machine Suite::retire_1_1(&mut self)->i32 {let result:i32=rt_case(true,2);result}

@@ -5,6 +5,8 @@ use execution_model::ExecutionOutcome;
 use execution_model::Frame;
 use execution_model::Operation;
 use execution_model::Target;
+use execution_model::Operand;
+use aml::model::Value;
 use integer_helpers::integers::normalize;
 pub machine push_operation(frame: &mut Frame, operation: Operation) -> ExecutionOutcome {
     let index: u64 = frame.operation_count;
@@ -19,6 +21,18 @@ pub machine current_operation(frame: &Frame) -> Operation {
     transition frame.operation_count > 0 && frame.operation_count <= 16 { true -> at(frame, frame.operation_count - 1) _ -> (Operation {}) }
     state at(frame: &Frame, index: u64) -> Operation { transition index < 16 { true -> (frame.operations[index]) _ -> (Operation {}) } }
 }
+// Read readiness metadata without capturing seven generic operand payloads.
+pub data OperationHeader [copy] {value_arity:u64;target_arity:u64;count:u64;}
+pub machine operation_header(frame:&Frame)->OperationHeader {
+ let count:u64=frame.operation_count;
+ transition count>0 && count<=16 {true -> at(frame,count-1) _ -> (OperationHeader {})}
+ state at(frame:&Frame,index:u64)->OperationHeader {
+  transition index<16 {true -> fields(frame,index) _ -> (OperationHeader {})}
+ }
+ state fields(frame:&Frame,index:u64)->OperationHeader {
+  OperationHeader {value_arity:frame.operations[index].value_arity,target_arity:frame.operations[index].target_arity,count:frame.operations[index].count}
+ }
+}
 pub machine pop_operation(frame: &mut Frame) -> ExecutionOutcome {
     transition frame.operation_count > 0 && frame.operation_count <= 16 {
         true -> pop(frame) _ -> (ExecutionOutcome::InvalidState)
@@ -26,19 +40,22 @@ pub machine pop_operation(frame: &mut Frame) -> ExecutionOutcome {
     state pop(frame: &mut Frame) -> ExecutionOutcome { frame.operation_count = frame.operation_count - 1; ExecutionOutcome::Success }
 }
 pub machine contribute_integer(frame: &mut Frame, number: u64) -> ExecutionOutcome {
-    let value: u64 = normalize(frame.size, number);
+    let value:u64=normalize(frame.size,number);
+    let result:ExecutionOutcome=contribute_operand(frame,Operand::Integer {number:value});result
+}
+pub machine contribute_operand(frame:&mut Frame,value:Operand)->ExecutionOutcome {
     transition { frame.operation_count == 0 -> (ExecutionOutcome::Success)
         frame.operation_count <= 16 -> at(frame, frame.operation_count - 1, value)
         _ -> (ExecutionOutcome::InvalidState) }
-    state at(frame: &mut Frame, index: u64, value: u64) -> ExecutionOutcome {
+    state at(frame: &mut Frame, index: u64, value: Operand) -> ExecutionOutcome {
         transition index < 16 { true -> role(frame, index, value) _ -> (ExecutionOutcome::InvalidState) }
     }
-    state role(frame: &mut Frame, index: u64, value: u64) -> ExecutionOutcome {
+    state role(frame: &mut Frame, index: u64, value: Operand) -> ExecutionOutcome {
         let count: u64 = frame.operations[index].count;
         let expected: u64 = frame.operations[index].value_arity;
         transition count < expected && count < 7 { true -> put(frame, index, count, value) _ -> (ExecutionOutcome::InvalidState) }
     }
-    state put(frame: &mut Frame, index: u64, count: u64, value: u64) -> ExecutionOutcome {
+    state put(frame: &mut Frame, index: u64, count: u64, value: Operand) -> ExecutionOutcome {
         frame.operations[index].operands[count] = value;
         frame.operations[index].count = count + 1; ExecutionOutcome::Success
     }

@@ -1,0 +1,120 @@
+use aml::model::ObjectStore;
+use aml::model::Value;
+use aml::model::ReferenceKind;
+use aml::model::BufferStorage;
+use execution::execution_model::Binding;
+use execution::execution_model::BindingResult;
+use execution::execution_model::Operand;
+use execution::execution_model::ExecutionOutcome;
+use execution::generic_target_model::TargetSelection;
+use execution::generic_target_model::TargetAction;
+use execution::generic_target_values::classify_target;
+use execution::generic_target_values::apply_target_action;
+data Suite {}
+machine ta_classify(row:u64,wanted:u64)->i32 {
+ let store:ObjectStore=ta_store(row);let selected:TargetSelection=ta_selection(row);let operand:Operand=ta_operand(row);let copying:bool=ta_copy(row);
+ let action:TargetAction=classify_target(&store,selected,operand,copying);
+ let result:u64=ta_action(action);
+ transition result==wanted {true -> (0) _ -> (1)}
+}
+machine ta_store(row:u64)->ObjectStore {
+ let mut store:ObjectStore=ObjectStore {};store.space.object_count=4;store.space.objects[0].value=Value::Integer {number:11};store.space.objects[1].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:0};store.space.objects[3].value=Value::OperationRegion {};
+ transition row==19 {true -> invalid(store) _ -> (store)}
+ state invalid(store:ObjectStore)->ObjectStore {let mut result:ObjectStore=store;result.space.object_count=18446744073709551615;result}
+}
+machine ta_selection(row:u64)->TargetSelection {transition row {
+ 0 -> (TargetSelection::Null) 1 -> (TargetSelection::Null) 2 -> (TargetSelection::Debug) 3 -> (TargetSelection::Debug)
+ 4 -> (TargetSelection::Local {local_index:0,local_binding:Binding::Uninitialized})
+ 5 -> (TargetSelection::Local {local_index:18446744073709551615,local_binding:Binding::Uninitialized})
+ 6 -> (TargetSelection::Argument {argument_index:7,argument_binding:Binding::Uninitialized})
+ 7 -> (TargetSelection::Argument {argument_index:0,argument_binding:Binding::Shared {shared_id:0}})
+ 8 -> (TargetSelection::Argument {argument_index:0,argument_binding:Binding::Shared {shared_id:1}})
+ 12 -> (TargetSelection::Named {object_id:2}) 13 -> (TargetSelection::Named {object_id:3})
+ 14 -> (TargetSelection::Named {object_id:18446744073709551615}) 15 -> (TargetSelection::Named {object_id:18446744073709551615})
+ 16 -> (TargetSelection::Failure {outcome:ExecutionOutcome::Capacity})
+ _ -> (TargetSelection::Named {object_id:0})}}
+machine ta_operand(row:u64)->Operand {transition row {11 -> (Operand::Object {object_id:1}) 17 -> (Operand::Object {object_id:18446744073709551615}) 18 -> (Operand::Uninitialized) _ -> (Operand::Integer {number:22})}}
+machine ta_copy(row:u64)->bool {row==1 || row==3 || row==9 || row==15}
+machine ta_action(action:TargetAction)->u64 {transition action {
+ TargetAction::NoWrite -> (1)
+ TargetAction::Replace {binding} -> replaced(binding)
+ TargetAction::CopyTo {object_id,result_binding} -> copied(object_id,result_binding)
+ TargetAction::Failure {outcome} -> failed(outcome)}
+ state replaced(binding:Binding)->u64 {transition binding {Binding::Uninitialized -> (2) Binding::Shared {shared_id} -> shared_code(shared_id) _ -> (999)}}
+ state copied(id:u64,binding:Binding)->u64 {transition binding {Binding::Uninitialized -> plain(id) Binding::Shared {shared_id} -> copied_code(id,shared_id) _ -> (999)}}
+ state plain(id:u64)->u64 {transition {id==18446744073709551615 -> (29) id<64 -> (20+id) _ -> (998)}}
+ state shared_code(id:u64)->u64 {transition id<64 {true -> (10+id) _ -> (998)}}
+ state copied_code(id:u64,shared_id:u64)->u64 {transition id<64 && shared_id<64 {true -> (100+shared_id+id) _ -> (998)}}
+ state failed(outcome:ExecutionOutcome)->u64 {transition outcome {ExecutionOutcome::InvalidTarget -> (30) ExecutionOutcome::UnresolvedService -> (31) ExecutionOutcome::MissingObject -> (32) ExecutionOutcome::UnsupportedValue -> (33) ExecutionOutcome::UnresolvedRegion -> (34) ExecutionOutcome::Capacity -> (35) ExecutionOutcome::InvalidState -> (36) _ -> (999)}}
+}
+machine ta_dispatch(row:u64,wanted:u64)->i32 {
+ let input:[u8;1024];let mut store:ObjectStore=ta_store(0);let action:TargetAction=ta_for_dispatch(row);
+ let result:BindingResult=apply_target_action(&input,0,7,&mut store,action,Operand::Integer {number:22});
+ let valid:bool=ta_dispatched(result,row);let number:u64=ta_number(store.space.objects[0].value);
+ transition valid && number==wanted && store.space.object_count==4 {true -> (0) _ -> (1)}
+}
+machine ta_for_dispatch(row:u64)->TargetAction {transition row {
+ 0 -> (TargetAction::NoWrite) 1 -> (TargetAction::Replace {binding:Binding::Shared {shared_id:0}})
+ 2 -> (TargetAction::CopyTo {object_id:0,result_binding:Binding::Shared {shared_id:1}})
+ 3 -> (TargetAction::Failure {outcome:ExecutionOutcome::InvalidTarget})
+ _ -> (TargetAction::CopyTo {object_id:18446744073709551615,result_binding:Binding::Shared {shared_id:1}})}}
+machine ta_dispatched(result:BindingResult,row:u64)->bool {transition row {
+ 0 -> (result.outcome==ExecutionOutcome::Success)
+ 1 -> integer(result.outcome,result.binding)
+ 2 -> reference(result.outcome,result.binding)
+ 3 -> (result.outcome==ExecutionOutcome::InvalidTarget)
+ _ -> (result.outcome==ExecutionOutcome::MissingObject)}
+ state integer(outcome:ExecutionOutcome,binding:Binding)->bool {transition binding {Binding::Integer {number} -> (outcome==ExecutionOutcome::Success && number==22) _ -> (false)}}
+ state reference(outcome:ExecutionOutcome,binding:Binding)->bool {transition binding {Binding::Shared {shared_id} -> (outcome==ExecutionOutcome::Success && shared_id==1) _ -> (false)}}
+}
+machine ta_number(value:Value)->u64 {transition value {Value::Integer {number} -> (number) _ -> (999)}}
+machine Suite::classify_0_0(&mut self)->i32 {let result:i32=ta_classify(0,1);result}
+machine Suite::classify_0_1(&mut self)->i32 {let result:i32=ta_classify(0,2);result}
+machine Suite::classify_1_0(&mut self)->i32 {let result:i32=ta_classify(1,30);result}
+machine Suite::classify_1_1(&mut self)->i32 {let result:i32=ta_classify(1,31);result}
+machine Suite::classify_2_0(&mut self)->i32 {let result:i32=ta_classify(2,31);result}
+machine Suite::classify_2_1(&mut self)->i32 {let result:i32=ta_classify(2,32);result}
+machine Suite::classify_3_0(&mut self)->i32 {let result:i32=ta_classify(3,30);result}
+machine Suite::classify_3_1(&mut self)->i32 {let result:i32=ta_classify(3,31);result}
+machine Suite::classify_4_0(&mut self)->i32 {let result:i32=ta_classify(4,2);result}
+machine Suite::classify_4_1(&mut self)->i32 {let result:i32=ta_classify(4,3);result}
+machine Suite::classify_5_0(&mut self)->i32 {let result:i32=ta_classify(5,30);result}
+machine Suite::classify_5_1(&mut self)->i32 {let result:i32=ta_classify(5,31);result}
+machine Suite::classify_6_0(&mut self)->i32 {let result:i32=ta_classify(6,30);result}
+machine Suite::classify_6_1(&mut self)->i32 {let result:i32=ta_classify(6,31);result}
+machine Suite::classify_7_0(&mut self)->i32 {let result:i32=ta_classify(7,10);result}
+machine Suite::classify_7_1(&mut self)->i32 {let result:i32=ta_classify(7,11);result}
+machine Suite::classify_8_0(&mut self)->i32 {let result:i32=ta_classify(8,101);result}
+machine Suite::classify_8_1(&mut self)->i32 {let result:i32=ta_classify(8,102);result}
+machine Suite::classify_9_0(&mut self)->i32 {let result:i32=ta_classify(9,20);result}
+machine Suite::classify_9_1(&mut self)->i32 {let result:i32=ta_classify(9,21);result}
+machine Suite::classify_10_0(&mut self)->i32 {let result:i32=ta_classify(10,20);result}
+machine Suite::classify_10_1(&mut self)->i32 {let result:i32=ta_classify(10,21);result}
+machine Suite::classify_11_0(&mut self)->i32 {let result:i32=ta_classify(11,33);result}
+machine Suite::classify_11_1(&mut self)->i32 {let result:i32=ta_classify(11,34);result}
+machine Suite::classify_12_0(&mut self)->i32 {let result:i32=ta_classify(12,22);result}
+machine Suite::classify_12_1(&mut self)->i32 {let result:i32=ta_classify(12,23);result}
+machine Suite::classify_13_0(&mut self)->i32 {let result:i32=ta_classify(13,34);result}
+machine Suite::classify_13_1(&mut self)->i32 {let result:i32=ta_classify(13,35);result}
+machine Suite::classify_14_0(&mut self)->i32 {let result:i32=ta_classify(14,32);result}
+machine Suite::classify_14_1(&mut self)->i32 {let result:i32=ta_classify(14,33);result}
+machine Suite::classify_15_0(&mut self)->i32 {let result:i32=ta_classify(15,29);result}
+machine Suite::classify_15_1(&mut self)->i32 {let result:i32=ta_classify(15,30);result}
+machine Suite::classify_16_0(&mut self)->i32 {let result:i32=ta_classify(16,35);result}
+machine Suite::classify_16_1(&mut self)->i32 {let result:i32=ta_classify(16,36);result}
+machine Suite::classify_17_0(&mut self)->i32 {let result:i32=ta_classify(17,36);result}
+machine Suite::classify_17_1(&mut self)->i32 {let result:i32=ta_classify(17,37);result}
+machine Suite::classify_18_0(&mut self)->i32 {let result:i32=ta_classify(18,33);result}
+machine Suite::classify_18_1(&mut self)->i32 {let result:i32=ta_classify(18,34);result}
+machine Suite::classify_19_0(&mut self)->i32 {let result:i32=ta_classify(19,32);result}
+machine Suite::classify_19_1(&mut self)->i32 {let result:i32=ta_classify(19,33);result}
+machine Suite::dispatch_0_0(&mut self)->i32 {let result:i32=ta_dispatch(0,11);result}
+machine Suite::dispatch_0_1(&mut self)->i32 {let result:i32=ta_dispatch(0,12);result}
+machine Suite::dispatch_1_0(&mut self)->i32 {let result:i32=ta_dispatch(1,11);result}
+machine Suite::dispatch_1_1(&mut self)->i32 {let result:i32=ta_dispatch(1,12);result}
+machine Suite::dispatch_2_0(&mut self)->i32 {let result:i32=ta_dispatch(2,22);result}
+machine Suite::dispatch_2_1(&mut self)->i32 {let result:i32=ta_dispatch(2,23);result}
+machine Suite::dispatch_3_0(&mut self)->i32 {let result:i32=ta_dispatch(3,11);result}
+machine Suite::dispatch_3_1(&mut self)->i32 {let result:i32=ta_dispatch(3,12);result}
+machine Suite::dispatch_4_0(&mut self)->i32 {let result:i32=ta_dispatch(4,11);result}
+machine Suite::dispatch_4_1(&mut self)->i32 {let result:i32=ta_dispatch(4,12);result}

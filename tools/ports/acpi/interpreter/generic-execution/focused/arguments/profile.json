@@ -1,0 +1,6 @@
+{
+  "stage": "checked-interpreter",
+  "pairs": 15,
+  "control": "changed expected value/outcome inside the authored scenario; requires observed return 1",
+  "native_execution": false
+}

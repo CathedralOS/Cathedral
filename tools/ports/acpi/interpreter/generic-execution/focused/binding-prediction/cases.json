@@ -1,0 +1,322 @@
+[
+  {
+    "source_case": 0,
+    "existing_cell": false,
+    "outcome": "Success"
+  },
+  {
+    "source_case": 0,
+    "existing_cell": true,
+    "outcome": "Success"
+  },
+  {
+    "source_case": 1,
+    "existing_cell": false,
+    "outcome": "Success"
+  },
+  {
+    "source_case": 1,
+    "existing_cell": true,
+    "outcome": "Success"
+  },
+  {
+    "source_case": 2,
+    "existing_cell": false,
+    "outcome": "Success"
+  },
+  {
+    "source_case": 2,
+    "existing_cell": true,
+    "outcome": "Success"
+  },
+  {
+    "source_case": 3,
+    "existing_cell": false,
+    "outcome": "Success"
+  },
+  {
+    "source_case": 3,
+    "existing_cell": true,
+    "outcome": "Success"
+  },
+  {
+    "source_case": 4,
+    "existing_cell": false,
+    "outcome": "Success"
+  },
+  {
+    "source_case": 4,
+    "existing_cell": true,
+    "outcome": "Success"
+  },
+  {
+    "source_case": 5,
+    "existing_cell": false,
+    "outcome": "Success"
+  },
+  {
+    "source_case": 5,
+    "existing_cell": true,
+    "outcome": "Success"
+  },
+  {
+    "source_case": 6,
+    "existing_cell": false,
+    "outcome": "Success"
+  },
+  {
+    "source_case": 6,
+    "existing_cell": true,
+    "outcome": "Success"
+  },
+  {
+    "source_case": 7,
+    "existing_cell": false,
+    "outcome": "Success"
+  },
+  {
+    "source_case": 7,
+    "existing_cell": true,
+    "outcome": "Success"
+  },
+  {
+    "source_case": 8,
+    "existing_cell": false,
+    "outcome": "Success"
+  },
+  {
+    "source_case": 8,
+    "existing_cell": true,
+    "outcome": "Success"
+  },
+  {
+    "source_case": 9,
+    "existing_cell": false,
+    "outcome": "Success"
+  },
+  {
+    "source_case": 9,
+    "existing_cell": true,
+    "outcome": "Success"
+  },
+  {
+    "source_case": 10,
+    "existing_cell": false,
+    "outcome": "Success"
+  },
+  {
+    "source_case": 10,
+    "existing_cell": true,
+    "outcome": "Success"
+  },
+  {
+    "source_case": 11,
+    "existing_cell": false,
+    "outcome": "Success"
+  },
+  {
+    "source_case": 11,
+    "existing_cell": true,
+    "outcome": "Success"
+  },
+  {
+    "source_case": 12,
+    "existing_cell": false,
+    "outcome": "Success"
+  },
+  {
+    "source_case": 12,
+    "existing_cell": true,
+    "outcome": "Success"
+  },
+  {
+    "source_case": 13,
+    "existing_cell": false,
+    "outcome": "Success"
+  },
+  {
+    "source_case": 13,
+    "existing_cell": true,
+    "outcome": "Success"
+  },
+  {
+    "source_case": 14,
+    "existing_cell": false,
+    "outcome": "Success"
+  },
+  {
+    "source_case": 14,
+    "existing_cell": true,
+    "outcome": "Success"
+  },
+  {
+    "source_case": 15,
+    "existing_cell": false,
+    "outcome": "Uninitialized"
+  },
+  {
+    "source_case": 15,
+    "existing_cell": true,
+    "outcome": "Uninitialized"
+  },
+  {
+    "source_case": 16,
+    "existing_cell": false,
+    "outcome": "UnsupportedValue"
+  },
+  {
+    "source_case": 16,
+    "existing_cell": true,
+    "outcome": "UnsupportedValue"
+  },
+  {
+    "source_case": 17,
+    "existing_cell": false,
+    "outcome": "InvalidState"
+  },
+  {
+    "source_case": 17,
+    "existing_cell": true,
+    "outcome": "InvalidState"
+  },
+  {
+    "source_case": 18,
+    "existing_cell": false,
+    "outcome": "InvalidState"
+  },
+  {
+    "source_case": 18,
+    "existing_cell": true,
+    "outcome": "InvalidState"
+  },
+  {
+    "source_case": 19,
+    "existing_cell": false,
+    "outcome": "InvalidState"
+  },
+  {
+    "source_case": 19,
+    "existing_cell": true,
+    "outcome": "InvalidState"
+  },
+  {
+    "source_case": 20,
+    "existing_cell": false,
+    "outcome": "Capacity"
+  },
+  {
+    "source_case": 20,
+    "existing_cell": true,
+    "outcome": "Success"
+  },
+  {
+    "source_case": 21,
+    "existing_cell": false,
+    "outcome": "InvalidState"
+  },
+  {
+    "source_case": 21,
+    "existing_cell": true,
+    "outcome": "InvalidState"
+  },
+  {
+    "source_case": 22,
+    "existing_cell": false,
+    "outcome": "InvalidState"
+  },
+  {
+    "source_case": 22,
+    "existing_cell": true,
+    "outcome": "InvalidState"
+  },
+  {
+    "source_case": 23,
+    "existing_cell": false,
+    "outcome": "InvalidState"
+  },
+  {
+    "source_case": 23,
+    "existing_cell": true,
+    "outcome": "InvalidState"
+  },
+  {
+    "source_case": 24,
+    "existing_cell": false,
+    "outcome": "InvalidState"
+  },
+  {
+    "source_case": 24,
+    "existing_cell": true,
+    "outcome": "MissingObject"
+  },
+  {
+    "source_case": 25,
+    "existing_cell": false,
+    "outcome": "Success"
+  },
+  {
+    "source_case": 25,
+    "existing_cell": true,
+    "outcome": "MissingObject"
+  },
+  {
+    "source_case": 26,
+    "existing_cell": false,
+    "outcome": "Success"
+  },
+  {
+    "source_case": 26,
+    "existing_cell": true,
+    "outcome": "Success"
+  },
+  {
+    "source_case": 27,
+    "existing_cell": false,
+    "outcome": "Success"
+  },
+  {
+    "source_case": 27,
+    "existing_cell": true,
+    "outcome": "Success"
+  },
+  {
+    "source_case": 28,
+    "existing_cell": false,
+    "outcome": "UnsupportedValue"
+  },
+  {
+    "source_case": 28,
+    "existing_cell": true,
+    "outcome": "UnsupportedValue"
+  },
+  {
+    "source_case": 29,
+    "existing_cell": false,
+    "outcome": "UnresolvedRegion"
+  },
+  {
+    "source_case": 29,
+    "existing_cell": true,
+    "outcome": "UnresolvedRegion"
+  },
+  {
+    "source_case": 30,
+    "existing_cell": false,
+    "outcome": "UnsupportedValue"
+  },
+  {
+    "source_case": 30,
+    "existing_cell": true,
+    "outcome": "UnsupportedValue"
+  },
+  {
+    "source_case": 31,
+    "existing_cell": false,
+    "outcome": "Success"
+  },
+  {
+    "source_case": 31,
+    "existing_cell": true,
+    "outcome": "Success"
+  }
+]

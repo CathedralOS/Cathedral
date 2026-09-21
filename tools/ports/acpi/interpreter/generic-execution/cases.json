@@ -1,0 +1,756 @@
+[
+  {
+    "name": "return_buffer",
+    "table": "08585f5f5f11060a03112233140b4d41494e00a4585f5f5f",
+    "kind": 2,
+    "number": 0,
+    "bytes": "112233",
+    "after": {},
+    "object_count": 2,
+    "error": "Success",
+    "note": "",
+    "setup": [],
+    "mutate_source": false,
+    "bits": 64
+  },
+  {
+    "name": "copy_local_buffer",
+    "table": "08585f5f5f11060a03112233140e4d41494e009d585f5f5f60a460",
+    "kind": 2,
+    "number": 0,
+    "bytes": "112233",
+    "after": {},
+    "object_count": 3,
+    "error": "Success",
+    "note": "",
+    "setup": [],
+    "mutate_source": false,
+    "bits": 64
+  },
+  {
+    "name": "call_return_buffer",
+    "table": "08585f5f5f11060a03112233140f4d41494e00a443414c5f585f5f5f140843414c5f01a468",
+    "kind": 2,
+    "number": 0,
+    "bytes": "112233",
+    "after": {},
+    "object_count": 3,
+    "error": "Success",
+    "note": "",
+    "setup": [],
+    "mutate_source": false,
+    "bits": 64
+  },
+  {
+    "name": "copy_named_buffer",
+    "table": "08585f5f5f11060a0311223308595f5f5f0014144d41494e009d585f5f5f595f5f5fa4595f5f5f",
+    "kind": 2,
+    "number": 0,
+    "bytes": "112233",
+    "after": {},
+    "object_count": 3,
+    "error": "Success",
+    "note": "",
+    "setup": [],
+    "mutate_source": false,
+    "bits": 64
+  },
+  {
+    "name": "return_string",
+    "table": "08585f5f5f0d41424300140b4d41494e00a4585f5f5f",
+    "kind": 3,
+    "number": 0,
+    "bytes": "414243",
+    "after": {},
+    "object_count": 2,
+    "error": "Success",
+    "note": "",
+    "setup": [],
+    "mutate_source": false,
+    "bits": 64
+  },
+  {
+    "name": "copy_local_string",
+    "table": "08585f5f5f0d41424300140e4d41494e009d585f5f5f60a460",
+    "kind": 3,
+    "number": 0,
+    "bytes": "414243",
+    "after": {},
+    "object_count": 3,
+    "error": "Success",
+    "note": "",
+    "setup": [],
+    "mutate_source": false,
+    "bits": 64
+  },
+  {
+    "name": "call_return_string",
+    "table": "08585f5f5f0d41424300140f4d41494e00a443414c5f585f5f5f140843414c5f01a468",
+    "kind": 3,
+    "number": 0,
+    "bytes": "414243",
+    "after": {},
+    "object_count": 3,
+    "error": "Success",
+    "note": "",
+    "setup": [],
+    "mutate_source": false,
+    "bits": 64
+  },
+  {
+    "name": "copy_named_string",
+    "table": "08585f5f5f0d4142430008595f5f5f0014144d41494e009d585f5f5f595f5f5fa4595f5f5f",
+    "kind": 3,
+    "number": 0,
+    "bytes": "414243",
+    "after": {},
+    "object_count": 3,
+    "error": "Success",
+    "note": "",
+    "setup": [],
+    "mutate_source": false,
+    "bits": 64
+  },
+  {
+    "name": "return_empty_buffer",
+    "table": "08585f5f5f110200140b4d41494e00a4585f5f5f",
+    "kind": 2,
+    "number": 0,
+    "bytes": "",
+    "after": {},
+    "object_count": 2,
+    "error": "Success",
+    "note": "",
+    "setup": [],
+    "mutate_source": false,
+    "bits": 64
+  },
+  {
+    "name": "copy_local_empty_buffer",
+    "table": "08585f5f5f110200140e4d41494e009d585f5f5f60a460",
+    "kind": 2,
+    "number": 0,
+    "bytes": "",
+    "after": {},
+    "object_count": 3,
+    "error": "Success",
+    "note": "",
+    "setup": [],
+    "mutate_source": false,
+    "bits": 64
+  },
+  {
+    "name": "call_return_empty_buffer",
+    "table": "08585f5f5f110200140f4d41494e00a443414c5f585f5f5f140843414c5f01a468",
+    "kind": 2,
+    "number": 0,
+    "bytes": "",
+    "after": {},
+    "object_count": 3,
+    "error": "Success",
+    "note": "",
+    "setup": [],
+    "mutate_source": false,
+    "bits": 64
+  },
+  {
+    "name": "copy_named_empty_buffer",
+    "table": "08585f5f5f11020008595f5f5f0014144d41494e009d585f5f5f595f5f5fa4595f5f5f",
+    "kind": 2,
+    "number": 0,
+    "bytes": "",
+    "after": {},
+    "object_count": 3,
+    "error": "Success",
+    "note": "",
+    "setup": [],
+    "mutate_source": false,
+    "bits": 64
+  },
+  {
+    "name": "return_empty_string",
+    "table": "08585f5f5f0d00140b4d41494e00a4585f5f5f",
+    "kind": 3,
+    "number": 0,
+    "bytes": "",
+    "after": {},
+    "object_count": 2,
+    "error": "Success",
+    "note": "",
+    "setup": [],
+    "mutate_source": false,
+    "bits": 64
+  },
+  {
+    "name": "copy_local_empty_string",
+    "table": "08585f5f5f0d00140e4d41494e009d585f5f5f60a460",
+    "kind": 3,
+    "number": 0,
+    "bytes": "",
+    "after": {},
+    "object_count": 3,
+    "error": "Success",
+    "note": "",
+    "setup": [],
+    "mutate_source": false,
+    "bits": 64
+  },
+  {
+    "name": "call_return_empty_string",
+    "table": "08585f5f5f0d00140f4d41494e00a443414c5f585f5f5f140843414c5f01a468",
+    "kind": 3,
+    "number": 0,
+    "bytes": "",
+    "after": {},
+    "object_count": 3,
+    "error": "Success",
+    "note": "",
+    "setup": [],
+    "mutate_source": false,
+    "bits": 64
+  },
+  {
+    "name": "copy_named_empty_string",
+    "table": "08585f5f5f0d0008595f5f5f0014144d41494e009d585f5f5f595f5f5fa4595f5f5f",
+    "kind": 3,
+    "number": 0,
+    "bytes": "",
+    "after": {},
+    "object_count": 3,
+    "error": "Success",
+    "note": "",
+    "setup": [],
+    "mutate_source": false,
+    "bits": 64
+  },
+  {
+    "name": "package_return",
+    "table": "08585f5f5f1206020a0b0a16140b4d41494e00a4585f5f5f",
+    "kind": 4,
+    "number": 2,
+    "bytes": "",
+    "after": {},
+    "object_count": 4,
+    "error": "Success",
+    "note": "",
+    "setup": [],
+    "mutate_source": false,
+    "bits": 64
+  },
+  {
+    "name": "package_copy_local",
+    "table": "08585f5f5f1206020a0b0a16140e4d41494e009d585f5f5f60a460",
+    "kind": 4,
+    "number": 2,
+    "bytes": "",
+    "after": {},
+    "object_count": 5,
+    "error": "Success",
+    "note": "",
+    "setup": [],
+    "mutate_source": false,
+    "bits": 64
+  },
+  {
+    "name": "package_copy_named",
+    "table": "08585f5f5f1206020a0b0a1608595f5f5f0014144d41494e009d585f5f5f595f5f5fa4595f5f5f",
+    "kind": 4,
+    "number": 2,
+    "bytes": "",
+    "after": {},
+    "object_count": 5,
+    "error": "Success",
+    "note": "Shallow child identities retained; not a general deep package clone claim.",
+    "setup": [],
+    "mutate_source": false,
+    "bits": 64
+  },
+  {
+    "name": "store_argument_plain_named",
+    "table": "08585f5f5f0a0b140f4d41494e00a443414c5f585f5f5f140c43414c5f01700a1668a468",
+    "kind": 1,
+    "number": 22,
+    "bytes": "",
+    "after": {
+      "X": 11
+    },
+    "object_count": 3,
+    "error": "Success",
+    "note": "Primary call-by-reference-constant. Public pin changes X to22.",
+    "setup": [],
+    "mutate_source": false,
+    "bits": 64
+  },
+  {
+    "name": "store_argument_plain_local",
+    "table": "14114d41494e00700a0b6043414c5f60a460140c43414c5f01700a1668a468",
+    "kind": 1,
+    "number": 11,
+    "bytes": "",
+    "after": {},
+    "object_count": 2,
+    "error": "Success",
+    "note": "Primary caller binding isolation; public pin returns22.",
+    "setup": [],
+    "mutate_source": false,
+    "bits": 64
+  },
+  {
+    "name": "store_argument_buffer_replace",
+    "table": "08585f5f5f11030111140f4d41494e00a443414c5f585f5f5f140c43414c5f01700a1668a468",
+    "kind": 1,
+    "number": 22,
+    "bytes": "",
+    "after": {},
+    "object_count": 3,
+    "error": "Success",
+    "note": "",
+    "setup": [],
+    "mutate_source": false,
+    "bits": 64
+  },
+  {
+    "name": "copy_argument_plain_named",
+    "table": "08585f5f5f0a0b140f4d41494e00a443414c5f585f5f5f140c43414c5f019d0a1668a468",
+    "kind": 1,
+    "number": 22,
+    "bytes": "",
+    "after": {
+      "X": 11
+    },
+    "object_count": 3,
+    "error": "Success",
+    "note": "Primary call-by-reference-constant. Public pin changes X to22.",
+    "setup": [],
+    "mutate_source": false,
+    "bits": 64
+  },
+  {
+    "name": "copy_argument_plain_local",
+    "table": "14114d41494e00700a0b6043414c5f60a460140c43414c5f019d0a1668a468",
+    "kind": 1,
+    "number": 11,
+    "bytes": "",
+    "after": {},
+    "object_count": 2,
+    "error": "Success",
+    "note": "Primary caller binding isolation; public pin returns22.",
+    "setup": [],
+    "mutate_source": false,
+    "bits": 64
+  },
+  {
+    "name": "copy_argument_buffer_replace",
+    "table": "08585f5f5f11030111140f4d41494e00a443414c5f585f5f5f140c43414c5f019d0a1668a468",
+    "kind": 1,
+    "number": 22,
+    "bytes": "",
+    "after": {},
+    "object_count": 3,
+    "error": "Success",
+    "note": "",
+    "setup": [],
+    "mutate_source": false,
+    "bits": 64
+  },
+  {
+    "name": "copy_local_byte_then_integer",
+    "table": "08585f5f5f1103011114124d41494e009d585f5f5f609d0a1660a460",
+    "kind": 1,
+    "number": 22,
+    "bytes": "",
+    "after": {},
+    "object_count": 3,
+    "error": "Success",
+    "note": "",
+    "setup": [],
+    "mutate_source": false,
+    "bits": 64
+  },
+  {
+    "name": "copy_local_byte_reuses_cell",
+    "table": "08585f5f5f1103011108595f5f5f11050a02445514144d41494e009d585f5f5f609d595f5f5f60a460",
+    "kind": 2,
+    "number": 0,
+    "bytes": "4455",
+    "after": {},
+    "object_count": 4,
+    "error": "Success",
+    "note": "",
+    "setup": [],
+    "mutate_source": false,
+    "bits": 64
+  },
+  {
+    "name": "copy_owned_buffer_independent",
+    "table": "08585f5f5f11050a021122140e4d41494e009d585f5f5f60a460",
+    "kind": 2,
+    "number": 0,
+    "bytes": "1122",
+    "after": {},
+    "object_count": 3,
+    "error": "Success",
+    "note": "",
+    "setup": [
+      "let materialized:ByteResult=materialize(&program.source,program.length,program.unit,&mut program.store,0);"
+    ],
+    "mutate_source": true,
+    "bits": 64
+  },
+  {
+    "name": "call_buffer_shared_payload",
+    "table": "08585f5f5f11050a021122140f4d41494e00a443414c5f585f5f5f140843414c5f01a468",
+    "kind": 2,
+    "number": 0,
+    "bytes": "4422",
+    "after": {},
+    "object_count": 3,
+    "error": "Success",
+    "note": "",
+    "setup": [],
+    "mutate_source": true,
+    "bits": 64
+  },
+  {
+    "name": "copy_named_self",
+    "table": "08585f5f5f11050a02112214144d41494e009d585f5f5f585f5f5fa4585f5f5f",
+    "kind": 2,
+    "number": 0,
+    "bytes": "1122",
+    "after": {},
+    "object_count": 2,
+    "error": "Success",
+    "note": "",
+    "setup": [],
+    "mutate_source": false,
+    "bits": 64
+  },
+  {
+    "name": "late_named_operand",
+    "table": "08585f5f5f0a0b14114d41494e00a472585f5f5f43414c5f00140f43414c5f00700a16585f5f5fa401",
+    "kind": 1,
+    "number": 23,
+    "bytes": "",
+    "after": {
+      "X": 22
+    },
+    "object_count": 3,
+    "error": "Success",
+    "note": "Retain captured operand identity through retirement; public pin returns23.",
+    "setup": [],
+    "mutate_source": false,
+    "bits": 64
+  },
+  {
+    "name": "package_local_payload_independence",
+    "table": "08585f5f5f1206020a0b0a1614154d41494e009d585f5f5f609d0a63585f5f5fa460",
+    "kind": 4,
+    "number": 2,
+    "bytes": "",
+    "after": {
+      "X": 99
+    },
+    "object_count": 5,
+    "error": "Success",
+    "note": "",
+    "setup": [],
+    "mutate_source": false,
+    "bits": 64
+  },
+  {
+    "name": "reference_local_payload_independence",
+    "table": "08585f5f5f0a0b08525f5f5f0014154d41494e009d525f5f5f609d0a63525f5f5fa460",
+    "kind": 5,
+    "number": 0,
+    "bytes": "",
+    "after": {
+      "R": 99
+    },
+    "object_count": 4,
+    "error": "Success",
+    "note": "",
+    "setup": [
+      "program.store.space.objects[1].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:0};"
+    ],
+    "mutate_source": false,
+    "bits": 64
+  },
+  {
+    "name": "capacity_copy_package_atomic",
+    "table": "08585f5f5f1204010a0b140e4d41494e009d585f5f5f60a460",
+    "kind": 1,
+    "number": 0,
+    "bytes": "",
+    "after": {},
+    "object_count": 64,
+    "error": "Capacity",
+    "note": "",
+    "setup": [
+      "program.store.space.object_count=64;"
+    ],
+    "mutate_source": false,
+    "bits": 64
+  },
+  {
+    "name": "copy_method_destination",
+    "table": "140f4d41494e009d0a1643414c5fa400140943414c5f00a40a0b",
+    "kind": 1,
+    "number": 0,
+    "bytes": "",
+    "after": {},
+    "object_count": null,
+    "error": "UnsupportedValue",
+    "note": "",
+    "setup": [],
+    "mutate_source": false,
+    "bits": 64
+  },
+  {
+    "name": "store_explicit_reference_argument",
+    "table": "08585f5f5f0a0b08525f5f5f00140f4d41494e00a443414c5f525f5f5f140c43414c5f01700a1668a468",
+    "kind": 1,
+    "number": 22,
+    "bytes": "",
+    "after": {
+      "X": 22
+    },
+    "object_count": 4,
+    "error": "Success",
+    "note": "Canonical Reference supplied through owned program metadata; RefOf bytecode dispatch is not claimed.",
+    "setup": [
+      "program.store.space.objects[1].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:0};"
+    ],
+    "mutate_source": false,
+    "bits": 64
+  },
+  {
+    "name": "store_reference_argument_type_replacement",
+    "table": "08585f5f5f0a0b08525f5f5f0008535f5f5f0d414200140f4d41494e00a443414c5f525f5f5f140e43414c5f0170535f5f5f68a468",
+    "kind": 3,
+    "number": 0,
+    "bytes": "4142",
+    "after": {},
+    "object_count": 5,
+    "error": "Success",
+    "note": "Primary Table19.10: reference Arg redirects a copy with no conversion; referenced Integer is replaced by String. Canonical reference metadata is seeded.",
+    "setup": [
+      "program.store.space.objects[1].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:0};"
+    ],
+    "mutate_source": false,
+    "bits": 64
+  },
+  {
+    "name": "store_local_reference_replaced",
+    "table": "08585f5f5f0a0b08525f5f5f0014124d41494e009d525f5f5f60700a1660a460",
+    "kind": 1,
+    "number": 22,
+    "bytes": "",
+    "after": {
+      "X": 11
+    },
+    "object_count": 4,
+    "error": "Success",
+    "note": "",
+    "setup": [
+      "program.store.space.objects[1].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:0};"
+    ],
+    "mutate_source": false,
+    "bits": 64
+  },
+  {
+    "name": "copy_explicit_reference_argument",
+    "table": "08585f5f5f0a0b08525f5f5f00140f4d41494e00a443414c5f525f5f5f140c43414c5f019d0a1668a468",
+    "kind": 1,
+    "number": 22,
+    "bytes": "",
+    "after": {
+      "X": 22
+    },
+    "object_count": 4,
+    "error": "Success",
+    "note": "Canonical Reference supplied through owned program metadata; RefOf bytecode dispatch is not claimed.",
+    "setup": [
+      "program.store.space.objects[1].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:0};"
+    ],
+    "mutate_source": false,
+    "bits": 64
+  },
+  {
+    "name": "copy_reference_argument_type_replacement",
+    "table": "08585f5f5f0a0b08525f5f5f0008535f5f5f0d414200140f4d41494e00a443414c5f525f5f5f140e43414c5f019d535f5f5f68a468",
+    "kind": 3,
+    "number": 0,
+    "bytes": "4142",
+    "after": {},
+    "object_count": 5,
+    "error": "Success",
+    "note": "Primary Table19.10: reference Arg redirects a copy with no conversion; referenced Integer is replaced by String. Canonical reference metadata is seeded.",
+    "setup": [
+      "program.store.space.objects[1].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:0};"
+    ],
+    "mutate_source": false,
+    "bits": 64
+  },
+  {
+    "name": "copy_local_reference_replaced",
+    "table": "08585f5f5f0a0b08525f5f5f0014124d41494e009d525f5f5f609d0a1660a460",
+    "kind": 1,
+    "number": 22,
+    "bytes": "",
+    "after": {
+      "X": 11
+    },
+    "object_count": 4,
+    "error": "Success",
+    "note": "",
+    "setup": [
+      "program.store.space.objects[1].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:0};"
+    ],
+    "mutate_source": false,
+    "bits": 64
+  },
+  {
+    "name": "capacity_copy_byte_atomic",
+    "table": "08585f5f5f11030111140e4d41494e009d585f5f5f60a460",
+    "kind": 1,
+    "number": 0,
+    "bytes": "",
+    "after": {},
+    "object_count": 64,
+    "error": "Capacity",
+    "note": "",
+    "setup": [
+      "program.store.space.object_count=64;"
+    ],
+    "mutate_source": false,
+    "bits": 64
+  },
+  {
+    "name": "source_unit_bad_byte",
+    "table": "08585f5f5f11030111140b4d41494e00a4585f5f5f",
+    "kind": 1,
+    "number": 0,
+    "bytes": "",
+    "after": {},
+    "object_count": null,
+    "error": "InvalidState",
+    "note": "",
+    "setup": [
+      "program.store.space.objects[0].value=Value::Buffer {buffer_storage:BufferStorage::Source {declared_size:1,buffer_initializer:Span {unit:8,start:0,end:1}}};"
+    ],
+    "mutate_source": false,
+    "bits": 64
+  },
+  {
+    "name": "owned_wrong_owner",
+    "table": "08585f5f5f11030111140b4d41494e00a4585f5f5f",
+    "kind": 1,
+    "number": 0,
+    "bytes": "",
+    "after": {},
+    "object_count": null,
+    "error": "InvalidState",
+    "note": "",
+    "setup": [
+      "program.store.space.objects[0].value=Value::Buffer {buffer_storage:BufferStorage::Owned {buffer_owner:1}};"
+    ],
+    "mutate_source": false,
+    "bits": 64
+  },
+  {
+    "name": "package_bad_link",
+    "table": "08585f5f5f1206020a0b0a16140b4d41494e00a4585f5f5f",
+    "kind": 1,
+    "number": 0,
+    "bytes": "",
+    "after": {},
+    "object_count": null,
+    "error": "InvalidState",
+    "note": "",
+    "setup": [
+      "program.store.space.objects[1].has_next=false;"
+    ],
+    "mutate_source": false,
+    "bits": 64
+  },
+  {
+    "name": "return_named_width32_carrier",
+    "table": "08585f5f5fff140b4d41494e00a4585f5f5f",
+    "kind": 1,
+    "number": 4294967295,
+    "bytes": "",
+    "after": {},
+    "object_count": 2,
+    "error": "Success",
+    "note": "",
+    "setup": [],
+    "mutate_source": false,
+    "bits": 32
+  },
+  {
+    "name": "copy_named_width32_carrier",
+    "table": "08585f5f5fff08595f5f5f0014144d41494e009d585f5f5f595f5f5fa4595f5f5f",
+    "kind": 1,
+    "number": 4294967295,
+    "bytes": "",
+    "after": {},
+    "object_count": 3,
+    "error": "Success",
+    "note": "",
+    "setup": [],
+    "mutate_source": false,
+    "bits": 32
+  },
+  {
+    "name": "argument_width32_carrier",
+    "table": "140c4d41494e00a443414c5fff140843414c5f01a468",
+    "kind": 1,
+    "number": 4294967295,
+    "bytes": "",
+    "after": {},
+    "object_count": 2,
+    "error": "Success",
+    "note": "",
+    "setup": [],
+    "mutate_source": false,
+    "bits": 32
+  },
+  {
+    "name": "buffer_arithmetic_rejected",
+    "table": "08585f5f5f11030111140e4d41494e00a472585f5f5f0100",
+    "kind": 1,
+    "number": 0,
+    "bytes": "",
+    "after": {},
+    "object_count": null,
+    "error": "UnsupportedValue",
+    "note": "",
+    "setup": [],
+    "mutate_source": false,
+    "bits": 64
+  },
+  {
+    "name": "decoder_constant_full",
+    "direct": 0
+  },
+  {
+    "name": "decoder_local_full",
+    "direct": 1
+  },
+  {
+    "name": "decoder_operation_full",
+    "direct": 2
+  },
+  {
+    "name": "decoder_named_value_full",
+    "direct": 3
+  },
+  {
+    "name": "decoder_named_method_full",
+    "direct": 4
+  },
+  {
+    "name": "decoder_target_full",
+    "direct": 5
+  }
+]

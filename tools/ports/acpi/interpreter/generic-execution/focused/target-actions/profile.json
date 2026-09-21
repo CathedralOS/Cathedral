@@ -1,0 +1,6 @@
+{
+  "stage": "checked-interpreter",
+  "pairs": 25,
+  "control": "changed expected computed classification or stored payload inside body",
+  "native_execution": false
+}

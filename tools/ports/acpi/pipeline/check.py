@@ -41,7 +41,7 @@ def source_snapshot(parser_regression,all_rows):
     return {str(path.relative_to(ROOT)):hashlib.sha256(path.read_bytes()).hexdigest()for path in sorted(sources)}
 
 def main():
-    p=argparse.ArgumentParser(description=__doc__);p.add_argument('--match',default='');p.add_argument('--parser-regression',action='store_true');p.add_argument('--record',type=Path);p.add_argument('--omega-source',type=Path,default=ROOT.parent/'Omega');p.add_argument('--target-dir',type=Path,default=Path('/tmp/cathedral-acpi-execution-checked'));a=p.parse_args();omega=a.omega_source.resolve();target=a.target_dir.resolve()
+    p=argparse.ArgumentParser(description=__doc__);p.add_argument('--runner',type=Path);p.add_argument('--match',default='');p.add_argument('--parser-regression',action='store_true');p.add_argument('--record',type=Path);p.add_argument('--omega-source',type=Path,default=ROOT.parent/'Omega');p.add_argument('--target-dir',type=Path,default=Path('/tmp/cathedral-acpi-generic-checked'));a=p.parse_args();omega=a.omega_source.resolve();target=a.target_dir.resolve()
     revision=subprocess.check_output(['git','rev-parse','HEAD'],cwd=omega,text=True).strip()
     assert revision=='eaa7993a23623cd8fabf45350340479c5c9c7879'
     assert not subprocess.check_output(['git','status','--porcelain'],cwd=omega,text=True).strip(),'Omega must be clean'
@@ -61,8 +61,8 @@ def main():
         for name,path in {'checked-interpreter':'psi/semantics/checked-interpreter','package-manager':'omega/packages/manager','target':'omega/representations/target'}.items():manifest.append(f'{name} = {{ path="{omega}/omega-rust/{path}" }}')
         manifest +=['[[bin]]','name="cathedral-acpi-checked-runner"',f'path="{SHARED}/checked_runner.rs"']
         (work/'Cargo.toml').write_text('\n'.join(manifest)+'\n');(work/'Cargo.lock').write_bytes((SHARED/'runner.Cargo.lock').read_bytes())
-        subprocess.run([shutil.which('mbx')or'cargo','build','--offline','--locked','--release','--manifest-path',str(work/'Cargo.toml'),'--target-dir',str(target)],check=True,cwd=omega)
-        runner=target/'release/cathedral-acpi-checked-runner';print('Harness SHA-256:',hashlib.sha256(runner.read_bytes()).hexdigest(),flush=True)
+        if a.runner is None:subprocess.run([shutil.which('mbx')or'cargo','build','--offline','--locked','--release','--manifest-path',str(work/'Cargo.toml'),'--target-dir',str(target)],check=True,cwd=omega)
+        runner=a.runner.resolve() if a.runner else target/'release/cathedral-acpi-checked-runner';runner_before=hashlib.sha256(runner.read_bytes()).hexdigest();print('Harness SHA-256:',hashlib.sha256(runner.read_bytes()).hexdigest(),flush=True)
         build=((ROOT/'tools/ports/acpi/aml/build.omg')if a.parser_regression else(HERE/'build.omg')).read_text()
         for relative in ['../../../../source/libraries/acpi/pipeline','../../../../source/libraries/acpi/aml','../../../../source/libraries/acpi/interpreter/execution','../../../../source/libraries/acpi/interpreter']:build=build.replace(relative,str((HERE/relative).resolve()))
         (work/'build.omg').write_text(build)
@@ -76,9 +76,10 @@ def main():
         process=subprocess.Popen(command,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True,env=dict(os.environ,OMEGA_INTERP_STEP_BUDGET='10000000'));lines=[]
         for line in process.stdout:print(line,end='',flush=True);lines.append(line)
         result=subprocess.CompletedProcess(command,process.wait(),''.join(lines));result.check_returncode()
+        assert runner_before==hashlib.sha256(runner.read_bytes()).hexdigest(),'Runner changed during regression'
         if a.record:
             assert source_hashes==source_snapshot(a.parser_regression,all_rows),'Source changed during run'
-            value={'format':'cathedral-acpi-parser-regression-checked-v1'if a.parser_regression else'cathedral-acpi-pipeline-checked-v1','stage':'checked-interpreter execution; native/hardware not run','omega_revision':revision,'runner_sha256':hashlib.sha256(runner.read_bytes()).hexdigest(),'cargo_lock_sha256':hashlib.sha256((work/'Cargo.lock').read_bytes()).hexdigest(),'cases':[row['name']for row in rows],'scenario_count':len(rows),'control_count':len(rows),'elapsed_seconds':round(time.monotonic()-started,3),'evaluator_step_limit':10000000,'source_sha256':source_hashes,'output':result.stdout}
+            value={'execution_root':str(ROOT.resolve()),'build_source':build,'build_sha256':hashlib.sha256(build.encode()).hexdigest(),'fixture_sha256':hashlib.sha256((work/'main.omg').read_bytes()).hexdigest(),'command':command,'source_unchanged':True,'format':'cathedral-acpi-parser-regression-checked-v1'if a.parser_regression else'cathedral-acpi-pipeline-checked-v1','stage':'checked-interpreter execution; native/hardware not run','omega_revision':revision,'runner_sha256':hashlib.sha256(runner.read_bytes()).hexdigest(),'cargo_lock_sha256':hashlib.sha256((work/'Cargo.lock').read_bytes()).hexdigest(),'cases':[row['name']for row in rows],'scenario_count':len(rows),'control_count':len(rows),'elapsed_seconds':round(time.monotonic()-started,3),'evaluator_step_limit':10000000,'source_sha256':source_hashes,'output':result.stdout}
             a.record.write_text(json.dumps(value,indent=2,sort_keys=True)+'\n')
     label='parser regression'if a.parser_regression else'pipeline'
     print(f'PASS {len(rows)} {label} scenarios + {len(rows)} changed-body controls. Native/hardware NOT RUN.',flush=True)

@@ -1,0 +1,72 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Primary ACPI 6.6 binding semantics. Reads and writable target selection are
+// distinct; Shared argument objects are never overwritten by ordinary Arg writes.
+module generic_targets;
+use aml::model::ObjectStore;
+use aml::model::Value;
+use aml::model::ReferenceKind;
+use aml::model::ReferenceState;
+use aml::object_references::unwrap_all;
+use execution_model::ExecutionOutcome;
+use execution_model::Operand;
+use execution_model::OperandResult;
+use execution_model::Binding;
+use execution_model::BindingResult;
+use execution_model::ValueResult;
+use execution_model::Frame;
+use execution_model::Target;
+use generic_values::binding_operand;
+use generic_values::read_value;
+use generic_values::normalized_operand;
+use generic_values::admit_data;
+use generic_values::copied_binding;
+use generic_values::copy_into;
+use generic_values::object_outcome;
+
+pub machine read_generic_target(store:&ObjectStore,frame:&Frame,target:Target)->OperandResult {
+ transition target {
+  Target::Local {local_index} -> local(frame,local_index)
+  Target::Argument {argument_index} -> argument(store,frame,argument_index)
+  Target::Named {object_id} -> (OperandResult {operand:Operand::Object {object_id:object_id}})
+  Target::Null -> (OperandResult {outcome:ExecutionOutcome::InvalidTarget})
+  Target::Debug -> (OperandResult {outcome:ExecutionOutcome::UnresolvedService})
+ }
+ state local(frame:&Frame,index:u64)->OperandResult {
+  transition index<8 {true -> binding(frame.locals[index]) _ -> (OperandResult {outcome:ExecutionOutcome::InvalidTarget})}
+ }
+ state binding(value:Binding)->OperandResult {let operand:Operand=binding_operand(value);OperandResult {operand:operand}}
+ state argument(store:&ObjectStore,frame:&Frame,index:u64)->OperandResult {
+  transition index<7 {true -> arg_binding(store,frame.arguments[index]) _ -> (OperandResult {outcome:ExecutionOutcome::InvalidTarget})}
+ }
+ state arg_binding(store:&ObjectStore,binding:Binding)->OperandResult {
+  let operand:Operand=binding_operand(binding);let value:ValueResult=read_value(store,operand);
+  transition value.outcome==ExecutionOutcome::Success {true -> arg_value(store,operand,value.value) _ -> (OperandResult {outcome:value.outcome})}
+ }
+ state arg_value(store:&ObjectStore,operand:Operand,value:Value)->OperandResult {
+  transition value {Value::Reference {kind,object_id} -> arg_reference(store,kind,object_id) _ -> (OperandResult {operand:operand})}
+ }
+ state arg_reference(store:&ObjectStore,kind:ReferenceKind,id:u64)->OperandResult {
+  transition kind {ReferenceKind::RefOf -> dereference(store,id) ReferenceKind::Index -> dereference(store,id) _ -> (OperandResult {outcome:ExecutionOutcome::InvalidTarget})}
+ }
+ state dereference(store:&ObjectStore,id:u64)->OperandResult {
+  let found:ReferenceState=unwrap_all(&store.space,id,64);let outcome:ExecutionOutcome=object_outcome(found.outcome);
+  OperandResult {outcome:outcome,operand:Operand::Object {object_id:found.object}}
+ }
+}
+
+use generic_target_model::TargetSelection;
+pub machine select_target(frame:&Frame,target:Target)->TargetSelection {
+ transition target {Target::Null -> (TargetSelection::Null) Target::Debug -> (TargetSelection::Debug) Target::Named {object_id} -> (TargetSelection::Named {object_id:object_id}) Target::Local {local_index} -> local(frame,local_index) Target::Argument {argument_index} -> argument(frame,argument_index)}
+ state local(frame:&Frame,index:u64)->TargetSelection {transition index<8 {true -> (TargetSelection::Local {local_index:index,local_binding:frame.locals[index]}) _ -> (TargetSelection::Failure {outcome:ExecutionOutcome::InvalidTarget})}}
+ state argument(frame:&Frame,index:u64)->TargetSelection {transition index<7 {true -> (TargetSelection::Argument {argument_index:index,argument_binding:frame.arguments[index]}) _ -> (TargetSelection::Failure {outcome:ExecutionOutcome::InvalidTarget})}}
+}
+pub machine publish_target(frame:&mut Frame,selection:TargetSelection,result:BindingResult)->ExecutionOutcome {
+ transition result.outcome==ExecutionOutcome::Success {true -> selected(frame,selection,result.binding) _ -> (result.outcome)}
+ state selected(frame:&mut Frame,selection:TargetSelection,binding:Binding)->ExecutionOutcome {
+  transition selection {TargetSelection::Local {local_index,local_binding} -> local_bound(frame,local_index,binding) TargetSelection::Argument {argument_index,argument_binding} -> argument_bound(frame,argument_index,binding) TargetSelection::Failure {outcome} -> (outcome) _ -> (ExecutionOutcome::Success)}
+ }
+ state local_bound(frame:&mut Frame,index:u64,binding:Binding)->ExecutionOutcome {transition index<8 {true -> local(frame,index,binding) _ -> (ExecutionOutcome::InvalidTarget)}}
+ state argument_bound(frame:&mut Frame,index:u64,binding:Binding)->ExecutionOutcome {transition index<7 {true -> argument(frame,index,binding) _ -> (ExecutionOutcome::InvalidTarget)}}
+ state local(frame:&mut Frame,index:u64,binding:Binding)->ExecutionOutcome {frame.locals[index]=binding;ExecutionOutcome::Success}
+ state argument(frame:&mut Frame,index:u64,binding:Binding)->ExecutionOutcome {frame.arguments[index]=binding;ExecutionOutcome::Success}
+}

@@ -1,0 +1,36 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+module generic_target_bridge;
+use aml::model::ObjectStore;
+use execution_model::Frame;
+use execution_model::Operand;
+use execution_model::Binding;
+use execution_model::Target;
+use execution_model::ExecutionOutcome;
+use execution_model::BindingResult;
+use generic_target_model::TargetSelection;
+use generic_target_model::TargetAction;
+use generic_targets::select_target;
+use generic_targets::publish_target;
+use generic_target_values::classify_target;
+use generic_target_values::apply_target_action;
+use generic_values::normalized_operand;
+use generic_binding_plan::prospective_binding;
+use integer_helpers::integers::IntegerSize;
+// Determine only inert publication metadata before mutation. The unchanged
+// mutation kernel performs all admission/allocation and returns the scalar
+// outcome into a local semantic-case output; publish_target ignores the
+// predicted binding on every failure. No numeric status encoding is used.
+pub machine write_generic_target(input:&[u8;1024],store:&mut ObjectStore,frame:&mut Frame,target:Target,operand:Operand,copy:bool)->ExecutionOutcome {
+ let length:u64=frame.source_length;let unit:u64=frame.body.unit;let size:IntegerSize=frame.size;
+ let selection:TargetSelection=select_target(frame,target);
+ let normalized:Operand=normalized_operand(store,size,operand);
+ let action:TargetAction=classify_target(store,selection,normalized,copy);
+ let count:u64=store.space.object_count;
+ let binding:Binding=prospective_binding(count,action,normalized);
+ let mut outcome:ExecutionOutcome=ExecutionOutcome::InvalidState;
+ mutate_selected(input,length,unit,store,action,normalized,&mut outcome);
+ let published:ExecutionOutcome=publish_target(frame,selection,BindingResult {outcome:outcome,binding:binding});published
+}
+machine mutate_selected(input:&[u8;1024],length:u64,unit:u64,store:&mut ObjectStore,action:TargetAction,operand:Operand,outcome:&mut ExecutionOutcome) {
+ let result:BindingResult=apply_target_action(input,length,unit,store,action,operand);outcome=result.outcome;
+}

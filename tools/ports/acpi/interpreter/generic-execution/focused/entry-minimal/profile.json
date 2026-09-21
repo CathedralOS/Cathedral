@@ -1,0 +1,6 @@
+{
+  "stage": "checked-interpreter",
+  "pairs": 2,
+  "control": "changed expected returned integer or allocated Source Buffer object ID",
+  "native_execution": false
+}

@@ -1,0 +1,93 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Canonical external Values are staged outside Runtime. Failure publishes no
+// object slots or byte blocks; standalone Owned locators remain inadmissible.
+module external_arguments;
+use aml::model::Value;
+use aml::model::ReferenceKind;
+use aml::model::Object;
+use aml::model::ObjectStore;
+use aml::model::ByteBlock;
+use execution_model::Operand;
+use execution_model::ExecutionOutcome;
+use execution_model::ValueResult;
+use generic_values::read_value;
+use generic_values::admit_value;
+use integer_helpers::integers::IntegerSize;
+use integer_helpers::integers::normalize;
+pub data ExternalArguments [copy] {outcome:ExecutionOutcome;operands:[Operand;7];}
+data ExternalPreflight [copy] {values:[ValueResult;7];}
+pub machine prepare_external_arguments(input:&[u8;1024],length:u64,unit:u64,store:&mut ObjectStore,arguments:&[Value;7],count:u64,size:IntegerSize)->ExternalArguments {
+ let objects:u64=store.space.object_count;let entries:u64=store.space.count;
+ transition count<=7 && length<=1024 && objects<=64 && entries<=32 {true -> preflight(input,length,unit,store,arguments,count,size) _ -> (ExternalArguments {outcome:ExecutionOutcome::Capacity})}
+ state preflight(input:&[u8;1024],length:u64,unit:u64,store:&mut ObjectStore,arguments:&[Value;7],count:u64,size:IntegerSize)->ExternalArguments {
+  let mut admitted:ExternalPreflight=ExternalPreflight {};
+  let outcome:ExecutionOutcome=ea_preflight(input,length,unit,store,arguments,&mut admitted,0,count);
+  transition outcome==ExecutionOutcome::Success {true -> stage(store,admitted,count,size) _ -> (ExternalArguments {outcome:outcome})}
+ }
+ state stage(store:&mut ObjectStore,admitted:ExternalPreflight,count:u64,size:IntegerSize)->ExternalArguments {
+  let mut staged:ObjectStore=ObjectStore {space:store.space,bytes:store.bytes};let mut result:ExternalArguments=ExternalArguments {};
+  let outcome:ExecutionOutcome=ea_stage(&mut staged,&admitted,&mut result,0,count,size);
+  transition outcome==ExecutionOutcome::Success {true -> commit(store,staged,result) _ -> (ExternalArguments {outcome:outcome})}
+ }
+ state commit(store:&mut ObjectStore,staged:ObjectStore,result:ExternalArguments)->ExternalArguments {
+  store.space=staged.space;store.bytes=staged.bytes;result
+ }
+}
+machine ea_preflight(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,arguments:&[Value;7],admitted:&mut ExternalPreflight,index:u64,count:u64)
+terminates by(index,count)->Nat::BoundedDistance;
+->ExecutionOutcome {
+ let outcome:ExecutionOutcome=ea_preflight_one(input,length,unit,store,arguments,admitted,index,count);
+ transition {outcome!=ExecutionOutcome::Success -> (outcome) index<count -> ea_preflight(input,length,unit,store,arguments,admitted,index+1,count) _ -> (outcome)}
+}
+machine ea_preflight_one(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,arguments:&[Value;7],admitted:&mut ExternalPreflight,index:u64,count:u64)->ExecutionOutcome {
+ transition index<count && index<7 {true -> one(input,length,unit,store,arguments,admitted,index,count) _ -> (ExecutionOutcome::Success)}
+ state one(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,arguments:&[Value;7],admitted:&mut ExternalPreflight,index:u64,count:u64)->ExecutionOutcome {
+  let found:ValueResult=ea_value(store,arguments[index]);let checked:ValueResult=admit_value(input,length,unit,store,found);
+  transition checked.outcome==ExecutionOutcome::Success {true -> retain(input,length,unit,store,arguments,admitted,index,count,checked) _ -> (checked.outcome)}
+ }
+ state retain(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,arguments:&[Value;7],admitted:&mut ExternalPreflight,index:u64,count:u64,found:ValueResult)->ExecutionOutcome {
+  transition index<7 {true -> write(admitted,index,found) _ -> (ExecutionOutcome::Capacity)}
+ }
+ state write(admitted:&mut ExternalPreflight,index:u64,found:ValueResult)->ExecutionOutcome {admitted.values[index]=found;ExecutionOutcome::Success}
+}
+machine ea_value(store:&ObjectStore,value:Value)->ValueResult {
+ transition value {Value::Reference {kind,object_id} -> reference(store,value,kind,object_id) _ -> (ValueResult {value:value})}
+ state reference(store:&ObjectStore,value:Value,kind:ReferenceKind,id:u64)->ValueResult {
+  transition kind {ReferenceKind::Named -> existing(store,id) ReferenceKind::Local -> existing(store,id) ReferenceKind::Arg -> existing(store,id) _ -> (ValueResult {value:value})}
+ }
+ state existing(store:&ObjectStore,id:u64)->ValueResult {let found:ValueResult=read_value(store,Operand::Object {object_id:id});let mut retained:ValueResult=found;retained.object=id;retained}
+}
+machine ea_stage(store:&mut ObjectStore,admitted:&ExternalPreflight,result:&mut ExternalArguments,index:u64,count:u64,size:IntegerSize)
+terminates by(index,count)->Nat::BoundedDistance;
+->ExecutionOutcome {
+ let outcome:ExecutionOutcome=ea_stage_one(store,admitted,result,index,count,size);
+ transition {outcome!=ExecutionOutcome::Success -> (outcome) index<count -> ea_stage(store,admitted,result,index+1,count,size) _ -> (outcome)}
+}
+machine ea_stage_one(store:&mut ObjectStore,admitted:&ExternalPreflight,result:&mut ExternalArguments,index:u64,count:u64,size:IntegerSize)->ExecutionOutcome {
+ transition index<count && index<7 {true -> one(store,admitted,result,index,count,size) _ -> (ExecutionOutcome::Success)}
+ state one(store:&mut ObjectStore,admitted:&ExternalPreflight,result:&mut ExternalArguments,index:u64,count:u64,size:IntegerSize)->ExecutionOutcome {
+  let outcome:ExecutionOutcome=ea_install(store,result,index,admitted.values[index],size);
+  outcome
+ }
+}
+machine ea_install(store:&mut ObjectStore,result:&mut ExternalArguments,index:u64,found:ValueResult,size:IntegerSize)->ExecutionOutcome {
+ transition index<7 {true -> observed(store,result,index,found,size) _ -> (ExecutionOutcome::Capacity)}
+ state observed(store:&mut ObjectStore,result:&mut ExternalArguments,index:u64,found:ValueResult,size:IntegerSize)->ExecutionOutcome {
+  transition found.has_object {true -> shared(result,index,found.object) _ -> kind(store,result,index,found,size,found.value)}
+ }
+ state kind(store:&mut ObjectStore,result:&mut ExternalArguments,index:u64,found:ValueResult,size:IntegerSize,value:Value)->ExecutionOutcome {
+  transition value {Value::Integer {number} -> integer(result,index,size,number) _ -> identity(store,result,index,found)}
+ }
+ state integer(result:&mut ExternalArguments,index:u64,size:IntegerSize,number:u64)->ExecutionOutcome {let value:u64=normalize(size,number);result.operands[index]=Operand::Integer {number:value};ExecutionOutcome::Success}
+ state identity(store:&mut ObjectStore,result:&mut ExternalArguments,index:u64,found:ValueResult)->ExecutionOutcome {
+  transition found.has_object {true -> shared(result,index,found.object) _ -> allocate(store,result,index,found.value)}
+ }
+ state shared(result:&mut ExternalArguments,index:u64,id:u64)->ExecutionOutcome {result.operands[index]=Operand::Object {object_id:id};ExecutionOutcome::Success}
+ state allocate(store:&mut ObjectStore,result:&mut ExternalArguments,index:u64,value:Value)->ExecutionOutcome {
+  let id:u64=store.space.object_count;
+  transition id<64 {true -> write(store,result,index,value,id) _ -> (ExecutionOutcome::Capacity)}
+ }
+ state write(store:&mut ObjectStore,result:&mut ExternalArguments,index:u64,value:Value,id:u64)->ExecutionOutcome {
+  store.space.objects[id]=Object {value:value};store.bytes.blocks[id]=ByteBlock {};store.space.object_count=id+1;result.operands[index]=Operand::Object {object_id:id};ExecutionOutcome::Success
+ }
+}

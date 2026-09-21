@@ -1,0 +1,24 @@
+{
+  "stage": "source inventory audit only",
+  "execution_root": "/Users/zcanann/Documents/projects/Cathedral",
+  "command": [
+    "python3",
+    "/Users/zcanann/Documents/projects/Cathedral/tools/ports/inventory.py",
+    "check",
+    "/Users/zcanann/Documents/projects/Cathedral/source/libraries/acpi/interpreter/execution/generic-inventory.json",
+    "--checkout",
+    "/Users/zcanann/Documents/projects/Cathedral/reference_code/rust-osdev/acpi"
+  ],
+  "exit_code": 0,
+  "manifest_sha256": "8e306105cc375ab39a3f793b2a90d13e1ea172cc47480474eede6bde40f3180e",
+  "summary": {
+    "files": 3,
+    "meaning": "source coverage audit only; no Omega compilation or execution",
+    "symbols": {
+      "blocked": 0,
+      "omitted": 0,
+      "pending": 210,
+      "translated": 0
+    }
+  }
+}

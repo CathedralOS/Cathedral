@@ -1,6 +1,14 @@
-# Bounded AML integer method execution — partial ACPI-005
+# AML method execution — partial ACPI-005
 
-## Scope and status
+The current implementation is described by [generic execution](generic.PORT.md).
+It passes ObjectStore through the pipeline and transports canonical data using
+Operand/Binding metadata. The original integer contract and verification below
+are retained as historical milestone documentation; their integer-only API,
+allocation limits and old receipt hashes do not describe the current executor.
+Current source-bound regression receipts and exact archived prior inputs live in
+`tools/ports/acpi/interpreter/generic-execution/manifest.json` and `history/`.
+
+## Historical integer milestone: scope and status
 
 `cathedral-acpi-execution` executes a bounded integer subset of real AML method
 bytes using the sibling parser's retained `Span`, `Path`, `Namespace`, `Value`
@@ -155,7 +163,7 @@ statements inside a synthetic method. Added return/read assertions inspect resul
 They are translated scenarios, not execution of complete ASL definition blocks.
 Case metadata distinguishes those from original malformed/boundary scenarios.
 
-**Current constant-evaluator stage passed:** `check_frame_const.py` proves valid
+**Historical constant-evaluator stage passed:** `check_frame_const.py` proves valid
 observed method admission and rejection of a `u64::MAX` start through the real
 `observed_frame`/`new_frame` bodies. Changing the expected rejection inside the
 body produces `TEST_RESULT == 1` and the required failing contract. Compiler:
@@ -165,14 +173,14 @@ The separate whole-bytecode const runner is optional; its earlier Return/Add and
 While successes preceded the definition-observation refinement and are not a
 fresh const proof of the final executor.
 
-**Final checked-interpreter stage passed:** all 79 scenarios and 79 changed-body
+**Historical checked-interpreter stage passed:** all 79 scenarios and 79 changed-body
 controls pass on the fixed source, including both maximum span offsets,
 cross-scope method aliases, original-name replacement/removal, a non-alias `bind`
 entry and missing definition observations. The complete retained-package run took
 280.577 seconds after the shared declaration-observation type move. The largest observed evaluator usage was 71,787 units;
 every run reports zero filesystem operation attempts.
 [Retained evidence](../../../../../tools/ports/acpi/interpreter/execution/verification.json)
-binds current source/fixture hashes, all selected machine outcomes, the dependency
+binds the historical source/fixture hashes, all selected machine outcomes, the dependency
 lock and exact runner identity. `verify_record.py` verifies this correspondence.
 
 The Cathedral test harness uses the pinned manager's source inspection pipeline

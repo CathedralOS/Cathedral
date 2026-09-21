@@ -1,0 +1,83 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Detached data application has no Frame parameter. Selection contains inert
+// metadata; public Local/Argument bounds are checked before store mutation.
+module generic_target_values;
+use aml::model::ObjectStore;
+use aml::model::Value;
+use aml::model::ReferenceKind;
+use execution_model::ExecutionOutcome;
+use execution_model::Operand;
+use execution_model::Binding;
+use execution_model::BindingResult;
+use execution_model::ValueResult;
+use generic_target_model::TargetSelection;
+use generic_target_model::ArgumentAction;
+use generic_target_model::TargetAction;
+use generic_values::binding_operand;
+use generic_values::read_value;
+use generic_values::normalized_operand;
+use generic_values::copied_binding;
+use generic_values::copy_into;
+use integer_helpers::integers::IntegerSize;
+// All policy selection is read-only. Mutation receives one small selected action.
+pub machine apply_selected(input:&[u8;1024],length:u64,unit:u64,size:IntegerSize,store:&mut ObjectStore,selection:TargetSelection,incoming:Operand,copy:bool)->BindingResult {
+ let operand:Operand=normalized_operand(store,size,incoming);
+ let action:TargetAction=classify_target(store,selection,operand,copy);
+ let result:BindingResult=apply_target_action(input,length,unit,store,action,operand);result
+}
+pub machine classify_target(store:&ObjectStore,selection:TargetSelection,operand:Operand,copy:bool)->TargetAction {
+ transition selection {
+ TargetSelection::Failure {outcome} -> (TargetAction::Failure {outcome:outcome})
+ TargetSelection::Null -> null(copy)
+ TargetSelection::Debug -> debug(copy)
+ TargetSelection::Local {local_index,local_binding} -> local_bound(local_index,local_binding)
+ TargetSelection::Argument {argument_index,argument_binding} -> argument_bound(store,argument_index,argument_binding)
+ TargetSelection::Named {object_id} -> named(store,object_id,operand,copy)
+ }
+ state null(copy:bool)->TargetAction {transition copy {true -> (TargetAction::Failure {outcome:ExecutionOutcome::InvalidTarget}) _ -> (TargetAction::NoWrite)}}
+ state debug(copy:bool)->TargetAction {transition copy {true -> (TargetAction::Failure {outcome:ExecutionOutcome::InvalidTarget}) _ -> (TargetAction::Failure {outcome:ExecutionOutcome::UnresolvedService})}}
+ state local_bound(index:u64,binding:Binding)->TargetAction {transition index<8 {true -> (TargetAction::Replace {binding:binding}) _ -> (TargetAction::Failure {outcome:ExecutionOutcome::InvalidTarget})}}
+ state argument_bound(store:&ObjectStore,index:u64,binding:Binding)->TargetAction {transition index<7 {true -> argument(store,binding) _ -> (TargetAction::Failure {outcome:ExecutionOutcome::InvalidTarget})}}
+ state argument(store:&ObjectStore,binding:Binding)->TargetAction {let action:ArgumentAction=classify_argument(store,binding);let result:TargetAction=target_from_argument(action);result}
+ state named(store:&ObjectStore,id:u64,operand:Operand,copy:bool)->TargetAction {transition copy {true -> (TargetAction::CopyTo {object_id:id,result_binding:Binding::Uninitialized}) _ -> named_store(store,id,operand)}}
+ state named_store(store:&ObjectStore,id:u64,operand:Operand)->TargetAction {
+  let count:u64=store.space.object_count;
+  transition count<=64 && id<count && id<64 {true -> named_kind(store,id,operand,store.space.objects[id].value) _ -> (TargetAction::Failure {outcome:ExecutionOutcome::MissingObject})}
+ }
+ state named_kind(store:&ObjectStore,id:u64,operand:Operand,value:Value)->TargetAction {
+  transition value {Value::Integer {number} -> scalar_source(store,id,operand) Value::Uninitialized -> (TargetAction::CopyTo {object_id:id,result_binding:Binding::Uninitialized}) Value::OperationRegion {space,base,length,scope} -> (TargetAction::Failure {outcome:ExecutionOutcome::UnresolvedRegion}) _ -> (TargetAction::Failure {outcome:ExecutionOutcome::UnsupportedValue})}
+ }
+ state scalar_source(store:&ObjectStore,id:u64,operand:Operand)->TargetAction {
+  let found:ValueResult=read_value(store,operand);
+  transition found.outcome==ExecutionOutcome::Success {true -> scalar_value(id,found.value) _ -> (TargetAction::Failure {outcome:found.outcome})}
+ }
+ state scalar_value(id:u64,value:Value)->TargetAction {
+  transition value {Value::Integer {number} -> (TargetAction::CopyTo {object_id:id,result_binding:Binding::Uninitialized}) _ -> (TargetAction::Failure {outcome:ExecutionOutcome::UnsupportedValue})}
+ }
+}
+machine target_from_argument(action:ArgumentAction)->TargetAction {
+ transition action {ArgumentAction::Failure {outcome} -> (TargetAction::Failure {outcome:outcome}) ArgumentAction::Replace {binding} -> (TargetAction::Replace {binding:binding}) ArgumentAction::CopyReferent {binding,object_id} -> (TargetAction::CopyTo {object_id:object_id,result_binding:binding})}
+}
+pub machine apply_target_action(input:&[u8;1024],length:u64,unit:u64,store:&mut ObjectStore,action:TargetAction,operand:Operand)->BindingResult {
+ transition action {TargetAction::Failure {outcome} -> (BindingResult {outcome:outcome}) TargetAction::NoWrite -> (BindingResult {}) TargetAction::Replace {binding} -> replace(input,length,unit,store,binding,operand) TargetAction::CopyTo {object_id,result_binding} -> copy(input,length,unit,store,object_id,result_binding,operand)}
+ state replace(input:&[u8;1024],length:u64,unit:u64,store:&mut ObjectStore,binding:Binding,operand:Operand)->BindingResult {let result:BindingResult=copied_binding(input,length,unit,store,binding,operand);result}
+ state copy(input:&[u8;1024],length:u64,unit:u64,store:&mut ObjectStore,id:u64,binding:Binding,operand:Operand)->BindingResult {let outcome:ExecutionOutcome=copy_into(input,length,unit,store,id,operand);BindingResult {outcome:outcome,binding:binding}}
+}
+// Read-only classification resolves the old argument binding once. Mutation
+// receives only the selected action, preserving the original binding when an
+// explicit RefOf/Index reference redirects the write to its referent.
+pub machine classify_argument(store:&ObjectStore,binding:Binding)->ArgumentAction {
+ let old:Operand=binding_operand(binding);let found:ValueResult=read_value(store,old);
+ transition found.outcome==ExecutionOutcome::Success {true -> value(binding,found.value) _ -> (ArgumentAction::Failure {outcome:found.outcome})}
+ state value(binding:Binding,value:Value)->ArgumentAction {
+  transition value {Value::Reference {kind,object_id} -> reference(binding,kind,object_id) _ -> (ArgumentAction::Replace {binding:binding})}
+ }
+ state reference(binding:Binding,kind:ReferenceKind,id:u64)->ArgumentAction {
+  transition kind {ReferenceKind::RefOf -> (ArgumentAction::CopyReferent {binding:binding,object_id:id}) ReferenceKind::Index -> (ArgumentAction::CopyReferent {binding:binding,object_id:id}) _ -> (ArgumentAction::Failure {outcome:ExecutionOutcome::InvalidTarget})}
+ }
+}
+pub machine apply_argument(input:&[u8;1024],length:u64,unit:u64,store:&mut ObjectStore,action:ArgumentAction,operand:Operand)->BindingResult {
+ transition action {ArgumentAction::Failure {outcome} -> (BindingResult {outcome:outcome}) ArgumentAction::Replace {binding} -> replace(input,length,unit,store,binding,operand) ArgumentAction::CopyReferent {binding,object_id} -> copy(input,length,unit,store,binding,object_id,operand)}
+ state replace(input:&[u8;1024],length:u64,unit:u64,store:&mut ObjectStore,binding:Binding,operand:Operand)->BindingResult {let result:BindingResult=copied_binding(input,length,unit,store,binding,operand);result}
+ state copy(input:&[u8;1024],length:u64,unit:u64,store:&mut ObjectStore,binding:Binding,id:u64,operand:Operand)->BindingResult {let outcome:ExecutionOutcome=copy_into(input,length,unit,store,id,operand);BindingResult {outcome:outcome,binding:binding}}
+}

@@ -1,0 +1,6 @@
+{
+  "stage": "checked-interpreter",
+  "pairs": 5,
+  "control": "changed expected normalized binding or stored integer",
+  "native_execution": false
+}

@@ -1,0 +1,39 @@
+use aml::model::Value;
+use aml::model::Span;
+use aml::model::Path;
+use aml::model::Entry;
+use aml::model::Object;
+use aml::model::BufferStorage;
+use aml::model::ObjectStore;
+use aml::model::MethodDefinition;
+use execution::engine::run_method;
+use execution::engine::ExecutionResult;
+use execution::execution_model::Operand;
+use execution::execution_model::ExecutionOutcome;
+use integer_helpers::integers::IntegerSize;
+data Suite {}
+machine de_case(buffer:bool,expected:u64)->i32 {
+ let mut input:[u8;1024];input[0]=164;input[1]=104;input[2]=17;
+ let mut path:Path=Path {absolute:true,count:1};path.segments[0]=1313423693;
+ let body:Span=Span {unit:7,end:2};
+ let mut store:ObjectStore=ObjectStore {};
+ store.space.count=1;store.space.object_count=1;
+ store.space.entries[0]=Entry {path:path,has_object:true,object:0};
+ store.space.objects[0]=Object {value:Value::Method {flags:1,body:body}};
+ let mut definitions:[MethodDefinition;64];definitions[0]=MethodDefinition {present:true,object_id:0,flags:1,body:body,scope:Path {absolute:true}};
+ let mut arguments:[Value;7];arguments[0]=de_argument(buffer);
+ let result:ExecutionResult=run_method(&input,3,7,&mut store,&definitions,path,&arguments,1,IntegerSize::EightBytes,64);
+ let number:u64=de_value(result.operand);
+ let count:u64=store.space.object_count;let kind:bool=de_source_buffer(store.space.objects[1].value);
+ let good:bool=de_assert(result.outcome,result.has_value,number,expected,count,buffer,kind);
+ transition good {true -> (0) _ -> (1)}
+}
+machine de_argument(buffer:bool)->Value {transition buffer {true -> (Value::Buffer {buffer_storage:BufferStorage::Source {declared_size:1,buffer_initializer:Span {unit:7,start:2,end:3}}}) _ -> (Value::Integer {number:23})}}
+machine de_value(value:Operand)->u64 {transition value {Operand::Object {object_id} -> (object_id) Operand::Integer {number} -> (number) _ -> (999)}}
+machine de_assert(outcome:ExecutionOutcome,present:bool,actual:u64,wanted:u64,count:u64,buffer:bool,kind:bool)->bool {let allocation:bool=de_count(buffer,count,kind);outcome==ExecutionOutcome::Success && present && actual==wanted && allocation}
+machine de_count(buffer:bool,count:u64,kind:bool)->bool {transition buffer {true -> (count==2 && kind) _ -> (count==1)}}
+machine de_source_buffer(value:Value)->bool {transition value {Value::Buffer {buffer_storage} -> source(buffer_storage) _ -> (false)} state source(storage:BufferStorage)->bool {transition storage {BufferStorage::Source {declared_size,buffer_initializer} -> (declared_size==1 && buffer_initializer.unit==7 && buffer_initializer.start==2 && buffer_initializer.end==3) _ -> (false)}}}
+machine Suite::direct_0_0(&mut self)->i32 {let result:i32=de_case(false,23);result}
+machine Suite::direct_0_1(&mut self)->i32 {let result:i32=de_case(false,24);result}
+machine Suite::direct_1_0(&mut self)->i32 {let result:i32=de_case(true,1);result}
+machine Suite::direct_1_1(&mut self)->i32 {let result:i32=de_case(true,2);result}

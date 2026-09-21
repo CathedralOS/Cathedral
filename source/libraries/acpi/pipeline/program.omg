@@ -38,6 +38,6 @@ pub machine run_program(program: &mut Program, path: Path, arguments: &[Value; 7
         program.length > 1024 -> (ExecutionResult { outcome: ExecutionOutcome::Capacity })
         _ -> execute(program, path, arguments, count, size, budget) }
     state execute(program: &mut Program, path: Path, arguments: &[Value; 7], count: u64, size: IntegerSize, budget: u64) -> ExecutionResult {
-        let result: ExecutionResult = run_method(&program.source, program.length, program.unit, &mut program.store.space, &program.definitions.entries, path, arguments, count, size, budget); result
+        let result: ExecutionResult = run_method(&program.source, program.length, program.unit, &mut program.store, &program.definitions.entries, path, arguments, count, size, budget); result
     }
 }

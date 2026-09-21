@@ -1157,7 +1157,25 @@
             "ACPI-004",
             "ACPI-005",
             "ACPI-006"
-          ]
+          ],
+          "targets": [
+            {
+              "path": "source/libraries/acpi/interpreter/execution/engine.omg",
+              "anchor": "pub machine run_method("
+            },
+            {
+              "path": "source/libraries/acpi/interpreter/execution/external_arguments.omg",
+              "anchor": "pub machine prepare_external_arguments("
+            },
+            {
+              "path": "source/libraries/acpi/interpreter/execution/generic.PORT.md",
+              "anchor": "## Scope"
+            }
+          ],
+          "generic_execution_component": {
+            "note": "Preloaded canonical data transport, bounded calls/Return, byte-owning copies, private Local/Arg bindings and explicit-reference Arg write-through. Named Store remains Integer/Uninitialized in this milestone. Package child sharing is a local shallow-copy profile. Dynamic literals, implicit conversions, general reference/field evaluation, services and full upstream semantics remain pending.",
+            "evidence": "source/libraries/acpi/interpreter/execution/generic.PORT.md"
+          }
         },
         "2383:do_deref_of": {
           "anchor": "fn do_deref_of(&self, object: WrappedObject, current_scope: &AmlName) -> Result<WrappedObject, AmlError> {",
@@ -1238,9 +1256,21 @@
             {
               "path": "source/libraries/acpi/aml/named_value_store.omg",
               "anchor": "pub machine store_value("
+            },
+            {
+              "path": "source/libraries/acpi/interpreter/execution/generic_target_bridge.omg",
+              "anchor": "pub machine write_generic_target("
+            },
+            {
+              "path": "source/libraries/acpi/interpreter/execution/generic_targets.omg",
+              "anchor": "pub machine read_generic_target("
+            },
+            {
+              "path": "source/libraries/acpi/interpreter/execution/generic.PORT.md",
+              "anchor": "## Scope"
             }
           ],
-          "note": "Partial only: primary Table 19.7 bounded numeric/String helpers and direct canonical Integer/String/Buffer conversion selection produce detached semantic results. Generic source/reference/Field resolution, existing-target extent policy, target storage and Store execution remain pending.",
+          "note": "Partial execution now covers preloaded Local/Arg data replacement, explicit-reference Arg write-through and existing Integer/Uninitialized named targets. Detached canonical implicit conversion helpers and atomic basic named-value storage are verified separately; their generic target/opcode composition, general fields and excluded Buffer policies remain pending.",
           "buffer_extent_component": {
             "note": "Detached positive explicit extent1..256, direct Integer/nonemptyString preparation under primary Table19.7. No target presence/provenance, reference evaluation, mutation or Store; zero extent/emptyString/same-typeBuffer policies excluded explicitly. Pin replacement always resizes to raw source bytes."
           },
@@ -1249,6 +1279,10 @@
           },
           "named_value_store_component": {
             "note": "Already-allocated direct basic destination admission, canonical detached conversion and atomic value/block replacement preserve identity and all unrelated store state. Integer/String self-stores are safe; positive Buffer Integer/nonemptyString profile only. Namespace/reference target selection, excluded Buffer policies and opcode retirement remain pending."
+          },
+          "generic_execution_component": {
+            "note": "Preloaded canonical data transport, bounded calls/Return, byte-owning copies, private Local/Arg bindings and explicit-reference Arg write-through. Named Store remains Integer/Uninitialized in this milestone. Package child sharing is a local shallow-copy profile. Dynamic literals, implicit conversions, general reference/field evaluation, services and full upstream semantics remain pending.",
+            "evidence": "source/libraries/acpi/interpreter/execution/generic.PORT.md"
           }
         },
         "2488:do_copy_object": {
@@ -1269,13 +1303,29 @@
             {
               "anchor": "pub machine clone_bytes_into",
               "path": "source/libraries/acpi/aml/byte_storage.omg"
+            },
+            {
+              "path": "source/libraries/acpi/interpreter/execution/generic_values.omg",
+              "anchor": "pub machine copy_into("
+            },
+            {
+              "path": "source/libraries/acpi/interpreter/execution/generic_target_values.omg",
+              "anchor": "pub machine classify_target("
+            },
+            {
+              "path": "source/libraries/acpi/interpreter/execution/generic.PORT.md",
+              "anchor": "## Scope"
             }
           ],
           "owned_byte_component": {
             "components": [
               "Independent byte-value copy into existing ordinary data destination ID"
             ],
-            "remaining": "Byte-copy kernel only; generic reference-target selection, non-byte value copying, MethodDefinitions handling and opcode retirement remain pending."
+            "remaining": "The byte-copy kernel is now composed with bounded generic target selection, ordinary data copying and opcode retirement. Complete Package deep copy, general reference/field evaluation and dynamic MethodDefinitions behavior remain pending."
+          },
+          "generic_execution_component": {
+            "note": "Preloaded canonical data transport, bounded calls/Return, byte-owning copies, private Local/Arg bindings and explicit-reference Arg write-through. Named Store remains Integer/Uninitialized in this milestone. Package child sharing is a local shallow-copy profile. Dynamic literals, implicit conversions, general reference/field evaluation, services and full upstream semantics remain pending.",
+            "evidence": "source/libraries/acpi/interpreter/execution/generic.PORT.md"
           }
         },
         "2519:do_field_read": {
@@ -1465,7 +1515,25 @@
             "ACPI-004",
             "ACPI-005",
             "ACPI-006"
-          ]
+          ],
+          "targets": [
+            {
+              "path": "source/libraries/acpi/interpreter/execution/execution_model.omg",
+              "anchor": "pub data Frame"
+            },
+            {
+              "path": "source/libraries/acpi/interpreter/execution/frames.omg",
+              "anchor": "pub machine new_frame("
+            },
+            {
+              "path": "source/libraries/acpi/interpreter/execution/generic.PORT.md",
+              "anchor": "## Scope"
+            }
+          ],
+          "generic_execution_component": {
+            "note": "Preloaded canonical data transport, bounded calls/Return, byte-owning copies, private Local/Arg bindings and explicit-reference Arg write-through. Named Store remains Integer/Uninitialized in this milestone. Package child sharing is a local shallow-copy profile. Dynamic literals, implicit conversions, general reference/field evaluation, services and full upstream semantics remain pending.",
+            "evidence": "source/libraries/acpi/interpreter/execution/generic.PORT.md"
+          }
         },
         "2873:Block": {
           "anchor": "struct Block {",
@@ -1540,7 +1608,21 @@
             "ACPI-004",
             "ACPI-005",
             "ACPI-006"
-          ]
+          ],
+          "targets": [
+            {
+              "path": "source/libraries/acpi/interpreter/execution/execution_model.omg",
+              "anchor": "pub data Operation"
+            },
+            {
+              "path": "source/libraries/acpi/interpreter/execution/generic.PORT.md",
+              "anchor": "## Scope"
+            }
+          ],
+          "generic_execution_component": {
+            "note": "Preloaded canonical data transport, bounded calls/Return, byte-owning copies, private Local/Arg bindings and explicit-reference Arg write-through. Named Store remains Integer/Uninitialized in this milestone. Package child sharing is a local shallow-copy profile. Dynamic literals, implicit conversions, general reference/field evaluation, services and full upstream semantics remain pending.",
+            "evidence": "source/libraries/acpi/interpreter/execution/generic.PORT.md"
+          }
         },
         "2945:Argument": {
           "anchor": "enum Argument {",
@@ -1675,7 +1757,21 @@
             "ACPI-004",
             "ACPI-005",
             "ACPI-006"
-          ]
+          ],
+          "targets": [
+            {
+              "path": "source/libraries/acpi/interpreter/execution/operands.omg",
+              "anchor": "pub machine contribute_operand("
+            },
+            {
+              "path": "source/libraries/acpi/interpreter/execution/generic.PORT.md",
+              "anchor": "## Scope"
+            }
+          ],
+          "generic_execution_component": {
+            "note": "Preloaded canonical data transport, bounded calls/Return, byte-owning copies, private Local/Arg bindings and explicit-reference Arg write-through. Named Store remains Integer/Uninitialized in this milestone. Package child sharing is a local shallow-copy profile. Dynamic literals, implicit conversions, general reference/field evaluation, services and full upstream semantics remain pending.",
+            "evidence": "source/libraries/acpi/interpreter/execution/generic.PORT.md"
+          }
         },
         "3062:start": {
           "anchor": "fn start(&mut self, op: OpInFlight) {",
@@ -1705,7 +1801,21 @@
             "ACPI-004",
             "ACPI-005",
             "ACPI-006"
-          ]
+          ],
+          "targets": [
+            {
+              "path": "source/libraries/acpi/interpreter/execution/retire.omg",
+              "anchor": "pub machine retire_operation("
+            },
+            {
+              "path": "source/libraries/acpi/interpreter/execution/generic.PORT.md",
+              "anchor": "## Scope"
+            }
+          ],
+          "generic_execution_component": {
+            "note": "Preloaded canonical data transport, bounded calls/Return, byte-owning copies, private Local/Arg bindings and explicit-reference Arg write-through. Named Store remains Integer/Uninitialized in this milestone. Package child sharing is a local shallow-copy profile. Dynamic literals, implicit conversions, general reference/field evaluation, services and full upstream semantics remain pending.",
+            "evidence": "source/libraries/acpi/interpreter/execution/generic.PORT.md"
+          }
         },
         "3077:start_new_block": {
           "anchor": "fn start_new_block(&mut self, kind: BlockKind, length: usize) {",
@@ -2081,6 +2191,18 @@
             {
               "path": "source/libraries/acpi/interpreter/execution/byte_literals.omg",
               "anchor": "pub machine preflight_byte_literal"
+            },
+            {
+              "path": "source/libraries/acpi/interpreter/execution/engine.omg",
+              "anchor": "pub machine run_operands("
+            },
+            {
+              "path": "source/libraries/acpi/interpreter/execution/decode_execution.omg",
+              "anchor": "pub machine decode_term("
+            },
+            {
+              "path": "source/libraries/acpi/interpreter/execution/generic.PORT.md",
+              "anchor": "## Scope"
             }
           ],
           "components": [
@@ -2093,7 +2215,11 @@
               "meaning": "Constant BufferSize only; source envelope/width normalization, spec max(declared,initializer) and zero padding. Dynamic evaluation and retirement remain pending."
             }
           ],
-          "note": "Standalone byte_literals preflight parses ASCII String and constant-size Buffer with active-block bounds and frame integer-width normalization. Generic decode contribution/retirement remains pending."
+          "note": "Standalone byte_literals preflight parses ASCII String and constant-size Buffer with active-block bounds and frame integer-width normalization. Generic decode contribution/retirement remains pending.",
+          "generic_execution_component": {
+            "note": "Preloaded canonical data transport, bounded calls/Return, byte-owning copies, private Local/Arg bindings and explicit-reference Arg write-through. Named Store remains Integer/Uninitialized in this milestone. Package child sharing is a local shallow-copy profile. Dynamic literals, implicit conversions, general reference/field evaluation, services and full upstream semantics remain pending.",
+            "evidence": "source/libraries/acpi/interpreter/execution/generic.PORT.md"
+          }
         },
         "551:strip_end_tag": {
           "anchor": "fn strip_end_tag(buf: &[u8]) -> &[u8] {",

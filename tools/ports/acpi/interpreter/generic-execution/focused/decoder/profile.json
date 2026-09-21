@@ -1,0 +1,6 @@
+{
+  "stage": "checked-interpreter",
+  "pairs": 6,
+  "control": "changed expected cursor inside authored body",
+  "native_execution": false
+}

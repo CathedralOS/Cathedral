@@ -1,0 +1,18 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+module integer_target_values;
+use aml::model::ObjectStore;
+use execution_model::ExecutionOutcome;
+use execution_model::Binding;
+use execution_model::BindingResult;
+use generic_target_model::TargetAction;
+use generic_values::copy_integer_into;
+// The scalar has already been normalized to the active AML IntegerSize.
+pub machine apply_integer_action(input:&[u8;1024],length:u64,unit:u64,store:&mut ObjectStore,action:TargetAction,number:u64)->BindingResult {
+ transition action {TargetAction::NoWrite -> (BindingResult {}) TargetAction::Failure {outcome} -> (BindingResult {outcome:outcome}) TargetAction::Replace {binding} -> replacement(input,length,unit,store,binding,number) TargetAction::CopyTo {object_id,result_binding} -> copy(input,length,unit,store,object_id,result_binding,number)}
+ state replacement(input:&[u8;1024],length:u64,unit:u64,store:&mut ObjectStore,binding:Binding,number:u64)->BindingResult {
+  transition binding {Binding::Cell {cell_id} -> copy(input,length,unit,store,cell_id,binding,number) _ -> (BindingResult {binding:Binding::Integer {number:number}})}
+ }
+ state copy(input:&[u8;1024],length:u64,unit:u64,store:&mut ObjectStore,id:u64,binding:Binding,number:u64)->BindingResult {
+  let outcome:ExecutionOutcome=copy_integer_into(input,length,unit,store,id,number);BindingResult {outcome:outcome,binding:binding}
+ }
+}

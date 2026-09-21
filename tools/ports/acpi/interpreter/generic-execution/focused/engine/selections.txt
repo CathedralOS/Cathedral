@@ -1,0 +1,4 @@
+Suite::direct_0_0=0
+Suite::direct_0_1=1
+Suite::direct_1_0=0
+Suite::direct_1_1=1

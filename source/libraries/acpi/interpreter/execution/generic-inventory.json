@@ -1,0 +1,1172 @@
+{
+  "files": {
+    "src/aml/mod.rs": {
+      "disposition": "pending",
+      "reason": "Partial canonical generic execution slice; complete interpreter remains pending.",
+      "sha256": "c1c9794c9fe490a87e5c94a4ab2b6ad07b8549c4f344186169629ed9d38bc3df",
+      "symbols": {
+        "104:BaseInterpreter": {
+          "anchor": "pub struct BaseInterpreter<H, R>",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "110:namespace": {
+          "anchor": "pub namespace: Spinlock<Namespace>,",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "111:object_token": {
+          "anchor": "pub object_token: Spinlock<ObjectToken>,",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "1161:DEF_ELSE_OP": {
+          "anchor": "const DEF_ELSE_OP: u8 = 0xa1;",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "128:NoSendInterpreter": {
+          "anchor": "pub type NoSendInterpreter<H> = BaseInterpreter<H, dyn RegionHandler>;",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "131:Interpreter": {
+          "anchor": "pub type Interpreter<H> = BaseInterpreter<H, dyn RegionHandler + Send + Sync>;",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "138:INTERPRETER_REVISION": {
+          "anchor": "const INTERPRETER_REVISION: u64 = 1;",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "143:MAX_NAME_PATH_INDIRECTIONS": {
+          "anchor": "const MAX_NAME_PATH_INDIRECTIONS: usize = 8;",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "1482:in": {
+          "anchor": "warn!(\"Wrong data field type in IndexField: {:?}\", data);",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "153:new": {
+          "anchor": "pub fn new(",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "177:new_from_platform": {
+          "anchor": "pub fn new_from_platform(platform: &AcpiPlatform<H>) -> Result<BaseInterpreter<H, R>, AcpiError> {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "178:load_table": {
+          "anchor": "fn load_table<H, R>(interpreter: &BaseInterpreter<H, R>, table: AmlTable) -> Result<(), AcpiError>",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "1831:parse_field_list": {
+          "anchor": "fn parse_field_list(",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "1839:RESERVED_FIELD": {
+          "anchor": "const RESERVED_FIELD: u8 = 0x00;",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "1840:ACCESS_FIELD": {
+          "anchor": "const ACCESS_FIELD: u8 = 0x01;",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "1841:CONNECT_FIELD": {
+          "anchor": "const CONNECT_FIELD: u8 = 0x02;",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "1842:EXTENDED_ACCESS_FIELD": {
+          "anchor": "const EXTENDED_ACCESS_FIELD: u8 = 0x03;",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "1896:do_binary_maths": {
+          "anchor": "fn do_binary_maths(&self, context: &mut MethodContext, op: OpInFlight) -> Result<(), AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "1931:do_unary_maths": {
+          "anchor": "fn do_unary_maths(&self, context: &mut MethodContext, op: OpInFlight) -> Result<(), AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "1972:do_logical_op": {
+          "anchor": "fn do_logical_op(&self, context: &mut MethodContext, op: OpInFlight) -> Result<(), AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "19:namespace": {
+          "anchor": "pub mod namespace;",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "2024:do_to_buffer": {
+          "anchor": "fn do_to_buffer(&self, context: &mut MethodContext, op: OpInFlight) -> Result<(), AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "2057:do_to_integer": {
+          "anchor": "fn do_to_integer(&self, context: &mut MethodContext, op: OpInFlight) -> Result<(), AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "2068:do_to_string": {
+          "anchor": "fn do_to_string(&self, context: &mut MethodContext, op: OpInFlight) -> Result<(), AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "2096:do_to_dec_hex_string": {
+          "anchor": "fn do_to_dec_hex_string(&self, context: &mut MethodContext, op: OpInFlight) -> Result<(), AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "20:object": {
+          "anchor": "pub mod object;",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "2137:do_mid": {
+          "anchor": "fn do_mid(&self, context: &mut MethodContext, op: OpInFlight) -> Result<(), AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "2171:do_concat": {
+          "anchor": "fn do_concat(&self, context: &mut MethodContext, op: OpInFlight) -> Result<(), AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "2176:resolve_as_string": {
+          "anchor": "fn resolve_as_string(obj: &Object) -> String {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "21:op_region": {
+          "anchor": "pub mod op_region;",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "2233:do_from_bcd": {
+          "anchor": "fn do_from_bcd(&self, context: &mut MethodContext, op: OpInFlight) -> Result<(), AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "2250:do_to_bcd": {
+          "anchor": "fn do_to_bcd(&self, context: &mut MethodContext, op: OpInFlight) -> Result<(), AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "2267:do_size_of": {
+          "anchor": "fn do_size_of(&self, context: &mut MethodContext, op: OpInFlight) -> Result<(), AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "2283:do_index": {
+          "anchor": "fn do_index(&self, context: &mut MethodContext, op: OpInFlight) -> Result<(), AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "228:load_table": {
+          "anchor": "pub fn load_table(&self, stream: &[u8]) -> Result<(), AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "22:pci_routing": {
+          "anchor": "pub mod pci_routing;",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "2336:resolve_name_path": {
+          "anchor": "fn resolve_name_path(&self, object: WrappedObject) -> Result<WrappedObject, AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "2355:object_type": {
+          "anchor": "fn object_type(&self, object: WrappedObject) -> Result<u64, AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "236:evaluate": {
+          "anchor": "pub fn evaluate(&self, path: AmlName, args: Vec<WrappedObject>) -> Result<WrappedObject, AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "2383:do_deref_of": {
+          "anchor": "fn do_deref_of(&self, object: WrappedObject, current_scope: &AmlName) -> Result<WrappedObject, AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "23:resource": {
+          "anchor": "pub mod resource;",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "2406:do_store": {
+          "anchor": "fn do_store(&self, target: WrappedObject, object: WrappedObject) -> Result<WrappedObject, AmlError> {",
+          "disposition": "pending",
+          "reason": "Partially adapted for canonical preloaded data and bounded frames. Primary binding isolation corrects observed pin aliases; unsupported opcodes/targets remain explicit. See generic.PORT.md.",
+          "targets": [
+            {
+              "anchor": "pub machine write_generic_target",
+              "path": "source/libraries/acpi/interpreter/execution/generic_target_bridge.omg"
+            },
+            {
+              "anchor": "pub machine classify_target",
+              "path": "source/libraries/acpi/interpreter/execution/generic_target_values.omg"
+            },
+            {
+              "anchor": "pub machine read_generic_target",
+              "path": "source/libraries/acpi/interpreter/execution/generic_targets.omg"
+            }
+          ]
+        },
+        "2488:do_copy_object": {
+          "anchor": "fn do_copy_object(&self, target: WrappedObject, object: WrappedObject) -> Result<(), AmlError> {",
+          "disposition": "pending",
+          "reason": "Partially adapted for canonical preloaded data and bounded frames. Primary binding isolation corrects observed pin aliases; unsupported opcodes/targets remain explicit. See generic.PORT.md.",
+          "targets": [
+            {
+              "anchor": "pub machine write_generic_target",
+              "path": "source/libraries/acpi/interpreter/execution/generic_target_bridge.omg"
+            },
+            {
+              "anchor": "pub machine copy_into",
+              "path": "source/libraries/acpi/interpreter/execution/generic_values.omg"
+            },
+            {
+              "anchor": "pub machine classify_target",
+              "path": "source/libraries/acpi/interpreter/execution/generic_target_values.omg"
+            },
+            {
+              "anchor": "pub machine read_generic_target",
+              "path": "source/libraries/acpi/interpreter/execution/generic_targets.omg"
+            }
+          ]
+        },
+        "2519:do_field_read": {
+          "anchor": "fn do_field_read(&self, field: &FieldUnit) -> Result<WrappedObject, AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "251:evaluate_if_present": {
+          "anchor": "pub fn evaluate_if_present(",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "2527:Output": {
+          "anchor": "enum Output {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "2612:do_field_write": {
+          "anchor": "fn do_field_write(&self, field: &FieldUnit, value: WrappedObject) -> Result<(), AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "269:install_region_handler": {
+          "anchor": "pub fn install_region_handler(&self, space: RegionSpace, handler: Box<R>) {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "2714:do_native_region_read": {
+          "anchor": "fn do_native_region_read(&self, region: &OpRegion, offset: usize, length: usize) -> Result<u64, AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "2770:do_native_region_write": {
+          "anchor": "fn do_native_region_write(",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "278:initialize_namespace": {
+          "anchor": "pub fn initialize_namespace(&self) {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "2835:pci_address_for_device": {
+          "anchor": "fn pci_address_for_device(&self, path: &AmlName) -> Result<PciAddress, AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "2862:MethodContext": {
+          "anchor": "struct MethodContext {",
+          "disposition": "pending",
+          "reason": "Partially adapted for canonical preloaded data and bounded frames. Primary binding isolation corrects observed pin aliases; unsupported opcodes/targets remain explicit. See generic.PORT.md.",
+          "targets": [
+            {
+              "anchor": "pub data Frame",
+              "path": "source/libraries/acpi/interpreter/execution/execution_model.omg"
+            }
+          ]
+        },
+        "2873:Block": {
+          "anchor": "struct Block {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "2880:stream": {
+          "anchor": "fn stream(&self) -> &[u8] {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "2886:BlockKind": {
+          "anchor": "pub enum BlockKind {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "2907:ResolveBehaviour": {
+          "anchor": "enum ResolveBehaviour {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "2937:OpInFlight": {
+          "anchor": "struct OpInFlight {",
+          "disposition": "pending",
+          "reason": "Partially adapted for canonical preloaded data and bounded frames. Primary binding isolation corrects observed pin aliases; unsupported opcodes/targets remain explicit. See generic.PORT.md.",
+          "targets": [
+            {
+              "anchor": "pub data Operation",
+              "path": "source/libraries/acpi/interpreter/execution/execution_model.omg"
+            }
+          ]
+        },
+        "2945:Argument": {
+          "anchor": "enum Argument {",
+          "disposition": "pending",
+          "reason": "Partially adapted for canonical preloaded data and bounded frames. Primary binding isolation corrects observed pin aliases; unsupported opcodes/targets remain explicit. See generic.PORT.md.",
+          "targets": [
+            {
+              "anchor": "pub data Operand",
+              "path": "source/libraries/acpi/interpreter/execution/execution_model.omg"
+            }
+          ]
+        },
+        "2957:new": {
+          "anchor": "pub fn new(op: Opcode, resolve_behaviour: &'static [ResolveBehaviour]) -> OpInFlight {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "2964:new_dynamic": {
+          "anchor": "pub fn new_dynamic(",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "2974:new_with_dynamic": {
+          "anchor": "pub fn new_with_dynamic(",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "2987:new_with": {
+          "anchor": "pub fn new_with(",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "2996:resolve_behaviour": {
+          "anchor": "fn resolve_behaviour(&self) -> ResolveBehaviour {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "3008:new_from_table": {
+          "anchor": "unsafe fn new_from_table(stream: &[u8]) -> MethodContext {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "3021:new_from_method": {
+          "anchor": "fn new_from_method(",
+          "disposition": "pending",
+          "reason": "Partially adapted for canonical preloaded data and bounded frames. Primary binding isolation corrects observed pin aliases; unsupported opcodes/targets remain explicit. See generic.PORT.md.",
+          "targets": [
+            {
+              "anchor": "pub machine new_frame",
+              "path": "source/libraries/acpi/interpreter/execution/frames.omg"
+            }
+          ]
+        },
+        "3053:contribute_arg": {
+          "anchor": "fn contribute_arg(&mut self, arg: Argument) {",
+          "disposition": "pending",
+          "reason": "Partially adapted for canonical preloaded data and bounded frames. Primary binding isolation corrects observed pin aliases; unsupported opcodes/targets remain explicit. See generic.PORT.md.",
+          "targets": [
+            {
+              "anchor": "pub machine contribute_operand",
+              "path": "source/libraries/acpi/interpreter/execution/operands.omg"
+            }
+          ]
+        },
+        "3062:start": {
+          "anchor": "fn start(&mut self, op: OpInFlight) {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "3073:retire_op": {
+          "anchor": "fn retire_op(&mut self, op: OpInFlight) {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "3077:start_new_block": {
+          "anchor": "fn start_new_block(&mut self, kind: BlockKind, length: usize) {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "3087:opcode": {
+          "anchor": "fn opcode(&mut self) -> Result<Opcode, AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "3227:pkglength": {
+          "anchor": "fn pkglength(&mut self) -> Result<usize, AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "3243:namestring": {
+          "anchor": "fn namestring(&mut self) -> Result<AmlName, AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "3255:NULL_NAME": {
+          "anchor": "const NULL_NAME: u8 = 0x00;",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "3256:DUAL_NAME_PREFIX": {
+          "anchor": "const DUAL_NAME_PREFIX: u8 = 0x2e;",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "3257:MULTI_NAME_PREFIX": {
+          "anchor": "const MULTI_NAME_PREFIX: u8 = 0x2f;",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "3305:next": {
+          "anchor": "fn next(&mut self) -> Result<u8, AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "3316:next_u16": {
+          "anchor": "fn next_u16(&mut self) -> Result<u16, AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "3320:next_u32": {
+          "anchor": "fn next_u32(&mut self) -> Result<u32, AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "3324:next_u64": {
+          "anchor": "fn next_u64(&mut self) -> Result<u64, AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "3337:peek": {
+          "anchor": "fn peek(&self) -> Result<u8, AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "3347:Opcode": {
+          "anchor": "enum Opcode {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "3465:Operation": {
+          "anchor": "pub enum Operation {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "3492:AmlError": {
+          "anchor": "pub enum AmlError {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "354:acquire_global_lock": {
+          "anchor": "pub fn acquire_global_lock(&self, timeout: u16) -> Result<(), AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "3568:IntegerSize": {
+          "anchor": "pub enum IntegerSize {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "3569:FourBytes": {
+          "anchor": "FourBytes = 4,",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "3570:EightBytes": {
+          "anchor": "EightBytes = 8,",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "3574:from_revision": {
+          "anchor": "pub fn from_revision(revision: u8) -> IntegerSize {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "389:try_do_acquire_firmware_lock": {
+          "anchor": "fn try_do_acquire_firmware_lock(&self) -> bool {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "415:release_global_lock": {
+          "anchor": "pub fn release_global_lock(&self) -> Result<(), AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "438:do_release_firmware_lock": {
+          "anchor": "fn do_release_firmware_lock(&self) -> bool {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "457:do_execute_method": {
+          "anchor": "fn do_execute_method(&self, mut context: MethodContext) -> Result<WrappedObject, AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "551:strip_end_tag": {
+          "anchor": "fn strip_end_tag(buf: &[u8]) -> &[u8] {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "749:produced": {
+          "anchor": "\"Invalid argument type produced for package element\".to_string(),",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "781:produced": {
+          "anchor": "\"Invalid argument type produced for package element\".to_string(),",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "816:DEF_ELSE_OP": {
+          "anchor": "const DEF_ELSE_OP: u8 = 0xa1;",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        }
+      },
+      "targets": [
+        {
+          "anchor": "## Source and behavior map",
+          "path": "source/libraries/acpi/interpreter/execution/generic.PORT.md"
+        }
+      ]
+    },
+    "src/aml/namespace.rs": {
+      "disposition": "pending",
+      "reason": "Partial canonical generic execution slice; complete interpreter remains pending.",
+      "sha256": "311f3d9b5fbcb08395dcde0b5dce5455e932ad4a8fb6c273580d80c507b2f347",
+      "symbols": {
+        "139:add_level": {
+          "anchor": "pub fn add_level(&mut self, path: AmlName, kind: NamespaceLevelKind) -> Result<(), AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "156:remove_level": {
+          "anchor": "pub fn remove_level(&mut self, path: AmlName) -> Result<(), AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "169:insert": {
+          "anchor": "pub fn insert(&mut self, path: AmlName, object: WrappedObject) -> Result<(), AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "186:create_alias": {
+          "anchor": "pub fn create_alias(&mut self, path: AmlName, object: WrappedObject) -> Result<(), AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "196:get": {
+          "anchor": "pub fn get(&mut self, path: AmlName) -> Result<WrappedObject, AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "209:search": {
+          "anchor": "pub fn search(&self, path: &AmlName, starting_scope: &AmlName) -> Result<(AmlName, WrappedObject), AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "20:Namespace": {
+          "anchor": "pub struct Namespace {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "252:search_for_level": {
+          "anchor": "pub fn search_for_level(&self, level_name: &AmlName, starting_scope: &AmlName) -> Result<AmlName, AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "26:new": {
+          "anchor": "pub fn new(global_lock_mutex: Handle) -> Namespace {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "280:get_level_for_path": {
+          "anchor": "fn get_level_for_path(&self, path: &AmlName) -> Result<(&NamespaceLevel, NameSeg), AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "307:get_level_for_path_mut": {
+          "anchor": "fn get_level_for_path_mut(&mut self, path: &AmlName) -> Result<(&mut NamespaceLevel, NameSeg), AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "339:traverse": {
+          "anchor": "pub fn traverse<F>(&mut self, mut f: F) -> Result<(), AmlError>",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "343:traverse_level": {
+          "anchor": "fn traverse_level<F>(level: &NamespaceLevel, scope: &AmlName, f: &mut F) -> Result<(), AmlError>",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "367:fmt": {
+          "anchor": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "368:STEM": {
+          "anchor": "const STEM: &str = \"\u2502   \";",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "369:BRANCH": {
+          "anchor": "const BRANCH: &str = \"\u251c\u2500\u2500 \";",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "370:END": {
+          "anchor": "const END: &str = \"\u2514\u2500\u2500 \";",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "372:print_level": {
+          "anchor": "fn print_level(f: &mut fmt::Formatter<'_>, level: &NamespaceLevel, indent_stack: String) -> fmt::Result {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "413:NamespaceLevelKind": {
+          "anchor": "pub enum NamespaceLevelKind {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "423:NamespaceLevel": {
+          "anchor": "pub struct NamespaceLevel {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "424:kind": {
+          "anchor": "pub kind: NamespaceLevelKind,",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "425:values": {
+          "anchor": "pub values: BTreeMap<NameSeg, (ObjectFlags, WrappedObject)>,",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "426:children": {
+          "anchor": "pub children: BTreeMap<NameSeg, NamespaceLevel>,",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "430:ObjectFlags": {
+          "anchor": "pub struct ObjectFlags(u8);",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "433:new": {
+          "anchor": "pub fn new(is_alias: bool) -> ObjectFlags {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "439:is_alias": {
+          "anchor": "pub fn is_alias(&self) -> bool {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "445:new": {
+          "anchor": "pub fn new(kind: NamespaceLevelKind) -> NamespaceLevel {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "451:AmlName": {
+          "anchor": "pub struct AmlName(Vec<NameComponent>);",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "454:NameComponent": {
+          "anchor": "pub enum NameComponent {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "461:root": {
+          "anchor": "pub fn root() -> AmlName {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "465:from_name_seg": {
+          "anchor": "pub fn from_name_seg(seg: NameSeg) -> AmlName {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "469:from_components": {
+          "anchor": "pub fn from_components(components: Vec<NameComponent>) -> AmlName {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "473:as_string": {
+          "anchor": "pub fn as_string(&self) -> String {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "487:is_normal": {
+          "anchor": "pub fn is_normal(&self) -> bool {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "491:is_absolute": {
+          "anchor": "pub fn is_absolute(&self) -> bool {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "497:search_rules_apply": {
+          "anchor": "pub fn search_rules_apply(&self) -> bool {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "507:normalize": {
+          "anchor": "pub fn normalize(self) -> Result<AmlName, AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "540:parent": {
+          "anchor": "pub fn parent(&self) -> Result<AmlName, AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "557:require_absolute": {
+          "anchor": "pub fn require_absolute(&self) -> Result<(), AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "563:normalize_absolute": {
+          "anchor": "pub fn normalize_absolute(self) -> Result<AmlName, AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "570:resolve": {
+          "anchor": "pub fn resolve(&self, scope: &AmlName) -> Result<AmlName, AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "584:Err": {
+          "anchor": "type Err = AmlError;",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "586:from_str": {
+          "anchor": "fn from_str(mut string: &str) -> Result<Self, Self::Err> {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "617:fmt": {
+          "anchor": "fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "623:NameSeg": {
+          "anchor": "pub struct NameSeg(pub(crate) [u8; 4]);",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "626:from_bytes": {
+          "anchor": "pub fn from_bytes(bytes: [u8; 4]) -> Result<NameSeg, AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "642:as_str": {
+          "anchor": "pub fn as_str(&self) -> &str {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "649:Err": {
+          "anchor": "type Err = AmlError;",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "651:from_str": {
+          "anchor": "fn from_str(s: &str) -> Result<Self, Self::Err> {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "679:is_lead_name_char": {
+          "anchor": "pub fn is_lead_name_char(c: u8) -> bool {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "683:is_name_char": {
+          "anchor": "pub fn is_name_char(c: u8) -> bool {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "688:fmt": {
+          "anchor": "fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        }
+      },
+      "targets": [
+        {
+          "anchor": "## Source and behavior map",
+          "path": "source/libraries/acpi/interpreter/execution/generic.PORT.md"
+        }
+      ]
+    },
+    "src/aml/object.rs": {
+      "disposition": "pending",
+      "reason": "Partial canonical generic execution slice; complete interpreter remains pending.",
+      "sha256": "03131269e94c209e58111c7d41c07c43aed8bc1c3044c772f551ddb55ff60491",
+      "symbols": {
+        "102:create_interpreter_token": {
+          "anchor": "pub(super) unsafe fn create_interpreter_token() -> ObjectToken {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "108:WrappedObject": {
+          "anchor": "pub struct WrappedObject(Arc<UnsafeCell<Object>>);",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "111:new": {
+          "anchor": "pub fn new(object: Object) -> WrappedObject {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "11:NativeMethod": {
+          "anchor": "type NativeMethod = dyn Fn(&[WrappedObject]) -> Result<WrappedObject, AmlError>;",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "124:gain_mut": {
+          "anchor": "pub unsafe fn gain_mut<'r, 'a, 't>(&'a self, _token: &'t ObjectToken) -> &'r mut Object",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "132:unwrap_reference": {
+          "anchor": "pub fn unwrap_reference(self) -> WrappedObject {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "145:unwrap_transparent_reference": {
+          "anchor": "pub fn unwrap_transparent_reference(self) -> WrappedObject {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "14:Object": {
+          "anchor": "pub enum Object {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "160:Target": {
+          "anchor": "type Target = Object;",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "162:deref": {
+          "anchor": "fn deref(&self) -> &Self::Target {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "174:fmt": {
+          "anchor": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "180:wrap": {
+          "anchor": "pub fn wrap(self) -> WrappedObject {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "187:as_integer": {
+          "anchor": "pub fn as_integer(&self) -> Result<u64, AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "195:as_string": {
+          "anchor": "pub fn as_string(&self) -> Result<Cow<'_, str>, AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "203:as_buffer": {
+          "anchor": "pub fn as_buffer(&self) -> Result<&[u8], AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "214:to_integer": {
+          "anchor": "pub fn to_integer(&self, integer_size: IntegerSize) -> Result<u64, AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "252:to_buffer": {
+          "anchor": "pub fn to_buffer(&self, integer_size: IntegerSize) -> Result<Vec<u8>, AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "264:read_buffer_field": {
+          "anchor": "pub fn read_buffer_field(&self, integer_size: IntegerSize) -> Result<Object, AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "291:write_buffer_field": {
+          "anchor": "pub fn write_buffer_field(&mut self, value: &[u8], token: &ObjectToken) -> Result<(), AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "317:replace_with_implicit_casting": {
+          "anchor": "pub fn replace_with_implicit_casting(&mut self, new: Object) -> Result<(), AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "346:typ": {
+          "anchor": "pub fn typ(&self) -> ObjectType {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "377:aml_cmp": {
+          "anchor": "pub fn aml_cmp(&self, other: &Object) -> Result<Ordering, AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "38:native_method": {
+          "anchor": "pub fn native_method<F>(num_args: u8, f: F) -> Object",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "394:FieldUnit": {
+          "anchor": "pub struct FieldUnit {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "395:kind": {
+          "anchor": "pub kind: FieldUnitKind,",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "396:flags": {
+          "anchor": "pub flags: FieldFlags,",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "397:bit_index": {
+          "anchor": "pub bit_index: usize,",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "398:bit_length": {
+          "anchor": "pub bit_length: usize,",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "402:FieldUnitKind": {
+          "anchor": "pub enum FieldUnitKind {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "409:FieldFlags": {
+          "anchor": "pub struct FieldFlags(pub u8);",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "412:FieldAccessType": {
+          "anchor": "pub enum FieldAccessType {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "422:FieldUpdateRule": {
+          "anchor": "pub enum FieldUpdateRule {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "429:access_type": {
+          "anchor": "pub fn access_type(&self) -> Result<FieldAccessType, AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "441:access_type_bytes": {
+          "anchor": "pub fn access_type_bytes(&self) -> Result<usize, AmlError> {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "455:lock_rule": {
+          "anchor": "pub fn lock_rule(&self) -> bool {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "459:update_rule": {
+          "anchor": "pub fn update_rule(&self) -> FieldUpdateRule {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "470:MethodFlags": {
+          "anchor": "pub struct MethodFlags(pub u8);",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "473:arg_count": {
+          "anchor": "pub fn arg_count(&self) -> usize {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "477:serialize": {
+          "anchor": "pub fn serialize(&self) -> bool {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "481:sync_level": {
+          "anchor": "pub fn sync_level(&self) -> u8 {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "487:ReferenceKind": {
+          "anchor": "pub enum ReferenceKind {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "497:ObjectType": {
+          "anchor": "pub enum ObjectType {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "49:fmt": {
+          "anchor": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "519:DeviceStatus": {
+          "anchor": "pub struct DeviceStatus(pub u64);",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "522:present": {
+          "anchor": "pub fn present(&self) -> bool {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "526:enabled": {
+          "anchor": "pub fn enabled(&self) -> bool {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "530:show_in_ui": {
+          "anchor": "pub fn show_in_ui(&self) -> bool {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "534:functioning": {
+          "anchor": "pub fn functioning(&self) -> bool {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "540:battery_present": {
+          "anchor": "pub fn battery_present(&self) -> bool {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "548:copy_bits": {
+          "anchor": "pub(crate) fn copy_bits(",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "588:align_down": {
+          "anchor": "pub(crate) fn align_down(value: usize, align: usize) -> usize {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "608:tests": {
+          "anchor": "mod tests {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "612:test_copy_bits": {
+          "anchor": "fn test_copy_bits() {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "621:buffer_to_integer": {
+          "anchor": "fn buffer_to_integer() {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "626:buffer_field_to_integer": {
+          "anchor": "fn buffer_field_to_integer() {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "627:BUFFER": {
+          "anchor": "const BUFFER: [u8; 5] = [0xffu8; 5];",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "635:buffer_field_to_4_byte_integer": {
+          "anchor": "fn buffer_field_to_4_byte_integer() {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "637:BUFFER": {
+          "anchor": "const BUFFER: [u8; 5] = [0x0f, 0x00, 0x00, 0x00, 0xf0];",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "649:buffer_field_to_8_byte_integer": {
+          "anchor": "fn buffer_field_to_8_byte_integer() {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "650:BUFFER": {
+          "anchor": "const BUFFER: [u8; 6] = [0x0f, 0x00, 0x00, 0x00, 0xf0, 0xff];",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        },
+        "95:ObjectToken": {
+          "anchor": "pub struct ObjectToken {",
+          "disposition": "pending",
+          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+        }
+      },
+      "targets": [
+        {
+          "anchor": "## Source and behavior map",
+          "path": "source/libraries/acpi/interpreter/execution/generic.PORT.md"
+        }
+      ]
+    }
+  },
+  "format": "cathedral-port-inventory-v1",
+  "scope": "ACPI005 generic preloaded-data transport/calls/Return/copy and primary binding isolation. Full upstream generic functions remain pending. The linked package shallow-copy profile is explicit; no source-wide completion overlay.",
+  "test_sources": {
+    "tests/incdec.asl": "4632b732ab5aad1a6e19ea565ddd528c6f93f5ad08ccaecb4201347cf13dab78",
+    "tests/logical_not.asl": "66dbf7fb31b8e5454ce7e1ee30e12a22adf79d27453bd670f087703beba5dd31",
+    "tests/method.asl": "b3cea0e5708fca22236c11f7204ec27dd77e04f3cfeae210296a7d6030d310a5",
+    "tests/while.asl": "8f413edf837d021fafe8d9eee8d482f79f0d417f6d2926ae0e23e93ba6a6c253"
+  },
+  "upstream": {
+    "revision": "257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5",
+    "roots": [
+      "src/aml/mod.rs",
+      "src/aml/object.rs",
+      "src/aml/namespace.rs"
+    ],
+    "url": "https://github.com/rust-osdev/acpi"
+  }
+}

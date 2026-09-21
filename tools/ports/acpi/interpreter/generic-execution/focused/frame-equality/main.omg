@@ -1,0 +1,200 @@
+use aml::model::Value;
+use aml::model::Span;
+use aml::model::Path;
+use aml::model::Entry;
+use aml::model::Namespace;
+use aml::model::Object;
+use aml::model::ObjectStore;
+use aml::model::ByteBlock;
+use aml::model::StringStorage;
+use aml::model::BufferStorage;
+use aml::model::ReferenceKind;
+use execution::execution_model::ExecutionOutcome;
+use execution::execution_model::Operand;
+use integer_helpers::integers::IntegerSize;
+use execution::execution_model::Frame;
+use execution::execution_model::Binding;
+use execution::execution_model::Target;
+use execution::execution_model::Block;
+use execution::execution_model::Operation;
+use execution::execution_model::NameCache;
+data Suite {}
+machine fx_bytes_equal(a:&[u8;256],b:&[u8;256],i:u64,n:u64,prior:bool)
+terminates by(i,n)->Nat::BoundedDistance;
+->bool {let good:bool=fx_byte_equal(a,b,i,n);transition i<n {true -> fx_bytes_equal(a,b,i+1,n,prior && good) _ -> (prior)}}
+machine fx_byte_equal(a:&[u8;256],b:&[u8;256],i:u64,n:u64)->bool {transition i<n && i<256 {true -> (a[i]==b[i]) _ -> (true)}}
+machine fx_span(a:Span,b:Span)->bool {a.unit==b.unit && a.start==b.start && a.end==b.end}
+machine fx_path(a:Path,b:Path)->bool {let good:bool=fx_segments(&a.segments,&b.segments,0,16,true);a.absolute==b.absolute && a.parents==b.parents && a.count==b.count && good}
+machine fx_segments(a:&[u32;16],b:&[u32;16],i:u64,n:u64,prior:bool)
+terminates by(i,n)->Nat::BoundedDistance;
+->bool {let good:bool=fx_segment(a,b,i,n);transition i<n {true -> fx_segments(a,b,i+1,n,prior && good) _ -> (prior)}}
+machine fx_segment(a:&[u32;16],b:&[u32;16],i:u64,n:u64)->bool {transition i<n && i<16 {true -> (a[i]==b[i]) _ -> (true)}}
+machine fx_string(a:StringStorage,b:StringStorage)->bool {
+ transition a {StringStorage::Source {string_source} -> source(string_source,b) StringStorage::Owned {string_owner} -> owned(string_owner,b)}
+ state source(a:Span,b:StringStorage)->bool {transition b {StringStorage::Source {string_source} -> span(a,string_source) _ -> (false)}}
+ state span(a:Span,b:Span)->bool {let good:bool=fx_span(a,b);good}
+ state owned(a:u64,b:StringStorage)->bool {transition b {StringStorage::Owned {string_owner} -> (a==string_owner) _ -> (false)}}
+}
+machine fx_buffer(a:BufferStorage,b:BufferStorage)->bool {
+ transition a {BufferStorage::Source {declared_size,buffer_initializer} -> source(declared_size,buffer_initializer,b) BufferStorage::Owned {buffer_owner} -> owned(buffer_owner,b)}
+ state source(size:u64,a:Span,b:BufferStorage)->bool {transition b {BufferStorage::Source {declared_size,buffer_initializer} -> span(size,a,declared_size,buffer_initializer) _ -> (false)}}
+ state span(size:u64,a:Span,other:u64,b:Span)->bool {let good:bool=fx_span(a,b);size==other && good}
+ state owned(a:u64,b:BufferStorage)->bool {transition b {BufferStorage::Owned {buffer_owner} -> (a==buffer_owner) _ -> (false)}}
+}
+machine fx_value(a:Value,b:Value)->bool {transition a {
+Value::Uninitialized -> c_uninitialized(b)
+Value::Integer {number} -> c_integer(number,b)
+Value::String {string_storage} -> c_string(string_storage,b)
+Value::Buffer {buffer_storage} -> c_buffer(buffer_storage,b)
+Value::BufferField {backing_object,bit_offset,bit_length} -> c_bufferfield(backing_object,bit_offset,bit_length,b)
+Value::Package {first,count} -> c_package(first,count,b)
+Value::NameReference {name,scope} -> c_namereference(name,scope,b)
+Value::Reference {kind,object_id} -> c_reference(kind,object_id,b)
+Value::Method {flags,body} -> c_method(flags,body,b)
+Value::Device -> c_device(b)
+Value::Processor {id,address,length} -> c_processor(id,address,length,b)
+Value::PowerResource {system_level,order} -> c_powerresource(system_level,order,b)
+Value::ThermalZone -> c_thermalzone(b)
+Value::Mutex {sync_level} -> c_mutex(sync_level,b)
+Value::Event -> c_event(b)
+Value::OperationRegion {space,base,length,scope} -> c_operationregion(space,base,length,scope,b)
+}
+state c_uninitialized(b:Value)->bool {transition b {Value::Uninitialized -> (true) _ -> (false)}}
+state c_integer(a_number:u64,b:Value)->bool {transition b {Value::Integer {number} -> (a_number==number) _ -> (false)}}
+state c_string(a_string_storage:StringStorage,b:Value)->bool {transition b {Value::String {string_storage} -> check_c_string(a_string_storage,string_storage) _ -> (false)}}
+state check_c_string(a_string_storage:StringStorage,string_storage:StringStorage)->bool {let good_string_storage:bool=fx_string(a_string_storage,string_storage);good_string_storage}
+state c_buffer(a_buffer_storage:BufferStorage,b:Value)->bool {transition b {Value::Buffer {buffer_storage} -> check_c_buffer(a_buffer_storage,buffer_storage) _ -> (false)}}
+state check_c_buffer(a_buffer_storage:BufferStorage,buffer_storage:BufferStorage)->bool {let good_buffer_storage:bool=fx_buffer(a_buffer_storage,buffer_storage);good_buffer_storage}
+state c_bufferfield(a_backing_object:u64,a_bit_offset:u64,a_bit_length:u64,b:Value)->bool {transition b {Value::BufferField {backing_object,bit_offset,bit_length} -> (a_backing_object==backing_object && a_bit_offset==bit_offset && a_bit_length==bit_length) _ -> (false)}}
+state c_package(a_first:u64,a_count:u64,b:Value)->bool {transition b {Value::Package {first,count} -> (a_first==first && a_count==count) _ -> (false)}}
+state c_namereference(a_name:Path,a_scope:Path,b:Value)->bool {transition b {Value::NameReference {name,scope} -> check_c_namereference(a_name,a_scope,name,scope) _ -> (false)}}
+state check_c_namereference(a_name:Path,a_scope:Path,name:Path,scope:Path)->bool {let good_name:bool=fx_path(a_name,name);let good_scope:bool=fx_path(a_scope,scope);good_name && good_scope}
+state c_reference(a_kind:ReferenceKind,a_object_id:u64,b:Value)->bool {transition b {Value::Reference {kind,object_id} -> (a_kind==kind && a_object_id==object_id) _ -> (false)}}
+state c_method(a_flags:u8,a_body:Span,b:Value)->bool {transition b {Value::Method {flags,body} -> check_c_method(a_flags,a_body,flags,body) _ -> (false)}}
+state check_c_method(a_flags:u8,a_body:Span,flags:u8,body:Span)->bool {let good_body:bool=fx_span(a_body,body);a_flags==flags && good_body}
+state c_device(b:Value)->bool {transition b {Value::Device -> (true) _ -> (false)}}
+state c_processor(a_id:u8,a_address:u32,a_length:u8,b:Value)->bool {transition b {Value::Processor {id,address,length} -> (a_id==id && a_address==address && a_length==length) _ -> (false)}}
+state c_powerresource(a_system_level:u8,a_order:u16,b:Value)->bool {transition b {Value::PowerResource {system_level,order} -> (a_system_level==system_level && a_order==order) _ -> (false)}}
+state c_thermalzone(b:Value)->bool {transition b {Value::ThermalZone -> (true) _ -> (false)}}
+state c_mutex(a_sync_level:u8,b:Value)->bool {transition b {Value::Mutex {sync_level} -> (a_sync_level==sync_level) _ -> (false)}}
+state c_event(b:Value)->bool {transition b {Value::Event -> (true) _ -> (false)}}
+state c_operationregion(a_space:u8,a_base:u64,a_length:u64,a_scope:Path,b:Value)->bool {transition b {Value::OperationRegion {space,base,length,scope} -> check_c_operationregion(a_space,a_base,a_length,a_scope,space,base,length,scope) _ -> (false)}}
+state check_c_operationregion(a_space:u8,a_base:u64,a_length:u64,a_scope:Path,space:u8,base:u64,length:u64,scope:Path)->bool {let good_scope:bool=fx_path(a_scope,scope);a_space==space && a_base==base && a_length==length && good_scope}
+}
+machine fx_store(a:&ObjectStore,b:&ObjectStore)->bool {
+ let objects:bool=fx_objects(a,b,0,64,true);let entries:bool=fx_entries(&a.space,&b.space,0,32,true);
+ a.space.object_count==b.space.object_count && a.space.count==b.space.count && objects && entries
+}
+machine fx_objects(a:&ObjectStore,b:&ObjectStore,i:u64,n:u64,prior:bool)
+terminates by(i,n)->Nat::BoundedDistance;
+->bool {let good:bool=fx_object(a,b,i,n);transition i<n {true -> fx_objects(a,b,i+1,n,prior && good) _ -> (prior)}}
+machine fx_object(a:&ObjectStore,b:&ObjectStore,i:u64,n:u64)->bool {
+ transition i<n && i<64 {true -> item(a,b,i) _ -> (true)}
+ state item(a:&ObjectStore,b:&ObjectStore,i:u64)->bool {
+  let left:Object=a.space.objects[i];let right:Object=b.space.objects[i];let first:ByteBlock=a.bytes.blocks[i];let second:ByteBlock=b.bytes.blocks[i];
+  let payload:bool=fx_value(left.value,right.value);
+  let bytes:bool=fx_bytes_equal(&first.bytes,&second.bytes,0,256,true);
+  payload && bytes && left.has_next==right.has_next && left.next==right.next && first.initialized==second.initialized && first.length==second.length
+ }
+}
+machine fx_entries(a:&Namespace,b:&Namespace,i:u64,n:u64,prior:bool)
+terminates by(i,n)->Nat::BoundedDistance;
+->bool {let good:bool=fx_entry(a,b,i,n);transition i<n {true -> fx_entries(a,b,i+1,n,prior && good) _ -> (prior)}}
+machine fx_entry(a:&Namespace,b:&Namespace,i:u64,n:u64)->bool {
+ transition i<n && i<32 {true -> item(a.entries[i],b.entries[i]) _ -> (true)}
+ state item(a:Entry,b:Entry)->bool {let path:bool=fx_path(a.path,b.path);path && a.has_level==b.has_level && a.level==b.level && a.has_object==b.has_object && a.object==b.object && a.alias==b.alias}
+}
+
+
+machine ba_binding(a:Binding,b:Binding)->bool {
+ transition a {Binding::Uninitialized -> none(b) Binding::Integer {number} -> integer(number,b) Binding::Shared {shared_id} -> shared(shared_id,b) Binding::Cell {cell_id} -> cell(cell_id,b)}
+ state none(b:Binding)->bool {transition b {Binding::Uninitialized -> (true) _ -> (false)}}
+ state integer(a:u64,b:Binding)->bool {transition b {Binding::Integer {number} -> (a==number) _ -> (false)}}
+ state shared(a:u64,b:Binding)->bool {transition b {Binding::Shared {shared_id} -> (a==shared_id) _ -> (false)}}
+ state cell(a:u64,b:Binding)->bool {transition b {Binding::Cell {cell_id} -> (a==cell_id) _ -> (false)}}
+}
+machine ba_operand(a:Operand,b:Operand)->bool {
+ transition a {Operand::Uninitialized -> none(b) Operand::Integer {number} -> integer(number,b) Operand::Object {object_id} -> object(object_id,b)}
+ state none(b:Operand)->bool {transition b {Operand::Uninitialized -> (true) _ -> (false)}}
+ state integer(a:u64,b:Operand)->bool {transition b {Operand::Integer {number} -> (a==number) _ -> (false)}}
+ state object(a:u64,b:Operand)->bool {transition b {Operand::Object {object_id} -> (a==object_id) _ -> (false)}}
+}
+machine ba_target(a:Target,b:Target)->bool {
+ transition a {Target::Null -> null(b) Target::Debug -> debug(b) Target::Local {local_index} -> local(local_index,b) Target::Argument {argument_index} -> argument(argument_index,b) Target::Named {object_id} -> named(object_id,b)}
+ state null(b:Target)->bool {transition b {Target::Null -> (true) _ -> (false)}}
+ state debug(b:Target)->bool {transition b {Target::Debug -> (true) _ -> (false)}}
+ state local(a:u64,b:Target)->bool {transition b {Target::Local {local_index} -> (a==local_index) _ -> (false)}}
+ state argument(a:u64,b:Target)->bool {transition b {Target::Argument {argument_index} -> (a==argument_index) _ -> (false)}}
+ state named(a:u64,b:Target)->bool {transition b {Target::Named {object_id} -> (a==object_id) _ -> (false)}}
+}
+machine ba_block(a:Block,b:Block)->bool {a.looping==b.looping && a.parent_end==b.parent_end && a.after==b.after && a.predicate==b.predicate && a.end==b.end}
+machine ba_cache(a:NameCache,b:NameCache)->bool {a.at==b.at && a.next==b.next && a.object_id==b.object_id && a.entry_index==b.entry_index}
+machine ba_operation(a:&Operation,b:&Operation)->bool {
+ let operands:bool=ba_operands(a,b,0,7,true);let first:bool=ba_target(a.first_target,b.first_target);let second:bool=ba_target(a.second_target,b.second_target);let span:bool=fx_span(a.method_body,b.method_body);
+ a.opcode==b.opcode && a.count==b.count && a.value_arity==b.value_arity && a.target_arity==b.target_arity && a.body_end==b.body_end && a.predicate==b.predicate && a.parent_end==b.parent_end && a.method_id==b.method_id && a.method_flags==b.method_flags && operands && first && second && span
+}
+machine ba_operands(a:&Operation,b:&Operation,i:u64,n:u64,prior:bool)
+terminates by(i,n)->Nat::BoundedDistance;
+->bool {let good:bool=ba_operand_at(a,b,i,n);transition i<n {true -> ba_operands(a,b,i+1,n,prior && good) _ -> (prior)}}
+machine ba_operand_at(a:&Operation,b:&Operation,i:u64,n:u64)->bool {
+ transition i<n && i<7 {true -> selected(a.operands[i],b.operands[i]) _ -> (true)}
+ state selected(left:Operand,right:Operand)->bool {let good:bool=ba_operand(left,right);good}
+}
+machine ba_frame(a:&Frame,b:&Frame)->bool {
+ let scope:bool=fx_path(a.scope,b.scope);let body:bool=fx_span(a.body,b.body);let result:bool=ba_operand(a.return_value,b.return_value);
+ let arrays:bool=ba_frame_arrays(a,b,0,16,true);
+ scope && body && result && arrays && a.source_length==b.source_length && a.size==b.size && a.pc==b.pc && a.end==b.end && a.block_count==b.block_count && a.operation_count==b.operation_count && a.cache_count==b.cache_count && a.returned==b.returned && a.has_return_value==b.has_return_value
+}
+machine ba_frame_arrays(a:&Frame,b:&Frame,i:u64,n:u64,prior:bool)
+terminates by(i,n)->Nat::BoundedDistance;
+->bool {let good:bool=ba_frame_at(a,b,i,n);transition i<n {true -> ba_frame_arrays(a,b,i+1,n,prior && good) _ -> (prior)}}
+machine ba_frame_at(a:&Frame,b:&Frame,i:u64,n:u64)->bool {
+ let small:bool=ba_frame_small(a,b,i);
+ transition i<n && i<16 {true -> selected(a.operations[i],b.operations[i],a.lookup_cache[i],b.lookup_cache[i],small) _ -> (true)}
+ state selected(left:Operation,right:Operation,left_cache:NameCache,right_cache:NameCache,small:bool)->bool {
+  let operation:bool=ba_operation(&left,&right);let cache:bool=ba_cache(left_cache,right_cache);operation && cache && small
+ }
+}
+machine ba_frame_small(a:&Frame,b:&Frame,i:u64)->bool {
+ transition i<8 {true -> local(a,b,i) _ -> (true)}
+ state local(a:&Frame,b:&Frame,i:u64)->bool {
+  let binding:bool=ba_binding(a.locals[i],b.locals[i]);let block_good:bool=ba_block(a.blocks[i],b.blocks[i]);let argument:bool=ba_frame_argument(a,b,i);binding && block_good && argument
+ }
+}
+machine ba_frame_argument(a:&Frame,b:&Frame,i:u64)->bool {transition i<7 {true -> item(a,b,i) _ -> (true)} state item(a:&Frame,b:&Frame,i:u64)->bool {let good:bool=ba_binding(a.arguments[i],b.arguments[i]);good}}
+
+machine fe_initial()->Frame {
+ let mut frame:Frame=Frame {scope:Path {absolute:true,count:1},body:Span {unit:7,start:1,end:23},source_length:25,size:IntegerSize::EightBytes,pc:13,end:23,block_count:8,operation_count:16,cache_count:16,returned:true,has_return_value:true,return_value:Operand::Object {object_id:61}};
+ frame.scope.segments[0]=77;frame.arguments[6]=Binding::Cell {cell_id:18446744073709551615};frame.locals[7]=Binding::Shared {shared_id:63};frame.blocks[7]=Block {looping:true,parent_end:9,after:8,predicate:7,end:6};frame.lookup_cache[15]=NameCache {at:71,next:72,object_id:73,entry_index:74};
+ frame.operations[15]=Operation {opcode:157,count:7,value_arity:6,target_arity:1,first_target:Target::Named {object_id:55},second_target:Target::Argument {argument_index:6},body_end:31,predicate:32,parent_end:33,method_id:34,method_body:Span {unit:35,start:36,end:37},method_flags:38};frame.operations[15].operands[6]=Operand::Integer {number:18446744073709551615};frame
+}
+machine fe_changed(frame:Frame,row:u64)->Frame {
+ let mut result:Frame=frame;
+ transition row {0 -> cache(result) 1 -> operand(result) 2 -> block_value(result) 3 -> argument(result) 4 -> local(result) 5 -> scope(result) 6 -> returned(result) _ -> scalar(result)}
+ state cache(frame:Frame)->Frame {let mut result:Frame=frame;result.lookup_cache[15].entry_index=75;result}
+ state operand(frame:Frame)->Frame {let mut result:Frame=frame;result.operations[15].operands[6]=Operand::Uninitialized;result}
+ state block_value(frame:Frame)->Frame {let mut result:Frame=frame;result.blocks[7].after=9;result}
+ state argument(frame:Frame)->Frame {let mut result:Frame=frame;result.arguments[6]=Binding::Integer {number:18446744073709551615};result}
+ state local(frame:Frame)->Frame {let mut result:Frame=frame;result.locals[7]=Binding::Cell {cell_id:63};result}
+ state scope(frame:Frame)->Frame {let mut result:Frame=frame;result.scope.segments[15]=1;result}
+ state returned(frame:Frame)->Frame {let mut result:Frame=frame;result.return_value=Operand::Integer {number:61};result}
+ state scalar(frame:Frame)->Frame {let mut result:Frame=frame;result.source_length=26;result}
+}
+machine fe_select(frame:Frame,row:u64,control:bool)->Frame {transition control {true -> changed(frame,row) _ -> (frame)} state changed(frame:Frame,row:u64)->Frame {let result:Frame=fe_changed(frame,row);result}}
+machine fe_case(row:u64,control:bool)->i32 {let original:Frame=fe_initial();let expected:Frame=fe_select(original,row,control);let good:bool=ba_frame(&original,&expected);transition good {true -> (0) _ -> (1)}}
+machine Suite::equality_0_0(&mut self)->i32 {let result:i32=fe_case(0,false);result}
+machine Suite::equality_0_1(&mut self)->i32 {let result:i32=fe_case(0,true);result}
+machine Suite::equality_1_0(&mut self)->i32 {let result:i32=fe_case(1,false);result}
+machine Suite::equality_1_1(&mut self)->i32 {let result:i32=fe_case(1,true);result}
+machine Suite::equality_2_0(&mut self)->i32 {let result:i32=fe_case(2,false);result}
+machine Suite::equality_2_1(&mut self)->i32 {let result:i32=fe_case(2,true);result}
+machine Suite::equality_3_0(&mut self)->i32 {let result:i32=fe_case(3,false);result}
+machine Suite::equality_3_1(&mut self)->i32 {let result:i32=fe_case(3,true);result}
+machine Suite::equality_4_0(&mut self)->i32 {let result:i32=fe_case(4,false);result}
+machine Suite::equality_4_1(&mut self)->i32 {let result:i32=fe_case(4,true);result}
+machine Suite::equality_5_0(&mut self)->i32 {let result:i32=fe_case(5,false);result}
+machine Suite::equality_5_1(&mut self)->i32 {let result:i32=fe_case(5,true);result}
+machine Suite::equality_6_0(&mut self)->i32 {let result:i32=fe_case(6,false);result}
+machine Suite::equality_6_1(&mut self)->i32 {let result:i32=fe_case(6,true);result}
+machine Suite::equality_7_0(&mut self)->i32 {let result:i32=fe_case(7,false);result}
+machine Suite::equality_7_1(&mut self)->i32 {let result:i32=fe_case(7,true);result}

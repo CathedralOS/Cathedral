@@ -1,0 +1,23 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+module generic_binding_plan;
+use execution_model::Binding;
+use execution_model::Operand;
+use generic_target_model::TargetAction;
+// Prospective metadata only: this does not validate the source/destination or
+// allocate an object. The caller supplies normalized_operand's output from the
+// same store and IntegerSize, and publishes this binding only after the existing
+// mutation kernel succeeds. Failed writes never publish predicted metadata.
+pub machine prospective_binding(object_count:u64,action:TargetAction,normalized:Operand)->Binding {
+ transition action {
+  TargetAction::NoWrite -> (Binding::Uninitialized)
+  TargetAction::Failure {outcome} -> (Binding::Uninitialized)
+  TargetAction::CopyTo {object_id,result_binding} -> (result_binding)
+  TargetAction::Replace {binding} -> replacement(object_count,binding,normalized)
+ }
+ state replacement(count:u64,binding:Binding,normalized:Operand)->Binding {
+  transition binding {Binding::Cell {cell_id} -> (binding) _ -> source(count,normalized)}
+ }
+ state source(count:u64,normalized:Operand)->Binding {
+  transition normalized {Operand::Integer {number} -> (Binding::Integer {number:number}) _ -> (Binding::Cell {cell_id:count})}
+ }
+}
