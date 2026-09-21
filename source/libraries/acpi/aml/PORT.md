@@ -79,3 +79,11 @@ pairs passed at the storage milestone. [Object queries](object-queries.PORT.md)
 add mixed name/reference resolution, numeric type reporting and validated size
 queries, with fresh namespace-guard regression evidence. Generic opcode
 integration remains pending.
+
+[Canonical conversion preflight](object-conversions.PORT.md) adapts direct stored
+Integer/String/Buffer values and bounded numeric BufferFields into detached
+semantic results. Its 207 checked pairs, three constant pairs and 166 actual
+public Rust observations cover storage validation, width normalization and named
+String policies. Reference resolution, wider field reads, opcode retirement and
+target mutation remain pending. The standalone primary implicit numeric and
+String formatting helpers do not change this adapter's explicit conversion policy.

@@ -200,3 +200,9 @@ hexadecimal text and space-separated Buffer byte pairs. All 334 checked pairs
 and three const pairs verify complete initialized outputs and capacity rejection.
 These helpers complement the explicit formatting policies; implicit conversion
 selection and target mutation remain pending.
+
+The [canonical object conversion adapter](../aml/object-conversions.PORT.md)
+connects the existing byte/numeric helpers to direct ObjectStore IDs, with 207
+checked pairs, three const pairs and 166 actual public Rust observations. It
+returns detached Integer/byte results after complete validation; execution and
+target writes remain pending.

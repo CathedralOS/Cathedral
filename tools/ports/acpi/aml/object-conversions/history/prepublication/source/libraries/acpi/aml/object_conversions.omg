@@ -1,0 +1,136 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Modified Object::to_integer/to_buffer and explicit conversion components from
+// rust-osdev/acpi 257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5.
+// Copyright 2018 Isaac Woods. Pure bounded data, no reference/target dispatch.
+module object_conversions;
+use model::ObjectStore;
+use model::Value;
+use byte_storage::ByteRead;
+use byte_storage::ByteResult;
+use byte_storage::ByteOutcome;
+use byte_storage::read_bytes;
+use byte_storage::read_field_integer;
+use integer_helpers::integers::IntegerSize;
+use integer_helpers::integers::IntegerResult;
+use integer_helpers::integers::normalize;
+use integer_helpers::conversions::EmptyPolicy;
+use integer_helpers::conversions::buffer_to_integer;
+use integer_helpers::conversions::integer_to_buffer;
+use integer_helpers::conversions::string_to_buffer;
+use integer_helpers::conversions::mid;
+use integer_helpers::string_numbers::ParseProfile;
+use integer_helpers::string_numbers::string_to_integer;
+pub data ConversionFailure [copy] {
+ case InvalidState;case UnsupportedValue;case Bounds;case Capacity;
+ case Empty;case Encoding;case Overflow;case ReferenceCycle;case WorkLimit;
+}
+pub data ConversionResult [copy] {
+ case Failure(reason:ConversionFailure);
+ case Integer(number:u64);
+ case Bytes(length:u64,bytes:[u8;256]);
+}
+// PinnedObjectBytes is NOT a normative implicit-conversion profile.
+pub data BufferRule [copy] {case ExplicitTerminated;case PinnedObjectBytes;}
+
+// Direct source slot only. Callers resolve references explicitly before entry.
+pub machine to_integer(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,object:u64,size:IntegerSize)->ConversionResult {
+ let count:u64=store.space.object_count;
+ transition count<=64 && object<count && object<64 {true -> selected(input,length,unit,store,object,size) _ -> (ConversionResult::Failure {reason:ConversionFailure::InvalidState})}
+ state selected(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,object:u64,size:IntegerSize)->ConversionResult {
+  let value:Value=store.space.objects[object].value;
+  transition value {
+   Value::Integer {number} -> integer(number,size)
+   Value::Buffer {buffer_storage} -> bytes(input,length,unit,store,object,size,false)
+   Value::String {string_storage} -> bytes(input,length,unit,store,object,size,true)
+   Value::BufferField {backing_object,bit_offset,bit_length} -> field(input,length,unit,store,object,size)
+   _ -> (ConversionResult::Failure {reason:ConversionFailure::UnsupportedValue})
+  }
+ }
+ state integer(number:u64,size:IntegerSize)->ConversionResult {let normalized:u64=normalize(size,number);ConversionResult::Integer {number:normalized}}
+ state bytes(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,object:u64,size:IntegerSize,string:bool)->ConversionResult {
+  let snapshot:ByteRead=read_bytes(input,length,unit,store,object);
+  let failure:ConversionResult=storage_failure(snapshot.outcome);
+  transition snapshot.outcome==ByteOutcome::Success {true -> convert(snapshot,size,string) _ -> (failure)}
+ }
+ state convert(snapshot:ByteRead,size:IntegerSize,string:bool)->ConversionResult {
+  let count:u64=snapshot.length;
+  transition string {true -> string_integer(snapshot,size,count) _ -> buffer_integer(snapshot,size,count)}
+ }
+ state string_integer(snapshot:ByteRead,size:IntegerSize,count:u64)->ConversionResult {
+  let result:IntegerResult=string_to_integer(size,&snapshot.bytes,count,ParseProfile::StrictDecimalHex);let out:ConversionResult=numeric_result(result);out
+ }
+ state buffer_integer(snapshot:ByteRead,size:IntegerSize,count:u64)->ConversionResult {
+  let result:IntegerResult=buffer_to_integer(size,&snapshot.bytes,count,EmptyPolicy::Reject);let out:ConversionResult=numeric_result(result);out
+ }
+ state field(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,object:u64,size:IntegerSize)->ConversionResult {
+  let result:ByteResult=read_field_integer(input,length,unit,store,object,size);
+  let failure:ConversionResult=storage_failure(result.outcome);
+  transition result.outcome==ByteOutcome::Success {true -> (ConversionResult::Integer {number:result.value}) _ -> (failure)}
+ }
+}
+pub machine to_buffer(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,object:u64,size:IntegerSize,rule:BufferRule)->ConversionResult {
+ let count:u64=store.space.object_count;
+ transition count<=64 && object<count && object<64 {true -> selected(input,length,unit,store,object,size,rule) _ -> (ConversionResult::Failure {reason:ConversionFailure::InvalidState})}
+ state selected(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,object:u64,size:IntegerSize,rule:BufferRule)->ConversionResult {
+  let value:Value=store.space.objects[object].value;
+  transition value {
+   Value::Integer {number} -> integer(number,size)
+   Value::Buffer {buffer_storage} -> bytes(input,length,unit,store,object,rule,false)
+   Value::String {string_storage} -> bytes(input,length,unit,store,object,rule,true)
+   _ -> (ConversionResult::Failure {reason:ConversionFailure::UnsupportedValue})
+  }
+ }
+ state integer(number:u64,size:IntegerSize)->ConversionResult {
+  let mut output:[u8;256];let result:IntegerResult=integer_to_buffer(size,number,&mut output);
+  let out:ConversionResult=bytes_result(result,output);out
+ }
+ state bytes(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,object:u64,rule:BufferRule,string:bool)->ConversionResult {
+  let snapshot:ByteRead=read_bytes(input,length,unit,store,object);
+  let failure:ConversionResult=storage_failure(snapshot.outcome);
+  transition snapshot.outcome==ByteOutcome::Success {true -> convert(snapshot,rule,string) _ -> (failure)}
+ }
+ state convert(snapshot:ByteRead,rule:BufferRule,string:bool)->ConversionResult {
+  let count:u64=snapshot.length;
+  transition string {true -> string_bytes(snapshot,rule,count) _ -> buffer_bytes(snapshot,count)}
+ }
+ state string_bytes(snapshot:ByteRead,rule:BufferRule,count:u64)->ConversionResult {
+  let mut output:[u8;256];let explicit:bool=rule==BufferRule::ExplicitTerminated;
+  let result:IntegerResult=string_to_buffer(&snapshot.bytes,count,explicit,&mut output);
+  let out:ConversionResult=bytes_result(result,output);out
+ }
+ state buffer_bytes(snapshot:ByteRead,count:u64)->ConversionResult {
+  // Copy only the logical extent into initialized zero storage. Owned byte-block
+  // tails may contain unrelated initialized bytes and must not enter the result.
+  let mut output:[u8;256];let result:IntegerResult=mid(&snapshot.bytes,count,0,count,&mut output);
+  let out:ConversionResult=bytes_result(result,output);out
+ }
+}
+machine numeric_result(result:IntegerResult)->ConversionResult {
+ let failure:ConversionResult=numeric_failure(result.error);
+ transition result.error==0 {true -> (ConversionResult::Integer {number:result.value}) _ -> (failure)}
+}
+machine bytes_result(result:IntegerResult,bytes:[u8;256])->ConversionResult {
+ let failure:ConversionResult=numeric_failure(result.error);
+ transition result.error==0 {true -> (ConversionResult::Bytes {length:result.value,bytes:bytes}) _ -> (failure)}
+}
+machine numeric_failure(error:u8)->ConversionResult {
+ transition error {
+  3 -> (ConversionResult::Failure {reason:ConversionFailure::Overflow})
+  4 -> (ConversionResult::Failure {reason:ConversionFailure::Capacity})
+  5 -> (ConversionResult::Failure {reason:ConversionFailure::Bounds})
+  6 -> (ConversionResult::Failure {reason:ConversionFailure::Empty})
+  7 -> (ConversionResult::Failure {reason:ConversionFailure::Encoding})
+  _ -> (ConversionResult::Failure {reason:ConversionFailure::InvalidState})
+ }
+}
+machine storage_failure(outcome:ByteOutcome)->ConversionResult {
+ transition outcome {
+  ByteOutcome::Capacity -> (ConversionResult::Failure {reason:ConversionFailure::Capacity})
+  ByteOutcome::Bounds -> (ConversionResult::Failure {reason:ConversionFailure::Bounds})
+  ByteOutcome::Encoding -> (ConversionResult::Failure {reason:ConversionFailure::Encoding})
+  ByteOutcome::UnsupportedValue -> (ConversionResult::Failure {reason:ConversionFailure::UnsupportedValue})
+  ByteOutcome::ReferenceCycle -> (ConversionResult::Failure {reason:ConversionFailure::ReferenceCycle})
+  ByteOutcome::WorkLimit -> (ConversionResult::Failure {reason:ConversionFailure::WorkLimit})
+  _ -> (ConversionResult::Failure {reason:ConversionFailure::InvalidState})
+ }
+}

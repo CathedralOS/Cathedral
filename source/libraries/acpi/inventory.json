@@ -743,7 +743,14 @@
             "ACPI-004",
             "ACPI-005",
             "ACPI-006"
-          ]
+          ],
+          "targets": [
+            {
+              "path": "source/libraries/acpi/aml/object_conversions.omg",
+              "anchor": "pub machine to_buffer"
+            }
+          ],
+          "note": "Partial bounded direct canonical Value conversion kernel; full context/reference/target semantics and wider BufferField conversion remain outside this slice. String explicit strict policy and pinned unterminated-buffer compatibility are separately named."
         },
         "2057:do_to_integer": {
           "anchor": "fn do_to_integer(&self, context: &mut MethodContext, op: OpInFlight) -> Result<(), AmlError> {",
@@ -758,7 +765,14 @@
             "ACPI-004",
             "ACPI-005",
             "ACPI-006"
-          ]
+          ],
+          "targets": [
+            {
+              "path": "source/libraries/acpi/aml/object_conversions.omg",
+              "anchor": "pub machine to_integer"
+            }
+          ],
+          "note": "Partial bounded direct canonical Value conversion kernel; full context/reference/target semantics and wider BufferField conversion remain outside this slice. String explicit strict policy and pinned unterminated-buffer compatibility are separately named."
         },
         "2068:do_to_string": {
           "anchor": "fn do_to_string(&self, context: &mut MethodContext, op: OpInFlight) -> Result<(), AmlError> {",
@@ -3056,7 +3070,14 @@
           "queue_tasks": [
             "ACPI-005",
             "ACPI-006"
-          ]
+          ],
+          "targets": [
+            {
+              "path": "source/libraries/acpi/aml/object_conversions.omg",
+              "anchor": "pub machine to_integer"
+            }
+          ],
+          "note": "Partial bounded direct canonical Value conversion kernel; full context/reference/target semantics and wider BufferField conversion remain outside this slice. String explicit strict policy and pinned unterminated-buffer compatibility are separately named."
         },
         "252:to_buffer": {
           "anchor": "pub fn to_buffer(&self, integer_size: IntegerSize) -> Result<Vec<u8>, AmlError> {",
@@ -3069,7 +3090,14 @@
           "queue_tasks": [
             "ACPI-005",
             "ACPI-006"
-          ]
+          ],
+          "targets": [
+            {
+              "path": "source/libraries/acpi/aml/object_conversions.omg",
+              "anchor": "pub machine to_buffer"
+            }
+          ],
+          "note": "Partial bounded direct canonical Value conversion kernel; full context/reference/target semantics and wider BufferField conversion remain outside this slice. String explicit strict policy and pinned unterminated-buffer compatibility are separately named."
         },
         "264:read_buffer_field": {
           "anchor": "pub fn read_buffer_field(&self, integer_size: IntegerSize) -> Result<Object, AmlError> {",

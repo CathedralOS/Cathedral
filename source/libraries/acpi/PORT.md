@@ -244,3 +244,9 @@ implicit operand/target conversion dispatch.
 [Primary Integer/Buffer-to-String conversion](interpreter/implicit-strings.PORT.md)
 adds fixed-width Integer text and spaced byte pairs, with 334 checked pairs and
 three const pairs. Aggregate Store/conversion anchors remain pending.
+
+[Canonical object conversions](aml/object-conversions.PORT.md) add direct
+ObjectStore preflight with 207 checked pairs, three constant pairs, 100 actual
+public Object calls and 66 actual explicit Interpreter observations. All four
+aggregate source anchors remain pending: reference/context/target integration
+and wider BufferField conversion are not claimed.

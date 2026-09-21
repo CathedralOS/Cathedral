@@ -1,0 +1,74 @@
+{
+  "cases": [
+    "integer_32_1311768467139281697",
+    "owned_dirty_tail_Buffer_buffer",
+    "invalid_id_max_integer"
+  ],
+  "compiler_sha256": "2ac9ce5859896c4689ed54ac55f79dd211050a530fe03e3d475cc543b9b523c4",
+  "input_sha256": {
+    "/Users/zcanann/Documents/projects/Cathedral/tools/ports/acpi/interpreter/execution/checked_runner.rs": "c11a264f72a377d508345a983c8973599f959d11ef7b214c00a95314be274ff1",
+    "/Users/zcanann/Documents/projects/Cathedral/tools/ports/acpi/interpreter/execution/runner.Cargo.lock": "71c0b77930a0188668c3d7e32fee83f52adeca9a47f123e3084593615e1dc805",
+    "source/libraries/acpi/aml/build.omg": "2129610bb9e275f63e87c5e736bb29114044d1a466cdc1d288e4c9103b076319",
+    "source/libraries/acpi/aml/byte_storage.omg": "045be1e6efc512f051231c3233f2a177473a15eb832f78111086f67a7b504f25",
+    "source/libraries/acpi/aml/bytes.omg": "66a5f91ebe3bba63c398a20dba184854f257d580279cde514ba00aa8216251be",
+    "source/libraries/acpi/aml/model.omg": "1fc2a3ceb403f0adef2022f76ac0c1187fc74b0cd794df4e7855d643838a10af",
+    "source/libraries/acpi/aml/names.omg": "4d616001e6f0eef3f5233fb2e7df6b237e2cc89d1d565475f4dd0d03036f444e",
+    "source/libraries/acpi/aml/namespace.omg": "2cb9a7187ad787316f89e712c115906290e29a477e23ec0b4e29642935468d97",
+    "source/libraries/acpi/aml/object_conversions.omg": "b26ea6b3b0023fd656d78759f2a36d9de49872f7e78e01807cd6f18526e5c390",
+    "source/libraries/acpi/aml/object_references.omg": "4c06bb925681f2e833ebb815b15e5e53d476f08810d0252e77a977af4134b703",
+    "source/libraries/acpi/interpreter/buffer_fields.omg": "98e1df3d821a88ba1d63c63189f3d9ac782f197b62cd04e6b71abd396042688a",
+    "source/libraries/acpi/interpreter/build.omg": "02894e043f2d5581de987c5b7a80260d3617d702df7e6240251ff0f43e357e6d",
+    "source/libraries/acpi/interpreter/conversions.omg": "b3ee9811b5434883bfa2374c8ca6a746ad2a75ab4c9eacea3e8dd19b5510f714",
+    "source/libraries/acpi/interpreter/integers.omg": "437c8e5d688dcae16ba69ed1a649215fe145840f1edfac501a8db0cc83601196",
+    "source/libraries/acpi/interpreter/string_numbers.omg": "8553d26a77cd0cb482a24a45aa739b86c7fbed94fb61bc97eb4974de5c9db389",
+    "tools/ports/acpi/aml/object-conversions/cases.json": "2d33d023ad5757ff072952ae0af8627deaef88c2e2110142af48717294397479",
+    "tools/ports/acpi/aml/object-conversions/check.py": "804845fa10287e2fa4580b612a71db4d52ffdc9a17fe253f01f4c7f1bbf8754d",
+    "tools/ports/acpi/aml/object-conversions/check_const.py": "a53a20d4aa12c99afca4f259a6722f2acdbb879214c2302b27ff418af9a9a127",
+    "tools/ports/acpi/aml/object-conversions/fixtures.py": "df19ae1814727c335ad23c30cde00f0074f38428ded0fe4f0e9498b1589285fc",
+    "tools/ports/acpi/aml/object-conversions/inventory.py": "40481455076be3f986c5be25750cd8aaa50da4383769565adff08d6d131ec9c9",
+    "tools/ports/acpi/aml/object-conversions/object_reference.rs": "ec85876c0673fbb00abd3262248b6a71baf5a18fb1c35cc4d52ce36620c99175",
+    "tools/ports/acpi/aml/object-conversions/reference.Cargo.lock": "b9d9dc354c76973d7761eb388c6a20bfa5a1e9b960f40693e4b5991857f9fe79",
+    "tools/ports/acpi/aml/object-conversions/reference.py": "482ea290dc127cdecfa368eed93c4908855e9ad457485a4a16c30649af82df0e",
+    "tools/ports/acpi/aml/object-conversions/verify_record.py": "ca3e86df95c94a8f36caf0d318d991b7dedae8003b581db4abb41cc8657d69b3"
+  },
+  "omega_revision": "eaa7993a23623cd8fabf45350340479c5c9c7879",
+  "proofs": [
+    {
+      "case": "integer_32_1311768467139281697",
+      "control": false,
+      "output": "compiled 21 source file(s) from /Users/zcanann/Library/Caches/CathedralOS/Omega/source/v1/external-local-sources/local-snapshots/source-f7c48ea5a51564567bb70c82d78d0cda1ed13097d5305b195ca74c505849926e/source/main.omg; wrote_output=false\n",
+      "source_sha256": "8e3e61ba47ffbc8662a6c3c40d7d82b63b1a7ac2024979031ab4ecb9d792ec0f"
+    },
+    {
+      "case": "integer_32_1311768467139281697",
+      "control": true,
+      "output": "cannot check prepared project: checked compilation failed for package `query-constant` with 1 diagnostic(s)\n  error: cannot prove requires contract for call require_ok from Main::main: 1 == 0 (needs fact `value == 0` here; establish it before the call via a prior contract guarantee, domain membership, or guard)\n",
+      "source_sha256": "aff5840cae17838fcd939c24d501e55dd6729d08090e3954e284f8565a0d228e"
+    },
+    {
+      "case": "owned_dirty_tail_Buffer_buffer",
+      "control": false,
+      "output": "compiled 21 source file(s) from /Users/zcanann/Library/Caches/CathedralOS/Omega/source/v1/external-local-sources/local-snapshots/source-d7aead0cf9ebb5efda068996e56ae1d7545121a87b102ccc860fc09c1eb23ce6/source/main.omg; wrote_output=false\n",
+      "source_sha256": "a4d93682a3b60b063cf645b8ce48d97fee601c213261628f158f5c07a145f544"
+    },
+    {
+      "case": "owned_dirty_tail_Buffer_buffer",
+      "control": true,
+      "output": "cannot check prepared project: checked compilation failed for package `query-constant` with 1 diagnostic(s)\n  error: cannot prove requires contract for call require_ok from Main::main: 1 == 0 (needs fact `value == 0` here; establish it before the call via a prior contract guarantee, domain membership, or guard)\n",
+      "source_sha256": "4ebddd745ea6946ff2e0b0422a44fc5d4124e104d41f2238ca4fe1d69abb6928"
+    },
+    {
+      "case": "invalid_id_max_integer",
+      "control": false,
+      "output": "compiled 21 source file(s) from /Users/zcanann/Library/Caches/CathedralOS/Omega/source/v1/external-local-sources/local-snapshots/source-fbe1856503c5ab77b520afc3b1f7e5eaeda215ad41ce09619724b3c3932a38cd/source/main.omg; wrote_output=false\n",
+      "source_sha256": "98f323a49ee3e073f7e4e916f1248284ebff324be1d51b1e3caf4b7e13d46b42"
+    },
+    {
+      "case": "invalid_id_max_integer",
+      "control": true,
+      "output": "cannot check prepared project: checked compilation failed for package `query-constant` with 1 diagnostic(s)\n  error: cannot prove requires contract for call require_ok from Main::main: 1 == 0 (needs fact `value == 0` here; establish it before the call via a prior contract guarantee, domain membership, or guard)\n",
+      "source_sha256": "ee99723ff5382e88e8cd6ab49193d6f1649800c131e3324747a5c886fbe5102a"
+    }
+  ],
+  "stage": "constant evaluation and checked requires; native/hardware not run"
+}

@@ -1,0 +1,27 @@
+{
+  "behavior_control_pairs": 207,
+  "constant_pairs": 3,
+  "explicit_interpreter_observations": 66,
+  "files_sha256": {
+    "canonical-baseline.json": "b2e8b3e107f7365999c8afb5de94e10e26ace93f6201818a0623242bcc86d10c",
+    "source/libraries/acpi/aml/object-conversions-inventory.json": "4d7d3377b37ffac89c9a51136e1f74dc90d874c87e6c47c79ce6108b38d97b6d",
+    "source/libraries/acpi/aml/object-conversions.PORT.md": "ab7b7afe7adbbac5c26ecacf44cf5371b0f20b076df6ea1d3a5dd0554a650b95",
+    "source/libraries/acpi/aml/object_conversions.omg": "b26ea6b3b0023fd656d78759f2a36d9de49872f7e78e01807cd6f18526e5c390",
+    "tools/ports/acpi/aml/object-conversions/README.md": "e5af96b57dc29c3a0ca5f2576143fd0a2542470abfc475b89bbd81c57f1f880f",
+    "tools/ports/acpi/aml/object-conversions/cases.json": "2d33d023ad5757ff072952ae0af8627deaef88c2e2110142af48717294397479",
+    "tools/ports/acpi/aml/object-conversions/check.py": "804845fa10287e2fa4580b612a71db4d52ffdc9a17fe253f01f4c7f1bbf8754d",
+    "tools/ports/acpi/aml/object-conversions/check_const.py": "a53a20d4aa12c99afca4f259a6722f2acdbb879214c2302b27ff418af9a9a127",
+    "tools/ports/acpi/aml/object-conversions/const-verification.json": "0f1a643c773d4fbdc6ae324208de9fe552e514fe29415b12e216c2bbc39a36f8",
+    "tools/ports/acpi/aml/object-conversions/fixtures.py": "df19ae1814727c335ad23c30cde00f0074f38428ded0fe4f0e9498b1589285fc",
+    "tools/ports/acpi/aml/object-conversions/inventory.py": "40481455076be3f986c5be25750cd8aaa50da4383769565adff08d6d131ec9c9",
+    "tools/ports/acpi/aml/object-conversions/object_reference.rs": "ec85876c0673fbb00abd3262248b6a71baf5a18fb1c35cc4d52ce36620c99175",
+    "tools/ports/acpi/aml/object-conversions/reference-verification.json": "9286ddeaa679bbf5f2b6fd76434a81523d22f7f5bb9bd04e16d24dd07d435b09",
+    "tools/ports/acpi/aml/object-conversions/reference.Cargo.lock": "b9d9dc354c76973d7761eb388c6a20bfa5a1e9b960f40693e4b5991857f9fe79",
+    "tools/ports/acpi/aml/object-conversions/reference.py": "482ea290dc127cdecfa368eed93c4908855e9ad457485a4a16c30649af82df0e",
+    "tools/ports/acpi/aml/object-conversions/verification.json": "03ff1d0d4f80a8c910115692a08e6d533f5d9778d75c4feea5135b97772a8507",
+    "tools/ports/acpi/aml/object-conversions/verify_record.py": "ca3e86df95c94a8f36caf0d318d991b7dedae8003b581db4abb41cc8657d69b3"
+  },
+  "format": "cathedral-object-conversion-scratch-release-v1",
+  "object_observations": 100,
+  "public_probe_limit": "All12 Reference-labelled Object rows actually construct RefOf(Integer42); Omega fixtures use exact reference kinds."
+}

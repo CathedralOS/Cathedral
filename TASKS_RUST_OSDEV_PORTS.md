@@ -578,6 +578,12 @@ adds fixed-width hexadecimal Integer text and spaced byte pairs. Its 334 checked
 pairs and three const pairs verify complete initialized output and bounded
 capacity. Generic implicit conversion selection and target dispatch stay pending.
 
+[Canonical object conversion preflight](source/libraries/acpi/aml/object-conversions.PORT.md)
+adds direct ObjectStore conversion with semantic results, complete byte validation
+and named String policies. All 207 checked pairs and three const pairs pass,
+with 100 public Object calls and 66 explicit Interpreter observations. Generic
+reference/context/target integration and wider BufferFields remain pending.
+
 ## Phase 5 — only after the corpus above is healthy
 
 - [ ] Port selected pure pieces and tests from APIC, xHCI, USB, PS/2, VGA, and
