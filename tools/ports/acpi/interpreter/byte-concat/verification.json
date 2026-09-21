@@ -1,0 +1,51 @@
+{
+  "artifacts_sha256": {
+    "source/libraries/acpi/interpreter/byte-concat-inventory.json": "33783df23f4a9bce08bd38c9649b767eb4208d655de6848a18fc0922b506fe09",
+    "source/libraries/acpi/interpreter/byte_concat.PORT.md": "96b28660164155b770462e5bba889d21add291a8f7285de892a0064a2a954feb",
+    "source/libraries/acpi/interpreter/byte_concat.omg": "91e4a7464493eb5a2cd2a4692b88180a5d96cd625ce65f962255a7bbc8d9085f",
+    "tools/ports/acpi/interpreter/byte-concat/.gitignore": "32dae3052f331ee34d628ef535709b301259a45df7c7522c4d35dcf49873f00b",
+    "tools/ports/acpi/interpreter/byte-concat/README.md": "2c3509bd57bb572601ec1c165bc0f67879c63bbce87ae972ca0a7ee80582c8a1",
+    "tools/ports/acpi/interpreter/byte-concat/build.omg": "112a00725c94abb4ee4bce13840df5633f95f957f9e2e30e7f9898ac079509cd",
+    "tools/ports/acpi/interpreter/byte-concat/cases.json": "25e5c5f9d556eea2e65f9bea6439365b4d5d7d38b635eba357bc988eeb09647b",
+    "tools/ports/acpi/interpreter/byte-concat/check.py": "0cef72990a3eb97dc350fefc22c978589372874732f6f40af08b1342661b6f91",
+    "tools/ports/acpi/interpreter/byte-concat/check_const.py": "a03e933aa1c6088df7281eb33bca559943dbc27a643c710afe0a9532d137ab0a",
+    "tools/ports/acpi/interpreter/byte-concat/checked-verification.json": "93a4c8323442154dfa813b3bdb8a5b5f5943b4eceb8b748826d55577d56beedb",
+    "tools/ports/acpi/interpreter/byte-concat/const-verification.json": "1bb465035c23a5c3f97bd6fbaacd4fd775172f8d9502c6d60f5e2b74a68d4cb5",
+    "tools/ports/acpi/interpreter/byte-concat/evidence.py": "910f7fa56050fb645cc41cbdc0b5d1d2e0c59a69015681499b84703eb7a30c9d",
+    "tools/ports/acpi/interpreter/byte-concat/fixtures.py": "540b332ae702ca2204013ec9f8b413df71e6305df44115040141b01a13a0ba72",
+    "tools/ports/acpi/interpreter/byte-concat/main.omg": "9c1aa7167d726aaf38452f0871b7c31a397e8f9166063bca217dda11181878d4",
+    "tools/ports/acpi/interpreter/byte-concat/reference-verification.json": "5927ca6bf4f29142150bebef4c037380fadc489fab00fe49070663386a7d9f40",
+    "tools/ports/acpi/interpreter/byte-concat/reference.Cargo.lock": "286106905cc699363b5bfcf593001784e9d95d8074b6a0e345d94e8141d76b15",
+    "tools/ports/acpi/interpreter/byte-concat/reference.py": "27c6ea5126ba1cc69b4d2780b5dafb78ffbfdd7bcb42aac4e2f51cc3a39b2f65",
+    "tools/ports/acpi/interpreter/byte-concat/reference.rs": "10d8e20f131b6674fda9baed982bd5725477f268db9b637cbb99cf375dbb7880",
+    "tools/ports/acpi/interpreter/byte-concat/verify_record.py": "ccaf11f2a1178e473951b4b2363bfc5e269b24f41f1b0b708a34a81753c24dc6"
+  },
+  "boundary": [
+    "already-converted same-type values only",
+    "no generic Object, Store, opcode, namespace or hardware access",
+    "bounded initialized 256-byte arrays; complete preflight and unchanged output on error",
+    "no native ABI claim"
+  ],
+  "checked_runner_sha256": "e6d0aee6b4dddbbf34a60cffbe8f158643cc5c4d100f9e20f0481f75f52890be",
+  "compiler_sha256": "2ac9ce5859896c4689ed54ac55f79dd211050a530fe03e3d475cc543b9b523c4",
+  "format": "cathedral-aml-byte-concat-v1",
+  "omega_revision": "eaa7993a23623cd8fabf45350340479c5c9c7879",
+  "source_closure_sha256": "a02d8b75e18fb44a6b9759be6d8aeadd7dbf62a9886634d5193209fa99c42fc5",
+  "source_hash_algorithm": "sorted repository-relative path + NUL + file bytes",
+  "source_sha256": {
+    "source/libraries/acpi/interpreter/buffer_fields.omg": "98e1df3d821a88ba1d63c63189f3d9ac782f197b62cd04e6b71abd396042688a",
+    "source/libraries/acpi/interpreter/build.omg": "02894e043f2d5581de987c5b7a80260d3617d702df7e6240251ff0f43e357e6d",
+    "source/libraries/acpi/interpreter/byte_concat.omg": "91e4a7464493eb5a2cd2a4692b88180a5d96cd625ce65f962255a7bbc8d9085f",
+    "source/libraries/acpi/interpreter/conversions.omg": "b3ee9811b5434883bfa2374c8ca6a746ad2a75ab4c9eacea3e8dd19b5510f714",
+    "source/libraries/acpi/interpreter/integers.omg": "437c8e5d688dcae16ba69ed1a649215fe145840f1edfac501a8db0cc83601196"
+  },
+  "status": "tested bounded same-type concatenation helpers; whole do_concat remains pending",
+  "upstream_revision": "257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5",
+  "validation": {
+    "actual_public_conversion_access_calls": 162,
+    "checked_interpreter_pairs": 63,
+    "constant_pairs": 3,
+    "private_expression_mirror_observations": 49,
+    "unrepresentable_rust_inputs": 14
+  }
+}

@@ -1,0 +1,78 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Modified same-type expressions from acpi src/aml/mod.rs do_concat at
+// 257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5; copyright 2018 Isaac Woods.
+// Cathedral bounded adaptation 2026. No Object, opcode or Store integration.
+module byte_concat;
+use integers::IntegerSize;
+use integers::IntegerResult;
+use integers::integer_bits;
+use conversions::integer_to_buffer;
+// Returns output length in value; remainder stays zero. Failure changes no bytes.
+pub machine concat_integers(size:IntegerSize,left:u64,right:u64,output:&mut [u8;256],capacity:u64)->IntegerResult {
+ let bits:u64=integer_bits(size);
+ transition capacity<=256 && bits<=64 {true -> room(size,left,right,output,capacity,bits/8) _ -> (IntegerResult{error:4})}
+ state room(size:IntegerSize,left:u64,right:u64,output:&mut [u8;256],capacity:u64,width:u64) {
+  transition width<=8 && capacity>=width*2 {true -> convert(size,left,right,output,capacity,width) _ -> (IntegerResult{error:4})}
+ }
+ state convert(size:IntegerSize,left:u64,right:u64,output:&mut [u8;256],capacity:u64,width:u64) {
+  let mut a:[u8;256];let mut b:[u8;256];
+  let first:IntegerResult=integer_to_buffer(size,left,&mut a);
+  let second:IntegerResult=integer_to_buffer(size,right,&mut b);
+  let result:IntegerResult=concat_buffers(&a,width,&b,width,output,capacity);result
+ }
+}
+// Source/destination are distinct borrows; no overlapping in-place copy API.
+pub machine concat_buffers(left:&[u8;256],a:u64,right:&[u8;256],b:u64,output:&mut [u8;256],capacity:u64)->IntegerResult {
+ transition a<=256 && b<=256 && capacity<=256 {true -> left_room(left,a,right,b,output,capacity) _ -> (IntegerResult{error:4})}
+ state left_room(left:&[u8;256],a:u64,right:&[u8;256],b:u64,output:&mut [u8;256],capacity:u64) {
+  transition a<=capacity {true -> right_room(left,a,right,b,output,capacity) _ -> (IntegerResult{error:4})}
+ }
+ state right_room(left:&[u8;256],a:u64,right:&[u8;256],b:u64,output:&mut [u8;256],capacity:u64) {
+  transition b<=capacity-a {true -> copy(left,a,right,b,output) _ -> (IntegerResult{error:4})}
+ }
+ state copy(left:&[u8;256],a:u64,right:&[u8;256],b:u64,output:&mut [u8;256]) {
+  transition a<=256 && b<=256 {true -> append(left,a,right,b,output) _ -> (IntegerResult{error:4})}
+ }
+ state append(left:&[u8;256],a:u64,right:&[u8;256],b:u64,output:&mut [u8;256]) {
+  _ = concat_copy_scan(left,output,0,0,a);
+  _ = concat_copy_scan(right,output,a,0,b);
+  IntegerResult{value:a+b}
+ }
+}
+// Order: logical extents/capacity domain, both entire ASCII extents, combined fit.
+// Logical strings exclude NUL; no output terminator is appended.
+pub machine concat_strings(left:&[u8;256],a:u64,right:&[u8;256],b:u64,output:&mut [u8;256],capacity:u64)->IntegerResult {
+ transition a<=256 && b<=256 && capacity<=256 {true -> validate(left,a,right,b,output,capacity) _ -> (IntegerResult{error:4})}
+ state validate(left:&[u8;256],a:u64,right:&[u8;256],b:u64,output:&mut [u8;256],capacity:u64) {
+  let first:bool=concat_ascii_scan(left,0,a,true);let second:bool=concat_ascii_scan(right,0,b,true);
+  transition first && second {true -> append(left,a,right,b,output,capacity) _ -> (IntegerResult{error:7})}
+ }
+ state append(left:&[u8;256],a:u64,right:&[u8;256],b:u64,output:&mut [u8;256],capacity:u64) {
+  let result:IntegerResult=concat_buffers(left,a,right,b,output,capacity);result
+ }
+}
+machine concat_ascii_scan(input:&[u8;256],index:u64,limit:u64,prior:bool)
+terminates by (index,limit)->Nat::BoundedDistance;
+->bool {
+ let current:bool=concat_ascii_byte(input,index,limit);
+ transition index<limit {true -> concat_ascii_scan(input,index+1,limit,prior && current) _ -> (prior)}
+}
+machine concat_ascii_byte(input:&[u8;256],index:u64,limit:u64)->bool {
+ transition index<limit && index<256 {true -> (input[index]!=0 && input[index]<128) _ -> (true)}
+}
+machine concat_copy_scan(input:&[u8;256],output:&mut [u8;256],start:u64,index:u64,limit:u64)
+terminates by (index,limit)->Nat::BoundedDistance;
+->u8 {
+ _ = concat_copy_byte(input,output,start,index,limit);
+ transition index<limit {true -> concat_copy_scan(input,output,start,index+1,limit) _ -> (0)}
+}
+machine concat_copy_byte(input:&[u8;256],output:&mut [u8;256],start:u64,index:u64,limit:u64)->u8 {
+ transition start<=256 && index<limit && index<256 {true -> extent(input,output,start,index) _ -> (0)}
+ state extent(input:&[u8;256],output:&mut [u8;256],start:u64,index:u64) {
+  transition index<256-start {true -> store(input,output,start+index,index) _ -> (0)}
+ }
+ state store(input:&[u8;256],output:&mut [u8;256],destination:u64,index:u64) {
+  transition destination<256 && index<256 {true -> write(input,output,destination,index) _ -> (0)}
+ }
+ state write(input:&[u8;256],output:&mut [u8;256],destination:u64,index:u64) {output[destination]=input[index];0}
+}

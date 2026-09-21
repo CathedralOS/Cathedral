@@ -1,0 +1,26 @@
+use helpers::integers::IntegerSize;
+use helpers::integers::IntegerResult;
+use helpers::byte_concat::concat_integers;
+use helpers::byte_concat::concat_buffers;
+use helpers::byte_concat::concat_strings;
+machine fixture_fill(output:&mut [u8;256],seed:u64,index:u64,limit:u64)
+terminates by (index,limit)->Nat::BoundedDistance;
+->u8 { _ = fixture_fill_byte(output,seed,index,limit);transition index<limit {true -> fixture_fill(output,seed,index+1,limit) _ -> (0)} }
+machine fixture_fill_byte(output:&mut [u8;256],seed:u64,index:u64,limit:u64)->u8 {
+ transition index<limit && index<256 && seed<=255 {true -> store(output,seed,index) _ -> (0)}
+ state store(output:&mut [u8;256],seed:u64,index:u64) {output[index]=((index*17+seed)&255)as u8;0}
+}
+machine fixture_equal(actual:&[u8;256],expected:&[u8;256],index:u64,limit:u64,prior:bool)
+terminates by (index,limit)->Nat::BoundedDistance;
+->bool {let good:bool=fixture_equal_byte(actual,expected,index,limit);transition index<limit {true -> fixture_equal(actual,expected,index+1,limit,prior && good) _ -> (prior)}}
+machine fixture_equal_byte(actual:&[u8;256],expected:&[u8;256],index:u64,limit:u64)->bool {
+ transition index<limit && index<256 {true -> (actual[index]==expected[index]) _ -> (true)}
+}
+machine test_result()->i32 {
+let mut output:[u8;256];let mut expected:[u8;256];
+_ = fixture_fill(&mut output,173,0,256);_ = fixture_fill(&mut expected,173,0,256);
+expected[0]=0;expected[1]=0;expected[2]=0;expected[3]=0;expected[4]=0;expected[5]=0;expected[6]=0;expected[7]=0;let observed:IntegerResult=concat_integers(IntegerSize::FourBytes,0,0,&mut output,256);let all_bytes:bool=fixture_equal(&output,&expected,0,256,true);transition observed.error==0 && observed.value==8 && observed.remainder==0 && all_bytes {true -> (0) _ -> (1)}}
+const TEST_RESULT:i32=test_result();
+machine require_ok(value:i32) requires value==0;{}
+data Main{}
+machine Main::main(&mut self){require_ok(TEST_RESULT);}

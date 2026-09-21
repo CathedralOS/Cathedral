@@ -444,6 +444,12 @@ adds 25 checked-interpreter pairs and four focused const pairs, with 23 labelled
 private Rust result-block mirrors and nine accepted-profile byte agreements.
 Complete input preflight precedes writes; all 4096 output bytes are checked.
 Generic ConcatRes opcode/target integration remains pending.
+[Same-type concatenation](source/libraries/acpi/interpreter/byte_concat.PORT.md)
+adds 63 checked-interpreter pairs and three const pairs, checking all 256 output
+bytes for integer, Buffer and ASCII String results. Reference evidence separates
+49 private append-expression observations from 162 public conversion/access
+calls. Generic implicit conversion and Concatenate opcode/target integration
+remain pending.
 The [integer method executor](source/libraries/acpi/interpreter/execution/PORT.md)
 now passes 79 actual Omega checked-interpreter cases and 79 changed-body controls.
 It executes integer method bytes, nested calls, existing named/alias targets and

@@ -170,6 +170,13 @@ plus four constant-evaluation pairs; reference evidence includes 116 actual
 public Rust calls and 76 labelled private formatting mirrors. Generic opcode
 argument/target/context integration remains pending.
 
+The [same-type concatenation component](byte_concat.PORT.md) adds bounded
+integer-pair, Buffer and ASCII String concatenation with complete preflight and
+preserved output tails. All 63 checked-interpreter pairs and three const pairs
+pass. Its 49 private append-expression observations are distinguished from 162
+actual public Rust conversion/access calls. Operands are already converted;
+generic type conversion, result storage and opcode integration remain pending.
+
 The [byte comparison component](byte_comparison.PORT.md) adds bounded ASCII
 String ordering and explicit primary lexicographic versus pinned length-first
 Buffer ordering. All 81 checked-interpreter pairs and four const pairs pass;

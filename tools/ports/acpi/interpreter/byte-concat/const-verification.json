@@ -1,0 +1,55 @@
+{
+  "cases": [
+    "integer_4_2",
+    "buffer_halves",
+    "string_invalid_beats_capacity"
+  ],
+  "compiler_sha256": "2ac9ce5859896c4689ed54ac55f79dd211050a530fe03e3d475cc543b9b523c4",
+  "runs": [
+    {
+      "case": "integer_4_2",
+      "control": false,
+      "output": "compiled 14 source file(s) from /Users/zcanann/Library/Caches/CathedralOS/Omega/source/v1/external-local-sources/local-snapshots/source-fa5eef19d460117c970894a37d722c6b71465b81a6e203d21874dcc948155121/source/main.omg; wrote_output=false\n"
+    },
+    {
+      "case": "integer_4_2",
+      "control": true,
+      "output": "cannot check prepared project: checked compilation failed for package `cathedral-acpi-byte-concat-tests` with 1 diagnostic(s)\n  error: cannot prove requires contract for call require_ok from Main::main: 1 == 0 (needs fact `value == 0` here; establish it before the call via a prior contract guarantee, domain membership, or guard)\n"
+    },
+    {
+      "case": "buffer_halves",
+      "control": false,
+      "output": "compiled 14 source file(s) from /Users/zcanann/Library/Caches/CathedralOS/Omega/source/v1/external-local-sources/local-snapshots/source-b92ca81945afbb7d169bbca14c9b51f80555a033c89a75df26e35318820eb51b/source/main.omg; wrote_output=false\n"
+    },
+    {
+      "case": "buffer_halves",
+      "control": true,
+      "output": "cannot check prepared project: checked compilation failed for package `cathedral-acpi-byte-concat-tests` with 1 diagnostic(s)\n  error: cannot prove requires contract for call require_ok from Main::main: 1 == 0 (needs fact `value == 0` here; establish it before the call via a prior contract guarantee, domain membership, or guard)\n"
+    },
+    {
+      "case": "string_invalid_beats_capacity",
+      "control": false,
+      "output": "compiled 14 source file(s) from /Users/zcanann/Library/Caches/CathedralOS/Omega/source/v1/external-local-sources/local-snapshots/source-c3b7cd571faeb1a095d7812dceef25a382216b0bcb4248ea0bb88f1d64ff9f2c/source/main.omg; wrote_output=false\n"
+    },
+    {
+      "case": "string_invalid_beats_capacity",
+      "control": true,
+      "output": "cannot check prepared project: checked compilation failed for package `cathedral-acpi-byte-concat-tests` with 1 diagnostic(s)\n  error: cannot prove requires contract for call require_ok from Main::main: 1 == 0 (needs fact `value == 0` here; establish it before the call via a prior contract guarantee, domain membership, or guard)\n"
+    }
+  ],
+  "source_sha256": {
+    "source/libraries/acpi/interpreter/buffer_fields.omg": "98e1df3d821a88ba1d63c63189f3d9ac782f197b62cd04e6b71abd396042688a",
+    "source/libraries/acpi/interpreter/build.omg": "02894e043f2d5581de987c5b7a80260d3617d702df7e6240251ff0f43e357e6d",
+    "source/libraries/acpi/interpreter/byte_concat.omg": "91e4a7464493eb5a2cd2a4692b88180a5d96cd625ce65f962255a7bbc8d9085f",
+    "source/libraries/acpi/interpreter/conversions.omg": "b3ee9811b5434883bfa2374c8ca6a746ad2a75ab4c9eacea3e8dd19b5510f714",
+    "source/libraries/acpi/interpreter/integers.omg": "437c8e5d688dcae16ba69ed1a649215fe145840f1edfac501a8db0cc83601196",
+    "tools/ports/acpi/interpreter/byte-concat/build.omg": "112a00725c94abb4ee4bce13840df5633f95f957f9e2e30e7f9898ac079509cd",
+    "tools/ports/acpi/interpreter/byte-concat/cases.json": "25e5c5f9d556eea2e65f9bea6439365b4d5d7d38b635eba357bc988eeb09647b",
+    "tools/ports/acpi/interpreter/byte-concat/check.py": "0cef72990a3eb97dc350fefc22c978589372874732f6f40af08b1342661b6f91",
+    "tools/ports/acpi/interpreter/byte-concat/check_const.py": "a03e933aa1c6088df7281eb33bca559943dbc27a643c710afe0a9532d137ab0a",
+    "tools/ports/acpi/interpreter/byte-concat/fixtures.py": "540b332ae702ca2204013ec9f8b413df71e6305df44115040141b01a13a0ba72",
+    "tools/ports/acpi/interpreter/execution/checked_runner.rs": "c11a264f72a377d508345a983c8973599f959d11ef7b214c00a95314be274ff1",
+    "tools/ports/acpi/interpreter/execution/runner.Cargo.lock": "71c0b77930a0188668c3d7e32fee83f52adeca9a47f123e3084593615e1dc805"
+  },
+  "stage": "constant evaluation and checked requires; native/hardware not run"
+}
