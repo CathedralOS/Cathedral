@@ -22,3 +22,19 @@ firmware access or equivalence to a Rust resource quota is claimed.
 
 All 27 pairs pass in the recorded isolated worktree. Its exact-input receipt
 remains evidence for that source snapshot and execution root.
+
+A separate three-pair supplement reaches an additional four-byte Buffer through
+RefOf and Index carriers. Exact object/byte quotas admit it; either quota one
+short rejects it. Each witness also executes an independent copy through the
+underlying engine, requiring the Program boundary to preserve exactly the same
+step count and fault offset, including rejected results. It has its own input
+snapshot and does not change the 27-pair fixture.
+
+```sh
+python3 tools/ports/acpi/pipeline/result-graph/supplemental/witnesses.py
+python3 tools/ports/acpi/pipeline/result-graph/supplemental/check.py --record tools/ports/acpi/pipeline/result-graph/supplemental/verification.json
+python3 tools/ports/acpi/pipeline/result-graph/supplemental/check.py --verify tools/ports/acpi/pipeline/result-graph/supplemental/verification.json
+```
+
+All three supplemental behavior/control pairs pass with an exact-input receipt
+in the same isolated worktree, bringing graph coverage to 79 pairs overall.

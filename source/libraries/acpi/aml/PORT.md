@@ -244,8 +244,8 @@ Aggregate source anchors remain pending.
 
 [Returned object graph quotas](result-graph.PORT.md) apply one shared object/byte budget at the public Program boundary. Nested byte
 backing and Package member chains are validated without evaluating references,
-resolving names or copying the graph. The 49 pure-kernel and 27 Program behavior/
-control pairs pass in the recorded isolated worktree. Rejected results expose no
+resolving names or copying the graph. The 49 pure-kernel, 27 Program and three supplemental behavior/control pairs
+pass in the recorded isolated worktree. Rejected results expose no
 value while preserving prior execution effects and diagnostics. This is partial
 ACPI-006 evidence; reclamation, deep copy accounting and other resource work
 remain open. No upstream source anchor is promoted by this original composition.
