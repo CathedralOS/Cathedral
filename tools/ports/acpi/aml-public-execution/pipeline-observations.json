@@ -1,0 +1,73 @@
+{
+  "agreements": 3,
+  "binary_sha256": "c593976974ff451b078e6a85a9c4d3680f22fb3ee84cabfbf484aa927cbccefb",
+  "format": "cathedral-public-aml-pipeline-v1",
+  "rows": {
+    "alias_original_rebound": {
+      "agrees": false,
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "integer:22"
+      },
+      "omega_expected_integer": 11,
+      "table_hex": "101844305f5f08585f5f5f0a0b140b464f4f5f00a4585f5f5f101b44315f5f08585f5f5f0a16065c2e44305f5f464f4f5f414c4953085c2e44305f5f464f4f5f0a6314114d41494e00a45c2e44315f5f414c4953"
+    },
+    "cross_scope_alias": {
+      "agrees": false,
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "integer:22"
+      },
+      "omega_expected_integer": 11,
+      "table_hex": "101844305f5f08585f5f5f0a0b140b464f4f5f00a4585f5f5f101b44315f5f08585f5f5f0a16065c2e44305f5f464f4f5f414c495314114d41494e00a45c2e44315f5f414c4953"
+    },
+    "load_run_add": {
+      "agrees": true,
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "integer:42"
+      },
+      "omega_expected_integer": 42,
+      "table_hex": "140d4d41494e00a4720a280a0200"
+    },
+    "method_redeclaration": {
+      "agrees": true,
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "integer:33"
+      },
+      "omega_expected_integer": 33,
+      "table_hex": "1409464f4f5f00a40a0b06464f4f5f4f4c444e1409464f4f5f00a40a1614114d41494e00a4724f4c444e464f4f5f00"
+    },
+    "nested_method": {
+      "agrees": true,
+      "observed": {
+        "created_mutexes": "1",
+        "forbidden_calls": "0",
+        "load": "ok",
+        "result": "integer:42"
+      },
+      "omega_expected_integer": 42,
+      "table_hex": "140b464f4f5f01a472680100140d4d41494e00a4464f4f5f0a29"
+    }
+  },
+  "source_sha256": {
+    "tools/ports/acpi/aml-public-execution/Cargo.lock": "ba4543d96562e5f411c8447ec4a23a08d224acb0e4af7c5e61e099a976dcf880",
+    "tools/ports/acpi/aml-public-execution/Cargo.toml": "5b8c17e5e61e7b2b2ff2b29f4ca5feb00639297abb742387a31ef2262f818642",
+    "tools/ports/acpi/aml-public-execution/check.py": "4a9b7214ae7952fe0ed5530dd274fd5fdc84c15519f34cdd3f39556b8ad7836f",
+    "tools/ports/acpi/aml-public-execution/check_pipeline.py": "7d492d0cb3c82dea23569e8cccf22f19922d3d729702729c7d9494908b416051",
+    "tools/ports/acpi/aml-public-execution/src/main.rs": "ec7a67ce3956b42883604c0c0b3cd26e4d76bf73a78344e7a2c1035d1e7ec943",
+    "tools/ports/acpi/pipeline/cases.json": "42da1848eb1a9ef313451054ed56c51a701fd5d54c6baae0048aeeeb60398a6b",
+    "tools/ports/acpi/pipeline/fixtures.py": "b8be8ff1685ec1f0e08053aaf50e5f9ce947ac0c1d86e1024d94abb5fb9f18c1"
+  },
+  "stage": "actual public Rust load_table/evaluate; no Omega native or hardware execution",
+  "upstream_revision": "257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5"
+}

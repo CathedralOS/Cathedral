@@ -53,3 +53,22 @@ The command builds locked/offline with `nightly-2026-09-04`, reruns public calls
 and rejects any recorded-input/output drift. Use `--write` only after reviewing
 intentional fixture, probe or observation changes. Exact source receipt hashes
 are retained; differing compiler/build paths can also change the binary hash.
+
+## Declaration and alias witnesses
+
+`check_pipeline.py` reconstructs five existing pipeline fixtures directly from
+their retained initialized input bytes, then uses the same public Rust loader
+and evaluator. Addition, nested calls and method redeclaration agree. The two
+cross-scope alias cases return 22 in the pin, resolving `X` from the alias's D1
+scope; Cathedral's documented declaration observation retains D0 and returns 11.
+The same difference survives original-name rebinding. These are explicit
+differences, not added compatibility passes or new source translations.
+No source replacement, hardware callback or direct namespace mutation is used.
+
+```sh
+python3 tools/ports/acpi/aml-public-execution/check_pipeline.py
+```
+
+`pipeline-observations.json` separately binds these five cases, the actual host
+binary and original pipeline fixture generator. It does not replace the existing
+22 Omega pipeline cases or their mutation controls.

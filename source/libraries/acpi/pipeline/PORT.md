@@ -30,6 +30,13 @@ existing object ID. Redeclaration allocates a fresh ID; original-name rebinding
 does not erase the old observation. Objects are not reclaimed in this bounded
 namespace profile.
 
+Five supplementary [public Rust pipeline observations](../../../../tools/ports/acpi/aml-public-execution/README.md#declaration-and-alias-witnesses)
+exercise these encoded declarations through the pinned loader and evaluator.
+Addition, nested calls and method redeclaration agree. Both cross-scope alias
+cases return 22 in the pin, while this component's declaration-scope observation
+returns 11; the difference also survives original-name rebinding. The record
+preserves that distinction and makes no compatibility claim for those two cases.
+
 Before publishing an insertion, the loader checks the ID is below 64 and its
 observation slot is unoccupied. An occupied slot produces `InvalidState`; it
 never silently overwrites a prior observation. A failed parse, exhausted budget
