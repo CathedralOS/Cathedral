@@ -1,5 +1,5 @@
 {
-  "binary_sha256": "c593976974ff451b078e6a85a9c4d3680f22fb3ee84cabfbf484aa927cbccefb",
+  "binary_sha256": "5117fcc6bbb783ab7de3ac2142eb8cf055b42f694703902bbcd8eb79f10afb1e",
   "different_or_error_observations": [
     "call_no_return_operand",
     "divide_targets",
@@ -773,7 +773,7 @@
     "tools/ports/acpi/aml-public-execution/Cargo.lock": "ba4543d96562e5f411c8447ec4a23a08d224acb0e4af7c5e61e099a976dcf880",
     "tools/ports/acpi/aml-public-execution/Cargo.toml": "5b8c17e5e61e7b2b2ff2b29f4ca5feb00639297abb742387a31ef2262f818642",
     "tools/ports/acpi/aml-public-execution/check.py": "4a9b7214ae7952fe0ed5530dd274fd5fdc84c15519f34cdd3f39556b8ad7836f",
-    "tools/ports/acpi/aml-public-execution/src/main.rs": "ec7a67ce3956b42883604c0c0b3cd26e4d76bf73a78344e7a2c1035d1e7ec943",
+    "tools/ports/acpi/aml-public-execution/src/main.rs": "ca6c249f592018b4407cb3b16f36460c758cdd24e1b3834dc681ac6d43b4fb83",
     "tools/ports/acpi/interpreter/execution/cases.json": "b89368911c2fbedad2d95e6d92c20f1c86e42fcbde2d032e87040a540e79214a",
     "tools/ports/acpi/interpreter/execution/fixtures.py": "c428f215738de207fd2443dff6124080c64840a2ceacab74264bb92a6592d305"
   },

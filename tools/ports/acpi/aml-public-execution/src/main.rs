@@ -33,7 +33,30 @@ fn interpreter(handler:Traps,revision:u8)->Interpreter<Traps> {
  Interpreter::new(handler,revision,registers,None)
 }
 fn describe(result:Result<acpi::aml::object::WrappedObject,AmlError>)->String {
+ if std::env::var_os("CATHEDRAL_GENERIC_DESCRIBE").is_some() {
+  return match result {Err(e)=>format!("error:{e:?}"),Ok(v)=>describe_object(&v,&mut vec![],&mut 512)};
+ }
  match result {Err(e)=>format!("error:{e:?}"),Ok(v)=>match &*v {Object::Integer(n)=>format!("integer:{n}"),Object::Uninitialized=>"uninitialized".into(),v=>format!("other:{:?}",v.typ())}}
+}
+// Observe public immutable payloads only. Pointer equality detects cycles;
+// addresses are never retained, dereferenced manually or used for mutation.
+fn describe_object(value:&Object,path:&mut Vec<*const Object>,budget:&mut usize)->String {
+ if *budget==0 || path.len()>=64 {return "observation-limit".into()}
+ if path.iter().any(|p|std::ptr::eq(*p,value)) {return "cycle".into()}
+ *budget-=1;path.push(value as *const Object);
+ let hex=|bytes:&[u8]|bytes.iter().map(|b|format!("{b:02x}")).collect::<String>();
+ let result=match value {
+  Object::Integer(n)=>format!("integer:{n}"),
+  Object::Uninitialized=>"uninitialized".into(),
+  Object::Buffer(bytes)=>format!("buffer:{}",hex(bytes)),
+  Object::String(text)=>format!("string:{}",hex(text.as_bytes())),
+  Object::Package(items)=>format!("package:[{}]",items.iter().map(|v|describe_object(v,path,budget)).collect::<Vec<_>>().join(";")),
+  Object::Reference{kind,inner}=>format!("reference:{kind:?}({})",describe_object(inner,path,budget)),
+  Object::BufferField{buffer,offset,length}=>format!("buffer-field:{offset}:{length}({})",describe_object(buffer,path,budget)),
+  Object::NamePath{name,scope}=>format!("name-path:{name}@{scope}"),
+  other=>format!("other:{:?}",other.typ()),
+ };
+ path.pop();result
 }
 fn main(){
  std::panic::set_hook(Box::new(|_|{}));

@@ -470,6 +470,10 @@ An additional [public Rust interpreter probe](tools/ports/acpi/aml-public-execut
 records 49 finite loader/evaluator cases, including 24 successful value/state
 agreements. Other errors/differences and thirty explicit exclusions remain
 recorded; no device/time/synchronization callback occurs.
+The same public harness also retains 94 generic object observations: 85 values,
+six evaluator errors and three caught panics. Reference-wrapper identity,
+argument assignment, package sharing, byte copying and conversions expose
+documented pin/spec differences; generic Omega integration is still pending.
 The [loader-to-executor pipeline](source/libraries/acpi/pipeline/PORT.md) now
 captures method observations during declaration, rolls them back with failed
 loads and owns a single initialized source snapshot. All 22 pipeline pairs,

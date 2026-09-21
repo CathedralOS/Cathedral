@@ -1,6 +1,6 @@
 {
   "agreements": 3,
-  "binary_sha256": "c593976974ff451b078e6a85a9c4d3680f22fb3ee84cabfbf484aa927cbccefb",
+  "binary_sha256": "5117fcc6bbb783ab7de3ac2142eb8cf055b42f694703902bbcd8eb79f10afb1e",
   "format": "cathedral-public-aml-pipeline-v1",
   "rows": {
     "alias_original_rebound": {
@@ -64,7 +64,7 @@
     "tools/ports/acpi/aml-public-execution/Cargo.toml": "5b8c17e5e61e7b2b2ff2b29f4ca5feb00639297abb742387a31ef2262f818642",
     "tools/ports/acpi/aml-public-execution/check.py": "4a9b7214ae7952fe0ed5530dd274fd5fdc84c15519f34cdd3f39556b8ad7836f",
     "tools/ports/acpi/aml-public-execution/check_pipeline.py": "7d492d0cb3c82dea23569e8cccf22f19922d3d729702729c7d9494908b416051",
-    "tools/ports/acpi/aml-public-execution/src/main.rs": "ec7a67ce3956b42883604c0c0b3cd26e4d76bf73a78344e7a2c1035d1e7ec943",
+    "tools/ports/acpi/aml-public-execution/src/main.rs": "ca6c249f592018b4407cb3b16f36460c758cdd24e1b3834dc681ac6d43b4fb83",
     "tools/ports/acpi/pipeline/cases.json": "42da1848eb1a9ef313451054ed56c51a701fd5d54c6baae0048aeeeb60398a6b",
     "tools/ports/acpi/pipeline/fixtures.py": "b8be8ff1685ec1f0e08053aaf50e5f9ce947ac0c1d86e1024d94abb5fb9f18c1"
   },

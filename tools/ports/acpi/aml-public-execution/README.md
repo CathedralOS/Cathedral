@@ -72,3 +72,50 @@ python3 tools/ports/acpi/aml-public-execution/check_pipeline.py
 `pipeline-observations.json` separately binds these five cases, the actual host
 binary and original pipeline fixture generator. It does not replace the existing
 22 Omega pipeline cases or their mutation controls.
+
+## Generic object observations
+
+`check_generic.py` adds 94 original finite bytecode cases. The probe's optional
+generic renderer reads immutable public Buffer, String, Package, Reference and
+BufferField payloads, retaining wrapper kinds and byte-exact hex strings. A
+64-level/512-node observation budget and pointer-equality cycle detection bound
+rendering; pointers are never forged, manually dereferenced or retained in the
+record. The original 49 integer and five pipeline observations were rerun after
+the probe change, with exactly the same results.
+
+The new record contains 85 value results, six explicit evaluator errors and
+three caught panics. It is host reference evidence for pending generic Omega
+integration, with no new Omega compatibility pass or translated-anchor claim.
+
+| Authored scenario | Actual pinned public result |
+| --- | --- |
+| Store Local holding RefOf(named Integer) | InvalidOperationOnObject on Reference; named value remains unchanged. CopyObject overwrites Local successfully. |
+| Store/Copy Arg receiving plain named Integer or caller Local | Changes the caller's underlying object. |
+| Store/Copy Arg receiving RefOf(named Integer) | Replaces the intermediate Named wrapper with Integer; original named object remains unchanged. |
+| RefOf return / local escape | Retains RefOf→Named or RefOf→Local wrapper chains, including the escaped local's value. |
+| Add(named value, method which replaces that value) | Reads the retained first operand at retirement: 22 + 1 produces 23. |
+| Direct Store/Copy to package Index | StoreToInvalidReferenceType. Index saved in a Local followed by Store does mutate the member. |
+| Copy package, then mutate member through saved Index | Both packages observe the changed child. This witness uses the pin's Local write-through behavior. |
+| Copy Buffer, then mutate copied byte through saved Index | Source retains its bytes; destination changes independently. |
+| Store String "12" into named Integer | Produces 12849 from raw bytes; CopyObject replaces the type with String. |
+| Oversized Buffer initializer, Mid beyond remaining suffix | Panics are retained explicitly. |
+| ToString across a NUL | Includes the NUL byte in the returned String. |
+
+Other rows cover exact/padded/empty literals, both integer widths, out-of-bounds
+Index, String and Buffer byte fields, explicit conversions, same/mixed-type
+concatenation and Mid boundaries. These observations are deliberately not
+treated as the specification. [ACPI 6.6 method calling conventions](https://uefi.org/specs/ACPI/6.6/05_ACPI_Software_Programming_Model.html#method-calling-convention)
+separate shared incoming values from argument assignment. [Object storing and
+copying rules](https://uefi.org/specs/ACPI/6.6/19_ASL_Reference.html#rules-for-storing-and-copying-objects)
+require Local replacement and distinguish reference-valued Args and named
+conversion. Production integration must retain explicit dispositions for these
+pin differences rather than copying them as default behavior.
+
+```sh
+python3 tools/ports/acpi/aml-public-execution/check_generic.py
+```
+
+`generic-observations.json` binds authored bytes, exact public outputs, compiler,
+binary, probe/generator and upstream source hashes. Each fresh child must finish
+within five seconds, with no forbidden service call and only the constructor's
+mutex identity. No firmware fixture or upstream private algorithm is copied.
