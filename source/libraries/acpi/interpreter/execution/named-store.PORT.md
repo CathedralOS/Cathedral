@@ -1,7 +1,7 @@
 # Named Store in generic method execution
 
-Status: tested through checked interpretation. All 255 behavior/control pairs
-pass with exact source/fixture receipts. ACPI-005 remains open. No native
+Status: tested through checked interpretation at checkpoint `a75f0cc`. All 255
+behavior/control pairs pass with exact source/fixture receipts. ACPI-005 remains open. No native
 execution, live region access, or production boot integration.
 
 This slice composes the existing canonical named-value Store kernels into the
@@ -91,3 +91,9 @@ source hashes and the same audited Omega `eaa7993` checked runner. The bytecode
 and bridge receipts additionally reproduce exact generated source, build text
 and selected entry points with `check.py --verify`. These are checked-interpreter
 results, not constant evaluation, native execution or hardware results.
+
+Checkpoint `a75f0cc` retains the exact tested inputs before the independent
+upstream BankField/IndexField package was merged. Subsequent receipts must retain
+their own source identity; these six results are not relabeled as execution of
+later code. Use `tools/ports/acpi/interpreter/named-store-execution/history/verify_checkpoint.py`
+with `--source-ref a75f0cc` to reproduce their historical integrity.

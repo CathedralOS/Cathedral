@@ -41,3 +41,14 @@ All six checkpoint suites pass: 44 new bytecode, 30 bridge, 25 target-dispatch,
 55 generic, 79 integer and 22 pipeline behavior/control pairs (255 pairs total).
 The retained regression receipts are stored alongside the two new receipts,
 and `toolchain.json` records the clean pinned compiler/runner provenance.
+
+The committed receipts describe checkpoint `a75f0cc`. Later independent package
+additions or implementation changes make their original broad input snapshot
+historical. Verify that checkpoint without claiming execution of later code:
+
+```sh
+python3 tools/ports/acpi/interpreter/named-store-execution/history/verify_checkpoint.py --source-ref a75f0cc
+```
+
+The commands above remain the current-source replay workflow and replace receipts
+only after an actual run.
