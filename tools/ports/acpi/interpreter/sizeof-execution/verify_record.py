@@ -11,6 +11,8 @@ import reference
 
 def checked(path, require_binaries):
     record=json.loads(path.read_text())
+    assert record['exit_code']==0 and record['source_unchanged'] is True
+    assert record['batches'] and all(batch['exit_code']==0 and batch['source_unchanged'] is True for batch in record['batches'])
     toolchain=json.loads((check.HERE/'toolchain.json').read_text())
     assert toolchain['omega_revision']==record['omega_revision']==check.PIN
     runner_hashes=[digest for path,digest in toolchain['sha256'].items() if Path(path).name in ['cathedral-acpi-checked-runner','cathedral-acpi-checked-runner.exe']]

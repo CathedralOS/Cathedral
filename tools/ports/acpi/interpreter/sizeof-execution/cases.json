@@ -1534,11 +1534,11 @@
   {
     "aml_hex": "084f424a30120502010a02140c4d41494e00a4874f424a30",
     "body": "let mut input:[u8;1024];\ninput[0]=8;\ninput[1]=79;\ninput[2]=66;\ninput[3]=74;\ninput[4]=48;\ninput[5]=18;\ninput[6]=5;\ninput[7]=2;\ninput[8]=1;\ninput[9]=10;\ninput[10]=2;\ninput[11]=20;\ninput[12]=12;\ninput[13]=77;\ninput[14]=65;\ninput[15]=73;\ninput[16]=78;\ninput[18]=164;\ninput[19]=135;\ninput[20]=79;\ninput[21]=66;\ninput[22]=74;\ninput[23]=48;\nlet prepared:Prepared=prepare_program(input,24,7,128,128);let mut program:Program=prepared.program;\nprogram.store.space.objects[2].has_next=true;program.store.space.objects[2].next=1;let mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;\nlet mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::EightBytes,128);\n",
-    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::InvalidState && !result.has_value",
-    "error": "InvalidState",
+    "check": "prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::BadEncoding && !result.has_value",
+    "error": "BadEncoding",
     "expected": null,
     "mutation": [
-      "result.outcome==ExecutionOutcome::InvalidState",
+      "result.outcome==ExecutionOutcome::BadEncoding",
       "result.outcome==ExecutionOutcome::Success"
     ],
     "name": "size_malformed_package",

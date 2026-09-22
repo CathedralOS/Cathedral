@@ -30,3 +30,12 @@ execute Omega or change the original result.
 ```sh
 python3 tools/ports/acpi/interpreter/sizeof-execution/diagnostics/package-tail-error/audit.py --require-binaries
 ```
+
+The corrected candidate retains `correction-source-audit.json` and
+`correction-body.diff`: only the positive assertion's expected error changes,
+with production and all other generated entry bodies identical. The checker
+and verifier additionally preserve/reject failed or changed-source receipts.
+Their host transport tests use synthetic temporary results solely to exercise
+receipt handling. `correction-public-replay.json` binds 76 actual observations
+to the unchanged public binary. None of these records promotes the corrected
+Omega candidate to a passing full run.

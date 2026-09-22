@@ -1,0 +1,11 @@
+--- original/authored_execution.omg
++++ corrected/authored_execution.omg
+@@ -5523,7 +5523,7 @@
+ let prepared:Prepared=prepare_program(input,24,7,128,128);let mut program:Program=prepared.program;
+ program.store.space.objects[2].has_next=true;program.store.space.objects[2].next=1;let mut main_path:Path=Path {absolute:true,count:1};main_path.segments[0]=1313423693;
+ let mut arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,main_path,&arguments,0,IntegerSize::EightBytes,128);
+-transition prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::InvalidState && !result.has_value {true -> (0) _ -> (1)}
++transition prepared.outcome==Outcome::Success && result.outcome==ExecutionOutcome::BadEncoding && !result.has_value {true -> (0) _ -> (1)}
+ }
+ machine SizeOfExecutionSuite::size_malformed_package_control(&mut self)->i32 {
+ let mut input:[u8;1024];

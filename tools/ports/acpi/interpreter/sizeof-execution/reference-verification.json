@@ -1085,7 +1085,7 @@
     "tools/ports/acpi/aml-public-execution/src/main.rs": "ca6c249f592018b4407cb3b16f36460c758cdd24e1b3834dc681ac6d43b4fb83",
     "tools/ports/acpi/field-access/reference.Cargo.lock": "9367b4eb30c481fbb3d63bdf427838778563773a81653783c5afde02e008219b",
     "tools/ports/acpi/interpreter/execution/fixtures.py": "1ad5198b0b0935ec471968c3a44a3d4c7c692aaa8f9cda5b45680046a87da868",
-    "tools/ports/acpi/interpreter/sizeof-execution/fixtures.py": "4ce4c9647f9794c0f510456542bf2158b9c0e3ca3a5f03234d4688eea8f31760",
+    "tools/ports/acpi/interpreter/sizeof-execution/fixtures.py": "a7b0911be6d78d412f5de06a19fac05999cd56efd3a1aa36598347feaf248efc",
     "tools/ports/acpi/interpreter/sizeof-execution/reference.py": "3a0098b63228016ba85f10ed495b07d02f6519f2ff67d4709121288c4170bc38"
   },
   "stage": "actual public pinned Interpreter load_table/evaluate; unchanged shared Rust harness; zero device/time/debug callbacks",

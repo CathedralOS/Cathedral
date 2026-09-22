@@ -1,12 +1,15 @@
 # Actual SizeOf opcode checks
 
-Status: **typechecked; full checked run failed one fixture**. The original
+Status: **typechecked; corrected full replay pending**. The original
 362-pair run evaluated all 724 entries: 361 complete pairs passed, while the
 `size_malformed_package` positive expected the wrong error category. Its control
 passed. The [terminal archive](diagnostics/package-tail-error/README.md) retains
 the complete failure and exact 160-input/generated-body audit. Corrected
 execution remains pending; no passing full-corpus result is claimed.
 Fixture generation and the 76 retained public observations also passed.
+The candidate corrects only that positive assertion to expect BadEncoding;
+all production and the other 723 generated entry bodies remain unchanged.
+The checker now writes failure receipts before rejecting unsuccessful batches.
 
 The new opcode reuses the existing ObjectType metadata operand path. Original
 fixtures exercise 116 actual Program cases and eight direct SizeOf decoder
@@ -44,3 +47,9 @@ See [the source contract](../../../../../source/libraries/acpi/interpreter/execu
 for the precise operand, error and incomplete-execution boundaries. Receipts
 belong to their exact source snapshot; later source integration needs a new run
 before claiming current-source verification.
+
+The diagnostic archive includes the exact correction/body comparison, ten
+host-only receipt-retention scenarios, eight verifier mutation rejections and
+a fresh replay of all 76 public cases through the unchanged pinned binary.
+Those public observations are identical. Synthetic host transport outputs are
+not Omega execution evidence; the corrected focused and full runs are pending.

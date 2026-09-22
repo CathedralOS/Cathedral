@@ -1,0 +1,55 @@
+{
+  "stage": "Host-only transport tests; synthetic outputs were temporary and are not execution evidence",
+  "results": [
+    {
+      "combined": false,
+      "mode": "compile_failure",
+      "record_written_before_failure": true,
+      "runner_exit": 2
+    },
+    {
+      "combined": false,
+      "mode": "entry_failure",
+      "record_written_before_failure": true,
+      "runner_exit": 1
+    },
+    {
+      "combined": false,
+      "mode": "invalid_output",
+      "record_written_before_failure": true,
+      "runner_exit": 0
+    },
+    {
+      "combined": false,
+      "mode": "success",
+      "record_written_before_failure": true,
+      "runner_exit": 0
+    },
+    {
+      "combined": true,
+      "mode": "compile_failure",
+      "record_written_before_failure": true,
+      "runner_exit": 2
+    },
+    {
+      "combined": true,
+      "mode": "entry_failure",
+      "record_written_before_failure": true,
+      "runner_exit": 1
+    },
+    {
+      "combined": true,
+      "mode": "invalid_output",
+      "record_written_before_failure": true,
+      "runner_exit": 0
+    },
+    {
+      "combined": true,
+      "mode": "success",
+      "record_written_before_failure": true,
+      "runner_exit": 0
+    }
+  ],
+  "verifier_mutation_rejections": 8,
+  "source_mismatch_retention_scenarios": 2
+}

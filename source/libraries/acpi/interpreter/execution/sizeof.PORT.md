@@ -1,6 +1,6 @@
 # Bounded SizeOf execution
 
-Status: **typechecked; full checked run failed one fixture**. All 724 entries
+Status: **typechecked; corrected full replay pending**. All 724 entries
 in the original 362-pair run executed: 361 complete pairs passed, and the
 `size_malformed_package` positive failed with no interpreter error. Its fixture
 incorrectly expects InvalidState for a trailing Package link; the existing
@@ -69,7 +69,12 @@ files. Its independent audit reconstructs the original Git sources and verifies
 the exact module/selection/output bindings. The old checker discarded the
 runner exit status before writing a normal receipt; the archive preserves the
 observed checker failure and does not invent a normal passing receipt.
-The fixture correction and current-source full replay remain pending.
+The candidate corrects the single positive expectation to BadEncoding. All
+production, every control and the other positive bodies remain unchanged.
+It also retains batch status and source-stability fields before asserting
+success, so future failures retain normal receipts. Ten host transport tests,
+eight verifier rejection checks and all 76 unchanged public replay observations
+pass; corrected Omega execution and the full current-source replay remain pending.
 
 The actual pinned public probe traps every device/time/debug callback and
 retains known ObjectType typeless-scope and incomplete-operand differences.

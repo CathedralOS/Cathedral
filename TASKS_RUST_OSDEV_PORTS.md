@@ -816,8 +816,9 @@ receipts retain their original source identities.
 is typechecked in an isolated branch. Its original 362-pair run executed all
 724 entries, with 361 complete pairs passing and one positive failing because
 the Package-tail fixture expected InvalidState instead of BadEncoding. The
-complete failed terminal evidence and 160 source hashes are retained. Fixture
-correction and a passing full replay remain pending; ACPI-005 stays open.
+complete failed terminal evidence and 160 source hashes are retained. The
+candidate corrects the expectation and preserves failure receipts without
+changing production. A passing full replay remains pending; ACPI-005 stays open.
 
 ## Phase 5 — only after the corpus above is healthy
 

@@ -161,7 +161,7 @@ def cases():
         patch=f'program.store.space.objects[0].value=Value::Method {{flags:255,body:Span {{unit:8,start:{MAX},end:0}}}};program.definitions.entries[0].present=false;')
     add('type_malformed_field',prefix=region()+field(),body=ret(op(0x8e,b'FLD0')),expected=5,
         patch=f'program.store.space.objects[1].value=Value::FieldUnit {{binding:FieldBinding::Region {{region_object:{MAX}}}}};')
-    for opcode,label,expected,error in [(0x8e,'type',4,'Success'),(0x87,'size',None,'InvalidState')]:
+    for opcode,label,expected,error in [(0x8e,'type',4,'Success'),(0x87,'size',None,'BadEncoding')]:
         add(label+'_malformed_package',named('OBJ0',package(integer(1),integer(2))),ret(op(opcode,b'OBJ0')),expected,error,
             patch='program.store.space.objects[2].has_next=true;program.store.space.objects[2].next=1;')
     for opcode,label,expected,error in [(0x8e,'type',14,'Success'),(0x87,'size',None,'UnsupportedValue')]:

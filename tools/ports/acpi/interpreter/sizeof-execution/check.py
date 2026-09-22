@@ -72,7 +72,7 @@ def validate(output,names):
     for (name,expected,observed),selection in zip(actual,names):assert name+'='+expected==selection and expected==observed,output
 
 def main():
-    p=argparse.ArgumentParser(description=__doc__);p.add_argument('--group',choices=DIRECTORIES,action='append');p.add_argument('--match',default='');p.add_argument('--runner',type=Path,default=RUNNER);p.add_argument('--workers',type=int,default=1);p.add_argument('--batch-size',type=int,default=1000);p.add_argument('--combine',action='store_true');p.add_argument('--record',type=Path);args=p.parse_args()
+    p=argparse.ArgumentParser(description=__doc__);p.add_argument('--group',choices=DIRECTORIES,action='append');p.add_argument('--match',default='');p.add_argument('--runner',type=Path,default=RUNNER);p.add_argument('--workers',type=int,default=1);p.add_argument('--batch-size',type=int,default=1000);p.add_argument('--combine',action='store_true');p.add_argument('--record',type=Path,default=HERE/'verification.json');args=p.parse_args()
     groups=args.group or ['execution'];assert 1<=args.workers<=4 and args.batch_size>0 and len(groups)==len(set(groups))
     inputs=snapshot(groups);binary=sha(args.runner);tasks=[]
     for group in groups:
@@ -85,10 +85,9 @@ def main():
             work=Path(directory);(work/'main.omg').write_text(text);(work/'build.omg').write_text(build)
             process=subprocess.run([str(args.runner),str(work/'main.omg'),str(work/'build'),*names],capture_output=True,text=True,env=dict(os.environ,OMEGA_INTERP_STEP_BUDGET='10000000'))
         output=process.stdout+process.stderr
-        assert process.returncode==0,output;validate(output,names)
-        assert inputs==snapshot(groups) and binary==sha(args.runner),'inputs changed during execution'
-        value=dict(group=group,cases=[row['name'] for row in rows],selections=names,source_sha256=text_sha(text),build_text=build,build_sha256=text_sha(build),output=output,elapsed_seconds=round(time.monotonic()-started,3))
-        print('PASS',group,len(rows),'pairs',flush=True);return value
+        unchanged=inputs==snapshot(groups) and binary==sha(args.runner)
+        value=dict(group=group,cases=[row['name'] for row in rows],selections=names,source_sha256=text_sha(text),build_text=build,build_sha256=text_sha(build),output=output,exit_code=process.returncode,source_unchanged=unchanged,elapsed_seconds=round(time.monotonic()-started,3))
+        print('BATCH',group,len(rows),'pairs; exit',process.returncode,flush=True);return value
     if args.combine:
         assert args.workers==1 and len(tasks)==len(groups), 'combined mode requires one worker and one complete chunk per group'
         names=[];modules=[];driver=driver_source(groups);build=build_text();started=time.monotonic()
@@ -99,14 +98,19 @@ def main():
                 modules.append(dict(group=group,cases=[row['name'] for row in rows],source_sha256=text_sha(body),selections=entries));names.extend(entries)
             process=subprocess.run([str(args.runner),str(work/'main.omg'),str(work/'build'),*names],capture_output=True,text=True,env=dict(os.environ,OMEGA_INTERP_STEP_BUDGET='10000000'))
         output=process.stdout+process.stderr
-        assert process.returncode==0,output;validate(output,names)
-        assert inputs==snapshot(groups) and binary==sha(args.runner),'inputs changed during combined execution'
-        batches=[dict(modules=modules,main_text=driver,main_sha256=text_sha(driver),build_text=build,build_sha256=text_sha(build),selections=names,output=output,elapsed_seconds=round(time.monotonic()-started,3))]
-        print('PASS combined',sum(len(rows) for _,rows,_ in tasks),'pairs',flush=True)
+        unchanged=inputs==snapshot(groups) and binary==sha(args.runner)
+        batches=[dict(modules=modules,main_text=driver,main_sha256=text_sha(driver),build_text=build,build_sha256=text_sha(build),selections=names,output=output,exit_code=process.returncode,source_unchanged=unchanged,elapsed_seconds=round(time.monotonic()-started,3))]
+        print('BATCH combined',sum(len(rows) for _,rows,_ in tasks),'pairs; exit',process.returncode,flush=True)
     else:
         with ThreadPoolExecutor(max_workers=args.workers) as pool:batches=list(pool.map(run,tasks))
     count=sum(len(rows) for _,rows,_ in tasks)
-    record=dict(stage='checked interpreter; authored Omega bodies with changed-expectation controls; native/hardware not run',omega_revision=PIN,execution_root=str(ROOT),runner_path=str(args.runner.resolve()),runner_sha256=binary,input_sha256=inputs,groups=groups,scope='selected' if args.match else 'full',positive_count=count,control_count=count,workers=args.workers,combined=args.combine,batches=batches,elapsed_seconds=round(time.monotonic()-start,3))
-    if args.record:args.record.write_text(json.dumps(record,indent=2,sort_keys=True)+'\n')
+    unchanged=inputs==snapshot(groups) and binary==sha(args.runner) and all(batch['source_unchanged'] for batch in batches)
+    record=dict(stage='checked interpreter; authored Omega bodies with changed-expectation controls; native/hardware not run',omega_revision=PIN,execution_root=str(ROOT),runner_path=str(args.runner.resolve()),runner_sha256=binary,input_sha256=inputs,groups=groups,scope='selected' if args.match else 'full',positive_count=count,control_count=count,workers=args.workers,combined=args.combine,batches=batches,exit_code=0 if all(batch['exit_code']==0 for batch in batches) else 1,source_unchanged=unchanged,elapsed_seconds=round(time.monotonic()-start,3))
+    args.record.parent.mkdir(parents=True,exist_ok=True)
+    args.record.write_text(json.dumps(record,indent=2,sort_keys=True)+'\n')
+    assert unchanged,'inputs changed during execution; see retained receipt'
+    for batch in batches:
+        assert batch['exit_code']==0,batch['output']
+        validate(batch['output'],batch['selections'])
     print('PASS',count,'SizeOf opcode/regression pairs')
 if __name__=='__main__':main()
