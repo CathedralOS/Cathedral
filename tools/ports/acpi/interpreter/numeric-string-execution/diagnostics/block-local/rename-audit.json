@@ -1,0 +1,17 @@
+{
+  "stage": "Fixture identifier correction audit only; no full adapter execution",
+  "input_count": 147,
+  "unchanged_inputs": 146,
+  "changed_inputs": {
+    "tools/ports/acpi/interpreter/numeric-string-execution/fixtures.py": {
+      "old": "16e3ae4d65449d11cc18f6f7648123c3247eb5ba253370e1d4f9b255efda9ccb",
+      "new": "8634dbb6f2d22500e427c315442655e5e5184643477175e5b26ffc1de8b5ffba"
+    }
+  },
+  "production_unchanged": true,
+  "fixture_rows_unchanged": true,
+  "selections_unchanged": true,
+  "original_generated_sha256": "036fc21fdf4a8245d8733c08a33ddbaf9a985ad02b74b05c51dda4826f8ec922",
+  "corrected_generated_sha256": "c26162d7d3cd774a2b4814e3597feba56ebe64757ae24e13ab226d027be6dabd",
+  "change": "Rename assertion-helper local block to snapshot in its declaration and three reads; no expectation or algorithm change."
+}

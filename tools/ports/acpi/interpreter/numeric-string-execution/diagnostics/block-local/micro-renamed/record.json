@@ -1,0 +1,15 @@
+{
+  "label": "renamed",
+  "command": [
+    "/tmp/cathedral-field-protocol-target/release/cathedral-acpi-checked-runner",
+    "/tmp/cathedral-block-local-micro/renamed/main.omg",
+    "/tmp/cathedral-block-local-micro/renamed/build",
+    "Suite::value=0"
+  ],
+  "source_sha256": "ff3b5726a0375f7fc0f5c49ba8210e9486e19dccc47e6fd5d59352e3f666f791",
+  "build_sha256": "6e740c0798f3273b92ccb7a02b935b4fac8cf57d287bfb5bad3beac1f2038404",
+  "runner_sha256": "4055e1d9cbc364859aeaaecc32148b1eaefa6cf04b3330076f816ce9bf9401dc",
+  "exit_code": 0,
+  "output": "CHECKED authored package and dependency bodies; native publication NOT requested\nPASS Suite::value expected=0 observed=0 error=None usage=EvaluationUsage { schema: EvaluationUsageSchemaIdentity(7), schedule: EvaluationStepScheduleIdentity(1), fuel_units: 9, fuel_ceiling: 10000000, build_log_bytes: 0, filesystem_operation_attempts: 0, peak_live_cells: 5, peak_live_text_bytes: 0, result_cells: 0, result_text_bytes: 0 }\n",
+  "elapsed_seconds": 6.734425209
+}

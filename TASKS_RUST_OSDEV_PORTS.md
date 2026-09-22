@@ -708,8 +708,10 @@ is transcribed on an isolated branch: both decimal/hexadecimal opcodes prepare
 complete String results, replace explicit targets and publish retirement
 atomically. Its 160 AML and 171 whole-state cases accompany all 315 retained
 Mid/executor regression pairs. The public Rust receipt records 124 observations,
-82 value/state agreements and all 42 nonagreements. Checked Omega execution
-remains pending; the complete source anchor and aggregate counts are unchanged.
+82 value/state agreements and all 42 nonagreements. A focused AML parse failure
+exposed a reserved helper-local identifier; its fixture-only correction leaves
+production unchanged. Corrected checked execution remains pending; the complete
+source anchor and aggregate counts are unchanged.
 
 [Direct String-name lookup](source/libraries/acpi/aml/string-lookup.PORT.md) joins canonical String admission, textual
 ASL name parsing and scoped namespace search, returning an object ID and path.

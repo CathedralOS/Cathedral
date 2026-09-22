@@ -5,6 +5,17 @@ defines explicit decimal/hexadecimal formatting, fresh result ownership, direct
 target replacement and atomic retirement. **Checked Omega execution is pending.**
 Source review, host generation and public Rust comparisons are distinct stages.
 
+The original `b539b33` focused AML batch failed during parsing of the new byte
+assertion helper: the local name `block` was rejected in expression position.
+The [diagnostic archive](diagnostics/block-local/) retains the exact generated
+package, 147-input plan and repeated compilation failure. A minimal original
+probe also fails parsing; its otherwise identical `snapshot`-named variant
+checks and returns zero. That is parser evidence, not adapter execution.
+The candidate changes only this assertion-helper identifier: all production,
+fixture rows and selections remain unchanged, as do 146 of 147 bound inputs.
+The original retirement batch remains a separate pending run. Corrected AML
+and full-corpus execution are still required.
+
 The full corpus has 646 positive/control pairs. Its 160 actual AML fixtures
 cover both opcodes, Integer widths, source kinds, target
 replacement, retained method effects, result identities and formatting/storage

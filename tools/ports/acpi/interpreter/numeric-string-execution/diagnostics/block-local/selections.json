@@ -1,0 +1,22 @@
+[
+  "ExecutionNumericStringSuite::decimal_inline_integer_32_positive=0",
+  "ExecutionNumericStringSuite::decimal_inline_integer_32_control=1",
+  "ExecutionNumericStringSuite::decimal_callee_earlier_effect_32_positive=0",
+  "ExecutionNumericStringSuite::decimal_callee_earlier_effect_32_control=1",
+  "ExecutionNumericStringSuite::decimal_buffer_exact_256_64_positive=0",
+  "ExecutionNumericStringSuite::decimal_buffer_exact_256_64_control=1",
+  "ExecutionNumericStringSuite::decimal_named_buffer_replacement_64_positive=0",
+  "ExecutionNumericStringSuite::decimal_named_buffer_replacement_64_control=1",
+  "ExecutionNumericStringSuite::decimal_earlier_conversion_before_capacity_64_positive=0",
+  "ExecutionNumericStringSuite::decimal_earlier_conversion_before_capacity_64_control=1",
+  "ExecutionNumericStringSuite::hex_integer_18446744073709551615_32_positive=0",
+  "ExecutionNumericStringSuite::hex_integer_18446744073709551615_32_control=1",
+  "ExecutionNumericStringSuite::hex_buffer_overflow_64_positive=0",
+  "ExecutionNumericStringSuite::hex_buffer_overflow_64_control=1",
+  "ExecutionNumericStringSuite::hex_local_expression_64_positive=0",
+  "ExecutionNumericStringSuite::hex_local_expression_64_control=1",
+  "ExecutionNumericStringSuite::hex_nested_64_positive=0",
+  "ExecutionNumericStringSuite::hex_nested_64_control=1",
+  "ExecutionNumericStringSuite::hex_argument_refof_64_positive=0",
+  "ExecutionNumericStringSuite::hex_argument_refof_64_control=1"
+]

@@ -146,7 +146,7 @@
     "tools/ports/acpi/interpreter/numeric-string-execution/bridge_fixtures.py": "94c6464f6416256fff8b67c484349abdbabebd3fdec873438b00f7bd43ff9619",
     "tools/ports/acpi/interpreter/numeric-string-execution/check.py": "917beb0924d2510a5d216ee80d92dbbd7f8462a7d6d75eb9a075a89f3145bc7f",
     "tools/ports/acpi/interpreter/numeric-string-execution/execution-cases.json": "1427251f3bfe4e1f54c0fdac83904fa6c2e3a1d98c6ceb9268057d8b7f0440fc",
-    "tools/ports/acpi/interpreter/numeric-string-execution/fixtures.py": "8634dbb6f2d22500e427c315442655e5e5184643477175e5b26ffc1de8b5ffba",
+    "tools/ports/acpi/interpreter/numeric-string-execution/fixtures.py": "16e3ae4d65449d11cc18f6f7648123c3247eb5ba253370e1d4f9b255efda9ccb",
     "tools/ports/acpi/interpreter/numeric-string-execution/toolchain.json": "f28d02436e4cdd6aaeb893c248219899174c5a01c0870e56af6ec7d2c98e7aa8",
     "tools/ports/acpi/interpreter/numeric-string-execution/verify_record.py": "4e1b78a25cb7c70b84413c4b66fe52f2ee3ac97f085950cc801cff2b96b8c3ac",
     "tools/ports/acpi/interpreter/to-integer-execution/fixtures.py": "01d2671723c19c59a6aa96c8afa0f4a839e5832d8aa2cf4c50a6be3604f9f4cf",
@@ -523,7 +523,7 @@
         "hex_wrong_source_unit_64",
         "hex_dirty_string_tail_64"
       ],
-      "source_sha256": "d0b412c048bf5e1bc56c4b47922ac403be97f92d01c4b7f58806f2e5d18705c0",
+      "source_sha256": "1002aecaaebfbe47583f93f452aa45c9bc4328eafa706f0b55e93b6f0a5812d6",
       "selections": [
         "ExecutionNumericStringSuite::decimal_integer_0_32_positive=0",
         "ExecutionNumericStringSuite::decimal_integer_0_32_control=1",

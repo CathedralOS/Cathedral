@@ -238,8 +238,8 @@ machine nse_owned(program:&Program,id:u64,length:u64,expected:&[u8;256])->bool {
   transition owner==id && id<64 {true -> block(program,id,length,expected) _ -> (false)}
  }
  state block(program:&Program,id:u64,length:u64,expected:&[u8;256])->bool {
-  let snapshot:ByteBlock=program.store.bytes.blocks[id];let same:bool=ge_same_bytes(&snapshot.bytes,expected,0,256,true);
-  snapshot.initialized && snapshot.length==length && same
+  let block:ByteBlock=program.store.bytes.blocks[id];let same:bool=ge_same_bytes(&block.bytes,expected,0,256,true);
+  block.initialized && block.length==length && same
  }
 }
 machine nse_reference(program:&Program,id:u64,kind:ReferenceKind,referent:u64)->bool {

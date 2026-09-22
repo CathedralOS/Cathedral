@@ -8,6 +8,14 @@ their detached boundary; that evidence does not execute this adapter. Authored
 executor regressions, require their own exact-source checked results. ACPI-005
 and aggregate counts remain pending.
 
+The original focused AML batch failed to parse a test-helper local named
+`block`. An isolated original/renamed probe confirms the identifier issue, and
+the exact failing package is retained under the tooling's
+[diagnostic archive](../../../../../tools/ports/acpi/interpreter/numeric-string-execution/diagnostics/block-local/).
+The candidate renames that local to `snapshot`, preserving all production
+inputs, fixture rows and expectations. This does not establish an AML execution
+pass; the original retirement batch and corrected checked runs remain pending.
+
 This modified composition maps rust-osdev/acpi
 [`257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5`, `src/aml/mod.rs:2096`](https://github.com/rust-osdev/acpi/blob/257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5/src/aml/mod.rs#L2096),
 `do_to_dec_hex_string`, copyright 2018 Isaac Woods, MIT OR Apache-2.0. The
