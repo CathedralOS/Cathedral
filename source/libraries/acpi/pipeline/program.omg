@@ -51,8 +51,17 @@ pub machine run_program_limited(program:&mut Program,path:Path,arguments:&[Value
         _ -> execute(program, path, arguments, count, size, budget,result_objects,result_bytes) }
     state execute(program: &mut Program, path: Path, arguments: &[Value; 7], count: u64, size: IntegerSize, budget: u64,result_objects:u64,result_bytes:u64) -> ExecutionResult {
         let result: ExecutionResult = run_method(&program.source, program.length, program.unit, &mut program.store, &program.definitions.entries, path, arguments, count, size, budget);
-        transition result.outcome==ExecutionOutcome::Success && result.has_value {true -> returned(program,result,result_objects,result_bytes) _ -> (result)}
+        let admitted:ExecutionResult=admit_result(program,result,result_objects,result_bytes);admitted
     }
+}
+// Shared result policy for synchronous execution and retained read sessions.
+// Callers preflight quota bounds before execution; this public helper also
+// checks them before admitting a supplied completed result.
+pub machine admit_result(program:&Program,result:ExecutionResult,result_objects:u64,result_bytes:u64)->ExecutionResult {
+    let valid:bool=limits_valid(result_objects,result_bytes);
+    transition {!valid -> rejected(result,ExecutionOutcome::Capacity)
+        result.outcome==ExecutionOutcome::Success && result.has_value -> returned(program,result,result_objects,result_bytes)
+        _ -> (result)}
     state returned(program:&Program,result:ExecutionResult,result_objects:u64,result_bytes:u64)->ExecutionResult {
         transition result.operand {Operand::Integer {number} -> (result)
             Operand::Object {object_id} -> graph(program,result,object_id,result_objects,result_bytes)
