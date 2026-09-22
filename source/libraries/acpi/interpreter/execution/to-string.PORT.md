@@ -93,3 +93,10 @@ No private Rust algorithm is copied into the public probe.
 No checked Omega, constant-evaluator, native Omega or hardware result is claimed
 for this opcode extension yet. Earlier direct conversion receipts remain scoped
 to their unchanged helper implementations.
+
+The original six-case AML selection failed compilation with an Outcome versus
+ExecutionOutcome equality diagnostic. Its exact failed package and unchanged
+145-input binding are [retained](../../../../../tools/ports/acpi/interpreter/to-string-execution/diagnostics/prepared-name-collision/README.md).
+The candidate gives the adapter's private preparation type a unique name to
+avoid collision with the imported loader Prepared type. Candidate checking and
+execution remain pending; the diagnostic does not establish a behavior result.

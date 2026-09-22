@@ -114,6 +114,8 @@ def main():
         for batch in pool.map(run_batch,batches):
             completed.append(batch)
             print('BATCH',batch['group'],len(batch['cases']),'pairs; exit',batch['exit_code'],';',batch['elapsed_seconds'],'seconds',flush=True)
+            if batch['exit_code']:
+                print(batch['output'],flush=True)
     unchanged = before == snapshot() and binary == sha(args.runner)
     assert subprocess.check_output(['git','rev-parse','HEAD'],cwd=omega,text=True).strip()==PIN
     assert not subprocess.check_output(['git','status','--porcelain'],cwd=omega,text=True).strip()
@@ -132,8 +134,6 @@ def main():
     assert unchanged, 'Inputs changed during verification'
     for batch in completed:
         assert batch['source_unchanged'], 'Inputs changed during batch'
-        if batch['exit_code']:
-            print(batch['output'],flush=True)
     assert record['exit_code']==0, 'Compilation or execution failed; see retained diagnostic'
     for batch in completed:
         validate(batch['output'],batch['selections'])

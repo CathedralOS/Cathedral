@@ -33,30 +33,30 @@ use integer_helpers::integers::normalize;
 use integer_helpers::conversions::integer_to_buffer;
 use integer_helpers::conversions::buffer_to_string;
 
-data ToStringPrepared [copy] {outcome:ExecutionOutcome;number:u64;length:u64;bytes:[u8;256];}
+data Prepared [copy] {outcome:ExecutionOutcome;number:u64;length:u64;bytes:[u8;256];}
 data Staged [copy] {store:ObjectStore;frame:Frame;}
 
 // Operand evaluation has already occurred in AML order. Coerce source to
 // Buffer, then maximum to Integer; admit complete backing before prefix scan.
 // No temporary operand conversion consumes a caller-owned object slot.
 pub machine retire_to_string(input:&[u8;1024],store:&mut ObjectStore,frame:&mut Frame,source:Operand,maximum:Operand,target:Target)->ExecutionOutcome {
- let bytes:ToStringPrepared=prepare_operand(input,frame.source_length,frame.body.unit,store,frame.size,source,ConversionTarget::Buffer);
+ let bytes:Prepared=prepare_operand(input,frame.source_length,frame.body.unit,store,frame.size,source,ConversionTarget::Buffer);
  transition bytes.outcome==ExecutionOutcome::Success {true -> maximum(input,store,frame,bytes,maximum,target) _ -> (bytes.outcome)}
- state maximum(input:&[u8;1024],store:&mut ObjectStore,frame:&mut Frame,bytes:ToStringPrepared,maximum:Operand,target:Target)->ExecutionOutcome {
-  let count:ToStringPrepared=prepare_operand(input,frame.source_length,frame.body.unit,store,frame.size,maximum,ConversionTarget::Integer);
+ state maximum(input:&[u8;1024],store:&mut ObjectStore,frame:&mut Frame,bytes:Prepared,maximum:Operand,target:Target)->ExecutionOutcome {
+  let count:Prepared=prepare_operand(input,frame.source_length,frame.body.unit,store,frame.size,maximum,ConversionTarget::Integer);
   transition count.outcome==ExecutionOutcome::Success {true -> convert(input,store,frame,bytes,count.number,target) _ -> (count.outcome)}
  }
- state convert(input:&[u8;1024],store:&mut ObjectStore,frame:&mut Frame,bytes:ToStringPrepared,maximum:u64,target:Target)->ExecutionOutcome {
-  let mut prepared:ToStringPrepared;let result:IntegerResult=buffer_to_string(&bytes.bytes,bytes.length,maximum,&mut prepared.bytes);
+ state convert(input:&[u8;1024],store:&mut ObjectStore,frame:&mut Frame,bytes:Prepared,maximum:u64,target:Target)->ExecutionOutcome {
+  let mut prepared:Prepared;let result:IntegerResult=buffer_to_string(&bytes.bytes,bytes.length,maximum,&mut prepared.bytes);
   prepared.length=result.value;
   transition {result.error==0 -> target(input,store,frame,prepared,target)
    result.error==7 -> (ExecutionOutcome::Encoding) result.error==4 -> (ExecutionOutcome::Capacity) _ -> (ExecutionOutcome::InvalidState)}
  }
- state target(input:&[u8;1024],store:&mut ObjectStore,frame:&mut Frame,prepared:ToStringPrepared,target:Target)->ExecutionOutcome {
+ state target(input:&[u8;1024],store:&mut ObjectStore,frame:&mut Frame,prepared:Prepared,target:Target)->ExecutionOutcome {
   let admitted:ExecutionOutcome=original_target(store,frame,target);
   transition admitted==ExecutionOutcome::Success {true -> stage(input,store,frame,prepared,target) _ -> (admitted)}
  }
- state stage(input:&[u8;1024],store:&mut ObjectStore,frame:&mut Frame,prepared:ToStringPrepared,target:Target)->ExecutionOutcome {
+ state stage(input:&[u8;1024],store:&mut ObjectStore,frame:&mut Frame,prepared:Prepared,target:Target)->ExecutionOutcome {
   let mut staged:Staged=Staged {store:store,frame:frame};
   let result:ExecutionOutcome=apply(input,&mut staged,prepared,target);
   transition result==ExecutionOutcome::Success {true -> publish(store,frame,staged) _ -> (result)}
@@ -64,46 +64,46 @@ pub machine retire_to_string(input:&[u8;1024],store:&mut ObjectStore,frame:&mut 
  state publish(store:&mut ObjectStore,frame:&mut Frame,staged:Staged)->ExecutionOutcome {store=staged.store;frame=staged.frame;ExecutionOutcome::Success}
 }
 
-machine prepare_operand(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,size:IntegerSize,operand:Operand,target:ConversionTarget)->ToStringPrepared {
+machine prepare_operand(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,size:IntegerSize,operand:Operand,target:ConversionTarget)->Prepared {
  transition operand {
-  Operand::Uninitialized -> (ToStringPrepared {outcome:ExecutionOutcome::Uninitialized})
+  Operand::Uninitialized -> (Prepared {outcome:ExecutionOutcome::Uninitialized})
   Operand::Integer {number} -> scalar(size,number,target)
   Operand::Object {object_id} -> object(input,length,unit,store,size,object_id,target)
  }
- state scalar(size:IntegerSize,number:u64,target:ConversionTarget)->ToStringPrepared {
+ state scalar(size:IntegerSize,number:u64,target:ConversionTarget)->Prepared {
   let value:u64=normalize(size,number);
-  transition target {ConversionTarget::Integer -> (ToStringPrepared {number:value})
-   ConversionTarget::Buffer -> bytes(size,value) _ -> (ToStringPrepared {outcome:ExecutionOutcome::InvalidState})}
+  transition target {ConversionTarget::Integer -> (Prepared {number:value})
+   ConversionTarget::Buffer -> bytes(size,value) _ -> (Prepared {outcome:ExecutionOutcome::InvalidState})}
  }
- state bytes(size:IntegerSize,number:u64)->ToStringPrepared {
-  let mut prepared:ToStringPrepared;let encoded:IntegerResult=integer_to_buffer(size,number,&mut prepared.bytes);prepared.length=encoded.value;
-  transition encoded.error==0 {true -> (prepared) _ -> (ToStringPrepared {outcome:ExecutionOutcome::Capacity})}
+ state bytes(size:IntegerSize,number:u64)->Prepared {
+  let mut prepared:Prepared;let encoded:IntegerResult=integer_to_buffer(size,number,&mut prepared.bytes);prepared.length=encoded.value;
+  transition encoded.error==0 {true -> (prepared) _ -> (Prepared {outcome:ExecutionOutcome::Capacity})}
  }
- state object(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,size:IntegerSize,id:u64,target:ConversionTarget)->ToStringPrepared {
+ state object(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,size:IntegerSize,id:u64,target:ConversionTarget)->Prepared {
   let found:ReferenceState=unwrap_transparent(&store.space,id,64);
   transition found.outcome {
    Outcome::Success -> resolved(input,length,unit,store,size,found.object,target)
-   Outcome::ReferenceCycle -> (ToStringPrepared {outcome:ExecutionOutcome::ReferenceCycle})
-   Outcome::WorkLimit -> (ToStringPrepared {outcome:ExecutionOutcome::WorkLimit})
-   _ -> (ToStringPrepared {outcome:ExecutionOutcome::InvalidState})
+   Outcome::ReferenceCycle -> (Prepared {outcome:ExecutionOutcome::ReferenceCycle})
+   Outcome::WorkLimit -> (Prepared {outcome:ExecutionOutcome::WorkLimit})
+   _ -> (Prepared {outcome:ExecutionOutcome::InvalidState})
   }
  }
- state resolved(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,size:IntegerSize,id:u64,target:ConversionTarget)->ToStringPrepared {
-  transition id<64 {true -> value(input,length,unit,store,size,id,target) _ -> (ToStringPrepared {outcome:ExecutionOutcome::InvalidState})}
+ state resolved(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,size:IntegerSize,id:u64,target:ConversionTarget)->Prepared {
+  transition id<64 {true -> value(input,length,unit,store,size,id,target) _ -> (Prepared {outcome:ExecutionOutcome::InvalidState})}
  }
- state value(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,size:IntegerSize,id:u64,target:ConversionTarget)->ToStringPrepared {
-  transition store.space.objects[id].value {Value::Uninitialized -> (ToStringPrepared {outcome:ExecutionOutcome::Uninitialized}) _ -> convert(input,length,unit,store,size,id,target)}
+ state value(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,size:IntegerSize,id:u64,target:ConversionTarget)->Prepared {
+  transition store.space.objects[id].value {Value::Uninitialized -> (Prepared {outcome:ExecutionOutcome::Uninitialized}) _ -> convert(input,length,unit,store,size,id,target)}
  }
- state convert(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,size:IntegerSize,id:u64,target:ConversionTarget)->ToStringPrepared {
+ state convert(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,size:IntegerSize,id:u64,target:ConversionTarget)->Prepared {
   let converted:ImplicitResult=implicit_conversions::convert(input,length,unit,store,id,size,target);
   transition converted {
-   ImplicitResult::Integer {number} -> (ToStringPrepared {number:number})
-   ImplicitResult::Buffer {length,bytes} -> (ToStringPrepared {length:length,bytes:bytes})
+   ImplicitResult::Integer {number} -> (Prepared {number:number})
+   ImplicitResult::Buffer {length,bytes} -> (Prepared {length:length,bytes:bytes})
    ImplicitResult::Failure {reason} -> failed(reason)
-   _ -> (ToStringPrepared {outcome:ExecutionOutcome::InvalidState})
+   _ -> (Prepared {outcome:ExecutionOutcome::InvalidState})
   }
  }
- state failed(reason:ConversionFailure)->ToStringPrepared {let error:ExecutionOutcome=conversion_outcome(reason);ToStringPrepared {outcome:error}}
+ state failed(reason:ConversionFailure)->Prepared {let error:ExecutionOutcome=conversion_outcome(reason);Prepared {outcome:error}}
 }
 
 // Explicit conversion replaces a named target's type. Admit old identities
@@ -129,10 +129,10 @@ machine original_target(store:&ObjectStore,frame:&Frame,target:Target)->Executio
  }
 }
 
-machine apply(input:&[u8;1024],staged:&mut Staged,prepared:ToStringPrepared,target:Target)->ExecutionOutcome {
+machine apply(input:&[u8;1024],staged:&mut Staged,prepared:Prepared,target:Target)->ExecutionOutcome {
  let id:u64=staged.store.space.object_count;
  transition id<64 && staged.store.space.count<=32 && prepared.length<=256 {true -> allocate(input,staged,prepared,target,id) _ -> (ExecutionOutcome::Capacity)}
- state allocate(input:&[u8;1024],staged:&mut Staged,prepared:ToStringPrepared,target:Target,id:u64)->ExecutionOutcome {
+ state allocate(input:&[u8;1024],staged:&mut Staged,prepared:Prepared,target:Target,id:u64)->ExecutionOutcome {
   staged.store.space.objects[id]=Object {value:Value::String {string_storage:StringStorage::Owned {string_owner:id}}};
   staged.store.bytes.blocks[id]=ByteBlock {initialized:true,length:prepared.length,bytes:prepared.bytes};
   staged.store.space.object_count=id+1;
