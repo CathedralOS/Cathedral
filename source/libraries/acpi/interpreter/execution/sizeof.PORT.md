@@ -1,9 +1,11 @@
 # Bounded SizeOf execution
 
-Status: **transcribed; checked verification pending**. The 362 behavior/control
-pairs are running against the frozen source snapshot. Fixture generation and
-76 actual pinned public observations have passed; no passing Omega integration
-result is claimed by this draft checkpoint.
+Status: **typechecked; full checked run failed one fixture**. All 724 entries
+in the original 362-pair run executed: 361 complete pairs passed, and the
+`size_malformed_package` positive failed with no interpreter error. Its fixture
+incorrectly expects InvalidState for a trailing Package link; the existing
+walker and adapter report BadEncoding. The full result remains a failure.
+Fixture generation and 76 actual pinned public observations have passed.
 
 This component adds actual AML `SizeOf` (`0x87`) execution through the owned
 `prepare_program` / `run_program` pipeline. It reuses the existing ObjectType
@@ -43,6 +45,8 @@ metadata parser's `UnsupportedOpcode`; bare NullName is `InvalidTarget`.
 Truncated operands retain parser failures. Resolution preserves MissingObject,
 ReferenceCycle, WorkLimit and Capacity; malformed identities are InvalidState.
 Storage failures use the existing generic byte-outcome mapping.
+An extra sibling link after the advertised Package tail is BadEncoding, even
+when that link would point back to an earlier member.
 
 Inspection borrows Frame and ObjectStore read-only. The decoder contributes the
 Integer through its existing bounded operand path before advancing the cursor.
@@ -58,6 +62,14 @@ The authored scenarios retain useful ObjectType coverage against the existing
 path and add actual SizeOf methods, malformed storage, references, field kinds,
 budgets and direct decoder publication checks. Unchanged ObjectType execution
 and exhaustive decoder state fixtures are included as regressions.
+
+The [original terminal archive](../../../../../tools/ports/acpi/interpreter/sizeof-execution/diagnostics/package-tail-error/README.md)
+retains all entries, the 160 unchanged launch inputs and eight cached generated
+files. Its independent audit reconstructs the original Git sources and verifies
+the exact module/selection/output bindings. The old checker discarded the
+runner exit status before writing a normal receipt; the archive preserves the
+observed checker failure and does not invent a normal passing receipt.
+The fixture correction and current-source full replay remain pending.
 
 The actual pinned public probe traps every device/time/debug callback and
 retains known ObjectType typeless-scope and incomplete-operand differences.

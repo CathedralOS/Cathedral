@@ -1,8 +1,12 @@
 # Actual SizeOf opcode checks
 
-Status: **transcribed; 362 checked pairs pending**. Fixture generation and the
-76 retained public observations have passed. The running Omega check has not
-yet returned a result; this draft checkpoint makes no checked integration claim.
+Status: **typechecked; full checked run failed one fixture**. The original
+362-pair run evaluated all 724 entries: 361 complete pairs passed, while the
+`size_malformed_package` positive expected the wrong error category. Its control
+passed. The [terminal archive](diagnostics/package-tail-error/README.md) retains
+the complete failure and exact 160-input/generated-body audit. Corrected
+execution remains pending; no passing full-corpus result is claimed.
+Fixture generation and the 76 retained public observations also passed.
 
 The new opcode reuses the existing ObjectType metadata operand path. Original
 fixtures exercise 116 actual Program cases and eight direct SizeOf decoder

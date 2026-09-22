@@ -1,0 +1,2840 @@
+module authored_objecttype;
+// SPDX-License-Identifier: MIT OR Apache-2.0
+use aml::model::Value;
+use aml::model::Path;
+use aml::model::Lookup;
+use aml::model::ReferenceKind;
+use aml::model::BufferStorage;
+use aml::model::Span;
+use aml::model::Outcome;
+use aml::namespace::get;
+use aml::byte_storage::ByteRead;
+use aml::byte_storage::ByteResult;
+use aml::byte_storage::ByteOutcome;
+use aml::byte_storage::materialize;
+use aml::byte_storage::create_buffer_field;
+use aml::byte_storage::write_field_integer;
+use execution::engine::ExecutionResult;
+use execution::execution_model::ExecutionOutcome;
+use execution::execution_model::Operand;
+use execution::execution_model::ValueResult;
+use execution::generic_values::read_value;
+use execution::generic_values::byte_snapshot;
+use pipeline::program::Program;
+use pipeline::program::Prepared;
+use pipeline::program::prepare_program;
+use pipeline::program::run_program;
+use integer_helpers::integers::IntegerSize;
+data GenericCase [copy] {input:[u8;1024];length:u64;kind:u64;number:u64;bytes:[u8;256];byte_count:u64;has_after:bool;after:u64;after_segment:u32;check_count:bool;object_count:u64;error:ExecutionOutcome;patch:u64;mutate_source:bool;size:IntegerSize;}
+machine ge_same_bytes(left:&[u8;256],right:&[u8;256],index:u64,count:u64,prior:bool)
+terminates by(index,count)->Nat::BoundedDistance;
+->bool {let good:bool=ge_byte(left,right,index,count);transition index<count {true -> ge_same_bytes(left,right,index+1,count,prior && good) _ -> (prior)}}
+machine ge_byte(left:&[u8;256],right:&[u8;256],index:u64,count:u64)->bool {transition index<count && index<256 {true -> (left[index]==right[index]) _ -> (true)}}
+machine ge_integer(value:Value,number:u64)->bool {transition value {Value::Integer {number as actual} -> (actual==number) _ -> (false)}}
+machine ge_transport(value:Operand,kind:u64)->bool {transition value {Operand::Integer {number} -> (kind==1) Operand::Object {object_id} -> (kind>=2 && kind<=5) _ -> (false)}}
+machine ge_kind(value:Value,kind:u64,number:u64)->bool {transition value {Value::Integer {number as actual} -> (kind==1 && actual==number) Value::Buffer {buffer_storage} -> (kind==2) Value::String {string_storage} -> (kind==3) Value::Package {first,count} -> (kind==4 && count==number) Value::Reference {kind as reference_kind,object_id} -> (kind==5 && reference_kind==ReferenceKind::RefOf && object_id==number) _ -> (false)}}
+machine ge_check(row:GenericCase)->i32 {
+ let loaded:Prepared=prepare_program(row.input,row.length,7,128,128);let mut program:Program=loaded.program;
+ _=ge_setup(&mut program,row.patch);
+ let mut path:Path=Path {absolute:true,count:1};path.segments[0]=1313423693;
+ let arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,path,&arguments,0,row.size,256);
+ let count:bool=!row.check_count || program.store.space.object_count==row.object_count;
+ let mutation:bool=ge_mutate_source(&mut program,row.mutate_source);
+ let found:ValueResult=read_value(&program.store,result.operand);
+ let matched:bool=ge_kind(found.value,row.kind,row.number);let transport:bool=ge_transport(result.operand,row.kind);
+ let bytes:bool=ge_check_bytes(&program,result.operand,row);
+ let after:bool=ge_after(&program,row);
+ let good:bool=ge_result(loaded.outcome,result.outcome,row.error,result.has_value,matched && transport,bytes,after,count,mutation);
+ transition good {true -> (0) _ -> (1)}
+}
+machine ge_result(loaded:Outcome,actual:ExecutionOutcome,expected:ExecutionOutcome,present:bool,matched:bool,bytes:bool,after:bool,count:bool,mutation:bool)->bool {loaded==Outcome::Success && actual==expected && after && count && mutation && (expected!=ExecutionOutcome::Success || (present && matched && bytes))}
+machine ge_check_bytes(program:&Program,operand:Operand,row:GenericCase)->bool {
+ transition row.kind==2 || row.kind==3 {true -> bytes(program,operand,row) _ -> (true)}
+ state bytes(program:&Program,operand:Operand,row:GenericCase)->bool {let value:ValueResult=read_value(&program.store,operand);let snapshot:ByteRead=byte_snapshot(&program.source,program.length,program.unit,&program.store,value);let equal:bool=ge_same_bytes(&snapshot.bytes,&row.bytes,0,row.byte_count,true);value.outcome==ExecutionOutcome::Success && snapshot.outcome==ByteOutcome::Success && snapshot.length==row.byte_count && equal}
+}
+machine ge_after(program:&Program,row:GenericCase)->bool {
+ transition row.has_after {true -> lookup(program,row) _ -> (true)}
+ state lookup(program:&Program,row:GenericCase)->bool {let mut path:Path=Path {absolute:true,count:1};path.segments[0]=row.after_segment;let found:Lookup=get(program.store.space,path);transition found.outcome==Outcome::Success && found.object<64 {true -> value(program,found.object,row.after) _ -> (false)}}
+ state value(program:&Program,id:u64,number:u64)->bool {let good:bool=ge_integer(program.store.space.objects[id].value,number);good}
+}
+machine ge_mutate_source(program:&mut Program,change:bool)->bool {
+ transition change {true -> field(program) _ -> (true)}
+ state field(program:&mut Program)->bool {let field:ByteResult=create_buffer_field(&program.source,program.length,program.unit,&mut program.store,0,0,8);transition field.outcome==ByteOutcome::Success {true -> write(program,field.object) _ -> (false)}}
+ state write(program:&mut Program,id:u64)->bool {let written:ByteResult=write_field_integer(&program.source,program.length,program.unit,&mut program.store,id,IntegerSize::EightBytes,68);written.outcome==ByteOutcome::Success}
+}
+data SizeOfPriorObjectTypeSuite {}
+
+
+use aml::model::ObjectStore;
+use aml::model::NamespaceResult;
+use aml::namespace::insert;
+use aml::namespace::empty;
+use execution::execution_model::Frame;
+use execution::execution_model::Binding;
+use execution::execution_model::Operation;
+use execution::decode_execution::decode_term;
+use execution::decode_execution::decode_target;
+machine ge_decoder(mode:u64,expected_pc:u64)->i32 {
+ let mut input:[u8;1024];let mut store:ObjectStore=ObjectStore {};store.space=empty();
+ let mut frame:Frame=Frame {scope:Path {absolute:true},source_length:4,body:Span {unit:7},end:4,operation_count:1};
+ frame.operations[0]=Operation {opcode:0x72,value_arity:1,count:1};
+ let expected:ExecutionOutcome=ge_decoder_setup(&mut input,&mut store,&mut frame,mode);
+ let count:u64=frame.operation_count;
+ let actual:ExecutionOutcome=ge_decoder_run(&input,&store,&mut frame,mode);
+ let good:bool=ge_decoder_result(actual,expected,frame.pc,expected_pc,frame.end,frame.operation_count,count);
+ transition good {true -> (0) _ -> (1)}
+}
+machine ge_decoder_result(actual:ExecutionOutcome,expected:ExecutionOutcome,pc:u64,want:u64,end:u64,count:u64,prior:u64)->bool {actual==expected && pc==want && end==4 && count==prior}
+machine ge_decoder_run(input:&[u8;1024],store:&ObjectStore,frame:&mut Frame,mode:u64)->ExecutionOutcome {
+ transition mode==5 {true -> target(input,store,frame) _ -> term(input,store,frame)}
+ state target(input:&[u8;1024],store:&ObjectStore,frame:&mut Frame)->ExecutionOutcome {let result:ExecutionOutcome=decode_target(input,store,frame);result}
+ state term(input:&[u8;1024],store:&ObjectStore,frame:&mut Frame)->ExecutionOutcome {let result:ExecutionOutcome=decode_term(input,store,frame);result}
+}
+machine ge_decoder_setup(input:&mut [u8;1024],store:&mut ObjectStore,frame:&mut Frame,mode:u64)->ExecutionOutcome {
+ transition mode {0 -> (ExecutionOutcome::InvalidState) 1 -> local(input,frame) 2 -> operation(input,frame) 3 -> named(input,store,frame,false) 4 -> named(input,store,frame,true) _ -> target(frame)}
+ state local(input:&mut [u8;1024],frame:&mut Frame)->ExecutionOutcome {input[0]=0x60;frame.locals[0]=Binding::Integer {number:11};ExecutionOutcome::InvalidState}
+ state operation(input:&mut [u8;1024],frame:&mut Frame)->ExecutionOutcome {input[0]=0x72;frame.operation_count=16;ExecutionOutcome::Depth}
+ state named(input:&mut [u8;1024],store:&mut ObjectStore,frame:&mut Frame,method:bool)->ExecutionOutcome {
+  input[0]=88;input[1]=95;input[2]=95;input[3]=95;
+  let mut path:Path=Path {absolute:true,count:1};path.segments[0]=1600085848;
+  let value:Value=ge_decoder_named_value(method);
+  let inserted:NamespaceResult=insert(store.space,path,value);store.space=inserted.space;
+  transition method {true -> method_frame(frame) _ -> (ExecutionOutcome::InvalidState)}
+ }
+ state method_frame(frame:&mut Frame)->ExecutionOutcome {frame.operation_count=16;ExecutionOutcome::Depth}
+ state target(frame:&mut Frame)->ExecutionOutcome {frame.operations[0]=Operation {opcode:0x72};ExecutionOutcome::InvalidState}
+}
+machine ge_decoder_named_value(method:bool)->Value {transition method {true -> (Value::Method {body:Span {unit:7}}) _ -> (Value::Integer {number:11})}}
+
+machine ge_setup(program:&mut Program,patch:u64)->u8 {transition patch {
+29 -> patch_29(program)
+30 -> patch_30(program)
+31 -> patch_31(program)
+32 -> patch_32(program)
+33 -> patch_33(program)
+34 -> patch_34(program)
+35 -> patch_35(program)
+36 -> patch_36(program)
+37 -> patch_37(program)
+38 -> patch_38(program)
+39 -> patch_39(program)
+40 -> patch_40(program)
+48 -> patch_48(program)
+49 -> patch_49(program)
+50 -> patch_50(program)
+53 -> patch_53(program)
+_ -> (0)}
+state patch_29(program:&mut Program)->u8 {program.store.space.objects[0].value=Value::Reference {kind:ReferenceKind::Named,object_id:1};0}
+state patch_30(program:&mut Program)->u8 {program.store.space.objects[0].value=Value::Reference {kind:ReferenceKind::Local,object_id:1};0}
+state patch_31(program:&mut Program)->u8 {program.store.space.objects[0].value=Value::Reference {kind:ReferenceKind::Arg,object_id:1};0}
+state patch_32(program:&mut Program)->u8 {program.store.space.objects[0].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:1};0}
+state patch_33(program:&mut Program)->u8 {program.store.space.objects[0].value=Value::Reference {kind:ReferenceKind::Index,object_id:1};0}
+state patch_34(program:&mut Program)->u8 {program.store.space.objects[0].value=Value::Reference {kind:ReferenceKind::Unresolved,object_id:1};0}
+state patch_35(program:&mut Program)->u8 {program.store.space.objects[0].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:1};0}
+state patch_36(program:&mut Program)->u8 {program.store.space.objects[0].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:1};0}
+state patch_37(program:&mut Program)->u8 {let mut lexical:Path=Path {count:1};lexical.segments[0]=1599361860;program.store.space.objects[0].value=Value::NameReference {name:lexical,scope:Path {absolute:true}};0}
+state patch_38(program:&mut Program)->u8 {program.store.space.objects[0].value=Value::Uninitialized;0}
+state patch_39(program:&mut Program)->u8 {program.store.space.objects[0].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:0};0}
+state patch_40(program:&mut Program)->u8 {program.store.space.objects[0].value=Value::Reference {kind:ReferenceKind::Index,object_id:18446744073709551615};0}
+state patch_48(program:&mut Program)->u8 {program.store.space.objects[0].value=Value::Buffer {buffer_storage:BufferStorage::Owned {buffer_owner:18446744073709551615}};0}
+state patch_49(program:&mut Program)->u8 {program.store.space.objects[0].value=Value::Package {first:18446744073709551615,count:18446744073709551615};0}
+state patch_50(program:&mut Program)->u8 {program.definitions.entries[0].present=false;program.store.space.objects[0].value=Value::Method {flags:7,body:Span {unit:18446744073709551615,start:18446744073709551615,end:18446744073709551615}};0}
+state patch_53(program:&mut Program)->u8 {program.store.space.objects[0].value=Value::BufferField {backing_object:18446744073709551615,bit_offset:18446744073709551615,bit_length:18446744073709551615};0}
+}
+machine SizeOfPriorObjectTypeSuite::named_integer_32_positive(&mut self)->i32 {
+let mut row:GenericCase=GenericCase {length:19,kind:1,number:1,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:false,object_count:0,error:ExecutionOutcome::Success,patch:1,mutate_source:false,size:IntegerSize::FourBytes};
+row.input[0]=8;
+row.input[1]=79;
+row.input[2]=66;
+row.input[3]=74;
+row.input[4]=95;
+row.input[5]=255;
+row.input[6]=20;
+row.input[7]=12;
+row.input[8]=77;
+row.input[9]=65;
+row.input[10]=73;
+row.input[11]=78;
+row.input[13]=164;
+row.input[14]=142;
+row.input[15]=79;
+row.input[16]=66;
+row.input[17]=74;
+row.input[18]=95;
+let result:i32=ge_check(row);result
+}
+machine SizeOfPriorObjectTypeSuite::named_integer_32_control(&mut self)->i32 {
+let mut row:GenericCase=GenericCase {length:19,kind:1,number:1,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:false,object_count:0,error:ExecutionOutcome::Success,patch:1,mutate_source:false,size:IntegerSize::FourBytes};
+row.input[0]=8;
+row.input[1]=79;
+row.input[2]=66;
+row.input[3]=74;
+row.input[4]=95;
+row.input[5]=255;
+row.input[6]=20;
+row.input[7]=12;
+row.input[8]=77;
+row.input[9]=65;
+row.input[10]=73;
+row.input[11]=78;
+row.input[13]=164;
+row.input[14]=142;
+row.input[15]=79;
+row.input[16]=66;
+row.input[17]=74;
+row.input[18]=95;
+row.number=2;
+let result:i32=ge_check(row);result
+}
+machine SizeOfPriorObjectTypeSuite::named_string_32_positive(&mut self)->i32 {
+let mut row:GenericCase=GenericCase {length:22,kind:1,number:2,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:false,object_count:0,error:ExecutionOutcome::Success,patch:2,mutate_source:false,size:IntegerSize::FourBytes};
+row.input[0]=8;
+row.input[1]=79;
+row.input[2]=66;
+row.input[3]=74;
+row.input[4]=95;
+row.input[5]=13;
+row.input[6]=65;
+row.input[7]=66;
+row.input[9]=20;
+row.input[10]=12;
+row.input[11]=77;
+row.input[12]=65;
+row.input[13]=73;
+row.input[14]=78;
+row.input[16]=164;
+row.input[17]=142;
+row.input[18]=79;
+row.input[19]=66;
+row.input[20]=74;
+row.input[21]=95;
+let result:i32=ge_check(row);result
+}
+machine SizeOfPriorObjectTypeSuite::named_string_32_control(&mut self)->i32 {
+let mut row:GenericCase=GenericCase {length:22,kind:1,number:2,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:false,object_count:0,error:ExecutionOutcome::Success,patch:2,mutate_source:false,size:IntegerSize::FourBytes};
+row.input[0]=8;
+row.input[1]=79;
+row.input[2]=66;
+row.input[3]=74;
+row.input[4]=95;
+row.input[5]=13;
+row.input[6]=65;
+row.input[7]=66;
+row.input[9]=20;
+row.input[10]=12;
+row.input[11]=77;
+row.input[12]=65;
+row.input[13]=73;
+row.input[14]=78;
+row.input[16]=164;
+row.input[17]=142;
+row.input[18]=79;
+row.input[19]=66;
+row.input[20]=74;
+row.input[21]=95;
+row.number=3;
+let result:i32=ge_check(row);result
+}
+machine SizeOfPriorObjectTypeSuite::named_buffer_32_positive(&mut self)->i32 {
+let mut row:GenericCase=GenericCase {length:24,kind:1,number:3,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:false,object_count:0,error:ExecutionOutcome::Success,patch:3,mutate_source:false,size:IntegerSize::FourBytes};
+row.input[0]=8;
+row.input[1]=79;
+row.input[2]=66;
+row.input[3]=74;
+row.input[4]=95;
+row.input[5]=17;
+row.input[6]=5;
+row.input[7]=10;
+row.input[8]=2;
+row.input[9]=65;
+row.input[10]=66;
+row.input[11]=20;
+row.input[12]=12;
+row.input[13]=77;
+row.input[14]=65;
+row.input[15]=73;
+row.input[16]=78;
+row.input[18]=164;
+row.input[19]=142;
+row.input[20]=79;
+row.input[21]=66;
+row.input[22]=74;
+row.input[23]=95;
+let result:i32=ge_check(row);result
+}
+machine SizeOfPriorObjectTypeSuite::named_buffer_32_control(&mut self)->i32 {
+let mut row:GenericCase=GenericCase {length:24,kind:1,number:3,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:false,object_count:0,error:ExecutionOutcome::Success,patch:3,mutate_source:false,size:IntegerSize::FourBytes};
+row.input[0]=8;
+row.input[1]=79;
+row.input[2]=66;
+row.input[3]=74;
+row.input[4]=95;
+row.input[5]=17;
+row.input[6]=5;
+row.input[7]=10;
+row.input[8]=2;
+row.input[9]=65;
+row.input[10]=66;
+row.input[11]=20;
+row.input[12]=12;
+row.input[13]=77;
+row.input[14]=65;
+row.input[15]=73;
+row.input[16]=78;
+row.input[18]=164;
+row.input[19]=142;
+row.input[20]=79;
+row.input[21]=66;
+row.input[22]=74;
+row.input[23]=95;
+row.number=4;
+let result:i32=ge_check(row);result
+}
+machine SizeOfPriorObjectTypeSuite::named_package_32_positive(&mut self)->i32 {
+let mut row:GenericCase=GenericCase {length:23,kind:1,number:4,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:false,object_count:0,error:ExecutionOutcome::Success,patch:4,mutate_source:false,size:IntegerSize::FourBytes};
+row.input[0]=8;
+row.input[1]=79;
+row.input[2]=66;
+row.input[3]=74;
+row.input[4]=95;
+row.input[5]=18;
+row.input[6]=4;
+row.input[7]=1;
+row.input[8]=10;
+row.input[9]=9;
+row.input[10]=20;
+row.input[11]=12;
+row.input[12]=77;
+row.input[13]=65;
+row.input[14]=73;
+row.input[15]=78;
+row.input[17]=164;
+row.input[18]=142;
+row.input[19]=79;
+row.input[20]=66;
+row.input[21]=74;
+row.input[22]=95;
+let result:i32=ge_check(row);result
+}
+machine SizeOfPriorObjectTypeSuite::named_package_32_control(&mut self)->i32 {
+let mut row:GenericCase=GenericCase {length:23,kind:1,number:4,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:false,object_count:0,error:ExecutionOutcome::Success,patch:4,mutate_source:false,size:IntegerSize::FourBytes};
+row.input[0]=8;
+row.input[1]=79;
+row.input[2]=66;
+row.input[3]=74;
+row.input[4]=95;
+row.input[5]=18;
+row.input[6]=4;
+row.input[7]=1;
+row.input[8]=10;
+row.input[9]=9;
+row.input[10]=20;
+row.input[11]=12;
+row.input[12]=77;
+row.input[13]=65;
+row.input[14]=73;
+row.input[15]=78;
+row.input[17]=164;
+row.input[18]=142;
+row.input[19]=79;
+row.input[20]=66;
+row.input[21]=74;
+row.input[22]=95;
+row.number=5;
+let result:i32=ge_check(row);result
+}
+machine SizeOfPriorObjectTypeSuite::local_uninitialized_32_positive(&mut self)->i32 {
+let mut row:GenericCase=GenericCase {length:10,kind:1,number:0,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:1,error:ExecutionOutcome::Success,patch:5,mutate_source:false,size:IntegerSize::FourBytes};
+row.input[0]=20;
+row.input[1]=9;
+row.input[2]=77;
+row.input[3]=65;
+row.input[4]=73;
+row.input[5]=78;
+row.input[7]=164;
+row.input[8]=142;
+row.input[9]=96;
+let result:i32=ge_check(row);result
+}
+machine SizeOfPriorObjectTypeSuite::local_uninitialized_32_control(&mut self)->i32 {
+let mut row:GenericCase=GenericCase {length:10,kind:1,number:0,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:1,error:ExecutionOutcome::Success,patch:5,mutate_source:false,size:IntegerSize::FourBytes};
+row.input[0]=20;
+row.input[1]=9;
+row.input[2]=77;
+row.input[3]=65;
+row.input[4]=73;
+row.input[5]=78;
+row.input[7]=164;
+row.input[8]=142;
+row.input[9]=96;
+row.number=1;
+let result:i32=ge_check(row);result
+}
+machine SizeOfPriorObjectTypeSuite::argument_uninitialized_32_positive(&mut self)->i32 {
+let mut row:GenericCase=GenericCase {length:10,kind:1,number:0,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:1,error:ExecutionOutcome::Success,patch:6,mutate_source:false,size:IntegerSize::FourBytes};
+row.input[0]=20;
+row.input[1]=9;
+row.input[2]=77;
+row.input[3]=65;
+row.input[4]=73;
+row.input[5]=78;
+row.input[7]=164;
+row.input[8]=142;
+row.input[9]=104;
+let result:i32=ge_check(row);result
+}
+machine SizeOfPriorObjectTypeSuite::argument_uninitialized_32_control(&mut self)->i32 {
+let mut row:GenericCase=GenericCase {length:10,kind:1,number:0,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:1,error:ExecutionOutcome::Success,patch:6,mutate_source:false,size:IntegerSize::FourBytes};
+row.input[0]=20;
+row.input[1]=9;
+row.input[2]=77;
+row.input[3]=65;
+row.input[4]=73;
+row.input[5]=78;
+row.input[7]=164;
+row.input[8]=142;
+row.input[9]=104;
+row.number=1;
+let result:i32=ge_check(row);result
+}
+machine SizeOfPriorObjectTypeSuite::local_private_integer_32_positive(&mut self)->i32 {
+let mut row:GenericCase=GenericCase {length:13,kind:1,number:1,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:1,error:ExecutionOutcome::Success,patch:7,mutate_source:false,size:IntegerSize::FourBytes};
+row.input[0]=20;
+row.input[1]=12;
+row.input[2]=77;
+row.input[3]=65;
+row.input[4]=73;
+row.input[5]=78;
+row.input[7]=112;
+row.input[8]=255;
+row.input[9]=96;
+row.input[10]=164;
+row.input[11]=142;
+row.input[12]=96;
+let result:i32=ge_check(row);result
+}
+machine SizeOfPriorObjectTypeSuite::local_private_integer_32_control(&mut self)->i32 {
+let mut row:GenericCase=GenericCase {length:13,kind:1,number:1,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:1,error:ExecutionOutcome::Success,patch:7,mutate_source:false,size:IntegerSize::FourBytes};
+row.input[0]=20;
+row.input[1]=12;
+row.input[2]=77;
+row.input[3]=65;
+row.input[4]=73;
+row.input[5]=78;
+row.input[7]=112;
+row.input[8]=255;
+row.input[9]=96;
+row.input[10]=164;
+row.input[11]=142;
+row.input[12]=96;
+row.number=2;
+let result:i32=ge_check(row);result
+}
+machine SizeOfPriorObjectTypeSuite::local_private_string_32_positive(&mut self)->i32 {
+let mut row:GenericCase=GenericCase {length:25,kind:1,number:2,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:3,error:ExecutionOutcome::Success,patch:8,mutate_source:false,size:IntegerSize::FourBytes};
+row.input[0]=8;
+row.input[1]=79;
+row.input[2]=66;
+row.input[3]=74;
+row.input[4]=95;
+row.input[5]=13;
+row.input[6]=65;
+row.input[7]=66;
+row.input[9]=20;
+row.input[10]=15;
+row.input[11]=77;
+row.input[12]=65;
+row.input[13]=73;
+row.input[14]=78;
+row.input[16]=157;
+row.input[17]=79;
+row.input[18]=66;
+row.input[19]=74;
+row.input[20]=95;
+row.input[21]=96;
+row.input[22]=164;
+row.input[23]=142;
+row.input[24]=96;
+let result:i32=ge_check(row);result
+}
+machine SizeOfPriorObjectTypeSuite::local_private_string_32_control(&mut self)->i32 {
+let mut row:GenericCase=GenericCase {length:25,kind:1,number:2,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:3,error:ExecutionOutcome::Success,patch:8,mutate_source:false,size:IntegerSize::FourBytes};
+row.input[0]=8;
+row.input[1]=79;
+row.input[2]=66;
+row.input[3]=74;
+row.input[4]=95;
+row.input[5]=13;
+row.input[6]=65;
+row.input[7]=66;
+row.input[9]=20;
+row.input[10]=15;
+row.input[11]=77;
+row.input[12]=65;
+row.input[13]=73;
+row.input[14]=78;
+row.input[16]=157;
+row.input[17]=79;
+row.input[18]=66;
+row.input[19]=74;
+row.input[20]=95;
+row.input[21]=96;
+row.input[22]=164;
+row.input[23]=142;
+row.input[24]=96;
+row.number=3;
+let result:i32=ge_check(row);result
+}
+machine SizeOfPriorObjectTypeSuite::argument_inline_32_positive(&mut self)->i32 {
+let mut row:GenericCase=GenericCase {length:23,kind:1,number:1,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:2,error:ExecutionOutcome::Success,patch:9,mutate_source:false,size:IntegerSize::FourBytes};
+row.input[0]=20;
+row.input[1]=9;
+row.input[2]=67;
+row.input[3]=65;
+row.input[4]=76;
+row.input[5]=95;
+row.input[6]=1;
+row.input[7]=164;
+row.input[8]=142;
+row.input[9]=104;
+row.input[10]=20;
+row.input[11]=12;
+row.input[12]=77;
+row.input[13]=65;
+row.input[14]=73;
+row.input[15]=78;
+row.input[17]=164;
+row.input[18]=67;
+row.input[19]=65;
+row.input[20]=76;
+row.input[21]=95;
+row.input[22]=255;
+let result:i32=ge_check(row);result
+}
+machine SizeOfPriorObjectTypeSuite::argument_inline_32_control(&mut self)->i32 {
+let mut row:GenericCase=GenericCase {length:23,kind:1,number:1,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:2,error:ExecutionOutcome::Success,patch:9,mutate_source:false,size:IntegerSize::FourBytes};
+row.input[0]=20;
+row.input[1]=9;
+row.input[2]=67;
+row.input[3]=65;
+row.input[4]=76;
+row.input[5]=95;
+row.input[6]=1;
+row.input[7]=164;
+row.input[8]=142;
+row.input[9]=104;
+row.input[10]=20;
+row.input[11]=12;
+row.input[12]=77;
+row.input[13]=65;
+row.input[14]=73;
+row.input[15]=78;
+row.input[17]=164;
+row.input[18]=67;
+row.input[19]=65;
+row.input[20]=76;
+row.input[21]=95;
+row.input[22]=255;
+row.number=2;
+let result:i32=ge_check(row);result
+}
+machine SizeOfPriorObjectTypeSuite::argument_shared_buffer_32_positive(&mut self)->i32 {
+let mut row:GenericCase=GenericCase {length:37,kind:1,number:3,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:3,error:ExecutionOutcome::Success,patch:10,mutate_source:false,size:IntegerSize::FourBytes};
+row.input[0]=8;
+row.input[1]=79;
+row.input[2]=66;
+row.input[3]=74;
+row.input[4]=95;
+row.input[5]=17;
+row.input[6]=5;
+row.input[7]=10;
+row.input[8]=2;
+row.input[9]=65;
+row.input[10]=66;
+row.input[11]=20;
+row.input[12]=9;
+row.input[13]=67;
+row.input[14]=65;
+row.input[15]=76;
+row.input[16]=95;
+row.input[17]=1;
+row.input[18]=164;
+row.input[19]=142;
+row.input[20]=104;
+row.input[21]=20;
+row.input[22]=15;
+row.input[23]=77;
+row.input[24]=65;
+row.input[25]=73;
+row.input[26]=78;
+row.input[28]=164;
+row.input[29]=67;
+row.input[30]=65;
+row.input[31]=76;
+row.input[32]=95;
+row.input[33]=79;
+row.input[34]=66;
+row.input[35]=74;
+row.input[36]=95;
+let result:i32=ge_check(row);result
+}
+machine SizeOfPriorObjectTypeSuite::argument_shared_buffer_32_control(&mut self)->i32 {
+let mut row:GenericCase=GenericCase {length:37,kind:1,number:3,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:3,error:ExecutionOutcome::Success,patch:10,mutate_source:false,size:IntegerSize::FourBytes};
+row.input[0]=8;
+row.input[1]=79;
+row.input[2]=66;
+row.input[3]=74;
+row.input[4]=95;
+row.input[5]=17;
+row.input[6]=5;
+row.input[7]=10;
+row.input[8]=2;
+row.input[9]=65;
+row.input[10]=66;
+row.input[11]=20;
+row.input[12]=9;
+row.input[13]=67;
+row.input[14]=65;
+row.input[15]=76;
+row.input[16]=95;
+row.input[17]=1;
+row.input[18]=164;
+row.input[19]=142;
+row.input[20]=104;
+row.input[21]=20;
+row.input[22]=15;
+row.input[23]=77;
+row.input[24]=65;
+row.input[25]=73;
+row.input[26]=78;
+row.input[28]=164;
+row.input[29]=67;
+row.input[30]=65;
+row.input[31]=76;
+row.input[32]=95;
+row.input[33]=79;
+row.input[34]=66;
+row.input[35]=74;
+row.input[36]=95;
+row.number=4;
+let result:i32=ge_check(row);result
+}
+machine SizeOfPriorObjectTypeSuite::debug_metadata_32_positive(&mut self)->i32 {
+let mut row:GenericCase=GenericCase {length:11,kind:1,number:16,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:1,error:ExecutionOutcome::Success,patch:11,mutate_source:false,size:IntegerSize::FourBytes};
+row.input[0]=20;
+row.input[1]=10;
+row.input[2]=77;
+row.input[3]=65;
+row.input[4]=73;
+row.input[5]=78;
+row.input[7]=164;
+row.input[8]=142;
+row.input[9]=91;
+row.input[10]=49;
+let result:i32=ge_check(row);result
+}
+machine SizeOfPriorObjectTypeSuite::debug_metadata_32_control(&mut self)->i32 {
+let mut row:GenericCase=GenericCase {length:11,kind:1,number:16,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:1,error:ExecutionOutcome::Success,patch:11,mutate_source:false,size:IntegerSize::FourBytes};
+row.input[0]=20;
+row.input[1]=10;
+row.input[2]=77;
+row.input[3]=65;
+row.input[4]=73;
+row.input[5]=78;
+row.input[7]=164;
+row.input[8]=142;
+row.input[9]=91;
+row.input[10]=49;
+row.number=17;
+let result:i32=ge_check(row);result
+}
+machine SizeOfPriorObjectTypeSuite::parameterized_method_not_invoked_32_positive(&mut self)->i32 {
+let mut row:GenericCase=GenericCase {length:36,kind:1,number:8,byte_count:0,has_after:true,after:7,after_segment:1195461702,check_count:true,object_count:3,error:ExecutionOutcome::Success,patch:12,mutate_source:false,size:IntegerSize::FourBytes};
+row.input[0]=8;
+row.input[1]=70;
+row.input[2]=76;
+row.input[3]=65;
+row.input[4]=71;
+row.input[5]=10;
+row.input[6]=7;
+row.input[7]=20;
+row.input[8]=15;
+row.input[9]=67;
+row.input[10]=65;
+row.input[11]=76;
+row.input[12]=95;
+row.input[13]=3;
+row.input[14]=112;
+row.input[15]=10;
+row.input[16]=99;
+row.input[17]=70;
+row.input[18]=76;
+row.input[19]=65;
+row.input[20]=71;
+row.input[21]=164;
+row.input[22]=1;
+row.input[23]=20;
+row.input[24]=12;
+row.input[25]=77;
+row.input[26]=65;
+row.input[27]=73;
+row.input[28]=78;
+row.input[30]=164;
+row.input[31]=142;
+row.input[32]=67;
+row.input[33]=65;
+row.input[34]=76;
+row.input[35]=95;
+let result:i32=ge_check(row);result
+}
+machine SizeOfPriorObjectTypeSuite::parameterized_method_not_invoked_32_control(&mut self)->i32 {
+let mut row:GenericCase=GenericCase {length:36,kind:1,number:8,byte_count:0,has_after:true,after:7,after_segment:1195461702,check_count:true,object_count:3,error:ExecutionOutcome::Success,patch:12,mutate_source:false,size:IntegerSize::FourBytes};
+row.input[0]=8;
+row.input[1]=70;
+row.input[2]=76;
+row.input[3]=65;
+row.input[4]=71;
+row.input[5]=10;
+row.input[6]=7;
+row.input[7]=20;
+row.input[8]=15;
+row.input[9]=67;
+row.input[10]=65;
+row.input[11]=76;
+row.input[12]=95;
+row.input[13]=3;
+row.input[14]=112;
+row.input[15]=10;
+row.input[16]=99;
+row.input[17]=70;
+row.input[18]=76;
+row.input[19]=65;
+row.input[20]=71;
+row.input[21]=164;
+row.input[22]=1;
+row.input[23]=20;
+row.input[24]=12;
+row.input[25]=77;
+row.input[26]=65;
+row.input[27]=73;
+row.input[28]=78;
+row.input[30]=164;
+row.input[31]=142;
+row.input[32]=67;
+row.input[33]=65;
+row.input[34]=76;
+row.input[35]=95;
+row.number=9;
+let result:i32=ge_check(row);result
+}
+machine SizeOfPriorObjectTypeSuite::named_integer_64_positive(&mut self)->i32 {
+let mut row:GenericCase=GenericCase {length:19,kind:1,number:1,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:false,object_count:0,error:ExecutionOutcome::Success,patch:13,mutate_source:false,size:IntegerSize::EightBytes};
+row.input[0]=8;
+row.input[1]=79;
+row.input[2]=66;
+row.input[3]=74;
+row.input[4]=95;
+row.input[5]=255;
+row.input[6]=20;
+row.input[7]=12;
+row.input[8]=77;
+row.input[9]=65;
+row.input[10]=73;
+row.input[11]=78;
+row.input[13]=164;
+row.input[14]=142;
+row.input[15]=79;
+row.input[16]=66;
+row.input[17]=74;
+row.input[18]=95;
+let result:i32=ge_check(row);result
+}
+machine SizeOfPriorObjectTypeSuite::named_integer_64_control(&mut self)->i32 {
+let mut row:GenericCase=GenericCase {length:19,kind:1,number:1,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:false,object_count:0,error:ExecutionOutcome::Success,patch:13,mutate_source:false,size:IntegerSize::EightBytes};
+row.input[0]=8;
+row.input[1]=79;
+row.input[2]=66;
+row.input[3]=74;
+row.input[4]=95;
+row.input[5]=255;
+row.input[6]=20;
+row.input[7]=12;
+row.input[8]=77;
+row.input[9]=65;
+row.input[10]=73;
+row.input[11]=78;
+row.input[13]=164;
+row.input[14]=142;
+row.input[15]=79;
+row.input[16]=66;
+row.input[17]=74;
+row.input[18]=95;
+row.number=2;
+let result:i32=ge_check(row);result
+}
+machine SizeOfPriorObjectTypeSuite::named_string_64_positive(&mut self)->i32 {
+let mut row:GenericCase=GenericCase {length:22,kind:1,number:2,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:false,object_count:0,error:ExecutionOutcome::Success,patch:14,mutate_source:false,size:IntegerSize::EightBytes};
+row.input[0]=8;
+row.input[1]=79;
+row.input[2]=66;
+row.input[3]=74;
+row.input[4]=95;
+row.input[5]=13;
+row.input[6]=65;
+row.input[7]=66;
+row.input[9]=20;
+row.input[10]=12;
+row.input[11]=77;
+row.input[12]=65;
+row.input[13]=73;
+row.input[14]=78;
+row.input[16]=164;
+row.input[17]=142;
+row.input[18]=79;
+row.input[19]=66;
+row.input[20]=74;
+row.input[21]=95;
+let result:i32=ge_check(row);result
+}
+machine SizeOfPriorObjectTypeSuite::named_string_64_control(&mut self)->i32 {
+let mut row:GenericCase=GenericCase {length:22,kind:1,number:2,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:false,object_count:0,error:ExecutionOutcome::Success,patch:14,mutate_source:false,size:IntegerSize::EightBytes};
+row.input[0]=8;
+row.input[1]=79;
+row.input[2]=66;
+row.input[3]=74;
+row.input[4]=95;
+row.input[5]=13;
+row.input[6]=65;
+row.input[7]=66;
+row.input[9]=20;
+row.input[10]=12;
+row.input[11]=77;
+row.input[12]=65;
+row.input[13]=73;
+row.input[14]=78;
+row.input[16]=164;
+row.input[17]=142;
+row.input[18]=79;
+row.input[19]=66;
+row.input[20]=74;
+row.input[21]=95;
+row.number=3;
+let result:i32=ge_check(row);result
+}
+machine SizeOfPriorObjectTypeSuite::named_buffer_64_positive(&mut self)->i32 {
+let mut row:GenericCase=GenericCase {length:24,kind:1,number:3,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:false,object_count:0,error:ExecutionOutcome::Success,patch:15,mutate_source:false,size:IntegerSize::EightBytes};
+row.input[0]=8;
+row.input[1]=79;
+row.input[2]=66;
+row.input[3]=74;
+row.input[4]=95;
+row.input[5]=17;
+row.input[6]=5;
+row.input[7]=10;
+row.input[8]=2;
+row.input[9]=65;
+row.input[10]=66;
+row.input[11]=20;
+row.input[12]=12;
+row.input[13]=77;
+row.input[14]=65;
+row.input[15]=73;
+row.input[16]=78;
+row.input[18]=164;
+row.input[19]=142;
+row.input[20]=79;
+row.input[21]=66;
+row.input[22]=74;
+row.input[23]=95;
+let result:i32=ge_check(row);result
+}
+machine SizeOfPriorObjectTypeSuite::named_buffer_64_control(&mut self)->i32 {
+let mut row:GenericCase=GenericCase {length:24,kind:1,number:3,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:false,object_count:0,error:ExecutionOutcome::Success,patch:15,mutate_source:false,size:IntegerSize::EightBytes};
+row.input[0]=8;
+row.input[1]=79;
+row.input[2]=66;
+row.input[3]=74;
+row.input[4]=95;
+row.input[5]=17;
+row.input[6]=5;
+row.input[7]=10;
+row.input[8]=2;
+row.input[9]=65;
+row.input[10]=66;
+row.input[11]=20;
+row.input[12]=12;
+row.input[13]=77;
+row.input[14]=65;
+row.input[15]=73;
+row.input[16]=78;
+row.input[18]=164;
+row.input[19]=142;
+row.input[20]=79;
+row.input[21]=66;
+row.input[22]=74;
+row.input[23]=95;
+row.number=4;
+let result:i32=ge_check(row);result
+}
+machine SizeOfPriorObjectTypeSuite::named_package_64_positive(&mut self)->i32 {
+let mut row:GenericCase=GenericCase {length:23,kind:1,number:4,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:false,object_count:0,error:ExecutionOutcome::Success,patch:16,mutate_source:false,size:IntegerSize::EightBytes};
+row.input[0]=8;
+row.input[1]=79;
+row.input[2]=66;
+row.input[3]=74;
+row.input[4]=95;
+row.input[5]=18;
+row.input[6]=4;
+row.input[7]=1;
+row.input[8]=10;
+row.input[9]=9;
+row.input[10]=20;
+row.input[11]=12;
+row.input[12]=77;
+row.input[13]=65;
+row.input[14]=73;
+row.input[15]=78;
+row.input[17]=164;
+row.input[18]=142;
+row.input[19]=79;
+row.input[20]=66;
+row.input[21]=74;
+row.input[22]=95;
+let result:i32=ge_check(row);result
+}
+machine SizeOfPriorObjectTypeSuite::named_package_64_control(&mut self)->i32 {
+let mut row:GenericCase=GenericCase {length:23,kind:1,number:4,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:false,object_count:0,error:ExecutionOutcome::Success,patch:16,mutate_source:false,size:IntegerSize::EightBytes};
+row.input[0]=8;
+row.input[1]=79;
+row.input[2]=66;
+row.input[3]=74;
+row.input[4]=95;
+row.input[5]=18;
+row.input[6]=4;
+row.input[7]=1;
+row.input[8]=10;
+row.input[9]=9;
+row.input[10]=20;
+row.input[11]=12;
+row.input[12]=77;
+row.input[13]=65;
+row.input[14]=73;
+row.input[15]=78;
+row.input[17]=164;
+row.input[18]=142;
+row.input[19]=79;
+row.input[20]=66;
+row.input[21]=74;
+row.input[22]=95;
+row.number=5;
+let result:i32=ge_check(row);result
+}
+machine SizeOfPriorObjectTypeSuite::local_uninitialized_64_positive(&mut self)->i32 {
+let mut row:GenericCase=GenericCase {length:10,kind:1,number:0,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:1,error:ExecutionOutcome::Success,patch:17,mutate_source:false,size:IntegerSize::EightBytes};
+row.input[0]=20;
+row.input[1]=9;
+row.input[2]=77;
+row.input[3]=65;
+row.input[4]=73;
+row.input[5]=78;
+row.input[7]=164;
+row.input[8]=142;
+row.input[9]=96;
+let result:i32=ge_check(row);result
+}
+machine SizeOfPriorObjectTypeSuite::local_uninitialized_64_control(&mut self)->i32 {
+let mut row:GenericCase=GenericCase {length:10,kind:1,number:0,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:1,error:ExecutionOutcome::Success,patch:17,mutate_source:false,size:IntegerSize::EightBytes};
+row.input[0]=20;
+row.input[1]=9;
+row.input[2]=77;
+row.input[3]=65;
+row.input[4]=73;
+row.input[5]=78;
+row.input[7]=164;
+row.input[8]=142;
+row.input[9]=96;
+row.number=1;
+let result:i32=ge_check(row);result
+}
+machine SizeOfPriorObjectTypeSuite::argument_uninitialized_64_positive(&mut self)->i32 {
+let mut row:GenericCase=GenericCase {length:10,kind:1,number:0,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:1,error:ExecutionOutcome::Success,patch:18,mutate_source:false,size:IntegerSize::EightBytes};
+row.input[0]=20;
+row.input[1]=9;
+row.input[2]=77;
+row.input[3]=65;
+row.input[4]=73;
+row.input[5]=78;
+row.input[7]=164;
+row.input[8]=142;
+row.input[9]=104;
+let result:i32=ge_check(row);result
+}
+machine SizeOfPriorObjectTypeSuite::argument_uninitialized_64_control(&mut self)->i32 {
+let mut row:GenericCase=GenericCase {length:10,kind:1,number:0,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:1,error:ExecutionOutcome::Success,patch:18,mutate_source:false,size:IntegerSize::EightBytes};
+row.input[0]=20;
+row.input[1]=9;
+row.input[2]=77;
+row.input[3]=65;
+row.input[4]=73;
+row.input[5]=78;
+row.input[7]=164;
+row.input[8]=142;
+row.input[9]=104;
+row.number=1;
+let result:i32=ge_check(row);result
+}
+machine SizeOfPriorObjectTypeSuite::local_private_integer_64_positive(&mut self)->i32 {
+let mut row:GenericCase=GenericCase {length:13,kind:1,number:1,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:1,error:ExecutionOutcome::Success,patch:19,mutate_source:false,size:IntegerSize::EightBytes};
+row.input[0]=20;
+row.input[1]=12;
+row.input[2]=77;
+row.input[3]=65;
+row.input[4]=73;
+row.input[5]=78;
+row.input[7]=112;
+row.input[8]=255;
+row.input[9]=96;
+row.input[10]=164;
+row.input[11]=142;
+row.input[12]=96;
+let result:i32=ge_check(row);result
+}
+machine SizeOfPriorObjectTypeSuite::local_private_integer_64_control(&mut self)->i32 {
+let mut row:GenericCase=GenericCase {length:13,kind:1,number:1,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:1,error:ExecutionOutcome::Success,patch:19,mutate_source:false,size:IntegerSize::EightBytes};
+row.input[0]=20;
+row.input[1]=12;
+row.input[2]=77;
+row.input[3]=65;
+row.input[4]=73;
+row.input[5]=78;
+row.input[7]=112;
+row.input[8]=255;
+row.input[9]=96;
+row.input[10]=164;
+row.input[11]=142;
+row.input[12]=96;
+row.number=2;
+let result:i32=ge_check(row);result
+}
+machine SizeOfPriorObjectTypeSuite::local_private_string_64_positive(&mut self)->i32 {
+let mut row:GenericCase=GenericCase {length:25,kind:1,number:2,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:3,error:ExecutionOutcome::Success,patch:20,mutate_source:false,size:IntegerSize::EightBytes};
+row.input[0]=8;
+row.input[1]=79;
+row.input[2]=66;
+row.input[3]=74;
+row.input[4]=95;
+row.input[5]=13;
+row.input[6]=65;
+row.input[7]=66;
+row.input[9]=20;
+row.input[10]=15;
+row.input[11]=77;
+row.input[12]=65;
+row.input[13]=73;
+row.input[14]=78;
+row.input[16]=157;
+row.input[17]=79;
+row.input[18]=66;
+row.input[19]=74;
+row.input[20]=95;
+row.input[21]=96;
+row.input[22]=164;
+row.input[23]=142;
+row.input[24]=96;
+let result:i32=ge_check(row);result
+}
+machine SizeOfPriorObjectTypeSuite::local_private_string_64_control(&mut self)->i32 {
+let mut row:GenericCase=GenericCase {length:25,kind:1,number:2,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:3,error:ExecutionOutcome::Success,patch:20,mutate_source:false,size:IntegerSize::EightBytes};
+row.input[0]=8;
+row.input[1]=79;
+row.input[2]=66;
+row.input[3]=74;
+row.input[4]=95;
+row.input[5]=13;
+row.input[6]=65;
+row.input[7]=66;
+row.input[9]=20;
+row.input[10]=15;
+row.input[11]=77;
+row.input[12]=65;
+row.input[13]=73;
+row.input[14]=78;
+row.input[16]=157;
+row.input[17]=79;
+row.input[18]=66;
+row.input[19]=74;
+row.input[20]=95;
+row.input[21]=96;
+row.input[22]=164;
+row.input[23]=142;
+row.input[24]=96;
+row.number=3;
+let result:i32=ge_check(row);result
+}
+machine SizeOfPriorObjectTypeSuite::argument_inline_64_positive(&mut self)->i32 {
+let mut row:GenericCase=GenericCase {length:23,kind:1,number:1,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:2,error:ExecutionOutcome::Success,patch:21,mutate_source:false,size:IntegerSize::EightBytes};
+row.input[0]=20;
+row.input[1]=9;
+row.input[2]=67;
+row.input[3]=65;
+row.input[4]=76;
+row.input[5]=95;
+row.input[6]=1;
+row.input[7]=164;
+row.input[8]=142;
+row.input[9]=104;
+row.input[10]=20;
+row.input[11]=12;
+row.input[12]=77;
+row.input[13]=65;
+row.input[14]=73;
+row.input[15]=78;
+row.input[17]=164;
+row.input[18]=67;
+row.input[19]=65;
+row.input[20]=76;
+row.input[21]=95;
+row.input[22]=255;
+let result:i32=ge_check(row);result
+}
+machine SizeOfPriorObjectTypeSuite::argument_inline_64_control(&mut self)->i32 {
+let mut row:GenericCase=GenericCase {length:23,kind:1,number:1,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:2,error:ExecutionOutcome::Success,patch:21,mutate_source:false,size:IntegerSize::EightBytes};
+row.input[0]=20;
+row.input[1]=9;
+row.input[2]=67;
+row.input[3]=65;
+row.input[4]=76;
+row.input[5]=95;
+row.input[6]=1;
+row.input[7]=164;
+row.input[8]=142;
+row.input[9]=104;
+row.input[10]=20;
+row.input[11]=12;
+row.input[12]=77;
+row.input[13]=65;
+row.input[14]=73;
+row.input[15]=78;
+row.input[17]=164;
+row.input[18]=67;
+row.input[19]=65;
+row.input[20]=76;
+row.input[21]=95;
+row.input[22]=255;
+row.number=2;
+let result:i32=ge_check(row);result
+}
+machine SizeOfPriorObjectTypeSuite::argument_shared_buffer_64_positive(&mut self)->i32 {
+let mut row:GenericCase=GenericCase {length:37,kind:1,number:3,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:3,error:ExecutionOutcome::Success,patch:22,mutate_source:false,size:IntegerSize::EightBytes};
+row.input[0]=8;
+row.input[1]=79;
+row.input[2]=66;
+row.input[3]=74;
+row.input[4]=95;
+row.input[5]=17;
+row.input[6]=5;
+row.input[7]=10;
+row.input[8]=2;
+row.input[9]=65;
+row.input[10]=66;
+row.input[11]=20;
+row.input[12]=9;
+row.input[13]=67;
+row.input[14]=65;
+row.input[15]=76;
+row.input[16]=95;
+row.input[17]=1;
+row.input[18]=164;
+row.input[19]=142;
+row.input[20]=104;
+row.input[21]=20;
+row.input[22]=15;
+row.input[23]=77;
+row.input[24]=65;
+row.input[25]=73;
+row.input[26]=78;
+row.input[28]=164;
+row.input[29]=67;
+row.input[30]=65;
+row.input[31]=76;
+row.input[32]=95;
+row.input[33]=79;
+row.input[34]=66;
+row.input[35]=74;
+row.input[36]=95;
+let result:i32=ge_check(row);result
+}
+machine SizeOfPriorObjectTypeSuite::argument_shared_buffer_64_control(&mut self)->i32 {
+let mut row:GenericCase=GenericCase {length:37,kind:1,number:3,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:3,error:ExecutionOutcome::Success,patch:22,mutate_source:false,size:IntegerSize::EightBytes};
+row.input[0]=8;
+row.input[1]=79;
+row.input[2]=66;
+row.input[3]=74;
+row.input[4]=95;
+row.input[5]=17;
+row.input[6]=5;
+row.input[7]=10;
+row.input[8]=2;
+row.input[9]=65;
+row.input[10]=66;
+row.input[11]=20;
+row.input[12]=9;
+row.input[13]=67;
+row.input[14]=65;
+row.input[15]=76;
+row.input[16]=95;
+row.input[17]=1;
+row.input[18]=164;
+row.input[19]=142;
+row.input[20]=104;
+row.input[21]=20;
+row.input[22]=15;
+row.input[23]=77;
+row.input[24]=65;
+row.input[25]=73;
+row.input[26]=78;
+row.input[28]=164;
+row.input[29]=67;
+row.input[30]=65;
+row.input[31]=76;
+row.input[32]=95;
+row.input[33]=79;
+row.input[34]=66;
+row.input[35]=74;
+row.input[36]=95;
+row.number=4;
+let result:i32=ge_check(row);result
+}
+machine SizeOfPriorObjectTypeSuite::debug_metadata_64_positive(&mut self)->i32 {
+let mut row:GenericCase=GenericCase {length:11,kind:1,number:16,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:1,error:ExecutionOutcome::Success,patch:23,mutate_source:false,size:IntegerSize::EightBytes};
+row.input[0]=20;
+row.input[1]=10;
+row.input[2]=77;
+row.input[3]=65;
+row.input[4]=73;
+row.input[5]=78;
+row.input[7]=164;
+row.input[8]=142;
+row.input[9]=91;
+row.input[10]=49;
+let result:i32=ge_check(row);result
+}
+machine SizeOfPriorObjectTypeSuite::debug_metadata_64_control(&mut self)->i32 {
+let mut row:GenericCase=GenericCase {length:11,kind:1,number:16,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:1,error:ExecutionOutcome::Success,patch:23,mutate_source:false,size:IntegerSize::EightBytes};
+row.input[0]=20;
+row.input[1]=10;
+row.input[2]=77;
+row.input[3]=65;
+row.input[4]=73;
+row.input[5]=78;
+row.input[7]=164;
+row.input[8]=142;
+row.input[9]=91;
+row.input[10]=49;
+row.number=17;
+let result:i32=ge_check(row);result
+}
+machine SizeOfPriorObjectTypeSuite::parameterized_method_not_invoked_64_positive(&mut self)->i32 {
+let mut row:GenericCase=GenericCase {length:36,kind:1,number:8,byte_count:0,has_after:true,after:7,after_segment:1195461702,check_count:true,object_count:3,error:ExecutionOutcome::Success,patch:24,mutate_source:false,size:IntegerSize::EightBytes};
+row.input[0]=8;
+row.input[1]=70;
+row.input[2]=76;
+row.input[3]=65;
+row.input[4]=71;
+row.input[5]=10;
+row.input[6]=7;
+row.input[7]=20;
+row.input[8]=15;
+row.input[9]=67;
+row.input[10]=65;
+row.input[11]=76;
+row.input[12]=95;
+row.input[13]=3;
+row.input[14]=112;
+row.input[15]=10;
+row.input[16]=99;
+row.input[17]=70;
+row.input[18]=76;
+row.input[19]=65;
+row.input[20]=71;
+row.input[21]=164;
+row.input[22]=1;
+row.input[23]=20;
+row.input[24]=12;
+row.input[25]=77;
+row.input[26]=65;
+row.input[27]=73;
+row.input[28]=78;
+row.input[30]=164;
+row.input[31]=142;
+row.input[32]=67;
+row.input[33]=65;
+row.input[34]=76;
+row.input[35]=95;
+let result:i32=ge_check(row);result
+}
+machine SizeOfPriorObjectTypeSuite::parameterized_method_not_invoked_64_control(&mut self)->i32 {
+let mut row:GenericCase=GenericCase {length:36,kind:1,number:8,byte_count:0,has_after:true,after:7,after_segment:1195461702,check_count:true,object_count:3,error:ExecutionOutcome::Success,patch:24,mutate_source:false,size:IntegerSize::EightBytes};
+row.input[0]=8;
+row.input[1]=70;
+row.input[2]=76;
+row.input[3]=65;
+row.input[4]=71;
+row.input[5]=10;
+row.input[6]=7;
+row.input[7]=20;
+row.input[8]=15;
+row.input[9]=67;
+row.input[10]=65;
+row.input[11]=76;
+row.input[12]=95;
+row.input[13]=3;
+row.input[14]=112;
+row.input[15]=10;
+row.input[16]=99;
+row.input[17]=70;
+row.input[18]=76;
+row.input[19]=65;
+row.input[20]=71;
+row.input[21]=164;
+row.input[22]=1;
+row.input[23]=20;
+row.input[24]=12;
+row.input[25]=77;
+row.input[26]=65;
+row.input[27]=73;
+row.input[28]=78;
+row.input[30]=164;
+row.input[31]=142;
+row.input[32]=67;
+row.input[33]=65;
+row.input[34]=76;
+row.input[35]=95;
+row.number=9;
+let result:i32=ge_check(row);result
+}
+machine SizeOfPriorObjectTypeSuite::alias_preserves_identity_positive(&mut self)->i32 {
+let mut row:GenericCase=GenericCase {length:31,kind:1,number:2,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:2,error:ExecutionOutcome::Success,patch:25,mutate_source:false,size:IntegerSize::EightBytes};
+row.input[0]=8;
+row.input[1]=79;
+row.input[2]=66;
+row.input[3]=74;
+row.input[4]=95;
+row.input[5]=13;
+row.input[6]=65;
+row.input[7]=66;
+row.input[9]=6;
+row.input[10]=79;
+row.input[11]=66;
+row.input[12]=74;
+row.input[13]=95;
+row.input[14]=65;
+row.input[15]=76;
+row.input[16]=83;
+row.input[17]=95;
+row.input[18]=20;
+row.input[19]=12;
+row.input[20]=77;
+row.input[21]=65;
+row.input[22]=73;
+row.input[23]=78;
+row.input[25]=164;
+row.input[26]=142;
+row.input[27]=65;
+row.input[28]=76;
+row.input[29]=83;
+row.input[30]=95;
+let result:i32=ge_check(row);result
+}
+machine SizeOfPriorObjectTypeSuite::alias_preserves_identity_control(&mut self)->i32 {
+let mut row:GenericCase=GenericCase {length:31,kind:1,number:2,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:2,error:ExecutionOutcome::Success,patch:25,mutate_source:false,size:IntegerSize::EightBytes};
+row.input[0]=8;
+row.input[1]=79;
+row.input[2]=66;
+row.input[3]=74;
+row.input[4]=95;
+row.input[5]=13;
+row.input[6]=65;
+row.input[7]=66;
+row.input[9]=6;
+row.input[10]=79;
+row.input[11]=66;
+row.input[12]=74;
+row.input[13]=95;
+row.input[14]=65;
+row.input[15]=76;
+row.input[16]=83;
+row.input[17]=95;
+row.input[18]=20;
+row.input[19]=12;
+row.input[20]=77;
+row.input[21]=65;
+row.input[22]=73;
+row.input[23]=78;
+row.input[25]=164;
+row.input[26]=142;
+row.input[27]=65;
+row.input[28]=76;
+row.input[29]=83;
+row.input[30]=95;
+row.number=3;
+let result:i32=ge_check(row);result
+}
+machine SizeOfPriorObjectTypeSuite::typeless_scope_positive(&mut self)->i32 {
+let mut row:GenericCase=GenericCase {length:19,kind:1,number:0,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:1,error:ExecutionOutcome::Success,patch:26,mutate_source:false,size:IntegerSize::EightBytes};
+row.input[0]=16;
+row.input[1]=5;
+row.input[2]=83;
+row.input[3]=67;
+row.input[4]=80;
+row.input[5]=95;
+row.input[6]=20;
+row.input[7]=12;
+row.input[8]=77;
+row.input[9]=65;
+row.input[10]=73;
+row.input[11]=78;
+row.input[13]=164;
+row.input[14]=142;
+row.input[15]=83;
+row.input[16]=67;
+row.input[17]=80;
+row.input[18]=95;
+let result:i32=ge_check(row);result
+}
+machine SizeOfPriorObjectTypeSuite::typeless_scope_control(&mut self)->i32 {
+let mut row:GenericCase=GenericCase {length:19,kind:1,number:0,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:1,error:ExecutionOutcome::Success,patch:26,mutate_source:false,size:IntegerSize::EightBytes};
+row.input[0]=16;
+row.input[1]=5;
+row.input[2]=83;
+row.input[3]=67;
+row.input[4]=80;
+row.input[5]=95;
+row.input[6]=20;
+row.input[7]=12;
+row.input[8]=77;
+row.input[9]=65;
+row.input[10]=73;
+row.input[11]=78;
+row.input[13]=164;
+row.input[14]=142;
+row.input[15]=83;
+row.input[16]=67;
+row.input[17]=80;
+row.input[18]=95;
+row.number=1;
+let result:i32=ge_check(row);result
+}
+machine SizeOfPriorObjectTypeSuite::root_scope_positive(&mut self)->i32 {
+let mut row:GenericCase=GenericCase {length:11,kind:1,number:0,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:1,error:ExecutionOutcome::Success,patch:27,mutate_source:false,size:IntegerSize::EightBytes};
+row.input[0]=20;
+row.input[1]=10;
+row.input[2]=77;
+row.input[3]=65;
+row.input[4]=73;
+row.input[5]=78;
+row.input[7]=164;
+row.input[8]=142;
+row.input[9]=92;
+let result:i32=ge_check(row);result
+}
+machine SizeOfPriorObjectTypeSuite::root_scope_control(&mut self)->i32 {
+let mut row:GenericCase=GenericCase {length:11,kind:1,number:0,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:1,error:ExecutionOutcome::Success,patch:27,mutate_source:false,size:IntegerSize::EightBytes};
+row.input[0]=20;
+row.input[1]=10;
+row.input[2]=77;
+row.input[3]=65;
+row.input[4]=73;
+row.input[5]=78;
+row.input[7]=164;
+row.input[8]=142;
+row.input[9]=92;
+row.number=1;
+let result:i32=ge_check(row);result
+}
+machine SizeOfPriorObjectTypeSuite::near_scope_shadows_outer_object_positive(&mut self)->i32 {
+let mut row:GenericCase=GenericCase {length:50,kind:1,number:0,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:3,error:ExecutionOutcome::Success,patch:28,mutate_source:false,size:IntegerSize::EightBytes};
+row.input[0]=8;
+row.input[1]=79;
+row.input[2]=66;
+row.input[3]=74;
+row.input[4]=95;
+row.input[5]=10;
+row.input[6]=42;
+row.input[7]=16;
+row.input[8]=24;
+row.input[9]=83;
+row.input[10]=67;
+row.input[11]=80;
+row.input[12]=95;
+row.input[13]=16;
+row.input[14]=5;
+row.input[15]=79;
+row.input[16]=66;
+row.input[17]=74;
+row.input[18]=95;
+row.input[19]=20;
+row.input[20]=12;
+row.input[21]=67;
+row.input[22]=65;
+row.input[23]=76;
+row.input[24]=95;
+row.input[26]=164;
+row.input[27]=142;
+row.input[28]=79;
+row.input[29]=66;
+row.input[30]=74;
+row.input[31]=95;
+row.input[32]=20;
+row.input[33]=17;
+row.input[34]=77;
+row.input[35]=65;
+row.input[36]=73;
+row.input[37]=78;
+row.input[39]=164;
+row.input[40]=92;
+row.input[41]=46;
+row.input[42]=83;
+row.input[43]=67;
+row.input[44]=80;
+row.input[45]=95;
+row.input[46]=67;
+row.input[47]=65;
+row.input[48]=76;
+row.input[49]=95;
+let result:i32=ge_check(row);result
+}
+machine SizeOfPriorObjectTypeSuite::near_scope_shadows_outer_object_control(&mut self)->i32 {
+let mut row:GenericCase=GenericCase {length:50,kind:1,number:0,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:3,error:ExecutionOutcome::Success,patch:28,mutate_source:false,size:IntegerSize::EightBytes};
+row.input[0]=8;
+row.input[1]=79;
+row.input[2]=66;
+row.input[3]=74;
+row.input[4]=95;
+row.input[5]=10;
+row.input[6]=42;
+row.input[7]=16;
+row.input[8]=24;
+row.input[9]=83;
+row.input[10]=67;
+row.input[11]=80;
+row.input[12]=95;
+row.input[13]=16;
+row.input[14]=5;
+row.input[15]=79;
+row.input[16]=66;
+row.input[17]=74;
+row.input[18]=95;
+row.input[19]=20;
+row.input[20]=12;
+row.input[21]=67;
+row.input[22]=65;
+row.input[23]=76;
+row.input[24]=95;
+row.input[26]=164;
+row.input[27]=142;
+row.input[28]=79;
+row.input[29]=66;
+row.input[30]=74;
+row.input[31]=95;
+row.input[32]=20;
+row.input[33]=17;
+row.input[34]=77;
+row.input[35]=65;
+row.input[36]=73;
+row.input[37]=78;
+row.input[39]=164;
+row.input[40]=92;
+row.input[41]=46;
+row.input[42]=83;
+row.input[43]=67;
+row.input[44]=80;
+row.input[45]=95;
+row.input[46]=67;
+row.input[47]=65;
+row.input[48]=76;
+row.input[49]=95;
+row.number=1;
+let result:i32=ge_check(row);result
+}
+machine SizeOfPriorObjectTypeSuite::reference_named_positive(&mut self)->i32 {
+let mut row:GenericCase=GenericCase {length:28,kind:1,number:2,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:3,error:ExecutionOutcome::Success,patch:29,mutate_source:false,size:IntegerSize::EightBytes};
+row.input[0]=8;
+row.input[1]=79;
+row.input[2]=66;
+row.input[3]=74;
+row.input[4]=95;
+row.input[6]=8;
+row.input[7]=68;
+row.input[8]=83;
+row.input[9]=84;
+row.input[10]=95;
+row.input[11]=13;
+row.input[12]=65;
+row.input[13]=66;
+row.input[15]=20;
+row.input[16]=12;
+row.input[17]=77;
+row.input[18]=65;
+row.input[19]=73;
+row.input[20]=78;
+row.input[22]=164;
+row.input[23]=142;
+row.input[24]=79;
+row.input[25]=66;
+row.input[26]=74;
+row.input[27]=95;
+let result:i32=ge_check(row);result
+}
+machine SizeOfPriorObjectTypeSuite::reference_named_control(&mut self)->i32 {
+let mut row:GenericCase=GenericCase {length:28,kind:1,number:2,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:3,error:ExecutionOutcome::Success,patch:29,mutate_source:false,size:IntegerSize::EightBytes};
+row.input[0]=8;
+row.input[1]=79;
+row.input[2]=66;
+row.input[3]=74;
+row.input[4]=95;
+row.input[6]=8;
+row.input[7]=68;
+row.input[8]=83;
+row.input[9]=84;
+row.input[10]=95;
+row.input[11]=13;
+row.input[12]=65;
+row.input[13]=66;
+row.input[15]=20;
+row.input[16]=12;
+row.input[17]=77;
+row.input[18]=65;
+row.input[19]=73;
+row.input[20]=78;
+row.input[22]=164;
+row.input[23]=142;
+row.input[24]=79;
+row.input[25]=66;
+row.input[26]=74;
+row.input[27]=95;
+row.number=3;
+let result:i32=ge_check(row);result
+}
+machine SizeOfPriorObjectTypeSuite::reference_local_positive(&mut self)->i32 {
+let mut row:GenericCase=GenericCase {length:28,kind:1,number:2,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:3,error:ExecutionOutcome::Success,patch:30,mutate_source:false,size:IntegerSize::EightBytes};
+row.input[0]=8;
+row.input[1]=79;
+row.input[2]=66;
+row.input[3]=74;
+row.input[4]=95;
+row.input[6]=8;
+row.input[7]=68;
+row.input[8]=83;
+row.input[9]=84;
+row.input[10]=95;
+row.input[11]=13;
+row.input[12]=65;
+row.input[13]=66;
+row.input[15]=20;
+row.input[16]=12;
+row.input[17]=77;
+row.input[18]=65;
+row.input[19]=73;
+row.input[20]=78;
+row.input[22]=164;
+row.input[23]=142;
+row.input[24]=79;
+row.input[25]=66;
+row.input[26]=74;
+row.input[27]=95;
+let result:i32=ge_check(row);result
+}
+machine SizeOfPriorObjectTypeSuite::reference_local_control(&mut self)->i32 {
+let mut row:GenericCase=GenericCase {length:28,kind:1,number:2,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:3,error:ExecutionOutcome::Success,patch:30,mutate_source:false,size:IntegerSize::EightBytes};
+row.input[0]=8;
+row.input[1]=79;
+row.input[2]=66;
+row.input[3]=74;
+row.input[4]=95;
+row.input[6]=8;
+row.input[7]=68;
+row.input[8]=83;
+row.input[9]=84;
+row.input[10]=95;
+row.input[11]=13;
+row.input[12]=65;
+row.input[13]=66;
+row.input[15]=20;
+row.input[16]=12;
+row.input[17]=77;
+row.input[18]=65;
+row.input[19]=73;
+row.input[20]=78;
+row.input[22]=164;
+row.input[23]=142;
+row.input[24]=79;
+row.input[25]=66;
+row.input[26]=74;
+row.input[27]=95;
+row.number=3;
+let result:i32=ge_check(row);result
+}
+machine SizeOfPriorObjectTypeSuite::reference_arg_positive(&mut self)->i32 {
+let mut row:GenericCase=GenericCase {length:28,kind:1,number:2,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:3,error:ExecutionOutcome::Success,patch:31,mutate_source:false,size:IntegerSize::EightBytes};
+row.input[0]=8;
+row.input[1]=79;
+row.input[2]=66;
+row.input[3]=74;
+row.input[4]=95;
+row.input[6]=8;
+row.input[7]=68;
+row.input[8]=83;
+row.input[9]=84;
+row.input[10]=95;
+row.input[11]=13;
+row.input[12]=65;
+row.input[13]=66;
+row.input[15]=20;
+row.input[16]=12;
+row.input[17]=77;
+row.input[18]=65;
+row.input[19]=73;
+row.input[20]=78;
+row.input[22]=164;
+row.input[23]=142;
+row.input[24]=79;
+row.input[25]=66;
+row.input[26]=74;
+row.input[27]=95;
+let result:i32=ge_check(row);result
+}
+machine SizeOfPriorObjectTypeSuite::reference_arg_control(&mut self)->i32 {
+let mut row:GenericCase=GenericCase {length:28,kind:1,number:2,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:3,error:ExecutionOutcome::Success,patch:31,mutate_source:false,size:IntegerSize::EightBytes};
+row.input[0]=8;
+row.input[1]=79;
+row.input[2]=66;
+row.input[3]=74;
+row.input[4]=95;
+row.input[6]=8;
+row.input[7]=68;
+row.input[8]=83;
+row.input[9]=84;
+row.input[10]=95;
+row.input[11]=13;
+row.input[12]=65;
+row.input[13]=66;
+row.input[15]=20;
+row.input[16]=12;
+row.input[17]=77;
+row.input[18]=65;
+row.input[19]=73;
+row.input[20]=78;
+row.input[22]=164;
+row.input[23]=142;
+row.input[24]=79;
+row.input[25]=66;
+row.input[26]=74;
+row.input[27]=95;
+row.number=3;
+let result:i32=ge_check(row);result
+}
+machine SizeOfPriorObjectTypeSuite::reference_refof_positive(&mut self)->i32 {
+let mut row:GenericCase=GenericCase {length:28,kind:1,number:2,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:3,error:ExecutionOutcome::Success,patch:32,mutate_source:false,size:IntegerSize::EightBytes};
+row.input[0]=8;
+row.input[1]=79;
+row.input[2]=66;
+row.input[3]=74;
+row.input[4]=95;
+row.input[6]=8;
+row.input[7]=68;
+row.input[8]=83;
+row.input[9]=84;
+row.input[10]=95;
+row.input[11]=13;
+row.input[12]=65;
+row.input[13]=66;
+row.input[15]=20;
+row.input[16]=12;
+row.input[17]=77;
+row.input[18]=65;
+row.input[19]=73;
+row.input[20]=78;
+row.input[22]=164;
+row.input[23]=142;
+row.input[24]=79;
+row.input[25]=66;
+row.input[26]=74;
+row.input[27]=95;
+let result:i32=ge_check(row);result
+}
+machine SizeOfPriorObjectTypeSuite::reference_refof_control(&mut self)->i32 {
+let mut row:GenericCase=GenericCase {length:28,kind:1,number:2,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:3,error:ExecutionOutcome::Success,patch:32,mutate_source:false,size:IntegerSize::EightBytes};
+row.input[0]=8;
+row.input[1]=79;
+row.input[2]=66;
+row.input[3]=74;
+row.input[4]=95;
+row.input[6]=8;
+row.input[7]=68;
+row.input[8]=83;
+row.input[9]=84;
+row.input[10]=95;
+row.input[11]=13;
+row.input[12]=65;
+row.input[13]=66;
+row.input[15]=20;
+row.input[16]=12;
+row.input[17]=77;
+row.input[18]=65;
+row.input[19]=73;
+row.input[20]=78;
+row.input[22]=164;
+row.input[23]=142;
+row.input[24]=79;
+row.input[25]=66;
+row.input[26]=74;
+row.input[27]=95;
+row.number=3;
+let result:i32=ge_check(row);result
+}
+machine SizeOfPriorObjectTypeSuite::reference_index_positive(&mut self)->i32 {
+let mut row:GenericCase=GenericCase {length:28,kind:1,number:2,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:3,error:ExecutionOutcome::Success,patch:33,mutate_source:false,size:IntegerSize::EightBytes};
+row.input[0]=8;
+row.input[1]=79;
+row.input[2]=66;
+row.input[3]=74;
+row.input[4]=95;
+row.input[6]=8;
+row.input[7]=68;
+row.input[8]=83;
+row.input[9]=84;
+row.input[10]=95;
+row.input[11]=13;
+row.input[12]=65;
+row.input[13]=66;
+row.input[15]=20;
+row.input[16]=12;
+row.input[17]=77;
+row.input[18]=65;
+row.input[19]=73;
+row.input[20]=78;
+row.input[22]=164;
+row.input[23]=142;
+row.input[24]=79;
+row.input[25]=66;
+row.input[26]=74;
+row.input[27]=95;
+let result:i32=ge_check(row);result
+}
+machine SizeOfPriorObjectTypeSuite::reference_index_control(&mut self)->i32 {
+let mut row:GenericCase=GenericCase {length:28,kind:1,number:2,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:3,error:ExecutionOutcome::Success,patch:33,mutate_source:false,size:IntegerSize::EightBytes};
+row.input[0]=8;
+row.input[1]=79;
+row.input[2]=66;
+row.input[3]=74;
+row.input[4]=95;
+row.input[6]=8;
+row.input[7]=68;
+row.input[8]=83;
+row.input[9]=84;
+row.input[10]=95;
+row.input[11]=13;
+row.input[12]=65;
+row.input[13]=66;
+row.input[15]=20;
+row.input[16]=12;
+row.input[17]=77;
+row.input[18]=65;
+row.input[19]=73;
+row.input[20]=78;
+row.input[22]=164;
+row.input[23]=142;
+row.input[24]=79;
+row.input[25]=66;
+row.input[26]=74;
+row.input[27]=95;
+row.number=3;
+let result:i32=ge_check(row);result
+}
+machine SizeOfPriorObjectTypeSuite::reference_unresolved_positive(&mut self)->i32 {
+let mut row:GenericCase=GenericCase {length:28,kind:1,number:2,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:3,error:ExecutionOutcome::Success,patch:34,mutate_source:false,size:IntegerSize::EightBytes};
+row.input[0]=8;
+row.input[1]=79;
+row.input[2]=66;
+row.input[3]=74;
+row.input[4]=95;
+row.input[6]=8;
+row.input[7]=68;
+row.input[8]=83;
+row.input[9]=84;
+row.input[10]=95;
+row.input[11]=13;
+row.input[12]=65;
+row.input[13]=66;
+row.input[15]=20;
+row.input[16]=12;
+row.input[17]=77;
+row.input[18]=65;
+row.input[19]=73;
+row.input[20]=78;
+row.input[22]=164;
+row.input[23]=142;
+row.input[24]=79;
+row.input[25]=66;
+row.input[26]=74;
+row.input[27]=95;
+let result:i32=ge_check(row);result
+}
+machine SizeOfPriorObjectTypeSuite::reference_unresolved_control(&mut self)->i32 {
+let mut row:GenericCase=GenericCase {length:28,kind:1,number:2,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:3,error:ExecutionOutcome::Success,patch:34,mutate_source:false,size:IntegerSize::EightBytes};
+row.input[0]=8;
+row.input[1]=79;
+row.input[2]=66;
+row.input[3]=74;
+row.input[4]=95;
+row.input[6]=8;
+row.input[7]=68;
+row.input[8]=83;
+row.input[9]=84;
+row.input[10]=95;
+row.input[11]=13;
+row.input[12]=65;
+row.input[13]=66;
+row.input[15]=20;
+row.input[16]=12;
+row.input[17]=77;
+row.input[18]=65;
+row.input[19]=73;
+row.input[20]=78;
+row.input[22]=164;
+row.input[23]=142;
+row.input[24]=79;
+row.input[25]=66;
+row.input[26]=74;
+row.input[27]=95;
+row.number=3;
+let result:i32=ge_check(row);result
+}
+machine SizeOfPriorObjectTypeSuite::local_reference_descriptor_positive(&mut self)->i32 {
+let mut row:GenericCase=GenericCase {length:31,kind:1,number:2,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:4,error:ExecutionOutcome::Success,patch:35,mutate_source:false,size:IntegerSize::EightBytes};
+row.input[0]=8;
+row.input[1]=79;
+row.input[2]=66;
+row.input[3]=74;
+row.input[4]=95;
+row.input[6]=8;
+row.input[7]=68;
+row.input[8]=83;
+row.input[9]=84;
+row.input[10]=95;
+row.input[11]=13;
+row.input[12]=65;
+row.input[13]=66;
+row.input[15]=20;
+row.input[16]=15;
+row.input[17]=77;
+row.input[18]=65;
+row.input[19]=73;
+row.input[20]=78;
+row.input[22]=157;
+row.input[23]=79;
+row.input[24]=66;
+row.input[25]=74;
+row.input[26]=95;
+row.input[27]=96;
+row.input[28]=164;
+row.input[29]=142;
+row.input[30]=96;
+let result:i32=ge_check(row);result
+}
+machine SizeOfPriorObjectTypeSuite::local_reference_descriptor_control(&mut self)->i32 {
+let mut row:GenericCase=GenericCase {length:31,kind:1,number:2,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:4,error:ExecutionOutcome::Success,patch:35,mutate_source:false,size:IntegerSize::EightBytes};
+row.input[0]=8;
+row.input[1]=79;
+row.input[2]=66;
+row.input[3]=74;
+row.input[4]=95;
+row.input[6]=8;
+row.input[7]=68;
+row.input[8]=83;
+row.input[9]=84;
+row.input[10]=95;
+row.input[11]=13;
+row.input[12]=65;
+row.input[13]=66;
+row.input[15]=20;
+row.input[16]=15;
+row.input[17]=77;
+row.input[18]=65;
+row.input[19]=73;
+row.input[20]=78;
+row.input[22]=157;
+row.input[23]=79;
+row.input[24]=66;
+row.input[25]=74;
+row.input[26]=95;
+row.input[27]=96;
+row.input[28]=164;
+row.input[29]=142;
+row.input[30]=96;
+row.number=3;
+let result:i32=ge_check(row);result
+}
+machine SizeOfPriorObjectTypeSuite::argument_reference_descriptor_positive(&mut self)->i32 {
+let mut row:GenericCase=GenericCase {length:41,kind:1,number:2,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:4,error:ExecutionOutcome::Success,patch:36,mutate_source:false,size:IntegerSize::EightBytes};
+row.input[0]=8;
+row.input[1]=79;
+row.input[2]=66;
+row.input[3]=74;
+row.input[4]=95;
+row.input[6]=8;
+row.input[7]=68;
+row.input[8]=83;
+row.input[9]=84;
+row.input[10]=95;
+row.input[11]=13;
+row.input[12]=65;
+row.input[13]=66;
+row.input[15]=20;
+row.input[16]=9;
+row.input[17]=67;
+row.input[18]=65;
+row.input[19]=76;
+row.input[20]=95;
+row.input[21]=1;
+row.input[22]=164;
+row.input[23]=142;
+row.input[24]=104;
+row.input[25]=20;
+row.input[26]=15;
+row.input[27]=77;
+row.input[28]=65;
+row.input[29]=73;
+row.input[30]=78;
+row.input[32]=164;
+row.input[33]=67;
+row.input[34]=65;
+row.input[35]=76;
+row.input[36]=95;
+row.input[37]=79;
+row.input[38]=66;
+row.input[39]=74;
+row.input[40]=95;
+let result:i32=ge_check(row);result
+}
+machine SizeOfPriorObjectTypeSuite::argument_reference_descriptor_control(&mut self)->i32 {
+let mut row:GenericCase=GenericCase {length:41,kind:1,number:2,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:4,error:ExecutionOutcome::Success,patch:36,mutate_source:false,size:IntegerSize::EightBytes};
+row.input[0]=8;
+row.input[1]=79;
+row.input[2]=66;
+row.input[3]=74;
+row.input[4]=95;
+row.input[6]=8;
+row.input[7]=68;
+row.input[8]=83;
+row.input[9]=84;
+row.input[10]=95;
+row.input[11]=13;
+row.input[12]=65;
+row.input[13]=66;
+row.input[15]=20;
+row.input[16]=9;
+row.input[17]=67;
+row.input[18]=65;
+row.input[19]=76;
+row.input[20]=95;
+row.input[21]=1;
+row.input[22]=164;
+row.input[23]=142;
+row.input[24]=104;
+row.input[25]=20;
+row.input[26]=15;
+row.input[27]=77;
+row.input[28]=65;
+row.input[29]=73;
+row.input[30]=78;
+row.input[32]=164;
+row.input[33]=67;
+row.input[34]=65;
+row.input[35]=76;
+row.input[36]=95;
+row.input[37]=79;
+row.input[38]=66;
+row.input[39]=74;
+row.input[40]=95;
+row.number=3;
+let result:i32=ge_check(row);result
+}
+machine SizeOfPriorObjectTypeSuite::lexical_reference_descriptor_positive(&mut self)->i32 {
+let mut row:GenericCase=GenericCase {length:28,kind:1,number:2,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:3,error:ExecutionOutcome::Success,patch:37,mutate_source:false,size:IntegerSize::EightBytes};
+row.input[0]=8;
+row.input[1]=79;
+row.input[2]=66;
+row.input[3]=74;
+row.input[4]=95;
+row.input[6]=8;
+row.input[7]=68;
+row.input[8]=83;
+row.input[9]=84;
+row.input[10]=95;
+row.input[11]=13;
+row.input[12]=65;
+row.input[13]=66;
+row.input[15]=20;
+row.input[16]=12;
+row.input[17]=77;
+row.input[18]=65;
+row.input[19]=73;
+row.input[20]=78;
+row.input[22]=164;
+row.input[23]=142;
+row.input[24]=79;
+row.input[25]=66;
+row.input[26]=74;
+row.input[27]=95;
+let result:i32=ge_check(row);result
+}
+machine SizeOfPriorObjectTypeSuite::lexical_reference_descriptor_control(&mut self)->i32 {
+let mut row:GenericCase=GenericCase {length:28,kind:1,number:2,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:3,error:ExecutionOutcome::Success,patch:37,mutate_source:false,size:IntegerSize::EightBytes};
+row.input[0]=8;
+row.input[1]=79;
+row.input[2]=66;
+row.input[3]=74;
+row.input[4]=95;
+row.input[6]=8;
+row.input[7]=68;
+row.input[8]=83;
+row.input[9]=84;
+row.input[10]=95;
+row.input[11]=13;
+row.input[12]=65;
+row.input[13]=66;
+row.input[15]=20;
+row.input[16]=12;
+row.input[17]=77;
+row.input[18]=65;
+row.input[19]=73;
+row.input[20]=78;
+row.input[22]=164;
+row.input[23]=142;
+row.input[24]=79;
+row.input[25]=66;
+row.input[26]=74;
+row.input[27]=95;
+row.number=3;
+let result:i32=ge_check(row);result
+}
+machine SizeOfPriorObjectTypeSuite::named_uninitialized_positive(&mut self)->i32 {
+let mut row:GenericCase=GenericCase {length:19,kind:1,number:0,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:2,error:ExecutionOutcome::Success,patch:38,mutate_source:false,size:IntegerSize::EightBytes};
+row.input[0]=8;
+row.input[1]=79;
+row.input[2]=66;
+row.input[3]=74;
+row.input[4]=95;
+row.input[6]=20;
+row.input[7]=12;
+row.input[8]=77;
+row.input[9]=65;
+row.input[10]=73;
+row.input[11]=78;
+row.input[13]=164;
+row.input[14]=142;
+row.input[15]=79;
+row.input[16]=66;
+row.input[17]=74;
+row.input[18]=95;
+let result:i32=ge_check(row);result
+}
+machine SizeOfPriorObjectTypeSuite::named_uninitialized_control(&mut self)->i32 {
+let mut row:GenericCase=GenericCase {length:19,kind:1,number:0,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:2,error:ExecutionOutcome::Success,patch:38,mutate_source:false,size:IntegerSize::EightBytes};
+row.input[0]=8;
+row.input[1]=79;
+row.input[2]=66;
+row.input[3]=74;
+row.input[4]=95;
+row.input[6]=20;
+row.input[7]=12;
+row.input[8]=77;
+row.input[9]=65;
+row.input[10]=73;
+row.input[11]=78;
+row.input[13]=164;
+row.input[14]=142;
+row.input[15]=79;
+row.input[16]=66;
+row.input[17]=74;
+row.input[18]=95;
+row.number=1;
+let result:i32=ge_check(row);result
+}
+machine SizeOfPriorObjectTypeSuite::reference_cycle_positive(&mut self)->i32 {
+let mut row:GenericCase=GenericCase {length:19,kind:1,number:0,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:2,error:ExecutionOutcome::ReferenceCycle,patch:39,mutate_source:false,size:IntegerSize::EightBytes};
+row.input[0]=8;
+row.input[1]=79;
+row.input[2]=66;
+row.input[3]=74;
+row.input[4]=95;
+row.input[6]=20;
+row.input[7]=12;
+row.input[8]=77;
+row.input[9]=65;
+row.input[10]=73;
+row.input[11]=78;
+row.input[13]=164;
+row.input[14]=142;
+row.input[15]=79;
+row.input[16]=66;
+row.input[17]=74;
+row.input[18]=95;
+let result:i32=ge_check(row);result
+}
+machine SizeOfPriorObjectTypeSuite::reference_cycle_control(&mut self)->i32 {
+let mut row:GenericCase=GenericCase {length:19,kind:1,number:0,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:2,error:ExecutionOutcome::ReferenceCycle,patch:39,mutate_source:false,size:IntegerSize::EightBytes};
+row.input[0]=8;
+row.input[1]=79;
+row.input[2]=66;
+row.input[3]=74;
+row.input[4]=95;
+row.input[6]=20;
+row.input[7]=12;
+row.input[8]=77;
+row.input[9]=65;
+row.input[10]=73;
+row.input[11]=78;
+row.input[13]=164;
+row.input[14]=142;
+row.input[15]=79;
+row.input[16]=66;
+row.input[17]=74;
+row.input[18]=95;
+row.error=ExecutionOutcome::Success;
+let result:i32=ge_check(row);result
+}
+machine SizeOfPriorObjectTypeSuite::reference_dangling_positive(&mut self)->i32 {
+let mut row:GenericCase=GenericCase {length:19,kind:1,number:0,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:2,error:ExecutionOutcome::InvalidState,patch:40,mutate_source:false,size:IntegerSize::EightBytes};
+row.input[0]=8;
+row.input[1]=79;
+row.input[2]=66;
+row.input[3]=74;
+row.input[4]=95;
+row.input[6]=20;
+row.input[7]=12;
+row.input[8]=77;
+row.input[9]=65;
+row.input[10]=73;
+row.input[11]=78;
+row.input[13]=164;
+row.input[14]=142;
+row.input[15]=79;
+row.input[16]=66;
+row.input[17]=74;
+row.input[18]=95;
+let result:i32=ge_check(row);result
+}
+machine SizeOfPriorObjectTypeSuite::reference_dangling_control(&mut self)->i32 {
+let mut row:GenericCase=GenericCase {length:19,kind:1,number:0,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:2,error:ExecutionOutcome::InvalidState,patch:40,mutate_source:false,size:IntegerSize::EightBytes};
+row.input[0]=8;
+row.input[1]=79;
+row.input[2]=66;
+row.input[3]=74;
+row.input[4]=95;
+row.input[6]=20;
+row.input[7]=12;
+row.input[8]=77;
+row.input[9]=65;
+row.input[10]=73;
+row.input[11]=78;
+row.input[13]=164;
+row.input[14]=142;
+row.input[15]=79;
+row.input[16]=66;
+row.input[17]=74;
+row.input[18]=95;
+row.error=ExecutionOutcome::Success;
+let result:i32=ge_check(row);result
+}
+machine SizeOfPriorObjectTypeSuite::unknown_name_positive(&mut self)->i32 {
+let mut row:GenericCase=GenericCase {length:13,kind:1,number:0,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:1,error:ExecutionOutcome::MissingObject,patch:41,mutate_source:false,size:IntegerSize::EightBytes};
+row.input[0]=20;
+row.input[1]=12;
+row.input[2]=77;
+row.input[3]=65;
+row.input[4]=73;
+row.input[5]=78;
+row.input[7]=164;
+row.input[8]=142;
+row.input[9]=79;
+row.input[10]=66;
+row.input[11]=74;
+row.input[12]=95;
+let result:i32=ge_check(row);result
+}
+machine SizeOfPriorObjectTypeSuite::unknown_name_control(&mut self)->i32 {
+let mut row:GenericCase=GenericCase {length:13,kind:1,number:0,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:1,error:ExecutionOutcome::MissingObject,patch:41,mutate_source:false,size:IntegerSize::EightBytes};
+row.input[0]=20;
+row.input[1]=12;
+row.input[2]=77;
+row.input[3]=65;
+row.input[4]=73;
+row.input[5]=78;
+row.input[7]=164;
+row.input[8]=142;
+row.input[9]=79;
+row.input[10]=66;
+row.input[11]=74;
+row.input[12]=95;
+row.error=ExecutionOutcome::Success;
+let result:i32=ge_check(row);result
+}
+machine SizeOfPriorObjectTypeSuite::truncated_operand_positive(&mut self)->i32 {
+let mut row:GenericCase=GenericCase {length:9,kind:1,number:0,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:1,error:ExecutionOutcome::Truncated,patch:42,mutate_source:false,size:IntegerSize::EightBytes};
+row.input[0]=20;
+row.input[1]=8;
+row.input[2]=77;
+row.input[3]=65;
+row.input[4]=73;
+row.input[5]=78;
+row.input[7]=164;
+row.input[8]=142;
+let result:i32=ge_check(row);result
+}
+machine SizeOfPriorObjectTypeSuite::truncated_operand_control(&mut self)->i32 {
+let mut row:GenericCase=GenericCase {length:9,kind:1,number:0,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:1,error:ExecutionOutcome::Truncated,patch:42,mutate_source:false,size:IntegerSize::EightBytes};
+row.input[0]=20;
+row.input[1]=8;
+row.input[2]=77;
+row.input[3]=65;
+row.input[4]=73;
+row.input[5]=78;
+row.input[7]=164;
+row.input[8]=142;
+row.error=ExecutionOutcome::Success;
+let result:i32=ge_check(row);result
+}
+machine SizeOfPriorObjectTypeSuite::excluded_refof_positive(&mut self)->i32 {
+let mut row:GenericCase=GenericCase {length:25,kind:1,number:0,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:2,error:ExecutionOutcome::UnsupportedOpcode,patch:43,mutate_source:false,size:IntegerSize::EightBytes};
+row.input[0]=8;
+row.input[1]=79;
+row.input[2]=66;
+row.input[3]=74;
+row.input[4]=95;
+row.input[5]=17;
+row.input[6]=5;
+row.input[7]=10;
+row.input[8]=2;
+row.input[9]=65;
+row.input[10]=66;
+row.input[11]=20;
+row.input[12]=13;
+row.input[13]=77;
+row.input[14]=65;
+row.input[15]=73;
+row.input[16]=78;
+row.input[18]=164;
+row.input[19]=142;
+row.input[20]=113;
+row.input[21]=79;
+row.input[22]=66;
+row.input[23]=74;
+row.input[24]=95;
+let result:i32=ge_check(row);result
+}
+machine SizeOfPriorObjectTypeSuite::excluded_refof_control(&mut self)->i32 {
+let mut row:GenericCase=GenericCase {length:25,kind:1,number:0,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:2,error:ExecutionOutcome::UnsupportedOpcode,patch:43,mutate_source:false,size:IntegerSize::EightBytes};
+row.input[0]=8;
+row.input[1]=79;
+row.input[2]=66;
+row.input[3]=74;
+row.input[4]=95;
+row.input[5]=17;
+row.input[6]=5;
+row.input[7]=10;
+row.input[8]=2;
+row.input[9]=65;
+row.input[10]=66;
+row.input[11]=20;
+row.input[12]=13;
+row.input[13]=77;
+row.input[14]=65;
+row.input[15]=73;
+row.input[16]=78;
+row.input[18]=164;
+row.input[19]=142;
+row.input[20]=113;
+row.input[21]=79;
+row.input[22]=66;
+row.input[23]=74;
+row.input[24]=95;
+row.error=ExecutionOutcome::Success;
+let result:i32=ge_check(row);result
+}
+machine SizeOfPriorObjectTypeSuite::excluded_derefof_positive(&mut self)->i32 {
+let mut row:GenericCase=GenericCase {length:25,kind:1,number:0,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:2,error:ExecutionOutcome::UnsupportedOpcode,patch:44,mutate_source:false,size:IntegerSize::EightBytes};
+row.input[0]=8;
+row.input[1]=79;
+row.input[2]=66;
+row.input[3]=74;
+row.input[4]=95;
+row.input[5]=17;
+row.input[6]=5;
+row.input[7]=10;
+row.input[8]=2;
+row.input[9]=65;
+row.input[10]=66;
+row.input[11]=20;
+row.input[12]=13;
+row.input[13]=77;
+row.input[14]=65;
+row.input[15]=73;
+row.input[16]=78;
+row.input[18]=164;
+row.input[19]=142;
+row.input[20]=131;
+row.input[21]=79;
+row.input[22]=66;
+row.input[23]=74;
+row.input[24]=95;
+let result:i32=ge_check(row);result
+}
+machine SizeOfPriorObjectTypeSuite::excluded_derefof_control(&mut self)->i32 {
+let mut row:GenericCase=GenericCase {length:25,kind:1,number:0,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:2,error:ExecutionOutcome::UnsupportedOpcode,patch:44,mutate_source:false,size:IntegerSize::EightBytes};
+row.input[0]=8;
+row.input[1]=79;
+row.input[2]=66;
+row.input[3]=74;
+row.input[4]=95;
+row.input[5]=17;
+row.input[6]=5;
+row.input[7]=10;
+row.input[8]=2;
+row.input[9]=65;
+row.input[10]=66;
+row.input[11]=20;
+row.input[12]=13;
+row.input[13]=77;
+row.input[14]=65;
+row.input[15]=73;
+row.input[16]=78;
+row.input[18]=164;
+row.input[19]=142;
+row.input[20]=131;
+row.input[21]=79;
+row.input[22]=66;
+row.input[23]=74;
+row.input[24]=95;
+row.error=ExecutionOutcome::Success;
+let result:i32=ge_check(row);result
+}
+machine SizeOfPriorObjectTypeSuite::excluded_index_positive(&mut self)->i32 {
+let mut row:GenericCase=GenericCase {length:27,kind:1,number:0,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:2,error:ExecutionOutcome::UnsupportedOpcode,patch:45,mutate_source:false,size:IntegerSize::EightBytes};
+row.input[0]=8;
+row.input[1]=79;
+row.input[2]=66;
+row.input[3]=74;
+row.input[4]=95;
+row.input[5]=17;
+row.input[6]=5;
+row.input[7]=10;
+row.input[8]=2;
+row.input[9]=65;
+row.input[10]=66;
+row.input[11]=20;
+row.input[12]=15;
+row.input[13]=77;
+row.input[14]=65;
+row.input[15]=73;
+row.input[16]=78;
+row.input[18]=164;
+row.input[19]=142;
+row.input[20]=136;
+row.input[21]=79;
+row.input[22]=66;
+row.input[23]=74;
+row.input[24]=95;
+let result:i32=ge_check(row);result
+}
+machine SizeOfPriorObjectTypeSuite::excluded_index_control(&mut self)->i32 {
+let mut row:GenericCase=GenericCase {length:27,kind:1,number:0,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:2,error:ExecutionOutcome::UnsupportedOpcode,patch:45,mutate_source:false,size:IntegerSize::EightBytes};
+row.input[0]=8;
+row.input[1]=79;
+row.input[2]=66;
+row.input[3]=74;
+row.input[4]=95;
+row.input[5]=17;
+row.input[6]=5;
+row.input[7]=10;
+row.input[8]=2;
+row.input[9]=65;
+row.input[10]=66;
+row.input[11]=20;
+row.input[12]=15;
+row.input[13]=77;
+row.input[14]=65;
+row.input[15]=73;
+row.input[16]=78;
+row.input[18]=164;
+row.input[19]=142;
+row.input[20]=136;
+row.input[21]=79;
+row.input[22]=66;
+row.input[23]=74;
+row.input[24]=95;
+row.error=ExecutionOutcome::Success;
+let result:i32=ge_check(row);result
+}
+machine SizeOfPriorObjectTypeSuite::excluded_literal_positive(&mut self)->i32 {
+let mut row:GenericCase=GenericCase {length:21,kind:1,number:0,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:2,error:ExecutionOutcome::UnsupportedOpcode,patch:46,mutate_source:false,size:IntegerSize::EightBytes};
+row.input[0]=8;
+row.input[1]=79;
+row.input[2]=66;
+row.input[3]=74;
+row.input[4]=95;
+row.input[5]=17;
+row.input[6]=5;
+row.input[7]=10;
+row.input[8]=2;
+row.input[9]=65;
+row.input[10]=66;
+row.input[11]=20;
+row.input[12]=9;
+row.input[13]=77;
+row.input[14]=65;
+row.input[15]=73;
+row.input[16]=78;
+row.input[18]=164;
+row.input[19]=142;
+row.input[20]=1;
+let result:i32=ge_check(row);result
+}
+machine SizeOfPriorObjectTypeSuite::excluded_literal_control(&mut self)->i32 {
+let mut row:GenericCase=GenericCase {length:21,kind:1,number:0,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:2,error:ExecutionOutcome::UnsupportedOpcode,patch:46,mutate_source:false,size:IntegerSize::EightBytes};
+row.input[0]=8;
+row.input[1]=79;
+row.input[2]=66;
+row.input[3]=74;
+row.input[4]=95;
+row.input[5]=17;
+row.input[6]=5;
+row.input[7]=10;
+row.input[8]=2;
+row.input[9]=65;
+row.input[10]=66;
+row.input[11]=20;
+row.input[12]=9;
+row.input[13]=77;
+row.input[14]=65;
+row.input[15]=73;
+row.input[16]=78;
+row.input[18]=164;
+row.input[19]=142;
+row.input[20]=1;
+row.error=ExecutionOutcome::Success;
+let result:i32=ge_check(row);result
+}
+machine SizeOfPriorObjectTypeSuite::null_name_positive(&mut self)->i32 {
+let mut row:GenericCase=GenericCase {length:10,kind:1,number:0,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:1,error:ExecutionOutcome::InvalidTarget,patch:47,mutate_source:false,size:IntegerSize::EightBytes};
+row.input[0]=20;
+row.input[1]=9;
+row.input[2]=77;
+row.input[3]=65;
+row.input[4]=73;
+row.input[5]=78;
+row.input[7]=164;
+row.input[8]=142;
+let result:i32=ge_check(row);result
+}
+machine SizeOfPriorObjectTypeSuite::null_name_control(&mut self)->i32 {
+let mut row:GenericCase=GenericCase {length:10,kind:1,number:0,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:1,error:ExecutionOutcome::InvalidTarget,patch:47,mutate_source:false,size:IntegerSize::EightBytes};
+row.input[0]=20;
+row.input[1]=9;
+row.input[2]=77;
+row.input[3]=65;
+row.input[4]=73;
+row.input[5]=78;
+row.input[7]=164;
+row.input[8]=142;
+row.error=ExecutionOutcome::Success;
+let result:i32=ge_check(row);result
+}
+machine SizeOfPriorObjectTypeSuite::malformed_owned_buffer_metadata_positive(&mut self)->i32 {
+let mut row:GenericCase=GenericCase {length:24,kind:1,number:3,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:2,error:ExecutionOutcome::Success,patch:48,mutate_source:false,size:IntegerSize::EightBytes};
+row.input[0]=8;
+row.input[1]=79;
+row.input[2]=66;
+row.input[3]=74;
+row.input[4]=95;
+row.input[5]=17;
+row.input[6]=5;
+row.input[7]=10;
+row.input[8]=2;
+row.input[9]=65;
+row.input[10]=66;
+row.input[11]=20;
+row.input[12]=12;
+row.input[13]=77;
+row.input[14]=65;
+row.input[15]=73;
+row.input[16]=78;
+row.input[18]=164;
+row.input[19]=142;
+row.input[20]=79;
+row.input[21]=66;
+row.input[22]=74;
+row.input[23]=95;
+let result:i32=ge_check(row);result
+}
+machine SizeOfPriorObjectTypeSuite::malformed_owned_buffer_metadata_control(&mut self)->i32 {
+let mut row:GenericCase=GenericCase {length:24,kind:1,number:3,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:2,error:ExecutionOutcome::Success,patch:48,mutate_source:false,size:IntegerSize::EightBytes};
+row.input[0]=8;
+row.input[1]=79;
+row.input[2]=66;
+row.input[3]=74;
+row.input[4]=95;
+row.input[5]=17;
+row.input[6]=5;
+row.input[7]=10;
+row.input[8]=2;
+row.input[9]=65;
+row.input[10]=66;
+row.input[11]=20;
+row.input[12]=12;
+row.input[13]=77;
+row.input[14]=65;
+row.input[15]=73;
+row.input[16]=78;
+row.input[18]=164;
+row.input[19]=142;
+row.input[20]=79;
+row.input[21]=66;
+row.input[22]=74;
+row.input[23]=95;
+row.number=4;
+let result:i32=ge_check(row);result
+}
+machine SizeOfPriorObjectTypeSuite::malformed_package_metadata_positive(&mut self)->i32 {
+let mut row:GenericCase=GenericCase {length:19,kind:1,number:4,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:2,error:ExecutionOutcome::Success,patch:49,mutate_source:false,size:IntegerSize::EightBytes};
+row.input[0]=8;
+row.input[1]=79;
+row.input[2]=66;
+row.input[3]=74;
+row.input[4]=95;
+row.input[6]=20;
+row.input[7]=12;
+row.input[8]=77;
+row.input[9]=65;
+row.input[10]=73;
+row.input[11]=78;
+row.input[13]=164;
+row.input[14]=142;
+row.input[15]=79;
+row.input[16]=66;
+row.input[17]=74;
+row.input[18]=95;
+let result:i32=ge_check(row);result
+}
+machine SizeOfPriorObjectTypeSuite::malformed_package_metadata_control(&mut self)->i32 {
+let mut row:GenericCase=GenericCase {length:19,kind:1,number:4,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:2,error:ExecutionOutcome::Success,patch:49,mutate_source:false,size:IntegerSize::EightBytes};
+row.input[0]=8;
+row.input[1]=79;
+row.input[2]=66;
+row.input[3]=74;
+row.input[4]=95;
+row.input[6]=20;
+row.input[7]=12;
+row.input[8]=77;
+row.input[9]=65;
+row.input[10]=73;
+row.input[11]=78;
+row.input[13]=164;
+row.input[14]=142;
+row.input[15]=79;
+row.input[16]=66;
+row.input[17]=74;
+row.input[18]=95;
+row.number=5;
+let result:i32=ge_check(row);result
+}
+machine SizeOfPriorObjectTypeSuite::malformed_method_body_metadata_positive(&mut self)->i32 {
+let mut row:GenericCase=GenericCase {length:21,kind:1,number:8,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:2,error:ExecutionOutcome::Success,patch:50,mutate_source:false,size:IntegerSize::EightBytes};
+row.input[0]=20;
+row.input[1]=7;
+row.input[2]=79;
+row.input[3]=66;
+row.input[4]=74;
+row.input[5]=95;
+row.input[6]=7;
+row.input[7]=222;
+row.input[8]=20;
+row.input[9]=12;
+row.input[10]=77;
+row.input[11]=65;
+row.input[12]=73;
+row.input[13]=78;
+row.input[15]=164;
+row.input[16]=142;
+row.input[17]=79;
+row.input[18]=66;
+row.input[19]=74;
+row.input[20]=95;
+let result:i32=ge_check(row);result
+}
+machine SizeOfPriorObjectTypeSuite::malformed_method_body_metadata_control(&mut self)->i32 {
+let mut row:GenericCase=GenericCase {length:21,kind:1,number:8,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:2,error:ExecutionOutcome::Success,patch:50,mutate_source:false,size:IntegerSize::EightBytes};
+row.input[0]=20;
+row.input[1]=7;
+row.input[2]=79;
+row.input[3]=66;
+row.input[4]=74;
+row.input[5]=95;
+row.input[6]=7;
+row.input[7]=222;
+row.input[8]=20;
+row.input[9]=12;
+row.input[10]=77;
+row.input[11]=65;
+row.input[12]=73;
+row.input[13]=78;
+row.input[15]=164;
+row.input[16]=142;
+row.input[17]=79;
+row.input[18]=66;
+row.input[19]=74;
+row.input[20]=95;
+row.number=9;
+let result:i32=ge_check(row);result
+}
+machine SizeOfPriorObjectTypeSuite::region_metadata_no_access_positive(&mut self)->i32 {
+let mut row:GenericCase=GenericCase {length:23,kind:1,number:10,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:2,error:ExecutionOutcome::Success,patch:51,mutate_source:false,size:IntegerSize::EightBytes};
+row.input[0]=91;
+row.input[1]=128;
+row.input[2]=79;
+row.input[3]=66;
+row.input[4]=74;
+row.input[5]=95;
+row.input[8]=10;
+row.input[9]=16;
+row.input[10]=20;
+row.input[11]=12;
+row.input[12]=77;
+row.input[13]=65;
+row.input[14]=73;
+row.input[15]=78;
+row.input[17]=164;
+row.input[18]=142;
+row.input[19]=79;
+row.input[20]=66;
+row.input[21]=74;
+row.input[22]=95;
+let result:i32=ge_check(row);result
+}
+machine SizeOfPriorObjectTypeSuite::region_metadata_no_access_control(&mut self)->i32 {
+let mut row:GenericCase=GenericCase {length:23,kind:1,number:10,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:2,error:ExecutionOutcome::Success,patch:51,mutate_source:false,size:IntegerSize::EightBytes};
+row.input[0]=91;
+row.input[1]=128;
+row.input[2]=79;
+row.input[3]=66;
+row.input[4]=74;
+row.input[5]=95;
+row.input[8]=10;
+row.input[9]=16;
+row.input[10]=20;
+row.input[11]=12;
+row.input[12]=77;
+row.input[13]=65;
+row.input[14]=73;
+row.input[15]=78;
+row.input[17]=164;
+row.input[18]=142;
+row.input[19]=79;
+row.input[20]=66;
+row.input[21]=74;
+row.input[22]=95;
+row.number=11;
+let result:i32=ge_check(row);result
+}
+machine SizeOfPriorObjectTypeSuite::legacy_processor_code12_positive(&mut self)->i32 {
+let mut row:GenericCase=GenericCase {length:26,kind:1,number:12,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:2,error:ExecutionOutcome::Success,patch:52,mutate_source:false,size:IntegerSize::EightBytes};
+row.input[0]=91;
+row.input[1]=131;
+row.input[2]=11;
+row.input[3]=79;
+row.input[4]=66;
+row.input[5]=74;
+row.input[6]=95;
+row.input[13]=20;
+row.input[14]=12;
+row.input[15]=77;
+row.input[16]=65;
+row.input[17]=73;
+row.input[18]=78;
+row.input[20]=164;
+row.input[21]=142;
+row.input[22]=79;
+row.input[23]=66;
+row.input[24]=74;
+row.input[25]=95;
+let result:i32=ge_check(row);result
+}
+machine SizeOfPriorObjectTypeSuite::legacy_processor_code12_control(&mut self)->i32 {
+let mut row:GenericCase=GenericCase {length:26,kind:1,number:12,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:2,error:ExecutionOutcome::Success,patch:52,mutate_source:false,size:IntegerSize::EightBytes};
+row.input[0]=91;
+row.input[1]=131;
+row.input[2]=11;
+row.input[3]=79;
+row.input[4]=66;
+row.input[5]=74;
+row.input[6]=95;
+row.input[13]=20;
+row.input[14]=12;
+row.input[15]=77;
+row.input[16]=65;
+row.input[17]=73;
+row.input[18]=78;
+row.input[20]=164;
+row.input[21]=142;
+row.input[22]=79;
+row.input[23]=66;
+row.input[24]=74;
+row.input[25]=95;
+row.number=13;
+let result:i32=ge_check(row);result
+}
+machine SizeOfPriorObjectTypeSuite::malformed_buffer_field_metadata_positive(&mut self)->i32 {
+let mut row:GenericCase=GenericCase {length:19,kind:1,number:14,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:2,error:ExecutionOutcome::Success,patch:53,mutate_source:false,size:IntegerSize::EightBytes};
+row.input[0]=8;
+row.input[1]=79;
+row.input[2]=66;
+row.input[3]=74;
+row.input[4]=95;
+row.input[6]=20;
+row.input[7]=12;
+row.input[8]=77;
+row.input[9]=65;
+row.input[10]=73;
+row.input[11]=78;
+row.input[13]=164;
+row.input[14]=142;
+row.input[15]=79;
+row.input[16]=66;
+row.input[17]=74;
+row.input[18]=95;
+let result:i32=ge_check(row);result
+}
+machine SizeOfPriorObjectTypeSuite::malformed_buffer_field_metadata_control(&mut self)->i32 {
+let mut row:GenericCase=GenericCase {length:19,kind:1,number:14,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:2,error:ExecutionOutcome::Success,patch:53,mutate_source:false,size:IntegerSize::EightBytes};
+row.input[0]=8;
+row.input[1]=79;
+row.input[2]=66;
+row.input[3]=74;
+row.input[4]=95;
+row.input[6]=20;
+row.input[7]=12;
+row.input[8]=77;
+row.input[9]=65;
+row.input[10]=73;
+row.input[11]=78;
+row.input[13]=164;
+row.input[14]=142;
+row.input[15]=79;
+row.input[16]=66;
+row.input[17]=74;
+row.input[18]=95;
+row.number=15;
+let result:i32=ge_check(row);result
+}

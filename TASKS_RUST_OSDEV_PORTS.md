@@ -812,6 +812,13 @@ replacement, Field metadata without region access, Field-target rejection,
 Owned Local sources and seeded RefOf/Index argument redirection. Component
 receipts retain their original source identities.
 
+[SizeOf opcode execution](source/libraries/acpi/interpreter/execution/sizeof.PORT.md)
+is typechecked in an isolated branch. Its original 362-pair run executed all
+724 entries, with 361 complete pairs passing and one positive failing because
+the Package-tail fixture expected InvalidState instead of BadEncoding. The
+complete failed terminal evidence and 160 source hashes are retained. Fixture
+correction and a passing full replay remain pending; ACPI-005 stays open.
+
 ## Phase 5 — only after the corpus above is healthy
 
 - [ ] Port selected pure pieces and tests from APIC, xHCI, USB, PS/2, VGA, and
