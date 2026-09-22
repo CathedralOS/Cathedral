@@ -138,7 +138,17 @@
         "2096:do_to_dec_hex_string": {
           "anchor": "fn do_to_dec_hex_string(&self, context: &mut MethodContext, op: OpInFlight) -> Result<(), AmlError> {",
           "disposition": "pending",
-          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+          "reason": "Explicit decimal/hex String opcode composition is transcribed for inline and canonical basic operands, with transparent resolution, direct target replacement and atomic retirement. Checked execution and complete Field/upstream behavior remain pending.",
+          "targets": [
+            {
+              "anchor": "pub machine retire_numeric_string(",
+              "path": "source/libraries/acpi/interpreter/execution/numeric_string_execution.omg"
+            },
+            {
+              "anchor": "# Explicit numeric String opcode execution",
+              "path": "source/libraries/acpi/interpreter/execution/numeric-strings.PORT.md"
+            }
+          ]
         },
         "20:object": {
           "anchor": "pub mod object;",

@@ -1,0 +1,129 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Modified do_to_dec_hex_string composition from rust-osdev/acpi
+// 257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5, src/aml/mod.rs:2096.
+// Copyright 2018 Isaac Woods. Primary rules: ACPI 6.6 19.6.139-140 and 19.3.5.5.
+module numeric_string_execution;
+use aml::model::ObjectStore;
+use aml::model::Value;
+use aml::model::Object;
+use aml::model::ByteBlock;
+use aml::model::StringStorage;
+use aml::model::Outcome;
+use aml::model::ReferenceState;
+use aml::object_references::unwrap_transparent;
+use aml::object_numeric_strings;
+use aml::object_numeric_strings::NumericStringResult;
+use aml::object_conversions::ConversionFailure;
+use execution_model::ExecutionOutcome;
+use execution_model::Operand;
+use execution_model::Frame;
+use execution_model::Target;
+use execution_model::Binding;
+use generic_target_bridge::write_generic_target;
+use generic_targets::select_target;
+use generic_target_values::classify_target;
+use generic_target_model::TargetSelection;
+use generic_target_model::TargetAction;
+use named_store::conversion_outcome;
+use operands::contribute_operand;
+use integer_helpers::integers::IntegerSize;
+use integer_helpers::integers::IntegerResult;
+use integer_helpers::string_numbers::NumberFormat;
+use integer_helpers::string_numbers::integer_to_string;
+
+data NumericStringPrepared [copy] {outcome:ExecutionOutcome;length:u64;bytes:[u8;256];}
+data NumericStringStage [copy] {store:ObjectStore;frame:Frame;}
+
+// Evaluate/format the complete source before target admission or allocation.
+// Publish only after the fresh result, copy target and parent contribution all
+// succeed. Operand evaluation and earlier AML statements precede this boundary.
+pub machine retire_numeric_string(input:&[u8;1024],store:&mut ObjectStore,frame:&mut Frame,source:Operand,target:Target,format:NumberFormat)->ExecutionOutcome {
+ let prepared:NumericStringPrepared=nse_prepare(input,frame.source_length,frame.body.unit,store,frame.size,source,format);
+ transition prepared.outcome==ExecutionOutcome::Success {true -> target(input,store,frame,prepared,target) _ -> (prepared.outcome)}
+ state target(input:&[u8;1024],store:&mut ObjectStore,frame:&mut Frame,prepared:NumericStringPrepared,target:Target)->ExecutionOutcome {
+  let admitted:ExecutionOutcome=nse_original_target(store,frame,target);
+  transition admitted==ExecutionOutcome::Success {true -> stage(input,store,frame,prepared,target) _ -> (admitted)}
+ }
+ state stage(input:&[u8;1024],store:&mut ObjectStore,frame:&mut Frame,prepared:NumericStringPrepared,target:Target)->ExecutionOutcome {
+  let mut staged:NumericStringStage=NumericStringStage {store:store,frame:frame};
+  let result:ExecutionOutcome=nse_apply(input,&mut staged,prepared,target);
+  transition result==ExecutionOutcome::Success {true -> publish(store,frame,staged) _ -> (result)}
+ }
+ state publish(store:&mut ObjectStore,frame:&mut Frame,staged:NumericStringStage)->ExecutionOutcome {store=staged.store;frame=staged.frame;ExecutionOutcome::Success}
+}
+
+machine nse_prepare(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,size:IntegerSize,operand:Operand,format:NumberFormat)->NumericStringPrepared {
+ transition operand {
+  Operand::Uninitialized -> (NumericStringPrepared {outcome:ExecutionOutcome::Uninitialized})
+  Operand::Integer {number} -> scalar(size,number,format)
+  Operand::Object {object_id} -> object(input,length,unit,store,size,object_id,format)
+ }
+ state scalar(size:IntegerSize,number:u64,format:NumberFormat)->NumericStringPrepared {
+  let mut prepared:NumericStringPrepared;
+  let formatted:IntegerResult=integer_to_string(size,number,format,256,&mut prepared.bytes);
+  prepared.length=formatted.value;
+  transition formatted.error {0 -> (prepared) 4 -> (NumericStringPrepared {outcome:ExecutionOutcome::Capacity}) _ -> (NumericStringPrepared {outcome:ExecutionOutcome::InvalidState})}
+ }
+ state object(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,size:IntegerSize,id:u64,format:NumberFormat)->NumericStringPrepared {
+  let found:ReferenceState=unwrap_transparent(&store.space,id,64);
+  transition found.outcome {
+   Outcome::Success -> resolved(input,length,unit,store,size,found.object,format)
+   Outcome::ReferenceCycle -> (NumericStringPrepared {outcome:ExecutionOutcome::ReferenceCycle})
+   Outcome::WorkLimit -> (NumericStringPrepared {outcome:ExecutionOutcome::WorkLimit})
+   _ -> (NumericStringPrepared {outcome:ExecutionOutcome::InvalidState})
+  }
+ }
+ state resolved(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,size:IntegerSize,id:u64,format:NumberFormat)->NumericStringPrepared {
+  transition id<64 {true -> value(input,length,unit,store,size,id,format) _ -> (NumericStringPrepared {outcome:ExecutionOutcome::InvalidState})}
+ }
+ state value(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,size:IntegerSize,id:u64,format:NumberFormat)->NumericStringPrepared {
+  transition store.space.objects[id].value {Value::Uninitialized -> (NumericStringPrepared {outcome:ExecutionOutcome::Uninitialized}) _ -> convert(input,length,unit,store,size,id,format)}
+ }
+ state convert(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,size:IntegerSize,id:u64,format:NumberFormat)->NumericStringPrepared {
+  let converted:NumericStringResult=object_numeric_strings::convert(input,length,unit,store,id,size,format);
+  transition converted {
+   NumericStringResult::String {length,bytes} -> (NumericStringPrepared {length:length,bytes:bytes})
+   NumericStringResult::Failure {reason} -> failed(reason)
+  }
+ }
+ state failed(reason:ConversionFailure)->NumericStringPrepared {let error:ExecutionOutcome=conversion_outcome(reason);NumericStringPrepared {outcome:error}}
+}
+
+// A dangling target must not become valid merely because the result occupied
+// its old ID. Null discards only the write; explicit conversion replaces types.
+machine nse_original_target(store:&ObjectStore,frame:&Frame,target:Target)->ExecutionOutcome {
+ transition target {Target::Null -> (ExecutionOutcome::Success)
+  Target::Debug -> (ExecutionOutcome::UnresolvedService) _ -> select(store,frame,target)}
+ state select(store:&ObjectStore,frame:&Frame,target:Target)->ExecutionOutcome {
+  let selected:TargetSelection=select_target(frame,target);
+  let action:TargetAction=classify_target(store,selected,Operand::Uninitialized,true);
+  transition action {
+   TargetAction::Failure {outcome} -> (outcome)
+   TargetAction::CopyTo {object_id,result_binding} -> existing(store,object_id)
+   TargetAction::StoreNamed {object_id} -> existing(store,object_id)
+   TargetAction::Replace {binding} -> binding(store,binding)
+   TargetAction::NoWrite -> (ExecutionOutcome::Success)
+  }
+ }
+ state binding(store:&ObjectStore,binding:Binding)->ExecutionOutcome {transition binding {Binding::Cell {cell_id} -> existing(store,cell_id) _ -> (ExecutionOutcome::Success)}}
+ state existing(store:&ObjectStore,id:u64)->ExecutionOutcome {
+  let count:u64=store.space.object_count;
+  transition count<=64 && id<count && id<64 {true -> (ExecutionOutcome::Success) _ -> (ExecutionOutcome::MissingObject)}
+ }
+}
+
+machine nse_apply(input:&[u8;1024],staged:&mut NumericStringStage,prepared:NumericStringPrepared,target:Target)->ExecutionOutcome {
+ let id:u64=staged.store.space.object_count;
+ transition id<64 && staged.store.space.count<=32 && prepared.length<=256 {true -> allocate(input,staged,prepared,target,id) _ -> (ExecutionOutcome::Capacity)}
+ state allocate(input:&[u8;1024],staged:&mut NumericStringStage,prepared:NumericStringPrepared,target:Target,id:u64)->ExecutionOutcome {
+  staged.store.space.objects[id]=Object {value:Value::String {string_storage:StringStorage::Owned {string_owner:id}}};
+  staged.store.bytes.blocks[id]=ByteBlock {initialized:true,length:prepared.length,bytes:prepared.bytes};
+  staged.store.space.object_count=id+1;
+  transition target {Target::Null -> contribute(staged,id) _ -> copy(input,staged,target,id)}
+ }
+ state copy(input:&[u8;1024],staged:&mut NumericStringStage,target:Target,id:u64)->ExecutionOutcome {
+  let written:ExecutionOutcome=write_generic_target(input,&mut staged.store,&mut staged.frame,target,Operand::Object {object_id:id},true);
+  transition written==ExecutionOutcome::Success {true -> contribute(staged,id) _ -> (written)}
+ }
+ state contribute(staged:&mut NumericStringStage,id:u64)->ExecutionOutcome {let result:ExecutionOutcome=contribute_operand(&mut staged.frame,Operand::Object {object_id:id});result}
+}

@@ -359,6 +359,14 @@ record retains 100 String results and two pinned literal-construction panics.
 Explicit formatting and width/capacity differences are documented. Operand
 resolution, target writes and opcode retirement remain pending; counts are unchanged.
 
+[Numeric String opcode execution](interpreter/execution/numeric-strings.PORT.md)
+is transcribed on an isolated branch: both decimal/hexadecimal opcodes prepare
+complete String results, replace explicit targets and publish retirement
+atomically. Its 160 AML and 171 whole-state cases accompany all 315 retained
+Mid/executor regression pairs. The public Rust receipt records 124 observations,
+82 value/state agreements and all 42 nonagreements. Checked Omega execution
+remains pending; the complete source anchor and aggregate counts are unchanged.
+
 [Direct String-name lookup](aml/string-lookup.PORT.md) joins canonical String admission, textual
 ASL name parsing and scoped namespace search, returning an object ID and path.
 All 97 checked pairs and three constant pairs pass, including scope validation,

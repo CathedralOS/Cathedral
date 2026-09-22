@@ -30,6 +30,8 @@ use control::enter_block;
 use operator_specs::compute_integer;
 use to_integer_execution::retire_to_integer;
 use mid_execution::retire_mid;
+use numeric_string_execution::retire_numeric_string;
+use integer_helpers::string_numbers::NumberFormat;
 use integer_helpers::integers::IntegerResult;
 pub machine retire_operation(input:&[u8;1024],space:&mut ObjectStore,frame:&mut Frame,operation:Operation)->ExecutionOutcome {
  transition operation.opcode {
@@ -38,6 +40,8 @@ pub machine retire_operation(input:&[u8;1024],space:&mut ObjectStore,frame:&mut 
   0xa2 -> branch(input,space,frame,operation.opcode,operation.body_end,operation.parent_end,operation.predicate,operation.operands[0])
   0x70 -> copy(input,space,frame,operation.first_target,operation.operands[0],false)
   0x99 -> integer_conversion_retirement(input,space,frame,operation.operands[0],operation.first_target)
+  0x97 -> numeric_string_retirement(input,space,frame,operation,NumberFormat::Decimal)
+  0x98 -> numeric_string_retirement(input,space,frame,operation,NumberFormat::Hexadecimal)
   0x9e -> mid_retirement(input,space,frame,operation)
   0x9d -> copy(input,space,frame,operation.first_target,operation.operands[0],true)
   0x75 -> increment(input,space,frame,operation.opcode,operation.target_arity,operation.first_target,operation.second_target)
@@ -49,6 +53,9 @@ pub machine retire_operation(input:&[u8;1024],space:&mut ObjectStore,frame:&mut 
  }
  state mid_retirement(input:&[u8;1024],space:&mut ObjectStore,frame:&mut Frame,operation:Operation)->ExecutionOutcome {
   let result:ExecutionOutcome=retire_mid(input,space,frame,operation.operands[0],operation.operands[1],operation.operands[2],operation.first_target);result
+ }
+ state numeric_string_retirement(input:&[u8;1024],space:&mut ObjectStore,frame:&mut Frame,operation:Operation,format:NumberFormat)->ExecutionOutcome {
+  let result:ExecutionOutcome=retire_numeric_string(input,space,frame,operation.operands[0],operation.first_target,format);result
  }
  state returned(input:&[u8;1024],space:&mut ObjectStore,frame:&mut Frame,operand:Operand)->ExecutionOutcome {
   let admitted:ExecutionOutcome=validate_operand(input,frame.source_length,frame.body.unit,space,operand);let normalized:Operand=normalized_operand(space,frame.size,operand);
