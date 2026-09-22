@@ -2,8 +2,12 @@
 
 The [port contract](../../../../../source/libraries/acpi/interpreter/execution/to-string.PORT.md)
 defines source/Length conversion, explicit target replacement, owned results and
-atomic retirement. **Omega execution is pending.** Fixture generation and public
-Rust receipt verification pass; neither establishes an Omega behavior pass.
+atomic retirement. **Six focused AML pairs pass; full-corpus execution is pending.**
+The [retained receipt](checked/focused-execution6.json) binds all 145 current
+inputs and the pinned runner. Its six positive bodies and six controls execute
+Integer source conversion, NUL termination, hexadecimal String Length, named
+Buffer replacement, Local publication and nested expressions. Independent
+verification passed; this selected result does not cover the full corpus.
 
 The corpus has 460 positive/control pairs: 66 new bytecode and 79 new complete
 ObjectStore/Frame retirement cases, plus 74 Mid, 42 Mid retirement, 79 integer,
@@ -14,6 +18,7 @@ pinned runner checks authored and dependency bodies before evaluating entries.
 
 ```sh
 python3 tools/ports/acpi/interpreter/to-string-execution/fixtures.py
+python3 tools/ports/acpi/interpreter/to-string-execution/verify_record.py tools/ports/acpi/interpreter/to-string-execution/checked/focused-execution6.json --require-binaries
 python3 tools/ports/acpi/interpreter/to-string-execution/check.py --runner /path/to/cathedral-acpi-checked-runner --batch-size 128 --workers 1
 python3 tools/ports/acpi/interpreter/to-string-execution/verify_record.py --require-binaries
 python3 tools/ports/acpi/interpreter/to-string-execution/public/check.py --acpi-source /path/to/pinned/acpi

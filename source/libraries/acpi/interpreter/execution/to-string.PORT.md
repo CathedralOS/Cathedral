@@ -1,10 +1,11 @@
 # ToString opcode execution
 
-Status: **transcribed; checked Omega execution pending**. Opcode `0x9c` takes
+Status: **typechecked; six focused AML pairs tested, full corpus pending**. Opcode `0x9c` takes
 two operands and one target. The authored corpus contains 66 Program scenarios
 and 79 complete-store/frame retirement scenarios. Another 315 unchanged Mid,
 integer, generic, pipeline and ToInteger scenarios are selected for regression
-execution. Authored cases and public Rust observations are not Omega passes.
+execution. Authored cases and public Rust observations are not Omega passes;
+the focused checked result below covers only its exact six selections.
 
 `to_string_execution.omg` adapts rust-osdev/acpi
 [`257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5`, `src/aml/mod.rs:2068`](https://github.com/rust-osdev/acpi/blob/257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5/src/aml/mod.rs#L2068),
@@ -90,16 +91,22 @@ where this explicit conversion produces a String. Other negative cases retain
 their raw errors rather than being counted as successful semantic comparisons.
 No private Rust algorithm is copied into the public probe.
 
-The current candidate's checked Omega execution is pending. Earlier direct
-conversion receipts remain scoped to their unchanged helper implementations;
-no new constant-evaluator, native Omega or hardware result is claimed.
+The current candidate's [focused checked receipt](../../../../../tools/ports/acpi/interpreter/to-string-execution/checked/focused-execution6.json)
+passes six AML pairs: `integer_source_32`, `nul_64`, `hex_length_64`,
+`named_buffer_replaced_64`, `local_target_64` and `nested_64`. All twelve
+positive/control entries passed after full authored/dependency-body checking,
+with exact 145-input and runner verification. The run took 4,915.453 seconds;
+maximum observed fuel was 108,685 and peak live cells were 83,205. The full
+460-pair candidate corpus remains pending. Earlier direct conversion receipts
+retain their original scope; no new constant-evaluator, native or hardware
+result is claimed.
 
 The original six-case AML selection failed compilation with an Outcome versus
 ExecutionOutcome equality diagnostic. Its exact failed package and unchanged
 145-input binding are [retained](../../../../../tools/ports/acpi/interpreter/to-string-execution/diagnostics/prepared-name-collision/README.md).
 The candidate gives the adapter's private preparation type a unique name to
-avoid collision with the imported loader Prepared type. Candidate checking and
-execution remain pending; the diagnostic does not establish a behavior result.
+avoid collision with the imported loader Prepared type. The focused candidate
+AML receipt above passes; the diagnostic itself establishes no behavior result.
 The original retirement package passed all eight selected whole-state pairs
 in 828.306 seconds, with exact source/build/body/runner verification. The retained
 mixed receipt still has overall exit 1 because its AML package failed compilation.

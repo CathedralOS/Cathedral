@@ -697,10 +697,11 @@ and 11 documented NUL/UTF-8 differences. Reference evaluation, target writes and
 opcode execution remain pending; aggregate source counts are unchanged.
 
 [ToString opcode execution](source/libraries/acpi/interpreter/execution/to-string.PORT.md)
-is transcribed on an isolated branch: source/Length conversion, fresh owned
+is typechecked on an isolated branch: source/Length conversion, fresh owned
 String results, explicit target type replacement and staged retirement. Its
 66 bytecode and 79 whole-state cases are authored, with 315 retained regression
-cases selected; checked Omega execution is pending. The 56 public Rust
+cases selected. Six focused AML positive/control pairs pass with exact source
+and runner verification; the full 460-pair run remains pending. The 56 public Rust
 observations retain 16 value/state agreements and all nonagreements. The source
 anchor and aggregate counts remain pending.
 
