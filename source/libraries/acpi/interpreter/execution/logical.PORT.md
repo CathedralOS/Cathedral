@@ -1,11 +1,18 @@
 # Logical opcode execution
 
-Status: **transcribed; checked Omega execution pending**. Nine existing logical
+Status: **transcribed; complete checked Omega execution pending**. Nine existing logical
 opcodes now dispatch through `logical_execution.omg` rather than the strict
 Integer-only retirement path. Authored coverage comprises 221 Program scenarios
 and 138 complete ObjectStore/Frame retirement scenarios, with 315 unchanged
 Mid/integer/generic/pipeline/ToInteger regression scenarios selected separately.
-These are authored cases, not Omega passes.
+Nine selected direct retirement pairs passed in the original focused run, with
+maximum fuel 517,363 and every positive/control observed. Its eight AML pairs
+failed compilation because a generated negative control exceeded `u64::MAX`;
+no AML execution result is claimed. The local renderer now uses zero for those
+all-ones controls, leaving production and positive bodies unchanged. The
+[retained diagnostic](../../../../../tools/ports/acpi/interpreter/logical-execution/diagnostics/control-overflow/)
+records the original mixed result and exact source scope. Corrected AML and
+complete-corpus checked results remain pending.
 
 The adapter modifies rust-osdev/acpi
 [`257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5`, `src/aml/mod.rs:1972`](https://github.com/rust-osdev/acpi/blob/257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5/src/aml/mod.rs#L1972),

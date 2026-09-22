@@ -1,6 +1,6 @@
 {
   "agreements": 61,
-  "binary": "/private/tmp/cathedral-logical-public-target/release/cathedral-acpi-public-execution",
+  "binary": "/private/tmp/cathedral-logical-bounded-public-target/release/cathedral-acpi-public-execution",
   "binary_sha256": "6d116bb6154f3f2358de5cee94836e222761a7038a1f679631cbc3d49ae569c3",
   "build_command": [
     "/Users/zcanann/.rustup/toolchains/nightly-2026-09-04-aarch64-apple-darwin/bin/cargo",
@@ -11,11 +11,11 @@
     "--jobs",
     "2",
     "--manifest-path",
-    "/var/folders/3c/8v1q6rv5745bgbx96v3bn1jc0000gn/T/cathedral-logical-public-gx2yxww1/Cargo.toml",
+    "/var/folders/3c/8v1q6rv5745bgbx96v3bn1jc0000gn/T/cathedral-logical-public-q3sidsh2/Cargo.toml",
     "--target-dir",
-    "/private/tmp/cathedral-logical-public-target"
+    "/private/tmp/cathedral-logical-bounded-public-target"
   ],
-  "build_output": "   Compiling scopeguard v1.2.0\n   Compiling bitflags v2.13.2\n   Compiling lock_api v0.4.14\n   Compiling bit_field v0.10.3\n   Compiling spinning_top v0.3.0\n   Compiling pci_types v0.10.1\n   Compiling byteorder v1.5.0\n   Compiling smallvec v1.16.1\n   Compiling log v0.4.34\n   Compiling acpi v6.1.1 (/Users/zcanann/Documents/Projects/Cathedral/reference_code/rust-osdev/acpi)\n   Compiling cathedral-acpi-public-execution v0.0.0 (/var/folders/3c/8v1q6rv5745bgbx96v3bn1jc0000gn/T/cathedral-logical-public-gx2yxww1)\nwarning: stripping debug info with `rust-objcopy` failed: signal: 6 (SIGABRT)\n  |\n  = note: dyld[16151]: Library not loaded: @rpath/libLLVM.dylib\n            Referenced from: <D6B3C499-A2AF-3E42-8F77-C42BD658AAB5> /Users/zcanann/.rustup/toolchains/nightly-2026-09-04-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/bin/rust-objcopy\n            Reason: tried: '/Users/zcanann/.rustup/toolchains/nightly-2026-09-04-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/bin/../lib/libLLVM.dylib' (no such file), '/Users/zcanann/.rustup/toolchains/nightly-2026-09-04-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/bin/../lib/libLLVM.dylib' (no such file), '/Users/zcanann/lib/libLLVM.dylib' (no such file), '/usr/local/lib/libLLVM.dylib' (no such file), '/usr/lib/libLLVM.dylib' (no such file, not in dyld cache)\n          \n\nwarning: `cathedral-acpi-public-execution` (bin \"cathedral-acpi-public-execution\") generated 1 warning\n    Finished `release` profile [optimized] target(s) in 5.42s\n",
+  "build_output": "   Compiling scopeguard v1.2.0\n   Compiling bitflags v2.13.2\n   Compiling lock_api v0.4.14\n   Compiling bit_field v0.10.3\n   Compiling spinning_top v0.3.0\n   Compiling pci_types v0.10.1\n   Compiling byteorder v1.5.0\n   Compiling log v0.4.34\n   Compiling smallvec v1.16.1\n   Compiling acpi v6.1.1 (/Users/zcanann/Documents/Projects/Cathedral/reference_code/rust-osdev/acpi)\n   Compiling cathedral-acpi-public-execution v0.0.0 (/var/folders/3c/8v1q6rv5745bgbx96v3bn1jc0000gn/T/cathedral-logical-public-q3sidsh2)\nwarning: stripping debug info with `rust-objcopy` failed: signal: 6 (SIGABRT)\n  |\n  = note: dyld[21860]: Library not loaded: @rpath/libLLVM.dylib\n            Referenced from: <D6B3C499-A2AF-3E42-8F77-C42BD658AAB5> /Users/zcanann/.rustup/toolchains/nightly-2026-09-04-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/bin/rust-objcopy\n            Reason: tried: '/Users/zcanann/.rustup/toolchains/nightly-2026-09-04-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/bin/../lib/libLLVM.dylib' (no such file), '/Users/zcanann/.rustup/toolchains/nightly-2026-09-04-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/bin/../lib/libLLVM.dylib' (no such file), '/Users/zcanann/lib/libLLVM.dylib' (no such file), '/usr/local/lib/libLLVM.dylib' (no such file), '/usr/lib/libLLVM.dylib' (no such file, not in dyld cache)\n          \n\nwarning: `cathedral-acpi-public-execution` (bin \"cathedral-acpi-public-execution\") generated 1 warning\n    Finished `release` profile [optimized] target(s) in 5.46s\n",
   "build_source": "[package]\nname=\"cathedral-acpi-public-execution\"\nversion=\"0.0.0\"\nedition=\"2024\"\npublish=false\n[dependencies]\nacpi={path=\"/Users/zcanann/Documents/Projects/Cathedral/reference_code/rust-osdev/acpi\"}\n",
   "cargo": "cargo 1.100.0-nightly (b2e9d5f9d 2026-09-02)\n",
   "nonagreements": [
@@ -7139,7 +7139,7 @@
     "tools/ports/acpi/interpreter/generic-execution/decoder_fixtures.py": "6f719cf60526dcda69421ec057786fbfc4f2907842e7d88aeec016c05607ad87",
     "tools/ports/acpi/interpreter/generic-execution/fixtures.py": "984afe7f99ca61d7a18ec0163ebd16658a694131309e9ced06813fef73db08ff",
     "tools/ports/acpi/interpreter/logical-execution/execution-cases.json": "5cb6ccdf2a8d7194d9f27c9ca02dfffcc78bf24f3993e2b1af195b85a87b8bce",
-    "tools/ports/acpi/interpreter/logical-execution/fixtures.py": "5f32ca1e4ee28a37e423ad0e9d8ec62a60db18f25a044e0d95580096c1b186ed",
+    "tools/ports/acpi/interpreter/logical-execution/fixtures.py": "5b6bfe7c8e2885d879044e6d93315777c81ffe50201bed00de2467c7c8de7c9f",
     "tools/ports/acpi/interpreter/logical-execution/public/check.py": "d3b8101e68576415a525d953981f94c41b57232abb0837bb358e103f1bb26824",
     "tools/ports/acpi/interpreter/logical-execution/toolchain.json": "f28d02436e4cdd6aaeb893c248219899174c5a01c0870e56af6ec7d2c98e7aa8",
     "tools/ports/acpi/interpreter/mid-execution/fixtures.py": "0288dd15936cdf5cba38193c2221013919a3380a2911b0f9e7b3eb699f2a4dd9",
