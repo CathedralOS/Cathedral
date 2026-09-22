@@ -1,0 +1,21 @@
+{
+  "stage": "Source/render audit only; no checked execution",
+  "original_revision": "c87658c3e70b4ba1fae29839c4741ec53fdc309c",
+  "changed_inputs": {
+    "tools/ports/acpi/interpreter/logical-execution/fixtures.py": {
+      "old": "5f32ca1e4ee28a37e423ad0e9d8ec62a60db18f25a044e0d95580096c1b186ed",
+      "new": "5b6bfe7c8e2885d879044e6d93315777c81ffe50201bed00de2467c7c8de7c9f"
+    }
+  },
+  "input_count": 146,
+  "production_unchanged": true,
+  "rows_unchanged": true,
+  "entry_names_unchanged": true,
+  "positive_bodies_unchanged": true,
+  "control_assignment_count": 66,
+  "old_assignment": "row.number=18446744073709551616;",
+  "new_assignment": "row.number=0;",
+  "legacy_source_sha256": "36a75f1a6229697bfc4db7dab36d7474e721aac3b9df24f4b2fc76fa7db0e056",
+  "bounded_source_sha256": "c0e6af490bf4fd7187224e214c4a97da0743d746a74fe255e7ec7ac556a1e5fb",
+  "all_full_pairs": 674
+}

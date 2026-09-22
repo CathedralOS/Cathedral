@@ -135,14 +135,7 @@ def rows(group):
     if group=='bridge':return bridge_module().cases()
     return mid.rows({'mid':'execution','mid_bridge':'bridge'}.get(group,group))
 def render_rows(group,selected):
-    if group=='execution':
-        source,entries=ns.base.render(selected)
-        # The borrowed generator increments scalar expectations. True64 is
-        # already u64::MAX, so use zero for that changed-expectation control.
-        overflow='row.number=18446744073709551616;'
-        count=sum(row['error']=='Success' and row['kind'] in (1,4,5) and row['number']==MAX for row in selected)
-        assert source.count(overflow)==count
-        return source.replace(overflow,'row.number=0;'),entries
+    if group=='execution':return ns.base.render(selected)
     if group=='bridge':return bridge_module().render(selected)
     return mid.render_rows({'mid':'execution','mid_bridge':'bridge'}.get(group,group),selected)
 

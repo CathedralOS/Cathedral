@@ -727,7 +727,10 @@ context retirement remain pending; aggregate source counts are unchanged.
 is transcribed on an isolated branch: inline/canonical operand conversion,
 transparent references, exact-width Boolean results and parent contribution.
 Its 221 AML and 138 whole-state cases are authored, with 315 retained regression
-cases selected; checked Omega execution is pending. The 212 public Rust
+cases selected. Nine focused retirement pairs passed; the focused AML batch
+failed compilation on overflowing fixture controls. The renderer-only fix
+preserves production and positive bodies; corrected AML and full validation
+remain pending. The 212 public Rust
 observations retain 61 value/state agreements and all 151 nonagreements.
 The complete source anchor and aggregate counts remain pending.
 
