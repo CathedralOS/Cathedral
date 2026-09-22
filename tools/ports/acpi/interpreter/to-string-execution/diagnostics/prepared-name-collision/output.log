@@ -1,0 +1,2 @@
+checked compilation failed for package `cathedral-to-string-execution` with 1 diagnostic(s)
+  error: cannot compare `Outcome` and `ExecutionOutcome` with `==`/`!=`: the operands are different data types (equality requires both operands to be the same type)

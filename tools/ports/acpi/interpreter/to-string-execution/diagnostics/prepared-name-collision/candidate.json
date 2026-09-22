@@ -1,0 +1,30 @@
+{
+  "changed_inputs": {
+    "source/libraries/acpi/interpreter/execution/to_string_execution.omg": {
+      "original": "2d3a789e3f7e8ad29ac9388d93c9732682c41571779a3c5056b1f09f684eb9e6",
+      "candidate": "add3a548c9ed62c79da6a57e9c50d07bd24492461774c6444dd4d5db840b4dce"
+    },
+    "tools/ports/acpi/interpreter/to-string-execution/check.py": {
+      "original": "dc826b0871d456095e6364af4613290e39e792e2410e986ac4ccf0771cbb0986",
+      "candidate": "bbed078245ffa94d3be77d9abdb3b85d525b98850bde3afb99ab35f1644ca4ae"
+    }
+  },
+  "unchanged_inputs": 143,
+  "production_edit": "Exactly 32 Prepared identifiers renamed to ToStringPrepared",
+  "same_generated_execution_source_sha256": "591f2432e915c5fd66438ba341a3d8ca32e3a3d90a6f463a340a1947b7c6680b",
+  "same_execution_selections": [
+    "ExecutionToStringSuite::integer_source_32_positive=0",
+    "ExecutionToStringSuite::integer_source_32_control=1",
+    "ExecutionToStringSuite::nul_64_positive=0",
+    "ExecutionToStringSuite::nul_64_control=1",
+    "ExecutionToStringSuite::hex_length_64_positive=0",
+    "ExecutionToStringSuite::hex_length_64_control=1",
+    "ExecutionToStringSuite::named_buffer_replaced_64_positive=0",
+    "ExecutionToStringSuite::named_buffer_replaced_64_control=1",
+    "ExecutionToStringSuite::local_target_64_positive=0",
+    "ExecutionToStringSuite::local_target_64_control=1",
+    "ExecutionToStringSuite::nested_64_positive=0",
+    "ExecutionToStringSuite::nested_64_control=1"
+  ],
+  "execution_status": "pending"
+}

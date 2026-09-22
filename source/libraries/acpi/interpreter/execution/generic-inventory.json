@@ -133,7 +133,17 @@
         "2068:do_to_string": {
           "anchor": "fn do_to_string(&self, context: &mut MethodContext, op: OpInFlight) -> Result<(), AmlError> {",
           "disposition": "pending",
-          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+          "reason": "ToString opcode composition is transcribed: primary Buffer/Integer operand coercion, bounded ASCII prefix, fresh String, explicit target replacement and atomic retirement. Actual execution pending; Field evaluation and full upstream operation remain incomplete.",
+          "targets": [
+            {
+              "anchor": "pub machine retire_to_string(",
+              "path": "source/libraries/acpi/interpreter/execution/to_string_execution.omg"
+            },
+            {
+              "anchor": "pub machine buffer_to_string(",
+              "path": "source/libraries/acpi/interpreter/conversions.omg"
+            }
+          ]
         },
         "2096:do_to_dec_hex_string": {
           "anchor": "fn do_to_dec_hex_string(&self, context: &mut MethodContext, op: OpInFlight) -> Result<(), AmlError> {",

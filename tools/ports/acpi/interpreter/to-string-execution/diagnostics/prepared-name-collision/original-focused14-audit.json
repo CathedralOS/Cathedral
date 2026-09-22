@@ -1,0 +1,14 @@
+{
+  "scope": "Original 8772ff8 mixed result only; not renamed-candidate execution",
+  "record_sha256": "6b2bddafcba5b3e4a3dc3c06accaad3265be69fcd0634ece031bc8bacf79bc5d",
+  "input_count": 145,
+  "all_inputs_unchanged": true,
+  "runner_verified": true,
+  "build_verified": true,
+  "generated_sources_verified": true,
+  "original_aml_exit_code": 2,
+  "original_bridge_pairs": 8,
+  "original_bridge_exit_code": 0,
+  "original_bridge_elapsed_seconds": 828.306,
+  "maximum_fuel": 523483
+}

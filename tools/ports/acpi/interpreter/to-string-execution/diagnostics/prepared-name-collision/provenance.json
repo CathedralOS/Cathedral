@@ -1,0 +1,17 @@
+{
+  "scope": "Reproduced original six-pair authored package compilation failure; no evaluation",
+  "revision": "8772ff858a1ab4dd470b60a36cfedcc624b66c46",
+  "omega_revision": "eaa7993a23623cd8fabf45350340479c5c9c7879",
+  "runner_sha256": "4055e1d9cbc364859aeaaecc32148b1eaefa6cf04b3330076f816ce9bf9401dc",
+  "exit_code": 2,
+  "inputs_unchanged": true,
+  "files": {
+    "authored_execution.omg": "591f2432e915c5fd66438ba341a3d8ca32e3a3d90a6f463a340a1947b7c6680b",
+    "build.omg": "b068486ccb63c4655321ccd1e4a4fb444df79d8bd528faa0064d2628dcf0029c",
+    "main.omg": "74fd8428aa46660986ed44049a1bf06152f0087de6ef7fe7b0a32ca50ca008cd",
+    "output.log": "2c6b01d794d7671355008e8fced333c4851ee2678aadd69b8361d124cd7bdff3",
+    "plan.json": "3560802c8c4efa7f1a2aa8fbe8c15a93eaea8a9f38c22914916fe544238f22de",
+    "status.json": "8d92b12849949bf3cc0570138c143d250319b8181a75037af239516405e4e28c",
+    "to_string_execution-original.omg": "2d3a789e3f7e8ad29ac9388d93c9732682c41571779a3c5056b1f09f684eb9e6"
+  }
+}
