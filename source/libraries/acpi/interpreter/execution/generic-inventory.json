@@ -103,7 +103,17 @@
         "1972:do_logical_op": {
           "anchor": "fn do_logical_op(&self, context: &mut MethodContext, op: OpInFlight) -> Result<(), AmlError> {",
           "disposition": "pending",
-          "reason": "Outside this bounded generic transport slice or a larger operation only partially adapted."
+          "reason": "Logical opcode composition is transcribed for inline and canonical basic operands: transparent resolution, primary truth/comparison conversion, exact width Boolean results and parent contribution. Actual execution pending; Field evaluation and complete upstream behavior remain unfinished.",
+          "targets": [
+            {
+              "anchor": "pub machine retire_logical(",
+              "path": "source/libraries/acpi/interpreter/execution/logical_execution.omg"
+            },
+            {
+              "anchor": "pub machine binary(",
+              "path": "source/libraries/acpi/aml/object_logic.omg"
+            }
+          ]
         },
         "19:namespace": {
           "anchor": "pub mod namespace;",
