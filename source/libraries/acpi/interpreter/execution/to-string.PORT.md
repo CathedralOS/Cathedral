@@ -90,9 +90,9 @@ where this explicit conversion produces a String. Other negative cases retain
 their raw errors rather than being counted as successful semantic comparisons.
 No private Rust algorithm is copied into the public probe.
 
-No checked Omega, constant-evaluator, native Omega or hardware result is claimed
-for this opcode extension yet. Earlier direct conversion receipts remain scoped
-to their unchanged helper implementations.
+The current candidate's checked Omega execution is pending. Earlier direct
+conversion receipts remain scoped to their unchanged helper implementations;
+no new constant-evaluator, native Omega or hardware result is claimed.
 
 The original six-case AML selection failed compilation with an Outcome versus
 ExecutionOutcome equality diagnostic. Its exact failed package and unchanged
@@ -100,3 +100,8 @@ ExecutionOutcome equality diagnostic. Its exact failed package and unchanged
 The candidate gives the adapter's private preparation type a unique name to
 avoid collision with the imported loader Prepared type. Candidate checking and
 execution remain pending; the diagnostic does not establish a behavior result.
+The original retirement package passed all eight selected whole-state pairs
+in 828.306 seconds, with exact source/build/body/runner verification. The retained
+mixed receipt still has overall exit 1 because its AML package failed compilation.
+These eight original-adapter results do not prove the renamed candidate or its
+bytecode path.

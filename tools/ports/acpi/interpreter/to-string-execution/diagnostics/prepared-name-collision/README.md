@@ -17,6 +17,11 @@ resolved type bindings.
 
 The candidate renames all 32 adapter references to `ToStringPrepared`; generated
 fixture bodies are unchanged. Candidate execution is pending. The original
-retirement package continues separately against frozen `8772ff8` inputs.
+retirement package completed separately against frozen `8772ff8` inputs:
+all eight positive/control pairs passed in 828.306 seconds. The mixed
+`original-focused14.json` retains both the failed AML package and passing
+retirement package; its overall exit is 1. The accompanying audit verifies all
+145 inputs, runner, generated bodies, build text and sixteen retirement results.
+This does not establish renamed-candidate or bytecode execution success.
 The checker now prints failed-batch diagnostics as soon as a batch completes.
 That reporting change does not alter the selected bodies or expected outcomes.
