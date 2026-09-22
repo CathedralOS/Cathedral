@@ -696,6 +696,14 @@ three constant pairs pass. The 44 public Rust observations retain 33 agreements
 and 11 documented NUL/UTF-8 differences. Reference evaluation, target writes and
 opcode execution remain pending; aggregate source counts are unchanged.
 
+[ToString opcode execution](source/libraries/acpi/interpreter/execution/to-string.PORT.md)
+is transcribed on an isolated branch: source/Length conversion, fresh owned
+String results, explicit target type replacement and staged retirement. Its
+66 bytecode and 79 whole-state cases are authored, with 315 retained regression
+cases selected; checked Omega execution is pending. The 56 public Rust
+observations retain 16 value/state agreements and all nonagreements. The source
+anchor and aggregate counts remain pending.
+
 [Explicit numeric String composition](source/libraries/acpi/aml/object-numeric-strings.PORT.md) handles direct Integer, String
 and Buffer sources for decimal/hexadecimal formatting. All 255 checked pairs,
 three constant pairs and 102 actual public opcode observations pass; the public
