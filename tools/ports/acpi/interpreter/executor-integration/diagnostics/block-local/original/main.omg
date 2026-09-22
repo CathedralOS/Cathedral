@@ -1,0 +1,4 @@
+data NumericSample [copy] {bytes:[u8;1];}
+data Suite {}
+machine read(bytes:&[u8;1])->u8 {bytes[0]}
+machine Suite::value(&mut self)->i32 {let block:NumericSample;let value:u8=read(&block.bytes);value as i32}

@@ -1,0 +1,15 @@
+{
+  "label": "original",
+  "command": [
+    "/tmp/cathedral-field-protocol-target/release/cathedral-acpi-checked-runner",
+    "/tmp/cathedral-block-local-micro/original/main.omg",
+    "/tmp/cathedral-block-local-micro/original/build",
+    "Suite::value=0"
+  ],
+  "source_sha256": "4336cd7f6b7989b1671adbb4981d00f55f11f3ee5a9c197b2aaaff1565800661",
+  "build_sha256": "6e740c0798f3273b92ccb7a02b935b4fac8cf57d287bfb5bad3beac1f2038404",
+  "runner_sha256": "4055e1d9cbc364859aeaaecc32148b1eaefa6cf04b3330076f816ce9bf9401dc",
+  "exit_code": 2,
+  "output": "checked compilation failed for package `block-local-micro` with 1 diagnostic(s)\n  error: /Users/zcanann/Library/Caches/CathedralOS/Omega/source/v1/external-local-sources/local-snapshots/source-cbcf37236a495531b031bc98488457612985141334694826291d55dd4e97c63a/source/main.omg:4:87: expected expression\n",
+  "elapsed_seconds": 0.0905165
+}

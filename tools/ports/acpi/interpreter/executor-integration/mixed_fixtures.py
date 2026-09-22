@@ -107,8 +107,8 @@ def destination_verifier(selected):
   transition metadata && id<64 {true -> backing(store,id,length,expected) _ -> (false)}
  }
  state backing(store:&ObjectStore,id:u64,length:u64,expected:&[u8;256])->bool {
-  let block:ByteBlock=store.bytes.blocks[id];let bytes:bool=ge_same_bytes(&block.bytes,expected,0,256,true);
-  block.initialized && block.length==length && bytes
+  let snapshot:ByteBlock=store.bytes.blocks[id];let bytes:bool=ge_same_bytes(&snapshot.bytes,expected,0,256,true);
+  snapshot.initialized && snapshot.length==length && bytes
  }
 }
 '''

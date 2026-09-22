@@ -57,6 +57,12 @@ The original borrowed scalar generator's increment would exceed `u64::MAX`.
 The logical component retains the original mixed receipt and the renderer-only
 fix audit; its production code and positive bodies were unchanged by that fix.
 
+The mixed-target backing helper uses `snapshot` as its local name. A
+[retained original/renamed probe](diagnostics/block-local/) demonstrates that
+the pinned parser rejects `block` in that expression position. Correcting the
+identifier changes neither fixture expectations nor production; the probe
+does not establish full integration execution.
+
 ## Running and verifying
 
 ```sh

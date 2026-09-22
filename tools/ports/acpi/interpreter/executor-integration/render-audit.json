@@ -149,7 +149,7 @@
     "tools/ports/acpi/interpreter/executor-integration/frame-cases.json": "207bc235b25bb14cb218b9edf73869f7cc87ea95135608c2620ba7bfac908195",
     "tools/ports/acpi/interpreter/executor-integration/frame_coverage.py": "b1303eff8683c941554238fab38cb6fffbaa31fcb69d40350ea32978e7ac8933",
     "tools/ports/acpi/interpreter/executor-integration/mixed-cases.json": "781927becc93e1d7e53db0dcb8ee28057e3bdf87b6f0bf868bc288d4fe9af4b8",
-    "tools/ports/acpi/interpreter/executor-integration/mixed_fixtures.py": "c54fe77e2c1f00f3d25e3b13f8201133d5f0673ea33aa6c233f27272501d188b",
+    "tools/ports/acpi/interpreter/executor-integration/mixed_fixtures.py": "04f860db7194cd831ea57576e143c1e61ea20d48bd87c515b17d9109b681badc",
     "tools/ports/acpi/interpreter/executor-integration/pipeline-cases.json": "ab7d9c6c69c3d4b83a7175ee821e23127d3e37e781b654bd661364f70210cc70",
     "tools/ports/acpi/interpreter/executor-integration/pipeline_fixtures.py": "013b635937b8bc44130d5eabab5b8636d368c9fbeac14f28f7dffd9102fe17de",
     "tools/ports/acpi/interpreter/executor-integration/preflight.py": "1215b3291caa2d489b7bbc9beaa1b33d9cb1a1df9017a61a81ca8e58ebd347fd",
@@ -193,7 +193,7 @@
     "execution_validation": false,
     "scope": "All recursive ACPI .omg sources plus selected historical tool/fixture inputs; no compilation, interpretation or public replay is asserted.",
     "root": "/private/tmp/cathedral-executor-integration",
-    "head": "27414b7642ada6b07dbacff9fb6ae44b300ec1ab",
+    "head": "e66bde6442a5be3a6539907623e1cd8e27c2e913",
     "revisions": {
       "20f1e02": "20f1e024aece142a7e558737fe5b07ba7cabf2d2",
       "21ef7e2": "21ef7e2e8f28d87f6a89a6eb953ea1479e299212",
@@ -2090,7 +2090,7 @@
     {
       "group": "mixed",
       "count": 16,
-      "source_sha256": "9dacbc80a3a3b18b0a800b5f82eb53d5117c5553bb5b6ce1734109b7f10e637c",
+      "source_sha256": "8125621261b4828b6b2a4317cbb23c50ca6425c0a4177aa68ee410485cd3b2b3",
       "cases": [
         "nested_string_relation_32",
         "empty_string_then_concat_32",
@@ -2146,7 +2146,7 @@
       "sampled_subsets": [
         {
           "case": "nested_string_relation_32",
-          "source_sha256": "acad5771310967c1beec81178b254fd30e97a6dfedd7d230eb4e2bf5b53a61e0",
+          "source_sha256": "e3d6df1fd665b95035d2b31d468a507d4eb0f8a4dfea16026a7098e264eee77d",
           "entries": [
             "MixedIntegratedSuite::nested_string_relation_32_positive=0",
             "MixedIntegratedSuite::nested_string_relation_32_control=1"
@@ -2154,7 +2154,7 @@
         },
         {
           "case": "nested_string_relation_64",
-          "source_sha256": "4a9c390cd3906ba28b010211fadcf6625eaca66297bab66eb5a5e74e720fbc41",
+          "source_sha256": "902bb6e21b4635c42cb838e6cb67de8b7b8671dae51b16f9ce6a3328de8d2d9d",
           "entries": [
             "MixedIntegratedSuite::nested_string_relation_64_positive=0",
             "MixedIntegratedSuite::nested_string_relation_64_control=1"
@@ -2162,7 +2162,7 @@
         },
         {
           "case": "integer_concat_then_conversion_64",
-          "source_sha256": "0219bd01fb8d6a993b242ade96748b649fe2a98f96842558ae5f8fec6c289250",
+          "source_sha256": "60e3d66a21da90a41d390817f89f77767af282c836ef9743cce3805d940fe4d3",
           "entries": [
             "MixedIntegratedSuite::integer_concat_then_conversion_64_positive=0",
             "MixedIntegratedSuite::integer_concat_then_conversion_64_control=1"
