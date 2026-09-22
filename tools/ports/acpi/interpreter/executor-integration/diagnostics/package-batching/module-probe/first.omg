@@ -1,0 +1,6 @@
+module first;
+data Shared [copy] {left:u64;}
+pub data FirstSuite [copy] {}
+machine read(value:Shared)->u64 {value.left}
+pub machine FirstSuite::positive(&mut self)->i32 {let data:Shared=Shared {left:7};let number:u64=read(data);transition number==7 {true -> (0) _ -> (1)}}
+pub machine FirstSuite::control(&mut self)->i32 {let data:Shared=Shared {left:7};let number:u64=read(data);transition number==8 {true -> (0) _ -> (1)}}

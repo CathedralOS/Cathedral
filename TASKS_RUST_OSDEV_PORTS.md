@@ -769,6 +769,9 @@ isolated branch. It authors 60 additional composition/frame pairs and retains
 1,031 component/regression pairs, with explicit coverage for every added Frame
 continuation member. Immutable component source audits and fixture generation
 are separate from execution evidence; checked integration remains pending.
+Optional package batching retains all 1,091 generated pairs while sharing one
+compiler invocation. Six host packing/receipt tests and a four-entry module
+probe pass; the combined ACPI run and its timing remain unverified.
 Component receipts retain their original source scope and aggregate counts are
 unchanged.
 

@@ -1,0 +1,30 @@
+{
+  "stage": "Two-module compiler/checked-interpreter plumbing probe only; no ACPI adapter execution",
+  "omega_revision": "eaa7993a23623cd8fabf45350340479c5c9c7879",
+  "command": [
+    "/tmp/cathedral-field-protocol-target/release/cathedral-acpi-checked-runner",
+    "/tmp/cathedral-integration-package-probe/main.omg",
+    "/tmp/cathedral-integration-package-probe/build",
+    "FirstSuite::positive=0",
+    "FirstSuite::control=1",
+    "SecondSuite::positive=0",
+    "SecondSuite::control=1"
+  ],
+  "input_sha256": {
+    "main.omg": "60683ffe7c3ce20492a388a350070bacabba83f8d52211564c4d88e624a5a9f4",
+    "build.omg": "e390d6ffb25665fda4477f7929c1cfff2936fe757a9b442cc11192a3cd43e438",
+    "first.omg": "e42f6178336950399affac988958cc58dced752bd0de405e647b8110aaf2c1c1",
+    "second.omg": "6b7771eecb37faa6aa1d088769441aeda9ce3504ca825b8cbfcbd742bbda8d3e"
+  },
+  "runner_sha256": "4055e1d9cbc364859aeaaecc32148b1eaefa6cf04b3330076f816ce9bf9401dc",
+  "selections": [
+    "FirstSuite::positive=0",
+    "FirstSuite::control=1",
+    "SecondSuite::positive=0",
+    "SecondSuite::control=1"
+  ],
+  "elapsed_seconds": 7.28,
+  "exit_code": 0,
+  "stdout": "CHECKED authored package and dependency bodies; native publication NOT requested\nPASS FirstSuite::positive expected=0 observed=0 error=None usage=EvaluationUsage { schema: EvaluationUsageSchemaIdentity(7), schedule: EvaluationStepScheduleIdentity(1), fuel_units: 14, fuel_ceiling: 10000000, build_log_bytes: 0, filesystem_operation_attempts: 0, peak_live_cells: 4, peak_live_text_bytes: 0, result_cells: 0, result_text_bytes: 0 }\nPASS FirstSuite::control expected=1 observed=1 error=None usage=EvaluationUsage { schema: EvaluationUsageSchemaIdentity(7), schedule: EvaluationStepScheduleIdentity(1), fuel_units: 14, fuel_ceiling: 10000000, build_log_bytes: 0, filesystem_operation_attempts: 0, peak_live_cells: 4, peak_live_text_bytes: 0, result_cells: 0, result_text_bytes: 0 }\nPASS SecondSuite::positive expected=0 observed=0 error=None usage=EvaluationUsage { schema: EvaluationUsageSchemaIdentity(7), schedule: EvaluationStepScheduleIdentity(1), fuel_units: 14, fuel_ceiling: 10000000, build_log_bytes: 0, filesystem_operation_attempts: 0, peak_live_cells: 4, peak_live_text_bytes: 0, result_cells: 0, result_text_bytes: 0 }\nPASS SecondSuite::control expected=1 observed=1 error=None usage=EvaluationUsage { schema: EvaluationUsageSchemaIdentity(7), schedule: EvaluationStepScheduleIdentity(1), fuel_units: 14, fuel_ceiling: 10000000, build_log_bytes: 0, filesystem_operation_attempts: 0, peak_live_cells: 4, peak_live_text_bytes: 0, result_cells: 0, result_text_bytes: 0 }\n",
+  "stderr": ""
+}

@@ -32,6 +32,20 @@ def run():
             selections.append(dict(case=rows[index]['name'],source_sha256=check.text_sha(subset),entries=names))
         groups.append(dict(group=group,count=len(rows),source_sha256=check.text_sha(source),
                            cases=[row['name'] for row in rows],selections=entries,sampled_subsets=selections))
+    selections=[dict(group=item['group'],cases=item['cases']) for item in groups]
+    packages=[]
+    expected_modules=[{key:item[key] for key in ('group','cases','source_sha256','selections')} for item in groups]
+    for combine in (False,True):
+        plans=check.plan_batches(selections,2000,combine)
+        modules=[]
+        package_records=[]
+        for plan in plans:
+            sources,rendered,entries,driver=check.render_package(plan)
+            modules.extend(rendered)
+            package_records.append(dict(modules=rendered,selections=entries,driver_sha256=check.text_sha(driver)))
+        assert modules==expected_modules,'Packing changed authored modules or selections'
+        assert len(plans)==(1 if combine else len(check.GROUPS))
+        packages.append(dict(combine_groups=combine,batch_size=2000,batches=package_records))
     frame=check.fixtures.frames()
     original,_=check.fixtures.original_source('logical_bridge',check.rows('logical_bridge')[:1])
     augmented=frame.augment(original)
@@ -55,7 +69,7 @@ def run():
     assert count==1091
     return dict(stage='source provenance and host rendering only',execution_validation=False,
                 positive_count=count,control_count=count,source_unchanged=True,input_sha256=before,
-                source_audit=source_audit,groups=groups,rejected_partial_comparators=rejected)
+                source_audit=source_audit,groups=groups,package_modes=packages,rejected_partial_comparators=rejected)
 
 
 def main():

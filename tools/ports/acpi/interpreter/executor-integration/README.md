@@ -68,7 +68,8 @@ does not establish full integration execution.
 ```sh
 python3 tools/ports/acpi/interpreter/executor-integration/provenance.py --record /tmp/executor-source-audit.json
 python3 tools/ports/acpi/interpreter/executor-integration/preflight.py --record /tmp/executor-render-audit.json
-python3 tools/ports/acpi/interpreter/executor-integration/check.py --batch-size 1000 --workers 1 --record /tmp/executor-checked.json
+python3 tools/ports/acpi/interpreter/executor-integration/host_tests.py
+python3 tools/ports/acpi/interpreter/executor-integration/check.py --combine-groups --batch-size 2000 --workers 1 --record /tmp/executor-checked.json
 python3 tools/ports/acpi/interpreter/executor-integration/verify_record.py /tmp/executor-checked.json --require-binaries --require-complete
 ```
 
@@ -81,6 +82,24 @@ runner. The verifier reconstructs those bindings and every observed result.
 The full 1,091-pair claim additionally requires all 16 groups in their declared
 order; `--require-complete` enforces that condition. `scope=full` on a deliberately
 narrowed group list covers that list only.
+
+`--combine-groups` packs ordered case pairs into packages up to `--batch-size`.
+Each group keeps its own module and exact generated bodies. At a size of 2,000,
+the entire current corpus shares one compiler invocation instead of sixteen;
+all 2,182 positive/control entries are still interpreted individually. Omitting
+the option preserves separate packages per group. Format-2 receipts bind the
+ordered module list, each module's cases/source/entries, the combined driver,
+the flattened selection and one raw runner output. Verification also requires
+the configured runner hash, even when its binary is unavailable locally.
+
+The [batching diagnostics](diagnostics/package-batching/) preserve the prior
+render audit and a small actual two-module probe. Its differing private `Shared`
+types and private `read` functions execute independently with both controls.
+This establishes module plumbing only. Six host tests check packing boundaries,
+unchanged full-corpus bodies and rejection of incomplete or corrupted receipts;
+their synthetic outputs exist only in memory and are not execution evidence.
+The host audit compares both package modes, but combined ACPI execution and any
+elapsed-time improvement remain unmeasured until the full run finishes.
 
 Provider traffic is a deterministic caller-supplied fixture. Live provider,
 Field-read continuation, Bank/Index Field execution, native Omega and hardware

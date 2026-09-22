@@ -57,6 +57,46 @@ def driver_source(groups):
     return ''.join('use authored_'+group+';\n' for group in groups)
 
 
+def plan_batches(selections, batch_size, combine_groups=False):
+    """Pack case names in order; each group keeps its own unchanged module."""
+    assert batch_size > 0 and selections
+    assert len({item['group'] for item in selections}) == len(selections)
+    batches, pending, used = [], [], 0
+    for selection in selections:
+        group, cases = selection['group'], selection['cases']
+        assert group in GROUPS and cases and len(cases) == len(set(cases))
+        offset = 0
+        while offset < len(cases):
+            chosen = cases[offset:offset + batch_size - used]
+            pending.append(dict(group=group, cases=chosen))
+            offset += len(chosen)
+            used += len(chosen)
+            if used == batch_size:
+                batches.append(pending)
+                pending, used = [], 0
+        if pending and not combine_groups:
+            batches.append(pending)
+            pending, used = [], 0
+    if pending:
+        batches.append(pending)
+    return batches
+
+
+def render_package(plan):
+    assert plan and len({item['group'] for item in plan}) == len(plan)
+    sources, modules, entries = {}, [], []
+    for selection in plan:
+        group, names = selection['group'], selection['cases']
+        by_name = {row['name']: row for row in rows(group)}
+        assert names and len(names) == len(set(names))
+        source, selected = module_source(group, [by_name[name] for name in names])
+        sources['authored_'+group+'.omg'] = source
+        modules.append(dict(group=group, cases=names, source_sha256=text_sha(source), selections=selected))
+        entries.extend(selected)
+    assert len(entries) == len(set(entries))
+    return sources, modules, entries, driver_source([item['group'] for item in plan])
+
+
 def build_text(root=ROOT):
     source = 'machine build(builder:&mut Build){builder.application("cathedral-executor-integration");builder.freestanding=true;'
     for alias, folder in [('aml','aml'),('execution','interpreter/execution'),('integer_helpers','interpreter'),('pipeline','pipeline'),('write_values','field_writes'),('access','field_access')]:
@@ -65,8 +105,10 @@ def build_text(root=ROOT):
 
 
 def validate(output, entries):
-    assert 'CHECKED authored package and dependency bodies;' in output
+    assert output.count('CHECKED authored package and dependency bodies; native publication NOT requested') == 1
+    assert not re.search(r'^FAIL ', output, re.M)
     actual = re.findall(r'^PASS (\S+) expected=(\d+) observed=(\d+) error=None usage=', output, re.M)
+    assert len(re.findall(r'^PASS ', output, re.M)) == len(actual), 'Malformed extra PASS line'
     assert len(actual) == len(entries)
     assert [name+'='+expected for name,expected,observed in actual] == entries
     assert all(expected == observed for name,expected,observed in actual)
@@ -80,6 +122,8 @@ def main():
     parser.add_argument('--record', type=Path, default=HERE/'checked-verification.json')
     parser.add_argument('--batch-size', type=int, default=10)
     parser.add_argument('--workers', type=int, default=1)
+    parser.add_argument('--combine-groups', action='store_true',
+                        help='Share one compiler check across groups, up to batch-size pairs per package.')
     args = parser.parse_args()
     toolchain=json.loads((HERE/'toolchain.json').read_text())
     omega=Path(toolchain['omega_source'])
@@ -90,48 +134,51 @@ def main():
     assert len(groups) == len(set(groups))
     assert args.batch_size>0 and 1<=args.workers<=3
     before, binary = snapshot(), sha(args.runner)
-    selections, batches = [], []
+    selections = []
     for group in groups:
         selected = [row for row in rows(group) if not args.match or row['name'] in args.match.split(',')]
         assert selected
         selections.append(dict(group=group,cases=[row['name'] for row in selected]))
-        batches.extend((group,selected[index:index+args.batch_size]) for index in range(0,len(selected),args.batch_size))
+    if args.match:
+        assert set(args.match.split(',')) == {name for item in selections for name in item['cases']}, 'Unknown selected case'
+    batches = plan_batches(selections, args.batch_size, args.combine_groups)
     build = build_text()
     started = time.monotonic()
     def run_batch(batch):
-        group,selected=batch
         batch_started=time.monotonic()
-        source,entries=module_source(group,selected)
-        driver=driver_source([group])
+        sources,modules,entries,driver=render_package(batch)
         assert before==snapshot() and binary==sha(args.runner), 'Inputs changed before batch'
         with tempfile.TemporaryDirectory(prefix='cathedral-executor-integration-') as directory:
             work=Path(directory)
             (work/'main.omg').write_text(driver)
             (work/'build.omg').write_text(build)
-            (work/('authored_'+group+'.omg')).write_text(source)
+            for name,source in sources.items():
+                (work/name).write_text(source)
             run=subprocess.run([str(args.runner),str(work/'main.omg'),str(work/'build'),*entries],
                                capture_output=True,text=True,env=dict(os.environ,OMEGA_INTERP_STEP_BUDGET='10000000'))
         unchanged=before==snapshot() and binary==sha(args.runner)
-        return dict(group=group,cases=[row['name'] for row in selected],source_sha256=text_sha(source),
+        return dict(modules=modules,
                     driver_sha256=text_sha(driver),selections=entries,exit_code=run.returncode,
                     source_unchanged=unchanged,elapsed_seconds=round(time.monotonic()-batch_started,3),output=run.stdout+run.stderr)
     completed=[]
     with ThreadPoolExecutor(max_workers=args.workers) as pool:
         for batch in pool.map(run_batch,batches):
             completed.append(batch)
-            print('BATCH',batch['group'],len(batch['cases']),'pairs; exit',batch['exit_code'],';',batch['elapsed_seconds'],'seconds',flush=True)
+            print('BATCH',','.join(item['group'] for item in batch['modules']),len(batch['selections'])//2,
+                  'pairs; exit',batch['exit_code'],';',batch['elapsed_seconds'],'seconds',flush=True)
             if batch['exit_code']:
                 print(batch['output'],flush=True)
     unchanged = before == snapshot() and binary == sha(args.runner)
     assert subprocess.check_output(['git','rev-parse','HEAD'],cwd=omega,text=True).strip()==PIN
     assert not subprocess.check_output(['git','status','--porcelain'],cwd=omega,text=True).strip()
     count=sum(len(selection['cases']) for selection in selections)
-    record = dict(stage='checked interpreter; complete authored and dependency bodies; changed-expectation controls',
+    record = dict(format_version=2,stage='checked interpreter; complete authored and dependency bodies; changed-expectation controls',
                   omega_revision=PIN, execution_root=str(ROOT), groups=groups, scope='selected' if args.match else 'full',
                   input_sha256=before, runner_path=str(args.runner.resolve()), runner_sha256=binary,
                   source_unchanged=unchanged, native_execution=False,
                   exit_code=0 if all(batch['exit_code']==0 for batch in completed) else 1,
                   groups_selected=selections,batches=completed,batch_size=args.batch_size,workers=args.workers,
+                  combine_groups=args.combine_groups,
                   positive_count=count,control_count=count,build_source=build,build_sha256=text_sha(build),
                   elapsed_seconds=round(time.monotonic()-started,3),
                   batch_elapsed_seconds_sum=round(sum(batch['elapsed_seconds'] for batch in completed),3))
