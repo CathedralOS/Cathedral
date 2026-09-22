@@ -1,0 +1,18 @@
+{
+  "source_sha256": "c6d52ec8e7c3452e0b8ba451f279e746ff954ebed7aeda904ec1d920e57b5d6a",
+  "findings": [
+    {
+      "machine": "turn",
+      "nonlocal_targets": [
+        "prepare"
+      ]
+    },
+    {
+      "machine": "complete",
+      "nonlocal_targets": [
+        "received"
+      ]
+    }
+  ],
+  "explanation": "Lexical audit of transition-call targets versus enclosing machine states; same-machine recursion excluded"
+}

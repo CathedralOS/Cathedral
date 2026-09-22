@@ -1,0 +1,151 @@
+{
+  "kind": "Diagnostic real Integer Field completion and assembly on directly seeded ready Session; no loader/execution dispatch proof",
+  "sources": {
+    "/tmp/cathedral-field-read-admission-micro/manifest.json": "05d176ae1271a3938ff3711521d43fc8755e2c2c88451cbc9f10555344dfe444",
+    "/tmp/cathedral-field-read-admission-micro/main.omg": "b0cb2eed372e1d2d28130c48c5dbfe1beee0e11bf46960c6c153ef1ff3693f70",
+    "/tmp/cathedral-field-reads-current/source/libraries/acpi/pipeline/field_reads.omg": "c6d52ec8e7c3452e0b8ba451f279e746ff954ebed7aeda904ec1d920e57b5d6a",
+    "/tmp/cathedral-field-reads-current/source/libraries/acpi/interpreter/execution/engine.omg": "41ec60725c8d2aeee649e902357437a734587bad01975d77970500090b63b386",
+    "/tmp/cathedral-field-reads-current/source/libraries/acpi/interpreter/execution/operands.omg": "de9520bb6911c526bd57187b395255289a6eaab81269473a8aeaca7a01d19348",
+    "/tmp/cathedral-field-reads-current/source/libraries/acpi/field_values/model.omg": "42fdb357d4d7e5b2772c0776585e8ce3c989382573dcd4dfb89e521e246eb705",
+    "/tmp/cathedral-field-reads-current/source/libraries/acpi/field_values/read.omg": "d52815d94a58985ab614ccd94faa407a85ebaf5c00385e01cfcd285a707c0412",
+    "/tmp/cathedral-field-reads-current/source/libraries/acpi/field_access/chunks.omg": "dc637c38bedfec4377cc3461149e98f2a78066bd266ee9c644b0921b15c56154",
+    "/tmp/cathedral-field-reads-current/source/libraries/acpi/interpreter/conversions.omg": "b3ee9811b5434883bfa2374c8ca6a746ad2a75ab4c9eacea3e8dd19b5510f714",
+    "/tmp/cathedral-field-reads-current/source/libraries/acpi/interpreter/buffer_fields.omg": "98e1df3d821a88ba1d63c63189f3d9ac782f197b62cd04e6b71abd396042688a"
+  },
+  "copies": [
+    {
+      "source": "/tmp/cathedral-field-reads-current/source/libraries/acpi/pipeline/field_reads.omg",
+      "machine": "complete",
+      "original_sha256": "2ec608df401adf214d60f842148ecf069660f9e4760b261650a8cef364657635",
+      "copied_sha256": "2ec608df401adf214d60f842148ecf069660f9e4760b261650a8cef364657635",
+      "substitutions": []
+    },
+    {
+      "source": "/tmp/cathedral-field-reads-current/source/libraries/acpi/pipeline/field_reads.omg",
+      "machine": "received",
+      "original_sha256": "f9b03d894cefff516a0dc1067263ebf58a8da16a7c6ba1f914c83ff978fc4e51",
+      "copied_sha256": "f9b03d894cefff516a0dc1067263ebf58a8da16a7c6ba1f914c83ff978fc4e51",
+      "substitutions": []
+    },
+    {
+      "source": "/tmp/cathedral-field-reads-current/source/libraries/acpi/interpreter/execution/engine.omg",
+      "machine": "complete_decoded_read",
+      "original_sha256": "e5205842fe426b437cb2836269c080e735093008073a996822407722ad6cefc2",
+      "copied_sha256": "e5205842fe426b437cb2836269c080e735093008073a996822407722ad6cefc2",
+      "substitutions": []
+    },
+    {
+      "source": "/tmp/cathedral-field-reads-current/source/libraries/acpi/interpreter/execution/operands.omg",
+      "machine": "contribute_operand",
+      "original_sha256": "7481f066409d9661bd19421878879adc7c4df51f1039a239cb5b460032ed8953",
+      "copied_sha256": "7481f066409d9661bd19421878879adc7c4df51f1039a239cb5b460032ed8953",
+      "substitutions": []
+    },
+    {
+      "source": "/tmp/cathedral-field-reads-current/source/libraries/acpi/field_values/read.omg",
+      "section": "Bytes and all following assembly machines",
+      "original_sha256": "6ee1aba7b76dabf0f385bc225c0e68350e7e7fea08d1245d779b6fcaaa5397f6",
+      "copied_sha256": "c573eae84ca82c3e97ddae7cf7aa49d29b06d412326cbf6d420d414de2ae4aa3",
+      "substitutions": [
+        [
+          "geometry::plan",
+          "geometry_plan"
+        ],
+        [
+          "buffer_fields::field_to_integer",
+          "field_to_integer"
+        ],
+        [
+          "chunks::extract",
+          "chunk_extract"
+        ],
+        [
+          "conversions::integer_to_buffer",
+          "integer_to_buffer"
+        ],
+        [
+          "buffer_fields::copy_bits",
+          "copy_bits"
+        ]
+      ]
+    },
+    {
+      "source": "/tmp/cathedral-field-reads-current/source/libraries/acpi/field_access/chunks.omg",
+      "machine": "valid",
+      "original_sha256": "249b76e5d04435ffabcde589f819a84273d66c65c777c79c15480cc89164f1eb",
+      "copied_sha256": "249b76e5d04435ffabcde589f819a84273d66c65c777c79c15480cc89164f1eb",
+      "substitutions": []
+    },
+    {
+      "source": "/tmp/cathedral-field-reads-current/source/libraries/acpi/field_access/chunks.omg",
+      "machine": "extract",
+      "original_sha256": "2da3cb898b9e20aba776b6e75ca8660e0f787324760160ee3d3d738a8f822ba8",
+      "copied_sha256": "12d143f2416910f54e8df016413de889c9b31d83150a1fbf34e9f66e1aa4e412",
+      "substitutions": [
+        [
+          "pub machine extract(",
+          "pub machine chunk_extract("
+        ]
+      ]
+    },
+    {
+      "source": "/tmp/cathedral-field-reads-current/source/libraries/acpi/interpreter/conversions.omg",
+      "machine": "integer_to_buffer",
+      "original_sha256": "f38b9004a7e744076e8f51de12056158a3ae74082f1fb7931152c02c6914097e",
+      "copied_sha256": "f38b9004a7e744076e8f51de12056158a3ae74082f1fb7931152c02c6914097e",
+      "substitutions": []
+    },
+    {
+      "source": "/tmp/cathedral-field-reads-current/source/libraries/acpi/interpreter/conversions.omg",
+      "machine": "integer_bytes",
+      "original_sha256": "39bcbe527cf88a6f750f55a033e3a60a9b527df0d718a5a5429fc092d4afb64c",
+      "copied_sha256": "39bcbe527cf88a6f750f55a033e3a60a9b527df0d718a5a5429fc092d4afb64c",
+      "substitutions": []
+    },
+    {
+      "source": "/tmp/cathedral-field-reads-current/source/libraries/acpi/interpreter/conversions.omg",
+      "machine": "integer_byte",
+      "original_sha256": "8f518f88e8064b871ce742c9393abe0e1e1c0a07916b5dc34c93ada03d7b77a4",
+      "copied_sha256": "8f518f88e8064b871ce742c9393abe0e1e1c0a07916b5dc34c93ada03d7b77a4",
+      "substitutions": []
+    },
+    {
+      "source": "/tmp/cathedral-field-reads-current/source/libraries/acpi/interpreter/buffer_fields.omg",
+      "section": "All buffer-fields machines",
+      "original_sha256": "b0878652928b218b8555bb0346e0177115ab78433cfc06b9745078c14a8d8b2d",
+      "copied_sha256": "b0878652928b218b8555bb0346e0177115ab78433cfc06b9745078c14a8d8b2d",
+      "substitutions": []
+    }
+  ],
+  "inherited_manifest": "/tmp/cathedral-field-read-admission-micro/manifest.json",
+  "stubs": [
+    "validate_operand retains only actual Integer/Uninitialized outcomes; all object operands fail UnsupportedOpcode",
+    "allocate_mut always fails InvalidState; Buffer allocation is excluded"
+  ],
+  "seed_extension": "runtime.length=38 and runtime.unit=7 supplied before prepare; five words19,56,93,130,167; expected29bit471001536",
+  "main_sha256": "7b4fc157380e84ce437e4da93af34465d014cbd451163c16f74fc28c6551e246",
+  "build_sha256": "d6d05cb9381bbe308557a1b0dae9bfae26b19920aa3669b867d8f54fa84baa8c",
+  "generator_sha256": "a2712b8013976b5aa2f60830bc8f4fcc57563861a946357ee1f6de0898cc2561",
+  "runner": "/tmp/cathedral-field-protocol-target/release/cathedral-acpi-checked-runner",
+  "runner_sha256": "4055e1d9cbc364859aeaaecc32148b1eaefa6cf04b3330076f816ce9bf9401dc",
+  "selections": [
+    "CompletionProbe::all_words=0",
+    "CompletionProbe::wrong_request=0",
+    "CompletionProbe::stale_request=0",
+    "CompletionProbe::failure_success_rejected=0"
+  ],
+  "exit_code": 1,
+  "source_unchanged": true,
+  "output_sha256": "0858c0b16b4bb5bce8d8b4bf98b8057fd2a109484b6654e7a3a98792d7051744",
+  "command": [
+    "/tmp/cathedral-field-protocol-target/release/cathedral-acpi-checked-runner",
+    "main.omg",
+    "build",
+    "CompletionProbe::all_words=0",
+    "CompletionProbe::wrong_request=0",
+    "CompletionProbe::stale_request=0",
+    "CompletionProbe::failure_success_rejected=0"
+  ],
+  "working_directory": "/private/tmp/cathedral-field-read-completion-micro",
+  "result": "CHECKED then all4 diagnostic entries failed: transition target received not found in current machine; no equality trap observed before that failure"
+}

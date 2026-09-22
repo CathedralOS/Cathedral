@@ -1,0 +1,431 @@
+{
+  "baseline": "8ef8d145334ac7469e0e13478d84729949b7659f",
+  "source": "source/libraries/acpi/pipeline/field_reads.omg",
+  "before_sha256": "c6d52ec8e7c3452e0b8ba451f279e746ff954ebed7aeda904ec1d920e57b5d6a",
+  "after_sha256": "baa5473b430373b1614fde40a46f49e61db433617160fda824c450bb2e571da5",
+  "method": "Lexical machine-body audit: lowercase transition-call targets must name an enclosing local state or the machine itself. Full source inspected for the two nonlocal targets; only their call wrappers changed.",
+  "production_diff": "Two local wrapper states and their two transition-target substitutions; no other production change.",
+  "before": [
+    {
+      "machine": "begin",
+      "states": [],
+      "transition_calls": [],
+      "nonlocal_targets": []
+    },
+    {
+      "machine": "begin_limited",
+      "states": [
+        "ready",
+        "rejected",
+        "start"
+      ],
+      "transition_calls": [
+        "ready",
+        "rejected",
+        "start"
+      ],
+      "nonlocal_targets": []
+    },
+    {
+      "machine": "progress",
+      "states": [
+        "failed",
+        "result"
+      ],
+      "transition_calls": [
+        "failed",
+        "result"
+      ],
+      "nonlocal_targets": []
+    },
+    {
+      "machine": "advance",
+      "states": [
+        "run"
+      ],
+      "transition_calls": [
+        "run"
+      ],
+      "nonlocal_targets": []
+    },
+    {
+      "machine": "drive",
+      "states": [],
+      "transition_calls": [
+        "drive"
+      ],
+      "nonlocal_targets": []
+    },
+    {
+      "machine": "turn",
+      "states": [
+        "execute",
+        "failed",
+        "finished",
+        "fuel",
+        "inspect",
+        "pending",
+        "published"
+      ],
+      "transition_calls": [
+        "execute",
+        "failed",
+        "finished",
+        "fuel",
+        "inspect",
+        "pending",
+        "prepare",
+        "published"
+      ],
+      "nonlocal_targets": [
+        "prepare"
+      ]
+    },
+    {
+      "machine": "prepare",
+      "states": [
+        "address",
+        "alignment",
+        "bank_binding",
+        "capacity",
+        "definition",
+        "exhausted",
+        "frame",
+        "geometry",
+        "geometry_failed",
+        "index_binding",
+        "invalid",
+        "kind",
+        "lock",
+        "locked",
+        "misaligned",
+        "normal_binding",
+        "overflow",
+        "profile",
+        "region",
+        "region_value",
+        "shape",
+        "size",
+        "source",
+        "stage",
+        "unsupported",
+        "width"
+      ],
+      "transition_calls": [
+        "address",
+        "alignment",
+        "bank_binding",
+        "capacity",
+        "definition",
+        "exhausted",
+        "frame",
+        "geometry",
+        "geometry_failed",
+        "index_binding",
+        "invalid",
+        "kind",
+        "lock",
+        "locked",
+        "misaligned",
+        "normal_binding",
+        "overflow",
+        "profile",
+        "region",
+        "region_value",
+        "shape",
+        "size",
+        "source",
+        "stage",
+        "unsupported",
+        "width"
+      ],
+      "nonlocal_targets": []
+    },
+    {
+      "machine": "issue",
+      "states": [
+        "invalid",
+        "request"
+      ],
+      "transition_calls": [
+        "invalid",
+        "request"
+      ],
+      "nonlocal_targets": []
+    },
+    {
+      "machine": "same_request",
+      "states": [],
+      "transition_calls": [],
+      "nonlocal_targets": []
+    },
+    {
+      "machine": "complete",
+      "states": [
+        "failed",
+        "kind",
+        "provider_failed",
+        "word"
+      ],
+      "transition_calls": [
+        "failed",
+        "kind",
+        "provider_failed",
+        "received",
+        "word"
+      ],
+      "nonlocal_targets": [
+        "received"
+      ]
+    },
+    {
+      "machine": "received",
+      "states": [
+        "allocate",
+        "assembled",
+        "backing",
+        "buffer",
+        "bytes",
+        "commit_buffer",
+        "commit_integer",
+        "failed",
+        "integer",
+        "invalid",
+        "next",
+        "remember"
+      ],
+      "transition_calls": [
+        "allocate",
+        "assembled",
+        "backing",
+        "buffer",
+        "bytes",
+        "commit_buffer",
+        "commit_integer",
+        "failed",
+        "integer",
+        "invalid",
+        "next",
+        "remember"
+      ],
+      "nonlocal_targets": []
+    },
+    {
+      "machine": "fail",
+      "states": [],
+      "transition_calls": [],
+      "nonlocal_targets": []
+    }
+  ],
+  "after": [
+    {
+      "machine": "begin",
+      "states": [],
+      "transition_calls": [],
+      "nonlocal_targets": []
+    },
+    {
+      "machine": "begin_limited",
+      "states": [
+        "ready",
+        "rejected",
+        "start"
+      ],
+      "transition_calls": [
+        "ready",
+        "rejected",
+        "start"
+      ],
+      "nonlocal_targets": []
+    },
+    {
+      "machine": "progress",
+      "states": [
+        "failed",
+        "result"
+      ],
+      "transition_calls": [
+        "failed",
+        "result"
+      ],
+      "nonlocal_targets": []
+    },
+    {
+      "machine": "advance",
+      "states": [
+        "run"
+      ],
+      "transition_calls": [
+        "run"
+      ],
+      "nonlocal_targets": []
+    },
+    {
+      "machine": "drive",
+      "states": [],
+      "transition_calls": [
+        "drive"
+      ],
+      "nonlocal_targets": []
+    },
+    {
+      "machine": "turn",
+      "states": [
+        "execute",
+        "failed",
+        "finished",
+        "fuel",
+        "inspect",
+        "pending",
+        "prepare_read",
+        "published"
+      ],
+      "transition_calls": [
+        "execute",
+        "failed",
+        "finished",
+        "fuel",
+        "inspect",
+        "pending",
+        "prepare_read",
+        "published"
+      ],
+      "nonlocal_targets": []
+    },
+    {
+      "machine": "prepare",
+      "states": [
+        "address",
+        "alignment",
+        "bank_binding",
+        "capacity",
+        "definition",
+        "exhausted",
+        "frame",
+        "geometry",
+        "geometry_failed",
+        "index_binding",
+        "invalid",
+        "kind",
+        "lock",
+        "locked",
+        "misaligned",
+        "normal_binding",
+        "overflow",
+        "profile",
+        "region",
+        "region_value",
+        "shape",
+        "size",
+        "source",
+        "stage",
+        "unsupported",
+        "width"
+      ],
+      "transition_calls": [
+        "address",
+        "alignment",
+        "bank_binding",
+        "capacity",
+        "definition",
+        "exhausted",
+        "frame",
+        "geometry",
+        "geometry_failed",
+        "index_binding",
+        "invalid",
+        "kind",
+        "lock",
+        "locked",
+        "misaligned",
+        "normal_binding",
+        "overflow",
+        "profile",
+        "region",
+        "region_value",
+        "shape",
+        "size",
+        "source",
+        "stage",
+        "unsupported",
+        "width"
+      ],
+      "nonlocal_targets": []
+    },
+    {
+      "machine": "issue",
+      "states": [
+        "invalid",
+        "request"
+      ],
+      "transition_calls": [
+        "invalid",
+        "request"
+      ],
+      "nonlocal_targets": []
+    },
+    {
+      "machine": "same_request",
+      "states": [],
+      "transition_calls": [],
+      "nonlocal_targets": []
+    },
+    {
+      "machine": "complete",
+      "states": [
+        "failed",
+        "kind",
+        "provider_failed",
+        "receive",
+        "word"
+      ],
+      "transition_calls": [
+        "failed",
+        "kind",
+        "provider_failed",
+        "receive",
+        "word"
+      ],
+      "nonlocal_targets": []
+    },
+    {
+      "machine": "received",
+      "states": [
+        "allocate",
+        "assembled",
+        "backing",
+        "buffer",
+        "bytes",
+        "commit_buffer",
+        "commit_integer",
+        "failed",
+        "integer",
+        "invalid",
+        "next",
+        "remember"
+      ],
+      "transition_calls": [
+        "allocate",
+        "assembled",
+        "backing",
+        "buffer",
+        "bytes",
+        "commit_buffer",
+        "commit_integer",
+        "failed",
+        "integer",
+        "invalid",
+        "next",
+        "remember"
+      ],
+      "nonlocal_targets": []
+    },
+    {
+      "machine": "fail",
+      "states": [],
+      "transition_calls": [],
+      "nonlocal_targets": []
+    }
+  ],
+  "candidate_execution": "Pending; standalone copied completion wrapper passed four selections, but actual Program/session execution and original equality trap remain unresolved."
+}

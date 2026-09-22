@@ -1,0 +1,85 @@
+{
+  "meaning": "Byte-for-byte diagnostic retention; historical absolute source paths are unchanged. This is not a complete Program/session verification.",
+  "files": [
+    {
+      "original": "/tmp/cathedral-field-read-completion-micro/main.omg",
+      "copy": "tools/ports/acpi/pipeline/field-reads/evidence/completion-micro/main.omg",
+      "sha256": "84319bdef1f8c044d6053ca45d5c05804e21d41379983ecd7dbbccba6f16ec09"
+    },
+    {
+      "original": "/tmp/cathedral-field-read-completion-micro/build.omg",
+      "copy": "tools/ports/acpi/pipeline/field-reads/evidence/completion-micro/build.omg",
+      "sha256": "d6d05cb9381bbe308557a1b0dae9bfae26b19920aa3669b867d8f54fa84baa8c"
+    },
+    {
+      "original": "/tmp/cathedral-field-read-completion-micro/generate.py",
+      "copy": "tools/ports/acpi/pipeline/field-reads/evidence/completion-micro/generate.py",
+      "sha256": "2c3c37a080f4ab4851e416257e472853294400ba90d01b830837ba420f6184e9"
+    },
+    {
+      "original": "/tmp/cathedral-field-read-completion-micro/manifest.json",
+      "copy": "tools/ports/acpi/pipeline/field-reads/evidence/completion-micro/manifest.json",
+      "sha256": "bcc80eabc653fb96f271c8bbd0604e0894e75cd41e4d13a44010e8739086c429"
+    },
+    {
+      "original": "/tmp/cathedral-field-read-completion-micro/output.log",
+      "copy": "tools/ports/acpi/pipeline/field-reads/evidence/completion-micro/output.log",
+      "sha256": "9b11671b3cf3776c8bc453746c1901f11a73c3ca6eed7d2889d9c493e4c2cc79"
+    },
+    {
+      "original": "/tmp/cathedral-field-read-completion-micro/transition-audit.json",
+      "copy": "tools/ports/acpi/pipeline/field-reads/evidence/completion-micro/transition-audit.json",
+      "sha256": "6d4f26ef42230f7931d9efa670928c4e566d97e46b1a4e588ae90df03c75a844"
+    },
+    {
+      "original": "/tmp/cathedral-field-read-completion-micro/attempt1/build.omg",
+      "copy": "tools/ports/acpi/pipeline/field-reads/evidence/completion-micro/attempt1/build.omg",
+      "sha256": "d6d05cb9381bbe308557a1b0dae9bfae26b19920aa3669b867d8f54fa84baa8c"
+    },
+    {
+      "original": "/tmp/cathedral-field-read-completion-micro/attempt1/generate.py",
+      "copy": "tools/ports/acpi/pipeline/field-reads/evidence/completion-micro/attempt1/generate.py",
+      "sha256": "4ad642571e1096fad018e63b2e1491f67124d59d4f5d5fddea7773d0eb7abcc5"
+    },
+    {
+      "original": "/tmp/cathedral-field-read-completion-micro/attempt1/main.omg",
+      "copy": "tools/ports/acpi/pipeline/field-reads/evidence/completion-micro/attempt1/main.omg",
+      "sha256": "a04769db8fdba730975bf6c8a3493a0a166bc225b08d00e5f07e0ef2702fc16f"
+    },
+    {
+      "original": "/tmp/cathedral-field-read-completion-micro/attempt1/manifest.json",
+      "copy": "tools/ports/acpi/pipeline/field-reads/evidence/completion-micro/attempt1/manifest.json",
+      "sha256": "8440903ca9d0b1b5dbc5ed66a41ad3f3a40834a78d412b63f1c93abcbc99d2e2"
+    },
+    {
+      "original": "/tmp/cathedral-field-read-completion-micro/attempt1/output.log",
+      "copy": "tools/ports/acpi/pipeline/field-reads/evidence/completion-micro/attempt1/output.log",
+      "sha256": "5473b28465af3a1172d129d33c6203d569eee8f2db2eb817377781ff818cb96b"
+    },
+    {
+      "original": "/tmp/cathedral-field-read-completion-micro/attempt2/build.omg",
+      "copy": "tools/ports/acpi/pipeline/field-reads/evidence/completion-micro/attempt2/build.omg",
+      "sha256": "d6d05cb9381bbe308557a1b0dae9bfae26b19920aa3669b867d8f54fa84baa8c"
+    },
+    {
+      "original": "/tmp/cathedral-field-read-completion-micro/attempt2/generate.py",
+      "copy": "tools/ports/acpi/pipeline/field-reads/evidence/completion-micro/attempt2/generate.py",
+      "sha256": "a2712b8013976b5aa2f60830bc8f4fcc57563861a946357ee1f6de0898cc2561"
+    },
+    {
+      "original": "/tmp/cathedral-field-read-completion-micro/attempt2/main.omg",
+      "copy": "tools/ports/acpi/pipeline/field-reads/evidence/completion-micro/attempt2/main.omg",
+      "sha256": "7b4fc157380e84ce437e4da93af34465d014cbd451163c16f74fc28c6551e246"
+    },
+    {
+      "original": "/tmp/cathedral-field-read-completion-micro/attempt2/manifest.json",
+      "copy": "tools/ports/acpi/pipeline/field-reads/evidence/completion-micro/attempt2/manifest.json",
+      "sha256": "413c3cc49c1fe22f744e329bb441965d5e47b244cd496adeedc47bfb0dcbd602"
+    },
+    {
+      "original": "/tmp/cathedral-field-read-completion-micro/attempt2/output.log",
+      "copy": "tools/ports/acpi/pipeline/field-reads/evidence/completion-micro/attempt2/output.log",
+      "sha256": "0858c0b16b4bb5bce8d8b4bf98b8057fd2a109484b6654e7a3a98792d7051744"
+    }
+  ]
+}

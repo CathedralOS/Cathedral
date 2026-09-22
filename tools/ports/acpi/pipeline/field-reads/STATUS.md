@@ -2,6 +2,8 @@
 
 Status on 2026-09-21: the implementation and 70 authored behavior/control pairs
 are retained for diagnosis. Actual successful Field-read execution is unverified.
+This candidate adds two local call wrappers to the retained `8ef8d145` draft.
+Its actual Program/session execution is pending; no new corpus has been started.
 The branch retains its original `50d8b3c1c904ff429b66f041a5c6daa83ad4569b`
 ancestry; it does not include later independent main-branch milestones.
 
@@ -53,20 +55,37 @@ reaches the deliberately failing retirement stub before decoding, so its inherit
 decoder expectation does not describe that route. This mixed diagnostic provides
 no complete Program or Field-read success claim.
 
-Two authored defects are identified in the unchanged production draft:
+Two authored defects were identified in the retained production draft:
 `turn::pending` transitions directly to the separate machine `prepare`, and
 `complete::word` transitions directly to the separate machine `received`.
 Omega state transitions must remain within their machine; these calls need
-local wrapper states. Whether they explain the earlier equality trap remains
+local wrapper states. This candidate supplies `turn::prepare_read` and
+`complete::receive`, each making an ordinary call to the separate machine and
+returning its result. The [transition audit](evidence/completion-micro/candidate-transition-audit.json)
+finds no remaining nonlocal transition-call targets in this module and records
+the exact before/after source hashes. Whether these defects explain the earlier equality trap remains
 under investigation. The full 70-pair run was therefore
 [stopped as superseded](evidence/full70-stopped/manifest.json), before any
 `CHECKED` or behavior output. Its exact generated main/build, 130 bound input
 hashes, runner hash, process identity, empty pre-stop log, SIGTERM action and
 reaped wrapper exit code 1 are retained. No full-corpus result is claimed.
 
-At this checkpoint the external staged diagnostic remains in progress, and the
-two production fixes are pending. Its future results are not included here. Frozen
-production and fixture bytes remain unchanged by this documentation/evidence
-checkpoint. No native execution, hardware/provider callback, grant, mapping,
+The [original completion diagnostic](evidence/completion-micro/attempt2/manifest.json)
+completed checking and then failed all four selections because the transition
+target `received` was absent from the current machine. The
+[local-wrapper diagnostic](evidence/completion-micro/manifest.json) passed all four
+selections, including all five actual Integer datum values, final decoder cursor
+and Return-parent contribution, wrong/stale request rejection, and rejection of
+a provider Failure carrying Success. Both versions and the initial harness
+compile failure are retained without rewriting their evidence. The probe uses
+real copied geometry and assembly bodies with directly seeded metadata. Its
+object validation and Buffer allocation paths are explicit failing stubs, and
+it omits loading and actual execution dispatch. It does not establish complete
+Program/session behavior or resolution of the original equality trap.
+
+At this checkpoint the external staged diagnostic remains in progress. Its
+future results are not included here. The original worktree and fixture bytes
+remain frozen; this candidate changes only the two production call wrappers.
+No native execution, hardware/provider callback, grant, mapping,
 lock acquisition, or Field write capability is claimed. ACPI-005 and whole
 upstream `do_field_read` remain incomplete.

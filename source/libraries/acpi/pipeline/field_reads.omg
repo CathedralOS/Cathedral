@@ -137,8 +137,9 @@ machine turn(session:&mut Session,index:u64,limit:u64)->ExecutionOutcome {
  state published(session:&mut Session)->ExecutionOutcome {session.state=State::Finished;ExecutionOutcome::Success}
  state pending(session:&mut Session)->ExecutionOutcome {
   let deferred:DeferredRead=pending_read(&session.runtime);
-  transition deferred {DeferredRead::Field {object,at,next} -> prepare(session,object) _ -> (ExecutionOutcome::Success)}
+  transition deferred {DeferredRead::Field {object,at,next} -> prepare_read(session,object) _ -> (ExecutionOutcome::Success)}
  }
+ state prepare_read(session:&mut Session,object:u64)->ExecutionOutcome {let result:ExecutionOutcome=prepare(session,object);result}
 }
 machine prepare(session:&mut Session,object:u64)->ExecutionOutcome {
  let count:u64=session.program.store.space.object_count;
@@ -255,8 +256,9 @@ pub machine complete(session:&mut Session,completion:Completion)->ExecutionOutco
  }
  state word(session:&mut Session,request:NativeRead,value:u64)->ExecutionOutcome {
   let same:bool=same_request(request,session.transfer.request);
-  transition same {true -> received(session,value) _ -> (ExecutionOutcome::InvalidState)}
+  transition same {true -> receive(session,value) _ -> (ExecutionOutcome::InvalidState)}
  }
+ state receive(session:&mut Session,value:u64)->ExecutionOutcome {let result:ExecutionOutcome=received(session,value);result}
  state failed(session:&mut Session,request:NativeRead,outcome:ExecutionOutcome)->ExecutionOutcome {
   let same:bool=same_request(request,session.transfer.request);
   transition same && outcome!=ExecutionOutcome::Success {

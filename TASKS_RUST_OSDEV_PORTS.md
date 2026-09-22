@@ -812,6 +812,17 @@ replacement, Field metadata without region access, Field-target rejection,
 Owned Local sources and seeded RefOf/Index argument redirection. Component
 receipts retain their original source identities.
 
+[Resumable normal Field reads](source/libraries/acpi/pipeline/field-reads.PORT.md)
+remain an incomplete transcription. The retained 213 ordinary execution/bridge
+pairs are historical; the original actual Field-read pair traps during checked
+interpretation, and the full 70-pair run was stopped before results. A candidate
+fixes two invalid cross-machine transitions with local calling states. Its copied
+Integer completion diagnostic passes four selections, with the original
+missing-state failure retained, but actual Program/session execution and the
+earlier equality trap remain unresolved. See the exact
+[draft status](tools/ports/acpi/pipeline/field-reads/STATUS.md). No provider or
+hardware access is added; ACPI-005 remains open.
+
 ## Phase 5 — only after the corpus above is healthy
 
 - [ ] Port selected pure pieces and tests from APIC, xHCI, USB, PS/2, VGA, and
