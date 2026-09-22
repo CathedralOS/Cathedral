@@ -1,0 +1,142 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Modified do_logical_op composition from rust-osdev/acpi
+// 257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5, src/aml/mod.rs:1972.
+// Copyright 2018 Isaac Woods. Primary rules: ACPI 6.6 19.3.5.4 and L* operators.
+module logical_execution;
+use aml::model::ObjectStore;
+use aml::model::Value;
+use aml::model::Outcome;
+use aml::model::ReferenceState;
+use aml::object_references::unwrap_transparent;
+use aml::implicit_conversions;
+use aml::implicit_conversions::ImplicitResult;
+use aml::implicit_conversions::ConversionTarget;
+use aml::object_conversions::ConversionFailure;
+use execution_model::ExecutionOutcome;
+use execution_model::Operand;
+use execution_model::Frame;
+use named_store::conversion_outcome;
+use operands::contribute_integer;
+use operator_specs::compute_integer;
+use integer_helpers::integers::IntegerSize;
+use integer_helpers::integers::IntegerResult;
+use integer_helpers::integers::normalize;
+use integer_helpers::integers::integer_mask;
+use integer_helpers::conversions::integer_to_buffer;
+use integer_helpers::implicit_strings;
+use integer_helpers::implicit_strings::StringResult;
+use integer_helpers::byte_comparison;
+use integer_helpers::byte_comparison::Comparison;
+use integer_helpers::byte_comparison::BufferOrdering;
+
+data LogicalPrepared [copy] {outcome:ExecutionOutcome;target:ConversionTarget;number:u64;length:u64;bytes:[u8;256];}
+
+// AML has already evaluated operands in order. Truth operands independently
+// convert to Integer; relations use the admitted left type for right conversion.
+// No temporary object or result cell consumes the caller's object arena.
+pub machine retire_logical(input:&[u8;1024],store:&ObjectStore,frame:&mut Frame,opcode:u64,left:Operand,right:Operand)->ExecutionOutcome {
+ transition opcode {
+  0x90 -> first(input,store,frame,opcode,left,right,false)
+  0x91 -> first(input,store,frame,opcode,left,right,false)
+  0x92 -> first(input,store,frame,opcode,left,right,false)
+  0x93 -> first(input,store,frame,opcode,left,right,true)
+  0x94 -> first(input,store,frame,opcode,left,right,true)
+  0x95 -> first(input,store,frame,opcode,left,right,true)
+  0x9293 -> first(input,store,frame,opcode,left,right,true)
+  0x9294 -> first(input,store,frame,opcode,left,right,true)
+  0x9295 -> first(input,store,frame,opcode,left,right,true)
+  _ -> (ExecutionOutcome::BadEncoding)
+ }
+ state first(input:&[u8;1024],store:&ObjectStore,frame:&mut Frame,opcode:u64,left:Operand,right:Operand,select_kind:bool)->ExecutionOutcome {
+  let a:LogicalPrepared=prepare_logical_operand(input,frame.source_length,frame.body.unit,store,frame.size,left,ConversionTarget::Integer,select_kind);
+  transition a.outcome==ExecutionOutcome::Success {true -> arity(input,store,frame,opcode,a,right) _ -> (a.outcome)}
+ }
+ state arity(input:&[u8;1024],store:&ObjectStore,frame:&mut Frame,opcode:u64,a:LogicalPrepared,right:Operand)->ExecutionOutcome {
+  transition opcode==0x92 {true -> numbers(frame,opcode,a.number,0) _ -> second(input,store,frame,opcode,a,right)}
+ }
+ state second(input:&[u8;1024],store:&ObjectStore,frame:&mut Frame,opcode:u64,a:LogicalPrepared,right:Operand)->ExecutionOutcome {
+  let b:LogicalPrepared=prepare_logical_operand(input,frame.source_length,frame.body.unit,store,frame.size,right,a.target,false);
+  transition b.outcome==ExecutionOutcome::Success {true -> compare(frame,opcode,a,b) _ -> (b.outcome)}
+ }
+ state compare(frame:&mut Frame,opcode:u64,a:LogicalPrepared,b:LogicalPrepared)->ExecutionOutcome {
+  transition a.target {ConversionTarget::Integer -> numbers(frame,opcode,a.number,b.number)
+   ConversionTarget::Buffer -> buffers(frame,opcode,a,b) ConversionTarget::String -> strings(frame,opcode,a,b)}
+ }
+ state numbers(frame:&mut Frame,opcode:u64,a:u64,b:u64)->ExecutionOutcome {
+  let result:IntegerResult=compute_integer(frame.size,opcode,a,b);
+  transition result.error==0 {true -> contribute(frame,result.value) _ -> (ExecutionOutcome::BadEncoding)}
+ }
+ state buffers(frame:&mut Frame,opcode:u64,a:LogicalPrepared,b:LogicalPrepared)->ExecutionOutcome {
+  let order:Comparison=byte_comparison::compare_buffers(&a.bytes,a.length,&b.bytes,b.length,BufferOrdering::Lexicographic);
+  transition order {Comparison::Less -> boolean(frame,opcode==0x9293 || opcode==0x95 || opcode==0x9294)
+   Comparison::Equal -> boolean(frame,opcode==0x93 || opcode==0x9294 || opcode==0x9295)
+   Comparison::Greater -> boolean(frame,opcode==0x9293 || opcode==0x94 || opcode==0x9295)
+   Comparison::Capacity -> (ExecutionOutcome::Capacity) Comparison::Encoding -> (ExecutionOutcome::Encoding)}
+ }
+ state strings(frame:&mut Frame,opcode:u64,a:LogicalPrepared,b:LogicalPrepared)->ExecutionOutcome {
+  let order:Comparison=byte_comparison::compare_strings(&a.bytes,a.length,&b.bytes,b.length);
+  transition order {Comparison::Less -> boolean(frame,opcode==0x9293 || opcode==0x95 || opcode==0x9294)
+   Comparison::Equal -> boolean(frame,opcode==0x93 || opcode==0x9294 || opcode==0x9295)
+   Comparison::Greater -> boolean(frame,opcode==0x9293 || opcode==0x94 || opcode==0x9295)
+   Comparison::Capacity -> (ExecutionOutcome::Capacity) Comparison::Encoding -> (ExecutionOutcome::Encoding)}
+ }
+ state boolean(frame:&mut Frame,yes:bool)->ExecutionOutcome {
+  let mask:u64=integer_mask(frame.size);transition yes {true -> contribute(frame,mask) _ -> contribute(frame,0)}
+ }
+ state contribute(frame:&mut Frame,number:u64)->ExecutionOutcome {let result:ExecutionOutcome=contribute_integer(frame,number);result}
+}
+
+machine prepare_logical_operand(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,size:IntegerSize,operand:Operand,target:ConversionTarget,select_kind:bool)->LogicalPrepared {
+ transition operand {Operand::Uninitialized -> (LogicalPrepared {outcome:ExecutionOutcome::Uninitialized})
+  Operand::Integer {number} -> scalar(size,number,target,select_kind)
+  Operand::Object {object_id} -> object(input,length,unit,store,size,object_id,target,select_kind)}
+ state scalar(size:IntegerSize,number:u64,target:ConversionTarget,select_kind:bool)->LogicalPrepared {
+  let value:u64=normalize(size,number);
+  transition select_kind {true -> (LogicalPrepared {number:value}) _ -> scalar_target(size,value,target)}
+ }
+ state scalar_target(size:IntegerSize,number:u64,target:ConversionTarget)->LogicalPrepared {
+  transition target {ConversionTarget::Integer -> (LogicalPrepared {number:number})
+   ConversionTarget::Buffer -> buffer(size,number) ConversionTarget::String -> string(size,number)}
+ }
+ state buffer(size:IntegerSize,number:u64)->LogicalPrepared {
+  let mut prepared:LogicalPrepared=LogicalPrepared {target:ConversionTarget::Buffer};
+  let result:IntegerResult=integer_to_buffer(size,number,&mut prepared.bytes);prepared.length=result.value;
+  transition result.error==0 {true -> (prepared) _ -> (LogicalPrepared {outcome:ExecutionOutcome::Capacity})}
+ }
+ state string(size:IntegerSize,number:u64)->LogicalPrepared {
+  let result:StringResult=implicit_strings::from_integer(size,number);
+  transition result {StringResult::String {length,bytes} -> (LogicalPrepared {target:ConversionTarget::String,length:length,bytes:bytes})
+   StringResult::Capacity -> (LogicalPrepared {outcome:ExecutionOutcome::Capacity})}
+ }
+ state object(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,size:IntegerSize,id:u64,target:ConversionTarget,select_kind:bool)->LogicalPrepared {
+  let found:ReferenceState=unwrap_transparent(&store.space,id,64);
+  transition found.outcome {Outcome::Success -> admitted(input,length,unit,store,size,found.object,target,select_kind)
+   Outcome::ReferenceCycle -> (LogicalPrepared {outcome:ExecutionOutcome::ReferenceCycle})
+   Outcome::WorkLimit -> (LogicalPrepared {outcome:ExecutionOutcome::WorkLimit})
+   _ -> (LogicalPrepared {outcome:ExecutionOutcome::InvalidState})}
+ }
+ state admitted(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,size:IntegerSize,id:u64,target:ConversionTarget,select_kind:bool)->LogicalPrepared {
+  transition id<64 {true -> initialized(input,length,unit,store,size,id,target,select_kind) _ -> (LogicalPrepared {outcome:ExecutionOutcome::InvalidState})}
+ }
+ state initialized(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,size:IntegerSize,id:u64,target:ConversionTarget,select_kind:bool)->LogicalPrepared {
+  transition store.space.objects[id].value {Value::Uninitialized -> (LogicalPrepared {outcome:ExecutionOutcome::Uninitialized}) _ -> kind(input,length,unit,store,size,id,target,select_kind)}
+ }
+ state kind(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,size:IntegerSize,id:u64,target:ConversionTarget,select_kind:bool)->LogicalPrepared {
+  transition select_kind {true -> select(input,length,unit,store,size,id) _ -> convert(input,length,unit,store,size,id,target)}
+ }
+ state select(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,size:IntegerSize,id:u64)->LogicalPrepared {
+  transition store.space.objects[id].value {
+   Value::Integer {number} -> convert(input,length,unit,store,size,id,ConversionTarget::Integer)
+   Value::Buffer {buffer_storage} -> convert(input,length,unit,store,size,id,ConversionTarget::Buffer)
+   Value::String {string_storage} -> convert(input,length,unit,store,size,id,ConversionTarget::String)
+   _ -> (LogicalPrepared {outcome:ExecutionOutcome::UnsupportedValue})}
+ }
+ state convert(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,size:IntegerSize,id:u64,target:ConversionTarget)->LogicalPrepared {
+  let value:ImplicitResult=implicit_conversions::convert(input,length,unit,store,id,size,target);
+  transition value {ImplicitResult::Integer {number} -> (LogicalPrepared {number:number})
+   ImplicitResult::Buffer {length,bytes} -> (LogicalPrepared {target:ConversionTarget::Buffer,length:length,bytes:bytes})
+   ImplicitResult::String {length,bytes} -> (LogicalPrepared {target:ConversionTarget::String,length:length,bytes:bytes})
+   ImplicitResult::Failure {reason} -> failed(reason)}
+ }
+ state failed(reason:ConversionFailure)->LogicalPrepared {let error:ExecutionOutcome=conversion_outcome(reason);LogicalPrepared {outcome:error}}
+}

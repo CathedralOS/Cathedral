@@ -723,6 +723,14 @@ pairs and three constant pairs pass, including exact 32/64-bit Boolean results,
 full right admission and malformed-tail errors. Operand/reference evaluation and
 context retirement remain pending; aggregate source counts are unchanged.
 
+[Logical opcode execution](source/libraries/acpi/interpreter/execution/logical.PORT.md)
+is transcribed on an isolated branch: inline/canonical operand conversion,
+transparent references, exact-width Boolean results and parent contribution.
+Its 221 AML and 138 whole-state cases are authored, with 315 retained regression
+cases selected; checked Omega execution is pending. The 212 public Rust
+observations retain 61 value/state agreements and all 151 nonagreements.
+The complete source anchor and aggregate counts remain pending.
+
 [Direct object descriptions](source/libraries/acpi/aml/object-descriptions.PORT.md) supply the eleven represented nonbasic
 Concatenate labels without reading or validating object payloads. All 115 checked
 pairs, three constant pairs and eleven static pinned-label audits pass; receipts

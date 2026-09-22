@@ -30,6 +30,7 @@ use control::enter_block;
 use operator_specs::compute_integer;
 use to_integer_execution::retire_to_integer;
 use mid_execution::retire_mid;
+use logical_execution::retire_logical;
 use integer_helpers::integers::IntegerResult;
 pub machine retire_operation(input:&[u8;1024],space:&mut ObjectStore,frame:&mut Frame,operation:Operation)->ExecutionOutcome {
  transition operation.opcode {
@@ -40,12 +41,24 @@ pub machine retire_operation(input:&[u8;1024],space:&mut ObjectStore,frame:&mut 
   0x99 -> integer_conversion_retirement(input,space,frame,operation.operands[0],operation.first_target)
   0x9e -> mid_retirement(input,space,frame,operation)
   0x9d -> copy(input,space,frame,operation.first_target,operation.operands[0],true)
+  0x90 -> logical_retirement(input,space,frame,operation)
+  0x91 -> logical_retirement(input,space,frame,operation)
+  0x92 -> logical_retirement(input,space,frame,operation)
+  0x93 -> logical_retirement(input,space,frame,operation)
+  0x94 -> logical_retirement(input,space,frame,operation)
+  0x95 -> logical_retirement(input,space,frame,operation)
+  0x9293 -> logical_retirement(input,space,frame,operation)
+  0x9294 -> logical_retirement(input,space,frame,operation)
+  0x9295 -> logical_retirement(input,space,frame,operation)
   0x75 -> increment(input,space,frame,operation.opcode,operation.target_arity,operation.first_target,operation.second_target)
   0x76 -> increment(input,space,frame,operation.opcode,operation.target_arity,operation.first_target,operation.second_target)
   _ -> scalar_a(input,space,frame,operation.opcode,operation.value_arity,operation.target_arity,operation.first_target,operation.second_target,operation.operands[0],operation.operands[1])
  }
  state integer_conversion_retirement(input:&[u8;1024],space:&mut ObjectStore,frame:&mut Frame,operand:Operand,target:Target)->ExecutionOutcome {
   let result:ExecutionOutcome=retire_to_integer(input,space,frame,operand,target);result
+ }
+ state logical_retirement(input:&[u8;1024],space:&ObjectStore,frame:&mut Frame,operation:Operation)->ExecutionOutcome {
+  let result:ExecutionOutcome=retire_logical(input,space,frame,operation.opcode,operation.operands[0],operation.operands[1]);result
  }
  state mid_retirement(input:&[u8;1024],space:&mut ObjectStore,frame:&mut Frame,operation:Operation)->ExecutionOutcome {
   let result:ExecutionOutcome=retire_mid(input,space,frame,operation.operands[0],operation.operands[1],operation.operands[2],operation.first_target);result
