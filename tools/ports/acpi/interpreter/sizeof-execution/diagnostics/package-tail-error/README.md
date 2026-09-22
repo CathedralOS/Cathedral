@@ -39,3 +39,11 @@ Their host transport tests use synthetic temporary results solely to exercise
 receipt handling. `correction-public-replay.json` binds 76 actual observations
 to the unchanged public binary. None of these records promotes the corrected
 Omega candidate to a passing full run.
+
+`host-retention.py` reproduces ten receipt-retention scenarios and eight
+verifier rejections with temporary synthetic transport results. It launches
+neither Omega nor Rust and leaves all 160 candidate inputs unchanged:
+
+```sh
+python3 tools/ports/acpi/interpreter/sizeof-execution/diagnostics/package-tail-error/host-retention.py --root "$PWD" --record /tmp/sizeof-host-retention.json
+```
