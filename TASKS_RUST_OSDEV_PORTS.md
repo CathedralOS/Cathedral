@@ -763,6 +763,15 @@ remain pending. The 212 public Rust
 observations retain 61 value/state agreements and all 151 nonagreements.
 The complete source anchor and aggregate counts remain pending.
 
+[Executor composition tooling](tools/ports/acpi/interpreter/executor-integration/README.md)
+combines the Field-write, Concatenate, ToString, logical and Mid drafts on an
+isolated branch. It authors 60 additional composition/frame pairs and retains
+1,031 component/regression pairs, with explicit coverage for every added Frame
+continuation member. Immutable component source audits and fixture generation
+are separate from execution evidence; checked integration remains pending.
+Component receipts retain their original source scope and aggregate counts are
+unchanged.
+
 [Direct object descriptions](source/libraries/acpi/aml/object-descriptions.PORT.md) supply the eleven represented nonbasic
 Concatenate labels without reading or validating object payloads. All 115 checked
 pairs, three constant pairs and eleven static pinned-label audits pass; receipts

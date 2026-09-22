@@ -1,0 +1,226 @@
+[
+  {
+    "name": "frame_mode_false",
+    "kind": "comparator",
+    "mode": false,
+    "pending": "DeferredWrite::None",
+    "mutation": "expected.field_writes=true;"
+  },
+  {
+    "name": "frame_mode_true",
+    "kind": "comparator",
+    "mode": true,
+    "pending": "DeferredWrite::Field {object:63,source:Operand::Object {object_id:61},result:Operand::Integer {number:18446744073709551615},stored:true,has_second:true,second_target:Target::Argument {argument_index:6},second_value:81985529216486895}",
+    "mutation": "expected.field_writes=false;"
+  },
+  {
+    "name": "frame_none_to_field",
+    "kind": "comparator",
+    "mode": true,
+    "pending": "DeferredWrite::None",
+    "mutation": "expected.deferred_write=DeferredWrite::Field {object:63,source:Operand::Object {object_id:61},result:Operand::Integer {number:18446744073709551615},stored:true,has_second:true,second_target:Target::Argument {argument_index:6},second_value:81985529216486895};"
+  },
+  {
+    "name": "frame_field_to_none",
+    "kind": "comparator",
+    "mode": true,
+    "pending": "DeferredWrite::Field {object:63,source:Operand::Object {object_id:61},result:Operand::Integer {number:18446744073709551615},stored:true,has_second:true,second_target:Target::Argument {argument_index:6},second_value:81985529216486895}",
+    "mutation": "expected.deferred_write=DeferredWrite::None;"
+  },
+  {
+    "name": "frame_object",
+    "kind": "comparator",
+    "mode": true,
+    "pending": "DeferredWrite::Field {object:63,source:Operand::Object {object_id:61},result:Operand::Integer {number:18446744073709551615},stored:true,has_second:true,second_target:Target::Argument {argument_index:6},second_value:81985529216486895}",
+    "mutation": "expected.deferred_write=DeferredWrite::Field {object:18446744073709551615,source:Operand::Object {object_id:61},result:Operand::Integer {number:18446744073709551615},stored:true,has_second:true,second_target:Target::Argument {argument_index:6},second_value:81985529216486895};"
+  },
+  {
+    "name": "frame_source_uninitialized",
+    "kind": "comparator",
+    "mode": true,
+    "pending": "DeferredWrite::Field {object:63,source:Operand::Uninitialized,result:Operand::Integer {number:18446744073709551615},stored:true,has_second:true,second_target:Target::Argument {argument_index:6},second_value:81985529216486895}",
+    "mutation": "expected.deferred_write=DeferredWrite::Field {object:63,source:Operand::Integer {number:0},result:Operand::Integer {number:18446744073709551615},stored:true,has_second:true,second_target:Target::Argument {argument_index:6},second_value:81985529216486895};"
+  },
+  {
+    "name": "frame_source_integer",
+    "kind": "comparator",
+    "mode": true,
+    "pending": "DeferredWrite::Field {object:63,source:Operand::Integer {number:63},result:Operand::Integer {number:18446744073709551615},stored:true,has_second:true,second_target:Target::Argument {argument_index:6},second_value:81985529216486895}",
+    "mutation": "expected.deferred_write=DeferredWrite::Field {object:63,source:Operand::Integer {number:64},result:Operand::Integer {number:18446744073709551615},stored:true,has_second:true,second_target:Target::Argument {argument_index:6},second_value:81985529216486895};"
+  },
+  {
+    "name": "frame_source_object",
+    "kind": "comparator",
+    "mode": true,
+    "pending": "DeferredWrite::Field {object:63,source:Operand::Object {object_id:63},result:Operand::Integer {number:18446744073709551615},stored:true,has_second:true,second_target:Target::Argument {argument_index:6},second_value:81985529216486895}",
+    "mutation": "expected.deferred_write=DeferredWrite::Field {object:63,source:Operand::Object {object_id:64},result:Operand::Integer {number:18446744073709551615},stored:true,has_second:true,second_target:Target::Argument {argument_index:6},second_value:81985529216486895};"
+  },
+  {
+    "name": "frame_source_tag",
+    "kind": "comparator",
+    "mode": true,
+    "pending": "DeferredWrite::Field {object:63,source:Operand::Integer {number:0},result:Operand::Integer {number:18446744073709551615},stored:true,has_second:true,second_target:Target::Argument {argument_index:6},second_value:81985529216486895}",
+    "mutation": "expected.deferred_write=DeferredWrite::Field {object:63,source:Operand::Object {object_id:0},result:Operand::Integer {number:18446744073709551615},stored:true,has_second:true,second_target:Target::Argument {argument_index:6},second_value:81985529216486895};"
+  },
+  {
+    "name": "frame_result_uninitialized",
+    "kind": "comparator",
+    "mode": true,
+    "pending": "DeferredWrite::Field {object:63,source:Operand::Object {object_id:61},result:Operand::Uninitialized,stored:true,has_second:true,second_target:Target::Argument {argument_index:6},second_value:81985529216486895}",
+    "mutation": "expected.deferred_write=DeferredWrite::Field {object:63,source:Operand::Object {object_id:61},result:Operand::Integer {number:0},stored:true,has_second:true,second_target:Target::Argument {argument_index:6},second_value:81985529216486895};"
+  },
+  {
+    "name": "frame_result_integer",
+    "kind": "comparator",
+    "mode": true,
+    "pending": "DeferredWrite::Field {object:63,source:Operand::Object {object_id:61},result:Operand::Integer {number:63},stored:true,has_second:true,second_target:Target::Argument {argument_index:6},second_value:81985529216486895}",
+    "mutation": "expected.deferred_write=DeferredWrite::Field {object:63,source:Operand::Object {object_id:61},result:Operand::Integer {number:64},stored:true,has_second:true,second_target:Target::Argument {argument_index:6},second_value:81985529216486895};"
+  },
+  {
+    "name": "frame_result_object",
+    "kind": "comparator",
+    "mode": true,
+    "pending": "DeferredWrite::Field {object:63,source:Operand::Object {object_id:61},result:Operand::Object {object_id:63},stored:true,has_second:true,second_target:Target::Argument {argument_index:6},second_value:81985529216486895}",
+    "mutation": "expected.deferred_write=DeferredWrite::Field {object:63,source:Operand::Object {object_id:61},result:Operand::Object {object_id:64},stored:true,has_second:true,second_target:Target::Argument {argument_index:6},second_value:81985529216486895};"
+  },
+  {
+    "name": "frame_result_tag",
+    "kind": "comparator",
+    "mode": true,
+    "pending": "DeferredWrite::Field {object:63,source:Operand::Object {object_id:61},result:Operand::Integer {number:0},stored:true,has_second:true,second_target:Target::Argument {argument_index:6},second_value:81985529216486895}",
+    "mutation": "expected.deferred_write=DeferredWrite::Field {object:63,source:Operand::Object {object_id:61},result:Operand::Object {object_id:0},stored:true,has_second:true,second_target:Target::Argument {argument_index:6},second_value:81985529216486895};"
+  },
+  {
+    "name": "frame_stored_false",
+    "kind": "comparator",
+    "mode": true,
+    "pending": "DeferredWrite::Field {object:63,source:Operand::Object {object_id:61},result:Operand::Integer {number:18446744073709551615},stored:false,has_second:true,second_target:Target::Argument {argument_index:6},second_value:81985529216486895}",
+    "mutation": "expected.deferred_write=DeferredWrite::Field {object:63,source:Operand::Object {object_id:61},result:Operand::Integer {number:18446744073709551615},stored:true,has_second:true,second_target:Target::Argument {argument_index:6},second_value:81985529216486895};"
+  },
+  {
+    "name": "frame_stored_true",
+    "kind": "comparator",
+    "mode": true,
+    "pending": "DeferredWrite::Field {object:63,source:Operand::Object {object_id:61},result:Operand::Integer {number:18446744073709551615},stored:true,has_second:true,second_target:Target::Argument {argument_index:6},second_value:81985529216486895}",
+    "mutation": "expected.deferred_write=DeferredWrite::Field {object:63,source:Operand::Object {object_id:61},result:Operand::Integer {number:18446744073709551615},stored:false,has_second:true,second_target:Target::Argument {argument_index:6},second_value:81985529216486895};"
+  },
+  {
+    "name": "frame_has_second_false",
+    "kind": "comparator",
+    "mode": true,
+    "pending": "DeferredWrite::Field {object:63,source:Operand::Object {object_id:61},result:Operand::Integer {number:18446744073709551615},stored:true,has_second:false,second_target:Target::Argument {argument_index:6},second_value:81985529216486895}",
+    "mutation": "expected.deferred_write=DeferredWrite::Field {object:63,source:Operand::Object {object_id:61},result:Operand::Integer {number:18446744073709551615},stored:true,has_second:true,second_target:Target::Argument {argument_index:6},second_value:81985529216486895};"
+  },
+  {
+    "name": "frame_has_second_true",
+    "kind": "comparator",
+    "mode": true,
+    "pending": "DeferredWrite::Field {object:63,source:Operand::Object {object_id:61},result:Operand::Integer {number:18446744073709551615},stored:true,has_second:true,second_target:Target::Argument {argument_index:6},second_value:81985529216486895}",
+    "mutation": "expected.deferred_write=DeferredWrite::Field {object:63,source:Operand::Object {object_id:61},result:Operand::Integer {number:18446744073709551615},stored:true,has_second:false,second_target:Target::Argument {argument_index:6},second_value:81985529216486895};"
+  },
+  {
+    "name": "frame_target_null",
+    "kind": "comparator",
+    "mode": true,
+    "pending": "DeferredWrite::Field {object:63,source:Operand::Object {object_id:61},result:Operand::Integer {number:18446744073709551615},stored:true,has_second:true,second_target:Target::Null,second_value:81985529216486895}",
+    "mutation": "expected.deferred_write=DeferredWrite::Field {object:63,source:Operand::Object {object_id:61},result:Operand::Integer {number:18446744073709551615},stored:true,has_second:true,second_target:Target::Debug,second_value:81985529216486895};"
+  },
+  {
+    "name": "frame_target_debug",
+    "kind": "comparator",
+    "mode": true,
+    "pending": "DeferredWrite::Field {object:63,source:Operand::Object {object_id:61},result:Operand::Integer {number:18446744073709551615},stored:true,has_second:true,second_target:Target::Debug,second_value:81985529216486895}",
+    "mutation": "expected.deferred_write=DeferredWrite::Field {object:63,source:Operand::Object {object_id:61},result:Operand::Integer {number:18446744073709551615},stored:true,has_second:true,second_target:Target::Null,second_value:81985529216486895};"
+  },
+  {
+    "name": "frame_target_local",
+    "kind": "comparator",
+    "mode": true,
+    "pending": "DeferredWrite::Field {object:63,source:Operand::Object {object_id:61},result:Operand::Integer {number:18446744073709551615},stored:true,has_second:true,second_target:Target::Local {local_index:7},second_value:81985529216486895}",
+    "mutation": "expected.deferred_write=DeferredWrite::Field {object:63,source:Operand::Object {object_id:61},result:Operand::Integer {number:18446744073709551615},stored:true,has_second:true,second_target:Target::Local {local_index:6},second_value:81985529216486895};"
+  },
+  {
+    "name": "frame_target_argument",
+    "kind": "comparator",
+    "mode": true,
+    "pending": "DeferredWrite::Field {object:63,source:Operand::Object {object_id:61},result:Operand::Integer {number:18446744073709551615},stored:true,has_second:true,second_target:Target::Argument {argument_index:6},second_value:81985529216486895}",
+    "mutation": "expected.deferred_write=DeferredWrite::Field {object:63,source:Operand::Object {object_id:61},result:Operand::Integer {number:18446744073709551615},stored:true,has_second:true,second_target:Target::Argument {argument_index:5},second_value:81985529216486895};"
+  },
+  {
+    "name": "frame_target_named",
+    "kind": "comparator",
+    "mode": true,
+    "pending": "DeferredWrite::Field {object:63,source:Operand::Object {object_id:61},result:Operand::Integer {number:18446744073709551615},stored:true,has_second:true,second_target:Target::Named {object_id:63},second_value:81985529216486895}",
+    "mutation": "expected.deferred_write=DeferredWrite::Field {object:63,source:Operand::Object {object_id:61},result:Operand::Integer {number:18446744073709551615},stored:true,has_second:true,second_target:Target::Named {object_id:64},second_value:81985529216486895};"
+  },
+  {
+    "name": "frame_target_tag",
+    "kind": "comparator",
+    "mode": true,
+    "pending": "DeferredWrite::Field {object:63,source:Operand::Object {object_id:61},result:Operand::Integer {number:18446744073709551615},stored:true,has_second:true,second_target:Target::Local {local_index:0},second_value:81985529216486895}",
+    "mutation": "expected.deferred_write=DeferredWrite::Field {object:63,source:Operand::Object {object_id:61},result:Operand::Integer {number:18446744073709551615},stored:true,has_second:true,second_target:Target::Named {object_id:0},second_value:81985529216486895};"
+  },
+  {
+    "name": "frame_second_value",
+    "kind": "comparator",
+    "mode": true,
+    "pending": "DeferredWrite::Field {object:63,source:Operand::Object {object_id:61},result:Operand::Integer {number:18446744073709551615},stored:true,has_second:true,second_target:Target::Argument {argument_index:6},second_value:18446744073709551615}",
+    "mutation": "expected.deferred_write=DeferredWrite::Field {object:63,source:Operand::Object {object_id:61},result:Operand::Integer {number:18446744073709551615},stored:true,has_second:true,second_target:Target::Argument {argument_index:6},second_value:0};"
+  },
+  {
+    "name": "frame_inactive_second_target",
+    "kind": "comparator",
+    "mode": true,
+    "pending": "DeferredWrite::Field {object:63,source:Operand::Object {object_id:61},result:Operand::Integer {number:18446744073709551615},stored:true,has_second:false,second_target:Target::Argument {argument_index:6},second_value:81985529216486895}",
+    "mutation": "expected.deferred_write=DeferredWrite::Field {object:63,source:Operand::Object {object_id:61},result:Operand::Integer {number:18446744073709551615},stored:true,has_second:false,second_target:Target::Null,second_value:81985529216486895};"
+  },
+  {
+    "name": "frame_inactive_second_value",
+    "kind": "comparator",
+    "mode": true,
+    "pending": "DeferredWrite::Field {object:63,source:Operand::Object {object_id:61},result:Operand::Integer {number:18446744073709551615},stored:true,has_second:false,second_target:Target::Argument {argument_index:6},second_value:81985529216486895}",
+    "mutation": "expected.deferred_write=DeferredWrite::Field {object:63,source:Operand::Object {object_id:61},result:Operand::Integer {number:18446744073709551615},stored:true,has_second:false,second_target:Target::Argument {argument_index:6},second_value:0};"
+  },
+  {
+    "name": "pending_logical_success",
+    "kind": "retirement",
+    "operator": "logical",
+    "bits": 32,
+    "fails": false
+  },
+  {
+    "name": "pending_logical_rollback",
+    "kind": "retirement",
+    "operator": "logical",
+    "bits": 32,
+    "fails": true
+  },
+  {
+    "name": "pending_to_string_success",
+    "kind": "retirement",
+    "operator": "to_string",
+    "bits": 64,
+    "fails": false
+  },
+  {
+    "name": "pending_to_string_rollback",
+    "kind": "retirement",
+    "operator": "to_string",
+    "bits": 64,
+    "fails": true
+  },
+  {
+    "name": "pending_mid_success",
+    "kind": "retirement",
+    "operator": "mid",
+    "bits": 32,
+    "fails": false
+  },
+  {
+    "name": "pending_mid_rollback",
+    "kind": "retirement",
+    "operator": "mid",
+    "bits": 32,
+    "fails": true
+  }
+]

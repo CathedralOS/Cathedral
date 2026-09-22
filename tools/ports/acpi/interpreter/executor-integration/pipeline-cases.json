@@ -1,0 +1,1154 @@
+[
+  {
+    "name": "to_string_store_32",
+    "aml": "5b805245473000000b00025b810d52454730010003464c44300d085352433011080a05414243005a14144d41494e00a4709c535243300a0300464c4430",
+    "size": 32,
+    "kind": "string",
+    "number": 0,
+    "raw": "414243",
+    "source_id": 4,
+    "initial_count": 4,
+    "allocations": [
+      {
+        "id": 4,
+        "kind": "string",
+        "raw": "414243"
+      }
+    ],
+    "object_count": 5,
+    "bits": 13,
+    "offset": 3,
+    "width": 1,
+    "base": 0,
+    "fail_at": 18446744073709551615,
+    "quota": 16384,
+    "events": [
+      {
+        "kind": "Read",
+        "field": 1,
+        "payload": 0,
+        "serial": 0,
+        "chunk": 0,
+        "offset": 0,
+        "width": 1,
+        "value": 0,
+        "response": 3
+      },
+      {
+        "kind": "Write",
+        "field": 1,
+        "payload": 0,
+        "serial": 1,
+        "chunk": 0,
+        "offset": 0,
+        "width": 1,
+        "value": 11,
+        "response": 11
+      },
+      {
+        "kind": "Write",
+        "field": 1,
+        "payload": 0,
+        "serial": 2,
+        "chunk": 1,
+        "offset": 1,
+        "width": 1,
+        "value": 2,
+        "response": 2
+      },
+      {
+        "kind": "Read",
+        "field": 1,
+        "payload": 1,
+        "serial": 0,
+        "chunk": 0,
+        "offset": 0,
+        "width": 1,
+        "value": 0,
+        "response": 11
+      },
+      {
+        "kind": "Write",
+        "field": 1,
+        "payload": 1,
+        "serial": 1,
+        "chunk": 0,
+        "offset": 0,
+        "width": 1,
+        "value": 19,
+        "response": 19
+      },
+      {
+        "kind": "Write",
+        "field": 1,
+        "payload": 1,
+        "serial": 2,
+        "chunk": 1,
+        "offset": 1,
+        "width": 1,
+        "value": 2,
+        "response": 2
+      },
+      {
+        "kind": "Read",
+        "field": 1,
+        "payload": 2,
+        "serial": 0,
+        "chunk": 0,
+        "offset": 0,
+        "width": 1,
+        "value": 0,
+        "response": 19
+      },
+      {
+        "kind": "Write",
+        "field": 1,
+        "payload": 2,
+        "serial": 1,
+        "chunk": 0,
+        "offset": 0,
+        "width": 1,
+        "value": 27,
+        "response": 27
+      },
+      {
+        "kind": "Write",
+        "field": 1,
+        "payload": 2,
+        "serial": 2,
+        "chunk": 1,
+        "offset": 1,
+        "width": 1,
+        "value": 2,
+        "response": 2
+      }
+    ],
+    "initial": "03203d5a7794b1ceeb0825425f7c99b6d3f00d2a4764819ebbd8f5122f4c6986a3c0ddfa1734516e8ba8c5e2ff1c39567390adcae704213e5b7895b2cfec092643607d9ab7d4f10e2b4865829fbcd9f613304d6a87a4c1defb1835526f8ca9c6e3001d3a577491aecbe805223f5c7996b3d0ed0a2744617e9bb8d5f20f2c496683a0bddaf714314e6b88a5c2dffc193653708daac7e4011e3b587592afcce90623405d7a97b4d1ee0b2845627f9cb9d6f3102d4a6784a1bedbf815324f6c89a6c3e0fd1a3754718eabc8e5021f3c597693b0cdea0724415e7b98b5d2ef0c294663809dbad7f4112e4b6885a2bfdcf91633506d8aa7c4e1fe1b3855728facc9e603203d5a7794b1ceeb0825425f7c99b6d3f00d2a4764819ebbd8f5122f4c6986a3c0ddfa1734516e8ba8c5e2ff1c39567390adcae704213e5b7895b2cfec092643607d9ab7d4f10e2b4865829fbcd9f613304d6a87a4c1defb1835526f8ca9c6e3001d3a577491aecbe805223f5c7996b3d0ed0a2744617e9bb8d5f20f2c496683a0bddaf714314e6b88a5c2dffc193653708daac7e4011e3b587592afcce90623405d7a97b4d1ee0b2845627f9cb9d6f3102d4a6784a1bedbf815324f6c89a6c3e0fd1a3754718eabc8e5021f3c597693b0cdea0724415e7b98b5d2ef0c294663809dbad7f4112e4b6885a2bfdcf91633506d8aa7c4e1fe1b3855728facc9e6",
+    "memory": "1b023d5a7794b1ceeb0825425f7c99b6d3f00d2a4764819ebbd8f5122f4c6986a3c0ddfa1734516e8ba8c5e2ff1c39567390adcae704213e5b7895b2cfec092643607d9ab7d4f10e2b4865829fbcd9f613304d6a87a4c1defb1835526f8ca9c6e3001d3a577491aecbe805223f5c7996b3d0ed0a2744617e9bb8d5f20f2c496683a0bddaf714314e6b88a5c2dffc193653708daac7e4011e3b587592afcce90623405d7a97b4d1ee0b2845627f9cb9d6f3102d4a6784a1bedbf815324f6c89a6c3e0fd1a3754718eabc8e5021f3c597693b0cdea0724415e7b98b5d2ef0c294663809dbad7f4112e4b6885a2bfdcf91633506d8aa7c4e1fe1b3855728facc9e603203d5a7794b1ceeb0825425f7c99b6d3f00d2a4764819ebbd8f5122f4c6986a3c0ddfa1734516e8ba8c5e2ff1c39567390adcae704213e5b7895b2cfec092643607d9ab7d4f10e2b4865829fbcd9f613304d6a87a4c1defb1835526f8ca9c6e3001d3a577491aecbe805223f5c7996b3d0ed0a2744617e9bb8d5f20f2c496683a0bddaf714314e6b88a5c2dffc193653708daac7e4011e3b587592afcce90623405d7a97b4d1ee0b2845627f9cb9d6f3102d4a6784a1bedbf815324f6c89a6c3e0fd1a3754718eabc8e5021f3c597693b0cdea0724415e7b98b5d2ef0c294663809dbad7f4112e4b6885a2bfdcf91633506d8aa7c4e1fe1b3855728facc9e6",
+    "reads": 3,
+    "writes": 6,
+    "payloads": 3,
+    "outcome": "Success"
+  },
+  {
+    "name": "concat_direct_string_target_32",
+    "aml": "5b805245473000000b00025b810d52454730010003464c44300d08535243300d41420008524748540d430014144d41494e00a4735352433052474854464c4430",
+    "size": 32,
+    "kind": "string",
+    "number": 0,
+    "raw": "414243",
+    "source_id": 5,
+    "initial_count": 5,
+    "allocations": [
+      {
+        "id": 5,
+        "kind": "string",
+        "raw": "414243"
+      }
+    ],
+    "object_count": 6,
+    "bits": 13,
+    "offset": 3,
+    "width": 1,
+    "base": 0,
+    "fail_at": 18446744073709551615,
+    "quota": 16384,
+    "events": [
+      {
+        "kind": "Read",
+        "field": 1,
+        "payload": 0,
+        "serial": 0,
+        "chunk": 0,
+        "offset": 0,
+        "width": 1,
+        "value": 0,
+        "response": 3
+      },
+      {
+        "kind": "Write",
+        "field": 1,
+        "payload": 0,
+        "serial": 1,
+        "chunk": 0,
+        "offset": 0,
+        "width": 1,
+        "value": 11,
+        "response": 11
+      },
+      {
+        "kind": "Write",
+        "field": 1,
+        "payload": 0,
+        "serial": 2,
+        "chunk": 1,
+        "offset": 1,
+        "width": 1,
+        "value": 2,
+        "response": 2
+      },
+      {
+        "kind": "Read",
+        "field": 1,
+        "payload": 1,
+        "serial": 0,
+        "chunk": 0,
+        "offset": 0,
+        "width": 1,
+        "value": 0,
+        "response": 11
+      },
+      {
+        "kind": "Write",
+        "field": 1,
+        "payload": 1,
+        "serial": 1,
+        "chunk": 0,
+        "offset": 0,
+        "width": 1,
+        "value": 19,
+        "response": 19
+      },
+      {
+        "kind": "Write",
+        "field": 1,
+        "payload": 1,
+        "serial": 2,
+        "chunk": 1,
+        "offset": 1,
+        "width": 1,
+        "value": 2,
+        "response": 2
+      },
+      {
+        "kind": "Read",
+        "field": 1,
+        "payload": 2,
+        "serial": 0,
+        "chunk": 0,
+        "offset": 0,
+        "width": 1,
+        "value": 0,
+        "response": 19
+      },
+      {
+        "kind": "Write",
+        "field": 1,
+        "payload": 2,
+        "serial": 1,
+        "chunk": 0,
+        "offset": 0,
+        "width": 1,
+        "value": 27,
+        "response": 27
+      },
+      {
+        "kind": "Write",
+        "field": 1,
+        "payload": 2,
+        "serial": 2,
+        "chunk": 1,
+        "offset": 1,
+        "width": 1,
+        "value": 2,
+        "response": 2
+      }
+    ],
+    "initial": "03203d5a7794b1ceeb0825425f7c99b6d3f00d2a4764819ebbd8f5122f4c6986a3c0ddfa1734516e8ba8c5e2ff1c39567390adcae704213e5b7895b2cfec092643607d9ab7d4f10e2b4865829fbcd9f613304d6a87a4c1defb1835526f8ca9c6e3001d3a577491aecbe805223f5c7996b3d0ed0a2744617e9bb8d5f20f2c496683a0bddaf714314e6b88a5c2dffc193653708daac7e4011e3b587592afcce90623405d7a97b4d1ee0b2845627f9cb9d6f3102d4a6784a1bedbf815324f6c89a6c3e0fd1a3754718eabc8e5021f3c597693b0cdea0724415e7b98b5d2ef0c294663809dbad7f4112e4b6885a2bfdcf91633506d8aa7c4e1fe1b3855728facc9e603203d5a7794b1ceeb0825425f7c99b6d3f00d2a4764819ebbd8f5122f4c6986a3c0ddfa1734516e8ba8c5e2ff1c39567390adcae704213e5b7895b2cfec092643607d9ab7d4f10e2b4865829fbcd9f613304d6a87a4c1defb1835526f8ca9c6e3001d3a577491aecbe805223f5c7996b3d0ed0a2744617e9bb8d5f20f2c496683a0bddaf714314e6b88a5c2dffc193653708daac7e4011e3b587592afcce90623405d7a97b4d1ee0b2845627f9cb9d6f3102d4a6784a1bedbf815324f6c89a6c3e0fd1a3754718eabc8e5021f3c597693b0cdea0724415e7b98b5d2ef0c294663809dbad7f4112e4b6885a2bfdcf91633506d8aa7c4e1fe1b3855728facc9e6",
+    "memory": "1b023d5a7794b1ceeb0825425f7c99b6d3f00d2a4764819ebbd8f5122f4c6986a3c0ddfa1734516e8ba8c5e2ff1c39567390adcae704213e5b7895b2cfec092643607d9ab7d4f10e2b4865829fbcd9f613304d6a87a4c1defb1835526f8ca9c6e3001d3a577491aecbe805223f5c7996b3d0ed0a2744617e9bb8d5f20f2c496683a0bddaf714314e6b88a5c2dffc193653708daac7e4011e3b587592afcce90623405d7a97b4d1ee0b2845627f9cb9d6f3102d4a6784a1bedbf815324f6c89a6c3e0fd1a3754718eabc8e5021f3c597693b0cdea0724415e7b98b5d2ef0c294663809dbad7f4112e4b6885a2bfdcf91633506d8aa7c4e1fe1b3855728facc9e603203d5a7794b1ceeb0825425f7c99b6d3f00d2a4764819ebbd8f5122f4c6986a3c0ddfa1734516e8ba8c5e2ff1c39567390adcae704213e5b7895b2cfec092643607d9ab7d4f10e2b4865829fbcd9f613304d6a87a4c1defb1835526f8ca9c6e3001d3a577491aecbe805223f5c7996b3d0ed0a2744617e9bb8d5f20f2c496683a0bddaf714314e6b88a5c2dffc193653708daac7e4011e3b587592afcce90623405d7a97b4d1ee0b2845627f9cb9d6f3102d4a6784a1bedbf815324f6c89a6c3e0fd1a3754718eabc8e5021f3c597693b0cdea0724415e7b98b5d2ef0c294663809dbad7f4112e4b6885a2bfdcf91633506d8aa7c4e1fe1b3855728facc9e6",
+    "reads": 3,
+    "writes": 6,
+    "payloads": 3,
+    "outcome": "Success"
+  },
+  {
+    "name": "logical_to_string_store_32",
+    "aml": "5b805245473000000b00025b810d52454730010003464c44300d085352433011070a044142005a08524748540d41420014194d41494e00a470939c535243300a020052474854464c4430",
+    "size": 32,
+    "kind": "integer",
+    "number": 4294967295,
+    "raw": "",
+    "source_id": 0,
+    "initial_count": 5,
+    "allocations": [
+      {
+        "id": 5,
+        "kind": "string",
+        "raw": "4142"
+      }
+    ],
+    "object_count": 6,
+    "bits": 13,
+    "offset": 3,
+    "width": 1,
+    "base": 0,
+    "fail_at": 18446744073709551615,
+    "quota": 16384,
+    "events": [
+      {
+        "kind": "Read",
+        "field": 1,
+        "payload": 0,
+        "serial": 0,
+        "chunk": 0,
+        "offset": 0,
+        "width": 1,
+        "value": 0,
+        "response": 3
+      },
+      {
+        "kind": "Write",
+        "field": 1,
+        "payload": 0,
+        "serial": 1,
+        "chunk": 0,
+        "offset": 0,
+        "width": 1,
+        "value": 251,
+        "response": 251
+      },
+      {
+        "kind": "Write",
+        "field": 1,
+        "payload": 0,
+        "serial": 2,
+        "chunk": 1,
+        "offset": 1,
+        "width": 1,
+        "value": 255,
+        "response": 255
+      }
+    ],
+    "initial": "03203d5a7794b1ceeb0825425f7c99b6d3f00d2a4764819ebbd8f5122f4c6986a3c0ddfa1734516e8ba8c5e2ff1c39567390adcae704213e5b7895b2cfec092643607d9ab7d4f10e2b4865829fbcd9f613304d6a87a4c1defb1835526f8ca9c6e3001d3a577491aecbe805223f5c7996b3d0ed0a2744617e9bb8d5f20f2c496683a0bddaf714314e6b88a5c2dffc193653708daac7e4011e3b587592afcce90623405d7a97b4d1ee0b2845627f9cb9d6f3102d4a6784a1bedbf815324f6c89a6c3e0fd1a3754718eabc8e5021f3c597693b0cdea0724415e7b98b5d2ef0c294663809dbad7f4112e4b6885a2bfdcf91633506d8aa7c4e1fe1b3855728facc9e603203d5a7794b1ceeb0825425f7c99b6d3f00d2a4764819ebbd8f5122f4c6986a3c0ddfa1734516e8ba8c5e2ff1c39567390adcae704213e5b7895b2cfec092643607d9ab7d4f10e2b4865829fbcd9f613304d6a87a4c1defb1835526f8ca9c6e3001d3a577491aecbe805223f5c7996b3d0ed0a2744617e9bb8d5f20f2c496683a0bddaf714314e6b88a5c2dffc193653708daac7e4011e3b587592afcce90623405d7a97b4d1ee0b2845627f9cb9d6f3102d4a6784a1bedbf815324f6c89a6c3e0fd1a3754718eabc8e5021f3c597693b0cdea0724415e7b98b5d2ef0c294663809dbad7f4112e4b6885a2bfdcf91633506d8aa7c4e1fe1b3855728facc9e6",
+    "memory": "fbff3d5a7794b1ceeb0825425f7c99b6d3f00d2a4764819ebbd8f5122f4c6986a3c0ddfa1734516e8ba8c5e2ff1c39567390adcae704213e5b7895b2cfec092643607d9ab7d4f10e2b4865829fbcd9f613304d6a87a4c1defb1835526f8ca9c6e3001d3a577491aecbe805223f5c7996b3d0ed0a2744617e9bb8d5f20f2c496683a0bddaf714314e6b88a5c2dffc193653708daac7e4011e3b587592afcce90623405d7a97b4d1ee0b2845627f9cb9d6f3102d4a6784a1bedbf815324f6c89a6c3e0fd1a3754718eabc8e5021f3c597693b0cdea0724415e7b98b5d2ef0c294663809dbad7f4112e4b6885a2bfdcf91633506d8aa7c4e1fe1b3855728facc9e603203d5a7794b1ceeb0825425f7c99b6d3f00d2a4764819ebbd8f5122f4c6986a3c0ddfa1734516e8ba8c5e2ff1c39567390adcae704213e5b7895b2cfec092643607d9ab7d4f10e2b4865829fbcd9f613304d6a87a4c1defb1835526f8ca9c6e3001d3a577491aecbe805223f5c7996b3d0ed0a2744617e9bb8d5f20f2c496683a0bddaf714314e6b88a5c2dffc193653708daac7e4011e3b587592afcce90623405d7a97b4d1ee0b2845627f9cb9d6f3102d4a6784a1bedbf815324f6c89a6c3e0fd1a3754718eabc8e5021f3c597693b0cdea0724415e7b98b5d2ef0c294663809dbad7f4112e4b6885a2bfdcf91633506d8aa7c4e1fe1b3855728facc9e6",
+    "reads": 1,
+    "writes": 2,
+    "payloads": 1,
+    "outcome": "Success"
+  },
+  {
+    "name": "mid_concat_store_32",
+    "aml": "5b805245473000000b00025b810d52454730010003464c44300d085352433011060a03010203085247485411050a020405141b4d41494e00a4709e73535243305247485400010a0300464c4430",
+    "size": 32,
+    "kind": "buffer",
+    "number": 0,
+    "raw": "020304",
+    "source_id": 6,
+    "initial_count": 5,
+    "allocations": [
+      {
+        "id": 5,
+        "kind": "buffer",
+        "raw": "0102030405"
+      },
+      {
+        "id": 6,
+        "kind": "buffer",
+        "raw": "020304"
+      }
+    ],
+    "object_count": 7,
+    "bits": 13,
+    "offset": 3,
+    "width": 1,
+    "base": 0,
+    "fail_at": 18446744073709551615,
+    "quota": 16384,
+    "events": [
+      {
+        "kind": "Read",
+        "field": 1,
+        "payload": 0,
+        "serial": 0,
+        "chunk": 0,
+        "offset": 0,
+        "width": 1,
+        "value": 0,
+        "response": 3
+      },
+      {
+        "kind": "Write",
+        "field": 1,
+        "payload": 0,
+        "serial": 1,
+        "chunk": 0,
+        "offset": 0,
+        "width": 1,
+        "value": 19,
+        "response": 19
+      },
+      {
+        "kind": "Write",
+        "field": 1,
+        "payload": 0,
+        "serial": 2,
+        "chunk": 1,
+        "offset": 1,
+        "width": 1,
+        "value": 24,
+        "response": 24
+      },
+      {
+        "kind": "Read",
+        "field": 1,
+        "payload": 1,
+        "serial": 0,
+        "chunk": 0,
+        "offset": 0,
+        "width": 1,
+        "value": 0,
+        "response": 19
+      },
+      {
+        "kind": "Write",
+        "field": 1,
+        "payload": 1,
+        "serial": 1,
+        "chunk": 0,
+        "offset": 0,
+        "width": 1,
+        "value": 3,
+        "response": 3
+      },
+      {
+        "kind": "Write",
+        "field": 1,
+        "payload": 1,
+        "serial": 2,
+        "chunk": 1,
+        "offset": 1,
+        "width": 1,
+        "value": 1,
+        "response": 1
+      }
+    ],
+    "initial": "03203d5a7794b1ceeb0825425f7c99b6d3f00d2a4764819ebbd8f5122f4c6986a3c0ddfa1734516e8ba8c5e2ff1c39567390adcae704213e5b7895b2cfec092643607d9ab7d4f10e2b4865829fbcd9f613304d6a87a4c1defb1835526f8ca9c6e3001d3a577491aecbe805223f5c7996b3d0ed0a2744617e9bb8d5f20f2c496683a0bddaf714314e6b88a5c2dffc193653708daac7e4011e3b587592afcce90623405d7a97b4d1ee0b2845627f9cb9d6f3102d4a6784a1bedbf815324f6c89a6c3e0fd1a3754718eabc8e5021f3c597693b0cdea0724415e7b98b5d2ef0c294663809dbad7f4112e4b6885a2bfdcf91633506d8aa7c4e1fe1b3855728facc9e603203d5a7794b1ceeb0825425f7c99b6d3f00d2a4764819ebbd8f5122f4c6986a3c0ddfa1734516e8ba8c5e2ff1c39567390adcae704213e5b7895b2cfec092643607d9ab7d4f10e2b4865829fbcd9f613304d6a87a4c1defb1835526f8ca9c6e3001d3a577491aecbe805223f5c7996b3d0ed0a2744617e9bb8d5f20f2c496683a0bddaf714314e6b88a5c2dffc193653708daac7e4011e3b587592afcce90623405d7a97b4d1ee0b2845627f9cb9d6f3102d4a6784a1bedbf815324f6c89a6c3e0fd1a3754718eabc8e5021f3c597693b0cdea0724415e7b98b5d2ef0c294663809dbad7f4112e4b6885a2bfdcf91633506d8aa7c4e1fe1b3855728facc9e6",
+    "memory": "03013d5a7794b1ceeb0825425f7c99b6d3f00d2a4764819ebbd8f5122f4c6986a3c0ddfa1734516e8ba8c5e2ff1c39567390adcae704213e5b7895b2cfec092643607d9ab7d4f10e2b4865829fbcd9f613304d6a87a4c1defb1835526f8ca9c6e3001d3a577491aecbe805223f5c7996b3d0ed0a2744617e9bb8d5f20f2c496683a0bddaf714314e6b88a5c2dffc193653708daac7e4011e3b587592afcce90623405d7a97b4d1ee0b2845627f9cb9d6f3102d4a6784a1bedbf815324f6c89a6c3e0fd1a3754718eabc8e5021f3c597693b0cdea0724415e7b98b5d2ef0c294663809dbad7f4112e4b6885a2bfdcf91633506d8aa7c4e1fe1b3855728facc9e603203d5a7794b1ceeb0825425f7c99b6d3f00d2a4764819ebbd8f5122f4c6986a3c0ddfa1734516e8ba8c5e2ff1c39567390adcae704213e5b7895b2cfec092643607d9ab7d4f10e2b4865829fbcd9f613304d6a87a4c1defb1835526f8ca9c6e3001d3a577491aecbe805223f5c7996b3d0ed0a2744617e9bb8d5f20f2c496683a0bddaf714314e6b88a5c2dffc193653708daac7e4011e3b587592afcce90623405d7a97b4d1ee0b2845627f9cb9d6f3102d4a6784a1bedbf815324f6c89a6c3e0fd1a3754718eabc8e5021f3c597693b0cdea0724415e7b98b5d2ef0c294663809dbad7f4112e4b6885a2bfdcf91633506d8aa7c4e1fe1b3855728facc9e6",
+    "reads": 2,
+    "writes": 4,
+    "payloads": 2,
+    "outcome": "Success"
+  },
+  {
+    "name": "to_string_concat_late_failure_32",
+    "aml": "5b805245473000000b00025b810d52454730010003464c44300d085352433011070a044142005a08524748540d434400141a4d41494e00a470739c535243300a02005247485400464c4430",
+    "size": 32,
+    "kind": "string",
+    "number": 0,
+    "raw": "41424344",
+    "source_id": 6,
+    "initial_count": 5,
+    "allocations": [
+      {
+        "id": 5,
+        "kind": "string",
+        "raw": "4142"
+      },
+      {
+        "id": 6,
+        "kind": "string",
+        "raw": "41424344"
+      }
+    ],
+    "object_count": 7,
+    "bits": 13,
+    "offset": 3,
+    "width": 1,
+    "base": 0,
+    "fail_at": 3,
+    "quota": 16384,
+    "events": [
+      {
+        "kind": "Read",
+        "field": 1,
+        "payload": 0,
+        "serial": 0,
+        "chunk": 0,
+        "offset": 0,
+        "width": 1,
+        "value": 0,
+        "response": 3
+      },
+      {
+        "kind": "Write",
+        "field": 1,
+        "payload": 0,
+        "serial": 1,
+        "chunk": 0,
+        "offset": 0,
+        "width": 1,
+        "value": 11,
+        "response": 11
+      },
+      {
+        "kind": "Write",
+        "field": 1,
+        "payload": 0,
+        "serial": 2,
+        "chunk": 1,
+        "offset": 1,
+        "width": 1,
+        "value": 2,
+        "response": 2
+      },
+      {
+        "kind": "Read",
+        "field": 1,
+        "payload": 1,
+        "serial": 0,
+        "chunk": 0,
+        "offset": 0,
+        "width": 1,
+        "value": 0,
+        "response": 11
+      }
+    ],
+    "initial": "03203d5a7794b1ceeb0825425f7c99b6d3f00d2a4764819ebbd8f5122f4c6986a3c0ddfa1734516e8ba8c5e2ff1c39567390adcae704213e5b7895b2cfec092643607d9ab7d4f10e2b4865829fbcd9f613304d6a87a4c1defb1835526f8ca9c6e3001d3a577491aecbe805223f5c7996b3d0ed0a2744617e9bb8d5f20f2c496683a0bddaf714314e6b88a5c2dffc193653708daac7e4011e3b587592afcce90623405d7a97b4d1ee0b2845627f9cb9d6f3102d4a6784a1bedbf815324f6c89a6c3e0fd1a3754718eabc8e5021f3c597693b0cdea0724415e7b98b5d2ef0c294663809dbad7f4112e4b6885a2bfdcf91633506d8aa7c4e1fe1b3855728facc9e603203d5a7794b1ceeb0825425f7c99b6d3f00d2a4764819ebbd8f5122f4c6986a3c0ddfa1734516e8ba8c5e2ff1c39567390adcae704213e5b7895b2cfec092643607d9ab7d4f10e2b4865829fbcd9f613304d6a87a4c1defb1835526f8ca9c6e3001d3a577491aecbe805223f5c7996b3d0ed0a2744617e9bb8d5f20f2c496683a0bddaf714314e6b88a5c2dffc193653708daac7e4011e3b587592afcce90623405d7a97b4d1ee0b2845627f9cb9d6f3102d4a6784a1bedbf815324f6c89a6c3e0fd1a3754718eabc8e5021f3c597693b0cdea0724415e7b98b5d2ef0c294663809dbad7f4112e4b6885a2bfdcf91633506d8aa7c4e1fe1b3855728facc9e6",
+    "memory": "0b023d5a7794b1ceeb0825425f7c99b6d3f00d2a4764819ebbd8f5122f4c6986a3c0ddfa1734516e8ba8c5e2ff1c39567390adcae704213e5b7895b2cfec092643607d9ab7d4f10e2b4865829fbcd9f613304d6a87a4c1defb1835526f8ca9c6e3001d3a577491aecbe805223f5c7996b3d0ed0a2744617e9bb8d5f20f2c496683a0bddaf714314e6b88a5c2dffc193653708daac7e4011e3b587592afcce90623405d7a97b4d1ee0b2845627f9cb9d6f3102d4a6784a1bedbf815324f6c89a6c3e0fd1a3754718eabc8e5021f3c597693b0cdea0724415e7b98b5d2ef0c294663809dbad7f4112e4b6885a2bfdcf91633506d8aa7c4e1fe1b3855728facc9e603203d5a7794b1ceeb0825425f7c99b6d3f00d2a4764819ebbd8f5122f4c6986a3c0ddfa1734516e8ba8c5e2ff1c39567390adcae704213e5b7895b2cfec092643607d9ab7d4f10e2b4865829fbcd9f613304d6a87a4c1defb1835526f8ca9c6e3001d3a577491aecbe805223f5c7996b3d0ed0a2744617e9bb8d5f20f2c496683a0bddaf714314e6b88a5c2dffc193653708daac7e4011e3b587592afcce90623405d7a97b4d1ee0b2845627f9cb9d6f3102d4a6784a1bedbf815324f6c89a6c3e0fd1a3754718eabc8e5021f3c597693b0cdea0724415e7b98b5d2ef0c294663809dbad7f4112e4b6885a2bfdcf91633506d8aa7c4e1fe1b3855728facc9e6",
+    "reads": 1,
+    "writes": 2,
+    "payloads": 1,
+    "outcome": "UnresolvedRegion"
+  },
+  {
+    "name": "concat_direct_quota_after_acks_32",
+    "aml": "5b805245473000000b00025b810d52454730010003464c44300d085352433011050a021234085247485411050a02567814144d41494e00a4735352433052474854464c4430",
+    "size": 32,
+    "kind": "buffer",
+    "number": 0,
+    "raw": "12345678",
+    "source_id": 5,
+    "initial_count": 5,
+    "allocations": [
+      {
+        "id": 5,
+        "kind": "buffer",
+        "raw": "12345678"
+      }
+    ],
+    "object_count": 6,
+    "bits": 13,
+    "offset": 3,
+    "width": 1,
+    "base": 0,
+    "fail_at": 18446744073709551615,
+    "quota": 2,
+    "events": [
+      {
+        "kind": "Read",
+        "field": 1,
+        "payload": 0,
+        "serial": 0,
+        "chunk": 0,
+        "offset": 0,
+        "width": 1,
+        "value": 0,
+        "response": 3
+      },
+      {
+        "kind": "Write",
+        "field": 1,
+        "payload": 0,
+        "serial": 1,
+        "chunk": 0,
+        "offset": 0,
+        "width": 1,
+        "value": 147,
+        "response": 147
+      },
+      {
+        "kind": "Write",
+        "field": 1,
+        "payload": 0,
+        "serial": 2,
+        "chunk": 1,
+        "offset": 1,
+        "width": 1,
+        "value": 160,
+        "response": 160
+      },
+      {
+        "kind": "Read",
+        "field": 1,
+        "payload": 1,
+        "serial": 0,
+        "chunk": 0,
+        "offset": 0,
+        "width": 1,
+        "value": 0,
+        "response": 147
+      },
+      {
+        "kind": "Write",
+        "field": 1,
+        "payload": 1,
+        "serial": 1,
+        "chunk": 0,
+        "offset": 0,
+        "width": 1,
+        "value": 139,
+        "response": 139
+      },
+      {
+        "kind": "Write",
+        "field": 1,
+        "payload": 1,
+        "serial": 2,
+        "chunk": 1,
+        "offset": 1,
+        "width": 1,
+        "value": 21,
+        "response": 21
+      },
+      {
+        "kind": "Read",
+        "field": 1,
+        "payload": 2,
+        "serial": 0,
+        "chunk": 0,
+        "offset": 0,
+        "width": 1,
+        "value": 0,
+        "response": 139
+      },
+      {
+        "kind": "Write",
+        "field": 1,
+        "payload": 2,
+        "serial": 1,
+        "chunk": 0,
+        "offset": 0,
+        "width": 1,
+        "value": 243,
+        "response": 243
+      },
+      {
+        "kind": "Write",
+        "field": 1,
+        "payload": 2,
+        "serial": 2,
+        "chunk": 1,
+        "offset": 1,
+        "width": 1,
+        "value": 0,
+        "response": 0
+      }
+    ],
+    "initial": "03203d5a7794b1ceeb0825425f7c99b6d3f00d2a4764819ebbd8f5122f4c6986a3c0ddfa1734516e8ba8c5e2ff1c39567390adcae704213e5b7895b2cfec092643607d9ab7d4f10e2b4865829fbcd9f613304d6a87a4c1defb1835526f8ca9c6e3001d3a577491aecbe805223f5c7996b3d0ed0a2744617e9bb8d5f20f2c496683a0bddaf714314e6b88a5c2dffc193653708daac7e4011e3b587592afcce90623405d7a97b4d1ee0b2845627f9cb9d6f3102d4a6784a1bedbf815324f6c89a6c3e0fd1a3754718eabc8e5021f3c597693b0cdea0724415e7b98b5d2ef0c294663809dbad7f4112e4b6885a2bfdcf91633506d8aa7c4e1fe1b3855728facc9e603203d5a7794b1ceeb0825425f7c99b6d3f00d2a4764819ebbd8f5122f4c6986a3c0ddfa1734516e8ba8c5e2ff1c39567390adcae704213e5b7895b2cfec092643607d9ab7d4f10e2b4865829fbcd9f613304d6a87a4c1defb1835526f8ca9c6e3001d3a577491aecbe805223f5c7996b3d0ed0a2744617e9bb8d5f20f2c496683a0bddaf714314e6b88a5c2dffc193653708daac7e4011e3b587592afcce90623405d7a97b4d1ee0b2845627f9cb9d6f3102d4a6784a1bedbf815324f6c89a6c3e0fd1a3754718eabc8e5021f3c597693b0cdea0724415e7b98b5d2ef0c294663809dbad7f4112e4b6885a2bfdcf91633506d8aa7c4e1fe1b3855728facc9e6",
+    "memory": "f3003d5a7794b1ceeb0825425f7c99b6d3f00d2a4764819ebbd8f5122f4c6986a3c0ddfa1734516e8ba8c5e2ff1c39567390adcae704213e5b7895b2cfec092643607d9ab7d4f10e2b4865829fbcd9f613304d6a87a4c1defb1835526f8ca9c6e3001d3a577491aecbe805223f5c7996b3d0ed0a2744617e9bb8d5f20f2c496683a0bddaf714314e6b88a5c2dffc193653708daac7e4011e3b587592afcce90623405d7a97b4d1ee0b2845627f9cb9d6f3102d4a6784a1bedbf815324f6c89a6c3e0fd1a3754718eabc8e5021f3c597693b0cdea0724415e7b98b5d2ef0c294663809dbad7f4112e4b6885a2bfdcf91633506d8aa7c4e1fe1b3855728facc9e603203d5a7794b1ceeb0825425f7c99b6d3f00d2a4764819ebbd8f5122f4c6986a3c0ddfa1734516e8ba8c5e2ff1c39567390adcae704213e5b7895b2cfec092643607d9ab7d4f10e2b4865829fbcd9f613304d6a87a4c1defb1835526f8ca9c6e3001d3a577491aecbe805223f5c7996b3d0ed0a2744617e9bb8d5f20f2c496683a0bddaf714314e6b88a5c2dffc193653708daac7e4011e3b587592afcce90623405d7a97b4d1ee0b2845627f9cb9d6f3102d4a6784a1bedbf815324f6c89a6c3e0fd1a3754718eabc8e5021f3c597693b0cdea0724415e7b98b5d2ef0c294663809dbad7f4112e4b6885a2bfdcf91633506d8aa7c4e1fe1b3855728facc9e6",
+    "reads": 3,
+    "writes": 6,
+    "payloads": 3,
+    "outcome": "Capacity"
+  },
+  {
+    "name": "to_string_store_64",
+    "aml": "5b805245473000000b00025b810d52454730020003464c44300d085352433011080a05414243005a14144d41494e00a4709c535243300a0300464c4430",
+    "size": 64,
+    "kind": "string",
+    "number": 0,
+    "raw": "414243",
+    "source_id": 4,
+    "initial_count": 4,
+    "allocations": [
+      {
+        "id": 4,
+        "kind": "string",
+        "raw": "414243"
+      }
+    ],
+    "object_count": 5,
+    "bits": 13,
+    "offset": 3,
+    "width": 2,
+    "base": 0,
+    "fail_at": 18446744073709551615,
+    "quota": 16384,
+    "events": [
+      {
+        "kind": "Read",
+        "field": 1,
+        "payload": 0,
+        "serial": 0,
+        "chunk": 0,
+        "offset": 0,
+        "width": 2,
+        "value": 0,
+        "response": 8195
+      },
+      {
+        "kind": "Write",
+        "field": 1,
+        "payload": 0,
+        "serial": 1,
+        "chunk": 0,
+        "offset": 0,
+        "width": 2,
+        "value": 523,
+        "response": 523
+      },
+      {
+        "kind": "Read",
+        "field": 1,
+        "payload": 1,
+        "serial": 0,
+        "chunk": 0,
+        "offset": 0,
+        "width": 2,
+        "value": 0,
+        "response": 523
+      },
+      {
+        "kind": "Write",
+        "field": 1,
+        "payload": 1,
+        "serial": 1,
+        "chunk": 0,
+        "offset": 0,
+        "width": 2,
+        "value": 531,
+        "response": 531
+      },
+      {
+        "kind": "Read",
+        "field": 1,
+        "payload": 2,
+        "serial": 0,
+        "chunk": 0,
+        "offset": 0,
+        "width": 2,
+        "value": 0,
+        "response": 531
+      },
+      {
+        "kind": "Write",
+        "field": 1,
+        "payload": 2,
+        "serial": 1,
+        "chunk": 0,
+        "offset": 0,
+        "width": 2,
+        "value": 539,
+        "response": 539
+      }
+    ],
+    "initial": "03203d5a7794b1ceeb0825425f7c99b6d3f00d2a4764819ebbd8f5122f4c6986a3c0ddfa1734516e8ba8c5e2ff1c39567390adcae704213e5b7895b2cfec092643607d9ab7d4f10e2b4865829fbcd9f613304d6a87a4c1defb1835526f8ca9c6e3001d3a577491aecbe805223f5c7996b3d0ed0a2744617e9bb8d5f20f2c496683a0bddaf714314e6b88a5c2dffc193653708daac7e4011e3b587592afcce90623405d7a97b4d1ee0b2845627f9cb9d6f3102d4a6784a1bedbf815324f6c89a6c3e0fd1a3754718eabc8e5021f3c597693b0cdea0724415e7b98b5d2ef0c294663809dbad7f4112e4b6885a2bfdcf91633506d8aa7c4e1fe1b3855728facc9e603203d5a7794b1ceeb0825425f7c99b6d3f00d2a4764819ebbd8f5122f4c6986a3c0ddfa1734516e8ba8c5e2ff1c39567390adcae704213e5b7895b2cfec092643607d9ab7d4f10e2b4865829fbcd9f613304d6a87a4c1defb1835526f8ca9c6e3001d3a577491aecbe805223f5c7996b3d0ed0a2744617e9bb8d5f20f2c496683a0bddaf714314e6b88a5c2dffc193653708daac7e4011e3b587592afcce90623405d7a97b4d1ee0b2845627f9cb9d6f3102d4a6784a1bedbf815324f6c89a6c3e0fd1a3754718eabc8e5021f3c597693b0cdea0724415e7b98b5d2ef0c294663809dbad7f4112e4b6885a2bfdcf91633506d8aa7c4e1fe1b3855728facc9e6",
+    "memory": "1b023d5a7794b1ceeb0825425f7c99b6d3f00d2a4764819ebbd8f5122f4c6986a3c0ddfa1734516e8ba8c5e2ff1c39567390adcae704213e5b7895b2cfec092643607d9ab7d4f10e2b4865829fbcd9f613304d6a87a4c1defb1835526f8ca9c6e3001d3a577491aecbe805223f5c7996b3d0ed0a2744617e9bb8d5f20f2c496683a0bddaf714314e6b88a5c2dffc193653708daac7e4011e3b587592afcce90623405d7a97b4d1ee0b2845627f9cb9d6f3102d4a6784a1bedbf815324f6c89a6c3e0fd1a3754718eabc8e5021f3c597693b0cdea0724415e7b98b5d2ef0c294663809dbad7f4112e4b6885a2bfdcf91633506d8aa7c4e1fe1b3855728facc9e603203d5a7794b1ceeb0825425f7c99b6d3f00d2a4764819ebbd8f5122f4c6986a3c0ddfa1734516e8ba8c5e2ff1c39567390adcae704213e5b7895b2cfec092643607d9ab7d4f10e2b4865829fbcd9f613304d6a87a4c1defb1835526f8ca9c6e3001d3a577491aecbe805223f5c7996b3d0ed0a2744617e9bb8d5f20f2c496683a0bddaf714314e6b88a5c2dffc193653708daac7e4011e3b587592afcce90623405d7a97b4d1ee0b2845627f9cb9d6f3102d4a6784a1bedbf815324f6c89a6c3e0fd1a3754718eabc8e5021f3c597693b0cdea0724415e7b98b5d2ef0c294663809dbad7f4112e4b6885a2bfdcf91633506d8aa7c4e1fe1b3855728facc9e6",
+    "reads": 3,
+    "writes": 3,
+    "payloads": 3,
+    "outcome": "Success"
+  },
+  {
+    "name": "concat_direct_string_target_64",
+    "aml": "5b805245473000000b00025b810d52454730020003464c44300d08535243300d41420008524748540d430014144d41494e00a4735352433052474854464c4430",
+    "size": 64,
+    "kind": "string",
+    "number": 0,
+    "raw": "414243",
+    "source_id": 5,
+    "initial_count": 5,
+    "allocations": [
+      {
+        "id": 5,
+        "kind": "string",
+        "raw": "414243"
+      }
+    ],
+    "object_count": 6,
+    "bits": 13,
+    "offset": 3,
+    "width": 2,
+    "base": 0,
+    "fail_at": 18446744073709551615,
+    "quota": 16384,
+    "events": [
+      {
+        "kind": "Read",
+        "field": 1,
+        "payload": 0,
+        "serial": 0,
+        "chunk": 0,
+        "offset": 0,
+        "width": 2,
+        "value": 0,
+        "response": 8195
+      },
+      {
+        "kind": "Write",
+        "field": 1,
+        "payload": 0,
+        "serial": 1,
+        "chunk": 0,
+        "offset": 0,
+        "width": 2,
+        "value": 523,
+        "response": 523
+      },
+      {
+        "kind": "Read",
+        "field": 1,
+        "payload": 1,
+        "serial": 0,
+        "chunk": 0,
+        "offset": 0,
+        "width": 2,
+        "value": 0,
+        "response": 523
+      },
+      {
+        "kind": "Write",
+        "field": 1,
+        "payload": 1,
+        "serial": 1,
+        "chunk": 0,
+        "offset": 0,
+        "width": 2,
+        "value": 531,
+        "response": 531
+      },
+      {
+        "kind": "Read",
+        "field": 1,
+        "payload": 2,
+        "serial": 0,
+        "chunk": 0,
+        "offset": 0,
+        "width": 2,
+        "value": 0,
+        "response": 531
+      },
+      {
+        "kind": "Write",
+        "field": 1,
+        "payload": 2,
+        "serial": 1,
+        "chunk": 0,
+        "offset": 0,
+        "width": 2,
+        "value": 539,
+        "response": 539
+      }
+    ],
+    "initial": "03203d5a7794b1ceeb0825425f7c99b6d3f00d2a4764819ebbd8f5122f4c6986a3c0ddfa1734516e8ba8c5e2ff1c39567390adcae704213e5b7895b2cfec092643607d9ab7d4f10e2b4865829fbcd9f613304d6a87a4c1defb1835526f8ca9c6e3001d3a577491aecbe805223f5c7996b3d0ed0a2744617e9bb8d5f20f2c496683a0bddaf714314e6b88a5c2dffc193653708daac7e4011e3b587592afcce90623405d7a97b4d1ee0b2845627f9cb9d6f3102d4a6784a1bedbf815324f6c89a6c3e0fd1a3754718eabc8e5021f3c597693b0cdea0724415e7b98b5d2ef0c294663809dbad7f4112e4b6885a2bfdcf91633506d8aa7c4e1fe1b3855728facc9e603203d5a7794b1ceeb0825425f7c99b6d3f00d2a4764819ebbd8f5122f4c6986a3c0ddfa1734516e8ba8c5e2ff1c39567390adcae704213e5b7895b2cfec092643607d9ab7d4f10e2b4865829fbcd9f613304d6a87a4c1defb1835526f8ca9c6e3001d3a577491aecbe805223f5c7996b3d0ed0a2744617e9bb8d5f20f2c496683a0bddaf714314e6b88a5c2dffc193653708daac7e4011e3b587592afcce90623405d7a97b4d1ee0b2845627f9cb9d6f3102d4a6784a1bedbf815324f6c89a6c3e0fd1a3754718eabc8e5021f3c597693b0cdea0724415e7b98b5d2ef0c294663809dbad7f4112e4b6885a2bfdcf91633506d8aa7c4e1fe1b3855728facc9e6",
+    "memory": "1b023d5a7794b1ceeb0825425f7c99b6d3f00d2a4764819ebbd8f5122f4c6986a3c0ddfa1734516e8ba8c5e2ff1c39567390adcae704213e5b7895b2cfec092643607d9ab7d4f10e2b4865829fbcd9f613304d6a87a4c1defb1835526f8ca9c6e3001d3a577491aecbe805223f5c7996b3d0ed0a2744617e9bb8d5f20f2c496683a0bddaf714314e6b88a5c2dffc193653708daac7e4011e3b587592afcce90623405d7a97b4d1ee0b2845627f9cb9d6f3102d4a6784a1bedbf815324f6c89a6c3e0fd1a3754718eabc8e5021f3c597693b0cdea0724415e7b98b5d2ef0c294663809dbad7f4112e4b6885a2bfdcf91633506d8aa7c4e1fe1b3855728facc9e603203d5a7794b1ceeb0825425f7c99b6d3f00d2a4764819ebbd8f5122f4c6986a3c0ddfa1734516e8ba8c5e2ff1c39567390adcae704213e5b7895b2cfec092643607d9ab7d4f10e2b4865829fbcd9f613304d6a87a4c1defb1835526f8ca9c6e3001d3a577491aecbe805223f5c7996b3d0ed0a2744617e9bb8d5f20f2c496683a0bddaf714314e6b88a5c2dffc193653708daac7e4011e3b587592afcce90623405d7a97b4d1ee0b2845627f9cb9d6f3102d4a6784a1bedbf815324f6c89a6c3e0fd1a3754718eabc8e5021f3c597693b0cdea0724415e7b98b5d2ef0c294663809dbad7f4112e4b6885a2bfdcf91633506d8aa7c4e1fe1b3855728facc9e6",
+    "reads": 3,
+    "writes": 3,
+    "payloads": 3,
+    "outcome": "Success"
+  },
+  {
+    "name": "logical_to_string_store_64",
+    "aml": "5b805245473000000b00025b810d52454730020003464c44300d085352433011070a044142005a08524748540d41420014194d41494e00a470939c535243300a020052474854464c4430",
+    "size": 64,
+    "kind": "integer",
+    "number": 18446744073709551615,
+    "raw": "",
+    "source_id": 0,
+    "initial_count": 5,
+    "allocations": [
+      {
+        "id": 5,
+        "kind": "string",
+        "raw": "4142"
+      }
+    ],
+    "object_count": 6,
+    "bits": 13,
+    "offset": 3,
+    "width": 2,
+    "base": 0,
+    "fail_at": 18446744073709551615,
+    "quota": 16384,
+    "events": [
+      {
+        "kind": "Read",
+        "field": 1,
+        "payload": 0,
+        "serial": 0,
+        "chunk": 0,
+        "offset": 0,
+        "width": 2,
+        "value": 0,
+        "response": 8195
+      },
+      {
+        "kind": "Write",
+        "field": 1,
+        "payload": 0,
+        "serial": 1,
+        "chunk": 0,
+        "offset": 0,
+        "width": 2,
+        "value": 65531,
+        "response": 65531
+      }
+    ],
+    "initial": "03203d5a7794b1ceeb0825425f7c99b6d3f00d2a4764819ebbd8f5122f4c6986a3c0ddfa1734516e8ba8c5e2ff1c39567390adcae704213e5b7895b2cfec092643607d9ab7d4f10e2b4865829fbcd9f613304d6a87a4c1defb1835526f8ca9c6e3001d3a577491aecbe805223f5c7996b3d0ed0a2744617e9bb8d5f20f2c496683a0bddaf714314e6b88a5c2dffc193653708daac7e4011e3b587592afcce90623405d7a97b4d1ee0b2845627f9cb9d6f3102d4a6784a1bedbf815324f6c89a6c3e0fd1a3754718eabc8e5021f3c597693b0cdea0724415e7b98b5d2ef0c294663809dbad7f4112e4b6885a2bfdcf91633506d8aa7c4e1fe1b3855728facc9e603203d5a7794b1ceeb0825425f7c99b6d3f00d2a4764819ebbd8f5122f4c6986a3c0ddfa1734516e8ba8c5e2ff1c39567390adcae704213e5b7895b2cfec092643607d9ab7d4f10e2b4865829fbcd9f613304d6a87a4c1defb1835526f8ca9c6e3001d3a577491aecbe805223f5c7996b3d0ed0a2744617e9bb8d5f20f2c496683a0bddaf714314e6b88a5c2dffc193653708daac7e4011e3b587592afcce90623405d7a97b4d1ee0b2845627f9cb9d6f3102d4a6784a1bedbf815324f6c89a6c3e0fd1a3754718eabc8e5021f3c597693b0cdea0724415e7b98b5d2ef0c294663809dbad7f4112e4b6885a2bfdcf91633506d8aa7c4e1fe1b3855728facc9e6",
+    "memory": "fbff3d5a7794b1ceeb0825425f7c99b6d3f00d2a4764819ebbd8f5122f4c6986a3c0ddfa1734516e8ba8c5e2ff1c39567390adcae704213e5b7895b2cfec092643607d9ab7d4f10e2b4865829fbcd9f613304d6a87a4c1defb1835526f8ca9c6e3001d3a577491aecbe805223f5c7996b3d0ed0a2744617e9bb8d5f20f2c496683a0bddaf714314e6b88a5c2dffc193653708daac7e4011e3b587592afcce90623405d7a97b4d1ee0b2845627f9cb9d6f3102d4a6784a1bedbf815324f6c89a6c3e0fd1a3754718eabc8e5021f3c597693b0cdea0724415e7b98b5d2ef0c294663809dbad7f4112e4b6885a2bfdcf91633506d8aa7c4e1fe1b3855728facc9e603203d5a7794b1ceeb0825425f7c99b6d3f00d2a4764819ebbd8f5122f4c6986a3c0ddfa1734516e8ba8c5e2ff1c39567390adcae704213e5b7895b2cfec092643607d9ab7d4f10e2b4865829fbcd9f613304d6a87a4c1defb1835526f8ca9c6e3001d3a577491aecbe805223f5c7996b3d0ed0a2744617e9bb8d5f20f2c496683a0bddaf714314e6b88a5c2dffc193653708daac7e4011e3b587592afcce90623405d7a97b4d1ee0b2845627f9cb9d6f3102d4a6784a1bedbf815324f6c89a6c3e0fd1a3754718eabc8e5021f3c597693b0cdea0724415e7b98b5d2ef0c294663809dbad7f4112e4b6885a2bfdcf91633506d8aa7c4e1fe1b3855728facc9e6",
+    "reads": 1,
+    "writes": 1,
+    "payloads": 1,
+    "outcome": "Success"
+  },
+  {
+    "name": "mid_concat_store_64",
+    "aml": "5b805245473000000b00025b810d52454730020003464c44300d085352433011060a03010203085247485411050a020405141b4d41494e00a4709e73535243305247485400010a0300464c4430",
+    "size": 64,
+    "kind": "buffer",
+    "number": 0,
+    "raw": "020304",
+    "source_id": 6,
+    "initial_count": 5,
+    "allocations": [
+      {
+        "id": 5,
+        "kind": "buffer",
+        "raw": "0102030405"
+      },
+      {
+        "id": 6,
+        "kind": "buffer",
+        "raw": "020304"
+      }
+    ],
+    "object_count": 7,
+    "bits": 13,
+    "offset": 3,
+    "width": 2,
+    "base": 0,
+    "fail_at": 18446744073709551615,
+    "quota": 16384,
+    "events": [
+      {
+        "kind": "Read",
+        "field": 1,
+        "payload": 0,
+        "serial": 0,
+        "chunk": 0,
+        "offset": 0,
+        "width": 2,
+        "value": 0,
+        "response": 8195
+      },
+      {
+        "kind": "Write",
+        "field": 1,
+        "payload": 0,
+        "serial": 1,
+        "chunk": 0,
+        "offset": 0,
+        "width": 2,
+        "value": 6163,
+        "response": 6163
+      },
+      {
+        "kind": "Read",
+        "field": 1,
+        "payload": 1,
+        "serial": 0,
+        "chunk": 0,
+        "offset": 0,
+        "width": 2,
+        "value": 0,
+        "response": 6163
+      },
+      {
+        "kind": "Write",
+        "field": 1,
+        "payload": 1,
+        "serial": 1,
+        "chunk": 0,
+        "offset": 0,
+        "width": 2,
+        "value": 259,
+        "response": 259
+      }
+    ],
+    "initial": "03203d5a7794b1ceeb0825425f7c99b6d3f00d2a4764819ebbd8f5122f4c6986a3c0ddfa1734516e8ba8c5e2ff1c39567390adcae704213e5b7895b2cfec092643607d9ab7d4f10e2b4865829fbcd9f613304d6a87a4c1defb1835526f8ca9c6e3001d3a577491aecbe805223f5c7996b3d0ed0a2744617e9bb8d5f20f2c496683a0bddaf714314e6b88a5c2dffc193653708daac7e4011e3b587592afcce90623405d7a97b4d1ee0b2845627f9cb9d6f3102d4a6784a1bedbf815324f6c89a6c3e0fd1a3754718eabc8e5021f3c597693b0cdea0724415e7b98b5d2ef0c294663809dbad7f4112e4b6885a2bfdcf91633506d8aa7c4e1fe1b3855728facc9e603203d5a7794b1ceeb0825425f7c99b6d3f00d2a4764819ebbd8f5122f4c6986a3c0ddfa1734516e8ba8c5e2ff1c39567390adcae704213e5b7895b2cfec092643607d9ab7d4f10e2b4865829fbcd9f613304d6a87a4c1defb1835526f8ca9c6e3001d3a577491aecbe805223f5c7996b3d0ed0a2744617e9bb8d5f20f2c496683a0bddaf714314e6b88a5c2dffc193653708daac7e4011e3b587592afcce90623405d7a97b4d1ee0b2845627f9cb9d6f3102d4a6784a1bedbf815324f6c89a6c3e0fd1a3754718eabc8e5021f3c597693b0cdea0724415e7b98b5d2ef0c294663809dbad7f4112e4b6885a2bfdcf91633506d8aa7c4e1fe1b3855728facc9e6",
+    "memory": "03013d5a7794b1ceeb0825425f7c99b6d3f00d2a4764819ebbd8f5122f4c6986a3c0ddfa1734516e8ba8c5e2ff1c39567390adcae704213e5b7895b2cfec092643607d9ab7d4f10e2b4865829fbcd9f613304d6a87a4c1defb1835526f8ca9c6e3001d3a577491aecbe805223f5c7996b3d0ed0a2744617e9bb8d5f20f2c496683a0bddaf714314e6b88a5c2dffc193653708daac7e4011e3b587592afcce90623405d7a97b4d1ee0b2845627f9cb9d6f3102d4a6784a1bedbf815324f6c89a6c3e0fd1a3754718eabc8e5021f3c597693b0cdea0724415e7b98b5d2ef0c294663809dbad7f4112e4b6885a2bfdcf91633506d8aa7c4e1fe1b3855728facc9e603203d5a7794b1ceeb0825425f7c99b6d3f00d2a4764819ebbd8f5122f4c6986a3c0ddfa1734516e8ba8c5e2ff1c39567390adcae704213e5b7895b2cfec092643607d9ab7d4f10e2b4865829fbcd9f613304d6a87a4c1defb1835526f8ca9c6e3001d3a577491aecbe805223f5c7996b3d0ed0a2744617e9bb8d5f20f2c496683a0bddaf714314e6b88a5c2dffc193653708daac7e4011e3b587592afcce90623405d7a97b4d1ee0b2845627f9cb9d6f3102d4a6784a1bedbf815324f6c89a6c3e0fd1a3754718eabc8e5021f3c597693b0cdea0724415e7b98b5d2ef0c294663809dbad7f4112e4b6885a2bfdcf91633506d8aa7c4e1fe1b3855728facc9e6",
+    "reads": 2,
+    "writes": 2,
+    "payloads": 2,
+    "outcome": "Success"
+  },
+  {
+    "name": "to_string_concat_late_failure_64",
+    "aml": "5b805245473000000b00025b810d52454730020003464c44300d085352433011070a044142005a08524748540d434400141a4d41494e00a470739c535243300a02005247485400464c4430",
+    "size": 64,
+    "kind": "string",
+    "number": 0,
+    "raw": "41424344",
+    "source_id": 6,
+    "initial_count": 5,
+    "allocations": [
+      {
+        "id": 5,
+        "kind": "string",
+        "raw": "4142"
+      },
+      {
+        "id": 6,
+        "kind": "string",
+        "raw": "41424344"
+      }
+    ],
+    "object_count": 7,
+    "bits": 13,
+    "offset": 3,
+    "width": 2,
+    "base": 0,
+    "fail_at": 3,
+    "quota": 16384,
+    "events": [
+      {
+        "kind": "Read",
+        "field": 1,
+        "payload": 0,
+        "serial": 0,
+        "chunk": 0,
+        "offset": 0,
+        "width": 2,
+        "value": 0,
+        "response": 8195
+      },
+      {
+        "kind": "Write",
+        "field": 1,
+        "payload": 0,
+        "serial": 1,
+        "chunk": 0,
+        "offset": 0,
+        "width": 2,
+        "value": 523,
+        "response": 523
+      },
+      {
+        "kind": "Read",
+        "field": 1,
+        "payload": 1,
+        "serial": 0,
+        "chunk": 0,
+        "offset": 0,
+        "width": 2,
+        "value": 0,
+        "response": 523
+      },
+      {
+        "kind": "Write",
+        "field": 1,
+        "payload": 1,
+        "serial": 1,
+        "chunk": 0,
+        "offset": 0,
+        "width": 2,
+        "value": 531,
+        "response": 531
+      }
+    ],
+    "initial": "03203d5a7794b1ceeb0825425f7c99b6d3f00d2a4764819ebbd8f5122f4c6986a3c0ddfa1734516e8ba8c5e2ff1c39567390adcae704213e5b7895b2cfec092643607d9ab7d4f10e2b4865829fbcd9f613304d6a87a4c1defb1835526f8ca9c6e3001d3a577491aecbe805223f5c7996b3d0ed0a2744617e9bb8d5f20f2c496683a0bddaf714314e6b88a5c2dffc193653708daac7e4011e3b587592afcce90623405d7a97b4d1ee0b2845627f9cb9d6f3102d4a6784a1bedbf815324f6c89a6c3e0fd1a3754718eabc8e5021f3c597693b0cdea0724415e7b98b5d2ef0c294663809dbad7f4112e4b6885a2bfdcf91633506d8aa7c4e1fe1b3855728facc9e603203d5a7794b1ceeb0825425f7c99b6d3f00d2a4764819ebbd8f5122f4c6986a3c0ddfa1734516e8ba8c5e2ff1c39567390adcae704213e5b7895b2cfec092643607d9ab7d4f10e2b4865829fbcd9f613304d6a87a4c1defb1835526f8ca9c6e3001d3a577491aecbe805223f5c7996b3d0ed0a2744617e9bb8d5f20f2c496683a0bddaf714314e6b88a5c2dffc193653708daac7e4011e3b587592afcce90623405d7a97b4d1ee0b2845627f9cb9d6f3102d4a6784a1bedbf815324f6c89a6c3e0fd1a3754718eabc8e5021f3c597693b0cdea0724415e7b98b5d2ef0c294663809dbad7f4112e4b6885a2bfdcf91633506d8aa7c4e1fe1b3855728facc9e6",
+    "memory": "0b023d5a7794b1ceeb0825425f7c99b6d3f00d2a4764819ebbd8f5122f4c6986a3c0ddfa1734516e8ba8c5e2ff1c39567390adcae704213e5b7895b2cfec092643607d9ab7d4f10e2b4865829fbcd9f613304d6a87a4c1defb1835526f8ca9c6e3001d3a577491aecbe805223f5c7996b3d0ed0a2744617e9bb8d5f20f2c496683a0bddaf714314e6b88a5c2dffc193653708daac7e4011e3b587592afcce90623405d7a97b4d1ee0b2845627f9cb9d6f3102d4a6784a1bedbf815324f6c89a6c3e0fd1a3754718eabc8e5021f3c597693b0cdea0724415e7b98b5d2ef0c294663809dbad7f4112e4b6885a2bfdcf91633506d8aa7c4e1fe1b3855728facc9e603203d5a7794b1ceeb0825425f7c99b6d3f00d2a4764819ebbd8f5122f4c6986a3c0ddfa1734516e8ba8c5e2ff1c39567390adcae704213e5b7895b2cfec092643607d9ab7d4f10e2b4865829fbcd9f613304d6a87a4c1defb1835526f8ca9c6e3001d3a577491aecbe805223f5c7996b3d0ed0a2744617e9bb8d5f20f2c496683a0bddaf714314e6b88a5c2dffc193653708daac7e4011e3b587592afcce90623405d7a97b4d1ee0b2845627f9cb9d6f3102d4a6784a1bedbf815324f6c89a6c3e0fd1a3754718eabc8e5021f3c597693b0cdea0724415e7b98b5d2ef0c294663809dbad7f4112e4b6885a2bfdcf91633506d8aa7c4e1fe1b3855728facc9e6",
+    "reads": 2,
+    "writes": 1,
+    "payloads": 1,
+    "outcome": "UnresolvedRegion"
+  },
+  {
+    "name": "concat_direct_quota_after_acks_64",
+    "aml": "5b805245473000000b00025b810d52454730020003464c44300d085352433011050a021234085247485411050a02567814144d41494e00a4735352433052474854464c4430",
+    "size": 64,
+    "kind": "buffer",
+    "number": 0,
+    "raw": "12345678",
+    "source_id": 5,
+    "initial_count": 5,
+    "allocations": [
+      {
+        "id": 5,
+        "kind": "buffer",
+        "raw": "12345678"
+      }
+    ],
+    "object_count": 6,
+    "bits": 13,
+    "offset": 3,
+    "width": 2,
+    "base": 0,
+    "fail_at": 18446744073709551615,
+    "quota": 2,
+    "events": [
+      {
+        "kind": "Read",
+        "field": 1,
+        "payload": 0,
+        "serial": 0,
+        "chunk": 0,
+        "offset": 0,
+        "width": 2,
+        "value": 0,
+        "response": 8195
+      },
+      {
+        "kind": "Write",
+        "field": 1,
+        "payload": 0,
+        "serial": 1,
+        "chunk": 0,
+        "offset": 0,
+        "width": 2,
+        "value": 41107,
+        "response": 41107
+      },
+      {
+        "kind": "Read",
+        "field": 1,
+        "payload": 1,
+        "serial": 0,
+        "chunk": 0,
+        "offset": 0,
+        "width": 2,
+        "value": 0,
+        "response": 41107
+      },
+      {
+        "kind": "Write",
+        "field": 1,
+        "payload": 1,
+        "serial": 1,
+        "chunk": 0,
+        "offset": 0,
+        "width": 2,
+        "value": 5515,
+        "response": 5515
+      },
+      {
+        "kind": "Read",
+        "field": 1,
+        "payload": 2,
+        "serial": 0,
+        "chunk": 0,
+        "offset": 0,
+        "width": 2,
+        "value": 0,
+        "response": 5515
+      },
+      {
+        "kind": "Write",
+        "field": 1,
+        "payload": 2,
+        "serial": 1,
+        "chunk": 0,
+        "offset": 0,
+        "width": 2,
+        "value": 243,
+        "response": 243
+      }
+    ],
+    "initial": "03203d5a7794b1ceeb0825425f7c99b6d3f00d2a4764819ebbd8f5122f4c6986a3c0ddfa1734516e8ba8c5e2ff1c39567390adcae704213e5b7895b2cfec092643607d9ab7d4f10e2b4865829fbcd9f613304d6a87a4c1defb1835526f8ca9c6e3001d3a577491aecbe805223f5c7996b3d0ed0a2744617e9bb8d5f20f2c496683a0bddaf714314e6b88a5c2dffc193653708daac7e4011e3b587592afcce90623405d7a97b4d1ee0b2845627f9cb9d6f3102d4a6784a1bedbf815324f6c89a6c3e0fd1a3754718eabc8e5021f3c597693b0cdea0724415e7b98b5d2ef0c294663809dbad7f4112e4b6885a2bfdcf91633506d8aa7c4e1fe1b3855728facc9e603203d5a7794b1ceeb0825425f7c99b6d3f00d2a4764819ebbd8f5122f4c6986a3c0ddfa1734516e8ba8c5e2ff1c39567390adcae704213e5b7895b2cfec092643607d9ab7d4f10e2b4865829fbcd9f613304d6a87a4c1defb1835526f8ca9c6e3001d3a577491aecbe805223f5c7996b3d0ed0a2744617e9bb8d5f20f2c496683a0bddaf714314e6b88a5c2dffc193653708daac7e4011e3b587592afcce90623405d7a97b4d1ee0b2845627f9cb9d6f3102d4a6784a1bedbf815324f6c89a6c3e0fd1a3754718eabc8e5021f3c597693b0cdea0724415e7b98b5d2ef0c294663809dbad7f4112e4b6885a2bfdcf91633506d8aa7c4e1fe1b3855728facc9e6",
+    "memory": "f3003d5a7794b1ceeb0825425f7c99b6d3f00d2a4764819ebbd8f5122f4c6986a3c0ddfa1734516e8ba8c5e2ff1c39567390adcae704213e5b7895b2cfec092643607d9ab7d4f10e2b4865829fbcd9f613304d6a87a4c1defb1835526f8ca9c6e3001d3a577491aecbe805223f5c7996b3d0ed0a2744617e9bb8d5f20f2c496683a0bddaf714314e6b88a5c2dffc193653708daac7e4011e3b587592afcce90623405d7a97b4d1ee0b2845627f9cb9d6f3102d4a6784a1bedbf815324f6c89a6c3e0fd1a3754718eabc8e5021f3c597693b0cdea0724415e7b98b5d2ef0c294663809dbad7f4112e4b6885a2bfdcf91633506d8aa7c4e1fe1b3855728facc9e603203d5a7794b1ceeb0825425f7c99b6d3f00d2a4764819ebbd8f5122f4c6986a3c0ddfa1734516e8ba8c5e2ff1c39567390adcae704213e5b7895b2cfec092643607d9ab7d4f10e2b4865829fbcd9f613304d6a87a4c1defb1835526f8ca9c6e3001d3a577491aecbe805223f5c7996b3d0ed0a2744617e9bb8d5f20f2c496683a0bddaf714314e6b88a5c2dffc193653708daac7e4011e3b587592afcce90623405d7a97b4d1ee0b2845627f9cb9d6f3102d4a6784a1bedbf815324f6c89a6c3e0fd1a3754718eabc8e5021f3c597693b0cdea0724415e7b98b5d2ef0c294663809dbad7f4112e4b6885a2bfdcf91633506d8aa7c4e1fe1b3855728facc9e6",
+    "reads": 3,
+    "writes": 3,
+    "payloads": 3,
+    "outcome": "Capacity"
+  }
+]
