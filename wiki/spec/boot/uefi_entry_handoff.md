@@ -194,6 +194,6 @@ replayable evidence chain.
 - The current post-entry firmware transition is
   [`source/boot/uefi/own_machine.omg`](../../../source/boot/uefi/own_machine.omg).
 - Omega owns the generic
-  [UEFI entry and firmware handoff](../../../../Omega/wiki/spec/build/uefi_entry.md),
-  [authority establishment](../../../../Omega/wiki/spec/resources/authority.md),
-  and [extent](../../../../Omega/wiki/spec/resources/extents.md) rules.
+  [UEFI entry and firmware handoff](https://github.com/CathedralOS/Omega/blob/main/wiki/spec/build/uefi_entry.md),
+  [authority establishment](https://github.com/CathedralOS/Omega/blob/main/wiki/spec/resources/authority.md),
+  and [extent](https://github.com/CathedralOS/Omega/blob/main/wiki/spec/resources/extents.md) rules.

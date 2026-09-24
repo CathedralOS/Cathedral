@@ -92,8 +92,8 @@ yet specify those operations.
 - The admitted invocation and lifetime are in
   [`source/boot/uefi/own_machine.omg`](../../../source/boot/uefi/own_machine.omg).
 - Omega owns the generic rules for
-  [authority establishment](../../../../Omega/wiki/spec/resources/authority.md)
-  and [extents](../../../../Omega/wiki/spec/resources/extents.md).
+  [authority establishment](https://github.com/CathedralOS/Omega/blob/main/wiki/spec/resources/authority.md)
+  and [extents](https://github.com/CathedralOS/Omega/blob/main/wiki/spec/resources/extents.md).
 
 The Cathedral specification narrows how those generic facilities are used by
 the current boot path; it does not redefine Omega qualification semantics.

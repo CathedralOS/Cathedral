@@ -60,10 +60,10 @@ Installing a font adds it to the user's font collection in the user realm, disco
 
 ## Omega Leverage
 
-- GPU/decode/capture/audio are **capabilities plus reach to their boundary services**, audited on the same axes as any other boundary ([capabilities & effects](../../../../Omega/wiki/language_guide/chapter_19_capabilities_effects_boundaries.md)).
+- GPU/decode/capture/audio are **capabilities plus reach to their boundary services**, audited on the same axes as any other boundary ([capabilities & effects](https://github.com/CathedralOS/Omega/blob/main/wiki/language_guide/chapter_19_capabilities_effects_boundaries.md)).
 - The pipeline is a set of **boundary providers** wrapping firmware/vendor code; the audited edge is explicit.
-- Decode/render sessions are **machines with states** ([machines](../../../../Omega/wiki/language_guide/chapter_3_machines.md)): configured → running → flushing → drained.
-- Frame/audio buffer descriptors crossing a boundary use ordinary numbered schemas and selected layout/codec policies ([wire protocols](../../../../Omega/wiki/language_guide/chapter_21_wire_protocols.md)).
+- Decode/render sessions are **machines with states** ([machines](https://github.com/CathedralOS/Omega/blob/main/wiki/language_guide/chapter_3_machines.md)): configured → running → flushing → drained.
+- Frame/audio buffer descriptors crossing a boundary use ordinary numbered schemas and selected layout/codec policies ([wire protocols](https://github.com/CathedralOS/Omega/blob/main/wiki/language_guide/chapter_14_traits.md#wire-protocols)).
 - Omega gives no GPU memory-isolation model for shared devices; that isolation guarantee is a Cathedral + hardware obligation.
 
 ## Open Questions

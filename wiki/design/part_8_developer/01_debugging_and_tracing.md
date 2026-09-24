@@ -104,7 +104,7 @@ A breakpoint expressed against the **source state graph / `data` fields** surviv
 
 ## Omega Leverage
 
-- **Inspectable source + lowered state graphs** ([../../../../Omega/wiki/language_guide/chapter_4_states_transitions.md](../../../../Omega/wiki/language_guide/chapter_4_states_transitions.md)) make "where is execution, and why" a query over a real artifact.
+- **Inspectable source + lowered state graphs** ([Omega Chapter 4: States And Transitions](https://github.com/CathedralOS/Omega/blob/main/wiki/language_guide/chapter_4_states_transitions.md)) make "where is execution, and why" a query over a real artifact.
 - **Capabilities as values** make `Capability<Debug<X>>` an ordinary, attenuable grant rather than a new privileged syscall.
 - **Virtual time + deterministic graphs** make replay debugging sound, and the debugger-as-Matrix owns clock/randomness/network/input.
 - **Historical state schemas + checked replacement** let a session survive a hot swap and give cross-era breakpoints their field-correspondence.

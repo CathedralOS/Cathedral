@@ -64,9 +64,9 @@ Committed Omega translations live in their eventual ownership layer alongside
    primary specs, then Omega's current normative contracts and implementation
    boundary. Layout geometry describes bits; access policy and authority are
    separate obligations. In particular, consult Omega's
-   [layout plans](../../../Omega/wiki/spec/layouts/plans.md),
-   [authority](../../../Omega/wiki/spec/resources/authority.md), and
-   [device custody](../../../Omega/wiki/spec/resources/device_access.md).
+   [layout plans](https://github.com/CathedralOS/Omega/blob/main/wiki/spec/layouts/plans.md),
+   [authority](https://github.com/CathedralOS/Omega/blob/main/wiki/spec/resources/authority.md), and
+   [device custody](https://github.com/CathedralOS/Omega/blob/main/wiki/spec/resources/device_access.md).
 3. **Translate the inert part.** Facts, parsing, validation, encoding, and pure
    state transitions may land ahead of compiler support. Raw UEFI ABI belongs
    in `source/contracts/uefi/`; driver facts in `source/drivers/facts/`; behavior

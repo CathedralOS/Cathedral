@@ -64,9 +64,9 @@ Tier-1 contracts still evolve. **Additive** changes (new numbered fields, stable
 
 - **Authority-flow reports** are the capability visualizer's data, unmodified.
 - **Effect ceilings** drive the resource profiler and certification checklist.
-- **Historical-schema + conversion reports** drive the migration tester and protocol explorer ([../../../../Omega/wiki/language_guide/chapter_22_versioned_data.md](../../../../Omega/wiki/language_guide/chapter_22_versioned_data.md)).
+- **Historical-schema + conversion reports** drive the migration tester and protocol explorer ([Omega Chapter 14: Versioned Data](https://github.com/CathedralOS/Omega/blob/main/wiki/language_guide/chapter_14_traits.md#versioned-data)).
 - **Quiescence / borrow-safety facts** drive the deadlock checker.
-- **Proof obligations** ([../../../../Omega/wiki/language_guide/chapter_9_proof_obligations.md](../../../../Omega/wiki/language_guide/chapter_9_proof_obligations.md)) are the proof tooling's content. The tooling's job is *surfacing*, not deriving.
+- **Proof obligations** ([Omega Chapter 9: Proof Obligations](https://github.com/CathedralOS/Omega/blob/main/wiki/language_guide/chapter_9_proof_obligations.md)) are the proof tooling's content. The tooling's job is *surfacing*, not deriving.
 
 ## Open Questions
 

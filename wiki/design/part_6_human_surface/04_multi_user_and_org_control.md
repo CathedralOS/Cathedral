@@ -53,9 +53,9 @@ Org control is then *policy layered onto tenants* ([[configuration_and_policy]])
 
 ## Omega Leverage
 
-- A tenant boundary is expressible as a **domain / proof predicate** ([domains](../../../../Omega/wiki/language_guide/chapter_8_domains.md)): capabilities and data carry their tenant; cross-tenant flow requires explicit, audited mediation.
-- Tenant scoping rides the **capability** model — authority is reachable only if held *within* the tenant ([capabilities](../../../../Omega/wiki/language_guide/chapter_19_capabilities_effects_boundaries.md)).
-- Per-tenant state uses **immutable historical schemas and checked conversions** with a clean lifecycle ([historical data](../../../../Omega/wiki/language_guide/chapter_22_versioned_data.md)).
+- A tenant boundary is expressible as a **domain / proof predicate** ([domains](https://github.com/CathedralOS/Omega/blob/main/wiki/language_guide/chapter_8_domains.md)): capabilities and data carry their tenant; cross-tenant flow requires explicit, audited mediation.
+- Tenant scoping rides the **capability** model — authority is reachable only if held *within* the tenant ([capabilities](https://github.com/CathedralOS/Omega/blob/main/wiki/language_guide/chapter_19_capabilities_effects_boundaries.md)).
+- Per-tenant state uses **immutable historical schemas and checked conversions** with a clean lifecycle ([historical data](https://github.com/CathedralOS/Omega/blob/main/wiki/language_guide/chapter_14_traits.md#versioned-data)).
 - Omega gives no built-in tenancy concept; the tenant-as-isolation-domain is a Cathedral construct layered on capabilities, domains, and storage.
 
 ## Open Questions

@@ -60,7 +60,7 @@ profile demanding an unestablished property rejects the component.
 - **A cryptographic argument** (zkVM / STARK / Nova-IVC) *is* succinct + cheap + build-shippable, but only **cryptographically** sound (Fiat-Shamir/ROM — with a demonstrated 2025 GKR attack — FRI proximity conjectures, trusted setup), at **~10⁶× prover cost**, certifying "the circuit ran," not "the circuit is your spec." **Second-class for a security kernel**, which weights kernel-only trust.
 - **A bare brute-force run** with no emitted trail is exactly an *attestation* (trust the prover ran it).
 
-So Cathedral **prioritizes the small-inductive-cert regime** (the only kernel-only-trust win), uses the **budget/bound measure** ([Omega totality](../../../../Omega/wiki/design_briefs/totality_and_bounded_computation.md)) to turn a would-be-exhaustion into a cheap bounded cert (the bound *is* the measure — greed costs build time), treats large verified proofs as **sound-but-not-build-shippable**, and never ships a bare exhaustion as a guarantee; the crypto regime is an opt-in only where cryptographic soundness + the prover bill are acceptable. Randomized and guided simulation remain local bug-finders, not transmissible certificates. (Honest floor: some predicates *provably* have no succinct certificate — proof-complexity lower bounds / NP-vs-coNP — though *structured* exhaustions sometimes compress sub-search-size, Nederlof–Williams. Survey: [Omega proof_caching](../../../../Omega/wiki/design_briefs/proof_caching.md).)
+So Cathedral **prioritizes the small-inductive-cert regime** (the only kernel-only-trust win), uses the **budget/bound measure** ([Omega totality](https://github.com/CathedralOS/Omega/blob/main/wiki/design_briefs/totality_and_bounded_computation.md)) to turn a would-be-exhaustion into a cheap bounded cert (the bound *is* the measure — greed costs build time), treats large verified proofs as **sound-but-not-build-shippable**, and never ships a bare exhaustion as a guarantee; the crypto regime is an opt-in only where cryptographic soundness + the prover bill are acceptable. Randomized and guided simulation remain local bug-finders, not transmissible certificates. (Honest floor: some predicates *provably* have no succinct certificate — proof-complexity lower bounds / NP-vs-coNP — though *structured* exhaustions sometimes compress sub-search-size, Nederlof–Williams. Survey: [Omega proof_caching](https://github.com/CathedralOS/Omega/blob/main/wiki/design_briefs/proof_caching.md).)
 
 ## Concerns & Design Space
 
@@ -92,9 +92,9 @@ So Cathedral **prioritizes the small-inductive-cert regime** (the only kernel-on
 ## Omega Leverage
 
 - **Deterministic state graphs** make whole-component behavior reproducible.
-- **Virtual time / injectable effects** ([../../../../Omega/wiki/language_guide/chapter_19_capabilities_effects_boundaries.md](../../../../Omega/wiki/language_guide/chapter_19_capabilities_effects_boundaries.md)) let the simulator own the clock, the network, and faults.
+- **Virtual time / injectable effects** ([Omega Chapter 19: Capabilities, Reach, And Boundaries](https://github.com/CathedralOS/Omega/blob/main/wiki/language_guide/chapter_19_capabilities_effects_boundaries.md)) let the simulator own the clock, the network, and faults.
 - **Effect injection** at the boundary substitutes mock providers for real ones.
-- **Proof obligations** ([../../../../Omega/wiki/language_guide/chapter_9_proof_obligations.md](../../../../Omega/wiki/language_guide/chapter_9_proof_obligations.md)) give the invariants the simulator checks against, shared with the type checker.
+- **Proof obligations** ([Omega Chapter 9: Proof Obligations](https://github.com/CathedralOS/Omega/blob/main/wiki/language_guide/chapter_9_proof_obligations.md)) give the invariants the simulator checks against, shared with the type checker.
 - Ordinary provider selection supplies the synthetic scheduler, clock, storage,
   network, device, and fault implementations; simulation needs no separate
   language execution mode.

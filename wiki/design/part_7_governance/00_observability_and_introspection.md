@@ -75,9 +75,9 @@ Full causality forever is impossible, so the event log rides the storage **retai
 ## Omega Leverage
 
 - The **authority graph** is already modeled from authority-flow inference (accepts / uses / derives / stores / acquires / returns / releases); observing it is reading a structure Omega built, not adding a probe.
-- **Reach** gives the orthogonal "which services may be reached" axis as a queryable ceiling per component ([reach](../../../../Omega/wiki/language_guide/chapter_19_capabilities_effects_boundaries.md)).
+- **Reach** gives the orthogonal "which services may be reached" axis as a queryable ceiling per component ([reach](https://github.com/CathedralOS/Omega/blob/main/wiki/language_guide/chapter_19_capabilities_effects_boundaries.md)).
 - **Provenance** of values and artifacts makes "what wrote this / what migrated this" a lookup.
-- Causal events compose with **historical schema/conversion identity** so "which migration touched this object" is intrinsic ([historical data](../../../../Omega/wiki/language_guide/chapter_22_versioned_data.md)).
+- Causal events compose with **historical schema/conversion identity** so "which migration touched this object" is intrinsic ([historical data](https://github.com/CathedralOS/Omega/blob/main/wiki/language_guide/chapter_14_traits.md#versioned-data)).
 - What Omega may need to grow: a standard, queryable *causal event graph* schema and an `Observe` capability domain that attenuates over axes.
 
 ## Open Questions

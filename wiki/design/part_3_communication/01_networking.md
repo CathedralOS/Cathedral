@@ -125,11 +125,11 @@ That capability is **the right to be *scheduled into* the pool, not ownership of
 
 ## Omega Leverage
 
-- **Capabilities as values** make a flow authorization a held, attenuable, revocable grant rather than an ambient socket right. See Omega [Capabilities, Reach, And Boundaries](../../../../Omega/wiki/language_guide/chapter_19_capabilities_effects_boundaries.md).
+- **Capabilities as values** make a flow authorization a held, attenuable, revocable grant rather than an ambient socket right. See Omega [Capabilities, Reach, And Boundaries](https://github.com/CathedralOS/Omega/blob/main/wiki/language_guide/chapter_19_capabilities_effects_boundaries.md).
 - **`reaches Network`** marks and accounts every crossing into the network, naming the boundary edge where the OS broker provides authority.
-- **Selected wire codecs over ordinary numbered schemas** frame the typed-library protocol with stable identities and compatibility rules, identical to local IPC, so cross-version interop and compatibility reports apply to the network too. See Omega [Wire Protocols](../../../../Omega/wiki/language_guide/chapter_21_wire_protocols.md).
+- **Selected wire codecs over ordinary numbered schemas** frame the typed-library protocol with stable identities and compatibility rules, identical to local IPC, so cross-version interop and compatibility reports apply to the network too. See Omega [Wire Protocols](https://github.com/CathedralOS/Omega/blob/main/wiki/language_guide/chapter_14_traits.md#wire-protocols).
 - **`boundary` providers** are the home for the NIC driver below the demux and for the transport stack (TLS, QUIC, NAT traversal) below the connection API; the demux/broker itself is Omega, keeping that TCB small and checked.
-- The network provider is a **trait** any component can implement, so nesting is one interface with many implementations resolved from the child's environment; a nested provider is just that resolution bound to a parent endpoint. See Omega [Traits](../../../../Omega/wiki/language_guide/chapter_14_traits.md).
+- The network provider is a **trait** any component can implement, so nesting is one interface with many implementations resolved from the child's environment; a nested provider is just that resolution bound to a parent endpoint. See Omega [Traits](https://github.com/CathedralOS/Omega/blob/main/wiki/language_guide/chapter_14_traits.md).
 - Omega does not yet model bandwidth as a metered effect or peer attestation as a fact; both are extensions Cathedral drives.
 
 ## Open Questions

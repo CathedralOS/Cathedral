@@ -85,7 +85,7 @@ then transforms `(old, context)` into new state under deterministic contracts.
 A package may expose an `Upgradable<Old, New, Context>` convenience trait, but
 Omega does not bless that trait or a migration DSL. The semantic requirement is
 the capture-before-point-of-no-return discipline described in [Omega Versioned
-Data](../../../../Omega/wiki/language_guide/chapter_22_versioned_data.md).
+Data](https://github.com/CathedralOS/Omega/blob/main/wiki/language_guide/chapter_14_traits.md#versioned-data).
 
 ## Concerns & Design Space
 
@@ -145,7 +145,7 @@ Data](../../../../Omega/wiki/language_guide/chapter_22_versioned_data.md).
   boundary-domain permission, checked transformations, provider/backing
   requirements, and transitive authority while keeping proof evidence behind
   the evidence firewall
-  ([Omega authority-value brief](../../../../Omega/wiki/design_briefs/authority_values_and_boundary_evidence.md)).
+  ([Omega authority-value brief](https://github.com/CathedralOS/Omega/blob/main/wiki/design_briefs/authority_values_and_boundary_evidence.md)).
 - **`reaches` ceilings** bound which services an install-time transition may reach; excluding ambient `Storage` reach outside the supplied setup capability is a checkable fact.
 - **Immutable historical `data` shapes + checked conversion machines** carry persistent format lineages and upgrade paths as ordinary typed code with obligations.
 - **Ordinary numbered schemas plus selected wire codecs** ([[ipc_and_service_invocation]]) declare the protocols spoken, making protocol compatibility part of the manifest.

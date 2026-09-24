@@ -14,7 +14,7 @@ Cathedral benefits from the *Omega Language*, which is an incredibly strict lang
 
 ## What Omega Already Provides
 
-- **`data` / `machine` / `state` / `transition`** — state is `data`; behavior is a `machine` over state; control flow inside a machine is an explicit graph of `state`s and `transition`s. The state graph is a first-class artifact the compiler can inspect, prove over, and schedule. See Omega [Machines](../../../../Omega/wiki/language_guide/chapter_3_machines.md) and [States And Transitions](../../../../Omega/wiki/language_guide/chapter_4_states_transitions.md).
+- **`data` / `machine` / `state` / `transition`** — state is `data`; behavior is a `machine` over state; control flow inside a machine is an explicit graph of `state`s and `transition`s. The state graph is a first-class artifact the compiler can inspect, prove over, and schedule. See Omega [Machines](https://github.com/CathedralOS/Omega/blob/main/wiki/language_guide/chapter_3_machines.md) and [States And Transitions](https://github.com/CathedralOS/Omega/blob/main/wiki/language_guide/chapter_4_states_transitions.md).
 - **`domain`** — named proof predicates over values (`Folder::Writable`,
   `Player::Alive`) with predicate bodies and compiler-owned semantic
   contribution roles carried independently. Operator-bearing declarations
@@ -33,8 +33,8 @@ Cathedral benefits from the *Omega Language*, which is an incredibly strict lang
   coercions preserve denotation without invoking arbitrary user code. Trait
   and machine visibility control who may conform and invoke, while admitted
   boundary routes retain selected-provider receipts. See Omega
-  [Domains](../../../../Omega/wiki/language_guide/chapter_8_domains.md).
-- **`boundary` + service and operational contracts** — `boundary` marks external supply/trust edges; the `reaches` row contains only normalized boundary-trait service identities. Independent `invokes`, `suspends`, and `blocks` clauses preserve synchronous entry and operational may-ceilings. Each axis propagates under its own rules and forms an authored API ceiling. Authority values, trust receipts, resources, failure, termination, and mutation remain independent axes. See Omega [Capabilities, Reach, And Boundaries](../../../../Omega/wiki/language_guide/chapter_19_capabilities_effects_boundaries.md).
+  [Domains](https://github.com/CathedralOS/Omega/blob/main/wiki/language_guide/chapter_8_domains.md).
+- **`boundary` + service and operational contracts** — `boundary` marks external supply/trust edges; the `reaches` row contains only normalized boundary-trait service identities. Independent `invokes`, `suspends`, and `blocks` clauses preserve synchronous entry and operational may-ceilings. Each axis propagates under its own rules and forms an authored API ceiling. Authority values, trust receipts, resources, failure, termination, and mutation remain independent axes. See Omega [Capabilities, Reach, And Boundaries](https://github.com/CathedralOS/Omega/blob/main/wiki/language_guide/chapter_19_capabilities_effects_boundaries.md).
 - **Authority flow** — inferred from values, domains, call contracts, returns, stores, and boundary provenance. The compiler reports what a unit *accepts, uses, derives, stores, acquires, returns, releases.* This is the raw material of Cathedral's authority graph.
 - **Ordinary data evolution** — historical external shapes are immutable
   ordinary `data`, sum envelopes, layout/codec policies, provenance domains,
@@ -42,13 +42,13 @@ Cathedral benefits from the *Omega Language*, which is an incredibly strict lang
   provider realizations, artifact/era identities, liveness pins, candidate
   resource demands, admitted runtime operations, and ordinary phase machines.
   See Omega [Versioned
-  Data](../../../../Omega/wiki/language_guide/chapter_22_versioned_data.md).
+  Data](https://github.com/CathedralOS/Omega/blob/main/wiki/language_guide/chapter_14_traits.md#versioned-data).
 - **Programmable schemas and layouts** — plain `data` may carry stable `#N`
   field/case identities and tombstones; layout and codec policies define
   external representation. Cathedral's IPC, networking, and persistence edges
   declare their compatibility demands and select the relevant policies. See
-  Omega [Wire Protocols](../../../../Omega/wiki/language_guide/chapter_21_wire_protocols.md)
-  and [Programmable Layouts](../../../../Omega/wiki/design_briefs/programmable_layouts.md).
+  Omega [Wire Protocols](https://github.com/CathedralOS/Omega/blob/main/wiki/language_guide/chapter_14_traits.md#wire-protocols)
+  and [Programmable Layouts](https://github.com/CathedralOS/Omega/blob/main/wiki/design_briefs/programmable_layouts.md).
 - **OS memory/hardware foundation** — inert addresses, range-authority
   `Extent`s, ordinary allocation-strategy packages, programmable layouts,
   separate access plans, checked assembly, boundary entry plans, symbolic
@@ -63,8 +63,8 @@ Cathedral benefits from the *Omega Language*, which is an incredibly strict lang
   requirement signature with the admitted evidence. Checked transformations
   conserve existing claims. Artifacts distinguish checked, transformed,
   validated, and accepted evidence origins
-  ([Omega brief](../../../../Omega/wiki/design_briefs/authority_values_and_boundary_evidence.md)).
-- **Proof obligations** — contracts (`requires` / `ensures`), bounded values, borrow facts, termination claims, and relax scopes. See Omega [Proof Obligations](../../../../Omega/wiki/language_guide/chapter_9_proof_obligations.md).
+  ([Omega brief](https://github.com/CathedralOS/Omega/blob/main/wiki/design_briefs/authority_values_and_boundary_evidence.md)).
+- **Proof obligations** — contracts (`requires` / `ensures`), bounded values, borrow facts, termination claims, and relax scopes. See Omega [Proof Obligations](https://github.com/CathedralOS/Omega/blob/main/wiki/language_guide/chapter_9_proof_obligations.md).
 
 ## The Division of Labor
 
@@ -129,7 +129,7 @@ important writes.
   is acceptable. Complete manifests stay machine-readable; human diffs are
   severity-ranked so an inert local token is quiet and new DMA/IOMMU/root-memory
   reach blocks.
-- **Single address space vs. hardware isolation.** Theseus-style language-level isolation in one address space is attractive for zero-copy IPC and hot swap, but interacts with the driver model, the kernel architecture, and untrusted legacy code. This is a recurring tension (see [[kernel_architecture]]). It is also the one place Cathedral can be *structurally* faster than a C-on-Linux stack rather than merely re-deriving it: when components are *proved* mutually safe, the OS can drop the hardware wall between them, so IPC becomes a call, a "syscall" to an OS service skips the user/kernel mode switch, a context switch skips the TLB flush, and zero-copy is the default because no boundary needs defensive validation. That is the Singularity/Theseus result, and it is impossible in C+Linux precisely because C cannot be proved safe, so the MMU costs cannot be removed. The honest bound: the win applies only inside the all-proved core — untrusted or foreign code stays behind the hardware wall with the same costs as Linux — proof sometimes *forces* slower restructurings, and a clean-slate OS is slower than the decades-tuned stack almost everywhere else at first. But the compiler gap is neither permanent nor as durable as the clean-slate analogy implies: Omega's optimizer starts from a *higher ceiling* — it keeps the aliasing, value-range, purity, and whole-program facts a C compiler must heroically and incompletely reconstruct — and its verified-equivalence gate can safely absorb machine-generated (search / LLM) optimizations at a volume LLVM structurally cannot, admitting them by proof rather than review ([verified-gated ML optimizer](../../../../Omega/wiki/design_briefs/verified_gated_ml_optimizer.md)). So the high-level optimizations can plausibly *exceed* LLVM long-run while the backend stays a grind, and the gap closes faster than history suggests. The near-term pitch is still not raw throughput; it is process-grade isolation at call speed, plus provable bounds and live upgrade, which the existing stack structurally cannot offer — the structural win concentrated in the proved-core service mesh (IPC-heavy, microservice, and OS-service workloads), at parity-or-better elsewhere as the compiler matures.
+- **Single address space vs. hardware isolation.** Theseus-style language-level isolation in one address space is attractive for zero-copy IPC and hot swap, but interacts with the driver model, the kernel architecture, and untrusted legacy code. This is a recurring tension (see [[kernel_architecture]]). It is also the one place Cathedral can be *structurally* faster than a C-on-Linux stack rather than merely re-deriving it: when components are *proved* mutually safe, the OS can drop the hardware wall between them, so IPC becomes a call, a "syscall" to an OS service skips the user/kernel mode switch, a context switch skips the TLB flush, and zero-copy is the default because no boundary needs defensive validation. That is the Singularity/Theseus result, and it is impossible in C+Linux precisely because C cannot be proved safe, so the MMU costs cannot be removed. The honest bound: the win applies only inside the all-proved core — untrusted or foreign code stays behind the hardware wall with the same costs as Linux — proof sometimes *forces* slower restructurings, and a clean-slate OS is slower than the decades-tuned stack almost everywhere else at first. But the compiler gap is neither permanent nor as durable as the clean-slate analogy implies: Omega's optimizer starts from a *higher ceiling* — it keeps the aliasing, value-range, purity, and whole-program facts a C compiler must heroically and incompletely reconstruct — and its verified-equivalence gate can safely absorb machine-generated (search / LLM) optimizations at a volume LLVM structurally cannot, admitting them by proof rather than review ([verified-gated ML optimizer](https://github.com/CathedralOS/Omega/blob/main/wiki/design_briefs/verified_gated_ml_optimizer.md)). So the high-level optimizations can plausibly *exceed* LLVM long-run while the backend stays a grind, and the gap closes faster than history suggests. The near-term pitch is still not raw throughput; it is process-grade isolation at call speed, plus provable bounds and live upgrade, which the existing stack structurally cannot offer — the structural win concentrated in the proved-core service mesh (IPC-heavy, microservice, and OS-service workloads), at parity-or-better elsewhere as the compiler matures.
 
 ## What Omega Still Needs to Grow (driven by Cathedral)
 
@@ -154,7 +154,7 @@ important writes.
   bounded extent-backed runtime provider.
   Device/MMIO is not "a second atomic model" but a separate
   `AccessPlan`/placed-view observation discipline ([[hardware_foundation_profile]],
-  [Omega concurrency](../../../../Omega/wiki/language_guide/chapter_18_concurrency.md)).
+  [Omega concurrency](https://github.com/CathedralOS/Omega/blob/main/wiki/language_guide/chapter_18_concurrency.md)).
 
 ## Key Questions
 

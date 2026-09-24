@@ -68,7 +68,7 @@ The confinement model (above) settles the trust question; the residue is device-
 
 ## Omega Leverage
 
-- **Drivers as components with boundary-trait reach ceilings** make hardware reach a checkable, audited fact without blessed lowercase keywords. See [Omega reach](../../../../Omega/wiki/language_guide/chapter_19_capabilities_effects_boundaries.md).
+- **Drivers as components with boundary-trait reach ceilings** make hardware reach a checkable, audited fact without blessed lowercase keywords. See [Omega reach](https://github.com/CathedralOS/Omega/blob/main/wiki/language_guide/chapter_19_capabilities_effects_boundaries.md).
 - **Extents, placed views, linear external loans, and entry-root plans** scope MMIO/DMA/IRQ access to one device ([[hardware_foundation_profile]]).
 - **Ordinary numbered schemas + layout/codec policies** give compatible driver APIs; component identities and quiescence govern live replacement.
 - **Boundary traits** model the device edge: the hardware contract is a `boundary` whose guarantees are accepted but whose effects and authority are bounded.

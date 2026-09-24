@@ -2,7 +2,7 @@
 
 This is the map of Cathedral's design. Every meaningful OS concept gets one chapter. Chapters are grouped into parts so the system can be read as a story rather than a flat pile of topics.
 
-These are **design documents**, not specifications. Each chapter states the legacy contract being replaced, the contract Cathedral wants instead, the concerns and open questions to work through, and how the [Omega](../../../Omega/wiki/language_guide/language_guide.md) language substrate is expected to carry the weight. Some chapters now contain substantial settled rationale, but accepted normative behavior belongs in the [subject-organized specification](../spec/README.md). An omitted specification rule cannot be inferred from a design chapter.
+These are **design documents**, not specifications. Each chapter states the legacy contract being replaced, the contract Cathedral wants instead, the concerns and open questions to work through, and how the [Omega](https://github.com/CathedralOS/Omega/blob/main/wiki/language_guide/language_guide.md) language substrate is expected to carry the weight. Some chapters now contain substantial settled rationale, but accepted normative behavior belongs in the [subject-organized specification](../spec/README.md). An omitted specification rule cannot be inferred from a design chapter.
 
 ## How to read this
 

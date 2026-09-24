@@ -49,10 +49,10 @@ Web integration composes almost entirely from already-decided machinery, so the 
 
 ## Omega Leverage
 
-- An origin is a **principal** holding **capabilities + domains** — no new mechanism, just a new kind of node in the authority graph ([capabilities chapter](../../../../Omega/wiki/language_guide/chapter_19_capabilities_effects_boundaries.md)).
+- An origin is a **principal** holding **capabilities + domains** — no new mechanism, just a new kind of node in the authority graph ([capabilities chapter](https://github.com/CathedralOS/Omega/blob/main/wiki/language_guide/chapter_19_capabilities_effects_boundaries.md)).
 - The native bridge is a **boundary provider**; crossing it requires a held capability and shows up in the authority-flow report.
-- Web messages use ordinary numbered schemas and selected wire codecs ([wire protocols](../../../../Omega/wiki/language_guide/chapter_21_wire_protocols.md)).
-- Origin-scoped authority is **attenuation** via [domains](../../../../Omega/wiki/language_guide/chapter_8_domains.md).
+- Web messages use ordinary numbered schemas and selected wire codecs ([wire protocols](https://github.com/CathedralOS/Omega/blob/main/wiki/language_guide/chapter_14_traits.md#wire-protocols)).
+- Origin-scoped authority is **attenuation** via [domains](https://github.com/CathedralOS/Omega/blob/main/wiki/language_guide/chapter_8_domains.md).
 - Omega does not model HTTP/TLS origin semantics; mapping origin identity onto a principal is Cathedral's bridge work atop the capability model.
 
 ## Open Questions

@@ -5,7 +5,7 @@
 > Cathedral-shaped language feature for every device or table.
 
 The shared language design lives in Omega's
-[OS Memory And Hardware Foundation](../../../../Omega/wiki/design_briefs/os_memory_and_hardware_foundation.md).
+[OS Memory And Hardware Foundation](https://github.com/CathedralOS/Omega/blob/main/wiki/design_briefs/os_memory_and_hardware_foundation.md).
 The governing rule is simple: an address is data, not authority. Hardware and
 arbitrary memory are reachable only through checked operations over real
 capabilities, compiler-understood instruction/plan contracts, or explicitly

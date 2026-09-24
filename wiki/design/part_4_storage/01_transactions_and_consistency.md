@@ -52,9 +52,9 @@ transaction grant_and_record {
 
 ## Omega Leverage
 
-- **Machines, states & transitions** model a transaction as an explicit state graph (`open -> staged -> committed | aborted`) the compiler can inspect — see Omega [States And Transitions](../../../../Omega/wiki/language_guide/chapter_4_states_transitions.md).
-- **Reach** distinguishes which world-touching services may participate: a reach ceiling lets the compiler exclude operations that require compensation rather than rollback — see Omega [Capabilities, Reach, And Boundaries](../../../../Omega/wiki/language_guide/chapter_19_capabilities_effects_boundaries.md).
-- **Domains** name the commit lifecycle (`Txn::Staged`, `Txn::Committed`) and let `requires`/`ensures` enforce that participants reach a terminal domain — see Omega [Domains](../../../../Omega/wiki/language_guide/chapter_8_domains.md).
+- **Machines, states & transitions** model a transaction as an explicit state graph (`open -> staged -> committed | aborted`) the compiler can inspect — see Omega [States And Transitions](https://github.com/CathedralOS/Omega/blob/main/wiki/language_guide/chapter_4_states_transitions.md).
+- **Reach** distinguishes which world-touching services may participate: a reach ceiling lets the compiler exclude operations that require compensation rather than rollback — see Omega [Capabilities, Reach, And Boundaries](https://github.com/CathedralOS/Omega/blob/main/wiki/language_guide/chapter_19_capabilities_effects_boundaries.md).
+- **Domains** name the commit lifecycle (`Txn::Staged`, `Txn::Committed`) and let `requires`/`ensures` enforce that participants reach a terminal domain — see Omega [Domains](https://github.com/CathedralOS/Omega/blob/main/wiki/language_guide/chapter_8_domains.md).
 - **Ownership / borrowing** supplies the isolation substrate: exclusive access is already a proven fact, so pessimistic isolation can lean on the borrow checker.
 - Omega does not model distributed commit/saga coordination; that is OS runtime policy layered over the typed local primitive.
 

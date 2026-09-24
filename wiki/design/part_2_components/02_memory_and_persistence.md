@@ -92,7 +92,7 @@ Page tables use a hybrid safety model. New tables are built through typed, capab
 
 ## Omega Leverage
 
-- **Ownership / borrowing / moves** are the entire foundation — borrowed vs. owned vs. stored is exactly the distinction that makes hot swap analyzable ([../../../../Omega/wiki/language_guide/chapter_4_states_transitions.md](../../../../Omega/wiki/language_guide/chapter_4_states_transitions.md) for the state-graph view of quiescence).
+- **Ownership / borrowing / moves** are the entire foundation — borrowed vs. owned vs. stored is exactly the distinction that makes hot swap analyzable ([Omega Chapter 4: States And Transitions](https://github.com/CathedralOS/Omega/blob/main/wiki/language_guide/chapter_4_states_transitions.md) for the state-graph view of quiescence).
 - **Domains** express buffer permission shades on one handle type instead of a family of mapping types.
 - **Ordinary era schemas + migration machines** unify memory and persistence without coupling runtime identity to one durable format lineage ([[versioned_state_and_migration]]).
 - **Proof obligations** can attach to shared buffers (init-before-read, aliasing facts).
