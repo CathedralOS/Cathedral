@@ -21,7 +21,7 @@ valid closures.
 Calls inside a component may name concrete machines and inline normally. Every
 incoming edge from outside a replaceable closure names a requirement contract.
 The same requirement may be statically selected in another build. There is no
-`slot` keyword or hot-swap call syntax; Cathedral's loader/runtime maintains the
+`slot` keyword or hot-swap call syntax. Cathedral's loader/runtime maintains the
 replaceable binding selected by the deployment.
 
 ## Division of labor
@@ -61,14 +61,14 @@ state may be reclaimed.
 A boundary-trait value instead names Cathedral's selected binding. Calls enter
 through the binding's published boundary plan and era protocol. Application
 code that wants a local `dyn` interface over a replaceable provider owns a
-proxy in its own artifact; the proxy holds the boundary binding and implements
+proxy in its own artifact. The proxy holds the boundary binding and implements
 the ordinary trait by making real boundary calls. This concentrates ABI,
 effect, lease, and replacement cost at one named seam without laundering a
 local table across it.
 
 Binding multiplicity uses Omega's ordinary multiplicity vocabulary and is
 affine unless the boundary trait author permits copying or requires linear
-release. A rebindable binding normally resolves the current era on each call; a
+release. A rebindable binding normally resolves the current era on each call. A
 pin is a separate linear value that intentionally retains one era. Binding
 entry publishes its operational/resource ceiling, and Cathedral's admitted
 entry algorithm must fit it.
@@ -77,15 +77,15 @@ Provider-originated session claims may retain an old era even after new calls
 route elsewhere. Each such claim records immutable origin separately from its
 current custodian. Only checked transfer to a named receiver, a boundary
 receipt, or preservation under moves changes custody. Replacement reports name
-retention paths rather than merely saying “not quiescent.”
+retention paths rather than merely saying "not quiescent."
 
-Cathedral supports three explicit capability tiers:
+Cathedral supports three capability tiers:
 
-1. **drain/coexist** — new calls route to the new era while old sessions finish
-   or keep their old provider alive;
-2. **explicit migration** — application/provider code cooperates to replace
-   existing session values;
-3. **stable object identity** — an object table may redirect handles without
+1. **drain/coexist.** New calls route to the new era while old sessions finish
+   or keep their old provider alive.
+2. **explicit migration.** Application/provider code cooperates to replace
+   existing session values.
+3. **stable object identity.** An object table may redirect handles without
    application cooperation, but only alongside a proved state migration and a
    defined racing-call disposition.
 
@@ -116,7 +116,7 @@ Before publication, the replacement plan declares:
 
 Before the point of no return Cathedral may abort and discard the candidate.
 Afterward recovery rolls forward or performs a separately admitted reverse
-replacement. A timeout does not authorize dropping an obligation; cancellation
+replacement. A timeout does not authorize dropping an obligation. Cancellation
 must be part of the component contract and must discharge owned resources.
 
 ## Era-safe entry
@@ -147,7 +147,7 @@ type.
 
 ## Complete disposition, not universal migration
 
-Every item in the old population receives one explicit disposition:
+Every item in the old population receives one disposition:
 
 - drain to completion on the old era;
 - coexist under the old era;
@@ -168,23 +168,23 @@ transformation, or retain that era indefinitely. Architectural preemption does
 not create a lifecycle transition and therefore cannot substitute for one of
 those dispositions.
 
-“New routing is active” and “the old era is reclaimed” are separate completion
+"New routing is active" and "the old era is reclaimed" are separate completion
 states.
 
 ## Resource admission
 
 Semantic compatibility does not freeze implementation resource demand.
-Every candidate carries target-specific realized demand; Cathedral admits it
+Every candidate carries target-specific realized demand, and Cathedral admits it
 against current provision.
 
 A replacement needing a larger `StackPlan` is legal for new activations when
 Cathedral can provision matching fixed stacks before publication. Existing
-activations keep their old stacks and code era until disposition; a live stack
+activations keep their old stacks and code era until disposition. A live stack
 is never resized underneath them. A fixed budget belongs to a requirement only
-when policy intentionally promises replacement without reprovisioning—for
-example, an already-provisioned hard-root class.
+when policy intentionally promises replacement without reprovisioning, for
+example an already-provisioned hard-root class.
 
-Admission covers peak coexistence, not just the candidate: old and new code,
+Admission covers peak coexistence, not just the candidate. Old and new code,
 state pools, activation metadata, stacks, and device claims may all be live
 during drain.
 
@@ -201,11 +201,11 @@ must be unmapped independently cannot share a page.
 
 Nothing outside the component may retain an untracked concrete code address or
 raw pointer into a reclaimable cohort. Cross-component calls use requirement
-identity; state crossing the edge uses validated component representations and
+identity. State crossing the edge uses validated component representations and
 version-aware ownership.
 
 Checked Omega eras do not instantiate private ambient runtimes. Allocators,
-output, cleanup, failure, and other services are explicit capabilities or
+output, cleanup, failure, and other services are passed-in capabilities or
 process-static custodians rooted outside the component. Coexisting eras are
 therefore separate owned subtrees. Shared process-static services still publish
 era-aware contracts: queued work and callbacks retain the era they may enter,
@@ -221,8 +221,8 @@ rather than becoming private to either era.
 
 An uncontained opaque library private to a component is not reliably
 hot-swappable. Its hidden threads, callbacks, TLS, loader state, native
-pointers, and process-global resources cannot enter Omega's quiescence proof;
-coexisting versions may also collide through those hidden resources. A
+pointers, and process-global resources cannot enter Omega's quiescence proof,
+and coexisting versions may also collide through those hidden resources. A
 replaceable component therefore uses checked Omega or verified portable IR
 interpreted or locally lowered through Cathedral's trusted path, or an enforced
 containment scope that Cathedral can retire. A foreign callback into
@@ -235,8 +235,8 @@ after proof that no live authority reaches it. Inert `addr` and sealed inert
 checked graph may reuse immediately after quiescence. An incomplete or poisoned
 drain, or a possible opaque holder, leaves the range reserved and
 unmapped/trapping until a wider isolation domain retires. This quarantine
-detects stale entry but discharges no lock, claim, or protocol obligation;
-repeated poisoned replacements report their reserved-address capacity loss.
+detects stale entry but discharges no lock, claim, or protocol obligation.
+Repeated poisoned replacements report their reserved-address capacity loss.
 
 ## Devices
 

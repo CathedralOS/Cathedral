@@ -4,93 +4,32 @@
 
 ## The state at entry
 
-The kernel starts in the CPU's most privileged mode (ring 0 on x86, exception level 1, "EL1", on ARM). On x86-64 the firmware has already enabled paging with a flat **identity map**: a trivial page table where each virtual address equals its physical address. So the kernel is not running without virtual memory, it is running on the firmware's throwaway page tables and needs its own. Firmware's temporary services, including its disk-read driver, are still available for now.
+The kernel starts in the CPU's most privileged mode (ring 0 on x86, exception level 1, "EL1", on ARM). On x86-64 the firmware has already enabled paging with a flat **identity map**: a trivial page table where each virtual address equals its physical address. The kernel is therefore not running without virtual memory. It is running on the firmware's throwaway page tables and needs its own. Firmware's temporary services, including its disk-read driver, are still available at this point.
 
-The standard UEFI entry supplies an image handle and System Table reference; it
-does not supply Omega-qualified extents. Cathedral's separate semantic entry
-may accept image and initial-storage authority. A generated ABI shell and
-source-authored target adapter must obtain their runtime carriers through
-standard UEFI mechanisms and join them to exact checked or admitted custody
-evidence before crossing that semantic entry. Cathedral's current
-`Main::run(handle, table)` remains the directly booted transitional callable
-until this bridge is connected. See the [entry-handoff
-specification](../spec/boot/uefi_entry_handoff.md).
+The standard UEFI entry supplies an image handle and System Table reference; it does not supply Omega-qualified extents. Cathedral's separate semantic entry may accept image and initial-storage authority. A generated ABI shell and source-authored target adapter must obtain their runtime carriers through standard UEFI mechanisms and join them to exact checked or admitted custody evidence before crossing that semantic entry. Cathedral's current `Main::run(handle, table)` remains the directly booted transitional callable until this bridge is connected. See the [entry-handoff specification](../spec/boot/uefi_entry_handoff.md).
 
-One term to fix, since the rest of the phase leans on it: virtual memory works through **page tables**, the in-memory structures the CPU's memory management unit (MMU) walks to translate a virtual address to a physical one. Owning your page tables means owning the address space.
+The rest of the phase leans on one term. Virtual memory works through **page tables**, the in-memory structures the CPU's memory management unit (MMU) walks to translate a virtual address to a physical one. Owning your page tables means owning the address space.
 
 ## First jobs
 
 - **Page tables.** Build the kernel's own page tables and point the MMU at them (load `CR3` on x86, set the translation base register on ARM). Real virtual memory begins here, before any serious storage work ([memory & persistence](../design/part_2_components/02_memory_and_persistence.md)).
 - **A heap.** A dynamic allocator, so the kernel can allocate at runtime instead of from fixed buffers.
-- **Fault handling before the timer.** Materialize and install the complete
-  exception table before enabling external interrupts: every defined exception
-  gets at least a diagnostic/fatal entry, while double fault, NMI, and machine
-  check receive separate emergency IST stacks. Only after that debugging floor
-  exists does boot install the shared maskable-IRQ stack and enable the first
-  timer ([early IDT handoff](02a_idt_handoff.md),
-  [hardware foundation](../design/part_0_foundations/03_hardware_foundation_profile.md)).
+- **Fault handling before the timer.** Materialize and install the complete exception table before enabling external interrupts: every defined exception gets at least a diagnostic/fatal entry, while double fault, NMI, and machine check receive separate emergency IST stacks. Only after that debugging floor exists does boot install the shared maskable-IRQ stack and enable the first timer ([early IDT handoff](02a_idt_handoff.md), [hardware foundation](../design/part_0_foundations/03_hardware_foundation_profile.md)).
 - **Per-CPU state and a console.** Enough to run each core and to report a diagnostic if early boot fails.
 
 ## ExitBootServices: the point of no return
 
-`ExitBootServices()` is the UEFI call after which UEFI Boot Services and their
-temporary drivers are no longer available. It is a lifecycle and custody
-succession point, not a blanket proof that Cathedral owns every device and
-address. Runtime firmware regions and services, reserved ranges, devices, and
-active bootstrap resources retain their separate contracts. Anything still
-needed from Boot Services, the final memory map above all, must be captured
-before the successful call. Cathedral must afterward use its own admitted
-driver path for storage access needed by [phase 4](04_mounting_the_store.md).
+`ExitBootServices()` is the UEFI call after which UEFI Boot Services and their temporary drivers are no longer available. It is a lifecycle and custody succession point, not a blanket proof that Cathedral owns every device and address. Runtime firmware regions and services, reserved ranges, devices, and active bootstrap resources retain their separate contracts. Anything still needed from Boot Services, the final memory map above all, must be captured before the successful call. Cathedral must afterward use its own admitted driver path for storage access needed by [phase 4](04_mounting_the_store.md).
 
-The map and its `MapKey` form one transaction. Cathedral's current boot source
-first gates the EFI System Table and Boot Services table on their standard
-signatures, one well-formed shared UEFI revision at or above the x86-64
-profile's 2.0 floor, minimum consumed-prefix sizes, and zero common reserved
-header fields; malformed metadata parks before any Boot Services dispatch.
-Whole-table CRC validation is not implemented yet. It then
-discards the entire descriptor-derived candidate and refreshes the map/key pair
-once when `ExitBootServices` reports a stale key; a second stale rejection parks
-without a grant. Only a successful exit can reach the first extent grant. The
-bootstrap image statically provisions 64 KiB but
-advertises 16 KiB first; an exact `EFI_BUFFER_TOO_SMALL` result may raise that
-window once to the fixed ceiling. No allocator or memory authority participates,
-and malformed results or requirements above 64 KiB fail closed.
-The byte backing starts behind an explicit 8-byte alignment anchor; the runtime
-descriptor stride must preserve that alignment, and the reported map size must
-contain a whole number of descriptors before Cathedral forms typed descriptor
-references. Cathedral currently understands UEFI descriptor revision 1 only;
-any other reported revision fails closed before interpretation.
+The map and its `MapKey` form one transaction. Cathedral's current boot source first gates the EFI System Table and Boot Services table on their standard signatures, one well-formed shared UEFI revision at or above the x86-64 profile's 2.0 floor, minimum consumed-prefix sizes, and zero common reserved header fields. Malformed metadata parks before any Boot Services dispatch. Whole-table CRC validation is not implemented yet. It then discards the entire descriptor-derived candidate and refreshes the map/key pair once when `ExitBootServices` reports a stale key; a second stale rejection parks without a grant. Only a successful exit can reach the first extent grant.
 
-The selected conventional-memory descriptor is also checked before the
-irreversible exit: it must not carry `EFI_MEMORY_RUNTIME`,
-`EFI_MEMORY_HOT_PLUGGABLE`, or `EFI_MEMORY_SP`; its span must contain at least
-one page, begin on a 4-KiB boundary, convert from pages to bytes without
-overflow, and have a representable one-past end. Runtime-marked, removable, and
-specific-purpose descriptors remain ineligible. The exact checked length
-crosses successful `ExitBootServices` with its map-derived start and is the
-geometry presented to the current transitional root provider. That
-naked-geometry grant demonstrates qualification flow but is not yet the final
-external-custody contract. Before exit, a
-second stride-bounded pass validates every descriptor's physical and virtual
-alignment, range end, and standard/OEM/OS-loader memory-type range, then
-rejects both attribute bits outside the revision-1 standard and ISA-specific
-masks and ISA-specific bits without their validity flag, and requires every
-other physical range to lie strictly before or after the selected span. Invalid
-type `16..0x6fffffff`, reserved attributes, misalignment,
-overflow, or overlap parks without a grant. These checks reject malformed
-firmware data; they do not themselves establish physical-space, rights, backing,
-or ownership. The final design must join the same geometry to the exact
-physical-entry and successful-exit receipt before establishing a post-exit
-inventory or qualified extent.
+The bootstrap image statically provisions 64 KiB but advertises 16 KiB first; an exact `EFI_BUFFER_TOO_SMALL` result may raise that window once to the fixed ceiling. No allocator or memory authority participates, and malformed results or requirements above 64 KiB fail closed. The byte backing starts behind an 8-byte alignment anchor; the runtime descriptor stride must preserve that alignment, and the reported map size must contain a whole number of descriptors before Cathedral forms typed descriptor references. Cathedral currently understands UEFI descriptor revision 1 only; any other reported revision fails closed before interpretation.
 
-The IDT should normally be materialized and validated after Cathedral's final
-image and virtual placements are known but before `ExitBootServices`, while
-firmware services remain available. It is installed only after every address
-it names is stable in the page tables Cathedral will keep. This leaves a tiny
-post-exit critical interval: switch final mappings/stack where required,
-complete visibility, prepare the external-root records, execute checked
-`lidt`, and finalize the installation receipt. Maskable interrupts remain
-disabled throughout.
+The selected conventional-memory descriptor is also checked before the irreversible exit. It must not carry `EFI_MEMORY_RUNTIME`, `EFI_MEMORY_HOT_PLUGGABLE`, or `EFI_MEMORY_SP`. Its span must contain at least one page, begin on a 4-KiB boundary, convert from pages to bytes without overflow, and have a representable one-past end. Runtime-marked, removable, and specific-purpose descriptors remain ineligible. The exact checked length crosses successful `ExitBootServices` with its map-derived start and is the geometry presented to the current transitional root provider. That naked-geometry grant demonstrates qualification flow but is not yet the final external-custody contract.
+
+Before exit, a second stride-bounded pass validates every descriptor's physical and virtual alignment, range end, and standard/OEM/OS-loader memory-type range. It rejects both attribute bits outside the revision-1 standard and ISA-specific masks and ISA-specific bits without their validity flag, and it requires every other physical range to lie strictly before or after the selected span. Invalid type `16..0x6fffffff`, reserved attributes, misalignment, overflow, or overlap parks without a grant. These checks reject malformed firmware data; they do not themselves establish physical-space, rights, backing, or ownership. The final design must join the same geometry to the exact physical-entry and successful-exit receipt before establishing a post-exit inventory or qualified extent.
+
+The IDT should normally be materialized and validated after Cathedral's final image and virtual placements are known but before `ExitBootServices`, while firmware services remain available. It is installed only after every address it names is stable in the page tables Cathedral will keep. This leaves a tiny post-exit critical interval: switch final mappings and stack where required, complete visibility, prepare the external-root records, execute checked `lidt`, and finalize the installation receipt. Maskable interrupts remain disabled throughout.
 
 ## What is Omega and what is not
 

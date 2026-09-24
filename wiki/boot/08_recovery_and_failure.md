@@ -14,11 +14,11 @@
 
 ## Update failures: the one that matters most
 
-A half-applied update has to be survivable. Because the system realm is immutable and content-addressed ([filesystem](../design/part_4_storage/00_filesystem_as_database.md), [updates & hot swap](../design/part_5_lifecycle/01_updates_and_hot_swap.md)), rolling back is just pointing the superblock's `root_ref` at the previous known-good system root. The old system realm was never overwritten, so the rollback is atomic and cheap, not a restore from backup. This is the operational form of treating an upgrade as a designed operation rather than a leap of faith.
+A half-applied update has to be survivable. Because the system realm is immutable and content-addressed ([filesystem](../design/part_4_storage/00_filesystem_as_database.md), [updates & hot swap](../design/part_5_lifecycle/01_updates_and_hot_swap.md)), rolling back is pointing the superblock's `root_ref` at the previous known-good system root. The old system realm was never overwritten, so the rollback is atomic and cheap rather than a restore from backup, and an upgrade becomes a designed operation rather than a leap of faith.
 
 ## The recovery image
 
-A known-good fallback the normal update process cannot corrupt, used when the primary path will not come up. The hard part is keeping it un-brickable by the very mechanism it backs up: it has to be updatable enough to stay useful, yet isolated enough that a bad update cannot take it down along with the main system. A fuller version of the same idea is mirroring the system realm across every enrolled drive (a placement class, [filesystem](../design/part_4_storage/00_filesystem_as_database.md)), so any drive boots and the recovery image becomes the minimal one-copy case.
+The recovery image is a known-good fallback that the normal update process cannot corrupt, used when the primary path will not come up. The hard part is keeping it un-brickable by the very mechanism it backs up: it has to be updatable enough to stay useful, yet isolated enough that a bad update cannot take it down along with the main system. A fuller version of the same idea mirrors the system realm across every enrolled drive (a placement class, [filesystem](../design/part_4_storage/00_filesystem_as_database.md)), so any drive boots and the recovery image becomes the minimal one-copy case.
 
 ## Credential and user-realm failures
 
@@ -26,4 +26,4 @@ If the user realm cannot be unsealed ([phase 6](06_session_and_login.md)), becau
 
 ## Factory reset
 
-Reset to a clean, attested baseline: drop the user and app realms, restore the system realm to a known-good measured state, and re-enroll. Because the store is content-addressed and partitioned into realms, "wipe my data but keep the operating system" and "reset the operating system but keep my data" are both expressible, instead of all-or-nothing.
+A factory reset returns the machine to a clean, attested baseline: drop the user and app realms, restore the system realm to a known-good measured state, and re-enroll. Because the store is content-addressed and partitioned into realms, "wipe my data but keep the operating system" and "reset the operating system but keep my data" are both expressible, instead of all-or-nothing.

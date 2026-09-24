@@ -45,8 +45,8 @@ Failure of any admission check enters the unowned failure park without invoking
 a Boot Services function through the rejected table.
 
 The current contract does not establish either table's CRC validity. Whole-table
-CRC checking is an implementation and specification coverage gap; no consumer
-may infer it from successful admission today.
+CRC checking is an implementation and specification coverage gap. No consumer
+may infer it from successful admission.
 
 ## Memory-map transaction
 
@@ -54,9 +54,9 @@ The returned map bytes, runtime descriptor stride, descriptor revision, and
 `MapKey` form one transaction. A candidate derived from one transaction must not
 be combined with a key or descriptor metadata from another.
 
-Cathedral provides a fixed 64-KiB, explicitly 8-byte-aligned byte buffer. It
-first advertises 16 KiB to `GetMemoryMap`. It may expose the full 64 KiB and
-retry once only when the first call returns exact `EFI_BUFFER_TOO_SMALL` and a
+Cathedral provides a fixed 64-KiB byte buffer aligned to 8 bytes. It first
+advertises 16 KiB to `GetMemoryMap`. It may expose the full 64 KiB and retry
+once only when the first call returns exact `EFI_BUFFER_TOO_SMALL` and a
 required size greater than 16 KiB and no greater than 64 KiB. Other failures,
 or a requirement outside that bound, enter the unowned failure park.
 
@@ -87,7 +87,7 @@ descriptor to satisfy all of these conditions:
   `u64` bootstrap geometry.
 
 The current path fails closed when that largest provisional descriptor fails a
-later geometry or map-wide audit; it does not fall back to a smaller span. When
+later geometry or map-wide audit. It does not fall back to a smaller span. When
 several provisional descriptors have the same largest size, the contract does
 not assign semantic significance to which tied descriptor is selected.
 
@@ -123,7 +123,7 @@ produced the selected and audited span.
   a rejected transaction.
 
 The successful path does not return to firmware. The failure park owns no root
-extent; the post-success owned park retains the established root across every
+extent. The post-success owned park retains the established root across every
 wake.
 
 Successful exit establishes a lifecycle event, not arbitrary memory authority.
@@ -134,7 +134,7 @@ repeat the grant.
 
 The current implementation forwards one selected geometry to an admitted
 `ExtentRootProvider`. That route is transitional evidence for the implemented
-milestone; the final handoff must replace its naked-geometry premise with the
+milestone. The final handoff must replace its naked-geometry premise with the
 occurrence-scoped correspondence defined by the entry-handoff contract.
 
 ## Conformance evidence

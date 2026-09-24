@@ -1,33 +1,26 @@
 # Chapter 00: Component Model
 
-> The unit Cathedral actually runs, isolates, restarts, and upgrades — and the recognition that those are *not one unit* but a family of overlapping ones.
+> The unit Cathedral runs, isolates, restarts, and upgrades is not one unit. It is a family of overlapping ones, and each concern picks its own.
 
 ## The Legacy Model
 
-The Unix process is one of computing's great overloaded nouns. A single `pid` simultaneously names an address space, a permission identity (uid/gid), a file descriptor table, an environment block, a signal-handling context, a lifecycle (fork/exec/wait/exit), a scheduling entity, and a crash boundary. These are welded together because in 1970 they were cheap to weld. The cost shows up everywhere after: you cannot restart the crash boundary without losing the address space; you cannot upgrade the code without killing the identity; you cannot isolate authority more finely than the process because authority *is* the process. Everything that wants a different granularity — threads, containers, namespaces, sessions, transactions — is bolted on as a partial, ad-hoc escape.
+The Unix process is an overloaded noun. A single `pid` names an address space, a permission identity (uid/gid), a file descriptor table, an environment block, a signal-handling context, a lifecycle (fork/exec/wait/exit), a scheduling entity, and a crash boundary, all at once. They are welded together because in 1970 they were cheap to weld. The cost shows up everywhere after. You cannot restart the crash boundary without losing the address space. You cannot upgrade the code without killing the identity. You cannot isolate authority more finely than the process, because authority *is* the process. Everything that wants a different granularity is bolted on as a partial, ad-hoc escape: threads, containers, namespaces, sessions, transactions.
 
 ## The Cathedral Model
 
-Stop pretending one noun fits. Cathedral models an explicit **family** of units and lets each concern pick the granularity it needs:
+Cathedral models a **family** of units and lets each concern pick the granularity it needs:
 
-- **Component** — a provider realization selected for independent deployment
-  or replacement, plus the closed code, state, resource, and metadata graph it
-  owns. The store ships its artifact; the loader instantiates an era of it.
-- **Instance** — a live running occurrence of a component, with its own state.
-- **Task** — the unit of *concurrent execution*; a single running state machine. An instance is one or more tasks.
-- **Actor / Service** — the unit of *protocol identity* (what others invoke).
-- **Driver** — a component bound to a device, with a distinct trust and restart story ([[driver_model]]).
-- **Session / Transaction / Job** — units of *work* with their own lifetime.
-- **Tenant** — the unit of *isolation and accounting* across users/orgs.
+- **Component.** A provider realization selected for independent deployment or replacement, plus the closed code, state, resource, and metadata graph it owns. The store ships its artifact; the loader instantiates an era of it.
+- **Instance.** A live running occurrence of a component, with its own state.
+- **Task.** The unit of concurrent execution: a single running state machine. An instance is one or more tasks.
+- **Actor / Service.** The unit of protocol identity, the thing others invoke.
+- **Driver.** A component bound to a device, with a distinct trust and restart story ([[driver_model]]).
+- **Session / Transaction / Job.** Units of work with their own lifetime.
+- **Tenant.** The unit of isolation and accounting across users and organizations.
 
-The point is that the unit of isolation, restart, hot swap, authority,
-scheduling, persistence, and upgrade are separately chosen axes. Package,
-component, and boundary also remain separate: a package is source/dependency
-organization, a component is a deployment/replacement closure, and a boundary
-is a trust/ABI/external crossing.
+The unit of isolation, restart, hot swap, authority, scheduling, persistence, and upgrade are separately chosen axes. Package, component, and boundary are also separate things. A package is source and dependency organization. A component is a deployment and replacement closure. A boundary is a trust, ABI, or external crossing.
 
-A live instance record joins those axes without pretending they are one
-identity:
+A live instance record joins those axes without pretending they are one identity:
 
 ```omega
 data ComponentInstance {
@@ -42,72 +35,56 @@ data ComponentInstance {
 }
 ```
 
-This record is Cathedral policy, not an Omega language primitive. In
-particular, candidate resource demand is not frozen forever in `ProtocolId`.
-The loader admits each realization against current provision unless the
-protocol deliberately declares a non-renegotiable budget.
+This record is Cathedral policy, not an Omega language primitive. Candidate resource demand is not frozen in `ProtocolId`. The loader admits each realization against current provision unless the protocol declares a non-renegotiable budget.
 
-Calls within a component may name concrete machines. Every incoming call from
-outside a replaceable closure names a requirement contract; the build may fuse
-the same requirement statically elsewhere. Cathedral needs no `slot` keyword or
-hot-swap call syntax.
+Calls within a component may name concrete machines. Every incoming call from outside a replaceable closure names a requirement contract, and the build may fuse the same requirement statically elsewhere. Cathedral needs no `slot` keyword or hot-swap call syntax.
 
 ### Concurrency: tasks that share nothing
 
-The smallest member of the family is the **task**: a single running state machine. A component runs as one or more tasks, and concurrency is many tasks making progress at once. Ownership and borrowing make unshared state the default and forbid unsanctioned concurrent mutation. Deliberately shared protocol state may still use atomics or library locks under an explicit sharing contract; that is a narrower, visible choice rather than the ambient model.
+The smallest member of the family is the task: a single running state machine. A component runs as one or more tasks, and concurrency is many tasks making progress at once. Ownership and borrowing make unshared state the default and forbid unsanctioned concurrent mutation. Shared protocol state may still use atomics or library locks under a sharing contract. That is a narrower, visible choice, not the ambient model.
 
 Tasks coordinate two ways:
 
-- **Message-passing** over channels (the shared-region primitive, [[ipc_and_service_invocation]]) and **ownership transfer**, which hands data from one task to another with no copy and no sharing.
-- **Owning actors** for shared mutable state: the state is owned by one task and others send it messages, so the serialization point a lock would provide is the owner's mailbox (a `many_to_one` channel, [[ipc_and_service_invocation]]). The actor convention keeps handlers non-waiting and runs them to completion; the receive loop is the explicit `suspend` point. Parking retains the actor activation's fixed `StackPlan`, while multi-step protocol state lives visibly in `self` rather than in a handler suspended halfway through an invariant. The single-consumer discipline removes a lock from the state path, and bounded mailbox capacity plus the fixed stack makes the actor's storage account explicit ([[scheduler_and_resources]]). Trivial shared cells can use lock-free atomics directly.
+- **Message passing and ownership transfer.** Messages travel over channels, the shared-region primitive ([[ipc_and_service_invocation]]). Ownership transfer hands data from one task to another with no copy and no sharing.
+- **Owning actors.** Shared mutable state is owned by one task, and other tasks send it messages, so the serialization point a lock would provide is the owner's mailbox, a `many_to_one` channel ([[ipc_and_service_invocation]]). The actor convention keeps handlers non-waiting and runs them to completion. The receive loop is the `suspend` point. Parking retains the actor activation's fixed `StackPlan`, and multi-step protocol state lives visibly in `self` rather than in a handler suspended halfway through an invariant. The single-consumer discipline removes a lock from the state path. Bounded mailbox capacity plus the fixed stack makes the actor's storage account visible ([[scheduler_and_resources]]). Trivial shared cells can use lock-free atomics directly.
 
-Tasks are **structured**: a task is owned by a scope and cannot outlive it, so a parent that exits accounts for its children instead of leaking them. Structured cancellation is delivered at an explicit semantic safe point—normally `suspend` or an authored scheduler poll—and carries the deadline from the call that started the work ([[ipc_and_service_invocation]]). A `block` call is also a visible wait, but it stops the current execution thread and provides no bounded cancellation response unless its contract supplies a finite wait ceiling ([[scheduler_and_resources]]).
+Tasks are **structured**: a task is owned by a scope and cannot outlive it, so a parent that exits accounts for its children instead of leaking them. Structured cancellation is delivered at a semantic safe point, normally `suspend` or an authored scheduler poll, and carries the deadline from the call that started the work ([[ipc_and_service_invocation]]). A `block` call is also a visible wait, but it stops the current execution thread and provides no bounded cancellation response unless its contract supplies a finite wait ceiling ([[scheduler_and_resources]]).
 
 ## Concerns & Design Space
 
-- **Decoupling the axes.** State identity must outlive code identity (that is what makes hot swap possible — [[updates_and_hot_swap]]). Authority identity must be assignable independently of code (a component runs *as* a principal, [[capability_model]]). Crash boundary must be choosable smaller than address space.
+- **Decoupling the axes.** State identity must outlive code identity; that is what makes hot swap possible ([[updates_and_hot_swap]]). Authority identity must be assignable independently of code, since a component runs as a principal ([[capability_model]]). The crash boundary must be choosable smaller than the address space.
 - **Composition.** Is a component a tree, a graph, or flat? Can components nest (a service containing drivers), and does restarting a parent restart children?
-- **Components as hosts.** A component can implement OS interfaces for the children it spawns, becoming their runtime: their compositor, their network, their clock, their realm. With realm-authority it runs a miniature Cathedral, sandboxing its own children with the same machinery that sandboxes it. This is the execution-level form of the recursive-provider pattern ([[capability_model]]).
-- **Instance creation.** An instance is created by spawning a component with an explicit initial state and an explicitly granted capability set, so a child starts from a known, declared state and holds only what it was passed.
-- **Launch is a sibling-spawn via a launcher-broker.** Nothing spawns itself; a launcher (a file browser, a shell) invokes a **launch capability**, which routes to *its* host, and the host spawns the executable as a **sibling child of the host — not a child of the launcher** (the launcher is a broker, like the login broker, and must not sit permanently in the new component's trusted base). The host builds the context from the component's **manifest** (benign capabilities auto-granted — a surface, appearance) plus whatever the launcher passes (the one document you double-clicked, as a scoped capability), so a launched app holds exactly that, never ambient authority.
-- **The launch context is a typed, manifest-derived record, passed by reference** — `main(context: &Context)`, a named-and-typed `data` shape (the manifest, fulfilled), *not* `argc`/`argv` and not a `&[u8]` to parse. Published context eras are immutable ordinary declarations with checked conversion, so an older component and a newer host agree through an explicit compatibility route rather than intrinsic type versioning. A trusted in-domain value needs no validation; only **untrusted** input arrives as `<Untrusted>` and the type system forces validate-into-typed before use ([[ipc_and_service_invocation]]). **On a foreign OS** (an Omega app on Windows/Linux) the same `main(context)` holds — a per-target *entry stub* materializes the context from that OS's process-startup convention (`GetCommandLineW` / the `_start` stack): capabilities from boundary providers, and the command line as a **raw untrusted `[u8]` slice** which the *author* validates-into-typed like any untrusted input (the stub is a courier, never a parser — a pre-typed args struct would be exactly the magic the mint discipline forbids). The blob-and-length survives as the slice; what dies is `char** argv` (NUL-terminated array-of-pointers + separate count) and the ambient authority argv smuggled. argc/argv is quarantined in the stub, never in `main`'s surface. On Cathedral (SAS/CHERI) the launcher hands the context directly as a struct/borrow, no stub and nothing to parse. See Omega [extern boundary & format domains §13](https://github.com/CathedralOS/Omega/blob/main/wiki/design_briefs/extern_boundary_and_format_domains.md).
-- **An empty context boots an inert component, never a crash (ZII).** Launch with no grants and every context field is the **zero capability** — default theme, no surface (headless), no realm — so the component runs but can do nothing, gracefully. A component *may* detect a zero capability and refuse ("I need a surface to run"), but graceful degradation to least authority is the default, not a boot failure.
-- **Instance lifecycle.** start / ready / running / quiescing / migrating / draining / stopped / failed — modeled as an Omega state graph the OS can inspect and schedule, not as opaque process states.
-- **Crash boundary vs. restart unit.** Erlang's lesson: the thing that fails and the thing that restarts it (a supervisor) are different components on purpose ([[error_model_and_recovery]]).
+- **Components as hosts.** A component can implement OS interfaces for the children it spawns, becoming their runtime: their compositor, their network, their clock, their realm. With realm authority it runs a miniature Cathedral, sandboxing its own children with the same machinery that sandboxes it. This is the execution-level form of the recursive-provider pattern ([[capability_model]]).
+- **Instance creation.** An instance is created by spawning a component with a declared initial state and a granted capability set, so a child starts from a known state and holds only what it was passed.
+- **Launch is a sibling-spawn via a launcher-broker.** Nothing spawns itself. A launcher (a file browser, a shell) invokes a **launch capability**, which routes to the launcher's host, and the host spawns the executable as a sibling child of the host, not a child of the launcher. The launcher is a broker, like the login broker, and must not sit permanently in the new component's trusted base. The host builds the context from the component's manifest plus whatever the launcher passes. The manifest supplies benign capabilities auto-granted, such as a surface and appearance. The launcher passes scoped capabilities, such as the one document you double-clicked. A launched app holds exactly that and never ambient authority.
+- **The launch context is a typed, manifest-derived record, passed by reference.** The entry point is `main(context: &Context)`, a named-and-typed `data` shape: the manifest, fulfilled. It is not `argc`/`argv` and not a `&[u8]` to parse. Published context eras are immutable ordinary declarations with checked conversion, so an older component and a newer host agree through a compatibility route rather than intrinsic type versioning. A trusted in-domain value needs no validation. Only untrusted input arrives as `<Untrusted>`, and the type system forces validate-into-typed before use ([[ipc_and_service_invocation]]).
+- **On a foreign OS the same `main(context)` holds.** For an Omega app on Windows or Linux, a per-target entry stub materializes the context from that OS's process-startup convention (`GetCommandLineW` or the `_start` stack). Capabilities come from boundary providers. The command line arrives as a raw untrusted `[u8]` slice, which the author validates-into-typed like any untrusted input. The stub is a courier, never a parser; a pre-typed args struct would be exactly the magic the mint discipline forbids. The blob-and-length survives as the slice. What dies is `char** argv`, the NUL-terminated array of pointers plus a separate count, and the ambient authority argv smuggled. argc/argv is quarantined in the stub and never reaches `main`'s surface. On Cathedral (SAS/CHERI) the launcher hands the context directly as a struct or borrow, with no stub and nothing to parse. Omega's extern boundary and format domains brief, section 13, is the source for this boundary.
+- **An empty context boots an inert component, never a crash (ZII).** Launch with no grants and every context field is the zero capability: default theme, no surface (headless), no realm. The component runs but can do nothing. A component may detect a zero capability and refuse ("I need a surface to run"), but graceful degradation to least authority is the default, not a boot failure.
+- **Instance lifecycle.** The states are start, ready, running, quiescing, migrating, draining, stopped, and failed. They are modeled as an Omega state graph the OS can inspect and schedule, not as opaque process states.
+- **Crash boundary vs. restart unit.** The thing that fails and the thing that restarts it (a supervisor) are different components on purpose. This is Erlang's lesson ([[error_model_and_recovery]]).
 - **Persistence identity.** Which components are stateless and respawnable, which own durable state, and which *are* their state (a database).
-- **Authority binding.** A component holds capabilities; spawning a child grants *nothing* ambient — every authority is explicitly passed ([[capability_model]]).
-- **Resource identity.** Each instance is a billable, budgetable entity, and the schedulable execution unit within it is the **task** ([[scheduler_and_resources]]); scheduling granularity need not equal isolation granularity.
-- **Zero value.** Zero-filled storage names no established live component.
-  APIs needing optionality use an explicit debt-free `Empty | Live(instance)`
-  sum. Zero bytes never mint authority, state ownership, or a reclamation
-  obligation ([[omega_substrate]]).
+- **Authority binding.** A component holds capabilities. Spawning a child grants nothing ambient; every authority is passed ([[capability_model]]).
+- **Resource identity.** Each instance is a billable, budgetable entity, and the schedulable execution unit within it is the task ([[scheduler_and_resources]]). Scheduling granularity need not equal isolation granularity.
+- **Zero value.** Zero-filled storage names no established live component. APIs needing optionality use a debt-free `Empty | Live(instance)` sum. Zero bytes never mint authority, state ownership, or a reclamation obligation ([[omega_substrate]]).
 
 ## Key Questions
 
-- Which concrete artifact/manifest representation records the settled
-  provider-realization closure without equating it to a package?
-- Does the OS isolate components by address space, by Omega's language-level isolation in one space, or a mix decided per component ([[kernel_architecture]])?
-- Which binding-era and ledger implementation realizes the replacement
-  protocol, and what live-era bound does Cathedral admit?
+- Which concrete artifact/manifest representation records the provider-realization closure without equating it to a package?
+- Does the OS isolate components by address space, by Omega's language-level isolation in one space, or a mix chosen per component ([[kernel_architecture]])?
+- Which binding-era and ledger implementation realizes the replacement protocol, and what live-era bound does Cathedral admit?
 - Can authority, scheduling, and persistence identity be reassigned on a live instance, or only at instantiation?
 
 ## Omega Leverage
 
-- Cathedral's component lifecycle is implemented by ordinary Omega
-  **machines** with explicit **state/transition** graphs. Omega supplies the
-  substrate; Cathedral owns the lifecycle and policy
-  ([Omega Chapter 4: States And Transitions](https://github.com/CathedralOS/Omega/blob/main/wiki/language_guide/chapter_4_states_transitions.md)).
-- **`reaches`** gives each component a service-reach ceiling; **authority flow** gives its accepts/uses/stores report — both are per-component, so the component is the natural granularity for both audits ([[capability_model]]).
-- **Immutable historical state shapes + checked replacement machines** make state lineage explicit and let state identity survive code replacement ([[versioned_state_and_migration]]).
-- Omega does **not** define an OS-managed component registry, supervision tree,
-  drain policy, or migration scheduler. Those remain Cathedral runtime
-  structures over Omega values and admitted providers.
+- Cathedral's component lifecycle is implemented by ordinary Omega machines with state/transition graphs. Omega supplies the substrate; Cathedral owns the lifecycle and policy ([Omega Chapter 4: States And Transitions](https://github.com/CathedralOS/Omega/blob/main/wiki/language_guide/chapter_4_states_transitions.md)).
+- `reaches` gives each component a service-reach ceiling, and authority flow gives its accepts/uses/stores report. Both are per-component, so the component is the natural granularity for both audits ([[capability_model]]).
+- Immutable historical state shapes plus checked replacement machines make state lineage visible and let state identity survive code replacement ([[versioned_state_and_migration]]).
+- Omega does not define an OS-managed component registry, supervision tree, drain policy, or migration scheduler. Those are Cathedral runtime structures over Omega values and admitted providers.
 
 ## Open Questions
 
-- What runtime records represent a component definition, one live era, one
-  instance, and the owned-closure ledger without fusing those identities?
-- Can the crash boundary be strictly smaller than the address space without hardware isolation, relying on Omega's safety alone — and is that trusted enough for drivers?
+- What runtime records represent a component definition, one live era, one instance, and the owned-closure ledger without fusing those identities?
+- Can the crash boundary be strictly smaller than the address space without hardware isolation, relying on Omega's safety alone, and is that trusted enough for drivers?
 - How does a component's identity persist across reboot and device migration without becoming an ambient, forgeable handle?
 
 ## Related

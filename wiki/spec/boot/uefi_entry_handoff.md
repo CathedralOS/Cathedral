@@ -32,7 +32,7 @@ physical ABI.
 The semantic boundary is Cathedral's program-storage and boot-continuation
 contract. It may carry qualified image storage, bootstrap storage, a scoped
 firmware session, and eventually a post-firmware machine inventory. These are
-Cathedral and Omega meanings, not promises silently added to UEFI.
+Cathedral and Omega meanings, not promises added to UEFI.
 
 The two boundaries are related by an exact target adapter and its retained
 evidence. ABI compatibility alone establishes no semantic resource.
@@ -41,8 +41,8 @@ evidence. ABI compatibility alone establishes no semantic resource.
 
 An Omega-authored UEFI implementation may satisfy the semantic handoff from
 resource authority it already holds. Its checked implementation must move,
-loan, or attenuate those exact claims into the Cathedral entry; it does not
-mint them merely because it calls a boundary trait.
+loan, or attenuate those exact claims into the Cathedral entry. Calling a
+boundary trait does not mint them.
 
 When an authored firmware invokes Cathedral as a separately built standard EFI
 image, it must also exercise the standard physical entry path. A direct
@@ -53,13 +53,13 @@ An external UEFI implementation supplies only the standard physical
 invocation. The receiving policy may admit narrowly stated external premises
 required by the selected UEFI profile, including live pointer correspondence,
 service lifetime, loaded-image correspondence, and successful allocation or
-handoff custody. Such premises are attached to the exact installed invocation;
-they are not ambient grants to Cathedral code.
+handoff custody. Such premises are attached to the exact installed invocation.
+They are not ambient grants to Cathedral code.
 
 Firmware that violates an admitted premise commits a trust violation. Runtime
 checks may reject malformed tables, status results, or geometry, but successful
-parsing cannot prove that firmware really owns or exclusively supplies the
-described hardware.
+parsing cannot prove that firmware owns or exclusively supplies the described
+hardware.
 
 ## Adapter responsibilities
 
@@ -76,7 +76,7 @@ protocol discovery, allocation operations, and the memory-map transaction. It
 must not require a vendor extension or a modified UEFI calling convention.
 
 The adapter is not authorized to grant a resource from naked geometry. A
-qualified carrier must be tied to either:
+qualified carrier must be tied to one of:
 
 - authority moved or loaned by a checked authored firmware provider;
 - an exact admitted external operation and its occurrence-scoped receipt; or
@@ -95,16 +95,15 @@ The consumer does not thereby become a general resource minter.
 
 ## Firmware access during the boot phase
 
-The incoming System Table exposes a firmware-resident function-table
-interface. Cathedral treats access to that interface as scoped to the exact
-physical invocation and the UEFI boot-services lifetime. It is not an
-ex-nihilo compiler grant merely because the methods are described by a boundary
-trait.
+Cathedral scopes access to the firmware-resident function-table interface
+exposed by the incoming System Table to the exact physical invocation and the
+UEFI boot-services lifetime. A boundary trait describing the methods does not
+make that access an ex-nihilo compiler grant.
 
 An implementation may represent this scoped access with a borrow-carrying
 session or an internal service binding. If it uses a `Service<R>` carrier, that
 binding must be derived from the exact incoming table occurrence and must end
-with the boot-services phase; ordinary build-time provider availability cannot
+with the boot-services phase. Ordinary build-time provider availability cannot
 manufacture it independently.
 
 Successful `ExitBootServices` consumes the boot-services phase. Stale or failed
@@ -113,10 +112,10 @@ contract and cannot preserve Boot Services by retaining equal pointer bits.
 
 ## Resource carriers and qualifications
 
-UEFI operations commonly return a status and write an address while the caller
-already knows a page count, or expose separate base and size fields through a
-protocol. They do not return an Omega `Extent in Granted` merely because those
-values can describe a range.
+UEFI operations return status and geometry, not an Omega `Extent in Granted`.
+They commonly return a status and write an address while the caller already
+knows a page count, or expose separate base and size fields through a protocol.
+Values that can describe a range are not thereby qualified.
 
 The adapter may construct an `Extent` carrier after checking the exact geometry.
 If Cathedral chooses `Extent` as its transferable resource representation, an
@@ -145,8 +144,8 @@ conservation rules.
 
 The exact source-visible carriers for the first complete adapter are deferred
 until that implementation makes their required dataflow and lifetime concrete.
-This is a specification-coverage gap, not an open license to weaken the rules
-above and not presently an owner-level question.
+This is a specification-coverage gap. It does not license weakening the rules
+above, and it is not presently an owner-level question.
 
 The implementation may select qualified `Extent` values, opaque linear
 resource values, direct semantic-entry parameters, or an appropriate mixture.
@@ -155,8 +154,8 @@ lifetime, rights, custody, conservation, and return obligations:
 
 - firmware calls that remain available across multiple operations require one
   scoped boot-phase carrier or an equivalently checked borrow;
-- a range delegated for independent splitting, mapping, or transfer requires a
-  first-class authority-bearing range value;
+- a range delegated for independent splitting, mapping, or transfer requires an
+  authority-bearing range value;
 - memory not yet delegated must remain accounted for by a linear inventory or
   equivalent custody ledger; and
 - a single-consumer adapter may establish exact semantic-entry parameters
@@ -166,19 +165,19 @@ The change that first implements the adapter must specify its exact semantic
 entry signature, establishment subjects, qualifications or opaque-resource
 invariants, failure returns, and terminal dispositions in this page and the
 machine-readable contracts. Implementation coverage cannot advance past
-`Partial` without that same-change specification. If implementation exposes
-two viable shapes with different user-visible authority or compatibility
-semantics, only then is the choice promoted to `OWNER_QUESTIONS.md`.
+`Partial` without that same-change specification. The choice is promoted to
+`OWNER_QUESTIONS.md` only if implementation exposes two viable shapes with
+different user-visible authority or compatibility semantics.
 
 ## Current implementation boundary
 
-Cathedral currently exports a raw `Main::run(handle, table)` UEFI callable and
-implements a bounded memory-map and `ExitBootServices` path. The generated
+Cathedral exports a raw `Main::run(handle, table)` UEFI callable and implements
+a bounded memory-map and `ExitBootServices` path. The generated
 physical-to-semantic entry bridge is not connected. The current admitted
 `ExtentRootProvider::grant` call over checked geometry is a transitional
-milestone and is not the final external-custody contract: its result does not
-yet establish physical-space identity, RAM backing, access rights, or a
-complete post-exit inventory.
+milestone, not the final external-custody contract. Its result does not yet
+establish physical-space identity, RAM backing, access rights, or a complete
+post-exit inventory.
 
 Implementation may be called complete only when the selected physical entry,
 adapter operations, external or checked-provider premises, semantic carriers,

@@ -8,7 +8,7 @@ its status, affected specification owners, concrete requirement, proposed
 behavior, compatibility and trust consequences, viable alternatives, unresolved
 questions, and acceptance evidence.
 
-Acceptance requires an explicit owner decision. The accepting change updates
+Acceptance requires an owner decision. The accepting change updates
 the specification, machine-readable contracts, implementation work, and links
 that the decision affects. Once incorporated, remove the proposal; Git retains
 its history.

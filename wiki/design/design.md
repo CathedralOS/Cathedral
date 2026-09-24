@@ -1,14 +1,14 @@
 # Cathedral Design Index
 
-This is the map of Cathedral's design. Every meaningful OS concept gets one chapter. Chapters are grouped into parts so the system can be read as a story rather than a flat pile of topics.
+This is the map of Cathedral's design. Every meaningful OS concept gets one chapter. Chapters are grouped into parts so the system reads as a story rather than a flat pile of topics.
 
-These are **design documents**, not specifications. Each chapter states the legacy contract being replaced, the contract Cathedral wants instead, the concerns and open questions to work through, and how the [Omega](https://github.com/CathedralOS/Omega/blob/main/wiki/language_guide/language_guide.md) language substrate is expected to carry the weight. Some chapters now contain substantial settled rationale, but accepted normative behavior belongs in the [subject-organized specification](../spec/README.md). An omitted specification rule cannot be inferred from a design chapter.
+These are design documents, not specifications. Each chapter states the legacy contract being replaced, the contract Cathedral wants instead, the concerns and open questions to work through, and how the [Omega](https://github.com/CathedralOS/Omega/blob/main/wiki/language_guide/language_guide.md) language substrate is expected to carry the weight. A chapter may hold substantial rationale, but accepted normative behavior belongs in the [subject-organized specification](../spec/README.md). A rule the specification omits cannot be inferred from a design chapter.
 
 ## How to read this
 
-The parts build on each other. Part 0 is the philosophy and the shared vocabulary; Part 1 is the authority spine that everything else hangs from; the remaining parts are domains that all reduce, eventually, to *who holds what authority, over what state, observable how, and replaceable when.*
+The parts build on each other. Part 0 is the philosophy and the shared vocabulary. Part 1 is the authority spine that everything else hangs from. The remaining parts are domains, and every one of them reduces to the same question: who holds what authority, over what state, observable how, and replaceable when.
 
-Chapters are numbered per part (00..n within each part), not globally. The stable identifier for a chapter is its slug (the filename without the number), and inline cross-references use the slug, so renumbering never breaks them.
+Chapters are numbered per part (00..n within each part), not globally. The stable identifier for a chapter is its slug, the filename without the number. Inline cross-references use the slug, so renumbering never breaks them.
 
 If you read nothing else, read:
 
@@ -21,11 +21,7 @@ If you read nothing else, read:
 
 ## The chapter template
 
-Every chapter follows the same shape so they stay comparable and skimmable.
-They may mature beyond short stubs, but they remain framing and rationale
-documents rather than normative contracts. When a mechanism becomes accepted,
-extract its required behavior into the specification and link back to the
-design instead of making implementation depend on a `decided` paragraph here.
+Every chapter follows the same shape so they stay comparable and skimmable. A chapter may grow well past a stub, but it stays a framing and rationale document, not a normative contract. When a mechanism is accepted, extract its required behavior into the specification and link back to the design. Implementation never depends on a `decided` paragraph here.
 
 ```markdown
 # Chapter NN: Title
@@ -56,12 +52,7 @@ obligations) and what, if anything, Omega still needs to grow.
 - Sibling chapters, referenced by slug: `[[capability_model]]`.
 ```
 
-A few writing rules, inherited from Omega's docs:
-
-- Use real words. `capability`, `principal`, `quiescence`, `attenuation`, not abbreviations only an insider would recognize.
-- Name the legacy contract honestly before proposing a replacement. The value of Cathedral is the *delta* from what exists.
-- Prefer Omega code sketches over prose when illustrating a contract. Syntax is provisional; the obligation it expresses is the point.
-- Cross-link siblings by slug: `[[capability_model]]`, not `[[00_capability_model]]`, so references survive renumbering. The whole system is one authority graph; the docs should feel like one too.
+The writing rules for every page in this wiki, including these chapters, live in the README under [How these docs are written](../README.md#how-these-docs-are-written).
 
 ## Chapter map
 
@@ -137,8 +128,8 @@ A few writing rules, inherited from Omega's docs:
 
 ## Speculative
 
-Forward-looking explorations under [`../speculation/`](../speculation/) — coherent visions to revisit, **not** committed design.
-- [Future Browser Design](../speculation/future_browser.md) — the browser decomposed into OS primitives: Omega-IR web-artifacts, native-exe tabs in a sandbox-host gatekeeper, tiered fidelity (native on Cathedral / WASM on legacy), and runtime re-optimization via hot-swap.
-- [Code-Shipping Capability](../speculation/code_shipping_capability.md) — eBPF-generalized: ship verified Omega IR to run *outside* your Matrix in a bounded capability context (next to a credential), checked by PCC. The stronger agent-credential model; same mechanism as the web-artifact.
-- [Network Trust Fabric](../speculation/network_trust_fabric.md) — capabilities replace the submit-a-secret web: prove-without-transmitting, key-not-name identity (petnames), the **Warden** (OS capability-wallet), cookies-as-durable-caps. The honest residual is first-introduction (first-pin) + recovery. The trust model the future browser runs on.
-- [Post-DNS Resolution](../speculation/post_dns_resolution.md) — naming/locating after DNS: self-certifying keys (the identifier *is* a key, Tor/DID-style), an untrusted DHT for key→location, name→key consensus quarantined to the URL-bar minority, and a capability-weighted **contribution commons** every device serves by default. Value-capture left an explicit open per-layer business dial.
+Forward-looking explorations under [`../speculation/`](../speculation/). They are coherent visions to revisit, not committed design.
+- [Future Browser Design](../speculation/future_browser.md) — the browser decomposed into OS primitives: Omega-IR web-artifacts, native-exe tabs in a sandbox-host gatekeeper, tiered fidelity (native on Cathedral, WASM on legacy), and runtime re-optimization via hot-swap.
+- [Code-Shipping Capability](../speculation/code_shipping_capability.md) — eBPF generalized: ship verified Omega IR to run outside your Matrix in a bounded capability context (next to a credential), checked by PCC. The stronger agent-credential model, and the same mechanism as the web-artifact.
+- [Network Trust Fabric](../speculation/network_trust_fabric.md) — capabilities replace the submit-a-secret web: prove-without-transmitting, key-not-name identity (petnames), the Warden (the OS capability wallet), cookies as durable capabilities. The residual is first-introduction (first-pin) plus recovery. The trust model the future browser runs on.
+- [Post-DNS Resolution](../speculation/post_dns_resolution.md) — naming and locating after DNS: self-certifying keys (the identifier is a key, Tor/DID-style), an untrusted DHT for key→location, name→key consensus quarantined to the URL-bar minority, and a capability-weighted contribution commons every device serves by default. Value capture is left as an open per-layer business dial.

@@ -2,12 +2,12 @@
 
 This directory defines Cathedral's current accepted contracts, organized by
 subject. The specification uses definitions, rules, state transitions, failure
-outcomes, and conformance evidence where useful. It is not claimed to be
+outcomes, and conformance evidence where useful. It does not claim to be
 complete or fully formalized.
 
 An unwritten subject is unspecified even when a design chapter describes a
 strong intended direction. A partially covered subject is normative only for
-the rules it actually states. Implementation details remain beside code.
+the rules it states. Implementation details remain beside code.
 
 ## Status model
 
@@ -21,7 +21,7 @@ Every specification page reports three independent facts:
   the evidence used for that assessment.
 
 `Covered` is a strong claim and must identify the complete boundary of the
-subject. A current specification is allowed to precede implementation.
+subject. A current specification may precede implementation.
 
 ## Current specification subjects
 
@@ -33,9 +33,9 @@ subject. A current specification is allowed to precede implementation.
 
 ## Owned but unwritten subjects
 
-This table establishes documentation ownership without pretending that an
-empty page is a contract. These are the frozen-semantics subjects identified by
-the [governance design](../design/part_7_governance/04_governance_and_extension_boundaries.md),
+This table assigns documentation ownership. An empty page is not a contract.
+These are the frozen-semantics subjects identified by the
+[governance design](../design/part_7_governance/04_governance_and_extension_boundaries.md),
 plus the active hardware frontier.
 
 | Subject | Intended specification owner | Current design owner | Implementation state |
@@ -57,10 +57,10 @@ plus the active hardware frontier.
    its implementation.
 3. If a concrete requirement exposes an unresolved semantic, compatibility, or
    trust choice, raise it in [`OWNER_QUESTIONS.md`](../../OWNER_QUESTIONS.md).
-4. If behavior is merely a candidate, place it in
+4. If the behavior is only a candidate, place it in
    [proposals](../proposals/README.md).
 5. Link conformance evidence without making generated build output normative.
 
 Specification pages do not contain open-ended design-question sections. They
-may identify an explicit exclusion or an unestablished claim, but alternatives
-and research remain in design, proposals, or drafts.
+may identify an exclusion or an unestablished claim. Alternatives and research
+remain in design, proposals, or drafts.

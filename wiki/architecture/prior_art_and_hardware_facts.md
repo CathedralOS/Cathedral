@@ -1,4 +1,4 @@
-# Prior Art & Hardware Facts — how Cathedral learns from existing OS code
+# Prior Art & Hardware Facts: how Cathedral learns from existing OS code
 
 > **Status: porting policy (2026-09-20).** Implements the ownership rules in
 > [`repository_layout.md`](repository_layout.md) and the licensed translation
@@ -8,8 +8,9 @@
 
 ## Three kinds of work
 
-Cathedral's target implementation is Omega, maintained in this monorepo.
-We do not link Rust crates or import their ambient-authority APIs. We do allow
+Porting work comes in three kinds, and each carries its own provenance claim.
+Cathedral's target implementation is Omega, maintained in this monorepo. We do
+not link Rust crates or import their ambient-authority APIs. We do allow
 properly licensed derivative Omega translations, including algorithms, data
 organization, tests, and quirk knowledge. A language rewrite does not erase
 upstream provenance.
@@ -33,9 +34,10 @@ Keep these three kinds of work visible:
    remains derivative and must retain its provenance too; calling it an adapter
    is not a change of origin.
 
-## `reference_code/` — pinned source, gitignored
+## `reference_code/`: pinned source, gitignored
 
-Clone studied sources into the gitignored root `reference_code/` reading room:
+`reference_code/` is the gitignored root reading room for studied sources.
+Clone them there:
 
 ```
 reference_code/
@@ -54,11 +56,13 @@ Committed Omega translations live in their eventual ownership layer alongside
 
 ## The translation workflow
 
+The workflow has six steps, from pinning the source to integrating the result.
+
 1. **Fix the scope and origin.** Use the queue's exact upstream pin. Verify its
    license files and notices, record them in `THIRD_PARTY_NOTICES.md`, and start
    a co-located `PORT.md` from the [template](../../tools/ports/PORT.template.md).
    Map every upstream file and public symbol in the claimed slice to a
-   translation, a deliberate omission with reason, or a named blocker. A pin
+   translation, an omission with a stated reason, or a named blocker. A pin
    update is a separate reviewed change with a renewed inventory/license audit.
 2. **Read the contracts first.** Consult the destination charter and relevant
    primary specs, then Omega's current normative contracts and implementation
@@ -93,15 +97,15 @@ Committed Omega translations live in their eventual ownership layer alongside
    roots. Even compilable raw contracts and pure behavior do not confer live
    authority. Integration must establish Cathedral's grants and lifecycle
    contracts, run affected canaries, and update the port's evidence. Record a
-   failed or unavailable check honestly; never use absence from a build as
-   compiler coverage.
+   failed or unavailable check as failed or unavailable; never use absence
+   from a build as compiler coverage.
 
 `PORT.md` reports one current stage: `inventoried`, `transcribed`, `typechecked`,
-`tested`, or `integrated`. That stage applies only to its precisely named slice;
-record mixed per-file stages and outstanding work rather than promoting an
-entire package on the strength of one passing unit. The template defines the
-minimum evidence for each stage. Update the task checkbox and port record in
-the same commit as the work.
+`tested`, or `integrated`. That stage applies only to its named slice; record
+mixed per-file stages and outstanding work rather than promoting an entire
+package on the strength of one passing unit. The template defines the minimum
+evidence for each stage. Update the task checkbox and port record in the same
+commit as the work.
 
 ## Authority is never a transcription result
 
@@ -123,22 +127,22 @@ because Cathedral boots under it.
 
 | Crate | Kind | What we do | Lands in |
 |---|---|---|---|
-| **uefi-rs** | ABI + logic | Transcribe EFI struct layouts (SystemTable, BootServices, ConOut, memory descriptor, GUIDs, status codes, protocol vtables); read the memory-map/ExitBootServices dance for quirks. **Milestone-1 goldmine.** | `contracts/` + facts |
-| **x86_64** | facts + logic | Transcribe page-table / GDT / IDT / CR / RFLAGS / MSR bit layouts (→ `Bits` stated-plans). Translate pure setup planning; instruction execution remains a boundary. | `drivers/facts/`, `core/` |
-| **uart_16550** | facts | Serial register map — trivial transcribe. | `drivers/facts/` |
-| **pic8259** / **apic** | facts + ritual | Port offsets + init sequences (remap-the-PIC, LAPIC setup). | `drivers/facts/`, `core/` |
-| **pci_types** | facts | PCI config-space header, BAR formats, capability lists. | `contracts/`/facts |
-| **virtio-spec-rs** | facts + protocol | Virtqueue descriptor/ring layouts + queue protocol — the first real driver's reference. | `drivers/` |
-| **acpi** (+ AML) | facts + big logic | ACPI table parsing (facts) + the AML interpreter — licensed translation with explicit operation-region boundaries. | `services/` (confined interp) |
-| **xhci** / **usb** / **vga** / **ps2-mouse** | driver logic | One exemplary port per class, later, on the count-budget. | `drivers/` |
-| **bootloader** | boot logic | Reference for the real-mode→long-mode transition we skip by going UEFI-first — read to understand what UEFI does for us. | (study only) |
-| **multiboot2** / **pvh** / **ieee1275** | alt boot ABIs | Deferred — multiboot2 only for a coreboot-payload reference platform; pvh only for a cloud target. | (deferred) |
-| **linked-list-allocator** | primitive | Reject the ambient model — `Extent` owns backing-range authority and allocation strategies are ordinary packages over qualified extents. Reference the free-list algorithm only. | (subsumed) |
-| **volatile** | primitive | Reject the wrapper — placed views derive sealed field operations from `Extent + LayoutPlan + AccessPlan`; volatile is an observation contract, not a type qualifier. | (subsumed) |
-| **spinning_top** / **mem-barrier** | primitive | Subsumed by the concurrency model and checked instruction catalog: atomics/waits are ordinary contracted operations; fences/cache/TLB instructions emit complete target contracts. | (subsumed) |
-| **ucs2-rs** / **endian-num** | util | UEFI strings are `u16` arrays; endianness is the layout/format machinery. Trivial/subsumed. | (subsumed) |
-| **ovmf-prebuilt** | tooling | Use directly — it *is* the test firmware (OVMF.fd) we boot under QEMU. | `tools/` |
-| **bootimage** / **cargo-xbuild** | tooling | Cargo-bound, irrelevant to the `build.omg` toolchain. Reuse only the workflow idea (assemble FAT image → `\EFI\BOOT\BOOTX64.EFI` → OVMF). | (idea only) |
+| uefi-rs | ABI + logic | Transcribe EFI struct layouts (SystemTable, BootServices, ConOut, memory descriptor, GUIDs, status codes, protocol vtables); read the memory-map/ExitBootServices dance for quirks. The milestone-1 goldmine. | `contracts/` + facts |
+| x86_64 | facts + logic | Transcribe page-table / GDT / IDT / CR / RFLAGS / MSR bit layouts (→ `Bits` stated-plans). Translate pure setup planning; instruction execution remains a boundary. | `drivers/facts/`, `core/` |
+| uart_16550 | facts | Serial register map; trivial transcribe. | `drivers/facts/` |
+| pic8259 / apic | facts + ritual | Port offsets + init sequences (remap-the-PIC, LAPIC setup). | `drivers/facts/`, `core/` |
+| pci_types | facts | PCI config-space header, BAR formats, capability lists. | `contracts/`/facts |
+| virtio-spec-rs | facts + protocol | Virtqueue descriptor/ring layouts + queue protocol; the first real driver's reference. | `drivers/` |
+| acpi (+ AML) | facts + big logic | ACPI table parsing (facts) + the AML interpreter, a licensed translation with declared operation-region boundaries. | `services/` (confined interp) |
+| xhci / usb / vga / ps2-mouse | driver logic | One exemplary port per class, later, on the count-budget. | `drivers/` |
+| bootloader | boot logic | Reference for the real-mode→long-mode transition we skip by going UEFI-first; read to understand what UEFI does for us. | (study only) |
+| multiboot2 / pvh / ieee1275 | alt boot ABIs | Deferred; multiboot2 only for a coreboot-payload reference platform, pvh only for a cloud target. | (deferred) |
+| linked-list-allocator | primitive | Reject the ambient model; `Extent` owns backing-range authority and allocation strategies are ordinary packages over qualified extents. Reference the free-list algorithm only. | (subsumed) |
+| volatile | primitive | Reject the wrapper; placed views derive sealed field operations from `Extent + LayoutPlan + AccessPlan`, and volatile is an observation contract, not a type qualifier. | (subsumed) |
+| spinning_top / mem-barrier | primitive | Subsumed by the concurrency model and checked instruction catalog: atomics/waits are ordinary contracted operations; fences/cache/TLB instructions emit complete target contracts. | (subsumed) |
+| ucs2-rs / endian-num | util | UEFI strings are `u16` arrays; endianness is the layout/format machinery. Trivial/subsumed. | (subsumed) |
+| ovmf-prebuilt | tooling | Use directly; it is the test firmware (OVMF.fd) we boot under QEMU. | `tools/` |
+| bootimage / cargo-xbuild | tooling | Cargo-bound, irrelevant to the `build.omg` toolchain. Reuse only the workflow idea (assemble FAT image → `\EFI\BOOT\BOOTX64.EFI` → OVMF). | (idea only) |
 
 ---
 

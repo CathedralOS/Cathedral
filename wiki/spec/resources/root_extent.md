@@ -12,7 +12,7 @@
 This contract defines the narrow authority claim established by Cathedral's
 current boot path after a successful [UEFI boot-services ownership
 transition](../boot/uefi_boot_services.md). It is the first qualified resource
-carried by Cathedral code; it is not yet the complete physical-memory or
+carried by Cathedral code. It is not yet the complete physical-memory or
 allocator contract.
 
 ## Carrier and qualification
@@ -28,7 +28,7 @@ admitted route and its receipt rather than from a runtime tag or mutation of the
 fields. Calling a same-shaped implementation outside that admitted occurrence
 does not establish the qualification.
 
-This route is a transitional implementation milestone, not the settled
+This route is a transitional implementation milestone, not the final
 physical-memory handoff. Its admission must not be read as a reusable promise
 that arbitrary caller-constructed geometry has backing or ownership. The final
 route must retain the exact physical-entry, UEFI operation, successful
@@ -55,12 +55,12 @@ route establishes a root. Reaching a failure park therefore carries no
 An implementation may establish the exact carrier as a result of an authorized
 adapter or directly on an installed semantic-entry parameter occurrence. If a
 single-consumer adapter is fused or inlined, its logical establishment identity
-and evidence remain; the consumer does not become a general-purpose minter.
+and evidence remain. The consumer does not become a general-purpose minter.
 
 ## Claims not yet established
 
-The current `Granted` root is intentionally a narrow milestone. It does not yet
-establish Cathedral's future facts for:
+The current `Granted` root is a narrow milestone. It does not yet establish
+Cathedral's future facts for:
 
 - physical address-space identity;
 - readable, writable, executable, or device-access rights;
@@ -71,18 +71,18 @@ establish Cathedral's future facts for:
 - transfer into a running kernel memory manager.
 
 Those facts require their own checked transformations and specification
-clauses. Numeric containment, alignment, or disjointness checks do not silently
-mint them.
+clauses. Numeric containment, alignment, or disjointness checks do not mint
+them.
 
 ## Conservation
 
 The current endpoint performs no split or merge. The same qualified carrier is
 threaded into the serial-report path and then back into the owned idle state.
-Each transition consumes and returns the linear claim; no second root or
+Each transition consumes and returns the linear claim. No second root or
 detached copy escapes.
 
 Future split, merge, mapping, and allocation contracts must preserve content
-and provenance, not merely make their numeric lengths add up. This page does not
+and provenance, not only make their numeric lengths add up. This page does not
 yet specify those operations.
 
 ## Conformance evidence
@@ -96,4 +96,4 @@ yet specify those operations.
   and [extents](https://github.com/CathedralOS/Omega/blob/main/wiki/spec/resources/extents.md).
 
 The Cathedral specification narrows how those generic facilities are used by
-the current boot path; it does not redefine Omega qualification semantics.
+the current boot path. It does not redefine Omega qualification semantics.

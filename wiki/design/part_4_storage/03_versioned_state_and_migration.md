@@ -1,24 +1,18 @@
 # Chapter 03: Schema Lineages & State Migration
 
-> Runtime identity, durable-format identity, and component-artifact identity are
-> independent. Cathedral composes them explicitly at each deployment edge.
+> Runtime identity, durable-format identity, and component-artifact identity are independent. Cathedral composes them at each deployment edge.
 
 ## The Legacy Model
 
-Traditional systems mix several unrelated meanings of “version”: an in-memory struct revision, a file-format number, an API revision, and the binary that happened to implement old behavior. Hand-written ladders and migration scripts then try to recover which meaning applies at a particular disk, wire, or live-update seam. Silent in-place edits, reused tags, unhandled old data, and nondeterministic migrations are common outcomes.
+Traditional systems mix several unrelated meanings of "version": an in-memory struct revision, a file-format number, an API revision, and the binary that happened to implement old behavior. Hand-written ladders and migration scripts then try to recover which meaning applies at a particular disk, wire, or live-update seam. Silent in-place edits, reused tags, unhandled old data, and nondeterministic migrations are common outcomes.
 
 ## The Cathedral Model
 
-Cathedral builds each lineage from ordinary immutable schema data, ordinary
-sums, layout/codec policies, provenance domains, and migration machines. Live
-replacement is a separate Cathedral protocol over admitted artifacts,
-requirement bindings, era/liveness pins, candidate resource provision, and
-runtime capabilities.
+Cathedral builds each lineage from ordinary immutable schema data, ordinary sums, layout/codec policies, provenance domains, and migration machines. Live replacement is a separate Cathedral protocol over admitted artifacts, requirement bindings, era/liveness pins, candidate resource provision, and runtime capabilities.
 
 ### External format lineages
 
-Each published era has a permanent shape. Runtime state uses a separate shape
-and an authored conversion:
+Each published era has a permanent shape. Runtime state uses a separate shape and an authored conversion:
 
 ```omega
 data CounterV1 {
@@ -42,14 +36,13 @@ data Counter {
 }
 ```
 
-The external version set is open; one binary's knowledge is closed. Decode is the boundary where Cathedral must choose what happens when the world exceeds that knowledge: reject, preserve opaque bytes, or negotiate another representation. Exhaustive handling covers every known era, while the explicit unknown policy covers future eras.
+The external version set is open; one binary's knowledge is closed. Decode is the boundary where Cathedral must choose what happens when the world exceeds that knowledge: reject, preserve opaque bytes, or negotiate another representation. Exhaustive handling covers every known era, and the declared unknown-era policy covers future eras.
 
-A schema identity is not merely a shape hash. It is a normalized typed identity containing structural and authored nominal commitments. Compatibility and refinement are separate deterministic certificates connecting identities; compatible evolution necessarily produces a different identity.
+A schema identity is more than a shape hash. It is a normalized typed identity containing structural and authored nominal commitments. Compatibility and refinement are separate deterministic certificates connecting identities, and compatible evolution necessarily produces a different identity.
 
 ### Migration
 
-Migration remains an ordinary trait and ordinary machines. A lineage package
-selects the decoder and migration route for each accepted historical shape:
+Migration is an ordinary trait and ordinary machines. A lineage package selects the decoder and migration route for each accepted historical shape:
 
 ```omega
 trait Upgradable<Old, New, Context = Nothing> {
@@ -66,7 +59,7 @@ machine upgrade_v1(old: CounterV1, ctx: CapturedClock, out: &mut Counter)
 }
 ```
 
-Effects belong in a preceding capture phase. The upgrade machine consumes owned old state plus owned captured context, mutates only its exclusive output, and calls only deterministic callees. That makes the transform replayable and independently testable. If preparation can fail, it must do so while the old state remains recoverable; taking old state is an explicit point of no return after which the path is infallible-or-install.
+Effects belong in a preceding capture phase. The upgrade machine consumes owned old state plus owned captured context, mutates only its exclusive output, and calls only deterministic callees. That makes the transform replayable and independently testable. If preparation can fail, it must do so while the old state remains recoverable. Taking the old state is the point of no return, after which the path is infallible-or-install.
 
 Machines written today over `CounterV1` are current code over an old shape. They are not evidence of what the historical V1 artifact did. Historical behavior identity lives only in retained content-addressed component artifacts.
 
@@ -78,34 +71,26 @@ The operational protocol is a Cathedral/library concern:
 2. provision peak coexistence and declare drain/disposition policy;
 3. capture effectful external context;
 4. run the deterministic state transform;
-5. publish through an era-safe requirement binding, or restore while
-   restoration remains meaningful;
-6. drain, retain, migrate, restart/cancel, redirect, or acknowledge-transfer
-   every old-era obligation; and
+5. publish through an era-safe requirement binding, or restore while restoration remains meaningful;
+6. drain, retain, migrate, restart/cancel, redirect, or acknowledge-transfer every old-era obligation; and
 7. reclaim each lifetime cohort only when its residual population is empty.
 
-Linear phase tokens can make local skipped cleanup or double completion compile
-errors. The live population also includes runtime entities the source checker
-cannot see, so Cathedral maintains an era ledger with provider receipts. The
-runtime supplies artifact loading, requirement binding, liveness pins, era-safe
-selection, resource admission, and reclamation; Cathedral supplies
-orchestration policy.
+Linear phase tokens can make local skipped cleanup or double completion compile errors. The live population also includes runtime entities the source checker cannot see, so Cathedral maintains an era ledger with provider receipts. The runtime supplies artifact loading, requirement binding, liveness pins, era-safe selection, resource admission, and reclamation; Cathedral supplies orchestration policy.
 
 ## Safety Properties
 
 - **Forgotten known era:** exhaustive matching or lineage-conformance law failure.
 - **Changed published bytes under an old identity:** publish-time predecessor diff failure.
 - **Reused retired identity/tag:** tombstone failure.
-- **Future data misread as current:** explicit unknown-era policy.
+- **Future data misread as current:** declared unknown-era policy.
 - **Forged boundary provenance:** owner-evidenced decode domain; constructing a shape does not mint provenance.
 - **Nondeterministic migration:** capture/upgrade separation plus ownership, access, and callee-contract checks.
-- **Wrong live provider after replacement:** requirement/provider/era identity,
-  admission refinement, and liveness pins.
+- **Wrong live provider after replacement:** requirement/provider/era identity, admission refinement, and liveness pins.
 - **Semantic drift without a changed declared contract:** residual risk; the language cannot infer durable meaning the author never stated.
 
 ## Ergonomics
 
-The irreducible work is authoring historical shapes, durable meaning, migration logic, and unknown-era policy. Generators may transcribe traversal and codec glue, but never decide whether a field persists or what it means. Cathedral should build three serious format packages—save-game style opaque preservation, negotiated API evolution, and phased OS-state migration—and promote language surface only if all three expose the same unexpressible concept. Repeated verbosity alone is library/generator evidence, not automatic grounds for syntax.
+The irreducible work is authoring historical shapes, durable meaning, migration logic, and unknown-era policy. Generators may transcribe traversal and codec glue, but never decide whether a field persists or what it means. Cathedral should build three serious format packages before promoting any language surface: save-game style opaque preservation, negotiated API evolution, and phased OS-state migration. Syntax is promoted only if all three expose the same unexpressible concept. Repeated verbosity alone is library/generator evidence, not automatic grounds for syntax.
 
 ## Open Questions
 

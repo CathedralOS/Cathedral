@@ -8,7 +8,7 @@ Operating systems have very clearly and obviously degraded. To add insult to inj
 
 Understandably, this was always viewed as too daunting a task. However, with improvements in large language models, seasoned systems engineers can make progress substantially faster.
 
-The blueprint for the Cathedral has already been drafted. This project simply aims to place the bricks one by one until the Catheral is built, laying the foundation of future software.
+The blueprint for the Cathedral has already been drafted. This project simply aims to place the bricks one by one until the Cathedral is built, laying the foundation of future software.
 
 ## Why It Can
 
@@ -41,7 +41,7 @@ Clean slate. Cathedral does not run existing Unix/Linux/Windows binaries or mirr
 
 At the present moment, it is unclear how much of the driver fiasco Cathedral can avoid. There are a few roads ahead:
 - Make drivers user space, less scary.
-- Adopt the existing chaotic driver ecosystem, which is unlikley.
+- Adopt the existing chaotic driver ecosystem, which is unlikely.
 - Find niche hardware wedges and force hardware to comply to a simple universal spec. Drastically reduce what drivers can do. Force vendors to ship hardware that actually works.
 
 ## Related

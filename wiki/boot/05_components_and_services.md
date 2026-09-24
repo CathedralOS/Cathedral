@@ -6,11 +6,11 @@ With the store mounted ([phase 4](04_mounting_the_store.md)), component code in 
 
 ## The root supervisor
 
-The kernel starts one component first: the **root supervisor**. It is the top of a *supervision tree*, a structure where supervisor components watch worker components and restart them when they fail ([component model](../design/part_2_components/00_component_model.md), [error model](../design/part_2_components/04_error_model_and_recovery.md)). This is the role init or systemd plays on a Unix system, except it is an ordinary restartable component, and the thing that fails is deliberately separate from the thing that restarts it.
+The kernel starts one component first: the **root supervisor**. It is the top of a *supervision tree*, a structure where supervisor components watch worker components and restart them when they fail ([component model](../design/part_2_components/00_component_model.md), [error model](../design/part_2_components/04_error_model_and_recovery.md)). This is the role init or systemd plays on a Unix system, except it is an ordinary restartable component, and the thing that fails is kept separate from the thing that restarts it.
 
 ## What "fail" means here
 
-A reader might reasonably ask what is left to go wrong, given that these components are written in a proof-carrying language. Expected, typed errors (an absent file, a refused connection, a declined allocation) are handled in band by the code that meets them and never reach a supervisor. A *fault* is the case the supervisor exists for: a component that can no longer be trusted to make correct progress. Proof removes large classes of fault (memory corruption, capability escapes, many logic bugs), but not the rest: hardware errors and dying devices, resource exhaustion, a wrong assumption at a firmware or hardware boundary, a deadlock, or an invariant a bit flip violated after the proof assumed correct hardware. Foreign application code in another language can simply crash. For a component whose own state is no longer trustworthy, the recovery is a restart to a known-good state ([error model](../design/part_2_components/04_error_model_and_recovery.md)).
+A *fault* is a component that can no longer be trusted to make correct progress, and it is the case the supervisor exists for. Expected, typed errors (an absent file, a refused connection, a declined allocation) are handled in band by the code that meets them and never reach a supervisor. These components are written in a proof-carrying language, and proof removes large classes of fault (memory corruption, capability escapes, many logic bugs), but not the rest: hardware errors and dying devices, resource exhaustion, a wrong assumption at a firmware or hardware boundary, a deadlock, or an invariant a bit flip violated after the proof assumed correct hardware. Foreign application code in another language can crash outright. For a component whose own state is no longer trustworthy, the recovery is a restart to a known-good state ([error model](../design/part_2_components/04_error_model_and_recovery.md)).
 
 ## A declarative startup, not scripts
 
@@ -18,7 +18,7 @@ The supervisor reads a typed, declarative startup description from the system re
 
 ## Spawning with explicit authority
 
-Each component is created with an explicit initial state and an explicitly granted set of capabilities ([component model](../design/part_2_components/00_component_model.md)). The supervisor hands a component exactly the capabilities its manifest declares and nothing ambient, so a freshly started service can reach only what it was given. Components come up in dependency order: one that needs the network waits for the network stack to be ready.
+Each component starts from an initial state and a set of capabilities that the supervisor passes in ([component model](../design/part_2_components/00_component_model.md)). The supervisor hands a component exactly the capabilities its manifest declares and nothing ambient, so a freshly started service can reach only what it was given. Components come up in dependency order: one that needs the network waits for the network stack to be ready.
 
 ## Drivers and services
 
@@ -27,7 +27,7 @@ Each component is created with an explicit initial state and an explicitly grant
 
 ## Where this phase ends
 
-The system is now running: memory, scheduling, messaging, drivers, and core services are up, the authority graph is populated, and the machine works. But no human is present. What is running is the system realm and the components that brought it up, sitting at the login surface.
+The system is running: memory, scheduling, messaging, drivers, and core services are up, the authority graph is populated, and the machine works. No human is present yet. What is running is the system realm and the components that brought it up, sitting at the login surface.
 
 ## Next
 

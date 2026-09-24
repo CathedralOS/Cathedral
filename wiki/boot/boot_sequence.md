@@ -1,6 +1,6 @@
 # Boot Sequence
 
-> The full arc of how a Cathedral machine comes up, from power-on to a logged-in user, one phase at a time. This is an **explainer**, not a design chapter: it linearizes a sequence that crosses many design chapters and shows the order things happen in.
+> The full arc of how a Cathedral machine comes up, from power-on to a logged-in user, one phase at a time. This is an explainer, not a design chapter: it linearizes a sequence that crosses many design chapters and shows the order things happen in.
 >
 > Status: **explainer over a partially implemented path.** The Omega-emitted
 > UEFI image currently validates a bounded firmware memory map, exits Boot
@@ -13,17 +13,9 @@
 
 ## The arc
 
-Power on, and a conforming firmware implementation loads the Cathedral image.
-Production may use an external UEFI; the reference path may use an
-Omega-authored implementation. Cathedral ends firmware Boot Services, takes
-custody only of the resources the exact handoff transfers, builds its own
-virtual-memory and core services, and then mounts the content-addressed object
-store. From the store it starts components and drivers with declared authority
-until the system is running but unattended. A human login authenticates the
-user, unseals their realm, and mints the session that owns their world. A trust
-chain runs through every stage, with a recovery path for each failure.
+At power-on a conforming firmware implementation loads the Cathedral image. Production may use an external UEFI; the reference path may use an Omega-authored implementation. Cathedral ends firmware Boot Services, takes custody only of the resources the exact handoff transfers, builds its own virtual-memory and core services, and then mounts the content-addressed object store. From the store it starts components and drivers with declared authority until the system is running but unattended. A human login authenticates the user, unseals their realm, and mints the session that owns their world. A trust chain runs through every stage, with a recovery path for each failure.
 
-The recurring shape is **bootstrap**: each layer is unreadable or unrunnable until the layer below hands it the one thing it needs. Firmware needs a standard filesystem to find the kernel; the kernel needs a fixed superblock to enter the content-addressed world; the user needs a credential to unseal their realm. Boot is the chain of those hand-offs.
+Boot is a chain of hand-offs, and the recurring shape is **bootstrap**: each layer is unreadable or unrunnable until the layer below hands it the one thing it needs. Firmware needs a standard filesystem to find the kernel. The kernel needs a fixed superblock to enter the content-addressed world. The user needs a credential to unseal their realm.
 
 ## The phases
 

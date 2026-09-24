@@ -1,6 +1,6 @@
 # Phase 6: Session and Login
 
-> The human arrives. Whether there is a login process, where credentials are stored, and what logging in actually produces. Part of the [boot sequence](boot_sequence.md). Intended mechanism, not yet implemented. The design contract is in [Sessions & Login](../design/part_1_authority/07_sessions_and_login.md).
+> The point where a human enters: whether there is a login process, where credentials are stored, and what logging in produces. Part of the [boot sequence](boot_sequence.md). Intended mechanism, not yet implemented. The design contract is in [Sessions & Login](../design/part_1_authority/07_sessions_and_login.md).
 
 After [phase 5](05_components_and_services.md) the machine is running but unattended, showing a login surface with no user authority in play.
 
@@ -18,7 +18,7 @@ Credentials are **secrets**, kept in the keychain (the operating system's protec
 
 ## Authentication unseals the realm
 
-A correct credential does two things at once. It proves identity, binding the new session to the user's principal ([identity & principals](../design/part_1_authority/02_identity_and_principals.md)). And it releases the user realm's decryption key, which is sealed to the credential plus a measured-good boot ([trust & measurement](07_trust_and_measurement.md)). So logging in is the act that makes the user's data readable: a wrong credential, or a tampered boot, leaves the realm sealed.
+A correct credential does two things at once. It proves identity, binding the new session to the user's principal ([identity & principals](../design/part_1_authority/02_identity_and_principals.md)). And it releases the user realm's decryption key, which is sealed to the credential plus a measured-good boot ([trust & measurement](07_trust_and_measurement.md)). Logging in is therefore the act that makes the user's data readable: a wrong credential, or a tampered boot, leaves the realm sealed.
 
 ## What login produces: a session
 
@@ -26,7 +26,7 @@ Login mints a **session**: a short-lived principal that carries the human's auth
 
 ## Launching the user's world
 
-The session then starts the user's first components inside the user realm: the per-session compositor, the home surface or shell, and any autostart apps, each receiving capabilities delegated down from the session ([components](05_components_and_services.md)). The user is now logged in and the machine is usable.
+The session then starts the user's first components inside the user realm: the per-session compositor, the home surface or shell, and any autostart apps, each receiving capabilities delegated down from the session ([components](05_components_and_services.md)). The user is logged in and the machine is usable.
 
 ## Lock, logout, switch
 
