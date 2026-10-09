@@ -10,7 +10,8 @@ path = "lib.rs"
 
 [dependencies]
 cathedral-contracts.workspace = true
+cathedral-arch.workspace = true
+linked_list_allocator = "0.10.6"
 
 [lints]
 workspace = true
-

@@ -3,9 +3,12 @@
 
 //! Boot orchestration. Subsystems own firmware, memory, CPU setup and diagnostics.
 
+extern crate alloc;
+
 mod diagnostics;
 mod firmware;
 mod handoff;
+mod heap;
 mod interrupts;
 mod memory;
 #[cfg(feature = "smoke-test")]
@@ -24,6 +27,9 @@ fn main() -> Status {
 fn kernel_main(mut boot: handoff::BootState) -> ! {
     memory::confirm_handoff(&mut boot.memory, &mut boot.console);
     interrupts::install(&boot.memory.layout, &mut boot.console);
+    heap::initialize(&boot.memory.layout, &mut boot.console);
+    #[cfg(feature = "smoke-test")]
+    heap::verify(&boot.memory.layout, &mut boot.console);
     #[cfg(feature = "smoke-test")]
     smoke::probe_faults(&boot.memory.layout);
     interrupts::start_timer(&boot.memory.layout, &mut boot.console);

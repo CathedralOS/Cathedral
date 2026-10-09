@@ -19,6 +19,8 @@ MARKERS = (
     "Cathedral Rust lab: arch=",
     "Cathedral Rust lab: owned page tables and stack",
     "Cathedral Rust lab: GDT TSS IDT installed; breakpoint returned",
+    "Cathedral Rust lab: heap initialized",
+    "Cathedral Rust lab: heap alignment exhaustion and reclamation passed",
     "Cathedral Rust lab: timer ticks=",
     "CATHEDRAL_RS_BOOT_OK",
 )
@@ -125,7 +127,7 @@ def main():
     serial = serial_path.read_text(encoding="utf-8", errors="replace")
     print(serial)
     position = 0
-    markers = MARKERS if not args.fault else MARKERS[:-2] + ("CATHEDRAL_RS_FAULT:", "CATHEDRAL_RS_EXPECTED_FAULT")
+    markers = MARKERS if not args.fault else MARKERS[:MARKERS.index("Cathedral Rust lab: timer ticks=")] + ("CATHEDRAL_RS_FAULT:", "CATHEDRAL_RS_EXPECTED_FAULT")
     for marker in markers:
         found = serial.find(marker, position)
         if found < 0:

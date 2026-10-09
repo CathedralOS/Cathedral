@@ -13,6 +13,13 @@ use core::arch::asm;
 
 pub const CPU_NAME: &str = "x86_64";
 
+/// # Safety
+/// Requires kernel privilege. Body must not change IF or suspend, and must not
+/// depend on an interrupt to finish. NMI/fault paths must not acquire its locks.
+pub unsafe fn without_interrupts<R>(body: impl FnOnce() -> R) -> R {
+    ::x86_64::instructions::interrupts::without_interrupts(body)
+}
+
 pub fn stack_pointer() -> u64 {
     let value;
     // SAFETY: Reading the current stack pointer has no privileged side effects.

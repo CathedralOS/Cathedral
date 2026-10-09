@@ -23,8 +23,10 @@ Omega's proof or authority guarantees.
 | `arch/x86_64/` | Paging, stack entry, GDT/TSS/IDT and interrupt stubs, using the `x86_64` crate |
 | `../tools/boot-harness-rs/` | Host build, QEMU launch and smoke verification |
 
-Each crate uses `no_std`. The core depends only on contracts and has no firmware
-dependency or unsafe code. Boot assembles the core, UART and firmware adapter.
+Each crate uses `no_std`. Core policies are host-testable and have no firmware
+dependency. Core's hardware-facing modules explicitly opt into unsafe code and
+depend on `arch/`; drivers never depend on core internals. Boot assembles these
+subsystems and the firmware adapter.
 The bootstrap UART currently runs privileged; user-mode drivers come later.
 The Rust-specific `arch/` layer groups hardware mechanisms that Omega currently
 spreads across core providers, instruction contracts and libraries. Only x86-64
@@ -119,7 +121,9 @@ Core accounts for physical frames; only the architecture backend accesses them.
 Inherited identity mappings remain, including aliases of the new backing frames;
 this is bootstrap address-space ownership, not user isolation or a final W^X
 policy. Old firmware tables/storage are still reserved, not reclaimed. The heap
-backing is mapped but there is no heap allocator yet. There is no scheduler,
+uses `linked_list_allocator` behind an interrupt-masked lock. The smoke boot
+exercises allocation/free, page alignment, exhaustion and complete reclamation.
+Fatal and NMI handlers must never allocate. There is no scheduler,
 syscall path or isolated driver. The timer ISR only records a tick, acknowledges
 the PIC and returns; it makes no Rust calls and touches no SIMD/FPU state.
 Exception stubs normalize hardware error codes before a terminal diagnostic;
@@ -130,7 +134,7 @@ mechanisms, not application APIs.
 
 ## Next bring-up steps
 
-- Add the heap allocator, context switching and two scheduled tasks.
+- Add context switching and two scheduled tasks.
 - Discover ACPI/APIC topology and replace the temporary PIC/PIT timer route.
 - Add user-mode address spaces, capability checks and shared-memory IPC.
 
