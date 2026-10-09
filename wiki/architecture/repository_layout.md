@@ -362,8 +362,12 @@ Status legend: built, in-progress, planned, parked. Current reality
 
 ## Omissions (negative space is part of the plan)
 
-- **Single-language target code, no Rust crate dependency model.** Cathedral
-  maintains its Omega implementation in this monorepo. Properly licensed
+- **Omega production tree, separate Rust lab.** Cathedral maintains its Omega
+  implementation in `source/`. The owner-authorized `source-rs/` workspace mirrors
+  the same ownership layers for boot and OS experiments using Rust crates and
+  explicit unsafe hardware operations. It is not a proved production target;
+  its setup and divergences live in [`source-rs/README.md`](../../source-rs/README.md).
+  Host tooling remains under `tools/`. Properly licensed
   derivative translations of useful representations, algorithms, and tests are
   permitted; Rust vendor trees and ambient-authority APIs are not imported.
   Primary-source facts, licensed translations, and Cathedral integration have

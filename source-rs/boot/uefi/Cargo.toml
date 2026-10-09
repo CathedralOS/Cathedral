@@ -1,0 +1,26 @@
+[package]
+name = "cathedral-boot-uefi"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[[bin]]
+name = "cathedral-boot-uefi"
+path = "main.rs"
+test = false
+bench = false
+
+[features]
+smoke-test = []
+
+[dependencies]
+cathedral-contracts.workspace = true
+cathedral-core.workspace = true
+cathedral-uart-16550.workspace = true
+cathedral-x86-64.workspace = true
+uefi.workspace = true
+
+[lints]
+workspace = true
+

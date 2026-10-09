@@ -93,6 +93,13 @@ This ADR records the locked decisions.
 
 ## Consequences
 
+The owner added a parallel Rust bring-up lab on 2026-10-08: `source-rs/` mirrors
+the Omega ownership layers as executable experiments land, with an independent
+Cargo workspace and host tooling under `tools/boot-harness-rs/`. `source/` remains
+the Omega implementation. Rust crates and explicit unsafe hardware seams are
+permitted in this lab; they do not establish Omega proof or admission guarantees.
+See [the lab guide](../../source-rs/README.md).
+
 - The trust boundary is legible from the tree; `tcb.md` answers "what must I
   trust" in one document.
 - New work has a decision procedure ("if behavior is X, it belongs in Y") and a

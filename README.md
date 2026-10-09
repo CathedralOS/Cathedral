@@ -78,6 +78,11 @@ One technique here shares ground with [Theseus](https://www.theseus-os.com/): a 
 
 ## Repository layout
 
+The [Rust lab](source-rs/README.md) mirrors the Omega ownership layers under
+`source-rs/` for executable OS bring-up experiments. Build and smoke-boot it with
+`python tools/boot-harness-rs/run.py --smoke`. Its hardware operations are
+explicitly unsafe; it does not carry the Omega implementation's proof guarantees.
+
 ```text
 wiki/          specifications, design, architecture, explainers, proposals, drafts
 source/
@@ -87,6 +92,7 @@ source/
   drivers/     user-mode, contained, not trusted
   libraries/   hardware and protocol libraries
 tools/         host-side tooling that never ships
+source-rs/     Rust bring-up lab, mirroring source/ layers as code lands
 ```
 
 `foundation/`, `services/`, and `applications/` are planned under `source/` and appear when real code lands. The dependency rules are in [repository_layout.md](wiki/architecture/repository_layout.md), the trusted set is enumerated in [tcb.md](wiki/architecture/tcb.md), and the decision is recorded in [ADR 0001](wiki/decisions/0001-repository-layout.md).
