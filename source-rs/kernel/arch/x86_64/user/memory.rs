@@ -19,6 +19,7 @@ pub const USER_IMAGE_END: u64 = USER_CODE + 1024 * 1024;
 pub const USER_STACK: u64 = USER_CODE + 2 * 1024 * 1024;
 pub const USER_STACK_TOP: u64 = USER_STACK + 4 * PAGE;
 pub const MAX_IMAGE_PAGES: usize = 64;
+const _: () = assert!(MAX_IMAGE_PAGES + 4 <= u128::BITS as usize);
 const MAX_FRAMES: usize = 128;
 
 #[derive(Clone, Copy, Debug)]
@@ -48,6 +49,7 @@ pub struct UserSpace {
     len: usize,
     backing: [Backing; MAX_IMAGE_PAGES + 4],
     pages: usize,
+    writable: u128,
 }
 impl UserSpace {
     pub fn root(&self) -> u64 {
@@ -119,6 +121,7 @@ impl UserSpace {
             len: 0,
             backing: [Backing::default(); MAX_IMAGE_PAGES + 4],
             pages: 0,
+            writable: 0,
         };
         // SAFETY: New frames are exclusively owned and identity-mapped in kernel CR3.
         let result = unsafe { space.build(layout, image.base, end, segments, frames) };
@@ -208,6 +211,9 @@ impl UserSpace {
                 let physical = frame.start_address().as_u64();
                 let address = segment.address + offset;
                 self.backing[self.pages] = Backing { address, physical };
+                if segment.writable {
+                    self.writable |= 1 << self.pages;
+                }
                 self.pages += 1;
                 // SAFETY: Fresh zeroed backing, disjoint validated virtual page.
                 // Only file bytes are copied; BSS and trailing page bytes stay zero.
@@ -253,6 +259,36 @@ impl UserSpace {
             }
         }
         false
+    }
+
+    /// Validate the entire destination before consuming a message or parking.
+    pub fn writable_range(&self, address: u64, length: usize) -> bool {
+        self.write_backing(address, length).is_some()
+    }
+    fn write_backing(&self, address: u64, length: usize) -> Option<u64> {
+        let end = address.checked_add(length as u64)?;
+        self.backing[..self.pages]
+            .iter()
+            .enumerate()
+            .find(|(index, page)| {
+                self.writable & (1 << index) != 0
+                    && address >= page.address
+                    && address < page.address + PAGE
+                    && end <= page.address + PAGE
+            })
+            .map(|(_, page)| page.physical + address - page.address)
+    }
+    /// # Safety
+    /// Kernel root active, IRQs off, this space live and not concurrently running.
+    pub unsafe fn copy_to_user(&self, address: u64, bytes: &[u8]) -> bool {
+        let Some(physical) = self.write_backing(address, bytes.len()) else {
+            return false;
+        };
+        // SAFETY: Full range is in a live owned writable user page; kernel buffer is disjoint.
+        unsafe {
+            core::ptr::copy_nonoverlapping(bytes.as_ptr(), physical as *mut u8, bytes.len());
+        }
+        true
     }
 
     /// # Safety

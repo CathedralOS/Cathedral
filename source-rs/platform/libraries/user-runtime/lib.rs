@@ -7,6 +7,7 @@
 compile_error!("Build the user runtime for x86_64-unknown-none");
 
 mod arch;
+pub mod ipc;
 use cathedral_contracts::user as abi;
 
 #[derive(Debug, PartialEq, Eq)]

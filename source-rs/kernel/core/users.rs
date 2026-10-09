@@ -4,7 +4,7 @@
 pub mod elf;
 mod runtime;
 pub mod syscall;
-pub use runtime::{Exit, Report, run};
+pub use runtime::{Config, Exit, Report, run, run_configured};
 
 pub enum Executable<'a> {
     Probe(&'a [u8]),
@@ -19,6 +19,7 @@ pub struct Program<'a> {
 #[derive(Debug)]
 pub enum Error {
     InvalidCount,
+    InvalidEndpoints,
     OutOfHeap,
     Executable(elf::Error),
     Memory(cathedral_arch::MemoryError),

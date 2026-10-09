@@ -1,13 +1,16 @@
 //! Admission/reclamation happen on the boot stack; callbacks never allocate.
 
-use super::{Error, Executable, Program, elf, syscall};
+use super::{Error, Program};
+use crate::ipc::{EndpointSpec, Ipc, MAX_EPOCH};
+mod admission;
+mod dispatch;
 use crate::{
     extent::FrameAllocator,
     scheduler::{Event, Scheduler, TaskState},
 };
 use alloc::vec::Vec;
 use cathedral_arch::{self as arch, Context, StackFrames, SwitchCause, UserSpace};
-use core::sync::atomic::{AtomicPtr, Ordering};
+use core::sync::atomic::{AtomicPtr, AtomicU64, Ordering};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Exit {
@@ -23,11 +26,15 @@ pub struct Report {
     pub rejected: usize,
     pub completion_order: usize,
     pub frames: usize,
+    pub receives_blocked: usize,
+    pub ipc_sent: usize,
+    pub ipc_received: usize,
 }
 struct Task {
     context: Context,
     space: Option<UserSpace>,
     report: Report,
+    receive: Option<dispatch::Receive>,
 }
 struct Session {
     tasks: Vec<Task>,
@@ -35,8 +42,16 @@ struct Session {
     boot: Context,
     output: fn(&[u8]) -> bool,
     completed: usize,
+    ipc: Ipc,
 }
 static ACTIVE: AtomicPtr<Session> = AtomicPtr::new(core::ptr::null_mut());
+
+static EPOCH: AtomicU64 = AtomicU64::new(1);
+
+pub struct Config<'a> {
+    pub frame_limit: usize,
+    pub endpoints: &'a [EndpointSpec],
+}
 
 struct Frames<'a> {
     frames: &'a mut FrameAllocator,
@@ -73,10 +88,44 @@ pub unsafe fn run(
     output: fn(&[u8]) -> bool,
     frame_limit: usize,
 ) -> Result<Vec<Report>, Error> {
+    // SAFETY: Same session and memory obligations as the caller.
+    unsafe {
+        run_configured(
+            frames,
+            layout,
+            image,
+            programs,
+            output,
+            Config {
+                frame_limit,
+                endpoints: &[],
+            },
+        )
+    }
+}
+
+/// Run tasks with explicit boot-issued endpoint grants.
+/// # Safety
+/// Same obligations as run. Endpoint task indices refer to this exact program list.
+pub unsafe fn run_configured(
+    frames: &mut FrameAllocator,
+    layout: &arch::BootLayout,
+    image: arch::ImageRange,
+    programs: &[Program<'_>],
+    output: fn(&[u8]) -> bool,
+    config: Config<'_>,
+) -> Result<Vec<Report>, Error> {
     assert!(ACTIVE.load(Ordering::Acquire).is_null());
     if programs.is_empty() || programs.len() > 8 {
         return Err(Error::InvalidCount);
     }
+    let epoch = EPOCH
+        .fetch_update(Ordering::Relaxed, Ordering::Relaxed, |value| {
+            (value <= MAX_EPOCH).then_some(value + 1)
+        })
+        .map_err(|_| Error::InvalidEndpoints)?;
+    let ipc =
+        Ipc::new(epoch, programs.len(), config.endpoints).map_err(|_| Error::InvalidEndpoints)?;
     let baseline = frames.allocated();
     let mut session = Session {
         tasks: Vec::new(),
@@ -84,6 +133,7 @@ pub unsafe fn run(
         boot: Context::default(),
         output,
         completed: 0,
+        ipc,
     };
     session
         .tasks
@@ -95,49 +145,25 @@ pub unsafe fn run(
         .map_err(|_| Error::OutOfHeap)?;
     let mut source = Frames {
         frames,
-        remaining: frame_limit,
+        remaining: config.frame_limit,
     };
     for (slot, program) in programs.iter().enumerate() {
-        // Parse before physical admission. Any error also retires earlier tasks.
-        let admission = (|| {
-            // SAFETY: Serialized admission on kernel CR3; no task has started.
+        // Keep large address-space construction temporaries out of the session frame.
+        if let Err(error) =
+            // SAFETY: Serialized admission on kernel CR3; no user has started.
             unsafe {
-                match &program.executable {
-                    Executable::Probe(code) => UserSpace::create(layout, image, code, &mut source)
-                        .map(|space| (space, arch::USER_CODE))
-                        .map_err(Error::Memory),
-                    Executable::Elf(bytes) => {
-                        let executable = elf::parse(bytes).map_err(Error::Executable)?;
-                        UserSpace::from_segments(layout, image, executable.segments(), &mut source)
-                            .map(|space| (space, executable.entry))
-                            .map_err(Error::Memory)
-                    }
+                admission::admit(&mut session, layout, image, program, &mut source, slot)
+            }
+        {
+            for task in &mut session.tasks {
+                // SAFETY: Admission failed before publishing any context/root.
+                unsafe {
+                    admission::retire(task, &mut source);
                 }
             }
-        })();
-        let (space, entry) = match admission {
-            Ok(admitted) => admitted,
-            Err(error) => {
-                for task in &mut session.tasks {
-                    // SAFETY: Admission failed before publishing any context/root.
-                    unsafe {
-                        task.space.take().unwrap().release(&mut source);
-                    }
-                }
-                assert_eq!(source.frames.allocated(), baseline);
-                return Err(error);
-            }
-        };
-        let count = space.frame_count();
-        session.tasks.push(Task {
-            context: Context::user(entry, arch::USER_STACK_TOP, program.arguments),
-            space: Some(space),
-            report: Report {
-                frames: count,
-                ..Default::default()
-            },
-        });
-        session.scheduler.admit(slot);
+            assert_eq!(source.frames.allocated(), baseline);
+            return Err(error);
+        }
     }
     let session = &raw mut session;
     ACTIVE.store(session, Ordering::Release);
@@ -149,18 +175,18 @@ pub unsafe fn run(
         loop {
             for slot in 0..(*session).tasks.len() {
                 if (*session).scheduler.states()[slot] == TaskState::Exited {
-                    (&mut (*session).tasks)[slot]
-                        .space
-                        .take()
-                        .unwrap()
-                        .release(&mut source);
+                    admission::retire(&mut (&mut (*session).tasks)[slot], &mut source);
                     (*session).scheduler.reap(slot);
                 }
             }
             if (*session).scheduler.finished() {
                 break;
             }
-            arch::suspend();
+            if (*session).scheduler.states().contains(&TaskState::Ready) {
+                arch::suspend();
+            } else {
+                arch::wait_for_ticks(1);
+            }
         }
         arch::set_switch_handler(None);
         arch::end_user_session();
@@ -194,45 +220,7 @@ unsafe fn schedule(context: &Context, cause: SwitchCause, now: u64) -> *const Co
                 event = Event::Exit;
             }
             SwitchCause::Syscall => {
-                let (number, first, second) = context.syscall();
-                let result = match number {
-                    syscall::WRITE => {
-                        let mut buffer = [0u8; syscall::MAX_WRITE];
-                        if second > syscall::MAX_WRITE as u64 {
-                            syscall::INVALID_ARGUMENT
-                        }
-                        // SAFETY: Copy checks the entire range against this task's owned pages.
-                        else if !unsafe {
-                            task.space
-                                .as_ref()
-                                .unwrap()
-                                .copy_from_user(first, &mut buffer[..second as usize])
-                        } {
-                            syscall::BAD_ADDRESS
-                        } else {
-                            if (session.output)(&buffer[..second as usize]) {
-                                task.report.writes += 1;
-                                second
-                            } else {
-                                syscall::IO_ERROR
-                            }
-                        }
-                    }
-                    syscall::YIELD => {
-                        task.report.yields += 1;
-                        0
-                    }
-                    syscall::EXIT => {
-                        task.report.exit = Some(Exit::Returned(first));
-                        event = Event::Exit;
-                        0
-                    }
-                    _ => syscall::UNKNOWN,
-                };
-                if (result as i64) < 0 {
-                    task.report.rejected += 1;
-                }
-                task.context.set_result(result);
+                event = dispatch::syscall(session, slot);
             }
         }
     } else {
@@ -240,6 +228,8 @@ unsafe fn schedule(context: &Context, cause: SwitchCause, now: u64) -> *const Co
         session.boot = context.clone();
     }
     let next = if matches!(event, Event::Exit) {
+        session.ipc.close_task(previous.unwrap());
+        dispatch::wake_receivers(session);
         session.completed += 1;
         session.tasks[previous.unwrap()].report.completion_order = session.completed;
         session.scheduler.park(event, now);

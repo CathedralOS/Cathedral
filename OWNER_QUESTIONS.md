@@ -129,3 +129,44 @@ None can infer containment merely from a package name or the language used.
 baseline; require an explicit admission contract before sharing a protection
 domain. Keep the current Rust syscall ABI experimental. Settle the production
 policy before treating the lab's task model as Cathedral's component model.
+
+### Endpoint transport and revocation of pending IPC
+
+**Requirement and tension.** Isolated services need a transport and a defined
+outcome when their authority is revoked during a wait. The
+[IPC design](wiki/design/part_3_communication/00_ipc_and_service_invocation.md)
+names shared regions as the one IPC primitive, with queues and RPC in libraries,
+but its endpoint section also describes kernel creation and delivery of opaque
+messages across hardware boundaries. It does not settle whether those are two
+transports or descriptions of one shared-region protocol. The
+[capability lifecycle](wiki/design/part_1_authority/01_capability_lifecycle.md)
+says already-redeemed operations run to completion and revocation is discovered
+on next use. An empty blocking receive may have no completion unless the contract
+defines when redemption commits it and how cancellation or peer death intervenes.
+
+**Contracts checked.** The [specification index](wiki/spec/README.md) assigns
+authority and IPC semantics to the unwritten `spec/authority/capabilities.md`
+and `spec/communication/ipc.md`. The new
+[Rust syscall constants](source-rs/contracts/user.rs) and
+[transport model](source-rs/kernel/core/ipc.rs) explicitly define only lab
+behavior. No accepted contract settles transport selection or pending-operation
+revocation. This blocks promoting the experiment to a stable service interface,
+not continued laboratory work.
+
+**Owner choice.** Either require shared-region data movement with kernel endpoints
+limited to authority and notification, or retain copied-message delivery as an
+additional supported transport with explicit limits and equivalent protocol
+semantics. Separately, define whether a parked receive has already redeemed
+authority: allowing it to finish preserves the current lifecycle wording but
+permits post-revocation delivery; rechecking at delivery cancels the wait but
+requires distinguishing admission to a wait from committed message delivery.
+Queued messages also need an explicit ownership/commit point so revocation
+cannot silently change their promised outcome.
+
+**Recommendation (unaccepted).** Treat copied queues as lab scaffolding until
+the transport boundary is specified. Define separate wait, delivery and
+completion points; permit cancellation before delivery commits, without
+retroactively undoing completed delivery. Reconcile that rule with the lifecycle
+chapter before freezing an API. The current Rust experiment rechecks pending
+receives, returns `REVOKED`, and discards undelivered queued bytes on revocation;
+those are explicit experimental choices, not an accepted production policy.

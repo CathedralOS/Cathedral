@@ -21,6 +21,7 @@ pub enum TaskState {
     Vacant,
     Ready,
     Running,
+    Blocked,
     Sleeping { deadline: u64 },
     Exited,
 }
@@ -30,6 +31,7 @@ pub enum Event {
     Timer,
     Yield,
     Sleep(u64),
+    Block,
     Exit,
 }
 
@@ -86,7 +88,10 @@ impl Scheduler {
         self.generations.get(id.slot) == Some(&id.generation)
             && matches!(
                 self.states[id.slot],
-                TaskState::Ready | TaskState::Running | TaskState::Sleeping { .. }
+                TaskState::Ready
+                    | TaskState::Running
+                    | TaskState::Sleeping { .. }
+                    | TaskState::Blocked
             )
     }
     /// Release only after the runtime has retired context and stack storage.
@@ -116,6 +121,12 @@ impl Scheduler {
         self.current
     }
 
+    pub fn unblock(&mut self, slot: usize) {
+        if self.states[slot] == TaskState::Blocked {
+            self.states[slot] = TaskState::Ready;
+        }
+    }
+
     fn wake(&mut self, now: u64) {
         for state in &mut self.states {
             if let TaskState::Sleeping { deadline } = *state
@@ -143,6 +154,7 @@ impl Scheduler {
                     }
                 }
                 Event::Exit => TaskState::Exited,
+                Event::Block => TaskState::Blocked,
             };
         }
         self.current = None;
@@ -152,6 +164,22 @@ impl Scheduler {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn blocked_tasks_need_explicit_wakeup_and_keep_their_identity() {
+        let mut scheduler = populated(2);
+        let waiter = scheduler.id(0);
+        scheduler.advance(Event::Yield, 0, true);
+        assert_eq!(scheduler.advance(Event::Block, 1, true), Some(1));
+        assert!(scheduler.is_alive(waiter));
+        assert_eq!(scheduler.advance(Event::Timer, 100, true), Some(1));
+        assert_eq!(scheduler.states()[0], TaskState::Blocked);
+        scheduler.unblock(0);
+        scheduler.unblock(0);
+        assert_eq!(scheduler.advance(Event::Yield, 101, true), Some(0));
+        scheduler.advance(Event::Exit, 102, true);
+        scheduler.unblock(0);
+        assert_eq!(scheduler.states()[0], TaskState::Exited);
+    }
     fn populated(limit: usize) -> Scheduler {
         let mut scheduler = Scheduler::new(limit);
         for slot in 0..limit {

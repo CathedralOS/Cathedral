@@ -82,8 +82,13 @@ impl Context {
     pub fn is_user(&self) -> bool {
         self.frame.code & 3 == 3
     }
-    pub fn syscall(&self) -> (u64, u64, u64) {
-        (self.registers.rax, self.registers.rdi, self.registers.rsi)
+    pub fn syscall(&self) -> (u64, u64, u64, u64) {
+        (
+            self.registers.rax,
+            self.registers.rdi,
+            self.registers.rsi,
+            self.registers.rdx,
+        )
     }
     pub fn set_result(&mut self, result: u64) {
         self.registers.rax = result;

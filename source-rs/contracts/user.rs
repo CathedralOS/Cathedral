@@ -1,11 +1,22 @@
 //! Experimental Rust-lab ABI, not Cathedral's accepted component contract.
-//! x86-64: INT 0x80; RAX is call/result, RDI/RSI are arguments. Entry receives
+//! x86-64: INT 0x80; RAX is call/result, RDI/RSI/RDX are arguments. Entry receives
 //! two ordinary arguments in RDI/RSI and a 16-byte-aligned stack without a caller.
 //! Write accepts at most 256 bytes within one mapped user page.
 
 pub const WRITE: u64 = 0;
 pub const YIELD: u64 = 1;
 pub const EXIT: u64 = 2;
+pub const IPC_HANDLE: u64 = 3;
+pub const IPC_SEND: u64 = 4;
+pub const IPC_RECEIVE: u64 = 5;
+pub const IPC_REVOKE: u64 = 6;
+pub const MAX_MESSAGE: usize = 64;
+pub const BAD_HANDLE: u64 = (-9i64) as u64;
+pub const WOULD_BLOCK: u64 = (-11i64) as u64;
+pub const DENIED: u64 = (-13i64) as u64;
+pub const PEER_CLOSED: u64 = (-32i64) as u64;
+pub const TOO_SMALL: u64 = (-90i64) as u64;
+pub const REVOKED: u64 = (-125i64) as u64;
 pub const MAX_WRITE: usize = 256;
 pub const IO_ERROR: u64 = (-5i64) as u64;
 pub const BAD_ADDRESS: u64 = (-14i64) as u64;

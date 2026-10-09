@@ -4,9 +4,16 @@
   "boot_entry": "kernel/boot/uefi/main.rs",
   "boot_package": "cathedral-boot-uefi",
   "target": "x86_64-unknown-uefi",
-  "user_program": {
-    "package": "cathedral-hello",
-    "entry": "distribution/programs/hello/main.rs",
-    "target": "x86_64-unknown-none"
+  "user_programs": {
+    "hello": {
+      "package": "cathedral-hello",
+      "entry": "distribution/programs/hello/main.rs",
+      "target": "x86_64-unknown-none"
+    },
+    "ipc": {
+      "package": "cathedral-ipc-lab",
+      "entry": "distribution/programs/ipc/main.rs",
+      "target": "x86_64-unknown-none"
+    }
   }
 }

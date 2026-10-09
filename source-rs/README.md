@@ -17,6 +17,8 @@ Omega's proof or authority guarantees.
 | `kernel/boot/uefi/heap.rs`, `tasks.rs`, `task_lifecycle.rs` | Heap installation, cooperative/preemptive workloads and dynamic lifecycle checks |
 | `kernel/boot/uefi/users.rs` | Ring-3 syscall, isolation, fault containment and admission rollback experiments |
 | `kernel/boot/uefi/applications.rs` | Run the bundled executable twice per session and check loading, private state, exit statuses and cleanup |
+| `kernel/boot/uefi/ipc.rs` | Compose explicit endpoint grants and check service/failure sessions |
+| `kernel/core/ipc.rs`, `ipc/` | Host-testable endpoint rights, bound tickets, queues and teardown |
 | `kernel/boot/uefi/smoke.rs` | Test-only fault injection and QEMU result reporting |
 | `contracts/boot.rs` | Firmware-neutral memory handoff; experimental Rust data, not a frozen ABI |
 | `contracts/user.rs` | Shared experimental entry/syscall constants for kernel and user runtime |
@@ -26,6 +28,7 @@ Omega's proof or authority guarantees.
 | `kernel/core/users/elf.rs` | Bounded, host-testable ELF64 preflight before physical admission |
 | `platform/drivers/uart_16550/` | Polling serial diagnostics, corresponding to `source/platform/drivers/uart_16550/` |
 | `platform/libraries/user-runtime/` | Entry stub, syscall wrappers and linker script; imports only shared contracts |
+| `distribution/programs/ipc/` | Client, echo service and hostile IPC fixture roles in a standalone ELF |
 | `distribution/programs/hello/` | Independently compiled `no_std` program exercising initialized data, BSS, yields and writes |
 | `kernel/arch/lib.rs` | Compile-time CPU backend selection and the boot-facing machine interface |
 | `kernel/arch/x86/` | Shared instructions and the selected PC platform's temporary PIC/PIT route |
@@ -70,11 +73,11 @@ The final command leaves the CPU idling with timer wakeups; Ctrl+C stops QEMU.
 Smoke mode has a 30-second boot deadline, requires ordered serial milestones,
 and checks the QEMU debug-exit status. A panic, missing milestone, reset or hang
 fails the run. Its debug-exit feature is not enabled for ordinary boots.
-The harness reads the one distribution profile, builds its selected user program
-as an ELF, then supplies that artifact to the UEFI build with `bundled-user`.
+The harness reads the one distribution profile, builds its named `user_programs`
+as ELFs, then supplies those artifacts to the UEFI build with `bundled-user`.
 Both builds use the selected debug/release profile. There is no filesystem read
 or executable download in the guest, and no Cargo dependency from boot to the
-distribution. The boot build tracks the selected artifact's path and contents
+distribution. The boot build tracks each selected artifact's path and contents
 through Cargo's build-script inputs.
 
 Exercise actual exception delivery separately:
@@ -105,7 +108,7 @@ cargo fmt --all -- --check
 cargo check-uefi
 cargo build-uefi
 cargo build --locked --package cathedral-hello --target x86_64-unknown-none
-cargo clippy --locked --package cathedral-hello --target x86_64-unknown-none -- -D warnings
+cargo clippy --locked --package cathedral-hello --package cathedral-ipc-lab --target x86_64-unknown-none -- -D warnings
 ```
 
 The default Cargo members are the host-testable contracts and core. Kernel crates
@@ -176,7 +179,14 @@ QEMU q35, one qemu64 CPU, software emulation, 128 MiB by default:
     state across yields. Exercise writes spanning page and syscall-size boundaries.
 22. Reject a malformed ELF after a valid peer was admitted, then fail at every
     frame-admission boundary for the ELF pair; require complete memory reclamation.
-23. Print `CATHEDRAL_RS_BOOT_OK`, then idle or terminate the smoke-test guest.
+23. Boot-grant request/reply endpoints to isolated ELF client/service instances;
+    repeat 32 echo exchanges in each of two sessions. Reject wrong rights,
+    foreign tickets and retired-session handles; require actual blocking.
+24. Revoke an endpoint or exit/fault its sender while its receiver is blocked;
+    require the corresponding error and complete heap/frame reclamation.
+25. Fill a bounded queue, reject bad/read-only/cross-page copyout destinations
+    and undersized receives without losing its message; drain after sender exit.
+26. Print `CATHEDRAL_RS_BOOT_OK`, then idle or terminate the smoke-test guest.
 
 Only ordinary conventional RAM is eligible. Loader memory, Boot Services memory,
 runtime memory, ACPI and MMIO remain reserved. Runtime-marked, hot-pluggable and
@@ -210,7 +220,7 @@ The CPU profile is qemu64, with no claim to optional virtualization exception
 semantics or physical-hardware coverage. Unsafe wrappers are boot-only lab
 mechanisms, not application APIs.
 
-The runtime supports a configurable limit of 1–64 trusted kernel tasks on one
+The runtime supports a configurable limit of 1â€“64 trusted kernel tasks on one
 CPU (default 8), plus an optional frame budget for stacks and their tables.
 `tasks::spawn(fn())` returns a `TaskId` or an admission error. IDs contain slot
 generations and are scoped to a session; reused slots do not revive old IDs.
@@ -240,7 +250,7 @@ containment on qemu64, not a claim of speculative-execution mitigation or full
 kernel W^X. Hardware rules follow the
 [Intel system programming manual](https://www.intel.com/content/www/us/en/developer/articles/technical/intel-sdm.html).
 
-The temporary ABI uses `int 0x80`, RAX for the call/result and RDI/RSI for two
+The temporary ABI uses `int 0x80`, RAX for the call/result and RDI/RSI/RDX for three
 arguments. Other saved registers and floating-point state survive calls and
 preemption. Initial registers are cleared apart from the explicit arguments;
 initial FP state is clean and I/O privilege is zero.
@@ -250,6 +260,10 @@ initial FP state is clean and I/O privilege is zero.
 | 0: diagnostic write | Address, byte count | Count copied, or negative error |
 | 1: yield | None | 0 |
 | 2: exit | Status | Task cannot resume; status recorded for boot |
+| 3: IPC handle | Local grant index | Already-installed ticket, or negative error |
+| 4: IPC send | Ticket, address, length | Bytes queued, or negative error; never blocks |
+| 5: IPC receive | Ticket, address, capacity | Bytes copied, or negative error; blocks on empty |
+| 6: IPC revoke | Revoke ticket | 0, or negative error |
 
 Writes accept at most 256 bytes within one known user page. The kernel validates
 the entire range and copies through its physical backing before calling the
@@ -263,7 +277,7 @@ check remain fatal. Exit/fault first restores the boot context, which retires th
 task's private tables and backing while peers remain runnable. Scheduling and
 syscall dispatch do not allocate or reclaim memory. Sessions preallocate their
 task/report storage; the scheduler's small arena still uses infallible allocation.
-The runtime has no dynamic linker, dynamic user spawn, IPC, admission proofs,
+The runtime has no dynamic linker, dynamic user spawn, admission proofs,
 device grants or production resource policy. Kernel and user workloads currently
 run in separate boot-managed sessions.
 
@@ -301,12 +315,65 @@ for proved OS components remains an owner-level policy question in
 [`OWNER_QUESTIONS.md`](../OWNER_QUESTIONS.md); these experiments do not freeze
 Cathedral's component model or shared ABI.
 
+## Capability IPC experiment
+
+The kernel owns at most four anonymous, one-way endpoints per user session.
+Each has one sender, one receiver, an optional revoke holder, and one queued
+message of at most 64 bytes. Boot explicitly assigns these grants to task slots;
+`IPC_HANDLE` enumerates only the caller's installed grants. There is no global
+lookup, runtime endpoint creation, delegation, transfer, manifest check, lease,
+persistent authority arena or production admission policy.
+
+Tickets combine a session epoch, owner slot and grant slot. The trapping task's
+kernel identity selects authority; user arguments cannot select another caller.
+Epochs never wrap during a boot, and task slots are not reused within a user
+session. Zero, foreign and retired-session tickets fail. Raw ticket bytes can
+be sent as ordinary data but confer no authority on the recipient. Tickets are
+not secret. They are boot-local; there is no cross-reboot stale-ticket guarantee.
+
+Send copies bytes into the kernel queue and returns `WOULD_BLOCK` (-11) if full.
+Receive validates the complete destination, including write permission, before
+consuming a message or parking. The raw ABI requires a buffer inside one user
+page; platform `ipc::Handle` wrappers stage through a 64-byte-aligned buffer so
+ordinary Rust slices may cross page boundaries. Empty messages are valid; even
+zero-capacity raw buffers require a valid writable address. A short destination
+returns `TOO_SMALL` (-90) and retains the queued message. Error precedence is
+handle/rights, length, address, then queue state.
+
+A receive on an empty live endpoint parks the task; sending wakes it and writes
+the result into its saved context. No callback allocates, frees or follows an
+unchecked virtual pointer. Pending operations store integer ranges, not Rust
+references into user memory. Mappings remain immutable throughout a session.
+When no task is ready, the boot context halts between timer ticks; there are no
+receive deadlines or deadlock recovery yet.
+
+Sender exit/fault allows already-accepted bytes to drain, then returns
+`PEER_CLOSED` (-32), waking a blocked receiver. Receiver exit discards queued
+bytes and subsequent sends fail closed. Revocation requires a separate right:
+it discards queued bytes, cancels pending receives with `REVOKED` (-125), and
+rejects later use. Wrong rights return `DENIED` (-13); invalid tickets return
+`BAD_HANDLE` (-9). Teardown retires the task's grants before reclaiming its
+address space; session destruction releases endpoint storage. Admission and
+reclamation have separate stack frames to keep debug construction temporaries
+within the existing 64-KiB boot stack.
+
+The distro fixture runs one ELF in separate client/service roles, tests stolen
+handle bits and a stale ticket from a prior session, and injects peer failures.
+Boot asserts actual blocking before reporting wakeup success. Host tests cover
+queue retention, admission limits, rights, epoch/caller checks and teardown;
+QEMU checks real syscall copy boundaries and returns to memory baselines.
+
+Copied queues and cancellation of already-parked receives deliberately remain
+experimental. The shared-region IPC design and its relationship to the
+capability lifecycle need reconciliation, recorded in
+[`OWNER_QUESTIONS.md`](../OWNER_QUESTIONS.md).
+
 ## Next bring-up steps
 
 - Define executable admission/provenance and explicit user-task supervision.
 - Add kernel-task arguments, join/result delivery and explicit ownership of task handles.
 - Discover ACPI/APIC topology and replace the temporary PIC/PIT timer route.
-- Add capability checks and shared-memory IPC.
+- Specify endpoint delivery/revocation semantics, then prototype shared-region IPC.
 
 Keep source transitions and invariants recognizable beside their Omega owners.
 Record deliberate divergences here and preserve test cases for eventual shared

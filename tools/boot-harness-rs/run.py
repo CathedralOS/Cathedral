@@ -37,6 +37,12 @@ MARKERS = (
     "Cathedral Rust lab: ELF instances exited [17, 29]",
     "Cathedral Rust lab: ELF instances exited [18, 30]",
     "Cathedral Rust lab: ELF rejection and",
+    "Cathedral Rust lab: IPC echo round=0 32 exchanges; bound rights and stale handles passed",
+    "Cathedral Rust lab: IPC echo round=1 32 exchanges; bound rights and stale handles passed",
+    "Cathedral Rust lab: IPC peer exit woke blocked receiver and reclaimed all memory",
+    "Cathedral Rust lab: IPC peer fault woke blocked receiver and reclaimed all memory",
+    "Cathedral Rust lab: IPC revocation woke blocked receiver and reclaimed all memory",
+    "Cathedral Rust lab: IPC backpressure and checked copyout preserved queued message; all memory reclaimed",
     "CATHEDRAL_RS_BOOT_OK",
 )
 
@@ -97,16 +103,16 @@ def main():
     if args.fault and not args.smoke:
         parser.error("--fault requires --smoke")
 
-    user = PROFILE['user_program']
-    user_cargo = ["cargo", "build", "--locked", "--package", user['package'],
-                  "--target", user['target'], "--target-dir", str(BUILD / "cargo")]
-    if args.release:
-        user_cargo.append("--release")
-    subprocess.run(user_cargo, cwd=WORKSPACE, check=True)
-    profile = "release" if args.release else "debug"
-    user_elf = BUILD / "cargo" / user['target'] / profile / user['package']
     environment = os.environ.copy()
-    environment['CATHEDRAL_USER_ELF'] = str(user_elf.resolve(strict=True))
+    profile = "release" if args.release else "debug"
+    for name, user in PROFILE['user_programs'].items():
+        user_cargo = ["cargo", "build", "--locked", "--package", user['package'],
+                      "--target", user['target'], "--target-dir", str(BUILD / "cargo")]
+        if args.release:
+            user_cargo.append("--release")
+        subprocess.run(user_cargo, cwd=WORKSPACE, check=True)
+        user_elf = BUILD / "cargo" / user['target'] / profile / user['package']
+        environment[f'CATHEDRAL_{name.upper()}_ELF'] = str(user_elf.resolve(strict=True))
 
     cargo = ["cargo", "build", "--locked", "--package", BOOT_PACKAGE,
              "--target", TARGET, "--target-dir", str(BUILD / "cargo")]
@@ -166,7 +172,7 @@ def main():
     # isa-debug-exit returns (guest_value << 1) | 1, so guest 0x10 means 33.
     if result.returncode != 33 or "CATHEDRAL_RS_PANIC" in serial:
         raise RuntimeError(f"Boot failed (QEMU exit {result.returncode}); logs: {output}")
-    print(f"PASS: expected {args.fault} exception" if args.fault else "PASS: boot, preemption, fault containment, static ELF programs and memory reclamation")
+    print(f"PASS: expected {args.fault} exception" if args.fault else "PASS: boot, preemption, fault containment, static ELF programs, capability IPC and memory reclamation")
     return 0
 
 

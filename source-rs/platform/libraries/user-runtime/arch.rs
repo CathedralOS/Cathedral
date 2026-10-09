@@ -7,13 +7,16 @@ global_asm!(include_str!("x86_64.S"));
 
 #[cfg(target_arch = "x86_64")]
 pub(super) fn call(number: u64, first: u64, second: u64) -> u64 {
+    call3(number, first, second, 0)
+}
+pub(super) fn call3(number: u64, first: u64, second: u64, third: u64) -> u64 {
     let result;
     // SAFETY: This library runs only in a Cathedral lab task. The installed gate
     // preserves every register except RAX and copies any write buffer before
     // returning. Compiler memory effects are retained across the boundary.
     unsafe {
         asm!("int 0x80", inlateout("rax") number => result, in("rdi") first,
-            in("rsi") second, options(nostack, preserves_flags));
+            in("rsi") second, in("rdx") third, options(nostack, preserves_flags));
     }
     result
 }

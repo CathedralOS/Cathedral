@@ -8,6 +8,7 @@ extern crate alloc;
 pub mod extent;
 #[allow(unsafe_code)]
 pub mod heap;
+pub mod ipc;
 pub mod scheduler;
 #[allow(unsafe_code)]
 pub mod tasks;

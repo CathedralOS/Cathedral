@@ -53,6 +53,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "cathedral-ipc-lab"
+version = "0.0.0"
+dependencies = [
+ "cathedral-contracts",
+ "cathedral-user-runtime",
+]
+
+[[package]]
 name = "cathedral-uart-16550"
 version = "0.0.0"
 
