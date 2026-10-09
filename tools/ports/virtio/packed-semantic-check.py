@@ -24,7 +24,7 @@ def main():
     print('Omega binary SHA-256:', hashlib.sha256(compiler.read_bytes()).hexdigest(), flush=True)
     subprocess.run([str(compiler), '--check', str(HERE/'packed/main.omg')], cwd=ROOT, check=True)
     source = (HERE/'packed/main.omg').read_text()
-    build = (HERE/'packed/build.omg').read_text().replace('../../../../source/libraries/virtio', str(ROOT/'source/libraries/virtio'))
+    build = (HERE/'packed/build.omg').read_text().replace('../../../../source/platform/libraries/virtio', str(ROOT/'source/platform/libraries/virtio'))
     with tempfile.TemporaryDirectory(prefix='cathedral-virtio-semantic-') as temporary:
         folder = Path(temporary)
         (folder/'build.omg').write_text(build)

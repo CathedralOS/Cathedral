@@ -1,6 +1,6 @@
 # Mid execution evidence
 
-The [port contract](../../../../../source/libraries/acpi/interpreter/execution/mid.PORT.md)
+The [port contract](../../../../../source/platform/libraries/acpi/interpreter/execution/mid.PORT.md)
 defines primary slicing/conversion behavior, owned expression results and atomic
 retirement. All 315 checked behavior/control pairs passed, as did the separate
 nine-pair focused run. Exact input/generated-source/build/entry/binary verification
@@ -19,7 +19,7 @@ python3 tools/ports/acpi/interpreter/mid-execution/check.py --runner /path/to/ca
 python3 tools/ports/acpi/interpreter/mid-execution/verify_record.py --require-binaries
 python3 tools/ports/acpi/interpreter/mid-execution/public/check.py --acpi-source /path/to/pinned/acpi
 python3 tools/ports/acpi/interpreter/mid-execution/public/check.py --verify --require-binary
-python3 tools/ports/inventory.py check --checkout reference_code/rust-osdev/acpi source/libraries/acpi/interpreter/execution/mid-inventory.json
+python3 tools/ports/inventory.py check --checkout reference_code/rust-osdev/acpi source/platform/libraries/acpi/interpreter/execution/mid-inventory.json
 ```
 
 The checker binds all ACPI Omega files, exact fixture dependencies, original and

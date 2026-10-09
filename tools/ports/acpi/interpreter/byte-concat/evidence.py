@@ -3,20 +3,20 @@
 import argparse,hashlib,importlib.util,json
 from pathlib import Path
 import fixtures
-ROOT=fixtures.ROOT;HERE=fixtures.HERE;UP=ROOT/'reference_code/rust-osdev/acpi';DEST=ROOT/'source/libraries/acpi/interpreter'
+ROOT=fixtures.ROOT;HERE=fixtures.HERE;UP=ROOT/'reference_code/rust-osdev/acpi';DEST=ROOT/'source/platform/libraries/acpi/interpreter'
 spec=importlib.util.spec_from_file_location('port_inventory',ROOT/'tools/ports/inventory.py');api=importlib.util.module_from_spec(spec);spec.loader.exec_module(api)
 def evidence():
  inv=api.snapshot(UP,fixtures.PIN,['src/aml/object.rs','src/aml/mod.rs'],'https://github.com/rust-osdev/acpi')
  inv['scope']='Bounded same-type concatenation components only; full Object/context/target operations remain pending.'
  for path,file in inv['files'].items():
   file['reason']='Complete source inventoried; this component implements only selected same-type concatenation expressions.'
-  file['targets']=[{'path':'source/libraries/acpi/interpreter/byte_concat.PORT.md','anchor':'## Source map'}]
+  file['targets']=[{'path':'source/platform/libraries/acpi/interpreter/byte_concat.PORT.md','anchor':'## Source map'}]
   for key,row in file['symbols'].items():
    name=key.split(':',1)[1];row['reason']='Outside this narrow component, or generic object/context/target behavior still pending.'
    names={'do_concat':'pub machine concat_integers'}
-   if name in names:row.update(targets=[{'path':'source/libraries/acpi/interpreter/byte_concat.omg','anchor':names[name]}],reason='Partial pure expression translation only. Generic Object resolution, reference semantics, target stores and/or method context retirement remain pending; no whole-operation translation claim.')
+   if name in names:row.update(targets=[{'path':'source/platform/libraries/acpi/interpreter/byte_concat.omg','anchor':names[name]}],reason='Partial pure expression translation only. Generic Object resolution, reference semantics, target stores and/or method context retirement remain pending; no whole-operation translation claim.')
    if name=='do_concat':
-    row['targets']=[{'path':'source/libraries/acpi/interpreter/byte_concat.omg','anchor':'pub machine '+operation}for operation in ['concat_integers','concat_buffers','concat_strings']]
+    row['targets']=[{'path':'source/platform/libraries/acpi/interpreter/byte_concat.omg','anchor':'pub machine '+operation}for operation in ['concat_integers','concat_buffers','concat_strings']]
     row['implemented_components']=['already-converted integer pair little-endian bytes','bounded same-type buffer append','bounded ASCII/NUL-free string extent append']
     row['remaining_components']=['generic implicit conversions','type-name formatting','transparent reference/object resolution','target Store/coercion','method result contribution and opcode retirement']
  inv['license_sha256']={p:hashlib.sha256((UP/p).read_bytes()).hexdigest()for p in ['LICENCE-MIT','LICENCE-APACHE','Cargo.toml']}

@@ -1,6 +1,6 @@
 # Equal-extent named Buffer Store checks
 
-The [port record](../../../../../source/libraries/acpi/aml/named-buffer-store.PORT.md)
+The [port record](../../../../../source/platform/libraries/acpi/aml/named-buffer-store.PORT.md)
 defines the supported equal-length 0..256 profile and the separate compatibility
 decision for differing Buffer lengths. These tools call the canonical
 `named_value_store::store_value`, never a test implementation.

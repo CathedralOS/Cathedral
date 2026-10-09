@@ -5,7 +5,7 @@ from pathlib import Path
 import fixtures
 HERE=fixtures.HERE;ROOT=fixtures.ROOT;CANONICAL=Path("/Users/zcanann/Documents/projects/Cathedral");SHARED=CANONICAL/'tools/ports/acpi/interpreter/execution'
 PIN='eaa7993a23623cd8fabf45350340479c5c9c7879'
-SOURCE=['source/libraries/acpi/aml/'+n for n in ['build.omg','model.omg','object_conversions.omg','object_numeric_strings.omg','bytes.omg','names.omg','namespace.omg','object_references.omg','byte_storage.omg']]+['source/libraries/acpi/interpreter/'+n for n in ['build.omg','integers.omg','conversions.omg','buffer_fields.omg','string_numbers.omg']]
+SOURCE=['source/platform/libraries/acpi/aml/'+n for n in ['build.omg','model.omg','object_conversions.omg','object_numeric_strings.omg','bytes.omg','names.omg','namespace.omg','object_references.omg','byte_storage.omg']]+['source/platform/libraries/acpi/interpreter/'+n for n in ['build.omg','integers.omg','conversions.omg','buffer_fields.omg','string_numbers.omg']]
 def sha(path):return hashlib.sha256(path.read_bytes()).hexdigest()
 def snapshot():
  paths=[ROOT/p for p in SOURCE]+list(HERE.glob('*.py'))+[HERE/'cases.json']+[SHARED/n for n in ['checked_runner.rs','runner.Cargo.lock']]
@@ -33,7 +33,7 @@ def main():
  rows=[r for r in fixtures.cases()if any(x in r['name']for x in a.match.split(','))];assert rows
  inputs=snapshot();runner=build_runner(a.omega_source.resolve());binary=sha(runner);records=[]
  with tempfile.TemporaryDirectory(prefix='cathedral-object-queries-')as d:
-  work=Path(d);(work/'build.omg').write_text('machine build(builder:&mut Build){builder.application("cathedral-object-queries");builder.freestanding=true;builder.depend_as("aml",Source::Path {location:"'+str(ROOT/'source/libraries/acpi/aml')+'"});builder.depend_as("integer_helpers",Source::Path {location:"'+str(ROOT/'source/libraries/acpi/interpreter')+'"});}')
+  work=Path(d);(work/'build.omg').write_text('machine build(builder:&mut Build){builder.application("cathedral-object-queries");builder.freestanding=true;builder.depend_as("aml",Source::Path {location:"'+str(ROOT/'source/platform/libraries/acpi/aml')+'"});builder.depend_as("integer_helpers",Source::Path {location:"'+str(ROOT/'source/platform/libraries/acpi/interpreter')+'"});}')
   for i in range(0,len(rows),a.batch):
    batch=rows[i:i+a.batch];text,names=source(batch);(work/'main.omg').write_text(text);assert sha(runner)==binary;start=time.monotonic()
    run=subprocess.run([str(runner),str(work/'main.omg'),str(work/'build'),*names],env=dict(os.environ,OMEGA_INTERP_STEP_BUDGET='10000000'),capture_output=True,text=True)

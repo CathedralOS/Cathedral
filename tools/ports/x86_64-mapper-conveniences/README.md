@@ -16,6 +16,6 @@ called and the fixed assertions. No translation root is installed.
 these positive fixtures have already passed. Every mutation changes an expected
 algorithm result and must fail under the unchanged success contract.
 
-See `source/libraries/x86_64/mapper-conveniences.PORT.md` for exact pin, source
+See `source/platform/libraries/x86_64/mapper-conveniences.PORT.md` for exact pin, source
 mapping, counts and authority boundaries. Route/core/PTE implementations remain
 owned by their existing modules.

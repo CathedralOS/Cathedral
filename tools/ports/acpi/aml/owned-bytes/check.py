@@ -5,7 +5,7 @@ from pathlib import Path
 import fixtures
 HERE=fixtures.HERE;ROOT=fixtures.ROOT
 SHARED=ROOT/'tools/ports/acpi/interpreter/execution'
-SOURCE_FILES=['source/libraries/acpi/aml/'+n for n in ['build.omg','model.omg','byte_storage.omg','object_references.omg','namespace.omg','names.omg','bytes.omg']]+['source/libraries/acpi/interpreter/'+n for n in ['build.omg','integers.omg','conversions.omg','buffer_fields.omg']]
+SOURCE_FILES=['source/platform/libraries/acpi/aml/'+n for n in ['build.omg','model.omg','byte_storage.omg','object_references.omg','namespace.omg','names.omg','bytes.omg']]+['source/platform/libraries/acpi/interpreter/'+n for n in ['build.omg','integers.omg','conversions.omg','buffer_fields.omg']]
 def snapshot():
  paths=[ROOT/name for name in SOURCE_FILES]+[HERE/name for name in ['fixtures.py','cases.json','check.py']]+[SHARED/'checked_runner.rs',SHARED/'runner.Cargo.lock']
  return {str(p.relative_to(ROOT)):hashlib.sha256(p.read_bytes()).hexdigest()for p in paths}
@@ -28,7 +28,7 @@ def main():
   for r in batch:
    for control in [False,True]:
     name='Suite::'+r['name']+('_control'if control else'_positive');text+=fixtures.render(r,control,name);selections.append(name+'='+str(int(control)))
-  (directory/'main.omg').write_text(text);(directory/'build.omg').write_text('machine build(builder:&mut Build){builder.application("cathedral-aml-owned-bytes-tests");builder.freestanding=true;builder.depend_as("aml",Source::Path {location:"'+str(ROOT/'source/libraries/acpi/aml')+'"});builder.depend_as("helpers",Source::Path {location:"'+str(ROOT/'source/libraries/acpi/interpreter')+'"});}\n')
+  (directory/'main.omg').write_text(text);(directory/'build.omg').write_text('machine build(builder:&mut Build){builder.application("cathedral-aml-owned-bytes-tests");builder.freestanding=true;builder.depend_as("aml",Source::Path {location:"'+str(ROOT/'source/platform/libraries/acpi/aml')+'"});builder.depend_as("helpers",Source::Path {location:"'+str(ROOT/'source/platform/libraries/acpi/interpreter')+'"});}\n')
   start=time.monotonic();process=subprocess.Popen([str(RUNNER),str(directory/'main.omg'),str(directory/'build'),*selections],stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True,env=dict(os.environ,OMEGA_INTERP_STEP_BUDGET='10000000'));lines=[]
   for line in process.stdout:print(line,end='',flush=True);lines.append(line)
   result=dict(cases=[r['name']for r in batch],suite_sha256=hashlib.sha256(text.encode()).hexdigest(),output=''.join(lines),seconds=round(time.monotonic()-start,3),exit=process.wait());results.append(result)

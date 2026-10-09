@@ -28,4 +28,4 @@ The production scan bodies also pass source/termination/index checking.
 `layout_local_projection.omg` consumes actual plans with local equivalent
 schemas. `layout_imported_probe.omg` reaches the generated-field privacy issue
 on the real imported schemas. Neither claims native Omega layout measurements.
-See `source/drivers/facts/x86_interrupts.PORT.md` for provenance and scope.
+See `source/platform/drivers/facts/x86_interrupts.PORT.md` for provenance and scope.

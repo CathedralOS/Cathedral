@@ -11,7 +11,7 @@ model.update({'ShareType':'I2c','ResourceUsage':'I2c','SlaveMode':'I2c','Address
 functions.update({'i2c_bus_descriptor':('resource_connections.omg','machine decode_serial_connection('),'serial_bus_descriptor':('resource_connections.omg','machine decode_serial_connection('),'gpio_connection_descriptor':('resource_connections.omg','machine decode_gpio_connection(')})
 for file in data['files'].values():
  file['disposition']='translated';file['reason']='All pin-supported families mapped to bounded decoders; declared profile/spec corrections documented. Other defined families remain explicit Unsupported, as the pin omits their semantics.'
- file['targets']=[{'path':'source/libraries/acpi/resources/resource_parse.omg','anchor':'pub machine parse_one('},{'path':'source/libraries/acpi/resources/resource_connections.omg','anchor':'pub machine parse_connection('}]
+ file['targets']=[{'path':'source/platform/libraries/acpi/resources/resource_parse.omg','anchor':'pub machine parse_one('},{'path':'source/platform/libraries/acpi/resources/resource_connections.omg','anchor':'pub machine parse_connection('}]
  for key,row in file['symbols'].items():
   line,name=key.split(':',1);line=int(line);target=None
   row['disposition']='pending';row['reason']='Outside first descriptor slice. Preserve full envelope as Unsupported; semantic decoder and policy remain pending.'
@@ -24,7 +24,7 @@ for file in data['files'].values():
   elif 637<=line<=643:target=('resource_model.omg','pub data I2c ')
   elif 737<=line<=745:target=('resource_model.omg','pub data Gpio ')
   if target:
-   row['disposition']='translated';row['reason']='Modified bounded data/decoder mapping; checked envelopes, semantic cases, retained source spans, strict template profile. See PORT.md for exact spec corrections and raw-fact boundary; full Rust allocation/object API is not reproduced.';row['targets']=[{'path':'source/libraries/acpi/resources/'+target[0],'anchor':target[1]}]
+   row['disposition']='translated';row['reason']='Modified bounded data/decoder mapping; checked envelopes, semantic cases, retained source spans, strict template profile. See PORT.md for exact spec corrections and raw-fact boundary; full Rust allocation/object API is not reproduced.';row['targets']=[{'path':'source/platform/libraries/acpi/resources/'+target[0],'anchor':target[1]}]
   if name in ['Resource','resource_descriptor_list','resource_descriptor']:
    row['reason']='All resource families implemented by this pin are represented: IRQ/DMA/IO/FixedMemory32/address/ExtendedIRQ/GPIO/SerialBus-I2C. Bounded spans replace allocations; strict envelope/source/EndTag and spec corrections documented. Other defined descriptors remain explicit Unsupported and are not claimed semantically decoded.'
    row['implemented_components']=['bounded descriptor envelope','strict template termination/checksum profile','IRQ','DMA','IO','FixedMemory32','Word/DWord/QWord address','ExtendedIRQ','GPIO interrupt and IO','SerialBus/I2C']
@@ -34,6 +34,6 @@ for file in data['files'].values():
    row['disposition']='omitted';row['reason']='Lexical scanner false positive inside unimplemented!("Reserved DMA transfer type preference") string, not a Rust declaration. Actual reserved code becomes BadEncoding in decode_dma.'
   if line>=826:
    row['disposition']='omitted';row['reason']='Upstream test/module body not copied. Original synthetic positive/malformed fixtures call the actual pinned public parser and actual Omega bodies; no firmware dump transcription.'
-path=ROOT/'source/libraries/acpi/resources/inventory.json';text=json.dumps(data,indent=2,sort_keys=True)+'\n'
+path=ROOT/'source/platform/libraries/acpi/resources/inventory.json';text=json.dumps(data,indent=2,sort_keys=True)+'\n'
 if '--check'in sys.argv:assert path.read_text()==text,'stale resources inventory'
 else:path.write_text(text)

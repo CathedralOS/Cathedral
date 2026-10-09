@@ -22,7 +22,7 @@ def main():
   if a.runner is None:subprocess.run(['cargo','build','--offline','--locked','--release','--manifest-path',str(root/'Cargo.toml'),'--target-dir',str(a.target_dir)],check=True,cwd=omega)
   runner=a.runner.resolve() if a.runner else a.target_dir/'release/cathedral-acpi-checked-runner';runner_before=hashlib.sha256(runner.read_bytes()).hexdigest();print('Harness SHA-256:',hashlib.sha256(runner.read_bytes()).hexdigest(),flush=True)
   build=(HERE/'build.omg').read_text()
-  for relative in ['../../../../../source/libraries/acpi/interpreter/execution','../../../../../source/libraries/acpi/interpreter','../../../../../source/libraries/acpi/aml']:build=build.replace(relative,str((HERE/relative).resolve()))
+  for relative in ['../../../../../source/platform/libraries/acpi/interpreter/execution','../../../../../source/platform/libraries/acpi/interpreter','../../../../../source/platform/libraries/acpi/aml']:build=build.replace(relative,str((HERE/relative).resolve()))
   (root/'build.omg').write_text(build)
   imports=[];bodies=[];selections=[]
   for row in rows:
@@ -40,7 +40,7 @@ def main():
   (root/'main.omg').write_text(''.join(imports+bodies))
   env=dict(os.environ,OMEGA_INTERP_STEP_BUDGET='10000000')
   paths=set()
-  for package in ['source/libraries/acpi/aml','source/libraries/acpi/interpreter']:
+  for package in ['source/platform/libraries/acpi/aml','source/platform/libraries/acpi/interpreter']:
    paths.update((fixtures.ROOT/package).rglob('*.omg'))
   paths.update(path for path in HERE.iterdir()if path.suffix in ['.py','.rs','.omg','.json']and path.name!='verification.json')
   before={str(path.relative_to(fixtures.ROOT)):hashlib.sha256(path.read_bytes()).hexdigest()for path in sorted(paths)}

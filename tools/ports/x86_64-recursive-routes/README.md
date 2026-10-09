@@ -1,6 +1,6 @@
 # Recursive mapper numeric witnesses
 
-See [the port record](../../../source/libraries/x86_64/recursive-routes.PORT.md).
+See [the port record](../../../source/platform/libraries/x86_64/recursive-routes.PORT.md).
 The reference copies pinned branch bodies into free functions over ordinary
 borrowed initialized snapshots. Instrumented wrappers execute actual PTE setters
 and PageTable::zero. It never constructs a RecursivePageTable or dereferences a

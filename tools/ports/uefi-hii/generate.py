@@ -187,7 +187,7 @@ for path,entry in manifest['files'].items():
         if name=='default':row.update(disposition='blocked',reason='omega:programmable-overlays: ImageOutputDest typed union default requires overlay representation; zero storage bytes remain constructible.',targets=[{'path':target,'anchor':'pub data ImageOutputDestWireStorage '}]);continue
         if name in {'storage','size','display'} and 'fn' in anchor:
             machine={'IfrDateFlags':'ifr_date_storage','IfrTimeFlags':'ifr_time_storage','IfrNumericFlags':'ifr_numeric_'+name}[owner]
-            row.update(disposition='translated',targets=[{'path':'source/libraries/uefi/hii_helpers.omg','anchor':'pub machine '+machine+'('}]);row.pop('reason',None);continue
+            row.update(disposition='translated',targets=[{'path':'source/platform/libraries/uefi/hii_helpers.omg','anchor':'pub machine '+machine+'('}]);row.pop('reason',None);continue
         if anchor.startswith('pub mod'):
             row.update(disposition='translated',targets=[{'path':target,'anchor':'module '+mod+';'}],reason='Rust submodule maps to separate hii_* source module.');continue
         if owner in blocked:

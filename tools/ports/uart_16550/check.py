@@ -24,7 +24,7 @@ def main():
     if source.count(marker) != 1:
         raise SystemExit('negative control requires one exact success assertion')
     build = (FIXTURE / 'build.omg').read_text()
-    for relative in ('../../../source/drivers/uart_16550', '../../../source/drivers/facts'):
+    for relative in ('../../../source/platform/drivers/uart_16550', '../../../source/platform/drivers/facts'):
         if relative not in build:
             raise SystemExit(f'negative control cannot locate fixture dependency {relative}')
         build = build.replace(relative, str((FIXTURE / relative).resolve()))

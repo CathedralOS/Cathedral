@@ -13,7 +13,7 @@ integration is claimed.
 - Exact pin: `c0facddf9ba42b74906a37fca2869e6cdbc8da6a`.
 - Preserved license: `MIT OR Apache-2.0`; Copyright (c) The uefi-rs contributors.
   [Third-party notices](../../../../THIRD_PARTY_NOTICES.md) retain the exact
-  [license texts](../../../../licenses/rust-osdev/uefi-rs/uefi-raw/).
+  [license texts](../../../../licenses/rust-osdev/uefi-rs/uefi-raw).
 - [UEFI 2.11 section 13, Media Access](https://uefi.org/specs/UEFI/2.11/13_Protocols_Media_Access.html):
   simple file system/file, disk, block, SCSI, ATA, and NVMe protocol shapes;
   sections 13.5, 13.7–13.10 specifically cross-check file/disk revisions and

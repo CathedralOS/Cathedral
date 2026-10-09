@@ -1,6 +1,6 @@
 # Pure descriptor evidence
 
-[Port record](../../../source/drivers/facts/x86_descriptors.PORT.md) contains exact
+[Port record](../../../source/platform/drivers/facts/x86_descriptors.PORT.md) contains exact
 scope, source map, provenance, representation and compiler limitations.
 
 ```sh

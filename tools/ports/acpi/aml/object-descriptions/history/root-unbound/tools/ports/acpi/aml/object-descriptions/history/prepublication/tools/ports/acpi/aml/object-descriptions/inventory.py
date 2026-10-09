@@ -13,10 +13,10 @@ def inventory():
    row['reason']='Outside this name-only component, or aggregate operation remains incomplete.'
    if key.split(':',1)[1]in ['do_concat','resolve_as_string']:
     row['reason']='Partial exact Table 19.31 labels for 11 represented nonbasic cases; basic value conversion, references/names, missing model cases, operand/target/context behavior remain pending.'
-    row['targets']=[{'path':'source/libraries/acpi/aml/object_descriptions.omg','anchor':'pub machine describe'}]
+    row['targets']=[{'path':'source/platform/libraries/acpi/aml/object_descriptions.omg','anchor':'pub machine describe'}]
  return value
 def main():
- p=argparse.ArgumentParser();p.add_argument('--check',action='store_true');a=p.parse_args();v=inventory();path=fixtures.ROOT/'source/libraries/acpi/aml/object-descriptions-inventory.json'
+ p=argparse.ArgumentParser();p.add_argument('--check',action='store_true');a=p.parse_args();v=inventory();path=fixtures.ROOT/'source/platform/libraries/acpi/aml/object-descriptions-inventory.json'
  if a.check:assert json.loads(path.read_text())==v
  else:path.write_text(json.dumps(v,indent=2)+'\n')
  print(api.check(v,UP,fixtures.ROOT))

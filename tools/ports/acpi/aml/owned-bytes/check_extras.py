@@ -3,10 +3,10 @@ import argparse,hashlib,json,os,subprocess,tempfile
 from pathlib import Path
 import extras,fixtures,check
 HERE=fixtures.HERE;ROOT=fixtures.ROOT
-p=argparse.ArgumentParser();p.add_argument('--const',dest='constant',action='store_true');a=p.parse_args();before=check.snapshot();source_files={str(p.relative_to(ROOT)):hashlib.sha256(p.read_bytes()).hexdigest()for base in ['aml','interpreter','pipeline']for p in(ROOT/'source/libraries/acpi'/base).rglob('*.omg')};rows=extras.cases();records=[]
+p=argparse.ArgumentParser();p.add_argument('--const',dest='constant',action='store_true');a=p.parse_args();before=check.snapshot();source_files={str(p.relative_to(ROOT)):hashlib.sha256(p.read_bytes()).hexdigest()for base in ['aml','interpreter','pipeline']for p in(ROOT/'source/platform/libraries/acpi'/base).rglob('*.omg')};rows=extras.cases();records=[]
 for name in ['extras.py','check_extras.py']:source_files[str((HERE/name).relative_to(ROOT))]=hashlib.sha256((HERE/name).read_bytes()).hexdigest()
 with tempfile.TemporaryDirectory(prefix='cathedral-owned-byte-extras-')as directory:
- work=Path(directory);(work/'build.omg').write_text('machine build(builder:&mut Build){builder.application("owned-byte-extras");builder.freestanding=true;builder.depend_as("aml",Source::Path {location:"'+str(ROOT/'source/libraries/acpi/aml')+'"});builder.depend_as("helpers",Source::Path {location:"'+str(ROOT/'source/libraries/acpi/interpreter')+'"});builder.depend_as("pipeline",Source::Path {location:"'+str(ROOT/'source/libraries/acpi/pipeline')+'"});}\n')
+ work=Path(directory);(work/'build.omg').write_text('machine build(builder:&mut Build){builder.application("owned-byte-extras");builder.freestanding=true;builder.depend_as("aml",Source::Path {location:"'+str(ROOT/'source/platform/libraries/acpi/aml')+'"});builder.depend_as("helpers",Source::Path {location:"'+str(ROOT/'source/platform/libraries/acpi/interpreter')+'"});builder.depend_as("pipeline",Source::Path {location:"'+str(ROOT/'source/platform/libraries/acpi/pipeline')+'"});}\n')
  if a.constant:
   rows=[r for r in rows if r['name']in ['length_buffer','string_index_write','field_revalidates_shrunken_backing']]
   for row in rows:

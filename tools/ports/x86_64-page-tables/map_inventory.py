@@ -3,16 +3,16 @@
 import json,sys
 from pathlib import Path
 HERE=Path(__file__).resolve().parent;ROOT=HERE.parents[2]
-p=ROOT/'source/libraries/x86_64/tables-inventory.json';doc=json.loads(p.read_text())
-base=json.loads((ROOT/'source/libraries/x86_64/page-entries-inventory.json').read_text())
-table='source/libraries/x86_64/page_tables.omg';translation='source/libraries/x86_64/translation.omg'
+p=ROOT/'source/platform/libraries/x86_64/tables-inventory.json';doc=json.loads(p.read_text())
+base=json.loads((ROOT/'source/platform/libraries/x86_64/page-entries-inventory.json').read_text())
+table='source/platform/libraries/x86_64/page_tables.omg';translation='source/platform/libraries/x86_64/translation.omg'
 for path,file in doc['files'].items():
  for key,row in file['symbols'].items():
   number,name=key.split(':',1);n=int(number);target=None;anchor=None
   if path.endswith('/page_table.rs'):
    original=base['files'][path]['symbols'][key]
    if original['disposition']!='pending':row.update(original);continue
-   if name=='PageTable':target='source/core/x86_page_table.omg';anchor='pub data X86PageTablePageCandidate {';reason='Canonical core candidate retained; pure helpers borrow its initialized array shape without creating a competing table carrier.'
+   if name=='PageTable':target='source/kernel/core/x86_page_table.omg';anchor='pub data X86PageTablePageCandidate {';reason='Canonical core candidate retained; pure helpers borrow its initialized array shape without creating a competing table carrier.'
    elif name=='ENTRY_COUNT':target=table;anchor='pub const ENTRY_COUNT:';reason='Fixed512entry geometry retained.'
    elif name in {'Output','fmt','default'}:row.update(disposition='omitted',reason='Rust presentation/index-trait/default scaffolding replaced by explicit array operations and new_table.');row.pop('targets',None);continue
    else:

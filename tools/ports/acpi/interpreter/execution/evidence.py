@@ -3,7 +3,7 @@
 import argparse,hashlib,importlib.util,json,subprocess
 from pathlib import Path
 import fixtures
-ROOT=fixtures.ROOT;UP=ROOT/'reference_code/rust-osdev/acpi';DEST=ROOT/'source/libraries/acpi/interpreter/execution'
+ROOT=fixtures.ROOT;UP=ROOT/'reference_code/rust-osdev/acpi';DEST=ROOT/'source/platform/libraries/acpi/interpreter/execution'
 PIN='257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5'
 spec=importlib.util.spec_from_file_location('port_inventory',ROOT/'tools/ports/inventory.py');api=importlib.util.module_from_spec(spec);spec.loader.exec_module(api)
 def evidence():
@@ -12,11 +12,11 @@ def evidence():
  mapping={'MethodContext':('execution_model.omg','pub data Frame'),'new_from_method':('frames.omg','pub machine new_frame'),'Block':('execution_model.omg','pub data Block'),'BlockKind':('control.omg','pub machine finish_block'),'OpInFlight':('execution_model.omg','pub data Operation'),'contribute_arg':('operands.omg','pub machine contribute_integer'),'start_new_block':('control.omg','pub machine enter_block'),'do_execute_method':('engine.omg','pub machine run_method'),'do_binary_maths':('retire.omg','pub machine retire_operation'),'do_unary_maths':('operator_specs.omg','pub machine compute_integer'),'do_logical_op':('operator_specs.omg','pub machine compute_integer'),'do_store':('targets.omg','pub machine store_target'),'do_copy_object':('targets.omg','pub machine copy_integer_target'),'do_from_bcd':('operator_specs.omg','pub machine compute_integer'),'do_to_bcd':('operator_specs.omg','pub machine compute_integer'),'opcode':('decode_execution.omg','pub machine decode_term'),'ResolveBehaviour':('decode_execution.omg','pub machine decode_target')}
  for path,file in value['files'].items():
   file['reason']='Bounded integer method profile only; complete generic interpreter/value/namespace semantics remain pending.'
-  file['targets']=[{'path':'source/libraries/acpi/interpreter/execution/PORT.md','anchor':'## Source and behavior map'}]
+  file['targets']=[{'path':'source/platform/libraries/acpi/interpreter/execution/PORT.md','anchor':'## Source and behavior map'}]
   for key,row in file['symbols'].items():
    row['reason']='Outside bounded integer execution profile, or only partial generic behavior implemented. Remains future work.'
    if path=='src/aml/mod.rs'and key.split(':',1)[1]in mapping:
-    target,anchor=mapping[key.split(':',1)[1]];row['targets']=[{'path':'source/libraries/acpi/interpreter/execution/'+target,'anchor':anchor}]
+    target,anchor=mapping[key.split(':',1)[1]];row['targets']=[{'path':'source/platform/libraries/acpi/interpreter/execution/'+target,'anchor':anchor}]
     row['reason']='Partial bounded integer/control/target translation; generic objects, references, dynamic namespace, package/field or external service behavior remains pending. See execution PORT source map.'
  value['test_sources']={}
  for path in ['tests/method.asl','tests/while.asl','tests/incdec.asl','tests/logical_not.asl']:

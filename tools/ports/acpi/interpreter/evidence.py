@@ -3,10 +3,10 @@
 import argparse,hashlib,importlib.util,json,subprocess
 from pathlib import Path
 import fixtures
-ROOT=fixtures.ROOT;HERE=fixtures.HERE;DEST=ROOT/'source/libraries/acpi/interpreter';UP=ROOT/'reference_code/rust-osdev/acpi'
+ROOT=fixtures.ROOT;HERE=fixtures.HERE;DEST=ROOT/'source/platform/libraries/acpi/interpreter';UP=ROOT/'reference_code/rust-osdev/acpi'
 spec=importlib.util.spec_from_file_location('port_inventory',ROOT/'tools/ports/inventory.py');api=importlib.util.module_from_spec(spec);spec.loader.exec_module(api)
 
-def target(file,anchor):return {'path':'source/libraries/acpi/interpreter/'+file,'anchor':anchor}
+def target(file,anchor):return {'path':'source/platform/libraries/acpi/interpreter/'+file,'anchor':anchor}
 def evidence():
  inv=api.snapshot(UP,fixtures.PIN,['src/aml/mod.rs','src/aml/object.rs'],'https://github.com/rust-osdev/acpi')
  inv['scope']='ACPI005 pure integer and initialized-byte helper slice; pending methods retain missing object/context/namespace behavior. No whole interpreter or full source-file translation claimed.'

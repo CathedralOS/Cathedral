@@ -2,7 +2,7 @@
 
 These fixtures exercise the bounded ObjectType SimpleName/Debug adapter through
 the actual loader and engine, plus exhaustive direct decoder state comparisons.
-The [port contract](../../../../../source/libraries/acpi/interpreter/execution/object-type.PORT.md)
+The [port contract](../../../../../source/platform/libraries/acpi/interpreter/execution/object-type.PORT.md)
 records admitted grammar, scope rules, failures and primary-spec/pin differences.
 
 There are 53 execution and 12 decoder behavior/control pairs. Controls change

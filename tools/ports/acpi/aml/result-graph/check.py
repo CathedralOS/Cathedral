@@ -8,10 +8,10 @@ RUNNER=Path('/tmp/cathedral-acpi-generic-checked/release/cathedral-acpi-checked-
 def sha(path):return hashlib.sha256(path.read_bytes()).hexdigest()
 def digest(value):return hashlib.sha256(value.encode()).hexdigest()
 def snapshot():
-    paths=list((ROOT/'source/libraries/acpi/aml').glob('*.omg'))+list((ROOT/'source/libraries/acpi/interpreter').glob('*.omg'))
+    paths=list((ROOT/'source/platform/libraries/acpi/aml').glob('*.omg'))+list((ROOT/'source/platform/libraries/acpi/interpreter').glob('*.omg'))
     paths+=list(HERE.glob('*.py'))+[HERE/'cases.json']
     return {str(p.relative_to(ROOT)):sha(p) for p in sorted(paths)}
-def build():return f'machine build(builder:&mut Build){{builder.package("result-graph-check");builder.freestanding=true;builder.depend_as("aml",Source::Path {{location:"{ROOT}/source/libraries/acpi/aml"}});}}\n'
+def build():return f'machine build(builder:&mut Build){{builder.package("result-graph-check");builder.freestanding=true;builder.depend_as("aml",Source::Path {{location:"{ROOT}/source/platform/libraries/acpi/aml"}});}}\n'
 def validate(output,selections):
     assert output.count('CHECKED authored package and dependency bodies;')==1
     rows=re.findall(r'^PASS (\S+) expected=(\d+) observed=(\d+) error=None usage=',output,re.M)

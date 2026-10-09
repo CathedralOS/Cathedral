@@ -1,6 +1,6 @@
 # Register operand witnesses
 
-See [the port record](../../../source/libraries/x86_64/register-operands.PORT.md).
+See [the port record](../../../source/platform/libraries/x86_64/register-operands.PORT.md).
 `generate_reference.py` extracts exact pure Rust fragments with CPU observations
 supplied as values and instruction tails removed. Actual live register APIs are
 never called. `cases.json` and `observations.json` retain 1,323 inputs/results.

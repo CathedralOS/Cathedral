@@ -16,13 +16,13 @@ trap 'rm -rf "$SCRATCH_DIR"' EXIT
 mkdir -p "$PROJECT_DIR" "$NATIVE_PROJECT_DIR"
 install -m 0644 "$CANARY_ROOT/main.omg" "$PROJECT_DIR/main.omg"
 install -m 0644 "$CANARY_ROOT/build.omg" "$PROJECT_DIR/build.omg"
-ln -s "$REPO_ROOT/source/core" "$PROJECT_DIR/core"
-ln -s "$REPO_ROOT/source/drivers/facts" "$PROJECT_DIR/facts"
+ln -s "$REPO_ROOT/source/kernel/core" "$PROJECT_DIR/core"
+ln -s "$REPO_ROOT/source/platform/drivers/facts" "$PROJECT_DIR/facts"
 CANARY_MAIN="$PROJECT_DIR/main.omg"
 install -m 0644 "$CANARY_ROOT/native-smoke.omg" "$NATIVE_PROJECT_DIR/main.omg"
 install -m 0644 "$CANARY_ROOT/build-native-smoke.omg" "$NATIVE_PROJECT_DIR/build.omg"
-ln -s "$REPO_ROOT/source/core" "$NATIVE_PROJECT_DIR/core"
-ln -s "$REPO_ROOT/source/drivers/facts" "$NATIVE_PROJECT_DIR/facts"
+ln -s "$REPO_ROOT/source/kernel/core" "$NATIVE_PROJECT_DIR/core"
+ln -s "$REPO_ROOT/source/platform/drivers/facts" "$NATIVE_PROJECT_DIR/facts"
 NATIVE_MAIN="$NATIVE_PROJECT_DIR/main.omg"
 
 run_omega() {

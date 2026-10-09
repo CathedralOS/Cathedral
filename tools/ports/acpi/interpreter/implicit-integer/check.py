@@ -73,9 +73,9 @@ def authored(rows):
   for control in [False,True]:
    name='Suite::'+row['name']+('_control'if control else'_positive');names.append(name+'='+str(int(control)));text+='machine '+name+'(&mut self)->i32{'+body(row,control)+'}\n'
  return text,names
-def build():return 'machine build(builder:&mut Build){builder.application("cathedral-implicit-integer-checks");builder.freestanding=true;builder.depend_as("interpreter",Source::Path {location:"'+str(ROOT/'source/libraries/acpi/interpreter')+'"});}'
+def build():return 'machine build(builder:&mut Build){builder.application("cathedral-implicit-integer-checks");builder.freestanding=true;builder.depend_as("interpreter",Source::Path {location:"'+str(ROOT/'source/platform/libraries/acpi/interpreter')+'"});}'
 def snapshot():
- paths=[HERE/'check.py',HERE/'cases.json']+[ROOT/'source/libraries/acpi/interpreter'/n for n in ['build.omg','integers.omg','implicit_integer.omg']]+[ROOT/'tools/ports/acpi/interpreter/execution'/n for n in ['checked_runner.rs','runner.Cargo.lock']]
+ paths=[HERE/'check.py',HERE/'cases.json']+[ROOT/'source/platform/libraries/acpi/interpreter'/n for n in ['build.omg','integers.omg','implicit_integer.omg']]+[ROOT/'tools/ports/acpi/interpreter/execution'/n for n in ['checked_runner.rs','runner.Cargo.lock']]
  return {str(p.relative_to(ROOT)):sha(p)for p in paths}
 def validate(out,names):
  assert out.count('CHECKED authored package and dependency bodies;')==1

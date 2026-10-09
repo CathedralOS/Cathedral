@@ -73,7 +73,7 @@ head+=['','pub const MXCSR_RESET_BITS: u32 = 8064;','pub const DR7_VALID_BITS: u
 # Validate the independent hand-derived mask against pinned flags.
 dr7=next(f['known_bits'] for f in flags if f['name']=='Dr7Flags')|0xffff0000
 assert dr7==4294913023,hex(dr7)
-emit(ROOT/'source/drivers/facts/x86_registers.omg','\n'.join(head))
+emit(ROOT/'source/platform/drivers/facts/x86_registers.omg','\n'.join(head))
 schema={'revision':PIN,'files':FILES,'flags':flags,'enums':enums,'msrs':msrs,'dr7_valid_bits':dr7}
 emit(HERE/'schema.json',json.dumps(schema,indent=2)+'\n')
 # Flags are public Rust observations; MSR one-field wrappers require explicit

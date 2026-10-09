@@ -13,7 +13,7 @@ parser.add_argument('--combined', action='store_true', help='reproduce current f
 args = parser.parse_args()
 with tempfile.TemporaryDirectory(prefix='cathedral-virtio-layout-') as directory:
     folder = Path(directory)
-    (folder/'build.omg').write_text((HERE/'build.omg').read_text().replace('../../../source/libraries/virtio', str(ROOT/'source/libraries/virtio')))
+    (folder/'build.omg').write_text((HERE/'build.omg').read_text().replace('../../../source/platform/libraries/virtio', str(ROOT/'source/platform/libraries/virtio')))
     source = (HERE/'main.omg').read_text() if args.combined else 'data Main {}\nmachine Main::main(&mut self) {}\n'
     (folder/'main.omg').write_text('use cathedral_virtio::'+args.module+';\n'+source)
     result = subprocess.run([str(args.omega.resolve()), '--check', str(folder/'main.omg')], cwd=ROOT)

@@ -3,7 +3,7 @@
 import argparse,hashlib,importlib.util,json
 from pathlib import Path
 HERE=Path(__file__).resolve().parent;ROOT=HERE.parents[2]
-DEST=ROOT/'source/libraries/x86_64';UP=ROOT/'reference_code/rust-osdev/x86_64'
+DEST=ROOT/'source/platform/libraries/x86_64';UP=ROOT/'reference_code/rust-osdev/x86_64'
 spec=importlib.util.spec_from_file_location('port_inventory',HERE.parent/'inventory.py')
 api=importlib.util.module_from_spec(spec);spec.loader.exec_module(api)
 def sha(path):return hashlib.sha256(path.read_bytes()).hexdigest()
@@ -11,7 +11,7 @@ def audit():
  historical=json.loads((DEST/'remaining-pure.json').read_text())
  profile=historical['profile_composition_review'];assert not profile['remaining'],'ordinary pure families remain'
  inventories=sorted(DEST.glob('*-inventory.json'))
- facts=[ROOT/'source/drivers/facts'/name for name in ['x86_descriptors-inventory.json','x86_interrupts-inventory.json','x86_registers-inventory.json']]
+ facts=[ROOT/'source/platform/drivers/facts'/name for name in ['x86_descriptors-inventory.json','x86_interrupts-inventory.json','x86_registers-inventory.json']]
  overlay={};sources={}
  for path in inventories+facts:
   value=json.loads(path.read_text());api.check(value,UP,ROOT)
@@ -29,7 +29,7 @@ def audit():
    if not item['translated_component_inventories']:
     assert (source,key)==('src/structures/gdt.rs','127:MAX'),item
     item['reason']='Impl const-generic parameter, represented by checked owned GDT capacity; not a missing declaration.'
-    item['evidence']='source/libraries/x86_64/gdt-storage.PORT.md';exceptions.append(item)
+    item['evidence']='source/platform/libraries/x86_64/gdt-storage.PORT.md';exceptions.append(item)
    else:anchors.append(item)
  completed={x['family']for x in historical['subsequent_completions']if x['stage']=='tested'}
  assert set(historical['remaining_families'])<=completed

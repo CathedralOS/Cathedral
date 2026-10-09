@@ -1,6 +1,6 @@
 # Canonical Field binding boundaries
 
-The [Bank/Index namespace milestone](../../../../../source/libraries/acpi/aml/field-indirect.PORT.md)
+The [Bank/Index namespace milestone](../../../../../source/platform/libraries/acpi/aml/field-indirect.PORT.md)
 adds explicit Region, Bank and Index identity alternatives. These fixtures check
 each alternative in both Integer widths. Direct and transparent ObjectType report
 5; scalar conversion, value admission, named Store and CopyObject fail through

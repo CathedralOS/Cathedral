@@ -5,8 +5,8 @@ from pathlib import Path
 HERE=Path(__file__).resolve().parent;ROOT=HERE.parents[4]
 subprocess.run(['python3',str(HERE/'verify_record.py')],cwd=ROOT,check=True)
 paths=set(p for p in HERE.rglob('*')if p.is_file()and'__pycache__'not in p.parts and p.name!='manifest.json')
-paths.update(ROOT/'source/libraries/acpi/aml'/n for n in ['model.omg','values.omg','object_references.omg','build.omg','byte_storage.omg','byte-storage.PORT.md','byte-storage-inventory.json','object-references.PORT.md','PORT.md'])
-paths.update(ROOT/n for n in ['source/libraries/acpi/pipeline/program.omg','tools/ports/acpi/aml/fixtures.py','tools/ports/acpi/aml/cases/string-validation.omg','tools/ports/acpi/aml/cases/values-buffer.omg','tools/ports/acpi/pipeline/fixtures.py','tools/ports/acpi/pipeline/cases.json','tools/ports/acpi/pipeline/main.omg'])
+paths.update(ROOT/'source/platform/libraries/acpi/aml'/n for n in ['model.omg','values.omg','object_references.omg','build.omg','byte_storage.omg','byte-storage.PORT.md','byte-storage-inventory.json','object-references.PORT.md','PORT.md'])
+paths.update(ROOT/n for n in ['source/platform/libraries/acpi/pipeline/program.omg','tools/ports/acpi/aml/fixtures.py','tools/ports/acpi/aml/cases/string-validation.omg','tools/ports/acpi/aml/cases/values-buffer.omg','tools/ports/acpi/pipeline/fixtures.py','tools/ports/acpi/pipeline/cases.json','tools/ports/acpi/pipeline/main.omg'])
 current={}
 for p in [HERE/'verification.json',HERE/'extras-verification.json',HERE/'const-verification.json',*sorted((HERE/'regressions').glob('*.json'))]:
  for rel,digest in json.loads(p.read_text())['source_sha256'].items():

@@ -11,7 +11,7 @@ Derived from [rust-osdev/uefi-rs](https://github.com/rust-osdev/uefi-rs) at
 `c0facddf9ba42b74906a37fca2869e6cdbc8da6a`, under **MIT OR Apache-2.0**.
 Copyright (c) The uefi-rs contributors. See the
 [retained notices](../../../../THIRD_PARTY_NOTICES.md) and
-[license texts](../../../../licenses/rust-osdev/uefi-rs/uefi-raw/).
+[license texts](../../../../licenses/rust-osdev/uefi-rs/uefi-raw).
 Modified for Cathedral: explicit Omega records, inert address slots, flattened
 constant names, and separate authored layout policies replace Rust repr,
 function-pointer, and macro surfaces. No upstream code is linked into Cathedral.

@@ -24,7 +24,7 @@ def migration(file):
  for path,sha in record['source_sha256'].items():assert check.sha(fixtures.ROOT/path)==sha,path
  # New unused sibling packages do not alter this retained dependency closure.
  added=set(module.snapshot())-set(record['source_sha256'])
- assert all(path.startswith('source/libraries/acpi/field_protocol/')for path in added),added
+ assert all(path.startswith('source/platform/libraries/acpi/field_protocol/')for path in added),added
  assert '/field_protocol'not in record['build_source']
  source,names=module.fixture();assert record['fixture_sha256']==digest(source)and record['selections']==names
  # Earlier migration receipts predate the explicit execution_root field.

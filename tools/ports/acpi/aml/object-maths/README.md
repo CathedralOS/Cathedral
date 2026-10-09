@@ -1,6 +1,6 @@
 # Direct canonical arithmetic checks
 
-The [port record](../../../../../source/libraries/acpi/aml/object-maths.PORT.md)
+The [port record](../../../../../source/platform/libraries/acpi/aml/object-maths.PORT.md)
 describes operand conversion, semantic math failures, detached division results
 and the direct-ID boundary. The 506 original cases have independent Python
 expectations, actual checked Omega bodies and changed expected-body controls.

@@ -18,6 +18,6 @@ are explicitly source checks, not replacements claiming compiler artifact
 contract evidence. The older initialization/root canaries currently stop at
 an external-symlink package rule before compilation.
 
-[PORT.md](../../../source/libraries/pic8259/PORT.md) records exact mappings,
+[PORT.md](../../../source/platform/libraries/pic8259/PORT.md) records exact mappings,
 intentional provider policy differences, test scope and results. No test grants
 PortIo, acknowledges a live interrupt, or executes privileged hardware code.

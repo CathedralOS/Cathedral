@@ -5,9 +5,9 @@ from pathlib import Path
 import generate,compact
 HERE=generate.HERE;ROOT=generate.ROOT;SHARED=ROOT/'tools/ports/acpi/interpreter/execution'
 def snapshot():
- sources={ROOT/'source/libraries/x86_64'/name for name in ['encrypted_frames.omg','pages.omg','addresses.omg','memory_encryption.omg','page_entries.omg','build.omg']}
+ sources={ROOT/'source/platform/libraries/x86_64'/name for name in ['encrypted_frames.omg','pages.omg','addresses.omg','memory_encryption.omg','page_entries.omg','build.omg']}
  sources.update(p for p in HERE.iterdir()if p.suffix in ['.py','.omg','.json','.jsonl','.toml','.lock']and'verification'not in p.name)
- sources.update([ROOT/'source/drivers/facts/build.omg',ROOT/'source/drivers/facts/x86_page_table_entry.omg']);sources.add(HERE/'src/main.rs');sources.update([SHARED/'checked_runner.rs',SHARED/'runner.Cargo.lock'])
+ sources.update([ROOT/'source/platform/drivers/facts/build.omg',ROOT/'source/platform/drivers/facts/x86_page_table_entry.omg']);sources.add(HERE/'src/main.rs');sources.update([SHARED/'checked_runner.rs',SHARED/'runner.Cargo.lock'])
  return {str(p.relative_to(ROOT)):hashlib.sha256(p.read_bytes()).hexdigest()for p in sorted(sources)}
 def reference_provenance():
  upstream=ROOT/'reference_code/rust-osdev/x86_64'

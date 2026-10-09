@@ -76,9 +76,9 @@ The deepest trust bottoms out in `{seed, checker, specs, hardware}`:
 
 *Source: `part_5_lifecycle/04_kernel_architecture` (the trust-base sharpening).*
 
-## 3. `source/core/`: the proved kernel, trusted in full
+## 3. `source/kernel/core/`: the proved kernel, trusted in full
 
-`source/core/` is the proved single-address-space core. It is small enough to
+`source/kernel/core/` is the proved single-address-space core. It is small enough to
 audit in its entirety, and its proofs live beside it. Members:
 
 - Capability grant arena, the live authority graph.
@@ -108,10 +108,10 @@ the platform, so the contract layer is trusted the way a constitution is: it
 governs by being the reference, and evolves only by the versioned-interface
 discipline.
 
-## 5. `source/services/`: the distributed minters
+## 5. `source/platform/services/`: the distributed minters
 
 The trusted core is distributed across resource owners: a small set of
-userspace services mint authority against the metal. Each lives in `services/`
+userspace services mint authority against the metal. Each lives in `platform/services/`
 for navigability but is TCB, and each is meant to stay "small enough to be
 TCB-worthy". The minimal-broker pattern (route tickets, never hold authority)
 shrinks several of these.
@@ -130,7 +130,7 @@ authority), `part_3_communication/01_networking`,
 `part_1_authority/08_wallet_and_credentials`,
 `part_7_governance/03_store_and_economic_control`.*
 
-## 6. `source/boot/`: measured, pre-capability
+## 6. `source/kernel/boot/`: measured, pre-capability
 
 The UEFI loader shim is tiny and measured. It is trusted because a compromised
 loader compromises the measured chain, but it hands off to the proved core the
@@ -169,7 +169,7 @@ stops at the first unproven or foreign node.
   entry cites the chapter that puts it there. When a chapter adds or removes a
   minter, update this map in the same change.
 - Each trusted service also declares its status in its own manifest. A service
-  in `services/` whose manifest claims minting authority but is not listed here
+  in `platform/services/` whose manifest claims minting authority but is not listed here
   is a discrepancy to resolve, not a silent grant.
 - The standing pressure is to shrink this list. Every minter that can be
   reduced to a ticket-router holding no authority itself should be, and moved

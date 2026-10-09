@@ -1,6 +1,6 @@
 # Normal Field write continuation evidence
 
-The [port contract](../../../../source/libraries/acpi/field_writes/transfer.PORT.md)
+The [port contract](../../../../source/platform/libraries/acpi/field_writes/transfer.PORT.md)
 defines one admitted payload, ordered requests and completion handling. The
 102-case corpus passes with exact source/binary verification, along with eight
 selected unchanged chunk/bulk regressions. Five focused pairs are retained
@@ -12,7 +12,7 @@ python3 tools/ports/acpi/field-write-transfer/verify_record.py tools/ports/acpi/
 python3 tools/ports/acpi/field-write-transfer/check.py --group transfer --batch-size 10 --workers 2
 python3 tools/ports/acpi/field-write-transfer/verify_record.py --require-binaries
 python3 tools/ports/acpi/field-write-transfer/verify_record.py tools/ports/acpi/field-write-transfer/regression-verification.json --require-binaries
-python3 tools/ports/inventory.py check --checkout reference_code/rust-osdev/acpi source/libraries/acpi/field_writes/inventory.json
+python3 tools/ports/inventory.py check --checkout reference_code/rust-osdev/acpi source/platform/libraries/acpi/field_writes/inventory.json
 ```
 
 The checker retains exact source/tool hashes, generated authored/driver/build

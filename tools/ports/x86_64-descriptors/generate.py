@@ -39,7 +39,7 @@ for c in constants:
   raw='LARGE_DESCRIPTOR_'+c['name'];head.append(f'const {raw}: u64 = ({c["value"] >> 32} as u64) << 32 | {c["value"] & 4294967295};')
  head.append(f'pub const DESCRIPTOR_{c["name"]}: DescriptorFlags = DescriptorFlags {{ raw: {raw} }};')
 head+=['pub const DESCRIPTOR_TABLE_GDT: u8 = 0;','pub const DESCRIPTOR_TABLE_IDT: u8 = 1;','pub const DESCRIPTOR_TABLE_LDT: u8 = 2;','pub const TSS_SIZE: u16 = 104;','pub const TSS_MIN_LIMIT: u16 = 103;','pub const IO_MAP_MAX_DISTANCE: u16 = 57343;','pub const IO_MAP_MAX_LENGTH: u16 = 8193;','pub const IO_MAP_OK: u8 = 0;','pub const IO_MAP_BEFORE_TSS: u8 = 1;','pub const IO_MAP_TOO_FAR: u8 = 2;','pub const IO_MAP_BAD_TERMINATOR: u8 = 3;','pub const IO_MAP_TOO_LONG: u8 = 4;','pub const IO_MAP_INVALID_BASE: u8 = 5;','']
-emit(ROOT/'source/drivers/facts/x86_descriptors.omg','\n'.join(head))
+emit(ROOT/'source/platform/drivers/facts/x86_descriptors.omg','\n'.join(head))
 plans=['// SPDX-License-Identifier: MIT OR Apache-2.0','// Requested hardware geometry; not an observation or authority grant.','module x86_descriptor_layouts;','use omega::language::core::layout;','']
 for name,row in records.items():
  plans+=['pub data '+name+'Layout {}','pub '+name+'Policy: '+name+'Layout satisfies Layout;','pub machine '+name+'Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {','    let mut entries: [FieldEntry; 64];']
@@ -52,7 +52,7 @@ for name,row in records.items():
   else:
    plans.append(f'    entries[{entry}] = FieldEntry {{ key: schema.fields[{i}].key, placement: FieldPlan::At {{ offset: {offset} }} }};');entry+=1
  plans+=['    Plan { entries: entries, entry_count: '+str(entry)+', size_fixed: '+str(row['size'])+', size_is_dynamic: false, align: '+str(row['align'])+' }','}','']
-emit(ROOT/'source/drivers/facts/x86_descriptor_layouts.omg','\n'.join(plans))
+emit(ROOT/'source/platform/drivers/facts/x86_descriptor_layouts.omg','\n'.join(plans))
 code=['// SPDX-License-Identifier: MIT OR Apache-2.0','// Literal little-endian codecs; no casts to pointers or inferred native ABI.','module descriptor_bytes;','use facts::x86_descriptors;','']
 for name,row in records.items():
  fields=[]
@@ -71,6 +71,6 @@ for name,row in records.items():
   expr='['+', '.join(values[f'{field}[{i}]'] for i in range(int(re.search(r'; (\d+)',ty)[1])))+']' if ty.startswith('[') else values[field]
   code.append(f'    let {field}: {ty} = {expr};')
  code+=['    x86_descriptors::'+name+' { '+', '.join(field+': '+field for field,_,_ in row['fields'])+' }','}','']
-emit(ROOT/'source/libraries/x86_64/descriptor_bytes.omg','\n'.join(code))
+emit(ROOT/'source/platform/libraries/x86_64/descriptor_bytes.omg','\n'.join(code))
 emit(HERE/'schema.json',json.dumps({'revision':PIN,'files':FILES,'constants':constants,'records':records},indent=2)+'\n')
 print(f'{len(constants)} descriptor constants; {len(records)} requested plans and byte-codec pairs')

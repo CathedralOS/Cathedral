@@ -1,0 +1,7 @@
+{
+  "name": "Cathedral Rust lab",
+  "stage": "early-boot",
+  "boot_entry": "kernel/boot/uefi/main.rs",
+  "boot_package": "cathedral-boot-uefi",
+  "target": "x86_64-unknown-uefi"
+}

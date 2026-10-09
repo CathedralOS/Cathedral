@@ -7,4 +7,4 @@ extras and negative controls; `--host-only` only reruns reference/freshness chec
 
 `generate.py` records actual public API observations in fresh child processes,
 not private-body mirrors. Full boundaries and authority limits are documented in
-[memory-encryption.PORT.md](../../../source/libraries/x86_64/memory-encryption.PORT.md).
+[memory-encryption.PORT.md](../../../source/platform/libraries/x86_64/memory-encryption.PORT.md).

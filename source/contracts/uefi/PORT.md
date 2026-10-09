@@ -13,7 +13,7 @@
   their pinned upstream counterparts and the specification references in
   [RECONCILIATION.md](RECONCILIATION.md).
 - Production inclusion: existing contracts are reached by
-  [`source/boot/uefi/build.omg`](../../boot/uefi/build.omg). This inventory adds
+  [`source/kernel/boot/uefi/build.omg`](../../kernel/boot/uefi/build.omg). This inventory adds
   no source declarations or build reach.
 - Remaining work: UEFI-001–009 cover the raw crate, layouts, values, operations,
   omitted files, test vectors and compiler verification; UEFI-010 owns producer
@@ -133,7 +133,7 @@ Cathedral policy. A raw address, memory descriptor or successful parsing result
 cannot establish firmware authority or RAM custody. Runtime Services have a
 separate lifetime after Boot Services end.
 
-Existing build reach is `source/boot/uefi` → `source/contracts/uefi`; the
+Existing build reach is `source/kernel/boot/uefi` → `source/contracts/uefi`; the
 calling-policy canary also consumes the contract. No new source enters these
 roots in this slice. No authority adapter, grants, hardware execution or
 producer/consumer integration is newly implemented or verified.

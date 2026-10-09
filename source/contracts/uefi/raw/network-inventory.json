@@ -88,7 +88,7 @@
           "reason": "Pure initialized-byte behavior; Rust core::net types replaced by fixed octets/IpOctets, with no raw pointer or unchecked union access.",
           "targets": [
             {
-              "path": "source/libraries/uefi/network_helpers.omg",
+              "path": "source/platform/libraries/uefi/network_helpers.omg",
               "anchor": "machine ip_new_v4("
             }
           ]
@@ -99,7 +99,7 @@
           "reason": "Pure initialized-byte behavior; Rust core::net types replaced by fixed octets/IpOctets, with no raw pointer or unchecked union access.",
           "targets": [
             {
-              "path": "source/libraries/uefi/network_helpers.omg",
+              "path": "source/platform/libraries/uefi/network_helpers.omg",
               "anchor": "machine ip_new_v6("
             }
           ]
@@ -110,7 +110,7 @@
           "reason": "Pure initialized-byte behavior; Rust core::net types replaced by fixed octets/IpOctets, with no raw pointer or unchecked union access.",
           "targets": [
             {
-              "path": "source/libraries/uefi/network_helpers.omg",
+              "path": "source/platform/libraries/uefi/network_helpers.omg",
               "anchor": "machine ip_into_octets("
             }
           ]
@@ -126,7 +126,7 @@
           "reason": "Pure initialized-byte behavior; Rust core::net types replaced by fixed octets/IpOctets, with no raw pointer or unchecked union access.",
           "targets": [
             {
-              "path": "source/libraries/uefi/network_helpers.omg",
+              "path": "source/platform/libraries/uefi/network_helpers.omg",
               "anchor": "machine ip_default("
             }
           ]
@@ -137,7 +137,7 @@
           "reason": "Pure initialized-byte behavior; Rust core::net types replaced by fixed octets/IpOctets, with no raw pointer or unchecked union access.",
           "targets": [
             {
-              "path": "source/libraries/uefi/network_helpers.omg",
+              "path": "source/platform/libraries/uefi/network_helpers.omg",
               "anchor": "machine ip_from_octets("
             }
           ]
@@ -148,7 +148,7 @@
           "reason": "Pure initialized-byte behavior; Rust core::net types replaced by fixed octets/IpOctets, with no raw pointer or unchecked union access.",
           "targets": [
             {
-              "path": "source/libraries/uefi/network_helpers.omg",
+              "path": "source/platform/libraries/uefi/network_helpers.omg",
               "anchor": "machine ip_new_v4("
             }
           ]
@@ -159,7 +159,7 @@
           "reason": "Pure initialized-byte behavior; Rust core::net types replaced by fixed octets/IpOctets, with no raw pointer or unchecked union access.",
           "targets": [
             {
-              "path": "source/libraries/uefi/network_helpers.omg",
+              "path": "source/platform/libraries/uefi/network_helpers.omg",
               "anchor": "machine ip_new_v6("
             }
           ]
@@ -170,7 +170,7 @@
           "reason": "Pure initialized-byte behavior; Rust core::net types replaced by fixed octets/IpOctets, with no raw pointer or unchecked union access.",
           "targets": [
             {
-              "path": "source/libraries/uefi/network_helpers.omg",
+              "path": "source/platform/libraries/uefi/network_helpers.omg",
               "anchor": "machine ip_new_v4("
             }
           ]
@@ -181,7 +181,7 @@
           "reason": "Pure initialized-byte behavior; Rust core::net types replaced by fixed octets/IpOctets, with no raw pointer or unchecked union access.",
           "targets": [
             {
-              "path": "source/libraries/uefi/network_helpers.omg",
+              "path": "source/platform/libraries/uefi/network_helpers.omg",
               "anchor": "machine ip_new_v6("
             }
           ]
@@ -214,7 +214,7 @@
           "reason": "Pure initialized-byte behavior; Rust core::net types replaced by fixed octets/IpOctets, with no raw pointer or unchecked union access.",
           "targets": [
             {
-              "path": "source/libraries/uefi/network_helpers.omg",
+              "path": "source/platform/libraries/uefi/network_helpers.omg",
               "anchor": "machine mac_octets("
             }
           ]
@@ -225,7 +225,7 @@
           "reason": "Pure initialized-byte behavior; Rust core::net types replaced by fixed octets/IpOctets, with no raw pointer or unchecked union access.",
           "targets": [
             {
-              "path": "source/libraries/uefi/network_helpers.omg",
+              "path": "source/platform/libraries/uefi/network_helpers.omg",
               "anchor": "machine mac_ethernet("
             }
           ]
@@ -236,7 +236,7 @@
           "reason": "Pure initialized-byte behavior; Rust core::net types replaced by fixed octets/IpOctets, with no raw pointer or unchecked union access.",
           "targets": [
             {
-              "path": "source/libraries/uefi/network_helpers.omg",
+              "path": "source/platform/libraries/uefi/network_helpers.omg",
               "anchor": "machine mac_from_ethernet("
             }
           ]
@@ -247,7 +247,7 @@
           "reason": "Pure initialized-byte behavior; Rust core::net types replaced by fixed octets/IpOctets, with no raw pointer or unchecked union access.",
           "targets": [
             {
-              "path": "source/libraries/uefi/network_helpers.omg",
+              "path": "source/platform/libraries/uefi/network_helpers.omg",
               "anchor": "machine ipv4_octets("
             }
           ]
@@ -258,7 +258,7 @@
           "reason": "Pure initialized-byte behavior; Rust core::net types replaced by fixed octets/IpOctets, with no raw pointer or unchecked union access.",
           "targets": [
             {
-              "path": "source/libraries/uefi/network_helpers.omg",
+              "path": "source/platform/libraries/uefi/network_helpers.omg",
               "anchor": "machine mac_ethernet("
             }
           ]
@@ -269,7 +269,7 @@
           "reason": "Pure initialized-byte behavior; Rust core::net types replaced by fixed octets/IpOctets, with no raw pointer or unchecked union access.",
           "targets": [
             {
-              "path": "source/libraries/uefi/network_helpers.omg",
+              "path": "source/platform/libraries/uefi/network_helpers.omg",
               "anchor": "machine mac_from_octets("
             }
           ]
@@ -351,7 +351,7 @@
           "reason": "Pure initialized-byte behavior; Rust core::net types replaced by fixed octets/IpOctets, with no raw pointer or unchecked union access.",
           "targets": [
             {
-              "path": "source/libraries/uefi/network_helpers.omg",
+              "path": "source/platform/libraries/uefi/network_helpers.omg",
               "anchor": "machine ipv4_from_octets("
             }
           ]
@@ -373,7 +373,7 @@
           "reason": "Pure initialized-byte behavior; Rust core::net types replaced by fixed octets/IpOctets, with no raw pointer or unchecked union access.",
           "targets": [
             {
-              "path": "source/libraries/uefi/network_helpers.omg",
+              "path": "source/platform/libraries/uefi/network_helpers.omg",
               "anchor": "machine ipv4_octets("
             }
           ]
@@ -417,7 +417,7 @@
           "reason": "Pure initialized-byte behavior; Rust core::net types replaced by fixed octets/IpOctets, with no raw pointer or unchecked union access.",
           "targets": [
             {
-              "path": "source/libraries/uefi/network_helpers.omg",
+              "path": "source/platform/libraries/uefi/network_helpers.omg",
               "anchor": "machine ipv4_from_octets("
             }
           ]
@@ -455,7 +455,7 @@
           "reason": "Pure initialized-byte behavior; Rust core::net types replaced by fixed octets/IpOctets, with no raw pointer or unchecked union access.",
           "targets": [
             {
-              "path": "source/libraries/uefi/network_helpers.omg",
+              "path": "source/platform/libraries/uefi/network_helpers.omg",
               "anchor": "machine ipv6_octets("
             }
           ]
@@ -466,7 +466,7 @@
           "reason": "Pure initialized-byte behavior; Rust core::net types replaced by fixed octets/IpOctets, with no raw pointer or unchecked union access.",
           "targets": [
             {
-              "path": "source/libraries/uefi/network_helpers.omg",
+              "path": "source/platform/libraries/uefi/network_helpers.omg",
               "anchor": "machine ipv6_from_octets("
             }
           ]
@@ -477,7 +477,7 @@
           "reason": "Pure initialized-byte behavior; Rust core::net types replaced by fixed octets/IpOctets, with no raw pointer or unchecked union access.",
           "targets": [
             {
-              "path": "source/libraries/uefi/network_helpers.omg",
+              "path": "source/platform/libraries/uefi/network_helpers.omg",
               "anchor": "machine ipv6_octets("
             }
           ]
@@ -488,7 +488,7 @@
           "reason": "Pure initialized-byte behavior; Rust core::net types replaced by fixed octets/IpOctets, with no raw pointer or unchecked union access.",
           "targets": [
             {
-              "path": "source/libraries/uefi/network_helpers.omg",
+              "path": "source/platform/libraries/uefi/network_helpers.omg",
               "anchor": "machine ipv6_from_octets("
             }
           ]
@@ -1613,7 +1613,7 @@
           "reason": "Zero/null default translated as initialized ordinary data; raw addresses confer no access.",
           "targets": [
             {
-              "path": "source/libraries/uefi/network_helpers.omg",
+              "path": "source/platform/libraries/uefi/network_helpers.omg",
               "anchor": "machine http_request_data_default("
             }
           ]
@@ -1838,7 +1838,7 @@
           "reason": "Zero/null default translated as initialized ordinary data; raw addresses confer no access.",
           "targets": [
             {
-              "path": "source/libraries/uefi/network_helpers.omg",
+              "path": "source/platform/libraries/uefi/network_helpers.omg",
               "anchor": "machine http_request_or_response_default("
             }
           ]
@@ -1904,7 +1904,7 @@
           "reason": "Zero/null default translated as initialized ordinary data; raw addresses confer no access.",
           "targets": [
             {
-              "path": "source/libraries/uefi/network_helpers.omg",
+              "path": "source/platform/libraries/uefi/network_helpers.omg",
               "anchor": "machine http_header_default("
             }
           ]
@@ -2668,7 +2668,7 @@
           "reason": "Zero/null default translated as initialized ordinary data; raw addresses confer no access.",
           "targets": [
             {
-              "path": "source/libraries/uefi/network_helpers.omg",
+              "path": "source/platform/libraries/uefi/network_helpers.omg",
               "anchor": "machine http_access_point_default("
             }
           ]
@@ -2723,7 +2723,7 @@
           "reason": "Zero/null default translated as initialized ordinary data; raw addresses confer no access.",
           "targets": [
             {
-              "path": "source/libraries/uefi/network_helpers.omg",
+              "path": "source/platform/libraries/uefi/network_helpers.omg",
               "anchor": "machine http_token_default("
             }
           ]
@@ -2800,7 +2800,7 @@
           "reason": "Zero/null default translated as initialized ordinary data; raw addresses confer no access.",
           "targets": [
             {
-              "path": "source/libraries/uefi/network_helpers.omg",
+              "path": "source/platform/libraries/uefi/network_helpers.omg",
               "anchor": "machine http_message_default("
             }
           ]
@@ -4124,7 +4124,7 @@
           "reason": "Pure behavior translated; optional addresses are owned snapshots, filters use fixed capacity/count and checked optional indexing; bootp_flags preserves pin explicitly.",
           "targets": [
             {
-              "path": "source/libraries/uefi/network_helpers.omg",
+              "path": "source/platform/libraries/uefi/network_helpers.omg",
               "anchor": "machine pxe_server_new("
             }
           ]
@@ -4135,7 +4135,7 @@
           "reason": "Pure behavior translated; optional addresses are owned snapshots, filters use fixed capacity/count and checked optional indexing; bootp_flags preserves pin explicitly.",
           "targets": [
             {
-              "path": "source/libraries/uefi/network_helpers.omg",
+              "path": "source/platform/libraries/uefi/network_helpers.omg",
               "anchor": "machine pxe_server_address("
             }
           ]
@@ -4745,7 +4745,7 @@
           "reason": "Pure behavior translated; optional addresses are owned snapshots, filters use fixed capacity/count and checked optional indexing; bootp_flags preserves pin explicitly.",
           "targets": [
             {
-              "path": "source/libraries/uefi/network_helpers.omg",
+              "path": "source/platform/libraries/uefi/network_helpers.omg",
               "anchor": "machine pxe_packet_bytes("
             }
           ]
@@ -4756,7 +4756,7 @@
           "reason": "PORT-BLOCKED[omega:plan-laid-public-fields]: borrowed packet projection via checked byte-region recast reaches private synthesized raw-field diagnostic; see layout_union_view.omg. No unchecked reference substitute.",
           "targets": [
             {
-              "path": "source/libraries/uefi/network_helpers.omg",
+              "path": "source/platform/libraries/uefi/network_helpers.omg",
               "anchor": "PORT-BLOCKED[omega:plan-laid-public-fields]"
             }
           ]
@@ -4767,7 +4767,7 @@
           "reason": "PORT-BLOCKED[omega:plan-laid-public-fields]: borrowed packet projection via checked byte-region recast reaches private synthesized raw-field diagnostic; see layout_union_view.omg. No unchecked reference substitute.",
           "targets": [
             {
-              "path": "source/libraries/uefi/network_helpers.omg",
+              "path": "source/platform/libraries/uefi/network_helpers.omg",
               "anchor": "PORT-BLOCKED[omega:plan-laid-public-fields]"
             }
           ]
@@ -4987,7 +4987,7 @@
           "reason": "Pure behavior translated; optional addresses are owned snapshots, filters use fixed capacity/count and checked optional indexing; bootp_flags preserves pin explicitly.",
           "targets": [
             {
-              "path": "source/libraries/uefi/network_helpers.omg",
+              "path": "source/platform/libraries/uefi/network_helpers.omg",
               "anchor": "machine pxe_bootp_ident("
             }
           ]
@@ -4998,7 +4998,7 @@
           "reason": "Pure behavior translated; optional addresses are owned snapshots, filters use fixed capacity/count and checked optional indexing; bootp_flags preserves pin explicitly.",
           "targets": [
             {
-              "path": "source/libraries/uefi/network_helpers.omg",
+              "path": "source/platform/libraries/uefi/network_helpers.omg",
               "anchor": "machine pxe_bootp_seconds("
             }
           ]
@@ -5009,7 +5009,7 @@
           "reason": "Pure behavior translated; optional addresses are owned snapshots, filters use fixed capacity/count and checked optional indexing; bootp_flags preserves pin explicitly.",
           "targets": [
             {
-              "path": "source/libraries/uefi/network_helpers.omg",
+              "path": "source/platform/libraries/uefi/network_helpers.omg",
               "anchor": "machine pxe_bootp_flags_upstream("
             }
           ]
@@ -5020,7 +5020,7 @@
           "reason": "Pure behavior translated; optional addresses are owned snapshots, filters use fixed capacity/count and checked optional indexing; bootp_flags preserves pin explicitly.",
           "targets": [
             {
-              "path": "source/libraries/uefi/network_helpers.omg",
+              "path": "source/platform/libraries/uefi/network_helpers.omg",
               "anchor": "machine pxe_dhcp_magik("
             }
           ]
@@ -5097,7 +5097,7 @@
           "reason": "Pure behavior translated; optional addresses are owned snapshots, filters use fixed capacity/count and checked optional indexing; bootp_flags preserves pin explicitly.",
           "targets": [
             {
-              "path": "source/libraries/uefi/network_helpers.omg",
+              "path": "source/platform/libraries/uefi/network_helpers.omg",
               "anchor": "machine pxe_transaction_id("
             }
           ]
@@ -5163,7 +5163,7 @@
           "reason": "Pure behavior translated; optional addresses are owned snapshots, filters use fixed capacity/count and checked optional indexing; bootp_flags preserves pin explicitly.",
           "targets": [
             {
-              "path": "source/libraries/uefi/network_helpers.omg",
+              "path": "source/platform/libraries/uefi/network_helpers.omg",
               "anchor": "machine pxe_ip_filter_new("
             }
           ]
@@ -5174,7 +5174,7 @@
           "reason": "Pure behavior translated; optional addresses are owned snapshots, filters use fixed capacity/count and checked optional indexing; bootp_flags preserves pin explicitly.",
           "targets": [
             {
-              "path": "source/libraries/uefi/network_helpers.omg",
+              "path": "source/platform/libraries/uefi/network_helpers.omg",
               "anchor": "machine pxe_ip_filter_address("
             }
           ]
@@ -6021,7 +6021,7 @@
           "reason": "Preserves all-ones unavailable sentinel; owned nominal optional replaces Rust Option.",
           "targets": [
             {
-              "path": "source/libraries/uefi/network_helpers.omg",
+              "path": "source/platform/libraries/uefi/network_helpers.omg",
               "anchor": "machine network_statistic_available("
             }
           ]
@@ -6032,7 +6032,7 @@
           "reason": "Preserves all-ones unavailable sentinel; owned nominal optional replaces Rust Option.",
           "targets": [
             {
-              "path": "source/libraries/uefi/network_helpers.omg",
+              "path": "source/platform/libraries/uefi/network_helpers.omg",
               "anchor": "machine network_statistic("
             }
           ]
@@ -6043,7 +6043,7 @@
           "reason": "Preserves all-ones unavailable sentinel; owned nominal optional replaces Rust Option.",
           "targets": [
             {
-              "path": "source/libraries/uefi/network_helpers.omg",
+              "path": "source/platform/libraries/uefi/network_helpers.omg",
               "anchor": "machine network_statistic_rx_total_frames("
             }
           ]
@@ -6054,7 +6054,7 @@
           "reason": "Preserves all-ones unavailable sentinel; owned nominal optional replaces Rust Option.",
           "targets": [
             {
-              "path": "source/libraries/uefi/network_helpers.omg",
+              "path": "source/platform/libraries/uefi/network_helpers.omg",
               "anchor": "machine network_statistic_rx_good_frames("
             }
           ]
@@ -6065,7 +6065,7 @@
           "reason": "Preserves all-ones unavailable sentinel; owned nominal optional replaces Rust Option.",
           "targets": [
             {
-              "path": "source/libraries/uefi/network_helpers.omg",
+              "path": "source/platform/libraries/uefi/network_helpers.omg",
               "anchor": "machine network_statistic_rx_undersize_frames("
             }
           ]
@@ -6076,7 +6076,7 @@
           "reason": "Preserves all-ones unavailable sentinel; owned nominal optional replaces Rust Option.",
           "targets": [
             {
-              "path": "source/libraries/uefi/network_helpers.omg",
+              "path": "source/platform/libraries/uefi/network_helpers.omg",
               "anchor": "machine network_statistic_rx_oversize_frames("
             }
           ]
@@ -6087,7 +6087,7 @@
           "reason": "Preserves all-ones unavailable sentinel; owned nominal optional replaces Rust Option.",
           "targets": [
             {
-              "path": "source/libraries/uefi/network_helpers.omg",
+              "path": "source/platform/libraries/uefi/network_helpers.omg",
               "anchor": "machine network_statistic_rx_dropped_frames("
             }
           ]
@@ -6109,7 +6109,7 @@
           "reason": "Preserves all-ones unavailable sentinel; owned nominal optional replaces Rust Option.",
           "targets": [
             {
-              "path": "source/libraries/uefi/network_helpers.omg",
+              "path": "source/platform/libraries/uefi/network_helpers.omg",
               "anchor": "machine network_statistic_rx_unicast_frames("
             }
           ]
@@ -6120,7 +6120,7 @@
           "reason": "Preserves all-ones unavailable sentinel; owned nominal optional replaces Rust Option.",
           "targets": [
             {
-              "path": "source/libraries/uefi/network_helpers.omg",
+              "path": "source/platform/libraries/uefi/network_helpers.omg",
               "anchor": "machine network_statistic_rx_broadcast_frames("
             }
           ]
@@ -6131,7 +6131,7 @@
           "reason": "Preserves all-ones unavailable sentinel; owned nominal optional replaces Rust Option.",
           "targets": [
             {
-              "path": "source/libraries/uefi/network_helpers.omg",
+              "path": "source/platform/libraries/uefi/network_helpers.omg",
               "anchor": "machine network_statistic_rx_multicast_frames("
             }
           ]
@@ -6153,7 +6153,7 @@
           "reason": "Preserves all-ones unavailable sentinel; owned nominal optional replaces Rust Option.",
           "targets": [
             {
-              "path": "source/libraries/uefi/network_helpers.omg",
+              "path": "source/platform/libraries/uefi/network_helpers.omg",
               "anchor": "machine network_statistic_rx_crc_error_frames("
             }
           ]
@@ -6164,7 +6164,7 @@
           "reason": "Preserves all-ones unavailable sentinel; owned nominal optional replaces Rust Option.",
           "targets": [
             {
-              "path": "source/libraries/uefi/network_helpers.omg",
+              "path": "source/platform/libraries/uefi/network_helpers.omg",
               "anchor": "machine network_statistic_rx_total_bytes("
             }
           ]
@@ -6186,7 +6186,7 @@
           "reason": "Preserves all-ones unavailable sentinel; owned nominal optional replaces Rust Option.",
           "targets": [
             {
-              "path": "source/libraries/uefi/network_helpers.omg",
+              "path": "source/platform/libraries/uefi/network_helpers.omg",
               "anchor": "machine network_statistic_tx_total_frames("
             }
           ]
@@ -6197,7 +6197,7 @@
           "reason": "Preserves all-ones unavailable sentinel; owned nominal optional replaces Rust Option.",
           "targets": [
             {
-              "path": "source/libraries/uefi/network_helpers.omg",
+              "path": "source/platform/libraries/uefi/network_helpers.omg",
               "anchor": "machine network_statistic_tx_good_frames("
             }
           ]
@@ -6208,7 +6208,7 @@
           "reason": "Preserves all-ones unavailable sentinel; owned nominal optional replaces Rust Option.",
           "targets": [
             {
-              "path": "source/libraries/uefi/network_helpers.omg",
+              "path": "source/platform/libraries/uefi/network_helpers.omg",
               "anchor": "machine network_statistic_tx_undersize_frames("
             }
           ]
@@ -6219,7 +6219,7 @@
           "reason": "Preserves all-ones unavailable sentinel; owned nominal optional replaces Rust Option.",
           "targets": [
             {
-              "path": "source/libraries/uefi/network_helpers.omg",
+              "path": "source/platform/libraries/uefi/network_helpers.omg",
               "anchor": "machine network_statistic_tx_oversize_frames("
             }
           ]
@@ -6230,7 +6230,7 @@
           "reason": "Preserves all-ones unavailable sentinel; owned nominal optional replaces Rust Option.",
           "targets": [
             {
-              "path": "source/libraries/uefi/network_helpers.omg",
+              "path": "source/platform/libraries/uefi/network_helpers.omg",
               "anchor": "machine network_statistic_tx_dropped_frames("
             }
           ]
@@ -6241,7 +6241,7 @@
           "reason": "Preserves all-ones unavailable sentinel; owned nominal optional replaces Rust Option.",
           "targets": [
             {
-              "path": "source/libraries/uefi/network_helpers.omg",
+              "path": "source/platform/libraries/uefi/network_helpers.omg",
               "anchor": "machine network_statistic_tx_unicast_frames("
             }
           ]
@@ -6252,7 +6252,7 @@
           "reason": "Preserves all-ones unavailable sentinel; owned nominal optional replaces Rust Option.",
           "targets": [
             {
-              "path": "source/libraries/uefi/network_helpers.omg",
+              "path": "source/platform/libraries/uefi/network_helpers.omg",
               "anchor": "machine network_statistic_tx_broadcast_frames("
             }
           ]
@@ -6263,7 +6263,7 @@
           "reason": "Preserves all-ones unavailable sentinel; owned nominal optional replaces Rust Option.",
           "targets": [
             {
-              "path": "source/libraries/uefi/network_helpers.omg",
+              "path": "source/platform/libraries/uefi/network_helpers.omg",
               "anchor": "machine network_statistic_tx_multicast_frames("
             }
           ]
@@ -6274,7 +6274,7 @@
           "reason": "Preserves all-ones unavailable sentinel; owned nominal optional replaces Rust Option.",
           "targets": [
             {
-              "path": "source/libraries/uefi/network_helpers.omg",
+              "path": "source/platform/libraries/uefi/network_helpers.omg",
               "anchor": "machine network_statistic_tx_crc_error_frames("
             }
           ]
@@ -6285,7 +6285,7 @@
           "reason": "Preserves all-ones unavailable sentinel; owned nominal optional replaces Rust Option.",
           "targets": [
             {
-              "path": "source/libraries/uefi/network_helpers.omg",
+              "path": "source/platform/libraries/uefi/network_helpers.omg",
               "anchor": "machine network_statistic_tx_total_bytes("
             }
           ]
@@ -6296,7 +6296,7 @@
           "reason": "Preserves all-ones unavailable sentinel; owned nominal optional replaces Rust Option.",
           "targets": [
             {
-              "path": "source/libraries/uefi/network_helpers.omg",
+              "path": "source/platform/libraries/uefi/network_helpers.omg",
               "anchor": "machine network_statistic_collisions("
             }
           ]
@@ -6307,7 +6307,7 @@
           "reason": "Preserves all-ones unavailable sentinel; owned nominal optional replaces Rust Option.",
           "targets": [
             {
-              "path": "source/libraries/uefi/network_helpers.omg",
+              "path": "source/platform/libraries/uefi/network_helpers.omg",
               "anchor": "machine network_statistic_unsupported_protocol("
             }
           ]
@@ -6329,7 +6329,7 @@
           "reason": "Preserves all-ones unavailable sentinel; owned nominal optional replaces Rust Option.",
           "targets": [
             {
-              "path": "source/libraries/uefi/network_helpers.omg",
+              "path": "source/platform/libraries/uefi/network_helpers.omg",
               "anchor": "machine network_statistic_rx_duplicated_frames("
             }
           ]
@@ -6340,7 +6340,7 @@
           "reason": "Preserves all-ones unavailable sentinel; owned nominal optional replaces Rust Option.",
           "targets": [
             {
-              "path": "source/libraries/uefi/network_helpers.omg",
+              "path": "source/platform/libraries/uefi/network_helpers.omg",
               "anchor": "machine network_statistic_rx_decrypt_error_frames("
             }
           ]
@@ -6351,7 +6351,7 @@
           "reason": "Preserves all-ones unavailable sentinel; owned nominal optional replaces Rust Option.",
           "targets": [
             {
-              "path": "source/libraries/uefi/network_helpers.omg",
+              "path": "source/platform/libraries/uefi/network_helpers.omg",
               "anchor": "machine network_statistic_tx_error_frames("
             }
           ]
@@ -6362,7 +6362,7 @@
           "reason": "Preserves all-ones unavailable sentinel; owned nominal optional replaces Rust Option.",
           "targets": [
             {
-              "path": "source/libraries/uefi/network_helpers.omg",
+              "path": "source/platform/libraries/uefi/network_helpers.omg",
               "anchor": "machine network_statistic_tx_retry_frames("
             }
           ]

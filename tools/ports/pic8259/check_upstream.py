@@ -7,7 +7,7 @@ import tempfile
 ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(ROOT/'tools/ports'))
 import inventory
-manifest = inventory.read_json(ROOT/'source/libraries/pic8259/inventory.json')
+manifest = inventory.read_json(ROOT/'source/platform/libraries/pic8259/inventory.json')
 inventory.check(manifest, ROOT/'reference_code/rust-osdev/pic8259')
 source = (ROOT/'reference_code/rust-osdev/pic8259/src/lib.rs').read_text()
 # Only crate framing changes; every controller implementation byte is retained.

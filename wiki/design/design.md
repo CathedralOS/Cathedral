@@ -128,7 +128,7 @@ The writing rules for every page in this wiki, including these chapters, live in
 
 ## Speculative
 
-Forward-looking explorations under [`../speculation/`](../speculation/). They are coherent visions to revisit, not committed design.
+Forward-looking explorations under [`../speculation/`](../speculation). They are coherent visions to revisit, not committed design.
 - [Future Browser Design](../speculation/future_browser.md) — the browser decomposed into OS primitives: Omega-IR web-artifacts, native-exe tabs in a sandbox-host gatekeeper, tiered fidelity (native on Cathedral, WASM on legacy), and runtime re-optimization via hot-swap.
 - [Code-Shipping Capability](../speculation/code_shipping_capability.md) — eBPF generalized: ship verified Omega IR to run outside your Matrix in a bounded capability context (next to a credential), checked by PCC. The stronger agent-credential model, and the same mechanism as the web-artifact.
 - [Network Trust Fabric](../speculation/network_trust_fabric.md) — capabilities replace the submit-a-secret web: prove-without-transmitting, key-not-name identity (petnames), the Warden (the OS capability wallet), cookies as durable capabilities. The residual is first-introduction (first-pin) plus recovery. The trust model the future browser runs on.

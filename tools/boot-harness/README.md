@@ -1,7 +1,7 @@
 # Boot Harness — build the UEFI app and boot it under QEMU/OVMF
 
 Host-side dev tool (never ships). Builds the Cathedral UEFI application
-([`source/boot/uefi`](../../source/boot/uefi)) and boots it under QEMU with OVMF
+([`source/kernel/boot/uefi`](../../source/kernel/boot/uefi)) and boots it under QEMU with OVMF
 (open-source UEFI firmware), so "does it print?" is one command.
 
 ## Status
@@ -12,7 +12,7 @@ memory over the 16550 serial driver, and idles with `hlt`.
 
 ## What it does
 
-1. **Build** `source/boot/uefi` → `BOOTX64.EFI` (the Uefi64 target is declared in
+1. **Build** `source/kernel/boot/uefi` → `BOOTX64.EFI` (the Uefi64 target is declared in
    that package's `build.omg`; the toolchain reads it).
 2. **Assemble an EFI System Partition** — a directory laid out as
    `esp/EFI/BOOT/BOOTX64.EFI`, the path UEFI firmware boots by convention.
@@ -23,6 +23,8 @@ Output goes to the serial console (`-serial stdio`), where the current milestone
 prints `Hello from Omega` and its owned-memory total before idling.
 
 ## Prerequisites
+
+- **Python 3.10+** for the Bash harness to read the distribution profile.
 
 - **QEMU** (`qemu-system-x86_64` on `PATH`).
   - Windows: install from qemu.org; add its folder to `PATH`.
@@ -43,6 +45,10 @@ prints `Hello from Omega` and its owned-memory total before idling.
   checkout with Cargo. Set `OMEGA_REPO` to use a checkout elsewhere.
 
 ## Run
+
+The harness reads `source/distribution/profile.json` for the boot entry and
+target. That file belongs to Cathedral's built-in distribution; image assembly
+stays in this host tool. See the [source layout](../../wiki/architecture/repository_layout.md).
 
 ```sh
 # bash / Git Bash / Linux

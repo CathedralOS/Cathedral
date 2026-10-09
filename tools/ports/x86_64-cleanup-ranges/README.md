@@ -8,4 +8,4 @@ verification stages.
 
 The source profile is a bounded resumable pure cursor over consistent snapshots.
 Exhaustion retains the next page; returned plans are never reclamation authority.
-See the [port record](../../../source/libraries/x86_64/cleanup-ranges.PORT.md).
+See the [port record](../../../source/platform/libraries/x86_64/cleanup-ranges.PORT.md).

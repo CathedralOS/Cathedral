@@ -20,7 +20,7 @@ def main():
     subprocess.run([str(compiler),'--check',str(HERE/'fixed_main.omg')],cwd=ROOT,check=True)
     rows=fixed_fixtures.cases();selected=[r for r in rows if args.match in r['name']]
     if not selected:raise SystemExit('No matching scenarios')
-    build=(HERE/'build.omg').read_text().replace('../../../source/libraries/acpi',str(ROOT/'source/libraries/acpi'))
+    build=(HERE/'build.omg').read_text().replace('../../../source/platform/libraries/acpi',str(ROOT/'source/platform/libraries/acpi'))
     groups=[];pending=[]
     for row in selected:
         if len(bytes.fromhex(row['bytes']))>128:

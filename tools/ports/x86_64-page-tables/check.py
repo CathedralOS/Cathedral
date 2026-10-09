@@ -8,11 +8,11 @@ def main():
  p=argparse.ArgumentParser();p.add_argument('--omega',type=Path,default=ROOT.parent/'Omega/target/release/omega');p.add_argument('--host-only',action='store_true');p.add_argument('--address-only',action='store_true');args=p.parse_args()
  run(sys.executable,HERE/'generate.py','--check')
  run(sys.executable,HERE/'map_inventory.py','--check')
- run(sys.executable,ROOT/'tools/ports/inventory.py','check',ROOT/'source/libraries/x86_64/tables-inventory.json','--checkout',ROOT/'reference_code/rust-osdev/x86_64')
+ run(sys.executable,ROOT/'tools/ports/inventory.py','check',ROOT/'source/platform/libraries/x86_64/tables-inventory.json','--checkout',ROOT/'reference_code/rust-osdev/x86_64')
  run('cargo','run','--quiet','--locked','--manifest-path',HERE/'Cargo.toml')
  if args.host_only:return
  compiler=args.omega.resolve();print('Omega SHA-256:',hashlib.sha256(compiler.read_bytes()).hexdigest(),flush=True)
- build=(HERE/'build.omg').read_text().replace('../../../source/libraries/x86_64',str(ROOT/'source/libraries/x86_64')).replace('../../../source/drivers/facts',str(ROOT/'source/drivers/facts'))
+ build=(HERE/'build.omg').read_text().replace('../../../source/platform/libraries/x86_64',str(ROOT/'source/platform/libraries/x86_64')).replace('../../../source/platform/drivers/facts',str(ROOT/'source/platform/drivers/facts'))
  def evaluate(body,mutation=None):
   if mutation:
    old,new=mutation;assert body.count(old)==1;body=body.replace(old,new)

@@ -7,7 +7,7 @@ HERE=Path(__file__).resolve().parent
 ROOT=HERE.parents[2];RAW=ROOT/'source/contracts/uefi/raw'
 path=RAW/'network-inventory.json';doc=json.loads(path.read_text())
 schema=json.loads((HERE/'schema.json').read_text());records={r['name']:r for r in schema['records']}
-raw='source/contracts/uefi/raw/network.omg';helper='source/libraries/uefi/network_helpers.omg';fixture='tools/ports/uefi-network/main.omg';probe='tools/ports/uefi-network/src/lib.rs'
+raw='source/contracts/uefi/raw/network.omg';helper='source/platform/libraries/uefi/network_helpers.omg';fixture='tools/ports/uefi-network/main.omg';probe='tools/ports/uefi-network/src/lib.rs'
 net_methods={28:'ipv4_octets',34:'ipv4_from_octets',40:'ipv4_octets',46:'ipv4_from_octets',73:'ipv6_octets',79:'ipv6_from_octets',85:'ipv6_octets',91:'ipv6_from_octets',156:'ip_new_v4',168:'ip_new_v6',185:'ip_into_octets',206:'ip_default',212:'ip_from_octets',221:'ip_new_v4',227:'ip_new_v6',233:'ip_new_v4',239:'ip_new_v6',267:'mac_octets',274:'mac_ethernet',283:'mac_from_ethernet',292:'mac_ethernet',299:'mac_from_octets'}
 net_tests={308:'TEST_IPV4',309:'TEST_IPV6',315:'test_ip_roundtrips',323:'test_ip_roundtrips',333:'test_ip_roundtrips',349:'test_mac_conversions',372:'test_promised_conversions',440:'test_flow_v4',441:'test_flow_v4',460:'test_flow_v4',486:'test_ip_roundtrips'}
 http_defaults={58:'http_access_point_default',74:'http_token_default',94:'http_message_default',113:'http_request_data_default',157:'http_request_or_response_default',172:'http_header_default'}

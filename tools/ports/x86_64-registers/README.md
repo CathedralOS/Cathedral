@@ -1,6 +1,6 @@
 # Pure x86 register evidence
 
-See [the port record](../../../source/drivers/facts/x86_registers.PORT.md) for
+See [the port record](../../../source/platform/drivers/facts/x86_registers.PORT.md) for
 scope, upstream source mapping, limitations and authority boundaries.
 
 ```sh

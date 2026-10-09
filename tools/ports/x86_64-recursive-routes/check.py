@@ -15,7 +15,7 @@ def main():
  omega=a.omega.resolve();print('Omega SHA256:',hashlib.sha256(omega.read_bytes()).hexdigest(),flush=True)
  if not a.controls_only:
   if a.route_batch is None:
-   for module in ['recursive_routes.omg','recursive_translation.omg']:run(omega,'--check',ROOT/'source/libraries/x86_64'/module)
+   for module in ['recursive_routes.omg','recursive_translation.omg']:run(omega,'--check',ROOT/'source/platform/libraries/x86_64'/module)
   for n,row in enumerate(f['routes']):
    if a.route_batch is None or a.route_batch==n:run(omega,'--check',HERE/row['path'])
   if a.route_batch is None:

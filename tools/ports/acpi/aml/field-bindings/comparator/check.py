@@ -22,8 +22,8 @@ def fixture():
     source+=var+'.space.objects[0]=Object {value:Value::FieldUnit {binding:FieldBinding::'+kind+' {'+payload+'},declaration:'+declaration+',field:'+field+'}};'
    source+='let same:bool=fx_store(&a,&b);transition same {true -> (0) _ -> (1)}}\n'
  return source,names
-def build():return 'machine build(builder:&mut Build){builder.package("field-binding-comparator");builder.freestanding=true;builder.depend_as("aml",Source::Path {location:"'+str(ROOT/'source/libraries/acpi/aml')+'"});}\n'
-def snapshot():return {str(p.relative_to(ROOT)):sha(p)for p in sorted([*(ROOT/'source/libraries/acpi/aml').glob('*.omg'),SHARED,HERE/'check.py'])}
+def build():return 'machine build(builder:&mut Build){builder.package("field-binding-comparator");builder.freestanding=true;builder.depend_as("aml",Source::Path {location:"'+str(ROOT/'source/platform/libraries/acpi/aml')+'"});}\n'
+def snapshot():return {str(p.relative_to(ROOT)):sha(p)for p in sorted([*(ROOT/'source/platform/libraries/acpi/aml').glob('*.omg'),SHARED,HERE/'check.py'])}
 def main():
  p=argparse.ArgumentParser(description=__doc__);p.add_argument('--verify',action='store_true');a=p.parse_args()
  binary=Path('/tmp/cathedral-acpi-generic-checked/release/cathedral-acpi-checked-runner');record_path=HERE/'checked-verification.json';source,names=fixture();before=snapshot();text=build();binary_hash=sha(binary)

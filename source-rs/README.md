@@ -10,31 +10,36 @@ Omega's proof or authority guarantees.
 
 | Path | Responsibility / Omega counterpart |
 | --- | --- |
-| `boot/uefi/main.rs` | Visible orchestration of firmware entry and post-handoff kernel startup |
-| `boot/uefi/firmware.rs` | UEFI crate adapter and memory-inventory policy |
-| `boot/uefi/memory.rs`, `handoff.rs` | Compose core frame policy with architecture mappings, then transfer boot state |
-| `boot/uefi/interrupts.rs`, `diagnostics.rs` | Interrupt bring-up and serial/fatal reporting |
-| `boot/uefi/heap.rs`, `tasks.rs`, `task_lifecycle.rs` | Heap installation, cooperative/preemptive workloads and dynamic lifecycle checks |
-| `boot/uefi/smoke.rs` | Test-only fault injection and QEMU result reporting |
+| `kernel/boot/uefi/main.rs` | Visible orchestration of firmware entry and post-handoff kernel startup |
+| `kernel/boot/uefi/firmware.rs` | UEFI crate adapter and memory-inventory policy |
+| `kernel/boot/uefi/memory.rs`, `handoff.rs` | Compose core frame policy with architecture mappings, then transfer boot state |
+| `kernel/boot/uefi/interrupts.rs`, `diagnostics.rs` | Interrupt bring-up and serial/fatal reporting |
+| `kernel/boot/uefi/heap.rs`, `tasks.rs`, `task_lifecycle.rs` | Heap installation, cooperative/preemptive workloads and dynamic lifecycle checks |
+| `kernel/boot/uefi/smoke.rs` | Test-only fault injection and QEMU result reporting |
 | `contracts/boot.rs` | Firmware-neutral memory handoff; experimental Rust data, not a frozen ABI |
-| `core/extent.rs` | Bootstrap frame accounting and reclaiming bitmap over usable RAM, corresponding to the resource work in `source/core/` |
-| `core/heap.rs`, `scheduler.rs`, `tasks.rs`, `tasks/` | IRQ-safe heap, pure scheduling policy, task admission and context/stack lifetime management |
-| `drivers/uart_16550/` | Polling serial diagnostics, corresponding to `source/drivers/uart_16550/` |
-| `arch/lib.rs` | Compile-time CPU backend selection and the boot-facing machine interface |
-| `arch/x86/` | Shared instructions and the selected PC platform's temporary PIC/PIT route |
-| `arch/x86_64/` | Paging, dynamic guarded stack mapping/teardown, CPU contexts, GDT/TSS/IDT and interrupt stubs, using the `x86_64` crate |
+| `kernel/core/extent.rs` | Bootstrap frame accounting and reclaiming bitmap over usable RAM, corresponding to the resource work in `source/kernel/core/` |
+| `kernel/core/heap.rs`, `scheduler.rs`, `tasks.rs`, `tasks/` | IRQ-safe heap, pure scheduling policy, task admission and context/stack lifetime management |
+| `platform/drivers/uart_16550/` | Polling serial diagnostics, corresponding to `source/platform/drivers/uart_16550/` |
+| `kernel/arch/lib.rs` | Compile-time CPU backend selection and the boot-facing machine interface |
+| `kernel/arch/x86/` | Shared instructions and the selected PC platform's temporary PIC/PIT route |
+| `kernel/arch/x86_64/` | Paging, dynamic guarded stack mapping/teardown, CPU contexts, GDT/TSS/IDT and interrupt stubs, using the `x86_64` crate |
+| `distribution/profile.json` | Built-in distribution composition consumed by the boot harness |
 | `../tools/boot-harness-rs/` | Host build, QEMU launch and smoke verification |
 
 Each crate uses `no_std`. Core policies are host-testable and have no firmware
 dependency. Core's hardware-facing modules explicitly opt into unsafe code and
-depend on `arch/`; drivers never depend on core internals. Boot assembles these
+depend on `kernel/arch/`; drivers never depend on core internals. Boot assembles these
 subsystems and the firmware adapter.
-The bootstrap UART currently runs privileged; user-mode drivers come later.
-The Rust-specific `arch/` layer groups hardware mechanisms that Omega currently
+The bootstrap UART currently runs privileged; user-mode drivers come later. Boot
+supplies its port operations; the platform driver imports no kernel package.
+`python tools/source-layout/check.py` checks these boundaries from the repository
+root. The single `distribution/` is replaceable by forks; platform and kernel do
+not import it.
+The Rust-specific `kernel/arch/` layer groups hardware mechanisms that Omega currently
 spreads across core providers, instruction contracts and libraries. Only x86-64
 boots today; shared x86 instructions do not imply a working 32-bit kernel.
 UEFI ABI definitions and Boot Services come from the upstream `uefi` crate.
-`foundation/`, `services/` and `applications/` appear when their first code lands,
+`foundation/`, `platform/services/` and distribution desktop packages appear when their first code lands,
 following the same rule as the Omega tree.
 
 ## Run

@@ -8,9 +8,9 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[2]
 sys.path.insert(0, str(HERE.parent))
 import inventory, rust_layout, vectors
-inventory.check(inventory.read_json(ROOT/'source/libraries/virtio/inventory.json'),
+inventory.check(inventory.read_json(ROOT/'source/platform/libraries/virtio/inventory.json'),
                 ROOT/'reference_code/rust-osdev/virtio-spec-rs', ROOT)
-expected = vectors.validate(inventory.read_json(ROOT/'source/libraries/virtio/packed.vectors.json'))
+expected = vectors.validate(inventory.read_json(ROOT/'source/platform/libraries/virtio/packed.vectors.json'))
 measured, artifact = rust_layout.measure(HERE/'Cargo.toml', HERE/'src/packed_probe.rs', 'CATHEDRAL_VIRTIO_PACKED', 'cathedral_virtio_layout_probe')
 if set(measured) != set(expected['measurements']): raise ValueError('packed measurement coverage differs')
 for key,value in measured.items():

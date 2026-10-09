@@ -1,12 +1,12 @@
 # UART audit developer fixtures
 
-See [`PORT.md`](../../../source/drivers/uart_16550/PORT.md) for scope, pin,
+See [`PORT.md`](../../../source/platform/drivers/uart_16550/PORT.md) for scope, pin,
 licensing, source map, deviations and explicit I/O boundaries.
 
 From Cathedral root:
 
 ```sh
-python3 tools/ports/inventory.py check --checkout reference_code/rust-osdev/uart_16550 --require-transcribed source/drivers/uart_16550/inventory.json
+python3 tools/ports/inventory.py check --checkout reference_code/rust-osdev/uart_16550 --require-transcribed source/platform/drivers/uart_16550/inventory.json
 python3 tools/ports/uart_16550/measure.py
 python3 tools/ports/uart_16550/check.py --omega /tmp/cathedral-omega-eaa7993/release/omega
 OMEGA_BIN=/tmp/cathedral-omega-eaa7993/release/omega tools/uart-16550-facts-canary/run.sh

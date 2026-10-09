@@ -3,11 +3,11 @@
 import re
 from pathlib import Path
 HERE=Path(__file__).resolve().parent;ROOT=HERE.parents[1]
-original=(ROOT/'source/drivers/facts/x86_page_table_entry.omg').read_text()
+original=(ROOT/'source/platform/drivers/facts/x86_page_table_entry.omg').read_text()
 fixture=(HERE/'main.omg').read_text()
 fields=lambda text,name:re.search(r'data '+name+r' \{([^}]+)\}',text)[1].split()
 assert fields(original,'X86PageTableEntry')==fields(fixture,'LocalPageTableEntry')
-policy=(ROOT/'source/drivers/facts/x86_page_table_layout.omg').read_text()
+policy=(ROOT/'source/platform/drivers/facts/x86_page_table_layout.omg').read_text()
 rows=re.findall(r'key: schema.fields\[(\d+)\].key,\s*placement: FieldPlan::Bits \{\s*container: (\d+),\s*container_width: (\d+),\s*destination_lsb: (\d+),\s*source_lsb: (\d+),\s*width: (\d+),',policy)
 expected=[(i,0,64,offset,0,width) for i,(offset,width) in enumerate([(i,1) for i in range(9)]+[(9,3),(12,40),(52,7),(59,4),(63,1)])]
 assert [tuple(map(int,row)) for row in rows]==expected

@@ -1,6 +1,6 @@
 # Direct Buffer/String Mid evidence
 
-See [the port scope](../../../../../source/libraries/acpi/aml/object-mid.PORT.md)
+See [the port scope](../../../../../source/platform/libraries/acpi/aml/object-mid.PORT.md)
 for primary slicing rules, bounded representation and deferred dispatch.
 
 ```sh

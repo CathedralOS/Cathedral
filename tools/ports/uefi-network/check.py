@@ -24,7 +24,7 @@ def main():
     if source.count(marker) != 1:
         raise SystemExit('negative control requires one exact success assertion')
     build = (FIXTURE / 'build.omg').read_text()
-    for relative in ('../../../source/contracts/uefi/raw', '../../../source/libraries/uefi'):
+    for relative in ('../../../source/contracts/uefi/raw', '../../../source/platform/libraries/uefi'):
         if relative not in build:
             raise SystemExit(f'negative control cannot locate fixture dependency {relative}')
         build = build.replace(relative, str((FIXTURE / relative).resolve()))

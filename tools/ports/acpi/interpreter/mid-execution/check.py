@@ -27,7 +27,7 @@ def text_sha(source):
 
 
 def snapshot():
-    paths=set((ROOT/'source/libraries/acpi').rglob('*.omg')) | set(HERE.glob('*.py')) | set(HERE.glob('*-cases.json')) | {HERE/'toolchain.json'}
+    paths=set((ROOT/'source/platform/libraries/acpi').rglob('*.omg')) | set(HERE.glob('*.py')) | set(HERE.glob('*-cases.json')) | {HERE/'toolchain.json'}
     paths |= {HERE.parent/'execution'/name for name in ['fixtures.py','checked_runner.rs','runner.Cargo.lock']}
     paths |= {fixtures.GENERIC/name for name in ['fixtures.py','decoder_fixtures.py','focused/bridge-atomicity/main.omg']}
     paths |= {fixtures.NAMED/'fixtures.py',HERE.parent/'to-integer-execution/fixtures.py',HERE.parent.parent/'pipeline/fixtures.py'}
@@ -52,7 +52,7 @@ def driver_source(groups):
 def build_text(root=ROOT):
     source = 'machine build(builder:&mut Build){builder.application("cathedral-mid-execution");builder.freestanding=true;'
     for alias, folder in [('aml','aml'),('execution','interpreter/execution'),('integer_helpers','interpreter'),('pipeline','pipeline')]:
-        source += 'builder.depend_as("'+alias+'",Source::Path {location:"'+str(root/'source/libraries/acpi'/folder)+'"});'
+        source += 'builder.depend_as("'+alias+'",Source::Path {location:"'+str(root/'source/platform/libraries/acpi'/folder)+'"});'
     return source+'}'
 
 

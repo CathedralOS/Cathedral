@@ -1,6 +1,6 @@
 # Explicit-profile mapper witnesses
 
-See [the port record](../../../source/libraries/x86_64/encrypted-mapping.PORT.md).
+See [the port record](../../../source/platform/libraries/x86_64/encrypted-mapping.PORT.md).
 The reference compares 159 actual public mapped operations against instrumented
 source-body mirrors and adds 159 explicitly adapted recursive scenarios. Eleven
 profiles run in separate processes. PTE operations and table clearing call the

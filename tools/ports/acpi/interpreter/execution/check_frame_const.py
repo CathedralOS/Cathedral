@@ -13,7 +13,7 @@ a = p.parse_args()
 compiler = a.omega.resolve()
 print('Omega SHA-256:', hashlib.sha256(compiler.read_bytes()).hexdigest(), flush=True)
 build = (fixtures.HERE / 'build.omg').read_text()
-for relative in ['../../../../../source/libraries/acpi/interpreter/execution', '../../../../../source/libraries/acpi/interpreter', '../../../../../source/libraries/acpi/aml']:
+for relative in ['../../../../../source/platform/libraries/acpi/interpreter/execution', '../../../../../source/platform/libraries/acpi/interpreter', '../../../../../source/platform/libraries/acpi/aml']:
     build = build.replace(relative, str((fixtures.HERE / relative).resolve()))
 source = (fixtures.HERE / 'frame-const.omg').read_text()
 for control in [False, True]:

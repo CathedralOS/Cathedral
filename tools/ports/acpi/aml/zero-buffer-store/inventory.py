@@ -24,9 +24,9 @@ def main():
             entry['reason'] = 'Outside the zero-length direct named Buffer conversion Store component; aggregate behavior remains pending.'
     for path, key in [('src/aml/mod.rs','2406:do_store'), ('src/aml/object.rs','317:replace_with_implicit_casting')]:
         entry = value['files'][path]['symbols'][key]
-        entry['targets'] = [dict(path='source/libraries/acpi/aml/named_value_store.omg', anchor=anchor)
+        entry['targets'] = [dict(path='source/platform/libraries/acpi/aml/named_value_store.omg', anchor=anchor)
                             for anchor in ['pub machine store_value(', 'pub machine store_integer(', 'machine prepare_integer(']]
-        entry['targets'].append(dict(path='source/libraries/acpi/aml/buffer_target_values.omg', anchor='pub machine prepare_buffer_extent('))
+        entry['targets'].append(dict(path='source/platform/libraries/acpi/aml/buffer_target_values.omg', anchor='pub machine prepare_buffer_extent('))
         entry['note'] = ('Partial zero-length Buffer target conversion: Integer scalar/object and fully admitted String sources '
                          'publish an empty owned Buffer atomically without allocation; complete source/destination identity retained. '
                          'Positive-target empty String precedence and unequal same-type Buffer extent remain separate decisions.')
@@ -37,7 +37,7 @@ def main():
     value['scope'] = {'target_extent': 0, 'sources': ['scalar Integer', 'object Integer', 'empty/nonempty String'],
                       'positive_target_empty_string': 'excluded pending conversion-special-case versus destination-extent precedence',
                       'unequal_buffers': 'existing separately documented compatibility decision unchanged'}
-    target = ROOT/'source/libraries/acpi/aml/zero-buffer-store-inventory.json'
+    target = ROOT/'source/platform/libraries/acpi/aml/zero-buffer-store-inventory.json'
     text = json.dumps(value, indent=2, sort_keys=True)+'\n'
     if args.check:
         assert target.read_text() == text

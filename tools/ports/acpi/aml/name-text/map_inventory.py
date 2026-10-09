@@ -12,9 +12,9 @@ def main():
  for key,symbol in entry['symbols'].items():
   symbol['reason']='Outside this textual-conversion slice; no whole namespace completion claim.'
   if key in mappings:
-   file,anchor,reason=mappings[key];symbol.update(disposition='translated',reason=reason,targets=[dict(path='source/libraries/acpi/aml/'+file,anchor=anchor)])
+   file,anchor,reason=mappings[key];symbol.update(disposition='translated',reason=reason,targets=[dict(path='source/platform/libraries/acpi/aml/'+file,anchor=anchor)])
   elif key in ['617:fmt','688:fmt']:symbol.update(disposition='omitted',reason='Rust Formatter/Debug integration is not a pure ASL conversion API; ordinary initialized text is supplied by format.')
- path=ROOT/'source/libraries/acpi/aml/name-text-inventory.json';text=json.dumps(value,indent=2,sort_keys=True)+'\n'
+ path=ROOT/'source/platform/libraries/acpi/aml/name-text-inventory.json';text=json.dumps(value,indent=2,sort_keys=True)+'\n'
  if a.check:assert path.read_text()==text
  else:path.write_text(text)
  result=mod.check(value,checkout,repository=ROOT);print(result)

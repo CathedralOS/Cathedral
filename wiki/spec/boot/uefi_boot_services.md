@@ -142,9 +142,9 @@ occurrence-scoped correspondence defined by the entry-handoff contract.
 - The machine-readable UEFI shapes and function boundaries are in
   [`source/contracts/uefi`](../../../source/contracts/uefi/boot_services.omg).
 - The checked transaction and failure paths are in
-  [`source/boot/uefi/own_machine.omg`](../../../source/boot/uefi/own_machine.omg).
+  [`source/kernel/boot/uefi/own_machine.omg`](../../../source/kernel/boot/uefi/own_machine.omg).
 - Current implementation coverage is summarized by the
-  [boot charter](../../../source/boot/CHARTER.md).
+  [boot charter](../../../source/kernel/boot/CHARTER.md).
 
 Generated build reports are evidence for a particular build, not an additional
 source of specification rules.

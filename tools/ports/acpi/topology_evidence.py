@@ -3,7 +3,7 @@
 import argparse,json
 from fixed_model import ROOT,UP,PIN
 from header_evidence import api,translated,omitted
-DEST=ROOT/'source/libraries/acpi'
+DEST=ROOT/'source/platform/libraries/acpi'
 
 def evidence():
  inv=api.snapshot(UP,PIN,['src/platform/mod.rs','src/platform/interrupt.rs','src/platform/pci.rs'],'https://github.com/rust-osdev/acpi')

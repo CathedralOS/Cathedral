@@ -171,7 +171,7 @@ for path,entry in manifest['files'].items():
         line,name=key.split(':',1);anchor=row['anchor']
         if name in ['default','length']:
             machine={'default':'graphics_output_mode_default','length':'device_path_length'}[name]
-            row.update(disposition='translated',targets=[{'path':'source/libraries/uefi/console_helpers.omg','anchor':'pub machine '+machine+'('}]);row.pop('reason',None);continue
+            row.update(disposition='translated',targets=[{'path':'source/platform/libraries/uefi/console_helpers.omg','anchor':'pub machine '+machine+'('}]);row.pop('reason',None);continue
         if name=='_':
             row.update(disposition='omitted',reason={'default':'Rust Default ergonomic constructor; raw zero fields remain representable; no live behavior copied.', 'length':'Translated pure length decode is tracked in console_helpers.omg and its fixture cases.', '_':'Compile-time ABI assertions retained as measured geometry vectors.'}[name])
             continue

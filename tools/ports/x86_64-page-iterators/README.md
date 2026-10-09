@@ -39,7 +39,7 @@ compiler/runner hashes, generated-suite hashes and full output. The source
 closure includes the unchanged `encrypted_frames::IteratorResult` declaration
 used by this slice. The virtual machines do not invoke encryption operations.
 No record demonstrates native code generation, hardware access or a universal
-proof. The [port report](../../../source/libraries/x86_64/page-iterators.PORT.md)
+proof. The [port report](../../../source/platform/libraries/x86_64/page-iterators.PORT.md)
 records the actual completed stages and the immutable upstream source inventory.
 
 For a pin update, inspect the full PageRange/Inclusive methods and their ordinary

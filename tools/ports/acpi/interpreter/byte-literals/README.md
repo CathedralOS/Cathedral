@@ -1,7 +1,7 @@
 # Standalone byte literal preflight proposal
 
 The sole new Omega implementation is
-`source/libraries/acpi/interpreter/execution/byte_literals.omg`. This published
+`source/platform/libraries/acpi/interpreter/execution/byte_literals.omg`. This published
 helper has no executor dispatch integration. It does not change the canonical
 model, parser, other helpers or package builds. The future executor decides
 contribution, cursor advancement, budgets and target publication. These tests

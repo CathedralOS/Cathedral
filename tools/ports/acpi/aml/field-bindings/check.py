@@ -8,7 +8,7 @@ def sha(path):return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 def digest(text):return hashlib.sha256(text.encode()).hexdigest()
 def snapshot():
  paths=set()
- for folder in ['source/libraries/acpi/aml','source/libraries/acpi/interpreter','source/libraries/acpi/interpreter/execution']:
+ for folder in ['source/platform/libraries/acpi/aml','source/platform/libraries/acpi/interpreter','source/platform/libraries/acpi/interpreter/execution']:
   paths.update((ROOT/folder).glob('*.omg'))
  paths.update(p for p in HERE.iterdir()if p.suffix in ['.py','.omg','.txt'])
  paths.add(HERE.parent/'field-namespace/fixtures.py')
@@ -16,7 +16,7 @@ def snapshot():
  return {str(p.relative_to(ROOT)):sha(p)for p in sorted(paths)}
 def build():
  text='machine build(builder:&mut Build){builder.package("field-binding-boundaries");builder.freestanding=true;'
- for alias,folder in [('aml','aml'),('execution','interpreter/execution'),('integers','interpreter')]:text+='builder.depend_as("'+alias+'",Source::Path {location:"'+str(ROOT/'source/libraries/acpi'/folder)+'"});'
+ for alias,folder in [('aml','aml'),('execution','interpreter/execution'),('integers','interpreter')]:text+='builder.depend_as("'+alias+'",Source::Path {location:"'+str(ROOT/'source/platform/libraries/acpi'/folder)+'"});'
  return text+'}\n'
 def main():
  p=argparse.ArgumentParser(description=__doc__);p.add_argument('--runner',type=Path,default=Path('/tmp/cathedral-acpi-generic-checked/release/cathedral-acpi-checked-runner'));p.add_argument('--verify',action='store_true');p.add_argument('--record',type=Path,default=HERE/'checked-verification.json');a=p.parse_args()

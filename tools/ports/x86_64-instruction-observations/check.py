@@ -4,7 +4,7 @@ from pathlib import Path
 HERE=Path(__file__).resolve().parent;ROOT=HERE.parents[2]
 def run(*args):subprocess.run([str(a) for a in args],cwd=ROOT,check=True)
 p=argparse.ArgumentParser();p.add_argument('--omega',type=Path,default=ROOT.parent/'Omega/target/release/omega');p.add_argument('--host-only',action='store_true');p.add_argument('--controls-only',action='store_true');a=p.parse_args()
-run(sys.executable,HERE/'generate.py','--check');run(sys.executable,ROOT/'tools/ports/inventory.py','check',ROOT/'source/libraries/x86_64/instruction-observations-inventory.json','--checkout',ROOT/'reference_code/rust-osdev/x86_64','--require-transcribed');run('cargo','run','--quiet','--locked','--manifest-path',HERE/'Cargo.toml')
+run(sys.executable,HERE/'generate.py','--check');run(sys.executable,ROOT/'tools/ports/inventory.py','check',ROOT/'source/platform/libraries/x86_64/instruction-observations-inventory.json','--checkout',ROOT/'reference_code/rust-osdev/x86_64','--require-transcribed');run('cargo','run','--quiet','--locked','--manifest-path',HERE/'Cargo.toml')
 if not a.host_only:
  omega=a.omega.resolve()
  if not a.controls_only:run(omega,'--check',HERE/'main.omg')

@@ -10,12 +10,12 @@ def main():
  for item in value['files'].values():
   for entry in item['symbols'].values():entry['reason']='Outside this primary-rule helper; aggregate Rust operations remain pending.'
  entry=value['files']['src/aml/mod.rs']['symbols']['2406:do_store']
- entry['targets']=[dict(path='source/libraries/acpi/aml/implicit_conversions.omg',anchor='pub machine '+name+'(')for name in ['convert']]
+ entry['targets']=[dict(path='source/platform/libraries/acpi/aml/implicit_conversions.omg',anchor='pub machine '+name+'(')for name in ['convert']]
  entry['note']='Detached direct Integer/String/Buffer implicit conversion dispatch is available. Outer reference resolution, fields, destination storage and execution remain pending. This helper creates a new detached result and does not resize/truncate it to an existing named Buffer target.'
  value['primary_exports']={'ConversionTarget':['Integer','Buffer','String'],'ImplicitResult':['Failure(reason:ConversionFailure)','Integer(number:u64)','Buffer(length:u64,bytes:[u8;256])','String(length:u64,bytes:[u8;256])'],'convert':'direct ObjectStore ID + IntegerSize + ConversionTarget -> ImplicitResult'}
- source=(ROOT/'source/libraries/acpi/aml/implicit_conversions.omg').read_text()
+ source=(ROOT/'source/platform/libraries/acpi/aml/implicit_conversions.omg').read_text()
  for anchor in ['pub data ConversionTarget','pub data ImplicitResult','case Failure(reason:ConversionFailure)','case Integer(number:u64)','case Buffer(length:u64,bytes:[u8;256])','case String(length:u64,bytes:[u8;256])','pub machine convert(']:assert anchor in source
- path=ROOT/'source/libraries/acpi/aml/implicit-conversions-inventory.json';text=json.dumps(value,indent=2,sort_keys=True)+'\n'
+ path=ROOT/'source/platform/libraries/acpi/aml/implicit-conversions-inventory.json';text=json.dumps(value,indent=2,sort_keys=True)+'\n'
  if args.check:assert path.read_text()==text
  else:path.write_text(text)
  print(api.check(value,up,repository=ROOT))

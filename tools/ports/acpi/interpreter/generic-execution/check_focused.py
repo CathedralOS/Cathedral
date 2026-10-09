@@ -23,7 +23,7 @@ def sha(path):
 
 
 def snapshot(group):
-    paths = sorted((ROOT / 'source/libraries/acpi').rglob('*.omg'))
+    paths = sorted((ROOT / 'source/platform/libraries/acpi').rglob('*.omg'))
     paths += [Path(__file__).resolve()] + sorted(group.glob('*'))
     return {str(p.relative_to(ROOT)): sha(p) for p in paths if p.is_file()}
 
@@ -44,7 +44,7 @@ def main():
         fixture = Path(directory)
         (fixture / 'main.omg').write_bytes((group / 'main.omg').read_bytes())
         build = 'machine build(builder:&mut Build){builder.package("generic-focused");builder.freestanding=true;'
-        for alias, relative in [('aml', 'source/libraries/acpi/aml'), ('execution', 'source/libraries/acpi/interpreter/execution'), ('integer_helpers', 'source/libraries/acpi/interpreter'), ('pipeline', 'source/libraries/acpi/pipeline')]:
+        for alias, relative in [('aml', 'source/platform/libraries/acpi/aml'), ('execution', 'source/platform/libraries/acpi/interpreter/execution'), ('integer_helpers', 'source/platform/libraries/acpi/interpreter'), ('pipeline', 'source/platform/libraries/acpi/pipeline')]:
             build += f'builder.depend_as("{alias}",Source::Path {{location:"{ROOT / relative}"}});'
         (fixture / 'build.omg').write_text(build + '}\n')
         command = [str(args.runner), str(fixture / 'main.omg'), str(fixture / 'build'), *selections]

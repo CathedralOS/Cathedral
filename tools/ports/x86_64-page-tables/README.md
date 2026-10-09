@@ -1,6 +1,6 @@
 # Detached table and captured translation witnesses
 
-See the [port record](../../../source/libraries/x86_64/tables.PORT.md) for exact
+See the [port record](../../../source/platform/libraries/x86_64/tables.PORT.md) for exact
 scope and differences from hardware admission. `check.py --omega /path/to/omega`
 audits source hashes and deterministic fixtures, runs actual pinned Rust table
 and mapper operations, then executes six table/address fixtures, 43 numeric

@@ -11,12 +11,12 @@ def expect(omega,path,needle):
 def main():
  parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--omega',type=Path,default=ROOT.parent/'Omega/target/release/omega');parser.add_argument('--host-only',action='store_true');args=parser.parse_args()
  for f in ('generate.py','generate_inventory.py','generate_reference_tests.py','generate_fixtures.py','generate_table_fixture.py'):run(sys.executable,HERE/f,'--check')
- run(sys.executable,ROOT/'tools/ports/inventory.py','check',ROOT/'source/drivers/facts/x86_interrupts-inventory.json','--checkout',ROOT/'reference_code/rust-osdev/x86_64','--require-transcribed')
- run(sys.executable,HERE/'measure.py');run(sys.executable,ROOT/'tools/ports/vectors.py',ROOT/'source/drivers/facts/x86_interrupts.vectors.json')
+ run(sys.executable,ROOT/'tools/ports/inventory.py','check',ROOT/'source/platform/drivers/facts/x86_interrupts-inventory.json','--checkout',ROOT/'reference_code/rust-osdev/x86_64','--require-transcribed')
+ run(sys.executable,HERE/'measure.py');run(sys.executable,ROOT/'tools/ports/vectors.py',ROOT/'source/platform/drivers/facts/x86_interrupts.vectors.json')
  run('cargo','test','--quiet','--locked','--manifest-path',HERE/'Cargo.toml');run(sys.executable,HERE/'check_gate_policy.py')
  if args.host_only:return
  omega=args.omega.resolve();print('Omega SHA-256:',hashlib.sha256(omega.read_bytes()).hexdigest(),flush=True)
- run(omega,'--check',ROOT/'source/libraries/x86_64/interrupt_bytes.omg')
+ run(omega,'--check',ROOT/'source/platform/libraries/x86_64/interrupt_bytes.omg')
  for name in ('main.omg','storage_main.omg','table_main.omg','table_encode_main.omg','table_decode_main.omg','table_reject_main.omg','layout_local_projection.omg'):run(omega,'--check',HERE/name)
  run(omega,'--check',ROOT/'tools/x86-idt-gate-layout-canary/main.omg')
  build=(HERE/'build.omg').read_text().replace('../../../source/',str(ROOT/'source')+'/')

@@ -6,4 +6,4 @@ and requires two expected-value mutations to fail. `--host-only` skips Omega;
 `--controls-only` reuses a separately verified positive fixture.
 
 Neither the reference nor the Omega module executes CPUID or creates a feature
-provider. See `source/libraries/x86_64/instruction-observations.PORT.md`.
+provider. See `source/platform/libraries/x86_64/instruction-observations.PORT.md`.

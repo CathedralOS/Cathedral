@@ -9,7 +9,7 @@ HERE=Path(__file__).resolve().parent
 ROOT=HERE.parents[2]
 sys.path.insert(0,str(HERE.parent))
 import inventory, rust_layout, vectors
-package=ROOT/'source/libraries/virtio'
+package=ROOT/'source/platform/libraries/virtio'
 up=ROOT/'reference_code/rust-osdev/virtio-spec-rs/src'
 rows=inventory.read_json(HERE/'mmio-registers.json')
 actual=re.findall(r'#\[offset\((0x[0-9a-f]+)\)\]\s*#\[access\((\w+)\)\]\s*(\w+):\s*([^,]+),',(up/'mmio.rs').read_text())

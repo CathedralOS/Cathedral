@@ -1,6 +1,6 @@
 # Direct basic-data Concatenate evidence
 
-See [the port scope](../../../../../source/libraries/acpi/aml/object-concat.PORT.md)
+See [the port scope](../../../../../source/platform/libraries/acpi/aml/object-concat.PORT.md)
 for primary conversion rules, bounded representation and deferred dispatch.
 
 ```sh

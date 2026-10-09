@@ -25,12 +25,12 @@ def main():
  print('Omega SHA-256:',hashlib.sha256(compiler.read_bytes()).hexdigest(),flush=True)
  def package_hash():
   digest=hashlib.sha256()
-  files=list((ROOT/'source/libraries/acpi/resources').glob('*.omg'))+[ROOT/name for name in ['source/libraries/acpi/build.omg','source/libraries/acpi/bytes.omg','source/libraries/acpi/fixed_bytes.omg','source/libraries/acpi/headers.omg']]
+  files=list((ROOT/'source/platform/libraries/acpi/resources').glob('*.omg'))+[ROOT/name for name in ['source/platform/libraries/acpi/build.omg','source/platform/libraries/acpi/bytes.omg','source/platform/libraries/acpi/fixed_bytes.omg','source/platform/libraries/acpi/headers.omg']]
   for file in sorted(files):
    digest.update(str(file.relative_to(ROOT)).encode());digest.update(b'\0');digest.update(file.read_bytes())
   return digest.hexdigest()
  before=package_hash();print('Resource descriptor closure SHA-256:',before,flush=True)
- build=(HERE/'build.omg').read_text().replace('../../../../source/libraries/acpi/resources',str(ROOT/'source/libraries/acpi/resources'))
+ build=(HERE/'build.omg').read_text().replace('../../../../source/platform/libraries/acpi/resources',str(ROOT/'source/platform/libraries/acpi/resources'))
  def check(name):
   started=time.monotonic()
   source=(HERE/'cases'/f'{name}.omg').read_text();old,new=cases[name]['mutation']

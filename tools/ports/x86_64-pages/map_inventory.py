@@ -3,8 +3,8 @@
 import json
 from pathlib import Path
 HERE=Path(__file__).resolve().parent;ROOT=HERE.parents[2]
-p=ROOT/'source/libraries/x86_64/pages-inventory.json';doc=json.loads(p.read_text())
-source='source/libraries/x86_64/pages.omg';fixture='tools/ports/x86_64-pages/main.omg';extras='tools/ports/x86_64-pages/extras.omg'
+p=ROOT/'source/platform/libraries/x86_64/pages-inventory.json';doc=json.loads(p.read_text())
+source='source/platform/libraries/x86_64/pages.omg';fixture='tools/ports/x86_64-pages/main.omg';extras='tools/ports/x86_64-pages/extras.omg'
 for path,file in doc['files'].items():
  frame=path.endswith('/frame.rs')
  for key,row in file['symbols'].items():
@@ -23,7 +23,7 @@ for path,file in doc['files'].items():
    elif name=='sub':anchor='machine '+('difference' if number==(222 if frame else 300) else 'arithmetic')+'('
    elif name in {'Size4KiB','Size2MiB','Size1GiB'}:anchor='pub const '+{'Size4KiB':'SIZE_4K','Size2MiB':'SIZE_2M','Size1GiB':'SIZE_1G'}[name]+':'
    elif name in {'SIZE','size'}:anchor='machine '+('range_bytes' if (frame and number in {256,397}) or (not frame and number in {370,526}) else 'page_size_valid')+'('
-   elif name in {'p1_index','p2_index','p3_index','p4_index','page_table_index'}:target='source/libraries/x86_64/addresses.omg';anchor='machine page_index('
+   elif name in {'p1_index','p2_index','p3_index','p4_index','page_table_index'}:target='source/platform/libraries/x86_64/addresses.omg';anchor='machine page_index('
    elif name in {'Page','PhysFrame','start_address','AddressNotAligned','PfnNotValid'}:anchor='machine from_start('
    elif name in {'PageRange','PageRangeInclusive','PhysFrameRange','PhysFrameRangeInclusive','start','end'}:anchor='machine range_count('
    else:raise ValueError((path,key))

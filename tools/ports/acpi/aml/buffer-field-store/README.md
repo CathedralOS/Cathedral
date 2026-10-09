@@ -1,6 +1,6 @@
 # Direct BufferField source Store checks
 
-The [port record](../../../../../source/libraries/acpi/aml/buffer-field-store.PORT.md)
+The [port record](../../../../../source/platform/libraries/acpi/aml/buffer-field-store.PORT.md)
 describes source admission, atomic backing publication and the direct-ID boundary.
 The 226 original cases use independent Python bit arithmetic and compare complete
 canonical stores after actual checked Omega calls. Every case has a changed-body

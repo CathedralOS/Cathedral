@@ -18,8 +18,8 @@ def sha(path):
 def inputs():
  paths = set()
  for folder in ['pci_routing', 'aml', 'resources', 'interpreter']:
-  paths.update((ROOT/'source/libraries/acpi'/folder).glob('*.omg'))
- paths.update((ROOT/'source/libraries/acpi').glob('*.omg'))
+  paths.update((ROOT/'source/platform/libraries/acpi'/folder).glob('*.omg'))
+ paths.update((ROOT/'source/platform/libraries/acpi').glob('*.omg'))
  paths.update(HERE.glob('*.py'))
  paths.add(HERE/'build.omg')
  for name in ['interpreter/execution/checked_runner.rs', 'interpreter/execution/runner.Cargo.lock', 'pci-routing/fixtures.json', 'pci-routing/observations.json']:

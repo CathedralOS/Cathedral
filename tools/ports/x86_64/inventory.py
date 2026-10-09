@@ -11,7 +11,7 @@ import sys
 from module_catalog import MODULES,F,A,E,I,P,R,T
 HERE=Path(__file__).resolve().parent
 ROOT=HERE.parents[2]
-DEST=ROOT/'source/libraries/x86_64'
+DEST=ROOT/'source/platform/libraries/x86_64'
 spec=importlib.util.spec_from_file_location('shared_inventory',HERE.parent/'inventory.py')
 shared=importlib.util.module_from_spec(spec);spec.loader.exec_module(shared)
 PIN='cc35c876d3badb57df54a66e22f7768a52be95f2'

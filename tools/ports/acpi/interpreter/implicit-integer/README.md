@@ -11,5 +11,5 @@ The independent host expectation uses ASCII prefix selection and Python's base-1
 integer conversion, bounded to 8/16 digits. This is a specification oracle, not a
 Rust public API or private mirror. It is kept distinct from actual Omega body
 execution in `verification.json`. See the
-[port record](../../../../../source/libraries/acpi/interpreter/implicit-integer.PORT.md)
+[port record](../../../../../source/platform/libraries/acpi/interpreter/implicit-integer.PORT.md)
 for validation precedence, profile limits, provenance and deferred integration.

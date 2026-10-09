@@ -13,7 +13,7 @@ def main():
 machine require_ok(value:i32) requires value==0;{}
 data Main{}
 machine Main::main(&mut self){require_ok(TEST_RESULT);}
-''';(work/'main.omg').write_text(text);(work/'build.omg').write_text('machine build(builder:&mut Build){builder.application("query-constant");builder.freestanding=true;builder.depend_as("aml",Source::Path {location:"'+str(ROOT/'source/libraries/acpi/aml')+'"});builder.depend_as("integer_helpers",Source::Path {location:"'+str(ROOT/'source/libraries/acpi/interpreter')+'"});}')
+''';(work/'main.omg').write_text(text);(work/'build.omg').write_text('machine build(builder:&mut Build){builder.application("query-constant");builder.freestanding=true;builder.depend_as("aml",Source::Path {location:"'+str(ROOT/'source/platform/libraries/acpi/aml')+'"});builder.depend_as("integer_helpers",Source::Path {location:"'+str(ROOT/'source/platform/libraries/acpi/interpreter')+'"});}')
     run=subprocess.run([str(compiler),'--check',str(work/'main.omg')],capture_output=True,text=True);output=run.stdout+run.stderr
     if control:assert run.returncode and 'cannot prove requires contract'in output and'1 == 0'in output,output
     else:assert run.returncode==0,output

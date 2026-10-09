@@ -14,13 +14,13 @@ def main():
  parser.add_argument('--omega',type=Path,default=Path('/tmp/cathedral-omega-eaa7993/release/omega'))
  args=parser.parse_args()
  with tempfile.TemporaryDirectory(prefix='cathedral-aml-private-helper-') as directory:
-  folder=Path(directory);package=folder/'aml';shutil.copytree(ROOT/'source/libraries/acpi/aml',package)
+  folder=Path(directory);package=folder/'aml';shutil.copytree(ROOT/'source/platform/libraries/acpi/aml',package)
   source=package/'references.omg';text=source.read_text()
   text=re.sub(r'\breference_scan\(', 'scan(',text)
   text=re.sub(r'\breference_step\(', 'step(',text)
   source.write_text(text)
   (folder/'main.omg').write_text((HERE/'cases/reference-cycle.omg').read_text())
-  build=(HERE/'build.omg').read_text().replace('../../../../source/libraries/acpi/aml',str(package))
+  build=(HERE/'build.omg').read_text().replace('../../../../source/platform/libraries/acpi/aml',str(package))
   (folder/'build.omg').write_text(build)
   result=subprocess.run([str(args.omega.resolve()),'--check',str(folder/'main.omg')],cwd=ROOT,capture_output=True,text=True)
   output=result.stdout+result.stderr

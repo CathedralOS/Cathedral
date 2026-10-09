@@ -1,7 +1,7 @@
 # Standalone byte literal preflight proposal
 
 Everything here is scratch-only. The sole new Omega implementation is
-`source/libraries/acpi/interpreter/execution/byte_literals.omg`. No executor,
+`source/platform/libraries/acpi/interpreter/execution/byte_literals.omg`. No executor,
 canonical model, parser, existing helper or build source is modified. The copied
 canonical snapshot is checked by `canonical-baseline.json` at the scratch root.
 The future executor decides contribution, cursor advancement, budgets and target

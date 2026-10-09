@@ -15,8 +15,8 @@ def authored(rows):
   for control in [False,True]:
    name='Suite::'+row['name']+('_control'if control else'_positive');names.append(name+'='+str(int(control)));text+='machine '+name+'(&mut self)->i32{'+body(row,control)+'}\n'
  return text,names
-def build(root=ROOT):return 'machine build(builder:&mut Build){builder.application("cathedral-package-index-checks");builder.freestanding=true;builder.depend_as("aml",Source::Path {location:"'+str(root/'source/libraries/acpi/aml')+'"});builder.depend_as("integer_helpers",Source::Path {location:"'+str(root/'source/libraries/acpi/interpreter')+'"});}'
-SOURCE=['source/libraries/acpi/aml/'+n for n in ['build.omg','model.omg','bytes.omg','names.omg','namespace.omg','object_references.omg','package_index.omg']]+['source/libraries/acpi/interpreter/build.omg']
+def build(root=ROOT):return 'machine build(builder:&mut Build){builder.application("cathedral-package-index-checks");builder.freestanding=true;builder.depend_as("aml",Source::Path {location:"'+str(root/'source/platform/libraries/acpi/aml')+'"});builder.depend_as("integer_helpers",Source::Path {location:"'+str(root/'source/platform/libraries/acpi/interpreter')+'"});}'
+SOURCE=['source/platform/libraries/acpi/aml/'+n for n in ['build.omg','model.omg','bytes.omg','names.omg','namespace.omg','object_references.omg','package_index.omg']]+['source/platform/libraries/acpi/interpreter/build.omg']
 def snapshot():
  paths=[HERE/n for n in ['check.py','fixtures.py','cases.json']]+[ROOT/p for p in SOURCE]+[ROOT/'tools/ports/acpi/interpreter/execution'/n for n in ['checked_runner.rs','runner.Cargo.lock']]
  return {str(p.relative_to(ROOT)):sha(p)for p in paths}

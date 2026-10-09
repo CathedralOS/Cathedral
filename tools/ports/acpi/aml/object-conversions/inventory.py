@@ -15,10 +15,10 @@ def inventory():
    if name in ['to_integer','to_buffer','do_to_integer','do_to_buffer']:
     target='to_integer'if name.endswith('integer')else'to_buffer'
     row['reason']='Partial bounded direct canonical Value conversion kernel; full context/reference/target semantics and wider BufferField conversion remain outside this slice. String explicit strict policy and pinned unterminated-buffer compatibility are separately named.'
-    row['targets']=[{'path':'source/libraries/acpi/aml/object_conversions.omg','anchor':'pub machine '+target}]
+    row['targets']=[{'path':'source/platform/libraries/acpi/aml/object_conversions.omg','anchor':'pub machine '+target}]
  return value
 def main():
- p=argparse.ArgumentParser();p.add_argument('--check',action='store_true');a=p.parse_args();v=inventory();path=fixtures.ROOT/'source/libraries/acpi/aml/object-conversions-inventory.json'
+ p=argparse.ArgumentParser();p.add_argument('--check',action='store_true');a=p.parse_args();v=inventory();path=fixtures.ROOT/'source/platform/libraries/acpi/aml/object-conversions-inventory.json'
  if a.check:assert json.loads(path.read_text())==v
  else:path.write_text(json.dumps(v,indent=2)+'\n')
  print(api.check(v,UP,fixtures.ROOT))

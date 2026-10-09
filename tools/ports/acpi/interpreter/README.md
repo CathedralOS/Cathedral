@@ -1,6 +1,6 @@
 # Pure AML helper validation
 
-This tests the staged [interpreter helper slice](../../../../source/libraries/acpi/interpreter/PORT.md),
+This tests the staged [interpreter helper slice](../../../../source/platform/libraries/acpi/interpreter/PORT.md),
 not AML bytecode or methods. All storage is initialized ordinary byte arrays;
 no handler, I/O, physical mapping or namespace capability is supplied.
 

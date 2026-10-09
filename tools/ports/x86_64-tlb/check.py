@@ -11,12 +11,12 @@ def expect(omega,path,needle):
 def main():
  p=argparse.ArgumentParser(description=__doc__);p.add_argument('--omega',type=Path,default=ROOT.parent/'Omega/target/release/omega');p.add_argument('--host-only',action='store_true');a=p.parse_args()
  for name in ('generate_reference.py','generate_fixtures.py','generate_inventory.py'):run(sys.executable,HERE/name,'--check')
- run(sys.executable,ROOT/'tools/ports/inventory.py','check',ROOT/'source/libraries/x86_64/tlb-operands-inventory.json','--checkout',ROOT/'reference_code/rust-osdev/x86_64','--require-transcribed')
- run(sys.executable,HERE/'measure.py');run(sys.executable,ROOT/'tools/ports/vectors.py',ROOT/'source/libraries/x86_64/tlb-operands.vectors.json')
+ run(sys.executable,ROOT/'tools/ports/inventory.py','check',ROOT/'source/platform/libraries/x86_64/tlb-operands-inventory.json','--checkout',ROOT/'reference_code/rust-osdev/x86_64','--require-transcribed')
+ run(sys.executable,HERE/'measure.py');run(sys.executable,ROOT/'tools/ports/vectors.py',ROOT/'source/platform/libraries/x86_64/tlb-operands.vectors.json')
  run('cargo','+nightly-2026-09-04','test','--quiet','--locked','--manifest-path',HERE/'Cargo.toml')
  if a.host_only:return
  omega=a.omega.resolve();print('Omega SHA256:',hashlib.sha256(omega.read_bytes()).hexdigest(),flush=True)
- run(omega,'--check',ROOT/'source/libraries/x86_64/tlb_operands.omg')
+ run(omega,'--check',ROOT/'source/platform/libraries/x86_64/tlb_operands.omg')
  run(omega,'--check',HERE/'main.omg');run(omega,'--check',HERE/'layout_local_projection.omg')
  build=(HERE/'build.omg').read_text().replace('../../../source/',str(ROOT/'source')+'/')
  controls=[('main.omg','bytes[13] == 128','bytes[13] == 129'),('main.omg','operand_is(b, 1, 4095, 0)','operand_is(b, 2, 4095, 0)'),('cases.omg','chunk_is(new, start, 0, 1, new_next)','chunk_is(new, start, 1, 1, new_next)'),('cases.omg','regs_are(result, expected, 2147549183, 268435455)','regs_are(result, expected, 2147549183, 268435454)')]

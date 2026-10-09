@@ -3,8 +3,8 @@
 import json,sys
 from pathlib import Path
 HERE=Path(__file__).resolve().parent;ROOT=HERE.parents[2]
-p=ROOT/'source/libraries/x86_64/mapping-plans-inventory.json';doc=json.loads(p.read_text())
-target='source/libraries/x86_64/mapping_plans.omg'
+p=ROOT/'source/platform/libraries/x86_64/mapping-plans-inventory.json';doc=json.loads(p.read_text())
+target='source/platform/libraries/x86_64/mapping_plans.omg'
 for path,file in doc['files'].items():
  for key,row in file['symbols'].items():
   n,name=key.split(':',1);n=int(n);row.update(disposition='pending',reason='Full mapper orchestration, hierarchy access/ownership, cleanup and invalidation interfaces remain subsequent work.');row.pop('targets',None)

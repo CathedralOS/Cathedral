@@ -2,13 +2,13 @@
   "files": [
     {
       "current_sha256": "7df4cd0910e2199717a75c8a88afa9254890a0350aa93262bdcf8ed45682bfb2",
-      "path": "source/libraries/acpi/field_protocol/model.omg",
+      "path": "source/platform/libraries/acpi/field_protocol/model.omg",
       "transformation": "fields::field_model:: -> aml::field_model:: only",
       "upstream_sha256": "fd43af2f3d9baccf509607112d32da8940515bedb23ce6e5c48c12a3f648d9bc"
     },
     {
       "current_sha256": "d6ce73ad473553f8c0fb37b7865ba8df2a562f4535b1e3b358557751ca395413",
-      "path": "source/libraries/acpi/field_protocol/protocol.omg",
+      "path": "source/platform/libraries/acpi/field_protocol/protocol.omg",
       "transformation": "fields::field_model:: -> aml::field_model:: only",
       "upstream_sha256": "2bb81642ca9876fb2f5bcfc08e0dfb03363331e49e4591c615a02bfdaa8024a6"
     },

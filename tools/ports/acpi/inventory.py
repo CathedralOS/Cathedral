@@ -8,7 +8,7 @@ from pathlib import Path
 import re
 import subprocess
 import sys
-HERE=Path(__file__).resolve().parent;ROOT=HERE.parents[2];DEST=ROOT/'source/libraries/acpi'
+HERE=Path(__file__).resolve().parent;ROOT=HERE.parents[2];DEST=ROOT/'source/platform/libraries/acpi'
 spec=importlib.util.spec_from_file_location('port_inventory',HERE.parent/'inventory.py');inventory=importlib.util.module_from_spec(spec);spec.loader.exec_module(inventory)
 PIN='257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5';CHECKOUT=ROOT/'reference_code/rust-osdev/acpi'
 parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--check',action='store_true');args=parser.parse_args()

@@ -29,7 +29,7 @@ def clean(source):
     return source
 
 def main():
-    package = ROOT/'source/libraries/virtio'
+    package = ROOT/'source/platform/libraries/virtio'
     checkout = ROOT/'reference_code/rust-osdev/virtio-spec-rs'
     print(json.dumps(inventory.check(inventory.read_json(package/'inventory.json'), checkout, ROOT), indent=2), flush=True)
     shapes = inventory.read_json(HERE/'raw-shapes.json')

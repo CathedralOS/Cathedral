@@ -5,9 +5,9 @@ HERE=fixtures.HERE;ROOT=fixtures.ROOT;PIN='eaa7993a23623cd8fabf45350340479c5c9c7
 RUNNER=Path('/tmp/cathedral-acpi-execution-checked/release/cathedral-acpi-checked-runner');COMPILER=Path('/tmp/cathedral-omega-eaa7993/release/omega')
 def sha(p):return hashlib.sha256(p.read_bytes()).hexdigest()
 def snapshot():
- paths=list(HERE.glob('*.py'))+[HERE/n for n in ['cases.json','reference.rs','reference.Cargo.lock','public-verification.json']]+[ROOT/'source/libraries/acpi/aml'/n for n in ['build.omg','model.omg','names.omg','bytes.omg','namespace_removal.omg']]+[ROOT/'source/libraries/acpi/interpreter/build.omg']+[ROOT/'tools/ports/acpi/interpreter/execution'/n for n in ['checked_runner.rs','runner.Cargo.lock']]
+ paths=list(HERE.glob('*.py'))+[HERE/n for n in ['cases.json','reference.rs','reference.Cargo.lock','public-verification.json']]+[ROOT/'source/platform/libraries/acpi/aml'/n for n in ['build.omg','model.omg','names.omg','bytes.omg','namespace_removal.omg']]+[ROOT/'source/platform/libraries/acpi/interpreter/build.omg']+[ROOT/'tools/ports/acpi/interpreter/execution'/n for n in ['checked_runner.rs','runner.Cargo.lock']]
  return {str(p.relative_to(ROOT)):sha(p)for p in sorted(paths)}
-def build():return 'machine build(builder:&mut Build){builder.application("cathedral-namespace-removal-tests");builder.freestanding=true;builder.depend_as("aml",Source::Path {location:"'+str(ROOT/'source/libraries/acpi/aml')+'"});}'
+def build():return 'machine build(builder:&mut Build){builder.application("cathedral-namespace-removal-tests");builder.freestanding=true;builder.depend_as("aml",Source::Path {location:"'+str(ROOT/'source/platform/libraries/acpi/aml')+'"});}'
 def validate(output,names):
  assert 'CHECKED authored package and dependency bodies;'in output
  actual=re.findall(r'^PASS (\S+) expected=(\d+) observed=(\d+) error=None usage=',output,re.M);assert len(actual)==len(names)

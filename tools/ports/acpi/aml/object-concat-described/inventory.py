@@ -13,10 +13,10 @@ def inventory():
    row['reason']='Outside this detached composition, or aggregate operation remains incomplete.'
    if key.split(':',1)[1]in ['do_concat','resolve_as_string']:
     row['reason']='Partial primary basic pairs plus String/Buffer-left descriptions and description-left String composition; Integer-left descriptions are locally excluded. References/names, unrepresented cases, field/method evaluation, target/context and retirement remain pending.'
-    row['targets']=[{'path':'source/libraries/acpi/aml/object_concat_described.omg','anchor':'pub machine concatenate'}]
+    row['targets']=[{'path':'source/platform/libraries/acpi/aml/object_concat_described.omg','anchor':'pub machine concatenate'}]
  return value
 def main():
- p=argparse.ArgumentParser();p.add_argument('--check',action='store_true');a=p.parse_args();v=inventory();path=fixtures.ROOT/'source/libraries/acpi/aml/object-concat-described-inventory.json'
+ p=argparse.ArgumentParser();p.add_argument('--check',action='store_true');a=p.parse_args();v=inventory();path=fixtures.ROOT/'source/platform/libraries/acpi/aml/object-concat-described-inventory.json'
  if a.check:assert json.loads(path.read_text())==v
  else:path.write_text(json.dumps(v,indent=2)+'\n')
  print(api.check(v,UP,fixtures.ROOT))

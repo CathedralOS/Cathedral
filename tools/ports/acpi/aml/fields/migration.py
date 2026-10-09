@@ -5,7 +5,7 @@ from pathlib import Path
 HERE=Path(__file__).resolve().parent;ROOT=HERE.parents[4]
 def sha(path):return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 def snapshot():
- paths=set((ROOT/'source/libraries/acpi').rglob('*.omg'))
+ paths=set((ROOT/'source/platform/libraries/acpi').rglob('*.omg'))
  paths.update((HERE/'cases').glob('*.omg'))
  paths.update(HERE/name for name in ['cases.json','migration.py','migration-boundaries.omg'])
  paths.update(ROOT/'tools/ports/acpi/interpreter/execution'/name for name in ['checked_runner.rs','runner.Cargo.lock'])
@@ -36,7 +36,7 @@ def fixture():
 
 def build():
  text='machine build(builder:&mut Build){builder.package("field-owner-migration");builder.freestanding=true;'
- for alias,folder in [('aml','aml'),('fields','aml/fields'),('reads','field_values'),('writes','field_writes'),('access','field_access'),('integers','interpreter'),('execution','interpreter/execution')]:text+='builder.depend_as("'+alias+'",Source::Path {location:"'+str(ROOT/'source/libraries/acpi'/folder)+'"});'
+ for alias,folder in [('aml','aml'),('fields','aml/fields'),('reads','field_values'),('writes','field_writes'),('access','field_access'),('integers','interpreter'),('execution','interpreter/execution')]:text+='builder.depend_as("'+alias+'",Source::Path {location:"'+str(ROOT/'source/platform/libraries/acpi'/folder)+'"});'
  return text+'}\n'
 def main():
  p=argparse.ArgumentParser(description=__doc__);p.add_argument('--runner',type=Path,default=Path('/tmp/cathedral-acpi-generic-checked/release/cathedral-acpi-checked-runner'));p.add_argument('--record',type=Path,default=HERE/'migration-verification.json');p.add_argument('--verify',action='store_true');a=p.parse_args()

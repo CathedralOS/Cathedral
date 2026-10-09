@@ -15,7 +15,7 @@ def main():
  omega=a.omega.resolve();print('Omega SHA256:',hashlib.sha256(omega.read_bytes()).hexdigest(),flush=True)
  f=json.loads((HERE/'fixtures.json').read_text())
  if not a.controls_only:
-  if a.batch is None:run(omega,'--check',ROOT/'source/libraries/x86_64/register_operands.omg')
+  if a.batch is None:run(omega,'--check',ROOT/'source/platform/libraries/x86_64/register_operands.omg')
   for n,b in enumerate(f['batches']):
    if a.batch is None or n==a.batch:run(omega,'--check',HERE/b['path'])
   if a.batch is None:run(omega,'--check',HERE/'extras.omg')

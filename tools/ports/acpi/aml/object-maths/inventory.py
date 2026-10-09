@@ -10,11 +10,11 @@ def main():
  for item in value['files'].values():
   for entry in item['symbols'].values():entry['reason']='Outside this direct arithmetic component; aggregate execution remains pending.'
  for key,name in [('1896:do_binary_maths','binary'),('1931:do_unary_maths','unary'),('2233:do_from_bcd','unary'),('2250:do_to_bcd','unary')]:
-  entry=value['files']['src/aml/mod.rs']['symbols'][key];entry['targets']=[dict(path='source/libraries/acpi/aml/object_maths.omg',anchor='pub machine '+name+'(')];entry['note']='Direct Integer/String/Buffer operands undergo primary implicit Integer conversion and existing width-normalized mathematics. Semantic failures and detached quotient/remainder are retained. Reference/Field evaluation, target stores, context contribution and retirement remain pending.'
+  entry=value['files']['src/aml/mod.rs']['symbols'][key];entry['targets']=[dict(path='source/platform/libraries/acpi/aml/object_maths.omg',anchor='pub machine '+name+'(')];entry['note']='Direct Integer/String/Buffer operands undergo primary implicit Integer conversion and existing width-normalized mathematics. Semantic failures and detached quotient/remainder are retained. Reference/Field evaluation, target stores, context contribution and retirement remain pending.'
  value['primary_exports']={'Unary':['BitwiseNot','FindSetLeft','FindSetRight','FromBcd','ToBcd'],'MathFailure':['Conversion(reason:ConversionFailure)','DivideByZero','InvalidBcd','Overflow'],'MathResult':['Failure(reason:MathFailure)','Integer(number:u64)','Division(quotient:u64,remainder:u64)'],'binary':'two direct IDs + IntegerSize + Binary -> MathResult','unary':'direct ID + IntegerSize + Unary -> MathResult'}
- source=(ROOT/'source/libraries/acpi/aml/object_maths.omg').read_text()
+ source=(ROOT/'source/platform/libraries/acpi/aml/object_maths.omg').read_text()
  for anchor in ['pub data Unary','pub data MathFailure','pub data MathResult','case Failure(reason:MathFailure)','case Division(quotient:u64,remainder:u64)','pub machine binary(','pub machine unary(']:assert anchor in source
- path=ROOT/'source/libraries/acpi/aml/object-maths-inventory.json';text=json.dumps(value,indent=2,sort_keys=True)+'\n'
+ path=ROOT/'source/platform/libraries/acpi/aml/object-maths-inventory.json';text=json.dumps(value,indent=2,sort_keys=True)+'\n'
  if args.check:assert path.read_text()==text
  else:path.write_text(text)
  print(api.check(value,args.checkout,repository=ROOT))

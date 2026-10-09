@@ -10,11 +10,11 @@ def main():
  for item in value['files'].values():
   for entry in item['symbols'].values():entry['reason']='Outside this Package Index construction helper; aggregate execution remains pending.'
  for path,key in [('src/aml/mod.rs','2283:do_index')]:
-  entry=value['files'][path]['symbols'][key];entry['targets']=[dict(path='source/libraries/acpi/aml/package_index.omg',anchor='pub machine make_package_index(')];entry['note']='Direct Package ID and evaluated unsigned index; complete existing linked-chain admission followed by one fresh RefOf wrapper preserving member identity. No operand evaluation, element resolution, target Store or retirement. Existing byte arena, including fresh reference slot backing, is unchanged.'
+  entry=value['files'][path]['symbols'][key];entry['targets']=[dict(path='source/platform/libraries/acpi/aml/package_index.omg',anchor='pub machine make_package_index(')];entry['note']='Direct Package ID and evaluated unsigned index; complete existing linked-chain admission followed by one fresh RefOf wrapper preserving member identity. No operand evaluation, element resolution, target Store or retirement. Existing byte arena, including fresh reference slot backing, is unchanged.'
  value['primary_exports']={'make_package_index':'ObjectStore mutation after full admission -> canonical Read outcome and fresh stable ID','reused_types':['model::ObjectStore','model::Read','model::ReferenceKind'],'reused_helpers':['object_references::package_element','object_references::allocate_reference']}
- source=(ROOT/'source/libraries/acpi/aml/package_index.omg').read_text()
+ source=(ROOT/'source/platform/libraries/acpi/aml/package_index.omg').read_text()
  for anchor in ['pub machine make_package_index(','package_element(','allocate_reference(','ReferenceKind::RefOf']:assert anchor in source
- path=ROOT/'source/libraries/acpi/aml/package-index-inventory.json';text=json.dumps(value,indent=2,sort_keys=True)+'\n'
+ path=ROOT/'source/platform/libraries/acpi/aml/package-index-inventory.json';text=json.dumps(value,indent=2,sort_keys=True)+'\n'
  if args.check:assert path.read_text()==text
  else:path.write_text(text)
  print(api.check(value,args.checkout,repository=ROOT))

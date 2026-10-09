@@ -76,21 +76,21 @@ def reproduce_build(archive, kind, execution_root):
         directory = INTEGER if kind == 'integer' else PIPELINE
         source = (archive / directory / 'build.omg').read_text()
         relative_prefix = '../../../../../' if kind == 'integer' else '../../../../'
-        packages = ['source/libraries/acpi/interpreter/execution',
-                    'source/libraries/acpi/interpreter', 'source/libraries/acpi/aml']
+        packages = ['source/platform/libraries/acpi/interpreter/execution',
+                    'source/platform/libraries/acpi/interpreter', 'source/platform/libraries/acpi/aml']
         if kind == 'pipeline':
-            packages = ['source/libraries/acpi/pipeline', 'source/libraries/acpi/aml',
-                        'source/libraries/acpi/interpreter/execution',
-                        'source/libraries/acpi/interpreter']
+            packages = ['source/platform/libraries/acpi/pipeline', 'source/platform/libraries/acpi/aml',
+                        'source/platform/libraries/acpi/interpreter/execution',
+                        'source/platform/libraries/acpi/interpreter']
         for package in packages:
             source = source.replace(relative_prefix + package, str(root / package))
         return source
     package = {'focused': 'generic-focused', 'generic': 'cathedral-acpi-generic-fixtures'}.get(kind, 'named-store-execution')
     source = f'machine build(builder:&mut Build){{builder.package("{package}");builder.freestanding=true;'
-    for alias, relative in [('aml', 'source/libraries/acpi/aml'),
-                            ('execution', 'source/libraries/acpi/interpreter/execution'),
-                            ('integer_helpers', 'source/libraries/acpi/interpreter'),
-                            ('pipeline', 'source/libraries/acpi/pipeline')]:
+    for alias, relative in [('aml', 'source/platform/libraries/acpi/aml'),
+                            ('execution', 'source/platform/libraries/acpi/interpreter/execution'),
+                            ('integer_helpers', 'source/platform/libraries/acpi/interpreter'),
+                            ('pipeline', 'source/platform/libraries/acpi/pipeline')]:
         source += f'builder.depend_as("{alias}",Source::Path {{location:"{root / relative}"}});'
     return source + '}\n'
 

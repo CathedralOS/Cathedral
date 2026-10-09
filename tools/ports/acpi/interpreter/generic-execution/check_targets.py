@@ -8,12 +8,12 @@ NAMES=[str(i)for i in range(10)]
 def sha(path):return hashlib.sha256(path.read_bytes()).hexdigest()
 def main():
  p=argparse.ArgumentParser();p.add_argument('--record',type=Path);a=p.parse_args();a.const=False
- paths=list((ROOT/'source/libraries/acpi').rglob('*.omg'))+[HERE/'targets.omg',Path(__file__).resolve(),HERE/'build.omg']
+ paths=list((ROOT/'source/platform/libraries/acpi').rglob('*.omg'))+[HERE/'targets.omg',Path(__file__).resolve(),HERE/'build.omg']
  before={str(p.relative_to(ROOT)):sha(p)for p in sorted(paths)};source=(HERE/'targets.omg').read_text();binary=OMEGA if a.const else RUNNER;binary_hash=sha(binary)
  results=[];started=time.monotonic()
  with tempfile.TemporaryDirectory(prefix='cathedral-generic-kernels-')as directory:
   root=Path(directory);build=(HERE/'build.omg').read_text()
-  for relative in ['../../../../../source/libraries/acpi/aml','../../../../../source/libraries/acpi/interpreter/execution','../../../../../source/libraries/acpi/interpreter']:build=build.replace(relative,str((HERE/relative).resolve()))
+  for relative in ['../../../../../source/platform/libraries/acpi/aml','../../../../../source/platform/libraries/acpi/interpreter/execution','../../../../../source/platform/libraries/acpi/interpreter']:build=build.replace(relative,str((HERE/relative).resolve()))
   (root/'build.omg').write_text(build)
   (root/'main.omg').write_text(source);selection=[f'Suite::target_{name}_{int(c)}={int(c)}'for name in NAMES for c in [False,True]];command=[str(RUNNER),str(root/'main.omg'),str(root/'build'),*selection]
   done=subprocess.run(command,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True,env=dict(os.environ,OMEGA_INTERP_STEP_BUDGET='10000000'));print(done.stdout,flush=True);done.check_returncode();results.append({'fixture_sha256':hashlib.sha256(source.encode()).hexdigest(),'exit_code':done.returncode,'output':done.stdout})

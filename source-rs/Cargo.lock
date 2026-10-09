@@ -48,9 +48,6 @@ dependencies = [
 [[package]]
 name = "cathedral-uart-16550"
 version = "0.0.0"
-dependencies = [
- "cathedral-arch",
-]
 
 [[package]]
 name = "cfg-if"

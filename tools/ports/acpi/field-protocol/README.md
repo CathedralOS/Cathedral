@@ -7,7 +7,7 @@ protocol algorithms and metadata parser bodies are not broadly re-executed by
 that namespace milestone.
 
 These checks exercise the detached
-[logical protocol planner](../../../../source/libraries/acpi/field_protocol/PORT.md).
+[logical protocol planner](../../../../source/platform/libraries/acpi/field_protocol/PORT.md).
 They do not execute Omega AML opcodes, payload transfers, native callbacks or
 device operations. The separate Rust public probe executes the pinned upstream
 interpreter against initialized Vec memory with all other services trapped.
@@ -58,7 +58,7 @@ python3 tools/ports/acpi/field-protocol/fixtures.py --check
 python3 tools/ports/acpi/field-protocol/check.py --runner /path/to/target/release/cathedral-acpi-checked-runner
 python3 tools/ports/acpi/field-protocol/check_const.py --compiler /path/to/target/release/omega
 python3 tools/ports/acpi/field-protocol/reference.py
-python3 tools/ports/inventory.py check source/libraries/acpi/field_protocol/inventory.json --checkout reference_code/rust-osdev/acpi
+python3 tools/ports/inventory.py check source/platform/libraries/acpi/field_protocol/inventory.json --checkout reference_code/rust-osdev/acpi
 python3 tools/ports/acpi/field-protocol/verify_record.py
 ```
 

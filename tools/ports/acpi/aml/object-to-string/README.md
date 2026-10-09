@@ -1,6 +1,6 @@
 # Direct Buffer ToString evidence
 
-The [port record](../../../../../source/libraries/acpi/aml/object-to-string.PORT.md)
+The [port record](../../../../../source/platform/libraries/acpi/aml/object-to-string.PORT.md)
 defines direct IDs, full backing admission, selected-prefix ASCII validation and
 zero-tailed semantic results. Final repository-path 195 checked pairs, three constant pairs and 44 public
 observations passed; retained receipts validate against current hashes.

@@ -9,10 +9,10 @@ def main():
  v=api.snapshot(a.checkout,'257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5',['src/aml/mod.rs'],'https://github.com/rust-osdev/acpi')
  for f in v['files'].values():
   for e in f['symbols'].values():e['reason']='Outside direct BufferField source Store composition; aggregate execution remains pending.'
- e=v['files']['src/aml/mod.rs']['symbols']['2406:do_store'];e['targets']=[dict(path='source/libraries/acpi/aml/buffer_field_store.omg',anchor='pub machine store_value(')];e['note']='Direct Integer/Buffer/String source admission and atomic fixed BufferField write, preserving shared source/backing identity through a detached snapshot. Target/reference evaluation, other destination types and opcode execution remain pending.'
+ e=v['files']['src/aml/mod.rs']['symbols']['2406:do_store'];e['targets']=[dict(path='source/platform/libraries/acpi/aml/buffer_field_store.omg',anchor='pub machine store_value(')];e['note']='Direct Integer/Buffer/String source admission and atomic fixed BufferField write, preserving shared source/backing identity through a detached snapshot. Target/reference evaluation, other destination types and opcode execution remain pending.'
  v['primary_exports']={'store_value':'direct field/source IDs + IntegerSize and mutable canonical ObjectStore -> ByteResult; failure atomic, success identifies backing'}
- assert 'pub machine store_value('in(ROOT/'source/libraries/acpi/aml/buffer_field_store.omg').read_text()
- path=ROOT/'source/libraries/acpi/aml/buffer-field-store-inventory.json';text=json.dumps(v,indent=2,sort_keys=True)+'\n'
+ assert 'pub machine store_value('in(ROOT/'source/platform/libraries/acpi/aml/buffer_field_store.omg').read_text()
+ path=ROOT/'source/platform/libraries/acpi/aml/buffer-field-store-inventory.json';text=json.dumps(v,indent=2,sort_keys=True)+'\n'
  if a.check:assert path.read_text()==text
  else:path.write_text(text)
  print(api.check(v,a.checkout,repository=ROOT))

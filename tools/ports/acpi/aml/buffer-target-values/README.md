@@ -1,6 +1,6 @@
 # Positive-extent Buffer preparation evidence
 
-The [port record](../../../../../source/libraries/acpi/aml/buffer-target-values.PORT.md)
+The [port record](../../../../../source/platform/libraries/acpi/aml/buffer-target-values.PORT.md)
 defines the partial preparation profile and explicit destination-policy exclusions.
 Final repository-path verification passed all 204 checked pairs, three constant
 pairs and 54 public observations; retained receipts match current inputs.

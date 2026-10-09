@@ -21,7 +21,7 @@ def main():
     subprocess.run([str(compiler),'--check',str(HERE/'main.omg')],cwd=ROOT,check=True)
     cases=header_fixtures.cases()
     rows={row['name']:row for row in cases}
-    build=(HERE/'build.omg').read_text().replace('../../../source/libraries/acpi',str(ROOT/'source/libraries/acpi'))
+    build=(HERE/'build.omg').read_text().replace('../../../source/platform/libraries/acpi',str(ROOT/'source/platform/libraries/acpi'))
     groups=[]; pending=[]
     for row in cases:
         if len(bytes.fromhex(row['bytes'])) > 512:
@@ -40,7 +40,7 @@ def main():
     controls=[('rsdp_legacy','result.value.rsdt_address == 2166572391','result.value.rsdt_address == 2166572392'),
               ('rsdp_compensated_legacy_checksum','result.error == 6','result.error == 0'),
               ('xsdt_entries','entry1.address == 18364758544493064720','entry1.address == 18364758544493064721')]
-    build=(HERE/'build.omg').read_text().replace('../../../source/libraries/acpi',str(ROOT/'source/libraries/acpi'))
+    build=(HERE/'build.omg').read_text().replace('../../../source/platform/libraries/acpi',str(ROOT/'source/platform/libraries/acpi'))
     for name,marker,replacement in controls:
         source=header_fixtures.render([rows[name]])
         if source.count(marker)!=1:raise SystemExit(f'control {name} needs one marker: {marker}')

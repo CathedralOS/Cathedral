@@ -16,7 +16,7 @@
       "status": "static-subset",
       "target": {
         "anchor": "machine alias_declaration(",
-        "path": "source/libraries/acpi/aml/loader.omg"
+        "path": "source/platform/libraries/acpi/aml/loader.omg"
       },
       "wire": 6
     },
@@ -40,7 +40,7 @@
       "status": "static-subset",
       "target": {
         "anchor": "machine load_field(",
-        "path": "source/libraries/acpi/aml/field_namespace.omg"
+        "path": "source/platform/libraries/acpi/aml/field_namespace.omg"
       },
       "wire": 23431
     },
@@ -59,7 +59,7 @@
       "status": "static-subset",
       "target": {
         "anchor": "pub machine atom(",
-        "path": "source/libraries/acpi/aml/values.omg"
+        "path": "source/platform/libraries/acpi/aml/values.omg"
       },
       "wire": 17
     },
@@ -68,7 +68,7 @@
       "status": "static-subset",
       "target": {
         "anchor": "pub machine integer(",
-        "path": "source/libraries/acpi/aml/values.omg"
+        "path": "source/platform/libraries/acpi/aml/values.omg"
       },
       "wire": 10
     },
@@ -132,7 +132,7 @@
       "status": "static-subset",
       "target": {
         "anchor": "pub machine integer(",
-        "path": "source/libraries/acpi/aml/values.omg"
+        "path": "source/platform/libraries/acpi/aml/values.omg"
       },
       "wire": 12
     },
@@ -161,7 +161,7 @@
       "status": "static-subset",
       "target": {
         "anchor": "machine scoped(",
-        "path": "source/libraries/acpi/aml/loader.omg"
+        "path": "source/platform/libraries/acpi/aml/loader.omg"
       },
       "wire": 23426
     },
@@ -170,7 +170,7 @@
       "status": "name-encoding",
       "target": {
         "anchor": "pub machine namestring(",
-        "path": "source/libraries/acpi/aml/names.omg"
+        "path": "source/platform/libraries/acpi/aml/names.omg"
       },
       "wire": 48
     },
@@ -179,7 +179,7 @@
       "status": "name-encoding",
       "target": {
         "anchor": "pub machine namestring(",
-        "path": "source/libraries/acpi/aml/names.omg"
+        "path": "source/platform/libraries/acpi/aml/names.omg"
       },
       "wire": 57
     },
@@ -193,7 +193,7 @@
       "status": "name-encoding",
       "target": {
         "anchor": "pub machine namestring(",
-        "path": "source/libraries/acpi/aml/names.omg"
+        "path": "source/platform/libraries/acpi/aml/names.omg"
       },
       "wire": 46
     },
@@ -207,7 +207,7 @@
       "status": "static-subset",
       "target": {
         "anchor": "machine event(",
-        "path": "source/libraries/acpi/aml/loader.omg"
+        "path": "source/platform/libraries/acpi/aml/loader.omg"
       },
       "wire": 23298
     },
@@ -216,7 +216,7 @@
       "status": "static-subset",
       "target": {
         "anchor": "machine external(",
-        "path": "source/libraries/acpi/aml/loader.omg"
+        "path": "source/platform/libraries/acpi/aml/loader.omg"
       },
       "wire": 21
     },
@@ -230,7 +230,7 @@
       "status": "static-subset",
       "target": {
         "anchor": "machine load_field(",
-        "path": "source/libraries/acpi/aml/field_namespace.omg"
+        "path": "source/platform/libraries/acpi/aml/field_namespace.omg"
       },
       "wire": 23425
     },
@@ -269,7 +269,7 @@
       "status": "static-subset",
       "target": {
         "anchor": "machine load_field(",
-        "path": "source/libraries/acpi/aml/field_namespace.omg"
+        "path": "source/platform/libraries/acpi/aml/field_namespace.omg"
       },
       "wire": 23430
     },
@@ -348,7 +348,7 @@
       "status": "static-subset",
       "target": {
         "anchor": "machine method(",
-        "path": "source/libraries/acpi/aml/loader.omg"
+        "path": "source/platform/libraries/acpi/aml/loader.omg"
       },
       "wire": 20
     },
@@ -367,7 +367,7 @@
       "status": "name-encoding",
       "target": {
         "anchor": "pub machine namestring(",
-        "path": "source/libraries/acpi/aml/names.omg"
+        "path": "source/platform/libraries/acpi/aml/names.omg"
       },
       "wire": 47
     },
@@ -381,7 +381,7 @@
       "status": "static-subset",
       "target": {
         "anchor": "machine mutex(",
-        "path": "source/libraries/acpi/aml/loader.omg"
+        "path": "source/platform/libraries/acpi/aml/loader.omg"
       },
       "wire": 23297
     },
@@ -390,7 +390,7 @@
       "status": "static-subset",
       "target": {
         "anchor": "machine name_declaration(",
-        "path": "source/libraries/acpi/aml/loader.omg"
+        "path": "source/platform/libraries/acpi/aml/loader.omg"
       },
       "wire": 8
     },
@@ -399,7 +399,7 @@
       "status": "name-encoding",
       "target": {
         "anchor": "pub machine namestring(",
-        "path": "source/libraries/acpi/aml/names.omg"
+        "path": "source/platform/libraries/acpi/aml/names.omg"
       },
       "wire": 65
     },
@@ -408,7 +408,7 @@
       "status": "name-encoding",
       "target": {
         "anchor": "pub machine namestring(",
-        "path": "source/libraries/acpi/aml/names.omg"
+        "path": "source/platform/libraries/acpi/aml/names.omg"
       },
       "wire": 90
     },
@@ -417,7 +417,7 @@
       "status": "name-encoding",
       "target": {
         "anchor": "pub machine namestring(",
-        "path": "source/libraries/acpi/aml/names.omg"
+        "path": "source/platform/libraries/acpi/aml/names.omg"
       },
       "wire": 95
     },
@@ -431,7 +431,7 @@
       "status": "static-subset",
       "target": {
         "anchor": "machine advance(",
-        "path": "source/libraries/acpi/aml/loader.omg"
+        "path": "source/platform/libraries/acpi/aml/loader.omg"
       },
       "wire": 163
     },
@@ -460,7 +460,7 @@
       "status": "static-subset",
       "target": {
         "anchor": "pub machine integer(",
-        "path": "source/libraries/acpi/aml/values.omg"
+        "path": "source/platform/libraries/acpi/aml/values.omg"
       },
       "wire": 1
     },
@@ -469,7 +469,7 @@
       "status": "static-subset",
       "target": {
         "anchor": "pub machine integer(",
-        "path": "source/libraries/acpi/aml/values.omg"
+        "path": "source/platform/libraries/acpi/aml/values.omg"
       },
       "wire": 255
     },
@@ -478,7 +478,7 @@
       "status": "static-subset",
       "target": {
         "anchor": "machine region(",
-        "path": "source/libraries/acpi/aml/loader.omg"
+        "path": "source/platform/libraries/acpi/aml/loader.omg"
       },
       "wire": 23424
     },
@@ -492,7 +492,7 @@
       "status": "static-subset",
       "target": {
         "anchor": "pub machine parse_value(",
-        "path": "source/libraries/acpi/aml/values.omg"
+        "path": "source/platform/libraries/acpi/aml/values.omg"
       },
       "wire": 18
     },
@@ -501,7 +501,7 @@
       "status": "name-encoding",
       "target": {
         "anchor": "pub machine namestring(",
-        "path": "source/libraries/acpi/aml/names.omg"
+        "path": "source/platform/libraries/acpi/aml/names.omg"
       },
       "wire": 94
     },
@@ -510,7 +510,7 @@
       "status": "static-subset",
       "target": {
         "anchor": "machine scoped(",
-        "path": "source/libraries/acpi/aml/loader.omg"
+        "path": "source/platform/libraries/acpi/aml/loader.omg"
       },
       "wire": 23428
     },
@@ -519,7 +519,7 @@
       "status": "static-subset",
       "target": {
         "anchor": "machine scoped(",
-        "path": "source/libraries/acpi/aml/loader.omg"
+        "path": "source/platform/libraries/acpi/aml/loader.omg"
       },
       "wire": 23427
     },
@@ -528,7 +528,7 @@
       "status": "static-subset",
       "target": {
         "anchor": "pub machine integer(",
-        "path": "source/libraries/acpi/aml/values.omg"
+        "path": "source/platform/libraries/acpi/aml/values.omg"
       },
       "wire": 14
     },
@@ -557,7 +557,7 @@
       "status": "static-subset",
       "target": {
         "anchor": "pub machine integer(",
-        "path": "source/libraries/acpi/aml/values.omg"
+        "path": "source/platform/libraries/acpi/aml/values.omg"
       },
       "wire": 23344
     },
@@ -566,7 +566,7 @@
       "status": "name-encoding",
       "target": {
         "anchor": "pub machine namestring(",
-        "path": "source/libraries/acpi/aml/names.omg"
+        "path": "source/platform/libraries/acpi/aml/names.omg"
       },
       "wire": 92
     },
@@ -575,7 +575,7 @@
       "status": "static-subset",
       "target": {
         "anchor": "machine scoped(",
-        "path": "source/libraries/acpi/aml/loader.omg"
+        "path": "source/platform/libraries/acpi/aml/loader.omg"
       },
       "wire": 16
     },
@@ -619,7 +619,7 @@
       "status": "static-subset",
       "target": {
         "anchor": "pub machine atom(",
-        "path": "source/libraries/acpi/aml/values.omg"
+        "path": "source/platform/libraries/acpi/aml/values.omg"
       },
       "wire": 13
     },
@@ -633,7 +633,7 @@
       "status": "static-subset",
       "target": {
         "anchor": "machine scoped(",
-        "path": "source/libraries/acpi/aml/loader.omg"
+        "path": "source/platform/libraries/acpi/aml/loader.omg"
       },
       "wire": 23429
     },
@@ -677,7 +677,7 @@
       "status": "static-subset",
       "target": {
         "anchor": "pub machine parse_value(",
-        "path": "source/libraries/acpi/aml/values.omg"
+        "path": "source/platform/libraries/acpi/aml/values.omg"
       },
       "wire": 19
     },
@@ -696,7 +696,7 @@
       "status": "static-subset",
       "target": {
         "anchor": "pub machine integer(",
-        "path": "source/libraries/acpi/aml/values.omg"
+        "path": "source/platform/libraries/acpi/aml/values.omg"
       },
       "wire": 11
     },
@@ -710,7 +710,7 @@
       "status": "static-subset",
       "target": {
         "anchor": "pub machine integer(",
-        "path": "source/libraries/acpi/aml/values.omg"
+        "path": "source/platform/libraries/acpi/aml/values.omg"
       },
       "wire": 0
     }

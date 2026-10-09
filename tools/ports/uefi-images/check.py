@@ -52,7 +52,7 @@ def negative_check(compiler):
         for source in HERE.glob('*.omg'):
             text = source.read_text()
             if source.name == 'build.omg':
-                for relative in ('../../../source/contracts/uefi/raw', '../../../source/libraries/uefi'):
+                for relative in ('../../../source/contracts/uefi/raw', '../../../source/platform/libraries/uefi'):
                     assert relative in text
                     text = text.replace(relative, str((HERE / relative).resolve()))
             if source.name == 'golden.omg':

@@ -209,7 +209,7 @@
   ],
   "original_record_scope": "First-slice records covered 9 authored/dependency paths; in-flight connection records cover 10. These were incomplete as total dependency closures. Their original hashes are retained as recorded subsets. The current complete Cathedral source closure adds headers.omg. Omega core/compiler sources are separately pinned.",
   "supplemental_source_sha256": {
-    "source/libraries/acpi/headers.omg": "3bc53060656dd0f508b23d53732b7e6a497d055b586d690a125af1608d480626"
+    "source/platform/libraries/acpi/headers.omg": "3bc53060656dd0f508b23d53732b7e6a497d055b586d690a125af1608d480626"
   },
   "working_tree_header_mtime_ns": 1789937954488709924
 }

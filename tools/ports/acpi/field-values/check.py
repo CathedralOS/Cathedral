@@ -10,16 +10,16 @@ RUNNER=Path('/tmp/cathedral-acpi-execution-checked/release/cathedral-acpi-checke
 def sha(path):return hashlib.sha256(path.read_bytes()).hexdigest()
 def snapshot():
  paths=list(HERE.glob('*.py'))+[HERE/'reference.rs',HERE/'reference.Cargo.lock',HERE/'reference-verification.json',HERE/'cases.json',HERE/'comparison.json']
- paths += list((ROOT/'source/libraries/acpi/field_values').glob('*.omg'))
- paths += [ROOT/'source/libraries/acpi/field_access'/name for name in ['build.omg','model.omg','geometry.omg','chunks.omg']]
- paths += list((ROOT/'source/libraries/acpi/aml').glob('*.omg'))
- paths += list((ROOT/'source/libraries/acpi/aml/fields').glob('*.omg'))
- paths += [ROOT/'source/libraries/acpi/interpreter'/name for name in ['build.omg','integers.omg','buffer_fields.omg','conversions.omg']]
+ paths += list((ROOT/'source/platform/libraries/acpi/field_values').glob('*.omg'))
+ paths += [ROOT/'source/platform/libraries/acpi/field_access'/name for name in ['build.omg','model.omg','geometry.omg','chunks.omg']]
+ paths += list((ROOT/'source/platform/libraries/acpi/aml').glob('*.omg'))
+ paths += list((ROOT/'source/platform/libraries/acpi/aml/fields').glob('*.omg'))
+ paths += [ROOT/'source/platform/libraries/acpi/interpreter'/name for name in ['build.omg','integers.omg','buffer_fields.omg','conversions.omg']]
  paths += [ROOT/'tools/ports/acpi/interpreter/execution'/name for name in ['checked_runner.rs','runner.Cargo.lock']]
  return {str(path.relative_to(ROOT)):sha(path)for path in sorted(paths)}
 def build_text():
  text='machine build(builder:&mut Build){builder.application("cathedral-field-values-tests");builder.freestanding=true;'
- for alias,folder in [('values','field_values'),('access','field_access'),('fields','aml/fields'),('integers','interpreter'),('aml','aml')]:text+='builder.depend_as("'+alias+'",Source::Path {location:"'+str(ROOT/'source/libraries/acpi'/folder)+'"});'
+ for alias,folder in [('values','field_values'),('access','field_access'),('fields','aml/fields'),('integers','interpreter'),('aml','aml')]:text+='builder.depend_as("'+alias+'",Source::Path {location:"'+str(ROOT/'source/platform/libraries/acpi'/folder)+'"});'
  return text+'}'
 def validate(output,names):
  assert 'CHECKED authored package and dependency bodies;'in output

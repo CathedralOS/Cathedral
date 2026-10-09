@@ -3,8 +3,8 @@
 import json,sys
 from pathlib import Path
 HERE=Path(__file__).resolve().parent;ROOT=HERE.parents[2]
-p=ROOT/'source/libraries/x86_64/page-entries-inventory.json';doc=json.loads(p.read_text())
-target='source/libraries/x86_64/page_entries.omg';facts='source/drivers/facts/x86_page_table_entry.omg'
+p=ROOT/'source/platform/libraries/x86_64/page-entries-inventory.json';doc=json.loads(p.read_text())
+target='source/platform/libraries/x86_64/page_entries.omg';facts='source/platform/drivers/facts/x86_page_table_entry.omg'
 for path,file in doc['files'].items():
  for key,row in file['symbols'].items():
   n,name=key.split(':');n=int(n);dest=target;anchor=None;status='translated';reason='Checked numeric operation over canonical Cathedral PTE schema; no memory access or hardware authority.'

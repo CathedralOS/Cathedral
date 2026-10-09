@@ -10,9 +10,9 @@ for name,record in records.items():
  for path,want in record['source_sha256'].items():assert digest(ROOT/path)==want,(name,path)
 # Require the complete current production closure, even for records made before
 # this audit utility existed. An added utility does not rewrite old run receipts.
-production=set((ROOT/'source/libraries/acpi/resource_composition').glob('*.omg'))
-production.update((ROOT/'source/libraries/acpi/resources').glob('*.omg'))
-production.update(ROOT/'source/libraries/acpi'/p for p in ['build.omg','fixed_bytes.omg','bytes.omg','headers.omg'])
+production=set((ROOT/'source/platform/libraries/acpi/resource_composition').glob('*.omg'))
+production.update((ROOT/'source/platform/libraries/acpi/resources').glob('*.omg'))
+production.update(ROOT/'source/platform/libraries/acpi'/p for p in ['build.omg','fixed_bytes.omg','bytes.omg','headers.omg'])
 for name in ['verification.json','const-verification.json']:
  assert {str(p.relative_to(ROOT))for p in production}<=set(records[name]['source_sha256']),name
 v=records['verification.json'];names=[r['name']for r in fixtures.cases()]

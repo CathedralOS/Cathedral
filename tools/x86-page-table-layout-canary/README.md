@@ -1,6 +1,6 @@
 # x86 page-table policy field canary
 
-The canonical PTE schema remains in `source/drivers/facts/x86_page_table_entry.omg`.
+The canonical PTE schema remains in `source/platform/drivers/facts/x86_page_table_entry.omg`.
 Its stateless policy now lives in `x86_page_table_layout.omg`. This canary demands
 all fourteen field projections on a local equivalent schema through that actual
 policy. `check-schema.py` binds the test schema to the canonical one and audits

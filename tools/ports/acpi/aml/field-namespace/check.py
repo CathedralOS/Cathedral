@@ -15,10 +15,10 @@ HERE=fixtures.HERE
 def sha(path):return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 def snapshot():
  # This fixture package depends only on the parent AML package.
- paths=sorted((ROOT/'source/libraries/acpi/aml').glob('*.omg'))
+ paths=sorted((ROOT/'source/platform/libraries/acpi/aml').glob('*.omg'))
  paths += sorted(p for p in HERE.iterdir()if p.suffix in ['.py','.omg','.txt']or p.name=='cases.json')
  return {str(p.relative_to(ROOT)):sha(p)for p in paths}
-def build():return 'machine build(builder:&mut Build){builder.package("field-namespace-fixtures");builder.freestanding=true;builder.depend_as("aml",Source::Path {location:"'+str(ROOT/'source/libraries/acpi/aml')+'"});}\n'
+def build():return 'machine build(builder:&mut Build){builder.package("field-namespace-fixtures");builder.freestanding=true;builder.depend_as("aml",Source::Path {location:"'+str(ROOT/'source/platform/libraries/acpi/aml')+'"});}\n'
 def main():
  p=argparse.ArgumentParser(description=__doc__)
  p.add_argument('--runner',type=Path,default=Path('/tmp/cathedral-acpi-generic-checked/release/cathedral-acpi-checked-runner'))

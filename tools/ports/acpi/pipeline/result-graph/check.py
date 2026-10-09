@@ -8,13 +8,13 @@ RUNNER=Path('/tmp/cathedral-acpi-generic-checked/release/cathedral-acpi-checked-
 def sha(path):return hashlib.sha256(path.read_bytes()).hexdigest()
 def digest(value):return hashlib.sha256(value.encode()).hexdigest()
 def snapshot():
-    paths=list((ROOT/'source/libraries/acpi/aml').glob('*.omg'))+list((ROOT/'source/libraries/acpi/interpreter').rglob('*.omg'))+list((ROOT/'source/libraries/acpi/pipeline').glob('*.omg'))
+    paths=list((ROOT/'source/platform/libraries/acpi/aml').glob('*.omg'))+list((ROOT/'source/platform/libraries/acpi/interpreter').rglob('*.omg'))+list((ROOT/'source/platform/libraries/acpi/pipeline').glob('*.omg'))
     paths+=list(HERE.glob('*.py'))+[HERE/'cases.json',fixtures.LEGACY]
     return {str(p.relative_to(ROOT)):sha(p) for p in sorted(paths)}
 def build():
     text='machine build(builder:&mut Build){builder.package("program-result-graph-check");builder.freestanding=true;'
     for alias,path in [('aml','aml'),('execution','interpreter/execution'),('integer_helpers','interpreter'),('pipeline','pipeline')]:
-        text+=f'builder.depend_as("{alias}",Source::Path {{location:"{ROOT}/source/libraries/acpi/{path}"}});'
+        text+=f'builder.depend_as("{alias}",Source::Path {{location:"{ROOT}/source/platform/libraries/acpi/{path}"}});'
     return text+'}\n'
 def validate(output,selections):
     assert output.count('CHECKED authored package and dependency bodies;')==1

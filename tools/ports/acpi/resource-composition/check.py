@@ -5,9 +5,9 @@ from pathlib import Path
 import fixtures
 HERE=fixtures.HERE;ROOT=fixtures.ROOT;SHARED=HERE.parent/'interpreter/execution'
 def snapshot():
- sources=set((ROOT/'source/libraries/acpi/resource_composition').glob('*.omg'))
- sources.update((ROOT/'source/libraries/acpi/resources').glob('*.omg'))
- sources.update(ROOT/'source/libraries/acpi'/p for p in ['build.omg','fixed_bytes.omg','bytes.omg','headers.omg'])
+ sources=set((ROOT/'source/platform/libraries/acpi/resource_composition').glob('*.omg'))
+ sources.update((ROOT/'source/platform/libraries/acpi/resources').glob('*.omg'))
+ sources.update(ROOT/'source/platform/libraries/acpi'/p for p in ['build.omg','fixed_bytes.omg','bytes.omg','headers.omg'])
  sources.update(p for p in HERE.iterdir()if p.suffix in ['.py','.omg','.json','.rs']and'verification'not in p.name)
  sources.update([SHARED/'checked_runner.rs',SHARED/'runner.Cargo.lock'])
  return {str(p.relative_to(ROOT)):hashlib.sha256(p.read_bytes()).hexdigest()for p in sorted(sources)}

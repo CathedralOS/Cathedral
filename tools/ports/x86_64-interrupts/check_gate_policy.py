@@ -3,8 +3,8 @@
 import re,subprocess
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[3]
-old=subprocess.check_output(['git','show','d4b8fa5aae189e9ee10768a1e6de5c1370fb5dcb:source/drivers/facts/x86_idt_gate.omg'],cwd=ROOT,text=True)
-new=(ROOT/'source/drivers/facts/x86_idt_gate.omg').read_text();plan=(ROOT/'source/drivers/facts/x86_idt_gate_layout.omg').read_text()
+old=subprocess.check_output(['git','show','d4b8fa5aae189e9ee10768a1e6de5c1370fb5dcb:source/platform/drivers/facts/x86_idt_gate.omg'],cwd=ROOT,text=True)
+new=(ROOT/'source/platform/drivers/facts/x86_idt_gate.omg').read_text();plan=(ROOT/'source/platform/drivers/facts/x86_idt_gate_layout.omg').read_text()
 def clean(s):return re.sub(r'\s+','',re.sub(r'//[^\n]*','',s))
 def fields(s):return re.search(r'pub data X86IdtGate(?: \[copy\])?\s*\{(.*?)\n\}',s,re.S).group(1)
 assert clean(fields(old))==clean(fields(new)),'canonical gate fields changed'

@@ -1,7 +1,7 @@
 """Reviewed module-level reconciliation, not inferred semantic translation status."""
 F='pure-fact-layout'; A='pure-algorithm'; E='existing-representation'; I='instruction-boundary'; P='cathedral-policy'; R='deliberate-rejection'; T='test-fixture'
-FACT='source/drivers/facts/'
-CORE='source/core/'
+FACT='source/platform/drivers/facts/'
+CORE='source/kernel/core/'
 def ref(path,anchor):return {'path':path,'anchor':anchor}
 PTE=ref(FACT+'x86_page_table_entry.omg','pub data X86PageTableEntry')
 IDT=ref(FACT+'x86_idt_gate.omg','pub data X86IdtGate')

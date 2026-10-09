@@ -5,7 +5,7 @@ from pathlib import Path
 import aml_encoding as aml
 HERE=Path(__file__).resolve().parent;ROOT=HERE.parents[4];PIN='257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5'
 def sha(p):return hashlib.sha256(p.read_bytes()).hexdigest()
-MAPPING=['source/libraries/acpi/aml/buffer_field_store.omg','source/libraries/acpi/aml/buffer_field_writes.omg','source/libraries/acpi/aml/byte_storage.omg']
+MAPPING=['source/platform/libraries/acpi/aml/buffer_field_store.omg','source/platform/libraries/acpi/aml/buffer_field_writes.omg','source/platform/libraries/acpi/aml/byte_storage.omg']
 def insert(backing,payload,start,count):
  mask=((1<<count)-1)<<start
  return ((int.from_bytes(backing,'little')&~mask)|((int.from_bytes(payload,'little')<<start)&mask)).to_bytes(len(backing),'little')

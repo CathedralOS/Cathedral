@@ -26,7 +26,7 @@ output=subprocess.check_output(['cargo','run','--locked','--quiet','--manifest-p
 actual={k:int(v) for k,v in (line.split('=',1) for line in output.splitlines())};assert actual=={k:r['value'] for k,r in rows.items()},(actual,rows)
 subprocess.run(['cargo','check','--locked','--quiet','--lib','--manifest-path',str(HERE/'Cargo.toml'),'--target','x86_64-unknown-uefi'],cwd=ROOT,check=True)
 vector={'format':'cathedral-port-vectors-v1','target':{'pointer_bits':64,'endian':'little','abi':'pinned Rust UEFI-x64 IDT/frame ABI; Cathedral gate policy alignment16 deliberately distinct'},'provenance':{'kind':'upstream','revision':schema['revision'],'sources':[schema['source']],'description':'Actual Rust host values/size/alignment/public offsets, each independently const-asserted for UEFI x64. Rust Entry alignment4 differs from Cathedral requested gate alignment16. Native Omega layout not observed.'},'measurements':{k:{'kind':r['kind'],'value':actual[k]} for k,r in rows.items()}}
-p=ROOT/'source/drivers/facts/x86_interrupts.vectors.json'
+p=ROOT/'source/platform/drivers/facts/x86_interrupts.vectors.json'
 if args.write:p.write_text(json.dumps(vector,indent=2)+'\n')
 elif not p.exists() or json.loads(p.read_text())!=vector:raise SystemExit('vectors differ; review before --write')
 print('PASS',len(rows),'actual Rust observations and UEFI-x64 const assertions')

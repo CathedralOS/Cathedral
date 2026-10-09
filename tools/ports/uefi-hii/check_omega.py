@@ -9,7 +9,7 @@ ROOT=HERE.parents[2]
 OMEGA=Path(sys.argv[1]).resolve() if len(sys.argv)>1 else ROOT.parent/'Omega/target/release/omega'
 if not OMEGA.is_file():raise SystemExit('Omega release binary absent: '+str(OMEGA))
 modules=sorted({r['module'] for r in json.loads((HERE/'schema.json').read_text())})+['hii_layouts']
-roots=['source/contracts/uefi/raw/'+m+'.omg' for m in modules]+['source/libraries/uefi/hii_helpers.omg','tools/ports/uefi-hii/main.omg']
+roots=['source/contracts/uefi/raw/'+m+'.omg' for m in modules]+['source/platform/libraries/uefi/hii_helpers.omg','tools/ports/uefi-hii/main.omg']
 for root in roots:
     result=subprocess.run([str(OMEGA),'--check',root],cwd=ROOT,text=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
     if result.returncode:raise SystemExit(root+' FAILED\n'+result.stdout)

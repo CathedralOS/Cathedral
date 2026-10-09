@@ -8,7 +8,7 @@ def main():
  p=argparse.ArgumentParser();p.add_argument('--omega',type=Path,default=ROOT.parent/'Omega/target/release/omega');p.add_argument('--host-only',action='store_true');args=p.parse_args()
  run(sys.executable,HERE/'generate.py','--check')
  run(sys.executable,HERE/'map_inventory.py','--check')
- run(sys.executable,ROOT/'tools/ports/inventory.py','check',ROOT/'source/libraries/x86_64/page-entries-inventory.json','--checkout',ROOT/'reference_code/rust-osdev/x86_64')
+ run(sys.executable,ROOT/'tools/ports/inventory.py','check',ROOT/'source/platform/libraries/x86_64/page-entries-inventory.json','--checkout',ROOT/'reference_code/rust-osdev/x86_64')
  run('cargo','+nightly-2026-09-04','run','--quiet','--locked','--manifest-path',HERE/'Cargo.toml')
  run('cargo','+nightly-2026-09-04','test','--quiet','--manifest-path',ROOT/'reference_code/rust-osdev/x86_64/Cargo.toml','--no-default-features','--features','step_trait','--lib','structures::paging::page_table::tests')
  if args.host_only:return
@@ -16,7 +16,7 @@ def main():
  run(sys.executable,ROOT/'tools/x86-page-table-layout-canary/check-schema.py')
  source=(HERE/'main.omg').read_text();prefix=source[:source.index('machine case_0(')]
  cases=json.loads((HERE/'cases.json').read_text())
- build=(HERE/'build.omg').read_text().replace('../../../source/libraries/x86_64',str(ROOT/'source/libraries/x86_64')).replace('../../../source/drivers/facts',str(ROOT/'source/drivers/facts'))
+ build=(HERE/'build.omg').read_text().replace('../../../source/platform/libraries/x86_64',str(ROOT/'source/platform/libraries/x86_64')).replace('../../../source/platform/drivers/facts',str(ROOT/'source/platform/drivers/facts'))
  def evaluate(indices,mutation=None):
   body=prefix+'\n'.join(f'machine case_{i}() -> i32 {{ {cases[i]["body"]} }}' for i in indices)
   if mutation:

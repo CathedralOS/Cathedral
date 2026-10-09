@@ -48,7 +48,7 @@ lexical; it does not expand Rust derive macros.
 | `device_path/device_path_gen.rs` | [device_path.omg](device_path.omg) | Every node's fixed fields and all enum/flag/GUID values; category-prefixed type names. |
 | `media.rs` | [load_file.omg](load_file.omg) | LoadFile, LoadFile2 and StorageSecurityCommand raw slots/GUIDs. |
 | `shell_params.rs` | [shell_params.omg](shell_params.omg) | Shell handle carrier and complete parameter record/GUID. |
-| Pure operations | [console_helpers.omg](../../../libraries/uefi/console_helpers.omg) | Length decoding, zero graphics-mode constructor; additional local bounded-prefix check. |
+| Pure operations | [console_helpers.omg](../../../platform/libraries/uefi/console_helpers.omg) | Length decoding, zero graphics-mode constructor; additional local bounded-prefix check. |
 
 No upstream raw callable operation is silently implemented: each function-pointer
 field retains its original signature in a comment and its exact native offset
@@ -153,7 +153,7 @@ establish any of these. No native invocation leaves are added by this slice.
 ## Cathedral integration and authority
 
 Owned by [contracts](../../CHARTER.md), isolated in the `cathedral-uefi-raw`
-package. Pure helper behavior belongs to `source/libraries/uefi`. No production
+package. Pure helper behavior belongs to `source/platform/libraries/uefi`. No production
 boot dependency or existing consumer view is migrated here. The legacy
 `TextOutputProtocol` prefix and `EfiSystemTable` remain separate as recorded by
 [UEFI-000](../RECONCILIATION.md). Protocol GUIDs and table bytes identify shapes;
@@ -171,7 +171,7 @@ Run from repository root:
 | `python3 tools/ports/vectors.py source/contracts/uefi/raw/console.vectors.json` | Vector format check; Omega comparison not run. |
 | `cargo test --manifest-path tools/ports/uefi-console/Cargo.toml` | Two upstream behavior checks pass; no translated Omega execution. |
 | `../Omega/target/release/omega --check source/contracts/uefi/raw/console.omg` (also serial, loaded_image, device_path, load_file, shell_params, console_layouts) | All seven roots pass. |
-| `../Omega/target/release/omega --check source/libraries/uefi/console_helpers.omg` | Helper source passes. |
+| `../Omega/target/release/omega --check source/platform/libraries/uefi/console_helpers.omg` | Helper source passes. |
 | `../Omega/target/release/omega --check tools/ports/uefi-console/main.omg` | Pure helper cases execute via compile-time `TEST_RESULT`; requires result zero; pass. |
 | `../Omega/target/release/omega --check tools/ports/uefi-console/negative.omg` | Expected rejection: `cannot prove ... require_success ... 0 + 1 == 0`; verifies the real evaluated result is used. |
 | `../Omega/target/release/omega --check tools/ports/uefi-console/layout_type_only.omg` | Selected InputKey policy carrier passes; no field access or layout observation. |

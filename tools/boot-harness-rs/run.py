@@ -2,6 +2,7 @@
 """Build and boot the Rust lab; --smoke checks a bounded, real QEMU boot."""
 
 import argparse
+import json
 import os
 from pathlib import Path
 import shutil
@@ -11,7 +12,9 @@ import sys
 REPO = Path(__file__).resolve().parents[2]
 WORKSPACE = REPO / "source-rs"
 BUILD = REPO / "build" / "boot-harness-rs"
-TARGET = "x86_64-unknown-uefi"
+PROFILE = json.loads((WORKSPACE / "distribution/profile.json").read_text(encoding="utf-8"))
+TARGET = PROFILE["target"]
+BOOT_PACKAGE = PROFILE["boot_package"]
 MARKERS = (
     "Cathedral Rust lab: UEFI entry",
     "Cathedral Rust lab: ExitBootServices complete",
@@ -85,7 +88,7 @@ def main():
     if args.fault and not args.smoke:
         parser.error("--fault requires --smoke")
 
-    cargo = ["cargo", "build", "--locked", "--package", "cathedral-boot-uefi",
+    cargo = ["cargo", "build", "--locked", "--package", BOOT_PACKAGE,
              "--target", TARGET, "--target-dir", str(BUILD / "cargo")]
     if args.release:
         cargo.append("--release")
@@ -97,7 +100,7 @@ def main():
     esp = output / "esp/EFI/BOOT"
     esp.mkdir(parents=True, exist_ok=True)
     profile = "release" if args.release else "debug"
-    shutil.copyfile(BUILD / "cargo" / TARGET / profile / "cathedral-boot-uefi.efi", esp / "BOOTX64.EFI")
+    shutil.copyfile(BUILD / "cargo" / TARGET / profile / f"{BOOT_PACKAGE}.efi", esp / "BOOTX64.EFI")
     print(f"EFI image: {esp / 'BOOTX64.EFI'}", flush=True)
     if args.build_only:
         return 0

@@ -42,5 +42,5 @@ Earlier milestone receipts are unchanged historical evidence. The preceding
 do not match its current-input verifier. To audit its input binding without
 claiming a replay, compare every receipt `input_sha256` entry with the SHA-256 of
 `git show 9e45adc:<path>`. Only this new focused suite is rerun for this extension.
-See the [PORT profile](../../../../../source/libraries/acpi/aml/zero-buffer-store.PORT.md)
+See the [PORT profile](../../../../../source/platform/libraries/acpi/aml/zero-buffer-store.PORT.md)
 for the remaining positive-target empty String decision and exact behavior.

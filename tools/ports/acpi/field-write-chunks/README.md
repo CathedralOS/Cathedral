@@ -5,7 +5,7 @@ runner verification. Execution took 1052.578 seconds wall time across 64 package
 and three workers (3110.472 seconds summed batch time). Maximum checked fuel was
 789,104 per body. All 126 public Rust observations also replay and verify.
 
-The [port contract](../../../../source/libraries/acpi/field_writes/chunks.PORT.md)
+The [port contract](../../../../source/platform/libraries/acpi/field_writes/chunks.PORT.md)
 describes the canonical shared merge, error precedence and detached boundary.
 The authored suite has 175 selected-chunk positive/changed-expectation pairs and
 retains all 454 original bulk assembly pairs, for 629 pairs. Packages contain ten
@@ -19,7 +19,7 @@ python3 tools/ports/acpi/field-write-chunks/check.py --runner /path/to/cathedral
 python3 tools/ports/acpi/field-write-chunks/verify_record.py --require-binaries
 python3 tools/ports/acpi/field-write-chunks/public/replay.py --repository /path/to/Cathedral
 python3 tools/ports/acpi/field-write-chunks/public/replay.py --verify --require-binary
-python3 tools/ports/inventory.py check --checkout reference_code/rust-osdev/acpi source/libraries/acpi/field_writes/inventory.json
+python3 tools/ports/inventory.py check --checkout reference_code/rust-osdev/acpi source/platform/libraries/acpi/field_writes/inventory.json
 ```
 
 The clean pinned Omega revision and immutable checked runner are recorded in

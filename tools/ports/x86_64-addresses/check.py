@@ -13,13 +13,13 @@ def main():
  parser.add_argument('--omega',type=Path,default=ROOT.parent/'Omega/target/release/omega')
  parser.add_argument('--host-only',action='store_true')
  args=parser.parse_args()
- run(sys.executable,ROOT/'tools/ports/inventory.py','check',ROOT/'source/libraries/x86_64/addresses-inventory.json','--checkout',ROOT/'reference_code/rust-osdev/x86_64','--require-transcribed')
+ run(sys.executable,ROOT/'tools/ports/inventory.py','check',ROOT/'source/platform/libraries/x86_64/addresses-inventory.json','--checkout',ROOT/'reference_code/rust-osdev/x86_64','--require-transcribed')
  run(sys.executable,HERE/'generate.py','--check')
  run('cargo','+nightly-2026-09-04','run','--quiet','--locked','--manifest-path',HERE/'Cargo.toml')
  if args.host_only:return
  compiler=args.omega.resolve();print('Omega binary SHA-256:',hashlib.sha256(compiler.read_bytes()).hexdigest(),flush=True)
  run(compiler,'--check',HERE/'main.omg')
- build=(HERE/'build.omg').read_text().replace('../../../source/libraries/x86_64',str(ROOT/'source/libraries/x86_64'))
+ build=(HERE/'build.omg').read_text().replace('../../../source/platform/libraries/x86_64',str(ROOT/'source/platform/libraries/x86_64'))
  controls=[('main.omg','equal(result0, 0)','equal(result0, 1)'),('extras.omg','forward.value == 0xffff800000000000','forward.value == 0xffff800000000001'),('extras.omg','overflow.value == 0xffffffffffffffff && overflow.overflow','overflow.value == 0xffffffffffffffff && !overflow.overflow')]
  for filename,old,new in controls:
   with tempfile.TemporaryDirectory(prefix='cathedral-x86-address-negative-') as directory:

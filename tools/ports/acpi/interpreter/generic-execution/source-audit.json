@@ -5,7 +5,7 @@
     "python3",
     "/Users/zcanann/Documents/projects/Cathedral/tools/ports/inventory.py",
     "check",
-    "/Users/zcanann/Documents/projects/Cathedral/source/libraries/acpi/interpreter/execution/generic-inventory.json",
+    "/Users/zcanann/Documents/projects/Cathedral/source/platform/libraries/acpi/interpreter/execution/generic-inventory.json",
     "--checkout",
     "/Users/zcanann/Documents/projects/Cathedral/reference_code/rust-osdev/acpi"
   ],

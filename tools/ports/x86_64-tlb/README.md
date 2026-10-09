@@ -20,5 +20,5 @@ AMD's encoded count means additional pages. The pinned source advances by
 max(encoded,1); the separately named architectural recipe advances by the
 addressed page count. Both behaviors are retained visibly and tested.
 
-See `source/libraries/x86_64/tlb-operands.PORT.md` for exact provenance,
+See `source/platform/libraries/x86_64/tlb-operands.PORT.md` for exact provenance,
 representation limits, source mapping and the remaining instruction-family audit.

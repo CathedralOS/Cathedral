@@ -10,9 +10,9 @@ def main():
  assert not subprocess.check_output(['git','status','--porcelain'],cwd=omega,text=True).strip(),'requires clean Omega source'
  subprocess.run(['python3',str(HERE/'generate.py'),'--check'],cwd=ROOT,check=True)
  subprocess.run(['python3',str(HERE/'map_inventory.py'),'--check'],cwd=ROOT,check=True)
- subprocess.run(['python3',str(ROOT/'tools/ports/inventory.py'),'check',str(ROOT/'source/libraries/acpi/resources/inventory.json'),'--checkout',str(ROOT/'reference_code/rust-osdev/acpi')],cwd=ROOT,check=True)
+ subprocess.run(['python3',str(ROOT/'tools/ports/inventory.py'),'check',str(ROOT/'source/platform/libraries/acpi/resources/inventory.json'),'--checkout',str(ROOT/'reference_code/rust-osdev/acpi')],cwd=ROOT,check=True)
  cases=json.loads((HERE/'cases.json').read_text());names=a.case or list(cases)
- source_files=sorted(list((ROOT/'source/libraries/acpi/resources').glob('*.omg'))+[ROOT/name for name in ['source/libraries/acpi/build.omg','source/libraries/acpi/bytes.omg','source/libraries/acpi/fixed_bytes.omg','source/libraries/acpi/headers.omg']])
+ source_files=sorted(list((ROOT/'source/platform/libraries/acpi/resources').glob('*.omg'))+[ROOT/name for name in ['source/platform/libraries/acpi/build.omg','source/platform/libraries/acpi/bytes.omg','source/platform/libraries/acpi/fixed_bytes.omg','source/platform/libraries/acpi/headers.omg']])
  def hashes():return {str(f.relative_to(ROOT)):hashlib.sha256(f.read_bytes()).hexdigest()for f in source_files}
  before=hashes()
  with tempfile.TemporaryDirectory(prefix='cathedral-resource-checked-')as directory:
@@ -32,7 +32,7 @@ def main():
     assert body.count('machine test()')==1,name;body=body.replace('machine test()','machine '+machine+'(&mut self)',1)
     bodies.append(body);selections.append(machine+'='+str(int(negative)))
   suite='\n'.join(sorted(set(imports)))+'\ndata ResourceSuite{}\n'+''.join(bodies)
-  (root/'main.omg').write_text(suite);(root/'build.omg').write_text((HERE/'build.omg').read_text().replace('../../../../source/libraries/acpi/resources',str(ROOT/'source/libraries/acpi/resources')))
+  (root/'main.omg').write_text(suite);(root/'build.omg').write_text((HERE/'build.omg').read_text().replace('../../../../source/platform/libraries/acpi/resources',str(ROOT/'source/platform/libraries/acpi/resources')))
   print('Checked resource suite:',len(names),'positives and',len(names),'changed-body controls',flush=True)
   env=dict(os.environ,OMEGA_INTERP_STEP_BUDGET='10000000');started=time.monotonic();command=[str(runner),str(root/'main.omg'),str(root/'build'),*selections];process=subprocess.Popen(command,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True,env=env);lines=[]
   for line in process.stdout:print(line,end='',flush=True);lines.append(line)

@@ -4,7 +4,7 @@ import argparse,hashlib,json,subprocess,tempfile
 from pathlib import Path
 import aml_encoding as aml
 HERE=Path(__file__).resolve().parent;ROOT=HERE.parents[4];PIN='257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5'
-MAPPING=['source/libraries/acpi/aml/namespace.omg','source/libraries/acpi/aml/object_references.omg','source/libraries/acpi/aml/byte_storage.omg']
+MAPPING=['source/platform/libraries/acpi/aml/namespace.omg','source/platform/libraries/acpi/aml/object_references.omg','source/platform/libraries/acpi/aml/byte_storage.omg']
 def sha(p):return hashlib.sha256(p.read_bytes()).hexdigest()
 def cases():
  rows=[]

@@ -30,8 +30,8 @@ def snapshot():
     paths = set(HERE.glob('*.py')) | {HERE/'cases.json', HERE/'toolchain.json'}
     paths |= {fixtures.BASE/name for name in ['fixtures.py', 'vectors.py', 'fixture_common.py', 'cases.json']}
     for folder in ['aml', 'field_sources']:
-        paths |= set((ROOT/'source/libraries/acpi'/folder).rglob('*.omg'))
-    paths |= {ROOT/'source/libraries/acpi/interpreter'/name for name in ['build.omg', 'integers.omg', 'buffer_fields.omg', 'conversions.omg', 'string_numbers.omg']}
+        paths |= set((ROOT/'source/platform/libraries/acpi'/folder).rglob('*.omg'))
+    paths |= {ROOT/'source/platform/libraries/acpi/interpreter'/name for name in ['build.omg', 'integers.omg', 'buffer_fields.omg', 'conversions.omg', 'string_numbers.omg']}
     paths |= {ROOT/'tools/ports/acpi/interpreter/execution'/name for name in ['checked_runner.rs', 'runner.Cargo.lock']}
     return {str(path.relative_to(ROOT)):sha(path) for path in sorted(paths)}
 
@@ -54,7 +54,7 @@ def driver_source(groups):
 def build_text(root=ROOT):
     source = 'machine build(builder:&mut Build){builder.application("cathedral-field-source-inline");builder.freestanding=true;'
     for alias, folder in [('sources','field_sources'), ('integers','interpreter'), ('aml','aml')]:
-        source += 'builder.depend_as("'+alias+'",Source::Path {location:"'+str(root/'source/libraries/acpi'/folder)+'"});'
+        source += 'builder.depend_as("'+alias+'",Source::Path {location:"'+str(root/'source/platform/libraries/acpi'/folder)+'"});'
     return source+'}'
 
 

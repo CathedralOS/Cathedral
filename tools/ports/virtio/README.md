@@ -1,6 +1,6 @@
 # Pure VirtIO port checks
 
-See `source/libraries/virtio/PORT.md` for provenance and stage limits.
+See `source/platform/libraries/virtio/PORT.md` for provenance and stage limits.
 `check.py` audits the full pin, private raw fields and enum widths, compares
 cross-target Rust observations, and runs actual pinned ring allocation cases.
 `semantic-check.py` checks eight pure Omega groups and eight body-mutating

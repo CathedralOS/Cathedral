@@ -3,7 +3,7 @@
 These tests consume real AML bytes through `cathedral-acpi-execution`. The
 79 scenarios cover translated method/loop/increment/logical-not examples,
 integer stores/calls/control flow, malformed inputs and explicit limits/services.
-The [port record](../../../../../source/libraries/acpi/interpreter/execution/PORT.md)
+The [port record](../../../../../source/platform/libraries/acpi/interpreter/execution/PORT.md)
 describes exact scope and pending generic interpreter behavior.
 
 ```sh

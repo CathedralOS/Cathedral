@@ -12,7 +12,7 @@ def main():
  subprocess.run([str(compiler),'--check',str(HERE/'main.omg')],check=True,cwd=ROOT)
  rows=fixtures.cases();selected=[r for r in rows if args.match in r['name']]
  if not selected:raise SystemExit('No matching cases')
- build=(HERE/'build.omg').read_text().replace('../../../../source/libraries/acpi/interpreter',str(ROOT/'source/libraries/acpi/interpreter'))
+ build=(HERE/'build.omg').read_text().replace('../../../../source/platform/libraries/acpi/interpreter',str(ROOT/'source/platform/libraries/acpi/interpreter'))
  def check(source,negative=False):
   with tempfile.TemporaryDirectory(prefix='cathedral-acpi-interpreter-')as directory:
    path=Path(directory);(path/'build.omg').write_text(build);(path/'main.omg').write_text(source)

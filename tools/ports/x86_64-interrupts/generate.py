@@ -30,13 +30,13 @@ for name,row in records.items():facts.append('pub data '+name+' [copy] { '+' '.j
 facts+=['pub data PageFaultErrorCode [copy] { raw: u64; }','pub data DetachedIdt [copy] { entries: [X86IdtGate; 256]; }','']
 for f in flags:facts.append(f'pub const PAGE_FAULT_{f["name"]}: PageFaultErrorCode = PageFaultErrorCode {{ raw: {f["value"]} }};')
 facts+=['pub const PAGE_FAULT_KNOWN_BITS: u64 = '+str(sum(f['value'] for f in flags))+';','pub const IDT_ENTRY_COUNT: u16 = 256;','pub const IDT_BYTE_LENGTH: u16 = 4096;','pub const IDT_BYTE_LIMIT: u16 = 4095;','']
-emit(ROOT/'source/drivers/facts/x86_interrupts.omg','\n'.join(facts))
+emit(ROOT/'source/platform/drivers/facts/x86_interrupts.omg','\n'.join(facts))
 plans=header+['module interrupt_frame_layouts;','use omega::language::core::layout;','']
 for name,row in records.items():
  plans+=['pub data '+name+'Layout {}','pub '+name+'Policy: '+name+'Layout satisfies Layout;','pub machine '+name+'Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {','    let mut entries: [FieldEntry; 64];']
  for i,(_,_,offset) in enumerate(row['fields']):plans.append(f'    entries[{i}] = FieldEntry {{ key: schema.fields[{i}].key, placement: FieldPlan::At {{ offset: {offset} }} }};')
  plans+=['    Plan { entries: entries, entry_count: '+str(len(row['fields']))+', size_fixed: '+str(row['size'])+', size_is_dynamic: false, align: '+str(row['align'])+' }','}','']
-emit(ROOT/'source/drivers/facts/interrupt_frame_layouts.omg','\n'.join(plans))
+emit(ROOT/'source/platform/drivers/facts/interrupt_frame_layouts.omg','\n'.join(plans))
 code=header+['module interrupt_bytes;','use facts::x86_interrupts::EntryOptions;','use facts::x86_interrupts::RawInterruptStackFrame;','use facts::x86_registers::SegmentSelector;','use facts::x86_registers::RFlags;','']
 for name,row in records.items():
  fields=[]
@@ -56,7 +56,7 @@ for name,row in records.items():
   else:expr=values[field]
   code.append(f'    let {field}: {ty} = {expr};')
  code+=['    '+name+' { '+', '.join(field+': '+field for field,_,_ in row['fields'])+' }','}','']
-emit(ROOT/'source/libraries/x86_64/interrupt_bytes.omg','\n'.join(code)+'\n'+(HERE/'gate_codecs.template.omg').read_text())
+emit(ROOT/'source/platform/libraries/x86_64/interrupt_bytes.omg','\n'.join(code)+'\n'+(HERE/'gate_codecs.template.omg').read_text())
 enum=s[s.index('pub enum ExceptionVector {'):s.index('/// Exception vector number is invalid')]
 vectors=[{'name':m[1],'value':int(m[2],0),'line':s[:s.index(enum)+m.start()].count('\n')+1} for m in re.finditer(r'    (\w+) = (0x[0-9A-Fa-f]+),',enum)]
 emit(HERE/'schema.json',json.dumps({'revision':PIN,'source':SOURCE,'flags':flags,'records':records,'exception_vectors':vectors},indent=2)+'\n')

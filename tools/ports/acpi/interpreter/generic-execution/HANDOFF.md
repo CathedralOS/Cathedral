@@ -10,25 +10,25 @@ or hardware execution is claimed.
 
 ## Production files
 
-- `source/libraries/acpi/interpreter/execution/control.omg`
-- `source/libraries/acpi/interpreter/execution/decode_execution.omg`
-- `source/libraries/acpi/interpreter/execution/engine.omg`
-- `source/libraries/acpi/interpreter/execution/execution_model.omg`
-- `source/libraries/acpi/interpreter/execution/external_arguments.omg`
-- `source/libraries/acpi/interpreter/execution/frames.omg`
-- `source/libraries/acpi/interpreter/execution/generic_binding_plan.omg`
-- `source/libraries/acpi/interpreter/execution/generic_target_bridge.omg`
-- `source/libraries/acpi/interpreter/execution/generic_target_model.omg`
-- `source/libraries/acpi/interpreter/execution/generic_target_values.omg`
-- `source/libraries/acpi/interpreter/execution/generic_targets.omg`
-- `source/libraries/acpi/interpreter/execution/generic_values.omg`
-- `source/libraries/acpi/interpreter/execution/integer_target_bridge.omg`
-- `source/libraries/acpi/interpreter/execution/integer_target_values.omg`
-- `source/libraries/acpi/interpreter/execution/operands.omg`
-- `source/libraries/acpi/interpreter/execution/retire.omg`
-- `source/libraries/acpi/interpreter/execution/runtime_model.omg`
-- `source/libraries/acpi/interpreter/execution/targets.omg`
-- `source/libraries/acpi/pipeline/program.omg`
+- `source/platform/libraries/acpi/interpreter/execution/control.omg`
+- `source/platform/libraries/acpi/interpreter/execution/decode_execution.omg`
+- `source/platform/libraries/acpi/interpreter/execution/engine.omg`
+- `source/platform/libraries/acpi/interpreter/execution/execution_model.omg`
+- `source/platform/libraries/acpi/interpreter/execution/external_arguments.omg`
+- `source/platform/libraries/acpi/interpreter/execution/frames.omg`
+- `source/platform/libraries/acpi/interpreter/execution/generic_binding_plan.omg`
+- `source/platform/libraries/acpi/interpreter/execution/generic_target_bridge.omg`
+- `source/platform/libraries/acpi/interpreter/execution/generic_target_model.omg`
+- `source/platform/libraries/acpi/interpreter/execution/generic_target_values.omg`
+- `source/platform/libraries/acpi/interpreter/execution/generic_targets.omg`
+- `source/platform/libraries/acpi/interpreter/execution/generic_values.omg`
+- `source/platform/libraries/acpi/interpreter/execution/integer_target_bridge.omg`
+- `source/platform/libraries/acpi/interpreter/execution/integer_target_values.omg`
+- `source/platform/libraries/acpi/interpreter/execution/operands.omg`
+- `source/platform/libraries/acpi/interpreter/execution/retire.omg`
+- `source/platform/libraries/acpi/interpreter/execution/runtime_model.omg`
+- `source/platform/libraries/acpi/interpreter/execution/targets.omg`
+- `source/platform/libraries/acpi/pipeline/program.omg`
 
 The new `generic.PORT.md` and `generic-inventory.json` document the bounded
 profile and partial source mappings. Existing test changes are limited to

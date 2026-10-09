@@ -1,6 +1,6 @@
 # Direct String-name lookup evidence
 
-See [the port record](../../../../../source/libraries/acpi/aml/string-lookup.PORT.md)
+See [the port record](../../../../../source/platform/libraries/acpi/aml/string-lookup.PORT.md)
 for direct String admission, scoped lookup and deferred target evaluation.
 
 ```sh

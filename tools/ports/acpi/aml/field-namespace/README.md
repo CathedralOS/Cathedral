@@ -1,6 +1,6 @@
 # Field declaration namespace fixtures
 
-The [BankField/IndexField extension](../../../../../source/libraries/acpi/aml/field-indirect.PORT.md)
+The [BankField/IndexField extension](../../../../../source/platform/libraries/acpi/aml/field-indirect.PORT.md)
 now generates 100 loader scenario/control pairs. Its new source-bound record is
 `indirect-verification.json`. The 38-pair normal Field receipt and the auxiliary
 constant/owner migration receipts below describe the preserved checkpoint
@@ -23,7 +23,7 @@ The earlier commands and evidence below belong to the normal-Field checkpoint.
 
 
 The canonical implementation and its admitted scope are recorded in
-[the port document](../../../../../source/libraries/acpi/aml/field-namespace.PORT.md).
+[the port document](../../../../../source/platform/libraries/acpi/aml/field-namespace.PORT.md).
 Inputs are independently authored AML; expected declarations, metadata and
 namespace changes are explicitly assembled by `fixtures.py`.
 

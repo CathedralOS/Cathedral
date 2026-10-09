@@ -35,7 +35,7 @@ from [uefi-rs](https://github.com/rust-osdev/uefi-rs) commit
 `c0facddf9ba42b74906a37fca2869e6cdbc8da6a` (`uefi-raw`, pinned workspace license).
 Source headers identify modified translations. Exact license texts, crate
 copies and notices are retained under
-[licenses/rust-osdev/uefi-rs](../../../../licenses/rust-osdev/uefi-rs/) and indexed
+[licenses/rust-osdev/uefi-rs](../../../../licenses/rust-osdev/uefi-rs) and indexed
 in [THIRD_PARTY_NOTICES.md](../../../../THIRD_PARTY_NOTICES.md). Optional checkout:
 `reference_code/rust-osdev/uefi-rs`; absence or pin mismatch fails the probes.
 Primary ABI facts and RFC2131's bit definition remain distinct from the
@@ -170,8 +170,8 @@ unsafe casts.
 ## Cathedral integration and authority
 
 Owning charters: `source/contracts/CHARTER.md` (inert foreign representation) and
-`source/libraries/CHARTER.md` (pure reusable behavior). Build roots are only
-`source/contracts/uefi/raw/build.omg`, `source/libraries/uefi/build.omg`, and
+`source/platform/libraries/CHARTER.md` (pure reusable behavior). Build roots are only
+`source/contracts/uefi/raw/build.omg`, `source/platform/libraries/uefi/build.omg`, and
 `tools/ports/uefi-network/build.omg` when explicitly selected. The large plan is
 outside passing fixture import graphs. No existing boot adapter is replaced.
 Production canaries, hardware, simulator and native execution: not run for this

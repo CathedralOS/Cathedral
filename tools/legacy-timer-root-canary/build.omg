@@ -2,5 +2,5 @@
 // external root and performs no hardware operation.
 
 machine build(b: &mut Build) {
-    b.depend("core", path("../../source/core"));
+    b.depend("core", path("../../source/kernel/core"));
 }

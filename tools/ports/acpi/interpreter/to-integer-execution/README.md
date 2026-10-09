@@ -1,6 +1,6 @@
 # ToInteger execution witnesses
 
-The [port record](../../../../../source/libraries/acpi/interpreter/execution/to-integer.PORT.md)
+The [port record](../../../../../source/platform/libraries/acpi/interpreter/execution/to-integer.PORT.md)
 defines source provenance, direct target replacement, strict numeric policy,
 supported operands and the valid retirement Frame precondition.
 

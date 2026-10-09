@@ -24,14 +24,14 @@ def sha(path):
 
 
 def snapshot():
-    paths = list((ROOT/'source/libraries/acpi/field_protocol').glob('*.omg'))
+    paths = list((ROOT/'source/platform/libraries/acpi/field_protocol').glob('*.omg'))
     for package, files in {
         'field_access': ['build.omg', 'geometry.omg', 'chunks.omg', 'model.omg'],
         'interpreter': ['build.omg', 'integers.omg'],
     }.items():
-        paths += [ROOT/'source/libraries/acpi'/package/name for name in files]
-    paths += list((ROOT/'source/libraries/acpi/aml').glob('*.omg'))
-    paths += list((ROOT/'source/libraries/acpi/aml/fields').glob('*.omg'))
+        paths += [ROOT/'source/platform/libraries/acpi'/package/name for name in files]
+    paths += list((ROOT/'source/platform/libraries/acpi/aml').glob('*.omg'))
+    paths += list((ROOT/'source/platform/libraries/acpi/aml/fields').glob('*.omg'))
     paths += [HERE/name for name in ['verify_migration.py', 'check.py', 'check_const.py', 'verify_record.py', 'fixtures.py', 'vectors.py', 'cases.json', 'toolchain.json']]
     paths += [ROOT/'tools/ports/acpi/interpreter/execution'/name for name in ['checked_runner.rs', 'runner.Cargo.lock']]
     return {str(path.relative_to(ROOT)): sha(path) for path in sorted(paths)}
@@ -40,7 +40,7 @@ def snapshot():
 def build_text():
     text = 'machine build(builder:&mut Build){builder.application("cathedral-field-protocol-tests");builder.freestanding=true;'
     for alias, folder in [('protocol', 'field_protocol'), ('access', 'field_access'), ('fields', 'aml/fields'), ('integers', 'interpreter'), ('aml', 'aml')]:
-        text += 'builder.depend_as("'+alias+'",Source::Path {location:"'+str(ROOT/'source/libraries/acpi'/folder)+'"});'
+        text += 'builder.depend_as("'+alias+'",Source::Path {location:"'+str(ROOT/'source/platform/libraries/acpi'/folder)+'"});'
     return text + '}'
 
 

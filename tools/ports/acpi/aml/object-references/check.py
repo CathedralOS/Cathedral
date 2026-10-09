@@ -5,7 +5,7 @@ from pathlib import Path
 import fixtures
 HERE=fixtures.HERE;ROOT=fixtures.ROOT;SHARED=ROOT/'tools/ports/acpi/interpreter/execution'
 def snapshot():
- paths=set((ROOT/'source/libraries/acpi/aml').rglob('*.omg'))
+ paths=set((ROOT/'source/platform/libraries/acpi/aml').rglob('*.omg'))
  paths.update(p for p in HERE.iterdir()if p.suffix in ['.py','.omg','.rs','.lock','.json']and 'verification'not in p.name)
  paths.update([SHARED/'checked_runner.rs',SHARED/'runner.Cargo.lock'])
  return {str(p.relative_to(ROOT)):hashlib.sha256(p.read_bytes()).hexdigest()for p in sorted(paths)}

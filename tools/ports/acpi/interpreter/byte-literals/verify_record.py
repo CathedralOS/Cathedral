@@ -31,7 +31,7 @@ def main():
  for p,h in host['upstream_sha256'].items():assert check.sha(reference.UP/p)==h
  history=HERE/'history/scratch';baseline=json.loads((history/'tools/ports/acpi/interpreter/byte-literals/manifest.json').read_text())
  for path,digest in baseline['files_sha256'].items():assert check.sha(history/path)==digest,'historical artifact drift: '+path
- for path in ['source/libraries/acpi/aml/names.omg','source/libraries/acpi/aml/namespace.omg']:
+ for path in ['source/platform/libraries/acpi/aml/names.omg','source/platform/libraries/acpi/aml/namespace.omg']:
   old=json.loads((history/'canonical-baseline.json').read_text());assert check.sha(history/path)==old[path]
  print('PASS',len(rows),'literal preflight pairs,3constant pairs,',len(host['rows']),'public observations; current dependency hashes and historical artifacts verified')
 if __name__=='__main__':main()

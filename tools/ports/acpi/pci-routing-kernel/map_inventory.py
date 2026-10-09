@@ -7,7 +7,7 @@ from pathlib import Path
 HERE=Path(__file__).resolve().parent
 ROOT=HERE.parents[3]
 PIN='257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5'
-PREFIX='source/libraries/acpi/pci_routing/'
+PREFIX='source/platform/libraries/acpi/pci_routing/'
 def main():
  parser=argparse.ArgumentParser();parser.add_argument('--checkout',type=Path,default=ROOT/'reference_code/rust-osdev/acpi');parser.add_argument('--check',action='store_true');args=parser.parse_args()
  spec=importlib.util.spec_from_file_location('inventory',ROOT/'tools/ports/inventory.py');inventory=importlib.util.module_from_spec(spec);spec.loader.exec_module(inventory)

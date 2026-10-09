@@ -17,7 +17,7 @@ for name,row in expected.items():
 (HERE/'src/lib.rs').write_text('\n'.join(source)+'\n')
 subprocess.run(['cargo','check','--locked','--quiet','--lib','--manifest-path',str(HERE/'Cargo.toml'),'--target','x86_64-unknown-uefi'],cwd=ROOT,check=True)
 vector={'format':'cathedral-port-vectors-v1','target':{'pointer_bits':64,'endian':'little','abi':'x86 register numeric values; no aggregate ABI'},'provenance':{'kind':'upstream','description':f'{len(actual)} actual pinned Rust value observations on host; {len(actual)-1} const-compatible facts independently asserted for x86_64-unknown-uefi. MXCSR Default body is host-observed only. MSR one-field private Rust carriers are inspected by test-only transmute, not adopted as foreign ABI. No Omega observation or hardware execution.','sources':json.loads((HERE/'schema.json').read_text())['files'],'revision':'cc35c876d3badb57df54a66e22f7768a52be95f2'},'measurements':{name:{'kind':'value','value':raw} for name,raw in actual.items()}}
-p=ROOT/'source/drivers/facts/x86_registers.vectors.json'
+p=ROOT/'source/platform/drivers/facts/x86_registers.vectors.json'
 if args.write:p.write_text(json.dumps(vector,indent=2)+'\n')
 elif not p.exists() or json.loads(p.read_text())!=vector:raise SystemExit('register vectors changed; review before --write')
 print(f'PASS {len(actual)} Rust-observed values; {len(actual)-1} UEFI-x64 const assertions; MXCSR default host-only')

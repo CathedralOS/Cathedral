@@ -189,9 +189,9 @@ replayable evidence chain.
 - Cathedral's current physical declarations are in
   [`source/contracts/uefi`](../../../source/contracts/uefi/uefi.omg).
 - The transitional exported callable is
-  [`source/boot/uefi/main.omg`](../../../source/boot/uefi/main.omg).
+  [`source/kernel/boot/uefi/main.omg`](../../../source/kernel/boot/uefi/main.omg).
 - The current post-entry firmware transition is
-  [`source/boot/uefi/own_machine.omg`](../../../source/boot/uefi/own_machine.omg).
+  [`source/kernel/boot/uefi/own_machine.omg`](../../../source/kernel/boot/uefi/own_machine.omg).
 - Omega owns the generic
   [UEFI entry and firmware handoff](https://github.com/CathedralOS/Omega/blob/main/wiki/spec/build/uefi_entry.md),
   [authority establishment](https://github.com/CathedralOS/Omega/blob/main/wiki/spec/resources/authority.md),

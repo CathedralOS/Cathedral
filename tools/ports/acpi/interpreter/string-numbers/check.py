@@ -5,7 +5,7 @@ from pathlib import Path
 import fixtures
 HERE=fixtures.HERE;ROOT=fixtures.ROOT;SHARED=HERE.parent/'execution'
 def snapshot():
- sources=set((ROOT/'source/libraries/acpi/interpreter').glob('*.omg'))
+ sources=set((ROOT/'source/platform/libraries/acpi/interpreter').glob('*.omg'))
  sources.update(p for p in HERE.iterdir()if p.suffix in ['.py','.omg','.json','.rs']and'verification'not in p.name)
  sources.update([SHARED/'checked_runner.rs',SHARED/'runner.Cargo.lock'])
  return {str(p.relative_to(ROOT)):hashlib.sha256(p.read_bytes()).hexdigest()for p in sorted(sources)}
@@ -24,7 +24,7 @@ def main():
   for row in rows:
    for control in [False,True]:
     machine='Suite::'+row['name']+('_control'if control else'_positive');source+=fixtures.render(row,control,machine);selections.append(machine+'='+str(int(control)))
-  (work/'main.omg').write_text(source);(work/'build.omg').write_text((HERE/'build.omg').read_text().replace('../../../../../source/libraries/acpi/interpreter',str(ROOT/'source/libraries/acpi/interpreter')))
+  (work/'main.omg').write_text(source);(work/'build.omg').write_text((HERE/'build.omg').read_text().replace('../../../../../source/platform/libraries/acpi/interpreter',str(ROOT/'source/platform/libraries/acpi/interpreter')))
   start=time.monotonic();lines=[];process=subprocess.Popen([str(runner),str(work/'main.omg'),str(work/'build'),*selections],stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True,env=dict(os.environ,OMEGA_INTERP_STEP_BUDGET='10000000'))
   for line in process.stdout:print(line,end='',flush=True);lines.append(line)
   if process.wait():raise SystemExit('Omega string/number cases failed')

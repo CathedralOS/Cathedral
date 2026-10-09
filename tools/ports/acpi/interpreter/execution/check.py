@@ -12,7 +12,7 @@ def main():
  rows=[r for r in fixtures.cases()if any(part in r['name'] for part in args.match.split(','))]
  if not rows:raise SystemExit('No matching cases')
  build=(HERE/'build.omg').read_text()
- for source in ['../../../../../source/libraries/acpi/interpreter/execution','../../../../../source/libraries/acpi/interpreter','../../../../../source/libraries/acpi/aml']:
+ for source in ['../../../../../source/platform/libraries/acpi/interpreter/execution','../../../../../source/platform/libraries/acpi/interpreter','../../../../../source/platform/libraries/acpi/aml']:
   build=build.replace(source,str((HERE/source).resolve()))
  def run(row,negative=False):
   source=fixtures.render(row)

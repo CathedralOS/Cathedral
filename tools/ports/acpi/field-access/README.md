@@ -3,7 +3,7 @@
 Published bounded module and original authored fixtures. No firmware fixture,
 hardware invocation, native Omega publication or completed Field evaluator claim.
 Production semantics and partial source mapping are in
-`source/libraries/acpi/field_access/PORT.md`.
+`source/platform/libraries/acpi/field_access/PORT.md`.
 
 Run from the repository root:
 
@@ -14,7 +14,7 @@ python3 tools/ports/acpi/field-access/compare.py --write
 python3 tools/ports/acpi/field-access/check.py
 python3 tools/ports/acpi/field-access/check_const.py
 python3 tools/ports/acpi/field-access/verify_record.py
-python3 tools/ports/inventory.py check --checkout reference_code/rust-osdev/acpi source/libraries/acpi/field_access/inventory.json
+python3 tools/ports/inventory.py check --checkout reference_code/rust-osdev/acpi source/platform/libraries/acpi/field_access/inventory.json
 ```
 
 `reference.py` uses the exact pinned Rust crate and isolated Cargo target

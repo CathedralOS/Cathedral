@@ -8,4 +8,4 @@ matching Omega machines, additional malformed/capture cases and body mutations.
 
 The harness uses initialized detached tables, never an installed translation
 root. Numeric captures, allocation observations and edit masks confer no access
-or invalidation authority. See the [port record](../../../source/libraries/x86_64/mapping-routes.PORT.md).
+or invalidation authority. See the [port record](../../../source/platform/libraries/x86_64/mapping-routes.PORT.md).

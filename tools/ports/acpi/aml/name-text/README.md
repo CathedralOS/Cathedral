@@ -1,7 +1,7 @@
 # ASL text conversion evidence
 
 Published and verified at the final repository paths. The source is
-`source/libraries/acpi/aml/name_text.omg`; its sibling port report defines the
+`source/platform/libraries/acpi/aml/name_text.omg`; its sibling port report defines the
 strict primary grammar, uppercase conversion and pin differences.
 
 Final results: 150 checked positives +150 controls in 25.568 seconds;

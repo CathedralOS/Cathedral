@@ -10,11 +10,11 @@ def main():
  for item in value['files'].values():
   for entry in item['symbols'].values():entry['reason']='Outside this direct Buffer/String Mid helper; aggregate execution remains pending.'
  for path,key in [('src/aml/mod.rs','2137:do_mid')]:
-  entry=value['files'][path]['symbols'][key];entry['targets']=[dict(path='source/libraries/acpi/aml/object_mid.omg',anchor='pub machine extract(')];entry['note']='Direct Buffer/String Mid preserves result type, validates complete backing, clamps the selected extent without overflow and zeros unused tails. Parameter evaluation/normalization, reference/context policy, target coercion, object installation and opcode execution remain pending.'
+  entry=value['files'][path]['symbols'][key];entry['targets']=[dict(path='source/platform/libraries/acpi/aml/object_mid.omg',anchor='pub machine extract(')];entry['note']='Direct Buffer/String Mid preserves result type, validates complete backing, clamps the selected extent without overflow and zeros unused tails. Parameter evaluation/normalization, reference/context policy, target coercion, object installation and opcode execution remain pending.'
  value['primary_exports']={'Portion':['Failure(reason:ConversionFailure)','Buffer(length:u64,bytes:[u8;256])','String(length:u64,bytes:[u8;256])'],'extract':'direct Buffer/String ObjectStore ID + evaluated unsigned index/length -> Portion'}
- source=(ROOT/'source/libraries/acpi/aml/object_mid.omg').read_text()
+ source=(ROOT/'source/platform/libraries/acpi/aml/object_mid.omg').read_text()
  for anchor in ['pub data Portion','case Failure(reason:ConversionFailure)','case Buffer(length:u64,bytes:[u8;256])','case String(length:u64,bytes:[u8;256])','pub machine extract(']:assert anchor in source
- path=ROOT/'source/libraries/acpi/aml/object-mid-inventory.json';text=json.dumps(value,indent=2,sort_keys=True)+'\n'
+ path=ROOT/'source/platform/libraries/acpi/aml/object-mid-inventory.json';text=json.dumps(value,indent=2,sort_keys=True)+'\n'
  if args.check:assert path.read_text()==text
  else:path.write_text(text)
  print(api.check(value,args.checkout,repository=ROOT))

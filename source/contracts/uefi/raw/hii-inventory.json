@@ -3380,7 +3380,7 @@
           "disposition": "translated",
           "targets": [
             {
-              "path": "source/libraries/uefi/hii_helpers.omg",
+              "path": "source/platform/libraries/uefi/hii_helpers.omg",
               "anchor": "pub machine ifr_date_storage("
             }
           ]
@@ -4907,7 +4907,7 @@
           "disposition": "translated",
           "targets": [
             {
-              "path": "source/libraries/uefi/hii_helpers.omg",
+              "path": "source/platform/libraries/uefi/hii_helpers.omg",
               "anchor": "pub machine ifr_numeric_size("
             }
           ]
@@ -4917,7 +4917,7 @@
           "disposition": "translated",
           "targets": [
             {
-              "path": "source/libraries/uefi/hii_helpers.omg",
+              "path": "source/platform/libraries/uefi/hii_helpers.omg",
               "anchor": "pub machine ifr_numeric_display("
             }
           ]
@@ -6469,7 +6469,7 @@
           "disposition": "translated",
           "targets": [
             {
-              "path": "source/libraries/uefi/hii_helpers.omg",
+              "path": "source/platform/libraries/uefi/hii_helpers.omg",
               "anchor": "pub machine ifr_time_storage("
             }
           ]

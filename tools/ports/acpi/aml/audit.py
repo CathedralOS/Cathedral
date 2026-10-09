@@ -11,7 +11,7 @@ sys.path.insert(0,str(HERE.parents[1]))
 import inventory
 
 def main():
- checkout=ROOT/'reference_code/rust-osdev/acpi';package=ROOT/'source/libraries/acpi/aml'
+ checkout=ROOT/'reference_code/rust-osdev/acpi';package=ROOT/'source/platform/libraries/acpi/aml'
  manifest=inventory.read_json(package/'inventory.json')
  print(json.dumps(inventory.check(manifest,checkout,ROOT),indent=2))
  provenance=inventory.read_json(HERE/'provenance.json')

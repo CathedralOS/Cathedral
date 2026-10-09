@@ -1,6 +1,6 @@
 # Direct object comparison checks
 
-The [port record](../../../../../source/libraries/acpi/aml/object-comparison.PORT.md)
+The [port record](../../../../../source/platform/libraries/acpi/aml/object-comparison.PORT.md)
 describes the direct-ID boundary and primary conversion rules. The 278 original
 cases compare actual Omega outcomes with independent numeric and byte expectations.
 Every case has a changed expected-order/error control; three constant-expression

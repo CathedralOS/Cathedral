@@ -17,7 +17,7 @@ or Cathedral integration is claimed.
 - Pin: `c0facddf9ba42b74906a37fca2869e6cdbc8da6a`.
 - Preserved license: `MIT OR Apache-2.0`; Copyright (c) The uefi-rs contributors.
   See [third-party notices](../../../../THIRD_PARTY_NOTICES.md) and the exact
-  [uefi-raw texts](../../../../licenses/rust-osdev/uefi-rs/uefi-raw/).
+  [uefi-raw texts](../../../../licenses/rust-osdev/uefi-rs/uefi-raw).
 - Translation changes: Rust function/pointee pointers become inert `addr`
   members; function signatures are retained as adjacent metadata. Explicit
   x86-64 layout plans in `tables_layouts.omg` and flat constant names replace Rust representation

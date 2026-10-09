@@ -7,9 +7,9 @@ import sys
 import tempfile
 ROOT = Path(__file__).resolve().parents[3]
 OMEGA = Path(sys.argv[1]).resolve() if len(sys.argv) > 1 else ROOT.parent / 'Omega/target/release/omega'
-facts = (ROOT / 'source/drivers/facts/pic_8259.omg').read_text()
+facts = (ROOT / 'source/platform/drivers/facts/pic_8259.omg').read_text()
 constants = {name: int(value, 0) for name, value in re.findall(r'pub const (\w+):\s*u(?:8|16)\s*=\s*(0x[0-9a-fA-F]+|\d+);', facts)}
-source = (ROOT / 'source/core/pic_8259.omg').read_text()
+source = (ROOT / 'source/kernel/core/pic_8259.omg').read_text()
 def number(value):
     return constants[value] if value in constants else int(value, 0)
 def body(name):
@@ -31,8 +31,8 @@ if 'InterruptAcknowledgement in Pending' not in ack or ack.index('acknowledgemen
 print('PASS source sequence/PortIo/Pending settlement regression checks (not compiler artifact validation)',flush=True)
 with tempfile.TemporaryDirectory(prefix='cathedral-pic-source-') as directory:
     project = Path(directory)
-    (project / 'pic_8259.omg').write_bytes((ROOT / 'source/core/pic_8259.omg').read_bytes())
+    (project / 'pic_8259.omg').write_bytes((ROOT / 'source/kernel/core/pic_8259.omg').read_bytes())
     (project / 'main.omg').write_text('use pic_8259;\ndata Main {}\nmachine Main::main(&mut self) {}\n')
-    (project / 'build.omg').write_text('machine build(builder: &mut Build) { builder.application("pic-existing-source-check"); builder.freestanding = true; builder.depend_as("facts", Source::Path { location: "' + str(ROOT / 'source/drivers/facts') + '" }); }\n')
+    (project / 'build.omg').write_text('machine build(builder: &mut Build) { builder.application("pic-existing-source-check"); builder.freestanding = true; builder.depend_as("facts", Source::Path { location: "' + str(ROOT / 'source/platform/drivers/facts') + '" }); }\n')
     subprocess.run([str(OMEGA),'--check',str(project/'main.omg')],cwd=ROOT,check=True)
 print('PASS exact existing core PIC source with actual facts dependency; no PortIo performed',flush=True)

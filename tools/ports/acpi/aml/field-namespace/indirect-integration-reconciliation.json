@@ -5,44 +5,44 @@
     "tools/ports/acpi/aml/field-namespace/indirect-verification.json": {
       "verified_git_inputs": 45,
       "different_current_recorded_inputs": [
-        "source/libraries/acpi/aml/buffer_target_values.omg",
-        "source/libraries/acpi/aml/named_value_store.omg"
+        "source/platform/libraries/acpi/aml/buffer_target_values.omg",
+        "source/platform/libraries/acpi/aml/named_value_store.omg"
       ],
       "unrecorded_current_sources_in_recorded_package_directories": [
-        "source/libraries/acpi/aml/result_graph.omg"
+        "source/platform/libraries/acpi/aml/result_graph.omg"
       ]
     },
     "tools/ports/acpi/aml/field-bindings/checked-verification.json": {
       "verified_git_inputs": 77,
       "different_current_recorded_inputs": [
-        "source/libraries/acpi/aml/buffer_target_values.omg",
-        "source/libraries/acpi/aml/named_value_store.omg",
-        "source/libraries/acpi/interpreter/execution/decode_execution.omg",
-        "source/libraries/acpi/interpreter/execution/execution_model.omg",
-        "source/libraries/acpi/interpreter/execution/generic_binding_plan.omg",
-        "source/libraries/acpi/interpreter/execution/generic_target_bridge.omg",
-        "source/libraries/acpi/interpreter/execution/generic_target_model.omg",
-        "source/libraries/acpi/interpreter/execution/generic_target_values.omg",
-        "source/libraries/acpi/interpreter/execution/integer_target_bridge.omg",
-        "source/libraries/acpi/interpreter/execution/integer_target_values.omg",
-        "source/libraries/acpi/interpreter/execution/operator_specs.omg",
-        "source/libraries/acpi/interpreter/execution/retire.omg"
+        "source/platform/libraries/acpi/aml/buffer_target_values.omg",
+        "source/platform/libraries/acpi/aml/named_value_store.omg",
+        "source/platform/libraries/acpi/interpreter/execution/decode_execution.omg",
+        "source/platform/libraries/acpi/interpreter/execution/execution_model.omg",
+        "source/platform/libraries/acpi/interpreter/execution/generic_binding_plan.omg",
+        "source/platform/libraries/acpi/interpreter/execution/generic_target_bridge.omg",
+        "source/platform/libraries/acpi/interpreter/execution/generic_target_model.omg",
+        "source/platform/libraries/acpi/interpreter/execution/generic_target_values.omg",
+        "source/platform/libraries/acpi/interpreter/execution/integer_target_bridge.omg",
+        "source/platform/libraries/acpi/interpreter/execution/integer_target_values.omg",
+        "source/platform/libraries/acpi/interpreter/execution/operator_specs.omg",
+        "source/platform/libraries/acpi/interpreter/execution/retire.omg"
       ],
       "unrecorded_current_sources_in_recorded_package_directories": [
-        "source/libraries/acpi/aml/result_graph.omg",
-        "source/libraries/acpi/interpreter/execution/named_store.omg",
-        "source/libraries/acpi/interpreter/execution/object_type_execution.omg",
-        "source/libraries/acpi/interpreter/execution/to_integer_execution.omg"
+        "source/platform/libraries/acpi/aml/result_graph.omg",
+        "source/platform/libraries/acpi/interpreter/execution/named_store.omg",
+        "source/platform/libraries/acpi/interpreter/execution/object_type_execution.omg",
+        "source/platform/libraries/acpi/interpreter/execution/to_integer_execution.omg"
       ]
     },
     "tools/ports/acpi/aml/field-bindings/comparator/checked-verification.json": {
       "verified_git_inputs": 40,
       "different_current_recorded_inputs": [
-        "source/libraries/acpi/aml/buffer_target_values.omg",
-        "source/libraries/acpi/aml/named_value_store.omg"
+        "source/platform/libraries/acpi/aml/buffer_target_values.omg",
+        "source/platform/libraries/acpi/aml/named_value_store.omg"
       ],
       "unrecorded_current_sources_in_recorded_package_directories": [
-        "source/libraries/acpi/aml/result_graph.omg"
+        "source/platform/libraries/acpi/aml/result_graph.omg"
       ]
     }
   }

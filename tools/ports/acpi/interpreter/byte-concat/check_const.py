@@ -17,7 +17,7 @@ machine require_ok(value:i32) requires value==0;{}
 data Main{}
 machine Main::main(&mut self){require_ok(TEST_RESULT);}
 '''
-   (work/'main.omg').write_text(source);(work/'build.omg').write_text((HERE/'build.omg').read_text().replace('../../../../../source/libraries/acpi/interpreter',str(ROOT/'source/libraries/acpi/interpreter')))
+   (work/'main.omg').write_text(source);(work/'build.omg').write_text((HERE/'build.omg').read_text().replace('../../../../../source/platform/libraries/acpi/interpreter',str(ROOT/'source/platform/libraries/acpi/interpreter')))
    result=subprocess.run([str(compiler),'--check',str(work/'main.omg')],capture_output=True,text=True);output=result.stdout+result.stderr
    good=result.returncode!=0 and'cannot prove requires contract'in output and'1 == 0'in output if control else result.returncode==0
    if not good:raise SystemExit(name+': '+output)

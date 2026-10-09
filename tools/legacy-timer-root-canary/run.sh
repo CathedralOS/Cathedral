@@ -18,7 +18,7 @@ trap 'rm -rf "$SCRATCH_DIR"' EXIT
 # harness still installs or executes nothing.
 mkdir -p "$PROJECT_DIR"
 install -m 0644 "$CANARY_ROOT/main.omg" "$PROJECT_DIR/main.omg"
-ln -s "$REPO_ROOT/source/core" "$PROJECT_DIR/core"
+ln -s "$REPO_ROOT/source/kernel/core" "$PROJECT_DIR/core"
 printf '%s\n' \
   'machine build(b: &mut Build) {' \
   '    b.depend("core", path("core"));' \
@@ -139,7 +139,7 @@ assert_contains "$CONTRACTS" '"checked_may_suspend": false'
 assert_contains "$CONTRACTS" '"checked_may_block": false'
 assert_contains "$CONTRACTS" '"checked_service_reach": ["PortIo"]'
 assert_contains "$CONTRACTS" '"machine": "Pic8259::complete_timer_acknowledgement"'
-assert_contains "$REPO_ROOT/source/core/legacy_timer_root.omg" 'Pic8259::complete_timer_acknowledgement(acknowledgement);'
+assert_contains "$REPO_ROOT/source/kernel/core/legacy_timer_root.omg" 'Pic8259::complete_timer_acknowledgement(acknowledgement);'
 assert_contains "$SYNTAX" 'Pic8259::complete_timer_acknowledgement'
 assert_contains "$SYNTAX" 'OCW2_END_OF_INTERRUPT'
 assert_contains "$CONTRACTS" '{"state": "complete_timer_acknowledgement", "statement_ordinal": 1, "call_ordinal": 0, "target_machine": "InterruptAcknowledgement::complete"'

@@ -8,4 +8,4 @@ cases and controls.
 
 The singleton-page profile is explicit. Complete range traversal remains work;
 deallocation callbacks only record detached test observations. See the
-[port record](../../../source/libraries/x86_64/cleanup-branch.PORT.md).
+[port record](../../../source/platform/libraries/x86_64/cleanup-branch.PORT.md).

@@ -26,7 +26,7 @@ actual={k:int(v) for k,v in (line.split('=',1) for line in output.splitlines())}
 assert actual=={k:r['value'] for k,r in measurements.items()},(actual,measurements)
 subprocess.run(['cargo','check','--locked','--quiet','--lib','--manifest-path',str(HERE/'Cargo.toml'),'--target','x86_64-unknown-uefi'],cwd=ROOT,check=True)
 vector={'format':'cathedral-port-vectors-v1','target':{'pointer_bits':64,'endian':'little','abi':'UEFI-x64 numeric descriptors and Rust packed records; not Omega native ABI'},'provenance':{'kind':'upstream','revision':schema['revision'],'sources':schema['files'],'description':'Actual pinned Rust host observations and independent UEFI-x64 const assertions. TSS private reserved offsets come from source/spec/requested plan only and are not presented as Rust offset observations. TssDescriptorWords is an encoded hardware pair, not the native Rust Descriptor enum.'},'measurements':{k:{'kind':row['kind'],'value':actual[k]} for k,row in measurements.items()}}
-p=ROOT/'source/drivers/facts/x86_descriptors.vectors.json'
+p=ROOT/'source/platform/drivers/facts/x86_descriptors.vectors.json'
 if args.write:p.write_text(json.dumps(vector,indent=2)+'\n')
 elif not p.exists() or json.loads(p.read_text())!=vector:raise SystemExit('vectors changed; review --write')
 print('PASS',len(measurements),'Rust observations and UEFI-x64 assertions')

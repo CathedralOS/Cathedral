@@ -9,8 +9,8 @@ RUNNER=Path('/tmp/cathedral-acpi-execution-checked/release/cathedral-acpi-checke
 RUNNER_SHA='e6d0aee6b4dddbbf34a60cffbe8f158643cc5c4d100f9e20f0481f75f52890be'
 OMEGA=Path('/tmp/cathedral-omega-eaa7993/release/omega')
 def snapshot():
- paths={ROOT/'source/libraries/x86_64'/name for name in ['build.omg','page_iterators.omg','encrypted_frames.omg','pages.omg','addresses.omg','memory_encryption.omg','page_entries.omg']}
- paths.update([ROOT/'source/drivers/facts/build.omg',ROOT/'source/drivers/facts/x86_page_table_entry.omg',SHARED/'checked_runner.rs',SHARED/'runner.Cargo.lock'])
+ paths={ROOT/'source/platform/libraries/x86_64'/name for name in ['build.omg','page_iterators.omg','encrypted_frames.omg','pages.omg','addresses.omg','memory_encryption.omg','page_entries.omg']}
+ paths.update([ROOT/'source/platform/drivers/facts/build.omg',ROOT/'source/platform/drivers/facts/x86_page_table_entry.omg',SHARED/'checked_runner.rs',SHARED/'runner.Cargo.lock'])
  paths.update(p for p in HERE.rglob('*')if p.is_file() and not any(s in p.parts for s in ['target','__pycache__']) and 'verification'not in p.name)
  return {str(p.relative_to(ROOT)):hashlib.sha256(p.read_bytes()).hexdigest()for p in sorted(paths)}
 def main():

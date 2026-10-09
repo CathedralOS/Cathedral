@@ -28,7 +28,7 @@ Representative actual constant-evaluation cases independently cover u64 maximum,
 Each control must compute one and fail the checked zero-result contract. The
 const and checked-interpreter stages remain separate from native Omega execution.
 
-See `source/libraries/acpi/interpreter/string_numbers.PORT.md` for exact policies,
+See `source/platform/libraries/acpi/interpreter/string_numbers.PORT.md` for exact policies,
 primary references, provenance, capacity semantics and pending generic operations.
 Full ToInteger/ToDecimalString/ToHexString opcode execution is not claimed.
 

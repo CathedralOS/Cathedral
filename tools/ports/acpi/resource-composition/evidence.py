@@ -10,12 +10,12 @@ def evidence():
  value['scope']='Only the bounded ConcatRes result-construction component; whole interpreter methods remain pending.'
  for file in value['files'].values():
   file['reason']='Partial ConcatRes branch; generic Object/Store/context integration remains pending.'
-  file['targets']=[{'path':'source/libraries/acpi/resource_composition/concatenate.omg','anchor':'pub machine compose'}]
+  file['targets']=[{'path':'source/platform/libraries/acpi/resource_composition/concatenate.omg','anchor':'pub machine compose'}]
   for row in file['symbols'].values():row['reason']='Outside this branch or whole interpreter method incomplete; no aggregate completion claim.'
  return value
 def main():
  p=argparse.ArgumentParser();p.add_argument('--check',action='store_true');a=p.parse_args()
- value=evidence();path=ROOT/'source/libraries/acpi/resource_composition/inventory.json'
+ value=evidence();path=ROOT/'source/platform/libraries/acpi/resource_composition/inventory.json'
  if a.check:assert json.loads(path.read_text())==value,'stale inventory'
  else:path.write_text(json.dumps(value,indent=2)+'\n')
  print(api.check(value,UP,ROOT))

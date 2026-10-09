@@ -6,7 +6,7 @@ import re
 import subprocess
 from fixed_model import ROOT,HERE,UP,PIN,FILES,records,rust_measure
 from header_evidence import api,translated,omitted
-DEST=ROOT/'source/libraries/acpi'
+DEST=ROOT/'source/platform/libraries/acpi'
 
 
 def evidence():

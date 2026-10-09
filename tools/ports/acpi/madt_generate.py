@@ -143,7 +143,7 @@ pub machine wakeup_command(value: u16) -> WakeupCommandResult {
 
 def main():
     parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--check',action='store_true');args=parser.parse_args()
-    path=ROOT/'source/libraries/acpi/madt.omg';text=render()
+    path=ROOT/'source/platform/libraries/acpi/madt.omg';text=render()
     if args.check:
         if not path.exists() or path.read_text()!=text:raise SystemExit('MADT generated source differs')
     else:path.write_text(text)

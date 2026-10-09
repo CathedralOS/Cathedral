@@ -157,7 +157,7 @@ Cathedral's authority-bearing boot policy do not belong in this phase.
   and mock service functions usable by both an Omega-authored UEFI producer and
   a Cathedral consumer.  Tests must demonstrate identical raw layouts; they do
   not grant service authority or perform `ExitBootServices` integration.
-  **Open native leg (compiler implementation dependencies):** the [tested fixed-image model](source/libraries/uefi/table_images.PORT.md)
+  **Open native leg (compiler implementation dependencies):** the [tested fixed-image model](source/platform/libraries/uefi/table_images.PORT.md)
   compares all 376 bytes and exercises pure mocks; complete native table
   reflection and private callback field materialization remain Omega gaps.
 
@@ -178,7 +178,7 @@ projection, union/tail and native-boundary limitations remain recorded there.
   unresolved authority seam.  Add malformed-list, alignment, and overflow
   tests.
 - [x] **UART-000 — Audit `uart_16550` against existing facts.** Do not duplicate
-  `source/drivers/facts/uart_16550.omg`.  Add omissions and upstream tests, then
+  `source/platform/drivers/facts/uart_16550.omg`.  Add omissions and upstream tests, then
   map constructor/read/write behavior into pure plans plus explicit port-I/O
   boundaries.
 - [x] **PIC-000 — Audit `pic8259` against existing facts and plans.** Reconcile
@@ -195,126 +195,126 @@ projection, union/tail and native-boundary limitations remain recorded there.
   checks, index extraction, frame/page arithmetic, descriptor construction, and
   table walking.  Actual register access and instructions remain boundaries.
 
-PCI-000 evidence: [PCI port record](source/libraries/pci/PORT.md), complete
+PCI-000 evidence: [PCI port record](source/platform/libraries/pci/PORT.md), complete
 six-file inventory, pinned in-memory Rust witnesses, and ten Omega semantic
 behavior groups with ten body-mutating negative controls. Configuration access
 remains an explicit authority seam.
 
-UART-000 evidence: [UART audit](source/drivers/uart_16550/PORT.md), additive
+UART-000 evidence: [UART audit](source/platform/drivers/uart_16550/PORT.md), additive
 existing facts, 168 pinned values/ordinals, 45 Rust tests, translated Omega
 behavior and body-mutating controls. The existing fact canary passes; live
 port-I/O/MMIO and polling remain explicit owner boundaries.
 
-X86-001 representation evidence and X86-002 algorithm evidence: [address arithmetic](source/libraries/x86_64/addresses.PORT.md)
+X86-001 representation evidence and X86-002 algorithm evidence: [address arithmetic](source/platform/libraries/x86_64/addresses.PORT.md)
 passes 110 Omega numeric cases, 102 actual pinned Rust witnesses, finite stepping
-relations and three body-mutating controls. The [register slice](source/drivers/facts/x86_registers.PORT.md)
+relations and three body-mutating controls. The [register slice](source/platform/drivers/facts/x86_registers.PORT.md)
 adds 177 observed constants and 31 tested helpers, including checked STAR
-underflow handling. The [descriptor slice](source/drivers/facts/x86_descriptors.PORT.md)
+underflow handling. The [descriptor slice](source/platform/drivers/facts/x86_descriptors.PORT.md)
 adds semantic descriptor cases, complete byte codecs, GDT append and bitmap
 plans, four Rust tests and four body mutations; native imported-layout limits
 are recorded. Pure representation and detached algorithm tasks are complete
-at the documented boundaries; live instruction/provider integration remains separate. The [PTE codec slice](source/libraries/x86_64/page-entries.PORT.md)
+at the documented boundaries; live instruction/provider integration remains separate. The [PTE codec slice](source/platform/libraries/x86_64/page-entries.PORT.md)
 reuses the canonical entry schema: 151 Omega scenarios, 143 actual Rust
 witnesses and three body mutations pass. The modernized layout canary demands
 all fourteen fields through the existing bit policy; native ABI is not measured.
-The [detached table slice](source/libraries/x86_64/tables.PORT.md) adds full-array
+The [detached table slice](source/platform/libraries/x86_64/tables.PORT.md) adds full-array
 operations and captured translation: 42 actual Rust mapper calls, 43 Omega
 translation scenarios, six table/address fixtures and six body mutations pass.
 Complete map/unmap/update routes are covered by the later slice below; live
 ownership/invalidation integration remains open.
-The [page/frame slice](source/libraries/x86_64/pages.PORT.md) passes 267 numeric
+The [page/frame slice](source/platform/libraries/x86_64/pages.PORT.md) passes 267 numeric
 scenarios, 253 actual Rust witnesses, 15 upstream Rust tests, range/overflow
 extras and three body mutations. Checked canonical-gap range deviations are explicit.
-The [mapping-decision slice](source/libraries/x86_64/mapping-plans.PORT.md) passes
+The [mapping-decision slice](source/platform/libraries/x86_64/mapping-plans.PORT.md) passes
 112 actual Rust child/leaf operations and matching Omega decisions, nine extra
 assertions and four body mutations. Partial writes on failure are retained;
 the later route slice completes this captured mapper orchestration; live
 invalidation settlement remains separate.
-The [interrupt slice](source/drivers/facts/x86_interrupts.PORT.md) passes 73 Rust
+The [interrupt slice](source/platform/drivers/facts/x86_interrupts.PORT.md) passes 73 Rust
 observations/target assertions, four Rust tests, Omega option/frame/gate checks,
 complete 4096-byte table encode/decode/rejection fixtures and six body mutations.
 Canonical gate fields and placements are preserved; imported generated-field
 privacy remains an explicitly reproduced layout-consumer limitation.
-The [TLB operand slice](source/libraries/x86_64/tlb-operands.PORT.md) passes
+The [TLB operand slice](source/platform/libraries/x86_64/tlb-operands.PORT.md) passes
 43 exact-source Rust observations, six actual upstream target assertions, four
 Rust tests and Omega semantic checks with four body mutations. Pinned and
 AMD-defined range-count recipes are separate; no TLB instruction or invalidation
 settlement is claimed.
-The [CPUID predicates](source/libraries/x86_64/instruction-observations.PORT.md)
+The [CPUID predicates](source/platform/libraries/x86_64/instruction-observations.PORT.md)
 complete the remaining RDRAND/SMAP observation helpers: 68 Rust/Omega bit cases
 and two body mutations pass. These functions consume supplied register values.
-The [cleanup branch slice](source/libraries/x86_64/cleanup-branch.PORT.md) passes
+The [cleanup branch slice](source/platform/libraries/x86_64/cleanup-branch.PORT.md) passes
 112 actual Rust/Omega singleton-range scenarios, five additional fixtures and
 three body mutations. It retains non-present nonzero entries, checks all 512
 entries for sibling occupancy and records deepest-first retirement requests.
-The [cleanup range cursor](source/libraries/x86_64/cleanup-ranges.PORT.md) adds
+The [cleanup range cursor](source/platform/libraries/x86_64/cleanup-ranges.PORT.md) adds
 bounded, resumable inclusive-range traversal: 13 whole-range Rust witnesses,
 18 Omega steps, six additional fixtures and four body mutations pass, including
 high-bit and maximum budgets. Exhaustion
 retains the exact next page; actual custody, invalidation and reclamation remain
 separate integration work.
-[Recursive cleanup](source/libraries/x86_64/recursive-cleanup.PORT.md) adds
+[Recursive cleanup](source/platform/libraries/x86_64/recursive-cleanup.PORT.md) adds
 20 pinned private-body whole-tree witnesses and 40 Omega cases with 40 body
 mutations. The recursive self-link participates in occupancy and is never
 traversed or retired; no live recursive mapper is constructed.
 
-The [complete route slice](source/libraries/x86_64/mapping-routes.PORT.md) passes
+The [complete route slice](source/platform/libraries/x86_64/mapping-routes.PORT.md) passes
 208 actual Rust/Omega scenarios, four additional fixture groups and four body
 mutations, including partial edits, allocation failures and capture mismatches.
-[Mapper conveniences](source/libraries/x86_64/mapper-conveniences.PORT.md) add
+[Mapper conveniences](source/platform/libraries/x86_64/mapper-conveniences.PORT.md) add
 actual trait-default witnesses, three Omega fixtures and four body mutations.
-The [remaining pure-work audit](source/libraries/x86_64/remaining-pure.RECONCILIATION.md)
+The [remaining pure-work audit](source/platform/libraries/x86_64/remaining-pure.RECONCILIATION.md)
 now records completion of its twelve historical families.
-[Recursive routes and translation](source/libraries/x86_64/recursive-routes.PORT.md)
+[Recursive routes and translation](source/platform/libraries/x86_64/recursive-routes.PORT.md)
 pass 232 route and 90 translation cases against adapted pinned Rust bodies, four
 additional checks and nine body mutations. Child allocation, non-present/huge
 ancestor rules and partial writes retain the recursive mapper's distinct order.
 Subsequent slices below complete the cross-feature algorithm compositions.
-[Owned GDT storage](source/libraries/x86_64/gdt-storage.PORT.md) now passes 16
+[Owned GDT storage](source/platform/libraries/x86_64/gdt-storage.PORT.md) now passes 16
 actual Rust/Omega scenarios, malformed-input/reset checks and four body mutations,
 including full 8192-word import and failed system appends without partial writes.
-[Register operand recipes](source/libraries/x86_64/register-operands.PORT.md) add
+[Register operand recipes](source/platform/libraries/x86_64/register-operands.PORT.md) add
 1,323 exact pure-body Rust observations, 14 Omega batches, four rejection cases
 and seven body mutations, covering reserved bits, XCR0 validation, CR3/CR8 and
-STAR/CET/APIC composition. [MSR word transport](source/libraries/x86_64/msr-words.PORT.md)
+STAR/CET/APIC composition. [MSR word transport](source/platform/libraries/x86_64/msr-words.PORT.md)
 adds 136 Rust-derived observations, 130 Omega round trips and two body mutations.
 No live register methods or instructions execute.
-[Numeric mapper topology](source/libraries/x86_64/mapper-topology.PORT.md) adds
+[Numeric mapper topology](source/platform/libraries/x86_64/mapper-topology.PORT.md) adds
 3,131 Rust numeric witnesses, 3,139 Omega assertions in 22 fixtures and 22 body
 controls for offset addition, recursive coordinates and constructor observations.
 All 512 recursive indices are covered; pointer/custody operations stay external.
-[Explicit memory-encryption state](source/libraries/x86_64/memory-encryption.PORT.md)
+[Explicit memory-encryption state](source/platform/libraries/x86_64/memory-encryption.PORT.md)
 passes 133 Omega profiles against 1,315 actual Rust observations, an additional
 reconfiguration regression and four body mutations. Repeated-mask accumulation
 and both bit polarities are preserved; existing captured walkers remain explicitly
 on their default physical profile.
-[Explicit-profile translation](source/libraries/x86_64/encrypted-translation.PORT.md)
+[Explicit-profile translation](source/platform/libraries/x86_64/encrypted-translation.PORT.md)
 adds 330 actual Rust/Omega observations, seven boundary assertions and nine body
 mutations for generic mapped translation and captured child identities.
 Virtual page-range iterator transitions are covered by the final slice below;
 the closure audit retains their exact source anchors.
-[Encryption-aware register expressions](source/libraries/x86_64/encrypted-registers.PORT.md)
+[Encryption-aware register expressions](source/platform/libraries/x86_64/encrypted-registers.PORT.md)
 pass 100 Rust reference rows, 800 Omega calls and twelve body controls, preserving
 strict CR3 rejection versus APIC truncation and typed-frame operand admission.
-[Profile-aware address projection](source/libraries/x86_64/encrypted-projection.PORT.md)
+[Profile-aware address projection](source/platform/libraries/x86_64/encrypted-projection.PORT.md)
 adds 240 actual Translate-default/Rust–Omega cases and eight body controls,
 including an offset inside a huge frame that reaches the configured bit.
-[Profile-aware recursive translation](source/libraries/x86_64/encrypted-recursive-translation.PORT.md)
+[Profile-aware recursive translation](source/platform/libraries/x86_64/encrypted-recursive-translation.PORT.md)
 adds 330 adapted Rust-body/Omega observations, one invalid-input check and eight
 body controls, preserving recursive whole-word checks and leaf-HUGE errors.
-[Profile-aware mapper routes](source/libraries/x86_64/encrypted-mapping.PORT.md)
+[Profile-aware mapper routes](source/platform/libraries/x86_64/encrypted-mapping.PORT.md)
 pass 318 checked-interpreter route cases, direct leaf checks, five additional
 policies and ten controls. Rust evidence includes 159 actual public mapped calls
 and 159 adapted recursive-body observations across eleven configurations.
-[Profile-aware cleanup](source/libraries/x86_64/encrypted-cleanup.PORT.md)
+[Profile-aware cleanup](source/platform/libraries/x86_64/encrypted-cleanup.PORT.md)
 passes 384 Rust tree references, 430 checked-interpreter bodies and nine controls,
 plus a representative const pair. It preserves raw occupancy, decoded retirement
 addresses, partial effects and recursive-slot exclusion.
-[Profile-aware constructor observations](source/libraries/x86_64/encrypted-constructor.PORT.md)
+[Profile-aware constructor observations](source/platform/libraries/x86_64/encrypted-constructor.PORT.md)
 pass 610 adapted Rust-check/Omega cases, ten controls and two const pairs. Virtual
 geometry, current-bit frame admission and accumulated-mask entry decoding keep
 the pinned order; no recursive page-table object is constructed.
-[Profile-aware physical frames](source/libraries/x86_64/encrypted-frames.PORT.md)
+[Profile-aware physical frames](source/platform/libraries/x86_64/encrypted-frames.PORT.md)
 pass 7,048 cases in 156 checked groups with 156 controls and six const pairs.
 The 7,008 public Rust observations span thirteen isolated profiles; forty
 additional cases cover invalid geometry. PFNs, arithmetic, range selection and
@@ -323,16 +323,16 @@ ordering, with checked multiplication overflow as an explicit policy.
 The full-source closure review found no remaining pure representation family:
 X86-001 is complete at the documented numeric/schema boundary. Native layout,
 instruction/provider and proof limits remain separate.
-[Virtual page iterator transitions](source/libraries/x86_64/page-iterators.PORT.md)
+[Virtual page iterator transitions](source/platform/libraries/x86_64/page-iterators.PORT.md)
 pass 1,630 checked cases, 51 body controls and one direct const pair, against
 1,626 actual public Rust observations. The
-[final closure audit](source/libraries/x86_64/closure-review.json) checks all 41
+[final closure audit](source/platform/libraries/x86_64/closure-review.json) checks all 41
 source hashes, 27 library and three fact inventories, twelve historical families
 and 71 translated anchor overlays plus one represented generic parameter.
 X86-002 is complete for the documented 64-bit usize/canonical48/physical52 and
 coherent explicit-encryption profiles; no native or universal-proof claim follows.
 
-X86-000 evidence: [full source reconciliation](source/libraries/x86_64/PORT.md)
+X86-000 evidence: [full source reconciliation](source/platform/libraries/x86_64/PORT.md)
 classifies all 41 Rust files, 1,307 lexical anchors, 124 supplemental anchors
 and 85 test/proof scenarios. Pending rows are reviewed implementation work;
 confirmed instruction-catalog gaps are limited to their exact live operations.
@@ -354,24 +354,24 @@ confirmed instruction-catalog gaps are limited to their exact live operations.
   transitions without hardware or DMA.  This is the unit-test target for later
   driver integration.
 
-VIRTIO-000/001 evidence: [protocol and split-queue port](source/libraries/virtio/PORT.md)
+VIRTIO-000/001 evidence: [protocol and split-queue port](source/platform/libraries/virtio/PORT.md)
 retains 343 expected vectors, 255 actual Rust UEFI-target measurements, 20 upstream
 allocation cases, and eight Omega behavior groups with eight body-mutating
 controls. All 24 policy declarations check separately; combined fixture/layout
 import exposes a recorded compiler diagnostic. No DMA or native ABI claim.
 
-VIRTIO-002 evidence: [packed queues](source/libraries/virtio/packed.PORT.md)
+VIRTIO-002 evidence: [packed queues](source/platform/libraries/virtio/packed.PORT.md)
 passes five semantic groups/five body-mutating controls, actual Rust bitfield
 checks and 14 Rust UEFI-target layout measurements. Four policy declarations
 check independently; wrap/event predicates confer no DMA or ordering authority.
 
-VIRTIO-003 evidence: [transport shapes](source/libraries/virtio/transport.PORT.md)
+VIRTIO-003 evidence: [transport shapes](source/platform/libraries/virtio/transport.PORT.md)
 retains PCI capabilities, all 30 MMIO and 23 PCI common field descriptions,
 and inert ordered access plans. Seven semantic groups and seven body mutations
 pass; 28 Rust target geometry measurements agree. Five layout declarations
 check independently. Discovery, access and activation remain named owner seams.
 
-VIRTIO-004 evidence: [pure queue simulator](source/libraries/virtio/simulator.PORT.md)
+VIRTIO-004 evidence: [pure queue simulator](source/platform/libraries/virtio/simulator.PORT.md)
 passes six lifecycle groups and six body-mutating controls for negotiation,
 split/packed submission, completion/reuse, wrap and event suppression. Its
 eight-slot direct-buffer profile is explicit; asynchronous DMA is not modeled.
@@ -399,66 +399,66 @@ eight-slot direct-buffer profile is explicit; asynchronous DMA is not modeled.
 - [x] **ACPI-006 — Add AML resource limits.** Bound input, namespace growth,
   recursion, method work, and returned data.  Fail closed on unsupported or
   exhausted behavior. Tested for the current single-source bounded Program
-  profile; see [scope and evidence](source/libraries/acpi/pipeline/resource-limits.PORT.md).
+  profile; see [scope and evidence](source/platform/libraries/acpi/pipeline/resource-limits.PORT.md).
 - [x] **ACPI-007 — Define the later Cathedral adapter.** Specify—but do not yet
   integrate—the attenuation from discovered regions to separately granted
   physical/MMIO/I/O capabilities.
 
-ACPI-000 evidence: [partitioned inventory](source/libraries/acpi/PORT.md)
+ACPI-000 evidence: [partitioned inventory](source/platform/libraries/acpi/PORT.md)
 classifies 52 Rust files, 1,581 anchors, 66 Rust tests and 19 ASL/AML assets.
 External fixture provenance remains explicit; no firmware dumps or externally
 derived test bodies were copied. Parsing and interpretation remain implementation
 work, separate from this completed inventory.
 
-ACPI-001 evidence: [bounded header parser](source/libraries/acpi/headers.PORT.md)
+ACPI-001 evidence: [bounded header parser](source/platform/libraries/acpi/headers.PORT.md)
 checks RSDP revisions 0/2 and SDT/root entries in a 4096-byte input profile,
 with strict lengths and checksums and raw OEM bytes. All 65 semantic scenarios
 and three body-mutating controls pass; 88 wire vectors and 65 pinned signatures
 are audited. Larger inputs, native layouts and firmware mapping are outside this slice.
 
-ACPI-002 evidence: [fixed parsers](source/libraries/acpi/fixed.PORT.md) cover GAS,
+ACPI-002 evidence: [fixed parsers](source/platform/libraries/acpi/fixed.PORT.md) cover GAS,
 FADT, all 17 pinned MADT entry kinds, MCFG and HPET. All 291 Omega scenarios and
 three body mutations pass; 236 compiled Rust declaration layout facts and 30
 pinned flag getter observations provide separate reference evidence.
 
-ACPI-003 evidence: [topology extraction](source/libraries/acpi/topology.PORT.md)
+ACPI-003 evidence: [topology extraction](source/platform/libraries/acpi/topology.PORT.md)
 passes 77 Omega scenarios and three body mutations. Ordered typed CPU/controller
 facts, timer descriptions and checked PCI-region queries retain unknown entries
 and separate observed boot identity from table order. ECAM uses bus-0-relative
 addressing. NUMA extraction, native execution and hardware activation remain open.
 
-ACPI-007 evidence: [adapter contract](source/libraries/acpi/ADAPTER.md) specifies
+ACPI-007 evidence: [adapter contract](source/platform/libraries/acpi/ADAPTER.md) specifies
 discovery snapshots, named source custody, device-scoped requests, conserved
 attenuation, complete transfer/page footprints, mediated versus placed lifetimes,
 and teardown/rejection obligations. This is a specification milestone; no grants,
 provider integration or adapter execution tests are claimed.
 
-ACPI-005 partial evidence: [integer/byte helpers](source/libraries/acpi/interpreter/PORT.md)
+ACPI-005 partial evidence: [integer/byte helpers](source/platform/libraries/acpi/interpreter/PORT.md)
 pass 150 Omega scenarios and three body controls, including five translated
 upstream object-test scenarios. Width-aware arithmetic, BCD, bit copying and
 bounded conversions preserve explicit primary-spec corrections. Method/context,
 namespace/target and generic object operations were outside that helper slice.
-The [string/number helpers](source/libraries/acpi/interpreter/string_numbers.PORT.md)
+The [string/number helpers](source/platform/libraries/acpi/interpreter/string_numbers.PORT.md)
 add 200 checked-interpreter pairs and four constant-evaluation pairs, with 116
 actual Rust parser observations and 76 labelled formatting mirrors. Strict versus
 pinned ASCII parsing and atomic bounded output are explicit; generic conversion
 opcodes remain pending.
-[Bounded byte comparisons](source/libraries/acpi/interpreter/byte_comparison.PORT.md)
+[Bounded byte comparisons](source/platform/libraries/acpi/interpreter/byte_comparison.PORT.md)
 add 81 checked-interpreter pairs, four const pairs and 62 public Rust observations.
 Primary lexicographic versus pinned length-first Buffer ordering is explicit;
 generic logical opcode conversion/dispatch remains pending.
-[Resource-template composition](source/libraries/acpi/resource_composition/PORT.md)
+[Resource-template composition](source/platform/libraries/acpi/resource_composition/PORT.md)
 adds 25 checked-interpreter pairs and four focused const pairs, with 23 labelled
 private Rust result-block mirrors and nine accepted-profile byte agreements.
 Complete input preflight precedes writes; all 4096 output bytes are checked.
 Generic ConcatRes opcode/target integration remains pending.
-[Same-type concatenation](source/libraries/acpi/interpreter/byte_concat.PORT.md)
+[Same-type concatenation](source/platform/libraries/acpi/interpreter/byte_concat.PORT.md)
 adds 63 checked-interpreter pairs and three const pairs, checking all 256 output
 bytes for integer, Buffer and ASCII String results. Reference evidence separates
 49 private append-expression observations from 162 public conversion/access
 calls. Generic implicit conversion and Concatenate opcode/target integration
 remain pending.
-The [integer method executor](source/libraries/acpi/interpreter/execution/PORT.md)
+The [integer method executor](source/platform/libraries/acpi/interpreter/execution/PORT.md)
 now passes 79 actual Omega checked-interpreter cases and 79 changed-body controls.
 It executes integer method bytes, nested calls, existing named/alias targets and
 bounded If/Else/While/Break/Continue with shared fuel. Current frame-admission
@@ -475,7 +475,7 @@ The same public harness also retains 94 generic object observations: 85 values,
 six evaluator errors and three caught panics. Reference-wrapper identity,
 argument assignment, package sharing, byte copying and conversions expose
 documented pin/spec differences; generic Omega integration is still pending.
-The [loader-to-executor pipeline](source/libraries/acpi/pipeline/PORT.md) now
+The [loader-to-executor pipeline](source/platform/libraries/acpi/pipeline/PORT.md) now
 captures method observations during declaration, rolls them back with failed
 loads and owns a single initialized source snapshot. All 22 pipeline pairs,
 27 original parser pairs, 79 executor pairs and 18 unchanged field-parser pairs
@@ -484,12 +484,12 @@ frame-admission const proofs retain their original hashes as historical evidence
 after the additive reference-model change. Multi-unit dispatch and full AML semantics remain pending;
 ACPI-004/005/006 stay open.
 
-[Canonical object references](source/libraries/acpi/aml/object-references.PORT.md)
+[Canonical object references](source/platform/libraries/acpi/aml/object-references.PORT.md)
 add full/transparent unwrap, stable-ID reference allocation, payload copy and
 complete package-chain selection. All 160 checked pairs, five const pairs and
 116 public immutable Rust observations pass. Generic opcode integration remains ordinary implementation work.
 
-[Owned byte storage](source/libraries/acpi/aml/byte-storage.PORT.md) adds canonical
+[Owned byte storage](source/platform/libraries/acpi/aml/byte-storage.PORT.md) adds canonical
 Source/Owned String and Buffer cases, stable indexed fields and affine Program
 ownership. All 138 storage/composition pairs, 306 existing regression pairs, eight
 const pairs and 21 labelled Rust observations pass. Mutations validate and stage
@@ -499,7 +499,7 @@ Current model-migration regression receipts live under
 original hashes as historical evidence. Generic opcode dispatch and complete
 AML resource accounting remain pending.
 
-[Canonical object queries](source/libraries/acpi/aml/object-queries.PORT.md) add
+[Canonical object queries](source/platform/libraries/acpi/aml/object-queries.PORT.md) add
 mixed name/reference resolution under one inspection budget, numeric ObjectType
 and validated SizeOf components. All 96 checked pairs, 306 regression pairs,
 three const pairs and 44
@@ -508,57 +508,57 @@ errors and one load panic remain recorded pin differences. Namespace get/bind
 maximum-ID guards now use staged u64 comparisons. Generic opcode integration
 and absent Object variants remain pending.
 
-[ASL textual name conversion](source/libraries/acpi/aml/name-text.PORT.md) adds
+[ASL textual name conversion](source/platform/libraries/acpi/aml/name-text.PORT.md) adds
 canonical path parse/format, case folding, bounded prefix/segment grammar and
 fully initialized output. Its 150 checked pairs (including 35 name-guard cases),
 three const pairs and 84 public Rust observations pass. Text conversion does not
 complete runtime DerefOf, namespace lookup or generic opcode integration.
 
-[Method and device-status facts](source/libraries/acpi/aml/object-metadata.PORT.md)
+[Method and device-status facts](source/platform/libraries/acpi/aml/object-metadata.PORT.md)
 adds pure metadata decoding, verified against 448 actual public Rust observations
 in 56 checked pairs and one constant pair. It does not implement synchronization
 or device-enumeration policy.
 
-[Byte literal preflight](source/libraries/acpi/interpreter/execution/byte-literals.PORT.md)
+[Byte literal preflight](source/platform/libraries/acpi/interpreter/execution/byte-literals.PORT.md)
 adds bounded String and constant-size Buffer parsing/admission, with active-block
 limits, source identity and 32/64-bit BufferSize normalization. Its 75 checked
 pairs, three constant pairs and 47 actual public Rust observations retain exact
 source hashes. It allocates no caller object and does not yet wire executor
 decode/retirement, dynamic BufferSize or Package evaluation.
 
-ACPI-004 partial evidence: [static AML syntax and namespace](source/libraries/acpi/aml/PORT.md)
+ACPI-004 partial evidence: [static AML syntax and namespace](source/platform/libraries/acpi/aml/PORT.md)
 passes 27 Omega scenarios with 27 body mutations and an 18-file source check.
 It covers NameString/package framing, literal/package values, static declarations,
 retained method bodies, stable aliases, scoped lazy references and transactional
 loader errors under explicit capacities/budgets.
-[Namespace-level removal](source/libraries/acpi/aml/namespace-removal.PORT.md)
+[Namespace-level removal](source/platform/libraries/acpi/aml/namespace-removal.PORT.md)
 adds validated transactional subtree removal with same-path object/alias and
 stable-ID preservation. All 44 checked pairs, two constant pairs and 12 public
 Rust observations pass. This pure operation does not implement AML Unload or
 object reclamation.
-[Field declaration metadata](source/libraries/acpi/aml/fields/PORT.md) adds 18
+[Field declaration metadata](source/platform/libraries/acpi/aml/fields/PORT.md) adds 18
 semantic cases, 18 body mutations and a 19-file source check for Field, IndexField,
 BankField and all five FieldList forms. Dynamic BankValue/BufferSize bodies remain
 explicitly unparsed or opaque. Those original parser receipts are historical after
 the shared metadata owner moves into the AML package.
-[Normal Field namespace installation](source/libraries/acpi/aml/field-namespace.PORT.md)
+[Normal Field namespace installation](source/platform/libraries/acpi/aml/field-namespace.PORT.md)
 adds staged installation into the canonical object/namespace store, complete
 access/connection metadata, stable region identity and whole-load rollback.
 All 38 checked loader pairs, one constant pair, 20 metadata/consumer pairs and
 three selected upstream protocol owner-migration pairs pass in the recorded
 isolated worktree. The original parser/protocol receipts remain historical.
-[BankField/IndexField namespace installation](source/libraries/acpi/aml/field-indirect.PORT.md)
+[BankField/IndexField namespace installation](source/platform/libraries/acpi/aml/field-indirect.PORT.md)
 adds explicit canonical register identities and extends the same transaction.
 All 100 loader pairs, six unresolved-boundary pairs and three shared-comparator
 pairs pass in the recorded isolated worktree. Dynamic BankValue and full interpreter behavior remain
 ordinary implementation work; ACPI-004 stays open. The separate integer executor does not
 complete these syntax/resource-limit milestones.
-[Normal Field geometry](source/libraries/acpi/field_access/PORT.md) adds aligned
+[Normal Field geometry](source/platform/libraries/acpi/field_access/PORT.md) adds aligned
 access footprints, bounded chunk plans and scalar extract/merge arithmetic, with
 451 checked pairs, three constant pairs and 362 public synthetic-memory
 observations. Lock and Preserve-read requirements are inert facts. Complete
 field execution and evaluator/provider integration remain pending.
-[Detached Bank/Index sequencing](source/libraries/acpi/field_protocol/PORT.md)
+[Detached Bank/Index sequencing](source/platform/libraries/acpi/field_protocol/PORT.md)
 adds validated selector/data geometry, aligned Index byte selectors and ordered
 read/write actions. All 204 checked pairs, three constant pairs and 60 public
 Rust observations pass; the public comparison preserves 32 explicit differences.
@@ -566,7 +566,7 @@ Register widths remain independent, selector overflow rejects before a recipe,
 and lock requirements stay unmet. Payload transfers, namespace installation,
 synchronization and provider/opcode execution remain pending; ACPI-005 stays
 open and aggregate source counts are unchanged.
-[Resource descriptor parsing](source/libraries/acpi/resources/PORT.md) adds 210
+[Resource descriptor parsing](source/platform/libraries/acpi/resources/PORT.md) adds 210
 checked-interpreter pairs, four const pairs and 187 actual public Rust observations,
 including 64 normalized supported-result agreements.
 It checks bounded envelopes, strict EndTag/checksum behavior, IRQ/DMA/I/O,
@@ -578,7 +578,7 @@ The [public PCI routing probe](tools/ports/acpi/pci-routing/README.md) adds 101
 original AML/resource fixtures using the pinned public loader and routing APIs.
 It records 74 successful decodes and 69 successful routes, with errors/panics
 separated and zero forbidden callbacks.
-The [detached PCI routing kernel](source/libraries/acpi/pci_routing/PORT.md) now
+The [detached PCI routing kernel](source/platform/libraries/acpi/pci_routing/PORT.md) now
 passes 117 checked pairs for strict four-member `_PRT` rows, complete output
 validation, captured link-level lookup, `_CRS` requests and physical SourceIndex
 selection after complete resource-template validation. It reuses canonical AML
@@ -587,63 +587,63 @@ before comparison; maximum-count regressions and fresh 96 query/27 parser pairs
 pass, while prior source-bound receipts remain historical. Evaluating the supplied objects and installing
 interrupts remain separate caller boundaries; generic AML integration stays open.
 
-[Implicit String-to-Integer conversion](source/libraries/acpi/interpreter/implicit-integer.PORT.md)
+[Implicit String-to-Integer conversion](source/platform/libraries/acpi/interpreter/implicit-integer.PORT.md)
 adds the primary hexadecimal prefix rule with 8/16-digit stopping, distinct from
 the explicit decimal/hex parser. The 630 checked pairs and three const pairs
 cover all first bytes, widths and malformed extents. This is a pure helper;
 implicit operand/target dispatch and the ACPI-005 aggregate remain pending.
 
-[Primary Integer/Buffer-to-String conversion](source/libraries/acpi/interpreter/implicit-strings.PORT.md)
+[Primary Integer/Buffer-to-String conversion](source/platform/libraries/acpi/interpreter/implicit-strings.PORT.md)
 adds fixed-width hexadecimal Integer text and spaced byte pairs. Its 334 checked
 pairs and three const pairs verify complete initialized output and bounded
 capacity. Direct conversion selection is supplied by the adapter below; runtime
 operand and target dispatch stay pending.
 
-[Canonical object conversion preflight](source/libraries/acpi/aml/object-conversions.PORT.md)
+[Canonical object conversion preflight](source/platform/libraries/acpi/aml/object-conversions.PORT.md)
 adds direct ObjectStore conversion with semantic results, complete byte validation
 and named String policies. All 207 checked pairs and three const pairs pass,
 with 100 public Object calls and 66 explicit Interpreter observations. Generic
 reference/context/target integration and wider BufferFields remain pending.
 
-[Detached normal Field read assembly](source/libraries/acpi/field_values/PORT.md)
+[Detached normal Field read assembly](source/platform/libraries/acpi/field_values/PORT.md)
 constructs complete Integer/Buffer data from exactly counted numeric words after
 recomputing geometry. All 301 checked pairs, three const pairs and 259 public Rust
 read observations pass, including the explicit pinned Buffer allocation correction.
 Lock/provider authority, Bank/Index and evaluator integration remain pending.
 
-[Primary implicit conversion dispatch](source/libraries/acpi/aml/implicit-conversions.PORT.md)
+[Primary implicit conversion dispatch](source/platform/libraries/acpi/aml/implicit-conversions.PORT.md)
 selects all nine direct Integer/String/Buffer conversions with 239 checked pairs
 and three constant pairs. Complete source validation and semantic destination
 cases are preserved. Existing-target extents, reference/Field resolution, object
 installation and Store execution remain pending; ACPI-005 stays open.
 
-[Detached BufferField reads](source/libraries/acpi/aml/buffer-field-values.PORT.md)
+[Detached BufferField reads](source/platform/libraries/acpi/aml/buffer-field-values.PORT.md)
 complete bounded read_buffer_field data translation with 281 checked pairs,
 three constant pairs and 136 actual public Object observations. Full field bounds,
 zero output tails and the primary 32/64-bit shape rule are enforced. One source
 anchor closes; reference/context dispatch and wider-field conversion stay open.
 
-[Detached normal Field write assembly](source/libraries/acpi/field_writes/PORT.md)
+[Detached normal Field write assembly](source/platform/libraries/acpi/field_writes/PORT.md)
 produces complete single-pass write records from an already-converted field-sized
 bit vector. The 454 checked pairs, three constant pairs and 126 actual public Rust
 probes pass, including early/late missing Preserve values and full zero tails.
 Source conversion and repeated Buffer writes, provider/lock authority, Bank/Index
 and Store execution remain pending; no aggregate source anchor closes.
 
-[Selected normal Field write chunks](source/libraries/acpi/field_writes/chunks.PORT.md)
+[Selected normal Field write chunks](source/platform/libraries/acpi/field_writes/chunks.PORT.md)
 add one native-word recipe with complete geometry admission and the same shared
 extraction/merge as bulk assembly. All 175 new chunk pairs and 454 retained bulk
 pairs pass, with exact source/binary verification and 126 public Rust replays.
 Provider ordering, acknowledgment and
 partial-effect handling remain future interpreter work; ACPI-005 stays open.
 
-[Direct object comparisons](source/libraries/acpi/aml/object-comparison.PORT.md)
+[Direct object comparisons](source/platform/libraries/acpi/aml/object-comparison.PORT.md)
 add primary right-hand conversion selected by the left object's type, with 278
 checked pairs and three constant pairs. Complete validation precedes unsigned
 Integer or lexical byte ordering. Reference/field evaluation, logical truth
 operators and opcode retirement remain pending; aggregate anchors stay open.
 
-[Field source sequencing](source/libraries/acpi/field_sources/PORT.md) prepares one normalized Integer payload,
+[Field source sequencing](source/platform/libraries/acpi/field_sources/PORT.md) prepares one normalized Integer payload,
 ordered Buffer pieces, or individual String characters for a normal Field.
 All 315 checked pairs, three constant pairs and 38 public Rust observations pass;
 the observations retain the pin's single-pass and String-rejection differences.
@@ -652,64 +652,64 @@ Empty-source and terminator choices are documented primary-profile interpretatio
 Repeated execution, provider/lock access and Store integration remain pending;
 aggregate source counts are unchanged.
 
-[Inline Integer Field payloads](source/libraries/acpi/field_sources/inline.PORT.md)
+[Inline Integer Field payloads](source/platform/libraries/acpi/field_sources/inline.PORT.md)
 reuse the same conversion path without a temporary object slot. All 168 scalar
 pairs and 315 original object-source pairs pass with exact source and binary
 verification. Field-write retirement and providers remain pending.
 
-[Single-payload Field write sequencing](source/libraries/acpi/field_writes/transfer.PORT.md)
+[Single-payload Field write sequencing](source/platform/libraries/acpi/field_writes/transfer.PORT.md)
 retains one admitted payload and orders each Preserve read immediately before
 its native write. All 102 continuation pairs and eight unchanged assembly
 regressions pass with exact source/binary checks. Rejected responses preserve
 the entire continuation; terminal failures retain acknowledged effect counts.
 AML retirement and actual providers remain pending; ACPI-005 stays open.
 
-[Direct basic-data Concatenate](source/libraries/acpi/aml/object-concat.PORT.md) composes all Integer/String/Buffer
+[Direct basic-data Concatenate](source/platform/libraries/acpi/aml/object-concat.PORT.md) composes all Integer/String/Buffer
 pairings with primary right-hand conversion, little-endian integer encoding and
 complete admission before combined capacity checks. All 314 checked pairs and
 three constant pairs pass. Other-object descriptions, reference/field policies,
 object installation and opcode retirement remain pending; aggregate counts are
 unchanged.
 
-[Atomic BufferField byte writes](source/libraries/acpi/aml/buffer-field-writes.PORT.md) stage already-converted payloads,
+[Atomic BufferField byte writes](source/platform/libraries/acpi/aml/buffer-field-writes.PORT.md) stage already-converted payloads,
 validate the full field and backing, and publish only after String encoding checks.
 All 189 whole-store behavior/control pairs, three representative constant pairs
 and 89 actual public Object method observations pass. One bounded source anchor
 closes; source conversion, target handling and Store execution remain pending.
 
-[Direct Buffer/String Mid](source/libraries/acpi/aml/object-mid.PORT.md) validates complete canonical backing,
+[Direct Buffer/String Mid](source/platform/libraries/acpi/aml/object-mid.PORT.md) validates complete canonical backing,
 preserves the source type and slices without overflowing index + requested length.
 All 315 checked pairs and three constant pairs pass, including malformed tails
 before empty selection and full zero output tails. Parameter evaluation,
 reference policy, target writes and opcode retirement remain pending; aggregate
 source counts are unchanged.
 
-[Mid opcode execution](source/libraries/acpi/interpreter/execution/mid.PORT.md) adds scalar/byte operand conversion, independent owned
+[Mid opcode execution](source/platform/libraries/acpi/interpreter/execution/mid.PORT.md) adds scalar/byte operand conversion, independent owned
 expression results and staged target publication. All 116 new and 199 retained
 regression pairs pass with exact source/binary verification. The 64 public Rust observations
 retain 33 value/state agreements and explicit pin differences. This remains
 a partial ACPI-005 component.
 
-[Direct Buffer ToString](source/libraries/acpi/aml/object-to-string.PORT.md) admits complete backing before selecting the
+[Direct Buffer ToString](source/platform/libraries/acpi/aml/object-to-string.PORT.md) admits complete backing before selecting the
 ASCII prefix ending at NUL or the requested maximum. All 195 checked pairs and
 three constant pairs pass. The 44 public Rust observations retain 33 agreements
 and 11 documented NUL/UTF-8 differences. Reference evaluation, target writes and
 opcode execution remain pending; aggregate source counts are unchanged.
 
-[Explicit numeric String composition](source/libraries/acpi/aml/object-numeric-strings.PORT.md) handles direct Integer, String
+[Explicit numeric String composition](source/platform/libraries/acpi/aml/object-numeric-strings.PORT.md) handles direct Integer, String
 and Buffer sources for decimal/hexadecimal formatting. All 255 checked pairs,
 three constant pairs and 102 actual public opcode observations pass; the public
 record retains 100 String results and two pinned literal-construction panics.
 Explicit formatting and width/capacity differences are documented. Operand
 resolution, target writes and opcode retirement remain pending; counts are unchanged.
 
-[Direct String-name lookup](source/libraries/acpi/aml/string-lookup.PORT.md) joins canonical String admission, textual
+[Direct String-name lookup](source/platform/libraries/acpi/aml/string-lookup.PORT.md) joins canonical String admission, textual
 ASL name parsing and scoped namespace search, returning an object ID and path.
 All 97 checked pairs and three constant pairs pass, including scope validation,
 error precedence and all initialized path segments. Target evaluation, reference
 policy and full DerefOf execution remain pending; aggregate counts are unchanged.
 
-[Positive-extent Buffer preparation](source/libraries/acpi/aml/buffer-target-values.PORT.md) prepares Integer/nonempty String bytes for a caller-supplied
+[Positive-extent Buffer preparation](source/platform/libraries/acpi/aml/buffer-target-values.PORT.md) prepares Integer/nonempty String bytes for a caller-supplied
 Buffer extent, preserving that extent through truncation and zero padding. All
 204 checked pairs, three constant pairs and 54 public replacement observations
 pass; the public record distinguishes seven agreements, 25 differences and 22
@@ -717,57 +717,57 @@ excluded-policy observations. Zero extent, empty String and Buffer sources remai
 outside this profile. Target provenance, mutation and Store execution are pending;
 aggregate source counts are unchanged.
 
-[Direct logical results](source/libraries/acpi/aml/object-logic.PORT.md) compose primary Integer truth conversion and
+[Direct logical results](source/platform/libraries/acpi/aml/object-logic.PORT.md) compose primary Integer truth conversion and
 left-directed relational comparison over canonical basic values. All 346 checked
 pairs and three constant pairs pass, including exact 32/64-bit Boolean results,
 full right admission and malformed-tail errors. Operand/reference evaluation and
 context retirement remain pending; aggregate source counts are unchanged.
 
-[Direct object descriptions](source/libraries/acpi/aml/object-descriptions.PORT.md) supply the eleven represented nonbasic
+[Direct object descriptions](source/platform/libraries/acpi/aml/object-descriptions.PORT.md) supply the eleven represented nonbasic
 Concatenate labels without reading or validating object payloads. All 115 checked
 pairs, three constant pairs and eleven static pinned-label audits pass; receipts
 bind the final execution root and generated build text. General Concatenate
 dispatch and opcode execution remain pending; aggregate counts are unchanged.
 
-[Direct arithmetic results](source/libraries/acpi/aml/object-maths.PORT.md) admit canonical Integer/String/Buffer
+[Direct arithmetic results](source/platform/libraries/acpi/aml/object-maths.PORT.md) admit canonical Integer/String/Buffer
 operands before width-normalized mathematics. All 506 checked pairs and three
 constant pairs pass, including separate quotient/remainder results and semantic
 conversion, divide-by-zero and BCD failures. Target writes, operand/reference
 evaluation and opcode retirement remain pending; aggregate counts are unchanged.
 
-[Package Index construction](source/libraries/acpi/aml/package-index.PORT.md) validates the advertised member chain and
+[Package Index construction](source/platform/libraries/acpi/aml/package-index.PORT.md) validates the advertised member chain and
 allocates one fresh RefOf wrapper preserving the selected element's identity.
 All 65 complete-store checked pairs, three bounded constant pairs and 19 public
 Index observations pass. Source evaluation, target Store and opcode retirement
 remain pending; aggregate counts are unchanged.
 
-[Direct BufferField source writes](source/libraries/acpi/aml/buffer-field-store.PORT.md) compose Integer/Buffer/String
+[Direct BufferField source writes](source/platform/libraries/acpi/aml/buffer-field-store.PORT.md) compose Integer/Buffer/String
 admission with atomic backing updates. All 226 complete-store checked pairs,
 three representative constant pairs and 116 public Store observations pass.
 The public record retains ten width differences and 24 String-source panics;
 shared source/backing identity is checked safely in Omega. Target/reference
 policy and opcode retirement remain pending; aggregate counts are unchanged.
 
-[Expanded canonical byte Index validation](source/libraries/acpi/aml/byte-index.PORT.md) checks the existing byte_storage constructor without adding a second implementation.
+[Expanded canonical byte Index validation](source/platform/libraries/acpi/aml/byte-index.PORT.md) checks the existing byte_storage constructor without adding a second implementation.
 All 117 complete-store checked pairs, three bounded constant pairs and 44 actual
 public Index observations pass, covering two-slot allocation, failure preservation,
 transparent references and fresh field/reference identities. Source evaluation,
 target Store and opcode retirement remain pending; source counts are unchanged.
 
-[Description-aware Concatenate](source/libraries/acpi/aml/object-concat-described.PORT.md) composes the eleven represented nonbasic labels with canonical basic-data conversion.
+[Description-aware Concatenate](source/platform/libraries/acpi/aml/object-concat-described.PORT.md) composes the eleven represented nonbasic labels with canonical basic-data conversion.
 All 472 checked pairs, three constant pairs and 52 actual public opcode observations
 pass. Integer plus a description remains explicitly outside this bounded profile;
 reference/field evaluation, target application and retirement remain pending.
 Aggregate source counts are unchanged.
 
-[Atomic named-value Store](source/libraries/acpi/aml/named-value-store.PORT.md) admits existing direct Integer/String/Buffer destinations, prepares canonical conversion,
+[Atomic named-value Store](source/platform/libraries/acpi/aml/named-value-store.PORT.md) admits existing direct Integer/String/Buffer destinations, prepares canonical conversion,
 and publishes only after success. All 305 whole-store checked pairs, three constant
 pairs and 297 actual public Store observations pass. Destination identity and links
 are retained; full-value byte storage is reset or replaced atomically. The bounded
 Buffer exclusions remain partial; subsequent executor integration is described
 below. These component receipts retain their original scope and source counts.
 
-[Generic method execution](source/libraries/acpi/interpreter/execution/generic.PORT.md) transports preloaded Integer/String/Buffer/Package/reference data through methods,
+[Generic method execution](source/platform/libraries/acpi/interpreter/execution/generic.PORT.md) transports preloaded Integer/String/Buffer/Package/reference data through methods,
 Return, Store and CopyObject using stable ObjectStore IDs and private bindings.
 At checkpoint `c4a8b03`, canonical replay passed 55 generic, 79 unchanged integer and 22 unchanged pipeline
 pairs, plus 103 boundary pairs and one constant-evaluator pair. Argument writes
@@ -776,15 +776,15 @@ children remain explicitly shallow. Dynamic literals, conversion opcodes, genera
 reference/field evaluation and services remain pending. ACPI-005 stays partial;
 aggregate source counts are unchanged.
 
-[Scalar named Store](source/libraries/acpi/aml/named-value-store-scalar.PORT.md) adds current-store destination admission and an inline Integer entry without
+[Scalar named Store](source/platform/libraries/acpi/aml/named-value-store-scalar.PORT.md) adds current-store destination admission and an inline Integer entry without
 a temporary object allocation. All 504 checked pairs and six constant pairs pass,
 including the unchanged 305 object-source cases and complete-store failure
 preservation. Existing target types and positive Buffer extents are retained.
 Generic named-target routing is implemented in the subsequent
-[executor integration](source/libraries/acpi/interpreter/execution/named-store.PORT.md);
+[executor integration](source/platform/libraries/acpi/interpreter/execution/named-store.PORT.md);
 the scalar receipts retain their original scope and source counts are unchanged.
 
-[Named Store executor integration](source/libraries/acpi/interpreter/execution/named-store.PORT.md) composes the canonical conversion kernels into Store and arithmetic named targets,
+[Named Store executor integration](source/platform/libraries/acpi/interpreter/execution/named-store.PORT.md) composes the canonical conversion kernels into Store and arithmetic named targets,
 preserving destination types and atomic failure behavior. Named Store expressions
 now contribute converted stored data, following ACPI 6.6 §19.6.132. All 255
 checked behavior/control pairs pass: 44 bytecode, 30 complete-state bridge, 25
@@ -793,7 +793,7 @@ Local/Arg bindings retain their existing contracts. Broader bytecodes, field
 evaluation and resource accounting remain pending; ACPI-005 and aggregate source
 anchors stay open.
 
-[Equal-extent named Buffer Store](source/libraries/acpi/aml/named-buffer-store.PORT.md) admits Buffer sources when both logical extents match, including zero, self-store
+[Equal-extent named Buffer Store](source/platform/libraries/acpi/aml/named-buffer-store.PORT.md) admits Buffer sources when both logical extents match, including zero, self-store
 and source padding. All 97 new and 504 retained complete-state behavior/control
 pairs pass in the recorded isolated worktree, with 12 public Rust observations.
 Those exact production and fixture hashes match the integrated source at
@@ -803,7 +803,7 @@ fixed-extent behavior; this does not block other ACPI-005 implementation work.
 Aggregate source anchors remain pending.
 
 
-[Zero-length Buffer conversion](source/libraries/acpi/aml/zero-buffer-store.PORT.md)
+[Zero-length Buffer conversion](source/platform/libraries/acpi/aml/zero-buffer-store.PORT.md)
 extends direct named Store and preparation to existing empty Buffers with fully
 admitted Integer/String sources. Focused isolated evidence covers 86 checked
 behavior/control pairs and six actual pinned public observations; earlier receipts
@@ -812,21 +812,21 @@ precedence decision between the conversion table's empty-result special case and
 existing-target padding rule. Unequal Buffer-copy geometry remains its separate
 compatibility decision; ACPI-005 and aggregate source counts stay open.
 
-[Returned object graph quotas](source/libraries/acpi/aml/result-graph.PORT.md) apply one shared object/byte budget at the public Program boundary. Nested byte
+[Returned object graph quotas](source/platform/libraries/acpi/aml/result-graph.PORT.md) apply one shared object/byte budget at the public Program boundary. Nested byte
 backing and Package member chains are validated without evaluating references,
 resolving names or copying the graph. The 49 pure-kernel, 27 Program and three supplemental behavior/control pairs
 pass in the recorded isolated worktree. Rejected results expose no
 value while preserving prior execution effects and diagnostics. The completed
-[ACPI-006 resource audit](source/libraries/acpi/pipeline/resource-limits.PORT.md) records the precise bounded Program profile
+[ACPI-006 resource audit](source/platform/libraries/acpi/pipeline/resource-limits.PORT.md) records the precise bounded Program profile
 and low-level API boundary. No upstream source anchor is promoted by this
 original composition.
 
-[ObjectType execution](source/libraries/acpi/interpreter/execution/object-type.PORT.md)
+[ObjectType execution](source/platform/libraries/acpi/interpreter/execution/object-type.PORT.md)
 inspects names, Local/Arg bindings and Debug through the canonical metadata helper,
 including pure Scope lookup and method noninvocation. Its isolated checkpoint `5bbaf37`
 passed 53 bytecode and 12 complete-state decoder pairs, with 37 public Rust
 observations. [Explicit ToInteger
-execution](source/libraries/acpi/interpreter/execution/to-integer.PORT.md) converts
+execution](source/platform/libraries/acpi/interpreter/execution/to-integer.PORT.md) converts
 through the canonical kernel and replaces the destination type while preserving target
 binding rules. Its source-bound checkpoints passed 43 bytecode and 25 complete-state
 retirement pairs. General reference constructors, field evaluation and the wider

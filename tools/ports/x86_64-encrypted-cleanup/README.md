@@ -54,7 +54,7 @@ encrypted bits 0/7/12/21/30/47/51, shared bits 47/63, and encrypted 47 followed 
 shared 48. The low/flag-bit stress profiles describe source arithmetic, not CPU
 configuration admission. Configuration occurs before all table construction.
 
-The inventory and [port contract](../../../source/libraries/x86_64/encrypted-cleanup.PORT.md)
+The inventory and [port contract](../../../source/platform/libraries/x86_64/encrypted-cleanup.PORT.md)
 identify canonical types, ownership boundaries and the exact upstream pin. On a
 pin update, review both complete cleanup bodies, PTE frame/flag/zero methods,
 configuration semantics, the extraction substitutions and retained range geometry

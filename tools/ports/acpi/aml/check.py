@@ -23,11 +23,11 @@ def main():
  print('Omega SHA-256:',hashlib.sha256(compiler.read_bytes()).hexdigest(),flush=True)
  def package_hash():
   digest=hashlib.sha256()
-  for file in sorted((ROOT/'source/libraries/acpi/aml').glob('*.omg')):
+  for file in sorted((ROOT/'source/platform/libraries/acpi/aml').glob('*.omg')):
    digest.update(file.name.encode());digest.update(b'\0');digest.update(file.read_bytes())
   return digest.hexdigest()
  before=package_hash();print('AML source SHA-256:',before,flush=True)
- build=(HERE/'build.omg').read_text().replace('../../../../source/libraries/acpi/aml',str(ROOT/'source/libraries/acpi/aml'))
+ build=(HERE/'build.omg').read_text().replace('../../../../source/platform/libraries/acpi/aml',str(ROOT/'source/platform/libraries/acpi/aml'))
  def check(name):
   started=time.monotonic()
   source=(HERE/'cases'/f'{name}.omg').read_text();old,new=cases[name]['mutation']

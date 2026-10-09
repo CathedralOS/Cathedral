@@ -17,9 +17,9 @@ fields, macro bodies, cfg branches and every unexpanded detail. One format-strin
 false anchor is explicitly rejected as non-code. Macro expansion and trait API
 semantics remain source-review work, not purported semantic-parser output.
 
-[PORT.md](../../../source/libraries/x86_64/PORT.md),
-[MODULES.md](../../../source/libraries/x86_64/MODULES.md), and
-[RECONCILIATION.md](../../../source/libraries/x86_64/RECONCILIATION.md) record scope,
+[PORT.md](../../../source/platform/libraries/x86_64/PORT.md),
+[MODULES.md](../../../source/platform/libraries/x86_64/MODULES.md), and
+[RECONCILIATION.md](../../../source/platform/libraries/x86_64/RECONCILIATION.md) record scope,
 reuse constraints, authority decisions and bounded implementation order.
 No inventory success establishes Omega compilation, test execution, native ABI
 or hardware access.

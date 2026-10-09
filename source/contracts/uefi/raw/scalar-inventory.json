@@ -322,7 +322,7 @@
           "targets": [
             {
               "anchor": "pub machine boolean_equal(",
-              "path": "source/libraries/uefi/scalar_helpers.omg"
+              "path": "source/platform/libraries/uefi/scalar_helpers.omg"
             }
           ]
         },
@@ -332,7 +332,7 @@
           "targets": [
             {
               "anchor": "pub machine boolean_is_true(",
-              "path": "source/libraries/uefi/scalar_helpers.omg"
+              "path": "source/platform/libraries/uefi/scalar_helpers.omg"
             }
           ]
         },
@@ -342,7 +342,7 @@
           "targets": [
             {
               "anchor": "pub machine boolean_is_false(",
-              "path": "source/libraries/uefi/scalar_helpers.omg"
+              "path": "source/platform/libraries/uefi/scalar_helpers.omg"
             }
           ]
         },
@@ -352,7 +352,7 @@
           "targets": [
             {
               "anchor": "pub machine boolean_from_raw(",
-              "path": "source/libraries/uefi/scalar_helpers.omg"
+              "path": "source/platform/libraries/uefi/scalar_helpers.omg"
             }
           ]
         },
@@ -362,7 +362,7 @@
           "targets": [
             {
               "anchor": "pub machine boolean_from_bool(",
-              "path": "source/libraries/uefi/scalar_helpers.omg"
+              "path": "source/platform/libraries/uefi/scalar_helpers.omg"
             }
           ]
         },
@@ -372,7 +372,7 @@
           "targets": [
             {
               "anchor": "pub machine boolean_is_true(",
-              "path": "source/libraries/uefi/scalar_helpers.omg"
+              "path": "source/platform/libraries/uefi/scalar_helpers.omg"
             }
           ]
         },
@@ -382,7 +382,7 @@
           "targets": [
             {
               "anchor": "pub machine boolean_equal(",
-              "path": "source/libraries/uefi/scalar_helpers.omg"
+              "path": "source/platform/libraries/uefi/scalar_helpers.omg"
             }
           ]
         },
@@ -392,7 +392,7 @@
           "targets": [
             {
               "anchor": "pub machine boolean_compare(",
-              "path": "source/libraries/uefi/scalar_helpers.omg"
+              "path": "source/platform/libraries/uefi/scalar_helpers.omg"
             }
           ]
         },
@@ -402,7 +402,7 @@
           "targets": [
             {
               "anchor": "pub machine boolean_compare(",
-              "path": "source/libraries/uefi/scalar_helpers.omg"
+              "path": "source/platform/libraries/uefi/scalar_helpers.omg"
             }
           ]
         },
@@ -412,7 +412,7 @@
           "targets": [
             {
               "anchor": "pub machine boolean_hash_byte(",
-              "path": "source/libraries/uefi/scalar_helpers.omg"
+              "path": "source/platform/libraries/uefi/scalar_helpers.omg"
             }
           ]
         },
@@ -656,7 +656,7 @@
           "targets": [
             {
               "anchor": "pub machine status_is_success(",
-              "path": "source/libraries/uefi/scalar_helpers.omg"
+              "path": "source/platform/libraries/uefi/scalar_helpers.omg"
             }
           ]
         },
@@ -666,7 +666,7 @@
           "targets": [
             {
               "anchor": "pub machine status_is_warning(",
-              "path": "source/libraries/uefi/scalar_helpers.omg"
+              "path": "source/platform/libraries/uefi/scalar_helpers.omg"
             }
           ]
         },
@@ -676,7 +676,7 @@
           "targets": [
             {
               "anchor": "pub machine status_is_error(",
-              "path": "source/libraries/uefi/scalar_helpers.omg"
+              "path": "source/platform/libraries/uefi/scalar_helpers.omg"
             }
           ]
         },
@@ -1689,7 +1689,7 @@
           "targets": [
             {
               "anchor": "pub machine memory_descriptor_default(",
-              "path": "source/libraries/uefi/scalar_helpers.omg"
+              "path": "source/platform/libraries/uefi/scalar_helpers.omg"
             }
           ]
         },
@@ -1911,7 +1911,7 @@
           "targets": [
             {
               "anchor": "pub machine memory_type_custom(",
-              "path": "source/libraries/uefi/scalar_helpers.omg"
+              "path": "source/platform/libraries/uefi/scalar_helpers.omg"
             }
           ]
         },
@@ -2293,7 +2293,7 @@
           "targets": [
             {
               "anchor": "pub machine revision_new(",
-              "path": "source/libraries/uefi/scalar_helpers.omg"
+              "path": "source/platform/libraries/uefi/scalar_helpers.omg"
             }
           ]
         },
@@ -2303,7 +2303,7 @@
           "targets": [
             {
               "anchor": "pub machine revision_major(",
-              "path": "source/libraries/uefi/scalar_helpers.omg"
+              "path": "source/platform/libraries/uefi/scalar_helpers.omg"
             }
           ]
         },
@@ -2313,7 +2313,7 @@
           "targets": [
             {
               "anchor": "pub machine revision_minor(",
-              "path": "source/libraries/uefi/scalar_helpers.omg"
+              "path": "source/platform/libraries/uefi/scalar_helpers.omg"
             }
           ]
         },
@@ -2340,7 +2340,7 @@
           "targets": [
             {
               "anchor": "pub machine time_equal(",
-              "path": "source/libraries/uefi/scalar_helpers.omg"
+              "path": "source/platform/libraries/uefi/scalar_helpers.omg"
             }
           ]
         },
@@ -2520,7 +2520,7 @@
           "targets": [
             {
               "anchor": "pub machine time_invalid(",
-              "path": "source/libraries/uefi/scalar_helpers.omg"
+              "path": "source/platform/libraries/uefi/scalar_helpers.omg"
             }
           ]
         },
@@ -2530,7 +2530,7 @@
           "targets": [
             {
               "anchor": "pub machine time_is_valid(",
-              "path": "source/libraries/uefi/scalar_helpers.omg"
+              "path": "source/platform/libraries/uefi/scalar_helpers.omg"
             }
           ]
         },

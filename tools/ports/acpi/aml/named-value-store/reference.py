@@ -4,7 +4,7 @@ import argparse,hashlib,json,subprocess,tempfile
 from pathlib import Path
 import aml_encoding as aml
 HERE=Path(__file__).resolve().parent;ROOT=HERE.parents[4];PIN='257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5'
-MAPPING=['source/libraries/acpi/aml/named_value_store.omg','source/libraries/acpi/aml/implicit_conversions.omg','source/libraries/acpi/aml/buffer_target_values.omg','source/libraries/acpi/aml/byte_storage.omg']
+MAPPING=['source/platform/libraries/acpi/aml/named_value_store.omg','source/platform/libraries/acpi/aml/implicit_conversions.omg','source/platform/libraries/acpi/aml/buffer_target_values.omg','source/platform/libraries/acpi/aml/byte_storage.omg']
 def sha(p):return hashlib.sha256(p.read_bytes()).hexdigest()
 def describe(kind,data):return kind.lower()+':'+(str(data)if kind=='Integer'else data.hex())
 def primary(kind,extent,source,data,bits):

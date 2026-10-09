@@ -11,7 +11,7 @@ for file in data['files'].values():
  for key,row in file['symbols'].items():
   row['disposition']='pending';row['reason']='Outside recursive cleanup supplement; see separate topology, routes and translation slices. Live pointers, hierarchy custody and instructions remain outside numeric ports.'
   if key.split(':',1)[1]in ['clean_up','clean_up_addr_range']:
-   row['disposition']='translated';row['targets']=[{'path':'source/libraries/x86_64/recursive_cleanup.omg','anchor':'pub machine '+name+'('}for name in ['begin','resume','step']];row['reason']='Modified detached begin/resume/step orchestration with explicit recursive-slot exclusion, finite budget, and ordinary cleanup plans. Exact private clean_up mirror validates owned fixture outcomes. No live API, raw recursive reference, actual entry write or frame retirement.'
-path=ROOT/'source/libraries/x86_64/recursive-cleanup-inventory.json';text=json.dumps(data,indent=2,sort_keys=True)+'\n'
+   row['disposition']='translated';row['targets']=[{'path':'source/platform/libraries/x86_64/recursive_cleanup.omg','anchor':'pub machine '+name+'('}for name in ['begin','resume','step']];row['reason']='Modified detached begin/resume/step orchestration with explicit recursive-slot exclusion, finite budget, and ordinary cleanup plans. Exact private clean_up mirror validates owned fixture outcomes. No live API, raw recursive reference, actual entry write or frame retirement.'
+path=ROOT/'source/platform/libraries/x86_64/recursive-cleanup-inventory.json';text=json.dumps(data,indent=2,sort_keys=True)+'\n'
 if '--check'in sys.argv:assert path.read_text()==text,'stale recursive cleanup inventory'
 else:path.write_text(text)

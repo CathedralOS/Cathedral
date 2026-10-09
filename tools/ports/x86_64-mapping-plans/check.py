@@ -8,14 +8,14 @@ def main():
  p=argparse.ArgumentParser();p.add_argument('--omega',type=Path,default=ROOT.parent/'Omega/target/release/omega');p.add_argument('--host-only',action='store_true');args=p.parse_args()
  run(sys.executable,HERE/'generate.py','--check')
  run(sys.executable,HERE/'map_inventory.py','--check')
- run(sys.executable,ROOT/'tools/ports/inventory.py','check',ROOT/'source/libraries/x86_64/mapping-plans-inventory.json','--checkout',ROOT/'reference_code/rust-osdev/x86_64')
+ run(sys.executable,ROOT/'tools/ports/inventory.py','check',ROOT/'source/platform/libraries/x86_64/mapping-plans-inventory.json','--checkout',ROOT/'reference_code/rust-osdev/x86_64')
  run('cargo','run','--quiet','--locked','--manifest-path',HERE/'Cargo.toml')
  if args.host_only:return
  compiler=args.omega.resolve();print('Omega SHA-256:',hashlib.sha256(compiler.read_bytes()).hexdigest(),flush=True)
  source=(HERE/'main.omg').read_text();prefix=source[:source.index('machine leaf_0')]
  blocks=re.findall(r'machine (?:leaf|child)_\d+\(\)->i32 \{.*?(?=\nmachine (?:leaf|child)_|\ndata Main)',source,re.S)
  names=[re.search(r'machine (\w+)\(',block)[1] for block in blocks]
- build=(HERE/'build.omg').read_text().replace('../../../source/libraries/x86_64',str(ROOT/'source/libraries/x86_64'))
+ build=(HERE/'build.omg').read_text().replace('../../../source/platform/libraries/x86_64',str(ROOT/'source/platform/libraries/x86_64'))
  def fixture(selected):
   body=prefix+'\n'.join(blocks[names.index(name)] for name in selected)
   body+='\nmachine plan_test_result()->i32 {\n'+'\n'.join(f'let pass{i}:bool={name}()==0;' for i,name in enumerate(selected))+'\ntransition '+' && '.join(f'pass{i}' for i in range(len(selected)))+' { true -> (0) _ -> (1) } }\nconst RESULT:i32=plan_test_result();\nmachine require_success(value:i32) requires value == 0; {}\ndata Main{}\nmachine Main::main(&mut self){require_success(RESULT);}\n'

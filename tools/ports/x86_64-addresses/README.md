@@ -1,6 +1,6 @@
 # x86 address arithmetic checks
 
-The [port record](../../../source/libraries/x86_64/addresses.PORT.md) records
+The [port record](../../../source/platform/libraries/x86_64/addresses.PORT.md) records
 scope, licensing, raw-value adaptations, test limits and compiler identity.
 
 ```sh

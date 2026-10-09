@@ -5,7 +5,7 @@ hashes, all 49 generated batches and the pinned runner binary. Execution took
 644.553 seconds wall time and 1913.560 seconds summed batch time with three workers.
 Maximum checked fuel was 316,054.
 
-The [port contract](../../../../source/libraries/acpi/field_sources/inline.PORT.md)
+The [port contract](../../../../source/platform/libraries/acpi/field_sources/inline.PORT.md)
 documents width-first admission and the shared conversion path. The corpus has
 168 scalar pairs and all 315 unchanged original object-source pairs, totaling
 483 positive/changed-expectation pairs.
@@ -14,7 +14,7 @@ documents width-first admission and the shared conversion path. The corpus has
 python3 tools/ports/acpi/field-source-inline/fixtures.py
 python3 tools/ports/acpi/field-source-inline/check.py --runner /path/to/cathedral-acpi-checked-runner
 python3 tools/ports/acpi/field-source-inline/verify_record.py --require-binaries
-python3 tools/ports/inventory.py check --checkout reference_code/rust-osdev/acpi source/libraries/acpi/field_sources/inventory.json
+python3 tools/ports/inventory.py check --checkout reference_code/rust-osdev/acpi source/platform/libraries/acpi/field_sources/inventory.json
 ```
 
 The pinned clean Omega build and runner provenance are in `toolchain.json`.

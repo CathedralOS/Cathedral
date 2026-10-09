@@ -13,10 +13,10 @@ def inventory():
    row['reason']='Outside this component, or aggregate operation remains incomplete.'
    if key.split(':',1)[1]=='do_to_dec_hex_string':
     row['reason']='Partial direct Integer/String/Buffer composition with selected-width normalization, exact pinned explicit numeric presentation, strict canonical String identity and bounded capacity. Operand evaluation/reference handling, targets, stores, context contribution and retirement remain pending.'
-    row['targets']=[{'path':'source/libraries/acpi/aml/object_numeric_strings.omg','anchor':'pub machine convert'}]
+    row['targets']=[{'path':'source/platform/libraries/acpi/aml/object_numeric_strings.omg','anchor':'pub machine convert'}]
  return value
 def main():
- p=argparse.ArgumentParser();p.add_argument('--check',action='store_true');a=p.parse_args();v=inventory();path=fixtures.ROOT/'source/libraries/acpi/aml/object-numeric-strings-inventory.json'
+ p=argparse.ArgumentParser();p.add_argument('--check',action='store_true');a=p.parse_args();v=inventory();path=fixtures.ROOT/'source/platform/libraries/acpi/aml/object-numeric-strings-inventory.json'
  if a.check:assert json.loads(path.read_text())==v
  else:path.write_text(json.dumps(v,indent=2)+'\n')
  print(api.check(v,UP,fixtures.ROOT))

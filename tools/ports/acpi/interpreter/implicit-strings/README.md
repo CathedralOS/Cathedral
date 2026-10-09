@@ -10,5 +10,5 @@ Buffer expectations join two-digit byte strings with spaces. These are primary
 specification oracles, not Rust observations or copied private helper bodies.
 Every successful Omega result is compared across all 256 initialized bytes,
 including output tails. See the
-[port record](../../../../../source/libraries/acpi/interpreter/implicit-strings.PORT.md)
+[port record](../../../../../source/platform/libraries/acpi/interpreter/implicit-strings.PORT.md)
 for capacity limits and deferred integration.

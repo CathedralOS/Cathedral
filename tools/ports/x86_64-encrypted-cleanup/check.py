@@ -9,7 +9,7 @@ def main():
  p=argparse.ArgumentParser(description=__doc__);p.add_argument('--host-only',action='store_true');p.add_argument('--omega',type=Path,default=OMEGA);a=p.parse_args()
  for script in ['generate_reference.py','generate.py','generate_extras.py','generate_inventory.py']:run(sys.executable,HERE/script,'--check')
  # Private geometry was retained verbatim; changes demand a fresh reconciliation.
- lib=ROOT/'source/libraries/x86_64'
+ lib=ROOT/'source/platform/libraries/x86_64'
  baseline=(lib/'cleanup_ranges.omg').read_text();profile=(lib/'encrypted_cleanup_ranges.omg').read_text()
  assert baseline[baseline.index('// Once a selected link'):]==profile[profile.index('// Once a selected link'):]
  run('cargo','+nightly-2026-09-04','build','--manifest-path',HERE/'Cargo.toml','--locked','--offline')

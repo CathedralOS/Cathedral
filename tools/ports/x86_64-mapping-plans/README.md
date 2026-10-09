@@ -1,6 +1,6 @@
 # Detached mapper decision witnesses
 
-See the [port record](../../../source/libraries/x86_64/mapping-plans.PORT.md).
+See the [port record](../../../source/platform/libraries/x86_64/mapping-plans.PORT.md).
 `check.py --omega /path/to/omega` audits the pin/mapping and deterministic corpus,
 executes112 actual pinned mapper scenarios, then evaluates the matching Omega
 decision bodies, extra malformed-input checks and four body mutations.

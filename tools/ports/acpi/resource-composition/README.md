@@ -1,7 +1,7 @@
 # Bounded resource-template concatenation evidence
 
 The production component is
-[`resource_composition/PORT.md`](../../../../source/libraries/acpi/resource_composition/PORT.md).
+[`resource_composition/PORT.md`](../../../../source/platform/libraries/acpi/resource_composition/PORT.md).
 The 25 original scenarios run the real Omega composition, resource validation
 and copy bodies. Every checked-execution scenario checks all 4096 output bytes,
 including untouched tails and complete output preservation after errors. Each

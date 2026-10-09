@@ -41,7 +41,7 @@ def main():
     for name, digest in source.items():
         assert hashlib.sha256(subprocess.check_output(['git','show',PIN+':'+name],cwd=upstream)).hexdigest() == digest
     input_paths = [Path(__file__), PROBE/'reference.rs', PROBE/'reference.Cargo.lock',
-                   ROOT/'source/libraries/acpi/aml/named_value_store.omg']
+                   ROOT/'source/platform/libraries/acpi/aml/named_value_store.omg']
     inputs = {str(p.relative_to(ROOT)): sha(p) for p in input_paths}
     target = Path('/tmp/cathedral-named-buffer-store-public')
     if args.verify_record:

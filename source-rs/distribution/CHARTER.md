@@ -1,0 +1,5 @@
+# Cathedral distribution
+
+Owns the one built-in Cathedral experience: shell, settings, bundled applications, defaults and composition. A fork can replace this directory. There is no multi-distribution framework. profile.json is consumed by the boot harness today; desktop packages arrive when implemented. Depends on public platform packages and shared contracts/foundation. Kernel and platform never depend on this implementation. Trusted platform owners retain permission and recovery enforcement.
+
+See [the source layout](../../wiki/architecture/repository_layout.md).

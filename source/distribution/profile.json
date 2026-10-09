@@ -1,0 +1,6 @@
+{
+  "name": "Cathedral",
+  "stage": "early-boot",
+  "boot_entry": "kernel/boot/uefi/main.omg",
+  "target": "uefi_x64"
+}

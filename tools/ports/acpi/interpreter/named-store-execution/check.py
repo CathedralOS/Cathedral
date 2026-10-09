@@ -26,13 +26,13 @@ def digest(text):
 
 def build(root):
     source = 'machine build(builder:&mut Build){builder.package("named-store-execution");builder.freestanding=true;'
-    for alias, path in [('aml','source/libraries/acpi/aml'), ('execution','source/libraries/acpi/interpreter/execution'), ('integer_helpers','source/libraries/acpi/interpreter'), ('pipeline','source/libraries/acpi/pipeline')]:
+    for alias, path in [('aml','source/platform/libraries/acpi/aml'), ('execution','source/platform/libraries/acpi/interpreter/execution'), ('integer_helpers','source/platform/libraries/acpi/interpreter'), ('pipeline','source/platform/libraries/acpi/pipeline')]:
         source += f'builder.depend_as("{alias}",Source::Path {{location:"{root/path}"}});'
     return source + '}\n'
 
 
 def snapshot():
-    paths = list((ROOT/'source/libraries/acpi').rglob('*.omg'))
+    paths = list((ROOT/'source/platform/libraries/acpi').rglob('*.omg'))
     paths += list(HERE.glob('*.py')) + list(HERE.glob('*-cases.json'))
     paths += [fixtures.GENERIC/p for p in ['fixtures.py','decoder_fixtures.py','focused/bridge-atomicity/main.omg']]
     paths += [HERE.parent/'execution'/p for p in ['fixtures.py','checked_runner.rs','runner.Cargo.lock']]

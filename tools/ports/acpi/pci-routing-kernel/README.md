@@ -2,8 +2,8 @@
 
 This directory is deliberately a sibling of `pci-routing`: its generated Omega
 fixtures and records do not alter the committed public Rust harness's input
-closure. The source package is `source/libraries/acpi/pci_routing`; see its
-[port report](../../../../source/libraries/acpi/pci_routing/PORT.md) for strict
+closure. The source package is `source/platform/libraries/acpi/pci_routing`; see its
+[port report](../../../../source/platform/libraries/acpi/pci_routing/PORT.md) for strict
 ACPI 6.6 behavior, pin differences and explicit evaluation boundaries.
 
 The portable suite contains 117 positives and 117 changed-body controls. It covers

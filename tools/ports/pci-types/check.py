@@ -13,7 +13,7 @@ import inventory
 
 
 def main():
-    package = ROOT/'source/libraries/pci'
+    package = ROOT/'source/platform/libraries/pci'
     checkout = ROOT/'reference_code/rust-osdev/pci_types'
     manifest = inventory.read_json(package/'inventory.json')
     result = inventory.check(manifest, checkout, ROOT, require_transcribed=True)

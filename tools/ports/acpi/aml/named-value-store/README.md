@@ -5,7 +5,7 @@ observations passed at the final repository path. These receipts bind the origin
 source before the scalar extension. Current checks, including all original 305
 cases, are in [named-value-store-scalar](../named-value-store-scalar/README.md).
 See the
-[port record](../../../../../source/libraries/acpi/aml/named-value-store.PORT.md)
+[port record](../../../../../source/platform/libraries/acpi/aml/named-value-store.PORT.md)
 for exact admission, exclusions and destination-block publication policy.
 
 ```sh

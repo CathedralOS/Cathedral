@@ -2,7 +2,7 @@
 
 Historical published bounded implementation; its recorded final-path checks pass. API, partial
 source mapping and primary conversion boundaries are in
-`source/libraries/acpi/field_writes/PORT.md`.
+`source/platform/libraries/acpi/field_writes/PORT.md`.
 
 The later [single-chunk extension](../field-write-chunks/README.md) owns separate
 current-source evidence after extracting the shared merge kernel. This directory's
@@ -15,7 +15,7 @@ python3 tools/ports/acpi/field-writes/compare.py --write
 python3 tools/ports/acpi/field-writes/check.py --batch-size 10
 python3 tools/ports/acpi/field-writes/check_const.py
 python3 tools/ports/acpi/field-writes/verify_record.py
-python3 tools/ports/inventory.py check --checkout reference_code/rust-osdev/acpi source/libraries/acpi/field_writes/inventory.json
+python3 tools/ports/inventory.py check --checkout reference_code/rust-osdev/acpi source/platform/libraries/acpi/field_writes/inventory.json
 ```
 
 In scratch, public reproduction and retained-record verification require

@@ -5,6 +5,13 @@
 Cathedral. The [porting policy](../../wiki/architecture/prior_art_and_hardware_facts.md)
 owns provenance and authority rules; source packages retain their usual owners.
 
+The 2026-10-09 layout migration moves kernel code beneath `source/kernel/` and
+drivers/libraries beneath `source/platform/`. Current inventories and host build
+paths follow those locations. Historical verification/receipt JSON remains
+verbatim: it binds the old tool/build inputs, and is not a fresh certification
+of relocated manifests or harnesses. Replaying those receipts requires their
+recorded source revision and toolchain; fresh runs should produce new receipts.
+
 Start a port by copying [PORT.template.md](PORT.template.md) to `PORT.md` beside
 the destination package. Define the exact upstream slice and inventory its
 files/public symbols before claiming a translation. Use the queue's full commit

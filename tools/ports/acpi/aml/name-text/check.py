@@ -9,11 +9,11 @@ RUNNER=Path('/tmp/cathedral-acpi-execution-checked/release/cathedral-acpi-checke
 def sha(path):return hashlib.sha256(path.read_bytes()).hexdigest()
 def snapshot():
  paths=list(HERE.glob('*.py'))+[HERE/'reference.rs',HERE/'reference.Cargo.lock',HERE/'reference-verification.json',HERE/'cases.json',HERE/'comparison.json']
- paths += [ROOT/'source/libraries/acpi/aml'/name for name in ['build.omg','model.omg','names.omg','bytes.omg','name_text.omg']]
- paths += [ROOT/'source/libraries/acpi/interpreter/build.omg']
+ paths += [ROOT/'source/platform/libraries/acpi/aml'/name for name in ['build.omg','model.omg','names.omg','bytes.omg','name_text.omg']]
+ paths += [ROOT/'source/platform/libraries/acpi/interpreter/build.omg']
  paths += [ROOT/'tools/ports/acpi/interpreter/execution'/name for name in ['checked_runner.rs','runner.Cargo.lock']]
  return {str(path.relative_to(ROOT)):sha(path)for path in sorted(paths)}
-def build_text():return 'machine build(builder:&mut Build){builder.application("cathedral-name-text-tests");builder.freestanding=true;builder.depend_as("aml",Source::Path {location:"'+str(ROOT/'source/libraries/acpi/aml')+'"});}'
+def build_text():return 'machine build(builder:&mut Build){builder.application("cathedral-name-text-tests");builder.freestanding=true;builder.depend_as("aml",Source::Path {location:"'+str(ROOT/'source/platform/libraries/acpi/aml')+'"});}'
 def validate(output,names):
  assert 'CHECKED authored package and dependency bodies;'in output
  actual=re.findall(r'^PASS (\S+) expected=(\d+) observed=(\d+) error=None usage=',output,re.M)

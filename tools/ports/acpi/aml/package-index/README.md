@@ -1,6 +1,6 @@
 # Package Index construction evidence
 
-See [port scope](../../../../../source/libraries/acpi/aml/package-index.PORT.md).
+See [port scope](../../../../../source/platform/libraries/acpi/aml/package-index.PORT.md).
 Status: final repository-path verification passed all 65 checked pairs, three
 constant pairs and 19 public observations; retained receipts match current inputs.
 

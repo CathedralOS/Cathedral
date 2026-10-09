@@ -9,7 +9,7 @@ def main():
  p=argparse.ArgumentParser(description=__doc__);p.add_argument('--write',action='store_true');a=p.parse_args()
  subprocess.run(['python3',str(HERE/'generate.py'),'--check'],cwd=ROOT,check=True)
  subprocess.run(['python3',str(HERE/'map_inventory.py'),'--check'],cwd=ROOT,check=True)
- subprocess.run(['python3',str(ROOT/'tools/ports/inventory.py'),'check',str(ROOT/'source/libraries/acpi/resources/inventory.json'),'--checkout',str(ROOT/'reference_code/rust-osdev/acpi')],cwd=ROOT,check=True)
+ subprocess.run(['python3',str(ROOT/'tools/ports/inventory.py'),'check',str(ROOT/'source/platform/libraries/acpi/resources/inventory.json'),'--checkout',str(ROOT/'reference_code/rust-osdev/acpi')],cwd=ROOT,check=True)
  cases=json.loads((HERE/'cases.json').read_text());checked=json.loads((HERE/'checked-verification.json').read_text());const=json.loads((HERE/'constant-verification.json').read_text());observations=json.loads((HERE/'observations.json').read_text())
  assert checked['format']=='cathedral-resource-checked-batches-v1'
  assert checked['scenario_count']==checked['control_count']==len(cases)
@@ -50,9 +50,9 @@ def main():
  refpath=HERE/'reference-verification.json'
  if a.write:refpath.write_text(encode(reference))
  else:assert refpath.read_text()==encode(reference),'stale reference record'
- inventory=json.loads((ROOT/'source/libraries/acpi/resources/inventory.json').read_text());anchor_counts=collections.Counter(row['disposition']for f in inventory['files'].values()for row in f['symbols'].values())
+ inventory=json.loads((ROOT/'source/platform/libraries/acpi/resources/inventory.json').read_text());anchor_counts=collections.Counter(row['disposition']for f in inventory['files'].values()for row in f['symbols'].values())
  artifacts=[]
- for base in [ROOT/'source/libraries/acpi/resources',HERE]:
+ for base in [ROOT/'source/platform/libraries/acpi/resources',HERE]:
   for f in base.rglob('*'):
    if f.is_file()and not any(part in ['target','__pycache__','history']for part in f.relative_to(base).parts)and f!=HERE/'verification.json':artifacts.append(f)
  manifest={'format':'cathedral-acpi-resources-connections-v2','status':'tested bounded pin-supported descriptor families including GPIO/I2C; other defined families explicitly Unsupported','upstream_revision':revision,'upstream_resource_sha256':digest(source),'omega_revision':checked['omega_revision'],'omega_compiler_sha256':const['omega_compiler_sha256'],'checked_runner_sha256':checked['runner_sha256'],'source_hash_algorithm':'SHA-256 over sorted repository-relative path + NUL + file bytes','selected_source_sha256':recorded_subset_hash,'source_closure_sha256':closure.hexdigest(),'source_files_sha256':complete_sources,'original_run_source_files_sha256':recorded_sources,'source_closure_audit':'source-closure-audit.json; original recorded subsets preserved, unchanged transitive header explicitly supplemented','inventory':dict(anchor_counts,anchors=sum(anchor_counts.values()),files=len(inventory['files'])),'validation':{'actual_public_rust':reference,'checked_interpreter':{'record':'checked-verification.json','positives':len(cases),'changed_body_controls':len(cases),'batches':len(checked['batches']),'elapsed_seconds':checked['elapsed_seconds'],'command':checked['command']},'constant_evaluation':{'record':'constant-verification.json','positives':const['scenario_count'],'changed_body_controls':const['control_count'],'command':const['command']}},'boundaries':['4096 initialized bytes, not an ACPI maximum','all actual pin-supported families represented; other defined families retain Unsupported envelope','strict documented EndTag, connection/source/revision profile','spans/raw numeric facts do not confer GPIO/I2C/DMA/IO/mapping or namespace authority','no native ABI or firmware execution'],'historical_record':'history/first-slice-4b95485/verification.json applies only to first checkpoint','artifacts_sha256':{str(f.relative_to(ROOT)):digest(f)for f in sorted(artifacts)}}

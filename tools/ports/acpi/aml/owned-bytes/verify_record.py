@@ -37,6 +37,6 @@ for proof in const_reference['proofs']:
 reference=read('reference-verification.json');hashes(reference);assert len(reference['observations'])==21
 migration=read('migration.json')
 for path,digest in migration['historical_sha256'].items():assert hashlib.sha256((ROOT/path).read_bytes()).hexdigest()==digest,('historical receipt changed',path)
-subprocess.run(['python3',str(ROOT/'tools/ports/inventory.py'),'check',str(ROOT/'source/libraries/acpi/aml/byte-storage-inventory.json'),'--checkout',str(ROOT/'reference_code/rust-osdev/acpi')],check=True)
+subprocess.run(['python3',str(ROOT/'tools/ports/inventory.py'),'check',str(ROOT/'source/platform/libraries/acpi/aml/byte-storage-inventory.json'),'--checkout',str(ROOT/'reference_code/rust-osdev/acpi')],check=True)
 assert json.loads((HERE/'cases.json').read_text())==fixtures.cases()
 print('PASS current138 owned-byte/composition pairs,306 regression pairs,8 const pairs,21 labelled Rust observations; old receipts preserved; native/hardware NOT RUN.')

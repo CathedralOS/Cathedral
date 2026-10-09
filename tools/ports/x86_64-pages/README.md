@@ -1,6 +1,6 @@
 # Page/frame numeric witnesses
 
-See the [port record](../../../source/libraries/x86_64/pages.PORT.md) for the exact
+See the [port record](../../../source/platform/libraries/x86_64/pages.PORT.md) for the exact
 profile, source map and deliberate differences from pinned Rust.
 
 Run `python3 tools/ports/x86_64-pages/check.py --omega /path/to/omega` from the

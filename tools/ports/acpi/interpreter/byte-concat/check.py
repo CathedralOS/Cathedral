@@ -5,7 +5,7 @@ from pathlib import Path
 import fixtures
 HERE=fixtures.HERE;ROOT=fixtures.ROOT;SHARED=HERE.parent/'execution'
 def snapshot():
- sources={ROOT/'source/libraries/acpi/interpreter/build.omg',ROOT/'source/libraries/acpi/interpreter/byte_concat.omg',ROOT/'source/libraries/acpi/interpreter/integers.omg',ROOT/'source/libraries/acpi/interpreter/conversions.omg',ROOT/'source/libraries/acpi/interpreter/buffer_fields.omg'}
+ sources={ROOT/'source/platform/libraries/acpi/interpreter/build.omg',ROOT/'source/platform/libraries/acpi/interpreter/byte_concat.omg',ROOT/'source/platform/libraries/acpi/interpreter/integers.omg',ROOT/'source/platform/libraries/acpi/interpreter/conversions.omg',ROOT/'source/platform/libraries/acpi/interpreter/buffer_fields.omg'}
  sources.update(HERE/n for n in ['fixtures.py','cases.json','build.omg','check.py','check_const.py'])
  sources.update([SHARED/'checked_runner.rs',SHARED/'runner.Cargo.lock'])
  return {str(p.relative_to(ROOT)):hashlib.sha256(p.read_bytes()).hexdigest()for p in sorted(sources)}
@@ -24,7 +24,7 @@ def main():
   for row in rows:
    for control in [False,True]:
     machine='Suite::'+row['name']+('_control'if control else'_positive');source+=fixtures.render(row,control,machine);selections.append(machine+'='+str(int(control)))
-  (work/'main.omg').write_text(source);(work/'build.omg').write_text((HERE/'build.omg').read_text().replace('../../../../../source/libraries/acpi/interpreter',str(ROOT/'source/libraries/acpi/interpreter')))
+  (work/'main.omg').write_text(source);(work/'build.omg').write_text((HERE/'build.omg').read_text().replace('../../../../../source/platform/libraries/acpi/interpreter',str(ROOT/'source/platform/libraries/acpi/interpreter')))
   start=time.monotonic();lines=[];process=subprocess.Popen([str(runner),str(work/'main.omg'),str(work/'build'),*selections],stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True,env=dict(os.environ,OMEGA_INTERP_STEP_BUDGET='10000000'))
   for line in process.stdout:print(line,end='',flush=True);lines.append(line)
   if process.wait():raise SystemExit('Omega byte-concat cases failed')

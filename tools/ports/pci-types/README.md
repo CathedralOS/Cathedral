@@ -27,4 +27,4 @@ The final verified compiler is clean Omega eaa7993:
 SHA-256 `2ac9ce5859896c4689ed54ac55f79dd211050a530fe03e3d475cc543b9b523c4`.
 These are semantic-evaluation checks, not native execution, ABI comparison,
 configuration-space access, or interrupt delivery tests. See
-[the port record](../../../source/libraries/pci/PORT.md) for adaptations and seams.
+[the port record](../../../source/platform/libraries/pci/PORT.md) for adaptations and seams.

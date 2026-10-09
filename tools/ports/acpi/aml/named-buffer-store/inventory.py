@@ -24,7 +24,7 @@ def main():
             entry['reason'] = 'Outside the equal-extent direct named Buffer Store component; aggregate behavior remains pending.'
     for path, key in [('src/aml/mod.rs','2406:do_store'), ('src/aml/object.rs','317:replace_with_implicit_casting')]:
         entry = value['files'][path]['symbols'][key]
-        entry['targets'] = [dict(path='source/libraries/acpi/aml/named_value_store.omg', anchor=anchor)
+        entry['targets'] = [dict(path='source/platform/libraries/acpi/aml/named_value_store.omg', anchor=anchor)
                             for anchor in ['pub machine store_value(', 'state buffer_copy(', 'state same_extent(']]
         entry['note'] = ('Partial Buffer-source branch only: both direct objects fully admitted; equal logical extents 0..256 copied atomically '
                          'through existing conversion and publisher. Unequal extents are a separate compatibility decision: '
@@ -36,7 +36,7 @@ def main():
     value['scope'] = {'equal_extents': [0,256], 'source_identity': 'retained', 'destination_identity': 'retained',
                       'ordinary_conversions': 'existing Integer/String target-extent rules unchanged',
                       'unequal_extents': 'explicitly unsupported pending same-type extent compatibility decision'}
-    target = ROOT/'source/libraries/acpi/aml/named-buffer-store-inventory.json'
+    target = ROOT/'source/platform/libraries/acpi/aml/named-buffer-store-inventory.json'
     text = json.dumps(value, indent=2, sort_keys=True)+'\n'
     if args.check:
         assert target.read_text() == text

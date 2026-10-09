@@ -5,7 +5,7 @@ from pathlib import Path
 import fixtures
 HERE=fixtures.HERE;ROOT=fixtures.ROOT;CANONICAL=fixtures.ROOT;SHARED=CANONICAL/'tools/ports/acpi/interpreter/execution'
 PIN='eaa7993a23623cd8fabf45350340479c5c9c7879'
-SOURCE=['source/libraries/acpi/aml/'+n for n in ['build.omg','model.omg','object_conversions.omg','object_descriptions.omg','bytes.omg','names.omg','namespace.omg','object_references.omg','byte_storage.omg']]+['source/libraries/acpi/interpreter/'+n for n in ['build.omg','integers.omg','conversions.omg','buffer_fields.omg','string_numbers.omg']]
+SOURCE=['source/platform/libraries/acpi/aml/'+n for n in ['build.omg','model.omg','object_conversions.omg','object_descriptions.omg','bytes.omg','names.omg','namespace.omg','object_references.omg','byte_storage.omg']]+['source/platform/libraries/acpi/interpreter/'+n for n in ['build.omg','integers.omg','conversions.omg','buffer_fields.omg','string_numbers.omg']]
 def sha(path):return hashlib.sha256(path.read_bytes()).hexdigest()
 def snapshot():
  paths=[ROOT/p for p in SOURCE]+list(HERE.glob('*.py'))+[HERE/'cases.json',HERE/'labels.json']+[SHARED/n for n in ['checked_runner.rs','runner.Cargo.lock']]
@@ -14,7 +14,7 @@ def build_text(stage):
  assert stage in ['runtime','constant']
  application='cathedral-object-descriptions'if stage=='runtime'else'object-description-constant'
  root=ROOT.resolve()
- return 'machine build(builder:&mut Build){builder.application("'+application+'");builder.freestanding=true;builder.depend_as("aml",Source::Path {location:"'+str(root/'source/libraries/acpi/aml')+'"});builder.depend_as("integer_helpers",Source::Path {location:"'+str(root/'source/libraries/acpi/interpreter')+'"});}'
+ return 'machine build(builder:&mut Build){builder.application("'+application+'");builder.freestanding=true;builder.depend_as("aml",Source::Path {location:"'+str(root/'source/platform/libraries/acpi/aml')+'"});builder.depend_as("integer_helpers",Source::Path {location:"'+str(root/'source/platform/libraries/acpi/interpreter')+'"});}'
 def text_sha(text):return hashlib.sha256(text.encode()).hexdigest()
 def build_runner(omega):
  assert subprocess.check_output(['git','rev-parse','HEAD'],cwd=omega,text=True).strip()==PIN

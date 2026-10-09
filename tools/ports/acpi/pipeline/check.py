@@ -32,7 +32,7 @@ def parser_suite():
 
 def source_snapshot(parser_regression,all_rows):
     sources=set()
-    packages=['source/libraries/acpi/aml']if parser_regression else['source/libraries/acpi/aml','source/libraries/acpi/interpreter','source/libraries/acpi/pipeline']
+    packages=['source/platform/libraries/acpi/aml']if parser_regression else['source/platform/libraries/acpi/aml','source/platform/libraries/acpi/interpreter','source/platform/libraries/acpi/pipeline']
     for package in packages:sources.update((ROOT/package).rglob('*.omg'))
     if parser_regression:
         sources.update(ROOT/row['original']for row in all_rows);sources.add(ROOT/'tools/ports/acpi/aml/cases.json')
@@ -64,7 +64,7 @@ def main():
         if a.runner is None:subprocess.run([shutil.which('mbx')or'cargo','build','--offline','--locked','--release','--manifest-path',str(work/'Cargo.toml'),'--target-dir',str(target)],check=True,cwd=omega)
         runner=a.runner.resolve() if a.runner else target/'release/cathedral-acpi-checked-runner';runner_before=hashlib.sha256(runner.read_bytes()).hexdigest();print('Harness SHA-256:',hashlib.sha256(runner.read_bytes()).hexdigest(),flush=True)
         build=((ROOT/'tools/ports/acpi/aml/build.omg')if a.parser_regression else(HERE/'build.omg')).read_text()
-        for relative in ['../../../../source/libraries/acpi/pipeline','../../../../source/libraries/acpi/aml','../../../../source/libraries/acpi/interpreter/execution','../../../../source/libraries/acpi/interpreter']:build=build.replace(relative,str((HERE/relative).resolve()))
+        for relative in ['../../../../source/platform/libraries/acpi/pipeline','../../../../source/platform/libraries/acpi/aml','../../../../source/platform/libraries/acpi/interpreter/execution','../../../../source/platform/libraries/acpi/interpreter']:build=build.replace(relative,str((HERE/relative).resolve()))
         (work/'build.omg').write_text(build)
         source=[prefix,'data PipelineSuite {}\n'];selections=[]
         for row in rows:

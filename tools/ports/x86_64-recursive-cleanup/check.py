@@ -10,10 +10,10 @@ import sys
 import tempfile
 HERE=Path(__file__).resolve().parent;ROOT=HERE.parents[2]
 SOURCE_FILES=[
- 'source/libraries/x86_64/build.omg','source/libraries/x86_64/recursive_cleanup.omg','source/libraries/x86_64/cleanup_ranges.omg','source/libraries/x86_64/cleanup_branch.omg',
- 'source/libraries/x86_64/addresses.omg','source/libraries/x86_64/pages.omg',
- 'source/libraries/x86_64/page_entries.omg','source/drivers/facts/build.omg',
- 'source/drivers/facts/x86_page_table_entry.omg',
+ 'source/platform/libraries/x86_64/build.omg','source/platform/libraries/x86_64/recursive_cleanup.omg','source/platform/libraries/x86_64/cleanup_ranges.omg','source/platform/libraries/x86_64/cleanup_branch.omg',
+ 'source/platform/libraries/x86_64/addresses.omg','source/platform/libraries/x86_64/pages.omg',
+ 'source/platform/libraries/x86_64/page_entries.omg','source/platform/drivers/facts/build.omg',
+ 'source/platform/drivers/facts/x86_page_table_entry.omg',
 ]
 def source_hash():
  digest=hashlib.sha256()
@@ -23,7 +23,7 @@ def main():
  parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--omega',type=Path,default=Path('/tmp/cathedral-omega-eaa7993/release/omega'));parser.add_argument('--case',action='append');parser.add_argument('--jobs',type=int,default=4);parser.add_argument('--positive-only',action='store_true');parser.add_argument('--host-only',action='store_true');args=parser.parse_args()
  for script in ['generate.py','generate_extras.py','generate_reference.py','map_inventory.py']:
   subprocess.run([sys.executable,str(HERE/script),'--check'],cwd=ROOT,check=True)
- subprocess.run([sys.executable,str(ROOT/'tools/ports/inventory.py'),'check',str(ROOT/'source/libraries/x86_64/recursive-cleanup-inventory.json'),'--checkout',str(ROOT/'reference_code/rust-osdev/x86_64')],cwd=ROOT,check=True)
+ subprocess.run([sys.executable,str(ROOT/'tools/ports/inventory.py'),'check',str(ROOT/'source/platform/libraries/x86_64/recursive-cleanup-inventory.json'),'--checkout',str(ROOT/'reference_code/rust-osdev/x86_64')],cwd=ROOT,check=True)
  subprocess.run(['cargo','+nightly-2026-09-04','run','--quiet','--locked','--manifest-path',str(HERE/'Cargo.toml')],cwd=ROOT,check=True)
  if args.host_only:return
  compiler=args.omega.resolve();before=source_hash();print('Omega SHA-256:',hashlib.sha256(compiler.read_bytes()).hexdigest(),flush=True);print('Selected recursive cleanup closure SHA-256:',before,flush=True)

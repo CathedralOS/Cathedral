@@ -14,7 +14,7 @@ for line in output.splitlines():
   rows[key]={'kind':kind,'value':int(v)}
 subprocess.run(command+['check','--lib','--target','x86_64-unknown-uefi']+tail,cwd=ROOT,check=True)
 vector={'format':'cathedral-port-vectors-v1','target':{'pointer_bits':64,'endian':'little','abi':'raw INVPCID repr(C) mirror; actual Pcid UEFI-x64 assertions'},'provenance':{'kind':'upstream','revision':'cc35c876d3badb57df54a66e22f7768a52be95f2','sources':['src/instructions/tlb.rs'],'description':'Exact extracted private pure bodies on host with real upstream address/Page/Step types. Hardware tails omitted. Actual upstream Pcid type and constructor boundaries compile-asserted for UEFI x64. Descriptor measurements use its exact private repr(C) source mirror; no Omega native ABI claim.'},'measurements':rows}
-p=ROOT/'source/libraries/x86_64/tlb-operands.vectors.json'
+p=ROOT/'source/platform/libraries/x86_64/tlb-operands.vectors.json'
 if args.write:p.write_text(json.dumps(vector,indent=2)+'\n')
 elif not p.exists() or json.loads(p.read_text())!=vector:raise SystemExit('Rust measurements changed')
 print('PASS',len(rows),'exact-body Rust observations;6 actual upstream UEFI-x64 Pcid assertions')

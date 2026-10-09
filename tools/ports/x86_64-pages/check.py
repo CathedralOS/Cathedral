@@ -11,7 +11,7 @@ def main():
  parser.add_argument('--extras-only',action='store_true',help='Validate only the separately authored extra scenarios and their mutation')
  parser.add_argument('--numeric-controls-only',action='store_true',help='Recheck only the two numeric-corpus body mutations')
  args=parser.parse_args()
- run(sys.executable,ROOT/'tools/ports/inventory.py','check',ROOT/'source/libraries/x86_64/pages-inventory.json','--checkout',ROOT/'reference_code/rust-osdev/x86_64','--require-transcribed')
+ run(sys.executable,ROOT/'tools/ports/inventory.py','check',ROOT/'source/platform/libraries/x86_64/pages-inventory.json','--checkout',ROOT/'reference_code/rust-osdev/x86_64','--require-transcribed')
  run(sys.executable,HERE/'generate.py','--check')
  run('cargo','+nightly-2026-09-04','run','--quiet','--locked','--manifest-path',HERE/'Cargo.toml')
  for scope in ['structures::paging::page::tests','structures::paging::frame::tests']:
@@ -19,7 +19,7 @@ def main():
  if args.host_only:return
  compiler=args.omega.resolve();print('Omega SHA-256:',hashlib.sha256(compiler.read_bytes()).hexdigest(),flush=True)
  source=(HERE/'main.omg').read_text();extra=(HERE/'extras.omg').read_text()
- build=(HERE/'build.omg').read_text().replace('../../../source/libraries/x86_64',str(ROOT/'source/libraries/x86_64'))
+ build=(HERE/'build.omg').read_text().replace('../../../source/platform/libraries/x86_64',str(ROOT/'source/platform/libraries/x86_64'))
  groups=re.findall(r'^machine (group_\d+)\(',source,re.M)
  def evaluate(selected,mutation=None):
   with tempfile.TemporaryDirectory(prefix='cathedral-x86-pages-') as directory:

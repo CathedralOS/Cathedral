@@ -1,6 +1,6 @@
 # PTE/index/level witnesses
 
-See the [port record](../../../source/libraries/x86_64/page-entries.PORT.md).
+See the [port record](../../../source/platform/libraries/x86_64/page-entries.PORT.md).
 `check.py --omega /path/to/omega` audits the complete source file, verifies
 deterministic fixtures, executes143 actual pinned Rust witnesses plus the
 upstream index-step test, then evaluates151 Omega scenarios and three body

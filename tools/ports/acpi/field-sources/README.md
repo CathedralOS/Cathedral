@@ -2,7 +2,7 @@
 
 Historical published bounded module; its recorded final-path checks pass. API, ordering,
 primary edge interpretations and partial provenance are in
-`source/libraries/acpi/field_sources/PORT.md`.
+`source/platform/libraries/acpi/field_sources/PORT.md`.
 
 The later [inline Integer entry](../field-source-inline/README.md) retains a
 separate source-bound regression receipt after sharing the Integer kernel.
@@ -15,7 +15,7 @@ python3 tools/ports/acpi/field-sources/compare.py --write
 python3 tools/ports/acpi/field-sources/check.py --batch-size 10
 python3 tools/ports/acpi/field-sources/check_const.py
 python3 tools/ports/acpi/field-sources/verify_record.py
-python3 tools/ports/inventory.py check --checkout reference_code/rust-osdev/acpi source/libraries/acpi/field_sources/inventory.json
+python3 tools/ports/inventory.py check --checkout reference_code/rust-osdev/acpi source/platform/libraries/acpi/field_sources/inventory.json
 ```
 
 Scratch public/retained-record verification requires

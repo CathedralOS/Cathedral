@@ -1,5 +1,9 @@
 # 0001: Repository Layout
 
+The source grouping and composition placement below are superseded by
+[ADR 0002](0002-kernel-platform-distribution.md), accepted 2026-10-09. Retained
+here as decision history; the current tree is in the architecture layout guide.
+
 Status: **accepted** (2026-07-02); licensed-port policy clarified 2026-09-20
 by `PORT-000` in [`TASKS_RUST_OSDEV_PORTS.md`](../../TASKS_RUST_OSDEV_PORTS.md).
 
@@ -106,7 +110,7 @@ See [the lab guide](../../source-rs/README.md).
   machine-checked layering law, so placement is not re-litigated per change.
 - Day one, the tree is `README.md` + `wiki/` + `source/`; `tools/` and each
   `source/` subdirectory appear only as real code arrives. The first residents
-  will be `source/boot/uefi/` and a minimal `source/core/`, with
+  will be `source/kernel/boot/uefi/` and a minimal `source/kernel/core/`, with
   `source/contracts/` growing the boot handoff alongside them (the first-boot
   ladder in `../../../Omega/wiki/cathedral_alignment.md`).
 - Charters and the layering-enforcement test are follow-up work, created with

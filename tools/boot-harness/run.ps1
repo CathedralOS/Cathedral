@@ -5,7 +5,9 @@
 $ErrorActionPreference = "Stop"
 
 $RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path
-$BootPkg  = Join-Path $RepoRoot "source\boot\uefi"
+$Profile = Get-Content -Raw -LiteralPath (Join-Path $RepoRoot "source\distribution\profile.json") | ConvertFrom-Json
+$BootEntry = Join-Path (Join-Path $RepoRoot "source") $Profile.boot_entry
+$BootTarget = $Profile.target
 $BuildDir = Join-Path $RepoRoot "build\boot-harness"
 $OmegaBuildDir = Join-Path $BuildDir "omega-out"
 $Esp      = Join-Path $BuildDir "esp"
@@ -50,14 +52,14 @@ if ($env:OVMF -and (Test-Path $env:OVMF)) {
 
 # --- build the boot package ------------------------------------------------
 if (Get-Command omega -ErrorAction SilentlyContinue) {
-  Write-Host "building $BootPkg -> $EfiOut"
-  & omega --build-dir $OmegaBuildDir --target uefi_x64 (Join-Path $BootPkg "main.omg")
+  Write-Host "building $BootEntry -> $EfiOut"
+  & omega --build-dir $OmegaBuildDir --target $BootTarget $BootEntry
   if ($LASTEXITCODE -ne 0) { throw "Omega UEFI build failed with exit code $LASTEXITCODE" }
   Copy-Item (Join-Path $OmegaBuildDir "omega-program.exe") $EfiOut -Force
 } elseif ((Get-Command cargo -ErrorAction SilentlyContinue) -and (Test-Path (Join-Path $OmegaRepo "Cargo.toml"))) {
-  Write-Host "building $BootPkg with sibling Omega workspace -> $EfiOut"
+  Write-Host "building $BootEntry with sibling Omega workspace -> $EfiOut"
   & cargo run -q --manifest-path (Join-Path $OmegaRepo "Cargo.toml") -p omega-cli -- `
-      --build-dir $OmegaBuildDir --target uefi_x64 (Join-Path $BootPkg "main.omg")
+      --build-dir $OmegaBuildDir --target $BootTarget $BootEntry
   if ($LASTEXITCODE -ne 0) { throw "Omega UEFI build failed with exit code $LASTEXITCODE" }
   Copy-Item (Join-Path $OmegaBuildDir "omega-program.exe") $EfiOut -Force
 } else {

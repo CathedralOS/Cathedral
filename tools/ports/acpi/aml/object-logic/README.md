@@ -1,6 +1,6 @@
 # Direct logical data checks
 
-The [port record](../../../../../source/libraries/acpi/aml/object-logic.PORT.md)
+The [port record](../../../../../source/platform/libraries/acpi/aml/object-logic.PORT.md)
 describes truth conversion, relation dispatch and the direct-ID boundary. The
 346 original cases have independent Python numeric/lexical expectations, actual
 checked Omega bodies and changed expected-body controls. Three constant pairs

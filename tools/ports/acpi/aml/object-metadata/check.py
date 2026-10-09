@@ -26,7 +26,7 @@ def public(write=False):
  print('PASS 448 actual public Rust observations',flush=True)
  return rows
 def snapshot():
- paths=list(HERE.glob('*.py'))+[HERE/n for n in ['reference.rs','reference.Cargo.lock','public-verification.json']]+[ROOT/'source/libraries/acpi/aml'/n for n in ['build.omg','object_metadata.omg']]+[ROOT/'source/libraries/acpi/interpreter/build.omg']+[ROOT/'tools/ports/acpi/interpreter/execution'/n for n in ['checked_runner.rs','runner.Cargo.lock']]
+ paths=list(HERE.glob('*.py'))+[HERE/n for n in ['reference.rs','reference.Cargo.lock','public-verification.json']]+[ROOT/'source/platform/libraries/acpi/aml'/n for n in ['build.omg','object_metadata.omg']]+[ROOT/'source/platform/libraries/acpi/interpreter/build.omg']+[ROOT/'tools/ports/acpi/interpreter/execution'/n for n in ['checked_runner.rs','runner.Cargo.lock']]
  return {str(p.relative_to(ROOT)):sha(p)for p in sorted(paths)}
 HELPERS="""
 machine check_method(raw:u8,args:u8,serialized:bool,level:u8)->bool {
@@ -45,7 +45,7 @@ def body(rows,control):
   if control and i==len(rows)-1:values[1]='false'if values[1]=='true'else'true'
   calls.append('check_'+('method'if method else'status')+'('+str(row['raw'])+','+','.join(values)+')')
  return 'let good:bool='+' && '.join(calls)+';\ntransition good {true -> (0) _ -> (1)}\n'
-def build():return 'machine build(builder:&mut Build){builder.application("cathedral-object-metadata-checks");builder.freestanding=true;builder.depend_as("aml",Source::Path {location:"'+str(ROOT/'source/libraries/acpi/aml')+'"});}'
+def build():return 'machine build(builder:&mut Build){builder.application("cathedral-object-metadata-checks");builder.freestanding=true;builder.depend_as("aml",Source::Path {location:"'+str(ROOT/'source/platform/libraries/acpi/aml')+'"});}'
 def authored(rows):
  text='use aml::object_metadata;\n'+HELPERS+'data Suite{}\n';names=[]
  for start in range(0,len(rows),8):

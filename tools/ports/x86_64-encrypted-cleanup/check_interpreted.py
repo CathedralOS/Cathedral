@@ -5,7 +5,7 @@ from pathlib import Path
 HERE=Path(__file__).resolve().parent;ROOT=HERE.parents[2]
 RUNNER_SHA='e6d0aee6b4dddbbf34a60cffbe8f158643cc5c4d100f9e20f0481f75f52890be'
 SHARED=ROOT/'tools/ports/acpi/interpreter/execution'
-SOURCES=['source/libraries/x86_64/'+n for n in ['build.omg','encrypted_cleanup_branch.omg','encrypted_cleanup_ranges.omg','encrypted_cleanup_recursive.omg','memory_encryption.omg','cleanup_branch.omg','cleanup_ranges.omg','recursive_cleanup.omg','page_entries.omg','pages.omg','addresses.omg']]+['source/drivers/facts/build.omg','source/drivers/facts/x86_page_table_entry.omg']
+SOURCES=['source/platform/libraries/x86_64/'+n for n in ['build.omg','encrypted_cleanup_branch.omg','encrypted_cleanup_ranges.omg','encrypted_cleanup_recursive.omg','memory_encryption.omg','cleanup_branch.omg','cleanup_ranges.omg','recursive_cleanup.omg','page_entries.omg','pages.omg','addresses.omg']]+['source/platform/drivers/facts/build.omg','source/platform/drivers/facts/x86_page_table_entry.omg']
 def snapshot():
  paths={ROOT/p for p in SOURCES};paths.update(p for p in HERE.rglob('*') if p.is_file() and not any(s in p.parts for s in ['target','__pycache__']) and p.name!='checked-verification.json')
  paths.update([SHARED/'checked_runner.rs',SHARED/'runner.Cargo.lock'])

@@ -15,7 +15,7 @@ def main():
  omega=a.omega.resolve();print('Omega SHA256:',hashlib.sha256(omega.read_bytes()).hexdigest(),flush=True)
  if not a.controls_only:
   if a.batch is None:
-   for n in ['encrypted_mapping_plans.omg','encrypted_mapping_routes.omg','encrypted_recursive_routes.omg']:run(omega,'--check',ROOT/'source/libraries/x86_64'/n)
+   for n in ['encrypted_mapping_plans.omg','encrypted_mapping_routes.omg','encrypted_recursive_routes.omg']:run(omega,'--check',ROOT/'source/platform/libraries/x86_64'/n)
   selected=[b for j,b in enumerate(fixtures['batches']) if a.batch is None or a.batch==j]
   with ThreadPoolExecutor(max_workers=a.jobs) as pool:
    list(pool.map(lambda b:run(omega,'--check',HERE/b['path']),selected))

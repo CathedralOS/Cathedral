@@ -16,7 +16,7 @@ def main():
     # Every originally captured input remains byte-identical, even outside the
     # actual dependency packages. This cannot excuse a changed recorded file.
     for path,wanted in recorded.items():assert sha(ROOT/path)==wanted,path
-    pending=[ROOT/'source/libraries/acpi'/part for part in ['aml','interpreter','interpreter/execution','pipeline']]
+    pending=[ROOT/'source/platform/libraries/acpi'/part for part in ['aml','interpreter','interpreter/execution','pipeline']]
     roots=set()
     while pending:
         root=pending.pop().resolve()
@@ -29,7 +29,7 @@ def main():
         pending.extend((root/path).resolve() for path in locations)
     closure={str(path.relative_to(ROOT)):sha(path) for root in sorted(roots) for path in sorted(root.glob('*.omg'))}
     assert all(recorded.get(path)==digest for path,digest in closure.items())
-    current={str(p.relative_to(ROOT)) for p in (ROOT/'source/libraries/acpi').rglob('*.omg')}
+    current={str(p.relative_to(ROOT)) for p in (ROOT/'source/platform/libraries/acpi').rglob('*.omg')}
     added={path:sha(ROOT/path) for path in sorted(current-set(recorded))}
     assert not set(added)&set(closure)
     # Run the original, hash-verified verifier with precisely its original input

@@ -10,12 +10,12 @@ def main():
  for item in value['files'].values():
   for entry in item['symbols'].values():entry['reason']='Outside this primary-rule helper; aggregate Rust operations remain pending.'
  entry=value['files']['src/aml/mod.rs']['symbols']['2406:do_store']
- entry['targets']=[dict(path='source/libraries/acpi/interpreter/implicit_integer.omg',anchor='pub machine from_string(')]
+ entry['targets']=[dict(path='source/platform/libraries/acpi/interpreter/implicit_integer.omg',anchor='pub machine from_string(')]
  entry['note']='Only the primary Table 19.7 String-to-Integer rule is available. Generic source resolution, conversion selection, target storage and execution remain pending; the pinned decimal parser is not the specification oracle.'
  value['primary_exports']={'Conversion':['Failure(reason:Error)','Integer(value:u64)'],'Error':['Capacity','Empty','Encoding'],'from_string':'IntegerSize, &[u8;256], u64 -> Conversion'}
- source=(ROOT/'source/libraries/acpi/interpreter/implicit_integer.omg').read_text()
+ source=(ROOT/'source/platform/libraries/acpi/interpreter/implicit_integer.omg').read_text()
  for anchor in ['pub data Conversion','case Failure(reason:Error)','case Integer(value:u64)','pub data Error','case Capacity','case Empty','case Encoding','pub machine from_string(']:assert anchor in source
- path=ROOT/'source/libraries/acpi/interpreter/implicit-integer-inventory.json';text=json.dumps(value,indent=2,sort_keys=True)+'\n'
+ path=ROOT/'source/platform/libraries/acpi/interpreter/implicit-integer-inventory.json';text=json.dumps(value,indent=2,sort_keys=True)+'\n'
  if args.check:assert path.read_text()==text
  else:path.write_text(text)
  print(api.check(value,up,repository=ROOT))

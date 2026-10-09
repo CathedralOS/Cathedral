@@ -10,11 +10,11 @@ def main():
  for item in value['files'].values():
   for entry in item['symbols'].values():entry['reason']='Outside this direct comparison helper; aggregate execution remains pending.'
  for path,key in [('src/aml/mod.rs','1972:do_logical_op'),('src/aml/object.rs','377:aml_cmp')]:
-  entry=value['files'][path]['symbols'][key];entry['targets']=[dict(path='source/libraries/acpi/aml/object_comparison.omg',anchor='pub machine compare(')];entry['note']='Direct Integer/String/Buffer comparison after primary right-hand conversion to the left type. Reference/Field evaluation, truth operators, Boolean result construction and context execution remain pending; pinned Buffer length-first ordering intentionally differs.'
+  entry=value['files'][path]['symbols'][key];entry['targets']=[dict(path='source/platform/libraries/acpi/aml/object_comparison.omg',anchor='pub machine compare(')];entry['note']='Direct Integer/String/Buffer comparison after primary right-hand conversion to the left type. Reference/Field evaluation, truth operators, Boolean result construction and context execution remain pending; pinned Buffer length-first ordering intentionally differs.'
  value['primary_exports']={'ObjectComparison':['Failure(reason:ConversionFailure)','Less','Equal','Greater'],'compare':'two direct ObjectStore IDs + IntegerSize -> ObjectComparison'}
- source=(ROOT/'source/libraries/acpi/aml/object_comparison.omg').read_text()
+ source=(ROOT/'source/platform/libraries/acpi/aml/object_comparison.omg').read_text()
  for anchor in ['pub data ObjectComparison','case Failure(reason:ConversionFailure)','case Less;','case Equal;','case Greater;','pub machine compare(']:assert anchor in source
- path=ROOT/'source/libraries/acpi/aml/object-comparison-inventory.json';text=json.dumps(value,indent=2,sort_keys=True)+'\n'
+ path=ROOT/'source/platform/libraries/acpi/aml/object-comparison-inventory.json';text=json.dumps(value,indent=2,sort_keys=True)+'\n'
  if args.check:assert path.read_text()==text
  else:path.write_text(text)
  print(api.check(value,args.checkout,repository=ROOT))

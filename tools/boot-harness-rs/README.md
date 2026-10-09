@@ -4,6 +4,10 @@ Run `python tools/boot-harness-rs/run.py --smoke` from the repository root.
 This builds the separate `source-rs/` Cargo workspace and exercises its UEFI
 handoff under QEMU/OVMF. Host-side Python only; no extra Python packages.
 
+`source-rs/distribution/profile.json` selects the boot package and target. The
+Cargo workspace keeps kernel implementation under `kernel/` and the UART under
+`platform/drivers/`; replacing the distribution does not require moving those.
+
 The smoke boot checks cooperative and timer-preempted tasks, dynamic admission,
 task-slot exhaustion, allocation-failure rollback, stale IDs and repeated stack,
 page-table and heap reclamation while a non-yielding peer stays alive. Use

@@ -12,10 +12,10 @@ positive=(HERE/'main.omg').read_text()
 negative=(HERE/'negative.omg').read_text()
 if negative != positive.replace('plan.writes[0].value == 0x11','plan.writes[0].value == 0x12') or negative==positive:
     raise SystemExit('negative fixture must mutate the real initialization expectation, keeping final assertion unchanged')
-run(sys.executable,'tools/ports/inventory.py','check','source/libraries/pic8259/inventory.json','--checkout','reference_code/rust-osdev/pic8259')
-run(sys.executable,'tools/ports/vectors.py','source/libraries/pic8259/vectors.json')
+run(sys.executable,'tools/ports/inventory.py','check','source/platform/libraries/pic8259/inventory.json','--checkout','reference_code/rust-osdev/pic8259')
+run(sys.executable,'tools/ports/vectors.py','source/platform/libraries/pic8259/vectors.json')
 run(sys.executable,HERE/'check_upstream.py')
-run(OMEGA,'--check','source/libraries/pic8259/plans.omg')
+run(OMEGA,'--check','source/platform/libraries/pic8259/plans.omg')
 run(OMEGA,'--check',HERE/'main.omg')
 result=subprocess.run([str(OMEGA),'--check',str(HERE/'negative.omg')],cwd=ROOT,text=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
 if result.returncode==0 or '1 == 0' not in result.stdout:

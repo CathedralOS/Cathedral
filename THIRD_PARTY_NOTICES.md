@@ -9,7 +9,7 @@ verification state. Independent Cathedral code and primary-specification facts
 remain distinguished from those translations.
 
 The exact license files, including their original copyright notices and
-formatting, are retained under [licenses/rust-osdev](licenses/rust-osdev/).
+formatting, are retained under [licenses/rust-osdev](licenses/rust-osdev).
 [sources.json](licenses/rust-osdev/sources.json) records every upstream license
 path, pinned revision, copied-file SHA-256, and the Cargo/README evidence hashes.
 No Rust source vendor tree is included.

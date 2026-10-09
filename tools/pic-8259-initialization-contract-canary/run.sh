@@ -14,7 +14,7 @@ trap 'rm -rf "$SCRATCH_DIR"' EXIT
 mkdir -p "$PROJECT_DIR"
 install -m 0644 "$CANARY_ROOT/main.omg" "$PROJECT_DIR/main.omg"
 install -m 0644 "$CANARY_ROOT/build.omg" "$PROJECT_DIR/build.omg"
-ln -s "$REPO_ROOT/source/core" "$PROJECT_DIR/core"
+ln -s "$REPO_ROOT/source/kernel/core" "$PROJECT_DIR/core"
 CANARY_MAIN="$PROJECT_DIR/main.omg"
 
 run_omega() {

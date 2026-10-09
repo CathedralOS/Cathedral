@@ -1170,7 +1170,7 @@
           "disposition": "translated",
           "targets": [
             {
-              "path": "source/libraries/uefi/console_helpers.omg",
+              "path": "source/platform/libraries/uefi/console_helpers.omg",
               "anchor": "pub machine graphics_output_mode_default("
             }
           ]
@@ -2087,7 +2087,7 @@
           "disposition": "translated",
           "targets": [
             {
-              "path": "source/libraries/uefi/console_helpers.omg",
+              "path": "source/platform/libraries/uefi/console_helpers.omg",
               "anchor": "pub machine device_path_length("
             }
           ]
@@ -2112,7 +2112,7 @@
           "disposition": "translated",
           "targets": [
             {
-              "path": "source/libraries/uefi/console_helpers.omg",
+              "path": "source/platform/libraries/uefi/console_helpers.omg",
               "anchor": "pub machine device_path_length("
             }
           ]

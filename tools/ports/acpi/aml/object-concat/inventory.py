@@ -10,11 +10,11 @@ def main():
  for item in value['files'].values():
   for entry in item['symbols'].values():entry['reason']='Outside this direct basic-data concatenation helper; aggregate execution remains pending.'
  for path,key in [('src/aml/mod.rs','2171:do_concat'),('src/aml/mod.rs','2176:resolve_as_string')]:
-  entry=value['files'][path]['symbols'][key];entry['targets']=[dict(path='source/libraries/acpi/aml/object_concat.omg',anchor='pub machine concatenate(')];entry['note']='Basic Integer/String/Buffer concatenation after primary right-hand conversion. Other-type name formatting, reference/context policy, target coercion, object installation and opcode execution remain pending.'
+  entry=value['files'][path]['symbols'][key];entry['targets']=[dict(path='source/platform/libraries/acpi/aml/object_concat.omg',anchor='pub machine concatenate(')];entry['note']='Basic Integer/String/Buffer concatenation after primary right-hand conversion. Other-type name formatting, reference/context policy, target coercion, object installation and opcode execution remain pending.'
  value['primary_exports']={'Concatenated':['Failure(reason:ConversionFailure)','Buffer(length:u64,bytes:[u8;256])','String(length:u64,bytes:[u8;256])'],'concatenate':'two direct basic-data ObjectStore IDs + IntegerSize -> Concatenated'}
- source=(ROOT/'source/libraries/acpi/aml/object_concat.omg').read_text()
+ source=(ROOT/'source/platform/libraries/acpi/aml/object_concat.omg').read_text()
  for anchor in ['pub data Concatenated','case Failure(reason:ConversionFailure)','case Buffer(length:u64,bytes:[u8;256])','case String(length:u64,bytes:[u8;256])','pub machine concatenate(']:assert anchor in source
- path=ROOT/'source/libraries/acpi/aml/object-concat-inventory.json';text=json.dumps(value,indent=2,sort_keys=True)+'\n'
+ path=ROOT/'source/platform/libraries/acpi/aml/object-concat-inventory.json';text=json.dumps(value,indent=2,sort_keys=True)+'\n'
  if args.check:assert path.read_text()==text
  else:path.write_text(text)
  print(api.check(value,args.checkout,repository=ROOT))

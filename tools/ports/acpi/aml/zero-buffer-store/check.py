@@ -40,8 +40,8 @@ def snapshot():
 
 def build():
     return ('machine build(builder:&mut Build){builder.application("cathedral-zero-buffer-store-checks");'
-            'builder.freestanding=true;builder.depend_as("aml",Source::Path {location:"'+str(ROOT/'source/libraries/acpi/aml')+'"});'
-            'builder.depend_as("integer_helpers",Source::Path {location:"'+str(ROOT/'source/libraries/acpi/interpreter')+'"});}')
+            'builder.freestanding=true;builder.depend_as("aml",Source::Path {location:"'+str(ROOT/'source/platform/libraries/acpi/aml')+'"});'
+            'builder.depend_as("integer_helpers",Source::Path {location:"'+str(ROOT/'source/platform/libraries/acpi/interpreter')+'"});}')
 
 
 def authored(rows):

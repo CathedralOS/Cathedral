@@ -1,0 +1,13 @@
+// source/core/build.omg
+//
+// The proved kernel package. Firmware-neutral at M2 — reaches nothing yet
+// (foundation/ and contracts/ deps arrive as core grows). PROVISIONAL SYNTAX
+// (Omega build_and_package_model.md).
+
+machine build(b: &mut Build) {
+    // Pure hardware facts grant no authority. Checked PIC/PIT and x2APIC
+    // helpers retain PortIo or MachineControl reach from their instruction
+    // contracts; the eventual boot/root provider must still be granted those
+    // services explicitly.
+    b.depend("facts", path("../../platform/drivers/facts"));
+}

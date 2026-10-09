@@ -3,8 +3,8 @@
 import json,re
 from pathlib import Path
 HERE=Path(__file__).resolve().parent;ROOT=HERE.parents[2]
-path=ROOT/'source/drivers/uart_16550/inventory.json';doc=json.loads(path.read_text())
-base='source/drivers/uart_16550/';pure=base+'pure.omg';plans=base+'plans.omg';boundary=base+'BOUNDARIES.md';error=base+'errors.omg';facts='source/drivers/facts/uart_16550.omg';test='tools/ports/uart_16550/main.omg'
+path=ROOT/'source/platform/drivers/uart_16550/inventory.json';doc=json.loads(path.read_text())
+base='source/platform/drivers/uart_16550/';pure=base+'pure.omg';plans=base+'plans.omg';boundary=base+'BOUNDARIES.md';error=base+'errors.omg';facts='source/platform/drivers/facts/uart_16550.omg';test='tools/ports/uart_16550/main.omg'
 rows=json.loads((HERE/'facts.json').read_text())
 def mapped(target,anchor,reason='Pure value/decision translation; no hardware authority.'):
  return {'disposition':'translated','reason':reason,'targets':[{'path':target,'anchor':anchor}]}

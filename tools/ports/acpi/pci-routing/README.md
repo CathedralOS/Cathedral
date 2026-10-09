@@ -74,4 +74,4 @@ routing, `_SRS` operation, or production-integration claim in this milestone.
 
 The fixture generator and probe are original authored harness code under the
 same MIT OR Apache-2.0 project terms. The pinned crate retains its original
-[license notices](../../../../licenses/rust-osdev/acpi/).
+[license notices](../../../../licenses/rust-osdev/acpi).

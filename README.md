@@ -87,15 +87,21 @@ explicitly unsafe; it does not carry the Omega implementation's proof guarantees
 wiki/          specifications, design, architecture, explainers, proposals, drafts
 source/
   contracts/   the frozen ABI
-  core/        the proved kernel: the trusted computing base
-  boot/        the firmware seam
-  drivers/     user-mode, contained, not trusted
-  libraries/   hardware and protocol libraries
+  kernel/      boot, core mechanisms and CPU architecture
+  platform/    shared services, device drivers and libraries
+  distribution/ Cathedral's built-in distro: composition and future desktop
 tools/         host-side tooling that never ships
 source-rs/     Rust bring-up lab, mirroring source/ layers as code lands
 ```
 
-`foundation/`, `services/`, and `applications/` are planned under `source/` and appear when real code lands. The dependency rules are in [repository_layout.md](wiki/architecture/repository_layout.md), the trusted set is enumerated in [tcb.md](wiki/architecture/tcb.md), and the decision is recorded in [ADR 0001](wiki/decisions/0001-repository-layout.md).
+Both source trees have one `distribution/`, whose boot profile is consumed by
+the corresponding harness. Its future shell, settings and applications build on
+the shared platform; kernel and platform never import distribution code. A fork
+can replace that directory. `foundation/` and unimplemented desktop/services
+directories appear with their first real code. See the
+[layout](wiki/architecture/repository_layout.md), [TCB](wiki/architecture/tcb.md)
+and [ADR 0002](wiki/decisions/0002-kernel-platform-distribution.md).
+Run `python tools/source-layout/check.py` to check the implemented boundaries.
 
 ## Documentation
 

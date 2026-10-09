@@ -14,15 +14,15 @@ def main():
  parser.add_argument('--host-only',action='store_true');args=parser.parse_args()
  for generator in ('generate.py','generate_inventory.py','generate_reference_tests.py','generate_fixtures.py'):
   run(sys.executable,HERE/generator,'--check')
- run(sys.executable,ROOT/'tools/ports/inventory.py','check',ROOT/'source/drivers/facts/x86_registers-inventory.json','--checkout',ROOT/'reference_code/rust-osdev/x86_64','--require-transcribed')
+ run(sys.executable,ROOT/'tools/ports/inventory.py','check',ROOT/'source/platform/drivers/facts/x86_registers-inventory.json','--checkout',ROOT/'reference_code/rust-osdev/x86_64','--require-transcribed')
  run(sys.executable,HERE/'measure.py')
- run(sys.executable,ROOT/'tools/ports/vectors.py',ROOT/'source/drivers/facts/x86_registers.vectors.json')
+ run(sys.executable,ROOT/'tools/ports/vectors.py',ROOT/'source/platform/drivers/facts/x86_registers.vectors.json')
  run('cargo','test','--quiet','--locked','--manifest-path',HERE/'Cargo.toml')
  if args.host_only:return
  compiler=args.omega.resolve();print('Omega binary SHA-256:',hashlib.sha256(compiler.read_bytes()).hexdigest(),flush=True)
- run(compiler,'--check',ROOT/'source/libraries/x86_64/registers.omg')
+ run(compiler,'--check',ROOT/'source/platform/libraries/x86_64/registers.omg')
  run(compiler,'--check',HERE/'main.omg')
- build=(HERE/'build.omg').read_text().replace('../../../source/libraries/x86_64',str(ROOT/'source/libraries/x86_64')).replace('../../../source/drivers/facts',str(ROOT/'source/drivers/facts'))
+ build=(HERE/'build.omg').read_text().replace('../../../source/platform/libraries/x86_64',str(ROOT/'source/platform/libraries/x86_64')).replace('../../../source/platform/drivers/facts',str(ROOT/'source/platform/drivers/facts'))
  controls=[('main.omg','registers::dr7_size(registers::dr7_set_size(base, 0, 2), 0) == 2','registers::dr7_size(registers::dr7_set_size(base, 0, 2), 0) == 3'),('main.omg','registers::star_plan(11, 3, 8, 16).error == 5','registers::star_plan(11, 3, 8, 16).error == 0'),('values.omg','x86_registers::MXCSR_RESET_BITS == 8064','x86_registers::MXCSR_RESET_BITS == 8065')]
  for filename,old,new in controls:
   with tempfile.TemporaryDirectory(prefix='cathedral-x86-register-negative-') as directory:

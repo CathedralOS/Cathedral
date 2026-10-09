@@ -1,7 +1,7 @@
 # Inert UEFI producer/consumer fixtures
 
 Status: **tested byte-image model; native compatibility leg blocked**. See the
-[port record](../../../source/libraries/uefi/table_images.PORT.md).
+[port record](../../../source/platform/libraries/uefi/table_images.PORT.md).
 
 ```sh
 python3 tools/ports/uefi-images/check.py --omega /path/to/omega

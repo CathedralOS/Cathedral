@@ -18,7 +18,7 @@ for method,bit in [('rdrand_bit',30),('smap_bit',20)]:
  for n in range(32):checks.append(f'instruction_observations::{method}({1<<n}) == {str(n==bit).lower()}')
  checks.extend([f'!instruction_observations::{method}(0)',f'instruction_observations::{method}(4294967295)'])
 omega+=['transition '+' &&\n'.join(checks)+' { true -> (0) _ -> (1) }','}','const RESULT:i32=test_result();','machine require_success(value:i32) requires value==0; {}','data Main{}','machine Main::main(&mut self){require_success(RESULT);}']
-helper='source/libraries/x86_64/instruction_observations.omg'
+helper='source/platform/libraries/x86_64/instruction_observations.omg'
 for path,file in m['files'].items():
  file.update(disposition='translated',reason='Only the detached CPUID register predicate is translated; live feature/probe/provider operations remain explicit boundaries.',targets=[{'path':helper,'anchor':'module instruction_observations;'}])
  for key,row in file['symbols'].items():
@@ -26,7 +26,7 @@ for path,file in m['files'].items():
    anchor='pub machine rdrand_bit' if path.endswith('random.rs') else 'pub machine smap_bit'
    row.update(disposition='translated',reason='Exact pure predicate extracted; CPUID execution and feature-authorized marker construction deliberately excluded.',targets=[{'path':helper,'anchor':anchor}])
   else:row.update(disposition='omitted',reason='RNG output, SMAP state/lifecycle, provider marker or Rust scaffolding outside detached CPUID predicate slice. No compiler blocker claimed.')
-outputs={HERE/'src/main.rs':rust,HERE/'main.omg':'\n'.join(omega)+'\n',ROOT/'source/libraries/x86_64/instruction-observations-inventory.json':json.dumps(m,indent=2)+'\n'}
+outputs={HERE/'src/main.rs':rust,HERE/'main.omg':'\n'.join(omega)+'\n',ROOT/'source/platform/libraries/x86_64/instruction-observations-inventory.json':json.dumps(m,indent=2)+'\n'}
 for p,text in outputs.items():
  if '--check' in sys.argv:
   if not p.exists() or p.read_text()!=text:raise SystemExit('generated predicate artifact drift: '+str(p))

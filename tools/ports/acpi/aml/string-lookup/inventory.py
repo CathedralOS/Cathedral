@@ -10,11 +10,11 @@ def main():
  for item in value['files'].values():
   for entry in item['symbols'].values():entry['reason']='Outside this direct String-name lookup helper; aggregate execution remains pending.'
  for path,key in [('src/aml/mod.rs','2383:do_deref_of')]:
-  entry=value['files'][path]['symbols'][key];entry['targets']=[dict(path='source/libraries/acpi/aml/string_lookup.omg',anchor='pub machine lookup(')];entry['note']='Direct canonical String storage admission, ASL textual name parsing and existing scoped namespace search return a stable object identity and resolved path. Reference/context evaluation, target reading and full DerefOf execution remain pending.'
+  entry=value['files'][path]['symbols'][key];entry['targets']=[dict(path='source/platform/libraries/acpi/aml/string_lookup.omg',anchor='pub machine lookup(')];entry['note']='Direct canonical String storage admission, ASL textual name parsing and existing scoped namespace search return a stable object identity and resolved path. Reference/context evaluation, target reading and full DerefOf execution remain pending.'
  value['primary_exports']={'StringLookup':['Failure(reason:LookupFailure)','Found(object:u64,path:Path)'],'lookup':'direct String ObjectStore ID + current Path scope -> stable identity without target evaluation'}
- source=(ROOT/'source/libraries/acpi/aml/string_lookup.omg').read_text()
+ source=(ROOT/'source/platform/libraries/acpi/aml/string_lookup.omg').read_text()
  for anchor in ['pub data StringLookup','case Failure(reason:LookupFailure)','case Found(object:u64,path:Path)','pub machine lookup(']:assert anchor in source
- path=ROOT/'source/libraries/acpi/aml/string-lookup-inventory.json';text=json.dumps(value,indent=2,sort_keys=True)+'\n'
+ path=ROOT/'source/platform/libraries/acpi/aml/string-lookup-inventory.json';text=json.dumps(value,indent=2,sort_keys=True)+'\n'
  if args.check:assert path.read_text()==text
  else:path.write_text(text)
  print(api.check(value,args.checkout,repository=ROOT))

@@ -7,13 +7,13 @@ def run(*args):subprocess.run([str(x)for x in args],cwd=ROOT,check=True)
 def main():
  p=argparse.ArgumentParser();p.add_argument('--omega',type=Path,default=ROOT.parent/'Omega/target/release/omega');p.add_argument('--host-only',action='store_true');p.add_argument('--start',type=int,default=0);p.add_argument('--end',type=int);p.add_argument('--controls-only',action='store_true');args=p.parse_args()
  run(sys.executable,HERE/'generate.py','--check');run(sys.executable,HERE/'map_inventory.py','--check')
- run(sys.executable,ROOT/'tools/ports/inventory.py','check',ROOT/'source/libraries/x86_64/cleanup-branch-inventory.json','--checkout',ROOT/'reference_code/rust-osdev/x86_64')
+ run(sys.executable,ROOT/'tools/ports/inventory.py','check',ROOT/'source/platform/libraries/x86_64/cleanup-branch-inventory.json','--checkout',ROOT/'reference_code/rust-osdev/x86_64')
  run('cargo','run','--quiet','--locked','--manifest-path',HERE/'Cargo.toml')
  if args.host_only:return
  compiler=args.omega.resolve();print('Omega SHA-256:',hashlib.sha256(compiler.read_bytes()).hexdigest(),flush=True)
  source=(HERE/'main.omg').read_text();prefix=source[:source.index('machine cleanup_0')]
  blocks=re.findall(r'machine cleanup_\d+\(\)->i32 \{.*?(?=\nmachine cleanup_|\ndata Main)',source,re.S)
- build=(HERE/'build.omg').read_text().replace('../../../source/libraries/x86_64',str(ROOT/'source/libraries/x86_64')).replace('../../../source/drivers/facts',str(ROOT/'source/drivers/facts'))
+ build=(HERE/'build.omg').read_text().replace('../../../source/platform/libraries/x86_64',str(ROOT/'source/platform/libraries/x86_64')).replace('../../../source/platform/drivers/facts',str(ROOT/'source/platform/drivers/facts'))
  suffix='\nconst RESULT:i32=test_result();\nmachine require_success(value:i32) requires value == 0; {}\ndata Main{}\nmachine Main::main(&mut self){require_success(RESULT);}\n'
  def fixture(selected):
   body=prefix+'\n'.join(blocks[n]for n in selected)

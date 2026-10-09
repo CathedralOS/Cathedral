@@ -3,8 +3,8 @@
 from pathlib import Path
 import json
 HERE=Path(__file__).resolve().parent;ROOT=HERE.parents[2]
-p=ROOT/'source/libraries/x86_64/addresses-inventory.json';doc=json.loads(p.read_text())
-source='source/libraries/x86_64/addresses.omg';fixture='tools/ports/x86_64-addresses/main.omg';extra='tools/ports/x86_64-addresses/extras.omg'
+p=ROOT/'source/platform/libraries/x86_64/addresses-inventory.json';doc=json.loads(p.read_text())
+source='source/platform/libraries/x86_64/addresses.omg';fixture='tools/ports/x86_64-addresses/main.omg';extra='tools/ports/x86_64-addresses/extras.omg'
 for key,row in doc['files']['src/addr.rs']['symbols'].items():
  number,name=key.split(':');number=int(number);target=None
  disposition='translated';reason='Checked numeric helper preserves pure behavior; errors become an explicit Rejected case, with no raw pointer or address authority.'

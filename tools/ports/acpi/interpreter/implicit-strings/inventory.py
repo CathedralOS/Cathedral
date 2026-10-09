@@ -10,12 +10,12 @@ def main():
  for item in value['files'].values():
   for entry in item['symbols'].values():entry['reason']='Outside this primary-rule helper; aggregate Rust operations remain pending.'
  entry=value['files']['src/aml/mod.rs']['symbols']['2406:do_store']
- entry['targets']=[dict(path='source/libraries/acpi/interpreter/implicit_strings.omg',anchor='pub machine '+name+'(')for name in ['from_integer','from_buffer']]
+ entry['targets']=[dict(path='source/platform/libraries/acpi/interpreter/implicit_strings.omg',anchor='pub machine '+name+'(')for name in ['from_integer','from_buffer']]
  entry['note']='Only the primary Table 19.7 Integer/Buffer-to-String rule is available. Generic source resolution, conversion selection, target storage and execution remain pending; the pinned explicit formatting helpers are not the specification oracle.'
  value['primary_exports']={'StringResult':['Capacity','String(length:u64,bytes:[u8;256])'],'from_integer':'IntegerSize, u64 -> StringResult','from_buffer':'&[u8;256], u64 -> StringResult'}
- source=(ROOT/'source/libraries/acpi/interpreter/implicit_strings.omg').read_text()
+ source=(ROOT/'source/platform/libraries/acpi/interpreter/implicit_strings.omg').read_text()
  for anchor in ['pub data StringResult','case Capacity','case String(length:u64,bytes:[u8;256])','pub machine from_integer(','pub machine from_buffer(']:assert anchor in source
- path=ROOT/'source/libraries/acpi/interpreter/implicit-strings-inventory.json';text=json.dumps(value,indent=2,sort_keys=True)+'\n'
+ path=ROOT/'source/platform/libraries/acpi/interpreter/implicit-strings-inventory.json';text=json.dumps(value,indent=2,sort_keys=True)+'\n'
  if args.check:assert path.read_text()==text
  else:path.write_text(text)
  print(api.check(value,up,repository=ROOT))

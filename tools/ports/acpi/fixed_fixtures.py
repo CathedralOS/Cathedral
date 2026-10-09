@@ -86,7 +86,7 @@ def cases():
     add('timer_bad_length',['let result: GasSelection = pm_timer_block(Fadt { pm_timer_length: 8, x_pm_timer_block: OptionalRawGas { present: true, value: RawGenericAddress { address: 1234 } } });'],['!result.present','result.error == 0'])
     for method in ['reset_register','sleep_control_register','sleep_status_register']:
         add(method+'_absent',[f'let result: GasSelection = {method}(Fadt {{}});'],['!result.present'])
-    source=(ROOT/'source/libraries/acpi/fadt.omg').read_text()
+    source=(ROOT/'source/platform/libraries/acpi/fadt.omg').read_text()
     for name,typ,bit in re.findall(r'pub machine (\w+)\(flags: (u\d+)\) -> bool \{ \(flags & (\d+)\) != 0 \}',source):
         IMPORTS['fadt'].append(name)
         add('flag_'+name,[f'let set: bool = {name}({bit});',f'let clear: bool = {name}({(1<<int(typ[1:]))-1-int(bit)});'],['set','!clear'])

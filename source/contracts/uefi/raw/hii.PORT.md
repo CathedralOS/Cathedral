@@ -50,7 +50,7 @@ inventory with every complete field mapping. The corpus has 185 inert carriers,
 | `image.rs` | [hii_image.omg](hii_image.omg) | Input/output facts, draw flags, both protocols/GUIDs; output union remains untyped storage. |
 | `popup.rs` | [hii_popup.omg](hii_popup.omg) | Style/type/selection, revision, protocol/GUID. |
 | `string.rs` | [hii_string.omg](hii_string.omg) | Complete string protocol/GUID. |
-| Four selector methods from `ifr.rs` | [hii_helpers.omg](../../../libraries/uefi/hii_helpers.omg) | Date/time storage and numeric size/display extraction, retaining reserved values. |
+| Four selector methods from `ifr.rs` | [hii_helpers.omg](../../../platform/libraries/uefi/hii_helpers.omg) | Date/time storage and numeric size/display extraction, retaining reserved values. |
 
 Upstream compile-time assertions map to vectors. `Debug` formatting is omitted
 as Rust tooling, not a firmware operation. Derived traits are not promised Omega
@@ -153,7 +153,7 @@ platform state. Parsing tags or finding a GUID establishes none of that authorit
 ## Cathedral integration and authority
 
 The [contracts charter](../../CHARTER.md) owns this raw ABI corpus. Pure machines
-live in `source/libraries/uefi`; the test application is isolated under tools.
+live in `source/platform/libraries/uefi`; the test application is isolated under tools.
 No production boot root gains a dependency or provider. No HII UI, configuration
 mutation, allocation, callback, image rendering or firmware execution is added.
 The existing complete console pixel type is reused, avoiding a competing shape.

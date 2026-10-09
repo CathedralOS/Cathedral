@@ -11,7 +11,7 @@ import inventory
 
 def main():
  checkout=ROOT/'reference_code/rust-osdev/acpi'
- manifest=inventory.read_json(ROOT/'source/libraries/acpi/aml/fields/inventory.json')
+ manifest=inventory.read_json(ROOT/'source/platform/libraries/acpi/aml/fields/inventory.json')
  print(json.dumps(inventory.check(manifest,checkout,ROOT),indent=2))
  provenance=inventory.read_json(HERE/'provenance.json')
  assert provenance['revision']==manifest['upstream']['revision']

@@ -73,7 +73,7 @@ The workflow has six steps, from pinning the source to integrating the result.
    [device custody](https://github.com/CathedralOS/Omega/blob/main/wiki/spec/resources/device_access.md).
 3. **Translate the inert part.** Facts, parsing, validation, encoding, and pure
    state transitions may land ahead of compiler support. Raw UEFI ABI belongs
-   in `source/contracts/uefi/`; driver facts in `source/drivers/facts/`; behavior
+   in `source/contracts/uefi/`; driver facts in `source/platform/drivers/facts/`; behavior
    follows the usual layer and charter rules. Extend existing representations
    instead of creating competing versions. Layout-sensitive work includes
    size, alignment, offset, discriminant, flag, and GUID/status vectors where

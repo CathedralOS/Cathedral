@@ -1,5 +1,12 @@
 # Chapter 00: Windowing & Compositor
 
+Source ownership update (2026-10-09): [ADR 0002](../../decisions/0002-kernel-platform-distribution.md)
+places Cathedral's stock desktop experience in the single `distribution/`, and
+common compositor/input/capture mechanisms in `platform/`. References below to
+OS chrome describe the shipped experience; a fork may replace its implementation.
+The trusted prompt, observation and operator-recovery guarantees remain platform
+requirements rather than replaceable distribution policy.
+
 > The compositor owns window arrangement, input routing, and the trusted path that lets a human know which app they are talking to.
 
 ## The Legacy Model

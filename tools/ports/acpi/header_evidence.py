@@ -13,12 +13,12 @@ api = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(api)
 PIN = '257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5'
 UP = ROOT/'reference_code/rust-osdev/acpi'
-DEST = ROOT/'source/libraries/acpi'
+DEST = ROOT/'source/platform/libraries/acpi'
 SOURCE = 'https://uefi.org/specs/ACPI/6.6/05_ACPI_Software_Programming_Model.html'
 
 
 def translated(row, file, anchor, note=None):
-    row.update(disposition='translated', targets=[{'path':'source/libraries/acpi/'+file,'anchor':anchor}])
+    row.update(disposition='translated', targets=[{'path':'source/platform/libraries/acpi/'+file,'anchor':anchor}])
     row.pop('reason',None)
     if note:row['note']=note
 

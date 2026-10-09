@@ -10,10 +10,10 @@ import sys
 import tempfile
 HERE=Path(__file__).resolve().parent;ROOT=HERE.parents[2]
 SOURCE_FILES=[
- 'source/libraries/x86_64/build.omg','source/libraries/x86_64/mapper_topology.omg',
- 'source/libraries/x86_64/addresses.omg','source/libraries/x86_64/pages.omg',
- 'source/libraries/x86_64/page_entries.omg','source/drivers/facts/build.omg',
- 'source/drivers/facts/x86_page_table_entry.omg',
+ 'source/platform/libraries/x86_64/build.omg','source/platform/libraries/x86_64/mapper_topology.omg',
+ 'source/platform/libraries/x86_64/addresses.omg','source/platform/libraries/x86_64/pages.omg',
+ 'source/platform/libraries/x86_64/page_entries.omg','source/platform/drivers/facts/build.omg',
+ 'source/platform/drivers/facts/x86_page_table_entry.omg',
 ]
 def source_hash():
  digest=hashlib.sha256()

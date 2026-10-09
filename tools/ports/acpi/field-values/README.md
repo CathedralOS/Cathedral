@@ -1,7 +1,7 @@
 # Detached Field read assembly evidence
 
 Published bounded module and original fixtures. Source/API/partial provenance
-are in `source/libraries/acpi/field_values/PORT.md`.
+are in `source/platform/libraries/acpi/field_values/PORT.md`.
 
 ```sh
 python3 tools/ports/acpi/field-values/fixtures.py
@@ -10,7 +10,7 @@ python3 tools/ports/acpi/field-values/compare.py --write
 python3 tools/ports/acpi/field-values/check.py
 python3 tools/ports/acpi/field-values/check_const.py
 python3 tools/ports/acpi/field-values/verify_record.py
-python3 tools/ports/inventory.py check --checkout reference_code/rust-osdev/acpi source/libraries/acpi/field_values/inventory.json
+python3 tools/ports/inventory.py check --checkout reference_code/rust-osdev/acpi source/platform/libraries/acpi/field_values/inventory.json
 ```
 
 Public evidence uses the exact Rust pin, original synthetic AML, initialized Vec

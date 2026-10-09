@@ -15,7 +15,7 @@ ROOT=HERE.parents[4]
 RUNNER_SHA='e6d0aee6b4dddbbf34a60cffbe8f158643cc5c4d100f9e20f0481f75f52890be'
 
 def snapshot():
-    sources=set((ROOT/'source/libraries/acpi/aml').rglob('*.omg'))
+    sources=set((ROOT/'source/platform/libraries/acpi/aml').rglob('*.omg'))
     sources.update((HERE/'cases').glob('*.omg'))
     sources.update([HERE/'cases.json',HERE/'build.omg',Path(__file__).resolve(),ROOT/'tools/ports/acpi/interpreter/execution/checked_runner.rs',ROOT/'tools/ports/acpi/interpreter/execution/runner.Cargo.lock'])
     return {str(p.relative_to(ROOT)):hashlib.sha256(p.read_bytes()).hexdigest()for p in sorted(sources)}
@@ -49,7 +49,7 @@ def main():
     with tempfile.TemporaryDirectory(prefix='cathedral-acpi-fields-checked-')as directory:
         work=Path(directory)
         (work/'main.omg').write_text('\n'.join(sorted(imports))+'\n'+'\n'.join(helpers.values())+'\ndata FieldSuite {}\n'+'\n'.join(bodies))
-        (work/'build.omg').write_text((HERE/'build.omg').read_text().replace('../../../../../source/libraries/acpi/aml',str(ROOT/'source/libraries/acpi/aml')))
+        (work/'build.omg').write_text((HERE/'build.omg').read_text().replace('../../../../../source/platform/libraries/acpi/aml',str(ROOT/'source/platform/libraries/acpi/aml')))
         started=time.monotonic();lines=[]
         process=subprocess.Popen([str(args.runner),str(work/'main.omg'),str(work/'build'),*selections],stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True,env=dict(os.environ,OMEGA_INTERP_STEP_BUDGET='10000000'))
         for line in process.stdout:print(line,end='',flush=True);lines.append(line)
