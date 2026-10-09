@@ -18,6 +18,8 @@ Omega's proof or authority guarantees.
 | `kernel/boot/uefi/users.rs` | Ring-3 syscall, isolation, fault containment and admission rollback experiments |
 | `kernel/boot/uefi/applications.rs` | Run the bundled executable twice per session and check loading, private state, exit statuses and cleanup |
 | `kernel/boot/uefi/ipc.rs` | Compose explicit endpoint grants and check service/failure sessions |
+| `kernel/core/supervision.rs`, `supervision/` | Host-testable launch authority, child identity and outcome consumption |
+| `kernel/boot/uefi/supervision.rs` | Supply launch bounds and verify userspace recovery/cleanup |
 | `kernel/core/ipc.rs`, `ipc/` | Host-testable endpoint rights, bound tickets, queues and teardown |
 | `kernel/boot/uefi/smoke.rs` | Test-only fault injection and QEMU result reporting |
 | `contracts/boot.rs` | Firmware-neutral memory handoff; experimental Rust data, not a frozen ABI |
@@ -28,6 +30,7 @@ Omega's proof or authority guarantees.
 | `kernel/core/users/elf.rs` | Bounded, host-testable ELF64 preflight before physical admission |
 | `platform/drivers/uart_16550/` | Polling serial diagnostics, corresponding to `source/platform/drivers/uart_16550/` |
 | `platform/libraries/user-runtime/` | Entry stub, syscall wrappers and linker script; imports only shared contracts |
+| `distribution/programs/supervision/` | Userspace restart policy, persistent client and crashing echo service |
 | `distribution/programs/ipc/` | Client, echo service and hostile IPC fixture roles in a standalone ELF |
 | `distribution/programs/hello/` | Independently compiled `no_std` program exercising initialized data, BSS, yields and writes |
 | `kernel/arch/lib.rs` | Compile-time CPU backend selection and the boot-facing machine interface |
@@ -108,7 +111,7 @@ cargo fmt --all -- --check
 cargo check-uefi
 cargo build-uefi
 cargo build --locked --package cathedral-hello --target x86_64-unknown-none
-cargo clippy --locked --package cathedral-hello --package cathedral-ipc-lab --target x86_64-unknown-none -- -D warnings
+cargo clippy --locked --package cathedral-hello --package cathedral-ipc-lab --package cathedral-supervision-lab --target x86_64-unknown-none -- -D warnings
 ```
 
 The default Cargo members are the host-testable contracts and core. Kernel crates
@@ -186,7 +189,12 @@ QEMU q35, one qemu64 CPU, software emulation, 128 MiB by default:
     require the corresponding error and complete heap/frame reclamation.
 25. Fill a bounded queue, reject bad/read-only/cross-page copyout destinations
     and undersized receives without losing its message; drain after sender exit.
-26. Print `CATHEDRAL_RS_BOOT_OK`, then idle or terminate the smoke-test guest.
+26. Give a userspace supervisor a bounded launch grant. It spawns an isolated
+    echo service, collects a kernel-reported fault after reclamation, and repeats
+    32 times while the same client explicitly reconnects and checks stale grants.
+27. Check supervisor-exit cancellation, complete returned-status delivery, bad
+    wait destinations, and repeated failed spawns while peers remain alive.
+28. Print `CATHEDRAL_RS_BOOT_OK`, then idle or terminate the smoke-test guest.
 
 Only ordinary conventional RAM is eligible. Loader memory, Boot Services memory,
 runtime memory, ACPI and MMIO remain reserved. Runtime-marked, hot-pluggable and
@@ -220,7 +228,7 @@ The CPU profile is qemu64, with no claim to optional virtualization exception
 semantics or physical-hardware coverage. Unsafe wrappers are boot-only lab
 mechanisms, not application APIs.
 
-The runtime supports a configurable limit of 1â€“64 trusted kernel tasks on one
+The runtime supports a configurable limit of 1Ã¢â‚¬â€œ64 trusted kernel tasks on one
 CPU (default 8), plus an optional frame budget for stacks and their tables.
 `tasks::spawn(fn())` returns a `TaskId` or an admission error. IDs contain slot
 generations and are scoped to a session; reused slots do not revive old IDs.
@@ -264,6 +272,11 @@ initial FP state is clean and I/O privilege is zero.
 | 4: IPC send | Ticket, address, length | Bytes queued, or negative error; never blocks |
 | 5: IPC receive | Ticket, address, capacity | Bytes copied, or negative error; blocks on empty |
 | 6: IPC revoke | Revoke ticket | 0, or negative error |
+| 7: task launch grant | None | Caller's boot-issued launch ticket |
+| 8: task spawn | Launch ticket, ordinary argument | Child ticket after admission, or error |
+| 9: task wait | Child ticket, destination, exactly 40 bytes | 0 after copying and consuming reaped outcome; blocks if live |
+| 10: task port grant | None | Designated peer's boot-issued port ticket |
+| 11: task connect | Port ticket | First of two newly accepted local IPC grant indices |
 
 Writes accept at most 256 bytes within one known user page. The kernel validates
 the entire range and copies through its physical backing before calling the
@@ -277,7 +290,7 @@ check remain fatal. Exit/fault first restores the boot context, which retires th
 task's private tables and backing while peers remain runnable. Scheduling and
 syscall dispatch do not allocate or reclaim memory. Sessions preallocate their
 task/report storage; the scheduler's small arena still uses infallible allocation.
-The runtime has no dynamic linker, dynamic user spawn, admission proofs,
+The runtime has no dynamic linker, general executable discovery, admission proofs,
 device grants or production resource policy. Kernel and user workloads currently
 run in separate boot-managed sessions.
 
@@ -321,13 +334,15 @@ The kernel owns at most four anonymous, one-way endpoints per user session.
 Each has one sender, one receiver, an optional revoke holder, and one queued
 message of at most 64 bytes. Boot explicitly assigns these grants to task slots;
 `IPC_HANDLE` enumerates only the caller's installed grants. There is no global
-lookup, runtime endpoint creation, delegation, transfer, manifest check, lease,
+lookup, general endpoint creation, delegation, transfer, manifest check, lease,
 persistent authority arena or production admission policy.
 
-Tickets combine a session epoch, owner slot and grant slot. The trapping task's
+Tickets combine an endpoint epoch, owner slot and grant slot. The trapping task's
 kernel identity selects authority; user arguments cannot select another caller.
-Epochs never wrap during a boot, and task slots are not reused within a user
-session. Zero, foreign and retired-session tickets fail. Raw ticket bytes can
+Epochs never wrap during a boot. Static endpoints retain their session epoch;
+a supervised child's endpoint pair receives a fresh epoch on each spawn, so
+reusing its task slot never revives old tickets. Zero, foreign and retired-session
+tickets fail. Raw ticket bytes can
 be sent as ordinary data but confer no authority on the recipient. Tickets are
 not secret. They are boot-local; there is no cross-reboot stale-ticket guarantee.
 
@@ -343,7 +358,7 @@ handle/rights, length, address, then queue state.
 A receive on an empty live endpoint parks the task; sending wakes it and writes
 the result into its saved context. No callback allocates, frees or follows an
 unchecked virtual pointer. Pending operations store integer ranges, not Rust
-references into user memory. Mappings remain immutable throughout a session.
+references into user memory. Each live task's mappings remain immutable until retirement.
 When no task is ready, the boot context halts between timer ticks; there are no
 receive deadlines or deadlock recovery yet.
 
@@ -368,9 +383,64 @@ experimental. The shared-region IPC design and its relationship to the
 capability lifecycle need reconciliation, recorded in
 [`OWNER_QUESTIONS.md`](../OWNER_QUESTIONS.md).
 
+## Userspace supervision experiment
+
+A session may reserve one additional task slot and two endpoint slots for a
+boot-approved executable. Boot binds the launch grant to one supervisor and a
+connection port to one other initial task. The grant selects the executable,
+fixed first entry argument, peer, and physical-frame budget; userspace can
+supply only the second ordinary argument. It cannot nominate another image,
+principal, authority set or peer. Initial endpoints cannot refer to the reusable
+child slot. This is an authority-bound lab mechanism, not a general process API,
+a manifest/provenance check or a component registry.
+
+`task::Launch::spawn` parks its caller and hands admission to the boot context.
+All context/metadata slots are preallocated; runtime spawn maps private physical
+pages without growing the arena. Success returns a fresh owner-bound child
+ticket. A second child or an uncollected previous outcome returns `BUSY` (-16).
+Failed ELF admission returns `BAD_EXECUTABLE` (-8); failed frame admission
+returns `NO_MEMORY` (-12), rolls back, and permits another attempt. Epoch
+exhaustion also fails closed. No mapping or reclamation runs in a trap callback.
+
+The child receives request-receive and reply-send grants. Its designated peer's
+matching grants remain hidden, including from guessed-ticket redemption, until
+`task::Port::connect` explicitly accepts that instance. It returns request-send
+and reply-receive handles through the platform wrapper. A second connection to
+the same child returns `BUSY`; connecting without a live child fails closed.
+Existing control channels keep their identity and queued messages across restarts.
+A replacement discards any undrained bytes in the retired child's endpoint pair;
+old tickets stay invalid, even for a new child occupying the same task slot.
+
+`task::Child::wait` blocks until the kernel has reclaimed the child, then returns
+its full exit status or kernel-observed fault details. The wire record is five
+little-endian u64 words: kind, status/vector, error, address, instruction. Kind
+0 means returned status, 1 means fault, 2 means cancelled; unused words are zero.
+The raw destination must be exactly 40 bytes within one writable user page.
+Invalid destinations preserve the outcome; successful copyout consumes it.
+Duplicate waits and retired child tickets cannot observe a replacement. The
+platform wrapper uses an aligned staging buffer and exposes `task::Outcome`.
+
+The distribution chooses when to spawn again, what failures merit restart, and
+how to coordinate reconnection. Its fixture runs 32 crash/restart cycles, checks
+fresh child state, requires the client to observe `PEER_CLOSED`, and rejects
+stolen launch/child tickets and stale IPC tickets. The kernel implements no echo
+protocol or retry policy. It asserts physical accounting against
+all remaining live tasks after every reclamation; boot checks heap and physical
+baselines after each complete session. Additional sessions exercise returned
+status (including all 64 bits), bad wait copyout, supervisor exit/fault cleanup, malformed
+executables, and repeated frame failures at budgets 0, 1 and 10.
+
+Supervisor exit or fault cancels its owned child before userspace resumes and
+reclaims the child even if it was blocked. This is abrupt hardware-task teardown,
+without user destructors or a graceful drain. No orphan adoption, general kill,
+wait deadline, nested supervision, delegation or persistent recovery is implemented.
+A child that hangs while its owner remains alive can still stall that owner's
+wait. Component supervision versus task-scope ownership remains an explicit
+question in [`OWNER_QUESTIONS.md`](../OWNER_QUESTIONS.md).
+
 ## Next bring-up steps
 
-- Define executable admission/provenance and explicit user-task supervision.
+- Define executable admission/provenance and service lifetime/adoption contracts.
 - Add kernel-task arguments, join/result delivery and explicit ownership of task handles.
 - Discover ACPI/APIC topology and replace the temporary PIC/PIT timer route.
 - Specify endpoint delivery/revocation semantics, then prototype shared-region IPC.

@@ -104,6 +104,7 @@ fn run(
             Config {
                 frame_limit: usize::MAX,
                 endpoints,
+                supervision: None,
             },
         )
     }

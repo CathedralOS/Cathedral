@@ -10,6 +10,7 @@ pub mod extent;
 pub mod heap;
 pub mod ipc;
 pub mod scheduler;
+pub mod supervision;
 #[allow(unsafe_code)]
 pub mod tasks;
 #[allow(unsafe_code)]

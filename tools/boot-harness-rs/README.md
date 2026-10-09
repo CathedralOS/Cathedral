@@ -15,7 +15,10 @@ page-table and heap reclamation while a non-yielding peer stays alive. Use
 The composed image also checks isolated ELF programs and capability-addressed
 IPC: echo exchanges, stale/foreign handles, rights, backpressure, checked copyout,
 and blocked-receiver wakeups on revoke or peer exit/fault. Each session must
-return to its heap and physical-frame baselines.
+return to its heap and physical-frame baselines. The userspace supervision fixture
+keeps one client alive across 32 service crashes/restarts and checks explicit
+reconnection, retired task/endpoint tickets, wait copyout, parent-exit cleanup,
+and failed admission with live peers.
 
 See [the Rust lab guide](../../source-rs/README.md) for setup, ordinary boots,
 firmware overrides, logs, checks, current limitations and the bring-up sequence.

@@ -42,6 +42,9 @@ pub(super) fn syscall(session: &mut Session, slot: usize) -> Event {
             }
         }
         abi::IPC_REVOKE => session.ipc.revoke(slot, first).map(|()| 0),
+        abi::TASK_LAUNCH..=abi::TASK_CONNECT => {
+            super::taskcalls::dispatch(session, slot, number, first, second, third, &mut event)
+        }
         _ => Err(abi::UNKNOWN),
     };
     complete(session, slot, result);
@@ -49,7 +52,7 @@ pub(super) fn syscall(session: &mut Session, slot: usize) -> Event {
     event
 }
 
-fn complete(session: &mut Session, slot: usize, result: Result<u64, u64>) {
+pub(super) fn complete(session: &mut Session, slot: usize, result: Result<u64, u64>) {
     let task = &mut session.tasks[slot];
     if result.is_err() {
         task.report.rejected += 1;

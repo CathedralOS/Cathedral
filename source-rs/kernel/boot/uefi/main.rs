@@ -17,6 +17,8 @@ mod ipc;
 mod memory;
 #[cfg(feature = "smoke-test")]
 mod smoke;
+#[cfg(feature = "bundled-user")]
+mod supervision;
 mod task_lifecycle;
 mod tasks;
 mod users;
@@ -47,6 +49,8 @@ fn kernel_main(mut boot: handoff::BootState) -> ! {
     applications::exercise(&mut boot.memory, &mut boot.console);
     #[cfg(feature = "bundled-user")]
     ipc::exercise(&mut boot.memory, &mut boot.console);
+    #[cfg(feature = "bundled-user")]
+    supervision::exercise(&mut boot.memory, &mut boot.console);
     diagnostics::ready(&mut boot.console);
 
     #[cfg(feature = "smoke-test")]

@@ -1,4 +1,46 @@
 use super::*;
+#[test]
+fn replacing_child_grants_requires_consent_and_preserves_control_channels() {
+    let mut ipc = Ipc::new(
+        1,
+        3,
+        &[EndpointSpec {
+            sender: 0,
+            receiver: 1,
+            revoker: None,
+        }],
+    )
+    .unwrap();
+    let control = ipc.handle(0, 0).unwrap();
+    ipc.close_task(2);
+    ipc.send(0, control, b"control").unwrap();
+    ipc.prepare_child(1, 1, 2, 2);
+    let old_child = ipc.handle(2, 0).unwrap();
+    let guessed_peer = Ipc::ticket(2, 1, 3);
+    assert_eq!(ipc.handle(1, 1), Err(abi::BAD_HANDLE));
+    assert_eq!(
+        ipc.send(1, guessed_peer, b"no consent"),
+        Err(abi::BAD_HANDLE)
+    );
+    ipc.accept_child(1, 1);
+    let old_peer = ipc.handle(1, 1).unwrap();
+    ipc.send(1, old_peer, b"old queue").unwrap();
+    ipc.close_task(2);
+    assert_eq!(ipc.send(1, old_peer, b"dead"), Err(abi::PEER_CLOSED));
+    ipc.prepare_child(1, 1, 2, 3);
+    assert_eq!(ipc.receive(2, old_child, 64), Err(abi::BAD_HANDLE));
+    assert_eq!(ipc.send(1, old_peer, b"stale"), Err(abi::BAD_HANDLE));
+    ipc.accept_child(1, 1);
+    let fresh = ipc.handle(1, 1).unwrap();
+    assert_ne!(old_peer, fresh);
+    let input = ipc.handle(2, 0).unwrap();
+    assert_eq!(ipc.receive(2, input, 64), Ok(None));
+    ipc.send(1, fresh, b"new queue").unwrap();
+    assert_eq!(ipc.receive(2, input, 64).unwrap().unwrap().len, 9);
+    assert_eq!(ipc.handle(0, 0), Ok(control));
+    let control_input = ipc.handle(1, 0).unwrap();
+    assert_eq!(ipc.receive(1, control_input, 64).unwrap().unwrap().len, 7);
+}
 fn pair(epoch: u64) -> Ipc {
     Ipc::new(
         epoch,

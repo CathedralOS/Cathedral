@@ -4,6 +4,9 @@ use super::{Error, Program};
 use crate::ipc::{EndpointSpec, Ipc, MAX_EPOCH};
 mod admission;
 mod dispatch;
+mod lifecycle;
+mod taskcalls;
+use crate::supervision::Supervisor;
 use crate::{
     extent::FrameAllocator,
     scheduler::{Event, Scheduler, TaskState},
@@ -16,6 +19,7 @@ use core::sync::atomic::{AtomicPtr, AtomicU64, Ordering};
 pub enum Exit {
     Returned(u64),
     Fault(arch::UserFault),
+    Cancelled,
 }
 #[derive(Default, Debug)]
 pub struct Report {
@@ -29,12 +33,17 @@ pub struct Report {
     pub receives_blocked: usize,
     pub ipc_sent: usize,
     pub ipc_received: usize,
+    pub spawned: usize,
+    pub reaped: usize,
+    pub waits_blocked: usize,
+    pub cancelled: usize,
 }
 struct Task {
     context: Context,
     space: Option<UserSpace>,
     report: Report,
     receive: Option<dispatch::Receive>,
+    wait: Option<taskcalls::Wait>,
 }
 struct Session {
     tasks: Vec<Task>,
@@ -43,6 +52,9 @@ struct Session {
     output: fn(&[u8]) -> bool,
     completed: usize,
     ipc: Ipc,
+    supervisor: Option<Supervisor>,
+    endpoint_base: usize,
+    frame_baseline: usize,
 }
 static ACTIVE: AtomicPtr<Session> = AtomicPtr::new(core::ptr::null_mut());
 
@@ -51,6 +63,16 @@ static EPOCH: AtomicU64 = AtomicU64::new(1);
 pub struct Config<'a> {
     pub frame_limit: usize,
     pub endpoints: &'a [EndpointSpec],
+    pub supervision: Option<Supervision<'a>>,
+}
+
+pub struct Supervision<'a> {
+    pub owner: usize,
+    pub peer: usize,
+    /// Boot selects executable and first entry argument; spawn supplies the second.
+    pub program: Program<'a>,
+    /// Physical admission budget per spawn, including deterministic failure probes.
+    pub frame_limit: usize,
 }
 
 struct Frames<'a> {
@@ -99,6 +121,7 @@ pub unsafe fn run(
             Config {
                 frame_limit,
                 endpoints: &[],
+                supervision: None,
             },
         )
     }
@@ -119,30 +142,57 @@ pub unsafe fn run_configured(
     if programs.is_empty() || programs.len() > 8 {
         return Err(Error::InvalidCount);
     }
-    let epoch = EPOCH
-        .fetch_update(Ordering::Relaxed, Ordering::Relaxed, |value| {
-            (value <= MAX_EPOCH).then_some(value + 1)
-        })
-        .map_err(|_| Error::InvalidEndpoints)?;
-    let ipc =
-        Ipc::new(epoch, programs.len(), config.endpoints).map_err(|_| Error::InvalidEndpoints)?;
+    let epoch = next_epoch().ok_or(Error::InvalidEndpoints)?;
+    let count = programs.len() + usize::from(config.supervision.is_some());
+    if count > crate::ipc::MAX_TASKS {
+        return Err(Error::InvalidCount);
+    }
+    let supervisor = if let Some(launch) = &config.supervision {
+        if config.endpoints.len() > crate::ipc::MAX_ENDPOINTS - 2 {
+            return Err(Error::InvalidEndpoints);
+        }
+        Some(
+            Supervisor::new(epoch, launch.owner, launch.peer, programs.len())
+                .map_err(|_| Error::InvalidEndpoints)?,
+        )
+    } else {
+        None
+    };
+    // Static grants may refer only to initial principals, never the reusable child slot.
+    if config.endpoints.iter().any(|spec| {
+        spec.sender >= programs.len()
+            || spec.receiver >= programs.len()
+            || spec.revoker.is_some_and(|slot| slot >= programs.len())
+    }) {
+        return Err(Error::InvalidEndpoints);
+    }
+    let mut ipc = Ipc::new(epoch, count, config.endpoints).map_err(|_| Error::InvalidEndpoints)?;
+    if let Some(model) = &supervisor {
+        ipc.close_task(model.child);
+    }
     let baseline = frames.allocated();
     let mut session = Session {
         tasks: Vec::new(),
-        scheduler: Scheduler::new(programs.len()),
+        scheduler: Scheduler::new(count),
         boot: Context::default(),
         output,
         completed: 0,
         ipc,
+        supervisor,
+        endpoint_base: config.endpoints.len(),
+        frame_baseline: baseline,
     };
     session
         .tasks
-        .try_reserve_exact(programs.len())
+        .try_reserve_exact(count)
         .map_err(|_| Error::OutOfHeap)?;
     let mut reports = Vec::new();
     reports
-        .try_reserve_exact(programs.len())
+        .try_reserve_exact(count)
         .map_err(|_| Error::OutOfHeap)?;
+    for _ in 0..count {
+        admission::reserve_slot(&mut session);
+    }
     let mut source = Frames {
         frames,
         remaining: config.frame_limit,
@@ -155,7 +205,7 @@ pub unsafe fn run_configured(
                 admission::admit(&mut session, layout, image, program, &mut source, slot)
             }
         {
-            for task in &mut session.tasks {
+            for task in session.tasks.iter_mut().filter(|task| task.space.is_some()) {
                 // SAFETY: Admission failed before publishing any context/root.
                 unsafe {
                     admission::retire(task, &mut source);
@@ -173,11 +223,9 @@ pub unsafe fn run_configured(
         arch::begin_user_session();
         arch::set_switch_handler(Some(schedule));
         loop {
-            for slot in 0..(*session).tasks.len() {
-                if (*session).scheduler.states()[slot] == TaskState::Exited {
-                    admission::retire(&mut (&mut (*session).tasks)[slot], &mut source);
-                    (*session).scheduler.reap(slot);
-                }
+            lifecycle::reap(&mut *session, &mut source);
+            if let Some(launch) = &config.supervision {
+                lifecycle::spawn(&mut *session, &mut source, layout, image, launch);
             }
             if (*session).scheduler.finished() {
                 break;
@@ -228,12 +276,18 @@ unsafe fn schedule(context: &Context, cause: SwitchCause, now: u64) -> *const Co
         session.boot = context.clone();
     }
     let next = if matches!(event, Event::Exit) {
-        session.ipc.close_task(previous.unwrap());
-        dispatch::wake_receivers(session);
+        lifecycle::close(session, previous.unwrap());
         session.completed += 1;
         session.tasks[previous.unwrap()].report.completion_order = session.completed;
         session.scheduler.park(event, now);
         None // Always reclaim from the boot context, never an interrupt stack.
+    } else if session
+        .supervisor
+        .as_ref()
+        .is_some_and(|model| model.pending().is_some())
+    {
+        session.scheduler.park(event, now);
+        None // Spawn runs on the boot stack with the kernel root, never in a trap.
     } else {
         session.scheduler.advance(event, now, true)
     };
@@ -249,4 +303,12 @@ unsafe fn schedule(context: &Context, cause: SwitchCause, now: u64) -> *const Co
         arch::select_user_root(next.map(|slot| session.tasks[slot].space.as_ref().unwrap().root()));
     }
     next.map_or(&session.boot, |slot| &session.tasks[slot].context)
+}
+
+fn next_epoch() -> Option<u64> {
+    EPOCH
+        .fetch_update(Ordering::Relaxed, Ordering::Relaxed, |value| {
+            (value <= MAX_EPOCH).then_some(value + 1)
+        })
+        .ok()
 }

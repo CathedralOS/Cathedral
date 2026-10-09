@@ -127,6 +127,16 @@ impl Scheduler {
         }
     }
 
+    /// Cancel a non-running task; the runtime must reclaim it before reaping.
+    pub fn cancel(&mut self, slot: usize) {
+        assert_ne!(self.current, Some(slot));
+        assert!(matches!(
+            self.states[slot],
+            TaskState::Ready | TaskState::Blocked | TaskState::Sleeping { .. }
+        ));
+        self.states[slot] = TaskState::Exited;
+    }
+
     fn wake(&mut self, now: u64) {
         for state in &mut self.states {
             if let TaskState::Sleeping { deadline } = *state
@@ -164,6 +174,23 @@ impl Scheduler {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn cancelling_a_waiter_requires_reaping_before_reuse() {
+        let mut scheduler = populated(2);
+        let old = scheduler.id(0);
+        scheduler.advance(Event::Yield, 0, true);
+        scheduler.advance(Event::Block, 1, true);
+        scheduler.park(Event::Yield, 2);
+        scheduler.cancel(0);
+        scheduler.unblock(0);
+        assert!(!scheduler.is_alive(old));
+        assert_eq!(scheduler.states()[0], TaskState::Exited);
+        scheduler.reap(0);
+        let new = scheduler.admit(0);
+        assert_ne!(old, new);
+        assert!(!scheduler.is_alive(old));
+        assert!(scheduler.is_alive(new));
+    }
     #[test]
     fn blocked_tasks_need_explicit_wakeup_and_keep_their_identity() {
         let mut scheduler = populated(2);

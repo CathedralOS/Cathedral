@@ -5,6 +5,7 @@ fn main() {
     for (variable, destination) in [
         ("CATHEDRAL_HELLO_ELF", "user.elf"),
         ("CATHEDRAL_IPC_ELF", "ipc.elf"),
+        ("CATHEDRAL_SUPERVISION_ELF", "supervision.elf"),
     ] {
         println!("cargo:rerun-if-env-changed={variable}");
         if env::var_os("CARGO_FEATURE_BUNDLED_USER").is_none() {

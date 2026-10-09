@@ -25,6 +25,8 @@ pub struct Message {
 }
 #[derive(Clone, Copy)]
 struct Endpoint {
+    epoch: u64,
+    hidden: u8,
     spec: EndpointSpec,
     message: Option<Message>,
     sender_alive: bool,
@@ -57,6 +59,8 @@ impl Ipc {
                 return Err(abi::INVALID_ARGUMENT);
             }
             ipc.endpoints[index] = Some(Endpoint {
+                epoch,
+                hidden: 0,
                 spec,
                 message: None,
                 sender_alive: true,
@@ -74,8 +78,8 @@ impl Ipc {
             Right::Revoke => endpoint.spec.revoker,
         }
     }
-    fn ticket(&self, owner: usize, slot: usize) -> u64 {
-        (self.epoch << 16) | ((owner as u64) << 8) | (slot as u64 + 1)
+    fn ticket(epoch: u64, owner: usize, slot: usize) -> u64 {
+        (epoch << 16) | ((owner as u64) << 8) | (slot as u64 + 1)
     }
     /// Enumerate only the calling task's preinstalled grants, in endpoint/right order.
     pub fn handle(&self, caller: usize, index: u64) -> Result<u64, u64> {
@@ -85,13 +89,20 @@ impl Ipc {
         let mut found = 0;
         for (endpoint_index, endpoint) in self.endpoints.iter().enumerate() {
             let Some(endpoint) = endpoint else { continue };
+            if endpoint.hidden & (1 << caller) != 0 {
+                continue;
+            }
             for (right_index, right) in [Right::Send, Right::Receive, Right::Revoke]
                 .into_iter()
                 .enumerate()
             {
                 if Self::owner(endpoint, right) == Some(caller) {
                     if found == index {
-                        return Ok(self.ticket(caller, endpoint_index * 3 + right_index));
+                        return Ok(Self::ticket(
+                            endpoint.epoch,
+                            caller,
+                            endpoint_index * 3 + right_index,
+                        ));
                     }
                     found += 1;
                 }
@@ -101,10 +112,15 @@ impl Ipc {
     }
     pub fn check(&self, caller: usize, ticket: u64, needed: Right) -> Result<usize, u64> {
         let slot = (ticket & 255).checked_sub(1).ok_or(abi::BAD_HANDLE)? as usize;
-        if !self.live(caller) || slot >= MAX_ENDPOINTS * 3 || ticket != self.ticket(caller, slot) {
+        if !self.live(caller) || slot >= MAX_ENDPOINTS * 3 {
             return Err(abi::BAD_HANDLE);
         }
         let endpoint = self.endpoints[slot / 3].as_ref().ok_or(abi::BAD_HANDLE)?;
+        if endpoint.hidden & (1 << caller) != 0
+            || ticket != Self::ticket(endpoint.epoch, caller, slot)
+        {
+            return Err(abi::BAD_HANDLE);
+        }
         let right = [Right::Send, Right::Receive, Right::Revoke][slot % 3];
         if Self::owner(endpoint, right) != Some(caller) {
             return Err(abi::BAD_HANDLE);
@@ -180,6 +196,46 @@ impl Ipc {
     }
     fn live(&self, task: usize) -> bool {
         task < self.tasks && self.alive & (1 << task) != 0
+    }
+}
+
+// Dynamic launch replaces only two explicitly reserved endpoint slots. Ordinary
+// boot endpoints keep their generations and continue serving the live peers.
+impl Ipc {
+    pub fn prepare_child(&mut self, first: usize, peer: usize, child: usize, epoch: u64) {
+        assert!(first + 1 < MAX_ENDPOINTS && self.live(peer) && !self.live(child));
+        assert!(child < self.tasks && child != peer && epoch > self.epoch && epoch <= MAX_EPOCH);
+        for index in first..first + 2 {
+            if let Some(old) = self.endpoints[index] {
+                assert!(old.epoch < epoch && (!old.sender_alive || !old.receiver_alive));
+                assert!(
+                    (old.spec.sender == child && old.spec.receiver == peer)
+                        || (old.spec.receiver == child && old.spec.sender == peer)
+                );
+            }
+        }
+        self.alive |= 1 << child;
+        for (index, sender, receiver) in [(first, peer, child), (first + 1, child, peer)] {
+            self.endpoints[index] = Some(Endpoint {
+                epoch,
+                hidden: 1 << peer,
+                spec: EndpointSpec {
+                    sender,
+                    receiver,
+                    revoker: None,
+                },
+                message: None,
+                sender_alive: true,
+                receiver_alive: true,
+                revoked: false,
+            });
+        }
+    }
+    pub fn accept_child(&mut self, first: usize, peer: usize) {
+        assert!(self.live(peer));
+        for index in first..first + 2 {
+            self.endpoints[index].as_mut().unwrap().hidden &= !(1 << peer);
+        }
     }
 }
 

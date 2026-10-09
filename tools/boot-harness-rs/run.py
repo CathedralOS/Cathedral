@@ -43,6 +43,9 @@ MARKERS = (
     "Cathedral Rust lab: IPC peer fault woke blocked receiver and reclaimed all memory",
     "Cathedral Rust lab: IPC revocation woke blocked receiver and reclaimed all memory",
     "Cathedral Rust lab: IPC backpressure and checked copyout preserved queued message; all memory reclaimed",
+    "Cathedral Rust lab: userspace supervisor restarted 32 faulted services; live client reconnected with fresh grants",
+    "Cathedral Rust lab: supervision parent-exit cancellation and collected return status reclaimed all memory",
+    "Cathedral Rust lab: supervision failed-spawn retries preserved live peers and memory baselines",
     "CATHEDRAL_RS_BOOT_OK",
 )
 
@@ -172,7 +175,7 @@ def main():
     # isa-debug-exit returns (guest_value << 1) | 1, so guest 0x10 means 33.
     if result.returncode != 33 or "CATHEDRAL_RS_PANIC" in serial:
         raise RuntimeError(f"Boot failed (QEMU exit {result.returncode}); logs: {output}")
-    print(f"PASS: expected {args.fault} exception" if args.fault else "PASS: boot, preemption, fault containment, static ELF programs, capability IPC and memory reclamation")
+    print(f"PASS: expected {args.fault} exception" if args.fault else "PASS: boot, preemption, fault containment, static ELF programs, capability IPC, userspace supervision and memory reclamation")
     return 0
 
 

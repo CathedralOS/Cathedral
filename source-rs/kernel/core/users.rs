@@ -4,8 +4,9 @@
 pub mod elf;
 mod runtime;
 pub mod syscall;
-pub use runtime::{Config, Exit, Report, run, run_configured};
+pub use runtime::{Config, Exit, Report, Supervision, run, run_configured};
 
+#[derive(Clone, Copy)]
 pub enum Executable<'a> {
     Probe(&'a [u8]),
     Elf(&'a [u8]),
