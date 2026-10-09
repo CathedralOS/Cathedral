@@ -1,139 +1,114 @@
-//! Single-CPU task runner. Policy is scheduler.rs; architecture owns the saved
-//! CPU image. IRQ callbacks never allocate, acquire locks, or retain references
-//! into the shared interrupt stack. Task return drops locals before exit.
+//! Trusted kernel task API. Admission and teardown run on the boot stack;
+//! the interrupt callback only saves contexts and chooses where to resume.
 
-use crate::scheduler::{Event, Scheduler};
-use alloc::boxed::Box;
-use cathedral_arch::{self as arch, Context, StackRange, SwitchCause};
-use core::sync::atomic::{AtomicPtr, Ordering};
+mod runtime;
+mod stacks;
 
-#[derive(Clone, Copy, Debug, Default)]
-pub struct RunStats {
-    pub switches: u64,
-    pub preemptions: [u64; 2],
-    pub exits: usize,
+pub use crate::scheduler::TaskId;
+use crate::{extent::FrameAllocator, scheduler::Event};
+use cathedral_arch as arch;
+pub use runtime::RunStats;
+use runtime::{Request, access};
+
+#[derive(Clone, Copy)]
+pub struct Config {
+    pub task_limit: usize,
+    pub preempt: bool,
+    /// Bounds simultaneous stack backing plus paging-structure frames.
+    pub frame_limit: usize,
+}
+impl Default for Config {
+    fn default() -> Self {
+        Self {
+            task_limit: 8,
+            preempt: true,
+            frame_limit: usize::MAX,
+        }
+    }
 }
 
-struct Session {
-    scheduler: Scheduler<2>,
-    contexts: [Context; 2],
-    boot: Context,
-    entries: [fn(); 2],
-    pending: Event,
-    preempt: bool,
-    stats: RunStats,
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum SpawnError {
+    InvalidLimit,
+    TaskLimit,
+    OutOfFrames,
+    OutOfHeap,
 }
 
-static ACTIVE: AtomicPtr<Session> = AtomicPtr::new(core::ptr::null_mut());
-
-/// Run two tasks to completion, returning on the caller's original stack.
-/// Sleeping all tasks returns to the boot context, which waits for timer wakes.
+/// Run a bounded task arena to completion, returning on the original stack.
+/// IDs are scoped to this session. Each admitted task owns a fresh guarded stack.
 /// # Safety
-/// Sole CPU, IRQs off, initialized heap/timer/IDT. Each supplied stack is mapped,
-/// exclusively owned, non-overlapping, and stays live until this call returns.
-/// Tasks are trusted kernel functions; they must return to release their locals.
-pub unsafe fn run(stacks: [StackRange; 2], entries: [fn(); 2], preempt: bool) -> RunStats {
-    assert!(
-        ACTIVE.load(Ordering::Acquire).is_null(),
-        "nested task session"
-    );
-    // SAFETY: Caller provides the two unique stacks and single-CPU setup.
-    let contexts = unsafe {
-        [
-            Context::new(stacks[0], task_entry, 0),
-            Context::new(stacks[1], task_entry, 1),
-        ]
-    };
-    let session = Box::into_raw(Box::new(Session {
-        scheduler: Scheduler::new(),
-        contexts,
-        boot: Context::default(),
-        entries,
-        pending: Event::Yield,
-        preempt,
-        stats: RunStats::default(),
-    }));
-    ACTIVE.store(session, Ordering::Release);
-    // SAFETY: The heap-owned session remains pinned until the callback is removed.
-    // No Rust reference to it spans suspension or a period with IRQs enabled.
-    unsafe {
-        arch::set_switch_handler(Some(schedule));
-        arch::suspend();
-        while !(*session).scheduler.finished() {
-            arch::wait_for_ticks(1);
-        }
-        arch::set_switch_handler(None);
-        ACTIVE.store(core::ptr::null_mut(), Ordering::Release);
-        let session = Box::from_raw(session);
-        assert_eq!(session.stats.exits, 2);
-        // Drop reclaims all context metadata. The reserved stack pool is reusable.
-        session.stats
-    }
+/// Sole CPU, IRQs off, initialized heap/timer/IDT and owned active page tables.
+/// Frames have reclamation enabled and unique custody of identity-mapped RAM.
+/// Trusted task functions must return normally to release Rust locals; no unwind.
+pub unsafe fn run(
+    frames: &mut FrameAllocator,
+    config: Config,
+    entries: &[fn()],
+) -> Result<RunStats, SpawnError> {
+    // SAFETY: Forward the runtime's machine/lifetime preconditions from caller.
+    unsafe { runtime::run(frames, config, entries) }
 }
 
-unsafe fn schedule(context: &Context, cause: SwitchCause, now: u64) -> *const Context {
-    // SAFETY: The installed callback has exclusive access with IRQs masked;
-    // run pins ACTIVE and task APIs release all borrows before suspending.
-    let session = unsafe { &mut *ACTIVE.load(Ordering::Acquire) };
-    let previous = session.scheduler.current();
-    if let Some(index) = previous {
-        session.contexts[index] = context.clone();
-    } else {
-        session.boot = context.clone();
-    }
-    let event = if cause == SwitchCause::Timer {
-        Event::Timer
-    } else {
-        core::mem::replace(&mut session.pending, Event::Yield)
-    };
-    if matches!(event, Event::Exit) {
-        session.stats.exits += 1;
-    }
-    let next = session.scheduler.advance(event, now, session.preempt);
-    if previous != next {
-        session.stats.switches += 1;
-        if cause == SwitchCause::Timer
-            && session.preempt
-            && let Some(index) = previous
-        {
-            session.stats.preemptions[index] += 1;
-        }
-    }
-    match next {
-        Some(index) => &session.contexts[index],
-        None => &session.boot,
-    }
+/// Spawn from a running task. Returns only after admission or complete rollback.
+pub fn spawn(entry: fn()) -> Result<TaskId, SpawnError> {
+    request(Request::Spawn(entry));
+    access(|session| {
+        let slot = session.scheduler.current().expect("spawn outside task");
+        session.tasks[slot]
+            .as_mut()
+            .unwrap()
+            .reply
+            .take()
+            .expect("missing spawn reply")
+    })
 }
 
-fn task_entry(index: usize) -> ! {
-    // SAFETY: Fetch only this immutable function pointer, with no session borrow
-    // surviving IRQ re-enable or the task call.
-    let entry =
-        unsafe { arch::without_interrupts(|| (*ACTIVE.load(Ordering::Acquire)).entries[index]) };
-    entry();
-    request(Event::Exit);
-    panic!("exited task was resumed");
+pub fn current_id() -> TaskId {
+    access(|session| {
+        session
+            .scheduler
+            .id(session.scheduler.current().expect("not in task"))
+    })
 }
 
-fn request(event: Event) {
-    // SAFETY: Kernel task context. Masking prevents a timer changing current
-    // between publishing the request and taking vector 48. No borrow crosses it.
-    unsafe {
-        arch::without_interrupts(|| {
-            let session = ACTIVE.load(Ordering::Acquire);
-            assert!(!session.is_null(), "task operation outside a task session");
-            assert!((*session).scheduler.current().is_some());
-            (*session).pending = event;
-            arch::suspend();
-        });
-    }
+pub fn is_alive(id: TaskId) -> bool {
+    access(|session| session.scheduler.is_alive(id))
+}
+
+pub fn current_stack() -> arch::StackRange {
+    arch::task_stack_range(current_id().slot())
+}
+
+/// Stable accounting snapshot; useful for admission policy and lab assertions.
+pub fn allocated_frames() -> usize {
+    access(|session| {
+        // SAFETY: The session borrows this allocator for its entire run, IRQs off.
+        unsafe { (*session.frames).allocated() }
+    })
 }
 
 pub fn yield_now() {
-    request(Event::Yield);
+    request(Request::Schedule(Event::Yield));
 }
-
 pub fn sleep(ticks: u64) {
     assert!(ticks < (1 << 63), "sleep exceeds clock comparison range");
-    request(Event::Sleep(ticks));
+    request(Request::Schedule(Event::Sleep(ticks)));
+}
+
+fn request(request: Request) {
+    // SAFETY: Sole kernel CPU. No borrow or lock spans the suspension. The saved
+    // context keeps IF clear until this function restores the caller's IF.
+    unsafe {
+        arch::without_interrupts(|| {
+            access(|session| {
+                assert!(
+                    session.scheduler.current().is_some(),
+                    "operation outside task"
+                );
+                session.pending = request;
+            });
+            arch::suspend();
+        });
+    }
 }

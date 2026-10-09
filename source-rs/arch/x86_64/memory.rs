@@ -42,7 +42,6 @@ pub struct BootLayout {
     pub emergency_tops: [u64; 4],
     pub heap_start: u64,
     pub heap_bytes: usize,
-    pub task_stacks: [StackRange; 2],
 }
 
 /// Geometry only; constructing this record does not grant ownership.
@@ -119,7 +118,7 @@ pub unsafe fn prepare_memory(
     let root = unsafe { copy_table(Cr3::read().0, 4, &mut frames)? };
     // SAFETY: The newly allocated root is exclusively owned and identity mapped.
     let table = unsafe { &mut *(root.start_address().as_u64() as *mut PageTable) };
-    for base in [STACK_BASE, HEAP_BASE] {
+    for base in [STACK_BASE, HEAP_BASE, super::stacks::TASK_BASE] {
         if !table[VirtAddr::new(base).p4_index()].is_unused() {
             return Err(MemoryError::OccupiedVirtualRange);
         }
@@ -144,24 +143,6 @@ pub unsafe fn prepare_memory(
         cursor = *top + PAGE_SIZE;
     }
     let heap_start = HEAP_BASE + PAGE_SIZE;
-    let mut task_stacks = [StackRange {
-        bottom: 0,
-        top: 0,
-        guard: 0,
-    }; 2];
-    for stack in &mut task_stacks {
-        let bottom = cursor + PAGE_SIZE;
-        // SAFETY: Each task has separate fresh backing and absent guard pages.
-        unsafe {
-            map_range(&mut mapper, &mut frames, bottom, STACK_PAGES)?;
-        }
-        *stack = StackRange {
-            bottom,
-            top: bottom + STACK_PAGES * PAGE_SIZE,
-            guard: cursor,
-        };
-        cursor = stack.top + PAGE_SIZE;
-    }
     // SAFETY: Heap range is vacant; backing is uniquely allocated and writable.
     unsafe {
         map_range(
@@ -180,7 +161,6 @@ pub unsafe fn prepare_memory(
         emergency_tops,
         heap_start,
         heap_bytes: HEAP_BYTES,
-        task_stacks,
     })
 }
 

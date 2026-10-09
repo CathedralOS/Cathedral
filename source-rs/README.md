@@ -14,15 +14,15 @@ Omega's proof or authority guarantees.
 | `boot/uefi/firmware.rs` | UEFI crate adapter and memory-inventory policy |
 | `boot/uefi/memory.rs`, `handoff.rs` | Compose core frame policy with architecture mappings, then transfer boot state |
 | `boot/uefi/interrupts.rs`, `diagnostics.rs` | Interrupt bring-up and serial/fatal reporting |
-| `boot/uefi/heap.rs`, `tasks.rs` | Heap installation and real cooperative/preemptive bring-up workloads |
+| `boot/uefi/heap.rs`, `tasks.rs`, `task_lifecycle.rs` | Heap installation, cooperative/preemptive workloads and dynamic lifecycle checks |
 | `boot/uefi/smoke.rs` | Test-only fault injection and QEMU result reporting |
 | `contracts/boot.rs` | Firmware-neutral memory handoff; experimental Rust data, not a frozen ABI |
-| `core/extent.rs` | Physical-memory inventory and initial frame accounting, corresponding to the resource work in `source/core/` |
-| `core/heap.rs`, `scheduler.rs`, `tasks.rs` | IRQ-safe heap, pure scheduling policy and task-context lifetime management |
+| `core/extent.rs` | Bootstrap frame accounting and reclaiming bitmap over usable RAM, corresponding to the resource work in `source/core/` |
+| `core/heap.rs`, `scheduler.rs`, `tasks.rs`, `tasks/` | IRQ-safe heap, pure scheduling policy, task admission and context/stack lifetime management |
 | `drivers/uart_16550/` | Polling serial diagnostics, corresponding to `source/drivers/uart_16550/` |
 | `arch/lib.rs` | Compile-time CPU backend selection and the boot-facing machine interface |
 | `arch/x86/` | Shared instructions and the selected PC platform's temporary PIC/PIT route |
-| `arch/x86_64/` | Paging, stack entry, GDT/TSS/IDT and interrupt stubs, using the `x86_64` crate |
+| `arch/x86_64/` | Paging, dynamic guarded stack mapping/teardown, CPU contexts, GDT/TSS/IDT and interrupt stubs, using the `x86_64` crate |
 | `../tools/boot-harness-rs/` | Host build, QEMU launch and smoke verification |
 
 Each crate uses `no_std`. Core policies are host-testable and have no firmware
@@ -104,7 +104,8 @@ QEMU q35, one qemu64 CPU, software emulation, 128 MiB by default:
    preserving inherited leaf mappings and their flags. Bound copying to 4,096
    table pages; fail on exhaustion, unsupported NX/LA57/PCID or occupied ranges.
 7. Map a guarded 64-KiB kernel stack, four guarded 16-KiB emergency stacks,
-   two guarded 64-KiB task stacks and 64 KiB of heap backing. New mappings are NX.
+   and 64 KiB of heap backing. Reserve a separate virtual branch for dynamic task
+   stacks, without allocating their backing yet. New mappings are NX.
 8. Load the owned CR3, enable write protection/NX, switch stacks and confirm the
    stack pointer is within its assigned range.
 9. Load Cathedral's GDT/TSS and complete 256-entry IDT. Double fault, NMI,
@@ -114,14 +115,21 @@ QEMU q35, one qemu64 CPU, software emulation, 128 MiB by default:
     `Vec`/`Box` allocations, writes and frees.
 11. Start the 100-Hz PIC/PIT bootstrap timer. Receive three ticks and verify the
     IRQ used its assigned stack.
-12. Run two cooperative kernel tasks through yield, sleep, wake and return; one
-    makes observable progress while the other sleeps. Repeat with reused stack
-    slots and verify all heap allocations are reclaimed.
+12. Enable physical-frame reclamation using a heap-allocated bitmap; earlier boot
+    allocations remain permanently reserved. Run two cooperative kernel tasks
+    through yield, sleep, wake and return; one progresses while the other sleeps.
+    Allocate guarded stacks on admission, then unmap and free them after exit.
 13. Run two non-yielding tasks under timer preemption. Stress heap allocation
     while switching, then verify distinct GPR/SSE/x87/MXCSR patterns survive.
     Require each task to observe its peer making progress before it exits, and
     require actual timer-driven switches away from both tasks.
-14. Print `CATHEDRAL_RS_BOOT_OK`, then idle or terminate the smoke-test guest.
+14. Fail stack admission at all 19 initial allocation boundaries, including
+    partial intermediate page tables; verify complete rollback. Also fail with
+    live peer tasks, and exhaust the heap to exercise context-admission rollback.
+15. Dynamically spawn and retire 128 child tasks across two sessions while a
+    non-yielding peer runs. Verify task limits, stale IDs, guards/canaries and
+    return to heap/frame baselines after each pair and each session.
+16. Print `CATHEDRAL_RS_BOOT_OK`, then idle or terminate the smoke-test guest.
 
 Only ordinary conventional RAM is eligible. Loader memory, Boot Services memory,
 runtime memory, ACPI and MMIO remain reserved. Runtime-marked, hot-pluggable and
@@ -140,9 +148,13 @@ driver. Timer and yield entries save all GPRs, the return frame, and x87/MMX/SSE
 state before entering an allocation-free scheduler callback. Each suspended
 task's context is copied into stable heap storage; no task retains a frame on
 the shared IRQ stack. The selected qemu64 profile has no AVX state to save.
-Tasks return normally so Rust drops their owned data; the session unregisters
-its callback before reclaiming context metadata. Stack backing remains a fixed
-reserved pool that is reused, not returned to the physical-frame allocator.
+Tasks return normally so Rust drops their owned data. Exit switches to the boot
+context before removing the saved context, unmapping the stack, invalidating
+translations and releasing its physical backing. Empty paging-structure frames
+are detached and released after a TLB flush. Each stack slot has its own 2-MiB
+virtual range with 64 KiB of backing, so a peer's live leaf table is unaffected.
+The callback does no allocation, mapping or freeing. Spawn requests also switch
+to the boot context, where partial admission is rolled back on failure.
 Exception stubs normalize hardware error codes before a terminal diagnostic;
 the breakpoint self-test resumes. Vector 48 handles cooperative suspension on
 the IRQ stack, through the same complete-context path as the timer. Unexpected
@@ -151,10 +163,18 @@ The CPU profile is qemu64, with no claim to optional virtualization exception
 semantics or physical-hardware coverage. Unsafe wrappers are boot-only lab
 mechanisms, not application APIs.
 
-The runtime is intentionally bounded to two trusted kernel tasks on one CPU.
-They share an address space; guards protect against stack overrun, not against
-malicious tasks. There is no user mode, capability enforcement, SMP, task
-cancellation or dynamic stack/frame reclamation yet. The scheduler is a pure
+The runtime supports a configurable limit of 1–64 trusted kernel tasks on one
+CPU (default 8), plus an optional frame budget for stacks and their tables.
+`tasks::spawn(fn())` returns a `TaskId` or an admission error. IDs contain slot
+generations and are scoped to a session; reused slots do not revive old IDs.
+`is_alive` reports liveness; return is the supported exit mechanism. There are
+no joins, captured closures, cancellation or recovery from task panic yet.
+Tasks share an address space; guards protect against stack overrun, not against
+malicious tasks. There is no user mode, capability enforcement or SMP. The
+64-KiB heap and runtime arena are initialized before executing tasks; ordinary
+infallible Rust allocations can still panic on exhaustion. Task context
+admission is fallible and returns `OutOfHeap` without leaking stack frames.
+The scheduler is a pure
 round-robin state machine; IRQ masking protects its mutable session, and heap
 locks are never held across a voluntary suspension. Preemption is tested with
 tasks that never yield, including a negative control that fails when their
@@ -162,10 +182,10 @@ timer preemption is disabled.
 
 ## Next bring-up steps
 
-- Add explicit task admission/resource limits and grow the fixed task arena.
-- Add mapping teardown and physical-frame reclamation before dynamic stacks.
+- Add user mode, separate address spaces and a minimal syscall boundary.
+- Add task arguments, join/result delivery and explicit ownership of task handles.
 - Discover ACPI/APIC topology and replace the temporary PIC/PIT timer route.
-- Add user-mode address spaces, capability checks and shared-memory IPC.
+- Add capability checks and shared-memory IPC.
 
 Keep source transitions and invariants recognizable beside their Omega owners.
 Record deliberate divergences here and preserve test cases for eventual shared

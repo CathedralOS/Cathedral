@@ -25,6 +25,9 @@ MARKERS = (
     "Cathedral Rust lab: cooperative tasks yielded slept woke and reclaimed",
     "Cathedral Rust lab: preempted non-yielding tasks counts=",
     "Cathedral Rust lab: task heap reclaimed and stack slots reusable",
+    "Cathedral Rust lab: stack allocation rollback passed all frame boundaries",
+    "Cathedral Rust lab: dynamic spawn limit stale IDs and live-peer progress passed",
+    "Cathedral Rust lab: task stacks unmapped; heap and physical frames returned to baseline",
     "CATHEDRAL_RS_BOOT_OK",
 )
 
@@ -139,7 +142,7 @@ def main():
     # isa-debug-exit returns (guest_value << 1) | 1, so guest 0x10 means 33.
     if result.returncode != 33 or "CATHEDRAL_RS_PANIC" in serial:
         raise RuntimeError(f"Boot failed (QEMU exit {result.returncode}); logs: {output}")
-    print(f"PASS: expected {args.fault} exception" if args.fault else "PASS: boot, heap, cooperative tasks, timer preemption and reclamation")
+    print(f"PASS: expected {args.fault} exception" if args.fault else "PASS: boot, preemption, dynamic tasks, admission rollback and memory reclamation")
     return 0
 
 

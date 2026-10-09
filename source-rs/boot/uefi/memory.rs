@@ -8,7 +8,7 @@ use core::fmt::Write;
 
 pub struct PreparedMemory {
     pub layout: arch::BootLayout,
-    frames: FrameAllocator,
+    pub frames: FrameAllocator,
 }
 
 pub fn prepare(inventory: BootMemory, console: &mut SerialPort) -> PreparedMemory {

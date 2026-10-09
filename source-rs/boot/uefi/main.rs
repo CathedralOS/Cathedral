@@ -13,6 +13,7 @@ mod interrupts;
 mod memory;
 #[cfg(feature = "smoke-test")]
 mod smoke;
+mod task_lifecycle;
 mod tasks;
 
 use uefi::{Status, entry};
@@ -34,7 +35,8 @@ fn kernel_main(mut boot: handoff::BootState) -> ! {
     #[cfg(feature = "smoke-test")]
     smoke::probe_faults(&boot.memory.layout);
     interrupts::start_timer(&boot.memory.layout, &mut boot.console);
-    tasks::exercise(&boot.memory.layout, &mut boot.console);
+    tasks::exercise(&mut boot.memory, &mut boot.console);
+    task_lifecycle::exercise(&mut boot.memory, &mut boot.console);
     diagnostics::ready(&mut boot.console);
 
     #[cfg(feature = "smoke-test")]

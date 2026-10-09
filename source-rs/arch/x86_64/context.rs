@@ -63,7 +63,7 @@ impl Default for Context {
 impl Context {
     /// # Safety
     /// Stack is uniquely owned, writable and mapped throughout the task's life.
-    /// Entry never returns. Called with IRQs off and no active task.
+    /// Entry never returns. Called with IRQs off, outside the interrupt handler.
     pub unsafe fn new(stack: StackRange, entry: fn(usize) -> !, argument: usize) -> Self {
         assert!(stack.top.is_multiple_of(16) && stack.top - stack.bottom >= 4096);
         let mut context = Self::default();

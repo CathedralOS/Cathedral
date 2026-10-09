@@ -3,6 +3,7 @@
 mod context;
 mod interrupts;
 mod memory;
+mod stacks;
 pub use crate::x86::{disable_interrupts, halt_forever, in8, out8, qemu_exit};
 pub use context::{Context, SwitchCause, probe_registers, set_switch_handler, suspend};
 pub use interrupts::{
@@ -10,14 +11,16 @@ pub use interrupts::{
     start_timer, test_breakpoint, ticks, wait_for_ticks,
 };
 pub use memory::{BootLayout, MemoryError, StackRange, prepare_memory};
+pub use stacks::{MAX_TASK_SLOTS, StackFrames, allocate_stack, release_stack, task_stack_range};
 
 use core::arch::asm;
 
 pub const CPU_NAME: &str = "x86_64";
 
 /// # Safety
-/// Requires kernel privilege. Body must not change IF or suspend, and must not
-/// depend on an interrupt to finish. NMI/fault paths must not acquire its locks.
+/// Requires kernel privilege. Body must not change IF or wait for an interrupt.
+/// Explicit task suspension is permitted only with no mutable shared borrows or
+/// locks spanning it. NMI/fault paths must not acquire locks used by the body.
 pub unsafe fn without_interrupts<R>(body: impl FnOnce() -> R) -> R {
     ::x86_64::instructions::interrupts::without_interrupts(body)
 }

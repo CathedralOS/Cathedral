@@ -14,22 +14,35 @@ use core::{
 static PROGRESS: [AtomicU64; 2] = [const { AtomicU64::new(0) }; 2];
 static STACKS: [AtomicU64; 2] = [const { AtomicU64::new(0) }; 2];
 
-pub fn exercise(layout: &arch::BootLayout, console: &mut SerialPort) {
+pub fn exercise(memory: &mut crate::memory::PreparedMemory, console: &mut SerialPort) {
+    memory.frames.enable_reclamation();
     // SAFETY: We remain on the privileged boot CPU, with the heap initialized.
     let baseline = unsafe { HEAP.used() };
-    // Run twice to verify task exit releases heap resources and the stack pool
+    // Run twice to verify task exit releases heap/stack backing and virtual slots
     // can be reused without stale contexts, wait state or registered callbacks.
     for _ in 0..2 {
         for progress in &PROGRESS {
             progress.store(0, Ordering::Relaxed);
         }
-        // SAFETY: Two disjoint mapped stacks, IRQs masked, timer and IDT installed.
-        let stats = unsafe { tasks::run(layout.task_stacks, [first, second], false) };
+        // SAFETY: Owned reclaiming allocator and mappings, IRQs masked, timer/IDT live.
+        let stats = unsafe {
+            tasks::run(
+                &mut memory.frames,
+                tasks::Config {
+                    task_limit: 2,
+                    preempt: false,
+                    ..Default::default()
+                },
+                &[first, second],
+            )
+        }
+        .unwrap();
         assert_eq!(stats.exits, 2);
-        assert_eq!(stats.preemptions, [0, 0]);
+        assert!(stats.preemptions.iter().all(|count| *count == 0));
         assert!(stats.switches >= 8);
-        for (index, stack) in layout.task_stacks.iter().enumerate() {
-            assert!((stack.bottom..stack.top).contains(&STACKS[index].load(Ordering::Acquire)));
+        for (index, saved) in STACKS.iter().enumerate() {
+            let stack = arch::task_stack_range(index);
+            assert!((stack.bottom..stack.top).contains(&saved.load(Ordering::Acquire)));
         }
         // SAFETY: The task callback has been removed and both tasks have exited.
         assert_eq!(unsafe { HEAP.used() }, baseline);
@@ -39,27 +52,42 @@ pub fn exercise(layout: &arch::BootLayout, console: &mut SerialPort) {
         "Cathedral Rust lab: cooperative tasks yielded slept woke and reclaimed"
     )
     .ok();
-    exercise_preemption(layout, console, baseline);
+    exercise_preemption(memory, console, baseline);
 }
 
-fn exercise_preemption(layout: &arch::BootLayout, console: &mut SerialPort, baseline: usize) {
+fn exercise_preemption(
+    memory: &mut crate::memory::PreparedMemory,
+    console: &mut SerialPort,
+    baseline: usize,
+) {
     for progress in &PROGRESS {
         progress.store(0, Ordering::Relaxed);
     }
     // SAFETY: The cooperative session returned both stack slots, removed its
-    // callback and reclaimed contexts. The same disjoint stacks can be reused.
-    let stats = unsafe { tasks::run(layout.task_stacks, [busy_first, busy_second], true) };
+    // callback and reclaimed contexts. Admission can map fresh backing in those slots.
+    let stats = unsafe {
+        tasks::run(
+            &mut memory.frames,
+            tasks::Config {
+                task_limit: 2,
+                ..Default::default()
+            },
+            &[busy_first, busy_second],
+        )
+    }
+    .unwrap();
     assert_eq!(stats.exits, 2);
-    assert!(stats.preemptions.iter().all(|count| *count > 0));
-    for (index, stack) in layout.task_stacks.iter().enumerate() {
-        assert!((stack.bottom..stack.top).contains(&STACKS[index].load(Ordering::Acquire)));
+    assert!(stats.preemptions[..2].iter().all(|count| *count > 0));
+    for (index, saved) in STACKS.iter().enumerate() {
+        let stack = arch::task_stack_range(index);
+        assert!((stack.bottom..stack.top).contains(&saved.load(Ordering::Acquire)));
     }
     // SAFETY: No tasks or scheduler callback remain; allocation usage is stable.
     assert_eq!(unsafe { HEAP.used() }, baseline);
     writeln!(
         console,
         "Cathedral Rust lab: preempted non-yielding tasks counts={:?}; GPR SSE x87 MXCSR preserved",
-        stats.preemptions
+        &stats.preemptions[..2]
     )
     .ok();
     writeln!(
