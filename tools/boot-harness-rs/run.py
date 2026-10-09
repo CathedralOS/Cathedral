@@ -16,9 +16,10 @@ MARKERS = (
     "Cathedral Rust lab: UEFI entry",
     "Cathedral Rust lab: ExitBootServices complete",
     "Cathedral Rust lab: memory regions=",
-    "Cathedral Rust lab: first frame=",
     "Cathedral Rust lab: arch=",
     "Cathedral Rust lab: owned page tables and stack",
+    "Cathedral Rust lab: GDT TSS IDT installed; breakpoint returned",
+    "Cathedral Rust lab: timer ticks=",
     "CATHEDRAL_RS_BOOT_OK",
 )
 
@@ -66,22 +67,25 @@ def main():
     mode = parser.add_mutually_exclusive_group()
     mode.add_argument("--build-only", action="store_true")
     mode.add_argument("--smoke", action="store_true")
+    parser.add_argument("--fault", choices=("guard", "invalid-opcode", "double-fault"), help="Expected-fault smoke test (requires --smoke)")
     parser.add_argument("--release", action="store_true")
     parser.add_argument("--timeout", type=float, default=30, help="Smoke boot timeout in seconds (default: 30)")
     parser.add_argument("--memory", type=int, default=128, help="Guest RAM in MiB (default: 128)")
     args = parser.parse_args()
     if args.timeout <= 0 or args.memory < 64:
         parser.error("timeout must be positive and memory must be at least 64 MiB")
+    if args.fault and not args.smoke:
+        parser.error("--fault requires --smoke")
 
     cargo = ["cargo", "build", "--locked", "--package", "cathedral-boot-uefi",
              "--target", TARGET, "--target-dir", str(BUILD / "cargo")]
     if args.release:
         cargo.append("--release")
     if args.smoke:
-        cargo.extend(["--features", "smoke-test"])
+        cargo.extend(["--features", f"fault-{args.fault}" if args.fault else "smoke-test"])
     subprocess.run(cargo, cwd=WORKSPACE, check=True)
     # Keep smoke images and their terminating feature separate from normal boots.
-    output = BUILD / ("smoke" if args.smoke else "interactive")
+    output = BUILD / (f"fault-{args.fault}" if args.fault else "smoke" if args.smoke else "interactive")
     esp = output / "esp/EFI/BOOT"
     esp.mkdir(parents=True, exist_ok=True)
     profile = "release" if args.release else "debug"
@@ -121,7 +125,8 @@ def main():
     serial = serial_path.read_text(encoding="utf-8", errors="replace")
     print(serial)
     position = 0
-    for marker in MARKERS:
+    markers = MARKERS if not args.fault else MARKERS[:-2] + ("CATHEDRAL_RS_FAULT:", "CATHEDRAL_RS_EXPECTED_FAULT")
+    for marker in markers:
         found = serial.find(marker, position)
         if found < 0:
             raise RuntimeError(f"Missing or out-of-order boot marker: {marker}; logs: {output}")
@@ -129,7 +134,7 @@ def main():
     # isa-debug-exit returns (guest_value << 1) | 1, so guest 0x10 means 33.
     if result.returncode != 33 or "CATHEDRAL_RS_PANIC" in serial:
         raise RuntimeError(f"Boot failed (QEMU exit {result.returncode}); logs: {output}")
-    print("PASS: firmware exit, memory handoff, owned page tables and guarded stack")
+    print(f"PASS: expected {args.fault} exception" if args.fault else "PASS: owned memory, exception entry/return, and timer IRQs")
     return 0
 
 

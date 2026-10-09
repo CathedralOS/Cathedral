@@ -1,0 +1,49 @@
+//! The UEFI crate owns the firmware ABI and exit transaction. This adapter
+//! applies Cathedral's conservative memory policy to its returned inventory.
+
+use cathedral_contracts::boot::{BootMemory, MemoryKind, MemoryRegion};
+use cathedral_uart_16550::SerialPort;
+use core::fmt::Write;
+use uefi::mem::memory_map::{MemoryAttribute, MemoryDescriptor, MemoryMap, MemoryType};
+
+pub fn exit_boot_services(console: &mut SerialPort) -> BootMemory {
+    // SAFETY: No protocol references, pool-owning values, firmware logger or
+    // global allocator survive this point. The crate owns map-key retry logic.
+    let firmware_map = unsafe { uefi::boot::exit_boot_services(None) };
+    // SAFETY: Firmware relinquished this sole boot CPU; no kernel IDT exists yet.
+    unsafe {
+        cathedral_arch::disable_interrupts();
+    }
+    writeln!(console, "Cathedral Rust lab: ExitBootServices complete").ok();
+
+    assert_eq!(firmware_map.meta().desc_version, MemoryDescriptor::VERSION);
+    let mut inventory = BootMemory::new();
+    for descriptor in firmware_map.entries() {
+        let ineligible = MemoryAttribute::RUNTIME
+            | MemoryAttribute::HOT_PLUGGABLE
+            | MemoryAttribute::SPECIAL_PURPOSE;
+        let usable =
+            descriptor.ty == MemoryType::CONVENTIONAL && !descriptor.att.intersects(ineligible);
+        // All loader/firmware storage remains reserved, retaining the image,
+        // current stack, inherited tables and map buffer through the handoff.
+        inventory
+            .push(MemoryRegion {
+                base: descriptor.phys_start,
+                page_count: descriptor.page_count,
+                kind: if usable {
+                    MemoryKind::Usable
+                } else {
+                    MemoryKind::Reserved
+                },
+            })
+            .expect("invalid or oversized firmware memory inventory");
+    }
+    writeln!(
+        console,
+        "Cathedral Rust lab: memory regions={} usable_bytes={}",
+        inventory.regions().len(),
+        inventory.usable_bytes()
+    )
+    .ok();
+    inventory
+}

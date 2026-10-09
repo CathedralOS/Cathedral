@@ -2,6 +2,8 @@
 
 use core::arch::asm;
 
+pub(super) mod legacy_timer;
+
 /// # Safety
 /// Caller must run with I/O privilege and own access to this port.
 pub unsafe fn out8(port: u16, value: u8) {
