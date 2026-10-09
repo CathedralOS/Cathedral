@@ -17,6 +17,7 @@ Omega's proof or authority guarantees.
 | `boot/uefi/smoke.rs` | Test-only fault injection and QEMU result reporting |
 | `contracts/boot.rs` | Firmware-neutral memory handoff; experimental Rust data, not a frozen ABI |
 | `core/extent.rs` | Physical-memory inventory and initial frame accounting, corresponding to the resource work in `source/core/` |
+| `core/heap.rs`, `scheduler.rs`, `tasks.rs` | IRQ-safe heap, pure scheduling policy and task-context lifetime management |
 | `drivers/uart_16550/` | Polling serial diagnostics, corresponding to `source/drivers/uart_16550/` |
 | `arch/lib.rs` | Compile-time CPU backend selection and the boot-facing machine interface |
 | `arch/x86/` | Shared instructions and the selected PC platform's temporary PIC/PIT route |
@@ -101,15 +102,17 @@ QEMU q35, one qemu64 CPU, software emulation, 128 MiB by default:
 6. Deep-copy the active four-level page tables into exclusively allocated frames,
    preserving inherited leaf mappings and their flags. Bound copying to 4,096
    table pages; fail on exhaustion, unsupported NX/LA57/PCID or occupied ranges.
-7. Map a guarded 64-KiB kernel stack, four guarded 16-KiB emergency stacks and
-   64 KiB of heap backing. New mappings are writable and non-executable.
+7. Map a guarded 64-KiB kernel stack, four guarded 16-KiB emergency stacks,
+   two guarded 64-KiB task stacks and 64 KiB of heap backing. New mappings are NX.
 8. Load the owned CR3, enable write protection/NX, switch stacks and confirm the
    stack pointer is within its assigned range.
 9. Load Cathedral's GDT/TSS and complete 256-entry IDT. Double fault, NMI,
    machine check and maskable interrupts have distinct emergency stacks.
 10. Execute `int3` and verify return, then start the 100-Hz PIC/PIT bootstrap
     timer. Receive three ticks and verify the IRQ used its assigned stack.
-11. Print `CATHEDRAL_RS_BOOT_OK`, then idle or terminate the smoke-test guest.
+11. Run two cooperative kernel tasks through yield, sleep, wake and return.
+    Repeat with reused stack slots and verify all heap allocations are reclaimed.
+12. Print `CATHEDRAL_RS_BOOT_OK`, then idle or terminate the smoke-test guest.
 
 Only ordinary conventional RAM is eligible. Loader memory, Boot Services memory,
 runtime memory, ACPI and MMIO remain reserved. Runtime-marked, hot-pluggable and
@@ -123,9 +126,14 @@ this is bootstrap address-space ownership, not user isolation or a final W^X
 policy. Old firmware tables/storage are still reserved, not reclaimed. The heap
 uses `linked_list_allocator` behind an interrupt-masked lock. The smoke boot
 exercises allocation/free, page alignment, exhaustion and complete reclamation.
-Fatal and NMI handlers must never allocate. There is no scheduler,
-syscall path or isolated driver. The timer ISR only records a tick, acknowledges
-the PIC and returns; it makes no Rust calls and touches no SIMD/FPU state.
+Fatal and NMI handlers must never allocate. There is no syscall path or isolated
+driver. Timer and yield entries save all GPRs, the return frame, and x87/MMX/SSE
+state before entering an allocation-free scheduler callback. Each suspended
+task's context is copied into stable heap storage; no task retains a frame on
+the shared IRQ stack. The selected qemu64 profile has no AVX state to save.
+Tasks return normally so Rust drops their owned data; the session unregisters
+its callback before reclaiming context metadata. Stack backing remains a fixed
+reserved pool that is reused, not returned to the physical-frame allocator.
 Exception stubs normalize hardware error codes before a terminal diagnostic;
 only the breakpoint self-test resumes. Unexpected external vectors report 255.
 The CPU profile is qemu64, with no claim to optional virtualization exception
@@ -134,7 +142,7 @@ mechanisms, not application APIs.
 
 ## Next bring-up steps
 
-- Add context switching and two scheduled tasks.
+- Exercise timer preemption of non-yielding tasks and register preservation.
 - Discover ACPI/APIC topology and replace the temporary PIC/PIT timer route.
 - Add user-mode address spaces, capability checks and shared-memory IPC.
 

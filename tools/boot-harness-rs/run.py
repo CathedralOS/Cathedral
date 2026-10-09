@@ -22,6 +22,7 @@ MARKERS = (
     "Cathedral Rust lab: heap initialized",
     "Cathedral Rust lab: heap alignment exhaustion and reclamation passed",
     "Cathedral Rust lab: timer ticks=",
+    "Cathedral Rust lab: cooperative tasks yielded slept woke and reclaimed",
     "CATHEDRAL_RS_BOOT_OK",
 )
 

@@ -1,5 +1,4 @@
-// Stable-Rust interrupt entry. Returning handlers touch no SIMD/FPU state and
-// preserve every GPR they use. Hardware's saved RFLAGS are restored by iretq.
+// Stable-Rust interrupt entry. Scheduler paths preserve complete qemu64 state.
 .text
 .macro exception number, error=0
 .p2align 4
@@ -66,7 +65,64 @@ cathedral_timer_entry:
     mov qword ptr [rip + {irq_stack}], rsp
     lock inc qword ptr [rip + {ticks}]
     push rax
+    mov eax, 1
+    jmp cathedral_switch_entry
+
+.global cathedral_yield_entry
+cathedral_yield_entry:
+    push rax
+    xor eax, eax
+
+cathedral_switch_entry:
+    push rbx
+    push rcx
+    push rdx
+    push rbp
+    push rsi
+    push rdi
+    push r8
+    push r9
+    push r10
+    push r11
+    push r12
+    push r13
+    push r14
+    push r15
+    mov edx, eax
+    sub rsp, 512
+    // FXSAVE leaves reserved bytes untouched: initialize them before Rust copies
+    // the frame. GPRs are already saved; these instructions preserve FP state.
+    cld
+    mov rdi, rsp
+    xor eax, eax
+    mov ecx, 64
+    rep stosq
+    fxsave64 [rsp]
+    test edx, edx
+    jz 1f
     mov al, 0x20
     out 0x20, al
+1:
+    mov rcx, rsp
+    sub rsp, 32
+    call {switch}
+    // The callback copied out of the shared IST and selected a permanent context.
+    mov rsp, rax
+    fxrstor64 [rsp]
+    add rsp, 512
+    pop r15
+    pop r14
+    pop r13
+    pop r12
+    pop r11
+    pop r10
+    pop r9
+    pop r8
+    pop rdi
+    pop rsi
+    pop rbp
+    pop rdx
+    pop rcx
+    pop rbx
     pop rax
     iretq

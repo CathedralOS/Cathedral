@@ -42,6 +42,15 @@ pub struct BootLayout {
     pub emergency_tops: [u64; 4],
     pub heap_start: u64,
     pub heap_bytes: usize,
+    pub task_stacks: [StackRange; 2],
+}
+
+/// Geometry only; constructing this record does not grant ownership.
+#[derive(Clone, Copy, Debug)]
+pub struct StackRange {
+    pub bottom: u64,
+    pub top: u64,
+    pub guard: u64,
 }
 
 impl BootLayout {
@@ -135,6 +144,24 @@ pub unsafe fn prepare_memory(
         cursor = *top + PAGE_SIZE;
     }
     let heap_start = HEAP_BASE + PAGE_SIZE;
+    let mut task_stacks = [StackRange {
+        bottom: 0,
+        top: 0,
+        guard: 0,
+    }; 2];
+    for stack in &mut task_stacks {
+        let bottom = cursor + PAGE_SIZE;
+        // SAFETY: Each task has separate fresh backing and absent guard pages.
+        unsafe {
+            map_range(&mut mapper, &mut frames, bottom, STACK_PAGES)?;
+        }
+        *stack = StackRange {
+            bottom,
+            top: bottom + STACK_PAGES * PAGE_SIZE,
+            guard: cursor,
+        };
+        cursor = stack.top + PAGE_SIZE;
+    }
     // SAFETY: Heap range is vacant; backing is uniquely allocated and writable.
     unsafe {
         map_range(
@@ -153,6 +180,7 @@ pub unsafe fn prepare_memory(
         emergency_tops,
         heap_start,
         heap_bytes: HEAP_BYTES,
+        task_stacks,
     })
 }
 

@@ -1,5 +1,5 @@
 //! Single-CPU GDT/TSS/IDT installation and bounded interrupt handlers.
-//! No allocator, locks, Rust calls or floating-point state in the timer ISR.
+//! Task switching saves complete contexts before the allocation-free callback.
 
 use super::{BootLayout, halt_forever, stack_pointer};
 use ::x86_64::{
@@ -59,7 +59,7 @@ extern "win64" fn dispatch_fault(vector: u64, error: u64, instruction: u64, addr
     unsafe { halt_forever() }
 }
 
-global_asm!(include_str!("entry.S"), fault = sym dispatch_fault, ticks = sym TICKS,
+global_asm!(include_str!("entry.S"), fault = sym dispatch_fault, switch = sym super::context::dispatch, ticks = sym TICKS,
     breakpoints = sym BREAKPOINTS, irq_stack = sym IRQ_STACK);
 
 macro_rules! exception_entries {
@@ -105,6 +105,7 @@ exception_entries!(
 unsafe extern "C" {
     fn cathedral_exception_255();
     fn cathedral_timer_entry();
+    fn cathedral_yield_entry();
 }
 
 /// # Safety
@@ -146,6 +147,8 @@ pub unsafe fn install_interrupts(layout: &BootLayout, handler: fn(Fault) -> !) {
                 EXCEPTIONS[vector] as *const ()
             } else if vector == 32 {
                 cathedral_timer_entry as *const ()
+            } else if vector == 48 {
+                cathedral_yield_entry as *const ()
             } else {
                 cathedral_exception_255 as *const ()
             };
@@ -217,6 +220,10 @@ pub unsafe fn wait_for_ticks(count: u64) -> u64 {
 
 pub fn last_irq_stack() -> u64 {
     IRQ_STACK.load(Ordering::Acquire)
+}
+
+pub fn ticks() -> u64 {
+    TICKS.load(Ordering::Acquire)
 }
 
 /// # Safety
