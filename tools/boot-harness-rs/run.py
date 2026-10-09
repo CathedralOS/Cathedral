@@ -23,6 +23,8 @@ MARKERS = (
     "Cathedral Rust lab: heap alignment exhaustion and reclamation passed",
     "Cathedral Rust lab: timer ticks=",
     "Cathedral Rust lab: cooperative tasks yielded slept woke and reclaimed",
+    "Cathedral Rust lab: preempted non-yielding tasks counts=",
+    "Cathedral Rust lab: task heap reclaimed and stack slots reusable",
     "CATHEDRAL_RS_BOOT_OK",
 )
 
@@ -137,7 +139,7 @@ def main():
     # isa-debug-exit returns (guest_value << 1) | 1, so guest 0x10 means 33.
     if result.returncode != 33 or "CATHEDRAL_RS_PANIC" in serial:
         raise RuntimeError(f"Boot failed (QEMU exit {result.returncode}); logs: {output}")
-    print(f"PASS: expected {args.fault} exception" if args.fault else "PASS: owned memory, exception entry/return, and timer IRQs")
+    print(f"PASS: expected {args.fault} exception" if args.fault else "PASS: boot, heap, cooperative tasks, timer preemption and reclamation")
     return 0
 
 

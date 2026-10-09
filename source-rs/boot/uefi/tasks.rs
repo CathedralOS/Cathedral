@@ -39,6 +39,67 @@ pub fn exercise(layout: &arch::BootLayout, console: &mut SerialPort) {
         "Cathedral Rust lab: cooperative tasks yielded slept woke and reclaimed"
     )
     .ok();
+    exercise_preemption(layout, console, baseline);
+}
+
+fn exercise_preemption(layout: &arch::BootLayout, console: &mut SerialPort, baseline: usize) {
+    for progress in &PROGRESS {
+        progress.store(0, Ordering::Relaxed);
+    }
+    // SAFETY: The cooperative session returned both stack slots, removed its
+    // callback and reclaimed contexts. The same disjoint stacks can be reused.
+    let stats = unsafe { tasks::run(layout.task_stacks, [busy_first, busy_second], true) };
+    assert_eq!(stats.exits, 2);
+    assert!(stats.preemptions.iter().all(|count| *count > 0));
+    for (index, stack) in layout.task_stacks.iter().enumerate() {
+        assert!((stack.bottom..stack.top).contains(&STACKS[index].load(Ordering::Acquire)));
+    }
+    // SAFETY: No tasks or scheduler callback remain; allocation usage is stable.
+    assert_eq!(unsafe { HEAP.used() }, baseline);
+    writeln!(
+        console,
+        "Cathedral Rust lab: preempted non-yielding tasks counts={:?}; GPR SSE x87 MXCSR preserved",
+        stats.preemptions
+    )
+    .ok();
+    writeln!(
+        console,
+        "Cathedral Rust lab: task heap reclaimed and stack slots reusable"
+    )
+    .ok();
+}
+
+fn busy_first() {
+    busy_worker(0);
+}
+fn busy_second() {
+    busy_worker(1);
+}
+
+fn busy_worker(index: usize) {
+    STACKS[index].store(arch::stack_pointer(), Ordering::Release);
+    let retained: Vec<u64> = (0..512).map(|value| value ^ index as u64).collect();
+    // Exercise allocator lock masking under actual timer-driven scheduling.
+    let start = arch::ticks();
+    while arch::ticks().wrapping_sub(start) < 3 {
+        let scratch: Vec<u64> = (0..128).map(|value| value + index as u64).collect();
+        assert_eq!(core::hint::black_box(scratch[127]), 127 + index as u64);
+    }
+    // SAFETY: IRQs are enabled in the task's saved flags, with a live timer.
+    // Distinct patterns force stale register/FP state from the other task to fail.
+    let preserved = unsafe {
+        arch::probe_registers(
+            &PROGRESS[index],
+            arch::ticks().wrapping_add(6),
+            if index == 0 { 17 } else { 34 },
+        )
+    };
+    assert!(preserved, "register state changed across timer preemption");
+    assert!(
+        PROGRESS[1 - index].load(Ordering::Acquire) > 0,
+        "peer never ran while this non-yielding task was alive"
+    );
+    assert_eq!(retained[511], 511 ^ index as u64);
 }
 
 fn first() {
@@ -56,10 +117,20 @@ fn worker(index: usize, delay: u64) {
         PROGRESS[index].fetch_add(1, Ordering::Relaxed);
         tasks::yield_now();
     }
+    if index == 1 {
+        // Task zero has just gone to sleep. Do observable work while it waits.
+        for _ in 0..4 {
+            PROGRESS[index].fetch_add(1, Ordering::Relaxed);
+            tasks::yield_now();
+        }
+    }
     let start = arch::ticks();
     tasks::sleep(delay);
     assert!(arch::ticks().wrapping_sub(start) >= delay);
     assert_eq!(values[511], 511 ^ index as u64);
     assert_eq!(core::hint::black_box(canary), [0xa55a_1234_5678_4321; 16]);
     assert!(PROGRESS[1 - index].load(Ordering::Acquire) >= 4);
+    if index == 0 {
+        assert_eq!(PROGRESS[1].load(Ordering::Acquire), 8);
+    }
 }

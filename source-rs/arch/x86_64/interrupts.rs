@@ -24,7 +24,7 @@ use core::{
 
 static INSTALLED: AtomicBool = AtomicBool::new(false);
 static FAULT_HANDLER: AtomicPtr<()> = AtomicPtr::new(core::ptr::null_mut());
-static TICKS: AtomicU64 = AtomicU64::new(0);
+pub(super) static TICKS: AtomicU64 = AtomicU64::new(0);
 static BREAKPOINTS: AtomicU64 = AtomicU64::new(0);
 static IRQ_STACK: AtomicU64 = AtomicU64::new(0);
 static mut TSS: TaskStateSegment = TaskStateSegment::new();
@@ -121,6 +121,7 @@ pub unsafe fn install_interrupts(layout: &BootLayout, handler: fn(Fault) -> !) {
     // SAFETY: Initialization is exclusive, single-CPU and before IRQ delivery.
     // Static table addresses and all four mapped emergency stacks are permanent.
     unsafe {
+        super::context::enable_context_save();
         let tss = addr_of_mut!(TSS);
         let mut value = TaskStateSegment::new();
         value.privilege_stack_table[0] = VirtAddr::new(layout.stack_top);

@@ -14,6 +14,7 @@ Omega's proof or authority guarantees.
 | `boot/uefi/firmware.rs` | UEFI crate adapter and memory-inventory policy |
 | `boot/uefi/memory.rs`, `handoff.rs` | Compose core frame policy with architecture mappings, then transfer boot state |
 | `boot/uefi/interrupts.rs`, `diagnostics.rs` | Interrupt bring-up and serial/fatal reporting |
+| `boot/uefi/heap.rs`, `tasks.rs` | Heap installation and real cooperative/preemptive bring-up workloads |
 | `boot/uefi/smoke.rs` | Test-only fault injection and QEMU result reporting |
 | `contracts/boot.rs` | Firmware-neutral memory handoff; experimental Rust data, not a frozen ABI |
 | `core/extent.rs` | Physical-memory inventory and initial frame accounting, corresponding to the resource work in `source/core/` |
@@ -108,11 +109,19 @@ QEMU q35, one qemu64 CPU, software emulation, 128 MiB by default:
    stack pointer is within its assigned range.
 9. Load Cathedral's GDT/TSS and complete 256-entry IDT. Double fault, NMI,
    machine check and maskable interrupts have distinct emergency stacks.
-10. Execute `int3` and verify return, then start the 100-Hz PIC/PIT bootstrap
-    timer. Receive three ticks and verify the IRQ used its assigned stack.
-11. Run two cooperative kernel tasks through yield, sleep, wake and return.
-    Repeat with reused stack slots and verify all heap allocations are reclaimed.
-12. Print `CATHEDRAL_RS_BOOT_OK`, then idle or terminate the smoke-test guest.
+   Execute `int3` and verify return.
+10. Initialize the reclaiming heap. Smoke builds exercise alignment, exhaustion,
+    `Vec`/`Box` allocations, writes and frees.
+11. Start the 100-Hz PIC/PIT bootstrap timer. Receive three ticks and verify the
+    IRQ used its assigned stack.
+12. Run two cooperative kernel tasks through yield, sleep, wake and return; one
+    makes observable progress while the other sleeps. Repeat with reused stack
+    slots and verify all heap allocations are reclaimed.
+13. Run two non-yielding tasks under timer preemption. Stress heap allocation
+    while switching, then verify distinct GPR/SSE/x87/MXCSR patterns survive.
+    Require each task to observe its peer making progress before it exits, and
+    require actual timer-driven switches away from both tasks.
+14. Print `CATHEDRAL_RS_BOOT_OK`, then idle or terminate the smoke-test guest.
 
 Only ordinary conventional RAM is eligible. Loader memory, Boot Services memory,
 runtime memory, ACPI and MMIO remain reserved. Runtime-marked, hot-pluggable and
@@ -135,14 +144,26 @@ Tasks return normally so Rust drops their owned data; the session unregisters
 its callback before reclaiming context metadata. Stack backing remains a fixed
 reserved pool that is reused, not returned to the physical-frame allocator.
 Exception stubs normalize hardware error codes before a terminal diagnostic;
-only the breakpoint self-test resumes. Unexpected external vectors report 255.
+the breakpoint self-test resumes. Vector 48 handles cooperative suspension on
+the IRQ stack, through the same complete-context path as the timer. Unexpected
+external vectors report 255.
 The CPU profile is qemu64, with no claim to optional virtualization exception
 semantics or physical-hardware coverage. Unsafe wrappers are boot-only lab
 mechanisms, not application APIs.
 
+The runtime is intentionally bounded to two trusted kernel tasks on one CPU.
+They share an address space; guards protect against stack overrun, not against
+malicious tasks. There is no user mode, capability enforcement, SMP, task
+cancellation or dynamic stack/frame reclamation yet. The scheduler is a pure
+round-robin state machine; IRQ masking protects its mutable session, and heap
+locks are never held across a voluntary suspension. Preemption is tested with
+tasks that never yield, including a negative control that fails when their
+timer preemption is disabled.
+
 ## Next bring-up steps
 
-- Exercise timer preemption of non-yielding tasks and register preservation.
+- Add explicit task admission/resource limits and grow the fixed task arena.
+- Add mapping teardown and physical-frame reclamation before dynamic stacks.
 - Discover ACPI/APIC topology and replace the temporary PIC/PIT timer route.
 - Add user-mode address spaces, capability checks and shared-memory IPC.
 

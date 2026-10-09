@@ -7,8 +7,8 @@ use ::x86_64::{
     registers::control::{Cr0, Cr0Flags, Cr4, Cr4Flags},
 };
 use core::{
-    arch::asm,
-    sync::atomic::{AtomicPtr, Ordering},
+    arch::{asm, global_asm},
+    sync::atomic::{AtomicPtr, AtomicU64, Ordering},
 };
 
 #[repr(C)]
@@ -69,11 +69,6 @@ impl Context {
         let mut context = Self::default();
         // SAFETY: Kernel owns FP policy; qemu64 supports FXSAVE/SSE, not AVX.
         unsafe {
-            Cr0::update(|flags| {
-                flags.remove(Cr0Flags::EMULATE_COPROCESSOR | Cr0Flags::TASK_SWITCHED);
-                flags.insert(Cr0Flags::MONITOR_COPROCESSOR);
-            });
-            Cr4::update(|flags| flags.insert(Cr4Flags::OSFXSR | Cr4Flags::OSXMMEXCPT_ENABLE));
             asm!("fxsave64 [{}]", in(reg) context.floating.as_mut_ptr(), options(nostack));
             // Win64 alignment and shadow space, with a poison return address.
             ((stack.top - 40) as *mut u64).write(0);
@@ -88,6 +83,22 @@ impl Context {
             segment: u64::from(SS::get_reg().0),
         };
         context
+    }
+}
+
+/// Enable architectural context saves before publishing the timer/yield gates.
+/// # Safety
+/// Boot CPU owns floating-point policy, with IRQs off and no tasks running.
+pub(super) unsafe fn enable_context_save() {
+    let features = core::arch::x86_64::__cpuid(1).edx;
+    assert_eq!(features & ((1 << 24) | (1 << 25)), (1 << 24) | (1 << 25));
+    // SAFETY: The selected CPU supports FXSAVE/SSE; no lazy FP owner exists.
+    unsafe {
+        Cr0::update(|flags| {
+            flags.remove(Cr0Flags::EMULATE_COPROCESSOR | Cr0Flags::TASK_SWITCHED);
+            flags.insert(Cr0Flags::MONITOR_COPROCESSOR);
+        });
+        Cr4::update(|flags| flags.insert(Cr4Flags::OSFXSR | Cr4Flags::OSXMMEXCPT_ENABLE));
     }
 }
 extern "win64" fn task_entry(entry: usize, argument: usize) -> ! {
@@ -141,4 +152,20 @@ pub unsafe fn suspend() {
     unsafe {
         asm!("int 0x30");
     }
+}
+
+global_asm!(include_str!("register_probe.S"), ticks = sym interrupts::TICKS);
+unsafe extern "win64" {
+    fn cathedral_register_probe(progress: *const AtomicU64, deadline: u64, pattern: u64) -> u64;
+}
+
+/// Busy-loop across timer interrupts, checking GPRs, all sixteen XMM registers,
+/// x87 values and MXCSR. It never yields voluntarily.
+/// # Safety
+/// Kernel task on the qemu64 profile with a live timer and IRQs enabled. Deadline
+/// is less than half the tick range ahead; pattern is a small positive integer.
+pub unsafe fn probe_registers(progress: &AtomicU64, deadline: u64, pattern: u64) -> bool {
+    // SAFETY: Assembly obeys Win64, restores caller FP/nonvolatile registers,
+    // and atomically increments the supplied live counter.
+    unsafe { cathedral_register_probe(progress, deadline, pattern) != 0 }
 }

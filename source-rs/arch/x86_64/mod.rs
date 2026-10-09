@@ -4,7 +4,7 @@ mod context;
 mod interrupts;
 mod memory;
 pub use crate::x86::{disable_interrupts, halt_forever, in8, out8, qemu_exit};
-pub use context::{Context, SwitchCause, set_switch_handler, suspend};
+pub use context::{Context, SwitchCause, probe_registers, set_switch_handler, suspend};
 pub use interrupts::{
     Fault, install_interrupts, last_irq_stack, probe_double_fault, probe_invalid_opcode,
     start_timer, test_breakpoint, ticks, wait_for_ticks,
