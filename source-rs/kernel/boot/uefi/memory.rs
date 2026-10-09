@@ -6,6 +6,7 @@ use cathedral_uart_16550::SerialPort;
 use core::fmt::Write;
 
 pub struct PreparedMemory {
+    pub framebuffer: Option<cathedral_contracts::display::Framebuffer>,
     pub layout: arch::BootLayout,
     pub frames: FrameAllocator,
     pub image: arch::ImageRange,
@@ -27,6 +28,7 @@ pub fn prepare(info: crate::firmware::BootInfo, console: &mut SerialPort) -> Pre
     )
     .ok();
     PreparedMemory {
+        framebuffer: info.framebuffer,
         frames,
         layout,
         image: info.image,

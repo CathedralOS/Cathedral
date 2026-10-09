@@ -7,11 +7,13 @@ use core::fmt::Write;
 use uefi::mem::memory_map::{MemoryAttribute, MemoryDescriptor, MemoryMap, MemoryType};
 
 pub struct BootInfo {
+    pub framebuffer: Option<cathedral_contracts::display::Framebuffer>,
     pub inventory: BootMemory,
     pub image: cathedral_arch::ImageRange,
 }
 
 pub fn exit_boot_services(console: &mut SerialPort) -> BootInfo {
+    let framebuffer = crate::graphics::capture();
     let image = {
         let loaded = uefi::boot::open_protocol_exclusive::<uefi::proto::loaded_image::LoadedImage>(
             uefi::boot::image_handle(),
@@ -38,8 +40,18 @@ pub fn exit_boot_services(console: &mut SerialPort) -> BootInfo {
         let ineligible = MemoryAttribute::RUNTIME
             | MemoryAttribute::HOT_PLUGGABLE
             | MemoryAttribute::SPECIAL_PURPOSE;
-        let usable =
-            descriptor.ty == MemoryType::CONVENTIONAL && !descriptor.att.intersects(ineligible);
+        // Keep the entire descriptor reserved if firmware advertises framebuffer
+        // storage as conventional RAM. Device pages must never enter our allocator.
+        let display_overlap = framebuffer.is_some_and(|fb| {
+            descriptor.phys_start < fb.physical + fb.bytes
+                && fb.physical
+                    < descriptor
+                        .phys_start
+                        .saturating_add(descriptor.page_count.saturating_mul(4096))
+        });
+        let usable = !display_overlap
+            && descriptor.ty == MemoryType::CONVENTIONAL
+            && !descriptor.att.intersects(ineligible);
         // All loader/firmware storage remains reserved, retaining the image,
         // current stack, inherited tables and map buffer through the handoff.
         inventory
@@ -61,5 +73,9 @@ pub fn exit_boot_services(console: &mut SerialPort) -> BootInfo {
         inventory.usable_bytes()
     )
     .ok();
-    BootInfo { inventory, image }
+    BootInfo {
+        inventory,
+        image,
+        framebuffer,
+    }
 }

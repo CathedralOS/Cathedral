@@ -25,6 +25,17 @@ observer must progress before cancellation; an all-blocked session must also wak
 on its deadline. Completed outcomes, stale cancellation tickets and complete memory
 reclamation are checked as well.
 
+The display fixture launches a platform display-service ELF and a separate
+distribution client. It verifies redraw after a provider fault, unrelated task
+progress, exclusive device mappings, NX/guard faults and all failed-admission
+budgets. The default QEMU display device must provide a linear RGB/BGR GOP mode.
+
+Run `python tools/boot-harness-rs/run.py --screenshot` for a bounded ordinary boot
+and an independent pixel-for-pixel scanout check through QMP. It saves
+`build/boot-harness-rs/capture/display.png` and the original PPM, then stops QEMU.
+No GUI or extra Python packages are required. `--window` instead opens the QEMU
+display for an ordinary interactive boot; Ctrl+C stops that run.
+
 See [the Rust lab guide](../../source-rs/README.md) for setup, ordinary boots,
 firmware overrides, logs, checks, current limitations and the bring-up sequence.
 The existing `tools/boot-harness/` continues to build and boot Omega.

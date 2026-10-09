@@ -1,6 +1,7 @@
 //! Sparse, independently owned task tables; no firmware mapping tree is copied.
 //! User code is RX; private data and guarded stack are RW/NX. Kernel mappings
 //! are supervisor-only. Physical aliases are available only in the kernel root.
+mod device;
 
 use super::super::{BootLayout, MemoryError, StackFrames};
 use ::x86_64::{

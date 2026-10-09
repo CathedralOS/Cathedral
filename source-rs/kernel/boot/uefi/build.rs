@@ -6,6 +6,8 @@ fn main() {
         ("CATHEDRAL_HELLO_ELF", "user.elf"),
         ("CATHEDRAL_IPC_ELF", "ipc.elf"),
         ("CATHEDRAL_SUPERVISION_ELF", "supervision.elf"),
+        ("CATHEDRAL_DISPLAY_SERVICE_ELF", "display-service.elf"),
+        ("CATHEDRAL_DISPLAY_LAB_ELF", "display-lab.elf"),
     ] {
         println!("cargo:rerun-if-env-changed={variable}");
         if env::var_os("CARGO_FEATURE_BUNDLED_USER").is_none() {

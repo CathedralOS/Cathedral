@@ -1,6 +1,6 @@
 [alias]
 build-uefi = "build --locked --package cathedral-boot-uefi --target x86_64-unknown-uefi"
-check-uefi = "clippy --locked --workspace --exclude cathedral-hello --exclude cathedral-ipc-lab --exclude cathedral-supervision-lab --exclude cathedral-user-runtime --target x86_64-unknown-uefi -- -D warnings"
+check-uefi = "clippy --locked --workspace --exclude cathedral-hello --exclude cathedral-ipc-lab --exclude cathedral-supervision-lab --exclude cathedral-display-service --exclude cathedral-display-lab --exclude cathedral-user-runtime --target x86_64-unknown-uefi -- -D warnings"
 
 [target.x86_64-unknown-none]
 rustflags = ["-C", "code-model=large", "-C", "relocation-model=static", "-C", "link-arg=-Tplatform/libraries/user-runtime/user.ld", "-C", "link-arg=--build-id=none"]

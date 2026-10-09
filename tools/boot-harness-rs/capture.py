@@ -1,0 +1,94 @@
+"""Capture the real QEMU scanout through QMP and check the distribution pattern."""
+import binascii
+import json
+import socket
+import struct
+import subprocess
+import time
+import zlib
+
+
+def command(stream, name, arguments=None):
+    request = {"execute": name}
+    if arguments is not None:
+        request["arguments"] = arguments
+    stream.write((json.dumps(request) + "\n").encode())
+    stream.flush()
+    while True:
+        line = stream.readline()
+        if not line:
+            raise RuntimeError("QMP disconnected")
+        reply = json.loads(line)
+        if "error" in reply:
+            raise RuntimeError(f"QMP {name}: {reply['error']}")
+        if "return" in reply:
+            return reply["return"]
+
+
+def run(qemu_command, output, timeout, creationflags):
+    serial = output / "serial.log"
+    serial.write_text("", encoding="utf-8")
+    with socket.socket() as listener, (output / "qemu.log").open("w") as log:
+        listener.bind(("127.0.0.1", 0))
+        listener.listen(1)
+        listener.settimeout(timeout)
+        port = listener.getsockname()[1]
+        qemu_command += ["-qmp", f"tcp:127.0.0.1:{port},server=off", "-serial", "file:serial.log"]
+        process = subprocess.Popen(qemu_command, cwd=output, stdout=log, stderr=log,
+                                   creationflags=creationflags)
+        try:
+            with listener.accept()[0] as connection:
+                connection.settimeout(timeout)
+                with connection.makefile("rwb") as stream:
+                    if "QMP" not in json.loads(stream.readline()):
+                        raise RuntimeError("Missing QMP greeting")
+                    command(stream, "qmp_capabilities")
+                    deadline = time.monotonic() + timeout
+                    while True:
+                        text = serial.read_text(encoding="utf-8", errors="replace")
+                        if "CATHEDRAL_RS_PANIC" in text or "CATHEDRAL_RS_FAULT:" in text:
+                            raise RuntimeError(f"Capture boot failed; logs: {output}")
+                        if "CATHEDRAL_RS_BOOT_OK" in text:
+                            break
+                        if process.poll() is not None or time.monotonic() >= deadline:
+                            raise RuntimeError(f"Capture boot did not complete; logs: {output}")
+                        time.sleep(0.05)
+                    if "display service faulted and restarted; pattern redrawn" not in text:
+                        raise RuntimeError("Display recovery milestone missing")
+                    command(stream, "screendump", {"filename": str(output / "display.ppm")})
+                    command(stream, "quit")
+            process.wait(timeout=5)
+            validate(output)
+        finally:
+            if process.poll() is None:
+                process.terminate()
+                process.wait(timeout=5)
+
+
+def validate(output):
+    with (output / "display.ppm").open("rb") as source:
+        if source.readline() != b"P6\n":
+            raise RuntimeError("Unexpected screenshot format")
+        width, height = map(int, source.readline().split())
+        if source.readline() != b"255\n" or (width, height) != (1024, 768):
+            raise RuntimeError("Screenshot requires the lab's 1024x768 RGB mode")
+        pixels = source.read()
+    expected = bytearray(bytes.fromhex("101827") * width * height)
+    for x, y, w, h, color in [(64, 64, 896, 8, "59d9cc"),
+                              (64, 160, 256, 384, "e96f6f"),
+                              (384, 160, 256, 384, "79c99e"),
+                              (704, 160, 256, 384, "779bea")]:
+        for row in range(y, y + h):
+            start = (row * width + x) * 3
+            expected[start:start + w * 3] = bytes.fromhex(color) * w
+    if pixels != expected:
+        raise RuntimeError(f"Scanout differs from the expected pattern: {output / 'display.ppm'}")
+    # Lossless screenshot conversion with only the Python standard library.
+    def chunk(kind, data):
+        return struct.pack(">I", len(data)) + kind + data + struct.pack(">I", binascii.crc32(kind + data))
+    rows = b"".join(b"\0" + pixels[row * width * 3:(row + 1) * width * 3] for row in range(height))
+    png = b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", struct.pack(">2I5B", width, height, 8, 2, 0, 0, 0))
+    png += chunk(b"IDAT", zlib.compress(rows)) + chunk(b"IEND", b"")
+    destination = output / "display.png"
+    destination.write_bytes(png)
+    print(f"PASS: all {width * height} scanout pixels match the redrawn pattern; screenshot: {destination}")

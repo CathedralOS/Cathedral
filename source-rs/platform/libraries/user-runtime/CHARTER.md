@@ -10,6 +10,8 @@ child outcome collection, deadline waits, cancellation and explicit connection
 acceptance. `time` reads the boot-granted monotonic clock; it grants no authority
 and chooses no deadline policy. Restart decisions
 belong to the caller, not this library. The runtime has no heap allocator or unwinding.
+`display::mapping` retrieves only the caller's boot-installed framebuffer geometry;
+pixel access and drawing requests belong to the separate platform display service.
 
 The calling convention and fixed image layout remain experiments, not frozen
 Cathedral interfaces. See the [lab guide](../../../README.md) for build commands,

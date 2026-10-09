@@ -4,4 +4,5 @@
 //! Experimental, firmware-neutral Rust contracts. Not a frozen wire ABI.
 
 pub mod boot;
+pub mod display;
 pub mod user;

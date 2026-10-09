@@ -59,6 +59,7 @@ struct Session {
     endpoint_base: usize,
     frame_baseline: usize,
     clock: crate::deadline::Clock,
+    framebuffer: Option<cathedral_contracts::display::Framebuffer>,
 }
 static ACTIVE: AtomicPtr<Session> = AtomicPtr::new(core::ptr::null_mut());
 
@@ -72,6 +73,8 @@ pub struct Config<'a> {
 }
 
 pub struct Supervision<'a> {
+    /// Exclusive boot-approved display aperture, granted only to the child.
+    pub framebuffer: Option<cathedral_contracts::display::Framebuffer>,
     pub owner: usize,
     pub peer: usize,
     /// Boot selects executable and first entry argument; spawn supplies the second.
@@ -136,6 +139,9 @@ pub unsafe fn run(
 /// Run tasks with explicit boot-issued endpoint, launch and clock grants.
 /// # Safety
 /// Same obligations as run. Endpoint and clock indices refer to this program list.
+/// Any framebuffer must be a live, reserved device aperture exclusively held by
+/// boot: no RAM allocation or other CPU/alias may access its pages. The launch
+/// grant authorizes its executable to read/write the entire aperture for its lifetime.
 pub unsafe fn run_configured(
     frames: &mut FrameAllocator,
     layout: &arch::BootLayout,
@@ -156,6 +162,9 @@ pub unsafe fn run_configured(
         return Err(Error::InvalidCount);
     }
     let supervisor = if let Some(launch) = &config.supervision {
+        if launch.framebuffer.is_some_and(|fb| !fb.valid()) {
+            return Err(Error::InvalidEndpoints);
+        }
         if config.endpoints.len() > crate::ipc::MAX_ENDPOINTS - 2 {
             return Err(Error::InvalidEndpoints);
         }
@@ -190,6 +199,10 @@ pub unsafe fn run_configured(
         endpoint_base: config.endpoints.len(),
         frame_baseline: baseline,
         clock,
+        framebuffer: config
+            .supervision
+            .as_ref()
+            .and_then(|launch| launch.framebuffer),
     };
     session
         .tasks

@@ -116,6 +116,7 @@ fn run(
                 endpoints,
                 clock_readers: clocks,
                 supervision: Some(Supervision {
+                    framebuffer: None,
                     owner: 0,
                     peer: 1,
                     program: program(role),

@@ -80,8 +80,8 @@ def check_rust():
         entry = (tree / user['entry']).resolve()
         package = packages[user['package']]
         entries = [Path(t['src_path']).resolve() for t in package['targets'] if 'bin' in t['kind']]
-        if not entry.is_relative_to(tree / 'distribution') or entry not in entries:
-            raise ValueError('Rust profile user entry must name a distribution executable')
+        if not (entry.is_relative_to(tree / 'distribution') or entry.is_relative_to(tree / 'platform/services')) or entry not in entries:
+            raise ValueError('Rust profile user entry must name a distribution or platform service executable')
         if user['target'] != 'x86_64-unknown-none':
             raise ValueError('Rust user profile requires the implemented x86-64 ELF target')
     return count

@@ -19,6 +19,7 @@ pub const CLOCK_READ: u64 = 12;
 pub const TASK_CANCEL: u64 = 13;
 pub const TASK_WAIT_UNTIL: u64 = 14;
 pub const CLOCK_HANDLE: u64 = 15;
+pub const DISPLAY_INFO: u64 = 16;
 pub const TIMED_OUT: u64 = (-110i64) as u64;
 /// Maximum unambiguous forward distance in the wrapping tick clock.
 pub const MAX_INTERVAL: u64 = (1 << 63) - 1;

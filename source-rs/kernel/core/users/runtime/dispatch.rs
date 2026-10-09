@@ -42,6 +42,7 @@ pub(super) fn syscall(session: &mut Session, slot: usize, now: u64) -> Event {
             }
         }
         abi::IPC_REVOKE => session.ipc.revoke(slot, first).map(|()| 0),
+        abi::DISPLAY_INFO => display_info(session, slot, first, second),
         abi::TASK_LAUNCH..=abi::CLOCK_HANDLE => super::taskcalls::dispatch(
             session,
             slot,
@@ -54,6 +55,31 @@ pub(super) fn syscall(session: &mut Session, slot: usize, now: u64) -> Event {
     complete(session, slot, result);
     wake_receivers(session);
     event
+}
+
+fn display_info(session: &Session, slot: usize, address: u64, length: u64) -> Result<u64, u64> {
+    if session
+        .supervisor
+        .as_ref()
+        .is_none_or(|model| model.child != slot)
+    {
+        return Err(abi::DENIED);
+    }
+    let fb = session.framebuffer.ok_or(abi::DENIED)?;
+    if length != cathedral_contracts::display::INFO_BYTES as u64 {
+        return Err(abi::INVALID_ARGUMENT);
+    }
+    // SAFETY: Kernel root and IRQs off; only owned writable RAM is a copy target.
+    if !unsafe {
+        session.tasks[slot]
+            .space
+            .as_ref()
+            .unwrap()
+            .copy_to_user(address, &fb.user_info())
+    } {
+        return Err(abi::BAD_ADDRESS);
+    }
+    Ok(0)
 }
 
 pub(super) fn complete(session: &mut Session, slot: usize, result: Result<u64, u64>) {

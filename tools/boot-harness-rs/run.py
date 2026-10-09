@@ -8,6 +8,7 @@ from pathlib import Path
 import shutil
 import subprocess
 import sys
+import capture
 
 REPO = Path(__file__).resolve().parents[2]
 WORKSPACE = REPO / "source-rs"
@@ -49,6 +50,9 @@ MARKERS = (
     "Cathedral Rust lab: deadlines recovered 4 silent and 4 spinning services; independent observer progressed; all memory reclaimed",
     "Cathedral Rust lab: clock grants copy checks and deadline completion/cancellation precedence passed",
     "Cathedral Rust lab: deadline woke an idle session with every user task blocked; all memory reclaimed",
+    "Cathedral Rust lab: GOP ",
+    "Cathedral Rust lab: display service faulted and restarted; pattern redrawn; observer progressed; ungranted mapping fault contained; all task memory reclaimed",
+    "Cathedral Rust lab: framebuffer NX guards and checked copies passed; ",
     "CATHEDRAL_RS_BOOT_OK",
 )
 
@@ -99,8 +103,10 @@ def main():
     mode = parser.add_mutually_exclusive_group()
     mode.add_argument("--build-only", action="store_true")
     mode.add_argument("--smoke", action="store_true")
+    mode.add_argument("--screenshot", action="store_true", help="Boot normally, verify scanout through QMP, save display.png and stop")
     parser.add_argument("--fault", choices=("guard", "invalid-opcode", "double-fault"), help="Expected-fault smoke test (requires --smoke)")
     parser.add_argument("--release", action="store_true")
+    parser.add_argument("--window", action="store_true", help="Show QEMU's display during an ordinary interactive boot")
     parser.add_argument("--timeout", type=float, default=30, help="Smoke boot timeout in seconds (default: 30)")
     parser.add_argument("--memory", type=int, default=128, help="Guest RAM in MiB (default: 128)")
     args = parser.parse_args()
@@ -108,6 +114,8 @@ def main():
         parser.error("timeout must be positive and memory must be at least 64 MiB")
     if args.fault and not args.smoke:
         parser.error("--fault requires --smoke")
+    if args.window and (args.smoke or args.screenshot or args.build_only):
+        parser.error("--window requires an ordinary interactive boot")
 
     environment = os.environ.copy()
     profile = "release" if args.release else "debug"
@@ -130,7 +138,7 @@ def main():
     cargo.extend(["--features", ','.join(features)])
     subprocess.run(cargo, cwd=WORKSPACE, check=True, env=environment)
     # Keep smoke images and their terminating feature separate from normal boots.
-    output = BUILD / (f"fault-{args.fault}" if args.fault else "smoke" if args.smoke else "interactive")
+    output = BUILD / (f"fault-{args.fault}" if args.fault else "smoke" if args.smoke else "capture" if args.screenshot else "interactive")
     esp = output / "esp/EFI/BOOT"
     esp.mkdir(parents=True, exist_ok=True)
     shutil.copyfile(BUILD / "cargo" / TARGET / profile / f"{BOOT_PACKAGE}.efi", esp / "BOOTX64.EFI")
@@ -142,9 +150,14 @@ def main():
     command = [qemu, "-machine", "q35", "-cpu", "qemu64", "-accel", "tcg", "-smp", "1", "-m", str(args.memory)]
     command += firmware_args(qemu, output)
     command += ["-drive", "format=raw,file=fat:rw:esp", "-nic", "none",
-                "-display", "none", "-monitor", "none", "-no-reboot"]
-    # No visible helper window on Windows; interactive output stays in this terminal.
+                "-monitor", "none", "-no-reboot"]
+    if not args.window:
+        command += ["-display", "none"]
+    # No console helper on Windows; --window explicitly opts into QEMU's GUI.
     creationflags = subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0
+    if args.screenshot:
+        capture.run(command, output, args.timeout, creationflags)
+        return 0
     if not args.smoke:
         command += ["-serial", "stdio"]
         print("Booting; Ctrl+C stops QEMU.", flush=True)
@@ -178,7 +191,7 @@ def main():
     # isa-debug-exit returns (guest_value << 1) | 1, so guest 0x10 means 33.
     if result.returncode != 33 or "CATHEDRAL_RS_PANIC" in serial:
         raise RuntimeError(f"Boot failed (QEMU exit {result.returncode}); logs: {output}")
-    print(f"PASS: expected {args.fault} exception" if args.fault else "PASS: boot, preemption, fault containment, static ELF programs, capability IPC, userspace supervision, deadline recovery and memory reclamation")
+    print(f"PASS: expected {args.fault} exception" if args.fault else "PASS: boot, preemption, fault containment, static ELF programs, capability IPC, userspace supervision, deadline/display recovery and memory reclamation")
     return 0
 
 

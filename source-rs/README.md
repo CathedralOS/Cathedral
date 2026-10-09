@@ -12,6 +12,7 @@ Omega's proof or authority guarantees.
 | --- | --- |
 | `kernel/boot/uefi/main.rs` | Visible orchestration of firmware entry and post-handoff kernel startup |
 | `kernel/boot/uefi/firmware.rs` | UEFI crate adapter and memory-inventory policy |
+| `kernel/boot/uefi/graphics.rs`, `display.rs`, `display/` | GOP snapshot and userspace display/recovery verification |
 | `kernel/boot/uefi/memory.rs`, `handoff.rs` | Compose core frame policy with architecture mappings, then transfer boot state |
 | `kernel/boot/uefi/interrupts.rs`, `diagnostics.rs` | Interrupt bring-up and serial/fatal reporting |
 | `kernel/boot/uefi/heap.rs`, `tasks.rs`, `task_lifecycle.rs` | Heap installation, cooperative/preemptive workloads and dynamic lifecycle checks |
@@ -26,12 +27,15 @@ Omega's proof or authority guarantees.
 | `kernel/boot/uefi/smoke.rs` | Test-only fault injection and QEMU result reporting |
 | `contracts/boot.rs` | Firmware-neutral memory handoff; experimental Rust data, not a frozen ABI |
 | `contracts/user.rs` | Shared experimental entry/syscall constants for kernel and user runtime |
+| `contracts/display.rs` | Bounded framebuffer geometry and experimental drawing messages |
 | `kernel/core/extent.rs` | Bootstrap frame accounting and reclaiming bitmap over usable RAM, corresponding to the resource work in `source/kernel/core/` |
 | `kernel/core/heap.rs`, `scheduler.rs`, `tasks.rs`, `tasks/` | IRQ-safe heap, pure scheduling policy, task admission and context/stack lifetime management |
 | `kernel/core/users.rs`, `users/` | Experimental user-task lifetime, checked diagnostic syscalls and outcomes |
 | `kernel/core/users/elf.rs` | Bounded, host-testable ELF64 preflight before physical admission |
 | `platform/drivers/uart_16550/` | Polling serial diagnostics, corresponding to `source/platform/drivers/uart_16550/` |
 | `platform/libraries/user-runtime/` | Entry stub, syscall wrappers and linker script; imports only shared contracts |
+| `platform/services/display/` | Separately compiled userspace provider for linear framebuffer drawing |
+| `distribution/programs/display/` | Test-pattern layout, display client and restart policy |
 | `distribution/programs/supervision/` | Userspace restart policy, persistent client and crashing echo service |
 | `distribution/programs/ipc/` | Client, echo service and hostile IPC fixture roles in a standalone ELF |
 | `distribution/programs/hello/` | Independently compiled `no_std` program exercising initialized data, BSS, yields and writes |
@@ -46,7 +50,7 @@ Each crate uses `no_std`. Core policies are host-testable and have no firmware
 dependency. Core's hardware-facing modules explicitly opt into unsafe code and
 depend on `kernel/arch/`; drivers never depend on core internals. Boot assembles these
 subsystems and the firmware adapter.
-The bootstrap UART currently runs privileged; user-mode drivers come later. Boot
+The bootstrap UART currently runs privileged; the display provider runs in userspace. Boot
 supplies its port operations; the platform driver imports no kernel package.
 `python tools/source-layout/check.py` checks these boundaries from the repository
 root. The single `distribution/` is replaceable by forks; platform and kernel do
@@ -55,7 +59,7 @@ The Rust-specific `kernel/arch/` layer groups hardware mechanisms that Omega cur
 spreads across core providers, instruction contracts and libraries. Only x86-64
 boots today; shared x86 instructions do not imply a working 32-bit kernel.
 UEFI ABI definitions and Boot Services come from the upstream `uefi` crate.
-`foundation/`, `platform/services/` and distribution desktop packages appear when their first code lands,
+`foundation/` and distribution desktop packages appear when their first code lands,
 following the same rule as the Omega tree.
 
 ## Run
@@ -70,10 +74,17 @@ From the repository root:
 ```text
 python tools/boot-harness-rs/run.py --build-only
 python tools/boot-harness-rs/run.py --smoke
+python tools/boot-harness-rs/run.py --screenshot
+python tools/boot-harness-rs/run.py --window
 python tools/boot-harness-rs/run.py
 ```
 
 The final command leaves the CPU idling with timer wakeups; Ctrl+C stops QEMU.
+`--window` shows the display during an ordinary boot. `--screenshot` runs a
+bounded ordinary boot, captures QEMU's actual scanout through local QMP, checks
+every pixel against the distribution pattern, writes `capture/display.png`
+under the build directory, and stops QEMU. This uses only Python's standard
+library. The capture check requires the lab's 1024x768 mode.
 `--release` selects an optimized build. `--memory 256` selects guest RAM in MiB.
 Smoke mode has a 30-second boot deadline, requires ordered serial milestones,
 and checks the QEMU debug-exit status. A panic, missing milestone, reset or hang
@@ -113,7 +124,7 @@ cargo fmt --all -- --check
 cargo check-uefi
 cargo build-uefi
 cargo build --locked --package cathedral-hello --target x86_64-unknown-none
-cargo clippy --locked --package cathedral-hello --package cathedral-ipc-lab --package cathedral-supervision-lab --target x86_64-unknown-none -- -D warnings
+cargo clippy --locked --package cathedral-hello --package cathedral-ipc-lab --package cathedral-supervision-lab --package cathedral-display-service --package cathedral-display-lab --target x86_64-unknown-none -- -D warnings
 ```
 
 The default Cargo members are the host-testable contracts and core. Kernel crates
@@ -201,6 +212,10 @@ QEMU q35, one qemu64 CPU, software emulation, 128 MiB by default:
     verify unrelated progress, stale grants and complete memory reclamation.
 29. Check completed-outcome precedence, clock copyout and deadline wakeups when
     every userspace task is blocked.
+30. Grant a reserved GOP framebuffer to an isolated display provider. Draw a
+    distribution-owned pattern, fault/restart the provider, reconnect and redraw
+    while an independent observer progresses. Reject ungranted access and check
+    NX, guard pages, copy boundaries and every admission allocation failure.
 28. Print `CATHEDRAL_RS_BOOT_OK`, then idle or terminate the smoke-test guest.
 
 Only ordinary conventional RAM is eligible. Loader memory, Boot Services memory,
@@ -235,7 +250,7 @@ The CPU profile is qemu64, with no claim to optional virtualization exception
 semantics or physical-hardware coverage. Unsafe wrappers are boot-only lab
 mechanisms, not application APIs.
 
-The runtime supports a configurable limit of 1Ã¢â‚¬â€œ64 trusted kernel tasks on one
+The runtime supports a configurable limit of 1ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“64 trusted kernel tasks on one
 CPU (default 8), plus an optional frame budget for stacks and their tables.
 `tasks::spawn(fn())` returns a `TaskId` or an admission error. IDs contain slot
 generations and are scoped to a session; reused slots do not revive old IDs.
@@ -288,6 +303,7 @@ initial FP state is clean and I/O privilege is zero.
 | 13: task cancel | Child ticket | 0 after reclamation; leaves the outcome collectible |
 | 14: task wait until | Child ticket, 40-byte destination, absolute deadline | Wait result, or `TIMED_OUT` (-110); requires a clock grant |
 | 15: clock grant | None | Caller's boot-issued clock ticket, or `DENIED` |
+| 16: display info | Destination, exactly 48 bytes | Boot-installed mapping geometry, or `DENIED` when no display grant |
 
 Writes accept at most 256 bytes within one known user page. The kernel validates
 the entire range and copies through its physical backing before calling the
@@ -481,6 +497,55 @@ clock-authorized observer reports progress before cancellation, while the client
 checks closure and reconnects. Further probes cover unauthorized and stale
 cancellation, completed outcomes, bad clock destinations and an entirely blocked
 session. Boot verifies heap and physical-frame baselines after each session.
+
+## Userspace display experiment
+
+The UEFI crate supplies GOP discovery, mode selection and the framebuffer snapshot
+before `ExitBootServices`. Boot prefers 1024x768 RGB/BGR, retaining only physical
+geometry after dropping all protocol references. The supported aperture must be
+page-aligned, page-sized, at most 16 MiB, and large enough for the validated stride
+and height. Bitmask and BLT-only modes are unsupported. Missing/unsupported GOP
+skips the display fixture during ordinary boot and fails the composed smoke test.
+Any memory descriptor overlapping the aperture is conservatively excluded from
+RAM allocation, even if firmware labels it conventional memory.
+
+Boot may bind that aperture to the one supervised child's launch grant. No syscall
+accepts an arbitrary physical address, and initial tasks receive no display grant.
+The x86-64 backend maps it at `0x0000_0080_0100_0000`, writable, user-accessible and
+non-executable, with unmapped adjacent pages. It requires PAT support and an
+uncacheable entry at index 3, then uses PCD/PWT leaves. No write-combining setup or
+hardware GPU driver is implemented; inherited firmware aliases remain unused.
+The caller's unsafe custody obligations require the aperture to stay exclusive.
+
+Device pages are borrowed, never zeroed or freed by the RAM allocator. Only page
+tables enter the task's ownership ledger. Normal syscall buffer checks exclude
+the device mapping. `display::mapping` returns six little-endian u64 words:
+user address, bytes, width, height, stride, pixel format (0 RGB, 1 BGR). It reports
+an already-installed mapping; it does not create, transfer or revoke one. Task
+teardown retires the root and its translations before a replacement is admitted.
+Framebuffer pixels persist after teardown until the next owner redraws them.
+
+`platform/services/display` is a standalone ELF with no kernel imports. It owns
+volatile pixel access and accepts a 48-byte experimental request: six little-endian
+u64 words `(operation, x, y, width, height, color)`. Operations are info (0), clear
+(1) and rectangle (2); colors are `0xRRGGBB`. Unused request fields must be zero.
+Rectangles must be nonempty and wholly inside the visible area; malformed lengths,
+overflows and unknown operations are rejected before drawing. Replies are six
+words: status, then width/height/stride/format/zero for info, or five zeros for other
+operations. The endpoint grants whole-screen drawing power to the trusted lab
+client. This is not an ordinary application's future surface grant, a compositor,
+a trusted prompt implementation, a capture protocol or a frozen Cathedral ABI.
+
+`distribution/programs/display` chooses the colors/layout and restart policy.
+Its supervisor launches the provider; a persistent client draws through IPC.
+Boot-controlled fault injection crashes the first provider on request nine;
+the client observes closure and reconnects to a fresh instance. The supervisor
+cancels the replacement after a successful redraw. An independent clock-granted
+task progresses across each drawing interval. Additional probes exercise missing
+authority, NX, both guard pages, checked metadata copyout, rejection of device
+memory as a syscall buffer, and two retries at every failed frame-admission budget.
+All sessions return their heap and RAM-frame counts to baseline. The retained
+scanout is independently checked by the harness's `--screenshot` mode.
 
 ## Next bring-up steps
 

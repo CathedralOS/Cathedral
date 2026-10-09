@@ -8,3 +8,7 @@ See [the source layout](../../wiki/architecture/repository_layout.md).
 platform runtime and is compiled separately for `x86_64-unknown-none`. The host
 harness selects it from `profile.json` and supplies its ELF bytes to boot;
 kernel and platform have no Cargo dependency on this distribution package.
+
+`programs/display` owns the lab's test-pattern layout and provider restart policy.
+The profile also selects the independent `platform/services/display` executable;
+composition chooses that provider without moving its implementation into the distro.
