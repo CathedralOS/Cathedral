@@ -15,6 +15,13 @@ pub fn ready(console: &mut SerialPort) {
     writeln!(console, "CATHEDRAL_RS_BOOT_OK").ok();
 }
 
+pub fn user_output(bytes: &[u8]) -> bool {
+    // SAFETY: Sole CPU in IRQ-masked dispatch. Boot's UART owner is suspended;
+    // this bounded sink neither allocates nor retains the supplied buffer.
+    let mut console = unsafe { SerialPort::com1(arch::in8, arch::out8) };
+    console.write_str("Cathedral Rust lab: ").is_ok() && console.write_bytes(bytes).is_ok()
+}
+
 pub fn fault(fault: arch::Fault) -> ! {
     // SAFETY: Terminal trap on the sole CPU; the interrupted owner never resumes.
     let mut console = unsafe { SerialPort::com1(arch::in8, arch::out8) };

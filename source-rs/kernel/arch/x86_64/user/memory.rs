@@ -15,9 +15,26 @@ use ::x86_64::{
 const PAGE: u64 = 4096;
 pub const USER_CODE: u64 = 0x0000_0080_0000_0000;
 pub const USER_DATA: u64 = USER_CODE + PAGE;
-pub const USER_STACK: u64 = USER_CODE + 3 * PAGE;
+pub const USER_IMAGE_END: u64 = USER_CODE + 1024 * 1024;
+pub const USER_STACK: u64 = USER_CODE + 2 * 1024 * 1024;
 pub const USER_STACK_TOP: u64 = USER_STACK + 4 * PAGE;
+pub const MAX_IMAGE_PAGES: usize = 64;
 const MAX_FRAMES: usize = 128;
+
+#[derive(Clone, Copy, Debug)]
+pub struct UserSegment<'a> {
+    pub address: u64,
+    pub bytes: &'a [u8],
+    pub memory_size: u64,
+    pub writable: bool,
+    pub executable: bool,
+}
+
+#[derive(Clone, Copy, Default)]
+struct Backing {
+    address: u64,
+    physical: u64,
+}
 
 #[derive(Clone, Copy)]
 pub struct ImageRange {
@@ -29,8 +46,8 @@ pub struct UserSpace {
     root: u64,
     owned: [u64; MAX_FRAMES],
     len: usize,
-    // Code, data, then four stack pages, all private to this task.
-    backing: [u64; 6],
+    backing: [Backing; MAX_IMAGE_PAGES + 4],
+    pages: usize,
 }
 impl UserSpace {
     pub fn root(&self) -> u64 {
@@ -50,11 +67,40 @@ impl UserSpace {
         code: &[u8],
         frames: &mut impl StackFrames,
     ) -> Result<Self, MemoryError> {
-        if code.is_empty()
-            || code.len() > PAGE as usize
-            || image.bytes == 0
-            || !image.base.is_multiple_of(PAGE)
-        {
+        if code.is_empty() || code.len() > PAGE as usize {
+            return Err(MemoryError::InvalidFrame);
+        }
+        let segments = [
+            UserSegment {
+                address: USER_CODE,
+                bytes: code,
+                memory_size: PAGE,
+                writable: false,
+                executable: true,
+            },
+            UserSegment {
+                address: USER_DATA,
+                bytes: &[],
+                memory_size: PAGE,
+                writable: true,
+                executable: false,
+            },
+        ];
+        // SAFETY: Same caller obligations; raw probes use two fixed disjoint pages.
+        unsafe { Self::from_segments(layout, image, &segments, frames) }
+    }
+
+    /// Build a bounded image from page-disjoint, immutable segment descriptions.
+    /// # Safety
+    /// Same machine/ownership obligations as create. Segment bytes remain live
+    /// for this call; kernel image and layout retain their boot-time mappings.
+    pub unsafe fn from_segments(
+        layout: &BootLayout,
+        image: ImageRange,
+        segments: &[UserSegment<'_>],
+        frames: &mut impl StackFrames,
+    ) -> Result<Self, MemoryError> {
+        if image.bytes == 0 || !image.base.is_multiple_of(PAGE) || !valid_segments(segments) {
             return Err(MemoryError::InvalidFrame);
         }
         let end = image
@@ -71,10 +117,11 @@ impl UserSpace {
             root: 0,
             owned: [0; MAX_FRAMES],
             len: 0,
-            backing: [0; 6],
+            backing: [Backing::default(); MAX_IMAGE_PAGES + 4],
+            pages: 0,
         };
         // SAFETY: New frames are exclusively owned and identity-mapped in kernel CR3.
-        let result = unsafe { space.build(layout, image.base, end, code, frames) };
+        let result = unsafe { space.build(layout, image.base, end, segments, frames) };
         if let Err(error) = result {
             // SAFETY: This root was never activated, including partially built tables.
             unsafe {
@@ -90,7 +137,7 @@ impl UserSpace {
         layout: &BootLayout,
         start: u64,
         end: u64,
-        code: &[u8],
+        segments: &[UserSegment<'_>],
         frames: &mut impl StackFrames,
     ) -> Result<(), MemoryError> {
         let mut source = Tracked {
@@ -141,29 +188,39 @@ impl UserSpace {
                 }
             }
         }
-        for (index, address) in [
-            USER_CODE,
-            USER_DATA,
-            USER_STACK,
-            USER_STACK + PAGE,
-            USER_STACK + 2 * PAGE,
-            USER_STACK + 3 * PAGE,
-        ]
-        .into_iter()
-        .enumerate()
-        {
-            let frame = source.allocate_frame().ok_or(MemoryError::OutOfFrames)?;
-            let physical = frame.start_address().as_u64();
-            self.backing[index] = physical;
+        let stack = UserSegment {
+            address: USER_STACK,
+            bytes: &[],
+            memory_size: 4 * PAGE,
+            writable: true,
+            executable: false,
+        };
+        for segment in segments.iter().chain(core::iter::once(&stack)) {
             let mut flags = Flags::PRESENT | Flags::USER_ACCESSIBLE;
-            if index != 0 {
-                flags |= Flags::WRITABLE | Flags::NO_EXECUTE;
+            if segment.writable {
+                flags |= Flags::WRITABLE;
             }
-            // SAFETY: Fresh backing and vacant address in the dedicated user branch.
-            unsafe {
-                map(&mut target, address, physical, flags, &mut source)?;
-                if index == 0 {
-                    core::ptr::copy_nonoverlapping(code.as_ptr(), physical as *mut u8, code.len());
+            if !segment.executable {
+                flags |= Flags::NO_EXECUTE;
+            }
+            for offset in (0..segment.memory_size).step_by(PAGE as usize) {
+                let frame = source.allocate_frame().ok_or(MemoryError::OutOfFrames)?;
+                let physical = frame.start_address().as_u64();
+                let address = segment.address + offset;
+                self.backing[self.pages] = Backing { address, physical };
+                self.pages += 1;
+                // SAFETY: Fresh zeroed backing, disjoint validated virtual page.
+                // Only file bytes are copied; BSS and trailing page bytes stay zero.
+                unsafe {
+                    map(&mut target, address, physical, flags, &mut source)?;
+                    if (offset as usize) < segment.bytes.len() {
+                        let bytes = &segment.bytes[offset as usize..];
+                        core::ptr::copy_nonoverlapping(
+                            bytes.as_ptr(),
+                            physical as *mut u8,
+                            bytes.len().min(PAGE as usize),
+                        );
+                    }
                 }
             }
         }
@@ -178,22 +235,16 @@ impl UserSpace {
         let Some(end) = address.checked_add(output.len() as u64) else {
             return false;
         };
-        for (index, base) in [
-            USER_CODE,
-            USER_DATA,
-            USER_STACK,
-            USER_STACK + PAGE,
-            USER_STACK + 2 * PAGE,
-            USER_STACK + 3 * PAGE,
-        ]
-        .into_iter()
-        .enumerate()
+        for &Backing {
+            address: base,
+            physical,
+        } in &self.backing[..self.pages]
         {
             if address >= base && address < base + PAGE && end <= base + PAGE {
                 // SAFETY: Checked full range is inside one live, owned user frame.
                 unsafe {
                     core::ptr::copy_nonoverlapping(
-                        (self.backing[index] + address - base) as *const u8,
+                        (physical + address - base) as *const u8,
                         output.as_mut_ptr(),
                         output.len(),
                     );
@@ -216,6 +267,45 @@ impl UserSpace {
             }
         }
     }
+}
+
+/// Geometry/permission check, independent of live paging and physical allocation.
+pub fn valid_segments(segments: &[UserSegment<'_>]) -> bool {
+    if segments.is_empty() || segments.len() > 8 {
+        return false;
+    }
+    let mut pages = 0;
+    for (index, segment) in segments.iter().enumerate() {
+        if segment.memory_size == 0
+            || segment.memory_size > USER_IMAGE_END - USER_CODE
+            || segment.bytes.len() as u64 > segment.memory_size
+            || segment.address < USER_CODE
+            || !segment.address.is_multiple_of(PAGE)
+            || (segment.writable && segment.executable)
+        {
+            return false;
+        }
+        let Some(end) = segment
+            .address
+            .checked_add(segment.memory_size.div_ceil(PAGE) * PAGE)
+        else {
+            return false;
+        };
+        if end > USER_IMAGE_END {
+            return false;
+        }
+        pages += segment.memory_size.div_ceil(PAGE) as usize;
+        if pages > MAX_IMAGE_PAGES {
+            return false;
+        }
+        for previous in &segments[..index] {
+            let previous_end = previous.address + previous.memory_size.div_ceil(PAGE) * PAGE;
+            if segment.address < previous_end && previous.address < end {
+                return false;
+            }
+        }
+    }
+    true
 }
 
 struct Tracked<'a, F> {

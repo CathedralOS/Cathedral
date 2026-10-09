@@ -3,5 +3,10 @@
   "stage": "early-boot",
   "boot_entry": "kernel/boot/uefi/main.rs",
   "boot_package": "cathedral-boot-uefi",
-  "target": "x86_64-unknown-uefi"
+  "target": "x86_64-unknown-uefi",
+  "user_program": {
+    "package": "cathedral-hello",
+    "entry": "distribution/programs/hello/main.rs",
+    "target": "x86_64-unknown-none"
+  }
 }

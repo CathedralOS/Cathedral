@@ -16,12 +16,17 @@ Omega's proof or authority guarantees.
 | `kernel/boot/uefi/interrupts.rs`, `diagnostics.rs` | Interrupt bring-up and serial/fatal reporting |
 | `kernel/boot/uefi/heap.rs`, `tasks.rs`, `task_lifecycle.rs` | Heap installation, cooperative/preemptive workloads and dynamic lifecycle checks |
 | `kernel/boot/uefi/users.rs` | Ring-3 syscall, isolation, fault containment and admission rollback experiments |
+| `kernel/boot/uefi/applications.rs` | Run the bundled executable twice per session and check loading, private state, exit statuses and cleanup |
 | `kernel/boot/uefi/smoke.rs` | Test-only fault injection and QEMU result reporting |
 | `contracts/boot.rs` | Firmware-neutral memory handoff; experimental Rust data, not a frozen ABI |
+| `contracts/user.rs` | Shared experimental entry/syscall constants for kernel and user runtime |
 | `kernel/core/extent.rs` | Bootstrap frame accounting and reclaiming bitmap over usable RAM, corresponding to the resource work in `source/kernel/core/` |
 | `kernel/core/heap.rs`, `scheduler.rs`, `tasks.rs`, `tasks/` | IRQ-safe heap, pure scheduling policy, task admission and context/stack lifetime management |
 | `kernel/core/users.rs`, `users/` | Experimental user-task lifetime, checked diagnostic syscalls and outcomes |
+| `kernel/core/users/elf.rs` | Bounded, host-testable ELF64 preflight before physical admission |
 | `platform/drivers/uart_16550/` | Polling serial diagnostics, corresponding to `source/platform/drivers/uart_16550/` |
+| `platform/libraries/user-runtime/` | Entry stub, syscall wrappers and linker script; imports only shared contracts |
+| `distribution/programs/hello/` | Independently compiled `no_std` program exercising initialized data, BSS, yields and writes |
 | `kernel/arch/lib.rs` | Compile-time CPU backend selection and the boot-facing machine interface |
 | `kernel/arch/x86/` | Shared instructions and the selected PC platform's temporary PIC/PIT route |
 | `kernel/arch/x86_64/` | Paging, dynamic guarded stack mapping/teardown, CPU contexts, GDT/TSS/IDT and interrupt stubs, using the `x86_64` crate |
@@ -48,7 +53,8 @@ following the same rule as the Omega tree.
 ## Run
 
 Prerequisites: Rustup, Python 3.10+, QEMU and OVMF. The workspace pins Rust 1.94.0
-and the UEFI target; Rustup installs them when Cargo is run inside `source-rs/`.
+and both `x86_64-unknown-uefi` and `x86_64-unknown-none`; Rustup installs them
+when Cargo is run inside `source-rs/`.
 Dependencies are locked in `Cargo.lock`. No nightly language features are used.
 
 From the repository root:
@@ -64,6 +70,12 @@ The final command leaves the CPU idling with timer wakeups; Ctrl+C stops QEMU.
 Smoke mode has a 30-second boot deadline, requires ordered serial milestones,
 and checks the QEMU debug-exit status. A panic, missing milestone, reset or hang
 fails the run. Its debug-exit feature is not enabled for ordinary boots.
+The harness reads the one distribution profile, builds its selected user program
+as an ELF, then supplies that artifact to the UEFI build with `bundled-user`.
+Both builds use the selected debug/release profile. There is no filesystem read
+or executable download in the guest, and no Cargo dependency from boot to the
+distribution. The boot build tracks the selected artifact's path and contents
+through Cargo's build-script inputs.
 
 Exercise actual exception delivery separately:
 
@@ -92,11 +104,17 @@ cargo test --locked
 cargo fmt --all -- --check
 cargo check-uefi
 cargo build-uefi
+cargo build --locked --package cathedral-hello --target x86_64-unknown-none
+cargo clippy --locked --package cathedral-hello --target x86_64-unknown-none -- -D warnings
 ```
 
-The default Cargo members are the host-testable contracts and core. The whole
-workspace requires the explicit `x86_64-unknown-uefi` target. Run Cargo inside
-this directory so its toolchain and aliases apply.
+The default Cargo members are the host-testable contracts and core. Kernel crates
+use the UEFI target; the user program/runtime use the freestanding ELF target,
+so the whole workspace cannot be built for one target. `cargo build-uefi` builds
+the kernel/probe lab alone; use the Python harness for the composed distribution
+image. Run Cargo inside this directory so its toolchain, aliases and relative
+linker-script path apply. The bare-metal target uses the SysV calling convention;
+the runtime's entry stub establishes its call alignment before invoking Rust.
 
 ## Current milestone
 
@@ -151,7 +169,14 @@ QEMU q35, one qemu64 CPU, software emulation, 128 MiB by default:
 19. Fail at every physical-frame admission boundary across two user tasks,
     including a fully admitted first task and partial second root. Require heap
     and frame baselines after every failure and completed session.
-20. Print `CATHEDRAL_RS_BOOT_OK`, then idle or terminate the smoke-test guest.
+20. Validate the separately built ELF and map its RX text, R/NX read-only data
+    and RW/NX data/BSS into two private roots. Execute through the shared user
+    runtime with distinct initial arguments and collect both exit statuses.
+21. Repeat with fresh instances to check zeroed BSS, initialized data and private
+    state across yields. Exercise writes spanning page and syscall-size boundaries.
+22. Reject a malformed ELF after a valid peer was admitted, then fail at every
+    frame-admission boundary for the ELF pair; require complete memory reclamation.
+23. Print `CATHEDRAL_RS_BOOT_OK`, then idle or terminate the smoke-test guest.
 
 Only ordinary conventional RAM is eligible. Loader memory, Boot Services memory,
 runtime memory, ACPI and MMIO remain reserved. Runtime-marked, hot-pluggable and
@@ -204,8 +229,8 @@ timer preemption is disabled.
 
 ## User-mode experiment
 
-User sessions currently run 1-8 embedded, position-independent payloads with a
-maximum of one code page each. Each task has its own root and physical backing
+User sessions run 1-8 tasks from either the one-page assembly probes or restricted
+static ELF images. Each task has its own root and physical backing
 at the same user virtual addresses, with no inherited firmware identity map.
 Only the live kernel image, boot/emergency stacks and context-storage heap are
 retained supervisor-only for entry/return. The kernel root still has its original
@@ -238,9 +263,37 @@ check remain fatal. Exit/fault first restores the boot context, which retires th
 task's private tables and backing while peers remain runnable. Scheduling and
 syscall dispatch do not allocate or reclaim memory. Sessions preallocate their
 task/report storage; the scheduler's small arena still uses infallible allocation.
-The runtime has no executable loader, dynamic user spawn, IPC, admission proofs,
+The runtime has no dynamic linker, dynamic user spawn, IPC, admission proofs,
 device grants or production resource policy. Kernel and user workloads currently
 run in separate boot-managed sessions.
+
+## Executable loading experiment
+
+The [ELF preflight](kernel/core/users/elf.rs) accepts little-endian ELF64,
+System V ABI version 0, x86-64 `ET_EXEC`. Limits are 4 MiB per file, 16 program
+headers, eight load segments and 64 image pages total. Each load segment must be
+readable, 4-KiB aligned in both file and virtual memory, have alignment 4096,
+and fit in the 1-MiB image window starting at `0x8000000000`. Segments cannot
+share pages or combine write and execute permission. The entry must lie within
+file-backed executable bytes. The four-page stack has guards and sits separately
+at image base + 2 MiB. Every task receives its own copies; BSS and page tails
+are zeroed before execution.
+
+`PT_NULL` and one non-executable `PT_GNU_STACK` are the only accepted non-load
+headers. Interpreters, dynamic linking, TLS and other program-header semantics
+are rejected. Section/debug tables are not used for loading. All offset/size
+arithmetic is checked before slicing or allocating. These restrictions are lab
+policy over the [ELF program-header format](https://gabi.xinuos.com/elf/08-pheader.html),
+not a promise to execute arbitrary Linux binaries or an admission proof.
+
+The [user runtime](platform/libraries/user-runtime/lib.rs) provides `entry!`,
+`write`, `yield_now` and `exit`, using the shared experimental ABI. `write` splits
+slices at both 256 bytes and page boundaries. Returning from the program exits
+with its status; a Rust panic exits with 255. There is no allocator or unwinding.
+The [hello program](distribution/programs/hello/main.rs) contains no privileged
+instructions or kernel imports. It checks more than one page of BSS and distinct
+per-instance data, then returns the supplied status. Its link script explicitly
+places LLVM's normal and large-code-model sections into matching segments.
 
 The [kernel design](../wiki/design/part_5_lifecycle/04_kernel_architecture.md)
 already calls for hardware walls around unproved apps and drivers. The default
@@ -250,8 +303,8 @@ Cathedral's component model or shared ABI.
 
 ## Next bring-up steps
 
-- Introduce an admitted executable format and explicit user-task supervision.
-- Add task arguments, join/result delivery and explicit ownership of task handles.
+- Define executable admission/provenance and explicit user-task supervision.
+- Add kernel-task arguments, join/result delivery and explicit ownership of task handles.
 - Discover ACPI/APIC topology and replace the temporary PIC/PIT timer route.
 - Add capability checks and shared-memory IPC.
 

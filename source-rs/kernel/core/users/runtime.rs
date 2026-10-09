@@ -1,6 +1,6 @@
 //! Admission/reclamation happen on the boot stack; callbacks never allocate.
 
-use super::{Error, Program, syscall};
+use super::{Error, Executable, Program, elf, syscall};
 use crate::{
     extent::FrameAllocator,
     scheduler::{Event, Scheduler, TaskState},
@@ -98,9 +98,25 @@ pub unsafe fn run(
         remaining: frame_limit,
     };
     for (slot, program) in programs.iter().enumerate() {
-        // SAFETY: Serialized admission on kernel CR3; no task has started.
-        let space = match unsafe { UserSpace::create(layout, image, program.code, &mut source) } {
-            Ok(space) => space,
+        // Parse before physical admission. Any error also retires earlier tasks.
+        let admission = (|| {
+            // SAFETY: Serialized admission on kernel CR3; no task has started.
+            unsafe {
+                match &program.executable {
+                    Executable::Probe(code) => UserSpace::create(layout, image, code, &mut source)
+                        .map(|space| (space, arch::USER_CODE))
+                        .map_err(Error::Memory),
+                    Executable::Elf(bytes) => {
+                        let executable = elf::parse(bytes).map_err(Error::Executable)?;
+                        UserSpace::from_segments(layout, image, executable.segments(), &mut source)
+                            .map(|space| (space, executable.entry))
+                            .map_err(Error::Memory)
+                    }
+                }
+            }
+        })();
+        let (space, entry) = match admission {
+            Ok(admitted) => admitted,
             Err(error) => {
                 for task in &mut session.tasks {
                     // SAFETY: Admission failed before publishing any context/root.
@@ -109,12 +125,12 @@ pub unsafe fn run(
                     }
                 }
                 assert_eq!(source.frames.allocated(), baseline);
-                return Err(Error::Memory(error));
+                return Err(error);
             }
         };
         let count = space.frame_count();
         session.tasks.push(Task {
-            context: Context::user(arch::USER_CODE, arch::USER_STACK_TOP, program.arguments),
+            context: Context::user(entry, arch::USER_STACK_TOP, program.arguments),
             space: Some(space),
             report: Report {
                 frames: count,

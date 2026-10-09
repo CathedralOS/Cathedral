@@ -13,7 +13,9 @@ pub use interrupts::{
 };
 pub use memory::{BootLayout, MemoryError, StackRange, prepare_memory};
 pub use stacks::{MAX_TASK_SLOTS, StackFrames, allocate_stack, release_stack, task_stack_range};
-pub use user::memory::{USER_CODE, USER_DATA, USER_STACK, USER_STACK_TOP};
+pub use user::memory::{
+    USER_CODE, USER_DATA, USER_IMAGE_END, USER_STACK, USER_STACK_TOP, UserSegment, valid_segments,
+};
 pub use user::{
     ImageRange, UserSpace, begin_user_session, end_user_session, select_user_root, user_probe,
 };

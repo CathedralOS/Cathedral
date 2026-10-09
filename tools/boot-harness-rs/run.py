@@ -34,6 +34,9 @@ MARKERS = (
     *(f"Cathedral Rust lab: user fault contained mode={mode} " for mode in range(1, 11)),
     "Cathedral Rust lab: ring3 private memory preemption and checked syscalls passed",
     "Cathedral Rust lab: user admission rollback passed",
+    "Cathedral Rust lab: ELF instances exited [17, 29]",
+    "Cathedral Rust lab: ELF instances exited [18, 30]",
+    "Cathedral Rust lab: ELF rejection and",
     "CATHEDRAL_RS_BOOT_OK",
 )
 
@@ -94,18 +97,30 @@ def main():
     if args.fault and not args.smoke:
         parser.error("--fault requires --smoke")
 
+    user = PROFILE['user_program']
+    user_cargo = ["cargo", "build", "--locked", "--package", user['package'],
+                  "--target", user['target'], "--target-dir", str(BUILD / "cargo")]
+    if args.release:
+        user_cargo.append("--release")
+    subprocess.run(user_cargo, cwd=WORKSPACE, check=True)
+    profile = "release" if args.release else "debug"
+    user_elf = BUILD / "cargo" / user['target'] / profile / user['package']
+    environment = os.environ.copy()
+    environment['CATHEDRAL_USER_ELF'] = str(user_elf.resolve(strict=True))
+
     cargo = ["cargo", "build", "--locked", "--package", BOOT_PACKAGE,
              "--target", TARGET, "--target-dir", str(BUILD / "cargo")]
     if args.release:
         cargo.append("--release")
+    features = ['bundled-user']
     if args.smoke:
-        cargo.extend(["--features", f"fault-{args.fault}" if args.fault else "smoke-test"])
-    subprocess.run(cargo, cwd=WORKSPACE, check=True)
+        features.append(f"fault-{args.fault}" if args.fault else "smoke-test")
+    cargo.extend(["--features", ','.join(features)])
+    subprocess.run(cargo, cwd=WORKSPACE, check=True, env=environment)
     # Keep smoke images and their terminating feature separate from normal boots.
     output = BUILD / (f"fault-{args.fault}" if args.fault else "smoke" if args.smoke else "interactive")
     esp = output / "esp/EFI/BOOT"
     esp.mkdir(parents=True, exist_ok=True)
-    profile = "release" if args.release else "debug"
     shutil.copyfile(BUILD / "cargo" / TARGET / profile / f"{BOOT_PACKAGE}.efi", esp / "BOOTX64.EFI")
     print(f"EFI image: {esp / 'BOOTX64.EFI'}", flush=True)
     if args.build_only:
@@ -151,7 +166,7 @@ def main():
     # isa-debug-exit returns (guest_value << 1) | 1, so guest 0x10 means 33.
     if result.returncode != 33 or "CATHEDRAL_RS_PANIC" in serial:
         raise RuntimeError(f"Boot failed (QEMU exit {result.returncode}); logs: {output}")
-    print(f"PASS: expected {args.fault} exception" if args.fault else "PASS: boot, kernel/user preemption, fault containment, checked syscalls and memory reclamation")
+    print(f"PASS: expected {args.fault} exception" if args.fault else "PASS: boot, preemption, fault containment, static ELF programs and memory reclamation")
     return 0
 
 

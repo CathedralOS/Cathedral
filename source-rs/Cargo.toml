@@ -1,6 +1,6 @@
 [workspace]
 resolver = "3"
-members = ["kernel/arch", "kernel/boot/uefi", "contracts", "kernel/core", "platform/drivers/uart_16550"]
+members = ["kernel/arch", "kernel/boot/uefi", "contracts", "kernel/core", "platform/drivers/uart_16550", "platform/libraries/user-runtime", "distribution/programs/hello"]
 default-members = ["contracts", "kernel/core"]
 
 [workspace.package]
@@ -14,6 +14,7 @@ cathedral-contracts = { path = "contracts" }
 cathedral-core = { path = "kernel/core" }
 cathedral-uart-16550 = { path = "platform/drivers/uart_16550" }
 cathedral-arch = { path = "kernel/arch" }
+cathedral-user-runtime = { path = "platform/libraries/user-runtime" }
 uefi = { version = "0.41.0", default-features = false }
 
 [workspace.lints.rust]

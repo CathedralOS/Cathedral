@@ -46,8 +46,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "cathedral-hello"
+version = "0.0.0"
+dependencies = [
+ "cathedral-user-runtime",
+]
+
+[[package]]
 name = "cathedral-uart-16550"
 version = "0.0.0"
+
+[[package]]
+name = "cathedral-user-runtime"
+version = "0.0.0"
+dependencies = [
+ "cathedral-contracts",
+]
 
 [[package]]
 name = "cfg-if"

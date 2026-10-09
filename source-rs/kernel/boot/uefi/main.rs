@@ -5,6 +5,8 @@
 
 extern crate alloc;
 
+#[cfg(feature = "bundled-user")]
+mod applications;
 mod diagnostics;
 mod firmware;
 mod handoff;
@@ -39,6 +41,8 @@ fn kernel_main(mut boot: handoff::BootState) -> ! {
     tasks::exercise(&mut boot.memory, &mut boot.console);
     task_lifecycle::exercise(&mut boot.memory, &mut boot.console);
     users::exercise(&mut boot.memory, &mut boot.console);
+    #[cfg(feature = "bundled-user")]
+    applications::exercise(&mut boot.memory, &mut boot.console);
     diagnostics::ready(&mut boot.console);
 
     #[cfg(feature = "smoke-test")]

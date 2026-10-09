@@ -1,7 +1,7 @@
 //! Boot-level experiments: ring transitions, bad requests, isolation and cleanup.
-use crate::{heap::HEAP, memory::PreparedMemory};
+use crate::{diagnostics::user_output, heap::HEAP, memory::PreparedMemory};
 use cathedral_arch as arch;
-use cathedral_core::users::{self, Exit, Program};
+use cathedral_core::users::{self, Executable, Exit, Program};
 use cathedral_uart_16550::SerialPort;
 use core::fmt::Write;
 
@@ -19,11 +19,11 @@ pub fn exercise(memory: &mut PreparedMemory, console: &mut SerialPort) {
         };
         let programs = [
             Program {
-                code,
+                executable: Executable::Probe(code),
                 arguments: [mode, probe_address],
             },
             Program {
-                code,
+                executable: Executable::Probe(code),
                 arguments: [0, memory.layout.heap_start],
             },
         ];
@@ -35,7 +35,7 @@ pub fn exercise(memory: &mut PreparedMemory, console: &mut SerialPort) {
                 &memory.layout,
                 memory.image,
                 &programs,
-                output,
+                user_output,
                 usize::MAX,
             )
         }
@@ -90,11 +90,11 @@ pub fn exercise(memory: &mut PreparedMemory, console: &mut SerialPort) {
     for budget in 0..admission_frames {
         let programs = [
             Program {
-                code,
+                executable: Executable::Probe(code),
                 arguments: [0, memory.layout.heap_start],
             },
             Program {
-                code,
+                executable: Executable::Probe(code),
                 arguments: [0, memory.layout.heap_start],
             },
         ];
@@ -105,7 +105,7 @@ pub fn exercise(memory: &mut PreparedMemory, console: &mut SerialPort) {
                 &memory.layout,
                 memory.image,
                 &programs,
-                output,
+                user_output,
                 budget,
             )
         };
@@ -118,11 +118,4 @@ pub fn exercise(memory: &mut PreparedMemory, console: &mut SerialPort) {
         assert_eq!(unsafe { HEAP.used() }, heap);
     }
     writeln!(console, "Cathedral Rust lab: user admission rollback passed {admission_frames} frame boundaries; heap and frames reclaimed").ok();
-}
-
-fn output(bytes: &[u8]) -> bool {
-    // SAFETY: Single CPU in IRQ-masked dispatch. Boot's UART owner is suspended;
-    // this bounded diagnostic uses no firmware, allocation or mutable shared state.
-    let mut console = unsafe { SerialPort::com1(arch::in8, arch::out8) };
-    console.write_str("Cathedral Rust lab: ").is_ok() && console.write_bytes(bytes).is_ok()
 }

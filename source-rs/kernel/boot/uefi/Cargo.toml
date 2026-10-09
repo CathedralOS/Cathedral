@@ -12,6 +12,7 @@ test = false
 bench = false
 
 [features]
+bundled-user = []
 smoke-test = []
 fault-guard = ["smoke-test"]
 fault-invalid-opcode = ["smoke-test"]

@@ -81,6 +81,9 @@ foundation         -> no implementation packages
 - Platform and distribution never import kernel implementation packages. They
   target contracts and receive explicitly supplied operations or capabilities.
 - Profiles select the kernel entry as composition data, not a userspace import.
+- The Rust profile also selects a separately compiled distribution program.
+  Host tooling supplies its ELF artifact to boot; the kernel's loader consumes
+  bytes through the experimental user boundary, without importing distro code.
 - Pure hardware facts are an explicit kernel dependency on
   `platform/drivers/facts`; they hold no authority and import no kernel code.
 - Rust boot currently links the platform UART for diagnostics. This exact
@@ -98,8 +101,10 @@ isolation or capability custody.
 
 The folder identifies responsibility, not privilege. Some platform services mint
 authority and belong to the [enumerated TCB](tcb.md). Moving them outside the
-kernel does not remove them from the audit surface. Rust still runs in one
-privileged address space; the folder boundary prepares for userspace.
+kernel does not remove them from the audit surface. The Rust lab now runs probes
+and a separately compiled distribution program in private ring-3 address spaces.
+Its boot/core and bootstrap UART remain privileged; the folder boundary alone
+still supplies no containment or capability authority.
 
 Frozen cross-component ABI belongs in `contracts/`. Private protocols, manifests,
 proofs, migrations and tests stay with their owner. `foundation/` is reserved for
@@ -116,5 +121,6 @@ recorded digests must not simply be replaced with today's hashes. Original path
 comments in unchanged Omega files remain provenance.
 
 Unit checks co-locate with their owner; host canaries and boot tools live under
-`tools/`. The Rust smoke boot exercises memory reclamation and task preemption.
+`tools/`. The Rust smoke boot exercises memory reclamation, task preemption,
+user-fault containment and restricted ELF loading.
 The Omega harness selects its own entry from `source/distribution/profile.json`.
