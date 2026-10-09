@@ -92,5 +92,6 @@ pub(super) fn reserve_slot(session: &mut Session) {
         receive: None,
         wait: None,
         keyboard_wait: false,
+        keyboard_deadline: None,
     });
 }

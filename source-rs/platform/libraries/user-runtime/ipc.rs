@@ -48,6 +48,27 @@ impl Handle {
     pub fn revoke(self) -> Result<(), Error> {
         result(arch::call(abi::IPC_REVOKE, self.0, 0)).map(|_| ())
     }
+    /// Timeout cancels only this receive, not the channel or remote request.
+    /// Ready data and terminal errors take precedence over expiry. Applications
+    /// must drain/correlate late replies or replace the connection before reuse.
+    pub fn receive_until(
+        self,
+        bytes: &mut [u8; abi::MAX_MESSAGE],
+        deadline: u64,
+    ) -> Result<usize, Error> {
+        let mut buffer = Buffer([0; abi::MAX_MESSAGE]);
+        let length = result(arch::call3(
+            abi::IPC_RECEIVE_UNTIL,
+            self.0,
+            buffer.0.as_mut_ptr() as u64,
+            deadline,
+        ))? as usize;
+        if length > abi::MAX_MESSAGE {
+            return Err(Error(abi::IO_ERROR as i64));
+        }
+        bytes[..length].copy_from_slice(&buffer.0[..length]);
+        Ok(length)
+    }
 }
 // Alignment equals size, and 64 divides a page: the buffer cannot straddle one.
 #[repr(align(64))]

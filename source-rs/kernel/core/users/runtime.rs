@@ -50,6 +50,7 @@ struct Task {
     receive: Option<dispatch::Receive>,
     wait: Option<taskcalls::Wait>,
     keyboard_wait: bool,
+    keyboard_deadline: Option<u64>,
 }
 struct Session {
     tasks: Vec<Task>,
@@ -150,7 +151,8 @@ pub unsafe fn run(
 
 /// Run tasks with explicit boot-issued endpoint, launch and clock grants.
 /// # Safety
-/// Same obligations as run. Endpoint and clock indices refer to this program list.
+/// Same obligations as run. Endpoint indices refer to initial programs; clock
+/// indices may also name reserved child slots.
 /// Any framebuffer must be a live, reserved device aperture exclusively held by
 /// boot: no RAM allocation or other CPU/alias may access its pages. The launch
 /// grant authorizes its executable to read/write the entire aperture for its lifetime.
@@ -169,8 +171,6 @@ pub unsafe fn run_configured(
         return Err(Error::InvalidCount);
     }
     let epoch = next_epoch().ok_or(Error::InvalidEndpoints)?;
-    let clock = crate::deadline::Clock::new(epoch, programs.len(), config.clock_readers)
-        .map_err(|_| Error::InvalidEndpoints)?;
     let count = programs.len() + config.supervision.len();
     if count > crate::ipc::MAX_TASKS || config.supervision.len() > MAX_LAUNCHES {
         return Err(Error::InvalidCount);
@@ -191,6 +191,8 @@ pub unsafe fn run_configured(
     {
         return Err(Error::InvalidEndpoints);
     }
+    let clock = crate::deadline::Clock::new(epoch, count, config.clock_readers)
+        .map_err(|_| Error::InvalidEndpoints)?;
     let mut launches = Vec::new();
     launches
         .try_reserve_exact(config.supervision.len())
@@ -337,7 +339,8 @@ unsafe fn schedule(context: &Context, cause: SwitchCause, now: u64) -> *const Co
         session.boot = context.clone();
     }
     if matches!(cause, SwitchCause::Timer | SwitchCause::Device) {
-        keyboard::poll(session);
+        keyboard::poll(session, now);
+        dispatch::wake_receivers(session);
         taskcalls::wake(session, now);
     }
     let next = if matches!(event, Event::Exit) {

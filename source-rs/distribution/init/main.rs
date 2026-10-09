@@ -1,6 +1,8 @@
 #![no_std]
 #![no_main]
 //! Cathedral startup policy and service orchestration.
+#[cfg(feature = "recovery-lab")]
+mod recovery;
 mod scene;
 mod service;
 use cathedral_user_runtime::write;

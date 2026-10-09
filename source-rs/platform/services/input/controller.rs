@@ -1,6 +1,6 @@
 //! Configure the QEMU bootstrap controller; decoding lives independently above it.
 use cathedral_contracts::user as abi;
-use cathedral_user_runtime::{Error, keyboard, yield_now};
+use cathedral_user_runtime::{Error, keyboard, time, yield_now};
 
 fn write(command: bool, byte: u8) -> Result<(), Error> {
     for _ in 0..1024 {
@@ -14,7 +14,7 @@ fn write(command: bool, byte: u8) -> Result<(), Error> {
 fn device(byte: u8) -> Result<(), Error> {
     for _ in 0..3 {
         write(false, byte)?;
-        match keyboard::read(true)? {
+        match keyboard::read_until(time::after(50)?)? {
             0xfa => return Ok(()),
             0xfe => continue,
             _ => break,
@@ -33,7 +33,7 @@ pub fn initialize() -> Result<(), Error> {
         }
     }
     write(true, 0x20)?;
-    let mode = keyboard::read(true)?;
+    let mode = keyboard::read_until(time::after(50)?)?;
     if mode > 255 {
         return Err(Error(abi::IO_ERROR as i64));
     }

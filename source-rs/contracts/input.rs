@@ -1,5 +1,5 @@
 //! Experimental physical-key events. Text, layout, focus and shortcuts are not
-//! part of this transport. NEXT consumes one event; RESET clears held-key state.
+//! part of this transport. NEXT yields one event or IDLE; RESET clears held-key state.
 pub const NEXT: [u8; 1] = [1];
 pub const RESET: u8 = 0;
 pub const UP: u8 = 1;
@@ -9,6 +9,8 @@ pub const RIGHT: u8 = 4;
 pub const ENTER: u8 = 5;
 pub const F1: u8 = 6;
 pub const F2: u8 = 7;
+/// A completed NEXT with no physical event in the provider's sampling interval.
+pub const IDLE: u8 = 8;
 pub const RELEASE: u8 = 0;
 pub const PRESS: u8 = 1;
 pub const REPEAT: u8 = 2;
@@ -19,6 +21,12 @@ pub struct Event {
     pub state: u8,
 }
 impl Event {
+    pub const fn idle() -> Self {
+        Self {
+            key: IDLE,
+            state: RELEASE,
+        }
+    }
     pub const fn reset() -> Self {
         Self {
             key: RESET,
@@ -31,6 +39,7 @@ impl Event {
     pub fn decode(bytes: &[u8]) -> Option<Self> {
         match bytes {
             [RESET, RELEASE] => Some(Self::reset()),
+            [IDLE, RELEASE] => Some(Self::idle()),
             [key @ UP..=F2, state @ RELEASE..=REPEAT] => Some(Self {
                 key: *key,
                 state: *state,
@@ -52,6 +61,7 @@ mod tests {
             }
         }
         assert_eq!(Event::decode(&[0, 0]), Some(Event::reset()));
+        assert_eq!(Event::decode(&[IDLE, RELEASE]), Some(Event::idle()));
         for bytes in [&[][..], &[1], &[1, 1, 0], &[0, 1], &[8, 1], &[1, 3]] {
             assert_eq!(Event::decode(bytes), None);
         }

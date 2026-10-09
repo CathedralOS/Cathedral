@@ -12,12 +12,30 @@ struct Scene {
 pub fn run() -> Result<(), Error> {
     let mut display = Service::start(0)?;
     let mut input = Service::start(1)?;
-    input_ready(&input)?;
+    input_ready(&mut input)?;
     let mut scene = Scene::default();
     scene.draw(&mut display)?;
     write(b"Cathedral: startup ready\n")?;
+    #[cfg(feature = "recovery-lab")]
+    let mut faults = super::recovery::Probes::default();
     loop {
+        let input_generation = input.generation();
         let event = next(&mut input)?;
+        // A healthy idle reply is also an opportunity to check display health.
+        if event.key == wire::IDLE {
+            if display.drawing()?.dimensions().is_err() {
+                display.restart()?;
+                scene.draw(&mut display)?;
+                display.recovered()?;
+                scene.report()?;
+            }
+            if input.generation() != input_generation {
+                scene.report()?;
+            }
+            #[cfg(feature = "recovery-lab")]
+            faults.verify(&display, &input)?;
+            continue;
+        }
         // Repeats navigate, but toggles and restart shortcuts require a new press.
         if event.state == wire::RELEASE {
             continue;
@@ -27,29 +45,52 @@ pub fn run() -> Result<(), Error> {
             wire::RIGHT | wire::DOWN => scene.selected = (scene.selected + 1) % 3,
             wire::ENTER if event.state == wire::PRESS => scene.active ^= 1 << scene.selected,
             wire::F1 if event.state == wire::PRESS => {
-                input.restart()?;
-                input_ready(&input)?;
-                write(b"Cathedral: input restarted\n")?;
+                #[cfg(feature = "recovery-lab")]
+                faults.inject(1, &input, &display)?;
+                #[cfg(not(feature = "recovery-lab"))]
+                {
+                    input.restart()?;
+                    input_ready(&mut input)?;
+                    write(b"Cathedral: input restarted\n")?;
+                }
             }
             wire::F2 if event.state == wire::PRESS => {
-                display.restart()?;
-                write(b"Cathedral: display restarted\n")?;
+                #[cfg(feature = "recovery-lab")]
+                {
+                    faults.inject(0, &display, &input)?;
+                    continue; // Let idle health checks or the next real draw discover failure.
+                }
+                #[cfg(not(feature = "recovery-lab"))]
+                {
+                    display.restart()?;
+                    write(b"Cathedral: display restarted\n")?;
+                }
             }
             _ => continue,
         }
         scene.draw(&mut display)?;
         scene.report()?;
+        #[cfg(feature = "recovery-lab")]
+        faults.verify(&display, &input)?;
     }
 }
-fn input_ready(input: &Service) -> Result<(), Error> {
-    if receive(input)? != wire::Event::reset() {
-        return Err(Error(abi::IO_ERROR as i64));
+fn input_ready(input: &mut Service) -> Result<(), Error> {
+    for attempt in 0..3 {
+        match receive(input) {
+            Ok(event) if event == wire::Event::reset() => {
+                if attempt != 0 {
+                    input.recovered()?;
+                }
+                return Ok(());
+            }
+            _ if attempt < 2 => input.restart()?,
+            _ => return Err(Error(abi::IO_ERROR as i64)),
+        }
     }
-    Ok(())
+    unreachable!()
 }
 fn receive(input: &Service) -> Result<wire::Event, Error> {
-    let mut bytes = [0; 64];
-    let length = input.receive.receive(&mut bytes)?;
+    let (bytes, length) = input.receive()?;
     wire::Event::decode(&bytes[..length]).ok_or(Error(abi::IO_ERROR as i64))
 }
 fn next(input: &mut Service) -> Result<wire::Event, Error> {
@@ -59,6 +100,7 @@ fn next(input: &mut Service) -> Result<wire::Event, Error> {
             Err(_) if attempt < 2 => {
                 input.restart()?;
                 input_ready(input)?;
+                input.recovered()?;
             }
             Err(error) => return Err(error),
         }
@@ -68,20 +110,17 @@ fn next(input: &mut Service) -> Result<wire::Event, Error> {
 impl Scene {
     fn draw(&self, display: &mut Service) -> Result<(), Error> {
         for attempt in 0..3 {
-            let result = cathedral_boot_scene::dimensions(display.send, display.receive).and_then(
-                |(w, h)| {
-                    cathedral_boot_scene::draw_interactive(
-                        display.send,
-                        display.receive,
-                        w,
-                        h,
-                        self.selected,
-                        self.active,
-                    )
-                },
-            );
+            let client = display.drawing()?;
+            let result = client
+                .dimensions()
+                .and_then(|(w, h)| client.draw_interactive(w, h, self.selected, self.active));
             match result {
-                Ok(()) => return Ok(()),
+                Ok(()) => {
+                    if attempt != 0 {
+                        display.recovered()?;
+                    }
+                    return Ok(());
+                }
                 Err(_) if attempt < 2 => display.restart()?,
                 Err(error) => return Err(error),
             }

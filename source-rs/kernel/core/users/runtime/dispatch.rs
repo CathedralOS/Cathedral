@@ -7,6 +7,7 @@ pub(super) struct Receive {
     handle: u64,
     address: u64,
     capacity: usize,
+    deadline: Option<u64>,
 }
 
 pub(super) fn syscall(session: &mut Session, slot: usize, now: u64) -> Event {
@@ -25,25 +26,29 @@ pub(super) fn syscall(session: &mut Session, slot: usize, now: u64) -> Event {
         }
         abi::IPC_HANDLE => session.ipc.handle(slot, first),
         abi::IPC_SEND => send(session, slot, first, second, third),
-        abi::IPC_RECEIVE => {
-            match receive(session, slot, first, second, third) {
-                Ok(Some(length)) => Ok(length),
-                Err(error) => Err(error),
-                Ok(None) => {
-                    session.tasks[slot].receive = Some(Receive {
-                        handle: first,
-                        address: second,
-                        capacity: third as usize,
-                    });
-                    session.tasks[slot].report.receives_blocked += 1;
-                    event = Event::Block;
-                    Ok(0) // Not observable until a completion replaces the saved result.
-                }
-            }
+        abi::IPC_RECEIVE | abi::IPC_RECEIVE_UNTIL => {
+            let deadline = if number == abi::IPC_RECEIVE_UNTIL {
+                Some(third)
+            } else {
+                None
+            };
+            let capacity = if deadline.is_some() {
+                abi::MAX_MESSAGE as u64
+            } else {
+                third
+            };
+            receive_call(
+                session,
+                slot,
+                (first, second, capacity),
+                deadline,
+                now,
+                &mut event,
+            )
         }
         abi::IPC_REVOKE => session.ipc.revoke(slot, first).map(|()| 0),
-        abi::KEYBOARD_READ | abi::KEYBOARD_WRITE => {
-            super::keyboard::syscall(session, slot, number, first, second, &mut event)
+        abi::KEYBOARD_READ | abi::KEYBOARD_WRITE | abi::KEYBOARD_READ_UNTIL => {
+            super::keyboard::syscall(session, slot, (number, first, second), &mut event, now)
         }
         abi::DISPLAY_INFO => display_info(session, slot, first, second),
         abi::TASK_LAUNCH..=abi::CLOCK_HANDLE => super::taskcalls::dispatch(
@@ -58,6 +63,41 @@ pub(super) fn syscall(session: &mut Session, slot: usize, now: u64) -> Event {
     complete(session, slot, result);
     wake_receivers(session);
     event
+}
+
+// The deadline variant has a fixed 64-byte destination, leaving the third ABI
+// argument for the absolute deadline. Check authority and the full destination
+// before observing expiry; an available message or terminal error wins a tie.
+fn receive_call(
+    session: &mut Session,
+    slot: usize,
+    call: (u64, u64, u64),
+    deadline: Option<u64>,
+    now: u64,
+    event: &mut Event,
+) -> Result<u64, u64> {
+    let (handle, address, capacity) = call;
+    if let Some(deadline) = deadline {
+        session.clock.handle(slot)?;
+        if !crate::deadline::valid(now, deadline) {
+            return Err(abi::INVALID_ARGUMENT);
+        }
+    }
+    if let Some(length) = receive(session, slot, handle, address, capacity)? {
+        return Ok(length);
+    }
+    if crate::deadline::timed_out(now, deadline, false) {
+        return Err(abi::TIMED_OUT);
+    }
+    session.tasks[slot].receive = Some(Receive {
+        handle,
+        address,
+        capacity: capacity as usize,
+        deadline,
+    });
+    session.tasks[slot].report.receives_blocked += 1;
+    *event = Event::Block;
+    Ok(0)
 }
 
 fn display_info(session: &Session, slot: usize, address: u64, length: u64) -> Result<u64, u64> {
@@ -177,6 +217,11 @@ pub(super) fn wake_receivers(session: &mut Session) {
             wait.address,
             wait.capacity as u64,
         ) {
+            Ok(None)
+                if crate::deadline::timed_out(cathedral_arch::ticks(), wait.deadline, false) =>
+            {
+                Err(abi::TIMED_OUT)
+            }
             Ok(None) => continue,
             Ok(Some(length)) => Ok(length),
             Err(error) => Err(error),

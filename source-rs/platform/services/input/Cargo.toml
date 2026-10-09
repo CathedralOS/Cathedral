@@ -22,3 +22,6 @@ cathedral-user-runtime.workspace = true
 
 [lints]
 workspace = true
+
+[features]
+recovery-lab = []

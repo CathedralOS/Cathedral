@@ -10,7 +10,7 @@ Cargo workspace keeps kernel implementation under `kernel/` and the UART under
 
 Ordinary boots build only `startup.initial` and the optional `startup.launches` array.
 The kernel admits that initial executable; `distribution/init` launches and uses
-display and input providers and keeps all three tasks alive. The tests below are compiled
+display and input providers and keeps all three tasks alive. The kernel fixtures below are compiled
 only with `--smoke`. `--kernel-only --smoke` runs kernel and raw-user tests without
 building any platform service or distribution executable. `--kernel-only` boots
 the kernel alone. `--profile tools/boot-harness-rs/profiles/minimal.json` supplies
@@ -56,3 +56,16 @@ select a panel, Enter toggles it, F1 restarts input and F2 restarts display. The
 final capture is `build/boot-harness-rs/input-test/display.png`. Smoke also tests
 multiple launch grants, surviving sibling queues, failed launch rollback, device
 access denial and parent-exit reclamation of a blocked input provider.
+
+`--recovery-test` enables only the providers/init recovery-lab features. It wedges
+both first-generation providers before startup, then injects a crash, busy loop
+and blocked request loop into each live provider. It checks automatic recovery,
+unchanged sibling identity, queued keyboard input during display failure, healthy
+idle without spurious restarts, and retained scene state through exact scanout
+checks. Logs and the final screenshot go in `recovery-test/`; no fault handlers
+are included in ordinary builds. Add `--release` for optimized verification.
+
+The smoke IPC fixture checks deadline wakeups with all tasks blocked, denied
+clock access, malformed destinations preserving queued data, late replies after
+timeout, terminal-error precedence, and complete memory reclamation. Child raw
+keyboard deadlines are exercised with and without a clock grant as well.

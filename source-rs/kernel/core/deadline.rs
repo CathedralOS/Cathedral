@@ -2,19 +2,19 @@
 const HALF: u64 = 1 << 63;
 use cathedral_contracts::user as abi;
 
-/// Boot-bound read authority. Reserved child slots do not inherit clock access.
+/// Boot-bound read authority. Reserved child slots require an explicit grant; they never inherit access.
 pub struct Clock {
     epoch: u64,
     readers: u8,
 }
 impl Clock {
-    pub fn new(epoch: u64, initial_tasks: usize, readers: &[usize]) -> Result<Self, u64> {
-        if !(1..=crate::ipc::MAX_EPOCH).contains(&epoch) || initial_tasks > crate::ipc::MAX_TASKS {
+    pub fn new(epoch: u64, tasks: usize, readers: &[usize]) -> Result<Self, u64> {
+        if !(1..=crate::ipc::MAX_EPOCH).contains(&epoch) || tasks > crate::ipc::MAX_TASKS {
             return Err(abi::INVALID_ARGUMENT);
         }
         let mut clock = Self { epoch, readers: 0 };
         for &reader in readers {
-            if reader >= initial_tasks {
+            if reader >= tasks {
                 return Err(abi::INVALID_ARGUMENT);
             }
             clock.readers |= 1 << reader;

@@ -8,6 +8,7 @@ use cathedral_uart_16550::SerialPort;
 use core::fmt::Write;
 
 static EXECUTABLE: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/ipc.elf"));
+mod deadlines;
 
 pub fn exercise(memory: &mut PreparedMemory, console: &mut SerialPort) {
     let baseline = memory.frames.allocated();
@@ -74,6 +75,7 @@ pub fn exercise(memory: &mut PreparedMemory, console: &mut SerialPort) {
     drop(reports);
     reclaimed(memory, baseline, heap);
     writeln!(console, "Cathedral Rust lab: IPC backpressure and checked copyout preserved queued message; all memory reclaimed").ok();
+    deadlines::exercise(memory, console);
 }
 fn program(role: u64, stale: u64) -> Program<'static> {
     Program {

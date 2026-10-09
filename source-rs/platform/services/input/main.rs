@@ -2,12 +2,16 @@
 #![no_main]
 //! Physical-key provider: exclusive raw bytes in, normalized events over IPC out.
 mod controller;
+#[cfg(feature = "recovery-lab")]
+mod recovery;
 use cathedral_contracts::{input as wire, user as abi};
 use cathedral_input_service::Decoder;
-use cathedral_user_runtime::{Error, ipc::Handle, keyboard};
+use cathedral_user_runtime::{Error, ipc::Handle, keyboard, time};
 cathedral_user_runtime::entry!(main);
 
-fn main(_: u64, _: u64) -> u64 {
+fn main(_mode: u64, _generation: u64) -> u64 {
+    #[cfg(feature = "recovery-lab")]
+    recovery::startup(_mode, _generation);
     if serve().is_ok() { 0 } else { 1 }
 }
 fn serve() -> Result<(), Error> {
@@ -23,11 +27,22 @@ fn serve() -> Result<(), Error> {
             Err(Error(code)) if code == abi::PEER_CLOSED as i64 => return Ok(()),
             Err(error) => return Err(error),
         };
+        #[cfg(feature = "recovery-lab")]
+        recovery::request(&bytes[..length], request, reply);
         if bytes[..length] != wire::NEXT {
             return Err(Error(abi::INVALID_ARGUMENT as i64));
         }
+        let deadline = time::after(25)?;
         let event = loop {
-            match keyboard::read(true)? {
+            if time::reached(time::now()?, deadline) {
+                break wire::Event::idle();
+            }
+            let byte = match keyboard::read_until(deadline) {
+                Ok(byte) => byte,
+                Err(Error(code)) if code == abi::TIMED_OUT as i64 => break wire::Event::idle(),
+                Err(error) => return Err(error),
+            };
+            match byte {
                 keyboard::LOST => break decoder.reset(),
                 byte => {
                     if let Some(event) = decoder.feed(byte as u8) {

@@ -10,13 +10,21 @@ struct InitialLaunch {
     elf: &'static [u8],
     framebuffer: bool,
     keyboard: bool,
+    clock: bool,
     argument: u64,
 }
 include!(concat!(env!("OUT_DIR"), "/startup_config.rs"));
 
 pub fn run(memory: &mut PreparedMemory, console: &mut SerialPort) {
     let mut launches = alloc::vec::Vec::new();
-    for grant in LAUNCHES {
+    let mut clock_readers = alloc::vec::Vec::new();
+    if INITIAL_CLOCK {
+        clock_readers.push(0);
+    }
+    for (index, grant) in LAUNCHES.iter().enumerate() {
+        if grant.clock {
+            clock_readers.push(index + 1);
+        }
         let framebuffer = if grant.framebuffer {
             let Some(framebuffer) = memory.framebuffer else {
                 writeln!(
@@ -62,7 +70,7 @@ pub fn run(memory: &mut PreparedMemory, console: &mut SerialPort) {
             Config {
                 frame_limit: usize::MAX,
                 endpoints: &[],
-                clock_readers: &[],
+                clock_readers: &clock_readers,
                 supervision: &launches,
             },
         )

@@ -5,10 +5,11 @@ pub(super) fn exercise(memory: &mut PreparedMemory, console: &mut SerialPort) {
     let baseline = memory.frames.allocated();
     // SAFETY: Boot owns the heap outside any task session.
     let heap = unsafe { HEAP.used() };
-    for (role, budget, keyboard, spawned) in [
-        (16, usize::MAX, false, 18),
-        (18, 0, false, 1),
-        (19, usize::MAX, true, 2),
+    for (role, budget, keyboard, spawned, clock) in [
+        (16, usize::MAX, false, 18, false),
+        (18, 0, false, 1, false),
+        (19, usize::MAX, true, 2, false),
+        (19, usize::MAX, true, 2, true),
     ] {
         let grants = [
             Supervision {
@@ -39,7 +40,7 @@ pub(super) fn exercise(memory: &mut PreparedMemory, console: &mut SerialPort) {
                 Config {
                     frame_limit: usize::MAX,
                     endpoints: &[],
-                    clock_readers: &[],
+                    clock_readers: if clock { &[2] } else { &[] },
                     supervision: &grants,
                 },
             )
@@ -53,7 +54,8 @@ pub(super) fn exercise(memory: &mut PreparedMemory, console: &mut SerialPort) {
             // Parent close wakes the echo reader with PEER_CLOSED before it is
             // cancelled. The raw keyboard reader remains blocked until cancellation.
             assert!(reports[0].cancelled_blocked >= 1);
-            assert_eq!(reports[2].keyboard_reads_blocked, 1);
+            assert_eq!(reports[2].keyboard_reads_blocked, if clock { 2 } else { 1 });
+            assert_eq!(reports[2].wait_timeouts, if clock { 2 } else { 0 });
         }
         assert_eq!(reports[1].exit, Some(Exit::Cancelled));
         assert_eq!(

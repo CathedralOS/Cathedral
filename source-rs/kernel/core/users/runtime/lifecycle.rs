@@ -10,6 +10,7 @@ pub(super) fn close(session: &mut Session, slot: usize) {
     session.tasks[slot].receive = None;
     session.tasks[slot].wait = None;
     session.tasks[slot].keyboard_wait = false;
+    session.tasks[slot].keyboard_deadline = None;
     if session
         .launches
         .iter()

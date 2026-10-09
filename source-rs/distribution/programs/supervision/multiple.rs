@@ -102,7 +102,20 @@ pub fn keyboard_waiter() -> u64 {
             break;
         }
     }
+    if cathedral_user_runtime::time::now().is_ok() {
+        assert_eq!(keyboard::read_until(0), Err(Error(abi::TIMED_OUT as i64)));
+        assert_eq!(
+            keyboard::read_until(cathedral_user_runtime::time::after(3).unwrap()),
+            Err(Error(abi::TIMED_OUT as i64))
+        );
+    } else {
+        assert_eq!(keyboard::read_until(0), Err(Error(abi::DENIED as i64)));
+    }
     Handle::bootstrap(1).unwrap().send(b"ready").unwrap();
-    keyboard::read(true).unwrap();
+    if cathedral_user_runtime::time::now().is_ok() {
+        keyboard::read_until(cathedral_user_runtime::time::after(1000).unwrap()).unwrap();
+    } else {
+        keyboard::read(true).unwrap();
+    }
     253 // Cancellation must wake/reap a provider blocked on its raw input queue.
 }

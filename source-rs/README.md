@@ -83,6 +83,7 @@ python tools/boot-harness-rs/run.py --smoke
 python tools/boot-harness-rs/run.py --kernel-only --smoke
 python tools/boot-harness-rs/run.py --screenshot
 python tools/boot-harness-rs/run.py --input-test
+python tools/boot-harness-rs/run.py --recovery-test
 python tools/boot-harness-rs/run.py --window
 python tools/boot-harness-rs/run.py
 ```
@@ -263,7 +264,7 @@ The CPU profile is qemu64, with no claim to optional virtualization exception
 semantics or physical-hardware coverage. Unsafe wrappers are boot-only lab
 mechanisms, not application APIs.
 
-The runtime supports a configurable limit of 1ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œ64 trusted kernel tasks on one
+The runtime supports a configurable limit of 1ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œ64 trusted kernel tasks on one
 CPU (default 8), plus an optional frame budget for stacks and their tables.
 `tasks::spawn(fn())` returns a `TaskId` or an admission error. IDs contain slot
 generations and are scoped to a session; reused slots do not revive old IDs.
@@ -319,6 +320,8 @@ initial FP state is clean and I/O privilege is zero.
 | 16: display info | Destination, exactly 48 bytes | Boot-installed mapping geometry, or `DENIED` when no display grant |
 | 17: keyboard read | 0: nonblocking, 1: wait | Raw byte, 256 on data loss, `WOULD_BLOCK` or `DENIED` |
 | 18: keyboard write | 0: data or 1: command, byte | 0, `WOULD_BLOCK`, `INVALID_ARGUMENT` or `DENIED` |
+| 19: IPC receive until | Ticket, 64-byte destination, absolute deadline | Bytes copied or error; requires clock access |
+| 20: keyboard read until | Absolute deadline | Raw byte/loss or `TIMED_OUT`; requires keyboard and clock access |
 
 Writes accept at most 256 bytes within one known user page. The kernel validates
 the entire range and copies through its physical backing before calling the
@@ -401,8 +404,8 @@ A receive on an empty live endpoint parks the task; sending wakes it and writes
 the result into its saved context. No callback allocates, frees or follows an
 unchecked virtual pointer. Pending operations store integer ranges, not Rust
 references into user memory. Each live task's mappings remain immutable until retirement.
-When no task is ready, the boot context halts between timer ticks; there are no
-receive deadlines or deadlock recovery yet.
+When no task is ready, the boot context halts between timer ticks; there is no
+general deadlock recovery. Deadline receives are described below.
 
 Sender exit/fault allows already-accepted bytes to drain, then returns
 `PEER_CLOSED` (-32), waking a blocked receiver. Receiver exit discards queued
@@ -424,6 +427,22 @@ Copied queues and cancellation of already-parked receives deliberately remain
 experimental. The shared-region IPC design and its relationship to the
 capability lifecycle need reconciliation, recorded in
 [`OWNER_QUESTIONS.md`](../OWNER_QUESTIONS.md).
+
+### Deadline receives
+
+`Handle::receive_until` requires explicit clock authority and stages a fixed
+64-byte destination. It validates rights and writable memory before checking
+expiry. An available message, revocation or peer closure wins over expiry at
+observation. An empty expired wait returns `TIMED_OUT` without changing its
+buffer. Timer interrupts also retire parked receives when every task is blocked.
+
+Timeout removes only that receive. It neither revokes the endpoint nor cancels
+a remote operation; a late reply can still queue. A caller must correlate/drain
+late responses or replace the connection. Init takes the latter approach by
+reclaiming the provider and accepting fresh epoch-bound endpoints before retry.
+`keyboard::read_until` follows the same ready-before-timeout rule and additionally
+requires the exclusive device grant. An input idle reply means the provider
+completed a timed raw read; it is not evidence of a hung provider.
 
 ## Userspace supervision experiment
 
@@ -486,8 +505,9 @@ question in [`OWNER_QUESTIONS.md`](../OWNER_QUESTIONS.md).
 
 ### Deadline waits and hung-service recovery
 
-Boot explicitly grants clock access to selected initial tasks through
-`Config::clock_readers`; reserved children inherit none. Clock tickets bind the
+Boot explicitly grants clock access to selected task slots through
+`Config::clock_readers`. Reserved children inherit none, but boot may separately
+grant a reserved launch slot clock access across its incarnations. Clock tickets bind the
 caller and session epoch. `time::now` copies all 64 bits into a checked writable
 buffer, avoiding confusion between large tick counts and negative syscall errors.
 This is a boot-local wrapping counter on the nominal 100 Hz PIT, not wall time or
@@ -509,7 +529,7 @@ and launch a replacement with fresh grants. Repeated cancellation before collect
 is harmless, and cancelling an already-reaped child preserves its original outcome.
 After collection the ticket is stale. Cancellation is abrupt task destruction,
 not Omega cooperative cancellation, an IPC rollback or proof that prior work had
-no effects. Receive deadlines and general service resource budgets remain absent.
+no effects. General service resource budgets remain absent.
 
 The distribution watchdog fixture chooses the deadline and restart policy. It
 alternates blocked and non-yielding services across eight recoveries. A separate
@@ -581,7 +601,8 @@ marks the default distribution's successful drawing and service startup.
 
 The host profile supplies `startup.initial` and an optional `startup.launches`
 array (at most three). Each selects a package, entry and ELF target; a child may
-request a framebuffer or keyboard grant and a fixed first argument. Each resource
+request a framebuffer or keyboard grant and a fixed first argument. Initial and
+child entries may request clock access with `clock: true`. Each device resource
 has at most one owner. The kernel grants the initial task distinct launch and
 connection tickets for each approved child. It enforces custody and task
 lifetime; the initial program chooses when to spawn, connect, draw and restart.
@@ -593,11 +614,21 @@ scene selection and toggle state; the providers own their devices. Arrow keys
 move the white selection border, Enter toggles a dark stripe in the selected
 panel, F1 restarts input and F2 restarts display. State survives either restart.
 Init redraws through `distribution/libraries/boot-scene` and waits for key events
-over IPC. Input blocks on raw bytes; display blocks on drawing requests. Display
-and event requests get at most three attempts after detected failure. Provider
-initialization failure ends startup; hung providers are not yet monitored. These
-shortcuts require functioning input/init and are not a trusted recovery path.
-No intentional faults or exhaustive tests run during ordinary startup.
+over IPC. Input blocks on raw bytes with a 25-tick deadline and returns IDLE if
+there was no event; display blocks on drawing requests. Init checks display INFO
+on idle replies, so a display fault does not require another key to be noticed.
+These manual shortcuts require functioning input/init and are not a trusted
+recovery path. No intentional faults or exhaustive tests run during ordinary startup.
+
+Each initialization reply, input request and whole scene redraw has a 100-tick
+response budget (nominally one second). Controller replies get 50 ticks. Input
+startup and failed requests each allow three attempts; request recovery can run
+that bounded startup sequence. A detected timeout, closure or malformed reply
+cancels/reclaims the affected child, collects its outcome, and accepts a fresh
+connection before retrying. Partial drawing is repaired by clearing/redrawing
+the scene from init's state. The sibling's task and endpoint grants stay live.
+Repeated failure ends init and the kernel reclaims its children. There is no
+backoff, persistent state or general service dependency manager yet.
 
 A replacement initial program need not use the platform services. For example:
 
@@ -609,7 +640,7 @@ That example supplies only the existing hello ELF, which prints and exits. No
 child or framebuffer grant is installed. Custom ordinary profiles have separate
 output directories. `--kernel-only` goes further and omits all user artifacts.
 
-All exhaustive workloads live under `kernel/boot/uefi/lab/`, compiled only by
+All exhaustive kernel workloads live under `kernel/boot/uefi/lab/`, compiled only by
 `smoke-test`. Its copied artifacts retain explicit service/fault composition as
 test fixtures. The display service's separate `lab` feature likewise excludes
 fault injection and negative probes from its normal executable.
@@ -626,13 +657,14 @@ data; reset and A20 commands are rejected. It is not arbitrary port authority.
 
 The platform input ELF selects scan set 2 with controller translation to set 1,
 decodes seven physical navigation/function keys, and returns two-byte key/state
-events for the `NEXT` request. Startup sends RESET once configuration completes.
+events for the `NEXT` request, or an explicit IDLE response after 25 ticks without
+an event. Startup sends RESET once configuration completes.
 The decoder recognizes press, release and repeat, skips Pause/PrintScreen, and
 clears held/prefix state on overflow. Overflow discards queued partial sequences
 and yields RESET; restarting a child discards old raw bytes and endpoint queues.
 This is bounded and intentionally lossy, not a full keyboard/text stack. There is
 no USB, hotplug, layout, IME, seat routing, focus or production input authority.
-Missing/unresponsive hardware can still stall provider initialization.
+Unresponsive hardware now times out; repeated initialization failure ends startup.
 
 `--input-test` injects actual QEMU keyboard events through local QMP, validates
 every scanout pixel after navigation/toggling and ten independent provider
@@ -642,6 +674,19 @@ stale tickets, failed admission beside a live child, denied raw access, forbidde
 controller commands, parent-exit cancellation of a blocked keyboard reader, and
 return to frame/heap baselines. Host tests cover byte-queue loss, key decoding,
 wire validation and sibling endpoint indexing.
+
+`--recovery-test` uses separate `recovery-lab` features on init and both providers.
+Their first incarnations spin during startup; replacement generations initialize
+normally. The harness then injects crashes, syscall-free spins and blocked
+request loops into each provider. It checks sibling task identity, queued input
+during display failure, retained selection/toggles, healthy idle without restart,
+and every scanout pixel after recovery. Test F1/F2 request faults rather than
+manual restarts; normal builds contain none of those fault handlers. Captures
+and logs live under `build/boot-harness-rs/recovery-test/`.
+
+Smoke tests additionally verify deadline authority, invalid copyout without
+message loss, late replies after timeout, ready/terminal precedence, all-blocked
+wakeups, granted/ungranted child clock access and memory reclamation.
 
 ## Next bring-up steps
 

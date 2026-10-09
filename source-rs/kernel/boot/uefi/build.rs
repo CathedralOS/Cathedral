@@ -2,11 +2,15 @@
 use std::{env, fs, path::PathBuf};
 
 fn main() {
-    for variable in ["CATHEDRAL_INIT_ELF", "CATHEDRAL_LAUNCH_COUNT"] {
+    for variable in [
+        "CATHEDRAL_INIT_ELF",
+        "CATHEDRAL_INIT_CLOCK",
+        "CATHEDRAL_LAUNCH_COUNT",
+    ] {
         println!("cargo:rerun-if-env-changed={variable}");
     }
     for index in 0..3 {
-        for field in ["ELF", "FRAMEBUFFER", "KEYBOARD", "ARGUMENT"] {
+        for field in ["ELF", "FRAMEBUFFER", "KEYBOARD", "CLOCK", "ARGUMENT"] {
             println!("cargo:rerun-if-env-changed=CATHEDRAL_LAUNCH_{index}_{field}");
         }
     }
@@ -36,17 +40,21 @@ fn startup() {
         .parse()
         .unwrap();
     assert!(count <= 3, "at most three launch grants");
-    let mut source = String::from("static LAUNCHES: &[InitialLaunch] = &[\n");
+    let mut source = format!(
+        "const INITIAL_CLOCK: bool = {};\nstatic LAUNCHES: &[InitialLaunch] = &[\n",
+        flag("CATHEDRAL_INIT_CLOCK")
+    );
     for index in 0..count {
         let prefix = format!("CATHEDRAL_LAUNCH_{index}");
         bundle(&format!("{prefix}_ELF"), &format!("launch-{index}.elf"));
         let framebuffer = flag(&format!("{prefix}_FRAMEBUFFER"));
+        let clock = flag(&format!("{prefix}_CLOCK"));
         let keyboard = flag(&format!("{prefix}_KEYBOARD"));
         let argument: u64 = env::var(format!("{prefix}_ARGUMENT"))
             .unwrap_or_else(|_| "0".into())
             .parse()
             .expect("invalid launch argument");
-        source.push_str(&format!("InitialLaunch {{ elf: include_bytes!(concat!(env!(\"OUT_DIR\"), \"/launch-{index}.elf\")), framebuffer: {framebuffer}, keyboard: {keyboard}, argument: {argument} }},\n"));
+        source.push_str(&format!("InitialLaunch {{ elf: include_bytes!(concat!(env!(\"OUT_DIR\"), \"/launch-{index}.elf\")), framebuffer: {framebuffer}, keyboard: {keyboard}, clock: {clock}, argument: {argument} }},\n"));
     }
     source.push_str("];\n");
     fs::write(output.join("startup_config.rs"), source).unwrap();

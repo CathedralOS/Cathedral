@@ -8,10 +8,12 @@ distribution implementations. The pure decoder is host-testable independently.
 
 This q35 experiment recognizes arrows, Enter and F1/F2. It distinguishes press,
 release and repeat; startup/overflow RESET clears held keys. One NEXT request
-consumes one event. Buffers are bounded and may lose bursts; restarting the
+consumes one event, or returns IDLE after 25 ticks without an event. Buffers are bounded and may lose bursts; restarting the
 provider discards previous raw/IPC queues. It does not implement text layouts,
 USB, hotplug, focus, seat routing, trusted shortcuts or application authorization.
-Controller replies currently block without a timeout on absent/broken hardware.
+Controller replies have a 50-tick deadline; init also bounds startup. This
+provider requires separately granted clock access. The recovery-lab feature adds
+explicit startup/request failures for tests; normal builds exclude them.
 
 Controller behavior is checked against the primary
 [QEMU i8042 implementation](https://github.com/qemu/qemu/blob/master/hw/input/pckbd.c).

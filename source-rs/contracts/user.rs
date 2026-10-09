@@ -22,6 +22,10 @@ pub const CLOCK_HANDLE: u64 = 15;
 pub const DISPLAY_INFO: u64 = 16;
 pub const KEYBOARD_READ: u64 = 17;
 pub const KEYBOARD_WRITE: u64 = 18;
+/// Receive into exactly MAX_MESSAGE writable bytes; RDX is the absolute deadline.
+pub const IPC_RECEIVE_UNTIL: u64 = 19;
+/// RDI is an absolute deadline. Requires both keyboard and clock grants.
+pub const KEYBOARD_READ_UNTIL: u64 = 20;
 pub const TIMED_OUT: u64 = (-110i64) as u64;
 /// Maximum unambiguous forward distance in the wrapping tick clock.
 pub const MAX_INTERVAL: u64 = (1 << 63) - 1;

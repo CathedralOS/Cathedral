@@ -17,6 +17,7 @@ cathedral-contracts.workspace = true
 
 [features]
 lab = []
+recovery-lab = []
 
 [lints]
 workspace = true

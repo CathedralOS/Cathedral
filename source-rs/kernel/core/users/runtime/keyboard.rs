@@ -14,11 +14,11 @@ fn owner(session: &Session) -> Option<usize> {
 pub(super) fn syscall(
     session: &mut Session,
     slot: usize,
-    number: u64,
-    first: u64,
-    second: u64,
+    call: (u64, u64, u64),
     event: &mut Event,
+    now: u64,
 ) -> Result<u64, u64> {
+    let (number, first, second) = call;
     if owner(session) != Some(slot) {
         return Err(abi::DENIED);
     }
@@ -35,22 +35,35 @@ pub(super) fn syscall(
             .then_some(0)
             .ok_or(abi::WOULD_BLOCK);
     }
-    if first > 1 {
+    let deadline = if number == abi::KEYBOARD_READ_UNTIL {
+        session.clock.handle(slot)?;
+        if !crate::deadline::valid(now, first) {
+            return Err(abi::INVALID_ARGUMENT);
+        }
+        Some(first)
+    } else {
+        None
+    };
+    if deadline.is_none() && first > 1 {
         return Err(abi::INVALID_ARGUMENT);
     }
-    poll(session);
+    poll(session, now);
     if let Some(byte) = session.keyboard.pop() {
         return Ok(byte);
     }
-    if first == 0 {
+    if deadline.is_none() && first == 0 {
         return Err(abi::WOULD_BLOCK);
     }
+    if crate::deadline::timed_out(now, deadline, false) {
+        return Err(abi::TIMED_OUT);
+    }
     session.tasks[slot].keyboard_wait = true;
+    session.tasks[slot].keyboard_deadline = deadline;
     session.tasks[slot].report.keyboard_reads_blocked += 1;
     *event = Event::Block;
     Ok(0)
 }
-pub(super) fn poll(session: &mut Session) {
+pub(super) fn poll(session: &mut Session, now: u64) {
     let Some(slot) = owner(session) else {
         return;
     };
@@ -68,11 +81,22 @@ pub(super) fn poll(session: &mut Session) {
             session.keyboard.push(byte);
         }
     }
-    if session.tasks[slot].keyboard_wait
-        && let Some(byte) = session.keyboard.pop()
-    {
+    if session.tasks[slot].keyboard_wait {
+        let result = match session.keyboard.pop() {
+            Some(byte) => Ok(byte),
+            None if crate::deadline::timed_out(
+                now,
+                session.tasks[slot].keyboard_deadline,
+                false,
+            ) =>
+            {
+                Err(abi::TIMED_OUT)
+            }
+            None => return,
+        };
         session.tasks[slot].keyboard_wait = false;
-        dispatch::complete(session, slot, Ok(byte));
+        session.tasks[slot].keyboard_deadline = None;
+        dispatch::complete(session, slot, result);
         session.scheduler.unblock(slot);
     }
 }

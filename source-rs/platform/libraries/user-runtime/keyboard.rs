@@ -3,6 +3,9 @@
 use crate::{Error, abi, arch};
 
 pub const LOST: u64 = 256;
+pub fn read_until(deadline: u64) -> Result<u64, Error> {
+    result(arch::call(abi::KEYBOARD_READ_UNTIL, deadline, 0))
+}
 pub fn read(wait: bool) -> Result<u64, Error> {
     result(arch::call(abi::KEYBOARD_READ, u64::from(wait), 0))
 }

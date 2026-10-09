@@ -25,7 +25,7 @@ def command(stream, name, arguments=None):
             return reply["return"]
 
 
-def run(qemu_command, output, timeout, creationflags, input_test=False):
+def run(qemu_command, output, timeout, creationflags, input_test=False, recovery_test=False):
     serial = output / "serial.log"
     serial.write_text("", encoding="utf-8")
     with socket.socket() as listener, (output / "qemu.log").open("w") as log:
@@ -61,6 +61,10 @@ def run(qemu_command, output, timeout, creationflags, input_test=False):
                         raise RuntimeError("Ordinary boot unexpectedly ran lab exercises")
                     print(f"Userspace scene ready after {time.monotonic() - (deadline - timeout):.2f}s from QMP connection", flush=True)
                     snapshot(stream, output)
+                    if recovery_test:
+                        if not all(f"Cathedral: {service} recovered" in text for service in ("input", "display")):
+                            raise RuntimeError("First-generation startup wedges were not recovered")
+                        exercise_recovery(stream, output, serial, process, timeout)
                     if input_test:
                         exercise_input(stream, output, serial, process, timeout)
                     command(stream, "quit")
@@ -142,3 +146,64 @@ def exercise_input(stream, output, serial, process, timeout):
                 raise RuntimeError(f"Missing {service} restart marker")
         snapshot(stream, output, selected, active)
     print("PASS: real keyboard events, navigation, toggles and 10 independent provider restarts preserve scene state")
+
+
+def key_event(stream, key):
+    command(stream, "input-send-event", {"events": [
+        {"type": "key", "data": {"down": down, "key": {"type": "qcode", "data": key}}}
+        for down in (True, False)]})
+
+
+def wait_log(serial, process, offset, markers, timeout):
+    deadline = time.monotonic() + timeout
+    while True:
+        text = serial.read_bytes()[offset:].decode("utf-8", errors="replace")
+        if any(bad in text for bad in ("startup failed", "initial program stopped", "CATHEDRAL_RS_PANIC")):
+            raise RuntimeError(f"Recovery guest failed: {text}")
+        if all(marker in text for marker in markers):
+            return text
+        if process.poll() is not None or time.monotonic() >= deadline:
+            raise RuntimeError(f"Missing recovery markers {markers}: {text}")
+        time.sleep(0.02)
+
+
+def exercise_recovery(stream, output, serial, process, timeout):
+    def navigate(key, selected, active):
+        offset = len(serial.read_bytes())
+        key_event(stream, key)
+        wait_log(serial, process, offset, [f"Cathedral: selection={selected} toggles={active}"], timeout)
+        snapshot(stream, output, selected, active)
+
+    navigate("right", 1, 0)
+    navigate("ret", 1, 2)
+    # No keys for several watchdog intervals: idle is successful service activity.
+    offset = len(serial.read_bytes())
+    until = time.monotonic() + 2.5
+    while time.monotonic() < until:
+        time.sleep(0.05)
+        text = serial.read_bytes()[offset:].decode("utf-8", errors="replace")
+        if "recovered" in text or "startup failed" in text or "initial program stopped" in text:
+            raise RuntimeError(f"Healthy idle caused a restart or failure: {text}")
+    snapshot(stream, output, 1, 2)
+    selected = 1
+    for mode in ("crash", "spin", "block"):
+        for service, key in (("display", "f2"), ("input", "f1")):
+            offset = len(serial.read_bytes())
+            key_event(stream, key)
+            wait_log(serial, process, offset, [f"Cathedral: probe {mode} armed"], timeout)
+            # Queue a real key while display is wedged: input must remain live.
+            if service == "display" and mode != "crash":
+                key_event(stream, "right")
+                selected = (selected + 1) % 3
+            markers = [f"Cathedral: {service} recovered", "Cathedral: recovered with sibling identity preserved"]
+            text = wait_log(serial, process, offset, markers, timeout)
+            sibling = "input" if service == "display" else "display"
+            if f"Cathedral: {sibling} recovered" in text or " restarted" in text:
+                raise RuntimeError(f"Recovery unexpectedly restarted sibling: {text}")
+            if service == "display" and mode != "crash":
+                wait_log(serial, process, offset, [f"Cathedral: selection={selected} toggles=2"], timeout)
+            snapshot(stream, output, selected, 2)
+            # A fresh request after recovery proves replacement input and display work.
+            navigate("right", (selected + 1) % 3, 2)
+            selected = (selected + 1) % 3
+    print("PASS: startup wedges, healthy idle, provider crashes/spins/blocks, preserved sibling identity and scene state")
