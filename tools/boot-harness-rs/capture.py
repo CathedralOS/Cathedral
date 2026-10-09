@@ -48,13 +48,18 @@ def run(qemu_command, output, timeout, creationflags):
                         text = serial.read_text(encoding="utf-8", errors="replace")
                         if "CATHEDRAL_RS_PANIC" in text or "CATHEDRAL_RS_FAULT:" in text:
                             raise RuntimeError(f"Capture boot failed; logs: {output}")
-                        if "CATHEDRAL_RS_BOOT_OK" in text:
+                        if any(marker in text for marker in ("Cathedral: startup failed", "initial program stopped", "admission failed", "requires unavailable framebuffer")):
+                            raise RuntimeError(f"Userspace startup failed; logs: {output}")
+                        if "Cathedral: startup ready" in text:
                             break
                         if process.poll() is not None or time.monotonic() >= deadline:
                             raise RuntimeError(f"Capture boot did not complete; logs: {output}")
                         time.sleep(0.05)
-                    if "display service faulted and restarted; pattern redrawn" not in text:
-                        raise RuntimeError("Display recovery milestone missing")
+                    if "Cathedral kernel: starting supplied initial program" not in text:
+                        raise RuntimeError("Initial program handoff missing")
+                    if any(marker in text for marker in ("ring3 private memory", "fault contained mode=", "display service faulted and restarted")):
+                        raise RuntimeError("Ordinary boot unexpectedly ran lab exercises")
+                    print(f"Userspace scene ready after {time.monotonic() - (deadline - timeout):.2f}s from QMP connection", flush=True)
                     command(stream, "screendump", {"filename": str(output / "display.ppm")})
                     command(stream, "quit")
             process.wait(timeout=5)
@@ -91,4 +96,4 @@ def validate(output):
     png += chunk(b"IDAT", zlib.compress(rows)) + chunk(b"IEND", b"")
     destination = output / "display.png"
     destination.write_bytes(png)
-    print(f"PASS: all {width * height} scanout pixels match the redrawn pattern; screenshot: {destination}")
+    print(f"PASS: all {width * height} scanout pixels match the startup scene; screenshot: {destination}")

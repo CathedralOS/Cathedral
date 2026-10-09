@@ -8,6 +8,14 @@ handoff under QEMU/OVMF. Host-side Python only; no extra Python packages.
 Cargo workspace keeps kernel implementation under `kernel/` and the UART under
 `platform/drivers/`; replacing the distribution does not require moving those.
 
+Ordinary boots build only `startup.initial` and its optional approved child.
+The kernel admits that initial executable; `distribution/init` launches and uses
+the display provider and keeps both tasks alive. The tests below are compiled
+only with `--smoke`. `--kernel-only --smoke` runs kernel and raw-user tests without
+building any platform service or distribution executable. `--kernel-only` boots
+the kernel alone. `--profile tools/boot-harness-rs/profiles/minimal.json` supplies
+only a hello initial program, with no child or display grant.
+
 The smoke boot checks cooperative and timer-preempted tasks, dynamic admission,
 task-slot exhaustion, allocation-failure rollback, stale IDs and repeated stack,
 page-table and heap reclamation while a non-yielding peer stays alive. Use
@@ -35,6 +43,8 @@ and an independent pixel-for-pixel scanout check through QMP. It saves
 `build/boot-harness-rs/capture/display.png` and the original PPM, then stops QEMU.
 No GUI or extra Python packages are required. `--window` instead opens the QEMU
 display for an ordinary interactive boot; Ctrl+C stops that run.
+Capture waits for userspace startup readiness and rejects accidental lab execution.
+The ordinary scene shares its distribution-owned drawing code with the smoke fixture.
 
 See [the Rust lab guide](../../source-rs/README.md) for setup, ordinary boots,
 firmware overrides, logs, checks, current limitations and the bring-up sequence.

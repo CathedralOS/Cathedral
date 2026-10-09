@@ -5,28 +5,19 @@
 
 extern crate alloc;
 
-#[cfg(feature = "bundled-user")]
-mod applications;
 mod diagnostics;
-#[cfg(feature = "bundled-user")]
-mod display;
 mod firmware;
 mod graphics;
 mod handoff;
 mod heap;
 mod interrupts;
-#[cfg(feature = "bundled-user")]
-mod ipc;
+#[cfg(feature = "smoke-test")]
+mod lab;
 mod memory;
 #[cfg(feature = "smoke-test")]
 mod smoke;
-#[cfg(feature = "bundled-user")]
-mod supervision;
-mod task_lifecycle;
-mod tasks;
-mod users;
-#[cfg(feature = "bundled-user")]
-mod watchdog;
+#[cfg(all(feature = "bundled-user", not(feature = "smoke-test")))]
+mod startup;
 
 use uefi::{Status, entry};
 
@@ -47,23 +38,17 @@ fn kernel_main(mut boot: handoff::BootState) -> ! {
     #[cfg(feature = "smoke-test")]
     smoke::probe_faults(&boot.memory.layout);
     interrupts::start_timer(&boot.memory.layout, &mut boot.console);
-    tasks::exercise(&mut boot.memory, &mut boot.console);
-    task_lifecycle::exercise(&mut boot.memory, &mut boot.console);
-    users::exercise(&mut boot.memory, &mut boot.console);
-    #[cfg(feature = "bundled-user")]
-    applications::exercise(&mut boot.memory, &mut boot.console);
-    #[cfg(feature = "bundled-user")]
-    ipc::exercise(&mut boot.memory, &mut boot.console);
-    #[cfg(feature = "bundled-user")]
-    supervision::exercise(&mut boot.memory, &mut boot.console);
-    #[cfg(feature = "bundled-user")]
-    watchdog::exercise(&mut boot.memory, &mut boot.console);
-    #[cfg(feature = "bundled-user")]
-    display::exercise(&mut boot.memory, &mut boot.console);
+    boot.memory.frames.enable_reclamation();
+    #[cfg(feature = "smoke-test")]
+    lab::run(&mut boot);
     diagnostics::ready(&mut boot.console);
 
     #[cfg(feature = "smoke-test")]
     smoke::complete();
     #[cfg(not(feature = "smoke-test"))]
-    interrupts::idle()
+    {
+        #[cfg(feature = "bundled-user")]
+        startup::run(&mut boot.memory, &mut boot.console);
+        interrupts::idle()
+    }
 }

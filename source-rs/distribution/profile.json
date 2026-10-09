@@ -23,12 +23,29 @@
     "display_service": {
       "package": "cathedral-display-service",
       "entry": "platform/services/display/main.rs",
-      "target": "x86_64-unknown-none"
+      "target": "x86_64-unknown-none",
+      "features": [
+        "lab"
+      ]
     },
     "display_lab": {
       "package": "cathedral-display-lab",
       "entry": "distribution/programs/display/main.rs",
       "target": "x86_64-unknown-none"
+    }
+  },
+  "startup": {
+    "initial": {
+      "package": "cathedral-init",
+      "entry": "distribution/init/main.rs",
+      "target": "x86_64-unknown-none"
+    },
+    "launch": {
+      "package": "cathedral-display-service",
+      "entry": "platform/services/display/main.rs",
+      "target": "x86_64-unknown-none",
+      "framebuffer": true,
+      "argument": 0
     }
   }
 }

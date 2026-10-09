@@ -15,6 +15,7 @@ pub fn ready(console: &mut SerialPort) {
     writeln!(console, "CATHEDRAL_RS_BOOT_OK").ok();
 }
 
+#[cfg(any(feature = "smoke-test", feature = "bundled-user"))]
 pub fn user_output(bytes: &[u8]) -> bool {
     // SAFETY: Sole CPU in IRQ-masked dispatch. Boot's UART owner is suspended;
     // this bounded sink neither allocates nor retains the supplied buffer.

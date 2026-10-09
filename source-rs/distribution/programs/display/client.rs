@@ -37,22 +37,7 @@ pub fn run() -> u64 {
             call(send, receive, [wire::RECT, u64::MAX, 0, 2, 1, 0])[0],
             abi::INVALID_ARGUMENT
         );
-        assert_eq!(
-            call(send, receive, [wire::CLEAR, 0, 0, 0, 0, 0x101827])[0],
-            0
-        );
-        // Layout is distribution policy. Coordinates scale with the display mode.
-        for (x, y, width, height, color) in [
-            (w / 16, h / 12, w * 7 / 8, h / 96, 0x59d9cc),
-            (w / 16, h * 5 / 24, w / 4, h / 2, 0xe96f6f),
-            (w * 6 / 16, h * 5 / 24, w / 4, h / 2, 0x79c99e),
-            (w * 11 / 16, h * 5 / 24, w / 4, h / 2, 0x779bea),
-        ] {
-            assert_eq!(
-                call(send, receive, [wire::RECT, x, y, width, height, color])[0],
-                0
-            );
-        }
+        cathedral_boot_scene::draw(send, receive, w, h).unwrap();
         send.send(&wire::encode([wire::INFO, 0, 0, 0, 0, 0]))
             .unwrap();
         if round == 0 {

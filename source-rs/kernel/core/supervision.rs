@@ -28,7 +28,6 @@ impl Supervisor {
             || child >= MAX_TASKS
             || owner >= child
             || peer >= child
-            || owner == peer
         {
             return Err(abi::INVALID_ARGUMENT);
         }

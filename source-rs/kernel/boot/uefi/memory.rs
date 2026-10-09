@@ -6,9 +6,11 @@ use cathedral_uart_16550::SerialPort;
 use core::fmt::Write;
 
 pub struct PreparedMemory {
+    #[cfg(feature = "bundled-user")]
     pub framebuffer: Option<cathedral_contracts::display::Framebuffer>,
     pub layout: arch::BootLayout,
     pub frames: FrameAllocator,
+    #[cfg(any(feature = "smoke-test", feature = "bundled-user"))]
     pub image: arch::ImageRange,
 }
 
@@ -28,9 +30,11 @@ pub fn prepare(info: crate::firmware::BootInfo, console: &mut SerialPort) -> Pre
     )
     .ok();
     PreparedMemory {
+        #[cfg(feature = "bundled-user")]
         framebuffer: info.framebuffer,
         frames,
         layout,
+        #[cfg(any(feature = "smoke-test", feature = "bundled-user"))]
         image: info.image,
     }
 }

@@ -12,17 +12,20 @@ Omega's proof or authority guarantees.
 | --- | --- |
 | `kernel/boot/uefi/main.rs` | Visible orchestration of firmware entry and post-handoff kernel startup |
 | `kernel/boot/uefi/firmware.rs` | UEFI crate adapter and memory-inventory policy |
-| `kernel/boot/uefi/graphics.rs`, `display.rs`, `display/` | GOP snapshot and userspace display/recovery verification |
+| `kernel/boot/uefi/graphics.rs` | GOP snapshot before firmware handoff |
+| `kernel/boot/uefi/startup.rs` | Admit a supplied initial program and its bounded launch grant |
+| `kernel/boot/uefi/lab.rs`, `lab/` | Smoke-only orchestration, fixtures and display recovery verification |
 | `kernel/boot/uefi/memory.rs`, `handoff.rs` | Compose core frame policy with architecture mappings, then transfer boot state |
 | `kernel/boot/uefi/interrupts.rs`, `diagnostics.rs` | Interrupt bring-up and serial/fatal reporting |
-| `kernel/boot/uefi/heap.rs`, `tasks.rs`, `task_lifecycle.rs` | Heap installation, cooperative/preemptive workloads and dynamic lifecycle checks |
-| `kernel/boot/uefi/users.rs` | Ring-3 syscall, isolation, fault containment and admission rollback experiments |
-| `kernel/boot/uefi/applications.rs` | Run the bundled executable twice per session and check loading, private state, exit statuses and cleanup |
-| `kernel/boot/uefi/ipc.rs` | Compose explicit endpoint grants and check service/failure sessions |
+| `kernel/boot/uefi/heap.rs` | Heap installation; smoke-only heap verification |
+| `kernel/boot/uefi/lab/tasks.rs`, `lab/task_lifecycle.rs` | Cooperative/preemptive workloads and dynamic lifecycle checks |
+| `kernel/boot/uefi/lab/users.rs` | Ring-3 syscall, isolation, fault containment and admission rollback experiments |
+| `kernel/boot/uefi/lab/applications.rs` | Run the bundled executable twice per session and check loading, private state, exit statuses and cleanup |
+| `kernel/boot/uefi/lab/ipc.rs` | Compose explicit endpoint grants and check service/failure sessions |
 | `kernel/core/supervision.rs`, `supervision/` | Host-testable launch authority, child identity and outcome consumption |
 | `kernel/core/deadline.rs` | Boot-issued clock grants and wrapping deadline comparisons |
-| `kernel/boot/uefi/supervision.rs` | Supply launch bounds and verify userspace recovery/cleanup |
-| `kernel/boot/uefi/watchdog.rs` | Verify hung-service cancellation, deadline wakeups and independent progress |
+| `kernel/boot/uefi/lab/supervision.rs` | Supply launch bounds and verify userspace recovery/cleanup |
+| `kernel/boot/uefi/lab/watchdog.rs` | Verify hung-service cancellation, deadline wakeups and independent progress |
 | `kernel/core/ipc.rs`, `ipc/` | Host-testable endpoint rights, bound tickets, queues and teardown |
 | `kernel/boot/uefi/smoke.rs` | Test-only fault injection and QEMU result reporting |
 | `contracts/boot.rs` | Firmware-neutral memory handoff; experimental Rust data, not a frozen ABI |
@@ -35,6 +38,7 @@ Omega's proof or authority guarantees.
 | `platform/drivers/uart_16550/` | Polling serial diagnostics, corresponding to `source/platform/drivers/uart_16550/` |
 | `platform/libraries/user-runtime/` | Entry stub, syscall wrappers and linker script; imports only shared contracts |
 | `platform/services/display/` | Separately compiled userspace provider for linear framebuffer drawing |
+| `distribution/init/`, `distribution/libraries/boot-scene/` | Ordinary userspace startup, restart policy and scene layout |
 | `distribution/programs/display/` | Test-pattern layout, display client and restart policy |
 | `distribution/programs/supervision/` | Userspace restart policy, persistent client and crashing echo service |
 | `distribution/programs/ipc/` | Client, echo service and hostile IPC fixture roles in a standalone ELF |
@@ -74,23 +78,29 @@ From the repository root:
 ```text
 python tools/boot-harness-rs/run.py --build-only
 python tools/boot-harness-rs/run.py --smoke
+python tools/boot-harness-rs/run.py --kernel-only --smoke
 python tools/boot-harness-rs/run.py --screenshot
 python tools/boot-harness-rs/run.py --window
 python tools/boot-harness-rs/run.py
 ```
 
-The final command leaves the CPU idling with timer wakeups; Ctrl+C stops QEMU.
+The final command keeps init and the display provider alive; both block when
+there is no work, leaving the CPU idle with timer wakeups. Ctrl+C stops QEMU.
 `--window` shows the display during an ordinary boot. `--screenshot` runs a
 bounded ordinary boot, captures QEMU's actual scanout through local QMP, checks
-every pixel against the distribution pattern, writes `capture/display.png`
+every pixel against the distribution pattern, confirms no lab suite ran, writes `capture/display.png`
 under the build directory, and stops QEMU. This uses only Python's standard
 library. The capture check requires the lab's 1024x768 mode.
 `--release` selects an optimized build. `--memory 256` selects guest RAM in MiB.
 Smoke mode has a 30-second boot deadline, requires ordered serial milestones,
 and checks the QEMU debug-exit status. A panic, missing milestone, reset or hang
 fails the run. Its debug-exit feature is not enabled for ordinary boots.
-The harness reads the one distribution profile, builds its named `user_programs`
-as ELFs, then supplies those artifacts to the UEFI build with `bundled-user`.
+The harness reads the distribution profile. Ordinary boots build only `startup.initial`
+and the optional `startup.launch`; smoke builds instead build the named
+`user_programs` fixtures. It supplies these ELF artifacts to the UEFI build with
+`bundled-user`. `--kernel-only` omits that feature and builds no user executables.
+It can be combined with `--smoke` to test raw user isolation without platform
+services or distribution programs.
 Both builds use the selected debug/release profile. There is no filesystem read
 or executable download in the guest, and no Cargo dependency from boot to the
 distribution. The boot build tracks each selected artifact's path and contents
@@ -124,14 +134,14 @@ cargo fmt --all -- --check
 cargo check-uefi
 cargo build-uefi
 cargo build --locked --package cathedral-hello --target x86_64-unknown-none
-cargo clippy --locked --package cathedral-hello --package cathedral-ipc-lab --package cathedral-supervision-lab --package cathedral-display-service --package cathedral-display-lab --target x86_64-unknown-none -- -D warnings
+cargo clippy --locked --package cathedral-hello --package cathedral-ipc-lab --package cathedral-supervision-lab --package cathedral-display-service --package cathedral-display-lab --package cathedral-init --target x86_64-unknown-none -- -D warnings
 ```
 
 The default Cargo members are the host-testable contracts and core. Kernel crates
 use the UEFI target; the user program/runtime use the freestanding ELF target,
 so the whole workspace cannot be built for one target. `cargo build-uefi` builds
-the kernel/probe lab alone; use the Python harness for the composed distribution
-image. Run Cargo inside this directory so its toolchain, aliases and relative
+a standalone kernel with no initial program; use the Python harness for the
+composed distribution image or add `smoke-test` for kernel-only exercises. Run Cargo inside this directory so its toolchain, aliases and relative
 linker-script path apply. The bare-metal target uses the SysV calling convention;
 the runtime's entry stub establishes its call alignment before invoking Rust.
 
@@ -250,7 +260,7 @@ The CPU profile is qemu64, with no claim to optional virtualization exception
 semantics or physical-hardware coverage. Unsafe wrappers are boot-only lab
 mechanisms, not application APIs.
 
-The runtime supports a configurable limit of 1ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“64 trusted kernel tasks on one
+The runtime supports a configurable limit of 1ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“64 trusted kernel tasks on one
 CPU (default 8), plus an optional frame budget for stacks and their tables.
 `tasks::spawn(fn())` returns a `TaskId` or an admission error. IDs contain slot
 generations and are scoped to a session; reused slots do not revive old IDs.
@@ -414,7 +424,7 @@ capability lifecycle need reconciliation, recorded in
 
 A session may reserve one additional task slot and two endpoint slots for a
 boot-approved executable. Boot binds the launch grant to one supervisor and a
-connection port to one other initial task. The grant selects the executable,
+connection port to one initial task, which may be the supervisor itself. The grant selects the executable,
 fixed first entry argument, peer, and physical-frame budget; userspace can
 supply only the second ordinary argument. It cannot nominate another image,
 principal, authority set or peer. Initial endpoints cannot refer to the reusable
@@ -505,7 +515,8 @@ before `ExitBootServices`. Boot prefers 1024x768 RGB/BGR, retaining only physica
 geometry after dropping all protocol references. The supported aperture must be
 page-aligned, page-sized, at most 16 MiB, and large enough for the validated stride
 and height. Bitmask and BLT-only modes are unsupported. Missing/unsupported GOP
-skips the display fixture during ordinary boot and fails the composed smoke test.
+prevents admission when the supplied startup grant requires a framebuffer, and
+fails the composed display smoke test. A profile without that grant remains usable.
 Any memory descriptor overlapping the aperture is conservatively excluded from
 RAM allocation, even if firmware labels it conventional memory.
 
@@ -544,8 +555,50 @@ cancels the replacement after a successful redraw. An independent clock-granted
 task progresses across each drawing interval. Additional probes exercise missing
 authority, NX, both guard pages, checked metadata copyout, rejection of device
 memory as a syscall buffer, and two retries at every failed frame-admission budget.
-All sessions return their heap and RAM-frame counts to baseline. The retained
-scanout is independently checked by the harness's `--screenshot` mode.
+All sessions return their heap and RAM-frame counts to baseline. The ordinary
+init uses the same distribution scene library; its live scanout is
+independently checked by the harness's `--screenshot` mode.
+
+## Ordinary userspace startup
+
+`main.rs` initializes firmware custody, memory, exception entry, the heap and timer,
+then enables frame reclamation. With `bundled-user` it admits a supplied initial
+ELF through `startup.rs`; without it, the kernel remains idle. The normal kernel
+path has no knowledge of the display service executable or distribution scene.
+The bootstrap UART remains the documented privileged platform-driver exception.
+`CATHEDRAL_RS_BOOT_OK` marks kernel initialization; `Cathedral: startup ready`
+marks the default distribution's successful drawing and service startup.
+
+The host profile supplies `startup.initial` and optionally `startup.launch`.
+Each selects a package, entry and ELF target; a child may request a framebuffer
+and a fixed first argument. The kernel grants the initial task distinct launch
+and connection tickets for that one approved child. It enforces custody and task
+lifetime; the initial program chooses when to spawn, connect, draw and restart.
+No physical address or executable choice is accepted from untrusted syscall data.
+This host-selected authority is still lab composition, not signed manifest admission.
+
+`distribution/init` launches the independent platform display provider, draws
+`distribution/libraries/boot-scene`, then blocks collecting its child's outcome.
+The display provider blocks waiting for messages. Init can restart/redraw after
+failure and stops after three failed generations. No intentional faults, observer
+waits or exhaustive tests run on this path. A hung provider is not yet monitored
+by this minimal init. The launcher still admits only one child at a time; adding
+an input service or shell requires extending the bounded launch mechanism.
+
+A replacement initial program need not use the platform services. For example:
+
+```text
+python tools/boot-harness-rs/run.py --profile tools/boot-harness-rs/profiles/minimal.json
+```
+
+That example supplies only the existing hello ELF, which prints and exits. No
+child or framebuffer grant is installed. Custom ordinary profiles have separate
+output directories. `--kernel-only` goes further and omits all user artifacts.
+
+All exhaustive workloads live under `kernel/boot/uefi/lab/`, compiled only by
+`smoke-test`. Its copied artifacts retain explicit service/fault composition as
+test fixtures. The display service's separate `lab` feature likewise excludes
+fault injection and negative probes from its normal executable.
 
 ## Next bring-up steps
 

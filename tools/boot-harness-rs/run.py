@@ -13,9 +13,6 @@ import capture
 REPO = Path(__file__).resolve().parents[2]
 WORKSPACE = REPO / "source-rs"
 BUILD = REPO / "build" / "boot-harness-rs"
-PROFILE = json.loads((WORKSPACE / "distribution/profile.json").read_text(encoding="utf-8"))
-TARGET = PROFILE["target"]
-BOOT_PACKAGE = PROFILE["boot_package"]
 MARKERS = (
     "Cathedral Rust lab: UEFI entry",
     "Cathedral Rust lab: ExitBootServices complete",
@@ -106,6 +103,8 @@ def main():
     mode.add_argument("--screenshot", action="store_true", help="Boot normally, verify scanout through QMP, save display.png and stop")
     parser.add_argument("--fault", choices=("guard", "invalid-opcode", "double-fault"), help="Expected-fault smoke test (requires --smoke)")
     parser.add_argument("--release", action="store_true")
+    parser.add_argument("--kernel-only", action="store_true", help="Build/boot without any platform or distribution executable")
+    parser.add_argument("--profile", type=Path, default=WORKSPACE / "distribution/profile.json", help="Host composition profile")
     parser.add_argument("--window", action="store_true", help="Show QEMU's display during an ordinary interactive boot")
     parser.add_argument("--timeout", type=float, default=30, help="Smoke boot timeout in seconds (default: 30)")
     parser.add_argument("--memory", type=int, default=128, help="Guest RAM in MiB (default: 128)")
@@ -117,31 +116,65 @@ def main():
     if args.window and (args.smoke or args.screenshot or args.build_only):
         parser.error("--window requires an ordinary interactive boot")
 
-    environment = os.environ.copy()
+    if args.kernel_only and args.screenshot:
+        parser.error("--screenshot requires the distribution scene")
+    custom_profile = args.profile.resolve() != (WORKSPACE / "distribution/profile.json").resolve()
+    if custom_profile and args.kernel_only:
+        parser.error("--kernel-only does not use a distribution profile")
+    if custom_profile and args.smoke:
+        parser.error("custom profiles select ordinary startup; smoke uses the standard lab profile")
+    composition = ({"target": "x86_64-unknown-uefi", "boot_package": "cathedral-boot-uefi"}
+                   if args.kernel_only else json.loads(args.profile.read_text(encoding="utf-8")))
+    target = composition["target"]
+    boot_package = composition["boot_package"]
+    environment = {key: value for key, value in os.environ.items()
+                   if not (key.startswith("CATHEDRAL_") and (key.endswith("_ELF") or key.startswith("CATHEDRAL_LAUNCH_")))}
+    programs = {}
+    if not args.kernel_only:
+        if args.smoke:
+            programs = composition["user_programs"]
+        else:
+            startup = composition["startup"]
+            programs["init"] = startup["initial"]
+            if startup.get("launch"):
+                child = startup["launch"]
+                programs["launch"] = child
+                environment["CATHEDRAL_LAUNCH_FRAMEBUFFER"] = "1" if child.get("framebuffer", False) else "0"
+                argument = child.get("argument", 0)
+                if type(argument) is not int or not 0 <= argument < 2**64:
+                    parser.error("launch argument must be a u64")
+                environment["CATHEDRAL_LAUNCH_ARGUMENT"] = str(argument)
     profile = "release" if args.release else "debug"
-    for name, user in PROFILE['user_programs'].items():
+    for name, user in programs.items():
         user_cargo = ["cargo", "build", "--locked", "--package", user['package'],
                       "--target", user['target'], "--target-dir", str(BUILD / "cargo")]
+        if user.get("features"):
+            user_cargo.extend(["--features", ",".join(user["features"])])
         if args.release:
             user_cargo.append("--release")
         subprocess.run(user_cargo, cwd=WORKSPACE, check=True)
         user_elf = BUILD / "cargo" / user['target'] / profile / user['package']
         environment[f'CATHEDRAL_{name.upper()}_ELF'] = str(user_elf.resolve(strict=True))
 
-    cargo = ["cargo", "build", "--locked", "--package", BOOT_PACKAGE,
-             "--target", TARGET, "--target-dir", str(BUILD / "cargo")]
+    cargo = ["cargo", "build", "--locked", "--package", boot_package,
+             "--target", target, "--target-dir", str(BUILD / "cargo")]
     if args.release:
         cargo.append("--release")
-    features = ['bundled-user']
+    features = [] if args.kernel_only else ['bundled-user']
     if args.smoke:
         features.append(f"fault-{args.fault}" if args.fault else "smoke-test")
-    cargo.extend(["--features", ','.join(features)])
+    if features:
+        cargo.extend(["--features", ','.join(features)])
     subprocess.run(cargo, cwd=WORKSPACE, check=True, env=environment)
     # Keep smoke images and their terminating feature separate from normal boots.
     output = BUILD / (f"fault-{args.fault}" if args.fault else "smoke" if args.smoke else "capture" if args.screenshot else "interactive")
+    if args.kernel_only:
+        output = output.with_name("kernel-" + output.name)
+    if custom_profile:
+        output = output.with_name(args.profile.stem + "-" + output.name)
     esp = output / "esp/EFI/BOOT"
     esp.mkdir(parents=True, exist_ok=True)
-    shutil.copyfile(BUILD / "cargo" / TARGET / profile / f"{BOOT_PACKAGE}.efi", esp / "BOOTX64.EFI")
+    shutil.copyfile(BUILD / "cargo" / target / profile / f"{boot_package}.efi", esp / "BOOTX64.EFI")
     print(f"EFI image: {esp / 'BOOTX64.EFI'}", flush=True)
     if args.build_only:
         return 0
@@ -182,7 +215,11 @@ def main():
     serial = serial_path.read_text(encoding="utf-8", errors="replace")
     print(serial)
     position = 0
-    markers = MARKERS if not args.fault else MARKERS[:MARKERS.index("Cathedral Rust lab: timer ticks=")] + ("CATHEDRAL_RS_FAULT:", "CATHEDRAL_RS_EXPECTED_FAULT")
+    markers = MARKERS
+    if args.kernel_only:
+        markers = MARKERS[:MARKERS.index("Cathedral Rust lab: ELF instances exited [17, 29]")] + ("CATHEDRAL_RS_BOOT_OK",)
+    if args.fault:
+        markers = MARKERS[:MARKERS.index("Cathedral Rust lab: timer ticks=")] + ("CATHEDRAL_RS_FAULT:", "CATHEDRAL_RS_EXPECTED_FAULT")
     for marker in markers:
         found = serial.find(marker, position)
         if found < 0:
@@ -191,7 +228,7 @@ def main():
     # isa-debug-exit returns (guest_value << 1) | 1, so guest 0x10 means 33.
     if result.returncode != 33 or "CATHEDRAL_RS_PANIC" in serial:
         raise RuntimeError(f"Boot failed (QEMU exit {result.returncode}); logs: {output}")
-    print(f"PASS: expected {args.fault} exception" if args.fault else "PASS: boot, preemption, fault containment, static ELF programs, capability IPC, userspace supervision, deadline/display recovery and memory reclamation")
+    print("PASS: standalone kernel boot and raw user isolation" if args.kernel_only and not args.fault else f"PASS: expected {args.fault} exception" if args.fault else "PASS: boot, preemption, fault containment, static ELF programs, capability IPC, userspace supervision, deadline/display recovery and memory reclamation")
     return 0
 
 

@@ -76,7 +76,11 @@ def check_rust():
     entries = [Path(t['src_path']).resolve() for t in package['targets'] if 'bin' in t['kind']]
     if (tree / profile['boot_entry']).resolve() not in entries:
         raise ValueError('Rust profile boot entry does not match its Cargo package')
-    for user in profile['user_programs'].values():
+    startup = profile['startup']
+    users = [*profile['user_programs'].values(), startup['initial']]
+    if startup.get('launch'):
+        users.append(startup['launch'])
+    for user in users:
         entry = (tree / user['entry']).resolve()
         package = packages[user['package']]
         entries = [Path(t['src_path']).resolve() for t in package['targets'] if 'bin' in t['kind']]

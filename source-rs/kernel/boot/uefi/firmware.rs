@@ -7,13 +7,16 @@ use core::fmt::Write;
 use uefi::mem::memory_map::{MemoryAttribute, MemoryDescriptor, MemoryMap, MemoryType};
 
 pub struct BootInfo {
+    #[cfg(feature = "bundled-user")]
     pub framebuffer: Option<cathedral_contracts::display::Framebuffer>,
     pub inventory: BootMemory,
+    #[cfg(any(feature = "smoke-test", feature = "bundled-user"))]
     pub image: cathedral_arch::ImageRange,
 }
 
 pub fn exit_boot_services(console: &mut SerialPort) -> BootInfo {
     let framebuffer = crate::graphics::capture();
+    #[cfg(any(feature = "smoke-test", feature = "bundled-user"))]
     let image = {
         let loaded = uefi::boot::open_protocol_exclusive::<uefi::proto::loaded_image::LoadedImage>(
             uefi::boot::image_handle(),
@@ -75,7 +78,9 @@ pub fn exit_boot_services(console: &mut SerialPort) -> BootInfo {
     .ok();
     BootInfo {
         inventory,
+        #[cfg(any(feature = "smoke-test", feature = "bundled-user"))]
         image,
+        #[cfg(feature = "bundled-user")]
         framebuffer,
     }
 }

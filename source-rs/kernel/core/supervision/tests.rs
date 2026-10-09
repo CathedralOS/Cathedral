@@ -62,11 +62,35 @@ fn failed_admission_can_retry_and_parent_death_cancels_live_child() {
 }
 #[test]
 fn dead_peer_and_invalid_boot_grants_fail_closed() {
-    assert!(Supervisor::new(1, 0, 0, 2).is_err());
+    assert!(Supervisor::new(1, 0, 2, 2).is_err());
     assert!(Supervisor::new(1, 2, 1, 2).is_err());
     assert!(Supervisor::new(0, 0, 1, 2).is_err());
     let mut model = Supervisor::new(1, 0, 1, 2).unwrap();
     let grant = model.launch(0).unwrap();
     model.close(1);
     assert_eq!(model.request(0, grant, 0), Err(abi::PEER_CLOSED));
+}
+
+#[test]
+fn initial_task_can_hold_distinct_launch_and_connection_grants() {
+    let mut model = Supervisor::new(1, 0, 0, 1).unwrap();
+    let launch = model.launch(0).unwrap();
+    let port = model.port(0).unwrap();
+    assert_ne!(launch, port);
+    assert_eq!(model.request(0, port, 0), Err(abi::BAD_HANDLE));
+    model.request(0, launch, 0).unwrap();
+    let child = model.started(2);
+    assert_eq!(model.connect(0, launch), Err(abi::BAD_HANDLE));
+    model.connect(0, port).unwrap();
+    assert_eq!(model.launch(1), Err(abi::DENIED));
+    assert_eq!(model.port(1), Err(abi::DENIED));
+    model.request_cancel(0, child).unwrap();
+    model.reaped([0; abi::EXIT_BYTES]);
+    model.consume();
+    model.request(0, launch, 1).unwrap();
+    model.started(3);
+    model.connect(0, port).unwrap();
+    model.close(0);
+    assert!(model.cancel_child());
+    assert_eq!(model.port(0), Err(abi::DENIED));
 }

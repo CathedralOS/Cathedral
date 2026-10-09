@@ -48,6 +48,14 @@ mechanisms. A directory move does not create a separate kernel binary: the Rust
 UEFI executable still composes entry and post-firmware startup through a small
 orchestrating `main.rs`.
 
+The kernel can boot independently of the shared platform. In the Rust lab,
+ordinary boot optionally admits a host-supplied initial program and bounded
+launch authority. `distribution/init` chooses when to start and use the selected
+platform provider. The profile chooses executable artifacts; the kernel enforces
+their grants. Exhaustive bring-up composition lives under `kernel/boot/uefi/lab`
+and is compiled only in smoke builds. The first launcher supports one approved
+child at a time; this is not yet a general service graph or admission contract.
+
 `platform/` is the shared OS base outside the kernel: display/capture, normalized
 input, audio, clipboard, accessibility, storage, networking and service lifecycle.
 Most of these services are not implemented yet. Stable interfaces, maintained

@@ -12,3 +12,8 @@ kernel and platform have no Cargo dependency on this distribution package.
 `programs/display` owns the lab's test-pattern layout and provider restart policy.
 The profile also selects the independent `platform/services/display` executable;
 composition chooses that provider without moving its implementation into the distro.
+
+`init` is the ordinary initial userspace executable. It receives bounded grants,
+launches the profile-selected provider, draws the shared `libraries/boot-scene`
+scene and owns restart decisions. Healthy tasks stay alive. `user_programs` in
+the profile selects smoke fixtures; `startup` selects ordinary composition.

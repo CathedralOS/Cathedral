@@ -15,7 +15,6 @@ static PROGRESS: [AtomicU64; 2] = [const { AtomicU64::new(0) }; 2];
 static STACKS: [AtomicU64; 2] = [const { AtomicU64::new(0) }; 2];
 
 pub fn exercise(memory: &mut crate::memory::PreparedMemory, console: &mut SerialPort) {
-    memory.frames.enable_reclamation();
     // SAFETY: We remain on the privileged boot CPU, with the heap initialized.
     let baseline = unsafe { HEAP.used() };
     // Run twice to verify task exit releases heap/stack backing and virtual slots

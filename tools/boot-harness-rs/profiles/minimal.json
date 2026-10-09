@@ -1,0 +1,13 @@
+{
+  "name": "Standalone initial-program example",
+  "boot_entry": "kernel/boot/uefi/main.rs",
+  "boot_package": "cathedral-boot-uefi",
+  "target": "x86_64-unknown-uefi",
+  "startup": {
+    "initial": {
+      "package": "cathedral-hello",
+      "entry": "distribution/programs/hello/main.rs",
+      "target": "x86_64-unknown-none"
+    }
+  }
+}
