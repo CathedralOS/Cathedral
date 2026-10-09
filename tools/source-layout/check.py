@@ -78,8 +78,7 @@ def check_rust():
         raise ValueError('Rust profile boot entry does not match its Cargo package')
     startup = profile['startup']
     users = [*profile['user_programs'].values(), startup['initial']]
-    if startup.get('launch'):
-        users.append(startup['launch'])
+    users.extend(startup.get('launches', [startup['launch']] if startup.get('launch') else []))
     for user in users:
         entry = (tree / user['entry']).resolve()
         package = packages[user['package']]

@@ -203,6 +203,6 @@ saved handle must not silently grant control or resurrect revoked authority.
 **Recommendation (unaccepted).** Keep task scopes structured. Require explicit
 lifetime ownership and transfer before an independently owned service can
 survive and be adopted by a replacement supervisor. Specify component ownership
-separately from task scheduling. The Rust lab currently cancels its one owned
-child on supervisor exit/fault, without running user destructors; it implements
+separately from task scheduling. The Rust lab currently cancels its owned
+children on supervisor exit/fault, without running user destructors; it implements
 neither surviving orphans nor production cooperative cancellation.

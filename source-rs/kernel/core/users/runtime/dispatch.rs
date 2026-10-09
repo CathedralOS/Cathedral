@@ -42,6 +42,9 @@ pub(super) fn syscall(session: &mut Session, slot: usize, now: u64) -> Event {
             }
         }
         abi::IPC_REVOKE => session.ipc.revoke(slot, first).map(|()| 0),
+        abi::KEYBOARD_READ | abi::KEYBOARD_WRITE => {
+            super::keyboard::syscall(session, slot, number, first, second, &mut event)
+        }
         abi::DISPLAY_INFO => display_info(session, slot, first, second),
         abi::TASK_LAUNCH..=abi::CLOCK_HANDLE => super::taskcalls::dispatch(
             session,
@@ -58,14 +61,12 @@ pub(super) fn syscall(session: &mut Session, slot: usize, now: u64) -> Event {
 }
 
 fn display_info(session: &Session, slot: usize, address: u64, length: u64) -> Result<u64, u64> {
-    if session
-        .supervisor
-        .as_ref()
-        .is_none_or(|model| model.child != slot)
-    {
-        return Err(abi::DENIED);
-    }
-    let fb = session.framebuffer.ok_or(abi::DENIED)?;
+    let fb = session
+        .launches
+        .iter()
+        .find(|launch| launch.model.child == slot)
+        .and_then(|launch| launch.framebuffer)
+        .ok_or(abi::DENIED)?;
     if length != cathedral_contracts::display::INFO_BYTES as u64 {
         return Err(abi::INVALID_ARGUMENT);
     }

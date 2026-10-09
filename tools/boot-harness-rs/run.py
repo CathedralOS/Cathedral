@@ -44,6 +44,7 @@ MARKERS = (
     "Cathedral Rust lab: userspace supervisor restarted 32 faulted services; live client reconnected with fresh grants",
     "Cathedral Rust lab: supervision parent-exit cancellation and collected return status reclaimed all memory",
     "Cathedral Rust lab: supervision failed-spawn retries preserved live peers and memory baselines",
+    "Cathedral Rust lab: multiple launch grants preserved sibling IPC across 16 restarts; failed admission and keyboard-wait cancellation reclaimed all memory",
     "Cathedral Rust lab: deadlines recovered 4 silent and 4 spinning services; independent observer progressed; all memory reclaimed",
     "Cathedral Rust lab: clock grants copy checks and deadline completion/cancellation precedence passed",
     "Cathedral Rust lab: deadline woke an idle session with every user task blocked; all memory reclaimed",
@@ -101,6 +102,7 @@ def main():
     mode.add_argument("--build-only", action="store_true")
     mode.add_argument("--smoke", action="store_true")
     mode.add_argument("--screenshot", action="store_true", help="Boot normally, verify scanout through QMP, save display.png and stop")
+    mode.add_argument("--input-test", action="store_true", help="Verify keyboard navigation and independent provider restarts through QMP")
     parser.add_argument("--fault", choices=("guard", "invalid-opcode", "double-fault"), help="Expected-fault smoke test (requires --smoke)")
     parser.add_argument("--release", action="store_true")
     parser.add_argument("--kernel-only", action="store_true", help="Build/boot without any platform or distribution executable")
@@ -113,11 +115,11 @@ def main():
         parser.error("timeout must be positive and memory must be at least 64 MiB")
     if args.fault and not args.smoke:
         parser.error("--fault requires --smoke")
-    if args.window and (args.smoke or args.screenshot or args.build_only):
+    if args.window and (args.smoke or args.screenshot or args.input_test or args.build_only):
         parser.error("--window requires an ordinary interactive boot")
 
-    if args.kernel_only and args.screenshot:
-        parser.error("--screenshot requires the distribution scene")
+    if args.kernel_only and (args.screenshot or args.input_test):
+        parser.error("capture modes require the distribution scene")
     custom_profile = args.profile.resolve() != (WORKSPACE / "distribution/profile.json").resolve()
     if custom_profile and args.kernel_only:
         parser.error("--kernel-only does not use a distribution profile")
@@ -136,14 +138,18 @@ def main():
         else:
             startup = composition["startup"]
             programs["init"] = startup["initial"]
-            if startup.get("launch"):
-                child = startup["launch"]
-                programs["launch"] = child
-                environment["CATHEDRAL_LAUNCH_FRAMEBUFFER"] = "1" if child.get("framebuffer", False) else "0"
+            launches = startup.get("launches", [startup["launch"]] if startup.get("launch") else [])
+            if len(launches) > 3:
+                parser.error("at most three startup launch grants")
+            environment["CATHEDRAL_LAUNCH_COUNT"] = str(len(launches))
+            for index, child in enumerate(launches):
+                programs[f"launch_{index}"] = child
+                for resource in ("framebuffer", "keyboard"):
+                    environment[f"CATHEDRAL_LAUNCH_{index}_{resource.upper()}"] = "1" if child.get(resource, False) else "0"
                 argument = child.get("argument", 0)
                 if type(argument) is not int or not 0 <= argument < 2**64:
                     parser.error("launch argument must be a u64")
-                environment["CATHEDRAL_LAUNCH_ARGUMENT"] = str(argument)
+                environment[f"CATHEDRAL_LAUNCH_{index}_ARGUMENT"] = str(argument)
     profile = "release" if args.release else "debug"
     for name, user in programs.items():
         user_cargo = ["cargo", "build", "--locked", "--package", user['package'],
@@ -167,7 +173,7 @@ def main():
         cargo.extend(["--features", ','.join(features)])
     subprocess.run(cargo, cwd=WORKSPACE, check=True, env=environment)
     # Keep smoke images and their terminating feature separate from normal boots.
-    output = BUILD / (f"fault-{args.fault}" if args.fault else "smoke" if args.smoke else "capture" if args.screenshot else "interactive")
+    output = BUILD / (f"fault-{args.fault}" if args.fault else "smoke" if args.smoke else "input-test" if args.input_test else "capture" if args.screenshot else "interactive")
     if args.kernel_only:
         output = output.with_name("kernel-" + output.name)
     if custom_profile:
@@ -188,8 +194,8 @@ def main():
         command += ["-display", "none"]
     # No console helper on Windows; --window explicitly opts into QEMU's GUI.
     creationflags = subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0
-    if args.screenshot:
-        capture.run(command, output, args.timeout, creationflags)
+    if args.screenshot or args.input_test:
+        capture.run(command, output, args.timeout, creationflags, args.input_test)
         return 0
     if not args.smoke:
         command += ["-serial", "stdio"]

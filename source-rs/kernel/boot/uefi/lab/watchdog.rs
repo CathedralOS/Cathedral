@@ -115,13 +115,14 @@ fn run(
                 frame_limit: usize::MAX,
                 endpoints,
                 clock_readers: clocks,
-                supervision: Some(Supervision {
+                supervision: &[Supervision {
+                    keyboard: false,
                     framebuffer: None,
                     owner: 0,
                     peer: 1,
                     program: program(role),
                     frame_limit: usize::MAX,
-                }),
+                }],
             },
         )
     }

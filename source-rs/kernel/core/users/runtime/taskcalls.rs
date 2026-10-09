@@ -6,6 +6,7 @@ use cathedral_contracts::user as abi;
 
 #[derive(Clone, Copy)]
 pub(super) struct Wait {
+    launch: usize,
     ticket: u64,
     address: u64,
     deadline: Option<u64>,
@@ -39,10 +40,51 @@ pub(super) fn dispatch(
         }
         return Ok(0);
     }
-    let model = session.supervisor.as_mut().ok_or(abi::DENIED)?;
+    if number == abi::TASK_LAUNCH || number == abi::TASK_PORT {
+        let grants: fn(&crate::supervision::Supervisor, usize) -> Result<u64, u64> =
+            if number == abi::TASK_LAUNCH {
+                crate::supervision::Supervisor::launch
+            } else {
+                crate::supervision::Supervisor::port
+            };
+        let mut tickets = session
+            .launches
+            .iter()
+            .filter_map(|launch| grants(&launch.model, slot).ok());
+        let first_ticket = tickets.next().ok_or(abi::DENIED)?;
+        return if first == 0 {
+            Ok(first_ticket)
+        } else {
+            tickets
+                .nth(usize::try_from(first - 1).map_err(|_| abi::BAD_HANDLE)?)
+                .ok_or(abi::BAD_HANDLE)
+        };
+    }
+    let index = session
+        .launches
+        .iter()
+        .position(|launch| match number {
+            abi::TASK_SPAWN => launch.model.launch(slot) == Ok(first),
+            abi::TASK_CONNECT => launch.model.port(slot) == Ok(first),
+            _ => launch.model.wait(slot, first).is_ok(),
+        })
+        .ok_or_else(|| {
+            let authorized = session.launches.iter().any(|launch| {
+                if number == abi::TASK_CONNECT {
+                    launch.model.port(slot).is_ok()
+                } else {
+                    launch.model.launch(slot).is_ok()
+                }
+            });
+            if authorized {
+                abi::BAD_HANDLE
+            } else {
+                abi::DENIED
+            }
+        })?;
+    let launch = &mut session.launches[index];
+    let model = &mut launch.model;
     match number {
-        abi::TASK_LAUNCH => model.launch(slot),
-        abi::TASK_PORT => model.port(slot),
         abi::TASK_SPAWN => {
             model.request(slot, first, second)?;
             *event = Event::Block;
@@ -50,12 +92,7 @@ pub(super) fn dispatch(
         }
         abi::TASK_CONNECT => {
             model.connect(slot, first)?;
-            let mut index = 0;
-            while session.ipc.handle(slot, index).is_ok() {
-                index += 1;
-            }
-            session.ipc.accept_child(session.endpoint_base, slot);
-            Ok(index)
+            Ok(session.ipc.accept_child(launch.endpoint_base, slot))
         }
         abi::TASK_CANCEL => {
             if model.request_cancel(slot, first)? {
@@ -80,6 +117,7 @@ pub(super) fn dispatch(
                 return Err(abi::BAD_ADDRESS);
             }
             let wait = Wait {
+                launch: index,
                 ticket: first,
                 address: second,
                 deadline: if number == abi::TASK_WAIT_UNTIL {
@@ -102,7 +140,7 @@ pub(super) fn dispatch(
     }
 }
 fn finish_wait(session: &mut Session, slot: usize, wait: Wait, now: u64) -> Result<bool, u64> {
-    let model = session.supervisor.as_mut().unwrap();
+    let model = &mut session.launches[wait.launch].model;
     let outcome = model.wait(slot, wait.ticket)?;
     if deadline::timed_out(now, wait.deadline, outcome.is_some()) {
         return Err(abi::TIMED_OUT);
@@ -125,19 +163,17 @@ fn finish_wait(session: &mut Session, slot: usize, wait: Wait, now: u64) -> Resu
     Ok(true)
 }
 pub(super) fn wake(session: &mut Session, now: u64) {
-    let Some(model) = &session.supervisor else {
-        return;
-    };
-    let slot = model.owner;
-    let Some(wait) = session.tasks[slot].wait else {
-        return;
-    };
-    let result = match finish_wait(session, slot, wait, now) {
-        Ok(false) => return,
-        Ok(true) => Ok(0),
-        Err(error) => Err(error),
-    };
-    session.tasks[slot].wait = None;
-    dispatch::complete(session, slot, result);
-    session.scheduler.unblock(slot);
+    for slot in 0..session.tasks.len() {
+        let Some(wait) = session.tasks[slot].wait else {
+            continue;
+        };
+        let result = match finish_wait(session, slot, wait, now) {
+            Ok(false) => continue,
+            Ok(true) => Ok(0),
+            Err(error) => Err(error),
+        };
+        session.tasks[slot].wait = None;
+        dispatch::complete(session, slot, result);
+        session.scheduler.unblock(slot);
+    }
 }

@@ -22,6 +22,38 @@ pub fn draw(send: Handle, receive: Handle, w: u64, h: u64) -> Result<(), Error> 
     }
     Ok(())
 }
+pub fn draw_interactive(
+    send: Handle,
+    receive: Handle,
+    w: u64,
+    h: u64,
+    selected: u8,
+    active: u8,
+) -> Result<(), Error> {
+    draw(send, receive, w, h)?;
+    for index in 0..3 {
+        let x = w * (1 + 5 * index) / 16;
+        let y = h * 5 / 24;
+        if active & (1 << index) != 0 {
+            call(
+                send,
+                receive,
+                [wire::RECT, x + 16, y + h / 4 - 8, w / 4 - 32, 16, 0x101827],
+            )?;
+        }
+        if u64::from(selected) == index {
+            for (rx, ry, rw, rh) in [
+                (x - 4, y - 4, w / 4 + 8, 4),
+                (x - 4, y + h / 2, w / 4 + 8, 4),
+                (x - 4, y, 4, h / 2),
+                (x + w / 4, y, 4, h / 2),
+            ] {
+                call(send, receive, [wire::RECT, rx, ry, rw, rh, 0xe8edf4])?;
+            }
+        }
+    }
+    Ok(())
+}
 fn call(send: Handle, receive: Handle, words: [u64; 6]) -> Result<[u64; 6], Error> {
     send.send(&wire::encode(words))?;
     let mut bytes = [0; 64];

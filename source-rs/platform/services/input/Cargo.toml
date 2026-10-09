@@ -1,0 +1,24 @@
+[package]
+name = "cathedral-input-service"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[lib]
+path = "decoder.rs"
+
+[[bin]]
+name = "cathedral-input-service"
+path = "main.rs"
+test = false
+bench = false
+
+[dependencies]
+cathedral-contracts.workspace = true
+
+[target.'cfg(target_os = "none")'.dependencies]
+cathedral-user-runtime.workspace = true
+
+[lints]
+workspace = true

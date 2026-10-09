@@ -9,34 +9,42 @@ use cathedral_contracts::user as abi;
 pub(super) fn close(session: &mut Session, slot: usize) {
     session.tasks[slot].receive = None;
     session.tasks[slot].wait = None;
+    session.tasks[slot].keyboard_wait = false;
+    if session
+        .launches
+        .iter()
+        .any(|launch| launch.model.child == slot && launch.keyboard)
+    {
+        super::keyboard::reset(session);
+    }
     session.ipc.close_task(slot);
-    if let Some(model) = &mut session.supervisor {
-        model.close(slot);
+    for launch in &mut session.launches {
+        launch.model.close(slot);
     }
     dispatch::wake_receivers(session);
 }
 
 pub(super) unsafe fn reap(session: &mut Session, source: &mut Frames<'_>) {
-    let requester = session
-        .supervisor
-        .as_ref()
-        .filter(|model| model.cancellation_pending())
-        .map(|model| model.owner);
-    if let Some(model) = &session.supervisor
-        && model.cancel_child()
-        && session.scheduler.states()[model.child] != TaskState::Exited
-    {
-        let slot = model.child;
+    let mut requesters = 0u8;
+    for index in 0..session.launches.len() {
+        let model = &session.launches[index].model;
+        let (slot, owner) = (model.child, model.owner);
+        if model.cancellation_pending() {
+            requesters |= 1 << owner;
+        }
+        if !model.cancel_child() || session.scheduler.states()[slot] == TaskState::Exited {
+            continue;
+        }
         match session.scheduler.states()[slot] {
-            TaskState::Ready => session.tasks[model.owner].report.cancelled_ready += 1,
-            TaskState::Blocked => session.tasks[model.owner].report.cancelled_blocked += 1,
+            TaskState::Ready => session.tasks[owner].report.cancelled_ready += 1,
+            TaskState::Blocked => session.tasks[owner].report.cancelled_blocked += 1,
             _ => {}
         }
         session.scheduler.cancel(slot);
         session.tasks[slot].report.exit = Some(Exit::Cancelled);
         session.completed += 1;
         session.tasks[slot].report.completion_order = session.completed;
-        session.tasks[model.owner].report.cancelled += 1;
+        session.tasks[owner].report.cancelled += 1;
         close(session, slot);
     }
     for slot in 0..session.tasks.len() {
@@ -48,11 +56,15 @@ pub(super) unsafe fn reap(session: &mut Session, source: &mut Frames<'_>) {
             admission::retire(&mut session.tasks[slot], source);
         }
         session.scheduler.reap(slot);
-        if let Some(model) = &mut session.supervisor
-            && model.child == slot
+        if let Some(launch) = session
+            .launches
+            .iter_mut()
+            .find(|launch| launch.model.child == slot)
         {
-            model.reaped(outcome(session.tasks[slot].report.exit.unwrap()));
-            session.tasks[model.owner].report.reaped += 1;
+            launch
+                .model
+                .reaped(outcome(session.tasks[slot].report.exit.unwrap()));
+            session.tasks[launch.model.owner].report.reaped += 1;
         }
     }
     let owned: usize = session
@@ -63,9 +75,11 @@ pub(super) unsafe fn reap(session: &mut Session, source: &mut Frames<'_>) {
         .sum();
     assert_eq!(source.frames.allocated(), session.frame_baseline + owned);
     taskcalls::wake(session, arch::ticks());
-    if let Some(owner) = requester {
-        dispatch::complete(session, owner, Ok(0));
-        session.scheduler.unblock(owner);
+    for owner in 0..session.tasks.len() {
+        if requesters & (1 << owner) != 0 {
+            dispatch::complete(session, owner, Ok(0));
+            session.scheduler.unblock(owner);
+        }
     }
 }
 
@@ -75,10 +89,9 @@ pub(super) unsafe fn spawn(
     layout: &arch::BootLayout,
     image: arch::ImageRange,
     launch: &Supervision<'_>,
+    index: usize,
 ) {
-    let Some(model) = &session.supervisor else {
-        return;
-    };
+    let model = &session.launches[index].model;
     let Some(argument) = model.pending() else {
         return;
     };
@@ -94,10 +107,16 @@ pub(super) unsafe fn spawn(
         // stay live. All partial admission is rolled back before returning errors.
         match unsafe { admission::admit(session, layout, image, &program, source, child) } {
             Ok(()) => {
-                session
-                    .ipc
-                    .prepare_child(session.endpoint_base, peer, child, epoch);
-                let ticket = session.supervisor.as_mut().unwrap().started(epoch);
+                session.ipc.prepare_child(
+                    session.launches[index].endpoint_base,
+                    peer,
+                    child,
+                    epoch,
+                );
+                if launch.keyboard {
+                    super::keyboard::reset(session);
+                }
+                let ticket = session.launches[index].model.started(epoch);
                 session.tasks[owner].report.spawned += 1;
                 Ok(ticket)
             }
@@ -112,7 +131,7 @@ pub(super) unsafe fn spawn(
     };
     if result.is_err() {
         assert_eq!(source.frames.allocated(), baseline);
-        session.supervisor.as_mut().unwrap().failed();
+        session.launches[index].model.failed();
     }
     dispatch::complete(session, owner, result);
     session.scheduler.unblock(owner);

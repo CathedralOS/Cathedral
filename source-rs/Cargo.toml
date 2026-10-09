@@ -1,7 +1,7 @@
 [workspace]
 resolver = "3"
-members = ["kernel/arch", "kernel/boot/uefi", "contracts", "kernel/core", "platform/drivers/uart_16550", "platform/libraries/user-runtime", "distribution/programs/hello", "distribution/programs/ipc", "distribution/programs/supervision", "platform/services/display", "distribution/programs/display", "distribution/init", "distribution/libraries/boot-scene"]
-default-members = ["contracts", "kernel/core"]
+members = ["kernel/arch", "kernel/boot/uefi", "contracts", "kernel/core", "platform/drivers/uart_16550", "platform/libraries/user-runtime", "distribution/programs/hello", "distribution/programs/ipc", "distribution/programs/supervision", "platform/services/display", "distribution/programs/display", "distribution/init", "distribution/libraries/boot-scene", "platform/services/input"]
+default-members = ["contracts", "kernel/core", "platform/services/input"]
 
 [workspace.package]
 version = "0.0.0"

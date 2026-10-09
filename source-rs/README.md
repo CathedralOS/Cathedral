@@ -13,7 +13,7 @@ Omega's proof or authority guarantees.
 | `kernel/boot/uefi/main.rs` | Visible orchestration of firmware entry and post-handoff kernel startup |
 | `kernel/boot/uefi/firmware.rs` | UEFI crate adapter and memory-inventory policy |
 | `kernel/boot/uefi/graphics.rs` | GOP snapshot before firmware handoff |
-| `kernel/boot/uefi/startup.rs` | Admit a supplied initial program and its bounded launch grant |
+| `kernel/boot/uefi/startup.rs` | Admit a supplied initial program and its bounded launch grants |
 | `kernel/boot/uefi/lab.rs`, `lab/` | Smoke-only orchestration, fixtures and display recovery verification |
 | `kernel/boot/uefi/memory.rs`, `handoff.rs` | Compose core frame policy with architecture mappings, then transfer boot state |
 | `kernel/boot/uefi/interrupts.rs`, `diagnostics.rs` | Interrupt bring-up and serial/fatal reporting |
@@ -31,6 +31,7 @@ Omega's proof or authority guarantees.
 | `contracts/boot.rs` | Firmware-neutral memory handoff; experimental Rust data, not a frozen ABI |
 | `contracts/user.rs` | Shared experimental entry/syscall constants for kernel and user runtime |
 | `contracts/display.rs` | Bounded framebuffer geometry and experimental drawing messages |
+| `contracts/input.rs` | Experimental physical-key events, independent of scan codes or UI policy |
 | `kernel/core/extent.rs` | Bootstrap frame accounting and reclaiming bitmap over usable RAM, corresponding to the resource work in `source/kernel/core/` |
 | `kernel/core/heap.rs`, `scheduler.rs`, `tasks.rs`, `tasks/` | IRQ-safe heap, pure scheduling policy, task admission and context/stack lifetime management |
 | `kernel/core/users.rs`, `users/` | Experimental user-task lifetime, checked diagnostic syscalls and outcomes |
@@ -38,6 +39,7 @@ Omega's proof or authority guarantees.
 | `platform/drivers/uart_16550/` | Polling serial diagnostics, corresponding to `source/platform/drivers/uart_16550/` |
 | `platform/libraries/user-runtime/` | Entry stub, syscall wrappers and linker script; imports only shared contracts |
 | `platform/services/display/` | Separately compiled userspace provider for linear framebuffer drawing |
+| `platform/services/input/` | Userspace PS/2 configuration, key decoding and IPC event delivery |
 | `distribution/init/`, `distribution/libraries/boot-scene/` | Ordinary userspace startup, restart policy and scene layout |
 | `distribution/programs/display/` | Test-pattern layout, display client and restart policy |
 | `distribution/programs/supervision/` | Userspace restart policy, persistent client and crashing echo service |
@@ -54,7 +56,7 @@ Each crate uses `no_std`. Core policies are host-testable and have no firmware
 dependency. Core's hardware-facing modules explicitly opt into unsafe code and
 depend on `kernel/arch/`; drivers never depend on core internals. Boot assembles these
 subsystems and the firmware adapter.
-The bootstrap UART currently runs privileged; the display provider runs in userspace. Boot
+The bootstrap UART currently runs privileged; the display and input providers run in userspace. Boot
 supplies its port operations; the platform driver imports no kernel package.
 `python tools/source-layout/check.py` checks these boundaries from the repository
 root. The single `distribution/` is replaceable by forks; platform and kernel do
@@ -80,11 +82,12 @@ python tools/boot-harness-rs/run.py --build-only
 python tools/boot-harness-rs/run.py --smoke
 python tools/boot-harness-rs/run.py --kernel-only --smoke
 python tools/boot-harness-rs/run.py --screenshot
+python tools/boot-harness-rs/run.py --input-test
 python tools/boot-harness-rs/run.py --window
 python tools/boot-harness-rs/run.py
 ```
 
-The final command keeps init and the display provider alive; both block when
+The final command keeps init, display and input alive; all block when
 there is no work, leaving the CPU idle with timer wakeups. Ctrl+C stops QEMU.
 `--window` shows the display during an ordinary boot. `--screenshot` runs a
 bounded ordinary boot, captures QEMU's actual scanout through local QMP, checks
@@ -96,7 +99,7 @@ Smoke mode has a 30-second boot deadline, requires ordered serial milestones,
 and checks the QEMU debug-exit status. A panic, missing milestone, reset or hang
 fails the run. Its debug-exit feature is not enabled for ordinary boots.
 The harness reads the distribution profile. Ordinary boots build only `startup.initial`
-and the optional `startup.launch`; smoke builds instead build the named
+and the optional `startup.launches` array; smoke builds instead build the named
 `user_programs` fixtures. It supplies these ELF artifacts to the UEFI build with
 `bundled-user`. `--kernel-only` omits that feature and builds no user executables.
 It can be combined with `--smoke` to test raw user isolation without platform
@@ -134,10 +137,10 @@ cargo fmt --all -- --check
 cargo check-uefi
 cargo build-uefi
 cargo build --locked --package cathedral-hello --target x86_64-unknown-none
-cargo clippy --locked --package cathedral-hello --package cathedral-ipc-lab --package cathedral-supervision-lab --package cathedral-display-service --package cathedral-display-lab --package cathedral-init --target x86_64-unknown-none -- -D warnings
+cargo clippy --locked --package cathedral-hello --package cathedral-ipc-lab --package cathedral-supervision-lab --package cathedral-display-service --package cathedral-input-service --package cathedral-display-lab --package cathedral-init --target x86_64-unknown-none -- -D warnings
 ```
 
-The default Cargo members are the host-testable contracts and core. Kernel crates
+The default Cargo members test contracts, core and the input decoder on the host. Kernel crates
 use the UEFI target; the user program/runtime use the freestanding ELF target,
 so the whole workspace cannot be built for one target. `cargo build-uefi` builds
 a standalone kernel with no initial program; use the Python harness for the
@@ -260,7 +263,7 @@ The CPU profile is qemu64, with no claim to optional virtualization exception
 semantics or physical-hardware coverage. Unsafe wrappers are boot-only lab
 mechanisms, not application APIs.
 
-The runtime supports a configurable limit of 1ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“64 trusted kernel tasks on one
+The runtime supports a configurable limit of 1ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œ64 trusted kernel tasks on one
 CPU (default 8), plus an optional frame budget for stacks and their tables.
 `tasks::spawn(fn())` returns a `TaskId` or an admission error. IDs contain slot
 generations and are scoped to a session; reused slots do not revive old IDs.
@@ -304,16 +307,18 @@ initial FP state is clean and I/O privilege is zero.
 | 4: IPC send | Ticket, address, length | Bytes queued, or negative error; never blocks |
 | 5: IPC receive | Ticket, address, capacity | Bytes copied, or negative error; blocks on empty |
 | 6: IPC revoke | Revoke ticket | 0, or negative error |
-| 7: task launch grant | None | Caller's boot-issued launch ticket |
+| 7: task launch grant | Caller-local launch index (0 for bootstrap) | Caller's boot-issued launch ticket |
 | 8: task spawn | Launch ticket, ordinary argument | Child ticket after admission, or error |
 | 9: task wait | Child ticket, destination, exactly 40 bytes | 0 after copying and consuming reaped outcome; blocks if live |
-| 10: task port grant | None | Designated peer's boot-issued port ticket |
+| 10: task port grant | Caller-local connection-port index (0 for bootstrap) | Designated peer's boot-issued port ticket |
 | 11: task connect | Port ticket | First of two newly accepted local IPC grant indices |
 | 12: clock read | Clock ticket, destination, exactly 8 bytes | 0 after copying the boot-local tick count |
 | 13: task cancel | Child ticket | 0 after reclamation; leaves the outcome collectible |
 | 14: task wait until | Child ticket, 40-byte destination, absolute deadline | Wait result, or `TIMED_OUT` (-110); requires a clock grant |
 | 15: clock grant | None | Caller's boot-issued clock ticket, or `DENIED` |
 | 16: display info | Destination, exactly 48 bytes | Boot-installed mapping geometry, or `DENIED` when no display grant |
+| 17: keyboard read | 0: nonblocking, 1: wait | Raw byte, 256 on data loss, `WOULD_BLOCK` or `DENIED` |
+| 18: keyboard write | 0: data or 1: command, byte | 0, `WOULD_BLOCK`, `INVALID_ARGUMENT` or `DENIED` |
 
 Writes accept at most 256 bytes within one known user page. The kernel validates
 the entire range and copies through its physical backing before calling the
@@ -422,8 +427,9 @@ capability lifecycle need reconciliation, recorded in
 
 ## Userspace supervision experiment
 
-A session may reserve one additional task slot and two endpoint slots for a
-boot-approved executable. Boot binds the launch grant to one supervisor and a
+A session may reserve up to three launch grants within the eight-task and
+six-endpoint limits. Each reserves one child slot and two endpoint slots for a
+boot-approved executable. Boot binds each launch grant to one supervisor and a
 connection port to one initial task, which may be the supervisor itself. The grant selects the executable,
 fixed first entry argument, peer, and physical-frame budget; userspace can
 supply only the second ordinary argument. It cannot nominate another image,
@@ -434,7 +440,9 @@ a manifest/provenance check or a component registry.
 `task::Launch::spawn` parks its caller and hands admission to the boot context.
 All context/metadata slots are preallocated; runtime spawn maps private physical
 pages without growing the arena. Success returns a fresh owner-bound child
-ticket. A second child or an uncollected previous outcome returns `BUSY` (-16).
+ticket. A second child on the same grant or an uncollected previous outcome
+returns `BUSY` (-16). `Launch::at(index)` and `Port::at(index)` select independent
+caller-local grants; `bootstrap()` selects index zero.
 Failed ELF admission returns `BAD_EXECUTABLE` (-8); failed frame admission
 returns `NO_MEMORY` (-12), rolls back, and permits another attempt. Epoch
 exhaustion also fails closed. No mapping or reclamation runs in a trap callback.
@@ -444,7 +452,9 @@ matching grants remain hidden, including from guessed-ticket redemption, until
 `task::Port::connect` explicitly accepts that instance. It returns request-send
 and reply-receive handles through the platform wrapper. A second connection to
 the same child returns `BUSY`; connecting without a live child fails closed.
-Existing control channels keep their identity and queued messages across restarts.
+Existing control channels and sibling service pairs keep their identity and
+queued messages across restarts. Reconnecting an earlier pair returns its actual
+local index even while later sibling pairs remain visible.
 A replacement discards any undrained bytes in the retired child's endpoint pair;
 old tickets stay invalid, even for a new child occupying the same task slot.
 
@@ -467,8 +477,8 @@ baselines after each complete session. Additional sessions exercise returned
 status (including all 64 bits), bad wait copyout, supervisor exit/fault cleanup, malformed
 executables, and repeated frame failures at budgets 0, 1 and 10.
 
-Supervisor exit or fault cancels its owned child before userspace resumes and
-reclaims the child even if it was blocked. This is abrupt hardware-task teardown,
+Supervisor exit or fault cancels all its owned children before userspace resumes
+and reclaims them even if blocked on IPC or raw keyboard input. This is abrupt hardware-task teardown,
 without user destructors or a graceful drain. No orphan adoption, general kill,
 nested supervision, delegation or persistent recovery is implemented.
 Component supervision versus task-scope ownership remains an explicit
@@ -520,7 +530,7 @@ fails the composed display smoke test. A profile without that grant remains usab
 Any memory descriptor overlapping the aperture is conservatively excluded from
 RAM allocation, even if firmware labels it conventional memory.
 
-Boot may bind that aperture to the one supervised child's launch grant. No syscall
+Boot may bind that aperture to exactly one supervised child's launch grant. No syscall
 accepts an arbitrary physical address, and initial tasks receive no display grant.
 The x86-64 backend maps it at `0x0000_0080_0100_0000`, writable, user-accessible and
 non-executable, with unmapped adjacent pages. It requires PAT support and an
@@ -569,21 +579,25 @@ The bootstrap UART remains the documented privileged platform-driver exception.
 `CATHEDRAL_RS_BOOT_OK` marks kernel initialization; `Cathedral: startup ready`
 marks the default distribution's successful drawing and service startup.
 
-The host profile supplies `startup.initial` and optionally `startup.launch`.
-Each selects a package, entry and ELF target; a child may request a framebuffer
-and a fixed first argument. The kernel grants the initial task distinct launch
-and connection tickets for that one approved child. It enforces custody and task
+The host profile supplies `startup.initial` and an optional `startup.launches`
+array (at most three). Each selects a package, entry and ELF target; a child may
+request a framebuffer or keyboard grant and a fixed first argument. Each resource
+has at most one owner. The kernel grants the initial task distinct launch and
+connection tickets for each approved child. It enforces custody and task
 lifetime; the initial program chooses when to spawn, connect, draw and restart.
 No physical address or executable choice is accepted from untrusted syscall data.
 This host-selected authority is still lab composition, not signed manifest admission.
 
-`distribution/init` launches the independent platform display provider, draws
-`distribution/libraries/boot-scene`, then blocks collecting its child's outcome.
-The display provider blocks waiting for messages. Init can restart/redraw after
-failure and stops after three failed generations. No intentional faults, observer
-waits or exhaustive tests run on this path. A hung provider is not yet monitored
-by this minimal init. The launcher still admits only one child at a time; adding
-an input service or shell requires extending the bounded launch mechanism.
+`distribution/init` launches independent display and input providers. It owns the
+scene selection and toggle state; the providers own their devices. Arrow keys
+move the white selection border, Enter toggles a dark stripe in the selected
+panel, F1 restarts input and F2 restarts display. State survives either restart.
+Init redraws through `distribution/libraries/boot-scene` and waits for key events
+over IPC. Input blocks on raw bytes; display blocks on drawing requests. Display
+and event requests get at most three attempts after detected failure. Provider
+initialization failure ends startup; hung providers are not yet monitored. These
+shortcuts require functioning input/init and are not a trusted recovery path.
+No intentional faults or exhaustive tests run during ordinary startup.
 
 A replacement initial program need not use the platform services. For example:
 
@@ -599,6 +613,35 @@ All exhaustive workloads live under `kernel/boot/uefi/lab/`, compiled only by
 `smoke-test`. Its copied artifacts retain explicit service/fault composition as
 test fixtures. The display service's separate `lab` feature likewise excludes
 fault injection and negative probes from its normal executable.
+
+## Keyboard and independent-service experiment
+
+The q35 PS/2 controller is temporary bootstrap hardware, like PIC/PIT. Kernel
+arch code transfers bytes through fixed ports and acknowledges IRQ1. Core checks
+the exclusive child grant, uses a 64-byte queue and parks readers. IRQs and timer
+polls drain at most 64 hardware bytes; controller replies can need timer delivery
+while the keyboard interface is disabled. Kernel code never decodes scan codes.
+The write interface allows only controller mode/interface commands, plus device
+data; reset and A20 commands are rejected. It is not arbitrary port authority.
+
+The platform input ELF selects scan set 2 with controller translation to set 1,
+decodes seven physical navigation/function keys, and returns two-byte key/state
+events for the `NEXT` request. Startup sends RESET once configuration completes.
+The decoder recognizes press, release and repeat, skips Pause/PrintScreen, and
+clears held/prefix state on overflow. Overflow discards queued partial sequences
+and yields RESET; restarting a child discards old raw bytes and endpoint queues.
+This is bounded and intentionally lossy, not a full keyboard/text stack. There is
+no USB, hotplug, layout, IME, seat routing, focus or production input authority.
+Missing/unresponsive hardware can still stall provider initialization.
+
+`--input-test` injects actual QEMU keyboard events through local QMP, validates
+every scanout pixel after navigation/toggling and ten independent provider
+restarts, then saves `input-test/display.png` and stops. The smoke suite separately
+checks 16 sibling restarts with a reply queued on the surviving connection,
+stale tickets, failed admission beside a live child, denied raw access, forbidden
+controller commands, parent-exit cancellation of a blocked keyboard reader, and
+return to frame/heap baselines. Host tests cover byte-queue loss, key decoding,
+wire validation and sibling endpoint indexing.
 
 ## Next bring-up steps
 

@@ -142,6 +142,7 @@ extern "win64" fn task_entry(entry: usize, argument: usize) -> ! {
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum SwitchCause {
     Timer,
+    Device,
     Yield,
     Syscall,
     Fault(UserFault),
@@ -181,6 +182,7 @@ pub(super) extern "win64" fn dispatch(context: *const Context, cause: u64) -> *c
                 0 => SwitchCause::Yield,
                 1 => SwitchCause::Timer,
                 2 => SwitchCause::Syscall,
+                3 => SwitchCause::Device,
                 _ => unreachable!(),
             },
             interrupts::ticks(),

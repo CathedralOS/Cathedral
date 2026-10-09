@@ -1,5 +1,32 @@
 use super::*;
 #[test]
+fn restarting_either_sibling_preserves_other_tickets_and_queued_reply() {
+    let mut ipc = Ipc::new(1, 3, &[]).unwrap();
+    ipc.close_task(1);
+    ipc.close_task(2);
+    ipc.prepare_child(0, 0, 1, 2);
+    ipc.prepare_child(2, 0, 2, 3);
+    assert_eq!(ipc.accept_child(2, 0), 0); // earlier pair still hidden
+    assert_eq!(ipc.accept_child(0, 0), 0);
+    for (child, base, sibling, sibling_base, epoch) in [(1, 0, 2, 2, 4), (2, 2, 1, 0, 5)] {
+        let old = ipc.handle(0, base as u64).unwrap();
+        let stable = ipc.handle(0, sibling_base as u64).unwrap();
+        let reply = ipc.handle(0, sibling_base as u64 + 1).unwrap();
+        let output = ipc.handle(sibling, 1).unwrap();
+        ipc.send(sibling, output, b"still queued").unwrap();
+        ipc.close_task(child);
+        ipc.prepare_child(base, 0, child, epoch);
+        assert_eq!(ipc.accept_child(base, 0), base as u64);
+        assert_eq!(ipc.send(0, old, b"stale"), Err(abi::BAD_HANDLE));
+        assert_eq!(ipc.handle(0, sibling_base as u64), Ok(stable));
+        let message = ipc.receive(0, reply, 64).unwrap().unwrap();
+        assert_eq!(&message.bytes[..message.len], b"still queued");
+        ipc.send(0, stable, b"sibling alive").unwrap();
+        let input = ipc.handle(sibling, 0).unwrap();
+        assert_eq!(ipc.receive(sibling, input, 64).unwrap().unwrap().len, 13);
+    }
+}
+#[test]
 fn replacing_child_grants_requires_consent_and_preserves_control_channels() {
     let mut ipc = Ipc::new(
         1,

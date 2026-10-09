@@ -50,7 +50,8 @@ fn run(memory: &mut PreparedMemory, role: u64, budget: usize) -> alloc::vec::Vec
                     revoker: None,
                 }],
                 clock_readers: &[],
-                supervision: Some(Supervision {
+                supervision: &[Supervision {
+                    keyboard: false,
                     owner: 0,
                     peer: 1,
                     framebuffer: memory.framebuffer,
@@ -59,7 +60,7 @@ fn run(memory: &mut PreparedMemory, role: u64, budget: usize) -> alloc::vec::Vec
                         arguments: [u64::MAX, 0],
                     },
                     frame_limit: budget,
-                }),
+                }],
             },
         )
     }

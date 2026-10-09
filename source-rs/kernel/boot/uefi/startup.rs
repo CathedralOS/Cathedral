@@ -6,33 +6,42 @@ use cathedral_uart_16550::SerialPort;
 use core::fmt::Write;
 
 static INITIAL: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/initial.elf"));
-static CHILD: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/launch.elf"));
+struct InitialLaunch {
+    elf: &'static [u8],
+    framebuffer: bool,
+    keyboard: bool,
+    argument: u64,
+}
 include!(concat!(env!("OUT_DIR"), "/startup_config.rs"));
 
 pub fn run(memory: &mut PreparedMemory, console: &mut SerialPort) {
-    let framebuffer = if FRAMEBUFFER {
-        let Some(framebuffer) = memory.framebuffer else {
-            writeln!(
-                console,
-                "Cathedral kernel: initial program requires unavailable framebuffer"
-            )
-            .ok();
-            return;
+    let mut launches = alloc::vec::Vec::new();
+    for grant in LAUNCHES {
+        let framebuffer = if grant.framebuffer {
+            let Some(framebuffer) = memory.framebuffer else {
+                writeln!(
+                    console,
+                    "Cathedral kernel: initial program requires unavailable framebuffer"
+                )
+                .ok();
+                return;
+            };
+            Some(framebuffer)
+        } else {
+            None
         };
-        Some(framebuffer)
-    } else {
-        None
-    };
-    let launch = (!CHILD.is_empty()).then_some(Supervision {
-        owner: 0,
-        peer: 0,
-        framebuffer,
-        program: Program {
-            executable: Executable::Elf(CHILD),
-            arguments: [LAUNCH_ARGUMENT, 0],
-        },
-        frame_limit: usize::MAX,
-    });
+        launches.push(Supervision {
+            owner: 0,
+            peer: 0,
+            framebuffer,
+            keyboard: grant.keyboard,
+            program: Program {
+                executable: Executable::Elf(grant.elf),
+                arguments: [grant.argument, 0],
+            },
+            frame_limit: usize::MAX,
+        });
+    }
     writeln!(
         console,
         "Cathedral kernel: starting supplied initial program"
@@ -54,7 +63,7 @@ pub fn run(memory: &mut PreparedMemory, console: &mut SerialPort) {
                 frame_limit: usize::MAX,
                 endpoints: &[],
                 clock_readers: &[],
-                supervision: launch,
+                supervision: &launches,
             },
         )
     };

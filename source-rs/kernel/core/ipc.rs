@@ -231,11 +231,19 @@ impl Ipc {
             });
         }
     }
-    pub fn accept_child(&mut self, first: usize, peer: usize) {
+    pub fn accept_child(&mut self, first: usize, peer: usize) -> u64 {
         assert!(self.live(peer));
         for index in first..first + 2 {
             self.endpoints[index].as_mut().unwrap().hidden &= !(1 << peer);
         }
+        let ticket = Self::ticket(
+            self.endpoints[first].as_ref().unwrap().epoch,
+            peer,
+            first * 3,
+        );
+        (0..(MAX_ENDPOINTS * 3) as u64)
+            .find(|index| self.handle(peer, *index) == Ok(ticket))
+            .unwrap()
     }
 }
 

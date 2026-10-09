@@ -17,11 +17,11 @@ pub(super) unsafe fn admit(
     // SAFETY: Caller serializes admission on the boot stack/kernel root with IRQs
     // off. Vacant slot cannot run; load rolls back its own partial mappings.
     let entry = unsafe { load(&mut task.space, layout, image, program, frames)? };
-    if session
-        .supervisor
-        .as_ref()
-        .is_some_and(|model| model.child == slot)
-        && let Some(fb) = session.framebuffer
+    if let Some(fb) = session
+        .launches
+        .iter()
+        .find(|launch| launch.model.child == slot)
+        .and_then(|launch| launch.framebuffer)
     {
         // SAFETY: Boot bound this reserved aperture exclusively to the child.
         // Space is inactive; failed device-table allocation rolls back all RAM.
@@ -36,6 +36,7 @@ pub(super) unsafe fn admit(
     task.context = Context::user(entry, arch::USER_STACK_TOP, program.arguments);
     task.receive = None;
     task.wait = None;
+    task.keyboard_wait = false;
     task.report = Report {
         frames: task.space.as_ref().unwrap().frame_count(),
         ..Default::default()
@@ -90,5 +91,6 @@ pub(super) fn reserve_slot(session: &mut Session) {
         report: Report::default(),
         receive: None,
         wait: None,
+        keyboard_wait: false,
     });
 }

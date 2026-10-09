@@ -55,7 +55,8 @@ pub fn exercise(memory: &mut PreparedMemory, console: &mut SerialPort) {
                 frame_limit: usize::MAX,
                 endpoints: &endpoints,
                 clock_readers: &[0, 2],
-                supervision: Some(Supervision {
+                supervision: &[Supervision {
+                    keyboard: false,
                     owner: 0,
                     peer: 1,
                     program: Program {
@@ -64,7 +65,7 @@ pub fn exercise(memory: &mut PreparedMemory, console: &mut SerialPort) {
                     },
                     frame_limit: usize::MAX,
                     framebuffer: Some(framebuffer),
-                }),
+                }],
             },
         )
     }

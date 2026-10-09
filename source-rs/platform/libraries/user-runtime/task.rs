@@ -20,7 +20,10 @@ pub enum Outcome {
 }
 impl Launch {
     pub fn bootstrap() -> Result<Self, Error> {
-        result(arch::call(abi::TASK_LAUNCH, 0, 0)).map(Self)
+        Self::at(0)
+    }
+    pub fn at(index: u64) -> Result<Self, Error> {
+        result(arch::call(abi::TASK_LAUNCH, index, 0)).map(Self)
     }
     pub fn from_raw(bits: u64) -> Self {
         Self(bits)
@@ -80,7 +83,10 @@ impl Child {
 }
 impl Port {
     pub fn bootstrap() -> Result<Self, Error> {
-        result(arch::call(abi::TASK_PORT, 0, 0)).map(Self)
+        Self::at(0)
+    }
+    pub fn at(index: u64) -> Result<Self, Error> {
+        result(arch::call(abi::TASK_PORT, index, 0)).map(Self)
     }
     /// Explicitly accept this service instance's grants: request sender, reply receiver.
     pub fn connect(self) -> Result<(Handle, Handle), Error> {

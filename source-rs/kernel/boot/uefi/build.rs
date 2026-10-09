@@ -2,13 +2,13 @@
 use std::{env, fs, path::PathBuf};
 
 fn main() {
-    for variable in [
-        "CATHEDRAL_INIT_ELF",
-        "CATHEDRAL_LAUNCH_ELF",
-        "CATHEDRAL_LAUNCH_FRAMEBUFFER",
-        "CATHEDRAL_LAUNCH_ARGUMENT",
-    ] {
+    for variable in ["CATHEDRAL_INIT_ELF", "CATHEDRAL_LAUNCH_COUNT"] {
         println!("cargo:rerun-if-env-changed={variable}");
+    }
+    for index in 0..3 {
+        for field in ["ELF", "FRAMEBUFFER", "KEYBOARD", "ARGUMENT"] {
+            println!("cargo:rerun-if-env-changed=CATHEDRAL_LAUNCH_{index}_{field}");
+        }
     }
     if env::var_os("CARGO_FEATURE_BUNDLED_USER").is_none() {
         return;
@@ -31,31 +31,32 @@ fn main() {
 fn startup() {
     bundle("CATHEDRAL_INIT_ELF", "initial.elf");
     let output = PathBuf::from(env::var_os("OUT_DIR").unwrap());
-    let framebuffer = match env::var("CATHEDRAL_LAUNCH_FRAMEBUFFER").as_deref() {
-        Ok("1") => true,
-        Ok("0") | Err(_) => false,
-        _ => panic!("invalid framebuffer grant"),
-    };
-    let argument: u64 = env::var("CATHEDRAL_LAUNCH_ARGUMENT")
+    let count: usize = env::var("CATHEDRAL_LAUNCH_COUNT")
         .unwrap_or_else(|_| "0".into())
         .parse()
-        .expect("invalid launch argument");
-    if env::var_os("CATHEDRAL_LAUNCH_ELF").is_some() {
-        bundle("CATHEDRAL_LAUNCH_ELF", "launch.elf");
-    } else {
-        assert!(
-            !framebuffer && argument == 0,
-            "child authority requires a child executable"
-        );
-        fs::write(output.join("launch.elf"), []).unwrap();
+        .unwrap();
+    assert!(count <= 3, "at most three launch grants");
+    let mut source = String::from("static LAUNCHES: &[InitialLaunch] = &[\n");
+    for index in 0..count {
+        let prefix = format!("CATHEDRAL_LAUNCH_{index}");
+        bundle(&format!("{prefix}_ELF"), &format!("launch-{index}.elf"));
+        let framebuffer = flag(&format!("{prefix}_FRAMEBUFFER"));
+        let keyboard = flag(&format!("{prefix}_KEYBOARD"));
+        let argument: u64 = env::var(format!("{prefix}_ARGUMENT"))
+            .unwrap_or_else(|_| "0".into())
+            .parse()
+            .expect("invalid launch argument");
+        source.push_str(&format!("InitialLaunch {{ elf: include_bytes!(concat!(env!(\"OUT_DIR\"), \"/launch-{index}.elf\")), framebuffer: {framebuffer}, keyboard: {keyboard}, argument: {argument} }},\n"));
     }
-    fs::write(
-        output.join("startup_config.rs"),
-        format!(
-            "const FRAMEBUFFER: bool = {framebuffer};\nconst LAUNCH_ARGUMENT: u64 = {argument};\n"
-        ),
-    )
-    .unwrap();
+    source.push_str("];\n");
+    fs::write(output.join("startup_config.rs"), source).unwrap();
+}
+fn flag(variable: &str) -> bool {
+    match env::var(variable).as_deref() {
+        Ok("1") => true,
+        Ok("0") | Err(_) => false,
+        _ => panic!("invalid device grant"),
+    }
 }
 fn bundle(variable: &str, destination: &str) {
     let source = PathBuf::from(env::var_os(variable).unwrap_or_else(|| {

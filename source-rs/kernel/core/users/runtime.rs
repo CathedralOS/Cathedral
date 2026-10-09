@@ -4,6 +4,7 @@ use super::{Error, Program};
 use crate::ipc::{EndpointSpec, Ipc, MAX_EPOCH};
 mod admission;
 mod dispatch;
+mod keyboard;
 mod lifecycle;
 mod taskcalls;
 use crate::supervision::Supervisor;
@@ -31,6 +32,7 @@ pub struct Report {
     pub completion_order: usize,
     pub frames: usize,
     pub receives_blocked: usize,
+    pub keyboard_reads_blocked: usize,
     pub ipc_sent: usize,
     pub ipc_received: usize,
     pub spawned: usize,
@@ -47,6 +49,7 @@ struct Task {
     report: Report,
     receive: Option<dispatch::Receive>,
     wait: Option<taskcalls::Wait>,
+    keyboard_wait: bool,
 }
 struct Session {
     tasks: Vec<Task>,
@@ -55,11 +58,10 @@ struct Session {
     output: fn(&[u8]) -> bool,
     completed: usize,
     ipc: Ipc,
-    supervisor: Option<Supervisor>,
-    endpoint_base: usize,
+    launches: Vec<LaunchState>,
+    keyboard: crate::byte_queue::ByteQueue,
     frame_baseline: usize,
     clock: crate::deadline::Clock,
-    framebuffer: Option<cathedral_contracts::display::Framebuffer>,
 }
 static ACTIVE: AtomicPtr<Session> = AtomicPtr::new(core::ptr::null_mut());
 
@@ -68,11 +70,13 @@ static EPOCH: AtomicU64 = AtomicU64::new(1);
 pub struct Config<'a> {
     pub frame_limit: usize,
     pub endpoints: &'a [EndpointSpec],
-    pub supervision: Option<Supervision<'a>>,
+    pub supervision: &'a [Supervision<'a>],
     pub clock_readers: &'a [usize],
 }
 
 pub struct Supervision<'a> {
+    /// Exclusive PC bootstrap byte channel; configuration/decoding stay in userspace.
+    pub keyboard: bool,
     /// Exclusive boot-approved display aperture, granted only to the child.
     pub framebuffer: Option<cathedral_contracts::display::Framebuffer>,
     pub owner: usize,
@@ -82,6 +86,14 @@ pub struct Supervision<'a> {
     /// Physical admission budget per spawn, including deterministic failure probes.
     pub frame_limit: usize,
 }
+
+struct LaunchState {
+    model: Supervisor,
+    endpoint_base: usize,
+    framebuffer: Option<cathedral_contracts::display::Framebuffer>,
+    keyboard: bool,
+}
+const MAX_LAUNCHES: usize = 3;
 
 struct Frames<'a> {
     frames: &'a mut FrameAllocator,
@@ -129,7 +141,7 @@ pub unsafe fn run(
             Config {
                 frame_limit,
                 endpoints: &[],
-                supervision: None,
+                supervision: &[],
                 clock_readers: &[],
             },
         )
@@ -142,6 +154,8 @@ pub unsafe fn run(
 /// Any framebuffer must be a live, reserved device aperture exclusively held by
 /// boot: no RAM allocation or other CPU/alias may access its pages. The launch
 /// grant authorizes its executable to read/write the entire aperture for its lifetime.
+/// A keyboard grant requires exclusive PC-controller/PIC IRQ1 custody. This
+/// bootstrap profile has no concurrent firmware, mouse or other controller user.
 pub unsafe fn run_configured(
     frames: &mut FrameAllocator,
     layout: &arch::BootLayout,
@@ -157,24 +171,51 @@ pub unsafe fn run_configured(
     let epoch = next_epoch().ok_or(Error::InvalidEndpoints)?;
     let clock = crate::deadline::Clock::new(epoch, programs.len(), config.clock_readers)
         .map_err(|_| Error::InvalidEndpoints)?;
-    let count = programs.len() + usize::from(config.supervision.is_some());
-    if count > crate::ipc::MAX_TASKS {
+    let count = programs.len() + config.supervision.len();
+    if count > crate::ipc::MAX_TASKS || config.supervision.len() > MAX_LAUNCHES {
         return Err(Error::InvalidCount);
     }
-    let supervisor = if let Some(launch) = &config.supervision {
-        if launch.framebuffer.is_some_and(|fb| !fb.valid()) {
+    if config.endpoints.len() + 2 * config.supervision.len() > crate::ipc::MAX_ENDPOINTS
+        || config
+            .supervision
+            .iter()
+            .filter(|grant| grant.framebuffer.is_some())
+            .count()
+            > 1
+        || config
+            .supervision
+            .iter()
+            .filter(|grant| grant.keyboard)
+            .count()
+            > 1
+    {
+        return Err(Error::InvalidEndpoints);
+    }
+    let mut launches = Vec::new();
+    launches
+        .try_reserve_exact(config.supervision.len())
+        .map_err(|_| Error::OutOfHeap)?;
+    for (index, launch) in config.supervision.iter().enumerate() {
+        if launch.framebuffer.is_some_and(|fb| !fb.valid())
+            || launch.owner >= programs.len()
+            || launch.peer >= programs.len()
+        {
             return Err(Error::InvalidEndpoints);
         }
-        if config.endpoints.len() > crate::ipc::MAX_ENDPOINTS - 2 {
-            return Err(Error::InvalidEndpoints);
-        }
-        Some(
-            Supervisor::new(epoch, launch.owner, launch.peer, programs.len())
-                .map_err(|_| Error::InvalidEndpoints)?,
-        )
-    } else {
-        None
-    };
+        let grant_epoch = next_epoch().ok_or(Error::InvalidEndpoints)?;
+        launches.push(LaunchState {
+            model: Supervisor::new(
+                grant_epoch,
+                launch.owner,
+                launch.peer,
+                programs.len() + index,
+            )
+            .map_err(|_| Error::InvalidEndpoints)?,
+            endpoint_base: config.endpoints.len() + 2 * index,
+            framebuffer: launch.framebuffer,
+            keyboard: launch.keyboard,
+        });
+    }
     // Static grants may refer only to initial principals, never the reusable child slot.
     if config.endpoints.iter().any(|spec| {
         spec.sender >= programs.len()
@@ -184,8 +225,8 @@ pub unsafe fn run_configured(
         return Err(Error::InvalidEndpoints);
     }
     let mut ipc = Ipc::new(epoch, count, config.endpoints).map_err(|_| Error::InvalidEndpoints)?;
-    if let Some(model) = &supervisor {
-        ipc.close_task(model.child);
+    for launch in &launches {
+        ipc.close_task(launch.model.child);
     }
     let baseline = frames.allocated();
     let mut session = Session {
@@ -195,14 +236,10 @@ pub unsafe fn run_configured(
         output,
         completed: 0,
         ipc,
-        supervisor,
-        endpoint_base: config.endpoints.len(),
+        launches,
+        keyboard: crate::byte_queue::ByteQueue::new(),
         frame_baseline: baseline,
         clock,
-        framebuffer: config
-            .supervision
-            .as_ref()
-            .and_then(|launch| launch.framebuffer),
     };
     session
         .tasks
@@ -244,10 +281,11 @@ pub unsafe fn run_configured(
     unsafe {
         arch::begin_user_session();
         arch::set_switch_handler(Some(schedule));
+        arch::keyboard_irq(config.supervision.iter().any(|grant| grant.keyboard));
         loop {
             lifecycle::reap(&mut *session, &mut source);
-            if let Some(launch) = &config.supervision {
-                lifecycle::spawn(&mut *session, &mut source, layout, image, launch);
+            for (index, launch) in config.supervision.iter().enumerate() {
+                lifecycle::spawn(&mut *session, &mut source, layout, image, launch, index);
             }
             if (*session).scheduler.finished() {
                 break;
@@ -258,6 +296,7 @@ pub unsafe fn run_configured(
                 arch::wait_for_ticks(1);
             }
         }
+        arch::keyboard_irq(false);
         arch::set_switch_handler(None);
         arch::end_user_session();
         ACTIVE.store(core::ptr::null_mut(), Ordering::Release);
@@ -283,7 +322,7 @@ unsafe fn schedule(context: &Context, cause: SwitchCause, now: u64) -> *const Co
         let task = &mut session.tasks[slot];
         task.context = context.clone();
         match cause {
-            SwitchCause::Timer => {}
+            SwitchCause::Timer | SwitchCause::Device => {}
             SwitchCause::Yield => panic!("user entered privileged yield gate"),
             SwitchCause::Fault(fault) => {
                 task.report.exit = Some(Exit::Fault(fault));
@@ -297,7 +336,8 @@ unsafe fn schedule(context: &Context, cause: SwitchCause, now: u64) -> *const Co
         assert!(!context.is_user());
         session.boot = context.clone();
     }
-    if cause == SwitchCause::Timer {
+    if matches!(cause, SwitchCause::Timer | SwitchCause::Device) {
+        keyboard::poll(session);
         taskcalls::wake(session, now);
     }
     let next = if matches!(event, Event::Exit) {
@@ -307,9 +347,9 @@ unsafe fn schedule(context: &Context, cause: SwitchCause, now: u64) -> *const Co
         session.scheduler.park(event, now);
         None // Always reclaim from the boot context, never an interrupt stack.
     } else if session
-        .supervisor
-        .as_ref()
-        .is_some_and(|model| model.pending().is_some() || model.cancellation_pending())
+        .launches
+        .iter()
+        .any(|launch| launch.model.pending().is_some() || launch.model.cancellation_pending())
     {
         session.scheduler.park(event, now);
         None // Admission/cancellation use the boot stack, never the trap stack.

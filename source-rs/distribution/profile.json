@@ -40,12 +40,20 @@
       "entry": "distribution/init/main.rs",
       "target": "x86_64-unknown-none"
     },
-    "launch": {
-      "package": "cathedral-display-service",
-      "entry": "platform/services/display/main.rs",
-      "target": "x86_64-unknown-none",
-      "framebuffer": true,
-      "argument": 0
-    }
+    "launches": [
+      {
+        "package": "cathedral-display-service",
+        "entry": "platform/services/display/main.rs",
+        "target": "x86_64-unknown-none",
+        "framebuffer": true,
+        "argument": 0
+      },
+      {
+        "package": "cathedral-input-service",
+        "entry": "platform/services/input/main.rs",
+        "target": "x86_64-unknown-none",
+        "keyboard": true
+      }
+    ]
   }
 }

@@ -101,6 +101,14 @@ cathedral_timer_entry:
     out 0x20, al
     jmp cathedral_switch_entry
 
+.global cathedral_keyboard_entry
+cathedral_keyboard_entry:
+    save_context
+    mov edx, 3
+    mov al, 0x20
+    out 0x20, al
+    jmp cathedral_switch_entry
+
 .global cathedral_yield_entry
 cathedral_yield_entry:
     save_context

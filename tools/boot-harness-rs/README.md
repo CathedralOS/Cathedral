@@ -8,9 +8,9 @@ handoff under QEMU/OVMF. Host-side Python only; no extra Python packages.
 Cargo workspace keeps kernel implementation under `kernel/` and the UART under
 `platform/drivers/`; replacing the distribution does not require moving those.
 
-Ordinary boots build only `startup.initial` and its optional approved child.
+Ordinary boots build only `startup.initial` and the optional `startup.launches` array.
 The kernel admits that initial executable; `distribution/init` launches and uses
-the display provider and keeps both tasks alive. The tests below are compiled
+display and input providers and keeps all three tasks alive. The tests below are compiled
 only with `--smoke`. `--kernel-only --smoke` runs kernel and raw-user tests without
 building any platform service or distribution executable. `--kernel-only` boots
 the kernel alone. `--profile tools/boot-harness-rs/profiles/minimal.json` supplies
@@ -49,3 +49,10 @@ The ordinary scene shares its distribution-owned drawing code with the smoke fix
 See [the Rust lab guide](../../source-rs/README.md) for setup, ordinary boots,
 firmware overrides, logs, checks, current limitations and the bring-up sequence.
 The existing `tools/boot-harness/` continues to build and boot Omega.
+
+`--input-test` boots normally, injects keyboard events over QMP and checks every
+pixel after navigation, toggling and ten alternating service restarts. Arrows
+select a panel, Enter toggles it, F1 restarts input and F2 restarts display. The
+final capture is `build/boot-harness-rs/input-test/display.png`. Smoke also tests
+multiple launch grants, surviving sibling queues, failed launch rollback, device
+access denial and parent-exit reclamation of a blocked input provider.

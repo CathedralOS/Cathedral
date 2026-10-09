@@ -112,6 +112,7 @@ exception_entries!(
 unsafe extern "C" {
     fn cathedral_exception_255();
     fn cathedral_timer_entry();
+    fn cathedral_keyboard_entry();
     fn cathedral_yield_entry();
     fn cathedral_syscall_entry();
 }
@@ -169,6 +170,8 @@ pub unsafe fn install_interrupts(layout: &BootLayout, handler: fn(Fault) -> !) {
                 EXCEPTIONS[vector] as *const ()
             } else if vector == 32 {
                 cathedral_timer_entry as *const ()
+            } else if vector == 33 {
+                cathedral_keyboard_entry as *const ()
             } else if vector == 48 {
                 cathedral_yield_entry as *const ()
             } else if vector == 128 {

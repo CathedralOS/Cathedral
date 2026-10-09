@@ -2,6 +2,8 @@
 
 mod context;
 mod interrupts;
+mod keyboard;
+pub use keyboard::{keyboard_irq, keyboard_read, keyboard_write};
 mod memory;
 mod stacks;
 mod user;

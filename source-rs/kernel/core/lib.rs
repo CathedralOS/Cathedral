@@ -5,6 +5,7 @@
 
 extern crate alloc;
 
+pub mod byte_queue;
 pub mod deadline;
 pub mod extent;
 #[allow(unsafe_code)]

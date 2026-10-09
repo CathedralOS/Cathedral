@@ -5,4 +5,5 @@
 
 pub mod boot;
 pub mod display;
+pub mod input;
 pub mod user;
