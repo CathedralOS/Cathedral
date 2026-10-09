@@ -31,6 +31,9 @@ MARKERS = (
     "Cathedral Rust lab: stack allocation rollback passed all frame boundaries",
     "Cathedral Rust lab: dynamic spawn limit stale IDs and live-peer progress passed",
     "Cathedral Rust lab: task stacks unmapped; heap and physical frames returned to baseline",
+    *(f"Cathedral Rust lab: user fault contained mode={mode} " for mode in range(1, 11)),
+    "Cathedral Rust lab: ring3 private memory preemption and checked syscalls passed",
+    "Cathedral Rust lab: user admission rollback passed",
     "CATHEDRAL_RS_BOOT_OK",
 )
 
@@ -74,6 +77,9 @@ def firmware_args(qemu, output):
 
 
 def main():
+    # Binary user diagnostics may decode to replacement characters. Windows
+    # terminals with a legacy encoding must still report and validate the boot.
+    sys.stdout.reconfigure(errors="backslashreplace")
     parser = argparse.ArgumentParser(description=__doc__)
     mode = parser.add_mutually_exclusive_group()
     mode.add_argument("--build-only", action="store_true")
@@ -145,7 +151,7 @@ def main():
     # isa-debug-exit returns (guest_value << 1) | 1, so guest 0x10 means 33.
     if result.returncode != 33 or "CATHEDRAL_RS_PANIC" in serial:
         raise RuntimeError(f"Boot failed (QEMU exit {result.returncode}); logs: {output}")
-    print(f"PASS: expected {args.fault} exception" if args.fault else "PASS: boot, preemption, dynamic tasks, admission rollback and memory reclamation")
+    print(f"PASS: expected {args.fault} exception" if args.fault else "PASS: boot, kernel/user preemption, fault containment, checked syscalls and memory reclamation")
     return 0
 
 

@@ -74,7 +74,10 @@ coordination, trusted loading and attestation to a kernel described as small
 enough to audit in full. Those assignments do not distinguish enforcement
 primitives from service orchestration. This is an unresolved scope decision,
 not evidence that those features are impossible or that a particular line
-count is required.
+count is required. The
+[kernel architecture design](wiki/design/part_5_lifecycle/04_kernel_architecture.md)
+also describes a narrower privileged substrate and restartable services, so the
+charter and inventory need an explicit reconciliation with that direction.
 
 **Contracts checked.** ADR 0002 establishes placement and dependency direction,
 but does not decide this split. The specification index lists component lifecycle
@@ -94,3 +97,35 @@ kernel mechanisms wherever required to enforce system invariants. Decide each
 subsystem's boundary before implementing it, and update its specification,
 contracts, charter and TCB entry together. Track kernel size and total trusted
 code separately; do not adopt a 12,000-line target as an architectural constraint.
+
+### Default isolation boundary for proved OS components
+
+**Requirement and tension.** The Rust lab now exercises hardware-contained
+tasks as a prerequisite to services outside the kernel. The
+[kernel architecture design](wiki/design/part_5_lifecycle/04_kernel_architecture.md)
+already places unproved apps and drivers behind hardware boundaries; this
+milestone is consistent with that direction. For OS components, however, the
+chapter describes proof-based isolation in one address space as the model,
+then favors MMU isolation by default with proof-based sharing as an aspirational
+option. The [component design](wiki/design/part_2_components/00_component_model.md)
+leaves the per-component boundary open. This affects future platform-service
+placement and failure containment, not whether the current lab can run ring-3
+payloads.
+
+**Contracts checked.** The [specification index](wiki/spec/README.md) assigns
+component, capability, IPC and admission semantics to unwritten subjects.
+The [Rust boot contract](source-rs/contracts/boot.rs) covers the firmware-neutral
+memory inventory, not admission into a shared protection domain. ADR 0002
+explicitly makes no userspace-isolation claim for its source grouping.
+
+**Owner choice.** Should proved OS services share a protection domain by default,
+use hardware isolation by default, or select a domain through explicit admission
+policy? Sharing requires a defined proof/checker assurance threshold and fault
+model; MMU separation requires service-call and shared-memory boundaries; a
+mixed policy must identify which guarantees each admitted placement provides.
+None can infer containment merely from a package name or the language used.
+
+**Recommendation (unaccepted).** Use hardware separation as the initial service
+baseline; require an explicit admission contract before sharing a protection
+domain. Keep the current Rust syscall ABI experimental. Settle the production
+policy before treating the lab's task model as Cathedral's component model.

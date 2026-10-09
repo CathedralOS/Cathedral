@@ -11,3 +11,5 @@ pub mod heap;
 pub mod scheduler;
 #[allow(unsafe_code)]
 pub mod tasks;
+#[allow(unsafe_code)]
+pub mod users;

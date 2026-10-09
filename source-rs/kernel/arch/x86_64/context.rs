@@ -61,6 +61,34 @@ impl Default for Context {
     }
 }
 impl Context {
+    /// Fresh ring-3 state: no inherited kernel registers, FP data or I/O privilege.
+    pub fn user(entry: u64, stack: u64, arguments: [u64; 2]) -> Self {
+        let mut context = Self::default();
+        context.floating[0..2].copy_from_slice(&0x037fu16.to_le_bytes());
+        context.floating[24..28].copy_from_slice(&0x1f80u32.to_le_bytes());
+        context.registers.rdi = arguments[0];
+        context.registers.rsi = arguments[1];
+        let (code, data) = interrupts::user_selectors();
+        context.frame = ReturnFrame {
+            instruction: entry,
+            code: u64::from(code),
+            flags: 0x202,
+            stack,
+            segment: u64::from(data),
+        };
+        context
+    }
+
+    pub fn is_user(&self) -> bool {
+        self.frame.code & 3 == 3
+    }
+    pub fn syscall(&self) -> (u64, u64, u64) {
+        (self.registers.rax, self.registers.rdi, self.registers.rsi)
+    }
+    pub fn set_result(&mut self, result: u64) {
+        self.registers.rax = result;
+    }
+
     /// # Safety
     /// Stack is uniquely owned, writable and mapped throughout the task's life.
     /// Entry never returns. Called with IRQs off, outside the interrupt handler.
@@ -110,6 +138,15 @@ extern "win64" fn task_entry(entry: usize, argument: usize) -> ! {
 pub enum SwitchCause {
     Timer,
     Yield,
+    Syscall,
+    Fault(UserFault),
+}
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct UserFault {
+    pub vector: u64,
+    pub error: u64,
+    pub address: u64,
+    pub instruction: u64,
 }
 pub type SwitchHandler = unsafe fn(&Context, SwitchCause, u64) -> *const Context;
 static HANDLER: AtomicPtr<()> = AtomicPtr::new(core::ptr::null_mut());
@@ -124,7 +161,7 @@ pub unsafe fn set_switch_handler(handler: Option<SwitchHandler>) {
         Ordering::Release,
     );
 }
-pub(super) extern "win64" fn dispatch(context: *const Context, timer: u64) -> *const Context {
+pub(super) extern "win64" fn dispatch(context: *const Context, cause: u64) -> *const Context {
     let handler = HANDLER.load(Ordering::Acquire);
     if handler.is_null() {
         return context;
@@ -135,14 +172,62 @@ pub(super) extern "win64" fn dispatch(context: *const Context, timer: u64) -> *c
         let handler: SwitchHandler = core::mem::transmute(handler);
         handler(
             &*context,
-            if timer == 0 {
-                SwitchCause::Yield
-            } else {
-                SwitchCause::Timer
+            match cause {
+                0 => SwitchCause::Yield,
+                1 => SwitchCause::Timer,
+                2 => SwitchCause::Syscall,
+                _ => unreachable!(),
             },
             interrupts::ticks(),
         )
     }
+}
+
+// Exception stubs add vector/error between the GPRs and hardware return frame.
+#[repr(C, align(16))]
+pub(super) struct ExceptionContext {
+    floating: [u8; 512],
+    registers: Registers,
+    vector: u64,
+    error: u64,
+    frame: ReturnFrame,
+}
+const _: () = {
+    assert!(core::mem::offset_of!(ExceptionContext, vector) == 632);
+    assert!(core::mem::offset_of!(ExceptionContext, frame) == 648);
+};
+pub(super) extern "win64" fn dispatch_exception(
+    raw: &ExceptionContext,
+    address: u64,
+) -> *const Context {
+    let handler = HANDLER.load(Ordering::Acquire);
+    // NMI, double fault and machine check remain machine-fatal regardless of CPL.
+    if raw.frame.code & 3 == 3
+        && matches!(raw.vector, 0 | 1 | 4..=7 | 10..=14 | 16 | 17 | 19)
+        && !handler.is_null()
+    {
+        let context = Context {
+            floating: raw.floating,
+            registers: raw.registers.clone(),
+            frame: raw.frame.clone(),
+        };
+        // SAFETY: Setter publishes this callback; IRQs are masked. The callback
+        // must copy this temporary context into its own permanent storage.
+        unsafe {
+            let handler: SwitchHandler = core::mem::transmute(handler);
+            return handler(
+                &context,
+                SwitchCause::Fault(UserFault {
+                    vector: raw.vector,
+                    error: raw.error,
+                    address,
+                    instruction: raw.frame.instruction,
+                }),
+                interrupts::ticks(),
+            );
+        }
+    }
+    interrupts::dispatch_fault(raw.vector, raw.error, raw.frame.instruction, address)
 }
 /// # Safety
 /// Requires installed vector 48 and task-switch callback. Caller holds no

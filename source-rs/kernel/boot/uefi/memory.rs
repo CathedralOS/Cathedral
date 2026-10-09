@@ -1,7 +1,6 @@
 //! Boot-time composition of core frame policy and architecture-owned mappings.
 
 use cathedral_arch as arch;
-use cathedral_contracts::boot::BootMemory;
 use cathedral_core::extent::FrameAllocator;
 use cathedral_uart_16550::SerialPort;
 use core::fmt::Write;
@@ -9,10 +8,11 @@ use core::fmt::Write;
 pub struct PreparedMemory {
     pub layout: arch::BootLayout,
     pub frames: FrameAllocator,
+    pub image: arch::ImageRange,
 }
 
-pub fn prepare(inventory: BootMemory, console: &mut SerialPort) -> PreparedMemory {
-    let mut frames = FrameAllocator::new(inventory);
+pub fn prepare(info: crate::firmware::BootInfo, console: &mut SerialPort) -> PreparedMemory {
+    let mut frames = FrameAllocator::new(info.inventory);
     // SAFETY: Firmware has exited, IRQs are off, and the sole CPU receives
     // unique conventional frames disjoint from live firmware allocations.
     let layout =
@@ -26,7 +26,11 @@ pub fn prepare(inventory: BootMemory, console: &mut SerialPort) -> PreparedMemor
         layout.root_address()
     )
     .ok();
-    PreparedMemory { frames, layout }
+    PreparedMemory {
+        frames,
+        layout,
+        image: info.image,
+    }
 }
 
 pub fn confirm_handoff(memory: &mut PreparedMemory, console: &mut SerialPort) {

@@ -6,7 +6,23 @@ use cathedral_uart_16550::SerialPort;
 use core::fmt::Write;
 use uefi::mem::memory_map::{MemoryAttribute, MemoryDescriptor, MemoryMap, MemoryType};
 
-pub fn exit_boot_services(console: &mut SerialPort) -> BootMemory {
+pub struct BootInfo {
+    pub inventory: BootMemory,
+    pub image: cathedral_arch::ImageRange,
+}
+
+pub fn exit_boot_services(console: &mut SerialPort) -> BootInfo {
+    let image = {
+        let loaded = uefi::boot::open_protocol_exclusive::<uefi::proto::loaded_image::LoadedImage>(
+            uefi::boot::image_handle(),
+        )
+        .expect("loaded image protocol unavailable");
+        let (base, bytes) = loaded.info();
+        cathedral_arch::ImageRange {
+            base: base as u64,
+            bytes,
+        }
+    };
     // SAFETY: No protocol references, pool-owning values, firmware logger or
     // global allocator survive this point. The crate owns map-key retry logic.
     let firmware_map = unsafe { uefi::boot::exit_boot_services(None) };
@@ -45,5 +61,5 @@ pub fn exit_boot_services(console: &mut SerialPort) -> BootMemory {
         inventory.usable_bytes()
     )
     .ok();
-    inventory
+    BootInfo { inventory, image }
 }

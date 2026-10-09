@@ -49,31 +49,8 @@ exception 30, 1
 exception 31
 exception 255
 
-cathedral_fatal_entry:
-    cld
-    mov rcx, [rsp]
-    mov rdx, [rsp + 8]
-    mov r8, [rsp + 16]
-    mov r9, cr2
-    and rsp, -16
-    sub rsp, 32
-    call {fault}
-    ud2
-
-.global cathedral_timer_entry
-cathedral_timer_entry:
-    mov qword ptr [rip + {irq_stack}], rsp
-    lock inc qword ptr [rip + {ticks}]
+.macro save_context
     push rax
-    mov eax, 1
-    jmp cathedral_switch_entry
-
-.global cathedral_yield_entry
-cathedral_yield_entry:
-    push rax
-    xor eax, eax
-
-cathedral_switch_entry:
     push rbx
     push rcx
     push rdx
@@ -88,26 +65,66 @@ cathedral_switch_entry:
     push r13
     push r14
     push r15
-    mov edx, eax
     sub rsp, 512
-    // FXSAVE leaves reserved bytes untouched: initialize them before Rust copies
-    // the frame. GPRs are already saved; these instructions preserve FP state.
     cld
     mov rdi, rsp
     xor eax, eax
     mov ecx, 64
     rep stosq
     fxsave64 [rsp]
-    test edx, edx
-    jz 1f
+.endm
+
+.macro kernel_root
+    mov rax, [rip + {entry_root}]
+    test rax, rax
+    jz 9f
+    mov cr3, rax
+9:
+.endm
+
+cathedral_fatal_entry:
+    save_context
+    mov rcx, rsp
+    mov rdx, cr2
+    kernel_root
+    sub rsp, 32
+    call {fault}
+    jmp cathedral_restore
+
+.global cathedral_timer_entry
+cathedral_timer_entry:
+    mov qword ptr [rip + {irq_stack}], rsp
+    lock inc qword ptr [rip + {ticks}]
+    save_context
+    mov edx, 1
     mov al, 0x20
     out 0x20, al
-1:
+    jmp cathedral_switch_entry
+
+.global cathedral_yield_entry
+cathedral_yield_entry:
+    save_context
+    xor edx, edx
+    jmp cathedral_switch_entry
+
+.global cathedral_syscall_entry
+cathedral_syscall_entry:
+    save_context
+    mov edx, 2
+
+cathedral_switch_entry:
+    kernel_root
     mov rcx, rsp
     sub rsp, 32
     call {switch}
+cathedral_restore:
     // The callback copied out of the shared IST and selected a permanent context.
     mov rsp, rax
+    mov rax, [rip + {return_root}]
+    test rax, rax
+    jz 2f
+    mov cr3, rax
+2:
     fxrstor64 [rsp]
     add rsp, 512
     pop r15

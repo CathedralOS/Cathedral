@@ -15,14 +15,17 @@ Omega's proof or authority guarantees.
 | `kernel/boot/uefi/memory.rs`, `handoff.rs` | Compose core frame policy with architecture mappings, then transfer boot state |
 | `kernel/boot/uefi/interrupts.rs`, `diagnostics.rs` | Interrupt bring-up and serial/fatal reporting |
 | `kernel/boot/uefi/heap.rs`, `tasks.rs`, `task_lifecycle.rs` | Heap installation, cooperative/preemptive workloads and dynamic lifecycle checks |
+| `kernel/boot/uefi/users.rs` | Ring-3 syscall, isolation, fault containment and admission rollback experiments |
 | `kernel/boot/uefi/smoke.rs` | Test-only fault injection and QEMU result reporting |
 | `contracts/boot.rs` | Firmware-neutral memory handoff; experimental Rust data, not a frozen ABI |
 | `kernel/core/extent.rs` | Bootstrap frame accounting and reclaiming bitmap over usable RAM, corresponding to the resource work in `source/kernel/core/` |
 | `kernel/core/heap.rs`, `scheduler.rs`, `tasks.rs`, `tasks/` | IRQ-safe heap, pure scheduling policy, task admission and context/stack lifetime management |
+| `kernel/core/users.rs`, `users/` | Experimental user-task lifetime, checked diagnostic syscalls and outcomes |
 | `platform/drivers/uart_16550/` | Polling serial diagnostics, corresponding to `source/platform/drivers/uart_16550/` |
 | `kernel/arch/lib.rs` | Compile-time CPU backend selection and the boot-facing machine interface |
 | `kernel/arch/x86/` | Shared instructions and the selected PC platform's temporary PIC/PIT route |
 | `kernel/arch/x86_64/` | Paging, dynamic guarded stack mapping/teardown, CPU contexts, GDT/TSS/IDT and interrupt stubs, using the `x86_64` crate |
+| `kernel/arch/x86_64/user.rs`, `user/` | Sparse task address spaces, CR3 entry/return policy and embedded x86-64 test payload |
 | `distribution/profile.json` | Built-in distribution composition consumed by the boot harness |
 | `../tools/boot-harness-rs/` | Host build, QEMU launch and smoke verification |
 
@@ -134,7 +137,21 @@ QEMU q35, one qemu64 CPU, software emulation, 128 MiB by default:
 15. Dynamically spawn and retire 128 child tasks across two sessions while a
     non-yielding peer runs. Verify task limits, stale IDs, guards/canaries and
     return to heap/frame baselines after each pair and each session.
-16. Print `CATHEDRAL_RS_BOOT_OK`, then idle or terminate the smoke-test guest.
+16. Build independent sparse task roots with explicitly retained supervisor-only
+    image, heap and entry stacks. Enter ring 3 with private RX code, RW/NX data
+    and a guarded 16-KiB stack. Switch back to the kernel root on entry.
+17. Exercise diagnostic write, yield and exit through `int 0x80`; reject unknown
+    calls, kernel/noncanonical/overflowing pointers, guard-crossing buffers and
+    oversized writes. Copy valid code, data and stack buffers, including binary
+    bytes. Preempt non-yielding user tasks while checking private data and FP state.
+18. Contain ten deliberate user faults: kernel-memory read, CLI, port I/O,
+    code-page write, stack execution, guard write, privileged interrupt gate,
+    invalid opcode, physical-root alias read and CLI with an invalid user RSP.
+    Check vector/error/address, peer progress after each fault and complete cleanup.
+19. Fail at every physical-frame admission boundary across two user tasks,
+    including a fully admitted first task and partial second root. Require heap
+    and frame baselines after every failure and completed session.
+20. Print `CATHEDRAL_RS_BOOT_OK`, then idle or terminate the smoke-test guest.
 
 Only ordinary conventional RAM is eligible. Loader memory, Boot Services memory,
 runtime memory, ACPI and MMIO remain reserved. Runtime-marked, hot-pluggable and
@@ -148,8 +165,8 @@ this is bootstrap address-space ownership, not user isolation or a final W^X
 policy. Old firmware tables/storage are still reserved, not reclaimed. The heap
 uses `linked_list_allocator` behind an interrupt-masked lock. The smoke boot
 exercises allocation/free, page alignment, exhaustion and complete reclamation.
-Fatal and NMI handlers must never allocate. There is no syscall path or isolated
-driver. Timer and yield entries save all GPRs, the return frame, and x87/MMX/SSE
+Fatal and NMI handlers must never allocate. There is no isolated driver yet.
+Timer, yield and syscall entries save all GPRs, the return frame, and x87/MMX/SSE
 state before entering an allocation-free scheduler callback. Each suspended
 task's context is copied into stable heap storage; no task retains a frame on
 the shared IRQ stack. The selected qemu64 profile has no AVX state to save.
@@ -174,8 +191,8 @@ CPU (default 8), plus an optional frame budget for stacks and their tables.
 generations and are scoped to a session; reused slots do not revive old IDs.
 `is_alive` reports liveness; return is the supported exit mechanism. There are
 no joins, captured closures, cancellation or recovery from task panic yet.
-Tasks share an address space; guards protect against stack overrun, not against
-malicious tasks. There is no user mode, capability enforcement or SMP. The
+These trusted kernel tasks share an address space; guards protect against stack
+overrun, not against malicious tasks. There is no capability enforcement or SMP. The
 64-KiB heap and runtime arena are initialized before executing tasks; ordinary
 infallible Rust allocations can still panic on exhaustion. Task context
 admission is fallible and returns `OutOfHeap` without leaking stack frames.
@@ -185,9 +202,55 @@ locks are never held across a voluntary suspension. Preemption is tested with
 tasks that never yield, including a negative control that fails when their
 timer preemption is disabled.
 
+## User-mode experiment
+
+User sessions currently run 1-8 embedded, position-independent payloads with a
+maximum of one code page each. Each task has its own root and physical backing
+at the same user virtual addresses, with no inherited firmware identity map.
+Only the live kernel image, boot/emergency stacks and context-storage heap are
+retained supervisor-only for entry/return. The kernel root still has its original
+identity aliases. Global translations are disabled before user execution; CR3
+switches flush task translations. This is architectural memory/privilege
+containment on qemu64, not a claim of speculative-execution mitigation or full
+kernel W^X. Hardware rules follow the
+[Intel system programming manual](https://www.intel.com/content/www/us/en/developer/articles/technical/intel-sdm.html).
+
+The temporary ABI uses `int 0x80`, RAX for the call/result and RDI/RSI for two
+arguments. Other saved registers and floating-point state survive calls and
+preemption. Initial registers are cleared apart from the explicit arguments;
+initial FP state is clean and I/O privilege is zero.
+
+| Call | Arguments | Result |
+| --- | --- | --- |
+| 0: diagnostic write | Address, byte count | Count copied, or negative error |
+| 1: yield | None | 0 |
+| 2: exit | Status | Task cannot resume; status recorded for boot |
+
+Writes accept at most 256 bytes within one known user page. The kernel validates
+the entire range and copies through its physical backing before calling the
+bounded diagnostic sink; it never follows an unchecked user pointer. Bad
+addresses return -14, excessive lengths -22, unknown calls -38 and sink failure
+-5. Zero-length writes still require an address inside a user page. This sink
+is a lab privilege, not a capability or a production console API.
+
+User faults become task outcomes; kernel faults, NMI, double fault and machine
+check remain fatal. Exit/fault first restores the boot context, which retires the
+task's private tables and backing while peers remain runnable. Scheduling and
+syscall dispatch do not allocate or reclaim memory. Sessions preallocate their
+task/report storage; the scheduler's small arena still uses infallible allocation.
+The runtime has no executable loader, dynamic user spawn, IPC, admission proofs,
+device grants or production resource policy. Kernel and user workloads currently
+run in separate boot-managed sessions.
+
+The [kernel design](../wiki/design/part_5_lifecycle/04_kernel_architecture.md)
+already calls for hardware walls around unproved apps and drivers. The default
+for proved OS components remains an owner-level policy question in
+[`OWNER_QUESTIONS.md`](../OWNER_QUESTIONS.md); these experiments do not freeze
+Cathedral's component model or shared ABI.
+
 ## Next bring-up steps
 
-- Add user mode, separate address spaces and a minimal syscall boundary.
+- Introduce an admitted executable format and explicit user-task supervision.
 - Add task arguments, join/result delivery and explicit ownership of task handles.
 - Discover ACPI/APIC topology and replace the temporary PIC/PIT timer route.
 - Add capability checks and shared-memory IPC.

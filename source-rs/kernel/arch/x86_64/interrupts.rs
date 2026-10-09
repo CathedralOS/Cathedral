@@ -3,7 +3,7 @@
 
 use super::{BootLayout, halt_forever, stack_pointer};
 use ::x86_64::{
-    VirtAddr,
+    PrivilegeLevel, VirtAddr,
     instructions::{
         segmentation::{CS, DS, ES, FS, GS, SS, Segment},
         tables::{lidt, load_tss},
@@ -27,6 +27,7 @@ static FAULT_HANDLER: AtomicPtr<()> = AtomicPtr::new(core::ptr::null_mut());
 pub(super) static TICKS: AtomicU64 = AtomicU64::new(0);
 static BREAKPOINTS: AtomicU64 = AtomicU64::new(0);
 static IRQ_STACK: AtomicU64 = AtomicU64::new(0);
+static USER_SELECTORS: AtomicU64 = AtomicU64::new(0);
 static mut TSS: TaskStateSegment = TaskStateSegment::new();
 static mut GDT: GlobalDescriptorTable = GlobalDescriptorTable::new();
 static mut IDT: [Entry<HandlerFunc>; 256] = [const { Entry::missing() }; 256];
@@ -41,7 +42,12 @@ pub struct Fault {
     pub stack: u64,
 }
 
-extern "win64" fn dispatch_fault(vector: u64, error: u64, instruction: u64, address: u64) -> ! {
+pub(super) extern "win64" fn dispatch_fault(
+    vector: u64,
+    error: u64,
+    instruction: u64,
+    address: u64,
+) -> ! {
     let handler = FAULT_HANDLER.load(Ordering::Acquire);
     if !handler.is_null() {
         // SAFETY: Only install_interrupts writes this pointer, using this exact
@@ -59,8 +65,9 @@ extern "win64" fn dispatch_fault(vector: u64, error: u64, instruction: u64, addr
     unsafe { halt_forever() }
 }
 
-global_asm!(include_str!("entry.S"), fault = sym dispatch_fault, switch = sym super::context::dispatch, ticks = sym TICKS,
-    breakpoints = sym BREAKPOINTS, irq_stack = sym IRQ_STACK);
+global_asm!(include_str!("entry.S"), fault = sym super::context::dispatch_exception, switch = sym super::context::dispatch, ticks = sym TICKS,
+    breakpoints = sym BREAKPOINTS, irq_stack = sym IRQ_STACK,
+    entry_root = sym super::user::ENTRY_ROOT, return_root = sym super::user::RETURN_ROOT);
 
 macro_rules! exception_entries {
     ($($name:ident),+ $(,)?) => {
@@ -106,6 +113,13 @@ unsafe extern "C" {
     fn cathedral_exception_255();
     fn cathedral_timer_entry();
     fn cathedral_yield_entry();
+    fn cathedral_syscall_entry();
+}
+
+pub(super) fn user_selectors() -> (u16, u16) {
+    let selectors = USER_SELECTORS.load(Ordering::Acquire);
+    assert_ne!(selectors, 0, "user context before GDT installation");
+    (selectors as u16, (selectors >> 16) as u16)
 }
 
 /// # Safety
@@ -124,7 +138,8 @@ pub unsafe fn install_interrupts(layout: &BootLayout, handler: fn(Fault) -> !) {
         super::context::enable_context_save();
         let tss = addr_of_mut!(TSS);
         let mut value = TaskStateSegment::new();
-        value.privilege_stack_table[0] = VirtAddr::new(layout.stack_top);
+        // Ring-3 exceptions must not overwrite the suspended boot stack.
+        value.privilege_stack_table[0] = VirtAddr::new(layout.emergency_tops[3]);
         for (index, top) in layout.emergency_tops.iter().enumerate() {
             value.interrupt_stack_table[index] = VirtAddr::new(*top);
         }
@@ -133,6 +148,12 @@ pub unsafe fn install_interrupts(layout: &BootLayout, handler: fn(Fault) -> !) {
         let code = gdt.append(Descriptor::kernel_code_segment());
         let data = gdt.append(Descriptor::kernel_data_segment());
         let task = gdt.append(Descriptor::tss_segment_unchecked(tss));
+        let user_code = gdt.append(Descriptor::user_code_segment());
+        let user_data = gdt.append(Descriptor::user_data_segment());
+        USER_SELECTORS.store(
+            u64::from(user_code.0) | (u64::from(user_data.0) << 16),
+            Ordering::Release,
+        );
         gdt.load_unsafe();
         CS::set_reg(code);
         DS::set_reg(data);
@@ -150,10 +171,15 @@ pub unsafe fn install_interrupts(layout: &BootLayout, handler: fn(Fault) -> !) {
                 cathedral_timer_entry as *const ()
             } else if vector == 48 {
                 cathedral_yield_entry as *const ()
+            } else if vector == 128 {
+                cathedral_syscall_entry as *const ()
             } else {
                 cathedral_exception_255 as *const ()
             };
             let options = entry.set_handler_addr(VirtAddr::from_ptr(address));
+            if vector == 128 {
+                options.set_privilege_level(PrivilegeLevel::Ring3);
+            }
             match vector {
                 8 => {
                     options.set_stack_index(0);

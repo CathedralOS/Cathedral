@@ -47,16 +47,21 @@ impl SerialPort {
         }
         Err(fmt::Error)
     }
-}
 
-impl fmt::Write for SerialPort {
-    fn write_str(&mut self, text: &str) -> fmt::Result {
-        for byte in text.bytes() {
+    /// Diagnostic bytes need not be UTF-8. Preserve the console's CRLF behavior.
+    pub fn write_bytes(&mut self, bytes: &[u8]) -> fmt::Result {
+        for &byte in bytes {
             if byte == b'\n' {
                 self.send(b'\r')?;
             }
             self.send(byte)?;
         }
         Ok(())
+    }
+}
+
+impl fmt::Write for SerialPort {
+    fn write_str(&mut self, text: &str) -> fmt::Result {
+        self.write_bytes(text.as_bytes())
     }
 }

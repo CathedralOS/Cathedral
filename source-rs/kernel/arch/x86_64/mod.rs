@@ -4,14 +4,19 @@ mod context;
 mod interrupts;
 mod memory;
 mod stacks;
+mod user;
 pub use crate::x86::{disable_interrupts, halt_forever, in8, out8, qemu_exit};
-pub use context::{Context, SwitchCause, probe_registers, set_switch_handler, suspend};
+pub use context::{Context, SwitchCause, UserFault, probe_registers, set_switch_handler, suspend};
 pub use interrupts::{
     Fault, install_interrupts, last_irq_stack, probe_double_fault, probe_invalid_opcode,
     start_timer, test_breakpoint, ticks, wait_for_ticks,
 };
 pub use memory::{BootLayout, MemoryError, StackRange, prepare_memory};
 pub use stacks::{MAX_TASK_SLOTS, StackFrames, allocate_stack, release_stack, task_stack_range};
+pub use user::memory::{USER_CODE, USER_DATA, USER_STACK, USER_STACK_TOP};
+pub use user::{
+    ImageRange, UserSpace, begin_user_session, end_user_session, select_user_root, user_probe,
+};
 
 use core::arch::asm;
 
