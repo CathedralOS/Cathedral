@@ -19,7 +19,9 @@ Omega's proof or authority guarantees.
 | `kernel/boot/uefi/applications.rs` | Run the bundled executable twice per session and check loading, private state, exit statuses and cleanup |
 | `kernel/boot/uefi/ipc.rs` | Compose explicit endpoint grants and check service/failure sessions |
 | `kernel/core/supervision.rs`, `supervision/` | Host-testable launch authority, child identity and outcome consumption |
+| `kernel/core/deadline.rs` | Boot-issued clock grants and wrapping deadline comparisons |
 | `kernel/boot/uefi/supervision.rs` | Supply launch bounds and verify userspace recovery/cleanup |
+| `kernel/boot/uefi/watchdog.rs` | Verify hung-service cancellation, deadline wakeups and independent progress |
 | `kernel/core/ipc.rs`, `ipc/` | Host-testable endpoint rights, bound tickets, queues and teardown |
 | `kernel/boot/uefi/smoke.rs` | Test-only fault injection and QEMU result reporting |
 | `contracts/boot.rs` | Firmware-neutral memory handoff; experimental Rust data, not a frozen ABI |
@@ -194,6 +196,11 @@ QEMU q35, one qemu64 CPU, software emulation, 128 MiB by default:
     32 times while the same client explicitly reconnects and checks stale grants.
 27. Check supervisor-exit cancellation, complete returned-status delivery, bad
     wait destinations, and repeated failed spawns while peers remain alive.
+28. Grant clock access to a supervisor and observer. Recover four blocked and four
+    syscall-free spinning services using deadline waits and explicit cancellation;
+    verify unrelated progress, stale grants and complete memory reclamation.
+29. Check completed-outcome precedence, clock copyout and deadline wakeups when
+    every userspace task is blocked.
 28. Print `CATHEDRAL_RS_BOOT_OK`, then idle or terminate the smoke-test guest.
 
 Only ordinary conventional RAM is eligible. Loader memory, Boot Services memory,
@@ -277,6 +284,10 @@ initial FP state is clean and I/O privilege is zero.
 | 9: task wait | Child ticket, destination, exactly 40 bytes | 0 after copying and consuming reaped outcome; blocks if live |
 | 10: task port grant | None | Designated peer's boot-issued port ticket |
 | 11: task connect | Port ticket | First of two newly accepted local IPC grant indices |
+| 12: clock read | Clock ticket, destination, exactly 8 bytes | 0 after copying the boot-local tick count |
+| 13: task cancel | Child ticket | 0 after reclamation; leaves the outcome collectible |
+| 14: task wait until | Child ticket, 40-byte destination, absolute deadline | Wait result, or `TIMED_OUT` (-110); requires a clock grant |
+| 15: clock grant | None | Caller's boot-issued clock ticket, or `DENIED` |
 
 Writes accept at most 256 bytes within one known user page. The kernel validates
 the entire range and copies through its physical backing before calling the
@@ -330,7 +341,7 @@ Cathedral's component model or shared ABI.
 
 ## Capability IPC experiment
 
-The kernel owns at most four anonymous, one-way endpoints per user session.
+The kernel owns at most six anonymous, one-way endpoints per user session.
 Each has one sender, one receiver, an optional revoke holder, and one queued
 message of at most 64 bytes. Boot explicitly assigns these grants to task slots;
 `IPC_HANDLE` enumerates only the caller's installed grants. There is no global
@@ -433,10 +444,43 @@ executables, and repeated frame failures at budgets 0, 1 and 10.
 Supervisor exit or fault cancels its owned child before userspace resumes and
 reclaims the child even if it was blocked. This is abrupt hardware-task teardown,
 without user destructors or a graceful drain. No orphan adoption, general kill,
-wait deadline, nested supervision, delegation or persistent recovery is implemented.
-A child that hangs while its owner remains alive can still stall that owner's
-wait. Component supervision versus task-scope ownership remains an explicit
+nested supervision, delegation or persistent recovery is implemented.
+Component supervision versus task-scope ownership remains an explicit
 question in [`OWNER_QUESTIONS.md`](../OWNER_QUESTIONS.md).
+
+### Deadline waits and hung-service recovery
+
+Boot explicitly grants clock access to selected initial tasks through
+`Config::clock_readers`; reserved children inherit none. Clock tickets bind the
+caller and session epoch. `time::now` copies all 64 bits into a checked writable
+buffer, avoiding confusion between large tick counts and negative syscall errors.
+This is a boot-local wrapping counter on the nominal 100 Hz PIT, not wall time or
+a calibrated elapsed-time guarantee. Grants gate this API; hardware timing sources
+such as RDTSC are not confined, and virtualized clocks are not implemented.
+
+`time::after` constructs an absolute deadline with an interval at most `2^63 - 1`
+ticks. Comparisons interpret deadlines within the nearest half-cycle; exactly a
+half-cycle is ambiguous and rejected. `Child::wait_until` requires clock authority
+as well as the child ticket. If no reaped outcome is available at observation,
+expiry returns `TIMED_OUT` without copying, consuming an outcome or killing the
+child. An already-available outcome wins over expiry. Timer interrupts wake
+parked waits, including when all userspace tasks are blocked.
+
+`Child::cancel` gives only the owning supervisor authority over that exact child
+incarnation. It returns after boot-context reclamation and endpoint teardown.
+Blocked receivers observe `PEER_CLOSED`; the supervisor can collect `Cancelled`
+and launch a replacement with fresh grants. Repeated cancellation before collection
+is harmless, and cancelling an already-reaped child preserves its original outcome.
+After collection the ticket is stale. Cancellation is abrupt task destruction,
+not Omega cooperative cancellation, an IPC rollback or proof that prior work had
+no effects. Receive deadlines and general service resource budgets remain absent.
+
+The distribution watchdog fixture chooses the deadline and restart policy. It
+alternates blocked and non-yielding services across eight recoveries. A separate
+clock-authorized observer reports progress before cancellation, while the client
+checks closure and reconnects. Further probes cover unauthorized and stale
+cancellation, completed outcomes, bad clock destinations and an entirely blocked
+session. Boot verifies heap and physical-frame baselines after each session.
 
 ## Next bring-up steps
 

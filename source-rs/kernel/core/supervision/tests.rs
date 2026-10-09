@@ -1,5 +1,26 @@
 use super::*;
 #[test]
+fn cancellation_is_owner_bound_preserves_outcome_and_cannot_hit_replacement() {
+    let mut model = Supervisor::new(1, 0, 1, 2).unwrap();
+    let launch = model.launch(0).unwrap();
+    model.request(0, launch, 0).unwrap();
+    let first = model.started(2);
+    assert_eq!(model.request_cancel(1, first), Err(abi::DENIED));
+    assert_eq!(model.request_cancel(0, launch), Err(abi::BAD_HANDLE));
+    assert!(!model.cancel_child());
+    assert_eq!(model.request_cancel(0, first), Ok(true));
+    assert!(model.cancellation_pending() && model.cancel_child());
+    model.reaped([2; abi::EXIT_BYTES]);
+    assert!(!model.cancellation_pending());
+    assert_eq!(model.request_cancel(0, first), Ok(false));
+    assert_eq!(model.wait(0, first), Ok(Some([2; abi::EXIT_BYTES])));
+    model.consume();
+    model.request(0, launch, 0).unwrap();
+    model.started(3);
+    assert_eq!(model.request_cancel(0, first), Err(abi::BAD_HANDLE));
+    assert!(!model.cancel_child());
+}
+#[test]
 fn grants_are_bound_and_child_outcomes_must_be_consumed_before_reuse() {
     let mut model = Supervisor::new(1, 0, 1, 2).unwrap();
     let launch = model.launch(0).unwrap();

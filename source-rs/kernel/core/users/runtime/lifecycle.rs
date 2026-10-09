@@ -17,11 +17,21 @@ pub(super) fn close(session: &mut Session, slot: usize) {
 }
 
 pub(super) unsafe fn reap(session: &mut Session, source: &mut Frames<'_>) {
+    let requester = session
+        .supervisor
+        .as_ref()
+        .filter(|model| model.cancellation_pending())
+        .map(|model| model.owner);
     if let Some(model) = &session.supervisor
         && model.cancel_child()
         && session.scheduler.states()[model.child] != TaskState::Exited
     {
         let slot = model.child;
+        match session.scheduler.states()[slot] {
+            TaskState::Ready => session.tasks[model.owner].report.cancelled_ready += 1,
+            TaskState::Blocked => session.tasks[model.owner].report.cancelled_blocked += 1,
+            _ => {}
+        }
         session.scheduler.cancel(slot);
         session.tasks[slot].report.exit = Some(Exit::Cancelled);
         session.completed += 1;
@@ -52,7 +62,11 @@ pub(super) unsafe fn reap(session: &mut Session, source: &mut Frames<'_>) {
         .map(|task| task.report.frames)
         .sum();
     assert_eq!(source.frames.allocated(), session.frame_baseline + owned);
-    taskcalls::wake(session);
+    taskcalls::wake(session, arch::ticks());
+    if let Some(owner) = requester {
+        dispatch::complete(session, owner, Ok(0));
+        session.scheduler.unblock(owner);
+    }
 }
 
 pub(super) unsafe fn spawn(

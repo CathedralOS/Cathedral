@@ -105,6 +105,7 @@ fn run(
                 frame_limit: usize::MAX,
                 endpoints,
                 supervision: None,
+                clock_readers: &[],
             },
         )
     }

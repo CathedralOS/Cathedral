@@ -1,5 +1,6 @@
 //! Task syscalls only validate/enqueue work; spawn and reclamation use boot context.
 use super::{Session, dispatch};
+use crate::deadline;
 use crate::scheduler::Event;
 use cathedral_contracts::user as abi;
 
@@ -7,17 +8,37 @@ use cathedral_contracts::user as abi;
 pub(super) struct Wait {
     ticket: u64,
     address: u64,
+    deadline: Option<u64>,
 }
 
 pub(super) fn dispatch(
     session: &mut Session,
     slot: usize,
-    number: u64,
-    first: u64,
-    second: u64,
-    third: u64,
+    call: (u64, u64, u64, u64),
     event: &mut Event,
+    now: u64,
 ) -> Result<u64, u64> {
+    let (number, first, second, third) = call;
+    if number == abi::CLOCK_HANDLE {
+        return session.clock.handle(slot);
+    }
+    if number == abi::CLOCK_READ {
+        session.clock.check(slot, first)?;
+        if third != 8 {
+            return Err(abi::INVALID_ARGUMENT);
+        }
+        // SAFETY: Kernel CR3, IRQs off; copy validates the complete writable range.
+        if !unsafe {
+            session.tasks[slot]
+                .space
+                .as_ref()
+                .unwrap()
+                .copy_to_user(second, &now.to_le_bytes())
+        } {
+            return Err(abi::BAD_ADDRESS);
+        }
+        return Ok(0);
+    }
     let model = session.supervisor.as_mut().ok_or(abi::DENIED)?;
     match number {
         abi::TASK_LAUNCH => model.launch(slot),
@@ -36,9 +57,18 @@ pub(super) fn dispatch(
             session.ipc.accept_child(session.endpoint_base, slot);
             Ok(index)
         }
-        abi::TASK_WAIT => {
+        abi::TASK_CANCEL => {
+            if model.request_cancel(slot, first)? {
+                *event = Event::Block;
+            }
+            Ok(0) // Boot reclaims a live child before completing this call.
+        }
+        abi::TASK_WAIT | abi::TASK_WAIT_UNTIL => {
             model.wait(slot, first)?;
-            if third != abi::EXIT_BYTES as u64 {
+            if number == abi::TASK_WAIT_UNTIL {
+                session.clock.handle(slot)?;
+            }
+            if number == abi::TASK_WAIT && third != abi::EXIT_BYTES as u64 {
                 return Err(abi::INVALID_ARGUMENT);
             }
             if !session.tasks[slot]
@@ -52,8 +82,16 @@ pub(super) fn dispatch(
             let wait = Wait {
                 ticket: first,
                 address: second,
+                deadline: if number == abi::TASK_WAIT_UNTIL {
+                    if !deadline::valid(now, third) {
+                        return Err(abi::INVALID_ARGUMENT);
+                    }
+                    Some(third)
+                } else {
+                    None
+                },
             };
-            if !finish_wait(session, slot, wait)? {
+            if !finish_wait(session, slot, wait, now)? {
                 session.tasks[slot].wait = Some(wait);
                 session.tasks[slot].report.waits_blocked += 1;
                 *event = Event::Block;
@@ -63,9 +101,13 @@ pub(super) fn dispatch(
         _ => unreachable!(),
     }
 }
-fn finish_wait(session: &mut Session, slot: usize, wait: Wait) -> Result<bool, u64> {
+fn finish_wait(session: &mut Session, slot: usize, wait: Wait, now: u64) -> Result<bool, u64> {
     let model = session.supervisor.as_mut().unwrap();
-    let Some(bytes) = model.wait(slot, wait.ticket)? else {
+    let outcome = model.wait(slot, wait.ticket)?;
+    if deadline::timed_out(now, wait.deadline, outcome.is_some()) {
+        return Err(abi::TIMED_OUT);
+    }
+    let Some(bytes) = outcome else {
         return Ok(false);
     };
     // SAFETY: Kernel root, IRQs off; copy validates full writable range. Spaces
@@ -82,7 +124,7 @@ fn finish_wait(session: &mut Session, slot: usize, wait: Wait) -> Result<bool, u
     model.consume();
     Ok(true)
 }
-pub(super) fn wake(session: &mut Session) {
+pub(super) fn wake(session: &mut Session, now: u64) {
     let Some(model) = &session.supervisor else {
         return;
     };
@@ -90,7 +132,7 @@ pub(super) fn wake(session: &mut Session) {
     let Some(wait) = session.tasks[slot].wait else {
         return;
     };
-    let result = match finish_wait(session, slot, wait) {
+    let result = match finish_wait(session, slot, wait, now) {
         Ok(false) => return,
         Ok(true) => Ok(0),
         Err(error) => Err(error),

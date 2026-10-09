@@ -42,12 +42,24 @@ impl Child {
     /// Returns only after address-space reclamation. Success consumes the outcome;
     /// copied handles cannot wait twice or observe a later child in the same slot.
     pub fn wait(self) -> Result<Outcome, Error> {
+        self.collect(abi::TASK_WAIT, abi::EXIT_BYTES as u64)
+    }
+    /// An expired wait leaves the child alive and its eventual outcome collectible.
+    pub fn wait_until(self, deadline: u64) -> Result<Outcome, Error> {
+        self.collect(abi::TASK_WAIT_UNTIL, deadline)
+    }
+    /// Stop and reclaim this exact child before returning; does not consume its
+    /// outcome. Cancelling an already-reaped child preserves its original status.
+    pub fn cancel(self) -> Result<(), Error> {
+        result(arch::call(abi::TASK_CANCEL, self.0, 0)).map(|_| ())
+    }
+    fn collect(self, number: u64, third: u64) -> Result<Outcome, Error> {
         let mut record = Record([0; abi::EXIT_BYTES]);
         result(arch::call3(
-            abi::TASK_WAIT,
+            number,
             self.0,
             record.0.as_mut_ptr() as u64,
-            abi::EXIT_BYTES as u64,
+            third,
         ))?;
         let mut words = [0; 5];
         for (word, bytes) in words.iter_mut().zip(record.0.chunks_exact(8)) {

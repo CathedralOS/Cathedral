@@ -5,6 +5,7 @@ mod client;
 mod probes;
 mod service;
 mod supervisor;
+mod watchdog;
 cathedral_user_runtime::entry!(main);
 fn main(role: u64, argument: u64) -> u64 {
     match role {
@@ -24,6 +25,12 @@ fn main(role: u64, argument: u64) -> u64 {
                 core::arch::asm!("ud2", options(noreturn));
             }
         }
+        10 => watchdog::supervisor::run(),
+        11 => watchdog::client(),
+        12 => watchdog::service(argument),
+        13 => watchdog::observer(),
+        14 => watchdog::probes::completed(),
+        15 => watchdog::probes::idle(),
         _ => 254,
     }
 }

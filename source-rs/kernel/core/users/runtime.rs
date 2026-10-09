@@ -37,6 +37,9 @@ pub struct Report {
     pub reaped: usize,
     pub waits_blocked: usize,
     pub cancelled: usize,
+    pub wait_timeouts: usize,
+    pub cancelled_ready: usize,
+    pub cancelled_blocked: usize,
 }
 struct Task {
     context: Context,
@@ -55,6 +58,7 @@ struct Session {
     supervisor: Option<Supervisor>,
     endpoint_base: usize,
     frame_baseline: usize,
+    clock: crate::deadline::Clock,
 }
 static ACTIVE: AtomicPtr<Session> = AtomicPtr::new(core::ptr::null_mut());
 
@@ -64,6 +68,7 @@ pub struct Config<'a> {
     pub frame_limit: usize,
     pub endpoints: &'a [EndpointSpec],
     pub supervision: Option<Supervision<'a>>,
+    pub clock_readers: &'a [usize],
 }
 
 pub struct Supervision<'a> {
@@ -122,14 +127,15 @@ pub unsafe fn run(
                 frame_limit,
                 endpoints: &[],
                 supervision: None,
+                clock_readers: &[],
             },
         )
     }
 }
 
-/// Run tasks with explicit boot-issued endpoint grants.
+/// Run tasks with explicit boot-issued endpoint, launch and clock grants.
 /// # Safety
-/// Same obligations as run. Endpoint task indices refer to this exact program list.
+/// Same obligations as run. Endpoint and clock indices refer to this program list.
 pub unsafe fn run_configured(
     frames: &mut FrameAllocator,
     layout: &arch::BootLayout,
@@ -143,6 +149,8 @@ pub unsafe fn run_configured(
         return Err(Error::InvalidCount);
     }
     let epoch = next_epoch().ok_or(Error::InvalidEndpoints)?;
+    let clock = crate::deadline::Clock::new(epoch, programs.len(), config.clock_readers)
+        .map_err(|_| Error::InvalidEndpoints)?;
     let count = programs.len() + usize::from(config.supervision.is_some());
     if count > crate::ipc::MAX_TASKS {
         return Err(Error::InvalidCount);
@@ -181,6 +189,7 @@ pub unsafe fn run_configured(
         supervisor,
         endpoint_base: config.endpoints.len(),
         frame_baseline: baseline,
+        clock,
     };
     session
         .tasks
@@ -268,12 +277,15 @@ unsafe fn schedule(context: &Context, cause: SwitchCause, now: u64) -> *const Co
                 event = Event::Exit;
             }
             SwitchCause::Syscall => {
-                event = dispatch::syscall(session, slot);
+                event = dispatch::syscall(session, slot, now);
             }
         }
     } else {
         assert!(!context.is_user());
         session.boot = context.clone();
+    }
+    if cause == SwitchCause::Timer {
+        taskcalls::wake(session, now);
     }
     let next = if matches!(event, Event::Exit) {
         lifecycle::close(session, previous.unwrap());
@@ -284,10 +296,10 @@ unsafe fn schedule(context: &Context, cause: SwitchCause, now: u64) -> *const Co
     } else if session
         .supervisor
         .as_ref()
-        .is_some_and(|model| model.pending().is_some())
+        .is_some_and(|model| model.pending().is_some() || model.cancellation_pending())
     {
         session.scheduler.park(event, now);
-        None // Spawn runs on the boot stack with the kernel root, never in a trap.
+        None // Admission/cancellation use the boot stack, never the trap stack.
     } else {
         session.scheduler.advance(event, now, true)
     };

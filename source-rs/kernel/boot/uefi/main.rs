@@ -22,6 +22,8 @@ mod supervision;
 mod task_lifecycle;
 mod tasks;
 mod users;
+#[cfg(feature = "bundled-user")]
+mod watchdog;
 
 use uefi::{Status, entry};
 
@@ -51,6 +53,8 @@ fn kernel_main(mut boot: handoff::BootState) -> ! {
     ipc::exercise(&mut boot.memory, &mut boot.console);
     #[cfg(feature = "bundled-user")]
     supervision::exercise(&mut boot.memory, &mut boot.console);
+    #[cfg(feature = "bundled-user")]
+    watchdog::exercise(&mut boot.memory, &mut boot.console);
     diagnostics::ready(&mut boot.console);
 
     #[cfg(feature = "smoke-test")]

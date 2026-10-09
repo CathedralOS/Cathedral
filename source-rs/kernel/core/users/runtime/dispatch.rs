@@ -9,7 +9,7 @@ pub(super) struct Receive {
     capacity: usize,
 }
 
-pub(super) fn syscall(session: &mut Session, slot: usize) -> Event {
+pub(super) fn syscall(session: &mut Session, slot: usize, now: u64) -> Event {
     let (number, first, second, third) = session.tasks[slot].context.syscall();
     let mut event = Event::Yield;
     let result = match number {
@@ -42,9 +42,13 @@ pub(super) fn syscall(session: &mut Session, slot: usize) -> Event {
             }
         }
         abi::IPC_REVOKE => session.ipc.revoke(slot, first).map(|()| 0),
-        abi::TASK_LAUNCH..=abi::TASK_CONNECT => {
-            super::taskcalls::dispatch(session, slot, number, first, second, third, &mut event)
-        }
+        abi::TASK_LAUNCH..=abi::CLOCK_HANDLE => super::taskcalls::dispatch(
+            session,
+            slot,
+            (number, first, second, third),
+            &mut event,
+            now,
+        ),
         _ => Err(abi::UNKNOWN),
     };
     complete(session, slot, result);
@@ -56,6 +60,9 @@ pub(super) fn complete(session: &mut Session, slot: usize, result: Result<u64, u
     let task = &mut session.tasks[slot];
     if result.is_err() {
         task.report.rejected += 1;
+    }
+    if result == Err(abi::TIMED_OUT) {
+        task.report.wait_timeouts += 1;
     }
     task.context
         .set_result(result.unwrap_or_else(|error| error));

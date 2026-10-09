@@ -131,6 +131,7 @@ fn run(
             Config {
                 frame_limit: usize::MAX,
                 endpoints,
+                clock_readers: &[],
                 supervision: Some(Supervision {
                     owner: 0,
                     peer: 1,

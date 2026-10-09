@@ -15,6 +15,13 @@ pub const TASK_SPAWN: u64 = 8;
 pub const TASK_WAIT: u64 = 9;
 pub const TASK_PORT: u64 = 10;
 pub const TASK_CONNECT: u64 = 11;
+pub const CLOCK_READ: u64 = 12;
+pub const TASK_CANCEL: u64 = 13;
+pub const TASK_WAIT_UNTIL: u64 = 14;
+pub const CLOCK_HANDLE: u64 = 15;
+pub const TIMED_OUT: u64 = (-110i64) as u64;
+/// Maximum unambiguous forward distance in the wrapping tick clock.
+pub const MAX_INTERVAL: u64 = (1 << 63) - 1;
 pub const BUSY: u64 = (-16i64) as u64;
 pub const NO_MEMORY: u64 = (-12i64) as u64;
 pub const BAD_EXECUTABLE: u64 = (-8i64) as u64;

@@ -20,6 +20,7 @@ pub struct Supervisor {
     connected: bool,
     owner_alive: bool,
     peer_alive: bool,
+    cancellation: bool,
 }
 impl Supervisor {
     pub fn new(epoch: u64, owner: usize, peer: usize, child: usize) -> Result<Self, u64> {
@@ -41,6 +42,7 @@ impl Supervisor {
             connected: false,
             owner_alive: true,
             peer_alive: true,
+            cancellation: false,
         })
     }
     fn ticket(epoch: u64, owner: usize, kind: u64) -> u64 {
@@ -110,6 +112,7 @@ impl Supervisor {
             panic!("reaping absent child")
         };
         self.state = Child::Reaped(ticket, outcome);
+        self.cancellation = false;
     }
     pub fn connect(&mut self, caller: usize, port: u64) -> Result<(), u64> {
         if self.port(caller)? != port {
@@ -133,7 +136,18 @@ impl Supervisor {
         }
     }
     pub fn cancel_child(&self) -> bool {
-        !self.owner_alive && matches!(self.state, Child::Live(_))
+        (!self.owner_alive || self.cancellation) && matches!(self.state, Child::Live(_))
+    }
+    /// Cancel only this owner's exact incarnation. A reaped outcome is preserved.
+    pub fn request_cancel(&mut self, caller: usize, ticket: u64) -> Result<bool, u64> {
+        if self.wait(caller, ticket)?.is_some() {
+            return Ok(false);
+        }
+        self.cancellation = true;
+        Ok(true)
+    }
+    pub fn cancellation_pending(&self) -> bool {
+        self.cancellation
     }
 }
 

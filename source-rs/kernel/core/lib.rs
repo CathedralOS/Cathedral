@@ -5,6 +5,7 @@
 
 extern crate alloc;
 
+pub mod deadline;
 pub mod extent;
 #[allow(unsafe_code)]
 pub mod heap;

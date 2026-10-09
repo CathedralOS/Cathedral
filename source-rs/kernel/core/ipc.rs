@@ -2,7 +2,7 @@
 //! Tickets are bound to a caller and a non-reused session epoch, not bearer tokens.
 use cathedral_contracts::user as abi;
 
-pub const MAX_ENDPOINTS: usize = 4;
+pub const MAX_ENDPOINTS: usize = 6;
 pub const MAX_TASKS: usize = 8;
 pub const MAX_EPOCH: u64 = (1 << 47) - 1;
 
