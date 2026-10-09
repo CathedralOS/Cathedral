@@ -17,6 +17,8 @@ MARKERS = (
     "Cathedral Rust lab: ExitBootServices complete",
     "Cathedral Rust lab: memory regions=",
     "Cathedral Rust lab: first frame=",
+    "Cathedral Rust lab: arch=",
+    "Cathedral Rust lab: owned page tables and stack",
     "CATHEDRAL_RS_BOOT_OK",
 )
 
@@ -89,7 +91,7 @@ def main():
         return 0
 
     qemu = find_qemu()
-    command = [qemu, "-machine", "q35", "-accel", "tcg", "-smp", "1", "-m", str(args.memory)]
+    command = [qemu, "-machine", "q35", "-cpu", "qemu64", "-accel", "tcg", "-smp", "1", "-m", str(args.memory)]
     command += firmware_args(qemu, output)
     command += ["-drive", "format=raw,file=fat:rw:esp", "-nic", "none",
                 "-display", "none", "-monitor", "none", "-no-reboot"]
@@ -127,7 +129,7 @@ def main():
     # isa-debug-exit returns (guest_value << 1) | 1, so guest 0x10 means 33.
     if result.returncode != 33 or "CATHEDRAL_RS_PANIC" in serial:
         raise RuntimeError(f"Boot failed (QEMU exit {result.returncode}); logs: {output}")
-    print("PASS: firmware exit, memory handoff, and first frame allocation")
+    print("PASS: firmware exit, memory handoff, owned page tables and guarded stack")
     return 0
 
 

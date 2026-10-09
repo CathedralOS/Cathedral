@@ -1,5 +1,5 @@
 [package]
-name = "cathedral-x86-64"
+name = "cathedral-arch"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -11,3 +11,5 @@ path = "lib.rs"
 [lints]
 workspace = true
 
+[target.'cfg(target_arch = "x86_64")'.dependencies]
+x86_64 = { version = "0.15.5", default-features = false, features = ["instructions"] }

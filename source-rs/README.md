@@ -14,12 +14,18 @@ Omega's proof or authority guarantees.
 | `contracts/boot.rs` | Firmware-neutral memory handoff; experimental Rust data, not a frozen ABI |
 | `core/extent.rs` | Physical-memory inventory and initial frame accounting, corresponding to the resource work in `source/core/` |
 | `drivers/uart_16550/` | Polling serial diagnostics, corresponding to `source/drivers/uart_16550/` |
-| `libraries/x86_64/` | Explicit unsafe instruction wrappers for the x86 hardware seam |
+| `arch/lib.rs` | Compile-time CPU backend selection and the boot-facing machine interface |
+| `arch/x86/` | Instructions shared by the x86 family |
+| `arch/x86_64/` | Four-level paging, stack entry and x86-64 CPU setup, using the `x86_64` crate |
 | `../tools/boot-harness-rs/` | Host build, QEMU launch and smoke verification |
 
 Each crate uses `no_std`. The core depends only on contracts and has no firmware
 dependency or unsafe code. Boot assembles the core, UART and firmware adapter.
 The bootstrap UART currently runs privileged; user-mode drivers come later.
+The Rust-specific `arch/` layer groups hardware mechanisms that Omega currently
+spreads across core providers, instruction contracts and libraries. Only x86-64
+boots today; shared x86 instructions do not imply a working 32-bit kernel.
+UEFI ABI definitions and Boot Services come from the upstream `uefi` crate.
 `foundation/`, `services/` and `applications/` appear when their first code lands,
 following the same rule as the Omega tree.
 
@@ -65,7 +71,7 @@ this directory so its toolchain and aliases apply.
 
 ## Current milestone
 
-QEMU q35, one x86-64 CPU, software emulation, 128 MiB by default:
+QEMU q35, one qemu64 CPU, software emulation, 128 MiB by default:
 
 1. Enter a real UEFI application through OVMF and report over COM1.
 2. Capture the final firmware memory map and exit Boot Services using `uefi`.
@@ -73,7 +79,14 @@ QEMU q35, one x86-64 CPU, software emulation, 128 MiB by default:
 4. Reject overlapping, unaligned, overflowing or oversized inventories.
 5. Move the inventory into the core and allocate the first available 4-KiB frame
    in accounting, skipping reserved memory and physical page zero.
-6. Print `CATHEDRAL_RS_BOOT_OK`, then idle or terminate the smoke-test guest.
+6. Deep-copy the active four-level page tables into exclusively allocated frames,
+   preserving inherited leaf mappings and their flags. Bound copying to 4,096
+   table pages; fail on exhaustion, unsupported NX/LA57/PCID or occupied ranges.
+7. Map a guarded 64-KiB kernel stack, four guarded 16-KiB emergency stacks and
+   64 KiB of heap backing. New mappings are writable and non-executable.
+8. Load the owned CR3, enable write protection/NX, switch stacks and confirm the
+   stack pointer is within its assigned range.
+9. Print `CATHEDRAL_RS_BOOT_OK`, then idle or terminate the smoke-test guest.
 
 Only ordinary conventional RAM is eligible. Loader memory, Boot Services memory,
 runtime memory, ACPI and MMIO remain reserved. Runtime-marked, hot-pluggable and
@@ -81,16 +94,16 @@ specific-purpose conventional regions also remain reserved. This deliberately
 retains the image, map buffer, firmware stack and inherited page tables. The
 inventory accepts at most 256 descriptors and fails closed beyond that.
 
-The frame allocator does not access the frame, create mappings, free memory or
-establish Omega-qualified ownership. There is no heap, custom stack/page table,
-Cathedral IDT, enabled timer, scheduler, syscall path or isolated driver yet.
-The inherited firmware execution environment is temporary. Unsafe wrappers are
-boot-only lab mechanisms, not a capability API to expose to applications.
+Core accounts for physical frames; only the architecture backend accesses them.
+Inherited identity mappings remain, including aliases of the new backing frames;
+this is bootstrap address-space ownership, not user isolation or a final W^X
+policy. Old firmware tables/storage are still reserved, not reclaimed. The heap
+backing and emergency stacks are mapped but not yet used. There is no heap
+allocator, Cathedral IDT, enabled timer, scheduler, syscall path or isolated
+driver yet. Unsafe wrappers are boot-only lab mechanisms, not application APIs.
 
 ## Next bring-up steps
 
-- Reserve and build Cathedral-owned page tables and a guarded stack; retain all
-  live mappings through the switch before reclaiming any bootstrap resources.
 - Establish diagnostic exception entries and emergency stacks before enabling
   the first timer; follow `wiki/boot/02a_idt_handoff.md`.
 - Add the heap, timer, context switching and two scheduled tasks.

@@ -2,7 +2,7 @@
 
 //! Bootstrap polling console. Runs privileged until driver isolation exists.
 
-use cathedral_x86_64::{in8, out8};
+use cathedral_arch::{in8, out8};
 use core::fmt;
 
 pub struct SerialPort {

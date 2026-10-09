@@ -1,10 +1,10 @@
 #![no_std]
 #![no_main]
 
+use cathedral_arch::{self as arch, disable_interrupts, halt_forever};
 use cathedral_contracts::boot::{BootMemory, MemoryKind, MemoryRegion};
 use cathedral_core::extent::FrameAllocator;
 use cathedral_uart_16550::SerialPort;
-use cathedral_x86_64::{disable_interrupts, halt_forever};
 use core::{fmt::Write, panic::PanicInfo};
 use uefi::{
     Status, boot, entry,
@@ -68,14 +68,64 @@ fn main() -> Status {
         frame.address()
     )
     .ok();
-    // This milestone allocates a frame in accounting only. Mapping and actual
-    // access await Cathedral-owned page tables; no address-to-reference cast.
+    // SAFETY: Post-UEFI single-CPU context with IRQs off. The core supplies
+    // unique conventional frames; every live firmware allocation is reserved.
+    let layout =
+        unsafe { arch::prepare_memory(&mut || frames.allocate().map(|frame| frame.address())) }
+            .expect("cannot prepare kernel memory");
+    writeln!(
+        serial,
+        "Cathedral Rust lab: arch={} page_tables={} root={:#x}",
+        arch::CPU_NAME,
+        layout.table_count,
+        layout.root_address()
+    )
+    .ok();
+    let mut state = BootState {
+        serial,
+        frames,
+        layout,
+    };
+    // SAFETY: Retained mappings preserve this image and the old stack containing
+    // state. Entry moves state once, never returns, and leaves old storage reserved.
+    unsafe {
+        state.layout.activate();
+        arch::enter_stack(
+            state.layout.stack_top,
+            kernel_entry,
+            (&mut state as *mut BootState).cast(),
+        );
+    }
+}
+
+struct BootState {
+    serial: SerialPort,
+    frames: FrameAllocator,
+    layout: arch::BootLayout,
+}
+
+unsafe extern "win64" fn kernel_entry(context: *mut ()) -> ! {
+    // SAFETY: The non-returning trampoline transfers exactly this live state.
+    let BootState {
+        mut serial,
+        mut frames,
+        layout,
+    } = unsafe { context.cast::<BootState>().read() };
+    let stack = arch::stack_pointer();
+    assert!((layout.stack_bottom..layout.stack_top).contains(&stack));
+    writeln!(
+        serial,
+        "Cathedral Rust lab: owned page tables and stack rsp={stack:#x}"
+    )
+    .ok();
+    // Exercise a post-switch allocation while retained identity mappings are live.
+    assert!(frames.allocate().is_some());
     writeln!(serial, "CATHEDRAL_RS_BOOT_OK").ok();
 
     #[cfg(feature = "smoke-test")]
     // SAFETY: Only the smoke runner supplies the debug-exit device at 0xf4.
     unsafe {
-        cathedral_x86_64::qemu_exit(0x10)
+        arch::qemu_exit(0x10)
     }
 
     #[cfg(not(feature = "smoke-test"))]

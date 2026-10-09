@@ -18,9 +18,8 @@ smoke-test = []
 cathedral-contracts.workspace = true
 cathedral-core.workspace = true
 cathedral-uart-16550.workspace = true
-cathedral-x86-64.workspace = true
+cathedral-arch.workspace = true
 uefi.workspace = true
 
 [lints]
 workspace = true
-

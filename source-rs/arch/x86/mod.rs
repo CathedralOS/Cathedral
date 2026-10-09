@@ -1,10 +1,4 @@
-#![no_std]
-
-//! Small, explicitly unsafe x86 hardware seam for the single-CPU lab.
-//! These are not Omega checked instructions or capability providers.
-
-#[cfg(not(target_arch = "x86_64"))]
-compile_error!("The Rust boot lab currently targets x86-64 only");
+//! Instructions shared by the x86 family; the active backend is x86-64.
 
 use core::arch::asm;
 
