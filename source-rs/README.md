@@ -40,6 +40,9 @@ explains how to preserve these routes as the lab grows.
 | `kernel/boot/uefi/smoke.rs` | Test-only fault injection and QEMU result reporting |
 | `contracts/boot.rs` | Firmware-neutral memory handoff; experimental Rust data, not a frozen ABI |
 | `contracts/user.rs` | Shared experimental entry/syscall constants for kernel and user runtime |
+| `contracts/memory.rs`, `kernel/core/regions.rs` | Page-object grants, quotas, sealing and reader lifetime |
+| `kernel/core/user_tasks/session/memory.rs` | Boot-stack frame ownership, mapping changes and cleanup |
+| `distribution/lab/memory/main.rs` | Private allocation, shared leases and permission-fault exercises |
 | `contracts/display.rs` | Bounded framebuffer geometry and experimental drawing messages |
 | `contracts/block.rs`, `contracts/storage.rs` | Experimental block durability and private-object messages |
 | `platform/drivers/ata-pio/` | Userspace bounded PIO driver for a dedicated QEMU data disk |
@@ -244,11 +247,14 @@ QEMU q35, one qemu64 CPU, software emulation, 128 MiB by default:
     verify unrelated progress, stale grants and complete memory reclamation.
 29. Check completed-outcome precedence, clock copyout and deadline wakeups when
     every userspace task is blocked.
-30. Grant a reserved GOP framebuffer to an isolated display provider. Draw a
+30. Allocate bounded private pages and seal shared buffers to an authorized peer.
+    Check write/NX faults, quotas, stale handles, peer death, pinned-reader lifetime,
+    zeroing/reuse, allocation rollback and complete heap/frame reclamation.
+31. Grant a reserved GOP framebuffer to an isolated display provider. Draw a
     distribution-owned pattern, fault/restart the provider, reconnect and redraw
     while an independent observer progresses. Reject ungranted access and check
     NX, guard pages, copy boundaries and every admission allocation failure.
-28. Print `CATHEDRAL_RS_BOOT_OK`, then idle or terminate the smoke-test guest.
+32. Print `CATHEDRAL_RS_BOOT_OK`, then idle or terminate the smoke-test guest.
 
 Only ordinary conventional RAM is eligible. Loader memory, Boot Services memory,
 runtime memory, ACPI and MMIO remain reserved. Runtime-marked, hot-pluggable and
@@ -262,7 +268,8 @@ this is bootstrap address-space ownership, not user isolation or a final W^X
 policy. Old firmware tables/storage are still reserved, not reclaimed. The heap
 uses `linked_list_allocator` behind an interrupt-masked lock. The smoke boot
 exercises allocation/free, page alignment, exhaustion and complete reclamation.
-Fatal and NMI handlers must never allocate. There is no isolated driver yet.
+Fatal and NMI handlers must never allocate. Display, input and storage providers
+run in isolated user tasks; the bootstrap UART remains privileged.
 Timer, yield and syscall entries save all GPRs, the return frame, and x87/MMX/SSE
 state before entering an allocation-free scheduler callback. Each suspended
 task's context is copied into stable heap storage; no task retains a frame on
@@ -346,6 +353,12 @@ initial FP state is clean and I/O privilege is zero.
 | 24: Disk register read | Fixed register index 1?8 | One byte; exclusive disk grant required |
 | 25: Disk register write | Fixed register index, byte | Whitelisted PIO command/configuration only |
 | 26: Disk transfer | Buffer, direction (0 read / 1 write), length 512 | Checked full buffer before bounded single-sector I/O |
+| 27: Memory allocate | Page count | Zeroed private RW/NX region handle, within explicit budget |
+| 28: Memory address | Region handle | Caller-owned or accepted mapping address |
+| 29: Memory release | Region handle | Remove caller mapping; owner waits for peer completion/death |
+| 30: Memory seal | Region handle, link token | Irreversibly remove WRITE and offer to that live service |
+| 31: Memory map | Region handle | Accept authorized RO/NX lease and return its address |
+| 32: Memory pages | Region handle | Caller-owned or accepted region page count |
 
 Writes accept at most 256 bytes within one known user page. The kernel validates
 the entire range and copies through its physical backing before calling the
@@ -360,7 +373,7 @@ task's private tables and backing while peers remain runnable. Scheduling and
 syscall dispatch do not allocate or reclaim memory. Sessions preallocate their
 task/report storage; the scheduler's small arena still uses infallible allocation.
 The runtime has no dynamic linker, general executable discovery, admission proofs,
-device grants or production resource policy. Kernel and user workloads currently
+dynamic device admission or production resource policy. Kernel and user workloads currently
 run in separate boot-managed sessions.
 
 ## Executable loading experiment
@@ -804,12 +817,62 @@ certify physical host power safety or simulate loss of the host page cache.
 F5 through F8 arm those four pause points only in recovery/storage builds.
 All fault injection and hostile-client probes are absent from ordinary builds.
 
+## Bounded private pages and shared buffers
+
+The [memory contract](contracts/memory.rs) defines explicit per-task private and
+accepted-reader budgets, each up to four 4 KiB pages. An allocation contains one
+to four zeroed pages, with 32 region slots per session and an unmapped guard after
+each slot. Runtime mappings are non-executable. Task admission reserves their
+page tables; allocation and mapping changes execute on the boot stack with the
+kernel root active. The kernel owns physical backing independently of either
+participant's address space.
+
+Follow [the policy model](kernel/core/regions.rs) for budgets and lifetime,
+[the syscall entrance](kernel/core/user_tasks/session/syscalls/memory.rs) for
+validation/deferral, [memory execution](kernel/core/user_tasks/session/memory.rs)
+for physical ownership, and [architecture mappings](kernel/arch/x86_64/user/memory/regions.rs)
+for PTE and checked-copy permissions. None of these depends on the platform.
+
+The producer fills private RW pages, seals them to a live boot-approved service
+link, then sends the handle over copied IPC. Sealing permanently removes write
+permission. The consumer accepts RO pages, reads them and releases its mapping
+before replying; the producer then releases its owner reference. An accepted
+reader survives producer death and retains its shared-page charge. An unaccepted
+offer is cancelled when the producer dies. Consumer death releases its lease;
+replacement tasks cannot inherit old authority. Complete teardown reclaims all
+backing and tables without relying on user destructors.
+
+The [runtime API](platform/libraries/user-runtime/memory.rs) expresses that flow
+as `Private -> Sealed` and `Shared`. These buffers are not a general heap, an
+arbitrary-address mapping API, a growable region, multicast, or executable memory.
+A dropped producer token with a pending peer stays charged until task exit;
+protocols must complete or recover the exchange. Generation handles reject stale
+operations, but raw virtual addresses can be reused after release: the kernel
+does not make dangling pointers safe.
+
+In ordinary startup, the status app now supplies the DISPLAY panel's `SHARED
+PIXELS` checkerboard this way. The display provider validates pixels in its
+read-only mapping and copies them to GOP. The compositor, GPU and capture
+protocols remain future platform work.
+
+`--smoke` exercises quota exhaustion, zeroing/reuse, stale and foreign handles,
+checked-copy rejection, write/NX/guard faults, producer and consumer replacement,
+pinned-reader budgets, parent-exit cleanup and heap/frame baselines. A smoke-only
+fixture injects every physical allocation failure boundary and checks rollback,
+including the reserved runtime page table. Host tests cover grant validation and
+global region exhaustion. Recovery/storage builds additionally send malformed
+pixel buffers to the real display service and require error replies to release
+accepted leases. Screenshot/input/recovery/storage checks include the new tile.
+
+This is an explicit lab contract. The transport and revocation question in
+[OWNER_QUESTIONS.md](../OWNER_QUESTIONS.md) remains open.
+
 ## Next bring-up steps
 
 - Define executable admission/provenance and service lifetime/adoption contracts.
 - Add kernel-task arguments, join/result delivery and explicit ownership of task handles.
 - Discover ACPI/APIC topology and replace the temporary PIC/PIT timer route.
-- Specify endpoint delivery/revocation semantics, then prototype shared-region IPC.
+- Specify production endpoint/shared-region delivery, acceptance and revocation semantics.
 
 Keep source transitions and invariants recognizable beside their Omega owners.
 Record deliberate divergences here and preserve test cases for eventual shared

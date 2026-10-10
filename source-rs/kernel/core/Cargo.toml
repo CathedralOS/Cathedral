@@ -8,6 +8,9 @@ publish.workspace = true
 [lib]
 path = "lib.rs"
 
+[features]
+memory-lab = []
+
 [dependencies]
 cathedral-contracts.workspace = true
 cathedral-arch.workspace = true

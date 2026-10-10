@@ -43,7 +43,8 @@ pub(super) unsafe fn schedule(context: &Context, cause: SwitchCause, now: u64) -
         session.tasks[previous.unwrap()].report.completion_order = session.completed;
         session.scheduler.park(event, now);
         None // Always reclaim from the boot context, never an interrupt stack.
-    } else if session.scheduler.states().contains(&TaskState::Exited)
+    } else if session.tasks.iter().any(|task| task.memory_call.is_some())
+        || session.scheduler.states().contains(&TaskState::Exited)
         || session
             .launches
             .iter()

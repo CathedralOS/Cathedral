@@ -14,17 +14,25 @@ struct InitialLaunch {
     keyboard: bool,
     disk: bool,
     clock: bool,
+    private_pages: usize,
+    shared_pages: usize,
     argument: u64,
 }
 include!(concat!(env!("OUT_DIR"), "/startup_config.rs"));
 
 pub fn run(memory: &mut PreparedMemory, console: &mut SerialPort) {
+    let mut memory_grants = alloc::vec::Vec::new();
     let mut launches = alloc::vec::Vec::new();
     let mut clock_readers = alloc::vec::Vec::new();
     if INITIAL_CLOCK {
         clock_readers.push(0);
     }
     for (index, grant) in LAUNCHES.iter().enumerate() {
+        memory_grants.push(cathedral_contracts::memory::Grant {
+            task: index + 1,
+            private_pages: grant.private_pages,
+            shared_pages: grant.shared_pages,
+        });
         if grant.clock {
             clock_readers.push(index + 1);
         }
@@ -75,6 +83,7 @@ pub fn run(memory: &mut PreparedMemory, console: &mut SerialPort) {
                 links: LINKS,
                 frame_limit: usize::MAX,
                 endpoints: &[],
+                memory: &memory_grants,
                 clock_readers: &clock_readers,
                 supervision: &launches,
             },

@@ -1,6 +1,7 @@
 //! Render the status view through the display data link, then report the completed frame.
 //! Client: distribution/libraries/boot-scene; protocol: contracts/display.rs;
 //! peer: platform/services/display/main.rs -> surface.rs.
+mod buffer;
 mod records;
 mod report;
 use super::{connection::Connections, state::State};
@@ -21,6 +22,7 @@ pub(super) fn render(state: &State, connections: &mut Connections) -> Result<(),
                 client.text(x, 184, 2, 0x101827, text)?;
             }
             records::draw(&client, state)?;
+            buffer::draw(&client)?;
             client.text(64, 592, 2, 0xe8edf4, b"ARROWS SELECT / ENTER TOGGLE")?;
             let status = connections.status;
             let mut counters = *b"DISPLAY READY 00  INPUT READY 00  APP 00";

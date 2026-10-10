@@ -3,6 +3,9 @@ use crate::{Error, abi, arch, ipc::Handle};
 #[derive(Clone, Copy, Debug)]
 pub struct Link(u64);
 impl Link {
+    pub fn raw(self) -> u64 {
+        self.0
+    }
     pub fn at(index: u64) -> Result<Self, Error> {
         result(arch::call(abi::LINK_HANDLE, index, 0)).map(Self)
     }

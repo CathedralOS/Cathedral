@@ -11,6 +11,17 @@ pub struct Client {
     deadline: Option<u64>,
 }
 impl Client {
+    pub fn buffer(
+        &self,
+        x: u64,
+        y: u64,
+        width: u64,
+        height: u64,
+        buffer: &cathedral_user_runtime::memory::Sealed,
+    ) -> Result<(), Error> {
+        self.call([wire::BLIT, x, y, width, height, buffer.handle()])
+            .map(|_| ())
+    }
     pub fn text(&self, x: u64, y: u64, scale: u64, color: u64, text: &[u8]) -> Result<(), Error> {
         for (index, chunk) in text.chunks(16).enumerate() {
             let x = (index as u64)

@@ -2,6 +2,7 @@
 use super::Program;
 use crate::ipc::EndpointSpec;
 pub struct Config<'a> {
+    pub memory: &'a [cathedral_contracts::memory::Grant],
     pub frame_limit: usize,
     pub links: &'a [crate::link::LinkSpec],
     pub endpoints: &'a [EndpointSpec],

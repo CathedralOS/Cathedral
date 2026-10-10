@@ -1,4 +1,5 @@
 //! Test-only checks run from the app's actual unprivileged principal.
+mod buffers;
 use super::connection::Connections;
 use cathedral_contracts::user as abi;
 use cathedral_user_runtime::{
@@ -20,6 +21,7 @@ pub fn authority(connections: &mut Connections) -> Result<(), Error> {
         Err(Error(abi::DENIED as i64))
     );
     storage(connections)?;
+    buffers::check(connections)?;
     for index in 0..2 {
         let (send, receive) = connections.pair(index)?;
         send.send(&[0xf0, 1])?; // Provider fault handler must not accept data-channel requests.

@@ -179,6 +179,19 @@ chapter before freezing an API. The current Rust experiment rechecks pending
 receives, returns `REVOKED`, and discards undelivered queued bytes on revocation;
 those are explicit experimental choices, not an accepted production policy.
 
+**Additional lab evidence.** The [page-object contract](source-rs/contracts/memory.rs)
+now supplements copied control messages with sealed shared buffers. Sealing
+removes producer write permission; accepting a read-only lease pins backing even
+if the producer dies. Unaccepted offers disappear on producer death, and peer
+replacement cannot inherit them. A live accepted reader is never remotely
+unmapped; release or reader death ends its lease. QEMU exercises this lifetime,
+hardware permissions, resource bounds and full reclamation. The visible display
+demo uses this path for pixels. This sharpens the owner question: does revocation
+prevent future acceptance, or can it withdraw already accepted mappings? The
+latter would need a protocol that cannot invalidate live safe-language borrows.
+Neither this experiment nor its Rust wrappers settles production revocation or
+whether copied control messages remain a supported transport.
+
 ### Child lifetime when a supervisor fails
 
 **Requirement and tension.** Userspace supervision needs to determine whether a

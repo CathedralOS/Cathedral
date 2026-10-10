@@ -1,4 +1,5 @@
 use cathedral_contracts::{display as wire, user as abi};
+mod buffer;
 
 pub struct Surface {
     address: u64,
@@ -39,6 +40,7 @@ impl Surface {
             return [abi::INVALID_ARGUMENT, 0, 0, 0, 0, 0];
         };
         let ok = match op {
+            wire::BLIT => return self.buffer(x, y, width, height, color),
             wire::INFO if [x, y, width, height, color] == [0; 5] => {
                 return [0, self.width, self.height, self.stride, self.format, 0];
             }

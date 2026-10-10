@@ -17,6 +17,16 @@ pub(super) unsafe fn admit(
     // SAFETY: Caller serializes admission on the boot stack/kernel root with IRQs
     // off. Vacant slot cannot run; load rolls back its own partial mappings.
     let entry = unsafe { load(&mut task.space, layout, image, program, frames)? };
+    if session.memory.model.enabled(slot) {
+        // SAFETY: Serialized admission; reserve tables before publishing the new user root.
+        if let Err(error) = unsafe { task.space.as_mut().unwrap().prepare_regions(frames) } {
+            // SAFETY: No context has been published; partial table allocation belongs to this task.
+            unsafe {
+                retire(task, frames);
+            }
+            return Err(Error::Memory(error));
+        }
+    }
     if let Some(fb) = session
         .launches
         .iter()
@@ -86,6 +96,7 @@ pub(super) unsafe fn retire(task: &mut Task, frames: &mut Frames<'_>) {
 
 pub(super) fn reserve_slot(session: &mut Session) {
     session.tasks.push(Task {
+        memory_call: None,
         context: Context::default(),
         space: None,
         report: Report::default(),

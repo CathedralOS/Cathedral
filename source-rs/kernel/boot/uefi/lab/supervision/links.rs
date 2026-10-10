@@ -25,6 +25,7 @@ pub(super) fn exercise(memory: &mut PreparedMemory, console: &mut SerialPort) {
                 links: &links,
                 frame_limit: usize::MAX,
                 endpoints: &[],
+                memory: &[],
                 clock_readers: &[1, 2, 3, 4],
                 supervision: &grants,
             },

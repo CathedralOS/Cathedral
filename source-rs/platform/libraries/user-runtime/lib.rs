@@ -12,6 +12,7 @@ pub mod display;
 pub mod ipc;
 pub mod keyboard;
 pub mod link;
+pub mod memory;
 pub mod server;
 pub mod storage;
 pub mod task;

@@ -29,6 +29,14 @@ indices must match the profile. Follow [input](applications/status/application/i
 The kernel's [IPC dispatcher](../kernel/core/user_tasks/session/syscalls.rs)
 transports these messages; the service implementations interpret them.
 
+For the pixel handoff, descend from `view` into
+[buffer.rs](applications/status/application/view/buffer.rs), then follow the
+[runtime ownership API](../platform/libraries/user-runtime/memory.rs) and
+[display buffer consumer](../platform/services/display/surface/buffer.rs).
+The profile grants status four private pages and display four accepted shared
+pages. The `SHARED PIXELS` tile uses one page per redraw; the display completion
+precedes owner release. The kernel has no knowledge of pixels or screen layout.
+
 `lab/` contains guest test executables selected by the profile's `user_programs`
 section for smoke runs. It is distinct from the ordinary `applications/` path.
 The minimal example profile also uses the lab's hello executable as its only task.

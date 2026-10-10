@@ -11,6 +11,7 @@ use alloc::vec::Vec;
 use cathedral_arch::{Context, StackFrames, UserSpace};
 use core::sync::atomic::{AtomicPtr, AtomicU64, Ordering};
 pub(super) struct Task {
+    pub(super) memory_call: Option<[u64; 3]>,
     pub(super) context: Context,
     pub(super) space: Option<UserSpace>,
     pub(super) report: Report,
@@ -21,6 +22,7 @@ pub(super) struct Task {
     pub(super) keyboard_deadline: Option<u64>,
 }
 pub(super) struct Session {
+    pub(super) memory: alloc::boxed::Box<super::memory::Memory>,
     pub(super) tasks: Vec<Task>,
     pub(super) scheduler: Scheduler,
     pub(super) boot: Context,

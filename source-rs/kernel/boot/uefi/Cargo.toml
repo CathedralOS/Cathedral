@@ -13,7 +13,7 @@ bench = false
 
 [features]
 bundled-user = []
-smoke-test = []
+smoke-test = ["cathedral-core/memory-lab"]
 fault-guard = ["smoke-test"]
 fault-invalid-opcode = ["smoke-test"]
 fault-double-fault = ["smoke-test"]

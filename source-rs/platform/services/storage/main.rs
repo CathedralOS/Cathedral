@@ -9,9 +9,16 @@ cathedral_user_runtime::entry!(main);
 fn main(_: u64, _: u64) -> u64 {
     match service::run() {
         Ok(()) => 0,
-        Err(_) => {
-            cathedral_user_runtime::write(b"Cathedral: storage failed\n").ok();
+        Err(error) => {
+            report(error);
             1
         }
     }
+}
+fn report(error: cathedral_user_runtime::Error) {
+    let mut message = *b"Cathedral: storage failed code=0000000000000000\n";
+    for (index, digit) in message[30..46].iter_mut().enumerate() {
+        *digit = b"0123456789abcdef"[((error.0 as u64 >> ((15 - index) * 4)) & 15) as usize];
+    }
+    cathedral_user_runtime::write(&message).ok();
 }

@@ -18,6 +18,8 @@ fn main() {
             "DISK",
             "CLOCK",
             "ARGUMENT",
+            "PRIVATE_PAGES",
+            "SHARED_PAGES",
         ] {
             println!("cargo:rerun-if-env-changed=CATHEDRAL_LAUNCH_{index}_{field}");
         }
@@ -32,6 +34,7 @@ fn main() {
     for (variable, destination) in [
         ("CATHEDRAL_HELLO_ELF", "user.elf"),
         ("CATHEDRAL_IPC_ELF", "ipc.elf"),
+        ("CATHEDRAL_MEMORY_ELF", "memory.elf"),
         ("CATHEDRAL_SUPERVISION_ELF", "supervision.elf"),
         ("CATHEDRAL_DISPLAY_SERVICE_ELF", "display-service.elf"),
         ("CATHEDRAL_DISPLAY_LAB_ELF", "display-lab.elf"),
@@ -62,11 +65,13 @@ fn startup() {
         let clock = flag(&format!("{prefix}_CLOCK"));
         let keyboard = flag(&format!("{prefix}_KEYBOARD"));
         let disk = flag(&format!("{prefix}_DISK"));
+        let private_pages = pages(&format!("{prefix}_PRIVATE_PAGES"));
+        let shared_pages = pages(&format!("{prefix}_SHARED_PAGES"));
         let argument: u64 = env::var(format!("{prefix}_ARGUMENT"))
             .unwrap_or_else(|_| "0".into())
             .parse()
             .expect("invalid launch argument");
-        source.push_str(&format!("InitialLaunch {{ elf: include_bytes!(concat!(env!(\"OUT_DIR\"), \"/launch-{index}.elf\")), framebuffer: {framebuffer}, keyboard: {keyboard}, disk: {disk}, clock: {clock}, argument: {argument} }},\n"));
+        source.push_str(&format!("InitialLaunch {{ elf: include_bytes!(concat!(env!(\"OUT_DIR\"), \"/launch-{index}.elf\")), framebuffer: {framebuffer}, keyboard: {keyboard}, disk: {disk}, clock: {clock}, private_pages: {private_pages}, shared_pages: {shared_pages}, argument: {argument} }},\n"));
     }
     source.push_str("];\nstatic LINKS: &[cathedral_core::link::LinkSpec] = &[\n");
     let graph = env::var("CATHEDRAL_LINKS").unwrap_or_default();
@@ -83,6 +88,17 @@ fn startup() {
     }
     source.push_str("];\n");
     fs::write(output.join("startup_config.rs"), source).unwrap();
+}
+fn pages(variable: &str) -> usize {
+    let pages = env::var(variable)
+        .unwrap_or_else(|_| "0".into())
+        .parse()
+        .expect("invalid page budget");
+    assert!(
+        pages <= cathedral_contracts::memory::MAX_PAGES,
+        "page budget exceeds lab limit"
+    );
+    pages
 }
 fn flag(variable: &str) -> bool {
     match env::var(variable).as_deref() {

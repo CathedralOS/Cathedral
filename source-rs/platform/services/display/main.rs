@@ -46,7 +46,13 @@ fn main(_fault_after: u64, _generation: u64) -> u64 {
                 }
             }
         }
-        let reply = surface.request(&request.bytes[..request.len]);
+        let bytes = &request.bytes[..request.len];
+        let reply =
+            if request.control && wire::decode(bytes).is_some_and(|words| words[0] == wire::BLIT) {
+                [abi::DENIED, 0, 0, 0, 0, 0]
+            } else {
+                surface.request(bytes)
+            };
         server.reply(&request, &wire::encode(reply)).unwrap();
     }
 }

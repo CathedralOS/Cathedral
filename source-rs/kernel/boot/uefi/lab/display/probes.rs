@@ -54,6 +54,7 @@ fn run(
                     receiver: 1,
                     revoker: None,
                 }],
+                memory: &[],
                 clock_readers: &[],
                 supervision: &[Supervision {
                     disk: false,

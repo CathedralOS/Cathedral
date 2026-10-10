@@ -16,6 +16,7 @@ pub mod ipc;
 #[allow(unsafe_code)]
 pub mod kernel_tasks;
 pub mod link;
+pub mod regions;
 pub mod scheduler;
 pub mod supervision;
 #[allow(unsafe_code)]

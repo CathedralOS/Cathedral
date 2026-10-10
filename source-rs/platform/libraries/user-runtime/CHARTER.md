@@ -10,6 +10,14 @@ child outcome collection, deadline waits, cancellation and explicit connection
 acceptance. `time` reads the boot-granted monotonic clock; it grants no authority
 and chooses no deadline policy. Restart decisions
 belong to the caller, not this library. The runtime has no heap allocator or unwinding.
+`memory::Private` owns a bounded zeroed page buffer. Sealing consumes mutable
+access and returns a `Sealed` token for one authorized peer. `Shared` accepts a
+read-only lease and releases it on drop. A producer crash cannot revoke a live
+reader's Rust borrow. The `raw` module exposes the same ABI for runtimes and
+hostile fixtures; release and sealing require callers to end their own borrows.
+Dropping a producer buffer while its peer still holds authority cannot free it;
+that abandoned owner reference remains charged until task exit. Normal protocols
+must wait for consumer completion and then explicitly release the producer.
 `display::mapping` retrieves only the caller's boot-installed framebuffer geometry;
 pixel access and drawing requests belong to the separate platform display service.
 `keyboard` exposes only the granted raw PS/2 byte channel and bounded writes;

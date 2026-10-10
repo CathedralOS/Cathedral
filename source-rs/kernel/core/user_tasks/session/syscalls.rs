@@ -7,6 +7,7 @@ mod display;
 mod ipc;
 pub(super) mod keyboard;
 mod links;
+mod memory;
 pub(super) mod readiness;
 pub(super) mod tasks;
 use super::{Exit, Session};
@@ -74,6 +75,9 @@ pub(super) fn syscall(session: &mut Session, slot: usize, now: u64) -> Event {
             &mut event,
             now,
         ),
+        abi::MEMORY_ALLOCATE..=abi::MEMORY_PAGES => {
+            memory::syscall(session, slot, [number, first, second, third], &mut event)
+        }
         _ => Err(abi::UNKNOWN),
     };
     complete(session, slot, result);

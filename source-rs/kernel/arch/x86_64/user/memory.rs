@@ -2,6 +2,7 @@
 //! User code is RX; private data and guarded stack are RW/NX. Kernel mappings
 //! are supervisor-only. Physical aliases are available only in the kernel root.
 mod device;
+mod regions;
 
 use super::super::{BootLayout, MemoryError, StackFrames};
 use ::x86_64::{
@@ -20,7 +21,8 @@ pub const USER_IMAGE_END: u64 = USER_CODE + 1024 * 1024;
 pub const USER_STACK: u64 = USER_CODE + 2 * 1024 * 1024;
 pub const USER_STACK_TOP: u64 = USER_STACK + 4 * PAGE;
 pub const MAX_IMAGE_PAGES: usize = 64;
-const _: () = assert!(MAX_IMAGE_PAGES + 4 <= u128::BITS as usize);
+const MAX_BACKING: usize = MAX_IMAGE_PAGES + 4 + 2 * cathedral_contracts::memory::MAX_PAGES;
+const _: () = assert!(MAX_BACKING <= u128::BITS as usize);
 const MAX_FRAMES: usize = 128;
 
 #[derive(Clone, Copy, Debug)]
@@ -48,7 +50,7 @@ pub struct UserSpace {
     root: u64,
     owned: [u64; MAX_FRAMES],
     len: usize,
-    backing: [Backing; MAX_IMAGE_PAGES + 4],
+    backing: [Backing; MAX_BACKING],
     pages: usize,
     writable: u128,
 }
@@ -120,7 +122,7 @@ impl UserSpace {
             root: 0,
             owned: [0; MAX_FRAMES],
             len: 0,
-            backing: [Backing::default(); MAX_IMAGE_PAGES + 4],
+            backing: [Backing::default(); MAX_BACKING],
             pages: 0,
             writable: 0,
         };

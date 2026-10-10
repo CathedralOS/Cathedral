@@ -125,6 +125,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "cathedral-memory-lab"
+version = "0.0.0"
+dependencies = [
+ "cathedral-contracts",
+ "cathedral-user-runtime",
+]
+
+[[package]]
 name = "cathedral-object-store"
 version = "0.0.0"
 dependencies = [

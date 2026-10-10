@@ -10,7 +10,7 @@ Cargo workspace keeps kernel implementation under `kernel/` and the UART under
 
 Ordinary boots build only `startup.initial` and the optional `startup.launches` array.
 The kernel admits that initial executable; `distribution/init` launches and uses
-display/input providers and the separate status application, keeping all four tasks alive. The kernel fixtures below are compiled
+display/input/storage providers and the separate status and counter applications. The kernel fixtures below are compiled
 only with `--smoke`. `--kernel-only --smoke` runs kernel and raw-user tests without
 building any platform service or distribution executable. `--kernel-only` boots
 the kernel alone. `--profile tools/boot-harness-rs/profiles/minimal.json` supplies
@@ -32,6 +32,13 @@ using clock grants, deadline waits and owner-authorized cancellation. An indepen
 observer must progress before cancellation; an all-blocked session must also wake
 on its deadline. Completed outcomes, stale cancellation tickets and complete memory
 reclamation are checked as well.
+
+The memory fixture allocates private pages, seals buffers to a boot-approved peer,
+and tests RO/NX permissions, guards, stale tokens, zeroing, budgets and both peer
+failure paths. It injects allocation failures at each backing/table boundary and
+requires complete heap/frame reclamation. Ordinary screenshot and interactive
+checks include the app's shared pixel tile. Recovery/storage builds also require
+malformed pixel buffers to complete with errors and release their read leases.
 
 The display fixture launches a platform display-service ELF and a separate
 distribution client. It verifies redraw after a provider fault, unrelated task

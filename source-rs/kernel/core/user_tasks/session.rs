@@ -10,6 +10,9 @@ mod composition;
 mod execution;
 mod lifecycle;
 mod links;
+mod memory;
+#[cfg(feature = "memory-lab")]
+pub use memory::rollback::exercise as exercise_memory_rollback;
 mod prepare;
 mod state;
 mod syscalls;
@@ -43,6 +46,7 @@ pub unsafe fn run(
                 frame_limit,
                 endpoints: &[],
                 supervision: &[],
+                memory: &[],
                 clock_readers: &[],
             },
         )

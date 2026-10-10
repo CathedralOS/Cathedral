@@ -7,6 +7,7 @@ use cathedral_arch as arch;
 use cathedral_contracts::user as abi;
 
 pub(super) fn close(session: &mut Session, slot: usize) {
+    session.tasks[slot].memory_call = None;
     session.tasks[slot].receive = None;
     session.tasks[slot].notify = None;
     for link in &mut session.links {
@@ -58,6 +59,7 @@ pub(super) unsafe fn reap(session: &mut Session, source: &mut Frames<'_>) {
         }
         // SAFETY: No context can resume this task. Kernel root, IRQs off.
         unsafe {
+            super::memory::close(session, slot, source);
             admission::retire(&mut session.tasks[slot], source);
         }
         session.scheduler.reap(slot);
@@ -78,7 +80,10 @@ pub(super) unsafe fn reap(session: &mut Session, source: &mut Frames<'_>) {
         .filter(|task| task.space.is_some())
         .map(|task| task.report.frames)
         .sum();
-    assert_eq!(source.frames.allocated(), session.frame_baseline + owned);
+    assert_eq!(
+        source.frames.allocated(),
+        session.frame_baseline + owned + session.memory.frames()
+    );
     taskcalls::wake(session, arch::ticks());
     for owner in 0..session.tasks.len() {
         if requesters & (1 << owner) != 0 {

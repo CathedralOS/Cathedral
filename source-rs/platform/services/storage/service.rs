@@ -35,7 +35,8 @@ pub fn run() -> Result<(), Error> {
                 super::recovery::checkpoint(_phase, cut);
             });
         if store.needs_reopen() {
-            return Err(Error(abi::IO_ERROR as i64));
+            // Preserve the underlying transport error in startup diagnostics.
+            return Err(Error(result.err().unwrap_or(abi::IO_ERROR) as i64));
         }
         let reply = match result {
             Ok(record) => record.reply(),

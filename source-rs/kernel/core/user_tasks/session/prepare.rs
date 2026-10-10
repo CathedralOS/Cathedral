@@ -11,7 +11,15 @@ pub(super) fn session(
     output: fn(&[u8]) -> bool,
 ) -> Result<(Session, Vec<Report>), Error> {
     let grants = composition::grants(initial_count, count, config)?;
+    let memory = super::memory::Memory::new(count, config.memory).map_err(|code| {
+        if code == cathedral_contracts::user::NO_MEMORY {
+            Error::OutOfHeap
+        } else {
+            Error::InvalidEndpoints
+        }
+    })?;
     let mut session = Session {
+        memory,
         tasks: Vec::new(),
         scheduler: Scheduler::new(count),
         boot: Context::default(),

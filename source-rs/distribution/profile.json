@@ -32,6 +32,11 @@
       "package": "cathedral-display-lab",
       "entry": "distribution/lab/display/main.rs",
       "target": "x86_64-unknown-none"
+    },
+    "memory": {
+      "package": "cathedral-memory-lab",
+      "entry": "distribution/lab/memory/main.rs",
+      "target": "x86_64-unknown-none"
     }
   },
   "startup": {
@@ -48,7 +53,8 @@
         "target": "x86_64-unknown-none",
         "framebuffer": true,
         "argument": 0,
-        "clock": true
+        "clock": true,
+        "shared_pages": 4
       },
       {
         "package": "cathedral-input-service",
@@ -61,7 +67,8 @@
         "package": "cathedral-status",
         "entry": "distribution/applications/status/main.rs",
         "target": "x86_64-unknown-none",
-        "clock": true
+        "clock": true,
+        "private_pages": 4
       },
       {
         "package": "cathedral-storage-service",

@@ -9,6 +9,9 @@ pub const INFO: u64 = 0;
 pub const CLEAR: u64 = 1;
 pub const RECT: u64 = 2;
 pub const TEXT: u64 = 3;
+/// [BLIT, x, y, width, height, sealed region handle]. Pixels are tightly packed
+/// little-endian u32 0x00RRGGBB. Provider releases its read lease before replying.
+pub const BLIT: u64 = 4;
 pub const TEXT_BYTES: usize = 64;
 /// Header: TEXT, x, y, scale, color, byte count; then at most 16 printable ASCII bytes.
 pub fn encode_text(

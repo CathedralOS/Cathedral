@@ -52,6 +52,8 @@ MARKERS = (
     "Cathedral Rust lab: deadlines recovered 4 silent and 4 spinning services; independent observer progressed; all memory reclaimed",
     "Cathedral Rust lab: clock grants copy checks and deadline completion/cancellation precedence passed",
     "Cathedral Rust lab: deadline woke an idle session with every user task blocked; all memory reclaimed",
+    "Cathedral Rust lab: runtime page allocation rolled back at every frame boundary",
+    "Cathedral Rust lab: private budgets zeroing shared leases NX write faults stale handles and peer death passed; all memory reclaimed",
     "Cathedral Rust lab: GOP ",
     "Cathedral Rust lab: display service faulted and restarted; pattern redrawn; observer progressed; ungranted mapping fault contained; all task memory reclaimed",
     "Cathedral Rust lab: framebuffer NX guards and checked copies passed; ",
@@ -159,6 +161,11 @@ def main():
                 programs[f"launch_{index}"] = child
                 for resource in ("framebuffer", "keyboard", "disk", "clock"):
                     environment[f"CATHEDRAL_LAUNCH_{index}_{resource.upper()}"] = "1" if child.get(resource, False) else "0"
+                for resource in ("private_pages", "shared_pages"):
+                    pages = child.get(resource, 0)
+                    if type(pages) is not int or not 0 <= pages <= 4:
+                        parser.error("memory page budgets must be integers between 0 and 4")
+                    environment[f"CATHEDRAL_LAUNCH_{index}_{resource.upper()}"] = str(pages)
                 argument = child.get("argument", 0)
                 if type(argument) is not int or not 0 <= argument < 2**64:
                     parser.error("launch argument must be a u64")

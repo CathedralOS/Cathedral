@@ -24,6 +24,7 @@ pub(super) unsafe fn run(
             for (index, launch) in config.supervision.iter().enumerate() {
                 lifecycle::spawn(&mut *session, source, layout, image, launch, index);
             }
+            super::memory::process(&mut *session, source);
             if (*session).scheduler.finished() {
                 break;
             }

@@ -23,6 +23,7 @@ members = [
     "distribution/lab/display",
     "distribution/lab/hello",
     "distribution/lab/ipc",
+    "distribution/lab/memory",
     "distribution/lab/supervision",
     "distribution/libraries/boot-scene",
     "distribution/libraries/session-protocol",

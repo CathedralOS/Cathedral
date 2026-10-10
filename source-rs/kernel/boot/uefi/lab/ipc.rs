@@ -108,6 +108,7 @@ fn run(
                 frame_limit: usize::MAX,
                 endpoints,
                 supervision: &[],
+                memory: &[],
                 clock_readers: &[],
             },
         )

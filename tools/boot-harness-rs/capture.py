@@ -62,7 +62,8 @@ def run(qemu_command, output, timeout, creationflags, input_test=False, recovery
                         raise RuntimeError("Ordinary boot unexpectedly ran lab exercises")
                     print(f"Userspace scene ready after {time.monotonic() - (deadline - timeout):.2f}s from QMP connection", flush=True)
                     if recovery_test or exercise is not None:
-                        for marker in ("two-root catalog bounds isolation and backpressure passed",
+                        for marker in ("shared pixel bounds permissions and error completion passed",
+                                       "two-root catalog bounds isolation and backpressure passed",
                                        "counter replacement discarded staged changes",
                                        "counter recovered; status app and providers preserved"):
                             if marker not in text:
@@ -113,17 +114,23 @@ def validate(output, selected=0, active=0, health=(0, 0, 0), last=0, storage=0, 
             start = (row * width + x) * 3
             expected[start:start + w * 3] = bytes.fromhex(color) * w
     font = (Path(__file__).resolve().parents[2] / "source-rs/platform/libraries/bitmap-font/font.hex").read_text().splitlines()
-    def label(x, y, text, color):
+    def label(x, y, text, color, scale=2):
         for index, char in enumerate(text):
             for row, bits in enumerate(bytes.fromhex(font[ord(char) - 32])):
                 for column in range(5):
                     if bits & (1 << (4 - column)):
-                        for dy in range(2):
-                            start = ((y + row * 2 + dy) * width + x + index * 12 + column * 2) * 3
-                            expected[start:start + 6] = bytes.fromhex(color) * 2
+                        for dy in range(scale):
+                            start = ((y + row * scale + dy) * width + x + index * 6 * scale + column * scale) * 3
+                            expected[start:start + 3 * scale] = bytes.fromhex(color) * scale
     label(64, 96, "CATHEDRAL / STATUS", "e8edf4")
     for x, title in ((80, "DISPLAY"), (400, "INPUT"), (720, "APPLICATION")):
         label(x, 184, title, "101827")
+    label(80, 224, "SHARED PIXELS", "101827", scale=1)
+    for row in range(16):
+        for column in range(64):
+            color = "101827" if (column // 8 + row // 8) % 2 == 0 else "59d9cc"
+            start = ((248 + row) * width + 80 + column) * 3
+            expected[start:start + 3] = bytes.fromhex(color)
     label(720, 232, "SAVED RECORDS", "101827")
     if legacy:
         label(720, 272, "1 SCENE (LEGACY)", "101827")
