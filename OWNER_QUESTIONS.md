@@ -67,6 +67,36 @@ surface and recovery path; keep the everyday desktop entirely in
 `distribution/`. Specify those guarantees before implementing shell integration,
 then reconcile the older permanent-chrome prose with the accepted contract.
 
+### Pointer leases, seats and action authority
+
+**Requirement and tension.** Matrices should be able to lease attributed cursors
+to apps, agents and remote participants without handing each one the operator's
+pointer or keyboard. The [windowing design](wiki/design/part_6_human_surface/00_windowing_and_compositor.md#seats)
+defines a seat as cursor plus key focus, and the
+[agent design](wiki/design/part_1_authority/06_agents_as_principals.md) equates an
+agent's labeled cursor with a virtual seat. This leaves unclear whether a
+lightweight or visual-only pointer necessarily creates a full focus context.
+
+**Contracts checked.** The [specification index](wiki/spec/README.md) assigns
+compositor and seat semantics to an unwritten subject. The
+[source contracts charter](source/contracts/CHARTER.md) supplies no pointer or
+seat protocol. The [Rust input transport](source-rs/contracts/input.rs) carries
+key events only; it does not define pointer identities, source bindings or focus.
+
+**Owner choice.** Require every logical pointer to be a complete seat, or permit
+separately leased pointers associated with an explicit seat context. The former
+ties cursor creation to independent keyboard-focus state. The latter supports
+lightweight pointers but needs rules for principal association, permitted button
+actions and focus changes. In either model, visual presence alone must not grant
+input authority or establish physical origin.
+
+**Recommendation (unaccepted).** Separate input sources, logical pointers and
+cursor visuals. Delegate motion, action and observation rights within a Matrix's
+authority; do not imply keyboard control. Keep seat association explicit and
+retain trusted source provenance when multiplexing. The
+[pointer proposal](wiki/proposals/0001_input_and_pointer_leases.md) develops this
+model while leaving the final focus topology and compatibility adapter open.
+
 ### Kernel mechanisms versus platform orchestration
 
 **Requirement and tension.** The kernel/platform split needs a defensible trust

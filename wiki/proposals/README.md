@@ -9,7 +9,7 @@ behavior, compatibility and trust consequences, viable alternatives, unresolved
 questions, and acceptance evidence.
 
 IDs are stable and are not reused after removal. The next available ID is
-`0001`. A substantial proposal may have a same-named companion directory. Its
+`0002`. A substantial proposal may have a same-named companion directory. Its
 entry page maps the responsibilities; companion pages do not become independent
 contracts or competing sources of truth.
 
@@ -28,3 +28,6 @@ semantic or trust choice blocking a concrete requirement belongs in
   separates retained scene submission, app-funded backing, read leases, resource
   budgets and software/GPU presentation. Platform text placement, residency policy
   and direct-write admission remain proposed.
+- [0001: Input sources and scoped pointer leases](0001_input_and_pointer_leases.md)
+  separates source bindings, logical pointers, cursor visuals and action rights.
+  Pointer-to-seat association and keyboard-focus authority remain proposed.

@@ -31,6 +31,9 @@ The active [rendering and composition proposal](proposals/0000_rendering_and_com
 is the entry point for retained drawing, Matrix nesting, resource backing and
 CPU/GPU presentation. Its evidence page distinguishes Rust experiments from
 candidate platform behavior and links conflicts with existing design chapters.
+The [input and pointer proposal](proposals/0001_input_and_pointer_leases.md)
+covers source multiplexing, Matrix-scoped cursor leases, attribution and the
+unresolved relationship between pointers, seats and keyboard focus.
 
 ## How these docs are written
 

@@ -82,6 +82,12 @@ The split is at the bottom. A Cathedral-native guest is intercepted at the Omega
 
 ## Input
 
+The [input and pointer proposal](../../proposals/0001_input_and_pointer_leases.md)
+separates physical and virtual sources from logical pointers and their cursor
+visuals. It explores Matrix-scoped leases and source multiplexing. Its proposed
+separation of pointer rights from seat keyboard focus is not an accepted contract;
+the seat coupling below remains an unresolved design choice.
+
 Input has two layers that stay separated. At the bottom, an input device driver ([[driver_model]]) holds the device's transport capability and translates raw device reports into a normalized, typed event vocabulary: ordinary numbered records under a selected codec for key, relative pointer, absolute pointer, axis, button, touch contact, pressure, and the like. Every device quirk is absorbed at that boundary. Above it, the compositor consumes only typed events and never sees the raw device, so routing is device-agnostic.
 
 This standardizes at the event-vocabulary level even though devices do not standardize at the hardware level. HID (Human Interface Device) is a self-describing bottom standard: a device declares its axes, buttons, and usages, and most input hardware speaks it, which makes input far more tractable than the GPU situation. The slop is the long tail (broken descriptors, vendor gesture processing, proprietary protocols, devices that lie), and it is contained in per-device drivers and quirk tables rather than leaking upward. A novel device ships a driver that maps its raw input to typed events, extending the vocabulary with a new kind. The normalized vocabulary follows the capability, profile, and action layering below. The full set of capability kinds and the registry that governs them remain to be specified.

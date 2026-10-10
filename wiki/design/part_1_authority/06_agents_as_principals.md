@@ -39,6 +39,11 @@ An agent is a seated principal, and raw input control is being the user. "The us
 
 ## Concerns & Design Space
 
+The [pointer lease proposal](../../proposals/0001_input_and_pointer_leases.md)
+explores agent cursors that receive scoped motion and action rights without
+automatically receiving keyboard focus. Its separation of pointers from complete
+seats is a candidate change to the coupling described above.
+
 - **Agent identity and lifecycle.** An agent instance is a principal with a birth, a task, and a death. Its capability bundle is reclaimed when the task ends or the lease expires.
 - **Bundle scoping.** What authority an agent gets by default (nothing ambient), and how a task widens it through attenuated grants rather than a standing role.
 - **Sub-agents and delegation.** An agent that spawns helpers delegates attenuations of its own authority, never more. The delegation chain is in the graph.

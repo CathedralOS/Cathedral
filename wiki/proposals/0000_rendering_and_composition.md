@@ -74,6 +74,11 @@ The diagram omits input routing and protected prompt policy, which remain owned
 by [[windowing_and_compositor]]. Flattening drawing work does not bypass a host's
 delegation, observation or interception rights.
 
+The [input and pointer proposal](0001_input_and_pointer_leases.md) develops
+source bindings, scoped pointer authority and cursor attribution. Cursor assets
+use this proposal's resource custody; permission to draw a cursor does not grant
+permission to deliver input through it.
+
 ## Alternatives and tradeoffs
 
 | Route | Benefit | Cost or limitation |
