@@ -8,9 +8,14 @@ Audio stacks sprawl because they bundle six concerns that each grew their own la
 
 ## The Cathedral Model
 
+This chapter describes design intent, not an accepted audio contract. The
+[audio hierarchy investigation](../../drafts/audio_graph_notes.md) examines
+shared resources and routing without a submix buffer at every Matrix ancestor.
+No Rust audio driver or graph implementation establishes the latency claims here.
+
 Audio is the compositor for sound. A privileged **audio server** mixes per-app temporal streams into the output device the way the compositor mixes spatial surfaces into the framebuffer, and the same primitives carry it. A stream is a capability-scoped shared-memory ring ([[ipc_and_service_invocation]]): the app writes samples, the server reads them, with no kernel in the hot path. Playback is therefore a held capability, so an app that was never granted output cannot make a sound. Output devices are driver components ([[driver_model]]). The server holds their capabilities, mixes the active streams with per-stream gain, and writes the device ring. Capture is the mirror image and is gated like the camera: the microphone is a capability with an OS-drawn live indicator on the trusted path ([[human_permission_ux]], [[windowing_and_compositor]]), default-deny, revocable, and visible in the authority graph. The one irreducibly hard part is timing, which is a scheduling guarantee rather than an audio-architecture problem.
 
-## The decided mechanism
+## Mechanisms under consideration
 
 The model above composes the IPC-ring, capability, and compositor machinery. What remains specific to audio is timing, exclusivity, fan-out, and focus, and each builds on work done elsewhere.
 

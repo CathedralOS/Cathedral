@@ -97,6 +97,31 @@ retain trusted source provenance when multiplexing. The
 [pointer proposal](wiki/proposals/0001_input_and_pointer_leases.md) develops this
 model while leaving the final focus topology and compatibility adapter open.
 
+### Exclusive audio and the reserved system channel
+
+**Requirement and tension.** The [audio design](wiki/design/part_6_human_surface/06_audio.md)
+offers exclusive device handoff that silences other streams, while promising a
+reserved channel for alarms, accessibility and system sounds that apps cannot
+suppress. On an output with no independently enforced mixing path, direct client
+ownership cannot provide both guarantees at once.
+
+**Contracts checked.** The [specification index](wiki/spec/README.md) contains no
+accepted audio contract. The [source contracts charter](source/contracts/CHARTER.md)
+defines no audio handoff or preemption semantics. The Rust lab has no audio
+driver, graph or device lease implementing either promise.
+
+**Owner choice.** Keep platform mixing for outputs that must carry the reserved
+channel, allow an explicit policy exception during exclusive playback, or require
+an independent enforceable path for reserved sound. Reclaiming a device on demand
+is another possible policy, but requires a specified interruption bound and is
+not uninterrupted reserved-channel availability.
+
+**Recommendation (unaccepted).** Preserve platform mixing where the reserved
+channel is required. Treat exclusive handoff as conditional on a defined policy
+exception or an independently enforced output path. Measure reclaim behavior
+before promising a bound. The [audio notes](wiki/drafts/audio_graph_notes.md)
+leave this decision open until the device and interaction requirements are known.
+
 ### Kernel mechanisms versus platform orchestration
 
 **Requirement and tension.** The kernel/platform split needs a defensible trust

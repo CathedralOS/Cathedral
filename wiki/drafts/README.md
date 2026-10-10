@@ -12,4 +12,6 @@ second specification.
 
 ## Current drafts
 
-None.
+- [Audio hierarchy and shared resources](audio_graph_notes.md) records routing
+  versus processing, retained samples, streaming lifetime and timing evidence
+  needed before choosing an audio protocol.
