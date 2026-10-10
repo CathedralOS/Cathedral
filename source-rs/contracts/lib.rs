@@ -11,3 +11,5 @@ pub mod user;
 
 pub mod block;
 pub mod storage;
+
+pub mod composition;

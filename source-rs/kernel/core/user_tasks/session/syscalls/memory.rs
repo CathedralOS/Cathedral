@@ -8,7 +8,7 @@ pub(super) fn syscall(
     [number, first, second, third]: [u64; 4],
     event: &mut Event,
 ) -> Result<u64, u64> {
-    if third != 0 || (number != abi::MEMORY_SEAL && second != 0) {
+    if third != 0 || (!matches!(number, abi::MEMORY_SEAL | abi::MEMORY_MAP) && second != 0) {
         return Err(abi::INVALID_ARGUMENT);
     }
     if number == abi::MEMORY_ADDRESS || number == abi::MEMORY_PAGES {

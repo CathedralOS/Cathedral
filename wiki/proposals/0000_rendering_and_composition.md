@@ -8,7 +8,7 @@ descriptions, resource backing, execution and presentation.
 | --- | --- |
 | Proposed | Candidate architecture, not an accepted Cathedral contract |
 | Specification coverage | Unwritten; ownership is recorded in the [specification index](../spec/README.md) |
-| Implementation evidence | Bounded Rust drawing, shared-page and rendering experiments; no retained scene service or GPU backend |
+| Implementation evidence | Bounded Rust drawing, shared pages and a two-client retained compositor experiment; no production scene contract or GPU backend |
 
 ## Read by responsibility
 

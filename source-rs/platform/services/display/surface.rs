@@ -3,12 +3,27 @@ mod buffer;
 
 pub struct Surface {
     address: u64,
-    width: u64,
-    height: u64,
+    pub(crate) width: u64,
+    pub(crate) height: u64,
     stride: u64,
     format: u64,
 }
 impl Surface {
+    pub(crate) fn put(&mut self, x: u64, y: u64, rgb: u32) {
+        assert!(x < self.width && y < self.height);
+        let pointer = (self.address + (y * self.stride + x) * 4) as *mut u32;
+        // SAFETY: Exclusive device aperture; checked visible coordinate and validated stride.
+        unsafe {
+            pointer.write_volatile(wire::pixel(self.format, rgb as u64));
+        }
+    }
+    pub(crate) fn read(&self, x: u64, y: u64) -> u32 {
+        assert!(x < self.width && y < self.height);
+        let pointer = (self.address + (y * self.stride + x) * 4) as *const u32;
+        // SAFETY: Live exclusive aperture and checked coordinate within validated geometry.
+        let native = unsafe { pointer.read_volatile() } & 0xffffff;
+        wire::pixel(self.format, native as u64)
+    }
     pub fn open() -> Self {
         let [address, bytes, width, height, stride, format] =
             cathedral_user_runtime::display::mapping().unwrap();

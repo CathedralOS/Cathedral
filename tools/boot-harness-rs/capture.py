@@ -26,7 +26,7 @@ def command(stream, name, arguments=None):
             return reply["return"]
 
 
-def run(qemu_command, output, timeout, creationflags, input_test=False, recovery_test=False, exercise=None):
+def run(qemu_command, output, timeout, creationflags, input_test=False, recovery_test=False, exercise=None, ready_marker="Cathedral: startup ready", verify=None):
     serial = output / "serial.log"
     serial.write_text("", encoding="utf-8")
     with socket.socket() as listener, (output / "qemu.log").open("w") as log:
@@ -51,7 +51,7 @@ def run(qemu_command, output, timeout, creationflags, input_test=False, recovery
                             raise RuntimeError(f"Capture boot failed; logs: {output}")
                         if any(marker in text for marker in ("Cathedral: startup failed", "initial program stopped", "admission failed", "requires unavailable framebuffer")):
                             raise RuntimeError(f"Userspace startup failed; logs: {output}")
-                        if "Cathedral: startup ready" in text:
+                        if ready_marker in text:
                             break
                         if process.poll() is not None or time.monotonic() >= deadline:
                             raise RuntimeError(f"Capture boot did not complete; logs: {output}")
@@ -68,7 +68,9 @@ def run(qemu_command, output, timeout, creationflags, input_test=False, recovery
                                        "counter recovered; status app and providers preserved"):
                             if marker not in text:
                                 raise RuntimeError(f"Catalog exercise missing: {marker}")
-                    if exercise is not None:
+                    if verify is not None:
+                        verify(stream, output, text)
+                    elif exercise is not None:
                         exercise(stream, output, serial, process, timeout)
                     else:
                         snapshot(stream, output, health=(1, 1, 0) if recovery_test else (0, 0, 0))
@@ -145,6 +147,11 @@ def validate(output, selected=0, active=0, health=(0, 0, 0), last=0, storage=0, 
     label(64, 696, f"STORAGE READY {storage:02}  SAVED {saved:04}", "59d9cc")
     if pixels != expected:
         raise RuntimeError(f"Scanout differs from the expected pattern: {output / 'display.ppm'}")
+    save_png(output, width, height, pixels)
+    print(f"PASS: all {width * height} scanout pixels match the startup scene; screenshot: {output / 'display.png'}")
+
+
+def save_png(output, width, height, pixels):
     # Lossless screenshot conversion with only the Python standard library.
     def chunk(kind, data):
         return struct.pack(">I", len(data)) + kind + data + struct.pack(">I", binascii.crc32(kind + data))
@@ -153,7 +160,6 @@ def validate(output, selected=0, active=0, health=(0, 0, 0), last=0, storage=0, 
     png += chunk(b"IDAT", zlib.compress(rows)) + chunk(b"IEND", b"")
     destination = output / "display.png"
     destination.write_bytes(png)
-    print(f"PASS: all {width * height} scanout pixels match the startup scene; screenshot: {destination}")
 
 
 def snapshot(stream, output, selected=0, active=0, health=(0, 0, 0), last=0, storage=0, saved=0, legacy=False):

@@ -52,6 +52,33 @@ pub fn exit(status: u64) -> ! {
     arch::stop()
 }
 
+/// Best-effort diagnostics before the existing panic exit. No allocation or retry.
+pub fn report_panic(info: &core::panic::PanicInfo<'_>) {
+    struct Diagnostic {
+        bytes: [u8; 256],
+        len: usize,
+    }
+    impl core::fmt::Write for Diagnostic {
+        fn write_str(&mut self, text: &str) -> core::fmt::Result {
+            let count = text.len().min(self.bytes.len() - self.len);
+            self.bytes[self.len..self.len + count].copy_from_slice(&text.as_bytes()[..count]);
+            self.len += count;
+            if count < text.len() {
+                Err(core::fmt::Error)
+            } else {
+                Ok(())
+            }
+        }
+    }
+    use core::fmt::Write;
+    let mut output = Diagnostic {
+        bytes: [0; 256],
+        len: 0,
+    };
+    let _ = writeln!(output, "Cathedral user panic: {info}");
+    let _ = write(&output.bytes[..output.len]);
+}
+
 #[macro_export]
 macro_rules! entry {
     ($main:path) => {
@@ -61,7 +88,8 @@ macro_rules! entry {
             $crate::exit(main(first, second))
         }
         #[panic_handler]
-        fn panic(_: &core::panic::PanicInfo<'_>) -> ! {
+        fn panic(info: &core::panic::PanicInfo<'_>) -> ! {
+            $crate::report_panic(info);
             $crate::exit(255)
         }
     };

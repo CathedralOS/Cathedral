@@ -14,6 +14,10 @@ pub struct Request {
     pub incarnation: u64,
     reply: Handle,
 }
+pub enum Event {
+    Request(Request),
+    Disconnected { client: usize, incarnation: u64 },
+}
 pub struct Server {
     control: (Handle, Handle),
     links: [Option<Link>; 2],
@@ -21,6 +25,7 @@ pub struct Server {
     count: usize,
     cursor: usize,
     idle: usize,
+    closed: [Option<u64>; 2],
 }
 impl Server {
     pub fn open() -> Result<Self, Error> {
@@ -45,23 +50,40 @@ impl Server {
             count,
             cursor: 0,
             idle: 0,
+            closed: [None; 2],
         })
     }
     pub fn next_request(&mut self) -> Result<Request, Error> {
+        loop {
+            if let Event::Request(request) = self.next_event()? {
+                return Ok(request);
+            }
+        }
+    }
+    /// Services retaining client-owned state must observe disconnects before reuse.
+    pub fn next_event(&mut self) -> Result<Event, Error> {
         // A control-only service needs no clock grant (for example the display fixture).
         if self.links.iter().all(Option::is_none) {
             let mut bytes = [0; 64];
             let len = self.control.0.receive(&mut bytes)?;
-            return Ok(Request {
+            return Ok(Event::Request(Request {
                 bytes,
                 len,
                 control: true,
                 client: None,
                 incarnation: self.control.0.raw(),
                 reply: self.control.1,
-            });
+            }));
         }
         loop {
+            for client in 0..self.count {
+                if let Some(incarnation) = self.closed[client].take() {
+                    return Ok(Event::Disconnected {
+                        client,
+                        incarnation,
+                    });
+                }
+            }
             self.connect()?;
             // Rotate across control and data so a flooding client cannot monopolize dispatch.
             for offset in 0..=self.count {
@@ -77,17 +99,23 @@ impl Server {
                 match pair.0.receive_until(&mut bytes, time::now()?) {
                     Ok(len) => {
                         self.cursor = (channel + 1) % (self.count + 1);
-                        return Ok(Request {
+                        return Ok(Event::Request(Request {
                             bytes,
                             len,
                             control: channel == 0,
                             client: channel.checked_sub(1),
                             incarnation: pair.0.raw(),
                             reply: pair.1,
-                        });
+                        }));
                     }
                     Err(Error(code)) if code == abi::TIMED_OUT as i64 => (),
-                    Err(_) if channel != 0 => self.clients[channel - 1] = None,
+                    Err(_) if channel != 0 => {
+                        self.clients[channel - 1] = None;
+                        return Ok(Event::Disconnected {
+                            client: channel - 1,
+                            incarnation: pair.0.raw(),
+                        });
+                    }
                     Err(error) => return Err(error),
                 }
             }
@@ -98,9 +126,14 @@ impl Server {
                 Ok(_) => (),
                 Err(Error(code)) if code == abi::TIMED_OUT as i64 => (),
                 Err(_) => {
-                    self.clients[self.idle] = None;
+                    self.disconnect(self.idle);
                 }
             }
+        }
+    }
+    fn disconnect(&mut self, client: usize) {
+        if let Some(pair) = self.clients[client].take() {
+            self.closed[client] = Some(pair.0.raw());
         }
     }
     fn connect(&mut self) -> Result<(), Error> {
@@ -124,7 +157,7 @@ impl Server {
             // client stay live; synchronous clients reconcile ambiguous commits.
             Err(Error(code)) if !request.control && code == abi::WOULD_BLOCK as i64 => Ok(()),
             Err(_) if !request.control => {
-                self.clients[request.client.unwrap()] = None;
+                self.disconnect(request.client.unwrap());
                 Ok(())
             }
             result => result,

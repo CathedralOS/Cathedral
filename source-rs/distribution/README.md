@@ -53,3 +53,8 @@ bindings for this profile; reordering storage links on an existing disk is
 unsupported. [The catalog service](../platform/services/storage/CHARTER.md)
 explains the authority and transaction boundaries. Init checks counter through
 [counter supervision](init/session/counter.rs), independently of the status app.
+
+The separate [compositor profile and experiment](lab/compositor/README.md) starts
+its own supervisor and two isolated scene clients. Follow its coordinator into
+drawing and recovery checks, then the display service's compositor dispatch.
+It exercises retained scopes without changing this ordinary status composition.

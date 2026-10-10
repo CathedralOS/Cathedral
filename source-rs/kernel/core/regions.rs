@@ -121,6 +121,13 @@ impl Regions {
         self.entries[index].peer = Some(peer);
         Ok(index)
     }
+    /// Authenticate the producer before a multiplexing service accepts an offer.
+    pub fn check_owner(&self, handle: u64, owner: usize) -> Result<(), u64> {
+        if self.entries[self.find(handle)?].owner != Some(owner) {
+            return Err(abi::DENIED);
+        }
+        Ok(())
+    }
     pub fn accept(&mut self, caller: usize, handle: u64) -> Result<usize, u64> {
         let index = self.find(handle)?;
         let region = self.entries[index];

@@ -1,4 +1,18 @@
 use super::*;
+#[test]
+fn producer_check_does_not_consume_another_clients_offer() {
+    let mut regions = model();
+    let index = regions.allocate(0, 1, 99).unwrap();
+    let handle = regions.entries[index].handle(index);
+    regions.offer(0, handle, 1).unwrap();
+    assert_eq!(regions.check_owner(handle, 2), Err(abi::DENIED));
+    assert!(!regions.entries[index].accepted);
+    assert_eq!(regions.check_owner(handle, 0), Ok(()));
+    regions.accept(1, handle).unwrap();
+    regions.close(index, 0);
+    assert_eq!(regions.check_owner(handle, 0), Err(abi::DENIED));
+    assert_eq!(regions.access(1, handle), Ok(index));
+}
 fn model() -> Regions {
     Regions::new(
         3,

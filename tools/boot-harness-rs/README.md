@@ -85,3 +85,12 @@ app/provider replacements and complete memory reclamation. The readiness fixture
 checks two receive channels, first-ready precedence, no-consume observations,
 denied clock/rights, peer closure and all-blocked timeout. Existing deadline,
 copyout, late reply, exclusive-device and admission-failure coverage remains.
+
+## Retained compositor profile
+
+`python tools/boot-harness-rs/run.py --compositor-test` selects
+[profiles/compositor.json](profiles/compositor.json), runs client/provider failure
+probes, and independently validates all final scanout pixels. Add `--release` for
+the optimized build. For a visible run use `--profile tools/boot-harness-rs/profiles/compositor.json --window`.
+The [lab guide](../../source-rs/distribution/lab/compositor/README.md) describes
+scope, authority, retained storage and the experimental limitations.

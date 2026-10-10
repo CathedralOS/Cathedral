@@ -12,6 +12,9 @@ pub fn pages(handle: u64) -> Result<usize, Error> {
 pub fn accept(handle: u64) -> Result<u64, Error> {
     result(arch::call(abi::MEMORY_MAP, handle, 0))
 }
+pub fn accept_from(handle: u64, link: u64) -> Result<u64, Error> {
+    result(arch::call(abi::MEMORY_MAP, handle, link))
+}
 /// # Safety
 /// End all write borrows of this region before sealing it.
 pub unsafe fn seal(handle: u64, link: u64) -> Result<(), Error> {

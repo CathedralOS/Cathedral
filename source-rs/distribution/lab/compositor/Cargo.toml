@@ -1,29 +1,19 @@
 [package]
-name = "cathedral-display-service"
+name = "cathedral-compositor-lab"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 publish.workspace = true
 
-[lib]
-path = "lib.rs"
-
 [[bin]]
-name = "cathedral-display-service"
+name = "cathedral-compositor-lab"
 path = "main.rs"
 test = false
 bench = false
 
 [dependencies]
-cathedral-bitmap-font.workspace = true
 cathedral-contracts.workspace = true
-
-[target.'cfg(target_os = "none")'.dependencies]
 cathedral-user-runtime.workspace = true
-
-[features]
-lab = []
-recovery-lab = []
 
 [lints]
 workspace = true

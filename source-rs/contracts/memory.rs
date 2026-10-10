@@ -8,6 +8,8 @@
 //! to that live boot-approved service. MAP(handle) accepts a single RO/NX lease
 //! and returns its address. Producer release is BUSY until peer completion/death.
 //! An accepted reader survives producer death; an unaccepted offer does not.
+//! MAP(handle, service_link) additionally checks the offer's producer against
+//! that service-side link before accepting. Zero retains the original MAP behavior.
 //! Reader release/death plus owner release/death frees backing. No live reader
 //! is remotely unmapped. These are lab semantics, not Cathedral's stable ABI.
 pub const PAGE_BYTES: usize = 4096;

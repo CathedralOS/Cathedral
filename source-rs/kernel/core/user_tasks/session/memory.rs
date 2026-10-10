@@ -104,6 +104,17 @@ unsafe fn dispatch(
             Ok(0)
         }
         abi::MEMORY_MAP => {
+            if second != 0 {
+                let owner = session
+                    .links
+                    .iter()
+                    .find(|link| {
+                        link.model.spec.service == slot && link.model.port(slot) == Ok(second)
+                    })
+                    .map(|link| link.model.spec.client)
+                    .ok_or(abi::DENIED)?;
+                session.memory.model.check_owner(first, owner)?;
+            }
             let index = session.memory.model.accept(slot, first)?;
             let pages = session.memory.model.entries[index].pages;
             // SAFETY: Sealed owner is read-only; backing is pinned until this accepted reader releases/dies.

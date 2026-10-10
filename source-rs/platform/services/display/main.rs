@@ -2,6 +2,7 @@
 #![no_main]
 //! Linear GOP display provider. Test fault injection is supplied only by boot.
 //! Receives contracts/display.rs packets; surface.rs owns rendering and mapping.
+mod compositor;
 #[cfg(feature = "lab")]
 mod probes;
 #[cfg(feature = "recovery-lab")]
@@ -12,6 +13,9 @@ use cathedral_user_runtime::{Error, server::Server};
 cathedral_user_runtime::entry!(main);
 
 fn main(_fault_after: u64, _generation: u64) -> u64 {
+    if _fault_after == cathedral_contracts::composition::MODE {
+        return compositor::run();
+    }
     #[cfg(feature = "recovery-lab")]
     recovery::startup(_fault_after, _generation);
     #[cfg(feature = "lab")]

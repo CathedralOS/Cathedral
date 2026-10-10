@@ -13,6 +13,7 @@ remain in the linked decision queue rather than being duplicated here.
 | --- | --- | --- |
 | Copied drawing requests and shared pixel input | [Rust display contract](../../../source-rs/contracts/display.rs), [provider](../../../source-rs/platform/services/display/surface.rs) | Production drawing vocabulary, retained resources or frame atomicity |
 | Private pages, sealing and accepted readers | [Page contract](../../../source-rs/contracts/memory.rs), [runtime wrappers](../../../source-rs/platform/libraries/user-runtime/memory.rs) | General multi-reader delegation, revocable live borrows or GPU fences |
+| Bounded retained scenes and connection-scoped drawing | [Two-client compositor experiment](../../../source-rs/distribution/lab/compositor/README.md) | Cross-process Matrix delegation, protected output, general resource custody or tear-free presentation |
 | Flattened leaves versus ancestor copies | [Rendering investigation](../../../source-rs/distribution/lab/rendering/README.md) | Real nested Matrix IPC, arbitrary effects, alpha or GPU performance |
 | Checked row spans and native stores | Same investigation's host tests and QEMU bounds probe | Native sub-page isolation or proof-carrying admission |
 | Handle and peer lifetime failures | [Memory fixture](../../../source-rs/distribution/lab/memory/main.rs) | Persistent principal accounting, retained cache eviction or asynchronous resource loading |

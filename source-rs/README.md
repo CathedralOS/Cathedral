@@ -855,7 +855,7 @@ does not make dangling pointers safe.
 
 In ordinary startup, the status app now supplies the DISPLAY panel's `SHARED
 PIXELS` checkerboard this way. The display provider validates pixels in its
-read-only mapping and copies them to GOP. The compositor, GPU and capture
+read-only mapping and copies them to GOP. The bounded compositor experiment is described below; GPU and capture
 protocols remain future platform work.
 
 `--smoke` exercises quota exhaustion, zeroing/reuse, stale and foreign handles,
@@ -869,6 +869,22 @@ accepted leases. Screenshot/input/recovery/storage checks include the new tile.
 
 This is an explicit lab contract. The transport and revocation question in
 [OWNER_QUESTIONS.md](../OWNER_QUESTIONS.md) remains open.
+
+## Retained compositor experiment
+
+The [two-client compositor lab](distribution/lab/compositor/README.md) adds
+connection-scoped retained drawing, nested groups and exposure redraw through a
+separate composition profile. Run `python tools/boot-harness-rs/run.py --compositor-test`
+from the repository root, or use its documented window command. The status demo
+still uses the original trusted whole-screen provider path.
+
+The compositor accepts bounded rectangles, ASCII text and one small shared image
+per client. Kernel memory acceptance can authenticate the producer against a
+service-side link. Generic service events expose client disconnects so retained
+state cannot silently pass to a replacement. QEMU exercises cross-client denial,
+invalid/stale snapshots, movement, failure containment and provider replacement;
+the host verifies the final scanout. This is not yet pointer routing, arbitrary
+Matrix delegation, protected output, GPU presentation or the production renderer.
 
 ## Next bring-up steps
 
