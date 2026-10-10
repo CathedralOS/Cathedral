@@ -10,6 +10,7 @@ struct InitialLaunch {
     elf: &'static [u8],
     framebuffer: bool,
     keyboard: bool,
+    disk: bool,
     clock: bool,
     argument: u64,
 }
@@ -39,6 +40,7 @@ pub fn run(memory: &mut PreparedMemory, console: &mut SerialPort) {
             None
         };
         launches.push(Supervision {
+            disk: grant.disk,
             owner: 0,
             peer: 0,
             framebuffer,

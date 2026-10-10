@@ -38,6 +38,7 @@ impl Decoder {
             (false, 0x3b) => wire::F1,
             (false, 0x3c) => wire::F2,
             (false, 0x3d) => wire::F3,
+            (false, code @ 0x3e..=0x42) => wire::F4 + code - 0x3e,
             _ => return None,
         };
         let mask = 1 << (key - 1);

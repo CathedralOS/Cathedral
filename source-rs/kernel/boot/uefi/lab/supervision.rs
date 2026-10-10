@@ -138,6 +138,7 @@ fn run(
                 endpoints,
                 clock_readers: &[],
                 supervision: &[Supervision {
+                    disk: false,
                     keyboard: false,
                     framebuffer: None,
                     owner: 0,

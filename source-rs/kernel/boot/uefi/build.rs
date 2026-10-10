@@ -10,8 +10,15 @@ fn main() {
     ] {
         println!("cargo:rerun-if-env-changed={variable}");
     }
-    for index in 0..3 {
-        for field in ["ELF", "FRAMEBUFFER", "KEYBOARD", "CLOCK", "ARGUMENT"] {
+    for index in 0..cathedral_contracts::user::MAX_LAUNCHES {
+        for field in [
+            "ELF",
+            "FRAMEBUFFER",
+            "KEYBOARD",
+            "DISK",
+            "CLOCK",
+            "ARGUMENT",
+        ] {
             println!("cargo:rerun-if-env-changed=CATHEDRAL_LAUNCH_{index}_{field}");
         }
     }
@@ -40,7 +47,10 @@ fn startup() {
         .unwrap_or_else(|_| "0".into())
         .parse()
         .unwrap();
-    assert!(count <= 3, "at most three launch grants");
+    assert!(
+        count <= cathedral_contracts::user::MAX_LAUNCHES,
+        "launch arena exhausted"
+    );
     let mut source = format!(
         "const INITIAL_CLOCK: bool = {};\nstatic LAUNCHES: &[InitialLaunch] = &[\n",
         flag("CATHEDRAL_INIT_CLOCK")
@@ -51,11 +61,12 @@ fn startup() {
         let framebuffer = flag(&format!("{prefix}_FRAMEBUFFER"));
         let clock = flag(&format!("{prefix}_CLOCK"));
         let keyboard = flag(&format!("{prefix}_KEYBOARD"));
+        let disk = flag(&format!("{prefix}_DISK"));
         let argument: u64 = env::var(format!("{prefix}_ARGUMENT"))
             .unwrap_or_else(|_| "0".into())
             .parse()
             .expect("invalid launch argument");
-        source.push_str(&format!("InitialLaunch {{ elf: include_bytes!(concat!(env!(\"OUT_DIR\"), \"/launch-{index}.elf\")), framebuffer: {framebuffer}, keyboard: {keyboard}, clock: {clock}, argument: {argument} }},\n"));
+        source.push_str(&format!("InitialLaunch {{ elf: include_bytes!(concat!(env!(\"OUT_DIR\"), \"/launch-{index}.elf\")), framebuffer: {framebuffer}, keyboard: {keyboard}, disk: {disk}, clock: {clock}, argument: {argument} }},\n"));
     }
     source.push_str("];\nstatic LINKS: &[cathedral_core::link::LinkSpec] = &[\n");
     let graph = env::var("CATHEDRAL_LINKS").unwrap_or_default();

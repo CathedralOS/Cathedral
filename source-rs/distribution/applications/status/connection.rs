@@ -6,6 +6,7 @@ pub struct Connections {
     control: (Handle, Handle),
     pub display: Option<(Handle, Handle)>,
     pub input: Option<(Handle, Handle)>,
+    pub storage: Option<(Handle, Handle)>,
     pub status: session::Status,
 }
 impl Connections {
@@ -14,6 +15,7 @@ impl Connections {
             control: (Handle::bootstrap(0)?, Handle::bootstrap(1)?),
             display: None,
             input: None,
+            storage: None,
             status: session::Status::default(),
         })
     }
@@ -36,12 +38,20 @@ impl Connections {
         if status.input != self.status.input {
             self.input = None;
         }
+        if status.storage != self.status.storage {
+            self.storage = None;
+        }
         let changed = status != self.status;
         self.status = status;
         Ok(changed)
     }
     pub fn pair(&mut self, index: u64) -> Result<(Handle, Handle), Error> {
-        if let Some(pair) = if index == 0 { self.display } else { self.input } {
+        if let Some(pair) = match index {
+            0 => self.display,
+            1 => self.input,
+            2 => self.storage,
+            _ => return Err(Error(abi::DENIED as i64)),
+        } {
             return Ok(pair);
         }
         for _ in 0..3 {
@@ -49,8 +59,10 @@ impl Connections {
                 Ok(pair) => {
                     if index == 0 {
                         self.display = Some(pair);
-                    } else {
+                    } else if index == 1 {
                         self.input = Some(pair);
+                    } else {
+                        self.storage = Some(pair);
                     }
                     return Ok(pair);
                 }

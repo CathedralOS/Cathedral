@@ -9,6 +9,8 @@ pub fn run() -> Result<(), Error> {
     let mut input = Service::start(1)?;
     input_ready(&mut input)?;
     healthy(&mut display, false)?;
+    let mut storage = Service::start(3)?;
+    storage_healthy(&mut storage)?;
     let mut app = Service::start(2)?;
     let mut last = 0;
     let mut seen = time::now()?;
@@ -22,12 +24,15 @@ pub fn run() -> Result<(), Error> {
         if healthy(&mut input, true)? {
             last = 2;
         }
+        if storage_healthy(&mut storage)? {
+            last = 4;
+        }
         #[cfg(feature = "recovery-lab")]
-        probes.verify(&display, &input, &app)?;
+        probes.verify(&display, &input, &storage, &app)?;
         if app.stopped()? {
-            let peers = (display.ticket(), input.ticket());
+            let peers = (display.ticket(), input.ticket(), storage.ticket());
             app.respawn()?;
-            assert_eq!((display.ticket(), input.ticket()), peers);
+            assert_eq!((display.ticket(), input.ticket(), storage.ticket()), peers);
             last = 3;
             seen = time::now()?;
             write(b"Cathedral: application restarted; providers preserved\n")?;
@@ -38,9 +43,9 @@ pub fn run() -> Result<(), Error> {
             Err(Error(code)) if code == abi::PEER_CLOSED as i64 => continue,
             Err(Error(code)) if code == abi::TIMED_OUT as i64 => {
                 if time::reached(time::now()?, seen.wrapping_add(300)) {
-                    let peers = (display.ticket(), input.ticket());
+                    let peers = (display.ticket(), input.ticket(), storage.ticket());
                     app.restart()?;
-                    assert_eq!((display.ticket(), input.ticket()), peers);
+                    assert_eq!((display.ticket(), input.ticket(), storage.ticket()), peers);
                     last = 3;
                     seen = time::now()?;
                     write(b"Cathedral: application restarted; providers preserved\n")?;
@@ -55,27 +60,35 @@ pub fn run() -> Result<(), Error> {
             input: input.generation(),
             application: app.generation(),
             last,
+            storage: storage.generation(),
         };
         let encoded = status.encode();
         let response: &[u8] = match &bytes[..length] {
             session::STATUS => &encoded,
             session::READY => b"ok",
             #[cfg(feature = "recovery-lab")]
-            [0xf0, index @ 0..=1] => {
+            [0xf0, index @ 0..=2] => {
                 if *index == 0 {
-                    probes.inject(0, &display, &input, &app)?;
+                    probes.inject(0, [&display, &input, &storage], &app)?;
                 } else {
-                    probes.inject(1, &input, &display, &app)?;
+                    probes.inject(*index as usize, [&display, &input, &storage], &app)?;
                 }
                 b"ok"
+            }
+            #[cfg(feature = "recovery-lab")]
+            [0xf1, phase @ 1..=4] => {
+                storage.send.send(&[0xf1, *phase])?;
+                let (reply, len) = storage.receive()?;
+                assert_eq!(&reply[..len], b"armed");
+                b"armed"
             }
             _ => b"denied",
         };
         // App closure or an undrained response must not take init/providers down.
         if app.send.send(response).is_err() {
-            let peers = (display.ticket(), input.ticket());
+            let peers = (display.ticket(), input.ticket(), storage.ticket());
             app.restart()?;
-            assert_eq!((display.ticket(), input.ticket()), peers);
+            assert_eq!((display.ticket(), input.ticket(), storage.ticket()), peers);
             last = 3;
             seen = time::now()?;
             write(b"Cathedral: application restarted; providers preserved\n")?;
@@ -134,6 +147,26 @@ fn healthy(service: &mut Service, keyboard: bool) -> Result<bool, Error> {
             if keyboard {
                 input_ready(service)?;
             }
+        }
+    }
+    Err(Error(abi::IO_ERROR as i64))
+}
+
+fn storage_healthy(service: &mut Service) -> Result<bool, Error> {
+    for attempt in 0..3 {
+        if service
+            .send
+            .send(cathedral_contracts::storage::HEALTH)
+            .and_then(|()| service.receive())
+            .is_ok_and(|(bytes, len)| &bytes[..len] == b"ready")
+        {
+            if attempt != 0 {
+                write(b"Cathedral: storage recovered\n")?;
+            }
+            return Ok(attempt != 0);
+        }
+        if attempt < 2 {
+            service.restart()?;
         }
     }
     Err(Error(abi::IO_ERROR as i64))

@@ -6,7 +6,7 @@ exports physical key events over IPC; shortcuts, selection and appearance belong
 to the distribution. It imports contracts and the user runtime, never kernel or
 distribution implementations. The pure decoder is host-testable independently.
 
-This q35 experiment recognizes arrows, Enter and F1/F2/F3. It distinguishes press,
+This q35 experiment recognizes arrows, Enter and F1 through F8. It distinguishes press,
 release and repeat; startup/overflow RESET clears held keys. One NEXT request
 consumes one event, or returns IDLE after 25 ticks without an event. Buffers are bounded and may lose bursts; restarting the
 provider discards previous raw/IPC queues. It does not implement text layouts,

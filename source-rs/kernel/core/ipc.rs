@@ -1,9 +1,9 @@
-//! Bounded copied-message lab transport. No allocation, names or delegation.
+//! Bounded copied-message lab transport. Allocates its arena once at admission.
+//! No allocation in message operations, names or delegation.
 //! Tickets are bound to a caller and a non-reused session epoch, not bearer tokens.
 use cathedral_contracts::user as abi;
 
-pub const MAX_ENDPOINTS: usize = 10;
-pub const MAX_TASKS: usize = 8;
+pub use abi::{MAX_ENDPOINTS, MAX_TASKS};
 pub const MAX_EPOCH: u64 = (1 << 47) - 1;
 
 #[derive(Clone, Copy, Debug)]
@@ -37,18 +37,23 @@ pub struct Ipc {
     epoch: u64,
     tasks: usize,
     alive: u8,
-    endpoints: [Option<Endpoint>; MAX_ENDPOINTS],
+    endpoints: alloc::vec::Vec<Option<Endpoint>>,
 }
 impl Ipc {
     pub fn new(epoch: u64, tasks: usize, specs: &[EndpointSpec]) -> Result<Self, u64> {
         if !(1..=MAX_EPOCH).contains(&epoch) || tasks > MAX_TASKS || specs.len() > MAX_ENDPOINTS {
             return Err(abi::INVALID_ARGUMENT);
         }
+        let mut endpoints = alloc::vec::Vec::new();
+        endpoints
+            .try_reserve_exact(MAX_ENDPOINTS)
+            .map_err(|_| abi::NO_MEMORY)?;
+        endpoints.resize(MAX_ENDPOINTS, None);
         let mut ipc = Self {
             epoch,
             tasks,
             alive: ((1u16 << tasks) - 1) as u8,
-            endpoints: [None; MAX_ENDPOINTS],
+            endpoints,
         };
         for (index, &spec) in specs.iter().enumerate() {
             if spec.sender >= tasks

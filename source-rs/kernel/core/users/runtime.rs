@@ -3,6 +3,7 @@
 use super::{Error, Program};
 use crate::ipc::{EndpointSpec, Ipc, MAX_EPOCH};
 mod admission;
+mod disk;
 mod dispatch;
 mod keyboard;
 mod lifecycle;
@@ -82,6 +83,8 @@ pub struct Config<'a> {
 }
 
 pub struct Supervision<'a> {
+    /// Exclusive secondary ISA ATA controller; no DMA or arbitrary ports.
+    pub disk: bool,
     /// Exclusive PC bootstrap byte channel; configuration/decoding stay in userspace.
     pub keyboard: bool,
     /// Exclusive boot-approved display aperture, granted only to the child.
@@ -95,6 +98,7 @@ pub struct Supervision<'a> {
 }
 
 struct LaunchState {
+    disk: bool,
     model: Supervisor,
     endpoint_base: usize,
     framebuffer: Option<cathedral_contracts::display::Framebuffer>,
@@ -104,7 +108,7 @@ struct LinkState {
     model: crate::link::Link,
     endpoint_base: usize,
 }
-const MAX_LAUNCHES: usize = 3;
+const MAX_LAUNCHES: usize = cathedral_contracts::user::MAX_LAUNCHES;
 
 struct Frames<'a> {
     frames: &'a mut FrameAllocator,
@@ -203,6 +207,9 @@ pub unsafe fn run_configured(
     {
         return Err(Error::InvalidEndpoints);
     }
+    if config.supervision.iter().filter(|grant| grant.disk).count() > 1 {
+        return Err(Error::InvalidEndpoints);
+    }
     let clock = crate::deadline::Clock::new(epoch, count, config.clock_readers)
         .map_err(|_| Error::InvalidEndpoints)?;
     let mut launches = Vec::new();
@@ -228,6 +235,7 @@ pub unsafe fn run_configured(
             endpoint_base: config.endpoints.len() + 2 * index,
             framebuffer: launch.framebuffer,
             keyboard: launch.keyboard,
+            disk: launch.disk,
         });
     }
     // Static grants may refer only to initial principals, never the reusable child slot.

@@ -51,3 +51,11 @@ pub const IO_ERROR: u64 = (-5i64) as u64;
 pub const BAD_ADDRESS: u64 = (-14i64) as u64;
 pub const INVALID_ARGUMENT: u64 = (-22i64) as u64;
 pub const UNKNOWN: u64 = (-38i64) as u64;
+
+/// Bounded lab arenas. Task slots follow composition; IPC reserves one fixed arena.
+pub const MAX_TASKS: usize = 8;
+pub const MAX_LAUNCHES: usize = MAX_TASKS - 1;
+pub const MAX_ENDPOINTS: usize = 32;
+pub const DISK_REGISTER_READ: u64 = 24;
+pub const DISK_REGISTER_WRITE: u64 = 25;
+pub const DISK_TRANSFER: u64 = 26;

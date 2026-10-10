@@ -9,6 +9,8 @@ import shutil
 import subprocess
 import sys
 import capture
+import disk_image
+import storage_test
 
 REPO = Path(__file__).resolve().parents[2]
 WORKSPACE = REPO / "source-rs"
@@ -46,6 +48,7 @@ MARKERS = (
     "Cathedral Rust lab: supervision parent-exit cancellation and collected return status reclaimed all memory",
     "Cathedral Rust lab: supervision failed-spawn retries preserved live peers and memory baselines",
     "Cathedral Rust lab: multiple launch grants preserved sibling IPC across 16 restarts; failed admission and keyboard-wait cancellation reclaimed all memory",
+    "Cathedral Rust lab: peer graph survived 16 app/provider replacements; all endpoints, frames and heap reclaimed",
     "Cathedral Rust lab: deadlines recovered 4 silent and 4 spinning services; independent observer progressed; all memory reclaimed",
     "Cathedral Rust lab: clock grants copy checks and deadline completion/cancellation precedence passed",
     "Cathedral Rust lab: deadline woke an idle session with every user task blocked; all memory reclaimed",
@@ -105,6 +108,7 @@ def main():
     mode.add_argument("--screenshot", action="store_true", help="Boot normally, verify scanout through QMP, save display.png and stop")
     mode.add_argument("--input-test", action="store_true", help="Verify keyboard navigation and independent provider restarts through QMP")
     mode.add_argument("--recovery-test", action="store_true", help="Inject provider failures and verify automatic deadline recovery")
+    mode.add_argument("--storage-test", action="store_true", help="Verify durable state across reboot and abrupt QEMU power cuts")
     parser.add_argument("--fault", choices=("guard", "invalid-opcode", "double-fault"), help="Expected-fault smoke test (requires --smoke)")
     parser.add_argument("--release", action="store_true")
     parser.add_argument("--kernel-only", action="store_true", help="Build/boot without any platform or distribution executable")
@@ -117,16 +121,16 @@ def main():
         parser.error("timeout must be positive and memory must be at least 64 MiB")
     if args.fault and not args.smoke:
         parser.error("--fault requires --smoke")
-    if args.window and (args.smoke or args.screenshot or args.input_test or args.recovery_test or args.build_only):
+    if args.window and (args.smoke or args.screenshot or args.input_test or args.recovery_test or args.storage_test or args.build_only):
         parser.error("--window requires an ordinary interactive boot")
 
-    if args.kernel_only and (args.screenshot or args.input_test or args.recovery_test):
+    if args.kernel_only and (args.screenshot or args.input_test or args.recovery_test or args.storage_test):
         parser.error("capture modes require the distribution scene")
     custom_profile = args.profile.resolve() != (WORKSPACE / "distribution/profile.json").resolve()
     if custom_profile and args.kernel_only:
         parser.error("--kernel-only does not use a distribution profile")
-    if custom_profile and args.recovery_test:
-        parser.error("--recovery-test uses the standard distribution profile")
+    if custom_profile and (args.recovery_test or args.storage_test):
+        parser.error("recovery/storage tests use the standard distribution profile")
     if custom_profile and args.smoke:
         parser.error("custom profiles select ordinary startup; smoke uses the standard lab profile")
     composition = ({"target": "x86_64-unknown-uefi", "boot_package": "cathedral-boot-uefi"}
@@ -144,18 +148,16 @@ def main():
             programs["init"] = startup["initial"]
             environment["CATHEDRAL_INIT_CLOCK"] = "1" if startup["initial"].get("clock", False) else "0"
             launches = startup.get("launches", [startup["launch"]] if startup.get("launch") else [])
-            if len(launches) > 3:
-                parser.error("at most three startup launch grants")
             environment["CATHEDRAL_LINKS"] = ",".join(f"{edge[0]}:{edge[1]}" for edge in startup.get("links", []))
-            if args.recovery_test:
+            if args.recovery_test or args.storage_test:
                 startup["initial"]["features"] = ["recovery-lab"]
                 for index, child in enumerate(launches):
                     child["features"] = ["recovery-lab"]
-                    child["argument"] = 2 if index < 2 else 0 # Provider startup wedges; application stays live.
+                    child["argument"] = 2 if args.recovery_test and index < 2 else 0 # Provider startup wedges; application stays live.
             environment["CATHEDRAL_LAUNCH_COUNT"] = str(len(launches))
             for index, child in enumerate(launches):
                 programs[f"launch_{index}"] = child
-                for resource in ("framebuffer", "keyboard", "clock"):
+                for resource in ("framebuffer", "keyboard", "disk", "clock"):
                     environment[f"CATHEDRAL_LAUNCH_{index}_{resource.upper()}"] = "1" if child.get(resource, False) else "0"
                 argument = child.get("argument", 0)
                 if type(argument) is not int or not 0 <= argument < 2**64:
@@ -184,7 +186,7 @@ def main():
         cargo.extend(["--features", ','.join(features)])
     subprocess.run(cargo, cwd=WORKSPACE, check=True, env=environment)
     # Keep smoke images and their terminating feature separate from normal boots.
-    output = BUILD / (f"fault-{args.fault}" if args.fault else "smoke" if args.smoke else "recovery-test" if args.recovery_test else "input-test" if args.input_test else "capture" if args.screenshot else "interactive")
+    output = BUILD / (f"fault-{args.fault}" if args.fault else "smoke" if args.smoke else "storage-test" if args.storage_test else "recovery-test" if args.recovery_test else "input-test" if args.input_test else "capture" if args.screenshot else "interactive")
     if args.kernel_only:
         output = output.with_name("kernel-" + output.name)
     if custom_profile:
@@ -201,10 +203,17 @@ def main():
     command += firmware_args(qemu, output)
     command += ["-drive", "format=raw,file=fat:rw:esp", "-nic", "none",
                 "-monitor", "none", "-no-reboot"]
+    if not args.kernel_only and not args.smoke and any(child.get("disk", False) for child in launches):
+        data_path = output / "test-storage.raw" if (args.screenshot or args.input_test or args.recovery_test or args.storage_test) else BUILD / "storage.raw"
+        disk_image.prepare(data_path, reset=args.screenshot or args.input_test or args.recovery_test or args.storage_test)
+        command += disk_image.arguments(data_path)
     if not args.window:
         command += ["-display", "none"]
     # No console helper on Windows; --window explicitly opts into QEMU's GUI.
     creationflags = subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0
+    if args.storage_test:
+        storage_test.run(command, output, args.timeout, creationflags)
+        return 0
     if args.screenshot or args.input_test or args.recovery_test:
         capture.run(command, output, args.timeout, creationflags, args.input_test, args.recovery_test)
         return 0

@@ -3,6 +3,11 @@
 pub const NEXT: [u8; 1] = [1];
 pub const HEALTH: [u8; 1] = [2];
 pub const F3: u8 = 9;
+pub const F4: u8 = 10;
+pub const F5: u8 = 11;
+pub const F6: u8 = 12;
+pub const F7: u8 = 13;
+pub const F8: u8 = 14;
 pub const RESET: u8 = 0;
 pub const UP: u8 = 1;
 pub const DOWN: u8 = 2;
@@ -42,7 +47,7 @@ impl Event {
         match bytes {
             [RESET, RELEASE] => Some(Self::reset()),
             [IDLE, RELEASE] => Some(Self::idle()),
-            [key @ (UP..=F2 | F3), state @ RELEASE..=REPEAT] => Some(Self {
+            [key @ (UP..=F2 | F3..=F8), state @ RELEASE..=REPEAT] => Some(Self {
                 key: *key,
                 state: *state,
             }),
@@ -56,7 +61,7 @@ mod tests {
     use super::*;
     #[test]
     fn wire_rejects_unknown_keys_states_and_lengths() {
-        for key in (UP..=F2).chain([F3]) {
+        for key in (UP..=F2).chain(F3..=F8) {
             for state in RELEASE..=REPEAT {
                 let event = Event { key, state };
                 assert_eq!(Event::decode(&event.encode()), Some(event));

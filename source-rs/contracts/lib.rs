@@ -7,3 +7,6 @@ pub mod boot;
 pub mod display;
 pub mod input;
 pub mod user;
+
+pub mod block;
+pub mod storage;

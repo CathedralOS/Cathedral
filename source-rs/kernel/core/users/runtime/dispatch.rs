@@ -61,6 +61,9 @@ pub(super) fn syscall(session: &mut Session, slot: usize, now: u64) -> Event {
         abi::KEYBOARD_READ | abi::KEYBOARD_WRITE | abi::KEYBOARD_READ_UNTIL => {
             super::keyboard::syscall(session, slot, (number, first, second), &mut event, now)
         }
+        abi::DISK_REGISTER_READ..=abi::DISK_TRANSFER => {
+            super::disk::syscall(session, slot, (number, first, second, third))
+        }
         abi::DISPLAY_INFO => display_info(session, slot, first, second),
         abi::TASK_LAUNCH..=abi::CLOCK_HANDLE => super::taskcalls::dispatch(
             session,

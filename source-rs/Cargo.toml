@@ -1,7 +1,7 @@
 [workspace]
 resolver = "3"
-members = ["kernel/arch", "kernel/boot/uefi", "contracts", "kernel/core", "platform/drivers/uart_16550", "platform/libraries/user-runtime", "distribution/programs/hello", "distribution/programs/ipc", "distribution/programs/supervision", "platform/services/display", "distribution/programs/display", "distribution/init", "distribution/libraries/boot-scene", "platform/services/input", "platform/libraries/bitmap-font", "distribution/applications/status", "distribution/libraries/session-protocol"]
-default-members = ["contracts", "kernel/core", "platform/services/input", "platform/libraries/bitmap-font"]
+members = ["platform/drivers/ata-pio", "platform/libraries/object-store", "platform/services/storage", "kernel/arch", "kernel/boot/uefi", "contracts", "kernel/core", "platform/drivers/uart_16550", "platform/libraries/user-runtime", "distribution/programs/hello", "distribution/programs/ipc", "distribution/programs/supervision", "platform/services/display", "distribution/programs/display", "distribution/init", "distribution/libraries/boot-scene", "platform/services/input", "platform/libraries/bitmap-font", "distribution/applications/status", "distribution/libraries/session-protocol"]
+default-members = ["platform/libraries/object-store", "contracts", "kernel/core", "platform/services/input", "platform/libraries/bitmap-font"]
 
 [workspace.package]
 version = "0.0.0"
@@ -10,6 +10,9 @@ rust-version = "1.94"
 publish = false
 
 [workspace.dependencies]
+cathedral-ata-pio = { path = "platform/drivers/ata-pio" }
+cathedral-object-store = { path = "platform/libraries/object-store" }
+cathedral-storage-service = { path = "platform/services/storage" }
 cathedral-session-protocol = { path = "distribution/libraries/session-protocol" }
 cathedral-bitmap-font = { path = "platform/libraries/bitmap-font" }
 cathedral-contracts = { path = "contracts" }

@@ -87,7 +87,12 @@ but does not decide this split. The specification index lists component lifecycl
 and admission as unwritten subjects; its current boot and root-extent contracts
 do not define these service boundaries. The
 [contracts charter](source/contracts/CHARTER.md) names future interfaces without
-settling their enforcement/orchestration split.
+settling their enforcement/orchestration split. The Rust lab now places its
+private-object engine and recovery in a platform service over a boot-granted
+PIO transport. That experiment covers disk-only atomic replacement; it does
+not define a transaction that atomically changes persistent objects and kernel
+authority, nor recovery of such a cross-boundary change. The broader transaction
+coordination assignment remains unresolved.
 
 **Owner choice.** Keep the listed subsystems wholly in the trusted kernel, or
 place orchestration in platform services over narrowly defined kernel

@@ -23,6 +23,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "cathedral-ata-pio"
+version = "0.0.0"
+dependencies = [
+ "cathedral-contracts",
+ "cathedral-user-runtime",
+]
+
+[[package]]
 name = "cathedral-bitmap-font"
 version = "0.0.0"
 
@@ -109,6 +117,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "cathedral-object-store"
+version = "0.0.0"
+dependencies = [
+ "cathedral-contracts",
+]
+
+[[package]]
 name = "cathedral-session-protocol"
 version = "0.0.0"
 
@@ -119,6 +134,16 @@ dependencies = [
  "cathedral-boot-scene",
  "cathedral-contracts",
  "cathedral-session-protocol",
+ "cathedral-user-runtime",
+]
+
+[[package]]
+name = "cathedral-storage-service"
+version = "0.0.0"
+dependencies = [
+ "cathedral-ata-pio",
+ "cathedral-contracts",
+ "cathedral-object-store",
  "cathedral-user-runtime",
 ]
 

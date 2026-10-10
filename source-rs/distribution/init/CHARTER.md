@@ -1,7 +1,8 @@
 # Cathedral initial program
 
 Owns startup and restart policy for the built-in distribution. Boot supplies
-three independent launch grants: display, input and the status application.
+four independent launch grants: display, input, the status application and
+storage. Providers are ready before the app starts.
 Init retains private provider control connections and checks health with bounded
 requests. It replaces failed providers independently, reports their generations
 to the application, and replaces an exited or unresponsive application without

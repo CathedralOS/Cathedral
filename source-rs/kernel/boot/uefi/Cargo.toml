@@ -27,3 +27,6 @@ uefi.workspace = true
 
 [lints]
 workspace = true
+
+[build-dependencies]
+cathedral-contracts.workspace = true

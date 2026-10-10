@@ -52,6 +52,7 @@ fn run(memory: &mut PreparedMemory, role: u64, budget: usize) -> alloc::vec::Vec
                 }],
                 clock_readers: &[],
                 supervision: &[Supervision {
+                    disk: false,
                     keyboard: false,
                     owner: 0,
                     peer: 1,

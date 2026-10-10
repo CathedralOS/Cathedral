@@ -1,4 +1,4 @@
-//! A three-child graph survives replacing either endpoint and complete teardown.
+//! A four-child graph survives replacing either endpoint and complete teardown.
 use cathedral_contracts::user as abi;
 use cathedral_user_runtime::{
     Error,
@@ -20,11 +20,13 @@ pub fn owner() -> u64 {
         Launch::at(0).unwrap(),
         Launch::at(1).unwrap(),
         Launch::at(2).unwrap(),
+        Launch::at(3).unwrap(),
     ];
     let ports = [
         Port::at(0).unwrap(),
         Port::at(1).unwrap(),
         Port::at(2).unwrap(),
+        Port::at(3).unwrap(),
     ];
     let mut children = launches.map(|launch| launch.spawn(0).unwrap());
     let mut pairs = ports.map(|port| port.connect().unwrap());
@@ -33,7 +35,7 @@ pub fn owner() -> u64 {
         let index = if generation % 2 == 1 {
             2
         } else {
-            (generation / 2) % 2
+            [0, 1, 3][(generation / 2) % 3]
         };
         let old = children[index];
         let retired = pairs[index];
@@ -42,10 +44,17 @@ pub fn owner() -> u64 {
         children[index] = launches[index].spawn(generation as u64).unwrap();
         pairs[index] = ports[index].connect().unwrap();
         assert_eq!(retired.0.send(b"stale"), Err(Error(abi::BAD_HANDLE as i64)));
-        for pair in &pairs[..2] {
-            exchange(*pair, 7);
+        for index in [0, 1, 3] {
+            exchange(pairs[index], 7);
         }
-        exchange(pairs[2], if index == 2 { 0 } else { index as u8 + 1 });
+        exchange(
+            pairs[2],
+            match index {
+                2 => 0,
+                3 => 3,
+                _ => index as u8 + 1,
+            },
+        );
     }
     // Exit with all children live; kernel must reclaim their roots, queues and graph.
     0
@@ -63,7 +72,11 @@ pub fn application() -> u64 {
     assert_eq!(Launch::at(0).unwrap_err(), Error(abi::DENIED as i64));
     let input = Handle::bootstrap(0).unwrap();
     let output = Handle::bootstrap(1).unwrap();
-    let links = [Link::at(0).unwrap(), Link::at(1).unwrap()];
+    let links = [
+        Link::at(0).unwrap(),
+        Link::at(1).unwrap(),
+        Link::at(2).unwrap(),
+    ];
     let mut pairs = links.map(|link| link.connect().unwrap());
     loop {
         let mut bytes = [0; 64];

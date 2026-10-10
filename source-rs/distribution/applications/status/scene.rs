@@ -7,18 +7,29 @@ use cathedral_user_runtime::{Error, time, write};
 struct Scene {
     selected: u8,
     active: u8,
+    saved: u64,
 }
 pub fn run(_generation: u64) -> Result<(), Error> {
     let mut connections = Connections::open()?;
     connections.refresh()?;
     #[cfg(feature = "recovery-lab")]
     super::probes::authority(&mut connections)?;
-    let mut scene = Scene::default();
+    let record = super::storage::load(&mut connections)?;
+    let mut scene = match record.payload() {
+        [] if record.generation == 0 => Scene::default(),
+        [1, selected @ 0..=2, active @ 0..=7] => Scene {
+            selected: *selected,
+            active: *active,
+            saved: record.generation,
+        },
+        _ => return Err(Error(abi::IO_ERROR as i64)),
+    };
     scene.draw(&mut connections)?;
     connections.request(session::READY)?;
     loop {
         let event = next(&mut connections)?;
         let mut changed = connections.refresh()?;
+        let previous = (scene.selected, scene.active);
         if event.state != input::RELEASE {
             let acted = match event.key {
                 input::LEFT | input::UP => {
@@ -34,16 +45,37 @@ pub fn run(_generation: u64) -> Result<(), Error> {
                     true
                 }
                 #[cfg(feature = "recovery-lab")]
-                input::F1 | input::F2 if event.state == input::PRESS => {
-                    connections.request(&[0xf0, u8::from(event.key == input::F1)])?;
+                input::F1 | input::F2 | input::F4 if event.state == input::PRESS => {
+                    connections.request(&[
+                        0xf0,
+                        match event.key {
+                            input::F1 => 1,
+                            input::F4 => 2,
+                            _ => 0,
+                        },
+                    ])?;
                     connections.refresh()?;
                     true
                 }
                 #[cfg(feature = "recovery-lab")]
                 input::F3 if event.state == input::PRESS => super::probes::fail(_generation),
+                #[cfg(feature = "recovery-lab")]
+                input::F5..=input::F8 if event.state == input::PRESS => {
+                    let phase = event.key - input::F5 + 1;
+                    let (reply, len) = connections.request(&[0xf1, phase])?;
+                    assert_eq!(&reply[..len], b"armed");
+                    let mut message = *b"Cathedral: storage armed=0\n";
+                    message[25] = b'0' + phase;
+                    write(&message)?;
+                    false
+                }
                 _ => false,
             };
             changed |= acted;
+        }
+        if previous != (scene.selected, scene.active) {
+            scene.saved =
+                super::storage::save(&mut connections, scene.saved, scene.selected, scene.active)?;
         }
         if changed {
             scene.draw(&mut connections)?;
@@ -98,9 +130,14 @@ impl Scene {
                         1 => b"LAST RECOVERY: DISPLAY",
                         2 => b"LAST RECOVERY: INPUT",
                         3 => b"LAST RECOVERY: APPLICATION",
+                        4 => b"LAST RECOVERY: STORAGE",
                         _ => b"LAST RECOVERY: NONE",
                     },
-                )
+                )?;
+                let mut storage = *b"STORAGE READY 00  SAVED 0000";
+                digits(&mut storage[14..16], status.storage);
+                digits(&mut storage[24..28], self.saved);
+                client.text(64, 696, 2, 0x59d9cc, &storage)
             });
             if result.is_ok() {
                 return self.report(connections.status);
@@ -120,11 +157,17 @@ impl Scene {
         digits(&mut health[21..23], status.input);
         digits(&mut health[24..26], status.application);
         health[32] = b'0' + status.last as u8;
-        write(&health)
+        write(&health)?;
+        let mut storage = *b"Cathedral: storage=00 saved=0000\n";
+        digits(&mut storage[19..21], status.storage);
+        digits(&mut storage[28..32], self.saved);
+        write(&storage)
     }
 }
 fn digits(bytes: &mut [u8], value: u64) {
-    let value = value.min(99) as u8;
-    bytes[0] = b'0' + value / 10;
-    bytes[1] = b'0' + value % 10;
+    let mut value = value.min(10u64.pow(bytes.len() as u32) - 1);
+    for byte in bytes.iter_mut().rev() {
+        *byte = b'0' + (value % 10) as u8;
+        value /= 10;
+    }
 }

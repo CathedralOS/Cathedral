@@ -13,6 +13,7 @@ pub(super) fn exercise(memory: &mut PreparedMemory, console: &mut SerialPort) {
     ] {
         let grants = [
             Supervision {
+                disk: false,
                 owner: 0,
                 peer: 0,
                 program: program(17, 0),
@@ -21,6 +22,7 @@ pub(super) fn exercise(memory: &mut PreparedMemory, console: &mut SerialPort) {
                 keyboard: false,
             },
             Supervision {
+                disk: false,
                 owner: 0,
                 peer: 0,
                 program: program(if keyboard { 20 } else { 17 }, 0),
@@ -70,33 +72,36 @@ pub(super) fn exercise(memory: &mut PreparedMemory, console: &mut SerialPort) {
         drop(reports);
         reclaimed(memory, baseline, heap);
     }
-    let duplicate = [true, true].map(|keyboard| Supervision {
-        owner: 0,
-        peer: 0,
-        program: program(20, 0),
-        frame_limit: usize::MAX,
-        framebuffer: None,
-        keyboard,
-    });
-    // SAFETY: No execution is expected: duplicate exclusive grants must fail preflight.
-    let rejected = unsafe {
-        users::run_configured(
-            &mut memory.frames,
-            &memory.layout,
-            memory.image,
-            &[program(19, 0)],
-            user_output,
-            Config {
-                links: &[],
-                frame_limit: usize::MAX,
-                endpoints: &[],
-                clock_readers: &[],
-                supervision: &duplicate,
-            },
-        )
-    };
-    assert!(matches!(rejected, Err(users::Error::InvalidEndpoints)));
-    drop(rejected);
-    reclaimed(memory, baseline, heap);
+    for disk in [false, true] {
+        let duplicate = [true, true].map(|keyboard| Supervision {
+            disk,
+            owner: 0,
+            peer: 0,
+            program: program(20, 0),
+            frame_limit: usize::MAX,
+            framebuffer: None,
+            keyboard: keyboard && !disk,
+        });
+        // SAFETY: No execution is expected: duplicate exclusive grants must fail preflight.
+        let rejected = unsafe {
+            users::run_configured(
+                &mut memory.frames,
+                &memory.layout,
+                memory.image,
+                &[program(19, 0)],
+                user_output,
+                Config {
+                    links: &[],
+                    frame_limit: usize::MAX,
+                    endpoints: &[],
+                    clock_readers: &[],
+                    supervision: &duplicate,
+                },
+            )
+        };
+        assert!(matches!(rejected, Err(users::Error::InvalidEndpoints)));
+        drop(rejected);
+        reclaimed(memory, baseline, heap);
+    }
     writeln!(console, "Cathedral Rust lab: multiple launch grants preserved sibling IPC across 16 restarts; failed admission and keyboard-wait cancellation reclaimed all memory").ok();
 }

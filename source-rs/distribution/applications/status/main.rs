@@ -4,6 +4,7 @@ mod connection;
 #[cfg(feature = "recovery-lab")]
 mod probes;
 mod scene;
+mod storage;
 use cathedral_user_runtime::write;
 cathedral_user_runtime::entry!(main);
 fn main(_: u64, generation: u64) -> u64 {

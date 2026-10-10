@@ -1,8 +1,10 @@
 //! x86-64 machine bring-up. Exports are selected by `arch/lib.rs`.
 
 mod context;
+mod disk;
 mod interrupts;
 mod keyboard;
+pub use disk::{disk_read, disk_transfer, disk_write};
 pub use keyboard::{keyboard_irq, keyboard_read, keyboard_write};
 mod memory;
 mod stacks;
