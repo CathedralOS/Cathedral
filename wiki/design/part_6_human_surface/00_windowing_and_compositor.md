@@ -19,6 +19,11 @@ The compositor is a privileged broker, not a shared bus. It mediates input, clip
 
 This chapter owns window management and its trust surface only. Permission-grant gestures (the file picker, share sheets, "open with") are authority-mint surfaces and live in [[human_permission_ux]]. Media decode, GPU, and the low-level display pipeline live in [[media_and_graphics]].
 
+The [rendering and composition proposal](../../proposals/0000_rendering_and_composition.md)
+owns the candidate scene/resource mechanism beneath this interface. It separates
+host authority and layout from pixel storage and final target execution. It does
+not change input, capture, protected-layer or distribution ownership rules.
+
 ## Layers and system prompts
 
 The compositor arranges surfaces in named layers rather than one flat stack: normal app windows, the chrome (panel, dock, status) above them, transient overlays such as notifications, and on top of everything the **system-prompt layer**: login, unlock, permission dialogs, secure text entry. This layer is the trusted path, the one part of the screen the OS draws itself. Nothing can draw over it, nothing can capture it, nothing can imitate it, and input directed at it goes straight to the OS without passing through any app stage. In the table below it is the "system prompts" row.
@@ -46,6 +51,12 @@ All of this is safe only because the security model never lived in the chrome. A
 Under the two-chrome model, drag-and-drop onto the desktop is chrome functionality rather than a separate drop-target role. The cross-app drop contract, where a drop delegates a capability to the dropped object by the same mint as the picker, keeps its home in [[human_permission_ux]].
 
 ## Recursive composition
+
+The [scene-submission proposal](../../proposals/0000_rendering_and_composition/scene_submission.md)
+explores forwarding authorized descriptions and resource references through this
+host chain. Receiving a frame and presenting upward need not require copying an
+image at each ancestor. Delegation and host interception for that route are not
+yet specified or implemented by the Rust rendering fixture.
 
 The compositor is a recursive interface any surface-holder can implement, rather than a single privileged process. Its operations are: mint child surfaces, receive their frames, route input down, and present the result upward. Any component that holds a surface and can spawn children can offer that interface to those children, so composition nests.
 

@@ -12,6 +12,11 @@ Every media facility is a capability-gated device-service boundary over a define
 
 The discipline is to say no early. Pick one GPU path, one decode path, and one audio graph for the initial target. Gate each behind a capability. Route everything through the driver model ([[driver_model]]) so the untrusted vendor blob is isolated rather than mapped into apps.
 
+The [rendering and composition proposal](../../proposals/0000_rendering_and_composition.md)
+develops the scene, resource and execution split beneath window management. Start
+there for retained drawing commands, image backing, leases, budgets and the
+software-to-GPU boundary. These remain candidate mechanisms, not a platform ABI.
+
 ## Why the GPU is the minimized concern
 
 GPUs are the least standardized hardware in the machine, which is why they sit at the edge of the design rather than the center. The pain has two separable sources, and only one of them is the OS's to solve.
@@ -27,6 +32,14 @@ The useful separation is between the display controller and the render engine. G
 Cathedral cannot prove the vendor's shader compiler, cannot make coarse hardware preemption schedule fairly, and cannot dissolve the opacity. A clean GPU answer is partly a hardware-control decision, targeting a documented or open GPU. That is a hardware-strategy question this design stays out of.
 
 ## Text and fonts
+
+The app-only rasterization position below conflicts with the optional platform
+glyph/path execution considered in the
+[rendering proposal](../../proposals/0000_rendering_and_composition/scene_submission.md#text-commands-and-legibility).
+The [owner question](../../../OWNER_QUESTIONS.md#platform-drawing-and-text-placement)
+records the placement and trust choice. Neither position is an accepted rendering
+contract. Text shaping, glyph rasterization and annotation access are separate
+responsibilities whichever placement is chosen.
 
 Text rendering, shaping, layout, and locale formatting are userspace libraries rather than OS services. Turning codepoints and a font into positioned glyphs, and glyphs into pixels, is pure computation with no capabilities and no I/O, so it belongs in a shared standard library that renders into the app's own surface. The OS owns only two thin touchpoints, both covered elsewhere. The compositor supplies DPI and scale and composites the finished surface without ever seeing a glyph ([[windowing_and_compositor]]). Input methods are a capability-held stage in the input pipeline.
 

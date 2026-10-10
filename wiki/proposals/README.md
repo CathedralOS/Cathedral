@@ -8,6 +8,11 @@ its status, affected specification owners, concrete requirement, proposed
 behavior, compatibility and trust consequences, viable alternatives, unresolved
 questions, and acceptance evidence.
 
+IDs are stable and are not reused after removal. The next available ID is
+`0001`. A substantial proposal may have a same-named companion directory. Its
+entry page maps the responsibilities; companion pages do not become independent
+contracts or competing sources of truth.
+
 Acceptance requires an owner decision. The accepting change updates
 the specification, machine-readable contracts, implementation work, and links
 that the decision affects. Once incorporated, remove the proposal; Git retains
@@ -19,4 +24,7 @@ semantic or trust choice blocking a concrete requirement belongs in
 
 ## Open proposals
 
-None.
+- [0000: Rendering, composition and resource custody](0000_rendering_and_composition.md)
+  separates retained scene submission, app-funded backing, read leases, resource
+  budgets and software/GPU presentation. Platform text placement, residency policy
+  and direct-write admission remain proposed.

@@ -27,6 +27,11 @@ The [specification index](spec/README.md) owns the coverage map, including subje
 
 Questions that need an owner-level semantic or trust decision go in [`OWNER_QUESTIONS.md`](../OWNER_QUESTIONS.md). Extraction work, implementation work, and deferred research do not.
 
+The active [rendering and composition proposal](proposals/0000_rendering_and_composition.md)
+is the entry point for retained drawing, Matrix nesting, resource backing and
+CPU/GPU presentation. Its evidence page distinguishes Rust experiments from
+candidate platform behavior and links conflicts with existing design chapters.
+
 ## How these docs are written
 
 Every page is written so that a reader who stops early still has the gist, and one who keeps going gets the detail.

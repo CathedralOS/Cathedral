@@ -4,6 +4,10 @@ This is a distribution-owned research fixture. It compares the cost of a drawing
 hierarchy separately from the authority needed to write its pixels. It does not
 choose Cathedral's production surface, compositor or component admission model.
 
+The [rendering and composition proposal](../../../../wiki/proposals/0000_rendering_and_composition.md)
+owns the candidate platform architecture informed by this fixture. This page
+remains the owner of measured costs, commands and implementation limitations.
+
 Start at [lib.rs](lib.rs) for the three shared pieces: [scene resolution](scene.rs),
 [row delegation](rows.rs) and [pixel operations](pixels.rs). The two execution paths
 are [bench.rs](bench.rs) for host measurements and [main.rs](main.rs) for guest role

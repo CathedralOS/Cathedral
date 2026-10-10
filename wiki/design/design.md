@@ -109,6 +109,11 @@ The writing rules for every page in this wiki, including these chapters, live in
 - [05 — Web Integration](part_6_human_surface/05_web_integration.md)
 - [06 — Audio](part_6_human_surface/06_audio.md)
 
+For the concrete scene/resource design beneath windowing and media, start at
+[Rendering, composition and resource custody](../proposals/0000_rendering_and_composition.md).
+It is a proposal with separate pages for submission, resource lifetime, execution
+and evidence. The chapters above remain the rationale owners.
+
 ### Part 7 — Observability & Governance
 - [00 — Observability & Introspection](part_7_governance/00_observability_and_introspection.md)
 - [01 — Audit, Compliance & Provenance](part_7_governance/01_audit_compliance_provenance.md)

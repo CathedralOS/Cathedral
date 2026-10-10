@@ -169,6 +169,73 @@ rows as distinct paths. Require an explicit admission and failure model before
 promising exact sub-page containment or leasing visible scanout to independent
 writers. This does not select owned surfaces or rule out verified direct leases.
 
+The [rendering proposal](wiki/proposals/0000_rendering_and_composition.md)
+keeps row borrows as a possible renderer implementation detail and evaluates
+bounded scene submission as a separate route. It does not grant direct target
+access to processes merely because Cathedral ships them.
+
+### Platform drawing and text placement
+
+**Requirement and tension.** A common renderer could execute bounded paths and
+glyph runs from nested Matrices without requiring each app or ancestor to create
+an intermediate image. The [media chapter](wiki/design/part_6_human_surface/02_media_and_graphics.md#text-and-fonts)
+instead places all text rasterization in app libraries and states that the
+compositor never sees a glyph. Its font-parser containment argument depends on
+that placement. This blocks choosing the production drawing boundary, not further
+measurement of either route.
+
+**Contracts checked.** The [specification index](wiki/spec/README.md) identifies
+compositor/seat and rendering contracts as unwritten.
+[Source contracts](source/contracts/CHARTER.md) contain no accepted glyph or scene
+protocol. The [Rust display contract](source-rs/contracts/display.rs) has fixed
+ASCII text, rectangle and sealed-pixel requests, all experimental. It does not
+establish general font parsing, shaping or retained glyph semantics.
+
+**Owner choice.** Keep the platform limited to completed images with all text/path
+rasterization in app libraries, or also offer bounded platform drawing commands.
+The latter lets the platform combine ordinary UI drawing but expands its rendering
+and validation responsibility. Shaping/layout can remain reusable library work in
+either choice. A trusted renderer parsing arbitrary font/image files has a larger
+trust boundary than one consuming prepared, validated resources.
+
+**Recommendation (unaccepted).** Evaluate optional platform drawing alongside
+completed-image presentation, as described in the
+[scene proposal](wiki/proposals/0000_rendering_and_composition/scene_submission.md).
+Keep resource preparation and final target writes separable. Specify which font
+and path interpretation enters the renderer's trust boundary before accepting
+that route. Glyph drawing must not implicitly grant accessibility or text capture.
+
+### Render-resource residency and sponsor liability
+
+**Requirement and tension.** Retained scenes should support large app-funded
+images without forcing every registered bitmap into compositor-owned storage.
+Asynchronous acquisition and derived caches need a rule for unavailable content
+and for storage that outlives the producing app. Without it, retained handles can
+either pin unbounded memory or promise content the renderer cannot supply.
+
+**Contracts checked.** Rendering, component and IPC subjects in the
+[specification index](wiki/spec/README.md) do not define this resource promise.
+The [scheduler design](wiki/design/part_2_components/01_scheduler_and_resources.md)
+requires bounded resource use, while the [Rust page contract](source-rs/contracts/memory.rs)
+only supplies fixed runtime page grants and pinned accepted readers. Neither
+settles production cache charges, sponsor lifetime or presentation under a miss.
+
+**Owner choice.** Does accepting a retained resource promise residency until
+explicit release, or can the platform evict/reacquire it with defined presentation
+fallback? Which account remains responsible for active leases and derived caches
+when the producer exits or its grant shrinks? Resident guarantees simplify redraw
+but require reserved budgets. Demand acquisition permits larger working sets but
+requires deadlines, visible failure behavior and a surviving sponsor or teardown.
+
+**Recommendation (unaccepted).** Separate registration from bounded residency and
+active-use guarantees. Charge backing to an identified app or Matrix sponsor,
+reserve consumer pin allowances, and account for derived caches separately.
+Keep those charges until the corresponding storage/use ends. Permit asynchronous
+acquisition with an explicit fallback policy; never retain visible content after
+its presentation authority ends just to hide a resource failure. The
+[resource proposal](wiki/proposals/0000_rendering_and_composition/resource_custody.md)
+develops this candidate model without assigning final ceilings or failure policy.
+
 ### Endpoint transport and revocation of pending IPC
 
 **Requirement and tension.** Isolated services need a transport and a defined

@@ -46,6 +46,7 @@ plus the active hardware frontier.
 | Realm and filesystem object semantics | `spec/storage/realms_and_objects.md` | [Filesystem as database](../design/part_4_storage/00_filesystem_as_database.md) | Not started |
 | Package closure and component manifest | `spec/packages/package_and_manifest.md` | [Package system](../design/part_5_lifecycle/00_package_system.md) | Not started |
 | Compositor and seat contract | `spec/human_surface/compositor_and_seat.md` | [Windowing and compositor](../design/part_6_human_surface/00_windowing_and_compositor.md) | Not started |
+| Rendering scenes, resource custody and presentation | `spec/human_surface/rendering.md` | [Media and graphics](../design/part_6_human_surface/02_media_and_graphics.md); [candidate proposal](../proposals/0000_rendering_and_composition.md) | Rust drawing/shared-page experiments only; retained scenes and GPU presentation absent |
 | Driver contract | `spec/devices/drivers.md` | [Driver model](../design/part_5_lifecycle/02_driver_model.md) | Hardware fact packages only |
 | Checker and installation admission | `spec/admission/checker.md` | [Kernel architecture](../design/part_5_lifecycle/04_kernel_architecture.md) | Partial Omega admission path |
 | x86-64 page-table, exception, interrupt, and timer bootstrap policy | `spec/architecture/x86_64_bootstrap.md` | [Hardware foundation profile](../design/part_0_foundations/03_hardware_foundation_profile.md) | Pure policy and validation helpers; installation remains absent |
