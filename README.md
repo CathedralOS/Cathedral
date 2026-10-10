@@ -101,6 +101,8 @@ can replace that directory. `foundation/` and unimplemented desktop/services
 directories appear with their first real code. See the
 [layout](wiki/architecture/repository_layout.md), [TCB](wiki/architecture/tcb.md)
 and [ADR 0002](wiki/decisions/0002-kernel-platform-distribution.md).
+The [discoverability guide](wiki/architecture/discoverability.md) maps executable
+entrances and the rules for keeping each level navigable.
 Run `python tools/source-layout/check.py` to check the implemented boundaries.
 
 ## Documentation

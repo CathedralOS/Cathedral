@@ -4,7 +4,7 @@
 use crate::heap::HEAP;
 use alloc::vec::Vec;
 use cathedral_arch as arch;
-use cathedral_core::tasks;
+use cathedral_core::kernel_tasks;
 use cathedral_uart_16550::SerialPort;
 use core::{
     fmt::Write,
@@ -25,9 +25,9 @@ pub fn exercise(memory: &mut crate::memory::PreparedMemory, console: &mut Serial
         }
         // SAFETY: Owned reclaiming allocator and mappings, IRQs masked, timer/IDT live.
         let stats = unsafe {
-            tasks::run(
+            kernel_tasks::run(
                 &mut memory.frames,
-                tasks::Config {
+                kernel_tasks::Config {
                     task_limit: 2,
                     preempt: false,
                     ..Default::default()
@@ -65,9 +65,9 @@ fn exercise_preemption(
     // SAFETY: The cooperative session returned both stack slots, removed its
     // callback and reclaimed contexts. Admission can map fresh backing in those slots.
     let stats = unsafe {
-        tasks::run(
+        kernel_tasks::run(
             &mut memory.frames,
-            tasks::Config {
+            kernel_tasks::Config {
                 task_limit: 2,
                 ..Default::default()
             },
@@ -142,17 +142,17 @@ fn worker(index: usize, delay: u64) {
     let canary = [0xa55a_1234_5678_4321u64; 16];
     for _ in 0..4 {
         PROGRESS[index].fetch_add(1, Ordering::Relaxed);
-        tasks::yield_now();
+        kernel_tasks::yield_now();
     }
     if index == 1 {
         // Task zero has just gone to sleep. Do observable work while it waits.
         for _ in 0..4 {
             PROGRESS[index].fetch_add(1, Ordering::Relaxed);
-            tasks::yield_now();
+            kernel_tasks::yield_now();
         }
     }
     let start = arch::ticks();
-    tasks::sleep(delay);
+    kernel_tasks::sleep(delay);
     assert!(arch::ticks().wrapping_sub(start) >= delay);
     assert_eq!(values[511], 511 ^ index as u64);
     assert_eq!(core::hint::black_box(canary), [0xa55a_1234_5678_4321; 16]);

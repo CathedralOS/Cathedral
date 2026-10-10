@@ -117,7 +117,8 @@ still supplies no containment or capability authority.
 
 Frozen cross-component ABI belongs in `contracts/`. Private protocols, manifests,
 proofs, migrations and tests stay with their owner. `foundation/` is reserved for
-small kernel-safe primitives without ambient authority. Keep entry files thin.
+small kernel-safe primitives without ambient authority. Entry files follow the [discoverability architecture](discoverability.md):
+show real orchestration at one level, with named routes into the next owners.
 
 Ports stay with their eventual owner, with `PORT.md`, mappings, tests and notices.
 Studied checkouts stay ignored under `reference_code/`; untypeable staged ports

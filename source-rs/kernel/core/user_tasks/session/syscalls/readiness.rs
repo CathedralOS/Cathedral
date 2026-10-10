@@ -1,9 +1,9 @@
 //! A bounded two-endpoint readiness wait. It never consumes a queued message.
-use super::{Session, dispatch};
+use super::{Session, complete};
 use crate::{deadline, scheduler::Event};
 use cathedral_contracts::user as abi;
 #[derive(Clone, Copy)]
-pub(super) struct Wait {
+pub(in super::super) struct Wait {
     pub handles: [u64; 2],
     pub deadline: u64,
 }
@@ -19,7 +19,7 @@ fn ready(session: &Session, slot: usize, wait: Wait, now: u64) -> Result<Option<
         Ok(None)
     }
 }
-pub(super) fn syscall(
+pub(in super::super) fn syscall(
     session: &mut Session,
     slot: usize,
     wait: Wait,
@@ -44,7 +44,7 @@ pub(super) fn syscall(
     *event = Event::Block;
     Ok(0)
 }
-pub(super) fn wake(session: &mut Session) {
+pub(in super::super) fn wake(session: &mut Session) {
     for slot in 0..session.tasks.len() {
         let Some(wait) = session.tasks[slot].notify else {
             continue;
@@ -55,7 +55,7 @@ pub(super) fn wake(session: &mut Session) {
             Err(error) => Err(error),
         };
         session.tasks[slot].notify = None;
-        dispatch::complete(session, slot, result);
+        complete(session, slot, result);
         session.scheduler.unblock(slot);
     }
 }

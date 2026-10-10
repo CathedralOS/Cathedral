@@ -1,8 +1,8 @@
 //! Boot-context admission/reaping and grant teardown. No restart policy here.
 use super::{
-    Error, Exit, Frames, Session, Supervision, admission, dispatch, next_epoch, taskcalls,
+    Error, Exit, Frames, Session, Supervision, admission, next_epoch, syscalls, taskcalls,
 };
-use crate::{scheduler::TaskState, users::Program};
+use crate::{scheduler::TaskState, user_tasks::Program};
 use cathedral_arch as arch;
 use cathedral_contracts::user as abi;
 
@@ -26,7 +26,7 @@ pub(super) fn close(session: &mut Session, slot: usize) {
     for launch in &mut session.launches {
         launch.model.close(slot);
     }
-    dispatch::wake_receivers(session);
+    syscalls::wake_receivers(session);
 }
 
 pub(super) unsafe fn reap(session: &mut Session, source: &mut Frames<'_>) {
@@ -82,7 +82,7 @@ pub(super) unsafe fn reap(session: &mut Session, source: &mut Frames<'_>) {
     taskcalls::wake(session, arch::ticks());
     for owner in 0..session.tasks.len() {
         if requesters & (1 << owner) != 0 {
-            dispatch::complete(session, owner, Ok(0));
+            syscalls::complete(session, owner, Ok(0));
             session.scheduler.unblock(owner);
         }
     }
@@ -141,7 +141,7 @@ pub(super) unsafe fn spawn(
         assert_eq!(source.frames.allocated(), baseline);
         session.launches[index].model.failed();
     }
-    dispatch::complete(session, owner, result);
+    syscalls::complete(session, owner, result);
     session.scheduler.unblock(owner);
 }
 

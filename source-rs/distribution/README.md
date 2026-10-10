@@ -1,0 +1,33 @@
+# Follow the running distribution
+
+Start at [init/main.rs](init/main.rs), then [session.rs](init/session.rs).
+The session starts and readies providers, launches the app, then enters
+[supervision](init/session/supervision.rs). Provider protocol details live under
+[providers](init/session/providers.rs); child cancellation, collection and spawn
+live in [child.rs](init/session/child.rs).
+
+[profile.json](profile.json) is the host's executable composition. The harness
+builds those packages and supplies their ELF artifacts to
+[kernel startup](../kernel/boot/uefi/startup.rs). The kernel sees supplied code
+and grants; the distribution gives those children their roles.
+
+| Role | Launch / task slot | Executable entrance | Protocol / implementation |
+| --- | --- | --- | --- |
+| Init | Initial / 0 | [init/main.rs](init/main.rs) | [App control](init/session/supervision/control.rs), [session protocol](libraries/session-protocol/lib.rs) |
+| Display | 0 / 1 | [display/main.rs](../platform/services/display/main.rs) | [Drawing contract](../contracts/display.rs), [surface](../platform/services/display/surface.rs) |
+| Input | 1 / 2 | [input/main.rs](../platform/services/input/main.rs) | [Event contract](../contracts/input.rs), [decoder](../platform/services/input/decoder.rs) |
+| Application | 2 / 3 | [status/main.rs](applications/status/main.rs) | [Application workflow](applications/status/application.rs) |
+| Storage | 3 / 4 | [storage/main.rs](../platform/services/storage/main.rs) | [Object contract](../contracts/storage.rs), [service](../platform/services/storage/service.rs), [store](../platform/libraries/object-store/lib.rs) |
+
+The app's [connections](applications/status/application/connection.rs) use a
+private init control pair plus three peer links, ordered display, input, storage.
+The corresponding names live in `session-protocol::launch` and `::link`; their
+indices must match the profile. Follow [input](applications/status/application/input.rs),
+[storage](applications/status/application/storage.rs) or
+[view](applications/status/application/view.rs) to see the app-side protocol use.
+The kernel's [IPC dispatcher](../kernel/core/user_tasks/session/syscalls.rs)
+transports these messages; the service implementations interpret them.
+
+`lab/` contains guest test executables selected by the profile's `user_programs`
+section for smoke runs. It is distinct from the ordinary `applications/` path.
+The minimal example profile also uses the lab's hello executable as its only task.

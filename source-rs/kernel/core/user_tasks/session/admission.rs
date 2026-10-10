@@ -1,7 +1,7 @@
 //! Address-space construction and task installation use separate stack frames.
 //! Slots are allocated before execution; live admission never grows the arena.
 use super::{Error, Frames, Report, Session, Task};
-use crate::users::{Executable, Program, elf};
+use crate::user_tasks::{Executable, Program, elf};
 use cathedral_arch::{self as arch, Context, UserSpace};
 
 pub(super) unsafe fn admit(
@@ -95,4 +95,31 @@ pub(super) fn reserve_slot(session: &mut Session) {
         keyboard_wait: false,
         keyboard_deadline: None,
     });
+}
+
+/// Admit the initial set atomically; retire every earlier task on failure.
+pub(super) unsafe fn initial(
+    session: &mut Session,
+    layout: &arch::BootLayout,
+    image: arch::ImageRange,
+    programs: &[Program<'_>],
+    source: &mut Frames<'_>,
+) -> Result<(), Error> {
+    for (slot, program) in programs.iter().enumerate() {
+        // Keep large address-space construction temporaries out of the session frame.
+        if let Err(error) =
+            // SAFETY: Serialized admission on kernel CR3; no user has started.
+            unsafe { admit(session, layout, image, program, source, slot) }
+        {
+            for task in session.tasks.iter_mut().filter(|task| task.space.is_some()) {
+                // SAFETY: Admission failed before publishing any context/root.
+                unsafe {
+                    retire(task, source);
+                }
+            }
+            assert_eq!(source.frames.allocated(), session.frame_baseline);
+            return Err(error);
+        }
+    }
+    Ok(())
 }

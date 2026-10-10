@@ -1,5 +1,5 @@
 //! Position-independent, embedded ring-3 workload for bring-up. This is not a
-//! loader or application SDK; the three syscall numbers follow core/users/syscall.
+//! loader or application SDK; the three syscall numbers follow core/user_tasks/syscall.
 use core::arch::global_asm;
 global_asm!(include_str!("probe.S"), code = const super::memory::USER_CODE,
     data = const super::memory::USER_DATA, stack = const super::memory::USER_STACK);

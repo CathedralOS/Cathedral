@@ -1,5 +1,5 @@
 //! Test-only fault requests and verification of the surviving sibling's identity.
-use super::service::Service;
+use super::child::Service;
 use cathedral_contracts::user as abi;
 use cathedral_user_runtime::{Error, write};
 

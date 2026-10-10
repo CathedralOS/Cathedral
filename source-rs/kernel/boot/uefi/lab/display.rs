@@ -4,7 +4,7 @@ use crate::{diagnostics::user_output, heap::HEAP, memory::PreparedMemory};
 use cathedral_contracts::display::USER_ADDRESS;
 use cathedral_core::{
     ipc::EndpointSpec,
-    users::{self, Config, Executable, Exit, Program, Supervision},
+    user_tasks::{self, Config, Executable, Exit, Program, Supervision},
 };
 use cathedral_uart_16550::SerialPort;
 use core::fmt::Write;
@@ -45,7 +45,7 @@ pub fn exercise(memory: &mut PreparedMemory, console: &mut SerialPort) {
     // SAFETY: Sole CPU, owned images/entry paths, IRQs off. Firmware relinquished
     // the reserved display aperture; only the supervised service may map it.
     let reports = unsafe {
-        users::run_configured(
+        user_tasks::run_configured(
             &mut memory.frames,
             &memory.layout,
             memory.image,

@@ -48,3 +48,17 @@ impl Status {
         })
     }
 }
+
+/// Launch order in distribution/profile.json. Kernel sees only indices and grants.
+pub mod launch {
+    pub const DISPLAY: u64 = 0;
+    pub const INPUT: u64 = 1;
+    pub const APPLICATION: u64 = 2;
+    pub const STORAGE: u64 = 3;
+}
+/// App-relative link order in distribution/profile.json: display, input, storage.
+pub mod link {
+    pub const DISPLAY: u64 = 0;
+    pub const INPUT: u64 = 1;
+    pub const STORAGE: u64 = 2;
+}

@@ -33,7 +33,7 @@ pub(super) fn exercise(memory: &mut PreparedMemory, console: &mut SerialPort) {
         ];
         // SAFETY: Sole boot CPU, IRQs off, valid image and exclusive device grant.
         let reports = unsafe {
-            users::run_configured(
+            user_tasks::run_configured(
                 &mut memory.frames,
                 &memory.layout,
                 memory.image,
@@ -84,7 +84,7 @@ pub(super) fn exercise(memory: &mut PreparedMemory, console: &mut SerialPort) {
         });
         // SAFETY: No execution is expected: duplicate exclusive grants must fail preflight.
         let rejected = unsafe {
-            users::run_configured(
+            user_tasks::run_configured(
                 &mut memory.frames,
                 &memory.layout,
                 memory.image,
@@ -99,7 +99,7 @@ pub(super) fn exercise(memory: &mut PreparedMemory, console: &mut SerialPort) {
                 },
             )
         };
-        assert!(matches!(rejected, Err(users::Error::InvalidEndpoints)));
+        assert!(matches!(rejected, Err(user_tasks::Error::InvalidEndpoints)));
         drop(rejected);
         reclaimed(memory, baseline, heap);
     }

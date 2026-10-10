@@ -15,6 +15,12 @@ This whole-screen demonstration is not trusted system chrome, a surface-isolated
 application API or a desktop shell. The app owns the three-byte schema; platform owns the storage format.
 
 Only `recovery-lab` includes F1/F2/F4 provider-fault requests to init, F3
-crash/hang/backpressure probes, F5?F8 write-boundary pauses,
+crash/hang/backpressure probes, F5-F8 write-boundary pauses,
 and probes proving that device and task-control calls are denied. Normal builds
 cannot request provider replacement through the init protocol.
+
+Start at `main.rs`, then `application.rs`: restore, receive, update, save, render.
+The `application/` children own connections, input, state/schema, persistence and
+view. Rendering reports completed frames through `view/report.rs`; optional
+failure probes stay in `application/lab.rs`. The
+[composition map](../../README.md) identifies the other executable entrances.

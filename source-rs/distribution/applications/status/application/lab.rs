@@ -100,3 +100,40 @@ pub fn fail(generation: u64) -> ! {
         }
     }
 }
+
+/// Test keys are kept out of the ordinary event/state update path.
+pub(super) fn handle(
+    event: cathedral_contracts::input::Event,
+    generation: u64,
+    connections: &mut Connections,
+) -> Result<bool, Error> {
+    use cathedral_contracts::input;
+    if event.state != input::PRESS {
+        return Ok(false);
+    }
+    match event.key {
+        input::F1 | input::F2 | input::F4 => {
+            connections.request(&[
+                0xf0,
+                match event.key {
+                    input::F1 => 1,
+                    input::F4 => 2,
+                    _ => 0,
+                },
+            ])?;
+            connections.refresh()?;
+            Ok(true)
+        }
+        input::F3 => fail(generation),
+        input::F5..=input::F8 => {
+            let phase = event.key - input::F5 + 1;
+            let (reply, len) = connections.request(&[0xf1, phase])?;
+            assert_eq!(&reply[..len], b"armed");
+            let mut message = *b"Cathedral: storage armed=0\n";
+            message[25] = b'0' + phase;
+            write(&message)?;
+            Ok(false)
+        }
+        _ => Ok(false),
+    }
+}

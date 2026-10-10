@@ -5,18 +5,18 @@ mod applications;
 mod display;
 #[cfg(feature = "bundled-user")]
 mod ipc;
+mod kernel_tasks;
 #[cfg(feature = "bundled-user")]
 mod supervision;
 mod task_lifecycle;
-mod tasks;
-mod users;
+mod user_tasks;
 #[cfg(feature = "bundled-user")]
 mod watchdog;
 
 pub fn run(boot: &mut crate::handoff::BootState) {
-    tasks::exercise(&mut boot.memory, &mut boot.console);
+    kernel_tasks::exercise(&mut boot.memory, &mut boot.console);
     task_lifecycle::exercise(&mut boot.memory, &mut boot.console);
-    users::exercise(&mut boot.memory, &mut boot.console);
+    user_tasks::exercise(&mut boot.memory, &mut boot.console);
     #[cfg(feature = "bundled-user")]
     {
         applications::exercise(&mut boot.memory, &mut boot.console);

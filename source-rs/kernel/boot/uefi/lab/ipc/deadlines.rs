@@ -7,7 +7,7 @@ pub(super) fn exercise(memory: &mut PreparedMemory, console: &mut SerialPort) {
     for revoke in [0, 1] {
         // SAFETY: Boot-owned executables and endpoints; initialized memory/entry paths.
         let reports = unsafe {
-            users::run_configured(
+            user_tasks::run_configured(
                 &mut memory.frames,
                 &memory.layout,
                 memory.image,
@@ -48,7 +48,7 @@ pub(super) fn exercise(memory: &mut PreparedMemory, console: &mut SerialPort) {
     reclaimed(memory, baseline, heap);
     // SAFETY: Same boot-owned session; two independently readable incoming endpoints.
     let reports = unsafe {
-        users::run_configured(
+        user_tasks::run_configured(
             &mut memory.frames,
             &memory.layout,
             memory.image,

@@ -6,7 +6,7 @@
   "startup": {
     "initial": {
       "package": "cathedral-hello",
-      "entry": "distribution/programs/hello/main.rs",
+      "entry": "distribution/lab/hello/main.rs",
       "target": "x86_64-unknown-none"
     }
   }

@@ -1,6 +1,8 @@
 #![no_std]
 #![no_main]
 //! Physical-key provider: exclusive raw bytes in, normalized events over IPC out.
+//! Receives contracts/input.rs requests; controller.rs initializes the device,
+//! decoder.rs interprets bytes, and serve below coordinates request delivery.
 mod controller;
 #[cfg(feature = "recovery-lab")]
 mod recovery;

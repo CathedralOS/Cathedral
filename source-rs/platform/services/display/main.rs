@@ -1,6 +1,7 @@
 #![no_std]
 #![no_main]
 //! Linear GOP display provider. Test fault injection is supplied only by boot.
+//! Receives contracts/display.rs packets; surface.rs owns rendering and mapping.
 #[cfg(feature = "lab")]
 mod probes;
 #[cfg(feature = "recovery-lab")]

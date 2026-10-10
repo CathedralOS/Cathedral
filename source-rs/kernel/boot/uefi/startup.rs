@@ -1,7 +1,9 @@
+//! Host-selected ELF handoff. The stock executable/IPC route is documented in
+//! source-rs/distribution/README.md and selected by distribution/profile.json.
 //! Admit a supplied initial program and its bounded launch authority.
 //! Executable selection and resource requests come from host composition.
 use crate::{diagnostics::user_output, memory::PreparedMemory};
-use cathedral_core::users::{self, Config, Executable, Program, Supervision};
+use cathedral_core::user_tasks::{self, Config, Executable, Program, Supervision};
 use cathedral_uart_16550::SerialPort;
 use core::fmt::Write;
 
@@ -60,7 +62,7 @@ pub fn run(memory: &mut PreparedMemory, console: &mut SerialPort) {
     // SAFETY: Sole boot CPU, IRQs off, owned image and entry paths; allocator is
     // reclaiming. Optional device aperture is reserved and held exclusively.
     let result = unsafe {
-        users::run_configured(
+        user_tasks::run_configured(
             &mut memory.frames,
             &memory.layout,
             memory.image,

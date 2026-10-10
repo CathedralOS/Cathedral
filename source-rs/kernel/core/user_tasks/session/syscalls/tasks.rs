@@ -1,18 +1,18 @@
 //! Task syscalls only validate/enqueue work; spawn and reclamation use boot context.
-use super::{Session, dispatch};
+use super::{Session, complete};
 use crate::deadline;
 use crate::scheduler::Event;
 use cathedral_contracts::user as abi;
 
 #[derive(Clone, Copy)]
-pub(super) struct Wait {
+pub(in super::super) struct Wait {
     launch: usize,
     ticket: u64,
     address: u64,
     deadline: Option<u64>,
 }
 
-pub(super) fn dispatch(
+pub(in super::super) fn dispatch(
     session: &mut Session,
     slot: usize,
     call: (u64, u64, u64, u64),
@@ -162,7 +162,7 @@ fn finish_wait(session: &mut Session, slot: usize, wait: Wait, now: u64) -> Resu
     model.consume();
     Ok(true)
 }
-pub(super) fn wake(session: &mut Session, now: u64) {
+pub(in super::super) fn wake(session: &mut Session, now: u64) {
     for slot in 0..session.tasks.len() {
         let Some(wait) = session.tasks[slot].wait else {
             continue;
@@ -173,7 +173,7 @@ pub(super) fn wake(session: &mut Session, now: u64) {
             Err(error) => Err(error),
         };
         session.tasks[slot].wait = None;
-        dispatch::complete(session, slot, result);
+        complete(session, slot, result);
         session.scheduler.unblock(slot);
     }
 }

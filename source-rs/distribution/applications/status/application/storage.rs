@@ -1,10 +1,11 @@
+//! Storage data client: contracts/storage.rs -> platform/services/storage/main.rs -> service.rs.
 //! Reconcile ambiguous completion by reading the private object before retrying.
 use super::connection::Connections;
 use cathedral_contracts::{storage as wire, user as abi};
 use cathedral_user_runtime::{Error, time};
 
 fn exchange(c: &mut Connections, request: &[u8; 64]) -> Result<wire::Record, Error> {
-    let (send, receive) = c.pair(2)?;
+    let (send, receive) = c.pair(cathedral_session_protocol::link::STORAGE)?;
     send.send(request)?;
     let mut bytes = [0; 64];
     let len = receive.receive_until(&mut bytes, time::after(150)?)?;

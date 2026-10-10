@@ -8,8 +8,10 @@ requests. It replaces failed providers independently, reports their generations
 to the application, and replaces an exited or unresponsive application without
 restarting its providers. Scene state and drawing live in `applications/status`.
 
-Main orchestrates startup through `supervisor`; `service` owns one child's
-lifetime and accepted control connection. Exhausted provider retries end init
+Main enters `session.rs`, which starts ready providers and the application,
+then enters `session/supervision.rs`. Each provider's health protocol lives under
+`session/providers/`; `session/child.rs` owns one child's lifetime and accepted
+control connection. The [composition map](../README.md) names the executable peers. Exhausted provider retries end init
 and reclaim its children. Normal builds have no fault injection. `recovery-lab`
 adds explicit test requests and asserts that unrelated task identities survive.
 

@@ -1,10 +1,16 @@
 //! Experimental hardware-contained tasks. Not Cathedral's frozen component ABI.
 //! CPU mappings/entry live in arch; syscall policy and task lifetime live here.
+//! Start at [`run_configured`]: session.rs exposes validation, preparation,
+//! admission and execution. Configuration and returned outcomes have separate owners.
 
+mod configuration;
 pub mod elf;
-mod runtime;
+mod outcomes;
+mod session;
 pub mod syscall;
-pub use runtime::{Config, Exit, Report, Supervision, run, run_configured};
+pub use configuration::{Config, Supervision};
+pub use outcomes::{Exit, Report};
+pub use session::{run, run_configured};
 
 #[derive(Clone, Copy)]
 pub enum Executable<'a> {

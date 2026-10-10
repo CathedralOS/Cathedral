@@ -1,7 +1,7 @@
 //! Run independently compiled distribution code through the same user runtime.
 use crate::{diagnostics::user_output, heap::HEAP, memory::PreparedMemory};
 use cathedral_arch as arch;
-use cathedral_core::users::{self, Executable, Exit, Program};
+use cathedral_core::user_tasks::{self, Executable, Exit, Program};
 use cathedral_uart_16550::SerialPort;
 use core::fmt::Write;
 
@@ -20,7 +20,7 @@ pub fn exercise(memory: &mut PreparedMemory, console: &mut SerialPort) {
         });
         // SAFETY: Sole CPU, IRQs off, initialized entry paths and owned memory.
         let reports = unsafe {
-            users::run(
+            user_tasks::run(
                 &mut memory.frames,
                 &memory.layout,
                 memory.image,
@@ -59,7 +59,7 @@ pub fn exercise(memory: &mut PreparedMemory, console: &mut SerialPort) {
     ];
     // SAFETY: Admission remains serialized; neither program may run on failure.
     let rejected = unsafe {
-        users::run(
+        user_tasks::run(
             &mut memory.frames,
             &memory.layout,
             memory.image,
@@ -70,7 +70,9 @@ pub fn exercise(memory: &mut PreparedMemory, console: &mut SerialPort) {
     };
     assert!(matches!(
         rejected,
-        Err(users::Error::Executable(users::elf::Error::Header))
+        Err(user_tasks::Error::Executable(
+            user_tasks::elf::Error::Header
+        ))
     ));
     assert_eq!(memory.frames.allocated(), frames);
     // SAFETY: Failed admission has returned all allocations.
@@ -82,7 +84,7 @@ pub fn exercise(memory: &mut PreparedMemory, console: &mut SerialPort) {
         });
         // SAFETY: Boot context owns mapper and inventory, with IRQs masked.
         let rejected = unsafe {
-            users::run(
+            user_tasks::run(
                 &mut memory.frames,
                 &memory.layout,
                 memory.image,
@@ -93,7 +95,7 @@ pub fn exercise(memory: &mut PreparedMemory, console: &mut SerialPort) {
         };
         assert!(matches!(
             rejected,
-            Err(users::Error::Memory(arch::MemoryError::OutOfFrames))
+            Err(user_tasks::Error::Memory(arch::MemoryError::OutOfFrames))
         ));
         assert_eq!(memory.frames.allocated(), frames);
         // SAFETY: Failed admission has returned all allocations.

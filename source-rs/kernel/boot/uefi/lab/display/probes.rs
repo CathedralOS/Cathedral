@@ -33,10 +33,14 @@ pub(super) fn exercise(memory: &mut PreparedMemory, console: &mut SerialPort) {
     }
     writeln!(console, "Cathedral Rust lab: framebuffer NX guards and checked copies passed; {count} admission failure boundaries reclaimed all task memory").ok();
 }
-fn run(memory: &mut PreparedMemory, role: u64, budget: usize) -> alloc::vec::Vec<users::Report> {
+fn run(
+    memory: &mut PreparedMemory,
+    role: u64,
+    budget: usize,
+) -> alloc::vec::Vec<user_tasks::Report> {
     // SAFETY: Sole boot CPU, IRQs off, reserved exclusive device and owned images.
     unsafe {
-        users::run_configured(
+        user_tasks::run_configured(
             &mut memory.frames,
             &memory.layout,
             memory.image,

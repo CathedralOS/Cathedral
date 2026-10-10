@@ -7,17 +7,17 @@
   "user_programs": {
     "hello": {
       "package": "cathedral-hello",
-      "entry": "distribution/programs/hello/main.rs",
+      "entry": "distribution/lab/hello/main.rs",
       "target": "x86_64-unknown-none"
     },
     "ipc": {
       "package": "cathedral-ipc-lab",
-      "entry": "distribution/programs/ipc/main.rs",
+      "entry": "distribution/lab/ipc/main.rs",
       "target": "x86_64-unknown-none"
     },
     "supervision": {
       "package": "cathedral-supervision-lab",
-      "entry": "distribution/programs/supervision/main.rs",
+      "entry": "distribution/lab/supervision/main.rs",
       "target": "x86_64-unknown-none"
     },
     "display_service": {
@@ -30,7 +30,7 @@
     },
     "display_lab": {
       "package": "cathedral-display-lab",
-      "entry": "distribution/programs/display/main.rs",
+      "entry": "distribution/lab/display/main.rs",
       "target": "x86_64-unknown-none"
     }
   },

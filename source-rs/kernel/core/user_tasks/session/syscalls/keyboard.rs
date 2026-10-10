@@ -1,5 +1,5 @@
 //! Device authority and bounded raw-byte delivery. No key decoding or UI policy.
-use super::{Session, dispatch};
+use super::{Session, complete};
 use crate::scheduler::Event;
 use cathedral_arch as arch;
 use cathedral_contracts::user as abi;
@@ -11,7 +11,7 @@ fn owner(session: &Session) -> Option<usize> {
         .find(|launch| launch.keyboard)
         .map(|launch| launch.model.child)
 }
-pub(super) fn syscall(
+pub(in super::super) fn syscall(
     session: &mut Session,
     slot: usize,
     call: (u64, u64, u64),
@@ -63,7 +63,7 @@ pub(super) fn syscall(
     *event = Event::Block;
     Ok(0)
 }
-pub(super) fn poll(session: &mut Session, now: u64) {
+pub(in super::super) fn poll(session: &mut Session, now: u64) {
     let Some(slot) = owner(session) else {
         return;
     };
@@ -96,11 +96,11 @@ pub(super) fn poll(session: &mut Session, now: u64) {
         };
         session.tasks[slot].keyboard_wait = false;
         session.tasks[slot].keyboard_deadline = None;
-        dispatch::complete(session, slot, result);
+        complete(session, slot, result);
         session.scheduler.unblock(slot);
     }
 }
-pub(super) fn reset(session: &mut Session) {
+pub(in super::super) fn reset(session: &mut Session) {
     session.keyboard.reset();
     for _ in 0..64 {
         // SAFETY: Grant incarnation is retiring or not yet runnable; discard old bytes.

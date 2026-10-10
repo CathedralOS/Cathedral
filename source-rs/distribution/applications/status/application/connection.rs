@@ -1,3 +1,5 @@
+//! Init status client: distribution/init/session/supervision/control.rs.
+//! Peer indices follow distribution/profile.json and session-protocol::link.
 //! Connections and observed health; no provider lifecycle authority lives here.
 use cathedral_contracts::user as abi;
 use cathedral_session_protocol as session;
@@ -47,9 +49,9 @@ impl Connections {
     }
     pub fn pair(&mut self, index: u64) -> Result<(Handle, Handle), Error> {
         if let Some(pair) = match index {
-            0 => self.display,
-            1 => self.input,
-            2 => self.storage,
+            session::link::DISPLAY => self.display,
+            session::link::INPUT => self.input,
+            session::link::STORAGE => self.storage,
             _ => return Err(Error(abi::DENIED as i64)),
         } {
             return Ok(pair);
@@ -57,9 +59,9 @@ impl Connections {
         for _ in 0..3 {
             match Link::at(index)?.connect() {
                 Ok(pair) => {
-                    if index == 0 {
+                    if index == session::link::DISPLAY {
                         self.display = Some(pair);
-                    } else if index == 1 {
+                    } else if index == session::link::INPUT {
                         self.input = Some(pair);
                     } else {
                         self.storage = Some(pair);

@@ -1,7 +1,7 @@
 //! Exclusive fixed-controller transport. No block addressing or storage policy.
 use super::Session;
 use cathedral_contracts::user as abi;
-pub(super) fn syscall(
+pub(in super::super) fn syscall(
     session: &mut Session,
     slot: usize,
     call: (u64, u64, u64, u64),

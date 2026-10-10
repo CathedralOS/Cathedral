@@ -1,7 +1,7 @@
 //! Boot-level experiments: ring transitions, bad requests, isolation and cleanup.
 use crate::{diagnostics::user_output, heap::HEAP, memory::PreparedMemory};
 use cathedral_arch as arch;
-use cathedral_core::users::{self, Executable, Exit, Program};
+use cathedral_core::user_tasks::{self, Executable, Exit, Program};
 use cathedral_uart_16550::SerialPort;
 use core::fmt::Write;
 
@@ -30,7 +30,7 @@ pub fn exercise(memory: &mut PreparedMemory, console: &mut SerialPort) {
         // SAFETY: Initialized single-CPU machine, owned frame inventory and layout,
         // IRQs off; output does not allocate, suspend or retain the supplied slice.
         let reports = unsafe {
-            users::run(
+            user_tasks::run(
                 &mut memory.frames,
                 &memory.layout,
                 memory.image,
@@ -100,7 +100,7 @@ pub fn exercise(memory: &mut PreparedMemory, console: &mut SerialPort) {
         ];
         // SAFETY: Exclusive boot context; failures must leave no published context.
         let result = unsafe {
-            users::run(
+            user_tasks::run(
                 &mut memory.frames,
                 &memory.layout,
                 memory.image,
@@ -111,7 +111,7 @@ pub fn exercise(memory: &mut PreparedMemory, console: &mut SerialPort) {
         };
         assert!(matches!(
             result,
-            Err(users::Error::Memory(arch::MemoryError::OutOfFrames))
+            Err(user_tasks::Error::Memory(arch::MemoryError::OutOfFrames))
         ));
         assert_eq!(memory.frames.allocated(), frames);
         // SAFETY: Failed admission has returned all heap allocations.

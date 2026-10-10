@@ -15,7 +15,7 @@ pub(super) fn exercise(memory: &mut PreparedMemory, console: &mut SerialPort) {
     let links = [1, 2, 4].map(|service| cathedral_core::link::LinkSpec { client: 3, service });
     // SAFETY: Boot-owned ELF, fixed endpoint graph and initialized memory/entry paths.
     let reports = unsafe {
-        users::run_configured(
+        user_tasks::run_configured(
             &mut memory.frames,
             &memory.layout,
             memory.image,

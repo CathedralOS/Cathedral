@@ -3,7 +3,7 @@ use crate::{diagnostics::user_output, heap::HEAP, memory::PreparedMemory};
 use cathedral_contracts::user as abi;
 use cathedral_core::{
     ipc::EndpointSpec,
-    users::{self, Config, Executable, Exit, Program, Supervision},
+    user_tasks::{self, Config, Executable, Exit, Program, Supervision},
 };
 use cathedral_uart_16550::SerialPort;
 use core::fmt::Write;
@@ -123,10 +123,10 @@ fn run(
     endpoints: &[EndpointSpec],
     child: Program<'_>,
     budget: usize,
-) -> alloc::vec::Vec<users::Report> {
+) -> alloc::vec::Vec<user_tasks::Report> {
     // SAFETY: Sole CPU, IRQs off, boot-owned executable bytes and initialized entry paths.
     unsafe {
-        users::run_configured(
+        user_tasks::run_configured(
             &mut memory.frames,
             &memory.layout,
             memory.image,

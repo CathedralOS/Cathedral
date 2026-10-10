@@ -1,6 +1,31 @@
 [workspace]
 resolver = "3"
-members = ["platform/drivers/ata-pio", "platform/libraries/object-store", "platform/services/storage", "kernel/arch", "kernel/boot/uefi", "contracts", "kernel/core", "platform/drivers/uart_16550", "platform/libraries/user-runtime", "distribution/programs/hello", "distribution/programs/ipc", "distribution/programs/supervision", "platform/services/display", "distribution/programs/display", "distribution/init", "distribution/libraries/boot-scene", "platform/services/input", "platform/libraries/bitmap-font", "distribution/applications/status", "distribution/libraries/session-protocol"]
+members = [
+    # Contracts
+    "contracts",
+    # Kernel
+    "kernel/arch",
+    "kernel/boot/uefi",
+    "kernel/core",
+    # Platform
+    "platform/drivers/ata-pio",
+    "platform/drivers/uart_16550",
+    "platform/libraries/bitmap-font",
+    "platform/libraries/object-store",
+    "platform/libraries/user-runtime",
+    "platform/services/display",
+    "platform/services/input",
+    "platform/services/storage",
+    # Distribution
+    "distribution/applications/status",
+    "distribution/init",
+    "distribution/lab/display",
+    "distribution/lab/hello",
+    "distribution/lab/ipc",
+    "distribution/lab/supervision",
+    "distribution/libraries/boot-scene",
+    "distribution/libraries/session-protocol",
+]
 default-members = ["platform/libraries/object-store", "contracts", "kernel/core", "platform/services/input", "platform/libraries/bitmap-font"]
 
 [workspace.package]

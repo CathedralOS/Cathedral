@@ -3,7 +3,7 @@
 use crate::{heap::HEAP, memory::PreparedMemory};
 use alloc::vec::Vec;
 use cathedral_arch as arch;
-use cathedral_core::tasks::{self, Config, SpawnError};
+use cathedral_core::kernel_tasks::{self, Config, SpawnError};
 use cathedral_uart_16550::SerialPort;
 use core::{
     fmt::Write,
@@ -30,7 +30,8 @@ pub fn exercise(memory: &mut PreparedMemory, console: &mut SerialPort) {
             ..Default::default()
         };
         // SAFETY: Boot context owns allocator and mappings with IRQs masked.
-        let error = unsafe { tasks::run(&mut memory.frames, config, &[never_run]) }.unwrap_err();
+        let error =
+            unsafe { kernel_tasks::run(&mut memory.frames, config, &[never_run]) }.unwrap_err();
         assert_eq!(error, SpawnError::OutOfFrames);
         assert_eq!(memory.frames.allocated(), frames);
         // SAFETY: Failed admission returned after complete teardown.
@@ -40,7 +41,7 @@ pub fn exercise(memory: &mut PreparedMemory, console: &mut SerialPort) {
     assert_eq!(
         // SAFETY: Serialized boot context; neither task runs before admission completes.
         unsafe {
-            tasks::run(
+            kernel_tasks::run(
                 &mut memory.frames,
                 Config {
                     frame_limit: 19,
@@ -66,7 +67,7 @@ pub fn exercise(memory: &mut PreparedMemory, console: &mut SerialPort) {
     reset();
     // SAFETY: Owned mappings/allocator, boot context with interrupts masked.
     let stats = unsafe {
-        tasks::run(
+        kernel_tasks::run(
             &mut memory.frames,
             Config {
                 task_limit: 4,
@@ -88,7 +89,7 @@ pub fn exercise(memory: &mut PreparedMemory, console: &mut SerialPort) {
         reset();
         // SAFETY: Owned mappings and reclaiming allocator, sole CPU, IRQs masked.
         let stats = unsafe {
-            tasks::run(
+            kernel_tasks::run(
                 &mut memory.frames,
                 Config {
                     task_limit: 4,
@@ -128,17 +129,17 @@ fn reset() {
 
 fn frame_failure() {
     while !PEER_READY.load(Ordering::Acquire) {
-        tasks::yield_now();
+        kernel_tasks::yield_now();
     }
-    let frames = tasks::allocated_frames();
+    let frames = kernel_tasks::allocated_frames();
     // SAFETY: Heap usage is sampled through its interrupt-masked lock.
     let heap = unsafe { HEAP.used() };
     for _ in 0..4 {
         let progress = PEER_PROGRESS.load(Ordering::Acquire);
-        assert_eq!(tasks::spawn(never_run), Err(SpawnError::OutOfFrames));
-        tasks::sleep(1);
+        assert_eq!(kernel_tasks::spawn(never_run), Err(SpawnError::OutOfFrames));
+        kernel_tasks::sleep(1);
         assert!(PEER_PROGRESS.load(Ordering::Acquire) > progress);
-        assert_eq!(tasks::allocated_frames(), frames);
+        assert_eq!(kernel_tasks::allocated_frames(), frames);
         // SAFETY: Peer allocations are stable, failed admission has rolled back.
         assert_eq!(unsafe { HEAP.used() }, heap);
     }
@@ -149,7 +150,7 @@ fn heap_failure() {
     use core::alloc::{GlobalAlloc, Layout};
     let layout = Layout::from_size_align(128, 16).unwrap();
     let mut blocks = [core::ptr::null_mut(); 512];
-    let frames = tasks::allocated_frames();
+    let frames = kernel_tasks::allocated_frames();
     // SAFETY: Keep each successful allocation uniquely owned and free using the
     // same layout. Context switches allocate nothing; the peer's data is stable.
     unsafe {
@@ -163,8 +164,8 @@ fn heap_failure() {
             blocks.last().unwrap().is_null(),
             "heap exhaustion probe too small"
         );
-        assert_eq!(tasks::spawn(never_run), Err(SpawnError::OutOfHeap));
-        assert_eq!(tasks::allocated_frames(), frames);
+        assert_eq!(kernel_tasks::spawn(never_run), Err(SpawnError::OutOfHeap));
+        assert_eq!(kernel_tasks::allocated_frames(), frames);
         for block in blocks {
             if !block.is_null() {
                 HEAP.dealloc(block, layout);
@@ -190,10 +191,10 @@ fn survivor() {
 
 fn controller() {
     while !PEER_READY.load(Ordering::Acquire) {
-        tasks::yield_now();
+        kernel_tasks::yield_now();
     }
-    let self_id = tasks::current_id();
-    let frames = tasks::allocated_frames();
+    let self_id = kernel_tasks::current_id();
+    let frames = kernel_tasks::allocated_frames();
     // SAFETY: Heap reports usage under its IRQ-masked allocator lock.
     let heap = unsafe { HEAP.used() };
     heap_failure();
@@ -203,22 +204,22 @@ fn controller() {
     for _ in 0..ROUNDS {
         let before = PEER_PROGRESS.load(Ordering::Acquire);
         RELEASE.store(false, Ordering::Release);
-        let first = tasks::spawn(child).unwrap();
-        let second = tasks::spawn(child).unwrap();
-        assert_eq!(tasks::spawn(never_run), Err(SpawnError::TaskLimit));
-        assert!(tasks::is_alive(first) && tasks::is_alive(second));
+        let first = kernel_tasks::spawn(child).unwrap();
+        let second = kernel_tasks::spawn(child).unwrap();
+        assert_eq!(kernel_tasks::spawn(never_run), Err(SpawnError::TaskLimit));
+        assert!(kernel_tasks::is_alive(first) && kernel_tasks::is_alive(second));
         if let Some(old) = previous {
             assert_ne!(first, old);
-            assert!(!tasks::is_alive(old));
+            assert!(!kernel_tasks::is_alive(old));
         }
-        tasks::sleep(2);
+        kernel_tasks::sleep(2);
         assert!(PEER_PROGRESS.load(Ordering::Acquire) > before);
         RELEASE.store(true, Ordering::Release);
-        while tasks::is_alive(first) || tasks::is_alive(second) {
-            tasks::yield_now();
+        while kernel_tasks::is_alive(first) || kernel_tasks::is_alive(second) {
+            kernel_tasks::yield_now();
         }
-        assert_eq!(tasks::current_id(), self_id);
-        assert_eq!(tasks::allocated_frames(), frames);
+        assert_eq!(kernel_tasks::current_id(), self_id);
+        assert_eq!(kernel_tasks::allocated_frames(), frames);
         // SAFETY: Survivor's allocation is stable; children have returned and reaped.
         assert_eq!(unsafe { HEAP.used() }, heap);
         previous = Some(first);
@@ -227,12 +228,12 @@ fn controller() {
 }
 
 fn child() {
-    let stack = tasks::current_stack();
+    let stack = kernel_tasks::current_stack();
     assert!((stack.bottom..stack.top).contains(&arch::stack_pointer()));
     let values: Vec<u64> = (0..256).map(|value| value ^ stack.bottom).collect();
     let canary = [0x9e37_79b9_7f4a_7c15u64; 16];
     while !RELEASE.load(Ordering::Acquire) {
-        tasks::sleep(1);
+        kernel_tasks::sleep(1);
     }
     assert_eq!(values[255], 255 ^ stack.bottom);
     assert_eq!(core::hint::black_box(canary), [0x9e37_79b9_7f4a_7c15; 16]);
