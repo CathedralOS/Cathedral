@@ -1,6 +1,7 @@
 """Actual guest reboot/power cuts; cache-loss and torn sectors also have host tests."""
 import shutil
 import capture
+import storage_migration
 
 
 def run(command, output, timeout, creationflags):
@@ -82,3 +83,5 @@ def run(command, output, timeout, creationflags):
     boot_with(acknowledged_cut)
     boot_with(check)
     print("PASS: all write boundaries, lost acknowledgement, continued writes and acknowledged durability")
+
+    storage_migration.run(boot_with, output)

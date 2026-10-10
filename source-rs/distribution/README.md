@@ -1,7 +1,7 @@
 # Follow the running distribution
 
 Start at [init/main.rs](init/main.rs), then [session.rs](init/session.rs).
-The session starts and readies providers, launches the app, then enters
+The session starts and readies providers, launches counter and status, then enters
 [supervision](init/session/supervision.rs). Provider protocol details live under
 [providers](init/session/providers.rs); child cancellation, collection and spawn
 live in [child.rs](init/session/child.rs).
@@ -17,6 +17,7 @@ and grants; the distribution gives those children their roles.
 | Display | 0 / 1 | [display/main.rs](../platform/services/display/main.rs) | [Drawing contract](../contracts/display.rs), [surface](../platform/services/display/surface.rs) |
 | Input | 1 / 2 | [input/main.rs](../platform/services/input/main.rs) | [Event contract](../contracts/input.rs), [decoder](../platform/services/input/decoder.rs) |
 | Application | 2 / 3 | [status/main.rs](applications/status/main.rs) | [Application workflow](applications/status/application.rs) |
+| Counter | 4 / 5 | [counter/main.rs](applications/counter/main.rs) | [Private counter workflow](applications/counter/session.rs) |
 | Storage | 3 / 4 | [storage/main.rs](../platform/services/storage/main.rs) | [Object contract](../contracts/storage.rs), [service](../platform/services/storage/service.rs), [store](../platform/libraries/object-store/lib.rs) |
 
 The app's [connections](applications/status/application/connection.rs) use a
@@ -31,3 +32,10 @@ transports these messages; the service implementations interpret them.
 `lab/` contains guest test executables selected by the profile's `user_programs`
 section for smoke runs. It is distinct from the ordinary `applications/` path.
 The minimal example profile also uses the lab's hello executable as its only task.
+
+Storage accepts status on its first data link (root 0) and counter on its second
+(root 1). Counter has only that one data link. These are fixed persistent root
+bindings for this profile; reordering storage links on an existing disk is
+unsupported. [The catalog service](../platform/services/storage/CHARTER.md)
+explains the authority and transaction boundaries. Init checks counter through
+[counter supervision](init/session/counter.rs), independently of the status app.

@@ -18,6 +18,7 @@ members = [
     "platform/services/storage",
     # Distribution
     "distribution/applications/status",
+    "distribution/applications/counter",
     "distribution/init",
     "distribution/lab/display",
     "distribution/lab/hello",

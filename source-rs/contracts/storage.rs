@@ -1,7 +1,22 @@
-//! One boot-granted private object. Object numbers are relative to this connection.
+//! Experimental private catalogs. Object numbers are relative to the accepted connection.
+//! Generations cover the entire root. Staging is bounded and bound to one connection incarnation.
 use crate::user as abi;
 pub const READ: u64 = 1;
 pub const REPLACE: u64 = 2;
+pub const LIST: u64 = 3;
+pub const CREATE: u64 = 4;
+pub const DELETE: u64 = 5;
+pub const BEGIN: u64 = 6;
+pub const STAGE_CREATE: u64 = 7;
+pub const STAGE_REPLACE: u64 = 8;
+pub const STAGE_DELETE: u64 = 9;
+pub const COMMIT: u64 = 10;
+pub const ABORT: u64 = 11;
+pub const ROOTS: usize = 2;
+pub const OBJECTS: usize = 4;
+pub const CHANGES: usize = 2;
+pub const NOT_FOUND: u64 = (-2i64) as u64;
+pub const EXISTS: u64 = (-17i64) as u64;
 pub const OBJECT: u64 = 1;
 pub const HEALTH: &[u8] = b"health";
 pub const CAPACITY: usize = 32;

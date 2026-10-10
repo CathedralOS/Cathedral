@@ -41,9 +41,12 @@ fn storage(connections: &mut Connections) -> Result<(), Error> {
     let before = super::storage::load(connections)?;
     let (send, receive) = connections.pair(2)?;
     for (request, error) in [
-        (wire::request(wire::READ, 2, 0, &[]).unwrap(), abi::DENIED),
         (
-            wire::request(wire::REPLACE, 2, before.generation, b"intruder").unwrap(),
+            wire::request(wire::READ, u64::MAX, 0, &[]).unwrap(),
+            abi::DENIED,
+        ),
+        (
+            wire::request(wire::REPLACE, u64::MAX, before.generation, b"intruder").unwrap(),
             abi::DENIED,
         ),
         (

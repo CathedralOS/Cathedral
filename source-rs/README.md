@@ -749,44 +749,60 @@ readiness tests cover denied clock/rights, non-consuming observations, first-rea
 precedence, closure and an all-blocked timeout. Existing tests retain deadline
 copyout, late replies, raw keyboard grants, sibling queues and admission rollback.
 
-## Private persistent-object experiment
+## Private catalog and transaction experiment
 
 Ordinary boots create/reuse `build/boot-harness-rs/storage.raw`, a dedicated
-4 MiB raw image. It is never reset by ordinary boots or tests. The ESP remains
-separate. Screenshot, input and recovery modes use their own disposable
-`test-storage.raw`; `--storage-test` resets its test image once, then reuses it
-across twelve QEMU boots. Removing the ordinary image while QEMU is stopped
-starts a fresh lab store; existing nonblank invalid media fails closed.
+4 MiB image, separate from the ESP. Ordinary boots and tests never reset that
+image. Screenshot, input and recovery modes use disposable `test-storage.raw`
+images. `--storage-test` runs twelve boots over one test image for durability,
+then resets only that disposable image for two legacy-conversion boots.
 
-The app writes a versioned three-byte record (schema 1, selection, toggle bits)
-before displaying each change. The storage line shows provider generation and
-saved object generation. App replacement reloads it; provider replacement
-reconnects without restarting the app. An ambiguous reply causes a read and
-expected-generation reconciliation, so a committed toggle is not applied twice.
-The app owns interpretation and UI; the platform owns the storage engine;
-the kernel only enforces exclusive controller access and checked PIO copies.
+The status app has a private root with separate selection and toggle records.
+Every edit commits both with matching root revision tags before drawing. The
+APPLICATION panel lists saved records; the bottom line reports the root revision.
+App replacement reloads both records; provider replacement reconnects without
+restarting the app. Lost replies are reconciled by reading both committed records.
+Existing single-object scene data remains readable and converts on the next edit.
+Do not reopen a converted image with an older binary.
 
-The object store alternates two body/commit pairs with flushes before publishing
-success. See its [format and limits](platform/libraries/object-store/CHARTER.md),
-the [service protocol](platform/services/storage/CHARTER.md) and the
-[PIO driver](platform/drivers/ata-pio/CHARTER.md). This is one private 32-byte
-object, not the production filesystem database, realms or a query engine.
+A second isolated app, [counter](distribution/applications/counter/main.rs),
+maintains a durable boot counter and mirror in its own root using the same object
+numbers. Init checks it and replaces it independently. The platform service binds
+roots to accepted link positions, never to client-supplied root IDs. The static
+profile order is part of this lab's persistent ownership binding and must not be
+reordered on an existing disk. The kernel enforces endpoints and device access;
+the platform owns catalogs/transactions; apps own schemas and UI.
 
-`--storage-test` checks a normal reboot, then kills QEMU before body write,
-after body flush, after commit write and after commit flush but before reply.
-Each reboot must show a complete permitted old/new record with the matching
-generation. It also kills QEMU after acknowledged updates and verifies their
-durability. Serial logs and screenshots for each boot are retained alongside
-the test image. Host tests additionally drop volatile caches and model every
-byte-prefix tear at each write/flush failure. QEMU process termination alone
-does not simulate losing the host's page cache or certify physical power safety.
+The bounded engine supports two roots, four 32-byte objects per root, create,
+read, replace, delete, enumeration, and atomic transactions of up to two distinct
+objects. Root revisions detect stale writes, including delete/recreate. Pending
+changes belong to a connection incarnation and disappear on replacement. The
+service rotates control and data channels; a full client reply queue cannot block
+another client. There is no dynamic realm admission, pathname tree, content
+addressing, allocation engine, query language or cross-kernel transaction yet.
 
-F5 through F8 arm those four pause points only in recovery/storage test builds;
-the next state change reaches the selected point. The recovery test lets init
-replace the phase-four wedged service and checks lost-reply reconciliation.
-All injection handlers are absent from ordinary builds. Initialization of a
-blank disk must first establish a durable empty root; interruption during that
-initial format can fail closed and currently has no repair tool.
+See the [engine and format](platform/libraries/object-store/CHARTER.md),
+[service protocol](platform/services/storage/CHARTER.md),
+[composition map](distribution/README.md) and [PIO driver](platform/drivers/ata-pio/CHARTER.md).
+The engine alternates whole-catalog body/commit pairs, flushing each before
+acknowledgement. Unknown nonblank media fails closed; interrupted initial format
+can still require manual recovery and has no repair tool.
+
+`--recovery-test` and `--storage-test` enable second-client probes for catalog
+bounds, stale/guessed IDs, queue backpressure and client exit with staged changes.
+The replacement verifies that staging was discarded. The visible app continues
+to test independent provider recovery and lost-reply reconciliation.
+
+`--storage-test` kills QEMU before body write, after body flush, after commit write
+and after commit flush before reply. Reboot must recover a complete permitted
+old/new pair of app records. It also checks acknowledged durability and legacy
+conversion. Per-boot serial logs/screenshots are retained. Host tests additionally
+tear every write and failed flush at every byte prefix, including conversion,
+while checking the untouched root. This models guest power loss; it does not
+certify physical host power safety or simulate loss of the host page cache.
+
+F5 through F8 arm those four pause points only in recovery/storage builds.
+All fault injection and hostile-client probes are absent from ordinary builds.
 
 ## Next bring-up steps
 

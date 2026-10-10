@@ -61,6 +61,12 @@ def run(qemu_command, output, timeout, creationflags, input_test=False, recovery
                     if any(marker in text for marker in ("ring3 private memory", "fault contained mode=", "display service faulted and restarted")):
                         raise RuntimeError("Ordinary boot unexpectedly ran lab exercises")
                     print(f"Userspace scene ready after {time.monotonic() - (deadline - timeout):.2f}s from QMP connection", flush=True)
+                    if recovery_test or exercise is not None:
+                        for marker in ("two-root catalog bounds isolation and backpressure passed",
+                                       "counter replacement discarded staged changes",
+                                       "counter recovered; status app and providers preserved"):
+                            if marker not in text:
+                                raise RuntimeError(f"Catalog exercise missing: {marker}")
                     if exercise is not None:
                         exercise(stream, output, serial, process, timeout)
                     else:
@@ -80,7 +86,7 @@ def run(qemu_command, output, timeout, creationflags, input_test=False, recovery
                 process.wait(timeout=5)
 
 
-def validate(output, selected=0, active=0, health=(0, 0, 0), last=0, storage=0, saved=0):
+def validate(output, selected=0, active=0, health=(0, 0, 0), last=0, storage=0, saved=0, legacy=False):
     with (output / "display.ppm").open("rb") as source:
         if source.readline() != b"P6\n":
             raise RuntimeError("Unexpected screenshot format")
@@ -118,6 +124,14 @@ def validate(output, selected=0, active=0, health=(0, 0, 0), last=0, storage=0, 
     label(64, 96, "CATHEDRAL / STATUS", "e8edf4")
     for x, title in ((80, "DISPLAY"), (400, "INPUT"), (720, "APPLICATION")):
         label(x, 184, title, "101827")
+    label(720, 232, "SAVED RECORDS", "101827")
+    if legacy:
+        label(720, 272, "1 SCENE (LEGACY)", "101827")
+    elif saved:
+        label(720, 272, f"1 SELECTION {selected}", "101827")
+        label(720, 304, f"2 TOGGLES   {active}", "101827")
+    else:
+        label(720, 272, "1 EMPTY", "101827")
     label(64, 592, "ARROWS SELECT / ENTER TOGGLE", "e8edf4")
     label(64, 632, f"DISPLAY READY {health[0]:02}  INPUT READY {health[1]:02}  APP {health[2]:02}", "59d9cc")
     label(64, 664, "LAST RECOVERY: " + ("NONE", "DISPLAY", "INPUT", "APPLICATION", "STORAGE")[last], "e8edf4")
@@ -135,9 +149,9 @@ def validate(output, selected=0, active=0, health=(0, 0, 0), last=0, storage=0, 
     print(f"PASS: all {width * height} scanout pixels match the startup scene; screenshot: {destination}")
 
 
-def snapshot(stream, output, selected=0, active=0, health=(0, 0, 0), last=0, storage=0, saved=0):
+def snapshot(stream, output, selected=0, active=0, health=(0, 0, 0), last=0, storage=0, saved=0, legacy=False):
     command(stream, "screendump", {"filename": str(output / "display.ppm")})
-    validate(output, selected, active, health, last, storage, saved)
+    validate(output, selected, active, health, last, storage, saved, legacy)
 
 
 def exercise_input(stream, output, serial, process, timeout):
@@ -159,7 +173,7 @@ def exercise_input(stream, output, serial, process, timeout):
             if process.poll() is not None or time.monotonic() >= deadline or "startup failed" in text:
                 raise RuntimeError(f"Input {key} did not produce {marker}; logs: {output}; new log: {text}")
             time.sleep(0.02)
-        if " recovered" in text or " restarted" in text:
+        if " recovered" in text or " restarted" in text or "Cathedral: counter recovered" in text:
             raise RuntimeError(f"Healthy input caused a restart: {text}")
         snapshot(stream, output, selected, active, saved=saved)
     print("PASS: real keyboard events, navigation and toggles in the separate application")
@@ -235,7 +249,7 @@ def exercise_recovery(stream, output, serial, process, timeout):
                 last = index + 1
             text = wait_log(serial, process, offset, markers() + [f"Cathedral: {service} recovered",
                            "Cathedral: recovered with sibling and application identities preserved"], timeout)
-            if any(f"Cathedral: {other} recovered" in text for other in ("input", "display", "storage") if other != service) or " restarted" in text:
+            if any(f"Cathedral: {other} recovered" in text for other in ("input", "display", "storage") if other != service) or " restarted" in text or "Cathedral: counter recovered" in text:
                 raise RuntimeError(f"Recovery unexpectedly restarted another task: {text}")
             check()
             navigate("right")

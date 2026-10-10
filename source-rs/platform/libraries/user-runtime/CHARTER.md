@@ -24,6 +24,11 @@ loader restrictions and the remaining admission-policy boundary.
 `link` accepts boot-approved client/service connections without task-control
 rights. Each incarnation requires explicit acceptance; peer replacement retires
 old endpoint tickets. `ipc::wait_two` checks both receive grants, waits without
-consuming data, and requires a clock grant. `server` combines one private control
-pair and an optional client link, prioritizes ready control traffic, and reconnects
-a replaced client. It contains no provider names, device access or restart policy.
+consuming data, and requires a clock grant. `server` combines a private control
+pair with up to two client links, rotates ready channels fairly, and reconnects
+replaced clients. Accepted link positions and endpoint incarnations accompany
+requests; message contents cannot select these identities. Control-only services
+need no clock. Multi-channel idle waits check the third channel within one tick.
+Full data reply queues do not block control or other clients. `storage` supplies
+synchronous catalog exchanges, with one outstanding request and no automatic
+mutation retry. Caller code owns reconciliation and application schemas.

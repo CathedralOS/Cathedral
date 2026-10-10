@@ -55,6 +55,7 @@ pub mod launch {
     pub const INPUT: u64 = 1;
     pub const APPLICATION: u64 = 2;
     pub const STORAGE: u64 = 3;
+    pub const COUNTER: u64 = 4;
 }
 /// App-relative link order in distribution/profile.json: display, input, storage.
 pub mod link {

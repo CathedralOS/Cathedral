@@ -69,6 +69,12 @@
         "target": "x86_64-unknown-none",
         "clock": true,
         "disk": true
+      },
+      {
+        "package": "cathedral-counter",
+        "entry": "distribution/applications/counter/main.rs",
+        "target": "x86_64-unknown-none",
+        "clock": true
       }
     ],
     "links": [
@@ -82,6 +88,10 @@
       ],
       [
         3,
+        4
+      ],
+      [
+        5,
         4
       ]
     ]

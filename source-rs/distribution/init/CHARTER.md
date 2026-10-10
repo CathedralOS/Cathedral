@@ -17,3 +17,7 @@ adds explicit test requests and asserts that unrelated task identities survive.
 
 This is bounded lab policy, not a production service manager or trusted recovery
 path. A fork can replace init and its profile, including using no platform services.
+
+The session also starts the independent counter app. `session/counter.rs` checks
+its private storage-backed health and replaces only that child on failure. The
+stock composition has five children (display, input, status, storage, counter).

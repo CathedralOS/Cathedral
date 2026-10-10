@@ -8,7 +8,11 @@ use super::{
 use cathedral_contracts::user as abi;
 use cathedral_session_protocol as session;
 use cathedral_user_runtime::{Error, time, write};
-pub(super) fn run(providers: Providers, mut app: Service) -> Result<(), Error> {
+pub(super) fn run(
+    providers: Providers,
+    mut app: Service,
+    mut counter: Service,
+) -> Result<(), Error> {
     let Providers {
         mut display,
         mut input,
@@ -29,6 +33,7 @@ pub(super) fn run(providers: Providers, mut app: Service) -> Result<(), Error> {
         if providers::storage::ensure_ready(&mut storage)? {
             last = 4;
         }
+        super::counter::ensure_ready(&mut counter)?;
         #[cfg(feature = "recovery-lab")]
         probes.verify(&display, &input, &storage, &app)?;
         if app.stopped()? {

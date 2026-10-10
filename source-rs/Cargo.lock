@@ -67,6 +67,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "cathedral-counter"
+version = "0.0.0"
+dependencies = [
+ "cathedral-contracts",
+ "cathedral-user-runtime",
+]
+
+[[package]]
 name = "cathedral-display-lab"
 version = "0.0.0"
 dependencies = [

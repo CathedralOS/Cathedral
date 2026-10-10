@@ -6,6 +6,7 @@ pub(super) struct State {
     pub selected: u8,
     pub active: u8,
     pub saved: u64,
+    pub records: u8,
 }
 impl State {
     pub fn restore(record: Record) -> Result<Self, Error> {
@@ -15,6 +16,7 @@ impl State {
                 selected: *selected,
                 active: *active,
                 saved: record.generation,
+                records: 0,
             }),
             _ => Err(Error(abi::IO_ERROR as i64)),
         }

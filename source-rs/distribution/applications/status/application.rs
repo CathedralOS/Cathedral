@@ -17,6 +17,7 @@ pub fn run(_generation: u64) -> Result<(), Error> {
     #[cfg(feature = "recovery-lab")]
     lab::authority(&mut connections)?;
     let mut state = State::restore(storage::load(&mut connections)?)?;
+    state.records = storage::catalog(&mut connections)?;
     view::render(&state, &mut connections)?;
     connections.request(session::READY)?;
     loop {
@@ -28,6 +29,7 @@ pub fn run(_generation: u64) -> Result<(), Error> {
         if changed {
             state.saved =
                 storage::save(&mut connections, state.saved, state.selected, state.active)?;
+            state.records = storage::catalog(&mut connections)?;
         }
         if changed || redraw {
             view::render(&state, &mut connections)?;
