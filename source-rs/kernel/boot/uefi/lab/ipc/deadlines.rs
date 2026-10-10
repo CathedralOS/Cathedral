@@ -14,6 +14,7 @@ pub(super) fn exercise(memory: &mut PreparedMemory, console: &mut SerialPort) {
                 &[program(9, revoke), program(10, revoke)],
                 user_output,
                 Config {
+                    links: &[],
                     frame_limit: usize::MAX,
                     supervision: &[],
                     clock_readers: &[0],
@@ -43,6 +44,39 @@ pub(super) fn exercise(memory: &mut PreparedMemory, console: &mut SerialPort) {
             .iter()
             .all(|report| report.exit == Some(Exit::Returned(0)))
     );
+    drop(reports);
+    reclaimed(memory, baseline, heap);
+    // SAFETY: Same boot-owned session; two independently readable incoming endpoints.
+    let reports = unsafe {
+        users::run_configured(
+            &mut memory.frames,
+            &memory.layout,
+            memory.image,
+            &[program(12, 0), program(13, 0)],
+            user_output,
+            Config {
+                links: &[],
+                frame_limit: usize::MAX,
+                supervision: &[],
+                clock_readers: &[0],
+                endpoints: &[
+                    endpoint(1, 0, None),
+                    endpoint(1, 0, None),
+                    endpoint(1, 0, None),
+                    endpoint(0, 1, None),
+                ],
+            },
+        )
+    }
+    .unwrap();
+    assert!(
+        reports
+            .iter()
+            .all(|report| report.exit == Some(Exit::Returned(0)))
+    );
+    assert_eq!(reports[0].wait_timeouts, 1);
+    assert!(reports[0].readiness_blocked >= 1);
+    assert_eq!(reports[0].ipc_received, 5);
     drop(reports);
     reclaimed(memory, baseline, heap);
     writeln!(console, "Cathedral Rust lab: IPC deadlines woke idle sessions; checked copies, late replies, terminal precedence and denied clock access passed").ok();

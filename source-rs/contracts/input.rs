@@ -1,6 +1,8 @@
 //! Experimental physical-key events. Text, layout, focus and shortcuts are not
 //! part of this transport. NEXT yields one event or IDLE; RESET clears held-key state.
 pub const NEXT: [u8; 1] = [1];
+pub const HEALTH: [u8; 1] = [2];
+pub const F3: u8 = 9;
 pub const RESET: u8 = 0;
 pub const UP: u8 = 1;
 pub const DOWN: u8 = 2;
@@ -40,7 +42,7 @@ impl Event {
         match bytes {
             [RESET, RELEASE] => Some(Self::reset()),
             [IDLE, RELEASE] => Some(Self::idle()),
-            [key @ UP..=F2, state @ RELEASE..=REPEAT] => Some(Self {
+            [key @ (UP..=F2 | F3), state @ RELEASE..=REPEAT] => Some(Self {
                 key: *key,
                 state: *state,
             }),
@@ -54,7 +56,7 @@ mod tests {
     use super::*;
     #[test]
     fn wire_rejects_unknown_keys_states_and_lengths() {
-        for key in UP..=F2 {
+        for key in (UP..=F2).chain([F3]) {
             for state in RELEASE..=REPEAT {
                 let event = Event { key, state };
                 assert_eq!(Event::decode(&event.encode()), Some(event));

@@ -49,7 +49,10 @@ not the already accepted folder split.
 to the unwritten `spec/human_surface/compositor_and_seat.md`. Neither the
 [Omega distribution profile](source/distribution/profile.json) nor the
 [Rust profile](source-rs/distribution/profile.json) defines a shell or recovery
-interface; both currently select only early boot.
+interface. The Rust profile now composes init, display/input providers and a
+separate status application, but its whole-screen drawing and automatic restart
+experiment provides no protected prompt, trusted indicator or operator escape
+surface. It does not resolve this owner choice.
 
 **Owner choice.** Must the platform retain a complete fallback desktop, or only
 a minimal trusted interaction and recovery surface? A complete fallback would

@@ -43,6 +43,7 @@ fn run(memory: &mut PreparedMemory, role: u64, budget: usize) -> alloc::vec::Vec
             &[program(role), program(6)],
             user_output,
             Config {
+                links: &[],
                 frame_limit: usize::MAX,
                 endpoints: &[EndpointSpec {
                     sender: 0,

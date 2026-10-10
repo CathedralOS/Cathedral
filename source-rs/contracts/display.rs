@@ -8,7 +8,59 @@ pub const BGR: u64 = 1;
 pub const INFO: u64 = 0;
 pub const CLEAR: u64 = 1;
 pub const RECT: u64 = 2;
+pub const TEXT: u64 = 3;
+pub const TEXT_BYTES: usize = 64;
+/// Header: TEXT, x, y, scale, color, byte count; then at most 16 printable ASCII bytes.
+pub fn encode_text(
+    x: u64,
+    y: u64,
+    scale: u64,
+    color: u64,
+    text: &[u8],
+) -> Option<[u8; TEXT_BYTES]> {
+    if text.is_empty() || text.len() > 16 || !text.iter().all(|byte| (32..=126).contains(byte)) {
+        return None;
+    }
+    let mut bytes = [0; TEXT_BYTES];
+    bytes[..48].copy_from_slice(&encode([TEXT, x, y, scale, color, text.len() as u64]));
+    bytes[48..48 + text.len()].copy_from_slice(text);
+    Some(bytes)
+}
 pub const REQUEST_BYTES: usize = 48;
+
+/// Fully checked text geometry; providers must validate before any device write.
+pub struct Text<'a> {
+    pub x: u64,
+    pub y: u64,
+    pub scale: u64,
+    pub color: u64,
+    pub bytes: &'a [u8],
+}
+pub fn decode_text(bytes: &[u8], width: u64, height: u64) -> Option<Text<'_>> {
+    if bytes.len() != TEXT_BYTES {
+        return None;
+    }
+    let [op, x, y, scale, color, length] = decode(&bytes[..48])?;
+    if op != TEXT
+        || !(1..=4).contains(&scale)
+        || !(1..=16).contains(&length)
+        || color > 0xffffff
+        || !valid_rect(width, height, x, y, length * 6 * scale, 7 * scale)
+    {
+        return None;
+    }
+    let bytes = &bytes[48..48 + length as usize];
+    if !bytes.iter().all(|byte| (32..=126).contains(byte)) {
+        return None;
+    }
+    Some(Text {
+        x,
+        y,
+        scale,
+        color,
+        bytes,
+    })
+}
 
 #[derive(Clone, Copy, Debug)]
 pub struct Framebuffer {
@@ -86,6 +138,35 @@ pub fn pixel(format: u64, rgb: u64) -> u32 {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn text_validates_the_entire_packet_before_rendering() {
+        let good = encode_text(1000, 740, 4, 0xffffff, b"A").unwrap();
+        assert!(decode_text(&good, 1024, 768).is_some());
+        assert!(decode_text(&good[..63], 1024, 768).is_none());
+        for (field, value) in [
+            (0, INFO),
+            (1, 1001),
+            (2, 741),
+            (1, u64::MAX),
+            (3, 0),
+            (3, 5),
+            (3, u64::MAX),
+            (4, 0x1000000),
+            (5, 0),
+            (5, 17),
+            (5, u64::MAX),
+        ] {
+            let mut bad = good;
+            bad[field * 8..field * 8 + 8].copy_from_slice(&value.to_le_bytes());
+            assert!(decode_text(&bad, 1024, 768).is_none());
+        }
+        let mut bad = good;
+        bad[48] = 127;
+        assert!(decode_text(&bad, 1024, 768).is_none());
+        for text in [&b""[..], &b"01234567890123456x"[..], &b"\n"[..]] {
+            assert!(encode_text(0, 0, 1, 0, text).is_none());
+        }
+    }
     fn screen() -> Framebuffer {
         Framebuffer {
             physical: 0xc000_0000,

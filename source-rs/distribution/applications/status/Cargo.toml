@@ -1,0 +1,20 @@
+[package]
+name = "cathedral-status"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+[[bin]]
+name = "cathedral-status"
+path = "main.rs"
+test = false
+bench = false
+[dependencies]
+cathedral-session-protocol.workspace = true
+cathedral-boot-scene.workspace = true
+cathedral-user-runtime.workspace = true
+cathedral-contracts.workspace = true
+[features]
+recovery-lab = []
+[lints]
+workspace = true

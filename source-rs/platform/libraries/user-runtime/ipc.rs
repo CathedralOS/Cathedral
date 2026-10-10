@@ -73,6 +73,17 @@ impl Handle {
 // Alignment equals size, and 64 divides a page: the buffer cannot straddle one.
 #[repr(align(64))]
 struct Buffer([u8; abi::MAX_MESSAGE]);
+/// Wait without consuming data; result 0/1 selects the ready receiver. A peer
+/// close is readiness so receive can report its terminal status. Requires clock.
+pub fn wait_two(first: Handle, second: Handle, deadline: u64) -> Result<usize, Error> {
+    result(arch::call3(
+        abi::IPC_WAIT_TWO,
+        first.raw(),
+        second.raw(),
+        deadline,
+    ))
+    .map(|index| index as usize)
+}
 fn result(value: u64) -> Result<u64, Error> {
     if (value as i64) < 0 {
         Err(Error(value as i64))

@@ -11,6 +11,7 @@ pub mod extent;
 #[allow(unsafe_code)]
 pub mod heap;
 pub mod ipc;
+pub mod link;
 pub mod scheduler;
 pub mod supervision;
 #[allow(unsafe_code)]

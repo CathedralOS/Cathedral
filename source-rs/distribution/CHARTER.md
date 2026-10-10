@@ -14,6 +14,8 @@ The profile also selects the independent `platform/services/display` executable;
 composition chooses that provider without moving its implementation into the distro.
 
 `init` is the ordinary initial userspace executable. It receives bounded grants,
-launches the profile-selected provider, draws the shared `libraries/boot-scene`
-scene and owns restart decisions. Healthy tasks stay alive. `user_programs` in
-the profile selects smoke fixtures; `startup` selects ordinary composition.
+launches independent display/input providers and `applications/status`, and owns
+restart decisions. The application draws through `libraries/boot-scene`, owns
+navigation/toggle state and reconnects after provider replacement. Init and the
+providers survive application failure. `user_programs` in the profile selects
+smoke fixtures; `startup` selects ordinary composition and peer links.

@@ -20,3 +20,10 @@ wait; callers choose how to handle remote requests and late replies.
 The calling convention and fixed image layout remain experiments, not frozen
 Cathedral interfaces. See the [lab guide](../../../README.md) for build commands,
 loader restrictions and the remaining admission-policy boundary.
+
+`link` accepts boot-approved client/service connections without task-control
+rights. Each incarnation requires explicit acceptance; peer replacement retires
+old endpoint tickets. `ipc::wait_two` checks both receive grants, waits without
+consuming data, and requires a clock grant. `server` combines one private control
+pair and an optional client link, prioritizes ready control traffic, and reconnects
+a replaced client. It contains no provider names, device access or restart policy.

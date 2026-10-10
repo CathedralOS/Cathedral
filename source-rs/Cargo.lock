@@ -23,6 +23,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "cathedral-bitmap-font"
+version = "0.0.0"
+
+[[package]]
 name = "cathedral-boot-scene"
 version = "0.0.0"
 dependencies = [
@@ -67,6 +71,7 @@ dependencies = [
 name = "cathedral-display-service"
 version = "0.0.0"
 dependencies = [
+ "cathedral-bitmap-font",
  "cathedral-contracts",
  "cathedral-user-runtime",
 ]
@@ -82,8 +87,8 @@ dependencies = [
 name = "cathedral-init"
 version = "0.0.0"
 dependencies = [
- "cathedral-boot-scene",
  "cathedral-contracts",
+ "cathedral-session-protocol",
  "cathedral-user-runtime",
 ]
 
@@ -100,6 +105,20 @@ name = "cathedral-ipc-lab"
 version = "0.0.0"
 dependencies = [
  "cathedral-contracts",
+ "cathedral-user-runtime",
+]
+
+[[package]]
+name = "cathedral-session-protocol"
+version = "0.0.0"
+
+[[package]]
+name = "cathedral-status"
+version = "0.0.0"
+dependencies = [
+ "cathedral-boot-scene",
+ "cathedral-contracts",
+ "cathedral-session-protocol",
  "cathedral-user-runtime",
 ]
 

@@ -47,7 +47,8 @@
         "entry": "platform/services/display/main.rs",
         "target": "x86_64-unknown-none",
         "framebuffer": true,
-        "argument": 0
+        "argument": 0,
+        "clock": true
       },
       {
         "package": "cathedral-input-service",
@@ -55,7 +56,23 @@
         "target": "x86_64-unknown-none",
         "keyboard": true,
         "clock": true
+      },
+      {
+        "package": "cathedral-status",
+        "entry": "distribution/applications/status/main.rs",
+        "target": "x86_64-unknown-none",
+        "clock": true
       }
+    ],
+    "links": [
+      [
+        3,
+        1
+      ],
+      [
+        3,
+        2
+      ]
     ]
   }
 }

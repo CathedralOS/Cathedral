@@ -8,6 +8,10 @@ use cathedral_contracts::user as abi;
 
 pub(super) fn close(session: &mut Session, slot: usize) {
     session.tasks[slot].receive = None;
+    session.tasks[slot].notify = None;
+    for link in &mut session.links {
+        link.model.close(slot);
+    }
     session.tasks[slot].wait = None;
     session.tasks[slot].keyboard_wait = false;
     session.tasks[slot].keyboard_deadline = None;
@@ -98,7 +102,9 @@ pub(super) unsafe fn spawn(
     };
     let (owner, child, peer) = (model.owner, model.child, model.peer);
     let baseline = source.frames.allocated();
-    let result = if let Some(epoch) = next_epoch() {
+    let result = if let Some(epoch) =
+        next_epoch().filter(|epoch| *epoch <= crate::ipc::MAX_EPOCH - session.links.len() as u64)
+    {
         let program = Program {
             executable: launch.program.executable,
             arguments: [launch.program.arguments[0], argument],
@@ -114,6 +120,7 @@ pub(super) unsafe fn spawn(
                     child,
                     epoch,
                 );
+                super::links::admit(session, child);
                 if launch.keyboard {
                     super::keyboard::reset(session);
                 }

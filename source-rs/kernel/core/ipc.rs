@@ -2,7 +2,7 @@
 //! Tickets are bound to a caller and a non-reused session epoch, not bearer tokens.
 use cathedral_contracts::user as abi;
 
-pub const MAX_ENDPOINTS: usize = 6;
+pub const MAX_ENDPOINTS: usize = 10;
 pub const MAX_TASKS: usize = 8;
 pub const MAX_EPOCH: u64 = (1 << 47) - 1;
 
@@ -181,6 +181,11 @@ impl Ipc {
         endpoint.message = None;
         Ok(())
     }
+    pub fn ready(&self, caller: usize, ticket: u64) -> Result<bool, u64> {
+        let index = self.check(caller, ticket, Right::Receive)?;
+        let endpoint = self.endpoints[index].as_ref().unwrap();
+        Ok(endpoint.message.is_some() || !endpoint.sender_alive)
+    }
     pub fn close_task(&mut self, task: usize) {
         assert!(task < self.tasks);
         self.alive &= !(1 << task);
@@ -205,6 +210,13 @@ impl Ipc {
     pub fn prepare_child(&mut self, first: usize, peer: usize, child: usize, epoch: u64) {
         assert!(first + 1 < MAX_ENDPOINTS && self.live(peer) && !self.live(child));
         assert!(child < self.tasks && child != peer && epoch > self.epoch && epoch <= MAX_EPOCH);
+        self.alive |= 1 << child;
+        self.prepare_pair(first, peer, child, epoch);
+        self.accept_child(first, child);
+    }
+    pub fn prepare_pair(&mut self, first: usize, peer: usize, child: usize, epoch: u64) {
+        assert!(first + 1 < MAX_ENDPOINTS && self.live(peer) && self.live(child));
+        assert!(child != peer && epoch > self.epoch && epoch <= MAX_EPOCH);
         for index in first..first + 2 {
             if let Some(old) = self.endpoints[index] {
                 assert!(old.epoch < epoch && (!old.sender_alive || !old.receiver_alive));
@@ -214,11 +226,10 @@ impl Ipc {
                 );
             }
         }
-        self.alive |= 1 << child;
         for (index, sender, receiver) in [(first, peer, child), (first + 1, child, peer)] {
             self.endpoints[index] = Some(Endpoint {
                 epoch,
-                hidden: 1 << peer,
+                hidden: (1 << peer) | (1 << child),
                 spec: EndpointSpec {
                     sender,
                     receiver,
@@ -239,7 +250,7 @@ impl Ipc {
         let ticket = Self::ticket(
             self.endpoints[first].as_ref().unwrap().epoch,
             peer,
-            first * 3,
+            first * 3 + usize::from(self.endpoints[first].as_ref().unwrap().spec.receiver == peer),
         );
         (0..(MAX_ENDPOINTS * 3) as u64)
             .find(|index| self.handle(peer, *index) == Ok(ticket))

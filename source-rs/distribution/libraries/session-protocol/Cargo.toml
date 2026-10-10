@@ -1,0 +1,10 @@
+[package]
+name = "cathedral-session-protocol"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+[lib]
+path = "lib.rs"
+[lints]
+workspace = true

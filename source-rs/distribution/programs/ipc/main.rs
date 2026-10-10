@@ -3,6 +3,7 @@
 //! One fixture executable, separately admitted as client/service/fault-test roles.
 mod deadlines;
 mod probes;
+mod readiness;
 use cathedral_contracts::user as abi;
 use cathedral_user_runtime::{Error, ipc::Handle};
 cathedral_user_runtime::entry!(main);
@@ -42,6 +43,8 @@ fn main(role: u64, stale: u64) -> u64 {
         9 => deadlines::receiver(stale),
         10 => deadlines::sender(stale),
         11 => deadlines::denied(),
+        12 => readiness::receiver(),
+        13 => readiness::sender(),
         _ => 254,
     }
 }

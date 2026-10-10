@@ -68,6 +68,7 @@ pub fn run(memory: &mut PreparedMemory, console: &mut SerialPort) {
             }],
             user_output,
             Config {
+                links: LINKS,
                 frame_limit: usize::MAX,
                 endpoints: &[],
                 clock_readers: &clock_readers,

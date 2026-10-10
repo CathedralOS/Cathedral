@@ -6,7 +6,7 @@ mod controller;
 mod recovery;
 use cathedral_contracts::{input as wire, user as abi};
 use cathedral_input_service::Decoder;
-use cathedral_user_runtime::{Error, ipc::Handle, keyboard, time};
+use cathedral_user_runtime::{Error, ipc::Handle, keyboard, server::Server, time};
 cathedral_user_runtime::entry!(main);
 
 fn main(_mode: u64, _generation: u64) -> u64 {
@@ -16,21 +16,27 @@ fn main(_mode: u64, _generation: u64) -> u64 {
 }
 fn serve() -> Result<(), Error> {
     controller::initialize()?;
-    let request = Handle::bootstrap(0)?;
-    let reply = Handle::bootstrap(1)?;
+    let mut server = Server::open()?;
     let mut decoder = Decoder::default();
-    reply.send(&wire::Event::reset().encode())?;
+    Handle::bootstrap(1)?.send(&wire::Event::reset().encode())?;
     loop {
-        let mut bytes = [0; 64];
-        let length = match request.receive(&mut bytes) {
-            Ok(length) => length,
+        let request = match server.next_request() {
+            Ok(request) => request,
             Err(Error(code)) if code == abi::PEER_CLOSED as i64 => return Ok(()),
             Err(error) => return Err(error),
         };
+        let bytes = &request.bytes[..request.len];
         #[cfg(feature = "recovery-lab")]
-        recovery::request(&bytes[..length], request, reply);
-        if bytes[..length] != wire::NEXT {
-            return Err(Error(abi::INVALID_ARGUMENT as i64));
+        if request.control {
+            recovery::request(bytes, Handle::bootstrap(0)?, Handle::bootstrap(1)?);
+        }
+        if bytes == wire::HEALTH && request.control {
+            server.reply(&request, &wire::Event::idle().encode())?;
+            continue;
+        }
+        if bytes != wire::NEXT {
+            server.reply(&request, &[0xff, 0])?;
+            continue;
         }
         let deadline = time::after(25)?;
         let event = loop {
@@ -51,6 +57,6 @@ fn serve() -> Result<(), Error> {
                 }
             }
         };
-        reply.send(&event.encode())?;
+        server.reply(&request, &event.encode())?;
     }
 }

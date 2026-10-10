@@ -1,5 +1,77 @@
 use super::*;
 #[test]
+fn graph_replacement_changes_only_edges_touching_the_replaced_task() {
+    let mut ipc = Ipc::new(1, 4, &[]).unwrap();
+    for child in 1..4 {
+        ipc.close_task(child);
+    }
+    for child in 1..4 {
+        ipc.prepare_child((child - 1) * 2, 0, child, child as u64 + 1);
+        ipc.accept_child((child - 1) * 2, 0);
+    }
+    for (base, service, epoch) in [(6, 1, 5), (8, 2, 6)] {
+        ipc.prepare_pair(base, 3, service, epoch);
+        ipc.accept_child(base, 3);
+        ipc.accept_child(base, service);
+    }
+    let controls: [_; 6] = core::array::from_fn(|i| ipc.handle(0, i as u64).unwrap());
+    let app_control = ipc.handle(3, 0).unwrap();
+    let old = ipc.handle(3, 2).unwrap();
+    let stable = ipc.handle(3, 4).unwrap();
+    ipc.send(3, old, b"discard").unwrap();
+    ipc.send(3, stable, b"preserve").unwrap();
+    ipc.close_task(1);
+    ipc.prepare_child(0, 0, 1, 7);
+    ipc.accept_child(0, 0);
+    ipc.prepare_pair(6, 3, 1, 8);
+    assert_eq!(ipc.send(3, old, b"stale"), Err(abi::BAD_HANDLE));
+    ipc.accept_child(6, 3);
+    ipc.accept_child(6, 1);
+    assert_eq!(ipc.handle(3, 0), Ok(app_control));
+    assert_eq!(ipc.handle(3, 4), Ok(stable));
+    let input = ipc.handle(2, 2).unwrap();
+    assert_eq!(ipc.receive(2, input, 64).unwrap().unwrap().len, 8);
+    let input = ipc.handle(1, 2).unwrap();
+    assert_eq!(ipc.receive(1, input, 64), Ok(None));
+    // Replacing the application refreshes both edges, preserving provider controls.
+    let old_data = [ipc.handle(1, 2).unwrap(), ipc.handle(2, 2).unwrap()];
+    ipc.close_task(3);
+    ipc.prepare_child(4, 0, 3, 9);
+    ipc.accept_child(4, 0);
+    for (base, service, epoch) in [(6, 1, 10), (8, 2, 11)] {
+        ipc.prepare_pair(base, 3, service, epoch);
+        assert_eq!(
+            ipc.ready(service, old_data[service - 1]),
+            Err(abi::BAD_HANDLE)
+        );
+        ipc.accept_child(base, service);
+        ipc.accept_child(base, 3);
+    }
+    assert_eq!(ipc.handle(0, 2), Ok(controls[2]));
+    assert_eq!(ipc.handle(0, 3), Ok(controls[3]));
+    assert_ne!(ipc.handle(0, 4), Ok(controls[4]));
+}
+#[test]
+fn readiness_preserves_messages_checks_rights_and_exposes_closure() {
+    let mut ipc = pair(1);
+    let send = ipc.handle(0, 0).unwrap();
+    let receive = ipc.handle(1, 0).unwrap();
+    assert_eq!(ipc.ready(0, send), Err(abi::DENIED));
+    assert_eq!(ipc.ready(1, send), Err(abi::BAD_HANDLE));
+    assert_eq!(ipc.ready(1, receive), Ok(false));
+    ipc.send(0, send, b"queued").unwrap();
+    assert_eq!(ipc.ready(1, receive), Ok(true));
+    assert_eq!(ipc.ready(1, receive), Ok(true));
+    assert_eq!(ipc.receive(1, receive, 64).unwrap().unwrap().len, 6);
+    assert_eq!(ipc.ready(1, receive), Ok(false));
+    ipc.close_task(0);
+    assert_eq!(ipc.ready(1, receive), Ok(true));
+    assert_eq!(ipc.receive(1, receive, 64), Err(abi::PEER_CLOSED));
+    let revoke = ipc.handle(2, 0).unwrap();
+    ipc.revoke(2, revoke).unwrap();
+    assert_eq!(ipc.ready(1, receive), Err(abi::REVOKED));
+}
+#[test]
 fn restarting_either_sibling_preserves_other_tickets_and_queued_reply() {
     let mut ipc = Ipc::new(1, 3, &[]).unwrap();
     ipc.close_task(1);

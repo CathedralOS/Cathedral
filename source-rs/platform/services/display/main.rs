@@ -7,7 +7,7 @@ mod probes;
 mod recovery;
 mod surface;
 use cathedral_contracts::{display as wire, user as abi};
-use cathedral_user_runtime::{Error, ipc::Handle};
+use cathedral_user_runtime::{Error, server::Server};
 cathedral_user_runtime::entry!(main);
 
 fn main(_fault_after: u64, _generation: u64) -> u64 {
@@ -18,19 +18,23 @@ fn main(_fault_after: u64, _generation: u64) -> u64 {
         return probes::run(_generation);
     }
     let mut surface = surface::Surface::open();
-    let input = Handle::bootstrap(0).unwrap();
-    let output = Handle::bootstrap(1).unwrap();
+    let mut server = Server::open().unwrap();
     #[cfg(feature = "lab")]
     let mut requests = 0;
     loop {
-        let mut bytes = [0; 64];
-        let size = match input.receive(&mut bytes) {
-            Ok(size) => size,
+        let request = match server.next_request() {
+            Ok(request) => request,
             Err(Error(code)) if code == abi::PEER_CLOSED as i64 => return 0,
             Err(_) => return 1,
         };
         #[cfg(feature = "recovery-lab")]
-        recovery::request(&bytes[..size], input, output);
+        if request.control {
+            recovery::request(
+                &request.bytes[..request.len],
+                cathedral_user_runtime::ipc::Handle::bootstrap(0).unwrap(),
+                cathedral_user_runtime::ipc::Handle::bootstrap(1).unwrap(),
+            );
+        }
         #[cfg(feature = "lab")]
         {
             requests += 1;
@@ -41,7 +45,7 @@ fn main(_fault_after: u64, _generation: u64) -> u64 {
                 }
             }
         }
-        let reply = surface.request(&bytes[..size]);
-        output.send(&wire::encode(reply)).unwrap();
+        let reply = surface.request(&request.bytes[..request.len]);
+        server.reply(&request, &wire::encode(reply)).unwrap();
     }
 }

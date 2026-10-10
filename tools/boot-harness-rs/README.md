@@ -10,7 +10,7 @@ Cargo workspace keeps kernel implementation under `kernel/` and the UART under
 
 Ordinary boots build only `startup.initial` and the optional `startup.launches` array.
 The kernel admits that initial executable; `distribution/init` launches and uses
-display and input providers and keeps all three tasks alive. The kernel fixtures below are compiled
+display/input providers and the separate status application, keeping all four tasks alive. The kernel fixtures below are compiled
 only with `--smoke`. `--kernel-only --smoke` runs kernel and raw-user tests without
 building any platform service or distribution executable. `--kernel-only` boots
 the kernel alone. `--profile tools/boot-harness-rs/profiles/minimal.json` supplies
@@ -44,28 +44,30 @@ and an independent pixel-for-pixel scanout check through QMP. It saves
 No GUI or extra Python packages are required. `--window` instead opens the QEMU
 display for an ordinary interactive boot; Ctrl+C stops that run.
 Capture waits for userspace startup readiness and rejects accidental lab execution.
-The ordinary scene shares its distribution-owned drawing code with the smoke fixture.
+The status application shares its distribution-owned drawing code with the smoke fixture.
 
 See [the Rust lab guide](../../source-rs/README.md) for setup, ordinary boots,
 firmware overrides, logs, checks, current limitations and the bring-up sequence.
 The existing `tools/boot-harness/` continues to build and boot Omega.
 
 `--input-test` boots normally, injects keyboard events over QMP and checks every
-pixel after navigation, toggling and ten alternating service restarts. Arrows
-select a panel, Enter toggles it, F1 restarts input and F2 restarts display. The
-final capture is `build/boot-harness-rs/input-test/display.png`. Smoke also tests
-multiple launch grants, surviving sibling queues, failed launch rollback, device
-access denial and parent-exit reclamation of a blocked input provider.
+pixel after navigation/toggling. Arrows select a labeled panel; Enter toggles it.
+The final capture is `build/boot-harness-rs/input-test/display.png`.
 
-`--recovery-test` enables only the providers/init recovery-lab features. It wedges
-both first-generation providers before startup, then injects a crash, busy loop
-and blocked request loop into each live provider. It checks automatic recovery,
-unchanged sibling identity, queued keyboard input during display failure, healthy
-idle without spurious restarts, and retained scene state through exact scanout
-checks. Logs and the final screenshot go in `recovery-test/`; no fault handlers
-are included in ordinary builds. Add `--release` for optimized verification.
+`--recovery-test` enables init/provider/app `recovery-lab` features. It wedges both
+first-generation providers, then injects a crash, busy loop and blocked request
+loop into each provider. It checks automatic recovery, unchanged sibling and app
+identities, queued keyboard input during display loss and retained scene state.
+F3 then crashes/hangs the app and fills its reply queue, proving init and providers
+survive all three replacements.
+The replacement app probes denied task/device authority and rejected fault
+commands on data connections. Exact scanout checks include all text, generations
+and last-recovery labels. Healthy idle must not restart any task. Logs and the
+final screenshot go in `recovery-test/`. Add `--release` for optimized verification.
+Fault handlers and F1/F2/F3 recovery shortcuts are absent from normal builds.
 
-The smoke IPC fixture checks deadline wakeups with all tasks blocked, denied
-clock access, malformed destinations preserving queued data, late replies after
-timeout, terminal-error precedence, and complete memory reclamation. Child raw
-keyboard deadlines are exercised with and without a clock grant as well.
+Smoke additionally checks a full three-child/two-link graph across 16 alternating
+app/provider replacements and complete memory reclamation. The readiness fixture
+checks two receive channels, first-ready precedence, no-consume observations,
+denied clock/rights, peer closure and all-blocked timeout. Existing deadline,
+copyout, late reply, exclusive-device and admission-failure coverage remains.

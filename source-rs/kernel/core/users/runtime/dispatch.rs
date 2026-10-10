@@ -46,6 +46,17 @@ pub(super) fn syscall(session: &mut Session, slot: usize, now: u64) -> Event {
                 &mut event,
             )
         }
+        abi::LINK_HANDLE | abi::LINK_CONNECT => super::links::syscall(session, slot, number, first),
+        abi::IPC_WAIT_TWO => super::notify::syscall(
+            session,
+            slot,
+            super::notify::Wait {
+                handles: [first, second],
+                deadline: third,
+            },
+            now,
+            &mut event,
+        ),
         abi::IPC_REVOKE => session.ipc.revoke(slot, first).map(|()| 0),
         abi::KEYBOARD_READ | abi::KEYBOARD_WRITE | abi::KEYBOARD_READ_UNTIL => {
             super::keyboard::syscall(session, slot, (number, first, second), &mut event, now)
@@ -206,6 +217,7 @@ fn receive(
     Ok(Some(message.len as u64))
 }
 pub(super) fn wake_receivers(session: &mut Session) {
+    super::notify::wake(session);
     for slot in 0..session.tasks.len() {
         let Some(wait) = session.tasks[slot].receive else {
             continue;

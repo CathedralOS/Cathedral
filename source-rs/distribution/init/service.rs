@@ -31,19 +31,11 @@ impl Service {
             receive,
         })
     }
-    #[cfg(feature = "recovery-lab")]
     pub fn ticket(&self) -> u64 {
         self.child.raw()
     }
     pub fn generation(&self) -> u64 {
         self.generation
-    }
-    pub fn drawing(&self) -> Result<cathedral_boot_scene::Client, Error> {
-        Ok(cathedral_boot_scene::Client::until(
-            self.send,
-            self.receive,
-            time::after(100)?,
-        ))
     }
     pub fn receive(&self) -> Result<([u8; 64], usize), Error> {
         let mut bytes = [0; 64];
@@ -57,9 +49,19 @@ impl Service {
             b"Cathedral: input recovered\n"
         })
     }
+    pub fn stopped(&self) -> Result<bool, Error> {
+        match self.child.wait_until(time::now()?) {
+            Ok(_) => Ok(true),
+            Err(Error(code)) if code == cathedral_contracts::user::TIMED_OUT as i64 => Ok(false),
+            Err(error) => Err(error),
+        }
+    }
     pub fn restart(&mut self) -> Result<(), Error> {
         self.child.cancel()?;
         self.child.wait()?;
+        self.respawn()
+    }
+    pub fn respawn(&mut self) -> Result<(), Error> {
         self.generation += 1;
         self.child = self.launch.spawn(self.generation)?;
         (self.send, self.receive) = self.port.connect()?;

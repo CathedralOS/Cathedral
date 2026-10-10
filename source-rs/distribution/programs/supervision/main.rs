@@ -2,6 +2,7 @@
 #![no_main]
 //! Distribution policy: restart a deliberately crashing service 32 times.
 mod client;
+mod links;
 mod multiple;
 mod probes;
 mod service;
@@ -37,6 +38,9 @@ fn main(role: u64, argument: u64) -> u64 {
         18 => multiple::failed(),
         19 => multiple::abandon(),
         20 => multiple::keyboard_waiter(),
+        21 => links::owner(),
+        22 => links::provider(),
+        23 => links::application(),
         _ => 254,
     }
 }

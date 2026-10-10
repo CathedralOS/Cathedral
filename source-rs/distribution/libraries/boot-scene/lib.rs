@@ -11,6 +11,19 @@ pub struct Client {
     deadline: Option<u64>,
 }
 impl Client {
+    pub fn text(&self, x: u64, y: u64, scale: u64, color: u64, text: &[u8]) -> Result<(), Error> {
+        for (index, chunk) in text.chunks(16).enumerate() {
+            let x = (index as u64)
+                .checked_mul(16 * 6)
+                .and_then(|n| n.checked_mul(scale))
+                .and_then(|n| x.checked_add(n))
+                .ok_or(Error(abi::INVALID_ARGUMENT as i64))?;
+            let request = wire::encode_text(x, y, scale, color, chunk)
+                .ok_or(Error(abi::INVALID_ARGUMENT as i64))?;
+            self.request(&request)?;
+        }
+        Ok(())
+    }
     pub fn new(send: Handle, receive: Handle) -> Self {
         Self {
             send,
@@ -66,7 +79,10 @@ impl Client {
         Ok(())
     }
     fn call(&self, words: [u64; 6]) -> Result<[u64; 6], Error> {
-        self.send.send(&wire::encode(words))?;
+        self.request(&wire::encode(words))
+    }
+    fn request(&self, request: &[u8]) -> Result<[u64; 6], Error> {
+        self.send.send(request)?;
         let mut bytes = [0; 64];
         let length = match self.deadline {
             Some(deadline) => self.receive.receive_until(&mut bytes, deadline)?,

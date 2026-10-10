@@ -12,6 +12,7 @@ test = false
 bench = false
 
 [dependencies]
+cathedral-bitmap-font.workspace = true
 cathedral-user-runtime.workspace = true
 cathedral-contracts.workspace = true
 

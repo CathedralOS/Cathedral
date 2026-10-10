@@ -7,7 +7,7 @@ use cathedral_contracts::input::{self as wire, Event};
 pub struct Decoder {
     extended: bool,
     pause: u8,
-    held: u8,
+    held: u16,
 }
 impl Decoder {
     pub fn reset(&mut self) -> Event {
@@ -37,6 +37,7 @@ impl Decoder {
             (_, 0x1c) => wire::ENTER,
             (false, 0x3b) => wire::F1,
             (false, 0x3c) => wire::F2,
+            (false, 0x3d) => wire::F3,
             _ => return None,
         };
         let mask = 1 << (key - 1);

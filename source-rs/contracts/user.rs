@@ -26,6 +26,9 @@ pub const KEYBOARD_WRITE: u64 = 18;
 pub const IPC_RECEIVE_UNTIL: u64 = 19;
 /// RDI is an absolute deadline. Requires both keyboard and clock grants.
 pub const KEYBOARD_READ_UNTIL: u64 = 20;
+pub const LINK_HANDLE: u64 = 21;
+pub const LINK_CONNECT: u64 = 22;
+pub const IPC_WAIT_TWO: u64 = 23;
 pub const TIMED_OUT: u64 = (-110i64) as u64;
 /// Maximum unambiguous forward distance in the wrapping tick clock.
 pub const MAX_INTERVAL: u64 = (1 << 63) - 1;

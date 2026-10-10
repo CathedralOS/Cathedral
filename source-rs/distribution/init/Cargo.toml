@@ -12,7 +12,7 @@ test = false
 bench = false
 
 [dependencies]
-cathedral-boot-scene.workspace = true
+cathedral-session-protocol.workspace = true
 cathedral-user-runtime.workspace = true
 cathedral-contracts.workspace = true
 

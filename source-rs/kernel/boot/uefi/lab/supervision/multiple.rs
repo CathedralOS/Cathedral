@@ -38,6 +38,7 @@ pub(super) fn exercise(memory: &mut PreparedMemory, console: &mut SerialPort) {
                 &[program(role, 0)],
                 user_output,
                 Config {
+                    links: &[],
                     frame_limit: usize::MAX,
                     endpoints: &[],
                     clock_readers: if clock { &[2] } else { &[] },
@@ -86,6 +87,7 @@ pub(super) fn exercise(memory: &mut PreparedMemory, console: &mut SerialPort) {
             &[program(19, 0)],
             user_output,
             Config {
+                links: &[],
                 frame_limit: usize::MAX,
                 endpoints: &[],
                 clock_readers: &[],

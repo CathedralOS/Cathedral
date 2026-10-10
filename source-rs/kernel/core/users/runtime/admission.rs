@@ -91,6 +91,7 @@ pub(super) fn reserve_slot(session: &mut Session) {
         report: Report::default(),
         receive: None,
         wait: None,
+        notify: None,
         keyboard_wait: false,
         keyboard_deadline: None,
     });

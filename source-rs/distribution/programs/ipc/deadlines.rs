@@ -80,6 +80,10 @@ pub fn sender(revoke: u64) -> u64 {
 pub fn denied() -> u64 {
     let input = Handle::bootstrap(0).unwrap();
     assert_eq!(
+        cathedral_user_runtime::ipc::wait_two(input, input, 0),
+        Err(Error(abi::DENIED as i64))
+    );
+    assert_eq!(
         input.receive_until(&mut [0; 64], 0),
         Err(Error(abi::DENIED as i64))
     );

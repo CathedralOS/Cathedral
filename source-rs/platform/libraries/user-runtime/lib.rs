@@ -10,6 +10,8 @@ mod arch;
 pub mod display;
 pub mod ipc;
 pub mod keyboard;
+pub mod link;
+pub mod server;
 pub mod task;
 pub mod time;
 use cathedral_contracts::user as abi;

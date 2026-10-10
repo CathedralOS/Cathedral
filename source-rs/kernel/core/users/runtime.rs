@@ -6,6 +6,8 @@ mod admission;
 mod dispatch;
 mod keyboard;
 mod lifecycle;
+mod links;
+mod notify;
 mod taskcalls;
 use crate::supervision::Supervisor;
 use crate::{
@@ -32,6 +34,7 @@ pub struct Report {
     pub completion_order: usize,
     pub frames: usize,
     pub receives_blocked: usize,
+    pub readiness_blocked: usize,
     pub keyboard_reads_blocked: usize,
     pub ipc_sent: usize,
     pub ipc_received: usize,
@@ -49,6 +52,7 @@ struct Task {
     report: Report,
     receive: Option<dispatch::Receive>,
     wait: Option<taskcalls::Wait>,
+    notify: Option<notify::Wait>,
     keyboard_wait: bool,
     keyboard_deadline: Option<u64>,
 }
@@ -60,6 +64,7 @@ struct Session {
     completed: usize,
     ipc: Ipc,
     launches: Vec<LaunchState>,
+    links: Vec<LinkState>,
     keyboard: crate::byte_queue::ByteQueue,
     frame_baseline: usize,
     clock: crate::deadline::Clock,
@@ -70,6 +75,7 @@ static EPOCH: AtomicU64 = AtomicU64::new(1);
 
 pub struct Config<'a> {
     pub frame_limit: usize,
+    pub links: &'a [crate::link::LinkSpec],
     pub endpoints: &'a [EndpointSpec],
     pub supervision: &'a [Supervision<'a>],
     pub clock_readers: &'a [usize],
@@ -93,6 +99,10 @@ struct LaunchState {
     endpoint_base: usize,
     framebuffer: Option<cathedral_contracts::display::Framebuffer>,
     keyboard: bool,
+}
+struct LinkState {
+    model: crate::link::Link,
+    endpoint_base: usize,
 }
 const MAX_LAUNCHES: usize = 3;
 
@@ -140,6 +150,7 @@ pub unsafe fn run(
             programs,
             output,
             Config {
+                links: &[],
                 frame_limit,
                 endpoints: &[],
                 supervision: &[],
@@ -175,7 +186,8 @@ pub unsafe fn run_configured(
     if count > crate::ipc::MAX_TASKS || config.supervision.len() > MAX_LAUNCHES {
         return Err(Error::InvalidCount);
     }
-    if config.endpoints.len() + 2 * config.supervision.len() > crate::ipc::MAX_ENDPOINTS
+    if config.endpoints.len() + 2 * (config.supervision.len() + config.links.len())
+        > crate::ipc::MAX_ENDPOINTS
         || config
             .supervision
             .iter()
@@ -226,6 +238,26 @@ pub unsafe fn run_configured(
     }) {
         return Err(Error::InvalidEndpoints);
     }
+    let mut links = Vec::new();
+    links
+        .try_reserve_exact(config.links.len())
+        .map_err(|_| Error::OutOfHeap)?;
+    for (index, &spec) in config.links.iter().enumerate() {
+        // Links connect reserved children only in this bounded launch graph.
+        if spec.client < programs.len() || spec.service < programs.len() {
+            return Err(Error::InvalidEndpoints);
+        }
+        links.push(LinkState {
+            model: crate::link::Link::new(
+                next_epoch().ok_or(Error::InvalidEndpoints)?,
+                spec,
+                count,
+                programs.len(),
+            )
+            .map_err(|_| Error::InvalidEndpoints)?,
+            endpoint_base: config.endpoints.len() + 2 * (config.supervision.len() + index),
+        });
+    }
     let mut ipc = Ipc::new(epoch, count, config.endpoints).map_err(|_| Error::InvalidEndpoints)?;
     for launch in &launches {
         ipc.close_task(launch.model.child);
@@ -239,6 +271,7 @@ pub unsafe fn run_configured(
         completed: 0,
         ipc,
         launches,
+        links,
         keyboard: crate::byte_queue::ByteQueue::new(),
         frame_baseline: baseline,
         clock,
@@ -349,13 +382,17 @@ unsafe fn schedule(context: &Context, cause: SwitchCause, now: u64) -> *const Co
         session.tasks[previous.unwrap()].report.completion_order = session.completed;
         session.scheduler.park(event, now);
         None // Always reclaim from the boot context, never an interrupt stack.
-    } else if session
-        .launches
-        .iter()
-        .any(|launch| launch.model.pending().is_some() || launch.model.cancellation_pending())
+    } else if session.scheduler.states().contains(&TaskState::Exited)
+        || session
+            .launches
+            .iter()
+            .any(|launch| launch.model.pending().is_some() || launch.model.cancellation_pending())
     {
         session.scheduler.park(event, now);
-        None // Admission/cancellation use the boot stack, never the trap stack.
+        // An IRQ can interrupt the restored idle boot context before it reaches
+        // reap. Keep returning there until all deferred work is done; otherwise
+        // runnable peers can indefinitely starve collection of an exited child.
+        None // Admission/reclamation use the boot stack, never the trap stack.
     } else {
         session.scheduler.advance(event, now, true)
     };

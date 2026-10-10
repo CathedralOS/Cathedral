@@ -112,6 +112,7 @@ fn run(
             programs,
             user_output,
             Config {
+                links: &[],
                 frame_limit: usize::MAX,
                 endpoints,
                 clock_readers: clocks,

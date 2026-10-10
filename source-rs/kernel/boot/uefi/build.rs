@@ -5,6 +5,7 @@ fn main() {
     for variable in [
         "CATHEDRAL_INIT_ELF",
         "CATHEDRAL_INIT_CLOCK",
+        "CATHEDRAL_LINKS",
         "CATHEDRAL_LAUNCH_COUNT",
     ] {
         println!("cargo:rerun-if-env-changed={variable}");
@@ -55,6 +56,19 @@ fn startup() {
             .parse()
             .expect("invalid launch argument");
         source.push_str(&format!("InitialLaunch {{ elf: include_bytes!(concat!(env!(\"OUT_DIR\"), \"/launch-{index}.elf\")), framebuffer: {framebuffer}, keyboard: {keyboard}, clock: {clock}, argument: {argument} }},\n"));
+    }
+    source.push_str("];\nstatic LINKS: &[cathedral_core::link::LinkSpec] = &[\n");
+    let graph = env::var("CATHEDRAL_LINKS").unwrap_or_default();
+    for edge in graph.split(',').filter(|edge| !edge.is_empty()) {
+        let (client, service) = edge.split_once(':').expect("link must be client:service");
+        let client: usize = client.parse().unwrap();
+        let service: usize = service.parse().unwrap();
+        assert!(
+            client > 0 && client <= count && service > 0 && service <= count && client != service
+        );
+        source.push_str(&format!(
+            "cathedral_core::link::LinkSpec {{ client: {client}, service: {service} }},\n"
+        ));
     }
     source.push_str("];\n");
     fs::write(output.join("startup_config.rs"), source).unwrap();

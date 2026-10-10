@@ -9,6 +9,7 @@ use cathedral_uart_16550::SerialPort;
 use core::fmt::Write;
 
 static ELF: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/supervision.elf"));
+mod links;
 mod multiple;
 
 pub fn exercise(memory: &mut PreparedMemory, console: &mut SerialPort) {
@@ -101,6 +102,7 @@ pub fn exercise(memory: &mut PreparedMemory, console: &mut SerialPort) {
     reclaimed(memory, baseline, heap);
     writeln!(console, "Cathedral Rust lab: supervision failed-spawn retries preserved live peers and memory baselines").ok();
     multiple::exercise(memory, console);
+    links::exercise(memory, console);
 }
 fn program(role: u64, argument: u64) -> Program<'static> {
     Program {
@@ -131,6 +133,7 @@ fn run(
             programs,
             user_output,
             Config {
+                links: &[],
                 frame_limit: usize::MAX,
                 endpoints,
                 clock_readers: &[],

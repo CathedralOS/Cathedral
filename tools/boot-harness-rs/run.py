@@ -134,7 +134,7 @@ def main():
     target = composition["target"]
     boot_package = composition["boot_package"]
     environment = {key: value for key, value in os.environ.items()
-                   if not (key.startswith("CATHEDRAL_") and (key.endswith("_ELF") or key == "CATHEDRAL_INIT_CLOCK" or key.startswith("CATHEDRAL_LAUNCH_")))}
+                   if not (key.startswith("CATHEDRAL_") and (key.endswith("_ELF") or key in ("CATHEDRAL_INIT_CLOCK", "CATHEDRAL_LINKS") or key.startswith("CATHEDRAL_LAUNCH_")))}
     programs = {}
     if not args.kernel_only:
         if args.smoke:
@@ -146,11 +146,12 @@ def main():
             launches = startup.get("launches", [startup["launch"]] if startup.get("launch") else [])
             if len(launches) > 3:
                 parser.error("at most three startup launch grants")
+            environment["CATHEDRAL_LINKS"] = ",".join(f"{edge[0]}:{edge[1]}" for edge in startup.get("links", []))
             if args.recovery_test:
                 startup["initial"]["features"] = ["recovery-lab"]
-                for child in launches:
+                for index, child in enumerate(launches):
                     child["features"] = ["recovery-lab"]
-                    child["argument"] = 2 # First incarnation wedges during startup.
+                    child["argument"] = 2 if index < 2 else 0 # Provider startup wedges; application stays live.
             environment["CATHEDRAL_LAUNCH_COUNT"] = str(len(launches))
             for index, child in enumerate(launches):
                 programs[f"launch_{index}"] = child

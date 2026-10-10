@@ -32,6 +32,9 @@ impl Surface {
         }
     }
     pub fn request(&mut self, bytes: &[u8]) -> [u64; 6] {
+        if bytes.len() == wire::TEXT_BYTES {
+            return self.text(bytes);
+        }
         let Some([op, x, y, width, height, color]) = wire::decode(bytes) else {
             return [abi::INVALID_ARGUMENT, 0, 0, 0, 0, 0];
         };
@@ -73,5 +76,33 @@ impl Surface {
             // SAFETY: Same bounded live device mapping as above, not ordinary RAM.
             assert_eq!(unsafe { pointer.read_volatile() } & 0xffffff, pixel);
         }
+    }
+    fn text(&mut self, bytes: &[u8]) -> [u64; 6] {
+        let Some(wire::Text {
+            x,
+            y,
+            scale,
+            color,
+            bytes,
+        }) = wire::decode_text(bytes, self.width, self.height)
+        else {
+            return [abi::INVALID_ARGUMENT, 0, 0, 0, 0, 0];
+        };
+        for (index, &byte) in bytes.iter().enumerate() {
+            for (row, bits) in cathedral_bitmap_font::glyph(byte).into_iter().enumerate() {
+                for column in 0..5 {
+                    if bits & (1 << (4 - column)) != 0 {
+                        self.fill(
+                            x + (index as u64 * 6 + column) * scale,
+                            y + row as u64 * scale,
+                            scale,
+                            scale,
+                            color,
+                        );
+                    }
+                }
+            }
+        }
+        [0; 6]
     }
 }
