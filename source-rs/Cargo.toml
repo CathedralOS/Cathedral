@@ -24,11 +24,12 @@ members = [
     "distribution/lab/hello",
     "distribution/lab/ipc",
     "distribution/lab/memory",
+    "distribution/lab/rendering",
     "distribution/lab/supervision",
     "distribution/libraries/boot-scene",
     "distribution/libraries/session-protocol",
 ]
-default-members = ["platform/libraries/object-store", "contracts", "kernel/core", "platform/services/input", "platform/libraries/bitmap-font"]
+default-members = ["distribution/lab/rendering", "platform/libraries/object-store", "contracts", "kernel/core", "platform/services/input", "platform/libraries/bitmap-font"]
 
 [workspace.package]
 version = "0.0.0"

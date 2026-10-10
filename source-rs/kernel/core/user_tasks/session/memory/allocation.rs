@@ -27,6 +27,8 @@ pub(super) unsafe fn allocate(
             )
         }
         .map_err(|_| abi::NO_MEMORY)?;
+        session.tasks[slot].report.memory.allocated_pages += pages;
+        session.tasks[slot].report.memory.mapped_pages += pages;
         Ok(session.memory.model.entries[index].handle(index))
     })();
     if result.is_err() {

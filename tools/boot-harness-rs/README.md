@@ -40,6 +40,13 @@ requires complete heap/frame reclamation. Ordinary screenshot and interactive
 checks include the app's shared pixel tile. Recovery/storage builds also require
 malformed pixel buffers to complete with errors and release their read leases.
 
+The [rendering fixture](../../source-rs/distribution/lab/rendering/README.md) then
+compares direct rows and flattened shared leaves on real guest pages. It checks
+that a native writer can bypass a software span inside its granted page, while
+an unmapped page boundary faults. Two sessions assert page-edit/IPC counts and
+full reclamation. Host pixel-copy and padding measurements have a separate runner
+at `tools/rendering-lab/run.py`; these experiments do not adopt a surface protocol.
+
 The display fixture launches a platform display-service ELF and a separate
 distribution client. It verifies redraw after a provider fault, unrelated task
 progress, exclusive device mappings, NX/guard faults and all failed-admission

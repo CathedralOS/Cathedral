@@ -54,6 +54,7 @@ MARKERS = (
     "Cathedral Rust lab: deadline woke an idle session with every user task blocked; all memory reclaimed",
     "Cathedral Rust lab: runtime page allocation rolled back at every frame boundary",
     "Cathedral Rust lab: private budgets zeroing shared leases NX write faults stale handles and peer death passed; all memory reclaimed",
+    "Cathedral Rust lab: rendering equivalence same-page escape page fault mapping counts and reclamation passed",
     "Cathedral Rust lab: GOP ",
     "Cathedral Rust lab: display service faulted and restarted; pattern redrawn; observer progressed; ungranted mapping fault contained; all task memory reclaimed",
     "Cathedral Rust lab: framebuffer NX guards and checked copies passed; ",

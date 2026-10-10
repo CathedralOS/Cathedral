@@ -43,6 +43,7 @@ explains how to preserve these routes as the lab grows.
 | `contracts/memory.rs`, `kernel/core/regions.rs` | Page-object grants, quotas, sealing and reader lifetime |
 | `kernel/core/user_tasks/session/memory.rs` | Boot-stack frame ownership, mapping changes and cleanup |
 | `distribution/lab/memory/main.rs` | Private allocation, shared leases and permission-fault exercises |
+| `distribution/lab/rendering/main.rs`, [investigation](distribution/lab/rendering/README.md) | Checked row delegation versus page-backed flattened composition, host costs and guest bounds probes |
 | `contracts/display.rs` | Bounded framebuffer geometry and experimental drawing messages |
 | `contracts/block.rs`, `contracts/storage.rs` | Experimental block durability and private-object messages |
 | `platform/drivers/ata-pio/` | Userspace bounded PIO driver for a dedicated QEMU data disk |
@@ -72,7 +73,8 @@ explains how to preserve these routes as the lab grows.
 | `distribution/profile.json` | Built-in distribution composition consumed by the boot harness |
 | `../tools/boot-harness-rs/` | Host build, QEMU launch and smoke verification |
 
-Each crate uses `no_std`. Core policies are host-testable and have no firmware
+Guest code and shared libraries use `no_std`; the rendering benchmark has a
+separate host-only executable using `std`. Core policies are host-testable and have no firmware
 dependency. Core's hardware-facing modules explicitly opt into unsafe code and
 depend on `kernel/arch/`; drivers never depend on core internals. Boot assembles these
 subsystems and the firmware adapter.
@@ -162,7 +164,8 @@ cargo build --locked --package cathedral-hello --target x86_64-unknown-none
 cargo clippy --locked --package cathedral-hello --package cathedral-ipc-lab --package cathedral-supervision-lab --package cathedral-display-service --package cathedral-input-service --package cathedral-display-lab --package cathedral-init --target x86_64-unknown-none -- -D warnings
 ```
 
-The default Cargo members test contracts, core and the input decoder on the host. Kernel crates
+The default Cargo members test contracts, core, storage, input decoding, fonts and
+rendering algorithms on the host. Kernel crates
 use the UEFI target; the user program/runtime use the freestanding ELF target,
 so the whole workspace cannot be built for one target. `cargo build-uefi` builds
 a standalone kernel with no initial program; use the Python harness for the

@@ -1,0 +1,33 @@
+[package]
+name = "cathedral-rendering-lab"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[lib]
+path = "lib.rs"
+
+[[bin]]
+name = "cathedral-rendering-lab"
+path = "main.rs"
+required-features = ["guest"]
+test = false
+bench = false
+
+[[bin]]
+name = "cathedral-rendering-bench"
+path = "bench.rs"
+required-features = ["host"]
+bench = false
+
+[features]
+host = []
+guest = ["dep:cathedral-user-runtime"]
+
+[dependencies]
+cathedral-contracts.workspace = true
+cathedral-user-runtime = { workspace = true, optional = true }
+
+[lints]
+workspace = true

@@ -37,6 +37,14 @@
       "package": "cathedral-memory-lab",
       "entry": "distribution/lab/memory/main.rs",
       "target": "x86_64-unknown-none"
+    },
+    "rendering": {
+      "package": "cathedral-rendering-lab",
+      "entry": "distribution/lab/rendering/main.rs",
+      "target": "x86_64-unknown-none",
+      "features": [
+        "guest"
+      ]
     }
   },
   "startup": {

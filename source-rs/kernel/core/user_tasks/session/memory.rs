@@ -59,6 +59,7 @@ pub(super) unsafe fn process(session: &mut Session, frames: &mut Frames<'_>) {
         };
         // Admission budgets are distinct from runtime page budgets enforced by Regions.
         frames.remaining = usize::MAX;
+        session.tasks[slot].report.memory.deferred_calls += 1;
         // SAFETY: Same machine and ownership obligations as process.
         let result = unsafe { dispatch(session, frames, slot, call) };
         syscalls::complete(session, slot, result);
@@ -99,6 +100,7 @@ unsafe fn dispatch(
                     .unwrap()
                     .seal_region(index, pages);
             }
+            session.tasks[slot].report.memory.sealed_pages += pages;
             Ok(0)
         }
         abi::MEMORY_MAP => {
@@ -116,6 +118,7 @@ unsafe fn dispatch(
                 session.memory.model.entries[index].accepted = false;
                 return Err(abi::NO_MEMORY);
             }
+            session.tasks[slot].report.memory.mapped_pages += pages;
             Ok(wire::address(index))
         }
         abi::MEMORY_RELEASE => {
@@ -130,6 +133,7 @@ unsafe fn dispatch(
                     .unmap_region(index, pages);
                 session.memory.reclaim(index, frames);
             }
+            session.tasks[slot].report.memory.unmapped_pages += pages;
             Ok(0)
         }
         _ => Err(abi::UNKNOWN),
@@ -149,6 +153,7 @@ pub(super) unsafe fn close(session: &mut Session, slot: usize, frames: &mut Fram
                     .unwrap()
                     .unmap_region(index, region.pages);
             }
+            session.tasks[slot].report.memory.unmapped_pages += region.pages;
         }
         session.memory.model.close(index, slot);
         // SAFETY: Model has no remaining live alias when reclamation proceeds.

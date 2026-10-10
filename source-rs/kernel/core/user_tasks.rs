@@ -9,7 +9,7 @@ mod outcomes;
 mod session;
 pub mod syscall;
 pub use configuration::{Config, Supervision};
-pub use outcomes::{Exit, Report};
+pub use outcomes::{Exit, MemoryReport, Report};
 #[cfg(feature = "memory-lab")]
 pub use session::exercise_memory_rollback;
 pub use session::{run, run_configured};

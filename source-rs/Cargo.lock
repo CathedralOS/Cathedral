@@ -140,6 +140,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "cathedral-rendering-lab"
+version = "0.0.0"
+dependencies = [
+ "cathedral-contracts",
+ "cathedral-user-runtime",
+]
+
+[[package]]
 name = "cathedral-session-protocol"
 version = "0.0.0"
 

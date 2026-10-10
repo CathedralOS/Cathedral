@@ -35,6 +35,7 @@ fn main() {
         ("CATHEDRAL_HELLO_ELF", "user.elf"),
         ("CATHEDRAL_IPC_ELF", "ipc.elf"),
         ("CATHEDRAL_MEMORY_ELF", "memory.elf"),
+        ("CATHEDRAL_RENDERING_ELF", "rendering.elf"),
         ("CATHEDRAL_SUPERVISION_ELF", "supervision.elf"),
         ("CATHEDRAL_DISPLAY_SERVICE_ELF", "display-service.elf"),
         ("CATHEDRAL_DISPLAY_LAB_ELF", "display-lab.elf"),

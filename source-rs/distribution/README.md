@@ -41,6 +41,12 @@ precedes owner release. The kernel has no knowledge of pixels or screen layout.
 section for smoke runs. It is distinct from the ordinary `applications/` path.
 The minimal example profile also uses the lab's hello executable as its only task.
 
+The [rendering investigation](lab/rendering/README.md) has two entrances:
+[bench.rs](lab/rendering/bench.rs) compares native host pixel/storage costs, and
+[main.rs](lab/rendering/main.rs) dispatches guest page-backed rendering and bounds
+probes. Its shared algorithms live at [lib.rs](lab/rendering/lib.rs); ordinary
+applications and platform services do not depend on this research fixture.
+
 Storage accepts status on its first data link (root 0) and counter on its second
 (root 1). Counter has only that one data link. These are fixed persistent root
 bindings for this profile; reordering storage links on an existing disk is
