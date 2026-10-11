@@ -67,3 +67,8 @@ The [matrix boundary lab](lab/matrix/README.md) runs the same platform world
 service at two levels over real IPC. Its distribution fixture supplies layout
 and a fixed process graph; child-facing views expose only local granted state.
 This is a headless protocol milestone, separate from the visual session profile.
+
+The [ordinary channel lab](lab/channels/README.md) launches a worker through the
+existing introduction, then creates and transfers its actual request/reply
+channels entirely at runtime. Follow its [scenario](lab/channels/scenario.rs)
+to the runtime channel API and kernel grant/escrow enforcement.

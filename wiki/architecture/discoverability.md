@@ -47,6 +47,7 @@ knowledge of a particular distribution.
 | Firmware and kernel startup | [boot main](../../source-rs/kernel/boot/uefi/main.rs) | Firmware handoff, memory, interrupts, supplied-program startup |
 | Isolated tasks | [user-task session](../../source-rs/kernel/core/user_tasks/session.rs) | Composition, preparation, admission, execution, outcomes |
 | CPU re-entry | [session traps](../../source-rs/kernel/core/user_tasks/session/traps.rs) | Syscall dispatch, wakeups, scheduling and root selection |
+| General IPC | [IPC coordinator](../../source-rs/kernel/core/ipc.rs) | [Process-local grants](../../source-rs/kernel/core/ipc/grants.rs), [creation and transfer](../../source-rs/kernel/core/ipc/channels.rs), [teardown](../../source-rs/kernel/core/ipc/lifecycle.rs); [ordinary-worker proof](../../source-rs/distribution/lab/channels/scenario.rs) |
 | Kernel syscall enforcement | [syscall dispatcher](../../source-rs/kernel/core/user_tasks/session/syscalls.rs) | IPC, tasks, readiness and specific device grants |
 | Trusted kernel tasks | [kernel-task API](../../source-rs/kernel/core/kernel_tasks.rs) | Runtime scheduling and stack ownership |
 | Distribution startup | [init session](../../source-rs/distribution/init/session.rs) | Provider readiness, application launch and supervision |

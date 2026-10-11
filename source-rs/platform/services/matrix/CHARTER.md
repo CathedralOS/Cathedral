@@ -54,7 +54,8 @@ continues to use its own fixed-slot experiment. These services need integration
 before the desktop itself is a recursive matrix.
 
 The locality tests compare protocol observations. They do not establish complete
-system noninterference: the existing kernel still exposes structured raw handle
-values, an explicitly granted global clock and shared execution resources. Those
+system noninterference: IPC endpoint names are now process-local, but other
+kernel handle families still expose structured values. An explicitly granted
+global clock, shared channel-pool contention and execution resources remain. Those
 interfaces require a confinement audit; this lab must not be represented as a
 production guarantee that a process cannot infer anything about its surroundings.

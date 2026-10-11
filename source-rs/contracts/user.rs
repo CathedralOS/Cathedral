@@ -73,3 +73,17 @@ pub const MEMORY_PAGES: u64 = 32;
 /// Wait on 1..=8 receive handles copied from a user array; return ready index.
 pub const IPC_WAIT_MANY: u64 = 33;
 pub const MAX_WAIT_HANDLES: usize = 8;
+
+/// Ordinary processes may create bounded, one-way copied-message channels.
+/// CREATE writes [send, receive] to 16 writable bytes at RDI; RSI/RDX must be zero.
+pub const IPC_CREATE: u64 = 34;
+pub const IPC_CLOSE: u64 = 35;
+/// SEND_CAP: RDI destination, RSI packet address, RDX zero. Moves one dynamic
+/// endpoint on success. Packet: length u64, attachment handle u64, 64 payload bytes.
+pub const IPC_SEND_CAP: u64 = 36;
+/// RECEIVE_CAP: RDI receiver, RSI writable packet, RDX zero. Blocks like RECEIVE.
+pub const IPC_RECEIVE_CAP: u64 = 37;
+pub const IPC_PACKET_BYTES: usize = 80;
+pub const MAX_DYNAMIC_CHANNELS: usize = 32;
+pub const MAX_CREATED_CHANNELS: usize = 8;
+pub const MAX_DYNAMIC_HANDLES: usize = 16;

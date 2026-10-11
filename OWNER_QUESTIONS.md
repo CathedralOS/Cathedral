@@ -384,6 +384,17 @@ latter would need a protocol that cannot invalidate live safe-language borrows.
 Neither this experiment nor its Rust wrappers settles production revocation or
 whether copied control messages remain a supported transport.
 
+**Further IPC evidence.** The [ordinary channel lab](source-rs/distribution/lab/channels/README.md)
+now implements explicit moves of dynamic endpoints. Successful send removes the
+sender's grant and reserves a hidden recipient grant; receive publishes it only
+after checked copyout validation. Sender death does not undo the move, while
+receiver death or bootstrap revocation discards an unaccepted attachment. This
+separates queue commitment from recipient acceptance and from service completion.
+It does not define a parent-revocable delegation tree. Production semantics still
+need to choose the cancellation/commit point and who sponsors in-flight and
+transferred endpoint storage. The fixed lab quotas are evidence, not an accepted
+hierarchical resource-accounting contract.
+
 ### Child lifetime when a supervisor fails
 
 **Requirement and tension.** Userspace supervision needs to determine whether a

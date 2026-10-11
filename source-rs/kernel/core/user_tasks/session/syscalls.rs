@@ -28,6 +28,29 @@ pub(super) fn syscall(session: &mut Session, slot: usize, now: u64) -> Event {
             event = Event::Exit;
             Ok(0)
         }
+        abi::IPC_CREATE => ipc::create(session, slot, first, second, third),
+        abi::IPC_CLOSE => {
+            if second != 0 || third != 0 {
+                Err(abi::INVALID_ARGUMENT)
+            } else {
+                session.ipc.close(slot, first).map(|()| 0)
+            }
+        }
+        abi::IPC_SEND_CAP => ipc::send_cap(session, slot, first, second, third),
+        abi::IPC_RECEIVE_CAP => {
+            if third != 0 {
+                Err(abi::INVALID_ARGUMENT)
+            } else {
+                ipc::receive_call(
+                    session,
+                    slot,
+                    (first, second, abi::MAX_MESSAGE as u64, true),
+                    None,
+                    now,
+                    &mut event,
+                )
+            }
+        }
         abi::IPC_HANDLE => session.ipc.handle(slot, first),
         abi::IPC_SEND => ipc::send(session, slot, first, second, third),
         abi::IPC_RECEIVE | abi::IPC_RECEIVE_UNTIL => {
@@ -44,7 +67,7 @@ pub(super) fn syscall(session: &mut Session, slot: usize, now: u64) -> Event {
             ipc::receive_call(
                 session,
                 slot,
-                (first, second, capacity),
+                (first, second, capacity, false),
                 deadline,
                 now,
                 &mut event,

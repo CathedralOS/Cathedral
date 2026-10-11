@@ -3,9 +3,12 @@
 Owns x86-64 task entry, syscall wrappers and the static ELF linker layout for the
 Rust lab. Depends only on shared `contracts/`; never imports kernel or
 distribution implementation. Applications choose their behavior and return an
-exit status through `entry!`. The `ipc::Handle` wrappers expose only boot-issued
-grants and bounded send/receive/revoke calls, including deadline receives; they do not perform service discovery
-or choose endpoint policy. The `task` wrappers expose indexed, bounded launch grants,
+exit status through `entry!`. The `ipc::Handle` wrappers expose local grants and bounded send/receive/revoke
+calls, including deadline receives. `ipc::channel` creates an ordinary one-way
+channel; `send_with` moves one dynamic endpoint and `receive_with` explicitly
+accepts it. `close` invalidates every local copy of that name. They do not perform
+service discovery or choose service policy. The [channel guide](../../../distribution/lab/channels/README.md)
+connects these wrappers to kernel enforcement and the ordinary-worker proof. The `task` wrappers expose indexed, bounded launch grants,
 child outcome collection, deadline waits, cancellation and explicit connection
 acceptance. `time` reads the boot-granted monotonic clock; it grants no authority
 and chooses no deadline policy. Restart decisions

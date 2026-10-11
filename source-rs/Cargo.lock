@@ -54,6 +54,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "cathedral-channels-lab"
+version = "0.0.0"
+dependencies = [
+ "cathedral-contracts",
+ "cathedral-user-runtime",
+]
+
+[[package]]
 name = "cathedral-compositor-lab"
 version = "0.0.0"
 dependencies = [

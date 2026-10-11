@@ -1,6 +1,8 @@
-//! Boot-issued, fixed-right lab endpoints. Copies are bounded; receive may park.
-//! No discovery, delegation, ownership transfer or stable production ABI.
+//! Process-local endpoint names and copied messages; receive may park.
+//! channels implements ordinary creation, close and explicit one-endpoint moves.
+mod channels;
 use crate::{Error, abi, arch};
+pub use channels::channel;
 
 #[derive(Clone, Copy, Debug)]
 pub struct Handle(u64);
@@ -8,7 +10,8 @@ impl Handle {
     pub fn bootstrap(index: u64) -> Result<Self, Error> {
         result(arch::call(abi::IPC_HANDLE, index, 0)).map(Self)
     }
-    /// Raw bits carry no authority outside the task to which the grant was issued.
+    /// A local name, not a bearer token. The same number in another process
+    /// can name its own unrelated grant; sending these bytes never delegates.
     pub fn from_raw(bits: u64) -> Self {
         Self(bits)
     }

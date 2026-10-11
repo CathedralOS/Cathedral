@@ -11,7 +11,7 @@ cathedral_user_runtime::entry!(main);
 fn main(role: u64, stale: u64) -> u64 {
     match role {
         0 => server(),
-        1 => client(stale),
+        1 => client(),
         2 | 5 => {
             let input = Handle::bootstrap(0).unwrap();
             let expected = if role == 2 {
@@ -55,9 +55,9 @@ fn server() -> u64 {
     let mut buffer = [0; 64];
     for _ in 0..32 {
         assert_eq!(input.receive(&mut buffer).unwrap(), 64);
-        // Receiving another task's handle bits does not confer its authority.
+        // The same local number names our receive right, never the sender's right.
         let foreign = Handle::from_raw(u64::from_le_bytes(buffer[..8].try_into().unwrap()));
-        assert_eq!(foreign.send(b"stolen"), Err(Error(abi::BAD_HANDLE as i64)));
+        assert_eq!(foreign.send(b"stolen"), Err(Error(abi::DENIED as i64)));
         output.send(&buffer).unwrap();
     }
     assert_eq!(
@@ -66,11 +66,11 @@ fn server() -> u64 {
     );
     0
 }
-fn client(stale: u64) -> u64 {
+fn client() -> u64 {
     let output = Handle::bootstrap(0).unwrap();
     let input = Handle::bootstrap(1).unwrap();
     assert_eq!(
-        Handle::from_raw(stale).send(b"stale"),
+        Handle::from_raw(0).send(b"invalid"),
         Err(Error(abi::BAD_HANDLE as i64))
     );
     assert!(Handle::bootstrap(2).is_err());
@@ -84,7 +84,9 @@ fn client(stale: u64) -> u64 {
         assert_eq!(input.receive(&mut received).unwrap(), 64);
         assert_eq!(sent, received);
     }
-    output.raw() // Boot feeds these retired-session bits to the next client.
+    output.close().unwrap();
+    assert_eq!(output.send(b"stale"), Err(Error(abi::BAD_HANDLE as i64)));
+    0
 }
 
 // Let the peer reach its receive, then require boot's measured blocked count.

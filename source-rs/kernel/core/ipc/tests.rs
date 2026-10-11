@@ -1,3 +1,4 @@
+mod channels;
 use super::*;
 #[test]
 fn graph_replacement_changes_only_edges_touching_the_replaced_task() {
@@ -57,7 +58,8 @@ fn readiness_preserves_messages_checks_rights_and_exposes_closure() {
     let send = ipc.handle(0, 0).unwrap();
     let receive = ipc.handle(1, 0).unwrap();
     assert_eq!(ipc.ready(0, send), Err(abi::DENIED));
-    assert_eq!(ipc.ready(1, send), Err(abi::BAD_HANDLE));
+    // Local names may alias: this number names the receiver's own grant.
+    assert_eq!(send, receive);
     assert_eq!(ipc.ready(1, receive), Ok(false));
     ipc.send(0, send, b"queued").unwrap();
     assert_eq!(ipc.ready(1, receive), Ok(true));
@@ -115,7 +117,7 @@ fn replacing_child_grants_requires_consent_and_preserves_control_channels() {
     ipc.send(0, control, b"control").unwrap();
     ipc.prepare_child(1, 1, 2, 2);
     let old_child = ipc.handle(2, 0).unwrap();
-    let guessed_peer = Ipc::ticket(2, 1, 3);
+    let guessed_peer = 4; // Next local boot name exists but remains hidden.
     assert_eq!(ipc.handle(1, 1), Err(abi::BAD_HANDLE));
     assert_eq!(
         ipc.send(1, guessed_peer, b"no consent"),
@@ -153,17 +155,16 @@ fn pair(epoch: u64) -> Ipc {
     .unwrap()
 }
 #[test]
-fn tickets_are_bound_to_caller_epoch_and_right() {
+fn tickets_resolve_only_in_the_callers_local_grants() {
     let mut ipc = pair(1);
     let send = ipc.handle(0, 0).unwrap();
     let receive = ipc.handle(1, 0).unwrap();
-    assert_eq!(ipc.send(1, send, b"stolen"), Err(abi::BAD_HANDLE));
+    assert_eq!(ipc.send(1, send, b"stolen"), Err(abi::DENIED));
     assert_eq!(ipc.send(1, receive, b"wrong right"), Err(abi::DENIED));
     assert_eq!(ipc.revoke(0, send), Err(abi::DENIED));
     for bad in [0, u64::MAX, send + 1, send ^ (1 << 8)] {
         assert_eq!(ipc.send(0, bad, b"bad"), Err(abi::BAD_HANDLE));
     }
-    assert_eq!(pair(2).send(0, send, b"stale"), Err(abi::BAD_HANDLE));
     assert_eq!(ipc.handle(0, 1), Err(abi::BAD_HANDLE));
     assert!(Ipc::new(0, 3, &[]).is_err());
     assert!(Ipc::new(MAX_EPOCH + 1, 3, &[]).is_err());
@@ -256,7 +257,7 @@ fn bounded_wait_set_validates_every_grant_and_preserves_messages() {
     assert_eq!(ipc.ready_any(1, &[receive; 9]), Err(abi::INVALID_ARGUMENT));
     assert_eq!(ipc.ready_any(1, &[receive; 8]), Ok(None));
     ipc.send(0, send, b"ready").unwrap();
-    assert_eq!(ipc.ready_any(1, &[receive, send]), Err(abi::BAD_HANDLE));
+    assert_eq!(ipc.ready_any(1, &[receive, 0]), Err(abi::BAD_HANDLE));
     assert_eq!(ipc.ready_any(1, &[receive; 8]), Ok(Some(0)));
     assert_eq!(ipc.receive(1, receive, 64).unwrap().unwrap().len, 5);
     assert_eq!(ipc.ready_any(1, &[receive; 8]), Ok(None));

@@ -36,7 +36,7 @@ explains how to preserve these routes as the lab grows.
 | `kernel/core/deadline.rs` | Boot-issued clock grants and wrapping deadline comparisons |
 | `kernel/boot/uefi/lab/supervision.rs` | Supply launch bounds and verify userspace recovery/cleanup |
 | `kernel/boot/uefi/lab/watchdog.rs` | Verify hung-service cancellation, deadline wakeups and independent progress |
-| `kernel/core/ipc.rs`, `ipc/` | Host-testable endpoint rights, bound tickets, queues and teardown |
+| `kernel/core/ipc.rs`, `ipc/` | Process-local endpoint grants, dynamic channels, checked moves, queues and teardown |
 | `kernel/boot/uefi/smoke.rs` | Test-only fault injection and QEMU result reporting |
 | `contracts/boot.rs` | Firmware-neutral memory handoff; experimental Rust data, not a frozen ABI |
 | `contracts/user.rs` | Shared experimental entry/syscall constants for kernel and user runtime |
@@ -67,6 +67,7 @@ explains how to preserve these routes as the lab grows.
 | `kernel/core/link.rs` | Boot-approved peer graph without lifecycle rights |
 | `distribution/lab/display/` | Test-pattern layout, display client and restart policy |
 | `distribution/lab/supervision/` | Userspace restart policy, persistent client and crashing echo service |
+| `distribution/lab/channels/` | [Ordinary parent/worker channels](distribution/lab/channels/README.md), endpoint transfer and reclamation |
 | `distribution/lab/ipc/` | Client, echo service and hostile IPC fixture roles in a standalone ELF |
 | `distribution/lab/hello/` | Independently compiled `no_std` program exercising initialized data, BSS, yields and writes |
 | `kernel/arch/lib.rs` | Compile-time CPU backend selection and the boot-facing machine interface |
@@ -238,7 +239,7 @@ QEMU q35, one qemu64 CPU, software emulation, 128 MiB by default:
     frame-admission boundary for the ELF pair; require complete memory reclamation.
 23. Boot-grant request/reply endpoints to isolated ELF client/service instances;
     repeat 32 echo exchanges in each of two sessions. Reject wrong rights,
-    foreign tickets and retired-session handles; require actual blocking.
+    raw-name authority and closed local handles; require actual blocking.
 24. Revoke an endpoint or exit/fault its sender while its receiver is blocked;
     require the corresponding error and complete heap/frame reclamation.
 25. Fill a bounded queue, reject bad/read-only/cross-page copyout destinations
@@ -366,6 +367,10 @@ initial FP state is clean and I/O privilege is zero.
 | 31: Memory map | Region handle | Accept authorized RO/NX lease and return its address |
 | 32: Memory pages | Region handle | Caller-owned or accepted region page count |
 | 33: IPC wait many | Pointer to 1–8 LE u64 receive tickets, count, absolute deadline | Ready index or error; validates the copied array and all receive rights, consumes no data, requires clock |
+| 34: IPC create | 16-byte writable destination, 0, 0 | 0 after installing local send/receive handles; `NO_MEMORY` at quota |
+| 35: IPC close | Local handle, 0, 0 | 0 after dropping the grant; copied handles become stale |
+| 36: IPC send capability | Destination handle, 80-byte packet, 0 | Payload length after atomic one-endpoint move into the queue |
+| 37: IPC receive capability | Receive handle, writable 80-byte packet, 0 | Payload length and optional installed handle; blocks on empty |
 
 Writes accept at most 256 bytes within one known user page. The kernel validates
 the entire range and copies through its physical backing before calling the
@@ -419,58 +424,59 @@ Cathedral's component model or shared ABI.
 
 ## Capability IPC experiment
 
-The kernel owns at most ten anonymous, one-way endpoints per user session.
-Each has one sender, one receiver, an optional revoke holder, and one queued
-message of at most 64 bytes. Boot explicitly assigns these grants to task slots;
-`IPC_HANDLE` enumerates only the caller's installed grants. There is no global
-lookup, general endpoint creation, delegation, transfer, manifest check, lease,
-persistent authority arena or production admission policy.
+The [kernel IPC entrance](kernel/core/ipc.rs) coordinates local grant checks,
+transfer reservation and message commit. [Boot admission](kernel/core/ipc/bootstrap.rs)
+uses 32 reserved endpoint slots; [ordinary creation](kernel/core/ipc/channels.rs)
+uses a separate pool of 32 dynamic channels. Each one-way channel has one sender,
+one receiver, and one queued message of at most 64 bytes. Boot channels may also
+have an explicitly assigned revoke holder. No syscall routes on a service name,
+matrix identity, manifest or caller-supplied PID.
 
-Tickets combine an endpoint epoch, owner slot and grant slot. The trapping task's
-kernel identity selects authority; user arguments cannot select another caller.
-Epochs never wrap during a boot. Static endpoints retain their session epoch;
-a supervised child's endpoint pair receives a fresh epoch on each spawn, so
-reusing its task slot never revives old tickets. Zero, foreign and retired-session
-tickets fail. Raw ticket bytes can
-be sent as ordinary data but confer no authority on the recipient. Tickets are
-not secret. They are boot-local; there is no cross-reboot stale-ticket guarantee.
+[Grant tables](kernel/core/ipc/grants.rs) resolve names using the trapping task's
+kernel identity. IPC names contain no global task/endpoint/epoch fields. Equal
+numbers in different processes may name different grants; copying a number never
+installs authority. Closed or moved names remain stale throughout this session,
+including task-slot replacement. Independent sessions and reboots have independent
+namespaces. `IPC_HANDLE` enumerates admitted boot grants only. Dynamic endpoints
+are returned directly by `ipc::channel()` and `Handle::receive_with()`.
 
-Send copies bytes into the kernel queue and returns `WOULD_BLOCK` (-11) if full.
-Receive validates the complete destination, including write permission, before
-consuming a message or parking. The raw ABI requires a buffer inside one user
-page; platform `ipc::Handle` wrappers stage through a 64-byte-aligned buffer so
-ordinary Rust slices may cross page boundaries. Empty messages are valid; even
-zero-capacity raw buffers require a valid writable address. A short destination
-returns `TOO_SMALL` (-90) and retains the queued message. Error precedence is
-handle/rights, length, address, then queue state.
+The [ordinary-app channel guide](distribution/lab/channels/README.md) documents
+creation, quota accounting, endpoint moves and the parent/worker QEMU proof:
 
-A receive on an empty live endpoint parks the task; sending wakes it and writes
-the result into its saved context. No callback allocates, frees or follows an
-unchecked virtual pointer. Pending operations store integer ranges, not Rust
-references into user memory. Each live task's mappings remain immutable until retirement.
-When no task is ready, the boot context halts between timer ticks; there is no
-general deadlock recovery. Deadline receives are described below.
+```powershell
+python tools/boot-harness-rs/run.py --ipc-test --timeout 90
+```
 
-Sender exit/fault allows already-accepted bytes to drain, then returns
-`PEER_CLOSED` (-32), waking a blocked receiver. Receiver exit discards queued
-bytes and subsequent sends fail closed. Revocation requires a separate right:
-it discards queued bytes, cancels pending receives with `REVOKED` (-125), and
-rejects later use. Wrong rights return `DENIED` (-13); invalid tickets return
-`BAD_HANDLE` (-9). Teardown retires the task's grants before reclaiming its
-address space; session destruction releases endpoint storage. Admission and
-reclamation have separate stack frames to keep debug construction temporaries
-within the existing 64-KiB boot stack.
+`send_with` checks all inputs and reserves recipient capacity before moving one
+dynamic endpoint into a message. A failed send preserves ownership. A successful
+send invalidates the sender's name; successful `receive_with` publishes a
+recipient-local name after validating its complete writable output. Its 80-byte
+record is length u64, attachment u64 (zero means none on receive), then 64 payload
+bytes. The runtime stages it in a 128-byte-aligned object. Plain receive refuses
+attached authority with `TOO_SMALL` and preserves the message. Boot grants cannot
+be moved; dynamic grants cannot yet be duplicated or independently revoked.
 
-The distro fixture runs one ELF in separate client/service roles, tests stolen
-handle bits and a stale ticket from a prior session, and injects peer failures.
-Boot asserts actual blocking before reporting wakeup success. Host tests cover
-queue retention, admission limits, rights, epoch/caller checks and teardown;
-QEMU checks real syscall copy boundaries and returns to memory baselines.
+Send returns `WOULD_BLOCK` (-11) for a full queue. Ordinary receives validate the
+complete destination before dequeueing or parking. Raw buffers must fit inside a
+mapped user page; wrappers stage bytes so callers' slices may cross pages.
+Short destinations preserve the message. Empty messages are valid. Pending
+operations store checked integer ranges, not Rust references into user memory.
+No message operation allocates or follows an unchecked virtual pointer.
 
-Copied queues and cancellation of already-parked receives deliberately remain
-experimental. The shared-region IPC design and its relationship to the
-capability lifecycle need reconciliation, recorded in
-[`OWNER_QUESTIONS.md`](../OWNER_QUESTIONS.md).
+Sender close/exit allows accepted bytes and transfers to drain before
+`PEER_CLOSED` (-32). Receiver close/exit discards queued messages and closes their
+unaccepted attachments. Bootstrap revocation discards the queue and returns
+`REVOKED` (-125); replacement cannot inherit it. Explicit moves survive sender
+death and preserve the transferred right. Wrong rights return `DENIED` (-13),
+unknown local names `BAD_HANDLE` (-9). Dynamic channel slots are reusable after
+both ends close; grant names are not reused. Admission and teardown remain bounded.
+
+The original smoke fixture checks plain messages, rights, local-name collisions,
+closed handles, blocked wakeups, peer failures and heap/frame reclamation. The
+new channel fixture adds real creation/transfer syscalls and worker-death cleanup.
+Host policy tests also cover quotas, escrow chains, forwarding, revocation and
+atomic failure. Production transport, sponsorship and revocation semantics remain
+experimental; see [`OWNER_QUESTIONS.md`](../OWNER_QUESTIONS.md).
 
 ### Deadline receives
 
@@ -483,7 +489,7 @@ buffer. Timer interrupts also retire parked receives when every task is blocked.
 Timeout removes only that receive. It neither revokes the endpoint nor cancels
 a remote operation; a late reply can still queue. A caller must correlate/drain
 late responses or replace the connection. Init takes the latter approach by
-reclaiming the provider and accepting fresh epoch-bound endpoints before retry.
+reclaiming the provider and accepting fresh local endpoint names before retry.
 `keyboard::read_until` follows the same ready-before-timeout rule and additionally
 requires the exclusive device grant. An input idle reply means the provider
 completed a timed raw read; it is not evidence of a hung provider.

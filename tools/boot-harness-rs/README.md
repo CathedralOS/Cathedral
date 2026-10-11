@@ -21,7 +21,7 @@ task-slot exhaustion, allocation-failure rollback, stale IDs and repeated stack,
 page-table and heap reclamation while a non-yielding peer stays alive. Use
 `--release` for the optimized path. Expected-fault runs remain separate.
 The composed image also checks isolated ELF programs and capability-addressed
-IPC: echo exchanges, stale/foreign handles, rights, backpressure, checked copyout,
+IPC: echo exchanges, stale local handles, raw-name collisions, rights, backpressure, checked copyout,
 and blocked-receiver wakeups on revoke or peer exit/fault. Each session must
 return to its heap and physical-frame baselines. The userspace supervision fixture
 keeps one client alive across 32 service crashes/restarts and checks explicit
@@ -142,3 +142,14 @@ clamped capture, attenuated keys, ancestor revocation, resize and replacement.
 Add `--release` for optimized verification. This profile has no display grant;
 its [guide](../../source-rs/distribution/lab/matrix/README.md) documents the
 execution paths and remaining environment/lifecycle work.
+
+## Ordinary application IPC profile
+
+`python tools/boot-harness-rs/run.py --ipc-test --timeout 90` selects
+[profiles/channels.json](profiles/channels.json). Add `--release` for optimized
+binaries. The parent creates runtime channels, moves endpoints to an ordinary
+worker, exchanges messages and repeats cancellation with queued transfers.
+This is headless and terminates at the guest's success marker. Logs live in
+`build/boot-harness-rs/channels-test/`. The [guide](../../source-rs/distribution/lab/channels/README.md)
+explains the local-name semantics, fixed quotas, limitations and code entrances.
+[protocol_test.py](protocol_test.py) monitors both this proof and the matrix proof.

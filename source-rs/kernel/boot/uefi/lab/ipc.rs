@@ -14,17 +14,12 @@ pub fn exercise(memory: &mut PreparedMemory, console: &mut SerialPort) {
     let baseline = memory.frames.allocated();
     // SAFETY: Boot CPU owns initialized heap, outside any task session.
     let heap = unsafe { HEAP.used() };
-    let mut stale = 0;
     for round in 0..2 {
-        let programs = [0, 1].map(|role| program(role, stale));
+        let programs = [0, 1].map(|role| program(role, 0));
         let endpoints = [endpoint(1, 0, None), endpoint(0, 1, None)];
         let reports = run(memory, &programs, &endpoints);
         assert_eq!(reports[0].exit, Some(Exit::Returned(0)));
-        let Some(Exit::Returned(ticket)) = reports[1].exit else {
-            panic!("IPC client failed")
-        };
-        assert!(ticket > 0 && (ticket as i64) > 0 && ticket != stale);
-        stale = ticket;
+        assert_eq!(reports[1].exit, Some(Exit::Returned(0)));
         assert!(
             reports
                 .iter()
