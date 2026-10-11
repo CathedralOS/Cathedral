@@ -51,6 +51,7 @@ knowledge of a particular distribution.
 | Trusted kernel tasks | [kernel-task API](../../source-rs/kernel/core/kernel_tasks.rs) | Runtime scheduling and stack ownership |
 | Distribution startup | [init session](../../source-rs/distribution/init/session.rs) | Provider readiness, application launch and supervision |
 | Status application | [application workflow](../../source-rs/distribution/applications/status/application.rs) | Connections, input, state, persistence, view and test probes |
+| Compositor input | [compositor loop](../../source-rs/platform/services/display/compositor.rs) | [Connection authorization](../../source-rs/platform/services/display/compositor/input.rs), [pointer lifetime](../../source-rs/platform/services/display/pointer.rs), routing and cursor damage |
 | Private storage | [catalog engine](../../source-rs/platform/libraries/object-store/lib.rs) | Root-local validation, encoding, commit and recovery; protocol staging is a separate entrance |
 | Second private client | [counter session](../../source-rs/distribution/applications/counter/session.rs) | Paired record schema, health verification and optional failure probes |
 | Kernel exercises | [boot lab](../../source-rs/kernel/boot/uefi/lab.rs) | Individual fixtures; guest counterparts live in `distribution/lab` |

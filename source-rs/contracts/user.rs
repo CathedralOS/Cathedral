@@ -20,6 +20,10 @@ pub const TASK_CANCEL: u64 = 13;
 pub const TASK_WAIT_UNTIL: u64 = 14;
 pub const CLOCK_HANDLE: u64 = 15;
 pub const DISPLAY_INFO: u64 = 16;
+/// Raw controller read: low eight bits are data; AUX identifies the mouse port.
+pub const KEYBOARD_AUX: u64 = 512;
+/// Loss is a separate record, never a tagged data byte.
+pub const KEYBOARD_LOST: u64 = 256;
 pub const KEYBOARD_READ: u64 = 17;
 pub const KEYBOARD_WRITE: u64 = 18;
 /// Receive into exactly MAX_MESSAGE writable bytes; RDX is the absolute deadline.

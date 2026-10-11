@@ -49,6 +49,7 @@ explains how to preserve these routes as the lab grows.
 | `platform/drivers/ata-pio/` | Userspace bounded PIO driver for a dedicated QEMU data disk |
 | `platform/libraries/object-store/`, `platform/services/storage/` | Atomic object replacement, recovery and private service endpoint |
 | `contracts/input.rs` | Experimental physical-key events, independent of scan codes or UI policy |
+| `contracts/pointer.rs` | Experimental logical pointers, source updates, capture and scoped synthetic leases |
 | `kernel/core/extent.rs` | Bootstrap frame accounting and reclaiming bitmap over usable RAM, corresponding to the resource work in `source/kernel/core/` |
 | `kernel/core/heap.rs`, `scheduler.rs`, `kernel_tasks.rs`, `kernel_tasks/` | IRQ-safe heap, pure scheduling policy, task admission and context/stack lifetime management |
 | `kernel/core/user_tasks.rs`, `user_tasks/` | Experimental user-task lifetime, checked diagnostic syscalls and outcomes |
@@ -56,7 +57,7 @@ explains how to preserve these routes as the lab grows.
 | `platform/drivers/uart_16550/` | Polling serial diagnostics, corresponding to `source/platform/drivers/uart_16550/` |
 | `platform/libraries/user-runtime/` | Entry stub, syscall wrappers and linker script; imports only shared contracts |
 | `platform/services/display/` | Separately compiled userspace provider for linear framebuffer drawing |
-| `platform/services/input/` | Userspace PS/2 configuration, key decoding and IPC event delivery |
+| `platform/services/input/` | Userspace PS/2 configuration, keyboard/mouse decoding and IPC event delivery |
 | `distribution/init/` | Ordinary userspace startup, service health and restart policy |
 | `distribution/applications/status/`, `distribution/libraries/boot-scene/` | Separate status application, retained UI state and drawing client |
 | `distribution/libraries/session-protocol/` | Init/app status messages kept inside the distribution |
@@ -346,7 +347,7 @@ initial FP state is clean and I/O privilege is zero.
 | 14: task wait until | Child ticket, 40-byte destination, absolute deadline | Wait result, or `TIMED_OUT` (-110); requires a clock grant |
 | 15: clock grant | None | Caller's boot-issued clock ticket, or `DENIED` |
 | 16: display info | Destination, exactly 48 bytes | Boot-installed mapping geometry, or `DENIED` when no display grant |
-| 17: keyboard read | 0: nonblocking, 1: wait | Raw byte, 256 on data loss, `WOULD_BLOCK` or `DENIED` |
+| 17: keyboard read | 0: nonblocking, 1: wait | Raw keyboard byte or `512 | mouse_byte`, 256 on data loss, `WOULD_BLOCK` or `DENIED` |
 | 18: keyboard write | 0: data or 1: command, byte | 0, `WOULD_BLOCK`, `INVALID_ARGUMENT` or `DENIED` |
 | 19: IPC receive until | Ticket, 64-byte destination, absolute deadline | Bytes copied or error; requires clock access |
 | 20: keyboard read until | Absolute deadline | Raw byte/loss or `TIMED_OUT`; requires keyboard and clock access |
@@ -727,7 +728,7 @@ fault injection and negative probes from its normal executable.
 
 The q35 PS/2 controller is temporary bootstrap hardware, like PIC/PIT. Kernel
 arch code transfers bytes through fixed ports and acknowledges IRQ1. Core checks
-the exclusive child grant, uses a 64-byte queue and parks readers. IRQs and timer
+the exclusive child grant, uses a 64-record tagged byte queue and parks readers. IRQs and timer
 polls drain at most 64 hardware bytes; controller replies can need timer delivery
 while the keyboard interface is disabled. Kernel code never decodes scan codes.
 The write interface allows only controller mode/interface commands, plus device
@@ -883,8 +884,11 @@ per client. Kernel memory acceptance can authenticate the producer against a
 service-side link. Generic service events expose client disconnects so retained
 state cannot silently pass to a replacement. QEMU exercises cross-client denial,
 invalid/stale snapshots, movement, failure containment and provider replacement;
-the host verifies the final scanout. This is not yet pointer routing, arbitrary
-Matrix delegation, protected output, GPU presentation or the production renderer.
+the host verifies the final scanout. The optional [pointer lab](distribution/lab/compositor/POINTERS.md)
+adds PS/2 motion, clipped hit-testing, capture, root-owned cursors and one scoped
+synthetic pointer. Run `python tools/boot-harness-rs/run.py --pointer-test`; use its
+documented window command to interact. Both profiles remain experiments without
+arbitrary Matrix delegation, protected output, seat/focus semantics or GPU presentation.
 
 ## Next bring-up steps
 

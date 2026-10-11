@@ -1,4 +1,5 @@
 //! Exercise the actual IPC and shared-page path; no display or task-control grant.
+mod interactive;
 use super::{exchange, scene};
 use cathedral_contracts::{composition as w, display, user as abi};
 use cathedral_user_runtime::{
@@ -87,6 +88,11 @@ pub fn run(role: u64) -> u64 {
                 }
             }
             11 => exchange(connection, [w::PLACE, 1, 0, 0, 256, 256]),
+            12 => {
+                control.1.send(&display::encode([0; 6])).unwrap();
+                return interactive::run(role, arg, control, connection, link);
+            }
+            32..=38 => exchange(connection, display::decode(&bytes[..len]).unwrap()),
             _ => panic!(),
         };
         control.1.send(&display::encode(reply)).unwrap();

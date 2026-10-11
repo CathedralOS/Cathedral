@@ -1,7 +1,9 @@
 //! Retained compositor entrance: receive lifecycle/request, authorize, commit, redraw.
+mod input;
 mod requests;
 use crate::surface::Surface;
 use cathedral_contracts::{composition as wire, display, user as abi};
+use cathedral_display_service::pointer::Router;
 use cathedral_display_service::scene::{Client, Rect, Scene};
 use cathedral_user_runtime::{
     Error,
@@ -12,6 +14,8 @@ struct Compositor {
     scratch: &'static mut Scene,
     background: u32,
     output: Surface,
+    pointers: Router,
+    source: u64,
 }
 pub fn run() -> u64 {
     static mut CLIENTS: [Client; 2] = [const { Client::empty() }; 2];
@@ -21,21 +25,23 @@ pub fn run() -> u64 {
     // SAFETY: This single-threaded process enters run exactly once. Neither static
     // has another reference; scratch and retained state are separate allocations.
     let (scratch, clients) = unsafe { (&mut *scratch_address, &mut *clients_address) };
+    let output = Surface::open();
     let mut compositor = Compositor {
         clients,
         scratch,
         background: 0,
-        output: Surface::open(),
+        pointers: Router::new(output.width, output.height),
+        output,
+        source: 0,
     };
-    let mut server = Server::open_clients(2).unwrap();
+    let mut server = Server::open_clients(3).unwrap();
     loop {
         match server.next_event() {
             Ok(Event::Disconnected {
                 client,
                 incarnation,
             }) => {
-                compositor.clients[client].disconnect(incarnation);
-                compositor.redraw(compositor.clients[client].scope);
+                compositor.disconnected(client, incarnation);
             }
             Ok(Event::Request(request)) => {
                 let reply = compositor.request(&request);
@@ -58,7 +64,11 @@ impl Compositor {
                     .filter_map(|client| client.pixel(x, y))
                     .next_back()
                     .unwrap_or(self.background);
-                self.output.put(x, y, color);
+                self.output.put(
+                    x,
+                    y,
+                    self.pointers.pixel(x, y, self.clients).unwrap_or(color),
+                );
             }
         }
     }

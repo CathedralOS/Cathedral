@@ -1,6 +1,6 @@
 //! Bounded raw device bytes. Loss invalidates the stream before any later data.
 pub struct ByteQueue {
-    bytes: [u8; 64],
+    bytes: [u16; 64],
     head: usize,
     len: usize,
     lost: bool,
@@ -28,6 +28,10 @@ impl ByteQueue {
         self.lost = true;
     }
     pub fn push(&mut self, byte: u8) {
+        self.push_tagged(u16::from(byte));
+    }
+    /// Preserve the controller source tag without interpreting device packets.
+    pub fn push_tagged(&mut self, byte: u16) {
         if self.lost {
             return;
         }
@@ -41,7 +45,7 @@ impl ByteQueue {
     pub fn pop(&mut self) -> Option<u64> {
         if self.lost {
             self.lost = false;
-            return Some(256);
+            return Some(cathedral_contracts::user::KEYBOARD_LOST);
         }
         if self.len == 0 {
             return None;
@@ -55,6 +59,20 @@ impl ByteQueue {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn interleaved_sources_remain_distinct_from_loss() {
+        let mut queue = ByteQueue::new();
+        queue.push(0xfa);
+        queue.push_tagged(512 | 0xfa);
+        queue.push(0);
+        assert_eq!(queue.pop(), Some(0xfa));
+        assert_eq!(queue.pop(), Some(512 | 0xfa));
+        assert_eq!(queue.pop(), Some(0));
+        queue.push_tagged(512 | 8);
+        queue.lose();
+        assert_eq!(queue.pop(), Some(256));
+        assert_eq!(queue.pop(), None);
+    }
     #[test]
     fn overflow_discards_partial_sequences_and_reset_discards_old_generation() {
         let mut queue = ByteQueue::new();

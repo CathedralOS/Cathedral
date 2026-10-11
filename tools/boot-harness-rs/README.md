@@ -94,3 +94,12 @@ probes, and independently validates all final scanout pixels. Add `--release` fo
 the optimized build. For a visible run use `--profile tools/boot-harness-rs/profiles/compositor.json --window`.
 The [lab guide](../../source-rs/distribution/lab/compositor/README.md) describes
 scope, authority, retained storage and the experimental limitations.
+
+## Pointer interaction profile
+
+`python tools/boot-harness-rs/run.py --pointer-test` drives the PS/2 mouse through
+QMP, checks capture and app/source recovery, and compares every final scanout
+pixel. Add `--release` for the optimized build. It writes
+`build/boot-harness-rs/pointer-test/display.png`. See the
+[pointer lab](../../source-rs/distribution/lab/compositor/POINTERS.md) for the
+interactive command, gestures, protocol ownership and bounds.

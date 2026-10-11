@@ -46,3 +46,46 @@ pub fn initialize() -> Result<(), Error> {
     device(0xf4)?;
     Ok(())
 }
+
+/// Enable the standard three-byte mouse with auxiliary IRQ disabled. The bounded
+/// kernel timer poll services both channels; mouse decoding stays in userspace.
+pub fn initialize_mouse() -> Result<(), Error> {
+    initialize()?;
+    write(true, 0xa8)?;
+    write(true, 0x20)?;
+    let mode = keyboard::read_until(time::after(50)?)?;
+    if mode > 255 {
+        return Err(Error(abi::IO_ERROR as i64));
+    }
+    write(true, 0x60)?;
+    write(false, (mode as u8 | 0x41) & !0x32)?;
+    for command in [0xf5, 0xf6, 0xe6, 0xea, 0xf4] {
+        let mut accepted = false;
+        for _ in 0..3 {
+            write(true, 0xd4)?;
+            write(false, command)?;
+            let deadline = time::after(50)?;
+            loop {
+                let byte = keyboard::read_until(deadline)?;
+                if byte == keyboard::AUX + 0xfa {
+                    accepted = true;
+                    break;
+                }
+                if byte == keyboard::AUX + 0xfe {
+                    break;
+                }
+                if byte == keyboard::LOST {
+                    return Err(Error(abi::IO_ERROR as i64));
+                }
+                // Ignore pending keyboard reports during configuration.
+            }
+            if accepted {
+                break;
+            }
+        }
+        if !accepted {
+            return Err(Error(abi::IO_ERROR as i64));
+        }
+    }
+    Ok(())
+}

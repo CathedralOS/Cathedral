@@ -1,6 +1,7 @@
 #![no_std]
 #![forbid(unsafe_code)]
 //! Small translated-set-1 decoder for the lab's physical navigation keys.
+pub mod mouse;
 use cathedral_contracts::input::{self as wire, Event};
 
 #[derive(Default)]

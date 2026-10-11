@@ -1,9 +1,10 @@
 #![no_std]
 #![no_main]
-//! Physical-key provider: exclusive raw bytes in, normalized events over IPC out.
+//! Input provider: select physical-key delivery or the boot-requested mouse source.
 //! Receives contracts/input.rs requests; controller.rs initializes the device,
 //! decoder.rs interprets bytes, and serve below coordinates request delivery.
 mod controller;
+mod pointer;
 #[cfg(feature = "recovery-lab")]
 mod recovery;
 use cathedral_contracts::{input as wire, user as abi};
@@ -12,6 +13,9 @@ use cathedral_user_runtime::{Error, ipc::Handle, keyboard, server::Server, time}
 cathedral_user_runtime::entry!(main);
 
 fn main(_mode: u64, _generation: u64) -> u64 {
+    if _mode == cathedral_contracts::pointer::SOURCE_MODE {
+        return pointer::run();
+    }
     #[cfg(feature = "recovery-lab")]
     recovery::startup(_mode, _generation);
     if serve().is_ok() { 0 } else { 1 }
@@ -52,11 +56,12 @@ fn serve() -> Result<(), Error> {
             };
             match byte {
                 keyboard::LOST => break decoder.reset(),
-                byte => {
+                byte if byte < 256 => {
                     if let Some(event) = decoder.feed(byte as u8) {
                         break event;
                     }
                 }
+                _ => (),
             }
         };
         server.reply(&request, &event.encode())?;

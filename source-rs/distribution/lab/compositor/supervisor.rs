@@ -29,6 +29,7 @@ fn marker(text: &[u8]) {
     cathedral_user_runtime::write(text).unwrap();
 }
 mod checks;
+mod pointer;
 mod recovery;
 struct Session {
     provider: Child,
@@ -68,6 +69,9 @@ pub fn run() -> u64 {
     session.client_recovery();
     session.provider_recovery();
     marker(b"Cathedral compositor: ready\n");
+    if let Ok(source) = Launch::at(3) {
+        return session.pointers(source);
+    }
     // Preserve the final scene and children for QMP or interactive viewing.
     loop {
         let _ = session

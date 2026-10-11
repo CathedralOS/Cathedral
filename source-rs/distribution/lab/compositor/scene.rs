@@ -1,6 +1,13 @@
 //! Distribution appearance. The platform knows only scene nodes and connection scopes.
 use cathedral_contracts::composition::{self as w, Node};
 pub fn snapshot(role: u64, invalid: bool) -> [u8; w::SNAPSHOT_BYTES] {
+    interactive(role, invalid, None)
+}
+pub fn interactive(
+    role: u64,
+    invalid: bool,
+    marker: Option<(u64, u64)>,
+) -> [u8; w::SNAPSHOT_BYTES] {
     let title = if role == 1 {
         *b"APP ONE\0"
     } else {
@@ -14,9 +21,18 @@ pub fn snapshot(role: u64, invalid: bool) -> [u8; w::SNAPSHOT_BYTES] {
         Node([2, w::GROUP, 16, 8, 96, 96, 0]),
         Node([3, w::RECT, 0, 0, 96, 96, 0x779bea]),
         Node([3, w::IMAGE, 8, 8, 16, 16, 0]),
+        Node([w::ROOT, w::RECT, 0, 0, 12, 12, 0x101827]),
     ];
     if invalid {
         nodes[5].0[2] = u64::MAX;
     }
-    w::encode(&nodes, &[0x59d9cc; w::IMAGE_PIXELS]).unwrap()
+    if let Some((x, y)) = marker {
+        nodes[6].0[2] = x;
+        nodes[6].0[3] = y;
+    }
+    w::encode(
+        &nodes[..if marker.is_some() { 7 } else { 6 }],
+        &[0x59d9cc; w::IMAGE_PIXELS],
+    )
+    .unwrap()
 }

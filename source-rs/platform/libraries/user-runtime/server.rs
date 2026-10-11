@@ -1,4 +1,4 @@
-//! Fair, bounded service control and up to two boot-approved client connections.
+//! Fair, bounded service control and up to three boot-approved client connections.
 //! Client identity comes from the accepted link slot, never from message contents.
 use crate::{
     Error, abi,
@@ -20,37 +20,43 @@ pub enum Event {
 }
 pub struct Server {
     control: (Handle, Handle),
-    links: [Option<Link>; 2],
-    clients: [Option<(Handle, Handle)>; 2],
+    links: [Option<Link>; 3],
+    clients: [Option<(Handle, Handle)>; 3],
     count: usize,
     cursor: usize,
     idle: usize,
-    closed: [Option<u64>; 2],
+    closed: [Option<u64>; 3],
 }
 impl Server {
     pub fn open() -> Result<Self, Error> {
         Self::open_clients(1)
     }
     pub fn open_clients(count: usize) -> Result<Self, Error> {
-        if count == 0 || count > 2 {
+        if count == 0 || count > 3 {
             return Err(Error(abi::INVALID_ARGUMENT as i64));
         }
-        let mut links = [None; 2];
+        let mut links = [None; 3];
         for (index, slot) in links.iter_mut().enumerate().take(count) {
             *slot = match Link::at(index as u64) {
                 Ok(link) => Some(link),
-                Err(Error(code)) if code == abi::DENIED as i64 => None,
+                // No links is DENIED; an index beyond existing links is BAD_HANDLE.
+                // Both represent an absent optional connection in this fixed budget.
+                Err(Error(code))
+                    if code == abi::DENIED as i64 || code == abi::BAD_HANDLE as i64 =>
+                {
+                    None
+                }
                 Err(error) => return Err(error),
             };
         }
         Ok(Self {
             control: (Handle::bootstrap(0)?, Handle::bootstrap(1)?),
             links,
-            clients: [None; 2],
+            clients: [None; 3],
             count,
             cursor: 0,
             idle: 0,
-            closed: [None; 2],
+            closed: [None; 3],
         })
     }
     pub fn next_request(&mut self) -> Result<Request, Error> {
@@ -119,7 +125,7 @@ impl Server {
                     Err(error) => return Err(error),
                 }
             }
-            // Existing wait-two ABI bounds idle latency for the third channel to one tick.
+            // Existing wait-two ABI bounds idle latency for unselected channels to one tick.
             self.idle = (self.idle + 1) % self.count;
             let peer = self.clients[self.idle].map_or(self.control.0, |pair| pair.0);
             match ipc::wait_two(self.control.0, peer, time::after(1)?) {

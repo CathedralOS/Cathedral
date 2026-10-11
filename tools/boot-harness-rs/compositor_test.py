@@ -20,13 +20,22 @@ def verify(stream, output, serial):
         if source.readline() != b"255\n" or (width, height) != (1024, 768):
             raise RuntimeError("Expected 1024x768 RGB scanout")
         pixels = source.read()
+    expected = expected_scene()
+    if pixels != expected:
+        raise RuntimeError(f"Compositor scanout mismatch: {output / 'display.ppm'}")
+    capture.save_png(output, width, height, pixels)
+    print(f"PASS: compositor isolation/recovery markers and all {width * height} scanout pixels; {output / 'display.png'}")
+
+
+def expected_scene(placements=((80, "e96f6f", "APP ONE"), (400, "79c99e", "APP TWO"))):
+    width, height = 1024, 768
     expected = bytearray(bytes.fromhex("101827") * width * height)
     def rect(x, y, w, h, rgb):
         for row in range(y, y + h):
             start = (row * width + x) * 3
             expected[start:start + w * 3] = bytes.fromhex(rgb) * w
     font = (Path(__file__).resolve().parents[2] / "source-rs/platform/libraries/bitmap-font/font.hex").read_text().splitlines()
-    for x, color, title in ((80, "e96f6f", "APP ONE"), (400, "79c99e", "APP TWO")):
+    for x, color, title in placements:
         rect(x, 160, 256, 200, color)
         # Independent intersection of the two nested groups: 64 by 56, not 96 by 96.
         rect(x + 48, 216, 64, 56, "779bea")
@@ -36,7 +45,4 @@ def verify(stream, output, serial):
                 for column in range(5):
                     if bits & (1 << (4 - column)):
                         rect(x + 16 + index * 6 + column, 172 + row, 1, 1, "ffffff")
-    if pixels != expected:
-        raise RuntimeError(f"Compositor scanout mismatch: {output / 'display.ppm'}")
-    capture.save_png(output, width, height, pixels)
-    print(f"PASS: compositor isolation/recovery markers and all {width * height} scanout pixels; {output / 'display.png'}")
+    return expected

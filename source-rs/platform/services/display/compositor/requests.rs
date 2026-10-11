@@ -8,15 +8,21 @@ impl Compositor {
     }
     fn dispatch(&mut self, request: &Request) -> Result<[u64; 6], u64> {
         let words = display::decode(&request.bytes[..request.len]).ok_or(abi::INVALID_ARGUMENT)?;
+        if words[0] >= cathedral_contracts::pointer::DEVICE {
+            return self.pointer_request(request, words);
+        }
         if !request.control {
             let client = request.client.ok_or(abi::DENIED)?;
-            if words[0] != wire::SUBMIT {
+            if client >= 2 || words[0] != wire::SUBMIT {
                 return Err(abi::DENIED);
             }
             // Authenticate and consume this client's offer even when its revision or
             // scene is invalid. A foreign offer remains untouched for its real owner.
             let link = Link::at(client as u64).map_err(|e| e.0 as u64)?;
             let region = Shared::accept_from(words[2], link).map_err(|e| e.0 as u64)?;
+            if self.clients[client].incarnation != request.incarnation {
+                self.pointers.client_lost(client, self.clients);
+            }
             let result = if words[3..].iter().any(|&n| n != 0) {
                 Err(abi::INVALID_ARGUMENT)
             } else {
@@ -53,7 +59,10 @@ impl Compositor {
                     return Err(abi::INVALID_ARGUMENT);
                 }
                 let old = self.clients[client as usize].scope;
+                let cursors = self.pointers.cursor_bounds();
                 self.clients[client as usize].scope = rect;
+                self.pointers.moved(client as usize, self.clients);
+                self.redraw_cursors(cursors);
                 self.redraw(old);
                 self.redraw(rect);
             }

@@ -2,7 +2,9 @@
 //! This temporary interface exposes fixed controller ports, never arbitrary I/O.
 use crate::{Error, abi, arch};
 
-pub const LOST: u64 = 256;
+pub const LOST: u64 = abi::KEYBOARD_LOST;
+/// Auxiliary-controller byte tag; low eight bits carry the mouse byte.
+pub const AUX: u64 = abi::KEYBOARD_AUX;
 pub fn read_until(deadline: u64) -> Result<u64, Error> {
     result(arch::call(abi::KEYBOARD_READ_UNTIL, deadline, 0))
 }

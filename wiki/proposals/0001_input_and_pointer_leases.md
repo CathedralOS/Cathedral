@@ -9,7 +9,7 @@ keyboard focus.
 | --- | --- |
 | Proposed | Candidate architecture, not an accepted Cathedral contract |
 | Specification owner | Unwritten `spec/human_surface/compositor_and_seat.md`; see the [coverage map](../spec/README.md) |
-| Implementation evidence | [Rust input transport](../../source-rs/contracts/input.rs) carries physical-key events; pointer routing and cursor leases are absent |
+| Implementation evidence | [Rust pointer lab](../../source-rs/distribution/lab/compositor/POINTERS.md) exercises one physical and one scoped synthetic pointer; production seats, multiplexing and recursive leases are absent |
 
 ## Separate the objects
 
@@ -175,6 +175,10 @@ Before promoting this proposal to a contract, establish:
 - Explicit seat/focus and compatibility-adapter rules, with budgets that keep
   an abusive source from monopolizing routing and cursor updates.
 
-These are future conformance requirements. The Rust key-event transport supplies
-no evidence for them yet. Acceptance updates the compositor/seat specification,
+The [Rust pointer lab](../../source-rs/distribution/lab/compositor/POINTERS.md)
+supplies bounded evidence for separate physical/synthetic identities, clipping,
+capture, cancellation and app/source failure. Its two app scopes, fixed cursor
+visuals and boot-approved source connection do not establish production seat
+semantics, multiple physical devices, protected prompts or recursive delegation.
+The list above remains the acceptance bar. Acceptance updates the compositor/seat specification,
 affected source contracts and the conflicting seat and agent design prose.

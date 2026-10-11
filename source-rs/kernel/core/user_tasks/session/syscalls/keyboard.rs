@@ -25,7 +25,7 @@ pub(in super::super) fn syscall(
     if number == abi::KEYBOARD_WRITE {
         if first > 1
             || second > 255
-            || (first == 1 && !matches!(second, 0x20 | 0x60 | 0xa7 | 0xad | 0xae))
+            || (first == 1 && !matches!(second, 0x20 | 0x60 | 0xa7 | 0xa8 | 0xad | 0xae | 0xd4))
         {
             return Err(abi::INVALID_ARGUMENT);
         }
@@ -72,13 +72,20 @@ pub(in super::super) fn poll(session: &mut Session, now: u64) {
         let Some((status, byte)) = (unsafe { arch::keyboard_read() }) else {
             break;
         };
-        if session.tasks[slot].space.is_none() || status & 0x20 != 0 {
+        if session.tasks[slot].space.is_none() {
             continue;
         }
         if status & 0xc0 != 0 {
             session.keyboard.lose();
         } else {
-            session.keyboard.push(byte);
+            session.keyboard.push_tagged(
+                u16::from(byte)
+                    | if status & 0x20 != 0 {
+                        abi::KEYBOARD_AUX as u16
+                    } else {
+                        0
+                    },
+            );
         }
     }
     if session.tasks[slot].keyboard_wait {

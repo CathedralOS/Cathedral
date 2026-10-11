@@ -14,7 +14,8 @@ python tools/boot-harness-rs/run.py --profile tools/boot-harness-rs/profiles/com
 
 The custom profile leaves the ordinary status distribution available. Its lab
 supervisor runs drawing and failure probes, then leaves two labeled panels on
-screen. It has no mouse or interactive window controls. The automated test saves
+screen. The optional [pointer profile](POINTERS.md) adds mouse interaction and a
+scoped synthetic cursor. The base automated test saves
 `build/boot-harness-rs/compositor-test/display.png` and checks every scanout pixel.
 
 ## Follow execution
@@ -66,7 +67,7 @@ work, though no real-time or fair CPU-share guarantee is established.
 
 All drawing writes GOP directly. Snapshot acceptance is atomic as scene state;
 scanout writes are not a tear-free frame commit. There is no vblank scheduling,
-GPU, alpha, protected prompt, cursor, input focus, delegated cross-process Matrix
+GPU, alpha, protected prompt, input focus, delegated cross-process Matrix
 tree or stable surface ABI. Local groups exercise nesting without claiming those
 larger authority contracts.
 

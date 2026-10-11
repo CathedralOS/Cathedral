@@ -81,7 +81,10 @@ lightweight or visual-only pointer necessarily creates a full focus context.
 compositor and seat semantics to an unwritten subject. The
 [source contracts charter](source/contracts/CHARTER.md) supplies no pointer or
 seat protocol. The [Rust input transport](source-rs/contracts/input.rs) carries
-key events only; it does not define pointer identities, source bindings or focus.
+key events only. The separate [Rust pointer experiment](source-rs/distribution/lab/compositor/POINTERS.md)
+adds bounded pointer identities, a boot-approved mouse source and an app-scoped
+synthetic lease. It deliberately leaves seats, keyboard focus, principal attribution
+and recursive delegation unspecified; it does not resolve this owner choice.
 
 **Owner choice.** Require every logical pointer to be a complete seat, or permit
 separately leased pointers associated with an explicit seat context. The former
