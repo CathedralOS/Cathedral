@@ -60,6 +60,7 @@ impl Ipc {
     pub fn close_task(&mut self, task: usize) {
         assert!(task < self.tasks);
         self.alive &= !(1 << task);
+        self.initial[task] = [0; abi::MAX_INITIAL_ENDPOINTS];
         for slot in 0..self.grants.entries.len() {
             if self.grants.entries[slot].is_some_and(|g| g.owner == task) {
                 self.close_grant(slot);

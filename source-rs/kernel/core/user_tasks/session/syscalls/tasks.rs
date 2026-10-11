@@ -1,4 +1,5 @@
 //! Task syscalls only validate/enqueue work; spawn and reclamation use boot context.
+mod launch;
 use super::{Session, complete};
 use crate::deadline;
 use crate::scheduler::Event;
@@ -20,6 +21,9 @@ pub(in super::super) fn dispatch(
     now: u64,
 ) -> Result<u64, u64> {
     let (number, first, second, third) = call;
+    if number == abi::TASK_ENVIRONMENT {
+        return launch::environment(session, slot, first, second, third);
+    }
     if number == abi::CLOCK_HANDLE {
         return session.clock.handle(slot);
     }
@@ -64,7 +68,7 @@ pub(in super::super) fn dispatch(
         .launches
         .iter()
         .position(|launch| match number {
-            abi::TASK_SPAWN => launch.model.launch(slot) == Ok(first),
+            abi::TASK_SPAWN | abi::TASK_SPAWN_WITH => launch.model.launch(slot) == Ok(first),
             abi::TASK_CONNECT => launch.model.port(slot) == Ok(first),
             _ => launch.model.wait(slot, first).is_ok(),
         })
@@ -82,14 +86,12 @@ pub(in super::super) fn dispatch(
                 abi::DENIED
             }
         })?;
+    if number == abi::TASK_SPAWN || number == abi::TASK_SPAWN_WITH {
+        return launch::request(session, slot, index, call, event);
+    }
     let launch = &mut session.launches[index];
     let model = &mut launch.model;
     match number {
-        abi::TASK_SPAWN => {
-            model.request(slot, first, second)?;
-            *event = Event::Block;
-            Ok(0) // Boot admission replaces this result before waking the owner.
-        }
         abi::TASK_CONNECT => {
             model.connect(slot, first)?;
             Ok(session.ipc.accept_child(launch.endpoint_base, slot))

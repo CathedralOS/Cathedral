@@ -1,5 +1,7 @@
 //! Bounded launch and observation mechanisms; applications choose restart policy.
+mod environment;
 use crate::{Error, abi, arch, ipc::Handle};
+pub use environment::Environment;
 
 #[derive(Clone, Copy, Debug)]
 pub struct Launch(u64);

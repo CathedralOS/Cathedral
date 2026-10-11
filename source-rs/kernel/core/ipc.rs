@@ -4,6 +4,7 @@
 mod bootstrap;
 mod channels;
 mod grants;
+mod initial;
 mod lifecycle;
 pub use abi::{MAX_ENDPOINTS, MAX_TASKS};
 use cathedral_contracts::user as abi;
@@ -51,6 +52,7 @@ pub struct Ipc {
     alive: u8,
     endpoints: alloc::vec::Vec<Option<Endpoint>>,
     grants: Grants,
+    initial: [[u64; abi::MAX_INITIAL_ENDPOINTS]; MAX_TASKS],
 }
 impl Ipc {
     pub fn check(&self, caller: usize, ticket: u64, needed: Right) -> Result<usize, u64> {

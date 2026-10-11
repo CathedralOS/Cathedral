@@ -106,8 +106,14 @@ pub(super) unsafe fn spawn(
         return;
     };
     let (owner, child, peer) = (model.owner, model.child, model.peer);
+    let initial = core::mem::take(&mut session.launches[index].initial);
+    let initial_count = core::mem::take(&mut session.launches[index].initial_count);
+    let handles = &initial[..initial_count];
     let baseline = source.frames.allocated();
-    let result = if let Some(epoch) =
+    // A blocked parent retains its rights through every fallible admission step.
+    let result = if let Err(error) = session.ipc.validate_initial(owner, child, handles) {
+        Err(error)
+    } else if let Some(epoch) =
         next_epoch().filter(|epoch| *epoch <= crate::ipc::MAX_EPOCH - session.links.len() as u64)
     {
         let program = Program {
@@ -119,12 +125,20 @@ pub(super) unsafe fn spawn(
         // stay live. All partial admission is rolled back before returning errors.
         match unsafe { admission::admit(session, layout, image, &program, source, child) } {
             Ok(()) => {
-                session.ipc.prepare_child(
-                    session.launches[index].endpoint_base,
-                    peer,
-                    child,
-                    epoch,
-                );
+                // No user/trap can run between validation, address-space admission,
+                // and this infallible commit (sole boot CPU, interrupts disabled).
+                // Although admit marks Ready, execution resumes only after spawn returns.
+                session
+                    .ipc
+                    .prepare_child_with(
+                        session.launches[index].endpoint_base,
+                        peer,
+                        child,
+                        epoch,
+                        owner,
+                        handles,
+                    )
+                    .expect("validated initial bundle changed during admission");
                 super::links::admit(session, child);
                 if launch.keyboard {
                     super::keyboard::reset(session);

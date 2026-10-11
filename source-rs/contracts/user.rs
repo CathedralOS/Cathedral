@@ -87,3 +87,13 @@ pub const IPC_PACKET_BYTES: usize = 80;
 pub const MAX_DYNAMIC_CHANNELS: usize = 32;
 pub const MAX_CREATED_CHANNELS: usize = 8;
 pub const MAX_DYNAMIC_HANDLES: usize = 16;
+
+/// Move up to four dynamic endpoints into a newly admitted child. RDI launch,
+/// RSI 48-byte record (argument, count, four handles), RDX zero. Unused words zero.
+pub const TASK_SPAWN_WITH: u64 = 38;
+/// Copy the caller's initial endpoint names: count, four handles (40 bytes).
+/// RDI writable destination, RSI/RDX zero. This snapshot never reinstalls grants.
+pub const TASK_ENVIRONMENT: u64 = 39;
+pub const MAX_INITIAL_ENDPOINTS: usize = 4;
+pub const SPAWN_BYTES: usize = 48;
+pub const ENVIRONMENT_BYTES: usize = 40;

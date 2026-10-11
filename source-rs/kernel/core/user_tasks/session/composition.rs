@@ -61,6 +61,8 @@ pub(super) fn grants(
         }
         let grant_epoch = next_epoch().ok_or(Error::InvalidEndpoints)?;
         launches.push(LaunchState {
+            initial: [0; cathedral_contracts::user::MAX_INITIAL_ENDPOINTS],
+            initial_count: 0,
             model: Supervisor::new(
                 grant_epoch,
                 launch.owner,

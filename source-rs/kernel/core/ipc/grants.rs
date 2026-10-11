@@ -70,8 +70,18 @@ impl Grants {
             .map(|g| g.ticket)
             .ok_or(abi::BAD_HANDLE)
     }
-    pub fn vacant(&self, task: usize, count: usize) -> Result<[usize; 2], u64> {
-        let mut slots = [0; 2];
+    pub fn vacant(
+        &self,
+        task: usize,
+        count: usize,
+    ) -> Result<[usize; abi::MAX_INITIAL_ENDPOINTS], u64> {
+        let mut slots = [0; abi::MAX_INITIAL_ENDPOINTS];
+        if count > slots.len() {
+            return Err(abi::INVALID_ARGUMENT);
+        }
+        if count == 0 {
+            return Ok(slots);
+        }
         let mut found = 0;
         let first = BOOT + task * abi::MAX_DYNAMIC_HANDLES;
         for i in first..first + abi::MAX_DYNAMIC_HANDLES {
@@ -149,7 +159,12 @@ mod tests {
         assert_eq!(ipc.receive(1, 2, 64), Ok(None));
         // Reserved boot reconnects use their own counter even after exhaustion.
         ipc.close_task(1);
-        ipc.prepare_child(1, 0, 1, 2);
+        assert_eq!(
+            ipc.prepare_child_with(1, 0, 1, 2, 0, &[s]),
+            Err(abi::NO_MEMORY)
+        );
+        ipc.check(0, s, Right::Send).unwrap();
+        ipc.prepare_child_with(1, 0, 1, 2, 0, &[]).unwrap();
         ipc.accept_child(1, 0);
         assert!(ipc.handle(1, 0).is_ok());
     }

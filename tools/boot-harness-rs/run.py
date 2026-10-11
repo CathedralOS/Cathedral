@@ -249,7 +249,7 @@ def main():
     # No console helper on Windows; --window explicitly opts into QEMU's GUI.
     creationflags = subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0
     if args.matrix_test or args.ipc_test:
-        marker = ("Cathedral IPC: dynamic channels, checked moves, worker replies and reclamation passed" if args.ipc_test
+        marker = ("Cathedral IPC: channels, endpoint moves, startup bundles and reclamation passed" if args.ipc_test
                   else "Cathedral matrix: two identical worlds, local-only views, attenuated input and recovery passed")
         protocol_test.run(command, output, args.timeout, creationflags, marker)
         return 0

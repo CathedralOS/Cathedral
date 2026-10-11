@@ -72,3 +72,8 @@ The [ordinary channel lab](lab/channels/README.md) launches a worker through the
 existing introduction, then creates and transfers its actual request/reply
 channels entirely at runtime. Follow its [scenario](lab/channels/scenario.rs)
 to the runtime channel API and kernel grant/escrow enforcement.
+
+The channel lab's [startup scenario](lab/channels/startup.rs) exercises the next
+handoff: the parent supplies an ordered initial endpoint bundle, and the runtime
+passes an `Environment` to the child's main. The worker needs no introduction
+messages; approved executable selection and lifecycle remain with the launch grant.

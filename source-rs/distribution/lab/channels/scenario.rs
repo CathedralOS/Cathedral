@@ -11,9 +11,10 @@ pub fn run() -> u64 {
         abandoned();
     }
     closed_wait();
+    startup::run();
     quota();
     cathedral_user_runtime::write(
-        b"Cathedral IPC: dynamic channels, checked moves, worker replies and reclamation passed\n",
+        b"Cathedral IPC: channels, endpoint moves, startup bundles and reclamation passed\n",
     )
     .unwrap();
     let (_, idle) = ipc::channel().unwrap();

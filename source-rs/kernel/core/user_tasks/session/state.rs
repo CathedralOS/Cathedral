@@ -40,6 +40,8 @@ pub(super) static ACTIVE: AtomicPtr<Session> = AtomicPtr::new(core::ptr::null_mu
 pub(super) static EPOCH: AtomicU64 = AtomicU64::new(1);
 
 pub(super) struct LaunchState {
+    pub(super) initial: [u64; cathedral_contracts::user::MAX_INITIAL_ENDPOINTS],
+    pub(super) initial_count: usize,
     pub(super) disk: bool,
     pub(super) model: Supervisor,
     pub(super) endpoint_base: usize,

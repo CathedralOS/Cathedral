@@ -148,7 +148,9 @@ execution paths and remaining environment/lifecycle work.
 `python tools/boot-harness-rs/run.py --ipc-test --timeout 90` selects
 [profiles/channels.json](profiles/channels.json). Add `--release` for optimized
 binaries. The parent creates runtime channels, moves endpoints to an ordinary
-worker, exchanges messages and repeats cancellation with queued transfers.
+worker, exchanges messages and repeats cancellation with queued transfers. It
+also launches children with complete initial endpoint bundles passed to main,
+checks atomic rejection, and cancels children using their initial connections.
 This is headless and terminates at the guest's success marker. Logs live in
 `build/boot-harness-rs/channels-test/`. The [guide](../../source-rs/distribution/lab/channels/README.md)
 explains the local-name semantics, fixed quotas, limitations and code entrances.

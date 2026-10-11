@@ -371,6 +371,8 @@ initial FP state is clean and I/O privilege is zero.
 | 35: IPC close | Local handle, 0, 0 | 0 after dropping the grant; copied handles become stale |
 | 36: IPC send capability | Destination handle, 80-byte packet, 0 | Payload length after atomic one-endpoint move into the queue |
 | 37: IPC receive capability | Receive handle, writable 80-byte packet, 0 | Payload length and optional installed handle; blocks on empty |
+| 38: task spawn with endpoints | Launch grant, 48-byte request, 0 | Child ticket after admitting and moving the whole initial bundle; failure retains all source grants |
+| 39: initial environment | Writable 40-byte destination, 0, 0 | 0 after copying count and up to four initial local endpoint names; never reinstalls grants |
 
 Writes accept at most 256 bytes within one known user page. The kernel validates
 the entire range and copies through its physical backing before calling the
@@ -518,9 +520,10 @@ thirty-two-endpoint limits. Each reserves one child slot and two endpoint slots 
 boot-approved executable. Boot binds each launch grant to one supervisor and a
 connection port to one initial task, which may be the supervisor itself. The grant selects the executable,
 fixed first entry argument, peer, and physical-frame budget; userspace can
-supply only the second ordinary argument. It cannot nominate another image,
-principal, authority set or peer. Initial endpoints cannot refer to the reusable
-child slot. This is an authority-bound lab mechanism, not a general process API,
+supply the second ordinary argument and optionally move a bounded set of its
+own dynamic IPC endpoints into the child. It cannot nominate another image,
+principal, device grants or peer. Boot-static endpoint specifications cannot
+refer to the reusable child slot. This is an authority-bound lab mechanism, not a general process API,
 a manifest/provenance check or a component registry.
 
 `task::Launch::spawn` parks its caller and hands admission to the boot context.
@@ -532,6 +535,15 @@ caller-local grants; `bootstrap()` selects index zero.
 Failed ELF admission returns `BAD_EXECUTABLE` (-8); failed frame admission
 returns `NO_MEMORY` (-12), rolls back, and permits another attempt. Epoch
 exhaustion also fails closed. No mapping or reclamation runs in a trap callback.
+
+`Launch::spawn_with(argument, endpoints)` additionally installs up to four dynamic
+endpoint rights before the child can run. Its [startup environment guide](distribution/lab/channels/README.md#initial-child-environment)
+connects the `entry_with_environment!` macro, checked syscall request, admission
+and atomic commit. All rejected bundles and failed ELF/frame admissions preserve
+the parent's endpoints. The environment snapshot contains only explicitly supplied
+initial names, whose roles the application defines. It supplements the profile's
+boot connection and device/clock authority; it is not a manifest or complete
+process-authority inventory.
 
 The child receives request-receive and reply-send grants. Its designated peer's
 matching grants remain hidden, including from guessed-ticket redemption, until
@@ -568,7 +580,7 @@ executables, and repeated frame failures at budgets 0, 1 and 10.
 Supervisor exit or fault cancels all its owned children before userspace resumes
 and reclaims them even if blocked on IPC or raw keyboard input. This is abrupt hardware-task teardown,
 without user destructors or a graceful drain. No orphan adoption, general kill,
-nested supervision, delegation or persistent recovery is implemented.
+nested supervision, launch-grant delegation or persistent recovery is implemented.
 Component supervision versus task-scope ownership remains an explicit
 question in [`OWNER_QUESTIONS.md`](../OWNER_QUESTIONS.md).
 

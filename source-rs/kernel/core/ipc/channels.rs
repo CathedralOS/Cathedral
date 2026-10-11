@@ -1,10 +1,11 @@
 //! Dynamic channel quotas and one-endpoint move transactions.
 use super::*;
+#[derive(Clone, Copy)]
 pub(super) struct Transfer {
-    source: usize,
-    target: usize,
-    endpoint: usize,
-    right: Right,
+    pub(super) source: usize,
+    pub(super) target: usize,
+    pub(super) endpoint: usize,
+    pub(super) right: Right,
 }
 impl Ipc {
     /// A single-direction channel, initially with both ends owned by the creator.
@@ -53,16 +54,9 @@ impl Ipc {
         receiver: usize,
         ticket: u64,
     ) -> Result<Transfer, u64> {
-        let (source, grant) = self.lookup(caller, ticket)?;
-        // Boot/lifecycle grants remain pinned to their admitted principals.
-        if grant.endpoint < MAX_ENDPOINTS || grant.endpoint == transport {
+        let (source, grant) = self.movable(caller, ticket)?;
+        if grant.endpoint == transport {
             return Err(abi::DENIED);
-        }
-        let endpoint = self.endpoints[grant.endpoint].as_ref().unwrap();
-        // Moving a queued receiver could hide an escrow queue inside another one.
-        // Refuse it: no ownership cycles, no unreachable retained channels, no recursive teardown.
-        if grant.right == Right::Receive && endpoint.message.is_some() {
-            return Err(abi::BUSY);
         }
         let target = self.grants.vacant(receiver, 1)?[0];
         self.grants.can_mint(receiver, 1)?;
@@ -72,6 +66,25 @@ impl Ipc {
             endpoint: grant.endpoint,
             right: grant.right,
         })
+    }
+    pub(super) fn movable(&self, caller: usize, ticket: u64) -> Result<(usize, Grant), u64> {
+        let (source, grant) = self.lookup(caller, ticket)?;
+        // Boot/lifecycle grants remain pinned to their admitted principals.
+        if grant.endpoint < MAX_ENDPOINTS {
+            return Err(abi::DENIED);
+        }
+        // Keep the same receive restriction for IPC moves and initial bundles.
+        // Queued receivers cannot be hidden inside escrow or a launch transaction.
+        if grant.right == Right::Receive
+            && self.endpoints[grant.endpoint]
+                .as_ref()
+                .unwrap()
+                .message
+                .is_some()
+        {
+            return Err(abi::BUSY);
+        }
+        Ok((source, grant))
     }
     pub(super) fn commit_transfer(
         &mut self,

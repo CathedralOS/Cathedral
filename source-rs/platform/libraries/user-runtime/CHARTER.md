@@ -10,7 +10,12 @@ accepts it. `close` invalidates every local copy of that name. They do not perfo
 service discovery or choose service policy. The [channel guide](../../../distribution/lab/channels/README.md)
 connects these wrappers to kernel enforcement and the ordinary-worker proof. The `task` wrappers expose indexed, bounded launch grants,
 child outcome collection, deadline waits, cancellation and explicit connection
-acceptance. `time` reads the boot-granted monotonic clock; it grants no authority
+acceptance. `Launch::spawn_with` moves up to four dynamic endpoints atomically
+with successful admission. `entry_with_environment!` passes their ordered
+`Environment` to main; `Environment::load` reads only the caller's original
+startup names and never restores closed grants. Protocol roles belong to the app.
+The bundle supplements the existing profile-controlled boot/device grants.
+`time` reads the boot-granted monotonic clock; it grants no authority
 and chooses no deadline policy. Restart decisions
 belong to the caller, not this library. The runtime has no heap allocator or unwinding.
 `memory::Private` owns a bounded zeroed page buffer. Sealing consumes mutable

@@ -16,6 +16,7 @@ impl Ipc {
             alive: ((1u16 << tasks) - 1) as u8,
             endpoints,
             grants: Grants::new(tasks)?,
+            initial: [[0; abi::MAX_INITIAL_ENDPOINTS]; MAX_TASKS],
         };
         for (index, &spec) in specs.iter().enumerate() {
             if spec.sender >= tasks

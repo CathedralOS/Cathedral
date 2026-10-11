@@ -94,3 +94,17 @@ macro_rules! entry {
         }
     };
 }
+
+/// Opt-in entrypoint taking (profile argument, launch argument, initial endpoints).
+/// Applications interpret the ordered roles; the kernel only installs authority.
+#[macro_export]
+macro_rules! entry_with_environment {
+    ($main:path) => {
+        fn cathedral_environment_entry(first: u64, second: u64) -> u64 {
+            let main: fn(u64, u64, $crate::task::Environment) -> u64 = $main;
+            let environment = $crate::task::Environment::load().expect("initial environment");
+            main(first, second, environment)
+        }
+        $crate::entry!(cathedral_environment_entry);
+    };
+}
