@@ -20,6 +20,12 @@ impl Compositor {
             return Ok([0; 6]);
         }
         let words = display::decode(&request.bytes[..request.len]).ok_or(abi::INVALID_ARGUMENT)?;
+        if matches!(words[0] & 0xffff, wire::MATRIX_RECT | wire::MATRIX_POINTER) {
+            if !request.control {
+                return Err(abi::DENIED);
+            }
+            return self.matrix_request(words);
+        }
         if words[0] >= cathedral_contracts::interaction::FOCUS_GRANT {
             return self.session_request(request, words);
         }
@@ -70,6 +76,9 @@ impl Compositor {
             };
             self.redraw(damage);
             return Ok([0, words[1], 0, 0, 0, 0]);
+        }
+        if words == [display::INFO, 0, 0, 0, 0, 0] {
+            return Ok([0, self.output.width, self.output.height, 0, 0, 0]);
         }
         match words {
             [wire::BACKGROUND, color, 0, 0, 0, 0] if color <= 0xffffff => {

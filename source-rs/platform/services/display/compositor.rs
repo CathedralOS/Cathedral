@@ -1,6 +1,7 @@
 //! Retained compositor entrance: receive lifecycle/request, authorize, commit, redraw.
 mod delivery;
 mod input;
+mod matrix;
 mod requests;
 mod session;
 use crate::surface::Surface;
@@ -22,10 +23,12 @@ struct Compositor {
     stats: [u64; 4],
     wake: [bool; 3],
 }
-pub fn run() -> u64 {
+pub fn run(environment: cathedral_user_runtime::task::Environment) -> u64 {
     static mut CLIENTS: [Client; 3] = [const { Client::empty() }; 3];
     static mut SCRATCH: Scene = Scene::empty();
     static mut LABELS: Labels = Labels::empty();
+    static mut TILES: cathedral_display_service::composition::scene::tiles::Tiles =
+        cathedral_display_service::composition::scene::tiles::Tiles::empty();
     let scratch_address = &raw mut SCRATCH;
     let clients_address = &raw mut CLIENTS;
     // SAFETY: This single-threaded process enters run exactly once. Neither static
@@ -34,10 +37,21 @@ pub fn run() -> u64 {
     let labels_address = &raw mut LABELS;
     // SAFETY: Same single-entry ownership as the retained scene statics above.
     let labels = unsafe { &mut *labels_address };
-    let mut compositor = Compositor::open(clients, scratch, labels);
+    let tiles_address = &raw mut TILES;
+    // SAFETY: Single entry, disjoint retained storage, like the scene/label arrays.
+    let tiles = unsafe { &mut *tiles_address };
+    let mut compositor = Compositor::open(clients, scratch, labels, tiles);
     // The optional fifth connection has no scene/input authority; it exercises
     // denied requests and reply backpressure without adding an application slot.
     let mut server = Server::open_clients(5).unwrap();
+    if environment.len() == 2 {
+        server.set_control((
+            environment.endpoint(0).unwrap(),
+            environment.endpoint(1).unwrap(),
+        ));
+    } else {
+        assert!(environment.is_empty());
+    }
     loop {
         match server.next_event() {
             Ok(Event::Disconnected {
@@ -68,10 +82,18 @@ impl Compositor {
         clients: &'static mut [Client; 3],
         scratch: &'static mut Scene,
         labels: &'static mut Labels,
+        tiles: &'static mut cathedral_display_service::composition::scene::tiles::Tiles,
     ) -> Self {
         let output = Surface::open();
         Self {
-            composition: Composition::new(output.width, output.height, clients, scratch, labels),
+            composition: Composition::new(
+                output.width,
+                output.height,
+                clients,
+                scratch,
+                labels,
+                tiles,
+            ),
             output,
             source: 0,
             action: 0,

@@ -63,23 +63,13 @@ hosted inside another app's scope, attenuated focus and live compositor recovery
 The distribution still owns all process lifetimes; display enforces scene and
 input grants independently of those lifecycle rights.
 
-The [matrix boundary lab](lab/matrix/README.md) runs the same platform world
-service at two levels over real IPC. Its distribution fixture supplies layout
-and a fixed process graph; child-facing views expose only local granted state.
-This is a headless protocol milestone, separate from the visual session profile.
+The [matrix boundary lab](lab/matrix/README.md) now lends launch budgets to the
+root matrix, which admits its own children. The inner matrix admits its leaf;
+the fixture holds only root control and has no descendant process handles.
+The [visible matrix policy](lab/matrix/desktop.rs) uses that same platform tree
+for local drawing, physical pointer input and focus through the existing
+compositor. See the [implementation map](../STATUS.md) for commands and limits.
 
-The [ordinary channel lab](lab/channels/README.md) launches a worker through the
-existing introduction, then creates and transfers its actual request/reply
-channels entirely at runtime. Follow its [scenario](lab/channels/scenario.rs)
-to the runtime channel API and kernel grant/escrow enforcement.
-
-The channel lab's [startup scenario](lab/channels/startup.rs) exercises the next
-handoff: the parent supplies an ordered initial endpoint bundle, and the runtime
-passes an `Environment` to the child's main. The worker needs no introduction
-messages; approved executable selection and lifecycle remain with the launch grant.
-
-The channel lab's [recursive admission proof](lab/channels/tree.rs) lends selected
-launch budgets through three instances of the same userspace supervisor. It
-checks complete subtree teardown, restart with fresh authority and survival of
-an unrelated sibling. This is the mechanism for moving lifecycle into matrices;
-the viewport/input matrix fixture above still owns its fixed graph.
+The [ordinary channel lab](lab/channels/README.md) remains the focused proof for
+runtime endpoint moves, startup environments and recursive launch-loan lifetime.
+Its [scenario](lab/channels/scenario.rs) descends into each of those mechanisms.

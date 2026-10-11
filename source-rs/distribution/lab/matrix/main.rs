@@ -1,16 +1,25 @@
 #![no_std]
 #![no_main]
-//! Boot fixture owns process admission; ordinary leaf peers know only their parent.
+//! Distribution policy configures a matrix-owned process tree through its root.
+#[cfg(feature = "desktop")]
+mod desktop;
 mod leaf;
+#[cfg(not(feature = "desktop"))]
 mod scenario;
 use cathedral_contracts::{matrix as wire, user as abi};
 use cathedral_user_runtime::{Error, ipc::Handle, time};
 type Pair = (Handle, Handle);
-cathedral_user_runtime::entry!(main);
-fn main(role: u64, _: u64) -> u64 {
+cathedral_user_runtime::entry_with_environment!(main);
+fn main(role: u64, argument: u64, environment: cathedral_user_runtime::task::Environment) -> u64 {
+    let _ = argument;
     match role {
+        #[cfg(feature = "desktop")]
+        0 => desktop::run(),
+        #[cfg(not(feature = "desktop"))]
         0 => scenario::run(),
-        _ => leaf::run(),
+        #[cfg(feature = "desktop")]
+        2 => desktop::app(argument, environment),
+        _ => leaf::run(environment),
     }
 }
 fn call(pair: Pair, words: wire::Packet) -> wire::Packet {

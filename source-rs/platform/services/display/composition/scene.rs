@@ -4,6 +4,7 @@ use cathedral_contracts::user as abi;
 pub mod hosting;
 pub mod labels;
 mod raster;
+pub mod tiles;
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct Rect {
     pub x: u64,

@@ -141,9 +141,9 @@ resolver, production sponsorship or general CPU/RAM budget subdivision. Boot sti
 reserves all task slots. Delegation requires the recipient's reserved slot to
 precede the lent slot, giving cancellation a bounded acyclic order. IPC quotas
 remain per-process/global; shared mappings and moved endpoints can outlive their
-creator under their existing contracts. The viewport/input matrix service still
-uses its existing fixed fixture graph; the ordinary recursive supervisor proves
-the admission mechanism it can adopt. Lifetime ownership and loan return policy
+creator under their existing contracts. The viewport/input matrix service now uses these loans to admit its own
+children; its [integrated proof](../matrix/README.md) combines lifecycle with
+local input and primitive rendering. Lifetime ownership and loan return policy
 remain provisional under [the owner question](../../../../OWNER_QUESTIONS.md).
 
 ## Experimental contract
@@ -202,8 +202,8 @@ Devices, shared pages and launch grants are not transferable through this API.
 `wait_many` before receiving. Each channel has one receiving process and the lab
 currently runs one thread per process.
 
-Next: integrate these loans into the viewport/input matrix service and resolve
-manifest requests into explicitly supplied connections. Applications can build named,
+Next: resolve manifest requests into explicitly supplied connections and
+generalize admission beyond reserved executable slots. Applications can build named,
 protocol-specific environment structures over the ordered startup endpoints now.
 
 ## Evidence

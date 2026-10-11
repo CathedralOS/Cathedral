@@ -1,6 +1,7 @@
 //! One level of ownership. The same state machine runs above apps or other worlds.
 mod children;
 mod input;
+mod surface;
 #[cfg(test)]
 mod tests;
 use cathedral_contracts::{matrix as wire, user as abi};
@@ -116,6 +117,9 @@ impl World {
     }
     pub fn disconnected(&mut self, slot: usize) {
         let _ = self.revoke(slot);
+        if let Some(child) = self.children.get_mut(slot) {
+            child.incarnation = 0;
+        }
     }
     /// Identity is supplied by the accepted endpoint, never a request field.
     pub fn request(&mut self, slot: usize, incarnation: u64, words: wire::Packet) -> wire::Packet {

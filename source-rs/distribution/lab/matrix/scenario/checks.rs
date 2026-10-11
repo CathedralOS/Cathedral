@@ -20,15 +20,18 @@ impl Fixture {
             wire::POINTER_SOURCE,
             wire::KEY_SOURCE,
             wire::HEALTH,
-            u64::MAX,
+            wire::SPAWN,
+            wire::STOP,
+            wire::route([wire::HEALTH, 0, 0, 0, 0, 0, 0, 0], 0).unwrap()[0],
+            0xffff,
         ] {
             assert_eq!(
-                call(self.peers[2], [op, 0, 0, 0, 0, 0, 0, 0]),
+                self.query(2, [op, 0, 0, 0, 0, 0, 0, 0]),
                 wire::error(abi::DENIED)
             );
         }
         assert_eq!(
-            call(self.peers[2], [wire::VIEW, 1, 0, 0, 0, 0, 0, 0]),
+            self.query(2, [wire::VIEW, 1, 0, 0, 0, 0, 0, 0]),
             wire::error(abi::DENIED)
         );
     }

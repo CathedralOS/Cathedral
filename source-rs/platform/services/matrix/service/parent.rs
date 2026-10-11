@@ -1,19 +1,35 @@
 //! Root adapter supplies a grant; nested instances obtain the same shape via IPC.
 //! A lost/invalid upstream grant empties the world before any child can query it.
 use super::*;
-use cathedral_user_runtime::{ipc::Handle, link::Link, time};
+use cathedral_user_runtime::{ipc::Handle, task::Environment, time};
+mod rendering;
 pub(super) struct Parent {
     pub upstream: bool,
     pair: Option<(Handle, Handle)>,
     pub grant: Grant,
+    display: Option<(Handle, Handle)>,
 }
 impl Parent {
-    pub fn new(upstream: bool) -> Self {
-        Self {
-            upstream,
-            pair: None,
-            grant: Grant::default(),
+    pub fn new(environment: &Environment) -> Result<Self, Error> {
+        if !matches!(environment.len(), 0 | 2 | 4) {
+            return Err(Error(abi::DENIED as i64));
         }
+        Ok(Self {
+            upstream: environment.len() == 2,
+            pair: (environment.len() == 2).then(|| {
+                (
+                    environment.endpoint(0).unwrap(),
+                    environment.endpoint(1).unwrap(),
+                )
+            }),
+            display: (environment.len() == 4).then(|| {
+                (
+                    environment.endpoint(0).unwrap(),
+                    environment.endpoint(1).unwrap(),
+                )
+            }),
+            grant: Grant::default(),
+        })
     }
     pub fn refresh(&mut self, world: &mut World) -> Result<(), Error> {
         if !self.upstream {
@@ -21,14 +37,8 @@ impl Parent {
             return Ok(());
         }
         if self.pair.is_none() {
-            match Link::at(0)?.connect() {
-                Ok(pair) => self.pair = Some(pair),
-                Err(Error(code)) if code == abi::PEER_CLOSED as i64 => {
-                    world.inherit(Grant::default());
-                    return Ok(());
-                }
-                Err(error) => return Err(error),
-            }
+            world.inherit(Grant::default());
+            return Ok(());
         }
         let view = match self.call([wire::VIEW, 0, 0, 0, 0, 0, 0, 0]) {
             Ok(reply) => reply,

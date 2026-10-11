@@ -52,3 +52,9 @@ need no clock. Multi-channel idle waits check the third channel within one tick.
 Full data reply queues do not block control or other clients. `storage` supplies
 synchronous catalog exchanges, with one outstanding request and no automatic
 mutation retry. Caller code owns reconciliation and application schemas.
+
+`server::Server` also accepts explicit dynamic client pairs. `next_event_or`
+waits on requests plus caller-owned reply handles and an optional deadline,
+without consuming those replies. Matrices use this to remain available for
+upward child requests while a downward owner RPC is pending. This is bounded
+multiplexing, not a general asynchronous language runtime.

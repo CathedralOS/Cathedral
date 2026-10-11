@@ -6,6 +6,9 @@ mirrors its ownership layers and names as behavior is implemented. It is an
 experimental kernel, with explicit unsafe hardware operations and no claim to
 Omega's proof or authority guarantees.
 
+See the [implementation map](STATUS.md) for the integrated matrix desktop,
+mechanism-to-test coverage, restrictions and next kernel boundaries.
+
 ## Start reading
 
 Follow [boot main](kernel/boot/uefi/main.rs) for machine startup,
@@ -553,7 +556,8 @@ guide](distribution/lab/channels/README.md#recursive-child-admission) covers the
 finite inherited budget, caller-only enumeration, subtree teardown and fresh
 names on return to a surviving lender. Executables and per-slot ceilings stay
 fixed. The same ordinary userspace algorithm runs at each level of the QEMU proof;
-viewport/input matrix-service integration remains separate.
+the matrix service now uses these loans for its actual children. See the
+[implementation map](STATUS.md) for the visible integration and its restrictions.
 
 The child receives request-receive and reply-send grants. Its designated peer's
 matching grants remain hidden, including from guessed-ticket redemption, until

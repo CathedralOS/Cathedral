@@ -9,15 +9,17 @@ Start at [main.rs](main.rs), which selects the supplied parent adapter, then
 [service.rs](service.rs): refresh parent authority, observe connection lifetime,
 dispatch an owner or child request, reply. [parent.rs](service/parent.rs) adapts
 either a root grant or the upstream matrix endpoint into the same `Grant`.
-[requests.rs](service/requests.rs) handles the separate owner's local layout.
+[requests.rs](service/requests.rs) authenticates owner/source/child requests;
+[owner.rs](service/requests/owner.rs) handles local layout, while
+[children.rs](service/children.rs) owns admission, pending control replies and teardown.
 [world.rs](world.rs) owns grant changes and child dispatch; descend into
 [children.rs](world/children.rs) for views/epochs/queues and
 [input.rs](world/input.rs) for focus, capture and key attenuation.
 
 ## Child boundary
 
-The [shared protocol](../../../contracts/matrix.rs) admits only `VIEW` and `NEXT`
-on child connections. Authentication comes from the accepted IPC endpoint.
+The [shared protocol](../../../contracts/matrix.rs) admits `VIEW`, `NEXT` and
+clipped `PAINT`/`ERASE` surface commands on child connections. Authentication comes from the accepted IPC endpoint.
 Children supply no task, world, ancestor or sibling selector. Their replies
 contain only their own extent, permitted keys, local binding revision and input.
 They receive no position in the parent, ancestor extent, tree depth, sibling
@@ -42,16 +44,18 @@ retires the service so a late reply cannot be mistaken for another operation.
 This is a protocol and input experiment: two local child slots, five navigation
 keys, eight queued events per child and extents up to 4096. The
 [distribution fixture](../../../distribution/lab/matrix/README.md) runs two
-identical service executables with separate state. Its boot supervisor still
-owns all process lifetimes and private owner channels. Neither service can yet
-admit its own processes. Input is demand-driven and uses synchronous upstream
+identical service executables with separate state. Each owns and admits its own
+children using inherited launch loans and dynamic parent endpoints. Distribution
+policy uses private owner commands; children cannot invoke them. Input is demand-driven and uses synchronous upstream
 queries; the fixed acyclic fixture bounds these calls. This is not the eventual
 low-latency delivery design.
 
-The service does not yet provide rendering, storage namespaces, audio, arbitrary
-delegation, a desktop, or trusted-path UI. The earlier visual compositor lab
-continues to use its own fixed-slot experiment. These services need integration
-before the desktop itself is a recursive matrix.
+The visible matrix desktop now uses this provider for lifecycle, primitive surface
+clipping, pointer routing and focus. Root adapters connect the existing compositor
+and physical decoder. Rendering is one retained rectangle per path, with two
+matrix levels supported by the bounded key space. Rich scenes, storage namespaces,
+audio, event-driven input and trusted-path UI remain unintegrated. The earlier
+visual session remains a separate, richer regression fixture.
 
 The locality tests compare protocol observations. They do not establish complete
 system noninterference: IPC endpoint names are now process-local, but other

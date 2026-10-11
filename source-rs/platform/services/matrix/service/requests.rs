@@ -1,43 +1,59 @@
-//! The owner's local layout commands. These never enter the child dispatcher.
+//! Authenticate the connection, then route owner, physical-source and child requests.
+mod owner;
 use super::*;
-pub(super) fn owner(parent: &mut Parent, world: &mut World, words: wire::Packet) -> wire::Packet {
-    let result = match words {
-        [wire::BIND, width, height, keys, 0, 0, 0, 0] if !parent.upstream => {
-            let grant = Grant {
-                epoch: 1,
-                width,
-                height,
-                keys,
-            };
-            if grant.valid() {
-                parent.grant = grant;
-                world.inherit(grant);
-                Ok(())
-            } else {
-                Err(abi::DENIED)
+use cathedral_user_runtime::server::Request;
+pub(super) fn dispatch(
+    request: Request,
+    parent: &mut Parent,
+    world: &mut World,
+    children: &mut children::Children,
+    server: &mut Server,
+) -> Result<(), Error> {
+    let response = match wire::decode(&request.bytes[..request.len]) {
+        Some(words) if request.control => {
+            if let [wire::READ_PIXEL, x, y, 0, 0, 0, 0, 0] = words {
+                server.reply(&request, &wire::encode(parent.pixel(x, y)?))?;
+                return Ok(());
+            }
+            if let [wire::STOP, slot @ 0..=1, 0, 0, 0, 0, 0, 0] = words {
+                parent.erase(slot as usize)?;
+            }
+            if children.dispatch(&request, words, server, world)? {
+                return Ok(());
+            }
+            let response = owner::dispatch(parent, world, words);
+            if response[0] == 0 && matches!(words[0], wire::PLACE | wire::REVOKE) {
+                parent.erase(words[1] as usize)?;
+            }
+            response
+        }
+        Some(words) if request.client == Some(2) => match words {
+            [wire::POINTER_SOURCE, x, y, buttons @ 0..=7, 0, 0, 0, 0]
+                if x < parent.grant.width && y < parent.grant.height =>
+            {
+                parent.pointer(x, y)?;
+                world.pointer(x, y, buttons);
+                [0; 8]
+            }
+            [wire::KEY_SOURCE, key, state, 0, 0, 0, 0, 0] => {
+                if key == cathedral_contracts::input::RESET as u64 {
+                    world.cancel();
+                } else {
+                    world.key(key, state);
+                }
+                [0; 8]
+            }
+            _ => wire::error(abi::DENIED),
+        },
+        Some(words) if matches!(words[0], wire::PAINT | wire::ERASE) => {
+            match world.surface(request.client.unwrap(), request.incarnation, words) {
+                Ok(words) => parent.surface(words)?,
+                Err(status) => wire::error(status),
             }
         }
-        [wire::PLACE, child @ 0..=1, x, y, width, height, keys, 0] => world.place(
-            child as usize,
-            Rect {
-                x,
-                y,
-                width,
-                height,
-            },
-            keys,
-        ),
-        [wire::REVOKE, child @ 0..=1, 0, 0, 0, 0, 0, 0] => world.revoke(child as usize),
-        [wire::POINTER_SOURCE, x, y, buttons @ 0..=7, 0, 0, 0, 0] if !parent.upstream => {
-            world.pointer(x, y, buttons);
-            Ok(())
-        }
-        [wire::KEY_SOURCE, key, state, 0, 0, 0, 0, 0] if !parent.upstream => {
-            world.key(key, state);
-            Ok(())
-        }
-        [wire::HEALTH, 0, 0, 0, 0, 0, 0, 0] => Ok(()),
-        _ => Err(abi::DENIED),
+        Some(words) => world.request(request.client.unwrap(), request.incarnation, words),
+        None => wire::error(abi::DENIED),
     };
-    wire::error(result.err().unwrap_or(0))
+    server.reply(&request, &wire::encode(response))?;
+    Ok(())
 }

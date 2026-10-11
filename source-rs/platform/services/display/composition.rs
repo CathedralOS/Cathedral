@@ -13,6 +13,7 @@ pub struct Composition<'a> {
     pub pointers: Router,
     pub focus: Focus,
     pub tree: Tree,
+    pub tiles: &'a mut scene::tiles::Tiles,
 }
 impl<'a> Composition<'a> {
     pub fn new(
@@ -21,6 +22,7 @@ impl<'a> Composition<'a> {
         clients: &'a mut [Client; 3],
         scratch: &'a mut Scene,
         labels: &'a mut Labels,
+        tiles: &'a mut scene::tiles::Tiles,
     ) -> Self {
         Self {
             clients,
@@ -30,11 +32,13 @@ impl<'a> Composition<'a> {
             pointers: Router::new(width, height),
             focus: Focus::default(),
             tree: Tree::default(),
+            tiles,
         }
     }
     pub fn paint_row(&self, x: u64, y: u64, row: &mut [u32]) {
         row.fill(self.background);
         self.labels.paint_row(x, y, row);
+        self.tiles.paint_row(x, y, row);
         for client in self.clients.iter() {
             client.paint_row(x, y, row);
         }

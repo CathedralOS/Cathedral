@@ -26,17 +26,15 @@ impl Fixture {
         );
         self.pointer(115, 127, 0);
         assert_eq!(self.next(2, resized[1])[2], wire::POINTER);
-        // Boot fixture still owns process lifetime; normal children have no launch grant.
-        // Retire the test leaf first so it cannot reuse an RPC across provider loss.
-        for index in [2, 1] {
-            self.children[index].cancel().unwrap();
-            self.children[index].wait().unwrap();
-        }
+        // Outer matrix cancels its child. Kernel tears down the inner leaf too;
+        // the fixture has neither child's launch, process handle nor private port.
         let sibling = self.view(3);
-        for index in [1, 2] {
-            self.children[index] = Launch::at(index as u64).unwrap().spawn(1).unwrap();
-            self.peers[index] = Port::at(index as u64).unwrap().connect().unwrap();
-        }
+        self.owner(0, [wire::STOP, 0, 0, 0, 0, 0, 0, 0]);
+        assert_eq!(
+            self.query(1, [wire::HEALTH, 0, 0, 0, 0, 0, 0, 0]),
+            wire::error(abi::PEER_CLOSED)
+        );
+        self.admit_inner();
         // Observe disconnect before authorizing the replacement host.
         self.owner(0, [wire::HEALTH, 0, 0, 0, 0, 0, 0, 0]);
         assert_eq!(self.view(2), wire::error(abi::DENIED));
@@ -48,5 +46,16 @@ impl Fixture {
         assert_eq!(self.view(3)[0], 0);
         self.pointer(799, 599, 0); // Release the physical hold from the revoked binding.
         self.input();
+        // A leaf exits while its parent is forwarding a control RPC. Complete the
+        // pending reply, reclaim the leaf, and preserve its matrix and sibling.
+        assert_eq!(
+            self.query(2, [crate::leaf::EXIT_PROBE, 0, 0, 0, 0, 0, 0, 0]),
+            wire::error(abi::PEER_CLOSED)
+        );
+        self.owner(1, [wire::HEALTH, 0, 0, 0, 0, 0, 0, 0]);
+        self.owner(1, [wire::SPAWN, 0, 0, 0, 0, 0, 0, 0]);
+        self.layout();
+        assert_eq!(self.view(2)[0], 0);
+        assert_eq!(self.view(3)[0], 0);
     }
 }

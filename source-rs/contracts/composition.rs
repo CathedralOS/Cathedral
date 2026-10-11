@@ -12,6 +12,13 @@ pub const BACKGROUND: u64 = 17;
 pub const PLACE: u64 = 18;
 pub const PIXEL: u64 = 19;
 pub const STATUS: u64 = 20;
+/// Root matrix adapter only: high opcode bits select one of sixteen retained tiles;
+/// remaining words are x,y,width,height,rgb. Zero dimensions remove the tile.
+pub const MATRIX_RECT: u64 = 21;
+pub const MATRIX_POINTER: u64 = 22; // control-only absolute x,y,0,0,0
+pub const MATRIX_TILES: usize = 16;
+/// Root child first, then its descendants, then the later sibling subtree.
+pub const MATRIX_KEYS: [u64; 6] = [1, 5, 9, 2, 6, 10];
 pub const MAX_CLIENTS: usize = 3;
 pub const MAX_NODES: usize = 16;
 pub const IMAGE_SIDE: usize = 16;

@@ -11,6 +11,9 @@ path = "main.rs"
 test = false
 bench = false
 
+[features]
+desktop = []
+
 [dependencies]
 cathedral-contracts.workspace = true
 cathedral-user-runtime.workspace = true

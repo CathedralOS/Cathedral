@@ -159,3 +159,18 @@ supervisors, exercises subtree cancel/exit/restart, and keeps an omitted sibling
 alive. Its [admission guide](../../source-rs/distribution/lab/channels/README.md#recursive-child-admission)
 distinguishes the finite boot-approved budgets from future manifest/resource policy.
 [protocol_test.py](protocol_test.py) monitors both this proof and the matrix proof.
+
+## Integrated matrix desktop
+
+`python tools/boot-harness-rs/run.py --matrix-desktop-test --release --timeout 120`
+uses [profiles/matrix-desktop.json](profiles/matrix-desktop.json). The existing
+compositor and physical decoder are connected explicitly to a root matrix; the
+root admits an inner matrix and sibling app, and the inner admits its own app.
+[The verifier](matrix_desktop_test.py) checks scanout clipping and physical focus
+isolation after guest-side subtree replacement. Logs and a PNG screenshot are in
+`build/boot-harness-rs/matrix-desktop-test/`.
+
+For interaction, run `python tools/boot-harness-rs/run.py --profile tools/boot-harness-rs/profiles/matrix-desktop.json --release --window`.
+Click either app and press Enter. This is the integrated matrix path; the older
+session profile retains its richer compositor regression experiments. The
+[implementation map](../../source-rs/STATUS.md) distinguishes their current scope.
