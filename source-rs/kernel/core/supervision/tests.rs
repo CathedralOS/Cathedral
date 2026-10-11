@@ -1,4 +1,75 @@
 use super::*;
+
+#[test]
+fn loan_moves_launch_and_peer_and_returns_fresh_authority_after_reaping() {
+    let mut model = Supervisor::new(1, 0, 0, 3).unwrap();
+    let original = model.launch(0).unwrap();
+    let old_port = model.port(0).unwrap();
+    model.can_lend(0, original, 1).unwrap();
+    model.lend(1, 2, 3);
+    assert_eq!(model.launch(0), Err(abi::DENIED));
+    assert_eq!(model.port(0), Err(abi::DENIED));
+    assert_eq!(model.request(1, original, 0), Err(abi::BAD_HANDLE));
+    model.request(1, model.launch(1).unwrap(), 0).unwrap();
+    let old_child = model.started(4);
+    model.close(1);
+    model.reclaim();
+    assert!(model.cancel_child());
+    assert_eq!(model.launch(0), Err(abi::DENIED)); // Physical reap comes first.
+    model.reaped([2; abi::EXIT_BYTES]);
+    model.reclaim();
+    assert_ne!(model.launch(0).unwrap(), original);
+    assert_eq!(model.request(0, original, 0), Err(abi::BAD_HANDLE));
+    assert_eq!(model.connect(0, old_port), Err(abi::BAD_HANDLE));
+    assert_eq!(model.wait(0, old_child), Err(abi::BAD_HANDLE));
+    model.request(0, model.launch(0).unwrap(), 0).unwrap();
+    model.started(5);
+}
+
+#[test]
+fn recursive_loan_skips_dead_lenders_and_clears_queued_admission() {
+    let mut model = Supervisor::new(1, 0, 0, 4).unwrap();
+    model.lend(1, 2, 3);
+    model.lend(2, 4, 5);
+    model.request(2, model.launch(2).unwrap(), 99).unwrap();
+    model.close(1);
+    model.close(2);
+    assert!(model.pending().is_none());
+    model.reclaim();
+    assert_eq!(model.owner, 0);
+    assert_eq!(model.launch(1), Err(abi::DENIED));
+    model.can_lend(0, model.launch(0).unwrap(), 1).unwrap();
+    model.lend(1, 6, 7);
+    model.lend(2, 8, 9);
+    model.close(2);
+    model.reclaim();
+    assert_eq!(model.owner, 1); // A live immediate lender retains its budget.
+    model.close(1);
+    model.reclaim();
+    assert_eq!(model.owner, 0);
+}
+
+#[test]
+fn loans_reject_cycles_separate_peer_consent_and_busy_slots_without_mutation() {
+    let split = Supervisor::new(1, 0, 1, 3).unwrap();
+    assert_eq!(
+        split.can_lend(0, split.launch(0).unwrap(), 2),
+        Err(abi::DENIED)
+    );
+    let mut model = Supervisor::new(1, 0, 0, 3).unwrap();
+    let grant = model.launch(0).unwrap();
+    for target in [0, 3, 4, usize::MAX] {
+        assert_eq!(model.can_lend(0, grant, target), Err(abi::DENIED));
+    }
+    model.request(0, grant, 0).unwrap();
+    assert_eq!(model.can_lend(0, grant, 1), Err(abi::BUSY));
+    model.started(2);
+    assert_eq!(model.can_lend(0, grant, 1), Err(abi::BUSY));
+    model.reaped([0; abi::EXIT_BYTES]);
+    assert_eq!(model.can_lend(0, grant, 1), Err(abi::BUSY));
+    model.consume();
+    model.can_lend(0, grant, 1).unwrap();
+}
 #[test]
 fn cancellation_is_owner_bound_preserves_outcome_and_cannot_hit_replacement() {
     let mut model = Supervisor::new(1, 0, 1, 2).unwrap();

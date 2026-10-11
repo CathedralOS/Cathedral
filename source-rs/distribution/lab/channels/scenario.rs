@@ -12,9 +12,10 @@ pub fn run() -> u64 {
     }
     closed_wait();
     startup::run();
+    tree::run();
     quota();
     cathedral_user_runtime::write(
-        b"Cathedral IPC: channels, endpoint moves, startup bundles and reclamation passed\n",
+        b"Cathedral IPC: channels, startup bundles, recursive admission and reclamation passed\n",
     )
     .unwrap();
     let (_, idle) = ipc::channel().unwrap();

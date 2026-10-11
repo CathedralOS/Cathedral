@@ -10,18 +10,25 @@ pub(super) fn request(
     let (number, grant, second, third) = call;
     let mut initial = [0; abi::MAX_INITIAL_ENDPOINTS];
     let mut count = 0;
-    let argument = if number == abi::TASK_SPAWN_WITH {
+    let mut delegated = [0; abi::MAX_LAUNCHES];
+    let mut delegated_count = 0;
+    let argument = if matches!(number, abi::TASK_SPAWN_WITH | abi::TASK_SPAWN_TREE) {
         if third != 0 {
             return Err(abi::INVALID_ARGUMENT);
         }
-        let mut bytes = [0; abi::SPAWN_BYTES];
+        let mut bytes = [0; abi::SPAWN_TREE_BYTES];
+        let length = if number == abi::TASK_SPAWN_TREE {
+            abi::SPAWN_TREE_BYTES
+        } else {
+            abi::SPAWN_BYTES
+        };
         // SAFETY: Serialized kernel root; checked copy from this task's backing.
         if !unsafe {
             session.tasks[slot]
                 .space
                 .as_ref()
                 .unwrap()
-                .copy_from_user(second, &mut bytes)
+                .copy_from_user(second, &mut bytes[..length])
         } {
             return Err(abi::BAD_ADDRESS);
         }
@@ -30,10 +37,31 @@ pub(super) fn request(
             return Err(abi::INVALID_ARGUMENT);
         }
         count = requested as usize;
-        for (handle, bytes) in initial.iter_mut().zip(bytes[16..].chunks_exact(8)) {
+        for (handle, bytes) in initial
+            .iter_mut()
+            .zip(bytes[16..abi::SPAWN_BYTES].chunks_exact(8))
+        {
             *handle = u64::from_le_bytes(bytes.try_into().unwrap());
         }
         if initial[count..].iter().any(|&h| h != 0) {
+            return Err(abi::INVALID_ARGUMENT);
+        }
+        let requested = u64::from_le_bytes(
+            bytes[abi::SPAWN_BYTES..abi::SPAWN_BYTES + 8]
+                .try_into()
+                .unwrap(),
+        );
+        if requested > abi::MAX_LAUNCHES as u64 {
+            return Err(abi::INVALID_ARGUMENT);
+        }
+        delegated_count = requested as usize;
+        for (handle, bytes) in delegated
+            .iter_mut()
+            .zip(bytes[abi::SPAWN_BYTES + 8..].chunks_exact(8))
+        {
+            *handle = u64::from_le_bytes(bytes.try_into().unwrap());
+        }
+        if delegated[delegated_count..].iter().any(|&h| h != 0) {
             return Err(abi::INVALID_ARGUMENT);
         }
         u64::from_le_bytes(bytes[..8].try_into().unwrap())
@@ -44,6 +72,8 @@ pub(super) fn request(
     launch.model.request(slot, grant, argument)?;
     launch.initial = initial;
     launch.initial_count = count;
+    launch.delegated = delegated;
+    launch.delegated_count = delegated_count;
     *event = Event::Block;
     Ok(0) // The boot-stack admission path returns the committed child or an error.
 }

@@ -429,4 +429,10 @@ lifetime ownership and transfer before an independently owned service can
 survive and be adopted by a replacement supervisor. Specify component ownership
 separately from task scheduling. The Rust lab currently cancels its owned
 children on supervisor exit/fault, without running user destructors; it implements
-neither surviving orphans nor production cooperative cancellation.
+neither surviving orphans nor production cooperative cancellation. The bounded
+[recursive admission experiment](source-rs/distribution/lab/channels/README.md#recursive-child-admission)
+lends idle launch/peer budgets at child startup and returns them, with fresh
+names, to the nearest surviving lender after subtree reclamation. This tests
+structured lifetime ownership; it does not settle production sponsorship,
+persistent service ownership or adoption. Whether returned budgets should follow
+this automatic lender chain remains part of that owner decision.

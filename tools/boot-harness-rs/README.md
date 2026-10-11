@@ -154,4 +154,8 @@ checks atomic rejection, and cancels children using their initial connections.
 This is headless and terminates at the guest's success marker. Logs live in
 `build/boot-harness-rs/channels-test/`. The [guide](../../source-rs/distribution/lab/channels/README.md)
 explains the local-name semantics, fixed quotas, limitations and code entrances.
+The same proof now delegates launch budgets through three identical recursive
+supervisors, exercises subtree cancel/exit/restart, and keeps an omitted sibling
+alive. Its [admission guide](../../source-rs/distribution/lab/channels/README.md#recursive-child-admission)
+distinguishes the finite boot-approved budgets from future manifest/resource policy.
 [protocol_test.py](protocol_test.py) monitors both this proof and the matrix proof.

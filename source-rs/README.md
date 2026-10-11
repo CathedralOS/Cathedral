@@ -373,6 +373,7 @@ initial FP state is clean and I/O privilege is zero.
 | 37: IPC receive capability | Receive handle, writable 80-byte packet, 0 | Payload length and optional installed handle; blocks on empty |
 | 38: task spawn with endpoints | Launch grant, 48-byte request, 0 | Child ticket after admitting and moving the whole initial bundle; failure retains all source grants |
 | 39: initial environment | Writable 40-byte destination, 0, 0 | 0 after copying count and up to four initial local endpoint names; never reinstalls grants |
+| 40: task spawn with launch loans | Launch grant, 112-byte request, 0 | Child ticket after atomic endpoint moves and selected idle launch loans; failure retains all grants |
 
 Writes accept at most 256 bytes within one known user page. The kernel validates
 the entire range and copies through its physical backing before calling the
@@ -517,12 +518,13 @@ to prioritize control requests without abandoning their application connection.
 
 A session may reserve up to seven launch grants within the eight-task and
 thirty-two-endpoint limits. Each reserves one child slot and two endpoint slots for a
-boot-approved executable. Boot binds each launch grant to one supervisor and a
-connection port to one initial task, which may be the supervisor itself. The grant selects the executable,
+boot-approved executable. Boot initially binds each launch grant to a supervisor
+and a connection port to an initial task, which may be the supervisor itself. The grant selects the executable,
 fixed first entry argument, peer, and physical-frame budget; userspace can
 supply the second ordinary argument and optionally move a bounded set of its
 own dynamic IPC endpoints into the child. It cannot nominate another image,
-principal, device grants or peer. Boot-static endpoint specifications cannot
+principal or device grants. A launch loan moves both owner and peer to its newly
+admitted child; otherwise userspace cannot select the peer. Boot-static endpoint specifications cannot
 refer to the reusable child slot. This is an authority-bound lab mechanism, not a general process API,
 a manifest/provenance check or a component registry.
 
@@ -544,6 +546,14 @@ the parent's endpoints. The environment snapshot contains only explicitly suppli
 initial names, whose roles the application defines. It supplements the profile's
 boot connection and device/clock authority; it is not a manifest or complete
 process-authority inventory.
+
+`Launch::spawn_tree(argument, endpoints, launches)` also lends selected idle
+launch/peer grants at the same atomic admission boundary. Its [recursive admission
+guide](distribution/lab/channels/README.md#recursive-child-admission) covers the
+finite inherited budget, caller-only enumeration, subtree teardown and fresh
+names on return to a surviving lender. Executables and per-slot ceilings stay
+fixed. The same ordinary userspace algorithm runs at each level of the QEMU proof;
+viewport/input matrix-service integration remains separate.
 
 The child receives request-receive and reply-send grants. Its designated peer's
 matching grants remain hidden, including from guessed-ticket redemption, until
@@ -579,8 +589,9 @@ executables, and repeated frame failures at budgets 0, 1 and 10.
 
 Supervisor exit or fault cancels all its owned children before userspace resumes
 and reclaims them even if blocked on IPC or raw keyboard input. This is abrupt hardware-task teardown,
-without user destructors or a graceful drain. No orphan adoption, general kill,
-nested supervision, launch-grant delegation or persistent recovery is implemented.
+without user destructors or a graceful drain. Nested launch loans cascade this
+teardown through descendants; reclaimed budgets return to surviving lenders.
+No orphan adoption, general kill or persistent recovery is implemented.
 Component supervision versus task-scope ownership remains an explicit
 question in [`OWNER_QUESTIONS.md`](../OWNER_QUESTIONS.md).
 

@@ -124,6 +124,32 @@ fn run(
     child: Program<'_>,
     budget: usize,
 ) -> alloc::vec::Vec<user_tasks::Report> {
+    let launches = [
+        Supervision {
+            disk: false,
+            keyboard: false,
+            framebuffer: None,
+            owner: 0,
+            peer: 1,
+            program: Program {
+                executable: child.executable,
+                arguments: child.arguments,
+            },
+            frame_limit: budget,
+        },
+        Supervision {
+            disk: false,
+            keyboard: false,
+            framebuffer: None,
+            owner: 0,
+            peer: 0,
+            program: child,
+            frame_limit: budget,
+        },
+    ];
+    // Failure probes also propose a launch loan. It must survive ELF and partial
+    // frame-admission failure just like their initial endpoint bundle.
+    let launch_count = if programs[0].arguments[0] == 3 { 2 } else { 1 };
     // SAFETY: Sole CPU, IRQs off, boot-owned executable bytes and initialized entry paths.
     unsafe {
         user_tasks::run_configured(
@@ -138,15 +164,7 @@ fn run(
                 endpoints,
                 memory: &[],
                 clock_readers: &[],
-                supervision: &[Supervision {
-                    disk: false,
-                    keyboard: false,
-                    framebuffer: None,
-                    owner: 0,
-                    peer: 1,
-                    program: child,
-                    frame_limit: budget,
-                }],
+                supervision: &launches[..launch_count],
             },
         )
     }

@@ -97,3 +97,9 @@ pub const TASK_ENVIRONMENT: u64 = 39;
 pub const MAX_INITIAL_ENDPOINTS: usize = 4;
 pub const SPAWN_BYTES: usize = 48;
 pub const ENVIRONMENT_BYTES: usize = 40;
+
+/// SPAWN_WITH's 48-byte prefix followed by count and seven launch grants.
+/// Successful admission lends idle launch/peer authority until the child exits.
+/// Endpoints move as usual. RDI launch, RSI 112-byte record, RDX zero; tails zero.
+pub const TASK_SPAWN_TREE: u64 = 40;
+pub const SPAWN_TREE_BYTES: usize = SPAWN_BYTES + 8 + MAX_LAUNCHES * 8;

@@ -1,5 +1,6 @@
 //! Bounded launch and observation mechanisms; applications choose restart policy.
 mod environment;
+mod launch;
 use crate::{Error, abi, arch, ipc::Handle};
 pub use environment::Environment;
 

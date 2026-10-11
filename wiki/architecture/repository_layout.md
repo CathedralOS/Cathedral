@@ -54,8 +54,8 @@ launch authority. `distribution/init` chooses when to start and use the selected
 platform providers. The profile chooses executable artifacts; the kernel enforces
 their grants. Exhaustive bring-up composition lives under `kernel/boot/uefi/lab`
 and is compiled only in smoke builds. The bounded launcher supports up to seven
-independent approved children; this is not yet a general service graph or
-admission contract. The built-in distribution launches display, input, storage
+approved child slots, whose launch grants can be lent recursively at child
+admission; this is not yet a general service graph or admission contract. The built-in distribution launches display, input, storage
 and applications; separate lab profiles exercise other approved graphs.
 
 `platform/` is the shared OS base outside the kernel: display/capture, normalized

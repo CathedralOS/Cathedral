@@ -26,15 +26,17 @@ pub fn bad_wait(child: Child) {
 }
 pub fn failed_spawn(expected: u64) -> u64 {
     let launch = Launch::bootstrap().unwrap();
+    let loan = Launch::at(1).unwrap();
     let (send, recv) = cathedral_user_runtime::ipc::channel().unwrap();
     let (reply, answer) = cathedral_user_runtime::ipc::channel().unwrap();
-    for round in 0..8 {
-        let result = if round % 2 == 0 {
-            launch.spawn(0)
-        } else {
-            launch.spawn_with(0, &[recv, reply])
+    for round in 0..9 {
+        let result = match round % 3 {
+            0 => launch.spawn(0),
+            1 => launch.spawn_with(0, &[recv, reply]),
+            _ => launch.spawn_tree(0, &[recv, reply], &[loan]),
         };
         assert_eq!(result.unwrap_err(), Error(expected as i64));
+        assert_eq!(Launch::at(1).unwrap().raw(), loan.raw());
         // Failed ELF/frame admission must retain the entire proposed environment.
         send.send(b"still ours").unwrap();
         assert_eq!(recv.receive(&mut [0; 64]).unwrap(), 10);

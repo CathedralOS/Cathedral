@@ -77,3 +77,9 @@ The channel lab's [startup scenario](lab/channels/startup.rs) exercises the next
 handoff: the parent supplies an ordered initial endpoint bundle, and the runtime
 passes an `Environment` to the child's main. The worker needs no introduction
 messages; approved executable selection and lifecycle remain with the launch grant.
+
+The channel lab's [recursive admission proof](lab/channels/tree.rs) lends selected
+launch budgets through three instances of the same userspace supervisor. It
+checks complete subtree teardown, restart with fresh authority and survival of
+an unrelated sibling. This is the mechanism for moving lifecycle into matrices;
+the viewport/input matrix fixture above still owns its fixed graph.

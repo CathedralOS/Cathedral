@@ -15,6 +15,10 @@ with successful admission. `entry_with_environment!` passes their ordered
 `Environment` to main; `Environment::load` reads only the caller's original
 startup names and never restores closed grants. Protocol roles belong to the app.
 The bundle supplements the existing profile-controlled boot/device grants.
+`Launch::spawn_tree` also lends idle launch/peer budgets at that admission boundary.
+The child enumerates only its assigned grants and may lend them further. Subtree
+teardown returns budgets with fresh names to surviving lenders; per-slot executable
+and resource ceilings stay fixed. The runtime chooses no manifest or budget policy.
 `time` reads the boot-granted monotonic clock; it grants no authority
 and chooses no deadline policy. Restart decisions
 belong to the caller, not this library. The runtime has no heap allocator or unwinding.

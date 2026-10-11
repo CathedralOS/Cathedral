@@ -68,7 +68,9 @@ pub(in super::super) fn dispatch(
         .launches
         .iter()
         .position(|launch| match number {
-            abi::TASK_SPAWN | abi::TASK_SPAWN_WITH => launch.model.launch(slot) == Ok(first),
+            abi::TASK_SPAWN | abi::TASK_SPAWN_WITH | abi::TASK_SPAWN_TREE => {
+                launch.model.launch(slot) == Ok(first)
+            }
             abi::TASK_CONNECT => launch.model.port(slot) == Ok(first),
             _ => launch.model.wait(slot, first).is_ok(),
         })
@@ -86,7 +88,10 @@ pub(in super::super) fn dispatch(
                 abi::DENIED
             }
         })?;
-    if number == abi::TASK_SPAWN || number == abi::TASK_SPAWN_WITH {
+    if matches!(
+        number,
+        abi::TASK_SPAWN | abi::TASK_SPAWN_WITH | abi::TASK_SPAWN_TREE
+    ) {
         return launch::request(session, slot, index, call, event);
     }
     let launch = &mut session.launches[index];

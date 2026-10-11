@@ -5,6 +5,7 @@ use super::{
 use crate::{scheduler::TaskState, user_tasks::Program};
 use cathedral_arch as arch;
 use cathedral_contracts::user as abi;
+mod delegation;
 
 pub(super) fn close(session: &mut Session, slot: usize) {
     session.tasks[slot].memory_call = None;
@@ -26,6 +27,12 @@ pub(super) fn close(session: &mut Session, slot: usize) {
     session.ipc.close_task(slot);
     for launch in &mut session.launches {
         launch.model.close(slot);
+        if launch.model.owner == slot {
+            launch.initial = [0; abi::MAX_INITIAL_ENDPOINTS];
+            launch.initial_count = 0;
+            launch.delegated = [0; abi::MAX_LAUNCHES];
+            launch.delegated_count = 0;
+        }
     }
     syscalls::wake_receivers(session);
 }
@@ -84,9 +91,14 @@ pub(super) unsafe fn reap(session: &mut Session, source: &mut Frames<'_>) {
         source.frames.allocated(),
         session.frame_baseline + owned + session.memory.frames()
     );
+    // Increasing owner/child slots made cancellation cascade in the first pass.
+    // Return empty budgets only after every descendant address space is gone.
+    for launch in &mut session.launches {
+        launch.model.reclaim();
+    }
     taskcalls::wake(session, arch::ticks());
     for owner in 0..session.tasks.len() {
-        if requesters & (1 << owner) != 0 {
+        if requesters & (1 << owner) != 0 && session.tasks[owner].space.is_some() {
             syscalls::complete(session, owner, Ok(0));
             session.scheduler.unblock(owner);
         }
@@ -108,10 +120,18 @@ pub(super) unsafe fn spawn(
     let (owner, child, peer) = (model.owner, model.child, model.peer);
     let initial = core::mem::take(&mut session.launches[index].initial);
     let initial_count = core::mem::take(&mut session.launches[index].initial_count);
+    let delegated = core::mem::take(&mut session.launches[index].delegated);
+    let delegated_count = core::mem::take(&mut session.launches[index].delegated_count);
     let handles = &initial[..initial_count];
     let baseline = source.frames.allocated();
     // A blocked parent retains its rights through every fallible admission step.
-    let result = if let Err(error) = session.ipc.validate_initial(owner, child, handles) {
+    let plan = session
+        .ipc
+        .validate_initial(owner, child, handles)
+        .and_then(|()| {
+            delegation::Plan::prepare(session, owner, child, &delegated[..delegated_count])
+        });
+    let result = if let Err(error) = plan {
         Err(error)
     } else if let Some(epoch) =
         next_epoch().filter(|epoch| *epoch <= crate::ipc::MAX_EPOCH - session.links.len() as u64)
@@ -140,6 +160,7 @@ pub(super) unsafe fn spawn(
                     )
                     .expect("validated initial bundle changed during admission");
                 super::links::admit(session, child);
+                plan.unwrap().commit(session, child);
                 if launch.keyboard {
                     super::keyboard::reset(session);
                 }

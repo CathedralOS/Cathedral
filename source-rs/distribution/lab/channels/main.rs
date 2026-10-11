@@ -4,6 +4,7 @@
 mod probes;
 mod scenario;
 mod startup;
+mod tree;
 mod worker;
 use cathedral_contracts::user as abi;
 use cathedral_user_runtime::{
@@ -13,6 +14,9 @@ use cathedral_user_runtime::{
 };
 cathedral_user_runtime::entry_with_environment!(main);
 fn main(role: u64, mode: u64, environment: cathedral_user_runtime::task::Environment) -> u64 {
+    if role == 2 {
+        return tree::worker(mode, environment);
+    }
     if role != 0 && (3..=6).contains(&mode) {
         return startup::worker(mode, environment);
     }

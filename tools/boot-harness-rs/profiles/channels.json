@@ -1,5 +1,5 @@
 {
-  "name": "Ordinary application channel creation and endpoint moves",
+  "name": "Ordinary IPC, startup bundles and recursive child admission",
   "target": "x86_64-unknown-uefi",
   "boot_package": "cathedral-boot-uefi",
   "startup": {
@@ -10,6 +10,34 @@
       "clock": true
     },
     "launches": [
+      {
+        "package": "cathedral-channels-lab",
+        "entry": "distribution/lab/channels/main.rs",
+        "target": "x86_64-unknown-none",
+        "clock": true,
+        "argument": 1
+      },
+      {
+        "package": "cathedral-channels-lab",
+        "entry": "distribution/lab/channels/main.rs",
+        "target": "x86_64-unknown-none",
+        "clock": true,
+        "argument": 2
+      },
+      {
+        "package": "cathedral-channels-lab",
+        "entry": "distribution/lab/channels/main.rs",
+        "target": "x86_64-unknown-none",
+        "clock": true,
+        "argument": 2
+      },
+      {
+        "package": "cathedral-channels-lab",
+        "entry": "distribution/lab/channels/main.rs",
+        "target": "x86_64-unknown-none",
+        "clock": true,
+        "argument": 2
+      },
       {
         "package": "cathedral-channels-lab",
         "entry": "distribution/lab/channels/main.rs",

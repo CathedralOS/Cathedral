@@ -9,7 +9,8 @@ python tools/boot-harness-rs/run.py --ipc-test --release --timeout 90
 
 This headless profile proves runtime channel creation and endpoint transfer between
 ordinary applications. Its [profile](../../../../tools/boot-harness-rs/profiles/channels.json)
-reserves only a worker executable and the existing parent/worker introduction.
+reserves worker and recursive-supervisor instances of the same executable. Each
+slot has the existing parent/worker introduction.
 The request and reply channels do not appear in boot composition. No matrix,
 service registry, driver, or PID lookup participates in the exchange.
 Logs go to `build/boot-harness-rs/channels-test/serial.log`.
@@ -22,6 +23,8 @@ the worker its request receiver and reply sender over their bootstrap connection
 The worker processes a request and replies directly on those new channels.
 The [startup scenario](startup.rs) then repeats the exchange with the connections
 already installed when the child enters `main`; no introduction messages are needed.
+The [tree scenario](tree.rs) then lends launch grants through three instances of
+the same [recursive supervisor](tree/node.rs).
 
 The public operations are in [user-runtime IPC](../../../platform/libraries/user-runtime/ipc.rs)
 and its [channel operations](../../../platform/libraries/user-runtime/ipc/channels.rs).
@@ -73,7 +76,7 @@ Malformed records, busy launch slots, name exhaustion and ELF/frame admission
 failures leave every source grant with the parent and permit a later retry.
 Success invalidates the parent's names while preserving each transferred right.
 
-Follow [runtime environment support](../../../platform/libraries/user-runtime/task/environment.rs)
+Follow [runtime launch requests](../../../platform/libraries/user-runtime/task/launch.rs)
 through [launch syscall staging](../../../kernel/core/user_tasks/session/syscalls/tasks/launch.rs)
 to [boot-context admission](../../../kernel/core/user_tasks/session/lifecycle.rs)
 and [whole-bundle commit](../../../kernel/core/ipc/initial.rs). The syscall copies
@@ -92,12 +95,60 @@ This bundle supplements the existing profile-approved boot connection and
 clock/device grants. It is not yet a complete description of all process authority.
 Existing `entry!` and `Launch::spawn` keep working; ordinary spawn supplies no
 initial dynamic endpoints. Launch grants still select fixed approved executables
-and child slots. No manifest resolution, arbitrary image admission, inherited
-budgets, launch-grant transfer, or nested matrix admission is added here.
+and child slots. The next operation lends selected launch budgets recursively.
+
+## Recursive child admission
+
+```rust,ignore
+let child = launch.spawn_tree(argument, &[input, output], &[worker_budget])?;
+// Child uses Launch::at(0) to admit its worker, with the same API.
+```
+
+The caller chooses which idle launch grants to lend. Each is one concurrent
+child slot with an approved executable, fixed first argument, admission frame
+ceiling and the existing per-slot device/clock/page grants. The recipient can
+start, wait for, cancel and restart that child, or lend the unused budget further.
+It cannot enlarge the set, select another image or change those ceilings.
+Launch and consenting peer must currently belong to the same lender; separate
+peer consent cannot be transferred implicitly. Busy slots, uncollected outcomes,
+duplicates, stale/foreign grants and cycles are rejected before admission.
+
+Endpoint moves and launch loans commit together after successful mapping.
+Failures preserve all endpoints, launch names and peer ports. Successful loans
+remove the lender's launch and peer authority; copied old names no longer work.
+`Launch::at` and `Port::at` enumerate only the caller's current grants in reserved
+slot order, not the requested bundle order or a global process namespace. These
+are current grants, not entries in the endpoint-only `Environment` snapshot.
+
+Exit, fault or cancellation tears down the complete owned subtree before a
+wait/cancel returns. A loan returns to its nearest surviving lender only after
+physical reclamation, with a fresh launch/peer name. The lender reacquires it
+through `Launch::at`; old handles and child outcomes never revive. Dead intermediate
+lenders are skipped. Explicit dynamic IPC moves still follow their separate
+transfer lifetime rules; this operation does not revoke endpoints already moved
+to unrelated processes.
+
+Follow [launch requests](../../../platform/libraries/user-runtime/task/launch.rs),
+[admission and commit](../../../kernel/core/user_tasks/session/lifecycle.rs),
+[whole-loan validation](../../../kernel/core/user_tasks/session/lifecycle/delegation.rs)
+and [loan lifetime](../../../kernel/core/supervision/delegation.rs). Syscall 40
+uses the 48-byte endpoint prefix followed by a count and seven launch names
+(112 bytes total); unused words and flags must be zero. Reclamation's fresh
+name is reserved before mapping, so teardown cannot fail from name exhaustion.
+
+This is a finite launch-budget experiment, not arbitrary ELF loading, a manifest
+resolver, production sponsorship or general CPU/RAM budget subdivision. Boot still
+reserves all task slots. Delegation requires the recipient's reserved slot to
+precede the lent slot, giving cancellation a bounded acyclic order. IPC quotas
+remain per-process/global; shared mappings and moved endpoints can outlive their
+creator under their existing contracts. The viewport/input matrix service still
+uses its existing fixed fixture graph; the ordinary recursive supervisor proves
+the admission mechanism it can adopt. Lifetime ownership and loan return policy
+remain provisional under [the owner question](../../../../OWNER_QUESTIONS.md).
 
 ## Experimental contract
 
-Handles are process-local names. The scheduler supplies the calling identity;
+IPC handles are process-local names. The scheduler supplies the calling identity;
 the syscall contains no caller PID. Names carry no task slot, global endpoint
 index or session epoch. Identical numbers in different processes can designate
 different grants. Raw bytes never add a grant; a guessed number can at most name
@@ -151,8 +202,8 @@ Devices, shared pages and launch grants are not transferable through this API.
 `wait_many` before receiving. Each channel has one receiving process and the lab
 currently runs one thread per process.
 
-Next: let a matrix admit its own children within its budget, and resolve manifest
-requests into explicitly supplied connections. Applications can build named,
+Next: integrate these loans into the viewport/input matrix service and resolve
+manifest requests into explicitly supplied connections. Applications can build named,
 protocol-specific environment structures over the ordered startup endpoints now.
 
 ## Evidence
@@ -167,9 +218,14 @@ queued transfers. [Raw probes](probes.rs) also check bad create/send records.
 The startup scenario adds 16 exchanges with initial bundles, eight cancellations,
 empty/four-entry bundles, invalid pointers/counts/trailing words, busy launches,
 duplicate or invalid tail handles, preserved queued receivers and non-resurrecting
-snapshots. The supervision smoke fixture alternates plain and bundled admission
-with malformed ELF and frame budgets 0, 1 and 10, checking that both proposed
-endpoints remain usable after each failure and that memory returns to baseline.
+snapshots. The recursive scenario runs 16 subtree cycles, covering ancestor
+cancellation, owner return with living descendants, inner-parent stop/restart,
+a living unrelated sibling, hidden omitted launch grants, stale names, busy
+loans and malformed records. A witness channel held only by the deepest leaf
+must close before the ancestor's wait returns. The supervision smoke fixture
+alternates plain, endpoint-bundled and loan-bundled admission with malformed ELF
+and frame budgets 0, 1 and 10, checking unchanged launch names, usable endpoints
+and restored heap/frame baselines after failure.
 [Initial-bundle host tests](../../../kernel/core/ipc/initial/tests.rs) cover atomic
 rejection, rights/order, name exhaustion, child-slot reuse and complete cleanup.
 

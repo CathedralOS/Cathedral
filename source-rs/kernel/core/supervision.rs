@@ -2,6 +2,7 @@
 //! One boot-issued launch grant, one consenting peer port, one child at a time.
 use crate::ipc::{MAX_EPOCH, MAX_TASKS};
 use cathedral_contracts::user as abi;
+mod delegation;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum Child {
@@ -21,6 +22,8 @@ pub struct Supervisor {
     owner_alive: bool,
     peer_alive: bool,
     cancellation: bool,
+    // Each live lender has one reserved, fresh name for reclaiming this budget.
+    sponsors: [u64; MAX_TASKS],
 }
 impl Supervisor {
     pub fn new(epoch: u64, owner: usize, peer: usize, child: usize) -> Result<Self, u64> {
@@ -42,6 +45,7 @@ impl Supervisor {
             owner_alive: true,
             peer_alive: true,
             cancellation: false,
+            sponsors: [0; MAX_TASKS],
         })
     }
     fn ticket(epoch: u64, owner: usize, kind: u64) -> u64 {
@@ -127,8 +131,15 @@ impl Supervisor {
         Ok(())
     }
     pub fn close(&mut self, task: usize) {
+        if let Some(sponsor) = self.sponsors.get_mut(task) {
+            *sponsor = 0;
+        }
         if task == self.owner {
             self.owner_alive = false;
+            // No admission may commit after a queued request's owner has died.
+            if matches!(self.state, Child::Starting(_)) {
+                self.state = Child::Empty;
+            }
         }
         if task == self.peer {
             self.peer_alive = false;

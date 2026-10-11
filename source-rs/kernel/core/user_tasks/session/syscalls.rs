@@ -96,15 +96,16 @@ pub(super) fn syscall(session: &mut Session, slot: usize, now: u64) -> Event {
             disk::syscall(session, slot, (number, first, second, third))
         }
         abi::DISPLAY_INFO => display::information(session, slot, first, second),
-        abi::TASK_LAUNCH..=abi::CLOCK_HANDLE | abi::TASK_SPAWN_WITH | abi::TASK_ENVIRONMENT => {
-            tasks::dispatch(
-                session,
-                slot,
-                (number, first, second, third),
-                &mut event,
-                now,
-            )
-        }
+        abi::TASK_LAUNCH..=abi::CLOCK_HANDLE
+        | abi::TASK_SPAWN_WITH
+        | abi::TASK_ENVIRONMENT
+        | abi::TASK_SPAWN_TREE => tasks::dispatch(
+            session,
+            slot,
+            (number, first, second, third),
+            &mut event,
+            now,
+        ),
         abi::MEMORY_ALLOCATE..=abi::MEMORY_PAGES => {
             memory::syscall(session, slot, [number, first, second, third], &mut event)
         }
