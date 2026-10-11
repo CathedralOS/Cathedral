@@ -60,7 +60,7 @@ pub struct Router {
     width: u64,
     height: u64,
     pointers: [Pointer; 2],
-    queues: [Queue; 2],
+    queues: [Queue; 3],
     lease: Option<Lease>,
     epoch: u64,
 }
@@ -81,14 +81,14 @@ impl Router {
             epoch: 0,
         }
     }
-    pub fn enable(&mut self, enabled: bool, clients: &[Client; 2]) {
+    pub fn enable(&mut self, enabled: bool, clients: &[Client; 3]) {
         self.cancel(0, clients);
         self.cancel(1, clients);
         self.lease = None;
         self.enabled = enabled;
     }
-    pub fn lease(&mut self, client: usize, grant: bool, clients: &[Client; 2]) -> Result<u64, u64> {
-        if client >= 2
+    pub fn lease(&mut self, client: usize, grant: bool, clients: &[Client; 3]) -> Result<u64, u64> {
+        if client >= 3
             || !self.enabled
             || !clients[client].visible
             || !clients[client].scope.valid()
@@ -124,7 +124,7 @@ impl Router {
         x: u64,
         y: u64,
         buttons: u8,
-        clients: &[Client; 2],
+        clients: &[Client; 3],
     ) -> Result<(), u64> {
         let lease = self
             .lease
@@ -132,6 +132,8 @@ impl Router {
                 l.client == client
                     && l.epoch == epoch
                     && l.incarnation == clients[client].incarnation
+                    && clients[client].visible
+                    && clients[client].scope.valid()
             })
             .ok_or(abi::DENIED)?;
         let scope = clients[lease.client].scope;
@@ -144,7 +146,7 @@ impl Router {
         );
         Ok(())
     }
-    pub fn device(&mut self, dx: i64, dy: i64, buttons: u8, reset: bool, clients: &[Client; 2]) {
+    pub fn device(&mut self, dx: i64, dy: i64, buttons: u8, reset: bool, clients: &[Client; 3]) {
         if !self.enabled {
             return;
         }
@@ -161,7 +163,7 @@ impl Router {
             .clamp(0, self.height as i64 - 1) as u64;
         self.update(0, x, y, buttons, clients);
     }
-    pub fn source_lost(&mut self, clients: &[Client; 2]) {
+    pub fn source_lost(&mut self, clients: &[Client; 3]) {
         self.cancel(0, clients);
     }
     pub fn capture(&mut self, client: usize, id: usize, take: bool) -> Result<(), u64> {
@@ -194,7 +196,7 @@ impl Router {
             },
         ]
     }
-    pub fn client_lost(&mut self, client: usize, clients: &[Client; 2]) {
+    pub fn scope_lost(&mut self, client: usize, clients: &[Client; 3]) {
         for id in 0..2 {
             if self.pointers[id].press == Some(client)
                 || (id == 1 && self.lease.is_some_and(|l| l.client == client))
@@ -205,9 +207,12 @@ impl Router {
         if self.lease.is_some_and(|l| l.client == client) {
             self.lease = None;
         }
+    }
+    pub fn client_lost(&mut self, client: usize, clients: &[Client; 3]) {
+        self.scope_lost(client, clients);
         self.queues[client] = Queue::default();
     }
-    pub fn moved(&mut self, client: usize, clients: &[Client; 2]) {
+    pub fn moved(&mut self, client: usize, clients: &[Client; 3]) {
         for id in 0..2 {
             if self.pointers[id].press == Some(client) {
                 self.cancel(id, clients);
@@ -215,7 +220,7 @@ impl Router {
         }
         self.clamp_lease(clients);
     }
-    fn clamp_lease(&mut self, clients: &[Client; 2]) {
+    fn clamp_lease(&mut self, clients: &[Client; 3]) {
         if let Some(l) = self.lease {
             let r = clients[l.client].scope;
             self.pointers[1].x = self.pointers[1].x.clamp(r.x, r.x + r.w - 1);

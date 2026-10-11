@@ -9,6 +9,11 @@ pub const DRIVE: u64 = 35; // client: lease,x,y,buttons,0; local clamped coordin
 pub const ENABLE: u64 = 36; // control: 1/0,0,0,0,0
 pub const LEASE: u64 = 37; // control: client,1/0,0,0,0; reply carries lease epoch
 pub const STATE: u64 = 38; // control: pointer,0,0,0,0; reply x,y,buttons,capture+1,lease
+/// One outstanding wait per app; an event or control WAKE completes it.
+/// Connection closure wakes the underlying receive with a transport error.
+pub const WAIT: u64 = 39;
+pub const STATS: u64 = 40; // control: replies requests, waits, delivered, redraws,0
+pub const WAKE: u64 = 41; // control: client,0,0,0,0; finish one event wait with NONE
 pub const MOTION: u64 = 1;
 pub const BUTTONS: u64 = 2;
 pub const CANCEL: u64 = 3;

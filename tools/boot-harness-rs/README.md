@@ -103,3 +103,15 @@ pixel. Add `--release` for the optimized build. It writes
 `build/boot-harness-rs/pointer-test/display.png`. See the
 [pointer lab](../../source-rs/distribution/lab/compositor/POINTERS.md) for the
 interactive command, gestures, protocol ownership and bounds.
+
+## Persistent session profile
+
+`python tools/boot-harness-rs/run.py --session-test --timeout 60` selects
+[profiles/session.json](profiles/session.json). It checks idle event waits,
+explicit input regions, delegated key masks and a separate child app clipped by
+its host. It replaces the compositor during a drag, preserves the child through
+host replacement, and replaces the input source while a key is held. The host
+compares every scanout pixel at several stages. Add `--release` for the optimized
+build. Output is `build/boot-harness-rs/session-test/display.png`; see the
+[session guide](../../source-rs/distribution/lab/compositor/SESSION.md) for the
+interactive command and F4–F7 recovery controls.

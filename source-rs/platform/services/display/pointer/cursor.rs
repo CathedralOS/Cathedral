@@ -9,7 +9,7 @@ impl Router {
             h: 17.min(self.height - p.y),
         })
     }
-    pub fn pixel(&self, x: u64, y: u64, clients: &[Client; 2]) -> Option<u32> {
+    pub fn pixel(&self, x: u64, y: u64, clients: &[Client; 3]) -> Option<u32> {
         if !self.enabled {
             return None;
         }

@@ -52,6 +52,8 @@ knowledge of a particular distribution.
 | Distribution startup | [init session](../../source-rs/distribution/init/session.rs) | Provider readiness, application launch and supervision |
 | Status application | [application workflow](../../source-rs/distribution/applications/status/application.rs) | Connections, input, state, persistence, view and test probes |
 | Compositor input | [compositor loop](../../source-rs/platform/services/display/compositor.rs) | [Connection authorization](../../source-rs/platform/services/display/compositor/input.rs), [pointer lifetime](../../source-rs/platform/services/display/pointer.rs), routing and cursor damage |
+| Focus and hosted scenes | [session dispatch](../../source-rs/platform/services/display/compositor/session.rs) | [Focus attenuation](../../source-rs/platform/services/display/focus.rs), [hosting and clips](../../source-rs/platform/services/display/hosting.rs), deferred event delivery |
+| Interactive recovery lab | [desktop session](../../source-rs/distribution/lab/compositor/supervisor/desktop.rs) | Admission, grants, idle probes and recovery; [client session](../../source-rs/distribution/lab/compositor/client/session.rs) owns desired state and presentation |
 | Private storage | [catalog engine](../../source-rs/platform/libraries/object-store/lib.rs) | Root-local validation, encoding, commit and recovery; protocol staging is a separate entrance |
 | Second private client | [counter session](../../source-rs/distribution/applications/counter/session.rs) | Paired record schema, health verification and optional failure probes |
 | Kernel exercises | [boot lab](../../source-rs/kernel/boot/uefi/lab.rs) | Individual fixtures; guest counterparts live in `distribution/lab` |

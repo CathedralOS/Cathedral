@@ -69,3 +69,7 @@ pub const MEMORY_RELEASE: u64 = 29;
 pub const MEMORY_SEAL: u64 = 30;
 pub const MEMORY_MAP: u64 = 31;
 pub const MEMORY_PAGES: u64 = 32;
+
+/// Wait on 1..=8 receive handles copied from a user array; return ready index.
+pub const IPC_WAIT_MANY: u64 = 33;
+pub const MAX_WAIT_HANDLES: usize = 8;

@@ -15,3 +15,5 @@ pub mod storage;
 pub mod composition;
 
 pub mod pointer;
+
+pub mod interaction;

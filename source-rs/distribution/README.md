@@ -58,3 +58,7 @@ The separate [compositor profile and experiment](lab/compositor/README.md) start
 its own supervisor and two isolated scene clients. Follow its coordinator into
 drawing and recovery checks, then the display service's compositor dispatch.
 It exercises retained scopes without changing this ordinary status composition.
+Its [persistent session profile](lab/compositor/SESSION.md) adds a third app
+hosted inside another app's scope, attenuated focus and live compositor recovery.
+The distribution still owns all process lifetimes; display enforces scene and
+input grants independently of those lifecycle rights.

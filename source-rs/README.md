@@ -50,6 +50,7 @@ explains how to preserve these routes as the lab grows.
 | `platform/libraries/object-store/`, `platform/services/storage/` | Atomic object replacement, recovery and private service endpoint |
 | `contracts/input.rs` | Experimental physical-key events, independent of scan codes or UI policy |
 | `contracts/pointer.rs` | Experimental logical pointers, source updates, capture and scoped synthetic leases |
+| `contracts/interaction.rs` | Experimental attenuated keyboard focus and cross-process child placement |
 | `kernel/core/extent.rs` | Bootstrap frame accounting and reclaiming bitmap over usable RAM, corresponding to the resource work in `source/kernel/core/` |
 | `kernel/core/heap.rs`, `scheduler.rs`, `kernel_tasks.rs`, `kernel_tasks/` | IRQ-safe heap, pure scheduling policy, task admission and context/stack lifetime management |
 | `kernel/core/user_tasks.rs`, `user_tasks/` | Experimental user-task lifetime, checked diagnostic syscalls and outcomes |
@@ -363,6 +364,7 @@ initial FP state is clean and I/O privilege is zero.
 | 30: Memory seal | Region handle, link token | Irreversibly remove WRITE and offer to that live service |
 | 31: Memory map | Region handle | Accept authorized RO/NX lease and return its address |
 | 32: Memory pages | Region handle | Caller-owned or accepted region page count |
+| 33: IPC wait many | Pointer to 1–8 LE u64 receive tickets, count, absolute deadline | Ready index or error; validates the copied array and all receive rights, consumes no data, requires clock |
 
 Writes accept at most 256 bytes within one known user page. The kernel validates
 the entire range and copies through its physical backing before calling the
@@ -887,8 +889,16 @@ invalid/stale snapshots, movement, failure containment and provider replacement;
 the host verifies the final scanout. The optional [pointer lab](distribution/lab/compositor/POINTERS.md)
 adds PS/2 motion, clipped hit-testing, capture, root-owned cursors and one scoped
 synthetic pointer. Run `python tools/boot-harness-rs/run.py --pointer-test`; use its
-documented window command to interact. Both profiles remain experiments without
-arbitrary Matrix delegation, protected output, seat/focus semantics or GPU presentation.
+documented window command to interact.
+
+The [persistent session lab](distribution/lab/compositor/SESSION.md) adds deferred
+event waits, explicit input regions, attenuated keyboard-focus grants and a child
+app hosted inside another process's scope. Live compositor replacement preserves
+all three app processes and their desired state while cancelling capture/focus.
+Run `python tools/boot-harness-rs/run.py --session-test --timeout 60`; add `--release`
+for the optimized build. Its guide lists the interactive command and failure
+gestures. These remain bounded experiments without general Matrix delegation,
+protected output, production seat semantics or GPU presentation.
 
 ## Next bring-up steps
 

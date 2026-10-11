@@ -180,5 +180,12 @@ supplies bounded evidence for separate physical/synthetic identities, clipping,
 capture, cancellation and app/source failure. Its two app scopes, fixed cursor
 visuals and boot-approved source connection do not establish production seat
 semantics, multiple physical devices, protected prompts or recursive delegation.
+The [session lab](../../source-rs/distribution/lab/compositor/SESSION.md) adds
+separate host/child processes, explicit input regions, event waits and attenuated
+keyboard-focus grants. Its child receives only Enter; synthetic clicks cannot
+acquire keyboard focus, and parent loss revokes descendant input. Focus-change
+queue cancellation is a provisional rule recorded in the
+[owner queue](../../OWNER_QUESTIONS.md#focus-changes-and-undelivered-key-events),
+not acceptance of production seat semantics.
 The list above remains the acceptance bar. Acceptance updates the compositor/seat specification,
 affected source contracts and the conflicting seat and agent design prose.

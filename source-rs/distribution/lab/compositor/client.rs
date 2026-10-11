@@ -1,5 +1,6 @@
 //! Exercise the actual IPC and shared-page path; no display or task-control grant.
 mod interactive;
+mod session;
 use super::{exchange, scene};
 use cathedral_contracts::{composition as w, display, user as abi};
 use cathedral_user_runtime::{
@@ -8,7 +9,22 @@ use cathedral_user_runtime::{
     link::Link,
     memory::{Private, Sealed},
 };
+struct Start {
+    mode: u64,
+    arg: u64,
+    control: (Handle, Handle),
+    connection: (Handle, Handle),
+    link: Link,
+}
 pub fn run(role: u64) -> u64 {
+    let start = commands(role);
+    if start.mode == 14 {
+        session::run(role, start.control, start.connection, start.link)
+    } else {
+        interactive::run(role, start.arg, start.control, start.connection, start.link)
+    }
+}
+fn commands(role: u64) -> Start {
     assert_eq!(
         cathedral_user_runtime::display::mapping(),
         Err(Error(abi::DENIED as i64))
@@ -88,11 +104,17 @@ pub fn run(role: u64) -> u64 {
                 }
             }
             11 => exchange(connection, [w::PLACE, 1, 0, 0, 256, 256]),
-            12 => {
+            12 | 14 => {
                 control.1.send(&display::encode([0; 6])).unwrap();
-                return interactive::run(role, arg, control, connection, link);
+                return Start {
+                    mode: op,
+                    arg,
+                    control,
+                    connection,
+                    link,
+                };
             }
-            32..=38 => exchange(connection, display::decode(&bytes[..len]).unwrap()),
+            32..=57 => exchange(connection, display::decode(&bytes[..len]).unwrap()),
             _ => panic!(),
         };
         control.1.send(&display::encode(reply)).unwrap();

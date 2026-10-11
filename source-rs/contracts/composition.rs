@@ -10,7 +10,8 @@ pub const BACKGROUND: u64 = 17;
 pub const PLACE: u64 = 18;
 pub const PIXEL: u64 = 19;
 pub const STATUS: u64 = 20;
-pub const MAX_NODES: usize = 8;
+pub const MAX_CLIENTS: usize = 3;
+pub const MAX_NODES: usize = 16;
 pub const IMAGE_SIDE: usize = 16;
 pub const IMAGE_PIXELS: usize = IMAGE_SIDE * IMAGE_SIDE;
 pub const SNAPSHOT_BYTES: usize = 16 + MAX_NODES * 56 + IMAGE_PIXELS * 4;
@@ -20,6 +21,8 @@ pub const GROUP: u64 = 0;
 pub const RECT: u64 = 1;
 pub const TEXT: u64 = 2;
 pub const IMAGE: u64 = 3;
+/// Explicit input region, subject to group clips. Payload must be zero.
+pub const INPUT: u64 = 4;
 /// Parent index (earlier GROUP or ROOT), kind, local x/y, width/height, payload.
 /// RECT payload is RGB; TEXT is up to eight ASCII bytes, zero padded, scale one;
 /// IMAGE uses the snapshot's one 16x16 RGB asset and requires matching dimensions.

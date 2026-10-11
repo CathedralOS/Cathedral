@@ -110,7 +110,7 @@ impl Scene {
                 return Err(abi::INVALID_ARGUMENT);
             }
             match kind {
-                wire::GROUP if value == 0 => (),
+                wire::GROUP | wire::INPUT if value == 0 => (),
                 wire::RECT if value <= 0xffffff => (),
                 wire::TEXT => {
                     let text = value.to_le_bytes();
@@ -152,6 +152,15 @@ impl Scene {
             }
         }
         Ok(())
+    }
+    pub fn hit(&self, x: u64, y: u64) -> bool {
+        let regions = self.draws[..self.count]
+            .iter()
+            .filter(|draw| draw.kind == wire::INPUT);
+        if regions.clone().next().is_none() {
+            return self.pixel(x, y).is_some();
+        }
+        regions.into_iter().any(|draw| draw.clip.contains(x, y))
     }
     pub fn pixel(&self, x: u64, y: u64) -> Option<u32> {
         let mut color = None;
@@ -231,6 +240,11 @@ impl Client {
         self.visible = true;
         self.revision = revision;
         Ok(())
+    }
+    pub fn hit(&self, x: u64, y: u64) -> bool {
+        self.visible
+            && self.scope.contains(x, y)
+            && self.scene.hit(x - self.scope.x, y - self.scope.y)
     }
     pub fn pixel(&self, x: u64, y: u64) -> Option<u32> {
         if !self.visible || !self.scope.contains(x, y) {

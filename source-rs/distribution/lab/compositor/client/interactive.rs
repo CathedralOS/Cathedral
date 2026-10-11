@@ -12,6 +12,7 @@ pub fn run(
 ) -> u64 {
     let mut held = [0; 2];
     let mut revision = 1;
+    let mut pending = false;
     loop {
         let mut bytes = [0; 64];
         match control.0.receive_until(&mut bytes, time::now().unwrap()) {
@@ -19,7 +20,27 @@ pub fn run(
             Err(Error(code)) if code == abi::TIMED_OUT as i64 => (),
             Err(_) => return 0,
         }
-        let event = p::Event::decode(exchange(connection, [p::NEXT, 0, 0, 0, 0, 0])).unwrap();
+        if !pending {
+            connection
+                .0
+                .send(&display::encode([p::WAIT, 0, 0, 0, 0, 0]))
+                .unwrap();
+            pending = true;
+        }
+        match cathedral_user_runtime::ipc::wait_two(
+            control.0,
+            connection.1,
+            time::after(500).unwrap(),
+        ) {
+            Ok(1) => (),
+            Ok(_) => continue,
+            Err(Error(code)) if code == abi::TIMED_OUT as i64 => continue,
+            Err(_) => return 0,
+        }
+        let mut packet = [0; 64];
+        let len = connection.1.receive(&mut packet).unwrap();
+        pending = false;
+        let event = p::Event::decode(display::decode(&packet[..len]).unwrap()).unwrap();
         if event.kind == p::NONE {
             cathedral_user_runtime::yield_now();
             continue;

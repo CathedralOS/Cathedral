@@ -11,10 +11,22 @@ impl Compositor {
                     self.pointers.enable(enabled == 1, self.clients);
                     Ok([0; 6])
                 }
-                [p::LEASE, client @ 0..=1, grant @ 0..=1, 0, 0, 0] => self
+                [p::LEASE, client @ 0..=2, grant @ 0..=1, 0, 0, 0] => self
                     .pointers
                     .lease(client as usize, grant == 1, self.clients)
                     .map(|epoch| [0, epoch, 0, 0, 0, 0]),
+                [p::WAKE, client @ 0..=2, 0, 0, 0, 0] => {
+                    self.wake[client as usize] = true;
+                    Ok([0; 6])
+                }
+                [p::STATS, 0, 0, 0, 0, 0] => Ok([
+                    0,
+                    self.stats[0],
+                    self.stats[1],
+                    self.stats[2],
+                    self.stats[3],
+                    0,
+                ]),
                 [p::STATE, id @ 0..=1, 0, 0, 0, 0] => Ok(self.pointers.state(id as usize)),
                 _ => Err(abi::DENIED),
             }
@@ -25,6 +37,7 @@ impl Compositor {
                         self.pointers.source_lost(self.clients);
                         self.source = r.incarnation;
                     }
+                    let previous = self.pointers.state(0)[3];
                     self.pointers.device(
                         dx as i64,
                         dy as i64,
@@ -32,6 +45,13 @@ impl Compositor {
                         reset == 1,
                         self.clients,
                     );
+                    if reset == 1 {
+                        self.focus.source_lost();
+                    } else if previous == 0 && self.pointers.state(0)[3] != 0 {
+                        let state = self.pointers.state(0);
+                        let target = self.clients.iter().rposition(|c| c.hit(state[1], state[2]));
+                        self.focus.click(target, &self.tree, self.clients);
+                    }
                     Ok([0; 6])
                 }
                 _ => Err(abi::DENIED),
@@ -39,8 +59,9 @@ impl Compositor {
         } else {
             let client = r
                 .client
+                .and_then(app_index)
                 .filter(|&c| {
-                    c < 2 && self.clients[c].visible && self.clients[c].incarnation == r.incarnation
+                    c < 3 && self.clients[c].visible && self.clients[c].incarnation == r.incarnation
                 })
                 .ok_or(abi::DENIED)?;
             match w {
@@ -72,16 +93,27 @@ impl Compositor {
         if client == 2 {
             if self.source == incarnation {
                 self.pointers.source_lost(self.clients);
+                self.focus.source_lost();
                 self.source = 0;
                 cathedral_user_runtime::write(
                     b"Cathedral pointer: source disconnected; capture cancelled\n",
                 )
                 .unwrap();
             }
-        } else if self.clients[client].incarnation == incarnation {
+        } else if let Some(client) = app_index(client)
+            && self.clients[client].incarnation == incarnation
+        {
+            self.pending[client] = None;
+            self.focus.revoke_branch(client, &self.tree);
+            self.tree.lost(client);
+            for descendant in 0..3 {
+                if self.tree.within(client, descendant) {
+                    self.pointers.scope_lost(descendant, self.clients);
+                }
+            }
             self.pointers.client_lost(client, self.clients);
             self.clients[client].disconnect(incarnation);
-            self.redraw(self.clients[client].scope);
+            self.layout_changed();
         }
         self.redraw_cursors(before);
     }

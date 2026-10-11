@@ -54,12 +54,16 @@ pub(super) fn syscall(session: &mut Session, slot: usize, now: u64) -> Event {
             session,
             slot,
             readiness::Wait {
-                handles: [first, second],
+                handles: [first, second, 0, 0, 0, 0, 0, 0],
+                count: 2,
                 deadline: third,
             },
             now,
             &mut event,
         ),
+        abi::IPC_WAIT_MANY => {
+            readiness::many(session, slot, [first, second, third], now, &mut event)
+        }
         abi::IPC_REVOKE => session.ipc.revoke(slot, first).map(|()| 0),
         abi::KEYBOARD_READ | abi::KEYBOARD_WRITE | abi::KEYBOARD_READ_UNTIL => {
             keyboard::syscall(session, slot, (number, first, second), &mut event, now)

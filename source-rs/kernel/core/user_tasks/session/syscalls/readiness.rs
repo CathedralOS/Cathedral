@@ -1,17 +1,16 @@
-//! A bounded two-endpoint readiness wait. It never consumes a queued message.
+//! Bounded endpoint readiness waits. It never consumes a queued message.
 use super::{Session, complete};
 use crate::{deadline, scheduler::Event};
 use cathedral_contracts::user as abi;
 #[derive(Clone, Copy)]
 pub(in super::super) struct Wait {
-    pub handles: [u64; 2],
+    pub handles: [u64; abi::MAX_WAIT_HANDLES],
+    pub count: usize,
     pub deadline: u64,
 }
 fn ready(session: &Session, slot: usize, wait: Wait, now: u64) -> Result<Option<u64>, u64> {
-    for (index, handle) in wait.handles.into_iter().enumerate() {
-        if session.ipc.ready(slot, handle)? {
-            return Ok(Some(index as u64));
-        }
+    if let Some(index) = session.ipc.ready_any(slot, &wait.handles[..wait.count])? {
+        return Ok(Some(index));
     }
     if deadline::reached(now, wait.deadline) {
         Err(abi::TIMED_OUT)
@@ -29,12 +28,6 @@ pub(in super::super) fn syscall(
     session.clock.handle(slot)?;
     if !deadline::valid(now, wait.deadline) {
         return Err(abi::INVALID_ARGUMENT);
-    }
-    // Validate both grants even when the first is already ready.
-    for handle in wait.handles {
-        session
-            .ipc
-            .check(slot, handle, crate::ipc::Right::Receive)?;
     }
     if let Some(index) = ready(session, slot, wait, now)? {
         return Ok(index);
@@ -58,4 +51,41 @@ pub(in super::super) fn wake(session: &mut Session) {
         complete(session, slot, result);
         session.scheduler.unblock(slot);
     }
+}
+
+pub(in super::super) fn many(
+    session: &mut Session,
+    slot: usize,
+    call: [u64; 3],
+    now: u64,
+    event: &mut Event,
+) -> Result<u64, u64> {
+    let [address, count, deadline] = call;
+    if count == 0 || count > abi::MAX_WAIT_HANDLES as u64 {
+        return Err(abi::INVALID_ARGUMENT);
+    }
+    let mut bytes = [0; abi::MAX_WAIT_HANDLES * 8];
+    // SAFETY: Copy checked task-owned backing while running under the kernel root.
+    if !unsafe {
+        session.tasks[slot]
+            .space
+            .as_ref()
+            .unwrap()
+            .copy_from_user(address, &mut bytes[..count as usize * 8])
+    } {
+        return Err(abi::BAD_ADDRESS);
+    }
+    let handles =
+        core::array::from_fn(|i| u64::from_le_bytes(bytes[i * 8..i * 8 + 8].try_into().unwrap()));
+    syscall(
+        session,
+        slot,
+        Wait {
+            handles,
+            count: count as usize,
+            deadline,
+        },
+        now,
+        event,
+    )
 }

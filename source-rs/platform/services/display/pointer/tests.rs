@@ -1,7 +1,10 @@
 use super::*;
 use cathedral_contracts::composition::{self as c, Node};
-fn clients() -> [Client; 2] {
+fn clients() -> [Client; 3] {
     core::array::from_fn(|index| {
+        if index == 2 {
+            return Client::empty();
+        }
         let mut client = Client::empty();
         client.scope = Rect {
             x: 100 + index as u64 * 100,
@@ -21,7 +24,24 @@ fn clients() -> [Client; 2] {
     })
 }
 use crate::scene::Scene;
-fn router(clients: &[Client; 2]) -> Router {
+#[test]
+fn hidden_scope_revokes_synthetic_lease_and_preserves_cancellation() {
+    let mut clients = clients();
+    let mut r = router(&clients);
+    let token = r.lease(1, true, &clients).unwrap();
+    r.drive(1, token, 40, 40, 1, &clients).unwrap();
+    assert_eq!(r.next(1).kind, wire::BUTTONS);
+    r.capture(1, 1, true).unwrap();
+    clients[1].scope = Rect::default();
+    assert_eq!(r.drive(1, token, 0, 0, 1, &clients), Err(abi::DENIED));
+    r.scope_lost(1, &clients);
+    r.scope_lost(1, &clients);
+    assert_eq!(r.next(1).kind, wire::CANCEL);
+    assert_eq!(r.next(1).kind, wire::NONE);
+    assert_eq!(r.state(1)[4], 0);
+    assert_eq!(r.state(1)[5], 0);
+}
+fn router(clients: &[Client; 3]) -> Router {
     let mut router = Router::new(1024, 768);
     router.enable(true, clients);
     router.device(0, 0, 0, false, clients);

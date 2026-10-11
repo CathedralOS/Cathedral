@@ -5,6 +5,8 @@ The pointer profile adds a mouse provider and two root-rendered cursors to the
 bytes. The platform owns decoding, pointer state, targeting and capture. The
 distribution chooses placement, grants the synthetic pointer and restarts failed
 apps. This supplies experimental evidence without accepting a seat contract.
+The newer [session profile](SESSION.md) builds on this with attenuated keyboard
+focus, explicit input regions, a hosted child and live compositor recovery.
 
 From the repository root:
 
@@ -59,7 +61,7 @@ Apps have separate connections and no device grant.
 
 ## Experimental rules
 
-Two pointers and two app event queues are fixed budgets. Each queue holds eight
+This profile uses two pointers and two app event queues. Each queue holds eight
 events. Adjacent motion for the same pointer coalesces; button edges do not.
 Overflow replaces that app's pending events with cancellation barriers, releases
 its captures and suppresses held presses until buttons are up. Other clients
@@ -109,7 +111,7 @@ USB, hotplug, scrolling or acceleration. There are no seats, keyboard focus,
 recursive Matrix delegation, visual-only leases, custom cursor assets or trusted
 prompts. Provider reconnect after compositor failure remains the base lab's
 pre-input probe; this interactive profile supervises app and mouse-provider loss,
-not live compositor replacement. Input source stalls are not supervised by a
-health protocol yet. The [pointer proposal](../../../../wiki/proposals/0001_input_and_pointer_leases.md)
+not live compositor replacement. Source health and live compositor replacement
+are exercised by the separate session profile. The [pointer proposal](../../../../wiki/proposals/0001_input_and_pointer_leases.md)
 and [owner question](../../../../OWNER_QUESTIONS.md#pointer-leases-seats-and-action-authority)
 retain those production choices.

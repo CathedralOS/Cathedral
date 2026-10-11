@@ -246,3 +246,20 @@ fn admission_rejects_invalid_peers_and_excessive_endpoints() {
         .is_err()
     );
 }
+
+#[test]
+fn bounded_wait_set_validates_every_grant_and_preserves_messages() {
+    let mut ipc = pair(1);
+    let send = ipc.handle(0, 0).unwrap();
+    let receive = ipc.handle(1, 0).unwrap();
+    assert_eq!(ipc.ready_any(1, &[]), Err(abi::INVALID_ARGUMENT));
+    assert_eq!(ipc.ready_any(1, &[receive; 9]), Err(abi::INVALID_ARGUMENT));
+    assert_eq!(ipc.ready_any(1, &[receive; 8]), Ok(None));
+    ipc.send(0, send, b"ready").unwrap();
+    assert_eq!(ipc.ready_any(1, &[receive, send]), Err(abi::BAD_HANDLE));
+    assert_eq!(ipc.ready_any(1, &[receive; 8]), Ok(Some(0)));
+    assert_eq!(ipc.receive(1, receive, 64).unwrap().unwrap().len, 5);
+    assert_eq!(ipc.ready_any(1, &[receive; 8]), Ok(None));
+    ipc.close_task(0);
+    assert_eq!(ipc.ready_any(1, &[receive]), Ok(Some(0)));
+}

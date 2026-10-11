@@ -1,12 +1,12 @@
-//! Target painted content in the same clip/stack order used by scanout.
+//! Target explicit regions (or legacy paint) in scanout's clip/stack order.
 use super::*;
 impl Router {
-    fn hit(&self, id: usize, x: u64, y: u64, clients: &[Client; 2]) -> Option<usize> {
-        let hit = clients.iter().rposition(|c| c.pixel(x, y).is_some());
+    fn hit(&self, id: usize, x: u64, y: u64, clients: &[Client; 3]) -> Option<usize> {
+        let hit = clients.iter().rposition(|c| c.hit(x, y));
         // A synthetic lease cannot target another app, including an app covering it.
         hit.filter(|&c| id == 0 || self.lease.is_some_and(|l| l.client == c))
     }
-    pub(super) fn update(&mut self, id: usize, x: u64, y: u64, buttons: u8, clients: &[Client; 2]) {
+    pub(super) fn update(&mut self, id: usize, x: u64, y: u64, buttons: u8, clients: &[Client; 3]) {
         let old = self.pointers[id];
         self.pointers[id].x = x;
         self.pointers[id].y = y;
@@ -48,7 +48,7 @@ impl Router {
             self.pointers[id].capture = None;
         }
     }
-    fn event(&self, client: usize, id: usize, kind: u64, clients: &[Client; 2]) -> Event {
+    fn event(&self, client: usize, id: usize, kind: u64, clients: &[Client; 3]) -> Event {
         let p = self.pointers[id];
         Event {
             pointer: id as u64,
@@ -58,7 +58,7 @@ impl Router {
             buttons: if kind == wire::CANCEL { 0 } else { p.buttons },
         }
     }
-    fn deliver(&mut self, client: usize, id: usize, kind: u64, clients: &[Client; 2]) {
+    fn deliver(&mut self, client: usize, id: usize, kind: u64, clients: &[Client; 3]) {
         let event = self.event(client, id, kind, clients);
         if self.queues[client].push(event) {
             return;
@@ -77,13 +77,13 @@ impl Router {
             self.queues[client].push(cancel);
         }
     }
-    pub(super) fn cancel(&mut self, id: usize, clients: &[Client; 2]) {
+    pub(super) fn cancel(&mut self, id: usize, clients: &[Client; 3]) {
         let owner = self.pointers[id].press;
         self.pointers[id].buttons = 0;
         self.pointers[id].press = None;
         self.pointers[id].capture = None;
         self.pointers[id].blocked = true;
-        for client in 0..2 {
+        for client in 0..3 {
             // Revocation discards undelivered events from the retired binding,
             // including a queued release whose app may already have seen its press.
             let q = &mut self.queues[client];

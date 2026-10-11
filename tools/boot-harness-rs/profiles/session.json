@@ -1,0 +1,74 @@
+{
+  "name": "Cathedral persistent nested session experiment",
+  "target": "x86_64-unknown-uefi",
+  "boot_package": "cathedral-boot-uefi",
+  "startup": {
+    "initial": {
+      "package": "cathedral-compositor-lab",
+      "entry": "distribution/lab/compositor/main.rs",
+      "target": "x86_64-unknown-none",
+      "clock": true
+    },
+    "launches": [
+      {
+        "package": "cathedral-display-service",
+        "entry": "platform/services/display/main.rs",
+        "target": "x86_64-unknown-none",
+        "clock": true,
+        "framebuffer": true,
+        "shared_pages": 3,
+        "argument": 1129270608
+      },
+      {
+        "package": "cathedral-compositor-lab",
+        "entry": "distribution/lab/compositor/main.rs",
+        "target": "x86_64-unknown-none",
+        "clock": true,
+        "argument": 1,
+        "private_pages": 1
+      },
+      {
+        "package": "cathedral-compositor-lab",
+        "entry": "distribution/lab/compositor/main.rs",
+        "target": "x86_64-unknown-none",
+        "clock": true,
+        "argument": 2,
+        "private_pages": 1
+      },
+      {
+        "package": "cathedral-input-service",
+        "entry": "platform/services/input/main.rs",
+        "target": "x86_64-unknown-none",
+        "clock": true,
+        "keyboard": true,
+        "argument": 1297044819
+      },
+      {
+        "package": "cathedral-compositor-lab",
+        "entry": "distribution/lab/compositor/main.rs",
+        "target": "x86_64-unknown-none",
+        "clock": true,
+        "argument": 3,
+        "private_pages": 1
+      }
+    ],
+    "links": [
+      [
+        2,
+        1
+      ],
+      [
+        3,
+        1
+      ],
+      [
+        4,
+        1
+      ],
+      [
+        5,
+        1
+      ]
+    ]
+  }
+}

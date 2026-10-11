@@ -1,4 +1,4 @@
-//! Fair, bounded service control and up to three boot-approved client connections.
+//! Fair, bounded service control and up to four boot-approved client connections.
 //! Client identity comes from the accepted link slot, never from message contents.
 use crate::{
     Error, abi,
@@ -6,6 +6,7 @@ use crate::{
     link::Link,
     time,
 };
+#[derive(Clone, Copy)]
 pub struct Request {
     pub bytes: [u8; 64],
     pub len: usize,
@@ -20,22 +21,21 @@ pub enum Event {
 }
 pub struct Server {
     control: (Handle, Handle),
-    links: [Option<Link>; 3],
-    clients: [Option<(Handle, Handle)>; 3],
+    links: [Option<Link>; 4],
+    clients: [Option<(Handle, Handle)>; 4],
     count: usize,
     cursor: usize,
-    idle: usize,
-    closed: [Option<u64>; 3],
+    closed: [Option<u64>; 4],
 }
 impl Server {
     pub fn open() -> Result<Self, Error> {
         Self::open_clients(1)
     }
     pub fn open_clients(count: usize) -> Result<Self, Error> {
-        if count == 0 || count > 3 {
+        if count == 0 || count > 4 {
             return Err(Error(abi::INVALID_ARGUMENT as i64));
         }
-        let mut links = [None; 3];
+        let mut links = [None; 4];
         for (index, slot) in links.iter_mut().enumerate().take(count) {
             *slot = match Link::at(index as u64) {
                 Ok(link) => Some(link),
@@ -52,11 +52,10 @@ impl Server {
         Ok(Self {
             control: (Handle::bootstrap(0)?, Handle::bootstrap(1)?),
             links,
-            clients: [None; 3],
+            clients: [None; 4],
             count,
             cursor: 0,
-            idle: 0,
-            closed: [None; 3],
+            closed: [None; 4],
         })
     }
     pub fn next_request(&mut self) -> Result<Request, Error> {
@@ -125,15 +124,19 @@ impl Server {
                     Err(error) => return Err(error),
                 }
             }
-            // Existing wait-two ABI bounds idle latency for unselected channels to one tick.
-            self.idle = (self.idle + 1) % self.count;
-            let peer = self.clients[self.idle].map_or(self.control.0, |pair| pair.0);
-            match ipc::wait_two(self.control.0, peer, time::after(1)?) {
+            // Watch every live channel together. The bounded maintenance timeout
+            // retries absent links; quiet connected clients generate no poll traffic.
+            let mut handles = [self.control.0; 5];
+            let mut count = 1;
+            for pair in self.clients.iter().take(self.count).flatten() {
+                handles[count] = pair.0;
+                count += 1;
+            }
+            match ipc::wait_many(&handles[..count], time::after(100)?) {
                 Ok(_) => (),
                 Err(Error(code)) if code == abi::TIMED_OUT as i64 => (),
-                Err(_) => {
-                    self.disconnect(self.idle);
-                }
+                // The next scan identifies and publishes the exact closed client.
+                Err(_) => (),
             }
         }
     }

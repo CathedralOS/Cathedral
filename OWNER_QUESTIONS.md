@@ -83,8 +83,10 @@ compositor and seat semantics to an unwritten subject. The
 seat protocol. The [Rust input transport](source-rs/contracts/input.rs) carries
 key events only. The separate [Rust pointer experiment](source-rs/distribution/lab/compositor/POINTERS.md)
 adds bounded pointer identities, a boot-approved mouse source and an app-scoped
-synthetic lease. It deliberately leaves seats, keyboard focus, principal attribution
-and recursive delegation unspecified; it does not resolve this owner choice.
+synthetic lease. The [session experiment](source-rs/distribution/lab/compositor/SESSION.md)
+adds attenuated keyboard-focus grants and a separate hosted child. Neither lab
+settles seats, principal attribution or general recursive delegation, so this
+owner choice remains open.
 
 **Owner choice.** Require every logical pointer to be a complete seat, or permit
 separately leased pointers associated with an explicit seat context. The former
@@ -99,6 +101,40 @@ authority; do not imply keyboard control. Keep seat association explicit and
 retain trusted source provenance when multiplexing. The
 [pointer proposal](wiki/proposals/0001_input_and_pointer_leases.md) develops this
 model while leaving the final focus topology and compatibility adapter open.
+
+### Focus changes and undelivered key events
+
+**Requirement and tension.** A held key must not become a fresh action in a new
+target after focus changes, source loss or host revocation. The
+[focus design](wiki/design/part_6_human_surface/00_windowing_and_compositor.md#focus)
+says already-queued events drain and describes a one-event risk window. A bounded
+queue can hold several events; draining a queued press can activate the old
+target after revocation, while discarding only its release can leave held state.
+The same section describes focus as a capability minted and revoked on focus
+changes, without separating standing routing/delegation authority from the
+currently selected recipient.
+
+**Contracts checked.** The [specification index](wiki/spec/README.md) leaves
+compositor/seat and capability semantics unwritten. The
+[Rust interaction contract](source-rs/contracts/interaction.rs) and
+[session lab](source-rs/distribution/lab/compositor/SESSION.md) are experimental.
+The owner has affirmed that keyboard focus attenuates like other delegated
+authority; that does not yet settle event commitment or held-key transfer.
+
+**Owner choice.** Drain accepted events to the former target, or replace
+undelivered events with an explicit cancellation barrier and suppress held keys
+until release. Define whether commitment occurs in the compositor's queue or
+when its reply enters IPC; messages already delivered cannot be retroactively
+undone. Also distinguish a standing subtree/key-mask grant from its active focus
+selection, or specify how an ephemeral focus capability preserves host delegation.
+
+**Recommendation (unaccepted).** Keep standing attenuated routing grants and
+explicit active selection. Cancel events still owned by the router, publish a
+focus-lost barrier, and require release before a held key can act on a new target.
+The lab implements this rule, including on overflow and source loss. Events
+already published into IPC may still be consumed. Reconcile the design prose and
+the [pending IPC question](#endpoint-transport-and-revocation-of-pending-ipc)
+before freezing production semantics.
 
 ### Exclusive audio and the reserved system channel
 

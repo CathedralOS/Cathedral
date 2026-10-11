@@ -40,6 +40,23 @@ pub struct Ipc {
     endpoints: alloc::vec::Vec<Option<Endpoint>>,
 }
 impl Ipc {
+    /// Validate the entire bounded receive set before reporting its first ready
+    /// entry. A ready earlier entry must not conceal an unauthorized later one.
+    pub fn ready_any(&self, caller: usize, handles: &[u64]) -> Result<Option<u64>, u64> {
+        if handles.is_empty() || handles.len() > abi::MAX_WAIT_HANDLES {
+            return Err(abi::INVALID_ARGUMENT);
+        }
+        for &handle in handles {
+            self.check(caller, handle, Right::Receive)?;
+        }
+        for (index, &handle) in handles.iter().enumerate() {
+            if self.ready(caller, handle)? {
+                return Ok(Some(index as u64));
+            }
+        }
+        Ok(None)
+    }
+
     pub fn new(epoch: u64, tasks: usize, specs: &[EndpointSpec]) -> Result<Self, u64> {
         if !(1..=MAX_EPOCH).contains(&epoch) || tasks > MAX_TASKS || specs.len() > MAX_ENDPOINTS {
             return Err(abi::INVALID_ARGUMENT);

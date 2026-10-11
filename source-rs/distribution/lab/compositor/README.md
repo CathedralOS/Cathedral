@@ -15,7 +15,9 @@ python tools/boot-harness-rs/run.py --profile tools/boot-harness-rs/profiles/com
 The custom profile leaves the ordinary status distribution available. Its lab
 supervisor runs drawing and failure probes, then leaves two labeled panels on
 screen. The optional [pointer profile](POINTERS.md) adds mouse interaction and a
-scoped synthetic cursor. The base automated test saves
+scoped synthetic cursor. The [persistent session](SESSION.md) adds sleeping apps,
+live compositor recovery, attenuated keyboard focus and a separate child process
+hosted inside an app. The base automated test saves
 `build/boot-harness-rs/compositor-test/display.png` and checks every scanout pixel.
 
 ## Follow execution
@@ -38,8 +40,9 @@ imports neither implementation.
 
 ## Bounds and lifetime
 
-Each of two clients has at most eight nodes, one 16x16 RGB image and a scope no
-larger than 256x256. Nodes are rectangles, existing ASCII text, images or groups.
+The service has three client slots; this base profile uses two. Each client has
+at most 16 nodes, one 16x16 RGB image and a scope no larger than 256x256. Nodes are
+rectangles, existing ASCII text, images, groups or explicit input regions.
 Earlier-group parent references prevent cycles. Checked local translations and
 intersected ancestor clips resolve directly into drawing; groups have no pixel
 buffers. Later nodes and the second client draw above earlier ones. The control
@@ -67,9 +70,9 @@ work, though no real-time or fair CPU-share guarantee is established.
 
 All drawing writes GOP directly. Snapshot acceptance is atomic as scene state;
 scanout writes are not a tear-free frame commit. There is no vblank scheduling,
-GPU, alpha, protected prompt, input focus, delegated cross-process Matrix
-tree or stable surface ABI. Local groups exercise nesting without claiming those
-larger authority contracts.
+GPU, alpha, protected prompt or stable surface ABI. Local groups exercise nesting;
+the separate session profile supplies bounded focus and cross-process hosting
+evidence without establishing the general Matrix or seat contracts.
 
 ## Evidence
 

@@ -9,10 +9,26 @@ pub struct Decoder {
     extended: bool,
     pause: u8,
     held: u16,
+    unmatched_releases: bool,
 }
 impl Decoder {
+    /// A restarted source must report key-up even if its predecessor saw key-down.
+    pub fn source() -> Self {
+        Self {
+            unmatched_releases: true,
+            ..Self::default()
+        }
+    }
+    /// Current decoded key state, used to cancel held input across router restart.
+    pub fn held_keys(&self) -> u16 {
+        self.held
+    }
     pub fn reset(&mut self) -> Event {
-        *self = Self::default();
+        let unmatched_releases = self.unmatched_releases;
+        *self = Self {
+            unmatched_releases,
+            ..Self::default()
+        };
         Event::reset()
     }
     pub fn feed(&mut self, byte: u8) -> Option<Event> {
@@ -44,7 +60,7 @@ impl Decoder {
         };
         let mask = 1 << (key - 1);
         let state = if byte & 0x80 != 0 {
-            if self.held & mask == 0 {
+            if self.held & mask == 0 && !self.unmatched_releases {
                 return None;
             }
             self.held &= !mask;
@@ -62,6 +78,36 @@ impl Decoder {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn restarted_source_preserves_unmatched_key_up_and_reset_mode() {
+        let mut decoder = Decoder::source();
+        assert_eq!(
+            decoder.feed(0x9c),
+            Some(Event {
+                key: wire::ENTER,
+                state: wire::RELEASE
+            })
+        );
+        decoder.reset();
+        assert_eq!(decoder.feed(0xe0), None);
+        assert_eq!(
+            decoder.feed(0xcd),
+            Some(Event {
+                key: wire::RIGHT,
+                state: wire::RELEASE
+            })
+        );
+        assert_eq!(
+            decoder.feed(0x1c),
+            Some(Event {
+                key: wire::ENTER,
+                state: wire::PRESS
+            })
+        );
+        assert_eq!(decoder.held_keys(), 1 << (wire::ENTER - 1));
+        decoder.feed(0x9c);
+        assert_eq!(decoder.held_keys(), 0);
+    }
     #[test]
     fn extended_press_repeat_release_and_reset() {
         let mut decoder = Decoder::default();

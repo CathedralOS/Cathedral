@@ -1,6 +1,6 @@
 #![no_std]
 #![no_main]
-//! Explicit lab profile: supervisor chooses layout; two isolated clients own content.
+//! Explicit lab profiles: supervisor chooses layout; isolated clients own content.
 mod client;
 mod scene;
 mod supervisor;
@@ -10,16 +10,21 @@ cathedral_user_runtime::entry!(main);
 fn main(role: u64, _generation: u64) -> u64 {
     match role {
         0 => supervisor::run(),
-        1 | 2 => client::run(role),
+        1..=3 => client::run(role),
         _ => 254,
     }
 }
 fn exchange(pair: (Handle, Handle), words: [u64; 6]) -> [u64; 6] {
-    pair.0.send(&display::encode(words)).unwrap();
+    try_exchange(pair, words).unwrap()
+}
+fn try_exchange(
+    pair: (Handle, Handle),
+    words: [u64; 6],
+) -> Result<[u64; 6], cathedral_user_runtime::Error> {
+    pair.0.send(&display::encode(words))?;
     let mut bytes = [0; 64];
-    let len = pair
-        .1
-        .receive_until(&mut bytes, time::after(300).unwrap())
-        .unwrap();
-    display::decode(&bytes[..len]).unwrap()
+    let len = pair.1.receive_until(&mut bytes, time::after(300)?)?;
+    display::decode(&bytes[..len]).ok_or(cathedral_user_runtime::Error(
+        cathedral_contracts::user::IO_ERROR as i64,
+    ))
 }

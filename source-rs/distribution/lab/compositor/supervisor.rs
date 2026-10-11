@@ -29,6 +29,7 @@ fn marker(text: &[u8]) {
     cathedral_user_runtime::write(text).unwrap();
 }
 mod checks;
+mod desktop;
 mod pointer;
 mod recovery;
 struct Session {
@@ -69,6 +70,9 @@ pub fn run() -> u64 {
     session.client_recovery();
     session.provider_recovery();
     marker(b"Cathedral compositor: ready\n");
+    if let Ok(child) = Launch::at(4) {
+        return session.desktop(child);
+    }
     if let Ok(source) = Launch::at(3) {
         return session.pointers(source);
     }

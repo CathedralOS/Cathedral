@@ -8,17 +8,20 @@ impl Compositor {
     }
     fn dispatch(&mut self, request: &Request) -> Result<[u64; 6], u64> {
         let words = display::decode(&request.bytes[..request.len]).ok_or(abi::INVALID_ARGUMENT)?;
+        if words[0] >= cathedral_contracts::interaction::FOCUS_GRANT {
+            return self.session_request(request, words);
+        }
         if words[0] >= cathedral_contracts::pointer::DEVICE {
             return self.pointer_request(request, words);
         }
         if !request.control {
-            let client = request.client.ok_or(abi::DENIED)?;
-            if client >= 2 || words[0] != wire::SUBMIT {
+            let client = request.client.and_then(app_index).ok_or(abi::DENIED)?;
+            if words[0] != wire::SUBMIT {
                 return Err(abi::DENIED);
             }
             // Authenticate and consume this client's offer even when its revision or
             // scene is invalid. A foreign offer remains untouched for its real owner.
-            let link = Link::at(client as u64).map_err(|e| e.0 as u64)?;
+            let link = Link::at(request.client.unwrap() as u64).map_err(|e| e.0 as u64)?;
             let region = Shared::accept_from(words[2], link).map_err(|e| e.0 as u64)?;
             if self.clients[client].incarnation != request.incarnation {
                 self.pointers.client_lost(client, self.clients);
@@ -35,6 +38,7 @@ impl Compositor {
             };
             drop(region); // Completion always follows release of the accepted reader.
             result?;
+            self.tree.resolve(self.clients);
             self.redraw(self.clients[client].scope);
             return Ok([0, words[1], 0, 0, 0, 0]);
         }
@@ -48,7 +52,7 @@ impl Compositor {
                     h: self.output.height,
                 });
             }
-            [wire::PLACE, client, x, y, w, h] if client < 2 => {
+            [wire::PLACE, client, x, y, w, h] if client < 3 => {
                 let rect = Rect { x, y, w, h };
                 if !rect.valid()
                     || w > 256
@@ -58,18 +62,13 @@ impl Compositor {
                 {
                     return Err(abi::INVALID_ARGUMENT);
                 }
-                let old = self.clients[client as usize].scope;
-                let cursors = self.pointers.cursor_bounds();
-                self.clients[client as usize].scope = rect;
-                self.pointers.moved(client as usize, self.clients);
-                self.redraw_cursors(cursors);
-                self.redraw(old);
-                self.redraw(rect);
+                self.tree.place_root(client as usize, rect)?;
+                self.layout_changed();
             }
             [wire::PIXEL, x, y, 0, 0, 0] if x < self.output.width && y < self.output.height => {
                 return Ok([0, self.output.read(x, y) as u64, 0, 0, 0, 0]);
             }
-            [wire::STATUS, client, 0, 0, 0, 0] if client < 2 => {
+            [wire::STATUS, client, 0, 0, 0, 0] if client < 3 => {
                 let c = &self.clients[client as usize];
                 return Ok([0, c.incarnation, c.revision, u64::from(c.visible), 0, 0]);
             }
