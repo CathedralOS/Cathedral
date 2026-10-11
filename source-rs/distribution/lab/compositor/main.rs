@@ -15,7 +15,7 @@ fn main(role: u64, _generation: u64) -> u64 {
     }
 }
 fn exchange(pair: (Handle, Handle), words: [u64; 6]) -> [u64; 6] {
-    try_exchange(pair, words).unwrap()
+    try_exchange(pair, words).unwrap_or_else(|error| panic!("exchange {words:?}: {error:?}"))
 }
 fn try_exchange(
     pair: (Handle, Handle),

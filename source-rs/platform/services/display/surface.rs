@@ -9,12 +9,16 @@ pub struct Surface {
     format: u64,
 }
 impl Surface {
-    pub(crate) fn put(&mut self, x: u64, y: u64, rgb: u32) {
-        assert!(x < self.width && y < self.height);
-        let pointer = (self.address + (y * self.stride + x) * 4) as *mut u32;
-        // SAFETY: Exclusive device aperture; checked visible coordinate and validated stride.
-        unsafe {
-            pointer.write_volatile(wire::pixel(self.format, rgb as u64));
+    pub(crate) fn row(&mut self, x: u64, y: u64, pixels: &[u32]) {
+        assert!(y < self.height && x + pixels.len() as u64 <= self.width);
+        let start = (self.address + (y * self.stride + x) * 4) as *mut u32;
+        for (index, &rgb) in pixels.iter().enumerate() {
+            // SAFETY: The entire row lies within the checked exclusive aperture.
+            unsafe {
+                start
+                    .add(index)
+                    .write_volatile(wire::pixel(self.format, rgb as u64));
+            }
         }
     }
     pub(crate) fn read(&self, x: u64, y: u64) -> u32 {

@@ -85,3 +85,63 @@ fn text_and_image_payloads_are_fully_validated_before_commit() {
     bytes[8] = 9;
     assert!(Scene::empty().decode(&bytes).is_err());
 }
+
+#[test]
+fn span_raster_matches_pixels_and_damage_contains_every_changed_pixel() {
+    let nodes = [
+        wire::Node([wire::ROOT, wire::RECT, 0, 0, 256, 256, 0x123456]),
+        wire::Node([wire::ROOT, wire::GROUP, 10, 12, 44, 34, 0]),
+        wire::Node([
+            1,
+            wire::TEXT,
+            2,
+            3,
+            36,
+            14,
+            u64::from_le_bytes(*b"ABC\0\0\0\0\0"),
+        ]),
+        wire::Node([1, wire::IMAGE, 30, 23, 16, 16, 0]),
+        wire::Node([wire::ROOT, wire::RECT, 80, 80, 12, 12, 0]),
+    ];
+    let mut client = Client {
+        scope: Rect {
+            x: 17,
+            y: 19,
+            w: 120,
+            h: 100,
+        },
+        ..Client::default()
+    };
+    let mut old = Scene::empty();
+    client.submit(1, 1, &snapshot(&nodes), &mut old).unwrap();
+    for y in 0..130 {
+        for x in (0..150).step_by(13) {
+            let mut row = [0x987654; 13];
+            client.paint_row(x, y, &mut row);
+            for (i, actual) in row.iter().enumerate() {
+                assert_eq!(*actual, client.pixel(x + i as u64, y).unwrap_or(0x987654));
+            }
+        }
+    }
+    let mut moved = nodes;
+    moved[4].0[2] += 1;
+    client.submit(1, 2, &snapshot(&moved), &mut old).unwrap();
+    let damage = client.scene.damage(&old);
+    assert_eq!(
+        damage,
+        Rect {
+            x: 80,
+            y: 80,
+            w: 13,
+            h: 12
+        }
+    );
+    for y in 0..256 {
+        for x in 0..256 {
+            if client.scene.pixel(x, y) != old.pixel(x, y) {
+                assert!(damage.contains(x, y));
+            }
+        }
+    }
+    assert!(!client.scene.damage(&client.scene).valid());
+}

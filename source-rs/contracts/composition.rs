@@ -4,6 +4,8 @@
 //! Control-only: BACKGROUND [op,rgb,0,0,0,0], PLACE [op,client,x,y,w,h],
 //! PIXEL [op,x,y,0,0,0] (lab readback), STATUS [op,client,0,0,0,0].
 //! STATUS replies [status, incarnation, revision, visible, 0, 0].
+//! Control may also send display::TEXT packets: up to 32 retained backdrop labels,
+//! replaced by matching origin, clipped by apps and redrawn beneath cursors.
 pub const MODE: u64 = 0x434f4d50;
 pub const SUBMIT: u64 = 16;
 pub const BACKGROUND: u64 = 17;
@@ -24,7 +26,8 @@ pub const IMAGE: u64 = 3;
 /// Explicit input region, subject to group clips. Payload must be zero.
 pub const INPUT: u64 = 4;
 /// Parent index (earlier GROUP or ROOT), kind, local x/y, width/height, payload.
-/// RECT payload is RGB; TEXT is up to eight ASCII bytes, zero padded, scale one;
+/// RECT payload is RGB; TEXT is up to eight ASCII bytes, zero padded, scale 1–4
+/// determined by height / 7 (width must equal length * 6 * scale);
 /// IMAGE uses the snapshot's one 16x16 RGB asset and requires matching dimensions.
 #[derive(Clone, Copy, Debug, Default)]
 pub struct Node(pub [u64; 7]);

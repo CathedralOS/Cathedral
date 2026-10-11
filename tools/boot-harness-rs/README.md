@@ -115,3 +115,9 @@ compares every scanout pixel at several stages. Add `--release` for the optimize
 build. Output is `build/boot-harness-rs/session-test/display.png`; see the
 [session guide](../../source-rs/distribution/lab/compositor/SESSION.md) for the
 interactive command and F4–F7 recovery controls.
+
+Normal session startup skips destructive bring-up probes. Add `--startup-probes`
+to run those and the full-screen repaint timing probe. Session tests also drive
+120 mouse reports at roughly 100 Hz and check exact motion, release and continued
+keyboard input; `latency.json` records the final cursor observation time. The
+interactive scene includes readable controls, focus status and recovery notices.

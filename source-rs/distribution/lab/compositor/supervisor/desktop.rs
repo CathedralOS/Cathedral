@@ -1,4 +1,5 @@
 //! Persistent session policy: admit, authorize, measure idle, supervise and restore.
+mod chrome;
 mod probes;
 mod recovery;
 use super::*;
@@ -10,6 +11,7 @@ struct Desktop {
     c: Pair,
     source: Child,
     input: Pair,
+    last_focus: u64,
 }
 impl Session {
     pub(super) fn desktop(self, child_launch: Launch) -> u64 {
@@ -24,14 +26,21 @@ impl Session {
             c,
             source,
             input,
+            last_focus: u64::MAX,
         };
         desktop.layout();
-        desktop.boundaries();
+        if cfg!(feature = "session-probes") {
+            desktop.boundaries();
+        }
         for pair in desktop.apps() {
             assert_eq!(call(pair, 14, 0)[0], 0);
         }
         desktop.authorize();
-        desktop.idle_probe();
+        if cfg!(feature = "session-probes") {
+            desktop.idle_probe();
+            desktop.repaint_probe();
+        }
+        desktop.chrome();
         marker(b"Cathedral session: ready\n");
         desktop.run()
     }
@@ -86,6 +95,7 @@ impl Desktop {
                     self.configure(1, [23, 0, 0, 0, 0, 0]);
                     assert_eq!(call(self.base.display, s::FOCUS_STATE, 0), focus);
                     marker(b"Cathedral session: synthetic click preserved keyboard focus\n");
+                    self.notice(b"SYNTHETIC CLICK");
                 }
                 Ok(_) => (),
                 Err(_) => self.restore_display(),
@@ -98,6 +108,7 @@ impl Desktop {
             if source_call(self.input, 1).is_err() {
                 self.replace_source();
             }
+            self.update_focus();
             let _ = self
                 .base
                 .display

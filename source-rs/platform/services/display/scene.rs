@@ -1,6 +1,7 @@
 //! Fixed-budget snapshots and recursive clips. No device access or IPC authority.
 use cathedral_contracts::composition as wire;
 use cathedral_contracts::user as abi;
+mod raster;
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct Rect {
     pub x: u64,
@@ -18,7 +19,7 @@ impl Rect {
     pub fn contains(self, x: u64, y: u64) -> bool {
         x >= self.x && y >= self.y && x - self.x < self.w && y - self.y < self.h
     }
-    fn intersect(self, other: Self) -> Self {
+    pub fn intersect(self, other: Self) -> Self {
         let x = self.x.max(other.x);
         let y = self.y.max(other.y);
         Self {
@@ -28,8 +29,24 @@ impl Rect {
             h: (self.y + self.h).min(other.y + other.h).saturating_sub(y),
         }
     }
+    pub fn union(self, other: Self) -> Self {
+        if !self.valid() {
+            return other;
+        }
+        if !other.valid() {
+            return self;
+        }
+        let x = self.x.min(other.x);
+        let y = self.y.min(other.y);
+        Self {
+            x,
+            y,
+            w: (self.x + self.w).max(other.x + other.w) - x,
+            h: (self.y + self.h).max(other.y + other.h) - y,
+        }
+    }
 }
-#[derive(Clone, Copy, Default)]
+#[derive(Clone, Copy, Default, PartialEq, Eq)]
 struct Draw {
     kind: u64,
     rect: Rect,
@@ -118,8 +135,9 @@ impl Scene {
                     if len == 0
                         || text[..len].iter().any(|b| !(32..=126).contains(b))
                         || text[len..].iter().any(|&b| b != 0)
-                        || w != len as u64 * 6
-                        || h != 7
+                        || !(7..=28).contains(&h)
+                        || h % 7 != 0
+                        || w != len as u64 * 6 * (h / 7)
                     {
                         return Err(abi::INVALID_ARGUMENT);
                     }
@@ -174,6 +192,8 @@ impl Scene {
                 wire::RECT => color = Some(draw.value as u32),
                 wire::IMAGE => color = Some(self.pixels[(dy * 16 + dx) as usize]),
                 wire::TEXT => {
+                    let scale = draw.rect.h / 7;
+                    let (dx, dy) = (dx / scale, dy / scale);
                     let ch = draw.value.to_le_bytes()[(dx / 6) as usize];
                     if dx % 6 < 5
                         && cathedral_bitmap_font::glyph(ch)[dy as usize] & (1 << (4 - dx % 6)) != 0

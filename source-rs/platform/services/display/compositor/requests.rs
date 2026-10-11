@@ -7,6 +7,16 @@ impl Compositor {
         result.unwrap_or_else(|status| [status, 0, 0, 0, 0, 0])
     }
     fn dispatch(&mut self, request: &Request) -> Result<[u64; 6], u64> {
+        if request.len == display::TEXT_BYTES {
+            if !request.control {
+                return Err(abi::DENIED);
+            }
+            let damage = self
+                .labels
+                .set(&request.bytes, self.output.width, self.output.height)?;
+            self.redraw(damage);
+            return Ok([0; 6]);
+        }
         let words = display::decode(&request.bytes[..request.len]).ok_or(abi::INVALID_ARGUMENT)?;
         if words[0] >= cathedral_contracts::interaction::FOCUS_GRANT {
             return self.session_request(request, words);
@@ -26,6 +36,8 @@ impl Compositor {
             if self.clients[client].incarnation != request.incarnation {
                 self.pointers.client_lost(client, self.clients);
             }
+            let was_visible = self.clients[client].visible
+                && self.clients[client].incarnation == request.incarnation;
             let result = if words[3..].iter().any(|&n| n != 0) {
                 Err(abi::INVALID_ARGUMENT)
             } else {
@@ -39,7 +51,20 @@ impl Compositor {
             drop(region); // Completion always follows release of the accepted reader.
             result?;
             self.tree.resolve(self.clients);
-            self.redraw(self.clients[client].scope);
+            let c = &self.clients[client];
+            let local = c.scene.damage(self.scratch);
+            let damage = if was_visible {
+                Rect {
+                    x: c.scope.x + local.x,
+                    y: c.scope.y + local.y,
+                    w: local.w,
+                    h: local.h,
+                }
+                .intersect(c.scope)
+            } else {
+                c.scope
+            };
+            self.redraw(damage);
             return Ok([0, words[1], 0, 0, 0, 0]);
         }
         match words {

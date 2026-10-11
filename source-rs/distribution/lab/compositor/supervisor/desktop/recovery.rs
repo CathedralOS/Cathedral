@@ -19,6 +19,8 @@ impl Desktop {
         }
         self.authorize();
         source_call(self.input, 2).unwrap();
+        self.chrome();
+        self.notice(b"DISPLAY RESTORED");
         assert_eq!(self.apps().map(|pair| health(pair).unwrap()[3]), before);
         assert_eq!(
             [
@@ -34,6 +36,7 @@ impl Desktop {
         marker(b"Cathedral session: compositor restored; three app identities and values preserved; capture and focus cleared\n");
     }
     pub(super) fn replace_app(&mut self, client: usize) {
+        self.notice(b"RESTARTING APP");
         let child_value = if client == 1 {
             Some(health(self.c).unwrap()[3])
         } else {
@@ -80,15 +83,19 @@ impl Desktop {
         if let Some(value) = child_value {
             assert_eq!(health(self.c).unwrap()[3], value);
             marker(b"Cathedral session: host replaced; child process and value preserved\n");
+            self.notice(b"HOST RESTORED");
         } else {
             marker(b"Cathedral session: app recovered\n");
+            self.notice(b"APP RESTORED");
         }
     }
     pub(super) fn replace_source(&mut self) {
+        self.notice(b"RESTARTING INPUT");
         self.source.cancel().unwrap();
         self.source.wait().unwrap();
         self.source = Launch::at(3).unwrap().spawn(0).unwrap();
         self.input = source_ready();
         marker(b"Cathedral session: input source restored\n");
+        self.notice(b"INPUT RESTORED");
     }
 }

@@ -120,6 +120,7 @@ def main():
     mode.add_argument("--storage-test", action="store_true", help="Verify durable state across reboot and abrupt QEMU power cuts")
     parser.add_argument("--fault", choices=("guard", "invalid-opcode", "double-fault"), help="Expected-fault smoke test (requires --smoke)")
     parser.add_argument("--release", action="store_true")
+    parser.add_argument("--startup-probes", action="store_true", help="Include destructive startup probes in the session lab")
     parser.add_argument("--kernel-only", action="store_true", help="Build/boot without any platform or distribution executable")
     parser.add_argument("--profile", type=Path, default=WORKSPACE / "distribution/profile.json", help="Host composition profile")
     parser.add_argument("--window", action="store_true", help="Show QEMU's display during an ordinary interactive boot")
@@ -185,8 +186,11 @@ def main():
     for name, user in programs.items():
         user_cargo = ["cargo", "build", "--locked", "--package", user['package'],
                       "--target", user['target'], "--target-dir", str(BUILD / "cargo")]
-        if user.get("features"):
-            user_cargo.extend(["--features", ",".join(user["features"])])
+        user_features = list(user.get("features", []))
+        if args.startup_probes and user['package'] == 'cathedral-compositor-lab':
+            user_features.append('session-probes')
+        if user_features:
+            user_cargo.extend(["--features", ",".join(user_features)])
         if args.release:
             user_cargo.append("--release")
         subprocess.run(user_cargo, cwd=WORKSPACE, check=True)

@@ -5,6 +5,9 @@ edition.workspace = true
 rust-version.workspace = true
 publish.workspace = true
 
+[features]
+session-probes = []
+
 [[bin]]
 name = "cathedral-compositor-lab"
 path = "main.rs"

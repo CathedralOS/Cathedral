@@ -29,7 +29,11 @@ fn serve() -> Result<(), Error> {
                     mouse.reset();
                     keys.reset();
                 }
-                control.1.send(b"ready")?;
+                control.1.send(if connection.is_some() {
+                    b"ready"
+                } else {
+                    b"offline"
+                })?;
             }
             Err(Error(code)) if code == abi::TIMED_OUT as i64 => (),
             Err(error) => return Err(error),
@@ -70,6 +74,7 @@ fn serve() -> Result<(), Error> {
         if let (Some(pair), Some(words)) = (connection, words)
             && publish(pair, words).is_err()
         {
+            cathedral_user_runtime::write(b"Cathedral pointer: delivery failed; source offline\n")?;
             connection = None; // Keep serving control through compositor replacement.
         }
     }

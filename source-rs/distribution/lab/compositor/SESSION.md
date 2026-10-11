@@ -11,12 +11,18 @@ From the repository root:
 python tools/boot-harness-rs/run.py --profile tools/boot-harness-rs/profiles/session.json --release --window
 python tools/boot-harness-rs/run.py --session-test --timeout 60
 python tools/boot-harness-rs/run.py --session-test --release --timeout 60
+python tools/boot-harness-rs/run.py --session-test --release --startup-probes --timeout 60
 ```
 
-Startup first runs drawing and recovery probes. Wait for the red APP ONE panel
-and green HOST containing a clipped blue CHILD. Optimized builds reach this
-screen sooner. The white cursor follows the mouse; the gold cursor belongs to
-the host. Clicking an input region gives its app keyboard focus.
+Normal startup goes straight to APP ONE and HOST containing a clipped CHILD.
+The on-screen instructions identify the controls; `KEYS` names the current focus
+recipient, and the status line reports recovery. The white cursor follows the
+mouse; the gold cursor belongs to the host. Clicking an input region gives its
+app keyboard focus. Right-dragging inside HOST drives the gold cursor.
+
+Destructive startup checks now require `--startup-probes`. They deliberately
+change scenes and replace processes, so their flashing output is not part of
+ordinary interactive startup. Use `--release` for interactive runs.
 
 | Interaction | Result |
 | --- | --- |
@@ -30,7 +36,7 @@ the host. Clicking an input region gives its app keyboard focus.
 | F6 | Replace HOST; CHILD survives, hides while its host is absent, then is placed and authorized again |
 | F7 | Ask HOST to click its own ADD through its synthetic pointer; keyboard focus stays unchanged |
 | Escape | Cancel physical capture and keyboard focus |
-| Hold left and right in APP ONE | Deliberate app fault; supervision replaces it |
+| Hold left and right in APP ONE, with `--startup-probes` | Opt-in app fault; supervision replaces it |
 
 After cancellation, release held buttons and keys. A neutral mouse report must
 arrive before another press is accepted. Replacement apps start fresh; surviving
@@ -41,9 +47,11 @@ apps keep state in their own RAM. This is not persistence across power loss.
 The [profile](../../../../tools/boot-harness-rs/profiles/session.json) supplies
 separate app, display and input connections. Start at [main.rs](main.rs), then
 [supervisor.rs](supervisor.rs), which selects the [desktop session](supervisor/desktop.rs).
-That coordinator admits participants, establishes grants, checks boundaries and
-idle behavior, then supervises health. [Recovery](supervisor/desktop/recovery.rs)
-owns replacement and reconnection. [Client session](client/session.rs) waits,
+That coordinator admits participants, establishes grants, optionally checks
+boundaries and idle behavior, then supervises health. [Recovery](supervisor/desktop/recovery.rs)
+owns replacement and reconnection. [Chrome](supervisor/desktop/chrome.rs) supplies
+instructions, focus labels and recovery notices through bounded retained control
+text; the platform owns no distribution wording. [Client session](client/session.rs) waits,
 handles control and input, and publishes desired state; its `events` and
 `presentation` modules separate behavior from appearance.
 
@@ -88,12 +96,18 @@ the distribution owns both process lifetimes. Reconnection explicitly regrants
 authority. Fixed slot order prevents cycles and determines stacking; arbitrary
 reparenting, Matrix effects and general recursive hosting remain future work.
 
-Each scene has at most 16 nodes and one 16x16 RGB image. The 1936-byte snapshot
+Each scene has at most 16 nodes and one 16x16 RGB image. ASCII text scales from
+one to four; the interactive controls use scale two. The 1936-byte snapshot
 fits one sealed page and is copied into bounded compositor storage. Explicit
 INPUT nodes define hit regions independently of painted pixels; ancestor clips
 still apply. Legacy scenes without them retain painted-pixel hit testing. The
 root draws GOP directly, so this does not establish zero-copy image resources,
 atomic frames, vblank scheduling or GPU presentation.
+
+[Rasterization](../../../platform/services/display/scene/raster.rs) paints spans
+into a fixed 256-pixel scratch row rather than walking the entire scene for every
+pixel. Snapshot comparison bounds repaint damage; unchanged snapshots cause no
+scanout writes. No full-frame backing or ancestor image copies are introduced.
 
 ## Waiting and recovery
 
@@ -116,6 +130,10 @@ source. The surviving source supplies its held-key state so a repeat cannot
 become a new press after reconnection. Cursor positions restart; interrupted
 capture and focus are cleared.
 The old interaction is never resumed merely because its content survived.
+If input delivery fails, source health reports `offline` instead of claiming
+readiness with a dead connection. Supervision can then replace it. Ordinary
+pointer motion no longer writes serial diagnostics for every report or moves the
+synthetic cursor; button edges and explicit synthetic actions remain observable.
 
 ## Evidence and limits
 
@@ -131,6 +149,21 @@ drag, replaces HOST without killing CHILD, and replaces the input source while
 Enter is held. It checks preserved app identities/state, child-only key rights,
 synthetic focus isolation and every scanout pixel at several stages. The final
 image is `build/boot-harness-rs/session-test/display.png`.
+
+The test also sends 120 relative motion reports at roughly 100 Hz while dragging,
+checks exact final position and release delivery, rejects cancellation/recovery,
+and checks keyboard input afterward. Timing goes to `latency.json`. This caught
+input loss that the earlier slow, individually acknowledged gestures missed.
+On the development host, the old release build lost 22 motion steps in this
+workload; the revised build delivered all 120 and its final cursor was visible
+about 16-31 ms after the last send in release runs, including the QMP scanout query. These are
+workload observations, not per-event latency or a desktop performance guarantee.
+
+With `--startup-probes`, the guest also times eight full 1024x768 repaints using
+its 10-ms clock. The observed release run took three ticks in total, including
+IPC. That probe repaints the whole screen regardless of damage, so it separates
+basic raster throughput from the benefit of small damage rectangles. It measures
+neither vblank latency nor scanout atomicity.
 
 This profile has three app slots, two pointers and eight-event queues. It does
 not implement text input/IME, USB, multiple seats, trusted prompts, arbitrary

@@ -6,3 +6,4 @@ pub mod scene;
 
 pub mod focus;
 pub mod hosting;
+pub mod labels;

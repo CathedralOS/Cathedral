@@ -31,6 +31,7 @@ impl App {
             return Ok(());
         }
         let pressed = self.held[id] == 0 && event.buttons != 0;
+        let was_right = self.held[id] & 2 != 0;
         if pressed {
             let _ = self.rpc([p::CAPTURE, event.pointer, 1, 0, 0, 0])?;
         }
@@ -40,17 +41,30 @@ impl App {
             self.activate();
             self.publish()?;
         } else if event.buttons != 0 {
-            self.marker = Some((event.x.clamp(0, 244) as u64, event.y.clamp(0, 188) as u64));
-            self.publish()?;
+            let marker = Some((event.x.clamp(0, 244) as u64, event.y.clamp(0, 188) as u64));
+            if marker != self.marker {
+                self.marker = marker;
+                self.publish()?;
+            }
         }
-        self.report("pointer", event.pointer, u64::from(event.buttons))?;
-        if self.role == 1 && event.pointer == 0 && event.buttons & 3 == 3 {
+        if event.kind == p::BUTTONS {
+            self.report("pointer", event.pointer, u64::from(event.buttons))?;
+        }
+        if cfg!(feature = "session-probes")
+            && self.role == 1
+            && event.pointer == 0
+            && event.buttons & 3 == 3
+        {
             // SAFETY: Lab fault injection in this isolated application only.
             unsafe {
                 core::arch::asm!("ud2", options(noreturn));
             }
         }
-        if self.role == 2 && event.pointer == 0 && self.lease != 0 {
+        if self.role == 2
+            && event.pointer == 0
+            && self.lease != 0
+            && (was_right || event.buttons & 2 != 0)
+        {
             self.rpc([
                 p::DRIVE,
                 self.lease,

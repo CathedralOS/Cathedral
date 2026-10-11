@@ -43,6 +43,9 @@ imports neither implementation.
 The service has three client slots; this base profile uses two. Each client has
 at most 16 nodes, one 16x16 RGB image and a scope no larger than 256x256. Nodes are
 rectangles, existing ASCII text, images, groups or explicit input regions.
+Scene text supports integer scales one through four. The compositor paints
+bounded spans into a scratch row and redraws the changed scene extent, preserving
+the same clipping/stack order as the per-pixel policy used by host tests.
 Earlier-group parent references prevent cycles. Checked local translations and
 intersected ancestor clips resolve directly into drawing; groups have no pixel
 buffers. Later nodes and the second client draw above earlier ones. The control

@@ -66,6 +66,14 @@ impl Session {
 }
 pub fn run() -> u64 {
     let mut session = Session::start();
+    if let Ok(child) = Launch::at(4)
+        && !cfg!(feature = "session-probes")
+    {
+        assert_eq!(call(session.a, 1, 1)[0], 0);
+        assert_eq!(call(session.b, 1, 1)[0], 0);
+        marker(b"Cathedral session: interactive startup; destructive probes disabled\n");
+        return session.desktop(child);
+    }
     session.drawing_checks();
     session.client_recovery();
     session.provider_recovery();

@@ -2,6 +2,20 @@
 use super::*;
 mod waits;
 impl Desktop {
+    pub(super) fn repaint_probe(&self) {
+        let start = time::now().unwrap();
+        for _ in 0..8 {
+            assert_eq!(call(self.base.display, w::BACKGROUND, 0x101827)[0], 0);
+        }
+        let ticks = time::now().unwrap() - start;
+        let mut line =
+            *b"Cathedral session: 8 full repaints ticks=000000 (10ms ticks, includes IPC)\n";
+        let begin = b"Cathedral session: 8 full repaints ticks=".len();
+        for i in 0..6 {
+            line[begin + 5 - i] = b'0' + ((ticks / 10u64.pow(i as u32)) % 10) as u8;
+        }
+        marker(&line);
+    }
     pub(super) fn boundaries(&mut self) {
         let display = self.base.display;
         let host = exchange(display, [s::HOST_GRANT, 1, 2, 0, 0, 0])[1];
