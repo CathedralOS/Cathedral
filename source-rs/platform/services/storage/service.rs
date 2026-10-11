@@ -8,6 +8,10 @@ pub fn run() -> Result<(), Error> {
     recovery::transport()?;
     let disk = cathedral_ata_pio::Ata::open().map_err(|e| Error(e as i64))?;
     let mut store = cathedral_object_store::Store::open(disk).map_err(|e| Error(e as i64))?;
+    serve(&mut store)
+}
+// Keep server state and transaction temporaries off the stack during catalog reopen.
+fn serve(store: &mut cathedral_object_store::Store<cathedral_ata_pio::Ata>) -> Result<(), Error> {
     let mut server = Server::open_clients(wire::ROOTS)?;
     let mut clients = core::array::from_fn::<_, { wire::ROOTS }, _>(|_| {
         cathedral_object_store::protocol::Client::default()
@@ -32,11 +36,10 @@ pub fn run() -> Result<(), Error> {
         }
         // Link position is the boot-approved root binding, stable across replacement.
         let root = request.client.unwrap();
-        let result =
-            clients[root].request(&mut store, root, request.incarnation, bytes, |_phase| {
-                #[cfg(feature = "recovery-lab")]
-                recovery::checkpoint(_phase, cut);
-            });
+        let result = clients[root].request(store, root, request.incarnation, bytes, |_phase| {
+            #[cfg(feature = "recovery-lab")]
+            recovery::checkpoint(_phase, cut);
+        });
         if store.needs_reopen() {
             // Preserve the underlying transport error in startup diagnostics.
             return Err(Error(result.err().unwrap_or(abi::IO_ERROR) as i64));

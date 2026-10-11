@@ -80,13 +80,9 @@ and last-recovery labels. Healthy idle must not restart any task. Logs and the
 final screenshot go in `recovery-test/`. Add `--release` for optimized verification.
 Fault handlers and F1/F2/F3 recovery shortcuts are absent from normal builds.
 
-Known failure (2026-10-11): the debug command
-`python tools/boot-harness-rs/run.py --recovery-test --timeout 60` reaches the
-first injected storage crash, prints two disk-transport probe completions, then
-init reports `startup failed`. This reproduces on unchanged commit `d979035` as
-well as after the service-layout refactor. Display/input recovery and the scanout
-checks preceding that step pass. The cause is unresolved; a passing session test
-does not cover this stock storage-restart path.
+The debug storage-restart regression found on 2026-10-11 was a user-stack guard
+fault while reopening a populated catalog. Storage now opens the catalog before
+entering the request loop's frame; the complete debug recovery exercise passes.
 
 Smoke additionally checks a full three-child/two-link graph across 16 alternating
 app/provider replacements and complete memory reclamation. The readiness fixture
