@@ -17,3 +17,5 @@ pub mod composition;
 pub mod pointer;
 
 pub mod interaction;
+
+pub mod matrix;

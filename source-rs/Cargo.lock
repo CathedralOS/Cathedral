@@ -133,6 +133,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "cathedral-matrix-lab"
+version = "0.0.0"
+dependencies = [
+ "cathedral-contracts",
+ "cathedral-user-runtime",
+]
+
+[[package]]
+name = "cathedral-matrix-service"
+version = "0.0.0"
+dependencies = [
+ "cathedral-contracts",
+ "cathedral-user-runtime",
+]
+
+[[package]]
 name = "cathedral-memory-lab"
 version = "0.0.0"
 dependencies = [

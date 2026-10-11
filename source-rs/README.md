@@ -59,6 +59,7 @@ explains how to preserve these routes as the lab grows.
 | `platform/libraries/user-runtime/` | Entry stub, syscall wrappers and linker script; imports only shared contracts |
 | `platform/services/display/` | Separately compiled userspace provider for linear framebuffer drawing |
 | `platform/services/input/` | Userspace PS/2 configuration, keyboard/mouse decoding and IPC event delivery |
+| `platform/services/matrix/` | Recursive local viewport and input grants; [headless boundary lab](distribution/lab/matrix/README.md) |
 | `distribution/init/` | Ordinary userspace startup, service health and restart policy |
 | `distribution/applications/status/`, `distribution/libraries/boot-scene/` | Separate status application, retained UI state and drawing client |
 | `distribution/libraries/session-protocol/` | Init/app status messages kept inside the distribution |

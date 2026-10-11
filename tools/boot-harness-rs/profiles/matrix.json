@@ -1,0 +1,58 @@
+{
+  "name": "Cathedral recursive local-world protocol experiment",
+  "target": "x86_64-unknown-uefi",
+  "boot_package": "cathedral-boot-uefi",
+  "startup": {
+    "initial": {
+      "package": "cathedral-matrix-lab",
+      "entry": "distribution/lab/matrix/main.rs",
+      "target": "x86_64-unknown-none",
+      "clock": true,
+      "argument": 0
+    },
+    "launches": [
+      {
+        "package": "cathedral-matrix-service",
+        "entry": "platform/services/matrix/main.rs",
+        "target": "x86_64-unknown-none",
+        "clock": true,
+        "argument": 0
+      },
+      {
+        "package": "cathedral-matrix-service",
+        "entry": "platform/services/matrix/main.rs",
+        "target": "x86_64-unknown-none",
+        "clock": true,
+        "argument": 1
+      },
+      {
+        "package": "cathedral-matrix-lab",
+        "entry": "distribution/lab/matrix/main.rs",
+        "target": "x86_64-unknown-none",
+        "clock": true,
+        "argument": 1
+      },
+      {
+        "package": "cathedral-matrix-lab",
+        "entry": "distribution/lab/matrix/main.rs",
+        "target": "x86_64-unknown-none",
+        "clock": true,
+        "argument": 1
+      }
+    ],
+    "links": [
+      [
+        2,
+        1
+      ],
+      [
+        3,
+        2
+      ],
+      [
+        4,
+        1
+      ]
+    ]
+  }
+}

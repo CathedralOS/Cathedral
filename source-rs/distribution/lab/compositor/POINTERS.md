@@ -71,8 +71,10 @@ a full reply queue cannot block another connection.
 Hit-testing selects the topmost painted pixel in the same accepted scene used
 for rendering. Ancestor clips and app placement apply to both paths. Transparent
 text gaps can target content underneath: this is a lab hit policy, not a decision
-about production input regions. Events contain signed app-local coordinates.
-Capture permits delivery outside the app; without capture, held motion stays
+about production input regions. Events retain the signed wire fields but coordinates are clamped to the granted
+app-local viewport. Cancellation carries zero coordinates. Capture preserves
+delivery when the physical cursor leaves the app without disclosing its outside
+position; without capture, held motion stays
 inside the current target, while button edges return to the original press owner.
 Releasing all buttons ends capture. Moving an app cancels its active drags.
 

@@ -33,12 +33,20 @@ impl Server {
         Self::open_clients(1)
     }
     pub fn open_clients(count: usize) -> Result<Self, Error> {
+        Self::open_clients_from(0, count)
+    }
+    /// Reserve earlier links for an upstream provider; serve only this local range.
+    pub fn open_clients_from(first: u64, count: usize) -> Result<Self, Error> {
         if count == 0 || count > MAX_CLIENTS {
             return Err(Error(abi::INVALID_ARGUMENT as i64));
         }
         let mut links = [None; MAX_CLIENTS];
         for (index, slot) in links.iter_mut().enumerate().take(count) {
-            *slot = match Link::at(index as u64) {
+            *slot = match Link::at(
+                first
+                    .checked_add(index as u64)
+                    .ok_or(Error(abi::INVALID_ARGUMENT as i64))?,
+            ) {
                 Ok(link) => Some(link),
                 // No links is DENIED; an index beyond existing links is BAD_HANDLE.
                 // Both represent an absent optional connection in this fixed budget.

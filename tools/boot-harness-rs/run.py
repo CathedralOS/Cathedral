@@ -14,6 +14,7 @@ import storage_test
 import compositor_test
 import pointer_test
 import session_test
+import matrix_test
 
 REPO = Path(__file__).resolve().parents[2]
 WORKSPACE = REPO / "source-rs"
@@ -109,6 +110,7 @@ def main():
     sys.stdout.reconfigure(errors="backslashreplace")
     parser = argparse.ArgumentParser(description=__doc__)
     mode = parser.add_mutually_exclusive_group()
+    mode.add_argument("--matrix-test", action="store_true", help="Check recursive matrix locality and input over isolated processes")
     mode.add_argument("--session-test", action="store_true", help="Exercise persistent apps, attenuated keyboard focus and process-owned child scenes")
     mode.add_argument("--pointer-test", action="store_true", help="Exercise physical and scoped synthetic pointers, capture and recovery")
     mode.add_argument("--compositor-test", action="store_true", help="Run the isolated retained-compositor profile and verify scanout")
@@ -128,15 +130,15 @@ def main():
     parser.add_argument("--timeout", type=float, default=30, help="Smoke boot timeout in seconds (default: 30)")
     parser.add_argument("--memory", type=int, default=128, help="Guest RAM in MiB (default: 128)")
     args = parser.parse_args()
-    if args.compositor_test or args.pointer_test or args.session_test:
+    if args.compositor_test or args.pointer_test or args.session_test or args.matrix_test:
         if args.kernel_only:
             parser.error("compositor test requires userspace")
-        args.profile = Path(__file__).parent / ("profiles/session.json" if args.session_test else "profiles/pointer.json" if args.pointer_test else "profiles/compositor.json")
+        args.profile = Path(__file__).parent / ("profiles/matrix.json" if args.matrix_test else "profiles/session.json" if args.session_test else "profiles/pointer.json" if args.pointer_test else "profiles/compositor.json")
     if args.timeout <= 0 or args.memory < 64:
         parser.error("timeout must be positive and memory must be at least 64 MiB")
     if args.fault and not args.smoke:
         parser.error("--fault requires --smoke")
-    if args.window and (args.smoke or args.screenshot or args.input_test or args.recovery_test or args.storage_test or args.compositor_test or args.pointer_test or args.session_test or args.build_only):
+    if args.window and (args.smoke or args.screenshot or args.input_test or args.recovery_test or args.storage_test or args.compositor_test or args.pointer_test or args.session_test or args.matrix_test or args.build_only):
         parser.error("--window requires an ordinary interactive boot")
 
     if args.kernel_only and (args.screenshot or args.input_test or args.recovery_test or args.storage_test):
@@ -218,7 +220,7 @@ def main():
         cargo.extend(["--features", ','.join(features)])
     subprocess.run(cargo, cwd=WORKSPACE, check=True, env=environment)
     # Keep smoke images and their terminating feature separate from normal boots.
-    output = BUILD / (f"fault-{args.fault}" if args.fault else "smoke" if args.smoke else "storage-test" if args.storage_test else "recovery-test" if args.recovery_test else "input-test" if args.input_test else "test" if (args.compositor_test or args.pointer_test or args.session_test) else "capture" if args.screenshot else "interactive")
+    output = BUILD / (f"fault-{args.fault}" if args.fault else "smoke" if args.smoke else "storage-test" if args.storage_test else "recovery-test" if args.recovery_test else "input-test" if args.input_test else "test" if (args.compositor_test or args.pointer_test or args.session_test or args.matrix_test) else "capture" if args.screenshot else "interactive")
     if args.kernel_only:
         output = output.with_name("kernel-" + output.name)
     if custom_profile:
@@ -245,6 +247,9 @@ def main():
         command += ["-display", "none"]
     # No console helper on Windows; --window explicitly opts into QEMU's GUI.
     creationflags = subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0
+    if args.matrix_test:
+        matrix_test.run(command, output, args.timeout, creationflags)
+        return 0
     if args.session_test:
         capture.run(command, output, args.timeout, creationflags, ready_marker="Cathedral session: ready",
                     verify=lambda stream, output, serial: session_test.verify(stream, output, serial, pressure=args.pressure))

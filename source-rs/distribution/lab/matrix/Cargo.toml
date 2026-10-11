@@ -1,0 +1,19 @@
+[package]
+name = "cathedral-matrix-lab"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[[bin]]
+name = "cathedral-matrix-lab"
+path = "main.rs"
+test = false
+bench = false
+
+[dependencies]
+cathedral-contracts.workspace = true
+cathedral-user-runtime.workspace = true
+
+[lints]
+workspace = true

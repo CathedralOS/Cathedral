@@ -132,3 +132,13 @@ replies, and repeatedly spins/faults before supervised replacement. The same
 interaction checks run under load; logs and images use the `pressure-session-test`
 directory. See the [pressure lab](../../source-rs/distribution/lab/compositor/PRESSURE.md)
 for navigation, checks and limits. Ordinary boots do not enable this workload.
+
+## Recursive matrix boundary profile
+
+`python tools/boot-harness-rs/run.py --matrix-test --timeout 60` selects
+[profiles/matrix.json](profiles/matrix.json). It runs two instances of the same
+matrix provider and two isolated leaf processes, checks local-only views,
+clamped capture, attenuated keys, ancestor revocation, resize and replacement.
+Add `--release` for optimized verification. This profile has no display grant;
+its [guide](../../source-rs/distribution/lab/matrix/README.md) documents the
+execution paths and remaining environment/lifecycle work.

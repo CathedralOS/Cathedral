@@ -62,3 +62,8 @@ Its [persistent session profile](lab/compositor/SESSION.md) adds a third app
 hosted inside another app's scope, attenuated focus and live compositor recovery.
 The distribution still owns all process lifetimes; display enforces scene and
 input grants independently of those lifecycle rights.
+
+The [matrix boundary lab](lab/matrix/README.md) runs the same platform world
+service at two levels over real IPC. Its distribution fixture supplies layout
+and a fixed process graph; child-facing views expose only local granted state.
+This is a headless protocol milestone, separate from the visual session profile.

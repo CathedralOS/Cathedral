@@ -50,11 +50,22 @@ impl Router {
     }
     fn event(&self, client: usize, id: usize, kind: u64, clients: &[Client; 3]) -> Event {
         let p = self.pointers[id];
+        let scope = clients[client].scope;
+        // Capture preserves delivery, not visibility outside the granted viewport.
+        // Cancellation must not reveal the physical cursor after scope revocation.
+        let (x, y) = if kind == wire::CANCEL || !scope.valid() {
+            (0, 0)
+        } else {
+            (
+                p.x.saturating_sub(scope.x).min(scope.w - 1) as i64,
+                p.y.saturating_sub(scope.y).min(scope.h - 1) as i64,
+            )
+        };
         Event {
             pointer: id as u64,
             kind,
-            x: p.x as i64 - clients[client].scope.x as i64,
-            y: p.y as i64 - clients[client].scope.y as i64,
+            x,
+            y,
             buttons: if kind == wire::CANCEL { 0 } else { p.buttons },
         }
     }

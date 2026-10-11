@@ -48,7 +48,7 @@ fn router(clients: &[Client; 3]) -> Router {
     router
 }
 #[test]
-fn overlap_capture_signed_coordinates_and_release() {
+fn overlap_capture_clamps_coordinates_and_releases() {
     let clients = clients();
     let mut r = router(&clients);
     r.device(110, 110, 1, false, &clients); // left only: world150,150
@@ -68,7 +68,7 @@ fn overlap_capture_signed_coordinates_and_release() {
     assert_eq!(r.next(0).x, 150);
     assert_eq!(r.next(1).kind, wire::NONE);
     r.device(-200, 0, 1, false, &clients);
-    assert_eq!(r.next(0).x, -50);
+    assert_eq!(r.next(0).x, 0);
     r.device(200, 0, 0, false, &clients);
     assert_eq!(r.next(0).buttons, 0);
     assert_eq!(r.state(0)[4], 0);

@@ -55,12 +55,12 @@ def verify(stream, output, serial):
     wait(event(1, 0, 2, 40, 40, 1), start)
     start = len(text())
     move(400, 220)
-    wait(event(1, 0, 1, 320, 60, 1), start)
+    wait(event(1, 0, 1, 255, 60, 1), start)
     if "app=2 id=0" in text()[start:]:
         raise RuntimeError("Captured drag leaked to the overlapped app")
     start = len(text())
     key("esc")
-    wait(event(1, 0, 3, 320, 60, 0), start)
+    wait(event(1, 0, 3, 0, 0, 0), start)
     button("left", False)
     time.sleep(0.08)
 
@@ -98,7 +98,7 @@ def verify(stream, output, serial):
     button("left", True)
     wait(event(1, 0, 2, 40, 40, 1), start)
     key("f5")  # Lab-only input-provider replacement.
-    wait(event(1, 0, 3, 40, 40, 0), start)
+    wait(event(1, 0, 3, 0, 0, 0), start)
     wait("Cathedral pointer: source recovered", start)
     button("left", False)
     move(121, 200)
