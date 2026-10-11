@@ -3,6 +3,7 @@ use super::{Config, Error, LaunchState, LinkState, next_epoch};
 use crate::{ipc::Ipc, supervision::Supervisor};
 use alloc::vec::Vec;
 pub(super) struct Grants {
+    pub(super) names: crate::names::Names,
     pub(super) clock: crate::deadline::Clock,
     pub(super) launches: Vec<LaunchState>,
     pub(super) links: Vec<LinkState>,
@@ -46,8 +47,14 @@ pub(super) fn grants(
     config: &Config<'_>,
 ) -> Result<Grants, Error> {
     let epoch = next_epoch().ok_or(Error::InvalidEndpoints)?;
-    let clock = crate::deadline::Clock::new(epoch, count, config.clock_readers)
+    let mut names = crate::names::Names::default();
+    let mut clock = crate::deadline::Clock::new(count, config.clock_readers)
         .map_err(|_| Error::InvalidEndpoints)?;
+    for slot in 0..initial_count {
+        if clock.allowed(slot) {
+            clock.install(slot, names.mint(slot).map_err(|_| Error::InvalidEndpoints)?);
+        }
+    }
     let mut launches = Vec::new();
     launches
         .try_reserve_exact(config.supervision.len())
@@ -59,14 +66,16 @@ pub(super) fn grants(
         {
             return Err(Error::InvalidEndpoints);
         }
-        let grant_epoch = next_epoch().ok_or(Error::InvalidEndpoints)?;
+
         launches.push(LaunchState {
             delegated: [0; cathedral_contracts::user::MAX_LAUNCHES],
             delegated_count: 0,
             initial: [0; cathedral_contracts::user::MAX_INITIAL_ENDPOINTS],
             initial_count: 0,
             model: Supervisor::new(
-                grant_epoch,
+                names
+                    .pair(launch.owner, launch.peer)
+                    .map_err(|_| Error::InvalidEndpoints)?,
                 launch.owner,
                 launch.peer,
                 initial_count + index,
@@ -96,13 +105,8 @@ pub(super) fn grants(
             return Err(Error::InvalidEndpoints);
         }
         links.push(LinkState {
-            model: crate::link::Link::new(
-                next_epoch().ok_or(Error::InvalidEndpoints)?,
-                spec,
-                count,
-                initial_count,
-            )
-            .map_err(|_| Error::InvalidEndpoints)?,
+            model: crate::link::Link::new(spec, count, initial_count)
+                .map_err(|_| Error::InvalidEndpoints)?,
             endpoint_base: config.endpoints.len() + 2 * (config.supervision.len() + index),
         });
     }
@@ -111,6 +115,7 @@ pub(super) fn grants(
         ipc.close_task(launch.model.child);
     }
     Ok(Grants {
+        names,
         clock,
         launches,
         links,

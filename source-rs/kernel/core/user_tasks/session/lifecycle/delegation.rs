@@ -1,12 +1,18 @@
 //! Validate every launch loan before admission; commit without allocation after it.
-use super::{Session, abi, next_epoch};
+use super::{Session, abi};
 
+#[derive(Clone, Copy)]
+struct Loan {
+    index: usize,
+    names: [u64; 2],
+    returned: [u64; 2],
+}
 pub(super) struct Plan {
-    loans: [Option<(usize, u64, u64)>; abi::MAX_LAUNCHES],
+    loans: [Option<Loan>; abi::MAX_LAUNCHES],
 }
 impl Plan {
     pub(super) fn prepare(
-        session: &Session,
+        session: &mut Session,
         owner: usize,
         child: usize,
         handles: &[u64],
@@ -30,15 +36,24 @@ impl Plan {
         for (loan, &index) in loans.iter_mut().zip(&indices[..handles.len()]) {
             // Reserve reclamation's name now, so teardown cannot fail for lack of
             // handle space. Failed admission burns names but retains authority.
-            let epoch = next_epoch().ok_or(abi::NO_MEMORY)?;
-            let returned = next_epoch().ok_or(abi::NO_MEMORY)?;
-            *loan = Some((index, epoch, returned));
+            let names = session.names.pair(child, child)?;
+            let returned = session.names.pair(owner, owner)?;
+            *loan = Some(Loan {
+                index,
+                names,
+                returned,
+            });
         }
         Ok(Self { loans })
     }
     pub(super) fn commit(self, session: &mut Session, child: usize) {
-        for (index, epoch, returned) in self.loans.into_iter().flatten() {
-            session.launches[index].model.lend(child, epoch, returned);
+        for Loan {
+            index,
+            names,
+            returned,
+        } in self.loans.into_iter().flatten()
+        {
+            session.launches[index].model.lend(child, names, returned);
         }
     }
 }

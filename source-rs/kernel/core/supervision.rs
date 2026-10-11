@@ -1,6 +1,6 @@
 //! Bounded launch authority and child lifecycle, independent of address spaces.
 //! One boot-issued launch grant, one consenting peer port, one child at a time.
-use crate::ipc::{MAX_EPOCH, MAX_TASKS};
+use crate::ipc::MAX_TASKS;
 use cathedral_contracts::user as abi;
 mod delegation;
 
@@ -15,19 +15,21 @@ pub struct Supervisor {
     pub owner: usize,
     pub peer: usize,
     pub child: usize,
-    epoch: u64,
-    latest_epoch: u64,
+    names: [u64; 2],
     state: Child,
     connected: bool,
     owner_alive: bool,
     peer_alive: bool,
     cancellation: bool,
-    // Each live lender has one reserved, fresh name for reclaiming this budget.
-    sponsors: [u64; MAX_TASKS],
+    // Each live lender reserves fresh launch/peer names for reclaiming this budget.
+    sponsors: [[u64; 2]; MAX_TASKS],
 }
 impl Supervisor {
-    pub fn new(epoch: u64, owner: usize, peer: usize, child: usize) -> Result<Self, u64> {
-        if !(1..=MAX_EPOCH).contains(&epoch)
+    pub fn new(names: [u64; 2], owner: usize, peer: usize, child: usize) -> Result<Self, u64> {
+        if names
+            .iter()
+            .any(|&name| name == 0 || name > i64::MAX as u64)
+            || (owner == peer && names[0] == names[1])
             || child >= MAX_TASKS
             || owner >= child
             || peer >= child
@@ -38,30 +40,26 @@ impl Supervisor {
             owner,
             peer,
             child,
-            epoch,
-            latest_epoch: epoch,
+            names,
             state: Child::Empty,
             connected: false,
             owner_alive: true,
             peer_alive: true,
             cancellation: false,
-            sponsors: [0; MAX_TASKS],
+            sponsors: [[0; 2]; MAX_TASKS],
         })
-    }
-    fn ticket(epoch: u64, owner: usize, kind: u64) -> u64 {
-        (epoch << 16) | ((owner as u64) << 8) | kind
     }
     pub fn launch(&self, caller: usize) -> Result<u64, u64> {
         if caller != self.owner || !self.owner_alive {
             return Err(abi::DENIED);
         }
-        Ok(Self::ticket(self.epoch, caller, 128))
+        Ok(self.names[0])
     }
     pub fn port(&self, caller: usize) -> Result<u64, u64> {
         if caller != self.peer || !self.peer_alive {
             return Err(abi::DENIED);
         }
-        Ok(Self::ticket(self.epoch, caller, 130))
+        Ok(self.names[1])
     }
     pub fn request(&mut self, caller: usize, grant: u64, argument: u64) -> Result<(), u64> {
         if self.launch(caller)? != grant {
@@ -83,10 +81,9 @@ impl Supervisor {
             None
         }
     }
-    pub fn started(&mut self, epoch: u64) -> u64 {
-        assert!(self.pending().is_some() && epoch > self.latest_epoch && epoch <= MAX_EPOCH);
-        self.latest_epoch = epoch;
-        let ticket = Self::ticket(epoch, self.owner, 129);
+    /// The admission plan reserves this fresh owner-local name before mapping.
+    pub fn started(&mut self, ticket: u64) -> u64 {
+        assert!(self.pending().is_some() && ticket != 0 && ticket <= i64::MAX as u64);
         self.state = Child::Live(ticket);
         self.connected = false;
         ticket
@@ -132,7 +129,7 @@ impl Supervisor {
     }
     pub fn close(&mut self, task: usize) {
         if let Some(sponsor) = self.sponsors.get_mut(task) {
-            *sponsor = 0;
+            *sponsor = [0; 2];
         }
         if task == self.owner {
             self.owner_alive = false;

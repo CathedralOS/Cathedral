@@ -22,6 +22,7 @@ pub(super) struct Task {
     pub(super) keyboard_deadline: Option<u64>,
 }
 pub(super) struct Session {
+    pub(super) names: crate::names::Names,
     pub(super) memory: alloc::boxed::Box<super::memory::Memory>,
     pub(super) tasks: Vec<Task>,
     pub(super) scheduler: Scheduler,

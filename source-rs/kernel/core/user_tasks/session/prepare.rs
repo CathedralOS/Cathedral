@@ -19,6 +19,7 @@ pub(super) fn session(
         }
     })?;
     let mut session = Session {
+        names: grants.names,
         memory,
         tasks: Vec::new(),
         scheduler: Scheduler::new(count),

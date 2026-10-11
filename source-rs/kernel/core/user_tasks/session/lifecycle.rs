@@ -6,8 +6,10 @@ use crate::{scheduler::TaskState, user_tasks::Program};
 use cathedral_arch as arch;
 use cathedral_contracts::user as abi;
 mod delegation;
+mod grants;
 
 pub(super) fn close(session: &mut Session, slot: usize) {
+    session.clock.install(slot, 0);
     session.tasks[slot].memory_call = None;
     session.tasks[slot].receive = None;
     session.tasks[slot].notify = None;
@@ -129,7 +131,9 @@ pub(super) unsafe fn spawn(
         .ipc
         .validate_initial(owner, child, handles)
         .and_then(|()| {
-            delegation::Plan::prepare(session, owner, child, &delegated[..delegated_count])
+            let loans =
+                delegation::Plan::prepare(session, owner, child, &delegated[..delegated_count])?;
+            Ok((loans, grants::Plan::prepare(session, owner, child)?))
         });
     let result = if let Err(error) = plan {
         Err(error)
@@ -159,12 +163,14 @@ pub(super) unsafe fn spawn(
                         handles,
                     )
                     .expect("validated initial bundle changed during admission");
-                super::links::admit(session, child);
-                plan.unwrap().commit(session, child);
+                let (loans, names) = plan.unwrap();
+                let ticket = names.child;
+                names.commit(session, child);
+                loans.commit(session, child);
                 if launch.keyboard {
                     super::keyboard::reset(session);
                 }
-                let ticket = session.launches[index].model.started(epoch);
+                let ticket = session.launches[index].model.started(ticket);
                 session.tasks[owner].report.spawned += 1;
                 Ok(ticket)
             }

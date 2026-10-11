@@ -9,9 +9,7 @@ pub fn address(handle: u64) -> Result<u64, Error> {
 pub fn pages(handle: u64) -> Result<usize, Error> {
     result(arch::call(abi::MEMORY_PAGES, handle, 0)).map(|n| n as usize)
 }
-pub fn accept(handle: u64) -> Result<u64, Error> {
-    result(arch::call(abi::MEMORY_MAP, handle, 0))
-}
+/// Resolve a producer-local offer through this link; return a new local reader handle.
 pub fn accept_from(handle: u64, link: u64) -> Result<u64, Error> {
     result(arch::call(abi::MEMORY_MAP, handle, link))
 }

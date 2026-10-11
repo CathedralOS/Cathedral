@@ -4,15 +4,18 @@ use cathedral_contracts::user as abi;
 
 /// Boot-bound read authority. Reserved child slots require an explicit grant; they never inherit access.
 pub struct Clock {
-    epoch: u64,
+    handles: [u64; abi::MAX_TASKS],
     readers: u8,
 }
 impl Clock {
-    pub fn new(epoch: u64, tasks: usize, readers: &[usize]) -> Result<Self, u64> {
-        if !(1..=crate::ipc::MAX_EPOCH).contains(&epoch) || tasks > crate::ipc::MAX_TASKS {
+    pub fn new(tasks: usize, readers: &[usize]) -> Result<Self, u64> {
+        if tasks > crate::ipc::MAX_TASKS {
             return Err(abi::INVALID_ARGUMENT);
         }
-        let mut clock = Self { epoch, readers: 0 };
+        let mut clock = Self {
+            handles: [0; abi::MAX_TASKS],
+            readers: 0,
+        };
         for &reader in readers {
             if reader >= tasks {
                 return Err(abi::INVALID_ARGUMENT);
@@ -21,14 +24,20 @@ impl Clock {
         }
         Ok(clock)
     }
+    pub fn allowed(&self, caller: usize) -> bool {
+        caller < abi::MAX_TASKS && self.readers & (1 << caller) != 0
+    }
+    pub fn install(&mut self, caller: usize, name: u64) {
+        self.handles[caller] = name;
+    }
     pub fn handle(&self, caller: usize) -> Result<u64, u64> {
-        if caller >= crate::ipc::MAX_TASKS || self.readers & (1 << caller) == 0 {
+        if !self.allowed(caller) || self.handles[caller] == 0 {
             return Err(abi::DENIED);
         }
-        Ok((self.epoch << 16) | ((caller as u64) << 8) | 131)
+        Ok(self.handles[caller])
     }
     pub fn check(&self, caller: usize, handle: u64) -> Result<(), u64> {
-        if self.handle(caller)? == handle {
+        if self.handle(caller) == Ok(handle) {
             Ok(())
         } else {
             Err(abi::BAD_HANDLE)
@@ -54,16 +63,14 @@ mod tests {
     use super::*;
     #[test]
     fn clocks_require_explicit_caller_bound_boot_grants() {
-        let clock = Clock::new(1, 3, &[0, 2]).unwrap();
-        let ticket = clock.handle(0).unwrap();
+        let mut clock = Clock::new(3, &[0, 2]).unwrap();
+        clock.install(0, 1);
+        clock.install(2, 3);
         assert_eq!(clock.handle(1), Err(abi::DENIED));
-        assert_eq!(clock.check(2, ticket), Err(abi::BAD_HANDLE));
-        assert_eq!(
-            Clock::new(2, 3, &[0]).unwrap().check(0, ticket),
-            Err(abi::BAD_HANDLE)
-        );
-        assert!(Clock::new(1, 3, &[3]).is_err());
-        assert!(Clock::new(0, 3, &[]).is_err());
+        assert_eq!(clock.check(2, 1), Err(abi::BAD_HANDLE));
+        clock.install(0, 4);
+        assert_eq!(clock.check(0, 1), Err(abi::BAD_HANDLE));
+        assert!(Clock::new(3, &[3]).is_err());
     }
     #[test]
     fn deadlines_expire_at_equality_and_survive_wrap() {

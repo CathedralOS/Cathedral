@@ -28,7 +28,7 @@ fn dispatch(op: u64, first: u64, second: u64) -> Result<u64, Error> {
         abi::MEMORY_ALLOCATE => raw::allocate(first as usize),
         abi::MEMORY_ADDRESS => raw::address(first),
         abi::MEMORY_PAGES => raw::pages(first).map(|n| n as u64),
-        abi::MEMORY_MAP => raw::accept(first),
+        abi::MEMORY_MAP => raw::accept_from(first, Link::at(0)?.raw()),
         abi::MEMORY_SEAL => {
             let link = if second == 0 {
                 Link::at(0)?.raw()

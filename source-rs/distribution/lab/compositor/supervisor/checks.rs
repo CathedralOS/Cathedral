@@ -20,7 +20,10 @@ impl Session {
         assert_eq!(call(self.display, w::STATUS, 0)[2], 2);
         assert_eq!(exchange(self.a, [4, 3, stale, 0, 0, 0])[0], abi::BAD_HANDLE);
         let foreign = call(self.b, 5, 0)[1];
-        assert_eq!(exchange(self.a, [4, 3, foreign, 0, 0, 0])[0], abi::DENIED);
+        assert_eq!(
+            exchange(self.a, [4, 3, foreign, 0, 0, 0])[0],
+            abi::BAD_HANDLE
+        );
         assert_eq!(call(self.b, 6, 2)[0], 0); // Forged request must leave the true offer available.
         for revision in 3..19 {
             assert_eq!(call(self.a, 1, revision)[0], 0);

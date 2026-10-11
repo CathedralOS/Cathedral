@@ -23,7 +23,7 @@ impl Surface {
     fn blit(&mut self, x: u64, y: u64, width: u64, height: u64, handle: u64) -> Result<(), Error> {
         // Even malformed geometry completes an authorized offer, so the caller
         // can reclaim it after the error reply. Foreign handles still fail closed.
-        let region = Shared::accept(handle)?;
+        let region = Shared::accept_from(handle, cathedral_user_runtime::link::Link::at(0)?)?;
         let length = width.checked_mul(height).and_then(|n| n.checked_mul(4));
         if !wire::valid_rect(self.width, self.height, x, y, width, height)
             || length.is_none_or(|n| n > region.bytes().len() as u64)

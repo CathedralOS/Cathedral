@@ -18,12 +18,12 @@ pub fn run() -> u64 {
         let stolen = u64::from_le_bytes(command[8..16].try_into().unwrap());
         assert_eq!(
             Launch::from_raw(stolen).spawn(0).unwrap_err(),
-            Error(abi::DENIED as i64)
+            Error(abi::BAD_HANDLE as i64)
         );
         let stolen = u64::from_le_bytes(command[16..24].try_into().unwrap());
         assert_eq!(
             Child::from_raw(stolen).wait(),
-            Err(Error(abi::DENIED as i64))
+            Err(Error(abi::BAD_HANDLE as i64))
         );
         // New service grants stay hidden until this client explicitly accepts.
         assert_eq!(

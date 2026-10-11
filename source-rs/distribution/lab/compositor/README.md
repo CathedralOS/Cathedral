@@ -52,7 +52,8 @@ buffers. Later nodes and the second client draw above earlier ones. The control
 connection alone sets client placements, background and lab readback queries.
 
 One sealed page carries a full snapshot. The kernel's optional
-`MEMORY_MAP(handle, service_link)` verifies its producer against the actual
+`MEMORY_MAP(offer, service_link)` returns a reader-local handle and verifies the
+producer-local offer against the actual
 client link before acceptance. A client cannot induce the service to consume a
 neighbor's offered page by guessing its handle. Existing zero-link acceptance
 remains available for older one-client lab protocols.

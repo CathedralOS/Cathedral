@@ -2,7 +2,7 @@
 mod allocation;
 #[cfg(feature = "memory-lab")]
 pub(super) mod rollback;
-use super::{Frames, Session, next_epoch, syscalls};
+use super::{Frames, Session, syscalls};
 use crate::{regions::Regions, scheduler::TaskState};
 use cathedral_arch::StackFrames;
 use cathedral_contracts::{memory as wire, user as abi};
@@ -81,7 +81,7 @@ unsafe fn dispatch(
                 .iter()
                 .find(|link| link.model.spec.client == slot && link.model.port(slot) == Ok(second))
                 .map(|link| link.model.spec.service)
-                .ok_or(abi::DENIED)?;
+                .ok_or(abi::BAD_HANDLE)?;
             if matches!(
                 session.scheduler.states()[peer],
                 TaskState::Vacant | TaskState::Exited
@@ -96,29 +96,25 @@ unsafe fn dispatch(
                     .space
                     .as_mut()
                     .unwrap()
-                    .seal_region(index, pages);
+                    .seal_region(session.memory.model.mapping(slot, index), pages);
             }
             session.tasks[slot].report.memory.sealed_pages += pages;
             Ok(0)
         }
         abi::MEMORY_MAP => {
-            if second != 0 {
-                let owner = session
-                    .links
-                    .iter()
-                    .find(|link| {
-                        link.model.spec.service == slot && link.model.port(slot) == Ok(second)
-                    })
-                    .map(|link| link.model.spec.client)
-                    .ok_or(abi::DENIED)?;
-                session.memory.model.check_owner(first, owner)?;
-            }
-            let index = session.memory.model.accept(slot, first)?;
+            // A producer-local offer is meaningful only through the receiving link.
+            let owner = session
+                .links
+                .iter()
+                .find(|link| link.model.spec.service == slot && link.model.port(slot) == Ok(second))
+                .map(|link| link.model.spec.client)
+                .ok_or(abi::BAD_HANDLE)?;
+            let index = session.memory.model.accept(slot, owner, first)?;
             let pages = session.memory.model.entries[index].pages;
             // SAFETY: Sealed owner is read-only; backing is pinned until this accepted reader releases/dies.
             let result = unsafe {
                 session.tasks[slot].space.as_mut().unwrap().map_region(
-                    index,
+                    session.memory.model.mapping(slot, index),
                     &session.memory.backing[index][..pages],
                     false,
                 )
@@ -128,10 +124,12 @@ unsafe fn dispatch(
                 return Err(abi::NO_MEMORY);
             }
             session.tasks[slot].report.memory.mapped_pages += pages;
-            Ok(wire::address(index))
+            Ok(session.memory.model.handle(slot, index))
         }
         abi::MEMORY_RELEASE => {
-            let index = session.memory.model.release(slot, first)?;
+            let index = session.memory.model.access(slot, first)?;
+            let mapping = session.memory.model.mapping(slot, index);
+            session.memory.model.release(slot, first)?;
             let pages = session.memory.model.entries[index].pages;
             // SAFETY: Calling task surrendered this mapping; no other mapping is withdrawn.
             unsafe {
@@ -139,7 +137,7 @@ unsafe fn dispatch(
                     .space
                     .as_mut()
                     .unwrap()
-                    .unmap_region(index, pages);
+                    .unmap_region(mapping, pages);
                 session.memory.reclaim(index, frames);
             }
             session.tasks[slot].report.memory.unmapped_pages += pages;
@@ -160,7 +158,7 @@ pub(super) unsafe fn close(session: &mut Session, slot: usize, frames: &mut Fram
                     .space
                     .as_mut()
                     .unwrap()
-                    .unmap_region(index, region.pages);
+                    .unmap_region(session.memory.model.mapping(slot, index), region.pages);
             }
             session.tasks[slot].report.memory.unmapped_pages += region.pages;
         }

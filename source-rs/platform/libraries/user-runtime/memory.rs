@@ -42,7 +42,7 @@ impl Private {
     }
 }
 impl Sealed {
-    /// Token to send over the authorized peer link, never a remote pointer.
+    /// Producer-local offer token, meaningful only through the authorized peer link.
     pub fn handle(&self) -> u64 {
         self.0.handle
     }
@@ -57,15 +57,8 @@ impl Sealed {
 impl Shared {
     /// Accept only an offer from this service-side link's current producer.
     pub fn accept_from(handle: u64, link: Link) -> Result<Self, Error> {
-        let address = raw::accept_from(handle, link.raw())?;
-        Ok(Self(Region {
-            handle,
-            address,
-            bytes: raw::pages(handle)? * PAGE_BYTES,
-        }))
-    }
-    pub fn accept(handle: u64) -> Result<Self, Error> {
-        let address = raw::accept(handle)?;
+        let handle = raw::accept_from(handle, link.raw())?;
+        let address = raw::address(handle)?;
         Ok(Self(Region {
             handle,
             address,

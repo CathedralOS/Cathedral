@@ -58,8 +58,8 @@ audio, event-driven input and trusted-path UI remain unintegrated. The earlier
 visual session remains a separate, richer regression fixture.
 
 The locality tests compare protocol observations. They do not establish complete
-system noninterference: IPC endpoint names are now process-local, but other
-kernel handle families still expose structured values. An explicitly granted
+system noninterference: IPC, task, clock, link and region handles now resolve locally, and region
+mapping addresses use local slots. An explicitly granted
 global clock, shared channel-pool contention and execution resources remain. Those
 interfaces require a confinement audit; this lab must not be represented as a
 production guarantee that a process cannot infer anything about its surroundings.

@@ -74,20 +74,7 @@ pub(in super::super) fn dispatch(
             abi::TASK_CONNECT => launch.model.port(slot) == Ok(first),
             _ => launch.model.wait(slot, first).is_ok(),
         })
-        .ok_or_else(|| {
-            let authorized = session.launches.iter().any(|launch| {
-                if number == abi::TASK_CONNECT {
-                    launch.model.port(slot).is_ok()
-                } else {
-                    launch.model.launch(slot).is_ok()
-                }
-            });
-            if authorized {
-                abi::BAD_HANDLE
-            } else {
-                abi::DENIED
-            }
-        })?;
+        .ok_or(abi::BAD_HANDLE)?;
     if matches!(
         number,
         abi::TASK_SPAWN | abi::TASK_SPAWN_WITH | abi::TASK_SPAWN_TREE

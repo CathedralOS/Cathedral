@@ -367,7 +367,7 @@ initial FP state is clean and I/O privilege is zero.
 | 28: Memory address | Region handle | Caller-owned or accepted mapping address |
 | 29: Memory release | Region handle | Remove caller mapping; owner waits for peer completion/death |
 | 30: Memory seal | Region handle, link token | Irreversibly remove WRITE and offer to that live service |
-| 31: Memory map | Region handle | Accept authorized RO/NX lease and return its address |
+| 31: Memory map | Producer-local offer, service link | Accept authorized RO/NX lease and return a fresh local reader handle |
 | 32: Memory pages | Region handle | Caller-owned or accepted region page count |
 | 33: IPC wait many | Pointer to 1–8 LE u64 receive tickets, count, absolute deadline | Ready index or error; validates the copied array and all receive rights, consumes no data, requires clock |
 | 34: IPC create | 16-byte writable destination, 0, 0 | 0 after installing local send/receive handles; `NO_MEMORY` at quota |
@@ -533,13 +533,15 @@ a manifest/provenance check or a component registry.
 
 `task::Launch::spawn` parks its caller and hands admission to the boot context.
 All context/metadata slots are preallocated; runtime spawn maps private physical
-pages without growing the arena. Success returns a fresh owner-bound child
-ticket. A second child on the same grant or an uncollected previous outcome
+pages without growing the arena. Success returns a fresh owner-local child
+name. Launch, peer, child, clock and link names come from a caller-local counter;
+none contains a global task slot or epoch. Admission reserves names before mapping,
+including the fresh launch/peer names used when a loan returns. A second child on the same grant or an uncollected previous outcome
 returns `BUSY` (-16). `Launch::at(index)` and `Port::at(index)` select independent
 caller-local grants; `bootstrap()` selects index zero.
 Failed ELF admission returns `BAD_EXECUTABLE` (-8); failed frame admission
-returns `NO_MEMORY` (-12), rolls back, and permits another attempt. Epoch
-exhaustion also fails closed. No mapping or reclamation runs in a trap callback.
+returns `NO_MEMORY` (-12), rolls back, and permits another attempt. Name and internal epoch
+exhaustion also fail closed. No mapping or reclamation runs in a trap callback.
 
 `Launch::spawn_with(argument, endpoints)` additionally installs up to four dynamic
 endpoint rights before the child can run. Its [startup environment guide](distribution/lab/channels/README.md#initial-child-environment)
@@ -604,7 +606,7 @@ question in [`OWNER_QUESTIONS.md`](../OWNER_QUESTIONS.md).
 Boot explicitly grants clock access to selected task slots through
 `Config::clock_readers`. Reserved children inherit none, but boot may separately
 grant a reserved launch slot clock access across its incarnations. Clock tickets bind the
-caller and session epoch. `time::now` copies all 64 bits into a checked writable
+current caller incarnation through a local grant lookup. `time::now` copies all 64 bits into a checked writable
 buffer, avoiding confusion between large tick counts and negative syscall errors.
 This is a boot-local wrapping counter on the nominal 100 Hz PIT, not wall time or
 a calibrated elapsed-time guarantee. Grants gate this API; hardware timing sources
@@ -865,7 +867,8 @@ contains one to sixteen zeroed pages. Independently, a task can own at most four
 objects and accept at most four reader objects. The 64 session slots cover those
 limits for all eight tasks, including readers retained after producer exit; a
 larger page grant cannot consume another task's metadata capacity. An unmapped
-guard follows each slot. Runtime mappings are non-executable. Task admission reserves their
+guard follows each process-local mapping slot (four private plus four reader
+slots). Mapping addresses never contain the global backing index. Runtime mappings are non-executable. Task admission reserves their
 page tables; allocation and mapping changes execute on the boot stack with the
 kernel root active. The kernel owns physical backing independently of either
 participant's address space.
@@ -878,7 +881,10 @@ for PTE and checked-copy permissions. None of these depends on the platform.
 
 The producer fills private RW pages, seals them to a live boot-approved service
 link, then sends the handle over copied IPC. Sealing permanently removes write
-permission. The consumer accepts RO pages, reads them and releases its mapping
+permission. The consumer supplies its service-side link to `Shared::accept_from`, which
+authenticates the producer and installs a separate reader-local handle. Raw
+`MEMORY_MAP` returns that handle; `MEMORY_ADDRESS` returns its local address.
+The consumer reads RO pages and releases its mapping
 before replying; the producer then releases its owner reference. An accepted
 reader survives producer death and retains its shared-page charge. An unaccepted
 offer is cancelled when the producer dies. Consumer death releases its lease;
@@ -889,7 +895,7 @@ The [runtime API](platform/libraries/user-runtime/memory.rs) expresses that flow
 as `Private -> Sealed` and `Shared`. These buffers are not a general heap, an
 arbitrary-address mapping API, a growable region, multicast, or executable memory.
 A dropped producer token with a pending peer stays charged until task exit;
-protocols must complete or recover the exchange. Generation handles reject stale
+protocols must complete or recover the exchange. Non-reused local names reject stale
 operations, but raw virtual addresses can be reused after release: the kernel
 does not make dangling pointers safe.
 

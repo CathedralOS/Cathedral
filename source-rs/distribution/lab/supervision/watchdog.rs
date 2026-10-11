@@ -22,7 +22,7 @@ pub fn client() -> u64 {
         assert_eq!(command.receive(&mut message).unwrap(), 16);
         assert_eq!(word(&message[..8]), round);
         let stolen = Child::from_raw(word(&message[8..16]));
-        assert_eq!(stolen.cancel(), Err(Error(abi::DENIED as i64)));
+        assert_eq!(stolen.cancel(), Err(Error(abi::BAD_HANDLE as i64)));
         if let Some((send, receive)) = previous {
             assert_eq!(send.send(b"stale"), Err(Error(abi::BAD_HANDLE as i64)));
             assert_eq!(

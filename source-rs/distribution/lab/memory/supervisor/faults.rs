@@ -16,16 +16,19 @@ pub(super) fn exercise(producer: &mut Peer, consumer: &mut Peer) {
     for operation in [1, 2] {
         let handle = producer.ok(abi::MEMORY_ALLOCATE, 1, 0);
         producer.ok(abi::MEMORY_SEAL, handle, 0);
-        let address = consumer.ok(abi::MEMORY_MAP, handle, 0);
+        let reader = consumer.ok(abi::MEMORY_MAP, handle, 0);
+        let address = consumer.ok(abi::MEMORY_ADDRESS, reader, 0);
         consumer.fault(address, operation, if operation == 1 { 7 } else { 21 });
         producer.ok(abi::MEMORY_RELEASE, handle, 0);
     }
     let handle = producer.ok(abi::MEMORY_ALLOCATE, 1, 0);
     producer.ok(worker::FILL, handle, 91);
     producer.ok(abi::MEMORY_SEAL, handle, 0);
-    let address = consumer.ok(abi::MEMORY_MAP, handle, 0);
-    producer.fault(address, 1, 7);
-    consumer.ok(worker::CHECK, handle, 91);
-    consumer.ok(abi::MEMORY_RELEASE, handle, 0);
+    let reader = consumer.ok(abi::MEMORY_MAP, handle, 0);
+    let address = consumer.ok(abi::MEMORY_ADDRESS, reader, 0);
+    let producer_address = producer.ok(abi::MEMORY_ADDRESS, handle, 0);
+    producer.fault(producer_address, 1, 7);
+    consumer.ok(worker::CHECK, reader, 91);
+    consumer.ok(abi::MEMORY_RELEASE, reader, 0);
     consumer.fault(address, 0, 4);
 }

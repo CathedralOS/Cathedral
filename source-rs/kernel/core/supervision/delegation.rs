@@ -18,18 +18,16 @@ impl Supervisor {
         Ok(())
     }
 
-    /// Caller has validated the complete bundle and reserved both unique epochs.
-    pub fn lend(&mut self, recipient: usize, epoch: u64, return_epoch: u64) {
+    /// Caller has validated the complete bundle and reserved fresh recipient and return names.
+    pub fn lend(&mut self, recipient: usize, names: [u64; 2], returned: [u64; 2]) {
         assert!(
             self.can_lend(self.owner, self.launch(self.owner).unwrap(), recipient)
                 .is_ok()
         );
-        assert!(epoch > self.latest_epoch && return_epoch > epoch && return_epoch <= MAX_EPOCH);
-        self.sponsors[self.owner] = return_epoch;
+        self.sponsors[self.owner] = returned;
         self.owner = recipient;
         self.peer = recipient;
-        self.epoch = epoch;
-        self.latest_epoch = return_epoch;
+        self.names = names;
         self.connected = false;
     }
 
@@ -41,11 +39,11 @@ impl Supervisor {
         }
         let Some(owner) = (0..self.owner)
             .rev()
-            .find(|&owner| self.sponsors[owner] != 0)
+            .find(|&owner| self.sponsors[owner] != [0; 2])
         else {
             return;
         };
-        self.epoch = core::mem::take(&mut self.sponsors[owner]);
+        self.names = core::mem::take(&mut self.sponsors[owner]);
         self.owner = owner;
         self.peer = owner;
         self.owner_alive = true;

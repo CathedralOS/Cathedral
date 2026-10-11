@@ -6,10 +6,7 @@ pub(super) unsafe fn allocate(
     slot: usize,
     pages: usize,
 ) -> Result<u64, u64> {
-    let index = session
-        .memory
-        .model
-        .allocate(slot, pages, next_epoch().ok_or(abi::NO_MEMORY)?)?;
+    let index = session.memory.model.allocate(slot, pages)?;
     let result = (|| {
         for physical in &mut session.memory.backing[index][..pages] {
             *physical = frames.allocate().ok_or(abi::NO_MEMORY)?;
@@ -21,7 +18,7 @@ pub(super) unsafe fn allocate(
         // SAFETY: Fresh zeroed frames; sole producer's inactive root has preallocated tables.
         unsafe {
             session.tasks[slot].space.as_mut().unwrap().map_region(
-                index,
+                session.memory.model.mapping(slot, index),
                 &session.memory.backing[index][..pages],
                 true,
             )
@@ -29,7 +26,7 @@ pub(super) unsafe fn allocate(
         .map_err(|_| abi::NO_MEMORY)?;
         session.tasks[slot].report.memory.allocated_pages += pages;
         session.tasks[slot].report.memory.mapped_pages += pages;
-        Ok(session.memory.model.entries[index].handle(index))
+        Ok(session.memory.model.handle(slot, index))
     })();
     if result.is_err() {
         session.memory.model.entries[index].owner = None;

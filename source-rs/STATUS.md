@@ -44,16 +44,16 @@ remain until their extra behavior has moved into the integrated path with tests.
 ## Kernel boundary audit and next steps
 
 The matrix protocol exposes local state only. That is narrower than a claim of
-whole-system noninterference. The next kernel changes should address these
-specific mechanisms, with tests that change an unrelated subtree and compare
-what a child can observe:
+whole-system noninterference. The handle-locality pass now covers task, clock, link and page rights as well as
+IPC. Host tests compare names and mapping addresses under unrelated graph/arena
+activity. The remaining boundary work is recorded below:
 
 | Surface | Current finding | Next implementation boundary |
 | --- | --- | --- |
 | IPC handles | [Grant table](kernel/core/ipc/grants.rs) supplies local, non-reused names | Retain this model when generalizing other capabilities |
-| Task/launch/peer handles | [Supervisor tickets](kernel/core/supervision.rs) encode owner slot and global epoch | Caller-local names for every externally visible task right; preserve loan return and stale-incarnation rejection |
-| Clock and static links | [Clock](kernel/core/deadline.rs) and [link](kernel/core/link.rs) tickets encode caller/global metadata | Local grant lookup; then separate timing authority from waiting/deadline mechanics |
-| Page handles | [Region handles](kernel/core/regions.rs) expose global object slot/generation; some error paths distinguish existence from authorization | Local region grants and explicit checked transfer; preserve accepted-reader lifetime |
+| Task/launch/peer handles | [Caller-local names](kernel/core/names.rs); [admission reservations](kernel/core/user_tasks/session/lifecycle/grants.rs) and reserved fresh loan-return names | Keep this boundary when replacing fixed executable/slot admission |
+| Clock and static links | [Clock](kernel/core/deadline.rs) and [link](kernel/core/link.rs) names refresh on recipient admission; unchanged peers retain their names | Separate timing authority from waiting/deadline mechanics; hardware timing remains visible |
+| Page handles | [Region grants and virtual slots](kernel/core/regions.rs) are caller-local; producer-local offers require the receiving link and install a separate reader name | Generalize beyond boot-approved sharing; preserve accepted-reader lifetime |
 | IPC capacity | Per-process ceilings share a 32-channel pool; creator death leaves moved endpoints alive | Define sponsorship/reservation for live and orphaned resources before promising subtree isolation |
 | CPU / RAM | Round-robin processes and fixed page grants; admitting more children adds runnable entities | Parent-budget subdivision, separate accounting from reservation, test sibling progress under exhaustion |
 | Admission | Executable and resource ceilings come from reserved boot slots | Admit an explicitly granted executable within a budget, with complete rollback and no ambient image lookup |
@@ -66,3 +66,10 @@ the compositor suppresses identical updates, but this is not the final idle or
 latency design. Root-adapter recovery/trusted-path behavior remains an owner-level
 policy question. SMP, GPU support and the database filesystem follow these
 boundaries rather than becoming prerequisites for exercising them.
+
+Local names are scoped by caller and API namespace, not globally unique bearer
+secrets. The same number can designate unrelated rights in two processes. Passing
+it as message data installs no authority. Counters survive task-slot reuse so old
+names cannot resurrect a replacement's grants; unsuccessful admission may burn
+reserved names. This does not conceal timing, resource contention or all local
+admission history. No claim of whole-system noninterference follows from it.

@@ -31,10 +31,13 @@ pub(super) fn exercise(producer: &Peer) {
         assert_eq!(producer.call(abi::MEMORY_ALLOCATE, 1, 0), abi::NO_MEMORY);
         assert_eq!(
             producer.call(abi::MEMORY_SEAL, handle, u64::MAX),
-            abi::DENIED
+            abi::BAD_HANDLE
         );
-        assert_eq!(raw::address(handle), Err(Error(abi::DENIED as i64)));
-        assert_eq!(raw::accept(handle), Err(Error(abi::DENIED as i64)));
+        assert_eq!(raw::address(handle), Err(Error(abi::BAD_HANDLE as i64)));
+        assert_eq!(
+            raw::accept_from(handle, 0),
+            Err(Error(abi::BAD_HANDLE as i64))
+        );
         producer.ok(abi::MEMORY_RELEASE, handle, 0);
         assert_eq!(
             producer.call(abi::MEMORY_ADDRESS, handle, 0),

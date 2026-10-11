@@ -14,7 +14,7 @@ pub fn run() -> u64 {
         let mut bytes = [0; 64];
         assert_eq!(commands.receive(&mut bytes).unwrap(), 8);
         let stolen = Child::from_raw(u64::from_le_bytes(bytes[..8].try_into().unwrap()));
-        assert_eq!(stolen.cancel(), Err(Error(abi::DENIED as i64)));
+        assert_eq!(stolen.cancel(), Err(Error(abi::BAD_HANDLE as i64)));
         if let Some((send, receive)) = stale {
             assert_eq!(send.send(b"stale"), Err(Error(abi::BAD_HANDLE as i64)));
             assert_eq!(

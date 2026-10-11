@@ -88,21 +88,22 @@ pub unsafe fn exercise(frames: &mut FrameAllocator, layout: &BootLayout, image: 
 /// Exercise a region crossing a 2-MiB table boundary and the last virtual slot.
 /// These inactive aliases are removed before the model releases the backing.
 unsafe fn mapping_boundaries(session: &mut Session, handle: u64) {
-    let index = session.memory.model.find(handle).unwrap();
+    let index = session.memory.model.access(0, handle).unwrap();
     let backing = session.memory.backing[index];
+    let mapping = session.memory.model.mapping(0, index);
     let space = session.tasks[0].space.as_mut().unwrap();
     for page in 0..wire::MAX_PAGES {
         // SAFETY: Full byte range in the prepared owner's writable mapping.
         assert!(unsafe {
             space.copy_to_user(
-                wire::address(index) + (page * wire::PAGE_BYTES) as u64,
+                wire::address(mapping) + (page * wire::PAGE_BYTES) as u64,
                 &[page as u8 + 1],
             )
         });
     }
     // SAFETY: No executing user or Rust borrow; remove writer before reader aliases.
-    unsafe { space.seal_region(index, wire::MAX_PAGES) };
-    assert!(!space.writable_range(wire::address(index), 1));
+    unsafe { space.seal_region(mapping, wire::MAX_PAGES) };
+    assert!(!space.writable_range(wire::address(mapping), 1));
     for alias in [30, wire::MAX_REGIONS - 1] {
         // SAFETY: Prepared empty slot; immutable frames stay owned until all aliases are gone.
         unsafe { space.map_region(alias, &backing, false) }.unwrap();

@@ -23,8 +23,8 @@ and resource ceilings stay fixed. The runtime chooses no manifest or budget poli
 and chooses no deadline policy. Restart decisions
 belong to the caller, not this library. The runtime has no heap allocator or unwinding.
 `memory::Private` owns a bounded zeroed page buffer. Sealing consumes mutable
-access and returns a `Sealed` token for one authorized peer. `Shared` accepts a
-read-only lease and releases it on drop. A producer crash cannot revoke a live
+access and returns a `Sealed` token for one authorized peer. `Shared::accept_from` accepts a producer-local offer through an explicit
+service-side link, obtains a distinct reader-local handle and releases it on drop. A producer crash cannot revoke a live
 reader's Rust borrow. The `raw` module exposes the same ABI for runtimes and
 hostile fixtures; release and sealing require callers to end their own borrows.
 Dropping a producer buffer while its peer still holds authority cannot free it;
@@ -40,6 +40,11 @@ wait; callers choose how to handle remote requests and late replies.
 The calling convention and fixed image layout remain experiments, not frozen
 Cathedral interfaces. See the [lab guide](../../../README.md) for build commands,
 loader restrictions and the remaining admission-policy boundary.
+
+Task, clock and link names are caller-local and refreshed when their recipient
+is replaced. Region names and virtual slots are local too; equal numeric names
+in different processes or API namespaces do not establish shared authority.
+Passing a number in IPC never installs a grant by itself.
 
 `link` accepts boot-approved client/service connections without task-control
 rights. Each incarnation requires explicit acceptance; peer replacement retires

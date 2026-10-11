@@ -1,4 +1,5 @@
 //! A four-child graph survives replacing either endpoint and complete teardown.
+mod names;
 use cathedral_contracts::user as abi;
 use cathedral_user_runtime::{
     Error,
@@ -30,6 +31,7 @@ pub fn owner() -> u64 {
     ];
     let mut children = launches.map(|launch| launch.spawn(0).unwrap());
     let mut pairs = ports.map(|port| port.connect().unwrap());
+    let mut names = pairs.map(|pair| names::inspect(pair, [0; 2]));
     exchange(pairs[2], 0);
     for generation in 1..=16 {
         let index = if generation % 2 == 1 {
@@ -43,6 +45,10 @@ pub fn owner() -> u64 {
         assert_eq!(old.wait().unwrap(), Outcome::Cancelled);
         children[index] = launches[index].spawn(generation as u64).unwrap();
         pairs[index] = ports[index].connect().unwrap();
+        names[index] = names::inspect(pairs[index], names[index]);
+        for other in 0..pairs.len() {
+            assert_eq!(names::inspect(pairs[other], [0; 2]), names[other]);
+        }
         assert_eq!(retired.0.send(b"stale"), Err(Error(abi::BAD_HANDLE as i64)));
         for index in [0, 1, 3] {
             exchange(pairs[index], 7);
@@ -56,6 +62,7 @@ pub fn owner() -> u64 {
             },
         );
     }
+    cathedral_user_runtime::write(b"Cathedral: local clock/link names survive unrelated restarts and reject prior incarnations\n").unwrap();
     // Exit with all children live; kernel must reclaim their roots, queues and graph.
     0
 }
@@ -63,6 +70,12 @@ pub fn provider() -> u64 {
     let mut server = Server::open().unwrap();
     loop {
         let request = server.next_request().unwrap();
+        if request.control
+            && let Some(reply) = names::probe(&request.bytes[..request.len])
+        {
+            server.reply(&request, &reply).unwrap();
+            continue;
+        }
         server
             .reply(&request, &request.bytes[..request.len])
             .unwrap();
@@ -80,7 +93,12 @@ pub fn application() -> u64 {
     let mut connections = None;
     loop {
         let mut bytes = [0; 64];
-        assert_eq!(input.receive(&mut bytes).unwrap(), 1);
+        let length = input.receive(&mut bytes).unwrap();
+        if let Some(reply) = names::probe(&bytes[..length]) {
+            output.send(&reply).unwrap();
+            continue;
+        }
+        assert_eq!(length, 1);
         let command = bytes[0];
         // Admission can run this app before the owner's last provider spawn.
         // The first control request is the explicit all-providers-live barrier.

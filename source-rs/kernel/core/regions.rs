@@ -11,18 +11,19 @@ pub struct Region {
     pub accepted: bool,
     pub sealed: bool,
     pub pages: usize,
-    pub epoch: u64,
+    pub owner_name: u64,
+    pub reader_name: u64,
+    pub owner_slot: usize,
+    pub reader_slot: usize,
 }
 impl Region {
     pub fn live(&self) -> bool {
         self.owner.is_some() || self.peer.is_some()
     }
-    pub fn handle(&self, index: usize) -> u64 {
-        (self.epoch << 8) | (index as u64 + 1)
-    }
 }
 pub struct Regions {
-    pub entries: [Region; MAX_REGIONS],
+    names: crate::names::Names,
+    pub entries: alloc::vec::Vec<Region>,
     private: [usize; abi::MAX_TASKS],
     shared: [usize; abi::MAX_TASKS],
 }
@@ -31,8 +32,16 @@ impl Regions {
         if tasks > abi::MAX_TASKS {
             return Err(abi::INVALID_ARGUMENT);
         }
+        // Construct the bounded metadata arena on the heap. Returning several
+        // debug-build copies of this array otherwise exhausts the kernel boot stack.
+        let mut entries = alloc::vec::Vec::new();
+        entries
+            .try_reserve_exact(MAX_REGIONS)
+            .map_err(|_| abi::NO_MEMORY)?;
+        entries.resize(MAX_REGIONS, Region::default());
         let mut model = Self {
-            entries: [Region::default(); MAX_REGIONS],
+            names: crate::names::Names::default(),
+            entries,
             private: [0; abi::MAX_TASKS],
             shared: [0; abi::MAX_TASKS],
         };
@@ -54,13 +63,8 @@ impl Regions {
     pub fn enabled(&self, task: usize) -> bool {
         self.private[task] + self.shared[task] != 0
     }
-    pub fn allocate(&mut self, owner: usize, pages: usize, epoch: u64) -> Result<usize, u64> {
-        if owner >= abi::MAX_TASKS
-            || pages == 0
-            || pages > MAX_PAGES
-            || epoch == 0
-            || epoch > crate::ipc::MAX_EPOCH
-        {
+    pub fn allocate(&mut self, owner: usize, pages: usize) -> Result<usize, u64> {
+        if owner >= abi::MAX_TASKS || pages == 0 || pages > MAX_PAGES {
             return Err(abi::INVALID_ARGUMENT);
         }
         if self.private[owner] == 0 {
@@ -76,33 +80,55 @@ impl Regions {
             .iter()
             .position(|r| !r.live())
             .ok_or(abi::NO_MEMORY)?;
+        let owner_slot = (0..MAX_PRIVATE_REGIONS)
+            .find(|&slot| {
+                !self
+                    .entries
+                    .iter()
+                    .any(|r| r.owner == Some(owner) && r.owner_slot == slot)
+            })
+            .ok_or(abi::NO_MEMORY)?;
+        let owner_name = self.names.mint(owner)?;
         self.entries[index] = Region {
             owner: Some(owner),
             pages,
-            epoch,
+            owner_name,
+            owner_slot,
             ..Region::default()
         };
         Ok(index)
     }
-    pub fn find(&self, handle: u64) -> Result<usize, u64> {
-        let index = (handle & 255).checked_sub(1).ok_or(abi::BAD_HANDLE)? as usize;
-        let region = self.entries.get(index).ok_or(abi::BAD_HANDLE)?;
-        if !region.live() || region.handle(index) != handle {
-            return Err(abi::BAD_HANDLE);
-        }
-        Ok(index)
-    }
+    /// Resolve only the caller's installed mappings. Unknown and foreign are identical.
     pub fn access(&self, caller: usize, handle: u64) -> Result<usize, u64> {
-        let index = self.find(handle)?;
+        self.entries
+            .iter()
+            .position(|r| {
+                (r.owner == Some(caller) && r.owner_name == handle)
+                    || (r.peer == Some(caller) && r.accepted && r.reader_name == handle)
+            })
+            .ok_or(abi::BAD_HANDLE)
+    }
+    pub fn mapping(&self, caller: usize, index: usize) -> usize {
         let region = self.entries[index];
-        if region.owner != Some(caller) && !(region.peer == Some(caller) && region.accepted) {
-            return Err(abi::DENIED);
+        if region.owner == Some(caller) {
+            region.owner_slot
+        } else {
+            assert!(region.peer == Some(caller) && region.accepted);
+            region.reader_slot
         }
-        Ok(index)
+    }
+    pub fn handle(&self, caller: usize, index: usize) -> u64 {
+        let region = self.entries[index];
+        if region.owner == Some(caller) {
+            region.owner_name
+        } else {
+            assert!(region.peer == Some(caller) && region.accepted);
+            region.reader_name
+        }
     }
     /// Caller has separately checked a live boot-approved producer -> consumer link.
     pub fn offer(&mut self, caller: usize, handle: u64, peer: usize) -> Result<usize, u64> {
-        let index = self.find(handle)?;
+        let index = self.access(caller, handle)?;
         if self.entries[index].owner != Some(caller)
             || peer >= abi::MAX_TASKS
             || peer == caller
@@ -117,19 +143,20 @@ impl Regions {
         self.entries[index].peer = Some(peer);
         Ok(index)
     }
-    /// Authenticate the producer before a multiplexing service accepts an offer.
-    pub fn check_owner(&self, handle: u64, owner: usize) -> Result<(), u64> {
-        if self.entries[self.find(handle)?].owner != Some(owner) {
-            return Err(abi::DENIED);
-        }
-        Ok(())
-    }
-    pub fn accept(&mut self, caller: usize, handle: u64) -> Result<usize, u64> {
-        let index = self.find(handle)?;
+    /// The offer is a producer-local name scoped by an authenticated service link.
+    /// It never acts as a receiver mapping handle; acceptance installs a fresh one.
+    pub fn accept(&mut self, caller: usize, producer: usize, offer: u64) -> Result<usize, u64> {
+        let index = self
+            .entries
+            .iter()
+            .position(|r| {
+                r.owner == Some(producer)
+                    && r.owner_name == offer
+                    && r.peer == Some(caller)
+                    && r.sealed
+            })
+            .ok_or(abi::BAD_HANDLE)?;
         let region = self.entries[index];
-        if region.peer != Some(caller) {
-            return Err(abi::DENIED);
-        }
         if region.accepted {
             return Err(abi::BUSY);
         }
@@ -141,12 +168,24 @@ impl Regions {
         if used + region.pages > self.shared[caller] || readers.count() >= MAX_SHARED_REGIONS {
             return Err(abi::NO_MEMORY);
         }
+        let reader_slot = (MAX_PRIVATE_REGIONS..MAX_PRIVATE_REGIONS + MAX_SHARED_REGIONS)
+            .find(|&slot| {
+                !self
+                    .entries
+                    .iter()
+                    .any(|r| r.peer == Some(caller) && r.accepted && r.reader_slot == slot)
+            })
+            .ok_or(abi::NO_MEMORY)?;
+        let reader_name = self.names.mint(caller)?;
+        self.entries[index].reader_name = reader_name;
+        self.entries[index].reader_slot = reader_slot;
         self.entries[index].accepted = true;
         Ok(index)
     }
-    /// Returns the mapping to remove. A live accepted reader pins the allocation.
+    /// Returns the backing index; caller resolves its local mapping before release.
+    /// A live accepted reader pins the allocation.
     pub fn release(&mut self, caller: usize, handle: u64) -> Result<usize, u64> {
-        let index = self.find(handle)?;
+        let index = self.access(caller, handle)?;
         let region = &mut self.entries[index];
         if region.owner == Some(caller) {
             if region.peer.is_some() {

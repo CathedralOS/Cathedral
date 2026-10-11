@@ -82,9 +82,10 @@ pub fn compose() -> u64 {
     let mut offer = [0; 64];
     assert_eq!(receive.receive(&mut offer).unwrap(), 32);
     let leaves: [Shared; 4] = core::array::from_fn(|i| {
-        Shared::accept(u64::from_le_bytes(
-            offer[i * 8..(i + 1) * 8].try_into().unwrap(),
-        ))
+        Shared::accept_from(
+            u64::from_le_bytes(offer[i * 8..(i + 1) * 8].try_into().unwrap()),
+            Link::at(0).unwrap(),
+        )
         .unwrap()
     });
     let sources = core::array::from_fn(|i| Source {
