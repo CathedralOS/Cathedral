@@ -143,6 +143,14 @@ Add `--release` for optimized verification. This profile has no display grant;
 its [guide](../../source-rs/distribution/lab/matrix/README.md) documents the
 execution paths and remaining environment/lifecycle work.
 
+## CPU turn sharing
+
+The broader `--smoke` profile includes a
+[CPU sharing fixture](../../source-rs/kernel/core/scheduler/README.md): one and then
+three non-yielding descendants compete with an independent outer account. The
+guest checks preemption shares, descendant progress, loan return and reclamation.
+This verifies hierarchical turns, not elapsed CPU-time quotas or deadlines.
+
 ## Ordinary application IPC profile
 
 `python tools/boot-harness-rs/run.py --ipc-test --timeout 90` selects

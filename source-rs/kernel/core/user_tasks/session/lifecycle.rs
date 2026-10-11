@@ -96,7 +96,13 @@ pub(super) unsafe fn reap(session: &mut Session, source: &mut Frames<'_>) {
     // Increasing owner/child slots made cancellation cascade in the first pass.
     // Return empty budgets only after every descendant address space is gone.
     for launch in &mut session.launches {
+        let previous_owner = launch.model.owner;
         launch.model.reclaim();
+        if launch.model.owner != previous_owner {
+            session
+                .scheduler
+                .set_parent(launch.model.child, launch.model.owner);
+        }
     }
     taskcalls::wake(session, arch::ticks());
     for owner in 0..session.tasks.len() {

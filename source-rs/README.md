@@ -310,11 +310,17 @@ overrun, not against malicious tasks. There is no capability enforcement or SMP.
 64-KiB heap and runtime arena are initialized before executing tasks; ordinary
 infallible Rust allocations can still panic on exhaustion. Task context
 admission is fallible and returns `OutOfHeap` without leaking stack frames.
-The scheduler is a pure
-round-robin state machine; IRQ masking protects its mutable session, and heap
+The scheduler separates task states from [hierarchical turn selection](kernel/core/scheduler/README.md).
+Kernel tasks use its flat round robin; user launch subtrees subdivide their owner's
+outer turns. IRQ masking protects its mutable session, and heap
 locks are never held across a voluntary suspension. Preemption is tested with
 tasks that never yield, including a negative control that fails when their
 timer preemption is disabled.
+
+The CPU subtree smoke test compares one versus three real userspace spinners
+against an independent outside account. Their combined turn share stays bounded
+by their owner. This is work-conserving turn fairness, not measured CPU-time quotas:
+partial timer quanta, service-call work and admission costs still need accounting.
 
 ## User-mode experiment
 

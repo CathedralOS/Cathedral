@@ -2,6 +2,7 @@
 #![no_main]
 //! Distribution policy: restart a deliberately crashing service 32 times.
 mod client;
+mod cpu;
 mod links;
 mod multiple;
 mod probes;
@@ -41,6 +42,10 @@ fn main(role: u64, argument: u64) -> u64 {
         21 => links::owner(),
         22 => links::provider(),
         23 => links::application(),
+        24 => cpu::owner(argument),
+        25 => cpu::peer(),
+        26 => cpu::branch(argument),
+        27 => cpu::spin(),
         _ => 254,
     }
 }

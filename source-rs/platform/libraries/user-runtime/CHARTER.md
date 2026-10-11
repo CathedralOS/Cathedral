@@ -19,6 +19,8 @@ The bundle supplements the existing profile-controlled boot/device grants.
 The child enumerates only its assigned grants and may lend them further. Subtree
 teardown returns budgets with fresh names to surviving lenders; per-slot executable
 and resource ceilings stay fixed. The runtime chooses no manifest or budget policy.
+The kernel nests a lent launch account's CPU turns under its borrower until return;
+the runtime exposes no global scheduling tree or authority to widen that share.
 `ipc::budget` reads only the caller's channel reservation/charge and dynamic
 handle limit/charge, including hidden incoming escrow. Channel charges belong to
 the original persistent launch account until final closure; replacement receives

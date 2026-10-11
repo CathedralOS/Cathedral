@@ -11,6 +11,10 @@ pub(super) fn session(
     output: fn(&[u8]) -> bool,
 ) -> Result<(Session, Vec<Report>), Error> {
     let grants = composition::grants(initial_count, count, config)?;
+    let mut scheduler = Scheduler::new(count);
+    for launch in &grants.launches {
+        scheduler.set_parent(launch.model.child, launch.model.owner);
+    }
     let memory = super::memory::Memory::new(count, config.memory).map_err(|code| {
         if code == cathedral_contracts::user::NO_MEMORY {
             Error::OutOfHeap
@@ -22,7 +26,7 @@ pub(super) fn session(
         names: grants.names,
         memory,
         tasks: Vec::new(),
-        scheduler: Scheduler::new(count),
+        scheduler,
         boot: Context::default(),
         output,
         completed: 0,

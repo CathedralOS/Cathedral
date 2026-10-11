@@ -54,6 +54,11 @@ impl Plan {
         } in self.loans.into_iter().flatten()
         {
             session.launches[index].model.lend(child, names, returned);
+            // The lent account is dormant; its future descendants subdivide the
+            // borrower's turns rather than competing with it at the outer level.
+            session
+                .scheduler
+                .set_parent(session.launches[index].model.child, child);
         }
     }
 }

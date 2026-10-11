@@ -137,7 +137,11 @@ uses the 48-byte endpoint prefix followed by a count and seven launch names
 name is reserved before mapping, so teardown cannot fail from name exhaustion.
 
 This is a finite launch-budget experiment, not arbitrary ELF loading, a manifest
-resolver, production sponsorship or general CPU/RAM budget subdivision. Boot still
+resolver, production sponsorship or general CPU-time/RAM budget subdivision. The
+[scheduler](../../../kernel/core/scheduler/README.md) now nests CPU turns under the
+current launch owner: loans subdivide the borrower's outer turns and return with
+their scheduling parent after reclamation. This does not reserve elapsed CPU time.
+Boot still
 reserves all task slots. Delegation requires the recipient's reserved slot to
 precede the lent slot, giving cancellation a bounded acyclic order. IPC channel
 reservations belong to persistent launch accounts: loans and replacement do not

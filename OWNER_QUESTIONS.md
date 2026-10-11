@@ -449,3 +449,31 @@ names, to the nearest surviving lender after subtree reclamation. This tests
 structured lifetime ownership; it does not settle production sponsorship,
 persistent service ownership or adoption. Whether returned budgets should follow
 this automatic lender chain remains part of that owner decision.
+
+### CPU sponsorship across service calls
+
+**Requirement and tension.** The [scheduler design](wiki/design/part_2_components/01_scheduler_and_resources.md)
+requires hierarchical resource envelopes and separates runtime shares from physical
+reservations and deadline evidence. Process descendants can share an owner's
+envelope, but a service executes work requested by clients outside that subtree.
+Ownership of a process alone does not identify who should pay for each request.
+
+**Contracts checked.** The design's nested budgets establish attenuation; the
+[specification index](wiki/spec/README.md) does not yet supply a production service
+CPU-sponsorship or donation contract. This does not block a bounded scheduler
+experiment, but it blocks promising end-to-end client-funded service execution.
+
+**Owner choice, before general service CPU budgets.** Should a provider fund
+accepted work from its own reservation, require an explicit client-funded grant,
+or support both under provider policy? Define who may accept a charge, its bound,
+what happens while a caller is blocked, and whether cancellation ends the funding
+or only future acceptance. IPC bytes or an asserted caller identity cannot mint
+CPU authority. Scheduling priority and permission to charge must remain distinct.
+
+**Rust experiment (not resolution).** [Hierarchical turns](source-rs/kernel/core/scheduler/README.md)
+now follow current launch ownership. Descendants divide their owner's outer turns;
+loans reattach dormant scheduling accounts, and reclamation returns them without
+resetting rotation. A provider still runs within its own launch tree even when
+serving another tree. The QEMU proof compares one versus three spinning descendants
+against an outside account. Equal turns do not account precisely for partial
+quanta, kernel work or request costs and are not hard CPU-time reservations.
