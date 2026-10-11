@@ -24,6 +24,10 @@ Destructive startup checks now require `--startup-probes`. They deliberately
 change scenes and replace processes, so their flashing output is not part of
 ordinary interactive startup. Use `--release` for interactive runs.
 
+Add `--pressure` to the interactive command or `--session-test` to run the
+[resource-pressure experiment](PRESSURE.md) alongside this session. It is opt-in;
+ordinary startup adds no hostile peer.
+
 | Interaction | Result |
 | --- | --- |
 | Click ADD / CLEAR | Increment / reset that app's counter |

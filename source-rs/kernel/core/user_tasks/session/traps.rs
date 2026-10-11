@@ -8,10 +8,12 @@ pub(super) unsafe fn schedule(context: &Context, cause: SwitchCause, now: u64) -
     // SAFETY: IRQs masked, kernel root active, run pins the session across syscalls.
     let session = unsafe { &mut *ACTIVE.load(Ordering::Acquire) };
     let previous = session.scheduler.current();
-    let mut event = if cause == SwitchCause::Timer {
-        Event::Timer
-    } else {
-        Event::Yield
+    let mut event = match cause {
+        SwitchCause::Timer => Event::Timer,
+        // A device IRQ records readiness; it is not a fresh round-robin quantum.
+        // Runnable waiters get their turn on blocking/yield or the next timer.
+        SwitchCause::Device => Event::Continue,
+        _ => Event::Yield,
     };
     if let Some(slot) = previous {
         assert!(context.is_user());

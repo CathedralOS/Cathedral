@@ -1,6 +1,10 @@
 use super::*;
 pub(super) fn exercise(producer: &Peer) {
-    for size in [0, 5, u64::MAX] {
+    for size in [
+        0,
+        cathedral_contracts::memory::MAX_PAGES as u64 + 1,
+        u64::MAX,
+    ] {
         assert_eq!(
             producer.call(abi::MEMORY_ALLOCATE, size, 0),
             abi::INVALID_ARGUMENT

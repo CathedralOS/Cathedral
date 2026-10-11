@@ -22,10 +22,8 @@ impl Memory {
             if pointer.is_null() {
                 return Err(abi::NO_MEMORY);
             }
-            pointer.write(Self {
-                model,
-                backing: [[0; wire::MAX_PAGES]; wire::MAX_REGIONS],
-            });
+            (&raw mut (*pointer).model).write(model);
+            (&raw mut (*pointer).backing).write_bytes(0, 1);
             Ok(alloc::boxed::Box::from_raw(pointer))
         }
     }

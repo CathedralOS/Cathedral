@@ -1,7 +1,7 @@
 //! Page-object authority and lifetime policy. Paging and frame custody live in user_tasks/session/memory.
 //! A sealed accepted reader retains backing after producer death; no remote unmap of a live reader.
 use cathedral_contracts::{
-    memory::{Grant, MAX_PAGES, MAX_REGIONS},
+    memory::{Grant, MAX_PAGES, MAX_PRIVATE_REGIONS, MAX_REGIONS, MAX_SHARED_REGIONS},
     user as abi,
 };
 #[derive(Clone, Copy, Debug, Default)]
@@ -66,13 +66,9 @@ impl Regions {
         if self.private[owner] == 0 {
             return Err(abi::DENIED);
         }
-        let used: usize = self
-            .entries
-            .iter()
-            .filter(|r| r.owner == Some(owner))
-            .map(|r| r.pages)
-            .sum();
-        if pages + used > self.private[owner] {
+        let owned = self.entries.iter().filter(|r| r.owner == Some(owner));
+        let used: usize = owned.clone().map(|r| r.pages).sum();
+        if pages + used > self.private[owner] || owned.count() >= MAX_PRIVATE_REGIONS {
             return Err(abi::NO_MEMORY);
         }
         let index = self
@@ -137,13 +133,12 @@ impl Regions {
         if region.accepted {
             return Err(abi::BUSY);
         }
-        let used: usize = self
+        let readers = self
             .entries
             .iter()
-            .filter(|r| r.peer == Some(caller) && r.accepted)
-            .map(|r| r.pages)
-            .sum();
-        if used + region.pages > self.shared[caller] {
+            .filter(|r| r.peer == Some(caller) && r.accepted);
+        let used: usize = readers.clone().map(|r| r.pages).sum();
+        if used + region.pages > self.shared[caller] || readers.count() >= MAX_SHARED_REGIONS {
             return Err(abi::NO_MEMORY);
         }
         self.entries[index].accepted = true;

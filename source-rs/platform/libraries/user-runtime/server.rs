@@ -1,4 +1,4 @@
-//! Fair, bounded service control and up to four boot-approved client connections.
+//! Fair, bounded service control and boot-approved client connections.
 //! Client identity comes from the accepted link slot, never from message contents.
 use crate::{
     Error, abi,
@@ -19,23 +19,24 @@ pub enum Event {
     Request(Request),
     Disconnected { client: usize, incarnation: u64 },
 }
+const MAX_CLIENTS: usize = abi::MAX_WAIT_HANDLES - 1; // Control also occupies a wait slot.
 pub struct Server {
     control: (Handle, Handle),
-    links: [Option<Link>; 4],
-    clients: [Option<(Handle, Handle)>; 4],
+    links: [Option<Link>; MAX_CLIENTS],
+    clients: [Option<(Handle, Handle)>; MAX_CLIENTS],
     count: usize,
     cursor: usize,
-    closed: [Option<u64>; 4],
+    closed: [Option<u64>; MAX_CLIENTS],
 }
 impl Server {
     pub fn open() -> Result<Self, Error> {
         Self::open_clients(1)
     }
     pub fn open_clients(count: usize) -> Result<Self, Error> {
-        if count == 0 || count > 4 {
+        if count == 0 || count > MAX_CLIENTS {
             return Err(Error(abi::INVALID_ARGUMENT as i64));
         }
-        let mut links = [None; 4];
+        let mut links = [None; MAX_CLIENTS];
         for (index, slot) in links.iter_mut().enumerate().take(count) {
             *slot = match Link::at(index as u64) {
                 Ok(link) => Some(link),
@@ -52,10 +53,10 @@ impl Server {
         Ok(Self {
             control: (Handle::bootstrap(0)?, Handle::bootstrap(1)?),
             links,
-            clients: [None; 4],
+            clients: [None; MAX_CLIENTS],
             count,
             cursor: 0,
-            closed: [None; 4],
+            closed: [None; MAX_CLIENTS],
         })
     }
     pub fn next_request(&mut self) -> Result<Request, Error> {
@@ -126,7 +127,7 @@ impl Server {
             }
             // Watch every live channel together. The bounded maintenance timeout
             // retries absent links; quiet connected clients generate no poll traffic.
-            let mut handles = [self.control.0; 5];
+            let mut handles = [self.control.0; abi::MAX_WAIT_HANDLES];
             let mut count = 1;
             for pair in self.clients.iter().take(self.count).flatten() {
                 handles[count] = pair.0;

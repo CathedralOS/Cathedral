@@ -15,10 +15,11 @@ use crate::{scheduler::Event, user_tasks::syscall as abi};
 pub(super) use ipc::{Receive, wake_receivers};
 pub(super) fn syscall(session: &mut Session, slot: usize, now: u64) -> Event {
     let (number, first, second, third) = session.tasks[slot].context.syscall();
-    let mut event = Event::Yield;
+    let mut event = Event::Continue;
     let result = match number {
         abi::WRITE => diagnostics::write(session, slot, first, second),
         abi::YIELD => {
+            event = Event::Yield;
             session.tasks[slot].report.yields += 1;
             Ok(0)
         }

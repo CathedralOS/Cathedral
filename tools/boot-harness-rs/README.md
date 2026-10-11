@@ -107,7 +107,7 @@ interactive command, gestures, protocol ownership and bounds.
 ## Persistent session profile
 
 `python tools/boot-harness-rs/run.py --session-test --timeout 60` selects
-[profiles/session.json](profiles/session.json). It checks idle event waits,
+[profiles/session.json](profiles/session.json). It checks event waits,
 explicit input regions, delegated key masks and a separate child app clipped by
 its host. It replaces the compositor during a drag, preserves the child through
 host replacement, and replaces the input source while a key is held. The host
@@ -121,3 +121,10 @@ to run those and the full-screen repaint timing probe. Session tests also drive
 120 mouse reports at roughly 100 Hz and check exact motion, release and continued
 keyboard input; `latency.json` records the final cursor observation time. The
 interactive scene includes readable controls, focus status and recovery notices.
+
+Add `--pressure` to `--session-test` or the interactive session profile to add a
+peer that exhausts page/object grants, floods the compositor without reading
+replies, and repeatedly spins/faults before supervised replacement. The same
+interaction checks run under load; logs and images use the `pressure-session-test`
+directory. See the [pressure lab](../../source-rs/distribution/lab/compositor/PRESSURE.md)
+for navigation, checks and limits. Ordinary boots do not enable this workload.

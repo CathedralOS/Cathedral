@@ -77,11 +77,14 @@ pub fn application() -> u64 {
         Link::at(1).unwrap(),
         Link::at(2).unwrap(),
     ];
-    let mut pairs = links.map(|link| link.connect().unwrap());
+    let mut connections = None;
     loop {
         let mut bytes = [0; 64];
         assert_eq!(input.receive(&mut bytes).unwrap(), 1);
         let command = bytes[0];
+        // Admission can run this app before the owner's last provider spawn.
+        // The first control request is the explicit all-providers-live barrier.
+        let pairs = connections.get_or_insert_with(|| links.map(|link| link.connect().unwrap()));
         if command != 0 {
             let index = usize::from(command - 1);
             assert_eq!(
@@ -90,7 +93,7 @@ pub fn application() -> u64 {
             );
             pairs[index] = links[index].connect().unwrap();
         }
-        for pair in pairs {
+        for pair in pairs.iter().copied() {
             pair.0.send(b"graph").unwrap();
             let length = pair
                 .1

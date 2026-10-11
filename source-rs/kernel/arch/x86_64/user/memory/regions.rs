@@ -10,14 +10,13 @@ unsafe impl FrameAllocator<Size4KiB> for NoFrames {
     }
 }
 impl UserSpace {
-    /// Reserve the single page table covering all bounded runtime slots.
+    /// Reserve every leaf table covering the bounded runtime slots and guards.
     /// # Safety
     /// Inactive exclusively owned hierarchy; same custody as from_segments. On error retire the space.
     pub unsafe fn prepare_regions(
         &mut self,
         frames: &mut impl StackFrames,
     ) -> Result<(), MemoryError> {
-        const _: () = assert!(wire::address(wire::MAX_REGIONS) - wire::USER_BASE < 2 * 1024 * 1024);
         let physical = self
             .backing
             .iter()
@@ -33,20 +32,22 @@ impl UserSpace {
         unsafe {
             let mut target =
                 OffsetPageTable::new(&mut *(self.root as *mut PageTable), VirtAddr::zero());
-            map(
-                &mut target,
-                wire::USER_BASE,
-                physical,
-                Flags::PRESENT | Flags::USER_ACCESSIBLE | Flags::NO_EXECUTE,
-                &mut source,
-            )?;
-            target
-                .unmap(
-                    Page::<Size4KiB>::from_start_address(VirtAddr::new(wire::USER_BASE)).unwrap(),
-                )
-                .unwrap()
-                .1
-                .ignore();
+            for address in
+                (wire::USER_BASE..wire::address(wire::MAX_REGIONS)).step_by(2 * 1024 * 1024)
+            {
+                map(
+                    &mut target,
+                    address,
+                    physical,
+                    Flags::PRESENT | Flags::USER_ACCESSIBLE | Flags::NO_EXECUTE,
+                    &mut source,
+                )?;
+                target
+                    .unmap(Page::<Size4KiB>::from_start_address(VirtAddr::new(address)).unwrap())
+                    .unwrap()
+                    .1
+                    .ignore();
+            }
         }
         Ok(())
     }

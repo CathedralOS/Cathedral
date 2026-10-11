@@ -25,6 +25,9 @@ impl Desktop {
         self.last_focus = u64::MAX;
         self.update_focus();
         self.notice(b"READY");
+        if self.pressure.is_some() {
+            self.label(80, 620, b"PRESSURE ACTIVE");
+        }
     }
     pub(super) fn update_focus(&mut self) {
         let focus = call(self.base.display, s::FOCUS_STATE, 0)[1];

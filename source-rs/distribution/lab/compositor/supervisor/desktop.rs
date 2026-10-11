@@ -1,5 +1,6 @@
 //! Persistent session policy: admit, authorize, measure idle, supervise and restore.
 mod chrome;
+mod pressure;
 mod probes;
 mod recovery;
 use super::*;
@@ -12,6 +13,7 @@ struct Desktop {
     source: Child,
     input: Pair,
     last_focus: u64,
+    pressure: Option<pressure::Pressure>,
 }
 impl Session {
     pub(super) fn desktop(self, child_launch: Launch) -> u64 {
@@ -27,6 +29,7 @@ impl Session {
             source,
             input,
             last_focus: u64::MAX,
+            pressure: None,
         };
         desktop.layout();
         if cfg!(feature = "session-probes") {
@@ -40,6 +43,7 @@ impl Session {
             desktop.idle_probe();
             desktop.repaint_probe();
         }
+        desktop.pressure = pressure::Pressure::start();
         desktop.chrome();
         marker(b"Cathedral session: ready\n");
         desktop.run()
@@ -109,6 +113,9 @@ impl Desktop {
                 self.replace_source();
             }
             self.update_focus();
+            if let Some(pressure) = &mut self.pressure {
+                pressure.tick();
+            }
             let _ = self
                 .base
                 .display

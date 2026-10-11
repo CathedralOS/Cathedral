@@ -49,6 +49,7 @@ fn serve() -> Result<(), Error> {
             0x41 => Some([session::SESSION_CONTROL, 3, 0, 0, 0, 0]), // F7: app-owned synthetic click.
             0x40 => Some([session::SESSION_CONTROL, 2, 0, 0, 0, 0]), // F6: host replacement.
             keyboard::LOST => {
+                cathedral_user_runtime::write(b"Cathedral pointer: raw input lost; cancelling\n")?;
                 keys.reset();
                 Some(motion(mouse.reset()))
             }

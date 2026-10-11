@@ -28,6 +28,8 @@ pub enum TaskState {
 
 #[derive(Clone, Copy, Debug)]
 pub enum Event {
+    /// A nonblocking operation completed; retain the current timer quantum.
+    Continue,
     Timer,
     Yield,
     Sleep(u64),
@@ -103,7 +105,9 @@ impl Scheduler {
 
     /// Sleep durations must be below half the wrapping clock's range.
     pub fn advance(&mut self, event: Event, now: u64, preempt: bool) -> Option<usize> {
-        if matches!(event, Event::Timer) && !preempt && self.current.is_some() {
+        if (matches!(event, Event::Continue) || (matches!(event, Event::Timer) && !preempt))
+            && self.current.is_some()
+        {
             self.wake(now);
             return self.current;
         }
@@ -152,7 +156,7 @@ impl Scheduler {
         self.wake(now);
         if let Some(current) = self.current {
             self.states[current] = match event {
-                Event::Timer | Event::Yield => TaskState::Ready,
+                Event::Continue | Event::Timer | Event::Yield => TaskState::Ready,
                 Event::Sleep(delay) => {
                     assert!(delay < (1 << 63), "sleep exceeds clock comparison range");
                     if delay == 0 {
@@ -174,6 +178,20 @@ impl Scheduler {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn nonblocking_operations_keep_the_quantum_but_timer_and_yield_rotate() {
+        let mut scheduler = populated(2);
+        assert_eq!(scheduler.advance(Event::Yield, 0, true), Some(0));
+        for _ in 0..100 {
+            assert_eq!(scheduler.advance(Event::Continue, 0, true), Some(0));
+        }
+        assert_eq!(scheduler.advance(Event::Timer, 1, true), Some(1));
+        assert_eq!(scheduler.advance(Event::Continue, 1, true), Some(1));
+        assert_eq!(scheduler.advance(Event::Yield, 1, true), Some(0));
+        assert_eq!(scheduler.advance(Event::Block, 1, true), Some(1));
+        scheduler.unblock(0);
+        assert_eq!(scheduler.advance(Event::Timer, 2, true), Some(0));
+    }
     #[test]
     fn cancelling_a_waiter_requires_reaping_before_reuse() {
         let mut scheduler = populated(2);

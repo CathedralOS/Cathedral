@@ -40,7 +40,9 @@ pub fn run() -> u64 {
     // SAFETY: Same single-entry ownership as the retained scene statics above.
     let labels = unsafe { &mut *labels_address };
     let mut compositor = Compositor::open(clients, scratch, labels);
-    let mut server = Server::open_clients(4).unwrap();
+    // The optional fifth connection has no scene/input authority; it exercises
+    // denied requests and reply backpressure without adding an application slot.
+    let mut server = Server::open_clients(5).unwrap();
     loop {
         match server.next_event() {
             Ok(Event::Disconnected {

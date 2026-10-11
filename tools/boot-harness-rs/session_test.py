@@ -6,11 +6,15 @@ import pointer_test
 import session_latency
 
 
-def verify(stream, output, serial):
+def verify(stream, output, serial, pressure=False):
     # Runtime writes split at page/ABI boundaries; each syscall adds this prefix,
     # including when the split falls inside a single guest evidence message.
     prefix = "Cathedral Rust lab: "
     serial = serial.replace(prefix, "")
+    if ("Cathedral pressure: active" in serial) != pressure:
+        raise RuntimeError("Session pressure workload does not match the requested mode")
+    def check(*args):
+        snapshot(*args, pressure=pressure)
     if "interactive startup; destructive probes disabled" not in serial:
         for marker in ("idle interval had zero", "real child scope clipping wrong-owner stale hosting and attenuated focus denials passed"):
             if marker not in serial:
@@ -54,7 +58,7 @@ def verify(stream, output, serial):
         wait(f"app={app} key a={code} b=1 value={value} selected={selected}", offset)
         wait(f"app={app} key a={code} b=0", offset)
 
-    snapshot(stream, output, [0, 0, 0], [0, 0, 0], [None] * 3, (40, 40), (424, 184))
+    check(stream, output, [0, 0, 0], [0, 0, 0], [None] * 3, (40, 40), (424, 184))
     move(50, 40)
     move(90, 170)  # Painted decoration has no input region.
     offset = len(text())
@@ -98,7 +102,7 @@ def verify(stream, output, serial):
     key("f4")
     wait("compositor restored; three app identities and values preserved; capture and focus cleared", offset)
     position[:] = [40, 40]  # Rebuilt compositor starts with a neutral root cursor.
-    snapshot(stream, output, [2, 1, 2], [0, 0, 0], [(244, 120), None, None], (40, 40), (424, 184), "DISPLAY RESTORED")
+    check(stream, output, [2, 1, 2], [0, 0, 0], [(244, 120), None, None], (40, 40), (424, 184), "DISPLAY RESTORED")
     offset = len(text())
     key("ret")
     time.sleep(0.15)
@@ -130,7 +134,7 @@ def verify(stream, output, serial):
     key("f6")
     wait("host loss hid child and revoked descendant input", offset)
     wait("host replaced; child process and value preserved", offset)
-    snapshot(stream, output, [2, 0, 2], [0, 0, 0], [(244, 120), None, None], (50, 40), (424, 184), "HOST RESTORED", "APP ONE")
+    check(stream, output, [2, 0, 2], [0, 0, 0], [(244, 120), None, None], (50, 40), (424, 184), "HOST RESTORED", "APP ONE")
     click(540, 280, 3, 3)
     offset = len(text())
     key("ret", True)
@@ -146,16 +150,24 @@ def verify(stream, output, serial):
     wait("synthetic click preserved keyboard focus", offset)
     wait("app=2 pointer a=1 b=1 value=1", offset)
     press("ret", 3, 5, 7, 0)
-    snapshot(stream, output, [2, 1, 7], [0, 0, 0], [(244, 120), None, None], (540, 280), (440, 200), "SYNTHETIC CLICK", "CHILD")
+    check(stream, output, [2, 1, 7], [0, 0, 0], [(244, 120), None, None], (540, 280), (440, 200), "SYNTHETIC CLICK", "CHILD")
     session_latency.drag(stream, output, move, button, text, wait)
     position[:] = [240, 280]
     press("right", 1, 4, 2, 1)
     press("left", 1, 3, 2, 0)
-    snapshot(stream, output, [2, 1, 7], [0, 0, 0], [(160, 120), None, None], (240, 280), (440, 200), "SYNTHETIC CLICK", "APP ONE")
+    check(stream, output, [2, 1, 7], [0, 0, 0], [(160, 120), None, None], (240, 280), (440, 200), "SYNTHETIC CLICK", "APP ONE")
+    if pressure:
+        for marker in ("page/object limits and IPC backpressure verified", "spinning peer cancelled and reaped", "faulted peer reaped"):
+            wait("Cathedral pressure: " + marker, 0)
+        if text().count("Cathedral pressure: replacement admitted") < 2:
+            raise RuntimeError("Pressure did not exercise repeated reclamation and admission")
+        print("PASS: memory/object exhaustion, unread IPC replies, non-yielding cancellation and fault replacement during session interaction")
+    if any(marker in text() for marker in ("CATHEDRAL_RS_PANIC", "Cathedral user panic", "initial program stopped")):
+        raise RuntimeError("Session or pressure workload failed; inspect serial.log")
     print(f"PASS: explicit hit regions, focus attenuation, sustained dragging, synthetic isolation, nested process scopes, compositor/host/source recovery and complete scanout; {output / 'display.png'}")
 
 
-def snapshot(stream, output, values, selections, markers, physical, synthetic, status="READY", focus="NONE"):
+def snapshot(stream, output, values, selections, markers, physical, synthetic, status="READY", focus="NONE", pressure=False):
     width, height = 1024, 768
     expected = bytearray(bytes.fromhex("101827") * width * height)
     font = (Path(__file__).resolve().parents[2] / "source-rs/platform/libraries/bitmap-font/font.hex").read_text().splitlines()
@@ -170,6 +182,8 @@ def snapshot(stream, output, values, selections, markers, physical, synthetic, s
                     if bits & (1 << (4 - col)):
                         for dy in range(2):
                             for dx in range(2): put(x + i*12 + col*2 + dx, y + row*2 + dy, "c5d3e8")
+    if pressure:
+        root_label(80, 620, "PRESSURE ACTIVE")
     for x, y, text in ((80,40,"CATHEDRAL LAB"),(80,76,"CLICK A BUTTON"),(400,76,"ARROWS / ENTER"),
                       (700,160,"APP ONE"),(700,190,"INDEPENDENT APP"),(700,240,"HOST AND CHILD"),
                       (700,270,"SEPARATE APPS"),(700,300,"CHILD: ENTER"),

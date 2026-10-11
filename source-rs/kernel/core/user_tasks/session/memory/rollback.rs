@@ -19,7 +19,7 @@ pub unsafe fn exercise(frames: &mut FrameAllocator, layout: &BootLayout, image: 
         clock_readers: &[],
         memory: &[wire::Grant {
             task: 0,
-            private_pages: 4,
+            private_pages: wire::MAX_PAGES,
             shared_pages: 0,
         }],
     };
@@ -45,6 +45,8 @@ pub unsafe fn exercise(frames: &mut FrameAllocator, layout: &BootLayout, image: 
         } else {
             let handle = result.unwrap();
             assert_eq!(source.frames.allocated(), admitted + wire::MAX_PAGES);
+            // SAFETY: Root has never executed and all frames remain pinned here.
+            unsafe { mapping_boundaries(&mut session, handle) };
             // SAFETY: Root never ran; no user borrows or outstanding peer references.
             unsafe {
                 dispatch(
@@ -70,7 +72,7 @@ pub unsafe fn exercise(frames: &mut FrameAllocator, layout: &BootLayout, image: 
     // SAFETY: Never activated, no remaining borrowed regions.
     unsafe { admission::retire(&mut session.tasks[0], &mut source) };
     assert_eq!(source.frames.allocated(), baseline);
-    // Exercise every admission boundary too, including the newly reserved PT.
+    // Exercise every admission boundary too, including all reserved region PTs.
     for budget in 0..table_budget {
         source.remaining = budget;
         assert!(
@@ -80,5 +82,44 @@ pub unsafe fn exercise(frames: &mut FrameAllocator, layout: &BootLayout, image: 
         );
         assert_eq!(source.frames.allocated(), baseline);
         assert!(session.tasks[0].space.is_none());
+    }
+}
+
+/// Exercise a region crossing a 2-MiB table boundary and the last virtual slot.
+/// These inactive aliases are removed before the model releases the backing.
+unsafe fn mapping_boundaries(session: &mut Session, handle: u64) {
+    let index = session.memory.model.find(handle).unwrap();
+    let backing = session.memory.backing[index];
+    let space = session.tasks[0].space.as_mut().unwrap();
+    for page in 0..wire::MAX_PAGES {
+        // SAFETY: Full byte range in the prepared owner's writable mapping.
+        assert!(unsafe {
+            space.copy_to_user(
+                wire::address(index) + (page * wire::PAGE_BYTES) as u64,
+                &[page as u8 + 1],
+            )
+        });
+    }
+    // SAFETY: No executing user or Rust borrow; remove writer before reader aliases.
+    unsafe { space.seal_region(index, wire::MAX_PAGES) };
+    assert!(!space.writable_range(wire::address(index), 1));
+    for alias in [30, wire::MAX_REGIONS - 1] {
+        // SAFETY: Prepared empty slot; immutable frames stay owned until all aliases are gone.
+        unsafe { space.map_region(alias, &backing, false) }.unwrap();
+        for page in 0..wire::MAX_PAGES {
+            let address = wire::address(alias) + (page * wire::PAGE_BYTES) as u64;
+            let mut byte = [0];
+            // SAFETY: Inactive live reader mapping into the retained allocation.
+            assert!(unsafe { space.copy_from_user(address, &mut byte) });
+            assert_eq!(byte, [page as u8 + 1]);
+            assert!(!space.writable_range(address, 1));
+        }
+        let guard = wire::address(alias) + (wire::MAX_PAGES * wire::PAGE_BYTES) as u64;
+        // SAFETY: copy validates the unmapped guard and does not dereference it.
+        assert!(!unsafe { space.copy_from_user(guard, &mut [0]) });
+        // SAFETY: No reader can execute; remove borrowed aliases before owner release.
+        unsafe { space.unmap_region(alias, wire::MAX_PAGES) };
+        // SAFETY: Validation must reject the entire retired alias.
+        assert!(!unsafe { space.copy_from_user(wire::address(alias), &mut [0]) });
     }
 }

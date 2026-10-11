@@ -77,7 +77,10 @@ pub fn exercise(memory: &mut PreparedMemory, console: &mut SerialPort) {
     assert_eq!(reports[0].wait_timeouts, 1);
     assert_eq!(reports[0].waits_blocked, 1);
     assert_eq!(reports[0].cancelled_blocked, 1);
-    assert_eq!(reports[1].receives_blocked, 2);
+    // The first receive waits through the idle interval. After "done", the
+    // sender may already have exited, so observing closure need not block again.
+    assert!(reports[1].receives_blocked >= 1);
+    assert_eq!(reports[1].ipc_received, 1);
     assert_eq!(reports[2].receives_blocked, 1);
     drop(reports);
     reclaimed(memory, frames, heap);

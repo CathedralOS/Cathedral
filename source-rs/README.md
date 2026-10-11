@@ -826,9 +826,12 @@ All fault injection and hostile-client probes are absent from ordinary builds.
 ## Bounded private pages and shared buffers
 
 The [memory contract](contracts/memory.rs) defines explicit per-task private and
-accepted-reader budgets, each up to four 4 KiB pages. An allocation contains one
-to four zeroed pages, with 32 region slots per session and an unmapped guard after
-each slot. Runtime mappings are non-executable. Task admission reserves their
+accepted-reader budgets, each up to sixteen 4 KiB pages (64 KiB). An allocation
+contains one to sixteen zeroed pages. Independently, a task can own at most four
+objects and accept at most four reader objects. The 64 session slots cover those
+limits for all eight tasks, including readers retained after producer exit; a
+larger page grant cannot consume another task's metadata capacity. An unmapped
+guard follows each slot. Runtime mappings are non-executable. Task admission reserves their
 page tables; allocation and mapping changes execute on the boot stack with the
 kernel root active. The kernel owns physical backing independently of either
 participant's address space.
@@ -865,13 +868,24 @@ protocols remain future platform work.
 checked-copy rejection, write/NX/guard faults, producer and consumer replacement,
 pinned-reader budgets, parent-exit cleanup and heap/frame baselines. A smoke-only
 fixture injects every physical allocation failure boundary and checks rollback,
-including the reserved runtime page table. Host tests cover grant validation and
-global region exhaustion. Recovery/storage builds additionally send malformed
+including all reserved runtime page tables. It also maps the largest buffer across
+a leaf-table boundary and in the last slot, checking read-only aliases and guards.
+Host tests cover independent page/object limits and global capacity with orphaned
+readers. Recovery/storage builds additionally send malformed
 pixel buffers to the real display service and require error replies to release
 accepted leases. Screenshot/input/recovery/storage checks include the new tile.
 
 This is an explicit lab contract. The transport and revocation question in
 [OWNER_QUESTIONS.md](../OWNER_QUESTIONS.md) remains open.
+
+The [interactive pressure experiment](distribution/lab/compositor/PRESSURE.md)
+exhausts grants, leaves compositor replies unread, and repeatedly cancels/faults
+an isolated peer while testing the visible session. Nonblocking user syscalls
+retain the caller's quantum; timer preemption, explicit yield and blocking still
+schedule peers. This avoids making every clock query or ready receive an implicit
+yield to a CPU-bound task. Device IRQ readiness likewise does not force a rotation
+between timer interrupts. This does not establish CPU reservations or real-time
+latency guarantees.
 
 ## Retained compositor experiment
 

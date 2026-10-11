@@ -13,8 +13,14 @@
 //! Reader release/death plus owner release/death frees backing. No live reader
 //! is remotely unmapped. These are lab semantics, not Cathedral's stable ABI.
 pub const PAGE_BYTES: usize = 4096;
-pub const MAX_PAGES: usize = 4;
-pub const MAX_REGIONS: usize = 32;
+/// Maximum pages per object and per-task private/accepted-reader page budget.
+pub const MAX_PAGES: usize = 16;
+/// Separate metadata limits: larger page grants must not buy every global slot.
+pub const MAX_PRIVATE_REGIONS: usize = 4;
+pub const MAX_SHARED_REGIONS: usize = 4;
+// Every live object has an owner or an accepted reader. This capacity covers
+// every task's object limits, including readers whose producer has exited.
+pub const MAX_REGIONS: usize = crate::user::MAX_TASKS * (MAX_PRIVATE_REGIONS + MAX_SHARED_REGIONS);
 pub const USER_BASE: u64 = 0x0000_0080_0040_0000;
 pub const fn address(index: usize) -> u64 {
     USER_BASE + (index * (MAX_PAGES + 1) * PAGE_BYTES) as u64

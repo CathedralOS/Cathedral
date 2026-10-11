@@ -121,6 +121,7 @@ def main():
     parser.add_argument("--fault", choices=("guard", "invalid-opcode", "double-fault"), help="Expected-fault smoke test (requires --smoke)")
     parser.add_argument("--release", action="store_true")
     parser.add_argument("--startup-probes", action="store_true", help="Include destructive startup probes in the session lab")
+    parser.add_argument("--pressure", action="store_true", help="Add a memory/IPC pressure peer to the session lab")
     parser.add_argument("--kernel-only", action="store_true", help="Build/boot without any platform or distribution executable")
     parser.add_argument("--profile", type=Path, default=WORKSPACE / "distribution/profile.json", help="Host composition profile")
     parser.add_argument("--window", action="store_true", help="Show QEMU's display during an ordinary interactive boot")
@@ -149,6 +150,15 @@ def main():
         parser.error("custom profiles select ordinary startup; smoke uses the standard lab profile")
     composition = ({"target": "x86_64-unknown-uefi", "boot_package": "cathedral-boot-uefi"}
                    if args.kernel_only else json.loads(args.profile.read_text(encoding="utf-8")))
+    if args.pressure:
+        if args.smoke or args.kernel_only or args.profile.resolve() != (Path(__file__).parent / "profiles/session.json").resolve():
+            parser.error("--pressure requires --session-test or the session.json interactive profile")
+        startup = composition["startup"]
+        startup["launches"].append({
+            "package": "cathedral-compositor-lab", "entry": "distribution/lab/compositor/main.rs",
+            "target": "x86_64-unknown-none", "clock": True, "argument": 4, "private_pages": 16,
+        })
+        startup["links"].append([6, 1])
     target = composition["target"]
     boot_package = composition["boot_package"]
     environment = {key: value for key, value in os.environ.items()
@@ -175,8 +185,8 @@ def main():
                     environment[f"CATHEDRAL_LAUNCH_{index}_{resource.upper()}"] = "1" if child.get(resource, False) else "0"
                 for resource in ("private_pages", "shared_pages"):
                     pages = child.get(resource, 0)
-                    if type(pages) is not int or not 0 <= pages <= 4:
-                        parser.error("memory page budgets must be integers between 0 and 4")
+                    if type(pages) is not int or not 0 <= pages <= 16:
+                        parser.error("memory page budgets must be integers between 0 and 16")
                     environment[f"CATHEDRAL_LAUNCH_{index}_{resource.upper()}"] = str(pages)
                 argument = child.get("argument", 0)
                 if type(argument) is not int or not 0 <= argument < 2**64:
@@ -213,6 +223,8 @@ def main():
         output = output.with_name("kernel-" + output.name)
     if custom_profile:
         output = output.with_name(args.profile.stem + "-" + output.name)
+    if args.pressure:
+        output = output.with_name("pressure-" + output.name)
     esp = output / "esp/EFI/BOOT"
     esp.mkdir(parents=True, exist_ok=True)
     shutil.copyfile(BUILD / "cargo" / target / profile / f"{boot_package}.efi", esp / "BOOTX64.EFI")
@@ -234,7 +246,8 @@ def main():
     # No console helper on Windows; --window explicitly opts into QEMU's GUI.
     creationflags = subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0
     if args.session_test:
-        capture.run(command, output, args.timeout, creationflags, ready_marker="Cathedral session: ready", verify=session_test.verify)
+        capture.run(command, output, args.timeout, creationflags, ready_marker="Cathedral session: ready",
+                    verify=lambda stream, output, serial: session_test.verify(stream, output, serial, pressure=args.pressure))
         return 0
     if args.pointer_test:
         capture.run(command, output, args.timeout, creationflags, ready_marker="Cathedral pointer: ready", verify=pointer_test.verify)
