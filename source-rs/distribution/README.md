@@ -14,8 +14,8 @@ and grants; the distribution gives those children their roles.
 | Role | Launch / task slot | Executable entrance | Protocol / implementation |
 | --- | --- | --- | --- |
 | Init | Initial / 0 | [init/main.rs](init/main.rs) | [App control](init/session/supervision/control.rs), [session protocol](libraries/session-protocol/lib.rs) |
-| Display | 0 / 1 | [display/main.rs](../platform/services/display/main.rs) | [Drawing contract](../contracts/display.rs), [surface](../platform/services/display/surface.rs) |
-| Input | 1 / 2 | [input/main.rs](../platform/services/input/main.rs) | [Event contract](../contracts/input.rs), [decoder](../platform/services/input/decoder.rs) |
+| Display | 0 / 1 | [display/main.rs](../platform/services/display/main.rs) | [Drawing contract](../contracts/display.rs), [direct service](../platform/services/display/direct.rs), [surface](../platform/services/display/surface.rs) |
+| Input | 1 / 2 | [input/main.rs](../platform/services/input/main.rs) | [Event contract](../contracts/input.rs), [keyboard service](../platform/services/input/keyboard.rs), [decoder](../platform/services/input/decoder.rs) |
 | Application | 2 / 3 | [status/main.rs](applications/status/main.rs) | [Application workflow](applications/status/application.rs) |
 | Counter | 4 / 5 | [counter/main.rs](applications/counter/main.rs) | [Private counter workflow](applications/counter/session.rs) |
 | Storage | 3 / 4 | [storage/main.rs](../platform/services/storage/main.rs) | [Object contract](../contracts/storage.rs), [service](../platform/services/storage/service.rs), [store](../platform/libraries/object-store/lib.rs) |

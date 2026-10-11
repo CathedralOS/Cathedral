@@ -1,6 +1,8 @@
 //! Fixed-budget snapshots and recursive clips. No device access or IPC authority.
 use cathedral_contracts::composition as wire;
 use cathedral_contracts::user as abi;
+pub mod hosting;
+pub mod labels;
 mod raster;
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct Rect {

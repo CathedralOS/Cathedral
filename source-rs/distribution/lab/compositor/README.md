@@ -33,7 +33,7 @@ binds devices and connections.
 The receiving [display entrance](../../../platform/services/display/main.rs)
 selects [compositor execution](../../../platform/services/display/compositor.rs)
 from its boot-supplied mode. Follow [request dispatch](../../../platform/services/display/compositor/requests.rs)
-for authority, [scene policy](../../../platform/services/display/scene.rs) for
+for authority, [scene policy](../../../platform/services/display/composition/scene.rs) for
 validation and drawing, and [surface](../../../platform/services/display/surface.rs)
 for bounded device writes. The [wire contract](../../../contracts/composition.rs)
 imports neither implementation.

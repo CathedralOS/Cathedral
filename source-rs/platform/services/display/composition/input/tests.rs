@@ -23,7 +23,7 @@ fn clients() -> [Client; 3] {
         client
     })
 }
-use crate::scene::Scene;
+use crate::composition::scene::Scene;
 #[test]
 fn hidden_scope_revokes_synthetic_lease_and_preserves_cancellation() {
     let mut clients = clients();

@@ -11,9 +11,11 @@ impl Compositor {
             if !request.control {
                 return Err(abi::DENIED);
             }
-            let damage = self
-                .labels
-                .set(&request.bytes, self.output.width, self.output.height)?;
+            let damage = self.composition.labels.set(
+                &request.bytes,
+                self.output.width,
+                self.output.height,
+            )?;
             self.redraw(damage);
             return Ok([0; 6]);
         }
@@ -33,26 +35,28 @@ impl Compositor {
             // scene is invalid. A foreign offer remains untouched for its real owner.
             let link = Link::at(request.client.unwrap() as u64).map_err(|e| e.0 as u64)?;
             let region = Shared::accept_from(words[2], link).map_err(|e| e.0 as u64)?;
-            if self.clients[client].incarnation != request.incarnation {
-                self.pointers.client_lost(client, self.clients);
+            if self.composition.clients[client].incarnation != request.incarnation {
+                self.composition
+                    .pointers
+                    .client_lost(client, self.composition.clients);
             }
-            let was_visible = self.clients[client].visible
-                && self.clients[client].incarnation == request.incarnation;
+            let was_visible = self.composition.clients[client].visible
+                && self.composition.clients[client].incarnation == request.incarnation;
             let result = if words[3..].iter().any(|&n| n != 0) {
                 Err(abi::INVALID_ARGUMENT)
             } else {
-                self.clients[client].submit(
+                self.composition.clients[client].submit(
                     request.incarnation,
                     words[1],
                     region.bytes(),
-                    self.scratch,
+                    self.composition.scratch,
                 )
             };
             drop(region); // Completion always follows release of the accepted reader.
             result?;
-            self.tree.resolve(self.clients);
-            let c = &self.clients[client];
-            let local = c.scene.damage(self.scratch);
+            self.composition.tree.resolve(self.composition.clients);
+            let c = &self.composition.clients[client];
+            let local = c.scene.damage(self.composition.scratch);
             let damage = if was_visible {
                 Rect {
                     x: c.scope.x + local.x,
@@ -69,7 +73,7 @@ impl Compositor {
         }
         match words {
             [wire::BACKGROUND, color, 0, 0, 0, 0] if color <= 0xffffff => {
-                self.background = color as u32;
+                self.composition.background = color as u32;
                 self.redraw(Rect {
                     x: 0,
                     y: 0,
@@ -87,14 +91,14 @@ impl Compositor {
                 {
                     return Err(abi::INVALID_ARGUMENT);
                 }
-                self.tree.place_root(client as usize, rect)?;
+                self.composition.tree.place_root(client as usize, rect)?;
                 self.layout_changed();
             }
             [wire::PIXEL, x, y, 0, 0, 0] if x < self.output.width && y < self.output.height => {
                 return Ok([0, self.output.read(x, y) as u64, 0, 0, 0, 0]);
             }
             [wire::STATUS, client, 0, 0, 0, 0] if client < 3 => {
-                let c = &self.clients[client as usize];
+                let c = &self.composition.clients[client as usize];
                 return Ok([0, c.incarnation, c.revision, u64::from(c.visible), 0, 0]);
             }
             _ => return Err(abi::INVALID_ARGUMENT),

@@ -6,7 +6,7 @@ rust-version.workspace = true
 publish.workspace = true
 
 [lib]
-path = "decoder.rs"
+path = "lib.rs"
 
 [[bin]]
 name = "cathedral-input-service"

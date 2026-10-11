@@ -1,8 +1,11 @@
+//! Open the catalog, bind accepted clients to roots, dispatch transactions and reply.
+#[cfg(feature = "recovery-lab")]
+mod recovery;
 use cathedral_contracts::{storage as wire, user as abi};
 use cathedral_user_runtime::{Error, server::Server, write};
 pub fn run() -> Result<(), Error> {
     #[cfg(feature = "recovery-lab")]
-    super::recovery::transport()?;
+    recovery::transport()?;
     let disk = cathedral_ata_pio::Ata::open().map_err(|e| Error(e as i64))?;
     let mut store = cathedral_object_store::Store::open(disk).map_err(|e| Error(e as i64))?;
     let mut server = Server::open_clients(wire::ROOTS)?;
@@ -16,7 +19,7 @@ pub fn run() -> Result<(), Error> {
         let request = server.next_request()?;
         let bytes = &request.bytes[..request.len];
         #[cfg(feature = "recovery-lab")]
-        if request.control && super::recovery::request(bytes, &mut cut, &mut server, &request)? {
+        if request.control && recovery::request(bytes, &mut cut, &mut server, &request)? {
             continue;
         }
         if request.control && bytes == wire::HEALTH {
@@ -32,7 +35,7 @@ pub fn run() -> Result<(), Error> {
         let result =
             clients[root].request(&mut store, root, request.incarnation, bytes, |_phase| {
                 #[cfg(feature = "recovery-lab")]
-                super::recovery::checkpoint(_phase, cut);
+                recovery::checkpoint(_phase, cut);
             });
         if store.needs_reopen() {
             // Preserve the underlying transport error in startup diagnostics.

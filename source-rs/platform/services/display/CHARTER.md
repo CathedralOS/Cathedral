@@ -1,9 +1,9 @@
 # Experimental display provider
 
 Owns bounded software drawing into one boot-granted linear GOP framebuffer.
-The separately compiled userspace service exposes dimensions, clear, rectangle
-and printable ASCII text requests over copied IPC. Text uses the platform's
-original bitmap font; every packet and its entire geometry are checked before
+In direct mode, the separately compiled userspace service exposes dimensions,
+clear, rectangle and printable ASCII text requests over copied IPC. Text uses
+the platform's original bitmap font; every packet and its entire geometry are checked before
 any device write. It accepts no physical addresses.
 
 The data channel also accepts `BLIT`: a sealed region token plus destination
@@ -24,7 +24,28 @@ composition requires an explicit clock grant. The legacy single-peer smoke
 fixture requires none.
 
 Distribution clients choose colors, layout and restart policy. Whole-screen
-drawing remains a lab capability, not a compositor, trusted prompt path, capture
-API or stable surface contract. `lab` adds boot-controlled smoke faults and mapping
-probes; `recovery-lab` adds faults only on the private control channel. Neither is
+drawing in direct mode remains a lab capability, without a trusted prompt path,
+capture API or stable surface contract. `lab` adds boot-controlled smoke faults
+and mapping probes; `recovery-lab` adds faults only on the private control channel. Neither is
 included in ordinary builds, and client messages cannot trigger those handlers.
+
+## Entrances and ownership
+
+[main.rs](main.rs) selects the protocol: [direct.rs](direct.rs) serves immediate
+[drawing requests](../../../contracts/display.rs), while
+[compositor.rs](compositor.rs) serves the retained
+[composition protocol](../../../contracts/composition.rs). Both use
+[surface.rs](surface.rs) for the boot-granted framebuffer. Direct-mode smoke
+probes and recovery hooks live under `direct/`.
+
+The compositor loop dispatches requests, connection loss and deferred delivery.
+Its [composition state](composition.rs) shows row order: background, labels,
+application scenes, then cursors. Descend into [scene.rs](composition/scene.rs)
+for snapshots, hosting/clips and rasterization, or [input.rs](composition/input.rs)
+for pointer lifetime, routing, cursor damage and keyboard focus. These policies
+remain host-testable without device access or IPC. The runtime handlers under
+`compositor/` bind that state to authenticated connections.
+
+Distribution clients choose content and request presentation; the provider
+validates authority, placement and clipping. This retained lab mode is still an
+experimental protocol, not the complete compositor design.

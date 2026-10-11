@@ -1,9 +1,11 @@
 # Storage provider
 
 A separate user task owns the exclusive boot-granted disk controller and the
-platform catalog engine. Start at `main.rs`, then `service.rs`; data requests
-enter `object-store/protocol.rs`. Private init control handles health and optional
-fault injection. It conveys no object access.
+platform catalog engine. [main.rs](main.rs) reports service termination;
+[service.rs](service.rs) opens the disk and catalog, accepts connections, and
+dispatches data requests to the [catalog protocol](../../libraries/object-store/protocol.rs).
+Private init control handles health and optional
+[recovery hooks](service/recovery.rs). It conveys no object access.
 
 Two boot-approved data links bind to private roots 0 and 1 by their service-local
 link position. The kernel isolates principals and grants endpoints; the platform

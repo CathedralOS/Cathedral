@@ -9,8 +9,8 @@ impl Compositor {
         }
         let client = request.client.and_then(app_index).filter(|&c| {
             !request.control
-                && self.clients[c].visible
-                && self.clients[c].incarnation == request.incarnation
+                && self.composition.clients[c].visible
+                && self.composition.clients[c].incarnation == request.incarnation
         });
         let error = match client {
             Some(c) if self.pending[c].is_none() => {
@@ -29,10 +29,10 @@ impl Compositor {
             let Some(request) = self.pending[client] else {
                 continue;
             };
-            let words = if let Some(key) = self.focus.next(client) {
+            let words = if let Some(key) = self.composition.focus.next(client) {
                 key
             } else {
-                let event = self.pointers.next(client);
+                let event = self.composition.pointers.next(client);
                 if event.kind == p::NONE && !self.wake[client] {
                     continue;
                 }

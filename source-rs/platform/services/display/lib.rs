@@ -1,9 +1,4 @@
 #![no_std]
 #![forbid(unsafe_code)]
-//! Retained scene policy: validate whole snapshots, then resolve local drawing.
-pub mod pointer;
-pub mod scene;
-
-pub mod focus;
-pub mod hosting;
-pub mod labels;
+//! Host-testable composition state. The executable owns IPC and the framebuffer.
+pub mod composition;

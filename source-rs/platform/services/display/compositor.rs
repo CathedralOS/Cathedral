@@ -5,22 +5,18 @@ mod requests;
 mod session;
 use crate::surface::Surface;
 use cathedral_contracts::{composition as wire, display, user as abi};
-use cathedral_display_service::pointer::Router;
-use cathedral_display_service::scene::{Client, Rect, Scene};
+use cathedral_display_service::composition::{
+    Composition,
+    scene::{Client, Rect, Scene, labels::Labels},
+};
 use cathedral_user_runtime::{
     Error,
     server::{Event, Server},
 };
 struct Compositor {
-    clients: &'static mut [Client; 3],
-    scratch: &'static mut Scene,
-    labels: &'static mut cathedral_display_service::labels::Labels,
-    background: u32,
+    composition: Composition<'static>,
     output: Surface,
-    pointers: Router,
     source: u64,
-    focus: cathedral_display_service::focus::Focus,
-    tree: cathedral_display_service::hosting::Tree,
     action: u64,
     pending: [Option<cathedral_user_runtime::server::Request>; 3],
     stats: [u64; 4],
@@ -29,8 +25,7 @@ struct Compositor {
 pub fn run() -> u64 {
     static mut CLIENTS: [Client; 3] = [const { Client::empty() }; 3];
     static mut SCRATCH: Scene = Scene::empty();
-    static mut LABELS: cathedral_display_service::labels::Labels =
-        cathedral_display_service::labels::Labels::empty();
+    static mut LABELS: Labels = Labels::empty();
     let scratch_address = &raw mut SCRATCH;
     let clients_address = &raw mut CLIENTS;
     // SAFETY: This single-threaded process enters run exactly once. Neither static
@@ -72,19 +67,13 @@ impl Compositor {
     fn open(
         clients: &'static mut [Client; 3],
         scratch: &'static mut Scene,
-        labels: &'static mut cathedral_display_service::labels::Labels,
+        labels: &'static mut Labels,
     ) -> Self {
         let output = Surface::open();
         Self {
-            clients,
-            scratch,
-            labels,
-            background: 0,
-            pointers: Router::new(output.width, output.height),
+            composition: Composition::new(output.width, output.height, clients, scratch, labels),
             output,
             source: 0,
-            focus: Default::default(),
-            tree: Default::default(),
             action: 0,
             pending: [None; 3],
             stats: [0; 4],
@@ -101,21 +90,7 @@ impl Compositor {
             for x in (rect.x..rect.x + rect.w).step_by(row.len()) {
                 let len = (rect.x + rect.w - x).min(row.len() as u64) as usize;
                 let row = &mut row[..len];
-                row.fill(self.background);
-                self.labels.paint_row(x, y, row);
-                for client in self.clients.iter() {
-                    client.paint_row(x, y, row);
-                }
-                for cursor in self.pointers.cursor_bounds() {
-                    if y < cursor.y || y - cursor.y >= cursor.h {
-                        continue;
-                    }
-                    for px in x.max(cursor.x)..(x + len as u64).min(cursor.x + cursor.w) {
-                        if let Some(color) = self.pointers.pixel(px, y, self.clients) {
-                            row[(px - x) as usize] = color;
-                        }
-                    }
-                }
+                self.composition.paint_row(x, y, row);
                 self.output.row(x, y, row);
             }
         }

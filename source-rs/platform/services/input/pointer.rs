@@ -1,7 +1,7 @@
 //! Physical source coordinator: control/reconnect, device decode, authenticated delivery.
 use super::controller;
 use cathedral_contracts::{display, input, interaction as session, pointer as wire, user as abi};
-use cathedral_input_service::{
+use cathedral_input_service::decoder::{
     Decoder,
     mouse::{Motion, Mouse},
 };

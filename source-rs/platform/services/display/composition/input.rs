@@ -1,10 +1,11 @@
 //! Logical pointer authority and routing over the compositor's accepted scene.
 //! The lab has one physical source and one revocable, app-scoped synthetic source.
 mod cursor;
+pub mod focus;
 mod routing;
 #[cfg(test)]
 mod tests;
-use crate::scene::{Client, Rect};
+use crate::composition::scene::{Client, Rect};
 use cathedral_contracts::{pointer as wire, user as abi};
 use wire::Event;
 

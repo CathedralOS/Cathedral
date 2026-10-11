@@ -2,7 +2,7 @@
 mod events;
 #[cfg(test)]
 mod tests;
-use crate::{hosting::Tree, scene::Client};
+use crate::composition::scene::{Client, hosting::Tree};
 use cathedral_contracts::{input, interaction as wire, user as abi};
 #[derive(Clone, Copy)]
 struct Grant {

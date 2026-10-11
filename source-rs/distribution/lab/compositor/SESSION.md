@@ -63,9 +63,9 @@ Across IPC, the [compositor](../../../platform/services/display/compositor.rs)
 dispatches requests, delivers pending waits and observes disconnects. Its
 [session dispatch](../../../platform/services/display/compositor/session.rs)
 authenticates focus and hosting operations. Follow
-[focus](../../../platform/services/display/focus.rs) for attenuation and held-key
-rules, [hosting](../../../platform/services/display/hosting.rs) for the process
-tree and clips, and [scene](../../../platform/services/display/scene.rs) for
+[focus](../../../platform/services/display/composition/input/focus.rs) for attenuation and held-key
+rules, [hosting](../../../platform/services/display/composition/scene/hosting.rs) for the process
+tree and clips, and [scene](../../../platform/services/display/composition/scene.rs) for
 snapshot validation, explicit input regions and drawing. The shared
 [interaction contract](../../../contracts/interaction.rs) imports no implementation.
 The [input source](../../../platform/services/input/pointer.rs) owns PS/2 decoding
@@ -108,7 +108,7 @@ still apply. Legacy scenes without them retain painted-pixel hit testing. The
 root draws GOP directly, so this does not establish zero-copy image resources,
 atomic frames, vblank scheduling or GPU presentation.
 
-[Rasterization](../../../platform/services/display/scene/raster.rs) paints spans
+[Rasterization](../../../platform/services/display/composition/scene/raster.rs) paints spans
 into a fixed 256-pixel scratch row rather than walking the entire scene for every
 pixel. Snapshot comparison bounds repaint damage; unchanged snapshots cause no
 scanout writes. No full-frame backing or ancestor image copies are introduced.

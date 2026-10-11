@@ -47,13 +47,13 @@ Apps have separate connections and no device grant.
 2. Input [startup](../../../platform/services/input/main.rs) selects
    [mouse mode](../../../platform/services/input/pointer.rs). The
    [controller](../../../platform/services/input/controller.rs) selects standard
-   three-byte stream packets, decoded by [mouse.rs](../../../platform/services/input/mouse.rs).
+   three-byte stream packets, decoded by [mouse.rs](../../../platform/services/input/decoder/mouse.rs).
 3. Display [input dispatch](../../../platform/services/display/compositor/input.rs)
    authenticates source and app roles from accepted connections. The experimental
    [wire contract](../../../contracts/pointer.rs) imports no implementation.
-4. [Pointer state](../../../platform/services/display/pointer.rs) owns leases and
-   lifetime. [Routing](../../../platform/services/display/pointer/routing.rs)
-   selects targets; [cursor rendering](../../../platform/services/display/pointer/cursor.rs)
+4. [Pointer state](../../../platform/services/display/composition/input.rs) owns leases and
+   lifetime. [Routing](../../../platform/services/display/composition/input/routing.rs)
+   selects targets; [cursor rendering](../../../platform/services/display/composition/input/cursor.rs)
    overlays bounded root-owned pixels after app drawing.
 5. Distribution [supervision](supervisor/pointer.rs) grants and recovers the lab;
    [interactive clients](client/interactive.rs) consume local events and update
