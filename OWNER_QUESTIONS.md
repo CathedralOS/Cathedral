@@ -392,8 +392,21 @@ receiver death or bootstrap revocation discards an unaccepted attachment. This
 separates queue commitment from recipient acceptance and from service completion.
 It does not define a parent-revocable delegation tree. Production semantics still
 need to choose the cancellation/commit point and who sponsors in-flight and
-transferred endpoint storage. The fixed lab quotas are evidence, not an accepted
+transferred endpoint storage. The fixed lab reservations are evidence, not an accepted
 hierarchical resource-accounting contract.
+
+**Rust sponsorship experiment (not resolution).** The
+[channel lab](source-rs/distribution/lab/channels/README.md#bounds-and-remaining-work)
+now reserves backed channel capacity for each boot/launch account. Charges survive
+creator death and slot replacement; endpoint moves change custody without moving
+funding. Final endpoint closure refunds the original account. QEMU retains channels
+across eight creator deaths, rejects further creation, proves a sibling can fill
+its reservation, and restores capacity after final closure. This closes the lab's
+restart loophole but allows an accepted receiver to pin a replacement's allowance.
+Production policy still needs to choose persistent sponsorship, explicit funded
+acceptance/transfer, or a defined teardown protocol. It must not silently erase
+charges or revoke accepted readers as a side effect of accounting. Static launch
+reservations do not settle hierarchical subdivision, CPU budgets or timing isolation.
 
 ### Child lifetime when a supervisor fails
 

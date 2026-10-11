@@ -3,6 +3,7 @@
 //! Ordinary parent and worker: only the introduction is supplied by boot.
 mod probes;
 mod scenario;
+mod sponsorship;
 mod startup;
 mod tree;
 mod worker;
@@ -21,6 +22,9 @@ fn main(role: u64, mode: u64, environment: cathedral_user_runtime::task::Environ
         return startup::worker(mode, environment);
     }
     assert!(environment.is_empty());
+    if role != 0 && (7..=8).contains(&mode) {
+        return sponsorship::worker(mode);
+    }
     match role {
         0 => scenario::run(),
         _ => worker::run(mode),

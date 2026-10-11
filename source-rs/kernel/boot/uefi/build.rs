@@ -6,6 +6,7 @@ fn main() {
         "CATHEDRAL_INIT_ELF",
         "CATHEDRAL_INIT_CLOCK",
         "CATHEDRAL_LINKS",
+        "CATHEDRAL_CHANNEL_LIMITS",
         "CATHEDRAL_LAUNCH_COUNT",
     ] {
         println!("cargo:rerun-if-env-changed={variable}");
@@ -55,6 +56,24 @@ fn startup() {
         count <= cathedral_contracts::user::MAX_LAUNCHES,
         "launch arena exhausted"
     );
+    let limits: Vec<usize> = env::var("CATHEDRAL_CHANNEL_LIMITS")
+        .map(|text| {
+            text.split(',')
+                .map(|n| n.parse().expect("invalid channel reservation"))
+                .collect()
+        })
+        .unwrap_or_else(|_| vec![cathedral_contracts::user::DEFAULT_CHANNELS; count + 1]);
+    assert!(
+        limits.len() == count + 1
+            && limits
+                .iter()
+                .all(|&n| n <= cathedral_contracts::user::MAX_CREATED_CHANNELS),
+        "invalid channel reservations"
+    );
+    assert!(
+        limits.iter().sum::<usize>() <= cathedral_contracts::user::MAX_DYNAMIC_CHANNELS,
+        "channel reservations exceed backing"
+    );
     let mut source = format!(
         "const INITIAL_CLOCK: bool = {};\nstatic LAUNCHES: &[InitialLaunch] = &[\n",
         flag("CATHEDRAL_INIT_CLOCK")
@@ -74,7 +93,10 @@ fn startup() {
             .expect("invalid launch argument");
         source.push_str(&format!("InitialLaunch {{ elf: include_bytes!(concat!(env!(\"OUT_DIR\"), \"/launch-{index}.elf\")), framebuffer: {framebuffer}, keyboard: {keyboard}, disk: {disk}, clock: {clock}, private_pages: {private_pages}, shared_pages: {shared_pages}, argument: {argument} }},\n"));
     }
-    source.push_str("];\nstatic LINKS: &[cathedral_core::link::LinkSpec] = &[\n");
+    source.push_str(&format!(
+        "];\nconst CHANNEL_LIMITS: &[usize] = &{limits:?};\n"
+    ));
+    source.push_str("static LINKS: &[cathedral_core::link::LinkSpec] = &[\n");
     let graph = env::var("CATHEDRAL_LINKS").unwrap_or_default();
     for edge in graph.split(',').filter(|edge| !edge.is_empty()) {
         let (client, service) = edge.split_once(':').expect("link must be client:service");

@@ -28,6 +28,7 @@ pub(super) fn syscall(session: &mut Session, slot: usize, now: u64) -> Event {
             event = Event::Exit;
             Ok(0)
         }
+        abi::IPC_BUDGET => ipc::budget(session, slot, first, second, third),
         abi::IPC_CREATE => ipc::create(session, slot, first, second, third),
         abi::IPC_CLOSE => {
             if second != 0 || third != 0 {

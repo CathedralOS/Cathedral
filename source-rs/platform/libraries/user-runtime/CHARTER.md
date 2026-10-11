@@ -19,6 +19,10 @@ The bundle supplements the existing profile-controlled boot/device grants.
 The child enumerates only its assigned grants and may lend them further. Subtree
 teardown returns budgets with fresh names to surviving lenders; per-slot executable
 and resource ceilings stay fixed. The runtime chooses no manifest or budget policy.
+`ipc::budget` reads only the caller's channel reservation/charge and dynamic
+handle limit/charge, including hidden incoming escrow. Channel charges belong to
+the original persistent launch account until final closure; replacement receives
+the remaining allowance. This query changes no authority or funding.
 `time` reads the boot-granted monotonic clock; it grants no authority
 and chooses no deadline policy. Restart decisions
 belong to the caller, not this library. The runtime has no heap allocator or unwinding.

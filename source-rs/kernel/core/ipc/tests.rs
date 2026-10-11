@@ -143,7 +143,7 @@ fn replacing_child_grants_requires_consent_and_preserves_control_channels() {
     assert_eq!(ipc.receive(1, control_input, 64).unwrap().unwrap().len, 7);
 }
 fn pair(epoch: u64) -> Ipc {
-    Ipc::new(
+    Ipc::with_reservations(
         epoch,
         3,
         &[EndpointSpec {
@@ -151,6 +151,7 @@ fn pair(epoch: u64) -> Ipc {
             receiver: 1,
             revoker: Some(2),
         }],
+        &[8; 3],
     )
     .unwrap()
 }

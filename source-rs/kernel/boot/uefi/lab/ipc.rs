@@ -104,6 +104,7 @@ fn run(
                 endpoints,
                 supervision: &[],
                 memory: &[],
+                channel_limits: &[],
                 clock_readers: &[],
             },
         )

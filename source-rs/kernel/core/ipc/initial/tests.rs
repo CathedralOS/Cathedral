@@ -79,6 +79,10 @@ fn full_bundle_can_include_both_rights_and_snapshot_never_regrants() {
     let b = ipc.create(0).unwrap();
     ipc.prepare_child_with(0, 0, 1, 2, 0, &[a[0], a[1], b[0], b[1]])
         .unwrap();
+    assert_eq!(ipc.budget(0), Ok([4, 2, 16, 0]));
+    assert_eq!(ipc.budget(1), Ok([4, 0, 16, 4]));
+    ipc.close_task(0); // Both ends moved; creator death cannot erase their funding.
+    assert_eq!(ipc.charged_channels(0), 2);
     let names = ipc.initial(1).unwrap().to_vec();
     assert_eq!(names.len(), 4);
     ipc.send(1, names[0], b"self").unwrap();
@@ -90,5 +94,6 @@ fn full_bundle_can_include_both_rights_and_snapshot_never_regrants() {
         Err(abi::BAD_HANDLE)
     );
     ipc.close_task(1);
+    assert_eq!(ipc.charged_channels(0), 0);
     assert!(ipc.endpoints[MAX_ENDPOINTS..].iter().all(Option::is_none));
 }

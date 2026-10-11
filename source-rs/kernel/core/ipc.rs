@@ -2,6 +2,7 @@
 //! Boot composition and ordinary channel creation share transport and lifetime rules.
 //! Descend into grants for local names, channels for creation/escrow, lifecycle for teardown.
 mod bootstrap;
+mod budget;
 mod channels;
 mod grants;
 mod initial;
@@ -44,7 +45,8 @@ struct Endpoint {
     sender_alive: bool,
     receiver_alive: bool,
     revoked: bool,
-    creator: Option<usize>,
+    // Persistent boot/launch account, independent of the current process incarnation.
+    account: Option<usize>,
 }
 pub struct Ipc {
     epoch: u64,
@@ -52,6 +54,7 @@ pub struct Ipc {
     alive: u8,
     endpoints: alloc::vec::Vec<Option<Endpoint>>,
     grants: Grants,
+    reservations: [usize; MAX_TASKS],
     initial: [[u64; abi::MAX_INITIAL_ENDPOINTS]; MAX_TASKS],
 }
 impl Ipc {

@@ -13,20 +13,14 @@ impl Ipc {
         if !self.live(caller) {
             return Err(abi::BAD_HANDLE);
         }
-        if self.endpoints[MAX_ENDPOINTS..]
-            .iter()
-            .flatten()
-            .filter(|e| e.creator == Some(caller))
-            .count()
-            >= abi::MAX_CREATED_CHANNELS
-        {
+        if self.charged_channels(caller) >= self.reservations[caller] {
             return Err(abi::NO_MEMORY);
         }
         let slots = self.grants.vacant(caller, 2)?;
         self.grants.can_mint(caller, 2)?;
         let index = (MAX_ENDPOINTS..self.endpoints.len())
             .find(|&i| self.endpoints[i].is_none())
-            .ok_or(abi::NO_MEMORY)?;
+            .expect("backed channel reservation missing storage");
         self.endpoints[index] = Some(Endpoint {
             epoch: 0,
             spec: EndpointSpec {
@@ -38,7 +32,7 @@ impl Ipc {
             sender_alive: true,
             receiver_alive: true,
             revoked: false,
-            creator: Some(caller),
+            account: Some(caller),
         });
         Ok([
             self.grants

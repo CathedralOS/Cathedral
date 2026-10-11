@@ -163,6 +163,7 @@ fn run(
                 frame_limit: usize::MAX,
                 endpoints,
                 memory: &[],
+                channel_limits: &[],
                 clock_readers: &[],
                 supervision: &launches[..launch_count],
             },

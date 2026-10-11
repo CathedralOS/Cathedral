@@ -2,9 +2,18 @@
 use super::*;
 impl Ipc {
     pub fn new(epoch: u64, tasks: usize, specs: &[EndpointSpec]) -> Result<Self, u64> {
+        Self::with_reservations(epoch, tasks, specs, &[])
+    }
+    pub fn with_reservations(
+        epoch: u64,
+        tasks: usize,
+        specs: &[EndpointSpec],
+        limits: &[usize],
+    ) -> Result<Self, u64> {
         if !(1..=MAX_EPOCH).contains(&epoch) || tasks > MAX_TASKS || specs.len() > MAX_ENDPOINTS {
             return Err(abi::INVALID_ARGUMENT);
         }
+        let reservations = budget::reservations(tasks, limits)?;
         let mut endpoints = alloc::vec::Vec::new();
         endpoints
             .try_reserve_exact(MAX_ENDPOINTS + abi::MAX_DYNAMIC_CHANNELS)
@@ -13,6 +22,7 @@ impl Ipc {
         let mut ipc = Self {
             epoch,
             tasks,
+            reservations,
             alive: ((1u16 << tasks) - 1) as u8,
             endpoints,
             grants: Grants::new(tasks)?,
@@ -46,7 +56,7 @@ impl Ipc {
             sender_alive: true,
             receiver_alive: true,
             revoked: false,
-            creator: None,
+            account: None,
         });
         for (owner, right) in [
             (Some(spec.sender), Right::Send),

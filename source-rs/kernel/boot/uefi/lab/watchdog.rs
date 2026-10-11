@@ -119,6 +119,7 @@ fn run(
                 frame_limit: usize::MAX,
                 endpoints,
                 memory: &[],
+                channel_limits: &[],
                 clock_readers: clocks,
                 supervision: &[Supervision {
                     disk: false,

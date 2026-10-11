@@ -120,32 +120,6 @@ fn queued_move_survives_sender_exit_but_not_receiver_exit() {
     }
 }
 #[test]
-fn quota_pool_and_local_name_exhaustion_are_atomic_and_reclaimable() {
-    let mut ipc = Ipc::new(1, 8, &[]).unwrap();
-    let mut all = alloc::vec::Vec::new();
-    for task in 0..4 {
-        for _ in 0..abi::MAX_CREATED_CHANNELS {
-            all.push((task, ipc.create(task).unwrap()));
-        }
-        assert_eq!(ipc.create(task), Err(abi::NO_MEMORY));
-    }
-    assert_eq!(ipc.create(4), Err(abi::NO_MEMORY));
-    let (task, [s, r]) = all.remove(0);
-    ipc.close(task, s).unwrap();
-    ipc.close(task, r).unwrap();
-    assert_eq!(ipc.close(task, s), Err(abi::BAD_HANDLE));
-    let fresh = ipc.create(4).unwrap();
-    ipc.close(4, fresh[0]).unwrap();
-    ipc.close(4, fresh[1]).unwrap();
-    let fresh = ipc.create(task).unwrap();
-    assert_ne!(fresh[0], s);
-    assert_eq!(ipc.send(task, s, b"stale"), Err(abi::BAD_HANDLE));
-    for task in 0..8 {
-        ipc.close_task(task);
-    }
-    empty(&ipc);
-}
-#[test]
 fn receive_moves_preserve_rights_and_refuse_queued_or_self_containment() {
     let (mut ipc, bootstrap, receive) = setup();
     let [s, r] = ipc.create(0).unwrap();

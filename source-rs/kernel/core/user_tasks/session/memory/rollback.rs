@@ -16,6 +16,7 @@ pub unsafe fn exercise(frames: &mut FrameAllocator, layout: &BootLayout, image: 
         endpoints: &[],
         links: &[],
         supervision: &[],
+        channel_limits: &[],
         clock_readers: &[],
         memory: &[wire::Grant {
             task: 0,

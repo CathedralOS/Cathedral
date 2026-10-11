@@ -110,7 +110,8 @@ pub(super) fn grants(
             endpoint_base: config.endpoints.len() + 2 * (config.supervision.len() + index),
         });
     }
-    let mut ipc = Ipc::new(epoch, count, config.endpoints).map_err(|_| Error::InvalidEndpoints)?;
+    let mut ipc = Ipc::with_reservations(epoch, count, config.endpoints, config.channel_limits)
+        .map_err(|_| Error::InvalidEndpoints)?;
     for launch in &launches {
         ipc.close_task(launch.model.child);
     }

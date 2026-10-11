@@ -377,6 +377,7 @@ initial FP state is clean and I/O privilege is zero.
 | 38: task spawn with endpoints | Launch grant, 48-byte request, 0 | Child ticket after admitting and moving the whole initial bundle; failure retains all source grants |
 | 39: initial environment | Writable 40-byte destination, 0, 0 | 0 after copying count and up to four initial local endpoint names; never reinstalls grants |
 | 40: task spawn with launch loans | Launch grant, 112-byte request, 0 | Child ticket after atomic endpoint moves and selected idle launch loans; failure retains all grants |
+| 41: IPC budget | Writable 32-byte destination, 0, 0 | 0 after copying caller-local channel limit/charge and dynamic handle limit/charge as four LE u64 words |
 
 Writes accept at most 256 bytes within one known user page. The kernel validates
 the entire range and copies through its physical backing before calling the
@@ -461,6 +462,18 @@ record is length u64, attachment u64 (zero means none on receive), then 64 paylo
 bytes. The runtime stages it in a 128-byte-aligned object. Plain receive refuses
 attached authority with `TOO_SMALL` and preserves the message. Boot grants cannot
 be moved; dynamic grants cannot yet be duplicated or independently revoked.
+
+Each initial/launch account has a backed channel reservation: four by default,
+or profile `ipc_channels` in 0–8. All accounts, including dormant children, must
+fit the 32-channel pool. [Accounting](kernel/core/ipc/budget.rs) retains the original
+account's charge through endpoint moves, creator death and replacement; final
+closure of both ends refunds it. Each recipient separately pays for its dynamic
+handles, including hidden escrow, within a limit of 16. Creation also requires
+available handles and fresh names. [`ipc::budget()`](platform/libraries/user-runtime/ipc/budget.rs)
+reads only these caller-local limits/charges. The profile and kernel reject
+overcommit, so unrelated accounts cannot exhaust promised channel storage.
+This is static launch-account funding, not hierarchical resource subdivision or
+CPU/timing isolation; retained endpoints can exhaust their original account.
 
 Send returns `WOULD_BLOCK` (-11) for a full queue. Ordinary receives validate the
 complete destination before dequeueing or parking. Raw buffers must fit inside a

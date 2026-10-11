@@ -66,12 +66,7 @@ impl Ipc {
                 self.close_grant(slot);
             }
         }
-        // Transferred endpoints survive creator death. Their current holders'
-        // handle budgets and the global pool still bound their storage.
-        for endpoint in self.endpoints[MAX_ENDPOINTS..].iter_mut().flatten() {
-            if endpoint.creator == Some(task) {
-                endpoint.creator = None;
-            }
-        }
+        // Transferred/escrow endpoints survive creator death. Keep their account
+        // charge until final closure, including across creator-slot replacement.
     }
 }

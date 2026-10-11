@@ -2,6 +2,8 @@
 use super::Program;
 use crate::ipc::EndpointSpec;
 pub struct Config<'a> {
+    /// Per boot/launch account, including dormant children. Empty selects fixed defaults.
+    pub channel_limits: &'a [usize],
     pub memory: &'a [cathedral_contracts::memory::Grant],
     pub frame_limit: usize,
     pub links: &'a [crate::link::LinkSpec],

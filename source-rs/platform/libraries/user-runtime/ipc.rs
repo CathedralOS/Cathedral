@@ -1,7 +1,9 @@
 //! Process-local endpoint names and copied messages; receive may park.
 //! channels implements ordinary creation, close and explicit one-endpoint moves.
+mod budget;
 mod channels;
 use crate::{Error, abi, arch};
+pub use budget::{Budget, budget};
 pub use channels::channel;
 
 #[derive(Clone, Copy, Debug)]

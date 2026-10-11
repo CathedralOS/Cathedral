@@ -47,10 +47,15 @@ pub fn tree(launch: cathedral_user_runtime::task::Launch) {
     );
 }
 pub fn creation() {
+    let before = ipc::budget().unwrap();
     for address in [0, u64::MAX, 0x8000203ff8] {
         assert_eq!(raw(abi::IPC_CREATE, address, 0, 0), abi::BAD_ADDRESS);
+        assert_eq!(raw(abi::IPC_BUDGET, address, 0, 0), abi::BAD_ADDRESS);
     }
     assert_eq!(raw(abi::IPC_CREATE, 0, 1, 0), abi::INVALID_ARGUMENT);
+    assert_eq!(raw(abi::IPC_BUDGET, 0, 1, 0), abi::INVALID_ARGUMENT);
+    assert_eq!(raw(abi::IPC_BUDGET, 0, 0, 1), abi::INVALID_ARGUMENT);
+    assert_eq!(ipc::budget().unwrap(), before);
 }
 pub fn send(destination: Handle, endpoint: Handle) {
     for address in [0, u64::MAX, 0x8000203ff8] {

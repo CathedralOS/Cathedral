@@ -56,6 +56,7 @@ pub fn exercise(memory: &mut PreparedMemory, console: &mut SerialPort) {
                 frame_limit: usize::MAX,
                 endpoints: &endpoints,
                 memory: &[],
+                channel_limits: &[],
                 clock_readers: &[0, 2],
                 supervision: &[Supervision {
                     disk: false,

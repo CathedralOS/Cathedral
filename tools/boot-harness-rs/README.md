@@ -153,12 +153,23 @@ also launches children with complete initial endpoint bundles passed to main,
 checks atomic rejection, and cancels children using their initial connections.
 This is headless and terminates at the guest's success marker. Logs live in
 `build/boot-harness-rs/channels-test/`. The [guide](../../source-rs/distribution/lab/channels/README.md)
-explains the local-name semantics, fixed quotas, limitations and code entrances.
+explains local names, backed reservations, limitations and code entrances.
+The sponsorship scenario retains channels across creator restarts, rejects
+creation at the account limit, proves sibling capacity and recovers after closure.
 The same proof now delegates launch budgets through three identical recursive
 supervisors, exercises subtree cancel/exit/restart, and keeps an omitted sibling
 alive. Its [admission guide](../../source-rs/distribution/lab/channels/README.md#recursive-child-admission)
 distinguishes the finite boot-approved budgets from future manifest/resource policy.
 [protocol_test.py](protocol_test.py) monitors both this proof and the matrix proof.
+
+Each profile `startup.initial` or `startup.launches` entry may set `ipc_channels`
+to an integer 0–8 (default 4 regardless of task count). Reservations for all
+initial and dormant launch accounts must total at most 32. Charges persist
+across replacement until both channel endpoints close. Launch loans preserve
+the same account; they do not grant fresh capacity. [resource_budgets.py](resource_budgets.py)
+validates this before executable builds; boot configuration and kernel admission
+also validate the bound. Run `python tools/boot-harness-rs/resource_budgets_test.py`
+for profile validation tests. Existing boot connections use a separate fixed arena.
 
 ## Integrated matrix desktop
 

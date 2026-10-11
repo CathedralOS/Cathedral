@@ -103,3 +103,10 @@ pub const ENVIRONMENT_BYTES: usize = 40;
 /// Endpoints move as usual. RDI launch, RSI 112-byte record, RDX zero; tails zero.
 pub const TASK_SPAWN_TREE: u64 = 40;
 pub const SPAWN_TREE_BYTES: usize = SPAWN_BYTES + 8 + MAX_LAUNCHES * 8;
+
+/// Caller-local IPC account snapshot at RDI: channel reservation, charged channels,
+/// dynamic-handle limit, charged handles (including escrow). RSI/RDX must be zero.
+pub const IPC_BUDGET: u64 = 41;
+pub const IPC_BUDGET_BYTES: usize = 32;
+/// Conservative default fits every reserved task slot without overcommit.
+pub const DEFAULT_CHANNELS: usize = MAX_DYNAMIC_CHANNELS / MAX_TASKS;

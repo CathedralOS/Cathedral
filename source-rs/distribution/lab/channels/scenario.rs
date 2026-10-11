@@ -4,6 +4,7 @@ use cathedral_user_runtime::task::{Launch, Outcome, Port};
 pub fn run() -> u64 {
     probes::creation();
     quota();
+    sponsorship::run();
     for _ in 0..32 {
         exchange();
     }

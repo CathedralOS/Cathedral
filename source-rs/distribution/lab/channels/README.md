@@ -139,8 +139,9 @@ name is reserved before mapping, so teardown cannot fail from name exhaustion.
 This is a finite launch-budget experiment, not arbitrary ELF loading, a manifest
 resolver, production sponsorship or general CPU/RAM budget subdivision. Boot still
 reserves all task slots. Delegation requires the recipient's reserved slot to
-precede the lent slot, giving cancellation a bounded acyclic order. IPC quotas
-remain per-process/global; shared mappings and moved endpoints can outlive their
+precede the lent slot, giving cancellation a bounded acyclic order. IPC channel
+reservations belong to persistent launch accounts: loans and replacement do not
+renew their allowance. Shared mappings and moved endpoints can outlive their
 creator under their existing contracts. The viewport/input matrix service now uses these loans to admit its own
 children; its [integrated proof](../matrix/README.md) combines lifecycle with
 local input and primitive rendering. Lifetime ownership and loan return policy
@@ -187,16 +188,30 @@ transport/revocation question remains in [OWNER_QUESTIONS.md](../../../../OWNER_
 
 There are 32 reserved boot endpoint slots plus a separate pool of 32 dynamic
 one-way channels. Each channel stores one message of up to 64 bytes and at most
-one attachment. Each process may hold/reserve 16 dynamic grants and create eight
-live channels. A channel stays charged to its creator while that incarnation
-lives, even after both ends move. On creator death its surviving ends remain
-bounded by their holders' grant quotas and the global pool. All IPC storage is
-allocated at session admission; send, receive, close and transfer do not allocate.
-Quota/name exhaustion returns `NO_MEMORY` without partial creation or transfer.
+one attachment. Each process may hold/reserve 16 dynamic grants, including hidden
+incoming escrow. Each boot/launch account reserves four channels by default;
+the profile's `ipc_channels` may choose 0–8. All reservations, including dormant
+children, must fit the 32-channel backing pool. Host composition and kernel
+admission reject overcommit before execution. Another account cannot consume
+this reservation. Creation still requires two available local handle slots and
+fresh names; exhaustion returns `NO_MEMORY` without partial creation or transfer.
 
-These fixed quotas are an experiment, not inherited matrix sponsorship or fair
-resource reservations. Shared pool contention can disclose activity through
-allocation failures; clocks and other handle families also need confinement work.
+A channel stays charged to its original account after either or both endpoints
+move, after creator death, and across replacement in that launch slot. Only final
+closure of both ends releases the charge. A receiver can therefore retain old
+channels and exhaust a replacement creator's allowance; it cannot consume a
+sibling's reservation. All IPC storage is allocated at session admission;
+send, receive, close and transfer do not allocate.
+
+[`ipc::budget()`](../../../platform/libraries/user-runtime/ipc/budget.rs) reports
+only the caller's channel limit/charge and handle limit/charge. Syscall 41 copies
+four little-endian u64 words to a checked 32-byte destination, with zero reserved
+arguments. There is no task selector, global free count or authority change.
+
+These backed launch accounts are a lab experiment, not hierarchical budget
+subdivision or a production sponsorship decision. Transfers do not transfer
+funding, and returning a launch loan does not clear outstanding charges. CPU,
+shared hardware and explicitly granted clocks still expose activity and timing.
 Devices, shared pages and launch grants are not transferable through this API.
 `receive_with` blocks; applications can use the existing clock-authorized
 `wait_many` before receiving. Each channel has one receiving process and the lab
@@ -207,6 +222,14 @@ generalize admission beyond reserved executable slots. Applications can build na
 protocol-specific environment structures over the ordered startup endpoints now.
 
 ## Evidence
+
+The [sponsorship scenario](sponsorship.rs) restarts the same
+[worker](sponsorship/worker.rs) eight times while retaining its channels, checks
+that a ninth allocation fails, and lets a sibling fill its reservation. Closing
+one retained channel restores the replacement's capacity. It repeats the wave
+after complete cleanup. [Kernel accounting](../../../kernel/core/ipc/budget.rs)
+and its [tests](../../../kernel/core/ipc/budget/tests.rs) also fill all 32 reserved
+channels and exercise escrow charges, creator death, discard and final refunds.
 
 QEMU performs 32 worker exchanges and 16 cancellations with endpoints in escrow,
 then exhausts/reuses the full per-process channel budget. Capability-aware receives

@@ -16,6 +16,7 @@ import pointer_test
 import session_test
 import protocol_test
 import matrix_desktop_test
+import resource_budgets
 
 REPO = Path(__file__).resolve().parents[2]
 WORKSPACE = REPO / "source-rs"
@@ -167,13 +168,18 @@ def main():
     target = composition["target"]
     boot_package = composition["boot_package"]
     environment = {key: value for key, value in os.environ.items()
-                   if not (key.startswith("CATHEDRAL_") and (key.endswith("_ELF") or key in ("CATHEDRAL_INIT_CLOCK", "CATHEDRAL_LINKS") or key.startswith("CATHEDRAL_LAUNCH_")))}
+                   if not (key.startswith("CATHEDRAL_") and (key.endswith("_ELF") or key in ("CATHEDRAL_INIT_CLOCK", "CATHEDRAL_LINKS", "CATHEDRAL_CHANNEL_LIMITS") or key.startswith("CATHEDRAL_LAUNCH_")))}
     programs = {}
     if not args.kernel_only:
         if args.smoke:
             programs = composition["user_programs"]
         else:
             startup = composition["startup"]
+            try:
+                limits = resource_budgets.channel_limits(startup)
+            except ValueError as error:
+                parser.error(str(error))
+            environment["CATHEDRAL_CHANNEL_LIMITS"] = ",".join(map(str, limits))
             programs["init"] = startup["initial"]
             environment["CATHEDRAL_INIT_CLOCK"] = "1" if startup["initial"].get("clock", False) else "0"
             launches = startup.get("launches", [startup["launch"]] if startup.get("launch") else [])

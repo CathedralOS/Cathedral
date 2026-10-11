@@ -2,7 +2,7 @@
 mod capabilities;
 use super::{Session, complete};
 use crate::{ipc::Right, scheduler::Event, user_tasks::syscall as abi};
-pub(super) use capabilities::{create, send_cap};
+pub(super) use capabilities::{budget, create, send_cap};
 #[derive(Clone, Copy)]
 pub(in super::super) struct Receive {
     handle: u64,

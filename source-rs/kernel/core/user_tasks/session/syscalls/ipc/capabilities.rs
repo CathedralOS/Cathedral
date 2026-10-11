@@ -58,3 +58,31 @@ pub(in super::super) fn send_cap(
     session.tasks[slot].report.ipc_sent += 1;
     Ok(length)
 }
+
+pub(in super::super) fn budget(
+    session: &mut Session,
+    slot: usize,
+    address: u64,
+    second: u64,
+    third: u64,
+) -> Result<u64, u64> {
+    if second != 0 || third != 0 {
+        return Err(abi::INVALID_ARGUMENT);
+    }
+    let words = session.ipc.budget(slot)?;
+    let mut bytes = [0; abi::IPC_BUDGET_BYTES];
+    for (word, target) in words.into_iter().zip(bytes.chunks_exact_mut(8)) {
+        target.copy_from_slice(&word.to_le_bytes());
+    }
+    // SAFETY: Copy validates the entire caller-owned destination under kernel CR3.
+    if !unsafe {
+        session.tasks[slot]
+            .space
+            .as_ref()
+            .unwrap()
+            .copy_to_user(address, &bytes)
+    } {
+        return Err(abi::BAD_ADDRESS);
+    }
+    Ok(0)
+}

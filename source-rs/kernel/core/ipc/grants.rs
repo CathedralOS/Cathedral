@@ -182,7 +182,7 @@ mod tests {
         };
         let mut a = Ipc::new(1, 4, &[local]).unwrap();
         let mut b = Ipc::new(99, 4, &[other, local, other]).unwrap();
-        for _ in 0..8 {
+        for _ in 0..abi::DEFAULT_CHANNELS {
             b.create(2).unwrap();
         }
         assert_eq!(a.handle(0, 0), b.handle(0, 0));

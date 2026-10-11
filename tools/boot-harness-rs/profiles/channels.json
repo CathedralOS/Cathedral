@@ -7,7 +7,8 @@
       "package": "cathedral-channels-lab",
       "entry": "distribution/lab/channels/main.rs",
       "target": "x86_64-unknown-none",
-      "clock": true
+      "clock": true,
+      "ipc_channels": 8
     },
     "launches": [
       {
@@ -15,7 +16,8 @@
         "entry": "distribution/lab/channels/main.rs",
         "target": "x86_64-unknown-none",
         "clock": true,
-        "argument": 1
+        "argument": 1,
+        "ipc_channels": 8
       },
       {
         "package": "cathedral-channels-lab",
