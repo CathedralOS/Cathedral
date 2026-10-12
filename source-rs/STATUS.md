@@ -49,6 +49,20 @@ remain until their extra behavior has moved into the integrated path with tests.
 
 ## Kernel boundary audit and next steps
 
+The discoverability pass reviewed all 27 Rust package trees and preserves the
+[entry routes](../wiki/architecture/discoverability.md): boot composition, task
+lifetime, CPU transitions, service event ordering, scene publication and lab
+scenario ownership. Contracts, small drivers, init/application workflows and the
+matrix/input service boundaries remain cohesive without extra forwarding layers.
+
+**Known verification blocker:** `--recovery-test` currently restarts the status
+app before readiness. Its [authority probe](distribution/applications/status/application/lab.rs)
+expects `DENIED` for cancellation of handle zero, while the caller-local task
+dispatcher returns `BAD_HANDLE`. The same failure was reproduced at `2f48d30`,
+before this pass. That assertion and the kernel's behavior were left unchanged;
+the full recovery/power-cut profiles need this mismatch resolved before their
+historical coverage can be claimed as a current pass.
+
 The matrix protocol exposes local state only. That is narrower than a claim of
 whole-system noninterference. The handle-locality pass now covers task, clock, link and page rights as well as
 IPC. Host tests compare names and mapping addresses under unrelated graph/arena

@@ -1,4 +1,5 @@
 //! No introduction messages: a child starts with the parent's chosen connections.
+mod probes;
 use super::*;
 use cathedral_user_runtime::task::{Environment, Launch, Outcome};
 pub fn run() {
@@ -22,7 +23,7 @@ fn exchange(launch: Launch, cancel: bool) {
     let (output, answers) = ipc::channel().unwrap();
     // This extra authority is deliberately absent from the initial bundle.
     let (private_send, private_recv) = ipc::channel().unwrap();
-    probes::startup(launch, input);
+    probes::check(launch, input);
     assert_eq!(
         launch.spawn_with(3, &[input, input]).unwrap_err(),
         Error(abi::INVALID_ARGUMENT as i64)

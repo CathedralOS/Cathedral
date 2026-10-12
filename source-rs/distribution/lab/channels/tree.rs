@@ -1,6 +1,7 @@
 //! Root fixture lends two budgets through three identical recursive processes.
 //! node.rs owns the per-level algorithm; the root observes only its direct child.
 mod node;
+mod probes;
 use super::*;
 use cathedral_user_runtime::task::{Environment, Launch, Outcome, Port};
 pub use node::run as worker;
@@ -16,7 +17,7 @@ pub fn run() {
         let (send, input) = ipc::channel().unwrap();
         let (output, recv) = ipc::channel().unwrap();
         let (audit, witness) = ipc::channel().unwrap();
-        super::probes::tree(launch);
+        probes::check(launch);
         for (grants, error) in [
             ([loans[0], loans[0]], abi::INVALID_ARGUMENT),
             ([loans[0], Launch::from_raw(0)], abi::BAD_HANDLE),

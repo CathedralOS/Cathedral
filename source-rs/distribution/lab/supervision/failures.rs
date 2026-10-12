@@ -1,3 +1,4 @@
+//! Failed admission, invalid outcome copies and owner-death teardown fixtures.
 use cathedral_contracts::user as abi;
 use cathedral_user_runtime::{
     Error,

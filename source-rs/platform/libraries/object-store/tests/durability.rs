@@ -155,7 +155,7 @@ fn legacy_conversion_is_lazy_and_power_safe() {
             b
         },
     };
-    let (body, commit) = legacy::encode(record);
+    let (body, commit) = format::legacy::encode(record);
     disk.stable[0] = body;
     disk.stable[1] = commit;
     let disk = disk.power_loss();

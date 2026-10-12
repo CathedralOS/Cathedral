@@ -1,5 +1,6 @@
 //! Executable authority chooses code; funded unbound accounts supply process capacity.
 mod physical;
+mod probes;
 use super::*;
 use cathedral_user_runtime::{
     memory::raw,
@@ -19,7 +20,7 @@ pub fn run() -> u64 {
     assert_eq!(task::available_slots().unwrap(), 5);
     let image = Launch::at(0).unwrap().executable().unwrap();
     let other_image = Launch::at(1).unwrap().executable().unwrap();
-    super::probes::admission(image);
+    probes::check(image);
     assert_eq!(
         Executable::from_raw(0)
             .reserve(limits(0, 0), 0, 256)

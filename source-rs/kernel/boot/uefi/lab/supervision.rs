@@ -12,6 +12,7 @@ static ELF: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/supervision.elf"))
 mod cpu;
 mod links;
 mod multiple;
+mod watchdog;
 
 pub fn exercise(memory: &mut PreparedMemory, console: &mut SerialPort) {
     let baseline = memory.frames.allocated();
@@ -105,6 +106,7 @@ pub fn exercise(memory: &mut PreparedMemory, console: &mut SerialPort) {
     multiple::exercise(memory, console);
     links::exercise(memory, console);
     cpu::exercise(memory, console);
+    watchdog::exercise(memory, console);
 }
 fn program(role: u64, argument: u64) -> Program<'static> {
     Program {

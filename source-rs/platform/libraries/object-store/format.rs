@@ -1,6 +1,6 @@
 //! Two complete catalog snapshots; one sector each plus a separately flushed commit.
 use super::catalog::{Catalog, Entry, Root};
-pub use super::legacy::crc;
+pub(super) mod legacy;
 use cathedral_contracts::storage as wire;
 fn seal(bytes: &mut [u8; 512]) {
     let checksum = crc(&bytes[..508]);
@@ -32,7 +32,7 @@ pub fn encode(catalog: &Catalog, body: &mut [u8; 512], commit: &mut [u8; 512]) {
 }
 pub fn decode(body: &[u8; 512], commit: &[u8; 512]) -> Option<Catalog> {
     if &body[..8] == b"CTOBJ001" {
-        let record = super::legacy::decode(body, commit)?;
+        let record = legacy::decode(body, commit)?;
         let mut catalog = Catalog {
             sequence: record.generation,
             ..Catalog::default()
@@ -92,4 +92,15 @@ pub fn decode(body: &[u8; 512], commit: &[u8; 512]) -> Option<Catalog> {
         return None;
     }
     Some(catalog)
+}
+
+pub fn crc(bytes: &[u8]) -> u32 {
+    let mut crc = !0u32;
+    for &byte in bytes {
+        crc ^= u32::from(byte);
+        for _ in 0..8 {
+            crc = (crc >> 1) ^ (0xedb88320 & 0u32.wrapping_sub(crc & 1));
+        }
+    }
+    !crc
 }

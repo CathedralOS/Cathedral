@@ -2,13 +2,13 @@
 #![no_main]
 //! Ordinary parent and worker: only the introduction is supplied by boot.
 mod admission;
-mod probes;
+mod delivery;
 mod resources;
 mod scenario;
 mod sponsorship;
 mod startup;
+mod syscall;
 mod tree;
-mod worker;
 use cathedral_contracts::user as abi;
 use cathedral_user_runtime::{
     Error,
@@ -38,7 +38,7 @@ fn main(role: u64, mode: u64, environment: cathedral_user_runtime::task::Environ
     }
     match role {
         0 => scenario::run(),
-        _ => worker::run(mode),
+        _ => delivery::worker::run(mode),
     }
 }
 fn receive(input: Handle) -> ([u8; 64], Option<Handle>) {

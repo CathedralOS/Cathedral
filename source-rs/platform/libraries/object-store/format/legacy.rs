@@ -1,22 +1,8 @@
-use cathedral_contracts::storage::Record;
-pub fn crc(bytes: &[u8]) -> u32 {
-    let mut crc = !0u32;
-    for &byte in bytes {
-        crc ^= u32::from(byte);
-        for _ in 0..8 {
-            crc = (crc >> 1) ^ (0xedb88320 & 0u32.wrapping_sub(crc & 1));
-        }
-    }
-    !crc
-}
+//! Compatibility decoding for the original single-object disk format.
 #[cfg(test)]
-fn seal(bytes: &mut [u8; 512]) {
-    let checksum = crc(&bytes[..508]);
-    bytes[508..].copy_from_slice(&checksum.to_le_bytes());
-}
-fn valid(bytes: &[u8; 512], magic: &[u8; 8]) -> bool {
-    &bytes[..8] == magic && crc(&bytes[..508]).to_le_bytes() == bytes[508..]
-}
+use super::seal;
+use super::valid;
+use cathedral_contracts::storage::Record;
 #[cfg(test)]
 pub fn encode(record: Record) -> ([u8; 512], [u8; 512]) {
     let mut body = [0; 512];

@@ -19,7 +19,9 @@ Logs go to `build/boot-harness-rs/channels-test/serial.log`.
 
 ## Follow the exchange
 
-[main.rs](main.rs) selects the parent [scenario](scenario.rs) or [worker](worker.rs).
+[main.rs](main.rs) selects a fixture role. The parent [suite](scenario.rs) orders
+resource, [delivery](delivery.rs), sponsorship, startup and recursive-tree checks.
+Each scenario owns its boundary probes; delivery also owns its [worker](delivery/worker.rs).
 The parent launches the approved worker, creates two one-way channels, and sends
 the worker its request receiver and reply sender over their bootstrap connection.
 The worker processes a request and replies directly on those new channels.
@@ -244,7 +246,7 @@ then exhausts/reuses the full per-process channel budget. Capability-aware recei
 are also parked and woken by delivery or peer closure. It checks that copied
 raw names confer no authority, moves invalidate sender names, accepted replies
 survive worker exit, and invalid/read-only/cross-page copy destinations preserve
-queued transfers. [Raw probes](probes.rs) also check bad create/send records.
+queued transfers. [Delivery probes](delivery/probes.rs) also check bad create/send records.
 
 The startup scenario adds 16 exchanges with initial bundles, eight cancellations,
 empty/four-entry bundles, invalid pointers/counts/trailing words, busy launches,

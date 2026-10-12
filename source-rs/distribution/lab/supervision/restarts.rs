@@ -1,3 +1,6 @@
+//! Repeated service faults preserve a live client; invalid waits never consume outcomes.
+pub(super) mod client;
+pub(super) mod service;
 use cathedral_contracts::user as abi;
 use cathedral_user_runtime::{
     Error,
@@ -24,7 +27,7 @@ pub fn run() -> u64 {
             );
         }
         // Bad destinations must neither block nor consume the child's outcome.
-        super::probes::bad_wait(child);
+        super::failures::bad_wait(child);
         let mut command = [0; 24];
         command[..8].copy_from_slice(&round.to_le_bytes());
         command[8..16].copy_from_slice(&launch.raw().to_le_bytes());

@@ -1,6 +1,7 @@
 //! Bring-up workloads. Each task owns heap data across yields and sleeps;
 //! orchestration and reporting happen back on the boot stack after teardown.
 
+mod lifecycle;
 use crate::heap::HEAP;
 use alloc::vec::Vec;
 use cathedral_arch as arch;
@@ -52,6 +53,7 @@ pub fn exercise(memory: &mut crate::memory::PreparedMemory, console: &mut Serial
     )
     .ok();
     exercise_preemption(memory, console, baseline);
+    lifecycle::exercise(memory, console);
 }
 
 fn exercise_preemption(

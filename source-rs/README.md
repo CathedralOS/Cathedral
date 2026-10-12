@@ -31,14 +31,14 @@ explains how to preserve these routes as the lab grows.
 | `kernel/boot/uefi/memory.rs`, `handoff.rs` | Compose core frame policy with architecture mappings, then transfer boot state |
 | `kernel/boot/uefi/interrupts.rs`, `diagnostics.rs` | Interrupt bring-up and serial/fatal reporting |
 | `kernel/boot/uefi/heap.rs` | Heap installation; smoke-only heap verification |
-| `kernel/boot/uefi/lab/kernel_tasks.rs`, `lab/task_lifecycle.rs` | Cooperative/preemptive workloads and dynamic lifecycle checks |
+| `kernel/boot/uefi/lab/kernel_tasks.rs`, `lab/kernel_tasks/lifecycle.rs` | Cooperative/preemptive workloads and dynamic lifecycle checks |
 | `kernel/boot/uefi/lab/user_tasks.rs` | Ring-3 syscall, isolation, fault containment and admission rollback experiments |
 | `kernel/boot/uefi/lab/applications.rs` | Run the bundled executable twice per session and check loading, private state, exit statuses and cleanup |
 | `kernel/boot/uefi/lab/ipc.rs` | Compose explicit endpoint grants and check service/failure sessions |
 | `kernel/core/user_tasks/lifecycle/supervision.rs`, `supervision/` | Host-testable launch authority, child identity and outcome consumption |
 | `kernel/core/user_tasks/time.rs` | Boot-issued clock grants and wrapping deadline comparisons |
 | `kernel/boot/uefi/lab/supervision.rs` | Supply launch bounds and verify userspace recovery/cleanup |
-| `kernel/boot/uefi/lab/watchdog.rs` | Verify hung-service cancellation, deadline wakeups and independent progress |
+| `kernel/boot/uefi/lab/supervision/watchdog.rs` | Verify hung-service cancellation, deadline wakeups and independent progress |
 | `kernel/core/ipc.rs`, `ipc/` | Process-local endpoint grants, dynamic channels, checked moves, queues and teardown |
 | `kernel/boot/uefi/smoke.rs` | Test-only fault injection and QEMU result reporting |
 | `contracts/boot.rs` | Firmware-neutral memory handoff; experimental Rust data, not a frozen ABI |
@@ -168,11 +168,13 @@ cargo fmt --all -- --check
 cargo check-uefi
 cargo build-uefi
 cargo build --locked --package cathedral-hello --target x86_64-unknown-none
-cargo clippy --locked --package cathedral-hello --package cathedral-ipc-lab --package cathedral-supervision-lab --package cathedral-display-service --package cathedral-input-service --package cathedral-display-lab --package cathedral-init --target x86_64-unknown-none -- -D warnings
+cargo check-userspace
 ```
 
 The default Cargo members test contracts, core, storage, input decoding, fonts and
-rendering algorithms on the host. Kernel crates
+rendering algorithms on the host. `check-uefi` selects the kernel packages;
+`check-userspace` checks the remaining packages and the rendering guest.
+Profile-specific features are exercised by their harness commands. Kernel crates
 use the UEFI target; the user program/runtime use the freestanding ELF target,
 so the whole workspace cannot be built for one target. `cargo build-uefi` builds
 a standalone kernel with no initial program; use the Python harness for the

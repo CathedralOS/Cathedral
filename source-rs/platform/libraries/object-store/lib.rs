@@ -4,7 +4,6 @@
 use cathedral_contracts::{block::Device, storage::Record, user as abi};
 pub mod catalog;
 mod format;
-mod legacy;
 pub mod protocol;
 mod recovery;
 use catalog::{Catalog, Change};

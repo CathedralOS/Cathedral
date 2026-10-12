@@ -1,4 +1,5 @@
 //! Real nested reservation subdivision, exhaustion, cancellation and return.
+mod probes;
 use super::*;
 use cathedral_user_runtime::{
     memory::raw,
@@ -16,7 +17,7 @@ pub fn run() {
     let before = resources::budget().unwrap();
     let launch = Launch::at(1).unwrap();
     resources::assign(launch, limits(8, 4)).unwrap();
-    super::probes::resources(launch);
+    probes::check(launch);
     let loan = Launch::at(2).unwrap();
     let child = launch.spawn_tree(20, &[], &[loan]).unwrap();
     let (_, events) = Port::at(1).unwrap().connect().unwrap();
