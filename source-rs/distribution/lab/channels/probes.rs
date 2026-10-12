@@ -9,6 +9,22 @@ fn raw(number: u64, a: u64, b: u64, c: u64) -> u64 {
     }
     result
 }
+pub fn resources(launch: cathedral_user_runtime::task::Launch) {
+    let before = cathedral_user_runtime::resources::budget().unwrap();
+    for address in [0, u64::MAX] {
+        assert_eq!(raw(abi::RESOURCE_BUDGET, address, 0, 0), abi::BAD_ADDRESS);
+        assert_eq!(
+            raw(abi::RESOURCE_ASSIGN, launch.raw(), address, 0),
+            abi::BAD_ADDRESS
+        );
+    }
+    assert_eq!(raw(abi::RESOURCE_ASSIGN, 0, 0, 0), abi::BAD_HANDLE);
+    assert_eq!(
+        raw(abi::RESOURCE_ASSIGN, launch.raw(), 0, 1),
+        abi::INVALID_ARGUMENT
+    );
+    assert_eq!(cathedral_user_runtime::resources::budget().unwrap(), before);
+}
 
 pub fn tree(launch: cathedral_user_runtime::task::Launch) {
     for address in [0, u64::MAX, 0x8000203ff8] {

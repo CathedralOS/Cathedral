@@ -2,6 +2,7 @@
 #![no_main]
 //! Ordinary parent and worker: only the introduction is supplied by boot.
 mod probes;
+mod resources;
 mod scenario;
 mod sponsorship;
 mod startup;
@@ -15,6 +16,9 @@ use cathedral_user_runtime::{
 };
 cathedral_user_runtime::entry_with_environment!(main);
 fn main(role: u64, mode: u64, environment: cathedral_user_runtime::task::Environment) -> u64 {
+    if role != 0 && (20..=21).contains(&mode) {
+        return resources::worker(mode);
+    }
     if role == 2 {
         return tree::worker(mode, environment);
     }

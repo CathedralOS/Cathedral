@@ -266,3 +266,7 @@ acceptance, nested escrow discard, self/cyclic receive moves, bootstrap revocati
 replacement, and complete channel/grant reclamation. Grant-table tests check name
 exhaustion and independence from unrelated graph activity. Existing smoke and
 matrix tests exercise boot connections using the same local grant machinery.
+
+[Resource subdivision](resources.rs) runs first: real nested processes partition
+page/channel capacity, exhaust it, and return it after subtree reclamation. See
+the [kernel accounting contract](../../../kernel/core/resources/README.md).

@@ -81,6 +81,9 @@ impl Supervisor {
             None
         }
     }
+    pub fn idle(&self) -> bool {
+        self.state == Child::Empty
+    }
     /// The admission plan reserves this fresh owner-local name before mapping.
     pub fn started(&mut self, ticket: u64) -> u64 {
         assert!(self.pending().is_some() && ticket != 0 && ticket <= i64::MAX as u64);

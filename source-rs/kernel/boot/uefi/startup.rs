@@ -22,6 +22,11 @@ include!(concat!(env!("OUT_DIR"), "/startup_config.rs"));
 
 pub fn run(memory: &mut PreparedMemory, console: &mut SerialPort) {
     let mut memory_grants = alloc::vec::Vec::new();
+    memory_grants.push(cathedral_contracts::memory::Grant {
+        task: 0,
+        private_pages: INITIAL_PAGES[0],
+        shared_pages: INITIAL_PAGES[1],
+    });
     let mut launches = alloc::vec::Vec::new();
     let mut clock_readers = alloc::vec::Vec::new();
     if INITIAL_CLOCK {

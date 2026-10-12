@@ -18,6 +18,7 @@ pub mod kernel_tasks;
 pub mod link;
 pub mod names;
 pub mod regions;
+pub mod resources;
 pub mod scheduler;
 pub mod supervision;
 #[allow(unsafe_code)]

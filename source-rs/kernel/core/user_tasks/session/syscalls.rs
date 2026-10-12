@@ -9,6 +9,7 @@ pub(super) mod keyboard;
 mod links;
 mod memory;
 pub(super) mod readiness;
+mod resources;
 pub(super) mod tasks;
 use super::{Exit, Session};
 use crate::{scheduler::Event, user_tasks::syscall as abi};
@@ -17,6 +18,9 @@ pub(super) fn syscall(session: &mut Session, slot: usize, now: u64) -> Event {
     let (number, first, second, third) = session.tasks[slot].context.syscall();
     let mut event = Event::Continue;
     let result = match number {
+        abi::RESOURCE_BUDGET | abi::RESOURCE_ASSIGN => {
+            resources::dispatch(session, slot, [number, first, second, third])
+        }
         abi::WRITE => diagnostics::write(session, slot, first, second),
         abi::YIELD => {
             event = Event::Yield;

@@ -164,7 +164,9 @@ fn global_capacity_covers_all_object_budgets_including_orphan_readers() {
         .position(|r| r.owner == Some(0))
         .unwrap();
     regions.release(0, regions.handle(0, owned)).unwrap();
-    assert_eq!(regions.allocate(0, MAX_PAGES - 3), Ok(0));
+    // Three orphan readers and three owned objects still charge account zero.
+    assert_eq!(regions.allocate(0, MAX_PAGES - 3), Err(abi::NO_MEMORY));
+    assert_eq!(regions.allocate(0, MAX_PAGES - 6), Ok(0));
     assert_eq!(regions.access(1, reader), Err(abi::BAD_HANDLE));
 }
 #[test]

@@ -179,7 +179,7 @@ def main():
     target = composition["target"]
     boot_package = composition["boot_package"]
     environment = {key: value for key, value in os.environ.items()
-                   if not (key.startswith("CATHEDRAL_") and (key.endswith("_ELF") or key in ("CATHEDRAL_INIT_CLOCK", "CATHEDRAL_LINKS", "CATHEDRAL_CHANNEL_LIMITS", "CATHEDRAL_CPU_LIMITS") or key.startswith("CATHEDRAL_LAUNCH_")))}
+                   if not (key.startswith("CATHEDRAL_") and (key.endswith("_ELF") or key in ("CATHEDRAL_INIT_CLOCK", "CATHEDRAL_LINKS", "CATHEDRAL_CHANNEL_LIMITS", "CATHEDRAL_CPU_LIMITS") or key.startswith("CATHEDRAL_LAUNCH_") or key.startswith("CATHEDRAL_INIT_")))}
     programs = {}
     if not args.kernel_only:
         if args.smoke:
@@ -193,6 +193,11 @@ def main():
                 parser.error(str(error))
             environment["CATHEDRAL_CHANNEL_LIMITS"] = ",".join(map(str, limits))
             environment["CATHEDRAL_CPU_LIMITS"] = ",".join(map(str, cpu_limits))
+            for resource in ("private_pages", "shared_pages"):
+                pages = startup["initial"].get(resource, 0)
+                if type(pages) is not int or not 0 <= pages <= 16:
+                    parser.error(f"initial {resource} must be an integer in 0..16")
+                environment[f"CATHEDRAL_INIT_{resource.upper()}"] = str(pages)
             programs["init"] = startup["initial"]
             environment["CATHEDRAL_INIT_CLOCK"] = "1" if startup["initial"].get("clock", False) else "0"
             launches = startup.get("launches", [startup["launch"]] if startup.get("launch") else [])

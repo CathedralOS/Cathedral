@@ -25,17 +25,18 @@ pub(super) fn exercise(producer: &mut Peer, consumer: &mut Peer) {
     assert_eq!(consumer.call(abi::MEMORY_MAP, handle, 0), abi::BAD_HANDLE);
 
     // An accepted read lease survives producer replacement, but does not confer
-    // any authority over that replacement or consume its fresh private budget.
+    // any authority over that replacement. Backing still charges the persistent
+    // producer account; restart cannot mint fresh capacity while a reader pins it.
     for _ in 0..8 {
         let old = offer(producer);
         let old_reader = consumer.ok(abi::MEMORY_MAP, old, 0);
         producer.restart();
         consumer.ok(worker::CHECK, old_reader, 42);
         assert_eq!(producer.call(abi::MEMORY_ADDRESS, old, 0), abi::BAD_HANDLE);
-        let new = offer(producer);
-        assert_eq!(consumer.call(abi::MEMORY_MAP, new, 0), abi::NO_MEMORY);
+        assert_eq!(producer.call(abi::MEMORY_ALLOCATE, 1, 0), abi::NO_MEMORY);
         consumer.ok(abi::MEMORY_RELEASE, old_reader, 0);
         assert_eq!(raw::address(old), Err(Error(abi::BAD_HANDLE as i64)));
+        let new = offer(producer);
         let new_reader = consumer.ok(abi::MEMORY_MAP, new, 0);
         consumer.ok(worker::CHECK, new_reader, 42);
         consumer.restart();

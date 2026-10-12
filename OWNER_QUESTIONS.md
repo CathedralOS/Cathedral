@@ -485,3 +485,15 @@ attribution choices and ceilings, not guaranteed CPU-time reservations. The
 periodic timer, unpreemptible kernel work and lab clock do not establish hard
 response bounds. Shared-provider request funding remains the unresolved choice
 above; merely registering a provider confers no extra scheduling authority.
+
+
+**Resource-subdivision lab evidence (not a production sponsorship decision).**
+[The Rust resource coordinator](source-rs/kernel/core/resources/README.md) now
+conserves runtime page/reader/channel allowances across owner-to-child assignment.
+Only owned idle launch accounts can be resized, and every family validates before
+commit. Accepted pages now retain the original backing sponsor after producer
+death; restart cannot buy replacement capacity while a reader pins it. Explicit
+withdrawal fails rather than revoking the reader. The same applies to channels.
+This extends the persistent-sponsor experiment above. It does not settle funding
+transfer, active-child rebudgeting or a physical RAM reservation covering ELF,
+page-table and stack admission costs.

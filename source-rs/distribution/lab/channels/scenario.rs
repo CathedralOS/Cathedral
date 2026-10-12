@@ -2,6 +2,7 @@
 use super::*;
 use cathedral_user_runtime::task::{Launch, Outcome, Port};
 pub fn run() -> u64 {
+    resources::run();
     probes::creation();
     quota();
     sponsorship::run();

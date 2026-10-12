@@ -13,6 +13,7 @@ pub mod ipc;
 pub mod keyboard;
 pub mod link;
 pub mod memory;
+pub mod resources;
 pub mod server;
 pub mod storage;
 pub mod task;

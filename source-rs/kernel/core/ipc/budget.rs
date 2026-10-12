@@ -23,12 +23,18 @@ pub(super) fn reservations(tasks: usize, limits: &[usize]) -> Result<[usize; MAX
     Ok(result)
 }
 impl Ipc {
-    pub(super) fn charged_channels(&self, task: usize) -> usize {
+    pub(crate) fn charged_channels(&self, task: usize) -> usize {
         self.endpoints[MAX_ENDPOINTS..]
             .iter()
             .flatten()
             .filter(|e| e.account == Some(task))
             .count()
+    }
+    pub(crate) fn channel_limit(&self, task: usize) -> usize {
+        self.reservations[task]
+    }
+    pub(crate) fn install_limit(&mut self, task: usize, limit: usize) {
+        self.reservations[task] = limit;
     }
     /// No task selector or global free count. Hidden incoming grants still consume
     /// the caller's handle budget, so the snapshot includes them.

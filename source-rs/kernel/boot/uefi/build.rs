@@ -5,6 +5,8 @@ fn main() {
     for variable in [
         "CATHEDRAL_INIT_ELF",
         "CATHEDRAL_INIT_CLOCK",
+        "CATHEDRAL_INIT_PRIVATE_PAGES",
+        "CATHEDRAL_INIT_SHARED_PAGES",
         "CATHEDRAL_LINKS",
         "CATHEDRAL_CHANNEL_LIMITS",
         "CATHEDRAL_CPU_LIMITS",
@@ -93,6 +95,8 @@ fn startup() {
         "const INITIAL_CLOCK: bool = {};\nstatic LAUNCHES: &[InitialLaunch] = &[\n",
         flag("CATHEDRAL_INIT_CLOCK")
     );
+    let initial_private = pages("CATHEDRAL_INIT_PRIVATE_PAGES");
+    let initial_shared = pages("CATHEDRAL_INIT_SHARED_PAGES");
     for index in 0..count {
         let prefix = format!("CATHEDRAL_LAUNCH_{index}");
         bundle(&format!("{prefix}_ELF"), &format!("launch-{index}.elf"));
@@ -111,7 +115,11 @@ fn startup() {
     source.push_str(&format!(
         "];\nconst CHANNEL_LIMITS: &[usize] = &{limits:?};\nconst CPU_LIMITS: &[u64] = &{cpu_limits:?};\n"
     ));
+    source.push_str(&format!(
+        "const INITIAL_PAGES: [usize; 2] = [{initial_private}, {initial_shared}];\n"
+    ));
     source.push_str("static LINKS: &[cathedral_core::link::LinkSpec] = &[\n");
+    // Initial resource ownership is supplied by the same host composition as children.
     let graph = env::var("CATHEDRAL_LINKS").unwrap_or_default();
     for edge in graph.split(',').filter(|edge| !edge.is_empty()) {
         let (client, service) = edge.split_once(':').expect("link must be client:service");

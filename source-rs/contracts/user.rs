@@ -114,3 +114,9 @@ pub const DEFAULT_CHANNELS: usize = MAX_DYNAMIC_CHANNELS / MAX_TASKS;
 pub const CPU_REFILL_PERIOD_US: u64 = 100_000;
 /// Caller-only measured execution microseconds. Same grant/copy ABI as CLOCK_READ.
 pub const CPU_READ: u64 = 42;
+/// Own account: private pages, reader pages, channels, then corresponding usage.
+/// RDI points to 48 writable bytes; RSI/RDX zero. No foreign/global selector.
+pub const RESOURCE_BUDGET: u64 = 43;
+/// RDI owned idle launch; RSI points to three u64 absolute child limits; RDX zero.
+/// Unused capacity moves between owner and child atomically, never minted.
+pub const RESOURCE_ASSIGN: u64 = 44;

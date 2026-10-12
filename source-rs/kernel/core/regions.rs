@@ -6,6 +6,8 @@ use cathedral_contracts::{
 };
 #[derive(Clone, Copy, Debug, Default)]
 pub struct Region {
+    /// Persistent backing sponsor; accepted readers can outlive its process.
+    pub account: Option<usize>,
     pub owner: Option<usize>,
     pub peer: Option<usize>,
     pub accepted: bool,
@@ -71,7 +73,7 @@ impl Regions {
             return Err(abi::DENIED);
         }
         let owned = self.entries.iter().filter(|r| r.owner == Some(owner));
-        let used: usize = owned.clone().map(|r| r.pages).sum();
+        let used = self.charged(owner)[0];
         if pages + used > self.private[owner] || owned.count() >= MAX_PRIVATE_REGIONS {
             return Err(abi::NO_MEMORY);
         }
@@ -90,6 +92,7 @@ impl Regions {
             .ok_or(abi::NO_MEMORY)?;
         let owner_name = self.names.mint(owner)?;
         self.entries[index] = Region {
+            account: Some(owner),
             owner: Some(owner),
             pages,
             owner_name,
@@ -212,6 +215,27 @@ impl Regions {
             region.peer = None;
             region.accepted = false;
         }
+    }
+    pub(crate) fn limits(&self, task: usize) -> [usize; 2] {
+        [self.private[task], self.shared[task]]
+    }
+    pub fn charged(&self, task: usize) -> [usize; 2] {
+        [
+            self.entries
+                .iter()
+                .filter(|r| r.live() && r.account == Some(task))
+                .map(|r| r.pages)
+                .sum(),
+            self.entries
+                .iter()
+                .filter(|r| r.accepted && r.peer == Some(task))
+                .map(|r| r.pages)
+                .sum(),
+        ]
+    }
+    /// Only the validated resource transaction may alter backed allowances.
+    pub(crate) fn install_limits(&mut self, task: usize, limits: [usize; 2]) {
+        [self.private[task], self.shared[task]] = limits;
     }
 }
 #[cfg(test)]

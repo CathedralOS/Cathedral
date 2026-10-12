@@ -989,3 +989,8 @@ Keep source transitions and invariants recognizable beside their Omega owners.
 Record deliberate divergences here and preserve test cases for eventual shared
 conformance testing. Rust data validation is not proof of firmware custody;
 QEMU success is not verification on physical hardware.
+
+Runtime page and channel allowances can now be subdivided through owned idle
+launch grants; see [resource subdivision](kernel/core/resources/README.md). Profiles
+may grant `private_pages` and `shared_pages` to the initial program as well as
+launches. Retained pages remain charged to their original account after producer death.
