@@ -510,3 +510,15 @@ semantics still need to decide general executable-capability transfer/revocation
 and whether code grants should be retained independently of launch ownership.
 The current lab grants permission to execute again; it does not infer that right
 from arbitrary readable bytes or service registration.
+
+
+**Matrix integration experiment.** Code-only boot catalogue grants no longer
+consume dormant process accounts. An owner may explicitly stage copied executable
+authority into an idle child; admission publishes fresh local names after load.
+The matrix desktop uses this path recursively. This adopts copying for the lab,
+not a production revocation contract: changing the launch's staging does not revoke
+an independently installed grant, and selected dynamic code remains executable
+by descendants within supplied process/resource budgets. General IPC transfer,
+revocation and physical admission funding remain the choices above. Idle-child
+CPU ceiling assignment preserves ancestor enforcement and debt; it confers no
+priority or permission to charge an unrelated service's work to a caller.

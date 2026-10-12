@@ -76,9 +76,7 @@ fn failed_transfer_keeps_source_and_queue_untouched() {
 #[test]
 fn receiver_budget_is_reserved_before_move_and_released_on_discard() {
     let (mut ipc, bootstrap, receive) = setup();
-    let full: alloc::vec::Vec<_> = (0..abi::MAX_CREATED_CHANNELS)
-        .map(|_| ipc.create(1).unwrap())
-        .collect();
+    let full: alloc::vec::Vec<_> = (0..8).map(|_| ipc.create(1).unwrap()).collect();
     let [send, recv] = ipc.create(0).unwrap();
     assert_eq!(
         ipc.send_cap(0, bootstrap, b"full", Some(send)),
@@ -141,7 +139,7 @@ fn chains_of_escrow_are_discarded_without_recursive_kernel_stack_growth() {
     for order in [[0, 1, 2], [1, 0, 2], [2, 1, 0]] {
         let (mut ipc, bootstrap, _) = setup();
         let mut carrier = bootstrap;
-        for _ in 0..abi::MAX_CREATED_CHANNELS {
+        for _ in 0..8 {
             let [s, r] = ipc.create(0).unwrap();
             ipc.send_cap(0, carrier, b"nested escrow", Some(r)).unwrap();
             carrier = s;

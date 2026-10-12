@@ -36,37 +36,27 @@
         "target": "x86_64-unknown-none",
         "clock": true,
         "argument": 0,
-        "ipc_channels": 6
-      },
+        "ipc_channels": 12
+      }
+    ],
+    "links": [],
+    "executables": [
       {
         "package": "cathedral-matrix-service",
         "entry": "platform/services/matrix/main.rs",
         "target": "x86_64-unknown-none",
-        "clock": true,
-        "argument": 0,
-        "ipc_channels": 6
+        "argument": 0
       },
       {
         "package": "cathedral-matrix-lab",
         "entry": "distribution/lab/matrix/main.rs",
         "target": "x86_64-unknown-none",
-        "clock": true,
-        "argument": 2,
-        "features": [
-          "desktop"
-        ]
-      },
-      {
-        "package": "cathedral-matrix-lab",
-        "entry": "distribution/lab/matrix/main.rs",
-        "target": "x86_64-unknown-none",
-        "clock": true,
         "argument": 2,
         "features": [
           "desktop"
         ]
       }
     ],
-    "links": []
+    "dynamic_tasks": 3
   }
 }

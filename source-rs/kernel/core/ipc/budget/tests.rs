@@ -3,7 +3,12 @@ use super::*;
 fn reservation_validation_rejects_overcommit_and_keeps_defaults_constant() {
     assert_eq!(reservations(8, &[]).unwrap(), [4; 8]);
     assert_eq!(&reservations(2, &[]).unwrap()[..2], &[4; 2]);
-    for (tasks, limits) in [(9, &[][..]), (2, &[1][..]), (1, &[9][..]), (8, &[8; 8][..])] {
+    for (tasks, limits) in [
+        (9, &[][..]),
+        (2, &[1][..]),
+        (1, &[17][..]),
+        (8, &[8; 8][..]),
+    ] {
         assert_eq!(reservations(tasks, limits), Err(abi::INVALID_ARGUMENT));
         assert!(Ipc::with_reservations(1, tasks, &[], limits).is_err());
     }

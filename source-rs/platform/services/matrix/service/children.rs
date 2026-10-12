@@ -6,6 +6,7 @@ use cathedral_user_runtime::{ipc::Handle, server::Request, task::Child, time};
 type Pair = (Handle, Handle);
 struct Owned {
     task: Child,
+    reservation: Option<cathedral_user_runtime::task::Launch>,
     control: Pair,
     data: Pair,
     notify: Handle,
@@ -41,7 +42,7 @@ impl Children {
         world: &mut World,
     ) -> Result<bool, Error> {
         let routed = words[0] >> wire::OP_BITS;
-        if routed == 0 && !matches!(words[0], wire::SPAWN | wire::STOP) {
+        if routed == 0 && !matches!(words[0], wire::SPAWN | wire::RUN | wire::STOP) {
             return Ok(false);
         }
         let result = if self.pending.is_some() {
@@ -67,6 +68,21 @@ impl Children {
                 [wire::SPAWN, slot @ 0..=1, launch, loans, argument, 0, 0, 0] => {
                     self.start(slot as usize, launch, loans, argument, server, world)
                 }
+                [
+                    wire::RUN,
+                    slot @ 0..=1,
+                    image,
+                    argument,
+                    channels,
+                    descendants,
+                    images,
+                    cpu,
+                ] => self.run(
+                    slot as usize,
+                    [image, argument, channels, descendants, images, cpu],
+                    server,
+                    world,
+                ),
                 [wire::STOP, slot @ 0..=1, 0, 0, 0, 0, 0, 0] => {
                     self.stop(slot as usize, server, world)
                 }
@@ -149,6 +165,21 @@ impl Children {
         child.data.0.close()?;
         child.data.1.close()?;
         child.notify.close()?;
+        if let Some(reservation) = child.reservation {
+            reservation.release()?;
+            // Creator death returns descendant reservations with fresh local names.
+            // Active siblings remain BUSY; static legacy grants remain DENIED.
+            let mut index = 0;
+            while let Ok(launch) = cathedral_user_runtime::task::Launch::at(index) {
+                match launch.release() {
+                    Ok(()) => (),
+                    Err(Error(code)) if code == abi::BUSY as i64 || code == abi::DENIED as i64 => {
+                        index += 1
+                    }
+                    Err(error) => return Err(error),
+                }
+            }
+        }
         Ok(())
     }
 }

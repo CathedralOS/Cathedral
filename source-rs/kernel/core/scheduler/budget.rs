@@ -85,6 +85,19 @@ impl Budgets {
         }
         self.refresh(shares);
     }
+    pub(super) fn assign(&mut self, slot: usize, limit: u64, shares: &Shares) -> bool {
+        if limit > PERIOD_US {
+            return false;
+        }
+        let account = &mut self.accounts[slot];
+        account.limit = limit;
+        // Changing a ceiling never forgives overrun or manufactures refill credit.
+        account.credit = account
+            .credit
+            .min(i128::from(limit) * i128::from(PERIOD_US));
+        self.refresh(shares);
+        true
+    }
     pub(super) fn refresh(&mut self, shares: &Shares) {
         for slot in 0..self.accounts.len() {
             let account = &self.accounts[slot];

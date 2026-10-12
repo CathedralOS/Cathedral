@@ -6,7 +6,7 @@ pub use app::run as app;
 use cathedral_contracts::{composition as c, display, input, pointer};
 use cathedral_user_runtime::{
     ipc,
-    task::{Launch, Port},
+    task::{self, Executable, Launch, Port},
 };
 const BACKGROUND: u64 = 0x101827;
 fn display_call(pair: Pair, words: [u64; 6]) -> [u64; 6] {
@@ -24,16 +24,34 @@ fn owner(pair: Pair, words: wire::Packet) {
 fn inner(pair: Pair, pressure: bool) {
     owner(
         pair,
-        [wire::SPAWN, 0, 0, if pressure { 10 } else { 2 }, 0, 0, 0, 0],
+        [
+            wire::RUN,
+            0,
+            0,
+            0,
+            6,
+            if pressure { 2 } else { 1 },
+            if pressure { 7 } else { 3 },
+            if pressure { 20000 } else { 0 },
+        ],
     );
     owner(
         pair,
-        wire::route([wire::SPAWN, 0, 0, 0, 0, 0, 0, 0], 0).unwrap(),
+        wire::route([wire::RUN, 0, 1, 0, 0, 0, 0, 0], 0).unwrap(),
     );
+    if !pressure {
+        assert_eq!(
+            call(
+                pair,
+                wire::route([wire::RUN, 1, 1, 0, 0, 0, 0, 0], 0).unwrap()
+            ),
+            wire::error(abi::NO_MEMORY)
+        );
+    }
     if pressure {
         owner(
             pair,
-            wire::route([wire::SPAWN, 1, 1, 0, 0, 0, 0, 0], 0).unwrap(),
+            wire::route([wire::RUN, 1, 2, 0, 0, 0, 0, 0], 0).unwrap(),
         );
     }
     owner(
@@ -117,30 +135,32 @@ pub fn run() -> u64 {
     }
     let (source_send, source_input) = ipc::channel().unwrap();
     let (source_output, source_recv) = ipc::channel().unwrap();
-    let spinner = Launch::at(6).ok();
-    let pressure = spinner.is_some();
-    let loans = [
-        Launch::at(3).unwrap(),
-        Launch::at(4).unwrap(),
-        Launch::at(5).unwrap(),
-        spinner.unwrap_or(Launch::from_raw(0)),
-    ];
-    let _root = Launch::at(2)
-        .unwrap()
-        .spawn_tree(
-            0,
-            &[display.0, display.1, source_input, source_output],
-            &loans[..if pressure { 4 } else { 3 }],
-        )
+    let capacity = task::available_slots().unwrap();
+    let pressure = capacity == 4;
+    assert_eq!(capacity, if pressure { 4 } else { 3 });
+    let root = Launch::at(2).unwrap();
+    root.assign_slots(capacity).unwrap();
+    for index in 0..if pressure { 3 } else { 2 } {
+        root.allow_executable(Executable::at(index).unwrap())
+            .unwrap();
+    }
+    let _root = root
+        .spawn_with(0, &[display.0, display.1, source_input, source_output])
         .unwrap();
+    assert_eq!(task::available_slots().unwrap(), 0);
     assert!(Launch::at(3).is_err());
     let matrix = Port::at(2).unwrap().connect().unwrap();
     owner(
         matrix,
         [wire::BIND, info[1], info[2], wire::KEY_MASK, 0, 0, 0, 0],
     );
+    // A bad delegated executable fails after reservation; rollback restores funding.
+    assert_eq!(
+        call(matrix, [wire::RUN, 0, 0, 0, 6, 1, 64, 0]),
+        wire::error(abi::BAD_HANDLE)
+    );
     inner(matrix, pressure);
-    owner(matrix, [wire::SPAWN, 1, 1, 0, 1, 0, 0, 0]);
+    owner(matrix, [wire::RUN, 1, 1, 1, 0, 0, 0, 0]);
     owner(
         matrix,
         [wire::PLACE, 1, 500, 180, 220, 180, wire::KEY_MASK, 0],
@@ -148,11 +168,17 @@ pub fn run() -> u64 {
     pixel(matrix, 140, 190, app::LEFT);
     pixel(matrix, 510, 190, app::RIGHT);
     pixel(matrix, 334, 310, BACKGROUND); // Oversized leaf draw was clipped twice.
-    owner(matrix, [wire::STOP, 0, 0, 0, 0, 0, 0, 0]);
-    pixel(matrix, 140, 190, BACKGROUND);
-    pixel(matrix, 510, 190, app::RIGHT);
-    inner(matrix, pressure);
-    pixel(matrix, 140, 190, app::LEFT);
+    for _ in 0..3 {
+        owner(matrix, [wire::STOP, 0, 0, 0, 0, 0, 0, 0]);
+        pixel(matrix, 140, 190, BACKGROUND);
+        pixel(matrix, 510, 190, app::RIGHT);
+        inner(matrix, pressure);
+        pixel(matrix, 140, 190, app::LEFT);
+    }
+    cathedral_user_runtime::write(
+        b"Cathedral matrix desktop: dynamic catalogue admission, rollback and pool reuse passed\n",
+    )
+    .unwrap();
     cathedral_user_runtime::write(
         b"Cathedral matrix desktop: subtree replacement cleared pixels and preserved sibling\n",
     )

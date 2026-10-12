@@ -25,7 +25,7 @@ class Reservations(unittest.TestCase):
         self.assertEqual(channel_limits({"initial": {"ipc_channels": 8}, "launches": [{"ipc_channels": 8}, {}, {}, {}, {}]}), [8, 8, 4, 4, 4, 4])
 
     def test_invalid_values_and_overcommit(self):
-        for value in [-1, 9, True, "4", 1.5, None]:
+        for value in [-1, 17, True, "4", 1.5, None]:
             with self.subTest(value=value), self.assertRaises(ValueError):
                 channel_limits({"initial": {"ipc_channels": value}})
         with self.assertRaises(ValueError):

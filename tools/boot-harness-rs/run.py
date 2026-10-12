@@ -164,11 +164,11 @@ def main():
         startup = composition.get("startup", {})
         profile = args.profile.resolve()
         if not args.kernel_only and profile == (Path(__file__).parent / "profiles/matrix-desktop.json").resolve():
-            startup["launches"][3]["cpu_budget_us"] = 20000
-            startup["launches"].append({
+            startup["dynamic_tasks"] = 4
+            startup["executables"].append({
                 "package": "cathedral-matrix-lab", "entry": "distribution/lab/matrix/main.rs",
-                "target": "x86_64-unknown-none", "clock": True, "argument": 3,
-                "ipc_channels": 0, "features": ["desktop"],
+                "target": "x86_64-unknown-none", "argument": 3,
+                "features": ["desktop"],
             })
         elif not args.kernel_only and profile == (Path(__file__).parent / "profiles/session.json").resolve():
             startup["launches"].append({
@@ -181,7 +181,7 @@ def main():
     target = composition["target"]
     boot_package = composition["boot_package"]
     environment = {key: value for key, value in os.environ.items()
-                   if not (key.startswith("CATHEDRAL_") and (key.endswith("_ELF") or key in ("CATHEDRAL_INIT_CLOCK", "CATHEDRAL_LINKS", "CATHEDRAL_CHANNEL_LIMITS", "CATHEDRAL_CPU_LIMITS", "CATHEDRAL_DYNAMIC_TASKS") or key.startswith("CATHEDRAL_LAUNCH_") or key.startswith("CATHEDRAL_INIT_")))}
+                   if not (key.startswith("CATHEDRAL_") and (key.endswith("_ELF") or key in ("CATHEDRAL_INIT_CLOCK", "CATHEDRAL_LINKS", "CATHEDRAL_CHANNEL_LIMITS", "CATHEDRAL_CPU_LIMITS", "CATHEDRAL_DYNAMIC_TASKS") or key.startswith("CATHEDRAL_LAUNCH_") or key.startswith("CATHEDRAL_INIT_") or key.startswith("CATHEDRAL_IMAGE_")))}
     programs = {}
     if not args.kernel_only:
         if args.smoke:
@@ -210,6 +210,18 @@ def main():
                 for index, child in enumerate(launches):
                     child["features"] = ["recovery-lab"]
                     child["argument"] = 2 if args.recovery_test and index < 2 else 0 # Provider startup wedges; application stays live.
+            images = startup.get("executables", [])
+            if not isinstance(images, list) or len(images) + len(launches) > 7:
+                parser.error("executable catalogue plus static launches must fit seven grants")
+            environment["CATHEDRAL_IMAGE_COUNT"] = str(len(images))
+            for index, image in enumerate(images):
+                if any(image.get(key) for key in ("framebuffer", "keyboard", "disk", "clock", "private_pages", "shared_pages", "ipc_channels", "cpu_budget_us")):
+                    parser.error("catalogue executables carry code only; resources belong to process reservations")
+                argument = image.get("argument", 0)
+                if type(argument) is not int or not 0 <= argument < 2**64:
+                    parser.error("executable argument must be a u64")
+                programs[f"image_{index}"] = image
+                environment[f"CATHEDRAL_IMAGE_{index}_ARGUMENT"] = str(argument)
             environment["CATHEDRAL_LAUNCH_COUNT"] = str(len(launches))
             for index, child in enumerate(launches):
                 programs[f"launch_{index}"] = child

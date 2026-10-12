@@ -116,3 +116,23 @@ fn boot_work_and_reparenting_keep_existing_debt_with_the_account() {
     assert_eq!(scheduler.cpu_report(1).subtree_us, 500);
     assert_eq!(scheduler.cpu_report(0).subtree_us, 20_000);
 }
+
+#[test]
+fn dormant_rebudgeting_preserves_debt_and_cannot_expand_an_ancestor() {
+    let mut scheduler = Scheduler::new(2);
+    scheduler.set_parent(1, 0);
+    assert!(scheduler.configure_cpu(&[20_000, 10_000]));
+    scheduler.account_cpu(0);
+    scheduler.charge_cpu(1, 40_000);
+    let debt = scheduler.budgets.accounts[1].credit;
+    assert!(debt < 0);
+    assert!(scheduler.assign_cpu(1, 0));
+    assert_eq!(scheduler.budgets.accounts[1].credit, debt);
+    assert!(scheduler.assign_cpu(1, 100_000));
+    assert_eq!(scheduler.budgets.accounts[1].credit, debt);
+    assert!(!scheduler.budgets.eligible[1]);
+    assert!(!scheduler.assign_cpu(1, 100_001));
+    scheduler.admit(1);
+    assert!(!scheduler.assign_cpu(1, 20_000));
+    assert_eq!(scheduler.cpu_report(0).subtree_us, 40_000);
+}

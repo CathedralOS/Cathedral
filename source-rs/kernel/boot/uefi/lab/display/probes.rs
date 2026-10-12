@@ -47,6 +47,7 @@ fn run(
             &[program(role), program(6)],
             user_output,
             Config {
+                executables: &[],
                 dynamic_tasks: 0,
                 links: &[],
                 frame_limit: usize::MAX,

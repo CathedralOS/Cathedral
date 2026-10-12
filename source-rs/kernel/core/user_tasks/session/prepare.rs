@@ -43,6 +43,13 @@ pub(super) fn session(
         frame_baseline: baseline,
         clock: grants.clock,
     };
+    for index in 0..config.executables.len() {
+        let name = session.names.mint(0).map_err(|_| Error::OutOfHeap)?;
+        session
+            .executables
+            .install(0, config.supervision.len() + index, name)
+            .map_err(|_| Error::OutOfHeap)?;
+    }
     session
         .tasks
         .try_reserve_exact(count)

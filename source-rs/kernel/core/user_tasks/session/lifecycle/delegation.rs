@@ -53,6 +53,7 @@ impl Plan {
             returned,
         } in self.loans.into_iter().flatten()
         {
+            session.launches[index].images.fill(None);
             session.launches[index].model.lend(child, names, returned);
             session
                 .pool

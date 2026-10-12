@@ -7,7 +7,7 @@ pub fn run(mode: u64) -> u64 {
     assert_eq!(budget.charged_handles, 0);
     if mode == 8 {
         assert_eq!(budget.charged_channels, 0);
-        let mut channels = [None; abi::MAX_CREATED_CHANNELS];
+        let mut channels = [None; 8];
         for pair in channels.iter_mut().take(budget.channel_limit as usize) {
             *pair = Some(ipc::channel().unwrap());
         }

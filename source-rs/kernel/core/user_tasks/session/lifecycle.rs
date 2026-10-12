@@ -1,7 +1,5 @@
 //! Boot-context admission/reaping and grant teardown. No restart policy here.
-use super::{
-    Error, Exit, Frames, Session, Supervision, admission, next_epoch, syscalls, taskcalls,
-};
+use super::{Error, Exit, Frames, Session, admission, next_epoch, syscalls, taskcalls};
 use crate::{scheduler::TaskState, user_tasks::Program};
 use cathedral_arch as arch;
 use cathedral_contracts::user as abi;
@@ -31,6 +29,7 @@ pub(super) fn close(session: &mut Session, slot: usize) {
     for launch in &mut session.launches {
         launch.model.close(slot);
         if launch.model.owner == slot {
+            launch.images.fill(None);
             launch.initial = [0; abi::MAX_INITIAL_ENDPOINTS];
             launch.initial_count = 0;
             launch.delegated = [0; abi::MAX_LAUNCHES];
@@ -132,7 +131,7 @@ pub(super) unsafe fn spawn(
     source: &mut Frames<'_>,
     layout: &arch::BootLayout,
     image: arch::ImageRange,
-    launch: &Supervision<'_>,
+    executable: &Program<'_>,
     index: usize,
 ) {
     let model = &session.launches[index].model;
@@ -162,8 +161,8 @@ pub(super) unsafe fn spawn(
         next_epoch().filter(|epoch| *epoch <= crate::ipc::MAX_EPOCH - session.links.len() as u64)
     {
         let program = Program {
-            executable: launch.program.executable,
-            arguments: [launch.program.arguments[0], argument],
+            executable: executable.executable,
+            arguments: [executable.arguments[0], argument],
         };
         source.remaining = session.launches[index].frame_limit;
         // SAFETY: Boot context, sole CPU/IRQs off. Child slot is vacant; peer roots
@@ -188,7 +187,7 @@ pub(super) unsafe fn spawn(
                 let ticket = names.child;
                 names.commit(session, child);
                 loans.commit(session, child);
-                if launch.keyboard {
+                if session.launches[index].keyboard {
                     super::keyboard::reset(session);
                 }
                 let ticket = session.launches[index].model.started(ticket);

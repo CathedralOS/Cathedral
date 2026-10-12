@@ -13,7 +13,11 @@ pub(super) fn dispatch(
     if operation == abi::TASK_RESERVE {
         return reserve::reserve(session, caller, first, second);
     }
-    if operation != abi::TASK_POOL_ASSIGN && second != 0 {
+    if !matches!(
+        operation,
+        abi::TASK_POOL_ASSIGN | abi::TASK_IMAGE_ALLOW | abi::TASK_CPU_ASSIGN
+    ) && second != 0
+    {
         return Err(abi::INVALID_ARGUMENT);
     }
     if operation == abi::TASK_IMAGE_AT {
@@ -47,6 +51,30 @@ pub(super) fn dispatch(
             let name = session.names.mint(caller)?;
             session.executables.install(caller, template, name)
         }
+        abi::TASK_IMAGE_ALLOW => {
+            if !launch.model.idle() {
+                return Err(abi::BUSY);
+            }
+            let template = session.executables.resolve(caller, second)?;
+            let images = &mut session.launches[index].images;
+            if !images.contains(&Some(template)) {
+                *images
+                    .iter_mut()
+                    .find(|i| i.is_none())
+                    .ok_or(abi::NO_MEMORY)? = Some(template);
+            }
+            Ok(0)
+        }
+        abi::TASK_CPU_ASSIGN => {
+            if !launch.model.idle() {
+                return Err(abi::BUSY);
+            }
+            session.scheduler.account_cpu(cathedral_arch::cpu_time_us());
+            if !session.scheduler.assign_cpu(child, second) {
+                return Err(abi::INVALID_ARGUMENT);
+            }
+            Ok(0)
+        }
         abi::TASK_LAUNCH_PORT => launch.model.port(caller),
         abi::TASK_POOL_ASSIGN => {
             if !launch.model.idle() {
@@ -74,6 +102,7 @@ pub(super) fn dispatch(
             session.clock.allow(child, false);
             session.executables.close(child);
             session.launches[index].template = None;
+            session.launches[index].images.fill(None);
             session.launches[index].model = crate::supervision::Supervisor::vacant(child);
             Ok(0)
         }

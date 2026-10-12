@@ -14,6 +14,7 @@ pub(super) fn exercise(memory: &mut PreparedMemory, console: &mut SerialPort) {
                 &[program(9, revoke), program(10, revoke)],
                 user_output,
                 Config {
+                    executables: &[],
                     dynamic_tasks: 0,
                     links: &[],
                     frame_limit: usize::MAX,
@@ -59,6 +60,7 @@ pub(super) fn exercise(memory: &mut PreparedMemory, console: &mut SerialPort) {
             &[program(12, 0), program(13, 0)],
             user_output,
             Config {
+                executables: &[],
                 dynamic_tasks: 0,
                 links: &[],
                 frame_limit: usize::MAX,

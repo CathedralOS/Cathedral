@@ -11,6 +11,8 @@ def verify(stream, output, serial, pressure=False):
         raise RuntimeError("Missing matrix idle/retention/budget evidence")
     if pressure and "capped spinner active" not in serial:
         raise RuntimeError("Missing capped matrix pressure peer")
+    if "dynamic catalogue admission, rollback and pool reuse passed" not in serial:
+        raise RuntimeError("Missing dynamic matrix admission evidence")
     position = [40, 40]
 
     def send(events):

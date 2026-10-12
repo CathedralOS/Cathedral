@@ -76,8 +76,7 @@ fn abandoned() {
     recv.close().unwrap();
 }
 fn quota() {
-    let channels: [_; abi::MAX_CREATED_CHANNELS] =
-        core::array::from_fn(|_| ipc::channel().unwrap());
+    let channels: [_; 8] = core::array::from_fn(|_| ipc::channel().unwrap());
     assert!(matches!(ipc::channel(), Err(Error(code)) if code == abi::NO_MEMORY as i64));
     let (send, recv) = channels[0];
     send.send(b"held").unwrap();

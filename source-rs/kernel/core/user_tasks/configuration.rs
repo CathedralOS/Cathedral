@@ -2,6 +2,8 @@
 use super::Program;
 use crate::ipc::EndpointSpec;
 pub struct Config<'a> {
+    /// Code-only grants supplied to the sole initial process, with no device rights.
+    pub executables: &'a [Program<'a>],
     /// Unbound process accounts owned initially by the sole initial process.
     pub dynamic_tasks: usize,
     /// Per boot/launch account, including dormant children. Empty selects fixed defaults.

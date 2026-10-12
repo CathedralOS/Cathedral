@@ -42,6 +42,13 @@ pub fn available_slots() -> Result<u64, Error> {
     result(arch::call(abi::TASK_POOL_AVAILABLE, 0, 0))
 }
 impl Launch {
+    pub fn allow_executable(self, image: Executable) -> Result<(), Error> {
+        result(arch::call(abi::TASK_IMAGE_ALLOW, self.0, image.raw())).map(|_| ())
+    }
+    pub fn assign_cpu(self, limit_us: u64) -> Result<(), Error> {
+        result(arch::call(abi::TASK_CPU_ASSIGN, self.0, limit_us)).map(|_| ())
+    }
+
     pub fn executable(self) -> Result<Executable, Error> {
         result(arch::call(abi::TASK_EXECUTABLE, self.0, 0)).map(Executable)
     }

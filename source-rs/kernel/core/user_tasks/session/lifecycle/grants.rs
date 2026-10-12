@@ -3,7 +3,7 @@ use super::{Session, abi};
 pub(super) struct Plan {
     pub child: u64,
     clock: u64,
-    executable: Option<(usize, u64)>,
+    executables: [Option<(usize, u64)>; abi::MAX_LAUNCHES],
     links: [u64; abi::MAX_ENDPOINTS / 2],
 }
 impl Plan {
@@ -11,19 +11,39 @@ impl Plan {
         let mut plan = Self {
             child: session.names.mint(owner)?,
             clock: 0,
-            executable: None,
+            executables: [None; abi::MAX_LAUNCHES],
             links: [0; abi::MAX_ENDPOINTS / 2],
         };
         if session.clock.allowed(child) {
             plan.clock = session.names.mint(child)?;
         }
-        if let Some(template) = session
+        let launch = session
             .launches
             .iter()
-            .find(|l| l.model.child == child && l.dynamic)
-            .and_then(|l| l.template)
+            .find(|l| l.model.child == child)
+            .unwrap();
+        let mut templates = launch.images;
+        // The selected dynamic executable occupies the first child-local grant.
+        if launch.dynamic {
+            let selected = launch.template.unwrap();
+            let mut staged = [None; abi::MAX_LAUNCHES];
+            staged[0] = Some(selected);
+            let mut count = 1;
+            for template in templates.into_iter().flatten().filter(|&t| t != selected) {
+                if count == staged.len() {
+                    return Err(abi::NO_MEMORY);
+                }
+                staged[count] = Some(template);
+                count += 1;
+            }
+            templates = staged;
+        }
+        for (grant, template) in plan
+            .executables
+            .iter_mut()
+            .zip(templates.into_iter().flatten())
         {
-            plan.executable = Some((template, session.names.mint(child)?));
+            *grant = Some((template, session.names.mint(child)?));
         }
         for (index, link) in session.links.iter().enumerate() {
             if link.model.spec.client == child || link.model.spec.service == child {
@@ -34,7 +54,7 @@ impl Plan {
     }
     pub fn commit(self, session: &mut Session, child: usize) {
         session.clock.install(child, self.clock);
-        if let Some((template, name)) = self.executable {
+        for (template, name) in self.executables.into_iter().flatten() {
             session
                 .executables
                 .install(child, template, name)

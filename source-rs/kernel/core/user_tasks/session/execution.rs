@@ -27,7 +27,11 @@ pub(super) unsafe fn run(
                         source,
                         layout,
                         image,
-                        &config.supervision[template],
+                        if template < config.supervision.len() {
+                            &config.supervision[template].program
+                        } else {
+                            &config.executables[template - config.supervision.len()]
+                        },
                         index,
                     );
                 }

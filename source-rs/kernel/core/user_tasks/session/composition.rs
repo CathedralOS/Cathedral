@@ -17,11 +17,12 @@ pub(super) fn validate(initial_count: usize, config: &Config<'_>) -> Result<usiz
         .checked_add(config.supervision.len())
         .and_then(|n| n.checked_add(config.dynamic_tasks))
         .ok_or(Error::InvalidCount)?;
-    if config.dynamic_tasks != 0 && initial_count != 1 {
+    if (config.dynamic_tasks != 0 || !config.executables.is_empty()) && initial_count != 1 {
         return Err(Error::InvalidCount);
     }
     if count > crate::ipc::MAX_TASKS
-        || config.supervision.len() > cathedral_contracts::user::MAX_LAUNCHES
+        || config.supervision.len() + config.executables.len()
+            > cathedral_contracts::user::MAX_LAUNCHES
     {
         return Err(Error::InvalidCount);
     }
@@ -74,6 +75,7 @@ pub(super) fn grants(
         }
 
         launches.push(LaunchState {
+            images: [None; cathedral_contracts::user::MAX_LAUNCHES],
             template: Some(index),
             dynamic: false,
             frame_limit: launch.frame_limit,
@@ -99,6 +101,7 @@ pub(super) fn grants(
     }
     for index in config.supervision.len()..count - initial_count {
         launches.push(LaunchState {
+            images: [None; cathedral_contracts::user::MAX_LAUNCHES],
             template: None,
             dynamic: true,
             frame_limit: 0,

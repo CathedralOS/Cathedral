@@ -12,10 +12,13 @@ fn main() {
         "CATHEDRAL_CPU_LIMITS",
         "CATHEDRAL_LAUNCH_COUNT",
         "CATHEDRAL_DYNAMIC_TASKS",
+        "CATHEDRAL_IMAGE_COUNT",
     ] {
         println!("cargo:rerun-if-env-changed={variable}");
     }
     for index in 0..cathedral_contracts::user::MAX_LAUNCHES {
+        println!("cargo:rerun-if-env-changed=CATHEDRAL_IMAGE_{index}_ELF");
+        println!("cargo:rerun-if-env-changed=CATHEDRAL_IMAGE_{index}_ARGUMENT");
         for field in [
             "ELF",
             "FRAMEBUFFER",
@@ -135,6 +138,24 @@ fn startup() {
     source.push_str(&format!(
         "const DYNAMIC_TASKS: usize = {dynamic};\nconst INITIAL_PAGES: [usize; 2] = [{initial_private}, {initial_shared}];\n"
     ));
+    let images: usize = env::var("CATHEDRAL_IMAGE_COUNT")
+        .unwrap_or_else(|_| "0".into())
+        .parse()
+        .unwrap();
+    assert!(images + count <= cathedral_contracts::user::MAX_LAUNCHES);
+    source.push_str("static EXECUTABLES: &[Program<'static>] = &[\n");
+    for index in 0..images {
+        bundle(
+            &format!("CATHEDRAL_IMAGE_{index}_ELF"),
+            &format!("image-{index}.elf"),
+        );
+        let argument: u64 = env::var(format!("CATHEDRAL_IMAGE_{index}_ARGUMENT"))
+            .unwrap()
+            .parse()
+            .unwrap();
+        source.push_str(&format!("Program {{ executable: Executable::Elf(include_bytes!(concat!(env!(\"OUT_DIR\"), \"/image-{index}.elf\"))), arguments: [{argument}, 0] }},\n"));
+    }
+    source.push_str("];\n");
     source.push_str("static LINKS: &[cathedral_core::link::LinkSpec] = &[\n");
     // Initial resource ownership is supplied by the same host composition as children.
     let graph = env::var("CATHEDRAL_LINKS").unwrap_or_default();

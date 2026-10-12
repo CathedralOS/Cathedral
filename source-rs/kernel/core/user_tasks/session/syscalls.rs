@@ -19,7 +19,7 @@ pub(super) fn syscall(session: &mut Session, slot: usize, now: u64) -> Event {
     let (number, first, second, third) = session.tasks[slot].context.syscall();
     let mut event = Event::Continue;
     let result = match number {
-        abi::TASK_EXECUTABLE..=abi::TASK_POOL_AVAILABLE => {
+        abi::TASK_EXECUTABLE..=abi::TASK_CPU_ASSIGN => {
             admission::dispatch(session, slot, [number, first, second, third])
         }
         abi::RESOURCE_BUDGET | abi::RESOURCE_ASSIGN => {

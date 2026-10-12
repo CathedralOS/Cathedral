@@ -71,3 +71,7 @@ pub fn decode(bytes: &[u8]) -> Option<Packet> {
 pub fn error(status: u64) -> Packet {
     [status, 0, 0, 0, 0, 0, 0, 0]
 }
+
+/// Owner selects a local executable and funds a dynamic child.
+/// slot, image index, argument, channels, descendant slots, image mask, CPU ceiling.
+pub const RUN: u64 = 109;

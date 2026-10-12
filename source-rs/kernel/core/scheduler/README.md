@@ -57,8 +57,9 @@ at a timer boundary, restart or loan transfer. Idle refill cannot exceed 20 ms.
 
 Limits are ceilings, not guaranteed reservations. Their sum may exceed one CPU;
 turn sharing still decides contention among eligible branches. A child ceiling
-larger than its parent's does not widen the parent. There are no runtime APIs for
-a matrix to change rates, and no virtual core-count advertisement in this milestone.
+larger than its parent's does not widen the parent. `Launch::assign_cpu` lets an owner configure an idle child's rate. It preserves
+existing debt and clamps credit without topping it up. Active-child changes and
+virtual core-count advertisement remain unimplemented.
 
 [The architecture clock](../../arch/x86_64/cpu_clock.rs) samples an ordered TSC,
 calibrated once against five nominal 100 Hz PIT periods. It assumes the fixed-rate,

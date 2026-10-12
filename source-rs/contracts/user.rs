@@ -85,7 +85,7 @@ pub const IPC_SEND_CAP: u64 = 36;
 pub const IPC_RECEIVE_CAP: u64 = 37;
 pub const IPC_PACKET_BYTES: usize = 80;
 pub const MAX_DYNAMIC_CHANNELS: usize = 32;
-pub const MAX_CREATED_CHANNELS: usize = 8;
+pub const MAX_CREATED_CHANNELS: usize = 16;
 pub const MAX_DYNAMIC_HANDLES: usize = 16;
 
 /// Move up to four dynamic endpoints into a newly admitted child. RDI launch,
@@ -128,3 +128,6 @@ pub const TASK_LAUNCH_PORT: u64 = 49; // owned launch -> owner-local peer port
 pub const TASK_IMAGE_AT: u64 = 50; // local executable grant index, zero, zero
 pub const TASK_POOL_AVAILABLE: u64 = 51; // zero, zero, zero; own unused process reservations
 pub const MAX_ADMISSION_FRAMES: usize = 256;
+
+pub const TASK_IMAGE_ALLOW: u64 = 52; // owned idle launch, executable grant, zero; stage copied startup authority
+pub const TASK_CPU_ASSIGN: u64 = 53; // owned idle launch, burst/refill ceiling, zero; retains debt

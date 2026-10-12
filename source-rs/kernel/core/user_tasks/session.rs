@@ -1,6 +1,6 @@
 //! User-task session entrance: validate -> prepare -> admit -> execute -> collect.
 //! Follow execution for the boot loop, traps for CPU re-entry, and syscalls for resource dispatch.
-use super::{Config, Error, Exit, Program, Report, Supervision};
+use super::{Config, Error, Exit, Program, Report};
 use crate::extent::FrameAllocator;
 use alloc::vec::Vec;
 use cathedral_arch as arch;
@@ -42,6 +42,7 @@ pub unsafe fn run(
             programs,
             output,
             Config {
+                executables: &[],
                 dynamic_tasks: 0,
                 links: &[],
                 frame_limit,

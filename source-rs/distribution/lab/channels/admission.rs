@@ -26,6 +26,15 @@ pub fn run() -> u64 {
     );
     for _ in 0..4 {
         let nested = image.reserve(limits(8, 4), 2, 256).unwrap();
+        assert_eq!(
+            nested.allow_executable(Executable::from_raw(0)),
+            Err(Error(abi::BAD_HANDLE as i64))
+        );
+        nested.allow_executable(other_image).unwrap();
+        assert_eq!(
+            nested.assign_cpu(abi::CPU_REFILL_PERIOD_US + 1),
+            Err(Error(abi::INVALID_ARGUMENT as i64))
+        );
         let sibling = other_image.reserve(limits(4, 2), 0, 256).unwrap();
         let spare = image.reserve(limits(0, 0), 0, 256).unwrap();
         assert_eq!(task::available_slots().unwrap(), 0);
@@ -37,6 +46,11 @@ pub fn run() -> u64 {
         let outside_pair = sibling.port().unwrap().connect().unwrap();
         assert_eq!(&receive(outside_pair.1).0[..5], b"ready");
         let child = nested.spawn(30).unwrap();
+        assert_eq!(
+            nested.allow_executable(other_image),
+            Err(Error(abi::BUSY as i64))
+        );
+        assert_eq!(nested.assign_cpu(20000), Err(Error(abi::BUSY as i64)));
         let pair = nested.port().unwrap().connect().unwrap();
         assert_eq!(&receive(pair.1).0[..5], b"ready");
         assert_eq!(nested.release(), Err(Error(abi::BUSY as i64)));
@@ -89,6 +103,8 @@ pub fn worker(role: u64, mode: u64) -> u64 {
         return 34;
     }
     if mode == 30 {
+        assert!(Executable::at(1).is_ok());
+        assert!(Executable::at(2).is_err());
         let slots = task::available_slots().unwrap();
         let budget = resources::budget().unwrap();
         let rejected = image.reserve(limits(1, 1), 0, 1).unwrap();
@@ -99,6 +115,9 @@ pub fn worker(role: u64, mode: u64) -> u64 {
         rejected.release().unwrap();
         assert_eq!(task::available_slots().unwrap(), slots);
         assert_eq!(resources::budget().unwrap(), budget);
+    }
+    if mode == 31 || mode == 32 {
+        assert!(Executable::at(1).is_err());
     }
     if mode < 32 {
         let child = image

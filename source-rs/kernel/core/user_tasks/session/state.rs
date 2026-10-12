@@ -43,6 +43,7 @@ pub(super) static ACTIVE: AtomicPtr<Session> = AtomicPtr::new(core::ptr::null_mu
 pub(super) static EPOCH: AtomicU64 = AtomicU64::new(1);
 
 pub(super) struct LaunchState {
+    pub(super) images: [Option<usize>; cathedral_contracts::user::MAX_LAUNCHES],
     pub(super) template: Option<usize>,
     pub(super) dynamic: bool,
     pub(super) frame_limit: usize,

@@ -11,7 +11,11 @@ names. Mapping and rollback remain in the existing
 ## Authority and sequence
 
 Profiles may supply `startup.dynamic_tasks` unbound accounts, initially owned by
-the sole initial process. Their page/channel allowances start at zero. Unlike a
+the sole initial process. Their page/channel allowances start at zero.
+`startup.executables` supplies code-only grants to that initial process through
+`Executable::at`, without allocating dormant process accounts. Catalogue entries
+and static launch templates together fit seven code grants; total process accounts
+still fit eight. Catalogue entries carry no device or resource authority. Unlike a
 static launch, no executable is assigned to one of these accounts at boot.
 
 1. `Launch::executable()` exports code authority from an owned plain launch.
@@ -30,7 +34,16 @@ static launch, no executable is assigned to one of these accounts at boot.
    child (`Executable::at(0)`), so it can construct bounded descendants from its
    own process/page/channel budgets. Clock access can only derive from the
    creator's clock authority; no device grant is cloned.
-5. After collecting the outcome, `Launch::release()` returns unused capacity.
+5. `Launch::allow_executable` stages a copy of a caller-owned code grant for an
+   idle owned child. Fresh child-local names publish only after successful load;
+   failed admission retains the staged configuration for retry. Lending the launch
+   or losing its owner clears staging. Dynamic children receive their selected
+   executable first, followed by explicitly allowed distinct images. Staging does
+   not install capabilities into an already-running process.
+6. `Launch::assign_cpu` changes an owned idle child's burst/refill ceiling, without
+   resetting accounting, debt or manufacturing refill credit. Ancestor ceilings
+   still apply. This is subdivision policy, not service-call donation or priority.
+7. After collecting the outcome, `Launch::release()` returns unused capacity.
    Accepted pages or moved endpoints can pin the account: release returns BUSY
    until their charges disappear, without unmapping or revoking their holders.
 
@@ -65,6 +78,13 @@ selects distinct executable grants, builds three dynamic process levels, exhaust
 its pool, forces load failure, cancels subtrees while a sibling responds, rejects
 stale launch names, and tests retained-endpoint funding before account release.
 The matrix desktop additionally rejects exporting its device-granted display launch.
+Its root receives code grants and a process pool; the same matrix service dynamically
+reserves descendants, stages selected executable authority and owns their lifetimes.
+Owner-only `RUN` configures code, channel allowance, descendant capacity and CPU cap.
+Repeated subtree replacement returns process/channel funding and preserves a live
+outside app. Invalid image delegation rolls reservation funding back; nested pool
+exhaustion cannot steal the sibling's reserved capacity. The matrix explicitly
+releases returned idle descendant reservations after cancellation.
 
 ```powershell
 python tools/boot-harness-rs/run.py --admission-test --release --timeout 120

@@ -71,6 +71,9 @@ impl Scheduler {
         self.budgets.refresh(&self.shares);
     }
     /// Boot configuration only. Zero inherits ancestor ceilings; it adds no cap.
+    pub fn assign_cpu(&mut self, slot: usize, limit: u64) -> bool {
+        self.states[slot] == TaskState::Vacant && self.budgets.assign(slot, limit, &self.shares)
+    }
     pub fn configure_cpu(&mut self, limits: &[u64]) -> bool {
         self.budgets.configure(limits)
     }

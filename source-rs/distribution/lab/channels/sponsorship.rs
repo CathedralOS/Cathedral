@@ -32,7 +32,7 @@ pub fn run() {
         (0, 0)
     );
     for _ in 0..2 {
-        let mut held = [None; abi::MAX_CREATED_CHANNELS];
+        let mut held = [None; 8];
         for (used, retained) in held.iter_mut().enumerate() {
             let (child, pair) = spawn(0, 7);
             charged(pair, used as u64);
