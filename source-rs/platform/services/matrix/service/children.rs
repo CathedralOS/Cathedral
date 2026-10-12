@@ -8,6 +8,7 @@ struct Owned {
     task: Child,
     control: Pair,
     data: Pair,
+    notify: Handle,
 }
 #[derive(Default)]
 pub(super) struct Children {
@@ -15,6 +16,23 @@ pub(super) struct Children {
     pending: Option<(Request, usize, u64)>,
 }
 impl Children {
+    pub(super) fn notify(&self, world: &mut World) -> Result<(), Error> {
+        for (slot, child) in self.slots.iter().enumerate() {
+            if world.take_notification(slot)
+                && let Some(child) = child
+            {
+                match child.notify.send(&[]) {
+                    Ok(()) => (),
+                    // A queued hint already guarantees a wake. Death is handled
+                    // through the data connection and structured child lifetime.
+                    Err(Error(code))
+                        if code == abi::WOULD_BLOCK as i64 || code == abi::PEER_CLOSED as i64 => {}
+                    Err(error) => return Err(error),
+                }
+            }
+        }
+        Ok(())
+    }
     pub(super) fn dispatch(
         &mut self,
         request: &Request,
@@ -130,6 +148,7 @@ impl Children {
         child.task.wait()?;
         child.data.0.close()?;
         child.data.1.close()?;
+        child.notify.close()?;
         Ok(())
     }
 }

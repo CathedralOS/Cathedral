@@ -4,7 +4,7 @@ use cathedral_user_runtime::task::Environment;
 pub(super) const LEFT: u64 = 0x315ca8;
 pub(super) const RIGHT: u64 = 0x2c8762;
 pub fn run(style: u64, environment: Environment) -> u64 {
-    assert_eq!(environment.len(), 2);
+    assert_eq!(environment.len(), 3);
     assert!(Launch::at(0).is_err());
     assert!(cathedral_user_runtime::link::Link::at(0).is_err());
     assert!(cathedral_user_runtime::display::mapping().is_err());
@@ -14,6 +14,10 @@ pub fn run(style: u64, environment: Environment) -> u64 {
     );
     let control = (Handle::bootstrap(0).unwrap(), Handle::bootstrap(1).unwrap());
     let mut alternate = false;
+    let wake = environment.endpoint(2).unwrap();
+    let mut painted = None;
+    let mut paints = 0;
+    let mut wakes = 0;
     loop {
         let view = call(parent, [wire::VIEW, 0, 0, 0, 0, 0, 0, 0]);
         if view[0] == 0 {
@@ -45,27 +49,55 @@ pub fn run(style: u64, environment: Environment) -> u64 {
             } else {
                 RIGHT
             };
-            let _ = call(
-                parent,
-                [
-                    wire::PAINT,
-                    view[1],
-                    0,
-                    0,
-                    0,
-                    view[2] + 99,
-                    view[3] + 99,
-                    color,
-                ],
-            );
+            if painted != Some((view, color)) {
+                let response = call(
+                    parent,
+                    [
+                        wire::PAINT,
+                        view[1],
+                        0,
+                        0,
+                        0,
+                        view[2] + 99,
+                        view[3] + 99,
+                        color,
+                    ],
+                );
+                if response[0] == 0 {
+                    painted = Some((view, color));
+                    paints += 1;
+                }
+            }
+        } else {
+            painted = None;
         }
         let mut bytes = [0; 64];
-        if control
-            .0
-            .receive_until(&mut bytes, time::after(2).unwrap())
-            .is_ok()
-        {
-            control.1.send(&wire::encode([0; 8])).unwrap();
+        loop {
+            match ipc::wait_many(&[wake, control.0], time::after(100).unwrap()) {
+                Ok(0) => {
+                    wake.receive(&mut bytes).unwrap();
+                    wakes += 1;
+                    break;
+                }
+                Ok(_) => {
+                    control.0.receive(&mut bytes).unwrap();
+                    control
+                        .1
+                        .send(&wire::encode([
+                            0,
+                            paints,
+                            wakes,
+                            time::cpu_us().unwrap(),
+                            0,
+                            0,
+                            0,
+                            0,
+                        ]))
+                        .unwrap();
+                }
+                Err(Error(code)) if code == abi::TIMED_OUT as i64 => (),
+                Err(error) => panic!("matrix app wait {error:?}"),
+            }
         }
     }
 }

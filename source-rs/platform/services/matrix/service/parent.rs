@@ -8,15 +8,26 @@ pub(super) struct Parent {
     pair: Option<(Handle, Handle)>,
     pub grant: Grant,
     display: Option<(Handle, Handle)>,
+    pub wake: Option<Handle>,
 }
 impl Parent {
+    pub fn refresh_notified(&mut self, world: &mut World) -> Result<(), Error> {
+        if let Some(wake) = self.wake {
+            match wake.receive_until(&mut [0; 64], time::now()?) {
+                Ok(_) => self.refresh(world)?,
+                Err(Error(code)) if code == abi::TIMED_OUT as i64 => (),
+                Err(error) => return Err(error),
+            }
+        }
+        Ok(())
+    }
     pub fn new(environment: &Environment) -> Result<Self, Error> {
-        if !matches!(environment.len(), 0 | 2 | 4) {
+        if !matches!(environment.len(), 0 | 2 | 3 | 4) {
             return Err(Error(abi::DENIED as i64));
         }
         Ok(Self {
-            upstream: environment.len() == 2,
-            pair: (environment.len() == 2).then(|| {
+            upstream: matches!(environment.len(), 2 | 3),
+            pair: matches!(environment.len(), 2 | 3).then(|| {
                 (
                     environment.endpoint(0).unwrap(),
                     environment.endpoint(1).unwrap(),
@@ -29,6 +40,7 @@ impl Parent {
                 )
             }),
             grant: Grant::default(),
+            wake: (environment.len() == 3).then(|| environment.endpoint(2).unwrap()),
         })
     }
     pub fn refresh(&mut self, world: &mut World) -> Result<(), Error> {

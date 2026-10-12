@@ -1,5 +1,6 @@
 //! Distribution layout and recovery policy over the platform matrix-owned tree.
 mod app;
+mod probes;
 use super::*;
 pub use app::run as app;
 use cathedral_contracts::{composition as c, display, input, pointer};
@@ -20,12 +21,21 @@ fn display_call(pair: Pair, words: [u64; 6]) -> [u64; 6] {
 fn owner(pair: Pair, words: wire::Packet) {
     assert_eq!(call(pair, words), [0; 8]);
 }
-fn inner(pair: Pair) {
-    owner(pair, [wire::SPAWN, 0, 0, 2, 0, 0, 0, 0]);
+fn inner(pair: Pair, pressure: bool) {
+    owner(
+        pair,
+        [wire::SPAWN, 0, 0, if pressure { 10 } else { 2 }, 0, 0, 0, 0],
+    );
     owner(
         pair,
         wire::route([wire::SPAWN, 0, 0, 0, 0, 0, 0, 0], 0).unwrap(),
     );
+    if pressure {
+        owner(
+            pair,
+            wire::route([wire::SPAWN, 1, 1, 0, 0, 0, 0, 0], 0).unwrap(),
+        );
+    }
     owner(
         pair,
         [wire::PLACE, 0, 110, 140, 280, 220, wire::KEY_MASK, 0],
@@ -103,17 +113,20 @@ pub fn run() -> u64 {
     }
     let (source_send, source_input) = ipc::channel().unwrap();
     let (source_output, source_recv) = ipc::channel().unwrap();
+    let spinner = Launch::at(6).ok();
+    let pressure = spinner.is_some();
     let loans = [
         Launch::at(3).unwrap(),
         Launch::at(4).unwrap(),
         Launch::at(5).unwrap(),
+        spinner.unwrap_or(Launch::from_raw(0)),
     ];
     let _root = Launch::at(2)
         .unwrap()
         .spawn_tree(
             0,
             &[display.0, display.1, source_input, source_output],
-            &loans,
+            &loans[..if pressure { 4 } else { 3 }],
         )
         .unwrap();
     assert!(Launch::at(3).is_err());
@@ -122,7 +135,7 @@ pub fn run() -> u64 {
         matrix,
         [wire::BIND, info[1], info[2], wire::KEY_MASK, 0, 0, 0, 0],
     );
-    inner(matrix);
+    inner(matrix, pressure);
     owner(matrix, [wire::SPAWN, 1, 1, 0, 1, 0, 0, 0]);
     owner(
         matrix,
@@ -134,13 +147,18 @@ pub fn run() -> u64 {
     owner(matrix, [wire::STOP, 0, 0, 0, 0, 0, 0, 0]);
     pixel(matrix, 140, 190, BACKGROUND);
     pixel(matrix, 510, 190, app::RIGHT);
-    inner(matrix);
+    inner(matrix, pressure);
     pixel(matrix, 140, 190, app::LEFT);
     cathedral_user_runtime::write(
         b"Cathedral matrix desktop: subtree replacement cleared pixels and preserved sibling\n",
     )
     .unwrap();
     // The source endpoint grants input ingress, never owner or display authority.
+    probes::exercise(matrix);
+    if pressure {
+        cathedral_user_runtime::write(b"Cathedral matrix desktop: capped spinner active\n")
+            .unwrap();
+    }
     for op in [wire::SPAWN, wire::READ_PIXEL, wire::BIND] {
         assert_eq!(
             call((source_send, source_recv), [op, 0, 0, 0, 0, 0, 0, 0]),
@@ -160,9 +178,6 @@ pub fn run() -> u64 {
         .unwrap();
     cathedral_user_runtime::write(b"Cathedral matrix desktop: ready\n").unwrap();
     loop {
-        owner(matrix, [wire::HEALTH, 0, 0, 0, 0, 0, 0, 0]);
-        let _ = matrix
-            .1
-            .receive_until(&mut [0; 64], time::after(100).unwrap());
+        matrix.1.receive(&mut [0; 64]).unwrap();
     }
 }

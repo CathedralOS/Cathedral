@@ -37,7 +37,7 @@ remain until their extra behavior has moved into the integrated path with tests.
 | [CPU turns and measured ceilings](kernel/core/scheduler/README.md) | Every user launch subtree, including nested matrices | Host accounting tests; `--smoke` checks capped spinners, yields, restart debt and idle refill | Boot-configured burst/refill caps; periodic-timer overrun; no deadlines, weights or service-call donation |
 | [Recursive launch loans](kernel/core/supervision/delegation.rs) | Matrices own direct children, lend budgets further, reclaim subtrees | `--ipc-test` plus matrix replacement tests | Approved executables/slots; not a general CPU/RAM sponsorship contract |
 | [Matrix lifecycle](platform/services/matrix/service/children.rs) | Same provider above apps and another matrix | `--matrix-test`: replacement preserves an outside sibling | Two direct children; distribution supplies policy through owner-only control |
-| [Local viewport, focus and capture](platform/services/matrix/world.rs) | Nested and sibling visible apps | Host policy tests; `--matrix-test`; `--matrix-desktop-test` physical focus | Five keys; bounded queues; app polling and synchronous upward refresh |
+| [Local viewport, focus and capture](platform/services/matrix/world.rs) | Nested and sibling visible apps | Host policy tests; `--matrix-test`; `--matrix-desktop-test` physical focus | Five keys; coalesced wake channels; synchronous upward refresh |
 | [Clipped surface commands](platform/services/matrix/world/surface.rs) | App rectangles cross actual matrix boundaries to the existing compositor | Host clipping/epoch/z-order tests; scanout and teardown checks | One primitive per path; current renderer supports two matrix levels; no images/text surfaces yet |
 | [Retained compositor and hardware input](platform/services/display/compositor.rs) | Root adapter uses existing scanout/cursor and shared input decoders | `--matrix-desktop-test`; `--session-test --pressure` | Existing richer scenes/hosting remain in the earlier session fixture |
 | [Private/shared page lifetime](kernel/core/regions.rs) | Existing rendering/storage labs | Host policy tests and `--smoke` | Per-slot page limits and boot-approved sharing; no general shared-object IPC transfer |
@@ -62,11 +62,12 @@ activity. The remaining boundary work is recorded below:
 | Admission | Executable and resource ceilings come from reserved boot slots | Admit an explicitly granted executable within a budget, with complete rollback and no ambient image lookup |
 | Devices | Concrete framebuffer/PS2/ATA grants, no arbitrary device discovery | One reusable userspace interrupt/MMIO boundary, proved with another driver; DMA needs a separate ownership/isolation design |
 
-Immediate integration follow-ups are event-driven matrix input, retained local
-scene replay after placement changes, and replacing fixed surface keys with
-budgeted surface objects. Current apps repaint their small primitive periodically;
-the compositor suppresses identical updates, but this is not the final idle or
-latency design. Root-adapter recovery/trusted-path behavior remains an owner-level
+Matrix input now wakes idle apps; retained local scenes replay after placement
+changes. The desktop test checks idle CPU use and moves without app repaint.
+`--matrix-desktop-test --pressure` adds a spinner inside a 20% nested CPU ceiling
+and reports key-to-scanout latency (about one second in the current lab). Equal
+turns and synchronous parent RPC still need latency work. Next, replace fixed
+surface keys with budgeted surface objects. Root-adapter recovery/trusted-path behavior remains an owner-level
 policy question. SMP, GPU support and the database filesystem follow these
 boundaries rather than becoming prerequisites for exercising them.
 

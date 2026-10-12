@@ -2,6 +2,43 @@ use super::*;
 use cathedral_contracts::input;
 
 #[test]
+fn retained_geometry_moves_without_child_traffic_and_revocation_erases_it() {
+    let mut w = world();
+    place(&mut w, 0, 10, 20);
+    let epoch = view(&mut w, 0)[1];
+    w.surface(0, 7, [wire::PAINT, epoch, 0, 5, 7, 400, 400, 0x123456])
+        .unwrap();
+    assert!(w.take_notification(0));
+    place(&mut w, 0, 200, 200);
+    assert!(!w.take_notification(0)); // Position is outside the child's view.
+    assert_eq!(
+        w.replay(0)[0].unwrap(),
+        [wire::PAINT, 1, 1, 205, 207, 95, 73, 0x123456]
+    );
+    w.revoke(0).unwrap();
+    assert!(w.take_notification(0));
+    place(&mut w, 0, 10, 20);
+    assert_eq!(w.replay(0), [None; 3]);
+}
+
+#[test]
+fn wake_hints_coalesce_and_remain_child_local() {
+    let mut w = world();
+    place(&mut w, 0, 0, 0);
+    place(&mut w, 1, 200, 0);
+    w.take_notification(0);
+    w.take_notification(1);
+    w.pointer(10, 10, 0);
+    w.pointer(11, 11, 0);
+    assert!(w.take_notification(0));
+    assert!(!w.take_notification(0));
+    assert!(!w.take_notification(1));
+    let epoch = view(&mut w, 0)[1];
+    assert_eq!(next(&mut w, 0, epoch)[2], wire::POINTER);
+    assert_eq!(next(&mut w, 0, epoch)[2], wire::POINTER);
+}
+
+#[test]
 fn nested_surfaces_clip_translate_and_cannot_name_a_siblings_surface() {
     let mut outer = world();
     place(&mut outer, 0, 100, 100);

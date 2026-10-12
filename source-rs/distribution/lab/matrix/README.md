@@ -34,7 +34,7 @@ The [desktop policy](desktop.rs) supplies layout and initial appearance. The sam
 platform matrix implementation owns input, clipping and child admission at both
 levels. The root environment additionally receives explicit compositor and
 physical-source endpoints; these are the only device-facing adapters. Apps get
-only their parent pair. The [app](desktop/app.rs) polls local views/events and
+only their parent pair and a child-local wake receiver. The [app](desktop/app.rs) waits for local input/view invalidations and
 submits an oversized rectangle that must be clipped at each ownership boundary.
 
 The [surface validator](../../../platform/services/matrix/world/surface.rs)
@@ -59,3 +59,10 @@ older session's images, text, synthetic pointers or richer scene snapshots.
 Device/root-provider recovery remains separate from the proved inner-subtree
 recovery. [STATUS.md](../../../STATUS.md) tracks these boundaries and the kernel
 metadata/resource audit. Protocol locality is not a complete timing-isolation claim.
+
+The desktop retains app rectangles across owner placement changes. Its startup
+probe checks that idle apps do not repaint or consume 20 ms of CPU per second.
+Use `--matrix-desktop-test --pressure --release --timeout 120` to add a
+non-yielding descendant inside a 20% nested CPU allowance. Physical-input tests
+report scanout latency; current equal-turn scheduling can still take about a
+second in that deliberately constrained subtree. The ordinary profile has no spinner.

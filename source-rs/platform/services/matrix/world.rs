@@ -63,6 +63,7 @@ impl World {
             // old descendant grants when a replacement parent later reconnects.
             for child in &mut self.children {
                 child.rect = None;
+                child.surfaces = [None; 3];
             }
         }
         self.parent = grant;
@@ -112,6 +113,7 @@ impl World {
             self.capture = None;
         }
         self.children[slot].rect = None;
+        self.children[slot].surfaces = [None; 3];
         self.children[slot].refresh(self.parent, false);
         Ok(())
     }
@@ -120,6 +122,10 @@ impl World {
         if let Some(child) = self.children.get_mut(slot) {
             child.incarnation = 0;
         }
+    }
+    /// Coalesced wake hint; clients re-read only their local view and events.
+    pub fn take_notification(&mut self, slot: usize) -> bool {
+        core::mem::take(&mut self.children[slot].notify)
     }
     /// Identity is supplied by the accepted endpoint, never a request field.
     pub fn request(&mut self, slot: usize, incarnation: u64, words: wire::Packet) -> wire::Packet {

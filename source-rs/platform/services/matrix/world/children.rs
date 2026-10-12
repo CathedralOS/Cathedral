@@ -23,6 +23,8 @@ pub(super) struct Child {
     pub keys: u64,
     pub grant: Grant,
     pub incarnation: u64,
+    pub notify: bool,
+    pub surfaces: [Option<wire::Packet>; 3],
     epoch: u64,
     queue: [wire::Packet; 8],
     len: usize,
@@ -42,6 +44,7 @@ impl Child {
             return;
         }
         self.len = 0;
+        self.notify = true;
         let Some(epoch) = self.epoch.checked_add(1) else {
             self.grant = Grant::default();
             return;
@@ -71,6 +74,7 @@ impl Child {
         }
         self.queue[self.len] = [0, self.grant.epoch, kind, x, y, value, 0, 0];
         self.len += 1;
+        self.notify = true;
         true
     }
     pub fn cancel(&mut self) {

@@ -3,7 +3,7 @@ use super::*;
 use cathedral_user_runtime::{link::Link, task::Launch};
 pub const EXIT_PROBE: u64 = 0xfffe;
 pub fn run(environment: cathedral_user_runtime::task::Environment) -> u64 {
-    assert_eq!(environment.len(), 2);
+    assert_eq!(environment.len(), 3);
     assert!(matches!(Launch::at(0), Err(Error(code)) if code == abi::DENIED as i64));
     assert!(Link::at(0).is_err());
     assert_eq!(

@@ -19,11 +19,14 @@ fn raw(number: u64, first: u64, second: u64, third: u64) -> u64 {
 pub fn clock() {
     let ticket = raw(abi::CLOCK_HANDLE, 0, 0, 0);
     assert!((ticket as i64) > 0);
-    assert_eq!(raw(abi::CLOCK_READ, 0, 0, 8), abi::BAD_HANDLE);
-    for address in [0, u64::MAX, b"readonly".as_ptr() as u64] {
-        assert_eq!(raw(abi::CLOCK_READ, ticket, address, 8), abi::BAD_ADDRESS);
+    for operation in [abi::CLOCK_READ, abi::CPU_READ] {
+        assert_eq!(raw(operation, 0, 0, 8), abi::BAD_HANDLE);
+        for address in [0, u64::MAX, b"readonly".as_ptr() as u64] {
+            assert_eq!(raw(operation, ticket, address, 8), abi::BAD_ADDRESS);
+        }
+        assert_eq!(raw(operation, ticket, 0, 7), abi::INVALID_ARGUMENT);
     }
-    assert_eq!(raw(abi::CLOCK_READ, ticket, 0, 7), abi::INVALID_ARGUMENT);
+    assert!(time::cpu_us().unwrap() <= time::cpu_us().unwrap());
     assert_eq!(
         time::after(1 << 63),
         Err(Error(abi::INVALID_ARGUMENT as i64))

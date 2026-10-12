@@ -207,3 +207,8 @@ For interaction, run `python tools/boot-harness-rs/run.py --profile tools/boot-h
 Click either app and press Enter. This is the integrated matrix path; the older
 session profile retains its richer compositor regression experiments. The
 [implementation map](../../source-rs/STATUS.md) distinguishes their current scope.
+
+The matrix desktop also accepts `--pressure`: a non-yielding descendant shares a
+20% CPU ceiling with the nested matrix/app. Both normal and pressure tests check
+quiet apps, retained placement without repaint, subtree replacement and physical
+input. The harness reports key-to-scanout latency; this is not a deadline guarantee.

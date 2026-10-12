@@ -1,4 +1,4 @@
-//! Refresh parent authority before every request, then dispatch local ownership.
+//! Consume local invalidations, wake children, then dispatch ownership and input.
 mod children;
 mod parent;
 mod requests;
@@ -26,14 +26,29 @@ pub fn run(environment: Environment) -> Result<(), Error> {
     }
     let mut children = children::Children::default();
     loop {
+        parent.refresh_notified(&mut world)?;
         if let Some(slot) = children.finish(&mut server, &mut world)? {
             parent.erase(slot)?;
         }
         let (handle, deadline) = children.wait();
-        let Some(event) = server.next_event_or(handle.as_slice(), deadline)? else {
+        children.notify(&mut world)?;
+        let mut extra = [cathedral_user_runtime::ipc::Handle::from_raw(0); 2];
+        let mut count = 0;
+        for h in [handle, parent.wake].into_iter().flatten() {
+            extra[count] = h;
+            count += 1;
+        }
+        let Some(event) = server.next_event_or(&extra[..count], deadline)? else {
             continue;
         };
-        parent.refresh(&mut world)?;
+        // Admitted children receive coalesced invalidations on their wake channel.
+        // Legacy manually assembled two-endpoint fixtures still refresh on demand.
+        if parent.wake.is_none() {
+            parent.refresh(&mut world)?;
+        } else {
+            // A parent hint may arrive while waiting for a child request.
+            parent.refresh_notified(&mut world)?;
+        }
         match event {
             Event::Disconnected { client, .. } => {
                 if client < 2 {

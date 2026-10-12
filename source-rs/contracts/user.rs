@@ -112,3 +112,5 @@ pub const IPC_BUDGET_BYTES: usize = 32;
 pub const DEFAULT_CHANNELS: usize = MAX_DYNAMIC_CHANNELS / MAX_TASKS;
 /// Lab CPU burst allowances refill at allowance/period of one execution CPU.
 pub const CPU_REFILL_PERIOD_US: u64 = 100_000;
+/// Caller-only measured execution microseconds. Same grant/copy ABI as CLOCK_READ.
+pub const CPU_READ: u64 = 42;

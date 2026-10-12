@@ -79,8 +79,9 @@ before publishing the first user context have no application sponsor.
 
 Each interval charges the process and all current ancestors exactly once. Internal
 `CpuReport` totals distinguish direct from subtree execution and survive process
-replacement. These reports return only to the boot fixture; no new application
-clock authority or view of another account is exposed. A blocked caller's request
+replacement. Full reports return only to the boot fixture. `CPU_READ` exposes only the caller
+account's direct microseconds through its existing clock grant and checked copyout;
+no other account or machine total is exposed. A blocked caller's request
 executing in an independent provider still charges that provider's tree.
 
 ## What a turn means

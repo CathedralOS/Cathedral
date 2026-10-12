@@ -98,6 +98,7 @@ pub(super) fn syscall(session: &mut Session, slot: usize, now: u64) -> Event {
         }
         abi::DISPLAY_INFO => display::information(session, slot, first, second),
         abi::TASK_LAUNCH..=abi::CLOCK_HANDLE
+        | abi::CPU_READ
         | abi::TASK_SPAWN_WITH
         | abi::TASK_ENVIRONMENT
         | abi::TASK_SPAWN_TREE => tasks::dispatch(

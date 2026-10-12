@@ -39,10 +39,19 @@ impl Children {
                 return Err(error);
             }
         };
-        let child = match target.spawn_tree(argument, &[requests, replies], &loans[..count]) {
-            Ok(child) => child,
+        let (notify, wake) = match ipc::channel() {
+            Ok(pair) => pair,
             Err(error) => {
                 for endpoint in [requests, input, output, replies] {
+                    endpoint.close()?;
+                }
+                return Err(error);
+            }
+        };
+        let child = match target.spawn_tree(argument, &[requests, replies, wake], &loans[..count]) {
+            Ok(child) => child,
+            Err(error) => {
+                for endpoint in [requests, input, output, replies, notify, wake] {
                     endpoint.close()?;
                 }
                 return Err(error);
@@ -55,6 +64,7 @@ impl Children {
                 child.wait()?;
                 input.close()?;
                 output.close()?;
+                notify.close()?;
                 return Err(error);
             }
         };
@@ -66,6 +76,7 @@ impl Children {
             task: child,
             control,
             data: (input, output),
+            notify,
         });
         Ok(())
     }

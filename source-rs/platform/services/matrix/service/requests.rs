@@ -24,6 +24,17 @@ pub(super) fn dispatch(
             let response = owner::dispatch(parent, world, words);
             if response[0] == 0 && matches!(words[0], wire::PLACE | wire::REVOKE) {
                 parent.erase(words[1] as usize)?;
+                for surface in world.replay(words[1] as usize).into_iter().flatten() {
+                    parent.surface(surface)?;
+                }
+            }
+            if response[0] == 0 && words[0] == wire::BIND {
+                for slot in 0..2 {
+                    parent.erase(slot)?;
+                    for surface in world.replay(slot).into_iter().flatten() {
+                        parent.surface(surface)?;
+                    }
+                }
             }
             response
         }

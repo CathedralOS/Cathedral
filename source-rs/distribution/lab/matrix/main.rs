@@ -19,6 +19,10 @@ fn main(role: u64, argument: u64, environment: cathedral_user_runtime::task::Env
         0 => scenario::run(),
         #[cfg(feature = "desktop")]
         2 => desktop::app(argument, environment),
+        #[cfg(feature = "desktop")]
+        3 => loop {
+            core::hint::spin_loop();
+        },
         _ => leaf::run(environment),
     }
 }

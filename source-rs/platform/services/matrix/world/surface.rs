@@ -13,6 +13,11 @@ impl World {
         }
         let key = (words[2] << 2) | (slot as u64 + 1);
         if words[0] == wire::ERASE && words[3..] == [0; 5] {
+            if words[2] == 0 {
+                self.children[slot].surfaces = [None; 3];
+            } else {
+                self.children[slot].surfaces[words[2] as usize] = None;
+            }
             return Ok([wire::ERASE, self.parent.epoch, key, 0, 0, 0, 0, 0]);
         }
         let [op, _, _, x, y, w, h, color] = words;
@@ -24,6 +29,7 @@ impl World {
             return Err(abi::DENIED);
         }
         let placement = self.children[slot].rect.unwrap();
+        self.children[slot].surfaces[words[2] as usize] = Some(words);
         let w = w.min(view[2].saturating_sub(x));
         let h = h.min(view[3].saturating_sub(y));
         if w == 0 || h == 0 {
@@ -39,5 +45,16 @@ impl World {
             h,
             color,
         ])
+    }
+    /// Replay retained child-local geometry through its current placement/clip.
+    pub fn replay(&mut self, slot: usize) -> [Option<wire::Packet>; 3] {
+        let child = &self.children[slot];
+        let (surfaces, epoch, incarnation) = (child.surfaces, child.grant.epoch, child.incarnation);
+        surfaces.map(|entry| {
+            entry.and_then(|mut words| {
+                words[1] = epoch;
+                self.surface(slot, incarnation, words).ok()
+            })
+        })
     }
 }

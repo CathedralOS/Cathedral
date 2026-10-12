@@ -27,18 +27,24 @@ pub(in super::super) fn dispatch(
     if number == abi::CLOCK_HANDLE {
         return session.clock.handle(slot);
     }
-    if number == abi::CLOCK_READ {
+    if number == abi::CLOCK_READ || number == abi::CPU_READ {
         session.clock.check(slot, first)?;
         if third != 8 {
             return Err(abi::INVALID_ARGUMENT);
         }
+        let value = if number == abi::CPU_READ {
+            session.scheduler.account_cpu(cathedral_arch::cpu_time_us());
+            session.scheduler.cpu_report(slot).direct_us
+        } else {
+            now
+        };
         // SAFETY: Kernel CR3, IRQs off; copy validates the complete writable range.
         if !unsafe {
             session.tasks[slot]
                 .space
                 .as_ref()
                 .unwrap()
-                .copy_to_user(second, &now.to_le_bytes())
+                .copy_to_user(second, &value.to_le_bytes())
         } {
             return Err(abi::BAD_ADDRESS);
         }

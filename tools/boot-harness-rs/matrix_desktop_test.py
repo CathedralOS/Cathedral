@@ -4,9 +4,13 @@ import capture
 import pointer_test
 
 
-def verify(stream, output, serial):
+def verify(stream, output, serial, pressure=False):
     if "subtree replacement cleared pixels and preserved sibling" not in serial:
         raise RuntimeError("Missing matrix-owned subtree recovery evidence")
+    if "retained move without app repaint" not in serial:
+        raise RuntimeError("Missing matrix idle/retention/budget evidence")
+    if pressure and "capped spinner active" not in serial:
+        raise RuntimeError("Missing capped matrix pressure peer")
     position = [40, 40]
 
     def send(events):
@@ -49,8 +53,10 @@ def verify(stream, output, serial):
 
     pixels("315ca8", "2c8762")
     click(170, 220)
+    started = time.monotonic()
     enter()
     pixels("d18b35", "2c8762")
+    print(f"Nested key to verified scanout (pressure={pressure}): {(time.monotonic() - started) * 1000:.0f} ms")
     click(550, 220)
     enter()
     pixels("d18b35", "d18b35")
