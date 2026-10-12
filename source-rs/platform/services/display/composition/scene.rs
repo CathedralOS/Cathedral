@@ -1,9 +1,12 @@
-//! Fixed-budget snapshots and recursive clips. No device access or IPC authority.
+//! Retained scene lifetime: bind incarnation, validate revision/snapshot, then publish by swap.
+//! snapshot owns wire decoding; raster owns hit testing, pixels and damage; hosting owns clips.
+//! No device access or IPC authority.
 use cathedral_contracts::composition as wire;
 use cathedral_contracts::user as abi;
 pub mod hosting;
 pub mod labels;
 mod raster;
+mod snapshot;
 pub mod tiles;
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct Rect {
@@ -84,130 +87,6 @@ impl Scene {
             count: 0,
             pixels: [0; wire::IMAGE_PIXELS],
         }
-    }
-    pub fn decode(&mut self, bytes: &[u8]) -> Result<(), u64> {
-        if bytes.len() < wire::SNAPSHOT_BYTES {
-            return Err(abi::INVALID_ARGUMENT);
-        }
-        let word = |at| u64::from_le_bytes(bytes[at..at + 8].try_into().unwrap());
-        if word(0) != wire::MAGIC || word(8) > wire::MAX_NODES as u64 {
-            return Err(abi::INVALID_ARGUMENT);
-        }
-        let scene = self;
-        scene.count = word(8) as usize;
-        for index in 0..scene.count {
-            let base = 16 + index * 56;
-            let [parent, kind, x, y, w, h, value] = core::array::from_fn(|i| word(base + i * 8));
-            let (ox, oy, clip) = if parent == wire::ROOT {
-                (
-                    0,
-                    0,
-                    Rect {
-                        x: 0,
-                        y: 0,
-                        w: 256,
-                        h: 256,
-                    },
-                )
-            } else {
-                let ancestor = scene
-                    .draws
-                    .get(parent as usize)
-                    .filter(|_| parent < index as u64)
-                    .ok_or(abi::INVALID_ARGUMENT)?;
-                if ancestor.kind != wire::GROUP {
-                    return Err(abi::INVALID_ARGUMENT);
-                }
-                (ancestor.rect.x, ancestor.rect.y, ancestor.clip)
-            };
-            let rect = Rect {
-                x: ox.checked_add(x).ok_or(abi::INVALID_ARGUMENT)?,
-                y: oy.checked_add(y).ok_or(abi::INVALID_ARGUMENT)?,
-                w,
-                h,
-            };
-            if !rect.valid() {
-                return Err(abi::INVALID_ARGUMENT);
-            }
-            match kind {
-                wire::GROUP | wire::INPUT if value == 0 => (),
-                wire::RECT if value <= 0xffffff => (),
-                wire::TEXT => {
-                    let text = value.to_le_bytes();
-                    let len = text.iter().position(|&b| b == 0).unwrap_or(8);
-                    if len == 0
-                        || text[..len].iter().any(|b| !(32..=126).contains(b))
-                        || text[len..].iter().any(|&b| b != 0)
-                        || !(7..=28).contains(&h)
-                        || h % 7 != 0
-                        || w != len as u64 * 6 * (h / 7)
-                    {
-                        return Err(abi::INVALID_ARGUMENT);
-                    }
-                }
-                wire::IMAGE if w == 16 && h == 16 && value == 0 => (),
-                _ => return Err(abi::INVALID_ARGUMENT),
-            }
-            scene.draws[index] = Draw {
-                kind,
-                rect,
-                clip: rect.intersect(clip),
-                value,
-            };
-        }
-        // Canonical unused nodes prevent hidden trailing commands.
-        if bytes[16 + scene.count * 56..16 + wire::MAX_NODES * 56]
-            .iter()
-            .any(|&b| b != 0)
-        {
-            return Err(abi::INVALID_ARGUMENT);
-        }
-        for (pixel, chunk) in scene
-            .pixels
-            .iter_mut()
-            .zip(bytes[16 + wire::MAX_NODES * 56..wire::SNAPSHOT_BYTES].chunks_exact(4))
-        {
-            *pixel = u32::from_le_bytes(chunk.try_into().unwrap());
-            if *pixel > 0xffffff {
-                return Err(abi::INVALID_ARGUMENT);
-            }
-        }
-        Ok(())
-    }
-    pub fn hit(&self, x: u64, y: u64) -> bool {
-        let regions = self.draws[..self.count]
-            .iter()
-            .filter(|draw| draw.kind == wire::INPUT);
-        if regions.clone().next().is_none() {
-            return self.pixel(x, y).is_some();
-        }
-        regions.into_iter().any(|draw| draw.clip.contains(x, y))
-    }
-    pub fn pixel(&self, x: u64, y: u64) -> Option<u32> {
-        let mut color = None;
-        for draw in &self.draws[..self.count] {
-            if !draw.clip.contains(x, y) {
-                continue;
-            }
-            let dx = x - draw.rect.x;
-            let dy = y - draw.rect.y;
-            match draw.kind {
-                wire::RECT => color = Some(draw.value as u32),
-                wire::IMAGE => color = Some(self.pixels[(dy * 16 + dx) as usize]),
-                wire::TEXT => {
-                    let scale = draw.rect.h / 7;
-                    let (dx, dy) = (dx / scale, dy / scale);
-                    let ch = draw.value.to_le_bytes()[(dx / 6) as usize];
-                    if dx % 6 < 5
-                        && cathedral_bitmap_font::glyph(ch)[dy as usize] & (1 << (4 - dx % 6)) != 0
-                    {
-                        color = Some(0xffffff);
-                    }
-                }
-                _ => (),
-            }
-        }
-        color
     }
 }
 pub struct Client {

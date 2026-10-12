@@ -108,3 +108,13 @@ fn result(value: u64) -> Result<u64, Error> {
         Ok(value)
     }
 }
+
+pub fn yield_now() {
+    arch::call(abi::YIELD, 0, 0);
+}
+pub fn exit(status: u64) -> ! {
+    arch::call(abi::EXIT, status, 0);
+    // If a broken kernel resumes exit, keep trapping instead of returning into
+    // an absent caller. Correct kernels never reach this instruction.
+    arch::stop()
+}

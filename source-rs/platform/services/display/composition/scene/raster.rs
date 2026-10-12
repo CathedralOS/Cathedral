@@ -1,6 +1,41 @@
 //! Paint bounded spans in scene order; compare snapshots to bound repaint damage.
 use super::*;
 impl Scene {
+    pub fn hit(&self, x: u64, y: u64) -> bool {
+        let regions = self.draws[..self.count]
+            .iter()
+            .filter(|draw| draw.kind == wire::INPUT);
+        if regions.clone().next().is_none() {
+            return self.pixel(x, y).is_some();
+        }
+        regions.into_iter().any(|draw| draw.clip.contains(x, y))
+    }
+    pub fn pixel(&self, x: u64, y: u64) -> Option<u32> {
+        let mut color = None;
+        for draw in &self.draws[..self.count] {
+            if !draw.clip.contains(x, y) {
+                continue;
+            }
+            let dx = x - draw.rect.x;
+            let dy = y - draw.rect.y;
+            match draw.kind {
+                wire::RECT => color = Some(draw.value as u32),
+                wire::IMAGE => color = Some(self.pixels[(dy * 16 + dx) as usize]),
+                wire::TEXT => {
+                    let scale = draw.rect.h / 7;
+                    let (dx, dy) = (dx / scale, dy / scale);
+                    let ch = draw.value.to_le_bytes()[(dx / 6) as usize];
+                    if dx % 6 < 5
+                        && cathedral_bitmap_font::glyph(ch)[dy as usize] & (1 << (4 - dx % 6)) != 0
+                    {
+                        color = Some(0xffffff);
+                    }
+                }
+                _ => (),
+            }
+        }
+        color
+    }
     pub fn damage(&self, old: &Self) -> Rect {
         let mut damage = Rect::default();
         let image_changed = self.pixels != old.pixels;
