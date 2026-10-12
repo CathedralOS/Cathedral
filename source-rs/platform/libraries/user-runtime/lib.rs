@@ -2,7 +2,7 @@
 
 //! Minimal Rust-lab userspace support. No allocator, kernel imports or OS policy.
 //! Start at entry.rs for _start -> supplied environment -> application main -> exit.
-//! task/ipc/memory expose explicit capabilities; server/mod.rs owns service event ordering.
+//! task/ipc/memory expose explicit capabilities; server/server.rs owns service event ordering.
 //! Protocol clients name their receiving service; arch.rs alone performs the trap.
 
 #[cfg(not(all(target_arch = "x86_64", target_os = "none")))]

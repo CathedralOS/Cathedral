@@ -16,7 +16,7 @@ hold child process handles and private ports. Ordinary parent connections are
 created with IPC and installed in the child environment.
 
 [main.rs](main.rs) selects distribution policy or a leaf. Follow
-[scenario entrance](scenario/mod.rs) through local layout, [confinement/input](scenario/checks.rs)
+[scenario entrance](scenario/scenario.rs) through local layout, [confinement/input](scenario/checks.rs)
 and [subtree replacement](scenario/recovery.rs). Owner commands can be routed down
 local child slots for distribution policy/instrumentation. Providers forward
 these asynchronously while continuing to service child requests: blocking on the
@@ -30,11 +30,11 @@ budget and admits a fresh subtree while the outside sibling process survives.
 
 ## Visible integration
 
-The [desktop policy](desktop/mod.rs) supplies layout and initial appearance. The same
+The [desktop policy](desktop/desktop.rs) supplies layout and initial appearance. The same
 platform matrix implementation owns input, clipping and child admission at both
 levels. The root environment additionally receives explicit compositor and
 physical-source endpoints; these are the only device-facing adapters. Apps get
-only their parent pair and a child-local wake receiver. The [app](desktop/app/mod.rs) waits for local input/view invalidations and
+only their parent pair and a child-local wake receiver. The [app](desktop/app/app.rs) waits for local input/view invalidations and
 submits an oversized rectangle that must be clipped at each ownership boundary.
 
 The desktop receives code-only catalogue grants and a funded process pool.

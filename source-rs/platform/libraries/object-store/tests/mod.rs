@@ -1,23 +1,8 @@
-//! Storage failure scenarios. disk models volatile caches and torn sectors.
-use super::*;
-use cathedral_contracts::storage as wire;
-mod disk;
-use disk::Disk;
+//! Rust module plumbing. Start reading in `tests.rs`.
+
 mod catalog;
+mod disk;
 mod durability;
 mod protocol;
 
-fn replace(
-    store: &mut Store<Disk>,
-    object: u64,
-    expected: u64,
-    payload: &[u8],
-) -> Result<Record, u64> {
-    store.transact(
-        0,
-        expected,
-        &[Change::value(wire::REPLACE, object, payload)?],
-        |_| {},
-    )?;
-    store.read(0, object)
-}
+include!("tests.rs");

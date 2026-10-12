@@ -5,7 +5,7 @@ recovery and atomic replacement over `block::Device`. It imports no kernel code.
 Start at `Store::transact` in `lib.rs`: validate a root-local change set, encode
 an inactive snapshot, flush its body, flush its commit, then publish the result.
 `catalog.rs` owns record policy, `protocol.rs` owns bounded connection staging,
-`recovery.rs` selects durable snapshots, and `format/mod.rs` owns their encoding.
+`recovery.rs` selects durable snapshots, and `format/format.rs` owns their encoding.
 
 There are two private roots, four numbered slots per root, and at most 32 bytes
 per object. Object numbers 1 through 4 are relative to the service's accepted

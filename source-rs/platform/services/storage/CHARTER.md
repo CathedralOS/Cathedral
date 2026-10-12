@@ -2,7 +2,7 @@
 
 A separate user task owns the exclusive boot-granted disk controller and the
 platform catalog engine. [main.rs](main.rs) reports service termination;
-[service entrance](service/mod.rs) opens the disk and catalog, accepts connections, and
+[service entrance](service/service.rs) opens the disk and catalog, accepts connections, and
 dispatches data requests to the [catalog protocol](../../libraries/object-store/protocol.rs).
 Private init control handles health and optional
 [recovery hooks](service/recovery.rs). It conveys no object access.

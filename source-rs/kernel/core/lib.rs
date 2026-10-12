@@ -1,8 +1,8 @@
 #![no_std]
 #![deny(unsafe_code)]
 
-//! Firmware-neutral kernel owners. Start at `user_tasks/mod.rs` for the ordinary
-//! prepare -> admit -> execute -> collect flow, or `kernel_tasks/mod.rs` for trusted tasks.
+//! Firmware-neutral kernel owners. Start at `user_tasks/user_tasks.rs` for the ordinary
+//! prepare -> admit -> execute -> collect flow, or `kernel_tasks/kernel_tasks.rs` for trusted tasks.
 //! Those coordinators use the memory, IPC and scheduling policies below; architecture
 //! supplies CPU mechanics and boot supplies firmware custody.
 extern crate alloc;

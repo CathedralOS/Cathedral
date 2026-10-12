@@ -1,18 +1,18 @@
 # Experimental matrix provider
 
 A matrix receives an environment grant and provides narrower environments to
-its children. The same [world](world/mod.rs) manages local children and input at
+its children. The same [world](world/world.rs) manages local children and input at
 every level. No world policy branches on depth or on a global task identity.
 The built-in distribution supplies layout and supervision policy.
 
 Start at [main.rs](main.rs), which selects the supplied parent adapter, then
-[service entrance](service/mod.rs): consume parent invalidations, wake affected children, observe connection lifetime,
-dispatch an owner or child request, reply. [parent entrance](service/parent/mod.rs) adapts
+[service entrance](service/service.rs): consume parent invalidations, wake affected children, observe connection lifetime,
+dispatch an owner or child request, reply. [parent entrance](service/parent/parent.rs) adapts
 either a root grant or the upstream matrix endpoint into the same `Grant`.
-[requests entrance](service/requests/mod.rs) authenticates owner/source/child requests;
+[requests entrance](service/requests/requests.rs) authenticates owner/source/child requests;
 [owner.rs](service/requests/owner.rs) handles local layout, while
-[children entrance](service/children/mod.rs) owns admission, pending control replies and teardown.
-[world entrance](world/mod.rs) owns grant changes and child dispatch; descend into
+[children entrance](service/children/children.rs) owns admission, pending control replies and teardown.
+[world entrance](world/world.rs) owns grant changes and child dispatch; descend into
 [children.rs](world/children.rs) for views/epochs/queues and
 [input.rs](world/input.rs) for focus, capture and key attenuation.
 

@@ -1,4 +1,5 @@
-//! Exhaustive bring-up exercises; never linked into an ordinary boot.
+//! Rust module plumbing. Start reading in `lab.rs`.
+
 #[cfg(feature = "bundled-user")]
 mod applications;
 #[cfg(feature = "bundled-user")]
@@ -14,16 +15,4 @@ mod rendering;
 mod supervision;
 mod user_tasks;
 
-pub fn run(boot: &mut crate::handoff::BootState) {
-    kernel_tasks::exercise(&mut boot.memory, &mut boot.console);
-    user_tasks::exercise(&mut boot.memory, &mut boot.console);
-    #[cfg(feature = "bundled-user")]
-    {
-        applications::exercise(&mut boot.memory, &mut boot.console);
-        ipc::exercise(&mut boot.memory, &mut boot.console);
-        supervision::exercise(&mut boot.memory, &mut boot.console);
-        memory::exercise(&mut boot.memory, &mut boot.console);
-        rendering::exercise(&mut boot.memory, &mut boot.console);
-        display::exercise(&mut boot.memory, &mut boot.console);
-    }
-}
+include!("lab.rs");

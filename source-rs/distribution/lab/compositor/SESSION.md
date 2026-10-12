@@ -50,22 +50,22 @@ apps keep state in their own RAM. This is not persistence across power loss.
 
 The [profile](../../../../tools/boot-harness-rs/profiles/session.json) supplies
 separate app, display and input connections. Start at [main.rs](main.rs), then
-[supervisor entrance](supervisor/mod.rs), which selects the [desktop session](supervisor/desktop/mod.rs).
+[supervisor entrance](supervisor/supervisor.rs), which selects the [desktop session](supervisor/desktop/desktop.rs).
 That coordinator admits participants, establishes grants, optionally checks
 boundaries and idle behavior, then supervises health. [Recovery](supervisor/desktop/recovery.rs)
 owns replacement and reconnection. [Chrome](supervisor/desktop/chrome.rs) supplies
 instructions, focus labels and recovery notices through bounded retained control
-text; the platform owns no distribution wording. [Client session](client/session/mod.rs) waits,
+text; the platform owns no distribution wording. [Client session](client/session/session.rs) waits,
 handles control and input, and publishes desired state; its `events` and
 `presentation` modules separate behavior from appearance.
 
-Across IPC, the [compositor](../../../platform/services/display/compositor/mod.rs)
+Across IPC, the [compositor](../../../platform/services/display/compositor/compositor.rs)
 dispatches requests, delivers pending waits and observes disconnects. Its
 [session dispatch](../../../platform/services/display/compositor/session.rs)
 authenticates focus and hosting operations. Follow
-[focus](../../../platform/services/display/composition/input/focus/mod.rs) for attenuation and held-key
+[focus](../../../platform/services/display/composition/input/focus/focus.rs) for attenuation and held-key
 rules, [hosting](../../../platform/services/display/composition/scene/hosting.rs) for the process
-tree and clips, and [scene](../../../platform/services/display/composition/scene/mod.rs) for
+tree and clips, and [scene](../../../platform/services/display/composition/scene/scene.rs) for
 snapshot validation, explicit input regions and drawing. The shared
 [interaction contract](../../../contracts/interaction.rs) imports no implementation.
 The [input source](../../../platform/services/input/pointer.rs) owns PS/2 decoding

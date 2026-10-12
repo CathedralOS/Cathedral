@@ -1,5 +1,5 @@
 //! Storage control client. Protocol: contracts/storage.rs; peer:
-//! platform/services/storage/main.rs -> service/mod.rs. Health does not grant object access.
+//! platform/services/storage/main.rs -> service/service.rs. Health does not grant object access.
 use super::super::child::Service;
 use cathedral_contracts::user as abi;
 use cathedral_user_runtime::{Error, write};

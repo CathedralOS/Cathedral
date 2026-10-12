@@ -6,11 +6,11 @@ instructions. [Owner questions](../OWNER_QUESTIONS.md) own unresolved semantics.
 
 ## Current integrated path
 
-Start at [distribution desktop policy](distribution/lab/matrix/desktop/mod.rs).
+Start at [distribution desktop policy](distribution/lab/matrix/desktop/desktop.rs).
 It admits display/input adapters and gives a root matrix code grants and a funded
 process pool with physical-memory funding.
 The root matrix admits an inner matrix and an outside app; the inner admits its
-own app. Both run the same [matrix service](platform/services/matrix/service/mod.rs).
+own app. Both run the same [matrix service](platform/services/matrix/service/service.rs).
 Only the root adapts physical input and compositor output.
 
 ```powershell
@@ -33,19 +33,19 @@ remain until their extra behavior has moved into the integrated path with tests.
 
 | Mechanism / owner | Integrated consumer | Proof | Remaining restriction |
 | --- | --- | --- | --- |
-| [Address spaces, admission, faults](kernel/core/user_tasks/mod.rs) | All separately compiled services/apps | `--smoke`: rollback, faults, stale tasks, frame/heap reclamation | One x86-64 CPU; bounded executable catalogue and eight-account arena |
-| [Dynamic IPC and startup bundles](kernel/core/ipc/mod.rs) | Matrix-child, root-display and physical-source connections | `--ipc-test`: moves, rejected bundles, death, quotas | Small copied messages; accepted moves can outlive their creator |
-| [Backed IPC reservations](kernel/core/ipc/budget/mod.rs) | Every initial/launch account, including matrix children | Host tests fill all 32 slots; `--ipc-test` exhausts restarted creators while a sibling fills its reservation | Owned idle accounts support conserving subdivision; no sponsorship transfer |
+| [Address spaces, admission, faults](kernel/core/user_tasks/user_tasks.rs) | All separately compiled services/apps | `--smoke`: rollback, faults, stale tasks, frame/heap reclamation | One x86-64 CPU; bounded executable catalogue and eight-account arena |
+| [Dynamic IPC and startup bundles](kernel/core/ipc/ipc.rs) | Matrix-child, root-display and physical-source connections | `--ipc-test`: moves, rejected bundles, death, quotas | Small copied messages; accepted moves can outlive their creator |
+| [Backed IPC reservations](kernel/core/ipc/budget/budget.rs) | Every initial/launch account, including matrix children | Host tests fill all 32 slots; `--ipc-test` exhausts restarted creators while a sibling fills its reservation | Owned idle accounts support conserving subdivision; no sponsorship transfer |
 | [CPU turns and measured ceilings](kernel/core/scheduler/README.md) | Every user launch subtree, including nested matrices | Host accounting tests; `--smoke` checks capped spinners, yields, restart debt and idle refill | Boot/owned-idle burst/refill caps; periodic-timer overrun; no deadlines, weights or service-call donation |
 | [Physical-memory funding](kernel/core/user_tasks/resources/physical/README.md) | Every admitted image, stack, page table and runtime buffer; recursive matrix pool | Host conservation/bank tests; smoke rollback and retained readers; admission exhaustion and desktop pixel checks | Eager bounded bank; idle-child assignment; no swap, active rebudgeting or sponsorship transfer |
 | [Recursive launch loans](kernel/core/user_tasks/lifecycle/supervision/delegation.rs) | Matrices own direct children, lend budgets further, reclaim subtrees | `--ipc-test` plus matrix replacement tests | Static launch loans plus executable-authorized process pools; fixed account arena |
 | [Executable-authorized admission](kernel/core/user_tasks/admission/pool/README.md) | Apps and the matrix desktop construct descendants from code authority and a process pool | `--admission-test`: recursive launch, exhaustion, load rollback, retained funding, sibling survival | Boot-supplied catalogue; eight accounts; device grants remain static |
-| [Matrix lifecycle](platform/services/matrix/service/children/mod.rs) | Same provider above apps and another matrix | `--matrix-test`: replacement preserves an outside sibling | Two direct children; distribution supplies policy through owner-only control |
-| [Local viewport, focus and capture](platform/services/matrix/world/mod.rs) | Nested and sibling visible apps | Host policy tests; `--matrix-test`; `--matrix-desktop-test` physical focus | Five keys; coalesced wake channels; synchronous upward refresh |
+| [Matrix lifecycle](platform/services/matrix/service/children/children.rs) | Same provider above apps and another matrix | `--matrix-test`: replacement preserves an outside sibling | Two direct children; distribution supplies policy through owner-only control |
+| [Local viewport, focus and capture](platform/services/matrix/world/world.rs) | Nested and sibling visible apps | Host policy tests; `--matrix-test`; `--matrix-desktop-test` physical focus | Five keys; coalesced wake channels; synchronous upward refresh |
 | [Owned surfaces](platform/services/matrix/world/surface/README.md) | App rectangles cross actual matrix boundaries to the existing compositor | Host quota/name/clipping/stacking tests; scanout removal and teardown checks | Sixteen backed rectangle objects; no images/text surfaces or atomic scene commits yet |
-| [Retained compositor and hardware input](platform/services/display/compositor/mod.rs) | Root adapter uses existing scanout/cursor and shared input decoders | `--matrix-desktop-test`; `--session-test --pressure` | Existing richer scenes/hosting remain in the earlier session fixture |
-| [Private/shared page lifetime](kernel/core/user_tasks/memory/regions/mod.rs) | Existing rendering/storage labs | Host policy tests and `--smoke` | Per-slot page limits and boot-approved sharing; no general shared-object IPC transfer |
-| [Object storage and recovery](platform/services/storage/service/mod.rs) | Default status/counter distribution | Storage host tests; `--storage-test` | Not yet an attenuated matrix namespace; not the custom database filesystem |
+| [Retained compositor and hardware input](platform/services/display/compositor/compositor.rs) | Root adapter uses existing scanout/cursor and shared input decoders | `--matrix-desktop-test`; `--session-test --pressure` | Existing richer scenes/hosting remain in the earlier session fixture |
+| [Private/shared page lifetime](kernel/core/user_tasks/memory/regions/regions.rs) | Existing rendering/storage labs | Host policy tests and `--smoke` | Per-slot page limits and boot-approved sharing; no general shared-object IPC transfer |
+| [Object storage and recovery](platform/services/storage/service/service.rs) | Default status/counter distribution | Storage host tests; `--storage-test` | Not yet an attenuated matrix namespace; not the custom database filesystem |
 
 ## Kernel boundary audit and next steps
 
@@ -55,14 +55,16 @@ lifetime, CPU transitions, service event ordering, scene publication and lab
 scenario ownership. Contracts, small drivers, init/application workflows and the
 matrix/input service boundaries remain cohesive without extra forwarding layers.
 
-Subsystem entrances now live inside their folders (`mod.rs`), alongside the
-responsibilities they introduce. The next reading level owns checked IPC delivery,
+Subsystem entrances live in named files inside their folders (`memory/memory.rs`),
+alongside the responsibilities they introduce. `mod.rs` contains only disposable
+Rust plumbing; the named reading path is intended to survive the Omega port.
+The next reading level owns checked IPC delivery,
 page sharing/retirement, scene geometry, pointer queues and forwarded matrix
 control requests. Cohesive leaves remain sibling files; the guide treats this as
 a reading-path preference rather than a file-count or line-count rule.
 
 **Known verification blocker:** `--recovery-test` currently restarts the status
-app before readiness. Its [authority probe](distribution/applications/status/application/lab/mod.rs)
+app before readiness. Its [authority probe](distribution/applications/status/application/lab/lab.rs)
 expects `DENIED` for cancellation of handle zero, while the caller-local task
 dispatcher returns `BAD_HANDLE`. The same failure was reproduced at `2f48d30`,
 before this pass. That assertion and the kernel's behavior were left unchanged;
@@ -79,7 +81,7 @@ activity. The remaining boundary work is recorded below:
 | IPC handles | [Grant table](kernel/core/ipc/grants.rs) supplies local, non-reused names | Retain this model when generalizing other capabilities |
 | Task/launch/peer handles | [Caller-local names](kernel/core/names.rs); [admission reservations](kernel/core/user_tasks/lifecycle/grants.rs) and reserved fresh loan-return names | Keep this boundary when replacing fixed executable/slot admission |
 | Clock and static links | [Clock](kernel/core/user_tasks/time.rs) and [link](kernel/core/ipc/link.rs) names refresh on recipient admission; unchanged peers retain their names | Separate timing authority from waiting/deadline mechanics; hardware timing remains visible |
-| Page handles | [Region grants and virtual slots](kernel/core/user_tasks/memory/regions/mod.rs) are caller-local; producer-local offers require the receiving link and install a separate reader name | Generalize beyond boot-approved sharing; preserve accepted-reader lifetime |
+| Page handles | [Region grants and virtual slots](kernel/core/user_tasks/memory/regions/regions.rs) are caller-local; producer-local offers require the receiving link and install a separate reader name | Generalize beyond boot-approved sharing; preserve accepted-reader lifetime |
 | IPC capacity | Backed launch-account reservations; surviving channels stay charged across creator replacement; caller-local budget query | Conserving owner/child subdivision implemented; explicit funding transfer remains; retained endpoints pin their original account |
 | CPU | Measured runtime and deferred work charge persistent ancestor accounts; exhausted branches wait for refill | Qualified clocks, precise exhaustion preemption, bounded kernel work, privileged latency policy and service-call sponsorship |
 | RAM | Physical reservations cover images, stacks, page tables and buffers; accepted readers retain original sponsor charges | General shared-object IPC, active pressure policy and explicit sponsorship transfer |

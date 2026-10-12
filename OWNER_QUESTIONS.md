@@ -348,7 +348,7 @@ defines when redemption commits it and how cancellation or peer death intervenes
 authority and IPC semantics to the unwritten `spec/authority/capabilities.md`
 and `spec/communication/ipc.md`. The new
 [Rust syscall constants](source-rs/contracts/user.rs) and
-[transport model](source-rs/kernel/core/ipc/mod.rs) explicitly define only lab
+[transport model](source-rs/kernel/core/ipc/ipc.rs) explicitly define only lab
 behavior. No accepted contract settles transport selection or pending-operation
 revocation. This blocks promoting the experiment to a stable service interface,
 not continued laboratory work.
@@ -425,8 +425,8 @@ ownership cannot simply be assumed identical.
 
 **Contracts checked.** The [specification index](wiki/spec/README.md) leaves
 component lifecycle/admission and capability contracts unwritten. The
-[Rust launch model](source-rs/kernel/core/user_tasks/lifecycle/supervision/mod.rs) and
-[userspace wrappers](source-rs/platform/libraries/user-runtime/task/mod.rs) are lab
+[Rust launch model](source-rs/kernel/core/user_tasks/lifecycle/supervision/supervision.rs) and
+[userspace wrappers](source-rs/platform/libraries/user-runtime/task/task.rs) are lab
 contracts only. This blocks promising independent service survival or reattachment,
 not implementing bounded restart experiments.
 

@@ -1,5 +1,5 @@
 //! Display control client. Protocol: contracts/display.rs; peer:
-//! platform/services/display/main.rs -> surface/mod.rs. The app uses a separate data link.
+//! platform/services/display/main.rs -> surface/surface.rs. The app uses a separate data link.
 use super::super::child::Service;
 use cathedral_contracts::{display, user as abi};
 use cathedral_user_runtime::Error;

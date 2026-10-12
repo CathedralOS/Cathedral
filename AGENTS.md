@@ -6,6 +6,10 @@ show real sequencing or dispatch at one level of detail. Descending into a
 subsystem reveals its next decisions. Split by responsibility, keep small
 leaves together, and avoid generic dumping grounds or forwarding-only layers.
 
+Rust `mod.rs` files are plumbing only. Put substantive code in a named sibling
+entrance such as `memory/memory.rs`; that reading path should survive the Omega
+port after the Rust plumbing disappears.
+
 The [repository layout](wiki/architecture/repository_layout.md) defines ownership
 and dependency direction. Keep the kernel, common platform and single replaceable
 distribution distinct. Shared protocols describe boundaries; they do not import

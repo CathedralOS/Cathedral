@@ -1,9 +1,9 @@
 # Hierarchical CPU turns and measured ceilings
 
-[Scheduler entrance](mod.rs) owns task state: wake sleepers, park the current
-process, select a turn, mark it running. [shares entrance](shares/mod.rs) selects within the
+[Scheduler entrance](scheduler.rs) owns task state: wake sleepers, park the current
+process, select a turn, mark it running. [shares entrance](shares/shares.rs) selects within the
 ownership tree without knowing about contexts, IPC protocols or matrices.
-[budget entrance](budget/mod.rs) accounts measured execution and gates exhausted accounts
+[budget entrance](budget/budget.rs) accounts measured execution and gates exhausted accounts
 before turn selection. The two policies share the same ownership tree.
 
 Initial processes are independent root accounts. Each launch account sits below
@@ -23,10 +23,10 @@ envelope; there are no authored weights or minimum per-child reservations yet.
 
 ## Admission and lifetime
 
-[Session preparation](../user_tasks/startup/mod.rs) installs the boot ownership
+[Session preparation](../user_tasks/startup/startup.rs) installs the boot ownership
 tree before admission. [Launch-loan commit](../user_tasks/lifecycle/delegation.rs)
 reattaches only dormant accounts after all fallible admission steps succeed.
-[Reclamation](../user_tasks/lifecycle/mod.rs) returns their scheduling parent
+[Reclamation](../user_tasks/lifecycle/lifecycle.rs) returns their scheduling parent
 with the launch authority after descendants have been physically reclaimed.
 IPC storage sponsorship remains tied to its original launch account independently.
 
@@ -114,7 +114,7 @@ turns, idle capacity reuse, wakeup without saved credit, nonblocking-call behavi
 restart persistence, loan reattachment and dormant admission. The existing
 [task-state tests](tests.rs) cover cancellation, stale IDs, sleeping and clock wrap.
 
-The [QEMU composition](../../boot/uefi/lab/supervision/cpu/mod.rs) runs the ordinary
+The [QEMU composition](../../boot/uefi/lab/supervision/cpu/cpu.rs) runs the ordinary
 [userspace fixture](../../../distribution/lab/supervision/cpu.rs) twice: one busy
 process under an owner, then three through a nested launch loan. An independent
 outer process spins through clock syscalls for 128 timer ticks. Its preemptions

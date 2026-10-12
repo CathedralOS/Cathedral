@@ -1,9 +1,9 @@
 # Follow the running distribution
 
-Start at [init/main.rs](init/main.rs), then [session entrance](init/session/mod.rs).
+Start at [init/main.rs](init/main.rs), then [session entrance](init/session/session.rs).
 The session starts and readies providers, launches counter and status, then enters
-[supervision](init/session/supervision/mod.rs). Provider protocol details live under
-[providers](init/session/providers/mod.rs); child cancellation, collection and spawn
+[supervision](init/session/supervision/supervision.rs). Provider protocol details live under
+[providers](init/session/providers/providers.rs); child cancellation, collection and spawn
 live in [child.rs](init/session/child.rs).
 
 [profile.json](profile.json) is the host's executable composition. The harness
@@ -14,24 +14,24 @@ and grants; the distribution gives those children their roles.
 | Role | Launch / task slot | Executable entrance | Protocol / implementation |
 | --- | --- | --- | --- |
 | Init | Initial / 0 | [init/main.rs](init/main.rs) | [App control](init/session/supervision/control.rs), [session protocol](libraries/session-protocol/lib.rs) |
-| Display | 0 / 1 | [display/main.rs](../platform/services/display/main.rs) | [Drawing contract](../contracts/display.rs), [direct service](../platform/services/display/direct/mod.rs), [surface](../platform/services/display/surface/mod.rs) |
-| Input | 1 / 2 | [input/main.rs](../platform/services/input/main.rs) | [Event contract](../contracts/input.rs), [keyboard service](../platform/services/input/keyboard/mod.rs), [decoder](../platform/services/input/decoder/mod.rs) |
-| Application | 2 / 3 | [status/main.rs](applications/status/main.rs) | [Application workflow](applications/status/application/mod.rs) |
-| Counter | 4 / 5 | [counter/main.rs](applications/counter/main.rs) | [Private counter workflow](applications/counter/session/mod.rs) |
-| Storage | 3 / 4 | [storage/main.rs](../platform/services/storage/main.rs) | [Object contract](../contracts/storage.rs), [service](../platform/services/storage/service/mod.rs), [store](../platform/libraries/object-store/lib.rs) |
+| Display | 0 / 1 | [display/main.rs](../platform/services/display/main.rs) | [Drawing contract](../contracts/display.rs), [direct service](../platform/services/display/direct/direct.rs), [surface](../platform/services/display/surface/surface.rs) |
+| Input | 1 / 2 | [input/main.rs](../platform/services/input/main.rs) | [Event contract](../contracts/input.rs), [keyboard service](../platform/services/input/keyboard/keyboard.rs), [decoder](../platform/services/input/decoder/decoder.rs) |
+| Application | 2 / 3 | [status/main.rs](applications/status/main.rs) | [Application workflow](applications/status/application/application.rs) |
+| Counter | 4 / 5 | [counter/main.rs](applications/counter/main.rs) | [Private counter workflow](applications/counter/session/session.rs) |
+| Storage | 3 / 4 | [storage/main.rs](../platform/services/storage/main.rs) | [Object contract](../contracts/storage.rs), [service](../platform/services/storage/service/service.rs), [store](../platform/libraries/object-store/lib.rs) |
 
 The app's [connections](applications/status/application/connection.rs) use a
 private init control pair plus three peer links, ordered display, input, storage.
 The corresponding names live in `session-protocol::launch` and `::link`; their
 indices must match the profile. Follow [input](applications/status/application/input.rs),
 [storage](applications/status/application/storage.rs) or
-[view](applications/status/application/view/mod.rs) to see the app-side protocol use.
-The kernel's [IPC dispatcher](../kernel/core/user_tasks/syscalls/mod.rs)
+[view](applications/status/application/view/view.rs) to see the app-side protocol use.
+The kernel's [IPC dispatcher](../kernel/core/user_tasks/syscalls/syscalls.rs)
 transports these messages; the service implementations interpret them.
 
 For the pixel handoff, descend from `view` into
 [buffer.rs](applications/status/application/view/buffer.rs), then follow the
-[runtime ownership API](../platform/libraries/user-runtime/memory/mod.rs) and
+[runtime ownership API](../platform/libraries/user-runtime/memory/memory.rs) and
 [display buffer consumer](../platform/services/display/surface/buffer.rs).
 The profile grants status four private pages and display four accepted shared
 pages. The `SHARED PIXELS` tile uses one page per redraw; the display completion
@@ -66,7 +66,7 @@ input grants independently of those lifecycle rights.
 The [matrix boundary lab](lab/matrix/README.md) now lends launch budgets to the
 root matrix, which admits its own children. The inner matrix admits its leaf;
 the fixture holds only root control and has no descendant process handles.
-The [visible matrix policy](lab/matrix/desktop/mod.rs) uses that same platform tree
+The [visible matrix policy](lab/matrix/desktop/desktop.rs) uses that same platform tree
 for local drawing, physical pointer input and focus through the existing
 compositor. See the [implementation map](../STATUS.md) for commands and limits.
 

@@ -31,13 +31,13 @@ accepted only on the private control channel in test builds.
 
 ## Entrances and ownership
 
-[main.rs](main.rs) selects [keyboard entrance](keyboard/mod.rs) for the ordinary
+[main.rs](main.rs) selects [keyboard entrance](keyboard/keyboard.rs) for the ordinary
 [key-event protocol](../../../contracts/input.rs), or [pointer.rs](pointer.rs)
 for the compositor's combined physical pointer/key source. Each service owns
 its request loop and uses [controller.rs](controller.rs) for shared PS/2
 configuration. Keyboard recovery hooks live under `keyboard/`.
 
-[decoder entrance](decoder/mod.rs) owns translated set-1 state; its
+[decoder entrance](decoder/decoder.rs) owns translated set-1 state; its
 [mouse decoder](decoder/mouse.rs) owns three-byte packet state. Both are pure,
 host-testable policies. Pointer-mode delivery feeds the
 [compositor input handler](../display/compositor/input.rs); application focus

@@ -32,7 +32,7 @@ Start at [main](main.rs), role four, then [the pressure peer](pressure.rs):
 4. On supervisor command, retain the allocated buffer and either spin without
    syscalls/yields or fault with an invalid instruction.
 
-[Desktop supervision](supervisor/desktop/mod.rs) continues ordinary health checks and
+[Desktop supervision](supervisor/desktop/desktop.rs) continues ordinary health checks and
 input policy. Its [pressure controller](supervisor/desktop/pressure.rs) checks
 progress counters, keeps the spinner alive through another supervision cycle,
 then cancels and collects it. Alternate rounds fault instead. Each round admits
@@ -40,30 +40,30 @@ a fresh instance that must acquire its full grant again. No user destructor
 runs for cancellation or fault; kernel teardown owns reclamation.
 
 The extra compositor connection has no application slot. Requests fail normal
-authorization. [The runtime server](../../../platform/libraries/user-runtime/server/mod.rs)
+authorization. [The runtime server](../../../platform/libraries/user-runtime/server/server.rs)
 rotates control and client channels, and an unread client reply does not block
 the service. It supports up to seven clients plus control within the kernel's
 eight-handle wait set.
 
 ## Kernel evidence and limits
 
-[Page-object policy](../../../kernel/core/user_tasks/memory/regions/mod.rs) separately bounds bytes and
+[Page-object policy](../../../kernel/core/user_tasks/memory/regions/regions.rs) separately bounds bytes and
 object counts. Each task has at most four owned objects and four accepted reader
 objects; sixty-four global records cover all eight task slots even after producers
 exit. Accepted readers retain their page and object charges until release/death.
 These bounds reserve metadata capacity, not physical RAM or future CPU time.
 
-[Memory execution](../../../kernel/core/user_tasks/memory/mod.rs) performs
+[Memory execution](../../../kernel/core/user_tasks/memory/memory.rs) performs
 fallible, zeroed allocation and all-or-nothing rollback. The existing
-[reaper](../../../kernel/core/user_tasks/lifecycle/mod.rs) checks physical
+[reaper](../../../kernel/core/user_tasks/lifecycle/lifecycle.rs) checks physical
 accounting against live address spaces and retained backing. Smoke tests check
 complete session heap/frame reclamation, every allocation/admission failure
 boundary, and mappings across a leaf-table boundary and at the last region slot.
 
 The first pressure run exposed an input regression: successful nonblocking
 syscalls yielded to the spinner, repeatedly adding an entire time slice between
-small operations. [Syscall dispatch](../../../kernel/core/user_tasks/syscalls/mod.rs)
-now returns a continuation event for immediate completion. [Scheduling](../../../kernel/core/scheduler/mod.rs)
+small operations. [Syscall dispatch](../../../kernel/core/user_tasks/syscalls/syscalls.rs)
+now returns a continuation event for immediate completion. [Scheduling](../../../kernel/core/scheduler/scheduler.rs)
 still rotates on timer preemption, blocking and explicit yields. Device IRQs
 record readiness without forcing another round-robin rotation; ready peers get
 their turn on the next timer or when the current task blocks/yields. Both release

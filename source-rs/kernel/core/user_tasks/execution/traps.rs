@@ -1,5 +1,5 @@
 //! Interrupt/syscall entrance: save context, dispatch syscalls, wake waiters and select a root.
-//! Allocating and reclaiming remain deferred to execution/mod.rs on the boot stack.
+//! Allocating and reclaiming remain deferred to execution/execution.rs on the boot stack.
 use crate::scheduler::{Event, TaskState};
 use crate::user_tasks::{ACTIVE, Exit, arch, keyboard, lifecycle, syscalls, taskcalls};
 use cathedral_arch::{Context, SwitchCause};

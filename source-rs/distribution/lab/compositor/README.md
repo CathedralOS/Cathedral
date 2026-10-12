@@ -22,19 +22,19 @@ hosted inside an app. The base automated test saves
 
 ## Follow execution
 
-Start at [main.rs](main.rs), then [supervisor entrance](supervisor/mod.rs). Startup admits a
+Start at [main.rs](main.rs), then [supervisor entrance](supervisor/supervisor.rs). Startup admits a
 framebuffer-owning display provider and two copies of the client executable.
 [Drawing checks](supervisor/checks.rs) exercise scopes and snapshots;
 [recovery](supervisor/recovery.rs) fails participants while preserving peers.
-[Client](client/mod.rs) owns submission and hostile requests; [scene](scene.rs) owns
+[Client](client/client.rs) owns submission and hostile requests; [scene](scene.rs) owns
 appearance. The [profile](../../../../tools/boot-harness-rs/profiles/compositor.json)
 binds devices and connections.
 
 The receiving [display entrance](../../../platform/services/display/main.rs)
-selects [compositor execution](../../../platform/services/display/compositor/mod.rs)
+selects [compositor execution](../../../platform/services/display/compositor/compositor.rs)
 from its boot-supplied mode. Follow [request dispatch](../../../platform/services/display/compositor/requests.rs)
-for authority, [scene policy](../../../platform/services/display/composition/scene/mod.rs) for
-validation and drawing, and [surface](../../../platform/services/display/surface/mod.rs)
+for authority, [scene policy](../../../platform/services/display/composition/scene/scene.rs) for
+validation and drawing, and [surface](../../../platform/services/display/surface/surface.rs)
 for bounded device writes. The [wire contract](../../../contracts/composition.rs)
 imports neither implementation.
 

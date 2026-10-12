@@ -2,7 +2,7 @@
 
 Start at [the request coordinator](../../service/requests/surfaces.rs): authenticate
 through the child's installed connection, validate its allocation request, acquire
-upstream backing, then publish a fresh local name. [The world model](mod.rs)
+upstream backing, then publish a fresh local name. [The world model](surface.rs)
 owns quotas, names, retained primitives, clipping and retirement. The
 [root adapter](../../service/parent/rendering.rs) maps its private ranks into the
 existing compositor's bounded [tile array](../../../display/composition/scene/tiles.rs).

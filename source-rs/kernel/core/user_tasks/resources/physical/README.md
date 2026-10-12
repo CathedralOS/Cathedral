@@ -1,6 +1,6 @@
 # Physical-memory funding
 
-Start at [the funding model](mod.rs). It conserves reservations between
+Start at [the funding model](physical.rs). It conserves reservations between
 persistent accounts and tracks occupied frames. [The frame bank](../../memory/frames.rs)
 reserves actual physical frames before any process starts; it rolls back a partial
 bank reservation and returns the whole bank after session teardown. Idle bank
@@ -26,7 +26,7 @@ reduction to its owner. `resources::physical_budget()` reports only the caller's
 reserved and charged frames, never global free memory or another account's use.
 The kernel syscalls are `PHYSICAL_ASSIGN` (55) and `PHYSICAL_BUDGET` (54).
 
-[Admission](../../admission/mod.rs) limits every allocation to the
+[Admission](../../admission/admission.rs) limits every allocation to the
 account's unused funding and the per-load ceiling. It publishes actual charges
 only after successful construction; serialized boot context prevents intervening
 allocation or rebudgeting. All partial image, stack, runtime-table and device-table

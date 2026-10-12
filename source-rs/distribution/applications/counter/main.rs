@@ -1,6 +1,6 @@
 #![no_std]
 #![no_main]
-//! A second app owns a private two-record boot counter. session/mod.rs owns its lifetime.
+//! A second app owns a private two-record boot counter. session/session.rs owns its lifetime.
 mod session;
 cathedral_user_runtime::entry!(main);
 fn main(_: u64, generation: u64) -> u64 {
