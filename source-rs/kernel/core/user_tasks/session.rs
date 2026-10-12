@@ -48,6 +48,7 @@ pub unsafe fn run(
                 supervision: &[],
                 memory: &[],
                 channel_limits: &[],
+                cpu_limits: &[],
                 clock_readers: &[],
             },
         )
@@ -86,7 +87,8 @@ pub unsafe fn run_configured(
         admission::initial(&mut session, layout, image, programs, &mut source)?;
         execution::run(&mut session, &mut source, layout, image, &config);
     }
-    for task in &mut session.tasks {
+    for (slot, task) in session.tasks.iter_mut().enumerate() {
+        task.report.cpu = session.scheduler.cpu_report(slot);
         reports.push(core::mem::take(&mut task.report));
     }
     assert_eq!(source.frames.allocated(), baseline);

@@ -63,7 +63,9 @@ mapping addresses use local slots. An explicitly granted
 global clock and shared execution resources remain. IPC storage now has backed
 launch-account reservations that survive creator replacement, but these do not
 provide hierarchical storage-budget subdivision. CPU turns follow the launch
-ownership tree, so inner matrices subdivide their outer matrix's turns; measured
-CPU-time quotas and deadline guarantees remain unimplemented. The remaining timing
+ownership tree, so inner matrices subdivide their outer matrix's turns. Measured
+CPU burst/refill ceilings now gate every ancestor account and survive replacement.
+These are boot-configured caps with periodic-timer overrun, not priority grants,
+capacity reservations or deadline guarantees. The remaining timing
 interfaces require a confinement audit; this lab must not be represented as a
 production guarantee that a process cannot infer anything about its surroundings.

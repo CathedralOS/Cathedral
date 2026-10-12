@@ -475,5 +475,13 @@ now follow current launch ownership. Descendants divide their owner's outer turn
 loans reattach dormant scheduling accounts, and reclamation returns them without
 resetting rotation. A provider still runs within its own launch tree even when
 serving another tree. The QEMU proof compares one versus three spinning descendants
-against an outside account. Equal turns do not account precisely for partial
-quanta, kernel work or request costs and are not hard CPU-time reservations.
+against an outside account. The measured-budget extension now charges elapsed
+execution, spawn attempts, page operations and reclamation through the ancestor
+chain. Boot-selected burst/refill ceilings retain overrun debt through restart
+and loan transfer; QEMU checks spinners, yields, repeated replacement and idle
+refill. IRQ handling while a process is selected is charged to that process;
+general boot/idle housekeeping has no application sponsor. These are provisional
+attribution choices and ceilings, not guaranteed CPU-time reservations. The
+periodic timer, unpreemptible kernel work and lab clock do not establish hard
+response bounds. Shared-provider request funding remains the unresolved choice
+above; merely registering a provider confers no extra scheduling authority.

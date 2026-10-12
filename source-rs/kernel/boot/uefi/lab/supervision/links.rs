@@ -27,6 +27,7 @@ pub(super) fn exercise(memory: &mut PreparedMemory, console: &mut SerialPort) {
                 endpoints: &[],
                 memory: &[],
                 channel_limits: &[],
+                cpu_limits: &[],
                 clock_readers: &[1, 2, 3, 4],
                 supervision: &grants,
             },

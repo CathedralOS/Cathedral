@@ -7,6 +7,7 @@ fn main() {
         "CATHEDRAL_INIT_CLOCK",
         "CATHEDRAL_LINKS",
         "CATHEDRAL_CHANNEL_LIMITS",
+        "CATHEDRAL_CPU_LIMITS",
         "CATHEDRAL_LAUNCH_COUNT",
     ] {
         println!("cargo:rerun-if-env-changed={variable}");
@@ -74,6 +75,20 @@ fn startup() {
         limits.iter().sum::<usize>() <= cathedral_contracts::user::MAX_DYNAMIC_CHANNELS,
         "channel reservations exceed backing"
     );
+    let cpu_limits: Vec<u64> = env::var("CATHEDRAL_CPU_LIMITS")
+        .map(|text| {
+            text.split(',')
+                .map(|n| n.parse().expect("invalid CPU limit"))
+                .collect()
+        })
+        .unwrap_or_else(|_| vec![0; count + 1]);
+    assert!(
+        cpu_limits.len() == count + 1
+            && cpu_limits
+                .iter()
+                .all(|&n| n <= cathedral_contracts::user::CPU_REFILL_PERIOD_US),
+        "invalid CPU burst/refill limit"
+    );
     let mut source = format!(
         "const INITIAL_CLOCK: bool = {};\nstatic LAUNCHES: &[InitialLaunch] = &[\n",
         flag("CATHEDRAL_INIT_CLOCK")
@@ -94,7 +109,7 @@ fn startup() {
         source.push_str(&format!("InitialLaunch {{ elf: include_bytes!(concat!(env!(\"OUT_DIR\"), \"/launch-{index}.elf\")), framebuffer: {framebuffer}, keyboard: {keyboard}, disk: {disk}, clock: {clock}, private_pages: {private_pages}, shared_pages: {shared_pages}, argument: {argument} }},\n"));
     }
     source.push_str(&format!(
-        "];\nconst CHANNEL_LIMITS: &[usize] = &{limits:?};\n"
+        "];\nconst CHANNEL_LIMITS: &[usize] = &{limits:?};\nconst CPU_LIMITS: &[u64] = &{cpu_limits:?};\n"
     ));
     source.push_str("static LINKS: &[cathedral_core::link::LinkSpec] = &[\n");
     let graph = env::var("CATHEDRAL_LINKS").unwrap_or_default();

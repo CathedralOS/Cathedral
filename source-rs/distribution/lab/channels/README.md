@@ -11,6 +11,8 @@ This headless profile proves runtime channel creation and endpoint transfer betw
 ordinary applications. Its [profile](../../../../tools/boot-harness-rs/profiles/channels.json)
 reserves worker and recursive-supervisor instances of the same executable. Each
 slot has the existing parent/worker introduction.
+The initial account's 50 ms CPU burst refills at 50% of one CPU and constrains
+the entire fixture, exercising profile-supplied accounting through recursive loans.
 The request and reply channels do not appear in boot composition. No matrix,
 service registry, driver, or PID lookup participates in the exchange.
 Logs go to `build/boot-harness-rs/channels-test/serial.log`.
@@ -140,7 +142,9 @@ This is a finite launch-budget experiment, not arbitrary ELF loading, a manifest
 resolver, production sponsorship or general CPU-time/RAM budget subdivision. The
 [scheduler](../../../kernel/core/scheduler/README.md) now nests CPU turns under the
 current launch owner: loans subdivide the borrower's outer turns and return with
-their scheduling parent after reclamation. This does not reserve elapsed CPU time.
+their scheduling parent after reclamation. Measured CPU burst/refill caps, when
+configured, charge every current ancestor and retain debt across replacement.
+Neither turn sharing nor these ceilings reserve guaranteed CPU capacity.
 Boot still
 reserves all task slots. Delegation requires the recipient's reserved slot to
 precede the lent slot, giving cancellation a bounded acyclic order. IPC channel

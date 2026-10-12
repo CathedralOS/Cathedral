@@ -1,6 +1,8 @@
 //! x86-64 machine bring-up. Exports are selected by `arch/lib.rs`.
 
 mod context;
+mod cpu_clock;
+pub use cpu_clock::{calibrate_cpu_clock, cpu_time_us};
 mod disk;
 mod interrupts;
 mod keyboard;

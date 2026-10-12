@@ -194,7 +194,7 @@ QEMU q35, one qemu64 CPU, software emulation, 128 MiB by default:
    preserving inherited leaf mappings and their flags. Bound copying to 4,096
    table pages; fail on exhaustion, unsupported NX/LA57/PCID or occupied ranges.
 7. Map a guarded 64-KiB kernel stack, four guarded 16-KiB emergency stacks,
-   and 64 KiB of heap backing. Reserve a separate virtual branch for dynamic task
+   and 128 KiB of heap backing. Reserve a separate virtual branch for dynamic task
    stacks, without allocating their backing yet. New mappings are NX.
 8. Load the owned CR3, enable write protection/NX, switch stacks and confirm the
    stack pointer is within its assigned range.
@@ -307,7 +307,7 @@ generations and are scoped to a session; reused slots do not revive old IDs.
 no joins, captured closures, cancellation or recovery from task panic yet.
 These trusted kernel tasks share an address space; guards protect against stack
 overrun, not against malicious tasks. There is no capability enforcement or SMP. The
-64-KiB heap and runtime arena are initialized before executing tasks; ordinary
+128-KiB heap and runtime arena are initialized before executing tasks; ordinary
 infallible Rust allocations can still panic on exhaustion. Task context
 admission is fallible and returns `OutOfHeap` without leaking stack frames.
 The scheduler separates task states from [hierarchical turn selection](kernel/core/scheduler/README.md).
@@ -319,8 +319,13 @@ timer preemption is disabled.
 
 The CPU subtree smoke test compares one versus three real userspace spinners
 against an independent outside account. Their combined turn share stays bounded
-by their owner. This is work-conserving turn fairness, not measured CPU-time quotas:
-partial timer quanta, service-call work and admission costs still need accounting.
+by their owner. The [measured-budget extension](kernel/core/scheduler/README.md#measured-execution-and-configuration)
+also charges partial execution, spawn attempts, page operations and reclamation.
+Profile `cpu_budget_us` sets a persistent burst allowance with continuous refill
+at allowance/100,000 of one CPU; zero inherits ancestor ceilings. Exhaustion gates
+the whole subtree, and overrun debt survives replacement. The single-CPU QEMU clock
+and periodic timer remain experimental: there are no hard deadlines, guaranteed
+reservations, virtual cores or service-call budget donation yet.
 
 ## User-mode experiment
 

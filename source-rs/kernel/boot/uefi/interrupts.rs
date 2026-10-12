@@ -24,6 +24,8 @@ pub fn start_timer(layout: &arch::BootLayout, console: &mut SerialPort) {
         arch::start_timer();
         arch::wait_for_ticks(3)
     };
+    // SAFETY: Timer is running; sole boot CPU, no active task or held locks.
+    unsafe { arch::calibrate_cpu_clock() };
     let irq_stack = arch::last_irq_stack();
     assert!((layout.emergency_tops[3] - 16 * 1024..layout.emergency_tops[3]).contains(&irq_stack));
     writeln!(

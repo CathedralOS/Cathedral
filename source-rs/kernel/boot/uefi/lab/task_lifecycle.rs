@@ -148,7 +148,9 @@ fn frame_failure() {
 
 fn heap_failure() {
     use core::alloc::{GlobalAlloc, Layout};
-    let layout = Layout::from_size_align(128, 16).unwrap();
+    // Cover the 128-KiB heap with bounded stack bookkeeping. Fragments below
+    // 256 bytes cannot hold a task context (its floating state alone is 512).
+    let layout = Layout::from_size_align(256, 16).unwrap();
     let mut blocks = [core::ptr::null_mut(); 512];
     let frames = kernel_tasks::allocated_frames();
     // SAFETY: Keep each successful allocation uniquely owned and free using the

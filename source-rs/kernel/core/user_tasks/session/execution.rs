@@ -1,6 +1,5 @@
 //! Boot-stack execution loop: reap and admit before resuming a user context.
 use super::{ACTIVE, Config, Frames, Session, arch, lifecycle, traps};
-use crate::scheduler::TaskState;
 use core::sync::atomic::Ordering;
 /// # Safety
 /// Initialized user entry machinery; exclusive pinned session, boot stack, IRQs off.
@@ -28,7 +27,8 @@ pub(super) unsafe fn run(
             if (*session).scheduler.finished() {
                 break;
             }
-            if (*session).scheduler.states().contains(&TaskState::Ready) {
+            (*session).scheduler.account_cpu(arch::cpu_time_us());
+            if (*session).scheduler.has_eligible_ready() {
                 arch::suspend();
             } else {
                 arch::wait_for_ticks(1);

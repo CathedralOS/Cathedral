@@ -43,9 +43,11 @@ fn main(role: u64, argument: u64) -> u64 {
         22 => links::provider(),
         23 => links::application(),
         24 => cpu::owner(argument),
-        25 => cpu::peer(),
+        25 => cpu::peer(argument),
         26 => cpu::branch(argument),
-        27 => cpu::spin(),
+        27 => cpu::worker(argument),
+        28 => cpu::restarts(),
+        29 => cpu::idle_refill(),
         _ => 254,
     }
 }

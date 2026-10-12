@@ -120,6 +120,7 @@ fn run(
                 endpoints,
                 memory: &[],
                 channel_limits: &[],
+                cpu_limits: &[],
                 clock_readers: clocks,
                 supervision: &[Supervision {
                     disk: false,

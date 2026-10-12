@@ -1,5 +1,6 @@
 //! Compare real preemptions with one and three busy descendants of the same owner.
 use super::*;
+mod budget;
 
 pub(super) fn exercise(memory: &mut PreparedMemory, console: &mut SerialPort) {
     let baseline = memory.frames.allocated();
@@ -25,6 +26,7 @@ pub(super) fn exercise(memory: &mut PreparedMemory, console: &mut SerialPort) {
                 user_output,
                 Config {
                     channel_limits: &[],
+                    cpu_limits: &[],
                     memory: &[],
                     frame_limit: usize::MAX,
                     links: &[],
@@ -58,4 +60,5 @@ pub(super) fn exercise(memory: &mut PreparedMemory, console: &mut SerialPort) {
         reclaimed(memory, baseline, heap);
     }
     writeln!(console, "Cathedral Rust lab: hierarchical CPU turns preserved outside progress under subtree growth; loan return and full reclamation passed").ok();
+    budget::exercise(memory, console);
 }

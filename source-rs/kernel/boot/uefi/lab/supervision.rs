@@ -166,6 +166,7 @@ fn run(
                 endpoints,
                 memory: &[],
                 channel_limits: &[],
+                cpu_limits: &[],
                 clock_readers: &[],
                 supervision: &launches[..launch_count],
             },

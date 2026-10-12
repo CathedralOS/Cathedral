@@ -66,12 +66,14 @@ pub(super) unsafe fn reap(session: &mut Session, source: &mut Frames<'_>) {
         if session.scheduler.states()[slot] != TaskState::Exited {
             continue;
         }
+        session.scheduler.account_cpu(arch::cpu_time_us());
         // SAFETY: No context can resume this task. Kernel root, IRQs off.
         unsafe {
             super::memory::close(session, slot, source);
             admission::retire(&mut session.tasks[slot], source);
         }
         session.scheduler.reap(slot);
+        session.scheduler.charge_cpu(slot, arch::cpu_time_us());
         if let Some(launch) = session
             .launches
             .iter_mut()
@@ -126,6 +128,7 @@ pub(super) unsafe fn spawn(
         return;
     };
     let (owner, child, peer) = (model.owner, model.child, model.peer);
+    session.scheduler.account_cpu(arch::cpu_time_us());
     let initial = core::mem::take(&mut session.launches[index].initial);
     let initial_count = core::mem::take(&mut session.launches[index].initial_count);
     let delegated = core::mem::take(&mut session.launches[index].delegated);
@@ -195,6 +198,7 @@ pub(super) unsafe fn spawn(
     }
     syscalls::complete(session, owner, result);
     session.scheduler.unblock(owner);
+    session.scheduler.charge_cpu(owner, arch::cpu_time_us());
 }
 
 fn outcome(exit: Exit) -> [u8; abi::EXIT_BYTES] {

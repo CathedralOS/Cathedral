@@ -8,7 +8,8 @@
       "entry": "distribution/lab/channels/main.rs",
       "target": "x86_64-unknown-none",
       "clock": true,
-      "ipc_channels": 8
+      "ipc_channels": 8,
+      "cpu_budget_us": 50000
     },
     "launches": [
       {

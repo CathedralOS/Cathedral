@@ -4,6 +4,9 @@ use crate::ipc::EndpointSpec;
 pub struct Config<'a> {
     /// Per boot/launch account, including dormant children. Empty selects fixed defaults.
     pub channel_limits: &'a [usize],
+    /// Per-account CPU burst microseconds, refilled at limit/100_000 of one CPU.
+    /// Empty or zero adds no local cap; ancestor caps still apply.
+    pub cpu_limits: &'a [u64],
     pub memory: &'a [cathedral_contracts::memory::Grant],
     pub frame_limit: usize,
     pub links: &'a [crate::link::LinkSpec],

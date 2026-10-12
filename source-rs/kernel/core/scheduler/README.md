@@ -1,16 +1,19 @@
-# Hierarchical CPU turns
+# Hierarchical CPU turns and measured ceilings
 
 [scheduler.rs](../scheduler.rs) owns task state: wake sleepers, park the current
 process, select a turn, mark it running. [shares.rs](shares.rs) selects within the
 ownership tree without knowing about contexts, IPC protocols or matrices.
+[budget.rs](budget.rs) accounts measured execution and gates exhausted accounts
+before turn selection. The two policies share the same ownership tree.
 
 Initial processes are independent root accounts. Each launch account sits below
 its current owner. At every level the owner's runnable process and each runnable
 direct-child subtree get one turn in rotation. Selection descends into the chosen
 subtree using the same rule. A parent with two runnable children subdivides its
 outer turn three ways; it does not add three competitors outside its account.
-Blocked, sleeping and vacant branches do not compete. Unused capacity is available
-to other runnable branches without accumulating credit for a later wakeup.
+Blocked, sleeping, vacant and budget-exhausted branches do not compete. Unused
+scheduling turns are available to other eligible branches. CPU allowances refill
+over time up to their fixed burst ceiling; unused turns themselves earn no credit.
 
 For example, two continuously runnable outer accounts get alternating turns. If
 one runs a parent plus two children, those three share its alternating turns; the
@@ -32,7 +35,53 @@ Readiness propagates upward in a reverse pass; selection descends iteratively,
 without recursion or allocation. Rotation cursors survive task exit, slot reuse
 and loan transfer. Merely restarting cannot reset an ancestor's rotation.
 The kernel-task fixture keeps a flat tree and retains its previous round robin.
-No new user-visible task identity, tree query or scheduling syscall is introduced.
+CPU usage, credit and overrun debt also survive replacement and loan transfer.
+Past ancestor charges stay with those ancestors; future work charges the current
+chain. No user-visible task identity, tree query or scheduling syscall is introduced.
+
+## Measured execution and configuration
+
+The profile's `cpu_budget_us` on an initial/launch entry sets a **burst allowance**
+in microseconds and a **continuous refill rate** of that allowance / 100,000.
+Values are integers 0–100,000. Omitted or zero adds no local ceiling; every ancestor
+ceiling still applies. Empty kernel `Config.cpu_limits` uses the same default.
+Host composition, the boot build and kernel admission validate the configuration.
+
+For example, `cpu_budget_us: 20000` starts with 20 ms of credit and refills at
+20% of one CPU. It can initially run for about 25 ms continuously because refill
+continues while it runs. This is a token bucket, not a fixed 20 ms allocation in
+each 100 ms window. For an interval of length T, starting with full credit, the
+allowance is 20 ms + 0.2T, plus any execution overrun before the next enforcement
+point. That overrun remains debt and delays future eligibility; it is never erased
+at a timer boundary, restart or loan transfer. Idle refill cannot exceed 20 ms.
+
+Limits are ceilings, not guaranteed reservations. Their sum may exceed one CPU;
+turn sharing still decides contention among eligible branches. A child ceiling
+larger than its parent's does not widen the parent. There are no runtime APIs for
+a matrix to change rates, and no virtual core-count advertisement in this milestone.
+
+[The architecture clock](../../arch/x86_64/cpu_clock.rs) samples an ordered TSC,
+calibrated once against five nominal 100 Hz PIT periods. It assumes the fixed-rate,
+single-CPU QEMU reference environment. Microsecond timestamps preserve partial
+timer quanta, including repeated short syscalls and yields. This is elapsed time
+on the execution path, not retired instructions or host CPU utilization; emulator
+descheduling and host stalls can affect measurements. Native clock qualification,
+frequency changes, migration and multicore synchronization remain unimplemented.
+The ordering follows the [Intel RDTSC instruction reference](https://cdrdv2-public.intel.com/789581/325383-sdm-vol-2abcd.pdf).
+
+[User traps](../user_tasks/session/traps.rs) charge the outgoing process through
+the scheduling boundary, including syscall/IRQ handling while it was selected.
+Dispatch/restore overhead after that sample belongs to the next selected process.
+On the boot stack, spawn attempts (including failures) charge their requester,
+page operations charge their caller, and physical reclamation charges the retired
+account before loan return. Boot admission, general idle housekeeping and work
+before publishing the first user context have no application sponsor.
+
+Each interval charges the process and all current ancestors exactly once. Internal
+`CpuReport` totals distinguish direct from subtree execution and survive process
+replacement. These reports return only to the boot fixture; no new application
+clock authority or view of another account is exposed. A blocked caller's request
+executing in an independent provider still charges that provider's tree.
 
 ## What a turn means
 
@@ -40,14 +89,20 @@ The current x86-64 lab preempts at the next periodic timer interrupt. Blocking,
 yielding, exit and deferred boot-stack work can end a turn earlier. Nonblocking
 syscalls and device interrupts retain the selected process's current turn.
 
-This is equal-turn, work-conserving scheduling, **not elapsed CPU-time accounting**.
-Unequal partial quanta, deliberately timed yields, interrupt handling, long kernel
-work and admission costs are not charged precisely. A turn is not necessarily a
-full timer interval. A process can use idle capacity without a fixed rate ceiling.
-There are no hard wall-time quotas, deadlines, priorities, service-call budget
-donations, SMP guarantees or timing noninterference claims. Those require actual
-execution-time accounting and explicit resource policy; equal dispatch counts
-must not be reported as a production percentage-of-CPU guarantee.
+Equal turns are still not equal execution time. Measured ceilings now bound the
+long-term consumption of configured accounts, checked before returning to user
+execution. A non-yielding process can overrun until the next roughly 10 ms timer
+interrupt; interrupts-disabled kernel work can extend that delay. Deferred work
+already accepted completes and is charged even if it creates debt. The lab has
+no timer programmed precisely to budget exhaustion and no proven kernel response
+bound, so this is not a hard instantaneous CPU cap or deadline guarantee.
+
+When every ready process is exhausted, the boot loop halts until an interrupt;
+timer refill can restore eligibility without an external sender. Priorities,
+weighted time fairness, guaranteed reservations, service-call budget donations,
+SMP and timing noninterference remain future work. The next precision boundary is
+a qualified execution clock plus exhaustion-triggered preemption and bounded
+kernel work; privileged service scheduling requires explicit grants as well.
 
 ## Evidence
 
@@ -64,6 +119,14 @@ remain approximately half the sample while the other account divides its turns.
 The guest checks every spinner progressed, loan return, cancellation and complete
 heap/frame reclamation. Startup/teardown may cross timer boundaries, so host tests
 own exact counts and QEMU checks a bounded tolerance.
+
+[Budget host tests](budget/tests.rs) prove fractional charging, ancestor limits,
+overrun debt, restart persistence, idle refill, yield pressure and loan movement.
+[The measured QEMU fixture](../../boot/uefi/lab/supervision/cpu/budget.rs) adds capped
+single/nested spinners, competing yield loops, repeated child replacement with a
+separate child cap, and a session where every runnable task becomes throttled.
+It checks measured totals, outside progress and complete reclamation. Its 30 ms
+overrun tolerance is a regression threshold for this fixture, not a kernel bound.
 
 Run `cargo test --locked` in `source-rs/`, then from the repository root:
 

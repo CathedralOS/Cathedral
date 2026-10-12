@@ -43,6 +43,7 @@ pub(super) unsafe fn schedule(context: &Context, cause: SwitchCause, now: u64) -
         lifecycle::close(session, previous.unwrap());
         session.completed += 1;
         session.tasks[previous.unwrap()].report.completion_order = session.completed;
+        session.scheduler.account_cpu(arch::cpu_time_us());
         session.scheduler.park(event, now);
         None // Always reclaim from the boot context, never an interrupt stack.
     } else if session.tasks.iter().any(|task| task.memory_call.is_some())
@@ -52,12 +53,14 @@ pub(super) unsafe fn schedule(context: &Context, cause: SwitchCause, now: u64) -
             .iter()
             .any(|launch| launch.model.pending().is_some() || launch.model.cancellation_pending())
     {
+        session.scheduler.account_cpu(arch::cpu_time_us());
         session.scheduler.park(event, now);
         // An IRQ can interrupt the restored idle boot context before it reaches
         // reap. Keep returning there until all deferred work is done; otherwise
         // runnable peers can indefinitely starve collection of an exited child.
         None // Admission/reclamation use the boot stack, never the trap stack.
     } else {
+        session.scheduler.account_cpu(arch::cpu_time_us());
         session.scheduler.advance(event, now, true)
     };
     if cause == SwitchCause::Timer

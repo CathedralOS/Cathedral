@@ -45,6 +45,7 @@ knowledge of a particular distribution.
 | Interest | Start here | Descend into |
 | --- | --- | --- |
 | CPU turn sharing | [Task scheduling](../../source-rs/kernel/core/scheduler.rs) | [Hierarchical selection](../../source-rs/kernel/core/scheduler/shares.rs), [contract and proof route](../../source-rs/kernel/core/scheduler/README.md), [loan reattachment](../../source-rs/kernel/core/user_tasks/session/lifecycle/delegation.rs) |
+| CPU time ceilings | [Persistent account charging](../../source-rs/kernel/core/scheduler/budget.rs) | [Architecture clock](../../source-rs/kernel/arch/x86_64/cpu_clock.rs), [trap samples](../../source-rs/kernel/core/user_tasks/session/traps.rs), [measured QEMU proof](../../source-rs/kernel/boot/uefi/lab/supervision/cpu/budget.rs) |
 | Firmware and kernel startup | [boot main](../../source-rs/kernel/boot/uefi/main.rs) | Firmware handoff, memory, interrupts, supplied-program startup |
 | Isolated tasks | [user-task session](../../source-rs/kernel/core/user_tasks/session.rs) | Composition, preparation, admission, execution, outcomes |
 | CPU re-entry | [session traps](../../source-rs/kernel/core/user_tasks/session/traps.rs) | Syscall dispatch, wakeups, scheduling and root selection |

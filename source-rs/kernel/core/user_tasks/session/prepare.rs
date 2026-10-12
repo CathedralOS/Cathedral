@@ -12,6 +12,9 @@ pub(super) fn session(
 ) -> Result<(Session, Vec<Report>), Error> {
     let grants = composition::grants(initial_count, count, config)?;
     let mut scheduler = Scheduler::new(count);
+    if !scheduler.configure_cpu(config.cpu_limits) {
+        return Err(Error::InvalidCpuBudget);
+    }
     for launch in &grants.launches {
         scheduler.set_parent(launch.model.child, launch.model.owner);
     }

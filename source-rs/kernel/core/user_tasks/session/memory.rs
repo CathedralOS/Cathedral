@@ -55,6 +55,7 @@ pub(super) unsafe fn process(session: &mut Session, frames: &mut Frames<'_>) {
         let Some(call) = session.tasks[slot].memory_call.take() else {
             continue;
         };
+        session.scheduler.account_cpu(cathedral_arch::cpu_time_us());
         // Admission budgets are distinct from runtime page budgets enforced by Regions.
         frames.remaining = usize::MAX;
         session.tasks[slot].report.memory.deferred_calls += 1;
@@ -62,6 +63,9 @@ pub(super) unsafe fn process(session: &mut Session, frames: &mut Frames<'_>) {
         let result = unsafe { dispatch(session, frames, slot, call) };
         syscalls::complete(session, slot, result);
         session.scheduler.unblock(slot);
+        session
+            .scheduler
+            .charge_cpu(slot, cathedral_arch::cpu_time_us());
     }
 }
 unsafe fn dispatch(

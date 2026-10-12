@@ -1,9 +1,13 @@
 //! Task state and scheduling entrance: wake, park, select a turn, resume.
-//! shares.rs subdivides turns down the ownership tree. CPU context mechanics stay
-//! outside policy; all scheduling storage is allocated at construction.
+//! shares.rs subdivides turns down the ownership tree; budget.rs gates eligibility
+//! using measured CPU ceilings. CPU context mechanics stay outside policy; all
+//! scheduling storage is allocated at construction.
 
 use alloc::{vec, vec::Vec};
+mod budget;
 mod shares;
+use budget::Budgets;
+pub use budget::{CpuReport, PERIOD_US as CPU_PERIOD_US};
 use shares::Shares;
 
 /// A slot and generation within one runtime session. Reuse never revives an ID.
@@ -45,6 +49,7 @@ pub struct Scheduler {
     generations: Vec<u64>,
     current: Option<usize>,
     shares: Shares,
+    budgets: Budgets,
 }
 
 impl Scheduler {
@@ -54,6 +59,7 @@ impl Scheduler {
             generations: vec![0; limit],
             current: None,
             shares: Shares::new(limit),
+            budgets: Budgets::new(limit),
         }
     }
     /// Attach a dormant launch account to its current owner. The bounded launch
@@ -62,6 +68,29 @@ impl Scheduler {
         assert_eq!(self.states[child], TaskState::Vacant);
         assert!(parent < child);
         self.shares.set_parent(child, parent);
+        self.budgets.refresh(&self.shares);
+    }
+    /// Boot configuration only. Zero inherits ancestor ceilings; it adds no cap.
+    pub fn configure_cpu(&mut self, limits: &[u64]) -> bool {
+        self.budgets.configure(limits)
+    }
+    /// Account the interval since the preceding sample to the running process.
+    pub fn account_cpu(&mut self, now_us: u64) {
+        self.budgets.advance(now_us, self.current, &self.shares);
+    }
+    /// Boot-stack work is charged explicitly to its requester or retired account.
+    pub fn charge_cpu(&mut self, owner: usize, now_us: u64) {
+        assert!(self.current.is_none());
+        self.budgets.advance(now_us, Some(owner), &self.shares);
+    }
+    pub fn cpu_report(&self, slot: usize) -> CpuReport {
+        self.budgets.report(slot)
+    }
+    pub fn has_eligible_ready(&self) -> bool {
+        self.states
+            .iter()
+            .enumerate()
+            .any(|(slot, state)| *state == TaskState::Ready && self.budgets.eligible[slot])
     }
     pub fn current(&self) -> Option<usize> {
         self.current
@@ -116,13 +145,13 @@ impl Scheduler {
     /// Sleep durations must be below half the wrapping clock's range.
     pub fn advance(&mut self, event: Event, now: u64, preempt: bool) -> Option<usize> {
         if (matches!(event, Event::Continue) || (matches!(event, Event::Timer) && !preempt))
-            && self.current.is_some()
+            && self.current.is_some_and(|slot| self.budgets.eligible[slot])
         {
             self.wake(now);
             return self.current;
         }
         self.park(event, now);
-        if let Some(candidate) = self.shares.select(&self.states) {
+        if let Some(candidate) = self.shares.select(&self.states, &self.budgets.eligible) {
             self.states[candidate] = TaskState::Running;
             self.current = Some(candidate);
         }

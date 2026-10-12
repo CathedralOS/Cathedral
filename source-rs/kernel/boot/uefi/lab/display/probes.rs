@@ -56,6 +56,7 @@ fn run(
                 }],
                 memory: &[],
                 channel_limits: &[],
+                cpu_limits: &[],
                 clock_readers: &[],
                 supervision: &[Supervision {
                     disk: false,

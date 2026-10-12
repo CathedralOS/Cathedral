@@ -27,6 +27,7 @@ pub struct Program<'a> {
 
 #[derive(Debug)]
 pub enum Error {
+    InvalidCpuBudget,
     InvalidCount,
     InvalidEndpoints,
     OutOfHeap,

@@ -56,6 +56,7 @@ MARKERS = (
     "Cathedral Rust lab: multiple launch grants preserved sibling IPC across 16 restarts; failed admission and keyboard-wait cancellation reclaimed all memory",
     "Cathedral Rust lab: peer graph survived 16 app/provider replacements; all endpoints, frames and heap reclaimed",
     "Cathedral Rust lab: hierarchical CPU turns preserved outside progress under subtree growth; loan return and full reclamation passed",
+    "Cathedral Rust lab: measured CPU ceilings, descendant charging, yield pressure, restart debt and idle refill passed",
     "Cathedral Rust lab: deadlines recovered 4 silent and 4 spinning services; independent observer progressed; all memory reclaimed",
     "Cathedral Rust lab: clock grants copy checks and deadline completion/cancellation precedence passed",
     "Cathedral Rust lab: deadline woke an idle session with every user task blocked; all memory reclaimed",
@@ -169,7 +170,7 @@ def main():
     target = composition["target"]
     boot_package = composition["boot_package"]
     environment = {key: value for key, value in os.environ.items()
-                   if not (key.startswith("CATHEDRAL_") and (key.endswith("_ELF") or key in ("CATHEDRAL_INIT_CLOCK", "CATHEDRAL_LINKS", "CATHEDRAL_CHANNEL_LIMITS") or key.startswith("CATHEDRAL_LAUNCH_")))}
+                   if not (key.startswith("CATHEDRAL_") and (key.endswith("_ELF") or key in ("CATHEDRAL_INIT_CLOCK", "CATHEDRAL_LINKS", "CATHEDRAL_CHANNEL_LIMITS", "CATHEDRAL_CPU_LIMITS") or key.startswith("CATHEDRAL_LAUNCH_")))}
     programs = {}
     if not args.kernel_only:
         if args.smoke:
@@ -178,9 +179,11 @@ def main():
             startup = composition["startup"]
             try:
                 limits = resource_budgets.channel_limits(startup)
+                cpu_limits = resource_budgets.cpu_limits(startup)
             except ValueError as error:
                 parser.error(str(error))
             environment["CATHEDRAL_CHANNEL_LIMITS"] = ",".join(map(str, limits))
+            environment["CATHEDRAL_CPU_LIMITS"] = ",".join(map(str, cpu_limits))
             programs["init"] = startup["initial"]
             environment["CATHEDRAL_INIT_CLOCK"] = "1" if startup["initial"].get("clock", False) else "0"
             launches = startup.get("launches", [startup["launch"]] if startup.get("launch") else [])

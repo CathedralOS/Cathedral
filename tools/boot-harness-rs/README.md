@@ -143,13 +143,25 @@ Add `--release` for optimized verification. This profile has no display grant;
 its [guide](../../source-rs/distribution/lab/matrix/README.md) documents the
 execution paths and remaining environment/lifecycle work.
 
-## CPU turn sharing
+## CPU turn sharing and measured ceilings
 
 The broader `--smoke` profile includes a
 [CPU sharing fixture](../../source-rs/kernel/core/scheduler/README.md): one and then
 three non-yielding descendants compete with an independent outer account. The
 guest checks preemption shares, descendant progress, loan return and reclamation.
-This verifies hierarchical turns, not elapsed CPU-time quotas or deadlines.
+It also measures capped execution under single/nested spinners, competing yield
+loops, repeated replacement and an all-throttled idle session. Reports include
+direct/subtree microseconds and exhaustion counts, with heap/frame reclamation.
+
+Each `startup.initial` or `startup.launches` entry may set `cpu_budget_us` to an
+integer 0–100000. For example, 20000 supplies a 20 ms burst and continuously refills
+at 20% of one CPU. Zero/default adds no local cap; ancestors still constrain the
+account. Limits persist through replacement and loans. These are token-bucket
+ceilings, not fixed windows or guaranteed reservations, so their sum need not fit
+one CPU. [resource_budgets.py](resource_budgets.py), boot generation and kernel
+admission validate the values. The 100 Hz timer permits overruns which become
+debt; the QEMU-calibrated clock and unpreemptible kernel work do not establish
+hard real-time bounds. See the [accounting contract](../../source-rs/kernel/core/scheduler/README.md).
 
 ## Ordinary application IPC profile
 
@@ -162,6 +174,8 @@ checks atomic rejection, and cancels children using their initial connections.
 This is headless and terminates at the guest's success marker. Logs live in
 `build/boot-harness-rs/channels-test/`. The [guide](../../source-rs/distribution/lab/channels/README.md)
 explains local names, backed reservations, limitations and code entrances.
+The initial account has a 50 ms CPU burst with 50% refill; every worker inherits
+that ancestor ceiling. This also exercises non-default profile-to-kernel CPU limits.
 The sponsorship scenario retains channels across creator restarts, rejects
 creation at the account limit, proves sibling capacity and recovers after closure.
 The same proof now delegates launch budgets through three identical recursive

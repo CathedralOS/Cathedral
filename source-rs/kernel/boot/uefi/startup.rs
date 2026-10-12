@@ -85,6 +85,7 @@ pub fn run(memory: &mut PreparedMemory, console: &mut SerialPort) {
                 endpoints: &[],
                 memory: &memory_grants,
                 channel_limits: CHANNEL_LIMITS,
+                cpu_limits: CPU_LIMITS,
                 clock_readers: &clock_readers,
                 supervision: &launches,
             },

@@ -105,6 +105,7 @@ fn run(
                 supervision: &[],
                 memory: &[],
                 channel_limits: &[],
+                cpu_limits: &[],
                 clock_readers: &[],
             },
         )

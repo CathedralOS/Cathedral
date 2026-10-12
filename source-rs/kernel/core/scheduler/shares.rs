@@ -25,10 +25,13 @@ impl Shares {
     pub(super) fn set_parent(&mut self, child: usize, parent: usize) {
         self.accounts[child].parent = Some(parent);
     }
-    pub(super) fn select(&mut self, states: &[TaskState]) -> Option<usize> {
+    pub(super) fn parent(&self, child: usize) -> Option<usize> {
+        self.accounts[child].parent
+    }
+    pub(super) fn select(&mut self, states: &[TaskState], eligible: &[bool]) -> Option<usize> {
         // Parents precede children, so one reverse pass summarizes readiness.
-        for (account, state) in self.accounts.iter_mut().zip(states) {
-            account.runnable = *state == TaskState::Ready;
+        for (slot, account) in self.accounts.iter_mut().enumerate() {
+            account.runnable = states[slot] == TaskState::Ready && eligible[slot];
         }
         for child in (0..self.accounts.len()).rev() {
             if self.accounts[child].runnable
@@ -45,7 +48,7 @@ impl Shares {
                 .map(|offset| (cursor + offset) % count)
                 .find(|&slot| {
                     if parent == Some(slot) {
-                        states[slot] == TaskState::Ready
+                        states[slot] == TaskState::Ready && eligible[slot]
                     } else {
                         self.accounts[slot].parent == parent && self.accounts[slot].runnable
                     }

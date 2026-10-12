@@ -8,6 +8,8 @@ pub enum Exit {
 }
 #[derive(Default, Debug)]
 pub struct Report {
+    /// Persistent launch-account totals, including earlier incarnations.
+    pub cpu: crate::scheduler::CpuReport,
     pub memory: MemoryReport,
     pub exit: Option<Exit>,
     pub preemptions: usize,
