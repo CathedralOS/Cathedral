@@ -1,8 +1,9 @@
 // Address-space construction and task installation use separate stack frames.
 // Slots are allocated before execution; live admission never grows the arena.
 use super::{Error, Frames, Report, Session, Task};
+use crate::user_tasks::address_space::{USER_CODE, USER_STACK_TOP, UserSpace};
 use crate::user_tasks::{Executable, Program};
-use cathedral_arch::{self as arch, Context, UserSpace};
+use cathedral_arch::{self as arch, Context};
 
 pub(super) unsafe fn admit(
     session: &mut Session,
@@ -71,7 +72,7 @@ unsafe fn construct(
             return Err(Error::Memory(error));
         }
     }
-    task.context = Context::user(entry, arch::USER_STACK_TOP, program.arguments);
+    task.context = Context::user(entry, USER_STACK_TOP, program.arguments);
     task.receive = None;
     task.wait = None;
     task.keyboard_wait = false;
@@ -96,7 +97,7 @@ unsafe fn load(
     let result = unsafe {
         match &program.executable {
             Executable::Probe(code) => {
-                entry = arch::USER_CODE;
+                entry = USER_CODE;
                 UserSpace::create(layout, image, code, frames)
             }
             Executable::Elf(bytes) => {

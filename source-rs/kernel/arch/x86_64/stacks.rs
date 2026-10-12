@@ -18,20 +18,11 @@ const STRIDE: u64 = 2 * 1024 * 1024;
 const PAGE_BYTES: u64 = 4096;
 const STACK_PAGES: u64 = 16;
 
-/// # Safety
-/// Allocations are unique, unused, identity-mapped writable RAM. Released frames
-/// become available again only after the caller has removed every live use.
-pub unsafe trait StackFrames {
-    fn allocate(&mut self) -> Option<u64>;
-    /// # Safety
-    /// Address came from this source. All live users and stack/table translations
-    /// are retired; the permanent identity alias remains under allocator custody.
-    unsafe fn release(&mut self, address: u64);
-}
+use crate::FrameSource;
 
 struct Tables<'a, F>(&'a mut F);
-// SAFETY: StackFrames guarantees unique unused physical frames.
-unsafe impl<F: StackFrames> FrameAllocator<Size4KiB> for Tables<'_, F> {
+// SAFETY: FrameSource guarantees unique unused physical frames.
+unsafe impl<F: FrameSource> FrameAllocator<Size4KiB> for Tables<'_, F> {
     fn allocate_frame(&mut self) -> Option<PhysFrame> {
         self.0.allocate().map(frame)
     }
@@ -70,7 +61,7 @@ fn page(address: u64) -> Page<Size4KiB> {
 /// exclusively to the caller and has no mappings or users. No competing mapper.
 pub unsafe fn allocate_stack(
     slot: usize,
-    frames: &mut impl StackFrames,
+    frames: &mut impl FrameSource,
 ) -> Result<StackRange, MemoryError> {
     let stack = task_stack_range(slot);
     // SAFETY: Caller owns serialized access to the active tree.
@@ -121,7 +112,7 @@ pub unsafe fn allocate_stack(
 /// # Safety
 /// Same machine guarantees as allocate_stack. The task has switched away and
 /// will never resume; no reference or saved context may still use this stack.
-pub unsafe fn release_stack(slot: usize, frames: &mut impl StackFrames) {
+pub unsafe fn release_stack(slot: usize, frames: &mut impl FrameSource) {
     // SAFETY: Caller has retired all stack users and owns the mapping tree.
     unsafe {
         retire(&mut mapper(), task_stack_range(slot), STACK_PAGES, frames);
@@ -145,7 +136,7 @@ unsafe fn retire(
     mapper: &mut OffsetPageTable<'_>,
     stack: StackRange,
     count: u64,
-    frames: &mut impl StackFrames,
+    frames: &mut impl FrameSource,
 ) {
     for index in 0..count {
         let (backing, flush) = mapper

@@ -3,7 +3,6 @@
 use core::arch::asm;
 
 pub const ELF_MACHINE: u16 = 62;
-pub const LEGACY_DEVICES: bool = true;
 pub const CPU_NAME: &str = "x86_64";
 
 /// # Safety

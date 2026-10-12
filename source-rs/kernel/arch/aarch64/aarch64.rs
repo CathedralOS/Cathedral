@@ -4,7 +4,6 @@
 use core::arch::asm;
 pub const CPU_NAME: &str = "aarch64";
 pub const ELF_MACHINE: u16 = 183;
-pub const LEGACY_DEVICES: bool = false;
 pub const INTERRUPT_READY: &str = "AArch64 vectors installed; breakpoint returned";
 /// # Safety
 /// Privileged EL1 execution and exclusive interrupt policy.

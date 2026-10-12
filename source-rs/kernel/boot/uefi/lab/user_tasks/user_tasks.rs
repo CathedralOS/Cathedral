@@ -1,7 +1,8 @@
-//! Boot-level experiments: ring transitions, bad requests, isolation and cleanup.
+// Boot-level experiments: ring transitions, bad requests, isolation and cleanup.
 use crate::console::Console as SerialPort;
 use crate::{diagnostics::user_output, heap::HEAP, memory::PreparedMemory};
 use cathedral_arch as arch;
+use cathedral_core::user_tasks::address_space;
 use cathedral_core::user_tasks::{self, Executable, Exit, Program};
 use core::fmt::Write;
 
@@ -9,7 +10,7 @@ pub fn exercise(memory: &mut PreparedMemory, console: &mut SerialPort) {
     let frames = memory.frames.allocated();
     // SAFETY: Sole boot CPU, outside a task session.
     let heap = unsafe { HEAP.used() };
-    let code = arch::user_probe();
+    let code = probe::user_probe();
     let mut admission_frames = 0;
     for mode in 1..=10 {
         let probe_address = if mode == 9 {
@@ -46,9 +47,9 @@ pub fn exercise(memory: &mut PreparedMemory, console: &mut SerialPort) {
         let (vector, error, address) = match mode {
             1 => (14, 5, Some(memory.layout.heap_start)),
             2 | 3 | 10 => (13, 0, None),
-            4 => (14, 7, Some(arch::USER_CODE)),
-            5 => (14, 21, Some(arch::USER_STACK_TOP - 8)),
-            6 => (14, 6, Some(arch::USER_STACK - 8)),
+            4 => (14, 7, Some(address_space::USER_CODE)),
+            5 => (14, 21, Some(address_space::USER_STACK_TOP - 8)),
+            6 => (14, 6, Some(address_space::USER_STACK - 8)),
             7 => (13, (48 << 3) | 2, None),
             8 => (6, 0, None),
             9 => (14, 4, Some(memory.layout.root_address())),
@@ -60,9 +61,11 @@ pub fn exercise(memory: &mut PreparedMemory, console: &mut SerialPort) {
             assert_eq!(fault.address, address);
         }
         if mode == 5 {
-            assert_eq!(fault.instruction, arch::USER_STACK_TOP - 8);
+            assert_eq!(fault.instruction, address_space::USER_STACK_TOP - 8);
         } else {
-            assert!((arch::USER_CODE..arch::USER_DATA).contains(&fault.instruction));
+            assert!(
+                (address_space::USER_CODE..address_space::USER_DATA).contains(&fault.instruction)
+            );
         }
         assert_eq!(reports[1].exit, Some(Exit::Returned(0)));
         assert_eq!(reports[0].completion_order, 1);

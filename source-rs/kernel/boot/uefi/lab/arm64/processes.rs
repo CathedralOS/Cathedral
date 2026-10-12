@@ -65,9 +65,9 @@ pub(super) fn isolation(
         (2, memory.layout.heap_start, 0x24),
         (2, memory.layout.root_address(), 0x24),
         (2, 0x0900_0000, 0x24),
-        (4, arch::USER_CODE, 0x24),
-        (2, arch::USER_STACK - 8, 0x24),
-        (5, arch::USER_STACK, 0x20),
+        (4, user_tasks::address_space::USER_CODE, 0x24),
+        (2, user_tasks::address_space::USER_STACK - 8, 0x24),
+        (5, user_tasks::address_space::USER_STACK, 0x20),
     ] {
         let reports = run(
             memory,

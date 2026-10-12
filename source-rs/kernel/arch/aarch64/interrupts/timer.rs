@@ -1,5 +1,6 @@
 //! Single-CPU QEMU virt: GICv2 timer PPI 27, nominally 100 Hz.
 use super::{Fault, fatal};
+use crate::board::virt::{TIMER_IRQ, gic};
 use core::{
     arch::asm,
     sync::atomic::{AtomicU64, Ordering},
@@ -32,29 +33,15 @@ pub unsafe fn calibrate_cpu_clock() {
 pub unsafe fn start_timer() {
     // SAFETY: Fixed-board distributor/CPU interface; enable only virtual timer PPI 27.
     unsafe {
-        (0x0800_0000 as *mut u32).write_volatile(0);
-        let banks = ((0x0800_0004 as *const u32).read_volatile() & 31) + 1;
-        for bank in 0..banks {
-            ((0x0800_0180 + bank * 4) as *mut u32).write_volatile(u32::MAX);
-            ((0x0800_0280 + bank * 4) as *mut u32).write_volatile(u32::MAX);
-        }
-        let group = 0x0800_0080 as *mut u32;
-        group.write_volatile(group.read_volatile() & !(1 << 27));
-        (0x0800_041b as *mut u8).write_volatile(0x80);
-        (0x0800_0100 as *mut u32).write_volatile(1 << 27);
-        (0x0801_0004 as *mut u32).write_volatile(0xff);
-        (0x0801_0008 as *mut u32).write_volatile(0);
-        (0x0801_0000 as *mut u32).write_volatile(1);
-        (0x0800_0000 as *mut u32).write_volatile(1);
-        asm!("dsb sy", options(nostack));
+        gic::start_timer_route();
         asm!("msr cntp_ctl_el0,xzr","msr cntv_tval_el0, {}","msr cntv_ctl_el0, {}","isb",in(reg) frequency()/100,in(reg) 1u64,options(nostack));
     }
 }
 pub(in crate::aarch64) fn acknowledge() {
     // SAFETY: Sole CPU, IRQs masked in vector entry; MMIO belongs to this backend.
     unsafe {
-        let id = (0x0801_000c as *const u32).read_volatile();
-        if id & 1023 != 27 {
+        let id = gic::acknowledge();
+        if id & 1023 != TIMER_IRQ {
             fatal(Fault {
                 vector: 0xffff,
                 error: id as u64,
@@ -64,7 +51,7 @@ pub(in crate::aarch64) fn acknowledge() {
             });
         }
         asm!("msr cntv_tval_el0, {}","isb",in(reg) frequency()/100,options(nostack));
-        (0x0801_0010 as *mut u32).write_volatile(id);
+        gic::complete(id);
     }
     TICKS.fetch_add(1, Ordering::Relaxed);
     LAST_IRQ.store(crate::aarch64::stack_pointer(), Ordering::Relaxed);

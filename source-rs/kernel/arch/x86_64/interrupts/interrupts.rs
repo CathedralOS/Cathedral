@@ -13,14 +13,7 @@ static FAULT_HANDLER: AtomicPtr<()> = AtomicPtr::new(core::ptr::null_mut());
 pub(super) static TICKS: AtomicU64 = AtomicU64::new(0);
 static BREAKPOINTS: AtomicU64 = AtomicU64::new(0);
 static IRQ_STACK: AtomicU64 = AtomicU64::new(0);
-#[derive(Debug)]
-pub struct Fault {
-    pub vector: u64,
-    pub error: u64,
-    pub instruction: u64,
-    pub address: u64,
-    pub stack: u64,
-}
+use crate::Fault;
 
 pub(super) extern "win64" fn dispatch_fault(
     vector: u64,
@@ -83,7 +76,7 @@ pub unsafe fn start_timer() {
     assert!(INSTALLED.load(Ordering::Acquire));
     // SAFETY: The selected PC lab grants this CPU exclusive legacy-controller access.
     unsafe {
-        crate::x86::legacy_timer::start_100_hz();
+        crate::board::pc::timer::start_100_hz();
     }
 }
 

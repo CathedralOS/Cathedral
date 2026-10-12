@@ -1,5 +1,6 @@
 //! Pinned task-session state and persistent launch accounts shared by the execution boundaries.
 use super::Report;
+use super::address_space::UserSpace;
 use super::syscalls::{self, ipc::readiness, tasks};
 use crate::{
     ipc::{Ipc, MAX_EPOCH},
@@ -7,7 +8,7 @@ use crate::{
     user_tasks::lifecycle::supervision::Supervisor,
 };
 use alloc::vec::Vec;
-use cathedral_arch::{Context, UserSpace};
+use cathedral_arch::Context;
 use core::sync::atomic::{AtomicPtr, AtomicU64, Ordering};
 pub(super) struct Task {
     pub(super) memory_call: Option<[u64; 3]>,

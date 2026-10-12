@@ -1,9 +1,7 @@
-//! Construct a sparse root: borrow required supervisor mappings, then load private image and stack.
-use super::paging::{Tracked, map};
-use super::{
-    Backing, BootLayout, MAX_BACKING, MemoryError, PAGE, StackFrames, USER_STACK, UserSegment,
-    UserSpace,
-};
+//! Borrow only the kernel translations needed for entry, dispatch and return.
+use super::paging::{Tables, map};
+use super::{PAGE, UserMappings};
+use crate::{BootLayout, FrameSource, ImageRange, MemoryError};
 use ::x86_64::{
     VirtAddr,
     structures::paging::{
@@ -11,49 +9,40 @@ use ::x86_64::{
         mapper::TranslateResult,
     },
 };
-
-impl UserSpace {
-    pub(super) unsafe fn build(
-        &mut self,
+impl UserMappings {
+    /// # Safety
+    /// Inactive unique root, live boot mappings, IRQs off. Caller retains every allocated
+    /// frame and reclaims them all if construction fails. Image range is page aligned.
+    pub unsafe fn create(
         layout: &BootLayout,
-        start: u64,
-        end: u64,
-        segments: &[UserSegment<'_>],
-        frames: &mut impl StackFrames,
-    ) -> Result<(), MemoryError> {
-        let mut source = Tracked {
-            frames,
-            addresses: &mut self.owned,
-            len: &mut self.len,
-        };
-        let root = source.allocate_frame().ok_or(MemoryError::OutOfFrames)?;
-        self.root = root.start_address().as_u64();
-        // SAFETY: New zeroed root, unique tables; boot root remains active and stable.
-        let (mut target, boot) = unsafe {
-            (
-                OffsetPageTable::new(&mut *(self.root as *mut PageTable), VirtAddr::zero()),
-                OffsetPageTable::new(
-                    &mut *(layout.root_address() as *mut PageTable),
-                    VirtAddr::zero(),
-                ),
-            )
-        };
-        // SAFETY: Inactive target and exclusive frame ledger; boot mappings stay live.
+        image: ImageRange,
+        frames: &mut impl FrameSource,
+    ) -> Result<Self, MemoryError> {
+        let mut source = Tables(frames);
+        let root = source
+            .allocate_frame()
+            .ok_or(MemoryError::OutOfFrames)?
+            .start_address()
+            .as_u64();
+        // SAFETY: Fresh zeroed root, disjoint from the live boot tree; caller tracks allocation.
         unsafe {
-            map_kernel(&mut target, &boot, layout, start, end, &mut source)?;
-            map_program(
+            let mut target = OffsetPageTable::new(&mut *(root as *mut PageTable), VirtAddr::zero());
+            let boot = OffsetPageTable::new(
+                &mut *(layout.root_address() as *mut PageTable),
+                VirtAddr::zero(),
+            );
+            map_kernel(
                 &mut target,
-                segments,
-                &mut self.backing,
-                &mut self.pages,
-                &mut self.writable,
+                &boot,
+                layout,
+                image.base,
+                image.base + image.bytes,
                 &mut source,
             )?;
         }
-        Ok(())
+        Ok(Self { root })
     }
 }
-
 unsafe fn map_kernel(
     target: &mut OffsetPageTable<'_>,
     boot: &OffsetPageTable<'_>,
@@ -90,56 +79,6 @@ unsafe fn map_kernel(
             // SAFETY: Explicit live kernel resource; only supervisor leaf permissions.
             unsafe {
                 map(target, address, physical, flags, source)?;
-            }
-        }
-    }
-    Ok(())
-}
-
-unsafe fn map_program(
-    target: &mut OffsetPageTable<'_>,
-    segments: &[UserSegment<'_>],
-    backing: &mut [Backing; MAX_BACKING],
-    pages: &mut usize,
-    writable: &mut u128,
-    source: &mut impl FrameAllocator<Size4KiB>,
-) -> Result<(), MemoryError> {
-    let stack = UserSegment {
-        address: USER_STACK,
-        bytes: &[],
-        memory_size: 4 * PAGE,
-        writable: true,
-        executable: false,
-    };
-    for segment in segments.iter().chain(core::iter::once(&stack)) {
-        let mut flags = Flags::PRESENT | Flags::USER_ACCESSIBLE;
-        if segment.writable {
-            flags |= Flags::WRITABLE;
-        }
-        if !segment.executable {
-            flags |= Flags::NO_EXECUTE;
-        }
-        for offset in (0..segment.memory_size).step_by(PAGE as usize) {
-            let frame = source.allocate_frame().ok_or(MemoryError::OutOfFrames)?;
-            let physical = frame.start_address().as_u64();
-            let address = segment.address + offset;
-            backing[*pages] = Backing { address, physical };
-            if segment.writable {
-                *writable |= 1 << *pages;
-            }
-            *pages += 1;
-            // SAFETY: Fresh zeroed backing, disjoint validated virtual page.
-            // Only file bytes are copied; BSS and trailing page bytes stay zero.
-            unsafe {
-                map(target, address, physical, flags, source)?;
-                if (offset as usize) < segment.bytes.len() {
-                    let bytes = &segment.bytes[offset as usize..];
-                    core::ptr::copy_nonoverlapping(
-                        bytes.as_ptr(),
-                        physical as *mut u8,
-                        bytes.len().min(PAGE as usize),
-                    );
-                }
             }
         }
     }

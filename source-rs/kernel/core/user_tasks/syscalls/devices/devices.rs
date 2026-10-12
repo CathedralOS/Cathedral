@@ -20,3 +20,10 @@ pub(super) fn dispatch(
         _ => Err(abi::UNKNOWN),
     }
 }
+
+fn error(error: cathedral_arch::board::DeviceError) -> u64 {
+    match error {
+        cathedral_arch::board::DeviceError::InvalidArgument => abi::INVALID_ARGUMENT,
+        cathedral_arch::board::DeviceError::WouldBlock => abi::WOULD_BLOCK,
+    }
+}

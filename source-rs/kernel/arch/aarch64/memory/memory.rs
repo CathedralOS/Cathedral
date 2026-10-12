@@ -3,22 +3,7 @@
 use core::arch::asm;
 use tables::{NORMAL, NX, PageTables, map};
 pub const PAGE: u64 = 4096;
-#[derive(Debug)]
-pub enum MemoryError {
-    UnsupportedCpu,
-    OutOfFrames,
-    InvalidFrame,
-    OccupiedVirtualRange,
-    MapFailed,
-}
-/// # Safety
-/// Frames are unique, unused, identity-mapped RAM; release follows every alias's retirement.
-pub unsafe trait StackFrames {
-    fn allocate(&mut self) -> Option<u64>;
-    /// # Safety
-    /// The caller has retired all mappings and users of this frame.
-    unsafe fn release(&mut self, address: u64);
-}
+use crate::MemoryError;
 pub struct BootLayout {
     root: u64,
     pub table_count: usize,
@@ -30,6 +15,15 @@ pub struct BootLayout {
     pub heap_bytes: usize,
 }
 impl BootLayout {
+    /// Mapped stack used for maskable interrupt dispatch; no CPU-specific slot leaks to boot.
+    pub fn interrupt_stack(&self) -> crate::StackRange {
+        let top = self.emergency_tops[3];
+        crate::StackRange {
+            top,
+            bottom: top - 4 * 4096,
+            guard: top - 5 * 4096,
+        }
+    }
     pub fn root_address(&self) -> u64 {
         self.root
     }
@@ -72,7 +66,7 @@ pub unsafe fn prepare_memory(
     unsafe {
         (root as *mut u64).write(l1 | 3);
         (l1 as *mut u64).write(devices | 3);
-        for i in 0..512 {
+        for i in 0..(crate::board::virt::RAM_START / 0x20_0000) as usize {
             (devices as *mut u64)
                 .add(i)
                 .write((i as u64 * 0x20_0000) | 1 | (1 << 10) | (1 << 2) | NX);
@@ -80,7 +74,7 @@ pub unsafe fn prepare_memory(
         // RAM is normal WB and supervisor-only. EL1 image executes from its identity alias.
         (l1 as *mut u64)
             .add(1)
-            .write(0x4000_0000 | 1 | NORMAL | (1 << 54));
+            .write(crate::board::virt::RAM_START | 1 | NORMAL | (1 << 54));
     }
     let mut table_count = 3;
     let stack_guard = 0x10_0000_0000;

@@ -2,7 +2,7 @@
 
 use super::SpawnError;
 use crate::memory::FrameAllocator;
-use cathedral_arch::{self as arch, StackFrames};
+use cathedral_arch::{self as arch, FrameSource};
 
 struct Source<'a> {
     frames: &'a mut FrameAllocator,
@@ -10,7 +10,7 @@ struct Source<'a> {
 }
 // SAFETY: Constructed only by the unsafe mapping APIs below, whose callers own
 // the physical inventory and serialize all users and mapping changes.
-unsafe impl StackFrames for Source<'_> {
+unsafe impl FrameSource for Source<'_> {
     fn allocate(&mut self) -> Option<u64> {
         if self.remaining == 0 {
             return None;

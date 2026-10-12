@@ -7,14 +7,7 @@ use core::{
 };
 pub(super) static IRQ_STACK: AtomicU64 = AtomicU64::new(0);
 static FAULT: AtomicPtr<()> = AtomicPtr::new(core::ptr::null_mut());
-#[derive(Debug)]
-pub struct Fault {
-    pub vector: u64,
-    pub error: u64,
-    pub address: u64,
-    pub instruction: u64,
-    pub stack: u64,
-}
+use crate::Fault;
 /// # Safety
 /// Own EL1 vectors and permanent exception stack; IRQs masked, sole CPU.
 pub unsafe fn install_interrupts(layout: &BootLayout, handler: fn(Fault) -> !) {

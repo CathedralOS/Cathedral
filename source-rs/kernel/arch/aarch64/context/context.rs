@@ -1,5 +1,6 @@
 // Exception entrance: restore the kernel root, classify the trap, run shared scheduling,
 // then select the return root. state.rs and entry.S define the saved-register ABI.
+use crate::{Fault, SwitchCause, UserFault};
 use core::{
     arch::{asm, global_asm},
     sync::atomic::{AtomicPtr, Ordering},
@@ -33,7 +34,7 @@ extern "C" fn dispatch(context: &mut Context, kind: u64, esr: u64, address: u64)
     }
     let ec = esr >> 26;
     if kind > 1 {
-        interrupts::fatal(super::Fault {
+        interrupts::fatal(Fault {
             vector: kind,
             error: esr,
             address,
@@ -61,7 +62,7 @@ extern "C" fn dispatch(context: &mut Context, kind: u64, esr: u64, address: u64)
             instruction: context.instruction,
         })
     } else {
-        interrupts::fatal(super::Fault {
+        interrupts::fatal(Fault {
             vector: ec,
             error: esr,
             address,

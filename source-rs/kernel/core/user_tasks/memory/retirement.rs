@@ -1,6 +1,6 @@
 //! Remove surrendered aliases before refunding unreferenced physical backing.
 use super::{Frames, Memory, Session, wire};
-use cathedral_arch::StackFrames;
+use cathedral_arch::FrameSource;
 
 impl Memory {
     pub(super) unsafe fn reclaim(&mut self, index: usize, frames: &mut Frames<'_>) {

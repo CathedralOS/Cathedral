@@ -2,6 +2,7 @@
 //! AVX/XSAVE state is not part of this CPU profile.
 
 use super::{StackRange, interrupts};
+use crate::{SwitchCause, UserFault};
 use ::x86_64::{
     instructions::segmentation::{CS, SS, Segment},
     registers::control::{Cr0, Cr0Flags, Cr4, Cr4Flags},
@@ -138,21 +139,6 @@ extern "win64" fn task_entry(entry: usize, argument: usize) -> ! {
     // SAFETY: Context::new installed this exact function-pointer type.
     let entry: fn(usize) -> ! = unsafe { core::mem::transmute(entry) };
     entry(argument)
-}
-#[derive(Clone, Copy, PartialEq, Eq)]
-pub enum SwitchCause {
-    Timer,
-    Device,
-    Yield,
-    Syscall,
-    Fault(UserFault),
-}
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub struct UserFault {
-    pub vector: u64,
-    pub error: u64,
-    pub address: u64,
-    pub instruction: u64,
 }
 pub type SwitchHandler = unsafe fn(&Context, SwitchCause, u64) -> *const Context;
 static HANDLER: AtomicPtr<()> = AtomicPtr::new(core::ptr::null_mut());

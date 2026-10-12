@@ -15,7 +15,9 @@ impl<'a, F: FnMut() -> Option<u64>> PageTables<'a, F> {
     }
     pub fn frame(&mut self) -> Result<u64, MemoryError> {
         let p = (self.next)().ok_or(MemoryError::OutOfFrames)?;
-        if !p.is_multiple_of(4096) || !(0x4000_0000..0x8000_0000).contains(&p) {
+        if !p.is_multiple_of(4096)
+            || !(crate::board::virt::RAM_START..crate::board::virt::RAM_END).contains(&p)
+        {
             return Err(MemoryError::InvalidFrame);
         }
         // SAFETY: The enclosing construction contract guarantees fresh, writable identity RAM.

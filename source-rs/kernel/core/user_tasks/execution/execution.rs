@@ -17,7 +17,9 @@ pub(super) unsafe fn run(
     unsafe {
         arch::begin_user_session();
         arch::set_switch_handler(Some(traps::schedule));
-        arch::keyboard_irq(config.supervision.iter().any(|grant| grant.keyboard));
+        if let Some(keyboard) = arch::board::devices().keyboard {
+            keyboard.interrupts(config.supervision.iter().any(|grant| grant.keyboard));
+        }
         loop {
             lifecycle::reap(&mut *session, source);
             for index in 0..(*session).launches.len() {
@@ -47,7 +49,9 @@ pub(super) unsafe fn run(
                 arch::wait_for_ticks(1);
             }
         }
-        arch::keyboard_irq(false);
+        if let Some(keyboard) = arch::board::devices().keyboard {
+            keyboard.interrupts(false);
+        }
         arch::set_switch_handler(None);
         arch::end_user_session();
         ACTIVE.store(core::ptr::null_mut(), Ordering::Release);

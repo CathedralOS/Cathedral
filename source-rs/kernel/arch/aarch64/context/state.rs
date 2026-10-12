@@ -46,18 +46,3 @@ impl Context {
         self.registers[0] = result;
     }
 }
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub struct UserFault {
-    pub vector: u64,
-    pub error: u64,
-    pub address: u64,
-    pub instruction: u64,
-}
-#[derive(Clone, Copy, PartialEq, Eq)]
-pub enum SwitchCause {
-    Timer,
-    Device,
-    Yield,
-    Syscall,
-    Fault(UserFault),
-}

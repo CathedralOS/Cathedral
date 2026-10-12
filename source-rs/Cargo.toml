@@ -34,7 +34,7 @@ members = [
     "distribution/libraries/boot-scene",
     "distribution/libraries/session-protocol",
 ]
-default-members = ["distribution/lab/rendering", "platform/libraries/object-store", "contracts", "kernel/core", "platform/services/input", "platform/services/display", "platform/services/matrix", "platform/libraries/bitmap-font"]
+default-members = ["distribution/lab/rendering", "platform/libraries/object-store", "contracts", "kernel/core", "kernel/arch", "platform/services/input", "platform/services/display", "platform/services/matrix", "platform/libraries/bitmap-font"]
 
 [workspace.package]
 version = "0.0.0"

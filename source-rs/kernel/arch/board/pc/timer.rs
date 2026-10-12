@@ -1,7 +1,7 @@
 //! QEMU PC platform bootstrap, not a universal x86 timer implementation.
 //! PIC/PIT remain a temporary route until ACPI/APIC discovery and calibration.
 
-use super::out8;
+use crate::x86::out8;
 
 /// # Safety
 /// Requires exclusive privileged access to the 8259 PICs, PIT and delay port.

@@ -1,5 +1,6 @@
 //! Rust module plumbing. Start reading in `user_tasks.rs`.
 
+pub mod address_space;
 pub mod admission;
 mod configuration;
 mod execution;

@@ -20,6 +20,28 @@ This is a headless single-CPU board proof. The graphical distribution, PC driver
 trusted kernel-thread fixture and full CPU-budget stress suite remain x86-64.
 The backend guide records fixed mappings and remaining hardening work.
 
+## Shared core and machine boundary
+
+The [address-space owner](kernel/core/user_tasks/address_space/address_space.rs)
+now owns image loading, checked user copies, frame accounting, rollback and
+borrowed-region bookkeeping for both CPUs. Architecture backends implement the
+translation operations and retain their own saved registers and assembly.
+[The machine boundary guide](kernel/arch/README.md) describes their ownership
+contract and reading paths.
+
+Privileged controller details live under `kernel/arch/board`: PC ATA/PS2 command
+validation and PIC/PIT setup, plus virt PL011/GICv2 and fixed physical addresses.
+Core still enforces grants, validates buffers and owns blocking. Device absence
+is explicit at composition; ARM no longer supplies dummy PC controller methods.
+Shared event/frame vocabulary uses static backend selection and direct calls.
+
+This pass passed host tests (including device command restrictions), both UEFI
+Clippy targets, x86-64 release smoke, ARM64 debug/release proofs, the matrix
+desktop's physical input/recovery checks, and ordinary `--input-test` with seven
+acknowledged storage updates. The storage recovery profile still stops at the
+pre-existing authority assertion described below; power-cut recovery is not
+claimed as a pass.
+
 ## Current integrated path
 
 Start at [distribution desktop policy](distribution/lab/matrix/desktop/desktop.rs).
@@ -79,7 +101,7 @@ page sharing/retirement, scene geometry, pointer queues and forwarded matrix
 control requests. Cohesive leaves remain sibling files; the guide treats this as
 a reading-path preference rather than a file-count or line-count rule.
 
-**Known verification blocker:** `--recovery-test` currently restarts the status
+**Known verification blocker:** `--recovery-test` and `--storage-test` restart the status
 app before readiness. Its [authority probe](distribution/applications/status/application/lab/lab.rs)
 expects `DENIED` for cancellation of handle zero, while the caller-local task
 dispatcher returns `BAD_HANDLE`. The same failure was reproduced at `2f48d30`,

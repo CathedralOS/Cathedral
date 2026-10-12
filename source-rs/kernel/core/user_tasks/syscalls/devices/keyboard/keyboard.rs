@@ -23,17 +23,11 @@ pub(in crate::user_tasks) fn syscall(
         return Err(abi::DENIED);
     }
     if number == abi::KEYBOARD_WRITE {
-        if first > 1
-            || second > 255
-            || (first == 1 && !matches!(second, 0x20 | 0x60 | 0xa7 | 0xa8 | 0xad | 0xae | 0xd4))
-        {
-            return Err(abi::INVALID_ARGUMENT);
-        }
-        // SAFETY: Caller has the exclusive boot-issued controller grant; only
-        // data/mode/interface operations are permitted, never reset/A20 commands.
-        return unsafe { arch::keyboard_write(first == 1, second as u8) }
-            .then_some(0)
-            .ok_or(abi::WOULD_BLOCK);
+        let device = arch::board::devices().keyboard.ok_or(abi::DENIED)?;
+        // SAFETY: Exclusive controller grant; adapter validates command/data before device access.
+        return unsafe { device.write(first, second) }
+            .map(|()| 0)
+            .map_err(crate::user_tasks::syscalls::devices::error);
     }
     let deadline = if number == abi::KEYBOARD_READ_UNTIL {
         session.clock.handle(slot)?;
@@ -67,25 +61,20 @@ pub(in crate::user_tasks) fn poll(session: &mut Session, now: u64) {
     let Some(slot) = owner(session) else {
         return;
     };
+    let Some(device) = arch::board::devices().keyboard else {
+        return;
+    };
     for _ in 0..64 {
         // SAFETY: Session owns the PC controller and IRQ route, IRQs masked.
-        let Some((status, byte)) = (unsafe { arch::keyboard_read() }) else {
+        let Some(event) = (unsafe { device.read() }) else {
             break;
         };
         if session.tasks[slot].space.is_none() {
             continue;
         }
-        if status & 0xc0 != 0 {
-            session.keyboard.lose();
-        } else {
-            session.keyboard.push_tagged(
-                u16::from(byte)
-                    | if status & 0x20 != 0 {
-                        abi::KEYBOARD_AUX as u16
-                    } else {
-                        0
-                    },
-            );
+        match event {
+            arch::board::InputEvent::Lost => session.keyboard.lose(),
+            arch::board::InputEvent::Byte(byte) => session.keyboard.push_tagged(byte),
         }
     }
     if session.tasks[slot].keyboard_wait {
@@ -109,9 +98,12 @@ pub(in crate::user_tasks) fn poll(session: &mut Session, now: u64) {
 }
 pub(in crate::user_tasks) fn reset(session: &mut Session) {
     session.keyboard.reset();
+    let Some(device) = arch::board::devices().keyboard else {
+        return;
+    };
     for _ in 0..64 {
         // SAFETY: Grant incarnation is retiring or not yet runnable; discard old bytes.
-        if unsafe { arch::keyboard_read() }.is_none() {
+        if unsafe { device.read() }.is_none() {
             break;
         }
     }

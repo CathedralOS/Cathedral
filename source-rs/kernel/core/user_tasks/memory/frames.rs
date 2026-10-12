@@ -2,7 +2,7 @@
 //! The bank is exclusive to this session and returns all frames on teardown/failure.
 use crate::{memory::FrameAllocator, user_tasks::Error};
 use alloc::vec::Vec;
-use cathedral_arch::{MemoryError, StackFrames};
+use cathedral_arch::{FrameSource, MemoryError};
 
 pub(in crate::user_tasks) struct Frames<'a> {
     frames: &'a mut FrameAllocator,
@@ -41,7 +41,7 @@ impl<'a> Frames<'a> {
     }
 }
 // SAFETY: Sole boot CPU and kernel identity map; every frame was reserved exclusively.
-unsafe impl StackFrames for Frames<'_> {
+unsafe impl FrameSource for Frames<'_> {
     fn allocate(&mut self) -> Option<u64> {
         if self.remaining == 0 {
             return None;

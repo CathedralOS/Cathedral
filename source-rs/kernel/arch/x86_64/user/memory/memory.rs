@@ -1,137 +1,122 @@
-// Sparse, independently owned task tables; no firmware mapping tree is copied.
-// User code is RX; private data and guarded stack are RW/NX. Kernel mappings
-// are supervisor-only. Physical aliases are available only in the kernel root.
-// from_segments validates the image, constructs mappings, and rolls back on error.
-// Descend into creation for mappings, access for checked copies, regions/device for leases.
-
-use super::super::{BootLayout, MemoryError, StackFrames};
-use ::x86_64::registers::control::Cr3;
-
-const PAGE: u64 = 4096;
-pub const USER_CODE: u64 = 0x0000_0080_0000_0000;
-pub const USER_DATA: u64 = USER_CODE + PAGE;
-pub const USER_IMAGE_END: u64 = USER_CODE + 1024 * 1024;
-pub const USER_STACK: u64 = USER_CODE + 2 * 1024 * 1024;
-pub const USER_STACK_TOP: u64 = USER_STACK + 4 * PAGE;
-pub const MAX_IMAGE_PAGES: usize = 64;
-const MAX_BACKING: usize = MAX_IMAGE_PAGES + 4 + 2 * cathedral_contracts::memory::MAX_PAGES;
-const _: () = assert!(MAX_BACKING <= u128::BITS as usize);
-const MAX_FRAMES: usize = 128;
-
-#[derive(Clone, Copy, Default)]
-struct Backing {
-    address: u64,
-    physical: u64,
-}
-
-#[derive(Clone, Copy)]
-pub struct ImageRange {
-    pub base: u64,
-    pub bytes: u64,
-}
-
-pub struct UserSpace {
+// Inactive x86 user translations. Core owns frames, executable layout, copies and rollback.
+// creation borrows the entry mappings; device handles PAT; this entrance edits ordinary leaves.
+use crate::{
+    FrameSource, MemoryError,
+    memory::{PAGE, Permissions},
+};
+use ::x86_64::{
+    VirtAddr,
+    registers::control::Cr3,
+    structures::paging::{
+        Mapper, OffsetPageTable, Page, PageTable, PageTableFlags as Flags, Size4KiB,
+    },
+};
+pub struct UserMappings {
     root: u64,
-    owned: [u64; MAX_FRAMES],
-    len: usize,
-    backing: [Backing; MAX_BACKING],
-    pages: usize,
-    writable: u128,
 }
-impl UserSpace {
+impl UserMappings {
     pub fn root(&self) -> u64 {
         self.root
     }
-    pub fn frame_count(&self) -> usize {
-        self.len
-    }
-
-    /// # Safety
-    /// Kernel root active, IRQs off, exclusive frame custody. The supplied image
-    /// and BootLayout are live supervisor resources from this boot. No mappings
-    /// change until the resulting task and its entry paths have been retired.
-    pub unsafe fn create(
-        layout: &BootLayout,
-        image: ImageRange,
-        code: &[u8],
-        frames: &mut impl StackFrames,
-    ) -> Result<Self, MemoryError> {
-        if code.is_empty() || code.len() > PAGE as usize {
-            return Err(MemoryError::InvalidFrame);
-        }
-        let segments = [
-            UserSegment {
-                address: USER_CODE,
-                bytes: code,
-                memory_size: PAGE,
-                writable: false,
-                executable: true,
-            },
-            UserSegment {
-                address: USER_DATA,
-                bytes: &[],
-                memory_size: PAGE,
-                writable: true,
-                executable: false,
-            },
-        ];
-        // SAFETY: Same caller obligations; raw probes use two fixed disjoint pages.
-        unsafe { Self::from_segments(layout, image, &segments, frames) }
-    }
-
-    /// Build a bounded image from page-disjoint, immutable segment descriptions.
-    /// # Safety
-    /// Same machine/ownership obligations as create. Segment bytes remain live
-    /// for this call; kernel image and layout retain their boot-time mappings.
-    pub unsafe fn from_segments(
-        layout: &BootLayout,
-        image: ImageRange,
-        segments: &[UserSegment<'_>],
-        frames: &mut impl StackFrames,
-    ) -> Result<Self, MemoryError> {
-        if image.bytes == 0 || !image.base.is_multiple_of(PAGE) || !valid_segments(segments) {
-            return Err(MemoryError::InvalidFrame);
-        }
-        let end = image
-            .base
-            .checked_add(image.bytes)
-            .and_then(|end| end.checked_add(PAGE - 1))
-            .ok_or(MemoryError::InvalidFrame)?
-            & !(PAGE - 1);
-        // Keep the low identity-loaded image disjoint from the user branch.
-        if end > USER_CODE {
-            return Err(MemoryError::OccupiedVirtualRange);
-        }
-        let mut space = Self {
-            root: 0,
-            owned: [0; MAX_FRAMES],
-            len: 0,
-            backing: [Backing::default(); MAX_BACKING],
-            pages: 0,
-            writable: 0,
-        };
-        // SAFETY: New frames are exclusively owned and identity-mapped in kernel CR3.
-        let result = unsafe { space.build(layout, image.base, end, segments, frames) };
-        if let Err(error) = result {
-            // SAFETY: This root was never activated, including partially built tables.
-            unsafe {
-                space.release(frames);
-            }
-            return Err(error);
-        }
-        Ok(space)
-    }
-
-    /// # Safety
-    /// Kernel root active, IRQs off. Task can never resume; no saved references
-    /// or mappings outside this retired root refer to these owned frames.
-    pub unsafe fn release(self, frames: &mut impl StackFrames) {
+    pub fn assert_inactive(&self) {
         assert_ne!(Cr3::read().0.start_address().as_u64(), self.root);
-        for address in self.owned[..self.len].iter().rev() {
-            // SAFETY: Inactive root; CR3 switch flushed its non-global translations.
-            unsafe {
-                frames.release(*address);
+    }
+    /// # Safety
+    /// IRQs off, kernel root active, exclusive inactive tree; VA/frame aligned and valid.
+    /// Caller owns backing and all newly allocated table frames; retire the tree on allocation error.
+    pub unsafe fn map_page(
+        &mut self,
+        address: u64,
+        physical: u64,
+        permissions: Permissions,
+        frames: &mut impl FrameSource,
+    ) -> Result<(), MemoryError> {
+        let flags = Flags::PRESENT
+            | Flags::USER_ACCESSIBLE
+            | if permissions.writable {
+                Flags::WRITABLE
+            } else {
+                Flags::empty()
+            }
+            | if permissions.executable {
+                Flags::empty()
+            } else {
+                Flags::NO_EXECUTE
+            };
+        // SAFETY: Caller supplies an inactive exclusively owned hierarchy and pinned backing.
+        unsafe {
+            let mut target =
+                OffsetPageTable::new(&mut *(self.root as *mut PageTable), VirtAddr::zero());
+            paging::map(
+                &mut target,
+                address,
+                physical,
+                flags,
+                &mut paging::Tables(frames),
+            )
+        }
+    }
+    /// # Safety
+    /// Same exclusive inactive-tree custody; scratch is pinned RAM. Range is page aligned,
+    /// vacant, and within a disjoint user branch. Temporary aliases are never executed.
+    pub unsafe fn reserve(
+        &mut self,
+        start: u64,
+        end: u64,
+        scratch: u64,
+        frames: &mut impl FrameSource,
+    ) -> Result<(), MemoryError> {
+        // SAFETY: Map/unmap one scratch alias per leaf-table span; all tables remain owned.
+        unsafe {
+            let mut address = start;
+            while address < end {
+                self.map_page(
+                    address,
+                    scratch,
+                    Permissions {
+                        writable: false,
+                        executable: false,
+                    },
+                    frames,
+                )?;
+                self.unmap_page(address);
+                address = (address | ((1 << 21) - 1)) + 1;
             }
         }
+        Ok(())
+    }
+    /// # Safety
+    /// Inactive tree, IRQs off; existing user RAM leaf, all mutable users retired.
+    pub unsafe fn seal_page(&mut self, address: u64) {
+        // SAFETY: Only remove WRITE from a live ordinary RAM leaf; next root load flushes TLB.
+        unsafe {
+            let mut target =
+                OffsetPageTable::new(&mut *(self.root as *mut PageTable), VirtAddr::zero());
+            target
+                .update_flags(
+                    Page::<Size4KiB>::from_start_address(VirtAddr::new(address)).unwrap(),
+                    Flags::PRESENT | Flags::USER_ACCESSIBLE | Flags::NO_EXECUTE,
+                )
+                .unwrap()
+                .ignore();
+        }
+    }
+    /// # Safety
+    /// Inactive tree, IRQs off; existing leaf, backing retained until every alias is removed.
+    pub unsafe fn unmap_page(&mut self, address: u64) {
+        // SAFETY: Caller retains backing; no table/frame ownership is consumed here.
+        unsafe {
+            let mut target =
+                OffsetPageTable::new(&mut *(self.root as *mut PageTable), VirtAddr::zero());
+            target
+                .unmap(Page::<Size4KiB>::from_start_address(VirtAddr::new(address)).unwrap())
+                .unwrap()
+                .1
+                .ignore();
+        }
+    }
+    /// # Safety
+    /// Newly loaded private executable RAM, not published to any running task.
+    pub unsafe fn publish_code(_physical: u64) { /* Coherent x86 instruction/data caches. */
     }
 }

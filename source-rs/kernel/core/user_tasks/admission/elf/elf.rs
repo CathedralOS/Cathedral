@@ -3,7 +3,7 @@
 // subset is lab policy: selected CPU, static, page-disjoint readable PT_LOAD segments,
 // no W+X, no interpreter/dynamic/TLS headers, and a file-backed executable entry.
 
-use cathedral_arch::{UserSegment, valid_segments};
+use crate::user_tasks::address_space::{UserSegment, valid_segments};
 
 const MAX_FILE: usize = 4 * 1024 * 1024;
 const EMPTY: UserSegment<'static> = UserSegment {

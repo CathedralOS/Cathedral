@@ -13,31 +13,19 @@ pub(in crate::user_tasks) fn syscall(
     {
         return Err(abi::DENIED);
     }
+    let device = cathedral_arch::board::devices().disk.ok_or(abi::DENIED)?;
     let (number, first, second, third) = call;
     if number == abi::DISK_REGISTER_READ {
-        if !(1..=8).contains(&first) {
-            return Err(abi::INVALID_ARGUMENT);
-        }
-        // SAFETY: This principal owns the fixed controller. No arbitrary port access.
-        return Ok(u64::from(unsafe { cathedral_arch::disk_read(first as u8) }));
+        // SAFETY: Caller owns this selected controller; adapter checks register restrictions.
+        return unsafe { device.read(first) }
+            .map(u64::from)
+            .map_err(super::error);
     }
     if number == abi::DISK_REGISTER_WRITE {
-        let valid = match first {
-            2 => second == 1, // Only single-sector operations.
-            3..=5 => second <= 255,
-            6 => (0xe0..=0xef).contains(&second), // LBA28, master only.
-            7 => matches!(second, 0x20 | 0x30 | 0xe7 | 0xec),
-            8 => matches!(second, 2 | 6), // IRQs disabled, optional channel reset.
-            _ => false,
-        };
-        if !valid {
-            return Err(abi::INVALID_ARGUMENT);
-        }
-        // SAFETY: Exclusive controller; bounded whitelist excludes DMA and other devices.
-        unsafe {
-            cathedral_arch::disk_write(first as u8, second as u8);
-        }
-        return Ok(0);
+        // SAFETY: Exclusive grant; adapter validates register/value before any device effect.
+        return unsafe { device.write(first, second) }
+            .map(|()| 0)
+            .map_err(super::error);
     }
     if second > 1 || third != 512 {
         return Err(abi::INVALID_ARGUMENT);
@@ -52,14 +40,9 @@ pub(in crate::user_tasks) fn syscall(
     } else if !space.writable_range(first, bytes.len()) {
         return Err(abi::BAD_ADDRESS);
     }
-    // SAFETY: Exclusive fixed controller, non-clearing alternate status read.
-    if unsafe { cathedral_arch::disk_read(8) } & 0xa9 != 8 {
-        return Err(abi::WOULD_BLOCK);
-    }
-    // SAFETY: DRQ set, no busy/error/device-fault; exactly one bounded sector.
-    unsafe {
-        cathedral_arch::disk_transfer(&mut bytes, second == 1);
-    }
+    // SAFETY: Controller grant and complete user-buffer validation precede any device effect.
+    // The selected adapter checks readiness and enforces the bounded transfer itself.
+    unsafe { device.transfer(&mut bytes, second == 1) }.map_err(super::error)?;
     if second == 0 {
         // SAFETY: Entire writable destination validated above; mappings cannot change here.
         assert!(unsafe { space.copy_to_user(first, &bytes) });

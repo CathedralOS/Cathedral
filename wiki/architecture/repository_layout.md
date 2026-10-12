@@ -13,7 +13,7 @@ Cathedral/
     kernel/
       boot/                Firmware entry and handoff
       core/                Scheduling, memory, capabilities, IPC, admission
-      arch/                CPU mechanisms, when a separate backend exists
+      arch/                CPU mechanisms and privileged board adapters
     platform/
       services/            Shared system services (planned)
       drivers/             Device programs and pure hardware facts
@@ -44,7 +44,10 @@ selections into images; the selections themselves live with target source.
 
 `kernel/` owns privileged execution, including the firmware seam. `kernel/core`
 stays firmware-neutral; `kernel/boot` adapts firmware, and `kernel/arch` owns CPU
-mechanisms. A directory move does not create a separate kernel binary: the Rust
+mechanisms and privileged board adapters. In the Rust lab, `arch/board` owns
+concrete controllers and fixed board addresses; `core/user_tasks/address_space`
+owns process memory layout, frame lifetime and checked copies. CPU backends
+encode translations and saved contexts. A directory move does not create a separate kernel binary: the Rust
 UEFI executable still composes entry and post-firmware startup through a small
 orchestrating `main.rs`.
 

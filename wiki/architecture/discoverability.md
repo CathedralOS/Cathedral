@@ -53,7 +53,9 @@ preparation, physical reservation, initial admission, execution and collection.
 Inside `user_tasks/`, descend into each folder's named entrance: `startup` validates
 composition and prepares grants; `admission` constructs images; `execution`
 orders deferred work and CPU re-entry; `lifecycle` owns spawn/teardown; `memory`
-dispatches page-object work to allocation, sharing and retirement.
+dispatches page-object work to allocation, sharing and retirement. `address_space`
+owns each process's image layout, checked copies and frame ledger, delegating
+translation encoding to the selected CPU backend.
 `session.rs` holds their shared state, not a second hidden execution pipeline.
 
 The second CPU proof follows the same boot entry into
@@ -92,7 +94,8 @@ knowledge of a particular distribution.
 | Firmware and kernel startup | [boot main](../../source-rs/kernel/boot/uefi/main.rs) | Firmware handoff, memory, interrupts, supplied-program startup |
 | Host-supplied boot composition | [build script](../../source-rs/kernel/boot/uefi/build/main.rs) | [Grant/image/link generation](../../source-rs/kernel/boot/uefi/build/composition/composition.rs), [reservation validation](../../source-rs/kernel/boot/uefi/build/composition/reservations.rs), [ELF bundling](../../source-rs/kernel/boot/uefi/build/artifacts.rs); consumed by [startup](../../source-rs/kernel/boot/uefi/startup.rs) |
 | CPU interrupt installation | [interrupt entrance](../../source-rs/kernel/arch/x86_64/interrupts/interrupts.rs) | [Privilege and vector tables](../../source-rs/kernel/arch/x86_64/interrupts/tables.rs), [assembly bindings](../../source-rs/kernel/arch/x86_64/interrupts/entries.rs) |
-| Isolated address spaces | [admission and rollback](../../source-rs/kernel/arch/x86_64/user/memory/memory.rs) | [Image validation](../../source-rs/kernel/arch/x86_64/user/memory/image.rs), [mapping construction](../../source-rs/kernel/arch/x86_64/user/memory/creation.rs), [checked buffer access](../../source-rs/kernel/arch/x86_64/user/memory/access.rs) |
+| Isolated address spaces | [ownership and rollback](../../source-rs/kernel/core/user_tasks/address_space/address_space.rs) | [Image validation](../../source-rs/kernel/core/user_tasks/address_space/image.rs), [loading](../../source-rs/kernel/core/user_tasks/address_space/creation.rs), [checked copies](../../source-rs/kernel/core/user_tasks/address_space/access.rs), [CPU mapping boundary](../../source-rs/kernel/arch/README.md) |
+| Privileged device access | [core authority and buffers](../../source-rs/kernel/core/user_tasks/syscalls/devices/devices.rs) | [Board selection](../../source-rs/kernel/arch/board/board.rs), [PC command restrictions](../../source-rs/kernel/arch/board/pc/pc.rs), [virt hardware](../../source-rs/kernel/arch/board/virt/virt.rs) |
 | Isolated tasks | [user-task session](../../source-rs/kernel/core/user_tasks/user_tasks.rs) | Composition, preparation, admission, execution, outcomes |
 | CPU re-entry | [session traps](../../source-rs/kernel/core/user_tasks/execution/traps.rs) | Syscall dispatch, wakeups, scheduling and root selection |
 | General IPC | [IPC coordinator](../../source-rs/kernel/core/ipc/ipc.rs) | [Process-local grants](../../source-rs/kernel/core/ipc/grants.rs), [creation and transfer](../../source-rs/kernel/core/ipc/channels.rs), [teardown](../../source-rs/kernel/core/ipc/lifecycle.rs); [ordinary-worker proof](../../source-rs/distribution/lab/channels/scenario.rs) |

@@ -1,4 +1,5 @@
 //! Polling PL011 on the explicitly selected QEMU virt board, already configured by EDK2.
+use super::UART;
 use core::fmt;
 pub struct Console;
 impl Console {
@@ -6,10 +7,10 @@ impl Console {
         for &byte in bytes {
             // SAFETY: QEMU virt's reserved PL011 MMIO, mapped Device by firmware and our tables.
             unsafe {
-                while (0x0900_0018 as *const u32).read_volatile() & (1 << 5) != 0 {
+                while ((UART + 0x18) as *const u32).read_volatile() & (1 << 5) != 0 {
                     core::hint::spin_loop();
                 }
-                (0x0900_0000 as *mut u32).write_volatile(u32::from(byte));
+                (UART as *mut u32).write_volatile(u32::from(byte));
             }
         }
         Ok(())

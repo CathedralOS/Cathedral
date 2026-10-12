@@ -1,5 +1,5 @@
 //! Device leaves borrow external backing; only their page tables are reclaimed.
-use super::paging::{Tracked, map};
+use super::paging::{Tables, map};
 use super::*;
 use ::x86_64::{
     VirtAddr,
@@ -8,7 +8,7 @@ use ::x86_64::{
 
 use cathedral_contracts::display::{Framebuffer, USER_ADDRESS};
 
-impl UserSpace {
+impl UserMappings {
     /// Map the boot-approved framebuffer into an inactive task, with guards.
     /// # Safety
     /// Kernel CR3, IRQs off. Caller owns this inactive space and exclusive device
@@ -17,7 +17,7 @@ impl UserSpace {
     pub unsafe fn map_framebuffer(
         &mut self,
         fb: Framebuffer,
-        frames: &mut impl StackFrames,
+        frames: &mut impl FrameSource,
     ) -> Result<(), MemoryError> {
         if !fb.valid() {
             return Err(MemoryError::InvalidFrame);
@@ -32,11 +32,7 @@ impl UserSpace {
         if (pat >> 24) & 0xff != 0 {
             return Err(MemoryError::UnsupportedCpu);
         }
-        let mut source = Tracked {
-            frames,
-            addresses: &mut self.owned,
-            len: &mut self.len,
-        };
+        let mut source = Tables(frames);
         // SAFETY: Exclusively owned inactive hierarchy, table frames identity-mapped.
         let mut target =
             unsafe { OffsetPageTable::new(&mut *(self.root as *mut PageTable), VirtAddr::zero()) };

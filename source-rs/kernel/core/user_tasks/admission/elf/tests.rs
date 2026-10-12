@@ -1,7 +1,7 @@
 use super::*;
+use crate::user_tasks::address_space::{USER_CODE, USER_IMAGE_END, USER_STACK};
 use alloc::vec;
 use alloc::vec::Vec;
-use cathedral_arch::{USER_CODE, USER_IMAGE_END, USER_STACK};
 
 fn put16(b: &mut [u8], at: usize, value: u16) {
     b[at..at + 2].copy_from_slice(&value.to_le_bytes());

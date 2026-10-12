@@ -1,23 +1,37 @@
-//! Borrow core-owned page objects; reserve translation tables at admission.
+//! Borrow page-object backing; reserve tables before runtime edits and publish bookkeeping atomically.
 use super::*;
+use cathedral_arch::memory::{NoFrames, Permissions};
 use cathedral_contracts::memory as wire;
 impl UserSpace {
     /// # Safety
-    /// Exclusively owned inactive hierarchy; retire the space on allocation failure.
+    /// IRQs masked, inactive owned tree. On failure retire this entire space.
     pub unsafe fn prepare_regions(
         &mut self,
-        frames: &mut impl StackFrames,
+        frames: &mut impl FrameSource,
     ) -> Result<(), MemoryError> {
-        for address in (wire::USER_BASE..wire::address(wire::MAX_REGIONS)).step_by(PAGE as usize) {
-            // SAFETY: Reserved user branch, inactive tree and tracked frame source.
-            unsafe {
-                tables::leaf(self.root, address, &mut || self.frame(frames))?;
-            }
+        let scratch = self.backing[..self.pages]
+            .iter()
+            .find(|p| p.address == USER_STACK)
+            .unwrap()
+            .physical;
+        let mut source = Tracked {
+            frames,
+            addresses: &mut self.owned,
+            len: &mut self.len,
+        };
+        // SAFETY: Reserve inactive tables only; scratch stays pinned throughout construction.
+        unsafe {
+            self.mapping.as_mut().unwrap().reserve(
+                wire::USER_BASE,
+                wire::address(wire::MAX_REGIONS),
+                scratch,
+                &mut source,
+            )
         }
-        Ok(())
     }
     /// # Safety
-    /// Inactive prepared tree, IRQs masked; caller retains backing until every alias is retired.
+    /// Inactive prepared tree, IRQs masked. Caller retains all backing until every alias retires;
+    /// writable mappings require exclusive producer custody.
     pub unsafe fn map_region(
         &mut self,
         index: usize,
@@ -28,27 +42,35 @@ impl UserSpace {
             || physical.is_empty()
             || physical.len() > wire::MAX_PAGES
             || self.pages + physical.len() > MAX_BACKING
-            || physical
-                .iter()
-                .any(|p| !p.is_multiple_of(PAGE) || !(0x4000_0000..0x8000_0000).contains(p))
+            || physical.iter().any(|p| *p == 0 || !p.is_multiple_of(PAGE))
         {
             return Err(MemoryError::InvalidFrame);
         }
         let base = wire::address(index);
-        let flags =
-            tables::NORMAL | tables::USER | tables::NX | if writable { 0 } else { tables::RO };
+        if self.backing[..self.pages]
+            .iter()
+            .any(|p| p.address >= base && p.address < base + wire::MAX_PAGES as u64 * PAGE)
+        {
+            return Err(MemoryError::OccupiedVirtualRange);
+        }
+        let permissions = Permissions {
+            writable,
+            executable: false,
+        };
         for (offset, &frame) in physical.iter().enumerate() {
-            // SAFETY: Inactive reserved branch; no allocation, all prior edits rolled back on failure.
+            // SAFETY: Inactive reserved branch; no allocation or running aliases. Roll back earlier leaves on failure.
             unsafe {
-                if let Err(error) = tables::map(
-                    self.root,
+                if let Err(error) = self.mapping.as_mut().unwrap().map_page(
                     base + offset as u64 * PAGE,
                     frame,
-                    flags,
-                    &mut || Err(MemoryError::OutOfFrames),
+                    permissions,
+                    &mut NoFrames,
                 ) {
                     for undo in 0..offset {
-                        self.entry(base + undo as u64 * PAGE).write(0);
+                        self.mapping
+                            .as_mut()
+                            .unwrap()
+                            .unmap_page(base + undo as u64 * PAGE);
                     }
                     return Err(error);
                 }
@@ -67,7 +89,7 @@ impl UserSpace {
         Ok(())
     }
     /// # Safety
-    /// IRQs masked, inactive tree, fully mapped region; no mutable user reference crosses this change.
+    /// Inactive root, IRQs masked, fully mapped region; no mutable borrow crosses sealing.
     pub unsafe fn seal_region(&mut self, index: usize, pages: usize) {
         for offset in 0..pages {
             let address = wire::address(index) + offset as u64 * PAGE;
@@ -75,16 +97,15 @@ impl UserSpace {
                 .iter()
                 .position(|p| p.address == address)
                 .unwrap();
-            // SAFETY: Existing inactive leaf loses write permission; next root load flushes translations.
+            // SAFETY: Existing ordinary user RAM leaf; only remove write permission.
             unsafe {
-                let entry = self.entry(address);
-                entry.write(entry.read() | tables::RO);
+                self.mapping.as_mut().unwrap().seal_page(address);
             }
             self.writable &= !(1 << position);
         }
     }
     /// # Safety
-    /// IRQs masked, inactive tree; caller retains backing until all aliases are gone.
+    /// Inactive root, IRQs masked; backing retained until every alias is removed.
     pub unsafe fn unmap_region(&mut self, index: usize, pages: usize) {
         for offset in 0..pages {
             let address = wire::address(index) + offset as u64 * PAGE;
@@ -92,9 +113,9 @@ impl UserSpace {
                 .iter()
                 .position(|p| p.address == address)
                 .unwrap();
-            // SAFETY: Existing inactive leaf; backing is still live and not freed here.
+            // SAFETY: Existing inactive leaf; translation removal precedes any backing refund.
             unsafe {
-                self.entry(address).write(0);
+                self.mapping.as_mut().unwrap().unmap_page(address);
             }
             self.pages -= 1;
             self.backing[position] = self.backing[self.pages];
@@ -103,9 +124,5 @@ impl UserSpace {
             self.writable &= !(1 << self.pages);
             self.backing[self.pages] = Backing::default();
         }
-    }
-    unsafe fn entry(&self, address: u64) -> *mut u64 {
-        // SAFETY: Caller supplies an existing leaf in this inactive owned tree.
-        unsafe { tables::leaf(self.root, address, &mut || Err(MemoryError::OutOfFrames)).unwrap() }
     }
 }

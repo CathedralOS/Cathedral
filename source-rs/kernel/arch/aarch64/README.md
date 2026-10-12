@@ -31,9 +31,11 @@ firmware ABI and ExitBootServices transaction.
 | --- | --- |
 | [aarch64.rs](aarch64.rs) | Interrupt masking, stack handoff and terminal CPU operations |
 | [memory/memory.rs](memory/memory.rs) | Construct and activate kernel tables, guarded stack, exception stacks and heap; `tables.rs` walks 4-KiB translations |
-| [interrupts/interrupts.rs](interrupts/interrupts.rs) | Install vectors and fault reporting; `timer.rs` owns GICv2 and the 100-Hz virtual timer |
+| [interrupts/interrupts.rs](interrupts/interrupts.rs) | Install vectors and fault reporting; `timer.rs` owns the 100-Hz virtual timer and calls the [board GICv2 adapter](../board/virt/gic.rs) |
 | [context/context.rs](context/context.rs) | Classify exceptions, enter the shared scheduler/syscall dispatcher, select the return root; `state.rs` and `entry.S` own saved registers |
-| [user/user.rs](user/user.rs) | Validate and build private mappings with rollback; `creation.rs`, `access.rs`, `regions.rs` and `session.rs` own their respective transitions |
+| [user/user.rs](user/user.rs) | Select the task root for exception return; [mappings.rs](user/mappings.rs) encodes inactive user translations |
+| [Shared address-space owner](../../core/user_tasks/address_space/address_space.rs) | Image loading, frame ledger and rollback, checked copies, sealing and region bookkeeping |
+| [QEMU virt board](../board/virt/virt.rs) | Physical address map, PL011 console, GICv2 routing and available devices |
 | [ARM64 lab entrance](../../boot/uefi/lab/arm64/arm64.rs) | Sequence actual process, IPC, isolation, sharing and reclamation assertions |
 
 An EL0 `svc #0` saves all general registers and FP/SIMD state, restores the

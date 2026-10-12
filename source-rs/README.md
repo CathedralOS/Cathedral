@@ -40,7 +40,7 @@ The entrance explains this level without exposing every detail below it.
 | `kernel/boot/uefi/interrupts.rs`, `diagnostics.rs` | Interrupt bring-up and serial/fatal reporting |
 | `kernel/boot/uefi/heap.rs` | Heap installation; smoke-only heap verification |
 | `kernel/boot/uefi/lab/kernel_tasks/kernel_tasks.rs`, `lab/kernel_tasks/lifecycle.rs` | Cooperative/preemptive workloads and dynamic lifecycle checks |
-| `kernel/boot/uefi/lab/user_tasks.rs` | Ring-3 syscall, isolation, fault containment and admission rollback experiments |
+| `kernel/boot/uefi/lab/user_tasks/user_tasks.rs` | Ring-3 syscall, isolation, fault containment and admission rollback experiments |
 | `kernel/boot/uefi/lab/applications.rs` | Run the bundled executable twice per session and check loading, private state, exit statuses and cleanup |
 | `kernel/boot/uefi/lab/ipc/ipc.rs` | Compose explicit endpoint grants and check service/failure sessions |
 | `kernel/core/user_tasks/lifecycle/supervision/supervision.rs` | Host-testable launch authority, child identity and outcome consumption |
@@ -81,11 +81,13 @@ The entrance explains this level without exposing every detail below it.
 | `distribution/lab/channels/` | [Ordinary parent/worker channels](distribution/lab/channels/README.md), endpoint transfer and reclamation |
 | `distribution/lab/ipc/` | Client, echo service and hostile IPC fixture roles in a standalone ELF |
 | `distribution/lab/hello/` | Independently compiled `no_std` program exercising initialized data, BSS, yields and writes |
-| `kernel/arch/lib.rs` | Compile-time CPU backend selection and the boot-facing machine interface |
-| `kernel/arch/aarch64/` | QEMU virt EL1/EL0 paging, contexts, GICv2 timer and headless portability proof; [scope and commands](kernel/arch/aarch64/README.md) |
-| `kernel/arch/x86/` | Shared instructions and the selected PC platform's temporary PIC/PIT route |
+| `kernel/arch/lib.rs` | Compile-time CPU selection; [machine boundary and ownership](kernel/arch/README.md) |
+| `kernel/arch/board/board.rs` | Actual board device selection; PC ATA/PS2/PIC/PIT and virt PL011/GICv2 adapters |
+| `kernel/core/user_tasks/address_space/address_space.rs` | Shared image layout, frame ledger, construction rollback, checked copies and borrowed region mappings |
+| `kernel/arch/aarch64/` | EL1/EL0 paging, contexts, architectural timer and headless portability proof; [scope and commands](kernel/arch/aarch64/README.md) |
+| `kernel/arch/x86/` | Shared x86 instructions; PC controller policy lives in `arch/board/pc/` |
 | `kernel/arch/x86_64/` | Paging, dynamic guarded stack mapping/teardown, CPU contexts, GDT/TSS/IDT and interrupt stubs, using the `x86_64` crate |
-| `kernel/arch/x86_64/user/user.rs` | Sparse task address spaces, CR3 entry/return policy and embedded x86-64 test payload |
+| `kernel/arch/x86_64/user/user.rs` | CR3 entry/return policy; `memory/memory.rs` implements translation operations |
 | `distribution/profile.json` | Built-in distribution composition consumed by the boot harness |
 | `../tools/boot-harness-rs/` | Host build, QEMU launch and smoke verification |
 
@@ -919,7 +921,7 @@ Follow [the policy model](kernel/core/user_tasks/memory/regions/regions.rs) for 
 validation/deferral, [memory execution](kernel/core/user_tasks/memory/memory.rs)
 for allocation/sharing/retirement dispatch, [sharing](kernel/core/user_tasks/memory/sharing.rs)
 for producer sealing and reader acceptance, [retirement](kernel/core/user_tasks/memory/retirement.rs)
-for alias removal before refund, and [architecture mappings](kernel/arch/x86_64/user/memory/regions.rs)
+for alias removal before refund, and [shared address-space mappings](kernel/core/user_tasks/address_space/regions.rs)
 for PTE and checked-copy permissions. None of these depends on the platform.
 
 The producer fills private RW pages, seals them to a live boot-approved service

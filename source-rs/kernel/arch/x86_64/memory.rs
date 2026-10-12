@@ -23,15 +23,7 @@ pub const HEAP_BYTES: usize = 128 * 1024;
 // OVMF can map the qemu64 CPU's complete physical envelope, not just guest RAM.
 const TABLE_BUDGET: usize = 4096;
 
-#[derive(Debug)]
-pub enum MemoryError {
-    UnsupportedCpu,
-    OutOfFrames,
-    InvalidFrame,
-    TableBudget,
-    OccupiedVirtualRange,
-    MapFailed,
-}
+use crate::MemoryError;
 
 pub struct BootLayout {
     root: PhysFrame,
@@ -45,15 +37,16 @@ pub struct BootLayout {
     pub heap_bytes: usize,
 }
 
-/// Geometry only; constructing this record does not grant ownership.
-#[derive(Clone, Copy, Debug)]
-pub struct StackRange {
-    pub bottom: u64,
-    pub top: u64,
-    pub guard: u64,
-}
-
 impl BootLayout {
+    /// Mapped stack used for maskable interrupt dispatch; no CPU-specific slot leaks to boot.
+    pub fn interrupt_stack(&self) -> crate::StackRange {
+        let top = self.emergency_tops[3];
+        crate::StackRange {
+            top,
+            bottom: top - 4 * 4096,
+            guard: top - 5 * 4096,
+        }
+    }
     pub fn root_address(&self) -> u64 {
         self.root.start_address().as_u64()
     }
