@@ -1,6 +1,15 @@
 //! Runtime page-object mappings borrow core-owned frames. Their page tables are reserved at admission.
 //! All edits occur on the boot stack with kernel CR3 active; the next CR3 load flushes user translations.
+use super::paging::{Tracked, map};
 use super::*;
+use ::x86_64::{
+    VirtAddr,
+    structures::paging::{
+        FrameAllocator, Mapper, OffsetPageTable, Page, PageTable, PageTableFlags as Flags,
+        PhysFrame, Size4KiB,
+    },
+};
+
 use cathedral_contracts::memory as wire;
 struct NoFrames;
 // SAFETY: Runtime mappings use only the preallocated hierarchy and never allocate a frame.

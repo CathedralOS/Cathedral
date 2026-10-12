@@ -1,5 +1,11 @@
 //! Device leaves borrow external backing; only their page tables are reclaimed.
+use super::paging::{Tracked, map};
 use super::*;
+use ::x86_64::{
+    VirtAddr,
+    structures::paging::{OffsetPageTable, PageTable, PageTableFlags as Flags},
+};
+
 use cathedral_contracts::display::{Framebuffer, USER_ADDRESS};
 
 impl UserSpace {

@@ -1,24 +1,13 @@
 //! Single-CPU GDT/TSS/IDT installation and bounded interrupt handlers.
-//! Task switching saves complete contexts before the allocation-free callback.
+//! Installation orders context-save setup, segment tables, then vector gates.
+//! Follow entries for assembly transitions and tables for privilege/stack selection.
+mod entries;
+mod tables;
+pub(super) use tables::user_selectors;
 
 use super::{BootLayout, halt_forever, stack_pointer};
-use ::x86_64::{
-    PrivilegeLevel, VirtAddr,
-    instructions::{
-        segmentation::{CS, DS, ES, FS, GS, SS, Segment},
-        tables::{lidt, load_tss},
-    },
-    registers::segmentation::SegmentSelector,
-    structures::{
-        DescriptorTablePointer,
-        gdt::{Descriptor, GlobalDescriptorTable},
-        idt::{Entry, HandlerFunc},
-        tss::TaskStateSegment,
-    },
-};
 use core::{
-    arch::{asm, global_asm},
-    ptr::addr_of_mut,
+    arch::asm,
     sync::atomic::{AtomicBool, AtomicPtr, AtomicU64, Ordering},
 };
 
@@ -27,12 +16,6 @@ static FAULT_HANDLER: AtomicPtr<()> = AtomicPtr::new(core::ptr::null_mut());
 pub(super) static TICKS: AtomicU64 = AtomicU64::new(0);
 static BREAKPOINTS: AtomicU64 = AtomicU64::new(0);
 static IRQ_STACK: AtomicU64 = AtomicU64::new(0);
-static USER_SELECTORS: AtomicU64 = AtomicU64::new(0);
-static mut TSS: TaskStateSegment = TaskStateSegment::new();
-static mut GDT: GlobalDescriptorTable = GlobalDescriptorTable::new();
-static mut IDT: [Entry<HandlerFunc>; 256] = [const { Entry::missing() }; 256];
-const _: () = assert!(size_of::<Entry<HandlerFunc>>() == 16);
-
 #[derive(Debug)]
 pub struct Fault {
     pub vector: u64,
@@ -65,64 +48,6 @@ pub(super) extern "win64" fn dispatch_fault(
     unsafe { halt_forever() }
 }
 
-global_asm!(include_str!("entry.S"), fault = sym super::context::dispatch_exception, switch = sym super::context::dispatch, ticks = sym TICKS,
-    breakpoints = sym BREAKPOINTS, irq_stack = sym IRQ_STACK,
-    entry_root = sym super::user::ENTRY_ROOT, return_root = sym super::user::RETURN_ROOT);
-
-macro_rules! exception_entries {
-    ($($name:ident),+ $(,)?) => {
-        unsafe extern "C" { $(fn $name();)+ }
-        const EXCEPTIONS: [unsafe extern "C" fn(); 32] = [$($name),+];
-    };
-}
-exception_entries!(
-    cathedral_exception_0,
-    cathedral_exception_1,
-    cathedral_exception_2,
-    cathedral_exception_3,
-    cathedral_exception_4,
-    cathedral_exception_5,
-    cathedral_exception_6,
-    cathedral_exception_7,
-    cathedral_exception_8,
-    cathedral_exception_9,
-    cathedral_exception_10,
-    cathedral_exception_11,
-    cathedral_exception_12,
-    cathedral_exception_13,
-    cathedral_exception_14,
-    cathedral_exception_15,
-    cathedral_exception_16,
-    cathedral_exception_17,
-    cathedral_exception_18,
-    cathedral_exception_19,
-    cathedral_exception_20,
-    cathedral_exception_21,
-    cathedral_exception_22,
-    cathedral_exception_23,
-    cathedral_exception_24,
-    cathedral_exception_25,
-    cathedral_exception_26,
-    cathedral_exception_27,
-    cathedral_exception_28,
-    cathedral_exception_29,
-    cathedral_exception_30,
-    cathedral_exception_31,
-);
-unsafe extern "C" {
-    fn cathedral_exception_255();
-    fn cathedral_timer_entry();
-    fn cathedral_keyboard_entry();
-    fn cathedral_yield_entry();
-    fn cathedral_syscall_entry();
-}
-
-pub(super) fn user_selectors() -> (u16, u16) {
-    let selectors = USER_SELECTORS.load(Ordering::Acquire);
-    assert_ne!(selectors, 0, "user context before GDT installation");
-    (selectors as u16, (selectors >> 16) as u16)
-}
-
 /// # Safety
 /// Called exactly once on the sole boot CPU with IRQs off, after activating
 /// layout's mappings and stack. Image, tables and stacks must remain resident.
@@ -137,72 +62,8 @@ pub unsafe fn install_interrupts(layout: &BootLayout, handler: fn(Fault) -> !) {
     // Static table addresses and all four mapped emergency stacks are permanent.
     unsafe {
         super::context::enable_context_save();
-        let tss = addr_of_mut!(TSS);
-        let mut value = TaskStateSegment::new();
-        // Ring-3 exceptions must not overwrite the suspended boot stack.
-        value.privilege_stack_table[0] = VirtAddr::new(layout.emergency_tops[3]);
-        for (index, top) in layout.emergency_tops.iter().enumerate() {
-            value.interrupt_stack_table[index] = VirtAddr::new(*top);
-        }
-        tss.write(value);
-        let gdt = &mut *addr_of_mut!(GDT);
-        let code = gdt.append(Descriptor::kernel_code_segment());
-        let data = gdt.append(Descriptor::kernel_data_segment());
-        let task = gdt.append(Descriptor::tss_segment_unchecked(tss));
-        let user_code = gdt.append(Descriptor::user_code_segment());
-        let user_data = gdt.append(Descriptor::user_data_segment());
-        USER_SELECTORS.store(
-            u64::from(user_code.0) | (u64::from(user_data.0) << 16),
-            Ordering::Release,
-        );
-        gdt.load_unsafe();
-        CS::set_reg(code);
-        DS::set_reg(data);
-        ES::set_reg(data);
-        SS::set_reg(data);
-        FS::set_reg(SegmentSelector(0));
-        GS::set_reg(SegmentSelector(0));
-        load_tss(task);
-
-        let idt = &mut *addr_of_mut!(IDT);
-        for (vector, entry) in idt.iter_mut().enumerate() {
-            let address = if vector < 32 {
-                EXCEPTIONS[vector] as *const ()
-            } else if vector == 32 {
-                cathedral_timer_entry as *const ()
-            } else if vector == 33 {
-                cathedral_keyboard_entry as *const ()
-            } else if vector == 48 {
-                cathedral_yield_entry as *const ()
-            } else if vector == 128 {
-                cathedral_syscall_entry as *const ()
-            } else {
-                cathedral_exception_255 as *const ()
-            };
-            let options = entry.set_handler_addr(VirtAddr::from_ptr(address));
-            if vector == 128 {
-                options.set_privilege_level(PrivilegeLevel::Ring3);
-            }
-            match vector {
-                8 => {
-                    options.set_stack_index(0);
-                }
-                2 => {
-                    options.set_stack_index(1);
-                }
-                18 => {
-                    options.set_stack_index(2);
-                }
-                32..=255 => {
-                    options.set_stack_index(3);
-                }
-                _ => {}
-            }
-        }
-        lidt(&DescriptorTablePointer {
-            limit: (size_of_val(idt) - 1) as u16,
-            base: VirtAddr::from_ptr(idt.as_ptr()),
-        });
+        tables::install_segments(layout);
+        tables::install_gates();
     }
     INSTALLED.store(true, Ordering::Release);
 }
