@@ -10,9 +10,10 @@ pub(super) fn check(connections: &mut Connections) -> Result<(), Error> {
     let pair = connections.pair(cathedral_session_protocol::link::DISPLAY)?;
     let link = Link::at(cathedral_session_protocol::link::DISPLAY)?;
     let private = raw::allocate(1)?;
+    // A producer's private name is not an offer in the display's link scope.
     assert_eq!(
         request(pair, [wire::BLIT, 0, 0, 1, 1, private])?,
-        abi::DENIED
+        abi::BAD_HANDLE
     );
     // SAFETY: Raw allocation has no Rust wrapper or outstanding references.
     unsafe { raw::release(private) }?;

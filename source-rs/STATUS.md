@@ -38,9 +38,8 @@ Shared event/frame vocabulary uses static backend selection and direct calls.
 This pass passed host tests (including device command restrictions), both UEFI
 Clippy targets, x86-64 release smoke, ARM64 debug/release proofs, the matrix
 desktop's physical input/recovery checks, and ordinary `--input-test` with seven
-acknowledged storage updates. The storage recovery profile still stops at the
-pre-existing authority assertion described below; power-cut recovery is not
-claimed as a pass.
+acknowledged storage updates. The recovery and power-cut profiles also pass in
+release after correcting the stale lab expectations described below.
 
 ## Current integrated path
 
@@ -101,13 +100,19 @@ page sharing/retirement, scene geometry, pointer queues and forwarded matrix
 control requests. Cohesive leaves remain sibling files; the guide treats this as
 a reading-path preference rather than a file-count or line-count rule.
 
-**Known verification blocker:** `--recovery-test` and `--storage-test` restart the status
-app before readiness. Its [authority probe](distribution/applications/status/application/lab/lab.rs)
-expects `DENIED` for cancellation of handle zero, while the caller-local task
-dispatcher returns `BAD_HANDLE`. The same failure was reproduced at `2f48d30`,
-before this pass. That assertion and the kernel's behavior were left unchanged;
-the full recovery/power-cut profiles need this mismatch resolved before their
-historical coverage can be claimed as a current pass.
+**Recovery verification restored:** the status app's
+[authority probe](distribution/applications/status/application/lab/lab.rs) and
+[buffer probe](distribution/applications/status/application/lab/buffers.rs) now
+expect `BAD_HANDLE` for cancellation of handle zero and an unoffered private page.
+These names confer no authority in the receiving namespace. Both probes had
+retained the older `DENIED` expectation; kernel behavior is unchanged.
+
+`--recovery-test --release --timeout 120` passes provider crash/spin/block
+recovery, application replacement, sibling preservation, checked disk transport,
+private storage authority, exact scanout and lost-reply reconciliation.
+`--storage-test --release --timeout 120` passes fourteen boots covering reboot
+durability, all four power-cut phases, continued writes, lost acknowledgements
+and legacy-format migration followed by another reboot.
 
 The matrix protocol exposes local state only. That is narrower than a claim of
 whole-system noninterference. The handle-locality pass now covers task, clock, link and page rights as well as

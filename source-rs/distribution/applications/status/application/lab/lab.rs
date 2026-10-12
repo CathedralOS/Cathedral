@@ -9,7 +9,11 @@ use cathedral_user_runtime::{
 pub fn authority(connections: &mut Connections) -> Result<(), Error> {
     assert_eq!(Launch::at(0).unwrap_err(), Error(abi::DENIED as i64));
     assert_eq!(Port::at(0).unwrap_err(), Error(abi::DENIED as i64));
-    assert_eq!(Child::from_raw(0).cancel(), Err(Error(abi::DENIED as i64)));
+    // Zero names no child in this caller's capability namespace.
+    assert_eq!(
+        Child::from_raw(0).cancel(),
+        Err(Error(abi::BAD_HANDLE as i64))
+    );
     assert_eq!(keyboard::read(false), Err(Error(abi::DENIED as i64)));
     assert_eq!(keyboard::write(false, 0xf4), Err(Error(abi::DENIED as i64)));
     assert_eq!(display::mapping(), Err(Error(abi::DENIED as i64)));
