@@ -15,6 +15,8 @@ def verify(stream, output, serial, pressure=False):
         raise RuntimeError("Missing dynamic matrix admission evidence")
     if "owned surface quotas, stale names, removal and subtree stacking passed" not in serial:
         raise RuntimeError("Missing owned surface lifecycle evidence")
+    if "physical admission exhaustion preserved sibling IPC and rendering" not in serial:
+        raise RuntimeError("Missing physical memory isolation evidence")
     position = [40, 40]
 
     def send(events):

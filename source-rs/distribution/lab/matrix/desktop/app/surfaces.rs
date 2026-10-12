@@ -8,6 +8,10 @@ pub(super) struct Scene {
 }
 impl Scene {
     pub fn new(parent: Pair, view: wire::Packet) -> Self {
+        assert_eq!(
+            call(parent, [wire::RUN_MEMORY, 0, 0, 0, 0, 0, 0, 0]),
+            wire::error(abi::DENIED)
+        );
         let info = call(parent, [wire::SURFACE_INFO, 0, 0, 0, 0, 0, 0, 0]);
         assert_eq!(info[0], 0);
         assert_eq!(info[2], 0);

@@ -16,11 +16,13 @@ The resulting subtree envelope is the sum of its exclusively held reservations,
 not an additional independent allowance at every depth.
 
 [IPC storage](../ipc/budget.rs) is physically backed by its fixed channel arena.
-Page quotas bound runtime buffer backing and accepted mappings; they do not reserve
-physical frames for ELF images, stacks, page tables or future allocations. Physical
-allocation may still fail and must roll back. Per-account lab maxima remain
-16 private pages, 16 reader pages and eight channels, with separate object/handle
-limits. This is not yet a general RAM guarantee or runtime memory-pressure policy.
+Page quotas bound runtime objects and accepted mappings. A separate
+[physical reservation](physical/README.md) now backs executable pages, stacks,
+page tables and runtime buffers from an eagerly reserved frame bank. Page/IPC
+quota changes alone do not transfer that physical funding. Dynamic reservation
+commits both together; idle launches also support explicit physical subdivision.
+Per-account lab maxima remain 16 private pages, 16 reader pages and 16 channels,
+with separate object/handle limits. This is not a general memory-pressure policy.
 
 [Page objects](../regions.rs) now retain their original backing sponsor through
 producer death, just as channels already retain their creator account. An accepted

@@ -1,4 +1,5 @@
 //! Executable authority chooses code; funded unbound accounts supply process capacity.
+mod physical;
 use super::*;
 use cathedral_user_runtime::{
     memory::raw,
@@ -14,6 +15,7 @@ fn limits(pages: u64, channels: u64) -> Limits {
 }
 pub fn run() -> u64 {
     let baseline = resources::budget().unwrap();
+    let physical_baseline = resources::physical_budget().unwrap();
     assert_eq!(task::available_slots().unwrap(), 5);
     let image = Launch::at(0).unwrap().executable().unwrap();
     let other_image = Launch::at(1).unwrap().executable().unwrap();
@@ -52,6 +54,10 @@ pub fn run() -> u64 {
         );
         assert_eq!(nested.assign_cpu(20000), Err(Error(abi::BUSY as i64)));
         let pair = nested.port().unwrap().connect().unwrap();
+        assert_eq!(&receive(pair.1).0[..9], b"exhausted");
+        outside_pair.0.send(b"allocate").unwrap();
+        assert_eq!(&receive(outside_pair.1).0[..9], b"allocated");
+        pair.0.send(b"recover").unwrap();
         assert_eq!(&receive(pair.1).0[..5], b"ready");
         assert_eq!(nested.release(), Err(Error(abi::BUSY as i64)));
         child.cancel().unwrap();
@@ -70,6 +76,7 @@ pub fn run() -> u64 {
         }
         assert_eq!(task::available_slots().unwrap(), 5);
         assert_eq!(resources::budget().unwrap(), baseline);
+        assert_eq!(resources::physical_budget().unwrap(), physical_baseline);
     }
     let pinned = image.reserve(limits(0, 1), 0, 256).unwrap();
     let child = pinned.spawn(34).unwrap();
@@ -103,6 +110,7 @@ pub fn worker(role: u64, mode: u64) -> u64 {
         return 34;
     }
     if mode == 30 {
+        physical::exhaust(image);
         assert!(Executable::at(1).is_ok());
         assert!(Executable::at(2).is_err());
         let slots = task::available_slots().unwrap();
@@ -137,12 +145,33 @@ pub fn worker(role: u64, mode: u64) -> u64 {
         );
     }
     let budget = resources::budget().unwrap();
-    raw::allocate(budget.limits.private_pages as usize).unwrap();
-    assert_eq!(raw::allocate(1), Err(Error(abi::NO_MEMORY as i64)));
+    if mode != 35 {
+        let pages = budget.limits.private_pages as usize;
+        let object = raw::allocate(pages).unwrap();
+        assert_eq!(raw::allocate(1), Err(Error(abi::NO_MEMORY as i64)));
+        if mode == 33 {
+            // Leave the outside sibling ready to allocate during the nested exhaustion.
+            // SAFETY: No references or offers were made from this raw allocation.
+            unsafe { raw::release(object) }.unwrap();
+        }
+    }
     Handle::bootstrap(1).unwrap().send(b"ready").unwrap();
     loop {
         let mut bytes = [0; 64];
         let len = Handle::bootstrap(0).unwrap().receive(&mut bytes).unwrap();
-        Handle::bootstrap(1).unwrap().send(&bytes[..len]).unwrap();
+        if mode == 33 && &bytes[..len] == b"allocate" {
+            let before = resources::physical_budget().unwrap();
+            let object = raw::allocate(4).unwrap();
+            assert_eq!(
+                resources::physical_budget().unwrap().charged,
+                before.charged + 4
+            );
+            // SAFETY: No borrows, offers or aliases escape this fixture.
+            unsafe { raw::release(object) }.unwrap();
+            assert_eq!(resources::physical_budget().unwrap(), before);
+            Handle::bootstrap(1).unwrap().send(b"allocated").unwrap();
+        } else {
+            Handle::bootstrap(1).unwrap().send(&bytes[..len]).unwrap();
+        }
     }
 }

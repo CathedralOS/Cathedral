@@ -14,6 +14,7 @@ struct Owned {
 #[derive(Default)]
 pub(super) struct Children {
     slots: [Option<Owned>; 2],
+    next_frames: [Option<u64>; 2],
     pending: Option<(Request, usize, u64)>,
 }
 impl Children {
@@ -42,7 +43,12 @@ impl Children {
         world: &mut World,
     ) -> Result<bool, Error> {
         let routed = words[0] >> wire::OP_BITS;
-        if routed == 0 && !matches!(words[0], wire::SPAWN | wire::RUN | wire::STOP) {
+        if routed == 0
+            && !matches!(
+                words[0],
+                wire::SPAWN | wire::RUN | wire::RUN_MEMORY | wire::STOP
+            )
+        {
             return Ok(false);
         }
         let result = if self.pending.is_some() {
@@ -65,6 +71,14 @@ impl Children {
             }
         } else {
             match words {
+                [wire::RUN_MEMORY, slot @ 0..=1, frames, 0, 0, 0, 0, 0] => {
+                    if self.slots[slot as usize].is_some() {
+                        Err(Error(abi::BUSY as i64))
+                    } else {
+                        self.next_frames[slot as usize] = Some(frames);
+                        Ok(())
+                    }
+                }
                 [wire::SPAWN, slot @ 0..=1, launch, loans, argument, 0, 0, 0] => {
                     self.start(slot as usize, launch, loans, argument, server, world)
                 }

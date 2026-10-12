@@ -64,3 +64,22 @@ fn result(value: u64) -> Result<(), Error> {
         Ok(())
     }
 }
+
+/// Only this account's reservation and live charges, including orphaned backing.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct PhysicalBudget {
+    pub reserved: u64,
+    pub charged: u64,
+}
+pub fn physical_budget() -> Result<PhysicalBudget, Error> {
+    let mut record = Record([0; 6]);
+    result(arch::call(
+        abi::PHYSICAL_BUDGET,
+        record.0.as_mut_ptr() as u64,
+        0,
+    ))?;
+    Ok(PhysicalBudget {
+        reserved: record.0[0],
+        charged: record.0[1],
+    })
+}

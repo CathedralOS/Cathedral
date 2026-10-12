@@ -389,6 +389,11 @@ initial FP state is clean and I/O privilege is zero.
 | 39: initial environment | Writable 40-byte destination, 0, 0 | 0 after copying count and up to four initial local endpoint names; never reinstalls grants |
 | 40: task spawn with launch loans | Launch grant, 112-byte request, 0 | Child ticket after atomic endpoint moves and selected idle launch loans; failure retains all grants |
 | 41: IPC budget | Writable 32-byte destination, 0, 0 | 0 after copying caller-local channel limit/charge and dynamic handle limit/charge as four LE u64 words |
+| 42: CPU read | Local clock grant, 0, 0 | Caller-local direct CPU microseconds |
+| 43/44: resource budget/assignment | Local output or owned idle launch and limits | [Conserved page/IPC quotas](kernel/core/resources/README.md) |
+| 45–53: executable and process admission | Caller-local executable/launch grants | [Catalogue, funded reservations, code staging and idle CPU limits](kernel/core/admission_pool/README.md) |
+| 54: physical budget | Writable 16-byte destination, 0, 0 | Caller-local reserved and charged physical frames as two LE u64 words |
+| 55: physical assignment | Owned idle launch, requested frame reservation, 0 | Conserving reassignment; BUSY if a live charge would lose funding |
 
 Writes accept at most 256 bytes within one known user page. The kernel validates
 the entire range and copies through its physical backing before calling the
@@ -999,3 +1004,9 @@ launches. Retained pages remain charged to their original account after producer
 code grants from process capacity. `startup.dynamic_tasks` reserves unbound
 accounts; apps can reserve and recursively launch granted executables within their
 page/channel/process allowances. Run `--admission-test --release --timeout 120`.
+
+[Physical-memory funding](kernel/core/resources/physical/README.md) now reserves
+real frames before userspace admission. Image/stack/page-table and runtime-buffer
+charges share conserved account funding, distinct from object quotas and the
+per-load failure ceiling. `Launch::assign_memory` subdivides it into idle children;
+`Executable::reserve_funded` includes it atomically with dynamic admission.

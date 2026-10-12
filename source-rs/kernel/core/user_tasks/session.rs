@@ -8,6 +8,8 @@ use core::sync::atomic::Ordering;
 mod admission;
 mod composition;
 mod execution;
+mod frames;
+use frames::Frames;
 mod lifecycle;
 mod links;
 mod memory;
@@ -17,7 +19,7 @@ mod prepare;
 mod state;
 mod syscalls;
 mod traps;
-use state::{ACTIVE, Frames, LaunchState, LinkState, Session, Task, next_epoch};
+use state::{ACTIVE, LaunchState, LinkState, Session, Task, next_epoch};
 use syscalls::{keyboard, tasks as taskcalls};
 /// Run a bounded session, returning task outcomes only after complete reclamation.
 /// frame_limit supports deterministic admission-failure testing.
@@ -79,10 +81,11 @@ pub unsafe fn run_configured(
     let baseline = frames.allocated();
     let (mut session, mut reports) =
         prepare::session(programs.len(), count, &config, baseline, output)?;
-    let mut source = Frames {
+    let mut source = Frames::new(
         frames,
-        remaining: config.frame_limit,
-    };
+        session.memory.funding.capacity(),
+        config.frame_limit,
+    )?;
     // SAFETY: Caller supplies exclusive machine/memory custody. Initial admission
     // rolls back on failure; execution pins this session until all tasks are reaped.
     unsafe {
@@ -93,6 +96,6 @@ pub unsafe fn run_configured(
         task.report.cpu = session.scheduler.cpu_report(slot);
         reports.push(core::mem::take(&mut task.report));
     }
-    assert_eq!(source.frames.allocated(), baseline);
+    assert_eq!(source.allocated(), baseline);
     Ok(reports)
 }

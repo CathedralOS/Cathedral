@@ -32,13 +32,10 @@ pub unsafe fn exercise(frames: &mut FrameAllocator, layout: &BootLayout, image: 
         arguments: [0, 0],
     };
     let (mut session, _) = prepare::session(1, 1, &config, baseline, |_| true).unwrap();
-    let mut source = Frames {
-        frames,
-        remaining: usize::MAX,
-    };
+    let mut source = Frames::new(frames, session.memory.funding.capacity(), usize::MAX).unwrap();
     // SAFETY: Same machine custody; root remains inactive throughout this fixture.
     unsafe { admission::admit(&mut session, layout, image, &program, &mut source, 0) }.unwrap();
-    let admitted = source.frames.allocated();
+    let admitted = source.allocated();
     let table_budget = admitted - baseline;
     for budget in 0..=wire::MAX_PAGES {
         source.remaining = budget;
@@ -48,7 +45,7 @@ pub unsafe fn exercise(frames: &mut FrameAllocator, layout: &BootLayout, image: 
             assert_eq!(result, Err(abi::NO_MEMORY));
         } else {
             let handle = result.unwrap();
-            assert_eq!(source.frames.allocated(), admitted + wire::MAX_PAGES);
+            assert_eq!(source.allocated(), admitted + wire::MAX_PAGES);
             // SAFETY: Root has never executed and all frames remain pinned here.
             unsafe { mapping_boundaries(&mut session, handle) };
             // SAFETY: Root never ran; no user borrows or outstanding peer references.
@@ -62,7 +59,8 @@ pub unsafe fn exercise(frames: &mut FrameAllocator, layout: &BootLayout, image: 
             }
             .unwrap();
         }
-        assert_eq!(source.frames.allocated(), admitted);
+        assert_eq!(source.allocated(), admitted);
+        assert_eq!(session.memory.funding.charged(), table_budget);
         assert!(
             session
                 .memory
@@ -74,8 +72,25 @@ pub unsafe fn exercise(frames: &mut FrameAllocator, layout: &BootLayout, image: 
         assert_eq!(session.memory.frames(), 0);
     }
     // SAFETY: Never activated, no remaining borrowed regions.
-    unsafe { admission::retire(&mut session.tasks[0], &mut source) };
-    assert_eq!(source.frames.allocated(), baseline);
+    unsafe { admission::retire(&mut session, 0, &mut source) };
+    assert_eq!(source.allocated(), baseline);
+    let capacity = session.memory.funding.capacity();
+    for budget in 0..table_budget {
+        session
+            .memory
+            .funding
+            .assign(0, 1, capacity - budget)
+            .unwrap();
+        source.remaining = usize::MAX;
+        assert!(
+            // SAFETY: Inactive account, serialized bank; physical funding alone limits the load.
+            unsafe { admission::admit(&mut session, layout, image, &program, &mut source, 0) }
+                .is_err()
+        );
+        assert_eq!(source.allocated(), baseline);
+        assert_eq!(session.memory.funding.charged(), 0);
+    }
+    session.memory.funding.assign(0, 1, 0).unwrap();
     // Exercise every admission boundary too, including all reserved region PTs.
     for budget in 0..table_budget {
         source.remaining = budget;
@@ -84,7 +99,7 @@ pub unsafe fn exercise(frames: &mut FrameAllocator, layout: &BootLayout, image: 
             unsafe { admission::admit(&mut session, layout, image, &program, &mut source, 0) }
                 .is_err()
         );
-        assert_eq!(source.frames.allocated(), baseline);
+        assert_eq!(source.allocated(), baseline);
         assert!(session.tasks[0].space.is_none());
     }
 }

@@ -12,6 +12,34 @@ pub(super) unsafe fn admit(
     frames: &mut Frames<'_>,
     slot: usize,
 ) -> Result<(), Error> {
+    let allowance = session.memory.funding.available(slot);
+    let previous = frames.remaining;
+    frames.remaining = previous.min(allowance);
+    let baseline = frames.allocated();
+    // SAFETY: Same inactive-root and sole-CPU obligations; all failures roll back.
+    let result = unsafe { construct(session, layout, image, program, frames, slot) };
+    let consumed = previous.min(allowance) - frames.remaining;
+    frames.remaining = previous - consumed;
+    if result.is_ok() {
+        session
+            .memory
+            .funding
+            .charge(slot, frames.allocated() - baseline)
+            .expect("serialized admission exceeded reserved funding");
+    } else {
+        assert_eq!(frames.allocated(), baseline);
+    }
+    result
+}
+
+unsafe fn construct(
+    session: &mut Session,
+    layout: &arch::BootLayout,
+    image: arch::ImageRange,
+    program: &Program<'_>,
+    frames: &mut Frames<'_>,
+    slot: usize,
+) -> Result<(), Error> {
     let task = &mut session.tasks[slot];
     assert!(task.space.is_none());
     // SAFETY: Caller serializes admission on the boot stack/kernel root with IRQs
@@ -22,7 +50,7 @@ pub(super) unsafe fn admit(
         if let Err(error) = unsafe { task.space.as_mut().unwrap().prepare_regions(frames) } {
             // SAFETY: No context has been published; partial table allocation belongs to this task.
             unsafe {
-                retire(task, frames);
+                discard(task, frames);
             }
             return Err(Error::Memory(error));
         }
@@ -38,7 +66,7 @@ pub(super) unsafe fn admit(
         if let Err(error) = unsafe { task.space.as_mut().unwrap().map_framebuffer(fb, frames) } {
             // SAFETY: Admission failed before publishing the new root/context.
             unsafe {
-                retire(task, frames);
+                discard(task, frames);
             }
             return Err(Error::Memory(error));
         }
@@ -87,7 +115,15 @@ unsafe fn load(
     }
 }
 
-pub(super) unsafe fn retire(task: &mut Task, frames: &mut Frames<'_>) {
+pub(super) unsafe fn retire(session: &mut Session, slot: usize, frames: &mut Frames<'_>) {
+    let count = session.tasks[slot].space.as_ref().unwrap().frame_count();
+    // SAFETY: Caller has removed all mappings/borrowers and retired the context.
+    unsafe {
+        discard(&mut session.tasks[slot], frames);
+    }
+    session.memory.funding.refund(slot, count);
+}
+unsafe fn discard(task: &mut Task, frames: &mut Frames<'_>) {
     // SAFETY: Caller retired this task or has not yet published any context.
     unsafe {
         task.space.take().unwrap().release(frames);
@@ -122,13 +158,16 @@ pub(super) unsafe fn initial(
             // SAFETY: Serialized admission on kernel CR3; no user has started.
             unsafe { admit(session, layout, image, program, source, slot) }
         {
-            for task in session.tasks.iter_mut().filter(|task| task.space.is_some()) {
+            for slot in 0..session.tasks.len() {
+                if session.tasks[slot].space.is_none() {
+                    continue;
+                }
                 // SAFETY: Admission failed before publishing any context/root.
                 unsafe {
-                    retire(task, source);
+                    retire(session, slot, source);
                 }
             }
-            assert_eq!(source.frames.allocated(), session.frame_baseline);
+            assert_eq!(source.allocated(), session.frame_baseline);
             return Err(error);
         }
     }

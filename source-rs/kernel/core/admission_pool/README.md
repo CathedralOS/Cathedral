@@ -23,7 +23,7 @@ static launch, no executable is assigned to one of these accounts at boot.
    grant is a separate authority, survives lending the source launch, and is
    retired on holder death. Raw integers or catalogue indices grant nothing.
 2. `Executable::reserve(limits, child_slots, admission_frames)` consumes one of
-   the caller's backed process reservations, assigns unused page/channel capacity
+   the caller's backed process reservations, assigns unused page/channel/physical capacity
    and reserves further process slots for its child. Allocation chooses only from
    the caller's pool; failure cannot consume an outside sibling's capacity.
 3. The result is an ordinary `Launch`: obtain its `port()`, then `spawn`,
@@ -32,7 +32,7 @@ static launch, no executable is assigned to one of these accounts at boot.
    reservation available for retry or explicit release.
 4. Dynamic admission explicitly supplies the same executable authority to the
    child (`Executable::at(0)`), so it can construct bounded descendants from its
-   own process/page/channel budgets. Clock access can only derive from the
+   own process/page/channel/physical budgets. Clock access can only derive from the
    creator's clock authority; no device grant is cloned.
 5. `Launch::allow_executable` stages a copy of a caller-owned code grant for an
    idle owned child. Fresh child-local names publish only after successful load;
@@ -65,9 +65,10 @@ DAG and a boot-supplied executable catalogue. It has no filesystem executable
 lookup, arbitrary ELF upload, general executable-capability IPC move, SMP or
 unbounded arena growth. Dynamic pools currently require one initial process.
 Admission has an explicit per-attempt frame ceiling (1..256), with complete load
-rollback; it is not a physical RAM reservation covering the entire subtree.
-Runtime buffer quotas, process capacity and image/stack/page-table costs remain
-distinct. Device drivers retain their existing exclusive static admission path.
+rollback. A separate [physical reservation](../resources/physical/README.md) now
+funds image/stack/page-table and runtime buffer costs from real reserved frames.
+The short reserve API requests 256 frames per account and requested descendant;
+`reserve_funded` accepts an explicit physical allowance. Device drivers retain their existing exclusive static admission path.
 These are experimental grants, not a frozen application ABI.
 
 ## Evidence

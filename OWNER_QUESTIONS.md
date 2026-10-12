@@ -495,8 +495,8 @@ commit. Accepted pages now retain the original backing sponsor after producer
 death; restart cannot buy replacement capacity while a reader pins it. Explicit
 withdrawal fails rather than revoking the reader. The same applies to channels.
 This extends the persistent-sponsor experiment above. It does not settle funding
-transfer, active-child rebudgeting or a physical RAM reservation covering ELF,
-page-table and stack admission costs.
+transfer or active-child rebudgeting. The bounded physical-memory experiment
+below now includes ELF, page-table and stack admission costs.
 
 
 **Executable-admission lab evidence (not a stable delegation contract).**
@@ -519,6 +519,21 @@ The matrix desktop uses this path recursively. This adopts copying for the lab,
 not a production revocation contract: changing the launch's staging does not revoke
 an independently installed grant, and selected dynamic code remains executable
 by descendants within supplied process/resource budgets. General IPC transfer,
-revocation and physical admission funding remain the choices above. Idle-child
+revocation and production sponsorship remain the choices above. Idle-child
 CPU ceiling assignment preserves ancestor enforcement and debt; it confers no
 priority or permission to charge an unrelated service's work to a caller.
+
+**Physical-memory funding experiment (not a production sponsorship decision).**
+The [Rust frame bank](source-rs/kernel/core/resources/physical/README.md) now backs
+conserved allowances with real reserved RAM. Executable pages, stacks, private
+page tables and runtime buffers charge the same account. Retained readers keep
+the original producer's physical charge after process death; final release refunds
+it. Kernel heap/IPC arenas and boot/device reservations remain separate bounded
+costs. Nested exhaustion cannot spend a sibling's reservation.
+
+Bootstrap sizing is provisionally 256 frames per bound account plus private-page
+quota, and another 256 per unbound process slot initially held by the root. This
+eager, fixed session bank is lab policy, not the eventual manifest contract.
+Production still needs the already-open choice between persistent sponsors,
+explicit funded adoption, and revocation, plus a policy for growing/reclaiming
+active memory envelopes. No new answer is needed to continue this bounded lab.

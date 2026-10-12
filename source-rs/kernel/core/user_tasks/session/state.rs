@@ -2,13 +2,12 @@
 use super::Report;
 use super::syscalls::{self, readiness, tasks};
 use crate::{
-    extent::FrameAllocator,
     ipc::{Ipc, MAX_EPOCH},
     scheduler::Scheduler,
     supervision::Supervisor,
 };
 use alloc::vec::Vec;
-use cathedral_arch::{Context, StackFrames, UserSpace};
+use cathedral_arch::{Context, UserSpace};
 use core::sync::atomic::{AtomicPtr, AtomicU64, Ordering};
 pub(super) struct Task {
     pub(super) memory_call: Option<[u64; 3]>,
@@ -61,27 +60,6 @@ pub(super) struct LaunchState {
 pub(super) struct LinkState {
     pub(super) model: crate::link::Link,
     pub(super) endpoint_base: usize,
-}
-
-pub(super) struct Frames<'a> {
-    pub(super) frames: &'a mut FrameAllocator,
-    pub(super) remaining: usize,
-}
-// SAFETY: Run is exclusive on the boot CPU, with the kernel's identity map active.
-unsafe impl StackFrames for Frames<'_> {
-    fn allocate(&mut self) -> Option<u64> {
-        if self.remaining == 0 {
-            return None;
-        }
-        let frame = self.frames.allocate()?;
-        self.remaining -= 1;
-        Some(frame.address())
-    }
-    unsafe fn release(&mut self, address: u64) {
-        self.frames
-            .release_address(address)
-            .expect("invalid user frame release");
-    }
 }
 
 pub(super) fn next_epoch() -> Option<u64> {

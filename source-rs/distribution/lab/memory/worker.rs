@@ -25,6 +25,14 @@ pub fn run() -> u64 {
 }
 fn dispatch(op: u64, first: u64, second: u64) -> Result<u64, Error> {
     match op {
+        abi::PHYSICAL_BUDGET => {
+            let budget = cathedral_user_runtime::resources::physical_budget()?;
+            Ok(if first == 0 {
+                budget.reserved
+            } else {
+                budget.charged
+            })
+        }
         abi::MEMORY_ALLOCATE => raw::allocate(first as usize),
         abi::MEMORY_ADDRESS => raw::address(first),
         abi::MEMORY_PAGES => raw::pages(first).map(|n| n as u64),

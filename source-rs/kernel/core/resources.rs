@@ -1,5 +1,6 @@
 //! Redistribute page/IPC reservations along an authorized owner-child edge.
 //! Capacity is conserved; live or retained backing prevents withdrawing its funding.
+pub mod physical;
 use crate::{ipc::Ipc, regions::Regions};
 use cathedral_contracts::{memory, user as abi};
 

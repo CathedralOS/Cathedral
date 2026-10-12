@@ -90,6 +90,8 @@ pub(super) fn start() -> Session {
     assert_eq!(capacity, if pressure { 4 } else { 3 });
     let root = Launch::at(2).unwrap();
     root.assign_slots(capacity).unwrap();
+    root.assign_memory((capacity + 1) * abi::MAX_ADMISSION_FRAMES as u64)
+        .unwrap();
     for index in 0..if pressure { 3 } else { 2 } {
         root.allow_executable(Executable::at(index).unwrap())
             .unwrap();

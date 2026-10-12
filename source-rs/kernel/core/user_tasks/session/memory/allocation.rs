@@ -7,6 +7,10 @@ pub(super) unsafe fn allocate(
     pages: usize,
 ) -> Result<u64, u64> {
     let index = session.memory.model.allocate(slot, pages)?;
+    if let Err(error) = session.memory.funding.charge(slot, pages) {
+        session.memory.model.entries[index].owner = None;
+        return Err(error);
+    }
     let result = (|| {
         for physical in &mut session.memory.backing[index][..pages] {
             *physical = frames.allocate().ok_or(abi::NO_MEMORY)?;
@@ -29,6 +33,11 @@ pub(super) unsafe fn allocate(
         Ok(session.memory.model.handle(slot, index))
     })();
     if result.is_err() {
+        let allocated = session.memory.backing[index][..pages]
+            .iter()
+            .filter(|&&frame| frame != 0)
+            .count();
+        session.memory.funding.refund(slot, pages - allocated);
         session.memory.model.entries[index].owner = None;
         // SAFETY: map_region publishes the complete set or rolls back all leaves; no borrowed mappings exist.
         unsafe {

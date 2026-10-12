@@ -76,6 +76,9 @@ pub fn error(status: u64) -> Packet {
 /// Owner selects a local executable and funds a dynamic child.
 /// slot, image index, argument, channels, descendant slots, image mask, CPU ceiling.
 pub const RUN: u64 = 109;
+/// Owner-only physical allowance for the next RUN attempt on an empty local slot.
+/// Consumed even on failure; omission uses 256 frames per requested process account.
+pub const RUN_MEMORY: u64 = 111; // slot, frames,0,0,0,0,0
 
 /// Child requests: create at a requested local stacking rank; query only own allowance.
 pub const SURFACE_CREATE: u64 = 6; // epoch, rank,0,0,0,0,0; reply status, local handle

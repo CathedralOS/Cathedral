@@ -8,7 +8,7 @@ instructions. [Owner questions](../OWNER_QUESTIONS.md) own unresolved semantics.
 
 Start at [distribution desktop policy](distribution/lab/matrix/desktop.rs).
 It admits display/input adapters and gives a root matrix code grants and a funded
-process pool.
+process pool with physical-memory funding.
 The root matrix admits an inner matrix and an outside app; the inner admits its
 own app. Both run the same [matrix service](platform/services/matrix/service.rs).
 Only the root adapts physical input and compositor output.
@@ -37,7 +37,8 @@ remain until their extra behavior has moved into the integrated path with tests.
 | [Dynamic IPC and startup bundles](kernel/core/ipc.rs) | Matrix-child, root-display and physical-source connections | `--ipc-test`: moves, rejected bundles, death, quotas | Small copied messages; accepted moves can outlive their creator |
 | [Backed IPC reservations](kernel/core/ipc/budget.rs) | Every initial/launch account, including matrix children | Host tests fill all 32 slots; `--ipc-test` exhausts restarted creators while a sibling fills its reservation | Owned idle accounts support conserving subdivision; no sponsorship transfer |
 | [CPU turns and measured ceilings](kernel/core/scheduler/README.md) | Every user launch subtree, including nested matrices | Host accounting tests; `--smoke` checks capped spinners, yields, restart debt and idle refill | Boot/owned-idle burst/refill caps; periodic-timer overrun; no deadlines, weights or service-call donation |
-| [Recursive launch loans](kernel/core/supervision/delegation.rs) | Matrices own direct children, lend budgets further, reclaim subtrees | `--ipc-test` plus matrix replacement tests | Static launch loans plus executable-authorized process pools; no general physical RAM reservation |
+| [Physical-memory funding](kernel/core/resources/physical/README.md) | Every admitted image, stack, page table and runtime buffer; recursive matrix pool | Host conservation/bank tests; smoke rollback and retained readers; admission exhaustion and desktop pixel checks | Eager bounded bank; idle-child assignment; no swap, active rebudgeting or sponsorship transfer |
+| [Recursive launch loans](kernel/core/supervision/delegation.rs) | Matrices own direct children, lend budgets further, reclaim subtrees | `--ipc-test` plus matrix replacement tests | Static launch loans plus executable-authorized process pools; fixed account arena |
 | [Executable-authorized admission](kernel/core/admission_pool/README.md) | Apps and the matrix desktop construct descendants from code authority and a process pool | `--admission-test`: recursive launch, exhaustion, load rollback, retained funding, sibling survival | Boot-supplied catalogue; eight accounts; device grants remain static |
 | [Matrix lifecycle](platform/services/matrix/service/children.rs) | Same provider above apps and another matrix | `--matrix-test`: replacement preserves an outside sibling | Two direct children; distribution supplies policy through owner-only control |
 | [Local viewport, focus and capture](platform/services/matrix/world.rs) | Nested and sibling visible apps | Host policy tests; `--matrix-test`; `--matrix-desktop-test` physical focus | Five keys; coalesced wake channels; synchronous upward refresh |
@@ -61,8 +62,8 @@ activity. The remaining boundary work is recorded below:
 | Page handles | [Region grants and virtual slots](kernel/core/regions.rs) are caller-local; producer-local offers require the receiving link and install a separate reader name | Generalize beyond boot-approved sharing; preserve accepted-reader lifetime |
 | IPC capacity | Backed launch-account reservations; surviving channels stay charged across creator replacement; caller-local budget query | Conserving owner/child subdivision implemented; explicit funding transfer remains; retained endpoints pin their original account |
 | CPU | Measured runtime and deferred work charge persistent ancestor accounts; exhausted branches wait for refill | Qualified clocks, precise exhaustion preemption, bounded kernel work, privileged latency policy and service-call sponsorship |
-| RAM | Conserving runtime-page subdivision; accepted readers retain original backing charges | General physical reservations including admission overhead; explicit sponsorship transfer |
-| Admission | Executable capabilities choose code for funded unbound accounts; recursive pools and rollback | General executable transfer/loading, physical admission reservations and larger arenas |
+| RAM | Physical reservations cover images, stacks, page tables and buffers; accepted readers retain original sponsor charges | General shared-object IPC, active pressure policy and explicit sponsorship transfer |
+| Admission | Executable capabilities choose code for funded unbound accounts; recursive pools and rollback | General executable transfer/loading and larger arenas |
 | Devices | Concrete framebuffer/PS2/ATA grants, no arbitrary device discovery | One reusable userspace interrupt/MMIO boundary, proved with another driver; DMA needs a separate ownership/isolation design |
 
 Matrix input now wakes idle apps; retained local scenes replay after placement

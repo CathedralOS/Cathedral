@@ -70,3 +70,11 @@ Use `--matrix-desktop-test --pressure --release --timeout 120` to add a
 non-yielding descendant inside a 20% nested CPU allowance. Physical-input tests
 report scanout latency; current equal-turn scheduling still takes roughly 0.5 to 0.9 seconds
 in recent runs of that deliberately constrained subtree. The ordinary profile has no spinner.
+
+Physical admission uses the same conserved frame funding as other processes.
+Owner-only `RUN_MEMORY` stages the physical-frame allowance for the next `RUN`
+attempt on an empty local child slot. An attempted admission consumes this setting
+on failure as well as success; ordinary `RUN` defaults to 256 frames per requested
+process account. This changes admission policy, never a running child's funding.
+The [physical-memory guide](../../../kernel/core/resources/physical/README.md)
+connects the kernel transaction, desktop failure/recovery probes and retained charges.

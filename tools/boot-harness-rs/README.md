@@ -246,3 +246,10 @@ After adding owned surfaces, recent optimized pressure runs measured 469-907 ms
 including the harness's 160 ms injection sleeps. Atomic polling removes redundant
 round trips, but equal turns, queued input and synchronous IPC still impose visible
 latency in a spinner-saturated 20% subtree. No latency guarantee is claimed.
+
+Physical-memory checks now run with `--admission-test`: nested exhaustion, an
+outside sibling's allocation, failed-load refunds and repeated subtree recovery.
+`--smoke` also checks retained physical charges and every load funding boundary.
+`--matrix-desktop-test` requires visible sibling rendering while nested admission
+fails, before restoring the normal tree. See the
+[funding contract and implementation](../../source-rs/kernel/core/resources/physical/README.md).

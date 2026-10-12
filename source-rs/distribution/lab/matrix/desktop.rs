@@ -1,6 +1,7 @@
 //! Distribution layout and recovery policy over the platform matrix-owned tree.
 mod admission;
 mod app;
+mod funding;
 mod probes;
 use super::*;
 pub use app::run as app;
@@ -10,7 +11,7 @@ const BACKGROUND: u64 = 0x101827;
 fn owner(pair: Pair, words: wire::Packet) {
     assert_eq!(call(pair, words), [0; 8]);
 }
-fn inner(pair: Pair, pressure: bool) {
+fn launch_inner(pair: Pair, pressure: bool) {
     owner(
         pair,
         [
@@ -24,6 +25,9 @@ fn inner(pair: Pair, pressure: bool) {
             if pressure { 20000 } else { 0 },
         ],
     );
+}
+fn inner(pair: Pair, pressure: bool) {
+    launch_inner(pair, pressure);
     owner(
         pair,
         wire::route([wire::RUN, 0, 1, 0, 0, 0, 0, 0], 0).unwrap(),
@@ -62,7 +66,9 @@ fn inner(pair: Pair, pressure: bool) {
     );
 }
 fn pixel(pair: Pair, x: u64, y: u64, expected: u64) {
-    let deadline = time::after(300).unwrap();
+    // Cold surface creation crosses multiple IPC hops under the 20% pressure cap.
+    // This is a bounded correctness wait; the host measures input latency separately.
+    let deadline = time::after(1000).unwrap();
     loop {
         let p = call(pair, [wire::READ_PIXEL, x, y, 0, 0, 0, 0, 0]);
         if p[0] == 0 && p[1] == expected {
@@ -96,13 +102,14 @@ pub fn run() -> u64 {
         call(matrix, [wire::RUN, 0, 0, 0, 6, 1, 64, 0]),
         wire::error(abi::BAD_HANDLE)
     );
-    inner(matrix, pressure);
     owner(matrix, [wire::RUN, 1, 1, 1, 0, 0, 0, 0]);
     owner(matrix, [wire::SURFACE_LIMIT, 1, 8, 0, 0, 0, 0, 0]);
     owner(
         matrix,
         [wire::PLACE, 1, 500, 180, 220, 180, wire::KEY_MASK, 0],
     );
+    funding::exercise(matrix, pressure);
+    inner(matrix, pressure);
     pixel(matrix, 140, 190, app::LEFT);
     pixel(matrix, 510, 190, app::RIGHT);
     pixel(matrix, 334, 310, BACKGROUND); // Oversized leaf draw was clipped twice.

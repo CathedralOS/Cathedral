@@ -8,11 +8,24 @@ use cathedral_arch::StackFrames;
 use cathedral_contracts::{memory as wire, user as abi};
 pub(super) struct Memory {
     pub model: Regions,
+    pub funding: crate::resources::physical::Funding,
     backing: [[u64; wire::MAX_PAGES]; wire::MAX_REGIONS],
 }
 impl Memory {
-    pub fn new(tasks: usize, grants: &[wire::Grant]) -> Result<alloc::boxed::Box<Self>, u64> {
+    pub fn new(
+        tasks: usize,
+        dynamic: usize,
+        grants: &[wire::Grant],
+    ) -> Result<alloc::boxed::Box<Self>, u64> {
         let model = Regions::new(tasks, grants)?;
+        // Bootstrap policy: each bound account starts with 256 frames plus its
+        // private-page quota. Unbound accounts' 256-frame allowances belong to root.
+        let mut limits = [0; abi::MAX_TASKS];
+        for (account, limit) in limits.iter_mut().enumerate().take(tasks - dynamic) {
+            *limit = abi::MAX_ADMISSION_FRAMES + model.limits(account)[0];
+        }
+        limits[0] += dynamic * abi::MAX_ADMISSION_FRAMES;
+        let funding = crate::resources::physical::Funding::new(limits);
         // Keep the bounded arena off the boot stack: debug builds otherwise copy
         // it through each session preparation/result frame. Allocation is fallible.
         // SAFETY: Correct nonzero layout, null checked before initialization; Box
@@ -23,6 +36,7 @@ impl Memory {
                 return Err(abi::NO_MEMORY);
             }
             (&raw mut (*pointer).model).write(model);
+            (&raw mut (*pointer).funding).write(funding);
             (&raw mut (*pointer).backing).write_bytes(0, 1);
             Ok(alloc::boxed::Box::from_raw(pointer))
         }
@@ -36,6 +50,7 @@ impl Memory {
     }
     unsafe fn reclaim(&mut self, index: usize, frames: &mut Frames<'_>) {
         if !self.model.entries[index].live() {
+            let mut returned = 0;
             for frame in &mut self.backing[index] {
                 if *frame != 0 {
                     // SAFETY: All mappings were removed or never published; core holds unique backing custody.
@@ -43,7 +58,12 @@ impl Memory {
                         frames.release(*frame);
                     }
                     *frame = 0;
+                    returned += 1;
                 }
+            }
+            if returned != 0 {
+                self.funding
+                    .refund(self.model.entries[index].account.unwrap(), returned);
             }
         }
     }

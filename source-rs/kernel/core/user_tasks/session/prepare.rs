@@ -18,13 +18,14 @@ pub(super) fn session(
     for launch in &grants.launches {
         scheduler.set_parent(launch.model.child, launch.model.owner);
     }
-    let memory = super::memory::Memory::new(count, config.memory).map_err(|code| {
-        if code == cathedral_contracts::user::NO_MEMORY {
-            Error::OutOfHeap
-        } else {
-            Error::InvalidEndpoints
-        }
-    })?;
+    let memory =
+        super::memory::Memory::new(count, config.dynamic_tasks, config.memory).map_err(|code| {
+            if code == cathedral_contracts::user::NO_MEMORY {
+                Error::OutOfHeap
+            } else {
+                Error::InvalidEndpoints
+            }
+        })?;
     let mut session = Session {
         pool: crate::admission_pool::Pool::new(count - config.dynamic_tasks, count),
         executables: crate::admission_pool::Executables::new(count)

@@ -51,10 +51,15 @@ impl Children {
         if self.slots[slot].is_some() || !server.available(slot) {
             return Err(Error(abi::BUSY as i64));
         }
+        let requested_frames = self.next_frames[slot].take();
         if images >> abi::MAX_LAUNCHES != 0 {
             return Err(Error(abi::DENIED as i64));
         }
-        let target = Executable::at(image)?.reserve(
+        let default_frames = descendants
+            .checked_add(1)
+            .and_then(|n| n.checked_mul(256))
+            .ok_or(Error(abi::INVALID_ARGUMENT as i64))?;
+        let target = Executable::at(image)?.reserve_funded(
             Limits {
                 private_pages: 0,
                 reader_pages: 0,
@@ -62,6 +67,7 @@ impl Children {
             },
             descendants,
             256,
+            requested_frames.unwrap_or(default_frames),
         )?;
         let result = (|| {
             target.assign_cpu(cpu)?;

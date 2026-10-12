@@ -8,7 +8,7 @@ pub(super) fn reserve(
     address: u64,
 ) -> Result<u64, u64> {
     let template = session.executables.resolve(caller, executable)?;
-    let mut bytes = [0; 40];
+    let mut bytes = [0; 48];
     // SAFETY: Serialized trap; full source range checked before any mutation.
     if !unsafe {
         session.tasks[caller]
@@ -19,7 +19,7 @@ pub(super) fn reserve(
     } {
         return Err(abi::BAD_ADDRESS);
     }
-    let words: [u64; 5] =
+    let words: [u64; 6] =
         core::array::from_fn(|i| u64::from_le_bytes(bytes[i * 8..i * 8 + 8].try_into().unwrap()));
     if words[3] > abi::MAX_TASKS as u64
         || words[4] == 0
@@ -51,6 +51,11 @@ pub(super) fn reserve(
         let returned = session.names.pair(model.owner, model.owner)?;
         model.lend(owner, session.names.pair(owner, owner)?, returned);
     }
+    let physical = usize::try_from(words[5]).map_err(|_| abi::INVALID_ARGUMENT)?;
+    session
+        .memory
+        .funding
+        .check_assign(caller, child, physical)?;
     // Names may be burned on failure, but no capacity or capability is lost.
     crate::resources::assign(
         &mut session.ipc,
@@ -59,6 +64,11 @@ pub(super) fn reserve(
         child,
         requested,
     )?;
+    session
+        .memory
+        .funding
+        .assign(caller, child, physical)
+        .expect("validated physical assignment");
     session.pool.commit(caller, child, mask);
     let ticket = model.launch(caller).unwrap();
     let launch = &mut session.launches[index];

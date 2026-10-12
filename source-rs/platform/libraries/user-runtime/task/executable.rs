@@ -20,14 +20,29 @@ impl Executable {
         child_slots: u64,
         admission_frames: u64,
     ) -> Result<Launch, Error> {
+        let physical_frames = child_slots
+            .checked_add(1)
+            .and_then(|count| count.checked_mul(abi::MAX_ADMISSION_FRAMES as u64))
+            .ok_or(Error(abi::INVALID_ARGUMENT as i64))?;
+        self.reserve_funded(limits, child_slots, admission_frames, physical_frames)
+    }
+    /// Reserve real frame capacity separately from the per-load failure ceiling.
+    pub fn reserve_funded(
+        self,
+        limits: Limits,
+        child_slots: u64,
+        admission_frames: u64,
+        physical_frames: u64,
+    ) -> Result<Launch, Error> {
         #[repr(align(64))]
-        struct Request([u64; 5]);
+        struct Request([u64; 6]);
         let request = Request([
             limits.private_pages,
             limits.reader_pages,
             limits.channels,
             child_slots,
             admission_frames,
+            physical_frames,
         ]);
         result(arch::call3(
             abi::TASK_RESERVE,
@@ -44,6 +59,9 @@ pub fn available_slots() -> Result<u64, Error> {
 impl Launch {
     pub fn allow_executable(self, image: Executable) -> Result<(), Error> {
         result(arch::call(abi::TASK_IMAGE_ALLOW, self.0, image.raw())).map(|_| ())
+    }
+    pub fn assign_memory(self, frames: u64) -> Result<(), Error> {
+        result(arch::call(abi::PHYSICAL_ASSIGN, self.0, frames)).map(|_| ())
     }
     pub fn assign_cpu(self, limit_us: u64) -> Result<(), Error> {
         result(arch::call(abi::TASK_CPU_ASSIGN, self.0, limit_us)).map(|_| ())

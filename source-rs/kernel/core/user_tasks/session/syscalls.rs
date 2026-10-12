@@ -22,7 +22,10 @@ pub(super) fn syscall(session: &mut Session, slot: usize, now: u64) -> Event {
         abi::TASK_EXECUTABLE..=abi::TASK_CPU_ASSIGN => {
             admission::dispatch(session, slot, [number, first, second, third])
         }
-        abi::RESOURCE_BUDGET | abi::RESOURCE_ASSIGN => {
+        abi::RESOURCE_BUDGET
+        | abi::RESOURCE_ASSIGN
+        | abi::PHYSICAL_BUDGET
+        | abi::PHYSICAL_ASSIGN => {
             resources::dispatch(session, slot, [number, first, second, third])
         }
         abi::WRITE => diagnostics::write(session, slot, first, second),

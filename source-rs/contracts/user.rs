@@ -121,7 +121,7 @@ pub const RESOURCE_BUDGET: u64 = 43;
 /// Unused capacity moves between owner and child atomically, never minted.
 pub const RESOURCE_ASSIGN: u64 = 44;
 pub const TASK_EXECUTABLE: u64 = 45; // owned launch -> executable-only authority
-pub const TASK_RESERVE: u64 = 46; // executable, 40-byte limits/pages/channels/slots/frames, zero
+pub const TASK_RESERVE: u64 = 46; // executable, 48-byte quotas/slots/load ceiling/physical frames, zero
 pub const TASK_RELEASE: u64 = 47; // idle dynamic launch, zero, zero
 pub const TASK_POOL_ASSIGN: u64 = 48; // owned idle launch, available child-slot count, zero
 pub const TASK_LAUNCH_PORT: u64 = 49; // owned launch -> owner-local peer port
@@ -131,3 +131,5 @@ pub const MAX_ADMISSION_FRAMES: usize = 256;
 
 pub const TASK_IMAGE_ALLOW: u64 = 52; // owned idle launch, executable grant, zero; stage copied startup authority
 pub const TASK_CPU_ASSIGN: u64 = 53; // owned idle launch, burst/refill ceiling, zero; retains debt
+pub const PHYSICAL_BUDGET: u64 = 54; // writable [reserved frames, charged frames], zero, zero
+pub const PHYSICAL_ASSIGN: u64 = 55; // owned idle launch, physical frames, zero

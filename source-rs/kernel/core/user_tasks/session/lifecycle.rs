@@ -70,7 +70,7 @@ pub(super) unsafe fn reap(session: &mut Session, source: &mut Frames<'_>) {
         // SAFETY: No context can resume this task. Kernel root, IRQs off.
         unsafe {
             super::memory::close(session, slot, source);
-            admission::retire(&mut session.tasks[slot], source);
+            admission::retire(session, slot, source);
         }
         session.scheduler.reap(slot);
         session.scheduler.charge_cpu(slot, arch::cpu_time_us());
@@ -100,8 +100,12 @@ pub(super) unsafe fn reap(session: &mut Session, source: &mut Frames<'_>) {
         .map(|task| task.report.frames)
         .sum();
     assert_eq!(
-        source.frames.allocated(),
+        source.allocated(),
         session.frame_baseline + owned + session.memory.frames()
+    );
+    assert_eq!(
+        session.memory.funding.charged(),
+        owned + session.memory.frames()
     );
     // Increasing owner/child slots made cancellation cascade in the first pass.
     // Return empty budgets only after every descendant address space is gone.
@@ -145,7 +149,7 @@ pub(super) unsafe fn spawn(
     let delegated = core::mem::take(&mut session.launches[index].delegated);
     let delegated_count = core::mem::take(&mut session.launches[index].delegated_count);
     let handles = &initial[..initial_count];
-    let baseline = source.frames.allocated();
+    let baseline = source.allocated();
     // A blocked parent retains its rights through every fallible admission step.
     let plan = session
         .ipc
@@ -204,7 +208,7 @@ pub(super) unsafe fn spawn(
         Err(abi::NO_MEMORY)
     };
     if result.is_err() {
-        assert_eq!(source.frames.allocated(), baseline);
+        assert_eq!(source.allocated(), baseline);
         session.launches[index].model.failed();
     }
     syscalls::complete(session, owner, result);

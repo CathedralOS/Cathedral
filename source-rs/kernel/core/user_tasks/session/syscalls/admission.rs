@@ -91,6 +91,7 @@ pub(super) fn dispatch(
             if !launch.model.idle() {
                 return Err(abi::BUSY);
             }
+            session.memory.funding.check_assign(caller, child, 0)?;
             crate::resources::assign(
                 &mut session.ipc,
                 &mut session.memory.model,
@@ -98,6 +99,11 @@ pub(super) fn dispatch(
                 child,
                 [0; 3],
             )?;
+            session
+                .memory
+                .funding
+                .assign(caller, child, 0)
+                .expect("validated physical refund");
             session.pool.release(caller, child);
             session.clock.allow(child, false);
             session.executables.close(child);
