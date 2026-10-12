@@ -4,6 +4,23 @@ This map connects implemented mechanisms to their integrated consumers, proofs
 and remaining restrictions. The [lab guide](README.md) owns detailed ABI/build
 instructions. [Owner questions](../OWNER_QUESTIONS.md) own unresolved semantics.
 
+## Kernel image protection
+
+Both ISAs now enforce RX kernel code, RO/NX immutable data and RW/NX mutable
+storage after activating owned tables. Firmware code mappings lose execution
+permission. Physical aliases obey image protection too; heap/stack backing is
+NX even through the identity map. The [protection guide](kernel/arch/memory/README.md)
+connects the UEFI section adapter, shared permission description, ISA encoding,
+fatal probes and remaining bootstrap/privileged exceptions.
+
+Seven separate release fault boots per ISA check text/data writes, heap/stack
+execution through both virtual and physical mappings, and the stack guard.
+Host tests cover invalid section layouts and duplicate physical aliases inside
+large x86 mappings; standalone PE parser tests reject malformed loaded-image
+headers. Full x86/ARM debug and release boot suites and the release matrix
+desktop regression pass with the protected image. This does not isolate trusted kernel code from page tables
+or remove writable kernel backing aliases used to load user programs.
+
 ## ARM64 portability proof
 
 The [ARM64 backend](kernel/arch/isa/aarch64/README.md) boots through the same UEFI

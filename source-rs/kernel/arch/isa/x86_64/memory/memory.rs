@@ -1,5 +1,5 @@
-//! Preserve the firmware's leaf mappings, but take ownership of every table.
-//! New stack/heap mappings are 4-KiB, writable and NX, with unmapped guards.
+// Own the firmware mapping topology, replacing its execution permissions.
+// New stack/heap mappings are 4-KiB, writable and NX, with unmapped guards.
 
 use ::x86_64::{
     PhysAddr, VirtAddr,
@@ -23,7 +23,7 @@ pub const HEAP_BYTES: usize = 128 * 1024;
 // OVMF can map the qemu64 CPU's complete physical envelope, not just guest RAM.
 const TABLE_BUDGET: usize = 4096;
 
-use crate::MemoryError;
+use crate::{MemoryError, memory::KernelImage};
 
 pub struct BootLayout {
     root: PhysFrame,
@@ -38,6 +38,23 @@ pub struct BootLayout {
 }
 
 impl BootLayout {
+    /// Resolve the physical backing of a boot mapping.
+    ///
+    /// # Safety
+    /// Sole CPU, IRQs off, kernel root active; no overlapping table access.
+    pub unsafe fn physical_address(&self, address: u64) -> Option<u64> {
+        use ::x86_64::structures::paging::Translate;
+        // SAFETY: BootLayout owns permanent tables; boot mappings are never retired.
+        let mapper = unsafe {
+            OffsetPageTable::new(
+                &mut *(self.root_address() as *mut PageTable),
+                VirtAddr::zero(),
+            )
+        };
+        mapper
+            .translate_addr(VirtAddr::try_new(address).ok()?)
+            .map(|p| p.as_u64())
+    }
     /// Mapped stack used for maskable interrupt dispatch; no CPU-specific slot leaks to boot.
     pub fn interrupt_stack(&self) -> crate::StackRange {
         let top = self.emergency_tops[3];
@@ -60,7 +77,11 @@ impl BootLayout {
         unsafe {
             Efer::update(|flags| flags.insert(EferFlags::NO_EXECUTE_ENABLE));
             Cr0::update(|flags| flags.insert(Cr0Flags::WRITE_PROTECT));
+            // Firmware may have cached global translations; CR3 alone cannot retire them.
+            let cr4 = Cr4::read();
+            Cr4::write(cr4 & !Cr4Flags::PAGE_GLOBAL);
             Cr3::write(self.root, Cr3::read().1);
+            Cr4::write(cr4);
         }
     }
 }
@@ -99,6 +120,7 @@ unsafe impl<F: FnMut() -> Option<u64>> FrameAllocator<Size4KiB> for Frames<'_, F
 /// unique unused writable RAM frame, disjoint from all live firmware resources.
 /// Failure consumes any frames already requested; boot must stop on failure.
 pub unsafe fn prepare_memory(
+    image: &KernelImage<'_>,
     next: &mut impl FnMut() -> Option<u64>,
 ) -> Result<BootLayout, MemoryError> {
     let cr4 = Cr4::read();
@@ -109,7 +131,7 @@ pub unsafe fn prepare_memory(
     }
     let mut frames = Frames { next, tables: 0 };
     // SAFETY: Active tables and callback backing satisfy the caller contract.
-    let root = unsafe { copy_table(Cr3::read().0, 4, &mut frames)? };
+    let root = unsafe { inherited::copy(Cr3::read().0, 4, image, &mut frames)? };
     // SAFETY: The newly allocated root is exclusively owned and identity mapped.
     let table = unsafe { &mut *(root.start_address().as_u64() as *mut PageTable) };
     for base in [STACK_BASE, HEAP_BASE, super::stacks::TASK_BASE] {
@@ -156,41 +178,6 @@ pub unsafe fn prepare_memory(
         heap_start,
         heap_bytes: HEAP_BYTES,
     })
-}
-
-unsafe fn copy_table<F: FnMut() -> Option<u64>>(
-    source: PhysFrame,
-    level: u8,
-    frames: &mut Frames<'_, F>,
-) -> Result<PhysFrame, MemoryError> {
-    if frames.tables >= TABLE_BUDGET {
-        return Err(MemoryError::TableBudget);
-    }
-    let dest = frames.frame()?;
-    frames.tables += 1;
-    // SAFETY: Valid firmware table, fresh non-overlapping destination, identity map.
-    unsafe {
-        let source = &*(source.start_address().as_u64() as *const PageTable);
-        let dest_table = dest.start_address().as_u64() as *mut PageTable;
-        dest_table.write(source.clone());
-        let dest_table = &mut *dest_table;
-        if level > 1 {
-            for entry in dest_table.iter_mut() {
-                let flags = entry.flags();
-                if flags.contains(PageTableFlags::PRESENT)
-                    && !flags.contains(PageTableFlags::HUGE_PAGE)
-                {
-                    let child = copy_table(
-                        PhysFrame::from_start_address(entry.addr()).unwrap(),
-                        level - 1,
-                        frames,
-                    )?;
-                    entry.set_addr(child.start_address(), flags);
-                }
-            }
-        }
-    }
-    Ok(dest)
 }
 
 unsafe fn map_range<F: FnMut() -> Option<u64>>(

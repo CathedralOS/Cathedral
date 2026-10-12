@@ -1,4 +1,4 @@
-//! QEMU-only assertions and intentional fault injection. Absent in normal boots.
+// QEMU-only assertions and intentional fault injection. Absent in normal boots.
 
 use crate::console::Console as SerialPort;
 use cathedral_arch as arch;
@@ -8,20 +8,20 @@ use core::{
 };
 
 static EXPECTED_VECTOR: AtomicU64 = AtomicU64::new(u64::MAX);
-static EXPECTED_ADDRESS: AtomicU64 = AtomicU64::new(0);
 static EXPECTED_STACK_TOP: AtomicU64 = AtomicU64::new(0);
 
-#[cfg(target_arch = "x86_64")]
 pub fn probe_faults(layout: &arch::BootLayout) {
+    protection::probe(layout);
     if cfg!(feature = "fault-guard") {
-        EXPECTED_VECTOR.store(14, Ordering::Release);
-        EXPECTED_ADDRESS.store(layout.stack_guard, Ordering::Release);
+        protection::expect_guard(layout.stack_guard);
         // SAFETY: Intentional access to an unmapped guard with diagnostics ready.
         unsafe {
             (layout.stack_guard as *mut u64).write_volatile(1);
         }
         panic!("stack guard was writable");
-    } else if cfg!(feature = "fault-invalid-opcode") {
+    }
+    #[cfg(target_arch = "x86_64")]
+    if cfg!(feature = "fault-invalid-opcode") {
         EXPECTED_VECTOR.store(6, Ordering::Release);
         // SAFETY: Intentional invalid instruction with diagnostics ready.
         unsafe {
@@ -39,11 +39,11 @@ pub fn probe_faults(layout: &arch::BootLayout) {
 
 pub fn finish_fault(fault: &arch::Fault, console: &mut SerialPort) -> ! {
     let top = EXPECTED_STACK_TOP.load(Ordering::Acquire);
-    let expected = EXPECTED_VECTOR.load(Ordering::Acquire) == fault.vector
-        && (fault.vector != 14
-            || (fault.address == EXPECTED_ADDRESS.load(Ordering::Acquire) && fault.error & 7 == 2))
-        && (fault.vector != 8
-            || (fault.error == 0 && (top.saturating_sub(16 * 1024)..top).contains(&fault.stack)));
+    let expected = protection::matches(fault)
+        || (EXPECTED_VECTOR.load(Ordering::Acquire) == fault.vector
+            && (fault.vector != 8
+                || (fault.error == 0
+                    && (top.saturating_sub(16 * 1024)..top).contains(&fault.stack))));
     if expected {
         writeln!(console, "CATHEDRAL_RS_EXPECTED_FAULT").ok();
         complete();

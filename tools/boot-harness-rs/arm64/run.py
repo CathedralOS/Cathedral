@@ -11,6 +11,7 @@ ROOT = Path(__file__).resolve().parents[3]
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--fault', choices=('guard', 'text-write', 'rodata-write', 'heap-execute', 'stack-execute', 'heap-alias-execute', 'stack-alias-execute'))
     parser.add_argument('--release', action='store_true')
     parser.add_argument('--kernel-only', action='store_true')
     parser.add_argument('--build-only', action='store_true')
@@ -26,7 +27,7 @@ def main():
     mode = 'release' if args.release else 'debug'
     profile = ['--release'] if args.release else []
     env = os.environ.copy()
-    features = 'smoke-test'
+    features = f'fault-{args.fault}' if args.fault else 'smoke-test'
     if not args.kernel_only:
         subprocess.run(['cargo', 'build', '--locked', '-p', 'cathedral-portability-lab',
                         '--target', 'aarch64-unknown-none', *profile], cwd=source, check=True)
@@ -60,6 +61,11 @@ def main():
         raise SystemExit(f'ARM64 boot timed out; see {out}/serial.log')
     log = (out / 'serial.log').read_text(errors='replace')
     print(log[max(0, log.find('Cathedral Rust lab: UEFI entry')):])
+    if args.fault:
+        if result.returncode != 0 or 'CATHEDRAL_RS_EXPECTED_FAULT' not in log or 'CATHEDRAL_RS_PANIC' in log:
+            raise SystemExit(f'ARM64 expected fault failed ({result.returncode})')
+        print(f'PASS: expected ARM64 {args.fault} exception')
+        return
     if result.returncode != 0 or 'CATHEDRAL_RS_BOOT_OK' not in log:
         raise SystemExit(f'ARM64 boot failed ({result.returncode}): {result.stderr.decode(errors="replace")}')
     milestones = ['UEFI entry', 'ExitBootServices complete', 'arch=aarch64',

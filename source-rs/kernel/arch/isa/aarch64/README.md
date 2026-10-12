@@ -72,9 +72,11 @@ and 1–2 GiB as supervisor normal RAM; the runner supplies only 128 MiB at
 `0x40000000`. No DT/ACPI discovery, EL2 handoff, SMP, ASIDs or TLB shootdowns yet.
 
 Task roots borrow the supervisor-only kernel branch and own their user branch.
-EL0 cannot use the physical aliases; the lab checks this directly. Kernel RAM
-still has a broad writable/executable identity mapping, so kernel W^X hardening
-remains separate work. Every root switch flushes translations. Loaded code is
+EL0 cannot use the physical aliases; the lab checks this directly.
+[Kernel image protection](../../memory/README.md) gives code RX, immutable data
+RO/NX and mutable data RW/NX; all other identity RAM is NX, including heap and
+stack backing. Fatal probes verify these permissions on the CPU.
+Every root switch flushes translations. Loaded code is
 cleaned to the point of unification before instruction-cache invalidation.
 
 The shared [kernel-task lab](../../../boot/uefi/lab/kernel_tasks/kernel_tasks.rs)

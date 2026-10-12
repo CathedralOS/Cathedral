@@ -20,6 +20,10 @@ The smoke boot checks cooperative and timer-preempted tasks, dynamic admission,
 task-slot exhaustion, allocation-failure rollback, stale IDs and repeated stack,
 page-table and heap reclamation while a non-yielding peer stays alive. Use
 `--release` for the optimized path. Expected-fault runs remain separate.
+Both the x86 runner and `arm64/run.py` support kernel text/data write, heap/stack
+execution, physical-alias execution and guard probes; see the
+[kernel protection guide](../../source-rs/kernel/arch/memory/README.md) for commands
+and exact assertions.
 The composed image also checks isolated ELF programs and capability-addressed
 IPC: echo exchanges, stale local handles, raw-name collisions, rights, backpressure, checked copyout,
 and blocked-receiver wakeups on revoke or peer exit/fault. Each session must

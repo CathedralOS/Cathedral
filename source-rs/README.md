@@ -32,7 +32,7 @@ The entrance explains this level without exposing every detail below it.
 | Path | Responsibility / Omega counterpart |
 | --- | --- |
 | `kernel/boot/uefi/main.rs` | Visible orchestration of firmware entry and post-handoff kernel startup |
-| `kernel/boot/uefi/firmware.rs` | UEFI crate adapter and memory-inventory policy |
+| `kernel/boot/uefi/firmware/firmware.rs` | UEFI crate adapter and memory-inventory policy |
 | `kernel/boot/uefi/graphics.rs` | GOP snapshot before firmware handoff |
 | `kernel/boot/uefi/startup.rs` | Admit a supplied initial program and its bounded launch grants |
 | `kernel/boot/uefi/lab/lab.rs` | Smoke-only orchestration, fixtures and display recovery verification |
@@ -48,7 +48,7 @@ The entrance explains this level without exposing every detail below it.
 | `kernel/boot/uefi/lab/supervision/supervision.rs` | Supply launch bounds and verify userspace recovery/cleanup |
 | `kernel/boot/uefi/lab/supervision/watchdog.rs` | Verify hung-service cancellation, deadline wakeups and independent progress |
 | `kernel/core/ipc/ipc.rs` | Process-local endpoint grants, dynamic channels, checked moves, queues and teardown |
-| `kernel/boot/uefi/smoke.rs` | Test-only fault injection and QEMU result reporting |
+| `kernel/boot/uefi/smoke/smoke.rs` | Test-only fault injection and QEMU result reporting |
 | `contracts/boot.rs` | Firmware-neutral memory handoff; experimental Rust data, not a frozen ABI |
 | `contracts/user.rs` | Shared experimental entry/syscall constants for kernel and user runtime |
 | `contracts/memory.rs`, `kernel/core/user_tasks/memory/regions/regions.rs` | Page-object grants, quotas, sealing and reader lifetime |
@@ -351,7 +351,8 @@ retained supervisor-only for entry/return. The kernel root still has its origina
 identity aliases. Global translations are disabled before user execution; CR3
 switches flush task translations. This is architectural memory/privilege
 containment on qemu64, not a claim of speculative-execution mitigation or full
-kernel W^X. Hardware rules follow the
+isolation between trusted kernel tasks. [Kernel image protection](kernel/arch/memory/README.md)
+now enforces section permissions and NX physical aliases. Hardware rules follow the
 [Intel system programming manual](https://www.intel.com/content/www/us/en/developer/articles/technical/intel-sdm.html).
 
 The temporary ABI uses `int 0x80`, RAX for the call/result and RDI/RSI/RDX for three

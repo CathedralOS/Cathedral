@@ -49,6 +49,14 @@ and initial contexts in `state.rs`.
   the kernel root. Boot obtains the PC UART window from the board; QEMU exit
   devices and semihosting also live under `board/`.
 
+## Kernel image protection
+
+The [memory protection guide](memory/README.md) follows the loaded-image
+permission description from UEFI into each ISA. Both backends protect kernel
+code and immutable data, deny execution from mutable storage and physical
+aliases, and retain those permissions in user roots. The guide records the
+bootstrap interval, fault probes and remaining privileged access.
+
 ## Ownership contract
 
 `FrameSource` supplies exclusive, aligned RAM with a writable kernel alias.

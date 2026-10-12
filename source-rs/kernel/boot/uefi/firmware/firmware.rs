@@ -1,5 +1,5 @@
-//! The UEFI crate owns the firmware ABI and exit transaction. This adapter
-//! applies Cathedral's conservative memory policy to its returned inventory.
+// The UEFI crate owns the firmware ABI and exit transaction. This adapter
+// applies Cathedral's conservative memory policy to its returned inventory.
 
 use crate::console::Console as SerialPort;
 use cathedral_contracts::boot::{BootMemory, MemoryKind, MemoryRegion};
@@ -10,29 +10,27 @@ pub struct BootInfo {
     #[cfg(feature = "bundled-user")]
     pub framebuffer: Option<cathedral_contracts::display::Framebuffer>,
     pub inventory: BootMemory,
-    #[cfg(any(
-        all(feature = "smoke-test", target_arch = "x86_64"),
-        feature = "bundled-user"
-    ))]
-    pub image: cathedral_arch::ImageRange,
+    pub sections: image::LoadedSections,
 }
 
 pub fn exit_boot_services(console: &mut SerialPort) -> BootInfo {
     let framebuffer = crate::graphics::capture();
-    #[cfg(any(
-        all(feature = "smoke-test", target_arch = "x86_64"),
-        feature = "bundled-user"
-    ))]
-    let image = {
+    let sections = {
         let loaded = uefi::boot::open_protocol_exclusive::<uefi::proto::loaded_image::LoadedImage>(
             uefi::boot::image_handle(),
         )
         .expect("loaded image protocol unavailable");
         let (base, bytes) = loaded.info();
-        cathedral_arch::ImageRange {
+        let range = cathedral_arch::ImageRange {
             base: base as u64,
             bytes,
-        }
+        };
+        assert!(bytes <= isize::MAX as u64);
+        // SAFETY: LoadedImage describes this live, relocated image. The bounded
+        // slice is used only for header parsing before any image state changes.
+        let loaded_bytes =
+            unsafe { core::slice::from_raw_parts(base.cast::<u8>(), bytes as usize) };
+        image::parse(loaded_bytes, range.base).expect("invalid loaded kernel image")
     };
     // SAFETY: No protocol references, pool-owning values, firmware logger or
     // global allocator survive this point. The crate owns map-key retry logic.
@@ -84,11 +82,7 @@ pub fn exit_boot_services(console: &mut SerialPort) -> BootInfo {
     .ok();
     BootInfo {
         inventory,
-        #[cfg(any(
-            all(feature = "smoke-test", target_arch = "x86_64"),
-            feature = "bundled-user"
-        ))]
-        image,
+        sections,
         #[cfg(feature = "bundled-user")]
         framebuffer,
     }

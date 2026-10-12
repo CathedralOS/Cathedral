@@ -9,6 +9,7 @@ pub enum MemoryError {
     TableBudget,
     OccupiedVirtualRange,
     MapFailed,
+    InvalidImage,
 }
 /// # Safety
 /// Allocations are unique, aligned, unused RAM valid for the selected board and

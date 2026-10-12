@@ -21,9 +21,12 @@ pub fn prepare(info: crate::firmware::BootInfo, console: &mut SerialPort) -> Pre
     let mut frames = FrameAllocator::new(info.inventory);
     // SAFETY: Firmware has exited, IRQs are off, and the sole CPU receives
     // unique conventional frames disjoint from live firmware allocations.
-    let layout =
-        unsafe { arch::prepare_memory(&mut || frames.allocate().map(|frame| frame.address())) }
-            .expect("cannot prepare kernel memory");
+    let layout = unsafe {
+        arch::prepare_memory(&info.sections.protection(), &mut || {
+            frames.allocate().map(|frame| frame.address())
+        })
+    }
+    .expect("cannot prepare kernel memory");
     writeln!(
         console,
         "Cathedral Rust lab: arch={} page_tables={} root={:#x}",
@@ -41,7 +44,7 @@ pub fn prepare(info: crate::firmware::BootInfo, console: &mut SerialPort) -> Pre
             all(feature = "smoke-test", target_arch = "x86_64"),
             feature = "bundled-user"
         ))]
-        image: info.image,
+        image: info.sections.protection().range,
     }
 }
 

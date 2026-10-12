@@ -127,7 +127,7 @@ def main():
     mode.add_argument("--input-test", action="store_true", help="Verify keyboard navigation and independent provider restarts through QMP")
     mode.add_argument("--recovery-test", action="store_true", help="Inject provider failures and verify automatic deadline recovery")
     mode.add_argument("--storage-test", action="store_true", help="Verify durable state across reboot and abrupt QEMU power cuts")
-    parser.add_argument("--fault", choices=("guard", "invalid-opcode", "double-fault"), help="Expected-fault smoke test (requires --smoke)")
+    parser.add_argument("--fault", choices=("guard", "invalid-opcode", "double-fault", "text-write", "rodata-write", "heap-execute", "stack-execute", "heap-alias-execute", "stack-alias-execute"), help="Expected-fault smoke test (requires --smoke)")
     parser.add_argument("--release", action="store_true")
     parser.add_argument("--startup-probes", action="store_true", help="Include destructive startup probes in the session lab")
     parser.add_argument("--trace-input", action="store_true", help="Log local matrix input stages (diagnostic timing perturbs execution)")
