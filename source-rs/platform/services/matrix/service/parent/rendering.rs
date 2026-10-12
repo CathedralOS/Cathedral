@@ -10,37 +10,33 @@ impl Parent {
             return Ok(wire::error(abi::DENIED));
         }
         let [op, _, key, x, y, w, h, color] = words;
-        if !composition::MATRIX_KEYS.contains(&key) {
+        if key == 0 || key > composition::MATRIX_TILES as u64 {
+            return Ok(wire::error(abi::BAD_HANDLE));
+        }
+        let reply = if op == wire::ERASE {
+            self.display_call([composition::MATRIX_RECT | ((key - 1) << 16), 0, 0, 0, 0, 0])?
+        } else {
+            self.display_call([
+                composition::MATRIX_RECT | ((key - 1) << 16),
+                x,
+                y,
+                w,
+                h,
+                color,
+            ])?
+        };
+        Ok(wire::error(reply[0]))
+    }
+    pub(in super::super) fn create_surface(&self, rank: u64) -> Result<wire::Packet, Error> {
+        if self.upstream {
+            return self.call([wire::SURFACE_CREATE, self.grant.epoch, rank, 0, 0, 0, 0, 0]);
+        }
+        if self.display.is_none() || rank >= composition::MATRIX_TILES as u64 {
             return Ok(wire::error(abi::NO_MEMORY));
         }
-        if op == wire::ERASE {
-            let bits = if key < 4 { 2 } else { 4 };
-            for index in composition::MATRIX_KEYS {
-                if index & ((1 << bits) - 1) == key {
-                    self.display_call([composition::MATRIX_RECT | (index << 16), 0, 0, 0, 0, 0])?;
-                }
-            }
-        } else {
-            let reply =
-                self.display_call([composition::MATRIX_RECT | (key << 16), x, y, w, h, color])?;
-            return Ok(wire::error(reply[0]));
-        }
-        Ok([0; 8])
-    }
-    pub(in super::super) fn erase(&self, child: usize) -> Result<(), Error> {
-        if self.display.is_some() || self.upstream {
-            self.surface([
-                wire::ERASE,
-                self.grant.epoch,
-                child as u64 + 1,
-                0,
-                0,
-                0,
-                0,
-                0,
-            ])?;
-        }
-        Ok(())
+        // Root slots are private implementation details; children receive fresh
+        // matrix-local names, never these tile indices.
+        Ok([0, rank + 1, 0, 0, 0, 0, 0, 0])
     }
     pub(in super::super) fn pointer(&self, x: u64, y: u64) -> Result<(), Error> {
         if self.display.is_some() {

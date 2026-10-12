@@ -475,7 +475,7 @@ attached authority with `TOO_SMALL` and preserves the message. Boot grants canno
 be moved; dynamic grants cannot yet be duplicated or independently revoked.
 
 Each initial/launch account has a backed channel reservation: four by default,
-or profile `ipc_channels` in 0–8. All accounts, including dormant children, must
+or profile `ipc_channels` in 0–16. All accounts, including dormant children, must
 fit the 32-channel pool. [Accounting](kernel/core/ipc/budget.rs) retains the original
 account's charge through endpoint moves, creator death and replacement; final
 closure of both ends refunds it. Each recipient separately pays for its dynamic

@@ -37,15 +37,19 @@ physical-source endpoints; these are the only device-facing adapters. Apps get
 only their parent pair and a child-local wake receiver. The [app](desktop/app.rs) waits for local input/view invalidations and
 submits an oversized rectangle that must be clipped at each ownership boundary.
 
-The [surface validator](../../../platform/services/matrix/world/surface.rs)
-translates one level, validates the binding epoch and prefixes the child-local
-surface key. The root [render adapter](../../../platform/services/matrix/service/parent/rendering.rs)
-sends flattened retained rectangles to the existing
-[compositor](../../../platform/services/display/compositor.rs). No ancestor pixel
-buffers are copied. Subtrees paint in the same order as hit testing. Placement,
-revoke, stop and disconnect erase the affected retained branch. Apps periodically
-repaint, so placement changes can briefly leave a cleared region; retained local
-scene replay and event-driven delivery are still future work.
+The desktop receives code-only catalogue grants and a funded process pool.
+[Startup admission](desktop/admission.rs) stages these into the root; owner-only
+RUN requests select and fund descendants using the same provider at each level.
+The test checks rollback, nested pool exhaustion and repeated subtree replacement.
+Device launches remain explicit static grants.
+
+[Owned surfaces](../../../platform/services/matrix/world/surface/README.md) use
+fresh child-local handles and conserving allowances. Each app owns a base rectangle
+and an accent object. Every matrix clips/translates one level and preserves subtree
+stacking; the root flattens into the existing compositor. Same-extent placement
+replays retained content without app traffic. Epoch changes, release and teardown
+retire objects; stale handles cannot paint their replacements. There are no
+ancestor pixel-buffer copies.
 
 Click an app, then Enter to change color. The test injects real PS/2 mouse/keyboard
 input, checks sibling focus isolation and clipped scanout, and verifies startup
@@ -53,9 +57,9 @@ subtree replacement. The physical source shares the existing controller/decoders
 its dedicated connection accepts only input operations, never owner commands.
 The root owns the compositor connection; children have neither it nor a framebuffer.
 
-This renderer is deliberately bounded: two local children, six surface keys for
-two matrix levels, and one rectangle per path. It does not yet integrate the
-older session's images, text, synthetic pointers or richer scene snapshots.
+This renderer has two direct children per matrix and sixteen root surface objects.
+It does not yet integrate the older session's images, text, synthetic pointers or
+richer scene snapshots. Recursive stacking has no hard-coded two-level path keys.
 Device/root-provider recovery remains separate from the proved inner-subtree
 recovery. [STATUS.md](../../../STATUS.md) tracks these boundaries and the kernel
 metadata/resource audit. Protocol locality is not a complete timing-isolation claim.
@@ -64,5 +68,5 @@ The desktop retains app rectangles across owner placement changes. Its startup
 probe checks that idle apps do not repaint or consume 20 ms of CPU per second.
 Use `--matrix-desktop-test --pressure --release --timeout 120` to add a
 non-yielding descendant inside a 20% nested CPU allowance. Physical-input tests
-report scanout latency; current equal-turn scheduling can still take about a
-second in that deliberately constrained subtree. The ordinary profile has no spinner.
+report scanout latency; current equal-turn scheduling still takes roughly 0.5 to 0.9 seconds
+in recent runs of that deliberately constrained subtree. The ordinary profile has no spinner.

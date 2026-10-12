@@ -2,26 +2,6 @@ use super::*;
 use cathedral_contracts::input;
 
 #[test]
-fn retained_geometry_moves_without_child_traffic_and_revocation_erases_it() {
-    let mut w = world();
-    place(&mut w, 0, 10, 20);
-    let epoch = view(&mut w, 0)[1];
-    w.surface(0, 7, [wire::PAINT, epoch, 0, 5, 7, 400, 400, 0x123456])
-        .unwrap();
-    assert!(w.take_notification(0));
-    place(&mut w, 0, 200, 200);
-    assert!(!w.take_notification(0)); // Position is outside the child's view.
-    assert_eq!(
-        w.replay(0)[0].unwrap(),
-        [wire::PAINT, 1, 1, 205, 207, 95, 73, 0x123456]
-    );
-    w.revoke(0).unwrap();
-    assert!(w.take_notification(0));
-    place(&mut w, 0, 10, 20);
-    assert_eq!(w.replay(0), [None; 3]);
-}
-
-#[test]
 fn wake_hints_coalesce_and_remain_child_local() {
     let mut w = world();
     place(&mut w, 0, 0, 0);
@@ -38,43 +18,6 @@ fn wake_hints_coalesce_and_remain_child_local() {
     assert_eq!(next(&mut w, 0, epoch)[2], wire::POINTER);
 }
 
-#[test]
-fn nested_surfaces_clip_translate_and_cannot_name_a_siblings_surface() {
-    let mut outer = world();
-    place(&mut outer, 0, 100, 100);
-    let parent = view(&mut outer, 0);
-    let mut inner = World::default();
-    inner.inherit(Grant {
-        epoch: parent[1],
-        width: parent[2],
-        height: parent[3],
-        keys: parent[4],
-    });
-    place(&mut inner, 0, 10, 20);
-    let leaf = view(&mut inner, 0);
-    let paint = [wire::PAINT, leaf[1], 0, 5, 7, 400, 400, 0x123456];
-    let local = inner.surface(0, 7, paint).unwrap();
-    assert_eq!(local, [wire::PAINT, parent[1], 1, 15, 27, 85, 53, 0x123456]);
-    assert_eq!(
-        outer.surface(0, 7, local).unwrap(),
-        [wire::PAINT, 1, 5, 115, 127, 85, 53, 0x123456]
-    );
-    for (at, value) in [(1, leaf[1] + 1), (2, 4), (3, u64::MAX), (7, 0x1000000)] {
-        let mut invalid = paint;
-        invalid[at] = value;
-        assert_eq!(inner.surface(0, 7, invalid), Err(abi::DENIED));
-    }
-    assert_eq!(inner.surface(1, 7, paint), Err(abi::DENIED));
-    outer.revoke(0).unwrap();
-    assert_eq!(outer.surface(0, 7, local), Err(abi::DENIED));
-    // Explicit teardown invalidates the old incarnation before owner regranting.
-    outer.disconnected(0);
-    place(&mut outer, 0, 200, 200);
-    assert_eq!(
-        outer.request(0, 99, [wire::VIEW, 0, 0, 0, 0, 0, 0, 0])[0],
-        0
-    );
-}
 fn world() -> World {
     let mut world = World::default();
     world.inherit(Grant {
@@ -83,6 +26,9 @@ fn world() -> World {
         height: 600,
         keys: wire::KEY_MASK,
     });
+    world.surface_capacity(16);
+    world.surface_limit(0, 8).unwrap();
+    world.surface_limit(1, 8).unwrap();
     world
 }
 fn place(w: &mut World, slot: usize, x: u64, y: u64) {

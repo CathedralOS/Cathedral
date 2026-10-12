@@ -24,12 +24,35 @@ pub(super) struct Child {
     pub grant: Grant,
     pub incarnation: u64,
     pub notify: bool,
-    pub surfaces: [Option<wire::Packet>; 3],
+    pub surfaces: [Option<surface::Surface>; wire::MAX_SURFACES],
+    pub surface_limit: usize,
+    pub next_surface: u64,
     epoch: u64,
     queue: [wire::Packet; 8],
     len: usize,
 }
 impl Child {
+    pub const fn empty() -> Self {
+        Self {
+            rect: None,
+            keys: 0,
+            grant: Grant {
+                epoch: 0,
+                width: 0,
+                height: 0,
+                keys: 0,
+            },
+            incarnation: 0,
+            notify: false,
+            surfaces: [None; wire::MAX_SURFACES],
+            surface_limit: 0,
+            next_surface: 0,
+            epoch: 0,
+            queue: [[0; 8]; 8],
+            len: 0,
+        }
+    }
+
     pub fn refresh(&mut self, parent: Grant, force: bool) {
         let (width, height, keys) = match self.rect {
             Some(r) if parent.valid() => (
@@ -93,6 +116,7 @@ impl Child {
     pub fn poll(&mut self) -> wire::Packet {
         let event = self.next();
         let mut reply = self.view();
+        reply[4] |= (self.surface_limit as u64) << wire::SURFACE_BITS;
         reply[5] = event[2] | (event[5] << 8) | if self.len != 0 { wire::MORE } else { 0 };
         reply[6] = event[3];
         reply[7] = event[4];

@@ -185,7 +185,7 @@ distinguishes the finite boot-approved budgets from future manifest/resource pol
 [protocol_test.py](protocol_test.py) monitors both this proof and the matrix proof.
 
 Each profile `startup.initial` or `startup.launches` entry may set `ipc_channels`
-to an integer 0–8 (default 4 regardless of task count). Reservations for all
+to an integer 0–16 (default 4 regardless of task count). Reservations for all
 initial and dormant launch accounts must total at most 32. Charges persist
 across replacement until both channel endpoints close. Launch loans preserve
 the same account; they do not grant fresh capacity. [resource_budgets.py](resource_budgets.py)
@@ -234,3 +234,15 @@ Its test checks failed image delegation, nested exhaustion, repeated replacement
 and outside sibling survival. Channel allowances can be up to 16 per account
 (global backing remains 32 and local dynamic-handle capacity remains 16), allowing
 a matrix to subdivide funding while retaining its own connection capacity.
+
+The matrix desktop now checks owned surface allocation/exhaustion, stale-handle
+rejection, removal of one object, retained movement, and whole-subtree stacking.
+Apps display a light accent over their base color. CPU-pressure startup also runs
+repeated admission and surface lifecycle probes, so it takes longer than the normal
+profile; the scene-ready timer includes those checks. Both run the same renderer.
+
+After adding owned surfaces, recent optimized pressure runs measured 469-907 ms
+(907 ms with tracing enabled); normal optimized input measured about 190-200 ms,
+including the harness's 160 ms injection sleeps. Atomic polling removes redundant
+round trips, but equal turns, queued input and synchronous IPC still impose visible
+latency in a spinner-saturated 20% subtree. No latency guarantee is claimed.

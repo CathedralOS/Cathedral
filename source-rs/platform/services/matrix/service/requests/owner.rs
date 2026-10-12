@@ -16,6 +16,7 @@ pub(super) fn dispatch(
             if grant.valid() {
                 parent.grant = grant;
                 world.inherit(grant);
+                world.surface_capacity(wire::MAX_SURFACES);
                 Ok(())
             } else {
                 Err(abi::DENIED)
@@ -31,6 +32,11 @@ pub(super) fn dispatch(
             },
             keys,
         ),
+        [wire::SURFACE_LIMIT, child @ 0..=1, count, 0, 0, 0, 0, 0]
+            if count <= wire::MAX_SURFACES as u64 =>
+        {
+            world.surface_limit(child as usize, count as usize)
+        }
         [wire::REVOKE, child @ 0..=1, 0, 0, 0, 0, 0, 0] => world.revoke(child as usize),
         [wire::POINTER_SOURCE, x, y, buttons @ 0..=7, 0, 0, 0, 0] if !parent.upstream => {
             world.pointer(x, y, buttons);

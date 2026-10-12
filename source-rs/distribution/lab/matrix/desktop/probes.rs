@@ -40,5 +40,29 @@ pub(super) fn exercise(matrix: Pair) {
         [wire::PLACE, 0, 110, 140, 280, 220, wire::KEY_MASK, 0],
     );
     pixel(matrix, 140, 190, app::LEFT);
+    surfaces(matrix);
     cathedral_user_runtime::write(b"Cathedral matrix desktop: quiet apps below 20ms CPU per second; retained move without app repaint\n").unwrap();
+}
+
+fn surfaces(matrix: Pair) {
+    let app = |operation| {
+        wire::route(wire::route([operation, 0, 0, 0, 0, 0, 0, 0], 0).unwrap(), 0).unwrap()
+    };
+    pixel(matrix, 170, 225, 0xe5e7eb);
+    assert_eq!(call(matrix, app(1))[0], 0);
+    pixel(matrix, 170, 225, app::LEFT);
+    pixel(matrix, 510, 190, app::RIGHT);
+    assert_eq!(call(matrix, app(2))[0], 0);
+    pixel(matrix, 170, 225, 0xe5e7eb);
+    owner(
+        matrix,
+        [wire::PLACE, 0, 500, 140, 280, 220, wire::KEY_MASK, 0],
+    );
+    pixel(matrix, 530, 190, app::RIGHT);
+    owner(
+        matrix,
+        [wire::PLACE, 0, 110, 140, 280, 220, wire::KEY_MASK, 0],
+    );
+    pixel(matrix, 170, 225, 0xe5e7eb);
+    cathedral_user_runtime::write(b"Cathedral matrix desktop: owned surface quotas, stale names, removal and subtree stacking passed\n").unwrap();
 }

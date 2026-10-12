@@ -1,7 +1,9 @@
 //! Authenticate the connection, then route owner, physical-source and child requests.
 mod owner;
+mod surfaces;
 use super::*;
 use cathedral_user_runtime::server::Request;
+pub(super) use surfaces::flush;
 pub(super) fn dispatch(
     request: Request,
     parent: &mut Parent,
@@ -15,25 +17,19 @@ pub(super) fn dispatch(
                 server.reply(&request, &wire::encode(parent.pixel(x, y)?))?;
                 return Ok(());
             }
-            if let [wire::STOP, slot @ 0..=1, 0, 0, 0, 0, 0, 0] = words {
-                parent.erase(slot as usize)?;
-            }
             if children.dispatch(&request, words, server, world)? {
+                flush(parent, world)?;
                 return Ok(());
             }
             let response = owner::dispatch(parent, world, words);
             if response[0] == 0 && matches!(words[0], wire::PLACE | wire::REVOKE) {
-                parent.erase(words[1] as usize)?;
-                for surface in world.replay(words[1] as usize).into_iter().flatten() {
-                    parent.surface(surface)?;
-                }
+                flush(parent, world)?;
+                surfaces::replay(parent, world, words[1] as usize)?;
             }
             if response[0] == 0 && words[0] == wire::BIND {
                 for slot in 0..2 {
-                    parent.erase(slot)?;
-                    for surface in world.replay(slot).into_iter().flatten() {
-                        parent.surface(surface)?;
-                    }
+                    flush(parent, world)?;
+                    surfaces::replay(parent, world, slot)?;
                 }
             }
             response
@@ -56,15 +52,13 @@ pub(super) fn dispatch(
             }
             _ => wire::error(abi::DENIED),
         },
-        Some(words) if matches!(words[0], wire::PAINT | wire::ERASE) => {
-            match world.surface(request.client.unwrap(), request.incarnation, words) {
-                Ok(words) => parent.surface(words)?,
-                Err(status) => wire::error(status),
-            }
+        Some(words) if matches!(words[0], wire::SURFACE_CREATE | wire::PAINT | wire::ERASE) => {
+            surfaces::dispatch(parent, world, &request, words)?
         }
         Some(words) => world.request(request.client.unwrap(), request.incarnation, words),
         None => wire::error(abi::DENIED),
     };
+    flush(parent, world)?;
     // Publish binding/input invalidations before acknowledging their mutation.
     children.notify(world)?;
     server.reply(&request, &wire::encode(response))?;

@@ -21,10 +21,9 @@ impl Tiles {
         before.union(rect)
     }
     pub fn paint_row(&self, x: u64, y: u64, row: &mut [u32]) {
-        // Whole earlier subtree precedes the later sibling, matching matrix hit
-        // testing. Numeric key order would paint a grandchild over its uncle.
-        for key in cathedral_contracts::composition::MATRIX_KEYS {
-            let Some((rect, color)) = self.entries[key as usize] else {
+        // Matrices reserve disjoint contiguous stacking ranges for subtrees.
+        for entry in &self.entries {
+            let Some((rect, color)) = *entry else {
                 continue;
             };
             if y < rect.y || y - rect.y >= rect.h {
@@ -50,12 +49,12 @@ mod tests {
             h: 2,
         };
         tiles.set(5, rect, 1);
-        tiles.set(2, rect, 2);
+        tiles.set(8, rect, 2);
         let mut row = [0; 8];
         tiles.paint_row(0, 3, &mut row);
         assert_eq!(row, [0, 0, 2, 2, 2, 2, 0, 0]);
-        assert_eq!(tiles.set(2, rect, 2), Rect::default());
-        assert_eq!(tiles.set(2, Rect::default(), 0), rect);
+        assert_eq!(tiles.set(8, rect, 2), Rect::default());
+        assert_eq!(tiles.set(8, Rect::default(), 0), rect);
         tiles.paint_row(0, 3, &mut row);
         assert_eq!(row, [0, 0, 1, 1, 1, 1, 0, 0]);
     }

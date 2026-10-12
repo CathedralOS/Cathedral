@@ -17,8 +17,6 @@ pub const STATUS: u64 = 20;
 pub const MATRIX_RECT: u64 = 21;
 pub const MATRIX_POINTER: u64 = 22; // control-only absolute x,y,0,0,0
 pub const MATRIX_TILES: usize = 16;
-/// Root child first, then its descendants, then the later sibling subtree.
-pub const MATRIX_KEYS: [u64; 6] = [1, 5, 9, 2, 6, 10];
 pub const MAX_CLIENTS: usize = 3;
 pub const MAX_NODES: usize = 16;
 pub const IMAGE_SIDE: usize = 16;

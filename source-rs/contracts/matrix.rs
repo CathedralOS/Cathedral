@@ -3,8 +3,8 @@
 pub type Packet = [u64; 8];
 pub const VIEW: u64 = 1;
 pub const NEXT: u64 = 2;
-pub const PAINT: u64 = 3; // epoch, local subtree key, x,y,width,height,rgb
-pub const ERASE: u64 = 4; // epoch, local subtree key,0,0,0,0,0
+pub const PAINT: u64 = 3; // epoch, owned surface handle, local x,y,width,height,rgb
+pub const ERASE: u64 = 4; // epoch, owned surface handle,0,0,0,0,0 (release)
 /// Atomic local view plus one event; response tag includes pointer buttons and MORE.
 pub const POLL: u64 = 5;
 pub const MORE: u64 = 1 << 16;
@@ -21,6 +21,7 @@ pub fn poll_event(reply: Packet) -> Packet {
     ]
 }
 pub fn poll_view(mut reply: Packet) -> Packet {
+    reply[4] &= KEY_MASK;
     reply[5..].fill(0);
     reply
 }
@@ -75,3 +76,12 @@ pub fn error(status: u64) -> Packet {
 /// Owner selects a local executable and funds a dynamic child.
 /// slot, image index, argument, channels, descendant slots, image mask, CPU ceiling.
 pub const RUN: u64 = 109;
+
+/// Child requests: create at a requested local stacking rank; query only own allowance.
+pub const SURFACE_CREATE: u64 = 6; // epoch, rank,0,0,0,0,0; reply status, local handle
+pub const SURFACE_INFO: u64 = 7; // all zero; reply status, allowance, allocated count
+pub const MAX_SURFACES: usize = 16;
+/// Owner-only conserving subdivision of the matrix's upstream allowance.
+pub const SURFACE_LIMIT: u64 = 110; // child slot, allowance,0,0,0,0,0
+/// POLL carries the surface allowance above the key mask in word four.
+pub const SURFACE_BITS: u32 = 32;

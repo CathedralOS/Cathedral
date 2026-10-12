@@ -28,6 +28,8 @@ impl Grant {
 #[derive(Default)]
 pub struct World {
     parent: Grant,
+    capacity: usize,
+    retired: [Option<wire::Packet>; wire::MAX_SURFACES],
     children: [Child; 2],
     focus: Option<usize>,
     capture: Option<usize>,
@@ -37,6 +39,27 @@ pub struct World {
     suppressed: u64,
 }
 impl World {
+    /// Retained process state can be installed without a large stack temporary.
+    pub const fn empty() -> Self {
+        Self {
+            parent: Grant {
+                epoch: 0,
+                width: 0,
+                height: 0,
+                keys: 0,
+            },
+            capacity: 0,
+            retired: [None; wire::MAX_SURFACES],
+            children: [const { Child::empty() }; 2],
+            focus: None,
+            capture: None,
+            buttons: 0,
+            blocked: false,
+            held: 0,
+            suppressed: 0,
+        }
+    }
+
     pub fn inherit(&mut self, grant: Grant) {
         let grant = if grant.valid() {
             grant
@@ -61,16 +84,19 @@ impl World {
         if self.parent.valid() && (replaced || !grant.valid()) {
             // Losing the parent's authority cannot be repaired by silently reviving
             // old descendant grants when a replacement parent later reconnects.
-            for child in &mut self.children {
-                child.rect = None;
-                child.surfaces = [None; 3];
+            for slot in 0..2 {
+                self.retire_surfaces(slot);
+                self.children[slot].rect = None;
+                self.children[slot].surface_limit = 0;
             }
         }
         self.parent = grant;
+        let mut changed = [false; 2];
         for (slot, child) in self.children.iter_mut().enumerate() {
             let previous = child.grant;
             child.refresh(grant, replaced);
             if child.grant != previous {
+                changed[slot] = true;
                 if self.focus == Some(slot) {
                     self.focus = None;
                     self.suppressed |= self.held;
@@ -78,6 +104,11 @@ impl World {
                 if self.capture == Some(slot) {
                     self.capture = None;
                 }
+            }
+        }
+        for (slot, changed) in changed.into_iter().enumerate() {
+            if changed {
+                self.retire_surfaces(slot);
             }
         }
     }
@@ -91,6 +122,7 @@ impl World {
         child.keys = keys;
         child.refresh(self.parent, false);
         if child.grant != previous {
+            self.retire_surfaces(slot);
             if self.focus == Some(slot) {
                 self.focus = None;
                 self.suppressed |= self.held;
@@ -113,7 +145,8 @@ impl World {
             self.capture = None;
         }
         self.children[slot].rect = None;
-        self.children[slot].surfaces = [None; 3];
+        self.retire_surfaces(slot);
+        self.children[slot].surface_limit = 0;
         self.children[slot].refresh(self.parent, false);
         Ok(())
     }
@@ -141,6 +174,16 @@ impl World {
         match words {
             [wire::VIEW, 0, 0, 0, 0, 0, 0, 0] => child.view(),
             [wire::POLL, 0, 0, 0, 0, 0, 0, 0] if child.grant.valid() => child.poll(),
+            [wire::SURFACE_INFO, 0, 0, 0, 0, 0, 0, 0] if child.grant.valid() => [
+                0,
+                child.surface_limit as u64,
+                child.surfaces.iter().flatten().count() as u64,
+                0,
+                0,
+                0,
+                0,
+                0,
+            ],
             [wire::NEXT, epoch, 0, 0, 0, 0, 0, 0]
                 if child.grant.valid() && epoch == child.grant.epoch =>
             {

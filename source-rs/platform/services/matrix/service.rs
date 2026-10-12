@@ -13,7 +13,11 @@ use parent::Parent;
 
 pub fn run(environment: Environment) -> Result<(), Error> {
     let mut parent = Parent::new(&environment)?;
-    let mut world = World::default();
+    static mut WORLD: World = World::empty();
+    let world_address = &raw mut WORLD;
+    // SAFETY: Single-threaded executable enters this service exactly once. This
+    // process-owned arena has no aliases and never occupies the guarded user stack.
+    let world = unsafe { &mut *world_address };
     let mut server = Server::open_clients(3)?;
     if environment.len() == 4 {
         server.install(
@@ -26,12 +30,11 @@ pub fn run(environment: Environment) -> Result<(), Error> {
     }
     let mut children = children::Children::default();
     loop {
-        parent.refresh_notified(&mut world)?;
-        if let Some(slot) = children.finish(&mut server, &mut world)? {
-            parent.erase(slot)?;
-        }
+        parent.refresh_notified(world)?;
+        children.finish(&mut server, world)?;
+        requests::flush(&parent, world)?;
         let (handle, deadline) = children.wait();
-        children.notify(&mut world)?;
+        children.notify(world)?;
         let mut extra = [cathedral_user_runtime::ipc::Handle::from_raw(0); 2];
         let mut count = 0;
         for h in [handle, parent.wake].into_iter().flatten() {
@@ -44,22 +47,21 @@ pub fn run(environment: Environment) -> Result<(), Error> {
         // Admitted children receive coalesced invalidations on their wake channel.
         // Legacy manually assembled two-endpoint fixtures still refresh on demand.
         if parent.wake.is_none() {
-            parent.refresh(&mut world)?;
+            parent.refresh(world)?;
         } else {
             // A parent hint may arrive while waiting for a child request.
-            parent.refresh_notified(&mut world)?;
+            parent.refresh_notified(world)?;
         }
         match event {
             Event::Disconnected { client, .. } => {
                 if client < 2 {
-                    parent.erase(client)?;
-                    children.disconnected(client, &mut server, &mut world)?;
+                    children.disconnected(client, &mut server, world)?;
                 } else {
                     world.cancel();
                 }
             }
             Event::Request(request) => {
-                requests::dispatch(request, &mut parent, &mut world, &mut children, &mut server)?
+                requests::dispatch(request, &mut parent, world, &mut children, &mut server)?
             }
         }
     }

@@ -18,7 +18,8 @@ python tools/boot-harness-rs/run.py --matrix-desktop-test --release --timeout 12
 python tools/boot-harness-rs/run.py --profile tools/boot-harness-rs/profiles/matrix-desktop.json --release --window
 ```
 
-Click either colored app, then Enter to change its color. The left app is nested;
+Each app has a base surface and an independent light accent. Click either app,
+then Enter to change its base color. The left app is nested;
 the right app is its outer sibling. Startup exercises inner-subtree replacement
 and checks that old pixels disappear while the sibling survives. The automated
 host test adds real mouse/keyboard injection and framebuffer checks.
@@ -40,7 +41,7 @@ remain until their extra behavior has moved into the integrated path with tests.
 | [Executable-authorized admission](kernel/core/admission_pool/README.md) | Apps and the matrix desktop construct descendants from code authority and a process pool | `--admission-test`: recursive launch, exhaustion, load rollback, retained funding, sibling survival | Boot-supplied catalogue; eight accounts; device grants remain static |
 | [Matrix lifecycle](platform/services/matrix/service/children.rs) | Same provider above apps and another matrix | `--matrix-test`: replacement preserves an outside sibling | Two direct children; distribution supplies policy through owner-only control |
 | [Local viewport, focus and capture](platform/services/matrix/world.rs) | Nested and sibling visible apps | Host policy tests; `--matrix-test`; `--matrix-desktop-test` physical focus | Five keys; coalesced wake channels; synchronous upward refresh |
-| [Clipped surface commands](platform/services/matrix/world/surface.rs) | App rectangles cross actual matrix boundaries to the existing compositor | Host clipping/epoch/z-order tests; scanout and teardown checks | One primitive per path; current renderer supports two matrix levels; no images/text surfaces yet |
+| [Owned surfaces](platform/services/matrix/world/surface/README.md) | App rectangles cross actual matrix boundaries to the existing compositor | Host quota/name/clipping/stacking tests; scanout removal and teardown checks | Sixteen backed rectangle objects; no images/text surfaces or atomic scene commits yet |
 | [Retained compositor and hardware input](platform/services/display/compositor.rs) | Root adapter uses existing scanout/cursor and shared input decoders | `--matrix-desktop-test`; `--session-test --pressure` | Existing richer scenes/hosting remain in the earlier session fixture |
 | [Private/shared page lifetime](kernel/core/regions.rs) | Existing rendering/storage labs | Host policy tests and `--smoke` | Per-slot page limits and boot-approved sharing; no general shared-object IPC transfer |
 | [Object storage and recovery](platform/services/storage/service.rs) | Default status/counter distribution | Storage host tests; `--storage-test` | Not yet an attenuated matrix namespace; not the custom database filesystem |
@@ -67,9 +68,10 @@ activity. The remaining boundary work is recorded below:
 Matrix input now wakes idle apps; retained local scenes replay after placement
 changes. The desktop test checks idle CPU use and moves without app repaint.
 `--matrix-desktop-test --pressure` adds a spinner inside a 20% nested CPU ceiling
-and reports key-to-scanout latency (roughly half a second after atomic view/event polling). Equal
-turns and synchronous parent RPC still need latency work. Next, replace fixed
-surface keys with budgeted surface objects. Root-adapter recovery/trusted-path behavior remains an owner-level
+and reports key-to-scanout latency (roughly 0.5 to 0.9 seconds in recent runs, including tracing overhead). Equal
+turns and synchronous parent RPC still need latency work. Owned surface objects now replace fixed
+path keys and conserve backing through recursive allowances. Physical admission
+funding and shared image objects are the next resource boundaries. Root-adapter recovery/trusted-path behavior remains an owner-level
 policy question. SMP, GPU support and the database filesystem follow these
 boundaries rather than becoming prerequisites for exercising them.
 

@@ -69,12 +69,13 @@ impl Parent {
                     epoch: reply[1],
                     width: reply[2],
                     height: reply[3],
-                    keys: reply[4],
+                    keys: reply[4] & wire::KEY_MASK,
                 }
             } else {
                 Grant::default()
             };
             world.inherit(self.grant);
+            world.surface_capacity((reply[4] >> wire::SURFACE_BITS) as usize);
             if !self.grant.valid() {
                 return Ok(());
             }

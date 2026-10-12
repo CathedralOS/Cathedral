@@ -13,6 +13,8 @@ def verify(stream, output, serial, pressure=False):
         raise RuntimeError("Missing capped matrix pressure peer")
     if "dynamic catalogue admission, rollback and pool reuse passed" not in serial:
         raise RuntimeError("Missing dynamic matrix admission evidence")
+    if "owned surface quotas, stale names, removal and subtree stacking passed" not in serial:
+        raise RuntimeError("Missing owned surface lifecycle evidence")
     position = [40, 40]
 
     def send(events):
@@ -65,7 +67,7 @@ def verify(stream, output, serial, pressure=False):
     click(80, 500)  # No child may acquire focus here.
     enter()
     pixels("d18b35", "d18b35")
-    text = (output / "serial.log").read_text(encoding="utf-8", errors="replace")
+    text = (output / "serial.log").read_text(encoding="utf-8", errors="replace").replace("Cathedral Rust lab: ", "")
     if "user panic:" in text or text.count("matrix app: nested key") != 1 or text.count("matrix app: sibling key") != 1:
         raise RuntimeError(f"Matrix input confinement failed: {text}")
     print(f"PASS: matrix-owned desktop, nested clipping, physical focus, subtree recovery; {output / 'display.png'}")

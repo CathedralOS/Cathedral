@@ -1,4 +1,5 @@
 //! App knows only its granted local extent, events and parent surface connection.
+mod surfaces;
 use super::*;
 use cathedral_user_runtime::task::Environment;
 pub(super) const LEFT: u64 = 0x315ca8;
@@ -16,6 +17,7 @@ pub fn run(style: u64, environment: Environment) -> u64 {
     let mut alternate = false;
     let wake = environment.endpoint(2).unwrap();
     let mut painted = None;
+    let mut scene: Option<surfaces::Scene> = None;
     let mut paints = 0;
     let mut wakes = 0;
     loop {
@@ -58,28 +60,18 @@ pub fn run(style: u64, environment: Environment) -> u64 {
                 RIGHT
             };
             if painted != Some((view, color)) {
-                let response = call(
-                    parent,
-                    [
-                        wire::PAINT,
-                        view[1],
-                        0,
-                        0,
-                        0,
-                        view[2] + 99,
-                        view[3] + 99,
-                        color,
-                    ],
-                );
-                if response[0] == 0 {
-                    painted = Some((view, color));
-                    paints += 1;
-                    #[cfg(feature = "trace-input")]
-                    time::trace("app-painted");
+                if scene.as_ref().is_none_or(|s| s.epoch != view[1]) {
+                    scene = Some(surfaces::Scene::new(parent, view));
                 }
+                scene.as_ref().unwrap().paint(parent, view, color);
+                painted = Some((view, color));
+                paints += 1;
+                #[cfg(feature = "trace-input")]
+                time::trace("app-painted");
             }
         } else {
             painted = None;
+            scene = None;
         }
         let mut bytes = [0; 64];
         loop {
@@ -90,7 +82,14 @@ pub fn run(style: u64, environment: Environment) -> u64 {
                     break;
                 }
                 Ok(_) => {
-                    control.0.receive(&mut bytes).unwrap();
+                    let len = control.0.receive(&mut bytes).unwrap();
+                    if let Some(words) = wire::decode(&bytes[..len]) {
+                        match words[0] {
+                            1 => scene.as_mut().unwrap().remove_accent(parent),
+                            2 => scene.as_mut().unwrap().restore_accent(parent),
+                            _ => (),
+                        }
+                    }
                     control
                         .1
                         .send(&wire::encode([

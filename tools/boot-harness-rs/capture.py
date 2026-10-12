@@ -46,7 +46,9 @@ def run(qemu_command, output, timeout, creationflags, input_test=False, recovery
                     command(stream, "qmp_capabilities")
                     deadline = time.monotonic() + timeout
                     while True:
-                        text = serial.read_text(encoding="utf-8", errors="replace")
+                        # User writes split at page boundaries; each chunk has a
+                        # boot diagnostic prefix, even in the middle of a marker.
+                        text = serial.read_text(encoding="utf-8", errors="replace").replace("Cathedral Rust lab: ", "")
                         if "CATHEDRAL_RS_PANIC" in text or "CATHEDRAL_RS_FAULT:" in text:
                             raise RuntimeError(f"Capture boot failed; logs: {output}")
                         if any(marker in text for marker in ("Cathedral: startup failed", "initial program stopped", "admission failed", "requires unavailable framebuffer")):

@@ -19,7 +19,7 @@ impl Compositor {
             );
             self.redraw_cursors(before);
         } else if op & 0xffff == wire::MATRIX_RECT
-            && wire::MATRIX_KEYS.contains(&(op >> 16))
+            && (op >> 16) < wire::MATRIX_TILES as u64
             && color <= 0xffffff
         {
             let rect = if w == 0 && h == 0 {
