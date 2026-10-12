@@ -19,10 +19,11 @@ pub fn run(style: u64, environment: Environment) -> u64 {
     let mut paints = 0;
     let mut wakes = 0;
     loop {
-        let view = call(parent, [wire::VIEW, 0, 0, 0, 0, 0, 0, 0]);
+        let mut snapshot = call(parent, [wire::POLL, 0, 0, 0, 0, 0, 0, 0]);
+        let mut view = wire::poll_view(snapshot);
         if view[0] == 0 {
             for _ in 0..8 {
-                let event = call(parent, [wire::NEXT, view[1], 0, 0, 0, 0, 0, 0]);
+                let event = wire::poll_event(snapshot);
                 if event[0] != 0 || event[2] == wire::NONE {
                     break;
                 }
@@ -33,6 +34,8 @@ pub fn run(style: u64, environment: Environment) -> u64 {
                     && event[3] == input::ENTER as u64
                     && event[4] == input::PRESS as u64
                 {
+                    #[cfg(feature = "trace-input")]
+                    time::trace("app-key");
                     alternate = !alternate;
                     cathedral_user_runtime::write(if style == 0 {
                         b"Cathedral matrix app: nested key\n"
@@ -41,6 +44,11 @@ pub fn run(style: u64, environment: Environment) -> u64 {
                     })
                     .unwrap();
                 }
+                if snapshot[5] & wire::MORE == 0 {
+                    break;
+                }
+                snapshot = call(parent, [wire::POLL, 0, 0, 0, 0, 0, 0, 0]);
+                view = wire::poll_view(snapshot);
             }
             let color = if alternate {
                 0xd18b35
@@ -66,6 +74,8 @@ pub fn run(style: u64, environment: Environment) -> u64 {
                 if response[0] == 0 {
                     painted = Some((view, color));
                     paints += 1;
+                    #[cfg(feature = "trace-input")]
+                    time::trace("app-painted");
                 }
             }
         } else {

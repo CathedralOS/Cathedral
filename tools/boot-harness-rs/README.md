@@ -218,3 +218,11 @@ process pools, failed-load rollback, retained-account funding and sibling surviv
 Add `--release` for optimized execution. Profiles can set `startup.dynamic_tasks`;
 initial + static launches + dynamic accounts must fit eight. Dynamic accounts
 start with zero page/channel allowances and consume explicitly assigned funding.
+
+For opt-in input timing, add `--trace-input` to the matrix desktop command.
+`INPUT_TRACE <stage> <tick> <caller_cpu_us>` records source decoding, nested matrix
+receipt, app handling and completed paint. Ticks are nominally 10 ms; CPU totals
+are caller-local, and logging perturbs timing. One capped-spinner comparison went
+from 937 ms to 532 ms after atomic view/event polling removed redundant round
+trips. The host measurement includes 160 ms of key injection sleeps and scanout
+sampling; this is regression evidence, not a response-time guarantee.

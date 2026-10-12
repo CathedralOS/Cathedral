@@ -24,4 +24,5 @@ cathedral-user-runtime.workspace = true
 workspace = true
 
 [features]
+trace-input = []
 recovery-lab = []

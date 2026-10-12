@@ -299,3 +299,31 @@ fn cancellation_cannot_turn_a_held_button_into_a_fresh_press() {
     w.key(input::ENTER as u64, input::REPEAT as u64);
     assert_eq!(next(&mut w, 0, epoch)[2], wire::NONE);
 }
+
+#[test]
+fn atomic_poll_is_local_reports_more_and_drops_events_on_rebinding() {
+    let mut w = world();
+    place(&mut w, 0, 10, 20);
+    place(&mut w, 1, 200, 0);
+    let sibling = view(&mut w, 1);
+    w.pointer(15, 27, 1);
+    w.pointer(16, 28, 0);
+    let first = w.request(0, 7, [wire::POLL, 0, 0, 0, 0, 0, 0, 0]);
+    assert_eq!(wire::poll_view(first), view(&mut w, 0));
+    assert_ne!(first[5] & wire::MORE, 0);
+    assert_eq!(&wire::poll_event(first)[2..6], &[wire::POINTER, 5, 7, 1]);
+    let last = w.request(0, 7, [wire::POLL, 0, 0, 0, 0, 0, 0, 0]);
+    assert_eq!(last[5] & wire::MORE, 0);
+    assert_eq!(&wire::poll_event(last)[2..6], &[wire::POINTER, 6, 8, 0]);
+    assert_eq!(view(&mut w, 1), sibling);
+    w.key(input::ENTER as u64, input::PRESS as u64);
+    w.revoke(0).unwrap();
+    assert_eq!(
+        w.request(0, 7, [wire::POLL, 0, 0, 0, 0, 0, 0, 0]),
+        wire::error(abi::DENIED)
+    );
+    place(&mut w, 0, 10, 20);
+    let fresh = w.request(0, 7, [wire::POLL, 0, 0, 0, 0, 0, 0, 0]);
+    assert_ne!(fresh[1], first[1]);
+    assert_eq!(wire::poll_event(fresh)[2], wire::NONE);
+}

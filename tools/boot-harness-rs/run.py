@@ -130,6 +130,7 @@ def main():
     parser.add_argument("--fault", choices=("guard", "invalid-opcode", "double-fault"), help="Expected-fault smoke test (requires --smoke)")
     parser.add_argument("--release", action="store_true")
     parser.add_argument("--startup-probes", action="store_true", help="Include destructive startup probes in the session lab")
+    parser.add_argument("--trace-input", action="store_true", help="Log local matrix input stages (diagnostic timing perturbs execution)")
     parser.add_argument("--pressure", action="store_true", help="Add a pressure peer to the session or matrix desktop")
     parser.add_argument("--kernel-only", action="store_true", help="Build/boot without any platform or distribution executable")
     parser.add_argument("--profile", type=Path, default=WORKSPACE / "distribution/profile.json", help="Host composition profile")
@@ -230,6 +231,8 @@ def main():
         user_features = list(user.get("features", []))
         if args.startup_probes and user['package'] == 'cathedral-compositor-lab':
             user_features.append('session-probes')
+        if args.trace_input and user["package"] in ("cathedral-matrix-service", "cathedral-input-service", "cathedral-matrix-lab"):
+            user_features.append("trace-input")
         if user_features:
             user_cargo.extend(["--features", ",".join(user_features)])
         if args.release:

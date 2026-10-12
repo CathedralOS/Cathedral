@@ -5,6 +5,25 @@ pub const VIEW: u64 = 1;
 pub const NEXT: u64 = 2;
 pub const PAINT: u64 = 3; // epoch, local subtree key, x,y,width,height,rgb
 pub const ERASE: u64 = 4; // epoch, local subtree key,0,0,0,0,0
+/// Atomic local view plus one event; response tag includes pointer buttons and MORE.
+pub const POLL: u64 = 5;
+pub const MORE: u64 = 1 << 16;
+pub fn poll_event(reply: Packet) -> Packet {
+    [
+        reply[0],
+        reply[1],
+        reply[5] & 255,
+        reply[6],
+        reply[7],
+        (reply[5] >> 8) & 7,
+        0,
+        0,
+    ]
+}
+pub fn poll_view(mut reply: Packet) -> Packet {
+    reply[5..].fill(0);
+    reply
+}
 pub const SOURCE_MODE: u64 = 0x4d415452;
 pub const READ_PIXEL: u64 = 108; // root owner diagnostic only: x,y
 pub const NONE: u64 = 0;

@@ -90,4 +90,12 @@ impl Child {
         self.len -= 1;
         event
     }
+    pub fn poll(&mut self) -> wire::Packet {
+        let event = self.next();
+        let mut reply = self.view();
+        reply[5] = event[2] | (event[5] << 8) | if self.len != 0 { wire::MORE } else { 0 };
+        reply[6] = event[3];
+        reply[7] = event[4];
+        reply
+    }
 }

@@ -140,6 +140,7 @@ impl World {
         child.incarnation = incarnation;
         match words {
             [wire::VIEW, 0, 0, 0, 0, 0, 0, 0] => child.view(),
+            [wire::POLL, 0, 0, 0, 0, 0, 0, 0] if child.grant.valid() => child.poll(),
             [wire::NEXT, epoch, 0, 0, 0, 0, 0, 0]
                 if child.grant.valid() && epoch == child.grant.epoch =>
             {

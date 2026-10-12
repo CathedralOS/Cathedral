@@ -12,6 +12,7 @@ test = false
 bench = false
 
 [features]
+trace-input = []
 desktop = []
 
 [dependencies]

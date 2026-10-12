@@ -66,7 +66,7 @@ activity. The remaining boundary work is recorded below:
 Matrix input now wakes idle apps; retained local scenes replay after placement
 changes. The desktop test checks idle CPU use and moves without app repaint.
 `--matrix-desktop-test --pressure` adds a spinner inside a 20% nested CPU ceiling
-and reports key-to-scanout latency (about one second in the current lab). Equal
+and reports key-to-scanout latency (roughly half a second after atomic view/event polling). Equal
 turns and synchronous parent RPC still need latency work. Next, replace fixed
 surface keys with budgeted surface objects. Root-adapter recovery/trusted-path behavior remains an owner-level
 policy question. SMP, GPU support and the database filesystem follow these

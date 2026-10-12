@@ -52,46 +52,49 @@ impl Parent {
             world.inherit(Grant::default());
             return Ok(());
         }
-        let view = match self.call([wire::VIEW, 0, 0, 0, 0, 0, 0, 0]) {
-            Ok(reply) => reply,
-            Err(Error(code)) if code == abi::PEER_CLOSED as i64 => {
-                self.pair = None;
-                world.inherit(Grant::default());
+        // Each round trip returns a consistent local grant and event. MORE avoids
+        // spending another scheduling turn merely to discover an empty queue.
+        for _ in 0..8 {
+            let reply = match self.call([wire::POLL, 0, 0, 0, 0, 0, 0, 0]) {
+                Ok(reply) => reply,
+                Err(Error(code)) if code == abi::PEER_CLOSED as i64 => {
+                    self.pair = None;
+                    world.inherit(Grant::default());
+                    return Ok(());
+                }
+                Err(error) => return Err(error),
+            };
+            self.grant = if reply[0] == 0 {
+                Grant {
+                    epoch: reply[1],
+                    width: reply[2],
+                    height: reply[3],
+                    keys: reply[4],
+                }
+            } else {
+                Grant::default()
+            };
+            world.inherit(self.grant);
+            if !self.grant.valid() {
                 return Ok(());
             }
-            // A timeout may leave a late reply: retire rather than reuse that stream.
-            Err(error) => return Err(error),
-        };
-        self.grant = if view[0] == 0 && view[5..] == [0; 3] {
-            Grant {
-                epoch: view[1],
-                width: view[2],
-                height: view[3],
-                keys: view[4],
-            }
-        } else {
-            Grant::default()
-        };
-        world.inherit(self.grant);
-        if !self.grant.valid() {
-            return Ok(());
-        }
-        // Bounded drain. Ancestors use exactly this same child protocol.
-        for _ in 0..8 {
-            let event = self.call([wire::NEXT, self.grant.epoch, 0, 0, 0, 0, 0, 0])?;
-            if event[0] != 0 || event[1] != self.grant.epoch {
-                world.inherit(Grant::default());
-                break;
-            }
+            let event = wire::poll_event(reply);
             match event[2] {
-                wire::NONE => break,
+                wire::NONE => (),
                 wire::POINTER => world.pointer(event[3], event[4], event[5]),
-                wire::KEY => world.key(event[3], event[4]),
+                wire::KEY => {
+                    #[cfg(feature = "trace-input")]
+                    time::trace("matrix-key");
+                    world.key(event[3], event[4]);
+                }
                 wire::CANCEL => world.cancel(),
                 _ => {
                     world.inherit(Grant::default());
                     break;
                 }
+            }
+            if reply[5] & wire::MORE == 0 {
+                break;
             }
         }
         Ok(())
