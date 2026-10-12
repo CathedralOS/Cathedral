@@ -1,6 +1,7 @@
 //! Own direct children and their local connections. Pending owner RPCs leave the
 //! service available for the child's upstream requests, avoiding recursive deadlock.
 mod admission;
+mod control;
 use super::*;
 use cathedral_user_runtime::{ipc::Handle, server::Request, task::Child, time};
 type Pair = (Handle, Handle);
@@ -38,7 +39,7 @@ impl Children {
     pub(super) fn dispatch(
         &mut self,
         request: &Request,
-        mut words: wire::Packet,
+        words: wire::Packet,
         server: &mut Server,
         world: &mut World,
     ) -> Result<bool, Error> {
@@ -54,20 +55,12 @@ impl Children {
         let result = if self.pending.is_some() {
             Err(Error(abi::BUSY as i64))
         } else if routed != 0 {
-            let hop = routed & 3;
-            if !(1..=2).contains(&hop) {
-                Err(Error(abi::DENIED as i64))
-            } else if let Some(child) = &self.slots[(hop - 1) as usize] {
-                words[0] = (words[0] & 0xffff) | ((routed >> 2) << wire::OP_BITS);
-                match child.control.0.send(&wire::encode(words)) {
-                    Ok(()) => {
-                        self.pending = Some((*request, (hop - 1) as usize, time::after(100)?));
-                        return Ok(true);
-                    }
-                    Err(error) => Err(error),
+            match self.forward(words, routed) {
+                Ok(slot) => {
+                    self.pending = Some((*request, slot, time::after(100)?));
+                    return Ok(true);
                 }
-            } else {
-                Err(Error(abi::PEER_CLOSED as i64))
+                Err(error) => Err(error),
             }
         } else {
             match words {
@@ -108,48 +101,6 @@ impl Children {
             &wire::encode(wire::error(result.err().map_or(0, |e| e.0 as u64))),
         )?;
         Ok(true)
-    }
-    pub(super) fn wait(&self) -> (Option<Handle>, Option<u64>) {
-        match &self.pending {
-            Some((_, slot, deadline)) => (
-                Some(self.slots[*slot].as_ref().unwrap().control.1),
-                Some(*deadline),
-            ),
-            None => (None, None),
-        }
-    }
-    pub(super) fn finish(
-        &mut self,
-        server: &mut Server,
-        world: &mut World,
-    ) -> Result<Option<usize>, Error> {
-        let Some((request, slot, deadline)) = self.pending else {
-            return Ok(None);
-        };
-        let mut retired = None;
-        let now = time::now()?;
-        let mut bytes = [0; 64];
-        let result = self.slots[slot]
-            .as_ref()
-            .unwrap()
-            .control
-            .1
-            .receive_until(&mut bytes, now);
-        let response = match result {
-            Ok(len) => wire::decode(&bytes[..len]).unwrap_or(wire::error(abi::IO_ERROR)),
-            Err(Error(code)) if code == abi::TIMED_OUT as i64 && !time::reached(now, deadline) => {
-                return Ok(None);
-            }
-            Err(error) => {
-                // Do not reuse a stream that may still produce an uncorrelated reply.
-                self.stop(slot, server, world)?;
-                retired = Some(slot);
-                wire::error(error.0 as u64)
-            }
-        };
-        self.pending = None;
-        server.reply(&request, &wire::encode(response))?;
-        Ok(retired)
     }
     pub(super) fn disconnected(
         &mut self,

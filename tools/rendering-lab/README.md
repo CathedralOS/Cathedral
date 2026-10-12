@@ -9,4 +9,4 @@ needed for this host comparison.
 Follow the [investigation](../../source-rs/distribution/lab/rendering/README.md)
 for strategy definitions, measured results, limitations and QEMU commands that
 exercise actual mappings. Start at [run.py](run.py) for orchestration or
-[bench.rs](../../source-rs/distribution/lab/rendering/bench.rs) for the workload.
+[bench entrance](../../source-rs/distribution/lab/rendering/bench/main.rs) for the workload.

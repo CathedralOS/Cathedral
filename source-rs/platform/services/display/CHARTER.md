@@ -31,17 +31,17 @@ included in ordinary builds, and client messages cannot trigger those handlers.
 
 ## Entrances and ownership
 
-[main.rs](main.rs) selects the protocol: [direct.rs](direct.rs) serves immediate
+[main.rs](main.rs) selects the protocol: [direct entrance](direct/mod.rs) serves immediate
 [drawing requests](../../../contracts/display.rs), while
-[compositor.rs](compositor.rs) serves the retained
+[compositor entrance](compositor/mod.rs) serves the retained
 [composition protocol](../../../contracts/composition.rs). Both use
-[surface.rs](surface.rs) for the boot-granted framebuffer. Direct-mode smoke
+[surface entrance](surface/mod.rs) for the boot-granted framebuffer. Direct-mode smoke
 probes and recovery hooks live under `direct/`.
 
 The compositor loop dispatches requests, connection loss and deferred delivery.
-Its [composition state](composition.rs) shows row order: background, labels,
-application scenes, then cursors. Descend into [scene.rs](composition/scene.rs)
-for snapshots, hosting/clips and rasterization, or [input.rs](composition/input.rs)
+Its [composition state](composition/mod.rs) shows row order: background, labels,
+application scenes, then cursors. Descend into [scene entrance](composition/scene/mod.rs)
+for snapshots, hosting/clips and rasterization, or [input entrance](composition/input/mod.rs)
 for pointer lifetime, routing, cursor damage and keyboard focus. These policies
 remain host-testable without device access or IPC. The runtime handlers under
 `compositor/` bind that state to authenticated connections.

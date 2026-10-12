@@ -1,5 +1,6 @@
 //! Validate complete user records before creating objects or moving any authority.
-use super::{Right, Session, abi};
+use super::{Session, abi};
+use crate::ipc::Right;
 pub(in super::super) fn create(
     session: &mut Session,
     slot: usize,

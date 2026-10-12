@@ -19,10 +19,10 @@ crash/hang/backpressure probes, F5-F8 write-boundary pauses,
 and probes proving that device and task-control calls are denied. Normal builds
 cannot request provider replacement through the init protocol.
 
-Start at `main.rs`, then `application.rs`: restore, receive, update, save, render.
+Start at `main.rs`, then `application/mod.rs`: restore, receive, update, save, render.
 The `application/` children own connections, input, state/schema, persistence and
 view. Rendering reports completed frames through `view/report.rs`; optional
-failure probes stay in `application/lab.rs`. The
+failure probes stay in `application/lab/mod.rs`. The
 [composition map](../../README.md) identifies the other executable entrances.
 
 Selection and toggle bits are separate records, committed together with matching

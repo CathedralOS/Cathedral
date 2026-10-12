@@ -1,6 +1,6 @@
 //! Synchronous private-catalog transport. The accepted link selects the root.
 //! One outstanding request; errors never automatically retry mutations.
-//! contracts/storage.rs defines packets; platform/services/storage/service.rs binds and serves roots.
+//! contracts/storage.rs defines packets; platform/services/storage/service/mod.rs binds and serves roots.
 use crate::{Error, ipc::Handle, link::Link, time};
 use cathedral_contracts::storage as wire;
 pub struct Client {

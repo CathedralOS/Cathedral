@@ -1,6 +1,6 @@
 //! Render the status view through the display data link, then report the completed frame.
 //! Client: distribution/libraries/boot-scene; protocol: contracts/display.rs;
-//! peer: platform/services/display/main.rs -> surface.rs.
+//! peer: platform/services/display/main.rs -> surface/mod.rs.
 mod buffer;
 mod records;
 mod report;

@@ -1,5 +1,6 @@
 //! All-or-nothing allocation: reserve budget, zero backing, map, or roll back every frame.
 use super::*;
+use cathedral_arch::StackFrames;
 pub(super) unsafe fn allocate(
     session: &mut Session,
     frames: &mut Frames<'_>,

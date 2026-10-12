@@ -1,6 +1,6 @@
 #![no_std]
 #![no_main]
-//! Storage executable entrance. service.rs serves contracts/storage.rs messages
+//! Storage executable entrance. service/mod.rs serves contracts/storage.rs messages
 //! using the object-store library and ata-pio driver; init owns its lifetime.
 mod service;
 cathedral_user_runtime::entry!(main);

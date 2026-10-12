@@ -2,7 +2,9 @@
 //! The lab has one physical source and one revocable, app-scoped synthetic source.
 mod cursor;
 pub mod focus;
+mod queue;
 mod routing;
+use queue::Queue;
 #[cfg(test)]
 mod tests;
 use crate::composition::scene::{Client, Rect};
@@ -23,38 +25,6 @@ struct Lease {
     client: usize,
     incarnation: u64,
     epoch: u64,
-}
-#[derive(Default)]
-struct Queue {
-    events: [Event; 8],
-    len: usize,
-}
-impl Queue {
-    fn push(&mut self, event: Event) -> bool {
-        // Motion may collapse; button transitions never silently disappear.
-        if self.len > 0 && event.kind == wire::MOTION {
-            let last = &mut self.events[self.len - 1];
-            if last.kind == wire::MOTION && last.pointer == event.pointer {
-                *last = event;
-                return true;
-            }
-        }
-        if self.len == self.events.len() {
-            return false;
-        }
-        self.events[self.len] = event;
-        self.len += 1;
-        true
-    }
-    fn pop(&mut self) -> Event {
-        if self.len == 0 {
-            return Event::default();
-        }
-        let event = self.events[0];
-        self.events.copy_within(1..self.len, 0);
-        self.len -= 1;
-        event
-    }
 }
 pub struct Router {
     enabled: bool,

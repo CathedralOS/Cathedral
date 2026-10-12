@@ -1,4 +1,4 @@
-//! Storage data client: contracts/storage.rs -> platform/services/storage/main.rs -> service.rs.
+//! Storage data client: contracts/storage.rs -> platform/services/storage/main.rs -> service/mod.rs.
 //! Reconcile ambiguous completion by reading the private object before retrying.
 use super::connection::Connections;
 use cathedral_contracts::{storage as wire, user as abi};

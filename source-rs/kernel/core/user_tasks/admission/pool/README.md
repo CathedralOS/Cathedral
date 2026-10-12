@@ -1,12 +1,12 @@
 # Executable-authorized admission
 
-Start at [the syscall coordinator](../../syscalls/admission.rs):
+Start at [the syscall coordinator](../../syscalls/admission/mod.rs):
 resolve an owned executable or launch, validate capacity, then publish a fresh
 launch reservation. [reserve.rs](../../syscalls/admission/reserve.rs)
-keeps validation and commit ordering explicit. [pool.rs](../pool.rs)
+keeps validation and commit ordering explicit. [Pool state](mod.rs)
 owns process capacity; [executables.rs](executables.rs) owns caller-local code
 names. Mapping and rollback remain in the existing
-[boot-stack spawn path](../../lifecycle.rs).
+[boot-stack spawn path](../../lifecycle/mod.rs).
 
 ## Authority and sequence
 
@@ -74,7 +74,7 @@ These are experimental grants, not a frozen application ABI.
 ## Evidence
 
 [Host tests](tests.rs) check pool conservation, sibling isolation, ancestry return
-and local executable names. The [ordinary userspace fixture](../../../../../distribution/lab/channels/admission.rs)
+and local executable names. The [ordinary userspace fixture](../../../../../distribution/lab/channels/admission/mod.rs)
 selects distinct executable grants, builds three dynamic process levels, exhausts
 its pool, forces load failure, cancels subtrees while a sibling responds, rejects
 stale launch names, and tests retained-endpoint funding before account release.

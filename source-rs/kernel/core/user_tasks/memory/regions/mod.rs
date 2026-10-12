@@ -1,4 +1,4 @@
-//! Page-object authority and lifetime policy. Paging and frame custody live in user_tasks/memory.rs.
+//! Page-object authority and lifetime policy. Paging and frame custody live in user_tasks/memory/mod.rs.
 //! A sealed accepted reader retains backing after producer death; no remote unmap of a live reader.
 use cathedral_contracts::{
     memory::{Grant, MAX_PAGES, MAX_PRIVATE_REGIONS, MAX_REGIONS, MAX_SHARED_REGIONS},

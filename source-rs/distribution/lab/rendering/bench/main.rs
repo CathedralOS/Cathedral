@@ -1,5 +1,4 @@
 //! Native scalar comparison. Run with --features host --bin cathedral-rendering-bench.
-#[path = "bench/measure.rs"]
 mod measure;
 use measure::{Strategy, measure};
 fn main() {

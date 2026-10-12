@@ -40,7 +40,7 @@ The [profile](../../../../tools/boot-harness-rs/profiles/pointer.json) gives the
 input process exclusive controller access and its own connection to display.
 Apps have separate connections and no device grant.
 
-1. Kernel [controller transport](../../../kernel/core/user_tasks/syscalls/devices/keyboard.rs)
+1. Kernel [controller transport](../../../kernel/core/user_tasks/syscalls/devices/keyboard/mod.rs)
    preserves the auxiliary-port tag. Existing timer polling drains mouse bytes;
    this experiment does not add IRQ12 handling. The historical `keyboard` grant
    and syscall names now cover both ports of this single PS/2 controller.
@@ -51,7 +51,7 @@ Apps have separate connections and no device grant.
 3. Display [input dispatch](../../../platform/services/display/compositor/input.rs)
    authenticates source and app roles from accepted connections. The experimental
    [wire contract](../../../contracts/pointer.rs) imports no implementation.
-4. [Pointer state](../../../platform/services/display/composition/input.rs) owns leases and
+4. [Pointer state](../../../platform/services/display/composition/input/mod.rs) owns leases and
    lifetime. [Routing](../../../platform/services/display/composition/input/routing.rs)
    selects targets; [cursor rendering](../../../platform/services/display/composition/input/cursor.rs)
    overlays bounded root-owned pixels after app drawing.

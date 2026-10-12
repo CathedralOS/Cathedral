@@ -1,5 +1,5 @@
 //! Task state and scheduling entrance: wake, park, select a turn, resume.
-//! shares.rs subdivides turns down the ownership tree; budget.rs gates eligibility
+//! shares/mod.rs subdivides turns down the ownership tree; budget/mod.rs gates eligibility
 //! using measured CPU ceilings. CPU context mechanics stay outside policy; all
 //! scheduling storage is allocated at construction.
 

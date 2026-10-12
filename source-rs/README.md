@@ -12,12 +12,17 @@ mechanism-to-test coverage, restrictions and next kernel boundaries.
 ## Start reading
 
 Follow [boot main](kernel/boot/uefi/main.rs) for machine startup,
-[the user-task session](kernel/core/user_tasks.rs) for kernel execution,
-[init's session](distribution/init/session.rs) for distribution startup, or
-[the application workflow](distribution/applications/status/application.rs) for
+[the user-task session](kernel/core/user_tasks/mod.rs) for kernel execution,
+[init's session](distribution/init/session/mod.rs) for distribution startup, or
+[the application workflow](distribution/applications/status/application/mod.rs) for
 input, persistence and drawing. The [composition map](distribution/README.md)
 bridges executable and IPC boundaries. The [discoverability convention](../wiki/architecture/discoverability.md)
 explains how to preserve these routes as the lab grows.
+
+Within a subsystem folder, start at `mod.rs` for its state, sequencing or dispatch,
+then follow the named responsibilities beside it. Small leaves remain ordinary
+source files. The entrance should explain this level without exposing every
+detail below it.
 
 ## Layout
 
@@ -27,24 +32,24 @@ explains how to preserve these routes as the lab grows.
 | `kernel/boot/uefi/firmware.rs` | UEFI crate adapter and memory-inventory policy |
 | `kernel/boot/uefi/graphics.rs` | GOP snapshot before firmware handoff |
 | `kernel/boot/uefi/startup.rs` | Admit a supplied initial program and its bounded launch grants |
-| `kernel/boot/uefi/lab.rs`, `lab/` | Smoke-only orchestration, fixtures and display recovery verification |
+| `kernel/boot/uefi/lab/mod.rs` | Smoke-only orchestration, fixtures and display recovery verification |
 | `kernel/boot/uefi/memory.rs`, `handoff.rs` | Compose core frame policy with architecture mappings, then transfer boot state |
 | `kernel/boot/uefi/interrupts.rs`, `diagnostics.rs` | Interrupt bring-up and serial/fatal reporting |
 | `kernel/boot/uefi/heap.rs` | Heap installation; smoke-only heap verification |
-| `kernel/boot/uefi/lab/kernel_tasks.rs`, `lab/kernel_tasks/lifecycle.rs` | Cooperative/preemptive workloads and dynamic lifecycle checks |
+| `kernel/boot/uefi/lab/kernel_tasks/mod.rs`, `lab/kernel_tasks/lifecycle.rs` | Cooperative/preemptive workloads and dynamic lifecycle checks |
 | `kernel/boot/uefi/lab/user_tasks.rs` | Ring-3 syscall, isolation, fault containment and admission rollback experiments |
 | `kernel/boot/uefi/lab/applications.rs` | Run the bundled executable twice per session and check loading, private state, exit statuses and cleanup |
-| `kernel/boot/uefi/lab/ipc.rs` | Compose explicit endpoint grants and check service/failure sessions |
-| `kernel/core/user_tasks/lifecycle/supervision.rs`, `supervision/` | Host-testable launch authority, child identity and outcome consumption |
+| `kernel/boot/uefi/lab/ipc/mod.rs` | Compose explicit endpoint grants and check service/failure sessions |
+| `kernel/core/user_tasks/lifecycle/supervision/mod.rs` | Host-testable launch authority, child identity and outcome consumption |
 | `kernel/core/user_tasks/time.rs` | Boot-issued clock grants and wrapping deadline comparisons |
-| `kernel/boot/uefi/lab/supervision.rs` | Supply launch bounds and verify userspace recovery/cleanup |
+| `kernel/boot/uefi/lab/supervision/mod.rs` | Supply launch bounds and verify userspace recovery/cleanup |
 | `kernel/boot/uefi/lab/supervision/watchdog.rs` | Verify hung-service cancellation, deadline wakeups and independent progress |
-| `kernel/core/ipc.rs`, `ipc/` | Process-local endpoint grants, dynamic channels, checked moves, queues and teardown |
+| `kernel/core/ipc/mod.rs` | Process-local endpoint grants, dynamic channels, checked moves, queues and teardown |
 | `kernel/boot/uefi/smoke.rs` | Test-only fault injection and QEMU result reporting |
 | `contracts/boot.rs` | Firmware-neutral memory handoff; experimental Rust data, not a frozen ABI |
 | `contracts/user.rs` | Shared experimental entry/syscall constants for kernel and user runtime |
-| `contracts/memory.rs`, `kernel/core/user_tasks/memory/regions.rs` | Page-object grants, quotas, sealing and reader lifetime |
-| `kernel/core/user_tasks/memory.rs` | Boot-stack frame ownership, mapping changes and cleanup |
+| `contracts/memory.rs`, `kernel/core/user_tasks/memory/regions/mod.rs` | Page-object grants, quotas, sealing and reader lifetime |
+| `kernel/core/user_tasks/memory/mod.rs` | Boot-stack frame ownership, mapping changes and cleanup |
 | `distribution/lab/memory/main.rs` | Private allocation, shared leases and permission-fault exercises |
 | `distribution/lab/rendering/main.rs`, [investigation](distribution/lab/rendering/README.md) | Checked row delegation versus page-backed flattened composition, host costs and guest bounds probes |
 | `contracts/display.rs` | Bounded framebuffer geometry and experimental drawing messages |
@@ -54,10 +59,10 @@ explains how to preserve these routes as the lab grows.
 | `contracts/input.rs` | Experimental physical-key events, independent of scan codes or UI policy |
 | `contracts/pointer.rs` | Experimental logical pointers, source updates, capture and scoped synthetic leases |
 | `contracts/interaction.rs` | Experimental attenuated keyboard focus and cross-process child placement |
-| `kernel/core/memory.rs` | Bootstrap frame accounting and reclaiming bitmap over usable RAM, corresponding to the resource work in `source/kernel/core/` |
-| `kernel/core/memory/heap.rs`, `scheduler.rs`, `kernel_tasks.rs`, `kernel_tasks/` | IRQ-safe heap, pure scheduling policy, task admission and context/stack lifetime management |
-| `kernel/core/user_tasks.rs`, `user_tasks/` | Experimental user-task lifetime, checked diagnostic syscalls and outcomes |
-| `kernel/core/user_tasks/admission/elf.rs` | Bounded, host-testable ELF64 preflight before physical admission |
+| `kernel/core/memory/mod.rs` | Bootstrap frame accounting and reclaiming bitmap over usable RAM, corresponding to the resource work in `source/kernel/core/` |
+| `kernel/core/memory/heap.rs`, `kernel/core/scheduler/mod.rs`, `kernel/core/kernel_tasks/mod.rs` | IRQ-safe heap, pure scheduling policy, task admission and context/stack lifetime management |
+| `kernel/core/user_tasks/mod.rs` | Experimental user-task lifetime, checked diagnostic syscalls and outcomes |
+| `kernel/core/user_tasks/admission/elf/mod.rs` | Bounded, host-testable ELF64 preflight before physical admission |
 | `platform/drivers/uart_16550/` | Polling serial diagnostics, corresponding to `source/platform/drivers/uart_16550/` |
 | `platform/libraries/user-runtime/` | Entry stub, syscall wrappers and linker script; imports only shared contracts |
 | `platform/services/display/` | Separately compiled userspace provider for linear framebuffer drawing |
@@ -76,7 +81,7 @@ explains how to preserve these routes as the lab grows.
 | `kernel/arch/lib.rs` | Compile-time CPU backend selection and the boot-facing machine interface |
 | `kernel/arch/x86/` | Shared instructions and the selected PC platform's temporary PIC/PIT route |
 | `kernel/arch/x86_64/` | Paging, dynamic guarded stack mapping/teardown, CPU contexts, GDT/TSS/IDT and interrupt stubs, using the `x86_64` crate |
-| `kernel/arch/x86_64/user.rs`, `user/` | Sparse task address spaces, CR3 entry/return policy and embedded x86-64 test payload |
+| `kernel/arch/x86_64/user/mod.rs` | Sparse task address spaces, CR3 entry/return policy and embedded x86-64 test payload |
 | `distribution/profile.json` | Built-in distribution composition consumed by the boot harness |
 | `../tools/boot-harness-rs/` | Host build, QEMU launch and smoke verification |
 
@@ -415,7 +420,7 @@ run in separate boot-managed sessions.
 
 ## Executable loading experiment
 
-The [ELF preflight](kernel/core/user_tasks/admission/elf.rs) accepts little-endian ELF64,
+The [ELF preflight](kernel/core/user_tasks/admission/elf/mod.rs) accepts little-endian ELF64,
 System V ABI version 0, x86-64 `ET_EXEC`. Limits are 4 MiB per file, 16 program
 headers, eight load segments and 64 image pages total. Each load segment must be
 readable, 4-KiB aligned in both file and virtual memory, have alignment 4096,
@@ -449,7 +454,7 @@ Cathedral's component model or shared ABI.
 
 ## Capability IPC experiment
 
-The [kernel IPC entrance](kernel/core/ipc.rs) coordinates local grant checks,
+The [kernel IPC entrance](kernel/core/ipc/mod.rs) coordinates local grant checks,
 transfer reservation and message commit. [Boot admission](kernel/core/ipc/bootstrap.rs)
 uses 32 reserved endpoint slots; [ordinary creation](kernel/core/ipc/channels.rs)
 uses a separate pool of 32 dynamic channels. Each one-way channel has one sender,
@@ -483,7 +488,7 @@ be moved; dynamic grants cannot yet be duplicated or independently revoked.
 
 Each initial/launch account has a backed channel reservation: four by default,
 or profile `ipc_channels` in 0–16. All accounts, including dormant children, must
-fit the 32-channel pool. [Accounting](kernel/core/ipc/budget.rs) retains the original
+fit the 32-channel pool. [Accounting](kernel/core/ipc/budget/mod.rs) retains the original
 account's charge through endpoint moves, creator death and replacement; final
 closure of both ends refunds it. Each recipient separately pays for its dynamic
 handles, including hidden escrow, within a limit of 16. Creation also requires
@@ -904,10 +909,12 @@ page tables; allocation and mapping changes execute on the boot stack with the
 kernel root active. The kernel owns physical backing independently of either
 participant's address space.
 
-Follow [the policy model](kernel/core/user_tasks/memory/regions.rs) for budgets and lifetime,
+Follow [the policy model](kernel/core/user_tasks/memory/regions/mod.rs) for budgets and lifetime,
 [the syscall entrance](kernel/core/user_tasks/syscalls/memory.rs) for
-validation/deferral, [memory execution](kernel/core/user_tasks/memory.rs)
-for physical ownership, and [architecture mappings](kernel/arch/x86_64/user/memory/regions.rs)
+validation/deferral, [memory execution](kernel/core/user_tasks/memory/mod.rs)
+for allocation/sharing/retirement dispatch, [sharing](kernel/core/user_tasks/memory/sharing.rs)
+for producer sealing and reader acceptance, [retirement](kernel/core/user_tasks/memory/retirement.rs)
+for alias removal before refund, and [architecture mappings](kernel/arch/x86_64/user/memory/regions.rs)
 for PTE and checked-copy permissions. None of these depends on the platform.
 
 The producer fills private RW pages, seals them to a live boot-approved service
@@ -922,7 +929,7 @@ offer is cancelled when the producer dies. Consumer death releases its lease;
 replacement tasks cannot inherit old authority. Complete teardown reclaims all
 backing and tables without relying on user destructors.
 
-The [runtime API](platform/libraries/user-runtime/memory.rs) expresses that flow
+The [runtime API](platform/libraries/user-runtime/memory/mod.rs) expresses that flow
 as `Private -> Sealed` and `Shared`. These buffers are not a general heap, an
 arbitrary-address mapping API, a growable region, multicast, or executable memory.
 A dropped producer token with a pending peer stays charged until task exit;

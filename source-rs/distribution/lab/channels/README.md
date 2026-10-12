@@ -20,21 +20,21 @@ Logs go to `build/boot-harness-rs/channels-test/serial.log`.
 ## Follow the exchange
 
 [main.rs](main.rs) selects a fixture role. The parent [suite](scenario.rs) orders
-resource, [delivery](delivery.rs), sponsorship, startup and recursive-tree checks.
+resource, [delivery](delivery/mod.rs), sponsorship, startup and recursive-tree checks.
 Each scenario owns its boundary probes; delivery also owns its [worker](delivery/worker.rs).
 The parent launches the approved worker, creates two one-way channels, and sends
 the worker its request receiver and reply sender over their bootstrap connection.
 The worker processes a request and replies directly on those new channels.
-The [startup scenario](startup.rs) then repeats the exchange with the connections
+The [startup scenario](startup/mod.rs) then repeats the exchange with the connections
 already installed when the child enters `main`; no introduction messages are needed.
-The [tree scenario](tree.rs) then lends launch grants through three instances of
+The [tree scenario](tree/mod.rs) then lends launch grants through three instances of
 the same [recursive supervisor](tree/node.rs).
 
-The public operations are in [user-runtime IPC](../../../platform/libraries/user-runtime/ipc.rs)
+The public operations are in [user-runtime IPC](../../../platform/libraries/user-runtime/ipc/mod.rs)
 and its [channel operations](../../../platform/libraries/user-runtime/ipc/channels.rs).
-They trap through the [syscall dispatcher](../../../kernel/core/user_tasks/syscalls.rs)
-to [checked IPC copies](../../../kernel/core/user_tasks/syscalls/ipc.rs).
-The pure [kernel model](../../../kernel/core/ipc.rs) coordinates authorization,
+They trap through the [syscall dispatcher](../../../kernel/core/user_tasks/syscalls/mod.rs)
+to [checked IPC copies](../../../kernel/core/user_tasks/syscalls/ipc/mod.rs).
+The pure [kernel model](../../../kernel/core/ipc/mod.rs) coordinates authorization,
 transfer reservation and queue commit. Descend into its [grant table](../../../kernel/core/ipc/grants.rs),
 [creation and moves](../../../kernel/core/ipc/channels.rs), or
 [teardown](../../../kernel/core/ipc/lifecycle.rs).
@@ -82,8 +82,8 @@ Success invalidates the parent's names while preserving each transferred right.
 
 Follow [runtime launch requests](../../../platform/libraries/user-runtime/task/launch.rs)
 through [launch syscall staging](../../../kernel/core/user_tasks/syscalls/tasks/launch.rs)
-to [boot-context admission](../../../kernel/core/user_tasks/lifecycle.rs)
-and [whole-bundle commit](../../../kernel/core/ipc/initial.rs). The syscall copies
+to [boot-context admission](../../../kernel/core/user_tasks/lifecycle/mod.rs)
+and [whole-bundle commit](../../../kernel/core/ipc/initial/mod.rs). The syscall copies
 a 48-byte request (argument, count, four names; unused words must be zero) before
 blocking the parent. Kernel records retain only copied names. Admission and commit
 run on the sole boot CPU with interrupts disabled; no task can observe a partial
@@ -133,7 +133,7 @@ transfer lifetime rules; this operation does not revoke endpoints already moved
 to unrelated processes.
 
 Follow [launch requests](../../../platform/libraries/user-runtime/task/launch.rs),
-[admission and commit](../../../kernel/core/user_tasks/lifecycle.rs),
+[admission and commit](../../../kernel/core/user_tasks/lifecycle/mod.rs),
 [whole-loan validation](../../../kernel/core/user_tasks/lifecycle/delegation.rs)
 and [loan lifetime](../../../kernel/core/user_tasks/lifecycle/supervision/delegation.rs). Syscall 40
 uses the 48-byte endpoint prefix followed by a count and seven launch names
@@ -233,11 +233,11 @@ protocol-specific environment structures over the ordered startup endpoints now.
 
 ## Evidence
 
-The [sponsorship scenario](sponsorship.rs) restarts the same
+The [sponsorship scenario](sponsorship/mod.rs) restarts the same
 [worker](sponsorship/worker.rs) eight times while retaining its channels, checks
 that a ninth allocation fails, and lets a sibling fill its reservation. Closing
 one retained channel restores the replacement's capacity. It repeats the wave
-after complete cleanup. [Kernel accounting](../../../kernel/core/ipc/budget.rs)
+after complete cleanup. [Kernel accounting](../../../kernel/core/ipc/budget/mod.rs)
 and its [tests](../../../kernel/core/ipc/budget/tests.rs) also fill all 32 reserved
 channels and exercise escrow charges, creator death, discard and final refunds.
 
@@ -269,11 +269,11 @@ replacement, and complete channel/grant reclamation. Grant-table tests check nam
 exhaustion and independence from unrelated graph activity. Existing smoke and
 matrix tests exercise boot connections using the same local grant machinery.
 
-[Resource subdivision](resources.rs) runs first: real nested processes partition
+[Resource subdivision](resources/mod.rs) runs first: real nested processes partition
 page/channel capacity, exhaust it, and return it after subtree reclamation. See
 the [kernel accounting contract](../../../kernel/core/user_tasks/resources/README.md).
 
-The separate `admission.json` profile enables [dynamic admission](admission.rs),
+The separate `admission.json` profile enables [dynamic admission](admission/mod.rs),
 using the same ordinary userspace program and transport. Its executable grants
 select code independently of five unbound process accounts. See the
 [admission contract](../../../kernel/core/user_tasks/admission/pool/README.md).

@@ -1,6 +1,5 @@
 //! Build startup_config.rs: reserve capacity, bundle launch grants and executable images, bind links.
 //! The target consumer is boot/uefi/startup.rs; profile selection stays in host tooling.
-#[path = "composition/reservations.rs"]
 mod reservations;
 use crate::{
     artifacts::bundle,

@@ -1,7 +1,7 @@
 # Private counter application
 
 A second isolated client demonstrates that the same object numbers refer to
-separate app-owned data. `main.rs` enters `session.rs`, which restores and advances
+separate app-owned data. `main.rs` enters `session/mod.rs`, which restores and advances
 a durable boot counter, then verifies it on init health requests. `state.rs`
 updates COUNTER and MIRROR records in one transaction and checks their agreement.
 Its only platform data link is storage. It has no display, keyboard, disk,

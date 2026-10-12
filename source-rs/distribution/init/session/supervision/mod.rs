@@ -1,5 +1,5 @@
 //! Check providers, collect application outcomes, then answer its bounded requests.
-//! Replacement decisions live here; child.rs owns cancellation/reaping/spawn mechanics.
+//! Replacement decisions live here; ../child.rs owns cancellation/reaping/spawn mechanics.
 mod control;
 use super::{
     child::Service,

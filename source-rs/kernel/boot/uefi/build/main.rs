@@ -1,9 +1,6 @@
 //! Host composition supplies a binary artifact, never a Rust dependency on the distro.
-#[path = "build/artifacts.rs"]
 mod artifacts;
-#[path = "build/composition.rs"]
 mod composition;
-#[path = "build/inputs.rs"]
 mod inputs;
 use artifacts::bundle;
 use std::env;

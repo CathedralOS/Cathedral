@@ -1,6 +1,6 @@
 #![no_std]
 #![no_main]
-//! Executable entry; application.rs owns the visible app workflow.
+//! Executable entry; application/mod.rs owns the visible app workflow.
 mod application;
 use cathedral_user_runtime::write;
 cathedral_user_runtime::entry!(main);

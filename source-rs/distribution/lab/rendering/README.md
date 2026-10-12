@@ -10,8 +10,8 @@ remains the owner of measured costs, commands and implementation limitations.
 
 Start at [lib.rs](lib.rs) for the three shared pieces: [scene resolution](scene.rs),
 [row delegation](rows.rs) and [pixel operations](pixels.rs). The two execution paths
-are [bench.rs](bench.rs) for host measurements and [main.rs](main.rs) for guest role
-dispatch. [guest.rs](guest.rs) coordinates the real page handoff; its
+are [bench entrance](bench/main.rs) for host measurements and [main.rs](main.rs) for guest role
+dispatch. [guest entrance](guest/mod.rs) coordinates the real page handoff; its
 [bounds probe](guest/bounds.rs) compares checked spans with native stores. The
 [boot fixture](../../../kernel/boot/uefi/lab/rendering.rs) supplies grants, checks
 kernel counters and verifies reclamation. None of these are public platform APIs.

@@ -17,7 +17,7 @@ bench = false
 
 [[bin]]
 name = "cathedral-rendering-bench"
-path = "bench.rs"
+path = "bench/main.rs"
 required-features = ["host"]
 bench = false
 
