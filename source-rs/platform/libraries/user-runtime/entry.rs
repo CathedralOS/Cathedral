@@ -1,4 +1,4 @@
-//! Application entry contract. x86_64.S calls cathedral_user_main with boot arguments.
+//! Application entry contract. The CPU entry stub calls cathedral_user_main with boot arguments.
 //! The environment variant loads installed capabilities before invoking application code.
 //! Normal return and panic both terminate through the kernel task boundary.
 

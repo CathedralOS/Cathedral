@@ -67,7 +67,8 @@ pub(super) fn grants(
         .try_reserve_exact(count - initial_count)
         .map_err(|_| Error::OutOfHeap)?;
     for (index, launch) in config.supervision.iter().enumerate() {
-        if launch.framebuffer.is_some_and(|fb| !fb.valid())
+        if (!cathedral_arch::LEGACY_DEVICES && (launch.keyboard || launch.disk))
+            || launch.framebuffer.is_some_and(|fb| !fb.valid())
             || launch.owner >= initial_count
             || launch.peer >= initial_count
         {

@@ -1,8 +1,8 @@
 //! Boot-level experiments: ring transitions, bad requests, isolation and cleanup.
+use crate::console::Console as SerialPort;
 use crate::{diagnostics::user_output, heap::HEAP, memory::PreparedMemory};
 use cathedral_arch as arch;
 use cathedral_core::user_tasks::{self, Executable, Exit, Program};
-use cathedral_uart_16550::SerialPort;
 use core::fmt::Write;
 
 pub fn exercise(memory: &mut PreparedMemory, console: &mut SerialPort) {

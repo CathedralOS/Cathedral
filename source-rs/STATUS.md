@@ -4,6 +4,22 @@ This map connects implemented mechanisms to their integrated consumers, proofs
 and remaining restrictions. The [lab guide](README.md) owns detailed ABI/build
 instructions. [Owner questions](../OWNER_QUESTIONS.md) own unresolved semantics.
 
+## ARM64 portability proof
+
+The [ARM64 backend](kernel/arch/aarch64/README.md) boots through the same UEFI
+entry on QEMU virt. Debug and release tests reuse core admission, scheduling,
+IPC, supervision, private/shared pages and reclamation. They exercise timer
+preemption, SIMD preservation, forbidden EL0 accesses, producer failure with a
+live reader, and every admission frame-failure boundary.
+
+```text
+python tools/boot-harness-rs/arm64/run.py --release
+```
+
+This is a headless single-CPU board proof. The graphical distribution, PC drivers,
+trusted kernel-thread fixture and full CPU-budget stress suite remain x86-64.
+The backend guide records fixed mappings and remaining hardening work.
+
 ## Current integrated path
 
 Start at [distribution desktop policy](distribution/lab/matrix/desktop/desktop.rs).
@@ -33,7 +49,7 @@ remain until their extra behavior has moved into the integrated path with tests.
 
 | Mechanism / owner | Integrated consumer | Proof | Remaining restriction |
 | --- | --- | --- | --- |
-| [Address spaces, admission, faults](kernel/core/user_tasks/user_tasks.rs) | All separately compiled services/apps | `--smoke`: rollback, faults, stale tasks, frame/heap reclamation | One x86-64 CPU; bounded executable catalogue and eight-account arena |
+| [Address spaces, admission, faults](kernel/core/user_tasks/user_tasks.rs) | All separately compiled services/apps | `--smoke`: rollback, faults, stale tasks, frame/heap reclamation | One CPU (x86-64 or ARM64 proof); bounded executable catalogue and eight-account arena |
 | [Dynamic IPC and startup bundles](kernel/core/ipc/ipc.rs) | Matrix-child, root-display and physical-source connections | `--ipc-test`: moves, rejected bundles, death, quotas | Small copied messages; accepted moves can outlive their creator |
 | [Backed IPC reservations](kernel/core/ipc/budget/budget.rs) | Every initial/launch account, including matrix children | Host tests fill all 32 slots; `--ipc-test` exhausts restarted creators while a sibling fills its reservation | Owned idle accounts support conserving subdivision; no sponsorship transfer |
 | [CPU turns and measured ceilings](kernel/core/scheduler/README.md) | Every user launch subtree, including nested matrices | Host accounting tests; `--smoke` checks capped spinners, yields, restart debt and idle refill | Boot/owned-idle burst/refill caps; periodic-timer overrun; no deadlines, weights or service-call donation |

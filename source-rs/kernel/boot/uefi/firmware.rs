@@ -1,8 +1,8 @@
 //! The UEFI crate owns the firmware ABI and exit transaction. This adapter
 //! applies Cathedral's conservative memory policy to its returned inventory.
 
+use crate::console::Console as SerialPort;
 use cathedral_contracts::boot::{BootMemory, MemoryKind, MemoryRegion};
-use cathedral_uart_16550::SerialPort;
 use core::fmt::Write;
 use uefi::mem::memory_map::{MemoryAttribute, MemoryDescriptor, MemoryMap, MemoryType};
 
@@ -10,13 +10,19 @@ pub struct BootInfo {
     #[cfg(feature = "bundled-user")]
     pub framebuffer: Option<cathedral_contracts::display::Framebuffer>,
     pub inventory: BootMemory,
-    #[cfg(any(feature = "smoke-test", feature = "bundled-user"))]
+    #[cfg(any(
+        all(feature = "smoke-test", target_arch = "x86_64"),
+        feature = "bundled-user"
+    ))]
     pub image: cathedral_arch::ImageRange,
 }
 
 pub fn exit_boot_services(console: &mut SerialPort) -> BootInfo {
     let framebuffer = crate::graphics::capture();
-    #[cfg(any(feature = "smoke-test", feature = "bundled-user"))]
+    #[cfg(any(
+        all(feature = "smoke-test", target_arch = "x86_64"),
+        feature = "bundled-user"
+    ))]
     let image = {
         let loaded = uefi::boot::open_protocol_exclusive::<uefi::proto::loaded_image::LoadedImage>(
             uefi::boot::image_handle(),
@@ -78,7 +84,10 @@ pub fn exit_boot_services(console: &mut SerialPort) -> BootInfo {
     .ok();
     BootInfo {
         inventory,
-        #[cfg(any(feature = "smoke-test", feature = "bundled-user"))]
+        #[cfg(any(
+            all(feature = "smoke-test", target_arch = "x86_64"),
+            feature = "bundled-user"
+        ))]
         image,
         #[cfg(feature = "bundled-user")]
         framebuffer,

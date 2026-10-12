@@ -1,6 +1,6 @@
 // Bounded ELF64 ET_EXEC preflight, entirely before physical allocation.
 // ELF shapes follow https://gabi.xinuos.com/elf/08-pheader.html. The accepted
-// subset is lab policy: x86-64, static, page-disjoint readable PT_LOAD segments,
+// subset is lab policy: selected CPU, static, page-disjoint readable PT_LOAD segments,
 // no W+X, no interpreter/dynamic/TLS headers, and a file-backed executable entry.
 
 use cathedral_arch::{UserSegment, valid_segments};
@@ -42,7 +42,7 @@ pub fn parse(bytes: &[u8]) -> Result<Image<'_>, Error> {
     if &bytes[..7] != b"\x7fELF\x02\x01\x01"
         || bytes[7..16].iter().any(|byte| *byte != 0)
         || u16_at(bytes, 16) != 2
-        || u16_at(bytes, 18) != 62
+        || u16_at(bytes, 18) != cathedral_arch::ELF_MACHINE
         || u32_at(bytes, 20) != 1
         || u32_at(bytes, 48) != 0
         || u16_at(bytes, 52) != 64

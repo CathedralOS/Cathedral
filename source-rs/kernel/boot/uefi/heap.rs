@@ -1,8 +1,8 @@
 //! Install the core allocator over the architecture's owned heap mapping.
 
+use crate::console::Console as SerialPort;
 use cathedral_arch::BootLayout;
 use cathedral_core::memory::heap::KernelHeap;
-use cathedral_uart_16550::SerialPort;
 use core::fmt::Write;
 
 #[global_allocator]

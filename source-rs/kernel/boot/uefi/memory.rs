@@ -1,8 +1,8 @@
 //! Boot-time composition of core frame policy and architecture-owned mappings.
 
+use crate::console::Console as SerialPort;
 use cathedral_arch as arch;
 use cathedral_core::memory::FrameAllocator;
-use cathedral_uart_16550::SerialPort;
 use core::fmt::Write;
 
 pub struct PreparedMemory {
@@ -10,7 +10,10 @@ pub struct PreparedMemory {
     pub framebuffer: Option<cathedral_contracts::display::Framebuffer>,
     pub layout: arch::BootLayout,
     pub frames: FrameAllocator,
-    #[cfg(any(feature = "smoke-test", feature = "bundled-user"))]
+    #[cfg(any(
+        all(feature = "smoke-test", target_arch = "x86_64"),
+        feature = "bundled-user"
+    ))]
     pub image: arch::ImageRange,
 }
 
@@ -34,7 +37,10 @@ pub fn prepare(info: crate::firmware::BootInfo, console: &mut SerialPort) -> Pre
         framebuffer: info.framebuffer,
         frames,
         layout,
-        #[cfg(any(feature = "smoke-test", feature = "bundled-user"))]
+        #[cfg(any(
+            all(feature = "smoke-test", target_arch = "x86_64"),
+            feature = "bundled-user"
+        ))]
         image: info.image,
     }
 }

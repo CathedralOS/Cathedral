@@ -14,6 +14,11 @@ fn main() {
         composition::generate();
         return;
     }
+    if env::var("CARGO_CFG_TARGET_ARCH").as_deref() == Ok("aarch64") {
+        println!("cargo:rerun-if-env-changed=CATHEDRAL_ARM64_ELF");
+        bundle("CATHEDRAL_ARM64_ELF", "arm64.elf");
+        return;
+    }
     for (variable, destination) in [
         ("CATHEDRAL_HELLO_ELF", "user.elf"),
         ("CATHEDRAL_IPC_ELF", "ipc.elf"),

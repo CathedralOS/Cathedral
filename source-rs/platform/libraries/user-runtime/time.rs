@@ -1,4 +1,4 @@
-//! Boot-local monotonic ticks, not wall time. The current PIT profile is nominally
+//! Boot-local monotonic ticks, not wall time. The current timer profiles are nominally
 //! 100 Hz; deadlines use wrapping comparisons within half the u64 clock range.
 use crate::{Error, abi, arch};
 

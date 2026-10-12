@@ -1,11 +1,11 @@
 //! Real frame rollback and supervised ring-3 page-object exercises.
+use crate::console::Console as SerialPort;
 use crate::{diagnostics::user_output, heap::HEAP, memory::PreparedMemory};
 use cathedral_contracts::memory::Grant;
 use cathedral_core::{
     ipc::link::LinkSpec,
     user_tasks::{self, Config, Executable, Exit, Program, Supervision},
 };
-use cathedral_uart_16550::SerialPort;
 use core::fmt::Write;
 static ELF: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/memory.elf"));
 pub fn exercise(memory: &mut PreparedMemory, console: &mut SerialPort) {

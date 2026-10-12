@@ -3,10 +3,13 @@
 //! Minimal Rust-lab userspace support. No allocator, kernel imports or OS policy.
 //! Start at entry.rs for _start -> supplied environment -> application main -> exit.
 //! task/ipc/memory expose explicit capabilities; server/server.rs owns service event ordering.
-//! Protocol clients name their receiving service; arch.rs alone performs the trap.
+//! Protocol clients name their receiving service; arch/ alone performs the trap.
 
-#[cfg(not(all(target_arch = "x86_64", target_os = "none")))]
-compile_error!("Build the user runtime for x86_64-unknown-none");
+#[cfg(not(all(
+    any(target_arch = "x86_64", target_arch = "aarch64"),
+    target_os = "none"
+)))]
+compile_error!("Build the user runtime for x86_64-unknown-none or aarch64-unknown-none");
 
 mod arch;
 mod diagnostics;

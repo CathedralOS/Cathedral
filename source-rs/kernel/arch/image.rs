@@ -1,5 +1,7 @@
 //! Image descriptions and pure geometry/permission validation before allocating frames.
-use super::{MAX_IMAGE_PAGES, PAGE, USER_CODE, USER_IMAGE_END};
+use crate::{USER_CODE, USER_IMAGE_END};
+const PAGE: u64 = 4096;
+const MAX_IMAGE_PAGES: usize = 64;
 
 #[derive(Clone, Copy, Debug)]
 pub struct UserSegment<'a> {

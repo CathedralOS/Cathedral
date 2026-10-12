@@ -1,10 +1,10 @@
 //! Verify userspace timeout/recovery and unrelated progress under a spinning peer.
+use crate::console::Console as SerialPort;
 use crate::{diagnostics::user_output, heap::HEAP, memory::PreparedMemory};
 use cathedral_core::{
     ipc::EndpointSpec,
     user_tasks::{self, Config, Executable, Exit, Program, Supervision},
 };
-use cathedral_uart_16550::SerialPort;
 use core::fmt::Write;
 
 static ELF: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/supervision.elf"));

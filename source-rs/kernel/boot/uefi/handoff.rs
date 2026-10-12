@@ -1,8 +1,8 @@
 //! Move boot state across the architecture's non-returning stack switch.
 
+use crate::console::Console as SerialPort;
 use crate::memory::PreparedMemory;
 use cathedral_arch as arch;
-use cathedral_uart_16550::SerialPort;
 
 pub struct BootState {
     pub memory: PreparedMemory,

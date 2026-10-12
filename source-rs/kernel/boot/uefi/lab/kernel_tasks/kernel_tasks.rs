@@ -1,11 +1,11 @@
 // Bring-up workloads. Each task owns heap data across yields and sleeps;
 // orchestration and reporting happen back on the boot stack after teardown.
 
+use crate::console::Console as SerialPort;
 use crate::heap::HEAP;
 use alloc::vec::Vec;
 use cathedral_arch as arch;
 use cathedral_core::kernel_tasks;
-use cathedral_uart_16550::SerialPort;
 use core::{
     fmt::Write,
     sync::atomic::{AtomicU64, Ordering},

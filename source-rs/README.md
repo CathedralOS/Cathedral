@@ -8,6 +8,8 @@ Omega's proof or authority guarantees.
 
 See the [implementation map](STATUS.md) for the integrated matrix desktop,
 mechanism-to-test coverage, restrictions and next kernel boundaries.
+The [ARM64 portability proof](kernel/arch/aarch64/README.md) exercises the shared
+core on a second CPU architecture; the integrated desktop remains x86-64.
 
 ## Start reading
 
@@ -80,6 +82,7 @@ The entrance explains this level without exposing every detail below it.
 | `distribution/lab/ipc/` | Client, echo service and hostile IPC fixture roles in a standalone ELF |
 | `distribution/lab/hello/` | Independently compiled `no_std` program exercising initialized data, BSS, yields and writes |
 | `kernel/arch/lib.rs` | Compile-time CPU backend selection and the boot-facing machine interface |
+| `kernel/arch/aarch64/` | QEMU virt EL1/EL0 paging, contexts, GICv2 timer and headless portability proof; [scope and commands](kernel/arch/aarch64/README.md) |
 | `kernel/arch/x86/` | Shared instructions and the selected PC platform's temporary PIC/PIT route |
 | `kernel/arch/x86_64/` | Paging, dynamic guarded stack mapping/teardown, CPU contexts, GDT/TSS/IDT and interrupt stubs, using the `x86_64` crate |
 | `kernel/arch/x86_64/user/user.rs` | Sparse task address spaces, CR3 entry/return policy and embedded x86-64 test payload |
@@ -97,8 +100,8 @@ supplies its port operations; the platform driver imports no kernel package.
 root. The single `distribution/` is replaceable by forks; platform and kernel do
 not import it.
 The Rust-specific `kernel/arch/` layer groups hardware mechanisms that Omega currently
-spreads across core providers, instruction contracts and libraries. Only x86-64
-boots today; shared x86 instructions do not imply a working 32-bit kernel.
+spreads across core providers, instruction contracts and libraries. x86-64 and
+AArch64 boot through UEFI; shared x86 instructions do not imply a working 32-bit kernel.
 UEFI ABI definitions and Boot Services come from the upstream `uefi` crate.
 `foundation/` and distribution desktop packages appear when their first code lands,
 following the same rule as the Omega tree.
@@ -106,8 +109,9 @@ following the same rule as the Omega tree.
 ## Run
 
 Prerequisites: Rustup, Python 3.10+, QEMU and OVMF. The workspace pins Rust 1.94.0
-and both `x86_64-unknown-uefi` and `x86_64-unknown-none`; Rustup installs them
-when Cargo is run inside `source-rs/`.
+and the `x86_64` / `aarch64` `unknown-uefi` and `unknown-none` targets; Rustup
+installs them when Cargo is run inside `source-rs/`. The commands below select
+x86-64; use the separate [ARM64 runner](kernel/arch/aarch64/README.md) for its proof.
 Dependencies are locked in `Cargo.lock`. No nightly language features are used.
 
 From the repository root:
@@ -185,8 +189,8 @@ use the UEFI target; the user program/runtime use the freestanding ELF target,
 so the whole workspace cannot be built for one target. `cargo build-uefi` builds
 a standalone kernel with no initial program; use the Python harness for the
 composed distribution image or add `smoke-test` for kernel-only exercises. Run Cargo inside this directory so its toolchain, aliases and relative
-linker-script path apply. The bare-metal target uses the SysV calling convention;
-the runtime's entry stub establishes its call alignment before invoking Rust.
+linker-script path apply. The x86-64 target uses SysV and AArch64 uses AAPCS64;
+the runtime's CPU entry stub establishes the call boundary before invoking Rust.
 
 ## Current milestone
 
@@ -307,7 +311,7 @@ The CPU profile is qemu64, with no claim to optional virtualization exception
 semantics or physical-hardware coverage. Unsafe wrappers are boot-only lab
 mechanisms, not application APIs.
 
-The runtime supports a configurable limit of 1–64 trusted kernel tasks on one
+The runtime supports a configurable limit of 1â€“64 trusted kernel tasks on one
 CPU (default 8), plus an optional frame budget for stacks and their tables.
 `kernel_tasks::spawn(fn())` returns a `TaskId` or an admission error. IDs contain slot
 generations and are scoped to a session; reused slots do not revive old IDs.
@@ -388,7 +392,7 @@ initial FP state is clean and I/O privilege is zero.
 | 30: Memory seal | Region handle, link token | Irreversibly remove WRITE and offer to that live service |
 | 31: Memory map | Producer-local offer, service link | Accept authorized RO/NX lease and return a fresh local reader handle |
 | 32: Memory pages | Region handle | Caller-owned or accepted region page count |
-| 33: IPC wait many | Pointer to 1–8 LE u64 receive tickets, count, absolute deadline | Ready index or error; validates the copied array and all receive rights, consumes no data, requires clock |
+| 33: IPC wait many | Pointer to 1â€“8 LE u64 receive tickets, count, absolute deadline | Ready index or error; validates the copied array and all receive rights, consumes no data, requires clock |
 | 34: IPC create | 16-byte writable destination, 0, 0 | 0 after installing local send/receive handles; `NO_MEMORY` at quota |
 | 35: IPC close | Local handle, 0, 0 | 0 after dropping the grant; copied handles become stale |
 | 36: IPC send capability | Destination handle, 80-byte packet, 0 | Payload length after atomic one-endpoint move into the queue |
@@ -422,7 +426,7 @@ run in separate boot-managed sessions.
 ## Executable loading experiment
 
 The [ELF preflight](kernel/core/user_tasks/admission/elf/elf.rs) accepts little-endian ELF64,
-System V ABI version 0, x86-64 `ET_EXEC`. Limits are 4 MiB per file, 16 program
+System V ABI version 0, `ET_EXEC` for the selected CPU (x86-64 or AArch64). Limits are 4 MiB per file, 16 program
 headers, eight load segments and 64 image pages total. Each load segment must be
 readable, 4-KiB aligned in both file and virtual memory, have alignment 4096,
 and fit in the 1-MiB image window starting at `0x8000000000`. Segments cannot
@@ -488,7 +492,7 @@ attached authority with `TOO_SMALL` and preserves the message. Boot grants canno
 be moved; dynamic grants cannot yet be duplicated or independently revoked.
 
 Each initial/launch account has a backed channel reservation: four by default,
-or profile `ipc_channels` in 0–16. All accounts, including dormant children, must
+or profile `ipc_channels` in 0â€“16. All accounts, including dormant children, must
 fit the 32-channel pool. [Accounting](kernel/core/ipc/budget/budget.rs) retains the original
 account's charge through endpoint moves, creator death and replacement; final
 closure of both ends refunds it. Each recipient separately pays for its dynamic

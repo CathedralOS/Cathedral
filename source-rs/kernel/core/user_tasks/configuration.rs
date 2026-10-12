@@ -40,7 +40,7 @@ pub enum Executable<'a> {
 }
 pub struct Program<'a> {
     pub executable: Executable<'a>,
-    /// Initial RDI/RSI values; ordinary data, not capabilities.
+    /// Initial architecture entry arguments; ordinary data, not capabilities.
     pub arguments: [u64; 2],
 }
 

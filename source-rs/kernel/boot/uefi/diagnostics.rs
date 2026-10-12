@@ -1,12 +1,12 @@
 //! Bootstrap serial reporting and terminal error paths. No firmware calls.
 
+use crate::console::Console as SerialPort;
 use cathedral_arch as arch;
-use cathedral_uart_16550::SerialPort;
 use core::{fmt::Write, panic::PanicInfo};
 
 pub fn initialize() -> SerialPort {
-    // SAFETY: The single-CPU QEMU PC profile provides privileged COM1 access.
-    let mut console = unsafe { SerialPort::com1(arch::in8, arch::out8) };
+    // SAFETY: The selected single-CPU QEMU board provides its privileged UART.
+    let mut console = unsafe { crate::console::acquire() };
     writeln!(console, "Cathedral Rust lab: UEFI entry").ok();
     console
 }
@@ -15,17 +15,20 @@ pub fn ready(console: &mut SerialPort) {
     writeln!(console, "CATHEDRAL_RS_BOOT_OK").ok();
 }
 
-#[cfg(any(feature = "smoke-test", feature = "bundled-user"))]
+#[cfg(any(
+    all(feature = "smoke-test", target_arch = "x86_64"),
+    feature = "bundled-user"
+))]
 pub fn user_output(bytes: &[u8]) -> bool {
     // SAFETY: Sole CPU in IRQ-masked dispatch. Boot's UART owner is suspended;
     // this bounded sink neither allocates nor retains the supplied buffer.
-    let mut console = unsafe { SerialPort::com1(arch::in8, arch::out8) };
+    let mut console = unsafe { crate::console::acquire() };
     console.write_str("Cathedral Rust lab: ").is_ok() && console.write_bytes(bytes).is_ok()
 }
 
 pub fn fault(fault: arch::Fault) -> ! {
     // SAFETY: Terminal trap on the sole CPU; the interrupted owner never resumes.
-    let mut console = unsafe { SerialPort::com1(arch::in8, arch::out8) };
+    let mut console = unsafe { crate::console::acquire() };
     writeln!(
         console,
         "CATHEDRAL_RS_FAULT: vector={} error={:#x} rip={:#x} cr2={:#x} rsp={:#x}",
@@ -46,7 +49,7 @@ fn panic(info: &PanicInfo<'_>) -> ! {
     // SAFETY: No unwinding/resumption; the previous UART owner is abandoned.
     unsafe {
         arch::disable_interrupts();
-        let mut console = SerialPort::com1(arch::in8, arch::out8);
+        let mut console = crate::console::acquire();
         writeln!(console, "CATHEDRAL_RS_PANIC: {info}").ok();
         #[cfg(feature = "smoke-test")]
         crate::smoke::fail();

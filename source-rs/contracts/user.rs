@@ -1,6 +1,9 @@
 //! Experimental Rust-lab ABI, not Cathedral's accepted component contract.
 //! x86-64: INT 0x80; RAX is call/result, RDI/RSI/RDX are arguments. Entry receives
 //! two ordinary arguments in RDI/RSI and a 16-byte-aligned stack without a caller.
+//! AArch64: SVC #0; x8 is call, x0 is result, x0/x1/x2 are arguments. Entry
+//! receives two ordinary arguments in x0/x1 with a 16-byte-aligned stack.
+//! Below, arg0/arg1/arg2 refer to the selected architecture's argument registers.
 //! Write accepts at most 256 bytes within one mapped user page.
 
 pub const WRITE: u64 = 0;
@@ -26,9 +29,9 @@ pub const KEYBOARD_AUX: u64 = 512;
 pub const KEYBOARD_LOST: u64 = 256;
 pub const KEYBOARD_READ: u64 = 17;
 pub const KEYBOARD_WRITE: u64 = 18;
-/// Receive into exactly MAX_MESSAGE writable bytes; RDX is the absolute deadline.
+/// Receive into exactly MAX_MESSAGE writable bytes; arg2 is the absolute deadline.
 pub const IPC_RECEIVE_UNTIL: u64 = 19;
-/// RDI is an absolute deadline. Requires both keyboard and clock grants.
+/// arg0 is an absolute deadline. Requires both keyboard and clock grants.
 pub const KEYBOARD_READ_UNTIL: u64 = 20;
 pub const LINK_HANDLE: u64 = 21;
 pub const LINK_CONNECT: u64 = 22;
@@ -75,24 +78,24 @@ pub const IPC_WAIT_MANY: u64 = 33;
 pub const MAX_WAIT_HANDLES: usize = 8;
 
 /// Ordinary processes may create bounded, one-way copied-message channels.
-/// CREATE writes [send, receive] to 16 writable bytes at RDI; RSI/RDX must be zero.
+/// CREATE writes [send, receive] to 16 writable bytes at arg0; arg1/arg2 must be zero.
 pub const IPC_CREATE: u64 = 34;
 pub const IPC_CLOSE: u64 = 35;
-/// SEND_CAP: RDI destination, RSI packet address, RDX zero. Moves one dynamic
+/// SEND_CAP: arg0 destination, arg1 packet address, arg2 zero. Moves one dynamic
 /// endpoint on success. Packet: length u64, attachment handle u64, 64 payload bytes.
 pub const IPC_SEND_CAP: u64 = 36;
-/// RECEIVE_CAP: RDI receiver, RSI writable packet, RDX zero. Blocks like RECEIVE.
+/// RECEIVE_CAP: arg0 receiver, arg1 writable packet, arg2 zero. Blocks like RECEIVE.
 pub const IPC_RECEIVE_CAP: u64 = 37;
 pub const IPC_PACKET_BYTES: usize = 80;
 pub const MAX_DYNAMIC_CHANNELS: usize = 32;
 pub const MAX_CREATED_CHANNELS: usize = 16;
 pub const MAX_DYNAMIC_HANDLES: usize = 16;
 
-/// Move up to four dynamic endpoints into a newly admitted child. RDI launch,
-/// RSI 48-byte record (argument, count, four handles), RDX zero. Unused words zero.
+/// Move up to four dynamic endpoints into a newly admitted child. arg0 launch,
+/// arg1 48-byte record (argument, count, four handles), arg2 zero. Unused words zero.
 pub const TASK_SPAWN_WITH: u64 = 38;
 /// Copy the caller's initial endpoint names: count, four handles (40 bytes).
-/// RDI writable destination, RSI/RDX zero. This snapshot never reinstalls grants.
+/// arg0 writable destination, arg1/arg2 zero. This snapshot never reinstalls grants.
 pub const TASK_ENVIRONMENT: u64 = 39;
 pub const MAX_INITIAL_ENDPOINTS: usize = 4;
 pub const SPAWN_BYTES: usize = 48;
@@ -100,12 +103,12 @@ pub const ENVIRONMENT_BYTES: usize = 40;
 
 /// SPAWN_WITH's 48-byte prefix followed by count and seven launch grants.
 /// Successful admission lends idle launch/peer authority until the child exits.
-/// Endpoints move as usual. RDI launch, RSI 112-byte record, RDX zero; tails zero.
+/// Endpoints move as usual. arg0 launch, arg1 112-byte record, arg2 zero; tails zero.
 pub const TASK_SPAWN_TREE: u64 = 40;
 pub const SPAWN_TREE_BYTES: usize = SPAWN_BYTES + 8 + MAX_LAUNCHES * 8;
 
-/// Caller-local IPC account snapshot at RDI: channel reservation, charged channels,
-/// dynamic-handle limit, charged handles (including escrow). RSI/RDX must be zero.
+/// Caller-local IPC account snapshot at arg0: channel reservation, charged channels,
+/// dynamic-handle limit, charged handles (including escrow). arg1/arg2 must be zero.
 pub const IPC_BUDGET: u64 = 41;
 pub const IPC_BUDGET_BYTES: usize = 32;
 /// Conservative default fits every reserved task slot without overcommit.
@@ -115,9 +118,9 @@ pub const CPU_REFILL_PERIOD_US: u64 = 100_000;
 /// Caller-only measured execution microseconds. Same grant/copy ABI as CLOCK_READ.
 pub const CPU_READ: u64 = 42;
 /// Own account: private pages, reader pages, channels, then corresponding usage.
-/// RDI points to 48 writable bytes; RSI/RDX zero. No foreign/global selector.
+/// arg0 points to 48 writable bytes; arg1/arg2 zero. No foreign/global selector.
 pub const RESOURCE_BUDGET: u64 = 43;
-/// RDI owned idle launch; RSI points to three u64 absolute child limits; RDX zero.
+/// arg0 owned idle launch; arg1 points to three u64 absolute child limits; arg2 zero.
 /// Unused capacity moves between owner and child atomically, never minted.
 pub const RESOURCE_ASSIGN: u64 = 44;
 pub const TASK_EXECUTABLE: u64 = 45; // owned launch -> executable-only authority

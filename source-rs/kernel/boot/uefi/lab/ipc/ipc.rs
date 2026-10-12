@@ -1,10 +1,10 @@
 // Lab composition: grants and assertions, with all executable behavior in distro ELF.
+use crate::console::Console as SerialPort;
 use crate::{diagnostics::user_output, heap::HEAP, memory::PreparedMemory};
 use cathedral_core::{
     ipc::EndpointSpec,
     user_tasks::{self, Config, Executable, Exit, Program},
 };
-use cathedral_uart_16550::SerialPort;
 use core::fmt::Write;
 
 static EXECUTABLE: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/ipc.elf"));

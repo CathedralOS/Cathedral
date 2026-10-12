@@ -2,9 +2,9 @@
 //! source-rs/distribution/README.md and selected by distribution/profile.json.
 //! Admit a supplied initial program and its bounded launch authority.
 //! Executable selection and resource requests come from host composition.
+use crate::console::Console as SerialPort;
 use crate::{diagnostics::user_output, memory::PreparedMemory};
 use cathedral_core::user_tasks::{self, Config, Executable, Program, Supervision};
-use cathedral_uart_16550::SerialPort;
 use core::fmt::Write;
 
 static INITIAL: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/initial.elf"));

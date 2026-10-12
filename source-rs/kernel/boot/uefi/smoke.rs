@@ -1,7 +1,7 @@
 //! QEMU-only assertions and intentional fault injection. Absent in normal boots.
 
+use crate::console::Console as SerialPort;
 use cathedral_arch as arch;
-use cathedral_uart_16550::SerialPort;
 use core::{
     fmt::Write,
     sync::atomic::{AtomicU64, Ordering},
@@ -11,6 +11,7 @@ static EXPECTED_VECTOR: AtomicU64 = AtomicU64::new(u64::MAX);
 static EXPECTED_ADDRESS: AtomicU64 = AtomicU64::new(0);
 static EXPECTED_STACK_TOP: AtomicU64 = AtomicU64::new(0);
 
+#[cfg(target_arch = "x86_64")]
 pub fn probe_faults(layout: &arch::BootLayout) {
     if cfg!(feature = "fault-guard") {
         EXPECTED_VECTOR.store(14, Ordering::Release);
@@ -51,7 +52,7 @@ pub fn finish_fault(fault: &arch::Fault, console: &mut SerialPort) -> ! {
 }
 
 pub fn complete() -> ! {
-    // SAFETY: Only the smoke runner supplies isa-debug-exit at port 0xf4.
+    // SAFETY: Only the lab harness enables the selected backend's QEMU exit mechanism.
     unsafe { arch::qemu_exit(0x10) }
 }
 

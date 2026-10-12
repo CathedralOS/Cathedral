@@ -1,4 +1,4 @@
-/* Rust-lab x86-64 ET_EXEC layout; not a stable Cathedral executable ABI. */
+/* Rust-lab ELF64 ET_EXEC layout; not a stable Cathedral executable ABI. */
 ENTRY(_start)
 PHDRS {
     text PT_LOAD FLAGS(5);

@@ -1,8 +1,8 @@
 //! Run independently compiled distribution code through the same user runtime.
+use crate::console::Console as SerialPort;
 use crate::{diagnostics::user_output, heap::HEAP, memory::PreparedMemory};
 use cathedral_arch as arch;
 use cathedral_core::user_tasks::{self, Executable, Exit, Program};
-use cathedral_uart_16550::SerialPort;
 use core::fmt::Write;
 
 static EXECUTABLE: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/user.elf"));

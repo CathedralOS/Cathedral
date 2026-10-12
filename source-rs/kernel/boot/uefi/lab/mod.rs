@@ -1,18 +1,25 @@
 //! Rust module plumbing. Start reading in `lab.rs`.
 
-#[cfg(feature = "bundled-user")]
+#[cfg(all(feature = "bundled-user", target_arch = "x86_64"))]
 mod applications;
-#[cfg(feature = "bundled-user")]
+#[cfg(all(feature = "bundled-user", target_arch = "x86_64"))]
 mod display;
-#[cfg(feature = "bundled-user")]
+#[cfg(all(feature = "bundled-user", target_arch = "x86_64"))]
 mod ipc;
+#[cfg(target_arch = "x86_64")]
 mod kernel_tasks;
-#[cfg(feature = "bundled-user")]
+#[cfg(all(feature = "bundled-user", target_arch = "x86_64"))]
 mod memory;
-#[cfg(feature = "bundled-user")]
+#[cfg(all(feature = "bundled-user", target_arch = "x86_64"))]
 mod rendering;
-#[cfg(feature = "bundled-user")]
+#[cfg(all(feature = "bundled-user", target_arch = "x86_64"))]
 mod supervision;
+#[cfg(target_arch = "x86_64")]
 mod user_tasks;
 
+#[cfg(target_arch = "x86_64")]
 include!("lab.rs");
+#[cfg(target_arch = "aarch64")]
+mod arm64;
+#[cfg(target_arch = "aarch64")]
+pub use arm64::run;

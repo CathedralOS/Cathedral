@@ -1,8 +1,8 @@
 //! Establish the exception floor before exposing the first external interrupt.
 
+use crate::console::Console as SerialPort;
 use crate::diagnostics;
 use cathedral_arch as arch;
-use cathedral_uart_16550::SerialPort;
 use core::fmt::Write;
 
 pub fn install(layout: &arch::BootLayout, console: &mut SerialPort) {
@@ -11,11 +11,7 @@ pub fn install(layout: &arch::BootLayout, console: &mut SerialPort) {
         arch::install_interrupts(layout, diagnostics::fault);
         arch::test_breakpoint();
     }
-    writeln!(
-        console,
-        "Cathedral Rust lab: GDT TSS IDT installed; breakpoint returned"
-    )
-    .ok();
+    writeln!(console, "Cathedral Rust lab: {}", arch::INTERRUPT_READY).ok();
 }
 
 pub fn start_timer(layout: &arch::BootLayout, console: &mut SerialPort) {

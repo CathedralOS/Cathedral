@@ -5,6 +5,7 @@
 
 extern crate alloc;
 
+mod console;
 mod diagnostics;
 mod firmware;
 mod graphics;
@@ -35,7 +36,7 @@ fn kernel_main(mut boot: handoff::BootState) -> ! {
     heap::initialize(&boot.memory.layout, &mut boot.console);
     #[cfg(feature = "smoke-test")]
     heap::verify(&boot.memory.layout, &mut boot.console);
-    #[cfg(feature = "smoke-test")]
+    #[cfg(all(feature = "smoke-test", target_arch = "x86_64"))]
     smoke::probe_faults(&boot.memory.layout);
     interrupts::start_timer(&boot.memory.layout, &mut boot.console);
     boot.memory.frames.enable_reclamation();

@@ -16,7 +16,7 @@ fn fixture() -> Vec<u8> {
     let mut bytes = vec![0; 8193];
     bytes[..7].copy_from_slice(b"\x7fELF\x02\x01\x01");
     put16(&mut bytes, 16, 2);
-    put16(&mut bytes, 18, 62);
+    put16(&mut bytes, 18, cathedral_arch::ELF_MACHINE);
     put32(&mut bytes, 20, 1);
     put64(&mut bytes, 24, USER_CODE);
     put64(&mut bytes, 32, 64);

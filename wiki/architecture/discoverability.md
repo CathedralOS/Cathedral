@@ -56,6 +56,11 @@ orders deferred work and CPU re-entry; `lifecycle` owns spawn/teardown; `memory`
 dispatches page-object work to allocation, sharing and retirement.
 `session.rs` holds their shared state, not a second hidden execution pipeline.
 
+The second CPU proof follows the same boot entry into
+`arch/aarch64/memory/memory.rs`, `interrupts/interrupts.rs` and
+`context/context.rs`. Its saved context returns to the shared core trap dispatcher;
+`boot/uefi/lab/arm64/arm64.rs` visibly sequences the headless proof.
+
 Trap requests descend from `execution/traps.rs` into `syscalls/syscalls.rs`, then a
 resource family. For example, `syscalls/ipc/ipc.rs` selects copied delivery,
 capability transfer, links or readiness, while `syscalls/devices/devices.rs` selects a

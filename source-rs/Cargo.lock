@@ -172,6 +172,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "cathedral-portability-lab"
+version = "0.0.0"
+dependencies = [
+ "cathedral-contracts",
+ "cathedral-user-runtime",
+]
+
+[[package]]
 name = "cathedral-rendering-lab"
 version = "0.0.0"
 dependencies = [

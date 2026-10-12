@@ -1,10 +1,10 @@
 //! Admission, allocation-failure rollback, stale IDs and live-peer stress.
 
+use crate::console::Console as SerialPort;
 use crate::{heap::HEAP, memory::PreparedMemory};
 use alloc::vec::Vec;
 use cathedral_arch as arch;
 use cathedral_core::kernel_tasks::{self, Config, SpawnError};
-use cathedral_uart_16550::SerialPort;
 use core::{
     fmt::Write,
     sync::atomic::{AtomicBool, AtomicU64, AtomicUsize, Ordering},
