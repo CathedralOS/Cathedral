@@ -2,6 +2,7 @@
 build/
 target/
 **/build/
+!source-rs/kernel/boot/uefi/build/
 
 # Editor / OS noise
 .DS_Store

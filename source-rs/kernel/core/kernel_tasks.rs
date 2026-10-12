@@ -1,14 +1,18 @@
 //! Trusted kernel task API. Admission and teardown run on the boot stack;
-//! the interrupt callback only saves contexts and chooses where to resume.
+//! run validates capacity, prepares state, admits tasks, executes and checks reclamation.
+//! lifecycle owns admission/reaping; execution owns suspension and its trap callback.
 
-mod runtime;
+mod execution;
+mod lifecycle;
+mod session;
 mod stacks;
 
 pub use crate::scheduler::TaskId;
 use crate::{memory::FrameAllocator, scheduler::Event};
 use cathedral_arch as arch;
-pub use runtime::RunStats;
-use runtime::{Request, access};
+use core::sync::atomic::Ordering;
+pub use session::RunStats;
+use session::{ACTIVE, Request, Session, access};
 
 #[derive(Clone, Copy)]
 pub struct Config {
@@ -46,8 +50,26 @@ pub unsafe fn run(
     config: Config,
     entries: &[fn()],
 ) -> Result<RunStats, SpawnError> {
-    // SAFETY: Forward the runtime's machine/lifetime preconditions from caller.
-    unsafe { runtime::run(frames, config, entries) }
+    assert!(
+        ACTIVE.load(Ordering::Acquire).is_null(),
+        "nested task session"
+    );
+    if config.task_limit == 0 || config.task_limit > arch::MAX_TASK_SLOTS {
+        return Err(SpawnError::InvalidLimit);
+    }
+    if entries.len() > config.task_limit {
+        return Err(SpawnError::TaskLimit);
+    }
+    let mut session = Session::new(frames, config);
+    // SAFETY: Caller owns machine setup. Admission rolls back before failure;
+    // execution pins the session through callback registration and removal.
+    let session = unsafe {
+        lifecycle::initial(&mut session, entries, frames)?;
+        execution::run(session)
+    };
+    assert_eq!(session.stats.exits, session.stats.spawned);
+    assert_eq!(frames.allocated(), session.baseline);
+    Ok(session.stats)
 }
 
 /// Spawn from a running task. Returns only after admission or complete rollback.

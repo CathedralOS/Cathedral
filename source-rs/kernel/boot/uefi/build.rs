@@ -1,42 +1,20 @@
 //! Host composition supplies a binary artifact, never a Rust dependency on the distro.
-use std::{env, fs, path::PathBuf};
+#[path = "build/artifacts.rs"]
+mod artifacts;
+#[path = "build/composition.rs"]
+mod composition;
+#[path = "build/inputs.rs"]
+mod inputs;
+use artifacts::bundle;
+use std::env;
 
 fn main() {
-    for variable in [
-        "CATHEDRAL_INIT_ELF",
-        "CATHEDRAL_INIT_CLOCK",
-        "CATHEDRAL_INIT_PRIVATE_PAGES",
-        "CATHEDRAL_INIT_SHARED_PAGES",
-        "CATHEDRAL_LINKS",
-        "CATHEDRAL_CHANNEL_LIMITS",
-        "CATHEDRAL_CPU_LIMITS",
-        "CATHEDRAL_LAUNCH_COUNT",
-        "CATHEDRAL_DYNAMIC_TASKS",
-        "CATHEDRAL_IMAGE_COUNT",
-    ] {
-        println!("cargo:rerun-if-env-changed={variable}");
-    }
-    for index in 0..cathedral_contracts::user::MAX_LAUNCHES {
-        println!("cargo:rerun-if-env-changed=CATHEDRAL_IMAGE_{index}_ELF");
-        println!("cargo:rerun-if-env-changed=CATHEDRAL_IMAGE_{index}_ARGUMENT");
-        for field in [
-            "ELF",
-            "FRAMEBUFFER",
-            "KEYBOARD",
-            "DISK",
-            "CLOCK",
-            "ARGUMENT",
-            "PRIVATE_PAGES",
-            "SHARED_PAGES",
-        ] {
-            println!("cargo:rerun-if-env-changed=CATHEDRAL_LAUNCH_{index}_{field}");
-        }
-    }
+    inputs::watch();
     if env::var_os("CARGO_FEATURE_BUNDLED_USER").is_none() {
         return;
     }
     if env::var_os("CARGO_FEATURE_SMOKE_TEST").is_none() {
-        startup();
+        composition::generate();
         return;
     }
     for (variable, destination) in [
@@ -51,160 +29,4 @@ fn main() {
         println!("cargo:rerun-if-env-changed={variable}");
         bundle(variable, destination);
     }
-}
-fn startup() {
-    bundle("CATHEDRAL_INIT_ELF", "initial.elf");
-    let output = PathBuf::from(env::var_os("OUT_DIR").unwrap());
-    let count: usize = env::var("CATHEDRAL_LAUNCH_COUNT")
-        .unwrap_or_else(|_| "0".into())
-        .parse()
-        .unwrap();
-    assert!(
-        count <= cathedral_contracts::user::MAX_LAUNCHES,
-        "launch arena exhausted"
-    );
-    let dynamic: usize = env::var("CATHEDRAL_DYNAMIC_TASKS")
-        .unwrap_or_else(|_| "0".into())
-        .parse()
-        .unwrap();
-    let accounts = count
-        .checked_add(1)
-        .and_then(|n| n.checked_add(dynamic))
-        .expect("account overflow");
-    assert!(
-        accounts <= cathedral_contracts::user::MAX_TASKS,
-        "process pool exhausted"
-    );
-    let limits: Vec<usize> = env::var("CATHEDRAL_CHANNEL_LIMITS")
-        .map(|text| {
-            text.split(',')
-                .map(|n| n.parse().expect("invalid channel reservation"))
-                .collect()
-        })
-        .unwrap_or_else(|_| {
-            let mut limits = vec![cathedral_contracts::user::DEFAULT_CHANNELS; count + 1];
-            limits.resize(accounts, 0);
-            limits
-        });
-    assert!(
-        limits.len() == accounts
-            && limits
-                .iter()
-                .all(|&n| n <= cathedral_contracts::user::MAX_CREATED_CHANNELS),
-        "invalid channel reservations"
-    );
-    assert!(
-        limits.iter().sum::<usize>() <= cathedral_contracts::user::MAX_DYNAMIC_CHANNELS,
-        "channel reservations exceed backing"
-    );
-    let cpu_limits: Vec<u64> = env::var("CATHEDRAL_CPU_LIMITS")
-        .map(|text| {
-            text.split(',')
-                .map(|n| n.parse().expect("invalid CPU limit"))
-                .collect()
-        })
-        .unwrap_or_else(|_| vec![0; accounts]);
-    assert!(
-        cpu_limits.len() == accounts
-            && cpu_limits
-                .iter()
-                .all(|&n| n <= cathedral_contracts::user::CPU_REFILL_PERIOD_US),
-        "invalid CPU burst/refill limit"
-    );
-    let mut source = format!(
-        "const INITIAL_CLOCK: bool = {};\nstatic LAUNCHES: &[InitialLaunch] = &[\n",
-        flag("CATHEDRAL_INIT_CLOCK")
-    );
-    let initial_private = pages("CATHEDRAL_INIT_PRIVATE_PAGES");
-    let initial_shared = pages("CATHEDRAL_INIT_SHARED_PAGES");
-    for index in 0..count {
-        let prefix = format!("CATHEDRAL_LAUNCH_{index}");
-        bundle(&format!("{prefix}_ELF"), &format!("launch-{index}.elf"));
-        let framebuffer = flag(&format!("{prefix}_FRAMEBUFFER"));
-        let clock = flag(&format!("{prefix}_CLOCK"));
-        let keyboard = flag(&format!("{prefix}_KEYBOARD"));
-        let disk = flag(&format!("{prefix}_DISK"));
-        let private_pages = pages(&format!("{prefix}_PRIVATE_PAGES"));
-        let shared_pages = pages(&format!("{prefix}_SHARED_PAGES"));
-        let argument: u64 = env::var(format!("{prefix}_ARGUMENT"))
-            .unwrap_or_else(|_| "0".into())
-            .parse()
-            .expect("invalid launch argument");
-        source.push_str(&format!("InitialLaunch {{ elf: include_bytes!(concat!(env!(\"OUT_DIR\"), \"/launch-{index}.elf\")), framebuffer: {framebuffer}, keyboard: {keyboard}, disk: {disk}, clock: {clock}, private_pages: {private_pages}, shared_pages: {shared_pages}, argument: {argument} }},\n"));
-    }
-    source.push_str(&format!(
-        "];\nconst CHANNEL_LIMITS: &[usize] = &{limits:?};\nconst CPU_LIMITS: &[u64] = &{cpu_limits:?};\n"
-    ));
-    source.push_str(&format!(
-        "const DYNAMIC_TASKS: usize = {dynamic};\nconst INITIAL_PAGES: [usize; 2] = [{initial_private}, {initial_shared}];\n"
-    ));
-    let images: usize = env::var("CATHEDRAL_IMAGE_COUNT")
-        .unwrap_or_else(|_| "0".into())
-        .parse()
-        .unwrap();
-    assert!(images + count <= cathedral_contracts::user::MAX_LAUNCHES);
-    source.push_str("static EXECUTABLES: &[Program<'static>] = &[\n");
-    for index in 0..images {
-        bundle(
-            &format!("CATHEDRAL_IMAGE_{index}_ELF"),
-            &format!("image-{index}.elf"),
-        );
-        let argument: u64 = env::var(format!("CATHEDRAL_IMAGE_{index}_ARGUMENT"))
-            .unwrap()
-            .parse()
-            .unwrap();
-        source.push_str(&format!("Program {{ executable: Executable::Elf(include_bytes!(concat!(env!(\"OUT_DIR\"), \"/image-{index}.elf\"))), arguments: [{argument}, 0] }},\n"));
-    }
-    source.push_str("];\n");
-    source.push_str("static LINKS: &[cathedral_core::ipc::link::LinkSpec] = &[\n");
-    // Initial resource ownership is supplied by the same host composition as children.
-    let graph = env::var("CATHEDRAL_LINKS").unwrap_or_default();
-    for edge in graph.split(',').filter(|edge| !edge.is_empty()) {
-        let (client, service) = edge.split_once(':').expect("link must be client:service");
-        let client: usize = client.parse().unwrap();
-        let service: usize = service.parse().unwrap();
-        assert!(
-            client > 0 && client <= count && service > 0 && service <= count && client != service
-        );
-        source.push_str(&format!(
-            "cathedral_core::ipc::link::LinkSpec {{ client: {client}, service: {service} }},\n"
-        ));
-    }
-    source.push_str("];\n");
-    fs::write(output.join("startup_config.rs"), source).unwrap();
-}
-fn pages(variable: &str) -> usize {
-    let pages = env::var(variable)
-        .unwrap_or_else(|_| "0".into())
-        .parse()
-        .expect("invalid page budget");
-    assert!(
-        pages <= cathedral_contracts::memory::MAX_PAGES,
-        "page budget exceeds lab limit"
-    );
-    pages
-}
-fn flag(variable: &str) -> bool {
-    match env::var(variable).as_deref() {
-        Ok("1") => true,
-        Ok("0") | Err(_) => false,
-        _ => panic!("invalid device grant"),
-    }
-}
-fn bundle(variable: &str, destination: &str) {
-    let source = PathBuf::from(env::var_os(variable).unwrap_or_else(|| {
-        panic!("bundled-user requires {variable}; use tools/boot-harness-rs/run.py")
-    }));
-    let source = source.canonicalize().expect("user ELF artifact is missing");
-    println!("cargo:rerun-if-changed={}", source.display());
-    let bytes = fs::read(source).expect("cannot read user ELF artifact");
-    assert!(
-        bytes.starts_with(b"\x7fELF") && bytes.len() <= 4 * 1024 * 1024,
-        "invalid bundled ELF artifact"
-    );
-    fs::write(
-        PathBuf::from(env::var_os("OUT_DIR").unwrap()).join(destination),
-        bytes,
-    )
-    .expect("cannot bundle user ELF");
 }
