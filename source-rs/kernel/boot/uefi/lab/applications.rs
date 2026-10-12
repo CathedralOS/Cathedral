@@ -71,7 +71,7 @@ pub fn exercise(memory: &mut PreparedMemory, console: &mut SerialPort) {
     assert!(matches!(
         rejected,
         Err(user_tasks::Error::Executable(
-            user_tasks::elf::Error::Header
+            user_tasks::admission::elf::Error::Header
         ))
     ));
     assert_eq!(memory.frames.allocated(), frames);

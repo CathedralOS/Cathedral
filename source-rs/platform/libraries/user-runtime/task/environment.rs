@@ -1,5 +1,5 @@
 //! Launch connections installed before execution. Roles/order are an app protocol,
-//! not kernel service names. Kernel route: session/syscalls/tasks/launch.rs.
+//! not kernel service names. Kernel route: user_tasks/syscalls/tasks/launch.rs.
 use super::{Error, Handle, abi, arch, result};
 #[derive(Debug)]
 pub struct Environment {

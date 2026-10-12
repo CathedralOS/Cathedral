@@ -49,9 +49,9 @@ mod tests {
     #[test]
     fn task_clock_and_link_names_do_not_reveal_graph_positions() {
         use crate::{
-            deadline::Clock,
-            link::{Link, LinkSpec},
-            supervision::Supervisor,
+            ipc::link::{Link, LinkSpec},
+            user_tasks::lifecycle::supervision::Supervisor,
+            user_tasks::time::Clock,
         };
         fn trace(owner: usize, child: usize, noisy: bool) -> alloc::vec::Vec<u64> {
             let mut names = Names::default();

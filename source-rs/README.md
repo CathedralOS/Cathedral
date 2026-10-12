@@ -12,7 +12,7 @@ mechanism-to-test coverage, restrictions and next kernel boundaries.
 ## Start reading
 
 Follow [boot main](kernel/boot/uefi/main.rs) for machine startup,
-[the user-task session](kernel/core/user_tasks/session.rs) for kernel execution,
+[the user-task session](kernel/core/user_tasks.rs) for kernel execution,
 [init's session](distribution/init/session.rs) for distribution startup, or
 [the application workflow](distribution/applications/status/application.rs) for
 input, persistence and drawing. The [composition map](distribution/README.md)
@@ -35,16 +35,16 @@ explains how to preserve these routes as the lab grows.
 | `kernel/boot/uefi/lab/user_tasks.rs` | Ring-3 syscall, isolation, fault containment and admission rollback experiments |
 | `kernel/boot/uefi/lab/applications.rs` | Run the bundled executable twice per session and check loading, private state, exit statuses and cleanup |
 | `kernel/boot/uefi/lab/ipc.rs` | Compose explicit endpoint grants and check service/failure sessions |
-| `kernel/core/supervision.rs`, `supervision/` | Host-testable launch authority, child identity and outcome consumption |
-| `kernel/core/deadline.rs` | Boot-issued clock grants and wrapping deadline comparisons |
+| `kernel/core/user_tasks/lifecycle/supervision.rs`, `supervision/` | Host-testable launch authority, child identity and outcome consumption |
+| `kernel/core/user_tasks/time.rs` | Boot-issued clock grants and wrapping deadline comparisons |
 | `kernel/boot/uefi/lab/supervision.rs` | Supply launch bounds and verify userspace recovery/cleanup |
 | `kernel/boot/uefi/lab/watchdog.rs` | Verify hung-service cancellation, deadline wakeups and independent progress |
 | `kernel/core/ipc.rs`, `ipc/` | Process-local endpoint grants, dynamic channels, checked moves, queues and teardown |
 | `kernel/boot/uefi/smoke.rs` | Test-only fault injection and QEMU result reporting |
 | `contracts/boot.rs` | Firmware-neutral memory handoff; experimental Rust data, not a frozen ABI |
 | `contracts/user.rs` | Shared experimental entry/syscall constants for kernel and user runtime |
-| `contracts/memory.rs`, `kernel/core/regions.rs` | Page-object grants, quotas, sealing and reader lifetime |
-| `kernel/core/user_tasks/session/memory.rs` | Boot-stack frame ownership, mapping changes and cleanup |
+| `contracts/memory.rs`, `kernel/core/user_tasks/memory/regions.rs` | Page-object grants, quotas, sealing and reader lifetime |
+| `kernel/core/user_tasks/memory.rs` | Boot-stack frame ownership, mapping changes and cleanup |
 | `distribution/lab/memory/main.rs` | Private allocation, shared leases and permission-fault exercises |
 | `distribution/lab/rendering/main.rs`, [investigation](distribution/lab/rendering/README.md) | Checked row delegation versus page-backed flattened composition, host costs and guest bounds probes |
 | `contracts/display.rs` | Bounded framebuffer geometry and experimental drawing messages |
@@ -54,10 +54,10 @@ explains how to preserve these routes as the lab grows.
 | `contracts/input.rs` | Experimental physical-key events, independent of scan codes or UI policy |
 | `contracts/pointer.rs` | Experimental logical pointers, source updates, capture and scoped synthetic leases |
 | `contracts/interaction.rs` | Experimental attenuated keyboard focus and cross-process child placement |
-| `kernel/core/extent.rs` | Bootstrap frame accounting and reclaiming bitmap over usable RAM, corresponding to the resource work in `source/kernel/core/` |
-| `kernel/core/heap.rs`, `scheduler.rs`, `kernel_tasks.rs`, `kernel_tasks/` | IRQ-safe heap, pure scheduling policy, task admission and context/stack lifetime management |
+| `kernel/core/memory.rs` | Bootstrap frame accounting and reclaiming bitmap over usable RAM, corresponding to the resource work in `source/kernel/core/` |
+| `kernel/core/memory/heap.rs`, `scheduler.rs`, `kernel_tasks.rs`, `kernel_tasks/` | IRQ-safe heap, pure scheduling policy, task admission and context/stack lifetime management |
 | `kernel/core/user_tasks.rs`, `user_tasks/` | Experimental user-task lifetime, checked diagnostic syscalls and outcomes |
-| `kernel/core/user_tasks/elf.rs` | Bounded, host-testable ELF64 preflight before physical admission |
+| `kernel/core/user_tasks/admission/elf.rs` | Bounded, host-testable ELF64 preflight before physical admission |
 | `platform/drivers/uart_16550/` | Polling serial diagnostics, corresponding to `source/platform/drivers/uart_16550/` |
 | `platform/libraries/user-runtime/` | Entry stub, syscall wrappers and linker script; imports only shared contracts |
 | `platform/services/display/` | Separately compiled userspace provider for linear framebuffer drawing |
@@ -67,7 +67,7 @@ explains how to preserve these routes as the lab grows.
 | `distribution/applications/status/`, `distribution/libraries/boot-scene/` | Separate status application, retained UI state and drawing client |
 | `distribution/libraries/session-protocol/` | Init/app status messages kept inside the distribution |
 | `platform/libraries/bitmap-font/` | Original 5-by-7 printable ASCII glyphs |
-| `kernel/core/link.rs` | Boot-approved peer graph without lifecycle rights |
+| `kernel/core/ipc/link.rs` | Boot-approved peer graph without lifecycle rights |
 | `distribution/lab/display/` | Test-pattern layout, display client and restart policy |
 | `distribution/lab/supervision/` | Userspace restart policy, persistent client and crashing echo service |
 | `distribution/lab/channels/` | [Ordinary parent/worker channels](distribution/lab/channels/README.md), endpoint transfer and reclamation |
@@ -390,8 +390,8 @@ initial FP state is clean and I/O privilege is zero.
 | 40: task spawn with launch loans | Launch grant, 112-byte request, 0 | Child ticket after atomic endpoint moves and selected idle launch loans; failure retains all grants |
 | 41: IPC budget | Writable 32-byte destination, 0, 0 | 0 after copying caller-local channel limit/charge and dynamic handle limit/charge as four LE u64 words |
 | 42: CPU read | Local clock grant, 0, 0 | Caller-local direct CPU microseconds |
-| 43/44: resource budget/assignment | Local output or owned idle launch and limits | [Conserved page/IPC quotas](kernel/core/resources/README.md) |
-| 45–53: executable and process admission | Caller-local executable/launch grants | [Catalogue, funded reservations, code staging and idle CPU limits](kernel/core/admission_pool/README.md) |
+| 43/44: resource budget/assignment | Local output or owned idle launch and limits | [Conserved page/IPC quotas](kernel/core/user_tasks/resources/README.md) |
+| 45-53: executable and process admission | Caller-local executable/launch grants | [Catalogue, funded reservations, code staging and idle CPU limits](kernel/core/user_tasks/admission/pool/README.md) |
 | 54: physical budget | Writable 16-byte destination, 0, 0 | Caller-local reserved and charged physical frames as two LE u64 words |
 | 55: physical assignment | Owned idle launch, requested frame reservation, 0 | Conserving reassignment; BUSY if a live charge would lose funding |
 
@@ -413,7 +413,7 @@ run in separate boot-managed sessions.
 
 ## Executable loading experiment
 
-The [ELF preflight](kernel/core/user_tasks/elf.rs) accepts little-endian ELF64,
+The [ELF preflight](kernel/core/user_tasks/admission/elf.rs) accepts little-endian ELF64,
 System V ABI version 0, x86-64 `ET_EXEC`. Limits are 4 MiB per file, 16 program
 headers, eight load segments and 64 image pages total. Each load segment must be
 readable, 4-KiB aligned in both file and virtual memory, have alignment 4096,
@@ -902,9 +902,9 @@ page tables; allocation and mapping changes execute on the boot stack with the
 kernel root active. The kernel owns physical backing independently of either
 participant's address space.
 
-Follow [the policy model](kernel/core/regions.rs) for budgets and lifetime,
-[the syscall entrance](kernel/core/user_tasks/session/syscalls/memory.rs) for
-validation/deferral, [memory execution](kernel/core/user_tasks/session/memory.rs)
+Follow [the policy model](kernel/core/user_tasks/memory/regions.rs) for budgets and lifetime,
+[the syscall entrance](kernel/core/user_tasks/syscalls/memory.rs) for
+validation/deferral, [memory execution](kernel/core/user_tasks/memory.rs)
 for physical ownership, and [architecture mappings](kernel/arch/x86_64/user/memory/regions.rs)
 for PTE and checked-copy permissions. None of these depends on the platform.
 
@@ -996,16 +996,16 @@ conformance testing. Rust data validation is not proof of firmware custody;
 QEMU success is not verification on physical hardware.
 
 Runtime page and channel allowances can now be subdivided through owned idle
-launch grants; see [resource subdivision](kernel/core/resources/README.md). Profiles
+launch grants; see [resource subdivision](kernel/core/user_tasks/resources/README.md). Profiles
 may grant `private_pages` and `shared_pages` to the initial program as well as
 launches. Retained pages remain charged to their original account after producer death.
 
-[Executable-authorized admission](kernel/core/admission_pool/README.md) separates
+[Executable-authorized admission](kernel/core/user_tasks/admission/pool/README.md) separates
 code grants from process capacity. `startup.dynamic_tasks` reserves unbound
 accounts; apps can reserve and recursively launch granted executables within their
 page/channel/process allowances. Run `--admission-test --release --timeout 120`.
 
-[Physical-memory funding](kernel/core/resources/physical/README.md) now reserves
+[Physical-memory funding](kernel/core/user_tasks/resources/physical/README.md) now reserves
 real frames before userspace admission. Image/stack/page-table and runtime-buffer
 charges share conserved account funding, distinct from object quotas and the
 per-load failure ceiling. `Launch::assign_memory` subdivides it into idle children;

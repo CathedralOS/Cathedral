@@ -425,7 +425,7 @@ ownership cannot simply be assumed identical.
 
 **Contracts checked.** The [specification index](wiki/spec/README.md) leaves
 component lifecycle/admission and capability contracts unwritten. The
-[Rust launch model](source-rs/kernel/core/supervision.rs) and
+[Rust launch model](source-rs/kernel/core/user_tasks/lifecycle/supervision.rs) and
 [userspace wrappers](source-rs/platform/libraries/user-runtime/task.rs) are lab
 contracts only. This blocks promising independent service survival or reattachment,
 not implementing bounded restart experiments.
@@ -488,7 +488,7 @@ above; merely registering a provider confers no extra scheduling authority.
 
 
 **Resource-subdivision lab evidence (not a production sponsorship decision).**
-[The Rust resource coordinator](source-rs/kernel/core/resources/README.md) now
+[The Rust resource coordinator](source-rs/kernel/core/user_tasks/resources/README.md) now
 conserves runtime page/reader/channel allowances across owner-to-child assignment.
 Only owned idle launch accounts can be resized, and every family validates before
 commit. Accepted pages now retain the original backing sponsor after producer
@@ -500,7 +500,7 @@ below now includes ELF, page-table and stack admission costs.
 
 
 **Executable-admission lab evidence (not a stable delegation contract).**
-[Dynamic admission](source-rs/kernel/core/admission_pool/README.md) now separates
+[Dynamic admission](source-rs/kernel/core/user_tasks/admission/pool/README.md) now separates
 code authority from a bounded process pool. Exporting an owned plain launch
 creates a distinct code grant; dynamic admission explicitly supplies that code
 grant to its child for funded recursive launch. Device-granted launches cannot
@@ -524,7 +524,7 @@ CPU ceiling assignment preserves ancestor enforcement and debt; it confers no
 priority or permission to charge an unrelated service's work to a caller.
 
 **Physical-memory funding experiment (not a production sponsorship decision).**
-The [Rust frame bank](source-rs/kernel/core/resources/physical/README.md) now backs
+The [Rust frame bank](source-rs/kernel/core/user_tasks/resources/physical/README.md) now backs
 conserved allowances with real reserved RAM. Executable pages, stacks, private
 page tables and runtime buffers charge the same account. Retained readers keep
 the original producer's physical charge after process death; final release refunds

@@ -1,7 +1,7 @@
 //! Bridge core frame custody to architecture mapping operations.
 
 use super::SpawnError;
-use crate::extent::FrameAllocator;
+use crate::memory::FrameAllocator;
 use cathedral_arch::{self as arch, StackFrames};
 
 struct Source<'a> {

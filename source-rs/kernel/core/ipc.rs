@@ -7,6 +7,7 @@ mod channels;
 mod grants;
 mod initial;
 mod lifecycle;
+pub mod link;
 pub use abi::{MAX_ENDPOINTS, MAX_TASKS};
 use cathedral_contracts::user as abi;
 use grants::{Grant, Grants};

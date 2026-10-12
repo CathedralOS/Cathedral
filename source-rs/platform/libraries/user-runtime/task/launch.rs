@@ -1,5 +1,5 @@
 //! Admission requests: endpoint moves and bounded recursive launch loans.
-//! Kernel route: session/syscalls/tasks/launch.rs, then lifecycle::spawn.
+//! Kernel route: user_tasks/syscalls/tasks/launch.rs, then lifecycle::spawn.
 use super::{Child, Error, Handle, Launch, abi, arch, result};
 impl Launch {
     /// Move a whole ordered bundle on successful admission. Every failure retains

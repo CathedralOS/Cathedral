@@ -76,5 +76,5 @@ Owner-only `RUN_MEMORY` stages the physical-frame allowance for the next `RUN`
 attempt on an empty local child slot. An attempted admission consumes this setting
 on failure as well as success; ordinary `RUN` defaults to 256 frames per requested
 process account. This changes admission policy, never a running child's funding.
-The [physical-memory guide](../../../kernel/core/resources/physical/README.md)
+The [physical-memory guide](../../../kernel/core/user_tasks/resources/physical/README.md)
 connects the kernel transaction, desktop failure/recovery probes and retained charges.

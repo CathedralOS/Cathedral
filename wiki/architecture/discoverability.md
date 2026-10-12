@@ -14,7 +14,7 @@ step to its owner. The code's execution path should supply the navigation.
   meaningful work: validate composition, admit tasks, check providers, save state.
   Keep safety ordering and rollback obligations visible at the boundary.
 - An implementation file gains a same-named directory when it has distinct
-  responsibilities to descend into: `session.rs` and `session/`, or `view.rs`
+  responsibilities to descend into: `admission.rs` and `admission/`, or `view.rs`
   and `view/`. Keep a coherent leaf together; line counts are not architectural
   boundaries. Avoid chains of files that only forward to the next file.
 - Folder names identify ownership or purpose. Prefer `kernel_tasks`, `user_tasks`
@@ -25,6 +25,31 @@ step to its owner. The code's execution path should supply the navigation.
   grouping is not permission to absorb them into a coordinator.
 - Small entrance comments name the mechanism, its important invariant and the
   next owners. Documentation supplements the navigable implementation.
+
+## Review each descent
+
+Choose an entrance from the file tree and read its body: what happens first,
+what decision selects the next owner, and where does a result or failure go?
+Repeat that check in the selected child. Semantic folders must narrow the job;
+a large folder named after the coordinator must not conceal all peer domains.
+A module list or README cannot stand in for the operation's actual control flow.
+Representation owners may start with their principal state and invariants.
+
+The Rust kernel's normal route starts in `boot/uefi/main.rs`, enters
+`boot/uefi/startup.rs`, then `core/user_tasks.rs`. That task entrance owns
+preparation, physical reservation, initial admission, execution and collection.
+Inside `user_tasks/`, `startup.rs` validates composition and prepares grants;
+`admission.rs` constructs images; `execution.rs` orders deferred work and CPU
+re-entry; `lifecycle.rs` owns spawn/teardown; `memory.rs` owns page objects.
+`session.rs` holds their shared state, not a second hidden execution pipeline.
+
+Trap requests descend from `execution/traps.rs` into `syscalls.rs`, then a
+resource family. For example, `syscalls/ipc.rs` selects copied delivery,
+capability transfer, links or readiness, while `syscalls/devices.rs` selects a
+boot-granted device adapter. Pure policies live with their owner: process pools
+under admission, supervision under lifecycle, page regions under memory, and
+raw input queues under the keyboard adapter. Shared frame allocation, IPC and
+scheduling remain core peers. Small coherent leaves need no extra wrapper.
 
 ## Executable and protocol boundaries
 
@@ -44,20 +69,20 @@ knowledge of a particular distribution.
 
 | Interest | Start here | Descend into |
 | --- | --- | --- |
-| CPU turn sharing | [Task scheduling](../../source-rs/kernel/core/scheduler.rs) | [Hierarchical selection](../../source-rs/kernel/core/scheduler/shares.rs), [contract and proof route](../../source-rs/kernel/core/scheduler/README.md), [loan reattachment](../../source-rs/kernel/core/user_tasks/session/lifecycle/delegation.rs) |
-| CPU time ceilings | [Persistent account charging](../../source-rs/kernel/core/scheduler/budget.rs) | [Architecture clock](../../source-rs/kernel/arch/x86_64/cpu_clock.rs), [trap samples](../../source-rs/kernel/core/user_tasks/session/traps.rs), [measured QEMU proof](../../source-rs/kernel/boot/uefi/lab/supervision/cpu/budget.rs) |
+| CPU turn sharing | [Task scheduling](../../source-rs/kernel/core/scheduler.rs) | [Hierarchical selection](../../source-rs/kernel/core/scheduler/shares.rs), [contract and proof route](../../source-rs/kernel/core/scheduler/README.md), [loan reattachment](../../source-rs/kernel/core/user_tasks/lifecycle/delegation.rs) |
+| CPU time ceilings | [Persistent account charging](../../source-rs/kernel/core/scheduler/budget.rs) | [Architecture clock](../../source-rs/kernel/arch/x86_64/cpu_clock.rs), [trap samples](../../source-rs/kernel/core/user_tasks/execution/traps.rs), [measured QEMU proof](../../source-rs/kernel/boot/uefi/lab/supervision/cpu/budget.rs) |
 | Firmware and kernel startup | [boot main](../../source-rs/kernel/boot/uefi/main.rs) | Firmware handoff, memory, interrupts, supplied-program startup |
-| Isolated tasks | [user-task session](../../source-rs/kernel/core/user_tasks/session.rs) | Composition, preparation, admission, execution, outcomes |
-| CPU re-entry | [session traps](../../source-rs/kernel/core/user_tasks/session/traps.rs) | Syscall dispatch, wakeups, scheduling and root selection |
+| Isolated tasks | [user-task session](../../source-rs/kernel/core/user_tasks.rs) | Composition, preparation, admission, execution, outcomes |
+| CPU re-entry | [session traps](../../source-rs/kernel/core/user_tasks/execution/traps.rs) | Syscall dispatch, wakeups, scheduling and root selection |
 | General IPC | [IPC coordinator](../../source-rs/kernel/core/ipc.rs) | [Process-local grants](../../source-rs/kernel/core/ipc/grants.rs), [creation and transfer](../../source-rs/kernel/core/ipc/channels.rs), [teardown](../../source-rs/kernel/core/ipc/lifecycle.rs); [ordinary-worker proof](../../source-rs/distribution/lab/channels/scenario.rs) |
 | IPC reservations | [Account limits and charges](../../source-rs/kernel/core/ipc/budget.rs) | [Admission validation](../../source-rs/kernel/core/ipc/bootstrap.rs), [final closure](../../source-rs/kernel/core/ipc/lifecycle.rs), [restart and sibling proof](../../source-rs/distribution/lab/channels/sponsorship.rs) |
-| Child startup environment | [Launch staging](../../source-rs/kernel/core/user_tasks/session/syscalls/tasks/launch.rs) | [Admission and commit ordering](../../source-rs/kernel/core/user_tasks/session/lifecycle.rs), [bundle validation and installation](../../source-rs/kernel/core/ipc/initial.rs), [userspace Environment](../../source-rs/platform/libraries/user-runtime/task/environment.rs) |
-| Resource subdivision | [Resource transaction](../../source-rs/kernel/core/resources.rs) | [Authority/copy boundary](../../source-rs/kernel/core/user_tasks/session/syscalls/resources.rs), [contract and proofs](../../source-rs/kernel/core/resources/README.md) |
-| Physical-memory funding | [Funding and invariants](../../source-rs/kernel/core/resources/physical.rs) | [Physical bank](../../source-rs/kernel/core/user_tasks/session/frames.rs), [admission commit/rollback](../../source-rs/kernel/core/user_tasks/session/admission.rs), [contract and proofs](../../source-rs/kernel/core/resources/physical/README.md) |
-| Executable-authorized admission | [Admission syscall coordinator](../../source-rs/kernel/core/user_tasks/session/syscalls/admission.rs) | [Reservation transaction](../../source-rs/kernel/core/user_tasks/session/syscalls/admission/reserve.rs), [process pool](../../source-rs/kernel/core/admission_pool.rs), [contract and proofs](../../source-rs/kernel/core/admission_pool/README.md) |
-| Recursive admission | [Launch syscall staging](../../source-rs/kernel/core/user_tasks/session/syscalls/tasks/launch.rs) | [Loan validation and commit](../../source-rs/kernel/core/user_tasks/session/lifecycle/delegation.rs), [loan lifetime](../../source-rs/kernel/core/supervision/delegation.rs), [same-code recursive proof](../../source-rs/distribution/lab/channels/tree/node.rs) |
-| Caller-local kernel names | [Name allocation](../../source-rs/kernel/core/names.rs) | [Admission reservations](../../source-rs/kernel/core/user_tasks/session/lifecycle/grants.rs), [loan return](../../source-rs/kernel/core/supervision/delegation.rs), [local region mappings and offers](../../source-rs/kernel/core/regions.rs) |
-| Kernel syscall enforcement | [syscall dispatcher](../../source-rs/kernel/core/user_tasks/session/syscalls.rs) | IPC, tasks, readiness and specific device grants |
+| Child startup environment | [Launch staging](../../source-rs/kernel/core/user_tasks/syscalls/tasks/launch.rs) | [Admission and commit ordering](../../source-rs/kernel/core/user_tasks/lifecycle.rs), [bundle validation and installation](../../source-rs/kernel/core/ipc/initial.rs), [userspace Environment](../../source-rs/platform/libraries/user-runtime/task/environment.rs) |
+| Resource subdivision | [Resource transaction](../../source-rs/kernel/core/user_tasks/resources.rs) | [Authority/copy boundary](../../source-rs/kernel/core/user_tasks/syscalls/resources.rs), [contract and proofs](../../source-rs/kernel/core/user_tasks/resources/README.md) |
+| Physical-memory funding | [Funding and invariants](../../source-rs/kernel/core/user_tasks/resources/physical.rs) | [Physical bank](../../source-rs/kernel/core/user_tasks/memory/frames.rs), [admission commit/rollback](../../source-rs/kernel/core/user_tasks/admission.rs), [contract and proofs](../../source-rs/kernel/core/user_tasks/resources/physical/README.md) |
+| Executable-authorized admission | [Admission syscall coordinator](../../source-rs/kernel/core/user_tasks/syscalls/admission.rs) | [Reservation transaction](../../source-rs/kernel/core/user_tasks/syscalls/admission/reserve.rs), [process pool](../../source-rs/kernel/core/user_tasks/admission/pool.rs), [contract and proofs](../../source-rs/kernel/core/user_tasks/admission/pool/README.md) |
+| Recursive admission | [Launch syscall staging](../../source-rs/kernel/core/user_tasks/syscalls/tasks/launch.rs) | [Loan validation and commit](../../source-rs/kernel/core/user_tasks/lifecycle/delegation.rs), [loan lifetime](../../source-rs/kernel/core/user_tasks/lifecycle/supervision/delegation.rs), [same-code recursive proof](../../source-rs/distribution/lab/channels/tree/node.rs) |
+| Caller-local kernel names | [Name allocation](../../source-rs/kernel/core/names.rs) | [Admission reservations](../../source-rs/kernel/core/user_tasks/lifecycle/grants.rs), [loan return](../../source-rs/kernel/core/user_tasks/lifecycle/supervision/delegation.rs), [local region mappings and offers](../../source-rs/kernel/core/user_tasks/memory/regions.rs) |
+| Kernel syscall enforcement | [syscall dispatcher](../../source-rs/kernel/core/user_tasks/syscalls.rs) | IPC, tasks, readiness and specific device grants |
 | Trusted kernel tasks | [kernel-task API](../../source-rs/kernel/core/kernel_tasks.rs) | Runtime scheduling and stack ownership |
 | Distribution startup | [init session](../../source-rs/distribution/init/session.rs) | Provider readiness, application launch and supervision |
 | Status application | [application workflow](../../source-rs/distribution/applications/status/application.rs) | Connections, input, state, persistence, view and test probes |

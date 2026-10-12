@@ -1,7 +1,7 @@
 //! Boot-time composition of core frame policy and architecture-owned mappings.
 
 use cathedral_arch as arch;
-use cathedral_core::extent::FrameAllocator;
+use cathedral_core::memory::FrameAllocator;
 use cathedral_uart_16550::SerialPort;
 use core::fmt::Write;
 

@@ -26,7 +26,7 @@ The corresponding names live in `session-protocol::launch` and `::link`; their
 indices must match the profile. Follow [input](applications/status/application/input.rs),
 [storage](applications/status/application/storage.rs) or
 [view](applications/status/application/view.rs) to see the app-side protocol use.
-The kernel's [IPC dispatcher](../kernel/core/user_tasks/session/syscalls.rs)
+The kernel's [IPC dispatcher](../kernel/core/user_tasks/syscalls.rs)
 transports these messages; the service implementations interpret them.
 
 For the pixel handoff, descend from `view` into

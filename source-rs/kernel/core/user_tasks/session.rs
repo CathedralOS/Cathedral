@@ -1,101 +1,71 @@
-//! User-task session entrance: validate -> prepare -> admit -> execute -> collect.
-//! Follow execution for the boot loop, traps for CPU re-entry, and syscalls for resource dispatch.
-use super::{Config, Error, Exit, Program, Report};
-use crate::extent::FrameAllocator;
+//! Pinned task-session state and persistent launch accounts shared by the execution boundaries.
+use super::Report;
+use super::syscalls::{self, ipc::readiness, tasks};
+use crate::{
+    ipc::{Ipc, MAX_EPOCH},
+    scheduler::Scheduler,
+    user_tasks::lifecycle::supervision::Supervisor,
+};
 use alloc::vec::Vec;
-use cathedral_arch as arch;
-use core::sync::atomic::Ordering;
-mod admission;
-mod composition;
-mod execution;
-mod frames;
-use frames::Frames;
-mod lifecycle;
-mod links;
-mod memory;
-#[cfg(feature = "memory-lab")]
-pub use memory::rollback::exercise as exercise_memory_rollback;
-mod prepare;
-mod state;
-mod syscalls;
-mod traps;
-use state::{ACTIVE, LaunchState, LinkState, Session, Task, next_epoch};
-use syscalls::{keyboard, tasks as taskcalls};
-/// Run a bounded session, returning task outcomes only after complete reclamation.
-/// frame_limit supports deterministic admission-failure testing.
-/// # Safety
-/// Sole CPU, IRQs off, no kernel/user task session; initialized heap/IDT/timer.
-/// Kernel root, layout and image are live; frame reclamation is enabled. Output
-/// is bounded, cannot allocate/suspend, and does not retain its borrowed buffer.
-pub unsafe fn run(
-    frames: &mut FrameAllocator,
-    layout: &arch::BootLayout,
-    image: arch::ImageRange,
-    programs: &[Program<'_>],
-    output: fn(&[u8]) -> bool,
-    frame_limit: usize,
-) -> Result<Vec<Report>, Error> {
-    // SAFETY: Same session and memory obligations as the caller.
-    unsafe {
-        run_configured(
-            frames,
-            layout,
-            image,
-            programs,
-            output,
-            Config {
-                executables: &[],
-                dynamic_tasks: 0,
-                links: &[],
-                frame_limit,
-                endpoints: &[],
-                supervision: &[],
-                memory: &[],
-                channel_limits: &[],
-                cpu_limits: &[],
-                clock_readers: &[],
-            },
-        )
-    }
+use cathedral_arch::{Context, UserSpace};
+use core::sync::atomic::{AtomicPtr, AtomicU64, Ordering};
+pub(super) struct Task {
+    pub(super) memory_call: Option<[u64; 3]>,
+    pub(super) context: Context,
+    pub(super) space: Option<UserSpace>,
+    pub(super) report: Report,
+    pub(super) receive: Option<syscalls::Receive>,
+    pub(super) wait: Option<tasks::Wait>,
+    pub(super) notify: Option<readiness::Wait>,
+    pub(super) keyboard_wait: bool,
+    pub(super) keyboard_deadline: Option<u64>,
+}
+pub(super) struct Session {
+    pub(super) pool: crate::user_tasks::admission::pool::Pool,
+    pub(super) executables: crate::user_tasks::admission::pool::Executables,
+    pub(super) names: crate::names::Names,
+    pub(super) memory: alloc::boxed::Box<super::memory::Memory>,
+    pub(super) tasks: Vec<Task>,
+    pub(super) scheduler: Scheduler,
+    pub(super) boot: Context,
+    pub(super) output: fn(&[u8]) -> bool,
+    pub(super) completed: usize,
+    pub(super) ipc: Ipc,
+    pub(super) launches: Vec<LaunchState>,
+    pub(super) links: Vec<LinkState>,
+    pub(super) keyboard: crate::user_tasks::syscalls::devices::keyboard::queue::ByteQueue,
+    pub(super) frame_baseline: usize,
+    pub(super) clock: crate::user_tasks::time::Clock,
+}
+pub(super) static ACTIVE: AtomicPtr<Session> = AtomicPtr::new(core::ptr::null_mut());
+
+pub(super) static EPOCH: AtomicU64 = AtomicU64::new(1);
+
+pub(super) struct LaunchState {
+    pub(super) images: [Option<usize>; cathedral_contracts::user::MAX_LAUNCHES],
+    pub(super) template: Option<usize>,
+    pub(super) dynamic: bool,
+    pub(super) frame_limit: usize,
+    pub(super) cpu_origin: u64,
+    pub(super) delegated: [u64; cathedral_contracts::user::MAX_LAUNCHES],
+    pub(super) delegated_count: usize,
+    pub(super) initial: [u64; cathedral_contracts::user::MAX_INITIAL_ENDPOINTS],
+    pub(super) initial_count: usize,
+    pub(super) disk: bool,
+    pub(super) model: Supervisor,
+    pub(super) endpoint_base: usize,
+    pub(super) framebuffer: Option<cathedral_contracts::display::Framebuffer>,
+    pub(super) keyboard: bool,
+}
+pub(super) struct LinkState {
+    pub(super) model: crate::ipc::link::Link,
+    pub(super) endpoint_base: usize,
 }
 
-/// Run tasks with explicit boot-issued endpoint, launch and clock grants.
-/// # Safety
-/// Same obligations as run. Endpoint indices refer to initial programs; clock
-/// indices may also name reserved child slots.
-/// Any framebuffer must be a live, reserved device aperture exclusively held by
-/// boot: no RAM allocation or other CPU/alias may access its pages. The launch
-/// grant authorizes its executable to read/write the entire aperture for its lifetime.
-/// A keyboard grant requires exclusive PC-controller/PIC IRQ1 custody. This
-/// bootstrap profile has no concurrent firmware, mouse or other controller user.
-pub unsafe fn run_configured(
-    frames: &mut FrameAllocator,
-    layout: &arch::BootLayout,
-    image: arch::ImageRange,
-    programs: &[Program<'_>],
-    output: fn(&[u8]) -> bool,
-    config: Config<'_>,
-) -> Result<Vec<Report>, Error> {
-    assert!(ACTIVE.load(Ordering::Acquire).is_null());
-    let count = composition::validate(programs.len(), &config)?;
-    let baseline = frames.allocated();
-    let (mut session, mut reports) =
-        prepare::session(programs.len(), count, &config, baseline, output)?;
-    let mut source = Frames::new(
-        frames,
-        session.memory.funding.capacity(),
-        config.frame_limit,
-    )?;
-    // SAFETY: Caller supplies exclusive machine/memory custody. Initial admission
-    // rolls back on failure; execution pins this session until all tasks are reaped.
-    unsafe {
-        admission::initial(&mut session, layout, image, programs, &mut source)?;
-        execution::run(&mut session, &mut source, layout, image, &config);
-    }
-    for (slot, task) in session.tasks.iter_mut().enumerate() {
-        task.report.cpu = session.scheduler.cpu_report(slot);
-        reports.push(core::mem::take(&mut task.report));
-    }
-    assert_eq!(source.allocated(), baseline);
-    Ok(reports)
+pub(super) fn next_epoch() -> Option<u64> {
+    EPOCH
+        .fetch_update(Ordering::Relaxed, Ordering::Relaxed, |value| {
+            (value <= MAX_EPOCH).then_some(value + 1)
+        })
+        .ok()
 }

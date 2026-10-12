@@ -40,7 +40,7 @@ The [profile](../../../../tools/boot-harness-rs/profiles/pointer.json) gives the
 input process exclusive controller access and its own connection to display.
 Apps have separate connections and no device grant.
 
-1. Kernel [controller transport](../../../kernel/core/user_tasks/session/syscalls/keyboard.rs)
+1. Kernel [controller transport](../../../kernel/core/user_tasks/syscalls/devices/keyboard.rs)
    preserves the auxiliary-port tag. Existing timer polling drains mouse bytes;
    this experiment does not add IRQ12 handling. The historical `keyboard` grant
    and syscall names now cover both ports of this single PS/2 controller.

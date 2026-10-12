@@ -12,7 +12,7 @@ pub(super) fn exercise(memory: &mut PreparedMemory, console: &mut SerialPort) {
         framebuffer: None,
         keyboard: false,
     });
-    let links = [1, 2, 4].map(|service| cathedral_core::link::LinkSpec { client: 3, service });
+    let links = [1, 2, 4].map(|service| cathedral_core::ipc::link::LinkSpec { client: 3, service });
     // SAFETY: Boot-owned ELF, fixed endpoint graph and initialized memory/entry paths.
     let reports = unsafe {
         user_tasks::run_configured(

@@ -5,7 +5,7 @@ mod runtime;
 mod stacks;
 
 pub use crate::scheduler::TaskId;
-use crate::{extent::FrameAllocator, scheduler::Event};
+use crate::{memory::FrameAllocator, scheduler::Event};
 use cathedral_arch as arch;
 pub use runtime::RunStats;
 use runtime::{Request, access};

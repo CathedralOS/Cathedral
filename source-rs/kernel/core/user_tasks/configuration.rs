@@ -1,5 +1,4 @@
 //! Boot-selected executable authority and resource envelopes; userspace subdivides them.
-use super::Program;
 use crate::ipc::EndpointSpec;
 pub struct Config<'a> {
     /// Code-only grants supplied to the sole initial process, with no device rights.
@@ -13,7 +12,7 @@ pub struct Config<'a> {
     pub cpu_limits: &'a [u64],
     pub memory: &'a [cathedral_contracts::memory::Grant],
     pub frame_limit: usize,
-    pub links: &'a [crate::link::LinkSpec],
+    pub links: &'a [crate::ipc::link::LinkSpec],
     pub endpoints: &'a [EndpointSpec],
     pub supervision: &'a [Supervision<'a>],
     pub clock_readers: &'a [usize],
@@ -32,4 +31,25 @@ pub struct Supervision<'a> {
     pub program: Program<'a>,
     /// Physical admission budget per spawn, including deterministic failure probes.
     pub frame_limit: usize,
+}
+
+#[derive(Clone, Copy)]
+pub enum Executable<'a> {
+    Probe(&'a [u8]),
+    Elf(&'a [u8]),
+}
+pub struct Program<'a> {
+    pub executable: Executable<'a>,
+    /// Initial RDI/RSI values; ordinary data, not capabilities.
+    pub arguments: [u64; 2],
+}
+
+#[derive(Debug)]
+pub enum Error {
+    InvalidCpuBudget,
+    InvalidCount,
+    InvalidEndpoints,
+    OutOfHeap,
+    Executable(super::admission::elf::Error),
+    Memory(cathedral_arch::MemoryError),
 }

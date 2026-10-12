@@ -30,8 +30,8 @@ the same [recursive supervisor](tree/node.rs).
 
 The public operations are in [user-runtime IPC](../../../platform/libraries/user-runtime/ipc.rs)
 and its [channel operations](../../../platform/libraries/user-runtime/ipc/channels.rs).
-They trap through the [syscall dispatcher](../../../kernel/core/user_tasks/session/syscalls.rs)
-to [checked IPC copies](../../../kernel/core/user_tasks/session/syscalls/ipc.rs).
+They trap through the [syscall dispatcher](../../../kernel/core/user_tasks/syscalls.rs)
+to [checked IPC copies](../../../kernel/core/user_tasks/syscalls/ipc.rs).
 The pure [kernel model](../../../kernel/core/ipc.rs) coordinates authorization,
 transfer reservation and queue commit. Descend into its [grant table](../../../kernel/core/ipc/grants.rs),
 [creation and moves](../../../kernel/core/ipc/channels.rs), or
@@ -79,8 +79,8 @@ failures leave every source grant with the parent and permit a later retry.
 Success invalidates the parent's names while preserving each transferred right.
 
 Follow [runtime launch requests](../../../platform/libraries/user-runtime/task/launch.rs)
-through [launch syscall staging](../../../kernel/core/user_tasks/session/syscalls/tasks/launch.rs)
-to [boot-context admission](../../../kernel/core/user_tasks/session/lifecycle.rs)
+through [launch syscall staging](../../../kernel/core/user_tasks/syscalls/tasks/launch.rs)
+to [boot-context admission](../../../kernel/core/user_tasks/lifecycle.rs)
 and [whole-bundle commit](../../../kernel/core/ipc/initial.rs). The syscall copies
 a 48-byte request (argument, count, four names; unused words must be zero) before
 blocking the parent. Kernel records retain only copied names. Admission and commit
@@ -131,9 +131,9 @@ transfer lifetime rules; this operation does not revoke endpoints already moved
 to unrelated processes.
 
 Follow [launch requests](../../../platform/libraries/user-runtime/task/launch.rs),
-[admission and commit](../../../kernel/core/user_tasks/session/lifecycle.rs),
-[whole-loan validation](../../../kernel/core/user_tasks/session/lifecycle/delegation.rs)
-and [loan lifetime](../../../kernel/core/supervision/delegation.rs). Syscall 40
+[admission and commit](../../../kernel/core/user_tasks/lifecycle.rs),
+[whole-loan validation](../../../kernel/core/user_tasks/lifecycle/delegation.rs)
+and [loan lifetime](../../../kernel/core/user_tasks/lifecycle/supervision/delegation.rs). Syscall 40
 uses the 48-byte endpoint prefix followed by a count and seven launch names
 (112 bytes total); unused words and flags must be zero. Reclamation's fresh
 name is reserved before mapping, so teardown cannot fail from name exhaustion.
@@ -269,9 +269,9 @@ matrix tests exercise boot connections using the same local grant machinery.
 
 [Resource subdivision](resources.rs) runs first: real nested processes partition
 page/channel capacity, exhaust it, and return it after subtree reclamation. See
-the [kernel accounting contract](../../../kernel/core/resources/README.md).
+the [kernel accounting contract](../../../kernel/core/user_tasks/resources/README.md).
 
 The separate `admission.json` profile enables [dynamic admission](admission.rs),
 using the same ordinary userspace program and transport. Its executable grants
 select code independently of five unbound process accounts. See the
-[admission contract](../../../kernel/core/admission_pool/README.md).
+[admission contract](../../../kernel/core/user_tasks/admission/pool/README.md).

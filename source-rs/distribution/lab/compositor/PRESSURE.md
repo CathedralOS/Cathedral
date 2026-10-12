@@ -47,22 +47,22 @@ eight-handle wait set.
 
 ## Kernel evidence and limits
 
-[Page-object policy](../../../kernel/core/regions.rs) separately bounds bytes and
+[Page-object policy](../../../kernel/core/user_tasks/memory/regions.rs) separately bounds bytes and
 object counts. Each task has at most four owned objects and four accepted reader
 objects; sixty-four global records cover all eight task slots even after producers
 exit. Accepted readers retain their page and object charges until release/death.
 These bounds reserve metadata capacity, not physical RAM or future CPU time.
 
-[Memory execution](../../../kernel/core/user_tasks/session/memory.rs) performs
+[Memory execution](../../../kernel/core/user_tasks/memory.rs) performs
 fallible, zeroed allocation and all-or-nothing rollback. The existing
-[reaper](../../../kernel/core/user_tasks/session/lifecycle.rs) checks physical
+[reaper](../../../kernel/core/user_tasks/lifecycle.rs) checks physical
 accounting against live address spaces and retained backing. Smoke tests check
 complete session heap/frame reclamation, every allocation/admission failure
 boundary, and mappings across a leaf-table boundary and at the last region slot.
 
 The first pressure run exposed an input regression: successful nonblocking
 syscalls yielded to the spinner, repeatedly adding an entire time slice between
-small operations. [Syscall dispatch](../../../kernel/core/user_tasks/session/syscalls.rs)
+small operations. [Syscall dispatch](../../../kernel/core/user_tasks/syscalls.rs)
 now returns a continuation event for immediate completion. [Scheduling](../../../kernel/core/scheduler.rs)
 still rotates on timer preemption, blocking and explicit yields. Device IRQs
 record readiness without forcing another round-robin rotation; ready peers get

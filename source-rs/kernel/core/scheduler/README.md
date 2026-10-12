@@ -23,10 +23,10 @@ envelope; there are no authored weights or minimum per-child reservations yet.
 
 ## Admission and lifetime
 
-[Session preparation](../user_tasks/session/prepare.rs) installs the boot ownership
-tree before admission. [Launch-loan commit](../user_tasks/session/lifecycle/delegation.rs)
+[Session preparation](../user_tasks/startup.rs) installs the boot ownership
+tree before admission. [Launch-loan commit](../user_tasks/lifecycle/delegation.rs)
 reattaches only dormant accounts after all fallible admission steps succeed.
-[Reclamation](../user_tasks/session/lifecycle.rs) returns their scheduling parent
+[Reclamation](../user_tasks/lifecycle.rs) returns their scheduling parent
 with the launch authority after descendants have been physically reclaimed.
 IPC storage sponsorship remains tied to its original launch account independently.
 
@@ -70,7 +70,7 @@ descheduling and host stalls can affect measurements. Native clock qualification
 frequency changes, migration and multicore synchronization remain unimplemented.
 The ordering follows the [Intel RDTSC instruction reference](https://cdrdv2-public.intel.com/789581/325383-sdm-vol-2abcd.pdf).
 
-[User traps](../user_tasks/session/traps.rs) charge the outgoing process through
+[User traps](../user_tasks/execution/traps.rs) charge the outgoing process through
 the scheduling boundary, including syscall/IRQ handling while it was selected.
 Dispatch/restore overhead after that sample belongs to the next selected process.
 On the boot stack, spawn attempts (including failures) charge their requester,

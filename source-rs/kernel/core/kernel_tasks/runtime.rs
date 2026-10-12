@@ -3,7 +3,7 @@
 
 use super::{Config, SpawnError, stacks};
 use crate::{
-    extent::FrameAllocator,
+    memory::FrameAllocator,
     scheduler::{Event, Scheduler, TaskId, TaskState},
 };
 use alloc::{alloc::alloc, boxed::Box, vec::Vec};

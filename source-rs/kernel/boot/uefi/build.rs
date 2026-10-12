@@ -156,7 +156,7 @@ fn startup() {
         source.push_str(&format!("Program {{ executable: Executable::Elf(include_bytes!(concat!(env!(\"OUT_DIR\"), \"/image-{index}.elf\"))), arguments: [{argument}, 0] }},\n"));
     }
     source.push_str("];\n");
-    source.push_str("static LINKS: &[cathedral_core::link::LinkSpec] = &[\n");
+    source.push_str("static LINKS: &[cathedral_core::ipc::link::LinkSpec] = &[\n");
     // Initial resource ownership is supplied by the same host composition as children.
     let graph = env::var("CATHEDRAL_LINKS").unwrap_or_default();
     for edge in graph.split(',').filter(|edge| !edge.is_empty()) {
@@ -167,7 +167,7 @@ fn startup() {
             client > 0 && client <= count && service > 0 && service <= count && client != service
         );
         source.push_str(&format!(
-            "cathedral_core::link::LinkSpec {{ client: {client}, service: {service} }},\n"
+            "cathedral_core::ipc::link::LinkSpec {{ client: {client}, service: {service} }},\n"
         ));
     }
     source.push_str("];\n");

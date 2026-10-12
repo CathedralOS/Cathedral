@@ -2,7 +2,7 @@
 use crate::{diagnostics::user_output, heap::HEAP, memory::PreparedMemory};
 use cathedral_contracts::memory::Grant;
 use cathedral_core::{
-    link::LinkSpec,
+    ipc::link::LinkSpec,
     user_tasks::{self, Config, Executable, Exit, Program, Supervision},
 };
 use cathedral_uart_16550::SerialPort;

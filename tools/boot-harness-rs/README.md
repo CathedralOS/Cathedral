@@ -252,4 +252,4 @@ outside sibling's allocation, failed-load refunds and repeated subtree recovery.
 `--smoke` also checks retained physical charges and every load funding boundary.
 `--matrix-desktop-test` requires visible sibling rendering while nested admission
 fails, before restoring the normal tree. See the
-[funding contract and implementation](../../source-rs/kernel/core/resources/physical/README.md).
+[funding contract and implementation](../../source-rs/kernel/core/user_tasks/resources/physical/README.md).
