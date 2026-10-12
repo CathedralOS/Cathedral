@@ -115,6 +115,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     mode = parser.add_mutually_exclusive_group()
     mode.add_argument("--matrix-desktop-test", action="store_true", help="Check the visible matrix-owned tree, clipping and physical input")
+    mode.add_argument("--admission-test", action="store_true", help="Check executable-authorized dynamic process pools")
     mode.add_argument("--ipc-test", action="store_true", help="Check ordinary app channel creation, endpoint moves and worker replies")
     mode.add_argument("--matrix-test", action="store_true", help="Check recursive matrix locality and input over isolated processes")
     mode.add_argument("--session-test", action="store_true", help="Exercise persistent apps, attenuated keyboard focus and process-owned child scenes")
@@ -136,15 +137,15 @@ def main():
     parser.add_argument("--timeout", type=float, default=30, help="Smoke boot timeout in seconds (default: 30)")
     parser.add_argument("--memory", type=int, default=128, help="Guest RAM in MiB (default: 128)")
     args = parser.parse_args()
-    if args.compositor_test or args.pointer_test or args.session_test or args.matrix_test or args.matrix_desktop_test or args.ipc_test:
+    if args.compositor_test or args.pointer_test or args.session_test or args.matrix_test or args.matrix_desktop_test or args.admission_test or args.ipc_test:
         if args.kernel_only:
             parser.error("protocol/display tests require userspace")
-        args.profile = Path(__file__).parent / ("profiles/matrix-desktop.json" if args.matrix_desktop_test else "profiles/channels.json" if args.ipc_test else "profiles/matrix.json" if args.matrix_test else "profiles/session.json" if args.session_test else "profiles/pointer.json" if args.pointer_test else "profiles/compositor.json")
+        args.profile = Path(__file__).parent / ("profiles/admission.json" if args.admission_test else "profiles/matrix-desktop.json" if args.matrix_desktop_test else "profiles/channels.json" if args.ipc_test else "profiles/matrix.json" if args.matrix_test else "profiles/session.json" if args.session_test else "profiles/pointer.json" if args.pointer_test else "profiles/compositor.json")
     if args.timeout <= 0 or args.memory < 64:
         parser.error("timeout must be positive and memory must be at least 64 MiB")
     if args.fault and not args.smoke:
         parser.error("--fault requires --smoke")
-    if args.window and (args.smoke or args.screenshot or args.input_test or args.recovery_test or args.storage_test or args.compositor_test or args.pointer_test or args.session_test or args.matrix_test or args.matrix_desktop_test or args.ipc_test or args.build_only):
+    if args.window and (args.smoke or args.screenshot or args.input_test or args.recovery_test or args.storage_test or args.compositor_test or args.pointer_test or args.session_test or args.matrix_test or args.matrix_desktop_test or args.admission_test or args.ipc_test or args.build_only):
         parser.error("--window requires an ordinary interactive boot")
 
     if args.kernel_only and (args.screenshot or args.input_test or args.recovery_test or args.storage_test):
@@ -179,7 +180,7 @@ def main():
     target = composition["target"]
     boot_package = composition["boot_package"]
     environment = {key: value for key, value in os.environ.items()
-                   if not (key.startswith("CATHEDRAL_") and (key.endswith("_ELF") or key in ("CATHEDRAL_INIT_CLOCK", "CATHEDRAL_LINKS", "CATHEDRAL_CHANNEL_LIMITS", "CATHEDRAL_CPU_LIMITS") or key.startswith("CATHEDRAL_LAUNCH_") or key.startswith("CATHEDRAL_INIT_")))}
+                   if not (key.startswith("CATHEDRAL_") and (key.endswith("_ELF") or key in ("CATHEDRAL_INIT_CLOCK", "CATHEDRAL_LINKS", "CATHEDRAL_CHANNEL_LIMITS", "CATHEDRAL_CPU_LIMITS", "CATHEDRAL_DYNAMIC_TASKS") or key.startswith("CATHEDRAL_LAUNCH_") or key.startswith("CATHEDRAL_INIT_")))}
     programs = {}
     if not args.kernel_only:
         if args.smoke:
@@ -193,6 +194,7 @@ def main():
                 parser.error(str(error))
             environment["CATHEDRAL_CHANNEL_LIMITS"] = ",".join(map(str, limits))
             environment["CATHEDRAL_CPU_LIMITS"] = ",".join(map(str, cpu_limits))
+            environment["CATHEDRAL_DYNAMIC_TASKS"] = str(startup.get("dynamic_tasks", 0))
             for resource in ("private_pages", "shared_pages"):
                 pages = startup["initial"].get(resource, 0)
                 if type(pages) is not int or not 0 <= pages <= 16:
@@ -247,7 +249,7 @@ def main():
         cargo.extend(["--features", ','.join(features)])
     subprocess.run(cargo, cwd=WORKSPACE, check=True, env=environment)
     # Keep smoke images and their terminating feature separate from normal boots.
-    output = BUILD / (f"fault-{args.fault}" if args.fault else "smoke" if args.smoke else "storage-test" if args.storage_test else "recovery-test" if args.recovery_test else "input-test" if args.input_test else "test" if (args.compositor_test or args.pointer_test or args.session_test or args.matrix_test or args.matrix_desktop_test or args.ipc_test) else "capture" if args.screenshot else "interactive")
+    output = BUILD / (f"fault-{args.fault}" if args.fault else "smoke" if args.smoke else "storage-test" if args.storage_test else "recovery-test" if args.recovery_test else "input-test" if args.input_test else "test" if (args.compositor_test or args.pointer_test or args.session_test or args.matrix_test or args.matrix_desktop_test or args.admission_test or args.ipc_test) else "capture" if args.screenshot else "interactive")
     if args.kernel_only:
         output = output.with_name("kernel-" + output.name)
     if custom_profile:
@@ -276,6 +278,9 @@ def main():
     creationflags = subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0
     if args.matrix_desktop_test:
         capture.run(command, output, args.timeout, creationflags, ready_marker="Cathedral matrix desktop: ready", verify=lambda stream, output, serial: matrix_desktop_test.verify(stream, output, serial, pressure=args.pressure))
+        return 0
+    if args.admission_test:
+        protocol_test.run(command, output, args.timeout, creationflags, "Cathedral admission: executable capabilities, recursive funded pools, load rollback, stale grants and sibling survival passed")
         return 0
     if args.matrix_test or args.ipc_test:
         marker = ("Cathedral IPC: channels, startup bundles, recursive admission and reclamation passed" if args.ipc_test

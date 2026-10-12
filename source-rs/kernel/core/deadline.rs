@@ -27,6 +27,13 @@ impl Clock {
     pub fn allowed(&self, caller: usize) -> bool {
         caller < abi::MAX_TASKS && self.readers & (1 << caller) != 0
     }
+    pub fn allow(&mut self, caller: usize, allowed: bool) {
+        self.readers &= !(1 << caller);
+        if allowed {
+            self.readers |= 1 << caller;
+        }
+        self.handles[caller] = 0;
+    }
     pub fn install(&mut self, caller: usize, name: u64) {
         self.handles[caller] = name;
     }

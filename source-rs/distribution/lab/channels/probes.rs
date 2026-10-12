@@ -25,6 +25,25 @@ pub fn resources(launch: cathedral_user_runtime::task::Launch) {
     );
     assert_eq!(cathedral_user_runtime::resources::budget().unwrap(), before);
 }
+pub fn admission(image: cathedral_user_runtime::task::Executable) {
+    let before = cathedral_user_runtime::resources::budget().unwrap();
+    let slots = cathedral_user_runtime::task::available_slots().unwrap();
+    for address in [0, u64::MAX] {
+        assert_eq!(
+            raw(abi::TASK_RESERVE, image.raw(), address, 0),
+            abi::BAD_ADDRESS
+        );
+    }
+    assert_eq!(
+        raw(abi::TASK_RESERVE, image.raw(), 0, 1),
+        abi::INVALID_ARGUMENT
+    );
+    assert_eq!(cathedral_user_runtime::resources::budget().unwrap(), before);
+    assert_eq!(
+        cathedral_user_runtime::task::available_slots().unwrap(),
+        slots
+    );
+}
 
 pub fn tree(launch: cathedral_user_runtime::task::Launch) {
     for address in [0, u64::MAX, 0x8000203ff8] {

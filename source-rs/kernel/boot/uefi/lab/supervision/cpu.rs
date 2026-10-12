@@ -25,6 +25,7 @@ pub(super) fn exercise(memory: &mut PreparedMemory, console: &mut SerialPort) {
                 &[program(24, descendants), program(25, 0)],
                 user_output,
                 Config {
+                    dynamic_tasks: 0,
                     channel_limits: &[],
                     cpu_limits: &[],
                     memory: &[],

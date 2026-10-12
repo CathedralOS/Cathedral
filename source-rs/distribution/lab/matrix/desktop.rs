@@ -63,6 +63,10 @@ fn pixel(pair: Pair, x: u64, y: u64, expected: u64) {
     }
 }
 pub fn run() -> u64 {
+    assert_eq!(
+        Launch::at(0).unwrap().executable().unwrap_err(),
+        Error(abi::DENIED as i64)
+    );
     let (display_send, display_input) = ipc::channel().unwrap();
     let (display_output, display_recv) = ipc::channel().unwrap();
     let display_task = Launch::at(0)

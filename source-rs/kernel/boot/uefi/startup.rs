@@ -85,6 +85,7 @@ pub fn run(memory: &mut PreparedMemory, console: &mut SerialPort) {
             }],
             user_output,
             Config {
+                dynamic_tasks: DYNAMIC_TASKS,
                 links: LINKS,
                 frame_limit: usize::MAX,
                 endpoints: &[],

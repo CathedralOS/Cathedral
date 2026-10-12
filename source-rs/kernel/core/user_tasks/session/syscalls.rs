@@ -1,6 +1,7 @@
 //! Syscall entrance: route by authority/resource family, then complete and wake.
 //! Platform APIs reach this transport through platform/libraries/user-runtime/;
 //! display/input/storage request semantics remain in their service executables.
+mod admission;
 mod diagnostics;
 mod disk;
 mod display;
@@ -18,6 +19,9 @@ pub(super) fn syscall(session: &mut Session, slot: usize, now: u64) -> Event {
     let (number, first, second, third) = session.tasks[slot].context.syscall();
     let mut event = Event::Continue;
     let result = match number {
+        abi::TASK_EXECUTABLE..=abi::TASK_POOL_AVAILABLE => {
+            admission::dispatch(session, slot, [number, first, second, third])
+        }
         abi::RESOURCE_BUDGET | abi::RESOURCE_ASSIGN => {
             resources::dispatch(session, slot, [number, first, second, third])
         }

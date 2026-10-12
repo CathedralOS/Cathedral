@@ -3,6 +3,13 @@ import unittest
 from resource_budgets import channel_limits, cpu_limits
 
 class Reservations(unittest.TestCase):
+    def test_dynamic_accounts_have_no_unfunded_channel_capacity(self):
+        startup = {"initial": {}, "launches": [{}], "dynamic_tasks": 6}
+        self.assertEqual(channel_limits(startup), [4, 4, 0, 0, 0, 0, 0, 0])
+        self.assertEqual(cpu_limits(startup), [0] * 8)
+        for value in [-1, 7, True, "2"]:
+            with self.subTest(value=value), self.assertRaises(ValueError):
+                channel_limits({"initial": {}, "launches": [{}], "dynamic_tasks": value})
     def test_cpu_inheritance_and_ceiling_values(self):
         self.assertEqual(cpu_limits({"initial": {}, "launches": [{}, {}]}), [0, 0, 0])
         self.assertEqual(cpu_limits({"initial": {"cpu_budget_us": 20000}, "launch": {"cpu_budget_us": 100000}}), [20000, 100000])

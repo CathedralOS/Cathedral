@@ -22,6 +22,8 @@ pub(super) struct Task {
     pub(super) keyboard_deadline: Option<u64>,
 }
 pub(super) struct Session {
+    pub(super) pool: crate::admission_pool::Pool,
+    pub(super) executables: crate::admission_pool::Executables,
     pub(super) names: crate::names::Names,
     pub(super) memory: alloc::boxed::Box<super::memory::Memory>,
     pub(super) tasks: Vec<Task>,
@@ -41,6 +43,10 @@ pub(super) static ACTIVE: AtomicPtr<Session> = AtomicPtr::new(core::ptr::null_mu
 pub(super) static EPOCH: AtomicU64 = AtomicU64::new(1);
 
 pub(super) struct LaunchState {
+    pub(super) template: Option<usize>,
+    pub(super) dynamic: bool,
+    pub(super) frame_limit: usize,
+    pub(super) cpu_origin: u64,
     pub(super) delegated: [u64; cathedral_contracts::user::MAX_LAUNCHES],
     pub(super) delegated_count: usize,
     pub(super) initial: [u64; cathedral_contracts::user::MAX_INITIAL_ENDPOINTS],

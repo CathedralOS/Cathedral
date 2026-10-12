@@ -95,6 +95,9 @@ impl Scheduler {
     pub fn current(&self) -> Option<usize> {
         self.current
     }
+    pub fn parent(&self, slot: usize) -> Option<usize> {
+        self.shares.parent(slot)
+    }
     pub fn states(&self) -> &[TaskState] {
         &self.states
     }

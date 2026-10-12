@@ -120,3 +120,11 @@ pub const RESOURCE_BUDGET: u64 = 43;
 /// RDI owned idle launch; RSI points to three u64 absolute child limits; RDX zero.
 /// Unused capacity moves between owner and child atomically, never minted.
 pub const RESOURCE_ASSIGN: u64 = 44;
+pub const TASK_EXECUTABLE: u64 = 45; // owned launch -> executable-only authority
+pub const TASK_RESERVE: u64 = 46; // executable, 40-byte limits/pages/channels/slots/frames, zero
+pub const TASK_RELEASE: u64 = 47; // idle dynamic launch, zero, zero
+pub const TASK_POOL_ASSIGN: u64 = 48; // owned idle launch, available child-slot count, zero
+pub const TASK_LAUNCH_PORT: u64 = 49; // owned launch -> owner-local peer port
+pub const TASK_IMAGE_AT: u64 = 50; // local executable grant index, zero, zero
+pub const TASK_POOL_AVAILABLE: u64 = 51; // zero, zero, zero; own unused process reservations
+pub const MAX_ADMISSION_FRAMES: usize = 256;

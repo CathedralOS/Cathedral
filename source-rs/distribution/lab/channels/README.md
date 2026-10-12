@@ -270,3 +270,8 @@ matrix tests exercise boot connections using the same local grant machinery.
 [Resource subdivision](resources.rs) runs first: real nested processes partition
 page/channel capacity, exhaust it, and return it after subtree reclamation. See
 the [kernel accounting contract](../../../kernel/core/resources/README.md).
+
+The separate `admission.json` profile enables [dynamic admission](admission.rs),
+using the same ordinary userspace program and transport. Its executable grants
+select code independently of five unbound process accounts. See the
+[admission contract](../../../kernel/core/admission_pool/README.md).

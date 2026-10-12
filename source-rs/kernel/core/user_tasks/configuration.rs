@@ -1,7 +1,9 @@
-//! Boot-selected executables and grants; userspace cannot widen this composition.
+//! Boot-selected executable authority and resource envelopes; userspace subdivides them.
 use super::Program;
 use crate::ipc::EndpointSpec;
 pub struct Config<'a> {
+    /// Unbound process accounts owned initially by the sole initial process.
+    pub dynamic_tasks: usize,
     /// Per boot/launch account, including dormant children. Empty selects fixed defaults.
     pub channel_limits: &'a [usize],
     /// Per-account CPU burst microseconds, refilled at limit/100_000 of one CPU.

@@ -6,6 +6,7 @@
 //! [`user_tasks::run_configured`] for isolated executables and boot-issued grants.
 
 extern crate alloc;
+pub mod admission_pool;
 
 pub mod byte_queue;
 pub mod deadline;

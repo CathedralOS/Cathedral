@@ -5,6 +5,9 @@ edition.workspace = true
 rust-version.workspace = true
 publish.workspace = true
 
+[features]
+dynamic-admission = []
+
 [[bin]]
 name = "cathedral-channels-lab"
 path = "main.rs"

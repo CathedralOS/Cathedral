@@ -497,3 +497,16 @@ withdrawal fails rather than revoking the reader. The same applies to channels.
 This extends the persistent-sponsor experiment above. It does not settle funding
 transfer, active-child rebudgeting or a physical RAM reservation covering ELF,
 page-table and stack admission costs.
+
+
+**Executable-admission lab evidence (not a stable delegation contract).**
+[Dynamic admission](source-rs/kernel/core/admission_pool/README.md) now separates
+code authority from a bounded process pool. Exporting an owned plain launch
+creates a distinct code grant; dynamic admission explicitly supplies that code
+grant to its child for funded recursive launch. Device-granted launches cannot
+be exported. Creator death uses the existing nearest-surviving-lender policy for
+new accounts too, while retained backing can pin returned reservations. Production
+semantics still need to decide general executable-capability transfer/revocation
+and whether code grants should be retained independently of launch ownership.
+The current lab grants permission to execute again; it does not infer that right
+from arbitrary readable bytes or service registration.

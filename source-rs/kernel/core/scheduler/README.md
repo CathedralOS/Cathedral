@@ -81,6 +81,7 @@ Each interval charges the process and all current ancestors exactly once. Intern
 `CpuReport` totals distinguish direct from subtree execution and survive process
 replacement. Full reports return only to the boot fixture. `CPU_READ` exposes only the caller
 account's direct microseconds through its existing clock grant and checked copyout;
+new dynamic reservations subtract a private baseline when reusing an arena slot;
 no other account or machine total is exposed. A blocked caller's request
 executing in an independent provider still charges that provider's tree.
 

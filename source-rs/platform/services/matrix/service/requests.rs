@@ -65,6 +65,8 @@ pub(super) fn dispatch(
         Some(words) => world.request(request.client.unwrap(), request.incarnation, words),
         None => wire::error(abi::DENIED),
     };
+    // Publish binding/input invalidations before acknowledging their mutation.
+    children.notify(world)?;
     server.reply(&request, &wire::encode(response))?;
     Ok(())
 }

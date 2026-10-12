@@ -994,3 +994,8 @@ Runtime page and channel allowances can now be subdivided through owned idle
 launch grants; see [resource subdivision](kernel/core/resources/README.md). Profiles
 may grant `private_pages` and `shared_pages` to the initial program as well as
 launches. Retained pages remain charged to their original account after producer death.
+
+[Executable-authorized admission](kernel/core/admission_pool/README.md) separates
+code grants from process capacity. `startup.dynamic_tasks` reserves unbound
+accounts; apps can reserve and recursively launch granted executables within their
+page/channel/process allowances. Run `--admission-test --release --timeout 120`.

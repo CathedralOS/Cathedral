@@ -1,6 +1,7 @@
 #![no_std]
 #![no_main]
 //! Ordinary parent and worker: only the introduction is supplied by boot.
+mod admission;
 mod probes;
 mod resources;
 mod scenario;
@@ -16,6 +17,12 @@ use cathedral_user_runtime::{
 };
 cathedral_user_runtime::entry_with_environment!(main);
 fn main(role: u64, mode: u64, environment: cathedral_user_runtime::task::Environment) -> u64 {
+    if cfg!(feature = "dynamic-admission") && role == 0 {
+        return admission::run();
+    }
+    if role != 0 && (30..=34).contains(&mode) {
+        return admission::worker(role, mode);
+    }
     if role != 0 && (20..=21).contains(&mode) {
         return resources::worker(mode);
     }

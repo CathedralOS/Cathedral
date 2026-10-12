@@ -11,6 +11,7 @@ fn main() {
         "CATHEDRAL_CHANNEL_LIMITS",
         "CATHEDRAL_CPU_LIMITS",
         "CATHEDRAL_LAUNCH_COUNT",
+        "CATHEDRAL_DYNAMIC_TASKS",
     ] {
         println!("cargo:rerun-if-env-changed={variable}");
     }
@@ -59,15 +60,31 @@ fn startup() {
         count <= cathedral_contracts::user::MAX_LAUNCHES,
         "launch arena exhausted"
     );
+    let dynamic: usize = env::var("CATHEDRAL_DYNAMIC_TASKS")
+        .unwrap_or_else(|_| "0".into())
+        .parse()
+        .unwrap();
+    let accounts = count
+        .checked_add(1)
+        .and_then(|n| n.checked_add(dynamic))
+        .expect("account overflow");
+    assert!(
+        accounts <= cathedral_contracts::user::MAX_TASKS,
+        "process pool exhausted"
+    );
     let limits: Vec<usize> = env::var("CATHEDRAL_CHANNEL_LIMITS")
         .map(|text| {
             text.split(',')
                 .map(|n| n.parse().expect("invalid channel reservation"))
                 .collect()
         })
-        .unwrap_or_else(|_| vec![cathedral_contracts::user::DEFAULT_CHANNELS; count + 1]);
+        .unwrap_or_else(|_| {
+            let mut limits = vec![cathedral_contracts::user::DEFAULT_CHANNELS; count + 1];
+            limits.resize(accounts, 0);
+            limits
+        });
     assert!(
-        limits.len() == count + 1
+        limits.len() == accounts
             && limits
                 .iter()
                 .all(|&n| n <= cathedral_contracts::user::MAX_CREATED_CHANNELS),
@@ -83,9 +100,9 @@ fn startup() {
                 .map(|n| n.parse().expect("invalid CPU limit"))
                 .collect()
         })
-        .unwrap_or_else(|_| vec![0; count + 1]);
+        .unwrap_or_else(|_| vec![0; accounts]);
     assert!(
-        cpu_limits.len() == count + 1
+        cpu_limits.len() == accounts
             && cpu_limits
                 .iter()
                 .all(|&n| n <= cathedral_contracts::user::CPU_REFILL_PERIOD_US),
@@ -116,7 +133,7 @@ fn startup() {
         "];\nconst CHANNEL_LIMITS: &[usize] = &{limits:?};\nconst CPU_LIMITS: &[u64] = &{cpu_limits:?};\n"
     ));
     source.push_str(&format!(
-        "const INITIAL_PAGES: [usize; 2] = [{initial_private}, {initial_shared}];\n"
+        "const DYNAMIC_TASKS: usize = {dynamic};\nconst INITIAL_PAGES: [usize; 2] = [{initial_private}, {initial_shared}];\n"
     ));
     source.push_str("static LINKS: &[cathedral_core::link::LinkSpec] = &[\n");
     // Initial resource ownership is supplied by the same host composition as children.

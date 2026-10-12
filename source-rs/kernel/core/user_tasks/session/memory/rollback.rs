@@ -12,6 +12,7 @@ use cathedral_arch::{BootLayout, ImageRange};
 pub unsafe fn exercise(frames: &mut FrameAllocator, layout: &BootLayout, image: ImageRange) {
     let baseline = frames.allocated();
     let config = Config {
+        dynamic_tasks: 0,
         frame_limit: usize::MAX,
         endpoints: &[],
         links: &[],

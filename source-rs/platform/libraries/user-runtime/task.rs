@@ -1,5 +1,7 @@
 //! Bounded launch and observation mechanisms; applications choose restart policy.
 mod environment;
+mod executable;
+pub use executable::{Executable, available_slots};
 mod launch;
 use crate::{Error, abi, arch, ipc::Handle};
 pub use environment::Environment;

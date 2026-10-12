@@ -20,8 +20,17 @@ pub(super) unsafe fn run(
         arch::keyboard_irq(config.supervision.iter().any(|grant| grant.keyboard));
         loop {
             lifecycle::reap(&mut *session, source);
-            for (index, launch) in config.supervision.iter().enumerate() {
-                lifecycle::spawn(&mut *session, source, layout, image, launch, index);
+            for index in 0..(*session).launches.len() {
+                if let Some(template) = (&(*session).launches)[index].template {
+                    lifecycle::spawn(
+                        &mut *session,
+                        source,
+                        layout,
+                        image,
+                        &config.supervision[template],
+                        index,
+                    );
+                }
             }
             super::memory::process(&mut *session, source);
             if (*session).scheduler.finished() {

@@ -26,6 +26,9 @@ pub(super) fn session(
         }
     })?;
     let mut session = Session {
+        pool: crate::admission_pool::Pool::new(count - config.dynamic_tasks, count),
+        executables: crate::admission_pool::Executables::new(count)
+            .map_err(|_| Error::OutOfHeap)?,
         names: grants.names,
         memory,
         tasks: Vec::new(),

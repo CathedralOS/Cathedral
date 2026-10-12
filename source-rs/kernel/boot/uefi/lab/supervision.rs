@@ -161,6 +161,7 @@ fn run(
             programs,
             user_output,
             Config {
+                dynamic_tasks: 0,
                 links: &[],
                 frame_limit: usize::MAX,
                 endpoints,

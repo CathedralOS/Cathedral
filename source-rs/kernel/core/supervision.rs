@@ -25,6 +25,11 @@ pub struct Supervisor {
     sponsors: [[u64; 2]; MAX_TASKS],
 }
 impl Supervisor {
+    pub fn vacant(child: usize) -> Self {
+        let mut model = Self::new([1, 2], 0, 0, child).unwrap();
+        model.close(0);
+        model
+    }
     pub fn new(names: [u64; 2], owner: usize, peer: usize, child: usize) -> Result<Self, u64> {
         if names
             .iter()

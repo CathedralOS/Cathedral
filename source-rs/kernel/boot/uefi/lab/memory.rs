@@ -43,6 +43,7 @@ pub fn exercise(memory: &mut PreparedMemory, console: &mut SerialPort) {
                 &[program(0)],
                 user_output,
                 Config {
+                    dynamic_tasks: 0,
                     frame_limit: usize::MAX,
                     endpoints: &[],
                     channel_limits: &[],

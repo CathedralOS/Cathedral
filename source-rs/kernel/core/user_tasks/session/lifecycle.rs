@@ -9,6 +9,7 @@ mod delegation;
 mod grants;
 
 pub(super) fn close(session: &mut Session, slot: usize) {
+    session.executables.close(slot);
     session.clock.install(slot, 0);
     session.tasks[slot].memory_call = None;
     session.tasks[slot].receive = None;
@@ -74,6 +75,14 @@ pub(super) unsafe fn reap(session: &mut Session, source: &mut Frames<'_>) {
         }
         session.scheduler.reap(slot);
         session.scheduler.charge_cpu(slot, arch::cpu_time_us());
+        let mut ancestor = session.scheduler.parent(slot).unwrap_or(0);
+        while ancestor != 0
+            && (session.tasks[ancestor].space.is_none()
+                || session.scheduler.states()[ancestor] == TaskState::Exited)
+        {
+            ancestor = session.scheduler.parent(ancestor).unwrap_or(0);
+        }
+        session.pool.reclaim(slot, ancestor);
         if let Some(launch) = session
             .launches
             .iter_mut()
@@ -101,6 +110,9 @@ pub(super) unsafe fn reap(session: &mut Session, source: &mut Frames<'_>) {
         let previous_owner = launch.model.owner;
         launch.model.reclaim();
         if launch.model.owner != previous_owner {
+            session
+                .pool
+                .reattach(launch.model.child, launch.model.owner);
             session
                 .scheduler
                 .set_parent(launch.model.child, launch.model.owner);
@@ -153,7 +165,7 @@ pub(super) unsafe fn spawn(
             executable: launch.program.executable,
             arguments: [launch.program.arguments[0], argument],
         };
-        source.remaining = launch.frame_limit;
+        source.remaining = session.launches[index].frame_limit;
         // SAFETY: Boot context, sole CPU/IRQs off. Child slot is vacant; peer roots
         // stay live. All partial admission is rolled back before returning errors.
         match unsafe { admission::admit(session, layout, image, &program, source, child) } {

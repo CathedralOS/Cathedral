@@ -42,6 +42,7 @@ pub unsafe fn run(
             programs,
             output,
             Config {
+                dynamic_tasks: 0,
                 links: &[],
                 frame_limit,
                 endpoints: &[],

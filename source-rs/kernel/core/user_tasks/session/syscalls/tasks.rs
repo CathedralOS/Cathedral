@@ -34,7 +34,16 @@ pub(in super::super) fn dispatch(
         }
         let value = if number == abi::CPU_READ {
             session.scheduler.account_cpu(cathedral_arch::cpu_time_us());
-            session.scheduler.cpu_report(slot).direct_us
+            let origin = session
+                .launches
+                .iter()
+                .find(|l| l.model.child == slot)
+                .map_or(0, |l| l.cpu_origin);
+            session
+                .scheduler
+                .cpu_report(slot)
+                .direct_us
+                .saturating_sub(origin)
         } else {
             now
         };
