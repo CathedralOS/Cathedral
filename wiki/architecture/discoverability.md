@@ -59,9 +59,12 @@ translation encoding to the selected CPU backend.
 `session.rs` holds their shared state, not a second hidden execution pipeline.
 
 The second CPU proof follows the same boot entry into
-`arch/aarch64/memory/memory.rs`, `interrupts/interrupts.rs` and
+`arch/isa/aarch64/memory/memory.rs`, `interrupts/interrupts.rs` and
 `context/context.rs`. Its saved context returns to the shared core trap dispatcher;
 `boot/uefi/lab/arm64/arm64.rs` visibly sequences the headless proof.
+`arch/lib.rs` lists the shared machine interface; `arch/isa/isa.rs` selects CPU
+mechanisms, while `arch/board/board.rs` selects actual device adapters. Both CPUs
+run the shared trusted-kernel-task lab, with register probes beneath that lab.
 
 Trap requests descend from `execution/traps.rs` into `syscalls/syscalls.rs`, then a
 resource family. For example, `syscalls/ipc/ipc.rs` selects copied delivery,
@@ -90,10 +93,10 @@ knowledge of a particular distribution.
 | Interest | Start here | Descend into |
 | --- | --- | --- |
 | CPU turn sharing | [Task scheduling](../../source-rs/kernel/core/scheduler/scheduler.rs) | [Hierarchical selection](../../source-rs/kernel/core/scheduler/shares/shares.rs), [contract and proof route](../../source-rs/kernel/core/scheduler/README.md), [loan reattachment](../../source-rs/kernel/core/user_tasks/lifecycle/delegation.rs) |
-| CPU time ceilings | [Persistent account charging](../../source-rs/kernel/core/scheduler/budget/budget.rs) | [Architecture clock](../../source-rs/kernel/arch/x86_64/cpu_clock.rs), [trap samples](../../source-rs/kernel/core/user_tasks/execution/traps.rs), [measured QEMU proof](../../source-rs/kernel/boot/uefi/lab/supervision/cpu/budget.rs) |
+| CPU time ceilings | [Persistent account charging](../../source-rs/kernel/core/scheduler/budget/budget.rs) | [Architecture clock](../../source-rs/kernel/arch/isa/x86_64/cpu_clock.rs), [trap samples](../../source-rs/kernel/core/user_tasks/execution/traps.rs), [measured QEMU proof](../../source-rs/kernel/boot/uefi/lab/supervision/cpu/budget.rs) |
 | Firmware and kernel startup | [boot main](../../source-rs/kernel/boot/uefi/main.rs) | Firmware handoff, memory, interrupts, supplied-program startup |
 | Host-supplied boot composition | [build script](../../source-rs/kernel/boot/uefi/build/main.rs) | [Grant/image/link generation](../../source-rs/kernel/boot/uefi/build/composition/composition.rs), [reservation validation](../../source-rs/kernel/boot/uefi/build/composition/reservations.rs), [ELF bundling](../../source-rs/kernel/boot/uefi/build/artifacts.rs); consumed by [startup](../../source-rs/kernel/boot/uefi/startup.rs) |
-| CPU interrupt installation | [interrupt entrance](../../source-rs/kernel/arch/x86_64/interrupts/interrupts.rs) | [Privilege and vector tables](../../source-rs/kernel/arch/x86_64/interrupts/tables.rs), [assembly bindings](../../source-rs/kernel/arch/x86_64/interrupts/entries.rs) |
+| CPU interrupt installation | [interrupt entrance](../../source-rs/kernel/arch/isa/x86_64/interrupts/interrupts.rs) | [Privilege and vector tables](../../source-rs/kernel/arch/isa/x86_64/interrupts/tables.rs), [assembly bindings](../../source-rs/kernel/arch/isa/x86_64/interrupts/entries.rs) |
 | Isolated address spaces | [ownership and rollback](../../source-rs/kernel/core/user_tasks/address_space/address_space.rs) | [Image validation](../../source-rs/kernel/core/user_tasks/address_space/image.rs), [loading](../../source-rs/kernel/core/user_tasks/address_space/creation.rs), [checked copies](../../source-rs/kernel/core/user_tasks/address_space/access.rs), [CPU mapping boundary](../../source-rs/kernel/arch/README.md) |
 | Privileged device access | [core authority and buffers](../../source-rs/kernel/core/user_tasks/syscalls/devices/devices.rs) | [Board selection](../../source-rs/kernel/arch/board/board.rs), [PC command restrictions](../../source-rs/kernel/arch/board/pc/pc.rs), [virt hardware](../../source-rs/kernel/arch/board/virt/virt.rs) |
 | Isolated tasks | [user-task session](../../source-rs/kernel/core/user_tasks/user_tasks.rs) | Composition, preparation, admission, execution, outcomes |

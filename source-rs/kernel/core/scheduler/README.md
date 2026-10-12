@@ -61,7 +61,7 @@ larger than its parent's does not widen the parent. `Launch::assign_cpu` lets an
 existing debt and clamps credit without topping it up. Active-child changes and
 virtual core-count advertisement remain unimplemented.
 
-[The architecture clock](../../arch/x86_64/cpu_clock.rs) samples an ordered TSC,
+[The architecture clock](../../arch/isa/x86_64/cpu_clock.rs) samples an ordered TSC,
 calibrated once against five nominal 100 Hz PIT periods. It assumes the fixed-rate,
 single-CPU QEMU reference environment. Microsecond timestamps preserve partial
 timer quanta, including repeated short syscalls and yields. This is elapsed time

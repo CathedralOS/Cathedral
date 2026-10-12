@@ -60,23 +60,22 @@ pub unsafe fn prepare_memory(
     }
     let mut tables = PageTables::new(next);
     let root = tables.frame()?;
-    let l1 = tables.frame()?;
-    let devices = tables.frame()?;
-    // SAFETY: Fresh exclusive tables and fixed QEMU board identity ranges.
-    unsafe {
-        (root as *mut u64).write(l1 | 3);
-        (l1 as *mut u64).write(devices | 3);
-        for i in 0..(crate::board::virt::RAM_START / 0x20_0000) as usize {
-            (devices as *mut u64)
-                .add(i)
-                .write((i as u64 * 0x20_0000) | 1 | (1 << 10) | (1 << 2) | NX);
+    let mut table_count = 1;
+    for window in &crate::board::virt::IDENTITY_MAP {
+        let flags = if window.device {
+            (1 << 10) | (1 << 2) | NX
+        } else {
+            NORMAL | (1 << 54)
+        };
+        // SAFETY: Fixed board supplies disjoint aligned physical windows; ISA encodes supervisor access.
+        unsafe {
+            tables::identity_blocks(root, window.start, window.end, flags, &mut || {
+                let frame = tables.frame()?;
+                table_count += 1;
+                Ok(frame)
+            })?;
         }
-        // RAM is normal WB and supervisor-only. EL1 image executes from its identity alias.
-        (l1 as *mut u64)
-            .add(1)
-            .write(crate::board::virt::RAM_START | 1 | NORMAL | (1 << 54));
     }
-    let mut table_count = 3;
     let stack_guard = 0x10_0000_0000;
     let stack_bottom = stack_guard + PAGE;
     let stack_top = stack_bottom + 16 * PAGE;

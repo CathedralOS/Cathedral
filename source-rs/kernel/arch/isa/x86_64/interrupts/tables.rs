@@ -25,7 +25,7 @@ static mut GDT: GlobalDescriptorTable = GlobalDescriptorTable::new();
 static mut IDT: [Entry<HandlerFunc>; 256] = [const { Entry::missing() }; 256];
 const _: () = assert!(size_of::<Entry<HandlerFunc>>() == 16);
 
-pub(in crate::x86_64) fn user_selectors() -> (u16, u16) {
+pub(in crate::isa::x86_64) fn user_selectors() -> (u16, u16) {
     let selectors = USER_SELECTORS.load(Ordering::Acquire);
     assert_ne!(selectors, 0, "user context before GDT installation");
     (selectors as u16, (selectors >> 16) as u16)

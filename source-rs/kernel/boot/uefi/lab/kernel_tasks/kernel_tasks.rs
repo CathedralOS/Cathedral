@@ -86,8 +86,9 @@ fn exercise_preemption(
     assert_eq!(unsafe { HEAP.used() }, baseline);
     writeln!(
         console,
-        "Cathedral Rust lab: preempted non-yielding tasks counts={:?}; GPR SSE x87 MXCSR preserved",
-        &stats.preemptions[..2]
+        "Cathedral Rust lab: preempted non-yielding tasks counts={:?}; {} preserved",
+        &stats.preemptions[..2],
+        registers::STATE
     )
     .ok();
     writeln!(
@@ -116,7 +117,7 @@ fn busy_worker(index: usize) {
     // SAFETY: IRQs are enabled in the task's saved flags, with a live timer.
     // Distinct patterns force stale register/FP state from the other task to fail.
     let preserved = unsafe {
-        arch::probe_registers(
+        registers::exercise(
             &PROGRESS[index],
             arch::ticks().wrapping_add(6),
             if index == 0 { 17 } else { 34 },

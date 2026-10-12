@@ -45,7 +45,8 @@ selections into images; the selections themselves live with target source.
 `kernel/` owns privileged execution, including the firmware seam. `kernel/core`
 stays firmware-neutral; `kernel/boot` adapts firmware, and `kernel/arch` owns CPU
 mechanisms and privileged board adapters. In the Rust lab, `arch/board` owns
-concrete controllers and fixed board addresses; `core/user_tasks/address_space`
+concrete controllers and fixed board addresses; `arch/isa` owns CPU-specific
+translation and context implementations; `core/user_tasks/address_space`
 owns process memory layout, frame lifetime and checked copies. CPU backends
 encode translations and saved contexts. A directory move does not create a separate kernel binary: the Rust
 UEFI executable still composes entry and post-firmware startup through a small

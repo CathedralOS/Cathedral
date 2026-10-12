@@ -11,15 +11,15 @@ pub struct SerialPort {
 }
 
 impl SerialPort {
-    /// Initialize the QEMU PC's COM1 at 115200 baud, 8N1, interrupts disabled.
+    /// Initialize a supplied 16550 port window at 115200 baud, 8N1, interrupts disabled.
     ///
     /// # Safety
-    /// Requires a 16550 at 0x3f8 and exclusive device access. The supplied port
+    /// Requires a 16550 at base and exclusive device access. The supplied port
     /// operations must implement reads/writes for that window and remain usable
     /// throughout this console's lifetime. Boot supplies privileged operations;
     /// the platform driver does not depend on the kernel implementation.
-    pub unsafe fn com1(read: unsafe fn(u16) -> u8, write: unsafe fn(u16, u8)) -> Self {
-        let base = 0x3f8;
+    pub unsafe fn new(base: u16, read: unsafe fn(u16) -> u8, write: unsafe fn(u16, u8)) -> Self {
+        assert!(base <= u16::MAX - 7);
         // SAFETY: The caller owns this UART's register window.
         unsafe {
             write(base + 1, 0);

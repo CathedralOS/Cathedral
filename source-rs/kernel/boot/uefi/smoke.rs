@@ -53,10 +53,10 @@ pub fn finish_fault(fault: &arch::Fault, console: &mut SerialPort) -> ! {
 
 pub fn complete() -> ! {
     // SAFETY: Only the lab harness enables the selected backend's QEMU exit mechanism.
-    unsafe { arch::qemu_exit(0x10) }
+    unsafe { arch::board::qemu_exit(0x10) }
 }
 
 pub fn fail() -> ! {
     // SAFETY: Same test-only device; this status means failure to the host.
-    unsafe { arch::qemu_exit(0x11) }
+    unsafe { arch::board::qemu_exit(0x11) }
 }

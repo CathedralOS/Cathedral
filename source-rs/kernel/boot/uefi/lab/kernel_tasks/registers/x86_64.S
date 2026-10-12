@@ -55,7 +55,24 @@ cathedral_register_probe:
     jne 3f
     mov r9, r8
     lock inc qword ptr [rcx]
-    mov rax, [rip + {ticks}]
+    // Preserve the tested state while sampling the public clock through its ABI.
+    sub rsp, 592
+    fxsave64 [rsp + 32]
+    mov [rsp + 544], rcx
+    mov [rsp + 552], rdx
+    mov [rsp + 560], r8
+    mov [rsp + 568], r9
+    mov [rsp + 576], r10
+    mov [rsp + 584], r11
+    call {ticks}
+    fxrstor64 [rsp + 32]
+    mov rcx, [rsp + 544]
+    mov rdx, [rsp + 552]
+    mov r8, [rsp + 560]
+    mov r9, [rsp + 568]
+    mov r10, [rsp + 576]
+    mov r11, [rsp + 584]
+    add rsp, 592
     sub rax, rdx
     jns 2f
     mov rax, r8

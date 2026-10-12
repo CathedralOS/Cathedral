@@ -1,6 +1,6 @@
 // AArch64 EL1 execution on QEMU virt. UEFI remains the firmware entrance.
 // memory prepares the machine; interrupts installs vectors/timer; context routes
-// traps into shared core; user owns EL0 roots and frame lifetime.
+// traps into shared core; user selects EL0 roots; core owns frame lifetime.
 use core::arch::asm;
 pub const CPU_NAME: &str = "aarch64";
 pub const ELF_MACHINE: u16 = 183;
@@ -54,15 +54,5 @@ pub unsafe fn halt_forever() -> ! {
         loop {
             asm!("wfi", options(nostack));
         }
-    }
-}
-/// # Safety
-/// Only the lab harness enables semihosting; no guest-provided arguments reach it.
-pub unsafe fn qemu_exit(status: u32) -> ! {
-    let block = [0x20026u64, if status == 0x10 { 0 } else { 1 }];
-    // SAFETY: QEMU SYS_EXIT_EXTENDED, with a live two-word host exit block.
-    unsafe {
-        asm!("hlt #0xf000", in("x0") 0x20u64, in("x1") block.as_ptr(), options(nostack));
-        halt_forever()
     }
 }

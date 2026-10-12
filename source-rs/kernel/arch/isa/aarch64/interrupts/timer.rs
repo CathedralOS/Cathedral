@@ -37,7 +37,7 @@ pub unsafe fn start_timer() {
         asm!("msr cntp_ctl_el0,xzr","msr cntv_tval_el0, {}","msr cntv_ctl_el0, {}","isb",in(reg) frequency()/100,in(reg) 1u64,options(nostack));
     }
 }
-pub(in crate::aarch64) fn acknowledge() {
+pub(in crate::isa::aarch64) fn acknowledge() {
     // SAFETY: Sole CPU, IRQs masked in vector entry; MMIO belongs to this backend.
     unsafe {
         let id = gic::acknowledge();
@@ -47,14 +47,14 @@ pub(in crate::aarch64) fn acknowledge() {
                 error: id as u64,
                 address: 0,
                 instruction: 0,
-                stack: crate::aarch64::stack_pointer(),
+                stack: crate::isa::aarch64::stack_pointer(),
             });
         }
         asm!("msr cntv_tval_el0, {}","isb",in(reg) frequency()/100,options(nostack));
         gic::complete(id);
     }
     TICKS.fetch_add(1, Ordering::Relaxed);
-    LAST_IRQ.store(crate::aarch64::stack_pointer(), Ordering::Relaxed);
+    LAST_IRQ.store(crate::isa::aarch64::stack_pointer(), Ordering::Relaxed);
 }
 pub fn ticks() -> u64 {
     TICKS.load(Ordering::Relaxed)

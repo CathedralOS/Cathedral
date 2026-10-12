@@ -16,7 +16,7 @@ pub unsafe fn read(register: u64) -> Result<u8, DeviceError> {
         return Err(DeviceError::InvalidArgument);
     }
     // SAFETY: Caller owns this fixed controller register.
-    Ok(unsafe { crate::x86::in8(port(register as u8)) })
+    Ok(unsafe { crate::isa::x86::in8(port(register as u8)) })
 }
 /// # Safety
 /// Same custody as read; this adapter validates register/value restrictions.
@@ -26,7 +26,7 @@ pub unsafe fn write(register: u64, value: u64) -> Result<(), DeviceError> {
     }
     // SAFETY: Caller owns this fixed controller register.
     unsafe {
-        crate::x86::out8(port(register as u8), value as u8);
+        crate::isa::x86::out8(port(register as u8), value as u8);
     }
     Ok(())
 }

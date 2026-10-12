@@ -13,9 +13,9 @@ python tools/boot-harness-rs/arm64/run.py
 python tools/boot-harness-rs/arm64/run.py --kernel-only
 ```
 
-The runner builds the standalone [guest fixture](../../../distribution/lab/portability/main.rs),
+The runner builds the standalone [guest fixture](../../../../distribution/lab/portability/main.rs),
 then embeds its ELF through the existing UEFI artifact boundary. `--kernel-only`
-stops after timer/heap bring-up; `--build-only` prepares the EFI image without
+runs timer/heap bring-up and the shared trusted-kernel-task suite; `--build-only` prepares the EFI image without
 launching QEMU. It uses `BOOTAA64.EFI`, a fresh private firmware variable store,
 ordered serial milestones and semihosted exit status. Logs and the ESP are in
 `build/arm64/`. Pass `--qemu` to select an executable and `--firmware` for a
@@ -23,7 +23,7 @@ directory containing `edk2-aarch64-code.fd` and `edk2-arm-vars.fd`.
 
 ## Reading and execution paths
 
-Start at [UEFI main](../../boot/uefi/main.rs), which is shared with x86-64.
+Start at [UEFI main](../../../boot/uefi/main.rs), which is shared with x86-64.
 Its console selects PL011, while the upstream `uefi` crate continues to own the
 firmware ABI and ExitBootServices transaction.
 
@@ -31,16 +31,17 @@ firmware ABI and ExitBootServices transaction.
 | --- | --- |
 | [aarch64.rs](aarch64.rs) | Interrupt masking, stack handoff and terminal CPU operations |
 | [memory/memory.rs](memory/memory.rs) | Construct and activate kernel tables, guarded stack, exception stacks and heap; `tables.rs` walks 4-KiB translations |
-| [interrupts/interrupts.rs](interrupts/interrupts.rs) | Install vectors and fault reporting; `timer.rs` owns the 100-Hz virtual timer and calls the [board GICv2 adapter](../board/virt/gic.rs) |
+| [interrupts/interrupts.rs](interrupts/interrupts.rs) | Install vectors and fault reporting; `timer.rs` owns the 100-Hz virtual timer and calls the [board GICv2 adapter](../../board/virt/gic.rs) |
 | [context/context.rs](context/context.rs) | Classify exceptions, enter the shared scheduler/syscall dispatcher, select the return root; `state.rs` and `entry.S` own saved registers |
+| [stacks.rs](stacks.rs) | Map guarded EL1 stacks, roll back partial construction, detach empty tables and flush before refund |
 | [user/user.rs](user/user.rs) | Select the task root for exception return; [mappings.rs](user/mappings.rs) encodes inactive user translations |
-| [Shared address-space owner](../../core/user_tasks/address_space/address_space.rs) | Image loading, frame ledger and rollback, checked copies, sealing and region bookkeeping |
-| [QEMU virt board](../board/virt/virt.rs) | Physical address map, PL011 console, GICv2 routing and available devices |
-| [ARM64 lab entrance](../../boot/uefi/lab/arm64/arm64.rs) | Sequence actual process, IPC, isolation, sharing and reclamation assertions |
+| [Shared address-space owner](../../../core/user_tasks/address_space/address_space.rs) | Image loading, frame ledger and rollback, checked copies, sealing and region bookkeeping |
+| [QEMU virt board](../../board/virt/virt.rs) | Physical address map, PL011 console, GICv2 routing and available devices |
+| [ARM64 lab entrance](../../../boot/uefi/lab/arm64/arm64.rs) | Sequence actual process, IPC, isolation, sharing and reclamation assertions |
 
 An EL0 `svc #0` saves all general registers and FP/SIMD state, restores the
 kernel translation root, and invokes the same
-[core trap dispatcher](../../core/user_tasks/execution/traps.rs) as x86-64.
+[core trap dispatcher](../../../core/user_tasks/execution/traps.rs) as x86-64.
 The selected context returns through `eret`. x8 carries the operation,
 x0/x1/x2 its arguments, and x0 its result. Application entry receives x0/x1.
 The runtime changes only this CPU stub; callers keep the same capability APIs.
@@ -51,6 +52,8 @@ Debug and release boots exercise:
 
 - Firmware exit, owned tables/stack, breakpoint return, heap exhaustion/reuse,
   timer delivery on the exception stack.
+- Trusted EL1 tasks yielding, sleeping and preempting with GPR/FP/SIMD/FPCR/FPSR
+  sentinels; dynamic spawn, stale IDs, frame/heap exhaustion and live-peer progress.
 - Two private EL0 peers switched by the timer, with different page contents
   and SIMD register sentinels surviving switches.
 - Repeated 32-message IPC exchanges, blocking receives, local rights, stale names.
@@ -74,8 +77,14 @@ still has a broad writable/executable identity mapping, so kernel W^X hardening
 remains separate work. Every root switch flushes translations. Loaded code is
 cleaned to the point of unification before instruction-cache invalidation.
 
-This port does not run the x86 trusted-kernel-thread fixture, recover from kernel
-stack overflow, or map a userspace framebuffer. PC PS/2 and ATA grants are
-rejected at composition. The matrix desktop remains on x86-64 until ARM device
+The shared [kernel-task lab](../../../boot/uefi/lab/kernel_tasks/kernel_tasks.rs)
+runs before user processes, with an ISA-specific register probe. Each 64-KiB
+EL1 task stack occupies a separate 2-MiB slot in a dedicated root branch.
+Teardown detaches empty tables and flushes translations before refund; admission
+failure tests cover all nineteen allocations for the first stack.
+
+This port does not recover from kernel stack overflow or map a userspace
+framebuffer. PC PS/2 and ATA grants are rejected at composition. The matrix
+desktop remains on x86-64 until ARM device
 adapters exist. CPU-budget policies are shared; their full stress suite has only
 been exercised on x86-64. Passing these tests is not full backend parity.

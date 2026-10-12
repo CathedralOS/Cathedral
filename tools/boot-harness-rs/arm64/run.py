@@ -64,7 +64,12 @@ def main():
         raise SystemExit(f'ARM64 boot failed ({result.returncode}): {result.stderr.decode(errors="replace")}')
     milestones = ['UEFI entry', 'ExitBootServices complete', 'arch=aarch64',
                   'owned page tables and stack', 'AArch64 vectors installed; breakpoint returned',
-                  'heap alignment exhaustion and reclamation passed', 'timer ticks=']
+                  'heap alignment exhaustion and reclamation passed', 'timer ticks=',
+                  'cooperative tasks yielded slept woke and reclaimed',
+                  'GPR FP/SIMD FPCR FPSR preserved',
+                  'stack allocation rollback passed all frame boundaries',
+                  'dynamic spawn limit stale IDs and live-peer progress passed',
+                  'task stacks unmapped; heap and physical frames returned to baseline']
     if not args.kernel_only:
         milestones += ['ARM64 IPC round=0', 'ARM64 IPC round=1',
                        'ARM64 timer preempted both private EL0 peers',

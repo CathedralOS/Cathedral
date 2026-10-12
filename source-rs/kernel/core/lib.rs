@@ -7,7 +7,6 @@
 //! supplies CPU mechanics and boot supplies firmware custody.
 extern crate alloc;
 pub mod ipc;
-#[cfg(target_arch = "x86_64")]
 #[allow(unsafe_code)]
 pub mod kernel_tasks;
 pub mod memory;

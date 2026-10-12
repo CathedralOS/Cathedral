@@ -1,7 +1,16 @@
 //! QEMU PC platform bootstrap, not a universal x86 timer implementation.
 //! PIC/PIT remain a temporary route until ACPI/APIC discovery and calibration.
 
-use crate::x86::out8;
+use crate::isa::x86::out8;
+
+/// # Safety
+/// IRQ0/IRQ1 entry on the sole CPU, PIC owned and installed by this board.
+pub(crate) unsafe fn acknowledge() {
+    // SAFETY: Only master-PIC routes are enabled; retire the current interrupt.
+    unsafe {
+        out8(0x20, 0x20);
+    }
+}
 
 /// # Safety
 /// Requires exclusive privileged access to the 8259 PICs, PIT and delay port.

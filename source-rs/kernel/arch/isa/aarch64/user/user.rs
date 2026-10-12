@@ -1,8 +1,8 @@
 // Single-CPU task root selection, consumed by the exception return path.
 use super::memory::tables;
 use core::sync::atomic::{AtomicU64, Ordering};
-pub(in crate::aarch64) static ENTRY_ROOT: AtomicU64 = AtomicU64::new(0);
-pub(in crate::aarch64) static RETURN_ROOT: AtomicU64 = AtomicU64::new(0);
+pub(in crate::isa::aarch64) static ENTRY_ROOT: AtomicU64 = AtomicU64::new(0);
+pub(in crate::isa::aarch64) static RETURN_ROOT: AtomicU64 = AtomicU64::new(0);
 /// # Safety
 /// EL1, IRQs masked, no session active; every task retains the supervisor boot branch.
 pub unsafe fn begin_user_session() {

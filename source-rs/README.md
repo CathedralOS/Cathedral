@@ -8,7 +8,7 @@ Omega's proof or authority guarantees.
 
 See the [implementation map](STATUS.md) for the integrated matrix desktop,
 mechanism-to-test coverage, restrictions and next kernel boundaries.
-The [ARM64 portability proof](kernel/arch/aarch64/README.md) exercises the shared
+The [ARM64 portability proof](kernel/arch/isa/aarch64/README.md) exercises the shared
 core on a second CPU architecture; the integrated desktop remains x86-64.
 
 ## Start reading
@@ -81,13 +81,13 @@ The entrance explains this level without exposing every detail below it.
 | `distribution/lab/channels/` | [Ordinary parent/worker channels](distribution/lab/channels/README.md), endpoint transfer and reclamation |
 | `distribution/lab/ipc/` | Client, echo service and hostile IPC fixture roles in a standalone ELF |
 | `distribution/lab/hello/` | Independently compiled `no_std` program exercising initialized data, BSS, yields and writes |
-| `kernel/arch/lib.rs` | Compile-time CPU selection; [machine boundary and ownership](kernel/arch/README.md) |
+| `kernel/arch/lib.rs`, `kernel/arch/isa/isa.rs` | Explicit interface and compile-time CPU selection; [machine boundary and ownership](kernel/arch/README.md) |
 | `kernel/arch/board/board.rs` | Actual board device selection; PC ATA/PS2/PIC/PIT and virt PL011/GICv2 adapters |
 | `kernel/core/user_tasks/address_space/address_space.rs` | Shared image layout, frame ledger, construction rollback, checked copies and borrowed region mappings |
-| `kernel/arch/aarch64/` | EL1/EL0 paging, contexts, architectural timer and headless portability proof; [scope and commands](kernel/arch/aarch64/README.md) |
-| `kernel/arch/x86/` | Shared x86 instructions; PC controller policy lives in `arch/board/pc/` |
-| `kernel/arch/x86_64/` | Paging, dynamic guarded stack mapping/teardown, CPU contexts, GDT/TSS/IDT and interrupt stubs, using the `x86_64` crate |
-| `kernel/arch/x86_64/user/user.rs` | CR3 entry/return policy; `memory/memory.rs` implements translation operations |
+| `kernel/arch/isa/aarch64/` | EL1/EL0 paging, guarded task stacks, contexts, architectural timer and headless portability proof; [scope and commands](kernel/arch/isa/aarch64/README.md) |
+| `kernel/arch/isa/x86/` | Shared x86 instructions; PC controller policy lives in `arch/board/pc/` |
+| `kernel/arch/isa/x86_64/` | Paging, dynamic guarded stack mapping/teardown, CPU contexts, GDT/TSS/IDT and interrupt stubs, using the `x86_64` crate |
+| `kernel/arch/isa/x86_64/user/user.rs` | CR3 entry/return policy; `memory/memory.rs` implements translation operations |
 | `distribution/profile.json` | Built-in distribution composition consumed by the boot harness |
 | `../tools/boot-harness-rs/` | Host build, QEMU launch and smoke verification |
 
@@ -113,7 +113,7 @@ following the same rule as the Omega tree.
 Prerequisites: Rustup, Python 3.10+, QEMU and OVMF. The workspace pins Rust 1.94.0
 and the `x86_64` / `aarch64` `unknown-uefi` and `unknown-none` targets; Rustup
 installs them when Cargo is run inside `source-rs/`. The commands below select
-x86-64; use the separate [ARM64 runner](kernel/arch/aarch64/README.md) for its proof.
+x86-64; use the separate [ARM64 runner](kernel/arch/isa/aarch64/README.md) for its proof.
 Dependencies are locked in `Cargo.lock`. No nightly language features are used.
 
 From the repository root:

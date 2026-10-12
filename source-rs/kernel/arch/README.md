@@ -1,10 +1,31 @@
 # Kernel machine boundary
 
-[lib.rs](lib.rs) selects the CPU implementation at compile time. Core calls that
+[lib.rs](lib.rs) lists the public machine interface explicitly.
+[isa/isa.rs](isa/isa.rs) selects its CPU implementation at compile time. Core calls that
 implementation directly; saved register layouts and entry assembly remain
 CPU-specific. [events.rs](events.rs) names the common switch/fault outcomes, while
 [memory/memory.rs](memory/memory.rs) describes frame custody and mapping intent.
 These are internal Rust interfaces, not a userspace ABI.
+
+The tree separates two independent hardware concerns:
+
+```text
+arch/
+  lib.rs                 Explicit interface consumed by core and boot
+  isa/isa.rs             Compile-time CPU selection
+    x86/                 Instructions shared by the x86 family
+    x86_64/x86_64.rs      Paging, contexts and interrupt entry
+    aarch64/aarch64.rs    EL1/EL0 translation and exception entry
+  board/board.rs         Concrete device availability and access
+    pc/pc.rs             PC controllers and diagnostic UART window
+    virt/virt.rs         QEMU virt physical map and controllers
+  memory/memory.rs        Shared frame custody and mapping vocabulary
+  events.rs              Shared switch/fault vocabulary
+```
+
+`mod.rs` files contain only Rust wiring. The x86 context entrance now lives at
+[context/context.rs](isa/x86_64/context/context.rs), with register representation
+and initial contexts in `state.rs`.
 
 ## Follow an operation
 
@@ -13,7 +34,7 @@ These are internal Rust interfaces, not a userspace ABI.
   validates the image, records every allocation, loads and zeroes pages, checks
   user copies, and retires backing. The selected `UserMappings` implementation
   creates translations, changes permissions and publishes executable code:
-  [x86-64](x86_64/user/memory/memory.rs), [ARM64](aarch64/user/mappings.rs).
+  [x86-64](isa/x86_64/user/memory/memory.rs), [ARM64](isa/aarch64/user/mappings.rs).
 - Process execution enters the selected context backend. Assembly restores the
   kernel root before dispatching to core and installs the selected task's root on
   return. CPU-specific register state stays opaque to shared scheduling policy.
@@ -23,8 +44,10 @@ These are internal Rust interfaces, not a userspace ABI.
   touching ports; userspace drivers still own device protocols and service policy.
 - Board setup lives in [PC](board/pc/pc.rs) or [QEMU virt](board/virt/virt.rs).
   The latter owns fixed RAM/MMIO locations, PL011 and GICv2. CPU backends retain
-  page-table encoding, architectural timers and exception return. The small PC
-  IRQ assembly still acknowledges its selected PIC directly.
+  page-table encoding, architectural timers and exception return. IRQ dispatch
+  acknowledges the selected board controller after saving registers and restoring
+  the kernel root. Boot obtains the PC UART window from the board; QEMU exit
+  devices and semihosting also live under `board/`.
 
 ## Ownership contract
 
@@ -43,6 +66,14 @@ composition rejects those grants. A second board for one CPU will need explicit
 board selection, without duplicating core policy. This separation does not imply
 device discovery, generic MMIO/IRQ capabilities or full backend parity.
 
-The [ARM64 guide](aarch64/README.md) records its proof and limitations. Trusted
-kernel-thread switching, userspace framebuffer mapping and the graphical
-distribution still run only on x86-64.
+Trusted kernel threads use the same core scheduler and lifecycle on both ISAs.
+Each backend creates its initial context and maps/reclaims guarded stacks;
+[the shared lab](../boot/uefi/lab/kernel_tasks/kernel_tasks.rs) exercises actual
+preemption, dynamic spawn and rollback. Register probes live beneath that lab,
+with no assembly payloads or test exports in the production context interface.
+Trusted-task and user-task sessions remain separate; this does not introduce a
+mixed kernel/user run queue.
+
+The [ARM64 guide](isa/aarch64/README.md) records its proof and limitations.
+Userspace framebuffer mapping and the graphical distribution remain x86-64.
+Kernel stack-overflow recovery remains unimplemented on ARM64.

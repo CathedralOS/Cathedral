@@ -5,7 +5,8 @@ pub unsafe fn acquire() -> Console {
     #[cfg(target_arch = "x86_64")]
     // SAFETY: Caller owns COM1 on the selected QEMU PC board.
     unsafe {
-        Console::com1(cathedral_arch::in8, cathedral_arch::out8)
+        let uart = cathedral_arch::board::diagnostic_uart();
+        Console::new(uart.base, uart.read, uart.write)
     }
     #[cfg(target_arch = "aarch64")]
     Console

@@ -6,7 +6,7 @@ instructions. [Owner questions](../OWNER_QUESTIONS.md) own unresolved semantics.
 
 ## ARM64 portability proof
 
-The [ARM64 backend](kernel/arch/aarch64/README.md) boots through the same UEFI
+The [ARM64 backend](kernel/arch/isa/aarch64/README.md) boots through the same UEFI
 entry on QEMU virt. Debug and release tests reuse core admission, scheduling,
 IPC, supervision, private/shared pages and reclamation. They exercise timer
 preemption, SIMD preservation, forbidden EL0 accesses, producer failure with a
@@ -17,8 +17,11 @@ python tools/boot-harness-rs/arm64/run.py --release
 ```
 
 This is a headless single-CPU board proof. The graphical distribution, PC drivers,
-trusted kernel-thread fixture and full CPU-budget stress suite remain x86-64.
-The backend guide records fixed mappings and remaining hardening work.
+and full CPU-budget stress suite remain x86-64. Trusted kernel threads now run
+the same core lifecycle on both ISAs, including guarded stacks, preemption,
+dynamic spawn and frame/heap-failure rollback.
+The backend guide records fixed mappings and remaining hardening work. The
+ARM `--kernel-only` profile also runs the trusted-task tests without a user ELF.
 
 ## Shared core and machine boundary
 
@@ -29,17 +32,29 @@ translation operations and retain their own saved registers and assembly.
 [The machine boundary guide](kernel/arch/README.md) describes their ownership
 contract and reading paths.
 
+CPU mechanisms now live under `kernel/arch/isa`, selected by `isa/isa.rs`;
+`arch/lib.rs` explicitly lists the shared interface. Register-preservation probes
+live in the boot lab, and x86 context state is separate from dispatch.
+
 Privileged controller details live under `kernel/arch/board`: PC ATA/PS2 command
-validation and PIC/PIT setup, plus virt PL011/GICv2 and fixed physical addresses.
+validation and PIC/PIT setup/acknowledgement, plus virt PL011/GICv2 and fixed
+physical windows. The board supplies the diagnostic UART location and QEMU exit
+mechanism; ARM paging encodes the board-provided windows.
 Core still enforces grants, validates buffers and owns blocking. Device absence
 is explicit at composition; ARM no longer supplies dummy PC controller methods.
 Shared event/frame vocabulary uses static backend selection and direct calls.
 
 This pass passed host tests (including device command restrictions), both UEFI
-Clippy targets, x86-64 release smoke, ARM64 debug/release proofs, the matrix
+Clippy targets (including smoke code), x86-64 debug/release smoke, ARM64
+debug/release proofs, the matrix
 desktop's physical input/recovery checks, and ordinary `--input-test` with seven
 acknowledged storage updates. The recovery and power-cut profiles also pass in
 release after correcting the stale lab expectations described below.
+
+The ARM kernel-task bring-up caught excessive debug stack use in the lab's heap
+exhaustion cleanup. Borrowing its bookkeeping array avoids by-value iterator
+copies; both backends retain guarded 64-KiB task stacks. Debug ARM now completes
+the same lifecycle/rollback suite before its user-process proof.
 
 ## Current integrated path
 

@@ -2,6 +2,7 @@
 #[cfg(feature = "bundled-user")]
 pub fn run(boot: &mut crate::handoff::BootState) {
     use core::fmt::Write;
+    super::kernel_tasks::exercise(&mut boot.memory, &mut boot.console);
     let memory = &mut boot.memory;
     let console = &mut boot.console;
     assert!(
@@ -22,4 +23,6 @@ pub fn run(boot: &mut crate::handoff::BootState) {
     .ok();
 }
 #[cfg(not(feature = "bundled-user"))]
-pub fn run(_boot: &mut crate::handoff::BootState) {}
+pub fn run(boot: &mut crate::handoff::BootState) {
+    super::kernel_tasks::exercise(&mut boot.memory, &mut boot.console);
+}

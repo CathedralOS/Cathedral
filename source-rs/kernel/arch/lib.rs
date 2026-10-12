@@ -1,25 +1,20 @@
 #![no_std]
 
-//! Compile-time CPU selection and privileged board adapters. Firmware handling
-//! belongs to the `uefi` crate; frame ownership and process layout belong to core.
-//! Backends own translations and saved registers; board/ owns concrete controllers.
-
-#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
-mod x86;
-#[cfg(target_arch = "x86_64")]
-mod x86_64;
-
-#[cfg(target_arch = "x86_64")]
-pub use crate::x86_64::*;
-
-#[cfg(target_arch = "aarch64")]
-mod aarch64;
-mod events;
-pub use events::{Fault, SwitchCause, UserFault};
+//! Machine boundary: isa/ selects CPU mechanisms, board/ selects concrete controllers.
+//! Core owns frame lifetime and scheduling; firmware handling belongs to boot.
 pub mod board;
+mod events;
+mod isa;
 pub mod memory;
-#[cfg(target_arch = "aarch64")]
-pub use aarch64::*;
+pub use events::{Fault, SwitchCause, UserFault};
+pub use isa::selected::{
+    BootLayout, CPU_NAME, Context, ELF_MACHINE, INTERRUPT_READY, MAX_TASK_SLOTS, UserMappings,
+    allocate_stack, begin_user_session, calibrate_cpu_clock, cpu_time_us, disable_interrupts,
+    end_user_session, enter_stack, halt_forever, install_interrupts, last_irq_stack,
+    prepare_memory, release_stack, select_user_root, set_switch_handler, stack_pointer,
+    start_timer, suspend, task_stack_range, test_breakpoint, ticks, wait_for_ticks,
+    without_interrupts,
+};
+#[cfg(target_arch = "x86_64")]
+pub use isa::selected::{probe_double_fault, probe_invalid_opcode};
 pub use memory::{FrameSource, ImageRange, MemoryError, StackRange};
-#[cfg(not(any(target_arch = "x86_64", target_arch = "aarch64")))]
-compile_error!("Only x86-64 and AArch64 backends are implemented");

@@ -6,7 +6,6 @@ mod applications;
 mod display;
 #[cfg(all(feature = "bundled-user", target_arch = "x86_64"))]
 mod ipc;
-#[cfg(target_arch = "x86_64")]
 mod kernel_tasks;
 #[cfg(all(feature = "bundled-user", target_arch = "x86_64"))]
 mod memory;

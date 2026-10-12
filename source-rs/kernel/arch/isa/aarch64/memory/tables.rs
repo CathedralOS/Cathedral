@@ -32,8 +32,18 @@ pub unsafe fn leaf(
     va: u64,
     next: &mut impl FnMut() -> Result<u64, MemoryError>,
 ) -> Result<*mut u64, MemoryError> {
+    // SAFETY: Caller owns the hierarchy and frame source.
+    unsafe { entry(root, va, &[39, 30, 21], 12, next) }
+}
+unsafe fn entry(
+    root: u64,
+    va: u64,
+    shifts: &[u32],
+    leaf_shift: u32,
+    next: &mut impl FnMut() -> Result<u64, MemoryError>,
+) -> Result<*mut u64, MemoryError> {
     let mut table = root;
-    for shift in [39, 30, 21] {
+    for &shift in shifts {
         let entry = (table as *mut u64).wrapping_add(((va >> shift) & 511) as usize);
         // SAFETY: Caller owns the hierarchy; each child comes from its exclusive frame source.
         unsafe {
@@ -48,7 +58,7 @@ pub unsafe fn leaf(
             table = descriptor & ADDRESS;
         }
     }
-    Ok((table as *mut u64).wrapping_add(((va >> 12) & 511) as usize))
+    Ok((table as *mut u64).wrapping_add(((va >> leaf_shift) & 511) as usize))
 }
 pub unsafe fn map(
     root: u64,
@@ -80,4 +90,41 @@ pub fn active() -> u64 {
         asm!("mrs {}, ttbr0_el1",out(reg) root,options(nostack));
     }
     root
+}
+
+/// # Safety
+/// Owned tree, aligned disjoint 2-MiB identity window supplied by the board, fresh table frames.
+pub unsafe fn identity_blocks(
+    root: u64,
+    start: u64,
+    end: u64,
+    flags: u64,
+    next: &mut impl FnMut() -> Result<u64, MemoryError>,
+) -> Result<(), MemoryError> {
+    assert!(start.is_multiple_of(1 << 21) && end.is_multiple_of(1 << 21));
+    for address in (start..end).step_by(1 << 21) {
+        // SAFETY: Board guarantees reserved/owned physical windows; install supervisor blocks only.
+        unsafe {
+            let leaf = entry(root, address, &[39, 30], 21, next)?;
+            if leaf.read() & 1 != 0 {
+                return Err(MemoryError::OccupiedVirtualRange);
+            }
+            leaf.write(address | flags | 1);
+        }
+    }
+    Ok(())
+}
+/// # Safety
+/// Sole CPU owns translation updates; removed backing stays live until this finishes.
+pub unsafe fn synchronize() {
+    // SAFETY: Publish page-table writes, invalidate all local translations, complete before refund.
+    unsafe {
+        asm!(
+            "dsb ishst",
+            "tlbi vmalle1",
+            "dsb ish",
+            "isb",
+            options(nostack)
+        );
+    }
 }

@@ -22,6 +22,22 @@ const _: () = {
     assert!(core::mem::offset_of!(Context, fpsr) == 792);
 };
 impl Context {
+    /// # Safety
+    /// Exclusive mapped kernel stack; entry and argument remain valid until task retirement.
+    /// Called on the sole EL1 CPU with IRQs masked. Entry never returns.
+    pub unsafe fn new(stack: crate::StackRange, entry: fn(usize) -> !, argument: usize) -> Self {
+        assert!(stack.top.is_multiple_of(16) && stack.top - stack.bottom >= 4096);
+        let mut context = Self {
+            instruction: task_entry as *const () as u64,
+            stack: stack.top,
+            // EL1h with IRQ enabled; debug, SError and FIQ remain masked.
+            status: 5 | (1 << 9) | (1 << 8) | (1 << 6),
+            ..Self::default()
+        };
+        context.registers[0] = entry as usize as u64;
+        context.registers[1] = argument as u64;
+        context
+    }
     pub fn user(entry: u64, stack: u64, arguments: [u64; 2]) -> Self {
         let mut c = Self {
             instruction: entry,
@@ -45,4 +61,10 @@ impl Context {
     pub fn set_result(&mut self, result: u64) {
         self.registers[0] = result;
     }
+}
+
+extern "C" fn task_entry(entry: usize, argument: usize) -> ! {
+    // SAFETY: Context::new installs this exact function type and a live argument.
+    let entry: fn(usize) -> ! = unsafe { core::mem::transmute(entry) };
+    entry(argument)
 }
