@@ -49,6 +49,10 @@ impl Devices {
             Ok(())
         }
     }
+    pub fn ready(&self, slot: usize, name: u64) -> Result<bool, u64> {
+        self.check(slot, name)?;
+        Ok(self.grants[slot].pending)
+    }
     pub fn arm(&mut self, slot: usize, name: u64) -> Result<(), u64> {
         self.check(slot, name)?;
         let grant = &mut self.grants[slot];

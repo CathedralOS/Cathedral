@@ -28,7 +28,10 @@ fn irq_before_wait_and_wait_before_irq_are_both_lossless() {
     assert!(!devices.interrupt(0));
     assert!(!devices.interrupt(0)); // Coalesce; only one notification per arm.
     assert_eq!(devices.arm(0, 3), Err(abi::BUSY));
+    assert_eq!(devices.ready(0, 3), Ok(true));
+    assert_eq!(devices.ready(0, 3), Ok(true)); // Readiness is non-consuming.
     assert_eq!(devices.wait(0, 3, false), Ok(false));
+    assert_eq!(devices.ready(0, 3), Ok(false));
     assert_eq!(devices.wait(0, 3, false), Err(abi::WOULD_BLOCK));
     devices.arm(0, 3).unwrap();
     assert_eq!(devices.wait(0, 3, true), Ok(true));

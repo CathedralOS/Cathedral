@@ -152,3 +152,9 @@ pub const DEVICE_WRITE8: u64 = 64; // handle, register offset, byte
 pub const DEVICE_IRQ_WAIT: u64 = 65; // handle, block (0/1), zero -> notification
 pub const DEVICE_IRQ_ARM: u64 = 66; // handle, zero, zero; BUSY until notification consumed
 pub const DEVICE_RELEASE: u64 = 67; // handle, zero, zero; reset/revoke until next launch
+/// address of count little-endian [kind, local handle] records, count (0..=8), deadline.
+/// Requires a clock grant. Returns first ready index, without consuming; validates
+/// the entire set first. Empty sets wait only for the deadline. IPC closure is ready.
+pub const EVENT_WAIT: u64 = 68;
+pub const WAIT_IPC: u64 = 0;
+pub const WAIT_DEVICE: u64 = 1;

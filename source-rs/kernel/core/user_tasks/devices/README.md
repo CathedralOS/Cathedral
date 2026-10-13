@@ -60,6 +60,17 @@ responsibilities.
 
 ## Proof and bounds
 
+[`event::wait`](../../../../platform/libraries/user-runtime/event.rs) combines up
+to eight typed IPC receivers/device notifications with an absolute deadline.
+An empty set is a timer-only wait. Syscall 68 requires a clock grant and checks
+every local capability before selecting the first ready entry. Readiness does
+not consume messages or IRQ notifications; IPC peer closure is also ready.
+Ready events precede expiry, and cancellation clears the wait before task reuse.
+The [readiness dispatcher](../syscalls/ipc/readiness.rs) uses the same scheduler
+blocking path as existing IPC waits. The UART guest checks deadline-only waits,
+mixed timeouts, non-consuming IRQ readiness, invalid entries after a ready IRQ,
+idle control shutdown and cancellation while waiting for either source.
+
 Run `python tools/boot-harness-rs/run.py --smoke --release`. For a debug build,
 use `python tools/boot-harness-rs/run.py --smoke --timeout 90`; the full debug
 suite can exceed the harness's default 30-second boot deadline.

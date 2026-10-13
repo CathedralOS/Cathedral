@@ -27,6 +27,12 @@ and boot-lab composition. It does not add discovery, direct MMIO, DMA/IOMMU,
 shared interrupts or device-capability transfer. ARM rejects the PC-only grant;
 existing PS/2 and ATA adapters remain deliberately restricted.
 
+The runtime now offers `event::wait` for a bounded mix of IPC receivers and device
+IRQ notifications plus a deadline. Release smoke proves real IRQ readiness,
+non-consuming observation, full-set validation, timer-only sleep, idle driver
+shutdown through IPC and cancellation/restart with exact reclamation. Both UEFI
+targets and userspace pass Clippy; the host readiness/device policy tests pass.
+
 Validation: host policies and UART drain tests, both UEFI Clippy targets including
 smoke code, x86 debug/release smoke, ARM64 release boot, and the release session
 focus/drag/recovery regression pass. The full debug smoke used `--timeout 90`.

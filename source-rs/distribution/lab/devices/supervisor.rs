@@ -33,6 +33,9 @@ pub fn run() -> u64 {
             assert_eq!(child.wait().unwrap(), Outcome::Cancelled);
         } else {
             assert_eq!(replies.receive(&mut message).unwrap(), 8);
+            if mode == 0 {
+                requests.send(b"stop").unwrap();
+            }
             let outcome = child.wait().unwrap();
             if mode == 1 {
                 assert!(matches!(outcome, Outcome::Fault { .. }));
@@ -46,5 +49,6 @@ pub fn run() -> u64 {
         b"device grant isolation, IRQ loopback, fault and blocked cancellation passed\n",
     )
     .unwrap();
+    cathedral_user_runtime::write(b"combined IPC, device IRQ and deadline waits passed\n").unwrap();
     0
 }

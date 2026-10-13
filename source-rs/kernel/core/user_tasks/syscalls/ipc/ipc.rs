@@ -77,6 +77,7 @@ pub(super) fn dispatch(
             slot,
             readiness::Wait {
                 handles: [first, second, 0, 0, 0, 0, 0, 0],
+                kinds: [abi::WAIT_IPC; abi::MAX_WAIT_HANDLES],
                 count: 2,
                 deadline: third,
             },
@@ -84,6 +85,7 @@ pub(super) fn dispatch(
             event,
         ),
         abi::IPC_WAIT_MANY => readiness::many(session, slot, [first, second, third], now, event),
+        abi::EVENT_WAIT => readiness::mixed(session, slot, [first, second, third], now, event),
         abi::IPC_REVOKE => session.ipc.revoke(slot, first).map(|()| 0),
         _ => Err(abi::UNKNOWN),
     }

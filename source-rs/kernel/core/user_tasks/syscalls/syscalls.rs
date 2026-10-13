@@ -22,6 +22,7 @@ pub(super) fn syscall(session: &mut Session, slot: usize, now: u64) -> Event {
         | abi::IPC_WAIT_TWO
         | abi::IPC_CREATE..=abi::IPC_RECEIVE_CAP
         | abi::IPC_WAIT_MANY
+        | abi::EVENT_WAIT
         | abi::IPC_BUDGET
         | abi::IPC_SEND_MEMORY..=abi::IPC_TRY_RECEIVE_MEMORY => {
             ipc::dispatch(session, slot, call, now, &mut event)

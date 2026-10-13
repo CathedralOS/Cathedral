@@ -43,7 +43,7 @@ pub fn exercise(memory: &mut PreparedMemory, console: &mut Console) {
                     links: &[],
                     endpoints: &[],
                     supervision: &launch,
-                    clock_readers: &[0],
+                    clock_readers: &[0, 1],
                 },
             )
         }
@@ -54,6 +54,8 @@ pub fn exercise(memory: &mut PreparedMemory, console: &mut Console) {
         assert_eq!(reports[0].cancelled_blocked, 1);
         assert_eq!(reports[1].exit, Some(Exit::Returned(0)));
         assert!(reports[1].device_interrupts >= 16);
+        assert!(reports[1].readiness_blocked >= 2);
+        assert!(reports[1].wait_timeouts >= 2);
         drop(reports);
         assert_eq!(memory.frames.allocated(), baseline);
         // SAFETY: Session ended; all device/process state reclaimed.

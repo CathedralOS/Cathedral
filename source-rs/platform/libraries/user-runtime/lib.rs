@@ -19,6 +19,7 @@ pub use task::{exit, yield_now};
 pub mod device;
 pub mod disk;
 pub mod display;
+pub mod event;
 pub mod ipc;
 pub mod keyboard;
 pub mod link;
