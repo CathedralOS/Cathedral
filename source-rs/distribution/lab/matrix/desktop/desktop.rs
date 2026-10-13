@@ -7,6 +7,7 @@ fn owner(pair: Pair, words: wire::Packet) {
     assert_eq!(call(pair, words), [0; 8]);
 }
 fn launch_inner(pair: Pair, pressure: bool) {
+    owner(pair, [wire::RUN_PAGES, 0, 2, 4, 0, 0, 0, 0]);
     owner(
         pair,
         [
@@ -23,6 +24,10 @@ fn launch_inner(pair: Pair, pressure: bool) {
 }
 fn inner(pair: Pair, pressure: bool) {
     launch_inner(pair, pressure);
+    owner(
+        pair,
+        wire::route([wire::RUN_PAGES, 0, 1, 0, 0, 0, 0, 0], 0).unwrap(),
+    );
     owner(
         pair,
         wire::route([wire::RUN, 0, 1, 0, 0, 0, 0, 0], 0).unwrap(),
@@ -75,6 +80,12 @@ fn pixel(pair: Pair, x: u64, y: u64, expected: u64) {
         );
     }
 }
+fn bitmap(matrix: Pair) {
+    pixel(matrix, 316, 292, 0xffcc44);
+    pixel(matrix, 316, 299, 0x7755dd);
+    pixel(matrix, 334, 292, BACKGROUND);
+    pixel(matrix, 682, 292, 0xffcc44);
+}
 pub fn run() -> u64 {
     let session = admission::start();
     let matrix = session.matrix;
@@ -97,6 +108,7 @@ pub fn run() -> u64 {
         call(matrix, [wire::RUN, 0, 0, 0, 6, 1, 64, 0]),
         wire::error(abi::BAD_HANDLE)
     );
+    owner(matrix, [wire::RUN_PAGES, 1, 1, 0, 0, 0, 0, 0]);
     owner(matrix, [wire::RUN, 1, 1, 1, 0, 0, 0, 0]);
     owner(matrix, [wire::SURFACE_LIMIT, 1, 8, 0, 0, 0, 0, 0]);
     owner(
@@ -107,13 +119,17 @@ pub fn run() -> u64 {
     inner(matrix, pressure);
     pixel(matrix, 140, 190, app::LEFT);
     pixel(matrix, 510, 190, app::RIGHT);
+    bitmap(matrix);
     pixel(matrix, 334, 310, BACKGROUND); // Oversized leaf draw was clipped twice.
     for _ in 0..3 {
         owner(matrix, [wire::STOP, 0, 0, 0, 0, 0, 0, 0]);
         pixel(matrix, 140, 190, BACKGROUND);
+        pixel(matrix, 316, 292, BACKGROUND);
+        pixel(matrix, 682, 292, 0xffcc44);
         pixel(matrix, 510, 190, app::RIGHT);
         inner(matrix, pressure);
         pixel(matrix, 140, 190, app::LEFT);
+        bitmap(matrix);
     }
     cathedral_user_runtime::write(
         b"Cathedral matrix desktop: dynamic catalogue admission, rollback and pool reuse passed\n",

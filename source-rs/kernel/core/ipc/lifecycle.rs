@@ -23,6 +23,9 @@ impl Ipc {
     }
     pub(super) fn discard(&mut self, index: usize) {
         let queued = self.endpoints[index].as_mut().unwrap().message.take();
+        if let Some(slot) = queued.and_then(|q| q.memory) {
+            self.retired_memory |= 1 << slot;
+        }
         if let Some(slot) = queued.and_then(|q| q.attachment) {
             // Queued receives cannot themselves be moved. However the endpoint
             // can receive a message after its receive right entered escrow; thus
@@ -41,9 +44,11 @@ impl Ipc {
                 Right::Send => endpoint.sender_alive = false,
                 Right::Receive => {
                     endpoint.receiver_alive = false;
-                    if let Some(next) = endpoint.message.take().and_then(|q| q.attachment) {
-                        pending = Some(next);
+                    let queued = endpoint.message.take();
+                    if let Some(slot) = queued.and_then(|q| q.memory) {
+                        self.retired_memory |= 1 << slot;
                     }
+                    pending = queued.and_then(|q| q.attachment);
                 }
                 Right::Revoke => unreachable!(),
             }

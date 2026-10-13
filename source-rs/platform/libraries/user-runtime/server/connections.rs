@@ -41,6 +41,7 @@ impl Server {
             clients: [None; MAX_CLIENTS],
             count,
             cursor: 0,
+            memory: false,
             closed: [None; MAX_CLIENTS],
         })
     }

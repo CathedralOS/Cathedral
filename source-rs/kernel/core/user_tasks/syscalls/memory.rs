@@ -14,7 +14,13 @@ pub(super) fn syscall(
     if number == abi::MEMORY_ADDRESS || number == abi::MEMORY_PAGES {
         let index = session.memory.model.access(slot, first)?;
         return Ok(if number == abi::MEMORY_ADDRESS {
-            wire::address(session.memory.model.mapping(slot, index))
+            wire::address(
+                session
+                    .memory
+                    .model
+                    .mapped(slot, first)?
+                    .ok_or(abi::BAD_ADDRESS)?,
+            )
         } else {
             session.memory.model.entries[index].pages as u64
         });

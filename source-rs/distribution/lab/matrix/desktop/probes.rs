@@ -34,12 +34,17 @@ pub(super) fn exercise(matrix: Pair) {
     );
     pixel(matrix, 140, 190, BACKGROUND);
     pixel(matrix, 190, 190, app::LEFT);
+    pixel(matrix, 316, 292, app::LEFT);
+    pixel(matrix, 366, 292, 0xffcc44);
+    pixel(matrix, 366, 299, 0x7755dd);
     assert_eq!(stats(matrix, true)[..3], after[0][..3]);
     owner(
         matrix,
         [wire::PLACE, 0, 110, 140, 280, 220, wire::KEY_MASK, 0],
     );
     pixel(matrix, 140, 190, app::LEFT);
+    bitmap(matrix);
+    cathedral_user_runtime::write(b"Cathedral matrix desktop: sealed bitmap forwarding, clipping, replay and subtree reclamation passed\n").unwrap();
     surfaces(matrix);
     cathedral_user_runtime::write(b"Cathedral matrix desktop: quiet apps below 20ms CPU per second; retained move without app repaint\n").unwrap();
 }

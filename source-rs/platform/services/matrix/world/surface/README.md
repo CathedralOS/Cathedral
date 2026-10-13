@@ -50,6 +50,30 @@ Retained state lives in process-private static storage; replay and retirement
 process one object at a time. This keeps debug builds within the existing guarded
 16 KiB user stack. There is no per-frame heap allocation.
 
+## Retained bitmaps
+
+`SURFACE_IMAGE(epoch, handle, x, y, width, height, stride)` carries one sealed
+memory attachment. [Image requests](../../service/requests/images.rs) validate
+local authority and pixel bounds, preview clipping, forward to the parent, then
+commit only after success. Pixels are little-endian RGBX u32; the top byte is
+ignored. Positive-coordinate clipping preserves the original stride. Each matrix
+retains an unmapped read right for later replay in [its parent adapter](../../service/parent/images.rs).
+Only [the root compositor](../../../display/compositor/matrix.rs) maps the pixels.
+
+All levels share the [same backing object](../../../../../kernel/core/user_tasks/memory/README.md);
+there is no intermediate pixel image or child-to-parent pixel copy. Final software
+composition still samples the bitmap and writes scanout. Replacing content or
+erasing a surface releases its old read right. Subtree stop flushes ancestor
+retirement before returning the child's funding. Failed validation preserves the
+previous image. Transport failure is still an ambiguous commit, not a transaction.
+
+Distribution policy explicitly stages private/reader quotas with owner-only
+`RUN_PAGES` before dynamic admission. No executable kind implicitly grants memory.
+The kernel reserves a reader slot and pages before queuing each attachment, so
+both retained rights and an in-flight replacement need capacity. The desktop
+uses one-page images and headroom for replacement; general image eviction,
+streaming and active quota changes are not implemented.
+
 ## Evidence and limits
 
 [Host tests](tests.rs) cover conservation, exhaustion, independent name sequences,
@@ -61,9 +85,9 @@ check real pixels after removing one surface, restoring it, moving a retained
 subtree, and overlapping it with an outside sibling. The same checks run under
 CPU pressure and after repeated dynamic subtree replacement.
 
-This is a rectangle-backed surface-object lab, not a complete compositor API.
+This is a bounded rectangle/immutable-image lab, not a complete compositor API.
 There are still two direct children per matrix, sixteen root primitives, and eight
-process accounts. Text/images, shared bitmap storage, active quota redistribution,
+process accounts. Text, streaming image updates, active quota redistribution,
 transactional multi-object presentation and root-provider recovery remain separate
 work. The prior fixed six path keys and two-level rendering encoding are gone;
 recursion is limited by supplied budgets and the lab's process arena.

@@ -207,3 +207,34 @@ fn drain(world: &mut World) -> usize {
     }
     count
 }
+
+#[test]
+fn image_preview_preserves_old_state_and_replay_retains_source_stride() {
+    let mut w = world();
+    place(&mut w, 0, 10, 20);
+    let epoch = view(&mut w, 0)[1];
+    let name = surface(&mut w, 0, 0, 5);
+    let paint = [wire::PAINT, epoch, name, 0, 0, 100, 80, 0x123456];
+    w.surface(0, 7, paint).unwrap();
+    let image = [wire::SURFACE_IMAGE, epoch, name, 90, 70, 32, 32, 40];
+    assert_eq!(
+        w.preview_surface(0, 7, image).unwrap(),
+        [wire::SURFACE_IMAGE, 1, 5, 100, 90, 10, 10, 40]
+    );
+    assert_eq!(w.replay(0, 0).unwrap()[0], wire::PAINT);
+    w.surface(0, 7, image).unwrap();
+    let mut bad = image;
+    bad[7] = 1;
+    assert_eq!(w.surface(0, 7, bad), Err(abi::DENIED));
+    place(&mut w, 0, 200, 200);
+    assert_eq!(
+        w.replay(0, 0).unwrap(),
+        [wire::SURFACE_IMAGE, 1, 5, 290, 270, 10, 10, 40]
+    );
+    assert!(cathedral_contracts::composition::valid_image(
+        10, 10, 40, 1480
+    ));
+    assert!(!cathedral_contracts::composition::valid_image(
+        10, 10, 40, 1479
+    ));
+}

@@ -3,6 +3,7 @@
 use super::{Session, complete};
 use crate::scheduler::Event;
 use cathedral_contracts::user as abi;
+use delivery::ReceiveMode;
 pub(super) fn dispatch(
     session: &mut Session,
     slot: usize,
@@ -20,15 +21,33 @@ pub(super) fn dispatch(
                 session.ipc.close(slot, first).map(|()| 0)
             }
         }
-        abi::IPC_SEND_CAP => capabilities::send_cap(session, slot, first, second, third),
-        abi::IPC_RECEIVE_CAP => {
+        abi::IPC_SEND_CAP | abi::IPC_SEND_MEMORY => capabilities::send_cap(
+            session,
+            slot,
+            first,
+            second,
+            third,
+            number == abi::IPC_SEND_MEMORY,
+        ),
+        abi::IPC_RECEIVE_CAP | abi::IPC_RECEIVE_MEMORY | abi::IPC_TRY_RECEIVE_MEMORY => {
             if third != 0 {
                 return Err(abi::INVALID_ARGUMENT);
             }
             delivery::receive_call(
                 session,
                 slot,
-                (first, second, abi::MAX_MESSAGE as u64, true),
+                (
+                    first,
+                    second,
+                    abi::MAX_MESSAGE as u64,
+                    if number == abi::IPC_RECEIVE_CAP {
+                        ReceiveMode::Endpoint
+                    } else if number == abi::IPC_TRY_RECEIVE_MEMORY {
+                        ReceiveMode::TryMemory
+                    } else {
+                        ReceiveMode::Memory
+                    },
+                ),
                 None,
                 now,
                 event,
@@ -46,7 +65,7 @@ pub(super) fn dispatch(
             delivery::receive_call(
                 session,
                 slot,
-                (first, second, capacity, false),
+                (first, second, capacity, ReceiveMode::Bytes),
                 deadline,
                 now,
                 event,

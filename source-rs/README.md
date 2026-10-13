@@ -561,6 +561,15 @@ counts as ready. Revocation/stale handles return errors. Empty waits expire with
 `TIMED_OUT`; timer wakeups also work when all tasks are blocked. Providers use this
 to prioritize control requests without abandoning their application connection.
 
+## Sealed objects over ordinary IPC
+
+The [memory guide](kernel/core/user_tasks/memory/README.md) defines copied read
+capabilities, optional RO/NX mappings, queued quota reservations and retained
+sponsor funding. Start at `Private::freeze`, then `Handle::send_memory` and
+`receive_memory`. This is independent of the legacy boot-link offer API.
+Both CPU boot proofs exercise forwarding after producer death; the matrix desktop
+uses it for retained images without pixel copies at intermediate matrices.
+
 ## Userspace supervision experiment
 
 A session may reserve up to seven launch grants within the eight-task and

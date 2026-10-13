@@ -136,3 +136,11 @@ pub const TASK_IMAGE_ALLOW: u64 = 52; // owned idle launch, executable grant, ze
 pub const TASK_CPU_ASSIGN: u64 = 53; // owned idle launch, burst/refill ceiling, zero; retains debt
 pub const PHYSICAL_BUDGET: u64 = 54; // writable [reserved frames, charged frames], zero, zero
 pub const PHYSICAL_ASSIGN: u64 = 55; // owned idle launch, physical frames, zero
+
+/// Sealed-memory capabilities: same 80-byte packet as endpoint IPC, separate typed receive.
+pub const IPC_SEND_MEMORY: u64 = 56;
+pub const IPC_RECEIVE_MEMORY: u64 = 57;
+pub const IPC_TRY_RECEIVE_MEMORY: u64 = 58;
+pub const MEMORY_FREEZE: u64 = 59; // private handle -> immutable; no peer binding
+pub const MEMORY_MAP_OBJECT: u64 = 60; // local sealed handle -> local address
+pub const MEMORY_UNMAP_OBJECT: u64 = 61; // retain handle, remove only own mapping

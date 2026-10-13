@@ -24,7 +24,7 @@ pub unsafe fn seal(handle: u64, link: u64) -> Result<(), Error> {
 pub unsafe fn release(handle: u64) -> Result<(), Error> {
     result(arch::call(abi::MEMORY_RELEASE, handle, 0)).map(|_| ())
 }
-fn result(value: u64) -> Result<u64, Error> {
+pub(super) fn result(value: u64) -> Result<u64, Error> {
     if (value as i64) < 0 {
         Err(Error(value as i64))
     } else {

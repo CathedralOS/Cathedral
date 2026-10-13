@@ -14,6 +14,7 @@ struct Owned {
 pub(super) struct Children {
     slots: [Option<Owned>; 2],
     next_frames: [Option<u64>; 2],
+    next_pages: [Option<[u64; 2]>; 2],
     pending: Option<(Request, usize, u64)>,
 }
 impl Children {
@@ -37,6 +38,7 @@ impl Children {
     pub(super) fn dispatch(
         &mut self,
         request: &Request,
+        parent: &mut Parent,
         words: wire::Packet,
         server: &mut Server,
         world: &mut World,
@@ -45,7 +47,7 @@ impl Children {
         if routed == 0
             && !matches!(
                 words[0],
-                wire::SPAWN | wire::RUN | wire::RUN_MEMORY | wire::STOP
+                wire::SPAWN | wire::RUN | wire::RUN_MEMORY | wire::RUN_PAGES | wire::STOP
             )
         {
             return Ok(false);
@@ -62,6 +64,16 @@ impl Children {
             }
         } else {
             match words {
+                [wire::RUN_PAGES, slot @ 0..=1, private, readers, 0, 0, 0, 0]
+                    if private <= 16 && readers <= 16 =>
+                {
+                    if self.slots[slot as usize].is_some() {
+                        Err(Error(abi::BUSY as i64))
+                    } else {
+                        self.next_pages[slot as usize] = Some([private, readers]);
+                        Ok(())
+                    }
+                }
                 [wire::RUN_MEMORY, slot @ 0..=1, frames, 0, 0, 0, 0, 0] => {
                     if self.slots[slot as usize].is_some() {
                         Err(Error(abi::BUSY as i64))
@@ -89,7 +101,7 @@ impl Children {
                     world,
                 ),
                 [wire::STOP, slot @ 0..=1, 0, 0, 0, 0, 0, 0] => {
-                    self.stop(slot as usize, server, world)
+                    self.stop(slot as usize, server, world, parent)
                 }
                 _ => Err(Error(abi::DENIED as i64)),
             }
@@ -105,24 +117,33 @@ impl Children {
         slot: usize,
         server: &mut Server,
         world: &mut World,
+        parent: &mut Parent,
     ) -> Result<(), Error> {
         if self.pending.is_some_and(|(_, pending, _)| pending == slot) {
             world.disconnected(slot);
             return Ok(());
         }
         if self.slots[slot].is_some() {
-            self.stop(slot, server, world)?;
+            self.stop(slot, server, world, parent)?;
         } else {
             world.disconnected(slot);
         }
         Ok(())
     }
-    fn stop(&mut self, slot: usize, server: &mut Server, world: &mut World) -> Result<(), Error> {
+    fn stop(
+        &mut self,
+        slot: usize,
+        server: &mut Server,
+        world: &mut World,
+        parent: &mut Parent,
+    ) -> Result<(), Error> {
         let child = self.slots[slot]
             .take()
             .ok_or(Error(abi::PEER_CLOSED as i64))?;
         server.remove(slot);
         world.disconnected(slot);
+        // Release retained upstream image readers before returning descendant funding.
+        super::requests::flush(parent, world)?;
         child.task.cancel()?;
         child.task.wait()?;
         child.data.0.close()?;

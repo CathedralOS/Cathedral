@@ -22,12 +22,19 @@ pub(super) fn dispatch(
         let name = world.create_surface(slot, words[2] as usize, reply[1]);
         return Ok([0, name, 0, 0, 0, 0, 0, 0]);
     }
-    match world.surface(slot, request.incarnation, words) {
-        Ok(words) => parent.surface(words),
-        Err(status) => Ok(wire::error(status)),
+    let prepared = match world.preview_surface(slot, request.incarnation, words) {
+        Ok(prepared) => prepared,
+        Err(status) => return Ok(wire::error(status)),
+    };
+    let response = parent.surface(prepared)?;
+    if response[0] == 0 {
+        world
+            .surface(slot, request.incarnation, words)
+            .expect("validated update");
     }
+    Ok(response)
 }
-pub(in super::super) fn flush(parent: &Parent, world: &mut World) -> Result<(), Error> {
+pub(in super::super) fn flush(parent: &mut Parent, world: &mut World) -> Result<(), Error> {
     while let Some(words) = world.take_retired_surface() {
         let response = parent.surface(words)?;
         // Parent rebind/revoke can already have retired the upstream object.
@@ -38,7 +45,7 @@ pub(in super::super) fn flush(parent: &Parent, world: &mut World) -> Result<(), 
     Ok(())
 }
 
-pub(super) fn replay(parent: &Parent, world: &mut World, slot: usize) -> Result<(), Error> {
+pub(super) fn replay(parent: &mut Parent, world: &mut World, slot: usize) -> Result<(), Error> {
     for rank in 0..wire::MAX_SURFACES {
         if let Some(words) = world.replay(slot, rank) {
             parent.surface(words)?;

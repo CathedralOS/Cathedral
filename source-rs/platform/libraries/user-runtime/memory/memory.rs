@@ -1,6 +1,6 @@
 // Bounded page buffers; no allocator or ambient memory authority.
-// Sealing consumes write access. Accepted readers retain a lease even when the
-// producer exits. Completion must release the reader before the producer frees.
+// freeze -> Object uses ordinary IPC and independent mapping lifetime (object.rs).
+// Legacy seal/link sharing below retains its single-peer completion discipline.
 use crate::{Error, link::Link};
 use cathedral_contracts::memory::PAGE_BYTES;
 

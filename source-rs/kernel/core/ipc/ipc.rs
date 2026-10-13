@@ -22,6 +22,7 @@ pub struct Message {
     pub bytes: [u8; abi::MAX_MESSAGE],
     pub len: usize,
     pub attachment: Option<u64>,
+    pub memory: Option<usize>,
 }
 #[derive(Clone, Copy)]
 struct Queued {
@@ -29,6 +30,7 @@ struct Queued {
     len: usize,
     // Reserved, inaccessible recipient-local grant. Published only on receive.
     attachment: Option<usize>,
+    memory: Option<usize>,
 }
 #[derive(Clone, Copy)]
 struct Endpoint {
@@ -43,6 +45,7 @@ struct Endpoint {
 }
 pub struct Ipc {
     epoch: u64,
+    retired_memory: u64,
     tasks: usize,
     alive: u8,
     endpoints: alloc::vec::Vec<Option<Endpoint>>,
@@ -99,6 +102,7 @@ impl Ipc {
             bytes: [0; abi::MAX_MESSAGE],
             len: bytes.len(),
             attachment: reserved,
+            memory: None,
         };
         message.bytes[..bytes.len()].copy_from_slice(bytes);
         self.endpoints[index].as_mut().unwrap().message = Some(message);
@@ -120,10 +124,30 @@ impl Ipc {
         capacity: usize,
         accept: bool,
     ) -> Result<Option<Message>, u64> {
+        self.receive_kind(caller, ticket, capacity, if accept { 1 } else { 0 })
+    }
+    pub fn receive_memory(
+        &mut self,
+        caller: usize,
+        ticket: u64,
+        capacity: usize,
+    ) -> Result<Option<Message>, u64> {
+        self.receive_kind(caller, ticket, capacity, 2)
+    }
+    fn receive_kind(
+        &mut self,
+        caller: usize,
+        ticket: u64,
+        capacity: usize,
+        kind: u8,
+    ) -> Result<Option<Message>, u64> {
         let index = self.check(caller, ticket, Right::Receive)?;
         let endpoint = self.endpoints[index].as_mut().unwrap();
         if let Some(message) = endpoint.message {
-            if message.len > capacity || (message.attachment.is_some() && !accept) {
+            if message.len > capacity
+                || (message.attachment.is_some() && kind != 1)
+                || (message.memory.is_some() && kind != 2)
+            {
                 return Err(abi::TOO_SMALL);
             }
             endpoint.message = None;
@@ -134,6 +158,7 @@ impl Ipc {
                 bytes: message.bytes,
                 len: message.len,
                 attachment,
+                memory: message.memory,
             }));
         }
         if !endpoint.sender_alive {

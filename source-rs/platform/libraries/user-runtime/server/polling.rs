@@ -19,19 +19,31 @@ impl Server {
                 continue;
             };
             let mut bytes = [0; 64];
-            match pair.0.receive_until(&mut bytes, time::now()?) {
-                Ok(len) => {
+            let received = if self.memory {
+                pair.0.try_receive_memory(&mut bytes)
+            } else {
+                pair.0
+                    .receive_until(&mut bytes, time::now()?)
+                    .map(|len| (len, None))
+            };
+            match received {
+                Ok((len, object)) => {
                     self.cursor = (channel + 1) % (self.count + 1);
-                    return Ok(Some(Event::Request(Request {
+                    let request = Request {
                         bytes,
                         len,
                         control: channel == 0,
                         client: channel.checked_sub(1),
                         incarnation: pair.0.raw(),
                         reply: pair.1,
-                    })));
+                    };
+                    return Ok(Some(match object {
+                        Some(object) => Event::Memory(request, object),
+                        None => Event::Request(request),
+                    }));
                 }
-                Err(Error(code)) if code == abi::TIMED_OUT as i64 => (),
+                Err(Error(code))
+                    if code == abi::TIMED_OUT as i64 || code == abi::WOULD_BLOCK as i64 => {}
                 Err(_) if channel != 0 => {
                     self.clients[channel - 1] = None;
                     return Ok(Some(Event::Disconnected {

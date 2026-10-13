@@ -26,6 +26,7 @@ members = [
     "distribution/lab/matrix",
     "distribution/lab/hello",
     "distribution/lab/portability",
+    "distribution/lab/shared-memory",
     "distribution/lab/ipc",
     "distribution/lab/channels",
     "distribution/lab/memory",

@@ -14,7 +14,7 @@ pub(super) fn dispatch(
                 server.reply(&request, &wire::encode(parent.pixel(x, y)?))?;
                 return Ok(());
             }
-            if children.dispatch(&request, words, server, world)? {
+            if children.dispatch(&request, parent, words, server, world)? {
                 flush(parent, world)?;
                 return Ok(());
             }

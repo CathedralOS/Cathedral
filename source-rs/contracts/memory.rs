@@ -1,7 +1,16 @@
 //! Experimental page objects with caller-local names and guarded local mapping slots.
 //! ALLOCATE(pages) returns a handle to zeroed private RW/NX pages; ADDRESS(handle)
-//! and PAGES(handle) query only the caller's installed mapping. RELEASE(handle)
-//! removes only that mapping. Unknown and foreign names both return BAD_HANDLE.
+//! and PAGES(handle) query only caller-held authority. ADDRESS requires a mapping.
+//! RELEASE removes that local mapping and right. Unknown/foreign names return BAD_HANDLE.
+//!
+//! FREEZE(handle) irreversibly seals without a boot link. IPC_SEND_MEMORY copies a
+//! read capability over an ordinary endpoint; IPC_RECEIVE_MEMORY installs a fresh
+//! local handle without a mapping. Queued rights reserve recipient reader capacity.
+//! MAP_OBJECT maps RO/NX; UNMAP_OBJECT drops only that mapping. All holders may
+//! forward; surviving rights keep backing and its original sponsor charge alive.
+//! The final release/death/discard refunds backing. No live reader is remotely unmapped.
+//!
+//! Legacy boot-link compatibility path:
 //!
 //! SEAL(handle, link) irreversibly removes producer WRITE and offers the object
 //! to that live boot-approved service. Send the producer-local handle as an offer
@@ -33,6 +42,9 @@ pub const fn address(index: usize) -> u64 {
 pub struct Grant {
     pub task: usize,
     pub private_pages: usize,
-    /// Accepted reader pages, including leases retained after producer death.
+    /// Reader pages, including queued/unmapped rights and rights retained after producer death.
     pub shared_pages: usize,
 }
+
+/// Includes queued/unmapped read capabilities, bounded independently of backing.
+pub const MAX_READ_HANDLES: usize = crate::user::MAX_TASKS * MAX_SHARED_REGIONS;

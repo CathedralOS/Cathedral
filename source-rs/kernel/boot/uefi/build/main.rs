@@ -14,6 +14,8 @@ fn main() {
         composition::generate();
         return;
     }
+    println!("cargo:rerun-if-env-changed=CATHEDRAL_SHARED_MEMORY_ELF");
+    bundle("CATHEDRAL_SHARED_MEMORY_ELF", "shared-memory.elf");
     if env::var("CARGO_CFG_TARGET_ARCH").as_deref() == Ok("aarch64") {
         println!("cargo:rerun-if-env-changed=CATHEDRAL_ARM64_ELF");
         bundle("CATHEDRAL_ARM64_ELF", "arm64.elf");

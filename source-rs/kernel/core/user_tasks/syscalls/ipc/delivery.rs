@@ -3,12 +3,19 @@ use super::{Session, complete};
 use crate::{ipc::Right, scheduler::Event};
 use cathedral_contracts::user as abi;
 
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub(super) enum ReceiveMode {
+    Bytes,
+    Endpoint,
+    Memory,
+    TryMemory,
+}
 #[derive(Clone, Copy)]
 pub(in crate::user_tasks) struct Receive {
     handle: u64,
     address: u64,
     capacity: usize,
-    attachment: bool,
+    attachment: ReceiveMode,
     deadline: Option<u64>,
 }
 
@@ -18,7 +25,7 @@ pub(in crate::user_tasks) struct Receive {
 pub(super) fn receive_call(
     session: &mut Session,
     slot: usize,
-    call: (u64, u64, u64, bool),
+    call: (u64, u64, u64, ReceiveMode),
     deadline: Option<u64>,
     now: u64,
     event: &mut Event,
@@ -39,6 +46,9 @@ pub(super) fn receive_call(
     };
     if let Some(length) = receive(session, slot, wait)? {
         return Ok(length);
+    }
+    if attachment == ReceiveMode::TryMemory {
+        return Err(abi::WOULD_BLOCK);
     }
     if crate::user_tasks::time::timed_out(now, deadline, false) {
         return Err(abi::TIMED_OUT);
@@ -89,7 +99,7 @@ fn receive(session: &mut Session, slot: usize, wait: Receive) -> Result<Option<u
     }
     let task = &mut session.tasks[slot];
     let space = task.space.as_ref().unwrap();
-    let size = if attachment {
+    let size = if attachment != ReceiveMode::Bytes {
         abi::IPC_PACKET_BYTES
     } else {
         capacity
@@ -97,16 +107,24 @@ fn receive(session: &mut Session, slot: usize, wait: Receive) -> Result<Option<u
     if !space.writable_range(address, size) {
         return Err(abi::BAD_ADDRESS);
     }
-    let Some(message) = session
-        .ipc
-        .receive_cap(slot, handle, capacity, attachment)?
-    else {
+    let message = if matches!(attachment, ReceiveMode::Memory | ReceiveMode::TryMemory) {
+        session.ipc.receive_memory(slot, handle, capacity)?
+    } else {
+        session
+            .ipc
+            .receive_cap(slot, handle, capacity, attachment == ReceiveMode::Endpoint)?
+    };
+    let Some(message) = message else {
         return Ok(None);
     };
-    if attachment {
+    let capability = message
+        .memory
+        .map(|escrow| session.memory.model.publish_read(slot, escrow))
+        .or(message.attachment);
+    if attachment != ReceiveMode::Bytes {
         let mut packet = [0; abi::IPC_PACKET_BYTES];
         packet[..8].copy_from_slice(&(message.len as u64).to_le_bytes());
-        packet[8..16].copy_from_slice(&message.attachment.unwrap_or(0).to_le_bytes());
+        packet[8..16].copy_from_slice(&capability.unwrap_or(0).to_le_bytes());
         packet[16..16 + message.len].copy_from_slice(&message.bytes[..message.len]);
         // SAFETY: Complete writable destination checked before dequeue/install. Serialized trap.
         assert!(unsafe { space.copy_to_user(address, &packet) });

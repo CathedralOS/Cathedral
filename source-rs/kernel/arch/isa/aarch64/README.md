@@ -61,6 +61,8 @@ Debug and release boots exercise:
   stack guards and non-executable data. A peer continues after every fault.
 - Parent-driven launch/wait and immutable page sharing. Sealing removes the
   producer's write permission; accepted readers survive producer exit or fault.
+- Ordinary shared-object IPC through three processes: unmapped forwarding,
+  post-exit reads, checked copyout, queue discard and sealed reader write faults.
 - Rejection of the wrong ELF machine, admission failure at every frame boundary,
   shared core runtime-allocation rollback, and full frame/heap reclamation.
 

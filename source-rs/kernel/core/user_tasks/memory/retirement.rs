@@ -31,19 +31,31 @@ pub(super) unsafe fn release(
     handle: u64,
 ) -> Result<u64, u64> {
     let index = session.memory.model.access(slot, handle)?;
-    let mapping = session.memory.model.mapping(slot, index);
-    session.memory.model.release(slot, handle)?;
+    let mapping = session.memory.model.mapped(slot, handle)?;
+    let read = session.memory.model.read_slot(slot, handle);
+    if read.is_none() {
+        session.memory.model.release(slot, handle)?;
+    }
     let pages = session.memory.model.entries[index].pages;
-    // SAFETY: Calling task surrendered this mapping; no other mapping is withdrawn.
+    if let Some(mapping) = mapping {
+        // SAFETY: Caller surrendered only its own mapping; root inactive.
+        unsafe {
+            session.tasks[slot]
+                .space
+                .as_mut()
+                .unwrap()
+                .unmap_region(mapping, pages);
+        }
+        session.tasks[slot].report.memory.unmapped_pages += pages;
+    }
+    if let Some(read) = read {
+        session.memory.model.reads[read].as_mut().unwrap().mapping = None;
+        session.memory.model.drop_read(read);
+    }
+    // SAFETY: Removed this alias before final-reference reclamation.
     unsafe {
-        session.tasks[slot]
-            .space
-            .as_mut()
-            .unwrap()
-            .unmap_region(mapping, pages);
         session.memory.reclaim(index, frames);
     }
-    session.tasks[slot].report.memory.unmapped_pages += pages;
     Ok(0)
 }
 
@@ -54,9 +66,30 @@ pub(in crate::user_tasks) unsafe fn close(
     slot: usize,
     frames: &mut Frames<'_>,
 ) {
+    for read in 0..wire::MAX_READ_HANDLES {
+        let Some(grant) = session.memory.model.reads[read].filter(|r| r.task == slot) else {
+            continue;
+        };
+        if let Some(mapping) = grant.mapping {
+            let pages = session.memory.model.entries[grant.object].pages;
+            // SAFETY: Retired task cannot resume; no other process mapping changes.
+            unsafe {
+                session.tasks[slot]
+                    .space
+                    .as_mut()
+                    .unwrap()
+                    .unmap_region(mapping, pages);
+            }
+            session.tasks[slot].report.memory.unmapped_pages += pages;
+            session.memory.model.reads[read].as_mut().unwrap().mapping = None;
+        }
+        session.memory.model.drop_read(read);
+    }
     for index in 0..wire::MAX_REGIONS {
         let region = session.memory.model.entries[index];
-        if region.owner == Some(slot) || (region.peer == Some(slot) && region.accepted) {
+        if (region.owner == Some(slot) && region.owner_mapped)
+            || (region.peer == Some(slot) && region.accepted)
+        {
             // SAFETY: Only the dead task's mappings disappear. Accepted live readers keep their physical lease.
             unsafe {
                 session.tasks[slot]

@@ -12,6 +12,7 @@ pub struct Request {
 }
 pub enum Event {
     Request(Request),
+    Memory(Request, crate::memory::Object),
     Disconnected { client: usize, incarnation: u64 },
 }
 const MAX_CLIENTS: usize = abi::MAX_WAIT_HANDLES - 1; // Control also occupies a wait slot.
@@ -21,9 +22,14 @@ pub struct Server {
     clients: [Option<(Handle, Handle)>; MAX_CLIENTS],
     count: usize,
     cursor: usize,
+    memory: bool,
     closed: [Option<u64>; MAX_CLIENTS],
 }
 impl Server {
+    /// Explicit opt-in: services must handle and release typed memory attachments.
+    pub fn enable_memory(&mut self) {
+        self.memory = true;
+    }
     pub fn next_request(&mut self) -> Result<Request, Error> {
         loop {
             if let Event::Request(request) = self.next_event()? {
@@ -53,15 +59,23 @@ impl Server {
             && self.clients.iter().all(Option::is_none)
         {
             let mut bytes = [0; 64];
-            let len = self.control.0.receive(&mut bytes)?;
-            return Ok(Some(Event::Request(Request {
+            let (len, object) = if self.memory {
+                self.control.0.receive_memory(&mut bytes)?
+            } else {
+                (self.control.0.receive(&mut bytes)?, None)
+            };
+            let request = Request {
                 bytes,
                 len,
                 control: true,
                 client: None,
                 incarnation: self.control.0.raw(),
                 reply: self.control.1,
-            })));
+            };
+            return Ok(Some(match object {
+                Some(object) => Event::Memory(request, object),
+                None => Event::Request(request),
+            }));
         }
         loop {
             if let Some(event) = self.take_disconnection() {

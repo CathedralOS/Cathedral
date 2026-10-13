@@ -34,9 +34,23 @@ impl<'a> Composition<'a> {
         }
     }
     pub fn paint_row(&self, x: u64, y: u64, row: &mut [u32]) {
+        self.paint_images(
+            x,
+            y,
+            row,
+            &[&[]; cathedral_contracts::composition::MATRIX_TILES],
+        );
+    }
+    pub fn paint_images(
+        &self,
+        x: u64,
+        y: u64,
+        row: &mut [u32],
+        images: &[&[u8]; cathedral_contracts::composition::MATRIX_TILES],
+    ) {
         row.fill(self.background);
         self.labels.paint_row(x, y, row);
-        self.tiles.paint_row(x, y, row);
+        self.tiles.paint_images(x, y, row, images);
         for client in self.clients.iter() {
             client.paint_row(x, y, row);
         }

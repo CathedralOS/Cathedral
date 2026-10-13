@@ -8,6 +8,8 @@ use cathedral_contracts::{
 pub struct Region {
     /// Persistent backing sponsor; accepted readers can outlive its process.
     pub account: Option<usize>,
+    pub read_refs: usize,
+    pub owner_mapped: bool,
     pub owner: Option<usize>,
     pub peer: Option<usize>,
     pub accepted: bool,
@@ -20,11 +22,12 @@ pub struct Region {
 }
 impl Region {
     pub fn live(&self) -> bool {
-        self.owner.is_some() || self.peer.is_some()
+        self.owner.is_some() || self.peer.is_some() || self.read_refs != 0
     }
 }
 pub struct Regions {
     names: crate::names::Names,
+    pub reads: alloc::vec::Vec<Option<readers::ReadGrant>>,
     pub entries: alloc::vec::Vec<Region>,
     private: [usize; abi::MAX_TASKS],
     shared: [usize; abi::MAX_TASKS],
@@ -41,7 +44,13 @@ impl Regions {
             .try_reserve_exact(MAX_REGIONS)
             .map_err(|_| abi::NO_MEMORY)?;
         entries.resize(MAX_REGIONS, Region::default());
+        let mut reads = alloc::vec::Vec::new();
+        reads
+            .try_reserve_exact(cathedral_contracts::memory::MAX_READ_HANDLES)
+            .map_err(|_| abi::NO_MEMORY)?;
+        reads.resize(cathedral_contracts::memory::MAX_READ_HANDLES, None);
         let mut model = Self {
+            reads,
             names: crate::names::Names::default(),
             entries,
             private: [0; abi::MAX_TASKS],
@@ -94,6 +103,7 @@ impl Regions {
         self.entries[index] = Region {
             account: Some(owner),
             owner: Some(owner),
+            owner_mapped: true,
             pages,
             owner_name,
             owner_slot,
@@ -101,13 +111,17 @@ impl Regions {
         };
         Ok(index)
     }
-    /// Resolve only the caller's installed mappings. Unknown and foreign are identical.
+    /// Resolve only the caller's published rights, mapped or not. Unknown and foreign are identical.
     pub fn access(&self, caller: usize, handle: u64) -> Result<usize, u64> {
         self.entries
             .iter()
             .position(|r| {
                 (r.owner == Some(caller) && r.owner_name == handle)
                     || (r.peer == Some(caller) && r.accepted && r.reader_name == handle)
+            })
+            .or_else(|| {
+                self.read_slot(caller, handle)
+                    .map(|i| self.reads[i].unwrap().object)
             })
             .ok_or(abi::BAD_HANDLE)
     }
@@ -167,18 +181,13 @@ impl Regions {
             .entries
             .iter()
             .filter(|r| r.peer == Some(caller) && r.accepted);
-        let used: usize = readers.clone().map(|r| r.pages).sum();
-        if used + region.pages > self.shared[caller] || readers.count() >= MAX_SHARED_REGIONS {
+        let used = self.charged(caller)[1];
+        if used + region.pages > self.shared[caller]
+            || readers.count() + self.read_count(caller) >= MAX_SHARED_REGIONS
+        {
             return Err(abi::NO_MEMORY);
         }
-        let reader_slot = (MAX_PRIVATE_REGIONS..MAX_PRIVATE_REGIONS + MAX_SHARED_REGIONS)
-            .find(|&slot| {
-                !self
-                    .entries
-                    .iter()
-                    .any(|r| r.peer == Some(caller) && r.accepted && r.reader_slot == slot)
-            })
-            .ok_or(abi::NO_MEMORY)?;
+        let reader_slot = self.vacant_mapping(caller)?;
         let reader_name = self.names.mint(caller)?;
         self.entries[index].reader_name = reader_name;
         self.entries[index].reader_slot = reader_slot;
@@ -230,7 +239,14 @@ impl Regions {
                 .iter()
                 .filter(|r| r.accepted && r.peer == Some(task))
                 .map(|r| r.pages)
-                .sum(),
+                .sum::<usize>()
+                + self
+                    .reads
+                    .iter()
+                    .flatten()
+                    .filter(|r| r.task == task)
+                    .map(|r| self.entries[r.object].pages)
+                    .sum::<usize>(),
         ]
     }
     /// Only the validated resource transaction may alter backed allowances.

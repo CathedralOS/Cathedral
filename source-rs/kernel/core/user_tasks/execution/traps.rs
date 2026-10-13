@@ -46,7 +46,8 @@ pub(super) unsafe fn schedule(context: &Context, cause: SwitchCause, now: u64) -
         session.scheduler.account_cpu(arch::cpu_time_us());
         session.scheduler.park(event, now);
         None // Always reclaim from the boot context, never an interrupt stack.
-    } else if session.tasks.iter().any(|task| task.memory_call.is_some())
+    } else if session.ipc.memory_retirement_pending()
+        || session.tasks.iter().any(|task| task.memory_call.is_some())
         || session.scheduler.states().contains(&TaskState::Exited)
         || session
             .launches

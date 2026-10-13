@@ -29,6 +29,9 @@ def main():
     env = os.environ.copy()
     features = f'fault-{args.fault}' if args.fault else 'smoke-test'
     if not args.kernel_only:
+        subprocess.run(['cargo', 'build', '--locked', '-p', 'cathedral-shared-memory-lab',
+                        '--target', 'aarch64-unknown-none', *profile], cwd=source, check=True)
+        env['CATHEDRAL_SHARED_MEMORY_ELF'] = str(source / 'target/aarch64-unknown-none' / mode / 'cathedral-shared-memory-lab')
         subprocess.run(['cargo', 'build', '--locked', '-p', 'cathedral-portability-lab',
                         '--target', 'aarch64-unknown-none', *profile], cwd=source, check=True)
         env['CATHEDRAL_ARM64_ELF'] = str(source / 'target/aarch64-unknown-none' /
@@ -77,7 +80,7 @@ def main():
                   'dynamic spawn limit stale IDs and live-peer progress passed',
                   'task stacks unmapped; heap and physical frames returned to baseline']
     if not args.kernel_only:
-        milestones += ['ARM64 IPC round=0', 'ARM64 IPC round=1',
+        milestones += ['shared objects forwarded without mappings; lifetime and reclamation passed', 'ARM64 IPC round=0', 'ARM64 IPC round=1',
                        'ARM64 timer preempted both private EL0 peers',
                        'ARM64 sealed pages rejected writes', 'ARM64 admission rollback passed',
                        'ARM64 portability proof passed']

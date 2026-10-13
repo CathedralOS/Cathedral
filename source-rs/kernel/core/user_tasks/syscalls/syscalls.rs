@@ -22,7 +22,10 @@ pub(super) fn syscall(session: &mut Session, slot: usize, now: u64) -> Event {
         | abi::IPC_WAIT_TWO
         | abi::IPC_CREATE..=abi::IPC_RECEIVE_CAP
         | abi::IPC_WAIT_MANY
-        | abi::IPC_BUDGET => ipc::dispatch(session, slot, call, now, &mut event),
+        | abi::IPC_BUDGET
+        | abi::IPC_SEND_MEMORY..=abi::IPC_TRY_RECEIVE_MEMORY => {
+            ipc::dispatch(session, slot, call, now, &mut event)
+        }
         abi::KEYBOARD_READ
         | abi::KEYBOARD_WRITE
         | abi::KEYBOARD_READ_UNTIL
@@ -41,7 +44,8 @@ pub(super) fn syscall(session: &mut Session, slot: usize, now: u64) -> Event {
             &mut event,
             now,
         ),
-        abi::MEMORY_ALLOCATE..=abi::MEMORY_PAGES => {
+        abi::MEMORY_ALLOCATE..=abi::MEMORY_PAGES
+        | abi::MEMORY_FREEZE..=abi::MEMORY_UNMAP_OBJECT => {
             memory::syscall(session, slot, call, &mut event)
         }
         _ => Err(abi::UNKNOWN),

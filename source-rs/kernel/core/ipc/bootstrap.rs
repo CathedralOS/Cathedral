@@ -21,6 +21,7 @@ impl Ipc {
         endpoints.resize(MAX_ENDPOINTS + abi::MAX_DYNAMIC_CHANNELS, None);
         let mut ipc = Self {
             epoch,
+            retired_memory: 0,
             tasks,
             reservations,
             alive: ((1u16 << tasks) - 1) as u8,

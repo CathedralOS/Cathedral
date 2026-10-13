@@ -28,6 +28,7 @@ impl Children {
         &mut self,
         server: &mut Server,
         world: &mut World,
+        parent: &mut Parent,
     ) -> Result<Option<usize>, Error> {
         let Some((request, slot, deadline)) = self.pending else {
             return Ok(None);
@@ -48,7 +49,7 @@ impl Children {
             }
             Err(error) => {
                 // Do not reuse a stream that may still produce an uncorrelated reply.
-                self.stop(slot, server, world)?;
+                self.stop(slot, server, world, parent)?;
                 retired = Some(slot);
                 wire::error(error.0 as u64)
             }

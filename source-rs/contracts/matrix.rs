@@ -88,3 +88,8 @@ pub const MAX_SURFACES: usize = 16;
 pub const SURFACE_LIMIT: u64 = 110; // child slot, allowance,0,0,0,0,0
 /// POLL carries the surface allowance above the key mask in word four.
 pub const SURFACE_BITS: u32 = 32;
+
+/// Same surface geometry as PAINT; word seven is pixel stride, plus one sealed attachment.
+/// RGBX little-endian u32 pixels; clipping retains the original row stride.
+pub const SURFACE_IMAGE: u64 = 8;
+pub const RUN_PAGES: u64 = 112; // owner: slot, private pages, reader pages; rest zero

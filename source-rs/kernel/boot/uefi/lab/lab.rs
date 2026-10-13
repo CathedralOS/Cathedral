@@ -5,6 +5,7 @@ pub fn run(boot: &mut crate::handoff::BootState) {
     user_tasks::exercise(&mut boot.memory, &mut boot.console);
     #[cfg(feature = "bundled-user")]
     {
+        shared_memory::exercise(&mut boot.memory, &mut boot.console);
         applications::exercise(&mut boot.memory, &mut boot.console);
         ipc::exercise(&mut boot.memory, &mut boot.console);
         supervision::exercise(&mut boot.memory, &mut boot.console);

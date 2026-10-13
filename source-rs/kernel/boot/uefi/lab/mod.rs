@@ -22,3 +22,6 @@ include!("lab.rs");
 mod arm64;
 #[cfg(target_arch = "aarch64")]
 pub use arm64::run;
+
+#[cfg(feature = "bundled-user")]
+mod shared_memory;

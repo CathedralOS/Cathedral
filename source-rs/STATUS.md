@@ -21,6 +21,23 @@ headers. Full x86/ARM debug and release boot suites and the release matrix
 desktop regression pass with the protected image. This does not isolate trusted kernel code from page tables
 or remove writable kernel backing aliases used to load user programs.
 
+## Transferable sealed memory
+
+[Shared objects](kernel/core/user_tasks/memory/README.md) now travel over ordinary
+IPC with caller-local read capabilities and independent optional mappings.
+Forwarding copies no backing bytes. Queued rights consume recipient capacity;
+retained rights pin their original sponsor until the final release, even after
+producer death. Both CPUs exercise a three-process chain, unmapped forwarding,
+checked copyout, read-only faults and complete frame/heap reclamation.
+
+The matrix desktop submits a bitmap once, retains its read right through both
+matrix levels, and maps only in the compositor. It clips and replays image metadata
+using the original stride. Replacement releases ancestor references before
+returning child funding. Host policy tests and normal/pressure desktop pixel tests
+cover clipping, replay, rejected updates and repeated subtree replacement.
+This is bounded immutable RGBX storage; writable streams, sponsorship transfer,
+texture decoding, GPU import and transactional multi-surface commits remain open.
+
 ## ARM64 portability proof
 
 The [ARM64 backend](kernel/arch/isa/aarch64/README.md) boots through the same UEFI
@@ -87,7 +104,7 @@ python tools/boot-harness-rs/run.py --matrix-desktop-test --release --timeout 12
 python tools/boot-harness-rs/run.py --profile tools/boot-harness-rs/profiles/matrix-desktop.json --release --window
 ```
 
-Each app has a base surface and an independent light accent. Click either app,
+Each app has a base surface, an independent light accent and a retained checkerboard bitmap. Click either app,
 then Enter to change its base color. The left app is nested;
 the right app is its outer sibling. Startup exercises inner-subtree replacement
 and checks that old pixels disappear while the sibling survives. The automated
@@ -111,9 +128,9 @@ remain until their extra behavior has moved into the integrated path with tests.
 | [Executable-authorized admission](kernel/core/user_tasks/admission/pool/README.md) | Apps and the matrix desktop construct descendants from code authority and a process pool | `--admission-test`: recursive launch, exhaustion, load rollback, retained funding, sibling survival | Boot-supplied catalogue; eight accounts; device grants remain static |
 | [Matrix lifecycle](platform/services/matrix/service/children/children.rs) | Same provider above apps and another matrix | `--matrix-test`: replacement preserves an outside sibling | Two direct children; distribution supplies policy through owner-only control |
 | [Local viewport, focus and capture](platform/services/matrix/world/world.rs) | Nested and sibling visible apps | Host policy tests; `--matrix-test`; `--matrix-desktop-test` physical focus | Five keys; coalesced wake channels; synchronous upward refresh |
-| [Owned surfaces](platform/services/matrix/world/surface/README.md) | App rectangles cross actual matrix boundaries to the existing compositor | Host quota/name/clipping/stacking tests; scanout removal and teardown checks | Sixteen backed rectangle objects; no images/text surfaces or atomic scene commits yet |
+| [Owned surfaces](platform/services/matrix/world/surface/README.md) | App rectangles cross actual matrix boundaries to the existing compositor | Host quota/name/clipping/stacking tests; scanout removal and teardown checks | Sixteen surfaces; bounded immutable RGBX images; no text surfaces or atomic scene commits yet |
 | [Retained compositor and hardware input](platform/services/display/compositor/compositor.rs) | Root adapter uses existing scanout/cursor and shared input decoders | `--matrix-desktop-test`; `--session-test --pressure` | Existing richer scenes/hosting remain in the earlier session fixture |
-| [Private/shared page lifetime](kernel/core/user_tasks/memory/regions/regions.rs) | Existing rendering/storage labs | Host policy tests and `--smoke` | Per-slot page limits and boot-approved sharing; no general shared-object IPC transfer |
+| [Private/shared page lifetime](kernel/core/user_tasks/memory/README.md) | Matrix bitmaps and existing rendering/storage labs | Host transactions; both CPU boot proofs; matrix desktop | Four reader rights per task, sixteen-page budgets; immutable copies only; original sponsor retained |
 | [Object storage and recovery](platform/services/storage/service/service.rs) | Default status/counter distribution | Storage host tests; `--storage-test` | Not yet an attenuated matrix namespace; not the custom database filesystem |
 
 ## Kernel boundary audit and next steps
@@ -156,10 +173,10 @@ activity. The remaining boundary work is recorded below:
 | IPC handles | [Grant table](kernel/core/ipc/grants.rs) supplies local, non-reused names | Retain this model when generalizing other capabilities |
 | Task/launch/peer handles | [Caller-local names](kernel/core/names.rs); [admission reservations](kernel/core/user_tasks/lifecycle/grants.rs) and reserved fresh loan-return names | Keep this boundary when replacing fixed executable/slot admission |
 | Clock and static links | [Clock](kernel/core/user_tasks/time.rs) and [link](kernel/core/ipc/link.rs) names refresh on recipient admission; unchanged peers retain their names | Separate timing authority from waiting/deadline mechanics; hardware timing remains visible |
-| Page handles | [Region grants and virtual slots](kernel/core/user_tasks/memory/regions/regions.rs) are caller-local; producer-local offers require the receiving link and install a separate reader name | Generalize beyond boot-approved sharing; preserve accepted-reader lifetime |
+| Page handles | [Region grants and virtual slots](kernel/core/user_tasks/memory/regions/regions.rs) are caller-local; producer-local offers require the receiving link and install a separate reader name | Ordinary IPC now copies unmapped read capabilities; writable sharing remains separate |
 | IPC capacity | Backed launch-account reservations; surviving channels stay charged across creator replacement; caller-local budget query | Conserving owner/child subdivision implemented; explicit funding transfer remains; retained endpoints pin their original account |
 | CPU | Measured runtime and deferred work charge persistent ancestor accounts; exhausted branches wait for refill | Qualified clocks, precise exhaustion preemption, bounded kernel work, privileged latency policy and service-call sponsorship |
-| RAM | Physical reservations cover images, stacks, page tables and buffers; accepted readers retain original sponsor charges | General shared-object IPC, active pressure policy and explicit sponsorship transfer |
+| RAM | Physical reservations cover images, stacks, page tables and buffers; accepted readers retain original sponsor charges | Active pressure policy and explicit sponsorship transfer |
 | Admission | Executable capabilities choose code for funded unbound accounts; recursive pools and rollback | General executable transfer/loading and larger arenas |
 | Devices | Concrete framebuffer/PS2/ATA grants, no arbitrary device discovery | One reusable userspace interrupt/MMIO boundary, proved with another driver; DMA needs a separate ownership/isolation design |
 
@@ -169,7 +186,7 @@ changes. The desktop test checks idle CPU use and moves without app repaint.
 and reports key-to-scanout latency (roughly 0.5 to 0.9 seconds in recent runs, including tracing overhead). Equal
 turns and synchronous parent RPC still need latency work. Owned surface objects now replace fixed
 path keys and conserve backing through recursive allowances. Physical admission
-funding and shared image objects are the next resource boundaries. Root-adapter recovery/trusted-path behavior remains an owner-level
+funding and shared image objects now reach the integrated desktop. Root-adapter recovery/trusted-path behavior remains an owner-level
 policy question. SMP, GPU support and the database filesystem follow these
 boundaries rather than becoming prerequisites for exercising them.
 

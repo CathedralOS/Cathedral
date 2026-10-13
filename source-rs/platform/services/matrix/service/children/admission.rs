@@ -52,6 +52,7 @@ impl Children {
             return Err(Error(abi::BUSY as i64));
         }
         let requested_frames = self.next_frames[slot].take();
+        let [private_pages, reader_pages] = self.next_pages[slot].take().unwrap_or([0, 0]);
         if images >> abi::MAX_LAUNCHES != 0 {
             return Err(Error(abi::DENIED as i64));
         }
@@ -61,8 +62,8 @@ impl Children {
             .ok_or(Error(abi::INVALID_ARGUMENT as i64))?;
         let target = Executable::at(image)?.reserve_funded(
             Limits {
-                private_pages: 0,
-                reader_pages: 0,
+                private_pages,
+                reader_pages,
                 channels,
             },
             descendants,

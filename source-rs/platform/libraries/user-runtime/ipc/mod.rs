@@ -6,3 +6,5 @@ pub use budget::{Budget, budget};
 pub use channels::channel;
 
 include!("ipc.rs");
+
+mod memory;

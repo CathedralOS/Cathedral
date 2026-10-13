@@ -29,6 +29,7 @@ pub(in super::super) fn send_cap(
     handle: u64,
     address: u64,
     reserved: u64,
+    memory: bool,
 ) -> Result<u64, u64> {
     session.ipc.check(slot, handle, Right::Send)?;
     if reserved != 0 {
@@ -50,12 +51,19 @@ pub(in super::super) fn send_cap(
     if length > abi::MAX_MESSAGE as u64 || attachment == 0 {
         return Err(abi::INVALID_ARGUMENT);
     }
-    session.ipc.send_cap(
-        slot,
-        handle,
-        &packet[16..16 + length as usize],
-        Some(attachment),
-    )?;
+    let bytes = &packet[16..16 + length as usize];
+    if memory {
+        let receiver = session.ipc.memory_receiver(slot, handle, bytes.len())?;
+        let escrow = session
+            .memory
+            .model
+            .reserve_read(slot, attachment, receiver)?;
+        session.ipc.send_memory(slot, handle, bytes, escrow);
+    } else {
+        session
+            .ipc
+            .send_cap(slot, handle, bytes, Some(attachment))?;
+    }
     session.tasks[slot].report.ipc_sent += 1;
     Ok(length)
 }

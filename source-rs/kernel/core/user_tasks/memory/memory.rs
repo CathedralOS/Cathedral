@@ -48,6 +48,10 @@ impl Memory {
 /// # Safety
 /// Sole CPU, boot stack, kernel root active, IRQs off; every user root is inactive.
 pub(super) unsafe fn process(session: &mut Session, frames: &mut Frames<'_>) {
+    // SAFETY: Queue discards never published a mapping; same boot-stack custody.
+    unsafe {
+        objects::retire_escrow(session, frames);
+    }
     for slot in 0..session.tasks.len() {
         let Some(call) = session.tasks[slot].memory_call.take() else {
             continue;
@@ -82,6 +86,12 @@ unsafe fn dispatch(
         abi::MEMORY_MAP => unsafe { sharing::map(session, slot, first, second) },
         // SAFETY: Caller provides exclusive inactive roots and frame custody.
         abi::MEMORY_RELEASE => unsafe { retirement::release(session, frames, slot, first) },
+        // SAFETY: Exclusive inactive roots and retained backing, as for the legacy operations.
+        abi::MEMORY_FREEZE => unsafe { objects::freeze(session, slot, first) },
+        // SAFETY: Exclusive inactive roots and retained backing.
+        abi::MEMORY_MAP_OBJECT => unsafe { objects::map(session, slot, first) },
+        // SAFETY: Caller withdraws only its own mapping.
+        abi::MEMORY_UNMAP_OBJECT => unsafe { objects::unmap(session, slot, first) },
         _ => Err(abi::UNKNOWN),
     }
 }

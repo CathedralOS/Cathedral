@@ -16,6 +16,7 @@ struct Compositor {
     action: u64,
     pending: [Option<cathedral_user_runtime::server::Request>; 3],
     stats: [u64; 4],
+    images: [Option<cathedral_user_runtime::memory::Object>; wire::MATRIX_TILES],
     wake: [bool; 3],
 }
 pub fn run(environment: cathedral_user_runtime::task::Environment) -> u64 {
@@ -39,6 +40,7 @@ pub fn run(environment: cathedral_user_runtime::task::Environment) -> u64 {
     // The optional fifth connection has no scene/input authority; it exercises
     // denied requests and reply backpressure without adding an application slot.
     let mut server = Server::open_clients(5).unwrap();
+    server.enable_memory();
     if environment.len() == 2 {
         server.set_control((
             environment.endpoint(0).unwrap(),
@@ -54,6 +56,14 @@ pub fn run(environment: cathedral_user_runtime::task::Environment) -> u64 {
                 incarnation,
             }) => {
                 compositor.disconnected(client, incarnation);
+            }
+            Ok(Event::Memory(request, object)) => {
+                let reply = compositor
+                    .matrix_image(&request, object)
+                    .unwrap_or_else(|status| [status, 0, 0, 0, 0, 0]);
+                if server.reply(&request, &display::encode(reply)).is_err() {
+                    return 1;
+                }
             }
             Ok(Event::Request(request)) => {
                 compositor.stats[0] += 1;
@@ -94,6 +104,7 @@ impl Compositor {
             action: 0,
             pending: [None; 3],
             stats: [0; 4],
+            images: [const { None }; wire::MATRIX_TILES],
             wake: [false; 3],
         }
     }
@@ -107,7 +118,13 @@ impl Compositor {
             for x in (rect.x..rect.x + rect.w).step_by(row.len()) {
                 let len = (rect.x + rect.w - x).min(row.len() as u64) as usize;
                 let row = &mut row[..len];
-                self.composition.paint_row(x, y, row);
+                let images = core::array::from_fn(|i| {
+                    self.images[i]
+                        .as_ref()
+                        .and_then(|o| o.bytes())
+                        .unwrap_or(&[])
+                });
+                self.composition.paint_images(x, y, row, &images);
                 self.output.row(x, y, row);
             }
         }

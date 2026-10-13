@@ -16,6 +16,7 @@ pub fn run(environment: Environment) -> Result<(), Error> {
     // process-owned arena has no aliases and never occupies the guarded user stack.
     let world = unsafe { &mut *world_address };
     let mut server = Server::open_clients(3)?;
+    server.enable_memory();
     if environment.len() == 4 {
         server.install(
             2,
@@ -28,8 +29,8 @@ pub fn run(environment: Environment) -> Result<(), Error> {
     let mut children = children::Children::default();
     loop {
         parent.refresh_notified(world)?;
-        children.finish(&mut server, world)?;
-        requests::flush(&parent, world)?;
+        children.finish(&mut server, world, &mut parent)?;
+        requests::flush(&mut parent, world)?;
         let (handle, deadline) = children.wait();
         children.notify(world)?;
         let mut extra = [cathedral_user_runtime::ipc::Handle::from_raw(0); 2];
@@ -52,10 +53,13 @@ pub fn run(environment: Environment) -> Result<(), Error> {
         match event {
             Event::Disconnected { client, .. } => {
                 if client < 2 {
-                    children.disconnected(client, &mut server, world)?;
+                    children.disconnected(client, &mut server, world, &mut parent)?;
                 } else {
                     world.cancel();
                 }
+            }
+            Event::Memory(request, object) => {
+                requests::image(request, object, &mut parent, world, &mut server)?;
             }
             Event::Request(request) => {
                 requests::dispatch(request, &mut parent, world, &mut children, &mut server)?

@@ -17,6 +17,8 @@ def verify(stream, output, serial, pressure=False):
         raise RuntimeError("Missing owned surface lifecycle evidence")
     if "physical admission exhaustion preserved sibling IPC and rendering" not in serial:
         raise RuntimeError("Missing physical memory isolation evidence")
+    if "sealed bitmap forwarding, clipping, replay and subtree reclamation passed" not in serial:
+        raise RuntimeError("Missing sealed bitmap proof")
     position = [40, 40]
 
     def send(events):
@@ -48,6 +50,8 @@ def verify(stream, output, serial, pressure=False):
         while True:
             width, height, data = pointer_test.read_scanout(stream, output)
             checks = [(140, 190, left), (510, 190, right),
+                      (316, 292, "ffcc44"), (316, 299, "7755dd"),
+                      (682, 292, "ffcc44"), (334, 292, "101827"),
                       (334, 310, "101827"), (720, 360, "101827")]
             if all(data[(y * width + x) * 3:(y * width + x) * 3 + 3] == bytes.fromhex(color)
                    for x, y, color in checks):

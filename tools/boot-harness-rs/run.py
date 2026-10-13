@@ -40,6 +40,7 @@ MARKERS = (
     *(f"Cathedral Rust lab: user fault contained mode={mode} " for mode in range(1, 11)),
     "Cathedral Rust lab: ring3 private memory preemption and checked syscalls passed",
     "Cathedral Rust lab: user admission rollback passed",
+    "Cathedral Rust lab: shared objects forwarded without mappings; lifetime and reclamation passed",
     "Cathedral Rust lab: ELF instances exited [17, 29]",
     "Cathedral Rust lab: ELF instances exited [18, 30]",
     "Cathedral Rust lab: ELF rejection and",

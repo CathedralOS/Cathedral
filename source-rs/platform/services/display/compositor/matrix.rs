@@ -29,6 +29,7 @@ impl Compositor {
             } else {
                 return Err(abi::INVALID_ARGUMENT);
             };
+            self.images[(op >> 16) as usize] = None;
             let damage = self
                 .composition
                 .tiles
@@ -37,6 +38,39 @@ impl Compositor {
         } else {
             return Err(abi::DENIED);
         }
+        Ok([0; 6])
+    }
+}
+
+impl Compositor {
+    pub(super) fn matrix_image(
+        &mut self,
+        request: &cathedral_user_runtime::server::Request,
+        mut object: cathedral_user_runtime::memory::Object,
+    ) -> Result<[u64; 6], u64> {
+        if !request.control {
+            return Err(abi::DENIED);
+        }
+        let [op, x, y, w, h, stride] =
+            display::decode(&request.bytes[..request.len]).ok_or(abi::INVALID_ARGUMENT)?;
+        if op & 0xffff != wire::MATRIX_IMAGE
+            || op >> 16 >= wire::MATRIX_TILES as u64
+            || !cathedral_contracts::composition::valid_image(w, h, stride, object.len())
+        {
+            return Err(abi::INVALID_ARGUMENT);
+        }
+        let rect = if w == 0 && h == 0 {
+            Rect::default()
+        } else if display::valid_rect(self.output.width, self.output.height, x, y, w, h) {
+            Rect { x, y, w, h }
+        } else {
+            return Err(abi::INVALID_ARGUMENT);
+        };
+        object.map().map_err(|e| e.0 as u64)?;
+        let index = (op >> 16) as usize;
+        let damage = self.composition.tiles.image(index, rect, stride);
+        self.images[index] = Some(object);
+        self.redraw(damage);
         Ok([0; 6])
     }
 }

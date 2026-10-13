@@ -192,6 +192,14 @@ name = "cathedral-session-protocol"
 version = "0.0.0"
 
 [[package]]
+name = "cathedral-shared-memory-lab"
+version = "0.0.0"
+dependencies = [
+ "cathedral-contracts",
+ "cathedral-user-runtime",
+]
+
+[[package]]
 name = "cathedral-status"
 version = "0.0.0"
 dependencies = [

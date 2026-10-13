@@ -87,6 +87,23 @@ impl World {
         incarnation: u64,
         words: wire::Packet,
     ) -> Result<wire::Packet, u64> {
+        self.update_surface(slot, incarnation, words, true)
+    }
+    pub fn preview_surface(
+        &mut self,
+        slot: usize,
+        incarnation: u64,
+        words: wire::Packet,
+    ) -> Result<wire::Packet, u64> {
+        self.update_surface(slot, incarnation, words, false)
+    }
+    fn update_surface(
+        &mut self,
+        slot: usize,
+        incarnation: u64,
+        words: wire::Packet,
+        commit: bool,
+    ) -> Result<wire::Packet, u64> {
         let view = self.request(slot, incarnation, [wire::VIEW, 0, 0, 0, 0, 0, 0, 0]);
         if view[0] != 0 || view[1] != words[1] {
             return Err(abi::DENIED);
@@ -100,26 +117,32 @@ impl World {
         let surface = child.surfaces[rank].as_mut().unwrap();
         let upstream = surface.upstream;
         if words[0] == wire::ERASE && words[3..] == [0; 5] {
-            child.surfaces[rank] = None;
+            if commit {
+                child.surfaces[rank] = None;
+            }
             return Ok([wire::ERASE, self.parent.epoch, upstream, 0, 0, 0, 0, 0]);
         }
         let [op, _, _, x, y, w, h, color] = words;
-        if op != wire::PAINT
-            || color > 0xffffff
+        if !matches!(op, wire::PAINT | wire::SURFACE_IMAGE)
+            || (op == wire::PAINT && color > 0xffffff)
+            || (op == wire::SURFACE_IMAGE
+                && (color == 0 || w > color || color > wire::MAX_EXTENT || h > wire::MAX_EXTENT))
             || x.checked_add(w).is_none()
             || y.checked_add(h).is_none()
         {
             return Err(abi::DENIED);
         }
-        surface.draw = Some(words);
+        if commit {
+            surface.draw = Some(words);
+        }
         let placement = child.rect.unwrap();
         let w = w.min(view[2].saturating_sub(x));
         let h = h.min(view[3].saturating_sub(y));
         if w == 0 || h == 0 {
-            return Ok([wire::PAINT, self.parent.epoch, upstream, 0, 0, 0, 0, color]);
+            return Ok([op, self.parent.epoch, upstream, 0, 0, 0, 0, color]);
         }
         Ok([
-            wire::PAINT,
+            op,
             self.parent.epoch,
             upstream,
             placement.x + x,

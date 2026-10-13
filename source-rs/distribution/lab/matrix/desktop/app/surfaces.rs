@@ -15,7 +15,7 @@ impl Scene {
         let info = call(parent, [wire::SURFACE_INFO, 0, 0, 0, 0, 0, 0, 0]);
         assert_eq!(info[0], 0);
         assert_eq!(info[2], 0);
-        assert!((2..=wire::MAX_SURFACES as u64).contains(&info[1]));
+        assert!((3..=wire::MAX_SURFACES as u64).contains(&info[1]));
         let mut names = [0; wire::MAX_SURFACES];
         for rank in 0..info[1] {
             let reply = call(parent, [wire::SURFACE_CREATE, view[1], rank, 0, 0, 0, 0, 0]);
@@ -30,7 +30,7 @@ impl Scene {
             call(parent, [wire::PAINT, view[1], 0, 0, 0, 1, 1, 0]),
             wire::error(abi::BAD_HANDLE)
         );
-        for &name in &names[2..info[1] as usize] {
+        for &name in &names[3..info[1] as usize] {
             assert_eq!(
                 call(parent, [wire::ERASE, view[1], name, 0, 0, 0, 0, 0]),
                 [0; 8]
@@ -43,6 +43,7 @@ impl Scene {
         };
         scene.remove_accent(parent);
         scene.restore_accent(parent);
+        image::submit(parent, view[1], names[2]);
         scene
     }
     pub fn paint(&self, parent: Pair, view: wire::Packet, color: u64) {

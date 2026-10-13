@@ -70,6 +70,10 @@ The [visible matrix policy](lab/matrix/desktop/desktop.rs) uses that same platfo
 for local drawing, physical pointer input and focus through the existing
 compositor. See the [implementation map](../STATUS.md) for commands and limits.
 
+The [shared-memory lab](lab/shared-memory/README.md) forwards one sealed object
+through three processes on both CPUs. The matrix desktop uses the same ordinary
+IPC mechanism for retained bitmaps, with explicit child memory budgets.
+
 The [ordinary channel lab](lab/channels/README.md) remains the focused proof for
 runtime endpoint moves, startup environments and recursive launch-loan lifetime.
 Its [scenario](lab/channels/scenario.rs) descends into each of those mechanisms.

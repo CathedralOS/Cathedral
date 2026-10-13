@@ -20,7 +20,8 @@
         "target": "x86_64-unknown-none",
         "clock": true,
         "argument": 1129270608,
-        "framebuffer": true
+        "framebuffer": true,
+        "shared_pages": 4
       },
       {
         "package": "cathedral-input-service",
@@ -36,7 +37,9 @@
         "target": "x86_64-unknown-none",
         "clock": true,
         "argument": 0,
-        "ipc_channels": 12
+        "ipc_channels": 12,
+        "private_pages": 4,
+        "shared_pages": 8
       }
     ],
     "links": [],
