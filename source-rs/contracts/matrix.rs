@@ -101,4 +101,18 @@ pub const PRESENT_BEGIN: u64 = 9;
 pub const PRESENT_COMMIT: u64 = 10;
 pub const PRESENT_ABORT: u64 = 11;
 pub const PRESENT_LIMIT: usize = 4;
+
+/// Child-local storage binding: [INFO,0..] -> [0, binding revision,0..].
+/// Storage packets retain storage.rs's layout; opcode is
+/// (binding revision << STORAGE_SCOPE_BITS) | (STORAGE_BASE + storage opcode).
+/// No root selector crosses the child connection. A binding grants one whole root.
+pub const STORAGE_INFO: u64 = 12;
+pub const STORAGE_BASE: u64 = 256;
+pub const STORAGE_SCOPE_BITS: u32 = 16;
+/// Owner-only: [GRANT, child slot, available source slot, 0..], [REVOKE,child,0..].
+/// Sources are exclusive between siblings. Revoke aborts pending transactions.
+pub const STORAGE_GRANT: u64 = 113;
+pub const STORAGE_REVOKE: u64 = 114;
+/// Explicit root adapter mode: two supplied links to storage, no display adapter.
+pub const STORAGE_ROOT: u64 = 0x53544f52;
 pub const RUN_PAGES: u64 = 112; // owner: slot, private pages, reader pages; rest zero

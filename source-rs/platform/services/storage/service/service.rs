@@ -1,6 +1,10 @@
 // Open the catalog, bind accepted clients to roots, dispatch transactions and reply.
 use cathedral_contracts::{storage as wire, user as abi};
-use cathedral_user_runtime::{Error, server::Server, write};
+use cathedral_user_runtime::{
+    Error,
+    server::{Event, Server},
+    write,
+};
 pub fn run() -> Result<(), Error> {
     #[cfg(feature = "recovery-lab")]
     recovery::transport()?;
@@ -18,7 +22,14 @@ fn serve(store: &mut cathedral_object_store::Store<cathedral_ata_pio::Ata>) -> R
     let mut cut = 0;
     write(b"Cathedral: storage ready\n")?;
     loop {
-        let request = server.next_request()?;
+        let request = match server.next_event()? {
+            Event::Request(request) => request,
+            Event::Disconnected { client, .. } => {
+                clients[client] = Default::default();
+                continue;
+            }
+            Event::Memory(_, _) => unreachable!("memory attachments disabled"),
+        };
         let bytes = &request.bytes[..request.len];
         #[cfg(feature = "recovery-lab")]
         if request.control && recovery::request(bytes, &mut cut, &mut server, &request)? {

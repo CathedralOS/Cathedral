@@ -18,7 +18,11 @@ pub(super) fn dispatch(
                 flush(parent, world)?;
                 return Ok(());
             }
-            let response = owner::dispatch(parent, world, words);
+            let response = if matches!(words[0], wire::STORAGE_GRANT | wire::STORAGE_REVOKE) {
+                parent.storage_owner(server, words)?
+            } else {
+                owner::dispatch(parent, world, words)
+            };
             if response[0] == 0 && matches!(words[0], wire::PLACE | wire::REVOKE) {
                 flush(parent, world)?;
                 surfaces::replay(parent, world, words[1] as usize)?;
@@ -49,6 +53,13 @@ pub(super) fn dispatch(
             }
             _ => wire::error(abi::DENIED),
         },
+        Some(words)
+            if words[0] == wire::STORAGE_INFO
+                || (wire::STORAGE_BASE..wire::STORAGE_BASE + 256)
+                    .contains(&(words[0] & 0xffff)) =>
+        {
+            parent.storage_request(request.client.unwrap(), request.incarnation, words)?
+        }
         Some(words)
             if matches!(
                 words[0],

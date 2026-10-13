@@ -28,6 +28,17 @@ revoke/resize and fresh-binding cases. Replacement now stops only the inner
 matrix; the kernel reclaims its leaf. The parent reacquires the returned launch
 budget and admits a fresh subtree while the outside sibling process survives.
 
+## Storage integration
+
+The separate `--matrix-storage-test --release` profile starts at
+[storage/storage.rs](storage/storage.rs). It shares [fixture.rs](fixture.rs)'s
+matrix-owned process tree and the same service binary, adding two private catalog
+sources at the root. Tests cover recursive grants, sibling isolation, stale
+binding revisions, revocation during transactions, child replacement and durable
+data after restarting the tree/provider. No leaf has a disk or provider link.
+See [storage scopes](../../../platform/services/matrix/world/storage/README.md)
+for the bounded whole-root policy and protocol.
+
 ## Visible integration
 
 The [desktop policy](desktop/desktop.rs) supplies layout and initial appearance. The same

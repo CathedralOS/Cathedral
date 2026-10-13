@@ -8,34 +8,41 @@ pub(super) struct Update {
     pub value: u64,
     pub object: Option<Object>,
 }
-#[derive(Default)]
 pub(super) struct Presentation {
     revision: Option<u64>,
     last: u64,
     failed: Option<u64>,
     updates: [Option<Update>; cathedral_contracts::matrix::PRESENT_LIMIT],
 }
+impl Presentation {
+    pub const fn empty() -> Self {
+        Self {
+            revision: None,
+            last: 0,
+            failed: None,
+            updates: [const { None }; cathedral_contracts::matrix::PRESENT_LIMIT],
+        }
+    }
+}
 impl Compositor {
     pub(super) fn publish_or_stage(&mut self, update: Update) -> Result<(), u64> {
-        let batch = &mut self.presentation;
+        let batch = &mut *self.presentation;
         if batch.revision.is_some() {
             let result = (|| {
                 if let Some(status) = batch.failed {
                     return Err(status);
                 }
-                if batch
-                    .updates
-                    .iter()
-                    .flatten()
-                    .any(|u| u.index == update.index)
-                {
-                    return Err(abi::INVALID_ARGUMENT);
+                let mut empty = None;
+                for i in 0..batch.updates.len() {
+                    match &batch.updates[i] {
+                        Some(old) if old.index == update.index => {
+                            return Err(abi::INVALID_ARGUMENT);
+                        }
+                        None if empty.is_none() => empty = Some(i),
+                        _ => (),
+                    }
                 }
-                *batch
-                    .updates
-                    .iter_mut()
-                    .find(|u| u.is_none())
-                    .ok_or(abi::NO_MEMORY)? = Some(update);
+                batch.updates[empty.ok_or(abi::NO_MEMORY)?] = Some(update);
                 Ok(())
             })();
             if let Err(status) = result {
@@ -71,7 +78,7 @@ impl Compositor {
         if revision == 0 || [a, b, c, d] != [0; 4] {
             return Err(abi::INVALID_ARGUMENT);
         }
-        let batch = &mut self.presentation;
+        let batch = &mut *self.presentation;
         match op {
             wire::MATRIX_BEGIN => {
                 if batch.revision == Some(revision) {
@@ -88,7 +95,7 @@ impl Compositor {
             wire::MATRIX_ABORT if batch.revision == Some(revision) => {
                 *batch = Presentation {
                     last: batch.last,
-                    ..Default::default()
+                    ..Presentation::empty()
                 };
             }
             wire::MATRIX_COMMIT => {

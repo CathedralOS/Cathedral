@@ -49,6 +49,10 @@ impl Server {
     pub fn available(&self, index: usize) -> bool {
         index < self.count && self.links[index].is_none() && self.clients[index].is_none()
     }
+    /// Provider-local connection identity for explicit authority binding.
+    pub fn incarnation(&self, index: usize) -> Option<u64> {
+        self.clients.get(index).and_then(|p| *p).map(|p| p.0.raw())
+    }
     /// Install an explicitly supplied client pair; no registry or global lookup.
     /// Caller owns placement/state invalidation before replacing a client.
     pub fn install(&mut self, index: usize, pair: (Handle, Handle)) -> Result<(), Error> {

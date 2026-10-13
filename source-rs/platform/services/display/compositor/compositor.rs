@@ -10,7 +10,7 @@ use cathedral_user_runtime::{
     server::{Event, Server},
 };
 struct Compositor {
-    presentation: presentation::Presentation,
+    presentation: &'static mut presentation::Presentation,
     composition: Composition<'static>,
     output: Surface,
     source: u64,
@@ -26,6 +26,7 @@ pub fn run(environment: cathedral_user_runtime::task::Environment) -> u64 {
     static mut LABELS: Labels = Labels::empty();
     static mut TILES: cathedral_display_service::composition::scene::tiles::Tiles =
         cathedral_display_service::composition::scene::tiles::Tiles::empty();
+    static mut PRESENTATION: presentation::Presentation = presentation::Presentation::empty();
     let scratch_address = &raw mut SCRATCH;
     let clients_address = &raw mut CLIENTS;
     // SAFETY: This single-threaded process enters run exactly once. Neither static
@@ -37,7 +38,10 @@ pub fn run(environment: cathedral_user_runtime::task::Environment) -> u64 {
     let tiles_address = &raw mut TILES;
     // SAFETY: Single entry, disjoint retained storage, like the scene/label arrays.
     let tiles = unsafe { &mut *tiles_address };
-    let mut compositor = Compositor::open(clients, scratch, labels, tiles);
+    let presentation_address = &raw mut PRESENTATION;
+    // SAFETY: Single entry and exclusive process-owned storage, as for retained tiles.
+    let presentation = unsafe { &mut *presentation_address };
+    let mut compositor = Compositor::open(clients, scratch, labels, tiles, presentation);
     // The optional fifth connection has no scene/input authority; it exercises
     // denied requests and reply backpressure without adding an application slot.
     let mut server = Server::open_clients(5).unwrap();
@@ -89,10 +93,11 @@ impl Compositor {
         scratch: &'static mut Scene,
         labels: &'static mut Labels,
         tiles: &'static mut cathedral_display_service::composition::scene::tiles::Tiles,
+        presentation: &'static mut presentation::Presentation,
     ) -> Self {
         let output = Surface::open();
         Self {
-            presentation: Default::default(),
+            presentation,
             composition: Composition::new(
                 output.width,
                 output.height,

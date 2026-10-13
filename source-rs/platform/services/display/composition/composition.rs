@@ -28,7 +28,7 @@ impl<'a> Composition<'a> {
             labels,
             background: 0,
             pointers: Router::new(width, height),
-            focus: Focus::default(),
+            focus: Focus::empty(),
             tree: Tree::default(),
             tiles,
         }

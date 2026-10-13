@@ -9,12 +9,22 @@ struct Grant {
     mask: u64,
     delegate: bool,
 }
-#[derive(Clone, Copy, Default)]
+#[derive(Clone, Copy)]
 struct Queue {
     events: [[u64; 6]; 8],
     len: usize,
 }
-#[derive(Default)]
+// Constant array initialization avoids eight nested debug Default calls; the
+// unoptimized compositor must fit its guarded stack and bounded loaded image.
+#[allow(clippy::derivable_impls)]
+impl Default for Queue {
+    fn default() -> Self {
+        Self {
+            events: [[0; 6]; 8],
+            len: 0,
+        }
+    }
+}
 pub struct Focus {
     grants: [Option<Grant>; 3],
     queues: [Queue; 3],
@@ -23,7 +33,25 @@ pub struct Focus {
     held: u64,
     suppressed: u64,
 }
+impl Default for Focus {
+    fn default() -> Self {
+        Self::empty()
+    }
+}
 impl Focus {
+    pub const fn empty() -> Self {
+        Self {
+            grants: [None; 3],
+            queues: [Queue {
+                events: [[0; 6]; 8],
+                len: 0,
+            }; 3],
+            active: None,
+            epoch: 0,
+            held: 0,
+            suppressed: 0,
+        }
+    }
     fn mint(
         &mut self,
         client: usize,

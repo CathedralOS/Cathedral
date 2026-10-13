@@ -11,6 +11,12 @@ mechanism-to-test coverage, restrictions and next kernel boundaries.
 The [ARM64 portability proof](kernel/arch/isa/aarch64/README.md) exercises the shared
 core on a second CPU architecture; the integrated desktop remains x86-64.
 
+Recent integrated proofs: `python tools/boot-harness-rs/run.py --matrix-desktop-test --release`
+checks recursive atomic presentation; `--matrix-storage-test --release` checks
+[private catalog delegation](platform/services/matrix/world/storage/README.md).
+The smoke suite covers [combined IPC/IRQ/deadline waits](kernel/core/user_tasks/devices/README.md).
+Run these commands from the repository root.
+
 ## Start reading
 
 Follow [boot main](kernel/boot/uefi/main.rs) for machine startup,

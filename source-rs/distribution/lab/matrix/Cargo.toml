@@ -12,6 +12,7 @@ test = false
 bench = false
 
 [features]
+storage-lab = []
 trace-input = []
 desktop = []
 

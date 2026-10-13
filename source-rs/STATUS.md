@@ -4,7 +4,7 @@ This map connects implemented mechanisms to their integrated consumers, proofs
 and remaining restrictions. The [lab guide](README.md) owns detailed ABI/build
 instructions. [Owner questions](../OWNER_QUESTIONS.md) own unresolved semantics.
 
-## Userspace register and interrupt grants
+## Atomic matrix presentation
 
 The recursive matrix desktop also has bounded atomic presentation transactions:
 four distinct retained surfaces, staged sealed readers, all-or-nothing publication
@@ -13,6 +13,24 @@ release desktop fixture under CPU pressure verify rejection, old pixels before
 commit, bitmap forwarding, input and subtree recovery. See the
 [matrix charter](platform/services/matrix/CHARTER.md) for the transaction path and
 limits, including non-transactional owner placement and no vblank guarantee.
+
+Debug integration also checks the fixed userspace stack/image bounds. Persistent
+matrix batches and compositor staging live in process data storage; constant
+input-queue initialization avoids large nested debug constructor temporaries.
+The debug desktop and matrix-storage fixtures pass without enlarging kernel limits.
+
+## Recursive storage delegation
+
+[Matrix storage scopes](platform/services/matrix/world/storage/README.md) delegate
+whole private catalog roots through the ordinary matrix executable. Every hop
+checks connection identity and a local binding revision; siblings have separate
+root data and generations. Revocation/death aborts staging and regranting an
+ancestor does not restore descendants automatically. The headless
+`--matrix-storage-test --release` fixture checks these boundaries and committed
+data after restarting the matrix tree and storage provider. Dynamic namespaces,
+read-only rights and integration into the visible desktop remain future work.
+
+## Userspace register and interrupt grants
 
 The [device boundary](kernel/core/user_tasks/devices/README.md) now supplies
 caller-local byte-register capabilities, masked IRQ notifications and revocation

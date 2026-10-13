@@ -41,7 +41,7 @@ impl Router {
                 y: 40.min(height - 1),
                 ..Pointer::default()
             }; 2],
-            queues: Default::default(),
+            queues: [const { Queue::empty() }; 3],
             lease: None,
             epoch: 0,
         }

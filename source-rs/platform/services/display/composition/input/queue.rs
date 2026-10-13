@@ -1,12 +1,28 @@
 //! Bounded pointer events: collapse adjacent motion while preserving transitions.
 use cathedral_contracts::pointer::{self as wire, Event};
 
-#[derive(Default)]
 pub(super) struct Queue {
     pub(super) events: [Event; 8],
     pub(super) len: usize,
 }
+impl Default for Queue {
+    fn default() -> Self {
+        Self::empty()
+    }
+}
 impl Queue {
+    pub(super) const fn empty() -> Self {
+        Self {
+            events: [Event {
+                pointer: 0,
+                kind: 0,
+                x: 0,
+                y: 0,
+                buttons: 0,
+            }; 8],
+            len: 0,
+        }
+    }
     pub(super) fn push(&mut self, event: Event) -> bool {
         // Motion may collapse; button transitions never silently disappear.
         if self.len > 0 && event.kind == wire::MOTION {

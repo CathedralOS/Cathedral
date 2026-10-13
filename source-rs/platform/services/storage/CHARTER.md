@@ -15,6 +15,12 @@ an existing disk changes ownership and is unsupported. This static lab binding
 is not a production identity, realm-admission or authority-transfer protocol.
 Both clients may use object numbers 1 through 4 without seeing each other's data.
 
+The separate [matrix storage fixture](../matrix/world/storage/README.md) binds both
+links to the root matrix. It delegates each whole catalog through child-local
+connections with per-hop binding revisions. Descendant revocation aborts staging;
+provider disconnect events also release transaction state before reuse. The
+durable format and root-local protocol are unchanged.
+
 Requests are 64 bytes: four little-endian u64s `(operation, object, expected
 root revision, payload length)`, then 32 payload bytes. Unused bytes must be zero.
 The shared constants and record encoding live in `contracts/storage.rs`.
@@ -37,8 +43,8 @@ changes until ABORT, COMMIT or connection replacement. COMMIT consumes staging
 even on conflict or validation failure; no partial transaction is published.
 
 The runtime serves control and data channels in round-robin order. Idle polling
-uses the existing wait-two syscall with at most one tick before checking the
-third channel. A full data reply queue loses that reply without blocking other
+uses a bounded IPC wait set and periodic checks for new boot-link connections.
+A full data reply queue loses that reply without blocking other
 clients. Synchronous clients keep one outstanding request; after uncertain
 completion they must regain a usable connection and read/reconcile revisions
 before retrying a mutation. There is no request-ID deduplication cache.

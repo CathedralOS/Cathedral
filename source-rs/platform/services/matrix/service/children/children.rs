@@ -119,6 +119,7 @@ impl Children {
         world: &mut World,
         parent: &mut Parent,
     ) -> Result<(), Error> {
+        parent.storage_close(slot)?;
         if self.pending.is_some_and(|(_, pending, _)| pending == slot) {
             parent.batches[slot] = Default::default();
             world.disconnected(slot);
@@ -139,6 +140,7 @@ impl Children {
         world: &mut World,
         parent: &mut Parent,
     ) -> Result<(), Error> {
+        parent.storage_close(slot)?;
         let child = self.slots[slot]
             .take()
             .ok_or(Error(abi::PEER_CLOSED as i64))?;

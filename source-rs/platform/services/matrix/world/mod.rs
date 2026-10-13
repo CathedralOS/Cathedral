@@ -3,6 +3,7 @@
 mod children;
 mod input;
 pub mod presentation;
+pub mod storage;
 mod surface;
 #[cfg(test)]
 mod tests;

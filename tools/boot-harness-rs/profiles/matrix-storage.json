@@ -1,0 +1,72 @@
+{
+  "name": "Cathedral recursive matrix storage delegation",
+  "target": "x86_64-unknown-uefi",
+  "boot_package": "cathedral-boot-uefi",
+  "startup": {
+    "initial": {
+      "package": "cathedral-matrix-lab",
+      "entry": "distribution/lab/matrix/main.rs",
+      "target": "x86_64-unknown-none",
+      "clock": true,
+      "argument": 0,
+      "features": [
+        "storage-lab"
+      ]
+    },
+    "launches": [
+      {
+        "package": "cathedral-matrix-service",
+        "entry": "platform/services/matrix/main.rs",
+        "target": "x86_64-unknown-none",
+        "clock": true,
+        "argument": 1398034258,
+        "ipc_channels": 6
+      },
+      {
+        "package": "cathedral-matrix-service",
+        "entry": "platform/services/matrix/main.rs",
+        "target": "x86_64-unknown-none",
+        "clock": true,
+        "argument": 1,
+        "ipc_channels": 6
+      },
+      {
+        "package": "cathedral-matrix-lab",
+        "entry": "distribution/lab/matrix/main.rs",
+        "target": "x86_64-unknown-none",
+        "clock": true,
+        "argument": 1,
+        "features": [
+          "storage-lab"
+        ]
+      },
+      {
+        "package": "cathedral-matrix-lab",
+        "entry": "distribution/lab/matrix/main.rs",
+        "target": "x86_64-unknown-none",
+        "clock": true,
+        "argument": 1,
+        "features": [
+          "storage-lab"
+        ]
+      },
+      {
+        "package": "cathedral-storage-service",
+        "entry": "platform/services/storage/main.rs",
+        "target": "x86_64-unknown-none",
+        "clock": true,
+        "disk": true
+      }
+    ],
+    "links": [
+      [
+        1,
+        5
+      ],
+      [
+        1,
+        5
+      ]
+    ]
+  }
+}

@@ -3,5 +3,6 @@
 mod images;
 mod presentation;
 mod rendering;
+mod storage;
 
 include!("parent.rs");

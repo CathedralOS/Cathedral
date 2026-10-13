@@ -3,6 +3,9 @@
 use super::*;
 use cathedral_user_runtime::{ipc::Handle, task::Environment, time};
 pub(super) struct Parent {
+    scopes: cathedral_matrix_service::world::storage::Scopes,
+    storage_links: [Option<cathedral_user_runtime::storage::Client>; 2],
+    storage_epoch: u64,
     pub batches: [cathedral_matrix_service::world::presentation::Batch<
         Option<cathedral_user_runtime::memory::Object>,
     >; 2],
@@ -25,30 +28,50 @@ impl Parent {
         }
         Ok(())
     }
-    pub fn new(environment: &Environment) -> Result<Self, Error> {
-        if !matches!(environment.len(), 0 | 2 | 3 | 4) {
-            return Err(Error(abi::DENIED as i64));
-        }
-        Ok(Self {
-            batches: core::array::from_fn(|_| Default::default()),
+    pub const fn empty() -> Self {
+        Self {
+            scopes: cathedral_matrix_service::world::storage::Scopes::empty(),
+            storage_links: [None, None],
+            storage_epoch: 0,
+            batches: [const { cathedral_matrix_service::world::presentation::Batch::empty() }; 2],
             next_revision: 0,
             images: [const { None }; wire::MAX_SURFACES],
-            upstream: matches!(environment.len(), 2 | 3),
-            pair: matches!(environment.len(), 2 | 3).then(|| {
-                (
-                    environment.endpoint(0).unwrap(),
-                    environment.endpoint(1).unwrap(),
-                )
-            }),
-            display: (environment.len() == 4).then(|| {
-                (
-                    environment.endpoint(0).unwrap(),
-                    environment.endpoint(1).unwrap(),
-                )
-            }),
-            grant: Grant::default(),
-            wake: (environment.len() == 3).then(|| environment.endpoint(2).unwrap()),
-        })
+            upstream: false,
+            pair: None,
+            grant: Grant {
+                epoch: 0,
+                width: 0,
+                height: 0,
+                keys: 0,
+            },
+            display: None,
+            wake: None,
+        }
+    }
+    pub fn initialize(
+        &mut self,
+        environment: &Environment,
+        storage_root: bool,
+    ) -> Result<(), Error> {
+        if (storage_root && !environment.is_empty()) || !matches!(environment.len(), 0 | 2 | 3 | 4)
+        {
+            return Err(Error(abi::DENIED as i64));
+        }
+        if storage_root {
+            self.storage_links[0] = Some(cathedral_user_runtime::storage::Client::at(0)?);
+            self.storage_links[1] = Some(cathedral_user_runtime::storage::Client::at(1)?);
+        }
+        self.upstream = matches!(environment.len(), 2 | 3);
+        let pair = || {
+            (
+                environment.endpoint(0).unwrap(),
+                environment.endpoint(1).unwrap(),
+            )
+        };
+        self.pair = self.upstream.then(pair);
+        self.display = (environment.len() == 4).then(pair);
+        self.wake = (environment.len() == 3).then(|| environment.endpoint(2).unwrap());
+        Ok(())
     }
     pub fn refresh(&mut self, world: &mut World) -> Result<(), Error> {
         if !self.upstream {

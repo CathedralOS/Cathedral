@@ -4,6 +4,14 @@ Run `python tools/boot-harness-rs/run.py --smoke` from the repository root.
 This builds the separate `source-rs/` Cargo workspace and exercises its UEFI
 handoff under QEMU/OVMF. Host-side Python only; no extra Python packages.
 
+`python tools/boot-harness-rs/run.py --matrix-storage-test --release` selects
+[profiles/matrix-storage.json](profiles/matrix-storage.json) and checks private
+catalog delegation through two matrix levels, stale binding rejection, revocation
+and tree/provider replacement. The proof uses a reset private disk at
+`build/boot-harness-rs/matrix-storage-test/test-storage.raw`; it never touches the
+ordinary interactive disk. The guest starts at
+[storage/storage.rs](../../source-rs/distribution/lab/matrix/storage/storage.rs).
+
 `source-rs/distribution/profile.json` selects the boot package, target and named user ELF programs. The
 Cargo workspace keeps kernel implementation under `kernel/` and the UART under
 `platform/drivers/`; replacing the distribution does not require moving those.

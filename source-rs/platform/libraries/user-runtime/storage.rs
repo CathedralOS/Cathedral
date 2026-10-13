@@ -8,6 +8,9 @@ pub struct Client {
     pair: Option<(Handle, Handle)>,
 }
 impl Client {
+    pub fn connected(&self) -> bool {
+        self.pair.is_some()
+    }
     pub fn at(index: u64) -> Result<Self, Error> {
         Ok(Self {
             link: Link::at(index)?,

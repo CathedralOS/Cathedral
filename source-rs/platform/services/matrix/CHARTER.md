@@ -45,6 +45,12 @@ retires the service so a late reply cannot be mistaken for another operation.
 
 ## Limits of this milestone
 
+[Storage delegation](world/storage/README.md) passes whole private catalog roots
+through the same matrix chain, independently of display grants. Owner assignment
+is exclusive between siblings; every request checks a local binding revision.
+Revocation/death aborts staged work; replacement requires fresh grants. This
+currently has a separate headless integration fixture.
+
 Presentation follows [the bounded batch policy](world/presentation/presentation.rs),
 [authenticated requests](service/requests/presentation.rs), then
 [upstream publication](service/parent/presentation.rs). `PRESENT_BEGIN` stages up
@@ -70,7 +76,7 @@ maintenance wake to discover legacy links. This is not a latency guarantee.
 The visible matrix desktop now uses this provider for lifecycle, primitive surface
 clipping, pointer routing and focus. Root adapters connect the existing compositor
 and physical decoder. Rendering retains independently named rectangles and sealed
-bitmaps in bounded stacking ranges. Rich scenes, storage namespaces,
+bitmaps in bounded stacking ranges. Rich scenes, desktop storage,
 audio and trusted-path UI remain unintegrated. Local primitives are retained and
 replayed through changed placement without requiring an app repaint; revoke and
 connection replacement clear retained state. The earlier

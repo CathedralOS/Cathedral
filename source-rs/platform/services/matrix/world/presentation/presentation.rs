@@ -12,6 +12,11 @@ pub struct Batch<T> {
 }
 impl<T> Default for Batch<T> {
     fn default() -> Self {
+        Self::empty()
+    }
+}
+impl<T> Batch<T> {
+    pub const fn empty() -> Self {
         Self {
             incarnation: 0,
             epoch: 0,
@@ -21,8 +26,6 @@ impl<T> Default for Batch<T> {
             entries: [const { None }; wire::PRESENT_LIMIT],
         }
     }
-}
-impl<T> Batch<T> {
     pub fn active(&self) -> bool {
         self.revision.is_some()
     }
