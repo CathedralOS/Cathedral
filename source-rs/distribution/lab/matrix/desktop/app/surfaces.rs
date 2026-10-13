@@ -5,6 +5,7 @@ pub(super) struct Scene {
     pub epoch: u64,
     base: u64,
     accent: Option<u64>,
+    revision: u64,
 }
 impl Scene {
     pub fn new(parent: Pair, view: wire::Packet) -> Self {
@@ -40,13 +41,15 @@ impl Scene {
             epoch: view[1],
             base: names[0],
             accent: Some(names[1]),
+            revision: 2,
         };
         scene.remove_accent(parent);
         scene.restore_accent(parent);
         image::submit(parent, view[1], names[2]);
         scene
     }
-    pub fn paint(&self, parent: Pair, view: wire::Packet, color: u64) {
+    pub fn paint(&mut self, parent: Pair, view: wire::Packet, color: u64) {
+        self.begin(parent);
         assert_eq!(
             call(
                 parent,
@@ -64,6 +67,118 @@ impl Scene {
             [0; 8]
         );
         self.paint_accent(parent);
+        self.commit(parent);
+    }
+    fn begin(&mut self, parent: Pair) {
+        self.revision += 1;
+        assert_eq!(
+            call(
+                parent,
+                [
+                    wire::PRESENT_BEGIN,
+                    self.epoch,
+                    self.revision,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0
+                ]
+            ),
+            [0; 8]
+        );
+    }
+    pub fn commit(&self, parent: Pair) {
+        for _ in 0..2 {
+            assert_eq!(
+                call(
+                    parent,
+                    [
+                        wire::PRESENT_COMMIT,
+                        self.epoch,
+                        self.revision,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0
+                    ]
+                ),
+                [0; 8]
+            );
+        }
+    }
+    pub fn staged_probe(&mut self, parent: Pair) {
+        self.begin(parent);
+        assert_eq!(
+            call(
+                parent,
+                [wire::PAINT, self.epoch, self.base, 0, 0, 200, 130, 0x884422]
+            ),
+            [0; 8]
+        );
+        assert_eq!(
+            call(
+                parent,
+                [
+                    wire::PAINT,
+                    self.epoch,
+                    self.accent.unwrap(),
+                    30,
+                    40,
+                    40,
+                    18,
+                    0x224488
+                ]
+            ),
+            [0; 8]
+        );
+    }
+    pub fn rejected_probe(&mut self, parent: Pair) {
+        self.begin(parent);
+        assert_eq!(
+            call(
+                parent,
+                [wire::PAINT, self.epoch, self.base, 0, 0, 200, 130, 0]
+            ),
+            [0; 8]
+        );
+        assert_eq!(
+            call(parent, [wire::ERASE, self.epoch, 0, 0, 0, 0, 0, 0]),
+            wire::error(abi::BAD_HANDLE)
+        );
+        assert_eq!(
+            call(
+                parent,
+                [
+                    wire::PRESENT_COMMIT,
+                    self.epoch,
+                    self.revision,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0
+                ]
+            ),
+            wire::error(abi::BAD_HANDLE)
+        );
+        assert_eq!(
+            call(
+                parent,
+                [
+                    wire::PRESENT_ABORT,
+                    self.epoch,
+                    self.revision,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0
+                ]
+            ),
+            [0; 8]
+        );
     }
     fn paint_accent(&self, parent: Pair) {
         if let Some(name) = self.accent {

@@ -7,6 +7,12 @@ pub(super) fn dispatch(
     words: wire::Packet,
 ) -> Result<wire::Packet, Error> {
     let slot = request.client.unwrap();
+    parent.prune_batches(world);
+    let batch = &mut parent.batches[slot];
+    if words[0] == wire::SURFACE_IMAGE || (batch.active() && words[0] == wire::SURFACE_CREATE) {
+        batch.poison(abi::DENIED);
+        return Ok(wire::error(abi::DENIED));
+    }
     if words[0] == wire::SURFACE_CREATE {
         if words[3..] != [0; 5] {
             return Ok(wire::error(abi::DENIED));
@@ -24,8 +30,15 @@ pub(super) fn dispatch(
     }
     let prepared = match world.preview_surface(slot, request.incarnation, words) {
         Ok(prepared) => prepared,
-        Err(status) => return Ok(wire::error(status)),
+        Err(status) => {
+            batch.poison(status);
+            return Ok(wire::error(status));
+        }
     };
+    if batch.active() {
+        let result = batch.stage(words, None);
+        return Ok(wire::error(result.err().unwrap_or(0)));
+    }
     let response = parent.surface(prepared)?;
     if response[0] == 0 {
         world
@@ -35,6 +48,7 @@ pub(super) fn dispatch(
     Ok(response)
 }
 pub(in super::super) fn flush(parent: &mut Parent, world: &mut World) -> Result<(), Error> {
+    parent.prune_batches(world);
     while let Some(words) = world.take_retired_surface() {
         let response = parent.surface(words)?;
         // Parent rebind/revoke can already have retired the upstream object.

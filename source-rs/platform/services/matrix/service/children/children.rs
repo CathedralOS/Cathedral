@@ -120,12 +120,14 @@ impl Children {
         parent: &mut Parent,
     ) -> Result<(), Error> {
         if self.pending.is_some_and(|(_, pending, _)| pending == slot) {
+            parent.batches[slot] = Default::default();
             world.disconnected(slot);
             return Ok(());
         }
         if self.slots[slot].is_some() {
             self.stop(slot, server, world, parent)?;
         } else {
+            parent.batches[slot] = Default::default();
             world.disconnected(slot);
         }
         Ok(())

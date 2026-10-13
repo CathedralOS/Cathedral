@@ -49,7 +49,20 @@ pub(super) fn dispatch(
             }
             _ => wire::error(abi::DENIED),
         },
-        Some(words) if matches!(words[0], wire::SURFACE_CREATE | wire::PAINT | wire::ERASE) => {
+        Some(words)
+            if matches!(
+                words[0],
+                wire::PRESENT_BEGIN | wire::PRESENT_COMMIT | wire::PRESENT_ABORT
+            ) =>
+        {
+            presentation::dispatch(parent, world, &request, words)?
+        }
+        Some(words)
+            if matches!(
+                words[0],
+                wire::SURFACE_CREATE | wire::PAINT | wire::ERASE | wire::SURFACE_IMAGE
+            ) =>
+        {
             surfaces::dispatch(parent, world, &request, words)?
         }
         Some(words) => world.request(request.client.unwrap(), request.incarnation, words),

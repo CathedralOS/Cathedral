@@ -33,6 +33,11 @@ pub struct World {
     suppressed: u64,
 }
 impl World {
+    pub fn binding_matches(&self, slot: usize, incarnation: u64, epoch: u64) -> bool {
+        self.children.get(slot).is_some_and(|c| {
+            c.incarnation == incarnation && c.grant.valid() && c.grant.epoch == epoch
+        })
+    }
     /// Retained process state can be installed without a large stack temporary.
     pub const fn empty() -> Self {
         Self {

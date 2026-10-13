@@ -10,6 +10,7 @@ use cathedral_user_runtime::{
     server::{Event, Server},
 };
 struct Compositor {
+    presentation: presentation::Presentation,
     composition: Composition<'static>,
     output: Surface,
     source: u64,
@@ -91,6 +92,7 @@ impl Compositor {
     ) -> Self {
         let output = Surface::open();
         Self {
+            presentation: Default::default(),
             composition: Composition::new(
                 output.width,
                 output.height,

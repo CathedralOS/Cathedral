@@ -20,7 +20,26 @@ pub(super) fn submit(parent: Pair, epoch: u64, surface: u64) {
     let mut object = pixels.freeze().unwrap();
     object.unmap().unwrap();
     let image = [wire::SURFACE_IMAGE, epoch, surface, 180, 110, 32, 32, 32];
+    // Aborted staging must release its reader. Then forward the same sealed
+    // backing through a complete recursive transaction without copying pixels.
+    assert_eq!(
+        call(parent, [wire::PRESENT_BEGIN, epoch, 1, 0, 0, 0, 0, 0]),
+        [0; 8]
+    );
     assert_eq!(send(parent, image, &object), [0; 8]);
+    assert_eq!(
+        call(parent, [wire::PRESENT_ABORT, epoch, 1, 0, 0, 0, 0, 0]),
+        [0; 8]
+    );
+    assert_eq!(
+        call(parent, [wire::PRESENT_BEGIN, epoch, 2, 0, 0, 0, 0, 0]),
+        [0; 8]
+    );
+    assert_eq!(send(parent, image, &object), [0; 8]);
+    assert_eq!(
+        call(parent, [wire::PRESENT_COMMIT, epoch, 2, 0, 0, 0, 0, 0]),
+        [0; 8]
+    );
     assert_eq!(call(parent, image), wire::error(abi::DENIED));
     // Rejected replacement cannot disturb retained geometry or the existing image.
     let mut invalid = image;

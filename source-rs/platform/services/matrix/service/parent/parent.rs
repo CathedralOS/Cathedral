@@ -3,6 +3,10 @@
 use super::*;
 use cathedral_user_runtime::{ipc::Handle, task::Environment, time};
 pub(super) struct Parent {
+    pub batches: [cathedral_matrix_service::world::presentation::Batch<
+        Option<cathedral_user_runtime::memory::Object>,
+    >; 2],
+    next_revision: u64,
     pub upstream: bool,
     images: [Option<(u64, cathedral_user_runtime::memory::Object)>; wire::MAX_SURFACES],
     pair: Option<(Handle, Handle)>,
@@ -26,6 +30,8 @@ impl Parent {
             return Err(Error(abi::DENIED as i64));
         }
         Ok(Self {
+            batches: core::array::from_fn(|_| Default::default()),
+            next_revision: 0,
             images: [const { None }; wire::MAX_SURFACES],
             upstream: matches!(environment.len(), 2 | 3),
             pair: matches!(environment.len(), 2 | 3).then(|| {

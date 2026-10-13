@@ -5,6 +5,8 @@ import pointer_test
 
 
 def verify(stream, output, serial, pressure=False):
+    if "atomic presentation, rejection and commit retry passed" not in serial:
+        raise RuntimeError("Missing recursive atomic presentation proof")
     if "subtree replacement cleared pixels and preserved sibling" not in serial:
         raise RuntimeError("Missing matrix-owned subtree recovery evidence")
     if "retained move without app repaint" not in serial:

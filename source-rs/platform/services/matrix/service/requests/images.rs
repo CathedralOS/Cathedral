@@ -9,6 +9,7 @@ pub(in super::super) fn image(
     world: &mut World,
     server: &mut Server,
 ) -> Result<(), Error> {
+    parent.prune_batches(world);
     let response = (|| {
         let words = wire::decode(&request.bytes[..request.len]).ok_or(abi::INVALID_ARGUMENT)?;
         if request.control
@@ -27,6 +28,10 @@ pub(in super::super) fn image(
         }
         let slot = request.client.unwrap();
         let prepared = world.preview_surface(slot, request.incarnation, words)?;
+        if parent.batches[slot].active() {
+            parent.batches[slot].stage(words, Some(object))?;
+            return Ok([0; 8]);
+        }
         let reply = parent.image(prepared, object).map_err(|e| e.0 as u64)?;
         if reply[0] == 0 {
             world
@@ -36,5 +41,11 @@ pub(in super::super) fn image(
         Ok(reply)
     })()
     .unwrap_or_else(wire::error);
+    if response[0] != 0
+        && !request.control
+        && let Some(slot @ 0..=1) = request.client
+    {
+        parent.batches[slot].poison(response[0]);
+    }
     server.reply(&request, &wire::encode(response))
 }

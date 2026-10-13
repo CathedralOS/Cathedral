@@ -46,7 +46,29 @@ pub(super) fn exercise(matrix: Pair) {
     bitmap(matrix);
     cathedral_user_runtime::write(b"Cathedral matrix desktop: sealed bitmap forwarding, clipping, replay and subtree reclamation passed\n").unwrap();
     surfaces(matrix);
+    presentation(matrix);
     cathedral_user_runtime::write(b"Cathedral matrix desktop: quiet apps below 20ms CPU per second; retained move without app repaint\n").unwrap();
+}
+
+fn presentation(matrix: Pair) {
+    let app = |op| wire::route(wire::route([op, 0, 0, 0, 0, 0, 0, 0], 0).unwrap(), 0).unwrap();
+    assert_eq!(call(matrix, app(3))[0], 0);
+    pixel(matrix, 140, 190, app::LEFT);
+    pixel(matrix, 170, 225, 0xe5e7eb);
+    assert_eq!(call(matrix, app(4))[0], 0);
+    pixel(matrix, 140, 190, 0x884422);
+    pixel(matrix, 170, 225, 0x224488);
+    assert_eq!(call(matrix, app(5))[0], 0);
+    pixel(matrix, 140, 190, 0x884422);
+    pixel(matrix, 170, 225, 0x224488);
+    pixel(matrix, 510, 190, app::RIGHT);
+    assert_eq!(call(matrix, app(6))[0], 0);
+    pixel(matrix, 140, 190, app::LEFT);
+    pixel(matrix, 170, 225, 0xe5e7eb);
+    cathedral_user_runtime::write(
+        b"Cathedral matrix desktop: atomic presentation, rejection and commit retry passed\n",
+    )
+    .unwrap();
 }
 
 fn surfaces(matrix: Pair) {

@@ -62,6 +62,10 @@ pub fn encode(nodes: &[Node], pixels: &[u32; IMAGE_PIXELS]) -> Option<[u8; SNAPS
 
 /// Root control only: tile index in high bits; x,y,w,h,stride plus sealed pixel attachment.
 pub const MATRIX_IMAGE: u64 = 23;
+/// Root control transaction: [op, nonzero revision, 0,0,0,0].
+pub const MATRIX_BEGIN: u64 = 24;
+pub const MATRIX_COMMIT: u64 = 25;
+pub const MATRIX_ABORT: u64 = 26;
 
 /// Packed RGBX pixels, bounded to 4096 per dimension, preserving source stride.
 pub fn valid_image(width: u64, height: u64, stride: u64, bytes: usize) -> bool {

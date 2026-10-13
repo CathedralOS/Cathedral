@@ -25,7 +25,7 @@ impl Parent {
         }
         Ok(reply)
     }
-    fn rectangle(&self, words: wire::Packet) -> Result<wire::Packet, Error> {
+    pub(super) fn rectangle(&self, words: wire::Packet) -> Result<wire::Packet, Error> {
         if self.upstream {
             return self.call(words);
         }
@@ -74,7 +74,7 @@ impl Parent {
         let reply = self.display_call([composition::PIXEL, x, y, 0, 0, 0])?;
         Ok([reply[0], reply[1], 0, 0, 0, 0, 0, 0])
     }
-    fn display_call(&self, words: [u64; 6]) -> Result<[u64; 6], Error> {
+    pub(super) fn display_call(&self, words: [u64; 6]) -> Result<[u64; 6], Error> {
         let (send, recv) = self.display.unwrap();
         send.send(&display::encode(words))?;
         let mut bytes = [0; 64];

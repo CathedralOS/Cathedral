@@ -4,6 +4,11 @@ use cathedral_user_runtime::{link::Link, memory::Shared, server::Request};
 impl Compositor {
     pub(super) fn request(&mut self, request: &Request) -> [u64; 6] {
         let result = self.dispatch(request);
+        if request.control
+            && let Err(status) = result
+        {
+            self.poison_presentation(status);
+        }
         result.unwrap_or_else(|status| [status, 0, 0, 0, 0, 0])
     }
     fn dispatch(&mut self, request: &Request) -> Result<[u64; 6], u64> {
@@ -20,6 +25,15 @@ impl Compositor {
             return Ok([0; 6]);
         }
         let words = display::decode(&request.bytes[..request.len]).ok_or(abi::INVALID_ARGUMENT)?;
+        if matches!(
+            words[0],
+            wire::MATRIX_BEGIN | wire::MATRIX_COMMIT | wire::MATRIX_ABORT
+        ) {
+            if !request.control {
+                return Err(abi::DENIED);
+            }
+            return self.presentation_request(words);
+        }
         if matches!(words[0] & 0xffff, wire::MATRIX_RECT | wire::MATRIX_POINTER) {
             if !request.control {
                 return Err(abi::DENIED);

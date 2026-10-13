@@ -29,12 +29,12 @@ impl Compositor {
             } else {
                 return Err(abi::INVALID_ARGUMENT);
             };
-            self.images[(op >> 16) as usize] = None;
-            let damage = self
-                .composition
-                .tiles
-                .set((op >> 16) as usize, rect, color as u32);
-            self.redraw(damage);
+            self.publish_or_stage(presentation::Update {
+                index: (op >> 16) as usize,
+                rect,
+                value: color,
+                object: None,
+            })?;
         } else {
             return Err(abi::DENIED);
         }
@@ -44,6 +44,19 @@ impl Compositor {
 
 impl Compositor {
     pub(super) fn matrix_image(
+        &mut self,
+        request: &cathedral_user_runtime::server::Request,
+        object: cathedral_user_runtime::memory::Object,
+    ) -> Result<[u64; 6], u64> {
+        let result = self.prepare_image(request, object);
+        if request.control
+            && let Err(status) = result
+        {
+            self.poison_presentation(status);
+        }
+        result
+    }
+    fn prepare_image(
         &mut self,
         request: &cathedral_user_runtime::server::Request,
         mut object: cathedral_user_runtime::memory::Object,
@@ -68,9 +81,12 @@ impl Compositor {
         };
         object.map().map_err(|e| e.0 as u64)?;
         let index = (op >> 16) as usize;
-        let damage = self.composition.tiles.image(index, rect, stride);
-        self.images[index] = Some(object);
-        self.redraw(damage);
+        self.publish_or_stage(presentation::Update {
+            index,
+            rect,
+            value: stride,
+            object: Some(object),
+        })?;
         Ok([0; 6])
     }
 }

@@ -6,6 +6,14 @@ instructions. [Owner questions](../OWNER_QUESTIONS.md) own unresolved semantics.
 
 ## Userspace register and interrupt grants
 
+The recursive matrix desktop also has bounded atomic presentation transactions:
+four distinct retained surfaces, staged sealed readers, all-or-nothing publication
+and latest-commit retry scoped to connection/view. Host policy tests and the
+release desktop fixture under CPU pressure verify rejection, old pixels before
+commit, bitmap forwarding, input and subtree recovery. See the
+[matrix charter](platform/services/matrix/CHARTER.md) for the transaction path and
+limits, including non-transactional owner placement and no vblank guarantee.
+
 The [device boundary](kernel/core/user_tasks/devices/README.md) now supplies
 caller-local byte-register capabilities, masked IRQ notifications and revocation
 on release, exit, fault or cancellation. A userspace UART driver on COM2/IRQ3

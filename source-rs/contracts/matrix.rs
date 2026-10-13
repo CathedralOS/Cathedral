@@ -92,4 +92,13 @@ pub const SURFACE_BITS: u32 = 32;
 /// Same surface geometry as PAINT; word seven is pixel stride, plus one sealed attachment.
 /// RGBX little-endian u32 pixels; clipping retains the original row stride.
 pub const SURFACE_IMAGE: u64 = 8;
+
+/// [op, view epoch, nonzero revision, 0..]. Stage at most four distinct existing
+/// surfaces with PAINT/ERASE/SURFACE_IMAGE; no publication until COMMIT succeeds.
+/// A rejected stage poisons the batch. ABORT releases its readers. Repeating the
+/// latest successful COMMIT is idempotent within this connection and view epoch.
+pub const PRESENT_BEGIN: u64 = 9;
+pub const PRESENT_COMMIT: u64 = 10;
+pub const PRESENT_ABORT: u64 = 11;
+pub const PRESENT_LIMIT: usize = 4;
 pub const RUN_PAGES: u64 = 112; // owner: slot, private pages, reader pages; rest zero

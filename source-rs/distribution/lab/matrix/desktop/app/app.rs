@@ -62,7 +62,7 @@ pub fn run(style: u64, environment: Environment) -> u64 {
                 if scene.as_ref().is_none_or(|s| s.epoch != view[1]) {
                     scene = Some(surfaces::Scene::new(parent, view));
                 }
-                scene.as_ref().unwrap().paint(parent, view, color);
+                scene.as_mut().unwrap().paint(parent, view, color);
                 painted = Some((view, color));
                 paints += 1;
                 #[cfg(feature = "trace-input")]
@@ -86,6 +86,14 @@ pub fn run(style: u64, environment: Environment) -> u64 {
                         match words[0] {
                             1 => scene.as_mut().unwrap().remove_accent(parent),
                             2 => scene.as_mut().unwrap().restore_accent(parent),
+                            3 => scene.as_mut().unwrap().staged_probe(parent),
+                            4 => scene.as_ref().unwrap().commit(parent),
+                            5 => scene.as_mut().unwrap().rejected_probe(parent),
+                            6 => scene.as_mut().unwrap().paint(
+                                parent,
+                                view,
+                                if style == 0 { LEFT } else { RIGHT },
+                            ),
                             _ => (),
                         }
                     }

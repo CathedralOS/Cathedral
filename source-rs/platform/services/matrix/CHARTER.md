@@ -45,6 +45,19 @@ retires the service so a late reply cannot be mistaken for another operation.
 
 ## Limits of this milestone
 
+Presentation follows [the bounded batch policy](world/presentation/presentation.rs),
+[authenticated requests](service/requests/presentation.rs), then
+[upstream publication](service/parent/presentation.rs). `PRESENT_BEGIN` stages up
+to four distinct existing surfaces (including sealed images); `PRESENT_COMMIT`
+publishes the complete clipped batch recursively. A failed stage poisons the
+batch until abort. Abort, binding loss and death drop staged readers. The latest
+successful revision can be retried within its connection and view epoch.
+Surface allocation remains outside transactions. Owner placement/replay still
+uses individual updates. Completion means logical scene publication, not vblank
+or tear-free scanout. Transport timeouts retire the matrix; retries do not cross
+provider death. The desktop fixture checks old pixels before commit, complete
+publication, rejected batches, repeated commits and bitmap forwarding.
+
 This is a protocol and input experiment: two local child slots, five navigation
 keys, eight queued events per child and extents up to 4096. The
 [distribution fixture](../../../distribution/lab/matrix/README.md) runs two
@@ -56,8 +69,8 @@ maintenance wake to discover legacy links. This is not a latency guarantee.
 
 The visible matrix desktop now uses this provider for lifecycle, primitive surface
 clipping, pointer routing and focus. Root adapters connect the existing compositor
-and physical decoder. Rendering is one retained rectangle per path, with two
-matrix levels supported by the bounded key space. Rich scenes, storage namespaces,
+and physical decoder. Rendering retains independently named rectangles and sealed
+bitmaps in bounded stacking ranges. Rich scenes, storage namespaces,
 audio and trusted-path UI remain unintegrated. Local primitives are retained and
 replayed through changed placement without requiring an app repaint; revoke and
 connection replacement clear retained state. The earlier
