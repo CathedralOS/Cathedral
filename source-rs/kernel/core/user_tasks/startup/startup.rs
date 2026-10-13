@@ -27,6 +27,7 @@ pub(super) fn prepare(
             }
         })?;
     let mut session = Session {
+        devices: super::devices::Devices::default(),
         pool: crate::user_tasks::admission::pool::Pool::new(count - config.dynamic_tasks, count),
         executables: crate::user_tasks::admission::pool::Executables::new(count)
             .map_err(|_| Error::OutOfHeap)?,

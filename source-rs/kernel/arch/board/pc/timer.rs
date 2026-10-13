@@ -4,7 +4,7 @@
 use crate::isa::x86::out8;
 
 /// # Safety
-/// IRQ0/IRQ1 entry on the sole CPU, PIC owned and installed by this board.
+/// Master-PIC IRQ entry on the sole CPU, PIC owned and installed by this board.
 pub(crate) unsafe fn acknowledge() {
     // SAFETY: Only master-PIC routes are enabled; retire the current interrupt.
     unsafe {

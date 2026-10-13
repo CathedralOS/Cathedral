@@ -50,6 +50,11 @@
       "package": "cathedral-shared-memory-lab",
       "entry": "distribution/lab/shared-memory/main.rs",
       "target": "x86_64-unknown-none"
+    },
+    "devices": {
+      "package": "cathedral-device-lab",
+      "entry": "distribution/lab/devices/main.rs",
+      "target": "x86_64-unknown-none"
     }
   },
   "startup": {

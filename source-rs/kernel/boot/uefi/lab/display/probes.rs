@@ -62,6 +62,7 @@ fn run(
                 clock_readers: &[],
                 supervision: &[Supervision {
                     disk: false,
+                    device: None,
                     keyboard: false,
                     owner: 0,
                     peer: 1,

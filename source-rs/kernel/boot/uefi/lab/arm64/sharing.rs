@@ -17,6 +17,7 @@ pub(super) fn exercise(
             owner: 0,
             peer: 0,
             disk: false,
+            device: None,
             keyboard: false,
             framebuffer: None,
             program: program(role, 0),

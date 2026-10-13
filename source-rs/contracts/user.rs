@@ -144,3 +144,11 @@ pub const IPC_TRY_RECEIVE_MEMORY: u64 = 58;
 pub const MEMORY_FREEZE: u64 = 59; // private handle -> immutable; no peer binding
 pub const MEMORY_MAP_OBJECT: u64 = 60; // local sealed handle -> local address
 pub const MEMORY_UNMAP_OBJECT: u64 = 61; // retain handle, remove only own mapping
+
+// Caller-local non-DMA register/IRQ grants. Only boot-selected child grants exist.
+pub const DEVICE_HANDLE: u64 = 62; // local index, zero, zero -> handle
+pub const DEVICE_READ8: u64 = 63; // handle, register offset, zero -> byte
+pub const DEVICE_WRITE8: u64 = 64; // handle, register offset, byte
+pub const DEVICE_IRQ_WAIT: u64 = 65; // handle, block (0/1), zero -> notification
+pub const DEVICE_IRQ_ARM: u64 = 66; // handle, zero, zero; BUSY until notification consumed
+pub const DEVICE_RELEASE: u64 = 67; // handle, zero, zero; reset/revoke until next launch

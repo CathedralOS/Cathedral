@@ -3,6 +3,8 @@
 #[cfg(all(feature = "bundled-user", target_arch = "x86_64"))]
 mod applications;
 #[cfg(all(feature = "bundled-user", target_arch = "x86_64"))]
+mod devices;
+#[cfg(all(feature = "bundled-user", target_arch = "x86_64"))]
 mod display;
 #[cfg(all(feature = "bundled-user", target_arch = "x86_64"))]
 mod ipc;

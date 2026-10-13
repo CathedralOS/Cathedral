@@ -21,6 +21,8 @@ pub struct Report {
     pub receives_blocked: usize,
     pub readiness_blocked: usize,
     pub keyboard_reads_blocked: usize,
+    pub device_interrupts: usize,
+    pub device_waits_blocked: usize,
     pub ipc_sent: usize,
     pub ipc_received: usize,
     pub spawned: usize,

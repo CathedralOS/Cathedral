@@ -17,6 +17,9 @@ use syscalls::{devices::keyboard, tasks as taskcalls};
 /// grant authorizes its executable to read/write the entire aperture for its lifetime.
 /// A keyboard grant requires exclusive PC-controller/PIC IRQ1 custody. This
 /// bootstrap profile has no concurrent firmware, mouse or other controller user.
+/// Each register-device grant requires the corresponding board device to exist,
+/// with exclusive register and IRQ custody for this entire session (including
+/// reset). The PC auxiliary serial device is COM2/IRQ3, separate from diagnostics.
 pub unsafe fn run_configured(
     frames: &mut FrameAllocator,
     layout: &arch::BootLayout,

@@ -91,6 +91,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "cathedral-device-lab"
+version = "0.0.0"
+dependencies = [
+ "cathedral-contracts",
+ "cathedral-uart-16550",
+ "cathedral-user-runtime",
+]
+
+[[package]]
 name = "cathedral-display-lab"
 version = "0.0.0"
 dependencies = [

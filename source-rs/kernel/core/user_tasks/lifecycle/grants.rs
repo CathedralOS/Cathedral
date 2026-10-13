@@ -3,6 +3,7 @@ use super::{Session, abi};
 pub(super) struct Plan {
     pub child: u64,
     clock: u64,
+    device: u64,
     executables: [Option<(usize, u64)>; abi::MAX_LAUNCHES],
     links: [u64; abi::MAX_ENDPOINTS / 2],
 }
@@ -11,6 +12,7 @@ impl Plan {
         let mut plan = Self {
             child: session.names.mint(owner)?,
             clock: 0,
+            device: 0,
             executables: [None; abi::MAX_LAUNCHES],
             links: [0; abi::MAX_ENDPOINTS / 2],
         };
@@ -22,6 +24,9 @@ impl Plan {
             .iter()
             .find(|l| l.model.child == child)
             .unwrap();
+        if launch.device.is_some() {
+            plan.device = session.names.mint(child)?;
+        }
         let mut templates = launch.images;
         // The selected dynamic executable occupies the first child-local grant.
         if launch.dynamic {
@@ -54,6 +59,16 @@ impl Plan {
     }
     pub fn commit(self, session: &mut Session, child: usize) {
         session.clock.install(child, self.clock);
+        if let Some(device) = session
+            .launches
+            .iter()
+            .find(|l| l.model.child == child)
+            .and_then(|l| l.device)
+        {
+            session
+                .devices
+                .install(child, self.device, device.register_bytes());
+        }
         for (template, name) in self.executables.into_iter().flatten() {
             session
                 .executables

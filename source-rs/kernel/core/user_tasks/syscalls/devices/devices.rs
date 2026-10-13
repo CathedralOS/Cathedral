@@ -10,6 +10,9 @@ pub(super) fn dispatch(
     event: &mut Event,
 ) -> Result<u64, u64> {
     match number {
+        abi::DEVICE_HANDLE..=abi::DEVICE_RELEASE => {
+            leased::dispatch(session, slot, [number, first, second, third], event)
+        }
         abi::KEYBOARD_READ | abi::KEYBOARD_WRITE | abi::KEYBOARD_READ_UNTIL => {
             keyboard::syscall(session, slot, (number, first, second), event, now)
         }

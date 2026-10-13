@@ -1,0 +1,20 @@
+[package]
+name = "cathedral-device-lab"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[[bin]]
+name = "cathedral-device-lab"
+path = "main.rs"
+test = false
+bench = false
+
+[dependencies]
+cathedral-user-runtime.workspace = true
+cathedral-contracts.workspace = true
+cathedral-uart-16550.workspace = true
+
+[lints]
+workspace = true

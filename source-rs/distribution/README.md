@@ -70,6 +70,10 @@ The [visible matrix policy](lab/matrix/desktop/desktop.rs) uses that same platfo
 for local drawing, physical pointer input and focus through the existing
 compositor. See the [implementation map](../STATUS.md) for commands and limits.
 
+The [device lifecycle lab](lab/devices/README.md) pairs a userspace supervisor
+with an interrupt-driven serial driver. The kernel grants only the child access
+to COM2/IRQ3, and the supervisor replaces it after faults and blocked waits.
+
 The [shared-memory lab](lab/shared-memory/README.md) forwards one sealed object
 through three processes on both CPUs. The matrix desktop uses the same ordinary
 IPC mechanism for retained bitmaps, with explicit child memory budgets.

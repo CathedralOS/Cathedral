@@ -4,6 +4,25 @@ This map connects implemented mechanisms to their integrated consumers, proofs
 and remaining restrictions. The [lab guide](README.md) owns detailed ABI/build
 instructions. [Owner questions](../OWNER_QUESTIONS.md) own unresolved semantics.
 
+## Userspace register and interrupt grants
+
+The [device boundary](kernel/core/user_tasks/devices/README.md) now supplies
+caller-local byte-register capabilities, masked IRQ notifications and revocation
+on release, exit, fault or cancellation. A userspace UART driver on COM2/IRQ3
+exercises loopback, register/name rejection and replacement after dirty faults
+and blocked waits. COM1 remains privileged diagnostics. The PC adapter filters
+stale PIC edges after reset; protocol configuration and byte handling run in
+userspace. Every session checks exact heap/frame reclamation.
+
+This first device uses mediated port operations, one exclusive grant per child
+and boot-lab composition. It does not add discovery, direct MMIO, DMA/IOMMU,
+shared interrupts or device-capability transfer. ARM rejects the PC-only grant;
+existing PS/2 and ATA adapters remain deliberately restricted.
+
+Validation: host policies and UART drain tests, both UEFI Clippy targets including
+smoke code, x86 debug/release smoke, ARM64 release boot, and the release session
+focus/drag/recovery regression pass. The full debug smoke used `--timeout 90`.
+
 ## Kernel image protection
 
 Both ISAs now enforce RX kernel code, RO/NX immutable data and RW/NX mutable

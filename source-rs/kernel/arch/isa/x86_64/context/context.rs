@@ -37,7 +37,13 @@ pub unsafe fn set_switch_handler(handler: Option<SwitchHandler>) {
     );
 }
 pub(super) extern "win64" fn dispatch(context: *const Context, cause: u64) -> *const Context {
-    if matches!(cause, 1 | 3) {
+    if cause == 4 {
+        // SAFETY: Dedicated COM2 IRQ entry; mask before acknowledging the PIC.
+        unsafe {
+            crate::board::pc::serial::interrupt();
+        }
+    }
+    if matches!(cause, 1 | 3 | 4) {
         // SAFETY: IRQ entry on the sole CPU; the selected board owns this route.
         unsafe {
             crate::board::pc::timer::acknowledge();
@@ -57,7 +63,7 @@ pub(super) extern "win64" fn dispatch(context: *const Context, cause: u64) -> *c
                 0 => SwitchCause::Yield,
                 1 => SwitchCause::Timer,
                 2 => SwitchCause::Syscall,
-                3 => SwitchCause::Device,
+                3 | 4 => SwitchCause::Device,
                 _ => unreachable!(),
             },
             interrupts::ticks(),

@@ -14,6 +14,7 @@ pub(super) fn exercise(memory: &mut PreparedMemory, console: &mut SerialPort) {
             framebuffer: None,
             keyboard: false,
             disk: false,
+            device: None,
         });
         // SAFETY: Boot-owned ELFs, exclusive CPU/kernel root, initialized timer/entry paths.
         let reports = unsafe {

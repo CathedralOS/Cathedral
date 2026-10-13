@@ -75,6 +75,8 @@ pub(super) unsafe fn install_gates() {
                 cathedral_timer_entry as *const ()
             } else if vector == 33 {
                 cathedral_keyboard_entry as *const ()
+            } else if vector == 35 {
+                cathedral_device_entry as *const ()
             } else if vector == 48 {
                 cathedral_yield_entry as *const ()
             } else if vector == 128 {

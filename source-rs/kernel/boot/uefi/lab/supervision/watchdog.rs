@@ -126,6 +126,7 @@ fn run(
                 clock_readers: clocks,
                 supervision: &[Supervision {
                     disk: false,
+                    device: None,
                     keyboard: false,
                     framebuffer: None,
                     owner: 0,

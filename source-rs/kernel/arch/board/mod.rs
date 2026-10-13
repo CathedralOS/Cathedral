@@ -4,6 +4,8 @@ pub(crate) mod pc;
 pub(crate) mod virt;
 #[cfg(target_arch = "aarch64")]
 pub use virt::Console;
+mod registers;
+pub use registers::DeviceId;
 include!("board.rs");
 
 #[cfg(target_arch = "x86_64")]

@@ -26,7 +26,8 @@ pub(super) fn syscall(session: &mut Session, slot: usize, now: u64) -> Event {
         | abi::IPC_SEND_MEMORY..=abi::IPC_TRY_RECEIVE_MEMORY => {
             ipc::dispatch(session, slot, call, now, &mut event)
         }
-        abi::KEYBOARD_READ
+        abi::DEVICE_HANDLE..=abi::DEVICE_RELEASE
+        | abi::KEYBOARD_READ
         | abi::KEYBOARD_WRITE
         | abi::KEYBOARD_READ_UNTIL
         | abi::DISK_REGISTER_READ..=abi::DISK_TRANSFER

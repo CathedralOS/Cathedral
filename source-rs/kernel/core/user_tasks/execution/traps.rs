@@ -35,6 +35,7 @@ pub(super) unsafe fn schedule(context: &Context, cause: SwitchCause, now: u64) -
         session.boot = context.clone();
     }
     if matches!(cause, SwitchCause::Timer | SwitchCause::Device) {
+        syscalls::devices::leased::interrupts(session);
         keyboard::poll(session, now);
         syscalls::wake_receivers(session);
         taskcalls::wake(session, now);

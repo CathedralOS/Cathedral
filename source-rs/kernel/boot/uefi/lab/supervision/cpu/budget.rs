@@ -15,6 +15,7 @@ pub(super) fn exercise(memory: &mut PreparedMemory, console: &mut SerialPort) {
             framebuffer: None,
             keyboard: false,
             disk: false,
+            device: None,
         });
         let allowance = if restarting { 2_000 } else { 20_000 };
         let limits = [allowance, 0, if restarting { 1_000 } else { 0 }, 0, 0];

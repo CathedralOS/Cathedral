@@ -127,6 +127,7 @@ fn run(
     let launches = [
         Supervision {
             disk: false,
+            device: None,
             keyboard: false,
             framebuffer: None,
             owner: 0,
@@ -139,6 +140,7 @@ fn run(
         },
         Supervision {
             disk: false,
+            device: None,
             keyboard: false,
             framebuffer: None,
             owner: 0,

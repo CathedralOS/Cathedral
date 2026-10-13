@@ -40,6 +40,7 @@ MARKERS = (
     *(f"Cathedral Rust lab: user fault contained mode={mode} " for mode in range(1, 11)),
     "Cathedral Rust lab: ring3 private memory preemption and checked syscalls passed",
     "Cathedral Rust lab: user admission rollback passed",
+    "Cathedral Rust lab: device capabilities, masked IRQ delivery and driver replacement reclaimed all state",
     "Cathedral Rust lab: shared objects forwarded without mappings; lifetime and reclamation passed",
     "Cathedral Rust lab: ELF instances exited [17, 29]",
     "Cathedral Rust lab: ELF instances exited [18, 30]",
@@ -332,7 +333,7 @@ def main():
 
     serial_path = output / "serial.log"
     serial_path.write_text("", encoding="utf-8")
-    command += ["-serial", "file:serial.log", "-device", "isa-debug-exit,iobase=0xf4,iosize=0x04"]
+    command += ["-serial", "file:serial.log", "-serial", "null", "-device", "isa-debug-exit,iobase=0xf4,iosize=0x04"]
     with (output / "qemu.log").open("w", encoding="utf-8") as log:
         try:
             result = subprocess.run(command, cwd=output, stdout=log, stderr=log,

@@ -5,6 +5,7 @@ use cathedral_arch as arch;
 use cathedral_contracts::user as abi;
 
 pub(super) fn close(session: &mut Session, slot: usize) {
+    super::syscalls::devices::leased::close(session, slot);
     session.executables.close(slot);
     session.clock.install(slot, 0);
     session.tasks[slot].memory_call = None;
@@ -187,6 +188,12 @@ pub(super) unsafe fn spawn(
                     .expect("validated initial bundle changed during admission");
                 let (loans, names) = plan.unwrap();
                 let ticket = names.child;
+                if let Some(device) = session.launches[index].device {
+                    // SAFETY: Child admitted but not runnable; boot owns exclusive device custody.
+                    unsafe {
+                        device.reset();
+                    }
+                }
                 names.commit(session, child);
                 loans.commit(session, child);
                 if session.launches[index].keyboard {

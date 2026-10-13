@@ -46,6 +46,16 @@ pub(super) fn validate(initial_count: usize, config: &Config<'_>) -> Result<usiz
     if config.supervision.iter().filter(|grant| grant.disk).count() > 1 {
         return Err(Error::InvalidEndpoints);
     }
+    for (index, grant) in config.supervision.iter().enumerate() {
+        if let Some(device) = grant.device
+            && (!device.available()
+                || config.supervision[..index]
+                    .iter()
+                    .any(|g| g.device == Some(device)))
+        {
+            return Err(Error::InvalidEndpoints);
+        }
+    }
     Ok(count)
 }
 pub(super) fn grants(
@@ -99,6 +109,7 @@ pub(super) fn grants(
             framebuffer: launch.framebuffer,
             keyboard: launch.keyboard,
             disk: launch.disk,
+            device: launch.device,
         });
     }
     for index in config.supervision.len()..count - initial_count {
@@ -117,6 +128,7 @@ pub(super) fn grants(
             framebuffer: None,
             keyboard: false,
             disk: false,
+            device: None,
         });
     }
     // Static grants may refer only to initial principals, never the reusable child slot.

@@ -56,6 +56,7 @@ pub fn run(memory: &mut PreparedMemory, console: &mut SerialPort) {
         };
         launches.push(Supervision {
             disk: grant.disk,
+            device: None,
             owner: 0,
             peer: 0,
             framebuffer,

@@ -22,6 +22,7 @@ pub(super) struct Task {
     pub(super) keyboard_deadline: Option<u64>,
 }
 pub(super) struct Session {
+    pub(super) devices: super::devices::Devices,
     pub(super) pool: crate::user_tasks::admission::pool::Pool,
     pub(super) executables: crate::user_tasks::admission::pool::Executables,
     pub(super) names: crate::names::Names,
@@ -53,6 +54,7 @@ pub(super) struct LaunchState {
     pub(super) initial: [u64; cathedral_contracts::user::MAX_INITIAL_ENDPOINTS],
     pub(super) initial_count: usize,
     pub(super) disk: bool,
+    pub(super) device: Option<cathedral_arch::board::DeviceId>,
     pub(super) model: Supervisor,
     pub(super) endpoint_base: usize,
     pub(super) framebuffer: Option<cathedral_contracts::display::Framebuffer>,

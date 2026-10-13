@@ -1,7 +1,7 @@
 //! Rust module plumbing. Start reading in `syscalls.rs`.
 
 mod admission;
-pub(super) mod devices;
+pub(in crate::user_tasks) mod devices;
 mod diagnostics;
 pub(super) mod ipc;
 mod memory;

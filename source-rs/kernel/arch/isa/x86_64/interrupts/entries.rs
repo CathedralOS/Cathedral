@@ -50,6 +50,7 @@ unsafe extern "C" {
     pub(super) fn cathedral_exception_255();
     pub(super) fn cathedral_timer_entry();
     pub(super) fn cathedral_keyboard_entry();
+    pub(super) fn cathedral_device_entry();
     pub(super) fn cathedral_yield_entry();
     pub(super) fn cathedral_syscall_entry();
 }

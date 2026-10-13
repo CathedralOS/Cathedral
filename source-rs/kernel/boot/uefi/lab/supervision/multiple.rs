@@ -14,6 +14,7 @@ pub(super) fn exercise(memory: &mut PreparedMemory, console: &mut SerialPort) {
         let grants = [
             Supervision {
                 disk: false,
+                device: None,
                 owner: 0,
                 peer: 0,
                 program: program(17, 0),
@@ -23,6 +24,7 @@ pub(super) fn exercise(memory: &mut PreparedMemory, console: &mut SerialPort) {
             },
             Supervision {
                 disk: false,
+                device: None,
                 owner: 0,
                 peer: 0,
                 program: program(if keyboard { 20 } else { 17 }, 0),
@@ -80,6 +82,7 @@ pub(super) fn exercise(memory: &mut PreparedMemory, console: &mut SerialPort) {
     for disk in [false, true] {
         let duplicate = [true, true].map(|keyboard| Supervision {
             disk,
+            device: None,
             owner: 0,
             peer: 0,
             program: program(20, 0),

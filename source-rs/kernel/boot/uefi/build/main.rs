@@ -22,6 +22,7 @@ fn main() {
         return;
     }
     for (variable, destination) in [
+        ("CATHEDRAL_DEVICES_ELF", "devices.elf"),
         ("CATHEDRAL_HELLO_ELF", "user.elf"),
         ("CATHEDRAL_IPC_ELF", "ipc.elf"),
         ("CATHEDRAL_MEMORY_ELF", "memory.elf"),

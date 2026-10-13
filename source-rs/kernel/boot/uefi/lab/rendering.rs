@@ -17,6 +17,7 @@ pub fn exercise(memory: &mut PreparedMemory, console: &mut SerialPort) {
             owner: 0,
             peer: 0,
             disk: false,
+            device: None,
             keyboard: false,
             framebuffer: None,
             program: program(role),

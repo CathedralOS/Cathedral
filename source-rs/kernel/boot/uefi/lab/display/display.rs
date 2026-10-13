@@ -62,6 +62,7 @@ pub fn exercise(memory: &mut PreparedMemory, console: &mut SerialPort) {
                 clock_readers: &[0, 2],
                 supervision: &[Supervision {
                     disk: false,
+                    device: None,
                     keyboard: false,
                     owner: 0,
                     peer: 1,

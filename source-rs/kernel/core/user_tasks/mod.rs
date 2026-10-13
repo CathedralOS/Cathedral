@@ -3,6 +3,8 @@
 pub mod address_space;
 pub mod admission;
 mod configuration;
+#[deny(unsafe_code)]
+mod devices;
 mod execution;
 pub(crate) mod lifecycle;
 pub(crate) mod memory;

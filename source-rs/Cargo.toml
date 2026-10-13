@@ -27,6 +27,7 @@ members = [
     "distribution/lab/hello",
     "distribution/lab/portability",
     "distribution/lab/shared-memory",
+    "distribution/lab/devices",
     "distribution/lab/ipc",
     "distribution/lab/channels",
     "distribution/lab/memory",
@@ -35,7 +36,7 @@ members = [
     "distribution/libraries/boot-scene",
     "distribution/libraries/session-protocol",
 ]
-default-members = ["distribution/lab/rendering", "platform/libraries/object-store", "contracts", "kernel/core", "kernel/arch", "platform/services/input", "platform/services/display", "platform/services/matrix", "platform/libraries/bitmap-font"]
+default-members = ["platform/drivers/uart_16550", "distribution/lab/rendering", "platform/libraries/object-store", "contracts", "kernel/core", "kernel/arch", "platform/services/input", "platform/services/display", "platform/services/matrix", "platform/libraries/bitmap-font"]
 
 [workspace.package]
 version = "0.0.0"

@@ -66,7 +66,9 @@ The entrance explains this level without exposing every detail below it.
 | `kernel/core/memory/heap.rs`, `kernel/core/scheduler/scheduler.rs`, `kernel/core/kernel_tasks/kernel_tasks.rs` | IRQ-safe heap, pure scheduling policy, task admission and context/stack lifetime management |
 | `kernel/core/user_tasks/user_tasks.rs` | Experimental user-task lifetime, checked diagnostic syscalls and outcomes |
 | `kernel/core/user_tasks/admission/elf/elf.rs` | Bounded, host-testable ELF64 preflight before physical admission |
-| `platform/drivers/uart_16550/` | Polling serial diagnostics, corresponding to `source/platform/drivers/uart_16550/` |
+| `kernel/core/user_tasks/devices/devices.rs` | [Register/IRQ grants and driver replacement](kernel/core/user_tasks/devices/README.md), paired with the syscall/board entrances |
+| `distribution/lab/devices/main.rs` | Userspace serial loopback, authority rejection, masked interrupts, fault/restart and blocked cancellation |
+| `platform/drivers/uart_16550/` | Userspace interrupt protocol plus polling serial diagnostics, corresponding to `source/platform/drivers/uart_16550/` |
 | `platform/libraries/user-runtime/` | Entry stub, syscall wrappers and linker script; imports only shared contracts |
 | `platform/services/display/` | Separately compiled userspace provider for linear framebuffer drawing |
 | `platform/services/input/` | Userspace PS/2 configuration, keyboard/mouse decoding and IPC event delivery |

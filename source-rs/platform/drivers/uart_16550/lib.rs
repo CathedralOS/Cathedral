@@ -1,6 +1,11 @@
 #![no_std]
 
-//! Bootstrap polling console. Runs privileged until driver isolation exists.
+//! UART entrances: SerialPort is the privileged bootstrap polling console.
+//! interrupt::Uart owns the userspace-capable protocol over an explicit register transport.
+
+pub mod interrupt;
+#[cfg(test)]
+mod interrupt_test;
 
 use core::fmt;
 

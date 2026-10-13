@@ -5,6 +5,7 @@ pub(super) fn exercise(memory: &mut PreparedMemory, console: &mut SerialPort) {
     let heap = unsafe { HEAP.used() };
     let grants = [22, 22, 23, 22].map(|role| Supervision {
         disk: false,
+        device: None,
         owner: 0,
         peer: 0,
         program: program(role, 0),

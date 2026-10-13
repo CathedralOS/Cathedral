@@ -105,6 +105,12 @@ cathedral_keyboard_entry:
     mov edx, 3
     jmp cathedral_switch_entry
 
+.global cathedral_device_entry
+cathedral_device_entry:
+    save_context
+    mov edx, 4
+    jmp cathedral_switch_entry
+
 .global cathedral_yield_entry
 cathedral_yield_entry:
     save_context

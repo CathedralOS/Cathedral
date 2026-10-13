@@ -19,6 +19,8 @@ pub struct Config<'a> {
 }
 
 pub struct Supervision<'a> {
+    /// Exclusive board-approved non-DMA register/interrupt grant.
+    pub device: Option<cathedral_arch::board::DeviceId>,
     /// Exclusive secondary ISA ATA controller; no DMA or arbitrary ports.
     pub disk: bool,
     /// Exclusive PC bootstrap byte channel; configuration/decoding stay in userspace.
