@@ -31,7 +31,7 @@ pub const EFI_MEMORY_DESCRIPTOR_VERSION: u32 = 1;
 
 // Memory that must retain an OS virtual mapping for firmware runtime services.
 // Cathedral's current bootstrap cannot admit such a region as ordinary RAM.
-pub data EfiMemoryAttribute { bits: u64; }
+pub data EfiMemoryAttribute [copy] { bits: u64; }
 pub const EFI_MEMORY_RUNTIME: EfiMemoryAttribute = EfiMemoryAttribute {
     bits: 0x8000_0000_0000_0000,
 };
@@ -76,7 +76,7 @@ pub data EfiMemoryDescriptor {
 
 // The map key GetMemoryMap returns; ExitBootServices only succeeds against the
 // current key (the freshness contract).
-pub data MapKey { raw: u64; }   // UINTN
+pub data MapKey [copy] { raw: u64; }   // UINTN; freshness is a call contract
 
 // --- EFI_BOOT_SERVICES table (field model) ---------------------------------
 // EFI_TABLE_HEADER then the boot services in spec order through the last field
@@ -161,20 +161,20 @@ pub boundary trait BootServices {
 // FUNCTIONS, not vtable methods: the table pointer locates the callee and stays
 // off the foreign wire. Protocol methods such as output_string do take This and
 // use VtableField instead.
-uefi_x64 machine BootServicesTable::get_memory_map_leaf(
+uefi_x86_64 machine BootServicesTable::get_memory_map_leaf(
     table:              &BootServicesTable,
     map_size:           &mut u64,
     buffer:             &mut [u8; 65536],
     map_key:            &mut MapKey,
     descriptor_size:    &mut u64,
     descriptor_version: &mut u32
-) -> EfiStatus satisfies BootServices::get_memory_map via Binding::TableFunction(get_memory_map);
+) -> EfiStatus satisfies BootServices::get_memory_map via ForeignBinding::TableFunction(get_memory_map);
 
-uefi_x64 machine BootServicesTable::exit_boot_services_leaf(
+uefi_x86_64 machine BootServicesTable::exit_boot_services_leaf(
     table:        &BootServicesTable,
     image_handle: EfiHandle,
     map_key:      MapKey
-) -> EfiStatus satisfies BootServices::exit_boot_services via Binding::TableFunction(exit_boot_services);
+) -> EfiStatus satisfies BootServices::exit_boot_services via ForeignBinding::TableFunction(exit_boot_services);
 
 // --- Origin of memory authority -------------------------------------------
 // FinalMemoryMap is the reserved carrier for the complete post-exit map. The M2

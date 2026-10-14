@@ -3,6 +3,6 @@
 // Hardware facts are a named pure-data package with no service grants.
 
 machine build(builder: &mut Build) {
-    builder.package("cathedral-hardware-facts");
+    Build::package(builder, "cathedral_hardware_facts");
     // facts reach nothing; no targets.
 }

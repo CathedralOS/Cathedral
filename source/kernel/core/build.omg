@@ -1,13 +1,10 @@
-// source/core/build.omg
-//
-// The proved kernel package. Firmware-neutral at M2 — reaches nothing yet
-// (foundation/ and contracts/ deps arrive as core grows). PROVISIONAL SYNTAX
-// (Omega build_and_package_model.md).
+// Firmware-neutral kernel mechanisms and their pure hardware facts.
 
-machine build(b: &mut Build) {
+machine build(builder: &mut Build) {
+    Build::package(builder, "cathedral_core");
     // Pure hardware facts grant no authority. Checked PIC/PIT and x2APIC
     // helpers retain PortIo or MachineControl reach from their instruction
     // contracts; the eventual boot/root provider must still be granted those
     // services explicitly.
-    b.depend("facts", path("../../platform/drivers/facts"));
+    Build::depend_as(builder, "facts", Source::Path { location: "../../platform/drivers/facts" });
 }

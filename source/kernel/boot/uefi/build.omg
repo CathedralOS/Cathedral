@@ -1,27 +1,16 @@
-// source/boot/uefi/build.omg
-//
-// The UEFI boot application. BOOT-VERIFIED shape (typed tree, 2026-07-11).
-// `target uefi_x64 {}` is the FRONTIER REGISTRATION (D15: a deployment target
-// name is valid iff compiler-defined or build-defined) — an empty declaration,
-// NOT the retired target{...} config block; `subsystem` and `freestanding`
-// remain orthogonal `Build` fields (build_and_package_model.md addendum).
-// `UefiApplication` now inherits the stable core ProgramStorageEntry
-// requirement and contributes the retained UEFI x86-64 calling policy. Build
-// entry-schema selection and the generated stub/geometry bridge are still
-// compiler engineering; the current exported Main::run keeps the already-booted
-// EFI/MS-x64 firmware ABI until that bridge is connected.
+// Cathedral's freestanding UEFI product. This selects the image format and
+// root provider, not a firmware arrival ABI. The checked physical entry
+// adapter must be connected before a ProgramEntry binding can be authored.
 
-target uefi_x64 {
-}
-
-machine build(b: &mut Build) {
+machine build(builder: &mut Build) {
+    Build::application(builder, "cathedral");
     // Reach: the boot hand-off ABI + the kernel's checked Extent provider.
     // The boot package may name `uefi` and `core` and nothing else.
-    b.depend("uefi", path("../../../contracts/uefi"));   // hash-pinned once the store exists
-    b.depend("core", path("../../core"));              // shared Extent provider (milestone 2)
-    b.accept_boundary<ExtentRootProvider>();           // exact selected root-provider receipt
-    b.select_provider<ExtentRootProvider, CathedralExtentRootProvider>();
+    Build::depend_as(builder, "uefi", Source::Path { location: "../../../contracts/uefi" });
+    Build::depend_as(builder, "core", Source::Path { location: "../../core" });
+    Build::accept_boundary<ExtentRootProvider>(builder);
+    Build::select_provider<ExtentRootProvider, core::CathedralExtentRootProvider>(builder);
 
-    b.subsystem    = Subsystem::EfiApplication;   // import-free PE32+ firmware loads directly
-    b.freestanding = true;                         // empty host-provider set (no host runtime)
+    builder.subsystem    = Subsystem::EfiApplication;   // import-free PE32+ firmware loads directly
+    builder.freestanding = true;                         // empty host-provider set (no host runtime)
 }

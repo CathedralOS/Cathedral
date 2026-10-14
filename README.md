@@ -10,7 +10,7 @@ This is made possible by the underlying filesystem database, which allows for ne
 
 Cathedral supports update-in-place, removing the need for the vast majority of "restart to update" prompts that plague legacy operating systems.
 
-**Pre-alpha.** Cathedral is in the design and early-boot phase. The Omega-emitted UEFI image boots under QEMU and OVMF, exits firmware, takes custody of one root memory extent, and reports over a 16550 UART. There is no kernel, scheduler, component runtime, or production driver yet. Each contract is being specified before the system hardens around it.
+**Pre-alpha.** Cathedral has an executable Rust bring-up lab and an Omega implementation under repair. The Omega boot source currently does **not** compile with the current language/compiler; historical QEMU results are not a claim about today's tree. Its [boot frontier](source/kernel/boot/uefi/README.md) names the remaining source/compiler work. The intended Omega milestone is firmware exit, custody of one memory root, a serial report, and owned idle. There is no production Omega kernel yet.
 
 [Documentation map](wiki/README.md) ·
 [Specification](wiki/spec/README.md) ·

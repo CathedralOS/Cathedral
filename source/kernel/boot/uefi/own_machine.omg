@@ -38,12 +38,12 @@ pub data UefiMemoryMapStorage {
     bytes: [u8; 65536];
 }
 
-// Get the map, walk it, exit, grant, report. `self.map_buf.bytes` is fixed
+// Get the map, walk it, exit, grant, report. `context.map_buf.bytes` is fixed
 // 64-KiB static storage behind an explicit 8-byte alignment anchor, not
 // allocated memory and not an Extent. Cathedral advertises 16 KiB first and
 // uses the remaining provision only after an exact EFI_BUFFER_TOO_SMALL result
 // reports a requirement within the fixed ceiling.
-machine Main::own_machine(&self, handle: EfiHandle, table: &EfiSystemTable)
+machine Main::own_machine(context: &mut Main, handle: EfiHandle, table: &EfiSystemTable)
 reaches BootServices + ExtentRootProvider + PortIo + MachineControl
 {
     // The boundary vouches the reference shape, not arbitrary firmware field
@@ -54,18 +54,18 @@ reaches BootServices + ExtentRootProvider + PortIo + MachineControl
                table.header.revision >= EFI_MIN_SUPPORTED_REVISION &&
                table.header.header_size >= EFI_SYSTEM_TABLE_REQUIRED_SIZE &&
                table.header.reserved == 0 {
-        true -> validate_boot_services(handle, table)
+        true -> validate_boot_services(context, handle, table)
         _    -> idle()
     }
 
-    state validate_boot_services(handle: EfiHandle,
+    state validate_boot_services(context: &mut Main, handle: EfiHandle,
                                  table: &EfiSystemTable) {
         let bs: &BootServicesTable = table.boot_services;
         transition bs.hdr.signature == EFI_BOOT_SERVICES_SIGNATURE &&
                    bs.hdr.revision == table.header.revision &&
                    bs.hdr.header_size >= EFI_BOOT_SERVICES_REQUIRED_SIZE &&
                    bs.hdr.reserved == 0 {
-            true -> refresh_map(bs, handle, 0)
+            true -> refresh_map(context, bs, handle, 0)
             _    -> idle()
         }
     }
@@ -73,22 +73,26 @@ reaches BootServices + ExtentRootProvider + PortIo + MachineControl
     // Get a fresh map and its inseparable key. This state is also the only
     // retry target after ExitBootServices reports EFI_INVALID_PARAMETER: the
     // old key and every descriptor-derived candidate are discarded together.
-    state refresh_map(bs: &BootServicesTable, handle: EfiHandle,
-                      stale_retry_used: u64 [0..=1]) {
-        transition { _ -> get_map(bs, handle, stale_retry_used, 16384) }
+    state refresh_map(context: &mut Main, bs: &BootServicesTable, handle: EfiHandle,
+                      stale_retry_used: u64)
+    requires stale_retry_used <= 1
+    {
+        transition { _ -> get_map(context, bs, handle, stale_retry_used, 16384) }
     }
 
-    state get_map(bs: &BootServicesTable, handle: EfiHandle,
-                  stale_retry_used: u64 [0..=1],
-                  attempted_capacity: u64 [16384..=65536]) {
+    state get_map(context: &mut Main, bs: &BootServicesTable, handle: EfiHandle,
+                  stale_retry_used: u64,
+                  attempted_capacity: u64)
+    requires stale_retry_used <= 1 && 16384 <= attempted_capacity && attempted_capacity <= 65536
+    {
         let mut map_size: u64 = attempted_capacity; // in = capacity, out = actual/needed
         let mut key: MapKey = MapKey { raw: 0 };
         let mut desc_size: u64 = 0;                 // out = the RUNTIME descriptor stride
         let mut desc_version: u32 = 0;
-        let status: EfiStatus = self.boot_svc.get_memory_map(
+        let status: EfiStatus = BootServices::get_memory_map(&context.boot_svc,
             bs,
             &mut map_size,
-            &mut self.map_buf.bytes,
+            &mut context.map_buf.bytes,
             &mut key,
             &mut desc_size,
             &mut desc_version
@@ -109,9 +113,10 @@ reaches BootServices + ExtentRootProvider + PortIo + MachineControl
                    map_size >= desc_size &&
                    map_size <= attempted_capacity && map_size <= 65536 &&
                    map_size % desc_size == 0 {
-            true -> walk(bs, handle, stale_retry_used,
-                         map_size, desc_size, key, 0, 0, 0, 0)
-            _    -> map_failed(bs, handle, stale_retry_used,
+            true -> walk(context, bs, handle, stale_retry_used,
+                         map_size as u64 in Trapping, desc_size as u64 in Trapping,
+                         key, 0, 0, 0, 0)
+            _    -> map_failed(context, bs, handle, stale_retry_used,
                                attempted_capacity, status_code, map_size)
         }
     }
@@ -119,12 +124,14 @@ reaches BootServices + ExtentRootProvider + PortIo + MachineControl
     // Only the exact capacity signal may expand the advertised window, and
     // only once. Key, descriptor size/version, and all buffer contents from the
     // failed call are ignored. A requirement above the static ceiling parks.
-    state map_failed(bs: &BootServicesTable, handle: EfiHandle,
-                     stale_retry_used: u64 [0..=1],
-                     attempted_capacity: u64 [16384..=65536],
-                     status_code: u64, required_size: u64) {
+    state map_failed(context: &mut Main, bs: &BootServicesTable, handle: EfiHandle,
+                     stale_retry_used: u64,
+                     attempted_capacity: u64,
+                     status_code: u64, required_size: u64)
+    requires stale_retry_used <= 1 && 16384 <= attempted_capacity && attempted_capacity <= 65536
+    {
         transition attempted_capacity == 16384 && status_code == EFI_BUFFER_TOO_SMALL.code && required_size > 16384 && required_size <= 65536 {
-            true -> get_map(bs, handle, stale_retry_used, 65536)
+            true -> get_map(context, bs, handle, stale_retry_used, 65536)
             _    -> idle()
         }
     }
@@ -143,36 +150,40 @@ reaches BootServices + ExtentRootProvider + PortIo + MachineControl
     // argument `offset + desc_size` carries the literal guard bound <= 65496
     // (= 65536 buffer - 40 descriptor footprint). `in Trapping` on the walk
     // arithmetic: hostile out-values trip a trap instead of wrapping.
-    state walk(bs: &BootServicesTable, handle: EfiHandle,
-               stale_retry_used: u64 [0..=1],
+    state walk(context: &mut Main, bs: &BootServicesTable, handle: EfiHandle,
+               stale_retry_used: u64,
                map_size: u64 in Trapping, desc_size: u64 in Trapping, key: MapKey,
                offset: u64 in Trapping, best_start: u64, best_pages: u64,
-               best_offset: u64 in Trapping) {
-        let d: &EfiMemoryDescriptor = &self.map_buf.bytes[offset] as &EfiMemoryDescriptor;
+               best_offset: u64 in Trapping)
+    requires stale_retry_used <= 1
+    {
+        let d: &EfiMemoryDescriptor = &context.map_buf.bytes[offset] as &EfiMemoryDescriptor;
         let is_free: bool = d.kind == EFI_CONVENTIONAL_MEMORY &&
                             (d.attribute & EFI_MEMORY_RUNTIME.bits) == 0 &&
                             (d.attribute & EFI_MEMORY_HOT_PLUGGABLE.bits) == 0 &&
                             (d.attribute & EFI_MEMORY_SP.bits) == 0;
         transition is_free && d.number_of_pages > best_pages {
-            true -> step(bs, handle, stale_retry_used, map_size, desc_size, key,
+            true -> step(context, bs, handle, stale_retry_used, map_size, desc_size, key,
                          offset, d.physical_start, d.number_of_pages, offset)
-            _    -> step(bs, handle, stale_retry_used, map_size, desc_size, key,
+            _    -> step(context, bs, handle, stale_retry_used, map_size, desc_size, key,
                          offset, best_start, best_pages, best_offset)
         }
     }
 
-    state step(bs: &BootServicesTable, handle: EfiHandle,
-               stale_retry_used: u64 [0..=1],
+    state step(context: &mut Main, bs: &BootServicesTable, handle: EfiHandle,
+               stale_retry_used: u64,
                map_size: u64 in Trapping, desc_size: u64 in Trapping, key: MapKey,
                offset: u64 in Trapping, best_start: u64, best_pages: u64,
-               best_offset: u64 in Trapping) {
+               best_offset: u64 in Trapping)
+    requires stale_retry_used <= 1
+    {
         // The second conjunct is implied by the first (map_size <= 65536,
         // desc_size >= 40) but spelled out so the loop edge's bound is a
         // DIRECT guard fact for the prover; it costs one always-true compare.
         transition offset + desc_size + desc_size <= map_size && offset + desc_size <= 65496 {
-            true -> walk(bs, handle, stale_retry_used, map_size, desc_size, key,
+            true -> walk(context, bs, handle, stale_retry_used, map_size, desc_size, key,
                          offset + desc_size, best_start, best_pages, best_offset)
-            _    -> validate_candidate(bs, handle, stale_retry_used,
+            _    -> validate_candidate(context, bs, handle, stale_retry_used,
                                        map_size, desc_size, key,
                                        best_start, best_pages, best_offset)
         }
@@ -184,35 +195,39 @@ reaches BootServices + ExtentRootProvider + PortIo + MachineControl
     // backing fact. Page-count bounding makes the following multiplication
     // exact; alignment follows the UEFI page contract but is checked rather
     // than trusted from raw descriptor bytes.
-    state validate_candidate(bs: &BootServicesTable, handle: EfiHandle,
-                             stale_retry_used: u64 [0..=1],
+    state validate_candidate(context: &mut Main, bs: &BootServicesTable, handle: EfiHandle,
+                             stale_retry_used: u64,
                              map_size: u64 in Trapping,
                              desc_size: u64 in Trapping, key: MapKey,
                              best_start: u64, best_pages: u64,
-                             best_offset: u64 in Trapping) {
+                             best_offset: u64 in Trapping)
+    requires stale_retry_used <= 1
+    {
         transition best_pages > 0 &&
                    best_pages <= MAX_BOOTSTRAP_PAGE_COUNT &&
                    best_start % PAGE_SIZE == 0 {
-            true -> validate_candidate_end(bs, handle, stale_retry_used,
+            true -> validate_candidate_end(context, bs, handle, stale_retry_used,
                                            map_size, desc_size, key,
                                            best_start, best_pages, best_offset)
             _ -> idle()
         }
     }
 
-    state validate_candidate_end(bs: &BootServicesTable, handle: EfiHandle,
-                                 stale_retry_used: u64 [0..=1],
+    state validate_candidate_end(context: &mut Main, bs: &BootServicesTable, handle: EfiHandle,
+                                 stale_retry_used: u64,
                                  map_size: u64 in Trapping,
                                  desc_size: u64 in Trapping, key: MapKey,
                                  best_start: u64,
-                                 best_pages: u64 [1..=4503599627370495],
-                                 best_offset: u64 in Trapping) {
+                                 best_pages: u64,
+                                 best_offset: u64 in Trapping)
+    requires stale_retry_used <= 1 && 1 <= best_pages && best_pages <= 4503599627370495
+    {
         let checked_pages: u64 in Trapping = best_pages as u64 in Trapping;
         let checked_length: u64 in Trapping = checked_pages * PAGE_SIZE;
         let length: u64 = checked_length as u64;
         let max_address: u64 = 0xFFFF_FFFF_FFFF_FFFF;
         transition best_start <= max_address - length {
-            true -> prepare_audit(bs, handle, stale_retry_used,
+            true -> prepare_audit(context, bs, handle, stale_retry_used,
                                   map_size, desc_size, key, best_start,
                                   best_pages, length, best_offset)
             _ -> idle()
@@ -227,31 +242,35 @@ reaches BootServices + ExtentRootProvider + PortIo + MachineControl
     // that validation, skip only the selected record's own
     // overlap comparison. Every other range must lie wholly to one side of the
     // chosen conventional span. No ordering assumption is made.
-    state prepare_audit(bs: &BootServicesTable, handle: EfiHandle,
-                        stale_retry_used: u64 [0..=1],
+    state prepare_audit(context: &mut Main, bs: &BootServicesTable, handle: EfiHandle,
+                        stale_retry_used: u64,
                         map_size: u64 in Trapping,
                         desc_size: u64 in Trapping, key: MapKey,
                         best_start: u64, best_pages: u64, length: u64,
-                        best_offset: u64 in Trapping) {
+                        best_offset: u64 in Trapping)
+    requires stale_retry_used <= 1
+    {
         let checked_start: u64 in Trapping = best_start as u64 in Trapping;
         let checked_length: u64 in Trapping = length as u64 in Trapping;
         let best_end: u64 in Trapping = checked_start + checked_length;
-        transition { _ -> audit_descriptor(bs, handle, stale_retry_used,
+        transition { _ -> audit_descriptor(context, bs, handle, stale_retry_used,
                                            map_size, desc_size, key, best_start,
                                            best_pages, length, best_end,
                                            best_offset, 0) }
     }
 
-    state audit_descriptor(bs: &BootServicesTable, handle: EfiHandle,
-                           stale_retry_used: u64 [0..=1],
+    state audit_descriptor(context: &mut Main, bs: &BootServicesTable, handle: EfiHandle,
+                           stale_retry_used: u64,
                            map_size: u64 in Trapping,
                            desc_size: u64 in Trapping, key: MapKey,
                            best_start: u64, best_pages: u64, length: u64,
                            best_end: u64 in Trapping,
                            best_offset: u64 in Trapping,
-                           audit_offset: u64 in Trapping) {
-        let d: &EfiMemoryDescriptor = &self.map_buf.bytes[audit_offset] as &EfiMemoryDescriptor;
-        transition { _ -> audit_geometry(bs, handle, stale_retry_used,
+                           audit_offset: u64 in Trapping)
+    requires stale_retry_used <= 1
+    {
+        let d: &EfiMemoryDescriptor = &context.map_buf.bytes[audit_offset] as &EfiMemoryDescriptor;
+        transition { _ -> audit_geometry(context, bs, handle, stale_retry_used,
                                          map_size, desc_size, key,
                                          best_start, best_pages, length,
                                          best_end, best_offset, audit_offset,
@@ -260,8 +279,8 @@ reaches BootServices + ExtentRootProvider + PortIo + MachineControl
                                          d.number_of_pages) }
     }
 
-    state audit_geometry(bs: &BootServicesTable, handle: EfiHandle,
-                         stale_retry_used: u64 [0..=1],
+    state audit_geometry(context: &mut Main, bs: &BootServicesTable, handle: EfiHandle,
+                         stale_retry_used: u64,
                          map_size: u64 in Trapping,
                          desc_size: u64 in Trapping, key: MapKey,
                          best_start: u64, best_pages: u64, length: u64,
@@ -271,7 +290,9 @@ reaches BootServices + ExtentRootProvider + PortIo + MachineControl
                          other_kind: u32, other_attribute: u64,
                          other_start: u64,
                          other_virtual_start: u64,
-                         other_pages: u64) {
+                         other_pages: u64)
+    requires stale_retry_used <= 1
+    {
         transition (other_kind < EFI_MAX_MEMORY_TYPE ||
                     other_kind >= EFI_OEM_MEMORY_TYPE_MIN) &&
                    (other_attribute & EFI_MEMORY_RESERVED_MASK.bits) == 0 &&
@@ -281,7 +302,7 @@ reaches BootServices + ExtentRootProvider + PortIo + MachineControl
                    other_pages <= MAX_BOOTSTRAP_PAGE_COUNT &&
                    other_start % PAGE_SIZE == 0 &&
                    other_virtual_start % PAGE_SIZE == 0 {
-            true -> audit_geometry_end(bs, handle, stale_retry_used,
+            true -> audit_geometry_end(context, bs, handle, stale_retry_used,
                                        map_size, desc_size, key,
                                        best_start, best_pages, length, best_end,
                                        best_offset, audit_offset,
@@ -291,8 +312,8 @@ reaches BootServices + ExtentRootProvider + PortIo + MachineControl
         }
     }
 
-    state audit_geometry_end(bs: &BootServicesTable, handle: EfiHandle,
-                             stale_retry_used: u64 [0..=1],
+    state audit_geometry_end(context: &mut Main, bs: &BootServicesTable, handle: EfiHandle,
+                             stale_retry_used: u64,
                              map_size: u64 in Trapping,
                              desc_size: u64 in Trapping, key: MapKey,
                              best_start: u64, best_pages: u64, length: u64,
@@ -300,7 +321,9 @@ reaches BootServices + ExtentRootProvider + PortIo + MachineControl
                              best_offset: u64 in Trapping,
                              audit_offset: u64 in Trapping,
                              other_start: u64, other_virtual_start: u64,
-                             other_pages: u64 [1..=4503599627370495]) {
+                             other_pages: u64)
+    requires stale_retry_used <= 1 && 1 <= other_pages && other_pages <= 4503599627370495
+    {
         let checked_pages: u64 in Trapping = other_pages as u64 in Trapping;
         let checked_length: u64 in Trapping = checked_pages * PAGE_SIZE;
         let other_length: u64 = checked_length as u64;
@@ -309,7 +332,7 @@ reaches BootServices + ExtentRootProvider + PortIo + MachineControl
         let max_address: u64 = 0xFFFF_FFFF_FFFF_FFFF;
         transition other_start <= max_address - last_offset &&
                    other_virtual_start <= max_address - last_offset {
-            true -> audit_overlap(bs, handle, stale_retry_used,
+            true -> audit_overlap(context, bs, handle, stale_retry_used,
                                   map_size, desc_size, key,
                                   best_start, best_pages, length, best_end,
                                   best_offset, audit_offset,
@@ -320,20 +343,22 @@ reaches BootServices + ExtentRootProvider + PortIo + MachineControl
 
     // The selected record has now passed the same complete descriptor-geometry
     // validation as every other record; skip only its overlap comparison.
-    state audit_overlap(bs: &BootServicesTable, handle: EfiHandle,
-                        stale_retry_used: u64 [0..=1],
+    state audit_overlap(context: &mut Main, bs: &BootServicesTable, handle: EfiHandle,
+                        stale_retry_used: u64,
                         map_size: u64 in Trapping,
                         desc_size: u64 in Trapping, key: MapKey,
                         best_start: u64, best_pages: u64, length: u64,
                         best_end: u64 in Trapping,
                         best_offset: u64 in Trapping,
                         audit_offset: u64 in Trapping,
-                        other_start: u64, last_offset: u64 in Trapping) {
+                        other_start: u64, last_offset: u64 in Trapping)
+    requires stale_retry_used <= 1
+    {
         transition audit_offset == best_offset {
-            true -> audit_step(bs, handle, stale_retry_used,
+            true -> audit_step(context, bs, handle, stale_retry_used,
                                map_size, desc_size, key, best_start, best_pages,
                                length, best_end, best_offset, audit_offset)
-            _ -> audit_classify(bs, handle, stale_retry_used,
+            _ -> audit_classify(context, bs, handle, stale_retry_used,
                                 map_size, desc_size, key,
                                 best_start, best_pages, length, best_end,
                                 best_offset, audit_offset,
@@ -341,77 +366,85 @@ reaches BootServices + ExtentRootProvider + PortIo + MachineControl
         }
     }
 
-    state audit_classify(bs: &BootServicesTable, handle: EfiHandle,
-                         stale_retry_used: u64 [0..=1],
+    state audit_classify(context: &mut Main, bs: &BootServicesTable, handle: EfiHandle,
+                         stale_retry_used: u64,
                          map_size: u64 in Trapping,
                          desc_size: u64 in Trapping, key: MapKey,
                          best_start: u64, best_pages: u64, length: u64,
                          best_end: u64 in Trapping,
                          best_offset: u64 in Trapping,
                          audit_offset: u64 in Trapping,
-                         other_start: u64, last_offset: u64 in Trapping) {
+                         other_start: u64, last_offset: u64 in Trapping)
+    requires stale_retry_used <= 1
+    {
         let checked_start: u64 in Trapping = other_start as u64 in Trapping;
         let other_last: u64 in Trapping = checked_start + last_offset;
         transition other_start < best_start {
-            true -> audit_left(bs, handle, stale_retry_used,
+            true -> audit_left(context, bs, handle, stale_retry_used,
                                map_size, desc_size, key,
                                best_start, best_pages, length, best_end,
                                best_offset, audit_offset, other_last)
-            _ -> audit_right(bs, handle, stale_retry_used,
+            _ -> audit_right(context, bs, handle, stale_retry_used,
                              map_size, desc_size, key,
                              best_start, best_pages, length, best_end,
                              best_offset, audit_offset, other_start)
         }
     }
 
-    state audit_left(bs: &BootServicesTable, handle: EfiHandle,
-                     stale_retry_used: u64 [0..=1],
+    state audit_left(context: &mut Main, bs: &BootServicesTable, handle: EfiHandle,
+                     stale_retry_used: u64,
                      map_size: u64 in Trapping,
                      desc_size: u64 in Trapping, key: MapKey,
                      best_start: u64, best_pages: u64, length: u64,
                      best_end: u64 in Trapping,
                      best_offset: u64 in Trapping,
                      audit_offset: u64 in Trapping,
-                     other_last: u64 in Trapping) {
+                     other_last: u64 in Trapping)
+    requires stale_retry_used <= 1
+    {
         transition other_last < best_start {
-            true -> audit_step(bs, handle, stale_retry_used,
+            true -> audit_step(context, bs, handle, stale_retry_used,
                                map_size, desc_size, key, best_start, best_pages,
                                length, best_end, best_offset, audit_offset)
             _ -> idle()
         }
     }
 
-    state audit_right(bs: &BootServicesTable, handle: EfiHandle,
-                      stale_retry_used: u64 [0..=1],
+    state audit_right(context: &mut Main, bs: &BootServicesTable, handle: EfiHandle,
+                      stale_retry_used: u64,
                       map_size: u64 in Trapping,
                       desc_size: u64 in Trapping, key: MapKey,
                       best_start: u64, best_pages: u64, length: u64,
                       best_end: u64 in Trapping,
                       best_offset: u64 in Trapping,
-                      audit_offset: u64 in Trapping, other_start: u64) {
+                      audit_offset: u64 in Trapping, other_start: u64)
+    requires stale_retry_used <= 1
+    {
         transition other_start >= best_end {
-            true -> audit_step(bs, handle, stale_retry_used,
+            true -> audit_step(context, bs, handle, stale_retry_used,
                                map_size, desc_size, key, best_start, best_pages,
                                length, best_end, best_offset, audit_offset)
             _ -> idle()
         }
     }
 
-    state audit_step(bs: &BootServicesTable, handle: EfiHandle,
-                     stale_retry_used: u64 [0..=1],
+    state audit_step(context: &mut Main, bs: &BootServicesTable, handle: EfiHandle,
+                     stale_retry_used: u64,
                      map_size: u64 in Trapping,
                      desc_size: u64 in Trapping, key: MapKey,
                      best_start: u64, best_pages: u64, length: u64,
                      best_end: u64 in Trapping,
                      best_offset: u64 in Trapping,
-                     audit_offset: u64 in Trapping) {
+                     audit_offset: u64 in Trapping)
+    requires stale_retry_used <= 1
+    {
         transition audit_offset + desc_size + desc_size <= map_size &&
                    audit_offset + desc_size <= 65496 {
-            true -> audit_descriptor(bs, handle, stale_retry_used,
+            true -> audit_descriptor(context, bs, handle, stale_retry_used,
                                      map_size, desc_size, key,
                                      best_start, best_pages, length, best_end,
                                      best_offset, audit_offset + desc_size)
-            _ -> exit(bs, handle, stale_retry_used,
+            _ -> exit(context, bs, handle, stale_retry_used,
                       key, best_start, best_pages, length)
         }
     }
@@ -421,24 +454,28 @@ reaches BootServices + ExtentRootProvider + PortIo + MachineControl
     // do not grant, discard the old map-derived candidate, and obtain a new map
     // and key before the one permitted retry. Any other firmware error parks
     // unowned.
-    state exit(bs: &BootServicesTable, handle: EfiHandle,
-               stale_retry_used: u64 [0..=1], key: MapKey,
-               best_start: u64, best_pages: u64, length: u64) {
-        let exit_status: EfiStatus = self.boot_svc.exit_boot_services(bs, handle, key);
+    state exit(context: &mut Main, bs: &BootServicesTable, handle: EfiHandle,
+               stale_retry_used: u64, key: MapKey,
+               best_start: u64, best_pages: u64, length: u64)
+    requires stale_retry_used <= 1
+    {
+        let exit_status: EfiStatus = BootServices::exit_boot_services(&context.boot_svc, bs, handle, key);
         let exit_code: u64 = exit_status.code;
         transition exit_code == 0 {
-            true -> own(best_start, best_pages, length)
-            _    -> exit_failed(bs, handle, stale_retry_used, exit_code)
+            true -> own(context, best_start, best_pages, length)
+            _    -> exit_failed(context, bs, handle, stale_retry_used, exit_code)
         }
     }
 
     // The first stale key gets the spec-required fresh map/exit pair. A second
     // stale rejection parks: hostile or broken firmware cannot keep Cathedral
     // in an unbounded bootstrap loop, and no rejected transaction can grant.
-    state exit_failed(bs: &BootServicesTable, handle: EfiHandle,
-                      stale_retry_used: u64 [0..=1], exit_code: u64) {
+    state exit_failed(context: &mut Main, bs: &BootServicesTable, handle: EfiHandle,
+                      stale_retry_used: u64, exit_code: u64)
+    requires stale_retry_used <= 1
+    {
         transition stale_retry_used == 0 && exit_code == EFI_INVALID_PARAMETER.code {
-            true -> refresh_map(bs, handle, 1)
+            true -> refresh_map(context, bs, handle, 1)
             _    -> idle()
         }
     }
@@ -448,11 +485,11 @@ reaches BootServices + ExtentRootProvider + PortIo + MachineControl
     // provider requirement.
     // Reconstructing these fields alone does not grant authority; exactly this
     // selected trait-slot call establishes the first qualified root.
-    state own(best_start: u64, best_pages: u64, length: u64) {
+    state own(context: &mut Main, best_start: u64, best_pages: u64, length: u64) {
         let base: addr = best_start as addr;
         let geometry: Extent = Extent { base: base, length: length };
-        let first_extent: Extent = self.memory.grant(geometry);
-        transition { _ -> serial_init(first_extent, best_pages) }
+        let first_extent: Extent = ExtentRootProvider::grant(&context.memory, geometry);
+        transition { _ -> serial_init(first_extent, best_pages as u64 in Trapping) }
     }
 
     // --- MILESTONE 3: the serial report ------------------------------------
@@ -689,7 +726,7 @@ reaches BootServices + ExtentRootProvider + PortIo + MachineControl
 //      through their FIELDS at plan offsets, and the table pointer stays OFF
 //      the wire (EFI table services take no This — protocol methods like
 //      output_string do, and stay This-call `VtableField` bindings).
-//   3. Recast at a runtime offset — `&self.map_buf.bytes[offset] as &EfiMemoryDescriptor`
+//   3. Recast at a runtime offset — `&context.map_buf.bytes[offset] as &EfiMemoryDescriptor`
 //      is the §5b borrow-recast, indexed by a runtime `offset` with a runtime
 //      `desc_size` stride, bounds-guarded on the transitions.
 //   4. A large static buffer field ([u8; 65536]) with a smaller runtime capacity

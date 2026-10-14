@@ -16,9 +16,13 @@ use omega::language::core::extent;
 
 pub const PAGE_SIZE: u64 = 4096;
 
-pub data CathedralExtentRootProvider {}
+data ExtentRoots {}
 
-pub machine CathedralExtentRootProvider::grant_root(root: Extent) -> Extent
+pub CathedralExtentRootProvider satisfies ExtentRootProvider {
+    ExtentRootProvider::grant = ExtentRoots::grant_root;
+}
+
+machine ExtentRoots::grant_root(root: Extent) -> Extent
 satisfies ExtentRootProvider::grant
 {
     root

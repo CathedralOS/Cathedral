@@ -1,75 +1,45 @@
-// source/boot/uefi/main.omg
-//
-// MILESTONE 1 — an Omega UEFI application that prints "Hello from Omega" through
-// the firmware's Simple Text Output protocol and returns Success. BOOT-VERIFIED
-// under QEMU/OVMF (2026-07-04): the serial console shows the greeting and the
-// image returns Success. No C, no host runtime, no hand-written assembly — the
-// whole stack is Omega plus the compiler's derivers. Aligned to the canonical
-// compiling reference, Omega samples/uefi_hello (ea51376cd).
-//
-// The chain, all here + build.omg + the uefi contracts:
-//   * build.omg independently selects PE subsystem 10 and a freestanding
-//     trust baseline → an import-free PE32+ that firmware loads directly.
-//   * `boundary machine Main::run` is the EXPORTED CALLABLE: firmware calls it,
-//     and the parameter list is the boundary-trusted shape over the registers it
-//     hands us (handle in RCX, the SystemTable pointer in RDX). The boundary
-//     VOUCHES transitively for `table`'s declared layout — no cast, no mint, in
-//     trusted boot code.
-//   * `table.con_out` projects the live SystemTable at the plan offset (+64) —
-//     a dereference of the firmware pointer the boundary vouched for.
-//   * `output_string -> output_string` (field model) dispatches through the protocol's own
-//     vtable (mov rax,[rcx+8]; call rax) — COM/UEFI per-object dispatch.
-//   * utf16"..." is the CHAR16 text UEFI expects.
-//
-// Typed-ABI note: Cathedral names the boot ABI with typed wrappers (EfiStatus,
-// EfiHandle, &TextOutputProtocol) where the single-file sample used raw `addr`/`i32`.
-// The typed form is the target as the toolchain threads typed params through the
-// vtable path; the sample is the proven-compiling shape.
+// Cathedral's intended Omega boot sequence: greet, validate the memory map,
+// exit Boot Services, retain one admitted memory root, and report over COM1.
+// This source is not currently a bootable product; see README.md for the
+// compiler frontier and the missing physical-to-semantic entry adapter.
 
 use uefi::uefi;            // EfiHandle, EfiStatus, EFI_SUCCESS, EfiSystemTable, TextOutputProtocol, SimpleTextOutput
 use uefi::boot_services;   // BootServices
-use own_machine;           // Main::own_machine (milestone 2, sibling module)
+use own_machine;
+use core::extent;
+use omega::language::core::binding;
 use omega::language::core::assembly; // PortIo, MachineControl
 use omega::language::core::extent;   // ExtentRootProvider
 
-// Main's STATIC DATA (`&self`): the held capabilities (Simple Text Output for
-// the greeting, Boot Services for the milestone-2 memory-map dance) + the
-// greeting bytes + aligned memory-map storage. The launch inputs (handle, table) are
-// PARAMETERS to run, not fields of self — self is what the component IS, the args
-// are what firmware handed this invocation.
+// Invocation-owned storage. The eventual checked physical adapter supplies
+// these bindings and firmware arguments; this record does not grant authority.
 data Main {
-    out:      SimpleTextOutput;
-    boot_svc: BootServices;      // milestone 2 — GetMemoryMap / ExitBootServices
-    memory:   ExtentRootProvider; // admitted one-root-at-a-time memory provider
+    out: Binding<SimpleTextOutput>;
+    boot_svc: Binding<BootServices>;      // milestone 2 — GetMemoryMap / ExitBootServices
+    memory: Binding<ExtentRootProvider>; // admitted one-root-at-a-time memory provider
     msg:      [u16; 19];         // "Hello from Omega\r\n\0" as UTF-16 CHAR16 code units
     map_buf:  UefiMemoryMapStorage; // aligned bounded map backing, no authority
 }
 
-// The firmware entry: the currently booted raw exported callable. The UEFI
-// contract declares `UefiApplication: ProgramStorageEntry +
-// Calling<UefiX86_64>`, and Omega retains and validates that evaluated policy.
-// The future selected target stub will bind its exact image/initial-storage
-// positions to emitted geometry before forwarding this firmware invocation.
-// Until that Build/stub bridge exists, this callable does not itself originate
-// those roots. `handle` is unused at milestone 1 (milestone 2 needs it for
-// ExitBootServices). The audited machine-state axioms (long mode, paging,
-// interrupts, stack) are boot-target properties surfaced by the artifact.
-boundary machine Main::run(&self, handle: EfiHandle, table: &EfiSystemTable) -> EfiStatus
+// Ordinary checked boot logic, not a physical firmware entry declaration.
+// Selecting PE's subsystem alone cannot install this function or establish
+// the validity of table. The target adapter must supply those premises.
+machine Main::run(context: &mut Main, handle: EfiHandle, table: &EfiSystemTable) -> EfiStatus
 reaches SimpleTextOutput + BootServices + ExtentRootProvider + PortIo + MachineControl
 invokes SimpleTextOutput;
 invokes BootServices;
 invokes ExtentRootProvider;
 {
-    self.msg = utf16"Hello from Omega\r\n\0";
+    context.msg = utf16"Hello from Omega\r\n\0";
     // Project con_out through a frame local (the reference-param deref), then
     // dispatch OutputString(con_out, &msg) through the firmware's own vtable.
-    // No `validate` on the boot path — the boundary vouched for `table`'s shape.
+    // This borrow must originate from the adapter's validated firmware input.
     let con_out: &TextOutputProtocol = table.con_out;
-    _ = self.out.output_string(con_out, &self.msg);
+    _ = SimpleTextOutput::output_string(&context.out, con_out, &context.msg);
     // Milestone 2 — own the machine (own_machine.omg): walk the memory map, exit
     // boot services, obtain the first qualified Extent, then idle while
     // retaining it. Does NOT return (firmware is gone after exit), so the
     // terminal below is unreachable.
-    self.own_machine(handle, table);
+    Main::own_machine(context, handle, table);
     transition { _ -> (EFI_SUCCESS) }
 }

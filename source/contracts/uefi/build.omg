@@ -1,10 +1,12 @@
-// source/contracts/uefi/build.omg
-//
-// The UEFI ABI contracts package. Reaches nothing and uses default settings, so
-// `build` augments nothing. (A package with no deps and default settings could
-// omit build.omg entirely — ZII gives the defaults — but it is kept explicit
-// here.) PROVISIONAL SYNTAX (Omega build_and_package_model.md).
+// Firmware contracts use the ordinary, revision-pinned std calling vocabulary.
+// Package acquisition and trust decisions remain subject to root review.
 
-machine build(b: &mut Build) {
+machine build(builder: &mut Build) {
+    Build::package(builder, "cathedral_uefi");
+    Build::depend_as(builder, "std", Source::Git {
+        repository: "https://github.com/CathedralOS/Omega.git",
+        revision: "0acd49d4fea419095bbe907bf673599c3f570235",
+        selection: PackageSelection::Named { package: "omega_language_std" }
+    });
     // contracts reach nothing; no targets to augment.
 }

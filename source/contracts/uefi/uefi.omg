@@ -9,19 +9,17 @@
 // external leaves name a fn-ptr FIELD of the table struct — the field model (Omega
 // extern_boundary_and_format_domains.md §12, decided 2026-07-04).
 //
-// BOOT-VERIFIED SHAPE (aligned to Omega samples/uefi_hello, ea51376cd,
-// 2026-07-04 — milestone 1 boots under QEMU/OVMF). Cathedral names the ABI with
-// typed wrappers where the single-file sample used raw `addr`; the typed form is
-// the target, the sample is the proven-compiling shape.
+// Typed firmware declarations are retained as source ABI definitions. Their
+// presence does not install a physical entry or establish pointer validity.
 
 use omega::language::core::extent; // ProgramStorageEntry
-use omega::language::std::calling;
+use std::calling;
 
 // --- Scalars (UEFI spec) --------------------------------------------------
 
 // EFI_STATUS is UINTN (pointer-width). On x86-64 that is 64-bit; 0 == success,
 // high bit set == error.
-pub data EfiStatus { code: u64; }
+pub data EfiStatus [copy] { code: u64; }
 
 pub const EFI_SUCCESS:           EfiStatus = EfiStatus { code: 0 };
 pub const EFI_INVALID_PARAMETER: EfiStatus = EfiStatus { code: 0x8000_0000_0000_0002 };
@@ -29,7 +27,7 @@ pub const EFI_BUFFER_TOO_SMALL:  EfiStatus = EfiStatus { code: 0x8000_0000_0000_
 
 // EFI_HANDLE — an opaque firmware handle. We never dereference it, only hold and
 // pass it (a gated token; extern brief §12.2 case 3, opaque).
-pub data EfiHandle { raw: addr; }
+pub data EfiHandle [copy] { raw: addr; }
 
 // --- Simple Text Output protocol (con_out) --------------------------------
 //
@@ -59,10 +57,10 @@ pub boundary trait SimpleTextOutput {
 // The leaf is attached to the layout-owning protocol type. Dispatch reads the
 // named field and calls it under the selected UEFI/MS-x64 plan; there is no
 // provider table, magic slot index, or import thunk.
-uefi_x64 machine TextOutputProtocol::output_string_leaf(
+uefi_x86_64 machine TextOutputProtocol::output_string_leaf(
     console: &TextOutputProtocol,
     string: &[u16; 19]
-) -> EfiStatus satisfies SimpleTextOutput::output_string via Binding::VtableField(output_string);
+) -> EfiStatus satisfies SimpleTextOutput::output_string via ForeignBinding::VtableField(output_string);
 
 // --- The System Table (firmware's root hand-off structure) ----------------
 //
@@ -115,8 +113,10 @@ pub data EfiSystemTable {
 // generated firmware stub must still bind these semantic positions to the
 // emitted image and initial-storage geometry.
 pub data UefiX86_64 { }
-// Stable evidence identity for the policy selected by Calling<UefiX86_64>.
-UefiX86_64CallingPolicy: UefiX86_64 satisfies CallingPolicy;
+// The policy is a named implementation; its data namespace is not evidence.
+pub UefiX86_64CallingPolicy satisfies CallingPolicy {
+    CallingPolicy::plan = UefiX86_64::plan;
+}
 
 machine UefiX86_64::plan(
     signature: BoundarySignature
@@ -210,32 +210,11 @@ machine UefiX86_64::plan(
 }
 
 pub boundary trait UefiApplication:
-    ProgramStorageEntry + Calling<UefiX86_64>
+    ProgramStorageEntry + Calling<UefiX86_64CallingPolicy>
 {
 }
 
-// The currently boot-verified bootstrap entry is still an EXPORTED CALLABLE —
-// `boundary machine Main::run(&self,
-// handle: EfiHandle, table: &EfiSystemTable) -> EfiStatus` in boot/uefi/main.omg
-// (boot-verified 2026-07-04). Firmware hands ImageHandle (RCX) and the
-// SystemTable pointer (RDX); the parameter list is the boundary-trusted shape
-// over those registers, and the boundary VOUCHES TRANSITIVELY for `table`'s
-// declared layout — reading `con_out` through it needs no mint (no `validate` on
-// the trusted boot path; `validate` remains for bytes code *chooses* to check —
-// network, disk — not for the vouched firmware structure).
-//
-// The build image and trust baseline are set by orthogonal `Build` fields in
-// build.omg (`b.freestanding = true`, `b.subsystem = EfiApplication`). Neither
-// field selects the entry ABI: the target-owned `ProgramEntry` schema must
-// retain its explicit UEFI x86-64 calling policy; that retention is live, while
-// the generated bridge remains outstanding. The
-// AUDITED AXIOM LIST survives as designed — prose checked against the UEFI spec
-// and surfaced by the build artifact next to the exported callable, never typed
-// clauses (freestanding_boot_and_hardware_facts.md; the world-facts deflation):
-//   axiom: CPU in long mode, paging on, identity-mapped
-//   axiom: interrupts enabled; ≥ 128 KiB of 16-aligned stack
-//   axiom: the SystemTable pointer is the live EFI system table (the boundary's
-//          vouch; transitive through the declared shape).
-// Connecting this raw callable to the selected UefiApplication schema remains
-// Build/stub engineering. Until then it does not originate program-storage
-// roots, and the compiler must not recognize Main::run by name.
+// The checked target adapter must validate physical firmware arrival and
+// provide disjoint image/storage roots before crossing ProgramStorageEntry.
+// Cathedral's Main::run is ordinary checked code with explicit context;
+// declaring this schema alone neither installs it nor vouches for its inputs.
