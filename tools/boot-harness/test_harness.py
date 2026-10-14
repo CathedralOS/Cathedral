@@ -1,0 +1,88 @@
+"""Host-only controls: a stale image must never count as a successful build."""
+
+import importlib.util
+from pathlib import Path
+import subprocess
+import tempfile
+import unittest
+from unittest.mock import patch
+
+spec = importlib.util.spec_from_file_location('boot', Path(__file__).with_name('run.py'))
+boot = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(boot)
+
+
+class BootHarnessTests(unittest.TestCase):
+    def test_overlapping_runs_cannot_replace_each_others_image_or_log(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            parent = Path(temporary)
+            first = boot.create_run_directory(parent)
+            second = boot.create_run_directory(parent)
+            self.assertNotEqual(first, second)
+            def compile_image(command):
+                output = Path(command[command.index('--build-dir') + 1])
+                (output / 'omega-program.exe').write_bytes(output.parent.name.encode())
+            with patch.object(boot, 'run_checked', side_effect=compile_image):
+                first_image = boot.build_image(['omega'], Path('main.omg'), 'uefi_x86_64', first)
+                second_image = boot.build_image(['omega'], Path('main.omg'), 'uefi_x86_64', second)
+            (first / 'serial.log').write_bytes(b'first')
+            (second / 'serial.log').write_bytes(b'second')
+            self.assertEqual(first_image.read_bytes(), first.name.encode())
+            self.assertEqual(second_image.read_bytes(), second.name.encode())
+            self.assertEqual((first / 'serial.log').read_bytes(), b'first')
+
+    def test_smoke_requires_ordered_complete_numeric_report(self):
+        boot.check_boot_milestones(b'Hello from Omega\r\nOwned 128 MiB\r\n')
+        boot.check_boot_milestones(b'Hello from Omega\nOwned 99999+ MiB\n')
+        for output in (b'', b'Hello from Omega\r\n',
+                       b'Owned 128 MiB\nHello from Omega\n',
+                       b'Hello from Omega\nOwned rubbish MiB\n',
+                       b'Hello from Omega\nOwned 128 MiB'):
+            with self.subTest(output=output):
+                with self.assertRaises(ValueError):
+                    boot.check_boot_milestones(output)
+
+    def test_source_checkout_uses_current_cli_package(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            repository = Path(temporary)
+            (repository / 'Cargo.toml').touch()
+            command = boot.compiler_command(None, repository)
+            self.assertEqual(command[-3:], ['-p', 'omega', '--'])
+
+    def test_explicit_binary_wins(self):
+        command = boot.compiler_command('selected-omega', Path('absent'))
+        self.assertEqual(command, [str(Path('selected-omega').resolve())])
+
+    def test_failed_build_does_not_replace_or_return_stale_image(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            directory = Path(temporary)
+            stale = directory / 'esp/EFI/BOOT/BOOTX64.EFI'
+            stale.parent.mkdir(parents=True)
+            stale.write_bytes(b'old')
+            with patch.object(boot, 'run_checked', side_effect=subprocess.CalledProcessError(1, 'omega')):
+                with self.assertRaises(subprocess.CalledProcessError):
+                    boot.build_image(['omega'], Path('main.omg'), 'uefi_x86_64', directory)
+            self.assertEqual(stale.read_bytes(), b'old')
+
+    def test_success_without_product_rejects_stale_image(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            directory = Path(temporary)
+            (directory / 'omega-program.exe').write_bytes(b'old')
+            with patch.object(boot, 'run_checked'):
+                with self.assertRaisesRegex(ValueError, 'without publishing'):
+                    boot.build_image(['omega'], Path('main.omg'), 'uefi_x86_64', directory)
+
+    def test_publishes_only_fresh_product(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            directory = Path(temporary)
+            def compile_image(command):
+                output = Path(command[command.index('--build-dir') + 1])
+                (output / 'omega-program.exe').write_bytes(b'new')
+            with patch.object(boot, 'run_checked', side_effect=compile_image):
+                image = boot.build_image(['omega'], Path('main.omg'), 'uefi_x86_64', directory)
+            self.assertEqual(image.read_bytes(), b'new')
+            self.assertEqual(list(directory.glob('compile-*')), [])
+
+
+if __name__ == '__main__':
+    unittest.main()

@@ -1,76 +1,58 @@
-# Boot Harness — build the UEFI app and boot it under QEMU/OVMF
+# Cathedral Omega boot harness
 
-Host-side dev tool (never ships). Builds the Cathedral UEFI application
-([`source/kernel/boot/uefi`](../../source/kernel/boot/uefi)) and boots it under QEMU with OVMF
-(open-source UEFI firmware), so "does it print?" is one command.
-
-## Status
-
-The QEMU + firmware loop and Omega UEFI build run end to end. The current image
-prints the milestone greeting, exits firmware boot services, reports its owned
-memory over the 16550 serial driver, and idles with `hlt`.
-
-## What it does
-
-1. **Build** `source/kernel/boot/uefi` → `BOOTX64.EFI` (the Uefi64 target is declared in
-   that package's `build.omg`; the toolchain reads it).
-2. **Assemble an EFI System Partition** — a directory laid out as
-   `esp/EFI/BOOT/BOOTX64.EFI`, the path UEFI firmware boots by convention.
-3. **Run QEMU** with OVMF as the firmware and the ESP presented as a FAT disk.
-   OVMF loads `\EFI\BOOT\BOOTX64.EFI` and calls it — exactly like real hardware.
-
-Output goes to the serial console (`-serial stdio`), where the current milestone
-prints `Hello from Omega` and its owned-memory total before idling.
-
-## Prerequisites
-
-- **Python 3.10+** for the Bash harness to read the distribution profile.
-
-- **QEMU** (`qemu-system-x86_64` on `PATH`).
-  - Windows: install from qemu.org; add its folder to `PATH`.
-  - Linux: `apt install qemu-system-x86` (or your distro's package).
-- **OVMF firmware.** Modern QEMU ships the **split** form
-  (`edk2-x86_64-code.fd` + `edk2-i386-vars.fd` in its `share/` dir) — the scripts
-  prefer it, copying both into `build/boot-harness/` so the vars store is
-  writable and paths are space-free. Resolution order:
-  1. `$OVMF` — a single *combined* `OVMF.fd`, used via `-bios` (override);
-  2. QEMU's bundled `share/edk2-x86_64-code.fd` + `edk2-i386-vars.fd`, including
-     Homebrew's `share/qemu` layout;
-  3. system split OVMF (`/usr/share/OVMF/OVMF_CODE.fd` + `OVMF_VARS.fd`, …);
-  4. `reference_code/rust-osdev/ovmf-prebuilt/`.
-  - On Windows, QEMU's own install supplies it — nothing extra to fetch. On
-    Linux, `apt install ovmf` (or your distro's `edk2-ovmf`).
-- **Omega compiler.** The scripts use an installed `omega` command first. If
-  it is absent, they build and run `omega-cli` from a sibling `../Omega`
-  checkout with Cargo. Set `OMEGA_REPO` to use a checkout elsewhere.
+This host-only tool compiles the Omega boot source and boots that invocation's
+image under QEMU/OVMF. The current source is not yet bootable; see the
+[boot frontier](../../source/kernel/boot/uefi/README.md). The Rust lab has its
+own harness and is not evidence that the Omega source works.
 
 ## Run
 
-The harness reads `source/distribution/profile.json` for the boot entry and
-target. That file belongs to Cathedral's built-in distribution; image assembly
-stays in this host tool. See the [source layout](../../wiki/architecture/repository_layout.md).
+Python 3.10+ is required on every host. Bash and PowerShell wrappers call the
+same implementation:
 
-```sh
-# bash / Git Bash / Linux
-tools/boot-harness/run.sh
+```text
+python tools/boot-harness/run.py --compiler PATH_TO_OMEGA --prepare --build-only
+python tools/boot-harness/run.py --compiler PATH_TO_OMEGA --smoke
 ```
 
-```powershell
-# Windows PowerShell
-tools\boot-harness\run.ps1
+Alternatively use `run.sh` or `run.ps1` with the same arguments.
+`--prepare` runs ordinary `omega update` for dependency review; pending
+decisions stop the command. Review them and resume using the compiler's
+instructions. Nothing is automatically accepted.
+
+Compiler selection is explicit `--compiler` / `OMEGA_BIN`, then a checkout
+at `--omega-repo` / `OMEGA_REPO` (default sibling `../Omega`), then an
+installed `omega`. The checkout route uses Cargo package `omega`, not the
+retired `omega-cli` name. An explicit optimized binary is preferable for
+repeated iterations. In isolated worktrees, supply the checkout or binary
+explicitly.
+
+The distribution's `source/distribution/profile.json` selects the entry and
+`uefi_x86_64` target. Each compilation uses an empty temporary output
+directory. Only a newly emitted `omega-program.exe` is copied to
+`build/boot-harness/run-*/esp/EFI/BOOT/BOOTX64.EFI`; failed compilation or success
+without an image stops before QEMU. An old ESP image is never a fallback.
+
+## Firmware and execution
+
+Install `qemu-system-x86_64` on PATH. Windows also checks the standard
+`C:/Program Files/qemu` installation. Firmware lookup accepts `OVMF` as an
+explicit combined image, then checks QEMU's bundled split firmware (including
+Homebrew), Linux OVMF/edk2 paths and the local reference checkout. Missing
+firmware is an error. Split firmware gets a fresh writable variable store.
+
+Without `--smoke`, QEMU's serial console is interactive. With it, the guest
+runs headlessly for at most `--timeout` seconds (default 30), and this run's
+serial log must contain the greeting followed by a complete numeric
+`Owned N MiB` line. Timeout alone is not success. The check observes those
+milestones; it does not prove firmware correctness or long-term liveness.
+
+Logs, firmware copies and the ESP stay in a unique retained `run-*` directory
+under `--build-dir` (default `build/boot-harness`). Concurrent invocations never
+share images or logs. No network device is attached and reboot is disabled.
+
+Host-only stale-image and milestone controls:
+
+```text
+python tools/boot-harness/test_harness.py
 ```
-
-Set `OVMF` first if it is not auto-detected, e.g. `OVMF=/usr/share/ovmf/OVMF.fd`
-(bash) or `$env:OVMF = "C:\path\to\OVMF.fd"` (PowerShell).
-
-## Notes
-
-- The **split** `pflash` form (`OVMF_CODE.fd` + writable `OVMF_VARS.fd`) is the
-  default — it is what modern QEMU ships and what a real target uses. The vars
-  copy is reset each run, so the boot manager starts clean. A single combined
-  `OVMF.fd` via `-bios` is still honored through `$OVMF` for older setups.
-- The ESP, the firmware copies, and QEMU/OVMF logs land under
-  `build/boot-harness/` (gitignored). `ovmf-debug.log` captures the firmware's
-  (and later the app's) debug output.
-- `-machine q35` (modern chipset), `-no-reboot` (a failed boot won't loop), and
-  `-serial stdio` (firmware/app console mirrored to your terminal).
