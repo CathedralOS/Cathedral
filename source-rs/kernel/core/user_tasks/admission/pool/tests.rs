@@ -1,5 +1,23 @@
 use super::*;
 #[test]
+fn high_accounts_delegate_exhaust_and_reclaim_without_truncating_masks() {
+    let mut p = Pool::new(8, abi::MAX_TASKS);
+    let (child, mask) = p.prepare(0, 3).unwrap();
+    assert_eq!(child, 8);
+    p.commit(0, child, mask);
+    assert_eq!(p.available(0), 0);
+    assert_eq!(p.available(child), 3);
+    let (leaf, mask) = p.prepare(child, 2).unwrap();
+    p.commit(child, leaf, mask);
+    assert_eq!(p.available(leaf), 2);
+    assert_eq!(p.prepare(child, 0), Err(abi::NO_MEMORY));
+    p.reclaim(leaf, child);
+    p.release(child, leaf);
+    p.reclaim(child, 0);
+    p.release(0, child);
+    assert_eq!(p.available(0), 4);
+}
+#[test]
 fn funded_nested_slots_cannot_steal_sibling_capacity_and_death_returns_them() {
     let mut p = Pool::new(3, 8);
     p.assign(0, 1, 3).unwrap();

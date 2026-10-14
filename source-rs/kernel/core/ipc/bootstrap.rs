@@ -24,7 +24,7 @@ impl Ipc {
             retired_memory: 0,
             tasks,
             reservations,
-            alive: ((1u16 << tasks) - 1) as u8,
+            alive: (1u16 << tasks) - 1,
             endpoints,
             grants: Grants::new(tasks)?,
             initial: [[0; abi::MAX_INITIAL_ENDPOINTS]; MAX_TASKS],

@@ -1,5 +1,5 @@
 use super::*;
-use crate::user_tasks::address_space::{USER_CODE, USER_IMAGE_END, USER_STACK};
+use crate::user_tasks::address_space::{MAX_IMAGE_PAGES, USER_CODE, USER_IMAGE_END, USER_STACK};
 use alloc::vec;
 use alloc::vec::Vec;
 
@@ -154,7 +154,7 @@ fn rejects_aliases_wx_invalid_entry_and_excessive_memory() {
         put64(&mut b, 24, entry);
         assert!(matches!(parse(&b), Err(Error::Entry)));
     }
-    for size in [0, 64 * 4096, u64::MAX] {
+    for size in [0, MAX_IMAGE_PAGES as u64 * 4096, u64::MAX] {
         let mut b = fixture();
         put64(&mut b, 120 + 40, size);
         assert!(parse(&b).is_err());
@@ -162,4 +162,14 @@ fn rejects_aliases_wx_invalid_entry_and_excessive_memory() {
     let mut b = fixture();
     put64(&mut b, 64 + 40, 4097);
     assert!(parse(&b).is_err(), "overlap after page rounding");
+}
+
+#[test]
+fn image_limit_counts_rounded_pages_across_segments() {
+    let mut b = fixture();
+    // One executable page plus the remaining writable image pages.
+    put64(&mut b, 120 + 40, (MAX_IMAGE_PAGES as u64 - 1) * 4096);
+    assert!(parse(&b).is_ok());
+    put64(&mut b, 120 + 40, (MAX_IMAGE_PAGES as u64 - 1) * 4096 + 1);
+    assert!(parse(&b).is_err());
 }

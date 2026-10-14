@@ -10,7 +10,7 @@ pub(super) struct Grants {
     pub(super) ipc: Ipc,
 }
 pub(super) fn validate(initial_count: usize, config: &Config<'_>) -> Result<usize, Error> {
-    if initial_count == 0 || initial_count > 8 {
+    if initial_count == 0 || initial_count > crate::ipc::MAX_TASKS {
         return Err(Error::InvalidCount);
     }
     let count = initial_count

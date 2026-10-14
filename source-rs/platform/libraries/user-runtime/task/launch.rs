@@ -30,7 +30,7 @@ impl Launch {
         if endpoints.len() > abi::MAX_INITIAL_ENDPOINTS || launches.len() > abi::MAX_LAUNCHES {
             return Err(Error(abi::INVALID_ARGUMENT as i64));
         }
-        let mut record = Record([0; 128]);
+        let mut record = Record([0; abi::SPAWN_TREE_BYTES]);
         record.0[..8].copy_from_slice(&argument.to_le_bytes());
         record.0[8..16].copy_from_slice(&(endpoints.len() as u64).to_le_bytes());
         for (endpoint, bytes) in endpoints
@@ -50,5 +50,5 @@ impl Launch {
         result(arch::call3(number, self.raw(), record.0.as_ptr() as u64, 0)).map(Child)
     }
 }
-#[repr(align(128))]
-struct Record([u8; 128]);
+#[repr(align(256))]
+struct Record([u8; abi::SPAWN_TREE_BYTES]);

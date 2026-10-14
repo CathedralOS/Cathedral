@@ -60,7 +60,9 @@ pub const INVALID_ARGUMENT: u64 = (-22i64) as u64;
 pub const UNKNOWN: u64 = (-38i64) as u64;
 
 /// Bounded lab arenas. Task slots follow composition; IPC reserves one fixed arena.
-pub const MAX_TASKS: usize = 8;
+pub const MAX_TASKS: usize = 12;
+// Core account masks use u16; reserve a bit so full-mask construction cannot overflow.
+const _: () = assert!(MAX_TASKS < u16::BITS as usize);
 pub const MAX_LAUNCHES: usize = MAX_TASKS - 1;
 pub const MAX_ENDPOINTS: usize = 32;
 pub const DISK_REGISTER_READ: u64 = 24;
@@ -101,9 +103,9 @@ pub const MAX_INITIAL_ENDPOINTS: usize = 4;
 pub const SPAWN_BYTES: usize = 48;
 pub const ENVIRONMENT_BYTES: usize = 40;
 
-/// SPAWN_WITH's 48-byte prefix followed by count and seven launch grants.
+/// SPAWN_WITH's 48-byte prefix followed by count and MAX_LAUNCHES grants.
 /// Successful admission lends idle launch/peer authority until the child exits.
-/// Endpoints move as usual. arg0 launch, arg1 112-byte record, arg2 zero; tails zero.
+/// Endpoints move as usual. arg0 launch, arg1 SPAWN_TREE_BYTES-byte record, arg2 zero; tails zero.
 pub const TASK_SPAWN_TREE: u64 = 40;
 pub const SPAWN_TREE_BYTES: usize = SPAWN_BYTES + 8 + MAX_LAUNCHES * 8;
 
@@ -111,8 +113,9 @@ pub const SPAWN_TREE_BYTES: usize = SPAWN_BYTES + 8 + MAX_LAUNCHES * 8;
 /// dynamic-handle limit, charged handles (including escrow). arg1/arg2 must be zero.
 pub const IPC_BUDGET: u64 = 41;
 pub const IPC_BUDGET_BYTES: usize = 32;
-/// Conservative default fits every reserved task slot without overcommit.
-pub const DEFAULT_CHANNELS: usize = MAX_DYNAMIC_CHANNELS / MAX_TASKS;
+/// Stable per-account default; larger compositions must explicitly subdivide
+/// the unchanged 32-channel backing pool.
+pub const DEFAULT_CHANNELS: usize = 4;
 /// Lab CPU burst allowances refill at allowance/period of one execution CPU.
 pub const CPU_REFILL_PERIOD_US: u64 = 100_000;
 /// Caller-only measured execution microseconds. Same grant/copy ABI as CLOCK_READ.

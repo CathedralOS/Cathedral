@@ -9,10 +9,12 @@ pub const USER_DATA: u64 = USER_CODE + PAGE;
 pub const USER_IMAGE_END: u64 = USER_CODE + 1024 * 1024;
 pub const USER_STACK: u64 = USER_CODE + 2 * 1024 * 1024;
 pub const USER_STACK_TOP: u64 = USER_STACK + 4 * PAGE;
-pub const MAX_IMAGE_PAGES: usize = 64;
+pub const MAX_IMAGE_PAGES: usize = 80;
 const MAX_BACKING: usize = MAX_IMAGE_PAGES + 4 + 2 * cathedral_contracts::memory::MAX_PAGES;
 const _: () = assert!(MAX_BACKING <= u128::BITS as usize);
-const MAX_FRAMES: usize = 128;
+// Image + guarded stack + maximum private/shared mappings, with table headroom.
+// This bounds bookkeeping, not funding: every allocation still charges its account.
+const MAX_FRAMES: usize = 160;
 
 #[derive(Clone, Copy, Default)]
 struct Backing {

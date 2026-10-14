@@ -49,7 +49,7 @@ eight-handle wait set.
 
 [Page-object policy](../../../kernel/core/user_tasks/memory/regions/regions.rs) separately bounds bytes and
 object counts. Each task has at most four owned objects and four accepted reader
-objects; sixty-four global records cover all eight task slots even after producers
+objects; ninety-six global records cover all twelve task slots even after producers
 exit. Accepted readers retain their page and object charges until release/death.
 These bounds reserve metadata capacity, not physical RAM or future CPU time.
 

@@ -5,7 +5,7 @@ use cathedral_contracts::user as abi;
 /// Boot-bound read authority. Reserved child slots require an explicit grant; they never inherit access.
 pub struct Clock {
     handles: [u64; abi::MAX_TASKS],
-    readers: u8,
+    readers: u16,
 }
 impl Clock {
     pub fn new(tasks: usize, readers: &[usize]) -> Result<Self, u64> {
@@ -78,6 +78,13 @@ mod tests {
         clock.install(0, 4);
         assert_eq!(clock.check(0, 1), Err(abi::BAD_HANDLE));
         assert!(Clock::new(3, &[3]).is_err());
+        let last = abi::MAX_TASKS - 1;
+        let mut clock = Clock::new(abi::MAX_TASKS, &[last]).unwrap();
+        clock.install(last, 7);
+        assert_eq!(clock.check(last, 7), Ok(()));
+        assert!(!clock.allowed(last - 8));
+        clock.allow(last, false);
+        assert!(!clock.allowed(last));
     }
     #[test]
     fn deadlines_expire_at_equality_and_survive_wrap() {

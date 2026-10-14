@@ -39,7 +39,7 @@ recipient's reader-page quota and one of four reader-capability slots, whether
 queued, mapped or unmapped. Multiple rights to the same object are individually
 charged. Unmapping returns a virtual slot, not the capability/page reservation.
 The current maximum is sixteen pages per object/account quota; the global arenas
-are backed for the eight-account lab. No extra frames are allocated by forwarding.
+are backed for the twelve-account lab. No extra frames are allocated by forwarding.
 A retained reader can prevent returning or reassigning its sponsor's funding.
 
 Copying read authority permits further forwarding. This does not implement

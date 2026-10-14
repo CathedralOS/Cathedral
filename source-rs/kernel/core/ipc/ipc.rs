@@ -47,7 +47,7 @@ pub struct Ipc {
     epoch: u64,
     retired_memory: u64,
     tasks: usize,
-    alive: u8,
+    alive: u16,
     endpoints: alloc::vec::Vec<Option<Endpoint>>,
     grants: Grants,
     reservations: [usize; MAX_TASKS],

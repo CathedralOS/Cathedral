@@ -5,11 +5,11 @@ These fixed lab limits mirror contracts/user.rs; kernel admission revalidates th
 def programs(startup):
     launches = startup.get("launches", [startup["launch"]] if startup.get("launch") else [])
     dynamic = startup.get("dynamic_tasks", 0)
-    if type(dynamic) is not int or not 0 <= dynamic <= 7:
-        raise ValueError("dynamic_tasks must be an integer in 0..7")
+    if type(dynamic) is not int or not 0 <= dynamic <= 11:
+        raise ValueError("dynamic_tasks must be an integer in 0..11")
     entries = [startup["initial"], *launches, *({"ipc_channels": 0} for _ in range(dynamic))]
-    if not 1 <= len(entries) <= 8:
-        raise ValueError("resource budgets require 1..8 boot/launch accounts")
+    if not 1 <= len(entries) <= 12:
+        raise ValueError("resource budgets require 1..12 boot/launch accounts")
     return entries
 
 def channel_limits(startup):

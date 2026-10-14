@@ -39,7 +39,7 @@ pub(super) fn close(session: &mut Session, slot: usize) {
 }
 
 pub(super) unsafe fn reap(session: &mut Session, source: &mut Frames<'_>) {
-    let mut requesters = 0u8;
+    let mut requesters = 0u16;
     for index in 0..session.launches.len() {
         let model = &session.launches[index].model;
         let (slot, owner) = (model.child, model.owner);

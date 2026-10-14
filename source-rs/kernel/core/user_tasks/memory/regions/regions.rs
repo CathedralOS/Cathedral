@@ -56,7 +56,7 @@ impl Regions {
             private: [0; abi::MAX_TASKS],
             shared: [0; abi::MAX_TASKS],
         };
-        let mut seen = 0u8;
+        let mut seen = 0u16;
         for grant in grants {
             if grant.task >= tasks
                 || grant.private_pages > MAX_PAGES

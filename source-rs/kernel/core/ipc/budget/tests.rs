@@ -1,7 +1,21 @@
 use super::*;
 #[test]
+fn high_account_liveness_and_reclamation_do_not_alias_low_accounts() {
+    let mut limits = [0; abi::MAX_TASKS];
+    let last = abi::MAX_TASKS - 1;
+    limits[last] = 1;
+    let mut ipc = Ipc::with_reservations(1, abi::MAX_TASKS, &[], &limits).unwrap();
+    let [send, receive] = ipc.create(last).unwrap();
+    ipc.send(last, send, b"high account").unwrap();
+    ipc.close_task(last - 8);
+    assert_eq!(ipc.receive(last, receive, 64).unwrap().unwrap().len, 12);
+    ipc.close_task(last);
+    assert_eq!(ipc.charged_channels(last), 0);
+    assert!(ipc.create(last).is_err());
+}
+#[test]
 fn reservation_validation_rejects_overcommit_and_keeps_defaults_constant() {
-    assert_eq!(reservations(8, &[]).unwrap(), [4; 8]);
+    assert_eq!(&reservations(8, &[]).unwrap()[..8], &[4; 8]);
     assert_eq!(&reservations(2, &[]).unwrap()[..2], &[4; 2]);
     for (tasks, limits) in [
         (9, &[][..]),

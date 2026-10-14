@@ -2,7 +2,7 @@ use super::*;
 
 #[test]
 fn nested_reservations_conserve_capacity_and_keep_siblings_funded() {
-    let mut funding = Funding::new([100, 0, 0, 0, 0, 0, 0, 0]);
+    let mut funding = Funding::new(core::array::from_fn(|i| if i == 0 { 100 } else { 0 }));
     funding.charge(0, 10).unwrap();
     funding.assign(0, 1, 60).unwrap();
     funding.assign(0, 2, 20).unwrap();
@@ -25,7 +25,7 @@ fn nested_reservations_conserve_capacity_and_keep_siblings_funded() {
 
 #[test]
 fn retained_sponsor_charge_prevents_releasing_or_laundering_funding() {
-    let mut funding = Funding::new([100, 0, 0, 0, 0, 0, 0, 0]);
+    let mut funding = Funding::new(core::array::from_fn(|i| if i == 0 { 100 } else { 0 }));
     funding.assign(0, 1, 40).unwrap();
     funding.charge(1, 24).unwrap(); // image/tables/stack + retained object
     funding.refund(1, 20); // producer exits; reader remains
@@ -41,7 +41,7 @@ fn retained_sponsor_charge_prevents_releasing_or_laundering_funding() {
 
 #[test]
 fn invalid_and_overflow_requests_are_atomic() {
-    let mut funding = Funding::new([100, 0, 0, 0, 0, 0, 0, 0]);
+    let mut funding = Funding::new(core::array::from_fn(|i| if i == 0 { 100 } else { 0 }));
     for (owner, child, pages, error) in [
         (0, 0, 0, abi::INVALID_ARGUMENT),
         (0, abi::MAX_TASKS, 0, abi::INVALID_ARGUMENT),

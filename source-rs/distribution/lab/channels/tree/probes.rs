@@ -11,7 +11,7 @@ pub(super) fn check(launch: cathedral_user_runtime::task::Launch) {
         raw(abi::TASK_SPAWN_TREE, launch.raw(), 0, 1),
         abi::INVALID_ARGUMENT
     );
-    #[repr(align(128))]
+    #[repr(align(256))]
     struct Request([u64; abi::SPAWN_TREE_BYTES / 8]);
     let mut request = Request([0; abi::SPAWN_TREE_BYTES / 8]);
     request.0[6] = abi::MAX_LAUNCHES as u64 + 1;

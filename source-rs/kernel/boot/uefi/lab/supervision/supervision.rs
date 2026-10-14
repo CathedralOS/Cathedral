@@ -11,6 +11,13 @@ use core::fmt::Write;
 static ELF: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/supervision.elf"));
 
 pub fn exercise(memory: &mut PreparedMemory, console: &mut SerialPort) {
+    lifecycle(memory, console);
+    multiple::exercise(memory, console);
+    links::exercise(memory, console);
+    cpu::exercise(memory, console);
+    watchdog::exercise(memory, console);
+}
+fn lifecycle(memory: &mut PreparedMemory, console: &mut SerialPort) {
     let baseline = memory.frames.allocated();
     // SAFETY: Sole boot CPU, outside task execution.
     let heap = unsafe { HEAP.used() };
@@ -99,10 +106,6 @@ pub fn exercise(memory: &mut PreparedMemory, console: &mut SerialPort) {
     drop(reports);
     reclaimed(memory, baseline, heap);
     writeln!(console, "Cathedral Rust lab: supervision failed-spawn retries preserved live peers and memory baselines").ok();
-    multiple::exercise(memory, console);
-    links::exercise(memory, console);
-    cpu::exercise(memory, console);
-    watchdog::exercise(memory, console);
 }
 fn program(role: u64, argument: u64) -> Program<'static> {
     Program {

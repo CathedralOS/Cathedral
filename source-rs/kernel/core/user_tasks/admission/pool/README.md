@@ -14,8 +14,8 @@ Profiles may supply `startup.dynamic_tasks` unbound accounts, initially owned by
 the sole initial process. Their page/channel allowances start at zero.
 `startup.executables` supplies code-only grants to that initial process through
 `Executable::at`, without allocating dormant process accounts. Catalogue entries
-and static launch templates together fit seven code grants; total process accounts
-still fit eight. Catalogue entries carry no device or resource authority. Unlike a
+and static launch templates together fit eleven code grants; total process accounts
+fit twelve. Catalogue entries carry no device or resource authority. Unlike a
 static launch, no executable is assigned to one of these accounts at boot.
 
 1. `Launch::executable()` exports code authority from an owned plain launch.
@@ -60,7 +60,7 @@ so it cannot observe the preceding reservation's direct CPU total.
 
 ## Bounds and remaining work
 
-The lab still has eight total process accounts, an increasing-index ownership
+The lab still has twelve total process accounts, an increasing-index ownership
 DAG and a boot-supplied executable catalogue. It has no filesystem executable
 lookup, arbitrary ELF upload, general executable-capability IPC move, SMP or
 unbounded arena growth. Dynamic pools currently require one initial process.
