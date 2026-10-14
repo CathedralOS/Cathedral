@@ -124,8 +124,6 @@ pub(super) fn startup(matrix: Pair, pressure: bool) {
         .unwrap();
         // The source endpoint grants input ingress, never owner or display authority.
         exercise(matrix);
-        if !pressure {
-            recovery::exercise(matrix);
-        }
+        recovery::exercise(matrix, pressure);
     }
 }

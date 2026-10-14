@@ -1,7 +1,7 @@
 # Matrix storage delegation
 
 Start at [storage.rs](storage.rs) for exclusive source assignment, connection
-identity and local binding revisions. [The parent adapter](../../service/parent/storage.rs)
+identity and local binding revisions. [The parent adapter](../../service/parent/storage/storage.rs)
 checks that policy and forwards the [storage protocol](../../../../../contracts/storage.rs)
 through the same matrix executable at every level. The root adapter alone holds
 the storage provider's links. Kernel IPC transports these requests; the kernel
@@ -30,9 +30,20 @@ fault or cancellation uses the same path. Changing an inherited binding clears
 descendant grants; regranting the ancestor never implicitly revives descendants.
 Each request checks its revision at every hop, including requests already in
 flight when authority changes. Connection replacement requires explicit grants.
-Matrix or provider transport failure retires the matrix rather than guessing
-whether an uncertain mutation committed. Recovery reconciles committed data
-through fresh connections; there is no automatic mutation retry.
+Child requests resume through [pending forwarding](../../service/parent/storage/pending.rs).
+One storage exchange is active per matrix, with one deferred event per stream.
+Root provider links are separate from display/input: other branches can render
+and physical input can enter while storage is blocked. Nested matrices still
+serialize their shared upstream connection; they can answer unrelated local queries
+but cannot refresh input or render upstream until that exchange completes.
+Owner grant/revoke and teardown aborts still use bounded synchronous calls.
+
+A root provider timeout or closure revokes the requesting child's storage binding
+and retires that link, without killing display/input or retrying the mutation.
+A live accepted link cannot reconnect after timeout; provider replacement and
+explicit owner grants are required. A shared parent transport failure still retires
+the nested matrix. Recovery reads committed state through fresh bindings;
+an error does not establish that a write failed to commit.
 
 Run `python tools/boot-harness-rs/run.py --matrix-storage-test --release` from
 the repository root. [The fixture](../../../../../distribution/lab/matrix/storage/storage.rs)

@@ -167,10 +167,7 @@ def main():
         startup = composition.get("startup", {})
         profile = args.profile.resolve()
         if not args.kernel_only and profile == (Path(__file__).parent / "profiles/matrix-desktop.json").resolve():
-            # The eight-account stress fixture spends its last slot on the spinner.
-            startup["launches"] = startup["launches"][:3]
-            startup["launches"][2]["argument"] = 0
-            startup["links"] = []
+            # Nine accounts exercise persistence and the capped spinner together.
             startup["dynamic_tasks"] = 4
             startup["executables"].append({
                 "package": "cathedral-matrix-lab", "entry": "distribution/lab/matrix/main.rs",
@@ -252,6 +249,8 @@ def main():
             user_features.append('session-probes')
         if args.matrix_desktop_test and user["package"] == "cathedral-matrix-lab":
             user_features.append("desktop-probes")
+        if args.matrix_desktop_test and user["package"] == "cathedral-storage-service":
+            user_features.append("recovery-lab")
         if args.trace_input and user["package"] in ("cathedral-matrix-service", "cathedral-input-service", "cathedral-matrix-lab"):
             user_features.append("trace-input")
         if user_features:
@@ -305,10 +304,9 @@ def main():
     creationflags = subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0
     if args.matrix_desktop_test:
         capture.run(command, output, args.timeout, creationflags, ready_marker="Cathedral matrix desktop: ready", verify=lambda stream, output, serial: matrix_desktop_test.verify(stream, output, serial, pressure=args.pressure))
-        if not args.pressure:
-            shutil.copyfile(output / "serial.log", output / "first-boot-serial.log")
-            capture.run(command, output, args.timeout, creationflags,
-                        ready_marker="Cathedral matrix desktop: ready", verify=matrix_desktop_test.verify_reboot)
+        shutil.copyfile(output / "serial.log", output / "first-boot-serial.log")
+        capture.run(command, output, args.timeout, creationflags,
+                    ready_marker="Cathedral matrix desktop: ready", verify=matrix_desktop_test.verify_reboot)
         return 0
     if args.admission_test:
         protocol_test.run(command, output, args.timeout, creationflags, "Cathedral admission: executable capabilities, recursive funded pools, load rollback, stale grants and sibling survival passed")

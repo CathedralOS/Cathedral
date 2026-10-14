@@ -6,6 +6,10 @@ import pointer_test
 
 
 def verify(stream, output, serial, pressure=False):
+    if "timeout, late reply and lost commit acknowledgement reconciled" not in serial:
+        raise RuntimeError("Missing stalled provider isolation/recovery proof")
+    if "explicit tree recovery restored persisted apps" not in serial:
+        raise RuntimeError("Missing input/display provider recovery proof")
     if "atomic presentation, rejection and commit retry passed" not in serial:
         raise RuntimeError("Missing recursive atomic presentation proof")
     if "subtree replacement cleared pixels and preserved sibling" not in serial:
@@ -22,7 +26,7 @@ def verify(stream, output, serial, pressure=False):
         raise RuntimeError("Missing physical memory isolation evidence")
     if "sealed bitmap forwarding, clipping, replay and subtree reclamation passed" not in serial:
         raise RuntimeError("Missing sealed bitmap proof")
-    if not pressure and "private persisted colors, revoked writes, staged-work death and sibling recovery passed" not in serial:
+    if "private persisted colors, revoked writes, staged-work death and sibling recovery passed" not in serial:
         raise RuntimeError("Missing integrated storage/recovery proof")
     position = [40, 40]
 

@@ -18,7 +18,11 @@ impl Children {
     pub(in crate::service) fn wait(&self) -> (Option<Handle>, Option<u64>) {
         match &self.pending {
             Some((_, slot, deadline)) => (
-                Some(self.slots[*slot].as_ref().unwrap().control.1),
+                if self.retiring.is_some() {
+                    None
+                } else {
+                    Some(self.slots[*slot].as_ref().unwrap().control.1)
+                },
                 Some(*deadline),
             ),
             None => (None, None),
@@ -36,18 +40,28 @@ impl Children {
         let mut retired = None;
         let now = time::now()?;
         let mut bytes = [0; 64];
-        let result = self.slots[slot]
-            .as_ref()
-            .unwrap()
-            .control
-            .1
-            .receive_until(&mut bytes, now);
+        let result = if let Some(error) = self.retiring {
+            Err(Error(error))
+        } else {
+            self.slots[slot]
+                .as_ref()
+                .unwrap()
+                .control
+                .1
+                .receive_until(&mut bytes, now)
+        };
         let response = match result {
             Ok(len) => wire::decode(&bytes[..len]).unwrap_or(wire::error(abi::IO_ERROR)),
             Err(Error(code)) if code == abi::TIMED_OUT as i64 && !time::reached(now, deadline) => {
                 return Ok(None);
             }
             Err(error) => {
+                // Defer teardown while another exchange owns the parent/provider
+                // stream. A ready owner reply above can still complete normally.
+                if parent.upstream_busy() || parent.storing() {
+                    self.retiring = Some(error.0);
+                    return Ok(None);
+                }
                 // Do not reuse a stream that may still produce an uncorrelated reply.
                 self.stop(slot, server, world, parent)?;
                 retired = Some(slot);

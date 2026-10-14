@@ -50,7 +50,9 @@ retires the service so a late reply cannot be mistaken for another operation.
 [Storage delegation](world/storage/README.md) passes whole private catalog roots
 through the same matrix chain, independently of display grants. Owner assignment
 is exclusive between siblings; every request checks a local binding revision.
-Revocation/death aborts staged work; replacement requires fresh grants. Both the
+Child storage forwarding resumes from the service loop; root provider failures
+retire the affected storage binding. Shared parent transport failures still retire
+the matrix. Revocation/death aborts staged work; replacement requires fresh grants. Both the
 headless storage fixture and visible desktop exercise this boundary.
 
 Presentation follows [the bounded batch policy](world/presentation/presentation.rs),
@@ -77,7 +79,7 @@ keys, eight queued events per child and extents up to 4096. The
 identical service executables with separate state. Each owns and admits its own
 children using inherited launch loans and dynamic parent endpoints. Distribution
 policy uses private owner commands; children cannot invoke them. Input wakes idle clients through their granted hint channel. Upstream state
-refresh, storage and nontransactional surface operations still use synchronous calls; quiet servers retain a bounded
+refresh, owner storage grant/revoke and nontransactional surface operations still use synchronous calls; quiet servers retain a bounded
 maintenance wake to discover legacy links. This is not a latency guarantee.
 
 The visible matrix desktop now uses this provider for lifecycle, primitive surface

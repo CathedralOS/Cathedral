@@ -1,12 +1,14 @@
-//! Authenticate a local scope, then relay the unchanged catalog protocol one hop.
-//! Only the root adapter can name actual provider links. Transport loss retires
-//! this matrix so a late mutation reply can never become another child's reply.
+// Authenticate a local scope, then relay the unchanged catalog protocol one hop.
+// Owner grants/abort use the binding path here; child requests resume in pending.rs.
+// Only the root adapter names provider links and retires them independently.
 use super::*;
-use cathedral_contracts::storage;
+use cathedral_contracts::storage as protocol;
+use cathedral_user_runtime::server::Request;
+pub(super) use pending::Pending;
 impl Parent {
     fn storage_refresh(&mut self) -> Result<usize, Error> {
         if !self.upstream {
-            return Ok(self.storage_links.iter().flatten().count());
+            return Ok(self.storage_links.len());
         }
         let reply = self.call([wire::STORAGE_INFO, 0, 0, 0, 0, 0, 0, 0])?;
         let epoch = if reply[0] == 0 { reply[1] } else { 0 };
@@ -16,7 +18,7 @@ impl Parent {
         }
         Ok(usize::from(epoch != 0))
     }
-    pub(in super::super) fn storage_owner(
+    pub(in crate::service) fn storage_owner(
         &mut self,
         server: &Server,
         words: wire::Packet,
@@ -25,9 +27,19 @@ impl Parent {
         let status = match words {
             [wire::STORAGE_GRANT, slot @ 0..=1, source, 0, 0, 0, 0, 0] => {
                 match server.incarnation(slot as usize) {
-                    Some(inc) => self
-                        .scopes
-                        .grant(slot as usize, inc, source as usize, available),
+                    Some(inc) => {
+                        if !self.upstream && source < available as u64 {
+                            let result = self.storage_links[source as usize]
+                                .as_mut()
+                                .ok_or(Error(abi::DENIED as i64))
+                                .and_then(|client| client.pair());
+                            if let Err(error) = result {
+                                return Ok(wire::error(error.0 as u64));
+                            }
+                        }
+                        self.scopes
+                            .grant(slot as usize, inc, source as usize, available)
+                    }
                     None => Err(abi::DENIED),
                 }
             }
@@ -39,52 +51,33 @@ impl Parent {
         };
         Ok(wire::error(status.err().unwrap_or(0)))
     }
-    pub(in super::super) fn storage_close(&mut self, slot: usize) -> Result<(), Error> {
+    pub(in crate::service) fn storage_close(&mut self, slot: usize) -> Result<(), Error> {
         self.storage_refresh()?;
         if let Some(source) = self.scopes.revoke(slot) {
-            let reply = self.storage_call(
+            let reply = match self.storage_call(
                 source,
-                [wire::STORAGE_BASE + storage::ABORT, 0, 0, 0, 0, 0, 0, 0],
-            )?;
+                [wire::STORAGE_BASE + protocol::ABORT, 0, 0, 0, 0, 0, 0, 0],
+            ) {
+                Ok(reply) => reply,
+                Err(error) if self.upstream => return Err(error),
+                // Binding is already revoked. A retired provider stream cannot
+                // serve another child until explicit grant after provider restart.
+                Err(_) => return Ok(()),
+            };
             if reply[0] != 0 {
                 return Err(Error(reply[0] as i64));
             }
         }
         Ok(())
     }
-    pub(in super::super) fn storage_request(
+    pub(in crate::service) fn storage_request(
         &mut self,
-        slot: usize,
-        incarnation: u64,
+        request: Request,
         words: wire::Packet,
-    ) -> Result<wire::Packet, Error> {
-        self.storage_refresh()?;
-        let source = match self.scopes.source(slot, incarnation) {
-            Ok(source) => source,
-            Err(status) => return Ok(wire::error(status)),
-        };
-        if words == [wire::STORAGE_INFO, 0, 0, 0, 0, 0, 0, 0] {
-            return Ok([
-                0,
-                self.scopes.revision(slot, incarnation).unwrap(),
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-            ]);
-        }
-        if self
-            .scopes
-            .authorize(slot, incarnation, words[0] >> wire::STORAGE_SCOPE_BITS)
-            .is_err()
-            || !(wire::STORAGE_BASE + storage::READ..=wire::STORAGE_BASE + storage::ABORT)
-                .contains(&(words[0] & 0xffff))
-        {
-            return Ok(wire::error(abi::DENIED));
-        }
-        self.storage_call(source, words)
+    ) -> Result<(), Error> {
+        assert!(self.storage_pending.is_none());
+        self.storage_pending = Some(Pending::new(request, words, self.upstream)?);
+        Ok(())
     }
     fn storage_call(
         &mut self,
@@ -97,7 +90,7 @@ impl Parent {
             return self.call(words);
         }
         let bytes = wire::encode(words);
-        if words[3] > storage::CAPACITY as u64
+        if words[3] > protocol::CAPACITY as u64
             || bytes[32 + words[3] as usize..].iter().any(|b| *b != 0)
         {
             return Ok(wire::error(abi::INVALID_ARGUMENT));

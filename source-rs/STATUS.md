@@ -4,6 +4,51 @@ This map connects implemented mechanisms to their integrated consumers, proofs
 and remaining restrictions. The [lab guide](README.md) owns detailed ABI/build
 instructions. [Owner questions](../OWNER_QUESTIONS.md) own unresolved semantics.
 
+## Resumable storage and provider recovery
+
+Child storage requests now return to the matrix event loop while awaiting replies.
+The root's separate provider links let physical input and sibling rendering continue
+through a blocked save. Nested matrices retain one ordered upstream stream: local
+queries can proceed, but upstream input refresh/rendering waits behind storage.
+Owner grant/revoke and teardown aborts remain synchronous bounded operations.
+Follow [storage forwarding](platform/services/matrix/service/parent/storage/storage.rs),
+[pending replies](platform/services/matrix/service/parent/storage/pending.rs) and
+[deferred stream policy](platform/services/matrix/service/deferred.rs).
+
+The [desktop stall proof](distribution/lab/matrix/desktop/stalls.rs) gates writes
+before execution and after durable commit. It checks sibling repaint while blocked,
+normal completion, timeout followed by a late reply, refusal to recycle an accepted
+live link, and provider replacement with explicit fresh grants. Unacknowledged
+writes are reconciled by readback, never automatically retried. Root storage
+transport loss revokes the affected binding without killing display/input.
+Shared parent transport loss still retires the nested matrix.
+
+[Provider recovery](distribution/lab/matrix/desktop/providers.rs) kills the physical
+input decoder and display provider. Input loss cancels focus while apps survive;
+display loss retires the root. Distribution policy explicitly tears down/rebuilds
+adapters and the tree, re-funds the root from reclaimed reservations, then restores
+committed app colors. This is a lab restart policy, not a trusted recovery UI.
+
+The arena now supports twelve accounts; the pressure desktop uses nine so storage,
+the capped spinner and all recovery checks run together. IPC backing stays at 32
+channels and existing four-channel defaults remain: larger compositions must fit
+explicit reservations. Account liveness, clock, pool, cancellation and region masks
+use u16. The launch-loan packet is now 144 bytes with 256-byte-aligned runtime
+storage. Host tests cover high-account isolation, exhaustion and reclamation.
+The traced debug matrix grew to 67 loaded pages: the image bound is now 80 pages
+and its frame ledger 160 entries, preserving the 16 KiB stack, 1 MiB image window,
+u128 writable-backing mask and physical funding checks. ELF tests cover the exact
+rounded-page boundary. These remain experimental lab ABI limits. The debug smoke also caught boot-lab
+stack pressure from retaining supervision fixture locals across later suites;
+the supervision entrance now sequences those suites after each fixture unwinds.
+
+Validation: workspace host tests, profile budget tests, x86_64/ARM64 target lint,
+x86 debug smoke, ARM64 debug portability, traced debug desktop and release desktop
+with storage faults/provider rebuilds/cold reboot, combined nine-process pressure
+and the headless storage regression. The pressure run includes all recovery checks;
+its destructive startup took about 75 seconds, while ordinary window boots skip
+those probes.
+
 ## Responsive publication and persistent desktop
 
 The visible matrix session now gives each app a private delegated catalog. Apps
@@ -20,25 +65,17 @@ Follow [desktop recovery](distribution/lab/matrix/desktop/recovery.rs) and
 from the service loop after upstream replies. Other children's local reads can
 proceed; dependent mutations retain one event per stream with backpressure, keeping
 geometry stable until commit. FIFO is preserved within each stream. This does not
-yet make storage, placement, creation or all parent refresh operations asynchronous.
+yet make owner storage operations, placement, creation or all parent refresh operations asynchronous.
 A compact `PRESENT_RECTS` packet carries one or two existing rectangle updates in
 one atomic request per matrix hop; images and larger batches keep BEGIN/stage/COMMIT.
 Malformed compact updates publish nothing, and successful commits share retry history.
 
-The pressure fixture keeps the original eight-account budget and spends the storage
-provider's slot on its capped spinner instead. In traced release runs, nested
-key handling through repaint fell from 710 ms before this work to 130-280 ms; host
-input-to-verified-scanout was 391-563 ms versus 766 ms. These are diagnostic observations,
-not latency guarantees: host load, QEMU and tracing affect them. Equal-turn scheduling
+Earlier diskless pressure measurements fell from 710 ms guest key-to-repaint to
+130-280 ms after compact presentation; host input-to-scanout was 391-563 ms versus
+766 ms. The combined storage/pressure fixture has additional work and is not a
+like-for-like comparison (traced runs measured 687-766 ms host / 180-270 ms guest).
+These are diagnostic observations, not latency guarantees. Equal-turn scheduling
 and provider-funded service work remain; no priority or CPU-donation policy changed.
-Failure diagnostics now include the root task outcome for desktop RPC failure
-and the ATA status register for readiness timeouts. Debug publication unwinds
-validation before transport work and keeps one copy of each staged batch, staying
-within the existing 16 KiB stack and 64-page loaded-image limits.
-
-Validation includes workspace host tests, x86_64 userspace Clippy, ARM64 runtime/matrix
-Clippy, debug (including tracing) and release desktop cold boots, pressured release
-input, headless matrix/storage regressions, the older visual session and debug smoke.
 
 ## Atomic matrix presentation
 
@@ -206,13 +243,13 @@ remain until their extra behavior has moved into the integrated path with tests.
 
 | Mechanism / owner | Integrated consumer | Proof | Remaining restriction |
 | --- | --- | --- | --- |
-| [Address spaces, admission, faults](kernel/core/user_tasks/user_tasks.rs) | All separately compiled services/apps | `--smoke`: rollback, faults, stale tasks, frame/heap reclamation | One CPU (x86-64 or ARM64 proof); bounded executable catalogue and eight-account arena |
+| [Address spaces, admission, faults](kernel/core/user_tasks/user_tasks.rs) | All separately compiled services/apps | `--smoke`: rollback, faults, stale tasks, frame/heap reclamation | One CPU (x86-64 or ARM64 proof); bounded executable catalogue and twelve-account arena |
 | [Dynamic IPC and startup bundles](kernel/core/ipc/ipc.rs) | Matrix-child, root-display and physical-source connections | `--ipc-test`: moves, rejected bundles, death, quotas | Small copied messages; accepted moves can outlive their creator |
 | [Backed IPC reservations](kernel/core/ipc/budget/budget.rs) | Every initial/launch account, including matrix children | Host tests fill all 32 slots; `--ipc-test` exhausts restarted creators while a sibling fills its reservation | Owned idle accounts support conserving subdivision; no sponsorship transfer |
 | [CPU turns and measured ceilings](kernel/core/scheduler/README.md) | Every user launch subtree, including nested matrices | Host accounting tests; `--smoke` checks capped spinners, yields, restart debt and idle refill | Boot/owned-idle burst/refill caps; periodic-timer overrun; no deadlines, weights or service-call donation |
 | [Physical-memory funding](kernel/core/user_tasks/resources/physical/README.md) | Every admitted image, stack, page table and runtime buffer; recursive matrix pool | Host conservation/bank tests; smoke rollback and retained readers; admission exhaustion and desktop pixel checks | Eager bounded bank; idle-child assignment; no swap, active rebudgeting or sponsorship transfer |
 | [Recursive launch loans](kernel/core/user_tasks/lifecycle/supervision/delegation.rs) | Matrices own direct children, lend budgets further, reclaim subtrees | `--ipc-test` plus matrix replacement tests | Static launch loans plus executable-authorized process pools; fixed account arena |
-| [Executable-authorized admission](kernel/core/user_tasks/admission/pool/README.md) | Apps and the matrix desktop construct descendants from code authority and a process pool | `--admission-test`: recursive launch, exhaustion, load rollback, retained funding, sibling survival | Boot-supplied catalogue; eight accounts; device grants remain static |
+| [Executable-authorized admission](kernel/core/user_tasks/admission/pool/README.md) | Apps and the matrix desktop construct descendants from code authority and a process pool | `--admission-test`: recursive launch, exhaustion, load rollback, retained funding, sibling survival | Boot-supplied catalogue; twelve accounts; device grants remain static |
 | [Matrix lifecycle](platform/services/matrix/service/children/children.rs) | Same provider above apps and another matrix | `--matrix-test`: replacement preserves an outside sibling | Two direct children; distribution supplies policy through owner-only control |
 | [Local viewport, focus and capture](platform/services/matrix/world/world.rs) | Nested and sibling visible apps | Host policy tests; `--matrix-test`; `--matrix-desktop-test` physical focus | Five keys; coalesced wake channels; synchronous upward refresh |
 | [Owned surfaces](platform/services/matrix/world/surface/README.md) | App rectangles cross actual matrix boundaries to the existing compositor | Host quota/name/clipping/stacking tests; scanout removal and teardown checks | Sixteen surfaces; bounded immutable RGBX images; no text surfaces or vblank guarantees |
@@ -270,10 +307,10 @@ activity. The remaining boundary work is recorded below:
 Matrix input now wakes idle apps; retained local scenes replay after placement
 changes. The desktop test checks idle CPU use and moves without app repaint.
 `--matrix-desktop-test --pressure` adds a spinner inside a 20% nested CPU ceiling
-and reports key-to-scanout latency (roughly 0.4 to 0.6 seconds in recent traced release runs). Equal
+with persistent storage and reports key-to-scanout latency. Equal
 turns and the remaining synchronous parent RPC paths still need latency work. Owned surface objects now replace fixed
 path keys and conserve backing through recursive allowances. Physical admission
-funding and shared image objects now reach the integrated desktop. Root-adapter recovery/trusted-path behavior remains an owner-level
+funding and shared image objects now reach the integrated desktop. The lab exercises explicit root-adapter recovery; production trusted-path behavior remains an owner-level
 policy question. SMP, GPU support and the database filesystem follow these
 boundaries rather than becoming prerequisites for exercising them.
 

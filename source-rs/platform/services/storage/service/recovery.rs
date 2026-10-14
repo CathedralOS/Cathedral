@@ -50,6 +50,11 @@ pub fn request(
     server: &mut Server,
     request: &Request,
 ) -> Result<bool, Error> {
+    if let [0xf2, phase @ 1..=2] = bytes {
+        *cut = 10 + *phase;
+        server.reply(request, b"armed")?;
+        return Ok(true);
+    }
     if let [0xf1, phase @ 1..=4] = bytes {
         *cut = *phase;
         server.reply(request, b"armed")?;
@@ -73,6 +78,19 @@ pub fn request(
         }
     }
     Ok(false)
+}
+/// Desktop-only test gate: pause a replacement before work or after durable
+/// completion but before acknowledgement. The owner can release or kill us.
+pub fn gate(phase: u8, requested: &mut u8) -> Result<(), Error> {
+    if *requested != 10 + phase {
+        return Ok(());
+    }
+    *requested = 0;
+    Handle::bootstrap(1)?.send(b"blocked")?;
+    let mut bytes = [0; 64];
+    let len = Handle::bootstrap(0)?.receive(&mut bytes)?;
+    assert_eq!(&bytes[..len], &[0xf3]);
+    Ok(())
 }
 pub fn checkpoint(phase: u8, requested: u8) {
     if phase == requested {

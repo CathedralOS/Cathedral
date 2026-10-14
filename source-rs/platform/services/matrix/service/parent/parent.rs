@@ -4,6 +4,7 @@ use super::*;
 use cathedral_user_runtime::{ipc::Handle, task::Environment, time};
 pub(super) struct Parent {
     pending: Option<presentation::Pending>,
+    storage_pending: Option<storage::Pending>,
     scopes: cathedral_matrix_service::world::storage::Scopes,
     storage_links: [Option<cathedral_user_runtime::storage::Client>; 2],
     storage_epoch: u64,
@@ -35,6 +36,7 @@ impl Parent {
     pub const fn empty() -> Self {
         Self {
             pending: None,
+            storage_pending: None,
             scopes: cathedral_matrix_service::world::storage::Scopes::empty(),
             storage_links: [None, None],
             storage_epoch: 0,

@@ -86,9 +86,9 @@ subtree, and overlapping it with an outside sibling. The same checks run under
 CPU pressure and after repeated dynamic subtree replacement.
 
 This is a bounded rectangle/immutable-image lab, not a complete compositor API.
-There are still two direct children per matrix, sixteen root primitives, and eight
+There are still two direct children per matrix, sixteen root primitives, and twelve
 process accounts. Text, streaming image updates, active quota redistribution
-and root-provider recovery remain separate work. Bounded atomic presentation is
+remain separate work. The desktop now tests explicit root-tree recovery after provider loss. Bounded atomic presentation is
 implemented through BEGIN/stage/COMMIT and the compact rectangle operation below.
 The prior fixed six path keys and two-level rendering encoding are gone;
 recursion is limited by supplied budgets and the lab's process arena.
@@ -98,7 +98,7 @@ recursion is limited by supplied budgets and the lab's process arena.
 [Request validation](../../service/requests/presentation.rs) previews every update
 before [the parent publisher](../../service/parent/presentation.rs) starts work.
 The service resumes that publisher after each reply, answering other children's
-local queries while dependent events wait in [bounded stream slots](../../service/publication.rs).
+local queries while dependent events wait in [bounded stream slots](../../service/deferred.rs).
 Placement, revocation and disconnect processing follow publication, so the validated
 geometry cannot change halfway through a commit. Transport loss retires the matrix;
 this is not a durable cross-provider commit/retry protocol.

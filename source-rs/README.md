@@ -321,7 +321,7 @@ The CPU profile is qemu64, with no claim to optional virtualization exception
 semantics or physical-hardware coverage. Unsafe wrappers are boot-only lab
 mechanisms, not application APIs.
 
-The runtime supports a configurable limit of 1â€“64 trusted kernel tasks on one
+The runtime supports a configurable limit of 1Ã¢â‚¬â€œ64 trusted kernel tasks on one
 CPU (default 8), plus an optional frame budget for stacks and their tables.
 `kernel_tasks::spawn(fn())` returns a `TaskId` or an admission error. IDs contain slot
 generations and are scoped to a session; reused slots do not revive old IDs.
@@ -403,14 +403,14 @@ initial FP state is clean and I/O privilege is zero.
 | 30: Memory seal | Region handle, link token | Irreversibly remove WRITE and offer to that live service |
 | 31: Memory map | Producer-local offer, service link | Accept authorized RO/NX lease and return a fresh local reader handle |
 | 32: Memory pages | Region handle | Caller-owned or accepted region page count |
-| 33: IPC wait many | Pointer to 1â€“8 LE u64 receive tickets, count, absolute deadline | Ready index or error; validates the copied array and all receive rights, consumes no data, requires clock |
+| 33: IPC wait many | Pointer to 1Ã¢â‚¬â€œ8 LE u64 receive tickets, count, absolute deadline | Ready index or error; validates the copied array and all receive rights, consumes no data, requires clock |
 | 34: IPC create | 16-byte writable destination, 0, 0 | 0 after installing local send/receive handles; `NO_MEMORY` at quota |
 | 35: IPC close | Local handle, 0, 0 | 0 after dropping the grant; copied handles become stale |
 | 36: IPC send capability | Destination handle, 80-byte packet, 0 | Payload length after atomic one-endpoint move into the queue |
 | 37: IPC receive capability | Receive handle, writable 80-byte packet, 0 | Payload length and optional installed handle; blocks on empty |
 | 38: task spawn with endpoints | Launch grant, 48-byte request, 0 | Child ticket after admitting and moving the whole initial bundle; failure retains all source grants |
 | 39: initial environment | Writable 40-byte destination, 0, 0 | 0 after copying count and up to four initial local endpoint names; never reinstalls grants |
-| 40: task spawn with launch loans | Launch grant, 112-byte request, 0 | Child ticket after atomic endpoint moves and selected idle launch loans; failure retains all grants |
+| 40: task spawn with launch loans | Launch grant, 144-byte request, 0 | Child ticket after atomic endpoint moves and selected idle launch loans; failure retains all grants |
 | 41: IPC budget | Writable 32-byte destination, 0, 0 | 0 after copying caller-local channel limit/charge and dynamic handle limit/charge as four LE u64 words |
 | 42: CPU read | Local clock grant, 0, 0 | Caller-local direct CPU microseconds |
 | 43/44: resource budget/assignment | Local output or owned idle launch and limits | [Conserved page/IPC quotas](kernel/core/user_tasks/resources/README.md) |
@@ -438,7 +438,7 @@ run in separate boot-managed sessions.
 
 The [ELF preflight](kernel/core/user_tasks/admission/elf/elf.rs) accepts little-endian ELF64,
 System V ABI version 0, `ET_EXEC` for the selected CPU (x86-64 or AArch64). Limits are 4 MiB per file, 16 program
-headers, eight load segments and 64 image pages total. Each load segment must be
+headers, eight load segments and 80 image pages total. Each load segment must be
 readable, 4-KiB aligned in both file and virtual memory, have alignment 4096,
 and fit in the 1-MiB image window starting at `0x8000000000`. Segments cannot
 share pages or combine write and execute permission. The entry must lie within
@@ -503,7 +503,7 @@ attached authority with `TOO_SMALL` and preserves the message. Boot grants canno
 be moved; dynamic grants cannot yet be duplicated or independently revoked.
 
 Each initial/launch account has a backed channel reservation: four by default,
-or profile `ipc_channels` in 0â€“16. All accounts, including dormant children, must
+or profile `ipc_channels` in 0Ã¢â‚¬â€œ16. All accounts, including dormant children, must
 fit the 32-channel pool. [Accounting](kernel/core/ipc/budget/budget.rs) retains the original
 account's charge through endpoint moves, creator death and replacement; final
 closure of both ends refunds it. Each recipient separately pays for its dynamic
@@ -580,7 +580,7 @@ uses it for retained images without pixel copies at intermediate matrices.
 
 ## Userspace supervision experiment
 
-A session may reserve up to seven launch grants within the eight-task and
+A session may reserve up to eleven launch grants within the twelve-task and
 thirty-two-endpoint limits. Each reserves one child slot and two endpoint slots for a
 boot-approved executable. Boot initially binds each launch grant to a supervisor
 and a connection port to an initial task, which may be the supervisor itself. The grant selects the executable,
@@ -765,7 +765,7 @@ The bootstrap UART remains the documented privileged platform-driver exception.
 marks the default distribution's successful drawing and service startup.
 
 The host profile supplies `startup.initial` and an optional `startup.launches`
-array (up to seven, within eight total task slots). Each selects a package, entry and ELF target; a child may
+array (up to eleven, within twelve total task slots). Each selects a package, entry and ELF target; a child may
 request a framebuffer, keyboard or disk grant and a fixed first argument. Initial and
 child entries may request clock access with `clock: true`. Each device resource
 has at most one owner. The kernel grants the initial task distinct launch and
@@ -926,7 +926,7 @@ The [memory contract](contracts/memory.rs) defines explicit per-task private and
 accepted-reader budgets, each up to sixteen 4 KiB pages (64 KiB). An allocation
 contains one to sixteen zeroed pages. Independently, a task can own at most four
 objects and accept at most four reader objects. The 64 session slots cover those
-limits for all eight tasks, including readers retained after producer exit; a
+limits for all twelve tasks, including readers retained after producer exit; a
 larger page grant cannot consume another task's metadata capacity. An unmapped
 guard follows each process-local mapping slot (four private plus four reader
 slots). Mapping addresses never contain the global backing index. Runtime mappings are non-executable. Task admission reserves their
@@ -1049,6 +1049,6 @@ The recursive desktop now persists each app's color through its matrix-local
 catalog. Ordinary `matrix-desktop.json --release --window` boots retain
 `build/boot-harness-rs/matrix-desktop-storage.raw`, separate from the default demo.
 `--matrix-desktop-test` enables destructive probes on a disposable image and then
-cold-boots that same image to check restoration. `--pressure` instead uses the last
-process slot for a capped spinner and omits storage. See the
+cold-boots that same image to check restoration. `--pressure` adds a ninth process
+for a capped spinner while retaining storage and all recovery checks. See the
 [matrix lab guide](distribution/lab/matrix/README.md) for navigation and limitations.

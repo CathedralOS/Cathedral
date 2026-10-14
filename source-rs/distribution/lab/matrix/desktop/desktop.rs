@@ -4,7 +4,7 @@ use cathedral_contracts::input;
 use cathedral_user_runtime::{ipc, task::Launch};
 const BACKGROUND: u64 = 0x101827;
 fn owner(pair: Pair, words: wire::Packet) {
-    assert_eq!(call(pair, words), [0; 8]);
+    assert_eq!(call(pair, words), [0; 8], "owner request {words:?}");
 }
 fn launch_inner(pair: Pair, pressure: bool) {
     owner(pair, [wire::RUN_PAGES, 0, 2, 4, 0, 0, 0, 0]);
@@ -47,13 +47,11 @@ fn inner(pair: Pair, pressure: bool) {
             wire::route([wire::RUN, 1, 2, 0, 0, 0, 0, 0], 0).unwrap(),
         );
     }
-    if !pressure {
-        owner(pair, [wire::STORAGE_GRANT, 0, 0, 0, 0, 0, 0, 0]);
-        owner(
-            pair,
-            wire::route([wire::STORAGE_GRANT, 0, 0, 0, 0, 0, 0, 0], 0).unwrap(),
-        );
-    }
+    owner(pair, [wire::STORAGE_GRANT, 0, 0, 0, 0, 0, 0, 0]);
+    owner(
+        pair,
+        wire::route([wire::STORAGE_GRANT, 0, 0, 0, 0, 0, 0, 0], 0).unwrap(),
+    );
     owner(pair, [wire::SURFACE_LIMIT, 0, 8, 0, 0, 0, 0, 0]);
     owner(
         pair,
@@ -93,8 +91,8 @@ fn bitmap(matrix: Pair) {
     pixel(matrix, 334, 292, BACKGROUND);
     pixel(matrix, 682, 292, 0xffcc44);
 }
-pub fn run() -> u64 {
-    let session = admission::start();
+fn setup(probes: bool) -> admission::Session {
+    let mut session = admission::start();
     let matrix = session.matrix;
     let pressure = session.pressure;
     owner(
@@ -117,28 +115,36 @@ pub fn run() -> u64 {
     );
     owner(matrix, [wire::RUN_PAGES, 1, 1, 0, 0, 0, 0, 0]);
     owner(matrix, [wire::RUN, 1, 1, 1, 0, 0, 0, 0]);
-    if !pressure {
-        owner(matrix, [wire::STORAGE_GRANT, 1, 1, 0, 0, 0, 0, 0]);
-    }
+    owner(matrix, [wire::STORAGE_GRANT, 1, 1, 0, 0, 0, 0, 0]);
     owner(matrix, [wire::SURFACE_LIMIT, 1, 8, 0, 0, 0, 0, 0]);
     owner(
         matrix,
         [wire::PLACE, 1, 500, 180, 220, 180, wire::KEY_MASK, 0],
     );
-    if cfg!(feature = "desktop-probes") && !recovery::sibling_saved(matrix) {
+    if probes && !recovery::sibling_saved(matrix) {
         funding::exercise(matrix, pressure);
     }
     inner(matrix, pressure);
-    if cfg!(feature = "desktop-probes") {
+    if probes {
         probes::startup(matrix, pressure);
+        if !recovery::sibling_saved(matrix) {
+            stalls::exercise(&mut session);
+        }
     }
     if pressure {
         cathedral_user_runtime::write(b"Cathedral matrix desktop: capped spinner active\n")
             .unwrap();
     }
+    session
+}
+pub fn run() -> u64 {
+    let mut session = setup(cfg!(feature = "desktop-probes"));
+    if cfg!(feature = "desktop-probes") && !recovery::sibling_saved(session.matrix) {
+        session = providers::exercise(session);
+    }
     session.start_input();
     cathedral_user_runtime::write(b"Cathedral matrix desktop: ready\n").unwrap();
     loop {
-        matrix.1.receive(&mut [0; 64]).unwrap();
+        session.matrix.1.receive(&mut [0; 64]).unwrap();
     }
 }

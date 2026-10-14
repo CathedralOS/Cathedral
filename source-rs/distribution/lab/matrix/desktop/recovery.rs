@@ -61,7 +61,7 @@ pub(super) fn restored(matrix: Pair) -> bool {
         false
     }
 }
-pub(super) fn exercise(matrix: Pair) {
+pub(super) fn exercise(matrix: Pair, pressure: bool) {
     assert_eq!(app(matrix, true, 8)[0], 0);
     pixel(matrix, 140, 190, 0xd18b35);
     pixel(matrix, 510, 190, app::RIGHT);
@@ -96,7 +96,7 @@ pub(super) fn exercise(matrix: Pair) {
         pixel(matrix, 316, 292, BACKGROUND);
         pixel(matrix, 510, 190, 0xd18b35);
         assert_eq!(app(matrix, false, wire::HEALTH)[0], 0);
-        inner(matrix, false);
+        inner(matrix, pressure);
         pixel(matrix, 140, 190, 0xd18b35); // Committed color, not staged toggle.
         bitmap(matrix);
         for state in [input::PRESS, input::RELEASE] {

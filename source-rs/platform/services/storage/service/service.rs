@@ -45,6 +45,10 @@ fn serve(store: &mut cathedral_object_store::Store<cathedral_ata_pio::Ata>) -> R
         }
         // Link position is the boot-approved root binding, stable across replacement.
         let root = request.client.unwrap();
+        #[cfg(feature = "recovery-lab")]
+        if wire::word(bytes, 0) == wire::REPLACE {
+            recovery::gate(1, &mut cut)?;
+        }
         let result = clients[root].request(store, root, request.incarnation, bytes, |_phase| {
             #[cfg(feature = "recovery-lab")]
             recovery::checkpoint(_phase, cut);
@@ -57,6 +61,10 @@ fn serve(store: &mut cathedral_object_store::Store<cathedral_ata_pio::Ata>) -> R
             Ok(record) => record.reply(),
             Err(error) => wire::error(error),
         };
+        #[cfg(feature = "recovery-lab")]
+        if wire::word(bytes, 0) == wire::REPLACE {
+            recovery::gate(2, &mut cut)?;
+        }
         server.reply(&request, &reply)?;
     }
 }

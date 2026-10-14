@@ -84,17 +84,18 @@ The root owns the compositor connection; children have neither it nor a framebuf
 This renderer has two direct children per matrix and sixteen root surface objects.
 It supports sealed RGBX images, but does not yet integrate the older session's text, synthetic pointers or
 richer scene snapshots. Recursive stacking has no hard-coded two-level path keys.
-Device/root-provider recovery remains separate from the proved inner-subtree
-recovery. [STATUS.md](../../../STATUS.md) tracks these boundaries and the kernel
+[Provider recovery](desktop/providers.rs) explicitly rebuilds the root tree after
+input/display loss. [Storage stalls](desktop/stalls.rs) prove sibling rendering
+through blocked saves and reconcile unacknowledged commits after provider replacement. [STATUS.md](../../../STATUS.md) tracks these boundaries and the kernel
 metadata/resource audit. Protocol locality is not a complete timing-isolation claim.
 
 The desktop retains app rectangles across owner placement changes. Its startup
 probe checks that idle apps do not repaint or consume 20 ms of CPU per second.
 Use `--matrix-desktop-test --pressure --release --timeout 120` to add a
 non-yielding descendant inside a 20% nested CPU allowance. Physical-input tests
-report scanout latency; current equal-turn scheduling still takes roughly 0.4 to 0.6 seconds
-in recent runs of that deliberately constrained subtree. The ordinary profile has no spinner. The pressure profile omits storage to keep
-the same eight-process arena. Add `--trace-input` for elapsed/CPU diagnostics.
+report scanout latency. This nine-process profile now includes storage, provider
+recovery and cold reboot alongside the spinner. The ordinary profile has no spinner.
+Add `--trace-input` for elapsed/CPU diagnostics; these are not latency guarantees.
 Compact rectangle packets avoid BEGIN/stage/COMMIT round trips at every level;
 publication waits now return to the service loop. Neither change introduces CPU
 priority, budget donation or a hard latency guarantee.

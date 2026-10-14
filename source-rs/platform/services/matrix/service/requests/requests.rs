@@ -58,7 +58,8 @@ pub(super) fn dispatch(
                 || (wire::STORAGE_BASE..wire::STORAGE_BASE + 256)
                     .contains(&(words[0] & 0xffff)) =>
         {
-            parent.storage_request(request.client.unwrap(), request.incarnation, words)?
+            parent.storage_request(request, words)?;
+            return Ok(());
         }
         Some(words)
             if matches!(

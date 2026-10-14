@@ -8,6 +8,11 @@ pub struct Client {
     pair: Option<(Handle, Handle)>,
 }
 impl Client {
+    /// Retire a failed exchange. Reconnection requires a fresh provider link
+    /// incarnation; an already accepted live link returns BUSY, never old replies.
+    pub fn invalidate(&mut self) {
+        self.pair = None;
+    }
     pub fn connected(&self) -> bool {
         self.pair.is_some()
     }

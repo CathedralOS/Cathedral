@@ -19,6 +19,7 @@ pub fn run(style: u64, environment: Environment) -> u64 {
     let mut scene: Option<surfaces::Scene> = None;
     let mut paints = 0;
     let mut wakes = 0;
+    let mut save_status = 0;
     loop {
         let mut snapshot = call(parent, [wire::POLL, 0, 0, 0, 0, 0, 0, 0]);
         let mut view = wire::poll_view(snapshot);
@@ -115,6 +116,19 @@ pub fn run(style: u64, environment: Environment) -> u64 {
                             }
                             10 => cathedral_user_runtime::task::exit(19),
                             11 => scene.as_mut().unwrap().compact_probe(parent),
+                            12 => {
+                                // Test owner gets admission acknowledgement before
+                                // the save blocks; completion is observed via HEALTH.
+                                control.1.send(&wire::encode([0; 8])).unwrap();
+                                save_status =
+                                    state.as_mut().unwrap().toggle(parent).err().unwrap_or(0);
+                                if save_status == 0 {
+                                    let color = state.as_ref().unwrap().color();
+                                    scene.as_mut().unwrap().paint(parent, view, color);
+                                    painted = Some((view, color));
+                                }
+                                continue;
+                            }
                             _ => (),
                         }
                     }
@@ -126,7 +140,7 @@ pub fn run(style: u64, environment: Environment) -> u64 {
                             wakes,
                             time::cpu_us().unwrap(),
                             u64::from(state.as_ref().is_some_and(|s| s.alternate)),
-                            0,
+                            save_status,
                             0,
                             0,
                         ]))

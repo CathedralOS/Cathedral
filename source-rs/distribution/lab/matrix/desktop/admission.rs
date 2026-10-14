@@ -6,7 +6,12 @@ pub(super) struct Session {
     pub matrix: Pair,
     pub pressure: bool,
     pub extent: [u64; 2],
-    source: Pair,
+    pub(super) source: Pair,
+    pub(super) storage: task::Child,
+    pub(super) storage_control: Pair,
+    pub(super) display_task: task::Child,
+    pub(super) root: task::Child,
+    pub(super) input: Option<task::Child>,
 }
 fn display_call(
     pair: Pair,
@@ -27,15 +32,16 @@ fn display_call(
     display::decode(&bytes[..len]).unwrap()
 }
 pub(super) fn start() -> Session {
-    if let Ok(storage) = Launch::at(3) {
-        storage.spawn(0).unwrap();
+    let (storage, storage_control) = {
+        let storage = Launch::at(3).unwrap().spawn(0).unwrap();
         let control = Port::at(3).unwrap().connect().unwrap();
         control
             .0
             .send(cathedral_contracts::storage::HEALTH)
             .unwrap();
         assert_eq!(control.1.receive(&mut [0; 64]).unwrap(), 5);
-    }
+        (storage, control)
+    };
     assert_eq!(
         Launch::at(0).unwrap().executable().unwrap_err(),
         Error(abi::DENIED as i64)
@@ -98,6 +104,17 @@ pub(super) fn start() -> Session {
     let pressure = capacity == 4;
     assert_eq!(capacity, if pressure { 4 } else { 3 });
     let root = Launch::at(2).unwrap();
+    // Descendant reservations return to the surviving distribution owner on root
+    // death. Re-fund the replacement explicitly; restarting never mints budgets.
+    cathedral_user_runtime::resources::assign(
+        root,
+        cathedral_user_runtime::resources::Limits {
+            private_pages: 4,
+            reader_pages: 8,
+            channels: 12,
+        },
+    )
+    .unwrap();
     root.assign_slots(capacity).unwrap();
     root.assign_memory((capacity + 1) * abi::MAX_ADMISSION_FRAMES as u64)
         .unwrap();
@@ -110,7 +127,7 @@ pub(super) fn start() -> Session {
         .unwrap();
     crate::ROOT_TASK.store(_root.raw(), core::sync::atomic::Ordering::Relaxed);
     assert_eq!(task::available_slots().unwrap(), 0);
-    assert_eq!(Launch::at(3).is_err(), pressure);
+    assert!(Launch::at(3).is_ok());
     let matrix = Port::at(2).unwrap().connect().unwrap();
     let ready = matrix
         .0
@@ -131,10 +148,16 @@ pub(super) fn start() -> Session {
         pressure,
         extent: [info[1], info[2]],
         source: (source_send, source_recv),
+        storage,
+        storage_control,
+        display_task,
+        root: _root,
+        input: None,
     }
 }
 impl Session {
-    pub fn start_input(self) {
+    pub fn start_input(&mut self) {
+        assert!(self.input.is_none());
         for op in [wire::SPAWN, wire::READ_PIXEL, wire::BIND] {
             assert_eq!(
                 call(self.source, [op, 0, 0, 0, 0, 0, 0, 0]),
@@ -148,6 +171,7 @@ impl Session {
                 &[self.source.0, self.source.1],
             )
             .unwrap();
+        self.input = Some(_input);
         Port::at(1)
             .unwrap()
             .connect()
@@ -155,5 +179,41 @@ impl Session {
             .1
             .receive(&mut [0; 64])
             .unwrap();
+    }
+    pub(super) fn stop(self) {
+        for child in [
+            self.input,
+            Some(self.root),
+            Some(self.display_task),
+            Some(self.storage),
+        ]
+        .into_iter()
+        .flatten()
+        {
+            match child.wait_until(time::now().unwrap()) {
+                Ok(_) => (),
+                Err(Error(code)) if code == abi::BAD_HANDLE as i64 => (), // Probe already collected it.
+                Err(Error(code)) if code == abi::TIMED_OUT as i64 => {
+                    child.cancel().unwrap();
+                    child.wait().unwrap();
+                }
+                Err(error) => panic!("desktop shutdown {error:?}"),
+            }
+        }
+        if self.input.is_none() {
+            self.source.0.close().unwrap();
+            self.source.1.close().unwrap();
+        }
+        // Descendant creator death returns dynamic reservations to this owner.
+        let mut index = 0;
+        while let Ok(launch) = Launch::at(index) {
+            match launch.release() {
+                Ok(()) => (),
+                Err(Error(code)) if code == abi::DENIED as i64 || code == abi::BUSY as i64 => {
+                    index += 1
+                }
+                Err(error) => panic!("desktop reservation release {error:?}"),
+            }
+        }
     }
 }

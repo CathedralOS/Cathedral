@@ -16,6 +16,7 @@ pub(super) struct Children {
     next_frames: [Option<u64>; 2],
     next_pages: [Option<[u64; 2]>; 2],
     pending: Option<(Request, usize, u64)>,
+    retiring: Option<i64>,
 }
 impl Children {
     pub(super) fn notify(&self, world: &mut World) -> Result<(), Error> {
@@ -58,6 +59,7 @@ impl Children {
             match self.forward(words, routed) {
                 Ok(slot) => {
                     self.pending = Some((*request, slot, time::after(100)?));
+                    self.retiring = None;
                     return Ok(true);
                 }
                 Err(error) => Err(error),

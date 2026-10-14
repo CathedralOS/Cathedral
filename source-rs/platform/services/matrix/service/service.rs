@@ -32,39 +32,54 @@ pub fn run(environment: Environment, storage_root: bool) -> Result<(), Error> {
         )?;
     }
     let mut children = children::Children::default();
-    static mut DEFERRED: publication::Deferred = publication::Deferred::empty();
+    static mut DEFERRED: deferred::Deferred = deferred::Deferred::empty();
     let deferred_address = &raw mut DEFERRED;
     // SAFETY: Same single-entry process lifetime as the parent/world arenas above.
     let deferred = unsafe { &mut *deferred_address };
     loop {
+        parent.progress_storage(&mut server)?;
         parent.progress_presentation(world, &mut server)?;
-        if !parent.publishing() {
+        children.finish(&mut server, world, parent)?;
+        if !parent.upstream_busy() {
             parent.refresh_notified(world)?;
-            children.finish(&mut server, world, parent)?;
             requests::flush(parent, world)?;
         }
         let (handle, mut deadline) = children.wait();
         children.notify(world)?;
-        let mut extra = [cathedral_user_runtime::ipc::Handle::from_raw(0); 3];
+        let mut extra = [cathedral_user_runtime::ipc::Handle::from_raw(0); 4];
         let mut count = 0;
+        if parent.upstream_busy() || parent.storing() {
+            deadline = None;
+        }
+        if let Some((receive, until)) = parent.storage_wait() {
+            extra[count] = receive;
+            count += 1;
+            deadline = Some(until);
+        }
         if let Some((receive, until)) = parent.presentation_wait() {
             extra[count] = receive;
             count += 1;
-            // Owner forwarding is resumed after publication; its elapsed deadline
-            // is still checked then. Avoid a busy loop on that older deadline.
-            deadline = Some(until);
+            // Ready owner replies still progress. Deferred teardown must not
+            // spin on its expired deadline while publication owns the stream.
+            deadline = Some(deadline.map_or(until, |d| {
+                if cathedral_user_runtime::time::reached(d, until) {
+                    until
+                } else {
+                    d
+                }
+            }));
         }
-        if !parent.publishing() {
-            if let Some(handle) = handle {
-                extra[count] = handle;
-                count += 1;
-            }
-            if let Some(wake) = parent.wake {
-                extra[count] = wake;
-                count += 1;
-            }
+        if let Some(handle) = handle {
+            extra[count] = handle;
+            count += 1;
         }
-        let queued = if parent.publishing() {
+        if !parent.upstream_busy()
+            && let Some(wake) = parent.wake
+        {
+            extra[count] = wake;
+            count += 1;
+        }
+        let queued = if parent.upstream_busy() || parent.storing() {
             None
         } else {
             deferred.take(&mut server)
@@ -76,8 +91,15 @@ pub fn run(environment: Environment, storage_root: bool) -> Result<(), Error> {
                 None => continue,
             },
         };
-        if parent.publishing() {
-            deferred.hold(event, &mut server, world, parent.publishing_client())?;
+        if deferred::Deferred::blocks(&event, parent) {
+            let mut blocked = 0;
+            if parent.publishing() {
+                blocked |= 1 << parent.publishing_client();
+            }
+            if parent.storing() {
+                blocked |= 1 << parent.storing_client();
+            }
+            deferred.hold(event, &mut server, world, blocked)?;
             continue;
         }
         // Admitted children receive coalesced invalidations on their wake channel.

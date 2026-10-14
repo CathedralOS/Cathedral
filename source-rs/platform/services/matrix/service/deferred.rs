@@ -1,4 +1,4 @@
-//! During upstream publication, answer local reads and retain one dependent event
+//! While publication or storage is pending, retain one dependent event
 //! per stream. Backpressure keeps memory bounded and preserves each stream's FIFO.
 use super::*;
 use cathedral_user_runtime::server::Request;
@@ -7,6 +7,36 @@ pub(super) struct Deferred {
     events: [Option<Event>; 4],
 }
 impl Deferred {
+    pub fn blocks(event: &Event, parent: &Parent) -> bool {
+        if parent.upstream_busy() {
+            return true;
+        }
+        if !parent.storing() {
+            return false;
+        }
+        match event {
+            Event::Request(r) => {
+                if r.client == Some(parent.storing_client()) {
+                    return true;
+                }
+                match wire::decode(&r.bytes[..r.len]) {
+                    Some(w) if r.control => {
+                        let hop = (w[0] >> wire::OP_BITS) & 3;
+                        !(matches!(w[0], wire::HEALTH | wire::READ_PIXEL)
+                            || matches!(hop, 1 | 2) && hop as usize != parent.storing_client() + 1)
+                    }
+                    Some(w) => {
+                        w[0] == wire::STORAGE_INFO
+                            || (wire::STORAGE_BASE..wire::STORAGE_BASE + 256)
+                                .contains(&(w[0] & 0xffff))
+                    }
+                    None => false,
+                }
+            }
+            Event::Memory(r, _) => r.client == Some(parent.storing_client()),
+            Event::Disconnected { .. } => true,
+        }
+    }
     pub const fn empty() -> Self {
         Self {
             events: [const { None }; 4],
@@ -26,10 +56,12 @@ impl Deferred {
         event: Event,
         server: &mut Server,
         world: &mut World,
-        publishing_client: usize,
+        blocked_clients: u8,
     ) -> Result<(), Error> {
         if let Event::Request(request) = &event
-            && request.client != Some(publishing_client)
+            && request
+                .client
+                .is_none_or(|slot| blocked_clients & (1 << slot) == 0)
             && self.local(request, server, world)?
         {
             return Ok(());
