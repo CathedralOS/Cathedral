@@ -35,11 +35,17 @@ invokes ExtentRootProvider;
     // dispatch OutputString(con_out, &msg) through the firmware's own vtable.
     // This borrow must originate from the adapter's validated firmware input.
     let con_out: &TextOutputProtocol = table.con_out;
-    _ = SimpleTextOutput::output_string(&context.out, con_out, &context.msg);
-    // Milestone 2 — own the machine (own_machine.omg): walk the memory map, exit
-    // boot services, obtain the first qualified Extent, then idle while
-    // retaining it. Does NOT return (firmware is gone after exit), so the
-    // terminal below is unreachable.
-    Main::own_machine(context, handle, table);
-    transition { _ -> (EFI_SUCCESS) }
+    let status: EfiStatus = SimpleTextOutput::output_string(&context.out, con_out, &context.msg);
+    // A failed greeting must not silently proceed into irreversible handoff.
+    // Preserve the firmware status while Boot Services are still available.
+    transition status.code == 0 {
+        true -> take_ownership(context, handle, table)
+        _ -> (status)
+    }
+    state take_ownership(context: &mut Main, handle: EfiHandle, table: &EfiSystemTable) -> EfiStatus {
+        // Walk the memory map, exit Boot Services, obtain the first qualified
+        // Extent, then idle retaining it. The success route does not return.
+        Main::own_machine(context, handle, table);
+        transition { _ -> (EFI_SUCCESS) }
+    }
 }

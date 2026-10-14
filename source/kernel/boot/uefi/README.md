@@ -1,7 +1,9 @@
 # Omega boot frontier
 
 This is the real Cathedral boot source, not a reduced hello-world surrogate.
-It is currently **not compile- or boot-verified** with the current compiler.
+The five-package candidate graph now passes checked compilation with the
+compiler's static Binding and numeric state-contract repairs. It is **not
+native-build- or boot-verified**.
 Historical July boot comments do not establish that the current tree runs.
 
 The intended acceptance is one freshly compiled `uefi_x86_64` image under
@@ -25,13 +27,11 @@ from a successful checked review, not hand-authored acceptance records.
 
 ## Work still required
 
-- Finish checking the migrated source. The current compiler counts the explicit
-  `&Binding<R>` argument of `R::operation` as an extra ordinary argument in
-  the four firmware/root-provider calls. Do not restore receiver-call syntax
-  or discard the authority argument to get past this.
-- Discharge the memory-map recast bounds at `walk` and `audit_descriptor`,
-  and finish explicit arithmetic-domain conversions in geometry and serial
-  formatting. Keep the actual descriptor integrity, overlap and retry checks.
+- Complete ordinary package admission. `omega update --project
+  source/kernel/boot/uefi --target uefi_x86_64` reaches the candidate review;
+  it does not yet install an accepted lock. The pinned std package also reports
+  unrelated host capabilities: do not blanket-accept its pending rows merely
+  to make the boot command proceed.
 - Connect the checked physical firmware adapter to the semantic entry and
   Cathedral continuation. Omega's `UEFI-PHYSICAL-SEMANTIC-ENTRY` and
   `UEFI-OS-HANDOFF` outcomes own the general compiler/target-source mechanics.
