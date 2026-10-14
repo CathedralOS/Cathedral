@@ -62,14 +62,27 @@ replays retained content without app traffic. Epoch changes, release and teardow
 retire objects; stale handles cannot paint their replacements. There are no
 ancestor pixel-buffer copies.
 
-Click an app, then Enter to change color. The test injects real PS/2 mouse/keyboard
+Click an app, then Enter to save and change color. The ordinary profile keeps a
+private disk at `build/boot-harness-rs/matrix-desktop-storage.raw`; both apps restore
+committed colors on the next boot. Each app uses object 2 in its own root (object 1
+in the first root is reserved by the store's legacy empty-record initialization).
+No app receives a provider link or disk grant.
+
+`--matrix-desktop-test` enables `desktop-probes`, using a disposable disk and
+[recovery checks](desktop/recovery.rs) for revoked writes, stale bindings, termination
+with staged pixels/data, focus loss and sibling survival. It then starts a fresh
+QEMU process over the same disk and checks both saved colors. Ordinary window boots
+skip these destructive probes. The first test boot log is `first-boot-serial.log`;
+`serial.log` contains the reboot.
+
+The test injects real PS/2 mouse/keyboard
 input, checks sibling focus isolation and clipped scanout, and verifies startup
 subtree replacement. The physical source shares the existing controller/decoders;
 its dedicated connection accepts only input operations, never owner commands.
 The root owns the compositor connection; children have neither it nor a framebuffer.
 
 This renderer has two direct children per matrix and sixteen root surface objects.
-It does not yet integrate the older session's images, text, synthetic pointers or
+It supports sealed RGBX images, but does not yet integrate the older session's text, synthetic pointers or
 richer scene snapshots. Recursive stacking has no hard-coded two-level path keys.
 Device/root-provider recovery remains separate from the proved inner-subtree
 recovery. [STATUS.md](../../../STATUS.md) tracks these boundaries and the kernel
@@ -79,8 +92,12 @@ The desktop retains app rectangles across owner placement changes. Its startup
 probe checks that idle apps do not repaint or consume 20 ms of CPU per second.
 Use `--matrix-desktop-test --pressure --release --timeout 120` to add a
 non-yielding descendant inside a 20% nested CPU allowance. Physical-input tests
-report scanout latency; current equal-turn scheduling still takes roughly 0.5 to 0.9 seconds
-in recent runs of that deliberately constrained subtree. The ordinary profile has no spinner.
+report scanout latency; current equal-turn scheduling still takes roughly 0.4 to 0.6 seconds
+in recent runs of that deliberately constrained subtree. The ordinary profile has no spinner. The pressure profile omits storage to keep
+the same eight-process arena. Add `--trace-input` for elapsed/CPU diagnostics.
+Compact rectangle packets avoid BEGIN/stage/COMMIT round trips at every level;
+publication waits now return to the service loop. Neither change introduces CPU
+priority, budget donation or a hard latency guarantee.
 
 Physical admission uses the same conserved frame funding as other processes.
 Owner-only `RUN_MEMORY` stages the physical-frame allowance for the next `RUN`

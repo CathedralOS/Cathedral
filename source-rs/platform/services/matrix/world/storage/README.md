@@ -12,8 +12,9 @@ the provider's two private catalogs. Owner-only `STORAGE_GRANT` assigns one sour
 to a live child connection. Each source can belong to only one direct child;
 the nested matrix can delegate its one inherited source to one of its children.
 This delegates whole roots, without creating or subdividing directories.
-The dedicated storage fixture uses no display adapter and does not alter the
-ordinary desktop's launch composition.
+The root can combine these links with the four-endpoint display/input environment.
+The visible desktop uses that composition; the dedicated storage fixture exercises
+the same delegation without a display adapter.
 
 A child obtains only its local binding revision through `STORAGE_INFO`. Each data
 opcode carries that revision in its upper 48 bits and `STORAGE_BASE + operation`
@@ -42,6 +43,6 @@ Host tests cover exclusivity, stale incarnations and binding revisions.
 
 This bounded experiment retains the provider's two roots, four objects per root
 and 32-byte records. Read-only attenuation, namespace creation, shared writable
-catalogs, storage quotas and integration with the visible desktop remain future
-work. Parents remain trusted to delegate their own authority; this is not a
+catalogs and storage quotas remain future work. The visible desktop saves private
+app colors through this boundary and verifies them after a cold reboot. Parents remain trusted to delegate their own authority; this is not a
 claim of timing isolation or confinement from a malicious ancestor.

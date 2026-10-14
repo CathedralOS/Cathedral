@@ -4,6 +4,42 @@ This map connects implemented mechanisms to their integrated consumers, proofs
 and remaining restrictions. The [lab guide](README.md) owns detailed ABI/build
 instructions. [Owner questions](../OWNER_QUESTIONS.md) own unresolved semantics.
 
+## Responsive publication and persistent desktop
+
+The visible matrix session now gives each app a private delegated catalog. Apps
+save color before presenting, reload after replacement, and recover both colors
+in a fresh QEMU process. Ordinary window boots keep
+`build/boot-harness-rs/matrix-desktop-storage.raw`, separate from the status demo.
+`--matrix-desktop-test` uses a disposable disk, adds staged rendering/storage death,
+revoked/stale writes and focus-loss checks, then cold-boots the same disk. Its first
+boot log is retained as `first-boot-serial.log` beside the reboot's `serial.log`.
+Follow [desktop recovery](distribution/lab/matrix/desktop/recovery.rs) and
+[app state](distribution/lab/matrix/desktop/app/state.rs).
+
+[Publication](platform/services/matrix/service/parent/presentation.rs) now resumes
+from the service loop after upstream replies. Other children's local reads can
+proceed; dependent mutations retain one event per stream with backpressure, keeping
+geometry stable until commit. FIFO is preserved within each stream. This does not
+yet make storage, placement, creation or all parent refresh operations asynchronous.
+A compact `PRESENT_RECTS` packet carries one or two existing rectangle updates in
+one atomic request per matrix hop; images and larger batches keep BEGIN/stage/COMMIT.
+Malformed compact updates publish nothing, and successful commits share retry history.
+
+The pressure fixture keeps the original eight-account budget and spends the storage
+provider's slot on its capped spinner instead. In traced release runs, nested
+key handling through repaint fell from 710 ms before this work to 130-280 ms; host
+input-to-verified-scanout was 391-563 ms versus 766 ms. These are diagnostic observations,
+not latency guarantees: host load, QEMU and tracing affect them. Equal-turn scheduling
+and provider-funded service work remain; no priority or CPU-donation policy changed.
+Failure diagnostics now include the root task outcome for desktop RPC failure
+and the ATA status register for readiness timeouts. Debug publication unwinds
+validation before transport work and keeps one copy of each staged batch, staying
+within the existing 16 KiB stack and 64-page loaded-image limits.
+
+Validation includes workspace host tests, x86_64 userspace Clippy, ARM64 runtime/matrix
+Clippy, debug (including tracing) and release desktop cold boots, pressured release
+input, headless matrix/storage regressions, the older visual session and debug smoke.
+
 ## Atomic matrix presentation
 
 The recursive matrix desktop also has bounded atomic presentation transactions:
@@ -28,7 +64,7 @@ root data and generations. Revocation/death aborts staging and regranting an
 ancestor does not restore descendants automatically. The headless
 `--matrix-storage-test --release` fixture checks these boundaries and committed
 data after restarting the matrix tree and storage provider. Dynamic namespaces,
-read-only rights and integration into the visible desktop remain future work.
+read-only rights and storage quotas remain future work; the visible desktop now consumes these grants.
 
 ## Userspace register and interrupt grants
 
@@ -87,7 +123,7 @@ using the original stride. Replacement releases ancestor references before
 returning child funding. Host policy tests and normal/pressure desktop pixel tests
 cover clipping, replay, rejected updates and repeated subtree replacement.
 This is bounded immutable RGBX storage; writable streams, sponsorship transfer,
-texture decoding, GPU import and transactional multi-surface commits remain open.
+texture decoding and GPU import remain open. Bounded multi-surface commits are implemented.
 
 ## ARM64 portability proof
 
@@ -179,10 +215,10 @@ remain until their extra behavior has moved into the integrated path with tests.
 | [Executable-authorized admission](kernel/core/user_tasks/admission/pool/README.md) | Apps and the matrix desktop construct descendants from code authority and a process pool | `--admission-test`: recursive launch, exhaustion, load rollback, retained funding, sibling survival | Boot-supplied catalogue; eight accounts; device grants remain static |
 | [Matrix lifecycle](platform/services/matrix/service/children/children.rs) | Same provider above apps and another matrix | `--matrix-test`: replacement preserves an outside sibling | Two direct children; distribution supplies policy through owner-only control |
 | [Local viewport, focus and capture](platform/services/matrix/world/world.rs) | Nested and sibling visible apps | Host policy tests; `--matrix-test`; `--matrix-desktop-test` physical focus | Five keys; coalesced wake channels; synchronous upward refresh |
-| [Owned surfaces](platform/services/matrix/world/surface/README.md) | App rectangles cross actual matrix boundaries to the existing compositor | Host quota/name/clipping/stacking tests; scanout removal and teardown checks | Sixteen surfaces; bounded immutable RGBX images; no text surfaces or atomic scene commits yet |
+| [Owned surfaces](platform/services/matrix/world/surface/README.md) | App rectangles cross actual matrix boundaries to the existing compositor | Host quota/name/clipping/stacking tests; scanout removal and teardown checks | Sixteen surfaces; bounded immutable RGBX images; no text surfaces or vblank guarantees |
 | [Retained compositor and hardware input](platform/services/display/compositor/compositor.rs) | Root adapter uses existing scanout/cursor and shared input decoders | `--matrix-desktop-test`; `--session-test --pressure` | Existing richer scenes/hosting remain in the earlier session fixture |
 | [Private/shared page lifetime](kernel/core/user_tasks/memory/README.md) | Matrix bitmaps and existing rendering/storage labs | Host transactions; both CPU boot proofs; matrix desktop | Four reader rights per task, sixteen-page budgets; immutable copies only; original sponsor retained |
-| [Object storage and recovery](platform/services/storage/service/service.rs) | Default status/counter distribution | Storage host tests; `--storage-test` | Not yet an attenuated matrix namespace; not the custom database filesystem |
+| [Object storage and recovery](platform/services/storage/service/service.rs) | Status/counter and private matrix app colors | Storage host tests; `--storage-test`; two-boot `--matrix-desktop-test` | Whole-root delegation only; not the custom database filesystem |
 
 ## Kernel boundary audit and next steps
 
@@ -229,13 +265,13 @@ activity. The remaining boundary work is recorded below:
 | CPU | Measured runtime and deferred work charge persistent ancestor accounts; exhausted branches wait for refill | Qualified clocks, precise exhaustion preemption, bounded kernel work, privileged latency policy and service-call sponsorship |
 | RAM | Physical reservations cover images, stacks, page tables and buffers; accepted readers retain original sponsor charges | Active pressure policy and explicit sponsorship transfer |
 | Admission | Executable capabilities choose code for funded unbound accounts; recursive pools and rollback | General executable transfer/loading and larger arenas |
-| Devices | Concrete framebuffer/PS2/ATA grants, no arbitrary device discovery | One reusable userspace interrupt/MMIO boundary, proved with another driver; DMA needs a separate ownership/isolation design |
+| Devices | Local register/IRQ grants proved by userspace COM2; restricted framebuffer/PS2/ATA adapters | Prove MMIO/interrupt grants with another device and ISA; DMA needs a separate ownership/isolation design |
 
 Matrix input now wakes idle apps; retained local scenes replay after placement
 changes. The desktop test checks idle CPU use and moves without app repaint.
 `--matrix-desktop-test --pressure` adds a spinner inside a 20% nested CPU ceiling
-and reports key-to-scanout latency (roughly 0.5 to 0.9 seconds in recent runs, including tracing overhead). Equal
-turns and synchronous parent RPC still need latency work. Owned surface objects now replace fixed
+and reports key-to-scanout latency (roughly 0.4 to 0.6 seconds in recent traced release runs). Equal
+turns and the remaining synchronous parent RPC paths still need latency work. Owned surface objects now replace fixed
 path keys and conserve backing through recursive allowances. Physical admission
 funding and shared image objects now reach the integrated desktop. Root-adapter recovery/trusted-path behavior remains an owner-level
 policy question. SMP, GPU support and the database filesystem follow these

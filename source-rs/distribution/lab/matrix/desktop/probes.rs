@@ -56,13 +56,17 @@ fn presentation(matrix: Pair) {
     pixel(matrix, 140, 190, app::LEFT);
     pixel(matrix, 170, 225, 0xe5e7eb);
     assert_eq!(call(matrix, app(4))[0], 0);
+    assert_eq!(call(matrix, app(4))[0], 0); // Retry belongs in the proof, not every repaint.
     pixel(matrix, 140, 190, 0x884422);
     pixel(matrix, 170, 225, 0x224488);
     assert_eq!(call(matrix, app(5))[0], 0);
     pixel(matrix, 140, 190, 0x884422);
     pixel(matrix, 170, 225, 0x224488);
     pixel(matrix, 510, 190, app::RIGHT);
+    assert_eq!(call(matrix, app(11))[0], 0);
+    pixel(matrix, 140, 190, 0x884422); // Neither compact rectangle was published.
     assert_eq!(call(matrix, app(6))[0], 0);
+    assert_eq!(call(matrix, app(4))[0], 0); // Compact publication shares commit retry history.
     pixel(matrix, 140, 190, app::LEFT);
     pixel(matrix, 170, 225, 0xe5e7eb);
     cathedral_user_runtime::write(
@@ -92,4 +96,36 @@ fn surfaces(matrix: Pair) {
     );
     pixel(matrix, 170, 225, 0xe5e7eb);
     cathedral_user_runtime::write(b"Cathedral matrix desktop: owned surface quotas, stale names, removal and subtree stacking passed\n").unwrap();
+}
+
+pub(super) fn startup(matrix: Pair, pressure: bool) {
+    if !recovery::restored(matrix) {
+        pixel(matrix, 140, 190, app::LEFT);
+        pixel(matrix, 510, 190, app::RIGHT);
+        bitmap(matrix);
+        pixel(matrix, 334, 310, BACKGROUND); // Oversized leaf draw was clipped twice.
+        for _ in 0..3 {
+            owner(matrix, [wire::STOP, 0, 0, 0, 0, 0, 0, 0]);
+            pixel(matrix, 140, 190, BACKGROUND);
+            pixel(matrix, 316, 292, BACKGROUND);
+            pixel(matrix, 682, 292, 0xffcc44);
+            pixel(matrix, 510, 190, app::RIGHT);
+            inner(matrix, pressure);
+            pixel(matrix, 140, 190, app::LEFT);
+            bitmap(matrix);
+        }
+        cathedral_user_runtime::write(
+        b"Cathedral matrix desktop: dynamic catalogue admission, rollback and pool reuse passed\n",
+    )
+    .unwrap();
+        cathedral_user_runtime::write(
+            b"Cathedral matrix desktop: subtree replacement cleared pixels and preserved sibling\n",
+        )
+        .unwrap();
+        // The source endpoint grants input ingress, never owner or display authority.
+        exercise(matrix);
+        if !pressure {
+            recovery::exercise(matrix);
+        }
+    }
 }

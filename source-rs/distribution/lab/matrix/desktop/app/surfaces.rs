@@ -49,25 +49,43 @@ impl Scene {
         scene
     }
     pub fn paint(&mut self, parent: Pair, view: wire::Packet, color: u64) {
-        self.begin(parent);
-        assert_eq!(
-            call(
-                parent,
-                [
-                    wire::PAINT,
-                    self.epoch,
-                    self.base,
-                    0,
-                    0,
-                    view[2] + 99,
-                    view[3] + 99,
-                    color
-                ]
-            ),
-            [0; 8]
-        );
-        self.paint_accent(parent);
-        self.commit(parent);
+        self.revision += 1;
+        let base = [
+            wire::PAINT,
+            self.epoch,
+            self.base,
+            0,
+            0,
+            view[2] + 99,
+            view[3] + 99,
+            color,
+        ];
+        let accent = [
+            wire::PAINT,
+            self.epoch,
+            self.accent.unwrap_or(0),
+            30,
+            40,
+            40,
+            18,
+            ACCENT,
+        ];
+        let updates = [base, accent];
+        let packet = wire::rectangles(
+            self.epoch,
+            self.revision,
+            &updates[..if self.accent.is_some() { 2 } else { 1 }],
+        )
+        .unwrap();
+        assert_eq!(call(parent, packet), [0; 8]);
+    }
+
+    pub fn compact_probe(&mut self, parent: Pair) {
+        self.revision += 1;
+        let valid = [wire::PAINT, self.epoch, self.base, 0, 0, 200, 130, 0];
+        let foreign = [wire::PAINT, self.epoch, u64::MAX, 0, 0, 1, 1, 0];
+        let packet = wire::rectangles(self.epoch, self.revision, &[valid, foreign]).unwrap();
+        assert_eq!(call(parent, packet), wire::error(abi::BAD_HANDLE));
     }
     fn begin(&mut self, parent: Pair) {
         self.revision += 1;
@@ -89,7 +107,7 @@ impl Scene {
         );
     }
     pub fn commit(&self, parent: Pair) {
-        for _ in 0..2 {
+        {
             assert_eq!(
                 call(
                     parent,

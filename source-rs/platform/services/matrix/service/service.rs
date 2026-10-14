@@ -32,21 +32,54 @@ pub fn run(environment: Environment, storage_root: bool) -> Result<(), Error> {
         )?;
     }
     let mut children = children::Children::default();
+    static mut DEFERRED: publication::Deferred = publication::Deferred::empty();
+    let deferred_address = &raw mut DEFERRED;
+    // SAFETY: Same single-entry process lifetime as the parent/world arenas above.
+    let deferred = unsafe { &mut *deferred_address };
     loop {
-        parent.refresh_notified(world)?;
-        children.finish(&mut server, world, parent)?;
-        requests::flush(parent, world)?;
-        let (handle, deadline) = children.wait();
-        children.notify(world)?;
-        let mut extra = [cathedral_user_runtime::ipc::Handle::from_raw(0); 2];
-        let mut count = 0;
-        for h in [handle, parent.wake].into_iter().flatten() {
-            extra[count] = h;
-            count += 1;
+        parent.progress_presentation(world, &mut server)?;
+        if !parent.publishing() {
+            parent.refresh_notified(world)?;
+            children.finish(&mut server, world, parent)?;
+            requests::flush(parent, world)?;
         }
-        let Some(event) = server.next_event_or(&extra[..count], deadline)? else {
-            continue;
+        let (handle, mut deadline) = children.wait();
+        children.notify(world)?;
+        let mut extra = [cathedral_user_runtime::ipc::Handle::from_raw(0); 3];
+        let mut count = 0;
+        if let Some((receive, until)) = parent.presentation_wait() {
+            extra[count] = receive;
+            count += 1;
+            // Owner forwarding is resumed after publication; its elapsed deadline
+            // is still checked then. Avoid a busy loop on that older deadline.
+            deadline = Some(until);
+        }
+        if !parent.publishing() {
+            if let Some(handle) = handle {
+                extra[count] = handle;
+                count += 1;
+            }
+            if let Some(wake) = parent.wake {
+                extra[count] = wake;
+                count += 1;
+            }
+        }
+        let queued = if parent.publishing() {
+            None
+        } else {
+            deferred.take(&mut server)
         };
+        let event = match queued {
+            Some(event) => event,
+            None => match server.next_event_or(&extra[..count], deadline)? {
+                Some(event) => event,
+                None => continue,
+            },
+        };
+        if parent.publishing() {
+            deferred.hold(event, &mut server, world, parent.publishing_client())?;
+            continue;
+        }
         // Admitted children receive coalesced invalidations on their wake channel.
         // Legacy manually assembled two-endpoint fixtures still refresh on demand.
         if parent.wake.is_none() {

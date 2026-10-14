@@ -1,5 +1,6 @@
 """Physical input and real scanout through the matrix-owned process tree."""
 import time
+import re
 import capture
 import pointer_test
 
@@ -21,6 +22,8 @@ def verify(stream, output, serial, pressure=False):
         raise RuntimeError("Missing physical memory isolation evidence")
     if "sealed bitmap forwarding, clipping, replay and subtree reclamation passed" not in serial:
         raise RuntimeError("Missing sealed bitmap proof")
+    if not pressure and "private persisted colors, revoked writes, staged-work death and sibling recovery passed" not in serial:
+        raise RuntimeError("Missing integrated storage/recovery proof")
     position = [40, 40]
 
     def send(events):
@@ -78,4 +81,23 @@ def verify(stream, output, serial, pressure=False):
     text = (output / "serial.log").read_text(encoding="utf-8", errors="replace").replace("Cathedral Rust lab: ", "")
     if "user panic:" in text or text.count("matrix app: nested key") != 1 or text.count("matrix app: sibling key") != 1:
         raise RuntimeError(f"Matrix input confinement failed: {text}")
+    pending = None
+    for stage, ticks, cpu in re.findall(r"INPUT_TRACE (app-key|app-painted) (\d+) (\d+)", text):
+        ticks, cpu = int(ticks), int(cpu)
+        if stage == "app-key":
+            pending = (ticks, cpu)
+        elif pending:
+            print(f"Guest key handling through presentation: {(ticks - pending[0]) * 10} ms elapsed, {cpu - pending[1]} us app CPU")
+            pending = None
     print(f"PASS: matrix-owned desktop, nested clipping, physical focus, subtree recovery; {output / 'display.png'}")
+
+
+def verify_reboot(stream, output, serial):
+    if "persisted colors restored after reboot" not in serial or "user panic:" in serial:
+        raise RuntimeError(f"Missing persisted reboot evidence; logs: {output}")
+    width, height, data = pointer_test.read_scanout(stream, output)
+    for x, y in [(140, 190), (510, 190)]:
+        if data[(y * width + x) * 3:(y * width + x) * 3 + 3] != bytes.fromhex("d18b35"):
+            raise RuntimeError(f"Saved color did not survive reboot at {x},{y}")
+    capture.save_png(output, width, height, data)
+    print("PASS: both private app colors survived a fresh QEMU process and guest boot")

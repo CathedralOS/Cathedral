@@ -24,8 +24,23 @@ pub struct Server {
     cursor: usize,
     memory: bool,
     closed: [Option<u64>; MAX_CLIENTS],
+    paused: u8,
 }
 impl Server {
+    fn control_only(&self) -> bool {
+        for index in 0..self.count {
+            if self.links[index].is_some() || self.clients[index].is_some() {
+                return false;
+            }
+        }
+        true
+    }
+    /// Apply backpressure while the service holds one deferred event per stream.
+    /// Bit zero is control; bit n+1 is local client n. Resuming preserves FIFO.
+    /// Keep a stream unpaused or supply an extra wake channel to next_event_or.
+    pub fn pause(&mut self, streams: u8) {
+        self.paused = streams;
+    }
     /// Explicit opt-in: services must handle and release typed memory attachments.
     pub fn enable_memory(&mut self) {
         self.memory = true;
@@ -53,11 +68,7 @@ impl Server {
         deadline: Option<u64>,
     ) -> Result<Option<Event>, Error> {
         // A control-only service needs no clock grant (for example the display fixture).
-        if extra.is_empty()
-            && deadline.is_none()
-            && self.links.iter().all(Option::is_none)
-            && self.clients.iter().all(Option::is_none)
-        {
+        if extra.is_empty() && self.paused == 0 && deadline.is_none() && self.control_only() {
             let mut bytes = [0; 64];
             let (len, object) = if self.memory {
                 self.control.0.receive_memory(&mut bytes)?

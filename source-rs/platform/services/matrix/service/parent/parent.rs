@@ -3,6 +3,7 @@
 use super::*;
 use cathedral_user_runtime::{ipc::Handle, task::Environment, time};
 pub(super) struct Parent {
+    pending: Option<presentation::Pending>,
     scopes: cathedral_matrix_service::world::storage::Scopes,
     storage_links: [Option<cathedral_user_runtime::storage::Client>; 2],
     storage_epoch: u64,
@@ -18,6 +19,9 @@ pub(super) struct Parent {
     pub wake: Option<Handle>,
 }
 impl Parent {
+    pub(in super::super) fn has_output(&self) -> bool {
+        self.pair.is_some() || self.display.is_some()
+    }
     pub fn refresh_notified(&mut self, world: &mut World) -> Result<(), Error> {
         if let Some(wake) = self.wake {
             match wake.receive_until(&mut [0; 64], time::now()?) {
@@ -30,6 +34,7 @@ impl Parent {
     }
     pub const fn empty() -> Self {
         Self {
+            pending: None,
             scopes: cathedral_matrix_service::world::storage::Scopes::empty(),
             storage_links: [None, None],
             storage_epoch: 0,
@@ -53,7 +58,8 @@ impl Parent {
         environment: &Environment,
         storage_root: bool,
     ) -> Result<(), Error> {
-        if (storage_root && !environment.is_empty()) || !matches!(environment.len(), 0 | 2 | 3 | 4)
+        if (storage_root && !matches!(environment.len(), 0 | 4))
+            || !matches!(environment.len(), 0 | 2 | 3 | 4)
         {
             return Err(Error(abi::DENIED as i64));
         }

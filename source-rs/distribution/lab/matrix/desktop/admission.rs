@@ -27,6 +27,15 @@ fn display_call(
     display::decode(&bytes[..len]).unwrap()
 }
 pub(super) fn start() -> Session {
+    if let Ok(storage) = Launch::at(3) {
+        storage.spawn(0).unwrap();
+        let control = Port::at(3).unwrap().connect().unwrap();
+        control
+            .0
+            .send(cathedral_contracts::storage::HEALTH)
+            .unwrap();
+        assert_eq!(control.1.receive(&mut [0; 64]).unwrap(), 5);
+    }
     assert_eq!(
         Launch::at(0).unwrap().executable().unwrap_err(),
         Error(abi::DENIED as i64)
@@ -99,8 +108,9 @@ pub(super) fn start() -> Session {
     let _root = root
         .spawn_with(0, &[display.0, display.1, source_input, source_output])
         .unwrap();
+    crate::ROOT_TASK.store(_root.raw(), core::sync::atomic::Ordering::Relaxed);
     assert_eq!(task::available_slots().unwrap(), 0);
-    assert!(Launch::at(3).is_err());
+    assert_eq!(Launch::at(3).is_err(), pressure);
     let matrix = Port::at(2).unwrap().connect().unwrap();
     let ready = matrix
         .0

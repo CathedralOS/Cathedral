@@ -11,6 +11,9 @@ impl Server {
         // Rotate across control and data so a flooding client cannot monopolize dispatch.
         for offset in 0..=self.count {
             let channel = (self.cursor + offset) % (self.count + 1);
+            if self.paused & (1 << channel) != 0 {
+                continue;
+            }
             let Some(pair) = (if channel == 0 {
                 Some(self.control)
             } else {
@@ -62,16 +65,26 @@ impl Server {
         // Watch every live channel together. The bounded maintenance timeout
         // retries absent links; quiet connected clients generate no poll traffic.
         let mut handles = [self.control.0; abi::MAX_WAIT_HANDLES];
-        let mut count = 1;
-        for pair in self.clients.iter().take(self.count).flatten() {
-            handles[count] = pair.0;
-            count += 1;
+        let mut count = 0;
+        if self.paused & 1 == 0 {
+            count = 1;
+        }
+        for index in 0..self.count {
+            if self.paused & (1 << (index + 1)) == 0
+                && let Some(pair) = self.clients[index]
+            {
+                handles[count] = pair.0;
+                count += 1;
+            }
         }
         if count + extra.len() > handles.len() {
             return Err(Error(abi::INVALID_ARGUMENT as i64));
         }
         handles[count..count + extra.len()].copy_from_slice(extra);
         let until = deadline.unwrap_or(time::after(100)?);
+        if count + extra.len() == 0 {
+            return Err(Error(abi::INVALID_ARGUMENT as i64));
+        }
         match ipc::wait_many(&handles[..count + extra.len()], until) {
             Ok(index) if index >= count => return Ok(true),
             Ok(_) => (),

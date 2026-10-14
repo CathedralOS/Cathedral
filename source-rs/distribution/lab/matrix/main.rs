@@ -13,6 +13,7 @@ mod storage;
 use cathedral_contracts::{matrix as wire, user as abi};
 use cathedral_user_runtime::{Error, ipc::Handle, time};
 type Pair = (Handle, Handle);
+static ROOT_TASK: core::sync::atomic::AtomicU64 = core::sync::atomic::AtomicU64::new(0);
 cathedral_user_runtime::entry_with_environment!(main);
 fn main(role: u64, argument: u64, environment: cathedral_user_runtime::task::Environment) -> u64 {
     let _ = argument;
@@ -33,11 +34,17 @@ fn main(role: u64, argument: u64, environment: cathedral_user_runtime::task::Env
     }
 }
 fn call(pair: Pair, words: wire::Packet) -> wire::Packet {
-    pair.0.send(&wire::encode(words)).unwrap();
     let mut bytes = [0; 64];
-    let len = pair
-        .1
-        .receive_until(&mut bytes, time::after(300).unwrap())
-        .unwrap();
+    let result = pair
+        .0
+        .send(&wire::encode(words))
+        .and_then(|()| pair.1.receive_until(&mut bytes, time::after(300).unwrap()));
+    let len = result.unwrap_or_else(|error| {
+        let root = ROOT_TASK.load(core::sync::atomic::Ordering::Relaxed);
+        panic!(
+            "matrix request {words:?}: {error:?}; root {:?}",
+            cathedral_user_runtime::task::Child::from_raw(root).wait_until(time::now().unwrap())
+        );
+    });
     wire::decode(&bytes[..len]).unwrap()
 }

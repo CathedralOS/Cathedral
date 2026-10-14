@@ -1044,3 +1044,11 @@ real frames before userspace admission. Image/stack/page-table and runtime-buffe
 charges share conserved account funding, distinct from object quotas and the
 per-load failure ceiling. `Launch::assign_memory` subdivides it into idle children;
 `Executable::reserve_funded` includes it atomically with dynamic admission.
+
+The recursive desktop now persists each app's color through its matrix-local
+catalog. Ordinary `matrix-desktop.json --release --window` boots retain
+`build/boot-harness-rs/matrix-desktop-storage.raw`, separate from the default demo.
+`--matrix-desktop-test` enables destructive probes on a disposable image and then
+cold-boots that same image to check restoration. `--pressure` instead uses the last
+process slot for a capped spinner and omits storage. See the
+[matrix lab guide](distribution/lab/matrix/README.md) for navigation and limitations.

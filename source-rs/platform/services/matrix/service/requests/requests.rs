@@ -63,10 +63,16 @@ pub(super) fn dispatch(
         Some(words)
             if matches!(
                 words[0],
-                wire::PRESENT_BEGIN | wire::PRESENT_COMMIT | wire::PRESENT_ABORT
+                wire::PRESENT_BEGIN
+                    | wire::PRESENT_COMMIT
+                    | wire::PRESENT_ABORT
+                    | wire::PRESENT_RECTS
             ) =>
         {
-            presentation::dispatch(parent, world, &request, words)?
+            match presentation::dispatch(parent, world, &request, words)? {
+                Some(reply) => reply,
+                None => return Ok(()),
+            }
         }
         Some(words)
             if matches!(

@@ -34,6 +34,11 @@ fn wait(data: bool) -> Result<(), u64> {
             }
         }
         if time::reached(now()?, deadline) {
+            let mut message = *b"ATA readiness timeout: data=0 status=00\n";
+            message[28] = b'0' + u8::from(data);
+            message[37] = b"0123456789abcdef"[(status >> 4) as usize];
+            message[38] = b"0123456789abcdef"[(status & 15) as usize];
+            cathedral_user_runtime::write(&message).ok();
             return Err(abi::TIMED_OUT);
         }
         yield_now();

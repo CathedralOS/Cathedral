@@ -16,10 +16,9 @@ pub fn trace(label: &str) {
     let mut bytes = [0; 128];
     let mut len = 0;
     for text in ["INPUT_TRACE ", label] {
-        for byte in text.bytes().take(48) {
-            bytes[len] = byte;
-            len += 1;
-        }
+        let count = text.len().min(48);
+        bytes[len..len + count].copy_from_slice(&text.as_bytes()[..count]);
+        len += count;
     }
     for value in [now().unwrap_or(0), cpu_us().unwrap_or(0)] {
         bytes[len] = b' ';

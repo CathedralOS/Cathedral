@@ -13,7 +13,7 @@ pub fn run(style: u64, environment: Environment) -> u64 {
         environment.endpoint(1).unwrap(),
     );
     let control = (Handle::bootstrap(0).unwrap(), Handle::bootstrap(1).unwrap());
-    let mut alternate = false;
+    let mut state: Option<state::State> = None;
     let wake = environment.endpoint(2).unwrap();
     let mut painted = None;
     let mut scene: Option<surfaces::Scene> = None;
@@ -23,6 +23,9 @@ pub fn run(style: u64, environment: Environment) -> u64 {
         let mut snapshot = call(parent, [wire::POLL, 0, 0, 0, 0, 0, 0, 0]);
         let mut view = wire::poll_view(snapshot);
         if view[0] == 0 {
+            if state.is_none() {
+                state = Some(state::State::open(parent, style));
+            }
             for _ in 0..8 {
                 let event = wire::poll_event(snapshot);
                 if event[0] != 0 || event[2] == wire::NONE {
@@ -37,13 +40,14 @@ pub fn run(style: u64, environment: Environment) -> u64 {
                 {
                     #[cfg(feature = "trace-input")]
                     time::trace("app-key");
-                    alternate = !alternate;
-                    cathedral_user_runtime::write(if style == 0 {
-                        b"Cathedral matrix app: nested key\n"
-                    } else {
-                        b"Cathedral matrix app: sibling key\n"
-                    })
-                    .unwrap();
+                    if state.as_mut().unwrap().toggle(parent).is_ok() {
+                        cathedral_user_runtime::write(if style == 0 {
+                            b"Cathedral matrix app: nested key\n"
+                        } else {
+                            b"Cathedral matrix app: sibling key\n"
+                        })
+                        .unwrap();
+                    }
                 }
                 if snapshot[5] & wire::MORE == 0 {
                     break;
@@ -51,13 +55,7 @@ pub fn run(style: u64, environment: Environment) -> u64 {
                 snapshot = call(parent, [wire::POLL, 0, 0, 0, 0, 0, 0, 0]);
                 view = wire::poll_view(snapshot);
             }
-            let color = if alternate {
-                0xd18b35
-            } else if style == 0 {
-                LEFT
-            } else {
-                RIGHT
-            };
+            let color = state.as_ref().unwrap().color();
             if painted != Some((view, color)) {
                 if scene.as_ref().is_none_or(|s| s.epoch != view[1]) {
                     scene = Some(surfaces::Scene::new(parent, view));
@@ -82,6 +80,7 @@ pub fn run(style: u64, environment: Environment) -> u64 {
                 }
                 Ok(_) => {
                     let len = control.0.receive(&mut bytes).unwrap();
+                    let mut status = 0;
                     if let Some(words) = wire::decode(&bytes[..len]) {
                         match words[0] {
                             1 => scene.as_mut().unwrap().remove_accent(parent),
@@ -94,17 +93,39 @@ pub fn run(style: u64, environment: Environment) -> u64 {
                                 view,
                                 if style == 0 { LEFT } else { RIGHT },
                             ),
+                            7 => {
+                                state = Some(state::State::open(parent, style));
+                                scene.as_mut().unwrap().paint(
+                                    parent,
+                                    view,
+                                    state.as_ref().unwrap().color(),
+                                );
+                            }
+                            8 => {
+                                status = state.as_mut().unwrap().toggle(parent).err().unwrap_or(0);
+                                if status == 0 {
+                                    let color = state.as_ref().unwrap().color();
+                                    scene.as_mut().unwrap().paint(parent, view, color);
+                                    painted = Some((view, color));
+                                }
+                            }
+                            9 => {
+                                state.as_ref().unwrap().stage(parent);
+                                scene.as_mut().unwrap().staged_probe(parent);
+                            }
+                            10 => cathedral_user_runtime::task::exit(19),
+                            11 => scene.as_mut().unwrap().compact_probe(parent),
                             _ => (),
                         }
                     }
                     control
                         .1
                         .send(&wire::encode([
-                            0,
+                            status,
                             paints,
                             wakes,
                             time::cpu_us().unwrap(),
-                            0,
+                            u64::from(state.as_ref().is_some_and(|s| s.alternate)),
                             0,
                             0,
                             0,

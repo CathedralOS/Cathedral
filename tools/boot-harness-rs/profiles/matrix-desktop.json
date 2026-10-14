@@ -36,13 +36,29 @@
         "entry": "platform/services/matrix/main.rs",
         "target": "x86_64-unknown-none",
         "clock": true,
-        "argument": 0,
+        "argument": 1398034258,
         "ipc_channels": 12,
         "private_pages": 4,
         "shared_pages": 8
+      },
+      {
+        "package": "cathedral-storage-service",
+        "entry": "platform/services/storage/main.rs",
+        "target": "x86_64-unknown-none",
+        "clock": true,
+        "disk": true
       }
     ],
-    "links": [],
+    "links": [
+      [
+        3,
+        4
+      ],
+      [
+        3,
+        4
+      ]
+    ],
     "executables": [
       {
         "package": "cathedral-matrix-service",

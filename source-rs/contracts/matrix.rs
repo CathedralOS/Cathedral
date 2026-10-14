@@ -102,6 +102,86 @@ pub const PRESENT_COMMIT: u64 = 10;
 pub const PRESENT_ABORT: u64 = 11;
 pub const PRESENT_LIMIT: usize = 4;
 
+/// One atomic publication of one or two rectangles, using the same revision space
+/// as BEGIN/COMMIT. Header: op/epoch/revision (24 bytes), then two 20-byte records:
+/// local name u64, x/y/w/h u16 each, RGB u32; all little endian. An unused record
+/// is entirely zero. No buffers, erases or allocation; names remain caller-local.
+pub const PRESENT_RECTS: u64 = 13;
+pub fn rectangles(epoch: u64, revision: u64, updates: &[Packet]) -> Option<Packet> {
+    if updates.is_empty() || updates.len() > 2 || epoch == 0 || revision == 0 {
+        return None;
+    }
+    let (name, geometry, color) = rectangle_record(epoch, updates[0])?;
+    let (second, second_geometry, second_color) = if updates.len() == 2 {
+        rectangle_record(epoch, updates[1])?
+    } else {
+        (0, 0, 0)
+    };
+    if second == name {
+        return None;
+    }
+    // Two 20-byte records cross the final three u64 boundaries. All names retain
+    // 64 bits; these shifts implement the documented little-endian byte layout.
+    Some([
+        PRESENT_RECTS,
+        epoch,
+        revision,
+        name,
+        geometry,
+        color | (second << 32),
+        (second >> 32) | (second_geometry << 32),
+        (second_geometry >> 32) | (second_color << 32),
+    ])
+}
+fn rectangle_record(epoch: u64, p: Packet) -> Option<(u64, u64, u64)> {
+    if p[0] != PAINT || p[1] != epoch || p[2] == 0 || p[7] > 0xff_ffff {
+        return None;
+    }
+    let mut geometry = 0;
+    for i in 0..4 {
+        if p[3 + i] > u16::MAX as u64 {
+            return None;
+        }
+        geometry |= p[3 + i] << (i * 16);
+    }
+    Some((p[2], geometry, p[7]))
+}
+fn rectangle_fields(epoch: u64, name: u64, geometry: u64, color: u64) -> Packet {
+    [
+        PAINT,
+        epoch,
+        name,
+        geometry & 0xffff,
+        (geometry >> 16) & 0xffff,
+        (geometry >> 32) & 0xffff,
+        geometry >> 48,
+        color,
+    ]
+}
+pub fn rectangle_updates(p: Packet) -> Option<([Packet; 2], usize)> {
+    if p[0] != PRESENT_RECTS {
+        return None;
+    }
+    let mut updates = [
+        rectangle_fields(p[1], p[3], p[4], p[5] & 0xffff_ffff),
+        rectangle_fields(
+            p[1],
+            (p[5] >> 32) | (p[6] << 32),
+            (p[6] >> 32) | (p[7] << 32),
+            p[7] >> 32,
+        ),
+    ];
+    let count = if updates[1][2] == 0 { 1 } else { 2 };
+    // Re-encoding checks ranges, distinct names, epoch/revision and zero padding.
+    if rectangles(p[1], p[2], &updates[..count]) != Some(p) {
+        return None;
+    }
+    if count == 1 {
+        updates[1] = [0; 8];
+    }
+    Some((updates, count))
+}
+
 /// Child-local storage binding: [INFO,0..] -> [0, binding revision,0..].
 /// Storage packets retain storage.rs's layout; opcode is
 /// (binding revision << STORAGE_SCOPE_BITS) | (STORAGE_BASE + storage opcode).
@@ -113,6 +193,31 @@ pub const STORAGE_SCOPE_BITS: u32 = 16;
 /// Sources are exclusive between siblings. Revoke aborts pending transactions.
 pub const STORAGE_GRANT: u64 = 113;
 pub const STORAGE_REVOKE: u64 = 114;
-/// Explicit root adapter mode: two supplied links to storage, no display adapter.
+/// Root adapter mode: two storage links; optional display/input environment.
 pub const STORAGE_ROOT: u64 = 0x53544f52;
 pub const RUN_PAGES: u64 = 112; // owner: slot, private pages, reader pages; rest zero
+
+#[cfg(test)]
+mod rectangle_tests {
+    use super::*;
+    #[test]
+    fn rectangle_packets_preserve_local_names_and_reject_aliasing_or_truncation() {
+        let a = [PAINT, 7, u64::MAX, 65535, 2, 0, 4096, 0xffffff];
+        let b = [PAINT, 7, 0x123456789abcdef, 0, 1, 2, 3, 4];
+        for updates in [&[a][..], &[a, b][..]] {
+            let packed = rectangles(7, 9, updates).unwrap();
+            let (decoded, count) = rectangle_updates(packed).unwrap();
+            assert_eq!(&decoded[..count], updates);
+        }
+        let bytes = encode(rectangles(7, 9, &[a, b]).unwrap());
+        assert_eq!(&bytes[44..52], &b[2].to_le_bytes());
+        assert_eq!(&bytes[52..60], &[0, 0, 1, 0, 2, 0, 3, 0]);
+        assert!(rectangles(7, 9, &[a, a]).is_none());
+        let mut bad = a;
+        bad[3] = 65536;
+        assert!(rectangles(7, 9, &[bad]).is_none());
+        let mut bad = rectangles(7, 9, &[a]).unwrap();
+        bad[7] = 1;
+        assert!(rectangle_updates(bad).is_none());
+    }
+}

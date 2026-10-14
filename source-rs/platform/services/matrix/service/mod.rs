@@ -2,6 +2,7 @@
 
 mod children;
 mod parent;
+mod publication;
 mod requests;
 
 include!("service.rs");

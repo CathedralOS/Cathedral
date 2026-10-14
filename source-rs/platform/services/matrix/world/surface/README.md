@@ -87,7 +87,27 @@ CPU pressure and after repeated dynamic subtree replacement.
 
 This is a bounded rectangle/immutable-image lab, not a complete compositor API.
 There are still two direct children per matrix, sixteen root primitives, and eight
-process accounts. Text, streaming image updates, active quota redistribution,
-transactional multi-object presentation and root-provider recovery remain separate
-work. The prior fixed six path keys and two-level rendering encoding are gone;
+process accounts. Text, streaming image updates, active quota redistribution
+and root-provider recovery remain separate work. Bounded atomic presentation is
+implemented through BEGIN/stage/COMMIT and the compact rectangle operation below.
+The prior fixed six path keys and two-level rendering encoding are gone;
 recursion is limited by supplied budgets and the lab's process arena.
+
+## Publication scheduling
+
+[Request validation](../../service/requests/presentation.rs) previews every update
+before [the parent publisher](../../service/parent/presentation.rs) starts work.
+The service resumes that publisher after each reply, answering other children's
+local queries while dependent events wait in [bounded stream slots](../../service/publication.rs).
+Placement, revocation and disconnect processing follow publication, so the validated
+geometry cannot change halfway through a commit. Transport loss retires the matrix;
+this is not a durable cross-provider commit/retry protocol.
+
+`PRESENT_RECTS` uses one 64-byte packet for one or two existing rectangles. Names
+remain full-width caller-local handles; coordinates use checked u16 fields and RGB
+uses checked 24-bit color. Every hop clips and remaps names normally. The entire
+packet is checked before staging; an invalid second rectangle cannot publish the
+first. It shares the connection/view revision history with ordinary transactions.
+Compact rejection leaves no active transaction. Sealed images, erases and up to
+four-surface batches continue using the original staged protocol. Owner placement
+replay is still individual updates, and scene atomicity does not promise vblank.

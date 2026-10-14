@@ -43,6 +43,7 @@ impl Server {
             cursor: 0,
             memory: false,
             closed: [None; MAX_CLIENTS],
+            paused: 0,
         })
     }
     /// Whether a local slot can accept an explicitly supplied connection.
@@ -76,6 +77,9 @@ impl Server {
     }
     pub(super) fn connect(&mut self) -> Result<(), Error> {
         for index in 0..self.count {
+            if self.paused & (1 << (index + 1)) != 0 {
+                continue;
+            }
             if self.clients[index].is_none()
                 && let Some(link) = self.links[index]
             {
@@ -91,6 +95,9 @@ impl Server {
     }
     pub(super) fn take_disconnection(&mut self) -> Option<Event> {
         for client in 0..self.count {
+            if self.paused & (1 << (client + 1)) != 0 {
+                continue;
+            }
             if let Some(incarnation) = self.closed[client].take() {
                 return Some(Event::Disconnected {
                     client,
