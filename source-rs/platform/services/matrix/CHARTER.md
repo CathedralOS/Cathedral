@@ -50,9 +50,13 @@ retires the service so a late reply cannot be mistaken for another operation.
 [Storage delegation](world/storage/README.md) passes whole private catalog roots
 through the same matrix chain, independently of display grants. Owner assignment
 is exclusive between siblings; every request checks a local binding revision.
-Child storage forwarding resumes from the service loop; root provider failures
-retire the affected storage binding. Shared parent transport failures still retire
-the matrix. Revocation/death aborts staged work; replacement requires fresh grants. Both the
+The visible desktop admits children with separate interaction and catalog pairs,
+plus a wake receiver. [Connection construction](service/children/connections.rs)
+owns allocation and rollback; the [runtime bundle](../../libraries/user-runtime/matrix.rs)
+names the child-visible roles. Child storage forwarding resumes from the service
+loop without occupying the upstream interaction pair. Root provider failures
+retire the affected storage binding. A separate parent catalog transport failure
+retires only catalog authority; legacy shared parent failures retire the matrix. Revocation/death aborts staged work; replacement requires fresh grants. Both the
 headless storage fixture and visible desktop exercise this boundary.
 
 Presentation follows [the bounded batch policy](world/presentation/presentation.rs),

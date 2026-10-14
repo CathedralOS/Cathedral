@@ -15,6 +15,8 @@ pub(super) struct Parent {
     pub upstream: bool,
     images: [Option<(u64, cathedral_user_runtime::memory::Object)>; wire::MAX_SURFACES],
     pair: Option<(Handle, Handle)>,
+    storage_pair: Option<(Handle, Handle)>,
+    pub separate_storage: bool,
     pub grant: Grant,
     display: Option<(Handle, Handle)>,
     pub wake: Option<Handle>,
@@ -45,6 +47,8 @@ impl Parent {
             images: [const { None }; wire::MAX_SURFACES],
             upstream: false,
             pair: None,
+            storage_pair: None,
+            separate_storage: false,
             grant: Grant {
                 epoch: 0,
                 width: 0,
@@ -61,7 +65,7 @@ impl Parent {
         storage_root: bool,
     ) -> Result<(), Error> {
         if (storage_root && !matches!(environment.len(), 0 | 4))
-            || !matches!(environment.len(), 0 | 2 | 3 | 4)
+            || !matches!(environment.len(), 0 | 2 | 3 | 4 | 5)
         {
             return Err(Error(abi::DENIED as i64));
         }
@@ -69,7 +73,8 @@ impl Parent {
             self.storage_links[0] = Some(cathedral_user_runtime::storage::Client::at(0)?);
             self.storage_links[1] = Some(cathedral_user_runtime::storage::Client::at(1)?);
         }
-        self.upstream = matches!(environment.len(), 2 | 3);
+        self.separate_storage = environment.len() == 5 || (storage_root && environment.len() == 4);
+        self.upstream = matches!(environment.len(), 2 | 3 | 5);
         let pair = || {
             (
                 environment.endpoint(0).unwrap(),
@@ -79,6 +84,15 @@ impl Parent {
         self.pair = self.upstream.then(pair);
         self.display = (environment.len() == 4).then(pair);
         self.wake = (environment.len() == 3).then(|| environment.endpoint(2).unwrap());
+        if environment.len() == 5 {
+            let connections = cathedral_user_runtime::matrix::Connections::load(environment)?;
+            self.pair = Some(connections.interaction);
+            self.storage_pair = Some(connections.storage);
+            self.wake = Some(connections.wake);
+        } else {
+            // Manually assembled headless fixtures retain their original shared stream.
+            self.storage_pair = self.pair;
+        }
         Ok(())
     }
     pub fn refresh(&mut self, world: &mut World) -> Result<(), Error> {

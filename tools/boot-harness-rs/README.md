@@ -197,7 +197,7 @@ distinguishes the finite boot-approved budgets from future manifest/resource pol
 [protocol_test.py](protocol_test.py) monitors both this proof and the matrix proof.
 
 Each profile `startup.initial` or `startup.launches` entry may set `ipc_channels`
-to an integer 0–16 (default 4 regardless of task count). Reservations for all
+to an integer 0..20 (default 4 regardless of task count). Reservations for all
 initial and dormant launch accounts must total at most 32. Charges persist
 across replacement until both channel endpoints close. Launch loans preserve
 the same account; they do not grant fresh capacity. [resource_budgets.py](resource_budgets.py)
@@ -243,8 +243,8 @@ The matrix desktop uses `startup.executables` for code-only catalogue grants and
 `dynamic_tasks` for unbound accounts. Owner-only matrix RUN requests reserve and
 admit each app/matrix recursively; static launches remain for the root and devices.
 Its test checks failed image delegation, nested exhaustion, repeated replacement,
-and outside sibling survival. Channel allowances can be up to 16 per account
-(global backing remains 32 and local dynamic-handle capacity remains 16), allowing
+and outside sibling survival. Channel allowances can be up to 20 per account
+(global backing remains 32 and local dynamic-handle capacity is 20), allowing
 a matrix to subdivide funding while retaining its own connection capacity.
 
 The matrix desktop now checks owned surface allocation/exhaustion, stale-handle

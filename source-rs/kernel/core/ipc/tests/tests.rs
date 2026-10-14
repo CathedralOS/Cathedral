@@ -150,7 +150,7 @@ fn pair(epoch: u64) -> Ipc {
             receiver: 1,
             revoker: Some(2),
         }],
-        &[8; 3],
+        &[abi::MAX_DYNAMIC_HANDLES / 2; 3],
     )
     .unwrap()
 }

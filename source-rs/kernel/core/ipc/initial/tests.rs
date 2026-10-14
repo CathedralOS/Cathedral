@@ -37,7 +37,10 @@ fn every_validation_failure_preserves_all_sources_and_dormant_child() {
     for (handles, error) in [
         (alloc::vec![s, 0], abi::BAD_HANDLE),
         (alloc::vec![s, s], abi::INVALID_ARGUMENT),
-        (alloc::vec![s;5], abi::INVALID_ARGUMENT),
+        (
+            alloc::vec![s; abi::MAX_INITIAL_ENDPOINTS + 1],
+            abi::INVALID_ARGUMENT,
+        ),
     ] {
         assert_eq!(ipc.prepare_child_with(0, 0, 1, 2, 0, &handles), Err(error));
         assert!(!ipc.live(1));
@@ -77,14 +80,30 @@ fn full_bundle_can_include_both_rights_and_snapshot_never_regrants() {
     let mut ipc = dormant();
     let a = ipc.create(0).unwrap();
     let b = ipc.create(0).unwrap();
-    ipc.prepare_child_with(0, 0, 1, 2, 0, &[a[0], a[1], b[0], b[1]])
+    let c = ipc.create(0).unwrap();
+    assert_eq!(
+        ipc.prepare_child_with(0, 0, 1, 2, 0, &[a[0], a[1], b[0], b[1], 0]),
+        Err(abi::BAD_HANDLE)
+    );
+    assert!(!ipc.live(1));
+    ipc.send(0, a[0], b"retained").unwrap();
+    assert_eq!(ipc.receive(0, a[1], 64).unwrap().unwrap().len, 8);
+    ipc.prepare_child_with(0, 0, 1, 2, 0, &[a[0], a[1], b[0], b[1], c[0]])
         .unwrap();
-    assert_eq!(ipc.budget(0), Ok([4, 2, 16, 0]));
-    assert_eq!(ipc.budget(1), Ok([4, 0, 16, 4]));
-    ipc.close_task(0); // Both ends moved; creator death cannot erase their funding.
-    assert_eq!(ipc.charged_channels(0), 2);
+    assert_eq!(
+        ipc.budget(0),
+        Ok([4, 3, abi::MAX_DYNAMIC_HANDLES as u64, 1])
+    );
+    assert_eq!(
+        ipc.budget(1),
+        Ok([4, 0, abi::MAX_DYNAMIC_HANDLES as u64, 5])
+    );
     let names = ipc.initial(1).unwrap().to_vec();
-    assert_eq!(names.len(), 4);
+    assert_eq!(names.len(), abi::MAX_INITIAL_ENDPOINTS);
+    ipc.send(1, names[4], b"fifth endpoint").unwrap();
+    assert_eq!(ipc.receive(0, c[1], 64).unwrap().unwrap().len, 14);
+    ipc.close_task(0); // Moved rights survive; creator death cannot erase their funding.
+    assert_eq!(ipc.charged_channels(0), 3);
     ipc.send(1, names[0], b"self").unwrap();
     assert_eq!(ipc.receive(1, names[1], 64).unwrap().unwrap().len, 4);
     ipc.close(1, names[2]).unwrap();

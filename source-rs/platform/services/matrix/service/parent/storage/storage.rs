@@ -6,11 +6,53 @@ use cathedral_contracts::storage as protocol;
 use cathedral_user_runtime::server::Request;
 pub(super) use pending::Pending;
 impl Parent {
+    pub(in crate::service) fn storage_client(&self, slot: usize) -> usize {
+        if self.separate_storage {
+            slot + 3
+        } else {
+            slot
+        }
+    }
+    pub(in crate::service) fn storage_slot(&self, client: usize) -> usize {
+        if self.separate_storage {
+            client - 3
+        } else {
+            client
+        }
+    }
+    pub(in crate::service) fn storage_stream(&self, client: usize) -> bool {
+        if self.separate_storage {
+            matches!(client, 3 | 4)
+        } else {
+            client < 2
+        }
+    }
+    fn storage_exchange(&mut self, words: wire::Packet) -> Result<wire::Packet, Error> {
+        let (send, receive) = self.storage_pair.ok_or(Error(abi::PEER_CLOSED as i64))?;
+        let mut bytes = [0; 64];
+        let result = send
+            .send(&wire::encode(words))
+            .and_then(|()| receive.receive_until(&mut bytes, time::after(100)?))
+            .and_then(|len| wire::decode(&bytes[..len]).ok_or(Error(abi::IO_ERROR as i64)));
+        if result.is_err() && self.separate_storage {
+            self.retire_storage(0, 0)?;
+        }
+        result
+    }
     fn storage_refresh(&mut self) -> Result<usize, Error> {
         if !self.upstream {
             return Ok(self.storage_links.len());
         }
-        let reply = self.call([wire::STORAGE_INFO, 0, 0, 0, 0, 0, 0, 0])?;
+        if self.storage_pair.is_none() {
+            self.scopes.clear();
+            self.storage_epoch = 0;
+            return Ok(0);
+        }
+        let reply = match self.storage_exchange([wire::STORAGE_INFO, 0, 0, 0, 0, 0, 0, 0]) {
+            Ok(reply) => reply,
+            Err(_) if self.separate_storage => return Ok(0),
+            Err(error) => return Err(error),
+        };
         let epoch = if reply[0] == 0 { reply[1] } else { 0 };
         if epoch != self.storage_epoch {
             self.scopes.clear(); // Ancestor already aborted its old binding.
@@ -26,7 +68,7 @@ impl Parent {
         let available = self.storage_refresh()?;
         let status = match words {
             [wire::STORAGE_GRANT, slot @ 0..=1, source, 0, 0, 0, 0, 0] => {
-                match server.incarnation(slot as usize) {
+                match server.incarnation(self.storage_client(slot as usize)) {
                     Some(inc) => {
                         if !self.upstream && source < available as u64 {
                             let result = self.storage_links[source as usize]
@@ -59,7 +101,7 @@ impl Parent {
                 [wire::STORAGE_BASE + protocol::ABORT, 0, 0, 0, 0, 0, 0, 0],
             ) {
                 Ok(reply) => reply,
-                Err(error) if self.upstream => return Err(error),
+                Err(error) if self.upstream && !self.separate_storage => return Err(error),
                 // Binding is already revoked. A retired provider stream cannot
                 // serve another child until explicit grant after provider restart.
                 Err(_) => return Ok(()),
@@ -79,6 +121,22 @@ impl Parent {
         self.storage_pending = Some(Pending::new(request, words, self.upstream)?);
         Ok(())
     }
+    fn retire_storage(&mut self, source: usize, client: usize) -> Result<(), Error> {
+        if self.upstream {
+            if let Some((send, receive)) = self.storage_pair.take() {
+                send.close()?;
+                receive.close()?;
+            }
+            self.storage_epoch = 0;
+            self.scopes.clear();
+        } else {
+            if let Some(link) = &mut self.storage_links[source] {
+                link.invalidate();
+            }
+            self.scopes.revoke(self.storage_slot(client));
+        }
+        Ok(())
+    }
     fn storage_call(
         &mut self,
         source: usize,
@@ -87,7 +145,7 @@ impl Parent {
         words[0] &= 0xffff;
         if self.upstream {
             words[0] |= self.storage_epoch << wire::STORAGE_SCOPE_BITS;
-            return self.call(words);
+            return self.storage_exchange(words);
         }
         let bytes = wire::encode(words);
         if words[3] > protocol::CAPACITY as u64

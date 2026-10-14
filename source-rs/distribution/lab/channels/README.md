@@ -51,7 +51,7 @@ requests.send(b"work")?;
 
 ## Initial child environment
 
-The parent may pass an ordered bundle of up to four dynamic endpoints:
+The parent may pass an ordered bundle of up to five dynamic endpoints:
 
 ```rust,ignore
 let (requests, worker_input) = ipc::channel()?;
@@ -84,12 +84,12 @@ Follow [runtime launch requests](../../../platform/libraries/user-runtime/task/l
 through [launch syscall staging](../../../kernel/core/user_tasks/syscalls/tasks/launch.rs)
 to [boot-context admission](../../../kernel/core/user_tasks/lifecycle/lifecycle.rs)
 and [whole-bundle commit](../../../kernel/core/ipc/initial/initial.rs). The syscall copies
-a 48-byte request (argument, count, four names; unused words must be zero) before
+a 56-byte request (argument, count, five names; unused words must be zero) before
 blocking the parent. Kernel records retain only copied names. Admission and commit
 run on the sole boot CPU with interrupts disabled; no task can observe a partial
 bundle. Storage stays bounded and no IPC arena grows during launch.
 
-`Environment::load` reads a 40-byte caller-local startup snapshot (count and four
+`Environment::load` reads a 48-byte caller-local startup snapshot (count and five
 names), also used by the entry macro. It never enumerates the parent's grants,
 looks up a provider or reinstalls authority. Reading after closing/moving an
 initial endpoint returns its original, now-stale name. Task death clears the
@@ -136,8 +136,8 @@ Follow [launch requests](../../../platform/libraries/user-runtime/task/launch.rs
 [admission and commit](../../../kernel/core/user_tasks/lifecycle/lifecycle.rs),
 [whole-loan validation](../../../kernel/core/user_tasks/lifecycle/delegation.rs)
 and [loan lifetime](../../../kernel/core/user_tasks/lifecycle/supervision/delegation.rs). Syscall 40
-uses the 48-byte endpoint prefix followed by a count and seven launch names
-(112 bytes total); unused words and flags must be zero. Reclamation's fresh
+uses the 56-byte endpoint prefix followed by a count and eleven launch names
+(152 bytes total); unused words and flags must be zero. Reclamation's fresh
 name is reserved before mapping, so teardown cannot fail from name exhaustion.
 
 This is a finite launch-budget experiment, not arbitrary ELF loading, a manifest
@@ -198,9 +198,9 @@ transport/revocation question remains in [OWNER_QUESTIONS.md](../../../../OWNER_
 
 There are 32 reserved boot endpoint slots plus a separate pool of 32 dynamic
 one-way channels. Each channel stores one message of up to 64 bytes and at most
-one attachment. Each process may hold/reserve 16 dynamic grants, including hidden
+one attachment. Each process may hold/reserve 20 dynamic grants, including hidden
 incoming escrow. Each boot/launch account reserves four channels by default;
-the profile's `ipc_channels` may choose 0–16. All reservations, including dormant
+the profile's `ipc_channels` may choose 0..20. All reservations, including dormant
 children, must fit the 32-channel backing pool. Host composition and kernel
 admission reject overcommit before execution. Another account cannot consume
 this reservation. Creation still requires two available local handle slots and

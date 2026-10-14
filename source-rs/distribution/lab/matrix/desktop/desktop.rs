@@ -15,8 +15,8 @@ fn launch_inner(pair: Pair, pressure: bool) {
             0,
             0,
             0,
-            6,
-            if pressure { 2 } else { 1 },
+            10,
+            2,
             if pressure { 7 } else { 3 },
             if pressure { 20000 } else { 0 },
         ],
@@ -32,15 +32,6 @@ fn inner(pair: Pair, pressure: bool) {
         pair,
         wire::route([wire::RUN, 0, 1, 0, 0, 0, 0, 0], 0).unwrap(),
     );
-    if !pressure {
-        assert_eq!(
-            call(
-                pair,
-                wire::route([wire::RUN, 1, 1, 0, 0, 0, 0, 0], 0).unwrap()
-            ),
-            wire::error(abi::NO_MEMORY)
-        );
-    }
     if pressure {
         owner(
             pair,

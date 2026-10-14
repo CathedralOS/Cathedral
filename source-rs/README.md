@@ -408,9 +408,9 @@ initial FP state is clean and I/O privilege is zero.
 | 35: IPC close | Local handle, 0, 0 | 0 after dropping the grant; copied handles become stale |
 | 36: IPC send capability | Destination handle, 80-byte packet, 0 | Payload length after atomic one-endpoint move into the queue |
 | 37: IPC receive capability | Receive handle, writable 80-byte packet, 0 | Payload length and optional installed handle; blocks on empty |
-| 38: task spawn with endpoints | Launch grant, 48-byte request, 0 | Child ticket after admitting and moving the whole initial bundle; failure retains all source grants |
-| 39: initial environment | Writable 40-byte destination, 0, 0 | 0 after copying count and up to four initial local endpoint names; never reinstalls grants |
-| 40: task spawn with launch loans | Launch grant, 144-byte request, 0 | Child ticket after atomic endpoint moves and selected idle launch loans; failure retains all grants |
+| 38: task spawn with endpoints | Launch grant, 56-byte request, 0 | Child ticket after admitting and moving the whole initial bundle; failure retains all source grants |
+| 39: initial environment | Writable 48-byte destination, 0, 0 | 0 after copying count and up to five initial local endpoint names; never reinstalls grants |
+| 40: task spawn with launch loans | Launch grant, 152-byte request, 0 | Child ticket after atomic endpoint moves and selected idle launch loans; failure retains all grants |
 | 41: IPC budget | Writable 32-byte destination, 0, 0 | 0 after copying caller-local channel limit/charge and dynamic handle limit/charge as four LE u64 words |
 | 42: CPU read | Local clock grant, 0, 0 | Caller-local direct CPU microseconds |
 | 43/44: resource budget/assignment | Local output or owned idle launch and limits | [Conserved page/IPC quotas](kernel/core/user_tasks/resources/README.md) |
@@ -503,11 +503,11 @@ attached authority with `TOO_SMALL` and preserves the message. Boot grants canno
 be moved; dynamic grants cannot yet be duplicated or independently revoked.
 
 Each initial/launch account has a backed channel reservation: four by default,
-or profile `ipc_channels` in 0Ã¢â‚¬â€œ16. All accounts, including dormant children, must
+or profile `ipc_channels` in 0..20. All accounts, including dormant children, must
 fit the 32-channel pool. [Accounting](kernel/core/ipc/budget/budget.rs) retains the original
 account's charge through endpoint moves, creator death and replacement; final
 closure of both ends refunds it. Each recipient separately pays for its dynamic
-handles, including hidden escrow, within a limit of 16. Creation also requires
+handles, including hidden escrow, within a limit of 20. Creation also requires
 available handles and fresh names. [`ipc::budget()`](platform/libraries/user-runtime/ipc/budget.rs)
 reads only these caller-local limits/charges. The profile and kernel reject
 overcommit, so unrelated accounts cannot exhaust promised channel storage.
@@ -604,7 +604,7 @@ Failed ELF admission returns `BAD_EXECUTABLE` (-8); failed frame admission
 returns `NO_MEMORY` (-12), rolls back, and permits another attempt. Name and internal epoch
 exhaustion also fail closed. No mapping or reclamation runs in a trap callback.
 
-`Launch::spawn_with(argument, endpoints)` additionally installs up to four dynamic
+`Launch::spawn_with(argument, endpoints)` additionally installs up to five dynamic
 endpoint rights before the child can run. Its [startup environment guide](distribution/lab/channels/README.md#initial-child-environment)
 connects the `entry_with_environment!` macro, checked syscall request, admission
 and atomic commit. All rejected bundles and failed ELF/frame admissions preserve

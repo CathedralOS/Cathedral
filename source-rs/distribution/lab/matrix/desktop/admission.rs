@@ -101,8 +101,8 @@ pub(super) fn start() -> Session {
     let (source_send, source_input) = ipc::channel().unwrap();
     let (source_output, source_recv) = ipc::channel().unwrap();
     let capacity = task::available_slots().unwrap();
-    let pressure = capacity == 4;
-    assert_eq!(capacity, if pressure { 4 } else { 3 });
+    let pressure = Executable::at(2).is_ok();
+    assert_eq!(capacity, 4);
     let root = Launch::at(2).unwrap();
     // Descendant reservations return to the surviving distribution owner on root
     // death. Re-fund the replacement explicitly; restarting never mints budgets.
@@ -111,7 +111,7 @@ pub(super) fn start() -> Session {
         cathedral_user_runtime::resources::Limits {
             private_pages: 4,
             reader_pages: 8,
-            channels: 12,
+            channels: 20,
         },
     )
     .unwrap();

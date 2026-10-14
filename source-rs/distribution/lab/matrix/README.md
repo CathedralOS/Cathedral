@@ -45,13 +45,13 @@ The [desktop policy](desktop/desktop.rs) supplies layout and initial appearance.
 platform matrix implementation owns input, clipping and child admission at both
 levels. The root environment additionally receives explicit compositor and
 physical-source endpoints; these are the only device-facing adapters. Apps get
-only their parent pair and a child-local wake receiver. The [app](desktop/app/app.rs) waits for local input/view invalidations and
+only their interaction pair, catalog pair and a child-local wake receiver. The [app](desktop/app/app.rs) waits for local input/view invalidations and
 submits an oversized rectangle that must be clipped at each ownership boundary.
 
 The desktop receives code-only catalogue grants and a funded process pool.
 [Startup admission](desktop/admission.rs) stages these into the root; owner-only
 RUN requests select and fund descendants using the same provider at each level.
-The test checks rollback, nested pool exhaustion and repeated subtree replacement.
+The test checks rollback, exhausted frame funding and repeated subtree replacement.
 Device launches remain explicit static grants.
 
 [Owned surfaces](../../../platform/services/matrix/world/surface/README.md) use
@@ -86,15 +86,32 @@ It supports sealed RGBX images, but does not yet integrate the older session's t
 richer scene snapshots. Recursive stacking has no hard-coded two-level path keys.
 [Provider recovery](desktop/providers.rs) explicitly rebuilds the root tree after
 input/display loss. [Storage stalls](desktop/stalls.rs) prove sibling rendering
-through blocked saves and reconcile unacknowledged commits after provider replacement. [STATUS.md](../../../STATUS.md) tracks these boundaries and the kernel
+through blocked saves and reconcile unacknowledged commits after provider replacement.
+The [nested peer](desktop/stalls_peer.rs) shares the saving app's immediate matrix;
+its pointer/key input and repaint complete before the storage deadline. It also
+survives catalog revocation, provider replacement and its sibling's death. Its
+state changes are deliberately volatile because only the saver holds the inherited
+catalog grant. [STATUS.md](../../../STATUS.md) tracks these boundaries and the kernel
 metadata/resource audit. Protocol locality is not a complete timing-isolation claim.
 
 The desktop retains app rectangles across owner placement changes. Its startup
 probe checks that idle apps do not repaint or consume 20 ms of CPU per second.
-Use `--matrix-desktop-test --pressure --release --timeout 120` to add a
+Use `--matrix-desktop-test --pressure --release --timeout 180` to add a
 non-yielding descendant inside a 20% nested CPU allowance. Physical-input tests
 report scanout latency. This nine-process profile now includes storage, provider
-recovery and cold reboot alongside the spinner. The ordinary profile has no spinner.
+recovery and cold reboot alongside the spinner. During the nested interaction
+proof the second nested slot temporarily hosts the interactive peer in place of
+the spinner, retaining the matrix's 20% cap. The spinner is restored before the
+host physical-input check. The ordinary profile reserves the same four descendant
+slots, uses three outside probes, and has no spinner.
+
+Channel funding remains within the fixed 32-channel arena: four for distribution
+adapter connections, four reserved for display, four for input, zero for storage,
+and twenty delegated to the root. The root retains ten and lends ten to its inner
+matrix; each child bundle costs five channels. The largest construction needs
+20 local dynamic handles (five incoming, five retained for an existing child,
+ten for the new child before transfer). Boot control/provider links use their
+separate static backing.
 Add `--trace-input` for elapsed/CPU diagnostics; these are not latency guarantees.
 Compact rectangle packets avoid BEGIN/stage/COMMIT round trips at every level;
 publication waits now return to the service loop. Neither change introduces CPU

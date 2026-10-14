@@ -4,8 +4,8 @@ from resource_budgets import channel_limits, cpu_limits
 
 class Reservations(unittest.TestCase):
     def test_nine_accounts_fit_with_explicit_backing(self):
-        startup = {"initial": {}, "launches": [{}, {}, {"ipc_channels": 12}, {}], "dynamic_tasks": 4}
-        self.assertEqual(channel_limits(startup), [4, 4, 4, 12, 4, 0, 0, 0, 0])
+        startup = {"initial": {}, "launches": [{}, {}, {"ipc_channels": 20}, {"ipc_channels": 0}], "dynamic_tasks": 4}
+        self.assertEqual(channel_limits(startup), [4, 4, 4, 20, 0, 0, 0, 0, 0])
     def test_dynamic_accounts_have_no_unfunded_channel_capacity(self):
         startup = {"initial": {}, "launches": [{}], "dynamic_tasks": 6}
         self.assertEqual(channel_limits(startup), [4, 4, 0, 0, 0, 0, 0, 0])
@@ -28,7 +28,7 @@ class Reservations(unittest.TestCase):
         self.assertEqual(channel_limits({"initial": {"ipc_channels": 8}, "launches": [{"ipc_channels": 8}, {}, {}, {}, {}]}), [8, 8, 4, 4, 4, 4])
 
     def test_invalid_values_and_overcommit(self):
-        for value in [-1, 17, True, "4", 1.5, None]:
+        for value in [-1, 21, True, "4", 1.5, None]:
             with self.subTest(value=value), self.assertRaises(ValueError):
                 channel_limits({"initial": {"ipc_channels": value}})
         with self.assertRaises(ValueError):

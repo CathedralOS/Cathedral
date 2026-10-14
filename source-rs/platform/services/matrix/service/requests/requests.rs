@@ -58,8 +58,19 @@ pub(super) fn dispatch(
                 || (wire::STORAGE_BASE..wire::STORAGE_BASE + 256)
                     .contains(&(words[0] & 0xffff)) =>
         {
+            if !request
+                .client
+                .is_some_and(|client| parent.storage_stream(client))
+            {
+                server.reply(&request, &wire::encode(wire::error(abi::DENIED)))?;
+                return Ok(());
+            }
             parent.storage_request(request, words)?;
             return Ok(());
+        }
+        _ if request.client.is_some_and(|client| client >= 3) => {
+            // A catalog endpoint confers no interaction or source authority.
+            return server.reply(&request, &wire::encode(wire::error(abi::DENIED)));
         }
         Some(words)
             if matches!(

@@ -14,7 +14,8 @@ pub(super) fn check(launch: cathedral_user_runtime::task::Launch) {
     #[repr(align(256))]
     struct Request([u64; abi::SPAWN_TREE_BYTES / 8]);
     let mut request = Request([0; abi::SPAWN_TREE_BYTES / 8]);
-    request.0[6] = abi::MAX_LAUNCHES as u64 + 1;
+    let loans = abi::SPAWN_BYTES / 8;
+    request.0[loans] = abi::MAX_LAUNCHES as u64 + 1;
     assert_eq!(
         raw(
             abi::TASK_SPAWN_TREE,
@@ -24,8 +25,8 @@ pub(super) fn check(launch: cathedral_user_runtime::task::Launch) {
         ),
         abi::INVALID_ARGUMENT
     );
-    request.0[6] = 0;
-    request.0[7] = launch.raw();
+    request.0[loans] = 0;
+    request.0[loans + 1] = launch.raw();
     assert_eq!(
         raw(
             abi::TASK_SPAWN_TREE,

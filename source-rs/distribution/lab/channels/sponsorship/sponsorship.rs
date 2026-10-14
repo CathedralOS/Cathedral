@@ -11,7 +11,7 @@ fn charged(pair: Pair, expected: u64) {
     assert!(attachment.is_none());
     let words: [u64; 4] =
         core::array::from_fn(|i| u64::from_le_bytes(bytes[i * 8..i * 8 + 8].try_into().unwrap()));
-    assert_eq!(words, [8, expected, 16, 0]);
+    assert_eq!(words, [8, expected, abi::MAX_DYNAMIC_HANDLES as u64, 0]);
 }
 fn release(handle: Handle) {
     let mut bytes = [0; 64];

@@ -8,10 +8,12 @@ struct Owned {
     reservation: Option<cathedral_user_runtime::task::Launch>,
     control: Pair,
     data: Pair,
+    storage: Option<Pair>,
     notify: Handle,
 }
 #[derive(Default)]
 pub(super) struct Children {
+    pub separate_storage: bool,
     slots: [Option<Owned>; 2],
     next_frames: [Option<u64>; 2],
     next_pages: [Option<[u64; 2]>; 2],
@@ -147,6 +149,9 @@ impl Children {
             .take()
             .ok_or(Error(abi::PEER_CLOSED as i64))?;
         server.remove(slot);
+        if child.storage.is_some() {
+            server.remove(slot + 3);
+        }
         world.disconnected(slot);
         // Release retained upstream image readers before returning descendant funding.
         super::requests::flush(parent, world)?;
@@ -155,6 +160,10 @@ impl Children {
         child.data.0.close()?;
         child.data.1.close()?;
         child.notify.close()?;
+        if let Some((input, output)) = child.storage {
+            input.close()?;
+            output.close()?;
+        }
         if let Some(reservation) = child.reservation {
             reservation.release()?;
             // Creator death returns descendant reservations with fresh local names.

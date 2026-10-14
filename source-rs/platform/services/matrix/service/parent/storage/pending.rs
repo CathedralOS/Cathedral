@@ -1,5 +1,5 @@
-//! One bounded child exchange. Nested matrices serialize their shared upstream
-//! stream; the root waits on a distinct provider link without blocking display.
+//! One bounded catalog exchange, independent of the interaction stream.
+//! Legacy shared-stream fixtures still serialize their upstream requests.
 use super::*;
 pub(in crate::service::parent) struct Pending {
     request: Request,
@@ -43,7 +43,7 @@ impl Parent {
             .unwrap()
     }
     pub(in crate::service) fn upstream_busy(&self) -> bool {
-        self.publishing() || (self.upstream && self.storing())
+        self.publishing() || (self.upstream && !self.separate_storage && self.storing())
     }
     pub(in crate::service) fn progress_storage(
         &mut self,
@@ -56,9 +56,11 @@ impl Parent {
         if let Some(receive) = p.receive {
             let now = time::now()?;
             let mut bytes = [0; 64];
-            match receive.receive_until(&mut bytes, now) {
-                Ok(len) => {
-                    let words = wire::decode(&bytes[..len]).ok_or(Error(abi::IO_ERROR as i64))?;
+            let result = receive
+                .receive_until(&mut bytes, now)
+                .and_then(|len| wire::decode(&bytes[..len]).ok_or(Error(abi::IO_ERROR as i64)));
+            match result {
+                Ok(words) => {
                     if p.refresh {
                         let epoch = if words[0] == 0 { words[1] } else { 0 };
                         if epoch != self.storage_epoch {
@@ -78,31 +80,39 @@ impl Parent {
                     return Ok(());
                 }
                 Err(error) => {
-                    // A late reply on the shared parent connection would corrupt
-                    // other protocols. Root provider links can be retired alone.
-                    if self.upstream {
+                    // A separate catalog stream can retire without losing input.
+                    // Legacy shared streams must retire the whole service.
+                    if self.upstream && !self.separate_storage {
                         return Err(error);
                     }
-                    self.storage_links[p.source].as_mut().unwrap().invalidate();
-                    self.scopes.revoke(p.request.client.unwrap());
+                    self.retire_storage(p.source, p.request.client.unwrap())?;
                     reply = Some(wire::error(error.0 as u64));
                 }
             }
         }
         if reply.is_none() && p.receive.is_none() {
             if p.refresh {
-                let (send, receive) = self.pair.ok_or(Error(abi::PEER_CLOSED as i64))?;
-                send.send(&wire::encode([wire::STORAGE_INFO, 0, 0, 0, 0, 0, 0, 0]))?;
-                p.receive = Some(receive);
+                let result = self
+                    .storage_pair
+                    .ok_or(Error(abi::PEER_CLOSED as i64))
+                    .and_then(|(send, receive)| {
+                        send.send(&wire::encode([wire::STORAGE_INFO, 0, 0, 0, 0, 0, 0, 0]))?;
+                        Ok(receive)
+                    });
+                match result {
+                    Ok(receive) => p.receive = Some(receive),
+                    Err(error) if !self.separate_storage => return Err(error),
+                    Err(error) => {
+                        self.retire_storage(p.source, p.request.client.unwrap())?;
+                        reply = Some(wire::error(error.0 as u64));
+                    }
+                }
             } else {
                 match self.send_storage(&mut p) {
                     Ok(result) => reply = result,
-                    Err(error) if self.upstream => return Err(error),
+                    Err(error) if self.upstream && !self.separate_storage => return Err(error),
                     Err(error) => {
-                        if let Some(client) = &mut self.storage_links[p.source] {
-                            client.invalidate();
-                        }
-                        self.scopes.revoke(p.request.client.unwrap());
+                        self.retire_storage(p.source, p.request.client.unwrap())?;
                         reply = Some(wire::error(error.0 as u64));
                     }
                 }
@@ -116,7 +126,7 @@ impl Parent {
         Ok(())
     }
     fn send_storage(&mut self, p: &mut Pending) -> Result<Option<wire::Packet>, Error> {
-        let slot = p.request.client.unwrap();
+        let slot = self.storage_slot(p.request.client.unwrap());
         let incarnation = p.request.incarnation;
         let source = match self.scopes.source(slot, incarnation) {
             Ok(source) => source,
@@ -148,7 +158,7 @@ impl Parent {
         let mut words = p.words;
         let pair = if self.upstream {
             words[0] = op | (self.storage_epoch << wire::STORAGE_SCOPE_BITS);
-            self.pair.ok_or(Error(abi::PEER_CLOSED as i64))?
+            self.storage_pair.ok_or(Error(abi::PEER_CLOSED as i64))?
         } else {
             words[0] = op - wire::STORAGE_BASE;
             self.storage_links[source]

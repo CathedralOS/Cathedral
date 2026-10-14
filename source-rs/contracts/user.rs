@@ -90,20 +90,20 @@ pub const IPC_SEND_CAP: u64 = 36;
 pub const IPC_RECEIVE_CAP: u64 = 37;
 pub const IPC_PACKET_BYTES: usize = 80;
 pub const MAX_DYNAMIC_CHANNELS: usize = 32;
-pub const MAX_CREATED_CHANNELS: usize = 16;
-pub const MAX_DYNAMIC_HANDLES: usize = 16;
+pub const MAX_CREATED_CHANNELS: usize = 20;
+pub const MAX_DYNAMIC_HANDLES: usize = 20;
 
-/// Move up to four dynamic endpoints into a newly admitted child. arg0 launch,
-/// arg1 48-byte record (argument, count, four handles), arg2 zero. Unused words zero.
+/// Move up to five dynamic endpoints into a newly admitted child. arg0 launch,
+/// arg1 56-byte record (argument, count, five handles), arg2 zero. Unused words zero.
 pub const TASK_SPAWN_WITH: u64 = 38;
-/// Copy the caller's initial endpoint names: count, four handles (40 bytes).
+/// Copy the caller's initial endpoint names: count, five handles (48 bytes).
 /// arg0 writable destination, arg1/arg2 zero. This snapshot never reinstalls grants.
 pub const TASK_ENVIRONMENT: u64 = 39;
-pub const MAX_INITIAL_ENDPOINTS: usize = 4;
-pub const SPAWN_BYTES: usize = 48;
-pub const ENVIRONMENT_BYTES: usize = 40;
+pub const MAX_INITIAL_ENDPOINTS: usize = 5;
+pub const SPAWN_BYTES: usize = 16 + MAX_INITIAL_ENDPOINTS * 8;
+pub const ENVIRONMENT_BYTES: usize = 8 + MAX_INITIAL_ENDPOINTS * 8;
 
-/// SPAWN_WITH's 48-byte prefix followed by count and MAX_LAUNCHES grants.
+/// SPAWN_WITH's prefix followed by count and MAX_LAUNCHES grants.
 /// Successful admission lends idle launch/peer authority until the child exits.
 /// Endpoints move as usual. arg0 launch, arg1 SPAWN_TREE_BYTES-byte record, arg2 zero; tails zero.
 pub const TASK_SPAWN_TREE: u64 = 40;

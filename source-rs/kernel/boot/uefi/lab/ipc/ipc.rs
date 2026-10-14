@@ -10,6 +10,10 @@ use core::fmt::Write;
 static EXECUTABLE: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/ipc.elf"));
 
 pub fn exercise(memory: &mut PreparedMemory, console: &mut SerialPort) {
+    delivery(memory, console);
+    deadlines::exercise(memory, console);
+}
+fn delivery(memory: &mut PreparedMemory, console: &mut SerialPort) {
     let baseline = memory.frames.allocated();
     // SAFETY: Boot CPU owns initialized heap, outside any task session.
     let heap = unsafe { HEAP.used() };
@@ -69,7 +73,6 @@ pub fn exercise(memory: &mut PreparedMemory, console: &mut SerialPort) {
     drop(reports);
     reclaimed(memory, baseline, heap);
     writeln!(console, "Cathedral Rust lab: IPC backpressure and checked copyout preserved queued message; all memory reclaimed").ok();
-    deadlines::exercise(memory, console);
 }
 fn program(role: u64, stale: u64) -> Program<'static> {
     Program {

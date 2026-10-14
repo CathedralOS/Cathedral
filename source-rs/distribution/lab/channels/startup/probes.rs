@@ -21,7 +21,7 @@ pub(super) fn check(launch: cathedral_user_runtime::task::Launch, endpoint: Hand
         abi::INVALID_ARGUMENT
     );
     let mut packet = Packet([0; abi::IPC_PACKET_BYTES]);
-    packet.0[8..16].copy_from_slice(&5u64.to_le_bytes());
+    packet.0[8..16].copy_from_slice(&((abi::MAX_INITIAL_ENDPOINTS + 1) as u64).to_le_bytes());
     assert_eq!(
         raw(
             abi::TASK_SPAWN_WITH,

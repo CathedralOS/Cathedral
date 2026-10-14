@@ -8,20 +8,25 @@ instructions. [Owner questions](../OWNER_QUESTIONS.md) own unresolved semantics.
 
 Child storage requests now return to the matrix event loop while awaiting replies.
 The root's separate provider links let physical input and sibling rendering continue
-through a blocked save. Nested matrices retain one ordered upstream stream: local
-queries can proceed, but upstream input refresh/rendering waits behind storage.
+through a blocked save. Nested matrices in the visible desktop now receive a separate catalog pair in
+[their named startup bundle](platform/libraries/user-runtime/matrix.rs). A gated
+save leaves a sibling inside that same matrix able to consume pointer/keyboard
+input and repaint. The legacy headless fixtures retain their shared-stream mode.
 Owner grant/revoke and teardown aborts remain synchronous bounded operations.
 Follow [storage forwarding](platform/services/matrix/service/parent/storage/storage.rs),
 [pending replies](platform/services/matrix/service/parent/storage/pending.rs) and
 [deferred stream policy](platform/services/matrix/service/deferred.rs).
 
 The [desktop stall proof](distribution/lab/matrix/desktop/stalls.rs) gates writes
-before execution and after durable commit. It checks sibling repaint while blocked,
+before execution and after durable commit. Its [nested peer](distribution/lab/matrix/desktop/stalls_peer.rs)
+checks input and repaint while blocked, plus survival across catalog revocation,
+provider replacement and writer death. It also checks
 normal completion, timeout followed by a late reply, refusal to recycle an accepted
 live link, and provider replacement with explicit fresh grants. Unacknowledged
 writes are reconciled by readback, never automatically retried. Root storage
 transport loss revokes the affected binding without killing display/input.
-Shared parent transport loss still retires the nested matrix.
+Separate parent catalog transport loss retires that connection and its grants;
+legacy shared-stream failures still retire the nested matrix.
 
 [Provider recovery](distribution/lab/matrix/desktop/providers.rs) kills the physical
 input decoder and display provider. Input loss cancels focus while apps survive;
@@ -33,14 +38,19 @@ The arena now supports twelve accounts; the pressure desktop uses nine so storag
 the capped spinner and all recovery checks run together. IPC backing stays at 32
 channels and existing four-channel defaults remain: larger compositions must fit
 explicit reservations. Account liveness, clock, pool, cancellation and region masks
-use u16. The launch-loan packet is now 144 bytes with 256-byte-aligned runtime
-storage. Host tests cover high-account isolation, exhaustion and reclamation.
+use u16. The launch-loan packet is now 152 bytes with 256-byte-aligned runtime
+storage. Five startup endpoints, a twenty-channel per-account ceiling and twenty
+dynamic handles support the split. The global channel arena remains 32; startup
+explicitly funds the root/inner connections. Pausing catalog request streams
+while storage is pending preserves the eight-handle wait bound. Host tests cover
+high-account isolation, full startup bundles, exhaustion and reclamation.
 The traced debug matrix grew to 67 loaded pages: the image bound is now 80 pages
 and its frame ledger 160 entries, preserving the 16 KiB stack, 1 MiB image window,
 u128 writable-backing mask and physical funding checks. ELF tests cover the exact
 rounded-page boundary. These remain experimental lab ABI limits. The debug smoke also caught boot-lab
 stack pressure from retaining supervision fixture locals across later suites;
-the supervision entrance now sequences those suites after each fixture unwinds.
+the supervision and IPC entrances now sequence their suites after each fixture
+unwinds, keeping the existing kernel stack bound.
 
 Validation: workspace host tests, profile budget tests, x86_64/ARM64 target lint,
 x86 debug smoke, ARM64 debug portability, traced debug desktop and release desktop

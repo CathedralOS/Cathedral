@@ -76,7 +76,9 @@ fn failed_transfer_keeps_source_and_queue_untouched() {
 #[test]
 fn receiver_budget_is_reserved_before_move_and_released_on_discard() {
     let (mut ipc, bootstrap, receive) = setup();
-    let full: alloc::vec::Vec<_> = (0..8).map(|_| ipc.create(1).unwrap()).collect();
+    let full: alloc::vec::Vec<_> = (0..abi::MAX_DYNAMIC_HANDLES / 2)
+        .map(|_| ipc.create(1).unwrap())
+        .collect();
     let [send, recv] = ipc.create(0).unwrap();
     assert_eq!(
         ipc.send_cap(0, bootstrap, b"full", Some(send)),

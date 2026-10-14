@@ -7,6 +7,7 @@ mod probes;
 mod providers;
 mod recovery;
 mod stalls;
+mod stalls_peer;
 pub use app::run as app;
 
 include!("desktop.rs");

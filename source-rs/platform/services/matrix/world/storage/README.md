@@ -31,18 +31,29 @@ descendant grants; regranting the ancestor never implicitly revives descendants.
 Each request checks its revision at every hop, including requests already in
 flight when authority changes. Connection replacement requires explicit grants.
 Child requests resume through [pending forwarding](../../service/parent/storage/pending.rs).
-One storage exchange is active per matrix, with one deferred event per stream.
-Root provider links are separate from display/input: other branches can render
-and physical input can enter while storage is blocked. Nested matrices still
-serialize their shared upstream connection; they can answer unrelated local queries
-but cannot refresh input or render upstream until that exchange completes.
+The visible desktop supplies a five-endpoint startup bundle: interaction send/reply,
+wake receiver, and catalog send/reply. The [named runtime connections](../../../../libraries/user-runtime/matrix.rs)
+expose those roles without service discovery. Catalog authority is bound to that
+catalog connection's incarnation, independently of the interaction connection.
+Neither connection accepts the other's operations. The root and every nested
+matrix use the same dispatch and forwarding machinery.
+
+One storage exchange is active per matrix. While it waits, catalog request streams
+are paused; requests remain in their bounded kernel queues. Interaction, parent
+wake hints, presentation replies and owner routing can progress independently.
+Deferred events resume as soon as their own dependency clears. The combined live
+wait set stays within the existing eight-handle limit. Manually assembled headless
+fixtures retain their legacy shared stream and its serialization limitation.
 Owner grant/revoke and teardown aborts still use bounded synchronous calls.
 
 A root provider timeout or closure revokes the requesting child's storage binding
 and retires that link, without killing display/input or retrying the mutation.
 A live accepted link cannot reconnect after timeout; provider replacement and
-explicit owner grants are required. A shared parent transport failure still retires
-the nested matrix. Recovery reads committed state through fresh bindings;
+explicit owner grants are required. A separate parent catalog transport failure
+closes only that stream and clears descendant catalog bindings; interaction stays
+live, but reconnecting that retired dynamic stream requires matrix replacement.
+Legacy shared-parent transport failures still retire the entire nested matrix.
+Recovery reads committed state through fresh bindings;
 an error does not establish that a write failed to commit.
 
 Run `python tools/boot-harness-rs/run.py --matrix-storage-test --release` from
@@ -57,3 +68,12 @@ and 32-byte records. Read-only attenuation, namespace creation, shared writable
 catalogs and storage quotas remain future work. The visible desktop saves private
 app colors through this boundary and verifies them after a cold reboot. Parents remain trusted to delegate their own authority; this is not a
 claim of timing isolation or confinement from a malicious ancestor.
+
+The [nested peer proof](../../../../../distribution/lab/matrix/desktop/stalls_peer.rs)
+places two apps beneath one nested matrix. While one save is gated at the storage
+provider, its sibling consumes pointer and keyboard events and repaints before
+the storage deadline. The same peer survives catalog revocation, provider restart
+and the writer's death/replacement. Its changes are intentionally volatile: this
+proves interaction independence, not parallel persistence or shared writable realms.
+The object protocol still describes private transactional catalogs, not sectors
+or file descriptors; the backing disk format remains a replaceable DBFS prototype.

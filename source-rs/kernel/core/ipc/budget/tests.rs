@@ -20,7 +20,7 @@ fn reservation_validation_rejects_overcommit_and_keeps_defaults_constant() {
     for (tasks, limits) in [
         (9, &[][..]),
         (2, &[1][..]),
-        (1, &[17][..]),
+        (1, &[abi::MAX_CREATED_CHANNELS + 1][..]),
         (8, &[8; 8][..]),
     ] {
         assert_eq!(reservations(tasks, limits), Err(abi::INVALID_ARGUMENT));
@@ -28,7 +28,10 @@ fn reservation_validation_rejects_overcommit_and_keeps_defaults_constant() {
     }
     let mut ipc = Ipc::with_reservations(1, 2, &[], &[0, 8]).unwrap();
     assert_eq!(ipc.create(0), Err(abi::NO_MEMORY));
-    assert_eq!(ipc.budget(0), Ok([0, 0, 16, 0]));
+    assert_eq!(
+        ipc.budget(0),
+        Ok([0, 0, abi::MAX_DYNAMIC_HANDLES as u64, 0])
+    );
     for _ in 0..8 {
         ipc.create(1).unwrap();
     }
@@ -71,7 +74,10 @@ fn restart_cannot_erase_charges_for_transferred_channels_and_sibling_progresses(
     for round in 0..2 {
         ipc.prepare_child(0, 0, 1, 2 + round);
         ipc.accept_child(0, 0);
-        assert_eq!(ipc.budget(1), Ok([2, round, 16, 0]));
+        assert_eq!(
+            ipc.budget(1),
+            Ok([2, round, abi::MAX_DYNAMIC_HANDLES as u64, 0])
+        );
         let [s, r] = ipc.create(1).unwrap();
         ipc.send_cap(1, ipc.handle(1, 1).unwrap(), b"hold", Some(r))
             .unwrap();
@@ -88,7 +94,10 @@ fn restart_cannot_erase_charges_for_transferred_channels_and_sibling_progresses(
     }
     ipc.prepare_child(0, 0, 1, 4);
     ipc.accept_child(0, 0);
-    assert_eq!(ipc.budget(1), Ok([2, 2, 16, 0]));
+    assert_eq!(
+        ipc.budget(1),
+        Ok([2, 2, abi::MAX_DYNAMIC_HANDLES as u64, 0])
+    );
     assert_eq!(ipc.create(1), Err(abi::NO_MEMORY));
     let before = ipc.budget(0).unwrap();
     for _ in 0..2 {
@@ -98,7 +107,10 @@ fn restart_cannot_erase_charges_for_transferred_channels_and_sibling_progresses(
     assert_eq!(ipc.receive(0, held[0], 64).unwrap().unwrap().len, 19);
     assert_eq!(ipc.receive(0, held[0], 64), Err(abi::PEER_CLOSED));
     ipc.close(0, held[0]).unwrap();
-    assert_eq!(ipc.budget(1), Ok([2, 1, 16, 0]));
+    assert_eq!(
+        ipc.budget(1),
+        Ok([2, 1, abi::MAX_DYNAMIC_HANDLES as u64, 0])
+    );
     ipc.create(1).unwrap();
     for task in 0..3 {
         ipc.close_task(task);
@@ -127,8 +139,14 @@ fn escrow_charges_custody_separately_and_refunds_on_discard() {
         assert_eq!(ipc.budget(0), Ok(before));
         ipc.send_cap(0, ipc.handle(0, 0).unwrap(), b"escrow", Some(r))
             .unwrap();
-        assert_eq!(ipc.budget(0), Ok([4, 1, 16, 1]));
-        assert_eq!(ipc.budget(1), Ok([4, 0, 16, 1])); // Invisible incoming grant already consumes capacity.
+        assert_eq!(
+            ipc.budget(0),
+            Ok([4, 1, abi::MAX_DYNAMIC_HANDLES as u64, 1])
+        );
+        assert_eq!(
+            ipc.budget(1),
+            Ok([4, 0, abi::MAX_DYNAMIC_HANDLES as u64, 1])
+        ); // Invisible incoming grant already consumes capacity.
         ipc.close(0, s).unwrap();
         ipc.close_task(0);
         assert_eq!(ipc.charged_channels(0), 1);
@@ -136,7 +154,10 @@ fn escrow_charges_custody_separately_and_refunds_on_discard() {
             ipc.close_task(1);
         } else {
             ipc.revoke(2, ipc.handle(2, 0).unwrap()).unwrap();
-            assert_eq!(ipc.budget(1), Ok([4, 0, 16, 0]));
+            assert_eq!(
+                ipc.budget(1),
+                Ok([4, 0, abi::MAX_DYNAMIC_HANDLES as u64, 0])
+            );
         }
         assert_eq!(ipc.charged_channels(0), 0);
     }

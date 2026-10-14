@@ -20,7 +20,10 @@ pub fn run(environment: Environment, storage_root: bool) -> Result<(), Error> {
     // SAFETY: Single-threaded executable enters this service exactly once. This
     // process-owned arena has no aliases and never occupies the guarded user stack.
     let world = unsafe { &mut *world_address };
-    let mut server = Server::open_clients_from(if storage_root { 2 } else { 0 }, 3)?;
+    let mut server = Server::open_clients_from(
+        if storage_root { 2 } else { 0 },
+        if parent.separate_storage { 5 } else { 3 },
+    )?;
     server.enable_memory();
     if environment.len() == 4 {
         server.install(
@@ -32,6 +35,7 @@ pub fn run(environment: Environment, storage_root: bool) -> Result<(), Error> {
         )?;
     }
     let mut children = children::Children::default();
+    children.separate_storage = parent.separate_storage;
     static mut DEFERRED: deferred::Deferred = deferred::Deferred::empty();
     let deferred_address = &raw mut DEFERRED;
     // SAFETY: Same single-entry process lifetime as the parent/world arenas above.
@@ -79,11 +83,8 @@ pub fn run(environment: Environment, storage_root: bool) -> Result<(), Error> {
             extra[count] = wake;
             count += 1;
         }
-        let queued = if parent.upstream_busy() || parent.storing() {
-            None
-        } else {
-            deferred.take(&mut server)
-        };
+        let queued = deferred.take(parent);
+        deferred.pause(&mut server, parent);
         let event = match queued {
             Some(event) => event,
             None => match server.next_event_or(&extra[..count], deadline)? {
@@ -104,18 +105,22 @@ pub fn run(environment: Environment, storage_root: bool) -> Result<(), Error> {
         }
         // Admitted children receive coalesced invalidations on their wake channel.
         // Legacy manually assembled two-endpoint fixtures still refresh on demand.
-        if parent.wake.is_none() {
-            parent.refresh(world)?;
-        } else {
-            // A parent hint may arrive while waiting for a child request.
-            parent.refresh_notified(world)?;
+        if !parent.upstream_busy() {
+            if parent.wake.is_none() {
+                parent.refresh(world)?;
+            } else {
+                // A parent hint may arrive while waiting for a child request.
+                parent.refresh_notified(world)?;
+            }
         }
         match event {
             Event::Disconnected { client, .. } => {
                 if client < 2 {
                     children.disconnected(client, &mut server, world, parent)?;
-                } else {
+                } else if client == 2 {
                     world.cancel();
+                } else {
+                    parent.storage_close(parent.storage_slot(client))?;
                 }
             }
             Event::Memory(request, object) => {

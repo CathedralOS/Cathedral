@@ -1,7 +1,6 @@
 //! Select local launch grants, create the child's parent connection, admit, install.
 use super::*;
 use cathedral_user_runtime::{
-    ipc,
     resources::Limits,
     task::{Executable, Launch},
 };
@@ -96,30 +95,14 @@ impl Children {
         world: &mut World,
     ) -> Result<(), Error> {
         let port = target.port()?;
-        let (requests, input) = ipc::channel()?;
-        let (output, replies) = match ipc::channel() {
-            Ok(pair) => pair,
-            Err(error) => {
-                requests.close()?;
-                input.close()?;
-                return Err(error);
-            }
-        };
-        let (notify, wake) = match ipc::channel() {
-            Ok(pair) => pair,
-            Err(error) => {
-                for endpoint in [requests, input, output, replies] {
-                    endpoint.close()?;
-                }
-                return Err(error);
-            }
-        };
-        let child = match target.spawn_tree(argument, &[requests, replies, wake], loans) {
+        if self.separate_storage && !server.available(slot + 3) {
+            return Err(Error(abi::BUSY as i64));
+        }
+        let connections = connections::Connections::create(self.separate_storage)?;
+        let child = match target.spawn_tree(argument, connections.initial(), loans) {
             Ok(child) => child,
             Err(error) => {
-                for endpoint in [requests, input, output, replies, notify, wake] {
-                    endpoint.close()?;
-                }
+                connections.rollback()?;
                 return Err(error);
             }
         };
@@ -128,22 +111,27 @@ impl Children {
             Err(error) => {
                 child.cancel()?;
                 child.wait()?;
-                input.close()?;
-                output.close()?;
-                notify.close()?;
+                connections.close_parent()?;
                 return Err(error);
             }
         };
         world.disconnected(slot);
         server
-            .install(slot, (input, output))
+            .install(slot, connections.data)
             .expect("validated local client slot changed");
+        let storage = connections.storage;
+        if let Some(pair) = storage {
+            server
+                .install(slot + 3, pair)
+                .expect("child catalog slot changed");
+        }
         self.slots[slot] = Some(Owned {
             task: child,
             reservation: dynamic.then_some(target),
             control,
-            data: (input, output),
-            notify,
+            data: connections.data,
+            storage,
+            notify: connections.notify,
         });
         Ok(())
     }

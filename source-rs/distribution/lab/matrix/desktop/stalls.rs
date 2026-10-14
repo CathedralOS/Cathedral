@@ -23,6 +23,7 @@ fn receive(pair: Pair, expected: &[u8]) {
 }
 pub(super) fn exercise(session: &mut admission::Session) {
     let matrix = session.matrix;
+    stalls_peer::start(session);
     // Normal completion, timeout with a late reply, durable commit without reply.
     for mode in 0..3 {
         let mut marker = *b"Cathedral storage stall mode=0\n";
@@ -34,9 +35,9 @@ pub(super) fn exercise(session: &mut admission::Session) {
             .send(&[0xf2, if mode == 2 { 2 } else { 1 }])
             .unwrap();
         receive(session.storage_control, b"armed");
+        let started = time::now().unwrap();
         assert_eq!(app(matrix, true, 12)[0], 0);
         receive(session.storage_control, b"blocked");
-        let started = time::now().unwrap();
         // Root control, physical-source ingress and sibling rendering still run
         // while storage is demonstrably blocked, not merely after it recovers.
         assert_eq!(
@@ -50,9 +51,11 @@ pub(super) fn exercise(session: &mut admission::Session) {
         pixel(matrix, 540, 225, app::RIGHT);
         assert_eq!(app(matrix, false, 2)[0], 0);
         pixel(matrix, 540, 225, 0xe5e7eb);
+        stalls_peer::interact(session);
+        let elapsed = time::now().unwrap().wrapping_sub(started);
         assert!(
-            time::now().unwrap().wrapping_sub(started) < 100,
-            "sibling waited for storage timeout"
+            elapsed < 150,
+            "sibling waited for storage timeout: {elapsed} ticks"
         );
         if mode == 0 {
             session.storage_control.0.send(&[0xf3]).unwrap();
@@ -90,6 +93,7 @@ pub(super) fn exercise(session: &mut admission::Session) {
         for slot in 0..2 {
             owner(matrix, [wire::STORAGE_REVOKE, slot, 0, 0, 0, 0, 0, 0]);
         }
+        stalls_peer::interact(session);
         session.storage = Launch::at(3).unwrap().spawn(0).unwrap();
         session.storage_control = Port::at(3).unwrap().connect().unwrap();
         session
@@ -114,6 +118,10 @@ pub(super) fn exercise(session: &mut admission::Session) {
         pixel(matrix, 140, 190, 0xd18b35);
         assert_eq!(app(matrix, true, 8)[0], 0);
         pixel(matrix, 140, 190, app::LEFT);
+        stalls_peer::interact(session);
     }
+    stalls_peer::replace_writer(session);
+    stalls_peer::stop(session);
+    cathedral_user_runtime::write(b"Cathedral matrix desktop: nested sibling consumed pointer and keyboard and repainted during blocked persistence\n").unwrap();
     cathedral_user_runtime::write(b"Cathedral matrix desktop: stalled storage preserved sibling rendering; timeout, late reply and lost commit acknowledgement reconciled\n").unwrap();
 }

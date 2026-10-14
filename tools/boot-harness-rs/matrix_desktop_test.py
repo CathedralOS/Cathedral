@@ -6,6 +6,10 @@ import pointer_test
 
 
 def verify(stream, output, serial, pressure=False):
+    if "nested peer survived catalog revocation, provider replacement and sibling death" not in serial:
+        raise RuntimeError("Missing nested peer lifetime isolation proof")
+    if "nested sibling consumed pointer and keyboard and repainted during blocked persistence" not in serial:
+        raise RuntimeError("Missing recursive storage/interaction isolation proof")
     if "timeout, late reply and lost commit acknowledgement reconciled" not in serial:
         raise RuntimeError("Missing stalled provider isolation/recovery proof")
     if "explicit tree recovery restored persisted apps" not in serial:

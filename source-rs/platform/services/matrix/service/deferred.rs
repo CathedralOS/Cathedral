@@ -4,10 +4,16 @@ use super::*;
 use cathedral_user_runtime::server::Request;
 
 pub(super) struct Deferred {
-    events: [Option<Event>; 4],
+    events: [Option<Event>; 6],
 }
 impl Deferred {
     pub fn blocks(event: &Event, parent: &Parent) -> bool {
+        if parent.separate_storage
+            && let Event::Request(r) = event
+            && r.client.is_some_and(|client| parent.storage_stream(client))
+        {
+            return parent.storing();
+        }
         if parent.upstream_busy() {
             return true;
         }
@@ -23,7 +29,9 @@ impl Deferred {
                     Some(w) if r.control => {
                         let hop = (w[0] >> wire::OP_BITS) & 3;
                         !(matches!(w[0], wire::HEALTH | wire::READ_PIXEL)
-                            || matches!(hop, 1 | 2) && hop as usize != parent.storing_client() + 1)
+                            || matches!(hop, 1 | 2)
+                                && (parent.separate_storage
+                                    || hop as usize != parent.storing_client() + 1))
                     }
                     Some(w) => {
                         w[0] == wire::STORAGE_INFO
@@ -39,17 +47,30 @@ impl Deferred {
     }
     pub const fn empty() -> Self {
         Self {
-            events: [const { None }; 4],
+            events: [const { None }; 6],
         }
     }
-    pub fn take(&mut self, server: &mut Server) -> Option<Event> {
+    pub fn take(&mut self, parent: &Parent) -> Option<Event> {
         for i in 0..self.events.len() {
-            if let Some(event) = self.events[i].take() {
-                server.pause(self.mask());
-                return Some(event);
+            if self.events[i]
+                .as_ref()
+                .is_some_and(|event| !Self::blocks(event, parent))
+            {
+                return self.events[i].take();
             }
         }
         None
+    }
+    pub fn pause(&self, server: &mut Server, parent: &Parent) {
+        // One catalog request at a time; unread requests remain in their bounded
+        // queues. Excluding these two receivers keeps the live wait set <= eight,
+        // even with presentation, storage, owner-reply and wake handles present.
+        let storage = if parent.separate_storage && parent.storing() {
+            (1 << 4) | (1 << 5)
+        } else {
+            0
+        };
+        server.pause(self.mask() | storage);
     }
     pub fn hold(
         &mut self,

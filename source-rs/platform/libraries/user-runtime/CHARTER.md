@@ -10,11 +10,14 @@ accepts it. `close` invalidates every local copy of that name. They do not perfo
 service discovery or choose service policy. The [channel guide](../../../distribution/lab/channels/README.md)
 connects these wrappers to kernel enforcement and the ordinary-worker proof. The `task` wrappers expose indexed, bounded launch grants,
 child outcome collection, deadline waits, cancellation and explicit connection
-acceptance. `Launch::spawn_with` moves up to four dynamic endpoints atomically
+acceptance. `Launch::spawn_with` moves up to five dynamic endpoints atomically
 with successful admission. `entry_with_environment!` passes their ordered
 `Environment` to main; `Environment::load` reads only the caller's original
 startup names and never restores closed grants. Protocol roles belong to the app.
 The bundle supplements the existing profile-controlled boot/device grants.
+[Matrix connections](matrix.rs) interpret the platform's five-endpoint bundle as
+interaction, wake and private catalog channels. This is a userspace protocol;
+the kernel does not recognize these service names or grant catalog contents.
 `Launch::spawn_tree` also lends idle launch/peer budgets at that admission boundary.
 The child enumerates only its assigned grants and may lend them further. Subtree
 teardown returns budgets with fresh names to surviving lenders; per-slot executable
@@ -56,10 +59,10 @@ Passing a number in IPC never installs a grant by itself.
 rights. Each incarnation requires explicit acceptance; peer replacement retires
 old endpoint tickets. `ipc::wait_two` checks both receive grants, waits without
 consuming data, and requires a clock grant. `server` combines a private control
-pair with up to two client links, rotates ready channels fairly, and reconnects
+pair with up to seven client slots, rotates ready channels fairly, and reconnects
 replaced clients. Accepted link positions and endpoint incarnations accompany
 requests; message contents cannot select these identities. Control-only services
-need no clock. Multi-channel idle waits check the third channel within one tick.
+need no clock. Multi-channel idle waits watch all active handles together.
 Full data reply queues do not block control or other clients. `storage` supplies
 synchronous catalog exchanges, with one outstanding request and no automatic
 mutation retry. Caller code owns reconciliation and application schemas.
