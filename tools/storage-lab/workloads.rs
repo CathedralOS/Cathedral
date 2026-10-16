@@ -1,6 +1,6 @@
 //! Workload entrance: tiny objects, sequential data, range edits, copies and
 //! insertion. Verification and reachability scans are outside measured time.
-use crate::chunks::{Live, Policy, Store, Version, Work};
+use crate::chunks::{Edit, Live, Policy, Reads, Store, Version, Work};
 use std::{fmt, time::Instant};
 
 pub struct Row {
@@ -9,6 +9,14 @@ pub struct Row {
     work: Work,
     live: Live,
     elapsed_us: u128,
+    reads: Reads,
+}
+
+#[derive(Clone, Copy)]
+enum Publication {
+    RetainEach,
+    Separate,
+    Batch,
 }
 
 impl fmt::Display for Row {
@@ -17,7 +25,7 @@ impl fmt::Display for Row {
         let l = self.live;
         write!(
             f,
-            "{},{},{},{},{},{},{},{},{},{},{}",
+            "{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}",
             self.name,
             self.logical,
             w.hashed_payload,
@@ -28,6 +36,11 @@ impl fmt::Display for Row {
             l.manifests,
             l.chunks,
             l.versions,
+            l.tree_nodes,
+            self.reads.metadata_bytes,
+            self.reads.metadata_records,
+            self.reads.payload_bytes,
+            self.reads.payload_records,
             self.elapsed_us
         )
     }
@@ -61,29 +74,54 @@ pub fn measure(policy: Policy) -> Vec<Row> {
         &copies,
     ));
 
-    for (name, offset) in [
-        ("patch_100_aligned", bytes.len() / 2),
-        ("patch_100_boundary", bytes.len() / 2 - 50),
+    for (name, offset, length) in [
+        ("patch_1_aligned", bytes.len() / 2, 1),
+        ("patch_100_aligned", bytes.len() / 2, 100),
+        ("patch_100_boundary", bytes.len() / 2 - 50, 100),
     ] {
         store.work = Work::default();
+        let patch = vec![0xa5; length];
         let start = Instant::now();
-        let next = store.patch(&original, offset, &[0xa5; 100]).unwrap();
+        let next = store.patch(&original, offset, &patch).unwrap();
         rows.push(finish(
             name,
-            100,
+            length,
             &mut store,
             start,
             &[original.clone(), next.clone()],
         ));
         let mut expected = bytes.clone();
-        expected[offset..offset + 100].fill(0xa5);
+        expected[offset..offset + length].fill(0xa5);
         assert_eq!(store.read(&next), expected);
         assert_eq!(store.read(&original), bytes);
         store.retain(std::slice::from_ref(&original));
     }
 
-    rows.push(edits(policy, &bytes, true));
-    rows.push(edits(policy, &bytes, false));
+    rows.push(edits(policy, &bytes, Publication::RetainEach, false));
+    rows.push(edits(policy, &bytes, Publication::Separate, false));
+    rows.push(edits(policy, &bytes, Publication::Batch, false));
+    rows.push(edits(policy, &bytes, Publication::Separate, true));
+    rows.push(edits(policy, &bytes, Publication::Batch, true));
+
+    for (name, offset) in [
+        ("read_100_aligned", bytes.len() / 2),
+        ("read_100_boundary", bytes.len() / 2 - 50),
+        ("read_100_tail", bytes.len() - 100),
+    ] {
+        store.work = Work::default();
+        let start = Instant::now();
+        let (readback, reads) = store.read_range(&original, offset, 100).unwrap();
+        let mut row = finish(
+            name,
+            100,
+            &mut store,
+            start,
+            std::slice::from_ref(&original),
+        );
+        row.reads = reads;
+        assert_eq!(readback, bytes[offset..offset + 100]);
+        rows.push(row);
+    }
 
     let mut inserted = bytes.clone();
     inserted.insert(0, 0x42);
@@ -114,34 +152,60 @@ fn tiny(policy: Policy) -> Row {
     row
 }
 
-fn edits(policy: Policy, bytes: &[u8], history: bool) -> Row {
+fn edits(policy: Policy, bytes: &[u8], publication: Publication, clustered: bool) -> Row {
+    let history = matches!(publication, Publication::RetainEach);
+    let batched = matches!(publication, Publication::Batch);
     let mut store = Store::new(policy);
     let original = store.put(bytes);
     let mut current = original.clone();
     let mut roots = vec![original.clone()];
     let patches: Vec<_> = (0..64)
         .map(|i| {
-            let offset = (i * 15485863 + 97) % (bytes.len() - 100);
-            (offset, fixture(100, i as u64 + 991))
+            let (offset, length) = if clustered {
+                (512 + i, 1)
+            } else {
+                ((i * 15485863 + 97) % (bytes.len() - 100), 100)
+            };
+            (offset, fixture(length, i as u64 + 991))
+        })
+        .collect();
+    let batch: Vec<_> = patches
+        .iter()
+        .map(|(offset, bytes)| Edit {
+            offset: *offset,
+            bytes,
         })
         .collect();
     store.work = Work::default();
     let start = Instant::now();
-    for (offset, patch) in &patches {
-        current = store.patch(&current, *offset, patch).unwrap();
-        if history {
-            roots.push(current.clone());
+    if batched {
+        current = store.patch_batch(&current, &batch).unwrap();
+    } else {
+        for (offset, patch) in &patches {
+            current = store.patch(&current, *offset, patch).unwrap();
+            if history {
+                roots.push(current.clone());
+            }
         }
     }
     if !history {
         roots = vec![current.clone()];
     }
-    let name = if history {
+    let name = if clustered {
+        if batched {
+            "local_64_bytes_batched"
+        } else {
+            "local_64_bytes_separate"
+        }
+    } else if batched {
+        "patch_64_batched"
+    } else if history {
         "patch_64_keep_history"
     } else {
         "patch_64_latest_only"
     };
-    let row = finish(name, 64 * 100, &mut store, start, &roots);
+    let logical = patches.iter().map(|(_, bytes)| bytes.len()).sum();
+    let row = finish(name, logical, &mut store, start, &roots);
     let mut expected = bytes.to_vec();
     if history {
         assert_eq!(store.read(&original), expected);
@@ -171,6 +235,7 @@ fn finish(
         work: store.work,
         live,
         elapsed_us,
+        reads: Reads::default(),
     }
 }
 

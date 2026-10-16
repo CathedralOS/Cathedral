@@ -5,7 +5,7 @@
 | Proposed | Engine-selection and layout experiment; no accepted disk format or production API |
 | Specification owner | Unwritten `spec/storage/realms_and_objects.md`; see the [coverage map](../spec/README.md) |
 | Existing evidence | [Private catalog](../../source-rs/platform/libraries/object-store/CHARTER.md): bounded disk transactions and recovery, without chunk allocation or snapshots |
-| New evidence | [Host layout lab](../../tools/storage-lab/README.md): fixed chunks, inline tiny contents, range edits, content reuse and retained versions |
+| New evidence | [Host layout lab](../../tools/storage-lab/README.md): flat/tree chunk references, inline contents, range reads, batched edits and retained versions |
 
 ## Direction and boundaries
 
@@ -52,8 +52,8 @@ flowchart LR
     chunks --> placement[Internal physical location index]
 ```
 
-The host experiment implements only chunks, flat manifests and an explicit list
-of retained versions. It does not implement the object table, capabilities,
+The host experiment implements chunks, flat or fixed-fanout tree manifests, range
+reads, batched range replacement and an explicit list of retained versions. It does not implement the object table, capabilities,
 queries or publication transaction in this diagram.
 
 ## One update and its failure boundary
@@ -115,8 +115,14 @@ aligned and boundary-crossing 100-byte replacements, repeated edits with and
 without history, identical-content copies and a one-byte prefix insertion.
 Use deterministic byte fixtures and check reconstructed data after every case.
 
-The baseline stores full flat manifests on change. Its cost is evidence for
-evaluating a reference tree; it is not an optimized candidate disk layout.
+The [comparison](../../tools/storage-lab/README.md#observed-comparison) now runs
+flat manifests against fanout-32 and fanout-128 copy-on-write reference trees.
+It measures batched versus separate publication and the packed metadata needed
+for cold range reads. With 4 KiB payload chunks, an aligned small edit changes
+81,937 bytes of flat metadata versus 2,212 bytes in the fanout-32 tree. The latter
+also needs four metadata records on a cold range read, versus one large flat
+record. These results justify separating content chunks from updateable reference
+structure, not selecting a production fanout, engine or allocation unit.
 Packed content lengths exclude index keys, allocation rounding, logs, replication,
 compression and allocator overhead. Host elapsed time is not storage throughput.
 Content-defined chunking remains a candidate for shifted-input reuse; changing

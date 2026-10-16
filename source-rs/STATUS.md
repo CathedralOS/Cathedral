@@ -13,12 +13,19 @@ automatically require two-phase commit; durable watchers do not require CRDTs.
 Identity/alias, deduplication/erasure, retention and isolation choices remain in
 the owner queue. No production engine or on-disk format is selected.
 
-The separate [host layout lab](../tools/storage-lab/README.md) measures actual
-BLAKE3 chunk/flat-manifest representations at 4/16/64 KiB, inline tiny contents,
-small range edits, copies, shifted contents and retained versions. It verifies
-readback and reports packed bytes and hashing work. It does not measure disk IO,
-implement transactions or replace the guest private catalog. Engine comparison,
-metadata queries and allocation/recovery under low free space remain next evidence.
+The separate [host layout lab](../tools/storage-lab/README.md) compares flat
+manifests with fanout-32/128 copy-on-write chunk-reference trees at 4/16/64 KiB.
+Its 270 cases cover inline tiny contents, range edits/reads, copies, shifted
+contents, batched publication and retained versions. The runner checks payload
+and final-state equivalence across layouts. Thirteen tests exercise boundaries,
+shared paths, batching and snapshot retention. At 4 KiB, an aligned small edit
+creates 4 KiB of payload and 81,937 bytes of flat metadata versus 2,212 bytes of
+tree-32 metadata. Cold range reads trade metadata bytes against dependent records.
+
+The lab measures packed representations and hashing work, not physical IO,
+transaction isolation or crash safety; the guest private catalog is unchanged.
+Existing-engine comparison, allocation granularity, metadata queries and recovery
+under low free space remain next evidence. See the lab's measured table and limits.
 
 ## Resumable storage and provider recovery
 
