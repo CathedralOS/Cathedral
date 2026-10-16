@@ -1,7 +1,8 @@
 // Redistribute page/IPC reservations along an authorized owner-child edge.
 // Capacity is conserved; live or retained backing prevents withdrawing its funding.
 use crate::{ipc::Ipc, user_tasks::memory::regions::Regions};
-use cathedral_contracts::{memory, user as abi};
+use cathedral_kernel_contracts::memory;
+use cathedral_kernel_contracts::user as abi;
 
 pub fn snapshot(ipc: &Ipc, regions: &Regions, account: usize) -> [usize; 6] {
     let [private, shared] = regions.limits(account);

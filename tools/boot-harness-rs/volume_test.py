@@ -98,7 +98,7 @@ def run(args):
                ROOT / 'source-rs/platform/libraries/storage-volume/Cargo.toml',
                * (ROOT / 'source-rs/distribution/lab/volume').glob('*.rs'),
                ROOT / 'source-rs/distribution/lab/volume/Cargo.toml',
-               ROOT / 'source-rs/platform/drivers/ata-pio/lib.rs', ROOT / 'source-rs/contracts/block.rs',
+               ROOT / 'source-rs/platform/drivers/ata-pio/lib.rs', ROOT / 'source-rs/platform/libraries/block-device/lib.rs',
                ROOT / 'source-rs/Cargo.toml', ROOT / 'source-rs/Cargo.lock', ROOT / 'source-rs/rust-toolchain.toml',
                ROOT / 'source-rs/.cargo/config.toml']
     context = {'revision': command('git', 'rev-parse', 'HEAD').stdout.strip(), 'release': args.release,

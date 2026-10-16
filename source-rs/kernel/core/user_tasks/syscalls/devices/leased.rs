@@ -3,7 +3,7 @@
 use crate::scheduler::Event;
 use crate::user_tasks::{Session, syscalls::complete};
 use cathedral_arch::board::DeviceId;
-use cathedral_contracts::user as abi;
+use cathedral_kernel_contracts::user as abi;
 
 fn device(session: &Session, slot: usize) -> Option<DeviceId> {
     session

@@ -1,6 +1,6 @@
 //! Route within this world, clamp capture, cancel focus and attenuate physical keys.
 use super::*;
-use cathedral_contracts::input;
+use cathedral_platform_contracts::input;
 impl World {
     pub fn cancel(&mut self) {
         for child in &mut self.children {

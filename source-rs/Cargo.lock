@@ -37,7 +37,7 @@ dependencies = [
 name = "cathedral-arch"
 version = "0.0.0"
 dependencies = [
- "cathedral-contracts",
+ "cathedral-kernel-contracts",
  "x86_64",
 ]
 
@@ -45,7 +45,8 @@ dependencies = [
 name = "cathedral-ata-pio"
 version = "0.0.0"
 dependencies = [
- "cathedral-contracts",
+ "cathedral-block-device",
+ "cathedral-kernel-contracts",
  "cathedral-user-runtime",
 ]
 
@@ -54,10 +55,15 @@ name = "cathedral-bitmap-font"
 version = "0.0.0"
 
 [[package]]
+name = "cathedral-block-device"
+version = "0.0.0"
+
+[[package]]
 name = "cathedral-boot-scene"
 version = "0.0.0"
 dependencies = [
- "cathedral-contracts",
+ "cathedral-kernel-contracts",
+ "cathedral-platform-contracts",
  "cathedral-user-runtime",
 ]
 
@@ -66,8 +72,8 @@ name = "cathedral-boot-uefi"
 version = "0.0.0"
 dependencies = [
  "cathedral-arch",
- "cathedral-contracts",
  "cathedral-core",
+ "cathedral-kernel-contracts",
  "cathedral-uart-16550",
  "uefi",
 ]
@@ -76,7 +82,7 @@ dependencies = [
 name = "cathedral-channels-lab"
 version = "0.0.0"
 dependencies = [
- "cathedral-contracts",
+ "cathedral-kernel-contracts",
  "cathedral-user-runtime",
 ]
 
@@ -84,20 +90,17 @@ dependencies = [
 name = "cathedral-compositor-lab"
 version = "0.0.0"
 dependencies = [
- "cathedral-contracts",
+ "cathedral-kernel-contracts",
+ "cathedral-platform-contracts",
  "cathedral-user-runtime",
 ]
-
-[[package]]
-name = "cathedral-contracts"
-version = "0.0.0"
 
 [[package]]
 name = "cathedral-core"
 version = "0.0.0"
 dependencies = [
  "cathedral-arch",
- "cathedral-contracts",
+ "cathedral-kernel-contracts",
  "linked_list_allocator",
 ]
 
@@ -105,7 +108,8 @@ dependencies = [
 name = "cathedral-counter"
 version = "0.0.0"
 dependencies = [
- "cathedral-contracts",
+ "cathedral-kernel-contracts",
+ "cathedral-platform-contracts",
  "cathedral-user-runtime",
 ]
 
@@ -129,7 +133,7 @@ dependencies = [
 name = "cathedral-device-lab"
 version = "0.0.0"
 dependencies = [
- "cathedral-contracts",
+ "cathedral-kernel-contracts",
  "cathedral-uart-16550",
  "cathedral-user-runtime",
 ]
@@ -139,7 +143,8 @@ name = "cathedral-display-lab"
 version = "0.0.0"
 dependencies = [
  "cathedral-boot-scene",
- "cathedral-contracts",
+ "cathedral-kernel-contracts",
+ "cathedral-platform-contracts",
  "cathedral-user-runtime",
 ]
 
@@ -148,7 +153,8 @@ name = "cathedral-display-service"
 version = "0.0.0"
 dependencies = [
  "cathedral-bitmap-font",
- "cathedral-contracts",
+ "cathedral-kernel-contracts",
+ "cathedral-platform-contracts",
  "cathedral-user-runtime",
 ]
 
@@ -163,7 +169,8 @@ dependencies = [
 name = "cathedral-init"
 version = "0.0.0"
 dependencies = [
- "cathedral-contracts",
+ "cathedral-kernel-contracts",
+ "cathedral-platform-contracts",
  "cathedral-session-protocol",
  "cathedral-user-runtime",
 ]
@@ -172,7 +179,8 @@ dependencies = [
 name = "cathedral-input-service"
 version = "0.0.0"
 dependencies = [
- "cathedral-contracts",
+ "cathedral-kernel-contracts",
+ "cathedral-platform-contracts",
  "cathedral-user-runtime",
 ]
 
@@ -180,15 +188,20 @@ dependencies = [
 name = "cathedral-ipc-lab"
 version = "0.0.0"
 dependencies = [
- "cathedral-contracts",
+ "cathedral-kernel-contracts",
  "cathedral-user-runtime",
 ]
+
+[[package]]
+name = "cathedral-kernel-contracts"
+version = "0.0.0"
 
 [[package]]
 name = "cathedral-matrix-lab"
 version = "0.0.0"
 dependencies = [
- "cathedral-contracts",
+ "cathedral-kernel-contracts",
+ "cathedral-platform-contracts",
  "cathedral-user-runtime",
 ]
 
@@ -196,7 +209,8 @@ dependencies = [
 name = "cathedral-matrix-service"
 version = "0.0.0"
 dependencies = [
- "cathedral-contracts",
+ "cathedral-kernel-contracts",
+ "cathedral-platform-contracts",
  "cathedral-user-runtime",
 ]
 
@@ -204,7 +218,7 @@ dependencies = [
 name = "cathedral-memory-lab"
 version = "0.0.0"
 dependencies = [
- "cathedral-contracts",
+ "cathedral-kernel-contracts",
  "cathedral-user-runtime",
 ]
 
@@ -212,14 +226,23 @@ dependencies = [
 name = "cathedral-object-store"
 version = "0.0.0"
 dependencies = [
- "cathedral-contracts",
+ "cathedral-block-device",
+ "cathedral-kernel-contracts",
+ "cathedral-platform-contracts",
+]
+
+[[package]]
+name = "cathedral-platform-contracts"
+version = "0.0.0"
+dependencies = [
+ "cathedral-kernel-contracts",
 ]
 
 [[package]]
 name = "cathedral-portability-lab"
 version = "0.0.0"
 dependencies = [
- "cathedral-contracts",
+ "cathedral-kernel-contracts",
  "cathedral-user-runtime",
 ]
 
@@ -227,7 +250,7 @@ dependencies = [
 name = "cathedral-rendering-lab"
 version = "0.0.0"
 dependencies = [
- "cathedral-contracts",
+ "cathedral-kernel-contracts",
  "cathedral-user-runtime",
 ]
 
@@ -239,7 +262,7 @@ version = "0.0.0"
 name = "cathedral-shared-memory-lab"
 version = "0.0.0"
 dependencies = [
- "cathedral-contracts",
+ "cathedral-kernel-contracts",
  "cathedral-user-runtime",
 ]
 
@@ -248,7 +271,8 @@ name = "cathedral-status"
 version = "0.0.0"
 dependencies = [
  "cathedral-boot-scene",
- "cathedral-contracts",
+ "cathedral-kernel-contracts",
+ "cathedral-platform-contracts",
  "cathedral-session-protocol",
  "cathedral-user-runtime",
 ]
@@ -257,7 +281,7 @@ dependencies = [
 name = "cathedral-storage-engine"
 version = "0.0.0"
 dependencies = [
- "cathedral-contracts",
+ "cathedral-block-device",
  "cathedral-storage-volume",
  "redb",
  "spinning_top",
@@ -268,8 +292,9 @@ name = "cathedral-storage-service"
 version = "0.0.0"
 dependencies = [
  "cathedral-ata-pio",
- "cathedral-contracts",
+ "cathedral-kernel-contracts",
  "cathedral-object-store",
+ "cathedral-platform-contracts",
  "cathedral-user-runtime",
 ]
 
@@ -278,14 +303,14 @@ name = "cathedral-storage-volume"
 version = "0.0.0"
 dependencies = [
  "blake3",
- "cathedral-contracts",
+ "cathedral-block-device",
 ]
 
 [[package]]
 name = "cathedral-supervision-lab"
 version = "0.0.0"
 dependencies = [
- "cathedral-contracts",
+ "cathedral-kernel-contracts",
  "cathedral-user-runtime",
 ]
 
@@ -305,7 +330,8 @@ dependencies = [
 name = "cathedral-user-runtime"
 version = "0.0.0"
 dependencies = [
- "cathedral-contracts",
+ "cathedral-kernel-contracts",
+ "cathedral-platform-contracts",
  "cathedral-user-heap",
 ]
 
@@ -314,7 +340,6 @@ name = "cathedral-volume-lab"
 version = "0.0.0"
 dependencies = [
  "cathedral-ata-pio",
- "cathedral-contracts",
  "cathedral-storage-volume",
  "cathedral-user-runtime",
 ]

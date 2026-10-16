@@ -1,5 +1,5 @@
 use super::*;
-use cathedral_contracts::input;
+use cathedral_platform_contracts::input;
 
 #[test]
 fn wake_hints_coalesce_and_remain_child_local() {

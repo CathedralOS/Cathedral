@@ -7,7 +7,15 @@ implementation dependencies. It does not compile staged Omega ports or claim
 runtime isolation.
 
 The Rust boot-to-UART edge and kernel-to-pure-hardware-facts edges are explicit
-bootstrap allowances. Platform packages cannot import kernel implementations;
+bootstrap allowances. Platform and distribution packages may import the independent `kernel/contracts`
+package. They cannot import other kernel packages or lookalike paths. Public
+contract packages cannot import implementations, and kernel packages cannot import
+platform protocols. The legacy Omega UEFI declarations remain supported.
+
+Run `python tools/source-layout/check_test.py` for the dependency-law regression
+tests.
+
+Platform packages cannot import kernel implementations;
 kernel/platform packages cannot import distribution implementations.
 
 Run `python tools/source-layout/format-rust.py --check` from the repository root

@@ -2,7 +2,7 @@
 // delivery owns checked buffers and blocked receives; readiness owns wait sets.
 use super::{Session, complete};
 use crate::scheduler::Event;
-use cathedral_contracts::user as abi;
+use cathedral_kernel_contracts::user as abi;
 use delivery::ReceiveMode;
 pub(super) fn dispatch(
     session: &mut Session,

@@ -10,7 +10,8 @@ path = "lib.rs"
 
 [dependencies]
 cathedral-user-runtime.workspace = true
-cathedral-contracts.workspace = true
+cathedral-kernel-contracts.workspace = true
+cathedral-platform-contracts.workspace = true
 
 [lints]
 workspace = true

@@ -10,4 +10,4 @@ pub(super) fn call(number: u64, a: u64, b: u64, c: u64) -> u64 {
 }
 
 #[repr(align(128))]
-pub(super) struct Packet(pub [u8; cathedral_contracts::user::IPC_PACKET_BYTES]);
+pub(super) struct Packet(pub [u8; cathedral_kernel_contracts::user::IPC_PACKET_BYTES]);

@@ -1,8 +1,9 @@
 //! Resume publication after each upstream reply. One in-flight batch owns the
 //! stream; transport loss retires the matrix before any late reply can be reused.
 use super::*;
-use cathedral_contracts::{composition, display};
 use cathedral_matrix_service::world::presentation::Batch;
+use cathedral_platform_contracts::display;
+use cathedral_platform_contracts::display::composition;
 use cathedral_user_runtime::server::Request;
 
 pub(super) struct Pending {

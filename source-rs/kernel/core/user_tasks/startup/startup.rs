@@ -20,7 +20,7 @@ pub(super) fn prepare(
     }
     let memory =
         super::memory::Memory::new(count, config.dynamic_tasks, config.memory).map_err(|code| {
-            if code == cathedral_contracts::user::NO_MEMORY {
+            if code == cathedral_kernel_contracts::user::NO_MEMORY {
                 Error::OutOfHeap
             } else {
                 Error::InvalidEndpoints

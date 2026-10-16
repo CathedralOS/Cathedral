@@ -11,8 +11,8 @@ remain in the linked decision queue rather than being duplicated here.
 
 | Mechanism | Evidence | What it does not establish |
 | --- | --- | --- |
-| Copied drawing requests and shared pixel input | [Rust display contract](../../../source-rs/contracts/display.rs), [provider](../../../source-rs/platform/services/display/surface/surface.rs) | Production drawing vocabulary, retained resources or frame atomicity |
-| Private pages, sealing and accepted readers | [Page contract](../../../source-rs/contracts/memory.rs), [runtime wrappers](../../../source-rs/platform/libraries/user-runtime/memory/memory.rs) | General multi-reader delegation, revocable live borrows or GPU fences |
+| Copied drawing requests and shared pixel input | [Rust display contract](../../../source-rs/platform/contracts/display/display.rs), [provider](../../../source-rs/platform/services/display/surface/surface.rs) | Production drawing vocabulary, retained resources or frame atomicity |
+| Private pages, sealing and accepted readers | [Page contract](../../../source-rs/kernel/contracts/memory.rs), [runtime wrappers](../../../source-rs/platform/libraries/user-runtime/memory/memory.rs) | General multi-reader delegation, revocable live borrows or GPU fences |
 | Bounded retained scenes and connection-scoped drawing | [Two-client compositor experiment](../../../source-rs/distribution/lab/compositor/README.md) | Cross-process Matrix delegation, protected output, general resource custody or tear-free presentation |
 | Separate host/child processes with root-resolved clips and no ancestor pixel buffers | [Persistent session experiment](../../../source-rs/distribution/lab/compositor/SESSION.md) | Arbitrary Matrix graphs/effects, resource residency, general delegation or GPU presentation |
 | Flattened leaves versus ancestor copies | [Rendering investigation](../../../source-rs/distribution/lab/rendering/README.md) | Real nested Matrix IPC, arbitrary effects, alpha or GPU performance |

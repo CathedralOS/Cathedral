@@ -18,7 +18,7 @@ either a root grant or the upstream matrix endpoint into the same `Grant`.
 
 ## Child boundary
 
-The [shared protocol](../../../contracts/matrix.rs) admits `VIEW`, `NEXT` and
+The [shared protocol](../../contracts/matrix.rs) admits `VIEW`, `NEXT` and
 clipped `PAINT`/`ERASE` surface commands on child connections. Authentication comes from the accepted IPC endpoint.
 Children supply no task, world, ancestor or sibling selector. Their replies
 contain only their own extent, permitted keys, local binding revision and input.

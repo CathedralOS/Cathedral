@@ -12,7 +12,7 @@ path = "lib.rs"
 memory-lab = []
 
 [dependencies]
-cathedral-contracts.workspace = true
+cathedral-kernel-contracts.workspace = true
 cathedral-arch.workspace = true
 linked_list_allocator = "0.10.6"
 

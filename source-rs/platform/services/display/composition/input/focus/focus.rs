@@ -1,6 +1,8 @@
 // Attenuated keyboard routing grants. Active focus never escapes its authorized subtree.
 use crate::composition::scene::{Client, hosting::Tree};
-use cathedral_contracts::{input, interaction as wire, user as abi};
+use cathedral_kernel_contracts::user as abi;
+use cathedral_platform_contracts::display::interaction as wire;
+use cathedral_platform_contracts::input;
 #[derive(Clone, Copy)]
 struct Grant {
     token: u64,

@@ -1,5 +1,5 @@
 //! Position-independent, embedded ring-3 workload for bring-up. This is not a
-//! loader or application SDK; syscall numbers follow contracts/user.rs.
+//! loader or application SDK; syscall numbers follow kernel/contracts/user.rs.
 use core::arch::global_asm;
 global_asm!(include_str!("probe.S"), code = const cathedral_core::user_tasks::address_space::USER_CODE,
     data = const cathedral_core::user_tasks::address_space::USER_DATA, stack = const cathedral_core::user_tasks::address_space::USER_STACK);

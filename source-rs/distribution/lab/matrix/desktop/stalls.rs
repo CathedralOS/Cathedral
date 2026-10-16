@@ -79,7 +79,7 @@ pub(super) fn exercise(session: &mut admission::Session) {
             session
                 .storage_control
                 .0
-                .send(cathedral_contracts::storage::HEALTH)
+                .send(cathedral_platform_contracts::storage::HEALTH)
                 .unwrap();
             receive(session.storage_control, b"ready");
         }
@@ -99,7 +99,7 @@ pub(super) fn exercise(session: &mut admission::Session) {
         session
             .storage_control
             .0
-            .send(cathedral_contracts::storage::HEALTH)
+            .send(cathedral_platform_contracts::storage::HEALTH)
             .unwrap();
         receive(session.storage_control, b"ready");
         for slot in 0..2 {

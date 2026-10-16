@@ -12,7 +12,7 @@ test = false
 bench = false
 
 [dependencies]
-cathedral-contracts.workspace = true
+
 cathedral-user-runtime.workspace = true
 cathedral-ata-pio.workspace = true
 cathedral-storage-volume.workspace = true

@@ -32,7 +32,7 @@ pub mod server;
 pub mod storage;
 pub mod task;
 pub mod time;
-use cathedral_contracts::user as abi;
+use cathedral_kernel_contracts::user as abi;
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct Error(pub i64);

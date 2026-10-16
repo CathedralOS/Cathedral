@@ -1,5 +1,5 @@
 use super::*;
-use cathedral_contracts::composition::{self as c, Node};
+use cathedral_platform_contracts::display::composition::{self as c, Node};
 fn clients() -> [Client; 3] {
     core::array::from_fn(|index| {
         if index == 2 {

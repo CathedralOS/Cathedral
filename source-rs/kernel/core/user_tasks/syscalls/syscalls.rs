@@ -3,7 +3,7 @@
 // display/input/storage request semantics remain in their service executables.
 use super::Session;
 use crate::scheduler::Event;
-use cathedral_contracts::user as abi;
+use cathedral_kernel_contracts::user as abi;
 pub(super) fn syscall(session: &mut Session, slot: usize, now: u64) -> Event {
     let (number, first, second, third) = session.tasks[slot].context.syscall();
     let mut event = Event::Continue;

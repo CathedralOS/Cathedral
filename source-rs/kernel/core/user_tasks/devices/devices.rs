@@ -1,6 +1,6 @@
 // Caller-local register authority and one outstanding interrupt per device.
 // No hardware here: syscalls/devices/leased.rs couples these transitions to the board.
-use cathedral_contracts::user as abi;
+use cathedral_kernel_contracts::user as abi;
 
 #[derive(Default, Clone, Copy)]
 struct Grant {

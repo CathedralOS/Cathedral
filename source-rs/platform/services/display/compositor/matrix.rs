@@ -68,7 +68,12 @@ impl Compositor {
             display::decode(&request.bytes[..request.len]).ok_or(abi::INVALID_ARGUMENT)?;
         if op & 0xffff != wire::MATRIX_IMAGE
             || op >> 16 >= wire::MATRIX_TILES as u64
-            || !cathedral_contracts::composition::valid_image(w, h, stride, object.len())
+            || !cathedral_platform_contracts::display::composition::valid_image(
+                w,
+                h,
+                stride,
+                object.len(),
+            )
         {
             return Err(abi::INVALID_ARGUMENT);
         }

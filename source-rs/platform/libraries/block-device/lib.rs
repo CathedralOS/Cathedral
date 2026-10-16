@@ -1,3 +1,5 @@
+#![no_std]
+#![forbid(unsafe_code)]
 //! Synchronous bounded block backend used by the storage experiment.
 //! Successful flush persists all preceding writes; errors never promise durability.
 //! Read/write completion alone promises no persistence or sector atomicity. A failed

@@ -16,7 +16,8 @@ bench = false
 
 [dependencies]
 cathedral-bitmap-font.workspace = true
-cathedral-contracts.workspace = true
+cathedral-kernel-contracts.workspace = true
+cathedral-platform-contracts.workspace = true
 
 [target.'cfg(target_os = "none")'.dependencies]
 cathedral-user-runtime.workspace = true

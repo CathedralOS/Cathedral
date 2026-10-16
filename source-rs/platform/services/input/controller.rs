@@ -1,5 +1,5 @@
 //! Configure the QEMU bootstrap controller; decoding lives independently above it.
-use cathedral_contracts::user as abi;
+use cathedral_kernel_contracts::user as abi;
 use cathedral_user_runtime::{Error, keyboard, time, yield_now};
 
 fn write(command: bool, byte: u8) -> Result<(), Error> {

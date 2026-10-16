@@ -1,7 +1,7 @@
 // Route only boot-granted device operations; each adapter checks the caller's grant.
 use super::Session;
 use crate::scheduler::Event;
-use cathedral_contracts::user as abi;
+use cathedral_kernel_contracts::user as abi;
 pub(super) fn dispatch(
     session: &mut Session,
     slot: usize,

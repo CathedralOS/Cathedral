@@ -2,7 +2,7 @@
 use crate::scheduler::Event;
 use crate::user_tasks::syscalls::{Session, complete};
 use cathedral_arch as arch;
-use cathedral_contracts::user as abi;
+use cathedral_kernel_contracts::user as abi;
 
 fn owner(session: &Session) -> Option<usize> {
     session

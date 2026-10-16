@@ -35,7 +35,7 @@ selects [compositor execution](../../../platform/services/display/compositor/com
 from its boot-supplied mode. Follow [request dispatch](../../../platform/services/display/compositor/requests.rs)
 for authority, [scene policy](../../../platform/services/display/composition/scene/scene.rs) for
 validation and drawing, and [surface](../../../platform/services/display/surface/surface.rs)
-for bounded device writes. The [wire contract](../../../contracts/composition.rs)
+for bounded device writes. The [wire contract](../../../platform/contracts/display/composition.rs)
 imports neither implementation.
 
 ## Bounds and lifetime

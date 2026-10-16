@@ -1,10 +1,14 @@
 //! Physical source coordinator: control/reconnect, device decode, authenticated delivery.
 use super::controller;
-use cathedral_contracts::{display, input, interaction as session, pointer as wire, user as abi};
 use cathedral_input_service::decoder::{
     Decoder,
     mouse::{Motion, Mouse},
 };
+use cathedral_kernel_contracts::user as abi;
+use cathedral_platform_contracts::display;
+use cathedral_platform_contracts::display::interaction as session;
+use cathedral_platform_contracts::display::pointer as wire;
+use cathedral_platform_contracts::input;
 use cathedral_user_runtime::{Error, ipc::Handle, keyboard, link::Link, time};
 type Pair = (Handle, Handle);
 pub fn run() -> u64 {

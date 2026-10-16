@@ -10,7 +10,8 @@ mod leaf;
 mod scenario;
 #[cfg(all(not(feature = "desktop"), feature = "storage-lab"))]
 mod storage;
-use cathedral_contracts::{matrix as wire, user as abi};
+use cathedral_kernel_contracts::user as abi;
+use cathedral_platform_contracts::matrix as wire;
 use cathedral_user_runtime::{Error, ipc::Handle, time};
 type Pair = (Handle, Handle);
 static ROOT_TASK: core::sync::atomic::AtomicU64 = core::sync::atomic::AtomicU64::new(0);

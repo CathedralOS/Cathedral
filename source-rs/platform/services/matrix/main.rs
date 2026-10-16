@@ -6,7 +6,7 @@ cathedral_user_runtime::entry_with_environment!(main);
 fn main(mode: u64, _: u64, environment: cathedral_user_runtime::task::Environment) -> u64 {
     if service::run(
         environment,
-        mode == cathedral_contracts::matrix::STORAGE_ROOT,
+        mode == cathedral_platform_contracts::matrix::STORAGE_ROOT,
     )
     .is_ok()
     {

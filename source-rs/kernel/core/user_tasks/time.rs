@@ -1,6 +1,6 @@
 //! Absolute deadlines on the lab's wrapping monotonic tick counter.
 const HALF: u64 = 1 << 63;
-use cathedral_contracts::user as abi;
+use cathedral_kernel_contracts::user as abi;
 
 /// Boot-bound read authority. Reserved child slots require an explicit grant; they never inherit access.
 pub struct Clock {

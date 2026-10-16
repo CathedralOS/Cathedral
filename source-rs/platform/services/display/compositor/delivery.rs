@@ -1,6 +1,6 @@
 //! One deferred event receive per app. Control/RPC work continues while apps sleep.
 use super::*;
-use cathedral_contracts::pointer as p;
+use cathedral_platform_contracts::display::pointer as p;
 use cathedral_user_runtime::server::Request;
 impl Compositor {
     pub(super) fn defer(&mut self, request: Request, server: &mut Server) -> bool {

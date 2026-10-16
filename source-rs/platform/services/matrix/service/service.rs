@@ -1,6 +1,7 @@
 // Consume local invalidations, wake children, then dispatch ownership and input.
-use cathedral_contracts::{matrix as wire, user as abi};
+use cathedral_kernel_contracts::user as abi;
 use cathedral_matrix_service::world::{Grant, Rect, World};
+use cathedral_platform_contracts::matrix as wire;
 use cathedral_user_runtime::{
     Error,
     server::{Event, Server},

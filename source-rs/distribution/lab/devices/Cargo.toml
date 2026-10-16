@@ -13,7 +13,7 @@ bench = false
 
 [dependencies]
 cathedral-user-runtime.workspace = true
-cathedral-contracts.workspace = true
+cathedral-kernel-contracts.workspace = true
 cathedral-uart-16550.workspace = true
 
 [lints]

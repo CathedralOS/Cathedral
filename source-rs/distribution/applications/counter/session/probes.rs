@@ -1,5 +1,6 @@
 //! Execute hostile requests from the second real principal, never with storage authority.
-use cathedral_contracts::{storage as wire, user as abi};
+use cathedral_kernel_contracts::user as abi;
+use cathedral_platform_contracts::storage as wire;
 use cathedral_user_runtime::{Error, storage::Client, time, write, yield_now};
 pub fn catalog(store: &mut Client, generation: u64) -> Result<(), Error> {
     let original = super::state::read(store)?;

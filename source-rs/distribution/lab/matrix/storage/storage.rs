@@ -2,7 +2,7 @@
 // relay test requests through their sole parent connection, with no disk/link grant.
 use crate::fixture::Fixture;
 use crate::*;
-use cathedral_contracts::storage as store;
+use cathedral_platform_contracts::storage as store;
 use cathedral_user_runtime::task::{Launch, Port};
 fn request(
     f: &Fixture,

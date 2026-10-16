@@ -28,7 +28,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "cathedral-contracts"
+name = "cathedral-block-device"
 version = "0.0.0"
 
 [[package]]
@@ -46,7 +46,7 @@ name = "cathedral-storage-volume"
 version = "0.0.0"
 dependencies = [
  "blake3",
- "cathedral-contracts",
+ "cathedral-block-device",
 ]
 
 [[package]]

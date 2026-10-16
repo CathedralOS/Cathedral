@@ -3,7 +3,7 @@
 [lib.rs](lib.rs) inspects an assigned volume, requires ready state, opens redb and
 validates the engine's volume identity against its envelope. [backend.rs](backend.rs)
 owns serialized IO, logical-length changes and permanent failure state. It consumes
-an exclusively owned `contracts::block::Device`; the [parent codec/region library](../CHARTER.md)
+an exclusively owned `cathedral_block_device::Device`; the [parent codec/region library](../CHARTER.md)
 remains allocator-free. This is a separate package so Cargo feature unification
 cannot impose an allocator on ordinary volume probes.
 

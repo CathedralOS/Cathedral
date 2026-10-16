@@ -5,7 +5,7 @@ mod client;
 mod pressure;
 mod scene;
 mod supervisor;
-use cathedral_contracts::display;
+use cathedral_platform_contracts::display;
 use cathedral_user_runtime::{ipc::Handle, time};
 cathedral_user_runtime::entry!(main);
 fn main(role: u64, _generation: u64) -> u64 {
@@ -27,6 +27,6 @@ fn try_exchange(
     let mut bytes = [0; 64];
     let len = pair.1.receive_until(&mut bytes, time::after(300)?)?;
     display::decode(&bytes[..len]).ok_or(cathedral_user_runtime::Error(
-        cathedral_contracts::user::IO_ERROR as i64,
+        cathedral_kernel_contracts::user::IO_ERROR as i64,
     ))
 }

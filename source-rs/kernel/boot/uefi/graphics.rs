@@ -1,5 +1,5 @@
 //! Snapshot GOP through the UEFI crate. No firmware protocol survives handoff.
-use cathedral_contracts::display::{self, Framebuffer};
+use cathedral_kernel_contracts::framebuffer::{self, Framebuffer};
 use uefi::proto::console::gop::{GraphicsOutput, PixelFormat};
 
 pub fn capture() -> Option<Framebuffer> {
@@ -18,8 +18,8 @@ pub fn capture() -> Option<Framebuffer> {
     }
     let info = gop.current_mode_info();
     let format = match info.pixel_format() {
-        PixelFormat::Rgb => display::RGB,
-        PixelFormat::Bgr => display::BGR,
+        PixelFormat::Rgb => framebuffer::RGB,
+        PixelFormat::Bgr => framebuffer::BGR,
         _ => return None,
     };
     let mut buffer = gop.frame_buffer();

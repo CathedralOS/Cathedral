@@ -27,6 +27,11 @@ input, persistence and drawing. The [composition map](distribution/README.md)
 bridges executable and IPC boundaries. The [discoverability convention](../wiki/architecture/discoverability.md)
 explains how to preserve these routes as the lab grows.
 
+Public boundaries also have owners: [kernel contracts](kernel/contracts/README.md)
+define syscalls and grants; [platform contracts](platform/contracts/README.md) define
+service messages. These packages import no implementations. Distribution-specific
+coordination stays in `distribution/libraries/session-protocol/`.
+
 Within a subsystem folder, start at its named entrance (`memory/memory.rs`, for
 example) for state, sequencing or dispatch, then follow the responsibilities
 beside it. `mod.rs` only wires Rust modules, exports and the included entrance;
@@ -55,20 +60,21 @@ The entrance explains this level without exposing every detail below it.
 | `kernel/boot/uefi/lab/supervision/watchdog.rs` | Verify hung-service cancellation, deadline wakeups and independent progress |
 | `kernel/core/ipc/ipc.rs` | Process-local endpoint grants, dynamic channels, checked moves, queues and teardown |
 | `kernel/boot/uefi/smoke/smoke.rs` | Test-only fault injection and QEMU result reporting |
-| `contracts/boot.rs` | Firmware-neutral memory handoff; experimental Rust data, not a frozen ABI |
-| `contracts/user.rs` | Shared experimental entry/syscall constants for kernel and user runtime |
-| `contracts/memory.rs`, `kernel/core/user_tasks/memory/regions/regions.rs` | Page-object grants, quotas, sealing and reader lifetime |
+| `kernel/core/memory/inventory.rs` | Core-owned memory inventory validated at firmware handoff; internal kernel data |
+| `kernel/contracts/user.rs` | Shared experimental entry/syscall constants for kernel and user runtime |
+| `kernel/contracts/memory.rs`, `kernel/core/user_tasks/memory/regions/regions.rs` | Page-object grants, quotas, sealing and reader lifetime |
 | `kernel/core/user_tasks/memory/memory.rs` | Boot-stack frame ownership, mapping changes and cleanup |
 | `distribution/lab/memory/main.rs` | Private allocation, shared leases and permission-fault exercises |
 | `distribution/lab/rendering/main.rs`, [investigation](distribution/lab/rendering/README.md) | Checked row delegation versus page-backed flattened composition, host costs and guest bounds probes |
-| `contracts/display.rs` | Bounded framebuffer geometry and experimental drawing messages |
-| `contracts/block.rs`, `contracts/storage.rs` | Experimental block durability and private-object messages |
+| `kernel/contracts/framebuffer.rs` | Kernel framebuffer aperture, geometry and DISPLAY_INFO record |
+| `platform/contracts/display/display.rs` | Userspace drawing requests; sibling files own composition, pointers and focus |
+| `platform/libraries/block-device/lib.rs`, `platform/contracts/storage.rs` | Experimental block durability and private-object messages |
 | `platform/drivers/ata-pio/` | Userspace bounded PIO driver for a dedicated QEMU data disk |
 | `platform/libraries/object-store/`, `platform/services/storage/` | Atomic object replacement, recovery and private service endpoint |
 | `platform/libraries/storage-volume/`, `distribution/lab/volume/` | Experimental shared envelope codec and guest block-region/flush proof; host redb only |
-| `contracts/input.rs` | Experimental physical-key events, independent of scan codes or UI policy |
-| `contracts/pointer.rs` | Experimental logical pointers, source updates, capture and scoped synthetic leases |
-| `contracts/interaction.rs` | Experimental attenuated keyboard focus and cross-process child placement |
+| `platform/contracts/input.rs` | Experimental physical-key events, independent of scan codes or UI policy |
+| `platform/contracts/display/pointer.rs` | Experimental logical pointers, source updates, capture and scoped synthetic leases |
+| `platform/contracts/display/interaction.rs` | Experimental attenuated keyboard focus and cross-process child placement |
 | `kernel/core/memory/memory.rs` | Bootstrap frame accounting and reclaiming bitmap over usable RAM, corresponding to the resource work in `source/kernel/core/` |
 | `kernel/core/memory/heap.rs`, `kernel/core/scheduler/scheduler.rs`, `kernel/core/kernel_tasks/kernel_tasks.rs` | IRQ-safe heap, pure scheduling policy, task admission and context/stack lifetime management |
 | `kernel/core/user_tasks/user_tasks.rs` | Experimental user-task lifetime, checked diagnostic syscalls and outcomes |
@@ -76,7 +82,7 @@ The entrance explains this level without exposing every detail below it.
 | `kernel/core/user_tasks/devices/devices.rs` | [Register/IRQ grants and driver replacement](kernel/core/user_tasks/devices/README.md), paired with the syscall/board entrances |
 | `distribution/lab/devices/main.rs` | Userspace serial loopback, authority rejection, masked interrupts, fault/restart and blocked cancellation |
 | `platform/drivers/uart_16550/` | Userspace interrupt protocol plus polling serial diagnostics, corresponding to `source/platform/drivers/uart_16550/` |
-| `platform/libraries/user-runtime/` | Entry stub, syscall wrappers and linker script; imports only shared contracts |
+| `platform/libraries/user-runtime/` | Entry stub, syscall and protocol clients, linker script and optional funded heap |
 | `platform/services/display/` | Separately compiled userspace provider for linear framebuffer drawing |
 | `platform/services/input/` | Userspace PS/2 configuration, keyboard/mouse decoding and IPC event delivery |
 | `platform/services/matrix/` | Recursive local viewport and input grants; [headless boundary lab](distribution/lab/matrix/README.md) |
@@ -924,7 +930,7 @@ All fault injection and hostile-client probes are absent from ordinary builds.
 
 ## Bounded private pages and shared buffers
 
-The [memory contract](contracts/memory.rs) defines explicit per-task private and
+The [memory contract](kernel/contracts/memory.rs) defines explicit per-task private and
 accepted-reader budgets, each up to sixty-four 4 KiB pages (256 KiB). An allocation
 contains one to sixteen zeroed pages. Independently, a task can own at most four
 objects and accept at most four reader objects. The 64 session slots cover those

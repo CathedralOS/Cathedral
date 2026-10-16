@@ -1,6 +1,6 @@
 //! Monotonic caller-local names. Global slots and epochs never enter a name.
 //! Counters survive task-slot reuse; allocation failure cannot wrap into old authority.
-use cathedral_contracts::user as abi;
+use cathedral_kernel_contracts::user as abi;
 #[derive(Clone)]
 pub struct Names {
     next: [u64; abi::MAX_TASKS],

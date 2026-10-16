@@ -1,5 +1,5 @@
 //! Deliberately hostile raw ABI probes; normal programs use the platform wrappers.
-use cathedral_contracts::user as abi;
+use cathedral_kernel_contracts::user as abi;
 use cathedral_user_runtime::{Error, ipc::Handle};
 use core::arch::asm;
 

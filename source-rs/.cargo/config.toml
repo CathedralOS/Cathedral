@@ -1,7 +1,7 @@
 [alias]
 check-userspace = "clippy --locked --workspace --exclude cathedral-boot-uefi --exclude cathedral-core --exclude cathedral-arch --target x86_64-unknown-none --features cathedral-rendering-lab/guest -- -D warnings"
 build-uefi = "build --locked --package cathedral-boot-uefi --target x86_64-unknown-uefi"
-check-uefi = "clippy --locked --package cathedral-boot-uefi --package cathedral-core --package cathedral-arch --package cathedral-contracts --package cathedral-uart-16550 --target x86_64-unknown-uefi -- -D warnings"
+check-uefi = "clippy --locked --package cathedral-boot-uefi --package cathedral-core --package cathedral-arch --package cathedral-kernel-contracts --package cathedral-uart-16550 --target x86_64-unknown-uefi -- -D warnings"
 
 [target.x86_64-unknown-none]
 rustflags = ["-C", "code-model=large", "-C", "relocation-model=static", "-C", "link-arg=-Tplatform/libraries/user-runtime/user.ld", "-C", "link-arg=--build-id=none"]

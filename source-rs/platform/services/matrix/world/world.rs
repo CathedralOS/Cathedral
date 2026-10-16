@@ -1,5 +1,6 @@
 // One level of ownership. The same state machine runs above apps or other worlds.
-use cathedral_contracts::{matrix as wire, user as abi};
+use cathedral_kernel_contracts::user as abi;
+use cathedral_platform_contracts::matrix as wire;
 use children::Child;
 
 #[derive(Clone, Copy, Default, Debug, PartialEq, Eq)]

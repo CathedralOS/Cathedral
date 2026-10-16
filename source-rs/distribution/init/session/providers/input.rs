@@ -1,7 +1,8 @@
-//! Input control client. Protocol: contracts/input.rs; peer:
+//! Input control client. Protocol: platform/contracts/input.rs; peer:
 //! platform/services/input/main.rs. RESET is consumed only during readiness.
 use super::super::child::Service;
-use cathedral_contracts::{input, user as abi};
+use cathedral_kernel_contracts::user as abi;
+use cathedral_platform_contracts::input;
 use cathedral_user_runtime::Error;
 pub fn await_ready(input: &mut Service) -> Result<(), Error> {
     for attempt in 0..3 {

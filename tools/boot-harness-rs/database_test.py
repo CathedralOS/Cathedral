@@ -58,6 +58,7 @@ def run(args):
         (output / f'host-{revision}.txt').write_text(result.stdout, encoding='utf-8')
         print(result.stdout, end='')
     sources = [profile, Path(__file__), ROOT / 'source-rs/Cargo.toml', ROOT / 'source-rs/Cargo.lock',
+               ROOT / 'source-rs/platform/libraries/block-device/lib.rs',
                * (ROOT / 'source-rs/distribution/lab/database').rglob('*.rs'),
                * (ROOT / 'source-rs/platform/libraries/user-heap').glob('*.rs'),
                * (ROOT / 'source-rs/platform/libraries/storage-volume').rglob('*.rs')]

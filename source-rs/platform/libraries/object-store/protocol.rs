@@ -1,7 +1,9 @@
 //! Data protocol dispatch. The service supplies a trusted root and connection identity;
 //! neither is deserialized from client bytes. Each connection stages at most two changes.
 use super::{Store, catalog::Change};
-use cathedral_contracts::{block::Device, storage as wire, user as abi};
+use cathedral_block_device::Device;
+use cathedral_kernel_contracts::user as abi;
+use cathedral_platform_contracts::storage as wire;
 #[derive(Default)]
 pub struct Client {
     incarnation: u64,

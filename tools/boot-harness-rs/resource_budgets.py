@@ -1,6 +1,6 @@
 """Validate boot/launch IPC backing and CPU ceilings before executable builds.
 
-These fixed lab limits mirror contracts/user.rs; kernel admission revalidates them.
+These fixed lab limits mirror kernel/contracts/user.rs; kernel admission revalidates them.
 """
 def programs(startup):
     launches = startup.get("launches", [startup["launch"]] if startup.get("launch") else [])

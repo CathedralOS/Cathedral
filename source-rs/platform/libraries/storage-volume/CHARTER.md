@@ -6,7 +6,7 @@ same codec used by the [host volume lab](../../../../tools/storage-lab/engines/v
 [region.rs](region.rs) owns checked byte-to-sector translation. This library has no
 allocator, runtime dependency, kernel imports or production disk-format commitment.
 
-`BlockRegion` exclusively borrows a `contracts::block::Device`. Its start and length
+`BlockRegion` exclusively borrows a `cathedral_block_device::Device`. Its start and length
 must be nonempty, sector aligned and fit the reported device extent without overflow.
 It validates each entire IO before the first device operation. Byte writes crossing
 sector boundaries use read/modify/write for partial sectors; aligned full sectors

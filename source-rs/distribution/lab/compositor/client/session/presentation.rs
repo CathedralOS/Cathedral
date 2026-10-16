@@ -1,6 +1,6 @@
 //! Small distribution UI: two explicit buttons, a counter and retained drag content.
 use super::*;
-use cathedral_contracts::composition::{self as c, Node};
+use cathedral_platform_contracts::display::composition::{self as c, Node};
 impl App {
     pub(super) fn publish(&mut self) -> Result<(), Error> {
         let mut page = Private::allocate(1)?;

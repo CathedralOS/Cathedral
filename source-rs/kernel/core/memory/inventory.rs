@@ -1,4 +1,5 @@
-//! Mirrors the responsibility of Cathedral's semantic boot handoff.
+//! Core-owned physical-memory inventory supplied by a firmware adapter at handoff.
+//! Internal input to frame management, not a userspace ABI.
 //! These records validate geometry; constructing them does not prove custody.
 
 pub const PAGE_SIZE: u64 = 4096;

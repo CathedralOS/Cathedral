@@ -2,7 +2,7 @@
 // Owner grants/abort use the binding path here; child requests resume in pending.rs.
 // Only the root adapter names provider links and retires them independently.
 use super::*;
-use cathedral_contracts::storage as protocol;
+use cathedral_platform_contracts::storage as protocol;
 use cathedral_user_runtime::server::Request;
 pub(super) use pending::Pending;
 impl Parent {

@@ -8,7 +8,9 @@ publish.workspace = true
 [lib]
 path = "lib.rs"
 [dependencies]
-cathedral-contracts.workspace = true
+cathedral-kernel-contracts.workspace = true
+cathedral-platform-contracts.workspace = true
+cathedral-block-device.workspace = true
 
 [lints]
 workspace = true

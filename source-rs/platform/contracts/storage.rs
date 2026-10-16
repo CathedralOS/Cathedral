@@ -1,6 +1,6 @@
 //! Experimental private catalogs. Object numbers are relative to the accepted connection.
 //! Generations cover the entire root. Staging is bounded and bound to one connection incarnation.
-use crate::user as abi;
+use cathedral_kernel_contracts::user as abi;
 pub const READ: u64 = 1;
 pub const REPLACE: u64 = 2;
 pub const LIST: u64 = 3;

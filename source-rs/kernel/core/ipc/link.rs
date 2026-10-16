@@ -1,6 +1,6 @@
 //! Boot-approved peer graph. Ports grant connection acceptance, never task control.
 use crate::ipc::MAX_TASKS;
-use cathedral_contracts::user as abi;
+use cathedral_kernel_contracts::user as abi;
 
 #[derive(Clone, Copy, Debug)]
 pub struct LinkSpec {

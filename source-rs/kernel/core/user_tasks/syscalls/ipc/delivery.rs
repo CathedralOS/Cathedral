@@ -1,7 +1,7 @@
 //! Copied messages: authorize and validate buffers before dequeue, then complete waits.
 use super::{Session, complete};
 use crate::{ipc::Right, scheduler::Event};
-use cathedral_contracts::user as abi;
+use cathedral_kernel_contracts::user as abi;
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub(super) enum ReceiveMode {

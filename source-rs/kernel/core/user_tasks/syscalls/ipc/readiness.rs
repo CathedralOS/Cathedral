@@ -1,7 +1,7 @@
 //! Bounded IPC/device readiness waits. Observing readiness never consumes an event.
 use crate::user_tasks::syscalls::{Session, complete};
 use crate::{scheduler::Event, user_tasks::time as deadline};
-use cathedral_contracts::user as abi;
+use cathedral_kernel_contracts::user as abi;
 #[derive(Clone, Copy)]
 pub(in crate::user_tasks) struct Wait {
     pub handles: [u64; abi::MAX_WAIT_HANDLES],

@@ -1,7 +1,9 @@
 //! Physical source adapter for the same matrix input boundary used recursively.
 //! Decoding/controller code is shared with the existing compositor source.
-use cathedral_contracts::{input, matrix as wire, user as abi};
 use cathedral_input_service::decoder::{Decoder, mouse::Mouse};
+use cathedral_kernel_contracts::user as abi;
+use cathedral_platform_contracts::input;
+use cathedral_platform_contracts::matrix as wire;
 use cathedral_user_runtime::{Error, ipc::Handle, keyboard, task::Environment, time};
 pub fn run(extent: u64, environment: Environment) -> u64 {
     serve(extent, environment).unwrap();

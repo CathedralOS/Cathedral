@@ -67,7 +67,7 @@ authenticates focus and hosting operations. Follow
 rules, [hosting](../../../platform/services/display/composition/scene/hosting.rs) for the process
 tree and clips, and [scene](../../../platform/services/display/composition/scene/scene.rs) for
 snapshot validation, explicit input regions and drawing. The shared
-[interaction contract](../../../contracts/interaction.rs) imports no implementation.
+[interaction contract](../../../platform/contracts/display/interaction.rs) imports no implementation.
 The [input source](../../../platform/services/input/pointer.rs) owns PS/2 decoding
 and normalized source updates; apps cannot acquire its role by sending an opcode.
 

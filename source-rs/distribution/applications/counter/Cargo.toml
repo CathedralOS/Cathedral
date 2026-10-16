@@ -11,7 +11,8 @@ test = false
 bench = false
 [dependencies]
 cathedral-user-runtime.workspace = true
-cathedral-contracts.workspace = true
+cathedral-kernel-contracts.workspace = true
+cathedral-platform-contracts.workspace = true
 [features]
 recovery-lab = []
 [lints]

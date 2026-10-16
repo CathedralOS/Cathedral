@@ -10,15 +10,31 @@ ROOT = Path(__file__).resolve().parents[2]
 LAYERS = ('kernel', 'platform', 'distribution', 'contracts', 'foundation')
 
 
+def within(path, root):
+    return path == root or path.startswith(root + '/')
+
+
 def check_edge(source, target):
-    """Paths are relative to one source tree, not package identities."""
+    """Paths name package roots; public contracts are not implementation imports."""
     owner, dependency = source.split('/')[0], target.split('/')[0]
     if owner not in LAYERS or dependency not in LAYERS:
         raise ValueError(f'Unknown source layer: {source} -> {target}')
+
+    kernel_contract = within(source, 'kernel/contracts')
+    platform_contract = within(source, 'platform/contracts')
+    block_boundary = source == 'platform/libraries/block-device'
+    if kernel_contract or platform_contract or block_boundary:
+        allowed = dependency == 'foundation'
+        allowed |= kernel_contract and within(target, 'kernel/contracts')
+        allowed |= platform_contract and (within(target, 'platform/contracts') or target == 'kernel/contracts')
+        if not allowed:
+            raise ValueError(f'Public boundary imports implementation: {source} -> {target}')
+
     if dependency == 'distribution' and owner != 'distribution':
         raise ValueError(f'Reverse distribution dependency: {source} -> {target}')
-    if owner in ('platform', 'distribution') and dependency == 'kernel':
+    if owner in ('platform', 'distribution') and dependency == 'kernel' and target != 'kernel/contracts':
         raise ValueError(f'Userspace imports kernel implementation: {source} -> {target}')
+    # Omega's existing external UEFI declarations still occupy its legacy root.
     if owner in ('contracts', 'foundation') and dependency not in ('contracts', 'foundation'):
         raise ValueError(f'Shared root imports implementation: {source} -> {target}')
     if owner == 'kernel' and dependency == 'platform':
@@ -60,6 +76,8 @@ def check_omega():
 
 def check_rust():
     tree = ROOT / 'source-rs'
+    if (tree / 'contracts').exists():
+        raise ValueError('Rust contracts must live with their kernel/platform owner')
     metadata = json.loads(subprocess.check_output(
         ['cargo', 'metadata', '--locked', '--no-deps', '--format-version', '1'], cwd=tree))
     packages = {p['name']: p for p in metadata['packages']}

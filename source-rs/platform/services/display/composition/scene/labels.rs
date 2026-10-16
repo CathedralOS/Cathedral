@@ -1,6 +1,7 @@
 //! Bounded retained control labels. The distribution supplies text and appearance.
 use crate::composition::scene::Rect;
-use cathedral_contracts::{display, user as abi};
+use cathedral_kernel_contracts::user as abi;
+use cathedral_platform_contracts::display;
 #[derive(Clone, Copy)]
 struct Label {
     rect: Rect,

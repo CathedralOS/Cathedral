@@ -40,10 +40,10 @@ impl Compositor {
             }
             return self.matrix_request(words);
         }
-        if words[0] >= cathedral_contracts::interaction::FOCUS_GRANT {
+        if words[0] >= cathedral_platform_contracts::display::interaction::FOCUS_GRANT {
             return self.session_request(request, words);
         }
-        if words[0] >= cathedral_contracts::pointer::DEVICE {
+        if words[0] >= cathedral_platform_contracts::display::pointer::DEVICE {
             return self.pointer_request(request, words);
         }
         if !request.control {

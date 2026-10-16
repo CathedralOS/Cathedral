@@ -1,7 +1,8 @@
 // Logical pointer authority and routing over the compositor's accepted scene.
 // The lab has one physical source and one revocable, app-scoped synthetic source.
 use crate::composition::scene::{Client, Rect};
-use cathedral_contracts::{pointer as wire, user as abi};
+use cathedral_kernel_contracts::user as abi;
+use cathedral_platform_contracts::display::pointer as wire;
 use queue::Queue;
 use wire::Event;
 

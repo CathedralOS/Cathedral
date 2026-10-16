@@ -1,7 +1,7 @@
 //! Growable engine length within a fixed disk grant. Growth is zeroed and flushed
 //! before publishing mirrored length; mutation failures retire the whole backend.
 use alloc::string::ToString;
-use cathedral_contracts::block::Device;
+use cathedral_block_device::Device;
 use cathedral_storage_volume::{
     BlockRegion, Error,
     header::{BLOCK, DATA_START, Header},

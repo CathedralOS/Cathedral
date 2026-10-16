@@ -1,6 +1,7 @@
 // Boot-stack page-object operations. Traps enqueue; this owner maps, seals and reclaims.
 use super::{Frames, Session, syscalls};
-use cathedral_contracts::{memory as wire, user as abi};
+use cathedral_kernel_contracts::memory as wire;
+use cathedral_kernel_contracts::user as abi;
 use regions::Regions;
 pub(super) struct Memory {
     pub model: Regions,

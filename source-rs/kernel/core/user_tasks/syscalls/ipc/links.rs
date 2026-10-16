@@ -1,6 +1,6 @@
 //! Accept boot-approved peer links; no launch or lifecycle authority.
 use super::Session;
-use cathedral_contracts::user as abi;
+use cathedral_kernel_contracts::user as abi;
 pub(super) fn syscall(
     session: &mut Session,
     slot: usize,

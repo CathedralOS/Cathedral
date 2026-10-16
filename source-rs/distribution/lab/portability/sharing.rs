@@ -1,5 +1,5 @@
 //! Immutable mappings stay live after producer death; sealing removes its own write permission.
-use cathedral_contracts::user as abi;
+use cathedral_kernel_contracts::user as abi;
 use cathedral_user_runtime::{
     Error,
     link::Link,

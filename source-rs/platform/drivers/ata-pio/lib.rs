@@ -1,7 +1,8 @@
 #![no_std]
 #![forbid(unsafe_code)]
 //! Userspace LBA28 single-sector PIO on the boot-granted secondary ATA master.
-use cathedral_contracts::{block::Device, user as abi};
+use cathedral_block_device::Device;
+use cathedral_kernel_contracts::user as abi;
 use cathedral_user_runtime::{Error, disk, time, yield_now};
 pub struct Ata {
     sectors: u64,

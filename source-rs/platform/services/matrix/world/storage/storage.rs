@@ -1,6 +1,6 @@
 // Whole-root delegation: owner selects a source, child sees only a local binding.
 // Exclusive sibling assignments keep transactions and root generations private.
-use cathedral_contracts::user as abi;
+use cathedral_kernel_contracts::user as abi;
 #[derive(Clone, Copy)]
 struct Binding {
     incarnation: u64,
@@ -35,7 +35,7 @@ impl Scopes {
         }
         self.revisions[slot] = self.revisions[slot]
             .checked_add(1)
-            .filter(|n| *n <= u64::MAX >> cathedral_contracts::matrix::STORAGE_SCOPE_BITS)
+            .filter(|n| *n <= u64::MAX >> cathedral_platform_contracts::matrix::STORAGE_SCOPE_BITS)
             .ok_or(abi::NO_MEMORY)?;
         self.bindings[slot] = Some(Binding {
             incarnation,

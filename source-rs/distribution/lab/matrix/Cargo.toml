@@ -18,7 +18,8 @@ desktop = []
 desktop-probes = ["desktop"]
 
 [dependencies]
-cathedral-contracts.workspace = true
+cathedral-kernel-contracts.workspace = true
+cathedral-platform-contracts.workspace = true
 cathedral-user-runtime.workspace = true
 
 [lints]

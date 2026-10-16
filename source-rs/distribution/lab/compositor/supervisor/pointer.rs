@@ -1,6 +1,6 @@
 //! Optional pointer profile: authorize, probe boundaries, then supervise interactions.
 use super::*;
-use cathedral_contracts::pointer as p;
+use cathedral_platform_contracts::display::pointer as p;
 use cathedral_user_runtime::Error;
 impl Session {
     pub(super) fn pointers(&mut self, source_launch: Launch) -> u64 {

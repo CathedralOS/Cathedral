@@ -6,7 +6,7 @@ use ::x86_64::{
     structures::paging::{OffsetPageTable, PageTable, PageTableFlags as Flags},
 };
 
-use cathedral_contracts::display::{Framebuffer, USER_ADDRESS};
+use cathedral_kernel_contracts::framebuffer::{Framebuffer, USER_ADDRESS};
 
 impl UserMappings {
     /// Map the boot-approved framebuffer into an inactive task, with guards.

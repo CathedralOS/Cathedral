@@ -22,7 +22,7 @@ include!(concat!(env!("OUT_DIR"), "/startup_config.rs"));
 
 pub fn run(memory: &mut PreparedMemory, console: &mut SerialPort) {
     let mut memory_grants = alloc::vec::Vec::new();
-    memory_grants.push(cathedral_contracts::memory::Grant {
+    memory_grants.push(cathedral_kernel_contracts::memory::Grant {
         task: 0,
         private_pages: INITIAL_PAGES[0],
         shared_pages: INITIAL_PAGES[1],
@@ -33,7 +33,7 @@ pub fn run(memory: &mut PreparedMemory, console: &mut SerialPort) {
         clock_readers.push(0);
     }
     for (index, grant) in LAUNCHES.iter().enumerate() {
-        memory_grants.push(cathedral_contracts::memory::Grant {
+        memory_grants.push(cathedral_kernel_contracts::memory::Grant {
             task: index + 1,
             private_pages: grant.private_pages,
             shared_pages: grant.shared_pages,

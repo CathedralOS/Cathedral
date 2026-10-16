@@ -12,7 +12,7 @@ pub(super) struct Presentation {
     revision: Option<u64>,
     last: u64,
     failed: Option<u64>,
-    updates: [Option<Update>; cathedral_contracts::matrix::PRESENT_LIMIT],
+    updates: [Option<Update>; cathedral_platform_contracts::matrix::PRESENT_LIMIT],
 }
 impl Presentation {
     pub const fn empty() -> Self {
@@ -20,7 +20,7 @@ impl Presentation {
             revision: None,
             last: 0,
             failed: None,
-            updates: [const { None }; cathedral_contracts::matrix::PRESENT_LIMIT],
+            updates: [const { None }; cathedral_platform_contracts::matrix::PRESENT_LIMIT],
         }
     }
 }
@@ -109,7 +109,7 @@ impl Compositor {
                     return Err(status);
                 }
                 let mut damage = Rect::default();
-                for i in 0..cathedral_contracts::matrix::PRESENT_LIMIT {
+                for i in 0..cathedral_platform_contracts::matrix::PRESENT_LIMIT {
                     if let Some(update) = self.presentation.updates[i].take() {
                         damage = damage.union(self.install(update));
                     }

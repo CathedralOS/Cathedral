@@ -18,7 +18,7 @@ pub(in super::super) fn image(
         {
             return Err(abi::DENIED);
         }
-        if !cathedral_contracts::composition::valid_image(
+        if !cathedral_platform_contracts::display::composition::valid_image(
             words[5],
             words[6],
             words[7],

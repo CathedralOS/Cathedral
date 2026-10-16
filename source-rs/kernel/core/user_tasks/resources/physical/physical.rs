@@ -1,6 +1,6 @@
 // Conserved frame funding. Actual frames are held by the session's frame bank.
 // Account identity outlives tasks; retained objects keep their original charge.
-use cathedral_contracts::user as abi;
+use cathedral_kernel_contracts::user as abi;
 
 pub struct Funding {
     limits: [usize; abi::MAX_TASKS],

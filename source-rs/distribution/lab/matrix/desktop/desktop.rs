@@ -1,6 +1,6 @@
 // Distribution layout and recovery policy over the platform matrix-owned tree.
 use super::*;
-use cathedral_contracts::input;
+use cathedral_platform_contracts::input;
 use cathedral_user_runtime::{ipc, task::Launch};
 const BACKGROUND: u64 = 0x101827;
 fn owner(pair: Pair, words: wire::Packet) {

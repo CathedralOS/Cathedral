@@ -1,6 +1,6 @@
 //! Scene ownership across process boundaries. Hosts place children; root resolves clips.
 use crate::composition::scene::{Client, Rect};
-use cathedral_contracts::user as abi;
+use cathedral_kernel_contracts::user as abi;
 #[derive(Clone, Copy)]
 struct Grant {
     token: u64,

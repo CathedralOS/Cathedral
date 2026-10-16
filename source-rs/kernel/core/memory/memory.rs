@@ -2,8 +2,8 @@
 // Bootstrap allocations become permanent when the reclaiming bitmap is enabled.
 // Later frames can be returned after their mappings and users are gone.
 
+use crate::memory::inventory::{BootMemory, MemoryKind, PAGE_SIZE};
 use alloc::{vec, vec::Vec};
-use cathedral_contracts::boot::{BootMemory, MemoryKind, PAGE_SIZE};
 
 #[derive(Debug)]
 pub struct PhysicalFrame {

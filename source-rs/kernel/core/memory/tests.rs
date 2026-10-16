@@ -1,5 +1,5 @@
 use super::*;
-use cathedral_contracts::boot::MemoryRegion;
+use crate::memory::inventory::MemoryRegion;
 
 #[test]
 fn allocations_skip_reserved_and_null_frames_and_exhaust_without_reuse() {

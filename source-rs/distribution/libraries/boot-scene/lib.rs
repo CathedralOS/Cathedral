@@ -1,6 +1,7 @@
 #![no_std]
 //! Cathedral's initial scene, shared by ordinary startup and its display fixture.
-use cathedral_contracts::{display as wire, user as abi};
+use cathedral_kernel_contracts::user as abi;
+use cathedral_platform_contracts::display as wire;
 use cathedral_user_runtime::{Error, ipc::Handle};
 
 /// A drawing session; ordinary init supplies one deadline for the whole redraw.

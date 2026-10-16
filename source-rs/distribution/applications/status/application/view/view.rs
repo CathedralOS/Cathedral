@@ -1,8 +1,8 @@
 // Render the status view through the display data link, then report the completed frame.
-// Client: distribution/libraries/boot-scene; protocol: contracts/display.rs;
+// Client: distribution/libraries/boot-scene; protocol: platform/contracts/display/display.rs;
 // peer: platform/services/display/main.rs -> surface/surface.rs.
 use super::{connection::Connections, state::State};
-use cathedral_contracts::user as abi;
+use cathedral_kernel_contracts::user as abi;
 use cathedral_user_runtime::{Error, time};
 pub(super) fn render(state: &State, connections: &mut Connections) -> Result<(), Error> {
     for _ in 0..3 {

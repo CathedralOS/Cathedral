@@ -1,11 +1,11 @@
 // Compose two independent user executables and verify hardware grant recovery.
 use crate::console::Console as SerialPort;
 use crate::{diagnostics::user_output, heap::HEAP, memory::PreparedMemory};
-use cathedral_contracts::display::USER_ADDRESS;
 use cathedral_core::{
     ipc::EndpointSpec,
     user_tasks::{self, Config, Executable, Exit, Program, Supervision},
 };
+use cathedral_kernel_contracts::framebuffer::USER_ADDRESS;
 use core::fmt::Write;
 static CLIENT: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/display-lab.elf"));
 static SERVICE: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/display-service.elf"));

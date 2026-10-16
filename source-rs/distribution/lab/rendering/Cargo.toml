@@ -26,7 +26,7 @@ host = []
 guest = ["dep:cathedral-user-runtime"]
 
 [dependencies]
-cathedral-contracts.workspace = true
+cathedral-kernel-contracts.workspace = true
 cathedral-user-runtime = { workspace = true, optional = true }
 
 [lints]

@@ -2,7 +2,7 @@
 
 Start at [storage.rs](storage.rs) for exclusive source assignment, connection
 identity and local binding revisions. [The parent adapter](../../service/parent/storage/storage.rs)
-checks that policy and forwards the [storage protocol](../../../../../contracts/storage.rs)
+checks that policy and forwards the [storage protocol](../../../../contracts/storage.rs)
 through the same matrix executable at every level. The root adapter alone holds
 the storage provider's links. Kernel IPC transports these requests; the kernel
 does not implement catalog operations or namespace policy.

@@ -1,6 +1,7 @@
 //! Upstream matrices receive clipped commands; only the root speaks compositor IPC.
 use super::*;
-use cathedral_contracts::{composition, display};
+use cathedral_platform_contracts::display;
+use cathedral_platform_contracts::display::composition;
 impl Parent {
     pub(in super::super) fn surface(&mut self, words: wire::Packet) -> Result<wire::Packet, Error> {
         if words[0] == wire::SURFACE_IMAGE {

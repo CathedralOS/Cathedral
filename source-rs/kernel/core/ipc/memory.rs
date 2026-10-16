@@ -18,7 +18,7 @@ impl Ipc {
     }
     /// Caller reserved a recipient grant after memory_receiver; serialized commit.
     pub fn send_memory(&mut self, caller: usize, ticket: u64, bytes: &[u8], escrow: usize) {
-        assert!(escrow < cathedral_contracts::memory::MAX_READ_HANDLES);
+        assert!(escrow < cathedral_kernel_contracts::memory::MAX_READ_HANDLES);
         self.memory_receiver(caller, ticket, bytes.len())
             .expect("validated memory send");
         let index = self.check(caller, ticket, Right::Send).unwrap();

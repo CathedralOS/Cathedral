@@ -1,6 +1,6 @@
 //! Executable capabilities use process-local non-reused names, never catalogue indices.
 use alloc::vec::Vec;
-use cathedral_contracts::user as abi;
+use cathedral_kernel_contracts::user as abi;
 #[derive(Clone, Copy)]
 struct Grant {
     name: u64,

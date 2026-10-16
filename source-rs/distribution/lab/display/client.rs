@@ -1,4 +1,5 @@
-use cathedral_contracts::{display as wire, user as abi};
+use cathedral_kernel_contracts::user as abi;
+use cathedral_platform_contracts::display as wire;
 use cathedral_user_runtime::{
     Error,
     ipc::Handle,

@@ -13,7 +13,8 @@ bench = false
 cathedral-session-protocol.workspace = true
 cathedral-boot-scene.workspace = true
 cathedral-user-runtime.workspace = true
-cathedral-contracts.workspace = true
+cathedral-kernel-contracts.workspace = true
+cathedral-platform-contracts.workspace = true
 [features]
 recovery-lab = []
 [lints]

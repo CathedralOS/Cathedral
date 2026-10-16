@@ -1,5 +1,6 @@
 //! App-owned schema: COUNTER and MIRROR must contain the same persisted count.
-use cathedral_contracts::{storage as wire, user as abi};
+use cathedral_kernel_contracts::user as abi;
+use cathedral_platform_contracts::storage as wire;
 use cathedral_user_runtime::{Error, storage::Client};
 pub fn read(store: &mut Client) -> Result<(u64, u64), Error> {
     let first = store.call(wire::READ, 1, 0, &[])?;

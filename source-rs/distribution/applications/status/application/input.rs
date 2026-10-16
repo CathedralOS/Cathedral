@@ -1,7 +1,8 @@
-//! Input data client: contracts/input.rs -> platform/services/input/main.rs.
+//! Input data client: platform/contracts/input.rs -> platform/services/input/main.rs.
 //! Reconnect after provider loss; init owns the replacement decision.
 use super::connection::Connections;
-use cathedral_contracts::{input, user as abi};
+use cathedral_kernel_contracts::user as abi;
+use cathedral_platform_contracts::input;
 use cathedral_user_runtime::{Error, time};
 pub(super) fn next(connections: &mut Connections) -> Result<input::Event, Error> {
     for _ in 0..3 {

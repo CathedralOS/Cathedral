@@ -73,7 +73,7 @@ impl Drop for Frames<'_> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use cathedral_contracts::boot::{BootMemory, MemoryKind, MemoryRegion};
+    use crate::memory::inventory::{BootMemory, MemoryKind, MemoryRegion};
     fn allocator() -> FrameAllocator {
         let mut memory = BootMemory::new();
         memory

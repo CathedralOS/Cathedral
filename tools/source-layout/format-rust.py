@@ -7,7 +7,7 @@ import re
 import subprocess
 
 WORKSPACE = Path(__file__).resolve().parents[2] / 'source-rs'
-LAYERS = ('kernel', 'platform', 'distribution', 'contracts', 'foundation')
+LAYERS = ('kernel', 'platform', 'distribution', 'foundation')
 
 
 def main():

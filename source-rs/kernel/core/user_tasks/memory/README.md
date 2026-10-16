@@ -29,7 +29,7 @@ The wire packet is the endpoint-transfer layout: length and local handle as two
 little-endian u64 words, followed by 64 bytes. Memory and endpoint attachments
 use distinct receive operations; plain messages work with either. A raw numeric
 handle in message bytes conveys no authority. These are experimental syscalls
-56 through 61 in [the shared ABI](../../../../contracts/user.rs), not stable OS APIs.
+56 through 61 in [the shared ABI](../../../contracts/user.rs), not stable OS APIs.
 
 ## Funding and limits
 

@@ -52,7 +52,9 @@ impl Service {
     pub fn stopped(&self) -> Result<bool, Error> {
         match self.child.wait_until(time::now()?) {
             Ok(_) => Ok(true),
-            Err(Error(code)) if code == cathedral_contracts::user::TIMED_OUT as i64 => Ok(false),
+            Err(Error(code)) if code == cathedral_kernel_contracts::user::TIMED_OUT as i64 => {
+                Ok(false)
+            }
             Err(error) => Err(error),
         }
     }

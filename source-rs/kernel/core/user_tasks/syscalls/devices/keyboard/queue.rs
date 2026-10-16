@@ -46,7 +46,7 @@ impl ByteQueue {
     pub fn pop(&mut self) -> Option<u64> {
         if self.lost {
             self.lost = false;
-            return Some(cathedral_contracts::user::KEYBOARD_LOST);
+            return Some(cathedral_kernel_contracts::user::KEYBOARD_LOST);
         }
         if self.len == 0 {
             return None;

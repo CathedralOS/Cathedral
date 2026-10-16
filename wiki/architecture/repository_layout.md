@@ -11,14 +11,16 @@ supersedes ADR 0001's flat grouping. `source/` contains Omega target code;
 Cathedral/
   source/                  Omega implementation: everything that ships
     kernel/
+      contracts/           Public kernel ABI (implemented in Rust lab)
       boot/                Firmware entry and handoff
       core/                Scheduling, memory, capabilities, IPC, admission
       arch/                CPU mechanisms and privileged board adapters
     platform/
+      contracts/           Public service protocols (implemented in Rust lab)
       services/            Shared system services (planned)
       drivers/             Device programs and pure hardware facts
       libraries/           Reusable algorithms, protocol clients and ports
-    contracts/             Shared ABI and platform interface vocabulary
+    contracts/             Legacy Omega external UEFI declarations
     foundation/            Kernel-safe shared primitives (planned)
     distribution/          Cathedral's one built-in distribution
       profile.json         Boot composition consumed by the host harness
@@ -82,18 +84,25 @@ This migration does not implement or finalize the future compositor protocol.
 ## The dependency law
 
 ```text
-distribution       -> platform public packages, contracts, foundation
-platform           -> platform packages, contracts, foundation
-kernel/core        -> kernel/arch, contracts, foundation, pure hardware facts
-kernel/arch        -> contracts, foundation, pure hardware facts
-kernel/boot        -> kernel packages, contracts, foundation
-contracts          -> no implementation packages
+distribution       -> platform packages, kernel/contracts, foundation
+platform           -> platform packages, kernel/contracts, foundation
+kernel/core        -> kernel/arch, kernel/contracts, foundation, pure hardware facts
+kernel/arch        -> kernel/contracts, foundation, pure hardware facts
+kernel/boot        -> kernel packages, foundation
+kernel/contracts   -> foundation only; no implementation packages
+platform/contracts -> kernel/contracts, foundation; no implementation packages
 foundation         -> no implementation packages
 ```
 
 - Kernel and platform never depend on distribution implementations.
-- Platform and distribution never import kernel implementation packages. They
-  target contracts and receive explicitly supplied operations or capabilities.
+- Platform and distribution may import the independently built `kernel/contracts`
+  package, never kernel implementation packages. Public definitions do not link
+  the kernel into an app. Operations and capabilities are explicitly supplied.
+- The kernel does not import platform service protocols. Shared display geometry
+  belongs to the kernel framebuffer boundary; drawing requests belong to the
+  platform display protocol.
+- A contract package cannot import its provider implementation. Nesting it under
+  its owner identifies responsibility, not a dependency on that owner's executable.
 - Profiles select the kernel entry as composition data, not a userspace import.
 - The Rust profile also selects a separately compiled distribution program.
   Host tooling supplies its ELF artifact to boot; the kernel's loader consumes
@@ -120,8 +129,25 @@ and a separately compiled distribution program in private ring-3 address spaces.
 Its boot/core and bootstrap UART remain privileged; the folder boundary alone
 still supplies no containment or capability authority.
 
-Frozen cross-component ABI belongs in `contracts/`. Private protocols, manifests,
-proofs, migrations and tests stay with their owner. `foundation/` is reserved for
+Cross-component contracts live with the subsystem that defines their semantics.
+In Rust, `kernel/contracts` owns the syscall ABI, page capabilities and framebuffer
+aperture record. `platform/contracts` owns display/compositor, input, matrix and
+catalog protocols, independently of their implementations. Distribution-specific
+coordination stays under distribution. A contract can be experimental: naming it
+as a boundary does not freeze its ABI or promise stability.
+
+Internal records and ordinary library traits need not become public OS protocols.
+The boot memory inventory belongs to `kernel/core/memory/inventory.rs`; firmware
+adapters construct it and the core validates it. The synchronous block `Device`
+trait belongs to `platform/libraries/block-device`, shared by drivers and storage
+adapters. Neither requires a universal contracts package.
+
+Rust's old top-level contracts crate has been retired. Omega's existing
+`source/contracts/uefi` holds external firmware declarations and remains at its
+current paths to preserve port provenance; it is not a precedent for collecting
+new kernel/platform protocols in a universal root. Its existing dependencies remain
+checked separately. Private protocols, manifests, proofs, migrations and tests
+stay with their owner. `foundation/` is reserved for
 small kernel-safe primitives without ambient authority. Entry files follow the [discoverability architecture](discoverability.md):
 show real orchestration at one level, with named routes into the next owners.
 

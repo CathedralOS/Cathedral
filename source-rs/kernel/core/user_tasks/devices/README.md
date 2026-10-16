@@ -22,7 +22,7 @@ resetting hardware. Name allocation precedes fallible process admission; failure
 publishes no device authority. A launch right is not register authority, and
 sending the numeric device name over IPC does not delegate it.
 
-The six experimental operations in [user.rs](../../../../contracts/user.rs)
+The six experimental operations in [user.rs](../../../contracts/user.rs)
 are `DEVICE_HANDLE`, `DEVICE_READ8`, `DEVICE_WRITE8`, `DEVICE_IRQ_WAIT`,
 `DEVICE_IRQ_ARM` and `DEVICE_RELEASE` (62 through 67). Register offsets are
 relative to the granted aperture, with byte width and checked values. There is

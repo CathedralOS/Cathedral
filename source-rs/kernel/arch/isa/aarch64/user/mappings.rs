@@ -123,7 +123,7 @@ impl UserMappings {
     /// Same inactive-tree custody; caller exclusively owns the reserved device aperture.
     pub unsafe fn map_framebuffer(
         &mut self,
-        _fb: cathedral_contracts::display::Framebuffer,
+        _fb: cathedral_kernel_contracts::framebuffer::Framebuffer,
         _frames: &mut impl FrameSource,
     ) -> Result<(), MemoryError> {
         Err(MemoryError::UnsupportedCpu)

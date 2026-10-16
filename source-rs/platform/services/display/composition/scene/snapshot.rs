@@ -1,6 +1,7 @@
 //! Validate a bounded snapshot in scratch storage before the client publishes it.
 use super::{Draw, Rect, Scene};
-use cathedral_contracts::{composition as wire, user as abi};
+use cathedral_kernel_contracts::user as abi;
+use cathedral_platform_contracts::display::composition as wire;
 
 impl Scene {
     pub fn decode(&mut self, bytes: &[u8]) -> Result<(), u64> {

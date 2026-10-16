@@ -7,7 +7,7 @@ pub fn initialize(heap: &'static Heap, pages: usize) -> Result<(), Error> {
     let handle = raw::allocate(pages)?;
     let result = (|| {
         let address = raw::address(handle)?;
-        let bytes = raw::pages(handle)? * cathedral_contracts::memory::PAGE_BYTES;
+        let bytes = raw::pages(handle)? * cathedral_kernel_contracts::memory::PAGE_BYTES;
         // SAFETY: Fresh uniquely owned RW/NX mapping. This module never exposes
         // its handle or releases success; the kernel reclaims it on process death.
         unsafe { heap.initialize(address as *mut u8, bytes) }

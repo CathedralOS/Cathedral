@@ -6,7 +6,7 @@ mod exchange;
 mod lifetime;
 mod probes;
 mod readiness;
-use cathedral_contracts::user as abi;
+use cathedral_kernel_contracts::user as abi;
 use cathedral_user_runtime::{Error, ipc::Handle};
 cathedral_user_runtime::entry!(main);
 

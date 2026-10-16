@@ -5,7 +5,7 @@ use cathedral_user_runtime::{
     write,
 };
 pub fn transport() -> Result<(), Error> {
-    use cathedral_contracts::user as abi;
+    use cathedral_kernel_contracts::user as abi;
     use cathedral_user_runtime::disk;
     for register in [0, 9, u64::MAX] {
         assert_eq!(
@@ -39,7 +39,7 @@ fn raw_transfer(pointer: u64, direction: u64, length: u64) -> u64 {
     // SAFETY: Test deliberately supplies hostile syscall arguments; no pointer
     // is dereferenced here. The kernel must reject them before device effects.
     unsafe {
-        core::arch::asm!("int 0x80", inlateout("rax") cathedral_contracts::user::DISK_TRANSFER => result,
+        core::arch::asm!("int 0x80", inlateout("rax") cathedral_kernel_contracts::user::DISK_TRANSFER => result,
             in("rdi") pointer, in("rsi") direction, in("rdx") length, options(nostack, preserves_flags));
     }
     result

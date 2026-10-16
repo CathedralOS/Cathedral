@@ -4,6 +4,21 @@ This map connects implemented mechanisms to their integrated consumers, proofs
 and remaining restrictions. The [lab guide](README.md) owns detailed ABI/build
 instructions. [Owner questions](../OWNER_QUESTIONS.md) own unresolved semantics.
 
+## Interface ownership
+
+The universal Rust contracts crate has been retired. [Kernel contracts](kernel/contracts/README.md)
+define the public syscall/page/framebuffer boundary; [platform contracts](platform/contracts/README.md)
+define service messages without importing their providers. Display requests and
+kernel framebuffer information now have separate owners. The core owns its internal
+[boot memory inventory](kernel/core/memory/inventory.rs), while the platform
+[block-device library](platform/libraries/block-device/README.md) owns the storage
+adapter trait. Distribution-specific session messages remain in distribution.
+
+The layout checker allows userspace to import the public kernel contract package,
+rejects kernel implementation imports, prevents contracts from importing providers,
+and keeps platform protocols out of kernel dependencies. This changes source/package
+ownership, not syscall numbers, packet encodings, grants or on-disk formats.
+
 ## DBFS storage-layout investigation
 
 The [foundation proposal](../wiki/proposals/0002_dbfs_storage_foundation.md) now

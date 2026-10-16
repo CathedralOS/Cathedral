@@ -1,6 +1,8 @@
 //! Admit device adapters, stage code authority and hand a funded pool to the root.
 use super::*;
-use cathedral_contracts::{composition as c, display, pointer};
+use cathedral_platform_contracts::display;
+use cathedral_platform_contracts::display::composition as c;
+use cathedral_platform_contracts::display::pointer;
 use cathedral_user_runtime::task::{self, Executable, Port};
 pub(super) struct Session {
     pub matrix: Pair,
@@ -37,7 +39,7 @@ pub(super) fn start() -> Session {
         let control = Port::at(3).unwrap().connect().unwrap();
         control
             .0
-            .send(cathedral_contracts::storage::HEALTH)
+            .send(cathedral_platform_contracts::storage::HEALTH)
             .unwrap();
         assert_eq!(control.1.receive(&mut [0; 64]).unwrap(), 5);
         (storage, control)

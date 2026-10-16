@@ -169,7 +169,7 @@ def main():
     sources = [*LAB.glob('*.rs'), *LAB.glob('*.toml'), *LAB.glob('chunk_tree/*.rs'),
                *HERE.glob('*.rs'), *HERE.glob('stress/**/*.rs'), *HERE.glob('volume/**/*.rs'), HERE / 'run.py', LAB / 'Cargo.lock']
     shared = ROOT / 'source-rs/platform/libraries/storage-volume'
-    sources.extend([*shared.glob('*.rs'), shared / 'Cargo.toml', ROOT / 'source-rs/contracts/block.rs'])
+    sources.extend([*shared.glob('*.rs'), shared / 'Cargo.toml', ROOT / 'source-rs/platform/libraries/block-device/lib.rs'])
     context = {
         'utc': datetime.now(timezone.utc).isoformat(),
         'platform': platform.platform(),

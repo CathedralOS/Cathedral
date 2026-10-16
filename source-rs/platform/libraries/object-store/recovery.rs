@@ -4,7 +4,8 @@ use super::{
     catalog::{Catalog, Entry},
     format,
 };
-use cathedral_contracts::{block::Device, user as abi};
+use cathedral_block_device::Device;
+use cathedral_kernel_contracts::user as abi;
 pub(super) fn open(disk: &mut impl Device) -> Result<(u64, Catalog), u64> {
     if disk.sectors() < 4 {
         return Err(abi::IO_ERROR);

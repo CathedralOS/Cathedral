@@ -8,8 +8,8 @@ mod pointer;
 cathedral_user_runtime::entry_with_environment!(main);
 fn main(mode: u64, generation: u64, environment: cathedral_user_runtime::task::Environment) -> u64 {
     match mode {
-        cathedral_contracts::pointer::SOURCE_MODE => pointer::run(),
-        cathedral_contracts::matrix::SOURCE_MODE => matrix::run(generation, environment),
+        cathedral_platform_contracts::display::pointer::SOURCE_MODE => pointer::run(),
+        cathedral_platform_contracts::matrix::SOURCE_MODE => matrix::run(generation, environment),
         _ => keyboard::run(mode, generation),
     }
 }

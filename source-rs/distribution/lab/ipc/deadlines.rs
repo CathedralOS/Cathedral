@@ -1,5 +1,5 @@
 //! Deadline completion, authority and retained-message integration probes.
-use cathedral_contracts::user as abi;
+use cathedral_kernel_contracts::user as abi;
 use cathedral_user_runtime::{Error, ipc::Handle, time, yield_now};
 
 fn raw(input: Handle, address: u64, deadline: u64) -> u64 {

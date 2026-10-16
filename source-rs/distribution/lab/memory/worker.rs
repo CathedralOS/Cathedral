@@ -1,5 +1,5 @@
 //! Raw ABI probes intentionally bypass runtime ownership to test kernel enforcement.
-use cathedral_contracts::user as abi;
+use cathedral_kernel_contracts::user as abi;
 use cathedral_user_runtime::link::Link;
 use cathedral_user_runtime::{Error, ipc::Handle, memory::raw};
 pub const FILL: u64 = 100;

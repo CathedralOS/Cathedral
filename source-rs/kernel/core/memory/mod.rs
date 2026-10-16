@@ -2,6 +2,7 @@
 
 #[allow(unsafe_code)]
 pub mod heap;
+pub mod inventory;
 #[cfg(test)]
 mod tests;
 

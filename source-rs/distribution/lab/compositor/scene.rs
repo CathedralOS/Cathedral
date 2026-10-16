@@ -1,5 +1,5 @@
 //! Distribution appearance. The platform knows only scene nodes and connection scopes.
-use cathedral_contracts::composition::{self as w, Node};
+use cathedral_platform_contracts::display::composition::{self as w, Node};
 pub fn snapshot(role: u64, invalid: bool) -> [u8; w::SNAPSHOT_BYTES] {
     interactive(role, invalid, None)
 }

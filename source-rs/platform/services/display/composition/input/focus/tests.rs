@@ -1,6 +1,6 @@
 use super::*;
 use crate::composition::scene::{Rect, Scene};
-use cathedral_contracts::composition::{self as c, Node};
+use cathedral_platform_contracts::display::composition::{self as c, Node};
 fn world() -> ([Client; 3], Tree, Focus) {
     let mut clients = core::array::from_fn(|i| {
         let mut c = Client::empty();

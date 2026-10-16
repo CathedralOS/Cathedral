@@ -1,7 +1,8 @@
 //! Trap-side validation and queueing only. Page-table edits and allocation run on the boot stack.
 use super::Session;
 use crate::scheduler::Event;
-use cathedral_contracts::{memory as wire, user as abi};
+use cathedral_kernel_contracts::memory as wire;
+use cathedral_kernel_contracts::user as abi;
 pub(super) fn syscall(
     session: &mut Session,
     slot: usize,

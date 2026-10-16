@@ -1,6 +1,7 @@
 // Immediate display protocol: receive, validate and draw through the shared surface.
 use crate::surface;
-use cathedral_contracts::{display as wire, user as abi};
+use cathedral_kernel_contracts::user as abi;
+use cathedral_platform_contracts::display as wire;
 use cathedral_user_runtime::{Error, server::Server};
 pub fn run(_fault_after: u64, _generation: u64) -> u64 {
     #[cfg(feature = "recovery-lab")]

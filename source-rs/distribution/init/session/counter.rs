@@ -1,6 +1,6 @@
 //! Supervise the independent private-counter app without replacing its storage provider.
 use super::child::Service;
-use cathedral_contracts::user as abi;
+use cathedral_kernel_contracts::user as abi;
 use cathedral_user_runtime::{Error, write};
 pub fn ensure_ready(counter: &mut Service) -> Result<(), Error> {
     for attempt in 0..3 {

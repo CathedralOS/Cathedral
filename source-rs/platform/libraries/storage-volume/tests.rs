@@ -1,5 +1,5 @@
 use super::*;
-use cathedral_contracts::block::SECTOR;
+use cathedral_block_device::SECTOR;
 use std::{vec, vec::Vec};
 
 struct Disk {

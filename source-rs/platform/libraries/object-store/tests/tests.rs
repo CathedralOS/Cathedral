@@ -1,6 +1,6 @@
 // Storage failure scenarios. disk models volatile caches and torn sectors.
 use super::*;
-use cathedral_contracts::storage as wire;
+use cathedral_platform_contracts::storage as wire;
 use disk::Disk;
 
 fn replace(

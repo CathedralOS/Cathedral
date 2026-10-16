@@ -1,6 +1,8 @@
 // Persistent app loop: retain desired state, wait for input/control, reconnect on command.
 use super::*;
-use cathedral_contracts::{input, interaction as s, pointer as p};
+use cathedral_platform_contracts::display::interaction as s;
+use cathedral_platform_contracts::display::pointer as p;
+use cathedral_platform_contracts::input;
 use cathedral_user_runtime::{ipc, time};
 type Pair = (Handle, Handle);
 struct App {

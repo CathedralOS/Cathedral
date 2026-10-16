@@ -5,7 +5,7 @@
 //! This is not a database engine or a partition/authority discovery mechanism.
 pub mod header;
 mod region;
-use cathedral_contracts::block::Device;
+use cathedral_block_device::Device;
 use header::{BLOCK, Header};
 pub use region::BlockRegion;
 

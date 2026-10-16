@@ -1,5 +1,5 @@
 [package]
-name = "cathedral-contracts"
+name = "cathedral-platform-contracts"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -11,3 +11,6 @@ path = "lib.rs"
 [lints]
 workspace = true
 
+
+[dependencies]
+cathedral-kernel-contracts.workspace = true

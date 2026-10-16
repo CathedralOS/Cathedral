@@ -1,6 +1,6 @@
 //! The actual UART protocol lives in platform/drivers/uart_16550/interrupt.rs.
 //! This fixture supplies its syscall transport and deliberately abandons dirty hardware.
-use cathedral_contracts::user as abi;
+use cathedral_kernel_contracts::user as abi;
 use cathedral_uart_16550::interrupt::{Registers, Uart};
 use cathedral_user_runtime::{
     Error,

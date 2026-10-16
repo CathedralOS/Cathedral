@@ -1,7 +1,7 @@
 //! Borrow page-object backing; reserve tables before runtime edits and publish bookkeeping atomically.
 use super::*;
 use cathedral_arch::memory::{NoFrames, Permissions};
-use cathedral_contracts::memory as wire;
+use cathedral_kernel_contracts::memory as wire;
 impl UserSpace {
     /// # Safety
     /// IRQs masked, inactive owned tree. On failure retire this entire space.

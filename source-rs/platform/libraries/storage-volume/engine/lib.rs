@@ -9,7 +9,7 @@ mod tests;
 // Experimental redb entrance: inspect an existing ready volume, adapt its
 // logical extent to the granted sectors, then validate the engine identity.
 use alloc::string::{String, ToString};
-use cathedral_contracts::block::Device;
+use cathedral_block_device::Device;
 use cathedral_storage_volume::{BlockRegion, inspect};
 pub use redb;
 use redb::{Database, ReadableDatabase, ReadableTable, TableDefinition};

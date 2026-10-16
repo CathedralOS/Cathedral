@@ -1,8 +1,8 @@
 //! Synchronous private-catalog transport. The accepted link selects the root.
 //! One outstanding request; errors never automatically retry mutations.
-//! contracts/storage.rs defines packets; platform/services/storage/service/service.rs binds and serves roots.
+//! platform/contracts/storage.rs defines packets; platform/services/storage/service/service.rs binds and serves roots.
 use crate::{Error, ipc::Handle, link::Link, time};
-use cathedral_contracts::storage as wire;
+use cathedral_platform_contracts::storage as wire;
 pub struct Client {
     link: Link,
     pair: Option<(Handle, Handle)>,
@@ -37,8 +37,9 @@ impl Client {
         generation: u64,
         payload: &[u8],
     ) -> Result<wire::Record, Error> {
-        let request = wire::request(op, object, generation, payload)
-            .ok_or(Error(cathedral_contracts::user::INVALID_ARGUMENT as i64))?;
+        let request = wire::request(op, object, generation, payload).ok_or(Error(
+            cathedral_kernel_contracts::user::INVALID_ARGUMENT as i64,
+        ))?;
         let (send, receive) = self.pair()?;
         let result = (|| {
             send.send(&request)?;

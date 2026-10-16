@@ -2,7 +2,7 @@
 use super::{Session, complete};
 use crate::scheduler::Event;
 use crate::user_tasks::time as deadline;
-use cathedral_contracts::user as abi;
+use cathedral_kernel_contracts::user as abi;
 
 #[derive(Clone, Copy)]
 pub(in super::super) struct Wait {

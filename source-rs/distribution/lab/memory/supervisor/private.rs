@@ -2,7 +2,7 @@ use super::*;
 pub(super) fn exercise(producer: &Peer) {
     for size in [
         0,
-        cathedral_contracts::memory::MAX_PAGES as u64 + 1,
+        cathedral_kernel_contracts::memory::MAX_PAGES as u64 + 1,
         u64::MAX,
     ] {
         assert_eq!(

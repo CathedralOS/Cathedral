@@ -23,7 +23,7 @@ durable format and root-local protocol are unchanged.
 
 Requests are 64 bytes: four little-endian u64s `(operation, object, expected
 root revision, payload length)`, then 32 payload bytes. Unused bytes must be zero.
-The shared constants and record encoding live in `contracts/storage.rs`.
+The shared constants and record encoding live in `platform/contracts/storage.rs`.
 
 | Operation | Arguments | Result |
 | --- | --- | --- |

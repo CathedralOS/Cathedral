@@ -1,6 +1,8 @@
 // Lab sequencing and recovery policy. Readback checks the device, not the scene model.
 use super::exchange;
-use cathedral_contracts::{composition as w, display, user as abi};
+use cathedral_kernel_contracts::user as abi;
+use cathedral_platform_contracts::display;
+use cathedral_platform_contracts::display::composition as w;
 use cathedral_user_runtime::{
     ipc::Handle,
     task::{Child, Launch, Outcome, Port},

@@ -1,6 +1,7 @@
 // A connection owns one bounded unpublished batch. Payloads hold read authority;
 // clearing a batch drops it without touching the previously published scene.
-use cathedral_contracts::{matrix as wire, user as abi};
+use cathedral_kernel_contracts::user as abi;
+use cathedral_platform_contracts::matrix as wire;
 
 pub struct Batch<T> {
     pub incarnation: u64,

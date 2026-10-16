@@ -9,7 +9,8 @@ publish.workspace = true
 path = "lib.rs"
 
 [dependencies]
-cathedral-contracts.workspace = true
+cathedral-kernel-contracts.workspace = true
+cathedral-platform-contracts.workspace = true
 cathedral-user-heap = { workspace = true, optional = true }
 
 [features]

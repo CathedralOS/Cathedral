@@ -1,7 +1,7 @@
 //! QEMU PC controller transport. Scan-code policy belongs to its user provider.
 use crate::board::{DeviceError, InputEvent};
 use crate::isa::x86::{in8, out8};
-use cathedral_contracts::user as abi;
+use cathedral_kernel_contracts::user as abi;
 /// # Safety
 /// Sole boot CPU, IRQs off, exclusive PIC ownership and vector 33 installed.
 pub unsafe fn interrupts(enabled: bool) {

@@ -1,5 +1,5 @@
 use super::backend::Backend;
-use cathedral_contracts::block::{Device, SECTOR};
+use cathedral_block_device::{Device, SECTOR};
 use cathedral_storage_volume::{
     BlockRegion,
     header::{DATA_START, Header},

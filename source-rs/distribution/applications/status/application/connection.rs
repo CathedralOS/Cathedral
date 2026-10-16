@@ -1,7 +1,7 @@
 //! Init status client: distribution/init/session/supervision/control.rs.
 //! Peer indices follow distribution/profile.json and session-protocol::link.
 //! Connections and observed health; no provider lifecycle authority lives here.
-use cathedral_contracts::user as abi;
+use cathedral_kernel_contracts::user as abi;
 use cathedral_session_protocol as session;
 use cathedral_user_runtime::{Error, ipc::Handle, link::Link, time};
 pub struct Connections {

@@ -1,7 +1,7 @@
 //! Arbitrary byte IO over exclusively borrowed sectors. Validate the whole range
 //! before IO; partial writes preserve neighbouring bytes with read/modify/write.
 use crate::Error;
-use cathedral_contracts::block::{Device, SECTOR};
+use cathedral_block_device::{Device, SECTOR};
 
 pub struct BlockRegion<'a, D> {
     device: &'a mut D,

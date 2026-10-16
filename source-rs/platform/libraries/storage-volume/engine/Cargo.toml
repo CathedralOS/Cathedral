@@ -7,7 +7,7 @@ publish.workspace = true
 [lib]
 path = "lib.rs"
 [dependencies]
-cathedral-contracts.workspace = true
+cathedral-block-device.workspace = true
 cathedral-storage-volume.workspace = true
 redb = { version = "=4.4.0", default-features = false, features = ["experimental-api-5"] }
 spinning_top = "0.2.5"

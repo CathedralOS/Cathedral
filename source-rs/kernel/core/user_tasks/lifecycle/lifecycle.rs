@@ -2,7 +2,7 @@
 use super::{Error, Exit, Frames, Session, admission, next_epoch, syscalls, taskcalls};
 use crate::{scheduler::TaskState, user_tasks::Program};
 use cathedral_arch as arch;
-use cathedral_contracts::user as abi;
+use cathedral_kernel_contracts::user as abi;
 
 pub(super) fn close(session: &mut Session, slot: usize) {
     super::syscalls::devices::leased::close(session, slot);

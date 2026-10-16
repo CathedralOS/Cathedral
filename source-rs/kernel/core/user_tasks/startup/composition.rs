@@ -22,7 +22,7 @@ pub(super) fn validate(initial_count: usize, config: &Config<'_>) -> Result<usiz
     }
     if count > crate::ipc::MAX_TASKS
         || config.supervision.len() + config.executables.len()
-            > cathedral_contracts::user::MAX_LAUNCHES
+            > cathedral_kernel_contracts::user::MAX_LAUNCHES
     {
         return Err(Error::InvalidCount);
     }
@@ -87,14 +87,14 @@ pub(super) fn grants(
         }
 
         launches.push(LaunchState {
-            images: [None; cathedral_contracts::user::MAX_LAUNCHES],
+            images: [None; cathedral_kernel_contracts::user::MAX_LAUNCHES],
             template: Some(index),
             dynamic: false,
             frame_limit: launch.frame_limit,
             cpu_origin: 0,
-            delegated: [0; cathedral_contracts::user::MAX_LAUNCHES],
+            delegated: [0; cathedral_kernel_contracts::user::MAX_LAUNCHES],
             delegated_count: 0,
-            initial: [0; cathedral_contracts::user::MAX_INITIAL_ENDPOINTS],
+            initial: [0; cathedral_kernel_contracts::user::MAX_INITIAL_ENDPOINTS],
             initial_count: 0,
             model: Supervisor::new(
                 names
@@ -114,14 +114,14 @@ pub(super) fn grants(
     }
     for index in config.supervision.len()..count - initial_count {
         launches.push(LaunchState {
-            images: [None; cathedral_contracts::user::MAX_LAUNCHES],
+            images: [None; cathedral_kernel_contracts::user::MAX_LAUNCHES],
             template: None,
             dynamic: true,
             frame_limit: 0,
             cpu_origin: 0,
-            delegated: [0; cathedral_contracts::user::MAX_LAUNCHES],
+            delegated: [0; cathedral_kernel_contracts::user::MAX_LAUNCHES],
             delegated_count: 0,
-            initial: [0; cathedral_contracts::user::MAX_INITIAL_ENDPOINTS],
+            initial: [0; cathedral_kernel_contracts::user::MAX_INITIAL_ENDPOINTS],
             initial_count: 0,
             model: Supervisor::vacant(initial_count + index),
             endpoint_base: config.endpoints.len() + 2 * index,
@@ -154,9 +154,9 @@ pub(super) fn grants(
             endpoint_base: config.endpoints.len() + 2 * (count - initial_count + index),
         });
     }
-    let mut defaults = [0; cathedral_contracts::user::MAX_TASKS];
+    let mut defaults = [0; cathedral_kernel_contracts::user::MAX_TASKS];
     defaults[..initial_count + config.supervision.len()]
-        .fill(cathedral_contracts::user::DEFAULT_CHANNELS);
+        .fill(cathedral_kernel_contracts::user::DEFAULT_CHANNELS);
     let limits = if config.channel_limits.is_empty() {
         &defaults[..count]
     } else {

@@ -1,16 +1,17 @@
 [workspace]
 resolver = "3"
 members = [
-    # Contracts
-    "contracts",
     # Kernel
+    "kernel/contracts",
     "kernel/arch",
     "kernel/boot/uefi",
     "kernel/core",
     # Platform
+    "platform/contracts",
     "platform/drivers/ata-pio",
     "platform/drivers/uart_16550",
     "platform/libraries/bitmap-font",
+    "platform/libraries/block-device",
     "platform/libraries/object-store",
     "platform/libraries/storage-volume",
     "platform/libraries/storage-volume/engine",
@@ -42,7 +43,7 @@ members = [
     "distribution/libraries/boot-scene",
     "distribution/libraries/session-protocol",
 ]
-default-members = ["platform/libraries/user-heap", "platform/libraries/storage-volume", "platform/drivers/uart_16550", "distribution/lab/rendering", "platform/libraries/object-store", "contracts", "kernel/core", "kernel/arch", "platform/services/input", "platform/services/display", "platform/services/matrix", "platform/libraries/bitmap-font"]
+default-members = ["platform/libraries/user-heap", "platform/libraries/storage-volume", "platform/drivers/uart_16550", "distribution/lab/rendering", "platform/libraries/object-store", "kernel/contracts", "platform/contracts", "platform/libraries/block-device", "kernel/core", "kernel/arch", "platform/services/input", "platform/services/display", "platform/services/matrix", "platform/libraries/bitmap-font"]
 
 [workspace.package]
 version = "0.0.0"
@@ -59,7 +60,9 @@ cathedral-object-store = { path = "platform/libraries/object-store" }
 cathedral-storage-service = { path = "platform/services/storage" }
 cathedral-session-protocol = { path = "distribution/libraries/session-protocol" }
 cathedral-bitmap-font = { path = "platform/libraries/bitmap-font" }
-cathedral-contracts = { path = "contracts" }
+cathedral-kernel-contracts = { path = "kernel/contracts" }
+cathedral-platform-contracts = { path = "platform/contracts" }
+cathedral-block-device = { path = "platform/libraries/block-device" }
 cathedral-core = { path = "kernel/core" }
 cathedral-uart-16550 = { path = "platform/drivers/uart_16550" }
 cathedral-arch = { path = "kernel/arch" }

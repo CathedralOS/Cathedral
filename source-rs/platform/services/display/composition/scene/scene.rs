@@ -1,8 +1,8 @@
 // Retained scene lifetime: bind incarnation, validate revision/snapshot, then publish by swap.
 // snapshot owns wire decoding; raster owns hit testing, pixels and damage; hosting owns clips.
 // No device access or IPC authority.
-use cathedral_contracts::composition as wire;
-use cathedral_contracts::user as abi;
+use cathedral_kernel_contracts::user as abi;
+use cathedral_platform_contracts::display::composition as wire;
 #[derive(Clone, Copy, Default, PartialEq, Eq)]
 struct Draw {
     kind: u64,

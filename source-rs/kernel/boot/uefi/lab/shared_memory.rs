@@ -15,7 +15,7 @@ pub fn exercise(memory: &mut PreparedMemory, console: &mut Console) {
             executable: Executable::Elf(ELF),
             arguments: [role, mode],
         });
-        let grants = [0, 1, 2].map(|task| cathedral_contracts::memory::Grant {
+        let grants = [0, 1, 2].map(|task| cathedral_kernel_contracts::memory::Grant {
             task,
             private_pages: 1,
             shared_pages: 2,
@@ -70,8 +70,8 @@ pub fn exercise(memory: &mut PreparedMemory, console: &mut Console) {
             };
             assert_eq!(
                 fault.address,
-                cathedral_contracts::memory::address(
-                    cathedral_contracts::memory::MAX_PRIVATE_REGIONS
+                cathedral_kernel_contracts::memory::address(
+                    cathedral_kernel_contracts::memory::MAX_PRIVATE_REGIONS
                 )
             );
             #[cfg(target_arch = "x86_64")]

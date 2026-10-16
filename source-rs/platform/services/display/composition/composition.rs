@@ -38,7 +38,7 @@ impl<'a> Composition<'a> {
             x,
             y,
             row,
-            &[&[]; cathedral_contracts::composition::MATRIX_TILES],
+            &[&[]; cathedral_platform_contracts::display::composition::MATRIX_TILES],
         );
     }
     pub fn paint_images(
@@ -46,7 +46,7 @@ impl<'a> Composition<'a> {
         x: u64,
         y: u64,
         row: &mut [u32],
-        images: &[&[u8]; cathedral_contracts::composition::MATRIX_TILES],
+        images: &[&[u8]; cathedral_platform_contracts::display::composition::MATRIX_TILES],
     ) {
         row.fill(self.background);
         self.labels.paint_row(x, y, row);

@@ -1,7 +1,7 @@
 // Bounded IPC entrance: authorize locally, stage transfers, then commit delivery.
 // Boot composition and ordinary channel creation share transport and lifetime rules.
 // Descend into grants for local names, channels for creation/escrow, lifecycle for teardown.
-use cathedral_contracts::user as abi;
+use cathedral_kernel_contracts::user as abi;
 use grants::{Grant, Grants};
 pub const MAX_EPOCH: u64 = (1 << 47) - 1;
 

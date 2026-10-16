@@ -56,7 +56,7 @@ fn append_executables(source: &mut String, count: usize) {
         .unwrap_or_else(|_| "0".into())
         .parse()
         .unwrap();
-    assert!(images + count <= cathedral_contracts::user::MAX_LAUNCHES);
+    assert!(images + count <= cathedral_kernel_contracts::user::MAX_LAUNCHES);
     source.push_str("static EXECUTABLES: &[Program<'static>] = &[\n");
     for index in 0..images {
         bundle(

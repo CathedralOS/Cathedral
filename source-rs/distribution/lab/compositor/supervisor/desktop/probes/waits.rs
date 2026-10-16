@@ -11,7 +11,9 @@ pub(super) fn check(display: Pair, app: Pair) {
     let words = Words([display.1.raw(); 8]);
     assert_eq!(raw(words.0.as_ptr() as u64, 8, deadline), abi::TIMED_OUT);
     app.0
-        .send(&cathedral_contracts::display::encode([20, 0, 0, 0, 0, 0]))
+        .send(&cathedral_platform_contracts::display::encode([
+            20, 0, 0, 0, 0, 0,
+        ]))
         .unwrap();
     let handles = [display.1, display.1, display.1, display.1, app.1];
     assert_eq!(ipc::wait_many(&handles, time::after(300).unwrap()), Ok(4));

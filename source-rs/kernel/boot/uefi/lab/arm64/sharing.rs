@@ -23,7 +23,7 @@ pub(super) fn exercise(
             program: program(role, 0),
             frame_limit: usize::MAX,
         });
-        let grants = [1, 2].map(|task| cathedral_contracts::memory::Grant {
+        let grants = [1, 2].map(|task| cathedral_kernel_contracts::memory::Grant {
             task,
             private_pages: 2,
             shared_pages: 2,
@@ -61,7 +61,7 @@ pub(super) fn exercise(
             assert_eq!(reports[1].exit, Some(Exit::Returned(0)));
         } else {
             assert!(
-                matches!(reports[1].exit,Some(Exit::Fault(f)) if f.vector==0x24 && f.address==cathedral_contracts::memory::USER_BASE)
+                matches!(reports[1].exit,Some(Exit::Fault(f)) if f.vector==0x24 && f.address==cathedral_kernel_contracts::memory::USER_BASE)
             );
         }
         assert_eq!(reports[2].exit, Some(Exit::Returned(0)));

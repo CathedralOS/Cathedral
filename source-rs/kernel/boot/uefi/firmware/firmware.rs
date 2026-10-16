@@ -2,13 +2,13 @@
 // applies Cathedral's conservative memory policy to its returned inventory.
 
 use crate::console::Console as SerialPort;
-use cathedral_contracts::boot::{BootMemory, MemoryKind, MemoryRegion};
+use cathedral_core::memory::inventory::{BootMemory, MemoryKind, MemoryRegion};
 use core::fmt::Write;
 use uefi::mem::memory_map::{MemoryAttribute, MemoryDescriptor, MemoryMap, MemoryType};
 
 pub struct BootInfo {
     #[cfg(feature = "bundled-user")]
-    pub framebuffer: Option<cathedral_contracts::display::Framebuffer>,
+    pub framebuffer: Option<cathedral_kernel_contracts::framebuffer::Framebuffer>,
     pub inventory: BootMemory,
     pub sections: image::LoadedSections,
 }

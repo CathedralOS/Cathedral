@@ -1,6 +1,7 @@
 // Persistent session policy: admit, authorize, measure idle, supervise and restore.
 use super::*;
-use cathedral_contracts::{interaction as s, pointer as p};
+use cathedral_platform_contracts::display::interaction as s;
+use cathedral_platform_contracts::display::pointer as p;
 use cathedral_user_runtime::Error;
 struct Desktop {
     base: Session,

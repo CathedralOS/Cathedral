@@ -50,7 +50,7 @@ Apps have separate connections and no device grant.
    three-byte stream packets, decoded by [mouse.rs](../../../platform/services/input/decoder/mouse.rs).
 3. Display [input dispatch](../../../platform/services/display/compositor/input.rs)
    authenticates source and app roles from accepted connections. The experimental
-   [wire contract](../../../contracts/pointer.rs) imports no implementation.
+   [wire contract](../../../platform/contracts/display/pointer.rs) imports no implementation.
 4. [Pointer state](../../../platform/services/display/composition/input/input.rs) owns leases and
    lifetime. [Routing](../../../platform/services/display/composition/input/routing.rs)
    selects targets; [cursor rendering](../../../platform/services/display/composition/input/cursor.rs)

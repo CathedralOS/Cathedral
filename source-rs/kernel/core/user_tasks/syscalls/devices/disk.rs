@@ -1,6 +1,6 @@
 //! Exclusive fixed-controller transport. No block addressing or storage policy.
 use super::Session;
-use cathedral_contracts::user as abi;
+use cathedral_kernel_contracts::user as abi;
 pub(in crate::user_tasks) fn syscall(
     session: &mut Session,
     slot: usize,

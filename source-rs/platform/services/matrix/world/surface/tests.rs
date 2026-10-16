@@ -231,10 +231,6 @@ fn image_preview_preserves_old_state_and_replay_retains_source_stride() {
         w.replay(0, 0).unwrap(),
         [wire::SURFACE_IMAGE, 1, 5, 290, 270, 10, 10, 40]
     );
-    assert!(cathedral_contracts::composition::valid_image(
-        10, 10, 40, 1480
-    ));
-    assert!(!cathedral_contracts::composition::valid_image(
-        10, 10, 40, 1479
-    ));
+    assert!(cathedral_platform_contracts::display::composition::valid_image(10, 10, 40, 1480));
+    assert!(!cathedral_platform_contracts::display::composition::valid_image(10, 10, 40, 1479));
 }

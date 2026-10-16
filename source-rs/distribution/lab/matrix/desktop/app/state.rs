@@ -1,7 +1,7 @@
 //! App schema over its matrix-local catalog capability. Persist before presenting;
 //! revoked bindings cannot save, and a replacement reads only committed state.
 use super::*;
-use cathedral_contracts::storage as store;
+use cathedral_platform_contracts::storage as store;
 pub(super) struct State {
     binding: u64,
     generation: u64,

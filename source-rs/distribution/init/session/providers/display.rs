@@ -1,7 +1,8 @@
-//! Display control client. Protocol: contracts/display.rs; peer:
+//! Display control client. Protocol: platform/contracts/display/display.rs; peer:
 //! platform/services/display/main.rs -> surface/surface.rs. The app uses a separate data link.
 use super::super::child::Service;
-use cathedral_contracts::{display, user as abi};
+use cathedral_kernel_contracts::user as abi;
+use cathedral_platform_contracts::display;
 use cathedral_user_runtime::Error;
 pub fn ensure_ready(service: &mut Service) -> Result<bool, Error> {
     for attempt in 0..3 {

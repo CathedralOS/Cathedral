@@ -136,7 +136,7 @@ fn run(
     endpoints: &[EndpointSpec],
     budget: usize,
 ) -> Result<alloc::vec::Vec<user_tasks::Report>, user_tasks::Error> {
-    let grants = [0, 1].map(|task| cathedral_contracts::memory::Grant {
+    let grants = [0, 1].map(|task| cathedral_kernel_contracts::memory::Grant {
         task,
         private_pages: 2,
         shared_pages: 2,

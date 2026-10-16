@@ -37,7 +37,10 @@ pub fn supervise() -> u64 {
     assert_eq!(vector, 14);
     assert_eq!(error & 31, 6);
     // All earlier allocations were released: the fixture reuses region slot zero.
-    assert_eq!(address, cathedral_contracts::memory::address(0) + 4096);
+    assert_eq!(
+        address,
+        cathedral_kernel_contracts::memory::address(0) + 4096
+    );
     cathedral_user_runtime::write(b"Cathedral: rendering rows and shared leaves agree; same-page native escape observed; page boundary fault contained\n").unwrap();
     0
 }

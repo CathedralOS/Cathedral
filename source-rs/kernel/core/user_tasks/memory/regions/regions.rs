@@ -1,9 +1,9 @@
 // Page-object authority and lifetime policy. Paging and frame custody live in user_tasks/memory/memory.rs.
 // A sealed accepted reader retains backing after producer death; no remote unmap of a live reader.
-use cathedral_contracts::{
-    memory::{Grant, MAX_PAGES, MAX_PRIVATE_REGIONS, MAX_REGIONS, MAX_SHARED_REGIONS},
-    user as abi,
+use cathedral_kernel_contracts::memory::{
+    Grant, MAX_PAGES, MAX_PRIVATE_REGIONS, MAX_REGIONS, MAX_SHARED_REGIONS,
 };
+use cathedral_kernel_contracts::user as abi;
 #[derive(Clone, Copy, Debug, Default)]
 pub struct Region {
     /// Persistent backing sponsor; accepted readers can outlive its process.
@@ -46,9 +46,9 @@ impl Regions {
         entries.resize(MAX_REGIONS, Region::default());
         let mut reads = alloc::vec::Vec::new();
         reads
-            .try_reserve_exact(cathedral_contracts::memory::MAX_READ_HANDLES)
+            .try_reserve_exact(cathedral_kernel_contracts::memory::MAX_READ_HANDLES)
             .map_err(|_| abi::NO_MEMORY)?;
-        reads.resize(cathedral_contracts::memory::MAX_READ_HANDLES, None);
+        reads.resize(cathedral_kernel_contracts::memory::MAX_READ_HANDLES, None);
         let mut model = Self {
             reads,
             names: crate::names::Names::default(),

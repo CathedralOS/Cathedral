@@ -1,7 +1,7 @@
 // Bounded launch authority and child lifecycle, independent of address spaces.
 // One boot-issued launch grant, one consenting peer port, one child at a time.
 use crate::ipc::MAX_TASKS;
-use cathedral_contracts::user as abi;
+use cathedral_kernel_contracts::user as abi;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum Child {

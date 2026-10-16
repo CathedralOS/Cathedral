@@ -3,7 +3,7 @@
 // Overruns leave debt; neither admission, reaping nor loan movement clears it.
 use super::shares::Shares;
 use alloc::{vec, vec::Vec};
-pub const PERIOD_US: u64 = cathedral_contracts::user::CPU_REFILL_PERIOD_US;
+pub const PERIOD_US: u64 = cathedral_kernel_contracts::user::CPU_REFILL_PERIOD_US;
 
 #[derive(Clone, Copy, Default, Debug)]
 pub struct CpuReport {

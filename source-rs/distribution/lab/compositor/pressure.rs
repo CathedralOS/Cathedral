@@ -1,6 +1,8 @@
 //! Opt-in hostile peer: exhaust page/object grants and flood a compositor link.
 //! Its private control protocol is consumed by supervisor/desktop/pressure.rs.
-use cathedral_contracts::{display, memory as m, user as abi};
+use cathedral_kernel_contracts::memory as m;
+use cathedral_kernel_contracts::user as abi;
+use cathedral_platform_contracts::display;
 use cathedral_user_runtime::{Error, ipc::Handle, link::Link, memory::Private, time};
 pub const STATUS: u64 = 0;
 pub const SPIN: u64 = 1;

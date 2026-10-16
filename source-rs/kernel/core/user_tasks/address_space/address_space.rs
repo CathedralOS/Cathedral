@@ -12,10 +12,10 @@ pub const USER_STACK_PAGES: usize = 8;
 pub const USER_STACK_TOP: u64 = USER_STACK + USER_STACK_PAGES as u64 * PAGE;
 pub const MAX_IMAGE_PAGES: usize = 240;
 const MAX_BACKING: usize =
-    MAX_IMAGE_PAGES + USER_STACK_PAGES + 2 * cathedral_contracts::memory::MAX_PAGES;
+    MAX_IMAGE_PAGES + USER_STACK_PAGES + 2 * cathedral_kernel_contracts::memory::MAX_PAGES;
 // Owned image/stack frames and translation tables; page objects retain their own ledger.
 // This bounds bookkeeping, not funding: every allocation still charges its account.
-const MAX_FRAMES: usize = cathedral_contracts::user::MAX_ADMISSION_FRAMES;
+const MAX_FRAMES: usize = cathedral_kernel_contracts::user::MAX_ADMISSION_FRAMES;
 
 #[derive(Clone, Copy, Default)]
 struct Backing {
@@ -118,7 +118,7 @@ impl UserSpace {
     /// Inactive exclusively owned root, boot-approved reserved aperture. On error retire this space.
     pub unsafe fn map_framebuffer(
         &mut self,
-        fb: cathedral_contracts::display::Framebuffer,
+        fb: cathedral_kernel_contracts::framebuffer::Framebuffer,
         frames: &mut impl FrameSource,
     ) -> Result<(), MemoryError> {
         let mut source = Tracked {

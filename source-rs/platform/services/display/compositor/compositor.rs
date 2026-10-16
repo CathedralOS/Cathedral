@@ -1,10 +1,12 @@
 // Retained compositor entrance: receive lifecycle/request, authorize, commit, redraw.
 use crate::surface::Surface;
-use cathedral_contracts::{composition as wire, display, user as abi};
 use cathedral_display_service::composition::{
     Composition,
     scene::{Client, Rect, Scene, labels::Labels},
 };
+use cathedral_kernel_contracts::user as abi;
+use cathedral_platform_contracts::display;
+use cathedral_platform_contracts::display::composition as wire;
 use cathedral_user_runtime::{
     Error,
     server::{Event, Server},

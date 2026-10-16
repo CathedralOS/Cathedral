@@ -10,7 +10,7 @@ pub struct Config<'a> {
     /// Per-account CPU burst microseconds, refilled at limit/100_000 of one CPU.
     /// Empty or zero adds no local cap; ancestor caps still apply.
     pub cpu_limits: &'a [u64],
-    pub memory: &'a [cathedral_contracts::memory::Grant],
+    pub memory: &'a [cathedral_kernel_contracts::memory::Grant],
     pub frame_limit: usize,
     pub links: &'a [crate::ipc::link::LinkSpec],
     pub endpoints: &'a [EndpointSpec],
@@ -26,7 +26,7 @@ pub struct Supervision<'a> {
     /// Exclusive PC bootstrap byte channel; configuration/decoding stay in userspace.
     pub keyboard: bool,
     /// Exclusive boot-approved display aperture, granted only to the child.
-    pub framebuffer: Option<cathedral_contracts::display::Framebuffer>,
+    pub framebuffer: Option<cathedral_kernel_contracts::framebuffer::Framebuffer>,
     pub owner: usize,
     pub peer: usize,
     /// Boot selects executable and first entry argument; spawn supplies the second.

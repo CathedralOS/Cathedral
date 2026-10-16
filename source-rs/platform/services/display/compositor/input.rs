@@ -1,6 +1,6 @@
 //! Connection-authorized pointer ingress, client delivery and cursor damage.
 use super::*;
-use cathedral_contracts::pointer as p;
+use cathedral_platform_contracts::display::pointer as p;
 use cathedral_user_runtime::server::Request;
 impl Compositor {
     pub(super) fn pointer_request(&mut self, r: &Request, w: [u64; 6]) -> Result<[u64; 6], u64> {

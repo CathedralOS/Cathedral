@@ -32,9 +32,9 @@ included in ordinary builds, and client messages cannot trigger those handlers.
 ## Entrances and ownership
 
 [main.rs](main.rs) selects the protocol: [direct entrance](direct/direct.rs) serves immediate
-[drawing requests](../../../contracts/display.rs), while
+[drawing requests](../../contracts/display/display.rs), while
 [compositor entrance](compositor/compositor.rs) serves the retained
-[composition protocol](../../../contracts/composition.rs). Both use
+[composition protocol](../../contracts/display/composition.rs). Both use
 [surface entrance](surface/surface.rs) for the boot-granted framebuffer. Direct-mode smoke
 probes and recovery hooks live under `direct/`.
 

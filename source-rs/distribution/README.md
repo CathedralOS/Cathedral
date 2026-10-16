@@ -14,11 +14,11 @@ and grants; the distribution gives those children their roles.
 | Role | Launch / task slot | Executable entrance | Protocol / implementation |
 | --- | --- | --- | --- |
 | Init | Initial / 0 | [init/main.rs](init/main.rs) | [App control](init/session/supervision/control.rs), [session protocol](libraries/session-protocol/lib.rs) |
-| Display | 0 / 1 | [display/main.rs](../platform/services/display/main.rs) | [Drawing contract](../contracts/display.rs), [direct service](../platform/services/display/direct/direct.rs), [surface](../platform/services/display/surface/surface.rs) |
-| Input | 1 / 2 | [input/main.rs](../platform/services/input/main.rs) | [Event contract](../contracts/input.rs), [keyboard service](../platform/services/input/keyboard/keyboard.rs), [decoder](../platform/services/input/decoder/decoder.rs) |
+| Display | 0 / 1 | [display/main.rs](../platform/services/display/main.rs) | [Drawing contract](../platform/contracts/display/display.rs), [direct service](../platform/services/display/direct/direct.rs), [surface](../platform/services/display/surface/surface.rs) |
+| Input | 1 / 2 | [input/main.rs](../platform/services/input/main.rs) | [Event contract](../platform/contracts/input.rs), [keyboard service](../platform/services/input/keyboard/keyboard.rs), [decoder](../platform/services/input/decoder/decoder.rs) |
 | Application | 2 / 3 | [status/main.rs](applications/status/main.rs) | [Application workflow](applications/status/application/application.rs) |
 | Counter | 4 / 5 | [counter/main.rs](applications/counter/main.rs) | [Private counter workflow](applications/counter/session/session.rs) |
-| Storage | 3 / 4 | [storage/main.rs](../platform/services/storage/main.rs) | [Object contract](../contracts/storage.rs), [service](../platform/services/storage/service/service.rs), [store](../platform/libraries/object-store/lib.rs) |
+| Storage | 3 / 4 | [storage/main.rs](../platform/services/storage/main.rs) | [Object contract](../platform/contracts/storage.rs), [service](../platform/services/storage/service/service.rs), [store](../platform/libraries/object-store/lib.rs) |
 
 The app's [connections](applications/status/application/connection.rs) use a
 private init control pair plus three peer links, ordered display, input, storage.

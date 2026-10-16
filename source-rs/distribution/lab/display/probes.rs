@@ -1,5 +1,6 @@
 //! Device denial, failed display admission and independent observer progress.
-use cathedral_contracts::{display, user as abi};
+use cathedral_kernel_contracts::framebuffer;
+use cathedral_kernel_contracts::user as abi;
 use cathedral_user_runtime::time;
 use cathedral_user_runtime::{
     Error,
@@ -17,7 +18,7 @@ pub fn owner() -> u64 {
                 Outcome::Fault {
                     vector: 14,
                     error: 0x15,
-                    address: display::USER_ADDRESS,
+                    address: framebuffer::USER_ADDRESS,
                     ..
                 },
             ) => {}
@@ -75,6 +76,6 @@ pub fn unmapped() -> ! {
     // SAFETY: Deliberately probe an ungranted virtual device address.
     // Assembly makes no Rust reference; the expected user fault is contained.
     unsafe {
-        core::arch::asm!("mov rax, [rax]", "ud2", in("rax") display::USER_ADDRESS, options(noreturn));
+        core::arch::asm!("mov rax, [rax]", "ud2", in("rax") framebuffer::USER_ADDRESS, options(noreturn));
     }
 }

@@ -1,6 +1,7 @@
 //! Attenuation and hosting requests. Physical-source identity is never app-supplied.
 use super::*;
-use cathedral_contracts::{input as key, interaction as s};
+use cathedral_platform_contracts::display::interaction as s;
+use cathedral_platform_contracts::input as key;
 use cathedral_user_runtime::server::Request;
 impl Compositor {
     pub(super) fn session_request(&mut self, r: &Request, w: [u64; 6]) -> Result<[u64; 6], u64> {

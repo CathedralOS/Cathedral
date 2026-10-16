@@ -1,5 +1,5 @@
 //! Bounded pointer events: collapse adjacent motion while preserving transitions.
-use cathedral_contracts::pointer::{self as wire, Event};
+use cathedral_platform_contracts::display::pointer::{self as wire, Event};
 
 pub(super) struct Queue {
     pub(super) events: [Event; 8],

@@ -1,4 +1,6 @@
-use cathedral_contracts::{display as wire, user as abi};
+use cathedral_kernel_contracts::framebuffer;
+use cathedral_kernel_contracts::user as abi;
+use cathedral_platform_contracts::display as wire;
 
 pub struct Surface {
     address: u64,
@@ -16,7 +18,7 @@ impl Surface {
             unsafe {
                 start
                     .add(index)
-                    .write_volatile(wire::pixel(self.format, rgb as u64));
+                    .write_volatile(framebuffer::pixel(self.format, rgb as u64));
             }
         }
     }
@@ -25,14 +27,14 @@ impl Surface {
         let pointer = (self.address + (y * self.stride + x) * 4) as *const u32;
         // SAFETY: Live exclusive aperture and checked coordinate within validated geometry.
         let native = unsafe { pointer.read_volatile() } & 0xffffff;
-        wire::pixel(self.format, native as u64)
+        framebuffer::pixel(self.format, native as u64)
     }
     pub fn open() -> Self {
         let [address, bytes, width, height, stride, format] =
             cathedral_user_runtime::display::mapping().unwrap();
-        assert_eq!(address, wire::USER_ADDRESS);
+        assert_eq!(address, framebuffer::USER_ADDRESS);
         assert!(
-            wire::Framebuffer {
+            framebuffer::Framebuffer {
                 physical: 4096,
                 bytes,
                 width,
@@ -78,7 +80,7 @@ impl Surface {
         [if ok { 0 } else { abi::INVALID_ARGUMENT }, 0, 0, 0, 0, 0]
     }
     fn fill(&mut self, x: u64, y: u64, width: u64, height: u64, color: u64) {
-        let pixel = wire::pixel(self.format, color);
+        let pixel = framebuffer::pixel(self.format, color);
         for row in y..y + height {
             for column in x..x + width {
                 let pointer = (self.address + (row * self.stride + column) * 4) as *mut u32;

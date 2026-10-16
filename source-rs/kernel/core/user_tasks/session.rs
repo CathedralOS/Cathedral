@@ -44,20 +44,20 @@ pub(super) static ACTIVE: AtomicPtr<Session> = AtomicPtr::new(core::ptr::null_mu
 pub(super) static EPOCH: AtomicU64 = AtomicU64::new(1);
 
 pub(super) struct LaunchState {
-    pub(super) images: [Option<usize>; cathedral_contracts::user::MAX_LAUNCHES],
+    pub(super) images: [Option<usize>; cathedral_kernel_contracts::user::MAX_LAUNCHES],
     pub(super) template: Option<usize>,
     pub(super) dynamic: bool,
     pub(super) frame_limit: usize,
     pub(super) cpu_origin: u64,
-    pub(super) delegated: [u64; cathedral_contracts::user::MAX_LAUNCHES],
+    pub(super) delegated: [u64; cathedral_kernel_contracts::user::MAX_LAUNCHES],
     pub(super) delegated_count: usize,
-    pub(super) initial: [u64; cathedral_contracts::user::MAX_INITIAL_ENDPOINTS],
+    pub(super) initial: [u64; cathedral_kernel_contracts::user::MAX_INITIAL_ENDPOINTS],
     pub(super) initial_count: usize,
     pub(super) disk: bool,
     pub(super) device: Option<cathedral_arch::board::DeviceId>,
     pub(super) model: Supervisor,
     pub(super) endpoint_base: usize,
-    pub(super) framebuffer: Option<cathedral_contracts::display::Framebuffer>,
+    pub(super) framebuffer: Option<cathedral_kernel_contracts::framebuffer::Framebuffer>,
     pub(super) keyboard: bool,
 }
 pub(super) struct LinkState {

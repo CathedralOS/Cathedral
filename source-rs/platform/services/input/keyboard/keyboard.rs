@@ -1,7 +1,8 @@
 // Physical-key service: configure the controller, decode and reply to NEXT/HEALTH.
 use crate::controller;
-use cathedral_contracts::{input as wire, user as abi};
 use cathedral_input_service::decoder::Decoder;
+use cathedral_kernel_contracts::user as abi;
+use cathedral_platform_contracts::input as wire;
 use cathedral_user_runtime::{Error, ipc::Handle, keyboard, server::Server, time};
 pub fn run(_mode: u64, _generation: u64) -> u64 {
     #[cfg(feature = "recovery-lab")]

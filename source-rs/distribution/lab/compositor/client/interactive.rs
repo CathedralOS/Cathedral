@@ -1,6 +1,6 @@
 //! Pointer-driven app content. Root cursor rendering and authority stay in the provider.
 use super::*;
-use cathedral_contracts::pointer as p;
+use cathedral_platform_contracts::display::pointer as p;
 use cathedral_user_runtime::time;
 use core::fmt::Write;
 pub fn run(

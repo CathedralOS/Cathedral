@@ -1,6 +1,7 @@
 //! Retain read authority for replay, but never map pixels in a matrix process.
 use super::*;
-use cathedral_contracts::{composition, display};
+use cathedral_platform_contracts::display;
+use cathedral_platform_contracts::display::composition;
 use cathedral_user_runtime::memory::Object;
 impl Parent {
     pub(in super::super) fn image(

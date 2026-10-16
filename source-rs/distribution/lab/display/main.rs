@@ -4,7 +4,7 @@
 mod client;
 mod probes;
 mod supervisor;
-use cathedral_contracts::user as abi;
+use cathedral_kernel_contracts::user as abi;
 use cathedral_user_runtime::Error;
 cathedral_user_runtime::entry!(main);
 fn main(role: u64, _: u64) -> u64 {

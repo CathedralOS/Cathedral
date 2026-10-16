@@ -1,7 +1,7 @@
 // Input/locality experiment over the common admitted matrix fixture.
 use super::*;
 use crate::fixture::Fixture;
-use cathedral_contracts::input;
+use cathedral_platform_contracts::input;
 impl Fixture {
     fn layout(&self) {
         self.owner(0, [wire::BIND, 800, 600, wire::KEY_MASK, 0, 0, 0, 0]);

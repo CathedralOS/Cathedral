@@ -1,6 +1,6 @@
 // Test-only checks run from the app's actual unprivileged principal.
 use super::connection::Connections;
-use cathedral_contracts::user as abi;
+use cathedral_kernel_contracts::user as abi;
 use cathedral_user_runtime::{
     Error, disk, display, keyboard,
     task::{Child, Launch, Port},
@@ -32,7 +32,7 @@ pub fn authority(connections: &mut Connections) -> Result<(), Error> {
         let length = receive.receive_until(&mut bytes, time::after(100)?)?;
         if index == 0 {
             assert_eq!(
-                cathedral_contracts::display::decode(&bytes[..length]).unwrap()[0],
+                cathedral_platform_contracts::display::decode(&bytes[..length]).unwrap()[0],
                 abi::INVALID_ARGUMENT
             );
         } else {
@@ -42,7 +42,7 @@ pub fn authority(connections: &mut Connections) -> Result<(), Error> {
     write(b"Cathedral: application authority isolated\n")
 }
 fn storage(connections: &mut Connections) -> Result<(), Error> {
-    use cathedral_contracts::storage as wire;
+    use cathedral_platform_contracts::storage as wire;
     let before = super::storage::load(connections)?;
     let (send, receive) = connections.pair(2)?;
     for (request, error) in [
@@ -111,11 +111,11 @@ pub fn fail(generation: u64) -> ! {
 
 /// Test keys are kept out of the ordinary event/state update path.
 pub(super) fn handle(
-    event: cathedral_contracts::input::Event,
+    event: cathedral_platform_contracts::input::Event,
     generation: u64,
     connections: &mut Connections,
 ) -> Result<bool, Error> {
-    use cathedral_contracts::input;
+    use cathedral_platform_contracts::input;
     if event.state != input::PRESS {
         return Ok(false);
     }

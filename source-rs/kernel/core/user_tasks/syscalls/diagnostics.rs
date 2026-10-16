@@ -1,6 +1,6 @@
 //! Bounded diagnostic output; no filesystem or console-service semantics.
 use super::Session;
-use cathedral_contracts::user as abi;
+use cathedral_kernel_contracts::user as abi;
 pub(super) fn write(
     session: &mut Session,
     slot: usize,

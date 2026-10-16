@@ -1,5 +1,5 @@
 // Small translated-set-1 decoder for the lab's physical navigation keys.
-use cathedral_contracts::input::{self as wire, Event};
+use cathedral_platform_contracts::input::{self as wire, Event};
 
 #[derive(Default)]
 pub struct Decoder {

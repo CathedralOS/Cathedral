@@ -1,8 +1,8 @@
 # Experimental user runtime
 
-Owns x86-64 task entry, syscall wrappers and the static ELF linker layout for the
-Rust lab. Depends only on shared `contracts/`; never imports kernel or
-distribution implementation. Applications choose their behavior and return an
+Owns x86-64/ARM64 task entry, syscall wrappers and the static ELF linker layout for the
+Rust lab. Depends on public kernel/platform contracts and optionally the funded
+user-heap library; never imports kernel or distribution implementations. Applications choose their behavior and return an
 exit status through `entry!`. The `ipc::Handle` wrappers expose local grants and bounded send/receive/revoke
 calls, including deadline receives. `ipc::channel` creates an ordinary one-way
 channel; `send_with` moves one dynamic endpoint and `receive_with` explicitly
@@ -30,7 +30,8 @@ the original persistent launch account until final closure; replacement receives
 the remaining allowance. This query changes no authority or funding.
 `time` reads the boot-granted monotonic clock; it grants no authority
 and chooses no deadline policy. Restart decisions
-belong to the caller, not this library. The runtime has no heap allocator or unwinding.
+belong to the caller, not this library. The runtime has no unwinding. Its optional `heap` feature installs an explicitly
+funded process-lifetime allocator; see [user-heap](../user-heap/CHARTER.md).
 `memory::Private` owns a bounded zeroed page buffer. Sealing consumes mutable
 access and returns a `Sealed` token for one authorized peer. `Shared::accept_from` accepts a producer-local offer through an explicit
 service-side link, obtains a distinct reader-local handle and releases it on drop. A producer crash cannot revoke a live

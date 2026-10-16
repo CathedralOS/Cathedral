@@ -1,5 +1,6 @@
 //! Consume an immutable pixel lease. Validate the whole payload before scanout.
 use super::{Surface, abi, wire};
+use cathedral_kernel_contracts::framebuffer;
 use cathedral_user_runtime::{Error, memory::Shared};
 impl Surface {
     pub(super) fn buffer(
@@ -40,7 +41,7 @@ impl Surface {
             let row = y + index as u64 / width;
             let pointer = (self.address + (row * self.stride + column) * 4) as *mut u32;
             // SAFETY: Exclusive device aperture and fully validated rectangle.
-            unsafe { pointer.write_volatile(wire::pixel(self.format, u64::from(color))) };
+            unsafe { pointer.write_volatile(framebuffer::pixel(self.format, u64::from(color))) };
         }
         // Drop unmaps the pinned read lease before main sends completion.
         Ok(())

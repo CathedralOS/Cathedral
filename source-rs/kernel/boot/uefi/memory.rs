@@ -7,7 +7,7 @@ use core::fmt::Write;
 
 pub struct PreparedMemory {
     #[cfg(feature = "bundled-user")]
-    pub framebuffer: Option<cathedral_contracts::display::Framebuffer>,
+    pub framebuffer: Option<cathedral_kernel_contracts::framebuffer::Framebuffer>,
     pub layout: arch::BootLayout,
     pub frames: FrameAllocator,
     #[cfg(any(

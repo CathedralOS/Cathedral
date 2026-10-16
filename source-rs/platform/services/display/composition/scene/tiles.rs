@@ -3,12 +3,13 @@
 use super::Rect;
 #[derive(Default)]
 pub struct Tiles {
-    entries: [Option<(Rect, Option<u32>, u64)>; cathedral_contracts::composition::MATRIX_TILES],
+    entries: [Option<(Rect, Option<u32>, u64)>;
+        cathedral_platform_contracts::display::composition::MATRIX_TILES],
 }
 impl Tiles {
     pub const fn empty() -> Self {
         Self {
-            entries: [None; cathedral_contracts::composition::MATRIX_TILES],
+            entries: [None; cathedral_platform_contracts::display::composition::MATRIX_TILES],
         }
     }
     pub fn set(&mut self, index: usize, rect: Rect, color: u32) -> Rect {
@@ -34,7 +35,7 @@ impl Tiles {
             x,
             y,
             row,
-            &[&[]; cathedral_contracts::composition::MATRIX_TILES],
+            &[&[]; cathedral_platform_contracts::display::composition::MATRIX_TILES],
         );
     }
     pub fn paint_images(
@@ -42,7 +43,7 @@ impl Tiles {
         x: u64,
         y: u64,
         row: &mut [u32],
-        images: &[&[u8]; cathedral_contracts::composition::MATRIX_TILES],
+        images: &[&[u8]; cathedral_platform_contracts::display::composition::MATRIX_TILES],
     ) {
         // Matrices reserve disjoint contiguous stacking ranges for subtrees.
         for (index, entry) in self.entries.iter().enumerate() {
@@ -50,7 +51,7 @@ impl Tiles {
                 continue;
             };
             if color.is_none()
-                && !cathedral_contracts::composition::valid_image(
+                && !cathedral_platform_contracts::display::composition::valid_image(
                     rect.w,
                     rect.h,
                     stride,
@@ -95,7 +96,8 @@ mod tests {
         for (i, pixel) in pixels.chunks_exact_mut(4).enumerate() {
             pixel.copy_from_slice(&(0xff000000u32 | i as u32).to_le_bytes());
         }
-        let mut images = [&[][..]; cathedral_contracts::composition::MATRIX_TILES];
+        let mut images =
+            [&[][..]; cathedral_platform_contracts::display::composition::MATRIX_TILES];
         images[1] = &pixels;
         let mut row = [0; 6];
         tiles.paint_images(0, 4, &mut row, &images);

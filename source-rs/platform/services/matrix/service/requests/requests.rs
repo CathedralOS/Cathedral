@@ -44,7 +44,7 @@ pub(super) fn dispatch(
                 [0; 8]
             }
             [wire::KEY_SOURCE, key, state, 0, 0, 0, 0, 0] => {
-                if key == cathedral_contracts::input::RESET as u64 {
+                if key == cathedral_platform_contracts::input::RESET as u64 {
                     world.cancel();
                 } else {
                     world.key(key, state);

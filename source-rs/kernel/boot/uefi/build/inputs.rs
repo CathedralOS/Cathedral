@@ -16,7 +16,7 @@ pub(super) fn watch() {
     ] {
         println!("cargo:rerun-if-env-changed={variable}");
     }
-    for index in 0..cathedral_contracts::user::MAX_LAUNCHES {
+    for index in 0..cathedral_kernel_contracts::user::MAX_LAUNCHES {
         println!("cargo:rerun-if-env-changed=CATHEDRAL_IMAGE_{index}_ELF");
         println!("cargo:rerun-if-env-changed=CATHEDRAL_IMAGE_{index}_ARGUMENT");
         for field in [
@@ -40,7 +40,7 @@ pub(super) fn pages(variable: &str) -> usize {
         .parse()
         .expect("invalid page budget");
     assert!(
-        pages <= cathedral_contracts::memory::MAX_PAGES,
+        pages <= cathedral_kernel_contracts::memory::MAX_PAGES,
         "page budget exceeds lab limit"
     );
     pages

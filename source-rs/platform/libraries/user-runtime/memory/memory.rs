@@ -2,7 +2,7 @@
 // freeze -> Object uses ordinary IPC and independent mapping lifetime (object.rs).
 // Legacy seal/link sharing below retains its single-peer completion discipline.
 use crate::{Error, link::Link};
-use cathedral_contracts::memory::PAGE_BYTES;
+use cathedral_kernel_contracts::memory::PAGE_BYTES;
 
 struct Region {
     handle: u64,

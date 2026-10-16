@@ -12,7 +12,7 @@ pub(super) fn read() -> Budget {
         .parse()
         .unwrap();
     assert!(
-        count <= cathedral_contracts::user::MAX_LAUNCHES,
+        count <= cathedral_kernel_contracts::user::MAX_LAUNCHES,
         "launch arena exhausted"
     );
     let dynamic: usize = env::var("CATHEDRAL_DYNAMIC_TASKS")
@@ -24,7 +24,7 @@ pub(super) fn read() -> Budget {
         .and_then(|n| n.checked_add(dynamic))
         .expect("account overflow");
     assert!(
-        accounts <= cathedral_contracts::user::MAX_TASKS,
+        accounts <= cathedral_kernel_contracts::user::MAX_TASKS,
         "process pool exhausted"
     );
     let limits: Vec<usize> = env::var("CATHEDRAL_CHANNEL_LIMITS")
@@ -34,7 +34,7 @@ pub(super) fn read() -> Budget {
                 .collect()
         })
         .unwrap_or_else(|_| {
-            let mut limits = vec![cathedral_contracts::user::DEFAULT_CHANNELS; count + 1];
+            let mut limits = vec![cathedral_kernel_contracts::user::DEFAULT_CHANNELS; count + 1];
             limits.resize(accounts, 0);
             limits
         });
@@ -42,11 +42,11 @@ pub(super) fn read() -> Budget {
         limits.len() == accounts
             && limits
                 .iter()
-                .all(|&n| n <= cathedral_contracts::user::MAX_CREATED_CHANNELS),
+                .all(|&n| n <= cathedral_kernel_contracts::user::MAX_CREATED_CHANNELS),
         "invalid channel reservations"
     );
     assert!(
-        limits.iter().sum::<usize>() <= cathedral_contracts::user::MAX_DYNAMIC_CHANNELS,
+        limits.iter().sum::<usize>() <= cathedral_kernel_contracts::user::MAX_DYNAMIC_CHANNELS,
         "channel reservations exceed backing"
     );
     let cpu_limits: Vec<u64> = env::var("CATHEDRAL_CPU_LIMITS")
@@ -60,7 +60,7 @@ pub(super) fn read() -> Budget {
         cpu_limits.len() == accounts
             && cpu_limits
                 .iter()
-                .all(|&n| n <= cathedral_contracts::user::CPU_REFILL_PERIOD_US),
+                .all(|&n| n <= cathedral_kernel_contracts::user::CPU_REFILL_PERIOD_US),
         "invalid CPU burst/refill limit"
     );
     Budget {

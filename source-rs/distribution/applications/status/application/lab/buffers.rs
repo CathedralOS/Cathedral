@@ -1,6 +1,6 @@
 //! Exercise the real display data endpoint with invalid and retired page offers.
 use super::*;
-use cathedral_contracts::display as wire;
+use cathedral_platform_contracts::display as wire;
 use cathedral_user_runtime::{
     ipc::Handle,
     link::Link,
