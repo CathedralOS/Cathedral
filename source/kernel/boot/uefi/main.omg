@@ -7,16 +7,13 @@ use uefi::uefi;            // EfiHandle, EfiStatus, EFI_SUCCESS, EfiSystemTable,
 use uefi::boot_services;   // BootServices
 use own_machine;
 use core::extent;
-use omega::language::core::binding;
 use omega::language::core::assembly; // PortIo, MachineControl
 use omega::language::core::extent;   // ExtentRootProvider
 
-// Invocation-owned storage. The eventual checked physical adapter supplies
-// these bindings and firmware arguments; this record does not grant authority.
+// Invocation-owned storage. Provider implementations are selected in build.omg;
+// firmware handles and table borrows stay explicit arguments. Neither this
+// record nor provider selection grants authority to a firmware occurrence.
 data Main {
-    out: Binding<SimpleTextOutput>;
-    boot_svc: Binding<BootServices>;      // milestone 2 — GetMemoryMap / ExitBootServices
-    memory: Binding<ExtentRootProvider>; // admitted one-root-at-a-time memory provider
     msg:      [u16; 19];         // "Hello from Omega\r\n\0" as UTF-16 CHAR16 code units
     map_buf:  UefiMemoryMapStorage; // aligned bounded map backing, no authority
 }
@@ -35,7 +32,7 @@ invokes ExtentRootProvider;
     // dispatch OutputString(con_out, &msg) through the firmware's own vtable.
     // This borrow must originate from the adapter's validated firmware input.
     let con_out: &TextOutputProtocol = table.con_out;
-    let status: EfiStatus = SimpleTextOutput::output_string(&context.out, con_out, &context.msg);
+    let status: EfiStatus = SimpleTextOutput::output_string(con_out, &context.msg);
     // A failed greeting must not silently proceed into irreversible handoff.
     // Preserve the firmware status while Boot Services are still available.
     transition status.code == 0 {

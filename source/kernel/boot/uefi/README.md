@@ -1,7 +1,8 @@
 # Omega boot frontier
 
 This is the real Cathedral boot source, not a reduced hello-world surrogate.
-With the pinned std revision and Omega's assembly-control arithmetic repair,
+With the pinned std revision and Omega's assembly-control arithmetic and
+named target-provider repairs,
 the fresh build reaches `terminal-artifact production requires one exact
 selected program entry`. The numeric state contracts after COM1 assembly no
 longer reject. It is **not native-build- or boot-verified**.
@@ -47,6 +48,12 @@ literals, which rejects before this program's entry can be selected.
 The local calling policy deliberately remains a normal named implementation;
 it must not collide with std's same-spelled policy. Firmware layouts and OS
 map-selection/retry policy stay in authored Omega, not compiler intrinsics.
+
+Firmware calls use static boundary requirements with explicitly selected named
+providers. `Main` stores only invocation data; the console/table borrows, image
+handle and map key remain ordinary arguments. There are no `Binding` fields or
+implicit provider arguments. Selecting the implementations does not establish
+the validity or lifetime of those firmware values.
 
 The Rust bring-up lab is a separate product and does not discharge this
 acceptance. Keep the harness failing visibly until this exact source produces

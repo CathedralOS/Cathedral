@@ -89,7 +89,7 @@ reaches BootServices + ExtentRootProvider + PortIo + MachineControl
         let mut key: MapKey = MapKey { raw: 0 };
         let mut desc_size: u64 = 0;                 // out = the RUNTIME descriptor stride
         let mut desc_version: u32 = 0;
-        let status: EfiStatus = BootServices::get_memory_map(&context.boot_svc,
+        let status: EfiStatus = BootServices::get_memory_map(
             bs,
             &mut map_size,
             &mut context.map_buf.bytes,
@@ -459,7 +459,7 @@ reaches BootServices + ExtentRootProvider + PortIo + MachineControl
                best_start: u64, best_pages: u64, length: u64)
     requires stale_retry_used <= 1
     {
-        let exit_status: EfiStatus = BootServices::exit_boot_services(&context.boot_svc, bs, handle, key);
+        let exit_status: EfiStatus = BootServices::exit_boot_services(bs, handle, key);
         let exit_code: u64 = exit_status.code;
         transition exit_code == 0 {
             true -> own(context, best_start, best_pages, length)
@@ -488,7 +488,7 @@ reaches BootServices + ExtentRootProvider + PortIo + MachineControl
     state own(context: &mut Main, best_start: u64, best_pages: u64, length: u64) {
         let base: addr = best_start as addr;
         let geometry: Extent = Extent { base: base, length: length };
-        let first_extent: Extent = ExtentRootProvider::grant(&context.memory, geometry);
+        let first_extent: Extent = ExtentRootProvider::grant(geometry);
         transition { _ -> serial_init(first_extent, best_pages as u64 in Trapping) }
     }
 

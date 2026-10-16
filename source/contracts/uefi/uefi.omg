@@ -62,6 +62,12 @@ uefi_x86_64 machine TextOutputProtocol::output_string_leaf(
     string: &[u16; 19]
 ) -> EfiStatus satisfies SimpleTextOutput::output_string via ForeignBinding::VtableField(output_string);
 
+// Selection chooses code. The console occurrence remains an explicit borrow,
+// not state stored in the provider or a fabricated Binding value.
+pub UefiTextOutputProvider satisfies SimpleTextOutput {
+    SimpleTextOutput::output_string = TextOutputProtocol::output_string_leaf;
+}
+
 // --- The System Table (firmware's root hand-off structure) ----------------
 //
 // Byte layout = the C ABI (Uefi policy). Only the header and the fields boot

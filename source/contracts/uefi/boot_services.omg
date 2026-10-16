@@ -176,6 +176,11 @@ uefi_x86_64 machine BootServicesTable::exit_boot_services_leaf(
     map_key:      MapKey
 ) -> EfiStatus satisfies BootServices::exit_boot_services via ForeignBinding::TableFunction(exit_boot_services);
 
+pub UefiBootServicesProvider satisfies BootServices {
+    BootServices::get_memory_map = BootServicesTable::get_memory_map_leaf;
+    BootServices::exit_boot_services = BootServicesTable::exit_boot_services_leaf;
+}
+
 // --- Origin of memory authority -------------------------------------------
 // FinalMemoryMap is the reserved carrier for the complete post-exit map. The M2
 // path currently requires the best span to be neither runtime-mapped,
