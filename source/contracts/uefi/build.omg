@@ -5,7 +5,7 @@ machine build(builder: &mut Build) {
     Build::package(builder, "cathedral_uefi");
     Build::depend_as(builder, "std", Source::Git {
         repository: "https://github.com/CathedralOS/Omega.git",
-        revision: "0acd49d4fea419095bbe907bf673599c3f570235",
+        revision: "cc43b6679d2ad343f8640a0630dd127c155a0c49",
         selection: PackageSelection::Named { package: "omega_language_std" }
     });
     // contracts reach nothing; no targets to augment.

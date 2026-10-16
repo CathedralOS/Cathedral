@@ -1,9 +1,10 @@
 # Omega boot frontier
 
 This is the real Cathedral boot source, not a reduced hello-world surrogate.
-The five-package candidate graph now passes checked compilation with the
-compiler's static Binding and numeric state-contract repairs. It is **not
-native-build- or boot-verified**.
+With the pinned std revision and Omega's assembly-control arithmetic repair,
+the fresh build reaches `terminal-artifact production requires one exact
+selected program entry`. The numeric state contracts after COM1 assembly no
+longer reject. It is **not native-build- or boot-verified**.
 Historical July boot comments do not establish that the current tree runs.
 
 The intended acceptance is one freshly compiled `uefi_x86_64` image under
@@ -38,6 +39,10 @@ from a successful checked review, not hand-authored acceptance records.
   `Main::run` is ordinary checked logic, not an implicitly installed raw ABI.
   PE subsystem selection, a same-shaped pointer, or an empty root provider is
   not proof of firmware validity or storage authority.
+
+The std pin includes the borrowed UTF-8 calling-policy rejection text. Older
+revisions declared a fixed 256-byte field but initialized it with shorter
+literals, which rejects before this program's entry can be selected.
 
 The local calling policy deliberately remains a normal named implementation;
 it must not collide with std's same-spelled policy. Firmware layouts and OS
