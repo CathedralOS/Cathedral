@@ -128,9 +128,26 @@ compression and allocator overhead. Host elapsed time is not storage throughput.
 Content-defined chunking remains a candidate for shifted-input reuse; changing
 the chunking algorithm does not decide the metadata engine.
 
-Then run the same logical traces against candidate metadata layouts/engines,
-including ordered scans and metadata queries. Extend the device fault model to
-allocation, durable publication and reopening. Measure physical bytes read/written,
+The [engine comparison](../../tools/storage-lab/engines/README.md) now applies
+identical byte records to redb 4.4.0 and SQLite in DELETE/WAL modes. Its 48 cells
+verify ordered event scans and full record equality after reopen. Nine additional
+checks cover process death before/after commit and failed capacity growth. Content,
+head and change records share one engine transaction; this baseline keeps blobs
+inside the engine too. It does not yet test external-blob publication or DBFS queries.
+
+At 4 KiB chunk size, one tree-32 edit submits 6,555 key/value bytes and causes
+61,760 redb backend write bytes; the flat layout submits 86,181 and causes 172,352.
+Batching 64 adjacent edits reduces tree-32 backend writes from 3,960,832 to 65,856
+bytes and syncs from 64 to one. File lengths and SQLite sidecars are recorded
+separately: neither means physical media writes or allocated disk blocks.
+An isolated redb `no_std` backend probe compiles for both x86-64 and ARM64
+bare-metal targets. This makes it a candidate for the next fault-model experiment,
+not a selected production engine. Runtime allocation, synchronization, bounded
+resources and Cathedral's device/capability adapter remain integration work.
+
+Next extend the device fault model to arbitrary write/flush failures, allocation,
+durable publication and reopening. Test active reader snapshots and metadata
+queries. Measure physical bytes read/written,
 flushes, peak RAM, read latency, reclamation work and reserved free space under
 near-full operation and pinned history. An in-memory reachability sweep is not
 evidence that production collection or full-disk progress works.

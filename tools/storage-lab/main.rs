@@ -1,13 +1,20 @@
 //! Host layout experiment: choose policies, execute byte-checked workloads, report costs.
-//! This has no disk format, authority API, transaction engine or guest dependency.
+//! Optional engine experiments persist records; neither mode defines a guest format or API.
 mod chunk_tree;
 mod chunks;
+#[cfg(feature = "engines")]
+mod engines;
 mod workloads;
 
 #[cfg(test)]
 mod tests;
 
 fn main() {
+    #[cfg(feature = "engines")]
+    if std::env::args().nth(1).as_deref() == Some("engines") {
+        engines::run().expect("engine experiment failed");
+        return;
+    }
     println!(
         "layout,chunk_bytes,inline_limit,workload,logical_bytes,hashed_payload_bytes,hashed_manifest_bytes,new_payload_bytes,new_manifest_bytes,live_payload_bytes,live_manifest_bytes,live_chunks,live_versions,live_tree_nodes,read_metadata_bytes,read_metadata_records,read_payload_bytes,read_payload_records,elapsed_us"
     );

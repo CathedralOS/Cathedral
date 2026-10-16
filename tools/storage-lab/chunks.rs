@@ -101,6 +101,38 @@ pub struct Store {
 }
 
 impl Store {
+    /// Export the exact experimental records for the host engine comparison.
+    /// Distinct key prefixes separate payload, version and tree-node records.
+    #[cfg(feature = "engines")]
+    pub fn records(&self, version: &Version) -> BTreeMap<Vec<u8>, Vec<u8>> {
+        let mut records = BTreeMap::new();
+        for (kind, entries) in [
+            (
+                b'c',
+                self.chunks
+                    .iter()
+                    .map(|(id, bytes)| (*id, bytes.clone()))
+                    .collect::<Vec<_>>(),
+            ),
+            (
+                b'm',
+                self.manifests
+                    .iter()
+                    .map(|(id, m)| (*id, m.encoded.clone()))
+                    .collect(),
+            ),
+            (b't', self.tree.records()),
+        ] {
+            for (id, bytes) in entries {
+                let mut key = vec![kind];
+                key.extend_from_slice(&id);
+                records.insert(key, bytes);
+            }
+        }
+        records.insert(b"head".to_vec(), version.id.to_vec());
+        records
+    }
+
     pub fn new(policy: Policy) -> Self {
         assert!(policy.chunk_bytes > 0 && u32::try_from(policy.chunk_bytes).is_ok());
         Self {

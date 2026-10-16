@@ -1,0 +1,13 @@
+[package]
+name = "cathedral-redb-portability-probe"
+version = "0.0.0"
+edition = "2024"
+publish = false
+
+[lib]
+path = "lib.rs"
+
+[dependencies]
+redb = { version = "=4.4.0", default-features = false, features = ["experimental-api-5"] }
+
+[workspace]

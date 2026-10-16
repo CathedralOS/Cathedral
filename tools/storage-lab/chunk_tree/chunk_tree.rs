@@ -15,6 +15,14 @@ pub struct Tree {
 }
 
 impl Tree {
+    #[cfg(feature = "engines")]
+    pub fn records(&self) -> Vec<(Digest, Vec<u8>)> {
+        self.nodes
+            .iter()
+            .map(|(key, node)| (*key, node.encoded.clone()))
+            .collect()
+    }
+
     pub fn new(fanout: usize) -> Self {
         assert!(fanout >= 2 && u32::try_from(fanout).is_ok());
         Self {

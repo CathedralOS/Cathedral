@@ -22,10 +22,19 @@ shared paths, batching and snapshot retention. At 4 KiB, an aligned small edit
 creates 4 KiB of payload and 81,937 bytes of flat metadata versus 2,212 bytes of
 tree-32 metadata. Cold range reads trade metadata bytes against dependent records.
 
-The lab measures packed representations and hashing work, not physical IO,
-transaction isolation or crash safety; the guest private catalog is unchanged.
-Existing-engine comparison, allocation granularity, metadata queries and recovery
-under low free space remain next evidence. See the lab's measured table and limits.
+The representation lab measures packed bytes and hashing work. Its separate
+[engine comparison](../tools/storage-lab/engines/README.md) now runs 48 cells against
+redb and SQLite DELETE/WAL with identical records, ordered scans and verified
+reopen. Nine checks cover process death before/after commit and capacity refusal.
+It measures logical file extents and redb backend writes/syncs, not physical media
+traffic or allocated disk blocks. At 4 KiB, batching 64 adjacent tree-32 edits
+reduces redb writes from 3,960,832 to 65,856 bytes and syncs from 64 to one.
+
+redb 4.4.0's experimental `no_std` backend entrance compiles for x86-64 and ARM64
+bare-metal targets. No guest runtime adapter exists and no engine is selected.
+Arbitrary IO faults, active-reader pressure, metadata queries, physical allocation
+and sustained low-space progress remain next evidence. The guest private catalog
+is unchanged; see the engine lab's measured table, portability assessment and limits.
 
 ## Resumable storage and provider recovery
 

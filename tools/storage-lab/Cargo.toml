@@ -11,5 +11,10 @@ path = "main.rs"
 
 [dependencies]
 blake3 = "1.8.7"
+redb = { version = "=4.4.0", optional = true }
+rusqlite = { version = "=0.40.2", default-features = false, features = ["bundled", "libsqlite3-sys"], optional = true }
+
+[features]
+engines = ["dep:redb", "dep:rusqlite"]
 
 [workspace]

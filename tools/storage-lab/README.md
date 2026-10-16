@@ -9,6 +9,12 @@ path replacement, range traversal and shared-node reachability. `mod.rs` is wiri
 The eventual engine belongs to the platform; this is a measurement tool for the
 [storage proposal](../../wiki/proposals/0002_dbfs_storage_foundation.md).
 
+The optional [engine comparison](engines/README.md) persists identical records
+through redb and SQLite (DELETE/WAL), measuring file extents and redb backend IO,
+with process recovery and capacity-refusal checks. Its named entrance is
+[engines/engines.rs](engines/engines.rs). The representation measurements below
+remain a separate in-memory experiment.
+
 From the repository root:
 
 ```powershell
@@ -153,9 +159,9 @@ height changes, range reads, overlapping batches, invalid late edits, canonical
 rebuild equivalence, shared paths, and collection with historical/shared nodes.
 No new owner semantics are selected by this experiment.
 
-Next compare existing transactional metadata engines against the needed record
-and range operations, including physical allocation granularity, ordered scans,
-recovery faults and near-full-store progress. This positional content tree is not
-a general B-tree database engine. The existing
+The [engine comparison](engines/README.md) now exercises durable record publication,
+ordered scans, reopen, process death and capacity denial. Physical allocation,
+arbitrary IO faults, active-reader pressure and near-full-store progress remain
+next evidence. This positional content tree is not a general B-tree database engine. The existing
 [catalog recovery tests](../../source-rs/platform/libraries/object-store/CHARTER.md)
 remain the durability evidence for the current guest implementation.
