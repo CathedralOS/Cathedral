@@ -12,6 +12,7 @@ members = [
     "platform/drivers/uart_16550",
     "platform/libraries/bitmap-font",
     "platform/libraries/object-store",
+    "platform/libraries/storage-volume",
     "platform/libraries/user-runtime",
     "platform/services/display",
     "platform/services/input",
@@ -28,6 +29,7 @@ members = [
     "distribution/lab/portability",
     "distribution/lab/shared-memory",
     "distribution/lab/devices",
+    "distribution/lab/volume",
     "distribution/lab/ipc",
     "distribution/lab/channels",
     "distribution/lab/memory",
@@ -36,7 +38,7 @@ members = [
     "distribution/libraries/boot-scene",
     "distribution/libraries/session-protocol",
 ]
-default-members = ["platform/drivers/uart_16550", "distribution/lab/rendering", "platform/libraries/object-store", "contracts", "kernel/core", "kernel/arch", "platform/services/input", "platform/services/display", "platform/services/matrix", "platform/libraries/bitmap-font"]
+default-members = ["platform/libraries/storage-volume", "platform/drivers/uart_16550", "distribution/lab/rendering", "platform/libraries/object-store", "contracts", "kernel/core", "kernel/arch", "platform/services/input", "platform/services/display", "platform/services/matrix", "platform/libraries/bitmap-font"]
 
 [workspace.package]
 version = "0.0.0"
@@ -45,6 +47,7 @@ rust-version = "1.94"
 publish = false
 
 [workspace.dependencies]
+cathedral-storage-volume = { path = "platform/libraries/storage-volume" }
 cathedral-ata-pio = { path = "platform/drivers/ata-pio" }
 cathedral-object-store = { path = "platform/libraries/object-store" }
 cathedral-storage-service = { path = "platform/services/storage" }
@@ -66,6 +69,11 @@ undocumented_unsafe_blocks = "deny"
 
 [profile.dev]
 panic = "abort"
+
+# BLAKE3's unrolled debug code exceeds the bounded guest ELF window. Keep the
+# caller debug build and checks; optimize only this dependency's implementation.
+[profile.dev.package.blake3]
+opt-level = "s"
 
 [profile.release]
 panic = "abort"

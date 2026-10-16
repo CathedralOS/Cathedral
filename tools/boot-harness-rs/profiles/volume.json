@@ -1,0 +1,22 @@
+{
+  "name": "Experimental volume block transport proof",
+  "target": "x86_64-unknown-uefi",
+  "boot_package": "cathedral-boot-uefi",
+  "startup": {
+    "initial": {
+      "package": "cathedral-volume-lab",
+      "entry": "distribution/lab/volume/main.rs",
+      "target": "x86_64-unknown-none"
+    },
+    "launches": [
+      {
+        "package": "cathedral-volume-lab",
+        "entry": "distribution/lab/volume/main.rs",
+        "target": "x86_64-unknown-none",
+        "clock": true,
+        "disk": true,
+        "argument": 1
+      }
+    ]
+  }
+}

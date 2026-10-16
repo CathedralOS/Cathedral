@@ -5,6 +5,7 @@ import hashlib
 import io
 import json
 import platform
+from os.path import relpath
 import queue
 import subprocess
 import threading
@@ -167,6 +168,8 @@ def main():
     checks = {'volume': volume, 'stress': stress, 'comparison': compare}[mode](executable, destination)
     sources = [*LAB.glob('*.rs'), *LAB.glob('*.toml'), *LAB.glob('chunk_tree/*.rs'),
                *HERE.glob('*.rs'), *HERE.glob('stress/**/*.rs'), *HERE.glob('volume/**/*.rs'), HERE / 'run.py', LAB / 'Cargo.lock']
+    shared = ROOT / 'source-rs/platform/libraries/storage-volume'
+    sources.extend([*shared.glob('*.rs'), shared / 'Cargo.toml', ROOT / 'source-rs/contracts/block.rs'])
     context = {
         'utc': datetime.now(timezone.utc).isoformat(),
         'platform': platform.platform(),
@@ -174,7 +177,7 @@ def main():
         'engine_runtime': run(str(executable), 'engines', 'versions', capture_output=True).stdout.strip(),
         'revision': run('git', 'rev-parse', 'HEAD', capture_output=True).stdout.strip(),
         'tracked_changes': run('git', 'diff', '--name-only', 'HEAD', capture_output=True).stdout.splitlines(),
-        'source_sha256': {p.relative_to(LAB).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest() for p in sources},
+        'source_sha256': {Path(relpath(p, LAB)).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest() for p in sources},
         'mode': mode,
         'checks': checks,
         'limits': 'Single host sample; logical extents, not physical allocation. Stress uses a bounded simulated durability model, not exhaustive device failure coverage. Comparison process termination is not power loss. redb IO counters exclude initialization, checkpoint and close; SQLite counters unavailable.',

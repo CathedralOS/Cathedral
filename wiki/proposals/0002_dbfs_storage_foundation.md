@@ -190,6 +190,14 @@ accepted disk ABI or an installer/partition-table implementation. The adapter
 currently adds durable envelope updates around length changes, so its performance
 and on-device flush contract need evaluation before guest promotion.
 
+The [guest block-boundary proof](../../source-rs/platform/libraries/storage-volume/CHARTER.md)
+now shares that envelope codec and checks byte/sector translation, explicit ATA
+flush, cold reboot and damaged-copy refusal. Its host-formatted database remains
+opaque to the guest; the host compares the whole image and reopens the engine.
+A funded userspace allocator and sufficient memory/image admission are still
+prerequisites for actual guest engine transactions. This does not change the
+kernel/platform ownership or select a permanent database engine.
+
 ## Performance boundaries to preserve
 
 - Prepare independent work before writer acquisition; revalidate the versions

@@ -9,7 +9,8 @@ EFI partition, bootable OS image or installer.
 Start at [volume.rs](volume.rs): dispatch commands, validate blank space, initialize
 the engine while marked formatting, close/sync it, then publish ready. Opening
 validates the envelope and engine identity without a formatting fallback. Descend
-into [header.rs](header.rs) for encoding/selection, [region.rs](region.rs) for checked
+into the shared [header codec](../../../../source-rs/platform/libraries/storage-volume/header.rs)
+for encoding/selection, [region.rs](region.rs) for checked
 range translation, [backend.rs](backend.rs) for file-length adaptation and
 [image.rs](image.rs) for exclusive host-image ownership. [proof.rs](proof.rs) sequences
 native-image checks, refusal/bounds cases and simulated interruption. `mod.rs` is
@@ -160,10 +161,15 @@ These tests cover fixed traces and selected partial-persistence patterns, not al
 sector reorderings, failures during recovery, controller behavior or hardware power
 loss. They do not establish space/latency guarantees or corruption repair for DBFS.
 There is no encryption, secure erase, migration, external blob allocation, installer
-partitioning or guest driver integration. The host lock does not replace a future
+partitioning or guest database runtime. The host lock does not replace a future
 kernel-enforced device capability and single-owner lifecycle.
 
-The next integration step is a guest block-backed region with an explicit flush
-contract, reusing the same envelope and adapter tests before adding an installer.
+The [guest block boundary](../../../../source-rs/platform/libraries/storage-volume/CHARTER.md)
+now shares this envelope codec and exercises bounded sector IO, explicit flush,
+cold reboot and corruption refusal on a host-formatted volume. Run it with
+`python tools/boot-harness-rs/volume_test.py --release`. Host redb still owns engine
+initialization and final engine reopen; the guest inspects metadata and transports
+opaque bytes. A funded allocator and sufficient userspace memory/image admission
+are the next prerequisites for running the database engine inside the guest.
 Whether this envelope or engine becomes permanent remains an engineering/design
 decision; current owner questions about identity, retention and isolation still apply.

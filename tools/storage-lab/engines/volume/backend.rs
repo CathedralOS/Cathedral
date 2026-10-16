@@ -1,8 +1,8 @@
 //! File-length semantics inside fixed capacity. Growth is zeroed and length is
 //! durably mirrored before exposing new space; underlying image size never changes.
 use super::{
-    header::{self, DATA_START, Header},
-    region::Region,
+    header::{DATA_START, Header},
+    region::{Region, invalid},
 };
 use redb::StorageBackend;
 use std::{
@@ -43,7 +43,7 @@ impl Backend {
             .checked_add(bytes as u64)
             .is_none_or(|end| end > state.header.length)
         {
-            return Err(header::invalid("engine IO exceeds logical extent"));
+            return Err(invalid("engine IO exceeds logical extent"));
         }
         Ok(())
     }
@@ -57,14 +57,14 @@ impl Backend {
         let mut state = self.state.lock().unwrap();
         Self::healthy(&state)?;
         if state.header.length == 0 {
-            return Err(header::invalid("empty engine cannot become ready"));
+            return Err(invalid("empty engine cannot become ready"));
         }
         let mut header = state.header.clone();
         header.ready = true;
         header.generation = header
             .generation
             .checked_add(1)
-            .ok_or_else(|| header::invalid("generation exhausted"))?;
+            .ok_or_else(|| invalid("generation exhausted"))?;
         Self::finish(&mut state, self.region.publish_header(&header))?;
         state.header = header;
         Ok(())
@@ -104,14 +104,14 @@ impl StorageBackend for Backend {
             return Ok(());
         }
         if state.header.ready && length == 0 {
-            return Err(header::invalid("refuse emptying a ready engine"));
+            return Err(invalid("refuse emptying a ready engine"));
         }
         let mut header = state.header.clone();
         header.length = length;
         header.generation = header
             .generation
             .checked_add(1)
-            .ok_or_else(|| header::invalid("generation exhausted"))?;
+            .ok_or_else(|| invalid("generation exhausted"))?;
         let result = (|| {
             let zeros = [0; 64 * 1024];
             for offset in (state.header.length..length).step_by(zeros.len()) {

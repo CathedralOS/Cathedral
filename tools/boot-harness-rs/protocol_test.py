@@ -3,7 +3,7 @@ import subprocess
 import time
 
 
-def run(command, output, timeout, creationflags, marker):
+def run(command, output, timeout, creationflags, marker, *, abrupt=False):
     serial = output / "serial.log"
     serial.write_text("", encoding="utf-8")
     with (output / "qemu.log").open("w", encoding="utf-8") as log:
@@ -24,5 +24,8 @@ def run(command, output, timeout, creationflags, marker):
             raise RuntimeError(f"Protocol guest timed out: {serial.read_text(encoding='utf-8', errors='replace')}")
         finally:
             if process.poll() is None:
-                process.terminate()
+                if abrupt:
+                    process.kill()
+                else:
+                    process.terminate()
             process.wait(timeout=5)

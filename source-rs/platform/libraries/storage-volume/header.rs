@@ -1,6 +1,6 @@
 //! Experimental envelope encoding. Two complete checksummed copies; no native
 //! struct serialization. Engine bytes and their own recovery metadata are opaque.
-use std::io;
+use crate::Error;
 pub const BLOCK: u64 = 4096;
 pub const DATA_START: u64 = 2 * BLOCK;
 const MAGIC: &[u8; 16] = b"CATH-VOLUME-LAB\0";
@@ -14,10 +14,10 @@ pub struct Header {
     pub length: u64,
     pub ready: bool,
 }
-pub fn invalid(message: &str) -> io::Error {
-    io::Error::new(io::ErrorKind::InvalidData, message)
+fn invalid(message: &'static str) -> Error {
+    Error::Invalid(message)
 }
-pub fn geometry(bytes: u64) -> io::Result<()> {
+pub fn geometry(bytes: u64) -> Result<(), Error> {
     if bytes < DATA_START + 2 * 1024 * 1024 || !bytes.is_multiple_of(BLOCK) {
         return Err(invalid(
             "volume must be block-aligned and provide at least 2 MiB engine capacity",
@@ -53,10 +53,8 @@ impl Header {
     }
     // None means blank/torn/damaged copy. An intact unsupported format is an
     // error even if another copy looks old and supported: no silent downgrade.
-    pub fn decode(bytes: &[u8; BLOCK as usize]) -> io::Result<Option<Self>> {
-        let mut expected = *bytes;
-        seal(&mut expected);
-        if expected[HASH_START..] != bytes[HASH_START..] {
+    pub fn decode(bytes: &[u8; BLOCK as usize]) -> Result<Option<Self>, Error> {
+        if digest(bytes).as_bytes() != &bytes[HASH_START..] {
             return Ok(None);
         }
         if &bytes[..16] != MAGIC {
@@ -93,14 +91,19 @@ impl Header {
         Ok(Some(header))
     }
 }
-pub(super) fn seal(bytes: &mut [u8; BLOCK as usize]) {
+fn digest(bytes: &[u8; BLOCK as usize]) -> blake3::Hash {
     let mut hash = blake3::Hasher::new();
     hash.update(b"cathedral-volume-lab-envelope-v1\0");
     hash.update(&bytes[..HASH_START]);
-    bytes[HASH_START..].copy_from_slice(hash.finalize().as_bytes());
+    hash.finalize()
+}
+/// Recompute the envelope checksum; this provides no authentication.
+pub fn seal(bytes: &mut [u8; BLOCK as usize]) {
+    let hash = digest(bytes);
+    bytes[HASH_START..].copy_from_slice(hash.as_bytes());
 }
 
-pub fn select(copies: &[Option<Header>; 2]) -> io::Result<Header> {
+pub fn select(copies: &[Option<Header>; 2]) -> Result<Header, Error> {
     match (&copies[0], &copies[1]) {
         (None, None) => Err(invalid("no valid volume header")),
         (Some(h), None) | (None, Some(h)) => Ok(h.clone()),

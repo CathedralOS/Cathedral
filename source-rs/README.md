@@ -65,6 +65,7 @@ The entrance explains this level without exposing every detail below it.
 | `contracts/block.rs`, `contracts/storage.rs` | Experimental block durability and private-object messages |
 | `platform/drivers/ata-pio/` | Userspace bounded PIO driver for a dedicated QEMU data disk |
 | `platform/libraries/object-store/`, `platform/services/storage/` | Atomic object replacement, recovery and private service endpoint |
+| `platform/libraries/storage-volume/`, `distribution/lab/volume/` | Experimental shared envelope codec and guest block-region/flush proof; host redb only |
 | `contracts/input.rs` | Experimental physical-key events, independent of scan codes or UI policy |
 | `contracts/pointer.rs` | Experimental logical pointers, source updates, capture and scoped synthetic leases |
 | `contracts/interaction.rs` | Experimental attenuated keyboard focus and cross-process child placement |

@@ -10,11 +10,12 @@ name = "storage-layout"
 path = "main.rs"
 
 [dependencies]
+cathedral-storage-volume = { path = "../../source-rs/platform/libraries/storage-volume", optional = true }
 blake3 = "1.8.7"
 redb = { version = "=4.4.0", optional = true }
 rusqlite = { version = "=0.40.2", default-features = false, features = ["bundled", "libsqlite3-sys"], optional = true }
 
 [features]
-engines = ["dep:redb", "dep:rusqlite"]
+engines = ["dep:cathedral-storage-volume", "dep:redb", "dep:rusqlite"]
 
 [workspace]

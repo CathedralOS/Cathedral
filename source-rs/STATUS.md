@@ -63,8 +63,23 @@ engine initialization. Opening refuses unsupported, unfinished or invalid volume
 without creating a replacement database. Native-image checks cover exclusive ownership,
 capacity refusal, reopen and preservation of neighbouring ranges; 939 simulated cuts
 exercise formatting, publication and compaction with logical-length changes. This adds no GPT/EFI,
-installer, accepted disk ABI or guest adapter. The next boundary is a guest block
-region with an explicit durability/flush contract, reusing the host checks.
+installer or accepted disk ABI.
+
+The [shared volume boundary](platform/libraries/storage-volume/CHARTER.md) now has
+an allocator-free byte/sector adapter and the host/guest envelope codec. It validates
+complete IO ranges, preserves partial-sector neighbours and stops IO after uncertain
+write/flush failures. The separate guest fixture uses the granted ATA controller to
+inspect a host-formatted redb volume and flush scratch writes. Four boots check cold
+reopen, single-copy recovery and both-copy refusal; host checks compare the entire
+image and reopen the intact engine. This is transport evidence, not guest database
+transactions or hardware power-loss coverage. A funded allocator and sufficient
+userspace memory/image admission remain prerequisites for the redb guest runtime;
+the kernel limits and ordinary private catalog service are unchanged.
+
+Validation: debug/release four-boot x86 QEMU proofs, workspace host tests, the
+939-cut host volume regression, host/x86/ARM64 target lint and repository layout
+checks. BLAKE3 alone is optimized in dev builds to fit the existing image bound;
+the guest fixture separates buffer lifetimes to stay inside the existing stack.
 
 ## Resumable storage and provider recovery
 

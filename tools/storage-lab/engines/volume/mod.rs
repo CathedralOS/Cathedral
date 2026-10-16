@@ -1,5 +1,5 @@
 mod backend;
-mod header;
+use cathedral_storage_volume::header;
 mod image;
 mod proof;
 mod region;

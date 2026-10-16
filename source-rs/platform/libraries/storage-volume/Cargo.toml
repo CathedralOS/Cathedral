@@ -1,0 +1,22 @@
+[package]
+name = "cathedral-storage-volume"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+autotests = false
+
+[lib]
+path = "lib.rs"
+
+[dependencies]
+cathedral-contracts.workspace = true
+blake3 = { version = "=1.8.7", default-features = false }
+
+# ARM64 bare-metal builds need no separate NEON C cross-compiler. Host and x86
+# feature selection stays unchanged, including the host measurement lab.
+[target.'cfg(all(target_arch = "aarch64", target_os = "none"))'.dependencies]
+blake3 = { version = "=1.8.7", default-features = false, features = ["pure"] }
+
+[lints]
+workspace = true

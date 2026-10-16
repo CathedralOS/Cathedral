@@ -4,6 +4,14 @@ Run `python tools/boot-harness-rs/run.py --smoke` from the repository root.
 This builds the separate `source-rs/` Cargo workspace and exercises its UEFI
 handoff under QEMU/OVMF. Host-side Python only; no extra Python packages.
 
+`python tools/boot-harness-rs/volume_test.py --release` runs the separate
+[volume transport proof](../../source-rs/platform/libraries/storage-volume/CHARTER.md).
+It builds [profiles/volume.json](profiles/volume.json), creates a new guarded image,
+and makes four boots for byte IO/flush, cold reopen and damaged-envelope cases.
+The full-image comparison and host engine reopen retain artifacts under
+`build/boot-harness-rs/volume/`. Omit `--release` for the debug proof. Guest redb
+execution is still pending; this exercises its volume envelope and block boundary.
+
 `python tools/boot-harness-rs/run.py --matrix-storage-test --release` selects
 [profiles/matrix-storage.json](profiles/matrix-storage.json) and checks private
 catalog delegation through two matrix levels, stale binding rejection, revocation
