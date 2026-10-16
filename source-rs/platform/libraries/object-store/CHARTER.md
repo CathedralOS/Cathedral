@@ -59,3 +59,9 @@ snapshots, replication, GC, dynamic realm admission or transactions spanning
 kernel authority and storage. Storing both bounded roots in one snapshot means
 writes are serialized and share one storage failure domain. The kernel remains
 independently usable without this library or its service.
+
+The next storage investigation is the
+[DBFS foundation proposal](../../../../wiki/proposals/0002_dbfs_storage_foundation.md)
+and its [host layout lab](../../../../tools/storage-lab/README.md). That experiment
+measures BLAKE3 chunks, flat manifests and retained contents without changing this
+catalog's format or guest protocol. Its in-memory checks are not durability evidence.

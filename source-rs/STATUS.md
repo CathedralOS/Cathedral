@@ -4,6 +4,22 @@ This map connects implemented mechanisms to their integrated consumers, proofs
 and remaining restrictions. The [lab guide](README.md) owns detailed ABI/build
 instructions. [Owner questions](../OWNER_QUESTIONS.md) own unresolved semantics.
 
+## DBFS storage-layout investigation
+
+The [foundation proposal](../wiki/proposals/0002_dbfs_storage_foundation.md) now
+distinguishes object identity, immutable content and physical placement, with
+established database-engine families as candidates. Realm boundaries do not
+automatically require two-phase commit; durable watchers do not require CRDTs.
+Identity/alias, deduplication/erasure, retention and isolation choices remain in
+the owner queue. No production engine or on-disk format is selected.
+
+The separate [host layout lab](../tools/storage-lab/README.md) measures actual
+BLAKE3 chunk/flat-manifest representations at 4/16/64 KiB, inline tiny contents,
+small range edits, copies, shifted contents and retained versions. It verifies
+readback and reports packed bytes and hashing work. It does not measure disk IO,
+implement transactions or replace the guest private catalog. Engine comparison,
+metadata queries and allocation/recovery under low free space remain next evidence.
+
 ## Resumable storage and provider recovery
 
 Child storage requests now return to the matrix event loop while awaiting replies.

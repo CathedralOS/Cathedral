@@ -9,7 +9,7 @@ behavior, compatibility and trust consequences, viable alternatives, unresolved
 questions, and acceptance evidence.
 
 IDs are stable and are not reused after removal. The next available ID is
-`0002`. A substantial proposal may have a same-named companion directory. Its
+`0003`. A substantial proposal may have a same-named companion directory. Its
 entry page maps the responsibilities; companion pages do not become independent
 contracts or competing sources of truth.
 
@@ -31,3 +31,7 @@ semantic or trust choice blocking a concrete requirement belongs in
 - [0001: Input sources and scoped pointer leases](0001_input_and_pointer_leases.md)
   separates source bindings, logical pointers, cursor visuals and action rights.
   Pointer-to-seat association and keyboard-focus authority remain proposed.
+- [0002: DBFS storage foundation](0002_dbfs_storage_foundation.md) separates
+  object identity, content and placement, compares established engine families,
+  and defines the first chunk-layout measurements. No engine or disk format is
+  selected; sharing, retention and isolation promises remain proposed.

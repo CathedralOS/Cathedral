@@ -1,0 +1,15 @@
+[package]
+name = "cathedral-storage-layout-lab"
+version = "0.0.0"
+edition = "2024"
+rust-version = "1.94"
+publish = false
+
+[[bin]]
+name = "storage-layout"
+path = "main.rs"
+
+[dependencies]
+blake3 = "1.8.7"
+
+[workspace]

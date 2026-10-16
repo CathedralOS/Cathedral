@@ -32,6 +32,108 @@ standard.
 
 ## Open questions
 
+### DBFS identity, aliases and realm authority
+
+**Requirement and conflict.** A versioned object store needs stable references
+and independent copies. The [filesystem design](wiki/design/part_4_storage/00_filesystem_as_database.md)
+proposes mutable file cells, aliases and cheap subtree copies, while formerly
+deriving one realm from parent ancestry. Shared immutable content can have several
+parents, and sharing mutable cells during a subtree copy would also share edits.
+This blocks freezing namespace/copy and persisted-reference semantics.
+
+**Contracts checked.** The [specification index](wiki/spec/README.md) leaves
+`spec/storage/realms_and_objects.md` unwritten. The
+[Rust catalog protocol](source-rs/contracts/storage.rs) supplies only bounded,
+connection-relative object numbers; it has no aliases, durable identity or
+cross-realm object graph. The [storage proposal](wiki/proposals/0002_dbfs_storage_foundation.md)
+and host content-layout lab do not resolve those semantics.
+
+**Owner choice.** Adopt stable mutable object identity with explicit alias edges,
+or path/version identity with copies and explicit references instead of shared
+mutable aliases. If cells exist, define whether they can be shared across realms
+and how writable subtree copies obtain independent identities. Authority must be
+checked for each authorized reference/traversal; content sharing cannot confer it.
+The alternatives change rename behavior, alias edits and persisted references.
+
+**Recommendation (unaccepted).** Separate stable object identity from immutable
+content and namespace edges. Make ordinary copies independent identities; keep
+content sharing internal. Specify cross-realm aliases and subtree-copy identity
+rules before exposing them, without promising O(1) writable subtree copies yet.
+
+### DBFS deduplication domains and erasure
+
+**Requirement and tension.** The filesystem design combines cross-realm content
+deduplication, per-subtree sealing and a `wipe` retention mode. A shared backing
+cannot be physically erased for one realm while another still requires it;
+deduplication success, timing and accounting can also reveal content equality.
+This blocks a production promise of global deduplication or secure erasure.
+
+**Contracts checked.** The [filesystem design](wiki/design/part_4_storage/00_filesystem_as_database.md)
+and [memory/persistence design](wiki/design/part_2_components/02_memory_and_persistence.md)
+describe the intent; the [specification index](wiki/spec/README.md) and
+[catalog protocol](source-rs/contracts/storage.rs) define no encryption domain,
+physical sponsorship, deduplication disclosure or erasure contract.
+
+**Owner choice.** Deduplicate only within an encryption/trust/accounting domain,
+or allow broader sharing with a specified confidentiality and key-lifetime model.
+Define whether `wipe` means withdrawing this principal's access, destroying an
+exclusive encryption key, or proving all managed copies unusable. These promises
+are different, especially with replicas, snapshots and external copies.
+
+**Recommendation (unaccepted).** Begin within one explicitly authorized domain;
+keep hash existence and placement private. Do not promise global sharing or
+immediate physical erasure. Charge retained backing to an identified sponsor and
+define key/reference lifetime before enabling cross-domain deduplication.
+
+### DBFS history and durable subscriber limits
+
+**Requirement and conflict.** The filesystem design wants watchers that never
+miss events and pressure-thinned history. An indefinitely offline subscriber
+cannot have unlimited replay on bounded storage without eventually blocking
+writes or increasing its funded allowance. This blocks a durable subscription
+and retained-version API, not the current finite host experiment.
+
+**Contracts checked.** The [filesystem](wiki/design/part_4_storage/00_filesystem_as_database.md)
+and [transaction](wiki/design/part_4_storage/01_transactions_and_consistency.md)
+chapters describe durable observation, but the
+[specification index](wiki/spec/README.md) and
+[Rust catalog protocol](source-rs/contracts/storage.rs) have no cursor, retention,
+expiry or subscriber-sponsorship contract.
+
+**Owner choice.** Reserve replay/history storage and reject or block further
+writes when exhausted, or permit bounded retention and require explicit cursor
+expiry/resynchronization. Active-reader pins and explicitly retained versions
+need a separate promise; silently removing backing from a live reader is invalid.
+
+**Recommendation (unaccepted).** Offer bounded funded retention, report expiry
+explicitly and support authorized resnapshot plus replay. Require explicit funded
+pins for stronger history guarantees. Publish change records atomically with
+state and specify duplicate delivery and revocation independently of CRDTs.
+
+### DBFS isolation for cross-record invariants
+
+**Requirement and tension.** The transaction design proposes snapshot reads and
+first-committer-wins write conflicts while also promising transactional invariants
+over several records. Disjoint writes based on a shared predicate can violate an
+invariant under snapshot isolation even when neither write conflicts directly.
+This blocks selecting the general transaction contract and its conflict indexes.
+
+**Contracts checked.** The [transaction chapter](wiki/design/part_4_storage/01_transactions_and_consistency.md)
+has no accepted read-set/predicate-conflict rule. The
+[specification index](wiki/spec/README.md) leaves storage unspecified, and the
+[Rust catalog](source-rs/platform/libraries/object-store/CHARTER.md) uses a coarse
+expected-root revision rather than general snapshot transactions or queries.
+
+**Owner choice.** Require serializable transactions for general multi-record
+operations, or expose weaker isolation with explicit invariant guards/stronger
+transaction modes. The former requires conflict tracking or serialization; the
+latter makes application obligations and retry behavior part of the public API.
+
+**Recommendation (unaccepted).** Target serializable semantics for general
+metadata transactions, initially allowing coarse serialization in the lab.
+Specify bounded transaction sizes and retry outcomes before optimizing concurrency.
+Do not equate copy-on-write, snapshot reads and serializability.
+
 ### Replaceable distribution versus permanent OS chrome
 
 **Requirement and conflict.** A fork must be able to replace the single

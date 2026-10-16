@@ -1,6 +1,16 @@
 # Chapter 00: Filesystem as Database
 
-> The filesystem is one content-addressed object graph, partitioned into capability-rooted realms with no global root. Every change is structured, durable, observable, replayable, and permissioned.
+> The filesystem is intended as a transactional object graph, exposed through capability-rooted realms. Committed changes are permissioned and observable; replay and history require explicit retention guarantees.
+
+## Design status
+
+This chapter records intended product semantics, not an accepted storage-engine
+or on-disk specification. The [storage foundation proposal](../../proposals/0002_dbfs_storage_foundation.md)
+separates current direction, experimental choices and evidence still required.
+The Rust private catalog proves a bounded transaction/recovery path; the host
+chunk-layout lab measures representation costs. Neither implements this chapter.
+Unresolved identity, authority, retention and isolation choices are tracked in
+[owner questions](../../../OWNER_QUESTIONS.md).
 
 ## The Legacy Model
 
@@ -12,7 +22,7 @@ The second failure is the API. Unix gives you `open`, `read`, `write`, `rename`,
 
 ## The Cathedral Model
 
-The Cathedral filesystem is a database: a durable object graph with a transaction log at its core. Files are records with typed metadata. Directories are indexes and views over those records. Every mutation is a structured, durable, ordered entry in a log, so reads can be point-in-time snapshots, watchers are durable subscriptions that never miss an event, and the past is replayable. Objects carry content addresses (for dedup and integrity), causal history (for undo and audit), and per-object capabilities (a directory listing is an attenuated view, not a raw mode bit). Every change is structured, durable, observable, replayable, permissioned, and queryable, which is what robust file watching, app sync, backup, audit, undo, and state migration all need underneath.
+The Cathedral filesystem is intended to be a durable object graph with transactional updates, typed metadata, indexes and capability-scoped access. Committed changes should be observable through a durable change stream, with snapshots and retained history supporting recovery, backup and synchronization. This does not require event sourcing as the sole source of truth: materialized records plus transactionally published change records are a candidate. Replay guarantees depend on retention, subscriber budgets and expiry behavior; finite storage cannot promise unlimited history to every disconnected watcher.
 
 The other half of the redesign is that there is no global root.
 
@@ -33,37 +43,47 @@ Realms are not virtual drives. Drive letters got the named-root syntax right and
 
 ### One object graph underneath
 
-Realms are not separate disks. Underneath every realm is one global, content-addressed object store: bodies keyed by hash, nodes with parent and child edges, deduped across realms. A realm is a distinguished **root node** in that graph. A realm's top-level objects have the realm node as their parent, so an object's realm membership is structural: it is which root you reach by walking parent edges. There is no per-file realm tag; membership is ancestry. An optional cached `realm_root_id` per object turns a realm check into a field read instead of a walk.
+Realms partition naming and authority independently of physical devices. Immutable
+content can be reused beneath several objects or realms without sharing their
+identities or grants. A content digest identifies bytes; it is not permission to
+read them. The placement index remains internal to the storage provider.
 
-The parent chain terminates at the realm root. An ordinary capability can walk down a realm but not up past its root. Above all realm roots sits exactly one privileged node, the **realm registry**, whose children are the realms. Traversing into it needs the realm-authority capability, held by the installer, backup tooling, and factory reset, not by ordinary principals. There is still one global thing, but it is an authority almost nobody holds, not a namespace everyone shares.
+The earlier proposal inferred an object's unique realm from its parent chain.
+That is insufficient for a graph with aliases or shared nodes: a node can have
+multiple incoming edges. Immutable content membership must be distinguished
+from namespace edges and the authority that permits traversal. Whether mutable
+object identity can itself be shared across realms remains an owner choice.
+A privileged realm registry is a proposed management interface, not permission
+for ordinary callers to enumerate other roots. Cross-realm physical deduplication,
+encryption domains and charging also remain proposed.
 
 ### Copying is a reference operation
 
-Copying a file creates a new reference to the same body. Bodies are content-addressed and a name is a reference to a hash, so no bytes move and a copy is O(1) regardless of file size. Directory nodes are content-addressed too (a directory's content is its list of `name -> hash` child entries), so a directory's hash transitively names its entire subtree. Copying a whole folder is one reference to the existing tree root, not a walk that recreates a million nodes. A snapshot is the same operation over a realm root.
+An immutable content version can be shared by adding a reference without copying its payload. A file copy can create a new identity referring to that version. A directory snapshot can share immutable tree structure, but a writable directory copy's identity and alias behavior still need definition: stable mutable cells cannot simply be shared while promising independent edits. O(1) reference creation describes content sharing, not an unconditional bound on authorization, identity creation, indexing or persistence costs.
 
-The store is a Merkle DAG, not a tree. The same immutable node can be referenced by many parents, so copies share nodes. This is safe because nodes are immutable, so two references can never interfere. Modifying a copy never edits a shared node; it writes new nodes along the path from the change to the root (copy-on-write path-copy, O(depth)) and leaves every untouched subtree shared. The DAG is acyclic by construction: a node's hash depends on its children's hashes, so a cycle would require a hash to be known before it is computed. Traversal therefore always terminates and needs no cycle detection, unlike symlinks. The one place sharing is visible is aggregate queries. "How big is this folder" must walk with a visited-set so a shared body is counted once, and storage accounting can then report that ten copies of a 100GB folder cost about 100GB, not a terabyte.
+The candidate immutable representation is a Merkle DAG with copy-on-write nodes. A bounded construction and validated decoding protocol must enforce node kinds, references and traversal limits; hashing alone is not validation of hostile input. Unchanged subtrees may be reused while changed paths are rebuilt. Aggregate queries must distinguish logical size, unique physical bytes and charged bytes. Shared backing does not define which realm pays for it.
 
 Bytes move only when a copy must live on different physical storage (cross-device, or a realm backed by another drive). That is the online-relocation path, and even there content-addressing dedups: a body the target already holds transfers for free.
 
-### Files, copies, and aliases
+### Files, copies, and aliases (candidate semantics)
 
-A file is two levels: a small mutable **cell** with stable identity that points at its current content hash, over the immutable content the cell points at. A content hash names fixed bytes, but a file that changes needs an identity that survives its edits, and the cell is that identity. The split gives the three operations users expect:
+The candidate file model has two levels: a small mutable **cell** with stable identity that points at its current content hash, over the immutable content the cell points at. A content hash names fixed bytes, but a file that changes needs an identity that survives its edits, and the cell is that identity. The split gives the three operations users expect:
 
 - **Copy** is a new cell pointing at the same content. The two files share a body until one is written, at which point copy-on-write gives that one a new content hash and leaves the other alone.
-- **Alias** (the hardlink) is two names for the same cell. A write goes through the shared cell, so both names see it. There is no original and no owner. The cell lives while any name references it and is freed when the last one goes. "If the original is deleted the other takes over" is just refcounting on the cell.
+- **Alias** (the proposed hardlink) is two names for the same mutable cell, so writes through either name affect the shared identity. Reclamation must account for retained versions, active readers and other permitted references, not only the last directory name. Cross-realm aliases are unresolved.
 - **Symlink** is a name that points at another name or path, and dangles if its target is renamed or removed. It is the weaker shortcut, for when you want a pointer that follows a location rather than a thing.
 
-Copy and alias differ on purpose: copy duplicates identity, alias shares it. Snapshots and dedup are unaffected, because the content is still content-addressed and a snapshot freezes every cell's current content pointer into an immutable point-in-time tree. Whether the mutable-cell level exists at all is a real design choice. A purely path-identified store (Git-like) gives copies but not true aliases.
+In this candidate model, copy duplicates identity and alias shares it. A snapshot must freeze the identity-to-version mapping as well as content references; otherwise mutable cells can leak later edits into an old snapshot. Whether the mutable-cell level exists and how a subtree copy treats aliases are owner choices. A path/version-identified store is an alternative with different alias semantics.
 
 ### Version history and retention
 
-Version history is deferred compaction, controlled per commit. Copy-on-write already orphans the prior version at every commit, so keeping recoverable history means not reclaiming it yet. Retention and reclamation are one continuum.
+Version history retains references to older committed state. Reclamation must respect current roots, retained history, active readers and in-flight publication. Copy-on-write makes sharing possible but does not itself establish safe collection or a retention guarantee. The following retention vocabulary remains proposed, particularly its interaction with quotas, shared encrypted content and durable subscribers.
 
 Retention is an attribute on the commit, not the file:
 
 - **`retain`** is the default. The superseded version is kept as history.
 - **`transient`** drops it. The bytes are reclaimed lazily by pressure-driven compaction and may physically linger.
-- **`wipe`** securely destroys it now.
+- **`wipe`** requests erasure subject to the encryption, sharing and remaining-reference contract; it cannot promise to destroy another authorized copy.
 
 When a commit does not specify, the realm or type policy supplies the default: a dense-recent to sparse-old thinning schedule, Time-Machine-style, overridden by storage pressure. Nothing is kept forever by default.
 
@@ -71,13 +91,13 @@ Recovery is a backstop to invariants, not a substitute for them. `ensures` and t
 
 Two commit modes depart from the default. Secrets use `wipe`, which is secure deletion: crypto-erase the version's key, since flash cannot reliably overwrite. That is valid only on unreferenced, non-deduped bytes ([[secrets_and_keys]], [[audit_compliance_provenance]]). A high-rate append stream such as video capture uses `transient` commits, so the OS does not retain the 5s/10s/15s growing tips as versions, with prefix-consistency on crash (recover to the last committed batch). The stream opts out of the transactional/versioned default while growing and seals to a normal `retain` object when done.
 
-Patching a large file needs none of this. Chunked Merkle-DAG copy-on-write pages in only the touched chunks and writes O(change), and the root-flip commit is atomic, so a huge-file patch is an ordinary transaction.
+A large range patch can replace touched chunks and affected manifest/index paths while reusing unchanged content. Its cost includes chunk rounding, metadata updates and the engine's journal or copy-on-write work; it is not literally O(changed bytes) independent of layout. Atomic publication requires a crash-consistent commit protocol, not merely an assumed atomic root-pointer write.
 
 ### Cross-realm access and its cost
 
 Cross-realm sharing is a capability-gated edge, not a global path. When an app needs a user file, something mints a capability into the user realm for that one object: that is the file picker as an authority mint ([[human_permission_ux]]). The distinction to keep, which iOS and Android both blur, is app-private storage (the app realm) versus user-facing documents (the user realm). A file an app saves "for the user" lands in the user realm via a granted capability, not buried in the app's container.
 
-A global root is a composability win, realms are an isolation win, and you cannot fully have both. A bare path is no longer a universal address, so sharing across realms costs a capability plus a qualified name instead of passing a string, and a persisted reference must record realm-plus-path, not a bare path. A global object store still exists underneath, so realms partition naming and authority, not storage. "See everything" for admin, backup, or search needs a meta-capability instead of being free.
+Cross-realm sharing requires an authorized reference, not merely a globally meaningful string. Durable references may name an identity or a realm-relative path depending on the eventual contract; those choices have different rename and alias behavior. Physical backing can be shared while naming and authority stay separate. Broad administrative, backup or search access requires explicit authority.
 
 ### Storage is relocatable
 
@@ -91,7 +111,7 @@ The friction is an app actively writing a file, since it is mutating the bytes b
 
 The real limit is large, hot files. A continuously appended high-bandwidth file, such as an active video capture, resists live migration for the same reason a write-heavy VM does: if the write rate exceeds the copy bandwidth, the delta never converges. The options are to wait for the writer to rotate or finish, force a cutover the writer must tolerate, or move only the cold prefix and leave the hot tail in place until it cools. The OS should pick and say which, rather than pretend the database makes it free.
 
-This works only because no component's address space is ever pinned to a storage location, which is why Cathedral has no memory-mapped files. An `mmap` hands an app raw pointers into specific physical pages, so the backing cannot move without invalidating them. The legitimate uses of `mmap` are served by location-independent primitives instead. Paged access to large persistent data is the single-level store ([[memory_and_persistence]]). A zero-copy read is a borrowed view over an object's pages with the runtime still owning placement. Shared-memory IPC is the shared-region primitive ([[ipc_and_service_invocation]]). In every case the app holds an object reference or a borrowed view, and the runtime owns where the bytes live.
+Relocation requires stable logical references and managed backing lifetimes. Conventional virtual-memory mappings do not inherently expose fixed disk locations or prevent relocation: page tables and filesystem indirection can preserve virtual addresses while backing changes. Cathedral's proposed object views and absence of a POSIX mmap API are API/lifetime choices, not a hardware prerequisite for moving storage. A borrowed resident view can still pin RAM and constrain eviction; that lifetime must be respected ([[memory_and_persistence]]).
 
 ### Placement and durability classes
 
@@ -163,16 +183,16 @@ There are three limits. Porting a legacy database wholesale still works but is w
 - **Owned child realms.** Because one object kind carries both content and children, an object can own a **child realm**. A running app's mutable per-app state is a sub-realm owned by its executable object, rooted in the file itself instead of a collision-prone sibling name, and dropping the executable reclaims its state with it. Copy and send are then type-driven: the immutable content-addressed body shares by default, and an owned child realm (private state) stays home unless the sender includes it. This is resource forks and alternate data streams generalized, and it cures sidecar-file litter. Thumbnails, versions, layers, and metadata become children of the object instead of `.DS_Store` / `file.jpg.xmp` siblings.
 - **Derived metadata and previews.** Thumbnails, extracted text, and dimensions are artifacts derived from content and stored as metadata, generated once by a read-capable broker. A component can be granted preview access without read access to the body, so a gallery shows thumbnails it could not open. A preview of sealed content must itself be sealed. Precomputing trades storage for avoiding a content read.
 - **No special folders; meaning is type and query.** The OS blesses no path. There is no canonical Photos, Documents, or fonts location. Those are queries over typed objects (`type: image`, `type: font`), and a folder is optional human organization the system attaches no meaning to. A default save destination is a user-configurable binding rather than a sacred path, and per-user config is typed records owned per principal rather than a magic directory ([[configuration_and_policy]]). A legacy app that hardcodes `~/Documents` or `~/.fonts` gets those names bound to a view or query in its resolution environment ([[compatibility_and_legacy]]), so the special folder is faked at the realm boundary and nothing native depends on one.
-- **The transaction log as the source of truth.** Journaling is exposed as an API. Change data capture is reading the log forward from an offset. Snapshots are log positions, and rollback is replay to a position ([[transactions_and_consistency]]). The log is likely per-realm.
-- **Version history is deferred compaction, controlled per commit.** Retention is a per-commit attribute (`retain`, `transient`, `wipe`) defaulted by a realm or type thinning policy and overridden by storage pressure. Secrets and high-rate append streams are the two non-default modes ([[secrets_and_keys]], [[audit_compliance_provenance]]). The mechanism is in the model section above.
-- **Durable subscriptions.** File watching becomes a resumable cursor over the log. A subscriber holds an offset, survives reboot, and is guaranteed every change in order with no overflow drops.
+- **Committed change stream.** Durable change records may be published alongside materialized state. Their API need not expose the physical recovery journal or require event sourcing. Snapshot identity, log partitioning and retention remain to be specified ([[transactions_and_consistency]]).
+- **Version history and reclamation.** Retention policies remain proposed; current roots, active readers and explicit pins constrain reclamation. Storage pressure needs a defined refusal, expiry or thinning policy rather than silently breaking those promises ([[secrets_and_keys]], [[audit_compliance_provenance]]).
+- **Durable subscriptions (proposed).** A resumable cursor observes authorized committed changes within a funded retention window. Expired cursors need explicit failure/resynchronization semantics; bounded storage cannot promise infinite offline replay. See the retention owner question.
 - **Atomic multi-object change.** A rename, a config write, and a content update commit as one transaction. The primitive lives in [[transactions_and_consistency]], and this chapter is its first heavy consumer.
 - **Content addressing and dedup.** Object bodies keyed by content hash give cheap dedup, integrity, and snapshot sharing across realms. Names are mutable references into it.
 - **Integrity by construction.** Because the content hash is also a checksum, every read is self-verifying. Bit rot or tampering is caught on read instead of being served silently. Where a subtree keeps replicas (a mirrored placement class above), the bad copy is repaired from a healthy one, and a background scrub can verify proactively rather than waiting for a read.
-- **Hash algorithm.** The address is a cryptographic 256-bit hash. The hash is the identity, and a collision is corruption plus a substitution attack (a malicious body masquerading as a trusted one), so a fast non-cryptographic hash will not do. The default is BLAKE3: fast, parallel, and its internal Merkle tree verifies a sub-range of a large file without rehashing the whole thing, which suits chunked bodies and sub-object paging. SHA-256 stays available as a compliance option. The address is algorithm-tagged and the algorithm is part of the versioned on-disk format, so a broken hash has a migration path instead of a dead store.
+- **Hash algorithm (provisional).** BLAKE3 with a 256-bit digest is the current candidate for content identification and integrity. Storage chunks and manifest nodes need their own canonical encoding and node-kind separation. A root digest alone does not verify an arbitrary sub-range: the verifier also needs the relevant authenticated tree nodes/proof. BLAKE3's internal 1 KiB chunks do not choose DBFS chunk size. Algorithm identifiers and migration need a format contract before freezing persistent addresses; alternative algorithms are not implemented by the current lab.
 - **Inline hashing under vertical integration.** Content-addressing puts a cryptographic hash on nearly all I/O, every write and every self-verifying read, which is far more than a traditional filesystem hashes. If the platform owns the silicon, the hash belongs inline in the storage/DMA path, computed as bytes stream between device and memory with no extra memory passes. That makes writes, self-verifying reads, scrub, and dedup effectively free at a fraction of the power a software hash costs. It is the pattern Apple already uses for inline storage encryption, pointed at the content hash. The tension is that a fixed-function BLAKE3 block is a generational commitment against the algorithm-migration rule above, so a programmable hash engine (or a hardware fast path with software fallback) is the safer shape. It helps the hashing cost, not the index memory cost.
 - **Compression.** Object bodies can be transparently compressed (lz4 for speed, zstd for ratio). Content-addressing dedups identical bodies, compression shrinks within a body, and the two compose. Both are properties the runtime applies, not something an app sees.
-- **The index is object-granular and tiered.** The `hash -> location` index is the mandatory analog of ZFS's dedup table, since content-addressing makes dedup the identity, so it must be kept bounded by design. Three levers do that. Index at object and shared-chunk granularity, locating bytes within a large object by a conventional extent map rather than a per-block hash, which is where ZFS dedup exploded. Store the index as an LSM tree on a fast metadata device with per-segment bloom filters and an adaptive RAM cache, so a lookup is a RAM hit normally and at most one flash read when cold, never the whole map resident. Partition it per realm ([[memory_and_persistence]]), so only active realms' sub-indexes load (the system realm at boot, a user realm at login). A truncated hash can serve as the index key, with the full hash verified from the object header.
+- **Placement-index design remains open.** Hash-to-location records need bounded caching and explicit metadata costs. Copy-on-write trees, journaled B-trees and LSM structures are candidates. Bloom filters and caching can reduce reads but do not guarantee one flash read on every cold lookup. Partitioning must fit the chosen sharing/authority domains; cross-realm deduplication cannot simultaneously assume entirely independent per-realm placement indexes. Full digests remain authoritative even if a shorter search key is used.
 - **Realm membership by ancestry.** Membership is the root the parent chain ends at, not a per-file tag. The optional cached `realm_root_id` is a denormalization, and a cross-realm move invalidates that cache over the moved subtree.
 - **The system realm is swappable.** It wants to be immutable and content-addressed so the OS can version and roll it back independently of the user realm ([[versioned_state_and_migration]], [[updates_and_hot_swap]]). Reinstall swaps the system realm and leaves the user realm untouched.
 - **Online relocation.** Any subtree's physical backing can move between devices at runtime, because names resolve through the graph and bodies are content-addressed. The move is a transaction with a live-migration cutover for in-use files ([[transactions_and_consistency]], [[updates_and_hot_swap]]).
@@ -180,7 +200,7 @@ There are three limits. Porting a legacy database wholesale still works but is w
 - **Sealed subtrees.** Encryption at rest is a property a subtree can carry. The bytes are ciphertext and a content-key gates them, with a choice of hiding contents only (names visible) or the names too. The key is sealed to a credential and unsealed on demand ([[sessions_and_login]], [[secrets_and_keys]]).
 - **Two protection axes: metadata and content.** Names, metadata, the search index, and derived previews live in one layer (directory nodes and records). Object bodies live in another. The two are protected independently. A subtree can be excluded from search with enumeration gated behind a re-auth, so its existence and names are hidden whether or not the bodies are encrypted. Conversely, the bodies can be sealed while the names stay visible. Hiding that a file exists is a metadata-axis job that content encryption does not do on its own, since encrypted contents still leak names, sizes, and types. The whole-realm login seal already encrypts both layers at rest ([[sessions_and_login]]). The per-subtree controls exist for the in-session threat: a left-open laptop, or someone who knows the main credential.
 - **Mutable file identity.** A file is a mutable cell over immutable content, which yields copies (a new cell), aliases or hardlinks (a shared cell with no owner), and symlinks (a name pointing at a path). Whether the cell level exists is a real design choice with snapshot and dedup implications.
-- **No memory-mapped files.** Nothing pins a component's address space to a storage location, which is what makes relocation and tiering possible. `mmap`'s uses are covered by the single-level store, borrowed object views, and the shared-region IPC primitive ([[memory_and_persistence]], [[ipc_and_service_invocation]]).
+- **Object views rather than a POSIX mmap API (proposed).** The runtime owns placement and view lifetime. Conventional mappings do not intrinsically pin disk locations; object views still need explicit residency and quiescence rules ([[memory_and_persistence]], [[ipc_and_service_invocation]]).
 - **Per-object capabilities.** A handle to an object is the authority over it. A directory view is an attenuated capability ([[capability_model]]), and a realm root is the top-most such capability.
 - **Capabilities are database-shaped.** A capability scopes by operation and projection, not only by subtree. Enumerating a directory (names and metadata) is a strictly weaker grant than reading object contents. A grant can be narrowed by record type (for example, read only image-typed objects) the way a database view restricts rows and columns, with the store enforcing the predicate at access. Listing names, reading previews, and reading contents are distinct capabilities over the same objects ([[capability_model]]).
 - **`private`: opt out of bulk grants, not out of your own view.** A per-object attribute that excludes the object from bulk enumerate and realm grants. A folder grant handed to an app skips `private` children, so reaching one needs an `Enumerate(private)` grant or a direct per-object mint (the double-click "open this" gesture, [[human_permission_ux]]). It is private from delegated apps, never from the owner. The realm holder always sees their own `private` objects, because the file browser is an app that was granted `Enumerate(private)`, not a blessed one. This is the inverse of the Windows/macOS "hidden" attribute, which buries files from the user. `private` buries nothing from you and only narrows what bulk delegation sweeps up. That is the over-granted-app threat, distinct from the at-rest "left-open laptop" threat the sealed and metadata-axis controls cover.
@@ -188,22 +208,22 @@ There are three limits. Porting a legacy database wholesale still works but is w
 - **Provenance.** Each record carries who, what, and when wrote it ([[audit_compliance_provenance]]).
 - **Schema evolution.** Records have typed, versioned shapes that migrate ([[versioned_state_and_migration]]).
 - **The on-disk format is a selected durable codec over ordinary data.** Source-of-truth metadata (directory nodes, file records, log entries, the superblock) uses versioned numbered schemas, so it decodes across OS versions. Storage is the hardest compatibility case, because a node may have been written by a version that no longer runs anywhere. You never break decode of an old node, and you keep a total migration chain ([[versioned_state_and_migration]]). The superblock is the most frozen of all: a tiny self-describing header (format version, root hash, log head) the boot chain reads before anything else is reachable. Derived structures like the `hash -> location` index are the exception. They are version-tagged but rebuildable, discarded and regenerated on a mismatch rather than migrated.
-- **Offline/online sync and conflict resolution.** Causal history makes merge and conflict detection a property of the log.
-- **Zero value.** A zero file handle is the canonical null object. It reads as a zero-byte file (valid-empty) and discards writes (inert null-object), so the all-zero hash names the empty body and a zeroed handle is accepted everywhere without a null-handle crash. This is the storage-side instance of ZII ([[omega_substrate]]).
+- **Offline/online sync and conflict resolution.** Causal history can support conflict detection; useful merge rules require a separate type-specific replication design.
+- **Zero value.** An inert zero file handle is proposed as an API-level null object. It is distinct from a content digest: the all-zero hash is not the BLAKE3 digest of empty content. The handle convention must not grant access or manufacture a valid stored object; its exact read/write behavior remains an API choice ([[omega_substrate]]).
 
 ## Key Questions
 
 - What is the unit of a "record" (a whole file, a sub-object, or a typed fragment), and how does that interact with huge opaque blobs (video, disk images) that resist structure?
 - What is the right realm granularity: one realm per app, or coarser, and who is allowed to mint a realm before it becomes fragmentation ([[governance_and_extension_boundaries]])?
 - Is the log global, per-realm, or per-subtree, and how is ordering defined across objects that commit together versus independently?
-- A shared object reachable from two realms has no single home. Is its "home realm" its creator, with others reaching it by a cross-realm edge, or is realm membership multi-valued?
+- Can mutable object identity be shared across realms, and what authorizes each traversal? Sharing immutable content alone does not imply shared identity or authority.
 - What is the exact thinning schedule for retained history, and how is per-realm history cost accounted?
 - Is there a write rate above which live relocation cannot converge, leaving a hot subtree pinned to its device until it cools, and how is that surfaced to the user who asked to move it?
 - What does a synthetic or overlay realm cost at the resolution layer, and is a fully fabricated `system://` cheap enough to back a long-running sandbox, or only a short-lived test world?
 
 ## Omega Leverage
 
-- **Capabilities as values plus authority flow** make a realm root a held capability, a directory view a derived attenuation of it, and provenance a recorded acquisition edge. An object's realm is the root its parent chain ends at.
+- **Capabilities as values plus authority flow** make a realm root a held capability, a directory view a derived attenuation of it, and provenance a recorded acquisition edge. Shared content does not have a unique realm inferred from ancestry; authority belongs to the authorized object/namespace traversal.
 - **Immutable historical `data` shapes plus checked conversions** give file records a path for on-disk schema evolution and help make the system realm rollback-able. See Omega [Historical Data And Component Replacement](https://github.com/CathedralOS/Omega/blob/main/wiki/language_guide/chapter_14_traits.md#versioned-data).
 - **Ordinary numbered schemas plus selected codecs** give at-rest and on-the-wire record and log encodings declared compatibility, so old log entries stay decodable. See Omega [Wire Protocols](https://github.com/CathedralOS/Omega/blob/main/wiki/language_guide/chapter_14_traits.md#wire-protocols).
 - **Domains** express object permission shades and validity classes (`Object::Readable`, `Object::Committed`, `Snapshot::Sealed`) on one handle type. See Omega [Domains](https://github.com/CathedralOS/Omega/blob/main/wiki/language_guide/chapter_8_domains.md).
@@ -213,10 +233,10 @@ There are three limits. Porting a legacy database wholesale still works but is w
 
 - Can the log be the only source of truth (event-sourced) at OS scale, or is a materialized object store required for performance, with the log as a journal?
 - How are durable subscriptions garbage-collected when a subscriber dies without unsubscribing: lease-based cursors ([[capability_lifecycle]])?
-- What is the consistency boundary between content-addressed bodies and the mutable name graph during a partial-failure write?
+- Which engine/recovery protocol ensures committed references always have durable backing, while retaining old backing until all required readers and versions release it?
 - How does a persisted cross-realm reference stay valid across a system-realm upgrade that relocates the target?
 - How is an open handle re-pointed across a relocation atomically, with no window where a read sees neither the old backing nor the new one?
-- With the index tiered (object-granular, LSM-on-flash, bloom-filtered, realm-partitioned), what is the residual memory floor, and how does it hold up under a random-access workload that defeats the hot-set cache, which is the worst case content-addressing creates?
+- For a candidate tiered placement index, what is the residual memory floor, and how does it hold up under a random-access workload that defeats the hot-set cache, which is the worst case content-addressing creates?
 
 ## Related
 - [[capability_model]] — per-object capabilities, realm roots, and attenuated directory views.

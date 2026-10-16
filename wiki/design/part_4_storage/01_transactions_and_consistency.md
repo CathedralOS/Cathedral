@@ -2,13 +2,23 @@
 
 > Atomicity is an OS primitive, not a database feature. This chapter owns the one common mechanism by which a set of state transitions commits all-or-nothing.
 
+## Design status
+
+The [storage foundation proposal](../../proposals/0002_dbfs_storage_foundation.md)
+records the current candidate architecture. Durable storage transactions belong
+in the platform; atomicity spanning kernel authority and service state is still
+an [owner question](../../../OWNER_QUESTIONS.md#kernel-mechanisms-versus-platform-orchestration).
+The scope below is a design ambition, not a claim that one implemented primitive
+already makes every subsystem transactional. Engine, isolation and recovery
+contracts remain to be selected and tested.
+
 ## The Legacy Model
 
 In a traditional OS, transactions live inside a database and nowhere else. Installing a package, applying an update, editing a config file, changing a permission, or moving files are all multi-step mutations with no atomicity. They half-complete and leave a state no design intended. The canonical recovery is "delete the lockfile and run it again." Each subsystem reinvents a private, partial commit/rollback (dpkg's `--configure -a`, a `.bak` file, a journal replay), and none of them compose. There is no OS-level answer to "make these N changes atomically, or none of them."
 
 ## The Cathedral Model
 
-Cathedral has a single transactional primitive that any subsystem can use to make a set of state transitions atomic, isolated, and rollback-able. It is exposed the same way for filesystem writes, package installs, upgrades, UI state, configuration changes, and capability grants and revocations. The whole OS is not globally transactional; that way lies a planet-sized lock. The work is to identify which state transitions must be atomic, draw that boundary, and give it one shared commit/abort/compensation machinery. Outside those boundaries the system stays loosely coupled and eventually consistent on purpose.
+The intended direction is a common transactional interface that subsystems can use to make a set of state transitions atomic, isolated, and rollback-able. It is exposed the same way for filesystem writes, package installs, upgrades, UI state, configuration changes, and capability grants and revocations. The whole OS is not globally transactional; that way lies a planet-sized lock. The work is to identify which state transitions must be atomic, draw that boundary, and give it one shared commit/abort/compensation machinery. Outside those boundaries the system stays loosely coupled and eventually consistent on purpose.
 
 A transaction reads as a scope over participating state with a proven outcome:
 
@@ -20,19 +30,62 @@ transaction grant_and_record {
 }
 ```
 
-### The decided mechanism
+### Explicit commit and established database mechanisms
 
-Commit is a runtime act, not magic. Durable state becomes durable through an actual commit: a host/stdlib `store.commit(obj)` call (API spelling illustrative), or a declared transaction the compiler lowers to one. There is no implicit RAII commit. Reach to the `Storage` boundary service is only a static contract fact and persists nothing by itself. "No save" is a slogan; there is always a commit call.
+Durability requires an actual commit through the storage boundary. A RAM mutation,
+a language transition or a function's return does not by itself persist anything.
+A future compiler/runtime integration may lower an explicit durable operation to
+that commit, but API spelling and transaction-overlay behavior remain proposals.
+There is no implicit RAII durability guarantee.
 
-The atomic unit is one object's new version, written as one realm-log append (copy-on-write). Mutate its fields in the RAM working copy, then commit. Single-object atomicity is therefore free. Co-locating the things that must commit together as fields of one aggregate, such as an outbox as a field of the account it guards, makes "both or neither" automatic with no transaction primitive at all.
+One metadata engine can publish changes to several objects atomically. Realm
+boundaries scope authority and naming, not necessarily engine ownership. Updating
+two authorized realms in the same engine need not require two-phase commit.
+Grouping state in one aggregate can simplify modeling, but single-object atomicity
+still depends on the engine's commit/recovery protocol; it is not free.
 
-A real transaction is needed only when state spans objects. Within one realm, stage writes to N objects, path-copy to the realm root, and commit the root once as one append. Same log, still cheap. Across realms on one machine, the OS coordinates two-phase commit. With a reliable coordinator and no partition this is easy, and it is one of the few intrinsically-OS pieces. Across machines, two-phase commit is wrong because it blocks under partition, so the answer there is sagas and compensation ([[distributed_boundary]]).
+Two-phase commit is a candidate for independently committing participants, local
+or remote. It requires durable decisions, participant recovery and a policy for
+in-doubt work; being on one machine does not remove coordinator failure. Sagas,
+compensation and transactional outboxes serve different requirements and are not
+interchangeable with atomic commit. No production cross-participant mechanism is
+selected. The existing kernel/platform boundary question remains open.
 
-The API has no `begin` and one `commit` verb that dispatches. Writes are plain mutations to a RAM copy-on-write working overlay, not syscalls. You already hold the participating realm capabilities and concurrency is optimistic, so there are no upfront locks to acquire and nothing happens up front. You mutate, then `commit`, and the runtime dispatches on the write set. A single object, or one realm, is one log append plus one durability flush. A cross-realm write set is two-phase commit, whose two phases are the two flushes: prepare-durable, then commit-durable. Participants in a cross-realm commit are named by their specific realm-capability slots, the O(1) fd-like handle from [[capability_model]]. Those capabilities are re-checked live at commit, so a revocation mid-transaction aborts it. The transaction is optimistic on authority, not just on data. A thin affine wrapper makes the uncommitted RAM overlay abort through nonblocking edge cleanup, so a trap or early return cannot publish a half-staged transaction. Any rollback that must perform IO is a separate operation the code invokes itself. `commit` remains the only path to durability.
+Immutable chunks plus transactional metadata require explicit integration:
+backing must be recoverably durable before committed metadata can reference it,
+and reclamation must preserve all current, retained and actively read versions.
+A log append or root update is the publication point only under a specified
+ordering, integrity and recovery protocol. Flush count depends on that protocol
+and device assumptions, not on object or realm count alone.
 
-Concurrency is snapshot isolation plus optimistic conflict detection. Copy-on-write is MVCC: every reader gets a consistent point-in-time view of the object graph with no reader locks. Write-write conflicts use optimistic first-committer-wins. The conflict is detected at commit, and the loser aborts and retries or surfaces a merge. There is no lock-on-open, because "file in use" is the wrong UX, and no silent last-write-wins, because that loses updates. Most data is uncontended, so the mechanism is invisible; concurrent edits surface as a conflict to merge ([[distributed_boundary]]). This is the database playbook (Postgres and InnoDB MVCC; FoundationDB and Spanner optimistic), inherited because the store is a db-fs. Conventional OSes punt on it: Windows TxF was deprecated, and file locks are the alternative.
+### Isolation, authority and observation
 
-Irreversible effects are fenced out of a transaction rather than made to participate. Reach to world-touching services such as `Network` or `DeviceIo` cannot appear inside a commit, because commit code carries a `Storage`-only reach ceiling and Omega rejects any additional boundary-service reach. The fence is a consequence of the existing reach system; there is no new keyword and no `[irreversible]` marker. The irreversible act is handled outside the transaction by the **transactional-outbox pattern**: record a durable intent inside the commit, emit it after the commit, and carry an idempotency key for crash replay. This is a userspace/stdlib pattern, not OS machinery. The OS supplies only the atomic commit, which the filesystem needs anyway, and the compiler supplies only the fence. The resend/reconcile loop belongs to the app. The db-fs's value here is that there is no second WAL, since the intent commits in the same realm-log append as the state, and that atomicity is whole-system, so no private database is needed.
+Snapshot reads and optimistic conflict detection are candidate concurrency rules.
+Copy-on-write alone is not MVCC or snapshot isolation; versions need visibility,
+conflict and reader-lifetime rules. Write-write conflict checks alone can permit
+write skew between disjoint writes based on shared predicates. The store must
+choose which cross-record invariants it promises and how read/predicate conflicts
+are handled before exposing a general transaction API. This is recorded in
+[owner questions](../../../OWNER_QUESTIONS.md).
+
+A transaction must validate its required authority at a defined point relative
+to publication. The exact relationship to concurrent revocation, already accepted
+operations and kernel capability state remains unresolved. The Rust catalog's
+connection-bound staging and root-revision checks are lab behavior, not the final
+persistent authority protocol.
+
+A candidate durable watcher records changes in the same transaction as the state
+and resumes from a committed sequence cursor. This does not require a CRDT or
+exposing the physical WAL. Replay needs explicit retention, authorization filtering,
+expiry/resynchronization and duplicate-delivery rules. CRDTs concern convergence
+of independently writable replicas, a separate decision with type-specific merge
+semantics. Neither a change log nor a content hash supplies those semantics.
+
+Irreversible effects happen outside the storage transaction. A transactional
+outbox records an intent with state, then emits after commit using an idempotency
+key and reconciliation where needed. It does not guarantee exactly-once external
+effects. A proposed Omega reach restriction could keep such effects out of commit
+code; that compiler boundary is not implemented by the Rust storage experiment.
 
 ## Concerns & Design Space
 
