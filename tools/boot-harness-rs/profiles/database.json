@@ -1,0 +1,11 @@
+{
+  "name": "Funded heap and guest database proof",
+  "target": "x86_64-unknown-uefi",
+  "boot_package": "cathedral-boot-uefi",
+  "startup": {
+    "initial": { "package": "cathedral-database-lab", "entry": "distribution/lab/database/main.rs", "target": "x86_64-unknown-none" },
+    "launches": [
+      { "package": "cathedral-database-worker", "entry": "distribution/lab/database/worker/main.rs", "target": "x86_64-unknown-none", "clock": true, "disk": true, "private_pages": 64 }
+    ]
+  }
+}

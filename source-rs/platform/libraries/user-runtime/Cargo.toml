@@ -10,6 +10,10 @@ path = "lib.rs"
 
 [dependencies]
 cathedral-contracts.workspace = true
+cathedral-user-heap = { workspace = true, optional = true }
+
+[features]
+heap = ["dep:cathedral-user-heap"]
 
 [lints]
 workspace = true

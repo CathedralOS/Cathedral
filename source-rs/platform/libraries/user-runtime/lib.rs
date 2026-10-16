@@ -1,6 +1,6 @@
 #![no_std]
 
-//! Minimal Rust-lab userspace support. No allocator, kernel imports or OS policy.
+//! Minimal Rust-lab userspace support. No kernel imports or OS policy; an explicit heap is opt-in.
 //! Start at entry.rs for _start -> supplied environment -> application main -> exit.
 //! task/ipc/memory expose explicit capabilities; server/server.rs owns service event ordering.
 //! Protocol clients name their receiving service; arch/ alone performs the trap.
@@ -20,6 +20,8 @@ pub mod device;
 pub mod disk;
 pub mod display;
 pub mod event;
+#[cfg(feature = "heap")]
+pub mod heap;
 pub mod ipc;
 pub mod keyboard;
 pub mod link;

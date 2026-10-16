@@ -13,6 +13,7 @@ impl UserSpace {
         for &Backing {
             address: base,
             physical,
+            ..
         } in &self.backing[..self.pages]
         {
             if address >= base && address < base + PAGE && end <= base + PAGE {
@@ -38,14 +39,13 @@ impl UserSpace {
         let end = address.checked_add(length as u64)?;
         self.backing[..self.pages]
             .iter()
-            .enumerate()
-            .find(|(index, page)| {
-                self.writable & (1 << index) != 0
+            .find(|page| {
+                page.writable
                     && address >= page.address
                     && address < page.address + PAGE
                     && end <= page.address + PAGE
             })
-            .map(|(_, page)| page.physical + address - page.address)
+            .map(|page| page.physical + address - page.address)
     }
     /// # Safety
     /// Kernel root active, IRQs off, this space live and not concurrently running.

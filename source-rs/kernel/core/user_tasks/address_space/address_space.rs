@@ -8,27 +8,28 @@ pub const USER_CODE: u64 = 0x0000_0080_0000_0000;
 pub const USER_DATA: u64 = USER_CODE + PAGE;
 pub const USER_IMAGE_END: u64 = USER_CODE + 1024 * 1024;
 pub const USER_STACK: u64 = USER_CODE + 2 * 1024 * 1024;
-pub const USER_STACK_TOP: u64 = USER_STACK + 4 * PAGE;
-pub const MAX_IMAGE_PAGES: usize = 80;
-const MAX_BACKING: usize = MAX_IMAGE_PAGES + 4 + 2 * cathedral_contracts::memory::MAX_PAGES;
-const _: () = assert!(MAX_BACKING <= u128::BITS as usize);
-// Image + guarded stack + maximum private/shared mappings, with table headroom.
+pub const USER_STACK_PAGES: usize = 8;
+pub const USER_STACK_TOP: u64 = USER_STACK + USER_STACK_PAGES as u64 * PAGE;
+pub const MAX_IMAGE_PAGES: usize = 240;
+const MAX_BACKING: usize =
+    MAX_IMAGE_PAGES + USER_STACK_PAGES + 2 * cathedral_contracts::memory::MAX_PAGES;
+// Owned image/stack frames and translation tables; page objects retain their own ledger.
 // This bounds bookkeeping, not funding: every allocation still charges its account.
-const MAX_FRAMES: usize = 160;
+const MAX_FRAMES: usize = cathedral_contracts::user::MAX_ADMISSION_FRAMES;
 
 #[derive(Clone, Copy, Default)]
 struct Backing {
     address: u64,
     physical: u64,
+    writable: bool,
 }
 
 pub struct UserSpace {
     mapping: Option<UserMappings>,
-    owned: [u64; MAX_FRAMES],
+    owned: alloc::vec::Vec<u64>,
     len: usize,
-    backing: [Backing; MAX_BACKING],
+    backing: alloc::vec::Vec<Backing>,
     pages: usize,
-    writable: u128,
 }
 impl UserSpace {
     pub fn root(&self) -> u64 {
@@ -96,11 +97,10 @@ impl UserSpace {
         }
         let mut space = Self {
             mapping: None,
-            owned: [0; MAX_FRAMES],
+            owned: alloc::vec::Vec::new(),
             len: 0,
-            backing: [Backing::default(); MAX_BACKING],
+            backing: alloc::vec::Vec::new(),
             pages: 0,
-            writable: 0,
         };
         // SAFETY: New frames are exclusively owned and identity-mapped in kernel translation root.
         let result = unsafe { space.build(layout, image.base, end, segments, frames) };

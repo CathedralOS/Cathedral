@@ -13,7 +13,9 @@ members = [
     "platform/libraries/bitmap-font",
     "platform/libraries/object-store",
     "platform/libraries/storage-volume",
+    "platform/libraries/storage-volume/engine",
     "platform/libraries/user-runtime",
+    "platform/libraries/user-heap",
     "platform/services/display",
     "platform/services/input",
     "platform/services/storage",
@@ -30,6 +32,8 @@ members = [
     "distribution/lab/shared-memory",
     "distribution/lab/devices",
     "distribution/lab/volume",
+    "distribution/lab/database",
+    "distribution/lab/database/worker",
     "distribution/lab/ipc",
     "distribution/lab/channels",
     "distribution/lab/memory",
@@ -38,7 +42,7 @@ members = [
     "distribution/libraries/boot-scene",
     "distribution/libraries/session-protocol",
 ]
-default-members = ["platform/libraries/storage-volume", "platform/drivers/uart_16550", "distribution/lab/rendering", "platform/libraries/object-store", "contracts", "kernel/core", "kernel/arch", "platform/services/input", "platform/services/display", "platform/services/matrix", "platform/libraries/bitmap-font"]
+default-members = ["platform/libraries/user-heap", "platform/libraries/storage-volume", "platform/drivers/uart_16550", "distribution/lab/rendering", "platform/libraries/object-store", "contracts", "kernel/core", "kernel/arch", "platform/services/input", "platform/services/display", "platform/services/matrix", "platform/libraries/bitmap-font"]
 
 [workspace.package]
 version = "0.0.0"
@@ -47,6 +51,8 @@ rust-version = "1.94"
 publish = false
 
 [workspace.dependencies]
+cathedral-storage-engine = { path = "platform/libraries/storage-volume/engine" }
+cathedral-user-heap = { path = "platform/libraries/user-heap" }
 cathedral-storage-volume = { path = "platform/libraries/storage-volume" }
 cathedral-ata-pio = { path = "platform/drivers/ata-pio" }
 cathedral-object-store = { path = "platform/libraries/object-store" }
@@ -75,6 +81,25 @@ panic = "abort"
 [profile.dev.package.blake3]
 opt-level = "s"
 
+# The engine proof also monomorphizes a large database. Size-optimize redb and
+# its worker in dev; debug_assert! is off in these two packages only. Explicit
+# fixture assert! checks remain enabled. Strip worker DWARF for the ELF file cap.
+[profile.dev.package.redb]
+opt-level = "s"
+debug-assertions = false
+
+[profile.dev.package.cathedral-database-worker]
+opt-level = "s"
+debug-assertions = false
+strip = "debuginfo"
+
 [profile.release]
 panic = "abort"
 debug = 2
+
+[profile.release.package.redb]
+opt-level = "s"
+
+[profile.release.package.cathedral-database-worker]
+opt-level = "s"
+strip = "debuginfo"

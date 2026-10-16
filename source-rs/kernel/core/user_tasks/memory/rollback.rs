@@ -108,7 +108,7 @@ pub unsafe fn exercise(frames: &mut FrameAllocator, layout: &BootLayout, image: 
 /// These inactive aliases are removed before the model releases the backing.
 unsafe fn mapping_boundaries(session: &mut Session, handle: u64) {
     let index = session.memory.model.access(0, handle).unwrap();
-    let backing = session.memory.backing[index];
+    let backing = session.memory.backing[index].clone();
     let mapping = session.memory.model.mapping(0, index);
     let space = session.tasks[0].space.as_mut().unwrap();
     for page in 0..wire::MAX_PAGES {
@@ -123,7 +123,7 @@ unsafe fn mapping_boundaries(session: &mut Session, handle: u64) {
     // SAFETY: No executing user or Rust borrow; remove writer before reader aliases.
     unsafe { space.seal_region(mapping, wire::MAX_PAGES) };
     assert!(!space.writable_range(wire::address(mapping), 1));
-    for alias in [30, wire::MAX_REGIONS - 1] {
+    for alias in [wire::MAX_PRIVATE_REGIONS, wire::MAX_MAPPING_SLOTS - 1] {
         // SAFETY: Prepared empty slot; immutable frames stay owned until all aliases are gone.
         unsafe { space.map_region(alias, &backing, false) }.unwrap();
         for page in 0..wire::MAX_PAGES {

@@ -26,10 +26,11 @@
 //! reused. These are lab semantics, not Cathedral's stable ABI.
 pub const PAGE_BYTES: usize = 4096;
 /// Maximum pages per object and per-task private/accepted-reader page budget.
-pub const MAX_PAGES: usize = 16;
+pub const MAX_PAGES: usize = 64;
 /// Separate metadata limits: larger page grants must not buy every global slot.
 pub const MAX_PRIVATE_REGIONS: usize = 4;
 pub const MAX_SHARED_REGIONS: usize = 4;
+pub const MAX_MAPPING_SLOTS: usize = MAX_PRIVATE_REGIONS + MAX_SHARED_REGIONS;
 // Every live object has an owner or an accepted reader. This capacity covers
 // every task's object limits, including readers whose producer has exited.
 pub const MAX_REGIONS: usize = crate::user::MAX_TASKS * (MAX_PRIVATE_REGIONS + MAX_SHARED_REGIONS);

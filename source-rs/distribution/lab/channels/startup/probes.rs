@@ -4,7 +4,7 @@ use crate::{
     syscall::{Packet, call as raw},
 };
 pub(super) fn check(launch: cathedral_user_runtime::task::Launch, endpoint: Handle) {
-    for address in [0, u64::MAX, 0x8000203ff8] {
+    for address in [0, u64::MAX, 0x8000207ff8] {
         assert_eq!(
             raw(abi::TASK_SPAWN_WITH, launch.raw(), address, 0),
             abi::BAD_ADDRESS

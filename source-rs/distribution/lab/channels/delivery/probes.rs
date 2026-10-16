@@ -6,7 +6,7 @@ use crate::{
 
 pub fn creation() {
     let before = ipc::budget().unwrap();
-    for address in [0, u64::MAX, 0x8000203ff8] {
+    for address in [0, u64::MAX, 0x8000207ff8] {
         assert_eq!(raw(abi::IPC_CREATE, address, 0, 0), abi::BAD_ADDRESS);
         assert_eq!(raw(abi::IPC_BUDGET, address, 0, 0), abi::BAD_ADDRESS);
     }
@@ -17,7 +17,7 @@ pub fn creation() {
 }
 
 pub fn send(destination: Handle, endpoint: Handle) {
-    for address in [0, u64::MAX, 0x8000203ff8] {
+    for address in [0, u64::MAX, 0x8000207ff8] {
         assert_eq!(
             raw(abi::IPC_SEND_CAP, destination.raw(), address, 0),
             abi::BAD_ADDRESS
@@ -50,7 +50,7 @@ pub fn send(destination: Handle, endpoint: Handle) {
 
 pub fn receive(input: Handle) {
     let readonly = b"read-only";
-    for address in [0, u64::MAX, 0x8000203ff8, readonly.as_ptr() as u64] {
+    for address in [0, u64::MAX, 0x8000207ff8, readonly.as_ptr() as u64] {
         assert_eq!(
             raw(abi::IPC_RECEIVE_CAP, input.raw(), address, 0),
             abi::BAD_ADDRESS

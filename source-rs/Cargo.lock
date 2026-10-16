@@ -110,6 +110,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "cathedral-database-lab"
+version = "0.0.0"
+dependencies = [
+ "cathedral-user-runtime",
+]
+
+[[package]]
+name = "cathedral-database-worker"
+version = "0.0.0"
+dependencies = [
+ "cathedral-ata-pio",
+ "cathedral-storage-engine",
+ "cathedral-user-runtime",
+]
+
+[[package]]
 name = "cathedral-device-lab"
 version = "0.0.0"
 dependencies = [
@@ -238,6 +254,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "cathedral-storage-engine"
+version = "0.0.0"
+dependencies = [
+ "cathedral-contracts",
+ "cathedral-storage-volume",
+ "redb",
+ "spinning_top",
+]
+
+[[package]]
 name = "cathedral-storage-service"
 version = "0.0.0"
 dependencies = [
@@ -268,10 +294,19 @@ name = "cathedral-uart-16550"
 version = "0.0.0"
 
 [[package]]
+name = "cathedral-user-heap"
+version = "0.0.0"
+dependencies = [
+ "linked_list_allocator",
+ "spinning_top",
+]
+
+[[package]]
 name = "cathedral-user-runtime"
 version = "0.0.0"
 dependencies = [
  "cathedral-contracts",
+ "cathedral-user-heap",
 ]
 
 [[package]]
@@ -393,6 +428,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1fbf4db142a473a8d80c26bbf18454ed458bf8d26c8219c331daecfdbd079001"
 dependencies = [
  "proc-macro2",
+]
+
+[[package]]
+name = "redb"
+version = "4.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "39178e0a867f9e3eaa6292a4ab1dd3613f2519c5b564341e1e7b29b270736cc4"
+dependencies = [
+ "libc",
 ]
 
 [[package]]

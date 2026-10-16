@@ -38,7 +38,7 @@ producer exits or releases its handle. Each copied read right charges the
 recipient's reader-page quota and one of four reader-capability slots, whether
 queued, mapped or unmapped. Multiple rights to the same object are individually
 charged. Unmapping returns a virtual slot, not the capability/page reservation.
-The current maximum is sixteen pages per object/account quota; the global arenas
+The current maximum is sixty-four pages per object/account quota; the global arenas
 are backed for the twelve-account lab. No extra frames are allocated by forwarding.
 A retained reader can prevent returning or reassigning its sponsor's funding.
 

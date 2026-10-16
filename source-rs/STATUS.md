@@ -31,7 +31,7 @@ traffic or allocated disk blocks. At 4 KiB, batching 64 adjacent tree-32 edits
 reduces redb writes from 3,960,832 to 65,856 bytes and syncs from 64 to one.
 
 redb 4.4.0's experimental `no_std` backend entrance compiles for x86-64 and ARM64
-bare-metal targets. No guest runtime adapter exists and no engine is selected.
+bare-metal targets. A bounded guest adapter now exists; no production engine is selected.
 The [redb stress lab](../tools/storage-lab/engines/stress/README.md) now checks
 competing expected-revision writers and whole-batch rejection, while preparation
 occurs before the writer transaction. Two bounded-queue workloads measure small
@@ -71,15 +71,24 @@ complete IO ranges, preserves partial-sector neighbours and stops IO after uncer
 write/flush failures. The separate guest fixture uses the granted ATA controller to
 inspect a host-formatted redb volume and flush scratch writes. Four boots check cold
 reopen, single-copy recovery and both-copy refusal; host checks compare the entire
-image and reopen the intact engine. This is transport evidence, not guest database
-transactions or hardware power-loss coverage. A funded allocator and sufficient
-userspace memory/image admission remain prerequisites for the redb guest runtime;
-the kernel limits and ordinary private catalog service are unchanged.
+image and reopen the intact engine. This transport proof remains separate from the
+[new database runtime proof](distribution/lab/database/README.md).
 
-Validation: debug/release four-boot x86 QEMU proofs, workspace host tests, the
-939-cut host volume regression, host/x86/ARM64 target lint and repository layout
-checks. BLAKE3 alone is optimized in dev builds to fit the existing image bound;
-the guest fixture separates buffer lifetimes to stay inside the existing stack.
+The runtime proof installs a 256 KiB heap from an explicit private-page grant,
+checks exhaustion and budget reclamation after leaked allocations and a contained
+fault, then commits three related records through no_std redb and userspace ATA.
+QEMU is killed after an acknowledged commit with the database still open. A cold
+guest recovers it and commits revision 2; independent host opens of image copies
+check both revisions without cleaning the guest's image first. Guards outside the
+assigned region remain unchanged. This does not simulate loss of host disk caches.
+
+Shared admission now permits 240 image pages inside the same 1 MiB image window,
+a guarded 32 KiB user stack, 288 admission frames and 64 private/reader pages.
+Fallible per-process/per-object ledgers replace the large fixed arrays and u128
+write mask. The stack increase was required by unclean database recovery. The
+kernel still has no engine dependency; the ordinary catalog format is unchanged.
+The engine and worker are size-optimized with debug_assert! disabled even in dev;
+explicit fixture assertions remain enabled. See the proof for commands and scope.
 
 ## Resumable storage and provider recovery
 
@@ -121,9 +130,10 @@ dynamic handles support the split. The global channel arena remains 32; startup
 explicitly funds the root/inner connections. Pausing catalog request streams
 while storage is pending preserves the eight-handle wait bound. Host tests cover
 high-account isolation, full startup bundles, exhaustion and reclamation.
-The traced debug matrix grew to 67 loaded pages: the image bound is now 80 pages
-and its frame ledger 160 entries, preserving the 16 KiB stack, 1 MiB image window,
-u128 writable-backing mask and physical funding checks. ELF tests cover the exact
+The traced debug matrix grew to 67 loaded pages. Admission limits have since
+increased for the database proof above, preserving the 1 MiB image window,
+and physical funding checks. The database milestone replaced the u128 write mask
+with per-backing permission records. ELF tests cover the exact
 rounded-page boundary. These remain experimental lab ABI limits. The debug smoke also caught boot-lab
 stack pressure from retaining supervision fixture locals across later suites;
 the supervision and IPC entrances now sequence their suites after each fixture

@@ -11,3 +11,17 @@ path = "lib.rs"
 redb = { version = "=4.4.0", default-features = false, features = ["experimental-api-5"] }
 
 [workspace]
+
+[[bin]]
+name = "measure-runtime"
+path = "measure/main.rs"
+required-features = ["measure"]
+
+[features]
+measure = []
+
+[profile.dev]
+panic = "abort"
+
+[profile.release]
+panic = "abort"

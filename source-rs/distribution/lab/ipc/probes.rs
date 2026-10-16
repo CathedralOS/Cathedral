@@ -42,14 +42,14 @@ pub fn receiver() -> u64 {
         0,
         u64::MAX,
         0x0000_8000_0000_0000,
-        0x0000_0080_0020_4000,
+        0x0000_0080_0020_8000,
         readonly.as_ptr() as u64,
     ] {
         assert_eq!(raw(abi::IPC_RECEIVE, input, address, 8), abi::BAD_ADDRESS);
     }
     // Mapped writable page, but the complete buffer crosses into the stack guard.
     assert_eq!(
-        raw(abi::IPC_RECEIVE, input, 0x0000_0080_0020_3ffc, 8),
+        raw(abi::IPC_RECEIVE, input, 0x0000_0080_0020_7ffc, 8),
         abi::BAD_ADDRESS
     );
     assert_eq!(raw(abi::IPC_RECEIVE, input, 0, 65), abi::INVALID_ARGUMENT);

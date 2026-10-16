@@ -133,7 +133,7 @@ pub const TASK_POOL_ASSIGN: u64 = 48; // owned idle launch, available child-slot
 pub const TASK_LAUNCH_PORT: u64 = 49; // owned launch -> owner-local peer port
 pub const TASK_IMAGE_AT: u64 = 50; // local executable grant index, zero, zero
 pub const TASK_POOL_AVAILABLE: u64 = 51; // zero, zero, zero; own unused process reservations
-pub const MAX_ADMISSION_FRAMES: usize = 256;
+pub const MAX_ADMISSION_FRAMES: usize = 288;
 
 pub const TASK_IMAGE_ALLOW: u64 = 52; // owned idle launch, executable grant, zero; stage copied startup authority
 pub const TASK_CPU_ASSIGN: u64 = 53; // owned idle launch, burst/refill ceiling, zero; retains debt

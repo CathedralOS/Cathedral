@@ -23,7 +23,7 @@ impl UserSpace {
         unsafe {
             self.mapping.as_mut().unwrap().reserve(
                 wire::USER_BASE,
-                wire::address(wire::MAX_REGIONS),
+                wire::address(wire::MAX_MAPPING_SLOTS),
                 scratch,
                 &mut source,
             )
@@ -38,7 +38,7 @@ impl UserSpace {
         physical: &[u64],
         writable: bool,
     ) -> Result<(), MemoryError> {
-        if index >= wire::MAX_REGIONS
+        if index >= wire::MAX_MAPPING_SLOTS
             || physical.is_empty()
             || physical.len() > wire::MAX_PAGES
             || self.pages + physical.len() > MAX_BACKING
@@ -53,6 +53,9 @@ impl UserSpace {
         {
             return Err(MemoryError::OccupiedVirtualRange);
         }
+        self.backing
+            .try_reserve_exact(physical.len())
+            .map_err(|_| MemoryError::OutOfFrames)?;
         let permissions = Permissions {
             writable,
             executable: false,
@@ -77,13 +80,11 @@ impl UserSpace {
             }
         }
         for (offset, &frame) in physical.iter().enumerate() {
-            self.backing[self.pages] = Backing {
+            self.backing.push(Backing {
                 address: base + offset as u64 * PAGE,
                 physical: frame,
-            };
-            if writable {
-                self.writable |= 1 << self.pages;
-            }
+                writable,
+            });
             self.pages += 1;
         }
         Ok(())
@@ -101,7 +102,7 @@ impl UserSpace {
             unsafe {
                 self.mapping.as_mut().unwrap().seal_page(address);
             }
-            self.writable &= !(1 << position);
+            self.backing[position].writable = false;
         }
     }
     /// # Safety
@@ -118,11 +119,7 @@ impl UserSpace {
                 self.mapping.as_mut().unwrap().unmap_page(address);
             }
             self.pages -= 1;
-            self.backing[position] = self.backing[self.pages];
-            self.writable = (self.writable & !(1 << position))
-                | (((self.writable >> self.pages) & 1) << position);
-            self.writable &= !(1 << self.pages);
-            self.backing[self.pages] = Backing::default();
+            self.backing.swap_remove(position);
         }
     }
 }

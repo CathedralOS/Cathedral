@@ -64,10 +64,10 @@ The lab still has twelve total process accounts, an increasing-index ownership
 DAG and a boot-supplied executable catalogue. It has no filesystem executable
 lookup, arbitrary ELF upload, general executable-capability IPC move, SMP or
 unbounded arena growth. Dynamic pools currently require one initial process.
-Admission has an explicit per-attempt frame ceiling (1..256), with complete load
+Admission has an explicit per-attempt frame ceiling (1..288), with complete load
 rollback. A separate [physical reservation](../../resources/physical/README.md) now
 funds image/stack/page-table and runtime buffer costs from real reserved frames.
-The short reserve API requests 256 frames per account and requested descendant;
+The short reserve API requests 288 frames per account and requested descendant;
 `reserve_funded` accepts an explicit physical allowance. Device drivers retain their existing exclusive static admission path.
 These are experimental grants, not a frozen application ABI.
 

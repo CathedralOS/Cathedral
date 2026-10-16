@@ -37,7 +37,7 @@ pub fn run() -> u64 {
     phase
 }
 
-// Separate the IO buffer's lifetime from envelope decoding on the 16 KiB stack.
+// Separate the IO buffer's lifetime from envelope decoding on the bounded user stack.
 fn opaque_io(volume: &mut BlockRegion<'_, Ata>, expected: &[u8], phase: u64) {
     let mut block = [0; BLOCK as usize];
     volume.read(DATA_START, &mut block[..256]).unwrap();

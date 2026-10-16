@@ -9,14 +9,14 @@ not a promise based on observing global free memory.
 
 ## Admission and ownership
 
-Bootstrap currently gives each bound account 256 frames plus its private-page
-quota. Each dynamic process slot contributes another 256 frames to the initial
+Bootstrap currently gives each bound account 288 frames plus its private-page
+quota. Each dynamic process slot contributes another 288 frames to the initial
 process's allowance. Dynamic accounts start unfunded. This is a lab default,
 not a manifest or production memory-sizing decision.
 
 `Executable::reserve_funded(limits, child_slots, admission_frames, physical_frames)`
 atomically subdivides physical funding with process/page/IPC reservations. The
-short `reserve` client requests 256 frames per selected account and descendant
+short `reserve` client requests 288 frames per selected account and descendant
 slot. The raw `TASK_RESERVE` record is six u64 words: private pages, reader pages,
 channels, descendant slots, per-load frame ceiling, physical frame reservation.
 A load ceiling remains a separate failure bound; it does not create funding.
@@ -68,7 +68,7 @@ the subtree four times without changing baseline funding.
 The matrix desktop gives its root the physical funding for its process pool.
 Owner-only `RUN_MEMORY` stages a frame allowance for the next `RUN` attempt on an
 empty slot; that attempt consumes the setting even if admission fails. Default
-`RUN` uses 256 frames per requested process account. Children and physical input
+`RUN` uses 288 frames per requested process account. Children and physical input
 connections cannot issue this policy operation. The desktop probes failed nested
 loads while the outside app removes/restores a surface and real pixels change,
 then replaces the inner matrix with enough funding and continues ordinary input.

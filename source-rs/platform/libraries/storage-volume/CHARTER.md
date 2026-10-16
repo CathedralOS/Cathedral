@@ -25,7 +25,8 @@ is implied. Bounds errors occur before IO and do not poison the region.
 `inspect` reads and selects envelope metadata only. It neither repairs copies nor
 opens/initializes the database. A returned formatting state is not a ready database;
 the caller must check readiness and validate its engine separately. The host formatter
-and redb logical-length adapter remain in the host lab. The envelope encoding and
+remains in the host lab. The optional allocating [engine package](engine/README.md)
+owns the guest redb logical-length adapter. The envelope encoding and
 failure rules are documented there, including refusal of intact unsupported versions.
 
 The [guest probe](../../../distribution/lab/volume/main.rs) runs over the existing
@@ -67,15 +68,14 @@ They run with `cargo test --locked` in `source-rs/`. The library also compiles f
 bare-metal CPU targets; the actual ATA/QEMU proof is x86-64 only.
 
 The dev profile optimizes only BLAKE3 for size: the unoptimized dependency produced
-a 292-page guest executable, exceeding the existing 80-page image bound. With that
+a 292-page guest executable, exceeding the then-current 80-page image bound. With that
 dependency optimized the debug executable uses 77 pages (release: 62); guest code
 still has debug assertions and symbols. The probe sequences buffer use after envelope
-decoding returns so the debug call chain fits the existing 16 KiB stack. The ARM64 bare-metal build uses BLAKE3's
+decoding returns so the debug call chain fits the then-current 16 KiB stack. The ARM64 bare-metal build uses BLAKE3's
 `pure` feature to avoid requiring a separate NEON C cross-compiler. This is a lab
 build choice, not a selection of future hashing acceleration policy.
 
-Next: a funded userspace allocator and sufficient memory/image admission for a guest
-database runtime, then a redb backend over this block transport. The present user
-runtime has no allocator and caps dynamically granted private memory at 16 pages
-(64 KiB). This milestone does not raise those limits, install an engine, format from
-the guest, or change the private catalog service's durable format.
+The [database runtime proof](../../../distribution/lab/database/README.md) now
+adds the funded heap and real guest transactions. The original opaque transport
+fixture above still leaves engine bytes unchanged; the two proofs have distinct
+runners and artifacts. Neither changes the ordinary catalog service's disk format.

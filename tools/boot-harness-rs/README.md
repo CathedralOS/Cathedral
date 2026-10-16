@@ -273,3 +273,11 @@ outside sibling's allocation, failed-load refunds and repeated subtree recovery.
 `--matrix-desktop-test` requires visible sibling rendering while nested admission
 fails, before restoring the normal tree. See the
 [funding contract and implementation](../../source-rs/kernel/core/user_tasks/resources/physical/README.md).
+
+## Funded heap and guest engine
+
+`python tools/boot-harness-rs/database_test.py [--release]` runs the
+[database proof](../../source-rs/distribution/lab/database/README.md): explicit heap
+funding, exhaustion and fault reclamation, an acknowledged live-engine commit,
+QEMU kill, cold guest recovery and independent host verification. It creates fresh
+guarded images and never uses the ordinary session disk.

@@ -6,13 +6,12 @@ impl Memory {
     pub(super) unsafe fn reclaim(&mut self, index: usize, frames: &mut Frames<'_>) {
         if !self.model.entries[index].live() {
             let mut returned = 0;
-            for frame in &mut self.backing[index] {
-                if *frame != 0 {
+            for frame in core::mem::take(&mut self.backing[index]) {
+                if frame != 0 {
                     // SAFETY: All mappings were removed or never published; core holds unique backing custody.
                     unsafe {
-                        frames.release(*frame);
+                        frames.release(frame);
                     }
-                    *frame = 0;
                     returned += 1;
                 }
             }

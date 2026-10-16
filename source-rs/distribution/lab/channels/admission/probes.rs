@@ -7,7 +7,7 @@ pub(super) fn check(image: cathedral_user_runtime::task::Executable) {
     assert_eq!(raw(abi::PHYSICAL_BUDGET, 0, 1, 0), abi::INVALID_ARGUMENT);
     assert_eq!(raw(abi::PHYSICAL_BUDGET, 0, 0, 1), abi::INVALID_ARGUMENT);
     let slots = cathedral_user_runtime::task::available_slots().unwrap();
-    for address in [0, u64::MAX, 0x8000203ff8] {
+    for address in [0, u64::MAX, 0x8000207ff8] {
         assert_eq!(raw(abi::PHYSICAL_BUDGET, address, 0, 0), abi::BAD_ADDRESS);
         assert_eq!(
             raw(abi::TASK_RESERVE, image.raw(), address, 0),

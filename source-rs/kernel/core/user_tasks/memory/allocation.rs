@@ -13,6 +13,10 @@ pub(super) unsafe fn allocate(
         return Err(error);
     }
     let result = (|| {
+        session.memory.backing[index]
+            .try_reserve_exact(pages)
+            .map_err(|_| abi::NO_MEMORY)?;
+        session.memory.backing[index].resize(pages, 0);
         for physical in &mut session.memory.backing[index][..pages] {
             *physical = frames.allocate().ok_or(abi::NO_MEMORY)?;
             // SAFETY: Fresh exclusive physical frame, writable in the kernel identity map; not yet exposed.
@@ -34,7 +38,7 @@ pub(super) unsafe fn allocate(
         Ok(session.memory.model.handle(slot, index))
     })();
     if result.is_err() {
-        let allocated = session.memory.backing[index][..pages]
+        let allocated = session.memory.backing[index]
             .iter()
             .filter(|&&frame| frame != 0)
             .count();

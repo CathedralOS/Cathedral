@@ -5,7 +5,7 @@ use regions::Regions;
 pub(super) struct Memory {
     pub model: Regions,
     pub funding: crate::user_tasks::resources::physical::Funding,
-    backing: [[u64; wire::MAX_PAGES]; wire::MAX_REGIONS],
+    backing: [alloc::vec::Vec<u64>; wire::MAX_REGIONS],
 }
 impl Memory {
     pub fn new(
@@ -14,8 +14,8 @@ impl Memory {
         grants: &[wire::Grant],
     ) -> Result<alloc::boxed::Box<Self>, u64> {
         let model = Regions::new(tasks, grants)?;
-        // Bootstrap policy: each bound account starts with 256 frames plus its
-        // private-page quota. Unbound accounts' 256-frame allowances belong to root.
+        // Bootstrap policy: each bound account starts with 288 frames plus its
+        // private-page quota. Unbound accounts' 288-frame allowances belong to root.
         let mut limits = [0; abi::MAX_TASKS];
         for (account, limit) in limits.iter_mut().enumerate().take(tasks - dynamic) {
             *limit = abi::MAX_ADMISSION_FRAMES + model.limits(account)[0];
@@ -33,7 +33,7 @@ impl Memory {
             }
             (&raw mut (*pointer).model).write(model);
             (&raw mut (*pointer).funding).write(funding);
-            (&raw mut (*pointer).backing).write_bytes(0, 1);
+            (&raw mut (*pointer).backing).write(core::array::from_fn(|_| alloc::vec::Vec::new()));
             Ok(alloc::boxed::Box::from_raw(pointer))
         }
     }

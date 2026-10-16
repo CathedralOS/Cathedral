@@ -1,0 +1,17 @@
+[package]
+name = "cathedral-storage-engine"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+[lib]
+path = "lib.rs"
+[dependencies]
+cathedral-contracts.workspace = true
+cathedral-storage-volume.workspace = true
+redb = { version = "=4.4.0", default-features = false, features = ["experimental-api-5"] }
+spinning_top = "0.2.5"
+[features]
+host = ["redb/std"]
+[lints]
+workspace = true

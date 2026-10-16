@@ -20,7 +20,7 @@ pub fn receiver(revoke: u64) -> u64 {
         0,
         u64::MAX,
         b"readonly".as_ptr() as u64,
-        0x0000_0080_0020_3fe0,
+        0x0000_0080_0020_7fe0,
     ] {
         assert_eq!(raw(input, address, 0), abi::BAD_ADDRESS);
     }

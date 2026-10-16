@@ -48,7 +48,7 @@ protocol before the next service wait. A parent that already revoked an object
 may reject its subsequent cleanup request; other transport failures remain errors.
 Retained state lives in process-private static storage; replay and retirement
 process one object at a time. This keeps debug builds within the existing guarded
-16 KiB user stack. There is no per-frame heap allocation.
+bounded user stack. There is no per-frame heap allocation.
 
 ## Retained bitmaps
 

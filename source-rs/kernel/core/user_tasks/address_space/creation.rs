@@ -10,6 +10,14 @@ impl UserSpace {
         segments: &[UserSegment<'_>],
         frames: &mut impl FrameSource,
     ) -> Result<(), MemoryError> {
+        let pages = USER_STACK_PAGES
+            + segments
+                .iter()
+                .map(|s| s.memory_size.div_ceil(PAGE) as usize)
+                .sum::<usize>();
+        self.backing
+            .try_reserve_exact(pages)
+            .map_err(|_| MemoryError::OutOfFrames)?;
         let mut source = Tracked {
             frames,
             addresses: &mut self.owned,
@@ -29,7 +37,7 @@ impl UserSpace {
         let stack = UserSegment {
             address: USER_STACK,
             bytes: &[],
-            memory_size: 4 * PAGE,
+            memory_size: USER_STACK_PAGES as u64 * PAGE,
             writable: true,
             executable: false,
         };
@@ -62,10 +70,11 @@ impl UserSpace {
                         &mut source,
                     )?;
                 }
-                self.backing[self.pages] = Backing { address, physical };
-                if segment.writable {
-                    self.writable |= 1 << self.pages;
-                }
+                self.backing.push(Backing {
+                    address,
+                    physical,
+                    writable: segment.writable,
+                });
                 self.pages += 1;
             }
         }

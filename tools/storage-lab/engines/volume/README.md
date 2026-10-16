@@ -161,7 +161,7 @@ These tests cover fixed traces and selected partial-persistence patterns, not al
 sector reorderings, failures during recovery, controller behavior or hardware power
 loss. They do not establish space/latency guarantees or corruption repair for DBFS.
 There is no encryption, secure erase, migration, external blob allocation, installer
-partitioning or guest database runtime. The host lock does not replace a future
+partitioning. The host lock does not replace a future
 kernel-enforced device capability and single-owner lifecycle.
 
 The [guest block boundary](../../../../source-rs/platform/libraries/storage-volume/CHARTER.md)
@@ -169,7 +169,7 @@ now shares this envelope codec and exercises bounded sector IO, explicit flush,
 cold reboot and corruption refusal on a host-formatted volume. Run it with
 `python tools/boot-harness-rs/volume_test.py --release`. Host redb still owns engine
 initialization and final engine reopen; the guest inspects metadata and transports
-opaque bytes. A funded allocator and sufficient userspace memory/image admission
-are the next prerequisites for running the database engine inside the guest.
+opaque bytes. The separate [guest engine proof](../../../../source-rs/distribution/lab/database/README.md)
+now supplies a funded allocator and performs actual guest commits and unclean recovery.
 Whether this envelope or engine becomes permanent remains an engineering/design
 decision; current owner questions about identity, retention and isolation still apply.

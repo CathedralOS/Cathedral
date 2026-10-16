@@ -244,7 +244,7 @@ QEMU q35, one qemu64 CPU, software emulation, 128 MiB by default:
     return to heap/frame baselines after each pair and each session.
 16. Build independent sparse task roots with explicitly retained supervisor-only
     image, heap and entry stacks. Enter ring 3 with private RX code, RW/NX data
-    and a guarded 16-KiB stack. Switch back to the kernel root on entry.
+    and a guarded 32-KiB user stack. Switch back to the kernel root on entry.
 17. Exercise diagnostic write, yield and exit through `int 0x80`; reject unknown
     calls, kernel/noncanonical/overflowing pointers, guard-crossing buffers and
     oversized writes. Copy valid code, data and stack buffers, including binary
@@ -457,7 +457,8 @@ not a promise to execute arbitrary Linux binaries or an admission proof.
 The [user runtime](platform/libraries/user-runtime/lib.rs) provides `entry!`,
 `write`, `yield_now` and `exit`, using the shared experimental ABI. `write` splits
 slices at both 256 bytes and page boundaries. Returning from the program exits
-with its status; a Rust panic exits with 255. There is no allocator or unwinding.
+with its status; a Rust panic exits with 255. There is no unwinding. The optional `heap` feature installs an explicitly funded
+process-lifetime allocator; see [the database proof](distribution/lab/database/README.md).
 The [hello program](distribution/lab/hello/main.rs) contains no privileged
 instructions or kernel imports. It checks more than one page of BSS and distinct
 per-instance data, then returns the supplied status. Its link script explicitly
@@ -924,7 +925,7 @@ All fault injection and hostile-client probes are absent from ordinary builds.
 ## Bounded private pages and shared buffers
 
 The [memory contract](contracts/memory.rs) defines explicit per-task private and
-accepted-reader budgets, each up to sixteen 4 KiB pages (64 KiB). An allocation
+accepted-reader budgets, each up to sixty-four 4 KiB pages (256 KiB). An allocation
 contains one to sixteen zeroed pages. Independently, a task can own at most four
 objects and accept at most four reader objects. The 64 session slots cover those
 limits for all twelve tasks, including readers retained after producer exit; a

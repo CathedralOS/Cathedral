@@ -141,8 +141,9 @@ def main():
     parser.add_argument("--timeout", type=float, default=30, help="Smoke boot timeout in seconds (default: 30)")
     parser.add_argument("--memory", type=int, default=128, help="Guest RAM in MiB (default: 128)")
     args = parser.parse_args()
-    if args.profile.resolve() == (Path(__file__).parent / 'profiles/volume.json').resolve() and not args.build_only:
-        parser.error('volume fixtures require volume_test.py; this profile is build-only here')
+    fixture_profiles = [Path(__file__).parent / f'profiles/{name}.json' for name in ('volume', 'database')]
+    if args.profile.resolve() in [p.resolve() for p in fixture_profiles] and not args.build_only:
+        parser.error('storage fixtures require volume_test.py or database_test.py; these profiles are build-only here')
     if args.compositor_test or args.pointer_test or args.session_test or args.matrix_test or args.matrix_desktop_test or args.matrix_storage_test or args.admission_test or args.ipc_test:
         if args.kernel_only:
             parser.error("protocol/display tests require userspace")
@@ -204,8 +205,8 @@ def main():
             environment["CATHEDRAL_DYNAMIC_TASKS"] = str(startup.get("dynamic_tasks", 0))
             for resource in ("private_pages", "shared_pages"):
                 pages = startup["initial"].get(resource, 0)
-                if type(pages) is not int or not 0 <= pages <= 16:
-                    parser.error(f"initial {resource} must be an integer in 0..16")
+                if type(pages) is not int or not 0 <= pages <= 64:
+                    parser.error(f"initial {resource} must be an integer in 0..64")
                 environment[f"CATHEDRAL_INIT_{resource.upper()}"] = str(pages)
             programs["init"] = startup["initial"]
             environment["CATHEDRAL_INIT_CLOCK"] = "1" if startup["initial"].get("clock", False) else "0"
@@ -235,8 +236,8 @@ def main():
                     environment[f"CATHEDRAL_LAUNCH_{index}_{resource.upper()}"] = "1" if child.get(resource, False) else "0"
                 for resource in ("private_pages", "shared_pages"):
                     pages = child.get(resource, 0)
-                    if type(pages) is not int or not 0 <= pages <= 16:
-                        parser.error("memory page budgets must be integers between 0 and 16")
+                    if type(pages) is not int or not 0 <= pages <= 64:
+                        parser.error("memory page budgets must be integers between 0 and 64")
                     environment[f"CATHEDRAL_LAUNCH_{index}_{resource.upper()}"] = str(pages)
                 argument = child.get("argument", 0)
                 if type(argument) is not int or not 0 <= argument < 2**64:
