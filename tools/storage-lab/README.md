@@ -15,6 +15,10 @@ with process recovery and capacity-refusal checks. Its named entrance is
 [engines/engines.rs](engines/engines.rs). The representation measurements below
 remain a separate in-memory experiment.
 
+The [stress lab](engines/stress/README.md) adds competing publication requests,
+active snapshots, expected-revision conflicts, simulated crash cuts and bounded
+reclamation. It tests a small record protocol, separate from the chunk layouts.
+
 From the repository root:
 
 ```powershell

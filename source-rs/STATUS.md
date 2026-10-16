@@ -32,9 +32,22 @@ reduces redb writes from 3,960,832 to 65,856 bytes and syncs from 64 to one.
 
 redb 4.4.0's experimental `no_std` backend entrance compiles for x86-64 and ARM64
 bare-metal targets. No guest runtime adapter exists and no engine is selected.
-Arbitrary IO faults, active-reader pressure, metadata queries, physical allocation
-and sustained low-space progress remain next evidence. The guest private catalog
-is unchanged; see the engine lab's measured table, portability assessment and limits.
+The [redb stress lab](../tools/storage-lab/engines/stress/README.md) now checks
+competing expected-revision writers and whole-batch rejection, while preparation
+occurs before the writer transaction. Two bounded-queue workloads measure small
+write latency and writer occupancy beside a bulk importer and active readers.
+The atomic bulk transaction has a different latency/commit tradeoff from separate
+publications; this is not an automatic transaction-splitting policy.
+
+All 150 simulated crash cuts recover complete old-or-new records with valid
+content/event references; four acknowledged commits survive immediate loss of
+volatile state. Releasing an old reader permits 289 further replacements under
+an unchanged 16,846,848-byte cap, followed by capacity refusal, reboot and a
+successful normal replacement under that same cap. The no-reader/pinned-reader
+controls reach 2,109,440/16,846,848-byte logical extents. These are bounded host
+experiments, not exhaustive device-failure, physical-allocation or general GC
+proofs. Byte-budgeted admission, longer fault histories, recovery failures and
+metadata queries remain next evidence. The guest private catalog is unchanged.
 
 ## Resumable storage and provider recovery
 

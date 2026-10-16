@@ -3,7 +3,7 @@
 use crate::chunks::Layout;
 use adapters::{Engine, file_bytes};
 use std::{path::Path, time::Instant};
-pub type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
+pub type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 
 pub fn run() -> Result<()> {
     let args: Vec<_> = std::env::args().skip(2).collect();
@@ -13,11 +13,12 @@ pub fn run() -> Result<()> {
             Ok(())
         }
         Some("measure") if args.len() == 2 => measure(Path::new(&args[1])),
+        Some("stress") if args.len() == 2 => stress::run(Path::new(&args[1])),
         Some("recovery") if args.len() == 5 => {
             recovery::run(&args[1], &args[2], Path::new(&args[3]), &args[4])
         }
         _ => Err(
-            "usage: engines versions | engines measure NEW_DIRECTORY | engines recovery MODE ENGINE FILE PHASE".into(),
+            "usage: engines versions | engines measure NEW_DIRECTORY | engines stress NEW_DIRECTORY | engines recovery MODE ENGINE FILE PHASE".into(),
         ),
     }
 }

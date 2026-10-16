@@ -100,6 +100,11 @@ chapters describe durable observation, but the
 [Rust catalog protocol](source-rs/contracts/storage.rs) have no cursor, retention,
 expiry or subscriber-sponsorship contract.
 
+**New evidence.** The [host engine stress lab](tools/storage-lab/engines/stress/README.md#reader-pressure-and-reclamation)
+shows a long-lived reader retaining engine backing despite deletion of old records.
+Releasing it permits repeated replacement under the same cap. This supports
+explicit pin accounting; it does not decide expiry, sponsorship or reader denial.
+
 **Owner choice.** Reserve replay/history storage and reject or block further
 writes when exhausted, or permit bounded retention and require explicit cursor
 expiry/resynchronization. Active-reader pins and explicitly retained versions
@@ -123,6 +128,11 @@ has no accepted read-set/predicate-conflict rule. The
 [specification index](wiki/spec/README.md) leaves storage unspecified, and the
 [Rust catalog](source-rs/platform/libraries/object-store/CHARTER.md) uses a coarse
 expected-root revision rather than general snapshot transactions or queries.
+
+The [host publication experiment](tools/storage-lab/engines/stress/README.md#preparation-and-publication)
+now checks expected revisions under the engine writer, including whole-batch
+rejection. It protects those explicit object revisions; predicates, independently
+read objects and the general application isolation promise remain unspecified.
 
 **Owner choice.** Require serializable transactions for general multi-record
 operations, or expose weaker isolation with explicit invariant guards/stronger

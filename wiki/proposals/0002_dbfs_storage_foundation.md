@@ -145,9 +145,22 @@ bare-metal targets. This makes it a candidate for the next fault-model experimen
 not a selected production engine. Runtime allocation, synchronization, bounded
 resources and Cathedral's device/capability adapter remain integration work.
 
-Next extend the device fault model to arbitrary write/flush failures, allocation,
-durable publication and reopening. Test active reader snapshots and metadata
-queries. Measure physical bytes read/written,
+The [publication stress lab](../../tools/storage-lab/engines/stress/README.md) now
+prepares owned payloads/hashes before writer acquisition, validates expected
+revisions inside the transaction, and rejects an entire batch on any conflict.
+It measures queueing and writer occupancy beside a bulk importer and concurrent
+readers. A large atomic import delays interactive writes more in the recorded
+sample; splitting it changes atomicity and is not a transparent optimization.
+
+Its volatile/durable backend passes 150 crash cuts across writes, length changes
+and syncs for two payload sizes and retained/retired old records. It requires exact
+old-or-new recovery and valid content/event references. Releasing a pinned reader
+allows 289 replacements under the same capacity cap, then recovery from capacity
+refusal without lifting that cap. These bounded patterns do not exhaust arbitrary
+device faults, recovery failures or general reclamation states.
+
+Next extend failure histories and byte-budgeted publication admission, and add
+metadata queries. Measure physical bytes read/written,
 flushes, peak RAM, read latency, reclamation work and reserved free space under
 near-full operation and pinned history. An in-memory reachability sweep is not
 evidence that production collection or full-disk progress works.
@@ -156,6 +169,29 @@ Promotion requires reproducible workload results, explicit crash assumptions,
 old-or-new recovery tests, conflict/isolation tests and a bounded reclamation
 strategy. Kernel integration follows a viable userspace engine; QEMU cannot
 substitute for those semantics or establish physical-device performance.
+
+## Performance boundaries to preserve
+
+- Prepare independent work before writer acquisition; revalidate the versions
+  that preparation depended on at publication. General predicate conflicts remain
+  part of the unresolved isolation contract.
+- Bound admitted bytes and outstanding requests, record queue delay separately
+  from writer occupancy, and expose transaction/batch boundaries explicitly.
+  A request-count limit alone cannot bound memory for arbitrary payload sizes.
+- Keep owned buffer lifetimes clear enough to support future copy avoidance.
+  Bytes must not change between hashing and persistence; unprotected shared memory
+  does not satisfy this invariant.
+- Keep logical chunks independent of physical packing, placement and IO requests.
+  Do not freeze one IPC, allocation or device operation per content chunk.
+- Fund reader pins, retained versions and maintenance headroom. Treat the scope of
+  global ordering, deduplication and atomicity as explicit semantic choices rather
+  than accidental consequences of the first single-writer engine.
+
+The current all-in-engine stress protocol still inserts bulk bytes while holding
+the writer. External blob storage could change that cost but introduces separate
+durability and orphan-recovery obligations. SIMD and worker pools can accelerate
+preparation without changing canonical digests or publication semantics; they
+cannot remove serialization already imposed by those semantics.
 
 ## Owner choices and compatibility
 

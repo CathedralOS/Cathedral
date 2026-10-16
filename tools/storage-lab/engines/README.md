@@ -14,6 +14,11 @@ host IO. [recovery.rs](recovery.rs) owns child-process gates and capacity failur
 [run.py](run.py) builds, checks the comparison matrix and kills/reopens writers.
 `mod.rs` only wires these leaves together.
 
+The next descent is the [publication stress lab](stress/README.md), entered at
+[stress/stress.rs](stress/stress.rs). Run it with
+`python tools/storage-lab/engines/run.py --stress` for competing requests,
+expected-revision conflicts, simulated write/flush cuts and reader-pressure reuse.
+
 ## Reproduce
 
 From the repository root:
@@ -41,6 +46,7 @@ cargo test --locked --features engines
 cargo clippy --locked --features engines --all-targets -- -D warnings
 cargo fmt --check
 rustfmt --edition 2024 --check engines/engines.rs chunk_tree/chunk_tree.rs
+rustfmt --edition 2024 --check engines/stress/stress.rs
 ```
 
 ## Controlled workloads and engine settings
@@ -151,10 +157,12 @@ checks refusal/rollback and later usability after a limit is lifted, not useful
 progress while a real disk remains full. WAL/journal space is not capped by the
 SQLite page limit.
 
-Active engine read transactions, concurrent writers, long-lived reader pressure,
-GC, allocator fragmentation, recovery-time bounds and sustained near-full-store
-progress remain unmeasured. Retaining immutable model history is not a substitute
-for testing the engine's active snapshots.
+This comparison does not measure active engine read transactions or concurrent
+writers. The [stress experiment](stress/README.md) separately checks conflicting
+writers, active snapshots, reader pressure and repeated reuse under a fixed cap.
+General GC, allocator fragmentation, recovery-time bounds and sustained progress
+under arbitrary near-full workloads remain unproven. Retaining immutable model
+history is not a substitute for testing the engine's active snapshots.
 
 ## Reuse and portability assessment
 
@@ -180,10 +188,11 @@ need explicit review before integration with Cathedral's CPU budgets. Compilatio
 does not supply an allocator, link a runnable guest, prove synchronization or
 implement a block/capability adapter. It also does not make rusqlite portable.
 
-The next useful experiment is a bounded redb backend with a simulated volatile/
-durable device image: inject failures at writes/flushes, recover old-or-new state,
-and measure space under retained readers and repeated reclamation. This is a
-candidate for deeper testing, not a production commitment. If blobs later move
+The [stress lab](stress/README.md) now supplies a bounded redb backend with separate
+volatile/durable images, 150 deterministic crash cuts, and retained-reader/reuse
+checks. It also measures queue delay and writer occupancy under competing workloads.
+Next extend byte-budgeted admission, failure patterns and workload histories.
+redb remains a candidate for deeper testing, not a production commitment. If blobs later move
 outside the engine, publish-before-reference ordering and orphan recovery must
 be tested again across that new boundary. A guest storage-provider integration
 should follow this evidence; the kernel need not acquire database policy.

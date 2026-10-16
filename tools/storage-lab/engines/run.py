@@ -1,5 +1,6 @@
 """Build the engine comparison, measure fresh files, and exercise process recovery."""
 import csv
+import argparse
 import hashlib
 import io
 import json
@@ -54,14 +55,7 @@ def recovery(executable, directory):
     return checks
 
 
-def main():
-    run('cargo', 'build', '--locked', '--release', '--features', 'engines')
-    executable = LAB / 'target' / 'release' / ('storage-layout.exe' if platform.system() == 'Windows' else 'storage-layout')
-    base = ROOT / 'build' / 'storage-engines'
-    base.mkdir(parents=True, exist_ok=True)
-    stamp = datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S%fZ')
-    destination = base / stamp
-    # Rust creates the directory and refuses overwrite. No previous DB is deleted.
+def compare(executable, destination):
     result = run(str(executable), 'engines', 'measure', str(destination), capture_output=True)
     rows = list(csv.DictReader(io.StringIO(result.stdout)))
     assert len(rows) == 48
@@ -74,8 +68,54 @@ def main():
         for metric in ('submitted_bytes', 'transactions', 'records'):
             assert row[metric] == indexed[('redb', *key[1:])][metric]
     checks = recovery(executable, destination)
+    (destination / 'measurements.csv').write_bytes(result.stdout.encode('utf-8'))
+    return [f'{len(rows)} comparisons', *checks]
+
+
+def stress(executable, destination):
+    result = run(str(executable), 'engines', 'stress', str(destination), capture_output=True)
+    (destination / 'checks.txt').write_bytes(result.stdout.encode('utf-8'))
+    assert 'PASS:' in result.stdout
+    def read(name):
+        with (destination / name).open(newline='', encoding='utf-8') as file:
+            return list(csv.DictReader(file))
+    summary = read('contention-summary.csv')
+    assert {(r['bulk_batch'], r['kind']) for r in summary} == {('64', 'small'), ('64', 'bulk'), ('1', 'small'), ('1', 'bulk')}
+    assert len(summary) == 4
+    assert len(read('contention.csv')) == 193
+    assert all(int(r['reader_checks']) > 0 for r in summary)
+    faults = read('faults.csv')
+    assert {(r['retire'], r['payload_bytes']) for r in faults} == {(a, b) for a in ('false', 'true') for b in ('4096', '2097152')}
+    assert {r['kind'] for r in faults} == {'write', 'resize', 'sync'}
+    groups = {}
+    for row in faults:
+        assert row['recovered'] in ('old', 'new')
+        key = (row['retire'], row['payload_bytes'], row['operation'])
+        groups.setdefault(key, []).append(row['cut'])
+    assert all(sorted(cuts) == ['After', 'Before', 'Partial'] for cuts in groups.values())
+    reclamation = read('reclamation.csv')
+    assert {r['phase'] for r in reclamation} == {'unpinned', 'pinned', 'released', 'recovered'}
+    limited = [r for r in reclamation if r['phase'] in ('released', 'recovered')]
+    assert len({r['capacity_bytes'] for r in limited}) == 1
+    assert all(int(r['extent_bytes']) <= int(r['capacity_bytes']) for r in limited)
+    print(result.stdout, end='')
+    return result.stdout.splitlines()
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--stress', action='store_true', help='run redb contention, crash-cut and reclamation experiments')
+    args = parser.parse_args()
+    run('cargo', 'build', '--locked', '--release', '--features', 'engines')
+    executable = LAB / 'target' / 'release' / ('storage-layout.exe' if platform.system() == 'Windows' else 'storage-layout')
+    base = ROOT / 'build' / ('storage-stress' if args.stress else 'storage-engines')
+    base.mkdir(parents=True, exist_ok=True)
+    stamp = datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S%fZ')
+    destination = base / stamp
+    # Rust creates the directory and refuses overwrite. No previous DB is deleted.
+    checks = stress(executable, destination) if args.stress else compare(executable, destination)
     sources = [*LAB.glob('*.rs'), *LAB.glob('*.toml'), *LAB.glob('chunk_tree/*.rs'),
-               *HERE.glob('*.rs'), HERE / 'run.py', LAB / 'Cargo.lock']
+               *HERE.glob('*.rs'), *HERE.glob('stress/*.rs'), HERE / 'run.py', LAB / 'Cargo.lock']
     context = {
         'utc': datetime.now(timezone.utc).isoformat(),
         'platform': platform.platform(),
@@ -84,12 +124,12 @@ def main():
         'revision': run('git', 'rev-parse', 'HEAD', capture_output=True).stdout.strip(),
         'tracked_changes': run('git', 'diff', '--name-only', 'HEAD', capture_output=True).stdout.splitlines(),
         'source_sha256': {p.relative_to(LAB).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest() for p in sources},
-        'recovery_checks': checks,
-        'limits': 'Single host sample; logical file extents, not physical media allocation. Process termination is not power loss. redb IO counters exclude initialization, checkpoint and close; SQLite counters unavailable.',
+        'mode': 'stress' if args.stress else 'comparison',
+        'checks': checks,
+        'limits': 'Single host sample; logical extents, not physical allocation. Stress uses a bounded simulated durability model, not exhaustive device failure coverage. Comparison process termination is not power loss. redb IO counters exclude initialization, checkpoint and close; SQLite counters unavailable.',
     }
-    (destination / 'measurements.csv').write_bytes(result.stdout.encode('utf-8'))
     (destination / 'context.json').write_bytes((json.dumps(context, indent=2) + '\n').encode('utf-8'))
-    print(f'PASS: {len(rows)} comparisons and {len(checks)} recovery/capacity checks. {destination}')
+    print(f'PASS: {context["mode"]}. {destination}')
 
 
 if __name__ == '__main__':
