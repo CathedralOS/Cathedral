@@ -2,7 +2,8 @@
 
 This redb-only host experiment tests performance boundaries before guest integration.
 Start at [stress.rs](stress.rs): check conflicting publications, run competing
-requests, enumerate storage failure cuts, then exercise reader pressure and reuse.
+requests, enforce [publication admission](admission/README.md), enumerate storage
+failure cuts, then exercise reader pressure and reuse.
 The [parent comparison](../README.md) owns engine selection context and dependency
 provenance. Neither experiment defines a production DBFS format or API.
 
@@ -160,8 +161,12 @@ count, and measure queueing separately from engine work. Keep reader retention
 funded and make engine reclamation progress observable. Our current all-in-engine
 baseline still copies/inserts bulk payload while holding the writer.
 
-Next evaluate a byte-budgeted publisher with explicit transaction-size admission,
-then extend failure/reuse tests to longer histories and recovery failures. Moving
+The [admission experiment](admission/README.md) now reserves bytes/counts before
+preparation, caps atomic transactions and alternates ready producers. It includes
+three trials and failure-path accounting checks. The policy bounds in-flight
+logical contents; it does not guarantee interactive latency or bound total RSS.
+Next compare controlled arrival rates and producer windows, then extend
+failure/reuse tests to longer histories and recovery failures. Moving
 payloads outside the engine may reduce writer occupancy, but creates a new ordering,
 orphan-recovery and accounting boundary that must be proven before guest adoption.
 The [existing owner questions](../../../../OWNER_QUESTIONS.md#dbfs-history-and-durable-subscriber-limits)

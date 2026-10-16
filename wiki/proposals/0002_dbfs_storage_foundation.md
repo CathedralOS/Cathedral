@@ -159,8 +159,18 @@ allows 289 replacements under the same capacity cap, then recovery from capacity
 refusal without lifting that cap. These bounded patterns do not exhaust arbitrary
 device faults, recovery failures or general reclamation states.
 
-Next extend failure histories and byte-budgeted publication admission, and add
-metadata queries. Measure physical bytes read/written,
+The [admission lab](../../tools/storage-lab/engines/stress/admission/README.md) now
+reserves logical payload bytes plus per-object charges before preparation, retaining
+them through queueing and commit. It caps total/per-producer bytes and requests,
+rejects oversized atomic transactions without splitting, and alternates ready
+producers. Three trials complete 384 publications with accounting returned to zero;
+failure tests cover cancellation, conflicts, preparation failure and engine errors.
+The policy bounds request contents, not total RAM, engine work or commit duration.
+Producer identity is assigned in the lab; a guest policy would need capability-backed
+budget ownership and bounded identities. No production priority contract is selected.
+
+Next compare controlled arrival rates and producer windows, extend failure histories,
+and add metadata queries. Measure physical bytes read/written,
 flushes, peak RAM, read latency, reclamation work and reserved free space under
 near-full operation and pinned history. An in-memory reachability sweep is not
 evidence that production collection or full-disk progress works.

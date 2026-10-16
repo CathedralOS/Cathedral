@@ -8,6 +8,7 @@ import platform
 import queue
 import subprocess
 import threading
+from collections import Counter
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -84,6 +85,20 @@ def stress(executable, destination):
     assert len(summary) == 4
     assert len(read('contention.csv')) == 193
     assert all(int(r['reader_checks']) > 0 for r in summary)
+    admission = read('admission-summary.csv')
+    assert {(r['trial'], r['kind']) for r in admission} == {(str(t), k) for t in range(3) for k in ('small', 'bulk')}
+    assert len(admission) == 6
+    for row in admission:
+        assert int(row['requests']) == 64
+        assert int(row['peak_bytes']) <= 512 * 1024
+        assert int(row['peak_requests']) <= 16
+        assert int(row['client_peak_bytes']) <= 256 * 1024
+        assert int(row['client_peak_requests']) <= 8
+        assert row['final_bytes'] == row['final_requests'] == '0'
+    admitted = read('admission.csv')
+    assert len(admitted) == 384
+    assert Counter((r['trial'], r['kind']) for r in admitted) == {(str(t), k): 64 for t in range(3) for k in ('small', 'bulk')}
+    assert all(int(r['charge_bytes']) <= 128 * 1024 and 0 < int(r['objects']) <= 8 for r in admitted)
     faults = read('faults.csv')
     assert {(r['retire'], r['payload_bytes']) for r in faults} == {(a, b) for a in ('false', 'true') for b in ('4096', '2097152')}
     assert {r['kind'] for r in faults} == {'write', 'resize', 'sync'}
@@ -115,7 +130,7 @@ def main():
     # Rust creates the directory and refuses overwrite. No previous DB is deleted.
     checks = stress(executable, destination) if args.stress else compare(executable, destination)
     sources = [*LAB.glob('*.rs'), *LAB.glob('*.toml'), *LAB.glob('chunk_tree/*.rs'),
-               *HERE.glob('*.rs'), *HERE.glob('stress/*.rs'), HERE / 'run.py', LAB / 'Cargo.lock']
+               *HERE.glob('*.rs'), *HERE.glob('stress/**/*.rs'), HERE / 'run.py', LAB / 'Cargo.lock']
     context = {
         'utc': datetime.now(timezone.utc).isoformat(),
         'platform': platform.platform(),

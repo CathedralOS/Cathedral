@@ -7,6 +7,7 @@ pub fn run(directory: &Path) -> Result<()> {
     std::fs::create_dir(directory)?;
     publication::check_conflict()?;
     contention::run(directory)?;
+    admission::run(directory)?;
     faults::run(directory)?;
     reclamation::run(directory)?;
     println!("PASS: conflict, contention, crash cuts and reclamation");

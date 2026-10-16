@@ -17,6 +17,10 @@ pub struct Prepared {
 }
 
 impl Prepared {
+    pub fn payload_len(&self) -> usize {
+        self.bytes.len()
+    }
+
     pub fn new(object: u64, expected: u64, bytes: Vec<u8>) -> Self {
         // Hashing and ownership acquisition precede any database writer lock.
         let digest = *blake3::hash(&bytes).as_bytes();

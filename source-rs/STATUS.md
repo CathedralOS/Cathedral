@@ -46,7 +46,13 @@ an unchanged 16,846,848-byte cap, followed by capacity refusal, reboot and a
 successful normal replacement under that same cap. The no-reader/pinned-reader
 controls reach 2,109,440/16,846,848-byte logical extents. These are bounded host
 experiments, not exhaustive device-failure, physical-allocation or general GC
-proofs. Byte-budgeted admission, longer fault histories, recovery failures and
+proofs. The [admission lab](../tools/storage-lab/engines/stress/admission/README.md)
+now reserves bytes/counts before preparation and holds them through commit, rejects
+oversized atomic transactions, and alternates ready producers. Three trials complete
+384 publications with all charge returned; eight tests cover budget boundaries,
+dispatch and release on failure. The logical charge peak is 232,192 bytes across
+11 requests. This is not a total-memory bound, priority contract or latency guarantee.
+Controlled arrival/window experiments, longer fault histories, recovery failures and
 metadata queries remain next evidence. The guest private catalog is unchanged.
 
 ## Resumable storage and provider recovery

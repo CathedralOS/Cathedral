@@ -47,6 +47,7 @@ cargo clippy --locked --features engines --all-targets -- -D warnings
 cargo fmt --check
 rustfmt --edition 2024 --check engines/engines.rs chunk_tree/chunk_tree.rs
 rustfmt --edition 2024 --check engines/stress/stress.rs
+rustfmt --edition 2024 --check engines/stress/admission/admission.rs
 ```
 
 ## Controlled workloads and engine settings
@@ -191,7 +192,9 @@ implement a block/capability adapter. It also does not make rusqlite portable.
 The [stress lab](stress/README.md) now supplies a bounded redb backend with separate
 volatile/durable images, 150 deterministic crash cuts, and retained-reader/reuse
 checks. It also measures queue delay and writer occupancy under competing workloads.
-Next extend byte-budgeted admission, failure patterns and workload histories.
+The [admission experiment](stress/admission/README.md) adds reservations before
+preparation, transaction-size caps and alternating ready producers. Next compare
+controlled arrivals/windows and extend failure patterns and workload histories.
 redb remains a candidate for deeper testing, not a production commitment. If blobs later move
 outside the engine, publish-before-reference ordering and orphan recovery must
 be tested again across that new boundary. A guest storage-provider integration

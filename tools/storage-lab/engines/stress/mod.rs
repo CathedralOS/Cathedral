@@ -1,3 +1,4 @@
+mod admission;
 mod contention;
 mod device;
 mod faults;
