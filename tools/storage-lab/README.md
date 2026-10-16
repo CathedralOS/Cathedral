@@ -19,6 +19,11 @@ The [stress lab](engines/stress/README.md) adds competing publication requests,
 active snapshots, expected-revision conflicts, simulated crash cuts and bounded
 reclamation. It tests a small record protocol, separate from the chunk layouts.
 
+The [volume bootstrap lab](engines/volume/README.md) puts an engine inside a bounded
+raw-image region, with explicit formatting, checked opening and redundant envelope
+metadata. It is an experimental storage-provider boundary, not an installer or
+accepted DBFS format.
+
 From the repository root:
 
 ```powershell

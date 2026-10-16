@@ -18,7 +18,7 @@ ROOT = LAB.parents[1]
 
 
 def run(*args, **kwargs):
-    return subprocess.run(args, cwd=LAB, check=True, text=True, timeout=300, **kwargs)
+    return subprocess.run(args, cwd=LAB, check=True, text=True, timeout=kwargs.pop('timeout', 300), **kwargs)
 
 
 def recovery(executable, directory):
@@ -117,20 +117,56 @@ def stress(executable, destination):
     return result.stdout.splitlines()
 
 
+def volume(executable, destination):
+    result = run(str(executable), 'engines', 'volume', 'prove', str(destination), capture_output=True, timeout=900)
+    (destination / 'checks.txt').write_bytes(result.stdout.encode('utf-8'))
+    assert 'PASS:' in result.stdout
+    with (destination / 'volume-cuts.csv').open(newline='', encoding='utf-8') as file:
+        rows = list(csv.DictReader(file))
+    assert {r['phase'] for r in rows} == {'format', 'publish', 'shrink'}
+    groups = {}
+    for row in rows:
+        assert row['kind'] in ('write', 'sync'), 'volume must not resize physical device'
+        allowed = ('incomplete', 'new') if row['phase'] == 'format' else ('old', 'new')
+        assert row['outcome'] in allowed
+        groups.setdefault((row['phase'], row['operation']), []).append(row['cut'])
+    assert all(sorted(cuts) == ['After', 'Before', 'Partial'] for cuts in groups.values())
+    # Exercise the public commands as separate processes, including refusal to
+    # replace an existing image and opening a missing path without creating it.
+    prefix = [str(executable), 'engines', 'volume']
+    path = destination / 'cli.raw'
+    run(*prefix, 'format', str(path), '4194304', '1', capture_output=True)
+    before = hashlib.sha256(path.read_bytes()).hexdigest()
+    refused = subprocess.run([*prefix, 'format', str(path), '4194304', '2'], cwd=LAB, capture_output=True, timeout=30)
+    assert refused.returncode != 0 and hashlib.sha256(path.read_bytes()).hexdigest() == before
+    inspected = run(*prefix, 'inspect', str(path), '0', '4194304', capture_output=True)
+    assert 'ready=true' in inspected.stdout
+    assert hashlib.sha256(path.read_bytes()).hexdigest() == before
+    run(*prefix, 'open', str(path), '0', '4194304', capture_output=True)
+    missing = destination / 'missing.raw'
+    refused = subprocess.run([*prefix, 'open', str(missing), '0', '4194304'], cwd=LAB, capture_output=True, timeout=30)
+    assert refused.returncode != 0 and not missing.exists()
+    print(result.stdout, end='')
+    return [*result.stdout.splitlines(), 'VERIFIED: separate-process format/inspect/open and creation refusals']
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--stress', action='store_true', help='run redb contention, crash-cut and reclamation experiments')
+    modes = parser.add_mutually_exclusive_group()
+    modes.add_argument('--stress', action='store_true', help='run redb contention, crash-cut and reclamation experiments')
+    modes.add_argument('--volume', action='store_true', help='run raw-image volume bootstrap and recovery experiments')
     args = parser.parse_args()
     run('cargo', 'build', '--locked', '--release', '--features', 'engines')
     executable = LAB / 'target' / 'release' / ('storage-layout.exe' if platform.system() == 'Windows' else 'storage-layout')
-    base = ROOT / 'build' / ('storage-stress' if args.stress else 'storage-engines')
+    mode = 'volume' if args.volume else 'stress' if args.stress else 'comparison'
+    base = ROOT / 'build' / {'volume': 'storage-volume', 'stress': 'storage-stress', 'comparison': 'storage-engines'}[mode]
     base.mkdir(parents=True, exist_ok=True)
     stamp = datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S%fZ')
     destination = base / stamp
     # Rust creates the directory and refuses overwrite. No previous DB is deleted.
-    checks = stress(executable, destination) if args.stress else compare(executable, destination)
+    checks = {'volume': volume, 'stress': stress, 'comparison': compare}[mode](executable, destination)
     sources = [*LAB.glob('*.rs'), *LAB.glob('*.toml'), *LAB.glob('chunk_tree/*.rs'),
-               *HERE.glob('*.rs'), *HERE.glob('stress/**/*.rs'), HERE / 'run.py', LAB / 'Cargo.lock']
+               *HERE.glob('*.rs'), *HERE.glob('stress/**/*.rs'), *HERE.glob('volume/**/*.rs'), HERE / 'run.py', LAB / 'Cargo.lock']
     context = {
         'utc': datetime.now(timezone.utc).isoformat(),
         'platform': platform.platform(),
@@ -139,7 +175,7 @@ def main():
         'revision': run('git', 'rev-parse', 'HEAD', capture_output=True).stdout.strip(),
         'tracked_changes': run('git', 'diff', '--name-only', 'HEAD', capture_output=True).stdout.splitlines(),
         'source_sha256': {p.relative_to(LAB).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest() for p in sources},
-        'mode': 'stress' if args.stress else 'comparison',
+        'mode': mode,
         'checks': checks,
         'limits': 'Single host sample; logical extents, not physical allocation. Stress uses a bounded simulated durability model, not exhaustive device failure coverage. Comparison process termination is not power loss. redb IO counters exclude initialization, checkpoint and close; SQLite counters unavailable.',
     }

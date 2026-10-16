@@ -180,6 +180,16 @@ old-or-new recovery tests, conflict/isolation tests and a bounded reclamation
 strategy. Kernel integration follows a viable userspace engine; QEMU cannot
 substitute for those semantics or establish physical-device performance.
 
+The [experimental volume bootstrap](../../tools/storage-lab/engines/volume/README.md)
+now gives the engine a bounded region of a raw image. Its envelope separates volume
+identity/version/geometry and logical engine length from redb's internal format.
+Formatting first marks the volume incomplete and publishes ready only after durable
+engine initialization. Opening never falls back to formatting. Redundant checksummed
+copies and deterministic fault checks exercise that transition; this is not an
+accepted disk ABI or an installer/partition-table implementation. The adapter
+currently adds durable envelope updates around length changes, so its performance
+and on-device flush contract need evaluation before guest promotion.
+
 ## Performance boundaries to preserve
 
 - Prepare independent work before writer acquisition; revalidate the versions

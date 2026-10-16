@@ -19,6 +19,12 @@ The next descent is the [publication stress lab](stress/README.md), entered at
 `python tools/storage-lab/engines/run.py --stress` for competing requests,
 expected-revision conflicts, simulated write/flush cuts and reader-pressure reuse.
 
+The [volume bootstrap lab](volume/README.md), entered at
+[volume/volume.rs](volume/volume.rs), adds explicit format/open operations and a
+bounded engine region inside a fixed raw image. Run it with
+`python tools/storage-lab/engines/run.py --volume`. Its envelope is experimental;
+it does not create a bootable image or select a production filesystem format.
+
 ## Reproduce
 
 From the repository root:
@@ -48,6 +54,7 @@ cargo fmt --check
 rustfmt --edition 2024 --check engines/engines.rs chunk_tree/chunk_tree.rs
 rustfmt --edition 2024 --check engines/stress/stress.rs
 rustfmt --edition 2024 --check engines/stress/admission/admission.rs
+rustfmt --edition 2024 --check engines/volume/volume.rs
 ```
 
 ## Controlled workloads and engine settings

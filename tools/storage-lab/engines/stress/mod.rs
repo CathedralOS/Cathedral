@@ -1,6 +1,6 @@
 mod admission;
 mod contention;
-mod device;
+pub(super) mod device;
 mod faults;
 mod publication;
 mod reclamation;

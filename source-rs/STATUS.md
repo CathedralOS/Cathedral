@@ -55,6 +55,17 @@ dispatch and release on failure. The logical charge peak is 232,192 bytes across
 Controlled arrival/window experiments, longer fault histories, recovery failures and
 metadata queries remain next evidence. The guest private catalog is unchanged.
 
+The [volume bootstrap lab](../tools/storage-lab/engines/volume/README.md) now wraps
+redb in an explicit fixed-capacity raw-image region. Two checksummed envelope copies
+record volume ID, version, geometry, formatting state and logical engine length.
+Formatting requires blank assigned space; ready is published only after durable
+engine initialization. Opening refuses unsupported, unfinished or invalid volumes
+without creating a replacement database. Native-image checks cover exclusive ownership,
+capacity refusal, reopen and preservation of neighbouring ranges; 939 simulated cuts
+exercise formatting, publication and compaction with logical-length changes. This adds no GPT/EFI,
+installer, accepted disk ABI or guest adapter. The next boundary is a guest block
+region with an explicit durability/flush contract, reusing the host checks.
+
 ## Resumable storage and provider recovery
 
 Child storage requests now return to the matrix event loop while awaiting replies.

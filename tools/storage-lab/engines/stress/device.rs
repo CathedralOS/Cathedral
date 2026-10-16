@@ -110,7 +110,12 @@ impl Device {
         match cut {
             None => {
                 if operation.kind == "sync" {
-                    s.durable = s.volatile.clone();
+                    // Reuse allocated backing during large volume fault sweeps.
+                    // A successful barrier still copies the entire visible image.
+                    let State {
+                        durable, volatile, ..
+                    } = &mut *s;
+                    durable.clone_from(volatile);
                 }
                 Ok(())
             }
