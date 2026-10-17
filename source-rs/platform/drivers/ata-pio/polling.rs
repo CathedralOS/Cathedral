@@ -22,6 +22,10 @@ pub(super) fn wait(data: bool, operation: u8, phase: &str, sector: u64) -> Resul
             writeln!(line, "ATA wait: op={operation:02x} phase={phase} lba={sector} data={} status={status:02x} ticks={elapsed} polls={polls} result={state:?}", u8::from(data)).ok();
             cathedral_user_runtime::write(&line.bytes[..line.len]).ok();
         }
+        #[cfg(feature = "trace-storage")]
+        if state != State::Wait {
+            super::metrics::waited(elapsed, polls);
+        }
         match state {
             State::Ready => return Ok(()),
             State::Failed => return Err(abi::IO_ERROR),

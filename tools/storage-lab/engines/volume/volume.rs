@@ -13,7 +13,7 @@ const ID_KEY: &[u8] = b"volume-id";
 
 pub fn run(args: &[String]) -> Result<()> {
     match args.first().map(String::as_str) {
-        Some("verify-catalog") if args.len() == 4 => catalog::verify(Path::new(&args[1]), args[2].parse()?, args[3].parse()?),
+        Some("verify-catalog") | Some("verify-catalog-recovery") if args.len() == 4 => catalog::verify(Path::new(&args[1]), args[2].parse()?, args[3].parse()?, args[0] == "verify-catalog-recovery"),
         Some("verify-objects") | Some("verify-retention") if args.len() == 5 => objects::verify(Path::new(&args[1]), args[2].parse()?, args[3].parse()?, args[4].parse()?, args[0] == "verify-retention"),
         Some("verify-guest") if args.len() == 5 => guest::verify(Path::new(&args[1]), args[2].parse()?, args[3].parse()?, args[4].parse()?),
         Some("prove") if args.len() == 2 => proof::run(Path::new(&args[1])),
@@ -35,7 +35,7 @@ pub fn run(args: &[String]) -> Result<()> {
             println!("VOLUME ready={} generation={} capacity={} logical_length={} id={:032x}", header.ready, header.generation, header.capacity(), header.length, u128::from_be_bytes(header.id));
             Ok(())
         }
-        _ => Err("usage: engines volume prove NEW_DIRECTORY | format NEW_IMAGE BYTES ID_HEX | open IMAGE OFFSET BYTES | inspect IMAGE OFFSET BYTES | verify-guest/verify-objects/verify-retention IMAGE OFFSET BYTES REVISION | verify-catalog IMAGE OFFSET BYTES".into()),
+        _ => Err("usage: engines volume prove NEW_DIRECTORY | format NEW_IMAGE BYTES ID_HEX | open IMAGE OFFSET BYTES | inspect IMAGE OFFSET BYTES | verify-guest/verify-objects/verify-retention IMAGE OFFSET BYTES REVISION | verify-catalog/verify-catalog-recovery IMAGE OFFSET BYTES".into()),
     }
 }
 

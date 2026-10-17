@@ -14,7 +14,25 @@ to stop. Python, Rust, QEMU and OVMF use the same setup as the CLI runner below.
 This uses VS Code's [terminal launch configuration](https://github.com/microsoft/vscode-js-debug/blob/main/OPTIONS.md#node-terminal-launch)
 to run the existing Python command; it does not attach a kernel debugger. The
 desktop keeps its existing `build/boot-harness-rs/matrix-desktop-storage.raw`
-between runs. The separate database proof still uses its dedicated test runner.
+between runs. **Cathedral: Database Desktop in QEMU** selects the newer backend
+and retains `build/boot-harness-rs/matrix-database-storage.raw` instead. Its first
+launch builds the host formatter and creates a new guarded database image; later
+launches preserve it. Existing files are never automatically reformatted.
+
+The equivalent command is:
+
+```powershell
+python tools/boot-harness-rs/run.py --profile tools/boot-harness-rs/profiles/matrix-database.json --release --window
+```
+
+Add `--trace-storage` for opt-in timing. Run
+`python tools/boot-harness-rs/matrix_database_test.py --release --recovery` for
+provider cuts, a real startup save timeout, sibling interaction, explicit grants,
+exact readback and cold restoration on a disposable image. It emits timing and ATA
+CSV files. See the [database catalog guide](../../source-rs/platform/libraries/object-store/database/README.md)
+for navigation, interpretation and remaining recovery limits. `database_image_test.py`
+checks that ordinary image preparation preserves existing bytes and refuses malformed
+file extents.
 
 `python tools/boot-harness-rs/volume_test.py --release` runs the separate
 [volume transport proof](../../source-rs/platform/libraries/storage-volume/CHARTER.md).

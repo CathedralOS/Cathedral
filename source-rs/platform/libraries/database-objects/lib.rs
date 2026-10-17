@@ -32,6 +32,8 @@ pub enum Error {
 #[derive(Clone, Copy)]
 pub enum Stage {
     Prepared,
+    /// Inside the writer, immediately before commit; observers must not reenter.
+    Committing,
     Committed,
 }
 pub type Result<T> = core::result::Result<T, Error>;

@@ -1069,6 +1069,7 @@ real BLAKE3 chunks/manifests through an explicitly granted client connection:
 python tools/boot-harness-rs/objects_test.py --release
 python tools/boot-harness-rs/objects_test.py --retention --release
 python tools/boot-harness-rs/matrix_database_test.py --release
+python tools/boot-harness-rs/matrix_database_test.py --release --recovery
 ```
 
 It uses a new disposable image, checks atomic refusals, kills QEMU after acknowledged
@@ -1079,3 +1080,13 @@ app through its private matrix capability and cold-restores it from database
 catalog snapshots. See the [adapter guide](platform/libraries/object-store/database/README.md)
 for ownership and format limits, and the content guide for dev commands, heap
 samples and optional ATA tracing. The intermittent ATA timeout remains undiagnosed.
+
+VS Code's **Cathedral: Database Desktop in QEMU** launches the ordinary database
+composition with a persistent `build/boot-harness-rs/matrix-database-storage.raw`.
+It creates missing media only; existing images are never reformatted. The legacy
+desktop remains a separate launch option. The recovery proof adds a real startup
+deadline, provider death before commit and after commit-before-reply, explicit
+re-grants, live sibling interaction and per-stage timing. Apps retain confirmed
+state and show a red mark on uncertain saves; Enter reconciles by reading before
+another mutation. A still-live stalled provider needs owner recovery; see the
+adapter guide for the distinction from automatic replacement of dead providers.

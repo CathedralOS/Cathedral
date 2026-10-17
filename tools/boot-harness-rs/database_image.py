@@ -1,0 +1,34 @@
+"""Persistent database desktop media. Only a missing image may be formatted."""
+import os
+from pathlib import Path
+import subprocess
+import tempfile
+
+VOLUME_BYTES = 4 * 1024 * 1024
+OFFSET = 4096
+IMAGE_BYTES = OFFSET + VOLUME_BYTES + 4096
+
+
+def prepare(path):
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    if path.is_symlink() or (path.exists() and not path.is_file()):
+        raise RuntimeError(f'Database image must be a regular file: {path}')
+    if path.exists():
+        if path.stat().st_size != IMAGE_BYTES:
+            raise RuntimeError(f'Unexpected database image size; refusing to replace {path}')
+        return  # Guest validates the existing envelope/engine; never auto-format.
+    root = Path(__file__).resolve().parents[2]
+    lab = root / 'tools/storage-lab'
+    subprocess.run(['cargo', 'build', '--locked', '--release', '--features', 'engines'], cwd=lab, check=True)
+    executable = lab / 'target/release' / ('storage-layout.exe' if os.name == 'nt' else 'storage-layout')
+    with tempfile.TemporaryDirectory(prefix='database-format-', dir=path.parent) as directory:
+        volume = Path(directory) / 'volume.raw'
+        subprocess.run([str(executable), 'engines', 'volume', 'format', str(volume), str(VOLUME_BYTES), '1'], cwd=lab, check=True)
+        data = volume.read_bytes()
+        assert len(data) == VOLUME_BYTES
+        # Exclusive creation cannot overwrite a concurrent creator or old media.
+        with path.open('xb') as file:
+            file.write(b'\x5a' * OFFSET + data + b'\xa5' * 4096)
+            file.flush()
+            os.fsync(file.fileno())

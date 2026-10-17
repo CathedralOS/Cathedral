@@ -124,3 +124,22 @@ on failure as well as success; ordinary `RUN` defaults to 256 frames per request
 process account. This changes admission policy, never a running child's funding.
 The [physical-memory guide](../../../kernel/core/user_tasks/resources/physical/README.md)
 connects the kernel transaction, desktop failure/recovery probes and retained charges.
+
+## Database desktop and save recovery
+
+The [database catalog guide](../../../platform/libraries/object-store/database/README.md)
+owns its persistent launch command and fault/timing proof. The ordinary desktop
+uses [persistence.rs](desktop/persistence.rs) to observe provider death, reopen it,
+and explicitly restore root and nested grants. Apps remain alive; their
+[state entry](desktop/app/state.rs) preserves confirmed values and displays a red
+mark on failed saves. Enter reloads an unresolved save rather than toggling again.
+The test-only [database recovery entry](desktop/database_recovery.rs) sequences
+startup timeout, before/after-commit cuts, sibling interaction and exact readback.
+Its temporary peer is admitted before the startup save is gated, so child admission
+does not itself wait on that storage request.
+
+`trace-storage` marks app send/reply, matrix receipt/admission/forward/reply and
+provider phases. Calls are omitted in ordinary builds. This adds neither kernel
+storage policy nor global names to child views. A timeout alone does not authorize
+an app to revive a retired binding; a live stalled provider still needs owner
+recovery, and a lost app transport requires replacement.

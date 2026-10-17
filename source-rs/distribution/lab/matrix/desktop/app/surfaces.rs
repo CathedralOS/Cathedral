@@ -48,7 +48,7 @@ impl Scene {
         image::submit(parent, view[1], names[2]);
         scene
     }
-    pub fn paint(&mut self, parent: Pair, view: wire::Packet, color: u64) {
+    pub fn paint(&mut self, parent: Pair, view: wire::Packet, color: u64, error: u64) {
         self.revision += 1;
         let base = [
             wire::PAINT,
@@ -68,7 +68,7 @@ impl Scene {
             40,
             40,
             18,
-            ACCENT,
+            if error == 0 { ACCENT } else { 0xe96f6f },
         ];
         let updates = [base, accent];
         let packet = wire::rectangles(

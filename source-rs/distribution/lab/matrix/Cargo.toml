@@ -14,8 +14,10 @@ bench = false
 [features]
 storage-lab = []
 trace-input = []
+trace-storage = []
 desktop = []
 desktop-probes = ["desktop"]
+database-probes = ["desktop"]
 
 [dependencies]
 cathedral-kernel-contracts.workspace = true

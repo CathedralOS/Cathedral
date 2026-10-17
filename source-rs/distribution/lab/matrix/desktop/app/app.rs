@@ -53,7 +53,13 @@ pub fn run(style: u64, environment: Environment) -> u64 {
                 {
                     #[cfg(feature = "trace-input")]
                     time::trace("app-key");
-                    if state.as_mut().unwrap().toggle(storage).is_ok() {
+                    let state = state.as_mut().unwrap();
+                    let result = if state.error != 0 {
+                        state.reload(storage)
+                    } else {
+                        state.toggle(storage)
+                    };
+                    if result.is_ok() {
                         cathedral_user_runtime::write(if style == 0 {
                             b"Cathedral matrix app: nested key\n"
                         } else if style == 1 {
@@ -71,12 +77,16 @@ pub fn run(style: u64, environment: Environment) -> u64 {
                 view = wire::poll_view(snapshot);
             }
             let color = state.as_ref().unwrap().color();
-            if painted != Some((view, color)) {
+            let error = state.as_ref().unwrap().error;
+            if painted != Some((view, color, error)) {
                 if scene.as_ref().is_none_or(|s| s.epoch != view[1]) {
                     scene = Some(surfaces::Scene::new(parent, view));
                 }
-                scene.as_mut().unwrap().paint(parent, view, color);
-                painted = Some((view, color));
+                scene
+                    .as_mut()
+                    .unwrap()
+                    .paint(parent, view, color, state.as_ref().unwrap().error);
+                painted = Some((view, color, state.as_ref().unwrap().error));
                 paints += 1;
                 #[cfg(feature = "trace-input")]
                 time::trace("app-painted");
@@ -107,26 +117,37 @@ pub fn run(style: u64, environment: Environment) -> u64 {
                                 parent,
                                 view,
                                 if style == 0 { LEFT } else { RIGHT },
+                                0,
                             ),
                             7 => {
-                                state = Some(state::State::open(storage, style));
+                                status = state.as_mut().unwrap().reload(storage).err().unwrap_or(0);
                                 scene.as_mut().unwrap().paint(
                                     parent,
                                     view,
                                     state.as_ref().unwrap().color(),
+                                    state.as_ref().unwrap().error,
                                 );
                             }
                             8 => {
                                 status = state.as_mut().unwrap().toggle(storage).err().unwrap_or(0);
-                                if status == 0 {
+                                {
                                     let color = state.as_ref().unwrap().color();
-                                    scene.as_mut().unwrap().paint(parent, view, color);
-                                    painted = Some((view, color));
+                                    scene.as_mut().unwrap().paint(
+                                        parent,
+                                        view,
+                                        color,
+                                        state.as_ref().unwrap().error,
+                                    );
+                                    painted = Some((view, color, state.as_ref().unwrap().error));
                                 }
                             }
                             9 => {
                                 state.as_ref().unwrap().stage(storage);
                                 scene.as_mut().unwrap().staged_probe(parent);
+                            }
+                            13 => {
+                                // Readiness/failure probe; never mutates state.
+                                status = state.as_ref().map_or(abi::BUSY, |s| s.error);
                             }
                             10 => cathedral_user_runtime::task::exit(19),
                             11 => scene.as_mut().unwrap().compact_probe(parent),
@@ -136,10 +157,15 @@ pub fn run(style: u64, environment: Environment) -> u64 {
                                 control.1.send(&wire::encode([0; 8])).unwrap();
                                 save_status =
                                     state.as_mut().unwrap().toggle(storage).err().unwrap_or(0);
-                                if save_status == 0 {
+                                {
                                     let color = state.as_ref().unwrap().color();
-                                    scene.as_mut().unwrap().paint(parent, view, color);
-                                    painted = Some((view, color));
+                                    scene.as_mut().unwrap().paint(
+                                        parent,
+                                        view,
+                                        color,
+                                        state.as_ref().unwrap().error,
+                                    );
+                                    painted = Some((view, color, state.as_ref().unwrap().error));
                                 }
                                 continue;
                             }
@@ -156,7 +182,7 @@ pub fn run(style: u64, environment: Environment) -> u64 {
                             u64::from(state.as_ref().is_some_and(|s| s.alternate)),
                             save_status,
                             pointers,
-                            0,
+                            state.as_ref().map_or(0, |s| s.generation),
                         ]))
                         .unwrap();
                 }

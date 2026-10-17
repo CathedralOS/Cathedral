@@ -136,9 +136,20 @@ now runs the matrix desktop over the database provider. Existing matrix IPC and
 private-root delegation carry atomic catalog snapshots; two cold boots and an
 independent host oracle verify saved app colors and exact records. The old desktop
 format remains available; there is no migration or production-engine selection.
-The desktop database proof requires release mode: the dev TCG trace exceeded a
-matrix storage deadline during CREATE, which the app currently unwraps. Startup
-reconciliation after an ambiguous save and slower-build latency remain work.
+The desktop database path requires release mode under TCG. Apps now preserve
+confirmed state on failed saves, show an unconfirmed-save mark and reconcile via
+readback before another mutation. A real startup CREATE timeout and provider cuts
+before/after commit are exercised with exact revision checks and a live nested
+sibling. The distribution replaces dead storage providers and explicitly restores
+grants; it does not automatically replace a live stalled provider. Retired app
+transports require app replacement, and bad media still fails closed.
+
+The database desktop is now an ordinary CLI/F5 option with its own persistent disk,
+created only if absent. Opt-in storage traces separate app/matrix round trips,
+dispatch/provider queueing, collection, commit and ATA operation/wait counters.
+Their clocks and fault-injection workloads do not establish production latency
+bounds. Live-timeout owner recovery, slow-build latency and general restart policy
+remain engineering work.
 
 One early ATA busy timeout remains undiagnosed. The driver now records opcode,
 phase, LBA, status, ticks and polls for slow/failed waits; optional QEMU tracing

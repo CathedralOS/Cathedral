@@ -51,7 +51,11 @@ are different budgets. This is not a production history or full-disk guarantee.
 With feature `catalog`, the provider instead serves the existing storage protocol
 through the [database catalog adapter](../../../libraries/object-store/database/README.md).
 The same matrix delegation grants access to private catalogs; apps gain no raw disk
-or content-hash authority. This mode exposes no revision-pin operations.
+or content-hash authority. This mode exposes no revision-pin operations. `trace-storage` adds bounded phase
+and ATA counters. The separate `recovery-lab` feature accepts owner-only gates
+before a mutation or after completion but before reply; ordinary builds omit these
+gates and their generation-inspection command. The distribution owns cancellation,
+restart and explicit grants; the provider never grants clients access itself.
 
 The distribution's [lab guide](../../../../distribution/lab/objects/README.md)
 owns composition, commands, evidence and limitations. This provider is a separate

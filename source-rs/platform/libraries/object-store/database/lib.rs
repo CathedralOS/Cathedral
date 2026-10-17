@@ -79,10 +79,18 @@ impl Backend for Catalog<'_> {
         let next = self.root(root)?.changed(expected, changes)?;
         // Finish bounded old garbage before allocating the next content revision.
         // Current head remains intact even if maintenance fails or power is lost.
+        hook(0);
         self.collect(root).map_err(|e| self.error(e))?;
         hook(1);
         self.store
-            .publish(root as u8, expected, &snapshot::encode(&next))
+            .publish_observed(root as u8, expected, &snapshot::encode(&next), |stage| {
+                use cathedral_database_objects::Stage;
+                match stage {
+                    Stage::Prepared => hook(2),
+                    Stage::Committing => hook(3),
+                    Stage::Committed => {}
+                }
+            })
             .map_err(|e| self.error(e))?;
         self.roots[root] = next;
         hook(4);

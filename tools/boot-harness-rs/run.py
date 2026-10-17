@@ -10,6 +10,7 @@ import subprocess
 import sys
 import capture
 import disk_image
+import database_image
 import storage_test
 import compositor_test
 import pointer_test
@@ -133,6 +134,7 @@ def main():
     parser.add_argument("--fault", choices=("guard", "invalid-opcode", "double-fault", "text-write", "rodata-write", "heap-execute", "stack-execute", "heap-alias-execute", "stack-alias-execute"), help="Expected-fault smoke test (requires --smoke)")
     parser.add_argument("--release", action="store_true")
     parser.add_argument("--startup-probes", action="store_true", help="Include destructive startup probes in the session lab")
+    parser.add_argument("--trace-storage", action="store_true", help="Log app/matrix/database/ATA stages; diagnostic timing perturbs execution")
     parser.add_argument("--trace-input", action="store_true", help="Log local matrix input stages (diagnostic timing perturbs execution)")
     parser.add_argument("--pressure", action="store_true", help="Add a pressure peer to the session or matrix desktop")
     parser.add_argument("--kernel-only", action="store_true", help="Build/boot without any platform or distribution executable")
@@ -141,13 +143,16 @@ def main():
     parser.add_argument("--timeout", type=float, default=30, help="Smoke boot timeout in seconds (default: 30)")
     parser.add_argument("--memory", type=int, default=128, help="Guest RAM in MiB (default: 128)")
     args = parser.parse_args()
-    fixture_profiles = [Path(__file__).parent / f'profiles/{name}.json' for name in ('volume', 'database', 'objects', 'objects-retention', 'matrix-database')]
+    fixture_profiles = [Path(__file__).parent / f'profiles/{name}.json' for name in ('volume', 'database', 'objects', 'objects-retention', 'matrix-database-recovery')]
     if args.profile.resolve() in [p.resolve() for p in fixture_profiles] and not args.build_only:
         parser.error('storage fixtures require volume_test.py, database_test.py, objects_test.py or matrix_database_test.py; these profiles are build-only here')
     if args.compositor_test or args.pointer_test or args.session_test or args.matrix_test or args.matrix_desktop_test or args.matrix_storage_test or args.admission_test or args.ipc_test:
         if args.kernel_only:
             parser.error("protocol/display tests require userspace")
         args.profile = Path(__file__).parent / ("profiles/matrix-storage.json" if args.matrix_storage_test else "profiles/admission.json" if args.admission_test else "profiles/matrix-desktop.json" if args.matrix_desktop_test else "profiles/channels.json" if args.ipc_test else "profiles/matrix.json" if args.matrix_test else "profiles/session.json" if args.session_test else "profiles/pointer.json" if args.pointer_test else "profiles/compositor.json")
+    database_desktop = args.profile.resolve() == (Path(__file__).parent / 'profiles/matrix-database.json').resolve()
+    if database_desktop and not args.release:
+        parser.error('the database desktop requires --release under TCG')
     if args.timeout <= 0 or args.memory < 64:
         parser.error("timeout must be positive and memory must be at least 64 MiB")
     if args.fault and not args.smoke:
@@ -256,6 +261,8 @@ def main():
             user_features.append("recovery-lab")
         if args.trace_input and user["package"] in ("cathedral-matrix-service", "cathedral-input-service", "cathedral-matrix-lab"):
             user_features.append("trace-input")
+        if args.trace_storage and user["package"] in ("cathedral-matrix-service", "cathedral-matrix-lab", "cathedral-database-storage"):
+            user_features.append("trace-storage")
         if user_features:
             user_cargo.extend(["--features", ",".join(user_features)])
         if args.release:
@@ -297,9 +304,14 @@ def main():
     if not args.kernel_only and not args.smoke and any(child.get("disk", False) for child in launches):
         disposable = args.screenshot or args.input_test or args.recovery_test or args.storage_test or args.matrix_storage_test or args.matrix_desktop_test
         # Matrix app schemas must never reinterpret the default distribution's roots.
-        persistent = BUILD / ("matrix-desktop-storage.raw" if args.profile.stem == "matrix-desktop" else "storage.raw")
+        persistent = BUILD / ("matrix-database-storage.raw" if database_desktop else "matrix-desktop-storage.raw" if args.profile.stem == "matrix-desktop" else "storage.raw")
         data_path = output / "test-storage.raw" if disposable else persistent
-        disk_image.prepare(data_path, reset=disposable)
+        if database_desktop:
+            if disposable:
+                parser.error('use matrix_database_test.py for disposable database proofs')
+            database_image.prepare(data_path)
+        else:
+            disk_image.prepare(data_path, reset=disposable)
         command += disk_image.arguments(data_path)
     if not args.window:
         command += ["-display", "none"]

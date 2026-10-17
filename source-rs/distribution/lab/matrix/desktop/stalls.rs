@@ -23,7 +23,7 @@ fn receive(pair: Pair, expected: &[u8]) {
 }
 pub(super) fn exercise(session: &mut admission::Session) {
     let matrix = session.matrix;
-    stalls_peer::start(session);
+    stalls_peer::start(session.matrix, session.pressure);
     // Normal completion, timeout with a late reply, durable commit without reply.
     for mode in 0..3 {
         let mut marker = *b"Cathedral storage stall mode=0\n";

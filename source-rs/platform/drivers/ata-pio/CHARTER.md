@@ -19,6 +19,11 @@ does not retry uncertain writes. The original intermittent busy timeout remains
 undiagnosed; `objects_test.py --release --ata-trace` captures QEMU ATA/block events
 alongside these diagnostics. See the [proof guide](../../../distribution/lab/objects/README.md).
 
+The optional `trace-storage` feature exposes [metrics.rs](metrics.rs) counters for
+read/write/flush commands and cumulative readiness ticks/polls. The database
+provider samples differences around requests. These describe driver activity,
+not physical-media latency; ordinary builds omit the counters.
+
 The pure status check can run on the host without linking guest syscalls:
 
 ```powershell

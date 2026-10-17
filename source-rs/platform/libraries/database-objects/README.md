@@ -18,8 +18,10 @@ and digest-based access are not introduced accidentally.
 The caller must supply a trusted root binding; this library is not an authority
 validator. The [provider](../../services/storage/database/service.rs) obtains the
 binding from its kernel-authenticated connection. Publication callbacks observe
-preparation and successful commit for heap measurements; they run outside the
-writer and do not define a public storage protocol.
+preparation and successful commit outside the writer for heap measurements. The
+additional Committing observation runs inside the writer immediately before commit;
+it must not reenter the store. These observations are private diagnostics, not a
+public storage protocol.
 
 History is retained until explicit collection; the fixed logical quota can refuse
 new publications first. Two persistent root-owned pin slots preserve selected

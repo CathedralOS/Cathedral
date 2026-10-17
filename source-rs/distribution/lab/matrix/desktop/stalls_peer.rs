@@ -10,33 +10,24 @@ fn peer(matrix: Pair) -> wire::Packet {
         wire::route([wire::HEALTH, 0, 0, 0, 0, 0, 0, 0], 1).unwrap(),
     )
 }
-pub(super) fn start(session: &admission::Session) {
-    if session.pressure {
-        assert_eq!(
-            inner(session.matrix, [wire::STOP, 1, 0, 0, 0, 0, 0, 0])[0],
-            0
-        );
+pub(super) fn start(matrix: Pair, pressure: bool) {
+    if pressure {
+        assert_eq!(inner(matrix, [wire::STOP, 1, 0, 0, 0, 0, 0, 0])[0], 0);
     }
+    assert_eq!(inner(matrix, [wire::RUN_PAGES, 1, 1, 0, 0, 0, 0, 0])[0], 0);
+    assert_eq!(inner(matrix, [wire::RUN, 1, 1, 2, 0, 0, 0, 0])[0], 0);
     assert_eq!(
-        inner(session.matrix, [wire::RUN_PAGES, 1, 1, 0, 0, 0, 0, 0])[0],
-        0
-    );
-    assert_eq!(
-        inner(session.matrix, [wire::RUN, 1, 1, 2, 0, 0, 0, 0])[0],
-        0
-    );
-    assert_eq!(
-        inner(session.matrix, [wire::SURFACE_LIMIT, 1, 4, 0, 0, 0, 0, 0])[0],
+        inner(matrix, [wire::SURFACE_LIMIT, 1, 4, 0, 0, 0, 0, 0])[0],
         0
     );
     assert_eq!(
         inner(
-            session.matrix,
+            matrix,
             [wire::PLACE, 1, 24, 175, 200, 40, wire::KEY_MASK, 0]
         )[0],
         0
     );
-    pixel(session.matrix, 140, 320, app::RIGHT);
+    pixel(matrix, 140, 320, app::RIGHT);
 }
 pub(super) fn interact(session: &admission::Session) {
     let before = peer(session.matrix);

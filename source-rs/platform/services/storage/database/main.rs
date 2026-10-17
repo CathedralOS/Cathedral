@@ -6,6 +6,8 @@
 mod bulk;
 #[cfg(feature = "catalog")]
 mod catalog;
+#[cfg(feature = "recovery-lab")]
+mod gate;
 mod metrics;
 #[cfg(not(feature = "catalog"))]
 mod service;

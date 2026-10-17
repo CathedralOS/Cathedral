@@ -86,6 +86,8 @@ pub fn run(environment: Environment, storage_root: bool) -> Result<(), Error> {
         }
         let queued = deferred.take(parent);
         deferred.pause(&mut server, parent);
+        #[cfg(feature = "trace-storage")]
+        let from_queue = queued.is_some();
         let event = match queued {
             Some(event) => event,
             None => match server.next_event_or(&extra[..count], deadline)? {
@@ -93,6 +95,22 @@ pub fn run(environment: Environment, storage_root: bool) -> Result<(), Error> {
                 None => continue,
             },
         };
+        #[cfg(feature = "trace-storage")]
+        if !from_queue
+            && let Event::Request(r) = &event
+            && r.client.is_some_and(|c| parent.storage_stream(c))
+        {
+            let op = wire::decode(&r.bytes[..r.len]).map_or(0, |w| w[0] & 0xffff);
+            cathedral_user_runtime::time::storage_trace(
+                if parent.upstream {
+                    "nested-receive"
+                } else {
+                    "root-receive"
+                },
+                r.client.unwrap() as u64,
+                op,
+            );
+        }
         if deferred::Deferred::blocks(&event, parent) {
             let mut blocked = 0;
             if parent.publishing() {

@@ -15,6 +15,16 @@ impl Pending {
         words: wire::Packet,
         upstream: bool,
     ) -> Result<Self, Error> {
+        #[cfg(feature = "trace-storage")]
+        time::storage_trace(
+            if upstream {
+                "nested-admit"
+            } else {
+                "root-admit"
+            },
+            request.client.unwrap() as u64,
+            words[0] & 0xffff,
+        );
         Ok(Self {
             request,
             words,
@@ -119,6 +129,16 @@ impl Parent {
             }
         }
         if let Some(reply) = reply {
+            #[cfg(feature = "trace-storage")]
+            time::storage_trace(
+                if self.upstream {
+                    "nested-reply"
+                } else {
+                    "root-reply"
+                },
+                p.request.client.unwrap() as u64,
+                p.words[0] & 0xffff,
+            );
             server.reply(&p.request, &wire::encode(reply))?;
         } else {
             self.storage_pending = Some(p);
@@ -166,6 +186,16 @@ impl Parent {
                 .ok_or(Error(abi::DENIED as i64))?
                 .pair()?
         };
+        #[cfg(feature = "trace-storage")]
+        time::storage_trace(
+            if self.upstream {
+                "nested-send"
+            } else {
+                "root-send"
+            },
+            slot as u64,
+            words[0] & 0xffff,
+        );
         pair.0.send(&wire::encode(words))?;
         p.receive = Some(pair.1);
         Ok(None)

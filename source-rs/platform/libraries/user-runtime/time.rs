@@ -10,6 +10,43 @@ pub fn now() -> Result<u64, Error> {
 pub fn cpu_us() -> Result<u64, Error> {
     read(abi::CPU_READ)
 }
+/// Opt-in storage diagnostics: local scope, opcode, monotonic ticks, account CPU.
+/// Scope values are local to each producer, never caller authentication or global IDs.
+pub fn storage_trace(label: &str, scope: u64, opcode: u64) {
+    storage_sample(
+        label,
+        &[scope, opcode, now().unwrap_or(0), cpu_us().unwrap_or(0)],
+    );
+}
+/// Bounded numeric diagnostic record. Callers compile this out in ordinary builds.
+pub fn storage_sample(label: &str, values: &[u64]) {
+    let mut bytes = [0; 256];
+    let mut len = 0;
+    for text in ["STORAGE_TRACE ", label] {
+        let count = text.len().min(32);
+        bytes[len..len + count].copy_from_slice(&text.as_bytes()[..count]);
+        len += count;
+    }
+    for &value in values.iter().take(8) {
+        bytes[len] = b' ';
+        len += 1;
+        let mut digits = [b'0'; 20];
+        let mut value = value;
+        let mut start = 19;
+        loop {
+            digits[start] += (value % 10) as u8;
+            value /= 10;
+            if value == 0 {
+                break;
+            }
+            start -= 1;
+        }
+        bytes[len..len + 20 - start].copy_from_slice(&digits[start..]);
+        len += 20 - start;
+    }
+    bytes[len] = b'\n';
+    let _ = crate::write(&bytes[..len + 1]);
+}
 /// Opt-in lab diagnostics. Call sites compile this out of ordinary service builds.
 /// Ticks and execution samples are approximate and logging perturbs scheduling.
 pub fn trace(label: &str) {

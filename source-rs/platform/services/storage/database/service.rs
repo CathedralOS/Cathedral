@@ -103,6 +103,7 @@ fn dispatch(
                     crate::metrics::report(match stage {
                         Stage::Prepared => "prepared",
                         Stage::Committed => "committed",
+                        Stage::Committing => return,
                     })
                 })?;
             response[24..56].copy_from_slice(&head.manifest);

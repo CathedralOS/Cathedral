@@ -14,7 +14,8 @@ import capture
 import disk_image
 import pointer_test
 import run as harness
-import volume_test
+import database_image
+import storage_timing
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
@@ -82,7 +83,8 @@ def desktop(stream, output, serial, reboot):
 
 
 def run(args):
-    profile = HERE / 'profiles/matrix-database.json'
+    name = 'matrix-database-recovery' if args.recovery else 'matrix-database'
+    profile = HERE / f'profiles/{name}.json'
     build = [sys.executable, str(HERE / 'run.py'), '--profile', str(profile), '--build-only']
     if args.release: build.append('--release')
     subprocess.run(build, cwd=ROOT, check=True)
@@ -91,8 +93,10 @@ def run(args):
     executable = lab / 'target/release' / ('storage-layout.exe' if os.name == 'nt' else 'storage-layout')
     output = harness.BUILD / 'matrix-database' / datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S%fZ')
     output.mkdir(parents=True)
-    shutil.copytree(harness.BUILD / 'matrix-database-interactive/esp', output / 'esp')
-    path, original = volume_test.seed(executable, output)
+    shutil.copytree(harness.BUILD / f'{name}-interactive/esp', output / 'esp')
+    path = output / "guest.raw"
+    database_image.prepare(path)
+    original = path.read_bytes()
     qemu = harness.find_qemu()
     command = [qemu, '-machine', 'q35', '-cpu', 'qemu64', '-accel', 'tcg', '-smp', '1', '-m', '128']
     command += harness.firmware_args(qemu, output)
@@ -104,15 +108,23 @@ def run(args):
                     verify=lambda stream, output, serial: desktop(stream, output, serial, boot == 2))
         for name in ('serial.log', 'qemu.log', 'display.png'):
             shutil.copyfile(output / name, output / f'boot-{boot}-{name}')
+        if args.recovery:
+            storage_timing.summarize(output, (output / 'serial.log').read_text(encoding='utf-8', errors='replace'), boot)
+        if args.recovery and boot == 1:
+            serial = (output / 'serial.log').read_text(encoding='utf-8', errors='replace').replace('Cathedral Rust lab: ', '')
+            assert 'uncertain CREATE reconciled without duplication' in serial
+            assert 'precommit and lost-reply replacement preserved live siblings and exact revisions' in serial
         actual = path.read_bytes()
+        database_image.prepare(path)
+        assert path.read_bytes() == actual  # Ordinary relaunch never reformats.
         assert len(actual) == len(original)
         assert actual[:4096] == original[:4096]
-        assert actual[4096 + volume_test.SIZE:] == original[4096 + volume_test.SIZE:]
+        assert actual[4096 + database_image.VOLUME_BYTES:] == original[4096 + database_image.VOLUME_BYTES:]
         # Host opens a copy, leaving the next guest to recover its own dirty engine.
         snapshot = output / f'host-reopen-{boot}.raw'
         with snapshot.open('xb') as file: file.write(actual)
-        result = subprocess.run([str(executable), 'engines', 'volume', 'verify-catalog', str(snapshot),
-                                 '4096', str(volume_test.SIZE)], cwd=lab, check=True, capture_output=True, text=True)
+        result = subprocess.run([str(executable), 'engines', 'volume', ('verify-catalog-recovery' if args.recovery else 'verify-catalog'), str(snapshot),
+                                 '4096', str(database_image.VOLUME_BYTES)], cwd=lab, check=True, capture_output=True, text=True)
         (output / f'host-{boot}.txt').write_text(result.stdout, encoding='utf-8')
         print(result.stdout, end='')
     sources = [profile, Path(__file__), ROOT / 'source-rs/Cargo.lock',
@@ -120,7 +132,7 @@ def run(args):
                *(ROOT / 'source-rs/platform/services/storage/database').glob('*.rs'),
                ROOT / 'tools/storage-lab/engines/volume/catalog.rs']
     context = {'revision': subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip(),
-               'release': args.release,
+               'release': args.release, 'recovery': args.recovery,
                'qemu': subprocess.check_output([qemu, '--version'], text=True).splitlines()[0],
                'efi_sha256': hashlib.sha256((output / 'esp/EFI/BOOT/BOOTX64.EFI').read_bytes()).hexdigest(),
                'source_sha256': {p.relative_to(ROOT).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest() for p in sources},
@@ -133,6 +145,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--release', action='store_true', required=True,
                         help='required for matrix storage response deadlines under TCG')
+    parser.add_argument('--recovery', action='store_true', help='kill/restart provider across ambiguous writes and collect timing')
     parser.add_argument('--timeout', type=float, default=180)
     args = parser.parse_args()
     if args.timeout <= 0: parser.error('timeout must be positive')

@@ -1,6 +1,8 @@
 #![no_std]
 #![forbid(unsafe_code)]
 //! Userspace LBA28 single-sector PIO on the boot-granted secondary ATA master.
+#[cfg(feature = "trace-storage")]
+pub mod metrics;
 mod polling;
 mod status;
 use cathedral_block_device::Device;
@@ -70,6 +72,8 @@ impl Ata {
         if sector >= self.sectors {
             return Err(abi::INVALID_ARGUMENT);
         }
+        #[cfg(feature = "trace-storage")]
+        metrics::operation(op);
         wait(false, op, "before", sector)?;
         write(6, 0xe0 | ((sector >> 24) as u8 & 15))?;
         delay()?;
@@ -98,6 +102,8 @@ impl Device for Ata {
         wait(false, 0x30, "complete", sector)
     }
     fn flush(&mut self) -> Result<(), u64> {
+        #[cfg(feature = "trace-storage")]
+        metrics::operation(0xe7);
         wait(false, 0xe7, "before", 0)?;
         write(7, 0xe7)?;
         delay()?;

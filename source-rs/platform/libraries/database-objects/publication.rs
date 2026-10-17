@@ -87,6 +87,7 @@ impl Store<'_> {
             engine(table.insert(key(root, b'h', &[]).as_slice(), head.encode().as_slice()))?;
             engine(table.insert(quota_key.as_slice(), charged.to_le_bytes().as_slice()))?;
         }
+        observe(Stage::Committing);
         engine(tx.commit())?; // No success response before durable publication.
         observe(Stage::Committed);
         Ok(head)

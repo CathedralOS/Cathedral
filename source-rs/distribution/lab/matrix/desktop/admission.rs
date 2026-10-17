@@ -5,6 +5,8 @@ use cathedral_platform_contracts::display::composition as c;
 use cathedral_platform_contracts::display::pointer;
 use cathedral_user_runtime::task::{self, Executable, Port};
 pub(super) struct Session {
+    #[cfg(feature = "database-probes")]
+    pub(super) database_fresh: bool,
     pub matrix: Pair,
     pub pressure: bool,
     pub extent: [u64; 2],
@@ -44,6 +46,8 @@ pub(super) fn start() -> Session {
         assert_eq!(control.1.receive(&mut [0; 64]).unwrap(), 5);
         (storage, control)
     };
+    #[cfg(feature = "database-probes")]
+    let database_fresh = database_recovery::arm_startup(storage_control);
     assert_eq!(
         Launch::at(0).unwrap().executable().unwrap_err(),
         Error(abi::DENIED as i64)
@@ -93,6 +97,8 @@ pub(super) fn start() -> Session {
         (134, 140, b"NESTED APP"),
         (500, 140, b"SIBLING APP"),
         (80, 400, b"CLICK THEN ENTER"),
+        (80, 440, b"RED: UNCONFIRMED"),
+        (80, 472, b"ENTER TO RELOAD"),
     ] {
         display
             .0
@@ -146,6 +152,8 @@ pub(super) fn start() -> Session {
         );
     }
     Session {
+        #[cfg(feature = "database-probes")]
+        database_fresh,
         matrix,
         pressure,
         extent: [info[1], info[2]],

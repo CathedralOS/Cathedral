@@ -52,6 +52,8 @@ fn inner(pair: Pair, pressure: bool) {
         pair,
         wire::route([wire::SURFACE_LIMIT, 0, 4, 0, 0, 0, 0, 0], 0).unwrap(),
     );
+    #[cfg(feature = "database-probes")]
+    stalls_peer::start(pair, pressure);
     owner(
         pair,
         wire::route(
@@ -133,9 +135,20 @@ pub fn run() -> u64 {
     if cfg!(feature = "desktop-probes") && !recovery::sibling_saved(session.matrix) {
         session = providers::exercise(session);
     }
+    #[cfg(feature = "database-probes")]
+    database_recovery::exercise(&mut session);
     session.start_input();
     cathedral_user_runtime::write(b"Cathedral matrix desktop: ready\n").unwrap();
     loop {
-        session.matrix.1.receive(&mut [0; 64]).unwrap();
+        match session
+            .matrix
+            .1
+            .receive_until(&mut [0; 64], time::after(100).unwrap())
+        {
+            Ok(_) => (),
+            Err(Error(code)) if code == abi::TIMED_OUT as i64 => (),
+            Err(error) => panic!("desktop owner: {error:?}"),
+        }
+        persistence::supervise(&mut session);
     }
 }

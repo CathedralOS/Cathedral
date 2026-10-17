@@ -27,6 +27,8 @@ From the repository root:
 
 ```powershell
 python tools/boot-harness-rs/matrix_database_test.py --release
+python tools/boot-harness-rs/matrix_database_test.py --release --recovery
+python tools/boot-harness-rs/run.py --profile tools/boot-harness-rs/profiles/matrix-database.json --release --window
 ```
 
 The runner creates a fresh bounded database volume, saves each app's color through
@@ -36,18 +38,58 @@ quota records on image copies. Guards outside the volume must remain unchanged.
 This is the ordinary desktop path, not the legacy provider's injected recovery
 protocol; those recovery tests retain their existing composition.
 
-The two-boot release run `20261017T022558426100Z` passed with 16 exact private
-records. Artifacts live under `build/boot-harness-rs/matrix-database/`. QMP quit
+The ordinary two-boot release run `20261017T025617017076Z` and the recovery run
+`20261017T025838513443Z` each passed with 16 exact private records on both boots.
+Artifacts live under `build/boot-harness-rs/matrix-database/`. QMP quit
 leaves the guest database open but does not model loss of physical device caches.
 No existing desktop disk is migrated or reformatted.
 
-This desktop proof requires `--release`. The dev attempt
-`20261017T023355118118Z` exceeded a matrix storage-response deadline during app
-initialization; the app's CREATE currently unwraps that timeout. A timeout may
-hide a committed write, so increasing deadlines or blindly retrying is not a
-general fix. App startup reconciliation and storage latency under slower builds
-remain engineering work. The separate private-content/retention proof passes in
-both dev and release and does not use the desktop's response deadline.
+The desktop still requires `--release` under TCG. The original dev timeout
+(`20261017T023355118118Z`) exposed an app bug: CREATE unwrapped a storage error.
+[App state](../../../../distribution/lab/matrix/desktop/app/state.rs) now retains
+confirmed state, reports failure visibly, and reads before any subsequent mutation.
+Enter on a red error mark reloads the current grant and stored value; it never
+blindly repeats a toggle. A failed CREATE may have committed, so readback settles
+it. Only the explicitly diskless sibling probe uses volatile state.
+
+The [recovery exercise](../../../../distribution/lab/matrix/desktop/database_recovery.rs)
+lets a committed CREATE exceed the actual matrix deadline, checks the app survives
+and shows its error, then kills the provider. The distribution's ordinary
+[supervisor](../../../../distribution/lab/matrix/desktop/persistence.rs) replaces
+the dead provider and explicitly re-grants both roots through the existing matrix
+tree. Readback finds revision 1 without duplicating CREATE. Further cuts before
+REPLACE and after its commit preserve the correct old/new values and exact
+revisions. A sibling in the same nested matrix continues pointer/key handling and
+painting while saves are blocked. Physical input then saves both apps, and a cold
+boot plus independent host oracle verify all 16 records (root revisions 4 and 2).
+
+The ordinary supervisor checks for provider death once per 100 guest ticks; it
+does not kill a still-live provider merely because a save timed out. A live stalled
+provider and a retired binding still need owner recovery (restart the desktop for
+now). Loss of the app's own matrix transport retires that uncorrelated stream;
+app replacement is required rather than accepting a late response as a new reply.
+This is bounded recovery policy, not automatic repair of damaged media or a general
+restart/backoff service. Initial open or replacement failure still fails closed.
+
+VS Code's **Cathedral: Database Desktop in QEMU** entry retains
+`build/boot-harness-rs/matrix-database-storage.raw`. The host creates this guarded
+volume only when absent; an existing file is never reformatted. The guest validates
+its envelope/engine on every open. The older catalog desktop remains a separate
+launch option and disk. No migration is performed.
+
+`--recovery` selects test-only provider gates and `trace-storage`. Artifacts include
+`timing-N.csv` and `ata-N.csv` alongside serial, scanout and independent host checks.
+Add `--trace-storage` to an ordinary runner command for diagnostics without fault
+injection. [The timing summarizer](../../../../../tools/boot-harness-rs/storage_timing.py)
+records app round trips, matrix dispatch/service, provider queueing/execution,
+collection and commit. Scope numbers are producer-local. The provider-queue join
+uses this fixture's fixed slot-to-root mapping and has no cross-process CPU delta.
+Matrix dispatch starts when the event is received; prior mailbox/backpressure time
+is included in outer round trips, not that span. ATA samples count read/write/flush
+commands, phase-wait ticks and polls, not physical-media work. Ticks are nominally
+10 ms, logging perturbs execution, and the recovery trace includes deliberate waits;
+these are diagnostics, not latency guarantees. Missing ends after process death
+are not converted into successful timings.
 
 Inside `source-rs/`, run `cargo test --locked -p cathedral-database-catalog --features host`
 for atomic changes, stale revisions, staging abandonment, root isolation, 300
