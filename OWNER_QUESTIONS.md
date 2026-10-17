@@ -43,7 +43,7 @@ This blocks freezing namespace/copy and persisted-reference semantics.
 
 **Contracts checked.** The [specification index](wiki/spec/README.md) leaves
 `spec/storage/realms_and_objects.md` unwritten. The
-[Rust catalog protocol](source-rs/contracts/storage.rs) supplies only bounded,
+[Rust catalog protocol](source-rs/platform/contracts/storage.rs) supplies only bounded,
 connection-relative object numbers; it has no aliases, durable identity or
 cross-realm object graph. The [storage proposal](wiki/proposals/0002_dbfs_storage_foundation.md)
 and host content-layout lab do not resolve those semantics.
@@ -71,7 +71,7 @@ This blocks a production promise of global deduplication or secure erasure.
 **Contracts checked.** The [filesystem design](wiki/design/part_4_storage/00_filesystem_as_database.md)
 and [memory/persistence design](wiki/design/part_2_components/02_memory_and_persistence.md)
 describe the intent; the [specification index](wiki/spec/README.md) and
-[catalog protocol](source-rs/contracts/storage.rs) define no encryption domain,
+[catalog protocol](source-rs/platform/contracts/storage.rs) define no encryption domain,
 physical sponsorship, deduplication disclosure or erasure contract.
 
 **Owner choice.** Deduplicate only within an encryption/trust/accounting domain,
@@ -97,7 +97,7 @@ and retained-version API, not the current finite host experiment.
 and [transaction](wiki/design/part_4_storage/01_transactions_and_consistency.md)
 chapters describe durable observation, but the
 [specification index](wiki/spec/README.md) and
-[Rust catalog protocol](source-rs/contracts/storage.rs) have no cursor, retention,
+[Rust catalog protocol](source-rs/platform/contracts/storage.rs) have no cursor, retention,
 expiry or subscriber-sponsorship contract.
 
 **New evidence.** The [host engine stress lab](tools/storage-lab/engines/stress/README.md#reader-pressure-and-reclamation)
@@ -192,7 +192,7 @@ lightweight or visual-only pointer necessarily creates a full focus context.
 **Contracts checked.** The [specification index](wiki/spec/README.md) assigns
 compositor and seat semantics to an unwritten subject. The
 [source contracts charter](source/contracts/CHARTER.md) supplies no pointer or
-seat protocol. The [Rust input transport](source-rs/contracts/input.rs) carries
+seat protocol. The [Rust input transport](source-rs/platform/contracts/input.rs) carries
 key events only. The separate [Rust pointer experiment](source-rs/distribution/lab/compositor/POINTERS.md)
 adds bounded pointer identities, a boot-approved mouse source and an app-scoped
 synthetic lease. The [session experiment](source-rs/distribution/lab/compositor/SESSION.md)
@@ -228,7 +228,7 @@ currently selected recipient.
 
 **Contracts checked.** The [specification index](wiki/spec/README.md) leaves
 compositor/seat and capability semantics unwritten. The
-[Rust interaction contract](source-rs/contracts/interaction.rs) and
+[Rust interaction contract](source-rs/platform/contracts/display/interaction.rs) and
 [session lab](source-rs/distribution/lab/compositor/SESSION.md) are experimental.
 The owner has affirmed that keyboard focus attenuates like other delegated
 authority; that does not yet settle event commitment or held-key transfer.
@@ -328,7 +328,7 @@ payloads.
 
 **Contracts checked.** The [specification index](wiki/spec/README.md) assigns
 component, capability, IPC and admission semantics to unwritten subjects.
-The [Rust boot contract](source-rs/contracts/boot.rs) covers the firmware-neutral
+The [Rust boot memory inventory](source-rs/kernel/core/memory/inventory.rs) covers the firmware-neutral
 memory inventory, not admission into a shared protection domain. ADR 0002
 explicitly makes no userspace-isolation claim for its source grouping.
 
@@ -356,7 +356,7 @@ arbitrary native store can cross an advertised row span within its writable page
 Crossing the mapped page boundary faults. These are different authority guarantees.
 
 **Contracts checked.** The isolation question above remains unresolved. The lab's
-[page contract](source-rs/contracts/memory.rs) defines whole-page private writers
+[page contract](source-rs/kernel/contracts/memory.rs) defines whole-page private writers
 and sealed readers; it supplies no writable byte-range delegation or production
 surface contract. The row wrapper relies on cooperating safe Rust and is not a
 proof checker or native-code sandbox. No Omega admission guarantee is implemented
@@ -393,7 +393,7 @@ measurement of either route.
 **Contracts checked.** The [specification index](wiki/spec/README.md) identifies
 compositor/seat and rendering contracts as unwritten.
 [Source contracts](source/contracts/CHARTER.md) contain no accepted glyph or scene
-protocol. The [Rust display contract](source-rs/contracts/display.rs) has fixed
+protocol. The [Rust display contract](source-rs/platform/contracts/display/display.rs) has fixed
 ASCII text, rectangle and sealed-pixel requests, all experimental. It does not
 establish general font parsing, shaping or retained glyph semantics.
 
@@ -422,7 +422,7 @@ either pin unbounded memory or promise content the renderer cannot supply.
 **Contracts checked.** Rendering, component and IPC subjects in the
 [specification index](wiki/spec/README.md) do not define this resource promise.
 The [scheduler design](wiki/design/part_2_components/01_scheduler_and_resources.md)
-requires bounded resource use, while the [Rust page contract](source-rs/contracts/memory.rs)
+requires bounded resource use, while the [Rust page contract](source-rs/kernel/contracts/memory.rs)
 only supplies fixed runtime page grants and pinned accepted readers. Neither
 settles production cache charges, sponsor lifetime or presentation under a miss.
 
@@ -459,7 +459,7 @@ defines when redemption commits it and how cancellation or peer death intervenes
 **Contracts checked.** The [specification index](wiki/spec/README.md) assigns
 authority and IPC semantics to the unwritten `spec/authority/capabilities.md`
 and `spec/communication/ipc.md`. The new
-[Rust syscall constants](source-rs/contracts/user.rs) and
+[Rust syscall constants](source-rs/kernel/contracts/user.rs) and
 [transport model](source-rs/kernel/core/ipc/ipc.rs) explicitly define only lab
 behavior. No accepted contract settles transport selection or pending-operation
 revocation. This blocks promoting the experiment to a stable service interface,
@@ -483,7 +483,7 @@ chapter before freezing an API. The current Rust experiment rechecks pending
 receives, returns `REVOKED`, and discards undelivered queued bytes on revocation;
 those are explicit experimental choices, not an accepted production policy.
 
-**Additional lab evidence.** The [page-object contract](source-rs/contracts/memory.rs)
+**Additional lab evidence.** The [page-object contract](source-rs/kernel/contracts/memory.rs)
 now supplements copied control messages with sealed shared buffers. Sealing
 removes producer write permission; accepting a read-only lease pins backing even
 if the producer dies. Unaccepted offers disappear on producer death, and peer

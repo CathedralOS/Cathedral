@@ -1,0 +1,19 @@
+[package]
+name = "cathedral-database-catalog"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+[lib]
+path = "lib.rs"
+[dependencies]
+cathedral-database-objects.workspace = true
+cathedral-object-store.workspace = true
+cathedral-kernel-contracts.workspace = true
+cathedral-platform-contracts.workspace = true
+[features]
+host = ["cathedral-database-objects/host"]
+[dev-dependencies]
+cathedral-storage-engine = { workspace = true, features = ["host"] }
+[lints]
+workspace = true

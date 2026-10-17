@@ -8,11 +8,18 @@ pub fn run() -> u64 {
     let first = Launch::at(1).unwrap().spawn(0).unwrap().wait().unwrap();
     let second = Launch::at(2).unwrap().spawn(1).unwrap().wait().unwrap();
     assert_eq!(first, second);
-    if first == Outcome::Returned(1) {
+    let first_marker = if cfg!(feature = "retention") { 9 } else { 1 };
+    let final_marker = if cfg!(feature = "retention") { 26 } else { 2 };
+    if cfg!(feature = "retention") && first == Outcome::Returned(25) {
+        write(b"Cathedral objects: collected revision 25\n").unwrap();
+    } else if first == Outcome::Returned(first_marker) {
+        #[cfg(feature = "retention")]
+        write(b"Cathedral objects: pinned revision 9\n").unwrap();
+        #[cfg(not(feature = "retention"))]
         write(b"Cathedral objects: acknowledged revision 1\n").unwrap();
         // Host kills QEMU here, with the provider's committed database still open.
     } else {
-        assert_eq!(first, Outcome::Returned(2));
+        assert_eq!(first, Outcome::Returned(final_marker));
         let (send, receive) = Port::at(0).unwrap().connect().unwrap();
         send.send(
             &wire::Request {

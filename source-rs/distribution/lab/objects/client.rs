@@ -2,18 +2,15 @@
 //! Deliberately no database/driver dependency. Distinct fixture bytes expose any
 //! accidental root alias; revision checks prevent mixing concurrent range reads.
 use cathedral_platform_contracts::database as wire;
-use cathedral_user_runtime::{
-    ipc::Handle,
-    link::Link,
-    memory::{Object, Private},
-    write,
-};
-struct Client {
-    send: Handle,
-    receive: Handle,
+use cathedral_user_runtime::{ipc::Handle, memory::Object};
+#[cfg(not(feature = "retention"))]
+use cathedral_user_runtime::{link::Link, memory::Private, write};
+pub(super) struct Client {
+    pub(super) send: Handle,
+    pub(super) receive: Handle,
 }
 impl Client {
-    fn call(
+    pub(super) fn call(
         &self,
         op: u64,
         expected: u64,
@@ -37,6 +34,7 @@ impl Client {
         assert_eq!(self.receive.receive(&mut reply).unwrap(), 64);
         reply
     }
+    #[cfg(not(feature = "retention"))]
     fn verify(&self, revision: u64, root: u64) {
         for offset in (0..8192).step_by(wire::READ_BYTES) {
             let len = wire::READ_BYTES.min(8192 - offset);
@@ -50,6 +48,7 @@ impl Client {
         }
     }
 }
+#[cfg(not(feature = "retention"))]
 fn fixture(root: u64, revision: u64, index: usize) -> u8 {
     let byte = ((index * 17 + index / 4096 * 71 + root as usize * 43) % 251) as u8;
     if revision == 2 && index == 41 {
@@ -58,6 +57,7 @@ fn fixture(root: u64, revision: u64, index: usize) -> u8 {
         byte
     }
 }
+#[cfg(not(feature = "retention"))]
 pub fn run(root: u64) -> u64 {
     assert!(Link::at(1).is_err(), "client sees an ungranted connection");
     let (send, receive) = Link::at(0).unwrap().connect().unwrap();

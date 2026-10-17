@@ -5,9 +5,13 @@ use super::*;
 use crate::chunks::{Layout, Policy, Store};
 use redb::ReadableTable;
 use std::collections::BTreeMap;
-pub fn verify(path: &Path, offset: u64, bytes: u64, revision: u64) -> Result<()> {
-    if !(1..=2).contains(&revision) {
-        return Err("expected revision 1 or 2".into());
+pub fn verify(path: &Path, offset: u64, bytes: u64, revision: u64, retention: bool) -> Result<()> {
+    if !(if retention {
+        [9, 25].contains(&revision)
+    } else {
+        (1..=2).contains(&revision)
+    }) {
+        return Err("invalid fixture revision".into());
     }
     let db = open(Region::new(Arc::new(Image::open(path)?), offset, bytes)?)?;
     let tx = db.begin_read()?;
@@ -24,48 +28,79 @@ pub fn verify(path: &Path, offset: u64, bytes: u64, revision: u64) -> Result<()>
             inline_limit: 128,
             layout: Layout::Flat,
         });
-        let bytes: Vec<_> = (0..8192)
-            .map(|i| ((i * 17 + i / 4096 * 71 + root as usize * 43) % 251) as u8)
-            .collect();
-        let mut version = store.put(&bytes);
+        let mut versions = Vec::new();
+        let mut heads = Vec::new();
         for n in 1..=revision {
-            if n == 2 {
-                version = store.patch(&version, 41, &[bytes[41] ^ 128]).unwrap();
+            let mut bytes: Vec<_> = (0..8192)
+                .map(|i| {
+                    ((i * 17
+                        + i / 4096 * 71
+                        + root as usize * 43
+                        + if retention && n >= 10 {
+                            n as usize * 13
+                        } else {
+                            0
+                        })
+                        % 251) as u8
+                })
+                .collect();
+            if retention && n > 1 && n < 10 {
+                bytes[41] ^= n as u8;
             }
+            if !retention && n == 2 {
+                bytes[41] ^= 128;
+            }
+            let version = store.put(&bytes);
             let records = store.records(&version);
             let mut head = n.to_le_bytes().to_vec();
             head.extend_from_slice(&records[b"head".as_slice()]);
             head.extend_from_slice(&8192u64.to_le_bytes());
-            for (key, value) in records {
-                if key == b"head" {
-                    continue;
-                }
-                let mut rooted = vec![root];
-                rooted.extend_from_slice(&key);
-                expected.insert(rooted, value);
-            }
-            let mut event = vec![root, b'e'];
-            event.extend_from_slice(&n.to_be_bytes());
-            expected.insert(event, head.clone());
-            expected.insert(vec![root, b'h'], head);
+            heads.push(head);
+            versions.push(version);
         }
-        let charge: usize = expected
+        let pinned = retention && revision == 9;
+        if retention {
+            let mut roots = vec![versions.last().unwrap().clone()];
+            if pinned {
+                roots.push(versions[0].clone());
+            }
+            store.retain(&roots);
+        }
+        for (key, value) in store.records(versions.last().unwrap()) {
+            if key == b"head" {
+                continue;
+            }
+            let mut rooted = vec![root];
+            rooted.extend_from_slice(&key);
+            expected.insert(rooted, value);
+        }
+        for (i, head) in heads.iter().enumerate() {
+            let n = i as u64 + 1;
+            if !retention || n == revision || (pinned && n == 1) {
+                let mut event = vec![root, b'e'];
+                event.extend_from_slice(&n.to_be_bytes());
+                expected.insert(event, head.clone());
+            }
+        }
+        expected.insert(vec![root, b'h'], heads.last().unwrap().clone());
+        if pinned {
+            expected.insert(vec![root, b'p', 0], heads[0].clone());
+        }
+        let charge = expected
             .iter()
             .filter(|(k, _)| k[0] == root)
             .map(|(k, v)| k.len() + v.len())
             .sum::<usize>()
-            + 2
-            + 8;
+            + 10;
         expected.insert(vec![root, b'q'], (charge as u64).to_le_bytes().to_vec());
     }
     if actual != expected {
         return Err(
-            "guest private records differ from independent host content/history/quota oracle"
-                .into(),
+            "guest private records differ from independent content/history/quota oracle".into(),
         );
     }
     println!(
-        "VERIFIED: both private roots, real content, revision {revision}, exact retained history and no aborted records ({} records)",
+        "VERIFIED: both roots, content, revision {revision}, retention={retention}, exact live records ({})",
         actual.len()
     );
     Ok(())

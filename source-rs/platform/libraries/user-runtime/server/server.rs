@@ -113,4 +113,14 @@ impl Server {
             result => result,
         }
     }
+    /// Typed reply. Failure leaves the source object owned by the caller; the
+    /// provider can send a small refusal if receiver funding prevents attachment.
+    pub fn reply_memory(
+        &self,
+        request: &Request,
+        bytes: &[u8],
+        object: &crate::memory::Object,
+    ) -> Result<(), Error> {
+        request.reply.send_memory(bytes, object)
+    }
 }

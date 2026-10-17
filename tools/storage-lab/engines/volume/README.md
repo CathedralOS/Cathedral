@@ -173,3 +173,12 @@ opaque bytes. The separate [guest engine proof](../../../../source-rs/distributi
 now supplies a funded allocator and performs actual guest commits and unclean recovery.
 Whether this envelope or engine becomes permanent remains an engineering/design
 decision; current owner questions about identity, retention and isolation still apply.
+
+The private-content runner uses `verify-objects` or `verify-retention` to compare
+the guest's entire private record set against the host representation model.
+`verify-catalog` independently builds the matrix apps' catalog payloads and checks
+their chunks, manifests, heads, history and quota. These commands take a copied
+image, byte offset and volume length; the first two also take the fixture revision.
+See [objects.rs](objects.rs) and [catalog.rs](catalog.rs). Host verification never
+opens the original image before the next cold guest, so host cleanup cannot hide
+guest recovery problems. These are fixed fixture oracles, not general fsck tools.

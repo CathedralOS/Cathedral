@@ -116,11 +116,33 @@ no disk grant and cannot select roots or look up arbitrary content hashes.
 
 Cold guest recovery reconstructs acknowledged content before replacing one byte.
 Stale, oversized, malformed and retained-quota refusals leave no partial records.
-A 256 KiB provider heap and four reader pages bound this fixture; serial samples
-report recovery, preparation and commit allocations. Its 24 KiB per-root quota
-bounds retained logical records, not physical full-volume progress. One early
-ATA busy timeout remains undiagnosed; the proof guide records this limitation.
-The ordinary desktop catalog and its matrix routing remain unchanged.
+A 224 KiB provider heap, eight output pages and four input reader pages bound this
+fixture; serial samples report recovery, preparation and commit allocations.
+Sealed bulk reads avoid reconstructing data through 40-byte copied replies. Reader
+exhaustion returns BUSY and released readers permit reuse. Backings remain funded
+by the provider until their last reader releases them; general client fairness and
+funding transfer are still open engineering work.
+
+Two durable root-owned pins and bounded collection now preserve selected revisions
+and reclaim retired content. Each pass validates at most three live closures,
+scans the 24 KiB root record budget, removes at most eight records and adjusts its
+ledger atomically. Host tests reopen every pass and complete 600 8 KiB replacements
+in a fixed roughly 1 MiB engine extent containing unrelated data. Three guest boots
+prove pin survival, release/collection, bulk pressure and cold recovery. This is
+bounded reuse evidence, not a physical full-volume progress or watcher guarantee.
+
+The separate [database catalog adapter](platform/libraries/object-store/database/README.md)
+now runs the matrix desktop over the database provider. Existing matrix IPC and
+private-root delegation carry atomic catalog snapshots; two cold boots and an
+independent host oracle verify saved app colors and exact records. The old desktop
+format remains available; there is no migration or production-engine selection.
+The desktop database proof requires release mode: the dev TCG trace exceeded a
+matrix storage deadline during CREATE, which the app currently unwraps. Startup
+reconciliation after an ambiguous save and slower-build latency remain work.
+
+One early ATA busy timeout remains undiagnosed. The driver now records opcode,
+phase, LBA, status, ticks and polls for slow/failed waits; optional QEMU tracing
+records device/block events. Instrumented runs passed without reproducing it.
 
 ## Resumable storage and provider recovery
 

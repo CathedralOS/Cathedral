@@ -209,11 +209,26 @@ model verifies exact retained records on image copies. Allocation samples cover
 recovery, preparation, commit and close.
 
 This remains one object per root with 16 KiB contents and a 24 KiB retained-record
-quota. That quota is not reserved physical engine space. General reclamation,
-full-volume progress, watcher replay, larger trees, crash cuts inside this guest
-protocol and multi-object predicates still need work. An intermittent ATA busy
-timeout is recorded in the proof guide. These are engineering gaps, not new owner
-semantics; the existing owner questions below remain open.
+quota. Two durable root-owned pin slots and bounded collection now protect the
+current head and selected revisions. Each immediate transaction removes at most
+eight retired records and updates exact logical accounting; events are removed
+before their content so interleaved pin requests cannot resurrect broken closures.
+Host checks reopen after each pass and run 600 replacements under a fixed extent;
+three guest boots exercise pins, release, reclamation and sealed bulk reads.
+
+The separate database catalog adapter now persists matrix desktop app state using
+existing root-local IPC and catalog transactions. An independent host oracle and
+cold desktop restoration check this path without migrating existing catalog media.
+Neither this adapter nor the two-slot pin experiment settles production semantics.
+
+Logical quota is not reserved physical engine space. General reclamation,
+full-volume progress, watcher replay, larger trees, crash cuts inside the guest
+protocol and multi-object predicates still need work. Bulk output remains funded
+by the provider until the final reader releases it; transferable sponsorship and
+per-client fairness need further design. An intermittent ATA busy timeout remains
+undiagnosed, with operation/phase diagnostics and optional QEMU tracing now in place.
+These are engineering gaps, not new owner semantics; the existing questions below
+remain open.
 
 ## Performance boundaries to preserve
 

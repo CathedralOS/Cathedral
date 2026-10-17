@@ -10,6 +10,9 @@ path = "main.rs"
 test = false
 bench = false
 [dependencies]
+cathedral-database-catalog = { workspace = true, optional = true }
+cathedral-object-store = { workspace = true, optional = true }
+cathedral-kernel-contracts = { workspace = true, optional = true }
 cathedral-user-runtime = { workspace = true, features = ["heap"] }
 cathedral-platform-contracts.workspace = true
 cathedral-database-objects.workspace = true
@@ -17,3 +20,6 @@ cathedral-storage-engine.workspace = true
 cathedral-ata-pio.workspace = true
 [lints]
 workspace = true
+
+[features]
+catalog = ["dep:cathedral-database-catalog", "dep:cathedral-object-store", "dep:cathedral-kernel-contracts"]

@@ -1,9 +1,12 @@
 #![no_std]
 #![forbid(unsafe_code)]
 //! Userspace LBA28 single-sector PIO on the boot-granted secondary ATA master.
+mod polling;
+mod status;
 use cathedral_block_device::Device;
 use cathedral_kernel_contracts::user as abi;
 use cathedral_user_runtime::{Error, disk, time, yield_now};
+use polling::wait;
 pub struct Ata {
     sectors: u64,
 }
@@ -18,32 +21,6 @@ fn write(reg: u64, byte: u8) -> Result<(), u64> {
 }
 fn now() -> Result<u64, u64> {
     time::now().map_err(code)
-}
-fn wait(data: bool) -> Result<(), u64> {
-    let deadline = time::after(50).map_err(code)?;
-    loop {
-        let status = read(8)?;
-        if status == 0 || status == 255 {
-            return Err(abi::IO_ERROR);
-        }
-        if status & 0x80 == 0 {
-            if status & 0x21 != 0 {
-                return Err(abi::IO_ERROR);
-            }
-            if (status & 8 != 0) == data {
-                return Ok(());
-            }
-        }
-        if time::reached(now()?, deadline) {
-            let mut message = *b"ATA readiness timeout: data=0 status=00\n";
-            message[28] = b'0' + u8::from(data);
-            message[37] = b"0123456789abcdef"[(status >> 4) as usize];
-            message[38] = b"0123456789abcdef"[(status & 15) as usize];
-            cathedral_user_runtime::write(&message).ok();
-            return Err(abi::TIMED_OUT);
-        }
-        yield_now();
-    }
 }
 fn delay() -> Result<(), u64> {
     for _ in 0..4 {
@@ -61,13 +38,13 @@ impl Ata {
         write(8, 2)?;
         write(6, 0xe0)?;
         delay()?;
-        wait(false)?;
+        wait(false, 0xec, "reset", 0)?;
         write(7, 0xec)?;
         delay()?;
-        wait(true)?;
+        wait(true, 0xec, "data", 0)?;
         let mut identify = [0; 512];
         disk::transfer(&mut identify, false).map_err(code)?;
-        wait(false)?;
+        wait(false, 0xec, "complete", 0)?;
         let word = |i: usize| u16::from_le_bytes([identify[i * 2], identify[i * 2 + 1]]);
         if word(49) & (1 << 9) == 0 || word(83) & (1 << 12) == 0 {
             return Err(abi::IO_ERROR);
@@ -93,7 +70,7 @@ impl Ata {
         if sector >= self.sectors {
             return Err(abi::INVALID_ARGUMENT);
         }
-        wait(false)?;
+        wait(false, op, "before", sector)?;
         write(6, 0xe0 | ((sector >> 24) as u8 & 15))?;
         delay()?;
         write(2, 1)?;
@@ -102,7 +79,7 @@ impl Ata {
         }
         write(7, op)?;
         delay()?;
-        wait(true)
+        wait(true, op, "data", sector)
     }
 }
 impl Device for Ata {
@@ -112,18 +89,18 @@ impl Device for Ata {
     fn read(&mut self, sector: u64, bytes: &mut [u8; 512]) -> Result<(), u64> {
         self.command(sector, 0x20)?;
         disk::transfer(bytes, false).map_err(code)?;
-        wait(false)
+        wait(false, 0x20, "complete", sector)
     }
     fn write(&mut self, sector: u64, bytes: &[u8; 512]) -> Result<(), u64> {
         self.command(sector, 0x30)?;
         let mut buffer = *bytes;
         disk::transfer(&mut buffer, true).map_err(code)?;
-        wait(false)
+        wait(false, 0x30, "complete", sector)
     }
     fn flush(&mut self) -> Result<(), u64> {
-        wait(false)?;
+        wait(false, 0xe7, "before", 0)?;
         write(7, 0xe7)?;
         delay()?;
-        wait(false)
+        wait(false, 0xe7, "complete", 0)
     }
 }

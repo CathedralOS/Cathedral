@@ -4,6 +4,35 @@ use super::{Store, catalog::Change};
 use cathedral_block_device::Device;
 use cathedral_kernel_contracts::user as abi;
 use cathedral_platform_contracts::storage as wire;
+/// Catalog semantics are independent of persistence. Providers implement one
+/// atomic changed-root publication; this dispatcher owns connection staging.
+pub trait Backend {
+    fn root(&self, root: usize) -> Result<&super::catalog::Root, u64>;
+    fn read(&self, root: usize, object: u64) -> Result<wire::Record, u64> {
+        self.root(root)?.read(object)
+    }
+    fn transact(
+        &mut self,
+        root: usize,
+        expected: u64,
+        changes: &[Change],
+        hook: impl FnMut(u8),
+    ) -> Result<wire::Record, u64>;
+}
+impl<D: Device> Backend for Store<D> {
+    fn root(&self, root: usize) -> Result<&super::catalog::Root, u64> {
+        self.root(root)
+    }
+    fn transact(
+        &mut self,
+        root: usize,
+        expected: u64,
+        changes: &[Change],
+        hook: impl FnMut(u8),
+    ) -> Result<wire::Record, u64> {
+        self.transact(root, expected, changes, hook)
+    }
+}
 #[derive(Default)]
 pub struct Client {
     incarnation: u64,
@@ -15,9 +44,9 @@ struct Transaction {
     length: usize,
 }
 impl Client {
-    pub fn request<D: Device>(
+    pub fn request<S: Backend>(
         &mut self,
-        store: &mut Store<D>,
+        store: &mut S,
         root: usize,
         incarnation: u64,
         bytes: &[u8],

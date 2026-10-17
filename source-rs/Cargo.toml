@@ -15,6 +15,7 @@ members = [
     "platform/libraries/content-layout",
     "platform/libraries/database-objects",
     "platform/libraries/object-store",
+    "platform/libraries/object-store/database",
     "platform/libraries/storage-volume",
     "platform/libraries/storage-volume/engine",
     "platform/libraries/user-runtime",
@@ -56,6 +57,7 @@ rust-version = "1.94"
 publish = false
 
 [workspace.dependencies]
+cathedral-database-catalog = { path = "platform/libraries/object-store/database" }
 cathedral-content-layout = { path = "platform/libraries/content-layout" }
 cathedral-database-objects = { path = "platform/libraries/database-objects" }
 cathedral-storage-engine = { path = "platform/libraries/storage-volume/engine" }
@@ -117,6 +119,7 @@ strip = "debuginfo"
 
 [profile.dev.package.cathedral-database-storage]
 opt-level = "s"
+codegen-units = 1
 debug-assertions = false
 strip = "debuginfo"
 
@@ -126,10 +129,29 @@ strip = "debuginfo"
 
 [profile.dev.package.cathedral-database-objects]
 opt-level = "s"
+codegen-units = 1
 debug-assertions = false
 
 [profile.dev.package.cathedral-storage-engine]
 opt-level = "s"
 
 [profile.dev.package.cathedral-content-layout]
+opt-level = "s"
+
+[profile.release.package.cathedral-database-objects]
+opt-level = "s"
+codegen-units = 1
+
+[profile.dev.package.cathedral-ata-pio]
+opt-level = "s"
+
+# Keep the database provider inside the existing user-image admission bound.
+# Runtime assertions remain enabled; optimize code size without raising limits.
+[profile.dev.package.cathedral-user-runtime]
+opt-level = "s"
+
+[profile.dev.package.cathedral-database-catalog]
+opt-level = "s"
+
+[profile.release.package.cathedral-database-catalog]
 opt-level = "s"

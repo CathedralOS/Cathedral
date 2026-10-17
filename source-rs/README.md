@@ -1067,8 +1067,15 @@ real BLAKE3 chunks/manifests through an explicitly granted client connection:
 
 ```powershell
 python tools/boot-harness-rs/objects_test.py --release
+python tools/boot-harness-rs/objects_test.py --retention --release
+python tools/boot-harness-rs/matrix_database_test.py --release
 ```
 
 It uses a new disposable image, checks atomic refusals, kills QEMU after acknowledged
 publication, cold-recovers contents and independently verifies every retained record.
-See its guide for the debug command, heap samples, bounds and known ATA timeout.
+The retention trace adds durable pins, bounded collection, sealed bulk reads and
+reader-pressure checks across three boots. The matrix trace saves each desktop
+app through its private matrix capability and cold-restores it from database
+catalog snapshots. See the [adapter guide](platform/libraries/object-store/database/README.md)
+for ownership and format limits, and the content guide for dev commands, heap
+samples and optional ATA tracing. The intermittent ATA timeout remains undiagnosed.

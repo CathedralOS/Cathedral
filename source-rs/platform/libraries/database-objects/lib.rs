@@ -7,8 +7,10 @@ extern crate alloc;
 mod publication;
 mod reading;
 mod records;
+mod retention;
 use cathedral_storage_engine::redb::{self, Database, TableDefinition};
 pub use records::Head;
+pub use retention::{Collection, PIN_SLOTS};
 
 pub const MAX_BYTES: usize = 16 * 1024;
 pub const CHUNK_BYTES: usize = 4096;
@@ -53,5 +55,7 @@ impl<'a> Store<'a> {
 
 #[cfg(all(test, feature = "host"))]
 extern crate std;
+#[cfg(all(test, feature = "host"))]
+mod retention_tests;
 #[cfg(all(test, feature = "host"))]
 mod tests;

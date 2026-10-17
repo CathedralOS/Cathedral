@@ -5,7 +5,9 @@
 [platform provider](../../../platform/services/storage/database/main.rs), then
 two [clients](client.rs). Each client has one explicit link and four private
 pages, with no disk, clock or sibling connection. The provider receives the disk,
-64 private pages for its heap and four reader pages for sealed attachments.
+64 private pages split into a 56-page heap and eight output pages, plus four
+reader pages for sealed input attachments. Retention clients also get four reader
+pages each for bulk replies.
 Profile link ordering binds provider slots to persistent roots 0 and 1; reordering
 those links on an existing image is unsupported. These are private fixture roots,
 not a proposal for global object identity.
@@ -15,6 +17,9 @@ Run from the repository root:
 ```powershell
 python tools/boot-harness-rs/objects_test.py --release
 python tools/boot-harness-rs/objects_test.py
+python tools/boot-harness-rs/objects_test.py --retention --release
+python tools/boot-harness-rs/objects_test.py --retention --timeout 240
+python tools/boot-harness-rs/objects_test.py --release --ata-trace
 ```
 
 The runner formats a new 4 MiB volume, surrounds it with guard bytes and boots
@@ -41,19 +46,32 @@ recovery, content preparation and commit, plus final close. Peak is cumulative,
 not a separate maximum for each phase. Allocator metadata/fragmentation, stack,
 code, kernel storage and sealed reader pages are outside those numbers.
 
-One early release run hit the existing ATA readiness deadline (`status=c0`, busy)
-during database initialization. A subsequent complete two-boot run passed without
-changing the driver. The failed artifact is retained alongside successful runs;
-the cause remains undiagnosed (`20261017T005941877071Z`). The driver's 50-tick deadline and intermittent host
-IO stalls need investigation; a passing rerun does not establish a fix.
+The retention profile selects [retention.rs](retention.rs). Boot one pins revision
+1 and replaces through revision 9, collecting between writes. Boot two recovers
+both heads, refuses a stale release, releases the pin, then replaces through 25.
+Boot three verifies current contents and the absence of the collected revision.
+The host oracle checks exactly 20 records after boot one and 12 after each later
+boot. Sealed bulk replies exercise full reads, a cross-chunk partial read, zero
+page padding, reader-page exhaustion returning BUSY, and reuse after dropping
+read objects. These backings are charged to the provider until their last reader
+releases them; there is no general per-client fairness or sponsorship contract yet.
+
+One early release run hit the ATA readiness deadline (`status=c0`, busy) during
+database initialization (`20261017T005941877071Z`). The cause remains undiagnosed.
+The driver now reports opcode, phase, LBA, status, elapsed ticks and poll count on
+errors/timeouts and slow successful waits. `--ata-trace` also records QEMU ATA and
+block events per boot. The instrumented two-boot release run
+`20261017T020820017190Z` passed without reproducing the stall. The 50-tick deadline
+is unchanged; no write retries hide an uncertain device outcome.
 
 This is a bounded, synchronous lab: 16 KiB maximum contents, 4 KiB chunks,
 inline contents through 128 bytes, one object per connection root, and a 24 KiB
-retained-record quota per root. The 40-byte read response exercises ordinary
-copied IPC; it is not a proposed bulk-read transport. There is no public history
-subscription, GC, cross-root transaction, encryption, installer or migration from
-the ordinary desktop catalog. Quota refusal is distinct from physical full-disk
-progress. QEMU termination does not emulate host-cache loss or physical power loss.
+retained-record quota per root. The original 40-byte copied read coexists with
+sealed bulk replies. Two durable root-owned pins and eight-record collection
+passes are experimental; there is no public watcher subscription, cross-root
+transaction, encryption, installer or accepted production retention policy.
+Quota refusal is distinct from physical full-disk progress. QEMU termination does
+not emulate host-cache loss or physical power loss.
 
 The shared publication policy tests run inside `source-rs/`:
 
@@ -63,19 +81,28 @@ cargo test --locked -p cathedral-database-objects --features host
 
 They check rollback of every record, writer revalidation after competing
 preparation, exact quota accounting, corruption detection, range boundaries,
-inline/chunk transitions and root isolation. Existing engine/volume fault labs
-remain the evidence for simulated write/sync failures; this guest trace does not
-exhaust those fault histories.
+inline/chunk transitions and root isolation. New tests cold-open after every
+collection pass, verify remaining event references can still be pinned, and
+perform 600 8 KiB replacements alongside 100 unrelated 4 KiB records within a
+fixed 1,056,768-byte engine extent. This demonstrates reuse for that trace, not
+universal progress on a physically full volume. Existing engine/volume fault labs
+remain the evidence for simulated write/sync failures; these collection tests do
+not inject failures inside each commit.
 
-The dev profile size-optimizes the engine, content libraries and provider, and
-uses one redb codegen unit. `debug_assert!` is disabled in redb, database-objects
-and the provider; explicit validation/assertions remain enabled. The provider fits
-235 image pages in the checked dev build; the kernel's 240-page limit is unchanged.
+The dev profile size-optimizes the engine, content libraries, provider, ATA driver
+and user runtime. redb, database-objects and the provider use one codegen unit.
+`debug_assert!` is disabled in redb, database-objects and the provider; explicit
+validation/assertions remain enabled. Runtime assertions remain enabled. The dev
+provider occupies 240 image pages; the kernel's 240-page limit is unchanged.
 
-Verified artifacts: debug `20261017T010736771525Z`, release
-`20261017T010906650068Z`. Both cold-boot traces pass with 12 records at revision 1
-and 18 at revision 2 across the two roots. Cold recovery's cumulative peak is
-81,751 requested bytes; the full second boot peaks at 95,676 bytes. Largest single
-allocation is 9,432 bytes, allocation failures are zero, and final live bytes are
-zero. Host workspace tests, all 24 storage-layout tests, four publication policy
-tests, x86 userspace lint, ARM64 library lint and source-layout checks also pass.
+The initial publication traces passed in debug (`20261017T010736771525Z`) and
+release (`20261017T010906650068Z`). Retention and bulk reads passed the three-boot
+release trace `20261017T021823542776Z` and dev trace `20261017T022849159913Z`;
+their final closes report zero live heap bytes,
+zero allocation failures and a largest allocation of 9,432 bytes. Consult each
+run's `heap-*.txt` for per-boot cumulative peaks rather than treating a sample as
+an all-workload memory bound.
+
+The [database catalog adapter](../../../platform/libraries/object-store/database/README.md)
+now connects this content representation to the matrix desktop in a separate
+profile, preserving the ordinary catalog protocol and existing desktop images.

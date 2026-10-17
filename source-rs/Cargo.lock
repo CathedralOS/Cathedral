@@ -121,6 +121,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "cathedral-database-catalog"
+version = "0.0.0"
+dependencies = [
+ "cathedral-database-objects",
+ "cathedral-kernel-contracts",
+ "cathedral-object-store",
+ "cathedral-platform-contracts",
+ "cathedral-storage-engine",
+]
+
+[[package]]
 name = "cathedral-database-lab"
 version = "0.0.0"
 dependencies = [
@@ -140,7 +151,10 @@ name = "cathedral-database-storage"
 version = "0.0.0"
 dependencies = [
  "cathedral-ata-pio",
+ "cathedral-database-catalog",
  "cathedral-database-objects",
+ "cathedral-kernel-contracts",
+ "cathedral-object-store",
  "cathedral-platform-contracts",
  "cathedral-storage-engine",
  "cathedral-user-runtime",

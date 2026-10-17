@@ -8,7 +8,7 @@
 | Physical keys | [input.rs](input.rs) | [input/main.rs](../services/input/main.rs) |
 | Recursive local worlds | [matrix.rs](matrix.rs) | [matrix/main.rs](../services/matrix/main.rs) |
 | Experimental content objects | [database.rs](database.rs) | [storage/database/main.rs](../services/storage/database/main.rs) |
-| Private catalogs | [storage.rs](storage.rs) | [storage/main.rs](../services/storage/main.rs) |
+| Private catalogs | [storage.rs](storage.rs) | [storage/main.rs](../services/storage/main.rs), or experimental [database catalog mode](../services/storage/database/catalog.rs) |
 
 These are experimental wire definitions and validators, with lab bounds and
 legacy protocol modes still present. Placement does not imply a stable ABI or a
