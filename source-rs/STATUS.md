@@ -402,28 +402,30 @@ the same lifecycle/rollback suite before its user-process proof.
 
 ## Current integrated path
 
-Start at [distribution desktop policy](distribution/desktop/session/shell/shell.rs).
-It admits display/input adapters and gives a root matrix code grants and a funded
-process pool with physical-memory funding.
-The root matrix admits an inner matrix and an outside app; the inner admits its
-own app. Both run the same [matrix service](platform/services/matrix/service/service.rs).
-Only the root adapts physical input and compositor output.
+The default [distribution policy](distribution/desktop/session/shell/shell.rs)
+starts display/input/storage providers and funds a root matrix. Root slot 1 is the
+program menu; root slot 0 is a workspace matrix containing the selected app.
+Both matrices run the same [service](platform/services/matrix/service/service.rs).
+Only the root adapts physical input and compositor output. The menu requests
+choices; the distribution owner supplies launch, storage and placement policy.
 
 ```powershell
-python tools/boot-harness-rs/run.py --matrix-desktop-test --release --timeout 120
-python tools/boot-harness-rs/run.py --profile tools/boot-harness-rs/profiles/matrix-desktop.json --release --window
+python tools/boot-harness-rs/run.py --release --window
+python tools/boot-harness-rs/desktop_test.py
 ```
 
-Each app has a base surface, an independent light accent and a retained checkerboard bitmap. Click either app,
-then Enter to change its base color. The left app is nested;
-the right app is its outer sibling. Startup exercises inner-subtree replacement
-and checks that old pixels disappear while the sibling survives. The automated
-host test adds real mouse/keyboard injection and framebuffer checks.
+F5 runs that first command. Choose Notes or Colors, then click the workspace to
+focus it. Notes uses F1 to save/check and F2 to reload; Colors changes on Enter.
+One workspace app runs at a time. The ordinary dirty-note guard prevents switching
+or closing until explicitly saved or reloaded. The desktop test checks that flow,
+repeated replacement and exact saved text after cold reboot.
 
-The earlier `session.json` desktop remains a richer compositor/input regression
-fixture. The default distribution profile still starts the storage/status demo.
-Neither is presented as using the new matrix-owned lifecycle. These fixtures
-remain until their extra behavior has moved into the integrated path with tests.
+The older `matrix-desktop.json` remains the two-color-app fixture for recursive
+surface/input, replacement and resource probes; `--matrix-desktop-test --release`
+selects it. `session.json` retains richer compositor/input recovery cases.
+`legacy.json` preserves status/counter; the old capture/input/recovery/storage
+flags select it. These profiles are engineering proofs, not the default OS boot.
+[The Rust handoff](../TASKS_RUST.md) records current priorities and evidence.
 
 ## Mechanisms, consumers and evidence
 
@@ -437,10 +439,10 @@ remain until their extra behavior has moved into the integrated path with tests.
 | [Recursive launch loans](kernel/core/user_tasks/lifecycle/supervision/delegation.rs) | Matrices own direct children, lend budgets further, reclaim subtrees | `--ipc-test` plus matrix replacement tests | Static launch loans plus executable-authorized process pools; fixed account arena |
 | [Executable-authorized admission](kernel/core/user_tasks/admission/pool/README.md) | Apps and the matrix desktop construct descendants from code authority and a process pool | `--admission-test`: recursive launch, exhaustion, load rollback, retained funding, sibling survival | Boot-supplied catalogue; twelve accounts; device grants remain static |
 | [Matrix lifecycle](platform/services/matrix/service/children/children.rs) | Same provider above apps and another matrix | `--matrix-test`: replacement preserves an outside sibling | Two direct children; distribution supplies policy through owner-only control |
-| [Local viewport, focus and capture](platform/services/matrix/world/world.rs) | Nested and sibling visible apps | Host policy tests; `--matrix-test`; `--matrix-desktop-test` physical focus | Five keys; coalesced wake channels; synchronous upward refresh |
+| [Local viewport, focus and capture](platform/services/matrix/world/world.rs) | Nested and sibling visible apps | Host policy tests; `--matrix-test`; `--matrix-desktop-test` physical focus | Navigation plus bounded ASCII physical keys; coalesced wake channels; synchronous upward refresh |
 | [Owned surfaces](platform/services/matrix/world/surface/README.md) | App rectangles cross actual matrix boundaries to the existing compositor | Host quota/name/clipping/stacking tests; scanout removal and teardown checks | Sixteen surfaces; bounded immutable RGBX images; no text surfaces or vblank guarantees |
 | [Retained compositor and hardware input](platform/services/display/compositor/compositor.rs) | Root adapter uses existing scanout/cursor and shared input decoders | `--matrix-desktop-test`; `--session-test --pressure` | Existing richer scenes/hosting remain in the earlier session fixture |
-| [Private/shared page lifetime](kernel/core/user_tasks/memory/README.md) | Matrix bitmaps and existing rendering/storage labs | Host transactions; both CPU boot proofs; matrix desktop | Four reader rights per task, sixteen-page budgets; immutable copies only; original sponsor retained |
+| [Private/shared page lifetime](kernel/core/user_tasks/memory/README.md) | Matrix bitmaps and existing rendering/storage labs | Host transactions; both CPU boot proofs; matrix desktop | Four shared-region slots per task, grants capped at 64 pages; sealed objects only; original sponsor retained |
 | [Object storage and recovery](platform/services/storage/service/service.rs) | Status/counter and private matrix app colors | Storage host tests; `--storage-test`; two-boot `--matrix-desktop-test` | Whole-root delegation only; not the custom database filesystem |
 
 ## Kernel boundary audit and next steps

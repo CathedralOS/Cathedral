@@ -1,5 +1,9 @@
 # Working in Cathedral
 
+Start with [the work index](TASKS.md). For the runnable Rust OS, read
+[the current tasks and handoff](TASKS_RUST.md) before choosing follow-up work;
+keep its baseline, outstanding issues and verification scope current.
+
 Preserve the discoverability architecture described in
 [the architecture guide](wiki/architecture/discoverability.md). Entry points
 show real sequencing or dispatch at one level of detail. Descending into a

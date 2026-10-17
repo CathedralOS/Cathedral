@@ -26,6 +26,9 @@ Run these commands from the repository root.
 
 ## Start reading
 
+For ongoing work or an agent handoff, read [TASKS_RUST.md](../TASKS_RUST.md) first.
+It records the current default boot, recent changes, priorities and test evidence.
+
 Follow [boot main](kernel/boot/uefi/main.rs) for machine startup,
 [the user-task session](kernel/core/user_tasks/user_tasks.rs) for kernel execution,
 [desktop policy](distribution/desktop/session/shell/shell.rs) for distribution startup, or

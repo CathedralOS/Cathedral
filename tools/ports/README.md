@@ -1,7 +1,7 @@
 # Port provenance workflow
 
 `tools/ports/` owns host-side support for the
-[rust-osdev queue](../../TASKS_RUST_OSDEV_PORTS.md). These tools never ship to
+[rust-osdev queue](../../TASKS_OMEGA_PORTS.md). These tools never ship to
 Cathedral. The [porting policy](../../wiki/architecture/prior_art_and_hardware_facts.md)
 owns provenance and authority rules; source packages retain their usual owners.
 

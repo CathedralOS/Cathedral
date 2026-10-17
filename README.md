@@ -16,7 +16,8 @@ Cathedral supports update-in-place, removing the need for the vast majority of "
 [Specification](wiki/spec/README.md) ·
 [Design](wiki/design/design.md) ·
 [Boot walkthrough](wiki/boot/boot_sequence.md) ·
-[Porting queue](TASKS_RUST_OSDEV_PORTS.md)
+[Work index](TASKS.md) ·
+[Rust implementation handoff](TASKS_RUST.md)
 
 ## Solved problems
 
@@ -79,8 +80,11 @@ One technique here shares ground with [Theseus](https://www.theseus-os.com/): a 
 ## Repository layout
 
 The [Rust lab](source-rs/README.md) mirrors the Omega ownership layers under
-`source-rs/` for executable OS bring-up experiments. Build and smoke-boot it with
-`python tools/boot-harness-rs/run.py --smoke`. Its hardware operations are
+`source-rs/` for executable OS bring-up experiments. Press **F5**, or run
+`python tools/boot-harness-rs/run.py --release --window`, to open the desktop and
+choose programs. `python tools/boot-harness-rs/run.py --smoke` runs the separate
+kernel proof suite. [TASKS_RUST.md](TASKS_RUST.md) records current context and next
+work for that implementation. Its hardware operations are
 explicitly unsafe; it does not carry the Omega implementation's proof guarantees.
 
 ```text

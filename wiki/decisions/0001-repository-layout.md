@@ -5,7 +5,7 @@ The source grouping and composition placement below are superseded by
 here as decision history; the current tree is in the architecture layout guide.
 
 Status: **accepted** (2026-07-02); licensed-port policy clarified 2026-09-20
-by `PORT-000` in [`TASKS_RUST_OSDEV_PORTS.md`](../../TASKS_RUST_OSDEV_PORTS.md).
+by `PORT-000` in [`TASKS_OMEGA_PORTS.md`](../../TASKS_OMEGA_PORTS.md).
 
 ## Context
 

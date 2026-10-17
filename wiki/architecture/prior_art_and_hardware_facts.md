@@ -2,7 +2,7 @@
 
 > **Status: porting policy (2026-09-20).** Implements the ownership rules in
 > [`repository_layout.md`](repository_layout.md) and the licensed translation
-> lane in [`TASKS_RUST_OSDEV_PORTS.md`](../../TASKS_RUST_OSDEV_PORTS.md).
+> lane in [`TASKS_OMEGA_PORTS.md`](../../TASKS_OMEGA_PORTS.md).
 > The method applies to studied OS and driver code; permission to translate is
 > established separately for each pinned source and its license.
 

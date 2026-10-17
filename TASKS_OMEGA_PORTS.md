@@ -1,9 +1,13 @@
-# rust-osdev porting queue
+# Omega ports from the rust-osdev ecosystem
 
 > **Status:** ready for agent pickup.  This queue deliberately separates
 > mechanical translation from Cathedral integration.  A translated unit may
 > land before Omega can compile it, but its status must say exactly what has
 > and has not been verified.
+
+For runnable Rust OS implementation work, use [TASKS_RUST.md](TASKS_RUST.md).
+This queue translates Rust upstreams into **Omega**, under `source/`.
+The overall work index is [TASKS.md](TASKS.md).
 
 ## Goal
 
