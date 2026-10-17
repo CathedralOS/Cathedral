@@ -129,7 +129,8 @@ connects the kernel transaction, desktop failure/recovery probes and retained ch
 
 The [database catalog guide](../../../platform/libraries/object-store/database/README.md)
 owns its persistent launch command and fault/timing proof. The ordinary desktop
-uses [persistence.rs](desktop/persistence.rs) to observe provider death, reopen it,
+uses [persistence entrance](desktop/persistence/persistence.rs) to observe provider death,
+retired root streams and bounded health probes, reopen it,
 and explicitly restore root and nested grants. Apps remain alive; their
 [state entry](desktop/app/state.rs) preserves confirmed values and displays a red
 mark on failed saves. Enter reloads an unresolved save rather than toggling again.
@@ -141,5 +142,15 @@ does not itself wait on that storage request.
 `trace-storage` marks app send/reply, matrix receipt/admission/forward/reply and
 provider phases. Calls are omitted in ordinary builds. This adds neither kernel
 storage policy nor global names to child views. A timeout alone does not authorize
-an app to revive a retired binding; a live stalled provider still needs owner
-recovery, and a lost app transport requires replacement.
+an app to revive a retired binding. The owner has three replacement attempts per
+session, then leaves storage offline; a failed reopen also stops recovery. A lost
+app transport requires replacement. The standalone restart-budget policy test is:
+
+```powershell
+rustc --edition 2024 --test source-rs/distribution/lab/matrix/desktop/persistence/policy.rs -o build/recovery-policy.exe
+./build/recovery-policy.exe
+```
+
+The `notes` composition substitutes the separate [notes application](../../applications/notes/README.md)
+for the color probe and explicitly funds its retained/replacement image pages.
+Its app protocol and draft state stay in that application, not in the matrix service.

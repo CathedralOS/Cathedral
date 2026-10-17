@@ -3,6 +3,7 @@ import csv
 import re
 
 PAIRS = {
+    'note-save-end': ('note-save-begin', 'note save'),
     'root-admit': ('root-receive', 'root dispatch'),
     'nested-admit': ('nested-receive', 'nested dispatch'),
     'provider-begin': ('root-send', 'provider queue'),
@@ -20,6 +21,7 @@ def summarize(output, serial, boot):
     text = serial.replace('Cathedral Rust lab: ', '')
     for label, numbers in re.findall(r'STORAGE_TRACE ([\w-]+) ([0-9 ]+)\r?\n', text):
         values = list(map(int, numbers.split()))
+        if label in ('note-loaded', 'note-saved'): continue
         if label == 'ata-io':
             assert len(values) == 7
             io.append(values)
@@ -46,4 +48,4 @@ def summarize(output, serial, boot):
     if boot == 1:
         assert any(row[4] > 0 for row in io)
         assert any(row[0] == 'commit' for row in spans)
-    print(f'TIMING: {len(spans)} completed local spans, {len(io)} ATA samples; nominal tick=10ms; fault-injection spans included')
+    print(f'TIMING: {len(spans)} completed local spans, {len(io)} ATA samples; nominal tick=10ms; all completed spans included; see context for injected faults')

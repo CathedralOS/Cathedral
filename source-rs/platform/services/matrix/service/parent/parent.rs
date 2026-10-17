@@ -8,6 +8,7 @@ pub(super) struct Parent {
     scopes: cathedral_matrix_service::world::storage::Scopes,
     storage_links: [Option<cathedral_user_runtime::storage::Client>; 2],
     storage_epoch: u64,
+    storage_failed: u64,
     pub batches: [cathedral_matrix_service::world::presentation::Batch<
         Option<cathedral_user_runtime::memory::Object>,
     >; 2],
@@ -42,6 +43,7 @@ impl Parent {
             scopes: cathedral_matrix_service::world::storage::Scopes::empty(),
             storage_links: [None, None],
             storage_epoch: 0,
+            storage_failed: 0,
             batches: [const { cathedral_matrix_service::world::presentation::Batch::empty() }; 2],
             next_revision: 0,
             images: [const { None }; wire::MAX_SURFACES],
@@ -121,7 +123,7 @@ impl Parent {
                     epoch: reply[1],
                     width: reply[2],
                     height: reply[3],
-                    keys: reply[4] & wire::KEY_MASK,
+                    keys: reply[4] & wire::VALID_KEY_MASK,
                 }
             } else {
                 Grant::default()

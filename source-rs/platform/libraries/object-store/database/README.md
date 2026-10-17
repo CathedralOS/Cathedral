@@ -39,7 +39,7 @@ This is the ordinary desktop path, not the legacy provider's injected recovery
 protocol; those recovery tests retain their existing composition.
 
 The ordinary two-boot release run `20261017T025617017076Z` and the recovery run
-`20261017T025838513443Z` each passed with 16 exact private records on both boots.
+`20261017T032755977723Z` each passed with 16 exact private records on both boots.
 Artifacts live under `build/boot-harness-rs/matrix-database/`. QMP quit
 leaves the guest database open but does not model loss of physical device caches.
 No existing desktop disk is migrated or reformatted.
@@ -54,8 +54,8 @@ it. Only the explicitly diskless sibling probe uses volatile state.
 
 The [recovery exercise](../../../../distribution/lab/matrix/desktop/database_recovery.rs)
 lets a committed CREATE exceed the actual matrix deadline, checks the app survives
-and shows its error, then kills the provider. The distribution's ordinary
-[supervisor](../../../../distribution/lab/matrix/desktop/persistence.rs) replaces
+and shows its error, then lets the owner detect and replace the live stalled provider. The distribution's ordinary
+[supervisor](../../../../distribution/lab/matrix/desktop/persistence/persistence.rs) replaces
 the dead provider and explicitly re-grants both roots through the existing matrix
 tree. Readback finds revision 1 without duplicating CREATE. Further cuts before
 REPLACE and after its commit preserve the correct old/new values and exact
@@ -63,13 +63,20 @@ revisions. A sibling in the same nested matrix continues pointer/key handling an
 painting while saves are blocked. Physical input then saves both apps, and a cold
 boot plus independent host oracle verify all 16 records (root revisions 4 and 2).
 
-The ordinary supervisor checks for provider death once per 100 guest ticks; it
-does not kill a still-live provider merely because a save timed out. A live stalled
-provider and a retired binding still need owner recovery (restart the desktop for
-now). Loss of the app's own matrix transport retires that uncorrelated stream;
-app replacement is required rather than accepting a late response as a new reply.
-This is bounded recovery policy, not automatic repair of damaged media or a general
-restart/backoff service. Initial open or replacement failure still fails closed.
+The ordinary supervisor checks once per 100 guest ticks. It replaces dead providers,
+providers whose control health probe expires (300 ticks, probes spaced by 500 ticks),
+and providers whose data stream the root matrix has already retired. The root's
+owner-only `STORAGE_STATUS` prevents a resumed provider's healthy control reply from
+hiding an unusable old stream. Children cannot query that status or reconnect it.
+Cancellation and collection precede revocation, reopen and explicit grants.
+
+Replacement authority is capped at three attempts per desktop session; healthy
+replies never reset that allowance. Exhaustion or replacement failure leaves storage
+offline with grants revoked while the matrix/apps remain alive. Startup/open failure
+still fails closed. These are bounded lab policy choices, not production restart
+policy or automatic media repair. Loss of the app's own uncorrelated transport still
+requires app replacement. Apps keep confirmed state and reconcile fresh grants on
+Enter; no uncertain mutation is replayed automatically.
 
 VS Code's **Cathedral: Database Desktop in QEMU** entry retains
 `build/boot-harness-rs/matrix-database-storage.raw`. The host creates this guarded
@@ -94,3 +101,7 @@ are not converted into successful timings.
 Inside `source-rs/`, run `cargo test --locked -p cathedral-database-catalog --features host`
 for atomic changes, stale revisions, staging abandonment, root isolation, 300
 replacements and reopen. The engine remains an experiment, not an accepted DBFS ABI.
+
+The [notes scratchpad](../../../../distribution/applications/notes/README.md) adds
+physical text editing, atomic two-record saves, draft-preserving recovery and a
+measured ordinary save workload over these same private catalog capabilities.

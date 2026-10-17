@@ -61,7 +61,8 @@ impl World {
         }
     }
     pub fn key(&mut self, key: u64, state: u64) {
-        if !(input::UP as u64..=input::ENTER as u64).contains(&key)
+        if !(1..=input::LAST_KEY as u64).contains(&key)
+            || key == input::IDLE as u64
             || ![
                 input::PRESS as u64,
                 input::RELEASE as u64,

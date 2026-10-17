@@ -1088,5 +1088,10 @@ desktop remains a separate launch option. The recovery proof adds a real startup
 deadline, provider death before commit and after commit-before-reply, explicit
 re-grants, live sibling interaction and per-stage timing. Apps retain confirmed
 state and show a red mark on uncertain saves; Enter reconciles by reading before
-another mutation. A still-live stalled provider needs owner recovery; see the
-adapter guide for the distinction from automatic replacement of dead providers.
+another mutation. Bounded owner supervision now replaces dead/stalled providers
+and retired root data streams, with at most three replacements per desktop session.
+
+**Cathedral: Notes in QEMU** adds an ordinary 60-character scratchpad with physical
+text input, atomic saves, draft-preserving reconciliation and a separate persistent
+image. See the [notes guide](distribution/applications/notes/README.md) for controls,
+proofs, measured costs and the remaining bulk-content boundary.

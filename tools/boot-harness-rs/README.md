@@ -19,7 +19,13 @@ and retains `build/boot-harness-rs/matrix-database-storage.raw` instead. Its fir
 launch builds the host formatter and creates a new guarded database image; later
 launches preserve it. Existing files are never automatically reformatted.
 
-The equivalent command is:
+**Cathedral: Notes in QEMU** runs the [notes scratchpad](../../source-rs/distribution/applications/notes/README.md)
+with its own `build/boot-harness-rs/notes-storage.raw`. Its disposable proofs are
+`matrix_database_test.py --release --notes` and `--release --notes-recovery`;
+they add typing, draft preservation, exact glyph checks, workload timings and an
+independent database oracle. The recovery profile is build-only in `run.py`.
+
+The equivalent database desktop command is:
 
 ```powershell
 python tools/boot-harness-rs/run.py --profile tools/boot-harness-rs/profiles/matrix-database.json --release --window

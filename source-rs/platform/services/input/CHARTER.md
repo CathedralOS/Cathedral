@@ -7,7 +7,8 @@ to the distribution. It imports contracts and the user runtime, never kernel or
 distribution implementations. The pure decoder is host-testable independently.
 
 The keyboard mode of this q35 experiment recognizes arrows, Enter and F1 through
-F8. It distinguishes press, release and repeat; startup/overflow RESET clears held keys. One NEXT request
+F8, letter/digit positions, Space and Backspace. These are physical identifiers,
+not text or a layout. It distinguishes press, release and repeat; startup/overflow RESET clears held keys. One NEXT request
 consumes one event, or returns IDLE after 25 ticks without an event. Buffers are
 bounded and may lose bursts; restarting the provider discards previous raw/IPC
 queues. It does not implement text layouts,

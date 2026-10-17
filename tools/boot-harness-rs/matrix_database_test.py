@@ -16,6 +16,7 @@ import pointer_test
 import run as harness
 import database_image
 import storage_timing
+import notes_test
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
@@ -83,10 +84,11 @@ def desktop(stream, output, serial, reboot):
 
 
 def run(args):
-    name = 'matrix-database-recovery' if args.recovery else 'matrix-database'
+    name = 'notes-recovery' if args.notes_recovery else 'notes' if args.notes else 'matrix-database-recovery' if args.recovery else 'matrix-database'
     profile = HERE / f'profiles/{name}.json'
     build = [sys.executable, str(HERE / 'run.py'), '--profile', str(profile), '--build-only']
     if args.release: build.append('--release')
+    if args.notes: build.append('--trace-storage')
     subprocess.run(build, cwd=ROOT, check=True)
     lab = ROOT / 'tools/storage-lab'
     subprocess.run(['cargo', 'build', '--locked', '--release', '--features', 'engines'], cwd=lab, check=True)
@@ -105,13 +107,14 @@ def run(args):
     flags = subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0
     for boot in (1, 2):
         capture.run(command, output, args.timeout, flags, ready_marker='Cathedral matrix desktop: ready',
-                    verify=lambda stream, output, serial: desktop(stream, output, serial, boot == 2))
+                    verify=lambda stream, output, serial: notes_test.desktop(stream, output, serial, boot == 2, args.notes_recovery) if args.notes else desktop(stream, output, serial, boot == 2))
         for name in ('serial.log', 'qemu.log', 'display.png'):
             shutil.copyfile(output / name, output / f'boot-{boot}-{name}')
-        if args.recovery:
+        if args.recovery or args.notes:
             storage_timing.summarize(output, (output / 'serial.log').read_text(encoding='utf-8', errors='replace'), boot)
         if args.recovery and boot == 1:
             serial = (output / 'serial.log').read_text(encoding='utf-8', errors='replace').replace('Cathedral Rust lab: ', '')
+            assert 'live stall watchdog restored grants' in serial
             assert 'uncertain CREATE reconciled without duplication' in serial
             assert 'precommit and lost-reply replacement preserved live siblings and exact revisions' in serial
         actual = path.read_bytes()
@@ -123,16 +126,23 @@ def run(args):
         # Host opens a copy, leaving the next guest to recover its own dirty engine.
         snapshot = output / f'host-reopen-{boot}.raw'
         with snapshot.open('xb') as file: file.write(actual)
-        result = subprocess.run([str(executable), 'engines', 'volume', ('verify-catalog-recovery' if args.recovery else 'verify-catalog'), str(snapshot),
+        result = subprocess.run([str(executable), 'engines', 'volume', ('verify-notes' if args.notes else 'verify-catalog-recovery' if args.recovery else 'verify-catalog'), str(snapshot),
                                  '4096', str(database_image.VOLUME_BYTES)], cwd=lab, check=True, capture_output=True, text=True)
         (output / f'host-{boot}.txt').write_text(result.stdout, encoding='utf-8')
         print(result.stdout, end='')
-    sources = [profile, Path(__file__), ROOT / 'source-rs/Cargo.lock',
+    sources = [profile, Path(__file__), HERE / 'notes_test.py', HERE / 'storage_timing.py', HERE / 'database_image.py', ROOT / 'source-rs/Cargo.lock',
+               *(ROOT / 'source-rs/distribution/applications/notes').rglob('*.rs'),
+               *(ROOT / 'source-rs/distribution/lab/matrix/desktop').rglob('*.rs'),
+               *(ROOT / 'source-rs/platform/services/matrix/service').rglob('*.rs'),
+               *(ROOT / 'source-rs/platform/services/matrix/world').rglob('*.rs'),
+               *(ROOT / 'source-rs/platform/services/input/decoder').rglob('*.rs'),
+               ROOT / 'source-rs/platform/services/input/matrix.rs',
+               ROOT / 'source-rs/platform/contracts/input.rs', ROOT / 'source-rs/platform/contracts/matrix.rs',
                *(ROOT / 'source-rs/platform/libraries/object-store/database').glob('*.rs'),
                *(ROOT / 'source-rs/platform/services/storage/database').glob('*.rs'),
                ROOT / 'tools/storage-lab/engines/volume/catalog.rs']
     context = {'revision': subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip(),
-               'release': args.release, 'recovery': args.recovery,
+               'release': args.release, 'recovery': args.recovery, 'notes': args.notes, 'notes_recovery': args.notes_recovery,
                'qemu': subprocess.check_output([qemu, '--version'], text=True).splitlines()[0],
                'efi_sha256': hashlib.sha256((output / 'esp/EFI/BOOT/BOOTX64.EFI').read_bytes()).hexdigest(),
                'source_sha256': {p.relative_to(ROOT).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest() for p in sources},
@@ -145,8 +155,12 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--release', action='store_true', required=True,
                         help='required for matrix storage response deadlines under TCG')
+    parser.add_argument('--notes-recovery', action='store_true', help='notes post-commit stall and draft-preserving reconciliation')
+    parser.add_argument('--notes', action='store_true', help='physical scratchpad edits, atomic saves and exact cold restoration')
     parser.add_argument('--recovery', action='store_true', help='kill/restart provider across ambiguous writes and collect timing')
     parser.add_argument('--timeout', type=float, default=180)
     args = parser.parse_args()
+    args.notes = args.notes or args.notes_recovery
+    if args.notes and args.recovery: parser.error('notes and recovery select separate compositions')
     if args.timeout <= 0: parser.error('timeout must be positive')
     run(args)

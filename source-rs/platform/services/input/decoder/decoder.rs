@@ -5,7 +5,7 @@ use cathedral_platform_contracts::input::{self as wire, Event};
 pub struct Decoder {
     extended: bool,
     pause: u8,
-    held: u16,
+    held: u64,
     unmatched_releases: bool,
 }
 impl Decoder {
@@ -17,7 +17,7 @@ impl Decoder {
         }
     }
     /// Current decoded key state, used to cancel held input across router restart.
-    pub fn held_keys(&self) -> u16 {
+    pub fn held_keys(&self) -> u64 {
         self.held
     }
     pub fn reset(&mut self) -> Event {
@@ -53,6 +53,17 @@ impl Decoder {
             (false, 0x3c) => wire::F2,
             (false, 0x3d) => wire::F3,
             (false, code @ 0x3e..=0x42) => wire::F4 + code - 0x3e,
+            (false, 0x39) => wire::SPACE,
+            (false, 0x0e) => wire::BACKSPACE,
+            (false, 0x0b) => wire::DIGIT_0,
+            (false, code @ 0x02..=0x0a) => wire::DIGIT_0 + code - 1,
+            (false, code) => {
+                const LETTERS: [u8; 26] = [
+                    0x1e, 0x30, 0x2e, 0x20, 0x12, 0x21, 0x22, 0x23, 0x17, 0x24, 0x25, 0x26, 0x32,
+                    0x31, 0x18, 0x19, 0x10, 0x13, 0x1f, 0x14, 0x16, 0x2f, 0x11, 0x2d, 0x15, 0x2c,
+                ];
+                wire::A + LETTERS.iter().position(|&scan| scan == code)? as u8
+            }
             _ => return None,
         };
         let mask = 1 << (key - 1);
@@ -75,6 +86,44 @@ impl Decoder {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn text_keys_preserve_high_held_bits_and_physical_releases() {
+        let mut decoder = Decoder::default();
+        for (scan, key) in [
+            (0x1e, wire::A),
+            (0x2c, wire::Z),
+            (0x0b, wire::DIGIT_0),
+            (0x0a, wire::DIGIT_9),
+            (0x39, wire::SPACE),
+            (0x0e, wire::BACKSPACE),
+        ] {
+            assert_eq!(
+                decoder.feed(scan),
+                Some(Event {
+                    key,
+                    state: wire::PRESS
+                })
+            );
+            assert_ne!(decoder.held_keys() & (1u64 << (key - 1)), 0);
+            assert_eq!(
+                decoder.feed(scan),
+                Some(Event {
+                    key,
+                    state: wire::REPEAT
+                })
+            );
+            assert_eq!(
+                decoder.feed(scan | 0x80),
+                Some(Event {
+                    key,
+                    state: wire::RELEASE
+                })
+            );
+        }
+        assert_eq!(decoder.held_keys(), 0);
+        decoder.feed(0xe0);
+        assert_eq!(decoder.feed(0x1e), None); // Extended codes do not become letters.
+    }
     #[test]
     fn restarted_source_preserves_unmatched_key_up_and_reset_mode() {
         let mut decoder = Decoder::source();

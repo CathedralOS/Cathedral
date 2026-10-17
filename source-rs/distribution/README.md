@@ -86,3 +86,8 @@ The [private content lab](lab/objects/README.md) composes the experimental datab
 provider with two explicitly connected storage clients. Its supervisor owns process
 lifetimes and crash-test milestones; the platform provider owns content publication
 and the disk. This is separate from the default desktop catalog composition.
+
+The separate [notes application](applications/notes/README.md) starts at
+[main.rs](applications/notes/main.rs) and [session.rs](applications/notes/session/session.rs).
+The `notes.json` composition selects it beneath ordinary root/nested matrix services;
+it does not import the distribution lab or any service implementation.

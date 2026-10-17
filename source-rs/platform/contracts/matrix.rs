@@ -21,7 +21,7 @@ pub fn poll_event(reply: Packet) -> Packet {
     ]
 }
 pub fn poll_view(mut reply: Packet) -> Packet {
-    reply[4] &= KEY_MASK;
+    reply[4] &= VALID_KEY_MASK;
     reply[5..].fill(0);
     reply
 }
@@ -31,7 +31,8 @@ pub const NONE: u64 = 0;
 pub const POINTER: u64 = 1;
 pub const KEY: u64 = 2;
 pub const CANCEL: u64 = 3;
-pub const KEY_MASK: u64 = 0x1f;
+pub const KEY_MASK: u64 = 0x1f; // Existing navigation-only grants.
+pub const VALID_KEY_MASK: u64 = crate::input::KEY_MASK;
 // Owner connection only. Child requests using these opcodes are uniformly denied.
 pub const BIND: u64 = 100; // width,height,key_mask; physical/root adapter only
 pub const PLACE: u64 = 101; // local child slot,x,y,width,height,key_mask
@@ -87,7 +88,7 @@ pub const MAX_SURFACES: usize = 16;
 /// Owner-only conserving subdivision of the matrix's upstream allowance.
 pub const SURFACE_LIMIT: u64 = 110; // child slot, allowance,0,0,0,0,0
 /// POLL carries the surface allowance above the key mask in word four.
-pub const SURFACE_BITS: u32 = 32;
+pub const SURFACE_BITS: u32 = 56;
 
 /// Same surface geometry as PAINT; word seven is pixel stride, plus one sealed attachment.
 /// RGBX little-endian u32 pixels; clipping retains the original row stride.
@@ -193,6 +194,9 @@ pub const STORAGE_SCOPE_BITS: u32 = 16;
 /// Sources are exclusive between siblings. Revoke aborts pending transactions.
 pub const STORAGE_GRANT: u64 = 113;
 pub const STORAGE_REVOKE: u64 = 114;
+/// Root owner diagnostic only: retired provider-stream bitmask in reply word one.
+/// Does not reconnect, grant authority or expose state to children.
+pub const STORAGE_STATUS: u64 = 115;
 /// Root adapter mode: two storage links; optional display/input environment.
 pub const STORAGE_ROOT: u64 = 0x53544f52;
 pub const RUN_PAGES: u64 = 112; // owner: slot, private pages, reader pages; rest zero

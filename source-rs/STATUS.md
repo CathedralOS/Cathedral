@@ -140,16 +140,25 @@ The desktop database path requires release mode under TCG. Apps now preserve
 confirmed state on failed saves, show an unconfirmed-save mark and reconcile via
 readback before another mutation. A real startup CREATE timeout and provider cuts
 before/after commit are exercised with exact revision checks and a live nested
-sibling. The distribution replaces dead storage providers and explicitly restores
-grants; it does not automatically replace a live stalled provider. Retired app
+sibling. The distribution replaces dead or stalled storage providers, including
+retired root streams, and explicitly restores grants. Its budget allows at most
+three replacements per desktop session; exhaustion or failed reopen leaves storage
+offline while the apps remain alive. Retired app
 transports require app replacement, and bad media still fails closed.
 
 The database desktop is now an ordinary CLI/F5 option with its own persistent disk,
 created only if absent. Opt-in storage traces separate app/matrix round trips,
 dispatch/provider queueing, collection, commit and ATA operation/wait counters.
 Their clocks and fault-injection workloads do not establish production latency
-bounds. Live-timeout owner recovery, slow-build latency and general restart policy
-remain engineering work.
+bounds. Slow-build latency and production restart policy remain engineering work.
+
+The [notes scratchpad](distribution/applications/notes/README.md) now exercises real
+physical text input, cursor edits, atomic two-record saves, draft-preserving
+reconciliation and exact cold-restored glyphs. It is an ordinary replaceable app
+with a separate F5 composition and persistent image. Its 60-character limit exposes
+the small catalog boundary; larger documents still need matrix-granted bulk-content
+access. Six ordinary saves measured 7?26 nominal ticks under traced TCG; commit and
+collection dominate this small workload. This is not a large-file benchmark.
 
 One early ATA busy timeout remains undiagnosed. The driver now records opcode,
 phase, LBA, status, ticks and polls for slow/failed waits; optional QEMU tracing

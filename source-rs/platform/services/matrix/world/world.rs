@@ -17,7 +17,7 @@ impl Grant {
             && self.height > 0
             && self.width <= wire::MAX_EXTENT
             && self.height <= wire::MAX_EXTENT
-            && self.keys & !wire::KEY_MASK == 0
+            && self.keys & !wire::VALID_KEY_MASK == 0
     }
 }
 #[derive(Default)]

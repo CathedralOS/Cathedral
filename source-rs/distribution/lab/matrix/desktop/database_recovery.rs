@@ -73,9 +73,22 @@ pub(super) fn exercise(session: &mut admission::Session) {
     );
     assert_eq!(app(session.matrix, 13)[0], abi::TIMED_OUT);
     pixel(session.matrix, 170, 225, 0xe96f6f);
-    retire(session);
-    pixel(session.matrix, 170, 225, 0xe96f6f);
-    restart(session);
+    let old = session.storage.raw();
+    let deadline = time::after(1000).unwrap();
+    while session.storage.raw() == old {
+        persistence::supervise(session);
+        stalls_peer::interact(session);
+        assert!(!time::reached(time::now().unwrap(), deadline));
+    }
+    assert_eq!(app(session.matrix, 7)[0], 0);
+    assert_eq!(
+        call(
+            session.matrix,
+            wire::route([7, 0, 0, 0, 0, 0, 0, 0], 1).unwrap()
+        )[0],
+        0
+    );
+    write(b"Cathedral database desktop: live stall watchdog restored grants\n").unwrap();
     assert_eq!(app(session.matrix, wire::HEALTH)[7], 1);
     pixel(session.matrix, 140, 190, app::LEFT);
     write(b"Cathedral database desktop: uncertain CREATE reconciled without duplication\n")

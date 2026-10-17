@@ -18,7 +18,10 @@ pub(super) fn dispatch(
                 flush(parent, world)?;
                 return Ok(());
             }
-            let response = if matches!(words[0], wire::STORAGE_GRANT | wire::STORAGE_REVOKE) {
+            let response = if matches!(
+                words[0],
+                wire::STORAGE_GRANT | wire::STORAGE_REVOKE | wire::STORAGE_STATUS
+            ) {
                 parent.storage_owner(server, words)?
             } else {
                 owner::dispatch(parent, world, words)

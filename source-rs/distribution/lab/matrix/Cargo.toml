@@ -16,6 +16,8 @@ storage-lab = []
 trace-input = []
 trace-storage = []
 desktop = []
+notes = ["desktop"]
+notes-probes = ["notes"]
 desktop-probes = ["desktop"]
 database-probes = ["desktop"]
 

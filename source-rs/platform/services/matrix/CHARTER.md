@@ -107,3 +107,11 @@ These are owner-assigned caps with periodic-timer overrun, not priority grants,
 capacity reservations or deadline guarantees. The remaining timing
 interfaces require a confinement audit; this lab must not be represented as a
 production guarantee that a process cannot infer anything about its surroundings.
+
+Text-capable compositions grant letter/digit/Space/Backspace and function-key bits
+through the same intersection/focus rules; the default navigation grant is unchanged.
+`POLL` reserves bits 56 and above for surface allowance, outside the physical key mask.
+`RUN_PAGES` accepts the existing kernel page bound; actual admission still requires
+conserved owner funding. The root-only owner `STORAGE_STATUS` reports retired
+provider streams without reconnecting them. It is unavailable to app connections
+and nested adapters; distribution supervision interprets it.

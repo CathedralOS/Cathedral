@@ -2,6 +2,50 @@ use super::*;
 use cathedral_platform_contracts::input;
 
 #[test]
+fn text_keys_remain_attenuated_and_do_not_overlap_surface_allowance() {
+    let mut w = world();
+    let letter = 1u64 << (input::Z - 1);
+    let backspace = 1u64 << (input::BACKSPACE - 1);
+    w.inherit(Grant {
+        epoch: 1,
+        width: 800,
+        height: 600,
+        keys: letter | backspace,
+    });
+    w.place(
+        0,
+        Rect {
+            x: 0,
+            y: 0,
+            width: 100,
+            height: 80,
+        },
+        letter | backspace,
+    )
+    .unwrap();
+    w.inherit(Grant {
+        epoch: 1,
+        width: 800,
+        height: 600,
+        keys: letter,
+    });
+    w.pointer(10, 10, 1);
+    w.pointer(10, 10, 0);
+    let epoch = view(&mut w, 0)[1];
+    while next(&mut w, 0, epoch)[2] != wire::NONE {}
+    w.key(input::BACKSPACE as u64, input::PRESS as u64);
+    assert_eq!(next(&mut w, 0, epoch)[2], wire::NONE);
+    w.key(input::Z as u64, input::PRESS as u64);
+    let poll = w.request(0, 7, [wire::POLL, 0, 0, 0, 0, 0, 0, 0]);
+    assert_eq!(
+        wire::poll_event(poll)[2..5],
+        [wire::KEY, input::Z as u64, input::PRESS as u64]
+    );
+    assert_eq!(wire::poll_view(poll)[4], letter);
+    assert_eq!(poll[4] >> wire::SURFACE_BITS, 8);
+}
+
+#[test]
 fn wake_hints_coalesce_and_remain_child_local() {
     let mut w = world();
     place(&mut w, 0, 0, 0);

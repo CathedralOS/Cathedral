@@ -1,0 +1,84 @@
+{
+  "name": "Notes lost-reply recovery fixture",
+  "target": "x86_64-unknown-uefi",
+  "boot_package": "cathedral-boot-uefi",
+  "startup": {
+    "initial": {
+      "package": "cathedral-matrix-lab",
+      "entry": "distribution/lab/matrix/main.rs",
+      "target": "x86_64-unknown-none",
+      "clock": true,
+      "argument": 0,
+      "features": [
+        "notes-probes"
+      ]
+    },
+    "launches": [
+      {
+        "package": "cathedral-display-service",
+        "entry": "platform/services/display/main.rs",
+        "target": "x86_64-unknown-none",
+        "clock": true,
+        "argument": 1129270608,
+        "framebuffer": true,
+        "shared_pages": 48
+      },
+      {
+        "package": "cathedral-input-service",
+        "entry": "platform/services/input/main.rs",
+        "target": "x86_64-unknown-none",
+        "clock": true,
+        "argument": 1296127058,
+        "keyboard": true
+      },
+      {
+        "package": "cathedral-matrix-service",
+        "entry": "platform/services/matrix/main.rs",
+        "target": "x86_64-unknown-none",
+        "clock": true,
+        "argument": 1398034258,
+        "ipc_channels": 20,
+        "private_pages": 48,
+        "shared_pages": 64
+      },
+      {
+        "package": "cathedral-database-storage",
+        "entry": "platform/services/storage/database/main.rs",
+        "target": "x86_64-unknown-none",
+        "clock": true,
+        "disk": true,
+        "ipc_channels": 0,
+        "features": [
+          "catalog",
+          "recovery-lab"
+        ],
+        "private_pages": 64
+      }
+    ],
+    "links": [
+      [
+        3,
+        4
+      ],
+      [
+        3,
+        4
+      ]
+    ],
+    "executables": [
+      {
+        "package": "cathedral-matrix-service",
+        "entry": "platform/services/matrix/main.rs",
+        "target": "x86_64-unknown-none",
+        "argument": 0
+      },
+      {
+        "package": "cathedral-notes",
+        "entry": "distribution/applications/notes/main.rs",
+        "target": "x86_64-unknown-none",
+        "argument": 2
+      }
+    ],
+    "dynamic_tasks": 4
+  }
+}

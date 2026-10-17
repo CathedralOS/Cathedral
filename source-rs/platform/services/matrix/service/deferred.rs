@@ -28,7 +28,7 @@ impl Deferred {
                 match wire::decode(&r.bytes[..r.len]) {
                     Some(w) if r.control => {
                         let hop = (w[0] >> wire::OP_BITS) & 3;
-                        !(matches!(w[0], wire::HEALTH | wire::READ_PIXEL)
+                        !(matches!(w[0], wire::HEALTH | wire::READ_PIXEL | wire::STORAGE_STATUS)
                             || matches!(hop, 1 | 2)
                                 && (parent.separate_storage
                                     || hop as usize != parent.storing_client() + 1))

@@ -27,6 +27,7 @@ members = [
     "platform/services/matrix",
     # Distribution
     "distribution/applications/status",
+    "distribution/applications/notes",
     "distribution/applications/counter",
     "distribution/init",
     "distribution/lab/display",
@@ -48,7 +49,7 @@ members = [
     "distribution/libraries/boot-scene",
     "distribution/libraries/session-protocol",
 ]
-default-members = ["platform/libraries/user-heap", "platform/libraries/storage-volume", "platform/drivers/uart_16550", "distribution/lab/rendering", "platform/libraries/object-store", "kernel/contracts", "platform/contracts", "platform/libraries/block-device", "kernel/core", "kernel/arch", "platform/services/input", "platform/services/display", "platform/services/matrix", "platform/libraries/bitmap-font"]
+default-members = ["distribution/applications/notes", "platform/libraries/user-heap", "platform/libraries/storage-volume", "platform/drivers/uart_16550", "distribution/lab/rendering", "platform/libraries/object-store", "kernel/contracts", "platform/contracts", "platform/libraries/block-device", "kernel/core", "kernel/arch", "platform/services/input", "platform/services/display", "platform/services/matrix", "platform/libraries/bitmap-font"]
 
 [workspace.package]
 version = "0.0.0"

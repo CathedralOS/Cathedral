@@ -18,6 +18,15 @@ pub const F1: u8 = 6;
 pub const F2: u8 = 7;
 /// A completed NEXT with no physical event in the provider's sampling interval.
 pub const IDLE: u8 = 8;
+// Physical letter/digit positions; layout/text interpretation belongs to the app.
+pub const A: u8 = 15;
+pub const Z: u8 = A + 25;
+pub const DIGIT_0: u8 = 41;
+pub const DIGIT_9: u8 = DIGIT_0 + 9;
+pub const SPACE: u8 = 51;
+pub const BACKSPACE: u8 = 52;
+pub const LAST_KEY: u8 = BACKSPACE;
+pub const KEY_MASK: u64 = ((1u64 << LAST_KEY) - 1) & !(1 << (IDLE - 1));
 pub const RELEASE: u8 = 0;
 pub const PRESS: u8 = 1;
 pub const REPEAT: u8 = 2;
@@ -47,7 +56,7 @@ impl Event {
         match bytes {
             [RESET, RELEASE] => Some(Self::reset()),
             [IDLE, RELEASE] => Some(Self::idle()),
-            [key @ (UP..=F2 | F3..=F8), state @ RELEASE..=REPEAT] => Some(Self {
+            [key @ (UP..=F2 | F3..=LAST_KEY), state @ RELEASE..=REPEAT] => Some(Self {
                 key: *key,
                 state: *state,
             }),
@@ -61,7 +70,7 @@ mod tests {
     use super::*;
     #[test]
     fn wire_rejects_unknown_keys_states_and_lengths() {
-        for key in (UP..=F2).chain(F3..=F8) {
+        for key in (UP..=F2).chain(F3..=LAST_KEY) {
             for state in RELEASE..=REPEAT {
                 let event = Event { key, state };
                 assert_eq!(Event::decode(&event.encode()), Some(event));

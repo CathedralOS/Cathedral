@@ -2,12 +2,23 @@
 use super::*;
 use cathedral_platform_contracts::input;
 use cathedral_user_runtime::{ipc, task::Launch};
+const APP_PAGES: u64 = if cfg!(feature = "notes") { 24 } else { 1 };
+const MATRIX_PAGES: u64 = if cfg!(feature = "notes") { 24 } else { 2 };
+const MATRIX_READERS: u64 = if cfg!(feature = "notes") { 24 } else { 4 };
+const KEYS: u64 = if cfg!(feature = "notes") {
+    wire::VALID_KEY_MASK
+} else {
+    wire::KEY_MASK
+};
 const BACKGROUND: u64 = 0x101827;
 fn owner(pair: Pair, words: wire::Packet) {
     assert_eq!(call(pair, words), [0; 8], "owner request {words:?}");
 }
 fn launch_inner(pair: Pair, pressure: bool) {
-    owner(pair, [wire::RUN_PAGES, 0, 2, 4, 0, 0, 0, 0]);
+    owner(
+        pair,
+        [wire::RUN_PAGES, 0, MATRIX_PAGES, MATRIX_READERS, 0, 0, 0, 0],
+    );
     owner(
         pair,
         [
@@ -26,7 +37,7 @@ fn inner(pair: Pair, pressure: bool) {
     launch_inner(pair, pressure);
     owner(
         pair,
-        wire::route([wire::RUN_PAGES, 0, 1, 0, 0, 0, 0, 0], 0).unwrap(),
+        wire::route([wire::RUN_PAGES, 0, APP_PAGES, 0, 0, 0, 0, 0], 0).unwrap(),
     );
     owner(
         pair,
@@ -44,10 +55,7 @@ fn inner(pair: Pair, pressure: bool) {
         wire::route([wire::STORAGE_GRANT, 0, 0, 0, 0, 0, 0, 0], 0).unwrap(),
     );
     owner(pair, [wire::SURFACE_LIMIT, 0, 8, 0, 0, 0, 0, 0]);
-    owner(
-        pair,
-        [wire::PLACE, 0, 110, 140, 280, 220, wire::KEY_MASK, 0],
-    );
+    owner(pair, [wire::PLACE, 0, 110, 140, 280, 220, KEYS, 0]);
     owner(
         pair,
         wire::route([wire::SURFACE_LIMIT, 0, 4, 0, 0, 0, 0, 0], 0).unwrap(),
@@ -57,7 +65,20 @@ fn inner(pair: Pair, pressure: bool) {
     owner(
         pair,
         wire::route(
-            [wire::PLACE, 0, 24, 40, 200, 130, 1 << (input::ENTER - 1), 0],
+            [
+                wire::PLACE,
+                0,
+                24,
+                40,
+                200,
+                130,
+                if cfg!(feature = "notes") {
+                    KEYS
+                } else {
+                    1 << (input::ENTER - 1)
+                },
+                0,
+            ],
             0,
         )
         .unwrap(),
@@ -94,7 +115,7 @@ fn setup(probes: bool) -> admission::Session {
             wire::BIND,
             session.extent[0],
             session.extent[1],
-            wire::KEY_MASK,
+            KEYS,
             0,
             0,
             0,
@@ -106,14 +127,11 @@ fn setup(probes: bool) -> admission::Session {
         call(matrix, [wire::RUN, 0, 0, 0, 6, 1, 64, 0]),
         wire::error(abi::BAD_HANDLE)
     );
-    owner(matrix, [wire::RUN_PAGES, 1, 1, 0, 0, 0, 0, 0]);
+    owner(matrix, [wire::RUN_PAGES, 1, APP_PAGES, 0, 0, 0, 0, 0]);
     owner(matrix, [wire::RUN, 1, 1, 1, 0, 0, 0, 0]);
     owner(matrix, [wire::STORAGE_GRANT, 1, 1, 0, 0, 0, 0, 0]);
     owner(matrix, [wire::SURFACE_LIMIT, 1, 8, 0, 0, 0, 0, 0]);
-    owner(
-        matrix,
-        [wire::PLACE, 1, 500, 180, 220, 180, wire::KEY_MASK, 0],
-    );
+    owner(matrix, [wire::PLACE, 1, 500, 180, 220, 180, KEYS, 0]);
     if probes && !recovery::sibling_saved(matrix) {
         funding::exercise(matrix, pressure);
     }

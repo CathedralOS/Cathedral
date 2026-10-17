@@ -13,6 +13,7 @@ pub(super) struct Session {
     pub(super) source: Pair,
     pub(super) storage: task::Child,
     pub(super) storage_control: Pair,
+    pub(super) storage_watch: persistence::Watchdog,
     pub(super) display_task: task::Child,
     pub(super) root: task::Child,
     pub(super) input: Option<task::Child>,
@@ -46,6 +47,15 @@ pub(super) fn start() -> Session {
         assert_eq!(control.1.receive(&mut [0; 64]).unwrap(), 5);
         (storage, control)
     };
+    #[cfg(feature = "notes-probes")]
+    {
+        // Quiet post-commit gate: the ordinary watchdog must discover the stall.
+        // On cold reboot this stays armed, but the restore-only proof performs no save.
+        storage_control.0.send(&[0xf5, 2, 10, 0]).unwrap();
+        let mut bytes = [0; 64];
+        let n = storage_control.1.receive(&mut bytes).unwrap();
+        assert_eq!(&bytes[..n], b"armed");
+    }
     #[cfg(feature = "database-probes")]
     let database_fresh = database_recovery::arm_startup(storage_control);
     assert_eq!(
@@ -92,14 +102,29 @@ pub(super) fn start() -> Session {
         display_call(display, display_task, [pointer::ENABLE, 1, 0, 0, 0, 0])[0],
         0
     );
-    for (x, y, text) in [
-        (80, 60, b"MATRIX SESSION".as_slice()),
-        (134, 140, b"NESTED APP"),
-        (500, 140, b"SIBLING APP"),
-        (80, 400, b"CLICK THEN ENTER"),
-        (80, 440, b"RED: UNCONFIRMED"),
-        (80, 472, b"ENTER TO RELOAD"),
-    ] {
+    let labels: &[(u64, u64, &[u8])] = if cfg!(feature = "notes") {
+        &[
+            (80, 60, b"PRIVATE NOTES"),
+            (134, 140, b"NESTED NOTE"),
+            (500, 140, b"SIBLING NOTE"),
+            (80, 400, b"F1 SAVE OR CHECK"),
+            (80, 432, b"F2 RELOAD"),
+            (80, 464, b"60 CHARACTERS"),
+            (500, 400, b"GREEN SAVED"),
+            (500, 432, b"AMBER DRAFT"),
+            (500, 464, b"RED SAVE ERROR"),
+        ]
+    } else {
+        &[
+            (80, 60, b"MATRIX SESSION".as_slice()),
+            (134, 140, b"NESTED APP"),
+            (500, 140, b"SIBLING APP"),
+            (80, 400, b"CLICK THEN ENTER"),
+            (80, 440, b"RED: UNCONFIRMED"),
+            (80, 472, b"ENTER TO RELOAD"),
+        ]
+    };
+    for &(x, y, text) in labels {
         display
             .0
             .send(&display::encode_text(x, y, 2, 0xffffff, text).unwrap())
@@ -117,8 +142,8 @@ pub(super) fn start() -> Session {
     cathedral_user_runtime::resources::assign(
         root,
         cathedral_user_runtime::resources::Limits {
-            private_pages: 4,
-            reader_pages: 8,
+            private_pages: if cfg!(feature = "notes") { 48 } else { 4 },
+            reader_pages: if cfg!(feature = "notes") { 64 } else { 8 },
             channels: 20,
         },
     )
@@ -160,6 +185,7 @@ pub(super) fn start() -> Session {
         source: (source_send, source_recv),
         storage,
         storage_control,
+        storage_watch: persistence::Watchdog::default(),
         display_task,
         root: _root,
         input: None,

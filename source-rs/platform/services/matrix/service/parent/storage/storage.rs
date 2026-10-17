@@ -65,6 +65,9 @@ impl Parent {
         server: &Server,
         words: wire::Packet,
     ) -> Result<wire::Packet, Error> {
+        if words == [wire::STORAGE_STATUS, 0, 0, 0, 0, 0, 0, 0] && !self.upstream {
+            return Ok([0, self.storage_failed, 0, 0, 0, 0, 0, 0]);
+        }
         let available = self.storage_refresh()?;
         let status = match words {
             [wire::STORAGE_GRANT, slot @ 0..=1, source, 0, 0, 0, 0, 0] => {
@@ -81,6 +84,9 @@ impl Parent {
                         }
                         self.scopes
                             .grant(slot as usize, inc, source as usize, available)
+                            .map(|()| {
+                                self.storage_failed &= !(1 << source);
+                            })
                     }
                     None => Err(abi::DENIED),
                 }
@@ -130,6 +136,7 @@ impl Parent {
             self.storage_epoch = 0;
             self.scopes.clear();
         } else {
+            self.storage_failed |= 1 << source;
             if let Some(link) = &mut self.storage_links[source] {
                 link.invalidate();
             }
@@ -166,7 +173,10 @@ impl Parent {
             // Provider protocol failures preserve the connection. Transport failures
             // are distinguished by the runtime so the service can retire safely.
             Err(error) if client.connected() => Ok(wire::error(error.0 as u64)),
-            Err(error) => Err(error),
+            Err(error) => {
+                self.storage_failed |= 1 << source;
+                Err(error)
+            }
         }
     }
 }

@@ -84,7 +84,7 @@ fn serve() -> Result<(), Error> {
         }
     }
 }
-fn connect(held: u16) -> Result<Pair, Error> {
+fn connect(held: u64) -> Result<Pair, Error> {
     let pair = Link::at(0)?.connect()?;
     publish(pair, [wire::DEVICE, 0, 0, 0, 1, 0])?;
     // The physical reset above clears focus. Seed the replacement router's held

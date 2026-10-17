@@ -69,7 +69,8 @@ impl Children {
         } else {
             match words {
                 [wire::RUN_PAGES, slot @ 0..=1, private, readers, 0, 0, 0, 0]
-                    if private <= 16 && readers <= 16 =>
+                    if private <= cathedral_kernel_contracts::memory::MAX_PAGES as u64
+                        && readers <= cathedral_kernel_contracts::memory::MAX_PAGES as u64 =>
                 {
                     if self.slots[slot as usize].is_some() {
                         Err(Error(abi::BUSY as i64))

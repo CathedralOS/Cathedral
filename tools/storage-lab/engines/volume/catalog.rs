@@ -4,7 +4,7 @@ use super::*;
 use crate::chunks::{Layout, Policy, Store};
 use redb::ReadableTable;
 use std::collections::BTreeMap;
-pub fn verify(path: &Path, offset: u64, bytes: u64, recovery: bool) -> Result<()> {
+pub fn verify(path: &Path, offset: u64, bytes: u64, recovery: bool, notes: bool) -> Result<()> {
     let db = open(Region::new(Arc::new(Image::open(path)?), offset, bytes)?)?;
     let tx = db.begin_read()?;
     let table = tx.open_table(TableDefinition::<&[u8], &[u8]>::new("private-objects-v1"))?;
@@ -20,22 +20,27 @@ pub fn verify(path: &Path, offset: u64, bytes: u64, recovery: bool) -> Result<()
             inline_limit: 128,
             layout: Layout::Flat,
         });
-        let last: u64 = if recovery && root == 0 { 4 } else { 2 };
+        let last: u64 = if (recovery || notes) && root == 0 { 4 } else { 2 };
         for revision in last - 1..=last {
             let mut snapshot = vec![0u8; 152];
             snapshot[..8].copy_from_slice(b"CTDBCAT1");
             snapshot[8..16].copy_from_slice(&revision.to_le_bytes());
-            // Object 2 is the app's six-byte color record; every other entry is empty.
-            snapshot[50..58].copy_from_slice(&[
-                1,
-                6,
-                b'M',
-                b'C',
-                b'0',
-                b'1',
-                root,
-                (revision % 2 == 0) as u8,
-            ]);
+            if notes {
+                let full = b"hello cathedral notes abcdefghijklmnopqrstuvwxyz 0123456789abc";
+                let text = if root == 0 { &full[..if revision == 3 { 60 } else { 35 }] }
+                    else if revision == 1 { b"private sibling note".as_slice() }
+                    else { b"private sibling note 2".as_slice() };
+                let mut note = b"NTS1".to_vec();
+                note.extend_from_slice(text);
+                for (object, payload) in [&note[..note.len().min(32)], &note[note.len().min(32)..]].into_iter().enumerate() {
+                    let offset = 16 + object * 34;
+                    snapshot[offset] = 1;
+                    snapshot[offset + 1] = payload.len() as u8;
+                    snapshot[offset + 2..offset + 2 + payload.len()].copy_from_slice(payload);
+                }
+            } else {
+                snapshot[50..58].copy_from_slice(&[1, 6, b'M', b'C', b'0', b'1', root, (revision % 2 == 0) as u8]);
+            }
             let version = store.put(&snapshot);
             let records = store.records(&version);
             let mut head = revision.to_le_bytes().to_vec();
@@ -66,7 +71,7 @@ pub fn verify(path: &Path, offset: u64, bytes: u64, recovery: bool) -> Result<()
         return Err("desktop records differ from independent private catalog oracle".into());
     }
     println!(
-        "VERIFIED: two private desktop catalogs, recovery={recovery}, exact snapshots/content/history/quota ({} records)",
+        "VERIFIED: two private desktop catalogs, recovery={recovery}, notes={notes}, exact snapshots/content/history/quota ({} records)",
         actual.len()
     );
     Ok(())
