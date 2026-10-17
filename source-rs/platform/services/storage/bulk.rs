@@ -26,6 +26,7 @@ pub fn reply(
     }
     server.reply(request, &bytes).unwrap();
 }
+/// The argument word is the byte offset for BULK and the pin slot for BULK_PIN.
 fn prepare(
     store: &Store<'_>,
     root: u8,
@@ -35,14 +36,14 @@ fn prepare(
     if r.expected == 0 || r.len == 0 || r.len > wire::MAX_BYTES as u64 {
         return Err(abi::INVALID_ARGUMENT);
     }
-    if r.op == wire::BULK_PIN && r.offset >= wire::PIN_SLOTS {
+    if r.op == wire::BULK_PIN && r.argument >= wire::PIN_SLOTS {
         return Err(abi::INVALID_ARGUMENT);
     }
-    let offset = usize::try_from(r.offset).map_err(|_| abi::INVALID_ARGUMENT)?;
+    let offset = usize::try_from(r.argument).map_err(|_| abi::INVALID_ARGUMENT)?;
     let mut pages = Private::allocate((r.len as usize).div_ceil(4096)).map_err(|_| abi::BUSY)?;
     let out = &mut pages.bytes_mut()[..r.len as usize];
     let head = if r.op == wire::BULK_PIN {
-        store.read_pinned(root, r.offset as u8, r.object, r.expected, 0, out)
+        store.read_pinned(root, r.argument as u8, r.object, r.expected, 0, out)
     } else {
         store.read(root, r.object, r.expected, offset, out)
     }

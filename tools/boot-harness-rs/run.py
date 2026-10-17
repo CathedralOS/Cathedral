@@ -316,7 +316,7 @@ def main():
         protocol_test.run(command, output, args.timeout, creationflags, "Cathedral admission: executable capabilities, recursive funded pools, load rollback, stale grants and sibling survival passed")
         return 0
     if args.matrix_test or args.matrix_storage_test or args.ipc_test:
-        marker = ("Cathedral matrix storage: scoped roots, recursive delegation, revocation, cheap copies and replacement passed" if args.matrix_storage_test else "Cathedral IPC: channels, startup bundles, recursive admission and reclamation passed" if args.ipc_test
+        marker = ("Cathedral matrix storage: scoped roots, recursive delegation, revocation, cheap copies, subtree scopes and replacement passed" if args.matrix_storage_test else "Cathedral IPC: channels, startup bundles, recursive admission and reclamation passed" if args.ipc_test
                   else "Cathedral matrix: two identical worlds, local-only views, attenuated input and recovery passed")
         protocol_test.run(command, output, args.timeout, creationflags, marker)
         return 0

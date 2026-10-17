@@ -44,10 +44,11 @@ This blocks freezing namespace/copy and persisted-reference semantics.
 **Contracts checked.** The [specification index](wiki/spec/README.md) leaves
 `spec/storage/realms_and_objects.md` unwritten. The
 [Rust object protocol](source-rs/platform/contracts/storage.rs) supplies only
-root-relative object numbers that are never reused, and a copy that is a new
-number sharing the source's content; it has no aliases, namespace edges or
-cross-realm object graph. The lab therefore already behaves as the recommendation
-below describes, without that being an accepted decision. The [storage proposal](wiki/proposals/0002_dbfs_storage_foundation.md)
+root-relative object numbers that are never reused, one parent per object, a
+copy that is a new number sharing the source's content, and a subtree copy that
+gives every descendant a new number; it has no aliases, names or cross-realm
+object graph. The lab therefore already behaves as the recommendation below
+describes, without that being an accepted decision. The [storage proposal](wiki/proposals/0002_dbfs_storage_foundation.md)
 and host content-layout lab do not resolve those semantics.
 
 **Owner choice.** Adopt stable mutable object identity with explicit alias edges,

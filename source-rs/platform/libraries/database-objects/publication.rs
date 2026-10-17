@@ -2,15 +2,23 @@
 //! in the same immediate transaction. Any refusal drops the uncommitted writer.
 use super::*;
 use cathedral_content_layout::{self as layout, Contents, digest};
-use objects::{allocate, ensure, head_of};
-use records::{event_key, head_key, key, quota, retain, set_quota};
+use objects::{allocate, check_parent, ensure, head_of};
+use records::{edge_key, event_key, head_key, key, quota, retain, set_quota};
 use redb::ReadableTable;
 
 impl Store<'_> {
-    /// Object number zero creates a new object; otherwise `expected` must equal
-    /// the object's current revision.
-    pub fn publish(&self, root: u8, id: u64, expected: u64, bytes: &[u8]) -> Result<Object> {
-        self.publish_observed(root, id, expected, bytes, |_| {})
+    /// Object number zero creates a new object under `parent`; otherwise
+    /// `expected` must equal the object's current revision and `parent` is
+    /// zero, because publication never moves an object.
+    pub fn publish(
+        &self,
+        root: u8,
+        id: u64,
+        expected: u64,
+        bytes: &[u8],
+        parent: u64,
+    ) -> Result<Object> {
+        self.publish_observed(root, id, expected, bytes, parent, |_| {})
     }
     pub fn publish_observed(
         &self,
@@ -18,12 +26,13 @@ impl Store<'_> {
         id: u64,
         expected: u64,
         bytes: &[u8],
+        parent: u64,
         mut observe: impl FnMut(Stage),
     ) -> Result<Object> {
         if bytes.len() > MAX_BYTES {
             return Err(Error::TooLarge);
         }
-        if id == 0 && expected != 0 {
+        if (id == 0 && expected != 0) || (id != 0 && parent != 0) {
             return Err(Error::Invalid);
         }
         // Cheap stale requests stop before preparation. The writer rechecks this
@@ -52,6 +61,7 @@ impl Store<'_> {
         {
             let mut table = engine(tx.open_table(TABLE))?;
             let old = if id == 0 {
+                check_parent(&table, root, parent)?;
                 None
             } else {
                 Some(head_of(&table, root, id)?)
@@ -78,6 +88,7 @@ impl Store<'_> {
                 revision: expected.checked_add(1).ok_or(Error::Capacity)?,
                 manifest,
                 len: bytes.len(),
+                parent: old.map_or(parent, |o| o.parent),
             };
             retain(
                 &mut table,
@@ -91,6 +102,14 @@ impl Store<'_> {
                 &head.encode(),
                 &mut charged,
             )?;
+            if old.is_none() {
+                ensure(
+                    &mut table,
+                    &edge_key(root, head.parent, id),
+                    &[],
+                    &mut charged,
+                )?;
+            }
             if engine(table.get(key(root, b'q', &[]).as_slice()))?.is_none() {
                 records::charge(&mut charged, 2 + 8)?;
             }

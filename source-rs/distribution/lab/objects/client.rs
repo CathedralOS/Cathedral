@@ -10,13 +10,7 @@ pub(super) struct Client {
     pub(super) receive: Handle,
 }
 pub(super) fn packet(op: u64, object: u64, expected: u64, offset: u64, len: u64) -> wire::Request {
-    wire::Request {
-        op,
-        object,
-        expected,
-        offset,
-        len,
-    }
+    wire::Request::new(op, object, expected, offset, len)
 }
 impl Client {
     pub(super) fn call(&self, request: wire::Request, object: Option<&Object>) -> [u8; 64] {
@@ -70,13 +64,6 @@ pub fn run(root: u64) -> u64 {
         wire::word(&client.call(packet(wire::CLOSE, 0, 0, 0, 0), None), 0),
         abi::INVALID_ARGUMENT
     );
-    // Extra fields are malformed, not a second namespace or root selector.
-    let mut forged = packet(wire::HEAD, 1, 0, 0, 0).encode();
-    forged[40] = 1;
-    client.send.send(&forged).unwrap();
-    let mut rejected = [0; 64];
-    assert_eq!(client.receive.receive(&mut rejected).unwrap(), 64);
-    assert_eq!(wire::word(&rejected, 0), abi::INVALID_ARGUMENT);
     let old = listing[1];
     assert!(old <= 1);
     if old == 1 {
@@ -93,6 +80,13 @@ pub fn run(root: u64) -> u64 {
     assert_eq!((head.object, head.revision, head.length), (1, next, 8192));
     let accepted = client.call(packet(wire::HEAD, 1, 0, 0, 0), None);
     assert_eq!(reply, accepted);
+    // A scope word only narrows: naming the object itself changes nothing,
+    // naming anything else denies it, and so does naming nothing that exists.
+    let mut scoped = packet(wire::HEAD, 1, 0, 0, 0);
+    scoped.scopes[0] = 1;
+    assert_eq!(client.call(scoped, None), accepted);
+    scoped.scopes[1] = 2;
+    assert_eq!(wire::word(&client.call(scoped, None), 0), abi::DENIED);
     assert_eq!(
         wire::word(
             &client.call(packet(wire::PUBLISH, 1, old, 0, 8192), Some(&object)),

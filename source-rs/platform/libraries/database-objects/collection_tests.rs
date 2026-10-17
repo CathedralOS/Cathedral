@@ -76,6 +76,7 @@ fn every_collection_boundary_cold_opens_with_live_pins_and_exact_accounting() {
                 u64::from(revision > 1),
                 revision - 1,
                 &revision.to_le_bytes(),
+                0,
             )
             .unwrap();
         if revision == 1 {
@@ -83,7 +84,7 @@ fn every_collection_boundary_cold_opens_with_live_pins_and_exact_accounting() {
         }
     }
     // A second object shares nothing with the pinned history but must survive it.
-    let other = store.publish(0, 0, 0, b"other object").unwrap();
+    let other = store.publish(0, 0, 0, b"other object", 0).unwrap();
     assert_eq!(store.pin(0, 1, 40, 0), Err(Error::Conflict));
     assert_eq!(store.pin(1, 1, 1, 0), Err(Error::Conflict));
     assert_eq!(store.release(0, 1, 2, 0), Err(Error::Conflict));
@@ -158,7 +159,7 @@ fn collected_payload_pages_are_reused_with_unrelated_data_in_a_fixed_extent() {
             *byte = ((index * 17 + index / 4096 * 71 + revision as usize * 13) % 251) as u8;
         }
         store
-            .publish(0, u64::from(revision > 1), revision - 1, &data)
+            .publish(0, u64::from(revision > 1), revision - 1, &data, 0)
             .unwrap();
         collect(&store, 0);
     }

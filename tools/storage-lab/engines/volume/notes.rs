@@ -15,7 +15,7 @@ pub fn verify(path: &Path, offset: u64, bytes: u64, last: [u64; 2]) -> Result<()
     }
     let db = open(Region::new(Arc::new(Image::open(path)?), offset, bytes)?)?;
     let tx = db.begin_read()?;
-    let table = tx.open_table(TableDefinition::<&[u8], &[u8]>::new("private-objects-v2"))?;
+    let table = tx.open_table(TableDefinition::<&[u8], &[u8]>::new("private-objects-v3"))?;
     let actual = colors::records(&table)?;
     let mut expected = BTreeMap::new();
     colors::expect(&mut expected, 0, 4, |revision| match revision {

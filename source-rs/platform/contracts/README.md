@@ -14,10 +14,12 @@ production interface. Providers enforce caller authority using kernel-authentica
 connections; a message or numeric token alone grants nothing.
 
 The object protocol carries one 64-byte packet each way. Publications attach one
-sealed memory object; bulk reads return one. A matrix forwards both directions
-unchanged, scoping the operation word by the child's binding (see
-[matrix.rs](matrix.rs) `STORAGE_BASE`). Object numbers are relative to the
-accepted root and never reused; a copy is a new number sharing the source's content.
+sealed memory object; bulk reads return one. A matrix forwards both directions,
+scoping the operation word by the child's binding and stamping the binding's
+scope object into a free scope word (see [matrix.rs](matrix.rs) `STORAGE_BASE`).
+Object numbers are relative to the accepted root, arranged as a tree and never
+reused; a copy is a new number sharing the source's content, and a subtree copy
+repeats that for every descendant.
 
 This no_std package imports no implementations. It uses public kernel status
 codes for provider refusals, plus two of its own for a missing object and an

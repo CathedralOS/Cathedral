@@ -15,7 +15,7 @@ pub fn verify(path: &Path, offset: u64, bytes: u64, revision: u64, retention: bo
     }
     let db = open(Region::new(Arc::new(Image::open(path)?), offset, bytes)?)?;
     let tx = db.begin_read()?;
-    let table = tx.open_table(TableDefinition::<&[u8], &[u8]>::new("private-objects-v2"))?;
+    let table = tx.open_table(TableDefinition::<&[u8], &[u8]>::new("private-objects-v3"))?;
     let mut actual = BTreeMap::new();
     for row in table.iter()? {
         let (key, value) = row?;
@@ -52,10 +52,7 @@ pub fn verify(path: &Path, offset: u64, bytes: u64, revision: u64, retention: bo
             }
             let version = store.put(&bytes);
             let records = store.records(&version);
-            let mut head = n.to_le_bytes().to_vec();
-            head.extend_from_slice(&records[b"head".as_slice()]);
-            head.extend_from_slice(&8192u64.to_le_bytes());
-            heads.push(head);
+            heads.push(colors::head(n, &records[b"head".as_slice()], 8192, 0));
             versions.push(version);
         }
         // The provider collects before every write, including refused ones, so
@@ -86,6 +83,10 @@ pub fn verify(path: &Path, offset: u64, bytes: u64, revision: u64, retention: bo
         let mut head_key = vec![root, b'h'];
         head_key.extend_from_slice(&1u64.to_be_bytes());
         expected.insert(head_key, heads.last().unwrap().clone());
+        let mut edge = vec![root, b't'];
+        edge.extend_from_slice(&0u64.to_be_bytes());
+        edge.extend_from_slice(&1u64.to_be_bytes());
+        expected.insert(edge, Vec::new());
         if pinned {
             let mut pin = 1u64.to_be_bytes().to_vec();
             pin.extend_from_slice(&heads[0]);

@@ -13,8 +13,11 @@ python tools/boot-harness-rs/run.py --release --window
 ```
 
 Click **Notes** or **Colors** in Programs, then click the workspace to focus it.
-Notes: type, F1 save/check, F2 reload. Colors: Enter changes color. Close App
-closes the workspace; unsaved notes block replacement until saved or reloaded.
+Notes: type, F1 save/check, F2 reload, F3 duplicate, F4 next note. Colors: Enter
+changes color. Close App closes the workspace; Clone World copies the current
+world with every note in it and reopens the program there; Next World cycles
+through the worlds. Unsaved notes block replacement, cloning and switching until
+saved or reloaded.
 Build output and serial diagnostics appear in the integrated terminal. Close
 QEMU or press Ctrl+C there to stop. This uses VS Code's terminal launcher, not
 an attached kernel debugger.
@@ -24,8 +27,9 @@ builds the host formatter and creates the image; later launches preserve it.
 Existing files are never automatically reformatted. Older lab disks are untouched.
 
 `python tools/boot-harness-rs/desktop_test.py` exercises this exact default image
-using physical input, repeated app launches, draft protection and cold-boot saved
-text checks on a disposable disk. [Distribution navigation](../../source-rs/distribution/README.md)
+using physical input, repeated app launches, draft protection, world cloning and
+cold-boot saved text checks in both worlds on a disposable disk, then has the
+host lab verify the retained records. [Distribution navigation](../../source-rs/distribution/README.md)
 connects the shell, apps and platform providers.
 
 The `notes`, `matrix-database` and recovery profiles remain focused engineering

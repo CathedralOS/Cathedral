@@ -12,13 +12,17 @@ the supervisor's close; it conveys no object access.
 Two boot-approved data links bind to private roots 0 and 1 by their
 service-local link position. The kernel isolates principals and grants
 endpoints; the provider enforces root-local object access, and no message
-carries a root selector. The desktop's root matrix holds both links and
-delegates whole roots to its children; the [objects lab](../../../distribution/lab/objects/README.md)
+carries a root selector. Within a root, objects form a tree, and a request's
+three scope words name subtrees it must stay inside: before dispatch the
+provider checks that every stamped scope is an ancestor of every object the
+request would touch, refusing an object outside the scope and one that does
+not exist alike. The desktop's root matrix holds both links and delegates
+subtrees of them to its children; the [objects lab](../../../distribution/lab/objects/README.md)
 hands them to two bare clients instead.
 
 Every write is one engine transaction. Collection runs before each publication
-or copy so retired history never blocks a live root; a refused write leaves no
-partial record. An engine or corruption failure ends the provider rather than
+or copy, including a subtree copy, so retired history never blocks a live
+root; a refused write leaves no partial record. An engine or corruption failure ends the provider rather than
 serving uncertain state, and the distribution replaces it and regrants roots.
 
 The `recovery-lab` feature adds the owner-controlled [fault gate](gate.rs),

@@ -1,5 +1,5 @@
 //! Killing the root drops descendants; reopening the disk recovers committed
-//! objects through newly authorized matrix connections.
+//! objects and their tree through newly authorized matrix connections.
 use super::*;
 pub(super) fn exercise(f: &Fixture, provider: cathedral_user_runtime::task::Child) {
     f.root.cancel().unwrap();
@@ -16,8 +16,12 @@ pub(super) fn exercise(f: &Fixture, provider: cathedral_user_runtime::task::Chil
     reopened.owner(0, [wire::STORAGE_GRANT, 1, 1, 0, 0, 0, 0, 0]);
     expect(text(&reopened, 2, 1).unwrap(), b"nested root");
     expect(text(&reopened, 2, 2).unwrap(), b"nested copy");
+    expect(text(&reopened, 2, 4).unwrap(), b"inside world");
+    expect(text(&reopened, 2, 6).unwrap(), b"inside copy");
     expect(text(&reopened, 3, 1).unwrap(), b"outside root");
-    assert_eq!(listing(&reopened, 2).unwrap()[1], 2);
+    assert_eq!(listing(&reopened, 2).unwrap()[1..6], [4, 1, 2, 3, 5]);
+    regrant_scoped(&reopened, 5);
+    assert_eq!(listing(&reopened, 2).unwrap()[1..3], [1, 6]);
     assert_eq!(
         provider.wait_until(time::now().unwrap()),
         Err(Error(abi::TIMED_OUT as i64))

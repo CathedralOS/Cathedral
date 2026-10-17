@@ -10,6 +10,8 @@ pub(crate) struct Session {
     pub matrix: Pair,
     #[cfg(feature = "shell")]
     pub(crate) notes_open: bool,
+    #[cfg(feature = "shell")]
+    pub(crate) worlds: worlds::Worlds,
     /// Lab compositions add a capped spinner; the shell never does.
     #[cfg(not(feature = "shell"))]
     pub pressure: bool,
@@ -213,12 +215,17 @@ pub(crate) fn start() -> Session {
             _root.wait_until(time::now().unwrap())
         );
     }
+    #[cfg(feature = "shell")]
+    let worlds = worlds::Worlds::open(matrix)
+        .unwrap_or_else(|status| panic!("desktop worlds unavailable: {status}"));
     Session {
         #[cfg(feature = "database-probes")]
         database_fresh,
         matrix,
         #[cfg(feature = "shell")]
         notes_open: false,
+        #[cfg(feature = "shell")]
+        worlds,
         #[cfg(not(feature = "shell"))]
         pressure,
         extent: [info[1], info[2]],

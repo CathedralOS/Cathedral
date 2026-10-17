@@ -11,9 +11,12 @@ workspace to give the app keyboard focus. Notes holds up to eight notes of 240
 characters: **F1** saves (or checks an uncertain save), **F2** reloads the saved
 note, **F3** duplicates it as a new note sharing its content, **F4** switches to
 the next note. Colors changes on **Enter**. **Close App** closes the workspace.
-Opening a different program replaces the current one; an unsaved note stays open
-until explicitly saved or reloaded, and a busy note is left open rather than
-killed. The menu also supports Up/Down/Enter while focused.
+The workspace lives in a world; **Clone World** copies the current world with
+every note in it, by reference, and reopens the program there, and **Next
+World** cycles through the worlds. The menu's last line says which world of how
+many is open. Opening a different program or world replaces the current one; an
+unsaved note stays open until explicitly saved or reloaded, and a busy note is
+left open rather than killed. The menu also supports Up/Down/Enter while focused.
 
 Notes persists in `build/boot-harness-rs/cathedral-storage.raw` across app launches
 and QEMU restarts. The first boot creates this experimental database image;
@@ -27,8 +30,11 @@ Start at [desktop/main.rs](desktop/main.rs), then the
 [shell policy](desktop/session/shell/shell.rs). Admission starts providers and a
 funded root matrix. The root contains an isolated launcher and a workspace matrix;
 the workspace admits the selected app. Both matrices run the same platform code.
-The owner supervises storage and explicitly restores only Notes' storage grant
-when replacing the provider.
+[Worlds](desktop/session/worlds.rs) are top-level objects of the notes root that
+the owner lists, creates and clones on the root matrix's own authority; the
+workspace is granted one world as its storage scope. The owner supervises
+storage and explicitly restores only Notes' storage grant when replacing the
+provider.
 
 [profile.json](profile.json) is the executable composition shared by F5, ordinary
 CLI boot and [the desktop test](../../tools/boot-harness-rs/desktop_test.py).
@@ -49,8 +55,8 @@ grants; the distribution assigns application roles and placement.
 
 The menu reports a numbered choice over its private owner control connection.
 Only the desktop owner validates that choice and sends RUN/STOP to the matrix.
-The menu has no launch handles or storage capability. Notes receives a private
-object root; Colors receives none. Apps see local geometry and input, not global
+The menu has no launch handles or storage capability. Notes receives one world
+of the private object root as its home; Colors receives none. Apps see local geometry and input, not global
 placement, other apps or an ancestor's services. The
 [matrix contract](../platform/contracts/matrix.rs) and
 [child admission](../platform/services/matrix/service/children/admission.rs)

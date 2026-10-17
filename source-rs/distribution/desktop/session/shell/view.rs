@@ -1,7 +1,18 @@
-//! Bounded menu bitmap; only a changed selection/status replaces its sealed image.
+//! Bounded menu bitmap; only a changed selection/status replaces its sealed
+//! image. One row per choice, then the status line, then the world line.
 use super::*;
 use cathedral_user_runtime::memory::Private;
-const WIDTH: usize = 180;
+use launcher::Status;
+pub(super) const WIDTH: usize = 180;
+pub(super) const ROW: u64 = 16;
+pub(super) const CHOICES: u64 = 5;
+const ROWS: usize = CHOICES as usize + 2;
+const HEIGHT: usize = ROWS * ROW as usize;
+/// Where the bitmap sits in the launcher's extent.
+pub(super) const LEFT: u64 = 10;
+pub(super) const TOP: u64 = 20;
+/// Pages one bitmap occupies; the launcher holds two during replacement.
+pub(crate) const PAGES: u64 = (WIDTH * HEIGHT * 4).div_ceil(4096) as u64;
 pub struct Scene {
     pub epoch: u64,
     base: u64,
@@ -24,14 +35,7 @@ impl Scene {
             text: names[1],
         }
     }
-    pub fn paint(
-        &self,
-        parent: Pair,
-        extent: wire::Packet,
-        selected: u64,
-        active: u64,
-        blocked: u64,
-    ) {
+    pub fn paint(&self, parent: Pair, extent: wire::Packet, selected: u64, status: Status) {
         assert_eq!(
             call(
                 parent,
@@ -48,38 +52,52 @@ impl Scene {
             )[0],
             0
         );
-        let mut pixels = Private::allocate(12).unwrap();
-        for (i, pixel) in pixels.bytes_mut().chunks_exact_mut(4).enumerate() {
-            let row = i / WIDTH / 16;
-            let color: u32 = if row < 3 && row as u64 + 1 == selected {
+        let mut pixels = Private::allocate(PAGES as usize).unwrap();
+        for (i, pixel) in pixels.bytes_mut()[..WIDTH * HEIGHT * 4]
+            .chunks_exact_mut(4)
+            .enumerate()
+        {
+            let row = (i / WIDTH / ROW as usize) as u64;
+            let color: u32 = if row < CHOICES && row + 1 == selected {
                 0x315ca8
             } else {
                 0x182132
             };
             pixel.copy_from_slice(&color.to_le_bytes());
         }
-        let status: &[u8] = if blocked == UNSAVED {
+        let message: &[u8] = if status.blocked == UNSAVED {
             b"SAVE NOTE FIRST"
-        } else if blocked == BUSY {
+        } else if status.blocked == BUSY {
             b"NOTES BUSY"
-        } else if active == NOTES {
+        } else if status.blocked == FAILED {
+            b"STORAGE FAILED"
+        } else if status.active == NOTES {
             b"NOTES OPEN"
-        } else if active == COLORS {
+        } else if status.active == COLORS {
             b"COLORS OPEN"
         } else {
             b"CHOOSE PROGRAM"
         };
-        for (row, label) in [b"NOTES".as_slice(), b"COLORS", b"CLOSE APP", status]
-            .into_iter()
-            .enumerate()
-        {
+        let mut world = *b"WORLD 0 OF 0";
+        world[6] = b'0' + (status.world % 10) as u8;
+        world[11] = b'0' + (status.worlds % 10) as u8;
+        let lines: [&[u8]; ROWS] = [
+            b"NOTES",
+            b"COLORS",
+            b"CLOSE APP",
+            b"CLONE WORLD",
+            b"NEXT WORLD",
+            message,
+            &world,
+        ];
+        for (row, label) in lines.into_iter().enumerate() {
             for (column, &ch) in label.iter().enumerate() {
                 for (y, bits) in cathedral_bitmap_font::glyph(ch).into_iter().enumerate() {
                     for x in 0..5 {
                         if bits & (1 << (4 - x)) != 0 {
                             for dy in 0..2 {
                                 for dx in 0..2 {
-                                    let offset = ((row * 16 + y * 2 + dy) * WIDTH
+                                    let offset = ((row * ROW as usize + y * 2 + dy) * WIDTH
                                         + column * 12
                                         + x * 2
                                         + dx)
@@ -102,10 +120,10 @@ impl Scene {
                     wire::SURFACE_IMAGE,
                     self.epoch,
                     self.text,
-                    10,
-                    20,
+                    LEFT,
+                    TOP,
                     WIDTH as u64,
-                    64,
+                    HEIGHT as u64,
                     WIDTH as u64,
                 ]),
                 &image,

@@ -35,7 +35,7 @@ impl Gate {
                 let mut reply = [0; 16];
                 for root in 0..2u8 {
                     let mut first = [0];
-                    if store.list(root, 0, &mut first).unwrap() == 1 {
+                    if store.list(root, 0, 0, &mut first).unwrap() == 1 {
                         reply[root as usize * 8..root as usize * 8 + 8]
                             .copy_from_slice(&first[0].to_le_bytes());
                     }

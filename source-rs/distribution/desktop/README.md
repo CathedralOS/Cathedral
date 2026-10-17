@@ -1,10 +1,11 @@
 # Cathedral desktop
 
 The default boot enters [main.rs](main.rs), then [session/session.rs](session/session.rs):
-admit providers and the root matrix, place the workspace and the menu, start
-input, serve choices and supervise storage. [shell/](session/shell/shell.rs)
+admit providers and the root matrix, open the worlds, place the workspace and
+the menu, start input, serve choices and supervise storage. [shell/](session/shell/shell.rs)
 carries out each choice and hosts the [launcher](session/shell/launcher.rs);
-[app/](session/app/app.rs) is the color program. See the
+[worlds.rs](session/worlds.rs) lists, creates and clones the worlds a workspace
+is scoped to; [app/](session/app/app.rs) is the color program. See the
 [distribution map](../README.md) for F5, controls, composition and the
 same-image interactive test.
 
@@ -50,10 +51,11 @@ The separate `--matrix-storage-test --release` profile starts at
 [storage/storage.rs](storage/storage.rs). It shares [fixture.rs](fixture.rs)'s
 matrix-owned process tree and the same service binary, adding two private object
 roots at the root. Tests cover recursive grants, sibling isolation, stale
-binding revisions, revocation during transactions, child replacement and durable
-data after restarting the tree/provider. No leaf has a disk or provider link.
+binding revisions, revocation during transactions, child replacement, subtree
+scopes, the owner's subtree copies and durable data after restarting the
+tree/provider. No leaf has a disk or provider link.
 See [storage scopes](../../platform/services/matrix/world/storage/README.md)
-for the bounded whole-root policy and protocol.
+for the bounded scope policy and protocol.
 
 ## Visible integration
 

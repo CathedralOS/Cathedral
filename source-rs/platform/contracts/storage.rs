@@ -1,23 +1,30 @@
 //! Private object storage. The accepted connection selects the root; objects
-//! are numbered within it and numbers are never reused. No global names,
-//! digests, root selectors or caller identities cross the wire.
+//! are numbered within it, arranged as a tree, and numbers are never reused.
+//! No global names, digests, root selectors or caller identities cross the wire.
 //!
 //! Every request and reply is one 64-byte packet of eight little-endian words.
-//! Request: `[op, object, expected, offset, len, 0, 0, 0]`. A matrix forwards
-//! the same words, scoping word zero by the child's binding (matrix.rs).
-//! A failed or lost reply may hide a commit: read HEAD before repeating a write.
+//! Request: `[op, object, expected, argument, len, scope, scope, scope]`. The
+//! argument word is the byte offset for reads, the parent for creation and
+//! copies, the pin slot for pins and the listing cursor. The three scope words
+//! are stamped by matrices on the way to the provider (matrix.rs): every
+//! nonzero scope names an object, and the request may only touch objects at
+//! or below each of them. A client that stamps its own scope only narrows
+//! itself. A failed or lost reply may hide a commit: read HEAD before
+//! repeating a write.
 use cathedral_kernel_contracts::user as abi;
 /// `object` → status, object, revision, length.
 pub const HEAD: u64 = 1;
 /// `object, expected, offset, len <= READ_BYTES` → bytes at 32..64.
 pub const READ: u64 = 2;
-/// `object or 0 to create, expected, 0, len` plus one frozen attachment.
+/// `object or 0 to create, expected, parent when creating, len` plus one
+/// frozen attachment; with `len` zero the attachment may be omitted and the
+/// content is empty, which is how a container object is made.
 pub const PUBLISH: u64 = 3;
-/// `source object, expected` → a new object sharing the source's content.
+/// `source object, expected, parent` → a new object sharing the source's content.
 pub const COPY: u64 = 4;
-/// `object, expected`.
+/// `object, expected`; an object that still has children is refused BUSY.
 pub const DELETE: u64 = 5;
-/// `after` → status, count, then up to LIST_IDS ascending object numbers.
+/// `parent, 0, after` → status, count, then up to LIST_IDS ascending children.
 pub const LIST: u64 = 6;
 /// `object, expected revision, offset, 1..=MAX_BYTES` → sealed attachment.
 pub const BULK: u64 = 7;
@@ -31,12 +38,16 @@ pub const BULK_PIN: u64 = 10;
 pub const COLLECT: u64 = 11;
 /// Supervisor control connection only.
 pub const CLOSE: u64 = 12;
+/// `source object, expected, parent` → the copy of the source, whose whole
+/// subtree is copied beneath it with the same shape, sharing all content.
+pub const COPY_TREE: u64 = 13;
 /// Highest operation a delegated child may issue.
-pub const LAST: u64 = COLLECT;
+pub const LAST: u64 = COPY_TREE;
 pub const MAX_BYTES: usize = 16384;
 pub const READ_BYTES: usize = 32;
 pub const LIST_IDS: usize = 6;
 pub const PIN_SLOTS: u64 = 2;
+pub const SCOPES: usize = 3;
 pub const ROOTS: usize = 2;
 pub const HEALTH: &[u8] = b"health";
 /// Provider refusals use kernel status codes plus these two.
@@ -48,44 +59,62 @@ pub struct Request {
     pub op: u64,
     pub object: u64,
     pub expected: u64,
-    pub offset: u64,
+    pub argument: u64,
     pub len: u64,
+    pub scopes: [u64; SCOPES],
 }
 impl Request {
+    /// A request with no scope of its own; matrices stamp the scope words.
+    pub const fn new(op: u64, object: u64, expected: u64, argument: u64, len: u64) -> Self {
+        Self {
+            op,
+            object,
+            expected,
+            argument,
+            len,
+            scopes: [0; SCOPES],
+        }
+    }
     pub fn words(self) -> [u64; 8] {
         [
             self.op,
             self.object,
             self.expected,
-            self.offset,
+            self.argument,
             self.len,
-            0,
-            0,
-            0,
+            self.scopes[0],
+            self.scopes[1],
+            self.scopes[2],
         ]
     }
     pub fn encode(self) -> [u8; 64] {
         pack(self.words())
     }
-    /// Trailing words must be zero: extra fields are malformed, never a
-    /// second namespace or root selector.
     pub fn decode(bytes: &[u8]) -> Option<Self> {
         let words = unpack(bytes)?;
-        if words[5..].iter().any(|w| *w != 0) {
-            return None;
-        }
         Some(Self {
             op: words[0],
             object: words[1],
             expected: words[2],
-            offset: words[3],
+            argument: words[3],
             len: words[4],
+            scopes: [words[5], words[6], words[7]],
         })
     }
+    /// The objects every scope must contain: the subject, and the parent a
+    /// creation or copy would place its result under.
+    pub fn subjects(self) -> ([u64; 2], usize) {
+        match self.op {
+            PUBLISH if self.object == 0 => ([self.argument, 0], 1),
+            COPY | COPY_TREE => ([self.object, self.argument], 2),
+            COLLECT => ([0; 2], 0),
+            _ => ([self.object, 0], 1),
+        }
+    }
 }
-/// Reply shape shared by HEAD, READ, PUBLISH, COPY, BULK and BULK_PIN.
-/// `extra` carries the attached byte count for bulk reads. READ places its
-/// bytes at 32..64 instead.
+/// Reply shape shared by HEAD, READ, PUBLISH, COPY, COPY_TREE, BULK and
+/// BULK_PIN. `extra` carries the attached byte count for bulk reads. READ
+/// places its bytes at 32..64 instead.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct Reply {
     pub object: u64,
@@ -119,6 +148,19 @@ impl Reply {
         })
     }
 }
+/// Narrow a request by one more scope. Fails when all three are taken: a
+/// request is never forwarded past the scope a matrix must apply to it.
+pub fn stamp(words: &mut [u64; 8], scope: u64) -> Result<(), u64> {
+    if scope == 0 {
+        return Ok(());
+    }
+    let free = words[5..]
+        .iter_mut()
+        .find(|s| **s == 0)
+        .ok_or(abi::DENIED)?;
+    *free = scope;
+    Ok(())
+}
 pub fn error(status: u64) -> [u8; 64] {
     pack([status, 0, 0, 0, 0, 0, 0, 0])
 }
@@ -147,20 +189,22 @@ pub fn unpack(bytes: &[u8]) -> Option<[u64; 8]> {
 mod tests {
     use super::*;
     #[test]
-    fn requests_round_trip_and_reject_extra_fields() {
-        let request = Request {
-            op: PUBLISH,
-            object: 0,
-            expected: 0,
-            offset: 0,
-            len: 300,
-        };
+    fn requests_round_trip_with_scopes_and_name_their_subjects() {
+        let request = Request::new(PUBLISH, 0, 0, 7, 300);
         let bytes = request.encode();
         assert_eq!(Request::decode(&bytes), Some(request));
-        let mut forged = bytes;
-        forged[40] = 1;
-        assert!(Request::decode(&forged).is_none());
         assert!(Request::decode(&bytes[..63]).is_none());
+        assert_eq!(request.subjects(), ([7, 0], 1));
+        let mut words = request.words();
+        stamp(&mut words, 0).unwrap();
+        stamp(&mut words, 4).unwrap();
+        stamp(&mut words, 9).unwrap();
+        stamp(&mut words, 2).unwrap();
+        assert_eq!(stamp(&mut words, 5), Err(abi::DENIED));
+        assert_eq!(Request::decode(&pack(words)).unwrap().scopes, [4, 9, 2]);
+        assert_eq!(Request::new(COPY_TREE, 3, 1, 8, 0).subjects(), ([3, 8], 2));
+        assert_eq!(Request::new(LIST, 3, 0, 0, 0).subjects(), ([3, 0], 1));
+        assert_eq!(Request::new(COLLECT, 0, 0, 0, 0).subjects().1, 0);
         let reply = Reply {
             object: 7,
             revision: 3,

@@ -130,8 +130,10 @@ pub fn run(environment: Environment) -> Result<(), Error> {
             if parent.publishing() {
                 blocked |= 1 << parent.publishing_client();
             }
-            if parent.storing() {
-                blocked |= 1 << parent.storing_client();
+            if parent.storing()
+                && let Some(client) = parent.storing_client()
+            {
+                blocked |= 1 << client;
             }
             deferred.hold(event, &mut server, world, blocked)?;
             continue;

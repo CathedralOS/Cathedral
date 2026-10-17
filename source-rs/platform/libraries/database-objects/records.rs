@@ -1,6 +1,7 @@
 //! Root-prefixed record keys and their fixed encodings. Kinds: `h` object head,
-//! `e` per-object revision event, `m` manifest, `c` chunk, `p` pin, `q` quota
-//! ledger, `n` next object number. Object numbers are never reused.
+//! `e` per-object revision event, `t` tree edge from parent to child, `m`
+//! manifest, `c` chunk, `p` pin, `q` quota ledger, `n` next object number.
+//! Object numbers are never reused; parent zero is the root itself.
 use super::*;
 use cathedral_content_layout::Digest;
 use redb::{ReadableTable, Table};
@@ -18,26 +19,34 @@ pub(crate) fn event_key(root: u8, id: u64, revision: u64) -> alloc::vec::Vec<u8>
     suffix[8..].copy_from_slice(&revision.to_be_bytes());
     key(root, b'e', &suffix)
 }
+pub(crate) fn edge_key(root: u8, parent: u64, child: u64) -> alloc::vec::Vec<u8> {
+    let mut suffix = [0; 16];
+    suffix[..8].copy_from_slice(&parent.to_be_bytes());
+    suffix[8..].copy_from_slice(&child.to_be_bytes());
+    key(root, b't', &suffix)
+}
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub struct Head {
     pub revision: u64,
     pub manifest: Digest,
     pub len: usize,
+    pub parent: u64,
 }
 impl Head {
-    pub const SIZE: usize = 48;
+    pub const SIZE: usize = 56;
     pub fn encode(self) -> [u8; Self::SIZE] {
         let mut bytes = [0; Self::SIZE];
         bytes[..8].copy_from_slice(&self.revision.to_le_bytes());
         bytes[8..40].copy_from_slice(&self.manifest);
-        bytes[40..].copy_from_slice(&(self.len as u64).to_le_bytes());
+        bytes[40..48].copy_from_slice(&(self.len as u64).to_le_bytes());
+        bytes[48..].copy_from_slice(&self.parent.to_le_bytes());
         bytes
     }
     pub fn decode(bytes: &[u8]) -> Result<Self> {
         if bytes.len() != Self::SIZE {
             return Err(Error::Corrupt);
         }
-        let len = u64::from_le_bytes(bytes[40..].try_into().unwrap());
+        let len = u64::from_le_bytes(bytes[40..48].try_into().unwrap());
         let revision = u64::from_le_bytes(bytes[..8].try_into().unwrap());
         if len > MAX_BYTES as u64 || revision == 0 {
             return Err(Error::Corrupt);
@@ -46,6 +55,7 @@ impl Head {
             revision,
             manifest: bytes[8..40].try_into().unwrap(),
             len: len as usize,
+            parent: u64::from_le_bytes(bytes[48..].try_into().unwrap()),
         })
     }
 }

@@ -1,9 +1,11 @@
 #![no_std]
 #![forbid(unsafe_code)]
-//! Private object roots over immutable content. A root holds numbered objects;
-//! their chunks and manifests are shared within the root, so a copy writes only
-//! a new head. The caller supplies a trusted root binding, never an
-//! application-selected root or a globally meaningful hash.
+//! Private object roots over immutable content. A root holds numbered objects
+//! arranged as a tree: every object has a parent, so a subtree is a realm that
+//! can be delegated and copied. Chunks and manifests are shared within the
+//! root, so a copy writes only heads, events and edges. The caller supplies a
+//! trusted root binding, never an application-selected root or a globally
+//! meaningful hash.
 extern crate alloc;
 mod collection;
 mod objects;
@@ -20,7 +22,10 @@ pub const INLINE_BYTES: usize = 128;
 /// Retained record bytes per root, including keys and event history. This is an
 /// admission limit, not a claim about physical redb space or allocator overhead.
 pub const ROOT_QUOTA: u64 = 24 * 1024;
-pub const TABLE: TableDefinition<&[u8], &[u8]> = TableDefinition::new("private-objects-v2");
+/// Objects one tree copy may produce; it bounds one request's work, not the
+/// root's size.
+pub const COPY_LIMIT: usize = 64;
+pub const TABLE: TableDefinition<&[u8], &[u8]> = TableDefinition::new("private-objects-v3");
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Error {
@@ -29,6 +34,8 @@ pub enum Error {
     Capacity,
     Invalid,
     Missing,
+    /// The object still has children; delete them first.
+    NotEmpty,
     Corrupt,
     Engine,
 }

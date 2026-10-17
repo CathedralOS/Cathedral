@@ -185,20 +185,31 @@ pub fn rectangle_updates(p: Packet) -> Option<([Packet; 2], usize)> {
     Some((updates, count))
 }
 
-/// Child-local storage binding: [INFO,0..] -> [0, binding revision,0..].
+/// Child-local storage binding: [INFO,0..] -> [0, binding revision, home,0..].
 /// Storage packets retain storage.rs's layout; opcode is
 /// (binding revision << STORAGE_SCOPE_BITS) | (STORAGE_BASE + storage opcode).
-/// No root selector crosses the child connection. A binding grants one whole root.
+/// No root selector crosses the child connection. A binding grants a subtree:
+/// its home object, or the whole of what the matrix itself holds when the
+/// grant names no scope. The matrix stamps a granted scope into the request's
+/// free scope words, so the provider enforces the entire chain.
 pub const STORAGE_INFO: u64 = 12;
 pub const STORAGE_BASE: u64 = 256;
 pub const STORAGE_SCOPE_BITS: u32 = 16;
-/// Owner-only: [GRANT, child slot, available source slot, 0..], [REVOKE,child,0..].
-/// Sources are exclusive between siblings. Revoke aborts pending transactions.
+/// Owner-only: [GRANT, child slot, available source slot, scope object, 0..],
+/// [REVOKE,child,0..]. Sources are exclusive between siblings. Revoke aborts
+/// pending transactions. A scope of zero grants everything the matrix holds.
 pub const STORAGE_GRANT: u64 = 113;
 pub const STORAGE_REVOKE: u64 = 114;
 /// Root owner diagnostic only: retired provider-stream bitmask in reply word one.
 /// Does not reconnect, grant authority or expose state to children.
 pub const STORAGE_STATUS: u64 = 115;
+/// Owner-only object request on the matrix's own authority: [REQUEST, source,
+/// op, object, expected, argument, len, 0] answered with the provider's eight
+/// words. The root adapter addresses a provider link by source; a nested
+/// matrix uses its upstream binding and takes source zero. Attachments do not
+/// travel on the control connection, so bulk reads are refused and a
+/// publication may only create an empty object.
+pub const STORAGE_REQUEST: u64 = 116;
 pub const RUN_PAGES: u64 = 112; // owner: slot, private pages, reader pages; rest zero
 
 #[cfg(test)]

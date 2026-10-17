@@ -115,7 +115,7 @@ impl Store<'_> {
                     return Err(Error::Corrupt);
                 }
                 match k[1] {
-                    b'h' | b'q' | b'p' | b'n' => continue,
+                    b'h' | b'q' | b'p' | b'n' | b't' => continue,
                     b'c' | b'm' | b'e' => {}
                     _ => return Err(Error::Corrupt),
                 }

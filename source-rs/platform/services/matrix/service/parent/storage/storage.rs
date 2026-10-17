@@ -1,8 +1,10 @@
 // Authenticate a local scope, then relay the object protocol one hop, with
-// sealed attachments travelling up (publish) and down (bulk reads) unchanged.
-// Owner grants/revokes act here; child requests resume in pending.rs.
-// Only the root adapter names provider links and retires them independently.
+// sealed attachments travelling up (publish) and down (bulk reads) unchanged
+// and the child's granted scope stamped on the way. Owner grants/revokes act
+// here; child and owner requests resume in pending.rs. Only the root adapter
+// names provider links and retires them independently.
 use super::*;
+use cathedral_platform_contracts::storage as protocol;
 use cathedral_user_runtime::{link::Link, memory::Object, server::Request};
 pub(super) use pending::Pending;
 /// The root adapter's link to one provider root. A failed exchange retires the
@@ -81,9 +83,24 @@ impl Parent {
             .and_then(|()| receive.receive_until(&mut bytes, time::after(100)?))
             .and_then(|len| wire::decode(&bytes[..len]).ok_or(Error(abi::IO_ERROR as i64)));
         if result.is_err() && self.separate_storage {
-            self.retire_storage(0, 0)?;
+            self.retire_storage(0, None)?;
         }
         result
+    }
+    /// Take the upstream binding's current revision and home. A changed
+    /// revision means the ancestor revoked the old binding, which empties
+    /// every grant made under it.
+    pub(super) fn adopt_upstream(&mut self, reply: wire::Packet) {
+        let (epoch, home) = if reply[0] == 0 {
+            (reply[1], reply[2])
+        } else {
+            (0, 0)
+        };
+        if epoch != self.storage_epoch {
+            self.scopes.clear();
+            self.storage_epoch = epoch;
+        }
+        self.storage_home = home;
     }
     fn storage_refresh(&mut self) -> Result<usize, Error> {
         if !self.upstream {
@@ -92,6 +109,7 @@ impl Parent {
         if self.storage_pair.is_none() {
             self.scopes.clear();
             self.storage_epoch = 0;
+            self.storage_home = 0;
             return Ok(0);
         }
         let reply = match self.storage_exchange([wire::STORAGE_INFO, 0, 0, 0, 0, 0, 0, 0]) {
@@ -99,12 +117,8 @@ impl Parent {
             Err(_) if self.separate_storage => return Ok(0),
             Err(error) => return Err(error),
         };
-        let epoch = if reply[0] == 0 { reply[1] } else { 0 };
-        if epoch != self.storage_epoch {
-            self.scopes.clear(); // Ancestor already revoked its old binding.
-            self.storage_epoch = epoch;
-        }
-        Ok(usize::from(epoch != 0))
+        self.adopt_upstream(reply);
+        Ok(usize::from(self.storage_epoch != 0))
     }
     pub(in crate::service) fn storage_owner(
         &mut self,
@@ -116,7 +130,7 @@ impl Parent {
         }
         let available = self.storage_refresh()?;
         let status = match words {
-            [wire::STORAGE_GRANT, slot @ 0..=1, source, 0, 0, 0, 0, 0] => {
+            [wire::STORAGE_GRANT, slot @ 0..=1, source, scope, 0, 0, 0, 0] => {
                 match server.incarnation(self.storage_client(slot as usize)) {
                     Some(inc) => {
                         if !self.upstream && source < available as u64 {
@@ -129,7 +143,7 @@ impl Parent {
                             }
                         }
                         self.scopes
-                            .grant(slot as usize, inc, source as usize, available)
+                            .grant(slot as usize, inc, source as usize, scope, available)
                             .map(|()| {
                                 self.storage_failed &= !(1 << source);
                             })
@@ -145,6 +159,52 @@ impl Parent {
         };
         Ok(wire::error(status.err().unwrap_or(0)))
     }
+    /// The owner acting on the matrix's own authority: the same forwarding as
+    /// a child request, without a binding or a stamp. Nothing is attached in
+    /// either direction on the control connection.
+    pub(in crate::service) fn storage_owner_request(
+        &mut self,
+        server: &mut Server,
+        request: Request,
+        words: wire::Packet,
+    ) -> Result<(), Error> {
+        let source = words[1] as usize;
+        let admitted = match words {
+            [
+                wire::STORAGE_REQUEST,
+                _,
+                op @ protocol::HEAD..=protocol::LAST,
+                object,
+                expected,
+                argument,
+                len,
+                0,
+            ] if !matches!(op, protocol::BULK | protocol::BULK_PIN)
+                && (op != protocol::PUBLISH || len == 0)
+                && if self.upstream {
+                    source == 0
+                } else {
+                    self.storage_links.get(source).is_some_and(|l| l.is_some())
+                } =>
+            {
+                Some([
+                    wire::STORAGE_BASE + op,
+                    object,
+                    expected,
+                    argument,
+                    len,
+                    0,
+                    0,
+                    0,
+                ])
+            }
+            _ => None,
+        };
+        match admitted {
+            Some(packet) => self.storage_request_from(request, packet, None, source),
+            None => server.reply(&request, &wire::encode(wire::error(abi::DENIED))),
+        }
+    }
     /// Every object operation is atomic at the provider, so revoking a binding
     /// leaves nothing staged upstream; the stale scope simply stops authorizing.
     pub(in crate::service) fn storage_close(&mut self, slot: usize) -> Result<(), Error> {
@@ -158,24 +218,42 @@ impl Parent {
         words: wire::Packet,
         attachment: Option<Object>,
     ) -> Result<(), Error> {
+        self.storage_request_from(request, words, attachment, 0)
+    }
+    fn storage_request_from(
+        &mut self,
+        request: Request,
+        words: wire::Packet,
+        attachment: Option<Object>,
+        source: usize,
+    ) -> Result<(), Error> {
         assert!(self.storage_pending.is_none());
-        self.storage_pending = Some(Pending::new(request, words, attachment, self.upstream)?);
+        self.storage_pending = Some(Pending::new(
+            request,
+            words,
+            attachment,
+            self.upstream,
+            source,
+        )?);
         Ok(())
     }
-    fn retire_storage(&mut self, source: usize, client: usize) -> Result<(), Error> {
+    fn retire_storage(&mut self, source: usize, client: Option<usize>) -> Result<(), Error> {
         if self.upstream {
             if let Some((send, receive)) = self.storage_pair.take() {
                 send.close()?;
                 receive.close()?;
             }
             self.storage_epoch = 0;
+            self.storage_home = 0;
             self.scopes.clear();
         } else {
             self.storage_failed |= 1 << source;
             if let Some(provider) = &mut self.storage_links[source] {
                 provider.invalidate();
             }
-            self.scopes.revoke(self.storage_slot(client));
+            if let Some(client) = client {
+                self.scopes.revoke(self.storage_slot(client));
+            }
         }
         Ok(())
     }

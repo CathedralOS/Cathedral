@@ -1,6 +1,8 @@
-//! Each note is one private object; the root holds up to MAX_NOTES of them.
-//! Saving publishes the whole encoded document; duplicating asks the store to
-//! copy the confirmed object, which shares its content rather than rewriting it.
+//! Each note is one private object under the binding's home; the home holds
+//! up to MAX_NOTES of them. Saving publishes the whole encoded document;
+//! duplicating asks the store to copy the confirmed object beside it, which
+//! shares its content rather than rewriting it. The app never learns where
+//! its home sits in the root: a world, a whole root and a clone look alike.
 //! IPC crosses into the parent matrix's service/parent/storage, then the
 //! object provider's service entrance.
 use super::*;
@@ -36,24 +38,16 @@ fn traced<T>(style: u64, op: u64, call: impl FnOnce() -> T) -> T {
     let _ = (style, op);
     result
 }
-fn packet(op: u64, object: u64, expected: u64, offset: u64, len: u64) -> store::Request {
-    store::Request {
-        op,
-        object,
-        expected,
-        offset,
-        len,
-    }
-}
 impl Notes {
-    /// Acquire the current binding, enumerate the root and read the current note.
-    /// Reconciliation abandons nothing durable: every write was already atomic.
+    /// Acquire the current binding, enumerate the home and read the current
+    /// note. Reconciliation abandons nothing durable: every write was already atomic.
     pub fn load(&mut self) -> Result<Document, u64> {
         self.scope.bind()?;
+        let home = self.scope.home();
         self.count = 0;
         let mut after = 0;
         loop {
-            let request = packet(store::LIST, after, 0, 0, 0);
+            let request = store::Request::new(store::LIST, home, 0, after, 0);
             let (reply, _) = traced(self._style, store::LIST, || {
                 self.scope.request(request, None)
             })?;
@@ -84,12 +78,12 @@ impl Notes {
     }
     fn read(&mut self) -> Result<Document, u64> {
         let id = self.ids[self.current];
-        let request = packet(store::HEAD, id, 0, 0, 0);
+        let request = store::Request::new(store::HEAD, id, 0, 0, 0);
         let head = traced(self._style, store::HEAD, || self.scope.call(request))?;
         if head.length == 0 || head.length > cathedral_notes::document::ENCODED as u64 {
             return Err(abi::IO_ERROR);
         }
-        let request = packet(store::BULK, id, head.revision, 0, head.length);
+        let request = store::Request::new(store::BULK, id, head.revision, 0, head.length);
         let (reply, attachment) = traced(self._style, store::BULK, || {
             self.scope.request(request, None)
         })?;
@@ -113,17 +107,23 @@ impl Notes {
         let mut pages = Private::allocate(1).map_err(|e| e.0 as u64)?;
         pages.bytes_mut()[..len].copy_from_slice(&bytes[..len]);
         let object = pages.freeze().map_err(|e| e.0 as u64)?;
-        let id = if self.count == 0 {
-            0
+        // A first note is created under the home; later saves name the note.
+        let request = if self.count == 0 {
+            store::Request::new(store::PUBLISH, 0, 0, self.scope.home(), len as u64)
         } else {
-            self.ids[self.current]
+            store::Request::new(
+                store::PUBLISH,
+                self.ids[self.current],
+                self.revision,
+                0,
+                len as u64,
+            )
         };
-        let request = packet(store::PUBLISH, id, self.revision, 0, len as u64);
         let (reply, _) = traced(self._style, store::PUBLISH, || {
             self.scope.request(request, Some(&object))
         })?;
         let reply = store::Reply::decode(&reply)?;
-        if id == 0 {
+        if request.object == 0 {
             self.ids[0] = reply.object;
             self.count = 1;
             self.current = 0;
@@ -131,12 +131,18 @@ impl Notes {
         self.revision = reply.revision;
         Ok(())
     }
-    /// A new note sharing the confirmed content of the current one.
+    /// A new note beside the current one, sharing its confirmed content.
     pub fn duplicate(&mut self) -> Result<Document, u64> {
         if self.count == 0 || self.count == MAX_NOTES {
             return Err(abi::NO_MEMORY);
         }
-        let request = packet(store::COPY, self.ids[self.current], self.revision, 0, 0);
+        let request = store::Request::new(
+            store::COPY,
+            self.ids[self.current],
+            self.revision,
+            self.scope.home(),
+            0,
+        );
         let reply = traced(self._style, store::COPY, || self.scope.call(request))?;
         self.ids[self.count] = reply.object;
         self.current = self.count;

@@ -21,17 +21,8 @@ pub fn run() -> u64 {
     } else {
         assert_eq!(first, Outcome::Returned(final_marker));
         let (send, receive) = Port::at(0).unwrap().connect().unwrap();
-        send.send(
-            &wire::Request {
-                op: wire::CLOSE,
-                object: 0,
-                expected: 0,
-                offset: 0,
-                len: 0,
-            }
-            .encode(),
-        )
-        .unwrap();
+        send.send(&wire::Request::new(wire::CLOSE, 0, 0, 0, 0).encode())
+            .unwrap();
         assert_eq!(receive.receive(&mut [0; 64]).unwrap(), 64);
         assert_eq!(provider.wait().unwrap(), Outcome::Returned(0));
         write(b"Cathedral objects: recovered content and private roots passed\n").unwrap();

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Exercise the ordinary F5 composition: choose apps, edit, switch and cold-open."""
+"""Exercise the ordinary F5 composition: choose apps, edit, switch, clone the world and cold-open."""
 import argparse
 from datetime import datetime, timezone
 import os
@@ -87,11 +87,18 @@ def desktop(stream, output, serial, reboot):
             return actual == expected and rgb(width, data, 335, 190) == bytes.fromhex('9b7028' if dirty else '27664a')
         scan(check, f'note text/status {text!r}, dirty={dirty}')
 
-    def status(text):
+    def menu_row(row, text, description):
         move(270, 300)  # Keep the cursor overlay outside the checked glyphs.
         expected = text_image(text)[:180 * 16 * 3]
-        scan(lambda width, data: b''.join(data[((208 + y) * width + 50) * 3:((208 + y) * width + 230) * 3] for y in range(16)) == expected,
-             f'menu status {text!r}')
+        top = 160 + 16 * row
+        scan(lambda width, data: b''.join(data[((top + y) * width + 50) * 3:((top + y) * width + 230) * 3] for y in range(16)) == expected,
+             f'{description} {text!r}')
+
+    def status(text):
+        menu_row(5, text, 'menu status')
+
+    def world(index, count):
+        menu_row(6, f'WORLD {index} OF {count}', 'menu world line')
 
     def color(value):
         scan(lambda width, data: rgb(width, data, 335, 190) == bytes.fromhex(value), f'workspace color {value}')
@@ -107,6 +114,7 @@ def desktop(stream, output, serial, reboot):
         scan(check, f'note tabs count={count} current={current}')
 
     status('CHOOSE PROGRAM')
+    world(1, 2 if reboot else 1)
     click(80, 166)  # Actual menu row, not host-side launch control.
     status('NOTES OPEN')
     note('hello cathedral' if reboot else '')
@@ -116,6 +124,19 @@ def desktop(stream, output, serial, reboot):
         key('f4')
         note('hello cathedral two')
         tabs(2, 1)
+        # The cloned world kept its own edit; the original kept none of it.
+        click(80, 230)
+        world(2, 2)
+        status('NOTES OPEN')
+        note('hello cathedral')
+        tabs(2, 0)
+        click(335, 300)
+        key('f4')
+        note('hello cathedral two clone')
+        tabs(2, 1)
+        click(80, 230)
+        world(1, 2)
+        note('hello cathedral')
         return
     click(335, 300)
     for char in 'hello cathedral':
@@ -178,7 +199,40 @@ def desktop(stream, output, serial, reboot):
     click(80, 166)
     status('NOTES OPEN')
     note('hello cathedral')
-    print('PASS: in-guest mouse/keyboard launch, draft protection, duplicate/switch, save/reload and repeated app replacement')
+    # Cloning the world copies both notes by reference and reopens Notes in
+    # the clone; a draft refuses the clone just as it refuses a switch.
+    click(335, 300)
+    key('y')
+    note('hello cathedraly', dirty=True)
+    click(80, 214)
+    status('SAVE NOTE FIRST')
+    world(1, 1)
+    click(335, 300)
+    key('f2')
+    note('hello cathedral')
+    click(80, 214)
+    world(2, 2)
+    status('NOTES OPEN')
+    note('hello cathedral')
+    tabs(2, 0)
+    click(335, 300)
+    key('f4')
+    note('hello cathedral two')
+    tabs(2, 1)
+    for char in ' clone':
+        key('spc' if char == ' ' else char)
+    key('f1')
+    note('hello cathedral two clone')
+    # Back in the first world the original notes are untouched.
+    click(80, 230)
+    world(1, 2)
+    status('NOTES OPEN')
+    note('hello cathedral')
+    tabs(2, 0)
+    click(335, 300)
+    key('f4')
+    note('hello cathedral two')
+    print('PASS: in-guest mouse/keyboard launch, draft protection, duplicate/switch, save/reload, repeated app replacement and world cloning')
 
 
 def run(timeout):
@@ -202,8 +256,8 @@ def run(timeout):
         contents = path.read_bytes()
         database_image.prepare(path)
         assert contents == path.read_bytes(), 'relaunch must not reformat storage'
-    # An independent host model checks the retained records on a copy: two notes,
-    # one shared manifest for the duplicated text, nothing in the ungranted root.
+    # An independent host model checks the retained records on a copy: two
+    # worlds of two notes sharing content, nothing in the ungranted root.
     snapshot = output / 'host-reopen.raw'
     snapshot.write_bytes(contents)
     result = subprocess.run([str(database_image.oracle()), 'engines', 'volume', 'verify-desktop', str(snapshot),
@@ -211,7 +265,7 @@ def run(timeout):
                             cwd=ROOT / 'tools/storage-lab', check=True, capture_output=True, text=True)
     (output / 'host.txt').write_text(result.stdout, encoding='utf-8')
     print(result.stdout, end='')
-    print(f'PASS: default F5 desktop, duplicated notes and saved notes after cold reboot; artifacts: {output}')
+    print(f'PASS: default F5 desktop, duplicated notes, cloned world and saved notes after cold reboot; artifacts: {output}')
 
 
 if __name__ == '__main__':

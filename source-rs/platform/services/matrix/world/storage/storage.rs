@@ -1,10 +1,13 @@
-// Whole-root delegation: owner selects a source, child sees only a local binding.
-// Exclusive sibling assignments keep transactions and root generations private.
+// Subtree delegation: the owner selects a source and a scope object, the
+// child sees only a local binding. Exclusive sibling assignments keep
+// transactions and root generations private. The scope is what the matrix
+// stamps on the child's requests; zero passes on everything the matrix holds.
 use cathedral_kernel_contracts::user as abi;
 #[derive(Clone, Copy)]
 struct Binding {
     incarnation: u64,
     source: usize,
+    scope: u64,
 }
 #[derive(Default)]
 pub struct Scopes {
@@ -23,6 +26,7 @@ impl Scopes {
         slot: usize,
         incarnation: u64,
         source: usize,
+        scope: u64,
         available: usize,
     ) -> Result<(), u64> {
         if slot >= 2 || incarnation == 0 || source >= available {
@@ -40,26 +44,33 @@ impl Scopes {
         self.bindings[slot] = Some(Binding {
             incarnation,
             source,
+            scope,
         });
         Ok(())
     }
-    pub fn source(&self, slot: usize, incarnation: u64) -> Result<usize, u64> {
+    /// The source and scope bound to this connection: source and scope.
+    pub fn binding(&self, slot: usize, incarnation: u64) -> Result<(usize, u64), u64> {
         self.bindings
             .get(slot)
             .and_then(|b| *b)
             .filter(|b| b.incarnation == incarnation)
-            .map(|b| b.source)
+            .map(|b| (b.source, b.scope))
             .ok_or(abi::DENIED)
     }
     pub fn revision(&self, slot: usize, incarnation: u64) -> Result<u64, u64> {
-        self.source(slot, incarnation)?;
+        self.binding(slot, incarnation)?;
         Ok(self.revisions[slot])
     }
-    pub fn authorize(&self, slot: usize, incarnation: u64, revision: u64) -> Result<usize, u64> {
+    pub fn authorize(
+        &self,
+        slot: usize,
+        incarnation: u64,
+        revision: u64,
+    ) -> Result<(usize, u64), u64> {
         if self.revision(slot, incarnation)? != revision {
             return Err(abi::DENIED);
         }
-        self.source(slot, incarnation)
+        self.binding(slot, incarnation)
     }
     pub fn revoke(&mut self, slot: usize) -> Option<usize> {
         self.bindings.get_mut(slot)?.take().map(|b| b.source)
