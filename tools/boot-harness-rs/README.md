@@ -4,6 +4,18 @@ Run `python tools/boot-harness-rs/run.py --smoke` from the repository root.
 This builds the separate `source-rs/` Cargo workspace and exercises its UEFI
 handoff under QEMU/OVMF. Host-side Python only; no extra Python packages.
 
+For an interactive desktop in VS Code, open the Cathedral repository root, select
+**Cathedral: Build & Run in QEMU** in Run and Debug, then press **F5**. The checked-in
+[launch configuration](../../.vscode/launch.json) builds the matrix desktop in
+release mode and opens QEMU's window. Build output and serial diagnostics appear
+in the integrated terminal. Close QEMU's window or press Ctrl+C in that terminal
+to stop. Python, Rust, QEMU and OVMF use the same setup as the CLI runner below.
+
+This uses VS Code's [terminal launch configuration](https://github.com/microsoft/vscode-js-debug/blob/main/OPTIONS.md#node-terminal-launch)
+to run the existing Python command; it does not attach a kernel debugger. The
+desktop keeps its existing `build/boot-harness-rs/matrix-desktop-storage.raw`
+between runs. The separate database proof still uses its dedicated test runner.
+
 `python tools/boot-harness-rs/volume_test.py --release` runs the separate
 [volume transport proof](../../source-rs/platform/libraries/storage-volume/CHARTER.md).
 It builds [profiles/volume.json](profiles/volume.json), creates a new guarded image,

@@ -11,6 +11,7 @@ Thumbs.db
 .idea/
 .vscode/*
 !.vscode/settings.json
+!.vscode/launch.json
 
 # Studied prior art — forked reference codebases (rust-osdev crates, other OSes)
 # read as fact-sources, quirk-references, and licensed-translation inputs; never shipped.
