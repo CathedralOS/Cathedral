@@ -177,8 +177,23 @@ uefi_x86_64 machine BootServicesTable::exit_boot_services_leaf(
 ) -> EfiStatus satisfies BootServices::exit_boot_services via ForeignBinding::TableFunction(exit_boot_services);
 
 pub UefiBootServicesProvider satisfies BootServices {
-    BootServices::get_memory_map = BootServicesTable::get_memory_map_leaf;
-    BootServices::exit_boot_services = BootServicesTable::exit_boot_services_leaf;
+    machine get_memory_map(
+        table: &BootServicesTable,
+        map_size: &mut u64,
+        buffer: &mut [u8; 65536],
+        map_key: &mut MapKey,
+        descriptor_size: &mut u64,
+        descriptor_version: &mut u32
+    ) -> EfiStatus {
+        BootServicesTable::get_memory_map_leaf(
+            table, map_size, buffer, map_key, descriptor_size, descriptor_version
+        )
+    }
+    machine exit_boot_services(
+        table: &BootServicesTable, image_handle: EfiHandle, map_key: MapKey
+    ) -> EfiStatus {
+        BootServicesTable::exit_boot_services_leaf(table, image_handle, map_key)
+    }
 }
 
 // --- Origin of memory authority -------------------------------------------

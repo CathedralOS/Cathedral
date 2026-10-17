@@ -1,0 +1,16 @@
+use omega::language::core::extent;
+use omega::language::core::assembly;
+
+// The semantic entry is independent of the firmware ABI. A valid installed
+// caller must transfer both roots; declaring or taking the address of this
+// machine does not mint them. The physical ladder does not cross this edge yet.
+machine Kernel::enter(image: Extent in Granted, initial_storage: Extent in Granted)
+reaches MachineControl
+{
+    transition { _ -> retain(image, initial_storage) }
+
+    state retain(image: Extent in Granted, initial_storage: Extent in Granted) {
+        asm { hlt }
+        transition { _ -> retain(image, initial_storage) }
+    }
+}

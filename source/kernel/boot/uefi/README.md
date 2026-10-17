@@ -1,12 +1,26 @@
 # Omega boot frontier
 
-This is the real Cathedral boot source, not a reduced hello-world surrogate.
-With the pinned std revision and Omega's assembly-control arithmetic and
-named target-provider repairs,
-the fresh build reaches `terminal-artifact production requires one exact
-selected program entry`. The numeric state contracts after COM1 assembly no
-longer reject. It is **not native-build- or boot-verified**.
-Historical July boot comments do not establish that the current tree runs.
+This directory contains Cathedral's boot source and a bounded physical-entry
+ladder. `build.omg` selects `CathedralBootstrap` for firmware arrival and binds
+the target's semantic slot to `Kernel::enter(image, initial_storage)`.
+`physical_entry.omg` is written to validate the incoming table header, print
+`Hello from Omega`, and return `EFI_UNSUPPORTED`; it does not claim a successful
+handoff or fabricate the two storage roots. The preserved map/exit/report
+implementation in `own_machine.omg` is not yet reached by that adapter.
+
+The source selection passes ordinary package review and reaches native emission,
+but is **not native-build- or boot-verified**. The current refusal is native
+settlement of the text-output wrapper's direct foreign leaf: the selected
+boundary provider is retained, but its explicitly called external dependency
+has no selected realization row. The leaf needs its own exact binding custody;
+aliasing it to the wrapper's boundary slot would recurse into the wrapper.
+
+The following known refusal is the physical entry stack check: Omega assigns
+every foreign call a fixed 256 KiB same-stack
+contribution, exceeding the UEFI target's 128 KiB arrival guarantee before the
+adapter's own frames and reserve are added. This needs admitted per-provider
+demand, not a smaller unexplained constant or a larger invented guarantee.
+Historical boot comments and old images do not establish that this tree runs.
 
 The intended acceptance is one freshly compiled `uefi_x86_64` image under
 QEMU/OVMF: `Hello from Omega`, successful firmware exit, `Owned N MiB` over
@@ -24,22 +38,29 @@ python tools/boot-harness/run.py --compiler PATH_TO_OMEGA --smoke
 
 `--prepare` invokes ordinary package review; it does not accept trust grants.
 Follow the emitted review instructions before attempting the build again.
-The obsolete text-format `omega.lock` was removed; a replacement must come
-from a successful checked review, not hand-authored acceptance records.
+The accepted `omega.lock` is produced by successful checked review, not
+hand-authored acceptance records. A different compiler identity requires ordinary
+review again. The current local-source lock also identifies its checkout path;
+regenerate it in the receiving checkout rather than committing this worktree's
+acceptance as if it were portable.
 
 ## Work still required
 
-- Complete ordinary package admission. `omega update --project
-  source/kernel/boot/uefi --target uefi_x86_64` reaches the candidate review;
-  it does not yet install an accepted lock. The pinned std package also reports
-  unrelated host capabilities: do not blanket-accept its pending rows merely
-  to make the boot command proceed.
+- Close directly called foreign declarations into the selected realization
+  dependency set, preserving exact leaf identity, target, calling plan, trust,
+  and table-field provenance. The inline implementation calls an ordinary
+  helper; removed conformance assignment syntax is not a workaround.
+- Replace the compiler's fixed foreign-call stack contribution with the exact
+  selected provider's admitted demand, then rerun the fresh-image harness.
+  Ordinary package admission now publishes the five-package lock without
+  blanket-accepting unrelated host capabilities.
 - Connect the checked physical firmware adapter to the semantic entry and
-  Cathedral continuation. Omega's `UEFI-PHYSICAL-SEMANTIC-ENTRY` and
-  `UEFI-OS-HANDOFF` outcomes own the general compiler/target-source mechanics.
-  `Main::run` is ordinary checked logic, not an implicitly installed raw ABI.
-  PE subsystem selection, a same-shaped pointer, or an empty root provider is
-  not proof of firmware validity or storage authority.
+  Cathedral continuation: obtain the image through LoadedImage protocol
+  discovery, establish bootstrap stack/storage custody, validate nonoverlap,
+  and retain the successful final-map/ExitBootServices provenance for both
+  semantic arguments. `Main::run` remains ordinary checked logic, not an
+  implicitly installed raw ABI. PE subsystem selection, a same-shaped pointer,
+  or an empty root provider is not proof of firmware validity or authority.
 
 The std pin includes the borrowed UTF-8 calling-policy rejection text. Older
 revisions declared a fixed 256-byte field but initialized it with shorter
@@ -55,6 +76,6 @@ handle and map key remain ordinary arguments. There are no `Binding` fields or
 implicit provider arguments. Selecting the implementations does not establish
 the validity or lifetime of those firmware values.
 
-The Rust bring-up lab is a separate product and does not discharge this
-acceptance. Keep the harness failing visibly until this exact source produces
-and boots a fresh image.
+The Rust bring-up lab and the returning physical-entry ladder do not discharge
+the full acceptance. Keep the full smoke harness failing visibly until this
+exact source produces a fresh image, exits firmware, and reports ownership.

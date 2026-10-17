@@ -1,6 +1,5 @@
-// Cathedral's freestanding UEFI product. This selects the image format and
-// providers, not a firmware arrival ABI. The checked physical entry
-// adapter must be connected before a ProgramEntry binding can be authored.
+// The target's physical ABI selects Cathedral's source-owned adapter. The
+// ProgramEntry slot independently names the two-root semantic continuation.
 
 machine build(builder: &mut Build) {
     Build::application(builder, "cathedral");
@@ -12,6 +11,8 @@ machine build(builder: &mut Build) {
     Build::select_provider<ExtentRootProvider, core::CathedralExtentRootProvider>(builder);
     Build::select_provider<uefi::SimpleTextOutput, uefi::UefiTextOutputProvider>(builder);
     Build::select_provider<uefi::BootServices, uefi::UefiBootServicesProvider>(builder);
+    Build::select_provider<uefi::UefiPhysicalEntry, CathedralBootstrap>(builder);
+    Build::bind(builder, uefi_x86_64::ProgramEntry, Kernel::enter);
 
     builder.subsystem    = Subsystem::EfiApplication;   // import-free PE32+ firmware loads directly
     builder.freestanding = true;                         // empty host-provider set (no host runtime)

@@ -171,9 +171,17 @@ different user-visible authority or compatibility semantics.
 
 ## Current implementation boundary
 
-Cathedral exports a raw `Main::run(handle, table)` UEFI callable and implements
-a bounded memory-map and `ExitBootServices` path. The generated
-physical-to-semantic entry bridge is not connected. The current admitted
+Cathedral selects the source `CathedralBootstrap` implementation of its exact
+`UefiPhysicalEntry` requirement and separately binds `Kernel::enter` to the
+two-root `ProgramStorageEntry` semantic slot. The contract package owns the
+concrete firmware types and calling plans for both signatures. The physical
+adapter validates the table header, greets, and returns an explicit
+`EFI_UNSUPPORTED` before any semantic installation. This is a bounded arrival
+ladder, not an OS-handoff implementation or a claim that the roots exist.
+
+`Main::run` and its bounded memory-map/`ExitBootServices` path remain ordinary
+checked source pending connection through validated LoadedImage discovery and
+bootstrap stack/storage custody. The current admitted
 `ExtentRootProvider::grant` call over checked geometry is a transitional
 milestone, not the final external-custody contract. Its result does not yet
 establish physical-space identity, RAM backing, access rights, or a complete
@@ -188,8 +196,10 @@ replayable evidence chain.
 
 - Cathedral's current physical declarations are in
   [`source/contracts/uefi`](../../../source/contracts/uefi/uefi.omg).
-- The transitional exported callable is
-  [`source/kernel/boot/uefi/main.omg`](../../../source/kernel/boot/uefi/main.omg).
+- The selected physical adapter is
+  [`physical_entry.omg`](../../../source/kernel/boot/uefi/physical_entry.omg),
+  and the separate semantic continuation is
+  [`kernel_entry.omg`](../../../source/kernel/boot/uefi/kernel_entry.omg).
 - The current post-entry firmware transition is
   [`source/kernel/boot/uefi/own_machine.omg`](../../../source/kernel/boot/uefi/own_machine.omg).
 - Omega owns the generic

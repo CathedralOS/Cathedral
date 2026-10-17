@@ -8,5 +8,9 @@ machine build(builder: &mut Build) {
         revision: "cc43b6679d2ad343f8640a0630dd127c155a0c49",
         selection: PackageSelection::Named { package: "omega_language_std" }
     });
-    // contracts reach nothing; no targets to augment.
+    // The package's own review resolves the same named providers its consumer
+    // selects. Attached external leaves are ABI definitions, not a competing
+    // implicit implementation chosen by import order.
+    Build::select_provider<SimpleTextOutput, UefiTextOutputProvider>(builder);
+    Build::select_provider<BootServices, UefiBootServicesProvider>(builder);
 }

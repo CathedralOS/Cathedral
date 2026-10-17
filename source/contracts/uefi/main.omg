@@ -1,0 +1,4 @@
+// Public checked firmware contracts. Package review starts here, so the exact
+// entry schema and its calling policy participate in ordinary admission.
+use uefi;
+use boot_services;

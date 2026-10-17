@@ -22,6 +22,7 @@ use std::calling;
 pub data EfiStatus [copy] { code: u64; }
 
 pub const EFI_SUCCESS:           EfiStatus = EfiStatus { code: 0 };
+pub const EFI_UNSUPPORTED:       EfiStatus = EfiStatus { code: 0x8000_0000_0000_0003 };
 pub const EFI_INVALID_PARAMETER: EfiStatus = EfiStatus { code: 0x8000_0000_0000_0002 };
 pub const EFI_BUFFER_TOO_SMALL:  EfiStatus = EfiStatus { code: 0x8000_0000_0000_0005 };
 
@@ -65,7 +66,9 @@ uefi_x86_64 machine TextOutputProtocol::output_string_leaf(
 // Selection chooses code. The console occurrence remains an explicit borrow,
 // not state stored in the provider or a fabricated Binding value.
 pub UefiTextOutputProvider satisfies SimpleTextOutput {
-    SimpleTextOutput::output_string = TextOutputProtocol::output_string_leaf;
+    machine output_string(console: &TextOutputProtocol, string: &[u16; 19]) -> EfiStatus {
+        TextOutputProtocol::output_string_leaf(console, string)
+    }
 }
 
 // --- The System Table (firmware's root hand-off structure) ----------------
@@ -113,29 +116,40 @@ pub data EfiSystemTable {
 
 // --- The firmware hand-off and semantic program-storage entry ---------------
 //
-// UEFI owns one target-entry schema, but it inherits the core requirement
-// rather than restating image/initial-storage authority under UEFI names. The
-// selected target retains and validates this evaluated calling policy. The
-// generated firmware stub must still bind these semantic positions to the
-// emitted image and initial-storage geometry.
-pub data UefiX86_64 { }
-// The policy is a named implementation; its data namespace is not evidence.
-pub UefiX86_64CallingPolicy satisfies CallingPolicy {
-    CallingPolicy::plan = UefiX86_64::plan;
+// The firmware arrival and the kernel's semantic entry are different calls.
+// This package owns the concrete firmware table layout, so its physical
+// requirement names that exact type rather than recasting an opaque target
+// table. Selecting its provider supplies code, not image/storage authority.
+pub boundary trait UefiPhysicalEntry {
+    machine enter(handle: EfiHandle, table: &EfiSystemTable) -> EfiStatus
+    reaches SimpleTextOutput
+    invokes SimpleTextOutput;
 }
 
-machine UefiX86_64::plan(
+// One source policy describes both signatures. The compiler checks the exact
+// requirement and adapts physical arrival to the selected ordinary callable;
+// Cathedral obtains the roots before calling the semantic continuation.
+// The policy owns its implementation directly; no attached data or member alias.
+pub UefiX86_64CallingPolicy satisfies CallingPolicy {
+machine plan(
     signature: BoundarySignature
 ) -> BoundaryPlanResult
-    satisfies CallingPolicy::plan
 {
-    transition signature.parameter_count == 2 && !signature.has_result {
-        true -> accept(
+    transition signature.parameter_count == 2 {
+        true -> select_surface(signature)
+        _ -> reject()
+    }
+
+    state select_surface(signature: BoundarySignature) -> BoundaryPlanResult {
+        transition signature.has_result {
+            true -> accept_physical(signature, signature.parameters[0],
+                                    signature.parameters[1], signature.result)
+            _ -> accept(
             signature,
             signature.parameters[0],
             signature.parameters[1]
         )
-        _ -> reject()
+        }
     }
 
     state accept(
@@ -206,17 +220,78 @@ machine UefiX86_64::plan(
         BoundaryPlanResult::Accepted { plan: output }
     }
 
+    state accept_physical(signature: BoundarySignature, handle: u64,
+                          table: u64, status: u64) -> BoundaryPlanResult {
+        transition handle < 256 && table < 256 && status < 256 {
+            true -> build_physical(signature, handle, table, status)
+            _ -> reject()
+        }
+    }
+
+    state build_physical(signature: BoundarySignature, handle: u64,
+                         table: u64, status: u64) -> BoundaryPlanResult {
+        let mut output: BoundaryEntryPlan;
+        output.call.convention = CallingConvention::MicrosoftX64;
+        output.call.parameter_count = 2;
+        output.call.parameters[0].shape.class = AbiValueClass::Integer;
+        output.call.parameters[0].shape.byte_size = signature.shapes[handle].byte_size;
+        output.call.parameters[0].shape.alignment = signature.shapes[handle].alignment;
+        output.call.parameters[0].location_count = 1;
+        output.call.parameters[0].locations[0] = ValueLocation::Register {
+            register: MachineRegister::X86Rcx,
+            value_byte_offset: 0,
+            byte_size: signature.shapes[handle].byte_size,
+        };
+        output.call.parameters[1].shape.class = AbiValueClass::Integer;
+        output.call.parameters[1].shape.byte_size = signature.shapes[table].byte_size;
+        output.call.parameters[1].shape.alignment = signature.shapes[table].alignment;
+        output.call.parameters[1].location_count = 1;
+        output.call.parameters[1].locations[0] = ValueLocation::Register {
+            register: MachineRegister::X86Rdx,
+            value_byte_offset: 0,
+            byte_size: signature.shapes[table].byte_size,
+        };
+        output.call.has_result = true;
+        output.call.result.shape.class = AbiValueClass::Integer;
+        output.call.result.shape.byte_size = signature.shapes[status].byte_size;
+        output.call.result.shape.alignment = signature.shapes[status].alignment;
+        output.call.result.location_count = 1;
+        output.call.result.locations[0] = ValueLocation::Register {
+            register: MachineRegister::X86Rax,
+            value_byte_offset: 0,
+            byte_size: signature.shapes[status].byte_size,
+        };
+        output.call.ordinary_clobbers.register_count = 7;
+        output.call.ordinary_clobbers.registers[0] = MachineRegister::X86Rax;
+        output.call.ordinary_clobbers.registers[1] = MachineRegister::X86Rcx;
+        output.call.ordinary_clobbers.registers[2] = MachineRegister::X86Rdx;
+        output.call.ordinary_clobbers.registers[3] = MachineRegister::X86R8;
+        output.call.ordinary_clobbers.registers[4] = MachineRegister::X86R9;
+        output.call.ordinary_clobbers.registers[5] = MachineRegister::X86R10;
+        output.call.ordinary_clobbers.registers[6] = MachineRegister::X86R11;
+        output.call.stack_alignment = 16;
+        output.call.shadow_bytes = 32;
+        output.call.entry_control = EntryControl::CallReturn;
+        output.state.initial_regime = MachineRegime::X86Long64;
+        output.state.permitted_transitive_use.general_registers = true;
+        output.state.permitted_transitive_use.flags = true;
+        output.state.stack = EntryStack::ProviderSelected;
+        output.state.preemption = Preemption::NotApplicable;
+        BoundaryPlanResult::Accepted { plan: output }
+    }
+
     state reject() -> BoundaryPlanResult {
         BoundaryPlanResult::Rejected {
             reason: CallingPolicyRejection {
-                reason: "UefiApplication requires two program-storage roots",
+                reason: "UefiApplication requires its physical arrival or two-root semantic signature",
             },
         }
     }
 }
+}
 
 pub boundary trait UefiApplication:
-    ProgramStorageEntry + Calling<UefiX86_64CallingPolicy>
+    ProgramStorageEntry + UefiPhysicalEntry + Calling<UefiX86_64CallingPolicy>
 {
 }
 

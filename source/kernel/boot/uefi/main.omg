@@ -6,6 +6,8 @@
 use uefi::uefi;            // EfiHandle, EfiStatus, EFI_SUCCESS, EfiSystemTable, TextOutputProtocol, SimpleTextOutput
 use uefi::boot_services;   // BootServices
 use own_machine;
+use physical_entry;
+use kernel_entry;
 use core::extent;
 use omega::language::core::assembly; // PortIo, MachineControl
 use omega::language::core::extent;   // ExtentRootProvider
