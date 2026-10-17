@@ -264,7 +264,15 @@ from 937 ms to 532 ms after atomic view/event polling removed redundant round
 trips. The host measurement includes 160 ms of key injection sleeps and scanout
 sampling; this is regression evidence, not a response-time guarantee.
 
-The matrix desktop uses `startup.executables` for code-only catalogue grants and
+Profiles with storage may list `startup.programs`: packages the harness builds,
+trims to their loadable bytes and installs into the storage image as objects
+one, two, three and so on of the notes root, each optionally `inside` an earlier
+program. A sidecar beside the image records what was installed, so an unchanged
+set never reopens the image and a changed program is republished as a new
+revision on the next launch. The installer replaces only programs: an image
+whose objects at those numbers hold anything else is refused rather than
+overwritten. The default desktop runs every program this way;
+the matrix desktop uses `startup.executables` for code-only catalogue grants and
 `dynamic_tasks` for unbound accounts. Owner-only matrix RUN requests reserve and
 admit each app/matrix recursively; static launches remain for the root and devices.
 Its test checks failed image delegation, nested exhaustion, repeated replacement,

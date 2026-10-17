@@ -22,7 +22,7 @@ impl Deferred {
         }
         match event {
             Event::Request(r) => {
-                if r.client == Some(parent.storing_client()) {
+                if r.client.is_some() && r.client == parent.storing_client() {
                     return true;
                 }
                 match wire::decode(&r.bytes[..r.len]) {
@@ -31,7 +31,9 @@ impl Deferred {
                         !(matches!(w[0], wire::HEALTH | wire::READ_PIXEL | wire::STORAGE_STATUS)
                             || matches!(hop, 1 | 2)
                                 && (parent.separate_storage
-                                    || hop as usize != parent.storing_client() + 1))
+                                    || parent
+                                        .storing_client()
+                                        .is_none_or(|client| hop as usize != client + 1)))
                     }
                     Some(w) => {
                         w[0] == wire::STORAGE_INFO
@@ -41,7 +43,7 @@ impl Deferred {
                     None => false,
                 }
             }
-            Event::Memory(r, _) => r.client == Some(parent.storing_client()),
+            Event::Memory(r, _) => r.client.is_some() && r.client == parent.storing_client(),
             Event::Disconnected { .. } => true,
         }
     }

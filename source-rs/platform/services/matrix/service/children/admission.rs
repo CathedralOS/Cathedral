@@ -40,6 +40,7 @@ impl Children {
             world,
         )
     }
+    /// Code from the owner's catalogue, with the catalogue grants `images` lends.
     pub(super) fn run(
         &mut self,
         slot: usize,
@@ -50,16 +51,54 @@ impl Children {
         if self.slots[slot].is_some() || !server.available(slot) {
             return Err(Error(abi::BUSY as i64));
         }
-        let requested_frames = self.next_frames[slot].take();
-        let [private_pages, reader_pages] = self.next_pages[slot].take().unwrap_or([0, 0]);
         if images >> abi::MAX_LAUNCHES != 0 {
             return Err(Error(abi::DENIED as i64));
         }
+        let executable = Executable::at(image)?;
+        self.admit(
+            slot,
+            executable,
+            [argument, channels, descendants, images, cpu],
+            server,
+            world,
+        )
+    }
+    /// Code from a sealed object read out of this matrix's realm; it lends no
+    /// catalogue grants, because its children come from its own realm.
+    pub(super) fn run_object(
+        &mut self,
+        plan: super::parent::LaunchRequest,
+        object: &cathedral_user_runtime::memory::Object,
+        server: &mut Server,
+        world: &mut World,
+    ) -> Result<(), Error> {
+        if self.slots[plan.slot].is_some() || !server.available(plan.slot) {
+            return Err(Error(abi::BUSY as i64));
+        }
+        let executable = Executable::from_object(object, plan.role)?;
+        self.admit(
+            plan.slot,
+            executable,
+            [plan.argument, plan.channels, plan.descendants, 0, plan.cpu],
+            server,
+            world,
+        )
+    }
+    fn admit(
+        &mut self,
+        slot: usize,
+        executable: Executable,
+        [argument, channels, descendants, images, cpu]: [u64; 5],
+        server: &mut Server,
+        world: &mut World,
+    ) -> Result<(), Error> {
+        let requested_frames = self.next_frames[slot].take();
+        let [private_pages, reader_pages] = self.next_pages[slot].take().unwrap_or([0, 0]);
         let default_frames = descendants
             .checked_add(1)
             .and_then(|n| n.checked_mul(256))
             .ok_or(Error(abi::INVALID_ARGUMENT as i64))?;
-        let target = Executable::at(image)?.reserve_funded(
+        let target = executable.reserve_funded(
             Limits {
                 private_pages,
                 reader_pages,

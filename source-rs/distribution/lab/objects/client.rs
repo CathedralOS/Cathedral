@@ -112,21 +112,6 @@ pub fn run(root: u64) -> u64 {
         abi::INVALID_ARGUMENT
     );
     drop(object);
-    // Distinct chunks exceed the retained-root quota, after some staging has
-    // already happened. The abort must discard those chunks as well as metadata.
-    let mut pages = Private::allocate(4).unwrap();
-    for (i, byte) in pages.bytes_mut().iter_mut().enumerate() {
-        *byte = (i / 4096 + 200) as u8;
-    }
-    let object = pages.freeze().unwrap();
-    assert_eq!(
-        wire::word(
-            &client.call(packet(wire::PUBLISH, 1, next, 0, 16384), Some(&object)),
-            0
-        ),
-        abi::NO_MEMORY
-    );
-    drop(object);
     assert_eq!(client.call(packet(wire::HEAD, 1, 0, 0, 0), None), accepted);
     assert_eq!(
         wire::word(

@@ -98,11 +98,13 @@ def check_rust():
     users = [*profile['user_programs'].values(), startup['initial']]
     users.extend(startup.get('launches', [startup['launch']] if startup.get('launch') else []))
     users.extend(startup.get('executables', []))
+    users.extend(startup.get('programs', []))
     for path in (ROOT / 'tools/boot-harness-rs/profiles').glob('*.json'):
         lab = json.loads(path.read_text(encoding='utf-8'))['startup']
         users.append(lab['initial'])
         users.extend(lab.get('launches', [lab['launch']] if lab.get('launch') else []))
         users.extend(lab.get('executables', []))
+        users.extend(lab.get('programs', []))
     for user in users:
         entry = (tree / user['entry']).resolve()
         package = packages[user['package']]

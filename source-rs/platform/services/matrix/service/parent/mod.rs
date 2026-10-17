@@ -3,6 +3,6 @@
 mod images;
 mod presentation;
 mod rendering;
-mod storage;
+pub(in crate::service) mod storage;
 
 include!("parent.rs");

@@ -1,8 +1,9 @@
 // The F5 desktop. Admit providers and the funded root matrix, lay out the
-// workspace and the program menu, start physical input, then serve menu
-// choices and supervise storage. What each choice does lives in shell/; the
-// apps live in app/ and ../applications/notes. The lab module composes the
-// same admission, apps and budgets into the probe desktop.
+// workspace and the program menu from the programs installed in the notes
+// root, start physical input, then serve menu choices and supervise storage.
+// What each choice does lives in shell/; the apps live in app/ and
+// ../applications/notes. The lab module composes the same admission, apps
+// and budgets into the probe desktop from the boot catalogue.
 use super::*;
 use cathedral_platform_contracts::input;
 use cathedral_user_runtime::{ipc, task::Launch};

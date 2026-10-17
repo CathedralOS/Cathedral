@@ -77,6 +77,7 @@ impl Store<'_> {
             };
             for (part, digest) in bytes.chunks(CHUNK_BYTES).zip(&parts) {
                 retain(&mut table, &key(root, b'c', digest), part, &mut charged)?;
+                retain(&mut table, &key(root, b'k', digest), &[], &mut charged)?;
             }
             retain(
                 &mut table,

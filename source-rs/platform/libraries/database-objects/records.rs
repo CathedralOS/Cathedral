@@ -1,7 +1,9 @@
 //! Root-prefixed record keys and their fixed encodings. Kinds: `h` object head,
 //! `e` per-object revision event, `t` tree edge from parent to child, `m`
-//! manifest, `c` chunk, `p` pin, `q` quota ledger, `n` next object number.
-//! Object numbers are never reused; parent zero is the root itself.
+//! manifest, `c` chunk, `k` chunk index entry (the chunk's digest with no
+//! value, so collection can sweep chunks without reading them), `p` pin, `q`
+//! quota ledger, `n` next object number. Object numbers are never reused;
+//! parent zero is the root itself.
 use super::*;
 use cathedral_content_layout::Digest;
 use redb::{ReadableTable, Table};

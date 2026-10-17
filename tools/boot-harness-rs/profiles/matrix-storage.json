@@ -20,8 +20,9 @@
         "target": "x86_64-unknown-none",
         "clock": true,
         "argument": 0,
-        "ipc_channels": 6,
-        "shared_pages": 8
+        "ipc_channels": 9,
+        "shared_pages": 72,
+        "private_pages": 8
       },
       {
         "package": "cathedral-matrix-service",
@@ -60,8 +61,8 @@
         "target": "x86_64-unknown-none",
         "clock": true,
         "disk": true,
-        "private_pages": 64,
-        "shared_pages": 8
+        "private_pages": 128,
+        "shared_pages": 64
       }
     ],
     "links": [
@@ -73,6 +74,17 @@
         1,
         5
       ]
+    ],
+    "dynamic_tasks": 1,
+    "programs": [
+      {
+        "package": "cathedral-desktop",
+        "entry": "distribution/desktop/main.rs",
+        "target": "x86_64-unknown-none",
+        "features": [
+          "storage-lab"
+        ]
+      }
     ]
   }
 }

@@ -16,7 +16,8 @@ carries a root selector. Within a root, objects form a tree, and a request's
 three scope words name subtrees it must stay inside: before dispatch the
 provider checks that every stamped scope is an ancestor of every object the
 request would touch, refusing an object outside the scope and one that does
-not exist alike. The desktop's root matrix holds both links and delegates
+not exist alike, and refusing to replace or delete the scope object itself.
+Objects hold up to 256 KiB, so programs fit; a root holds a megabyte. The desktop's root matrix holds both links and delegates
 subtrees of them to its children; the [objects lab](../../../distribution/lab/objects/README.md)
 hands them to two bare clients instead.
 
@@ -34,7 +35,9 @@ builds contain neither.
 
 The provider's reader pages receive publication attachments; its private pages
 hold the heap and the pages behind bulk replies, which stay charged to it until
-the last reader releases them. Profiles fund both explicitly.
+the last reader releases them. Profiles fund both explicitly: 128 private pages
+leave room for a 64-page reply beside the heap, and 64 reader pages take the
+largest publication.
 
 Proofs, from the repository root:
 

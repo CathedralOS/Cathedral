@@ -3,13 +3,16 @@ use super::*;
 use cathedral_platform_contracts::display;
 use cathedral_platform_contracts::display::composition as c;
 use cathedral_platform_contracts::display::pointer;
-use cathedral_user_runtime::task::{self, Executable, Port};
+#[cfg(not(feature = "shell"))]
+use cathedral_user_runtime::task::Executable;
+use cathedral_user_runtime::task::{self, Port};
 pub(crate) struct Session {
     #[cfg(feature = "database-probes")]
     pub(crate) database_fresh: bool,
     pub matrix: Pair,
+    /// The program open in the workspace, by object number, or zero.
     #[cfg(feature = "shell")]
-    pub(crate) notes_open: bool,
+    pub(crate) program: u64,
     /// Lab compositions add a capped spinner; the shell never does.
     #[cfg(not(feature = "shell"))]
     pub pressure: bool,
@@ -166,8 +169,6 @@ pub(crate) fn start() -> Session {
     let capacity = task::available_slots().unwrap();
     #[cfg(not(feature = "shell"))]
     let pressure = Executable::at(2).is_ok();
-    #[cfg(feature = "shell")]
-    let pressure = false;
     assert_eq!(capacity, 4);
     let root = Launch::at(2).unwrap();
     // Descendant reservations return to the surviving distribution owner on root
@@ -184,11 +185,10 @@ pub(crate) fn start() -> Session {
     root.assign_slots(capacity).unwrap();
     root.assign_memory((capacity + 1) * abi::MAX_ADMISSION_FRAMES as u64)
         .unwrap();
-    for index in 0..if pressure || cfg!(feature = "shell") {
-        3
-    } else {
-        2
-    } {
+    // The shell's programs are installed in the notes root; the lab desktops
+    // lend their boot catalogue.
+    #[cfg(not(feature = "shell"))]
+    for index in 0..if pressure { 3 } else { 2 } {
         root.allow_executable(Executable::at(index).unwrap())
             .unwrap();
     }
@@ -218,7 +218,7 @@ pub(crate) fn start() -> Session {
         database_fresh,
         matrix,
         #[cfg(feature = "shell")]
-        notes_open: false,
+        program: 0,
         #[cfg(not(feature = "shell"))]
         pressure,
         extent: [info[1], info[2]],

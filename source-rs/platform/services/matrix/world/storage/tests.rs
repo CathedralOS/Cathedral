@@ -25,4 +25,14 @@ fn sources_are_exclusive_connection_bound_and_regrant_is_fresh() {
     scopes.clear();
     assert_eq!(scopes.binding(0, 9), Err(abi::DENIED));
     assert_eq!(scopes.grant(0, 9, 1, 0, 1), Err(abi::DENIED));
+    // A subtree may be held beside a whole source or another subtree; only
+    // two whole-source grants of one source conflict.
+    scopes.grant(0, 9, 0, 3, 2).unwrap();
+    scopes.grant(1, 8, 0, 5, 2).unwrap();
+    assert_eq!(scopes.binding(1, 8), Ok((0, 5)));
+    scopes.revoke(1);
+    scopes.grant(1, 8, 0, 0, 2).unwrap();
+    scopes.revoke(0);
+    assert_eq!(scopes.grant(0, 9, 0, 0, 2), Err(abi::BUSY));
+    scopes.grant(0, 9, 0, 3, 2).unwrap();
 }

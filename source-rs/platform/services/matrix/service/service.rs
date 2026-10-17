@@ -56,7 +56,9 @@ pub fn run(environment: Environment) -> Result<(), Error> {
     // SAFETY: Same single-entry process lifetime as the parent/world arenas above.
     let deferred = unsafe { &mut *deferred_address };
     loop {
-        parent.progress_storage(&mut server)?;
+        if let Some(launched) = parent.progress_storage(&mut server)? {
+            children.launch_object(launched, parent, world, &mut server)?;
+        }
         parent.progress_presentation(world, &mut server)?;
         children.finish(&mut server, world, parent)?;
         if !parent.upstream_busy() {
@@ -130,8 +132,10 @@ pub fn run(environment: Environment) -> Result<(), Error> {
             if parent.publishing() {
                 blocked |= 1 << parent.publishing_client();
             }
-            if parent.storing() {
-                blocked |= 1 << parent.storing_client();
+            if parent.storing()
+                && let Some(client) = parent.storing_client()
+            {
+                blocked |= 1 << client;
             }
             deferred.hold(event, &mut server, world, blocked)?;
             continue;

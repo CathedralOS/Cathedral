@@ -52,10 +52,13 @@ to a root and which clients may also request; the fixed logical quota can refuse
 new publications first. Two persistent root-owned pin slots preserve selected
 revisions of any object, and a pinned revision stays readable after its object is
 deleted. Collection derives reachability from every current head and both pins
-under one writer, scans at most the 24 KiB root record budget, and removes at most
-eight records per immediate commit. Obsolete events are retired before manifests
-and chunks so a pin between passes cannot resurrect a partially collected revision.
-It frees engine pages for reuse; it does not shrink the file.
+under one writer and removes at most eight records per immediate commit. A pass
+reads only metadata: it marks chunks by the digests their live manifests name
+and sweeps them through a key-only chunk index, never reading or re-hashing
+chunk bytes, so a root holding programs costs a write no more than a root of
+notes; reads authenticate chunks when they are used. Obsolete events are retired
+before manifests and chunks so a pin between passes cannot resurrect a partially
+collected revision. It frees engine pages for reuse; it does not shrink the file.
 
 Accounting includes exact retained keys and values, including the ledger itself.
 It excludes redb pages, allocator overhead and free-space reserves.

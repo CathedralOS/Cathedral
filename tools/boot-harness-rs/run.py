@@ -11,6 +11,7 @@ import sys
 import capture
 import disk_image
 import database_image
+import elf_trim
 import compositor_test
 import pointer_test
 import session_test
@@ -70,6 +71,31 @@ MARKERS = (
     "Cathedral Rust lab: framebuffer NX guards and checked copies passed; ",
     "CATHEDRAL_RS_BOOT_OK",
 )
+
+
+def program_images(profile_path, composition, release):
+    """The profile's programs as (parent object, trimmed ELF) pairs, in order.
+    Built program ELFs are trimmed to their loadable bytes beside the harness
+    output so the host lab can install them as objects of the first root."""
+    installed = composition.get("startup", {}).get("programs", [])
+    mode = "release" if release else "debug"
+    images = []
+    for index, program in enumerate(installed):
+        inside = program.get("inside")
+        if inside is not None and not (type(inside) is int and 0 <= inside < index):
+            raise ValueError("a program may only sit inside an earlier program")
+        if any(program.get(key) for key in ("argument", "framebuffer", "keyboard", "disk", "clock", "private_pages", "shared_pages", "ipc_channels", "cpu_budget_us")):
+            raise ValueError("store programs carry code only; roles and resources are chosen at launch")
+        built = BUILD / "cargo" / program["target"] / mode / program["package"]
+        trimmed = BUILD / "programs" / Path(profile_path).stem / f"{index}-{program['package']}.elf"
+        images.append((0 if inside is None else inside + 1, built, trimmed))
+    return images
+
+
+def seeded_programs(profile_path, release):
+    """What a fixture passes to database_image.prepare after a --build-only run."""
+    composition = json.loads(Path(profile_path).read_text(encoding="utf-8"))
+    return [(parent, trimmed) for parent, _, trimmed in program_images(profile_path, composition, release)]
 
 
 def find_qemu():
@@ -215,6 +241,12 @@ def main():
             images = startup.get("executables", [])
             if not isinstance(images, list) or len(images) + len(launches) > 7:
                 parser.error("executable catalogue plus static launches must fit seven grants")
+            try:
+                installed = program_images(args.profile, composition, args.release)
+            except ValueError as error:
+                parser.error(str(error))
+            for index, program in enumerate(startup.get("programs", [])):
+                programs[f"program_{index}"] = program
             environment["CATHEDRAL_IMAGE_COUNT"] = str(len(images))
             for index, image in enumerate(images):
                 if any(image.get(key) for key in ("framebuffer", "keyboard", "disk", "clock", "private_pages", "shared_pages", "ipc_channels", "cpu_budget_us")):
@@ -261,6 +293,11 @@ def main():
         user_elf = BUILD / "cargo" / user['target'] / profile / user['package']
         environment[f'CATHEDRAL_{name.upper()}_ELF'] = str(user_elf.resolve(strict=True))
 
+    seeded = []
+    if not args.kernel_only and not args.smoke:
+        for parent, built, trimmed in installed:
+            elf_trim.trim(built, trimmed)
+            seeded.append((parent, trimmed))
     cargo = ["cargo", "build", "--locked", "--package", boot_package,
              "--target", target, "--target-dir", str(BUILD / "cargo")]
     if args.release:
@@ -300,7 +337,7 @@ def main():
         # persistent media is created once and never reformatted.
         if disposable and data_path.exists():
             data_path.unlink()
-        database_image.prepare(data_path)
+        database_image.prepare(data_path, seeded)
         command += disk_image.arguments(data_path)
     if not args.window:
         command += ["-display", "none"]
@@ -316,7 +353,7 @@ def main():
         protocol_test.run(command, output, args.timeout, creationflags, "Cathedral admission: executable capabilities, recursive funded pools, load rollback, stale grants and sibling survival passed")
         return 0
     if args.matrix_test or args.matrix_storage_test or args.ipc_test:
-        marker = ("Cathedral matrix storage: scoped roots, recursive delegation, revocation, cheap copies, attenuated realms and replacement passed" if args.matrix_storage_test else "Cathedral IPC: channels, startup bundles, recursive admission and reclamation passed" if args.ipc_test
+        marker = ("Cathedral matrix storage: scoped roots, recursive delegation, revocation, cheap copies, attenuated realms, programs from the realm and replacement passed" if args.matrix_storage_test else "Cathedral IPC: channels, startup bundles, recursive admission and reclamation passed" if args.ipc_test
                   else "Cathedral matrix: two identical worlds, local-only views, attenuated input and recovery passed")
         protocol_test.run(command, output, args.timeout, creationflags, marker)
         return 0

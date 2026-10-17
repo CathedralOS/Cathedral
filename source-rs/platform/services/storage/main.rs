@@ -12,8 +12,9 @@ use cathedral_user_runtime::heap::{self, Heap};
 static HEAP: Heap = Heap::empty();
 cathedral_user_runtime::entry!(main);
 fn main(_: u64, _: u64) -> u64 {
-    // Leave eight private pages for bounded sealed read replies, separately from
-    // the allocator. Reader custody continues to charge this provider's budget.
+    // Leave the rest of the private allowance for sealed read replies of up to
+    // MAX_BYTES, separately from the allocator. Reader custody continues to
+    // charge this provider's budget until the last reader releases a reply.
     heap::initialize(&HEAP, 56).unwrap();
     let disk = cathedral_ata_pio::Ata::open().unwrap();
     let db = cathedral_storage_engine::open(disk, 4096, 4 * 1024 * 1024, 32768).unwrap();

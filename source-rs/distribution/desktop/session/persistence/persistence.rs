@@ -25,9 +25,7 @@ fn regrant(session: &mut admission::Session) -> Result<(), Error> {
         return Err(Error(abi::IO_ERROR as i64));
     }
     #[cfg(feature = "shell")]
-    if session.notes_open {
-        super::shell::grant_notes(session.matrix);
-    }
+    super::shell::regrant(session.matrix, session.program);
     #[cfg(not(feature = "shell"))]
     {
         for slot in 0..2 {

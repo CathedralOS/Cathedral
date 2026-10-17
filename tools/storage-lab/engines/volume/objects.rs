@@ -67,6 +67,11 @@ pub fn verify(path: &Path, offset: u64, bytes: u64, revision: u64, retention: bo
             if key == b"head" {
                 continue;
             }
+            if key[0] == b'c' {
+                let mut index = vec![root, b'k'];
+                index.extend_from_slice(&key[1..]);
+                expected.insert(index, Vec::new());
+            }
             let mut rooted = vec![root];
             rooted.extend_from_slice(&key);
             expected.insert(rooted, value);

@@ -15,10 +15,12 @@ Opening a different program replaces the current one; an unsaved note stays open
 until explicitly saved or reloaded, and a busy note is left open rather than
 killed. The menu also supports Up/Down/Enter while focused.
 
-Notes persists in `build/boot-harness-rs/cathedral-storage.raw` across app launches
-and QEMU restarts. The first boot creates this experimental database image;
-subsequent boots preserve it. Earlier lab images remain separate and untouched.
-Colors is deliberately transient and receives no storage grant.
+Notes and Colors persist in `build/boot-harness-rs/cathedral-storage.raw` across
+app launches and QEMU restarts. The first boot creates this experimental database
+image and installs the programs into it; subsequent boots preserve it and
+reinstall only programs whose bytes changed. Earlier lab images remain separate
+and untouched. Every program's state nests under its own object: Colors keeps
+its color for the same reason Notes keeps its notes.
 
 ## Executable route
 
@@ -32,9 +34,12 @@ when replacing the provider.
 
 [profile.json](profile.json) is the executable composition shared by F5, ordinary
 CLI boot and [the desktop test](../../tools/boot-harness-rs/desktop_test.py).
-The harness builds these packages and supplies their ELF artifacts to
-[kernel startup](../kernel/boot/uefi/startup.rs). The kernel sees supplied code and
-grants; the distribution assigns application roles and placement.
+The harness builds the boot launches and supplies their ELF artifacts to
+[kernel startup](../kernel/boot/uefi/startup.rs); it trims the `programs` to
+their loadable bytes and installs them into the storage image as objects of
+the notes root, in order and nested as the profile says. The kernel sees
+supplied code and grants; the distribution assigns application roles and
+placement, and launches programs from the store by object number.
 
 | Role | Composition entry | Entrance / receiving implementation |
 | --- | --- | --- |
@@ -43,15 +48,16 @@ grants; the distribution assigns application roles and placement.
 | Input | Launch 1 | [input main](../platform/services/input/main.rs), [matrix source](../platform/services/input/matrix.rs) |
 | Root matrix | Launch 2 | [matrix main](../platform/services/matrix/main.rs), [service loop](../platform/services/matrix/service/service.rs) |
 | Object storage | Launch 3 | [storage main](../platform/services/storage/main.rs), [object contract](../platform/contracts/storage.rs) |
-| Workspace matrix | Executable 0 | Same matrix service; child-local extent and attenuated input |
-| Notes | Executable 1 | [notes main](applications/notes/main.rs), [editing/storage/view](applications/notes/session/session.rs) |
-| Menu / Colors | Executable 2, supplied app argument 3 / 2 | [launcher](desktop/session/shell/launcher.rs), [color app](desktop/session/app/app.rs) |
+| Workspace matrix | Program 1 | Same matrix service; child-local extent and attenuated input; its realm holds the programs it hosts |
+| Notes | Program 2, inside the workspace | [notes main](applications/notes/main.rs), [editing/storage/view](applications/notes/session/session.rs) |
+| Colors / Menu | Programs 3 (inside the workspace) and 4, role 2 with argument 2 / 3 | [color app](desktop/session/app/app.rs), [launcher](desktop/session/shell/launcher.rs) |
 
 The menu reports a numbered choice over its private owner control connection.
-Only the desktop owner validates that choice and sends RUN/STOP to the matrix.
-The menu has no launch handles or storage capability. Notes receives a private
-object root; Colors receives none. Apps see local geometry and input, not global
-placement, other apps or an ancestor's services. The
+Only the desktop owner validates that choice and sends RUN_OBJECT/STOP to the
+matrix, which reads the program from its own realm and grants the child the
+program's subtree. The menu has no launch handles and never touches its realm.
+Apps see local geometry and input, not global placement, other apps or an
+ancestor's services. The
 [matrix contract](../platform/contracts/matrix.rs) and
 [child admission](../platform/services/matrix/service/children/admission.rs)
 connect this distribution policy to the platform mechanism.

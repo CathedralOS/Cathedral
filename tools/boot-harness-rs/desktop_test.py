@@ -151,14 +151,15 @@ def desktop(stream, output, serial, reboot):
     click(80, 198)
     status('CHOOSE PROGRAM')
     color('101827')
-    # Repeated actual teardown/admission catches leaked loans, surfaces or handles.
+    # Repeated actual teardown/admission catches leaked loans, surfaces or
+    # handles. Colors keeps its color: its state nests under its own program.
     for _ in range(5):
         click(80, 166)
         status('NOTES OPEN')
         note('hello cathedral')
         click(80, 182)
         status('COLORS OPEN')
-        color('2c8762')
+        color('d18b35')
     # Keyboard navigation also works once the launcher has focus.
     key('up')
     key('ret')
@@ -181,13 +182,17 @@ def desktop(stream, output, serial, reboot):
     print('PASS: in-guest mouse/keyboard launch, draft protection, duplicate/switch, save/reload and repeated app replacement')
 
 
-def run(timeout):
-    subprocess.run([sys.executable, str(HERE / 'run.py'), '--release', '--build-only'], cwd=ROOT, check=True)
+def run(timeout, trace_storage=False):
+    build = [sys.executable, str(HERE / 'run.py'), '--release', '--build-only']
+    if trace_storage:
+        build.append('--trace-storage')
+    subprocess.run(build, cwd=ROOT, check=True)
     output = harness.BUILD / 'desktop' / datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S%fZ')
     output.mkdir(parents=True)
     shutil.copytree(harness.BUILD / 'interactive/esp', output / 'esp')
     path = output / 'guest.raw'
-    database_image.prepare(path)
+    programs = harness.seeded_programs(ROOT / 'source-rs/distribution/profile.json', True)
+    database_image.prepare(path, programs)
     qemu = harness.find_qemu()
     command = [qemu, '-machine', 'q35', '-cpu', 'qemu64', '-accel', 'tcg', '-smp', '1', '-m', '128']
     command += harness.firmware_args(qemu, output)
@@ -200,14 +205,16 @@ def run(timeout):
         for name in ('serial.log', 'qemu.log', 'display.png'):
             shutil.copyfile(output / name, output / f'boot-{boot}-{name}')
         contents = path.read_bytes()
-        database_image.prepare(path)
-        assert contents == path.read_bytes(), 'relaunch must not reformat storage'
-    # An independent host model checks the retained records on a copy: two notes,
-    # one shared manifest for the duplicated text, nothing in the ungranted root.
+        database_image.prepare(path, programs)
+        assert contents == path.read_bytes(), 'relaunch must not reformat storage or reinstall unchanged programs'
+    # An independent host model checks the retained records on a copy: the
+    # installed programs, two notes sharing one manifest under Notes, the color
+    # under Colors, nothing in the ungranted root.
     snapshot = output / 'host-reopen.raw'
     snapshot.write_bytes(contents)
     result = subprocess.run([str(database_image.oracle()), 'engines', 'volume', 'verify-desktop', str(snapshot),
-                             str(database_image.OFFSET), str(database_image.VOLUME_BYTES)],
+                             str(database_image.OFFSET), str(database_image.VOLUME_BYTES),
+                             *[str(item) for parent, file in programs for item in (parent, file)]],
                             cwd=ROOT / 'tools/storage-lab', check=True, capture_output=True, text=True)
     (output / 'host.txt').write_text(result.stdout, encoding='utf-8')
     print(result.stdout, end='')
@@ -217,7 +224,8 @@ def run(timeout):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--timeout', type=float, default=180)
+    parser.add_argument('--trace-storage', action='store_true', help='build with storage phase traces in the serial log')
     args = parser.parse_args()
     if args.timeout <= 0:
         parser.error('timeout must be positive')
-    run(args.timeout)
+    run(args.timeout, args.trace_storage)

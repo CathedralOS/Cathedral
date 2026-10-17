@@ -205,6 +205,15 @@ pub const STORAGE_REVOKE: u64 = 114;
 /// Does not reconnect, grant authority or expose state to children.
 pub const STORAGE_STATUS: u64 = 115;
 pub const RUN_PAGES: u64 = 112; // owner: slot, private pages, reader pages; rest zero
+/// Owner-only: run a program held in this matrix's realm. [RUN_OBJECT, slot,
+/// object, role, argument, channels, descendant slots, CPU ceiling]. The matrix
+/// reads the object through its own binding, admits it with `role` as its first
+/// entry argument and `argument` as its second, and grants the child the
+/// object's subtree as its realm, so the program's state nests under its code.
+/// The root adapter reads from its first provider root. RUN_PAGES and
+/// RUN_MEMORY stage the child's allowances exactly as for RUN. Answered once
+/// the child is admitted, or with the provider's refusal.
+pub const RUN_OBJECT: u64 = 117;
 
 #[cfg(test)]
 mod rectangle_tests {

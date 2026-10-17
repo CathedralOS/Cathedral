@@ -43,7 +43,9 @@ pub const CLOSE: u64 = 12;
 pub const COPY_TREE: u64 = 13;
 /// Highest operation a delegated child may issue.
 pub const LAST: u64 = COPY_TREE;
-pub const MAX_BYTES: usize = 16384;
+/// Largest object on the wire: 64 pages, so a program or a bulk reply fits in
+/// half a task's page allowance. The store's own bound must agree.
+pub const MAX_BYTES: usize = 256 * 1024;
 pub const READ_BYTES: usize = 32;
 pub const LIST_IDS: usize = 6;
 pub const PIN_SLOTS: u64 = 2;

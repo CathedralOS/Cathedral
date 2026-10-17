@@ -12,7 +12,9 @@ Colors in a nested workspace without restarting QEMU. Notes keeps up to eight
 notes as private objects on the experimental database disk; a duplicate is the
 store's copy of the saved note and shares its content. Unsaved drafts block
 switching/closing until saved or explicitly reloaded, and a busy note is left
-open. Colors is transient. [The distribution map](distribution/README.md)
+open. Colors keeps its color. Every program the desktop runs is an object in
+the store, launched from the matrix's own realm and granted its object's
+subtree, so its state nests under its code. [The distribution map](distribution/README.md)
 links admission, launcher, apps and provider boundaries.
 
 `python tools/boot-harness-rs/desktop_test.py` checks this actual image through
@@ -154,7 +156,9 @@ numbered objects per root, arranged as a tree. Chunks and manifests are shared
 within a root, so a copy writes a head, an event and an edge and nothing else,
 whatever the content's size, and a subtree copy does that for every object
 beneath the source; numbers are never reused; collection runs before every write
-and reclaims what no head or pin reaches. The [provider](platform/services/storage/main.rs)
+and reclaims what no head or pin reaches, reading only metadata and a key-only
+chunk index. Objects hold up to 256 KiB and a root a megabyte, enough for the
+desktop's programs to live in the store as objects. The [provider](platform/services/storage/main.rs)
 speaks one [object protocol](platform/contracts/storage.rs): 64-byte packets with
 sealed attachments for publications and bulk reads. The legacy sector catalog and
 its protocol remain only for the status/counter composition.
@@ -306,7 +310,10 @@ automatically. The headless `--matrix-storage-test --release` fixture checks
 these boundaries, copies through two hops, attenuated realms, a subtree copy
 and committed objects after restarting the matrix tree and storage provider.
 Read-only rights and per-subtree quotas remain future work; the visible desktop
-consumes these grants.
+consumes these grants. A matrix also runs programs from its realm: `RUN_OBJECT`
+reads an object on the matrix's own binding, admits it from the sealed reply,
+and grants the child that object's subtree, whose root the provider keeps
+read-only to its holder.
 
 ## Userspace register and interrupt grants
 
@@ -452,7 +459,7 @@ These profiles are engineering proofs, not the default OS boot.
 | [CPU turns and measured ceilings](kernel/core/scheduler/README.md) | Every user launch subtree, including nested matrices | Host accounting tests; `--smoke` checks capped spinners, yields, restart debt and idle refill | Boot/owned-idle burst/refill caps; periodic-timer overrun; no deadlines, weights or service-call donation |
 | [Physical-memory funding](kernel/core/user_tasks/resources/physical/README.md) | Every admitted image, stack, page table and runtime buffer; recursive matrix pool | Host conservation/bank tests; smoke rollback and retained readers; admission exhaustion and desktop pixel checks | Eager bounded bank; idle-child assignment; no swap, active rebudgeting or sponsorship transfer |
 | [Recursive launch loans](kernel/core/user_tasks/lifecycle/supervision/delegation.rs) | Matrices own direct children, lend budgets further, reclaim subtrees | `--ipc-test` plus matrix replacement tests | Static launch loans plus executable-authorized process pools; fixed account arena |
-| [Executable-authorized admission](kernel/core/user_tasks/admission/pool/README.md) | Apps and the matrix desktop construct descendants from code authority and a process pool | `--admission-test`: recursive launch, exhaustion, load rollback, retained funding, sibling survival | Boot-supplied catalogue; twelve accounts; device grants remain static |
+| [Executable-authorized admission](kernel/core/user_tasks/admission/pool/README.md) | Apps and the matrix desktop construct descendants from code authority and a process pool; the shell admits code from sealed objects read out of the store | `--admission-test`: recursive launch, exhaustion, load rollback, retained funding, sibling survival; `--matrix-storage-test` and `desktop_test.py` admit programs from the realm | Boot catalogue or a sealed object, admitted once per reservation; twelve accounts; device grants remain static |
 | [Matrix lifecycle](platform/services/matrix/service/children/children.rs) | Same provider above apps and another matrix | `--matrix-test`: replacement preserves an outside sibling | Two direct children; distribution supplies policy through owner-only control |
 | [Local viewport, focus and capture](platform/services/matrix/world/world.rs) | Nested and sibling visible apps | Host policy tests; `--matrix-test`; `--matrix-desktop-test` physical focus | Navigation plus bounded ASCII physical keys; coalesced wake channels; synchronous upward refresh |
 | [Owned surfaces](platform/services/matrix/world/surface/README.md) | App rectangles cross actual matrix boundaries to the existing compositor | Host quota/name/clipping/stacking tests; scanout removal and teardown checks | Sixteen surfaces; bounded immutable RGBX images; no text surfaces or vblank guarantees |

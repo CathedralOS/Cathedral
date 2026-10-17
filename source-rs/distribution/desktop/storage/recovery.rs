@@ -11,17 +11,20 @@ pub(super) fn exercise(f: &Fixture, provider: cathedral_user_runtime::task::Chil
     control.0.send(store::HEALTH).unwrap();
     assert_eq!(control.1.receive(&mut [0; 64]).unwrap(), 5);
     let reopened = Fixture::open();
-    assert_eq!(text(&reopened, 2, 1), Err(abi::DENIED));
+    assert_eq!(text(&reopened, 2, 2), Err(abi::DENIED));
     grant(&reopened);
     reopened.owner(0, [wire::STORAGE_GRANT, 1, 1, 0, 0, 0, 0, 0]);
-    expect(text(&reopened, 2, 1).unwrap(), b"nested root");
-    expect(text(&reopened, 2, 2).unwrap(), b"nested copy");
-    expect(text(&reopened, 2, 4).unwrap(), b"inside realm");
-    expect(text(&reopened, 2, 6).unwrap(), b"inside copy");
+    expect(text(&reopened, 2, 2).unwrap(), b"nested root");
+    expect(text(&reopened, 2, 3).unwrap(), b"nested copy");
+    expect(text(&reopened, 2, 5).unwrap(), b"inside realm");
+    expect(text(&reopened, 2, 7).unwrap(), b"inside copy");
+    expect(text(&reopened, 2, 8).unwrap(), b"program state");
     expect(text(&reopened, 3, 1).unwrap(), b"outside root");
-    assert_eq!(listing(&reopened, 2).unwrap()[1..6], [4, 1, 2, 3, 5]);
-    regrant_scoped(&reopened, 5);
-    assert_eq!(listing(&reopened, 2).unwrap()[1..3], [1, 6]);
+    assert_eq!(listing(&reopened, 2).unwrap()[1..7], [5, 1, 2, 3, 4, 6]);
+    regrant_scoped(&reopened, 6);
+    assert_eq!(listing(&reopened, 2).unwrap()[1..3], [1, 7]);
+    regrant_scoped(&reopened, 1);
+    assert_eq!(listing(&reopened, 2).unwrap()[1..3], [1, 8]);
     assert_eq!(
         provider.wait_until(time::now().unwrap()),
         Err(Error(abi::TIMED_OUT as i64))

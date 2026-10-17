@@ -42,6 +42,16 @@ everything beneath it. The matrix adds no operation of its own for that; the
 owner grants a number it was told, and the provider decides what that number
 reaches.
 
+The matrix does run programs from its realm. Owner-only `RUN_OBJECT` names an
+object: the matrix reads it on its own binding, HEAD then BULK, in the same
+pending exchange a child's request uses; admits the sealed reply as the child's
+code; and grants the child that object's subtree. A program's state therefore
+nests under its code, and the provider keeps a realm's root read-only to its
+holder, so no program can replace or delete what it runs from. The root
+adapter reads from its first provider root. A whole-source grant still
+belongs to one child at a time, but a subtree may be held beside anything,
+since the provider confines it and the owner holds all of it anyway.
+
 Sealed attachments travel with the packet in both directions. A publication's
 attachment arrives on the child's catalog stream, is forwarded with the request
 and dropped once the next hop holds it. A bulk read's attachment comes back the
@@ -87,8 +97,9 @@ checks sibling isolation of numbers and content, over-delegation, stale bindings
 ancestor revocation, stale revisions, child replacement, copies through two hops,
 a subtree granted as a realm that hides everything beside it, a child that cannot
 widen or block the stamps, a subtree copy whose edited object leaves the original
-alone, and committed objects and edges after reopening the provider and matrix
-tree. It uses a private reset test disk. Host tests cover exclusivity, stale
+alone, a program installed by the harness and run from the realm that creates
+under its own object but cannot replace it, and committed objects and edges
+after reopening the provider and matrix tree. It uses a private reset test disk. Host tests cover exclusivity, stale
 incarnations, binding revisions and scoped regrants.
 
 This bounded experiment retains the provider's two roots and three scope words

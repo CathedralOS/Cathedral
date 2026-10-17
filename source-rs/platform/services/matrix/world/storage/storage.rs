@@ -1,6 +1,7 @@
 // Subtree delegation: the owner selects a source and a scope object, the
-// child sees only a local binding. Exclusive sibling assignments keep
-// transactions and root generations private. The scope is what the matrix
+// child sees only a local binding. A whole source belongs to one child at a
+// time; a subtree may be held beside anything, since the provider confines
+// it and the owner holds all of it anyway. The scope is what the matrix
 // stamps on the child's requests; zero passes on everything the matrix holds.
 use cathedral_kernel_contracts::user as abi;
 #[derive(Clone, Copy)]
@@ -33,7 +34,11 @@ impl Scopes {
             return Err(abi::DENIED);
         }
         if self.bindings[slot].is_some()
-            || self.bindings.iter().flatten().any(|b| b.source == source)
+            || self
+                .bindings
+                .iter()
+                .flatten()
+                .any(|b| b.source == source && b.scope == 0 && scope == 0)
         {
             return Err(abi::BUSY);
         }

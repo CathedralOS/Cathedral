@@ -2,6 +2,7 @@
 // A lost/invalid upstream grant empties the world before any child can query it.
 use super::*;
 use cathedral_user_runtime::{ipc::Handle, task::Environment, time};
+pub(in crate::service) use storage::{LaunchRequest, Launched};
 pub(super) struct Parent {
     pending: Option<presentation::Pending>,
     storage_pending: Option<storage::Pending>,

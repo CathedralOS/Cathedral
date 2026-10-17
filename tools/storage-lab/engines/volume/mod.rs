@@ -9,4 +9,5 @@ mod notes;
 mod objects;
 mod proof;
 mod region;
+mod seed;
 include!("volume.rs");

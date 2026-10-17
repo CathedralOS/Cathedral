@@ -71,9 +71,6 @@ fn refusals_abort_every_record_and_other_roots_stay_private() {
         store.publish(0, 1, 1, &vec![0; MAX_BYTES + 1], 0),
         Err(Error::TooLarge)
     );
-    // Refuse after staging multiple new chunks, not merely before opening a tx.
-    let large: Vec<_> = (0..MAX_BYTES).map(|i| (200 + i / 4096) as u8).collect();
-    assert_eq!(store.publish(0, 1, 1, &large, 0), Err(Error::Capacity));
     assert_eq!(snapshot(&db), before);
     let mut read = vec![0; bytes.len()];
     assert_eq!(store.read(0, 1, 1, 0, &mut read).unwrap(), first.head);
@@ -99,6 +96,31 @@ fn refusals_abort_every_record_and_other_roots_stay_private() {
 }
 
 #[test]
+fn the_root_quota_refuses_a_write_whole_after_staging_its_chunks() {
+    let db = database();
+    let store = Store::open(&db).unwrap();
+    // Distinct chunks every time, so nothing is shared and the root fills up.
+    let mut object = 0;
+    loop {
+        let bytes: Vec<_> = (0..MAX_BYTES)
+            .map(|i| ((i / 4096 + object as usize * 64) % 251) as u8)
+            .collect();
+        let before = snapshot(&db);
+        match store.publish(0, 0, 0, &bytes, 0) {
+            Ok(created) => object = created.id,
+            Err(Error::Capacity) => {
+                assert_eq!(snapshot(&db), before);
+                break;
+            }
+            other => panic!("unexpected {other:?}"),
+        }
+        assert!(object <= (ROOT_QUOTA / MAX_BYTES as u64) + 1);
+    }
+    assert!(object >= ROOT_QUOTA / MAX_BYTES as u64 - 1);
+    accounted(&db, 0);
+}
+
+#[test]
 fn a_copy_shares_every_chunk_and_costs_only_its_head_and_event() {
     let db = database();
     let store = Store::open(&db).unwrap();
@@ -113,6 +135,7 @@ fn a_copy_shares_every_chunk_and_costs_only_its_head_and_event() {
     let added: Vec<_> = after.iter().filter(|row| !before.contains(row)).collect();
     // Three small records plus the rewritten number/quota ledgers; no content.
     assert_eq!(added.len(), 5);
+    assert_eq!(count(&db, 0, b'k'), count(&db, 0, b'c'));
     assert!(
         added
             .iter()
@@ -163,6 +186,7 @@ fn deleted_objects_release_only_unshared_content_and_numbers_are_never_reused() 
     store.delete(0, b.id, 1).unwrap();
     collect(&store, 0);
     assert_eq!(count(&db, 0, b'c'), 0);
+    assert_eq!(count(&db, 0, b'k'), 0);
     assert_eq!(count(&db, 0, b'm'), 1);
     let d = store.publish(0, 0, 0, b"later", 0).unwrap();
     assert_eq!(d.id, 4);

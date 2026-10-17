@@ -1,11 +1,13 @@
 // Authenticate a local scope, then relay the object protocol one hop, with
 // sealed attachments travelling up (publish) and down (bulk reads) unchanged
 // and the child's granted scope stamped on the way. Owner grants/revokes act
-// here; child requests resume in pending.rs. Only the root adapter names
-// provider links and retires them independently.
+// here; child requests and the matrix's own program reads resume in
+// pending.rs. Only the root adapter names provider links and retires them
+// independently.
 use super::*;
 use cathedral_user_runtime::{link::Link, memory::Object, server::Request};
 pub(super) use pending::Pending;
+pub(in crate::service) use pending::{LaunchRequest, Launched};
 /// The root adapter's link to one provider root. A failed exchange retires the
 /// accepted pair; serving that root again needs a fresh provider incarnation.
 pub(super) struct Provider {
@@ -82,7 +84,7 @@ impl Parent {
             .and_then(|()| receive.receive_until(&mut bytes, time::after(100)?))
             .and_then(|len| wire::decode(&bytes[..len]).ok_or(Error(abi::IO_ERROR as i64)));
         if result.is_err() && self.separate_storage {
-            self.retire_storage(0, 0)?;
+            self.retire_storage(0, None)?;
         }
         result
     }
@@ -127,28 +129,9 @@ impl Parent {
         if words == [wire::STORAGE_STATUS, 0, 0, 0, 0, 0, 0, 0] && !self.upstream {
             return Ok([0, self.storage_failed, 0, 0, 0, 0, 0, 0]);
         }
-        let available = self.storage_refresh()?;
         let status = match words {
             [wire::STORAGE_GRANT, slot @ 0..=1, source, scope, 0, 0, 0, 0] => {
-                match server.incarnation(self.storage_client(slot as usize)) {
-                    Some(inc) => {
-                        if !self.upstream && source < available as u64 {
-                            let result = self.storage_links[source as usize]
-                                .as_mut()
-                                .ok_or(Error(abi::DENIED as i64))
-                                .and_then(|provider| provider.refresh());
-                            if let Err(error) = result {
-                                return Ok(wire::error(error.0 as u64));
-                            }
-                        }
-                        self.scopes
-                            .grant(slot as usize, inc, source as usize, scope, available)
-                            .map(|()| {
-                                self.storage_failed &= !(1 << source);
-                            })
-                    }
-                    None => Err(abi::DENIED),
-                }
+                self.storage_grant(server, slot as usize, source as usize, scope)?
             }
             [wire::STORAGE_REVOKE, slot @ 0..=1, 0, 0, 0, 0, 0, 0] => {
                 self.storage_close(slot as usize)?;
@@ -157,6 +140,47 @@ impl Parent {
             _ => Err(abi::DENIED),
         };
         Ok(wire::error(status.err().unwrap_or(0)))
+    }
+    /// Bind a child's live catalog connection to a source and scope. At the
+    /// root this also re-establishes the provider link, so a grant after
+    /// provider replacement connects to the fresh incarnation.
+    pub(in crate::service) fn storage_grant(
+        &mut self,
+        server: &Server,
+        slot: usize,
+        source: usize,
+        scope: u64,
+    ) -> Result<Result<(), u64>, Error> {
+        let available = self.storage_refresh()?;
+        let Some(incarnation) = server.incarnation(self.storage_client(slot)) else {
+            return Ok(Err(abi::DENIED));
+        };
+        if !self.upstream && source < available {
+            let result = self.storage_links[source]
+                .as_mut()
+                .ok_or(Error(abi::DENIED as i64))
+                .and_then(|provider| provider.refresh());
+            if let Err(error) = result {
+                return Ok(Err(error.0 as u64));
+            }
+        }
+        Ok(self
+            .scopes
+            .grant(slot, incarnation, source, scope, available)
+            .map(|()| {
+                self.storage_failed &= !(1 << source);
+            }))
+    }
+    /// Begin reading a program the owner asked to run; the owner's request is
+    /// answered once the child is admitted.
+    pub(in crate::service) fn storage_launch(
+        &mut self,
+        request: Request,
+        plan: LaunchRequest,
+    ) -> Result<(), Error> {
+        assert!(self.storage_pending.is_none());
+        self.storage_pending = Some(Pending::launch(request, plan, self.upstream)?);
+        Ok(())
     }
     /// Every object operation is atomic at the provider, so revoking a binding
     /// leaves nothing staged upstream; the stale scope simply stops authorizing.
@@ -175,7 +199,7 @@ impl Parent {
         self.storage_pending = Some(Pending::new(request, words, attachment, self.upstream)?);
         Ok(())
     }
-    fn retire_storage(&mut self, source: usize, client: usize) -> Result<(), Error> {
+    fn retire_storage(&mut self, source: usize, client: Option<usize>) -> Result<(), Error> {
         if self.upstream {
             if let Some((send, receive)) = self.storage_pair.take() {
                 send.close()?;
@@ -189,7 +213,9 @@ impl Parent {
             if let Some(provider) = &mut self.storage_links[source] {
                 provider.invalidate();
             }
-            self.scopes.revoke(self.storage_slot(client));
+            if let Some(client) = client {
+                self.scopes.revoke(self.storage_slot(client));
+            }
         }
         Ok(())
     }

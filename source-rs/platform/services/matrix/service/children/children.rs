@@ -51,10 +51,50 @@ impl Children {
         if routed == 0
             && !matches!(
                 words[0],
-                wire::SPAWN | wire::RUN | wire::RUN_MEMORY | wire::RUN_PAGES | wire::STOP
+                wire::SPAWN
+                    | wire::RUN
+                    | wire::RUN_OBJECT
+                    | wire::RUN_MEMORY
+                    | wire::RUN_PAGES
+                    | wire::STOP
             )
         {
             return Ok(false);
+        }
+        // A program from the realm is read first; the owner is answered when
+        // the child is admitted, from launch_object.
+        if routed == 0
+            && let [
+                wire::RUN_OBJECT,
+                slot @ 0..=1,
+                object,
+                role,
+                argument,
+                channels,
+                descendants,
+                cpu,
+            ] = words
+        {
+            let slot = slot as usize;
+            if self.pending.is_some() || self.slots[slot].is_some() || !server.available(slot) {
+                server.reply(request, &wire::encode(wire::error(abi::BUSY)))?;
+            } else if object == 0 {
+                server.reply(request, &wire::encode(wire::error(abi::INVALID_ARGUMENT)))?;
+            } else {
+                parent.storage_launch(
+                    *request,
+                    parent::LaunchRequest {
+                        slot,
+                        object,
+                        role,
+                        argument,
+                        channels,
+                        descendants,
+                        cpu,
+                    },
+                )?;
+            }
+            return Ok(true);
         }
         let result = if self.pending.is_some() {
             Err(Error(abi::BUSY as i64))
@@ -117,6 +157,44 @@ impl Children {
             &wire::encode(wire::error(result.err().map_or(0, |e| e.0 as u64))),
         )?;
         Ok(true)
+    }
+    /// Admit a program the matrix just read from its realm, grant the child
+    /// that object's subtree, and answer the owner. A child that cannot be
+    /// granted its realm is stopped rather than left running without one.
+    pub(in crate::service) fn launch_object(
+        &mut self,
+        launched: parent::Launched,
+        parent: &mut Parent,
+        world: &mut World,
+        server: &mut Server,
+    ) -> Result<(), Error> {
+        let parent::Launched {
+            plan,
+            request,
+            result,
+        } = launched;
+        let status = match result {
+            Err(code) => Err(Error(code as i64)),
+            Ok(object) => {
+                let admitted = self.run_object(plan, &object, server, world);
+                drop(object); // The kernel holds its own reference to the image.
+                match admitted {
+                    Err(error) => Err(error),
+                    Ok(()) => match parent.storage_grant(server, plan.slot, 0, plan.object)? {
+                        Ok(()) => Ok(()),
+                        Err(code) => {
+                            self.stop(plan.slot, server, world, parent)?;
+                            Err(Error(code as i64))
+                        }
+                    },
+                }
+            }
+        };
+        super::requests::flush(parent, world)?;
+        server.reply(
+            &request,
+            &wire::encode(wire::error(status.err().map_or(0, |e| e.0 as u64))),
+        )
     }
     pub(super) fn disconnected(
         &mut self,

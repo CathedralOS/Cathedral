@@ -3,7 +3,8 @@
 The default boot enters [main.rs](main.rs), then [session/session.rs](session/session.rs):
 admit providers and the root matrix, place the workspace and the menu, start
 input, serve choices and supervise storage. [shell/](session/shell/shell.rs)
-carries out each choice and hosts the [launcher](session/shell/launcher.rs);
+carries out each choice by object number, since the shell's programs live in
+the notes root, and hosts the [launcher](session/shell/launcher.rs);
 [app/](session/app/app.rs) is the color program. See the
 [distribution map](../README.md) for F5, controls, composition and the
 same-image interactive test.
@@ -65,9 +66,10 @@ physical-source endpoints; these are the only device-facing adapters. Apps get
 only their interaction pair, catalog pair and a child-local wake receiver. The [app](session/app/app.rs) waits for local input/view invalidations and
 submits an oversized rectangle that must be clipped at each ownership boundary.
 
-The desktop receives code-only catalogue grants and a funded process pool.
+The probe desktop receives code-only catalogue grants and a funded process pool.
 [Startup admission](session/admission.rs) stages these into the root; owner-only
 RUN requests select and fund descendants using the same provider at each level.
+The shell lends no catalogue: its RUN_OBJECT requests name objects instead.
 The test checks rollback, exhausted frame funding and repeated subtree replacement.
 Device launches remain explicit static grants.
 

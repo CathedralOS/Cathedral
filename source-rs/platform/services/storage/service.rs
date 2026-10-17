@@ -11,6 +11,8 @@ use cathedral_user_runtime::{
     server::{Event, Server},
     write,
 };
+/// The protocol's object bound is the store's; neither may drift alone.
+const _: () = assert!(wire::MAX_BYTES == cathedral_database_objects::MAX_BYTES);
 
 pub fn serve(store: &Store<'_>) {
     let mut server = Server::open_clients(wire::ROOTS).unwrap();
@@ -102,10 +104,15 @@ pub fn serve(store: &Store<'_>) {
 
 /// Every stamped scope must contain every subject. An object outside a scope
 /// and an object that does not exist are refused alike, so a scoped client
-/// cannot probe what lies beyond its subtree.
+/// cannot probe what lies beyond its subtree. The scope object itself is the
+/// realm's root: readable, listable and copyable, but never replaced or
+/// deleted by what lives under it, so a program cannot overwrite its own code.
 fn scoped(store: &Store<'_>, root: u8, r: wire::Request) -> Result<(), u64> {
     let (subjects, count) = r.subjects();
     for &scope in r.scopes.iter().filter(|s| **s != 0) {
+        if matches!(r.op, wire::PUBLISH | wire::DELETE) && r.object == scope {
+            return Err(abi::DENIED);
+        }
         for &subject in &subjects[..count] {
             match store.within(root, subject, scope) {
                 Ok(true) => (),

@@ -45,6 +45,9 @@ pub(super) fn expect(expected: &mut BTreeMap<Vec<u8>, Vec<u8>>, root: u8, last: 
             if k == b"head" {
                 continue;
             }
+            if k[0] == b'c' {
+                expected.insert(key(b'k', &k[1..]), Vec::new());
+            }
             expected.insert(key(k[0], &k[1..]), v);
         }
         let mut suffix = 1u64.to_be_bytes().to_vec();

@@ -1,9 +1,12 @@
 //! Root-owned revision pins and bounded reachability collection. Every pass
 //! derives liveness from all current heads and durable pins under one writer.
-//! No persisted cursor can skip newly live records between passes.
+//! No persisted cursor can skip newly live records between passes. A pass
+//! reads only metadata: heads, events, manifests and the chunk index. Chunk
+//! bytes are never read or re-hashed here, so a root full of programs costs a
+//! write no more than a root full of notes; reads verify chunks when they
+//! are used.
 use super::*;
 use alloc::{collections::BTreeSet, vec::Vec};
-use cathedral_content_layout::{self as layout, digest};
 use records::{charge, decode_pin, encode_pin, event_key, key, quota, set_quota};
 use redb::{ReadableTable, Table};
 pub const PIN_SLOTS: u8 = 2;
@@ -69,7 +72,7 @@ impl Store<'_> {
         }
         engine(tx.commit())
     }
-    /// At most eight removals and ROOT_QUOTA bytes in the root record scan per
+    /// At most eight removals and ROOT_QUOTA bytes of metadata in the scan per
     /// pass. A crash leaves every head/pin closure valid and an exact ledger.
     /// This frees engine pages for reuse; file shrinking is a separate operation.
     pub fn collect(&self, root: u8) -> Result<Collection> {
@@ -99,46 +102,46 @@ impl Store<'_> {
                     closure(&table, root, pinned.id, pinned.head, &mut live)?;
                 }
             }
+            // Retire event lookup authority before manifests, and manifests
+            // before chunks. A pin between passes must never resurrect a
+            // partially collected revision. The order of kinds scanned is the
+            // retirement order; the chunk index stands in for the chunks.
             let mut retired = Vec::new();
             let mut inspected = 0usize;
             let mut more = false;
-            for row in engine(table.range([root].as_slice()..))? {
-                let (k, v) = engine(row)?;
-                let k = k.value();
-                if k.first() != Some(&root) {
-                    break;
-                }
-                inspected = inspected
-                    .checked_add(k.len() + v.value().len())
-                    .ok_or(Error::Corrupt)?;
-                if inspected > ROOT_QUOTA as usize || k.len() < 2 {
-                    return Err(Error::Corrupt);
-                }
-                match k[1] {
-                    b'h' | b'q' | b'p' | b'n' | b't' => continue,
-                    b'c' | b'm' | b'e' => {}
-                    _ => return Err(Error::Corrupt),
-                }
-                if live.contains(k) {
-                    continue;
-                }
-                // Retire event lookup authority before its manifest/chunks. A
-                // pin between passes must never resurrect a partially collected revision.
-                retired.push(k.to_vec());
-                retired.sort_unstable_by_key(|k| match k[1] {
-                    b'e' => 0,
-                    b'm' => 1,
-                    _ => 2,
-                });
-                if retired.len() > PASS_RECORDS {
-                    retired.pop();
-                    more = true;
+            'kinds: for kind in [b'e', b'm', b'k'] {
+                for row in engine(table.range(key(root, kind, &[]).as_slice()..))? {
+                    let (k, v) = engine(row)?;
+                    let k = k.value();
+                    if k.len() < 2 || k[0] != root || k[1] != kind {
+                        break;
+                    }
+                    inspected = inspected
+                        .checked_add(k.len() + v.value().len())
+                        .ok_or(Error::Corrupt)?;
+                    if inspected > ROOT_QUOTA as usize {
+                        return Err(Error::Corrupt);
+                    }
+                    if live.contains(k) {
+                        continue;
+                    }
+                    if retired.len() == PASS_RECORDS {
+                        more = true;
+                        break 'kinds;
+                    }
+                    retired.push(k.to_vec());
                 }
             }
             let mut reclaimed = 0u64;
             for key in &retired {
                 let old = engine(table.remove(key.as_slice()))?.ok_or(Error::Corrupt)?;
                 reclaimed += (key.len() + old.value().len()) as u64;
+                drop(old);
+                if key[1] == b'k' {
+                    let chunk = records::key(root, b'c', &key[2..]);
+                    let old = engine(table.remove(chunk.as_slice()))?.ok_or(Error::Corrupt)?;
+                    reclaimed += (chunk.len() + old.value().len()) as u64;
+                }
             }
             let charged = quota(&table, root)?
                 .checked_sub(reclaimed)
@@ -158,6 +161,8 @@ impl Store<'_> {
         Ok(result)
     }
 }
+/// Mark one revision's event, manifest and chunk index entries live. The
+/// manifest is read and authenticated; chunks are named by it, not read.
 fn closure(
     table: &Table<&[u8], &[u8]>,
     root: u8,
@@ -182,15 +187,12 @@ fn closure(
     let data = value.value();
     let body = records::manifest(head, data)?;
     if let records::Contents::Chunks(parts) = body {
-        for (index, id) in parts.chunks_exact(32).enumerate() {
-            let k = key(root, b'c', id);
-            let v = engine(table.get(k.as_slice()))?.ok_or(Error::Corrupt)?;
-            if v.value().len() != (head.len - index * CHUNK_BYTES).min(CHUNK_BYTES)
-                || digest(layout::CHUNK_DOMAIN, v.value()) != id
-            {
+        for id in parts.chunks_exact(32) {
+            let index = key(root, b'k', id);
+            if engine(table.get(index.as_slice()))?.is_none() {
                 return Err(Error::Corrupt);
             }
-            live.insert(k);
+            live.insert(index);
         }
     }
     live.insert(manifest);

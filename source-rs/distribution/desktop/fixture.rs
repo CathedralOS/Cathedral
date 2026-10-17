@@ -12,7 +12,17 @@ impl Fixture {
             Launch::at(2).unwrap(),
             Launch::at(3).unwrap(),
         ];
-        let root = Launch::at(0).unwrap().spawn_tree(0, &[], &loans).unwrap();
+        let launch = Launch::at(0).unwrap();
+        // Profiles with dynamic accounts let the root run programs from its
+        // realm; fund every account it may admit before it starts.
+        let dynamic = cathedral_user_runtime::task::available_slots().unwrap();
+        if dynamic > 0 {
+            launch.assign_slots(dynamic).unwrap();
+            launch
+                .assign_memory((dynamic + 1) * abi::MAX_ADMISSION_FRAMES as u64)
+                .unwrap();
+        }
+        let root = launch.spawn_tree(0, &[], &loans).unwrap();
         // Enumeration compacts after loans; another fixture may retain its own
         // provider launch. The old loan name itself must no longer grant spawning.
         assert!(loans[0].spawn(0).is_err());

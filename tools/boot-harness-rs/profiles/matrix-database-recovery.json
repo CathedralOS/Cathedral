@@ -57,8 +57,8 @@
           "recovery-lab",
           "trace-storage"
         ],
-        "private_pages": 64,
-        "shared_pages": 8
+        "private_pages": 128,
+        "shared_pages": 64
       }
     ],
     "links": [

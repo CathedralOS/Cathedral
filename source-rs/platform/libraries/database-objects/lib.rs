@@ -16,12 +16,15 @@ use cathedral_storage_engine::redb::{self, Database, TableDefinition};
 pub use collection::{Collection, PIN_SLOTS};
 pub use records::{Head, Object};
 
-pub const MAX_BYTES: usize = 16 * 1024;
+/// Largest object: 64 pages, so a program or a bulk reply fits in half a
+/// task's page allowance while the other half holds what it already retains.
+pub const MAX_BYTES: usize = 256 * 1024;
 pub const CHUNK_BYTES: usize = 4096;
 pub const INLINE_BYTES: usize = 128;
 /// Retained record bytes per root, including keys and event history. This is an
 /// admission limit, not a claim about physical redb space or allocator overhead.
-pub const ROOT_QUOTA: u64 = 24 * 1024;
+/// It also bounds one collection pass's scan.
+pub const ROOT_QUOTA: u64 = 1024 * 1024;
 /// Objects one tree copy may produce; it bounds one request's work, not the
 /// root's size.
 pub const COPY_LIMIT: usize = 64;

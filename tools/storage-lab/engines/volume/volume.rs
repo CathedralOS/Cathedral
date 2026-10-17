@@ -13,7 +13,7 @@ const ID_KEY: &[u8] = b"volume-id";
 
 pub fn run(args: &[String]) -> Result<()> {
     match args.first().map(String::as_str) {
-        Some("verify-desktop") if args.len() == 4 => desktop::verify(Path::new(&args[1]), args[2].parse()?, args[3].parse()?),
+        Some("verify-desktop") if args.len() >= 4 => desktop::verify(Path::new(&args[1]), args[2].parse()?, args[3].parse()?, &seed::load(&args[4..])?),
         Some("verify-colors") | Some("verify-notes") if args.len() == 6 => {
             let last = [args[4].parse()?, args[5].parse()?];
             if args[0] == "verify-colors" { colors::verify(Path::new(&args[1]), args[2].parse()?, args[3].parse()?, last) }
@@ -21,6 +21,7 @@ pub fn run(args: &[String]) -> Result<()> {
         }
         Some("verify-objects") | Some("verify-retention") if args.len() == 5 => objects::verify(Path::new(&args[1]), args[2].parse()?, args[3].parse()?, args[4].parse()?, args[0] == "verify-retention"),
         Some("verify-guest") if args.len() == 5 => guest::verify(Path::new(&args[1]), args[2].parse()?, args[3].parse()?, args[4].parse()?),
+        Some("seed") if args.len() >= 6 => seed::seed(Path::new(&args[1]), args[2].parse()?, args[3].parse()?, &seed::load(&args[4..])?),
         Some("prove") if args.len() == 2 => proof::run(Path::new(&args[1])),
         Some("format") if args.len() == 4 => {
             let bytes = args[2].parse()?;
@@ -40,7 +41,7 @@ pub fn run(args: &[String]) -> Result<()> {
             println!("VOLUME ready={} generation={} capacity={} logical_length={} id={:032x}", header.ready, header.generation, header.capacity(), header.length, u128::from_be_bytes(header.id));
             Ok(())
         }
-        _ => Err("usage: engines volume prove NEW_DIRECTORY | format NEW_IMAGE BYTES ID_HEX | open IMAGE OFFSET BYTES | inspect IMAGE OFFSET BYTES | verify-guest/verify-objects/verify-retention IMAGE OFFSET BYTES REVISION | verify-desktop IMAGE OFFSET BYTES | verify-colors/verify-notes IMAGE OFFSET BYTES LAST0 LAST1".into()),
+        _ => Err("usage: engines volume prove NEW_DIRECTORY | format NEW_IMAGE BYTES ID_HEX | open IMAGE OFFSET BYTES | inspect IMAGE OFFSET BYTES | verify-guest/verify-objects/verify-retention IMAGE OFFSET BYTES REVISION | verify-desktop IMAGE OFFSET BYTES (PARENT FILE)... | verify-colors/verify-notes IMAGE OFFSET BYTES LAST0 LAST1 | seed IMAGE OFFSET BYTES (PARENT FILE)...".into()),
     }
 }
 

@@ -76,7 +76,7 @@
         "clock": true,
         "argument": 1129270608,
         "framebuffer": true,
-        "shared_pages": 64
+        "shared_pages": 96
       },
       {
         "package": "cathedral-input-service",
@@ -103,8 +103,8 @@
         "clock": true,
         "disk": true,
         "ipc_channels": 0,
-        "private_pages": 64,
-        "shared_pages": 8
+        "private_pages": 128,
+        "shared_pages": 64
       }
     ],
     "links": [
@@ -117,29 +117,36 @@
         4
       ]
     ],
-    "executables": [
+    "dynamic_tasks": 4,
+    "programs": [
       {
         "package": "cathedral-matrix-service",
         "entry": "platform/services/matrix/main.rs",
-        "target": "x86_64-unknown-none",
-        "argument": 0
+        "target": "x86_64-unknown-none"
       },
       {
         "package": "cathedral-notes",
         "entry": "distribution/applications/notes/main.rs",
         "target": "x86_64-unknown-none",
-        "argument": 2
+        "inside": 0
       },
       {
         "package": "cathedral-desktop",
         "entry": "distribution/desktop/main.rs",
         "target": "x86_64-unknown-none",
-        "argument": 2,
+        "features": [
+          "shell"
+        ],
+        "inside": 0
+      },
+      {
+        "package": "cathedral-desktop",
+        "entry": "distribution/desktop/main.rs",
+        "target": "x86_64-unknown-none",
         "features": [
           "shell"
         ]
       }
-    ],
-    "dynamic_tasks": 4
+    ]
   }
 }

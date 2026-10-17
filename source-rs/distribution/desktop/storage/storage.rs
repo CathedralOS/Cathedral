@@ -93,6 +93,17 @@ fn read(f: &Fixture, leaf: usize, object: u64) -> Result<([u8; 32], usize), u64>
 fn text(f: &Fixture, leaf: usize, object: u64) -> Result<[u8; 32], u64> {
     read(f, leaf, object).map(|(bytes, _)| bytes)
 }
+/// The first bytes of an object too large to read whole through the inline path.
+fn prefix(f: &Fixture, leaf: usize, object: u64, len: u64) -> Result<[u8; 32], u64> {
+    let reply = request(
+        f,
+        leaf,
+        store::Request::new(store::READ, object, 0, 0, len),
+        &[],
+    );
+    store::Reply::decode(&reply)?;
+    Ok(reply[32..].try_into().unwrap())
+}
 fn expect(bytes: [u8; 32], payload: &[u8]) {
     assert_eq!(&bytes[..payload.len()], payload);
 }
@@ -140,8 +151,9 @@ pub fn run() -> u64 {
     probes::replacement(f);
     probes::sharing(f);
     probes::attenuation(f);
+    probes::launching(f);
     recovery::exercise(f, provider);
-    cathedral_user_runtime::write(b"Cathedral matrix storage: scoped roots, recursive delegation, revocation, cheap copies, attenuated realms and replacement passed\n").unwrap();
+    cathedral_user_runtime::write(b"Cathedral matrix storage: scoped roots, recursive delegation, revocation, cheap copies, attenuated realms, programs from the realm and replacement passed\n").unwrap();
     loop {
         let _ = event_sleep();
     }

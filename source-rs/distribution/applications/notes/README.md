@@ -28,7 +28,9 @@ bright one on the current note. A realm holds up to eight notes.
 Each note is one private object of up to 240 ASCII characters, placed in the
 realm its storage binding reports. The capacity is this editor's choice, not a
 storage limit. The app cannot tell a subtree from a whole root and never sees
-what lies beside its realm; on the desktop it is granted the whole notes root.
+what lies beside its realm; on the desktop its realm is its own program object,
+so the notes nest under the code that edits them, and the object itself stays
+read-only to the app.
 A duplicate is the store's copy operation: a new object number beside the
 original pointing at the same content, written without reading, hashing or
 rewriting the text. Editing either note afterwards leaves the other as it was.
@@ -74,9 +76,9 @@ python tools/boot-harness-rs/matrix_database_test.py --release --notes-recovery
 The desktop test types into the default F5 composition, saves, duplicates, edits
 the copy, switches back, cold-boots the same disposable disk and checks every
 glyph, status color and bar segment. An independent host model then verifies the
-retained records on a copy of the image: two notes, one shared manifest for the
-duplicated text, exact heads, edges, history and quota, and nothing in the
-ungranted root. The notes fixtures drive two instances through physical key
+retained records on a copy of the image: the four installed programs, two notes
+under Notes with one shared manifest for the duplicated text, the color under
+Colors, exact heads, edges, history and quota, and nothing in the ungranted root. The notes fixtures drive two instances through physical key
 events at several lengths, middle edits, draft discard and focus isolation, then
 verify exact text and status after a cold boot with the same kind of oracle. The
 recovery profile stalls after the first commit but before its reply; ordinary
