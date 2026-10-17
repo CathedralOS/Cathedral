@@ -47,6 +47,10 @@ pub const STOP: u64 = 107; // local child slot; return after complete subtree re
 /// Host to child over its control link before stopping it for a sibling's
 /// CLOSE: [LOSS, 0..]. The reply's word one is the work the child would lose
 /// if stopped now, zero meaning none. A child that does not answer is kept.
+/// A matrix asynchronously asks all its direct children and returns a boolean
+/// aggregate. Unknown/busy/error answers count as loss; descendants are never
+/// stopped by the query. This is an advisory observation, not a freeze/commit
+/// transaction preventing subsequent edits or background work.
 pub const LOSS: u64 = 121;
 // Owner-only routing. Two bits per hop (1/2 = local child 0/1); child endpoints
 // reject the entire encoded opcode. No process IDs or global paths are accepted.
@@ -236,11 +240,11 @@ pub const LAUNCH_PLACE: u64 = 119;
 /// Owner-only: [STORAGE_BINDING, slot, 0..] -> [0, source, scope] of the
 /// child's live storage binding, or DENIED while it has none.
 pub const STORAGE_BINDING: u64 = 120;
-/// How long a matrix waits for its provider to answer one forwarded request
-/// before retiring that stream as stalled. A durable commit on the lab disk
-/// takes on the order of 150 ms, so the bound leaves it several times over;
-/// nested forwards and program reads add a hop's margin on top.
-pub const STORAGE_DEADLINE: u64 = 600;
+/// Monotonic ticks a matrix waits for one forwarded storage request before
+/// retiring its provider stream. The current 100-Hz timer makes 600 ticks
+/// nominally six seconds, not 600 milliseconds. Nested forwards and program
+/// reads add a margin. This is a failure bound, not a commit latency estimate.
+pub const STORAGE_DEADLINE_TICKS: u64 = 600;
 
 #[cfg(test)]
 mod rectangle_tests {

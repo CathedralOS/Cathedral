@@ -63,7 +63,7 @@ control link first and stops it only when the answer is nothing to lose. The
 owner learns what a slot holds from `STORAGE_BINDING`, the child's source and
 scope, and restores exactly that after replacing a provider.
 
-Every forwarded exchange is bounded by the contract's `STORAGE_DEADLINE`, with
+Every forwarded exchange is bounded by the contract's `STORAGE_DEADLINE_TICKS`, with
 a hop's margin added at each nesting level and for the reads of a launch. A
 provider that misses it has its stream retired and the owner replaces it, so
 the bound sits several times above a durable commit on the lab disk.
@@ -130,3 +130,18 @@ provider, its sibling consumes pointer and keyboard events and repaints before
 the storage deadline. The same peer survives catalog revocation, provider restart
 and the writer's death/replacement. Its changes are intentionally volatile: this
 proves interaction independence, not parallel persistence or shared writable roots.
+
+The matrix's control [loss survey](../../service/children/loss.rs) recursively
+asks its children before answering its own LOSS request. Any dirty, busy,
+missing or failed reply prevents a clean answer; the query does not stop a child.
+Topology changes refuse while the survey is active. Late control replies are
+counted and drained, including while idle. At eight unanswered requests, new
+probes refuse until old replies drain; the channel stays open so a slow program
+is not killed by the check itself. The answer is an advisory boolean, not a
+cross-process freeze or disclosure of descendant identities/content.
+
+`--matrix-test --release` exercises dirty descendants, delayed clean replies,
+exhausted probe capacity and recovery, and subtree close/recreation beside a
+surviving sibling. `desktop_test.py` exercises the same recursive close through
+the outer user chooser, including dirty Notes, repeated clean user reopening,
+and persistence checked after a cold boot.

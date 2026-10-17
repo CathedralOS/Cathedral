@@ -11,7 +11,9 @@ template user beside it; clicking a user runs it in the workspace. A user is a
 matrix with its own chrome: a second chooser over the user's realm, listing the
 user's copies of Notes and Colors. Click one to launch it, and click the
 program's area to give it keyboard focus. **CLOSE** asks the running program
-whether it would lose work and keeps it open if so. Notes holds up to eight
+whether it would lose work and keeps it open if so. The outer chooser can
+close an entire user matrix: it recursively checks its descendants, keeps dirty
+or unanswered work open, and permits reopening the same user after a clean close. Notes holds up to eight
 notes of 240 characters: **F1** saves (or checks an uncertain save), **F2**
 reloads the saved note, **F3** duplicates it as a new note sharing its content,
 **F4** switches to the next note. Colors changes on **Enter**. Both choosers
@@ -84,7 +86,7 @@ python tools/boot-harness-rs/desktop_test.py
 This builds the default composition, copies a user from the template, launches
 its programs with physical mouse and keyboard input, checks exact note glyphs
 and status, protects unsaved drafts, duplicates and switches notes, repeatedly
-replaces apps, cold-boots the same disposable disk to check saved state, and
+replaces apps and whole user matrices, cold-boots the same disposable disk to check saved state, and
 has an independent host model verify the retained records. It never touches
 the interactive disk.
 

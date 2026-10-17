@@ -318,7 +318,12 @@ reads an object on the matrix's own binding, admits it from the sealed reply,
 and grants the child that object's subtree, whose root the provider keeps
 read-only to its holder. A child's `LAUNCH` does the same through the child's
 own binding into a slot the owner opened with a standing policy, and `CLOSE`
-stops that sibling only after it answers `LOSS` with nothing to lose.
+stops that sibling only after it answers `LOSS` with nothing to lose. A matrix
+answers by surveying all its direct children recursively, retaining the subtree
+when any answer is dirty, busy, missing or failed. The F5 desktop test closes and
+reopens whole user matrices; the headless matrix proof also exercises delayed
+replies and exhausted control-probe capacity without destroying the slow child.
+LOSS is advisory; it does not freeze future edits across processes.
 
 ## Userspace register and interrupt grants
 

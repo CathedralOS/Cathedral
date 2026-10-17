@@ -79,9 +79,9 @@ impl Pending {
             },
             source: 0,
             deadline: time::after(if upstream {
-                wire::STORAGE_DEADLINE + 100
+                wire::STORAGE_DEADLINE_TICKS + 100
             } else {
-                wire::STORAGE_DEADLINE
+                wire::STORAGE_DEADLINE_TICKS
             })?,
             launch: None,
         })
@@ -109,7 +109,9 @@ impl Pending {
             receive: None,
             step: if upstream { Step::Refresh } else { Step::Head },
             source: 0,
-            deadline: time::after(if upstream { 3 } else { 2 } * wire::STORAGE_DEADLINE + 100)?,
+            deadline: time::after(
+                if upstream { 3 } else { 2 } * wire::STORAGE_DEADLINE_TICKS + 100,
+            )?,
             launch: Some(plan),
         })
     }

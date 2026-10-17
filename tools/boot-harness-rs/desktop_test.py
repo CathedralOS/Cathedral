@@ -177,6 +177,9 @@ def desktop(stream, output, serial, reboot):
     for char in 'hello cathedral':
         key('spc' if char == ' ' else char)
     note('hello cathedral', dirty=True)
+    click_users(CLOSE)  # The outer close must consult the nested note too.
+    users(STATUS, 'KEPT')
+    note('hello cathedral', dirty=True)
     click_chrome(CLOSE)  # Closing must not discard the unsaved draft.
     chrome(STATUS, 'KEPT')
     note('hello cathedral', dirty=True)
@@ -243,7 +246,30 @@ def desktop(stream, output, serial, reboot):
     click_chrome(1)
     chrome(STATUS, 'RUNNING')
     note('hello cathedral')
-    print('PASS: a user made from the template, programs launched by its chrome, draft protection, duplicate/switch, save/reload and repeated app replacement')
+    # Close a clean user while Notes is still running, then reconstruct its
+    # chrome/apps from the same realm. Repeat to exercise whole-tree reclamation.
+    for _ in range(3):
+        click_users(CLOSE)
+        users(STATUS, 'CLOSED')
+        color('101827')
+        click_users(1)
+        users(STATUS, 'RUNNING')
+        chrome(STATUS, 'CHOOSE')
+        click_chrome(1)
+        chrome(STATUS, 'RUNNING')
+        note('hello cathedral')
+        tabs(2, 0)
+    click_chrome(CLOSE)
+    chrome(STATUS, 'CLOSED')
+    click_users(CLOSE)  # User with only chrome left is also clean.
+    users(STATUS, 'CLOSED')
+    click_users(1)
+    users(STATUS, 'RUNNING')
+    chrome(STATUS, 'CHOOSE')
+    click_chrome(2)
+    chrome(STATUS, 'RUNNING')
+    color('d18b35')
+    print('PASS: recursive user close/reopen, dirty descendant protection, saved notes/color and app replacement')
 
 
 def run(timeout, trace_storage=False):

@@ -27,11 +27,12 @@ struct Standing {
     place: Option<(Rect, u64)>,
 }
 /// Why a request was forwarded to a child, so its reply is read right: the
-/// owner's own request, or a health probe before a sibling's close request.
+/// owner's own request, or a loss query before a sibling's close request.
 #[derive(Clone, Copy)]
 pub(super) enum Purpose {
     Owner,
     Close,
+    Loss,
 }
 #[derive(Default)]
 pub(super) struct Children {
@@ -42,6 +43,7 @@ pub(super) struct Children {
     standing: [Option<Standing>; 2],
     pending: [Option<(Request, u64, Purpose)>; 2],
     retiring: [Option<i64>; 2],
+    loss: Option<loss::Survey>,
 }
 impl Children {
     pub(super) fn notify(&self, world: &mut World) -> Result<(), Error> {
@@ -70,6 +72,10 @@ impl Children {
         world: &mut World,
     ) -> Result<bool, Error> {
         let routed = words[0] >> wire::OP_BITS;
+        if words == [wire::LOSS, 0, 0, 0, 0, 0, 0, 0] {
+            self.survey_loss(*request, parent, server)?;
+            return Ok(true);
+        }
         if routed == 0
             && !matches!(
                 words[0],
@@ -84,6 +90,10 @@ impl Children {
             )
         {
             return Ok(false);
+        }
+        if self.loss.is_some() {
+            server.reply(request, &wire::encode(wire::error(abi::BUSY)))?;
+            return Ok(true);
         }
         // A program from the realm is read first; the owner is answered when
         // the child is admitted, from launch_object.
@@ -245,6 +255,9 @@ impl Children {
         parent: &mut Parent,
         server: &mut Server,
     ) -> Result<(), Error> {
+        if self.loss.is_some() {
+            return server.reply(&request, &wire::encode(wire::error(abi::BUSY)));
+        }
         let requester = request.client.unwrap();
         let slot = 1 - requester;
         let refusal = if parent.storing() || self.slots[slot].is_some() || !server.available(slot) {
@@ -287,14 +300,23 @@ impl Children {
         world: &mut World,
         server: &mut Server,
     ) -> Result<(), Error> {
+        if self.loss.is_some() {
+            return server.reply(&request, &wire::encode(wire::error(abi::BUSY)));
+        }
         let target = 1 - request.client.unwrap();
         // A reply the requester sent just before asking may still be queued.
         self.finish(server, world, parent)?;
         if self.pending[target].is_some() {
             return server.reply(&request, &wire::encode(wire::error(abi::BUSY)));
         }
-        let Some(control) = self.slots[target].as_ref().and_then(|child| child.control) else {
+        let Some(child) = self.slots[target].as_ref() else {
             return server.reply(&request, &wire::encode(wire::error(abi::PEER_CLOSED)));
+        };
+        if child.stale >= control::MAX_STALE {
+            return server.reply(&request, &wire::encode(wire::error(abi::BUSY)));
+        }
+        let Some(control) = child.control else {
+            return server.reply(&request, &wire::encode(wire::error(abi::BUSY)));
         };
         control
             .0

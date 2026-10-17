@@ -79,7 +79,7 @@ pub(super) fn dispatch(
             return server.reply(&request, &wire::encode(wire::error(abi::DENIED)));
         }
         // A child asks for a sibling, or for its sibling to go; both are
-        // answered later, from launch_object or the forwarded health probe.
+        // answered later, from launch_object or the forwarded loss query.
         Some([wire::LAUNCH, object, 0, 0, 0, 0, 0, 0]) if request.client.is_some() => {
             return children.launch(request, object, parent, server);
         }

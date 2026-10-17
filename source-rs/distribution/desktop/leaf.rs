@@ -10,6 +10,8 @@ use cathedral_user_runtime::{ipc, link::Link, memory::Private, task::Launch};
 pub const EXIT_PROBE: u64 = 0xfffe;
 pub const DETACHED_PROBE: u64 = 0xfffd;
 pub const LAST_PROBE: u64 = 0xfffc;
+pub const LOSS_PROBE: u64 = 0xfffb;
+pub const LOSS_BATCH_PROBE: u64 = 0xfffa;
 pub fn run(environment: cathedral_user_runtime::task::Environment) -> u64 {
     assert_eq!(environment.len(), 3);
     assert!(matches!(Launch::at(0), Err(Error(code)) if code == abi::DENIED as i64));
@@ -33,6 +35,8 @@ pub fn run(environment: cathedral_user_runtime::task::Environment) -> u64 {
     );
     let mut storage_epoch = 0;
     let mut last = wire::error(abi::WOULD_BLOCK);
+    let (mut loss, mut loss_delay, mut next_loss) = (0, 0, 0);
+    let mut held_losses = None;
     loop {
         let mut bytes = [0; 64];
         let Ok(len) = control.0.receive(&mut bytes) else {
@@ -48,11 +52,54 @@ pub fn run(environment: cathedral_user_runtime::task::Environment) -> u64 {
             control.1.send(&wire::encode(last)).unwrap();
             continue;
         }
-        // The host's close question is the leaf's own answer: nothing to lose.
+        if let [LOSS_PROBE, value, delay, next, 0, 0, 0, 0] = words {
+            (loss, loss_delay, next_loss) = (value, delay, next);
+            control.1.send(&wire::encode([0; 8])).unwrap();
+            continue;
+        }
+        if words == [LOSS_BATCH_PROBE, 0, 0, 0, 0, 0, 0, 0] {
+            held_losses = Some(0);
+            control.1.send(&wire::encode([0; 8])).unwrap();
+            continue;
+        }
+        // Normally nothing to lose. A fixture can delay one old clean answer
+        // while subsequent answers become dirty, exercising FIFO correlation.
         // Everything else, a liveness probe included, is relayed to the parent
         // so a fixture sees exactly what the matrix answers a child.
         if words == [wire::LOSS, 0, 0, 0, 0, 0, 0, 0] {
-            control.1.send(&wire::encode([0; 8])).unwrap();
+            if let Some(count) = &mut held_losses {
+                *count += 1;
+                if *count < 8 {
+                    continue;
+                }
+                let until = time::after(150).unwrap();
+                while !time::reached(time::now().unwrap(), until) {
+                    cathedral_user_runtime::yield_now();
+                }
+                for _ in 0..8 {
+                    loop {
+                        match control.1.send(&wire::encode([0; 8])) {
+                            Ok(()) => break,
+                            Err(Error(code)) if code == abi::WOULD_BLOCK as i64 => {
+                                assert!(!time::reached(time::now().unwrap(), until + 300));
+                                cathedral_user_runtime::yield_now();
+                            }
+                            Err(error) => panic!("late loss reply {error:?}"),
+                        }
+                    }
+                }
+                held_losses = None;
+                (loss, loss_delay, next_loss) = (1, 0, 1);
+                continue;
+            }
+            let answer = [0, loss, 0, 0, 0, 0, 0, 0];
+            let until = time::after(loss_delay).unwrap();
+            while !time::reached(time::now().unwrap(), until) {
+                cathedral_user_runtime::yield_now();
+            }
+            loss_delay = 0;
+            loss = next_loss;
+            control.1.send(&wire::encode(answer)).unwrap();
             continue;
         }
         if words[0] == DETACHED_PROBE {

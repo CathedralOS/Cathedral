@@ -1,9 +1,9 @@
 # Rust reference OS: tasks and handoff
 
-Updated 2026-10-17 (local date). Implementation baseline: the commit after
-`37b54c1` ("Install programs in the store and run them from the matrix's realm")
-that boots to a chooser over users and lets a user's chrome launch its programs.
-Check Git for later work.
+Updated 2026-10-17 (local date). Implementation baseline: the recursive
+user-close change following **`cba1d49`**. The chooser/store architecture from that
+commit remains; matrices now aggregate descendant LOSS replies so a whole user
+can be closed and reopened. Check Git for later work.
 
 ## Start here
 
@@ -31,7 +31,10 @@ It uses x86-64 QEMU/TCG and UEFI.
   its own program like everything else's.
 - **CLOSE** in a chooser asks the running program what it would lose and stops
   it only on an answer of nothing; an unsaved note stays open. Launching while
-  the slot is taken answers BUSY. Up/Down/Enter work in a focused chooser.
+  the slot is taken answers BUSY. The outer chooser can close a whole user:
+  its matrix recursively checks its children, retaining the user when a
+  descendant is dirty, busy or unresponsive. Reopening restores its stored state.
+  Up/Down/Enter work in a focused chooser.
 
 Interactive state persists in **`build/boot-harness-rs/cathedral-storage.raw`**:
 the users you made, their notes and colors. Missing media is created; existing
@@ -114,12 +117,13 @@ nested matrix. The kernel still knows no matrix, realm or store.
 - Boot launches and storage-less fixtures keep the boot catalogue, because the
   provider itself must come from boot. The matrix's RUN by catalogue image
   serves those compositions; RUN_OBJECT and LAUNCH serve the store.
-- Timeouts derive from one number. The matrix contract's `STORAGE_DEADLINE`
+- Timeouts derive from one number. The matrix contract's `STORAGE_DEADLINE_TICKS`
   bounds a forwarded storage request; nested hops and program reads add a
   margin, the runtime's storage client waits twice it, and the desktop's
   provider watchdog probes past it, so a stalled provider is always reported by
-  the matrix's verdict first. A durable commit on the lab disk costs about
-  150 ms; do not tune any of these numbers below that order.
+  the matrix's verdict first. These numbers are **ticks**: the current timer
+  runs nominally at 100 Hz, so the base deadline is **six seconds**, not 600 ms.
+  Keep units explicit and measure actual spans before tuning deadlines.
 - Do not add debt to bridge old and new: when a protocol or layer is replaced,
   retire the old one from every composition in the same change and delete it.
   Git history is the only retention wanted.
@@ -196,9 +200,11 @@ hold at most 256 KiB (64 pages).
 A request carries three scope words, so three narrowing grants can stack on one
 path; a fourth is refused. Each scoped request costs the provider one ancestry
 walk per stamp. Collection before every write scans only metadata and the
-key-only chunk index; a note save still costs about 50 ms of collection and
-100 ms of durable commit on the lab disk. The matrix's storage deadline is
-600 ms. All are lab bounds.
+key-only chunk index. The older 50/100/150-ms collection/commit/save claims were
+not reliable unit conversions and are withdrawn. A fresh traced desktop run is
+recorded below. The matrix's base storage deadline is 600 **ticks**, nominally
+six seconds; the runtime's 1200-tick wait is nominally twelve. Values were not
+retuned in the recursive-close change. All are lab bounds.
 
 `--smoke` uses the default profile's `user_programs`, not its desktop startup
 graph; the desktop is tested by `desktop_test.py`.
@@ -226,10 +232,11 @@ in a realm. Both block the first two items below.
   program that cannot be read from the realm answers REFUSED in the chooser
   but the desktop asserts on its own launches. Add an adversarial test for each
   failure actually fixed.
-- [ ] **Bring storage write latency down.** Collection scans every metadata key
-  before each write and a durable commit writes through ATA PIO; together they
-  cost 150 ms per note save with the programs installed. Measure with
-  `--trace-storage` before changing either.
+- [ ] **Bring storage write latency down.** Collection scans metadata before
+  each write and durable commit writes through ATA PIO. Use explicit tick-to-time
+  conversion and separate CPU time from elapsed time. Measure with
+  `--trace-storage` before changing either; the small sample below is not a
+  benchmark or a latency guarantee.
 - [ ] **Let the lab desktops run from the store too.** The probe desktop and
   the notes fixtures still lend the boot catalogue, which keeps the admission
   and funding proofs on their original path. When those proofs have store
@@ -306,3 +313,49 @@ probe desktop images, the notes images, and both objects proofs.
 When handing off again, update the baseline commit, next concrete task, known
 failures and verification scope here. Keep durable subsystem detail in its owner
 docs, and avoid leaving two conflicting descriptions of the default OS boot.
+
+## Recursive-close handoff evidence
+
+The matrix's [loss survey](source-rs/platform/services/matrix/service/children/loss.rs)
+asks both children without blocking their upstream IPC. It replies only after
+all requested answers settle and returns only a boolean aggregate, never child
+identities or draft contents. Dirty, missing, busy and failed answers keep the
+matrix open. Admission/topology commands refuse while a survey is active.
+LOSS remains an advisory observation of cooperative children, not a distributed
+freeze that prevents later edits. General crash recovery and persisted matrix
+configuration remain separate work.
+
+The headless `--matrix-test --release` now checks dirty descendants, a deliberately
+delayed clean reply followed by dirty replies, subtree survival after refusal,
+exhaustion and restoration of the eight-unanswered-probe allowance without
+closing the live child's endpoint, and clean subtree close/recreation while an
+outside sibling survives. The actual
+F5 test checks the outer CLOSE against a dirty note, repeats whole-user close and
+reopen with clean Notes still running, closes a user containing only chrome, and
+verifies persistent Notes/Colors plus the cold-boot host oracle.
+
+Fresh traced F5 evidence: `build/boot-harness-rs/desktop/20261017T231701527969Z/`.
+The first boot had four measured publication spans and two note saves:
+
+| Span | Count | Min / median / max ticks | Nominal milliseconds (10 ms/tick) |
+| --- | --- | --- | --- |
+| Collection | 4 | 14 / 57 / 73 | 140 / 570 / 730 |
+| Commit | 4 | 7 / 21 / 122 | 70 / 210 / 1220 |
+| Whole note save | 2 | 80 / 129 / 178 | 800 / 1290 / 1780 |
+
+These spans include normal traced publication work, not injected stalls. They
+come from one small TCG run on a host also doing validation work, and do not
+establish a stable performance distribution. The deadline-unit correction
+changes documentation and the constant's name, not the timeout values.
+
+Validation for this recursive-close change: `cargo test --locked`,
+`cargo check-userspace`, shell/matrix target clippy, layout checks, formatting,
+`--matrix-test --release` (including exhausted-probe recovery),
+`--matrix-storage-test --release`, `matrix_database_test.py --release
+--notes-recovery`, and the F5 desktop test with and without storage tracing passed.
+The final ordinary desktop run is
+`build/boot-harness-rs/desktop/20261017T232223657195Z/`; its independent oracle
+verified all 189 retained records after cold boot. Notes recovery evidence is
+`build/boot-harness-rs/matrix-database/20261017T232129731671Z/` (16 records).
+The earlier intermittent gate miss did not occur in this run; it remains open.
+No kernel code or timeout value changed, and no new smoke/ARM64 run is claimed.

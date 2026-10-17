@@ -2,7 +2,7 @@
 //! A probe outlasts the matrix's storage deadline, so a stalled provider is
 //! retired by the matrix's verdict before the owner replaces it.
 pub const PROBE_INTERVAL: u64 = 500;
-pub const PROBE_TIMEOUT: u64 = cathedral_platform_contracts::matrix::STORAGE_DEADLINE + 100;
+pub const PROBE_TIMEOUT: u64 = cathedral_platform_contracts::matrix::STORAGE_DEADLINE_TICKS + 100;
 pub const MAX_RESTARTS: u8 = 3;
 #[derive(Default)]
 pub struct Watchdog {

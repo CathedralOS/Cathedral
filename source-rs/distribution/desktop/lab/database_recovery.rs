@@ -67,7 +67,7 @@ pub(super) fn exercise(session: &mut admission::Session) {
     assert_eq!(
         session.matrix.1.receive_until(
             &mut [0; 64],
-            time::after(wire::STORAGE_DEADLINE + 50).unwrap()
+            time::after(wire::STORAGE_DEADLINE_TICKS + 50).unwrap()
         ),
         Err(Error(abi::TIMED_OUT as i64))
     );

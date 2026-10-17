@@ -31,6 +31,7 @@ impl Deferred {
                         !(matches!(
                             w[0],
                             wire::HEALTH
+                                | wire::LOSS
                                 | wire::READ_PIXEL
                                 | wire::STORAGE_STATUS
                                 | wire::STORAGE_BINDING

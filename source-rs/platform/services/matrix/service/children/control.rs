@@ -2,13 +2,14 @@
 //! Control is a FIFO request/reply stream the child answers in order, so an
 //! unanswered request is counted and its late reply skipped rather than letting
 //! it be read as the answer to a newer request. A slow child costs the asker a
-//! timeout; only a child that stops answering altogether loses its control link.
-//! One request may be pending per child: the owner's own, or a health probe
+//! timeout. At the unanswered-request limit, stop issuing probes rather than
+//! closing the child's endpoint (which could destroy its unsaved work).
+//! One request may be pending per child: the owner's own, or a loss query
 //! sent before a sibling's close request, acted on when it answers.
 use super::*;
 
 /// Unanswered requests tolerated before the control link is retired.
-const MAX_STALE: u8 = 8;
+pub(super) const MAX_STALE: u8 = 8;
 
 impl Children {
     pub(super) fn forward(&self, mut words: wire::Packet, routed: u64) -> Result<usize, Error> {
@@ -16,6 +17,9 @@ impl Children {
         if !(1..=2).contains(&hop) {
             Err(Error(abi::DENIED as i64))
         } else if let Some(child) = &self.slots[(hop - 1) as usize] {
+            if child.stale >= MAX_STALE {
+                return Err(Error(abi::TIMED_OUT as i64));
+            }
             let control = child.control.ok_or(Error(abi::PEER_CLOSED as i64))?;
             words[0] = (words[0] & 0xffff) | ((routed >> 2) << wire::OP_BITS);
             control.0.send(&wire::encode(words))?;
@@ -30,6 +34,15 @@ impl Children {
         let mut deadline: Option<u64> = None;
         for (slot, handle) in handles.iter_mut().enumerate() {
             let Some((_, until, _)) = &self.pending[slot] else {
+                // Late replies are drained even while nobody is asking. This
+                // restores probe capacity without mistaking an old answer for
+                // a fresh observation or abandoning the live child's channel.
+                *handle = self.slots[slot].as_ref().and_then(|child| {
+                    (child.stale > 0)
+                        .then_some(child.control)
+                        .flatten()
+                        .map(|p| p.1)
+                });
                 continue;
             };
             if self.retiring[slot].is_none() {
@@ -68,6 +81,18 @@ impl Children {
         parent: &mut Parent,
     ) -> Result<bool, Error> {
         let Some((request, deadline, purpose)) = self.pending[slot] else {
+            if let Some(child) = &mut self.slots[slot]
+                && child.stale > 0
+                && let Some(control) = child.control
+            {
+                match control.1.receive_until(&mut [0; 64], time::now()?) {
+                    Ok(_) => child.stale -= 1,
+                    Err(Error(code)) if code == abi::TIMED_OUT as i64 => (),
+                    // No late replies can arrive on a failed stream. Do not
+                    // leave its permanently-ready handle in the idle wait set.
+                    Err(_) => child.stale = 0,
+                }
+            }
             return Ok(false);
         };
         let mut retired = false;
@@ -97,14 +122,9 @@ impl Children {
             Err(Error(code)) if code == abi::TIMED_OUT as i64 => {
                 let child = self.slots[slot].as_mut().unwrap();
                 child.stale += 1;
-                if child.stale >= MAX_STALE
-                    && let Some((send, receive)) = child.control.take()
-                {
-                    send.close()?;
-                    receive.close()?;
-                }
                 Err(abi::TIMED_OUT)
             }
+            Err(error) if matches!(purpose, Purpose::Loss) => Err(error.0 as u64),
             Err(error) => {
                 // Defer teardown while another exchange owns the parent/provider
                 // stream. A ready reply above can still complete normally.
@@ -120,7 +140,12 @@ impl Children {
         };
         self.pending[slot] = None;
         self.retiring[slot] = None;
+        if matches!(purpose, Purpose::Loss) {
+            self.loss_answer(slot, answer, server)?;
+            return Ok(false);
+        }
         let response = match (purpose, answer) {
+            (Purpose::Loss, _) => unreachable!("survey answered above"),
             (Purpose::Owner, Ok(words)) => words,
             (Purpose::Owner, Err(code)) => wire::error(code),
             // The sibling goes only if it answered and reported nothing it would lose.
