@@ -160,15 +160,48 @@ future feature.
 
 - [ ] **Programs live in the store and get their subtree for free.** Today
   executables come from the fixed boot catalogue and the owner grants Notes a
-  root by number. Put program binaries into the object store as objects, let
-  the boot matrix launch a program from an object it can read, and make the
-  launched program's realm the subtree under its own object (or under an
-  instance object beneath it), so a program's state nests under its binary and
-  cloning the program's subtree clones its state. That is the rule the owner
-  named; the tree, scope stamps and subtree copy already exist for it. It needs
-  admission beyond the boot catalogue (reading code from the store into an
-  executable) and a decision on what the matrix persists for itself, which is
-  where the wiki's "a Matrix is an object owning its world-realm" lands.
+  root by number. The design, worked out against the kernel as it stands:
+  - *Kernel: an executable from a sealed object.* A new syscall turns a sealed
+    memory object the caller holds into a caller-local executable grant. The
+    kernel takes its own read reference so the object outlives the caller's
+    handle, and drops it when the launch is admitted or released or the caller
+    dies. The ELF loader reads page-wise: segments are already page-aligned in
+    the file, so file page k is object frame k and the loader copies frame to
+    frame through the identity map; program headers must sit in the first page
+    (a lab bound). An object-backed grant is consumed by `reserve`, admitted
+    once, and cannot be lent to a child or exported from a launch; boot
+    templates keep their current behaviour. The code change is one `Source`
+    enum through `elf.rs`, `UserSegment` and `creation.rs`, a grant source in
+    `pool/executables.rs` and `LaunchState`, and the syscall in
+    `syscalls/admission`.
+  - *Store and budgets.* `MAX_BYTES` 16 KiB to 256 KiB (64 pages, half the
+    per-task page bound), `ROOT_QUOTA` to a few MiB of the 4 MiB volume,
+    provider private pages to hold a 64-page bulk reply beside its heap,
+    matrix reader pages likewise. Notes is 37 KiB of loadable code, the desktop
+    binary 103 KiB; the storage provider (930 KiB) stays a boot launch.
+    Collection before every write scans the root, so binaries in a root make
+    every save slower; measure before changing the collection policy.
+  - *Seeding.* The harness trims each profile executable to its program headers
+    and loadable segments and the host lab writes them into the formatted
+    image as objects in profile order, with exactly the guest's records, so
+    numbers follow the profile the way catalogue indices do today.
+  - *Matrix: `RUN_OBJECT`.* Same shape as RUN, but the image word names an
+    object in the matrix's realm. The matrix reads it through its own binding
+    as a sealed attachment (a self-originated pending exchange), makes the
+    executable, spawns, and grants the child that object's subtree as its
+    realm. The provider refuses PUBLISH and DELETE on a realm's own root, so a
+    program cannot overwrite its code and keeps all its state beneath it.
+  - *Hosting is copying.* A matrix that hosts programs holds them in its own
+    realm as subtree copies, so the workspace matrix's subtree contains its
+    Notes binary and Notes' notes nest under that copy; cloning the workspace's
+    subtree clones the matrix, its programs and their state. The desktop holds
+    no storage authority and names objects by number only.
+  - Boot launches and storage-less fixtures keep the boot catalogue, because the
+    provider itself must come from boot. The matrix's RUN by catalogue image
+    stays for those compositions.
+  What the matrix persists for itself is still undecided; that is where the
+  wiki's "a Matrix is an object owning its world-realm" lands, and it should
+  not be resolved by implication while building the above.
 - [ ] **Keep app lifecycle honest as apps grow.** Startup failure, app crash and
   provider loss while an app holds work still end in assertions in places. A
   refused control probe now leaves a note open; make the menu say why and offer
