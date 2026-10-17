@@ -76,7 +76,7 @@
         "clock": true,
         "argument": 1129270608,
         "framebuffer": true,
-        "shared_pages": 96
+        "shared_pages": 64
       },
       {
         "package": "cathedral-input-service",

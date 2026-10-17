@@ -10,8 +10,7 @@ F5 and `python tools/boot-harness-rs/run.py --release --window` share
 [one composition](distribution/profile.json). Its Programs menu opens Notes or
 Colors in a nested workspace without restarting QEMU. Notes keeps up to eight
 notes as private objects on the experimental database disk; a duplicate is the
-store's copy of the saved note and shares its content, and cloning the world
-copies every note the same way. Unsaved drafts block
+store's copy of the saved note and shares its content. Unsaved drafts block
 switching/closing until saved or explicitly reloaded, and a busy note is left
 open. Colors is transient. [The distribution map](distribution/README.md)
 links admission, launcher, apps and provider boundaries.
@@ -161,13 +160,11 @@ sealed attachments for publications and bulk reads. The legacy sector catalog an
 its protocol remain only for the status/counter composition.
 
 The matrix forwards that protocol through every level, attachments included, and
-the desktop's apps use it directly: Notes publishes whole documents under its
-home, reads them back as sealed objects and duplicates them through the store's
-copy; the color probe keeps its one object. The desktop keeps worlds as
-top-level objects, grants the workspace one world as its scope, and clones a
-world through the store's subtree copy. Two cold boots and an independent host
-oracle verify saved colors, saved notes and exact records, including two worlds
-whose notes share manifests. The desktop database path requires release mode under TCG.
+the desktop's apps use it directly: Notes publishes whole documents in its
+realm, reads them back as sealed objects and duplicates them through the store's
+copy; the color probe keeps its one object. Two cold boots and an independent
+host oracle verify saved colors, saved notes and exact records, including one
+shared manifest behind a duplicated note. The desktop database path requires release mode under TCG.
 Apps preserve confirmed state on failed saves, show an unconfirmed-save mark and
 reconcile via readback before another mutation. A real startup publish timeout
 and provider cuts before/after commit are exercised with exact revision checks and
@@ -299,17 +296,17 @@ The debug desktop and matrix-storage fixtures pass without enlarging kernel limi
 [Matrix storage scopes](platform/services/matrix/world/storage/README.md) delegate
 private object roots, or subtrees of them, through the ordinary matrix
 executable, which becomes the storage root by being handed provider links rather
-than by an argument. Every hop checks connection identity and a local binding
-revision and stamps the binding's scope on the request; the provider enforces
-every stamp, so a child sees its home and nothing beside it. Siblings have
-separate numbers and revisions. Every operation is atomic at the provider, so
-revocation leaves nothing staged, and regranting an ancestor does not restore
-descendants automatically. The owner can act on a matrix's own authority to
-prepare what it grants. The headless `--matrix-storage-test --release` fixture
-checks these boundaries, copies through two hops, scoped worlds, an owner's
-subtree copy and committed objects after restarting the matrix tree and storage
-provider. Read-only rights and per-subtree quotas remain future work; the visible
-desktop consumes these grants.
+than by an argument. A realm is that attenuated view; a matrix is a program that
+attenuates. Every hop checks connection identity and a local binding revision
+and stamps the binding's scope on the request; the provider enforces every
+stamp, so a child sees its realm and nothing beside it. Siblings have separate
+numbers and revisions. Every operation is atomic at the provider, so revocation
+leaves nothing staged, and regranting an ancestor does not restore descendants
+automatically. The headless `--matrix-storage-test --release` fixture checks
+these boundaries, copies through two hops, attenuated realms, a subtree copy
+and committed objects after restarting the matrix tree and storage provider.
+Read-only rights and per-subtree quotas remain future work; the visible desktop
+consumes these grants.
 
 ## Userspace register and interrupt grants
 

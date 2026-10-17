@@ -1,14 +1,9 @@
 //! One bounded object exchange, independent of the interaction stream. The
 //! matrix holds a forwarded attachment only until the next hop has accepted it.
-//! A child's request is authorized by its binding and stamped with its scope;
-//! the owner's request carries the matrix's own authority unchanged.
+//! A child's request is authorized by its binding and stamped with its scope.
 //! Legacy shared-stream fixtures still serialize their upstream requests.
 use super::*;
 use cathedral_platform_contracts::storage as protocol;
-/// Trace scope for requests the owner makes on the matrix's own authority;
-/// child requests trace by their slot, zero or one.
-#[cfg(feature = "trace-storage")]
-const OWNER_SCOPE: u64 = 2;
 pub(in crate::service::parent) struct Pending {
     request: Request,
     words: wire::Packet,
@@ -24,7 +19,6 @@ impl Pending {
         words: wire::Packet,
         attachment: Option<Object>,
         upstream: bool,
-        source: usize,
     ) -> Result<Self, Error> {
         #[cfg(feature = "trace-storage")]
         time::storage_trace(
@@ -33,7 +27,7 @@ impl Pending {
             } else {
                 "root-admit"
             },
-            request.client.map_or(OWNER_SCOPE, |c| c as u64),
+            request.client.unwrap() as u64,
             words[0] & 0xffff,
         );
         Ok(Self {
@@ -42,7 +36,7 @@ impl Pending {
             attachment,
             receive: None,
             refresh: upstream,
-            source,
+            source: 0,
             deadline: time::after(if upstream { 250 } else { 150 })?,
         })
     }
@@ -56,9 +50,13 @@ impl Parent {
     pub(in crate::service) fn storing(&self) -> bool {
         self.storage_pending.is_some()
     }
-    /// The child whose request is in flight; none when it is the owner's.
-    pub(in crate::service) fn storing_client(&self) -> Option<usize> {
-        self.storage_pending.as_ref().unwrap().request.client
+    pub(in crate::service) fn storing_client(&self) -> usize {
+        self.storage_pending
+            .as_ref()
+            .unwrap()
+            .request
+            .client
+            .unwrap()
     }
     pub(in crate::service) fn upstream_busy(&self) -> bool {
         self.publishing() || (self.upstream && !self.separate_storage && self.storing())
@@ -135,7 +133,7 @@ impl Parent {
                 } else {
                     "root-reply"
                 },
-                p.request.client.map_or(OWNER_SCOPE, |c| c as u64),
+                p.request.client.unwrap() as u64,
                 p.words[0] & 0xffff,
             );
             match object {
@@ -167,46 +165,48 @@ impl Parent {
         if self.upstream && !self.separate_storage {
             return Err(error);
         }
-        self.retire_storage(p.source, p.request.client)?;
+        self.retire_storage(p.source, p.request.client.unwrap())?;
         *reply = Some((wire::error(error.0 as u64), None));
         Ok(())
     }
     fn send_storage(&mut self, p: &mut Pending) -> Result<Option<wire::Packet>, Error> {
+        let slot = self.storage_slot(p.request.client.unwrap());
+        let incarnation = p.request.incarnation;
+        let (source, scope) = match self.scopes.binding(slot, incarnation) {
+            Ok(binding) => binding,
+            Err(status) => return Ok(Some(wire::error(status))),
+        };
+        p.source = source;
+        if p.words == [wire::STORAGE_INFO, 0, 0, 0, 0, 0, 0, 0] {
+            // A binding without a scope of its own is rooted wherever this
+            // matrix's own binding is.
+            let realm = if scope != 0 {
+                scope
+            } else {
+                self.storage_realm
+            };
+            let revision = self.scopes.revision(slot, incarnation).unwrap();
+            return Ok(Some([0, revision, realm, 0, 0, 0, 0, 0]));
+        }
         let mut words = p.words;
         let op = words[0] & 0xffff;
-        if let Some(client) = p.request.client {
-            let slot = self.storage_slot(client);
-            let incarnation = p.request.incarnation;
-            let (source, scope) = match self.scopes.binding(slot, incarnation) {
-                Ok(binding) => binding,
-                Err(status) => return Ok(Some(wire::error(status))),
-            };
-            p.source = source;
-            if p.words == [wire::STORAGE_INFO, 0, 0, 0, 0, 0, 0, 0] {
-                // A binding without a scope of its own is rooted wherever this
-                // matrix's own binding is.
-                let home = if scope != 0 { scope } else { self.storage_home };
-                let revision = self.scopes.revision(slot, incarnation).unwrap();
-                return Ok(Some([0, revision, home, 0, 0, 0, 0, 0]));
-            }
-            // The child's scope narrows the request; the provider checks every stamp.
-            if self
-                .scopes
-                .authorize(slot, incarnation, p.words[0] >> wire::STORAGE_SCOPE_BITS)
-                .is_err()
-                || !(wire::STORAGE_BASE + protocol::HEAD..=wire::STORAGE_BASE + protocol::LAST)
-                    .contains(&op)
-                || protocol::stamp(&mut words, scope).is_err()
-            {
-                return Ok(Some(wire::error(abi::DENIED)));
-            }
+        // The child's scope narrows the request; the provider checks every stamp.
+        if self
+            .scopes
+            .authorize(slot, incarnation, p.words[0] >> wire::STORAGE_SCOPE_BITS)
+            .is_err()
+            || !(wire::STORAGE_BASE + protocol::HEAD..=wire::STORAGE_BASE + protocol::LAST)
+                .contains(&op)
+            || protocol::stamp(&mut words, scope).is_err()
+        {
+            return Ok(Some(wire::error(abi::DENIED)));
         }
         let pair = if self.upstream {
             words[0] = op | (self.storage_epoch << wire::STORAGE_SCOPE_BITS);
             self.storage_pair.ok_or(Error(abi::PEER_CLOSED as i64))?
         } else {
             words[0] = op - wire::STORAGE_BASE;
-            self.storage_links[p.source]
+            self.storage_links[source]
                 .as_mut()
                 .ok_or(Error(abi::DENIED as i64))?
                 .pair()?
@@ -218,9 +218,7 @@ impl Parent {
             } else {
                 "root-send"
             },
-            p.request
-                .client
-                .map_or(OWNER_SCOPE, |client| self.storage_slot(client) as u64),
+            slot as u64,
             words[0] & 0xffff,
         );
         match p.attachment.take() {

@@ -26,7 +26,7 @@ fn regrant(session: &mut admission::Session) -> Result<(), Error> {
     }
     #[cfg(feature = "shell")]
     if session.notes_open {
-        super::shell::grant_notes(session.matrix, session.worlds.current());
+        super::shell::grant_notes(session.matrix);
     }
     #[cfg(not(feature = "shell"))]
     {

@@ -1,7 +1,7 @@
 //! App schema over its matrix-local object capability. Persist before
 //! presenting; revoked bindings cannot save, and a replacement reads only
-//! committed state. The color lives in one object under the binding's home;
-//! its number is discovered by listing the home, never assumed.
+//! committed state. The color lives in one object in the binding's realm;
+//! its number is discovered by listing the realm, never assumed.
 use super::*;
 use cathedral_platform_contracts::storage as store;
 use cathedral_user_runtime::{memory::Private, storage::Scope};
@@ -30,7 +30,7 @@ impl State {
         state
     }
     /// Explicit reconciliation: acquire only the currently granted binding,
-    /// read first, and create only after observing an empty home. Never replay
+    /// read first, and create only after observing an empty realm. Never replay
     /// an uncertain toggle or replace confirmed state on failed reads.
     pub fn reload(&mut self) -> Result<(), u64> {
         let result = self.load();
@@ -44,8 +44,8 @@ impl State {
             Err(error) => return Err(error),
         }
         self.volatile = false;
-        let home = self.scope.home();
-        let listing = self.exchange(store::Request::new(store::LIST, home, 0, 0, 0), None)?;
+        let realm = self.scope.realm();
+        let listing = self.exchange(store::Request::new(store::LIST, realm, 0, 0, 0), None)?;
         let words = store::unpack(&listing).ok_or(abi::IO_ERROR)?;
         if words[0] != 0 {
             return Err(words[0]);
@@ -54,7 +54,7 @@ impl State {
             // Even an error may hide a committed creation. A successful listing
             // afterwards settles the outcome; otherwise leave it unresolved.
             let created = self.publish(0, 0, false);
-            let listing = self.exchange(store::Request::new(store::LIST, home, 0, 0, 0), None)?;
+            let listing = self.exchange(store::Request::new(store::LIST, realm, 0, 0, 0), None)?;
             let words = store::unpack(&listing).ok_or(abi::IO_ERROR)?;
             if words[0] != 0 || words[1] == 0 {
                 return Err(created.err().unwrap_or(abi::IO_ERROR));
@@ -88,13 +88,13 @@ impl State {
         self.alternate = alternate;
         Ok(())
     }
-    /// Object zero creates the color under the home; otherwise the object is
+    /// Object zero creates the color in the realm; otherwise the object is
     /// replaced at its expected revision.
     fn publish(&mut self, object: u64, expected: u64, alternate: bool) -> Result<(), u64> {
         let mut pages = Private::allocate(1).map_err(|e| e.0 as u64)?;
         pages.bytes_mut()[..6].copy_from_slice(&self.payload(alternate));
         let attachment = pages.freeze().map_err(|e| e.0 as u64)?;
-        let parent = if object == 0 { self.scope.home() } else { 0 };
+        let parent = if object == 0 { self.scope.realm() } else { 0 };
         let reply = self.exchange(
             store::Request::new(store::PUBLISH, object, expected, parent, 6),
             Some(&attachment),

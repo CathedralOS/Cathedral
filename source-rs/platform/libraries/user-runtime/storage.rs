@@ -1,5 +1,5 @@
 //! Child-local object storage through the parent matrix. STORAGE_INFO supplies
-//! a binding revision that scopes every later request and the home object the
+//! a binding revision that scopes every later request and the realm the
 //! binding is rooted at; the parent substitutes its own upstream scope at each
 //! hop. Replies carry no correlation identity, so one failed exchange retires
 //! the connection rather than risking a late reply being read as the answer to
@@ -15,7 +15,7 @@ const DEADLINE_TICKS: u64 = 300;
 pub struct Scope {
     pair: (Handle, Handle),
     binding: u64,
-    home: u64,
+    realm: u64,
     alive: bool,
 }
 impl Scope {
@@ -23,7 +23,7 @@ impl Scope {
         Self {
             pair,
             binding: 0,
-            home: 0,
+            realm: 0,
             alive: true,
         }
     }
@@ -39,13 +39,13 @@ impl Scope {
             return Err(words[0]);
         }
         self.binding = words[1];
-        self.home = words[2];
+        self.realm = words[2];
         Ok(self.binding)
     }
-    /// The object this binding is rooted at: the parent to list and to create
-    /// under. Zero is the whole root. Valid after `bind`.
-    pub fn home(&self) -> u64 {
-        self.home
+    /// The object this binding's realm is rooted at: the parent to list and
+    /// to create under. Zero is the whole root. Valid after `bind`.
+    pub fn realm(&self) -> u64 {
+        self.realm
     }
     /// One scoped request with optional attachments in either direction.
     pub fn request(

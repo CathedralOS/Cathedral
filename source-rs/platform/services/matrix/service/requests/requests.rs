@@ -18,9 +18,6 @@ pub(super) fn dispatch(
                 flush(parent, world)?;
                 return Ok(());
             }
-            if words[0] == wire::STORAGE_REQUEST {
-                return parent.storage_owner_request(server, request, words);
-            }
             let response = if matches!(
                 words[0],
                 wire::STORAGE_GRANT | wire::STORAGE_REVOKE | wire::STORAGE_STATUS

@@ -8,9 +8,9 @@ pub(super) struct Parent {
     scopes: cathedral_matrix_service::world::storage::Scopes,
     storage_links: [Option<storage::Provider>; 2],
     storage_epoch: u64,
-    /// Where the upstream binding is rooted; children without a scope of
-    /// their own inherit it as their home.
-    storage_home: u64,
+    /// The object the upstream binding is rooted at; children without a
+    /// scope of their own inherit it as their realm.
+    storage_realm: u64,
     storage_failed: u64,
     pub batches: [cathedral_matrix_service::world::presentation::Batch<
         Option<cathedral_user_runtime::memory::Object>,
@@ -46,7 +46,7 @@ impl Parent {
             scopes: cathedral_matrix_service::world::storage::Scopes::empty(),
             storage_links: [None, None],
             storage_epoch: 0,
-            storage_home: 0,
+            storage_realm: 0,
             storage_failed: 0,
             batches: [const { cathedral_matrix_service::world::presentation::Batch::empty() }; 2],
             next_revision: 0,

@@ -2,21 +2,12 @@
 //! sequence and fixed choice; the distribution validates and performs admission.
 use super::*;
 use cathedral_user_runtime::task::Environment;
-/// What the owner last reported: the active program, why a choice was
-/// refused, and which world of how many the workspace is in.
-#[derive(Clone, Copy, Default, PartialEq, Eq)]
-pub(super) struct Status {
-    pub active: u64,
-    pub blocked: u64,
-    pub world: u64,
-    pub worlds: u64,
-}
 pub fn run(environment: Environment) -> u64 {
     let connections = cathedral_user_runtime::matrix::Connections::load(&environment).unwrap();
     let parent = connections.interaction;
     let control = (Handle::bootstrap(0).unwrap(), Handle::bootstrap(1).unwrap());
     let (mut selected, mut sequence, mut requested) = (NOTES, 0u64, 0);
-    let (mut status, mut pressed) = (Status::default(), false);
+    let (mut active, mut blocked, mut pressed) = (0, 0, false);
     let mut scene: Option<view::Scene> = None;
     let mut repaint = true;
     loop {
@@ -30,10 +21,10 @@ pub fn run(environment: Environment) -> u64 {
                     let down = event[5] & 1 != 0;
                     if down
                         && !pressed
-                        && (view::LEFT..view::LEFT + view::WIDTH as u64).contains(&event[3])
-                        && (view::TOP..view::TOP + view::ROW * view::CHOICES).contains(&event[4])
+                        && (10..190).contains(&event[3])
+                        && (20..68).contains(&event[4])
                     {
-                        selected = (event[4] - view::TOP) / view::ROW + 1;
+                        selected = (event[4] - 20) / 16 + 1;
                         choose = true;
                     }
                     pressed = down;
@@ -42,14 +33,14 @@ pub fn run(environment: Environment) -> u64 {
                 wire::KEY if event[4] == input::PRESS as u64 => match event[3] as u8 {
                     input::UP => {
                         selected = if selected == NOTES {
-                            NEXT_WORLD
+                            CLOSE
                         } else {
                             selected - 1
                         };
                         repaint = true;
                     }
                     input::DOWN => {
-                        selected = if selected == NEXT_WORLD {
+                        selected = if selected == CLOSE {
                             NOTES
                         } else {
                             selected + 1
@@ -74,7 +65,7 @@ pub fn run(environment: Environment) -> u64 {
                 scene
                     .as_ref()
                     .unwrap()
-                    .paint(parent, extent, selected, status);
+                    .paint(parent, extent, selected, active, blocked);
                 repaint = false;
             }
         } else {
@@ -92,14 +83,9 @@ pub fn run(environment: Environment) -> u64 {
                 let len = control.0.receive(&mut bytes).unwrap();
                 let words = wire::decode(&bytes[..len]).unwrap();
                 if words[0] == MENU_STATUS {
-                    let reported = Status {
-                        active: words[1],
-                        blocked: words[2],
-                        world: words[3],
-                        worlds: words[4],
-                    };
-                    repaint |= status != reported;
-                    status = reported;
+                    repaint |= active != words[1] || blocked != words[2];
+                    active = words[1];
+                    blocked = words[2];
                     control
                         .1
                         .send(&wire::encode([0, sequence, requested, 0, 0, 0, 0, 0]))

@@ -16,7 +16,7 @@ pub(super) fn exercise(f: &Fixture, provider: cathedral_user_runtime::task::Chil
     reopened.owner(0, [wire::STORAGE_GRANT, 1, 1, 0, 0, 0, 0, 0]);
     expect(text(&reopened, 2, 1).unwrap(), b"nested root");
     expect(text(&reopened, 2, 2).unwrap(), b"nested copy");
-    expect(text(&reopened, 2, 4).unwrap(), b"inside world");
+    expect(text(&reopened, 2, 4).unwrap(), b"inside realm");
     expect(text(&reopened, 2, 6).unwrap(), b"inside copy");
     expect(text(&reopened, 3, 1).unwrap(), b"outside root");
     assert_eq!(listing(&reopened, 2).unwrap()[1..6], [4, 1, 2, 3, 5]);

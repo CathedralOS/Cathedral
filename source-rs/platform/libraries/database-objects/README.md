@@ -32,7 +32,7 @@ source's manifest. The content is not read, hashed or rewritten, whatever its
 size. A subtree copy does the same for the source and every descendant,
 preserving the shape under new numbers, and is refused whole beyond
 `COPY_LIMIT` objects. Editing either side afterwards leaves the other untouched
-and keeps sharing every chunk the edit did not change. A world made of many
+and keeps sharing every chunk the edit did not change. A realm made of many
 objects is copied for the price of three small records per object.
 
 The shared [content encoding](../content-layout/lib.rs) is extracted from the host

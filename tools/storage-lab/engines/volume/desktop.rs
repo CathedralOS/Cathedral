@@ -1,9 +1,7 @@
 //! Independent oracle for the default desktop image after its interactive test:
 //! construct every expected record without importing the guest store, then
-//! compare the whole retained set. The notes root holds two worlds. The first
-//! was made at startup and holds a note and its edited copy; the second is a
-//! subtree copy of the first, whose second note was then edited once more.
-//! The ungranted root holds nothing.
+//! compare the whole retained set. Notes' root holds two objects at its top
+//! whose first revisions share one manifest; the ungranted root holds nothing.
 use super::*;
 use crate::chunks::{Layout, Policy, Store};
 use redb::ReadableTable;
@@ -15,13 +13,6 @@ fn key(kind: u8, suffix: &[u8]) -> Vec<u8> {
     let mut key = vec![ROOT, kind];
     key.extend_from_slice(suffix);
     key
-}
-fn head(revision: u64, manifest: &[u8], len: usize, parent: u64) -> Vec<u8> {
-    let mut head = revision.to_le_bytes().to_vec();
-    head.extend_from_slice(manifest);
-    head.extend_from_slice(&(len as u64).to_le_bytes());
-    head.extend_from_slice(&parent.to_le_bytes());
-    head
 }
 fn event(object: u64, revision: u64) -> Vec<u8> {
     let mut suffix = object.to_be_bytes().to_vec();
@@ -48,16 +39,13 @@ pub fn verify(path: &Path, offset: u64, bytes: u64) -> Result<()> {
         layout: Layout::Flat,
     });
     let mut expected = BTreeMap::new();
-    // Content is shared within the root: four distinct texts, however many
-    // notes point at them. Collection runs before each write, so only events
-    // that were still heads at the last write survive; the clone's edited note
-    // was the last write, so its first event is still present.
-    let empty = store.put(b"");
+    // Note one is saved once; note two is copied from it, then edited and saved.
+    // Collection runs before each write, so the copy's first event is still
+    // present: nothing retired it after the final publication.
     let original = store.put(b"NTS1hello cathedral");
     let edited = store.put(b"NTS1hello cathedral two");
-    let cloned = store.put(b"NTS1hello cathedral two clone");
     let mut manifests = Vec::new();
-    for version in [&empty, &original, &edited, &cloned] {
+    for version in [&original, &edited] {
         for (k, v) in store.records(version) {
             if k == b"head" {
                 manifests.push(v);
@@ -66,30 +54,17 @@ pub fn verify(path: &Path, offset: u64, bytes: u64) -> Result<()> {
             expected.insert(key(k[0], &k[1..]), v);
         }
     }
-    let text = |manifest: usize, revision: u64, parent: u64| {
-        let len = [0, 19, 23, 29][manifest];
-        head(revision, &manifests[manifest], len, parent)
-    };
-    // Objects: world 1; its notes 2 (saved once) and 3 (copied, then edited);
-    // world 4 (the clone); its notes 5 (copy of 2) and 6 (copy of 3, edited).
-    let objects: [(u64, Vec<u8>, Vec<Vec<u8>>); 6] = [
-        (1, text(0, 1, 0), vec![text(0, 1, 0)]),
-        (2, text(1, 1, 1), vec![text(1, 1, 1)]),
-        (3, text(2, 2, 1), vec![text(2, 2, 1)]),
-        (4, text(0, 1, 0), vec![text(0, 1, 0)]),
-        (5, text(1, 1, 4), vec![text(1, 1, 4)]),
-        (6, text(3, 2, 4), vec![text(2, 1, 4), text(3, 2, 4)]),
-    ];
-    for (object, current, history) in objects {
-        let parent = u64::from_le_bytes(current[48..].try_into().unwrap());
-        expected.insert(key(b'h', &object.to_be_bytes()), current);
-        expected.insert(edge(parent, object), Vec::new());
-        for head in history {
-            let revision = u64::from_le_bytes(head[..8].try_into().unwrap());
-            expected.insert(event(object, revision), head);
-        }
-    }
-    expected.insert(key(b'n', &[]), 7u64.to_le_bytes().to_vec());
+    let first = colors::head(1, &manifests[0], 4 + "hello cathedral".len(), 0);
+    let copied = colors::head(1, &manifests[0], 4 + "hello cathedral".len(), 0);
+    let second = colors::head(2, &manifests[1], 4 + "hello cathedral two".len(), 0);
+    expected.insert(key(b'h', &1u64.to_be_bytes()), first.clone());
+    expected.insert(key(b'h', &2u64.to_be_bytes()), second.clone());
+    expected.insert(edge(0, 1), Vec::new());
+    expected.insert(edge(0, 2), Vec::new());
+    expected.insert(event(1, 1), first);
+    expected.insert(event(2, 1), copied);
+    expected.insert(event(2, 2), second);
+    expected.insert(key(b'n', &[]), 3u64.to_le_bytes().to_vec());
     let charge = expected.iter().map(|(k, v)| k.len() + v.len()).sum::<usize>() + 10;
     expected.insert(key(b'q', &[]), (charge as u64).to_le_bytes().to_vec());
     if actual != expected {
@@ -97,7 +72,7 @@ pub fn verify(path: &Path, offset: u64, bytes: u64) -> Result<()> {
         return Err("desktop records differ from the independent object oracle".into());
     }
     println!(
-        "VERIFIED: two worlds of two notes each sharing content, exact heads/history/edges/quota, empty second root ({} records)",
+        "VERIFIED: two notes sharing one manifest, exact heads/history/edges/quota, empty second root ({} records)",
         actual.len()
     );
     Ok(())

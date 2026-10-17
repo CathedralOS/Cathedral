@@ -1,9 +1,8 @@
-// The F5 desktop. Admit providers and the funded root matrix, open the
-// worlds, lay out the workspace and the program menu, start physical input,
-// then serve menu choices and supervise storage. What each choice does lives
-// in shell/, the worlds in worlds.rs; the apps live in app/ and
-// ../applications/notes. The lab module composes the same admission, apps
-// and budgets into the probe desktop.
+// The F5 desktop. Admit providers and the funded root matrix, lay out the
+// workspace and the program menu, start physical input, then serve menu
+// choices and supervise storage. What each choice does lives in shell/; the
+// apps live in app/ and ../applications/notes. The lab module composes the
+// same admission, apps and budgets into the probe desktop.
 use super::*;
 use cathedral_platform_contracts::input;
 use cathedral_user_runtime::{ipc, task::Launch};
@@ -39,14 +38,9 @@ pub(crate) fn run() -> u64 {
     cathedral_user_runtime::write(b"Cathedral desktop: ready; choose a program\n").unwrap();
     let (mut sequence, mut active, mut blocked) = (0, 0, 0);
     loop {
-        let (world, worlds) = session.worlds.position();
         let reply = call(
             matrix,
-            wire::route(
-                [shell::MENU_STATUS, active, blocked, world, worlds, 0, 0, 0],
-                1,
-            )
-            .unwrap(),
+            wire::route([shell::MENU_STATUS, active, blocked, 0, 0, 0, 0, 0], 1).unwrap(),
         );
         assert_eq!(reply[0], 0);
         if reply[1] != sequence {

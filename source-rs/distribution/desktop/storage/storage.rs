@@ -18,28 +18,12 @@ fn request(f: &Fixture, leaf: usize, request: store::Request, payload: &[u8]) ->
     wire::encode(f.query(leaf, words))
 }
 /// The object a leaf's binding is rooted at, once it has a binding.
-fn home(f: &Fixture, leaf: usize) -> Result<u64, u64> {
+fn realm(f: &Fixture, leaf: usize) -> Result<u64, u64> {
     let info = f.query(leaf, [wire::STORAGE_INFO, 0, 0, 0, 0, 0, 0, 0]);
     if info[0] != 0 {
         return Err(info[0]);
     }
     Ok(info[2])
-}
-/// An object request on the root matrix's own authority.
-fn owner_request(f: &Fixture, op: u64, object: u64, expected: u64, argument: u64) -> wire::Packet {
-    f.query(
-        0,
-        [
-            wire::STORAGE_REQUEST,
-            0,
-            op,
-            object,
-            expected,
-            argument,
-            0,
-            0,
-        ],
-    )
 }
 fn publish(
     f: &Fixture,
@@ -48,7 +32,7 @@ fn publish(
     expected: u64,
     payload: &[u8],
 ) -> Result<store::Reply, u64> {
-    let parent = if object == 0 { home(f, leaf)? } else { 0 };
+    let parent = if object == 0 { realm(f, leaf)? } else { 0 };
     store::Reply::decode(&request(
         f,
         leaf,
@@ -76,6 +60,20 @@ fn copy(
         &[],
     ))
 }
+fn copy_tree(
+    f: &Fixture,
+    leaf: usize,
+    object: u64,
+    expected: u64,
+    parent: u64,
+) -> Result<store::Reply, u64> {
+    store::Reply::decode(&request(
+        f,
+        leaf,
+        store::Request::new(store::COPY_TREE, object, expected, parent, 0),
+        &[],
+    ))
+}
 fn read(f: &Fixture, leaf: usize, object: u64) -> Result<([u8; 32], usize), u64> {
     let head = store::Reply::decode(&request(
         f,
@@ -98,9 +96,9 @@ fn text(f: &Fixture, leaf: usize, object: u64) -> Result<[u8; 32], u64> {
 fn expect(bytes: [u8; 32], payload: &[u8]) {
     assert_eq!(&bytes[..payload.len()], payload);
 }
-/// The children of the leaf's home: count, then the numbers.
+/// The children of the leaf's realm: count, then the numbers.
 fn listing(f: &Fixture, leaf: usize) -> Result<[u64; 8], u64> {
-    let parent = home(f, leaf)?;
+    let parent = realm(f, leaf)?;
     let reply = request(
         f,
         leaf,
@@ -123,12 +121,12 @@ fn grant(f: &Fixture) {
         wire::error(abi::DENIED)
     );
 }
-/// Give the nested matrix one scope of root 0 and its leaf the whole of that.
+/// Give the nested matrix one subtree of root 0 and its leaf the whole of that.
 fn regrant_scoped(f: &Fixture, scope: u64) {
     f.owner(0, [wire::STORAGE_REVOKE, 0, 0, 0, 0, 0, 0, 0]);
     f.owner(0, [wire::STORAGE_GRANT, 0, 0, scope, 0, 0, 0, 0]);
     f.owner(1, [wire::STORAGE_GRANT, 0, 0, 0, 0, 0, 0, 0]);
-    assert_eq!(home(f, 2), Ok(scope));
+    assert_eq!(realm(f, 2), Ok(scope));
 }
 pub fn run() -> u64 {
     let provider = Launch::at(4).unwrap().spawn(0).unwrap();
@@ -141,9 +139,9 @@ pub fn run() -> u64 {
     probes::revocation(f);
     probes::replacement(f);
     probes::sharing(f);
-    probes::scoping(f);
+    probes::attenuation(f);
     recovery::exercise(f, provider);
-    cathedral_user_runtime::write(b"Cathedral matrix storage: scoped roots, recursive delegation, revocation, cheap copies, subtree scopes and replacement passed\n").unwrap();
+    cathedral_user_runtime::write(b"Cathedral matrix storage: scoped roots, recursive delegation, revocation, cheap copies, attenuated realms and replacement passed\n").unwrap();
     loop {
         let _ = event_sleep();
     }

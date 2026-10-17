@@ -1,5 +1,5 @@
-//! Scope isolation, stale bindings, replacement, content sharing and subtree
-//! delegation over real IPC.
+//! Scope isolation, stale bindings, replacement, content sharing and realm
+//! attenuation over real IPC.
 use super::*;
 pub(super) fn delegation(f: &Fixture) {
     assert_eq!(listing(f, 2), Err(abi::DENIED));
@@ -76,30 +76,26 @@ pub(super) fn sharing(f: &Fixture) {
     assert_eq!(listing(f, 3).unwrap()[1], 1);
     assert_eq!(super::copy(f, 2, 9, 1, 0), Err(store::MISSING));
 }
-pub(super) fn scoping(f: &Fixture) {
-    // The owner carves a world out of root 0 on the matrix's own authority;
-    // a child has no such authority on its data connection.
-    let world = owner_request(f, store::PUBLISH, 0, 0, 0);
-    assert_eq!((world[0], world[1], world[2]), (0, 3, 1));
-    let world = world[1];
-    assert_eq!(
-        f.query(2, [wire::STORAGE_REQUEST, 0, store::LIST, 0, 0, 0, 0, 0]),
-        wire::error(abi::DENIED)
-    );
-    // Granted the world, the nested matrix and its leaf see it as their home
+pub(super) fn attenuation(f: &Fixture) {
+    // A program holding the whole root makes a subtree: an empty object at
+    // the top. The owner can then grant the nested matrix that subtree alone.
+    let realm = publish(f, 2, 0, 0, b"").unwrap();
+    assert_eq!((realm.object, realm.revision, realm.length), (3, 1, 0));
+    let realm = realm.object;
+    // Granted the subtree, the nested matrix and its leaf see it as their realm
     // and nothing beside it; an object outside and one that does not exist
     // are refused alike.
-    regrant_scoped(f, world);
+    regrant_scoped(f, realm);
     assert_eq!(listing(f, 2).unwrap()[1], 0);
     assert_eq!(text(f, 2, 1), Err(abi::DENIED));
     assert_eq!(text(f, 2, 99), Err(abi::DENIED));
-    let inside = publish(f, 2, 0, 0, b"inside world").unwrap();
+    let inside = publish(f, 2, 0, 0, b"inside realm").unwrap();
     assert_eq!((inside.object, inside.revision), (4, 1));
     assert_eq!(listing(f, 2).unwrap()[1..3], [1, 4]);
     // Copies cross the boundary in neither direction, and the leaf cannot
     // widen itself: scope words it fills only narrow, and filling them all
     // leaves the matrix no room for its stamp.
-    assert_eq!(copy(f, 2, 1, 1, world), Err(abi::DENIED));
+    assert_eq!(copy(f, 2, 1, 1, realm), Err(abi::DENIED));
     assert_eq!(copy(f, 2, 4, 1, 0), Err(abi::DENIED));
     assert_eq!(
         f.query(2, [wire::STORAGE_BASE + store::HEAD, 4, 0, 0, 0, 4, 0, 0])[0],
@@ -113,26 +109,30 @@ pub(super) fn scoping(f: &Fixture) {
         f.query(2, [wire::STORAGE_BASE + store::HEAD, 4, 0, 0, 0, 4, 4, 4]),
         wire::error(abi::DENIED)
     );
-    // The owner clones the world: the copy and its note share content, and
-    // editing the copy's note leaves the original world as it was.
+    // A subtree cannot be copied into itself, and a subtree holding objects
+    // cannot be deleted from under them; neither needs more than the realm.
+    assert_eq!(copy_tree(f, 2, realm, 1, realm), Err(abi::INVALID_ARGUMENT));
+    // Back at the whole root, the same program copies the subtree: the copy
+    // and its object share content, and editing the copy leaves the original.
+    regrant_scoped(f, 0);
     assert_eq!(
-        owner_request(f, store::COPY_TREE, world, 1, world),
-        wire::error(abi::INVALID_ARGUMENT)
+        store::Reply::decode(&request(
+            f,
+            2,
+            store::Request::new(store::DELETE, realm, 1, 0, 0),
+            &[]
+        )),
+        Err(abi::BUSY)
     );
-    let copied = owner_request(f, store::COPY_TREE, world, 1, 0);
-    assert_eq!((copied[0], copied[1], copied[2]), (0, 5, 1));
-    regrant_scoped(f, copied[1]);
+    let copied = copy_tree(f, 2, realm, 1, 0).unwrap();
+    assert_eq!((copied.object, copied.revision), (5, 1));
+    regrant_scoped(f, copied.object);
     assert_eq!(listing(f, 2).unwrap()[1..3], [1, 6]);
-    expect(text(f, 2, 6).unwrap(), b"inside world");
+    expect(text(f, 2, 6).unwrap(), b"inside realm");
     assert_eq!(publish(f, 2, 6, 1, b"inside copy").unwrap().revision, 2);
-    regrant_scoped(f, world);
-    expect(text(f, 2, 4).unwrap(), b"inside world");
+    regrant_scoped(f, realm);
+    expect(text(f, 2, 4).unwrap(), b"inside realm");
     assert_eq!(text(f, 2, 6), Err(abi::DENIED));
-    // A world with notes in it cannot be deleted from under them.
-    assert_eq!(
-        owner_request(f, store::DELETE, world, 1, 0),
-        wire::error(abi::BUSY)
-    );
     regrant_scoped(f, 0);
     assert_eq!(listing(f, 2).unwrap()[1..6], [4, 1, 2, 3, 5]);
 }

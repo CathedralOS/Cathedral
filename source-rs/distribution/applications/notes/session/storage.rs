@@ -1,8 +1,8 @@
-//! Each note is one private object under the binding's home; the home holds
-//! up to MAX_NOTES of them. Saving publishes the whole encoded document;
-//! duplicating asks the store to copy the confirmed object beside it, which
-//! shares its content rather than rewriting it. The app never learns where
-//! its home sits in the root: a world, a whole root and a clone look alike.
+//! Each note is one private object in the binding's realm, which holds up to
+//! MAX_NOTES of them. Saving publishes the whole encoded document; duplicating
+//! asks the store to copy the confirmed object beside it, which shares its
+//! content rather than rewriting it. The app never learns where its realm sits
+//! in the root: a subtree and a whole root look alike.
 //! IPC crosses into the parent matrix's service/parent/storage, then the
 //! object provider's service entrance.
 use super::*;
@@ -39,15 +39,15 @@ fn traced<T>(style: u64, op: u64, call: impl FnOnce() -> T) -> T {
     result
 }
 impl Notes {
-    /// Acquire the current binding, enumerate the home and read the current
+    /// Acquire the current binding, enumerate the realm and read the current
     /// note. Reconciliation abandons nothing durable: every write was already atomic.
     pub fn load(&mut self) -> Result<Document, u64> {
         self.scope.bind()?;
-        let home = self.scope.home();
+        let realm = self.scope.realm();
         self.count = 0;
         let mut after = 0;
         loop {
-            let request = store::Request::new(store::LIST, home, 0, after, 0);
+            let request = store::Request::new(store::LIST, realm, 0, after, 0);
             let (reply, _) = traced(self._style, store::LIST, || {
                 self.scope.request(request, None)
             })?;
@@ -107,9 +107,9 @@ impl Notes {
         let mut pages = Private::allocate(1).map_err(|e| e.0 as u64)?;
         pages.bytes_mut()[..len].copy_from_slice(&bytes[..len]);
         let object = pages.freeze().map_err(|e| e.0 as u64)?;
-        // A first note is created under the home; later saves name the note.
+        // A first note is created in the realm; later saves name the note.
         let request = if self.count == 0 {
-            store::Request::new(store::PUBLISH, 0, 0, self.scope.home(), len as u64)
+            store::Request::new(store::PUBLISH, 0, 0, self.scope.realm(), len as u64)
         } else {
             store::Request::new(
                 store::PUBLISH,
@@ -140,7 +140,7 @@ impl Notes {
             store::COPY,
             self.ids[self.current],
             self.revision,
-            self.scope.home(),
+            self.scope.realm(),
             0,
         );
         let reply = traced(self._style, store::COPY, || self.scope.call(request))?;
