@@ -8,18 +8,13 @@ the target's semantic slot to `Kernel::enter(image, initial_storage)`.
 handoff or fabricate the two storage roots. The preserved map/exit/report
 implementation in `own_machine.omg` is not yet reached by that adapter.
 
-The source selection passes ordinary package review and reaches native emission,
-but is **not native-build- or boot-verified**. The current refusal is native
-settlement of the text-output wrapper's direct foreign leaf: the selected
-boundary provider is retained, but its explicitly called external dependency
-has no selected realization row. The leaf needs its own exact binding custody;
-aliasing it to the wrapper's boundary slot would recurse into the wrapper.
-
-The following known refusal is the physical entry stack check: Omega assigns
-every foreign call a fixed 256 KiB same-stack
-contribution, exceeding the UEFI target's 128 KiB arrival guarantee before the
-adapter's own frames and reserve are added. This needs admitted per-provider
-demand, not a smaller unexplained constant or a larger invented guarantee.
+The source selection passes ordinary package review and direct foreign-leaf
+settlement, but is **not native-build- or boot-verified**. The current refusal
+is physical entry stack admission: Omega assigns every foreign call a fixed
+256 KiB same-stack contribution. The fresh build reports 262,560 bytes of demand
+plus 4,096 bytes of reserve against the UEFI target's 131,072-byte arrival
+guarantee. This needs admitted per-provider demand, not a smaller unexplained
+constant or a larger invented guarantee.
 Historical boot comments and old images do not establish that this tree runs.
 
 The intended acceptance is one freshly compiled `uefi_x86_64` image under
@@ -46,10 +41,6 @@ acceptance as if it were portable.
 
 ## Work still required
 
-- Close directly called foreign declarations into the selected realization
-  dependency set, preserving exact leaf identity, target, calling plan, trust,
-  and table-field provenance. The inline implementation calls an ordinary
-  helper; removed conformance assignment syntax is not a workaround.
 - Replace the compiler's fixed foreign-call stack contribution with the exact
   selected provider's admitted demand, then rerun the fresh-image harness.
   Ordinary package admission now publishes the five-package lock without
