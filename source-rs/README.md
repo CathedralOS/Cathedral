@@ -20,7 +20,7 @@ Enter. Saved notes survive QEMU restarts. See [controls and executable routes](d
 
 Recent integrated proofs: `python tools/boot-harness-rs/run.py --matrix-desktop-test --release`
 checks recursive atomic presentation; `--matrix-storage-test --release` checks
-[private catalog delegation](platform/services/matrix/world/storage/README.md).
+[private root delegation](platform/services/matrix/world/storage/README.md).
 The smoke suite covers [combined IPC/IRQ/deadline waits](kernel/core/user_tasks/devices/README.md).
 Run these commands from the repository root.
 
@@ -885,7 +885,7 @@ readiness tests cover denied clock/rights, non-consuming observations, first-rea
 precedence, closure and an all-blocked timeout. Existing tests retain deadline
 copyout, late replies, raw keyboard grants, sibling queues and admission rollback.
 
-## Private catalog and transaction experiment
+## Legacy private catalog composition
 
 Ordinary boots create/reuse `build/boot-harness-rs/storage.raw`, a dedicated
 4 MiB image, separate from the ESP. Ordinary boots and tests never reset that
@@ -1088,7 +1088,7 @@ publication, cold-recovers contents and independently verifies every retained re
 The retention trace adds durable pins, bounded collection, sealed bulk reads and
 reader-pressure checks across three boots. The matrix trace saves each desktop
 app through its private matrix capability and cold-restores it from database
-catalog snapshots. See the [adapter guide](platform/libraries/object-store/database/README.md)
+private objects. See the [object store guide](platform/libraries/database-objects/README.md)
 for ownership and format limits, and the content guide for dev commands, heap
 samples and optional ATA tracing. The intermittent ATA timeout remains undiagnosed.
 

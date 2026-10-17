@@ -1,5 +1,5 @@
 // Load local connections, reconcile durable state, handle editing, then present.
-// Storage owns the IPC transaction; view owns immutable bitmap publication.
+// Storage owns the object exchanges; view owns immutable bitmap publication.
 use cathedral_kernel_contracts::user as abi;
 use cathedral_notes::document::Document;
 use cathedral_platform_contracts::{input, matrix as wire};
@@ -19,6 +19,23 @@ fn call(pair: Pair, words: wire::Packet) -> wire::Packet {
         .unwrap();
     wire::decode(&bytes[..n]).unwrap()
 }
+/// Owner control reply: revision, length, last error, dirty, note count, note index.
+fn report(control: Pair, notes: &storage::Notes, draft: &Document, dirty: bool, error: u64) {
+    let _ = control.1.send(&wire::encode([
+        0,
+        notes.revision,
+        draft.len as u64,
+        error,
+        u64::from(dirty),
+        notes.count as u64,
+        if notes.count == 0 {
+            0
+        } else {
+            notes.current as u64 + 1
+        },
+        0,
+    ]));
+}
 pub fn run(style: u64, environment: Environment) {
     let connections = cathedral_user_runtime::matrix::Connections::load(&environment).unwrap();
     let parent = connections.interaction;
@@ -26,8 +43,9 @@ pub fn run(style: u64, environment: Environment) {
         call(parent, [wire::STORAGE_STATUS, 0, 0, 0, 0, 0, 0, 0]),
         wire::error(abi::DENIED)
     );
-    let control = (Handle::bootstrap(0).unwrap(), Handle::bootstrap(1).unwrap());
-    let mut catalog = storage::Catalog::new(connections.storage, style);
+    // The owner may retire this control link; the app keeps serving its world.
+    let mut control = Some((Handle::bootstrap(0).unwrap(), Handle::bootstrap(1).unwrap()));
+    let mut notes = storage::Notes::new(connections.storage, style);
     let mut draft = Document::default();
     let mut confirmed = draft;
     let mut error = 0;
@@ -40,7 +58,7 @@ pub fn run(style: u64, environment: Environment) {
         let extent = wire::poll_view(snapshot);
         if extent[0] == 0 {
             if !loaded {
-                match catalog.load() {
+                match notes.load() {
                     Ok(doc) => {
                         confirmed = doc;
                         draft = doc;
@@ -49,41 +67,72 @@ pub fn run(style: u64, environment: Environment) {
                     Err(code) => error = code,
                 }
                 loaded = true;
-                time::storage_sample(
-                    "note-loaded",
-                    &[style, catalog.generation, draft.len as u64],
-                );
+                time::storage_sample("note-loaded", &[style, notes.revision, draft.len as u64]);
+                // Page allowances, use and frame funding, so a refused allocation
+                // is diagnosable from the serial log.
+                if let (Ok(budget), Ok(physical)) = (
+                    cathedral_user_runtime::resources::budget(),
+                    cathedral_user_runtime::resources::physical_budget(),
+                ) {
+                    time::storage_sample(
+                        "note-budget",
+                        &[
+                            budget.limits.private_pages,
+                            budget.limits.reader_pages,
+                            budget.used.private_pages,
+                            budget.used.reader_pages,
+                            physical.reserved,
+                            physical.charged,
+                        ],
+                    );
+                }
             }
             let event = wire::poll_event(snapshot);
             if event[2] == wire::KEY && event[4] != input::RELEASE as u64 {
                 let key = event[3] as u8;
-                if matches!(key, input::F1 | input::F2) && event[4] == input::PRESS as u64 {
-                    if key == input::F2 || error != 0 {
-                        match catalog.load() {
-                            Ok(doc) => {
-                                confirmed = doc;
-                                error = 0;
-                                if key == input::F2 {
-                                    draft = doc;
-                                    cursor = doc.len;
-                                }
-                            }
-                            Err(code) => error = code,
-                        }
-                    } else if draft != confirmed || catalog.generation == 0 {
-                        match catalog.save(&draft) {
-                            Ok(()) => {
+                let function = matches!(key, input::F1 | input::F2 | input::F3 | input::F4);
+                if function && event[4] == input::PRESS as u64 {
+                    let dirty = draft != confirmed;
+                    let outcome = match key {
+                        // F1 saves a draft; on an unresolved error it reads first,
+                        // keeping the draft so a lost acknowledgement never
+                        // repeats a write blindly.
+                        input::F1 if error == 0 && (dirty || notes.revision == 0) => {
+                            notes.save(&draft).map(|()| {
                                 confirmed = draft;
                                 time::storage_sample(
                                     "note-saved",
-                                    &[style, catalog.generation, draft.len as u64],
+                                    &[style, notes.revision, draft.len as u64],
                                 );
-                            }
-                            Err(code) => error = code,
+                            })
                         }
-                    }
+                        input::F1 | input::F2 => notes.load().map(|doc| {
+                            confirmed = doc;
+                            if key == input::F2 {
+                                draft = doc;
+                                cursor = doc.len;
+                            }
+                        }),
+                        // Duplicate and switch act on confirmed notes only.
+                        input::F3 if error == 0 && !dirty && notes.revision != 0 => {
+                            notes.duplicate().map(|doc| {
+                                confirmed = doc;
+                                draft = doc;
+                                cursor = doc.len;
+                            })
+                        }
+                        input::F4 if error == 0 && !dirty && notes.count > 1 => {
+                            notes.next().map(|doc| {
+                                confirmed = doc;
+                                draft = doc;
+                                cursor = doc.len;
+                            })
+                        }
+                        _ => Ok(()),
+                    };
+                    error = outcome.err().unwrap_or(0);
                     repaint = true;
-                } else {
+                } else if !function {
                     repaint |= draft.edit(&mut cursor, key);
                 }
             }
@@ -99,6 +148,7 @@ pub fn run(style: u64, environment: Environment) {
                     cursor,
                     draft != confirmed,
                     error,
+                    &notes,
                 );
                 repaint = false;
             }
@@ -109,25 +159,22 @@ pub fn run(style: u64, environment: Environment) {
             continue;
         }
         let mut bytes = [0; 64];
-        match ipc::wait_many(&[connections.wake, control.0], time::after(100).unwrap()) {
+        let mut handles = [connections.wake; 2];
+        let mut count = 1;
+        if let Some(control) = control {
+            handles[1] = control.0;
+            count = 2;
+        }
+        match ipc::wait_many(&handles[..count], time::after(100).unwrap()) {
             Ok(0) => {
                 connections.wake.receive(&mut bytes).unwrap();
             }
             Ok(_) => {
-                control.0.receive(&mut bytes).unwrap();
-                control
-                    .1
-                    .send(&wire::encode([
-                        0,
-                        catalog.generation,
-                        draft.len as u64,
-                        error,
-                        u64::from(draft != confirmed),
-                        0,
-                        0,
-                        0,
-                    ]))
-                    .unwrap();
+                let pair = control.unwrap();
+                match pair.0.receive(&mut bytes) {
+                    Ok(_) => report(pair, &notes, &draft, draft != confirmed, error),
+                    Err(_) => control = None,
+                }
             }
             Err(Error(code)) if code == abi::TIMED_OUT as i64 => (),
             Err(e) => panic!("notes wait {e:?}"),

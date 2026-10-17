@@ -7,7 +7,7 @@ pub fn run(environment: Environment) -> u64 {
     let parent = connections.interaction;
     let control = (Handle::bootstrap(0).unwrap(), Handle::bootstrap(1).unwrap());
     let (mut selected, mut sequence, mut requested) = (NOTES, 0u64, 0);
-    let (mut active, mut blocked, mut pressed) = (0, false, false);
+    let (mut active, mut blocked, mut pressed) = (0, 0, false);
     let mut scene: Option<view::Scene> = None;
     let mut repaint = true;
     loop {
@@ -83,9 +83,9 @@ pub fn run(environment: Environment) -> u64 {
                 let len = control.0.receive(&mut bytes).unwrap();
                 let words = wire::decode(&bytes[..len]).unwrap();
                 if words[0] == MENU_STATUS {
-                    repaint |= active != words[1] || blocked != (words[2] != 0);
+                    repaint |= active != words[1] || blocked != words[2];
                     active = words[1];
-                    blocked = words[2] != 0;
+                    blocked = words[2];
                     control
                         .1
                         .send(&wire::encode([0, sequence, requested, 0, 0, 0, 0, 0]))

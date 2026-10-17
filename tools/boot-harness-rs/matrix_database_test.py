@@ -23,7 +23,7 @@ ROOT = HERE.parents[1]
 
 
 def desktop(stream, output, serial, reboot):
-    assert 'Cathedral: database catalog ready' in serial
+    assert 'Cathedral: object storage ready' in serial
     position = [40, 40]
 
     def send(events):
@@ -84,7 +84,7 @@ def desktop(stream, output, serial, reboot):
 
 
 def run(args):
-    name = 'notes-recovery' if args.notes_recovery else 'notes' if args.notes else 'matrix-database-recovery' if args.recovery else 'matrix-database'
+    name = 'notes-recovery' if args.notes_recovery else 'notes' if args.notes else 'matrix-database-recovery' if args.recovery else 'matrix-desktop'
     profile = HERE / f'profiles/{name}.json'
     build = [sys.executable, str(HERE / 'run.py'), '--profile', str(profile), '--build-only']
     if args.release: build.append('--release')
@@ -126,8 +126,11 @@ def run(args):
         # Host opens a copy, leaving the next guest to recover its own dirty engine.
         snapshot = output / f'host-reopen-{boot}.raw'
         with snapshot.open('xb') as file: file.write(actual)
-        result = subprocess.run([str(executable), 'engines', 'volume', ('verify-notes' if args.notes else 'verify-catalog-recovery' if args.recovery else 'verify-catalog'), str(snapshot),
-                                 '4096', str(database_image.VOLUME_BYTES)], cwd=lab, check=True, capture_output=True, text=True)
+        # Final revision of each root's single object after the workload above;
+        # the recovery probe's extra cuts and reconciliations land on root 0.
+        oracle = ['verify-notes', '4', '2'] if args.notes else ['verify-colors', '4', '2'] if args.recovery else ['verify-colors', '2', '2']
+        result = subprocess.run([str(executable), 'engines', 'volume', oracle[0], str(snapshot),
+                                 '4096', str(database_image.VOLUME_BYTES), oracle[1], oracle[2]], cwd=lab, check=True, capture_output=True, text=True)
         (output / f'host-{boot}.txt').write_text(result.stdout, encoding='utf-8')
         print(result.stdout, end='')
     sources = [profile, Path(__file__), HERE / 'notes_test.py', HERE / 'storage_timing.py', HERE / 'database_image.py', ROOT / 'source-rs/Cargo.lock',
@@ -138,15 +141,15 @@ def run(args):
                *(ROOT / 'source-rs/platform/services/input/decoder').rglob('*.rs'),
                ROOT / 'source-rs/platform/services/input/matrix.rs',
                ROOT / 'source-rs/platform/contracts/input.rs', ROOT / 'source-rs/platform/contracts/matrix.rs',
-               *(ROOT / 'source-rs/platform/libraries/object-store/database').glob('*.rs'),
+               *(ROOT / 'source-rs/platform/libraries/database-objects').glob('*.rs'),
                *(ROOT / 'source-rs/platform/services/storage/database').glob('*.rs'),
-               ROOT / 'tools/storage-lab/engines/volume/catalog.rs']
+               ROOT / 'tools/storage-lab/engines/volume/colors.rs', ROOT / 'tools/storage-lab/engines/volume/notes.rs']
     context = {'revision': subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip(),
                'release': args.release, 'recovery': args.recovery, 'notes': args.notes, 'notes_recovery': args.notes_recovery,
                'qemu': subprocess.check_output([qemu, '--version'], text=True).splitlines()[0],
                'efi_sha256': hashlib.sha256((output / 'esp/EFI/BOOT/BOOTX64.EFI').read_bytes()).hexdigest(),
                'source_sha256': {p.relative_to(ROOT).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest() for p in sources},
-               'limits': 'Two private catalogs, ordinary matrix IPC. QMP quit leaves the guest database open; it does not emulate physical cache loss.'}
+               'limits': 'Two private object roots, ordinary matrix IPC. QMP quit leaves the guest database open; it does not emulate physical cache loss.'}
     (output / 'context.json').write_text(json.dumps(context, indent=2) + '\n', encoding='utf-8')
     print(f'PASS: matrix-scoped database persistence and cold desktop restoration; artifacts: {output}')
 

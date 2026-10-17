@@ -9,7 +9,9 @@ use cathedral_user_runtime::{
 };
 use parent::Parent;
 
-pub fn run(environment: Environment, storage_root: bool) -> Result<(), Error> {
+pub fn run(environment: Environment) -> Result<(), Error> {
+    // Supplied provider links make this instance the storage root; nothing else does.
+    let storage_root = cathedral_user_runtime::link::Link::at(0).is_ok();
     static mut PARENT: Parent = Parent::empty();
     let parent_address = &raw mut PARENT;
     // SAFETY: Single-threaded executable enters once. Persistent buffers live in
@@ -34,6 +36,18 @@ pub fn run(environment: Environment, storage_root: bool) -> Result<(), Error> {
                 environment.endpoint(3).unwrap(),
             ),
         )?;
+    }
+    // Page allowances and use at startup, so a refused attachment is diagnosable.
+    if let Ok(budget) = cathedral_user_runtime::resources::budget() {
+        cathedral_user_runtime::time::storage_sample(
+            "matrix-budget",
+            &[
+                budget.limits.private_pages,
+                budget.limits.reader_pages,
+                budget.used.private_pages,
+                budget.used.reader_pages,
+            ],
+        );
     }
     let mut children = children::Children::default();
     children.separate_storage = parent.separate_storage;
@@ -143,7 +157,14 @@ pub fn run(environment: Environment, storage_root: bool) -> Result<(), Error> {
                 }
             }
             Event::Memory(request, object) => {
-                requests::image(request, object, parent, world, &mut server)?;
+                if request
+                    .client
+                    .is_some_and(|client| parent.storage_stream(client))
+                {
+                    requests::attachment(request, object, parent, &mut server)?;
+                } else {
+                    requests::image(request, object, parent, world, &mut server)?;
+                }
             }
             Event::Request(request) => {
                 requests::dispatch(request, parent, world, &mut children, &mut server)?

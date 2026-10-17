@@ -68,7 +68,7 @@ pub(super) fn dispatch(
                 server.reply(&request, &wire::encode(wire::error(abi::DENIED)))?;
                 return Ok(());
             }
-            parent.storage_request(request, words)?;
+            parent.storage_request(request, words, None)?;
             return Ok(());
         }
         _ if request.client.is_some_and(|client| client >= 3) => {
@@ -105,4 +105,25 @@ pub(super) fn dispatch(
     children.notify(world)?;
     server.reply(&request, &wire::encode(response))?;
     Ok(())
+}
+/// A sealed attachment on a catalog stream can only accompany a publication.
+pub(super) fn attachment(
+    request: Request,
+    object: cathedral_user_runtime::memory::Object,
+    parent: &mut Parent,
+    server: &mut Server,
+) -> Result<(), Error> {
+    match wire::decode(&request.bytes[..request.len]) {
+        Some(words)
+            if !request.control
+                && words[0] & 0xffff
+                    == wire::STORAGE_BASE + cathedral_platform_contracts::storage::PUBLISH =>
+        {
+            parent.storage_request(request, words, Some(object))
+        }
+        _ => {
+            drop(object);
+            server.reply(&request, &wire::encode(wire::error(abi::DENIED)))
+        }
+    }
 }

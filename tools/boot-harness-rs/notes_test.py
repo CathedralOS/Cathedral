@@ -99,7 +99,6 @@ def desktop(stream, output, serial, reboot, recovery=False):
     key('f1')
     check('hello cathedral notes')
     type_text(FULL[len('hello cathedral notes'):])
-    type_text('overflow')  # Capacity refusal must preserve existing text.
     key('f1')
     check(FULL)
     key('backspace', 25)

@@ -6,7 +6,8 @@ type Pair = (Handle, Handle);
 struct Owned {
     task: Child,
     reservation: Option<cathedral_user_runtime::task::Launch>,
-    control: Pair,
+    control: Option<Pair>,
+    stale: u8,
     data: Pair,
     storage: Option<Pair>,
     notify: Handle,

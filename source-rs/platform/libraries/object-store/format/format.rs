@@ -1,6 +1,6 @@
 // Two complete catalog snapshots; one sector each plus a separately flushed commit.
 use super::catalog::{Catalog, Entry, Root};
-use cathedral_platform_contracts::storage as wire;
+use cathedral_platform_contracts::catalog as wire;
 fn seal(bytes: &mut [u8; 512]) {
     let checksum = crc(&bytes[..508]);
     bytes[508..].copy_from_slice(&checksum.to_le_bytes());

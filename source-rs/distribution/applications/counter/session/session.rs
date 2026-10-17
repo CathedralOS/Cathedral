@@ -1,5 +1,5 @@
 // Restore the private counter, commit both records, then verify them on health requests.
-use cathedral_user_runtime::{Error, ipc::Handle, storage::Client, write};
+use cathedral_user_runtime::{Error, catalog::Client, ipc::Handle, write};
 pub fn run(_generation: u64) -> Result<(), Error> {
     let mut store = Client::at(0)?;
     state::advance(&mut store)?;

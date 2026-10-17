@@ -30,7 +30,7 @@ impl Scene {
         extent: wire::Packet,
         selected: u64,
         active: u64,
-        blocked: bool,
+        blocked: u64,
     ) {
         assert_eq!(
             call(
@@ -58,8 +58,10 @@ impl Scene {
             };
             pixel.copy_from_slice(&color.to_le_bytes());
         }
-        let status: &[u8] = if blocked {
+        let status: &[u8] = if blocked == UNSAVED {
             b"SAVE NOTE FIRST"
+        } else if blocked == BUSY {
+            b"NOTES BUSY"
         } else if active == NOTES {
             b"NOTES OPEN"
         } else if active == COLORS {

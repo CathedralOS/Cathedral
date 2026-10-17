@@ -77,7 +77,7 @@ def run(args):
                * (ROOT / 'source-rs/platform/libraries/content-layout').rglob('*.rs'),
                * (ROOT / 'source-rs/platform/libraries/database-objects').rglob('*.rs'),
                * (ROOT / 'source-rs/platform/services/storage/database').rglob('*.rs'),
-               ROOT / 'source-rs/platform/contracts/database.rs',
+               ROOT / 'source-rs/platform/contracts/storage.rs',
                ROOT / 'tools/storage-lab/engines/volume/objects.rs']
     context = {'revision': subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip(),
                'release': args.release, 'retention': args.retention,

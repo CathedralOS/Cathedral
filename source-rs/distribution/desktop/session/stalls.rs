@@ -29,10 +29,17 @@ pub(super) fn exercise(session: &mut admission::Session) {
         let mut marker = *b"Cathedral storage stall mode=0\n";
         marker[29] = b'0' + mode;
         cathedral_user_runtime::write(&marker).unwrap();
+        // Stall the nested app's next publication on its root, before execution
+        // or after commit; the sibling's root stays unaffected.
         session
             .storage_control
             .0
-            .send(&[0xf2, if mode == 2 { 2 } else { 1 }])
+            .send(&[
+                0xf2,
+                if mode == 2 { 2 } else { 1 },
+                cathedral_platform_contracts::storage::PUBLISH as u8,
+                0,
+            ])
             .unwrap();
         receive(session.storage_control, b"armed");
         let started = time::now().unwrap();

@@ -1,9 +1,12 @@
-//! One bounded catalog exchange, independent of the interaction stream.
+//! One bounded object exchange, independent of the interaction stream. The
+//! matrix holds a forwarded attachment only until the next hop has accepted it.
 //! Legacy shared-stream fixtures still serialize their upstream requests.
 use super::*;
+use cathedral_platform_contracts::storage as protocol;
 pub(in crate::service::parent) struct Pending {
     request: Request,
     words: wire::Packet,
+    attachment: Option<Object>,
     receive: Option<Handle>,
     refresh: bool,
     source: usize,
@@ -13,6 +16,7 @@ impl Pending {
     pub(super) fn new(
         request: Request,
         words: wire::Packet,
+        attachment: Option<Object>,
         upstream: bool,
     ) -> Result<Self, Error> {
         #[cfg(feature = "trace-storage")]
@@ -28,6 +32,7 @@ impl Pending {
         Ok(Self {
             request,
             words,
+            attachment,
             receive: None,
             refresh: upstream,
             source: 0,
@@ -62,16 +67,21 @@ impl Parent {
         let Some(mut p) = self.storage_pending.take() else {
             return Ok(());
         };
-        let mut reply = None;
+        let mut reply: Option<(wire::Packet, Option<Object>)> = None;
         if let Some(receive) = p.receive {
             let now = time::now()?;
             let mut bytes = [0; 64];
             let result = receive
-                .receive_until(&mut bytes, now)
-                .and_then(|len| wire::decode(&bytes[..len]).ok_or(Error(abi::IO_ERROR as i64)));
+                .try_receive_memory(&mut bytes)
+                .and_then(|(len, object)| {
+                    wire::decode(&bytes[..len])
+                        .map(|words| (words, object))
+                        .ok_or(Error(abi::IO_ERROR as i64))
+                });
             match result {
-                Ok(words) => {
+                Ok((words, object)) => {
                     if p.refresh {
+                        drop(object);
                         let epoch = if words[0] == 0 { words[1] } else { 0 };
                         if epoch != self.storage_epoch {
                             self.scopes.clear();
@@ -80,23 +90,21 @@ impl Parent {
                         p.refresh = false;
                         p.receive = None;
                     } else {
-                        reply = Some(words);
+                        reply = Some((words, object));
                     }
                 }
                 Err(Error(code))
-                    if code == abi::TIMED_OUT as i64 && !time::reached(now, p.deadline) =>
+                    if (code == abi::TIMED_OUT as i64 || code == abi::WOULD_BLOCK as i64)
+                        && !time::reached(now, p.deadline) =>
                 {
                     self.storage_pending = Some(p);
                     return Ok(());
                 }
+                Err(Error(code)) if code == abi::WOULD_BLOCK as i64 => {
+                    self.retire_after(&p, Error(abi::TIMED_OUT as i64), &mut reply)?;
+                }
                 Err(error) => {
-                    // A separate catalog stream can retire without losing input.
-                    // Legacy shared streams must retire the whole service.
-                    if self.upstream && !self.separate_storage {
-                        return Err(error);
-                    }
-                    self.retire_storage(p.source, p.request.client.unwrap())?;
-                    reply = Some(wire::error(error.0 as u64));
+                    self.retire_after(&p, error, &mut reply)?;
                 }
             }
         }
@@ -111,24 +119,16 @@ impl Parent {
                     });
                 match result {
                     Ok(receive) => p.receive = Some(receive),
-                    Err(error) if !self.separate_storage => return Err(error),
-                    Err(error) => {
-                        self.retire_storage(p.source, p.request.client.unwrap())?;
-                        reply = Some(wire::error(error.0 as u64));
-                    }
+                    Err(error) => self.retire_after(&p, error, &mut reply)?,
                 }
             } else {
                 match self.send_storage(&mut p) {
-                    Ok(result) => reply = result,
-                    Err(error) if self.upstream && !self.separate_storage => return Err(error),
-                    Err(error) => {
-                        self.retire_storage(p.source, p.request.client.unwrap())?;
-                        reply = Some(wire::error(error.0 as u64));
-                    }
+                    Ok(result) => reply = result.map(|words| (words, None)),
+                    Err(error) => self.retire_after(&p, error, &mut reply)?,
                 }
             }
         }
-        if let Some(reply) = reply {
+        if let Some((words, object)) = reply {
             #[cfg(feature = "trace-storage")]
             time::storage_trace(
                 if self.upstream {
@@ -139,10 +139,37 @@ impl Parent {
                 p.request.client.unwrap() as u64,
                 p.words[0] & 0xffff,
             );
-            server.reply(&p.request, &wire::encode(reply))?;
+            match object {
+                // The child must have reader funding; otherwise it gets the same
+                // refusal the provider gives an unfunded reader.
+                Some(object) => {
+                    if server
+                        .reply_memory(&p.request, &wire::encode(words), &object)
+                        .is_err()
+                    {
+                        server.reply(&p.request, &wire::encode(wire::error(abi::BUSY)))?;
+                    }
+                }
+                None => server.reply(&p.request, &wire::encode(words))?,
+            }
         } else {
             self.storage_pending = Some(p);
         }
+        Ok(())
+    }
+    /// A separate catalog stream can retire without losing input. Legacy shared
+    /// streams must retire the whole service.
+    fn retire_after(
+        &mut self,
+        p: &Pending,
+        error: Error,
+        reply: &mut Option<(wire::Packet, Option<Object>)>,
+    ) -> Result<(), Error> {
+        if self.upstream && !self.separate_storage {
+            return Err(error);
+        }
+        self.retire_storage(p.source, p.request.client.unwrap())?;
+        *reply = Some((wire::error(error.0 as u64), None));
         Ok(())
     }
     fn send_storage(&mut self, p: &mut Pending) -> Result<Option<wire::Packet>, Error> {
@@ -170,7 +197,7 @@ impl Parent {
             .scopes
             .authorize(slot, incarnation, p.words[0] >> wire::STORAGE_SCOPE_BITS)
             .is_err()
-            || !(wire::STORAGE_BASE + protocol::READ..=wire::STORAGE_BASE + protocol::ABORT)
+            || !(wire::STORAGE_BASE + protocol::HEAD..=wire::STORAGE_BASE + protocol::LAST)
                 .contains(&op)
         {
             return Ok(Some(wire::error(abi::DENIED)));
@@ -196,7 +223,10 @@ impl Parent {
             slot as u64,
             words[0] & 0xffff,
         );
-        pair.0.send(&wire::encode(words))?;
+        match p.attachment.take() {
+            Some(object) => pair.0.send_memory(&wire::encode(words), &object)?,
+            None => pair.0.send(&wire::encode(words))?,
+        }
         p.receive = Some(pair.1);
         Ok(None)
     }

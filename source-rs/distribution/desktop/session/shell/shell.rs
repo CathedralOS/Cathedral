@@ -5,6 +5,9 @@ const NOTES: u64 = 1;
 const COLORS: u64 = 2;
 const CLOSE: u64 = 3;
 const MENU_STATUS: u64 = 200;
+/// Why the last choice was refused, reported to the launcher with the active program.
+const UNSAVED: u64 = 1;
+const BUSY: u64 = 2;
 
 pub(super) fn grant_notes(matrix: Pair) {
     owner(matrix, [wire::STORAGE_GRANT, 0, 0, 0, 0, 0, 0, 0]);
@@ -15,15 +18,16 @@ pub(super) fn grant_notes(matrix: Pair) {
 }
 
 fn workspace(matrix: Pair) {
-    owner(matrix, [wire::RUN_PAGES, 0, 24, 24, 0, 0, 0, 0]);
+    owner(matrix, [wire::RUN_PAGES, 0, 40, 40, 0, 0, 0, 0]);
     owner(matrix, [wire::RUN, 0, 0, 0, 10, 1, 7, 0]);
     owner(matrix, [wire::SURFACE_LIMIT, 0, 8, 0, 0, 0, 0, 0]);
     owner(matrix, [wire::PLACE, 0, 310, 140, 430, 240, KEYS, 0]);
 }
 
-fn select(session: &mut admission::Session, active: &mut u64, choice: u64) -> bool {
+/// Returns why the choice was refused, or zero when it was carried out.
+fn select(session: &mut admission::Session, active: &mut u64, choice: u64) -> u64 {
     if !(NOTES..=CLOSE).contains(&choice) || choice == *active {
-        return false;
+        return 0;
     }
     let matrix = session.matrix;
     if *active == NOTES {
@@ -37,9 +41,14 @@ fn select(session: &mut admission::Session, active: &mut u64, choice: u64) -> bo
         );
         // Never kill a draft to make room for a different program. The user can
         // save with F1 or explicitly reload with F2 before requesting the switch.
-        if health[0] != 0 || health[4] != 0 {
+        // An unanswered probe means the app is busy, not that the draft is gone.
+        if health[0] != 0 {
+            cathedral_user_runtime::write(b"Cathedral desktop: notes busy; kept open\n").unwrap();
+            return BUSY;
+        }
+        if health[4] != 0 {
             cathedral_user_runtime::write(b"Cathedral desktop: unsaved note kept open\n").unwrap();
-            return true;
+            return UNSAVED;
         }
     }
     if *active != 0 {
@@ -53,24 +62,15 @@ fn select(session: &mut admission::Session, active: &mut u64, choice: u64) -> bo
     session.notes_open = false;
     if choice == CLOSE {
         cathedral_user_runtime::write(b"Cathedral desktop: workspace closed\n").unwrap();
-        return false;
+        return 0;
     }
+    // Notes retains two sealed bitmaps and their replacements, publishes through
+    // one more page and reads bulk replies through reader pages. Colors keeps
+    // one bitmap and publishes through one page.
+    let (private, readers) = if choice == NOTES { (32, 4) } else { (2, 0) };
     owner(
         matrix,
-        wire::route(
-            [
-                wire::RUN_PAGES,
-                0,
-                if choice == NOTES { 24 } else { 1 },
-                0,
-                0,
-                0,
-                0,
-                0,
-            ],
-            0,
-        )
-        .unwrap(),
+        wire::route([wire::RUN_PAGES, 0, private, readers, 0, 0, 0, 0], 0).unwrap(),
     );
     owner(
         matrix,
@@ -95,7 +95,7 @@ fn select(session: &mut admission::Session, active: &mut u64, choice: u64) -> bo
     }
     owner(
         matrix,
-        wire::route([wire::SURFACE_LIMIT, 0, 4, 0, 0, 0, 0, 0], 0).unwrap(),
+        wire::route([wire::SURFACE_LIMIT, 0, 6, 0, 0, 0, 0, 0], 0).unwrap(),
     );
     owner(
         matrix,
@@ -108,7 +108,7 @@ fn select(session: &mut admission::Session, active: &mut u64, choice: u64) -> bo
         b"Cathedral desktop: opened Colors\n"
     })
     .unwrap();
-    false
+    0
 }
 
 pub(super) fn run() -> u64 {
@@ -137,11 +137,11 @@ pub(super) fn run() -> u64 {
     );
     session.start_input();
     cathedral_user_runtime::write(b"Cathedral desktop: ready; choose a program\n").unwrap();
-    let (mut sequence, mut active, mut blocked) = (0, 0, false);
+    let (mut sequence, mut active, mut blocked) = (0, 0, 0);
     loop {
         let reply = call(
             matrix,
-            wire::route([MENU_STATUS, active, u64::from(blocked), 0, 0, 0, 0, 0], 1).unwrap(),
+            wire::route([MENU_STATUS, active, blocked, 0, 0, 0, 0, 0], 1).unwrap(),
         );
         assert_eq!(reply[0], 0);
         if reply[1] != sequence {

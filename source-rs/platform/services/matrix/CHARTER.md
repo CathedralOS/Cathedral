@@ -44,11 +44,16 @@ owner regranting. Old revisions cannot read queued events in a new binding.
 Revisions are scoped to the accepted connection, not transferable capabilities.
 Clients must discard them on provider replacement. A timed-out upstream RPC
 retires the service so a late reply cannot be mistaken for another operation.
+Owner requests routed to a child use a FIFO control stream the child answers in
+order: an unanswered request is counted and its late reply skipped, so a slow
+child costs the owner a timeout rather than its life. Only a child that stops
+answering altogether loses its control link; the owner decides whether to stop it.
 
 ## Limits of this milestone
 
-[Storage delegation](world/storage/README.md) passes whole private catalog roots
-through the same matrix chain, independently of display grants. Owner assignment
+[Storage delegation](world/storage/README.md) passes whole private object roots
+through the same matrix chain, independently of display grants, with sealed
+attachments forwarded in both directions. Owner assignment
 is exclusive between siblings; every request checks a local binding revision.
 The visible desktop admits children with separate interaction and catalog pairs,
 plus a wake receiver. [Connection construction](service/children/connections.rs)

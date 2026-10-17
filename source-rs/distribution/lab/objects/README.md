@@ -65,8 +65,9 @@ block events per boot. The instrumented two-boot release run
 is unchanged; no write retries hide an uncertain device outcome.
 
 This is a bounded, synchronous lab: 16 KiB maximum contents, 4 KiB chunks,
-inline contents through 128 bytes, one object per connection root, and a 24 KiB
-retained-record quota per root. The original 40-byte copied read coexists with
+inline contents through 128 bytes, and a 24 KiB retained-record quota per root.
+Each client uses object number one of its root; numbering, copies and deletion
+are covered by the store's host tests and the matrix storage fixture. The original 40-byte copied read coexists with
 sealed bulk replies. Two durable root-owned pins and eight-record collection
 passes are experimental; there is no public watcher subscription, cross-root
 transaction, encryption, installer or accepted production retention policy.

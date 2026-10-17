@@ -43,8 +43,8 @@ budget and admits a fresh subtree while the outside sibling process survives.
 
 The separate `--matrix-storage-test --release` profile starts at
 [storage/storage.rs](storage/storage.rs). It shares [fixture.rs](fixture.rs)'s
-matrix-owned process tree and the same service binary, adding two private catalog
-sources at the root. Tests cover recursive grants, sibling isolation, stale
+matrix-owned process tree and the same service binary, adding two private object
+roots at the root. Tests cover recursive grants, sibling isolation, stale
 binding revisions, revocation during transactions, child replacement and durable
 data after restarting the tree/provider. No leaf has a disk or provider link.
 See [storage scopes](../../platform/services/matrix/world/storage/README.md)
@@ -138,8 +138,9 @@ connects the kernel transaction, desktop failure/recovery probes and retained ch
 
 ## Database desktop and save recovery
 
-The [database catalog guide](../../platform/libraries/object-store/database/README.md)
-owns its persistent launch command and fault/timing proof. The ordinary desktop
+The [object store guide](../../platform/libraries/database-objects/README.md)
+owns the store; the provider's recovery and timing proofs are driven by
+`matrix_database_test.py`. The ordinary desktop
 uses [persistence entrance](session/persistence/persistence.rs) to observe provider death,
 retired root streams and bounded health probes, reopen it,
 and explicitly restore root and nested grants. Apps remain alive; their

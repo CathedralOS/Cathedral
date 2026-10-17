@@ -9,6 +9,14 @@ OFFSET = 4096
 IMAGE_BYTES = OFFSET + VOLUME_BYTES + 4096
 
 
+def oracle():
+    """Build the host storage lab once and return its executable."""
+    root = Path(__file__).resolve().parents[2]
+    lab = root / 'tools/storage-lab'
+    subprocess.run(['cargo', 'build', '--locked', '--release', '--features', 'engines'], cwd=lab, check=True)
+    return lab / 'target/release' / ('storage-layout.exe' if os.name == 'nt' else 'storage-layout')
+
+
 def prepare(path):
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -18,10 +26,8 @@ def prepare(path):
         if path.stat().st_size != IMAGE_BYTES:
             raise RuntimeError(f'Unexpected database image size; refusing to replace {path}')
         return  # Guest validates the existing envelope/engine; never auto-format.
-    root = Path(__file__).resolve().parents[2]
-    lab = root / 'tools/storage-lab'
-    subprocess.run(['cargo', 'build', '--locked', '--release', '--features', 'engines'], cwd=lab, check=True)
-    executable = lab / 'target/release' / ('storage-layout.exe' if os.name == 'nt' else 'storage-layout')
+    executable = oracle()
+    lab = executable.parents[2]
     with tempfile.TemporaryDirectory(prefix='database-format-', dir=path.parent) as directory:
         volume = Path(directory) / 'volume.raw'
         subprocess.run([str(executable), 'engines', 'volume', 'format', str(volume), str(VOLUME_BYTES), '1'], cwd=lab, check=True)

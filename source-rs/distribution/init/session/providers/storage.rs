@@ -7,7 +7,7 @@ pub fn ensure_ready(service: &mut Service) -> Result<bool, Error> {
     for attempt in 0..3 {
         if service
             .send
-            .send(cathedral_platform_contracts::storage::HEALTH)
+            .send(cathedral_platform_contracts::catalog::HEALTH)
             .and_then(|()| service.receive())
             .is_ok_and(|(bytes, len)| &bytes[..len] == b"ready")
         {

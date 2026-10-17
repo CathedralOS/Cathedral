@@ -19,7 +19,7 @@ ROOT = HERE.parents[1]
 
 
 def desktop(stream, output, serial, reboot):
-    assert 'Cathedral: database catalog ready' in serial
+    assert 'Cathedral: object storage ready' in serial
     position = [40, 40]
     font = bytes.fromhex((ROOT / 'source-rs/platform/libraries/bitmap-font/font.hex').read_text())
 
@@ -96,11 +96,26 @@ def desktop(stream, output, serial, reboot):
     def color(value):
         scan(lambda width, data: rgb(width, data, 335, 190) == bytes.fromhex(value), f'workspace color {value}')
 
+    def tabs(count, current):
+        # One tab per note below the text; the current note's tab is bright.
+        def check(width, data):
+            for index in range(count + 1):
+                expected = '182132' if index == count else '66ccff' if index == current else '3a4a63'
+                if rgb(width, data, 346 + 16 * index, 272) != bytes.fromhex(expected):
+                    return False
+            return True
+        scan(check, f'note tabs count={count} current={current}')
+
     status('CHOOSE PROGRAM')
     click(80, 166)  # Actual menu row, not host-side launch control.
     status('NOTES OPEN')
     note('hello cathedral' if reboot else '')
+    tabs(2 if reboot else 0, 0)
     if reboot:
+        click(335, 300)
+        key('f4')
+        note('hello cathedral two')
+        tabs(2, 1)
         return
     click(335, 300)
     for char in 'hello cathedral':
@@ -111,6 +126,21 @@ def desktop(stream, output, serial, reboot):
     note('hello cathedral', dirty=True)
     click(335, 300)
     key('f1')
+    note('hello cathedral')
+    tabs(1, 0)
+    # Duplicate shares the saved content; editing the copy leaves the original.
+    key('f3')
+    tabs(2, 1)
+    note('hello cathedral')
+    for char in ' two':
+        key('spc' if char == ' ' else char)
+    note('hello cathedral two', dirty=True)
+    key('f3')  # A draft is never duplicated; save first.
+    tabs(2, 1)
+    key('f1')
+    note('hello cathedral two')
+    key('f4')
+    tabs(2, 0)
     note('hello cathedral')
     click(80, 182)
     status('COLORS OPEN')
@@ -148,7 +178,7 @@ def desktop(stream, output, serial, reboot):
     click(80, 166)
     status('NOTES OPEN')
     note('hello cathedral')
-    print('PASS: in-guest mouse/keyboard launch, draft protection, save/reload and repeated app replacement')
+    print('PASS: in-guest mouse/keyboard launch, draft protection, duplicate/switch, save/reload and repeated app replacement')
 
 
 def run(timeout):
@@ -172,7 +202,16 @@ def run(timeout):
         contents = path.read_bytes()
         database_image.prepare(path)
         assert contents == path.read_bytes(), 'relaunch must not reformat storage'
-    print(f'PASS: default F5 desktop and saved note after cold reboot; artifacts: {output}')
+    # An independent host model checks the retained records on a copy: two notes,
+    # one shared manifest for the duplicated text, nothing in the ungranted root.
+    snapshot = output / 'host-reopen.raw'
+    snapshot.write_bytes(contents)
+    result = subprocess.run([str(database_image.oracle()), 'engines', 'volume', 'verify-desktop', str(snapshot),
+                             str(database_image.OFFSET), str(database_image.VOLUME_BYTES)],
+                            cwd=ROOT / 'tools/storage-lab', check=True, capture_output=True, text=True)
+    (output / 'host.txt').write_text(result.stdout, encoding='utf-8')
+    print(result.stdout, end='')
+    print(f'PASS: default F5 desktop, duplicated notes and saved notes after cold reboot; artifacts: {output}')
 
 
 if __name__ == '__main__':

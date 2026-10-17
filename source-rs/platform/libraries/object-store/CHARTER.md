@@ -60,14 +60,12 @@ kernel authority and storage. Storing both bounded roots in one snapshot means
 writes are serialized and share one storage failure domain. The kernel remains
 independently usable without this library or its service.
 
-The next storage investigation is the
+This catalog serves only the legacy status/counter composition. The matrix
+desktop and every live fixture use the separate
+[object store](../database-objects/README.md) and its
+[provider](../../services/storage/database/main.rs), which replaced the
+catalog-over-database adapter that once bridged the two. The
 [DBFS foundation proposal](../../../../wiki/proposals/0002_dbfs_storage_foundation.md)
-and its [host layout lab](../../../../tools/storage-lab/README.md). That experiment
-measures BLAKE3 chunks, flat/tree manifests and retained contents without changing this
-catalog's format or guest protocol. Its in-memory checks are not durability evidence.
-
-The [database adapter](database/README.md) now implements the same catalog backend
-interface over durable immutable content. It has a separate snapshot payload and
-provider feature, with a two-boot matrix desktop proof. The protocol still owns
-connection staging; each backend owns persistence and recovery. Existing images
-and the legacy provider's fault-injection composition remain unchanged.
+and its [host layout lab](../../../../tools/storage-lab/README.md) measure the
+representation choices behind that store; their in-memory checks are not
+durability evidence.

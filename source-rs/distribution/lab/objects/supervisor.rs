@@ -1,4 +1,4 @@
-use cathedral_platform_contracts::database as wire;
+use cathedral_platform_contracts::storage as wire;
 use cathedral_user_runtime::{
     task::{Launch, Outcome, Port},
     write, yield_now,
@@ -24,6 +24,7 @@ pub fn run() -> u64 {
         send.send(
             &wire::Request {
                 op: wire::CLOSE,
+                object: 0,
                 expected: 0,
                 offset: 0,
                 len: 0,

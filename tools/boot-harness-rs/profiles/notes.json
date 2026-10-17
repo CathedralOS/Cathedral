@@ -21,7 +21,7 @@
         "clock": true,
         "argument": 1129270608,
         "framebuffer": true,
-        "shared_pages": 48
+        "shared_pages": 64
       },
       {
         "package": "cathedral-input-service",
@@ -36,10 +36,10 @@
         "entry": "platform/services/matrix/main.rs",
         "target": "x86_64-unknown-none",
         "clock": true,
-        "argument": 1398034258,
+        "argument": 0,
         "ipc_channels": 20,
-        "private_pages": 48,
-        "shared_pages": 64
+        "private_pages": 128,
+        "shared_pages": 128
       },
       {
         "package": "cathedral-database-storage",
@@ -48,10 +48,8 @@
         "clock": true,
         "disk": true,
         "ipc_channels": 0,
-        "features": [
-          "catalog"
-        ],
-        "private_pages": 64
+        "private_pages": 64,
+        "shared_pages": 8
       }
     ],
     "links": [

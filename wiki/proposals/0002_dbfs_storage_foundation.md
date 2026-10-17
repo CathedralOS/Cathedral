@@ -216,10 +216,14 @@ before their content so interleaved pin requests cannot resurrect broken closure
 Host checks reopen after each pass and run 600 replacements under a fixed extent;
 three guest boots exercise pins, release, reclamation and sealed bulk reads.
 
-The separate database catalog adapter now persists matrix desktop app state using
-existing root-local IPC and catalog transactions. An independent host oracle and
-cold desktop restoration check this path without migrating existing catalog media.
-Neither this adapter nor the two-slot pin experiment settles production semantics.
+The guest store now holds many numbered objects per root, sharing chunks and
+manifests within the root, with a copy operation that writes only a new head and
+event. The matrix desktop's Notes app saves, duplicates and switches notes through
+that store over ordinary matrix IPC, and an independent host oracle checks the
+retained records after a cold boot: two notes, one shared manifest. This is the
+first point at which cheap copies exist in the booted OS. Copies are independent
+identities, as the identity question below recommends; nothing here accepts that
+recommendation, resolves cross-root sharing or settles production semantics.
 
 Logical quota is not reserved physical engine space. General reclamation,
 full-volume progress, watcher replay, larger trees, crash cuts inside the guest

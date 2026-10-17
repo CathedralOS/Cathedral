@@ -6,7 +6,7 @@ pub(super) struct Parent {
     pending: Option<presentation::Pending>,
     storage_pending: Option<storage::Pending>,
     scopes: cathedral_matrix_service::world::storage::Scopes,
-    storage_links: [Option<cathedral_user_runtime::storage::Client>; 2],
+    storage_links: [Option<storage::Provider>; 2],
     storage_epoch: u64,
     storage_failed: u64,
     pub batches: [cathedral_matrix_service::world::presentation::Batch<
@@ -72,8 +72,8 @@ impl Parent {
             return Err(Error(abi::DENIED as i64));
         }
         if storage_root {
-            self.storage_links[0] = Some(cathedral_user_runtime::storage::Client::at(0)?);
-            self.storage_links[1] = Some(cathedral_user_runtime::storage::Client::at(1)?);
+            self.storage_links[0] = Some(storage::Provider::at(0)?);
+            self.storage_links[1] = Some(storage::Provider::at(1)?);
         }
         self.separate_storage = environment.len() == 5 || (storage_root && environment.len() == 4);
         self.upstream = matches!(environment.len(), 2 | 3 | 5);

@@ -7,11 +7,13 @@ python tools/boot-harness-rs/run.py --release --window
 ```
 
 One desktop boots. Click **Notes** or **Colors** in Programs, then click the
-workspace to give the app keyboard focus. Notes accepts up to 60 characters;
-**F1** saves (or checks an uncertain save), **F2** reloads the saved note. Colors
-changes on **Enter**. **Close App** closes the workspace. Opening a different
-program replaces the current one; an unsaved note stays open until explicitly
-saved or reloaded. The menu also supports Up/Down/Enter while focused.
+workspace to give the app keyboard focus. Notes holds up to eight notes of 240
+characters: **F1** saves (or checks an uncertain save), **F2** reloads the saved
+note, **F3** duplicates it as a new note sharing its content, **F4** switches to
+the next note. Colors changes on **Enter**. **Close App** closes the workspace.
+Opening a different program replaces the current one; an unsaved note stays open
+until explicitly saved or reloaded, and a busy note is left open rather than
+killed. The menu also supports Up/Down/Enter while focused.
 
 Notes persists in `build/boot-harness-rs/cathedral-storage.raw` across app launches
 and QEMU restarts. The first boot creates this experimental database image;
@@ -40,7 +42,7 @@ grants; the distribution assigns application roles and placement.
 | Display | Launch 0 | [display main](../platform/services/display/main.rs), [retained compositor](../platform/services/display/compositor/compositor.rs) |
 | Input | Launch 1 | [input main](../platform/services/input/main.rs), [matrix source](../platform/services/input/matrix.rs) |
 | Root matrix | Launch 2 | [matrix main](../platform/services/matrix/main.rs), [service loop](../platform/services/matrix/service/service.rs) |
-| Database storage | Launch 3 | [database main](../platform/services/storage/database/main.rs), [catalog contract](../platform/contracts/storage.rs) |
+| Object storage | Launch 3 | [database main](../platform/services/storage/database/main.rs), [object contract](../platform/contracts/storage.rs) |
 | Workspace matrix | Executable 0 | Same matrix service; child-local extent and attenuated input |
 | Notes | Executable 1 | [notes main](applications/notes/main.rs), [editing/storage/view](applications/notes/session/session.rs) |
 | Menu / Colors | Executable 2, supplied app argument 3 / 2 | [launcher](desktop/session/shell/launcher.rs), [color app](desktop/session/app/app.rs) |
@@ -48,7 +50,7 @@ grants; the distribution assigns application roles and placement.
 The menu reports a numbered choice over its private owner control connection.
 Only the desktop owner validates that choice and sends RUN/STOP to the matrix.
 The menu has no launch handles or storage capability. Notes receives a private
-catalog; Colors receives none. Apps see local geometry and input, not global
+object root; Colors receives none. Apps see local geometry and input, not global
 placement, other apps or an ancestor's services. The
 [matrix contract](../platform/contracts/matrix.rs) and
 [child admission](../platform/services/matrix/service/children/admission.rs)
@@ -62,8 +64,9 @@ python tools/boot-harness-rs/desktop_test.py
 
 This builds the default composition, chooses programs with physical mouse and
 keyboard input, checks exact note glyphs and status, protects unsaved drafts,
-repeatedly replaces apps, and cold-boots the same disposable disk to check saved
-text. It never touches the interactive disk.
+duplicates and switches notes, repeatedly replaces apps, cold-boots the same
+disposable disk to check saved text, and has an independent host model verify the
+retained records. It never touches the interactive disk.
 
 Other profiles remain focused mechanism and fault tests, not competing default
 OS entry points. [The desktop guide](desktop/README.md) describes its recursive

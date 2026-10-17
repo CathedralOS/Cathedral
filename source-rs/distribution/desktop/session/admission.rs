@@ -53,7 +53,15 @@ pub(super) fn start() -> Session {
     {
         // Quiet post-commit gate: the ordinary watchdog must discover the stall.
         // On cold reboot this stays armed, but the restore-only proof performs no save.
-        storage_control.0.send(&[0xf5, 2, 10, 0]).unwrap();
+        storage_control
+            .0
+            .send(&[
+                0xf5,
+                2,
+                cathedral_platform_contracts::storage::PUBLISH as u8,
+                0,
+            ])
+            .unwrap();
         let mut bytes = [0; 64];
         let n = storage_control.1.receive(&mut bytes).unwrap();
         assert_eq!(&bytes[..n], b"armed");
@@ -111,9 +119,9 @@ pub(super) fn start() -> Session {
             (330, 110, b"WORKSPACE"),
             (40, 330, b"CLICK A PROGRAM"),
             (40, 362, b"THEN CLICK APP"),
-            (40, 420, b"NOTES: 60 CHARS"),
-            (40, 452, b"F1 SAVE / CHECK"),
-            (40, 484, b"F2 RELOAD"),
+            (40, 420, b"NOTES: F1 SAVE"),
+            (40, 452, b"F2 LOAD F3 COPY"),
+            (40, 484, b"F4 NEXT NOTE"),
             (360, 420, b"COLORS: ENTER"),
             (360, 452, b"CHANGES COLOR"),
             (360, 484, b"NO REBOOT NEEDED"),
@@ -125,7 +133,7 @@ pub(super) fn start() -> Session {
             (500, 140, b"SIBLING NOTE"),
             (80, 400, b"F1 SAVE OR CHECK"),
             (80, 432, b"F2 RELOAD"),
-            (80, 464, b"60 CHARACTERS"),
+            (80, 464, b"F3 COPY F4 NEXT"),
             (500, 400, b"GREEN SAVED"),
             (500, 432, b"AMBER DRAFT"),
             (500, 464, b"RED SAVE ERROR"),
@@ -158,8 +166,8 @@ pub(super) fn start() -> Session {
     cathedral_user_runtime::resources::assign(
         root,
         cathedral_user_runtime::resources::Limits {
-            private_pages: if cfg!(feature = "notes") { 48 } else { 4 },
-            reader_pages: if cfg!(feature = "notes") { 64 } else { 8 },
+            private_pages: if cfg!(feature = "notes") { 128 } else { 16 },
+            reader_pages: if cfg!(feature = "notes") { 128 } else { 8 },
             channels: 20,
         },
     )

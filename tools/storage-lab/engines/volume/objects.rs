@@ -15,7 +15,7 @@ pub fn verify(path: &Path, offset: u64, bytes: u64, revision: u64, retention: bo
     }
     let db = open(Region::new(Arc::new(Image::open(path)?), offset, bytes)?)?;
     let tx = db.begin_read()?;
-    let table = tx.open_table(TableDefinition::<&[u8], &[u8]>::new("private-objects-v1"))?;
+    let table = tx.open_table(TableDefinition::<&[u8], &[u8]>::new("private-objects-v2"))?;
     let mut actual = BTreeMap::new();
     for row in table.iter()? {
         let (key, value) = row?;
@@ -58,14 +58,14 @@ pub fn verify(path: &Path, offset: u64, bytes: u64, revision: u64, retention: bo
             heads.push(head);
             versions.push(version);
         }
+        // The provider collects before every write, including refused ones, so
+        // only the current revision and pinned revisions survive a later write.
         let pinned = retention && revision == 9;
-        if retention {
-            let mut roots = vec![versions.last().unwrap().clone()];
-            if pinned {
-                roots.push(versions[0].clone());
-            }
-            store.retain(&roots);
+        let mut roots = vec![versions.last().unwrap().clone()];
+        if pinned {
+            roots.push(versions[0].clone());
         }
+        store.retain(&roots);
         for (key, value) in store.records(versions.last().unwrap()) {
             if key == b"head" {
                 continue;
@@ -76,16 +76,22 @@ pub fn verify(path: &Path, offset: u64, bytes: u64, revision: u64, retention: bo
         }
         for (i, head) in heads.iter().enumerate() {
             let n = i as u64 + 1;
-            if !retention || n == revision || (pinned && n == 1) {
+            if n == revision || (pinned && n == 1) {
                 let mut event = vec![root, b'e'];
+                event.extend_from_slice(&1u64.to_be_bytes());
                 event.extend_from_slice(&n.to_be_bytes());
                 expected.insert(event, head.clone());
             }
         }
-        expected.insert(vec![root, b'h'], heads.last().unwrap().clone());
+        let mut head_key = vec![root, b'h'];
+        head_key.extend_from_slice(&1u64.to_be_bytes());
+        expected.insert(head_key, heads.last().unwrap().clone());
         if pinned {
-            expected.insert(vec![root, b'p', 0], heads[0].clone());
+            let mut pin = 1u64.to_be_bytes().to_vec();
+            pin.extend_from_slice(&heads[0]);
+            expected.insert(vec![root, b'p', 0], pin);
         }
+        expected.insert(vec![root, b'n'], 2u64.to_le_bytes().to_vec());
         let charge = expected
             .iter()
             .filter(|(k, _)| k[0] == root)
@@ -95,6 +101,7 @@ pub fn verify(path: &Path, offset: u64, bytes: u64, revision: u64, retention: bo
         expected.insert(vec![root, b'q'], (charge as u64).to_le_bytes().to_vec());
     }
     if actual != expected {
+        difference::report(&actual, &expected);
         return Err(
             "guest private records differ from independent content/history/quota oracle".into(),
         );

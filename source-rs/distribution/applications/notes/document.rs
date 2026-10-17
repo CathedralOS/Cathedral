@@ -1,6 +1,9 @@
-//! A deliberately bounded ASCII note. Encoding belongs to the app, not storage.
+//! A deliberately bounded ASCII note. Encoding belongs to the app, not storage;
+//! the capacity is this editor's choice, not a storage limit.
 use cathedral_platform_contracts::input;
-pub const CAPACITY: usize = 60;
+pub const CAPACITY: usize = 240;
+pub const TAG: &[u8; 4] = b"NTS1";
+pub const ENCODED: usize = TAG.len() + CAPACITY;
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Document {
     pub bytes: [u8; CAPACITY],
@@ -44,15 +47,15 @@ impl Document {
         }
         true
     }
-    pub fn encode(&self) -> ([u8; 64], usize) {
-        let mut bytes = [0; 64];
-        bytes[..4].copy_from_slice(b"NTS1");
+    pub fn encode(&self) -> ([u8; ENCODED], usize) {
+        let mut bytes = [0; ENCODED];
+        bytes[..4].copy_from_slice(TAG);
         bytes[4..4 + self.len].copy_from_slice(&self.bytes[..self.len]);
         (bytes, 4 + self.len)
     }
     pub fn decode(bytes: &[u8]) -> Option<Self> {
-        if !(4..=64).contains(&bytes.len())
-            || &bytes[..4] != b"NTS1"
+        if !(4..=ENCODED).contains(&bytes.len())
+            || &bytes[..4] != TAG
             || bytes[4..].iter().any(|b| {
                 !b.is_ascii_lowercase() && !b.is_ascii_digit() && !matches!(b, b' ' | b'\n')
             })
@@ -71,10 +74,10 @@ impl Document {
 mod tests {
     use super::*;
     #[test]
-    fn middle_edits_round_trip_at_record_boundary_and_capacity() {
+    fn middle_edits_round_trip_at_capacity() {
         let mut doc = Document::default();
         let mut cursor = 0;
-        for _ in 0..60 {
+        for _ in 0..CAPACITY {
             assert!(doc.edit(&mut cursor, input::A));
         }
         assert!(!doc.edit(&mut cursor, input::SPACE));

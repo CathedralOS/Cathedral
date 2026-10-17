@@ -1,16 +1,18 @@
 #![no_std]
 #![forbid(unsafe_code)]
-//! Bounded private-object experiment: publish immutable content, revision and
-//! change together; read verifies that chain. The caller supplies a trusted root
-//! binding, never an application-selected root or globally meaningful hash.
+//! Private object roots over immutable content. A root holds numbered objects;
+//! their chunks and manifests are shared within the root, so a copy writes only
+//! a new head. The caller supplies a trusted root binding, never an
+//! application-selected root or a globally meaningful hash.
 extern crate alloc;
+mod collection;
+mod objects;
 mod publication;
 mod reading;
 mod records;
-mod retention;
 use cathedral_storage_engine::redb::{self, Database, TableDefinition};
-pub use records::Head;
-pub use retention::{Collection, PIN_SLOTS};
+pub use collection::{Collection, PIN_SLOTS};
+pub use records::{Head, Object};
 
 pub const MAX_BYTES: usize = 16 * 1024;
 pub const CHUNK_BYTES: usize = 4096;
@@ -18,7 +20,7 @@ pub const INLINE_BYTES: usize = 128;
 /// Retained record bytes per root, including keys and event history. This is an
 /// admission limit, not a claim about physical redb space or allocator overhead.
 pub const ROOT_QUOTA: u64 = 24 * 1024;
-pub const TABLE: TableDefinition<&[u8], &[u8]> = TableDefinition::new("private-objects-v1");
+pub const TABLE: TableDefinition<&[u8], &[u8]> = TableDefinition::new("private-objects-v2");
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Error {
@@ -26,6 +28,7 @@ pub enum Error {
     Conflict,
     Capacity,
     Invalid,
+    Missing,
     Corrupt,
     Engine,
 }
@@ -53,11 +56,16 @@ impl<'a> Store<'a> {
         engine(tx.commit())?;
         Ok(Self { db })
     }
+    fn writer(&self) -> Result<redb::WriteTransaction> {
+        let mut tx = engine(self.db.begin_write())?;
+        engine(tx.set_durability(redb::Durability::Immediate))?;
+        Ok(tx)
+    }
 }
 
 #[cfg(all(test, feature = "host"))]
 extern crate std;
 #[cfg(all(test, feature = "host"))]
-mod retention_tests;
+mod collection_tests;
 #[cfg(all(test, feature = "host"))]
 mod tests;

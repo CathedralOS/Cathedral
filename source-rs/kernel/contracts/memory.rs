@@ -26,7 +26,9 @@
 //! reused. These are lab semantics, not Cathedral's stable ABI.
 pub const PAGE_BYTES: usize = 4096;
 /// Maximum pages per object and per-task private/accepted-reader page budget.
-pub const MAX_PAGES: usize = 64;
+/// A matrix hub retains every child image and holds old and new during each
+/// replacement, so the bound covers several such pairs plus what it lends.
+pub const MAX_PAGES: usize = 128;
 /// Separate metadata limits: larger page grants must not buy every global slot.
 pub const MAX_PRIVATE_REGIONS: usize = 4;
 pub const MAX_SHARED_REGIONS: usize = 4;

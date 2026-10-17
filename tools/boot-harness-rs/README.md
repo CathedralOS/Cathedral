@@ -38,7 +38,8 @@ Add `--trace-storage` for opt-in timing. Run
 `python tools/boot-harness-rs/matrix_database_test.py --release --recovery` for
 provider cuts, a real startup save timeout, sibling interaction, explicit grants,
 exact readback and cold restoration on a disposable image. It emits timing and ATA
-CSV files. See the [database catalog guide](../../source-rs/platform/libraries/object-store/database/README.md)
+CSV files. See the [object store guide](../../source-rs/platform/libraries/database-objects/README.md)
+and the [notes guide](../../source-rs/distribution/applications/notes/README.md)
 for navigation, interpretation and remaining recovery limits. `database_image_test.py`
 checks that ordinary image preparation preserves existing bytes and refuses malformed
 file extents.

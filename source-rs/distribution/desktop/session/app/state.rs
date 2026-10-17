@@ -1,107 +1,120 @@
-//! App schema over its matrix-local catalog capability. Persist before presenting;
-//! revoked bindings cannot save, and a replacement reads only committed state.
+//! App schema over its matrix-local object capability. Persist before
+//! presenting; revoked bindings cannot save, and a replacement reads only
+//! committed state. The color lives in one object; its number is discovered
+//! by listing the granted root, never assumed.
 use super::*;
 use cathedral_platform_contracts::storage as store;
+use cathedral_user_runtime::{memory::Private, storage::Scope};
 pub(super) struct State {
-    binding: u64,
-    pub generation: u64,
+    scope: Scope,
+    object: u64,
+    pub revision: u64,
     style: u64,
     pub alternate: bool,
     pub error: u64,
     volatile: bool,
-    transport_alive: core::cell::Cell<bool>,
 }
 impl State {
-    pub fn open(parent: Pair, style: u64) -> Self {
+    pub fn open(pair: Pair, style: u64) -> Self {
         let mut state = Self {
-            binding: 0,
-            generation: 0,
+            scope: Scope::new(pair),
+            object: 0,
+            revision: 0,
             style,
             alternate: false,
             error: 0,
             // Only the explicitly diskless sibling probe may change volatile state.
             volatile: style == 2,
-            transport_alive: core::cell::Cell::new(true),
         };
-        let _ = state.reload(parent);
+        let _ = state.reload();
         state
     }
-    /// Explicit reconciliation: acquire only the currently granted local binding,
-    /// read first, and create only after observing absence and the current revision.
-    /// Never replay an uncertain toggle or replace confirmed state on failed reads.
-    pub fn reload(&mut self, parent: Pair) -> Result<(), u64> {
-        let result = self.load(parent);
+    /// Explicit reconciliation: acquire only the currently granted binding,
+    /// read first, and create only after observing an empty root. Never replay
+    /// an uncertain toggle or replace confirmed state on failed reads.
+    pub fn reload(&mut self) -> Result<(), u64> {
+        let result = self.load();
         self.error = result.err().unwrap_or(0);
         result
     }
-    fn load(&mut self, parent: Pair) -> Result<(), u64> {
-        let info = self.exchange(parent, [wire::STORAGE_INFO, 0, 0, 0, 0, 0, 0, 0])?;
-        if info[0] == abi::DENIED && self.volatile {
-            return Ok(());
-        }
-        if info[0] != 0 {
-            return Err(info[0]);
-        }
-        self.binding = info[1];
-        self.volatile = false;
-        let record = match self.request(parent, store::READ, 2, 0, &[]) {
-            Ok(record) => record,
-            Err(store::NOT_FOUND) => {
-                let generation = self.request(parent, store::LIST, 0, 0, &[])?.generation;
-                let created =
-                    self.request(parent, store::CREATE, 2, generation, &self.payload(false));
-                // Even an error may hide a committed CREATE. A successful readback
-                // settles the outcome; otherwise leave it unresolved for the owner/user.
-                match self.request(parent, store::READ, 2, 0, &[]) {
-                    Ok(record) => record,
-                    Err(read_error) => return Err(created.err().unwrap_or(read_error)),
-                }
-            }
+    fn load(&mut self) -> Result<(), u64> {
+        match self.scope.bind() {
+            Ok(_) => (),
+            Err(abi::DENIED) if self.volatile => return Ok(()),
             Err(error) => return Err(error),
-        };
-        if record.payload() != self.payload(false) && record.payload() != self.payload(true) {
+        }
+        self.volatile = false;
+        let listing = self.exchange(packet(store::LIST, 0, 0, 0, 0), None)?;
+        let words = store::unpack(&listing).ok_or(abi::IO_ERROR)?;
+        if words[0] != 0 {
+            return Err(words[0]);
+        }
+        if words[1] == 0 {
+            // Even an error may hide a committed creation. A successful listing
+            // afterwards settles the outcome; otherwise leave it unresolved.
+            let created = self.publish(0, 0, false);
+            let listing = self.exchange(packet(store::LIST, 0, 0, 0, 0), None)?;
+            let words = store::unpack(&listing).ok_or(abi::IO_ERROR)?;
+            if words[0] != 0 || words[1] == 0 {
+                return Err(created.err().unwrap_or(abi::IO_ERROR));
+            }
+            self.object = words[2];
+        } else {
+            self.object = words[2];
+        }
+        let reply = self.exchange(packet(store::READ, self.object, 0, 0, 6), None)?;
+        let record = store::Reply::decode(&reply)?;
+        let payload = &reply[32..38];
+        if record.length != 6 || (payload != self.payload(false) && payload != self.payload(true)) {
             return Err(abi::IO_ERROR);
         }
-        self.generation = record.generation;
-        self.alternate = record.bytes[5] != 0;
+        self.revision = record.revision;
+        self.alternate = payload[5] != 0;
         Ok(())
     }
-    pub fn toggle(&mut self, parent: Pair) -> Result<(), u64> {
+    pub fn toggle(&mut self) -> Result<(), u64> {
         // An unresolved operation must be reconciled explicitly before mutation.
         if self.error != 0 {
             return Err(abi::DENIED);
         }
         let alternate = !self.alternate;
-        if !self.volatile {
-            match self.request(
-                parent,
-                store::REPLACE,
-                2,
-                self.generation,
-                &self.payload(alternate),
-            ) {
-                Ok(record) => self.generation = record.generation,
-                Err(error) => {
-                    self.error = error;
-                    return Err(error);
-                }
-            }
+        if !self.volatile
+            && let Err(error) = self.publish(self.object, self.revision, alternate)
+        {
+            self.error = error;
+            return Err(error);
         }
         self.alternate = alternate;
         Ok(())
     }
-    pub fn stage(&self, parent: Pair) {
-        assert_ne!(self.binding, 0);
-        self.request(parent, store::BEGIN, 0, self.generation, &[])
-            .unwrap();
-        self.request(
-            parent,
-            store::STAGE_REPLACE,
-            2,
-            0,
-            &self.payload(!self.alternate),
-        )
-        .unwrap();
+    fn publish(&mut self, object: u64, expected: u64, alternate: bool) -> Result<(), u64> {
+        let mut pages = Private::allocate(1).map_err(|e| e.0 as u64)?;
+        pages.bytes_mut()[..6].copy_from_slice(&self.payload(alternate));
+        let attachment = pages.freeze().map_err(|e| e.0 as u64)?;
+        let reply = self.exchange(
+            packet(store::PUBLISH, object, expected, 0, 6),
+            Some(&attachment),
+        )?;
+        let reply = store::Reply::decode(&reply)?;
+        self.object = reply.object;
+        self.revision = reply.revision;
+        Ok(())
+    }
+    /// Every exchange goes through here so the storage trace sees each one.
+    fn exchange(
+        &mut self,
+        request: store::Request,
+        attachment: Option<&cathedral_user_runtime::memory::Object>,
+    ) -> Result<[u8; 64], u64> {
+        #[cfg(feature = "trace-storage")]
+        time::storage_trace("app-send", self.style, request.op);
+        let result = self
+            .scope
+            .request(request, attachment)
+            .map(|(reply, _)| reply);
+        #[cfg(feature = "trace-storage")]
+        time::storage_trace("app-reply", self.style, request.op);
+        result
     }
     pub fn color(&self) -> u64 {
         if self.alternate {
@@ -122,41 +135,13 @@ impl State {
             u8::from(alternate),
         ]
     }
-    fn exchange(&self, parent: Pair, words: wire::Packet) -> Result<wire::Packet, u64> {
-        if !self.transport_alive.get() {
-            return Err(abi::PEER_CLOSED);
-        }
-        let mut bytes = [0; 64];
-        let result = parent
-            .0
-            .send(&wire::encode(words))
-            .and_then(|()| parent.1.receive_until(&mut bytes, time::after(300)?))
-            .map_err(|e| e.0 as u64)
-            .and_then(|n| wire::decode(&bytes[..n]).ok_or(abi::IO_ERROR));
-        // No correlation ID exists on this stream. After transport failure, never
-        // mistake a late response for a new request. Replacing the app is required.
-        if result.is_err() {
-            self.transport_alive.set(false);
-        }
-        result
-    }
-    fn request(
-        &self,
-        parent: Pair,
-        op: u64,
-        object: u64,
-        generation: u64,
-        payload: &[u8],
-    ) -> Result<store::Record, u64> {
-        let opcode = (self.binding << wire::STORAGE_SCOPE_BITS) | (wire::STORAGE_BASE + op);
-        let bytes = store::request(opcode, object, generation, payload).unwrap();
-        #[cfg(feature = "trace-storage")]
-        time::storage_trace("app-send", self.style, op);
-        let result = self
-            .exchange(parent, wire::decode(&bytes).unwrap())
-            .and_then(|reply| store::Record::decode(&wire::encode(reply)));
-        #[cfg(feature = "trace-storage")]
-        time::storage_trace("app-reply", self.style, op);
-        result
+}
+fn packet(op: u64, object: u64, expected: u64, offset: u64, len: u64) -> store::Request {
+    store::Request {
+        op,
+        object,
+        expected,
+        offset,
+        len,
     }
 }

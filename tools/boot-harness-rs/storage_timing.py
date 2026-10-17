@@ -21,7 +21,7 @@ def summarize(output, serial, boot):
     text = serial.replace('Cathedral Rust lab: ', '')
     for label, numbers in re.findall(r'STORAGE_TRACE ([\w-]+) ([0-9 ]+)\r?\n', text):
         values = list(map(int, numbers.split()))
-        if label in ('note-loaded', 'note-saved'): continue
+        if label in ('note-loaded', 'note-saved', 'note-budget', 'matrix-budget'): continue
         if label == 'ata-io':
             assert len(values) == 7
             io.append(values)

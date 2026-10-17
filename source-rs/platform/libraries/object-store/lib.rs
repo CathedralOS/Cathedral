@@ -3,7 +3,7 @@
 //! Private catalogs: validate root-local changes, commit a snapshot, recover complete roots.
 use cathedral_block_device::Device;
 use cathedral_kernel_contracts::user as abi;
-use cathedral_platform_contracts::storage::Record;
+use cathedral_platform_contracts::catalog::Record;
 pub mod catalog;
 mod format;
 pub mod protocol;

@@ -15,7 +15,6 @@ members = [
     "platform/libraries/content-layout",
     "platform/libraries/database-objects",
     "platform/libraries/object-store",
-    "platform/libraries/object-store/database",
     "platform/libraries/storage-volume",
     "platform/libraries/storage-volume/engine",
     "platform/libraries/user-runtime",
@@ -58,7 +57,6 @@ rust-version = "1.94"
 publish = false
 
 [workspace.dependencies]
-cathedral-database-catalog = { path = "platform/libraries/object-store/database" }
 cathedral-content-layout = { path = "platform/libraries/content-layout" }
 cathedral-database-objects = { path = "platform/libraries/database-objects" }
 cathedral-storage-engine = { path = "platform/libraries/storage-volume/engine" }
@@ -151,8 +149,3 @@ opt-level = "s"
 [profile.dev.package.cathedral-user-runtime]
 opt-level = "s"
 
-[profile.dev.package.cathedral-database-catalog]
-opt-level = "s"
-
-[profile.release.package.cathedral-database-catalog]
-opt-level = "s"

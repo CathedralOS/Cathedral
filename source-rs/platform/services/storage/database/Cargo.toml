@@ -10,9 +10,7 @@ path = "main.rs"
 test = false
 bench = false
 [dependencies]
-cathedral-database-catalog = { workspace = true, optional = true }
-cathedral-object-store = { workspace = true, optional = true }
-cathedral-kernel-contracts = { workspace = true, optional = true }
+cathedral-kernel-contracts.workspace = true
 cathedral-user-runtime = { workspace = true, features = ["heap"] }
 cathedral-platform-contracts.workspace = true
 cathedral-database-objects.workspace = true
@@ -22,7 +20,5 @@ cathedral-ata-pio.workspace = true
 workspace = true
 
 [features]
-catalog = ["dep:cathedral-database-catalog", "dep:cathedral-object-store", "dep:cathedral-kernel-contracts"]
-
-recovery-lab = ["catalog"]
+recovery-lab = []
 trace-storage = ["cathedral-ata-pio/trace-storage"]

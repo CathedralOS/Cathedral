@@ -92,7 +92,13 @@ pub(super) fn replace_writer(session: &admission::Session) {
     );
     pixel(matrix, 140, 190, BACKGROUND);
     interact(session);
-    assert_eq!(inner(matrix, [wire::RUN_PAGES, 0, 1, 0, 0, 0, 0, 0])[0], 0);
+    assert_eq!(
+        inner(
+            matrix,
+            [wire::RUN_PAGES, 0, APP_PAGES, APP_READERS, 0, 0, 0, 0]
+        )[0],
+        0
+    );
     assert_eq!(inner(matrix, [wire::RUN, 0, 1, 0, 0, 0, 0, 0])[0], 0);
     assert_eq!(
         inner(matrix, [wire::STORAGE_GRANT, 0, 0, 0, 0, 0, 0, 0])[0],

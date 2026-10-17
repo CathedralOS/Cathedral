@@ -1,8 +1,11 @@
 mod backend;
-mod catalog;
+mod colors;
 use cathedral_storage_volume::header;
+mod desktop;
+mod difference;
 mod guest;
 mod image;
+mod notes;
 mod objects;
 mod proof;
 mod region;

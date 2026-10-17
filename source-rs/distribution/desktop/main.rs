@@ -14,6 +14,7 @@ use cathedral_kernel_contracts::user as abi;
 use cathedral_platform_contracts::matrix as wire;
 use cathedral_user_runtime::{Error, ipc::Handle, time};
 type Pair = (Handle, Handle);
+#[cfg(feature = "desktop")]
 static ROOT_TASK: core::sync::atomic::AtomicU64 = core::sync::atomic::AtomicU64::new(0);
 cathedral_user_runtime::entry_with_environment!(main);
 fn main(role: u64, argument: u64, environment: cathedral_user_runtime::task::Environment) -> u64 {
@@ -40,6 +41,7 @@ fn main(role: u64, argument: u64, environment: cathedral_user_runtime::task::Env
         _ => leaf::run(environment),
     }
 }
+#[cfg(feature = "desktop")]
 fn call(pair: Pair, words: wire::Packet) -> wire::Packet {
     let mut bytes = [0; 64];
     let result = pair

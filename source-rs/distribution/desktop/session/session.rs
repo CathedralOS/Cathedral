@@ -2,9 +2,15 @@
 use super::*;
 use cathedral_platform_contracts::input;
 use cathedral_user_runtime::{ipc, task::Launch};
-const APP_PAGES: u64 = if cfg!(feature = "notes") { 24 } else { 1 };
-const MATRIX_PAGES: u64 = if cfg!(feature = "notes") { 24 } else { 2 };
-const MATRIX_READERS: u64 = if cfg!(feature = "notes") { 24 } else { 4 };
+const APP_PAGES: u64 = if cfg!(feature = "notes") { 32 } else { 2 };
+const APP_READERS: u64 = if cfg!(feature = "notes") { 4 } else { 0 };
+const MATRIX_PAGES: u64 = if cfg!(feature = "notes") { 40 } else { 4 };
+const MATRIX_READERS: u64 = if cfg!(feature = "notes") { 40 } else { 4 };
+/// Notes draws a base, a text bitmap and three note-bar rectangles; the color
+/// probe draws a base and an accent plus its quota probes.
+const APP_SURFACES: u64 = if cfg!(feature = "notes") { 6 } else { 4 };
+const INNER_SURFACES: u64 = if cfg!(feature = "notes") { 10 } else { 8 };
+const SIBLING_SURFACES: u64 = if cfg!(feature = "notes") { 6 } else { 8 };
 const KEYS: u64 = if cfg!(feature = "notes") {
     wire::VALID_KEY_MASK
 } else {
@@ -37,7 +43,7 @@ fn inner(pair: Pair, pressure: bool) {
     launch_inner(pair, pressure);
     owner(
         pair,
-        wire::route([wire::RUN_PAGES, 0, APP_PAGES, 0, 0, 0, 0, 0], 0).unwrap(),
+        wire::route([wire::RUN_PAGES, 0, APP_PAGES, APP_READERS, 0, 0, 0, 0], 0).unwrap(),
     );
     owner(
         pair,
@@ -54,11 +60,14 @@ fn inner(pair: Pair, pressure: bool) {
         pair,
         wire::route([wire::STORAGE_GRANT, 0, 0, 0, 0, 0, 0, 0], 0).unwrap(),
     );
-    owner(pair, [wire::SURFACE_LIMIT, 0, 8, 0, 0, 0, 0, 0]);
+    owner(
+        pair,
+        [wire::SURFACE_LIMIT, 0, INNER_SURFACES, 0, 0, 0, 0, 0],
+    );
     owner(pair, [wire::PLACE, 0, 110, 140, 280, 220, KEYS, 0]);
     owner(
         pair,
-        wire::route([wire::SURFACE_LIMIT, 0, 4, 0, 0, 0, 0, 0], 0).unwrap(),
+        wire::route([wire::SURFACE_LIMIT, 0, APP_SURFACES, 0, 0, 0, 0, 0], 0).unwrap(),
     );
     #[cfg(feature = "database-probes")]
     stalls_peer::start(pair, pressure);
@@ -127,10 +136,16 @@ fn setup(probes: bool) -> admission::Session {
         call(matrix, [wire::RUN, 0, 0, 0, 6, 1, 64, 0]),
         wire::error(abi::BAD_HANDLE)
     );
-    owner(matrix, [wire::RUN_PAGES, 1, APP_PAGES, 0, 0, 0, 0, 0]);
+    owner(
+        matrix,
+        [wire::RUN_PAGES, 1, APP_PAGES, APP_READERS, 0, 0, 0, 0],
+    );
     owner(matrix, [wire::RUN, 1, 1, 1, 0, 0, 0, 0]);
     owner(matrix, [wire::STORAGE_GRANT, 1, 1, 0, 0, 0, 0, 0]);
-    owner(matrix, [wire::SURFACE_LIMIT, 1, 8, 0, 0, 0, 0, 0]);
+    owner(
+        matrix,
+        [wire::SURFACE_LIMIT, 1, SIBLING_SURFACES, 0, 0, 0, 0, 0],
+    );
     owner(matrix, [wire::PLACE, 1, 500, 180, 220, 180, KEYS, 0]);
     if probes && !recovery::sibling_saved(matrix) {
         funding::exercise(matrix, pressure);

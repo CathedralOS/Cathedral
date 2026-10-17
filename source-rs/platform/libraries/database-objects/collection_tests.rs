@@ -71,15 +71,23 @@ fn every_collection_boundary_cold_opens_with_live_pins_and_exact_accounting() {
     let store = Store::open(&db).unwrap();
     for revision in 1..=40u64 {
         store
-            .publish(0, revision - 1, &revision.to_le_bytes())
+            .publish(
+                0,
+                u64::from(revision > 1),
+                revision - 1,
+                &revision.to_le_bytes(),
+            )
             .unwrap();
         if revision == 1 {
-            store.pin(0, 1, 0).unwrap();
+            store.pin(0, 1, 1, 0).unwrap();
         }
     }
-    assert_eq!(store.pin(0, 40, 0), Err(Error::Conflict));
-    assert_eq!(store.pin(1, 1, 0), Err(Error::Conflict));
-    assert_eq!(store.release(0, 2, 0), Err(Error::Conflict));
+    // A second object shares nothing with the pinned history but must survive it.
+    let other = store.publish(0, 0, 0, b"other object").unwrap();
+    assert_eq!(store.pin(0, 1, 40, 0), Err(Error::Conflict));
+    assert_eq!(store.pin(1, 1, 1, 0), Err(Error::Conflict));
+    assert_eq!(store.release(0, 1, 2, 0), Err(Error::Conflict));
+    assert_eq!(store.release(0, other.id, 1, 0), Err(Error::Conflict));
     let mut passes = 0;
     loop {
         let result = store.collect(0).unwrap();
@@ -89,18 +97,21 @@ fn every_collection_boundary_cold_opens_with_live_pins_and_exact_accounting() {
         let recovered = open(Disk(Arc::new(Mutex::new(disk.0.lock().unwrap().clone()))));
         let reader = Store::open(&recovered).unwrap();
         let mut out = [0; 8];
-        reader.read_pinned(0, 0, 1, 0, &mut out).unwrap();
+        reader.read_pinned(0, 0, 1, 1, 0, &mut out).unwrap();
         assert_eq!(out, 1u64.to_le_bytes());
-        reader.read(0, 40, 0, &mut out).unwrap();
+        reader.read(0, 1, 40, 0, &mut out).unwrap();
         assert_eq!(out, 40u64.to_le_bytes());
+        let mut text = [0; 12];
+        reader.read(0, other.id, 1, 0, &mut text).unwrap();
+        assert_eq!(&text, b"other object");
         accounting(&recovered);
         // Every still-discoverable event remains pinnable between passes.
         for revision in 2..40 {
-            match reader.pin(0, revision, 1) {
+            match reader.pin(0, 1, revision, 1) {
                 Ok(_) => {
-                    reader.read_pinned(0, 1, revision, 0, &mut out).unwrap();
+                    reader.read_pinned(0, 1, 1, revision, 0, &mut out).unwrap();
                     assert_eq!(out, revision.to_le_bytes());
-                    reader.release(0, revision, 1).unwrap();
+                    reader.release(0, 1, revision, 1).unwrap();
                 }
                 Err(Error::Conflict) => {} // Already retired by this pass.
                 other => panic!("retained event has invalid closure: {other:?}"),
@@ -111,11 +122,17 @@ fn every_collection_boundary_cold_opens_with_live_pins_and_exact_accounting() {
         }
     }
     assert!(passes > 1);
-    store.release(0, 1, 0).unwrap();
+    // A pinned revision outlives its object's deletion until released.
+    store.delete(0, 1, 40).unwrap();
     collect(&store, 0);
-    assert_eq!(store.pin(0, 1, 0), Err(Error::Conflict));
+    let mut out = [0; 8];
+    store.read_pinned(0, 0, 1, 1, 0, &mut out).unwrap();
+    assert_eq!(out, 1u64.to_le_bytes());
+    store.release(0, 1, 1, 0).unwrap();
+    collect(&store, 0);
+    assert_eq!(store.pin(0, 1, 1, 0), Err(Error::Conflict));
     assert_eq!(
-        store.read_pinned(0, 0, 1, 0, &mut [0; 8]),
+        store.read_pinned(0, 0, 1, 1, 0, &mut [0; 8]),
         Err(Error::Conflict)
     );
     accounting(&db);
@@ -140,7 +157,9 @@ fn collected_payload_pages_are_reused_with_unrelated_data_in_a_fixed_extent() {
         for (index, byte) in data.iter_mut().enumerate() {
             *byte = ((index * 17 + index / 4096 * 71 + revision as usize * 13) % 251) as u8;
         }
-        store.publish(0, revision - 1, &data).unwrap();
+        store
+            .publish(0, u64::from(revision > 1), revision - 1, &data)
+            .unwrap();
         collect(&store, 0);
     }
     assert!(disk.len().unwrap() <= CAPACITY as u64);
@@ -149,7 +168,7 @@ fn collected_payload_pages_are_reused_with_unrelated_data_in_a_fixed_extent() {
     let mut out = vec![0; 8192];
     Store::open(&recovered)
         .unwrap()
-        .read(0, 600, 0, &mut out)
+        .read(0, 1, 600, 0, &mut out)
         .unwrap();
     assert_eq!(out, data);
     let tx = recovered.begin_read().unwrap();

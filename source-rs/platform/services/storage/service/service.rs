@@ -1,6 +1,6 @@
 // Open the catalog, bind accepted clients to roots, dispatch transactions and reply.
 use cathedral_kernel_contracts::user as abi;
-use cathedral_platform_contracts::storage as wire;
+use cathedral_platform_contracts::catalog as wire;
 use cathedral_user_runtime::{
     Error,
     server::{Event, Server},

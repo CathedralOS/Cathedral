@@ -42,7 +42,7 @@ pub fn authority(connections: &mut Connections) -> Result<(), Error> {
     write(b"Cathedral: application authority isolated\n")
 }
 fn storage(connections: &mut Connections) -> Result<(), Error> {
-    use cathedral_platform_contracts::storage as wire;
+    use cathedral_platform_contracts::catalog as wire;
     let before = super::storage::load(connections)?;
     let (send, receive) = connections.pair(2)?;
     for (request, error) in [

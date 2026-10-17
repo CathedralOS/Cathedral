@@ -55,9 +55,9 @@ pub fn run(style: u64, environment: Environment) -> u64 {
                     time::trace("app-key");
                     let state = state.as_mut().unwrap();
                     let result = if state.error != 0 {
-                        state.reload(storage)
+                        state.reload()
                     } else {
-                        state.toggle(storage)
+                        state.toggle()
                     };
                     if result.is_ok() {
                         cathedral_user_runtime::write(if style == 0 {
@@ -120,7 +120,7 @@ pub fn run(style: u64, environment: Environment) -> u64 {
                                 0,
                             ),
                             7 => {
-                                status = state.as_mut().unwrap().reload(storage).err().unwrap_or(0);
+                                status = state.as_mut().unwrap().reload().err().unwrap_or(0);
                                 scene.as_mut().unwrap().paint(
                                     parent,
                                     view,
@@ -129,7 +129,7 @@ pub fn run(style: u64, environment: Environment) -> u64 {
                                 );
                             }
                             8 => {
-                                status = state.as_mut().unwrap().toggle(storage).err().unwrap_or(0);
+                                status = state.as_mut().unwrap().toggle().err().unwrap_or(0);
                                 {
                                     let color = state.as_ref().unwrap().color();
                                     scene.as_mut().unwrap().paint(
@@ -141,10 +141,7 @@ pub fn run(style: u64, environment: Environment) -> u64 {
                                     painted = Some((view, color, state.as_ref().unwrap().error));
                                 }
                             }
-                            9 => {
-                                state.as_ref().unwrap().stage(storage);
-                                scene.as_mut().unwrap().staged_probe(parent);
-                            }
+                            9 => scene.as_mut().unwrap().staged_probe(parent),
                             13 => {
                                 // Readiness/failure probe; never mutates state.
                                 status = state.as_ref().map_or(abi::BUSY, |s| s.error);
@@ -155,8 +152,7 @@ pub fn run(style: u64, environment: Environment) -> u64 {
                                 // Test owner gets admission acknowledgement before
                                 // the save blocks; completion is observed via HEALTH.
                                 control.1.send(&wire::encode([0; 8])).unwrap();
-                                save_status =
-                                    state.as_mut().unwrap().toggle(storage).err().unwrap_or(0);
+                                save_status = state.as_mut().unwrap().toggle().err().unwrap_or(0);
                                 {
                                     let color = state.as_ref().unwrap().color();
                                     scene.as_mut().unwrap().paint(
@@ -182,7 +178,7 @@ pub fn run(style: u64, environment: Environment) -> u64 {
                             u64::from(state.as_ref().is_some_and(|s| s.alternate)),
                             save_status,
                             pointers,
-                            state.as_ref().map_or(0, |s| s.generation),
+                            state.as_ref().map_or(0, |s| s.revision),
                         ]))
                         .unwrap();
                 }

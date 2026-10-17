@@ -156,7 +156,7 @@ def main():
     if args.profile.resolve() == default_profile and (args.screenshot or args.input_test or args.recovery_test or args.storage_test):
         args.profile = legacy_profile
     desktop = args.profile.resolve() == default_profile and not (args.smoke or args.kernel_only)
-    database_desktop = desktop or args.profile.resolve() in [(Path(__file__).parent / f'profiles/{name}.json').resolve() for name in ('matrix-database', 'notes')]
+    database_desktop = desktop or args.profile.resolve() in [(Path(__file__).parent / f'profiles/{name}.json').resolve() for name in ('matrix-desktop', 'matrix-database-recovery', 'matrix-storage', 'notes', 'notes-recovery')]
     if database_desktop and not args.release:
         parser.error('the database desktop requires --release under TCG')
     if args.timeout <= 0 or args.memory < 64:
@@ -216,7 +216,7 @@ def main():
             environment["CATHEDRAL_DYNAMIC_TASKS"] = str(startup.get("dynamic_tasks", 0))
             for resource in ("private_pages", "shared_pages"):
                 pages = startup["initial"].get(resource, 0)
-                if type(pages) is not int or not 0 <= pages <= 64:
+                if type(pages) is not int or not 0 <= pages <= 128:
                     parser.error(f"initial {resource} must be an integer in 0..64")
                 environment[f"CATHEDRAL_INIT_{resource.upper()}"] = str(pages)
             programs["init"] = startup["initial"]
@@ -247,8 +247,8 @@ def main():
                     environment[f"CATHEDRAL_LAUNCH_{index}_{resource.upper()}"] = "1" if child.get(resource, False) else "0"
                 for resource in ("private_pages", "shared_pages"):
                     pages = child.get(resource, 0)
-                    if type(pages) is not int or not 0 <= pages <= 64:
-                        parser.error("memory page budgets must be integers between 0 and 64")
+                    if type(pages) is not int or not 0 <= pages <= 128:
+                        parser.error("memory page budgets must be integers between 0 and 128")
                     environment[f"CATHEDRAL_LAUNCH_{index}_{resource.upper()}"] = str(pages)
                 argument = child.get("argument", 0)
                 if type(argument) is not int or not 0 <= argument < 2**64:
@@ -263,7 +263,7 @@ def main():
             user_features.append('session-probes')
         if args.matrix_desktop_test and user["package"] == "cathedral-desktop":
             user_features.append("desktop-probes")
-        if args.matrix_desktop_test and user["package"] == "cathedral-storage-service":
+        if args.matrix_desktop_test and user["package"] == "cathedral-database-storage":
             user_features.append("recovery-lab")
         if args.trace_input and user["package"] in ("cathedral-matrix-service", "cathedral-input-service", "cathedral-desktop"):
             user_features.append("trace-input")
@@ -310,11 +310,13 @@ def main():
     if not args.kernel_only and not args.smoke and any(child.get("disk", False) for child in launches):
         disposable = args.screenshot or args.input_test or args.recovery_test or args.storage_test or args.matrix_storage_test or args.matrix_desktop_test
         # Matrix app schemas must never reinterpret the default distribution's roots.
-        persistent = BUILD / ("cathedral-storage.raw" if desktop else "notes-storage.raw" if args.profile.stem == "notes" else "matrix-database-storage.raw" if database_desktop else "matrix-desktop-storage.raw" if args.profile.stem == "matrix-desktop" else "storage.raw")
+        persistent = BUILD / ("cathedral-storage.raw" if desktop else "notes-storage.raw" if args.profile.stem == "notes" else "matrix-database-storage.raw" if database_desktop else "storage.raw")
         data_path = output / "test-storage.raw" if disposable else persistent
         if database_desktop:
-            if disposable:
-                parser.error('use matrix_database_test.py for disposable database proofs')
+            # A disposable proof starts from a freshly formatted object volume;
+            # persistent media is created once and never reformatted.
+            if disposable and data_path.exists():
+                data_path.unlink()
             database_image.prepare(data_path)
         else:
             disk_image.prepare(data_path, reset=disposable)
@@ -333,7 +335,7 @@ def main():
         protocol_test.run(command, output, args.timeout, creationflags, "Cathedral admission: executable capabilities, recursive funded pools, load rollback, stale grants and sibling survival passed")
         return 0
     if args.matrix_test or args.matrix_storage_test or args.ipc_test:
-        marker = ("Cathedral matrix storage: scoped catalogs, recursive delegation, revocation and replacement passed" if args.matrix_storage_test else "Cathedral IPC: channels, startup bundles, recursive admission and reclamation passed" if args.ipc_test
+        marker = ("Cathedral matrix storage: scoped roots, recursive delegation, revocation, cheap copies and replacement passed" if args.matrix_storage_test else "Cathedral IPC: channels, startup bundles, recursive admission and reclamation passed" if args.ipc_test
                   else "Cathedral matrix: two identical worlds, local-only views, attenuated input and recovery passed")
         protocol_test.run(command, output, args.timeout, creationflags, marker)
         return 0

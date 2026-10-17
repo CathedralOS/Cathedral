@@ -3,7 +3,7 @@
 use super::{Store, catalog::Change};
 use cathedral_block_device::Device;
 use cathedral_kernel_contracts::user as abi;
-use cathedral_platform_contracts::storage as wire;
+use cathedral_platform_contracts::catalog as wire;
 /// Catalog semantics are independent of persistence. Providers implement one
 /// atomic changed-root publication; this dispatcher owns connection staging.
 pub trait Backend {

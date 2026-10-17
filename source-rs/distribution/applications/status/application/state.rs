@@ -1,7 +1,7 @@
 //! App-owned schema and navigation. No IPC, device access or drawing.
 use cathedral_kernel_contracts::user as abi;
+use cathedral_platform_contracts::catalog::Record;
 use cathedral_platform_contracts::input;
-use cathedral_platform_contracts::storage::Record;
 use cathedral_user_runtime::Error;
 #[derive(Default)]
 pub(super) struct State {

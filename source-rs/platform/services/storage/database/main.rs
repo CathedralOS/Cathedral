@@ -1,15 +1,11 @@
 #![no_std]
 #![no_main]
-//! Experimental storage provider. Only this executable receives the disk grant.
-//! Fund the heap, recover the engine, serve bounded private-root publications.
-#[cfg(not(feature = "catalog"))]
+//! Private object storage provider. Only this executable receives the disk
+//! grant. Fund the heap, recover the engine, serve two private roots.
 mod bulk;
-#[cfg(feature = "catalog")]
-mod catalog;
 #[cfg(feature = "recovery-lab")]
 mod gate;
 mod metrics;
-#[cfg(not(feature = "catalog"))]
 mod service;
 use cathedral_user_runtime::heap::{self, Heap};
 #[global_allocator]
@@ -24,10 +20,7 @@ fn main(_: u64, _: u64) -> u64 {
     metrics::report("recovered");
     {
         let store = cathedral_database_objects::Store::open(&db).unwrap();
-        #[cfg(not(feature = "catalog"))]
         service::serve(&store);
-        #[cfg(feature = "catalog")]
-        catalog::serve(&store);
     }
     assert_eq!(
         cathedral_user_runtime::resources::budget()

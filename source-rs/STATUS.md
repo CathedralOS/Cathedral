@@ -8,16 +8,19 @@ instructions. [Owner questions](../OWNER_QUESTIONS.md) own unresolved semantics.
 
 F5 and `python tools/boot-harness-rs/run.py --release --window` share
 [one composition](distribution/profile.json). Its Programs menu opens Notes or
-Colors in a nested workspace without restarting QEMU. Notes saves to the
-experimental database disk; unsaved drafts block switching/closing until saved
-or explicitly reloaded. Colors is transient. [The distribution map](distribution/README.md)
+Colors in a nested workspace without restarting QEMU. Notes keeps up to eight
+notes as private objects on the experimental database disk; a duplicate is the
+store's copy of the saved note and shares its content. Unsaved drafts block
+switching/closing until saved or explicitly reloaded, and a busy note is left
+open. Colors is transient. [The distribution map](distribution/README.md)
 links admission, launcher, apps and provider boundaries.
 
 `python tools/boot-harness-rs/desktop_test.py` checks this actual image through
-physical input, exact saved text/status, repeated app replacement and cold reboot.
-Older profiles remain focused fault/mechanism fixtures. This is still a bounded
-installed menu and one active workspace app, not general app installation or a
-full window manager.
+physical input, exact saved text/status, duplicate and switch, repeated app
+replacement and cold reboot, then has an independent host model verify the
+retained records. Older profiles remain focused fault/mechanism fixtures. This is
+still a bounded installed menu and one active workspace app, not general app
+installation or a full window manager.
 
 ## Interface ownership
 
@@ -113,7 +116,7 @@ check both revisions without cleaning the guest's image first. Guards outside th
 assigned region remain unchanged. This does not simulate loss of host disk caches.
 
 Shared admission now permits 240 image pages inside the same 1 MiB image window,
-a guarded 32 KiB user stack, 288 admission frames and 64 private/reader pages.
+a guarded 32 KiB user stack, 288 admission frames and 128 private/reader pages.
 Fallible per-process/per-object ledgers replace the large fixed arrays and u128
 write mask. The stack increase was required by unclean database recovery. The
 kernel still has no engine dependency; the ordinary catalog format is unchanged.
@@ -146,34 +149,43 @@ in a fixed roughly 1 MiB engine extent containing unrelated data. Three guest bo
 prove pin survival, release/collection, bulk pressure and cold recovery. This is
 bounded reuse evidence, not a physical full-volume progress or watcher guarantee.
 
-The separate [database catalog adapter](platform/libraries/object-store/database/README.md)
-now runs the matrix desktop over the database provider. Existing matrix IPC and
-private-root delegation carry atomic catalog snapshots; two cold boots and an
-independent host oracle verify saved app colors and exact records. The old desktop
-format remains available; there is no migration or production-engine selection.
-The desktop database path requires release mode under TCG. Apps now preserve
-confirmed state on failed saves, show an unconfirmed-save mark and reconcile via
-readback before another mutation. A real startup CREATE timeout and provider cuts
-before/after commit are exercised with exact revision checks and a live nested
-sibling. The distribution replaces dead or stalled storage providers, including
-retired root streams, and explicitly restores grants. Its budget allows at most
-three replacements per desktop session; exhaustion or failed reopen leaves storage
-offline while the apps remain alive. Retired app
-transports require app replacement, and bad media still fails closed.
+The [object store](platform/libraries/database-objects/README.md) holds many
+numbered objects per root. Chunks and manifests are shared within a root, so a
+copy writes a head and an event and nothing else, whatever the content's size;
+numbers are never reused; collection runs before every write and reclaims what no
+head or pin reaches. The [provider](platform/services/storage/database/main.rs)
+speaks one [object protocol](platform/contracts/storage.rs): 64-byte packets with
+sealed attachments for publications and bulk reads. The legacy sector catalog and
+its protocol remain only for the status/counter composition.
 
-The database desktop is now an ordinary CLI/F5 option with its own persistent disk,
+The matrix forwards that protocol through every level, attachments included, and
+the desktop's apps use it directly: Notes publishes whole documents, reads them
+back as sealed objects and duplicates them through the store's copy; the color
+probe keeps its one object. Two cold boots and an independent host oracle verify
+saved colors, saved notes and exact records, including one shared manifest behind
+a duplicated note. The desktop database path requires release mode under TCG.
+Apps preserve confirmed state on failed saves, show an unconfirmed-save mark and
+reconcile via readback before another mutation. A real startup publish timeout
+and provider cuts before/after commit are exercised with exact revision checks and
+a live nested sibling. The distribution replaces dead or stalled storage providers,
+including retired root streams, and explicitly restores grants; a grant after
+replacement re-establishes the root's provider connection through the link
+itself. The budget allows at most three replacements per desktop session;
+exhaustion or failed reopen leaves storage offline while the apps remain alive.
+Retired app transports require app replacement, and bad media still fails closed.
+
+The database desktop is an ordinary CLI/F5 option with its own persistent disk,
 created only if absent. Opt-in storage traces separate app/matrix round trips,
 dispatch/provider queueing, collection, commit and ATA operation/wait counters.
 Their clocks and fault-injection workloads do not establish production latency
 bounds. Slow-build latency and production restart policy remain engineering work.
 
-The [notes scratchpad](distribution/applications/notes/README.md) now exercises real
-physical text input, cursor edits, atomic two-record saves, draft-preserving
-reconciliation and exact cold-restored glyphs. It is an ordinary replaceable app
-with a separate F5 composition and persistent image. Its 60-character limit exposes
-the small catalog boundary; larger documents still need matrix-granted bulk-content
-access. Six ordinary saves measured 7?26 nominal ticks under traced TCG; commit and
-collection dominate this small workload. This is not a large-file benchmark.
+The [notes app](distribution/applications/notes/README.md) exercises real physical
+text input, cursor edits, whole-document publication, draft-preserving
+reconciliation, duplicate/switch and exact cold-restored glyphs. It is an
+ordinary replaceable app. Its 240-character capacity is the editor's choice, not
+a storage bound; the matrix's reader budgets are sized for the sealed bitmaps it
+retains at each level, with old and new held during replacement.
 
 One early ATA busy timeout remains undiagnosed. The driver now records opcode,
 phase, LBA, status, ticks and polls for slow/failed waits; optional QEMU tracing
@@ -281,13 +293,15 @@ The debug desktop and matrix-storage fixtures pass without enlarging kernel limi
 ## Recursive storage delegation
 
 [Matrix storage scopes](platform/services/matrix/world/storage/README.md) delegate
-whole private catalog roots through the ordinary matrix executable. Every hop
-checks connection identity and a local binding revision; siblings have separate
-root data and generations. Revocation/death aborts staging and regranting an
-ancestor does not restore descendants automatically. The headless
-`--matrix-storage-test --release` fixture checks these boundaries and committed
-data after restarting the matrix tree and storage provider. Dynamic namespaces,
-read-only rights and storage quotas remain future work; the visible desktop now consumes these grants.
+whole private object roots through the ordinary matrix executable, which becomes
+the storage root by being handed provider links rather than by an argument.
+Every hop checks connection identity and a local binding revision; siblings have
+separate numbers and revisions. Every operation is atomic at the provider, so
+revocation leaves nothing staged, and regranting an ancestor does not restore
+descendants automatically. The headless `--matrix-storage-test --release` fixture
+checks these boundaries, copies through two hops and committed objects after
+restarting the matrix tree and storage provider. Sub-root delegation, read-only
+rights and storage quotas remain future work; the visible desktop consumes these grants.
 
 ## Userspace register and interrupt grants
 

@@ -25,6 +25,8 @@ pub fn poll_view(mut reply: Packet) -> Packet {
     reply[5..].fill(0);
     reply
 }
+/// Input-service adapter selector; the matrix itself derives its role from
+/// the environment it is handed.
 pub const SOURCE_MODE: u64 = 0x4d415452;
 pub const READ_PIXEL: u64 = 108; // root owner diagnostic only: x,y
 pub const NONE: u64 = 0;
@@ -197,8 +199,6 @@ pub const STORAGE_REVOKE: u64 = 114;
 /// Root owner diagnostic only: retired provider-stream bitmask in reply word one.
 /// Does not reconnect, grant authority or expose state to children.
 pub const STORAGE_STATUS: u64 = 115;
-/// Root adapter mode: two storage links; optional display/input environment.
-pub const STORAGE_ROOT: u64 = 0x53544f52;
 pub const RUN_PAGES: u64 = 112; // owner: slot, private pages, reader pages; rest zero
 
 #[cfg(test)]

@@ -21,7 +21,7 @@ pub(super) fn arm_startup(control: Pair) -> bool {
     assert_eq!(control.1.receive(&mut bytes).unwrap(), 16);
     let fresh = bytes == [0; 16];
     if fresh {
-        arm(control, 2, storage::CREATE as u8);
+        arm(control, 2, storage::PUBLISH as u8);
     }
     fresh
 }
@@ -94,7 +94,7 @@ pub(super) fn exercise(session: &mut admission::Session) {
     write(b"Cathedral database desktop: uncertain CREATE reconciled without duplication\n")
         .unwrap();
     for phase in 1..=2 {
-        arm(session.storage_control, phase, storage::REPLACE as u8);
+        arm(session.storage_control, phase, storage::PUBLISH as u8);
         let started = time::now().unwrap();
         assert_eq!(app(session.matrix, 12)[0], 0);
         receive(session.storage_control, b"blocked");

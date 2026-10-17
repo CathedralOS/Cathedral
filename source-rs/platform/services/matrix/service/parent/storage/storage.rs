@@ -1,10 +1,56 @@
-// Authenticate a local scope, then relay the unchanged catalog protocol one hop.
-// Owner grants/abort use the binding path here; child requests resume in pending.rs.
+// Authenticate a local scope, then relay the object protocol one hop, with
+// sealed attachments travelling up (publish) and down (bulk reads) unchanged.
+// Owner grants/revokes act here; child requests resume in pending.rs.
 // Only the root adapter names provider links and retires them independently.
 use super::*;
-use cathedral_platform_contracts::storage as protocol;
-use cathedral_user_runtime::server::Request;
+use cathedral_user_runtime::{link::Link, memory::Object, server::Request};
 pub(super) use pending::Pending;
+/// The root adapter's link to one provider root. A failed exchange retires the
+/// accepted pair; serving that root again needs a fresh provider incarnation.
+pub(super) struct Provider {
+    link: Link,
+    pair: Option<(Handle, Handle)>,
+}
+impl Provider {
+    pub fn at(index: u64) -> Result<Self, Error> {
+        Ok(Self {
+            link: Link::at(index)?,
+            pair: None,
+        })
+    }
+    pub fn pair(&mut self) -> Result<(Handle, Handle), Error> {
+        if let Some(pair) = self.pair {
+            return Ok(pair);
+        }
+        let pair = self.link.connect()?;
+        self.pair = Some(pair);
+        Ok(pair)
+    }
+    /// An owner grant re-establishes the connection: a replaced provider is a
+    /// fresh incarnation and connects, while a still-live accepted link refuses
+    /// with BUSY and the existing pair stays. The owner never names processes;
+    /// the link itself distinguishes the two cases.
+    pub fn refresh(&mut self) -> Result<(Handle, Handle), Error> {
+        match self.link.connect() {
+            Ok(pair) => {
+                // The superseded endpoints belonged to a provider that is gone;
+                // their names may already be dead, so releasing them is best effort.
+                if let Some((send, receive)) = self.pair.replace(pair) {
+                    let _ = send.close();
+                    let _ = receive.close();
+                }
+                Ok(pair)
+            }
+            Err(Error(code)) if code == abi::BUSY as i64 && self.pair.is_some() => {
+                Ok(self.pair.unwrap())
+            }
+            Err(error) => Err(error),
+        }
+    }
+    pub fn invalidate(&mut self) {
+        self.pair = None;
+    }
+}
 impl Parent {
     pub(in crate::service) fn storage_client(&self, slot: usize) -> usize {
         if self.separate_storage {
@@ -55,7 +101,7 @@ impl Parent {
         };
         let epoch = if reply[0] == 0 { reply[1] } else { 0 };
         if epoch != self.storage_epoch {
-            self.scopes.clear(); // Ancestor already aborted its old binding.
+            self.scopes.clear(); // Ancestor already revoked its old binding.
             self.storage_epoch = epoch;
         }
         Ok(usize::from(epoch != 0))
@@ -77,7 +123,7 @@ impl Parent {
                             let result = self.storage_links[source as usize]
                                 .as_mut()
                                 .ok_or(Error(abi::DENIED as i64))
-                                .and_then(|client| client.pair());
+                                .and_then(|provider| provider.refresh());
                             if let Err(error) = result {
                                 return Ok(wire::error(error.0 as u64));
                             }
@@ -99,32 +145,21 @@ impl Parent {
         };
         Ok(wire::error(status.err().unwrap_or(0)))
     }
+    /// Every object operation is atomic at the provider, so revoking a binding
+    /// leaves nothing staged upstream; the stale scope simply stops authorizing.
     pub(in crate::service) fn storage_close(&mut self, slot: usize) -> Result<(), Error> {
         self.storage_refresh()?;
-        if let Some(source) = self.scopes.revoke(slot) {
-            let reply = match self.storage_call(
-                source,
-                [wire::STORAGE_BASE + protocol::ABORT, 0, 0, 0, 0, 0, 0, 0],
-            ) {
-                Ok(reply) => reply,
-                Err(error) if self.upstream && !self.separate_storage => return Err(error),
-                // Binding is already revoked. A retired provider stream cannot
-                // serve another child until explicit grant after provider restart.
-                Err(_) => return Ok(()),
-            };
-            if reply[0] != 0 {
-                return Err(Error(reply[0] as i64));
-            }
-        }
+        self.scopes.revoke(slot);
         Ok(())
     }
     pub(in crate::service) fn storage_request(
         &mut self,
         request: Request,
         words: wire::Packet,
+        attachment: Option<Object>,
     ) -> Result<(), Error> {
         assert!(self.storage_pending.is_none());
-        self.storage_pending = Some(Pending::new(request, words, self.upstream)?);
+        self.storage_pending = Some(Pending::new(request, words, attachment, self.upstream)?);
         Ok(())
     }
     fn retire_storage(&mut self, source: usize, client: usize) -> Result<(), Error> {
@@ -137,46 +172,11 @@ impl Parent {
             self.scopes.clear();
         } else {
             self.storage_failed |= 1 << source;
-            if let Some(link) = &mut self.storage_links[source] {
-                link.invalidate();
+            if let Some(provider) = &mut self.storage_links[source] {
+                provider.invalidate();
             }
             self.scopes.revoke(self.storage_slot(client));
         }
         Ok(())
-    }
-    fn storage_call(
-        &mut self,
-        source: usize,
-        mut words: wire::Packet,
-    ) -> Result<wire::Packet, Error> {
-        words[0] &= 0xffff;
-        if self.upstream {
-            words[0] |= self.storage_epoch << wire::STORAGE_SCOPE_BITS;
-            return self.storage_exchange(words);
-        }
-        let bytes = wire::encode(words);
-        if words[3] > protocol::CAPACITY as u64
-            || bytes[32 + words[3] as usize..].iter().any(|b| *b != 0)
-        {
-            return Ok(wire::error(abi::INVALID_ARGUMENT));
-        }
-        let client = self.storage_links[source]
-            .as_mut()
-            .ok_or(Error(abi::DENIED as i64))?;
-        match client.call(
-            words[0] - wire::STORAGE_BASE,
-            words[1],
-            words[2],
-            &bytes[32..32 + words[3] as usize],
-        ) {
-            Ok(record) => Ok(wire::decode(&record.reply()).unwrap()),
-            // Provider protocol failures preserve the connection. Transport failures
-            // are distinguished by the runtime so the service can retire safely.
-            Err(error) if client.connected() => Ok(wire::error(error.0 as u64)),
-            Err(error) => {
-                self.storage_failed |= 1 << source;
-                Err(error)
-            }
-        }
     }
 }

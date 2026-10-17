@@ -1,6 +1,6 @@
 //! Bounded root-local records and validation of a whole transaction before disk effects.
 use cathedral_kernel_contracts::user as abi;
-use cathedral_platform_contracts::storage::{self as wire, Record};
+use cathedral_platform_contracts::catalog::{self as wire, Record};
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct Entry {

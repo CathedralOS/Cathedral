@@ -43,9 +43,11 @@ This blocks freezing namespace/copy and persisted-reference semantics.
 
 **Contracts checked.** The [specification index](wiki/spec/README.md) leaves
 `spec/storage/realms_and_objects.md` unwritten. The
-[Rust catalog protocol](source-rs/platform/contracts/storage.rs) supplies only bounded,
-connection-relative object numbers; it has no aliases, durable identity or
-cross-realm object graph. The [storage proposal](wiki/proposals/0002_dbfs_storage_foundation.md)
+[Rust object protocol](source-rs/platform/contracts/storage.rs) supplies only
+root-relative object numbers that are never reused, and a copy that is a new
+number sharing the source's content; it has no aliases, namespace edges or
+cross-realm object graph. The lab therefore already behaves as the recommendation
+below describes, without that being an accepted decision. The [storage proposal](wiki/proposals/0002_dbfs_storage_foundation.md)
 and host content-layout lab do not resolve those semantics.
 
 **Owner choice.** Adopt stable mutable object identity with explicit alias edges,
@@ -71,7 +73,7 @@ This blocks a production promise of global deduplication or secure erasure.
 **Contracts checked.** The [filesystem design](wiki/design/part_4_storage/00_filesystem_as_database.md)
 and [memory/persistence design](wiki/design/part_2_components/02_memory_and_persistence.md)
 describe the intent; the [specification index](wiki/spec/README.md) and
-[catalog protocol](source-rs/platform/contracts/storage.rs) define no encryption domain,
+[object protocol](source-rs/platform/contracts/storage.rs) define no encryption domain,
 physical sponsorship, deduplication disclosure or erasure contract.
 
 **Owner choice.** Deduplicate only within an encryption/trust/accounting domain,
@@ -97,7 +99,7 @@ and retained-version API, not the current finite host experiment.
 and [transaction](wiki/design/part_4_storage/01_transactions_and_consistency.md)
 chapters describe durable observation, but the
 [specification index](wiki/spec/README.md) and
-[Rust catalog protocol](source-rs/platform/contracts/storage.rs) have no cursor, retention,
+[Rust object protocol](source-rs/platform/contracts/storage.rs) have no cursor, retention,
 expiry or subscriber-sponsorship contract.
 
 **New evidence.** The [host engine stress lab](tools/storage-lab/engines/stress/README.md#reader-pressure-and-reclamation)
@@ -126,8 +128,8 @@ This blocks selecting the general transaction contract and its conflict indexes.
 **Contracts checked.** The [transaction chapter](wiki/design/part_4_storage/01_transactions_and_consistency.md)
 has no accepted read-set/predicate-conflict rule. The
 [specification index](wiki/spec/README.md) leaves storage unspecified, and the
-[Rust catalog](source-rs/platform/libraries/object-store/CHARTER.md) uses a coarse
-expected-root revision rather than general snapshot transactions or queries.
+[Rust object store](source-rs/platform/libraries/database-objects/README.md) uses
+a per-object expected revision rather than general snapshot transactions or queries.
 
 The [host publication experiment](tools/storage-lab/engines/stress/README.md#preparation-and-publication)
 now checks expected revisions under the engine writer, including whole-batch

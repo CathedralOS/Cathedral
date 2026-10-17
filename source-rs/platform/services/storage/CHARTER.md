@@ -15,15 +15,14 @@ an existing disk changes ownership and is unsupported. This static lab binding
 is not a production identity, realm-admission or authority-transfer protocol.
 Both clients may use object numbers 1 through 4 without seeing each other's data.
 
-The separate [matrix storage fixture](../matrix/world/storage/README.md) binds both
-links to the root matrix. It delegates each whole catalog through child-local
-connections with per-hop binding revisions. Descendant revocation aborts staging;
-provider disconnect events also release transaction state before reuse. The
-durable format and root-local protocol are unchanged.
+This provider serves only the legacy status/counter composition
+([profiles/legacy.json](../../../../tools/boot-harness-rs/profiles/legacy.json)).
+The matrix desktop and its fixtures use the [object provider](database/main.rs)
+in this same folder, which speaks the separate object protocol.
 
 Requests are 64 bytes: four little-endian u64s `(operation, object, expected
 root revision, payload length)`, then 32 payload bytes. Unused bytes must be zero.
-The shared constants and record encoding live in `platform/contracts/storage.rs`.
+The shared constants and record encoding live in `platform/contracts/catalog.rs`.
 
 | Operation | Arguments | Result |
 | --- | --- | --- |

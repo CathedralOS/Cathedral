@@ -9,7 +9,7 @@ pub(super) struct Deferred {
 impl Deferred {
     pub fn blocks(event: &Event, parent: &Parent) -> bool {
         if parent.separate_storage
-            && let Event::Request(r) = event
+            && let Event::Request(r) | Event::Memory(r, _) = event
             && r.client.is_some_and(|client| parent.storage_stream(client))
         {
             return parent.storing();

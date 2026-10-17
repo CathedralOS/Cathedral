@@ -1,10 +1,10 @@
-//! Root-owned experimental revision pins and bounded reachability collection.
-//! Every pass derives liveness from the current head and durable pins under one
-//! writer. No persisted cursor can skip newly live records between passes.
+//! Root-owned revision pins and bounded reachability collection. Every pass
+//! derives liveness from all current heads and durable pins under one writer.
+//! No persisted cursor can skip newly live records between passes.
 use super::*;
-use alloc::vec::Vec;
+use alloc::{collections::BTreeSet, vec::Vec};
 use cathedral_content_layout::{self as layout, digest};
-use records::key;
+use records::{charge, decode_pin, encode_pin, event_key, key, quota, set_quota};
 use redb::{ReadableTable, Table};
 pub const PIN_SLOTS: u8 = 2;
 const PASS_RECORDS: usize = 8;
@@ -16,14 +16,13 @@ pub struct Collection {
 }
 
 impl Store<'_> {
-    /// Pins are persistent root-owned lab snapshots, not process-local handles.
+    /// Pins are persistent root-owned snapshots, not process-local handles.
     /// Only a retained revision can be pinned; occupied slots are never replaced.
-    pub fn pin(&self, root: u8, revision: u64, slot: u8) -> Result<()> {
-        if slot >= PIN_SLOTS || revision == 0 {
+    pub fn pin(&self, root: u8, id: u64, revision: u64, slot: u8) -> Result<()> {
+        if slot >= PIN_SLOTS || revision == 0 || id == 0 {
             return Err(Error::Invalid);
         }
-        let mut tx = engine(self.db.begin_write())?;
-        engine(tx.set_durability(redb::Durability::Immediate))?;
+        let tx = self.writer()?;
         {
             let mut table = engine(tx.open_table(TABLE))?;
             let pin = key(root, b'p', &[slot]);
@@ -31,65 +30,77 @@ impl Store<'_> {
                 return Err(Error::Conflict);
             }
             let head = {
-                let value = engine(table.get(key(root, b'e', &revision.to_be_bytes()).as_slice()))?
+                let value = engine(table.get(event_key(root, id, revision).as_slice()))?
                     .ok_or(Error::Conflict)?;
                 Head::decode(value.value())?
             };
             if head.revision != revision {
                 return Err(Error::Corrupt);
             }
-            closure(&table, root, head, &mut Vec::new())?;
-            let charged = quota(&table, root)?
-                .checked_add(51)
-                .filter(|n| *n <= ROOT_QUOTA)
-                .ok_or(Error::Capacity)?;
-            engine(table.insert(pin.as_slice(), head.encode().as_slice()))?;
+            closure(&table, root, id, head, &mut BTreeSet::new())?;
+            let value = encode_pin(Object { id, head });
+            let mut charged = quota(&table, root)?;
+            charge(&mut charged, pin.len() + value.len())?;
+            engine(table.insert(pin.as_slice(), value.as_slice()))?;
             set_quota(&mut table, root, charged)?;
         }
         engine(tx.commit())
     }
-    pub fn release(&self, root: u8, revision: u64, slot: u8) -> Result<()> {
-        if slot >= PIN_SLOTS || revision == 0 {
+    pub fn release(&self, root: u8, id: u64, revision: u64, slot: u8) -> Result<()> {
+        if slot >= PIN_SLOTS || revision == 0 || id == 0 {
             return Err(Error::Invalid);
         }
-        let mut tx = engine(self.db.begin_write())?;
-        engine(tx.set_durability(redb::Durability::Immediate))?;
+        let tx = self.writer()?;
         {
             let mut table = engine(tx.open_table(TABLE))?;
             let pin = key(root, b'p', &[slot]);
-            let head = engine(table.get(pin.as_slice()))?.ok_or(Error::Conflict)?;
-            if Head::decode(head.value())?.revision != revision {
+            let value = engine(table.get(pin.as_slice()))?.ok_or(Error::Conflict)?;
+            let pinned = decode_pin(value.value())?;
+            if pinned.id != id || pinned.head.revision != revision {
                 return Err(Error::Conflict);
             }
-            drop(head);
-            let charged = quota(&table, root)?.checked_sub(51).ok_or(Error::Corrupt)?;
+            let reclaimed = (pin.len() + value.value().len()) as u64;
+            drop(value);
+            let charged = quota(&table, root)?
+                .checked_sub(reclaimed)
+                .ok_or(Error::Corrupt)?;
             engine(table.remove(pin.as_slice()))?;
             set_quota(&mut table, root, charged)?;
         }
         engine(tx.commit())
     }
     /// At most eight removals and ROOT_QUOTA bytes in the root record scan per
-    /// pass. A crash leaves a valid head/pin closure and an exact quota ledger.
-    /// Before that scan, validate at most three live object closures (head/pins).
+    /// pass. A crash leaves every head/pin closure valid and an exact ledger.
     /// This frees engine pages for reuse; file shrinking is a separate operation.
     pub fn collect(&self, root: u8) -> Result<Collection> {
-        let mut tx = engine(self.db.begin_write())?;
-        engine(tx.set_durability(redb::Durability::Immediate))?;
+        let tx = self.writer()?;
         let result;
         {
             let mut table = engine(tx.open_table(TABLE))?;
-            let mut live = Vec::new();
-            if let Some(head) = engine(table.get(key(root, b'h', &[]).as_slice()))? {
-                closure(&table, root, Head::decode(head.value())?, &mut live)?;
+            let mut live = BTreeSet::new();
+            let mut heads = Vec::new();
+            for row in engine(table.range(key(root, b'h', &[]).as_slice()..))? {
+                let (k, v) = engine(row)?;
+                let k = k.value();
+                if k.len() != 10 || k[0] != root || k[1] != b'h' {
+                    break;
+                }
+                heads.push((
+                    u64::from_be_bytes(k[2..].try_into().unwrap()),
+                    Head::decode(v.value())?,
+                ));
+            }
+            for (id, head) in heads {
+                closure(&table, root, id, head, &mut live)?;
             }
             for slot in 0..PIN_SLOTS {
-                if let Some(head) = engine(table.get(key(root, b'p', &[slot]).as_slice()))? {
-                    closure(&table, root, Head::decode(head.value())?, &mut live)?;
+                if let Some(pin) = engine(table.get(key(root, b'p', &[slot]).as_slice()))? {
+                    let pinned = decode_pin(pin.value())?;
+                    closure(&table, root, pinned.id, pinned.head, &mut live)?;
                 }
             }
             let mut retired = Vec::new();
             let mut inspected = 0usize;
-
             let mut more = false;
             for row in engine(table.range([root].as_slice()..))? {
                 let (k, v) = engine(row)?;
@@ -104,11 +115,11 @@ impl Store<'_> {
                     return Err(Error::Corrupt);
                 }
                 match k[1] {
-                    b'h' | b'q' | b'p' => continue,
+                    b'h' | b'q' | b'p' | b'n' => continue,
                     b'c' | b'm' | b'e' => {}
                     _ => return Err(Error::Corrupt),
                 }
-                if live.iter().any(|l: &Vec<u8>| l.as_slice() == k) {
+                if live.contains(k) {
                     continue;
                 }
                 // Retire event lookup authority before its manifest/chunks. A
@@ -147,29 +158,14 @@ impl Store<'_> {
         Ok(result)
     }
 }
-fn quota(table: &Table<&[u8], &[u8]>, root: u8) -> Result<u64> {
-    match engine(table.get(key(root, b'q', &[]).as_slice()))? {
-        None => Ok(0),
-        Some(value) if value.value().len() == 8 => {
-            Ok(u64::from_le_bytes(value.value().try_into().unwrap()))
-        }
-        _ => Err(Error::Corrupt),
-    }
-}
-fn set_quota(table: &mut Table<&[u8], &[u8]>, root: u8, value: u64) -> Result<()> {
-    engine(table.insert(
-        key(root, b'q', &[]).as_slice(),
-        value.to_le_bytes().as_slice(),
-    ))?;
-    Ok(())
-}
 fn closure(
     table: &Table<&[u8], &[u8]>,
     root: u8,
+    id: u64,
     head: Head,
-    live: &mut Vec<Vec<u8>>,
+    live: &mut BTreeSet<Vec<u8>>,
 ) -> Result<()> {
-    let event = key(root, b'e', &head.revision.to_be_bytes());
+    let event = event_key(root, id, head.revision);
     if engine(table.get(event.as_slice()))?
         .ok_or(Error::Corrupt)?
         .value()
@@ -177,8 +173,11 @@ fn closure(
     {
         return Err(Error::Corrupt);
     }
-    live.push(event);
+    live.insert(event);
     let manifest = key(root, b'm', &head.manifest);
+    if live.contains(&manifest) {
+        return Ok(()); // Shared content was already validated through another head.
+    }
     let value = engine(table.get(manifest.as_slice()))?.ok_or(Error::Corrupt)?;
     let data = value.value();
     let body = records::manifest(head, data)?;
@@ -191,9 +190,9 @@ fn closure(
             {
                 return Err(Error::Corrupt);
             }
-            live.push(k);
+            live.insert(k);
         }
     }
-    live.push(manifest);
+    live.insert(manifest);
     Ok(())
 }

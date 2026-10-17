@@ -2,7 +2,7 @@
 //! Reconcile ambiguous completion by reading the private object before retrying.
 use super::connection::Connections;
 use cathedral_kernel_contracts::user as abi;
-use cathedral_platform_contracts::storage as wire;
+use cathedral_platform_contracts::catalog as wire;
 use cathedral_user_runtime::{Error, time};
 
 fn exchange(c: &mut Connections, request: &[u8; 64]) -> Result<wire::Record, Error> {

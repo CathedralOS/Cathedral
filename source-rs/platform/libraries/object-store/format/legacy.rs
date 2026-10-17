@@ -2,7 +2,7 @@
 #[cfg(test)]
 use super::seal;
 use super::valid;
-use cathedral_platform_contracts::storage::Record;
+use cathedral_platform_contracts::catalog::Record;
 #[cfg(test)]
 pub fn encode(record: Record) -> ([u8; 512], [u8; 512]) {
     let mut body = [0; 512];
