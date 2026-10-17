@@ -1,8 +1,37 @@
 // App knows only its granted local extent, events and parent surface connection.
+// Enter toggles its color through its own private object. The owner may probe
+// it over the control link; lab compositions add proof commands to that link,
+// the shipped app answers every command with its liveness report.
 use super::*;
 use cathedral_user_runtime::task::Environment;
-pub(super) const LEFT: u64 = 0x315ca8;
-pub(super) const RIGHT: u64 = 0x2c8762;
+pub(crate) const LEFT: u64 = 0x315ca8;
+pub(crate) const RIGHT: u64 = 0x2c8762;
+/// What an owner command may act on: the scene, the state and the paint record.
+#[cfg(not(feature = "shell"))]
+pub(crate) struct Probe<'a> {
+    pub style: u64,
+    pub parent: Pair,
+    pub control: Pair,
+    pub view: wire::Packet,
+    pub scene: &'a mut Option<surfaces::Scene>,
+    pub state: &'a mut Option<state::State>,
+    pub painted: &'a mut Option<(wire::Packet, u64, u64)>,
+    pub save_status: &'a mut u64,
+}
+#[cfg(not(feature = "shell"))]
+impl Probe<'_> {
+    pub fn repaint(&mut self, record: bool) {
+        let state = self.state.as_ref().unwrap();
+        let color = state.color();
+        self.scene
+            .as_mut()
+            .unwrap()
+            .paint(self.parent, self.view, color, state.error);
+        if record {
+            *self.painted = Some((self.view, color, state.error));
+        }
+    }
+}
 pub fn run(style: u64, environment: Environment) -> u64 {
     let connections = cathedral_user_runtime::matrix::Connections::load(&environment).unwrap();
     assert!(Launch::at(0).is_err());
@@ -29,7 +58,10 @@ pub fn run(style: u64, environment: Environment) -> u64 {
     let mut scene: Option<surfaces::Scene> = None;
     let mut paints = 0;
     let mut wakes = 0;
+    #[cfg(not(feature = "shell"))]
     let mut save_status = 0;
+    #[cfg(feature = "shell")]
+    let save_status = 0;
     let mut pointers = 0;
     loop {
         let mut snapshot = call(parent, [wire::POLL, 0, 0, 0, 0, 0, 0, 0]);
@@ -104,70 +136,31 @@ pub fn run(style: u64, environment: Environment) -> u64 {
                     break;
                 }
                 Ok(_) => {
+                    // The shipped app answers any owner command with its liveness
+                    // report; lab compositions act on proof commands first.
+                    #[cfg(feature = "shell")]
+                    let status = {
+                        control.0.receive(&mut bytes).unwrap();
+                        0
+                    };
+                    #[cfg(not(feature = "shell"))]
                     let len = control.0.receive(&mut bytes).unwrap();
-                    let mut status = 0;
-                    if let Some(words) = wire::decode(&bytes[..len]) {
-                        match words[0] {
-                            1 => scene.as_mut().unwrap().remove_accent(parent),
-                            2 => scene.as_mut().unwrap().restore_accent(parent),
-                            3 => scene.as_mut().unwrap().staged_probe(parent),
-                            4 => scene.as_ref().unwrap().commit(parent),
-                            5 => scene.as_mut().unwrap().rejected_probe(parent),
-                            6 => scene.as_mut().unwrap().paint(
-                                parent,
-                                view,
-                                if style == 0 { LEFT } else { RIGHT },
-                                0,
-                            ),
-                            7 => {
-                                status = state.as_mut().unwrap().reload().err().unwrap_or(0);
-                                scene.as_mut().unwrap().paint(
-                                    parent,
-                                    view,
-                                    state.as_ref().unwrap().color(),
-                                    state.as_ref().unwrap().error,
-                                );
-                            }
-                            8 => {
-                                status = state.as_mut().unwrap().toggle().err().unwrap_or(0);
-                                {
-                                    let color = state.as_ref().unwrap().color();
-                                    scene.as_mut().unwrap().paint(
-                                        parent,
-                                        view,
-                                        color,
-                                        state.as_ref().unwrap().error,
-                                    );
-                                    painted = Some((view, color, state.as_ref().unwrap().error));
-                                }
-                            }
-                            9 => scene.as_mut().unwrap().staged_probe(parent),
-                            13 => {
-                                // Readiness/failure probe; never mutates state.
-                                status = state.as_ref().map_or(abi::BUSY, |s| s.error);
-                            }
-                            10 => cathedral_user_runtime::task::exit(19),
-                            11 => scene.as_mut().unwrap().compact_probe(parent),
-                            12 => {
-                                // Test owner gets admission acknowledgement before
-                                // the save blocks; completion is observed via HEALTH.
-                                control.1.send(&wire::encode([0; 8])).unwrap();
-                                save_status = state.as_mut().unwrap().toggle().err().unwrap_or(0);
-                                {
-                                    let color = state.as_ref().unwrap().color();
-                                    scene.as_mut().unwrap().paint(
-                                        parent,
-                                        view,
-                                        color,
-                                        state.as_ref().unwrap().error,
-                                    );
-                                    painted = Some((view, color, state.as_ref().unwrap().error));
-                                }
-                                continue;
-                            }
-                            _ => (),
-                        }
-                    }
+                    #[cfg(not(feature = "shell"))]
+                    let Some(status) = crate::lab::command(
+                        wire::decode(&bytes[..len]).map_or(0, |words| words[0]),
+                        &mut Probe {
+                            style,
+                            parent,
+                            control,
+                            view,
+                            scene: &mut scene,
+                            state: &mut state,
+                            painted: &mut painted,
+                            save_status: &mut save_status,
+                        },
+                    ) else {
+                        continue;
+                    };
                     control
                         .1
                         .send(&wire::encode([

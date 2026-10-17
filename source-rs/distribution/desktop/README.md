@@ -1,14 +1,19 @@
 # Cathedral desktop
 
-The default boot enters [main.rs](main.rs), [session](session/session.rs), then
-[shell policy](session/shell/shell.rs). The [launcher](session/shell/launcher.rs)
-reports local input choices; the owner admits Notes or Colors in a nested matrix,
-protects unsaved notes and supervises storage. See the [distribution map](../README.md)
-for F5, controls, composition and the same-image interactive test.
+The default boot enters [main.rs](main.rs), then [session/session.rs](session/session.rs):
+admit providers and the root matrix, place the workspace and the menu, start
+input, serve choices and supervise storage. [shell/](session/shell/shell.rs)
+carries out each choice and hosts the [launcher](session/shell/launcher.rs);
+[app/](session/app/app.rs) is the color program. See the
+[distribution map](../README.md) for F5, controls, composition and the
+same-image interactive test.
 
-The older proofs below remain explicitly selected features/profiles. This package
-was promoted from `distribution/lab/matrix`; its default composition now uses the
-`shell` feature rather than booting a fixed pair of test apps.
+Without the `shell` feature the same package builds the probe desktop in
+[lab/](lab/desktop.rs): the same admission, apps and budgets laid out as a
+nested matrix beside an outside sibling, with destructive proofs selected by
+feature. The proof commands the color app answers over its control link live in
+[lab/commands.rs](lab/commands.rs) and never ship in the shell. Without the
+`desktop` feature the package is a headless matrix fixture.
 
 
 Run from the repository root:
@@ -80,7 +85,7 @@ in the first root is reserved by the store's legacy empty-record initialization)
 No app receives a provider link or disk grant.
 
 `--matrix-desktop-test` enables `desktop-probes`, using a disposable disk and
-[recovery checks](session/recovery.rs) for revoked writes, stale bindings, termination
+[recovery checks](lab/recovery.rs) for revoked writes, stale bindings, termination
 with staged pixels/data, focus loss and sibling survival. It then starts a fresh
 QEMU process over the same disk and checks both saved colors. Ordinary window boots
 skip these destructive probes. The first test boot log is `first-boot-serial.log`;
@@ -95,10 +100,10 @@ The root owns the compositor connection; children have neither it nor a framebuf
 This renderer has two direct children per matrix and sixteen root surface objects.
 It supports sealed RGBX images, but does not yet integrate the older session's text, synthetic pointers or
 richer scene snapshots. Recursive stacking has no hard-coded two-level path keys.
-[Provider recovery](session/providers.rs) explicitly rebuilds the root tree after
-input/display loss. [Storage stalls](session/stalls.rs) prove sibling rendering
+[Provider recovery](lab/providers.rs) explicitly rebuilds the root tree after
+input/display loss. [Storage stalls](lab/stalls.rs) prove sibling rendering
 through blocked saves and reconcile unacknowledged commits after provider replacement.
-The [nested peer](session/stalls_peer.rs) shares the saving app's immediate matrix;
+The [nested peer](lab/stalls_peer.rs) shares the saving app's immediate matrix;
 its pointer/key input and repaint complete before the storage deadline. It also
 survives catalog revocation, provider replacement and its sibling's death. Its
 state changes are deliberately volatile because only the saver holds the inherited
@@ -146,7 +151,7 @@ retired root streams and bounded health probes, reopen it,
 and explicitly restore root and nested grants. Apps remain alive; their
 [state entry](session/app/state.rs) preserves confirmed values and displays a red
 mark on failed saves. Enter reloads an unresolved save rather than toggling again.
-The test-only [database recovery entry](session/database_recovery.rs) sequences
+The test-only [database recovery entry](lab/database_recovery.rs) sequences
 startup timeout, before/after-commit cuts, sibling interaction and exact readback.
 Its temporary peer is admitted before the startup save is gated, so child admission
 does not itself wait on that storage request.

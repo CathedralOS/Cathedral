@@ -3,7 +3,7 @@
 use super::*;
 use cathedral_platform_contracts::storage;
 use cathedral_user_runtime::{task::Port, write};
-pub(super) use policy::Watchdog;
+pub(crate) use policy::Watchdog;
 fn revoke(session: &admission::Session) {
     for slot in 0..2 {
         owner(
@@ -46,7 +46,7 @@ fn regrant(session: &mut admission::Session) -> Result<(), Error> {
 }
 /// Called periodically by the owner; never blocks waiting for an ordinary probe.
 /// A timed-out probe is never reused: kill, collect, close, then reconnect.
-pub(super) fn supervise(session: &mut admission::Session) {
+pub(crate) fn supervise(session: &mut admission::Session) {
     if session.storage_watch.offline {
         return;
     }

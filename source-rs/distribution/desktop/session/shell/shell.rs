@@ -1,15 +1,15 @@
 // The distribution owns installed choices and admission. The launcher is an
 // ordinary isolated child: it reports a choice, never receives launch authority.
 use super::*;
-const NOTES: u64 = 1;
-const COLORS: u64 = 2;
-const CLOSE: u64 = 3;
-const MENU_STATUS: u64 = 200;
+pub(super) const NOTES: u64 = 1;
+pub(super) const COLORS: u64 = 2;
+pub(super) const CLOSE: u64 = 3;
+pub(super) const MENU_STATUS: u64 = 200;
 /// Why the last choice was refused, reported to the launcher with the active program.
-const UNSAVED: u64 = 1;
-const BUSY: u64 = 2;
+pub(super) const UNSAVED: u64 = 1;
+pub(super) const BUSY: u64 = 2;
 
-pub(super) fn grant_notes(matrix: Pair) {
+pub(crate) fn grant_notes(matrix: Pair) {
     owner(matrix, [wire::STORAGE_GRANT, 0, 0, 0, 0, 0, 0, 0]);
     owner(
         matrix,
@@ -17,15 +17,27 @@ pub(super) fn grant_notes(matrix: Pair) {
     );
 }
 
-fn workspace(matrix: Pair) {
+/// Root slot 0: a nested matrix whose single child is the active program.
+pub(super) fn workspace(matrix: Pair) {
     owner(matrix, [wire::RUN_PAGES, 0, 40, 40, 0, 0, 0, 0]);
     owner(matrix, [wire::RUN, 0, 0, 0, 10, 1, 7, 0]);
     owner(matrix, [wire::SURFACE_LIMIT, 0, 8, 0, 0, 0, 0, 0]);
     owner(matrix, [wire::PLACE, 0, 310, 140, 430, 240, KEYS, 0]);
 }
 
-/// Returns why the choice was refused, or zero when it was carried out.
-fn select(session: &mut admission::Session, active: &mut u64, choice: u64) -> u64 {
+/// Root slot 1: the launcher, isolated with navigation keys and no authority.
+pub(super) fn menu(matrix: Pair) {
+    owner(matrix, [wire::RUN_PAGES, 1, 24, 0, 0, 0, 0, 0]);
+    owner(matrix, [wire::RUN, 1, 2, 3, 0, 0, 0, 0]);
+    owner(matrix, [wire::SURFACE_LIMIT, 1, 2, 0, 0, 0, 0, 0]);
+    owner(
+        matrix,
+        [wire::PLACE, 1, 40, 140, 220, 130, wire::KEY_MASK, 0],
+    );
+}
+
+/// Carry out a menu choice. Returns why it was refused, or zero when done.
+pub(super) fn select(session: &mut admission::Session, active: &mut u64, choice: u64) -> u64 {
     if !(NOTES..=CLOSE).contains(&choice) || choice == *active {
         return 0;
     }
@@ -109,54 +121,4 @@ fn select(session: &mut admission::Session, active: &mut u64, choice: u64) -> u6
     })
     .unwrap();
     0
-}
-
-pub(super) fn run() -> u64 {
-    let mut session = admission::start();
-    let matrix = session.matrix;
-    owner(
-        matrix,
-        [
-            wire::BIND,
-            session.extent[0],
-            session.extent[1],
-            KEYS,
-            0,
-            0,
-            0,
-            0,
-        ],
-    );
-    workspace(matrix);
-    owner(matrix, [wire::RUN_PAGES, 1, 24, 0, 0, 0, 0, 0]);
-    owner(matrix, [wire::RUN, 1, 2, 3, 0, 0, 0, 0]);
-    owner(matrix, [wire::SURFACE_LIMIT, 1, 2, 0, 0, 0, 0, 0]);
-    owner(
-        matrix,
-        [wire::PLACE, 1, 40, 140, 220, 130, wire::KEY_MASK, 0],
-    );
-    session.start_input();
-    cathedral_user_runtime::write(b"Cathedral desktop: ready; choose a program\n").unwrap();
-    let (mut sequence, mut active, mut blocked) = (0, 0, 0);
-    loop {
-        let reply = call(
-            matrix,
-            wire::route([MENU_STATUS, active, blocked, 0, 0, 0, 0, 0], 1).unwrap(),
-        );
-        assert_eq!(reply[0], 0);
-        if reply[1] != sequence {
-            sequence = reply[1];
-            blocked = select(&mut session, &mut active, reply[2]);
-        }
-        persistence::supervise(&mut session);
-        // An owner poll is only the menu's notification path; rendering and input
-        // still wake the apps independently through their matrix connections.
-        match matrix
-            .1
-            .receive_until(&mut [0; 64], time::after(10).unwrap())
-        {
-            Err(Error(code)) if code == abi::TIMED_OUT as i64 => (),
-            result => panic!("desktop idle {result:?}"),
-        }
-    }
 }

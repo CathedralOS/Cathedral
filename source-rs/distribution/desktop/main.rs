@@ -1,8 +1,13 @@
 #![no_std]
 #![no_main]
 //! Distribution policy configures a matrix-owned process tree through its root.
+//! Role 0 is the owner: the F5 desktop with the shell feature, the probe desktop
+//! with desktop alone, or a headless matrix fixture otherwise. Role 2 is a
+//! supplied app, role 3 the pressure spinner, anything else a test leaf.
 #[cfg(not(feature = "desktop"))]
 mod fixture;
+#[cfg(all(feature = "desktop", not(feature = "shell")))]
+mod lab;
 mod leaf;
 #[cfg(not(any(feature = "desktop", feature = "storage-lab")))]
 mod scenario;
@@ -20,8 +25,10 @@ cathedral_user_runtime::entry_with_environment!(main);
 fn main(role: u64, argument: u64, environment: cathedral_user_runtime::task::Environment) -> u64 {
     let _ = argument;
     match role {
-        #[cfg(feature = "desktop")]
+        #[cfg(feature = "shell")]
         0 => session::run(),
+        #[cfg(all(feature = "desktop", not(feature = "shell")))]
+        0 => lab::run(),
         #[cfg(not(any(feature = "desktop", feature = "storage-lab")))]
         0 => scenario::run(),
         #[cfg(all(not(feature = "desktop"), feature = "storage-lab"))]
@@ -53,7 +60,7 @@ fn call(pair: Pair, words: wire::Packet) -> wire::Packet {
         panic!(
             "matrix request {words:?}: {error:?}; root {:?}",
             cathedral_user_runtime::task::Child::from_raw(root).wait_until(time::now().unwrap())
-        );
+        )
     });
     wire::decode(&bytes[..len]).unwrap()
 }

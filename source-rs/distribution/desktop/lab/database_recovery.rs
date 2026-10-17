@@ -15,7 +15,7 @@ fn arm(control: Pair, phase: u8, opcode: u8) {
     control.0.send(&[0xf2, phase, opcode, 0]).unwrap();
     receive(control, b"armed");
 }
-pub(super) fn arm_startup(control: Pair) -> bool {
+pub(crate) fn arm_startup(control: Pair) -> bool {
     control.0.send(&[0xf4]).unwrap();
     let mut bytes = [0; 16];
     assert_eq!(control.1.receive(&mut bytes).unwrap(), 16);

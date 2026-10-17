@@ -1,7 +1,7 @@
 //! App-owned surface lifecycle and adversarial local-handle/allowance probes.
 use super::*;
 pub(super) const ACCENT: u64 = 0xe5e7eb;
-pub(super) struct Scene {
+pub(crate) struct Scene {
     pub epoch: u64,
     base: u64,
     accent: Option<u64>,
@@ -80,6 +80,7 @@ impl Scene {
         assert_eq!(call(parent, packet), [0; 8]);
     }
 
+    #[cfg(not(feature = "shell"))]
     pub fn compact_probe(&mut self, parent: Pair) {
         self.revision += 1;
         let valid = [wire::PAINT, self.epoch, self.base, 0, 0, 200, 130, 0];
@@ -87,6 +88,7 @@ impl Scene {
         let packet = wire::rectangles(self.epoch, self.revision, &[valid, foreign]).unwrap();
         assert_eq!(call(parent, packet), wire::error(abi::BAD_HANDLE));
     }
+    #[cfg(not(feature = "shell"))]
     fn begin(&mut self, parent: Pair) {
         self.revision += 1;
         assert_eq!(
@@ -106,6 +108,7 @@ impl Scene {
             [0; 8]
         );
     }
+    #[cfg(not(feature = "shell"))]
     pub fn commit(&self, parent: Pair) {
         {
             assert_eq!(
@@ -126,6 +129,7 @@ impl Scene {
             );
         }
     }
+    #[cfg(not(feature = "shell"))]
     pub fn staged_probe(&mut self, parent: Pair) {
         self.begin(parent);
         assert_eq!(
@@ -152,6 +156,7 @@ impl Scene {
             [0; 8]
         );
     }
+    #[cfg(not(feature = "shell"))]
     pub fn rejected_probe(&mut self, parent: Pair) {
         self.begin(parent);
         assert_eq!(

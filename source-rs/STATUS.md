@@ -204,8 +204,8 @@ Follow [storage forwarding](platform/services/matrix/service/parent/storage/stor
 [pending replies](platform/services/matrix/service/parent/storage/pending.rs) and
 [deferred stream policy](platform/services/matrix/service/deferred.rs).
 
-The [desktop stall proof](distribution/desktop/session/stalls.rs) gates writes
-before execution and after durable commit. Its [nested peer](distribution/desktop/session/stalls_peer.rs)
+The [desktop stall proof](distribution/desktop/lab/stalls.rs) gates writes
+before execution and after durable commit. Its [nested peer](distribution/desktop/lab/stalls_peer.rs)
 checks input and repaint while blocked, plus survival across catalog revocation,
 provider replacement and writer death. It also checks
 normal completion, timeout followed by a late reply, refusal to recycle an accepted
@@ -215,7 +215,7 @@ transport loss revokes the affected binding without killing display/input.
 Separate parent catalog transport loss retires that connection and its grants;
 legacy shared-stream failures still retire the nested matrix.
 
-[Provider recovery](distribution/desktop/session/providers.rs) kills the physical
+[Provider recovery](distribution/desktop/lab/providers.rs) kills the physical
 input decoder and display provider. Input loss cancels focus while apps survive;
 display loss retires the root. Distribution policy explicitly tears down/rebuilds
 adapters and the tree, re-funds the root from reclaimed reservations, then restores
@@ -256,7 +256,7 @@ in a fresh QEMU process. Ordinary window boots keep
 `--matrix-desktop-test` uses a disposable disk, adds staged rendering/storage death,
 revoked/stale writes and focus-loss checks, then cold-boots the same disk. Its first
 boot log is retained as `first-boot-serial.log` beside the reboot's `serial.log`.
-Follow [desktop recovery](distribution/desktop/session/recovery.rs) and
+Follow [desktop recovery](distribution/desktop/lab/recovery.rs) and
 [app state](distribution/desktop/session/app/state.rs).
 
 [Publication](platform/services/matrix/service/parent/presentation.rs) now resumes

@@ -77,7 +77,7 @@ sub-root delegation, shared writable roots and storage quotas remain future work
 Parents remain trusted to delegate their own authority; this is not a claim of
 timing isolation or confinement from a malicious ancestor.
 
-The [nested peer proof](../../../../../distribution/desktop/session/stalls_peer.rs)
+The [nested peer proof](../../../../../distribution/desktop/lab/stalls_peer.rs)
 places two apps beneath one nested matrix. While one save is gated at the storage
 provider, its sibling consumes pointer and keyboard events and repaints before
 the storage deadline. The same peer survives catalog revocation, provider restart

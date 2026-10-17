@@ -4,21 +4,27 @@ use cathedral_platform_contracts::display;
 use cathedral_platform_contracts::display::composition as c;
 use cathedral_platform_contracts::display::pointer;
 use cathedral_user_runtime::task::{self, Executable, Port};
-pub(super) struct Session {
+pub(crate) struct Session {
     #[cfg(feature = "database-probes")]
-    pub(super) database_fresh: bool,
+    pub(crate) database_fresh: bool,
     pub matrix: Pair,
     #[cfg(feature = "shell")]
-    pub(super) notes_open: bool,
+    pub(crate) notes_open: bool,
+    /// Lab compositions add a capped spinner; the shell never does.
+    #[cfg(not(feature = "shell"))]
     pub pressure: bool,
     pub extent: [u64; 2],
-    pub(super) source: Pair,
-    pub(super) storage: task::Child,
-    pub(super) storage_control: Pair,
-    pub(super) storage_watch: persistence::Watchdog,
-    pub(super) display_task: task::Child,
-    pub(super) root: task::Child,
-    pub(super) input: Option<task::Child>,
+    pub(crate) source: Pair,
+    pub(crate) storage: task::Child,
+    pub(crate) storage_control: Pair,
+    pub(crate) storage_watch: persistence::Watchdog,
+    /// Held so the owner keeps its children's handles; lab compositions also
+    /// cancel and collect them when rebuilding the tree.
+    #[cfg_attr(feature = "shell", allow(dead_code))]
+    pub(crate) display_task: task::Child,
+    #[cfg_attr(feature = "shell", allow(dead_code))]
+    pub(crate) root: task::Child,
+    pub(crate) input: Option<task::Child>,
 }
 fn display_call(
     pair: Pair,
@@ -38,7 +44,7 @@ fn display_call(
         });
     display::decode(&bytes[..len]).unwrap()
 }
-pub(super) fn start() -> Session {
+pub(crate) fn start() -> Session {
     let (storage, storage_control) = {
         let storage = Launch::at(3).unwrap().spawn(0).unwrap();
         let control = Port::at(3).unwrap().connect().unwrap();
@@ -67,7 +73,7 @@ pub(super) fn start() -> Session {
         assert_eq!(&bytes[..n], b"armed");
     }
     #[cfg(feature = "database-probes")]
-    let database_fresh = database_recovery::arm_startup(storage_control);
+    let database_fresh = crate::lab::database_recovery::arm_startup(storage_control);
     assert_eq!(
         Launch::at(0).unwrap().executable().unwrap_err(),
         Error(abi::DENIED as i64)
@@ -158,7 +164,10 @@ pub(super) fn start() -> Session {
     let (source_send, source_input) = ipc::channel().unwrap();
     let (source_output, source_recv) = ipc::channel().unwrap();
     let capacity = task::available_slots().unwrap();
-    let pressure = !cfg!(feature = "shell") && Executable::at(2).is_ok();
+    #[cfg(not(feature = "shell"))]
+    let pressure = Executable::at(2).is_ok();
+    #[cfg(feature = "shell")]
+    let pressure = false;
     assert_eq!(capacity, 4);
     let root = Launch::at(2).unwrap();
     // Descendant reservations return to the surviving distribution owner on root
@@ -210,6 +219,7 @@ pub(super) fn start() -> Session {
         matrix,
         #[cfg(feature = "shell")]
         notes_open: false,
+        #[cfg(not(feature = "shell"))]
         pressure,
         extent: [info[1], info[2]],
         source: (source_send, source_recv),
@@ -246,7 +256,8 @@ impl Session {
             .receive(&mut [0; 64])
             .unwrap();
     }
-    pub(super) fn stop(self) {
+    #[cfg(not(feature = "shell"))]
+    pub(crate) fn stop(self) {
         for child in [
             self.input,
             Some(self.root),
