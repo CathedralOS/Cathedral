@@ -1,7 +1,15 @@
-//! Bounded menu bitmap; only a changed selection/status replaces its sealed image.
+//! Bounded bitmap of fixed rows; only a changed selection or status replaces
+//! its sealed image. Entries show their object numbers.
 use super::*;
 use cathedral_user_runtime::memory::Private;
-const WIDTH: usize = 180;
+pub const WIDTH: usize = 160;
+pub const ROW: u64 = 16;
+const HEIGHT: usize = ROWS * ROW as usize;
+/// Where the bitmap sits in the chooser's extent.
+pub const LEFT: u64 = 10;
+pub const TOP: u64 = 20;
+/// Pages one bitmap occupies; the chooser holds two during replacement.
+pub const PAGES: usize = (WIDTH * HEIGHT * 4).div_ceil(4096);
 pub struct Scene {
     pub epoch: u64,
     base: u64,
@@ -28,9 +36,9 @@ impl Scene {
         &self,
         parent: Pair,
         extent: wire::Packet,
-        selected: u64,
-        active: u64,
-        blocked: u64,
+        realm: &realm::Realm,
+        selected: usize,
+        status: &str,
     ) {
         assert_eq!(
             call(
@@ -48,38 +56,47 @@ impl Scene {
             )[0],
             0
         );
-        let mut pixels = Private::allocate(12).unwrap();
-        for (i, pixel) in pixels.bytes_mut().chunks_exact_mut(4).enumerate() {
-            let row = i / WIDTH / 16;
-            let color: u32 = if row < 3 && row as u64 + 1 == selected {
+        let mut pixels = Private::allocate(PAGES).unwrap();
+        for (i, pixel) in pixels.bytes_mut()[..WIDTH * HEIGHT * 4]
+            .chunks_exact_mut(4)
+            .enumerate()
+        {
+            let row = i / WIDTH / ROW as usize;
+            let color: u32 = if row == selected && row <= CLOSE {
                 0x315ca8
             } else {
                 0x182132
             };
             pixel.copy_from_slice(&color.to_le_bytes());
         }
-        let status: &[u8] = if blocked == UNSAVED {
-            b"SAVE NOTE FIRST"
-        } else if blocked == BUSY {
-            b"NOTES BUSY"
-        } else if active == NOTES {
-            b"NOTES OPEN"
-        } else if active == COLORS {
-            b"COLORS OPEN"
-        } else {
-            b"CHOOSE PROGRAM"
-        };
-        for (row, label) in [b"NOTES".as_slice(), b"COLORS", b"CLOSE APP", status]
-            .into_iter()
-            .enumerate()
-        {
+        let mut labels = [[0u8; 13]; ROWS];
+        for (row, label) in labels.iter_mut().enumerate() {
+            let text: &[u8] = match row {
+                row if row < realm.count => {
+                    let mut line = *b"OBJECT       ";
+                    let digits = decimal(realm.ids[row]);
+                    line[7..].copy_from_slice(&digits);
+                    *label = line;
+                    continue;
+                }
+                NEW => b"NEW",
+                CLOSE => b"CLOSE",
+                row if row == ROWS - 1 => status.as_bytes(),
+                _ => b"",
+            };
+            label[..text.len().min(13)].copy_from_slice(&text[..text.len().min(13)]);
+        }
+        for (row, label) in labels.iter().enumerate() {
             for (column, &ch) in label.iter().enumerate() {
+                if ch == 0 {
+                    continue;
+                }
                 for (y, bits) in cathedral_bitmap_font::glyph(ch).into_iter().enumerate() {
                     for x in 0..5 {
                         if bits & (1 << (4 - x)) != 0 {
                             for dy in 0..2 {
                                 for dx in 0..2 {
-                                    let offset = ((row * 16 + y * 2 + dy) * WIDTH
+                                    let offset = ((row * ROW as usize + y * 2 + dy) * WIDTH
                                         + column * 12
                                         + x * 2
                                         + dx)
@@ -102,10 +119,10 @@ impl Scene {
                     wire::SURFACE_IMAGE,
                     self.epoch,
                     self.text,
-                    10,
-                    20,
+                    LEFT,
+                    TOP,
                     WIDTH as u64,
-                    64,
+                    HEIGHT as u64,
                     WIDTH as u64,
                 ]),
                 &image,
@@ -118,4 +135,19 @@ impl Scene {
             .unwrap();
         assert_eq!(wire::decode(&bytes[..n]).unwrap()[0], 0);
     }
+}
+/// Six right-aligned decimal digits, blank-padded; larger numbers show their
+/// low six digits, which is honest for a lab that never reaches them.
+fn decimal(mut value: u64) -> [u8; 6] {
+    let mut digits = *b"      ";
+    let mut at = 6;
+    loop {
+        at -= 1;
+        digits[at] = b'0' + (value % 10) as u8;
+        value /= 10;
+        if value == 0 || at == 0 {
+            break;
+        }
+    }
+    digits
 }

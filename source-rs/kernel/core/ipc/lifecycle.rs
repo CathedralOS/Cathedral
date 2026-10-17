@@ -24,7 +24,7 @@ impl Ipc {
     pub(super) fn discard(&mut self, index: usize) {
         let queued = self.endpoints[index].as_mut().unwrap().message.take();
         if let Some(slot) = queued.and_then(|q| q.memory) {
-            self.retired_memory |= 1 << slot;
+            self.retired_memory |= 1u128 << slot;
         }
         if let Some(slot) = queued.and_then(|q| q.attachment) {
             // Queued receives cannot themselves be moved. However the endpoint
@@ -46,7 +46,7 @@ impl Ipc {
                     endpoint.receiver_alive = false;
                     let queued = endpoint.message.take();
                     if let Some(slot) = queued.and_then(|q| q.memory) {
-                        self.retired_memory |= 1 << slot;
+                        self.retired_memory |= 1u128 << slot;
                     }
                     pending = queued.and_then(|q| q.attachment);
                 }

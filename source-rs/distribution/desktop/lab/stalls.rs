@@ -72,9 +72,10 @@ pub(super) fn exercise(session: &mut admission::Session) {
             continue;
         }
         if mode == 1 {
-            let _ = matrix
-                .1
-                .receive_until(&mut [0; 64], time::after(180).unwrap());
+            let _ = matrix.1.receive_until(
+                &mut [0; 64],
+                time::after(wire::STORAGE_DEADLINE + 50).unwrap(),
+            );
             assert_eq!(app(matrix, true, wire::HEALTH)[5], abi::TIMED_OUT);
             // A still-live accepted link cannot be recycled after timeout.
             assert_eq!(

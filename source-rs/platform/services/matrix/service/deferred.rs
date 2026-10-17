@@ -28,12 +28,17 @@ impl Deferred {
                 match wire::decode(&r.bytes[..r.len]) {
                     Some(w) if r.control => {
                         let hop = (w[0] >> wire::OP_BITS) & 3;
-                        !(matches!(w[0], wire::HEALTH | wire::READ_PIXEL | wire::STORAGE_STATUS)
-                            || matches!(hop, 1 | 2)
-                                && (parent.separate_storage
-                                    || parent
-                                        .storing_client()
-                                        .is_none_or(|client| hop as usize != client + 1)))
+                        !(matches!(
+                            w[0],
+                            wire::HEALTH
+                                | wire::READ_PIXEL
+                                | wire::STORAGE_STATUS
+                                | wire::STORAGE_BINDING
+                        ) || matches!(hop, 1 | 2)
+                            && (parent.separate_storage
+                                || parent
+                                    .storing_client()
+                                    .is_none_or(|client| hop as usize != client + 1)))
                     }
                     Some(w) => {
                         w[0] == wire::STORAGE_INFO

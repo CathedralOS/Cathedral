@@ -52,6 +52,22 @@ adapter reads from its first provider root. A whole-source grant still
 belongs to one child at a time, but a subtree may be held beside anything,
 since the provider confines it and the owner holds all of it anyway.
 
+A child may launch too. The owner opens a slot with `LAUNCH_POLICY`, a standing
+budget, surface allowance and descendant count for whatever lands there, and
+`LAUNCH_PLACE` for where. A child's `LAUNCH` names an object in its realm: the
+matrix reads it through the child's binding, stamped with the child's scope, so
+a child can only run what it can see, and admits it into the other slot as the
+requester's sibling with the standing policy and that object's subtree. `CLOSE`
+asks the matrix to stop the sibling; the matrix sends the sibling `LOSS` on its
+control link first and stops it only when the answer is nothing to lose. The
+owner learns what a slot holds from `STORAGE_BINDING`, the child's source and
+scope, and restores exactly that after replacing a provider.
+
+Every forwarded exchange is bounded by the contract's `STORAGE_DEADLINE`, with
+a hop's margin added at each nesting level and for the reads of a launch. A
+provider that misses it has its stream retired and the owner replaces it, so
+the bound sits several times above a durable commit on the lab disk.
+
 Sealed attachments travel with the packet in both directions. A publication's
 attachment arrives on the child's catalog stream, is forwarded with the request
 and dropped once the next hop holds it. A bulk read's attachment comes back the

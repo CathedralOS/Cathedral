@@ -5,6 +5,6 @@ mod owner;
 mod presentation;
 pub(super) use images::image;
 mod surfaces;
-pub(super) use surfaces::flush;
+pub(in crate::service) use surfaces::{flush, replay};
 
 include!("requests.rs");

@@ -6,7 +6,5 @@ pub(crate) mod persistence;
 #[cfg(feature = "shell")]
 mod shell;
 pub use app::run as app;
-#[cfg(feature = "shell")]
-pub use shell::launcher;
 
 include!("session.rs");

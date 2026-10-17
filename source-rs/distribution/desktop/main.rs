@@ -1,9 +1,11 @@
 #![no_std]
 #![no_main]
 //! Distribution policy configures a matrix-owned process tree through its root.
-//! Role 0 is the owner: the F5 desktop with the shell feature, the probe desktop
-//! with desktop alone, or a headless matrix fixture otherwise. Role 2 is a
-//! supplied app, role 3 the pressure spinner, anything else a test leaf.
+//! Started by boot with nothing, this executable is the owner: the F5 desktop
+//! with the shell feature, the probe desktop with desktop alone, or a headless
+//! matrix fixture otherwise. Started by a matrix with a bundle it is a supplied
+//! app (role 0 from the store or 2 from the catalogue), role 3 the pressure
+//! spinner, and anything else a test leaf.
 #[cfg(not(feature = "desktop"))]
 mod fixture;
 #[cfg(all(feature = "desktop", not(feature = "shell")))]
@@ -24,23 +26,18 @@ static ROOT_TASK: core::sync::atomic::AtomicU64 = core::sync::atomic::AtomicU64:
 cathedral_user_runtime::entry_with_environment!(main);
 fn main(role: u64, argument: u64, environment: cathedral_user_runtime::task::Environment) -> u64 {
     let _ = argument;
+    let owner = role == 0 && environment.is_empty();
     match role {
         #[cfg(feature = "shell")]
-        0 => session::run(),
+        0 if owner => session::run(),
         #[cfg(all(feature = "desktop", not(feature = "shell")))]
-        0 => lab::run(),
+        0 if owner => lab::run(),
         #[cfg(not(any(feature = "desktop", feature = "storage-lab")))]
-        0 => scenario::run(),
+        0 if owner => scenario::run(),
         #[cfg(all(not(feature = "desktop"), feature = "storage-lab"))]
-        0 => storage::run(),
+        0 if owner => storage::run(),
         #[cfg(feature = "desktop")]
-        2 => {
-            #[cfg(feature = "shell")]
-            if argument == 3 {
-                return session::launcher(environment);
-            }
-            session::app(argument, environment)
-        }
+        0 | 2 => session::app(argument, environment),
         #[cfg(feature = "desktop")]
         3 => loop {
             core::hint::spin_loop();

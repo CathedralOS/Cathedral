@@ -4,10 +4,12 @@ use crate::ipc::{EndpointSpec, Ipc};
 fn setup() -> (Regions, Ipc) {
     let regions = Regions::new(
         3,
+        // Enough pages for a reader slot per page, so slot pressure is what
+        // these tests reach, except where a larger object is chosen on purpose.
         &[0, 1, 2].map(|task| Grant {
             task,
-            private_pages: 4,
-            shared_pages: 4,
+            private_pages: MAX_SHARED_REGIONS,
+            shared_pages: MAX_SHARED_REGIONS,
         }),
     )
     .unwrap();
@@ -73,7 +75,8 @@ fn forwarded_rights_survive_both_senders_and_preserve_sponsor_until_last_release
 #[test]
 fn queue_discard_returns_escrow_and_capacity_without_touching_sender() {
     let (mut model, mut ipc) = setup();
-    let object = model.allocate(0, 4).unwrap();
+    // Over half the reader pages, so a second reservation is page pressure.
+    let object = model.allocate(0, MAX_SHARED_REGIONS / 2 + 1).unwrap();
     let owner = model.handle(0, object);
     model.freeze(0, owner).unwrap();
     let send = ipc.handle(0, 0).unwrap();

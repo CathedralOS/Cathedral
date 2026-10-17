@@ -33,10 +33,12 @@ def prepare(path, programs=()):
         raise RuntimeError(f'Database image must be a regular file: {path}')
     executable = oracle()
     lab = executable.parents[2]
+    sidecar = path.with_name(path.name + '.programs')
     if path.exists():
         if path.stat().st_size != IMAGE_BYTES:
             raise RuntimeError(f'Unexpected database image size; refusing to replace {path}')
     else:
+        sidecar.unlink(missing_ok=True)  # A fresh image holds nothing yet, whatever was recorded.
         with tempfile.TemporaryDirectory(prefix='database-format-', dir=path.parent) as directory:
             volume = Path(directory) / 'volume.raw'
             subprocess.run([str(executable), 'engines', 'volume', 'format', str(volume), str(VOLUME_BYTES), '1'], cwd=lab, check=True)
@@ -50,7 +52,6 @@ def prepare(path, programs=()):
     if not programs:
         return
     installed = [[int(parent), hashlib.sha256(Path(file).read_bytes()).hexdigest()] for parent, file in programs]
-    sidecar = path.with_name(path.name + '.programs')
     if sidecar.exists() and json.loads(sidecar.read_text(encoding='utf-8')) == installed:
         return
     command = [str(executable), 'engines', 'volume', 'seed', str(path), str(OFFSET), str(VOLUME_BYTES)]

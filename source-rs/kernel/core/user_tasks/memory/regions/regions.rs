@@ -1,7 +1,7 @@
 // Page-object authority and lifetime policy. Paging and frame custody live in user_tasks/memory/memory.rs.
 // A sealed accepted reader retains backing after producer death; no remote unmap of a live reader.
 use cathedral_kernel_contracts::memory::{
-    Grant, MAX_PAGES, MAX_PRIVATE_REGIONS, MAX_REGIONS, MAX_SHARED_REGIONS,
+    Grant, MAX_PAGES, MAX_PRIVATE_REGIONS, MAX_READER_PAGES, MAX_REGIONS, MAX_SHARED_REGIONS,
 };
 use cathedral_kernel_contracts::user as abi;
 #[derive(Clone, Copy, Debug, Default)]
@@ -60,7 +60,7 @@ impl Regions {
         for grant in grants {
             if grant.task >= tasks
                 || grant.private_pages > MAX_PAGES
-                || grant.shared_pages > MAX_PAGES
+                || grant.shared_pages > MAX_READER_PAGES
                 || seen & (1 << grant.task) != 0
             {
                 return Err(abi::INVALID_ARGUMENT);

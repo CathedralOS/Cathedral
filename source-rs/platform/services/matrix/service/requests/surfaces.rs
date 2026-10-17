@@ -59,7 +59,11 @@ pub(in super::super) fn flush(parent: &mut Parent, world: &mut World) -> Result<
     Ok(())
 }
 
-pub(super) fn replay(parent: &mut Parent, world: &mut World, slot: usize) -> Result<(), Error> {
+pub(in crate::service) fn replay(
+    parent: &mut Parent,
+    world: &mut World,
+    slot: usize,
+) -> Result<(), Error> {
     for rank in 0..wire::MAX_SURFACES {
         if let Some(words) = world.replay(slot, rank) {
             parent.surface(words)?;

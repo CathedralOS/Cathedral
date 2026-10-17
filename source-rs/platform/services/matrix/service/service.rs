@@ -65,9 +65,9 @@ pub fn run(environment: Environment) -> Result<(), Error> {
             parent.refresh_notified(world)?;
             requests::flush(parent, world)?;
         }
-        let (handle, mut deadline) = children.wait();
+        let (handles, mut deadline) = children.wait();
         children.notify(world)?;
-        let mut extra = [cathedral_user_runtime::ipc::Handle::from_raw(0); 4];
+        let mut extra = [cathedral_user_runtime::ipc::Handle::from_raw(0); 5];
         let mut count = 0;
         if parent.upstream_busy() || parent.storing() {
             deadline = None;
@@ -90,7 +90,7 @@ pub fn run(environment: Environment) -> Result<(), Error> {
                 }
             }));
         }
-        if let Some(handle) = handle {
+        for handle in handles.into_iter().flatten() {
             extra[count] = handle;
             count += 1;
         }

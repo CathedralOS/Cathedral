@@ -24,7 +24,10 @@ pub(super) fn exercise(f: &Fixture, provider: cathedral_user_runtime::task::Chil
     regrant_scoped(&reopened, 6);
     assert_eq!(listing(&reopened, 2).unwrap()[1..3], [1, 7]);
     regrant_scoped(&reopened, 1);
-    assert_eq!(listing(&reopened, 2).unwrap()[1..3], [1, 8]);
+    assert_eq!(listing(&reopened, 2).unwrap()[1..4], [2, 8, 9]);
+    regrant_scoped(&reopened, 9);
+    assert_eq!(listing(&reopened, 2).unwrap()[1..3], [1, 10]);
+    expect(text(&reopened, 2, 10).unwrap(), b"sibling state");
     assert_eq!(
         provider.wait_until(time::now().unwrap()),
         Err(Error(abi::TIMED_OUT as i64))

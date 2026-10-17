@@ -34,15 +34,12 @@ pub(super) fn watch() {
     }
 }
 
-pub(super) fn pages(variable: &str) -> usize {
+pub(super) fn pages(variable: &str, limit: usize) -> usize {
     let pages = env::var(variable)
         .unwrap_or_else(|_| "0".into())
         .parse()
         .expect("invalid page budget");
-    assert!(
-        pages <= cathedral_kernel_contracts::memory::MAX_PAGES,
-        "page budget exceeds lab limit"
-    );
+    assert!(pages <= limit, "page budget exceeds lab limit");
     pages
 }
 pub(super) fn flag(variable: &str) -> bool {

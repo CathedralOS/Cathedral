@@ -652,3 +652,66 @@ eager, fixed session bank is lab policy, not the eventual manifest contract.
 Production still needs the already-open choice between persistent sponsors,
 explicit funded adoption, and revocation, plus a policy for growing/reclaiming
 active memory envelopes. No new answer is needed to continue this bounded lab.
+
+### The boot matrix as the initial program, and what a matrix persists
+
+**Requirement and conflict.** The Rust desktop boots an owner program that
+admits a root matrix beside itself, runs a chooser over the folder of users and
+furnishes each user matrix the chooser launches with its chrome and a standing
+launch policy ([shell.rs](source-rs/distribution/desktop/session/shell/shell.rs)).
+The owner's framing is that the boot matrix is the privileged program: boot
+hands it everything, and the shell is a program it hosts from its realm. Making
+the matrix the initial program decides what a matrix persists for itself, since
+its budgets, placement and standing policy would have to come from its realm
+rather than from an owner's numbers, which is where the wiki's "a Matrix is an
+object owning its world-realm" lands. It also decides whether a user matrix is
+the login boundary: today a user is a subtree copy of a template with no
+authentication, session or seat semantics.
+
+**Contracts checked.** The [matrix contract](source-rs/platform/contracts/matrix.rs)
+separates owner-only policy from child requests and knows no persisted matrix
+state. The [component model](wiki/design/part_2_components/00_component_model.md)
+settles launch as a sibling spawn through a launcher broker, which `LAUNCH` now
+implements, but not what the host reads its policy from. The
+[storage design](wiki/design/part_4_storage/00_filesystem_as_database.md) and
+the [object contract](source-rs/platform/contracts/storage.rs) carry no manifest
+or policy object kind. Nothing in the specification covers login or sessions.
+
+**Owner choice.** Keep the owner program as the initial program, with the
+matrix a pure mechanism driven by owner requests; or make the matrix the initial
+program, reading its standing policy and what it hosts from a manifest object in
+its realm, which requires choosing that object's format and who may write it;
+or a hybrid where the owner persists the policy on the matrix's behalf. The
+second choice also fixes where a user's identity and session live.
+
+**Recommendation (unaccepted).** Make the matrix the initial program once a
+manifest object kind exists, with the policy written by the installer and the
+owner of the enclosing realm only. Until then keep the owner program and its
+numbers, and do not add login semantics to subtree copies by implication.
+
+### Object kinds and names in a realm
+
+**Requirement and conflict.** A chooser lists its realm by object number and
+acts by position: NEW copies the first entry whole, which makes a user from the
+template over the users folder but duplicates the chrome program over a user's
+realm, because nothing in the store distinguishes a program, a folder, a
+document or a matrix. Heads carry revision, manifest, length and parent; edges
+carry nothing. The desktop installs by position and names objects by number.
+Showing names, refusing to launch a note, or offering a terminal that navigates
+the same tree all need a kind and a name somewhere.
+
+**Contracts checked.** The [object contract](source-rs/platform/contracts/storage.rs)
+and the [store](source-rs/platform/libraries/database-objects/README.md) define
+heads, events, edges, chunks and pins only. The
+[filesystem design](wiki/design/part_4_storage/00_filesystem_as_database.md)
+says files are folders and content is shared, but does not place names or kinds.
+
+**Owner choice.** Put a kind and name in the head, so the store types its
+objects and every listing carries them; or keep the store untyped and put a
+conventional object inside each object, read by programs that care; or carry
+the name on the edge from the parent, so one object may be known by different
+names in different folders while its kind stays a property of the object.
+
+**Recommendation (unaccepted).** Carry the name on the edge and the kind in the
+head: a kind is what the object is wherever it sits, a name is what a folder
+calls it. Keep programs from interpreting payload bytes to discover either.

@@ -22,6 +22,9 @@ import resource_budgets
 REPO = Path(__file__).resolve().parents[2]
 WORKSPACE = REPO / "source-rs"
 BUILD = REPO / "build" / "boot-harness-rs"
+# The kernel contract's per-task caps: private pages fund frames; reader pages
+# pin other tasks' objects, and a matrix hub needs several objects' worth.
+PAGE_LIMITS = (("private_pages", 128), ("shared_pages", 512))
 MARKERS = (
     "Cathedral Rust lab: UEFI entry",
     "Cathedral Rust lab: ExitBootServices complete",
@@ -86,9 +89,14 @@ def program_images(profile_path, composition, release):
             raise ValueError("a program may only sit inside an earlier program")
         if any(program.get(key) for key in ("argument", "framebuffer", "keyboard", "disk", "clock", "private_pages", "shared_pages", "ipc_channels", "cpu_budget_us")):
             raise ValueError("store programs carry code only; roles and resources are chosen at launch")
+        parent = 0 if inside is None else inside + 1
+        if program.get("folder"):
+            # An empty object: a container other programs sit inside.
+            images.append((parent, None, BUILD / "programs" / Path(profile_path).stem / f"{index}-folder"))
+            continue
         built = BUILD / "cargo" / program["target"] / mode / program["package"]
         trimmed = BUILD / "programs" / Path(profile_path).stem / f"{index}-{program['package']}.elf"
-        images.append((0 if inside is None else inside + 1, built, trimmed))
+        images.append((parent, built, trimmed))
     return images
 
 
@@ -229,10 +237,10 @@ def main():
             environment["CATHEDRAL_CHANNEL_LIMITS"] = ",".join(map(str, limits))
             environment["CATHEDRAL_CPU_LIMITS"] = ",".join(map(str, cpu_limits))
             environment["CATHEDRAL_DYNAMIC_TASKS"] = str(startup.get("dynamic_tasks", 0))
-            for resource in ("private_pages", "shared_pages"):
+            for resource, limit in PAGE_LIMITS:
                 pages = startup["initial"].get(resource, 0)
-                if type(pages) is not int or not 0 <= pages <= 128:
-                    parser.error(f"initial {resource} must be an integer in 0..128")
+                if type(pages) is not int or not 0 <= pages <= limit:
+                    parser.error(f"initial {resource} must be an integer in 0..{limit}")
                 environment[f"CATHEDRAL_INIT_{resource.upper()}"] = str(pages)
             programs["init"] = startup["initial"]
             environment["CATHEDRAL_INIT_CLOCK"] = "1" if startup["initial"].get("clock", False) else "0"
@@ -246,7 +254,8 @@ def main():
             except ValueError as error:
                 parser.error(str(error))
             for index, program in enumerate(startup.get("programs", [])):
-                programs[f"program_{index}"] = program
+                if "package" in program:
+                    programs[f"program_{index}"] = program
             environment["CATHEDRAL_IMAGE_COUNT"] = str(len(images))
             for index, image in enumerate(images):
                 if any(image.get(key) for key in ("framebuffer", "keyboard", "disk", "clock", "private_pages", "shared_pages", "ipc_channels", "cpu_budget_us")):
@@ -261,10 +270,10 @@ def main():
                 programs[f"launch_{index}"] = child
                 for resource in ("framebuffer", "keyboard", "disk", "clock"):
                     environment[f"CATHEDRAL_LAUNCH_{index}_{resource.upper()}"] = "1" if child.get(resource, False) else "0"
-                for resource in ("private_pages", "shared_pages"):
+                for resource, limit in PAGE_LIMITS:
                     pages = child.get(resource, 0)
-                    if type(pages) is not int or not 0 <= pages <= 128:
-                        parser.error("memory page budgets must be integers between 0 and 128")
+                    if type(pages) is not int or not 0 <= pages <= limit:
+                        parser.error(f"{resource} must be an integer in 0..{limit}")
                     environment[f"CATHEDRAL_LAUNCH_{index}_{resource.upper()}"] = str(pages)
                 argument = child.get("argument", 0)
                 if type(argument) is not int or not 0 <= argument < 2**64:
@@ -296,7 +305,11 @@ def main():
     seeded = []
     if not args.kernel_only and not args.smoke:
         for parent, built, trimmed in installed:
-            elf_trim.trim(built, trimmed)
+            if built is None:
+                trimmed.parent.mkdir(parents=True, exist_ok=True)
+                trimmed.write_bytes(b"")
+            else:
+                elf_trim.trim(built, trimmed)
             seeded.append((parent, trimmed))
     cargo = ["cargo", "build", "--locked", "--package", boot_package,
              "--target", target, "--target-dir", str(BUILD / "cargo")]
@@ -353,7 +366,7 @@ def main():
         protocol_test.run(command, output, args.timeout, creationflags, "Cathedral admission: executable capabilities, recursive funded pools, load rollback, stale grants and sibling survival passed")
         return 0
     if args.matrix_test or args.matrix_storage_test or args.ipc_test:
-        marker = ("Cathedral matrix storage: scoped roots, recursive delegation, revocation, cheap copies, attenuated realms, programs from the realm and replacement passed" if args.matrix_storage_test else "Cathedral IPC: channels, startup bundles, recursive admission and reclamation passed" if args.ipc_test
+        marker = ("Cathedral matrix storage: scoped roots, recursive delegation, revocation, cheap copies, attenuated realms, programs from the realm, launched siblings and replacement passed" if args.matrix_storage_test else "Cathedral IPC: channels, startup bundles, recursive admission and reclamation passed" if args.ipc_test
                   else "Cathedral matrix: two identical worlds, local-only views, attenuated input and recovery passed")
         protocol_test.run(command, output, args.timeout, creationflags, marker)
         return 0

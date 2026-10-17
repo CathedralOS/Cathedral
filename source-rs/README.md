@@ -12,10 +12,12 @@ The [ARM64 portability proof](kernel/arch/isa/aarch64/README.md) exercises the s
 core on a second CPU architecture; the integrated desktop remains x86-64.
 
 Press **F5** at the repository root, or run
-`python tools/boot-harness-rs/run.py --release --window`. One desktop boots with a
-**Programs** menu: open Notes or Colors, click the workspace to focus, and use
-Close App to close it. Notes uses F1 to save/check and F2 to reload; Colors uses
-Enter. Saved notes survive QEMU restarts. See [controls and executable routes](distribution/README.md).
+`python tools/boot-harness-rs/run.py --release --window`. One desktop boots to a
+chooser over the folder of users: NEW copies the template user, clicking a user
+runs it, and its chrome launches Notes or Colors; click a program to focus it
+and CLOSE to stop it unless it would lose work. Notes uses F1 to save/check and
+F2 to reload; Colors uses Enter. Users, notes and colors survive QEMU restarts.
+See [controls and executable routes](distribution/README.md).
 `python tools/boot-harness-rs/desktop_test.py` tests this same default composition.
 
 Recent integrated proofs: `python tools/boot-harness-rs/run.py --matrix-desktop-test --release`
@@ -96,7 +98,7 @@ The entrance explains this level without exposing every detail below it.
 | `platform/services/display/` | Separately compiled userspace provider for linear framebuffer drawing |
 | `platform/services/input/` | Userspace PS/2 configuration, keyboard/mouse decoding and IPC event delivery |
 | `platform/services/matrix/` | Recursive local viewport and input grants; [headless boundary lab](distribution/desktop/README.md) |
-| `distribution/desktop/` | Default program launcher, app admission, recursive workspace and storage supervision |
+| `distribution/desktop/` | Default desktop: provider admission, chooser and user-matrix policy, storage supervision |
 | `distribution/libraries/boot-scene/` | Retained test-pattern drawing client shared by the display lab |
 | `platform/libraries/bitmap-font/` | Original 5-by-7 printable ASCII glyphs |
 | `kernel/core/ipc/link.rs` | Boot-approved peer graph without lifecycle rights |
@@ -226,7 +228,7 @@ QEMU q35, one qemu64 CPU, software emulation, 128 MiB by default:
    preserving inherited leaf mappings and their flags. Bound copying to 4,096
    table pages; fail on exhaustion, unsupported NX/LA57/PCID or occupied ranges.
 7. Map a guarded 64-KiB kernel stack, four guarded 16-KiB emergency stacks,
-   and 128 KiB of heap backing. Reserve a separate virtual branch for dynamic task
+   and 256 KiB of heap backing. Reserve a separate virtual branch for dynamic task
    stacks, without allocating their backing yet. New mappings are NX.
 8. Load the owned CR3, enable write protection/NX, switch stacks and confirm the
    stack pointer is within its assigned range.
@@ -339,7 +341,7 @@ generations and are scoped to a session; reused slots do not revive old IDs.
 no joins, captured closures, cancellation or recovery from task panic yet.
 These trusted kernel tasks share an address space; guards protect against stack
 overrun, not against malicious tasks. There is no capability enforcement or SMP. The
-128-KiB heap and runtime arena are initialized before executing tasks; ordinary
+256-KiB heap and runtime arena are initialized before executing tasks; ordinary
 infallible Rust allocations can still panic on exhaustion. Task context
 admission is fallible and returns `OutOfHeap` without leaking stack frames.
 The scheduler separates task states from [hierarchical turn selection](kernel/core/scheduler/README.md).
@@ -845,13 +847,14 @@ copyout, late replies, raw keyboard grants, sibling queues and admission rollbac
 ## Bounded private pages and shared buffers
 
 The [memory contract](kernel/contracts/memory.rs) defines explicit per-task private and
-accepted-reader budgets, each up to sixty-four 4 KiB pages (256 KiB). An allocation
-contains one to sixteen zeroed pages. Independently, a task can own at most four
-objects and accept at most four reader objects. The 64 session slots cover those
-limits for all twelve tasks, including readers retained after producer exit; a
-larger page grant cannot consume another task's metadata capacity. An unmapped
-guard follows each process-local mapping slot (four private plus four reader
-slots). Mapping addresses never contain the global backing index. Runtime mappings are non-executable. Task admission reserves their
+accepted-reader budgets: up to 128 4 KiB pages of private memory, and up to four
+times that in reader pages, which pin other tasks' sealed objects rather than
+funding frames. An allocation contains one to 128 zeroed pages. Independently, a
+task can own at most four objects and hold at most eight reader rights. The
+session slots cover those limits for all twelve tasks, including readers
+retained after producer exit; a larger page grant cannot consume another task's
+metadata capacity. An unmapped guard follows each process-local mapping slot
+(four private plus eight reader slots). Mapping addresses never contain the global backing index. Runtime mappings are non-executable. Task admission reserves their
 page tables; allocation and mapping changes execute on the boot stack with the
 kernel root active. The kernel owns physical backing independently of either
 participant's address space.
@@ -993,8 +996,8 @@ private objects. See the [object store guide](platform/libraries/database-object
 for ownership and format limits, and the content guide for dev commands, heap
 samples and optional ATA tracing. The intermittent ATA timeout remains undiagnosed.
 
-F5's **Cathedral: Build & Run in QEMU** uses the database provider for Notes in
-the default program-launcher desktop, retaining `build/boot-harness-rs/cathedral-storage.raw`.
+F5's **Cathedral: Build & Run in QEMU** uses the database provider for users and
+their programs in the default desktop, retaining `build/boot-harness-rs/cathedral-storage.raw`.
 It creates missing media only; existing images are never reformatted. Explicit
 lab profiles retain their separate images. The recovery proof adds a real startup
 deadline, provider death before commit and after commit-before-reply, explicit
@@ -1003,6 +1006,6 @@ state and show a red mark on uncertain saves; Enter reconciles by reading before
 another mutation. Bounded owner supervision now replaces dead/stalled providers
 and retired root data streams, with at most three replacements per desktop session.
 
-**Notes** in the Programs menu opens a 60-character scratchpad with physical
-text input, atomic saves and draft-preserving reconciliation. See the [notes guide](distribution/applications/notes/README.md) for controls,
+**Notes** in a user's chrome opens a scratchpad with physical text input,
+atomic saves and draft-preserving reconciliation. See the [notes guide](distribution/applications/notes/README.md) for controls,
 proofs, measured costs and the remaining bulk-content boundary.

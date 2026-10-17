@@ -136,18 +136,32 @@ pub fn run(style: u64, environment: Environment) -> u64 {
                     break;
                 }
                 Ok(_) => {
+                    let len = control.0.receive(&mut bytes).unwrap();
+                    let command = wire::decode(&bytes[..len]).map_or(0, |words| words[0]);
+                    // Closing asks what would be lost: a toggle whose save failed.
+                    if command == wire::LOSS {
+                        control
+                            .1
+                            .send(&wire::encode([
+                                0,
+                                u64::from(save_status != 0),
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                            ]))
+                            .unwrap();
+                        continue;
+                    }
                     // The shipped app answers any owner command with its liveness
                     // report; lab compositions act on proof commands first.
                     #[cfg(feature = "shell")]
-                    let status = {
-                        control.0.receive(&mut bytes).unwrap();
-                        0
-                    };
-                    #[cfg(not(feature = "shell"))]
-                    let len = control.0.receive(&mut bytes).unwrap();
+                    let status = 0;
                     #[cfg(not(feature = "shell"))]
                     let Some(status) = crate::lab::command(
-                        wire::decode(&bytes[..len]).map_or(0, |words| words[0]),
+                        command,
                         &mut Probe {
                             style,
                             parent,

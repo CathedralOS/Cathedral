@@ -23,6 +23,7 @@ members = [
     "platform/services/storage",
     "platform/services/matrix",
     # Distribution
+    "distribution/applications/chooser",
     "distribution/applications/notes",
     "distribution/lab/display",
     "distribution/lab/compositor",

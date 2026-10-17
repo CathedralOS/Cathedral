@@ -25,13 +25,19 @@
 //! non-reused within a session (including task-slot reuse); raw addresses may be
 //! reused. These are lab semantics, not Cathedral's stable ABI.
 pub const PAGE_BYTES: usize = 4096;
-/// Maximum pages per object and per-task private/accepted-reader page budget.
-/// A matrix hub retains every child image and holds old and new during each
-/// replacement, so the bound covers several such pairs plus what it lends.
+/// Maximum pages per object and per-task private page budget.
 pub const MAX_PAGES: usize = 128;
+/// Maximum per-task reader page budget. Reader pages pin other tasks' backing
+/// rather than funding frames, and a matrix hub needs far more of them than
+/// any one object: it retains every image its subtree shows, holds old and new
+/// during each replacement, and lends the same kind of budget to each nested
+/// matrix below it.
+pub const MAX_READER_PAGES: usize = 4 * MAX_PAGES;
 /// Separate metadata limits: larger page grants must not buy every global slot.
+/// A matrix or the compositor retains one sealed image per surface it shows
+/// and holds the replacement beside it, so readers get twice the private count.
 pub const MAX_PRIVATE_REGIONS: usize = 4;
-pub const MAX_SHARED_REGIONS: usize = 4;
+pub const MAX_SHARED_REGIONS: usize = 8;
 pub const MAX_MAPPING_SLOTS: usize = MAX_PRIVATE_REGIONS + MAX_SHARED_REGIONS;
 // Every live object has an owner or an accepted reader. This capacity covers
 // every task's object limits, including readers whose producer has exited.
@@ -50,4 +56,6 @@ pub struct Grant {
 }
 
 /// Includes queued/unmapped read capabilities, bounded independently of backing.
+/// Retirement tracks them in a 128-bit mask.
 pub const MAX_READ_HANDLES: usize = crate::user::MAX_TASKS * MAX_SHARED_REGIONS;
+const _: () = assert!(MAX_READ_HANDLES <= 128);

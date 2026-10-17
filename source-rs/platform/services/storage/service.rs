@@ -198,7 +198,15 @@ fn dispatch(
                     if attachment.len() > wire::MAX_BYTES || attachment.len() < r.len as usize {
                         return Err(Error::Invalid);
                     }
-                    mapped = attachment.map().map_err(|_| Error::Invalid)?;
+                    // A mapping refused for lack of memory is capacity, not a
+                    // malformed request.
+                    mapped = attachment.map().map_err(|error| {
+                        if error.0 as u64 == abi::NO_MEMORY {
+                            Error::Capacity
+                        } else {
+                            Error::Invalid
+                        }
+                    })?;
                     &mapped[..r.len as usize]
                 }
                 None if r.len == 0 => &[],

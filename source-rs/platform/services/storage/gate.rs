@@ -28,6 +28,12 @@ impl Gate {
                     root,
                     quiet: command == 0xf5,
                 };
+                #[cfg(feature = "trace-storage")]
+                cathedral_user_runtime::time::storage_trace(
+                    "gate-armed",
+                    phase as u64,
+                    opcode as u64,
+                );
                 server.reply(request, b"armed").unwrap();
                 true
             }
@@ -51,6 +57,8 @@ impl Gate {
             return;
         }
         self.phase = 0;
+        #[cfg(feature = "trace-storage")]
+        cathedral_user_runtime::time::storage_trace("gate-stall", phase as u64, opcode);
         if !self.quiet {
             Handle::bootstrap(1).unwrap().send(b"blocked").unwrap();
         }

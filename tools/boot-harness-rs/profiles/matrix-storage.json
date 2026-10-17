@@ -75,7 +75,7 @@
         5
       ]
     ],
-    "dynamic_tasks": 1,
+    "dynamic_tasks": 2,
     "programs": [
       {
         "package": "cathedral-desktop",

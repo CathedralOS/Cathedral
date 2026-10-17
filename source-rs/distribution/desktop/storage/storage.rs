@@ -152,8 +152,9 @@ pub fn run() -> u64 {
     probes::sharing(f);
     probes::attenuation(f);
     probes::launching(f);
+    probes::sibling(f);
     recovery::exercise(f, provider);
-    cathedral_user_runtime::write(b"Cathedral matrix storage: scoped roots, recursive delegation, revocation, cheap copies, attenuated realms, programs from the realm and replacement passed\n").unwrap();
+    cathedral_user_runtime::write(b"Cathedral matrix storage: scoped roots, recursive delegation, revocation, cheap copies, attenuated realms, programs from the realm, launched siblings and replacement passed\n").unwrap();
     loop {
         let _ = event_sleep();
     }

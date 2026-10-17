@@ -20,7 +20,10 @@ pub(super) fn dispatch(
             }
             let response = if matches!(
                 words[0],
-                wire::STORAGE_GRANT | wire::STORAGE_REVOKE | wire::STORAGE_STATUS
+                wire::STORAGE_GRANT
+                    | wire::STORAGE_REVOKE
+                    | wire::STORAGE_STATUS
+                    | wire::STORAGE_BINDING
             ) {
                 parent.storage_owner(server, words)?
             } else {
@@ -74,6 +77,14 @@ pub(super) fn dispatch(
         _ if request.client.is_some_and(|client| client >= 3) => {
             // A catalog endpoint confers no interaction or source authority.
             return server.reply(&request, &wire::encode(wire::error(abi::DENIED)));
+        }
+        // A child asks for a sibling, or for its sibling to go; both are
+        // answered later, from launch_object or the forwarded health probe.
+        Some([wire::LAUNCH, object, 0, 0, 0, 0, 0, 0]) if request.client.is_some() => {
+            return children.launch(request, object, parent, server);
+        }
+        Some([wire::CLOSE, 0, 0, 0, 0, 0, 0, 0]) if request.client.is_some() => {
+            return children.close(request, parent, world, server);
         }
         Some(words)
             if matches!(

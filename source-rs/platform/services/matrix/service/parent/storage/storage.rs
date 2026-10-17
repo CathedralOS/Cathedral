@@ -129,6 +129,12 @@ impl Parent {
         if words == [wire::STORAGE_STATUS, 0, 0, 0, 0, 0, 0, 0] && !self.upstream {
             return Ok([0, self.storage_failed, 0, 0, 0, 0, 0, 0]);
         }
+        if let [wire::STORAGE_BINDING, slot @ 0..=1, 0, 0, 0, 0, 0, 0] = words {
+            return Ok(match self.storage_binding(server, slot as usize) {
+                Some((source, scope)) => [0, source as u64, scope, 0, 0, 0, 0, 0],
+                None => wire::error(abi::DENIED),
+            });
+        }
         let status = match words {
             [wire::STORAGE_GRANT, slot @ 0..=1, source, scope, 0, 0, 0, 0] => {
                 self.storage_grant(server, slot as usize, source as usize, scope)?
@@ -171,8 +177,17 @@ impl Parent {
                 self.storage_failed &= !(1 << source);
             }))
     }
-    /// Begin reading a program the owner asked to run; the owner's request is
-    /// answered once the child is admitted.
+    /// A child's live storage binding: its source and the scope it was granted.
+    pub(in crate::service) fn storage_binding(
+        &self,
+        server: &Server,
+        slot: usize,
+    ) -> Option<(usize, u64)> {
+        let incarnation = server.incarnation(self.storage_client(slot))?;
+        self.scopes.binding(slot, incarnation).ok()
+    }
+    /// Begin reading a program someone asked to run; their request is answered
+    /// once the child is admitted.
     pub(in crate::service) fn storage_launch(
         &mut self,
         request: Request,

@@ -35,11 +35,13 @@ handle in message bytes conveys no authority. These are experimental syscalls
 
 Backing remains charged to its original persistent account, including after its
 producer exits or releases its handle. Each copied read right charges the
-recipient's reader-page quota and one of four reader-capability slots, whether
+recipient's reader-page quota and one of eight reader-capability slots, whether
 queued, mapped or unmapped. Multiple rights to the same object are individually
 charged. Unmapping returns a virtual slot, not the capability/page reservation.
-The current maximum is sixty-four pages per object/account quota; the global arenas
-are backed for the twelve-account lab. No extra frames are allocated by forwarding.
+An object holds up to 128 pages, as does a private page budget; a reader page
+budget may reach four times that, since a matrix hub pins every image its
+subtree shows and lends the same budget downward. The global arenas are backed
+for the twelve-account lab. No extra frames are allocated by forwarding.
 A retained reader can prevent returning or reassigning its sponsor's funding.
 
 Copying read authority permits further forwarding. This does not implement

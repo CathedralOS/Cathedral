@@ -32,10 +32,10 @@ pub fn assign(
     let previous = snapshot(ipc, regions, child);
     let mut remaining = [0; 3];
     for i in 0..3 {
-        let maximum = if i == 2 {
-            abi::MAX_CREATED_CHANNELS
-        } else {
-            memory::MAX_PAGES
+        let maximum = match i {
+            0 => memory::MAX_PAGES,
+            1 => memory::MAX_READER_PAGES,
+            _ => abi::MAX_CREATED_CHANNELS,
         };
         remaining[i] = parent[i]
             .checked_add(previous[i])

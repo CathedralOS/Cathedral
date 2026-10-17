@@ -34,7 +34,7 @@ impl Ipc {
     pub fn memory_retirement_pending(&self) -> bool {
         self.retired_memory != 0
     }
-    pub fn take_retired_memory(&mut self) -> u64 {
+    pub fn take_retired_memory(&mut self) -> u128 {
         core::mem::take(&mut self.retired_memory)
     }
 }

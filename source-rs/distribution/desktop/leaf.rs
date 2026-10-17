@@ -1,10 +1,15 @@
 //! Test peer relays probes over its sole parent endpoint. No world/global lookup.
 //! A relayed publication carries its bytes inline in the owner packet; the leaf
-//! turns them into the sealed attachment the real protocol requires.
+//! turns them into the sealed attachment the real protocol requires. A detached
+//! probe is answered before it is relayed, so the leaf can ask its host for
+//! something the host answers only after talking to the owner's other children;
+//! the result waits for the next LAST_PROBE.
 use super::*;
 use cathedral_platform_contracts::storage;
 use cathedral_user_runtime::{ipc, link::Link, memory::Private, task::Launch};
 pub const EXIT_PROBE: u64 = 0xfffe;
+pub const DETACHED_PROBE: u64 = 0xfffd;
+pub const LAST_PROBE: u64 = 0xfffc;
 pub fn run(environment: cathedral_user_runtime::task::Environment) -> u64 {
     assert_eq!(environment.len(), 3);
     assert!(matches!(Launch::at(0), Err(Error(code)) if code == abi::DENIED as i64));
@@ -27,6 +32,7 @@ pub fn run(environment: cathedral_user_runtime::task::Environment) -> u64 {
         environment.endpoint(1).unwrap(),
     );
     let mut storage_epoch = 0;
+    let mut last = wire::error(abi::WOULD_BLOCK);
     loop {
         let mut bytes = [0; 64];
         let Ok(len) = control.0.receive(&mut bytes) else {
@@ -37,6 +43,24 @@ pub fn run(environment: cathedral_user_runtime::task::Environment) -> u64 {
         };
         if words == [EXIT_PROBE, 0, 0, 0, 0, 0, 0, 0] {
             return 0;
+        }
+        if words == [LAST_PROBE, 0, 0, 0, 0, 0, 0, 0] {
+            control.1.send(&wire::encode(last)).unwrap();
+            continue;
+        }
+        // The host's close question is the leaf's own answer: nothing to lose.
+        // Everything else, a liveness probe included, is relayed to the parent
+        // so a fixture sees exactly what the matrix answers a child.
+        if words == [wire::LOSS, 0, 0, 0, 0, 0, 0, 0] {
+            control.1.send(&wire::encode([0; 8])).unwrap();
+            continue;
+        }
+        if words[0] == DETACHED_PROBE {
+            control.1.send(&wire::encode([0; 8])).unwrap();
+            let mut detached = [0; 8];
+            detached[..7].copy_from_slice(&words[1..]);
+            last = exchange(parent, detached, None);
+            continue;
         }
         let stored = (wire::STORAGE_BASE..wire::STORAGE_BASE + 256).contains(&words[0]);
         let mut attachment = None;

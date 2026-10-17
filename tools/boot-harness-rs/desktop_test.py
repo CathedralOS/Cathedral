@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Exercise the ordinary F5 composition: choose apps, edit, switch and cold-open."""
+"""Exercise the ordinary F5 composition: make a user, launch its programs, edit, switch and cold-open."""
 import argparse
 from datetime import datetime, timezone
 import os
@@ -80,51 +80,107 @@ def desktop(stream, output, serial, reboot):
                 pixel(len(text) % 15 * 12 + dx, len(text) // 15 * 16 + 14, '66ccff')
         return image
 
+    # The app sits at (180, 40) inside the workspace at (280, 140).
+    APP = (460, 180)
+
     def note(text, dirty=False):
         expected = text_image(text, cursor=True)
         def check(width, data):
-            actual = b''.join(data[((200 + y) * width + 340) * 3:((200 + y) * width + 520) * 3] for y in range(64))
-            return actual == expected and rgb(width, data, 335, 190) == bytes.fromhex('9b7028' if dirty else '27664a')
+            actual = b''.join(data[((APP[1] + 20 + y) * width + APP[0] + 10) * 3:((APP[1] + 20 + y) * width + APP[0] + 190) * 3] for y in range(64))
+            return actual == expected and rgb(width, data, APP[0] + 5, APP[1] + 10) == bytes.fromhex('9b7028' if dirty else '27664a')
         scan(check, f'note text/status {text!r}, dirty={dirty}')
 
-    def status(text):
-        move(270, 300)  # Keep the cursor overlay outside the checked glyphs.
-        expected = text_image(text)[:180 * 16 * 3]
-        scan(lambda width, data: b''.join(data[((208 + y) * width + 50) * 3:((208 + y) * width + 230) * 3] for y in range(16)) == expected,
-             f'menu status {text!r}')
+    def rows_image(lines):
+        """The chooser bitmap: 160 px wide rows of 13 glyph cells."""
+        image = bytearray(bytes.fromhex('182132') * (160 * 16 * len(lines)))
+        def pixel(x, y, color):
+            image[(y * 160 + x) * 3:(y * 160 + x) * 3 + 3] = bytes.fromhex(color)
+        for row, text in enumerate(lines):
+            for index, ch in enumerate(text):
+                for y, bits in enumerate(font[(ord(ch) - 32) * 7:(ord(ch) - 31) * 7]):
+                    for x in range(5):
+                        if bits & (1 << (4 - x)):
+                            for dy in range(2):
+                                for dx in range(2):
+                                    pixel(index * 12 + x * 2 + dx, row * 16 + y * 2 + dy, 'ffffff')
+        return image
+
+    def chooser_row(left, row, text, description):
+        move(270, 100)  # Keep the cursor overlay outside the checked glyphs.
+        expected = rows_image([text])
+        top = 160 + 16 * row
+        def check(width, data):
+            # A selected row has a different background; compare glyph pixels only.
+            actual = b''.join(data[((top + y) * width + left) * 3:((top + y) * width + left + 160) * 3] for y in range(16))
+            return all(actual[i:i + 3] == b'\xff\xff\xff' for i in range(0, len(expected), 3) if expected[i:i + 3] == b'\xff\xff\xff') \
+                and all(actual[i:i + 3] != b'\xff\xff\xff' for i in range(0, len(expected), 3) if expected[i:i + 3] != b'\xff\xff\xff')
+        scan(check, f'{description} row {row} {text!r}')
+
+    def entry(number):
+        return 'OBJECT ' + str(number).rjust(6)
+
+    # The chooser over the users folder sits at (50, 160); a user's chrome at (290, 160).
+    def users(row, text):
+        chooser_row(50, row, text, 'users')
+
+    def chrome(row, text):
+        chooser_row(290, row, text, 'chrome')
+
+    def click_users(row):
+        click(80, 168 + 16 * row)
+
+    def click_chrome(row):
+        click(330, 168 + 16 * row)
+
+    def focus_app():
+        click(APP[0] + 5, APP[1] + 120)
 
     def color(value):
-        scan(lambda width, data: rgb(width, data, 335, 190) == bytes.fromhex(value), f'workspace color {value}')
+        scan(lambda width, data: rgb(width, data, APP[0] + 5, APP[1] + 10) == bytes.fromhex(value), f'workspace color {value}')
 
     def tabs(count, current):
         # One tab per note below the text; the current note's tab is bright.
         def check(width, data):
             for index in range(count + 1):
                 expected = '182132' if index == count else '66ccff' if index == current else '3a4a63'
-                if rgb(width, data, 346 + 16 * index, 272) != bytes.fromhex(expected):
+                if rgb(width, data, APP[0] + 16 + 16 * index, APP[1] + 92) != bytes.fromhex(expected):
                     return False
             return True
         scan(check, f'note tabs count={count} current={current}')
 
-    status('CHOOSE PROGRAM')
-    click(80, 166)  # Actual menu row, not host-side launch control.
-    status('NOTES OPEN')
+    NEW, CLOSE, STATUS = 4, 5, 6
+    # Objects: the template user is 3; a user made from it is 7 with chrome 8,
+    # Notes 9 and Colors 10 inside.
+    users(STATUS, 'CHOOSE')
+    users(0, entry(3))
+    if not reboot:
+        click_users(NEW)
+        users(STATUS, 'COPIED')
+    users(1, entry(7))
+    click_users(1)
+    users(STATUS, 'RUNNING')
+    chrome(STATUS, 'CHOOSE')
+    chrome(0, entry(8))
+    chrome(1, entry(9))
+    chrome(2, entry(10))
+    click_chrome(1)
+    chrome(STATUS, 'RUNNING')
     note('hello cathedral' if reboot else '')
     tabs(2 if reboot else 0, 0)
     if reboot:
-        click(335, 300)
+        focus_app()
         key('f4')
         note('hello cathedral two')
         tabs(2, 1)
         return
-    click(335, 300)
+    focus_app()
     for char in 'hello cathedral':
         key('spc' if char == ' ' else char)
     note('hello cathedral', dirty=True)
-    click(80, 182)  # Switching must not discard the unsaved draft.
-    status('SAVE NOTE FIRST')
+    click_chrome(CLOSE)  # Closing must not discard the unsaved draft.
+    chrome(STATUS, 'KEPT')
     note('hello cathedral', dirty=True)
-    click(335, 300)
+    focus_app()
     key('f1')
     note('hello cathedral')
     tabs(1, 0)
@@ -142,44 +198,52 @@ def desktop(stream, output, serial, reboot):
     key('f4')
     tabs(2, 0)
     note('hello cathedral')
-    click(80, 182)
-    status('COLORS OPEN')
-    color('2c8762')
-    click(335, 300)
+    click_chrome(CLOSE)
+    chrome(STATUS, 'CLOSED')
+    click_chrome(2)
+    chrome(STATUS, 'RUNNING')
+    color('315ca8')
+    focus_app()
     key('ret')
     color('d18b35')
-    click(80, 198)
-    status('CHOOSE PROGRAM')
+    click_chrome(CLOSE)
+    chrome(STATUS, 'CLOSED')
     color('101827')
     # Repeated actual teardown/admission catches leaked loans, surfaces or
     # handles. Colors keeps its color: its state nests under its own program.
-    for _ in range(5):
-        click(80, 166)
-        status('NOTES OPEN')
+    for _ in range(3):
+        click_chrome(1)
+        chrome(STATUS, 'RUNNING')
         note('hello cathedral')
-        click(80, 182)
-        status('COLORS OPEN')
+        click_chrome(CLOSE)
+        chrome(STATUS, 'CLOSED')
+        click_chrome(2)
+        chrome(STATUS, 'RUNNING')
         color('d18b35')
-    # Keyboard navigation also works once the launcher has focus.
-    key('up')
+        click_chrome(CLOSE)
+        chrome(STATUS, 'CLOSED')
+    # Keyboard navigation also works once the chrome has focus: from CLOSE,
+    # four steps up reach Notes.
+    for _ in range(4):
+        key('up')
     key('ret')
-    status('NOTES OPEN')
+    chrome(STATUS, 'RUNNING')
     note('hello cathedral')
-    click(335, 300)
+    focus_app()
     key('x')
-    click(80, 198)
-    status('SAVE NOTE FIRST')
+    click_chrome(CLOSE)
+    chrome(STATUS, 'KEPT')
     note('hello cathedralx', dirty=True)
-    click(335, 300)
+    focus_app()
     key('f2')
     note('hello cathedral')
-    click(80, 198)
-    status('CHOOSE PROGRAM')
+    click_chrome(CLOSE)
+    chrome(STATUS, 'CLOSED')
     color('101827')
-    click(80, 166)
-    status('NOTES OPEN')
+    click_chrome(1)
+    chrome(STATUS, 'RUNNING')
     note('hello cathedral')
-    print('PASS: in-guest mouse/keyboard launch, draft protection, duplicate/switch, save/reload and repeated app replacement')
+    print('PASS: a user made from the template, programs launched by its chrome, draft protection, duplicate/switch, save/reload and repeated app replacement')
 
 
 def run(timeout, trace_storage=False):
@@ -200,7 +264,7 @@ def run(timeout, trace_storage=False):
     command += disk_image.arguments(path)
     flags = subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0
     for boot in (1, 2):
-        capture.run(command, output, timeout, flags, ready_marker='Cathedral desktop: ready; choose a program',
+        capture.run(command, output, timeout, flags, ready_marker='Cathedral desktop: ready; choose a user',
                     verify=lambda stream, output, serial: desktop(stream, output, serial, boot == 2))
         for name in ('serial.log', 'qemu.log', 'display.png'):
             shutil.copyfile(output / name, output / f'boot-{boot}-{name}')
@@ -208,8 +272,9 @@ def run(timeout, trace_storage=False):
         database_image.prepare(path, programs)
         assert contents == path.read_bytes(), 'relaunch must not reformat storage or reinstall unchanged programs'
     # An independent host model checks the retained records on a copy: the
-    # installed programs, two notes sharing one manifest under Notes, the color
-    # under Colors, nothing in the ungranted root.
+    # installed programs, the user copied from the template, two notes sharing
+    # one manifest under the user's Notes, the color under its Colors, nothing
+    # in the ungranted root.
     snapshot = output / 'host-reopen.raw'
     snapshot.write_bytes(contents)
     result = subprocess.run([str(database_image.oracle()), 'engines', 'volume', 'verify-desktop', str(snapshot),
@@ -218,7 +283,7 @@ def run(timeout, trace_storage=False):
                             cwd=ROOT / 'tools/storage-lab', check=True, capture_output=True, text=True)
     (output / 'host.txt').write_text(result.stdout, encoding='utf-8')
     print(result.stdout, end='')
-    print(f'PASS: default F5 desktop, duplicated notes and saved notes after cold reboot; artifacts: {output}')
+    print(f'PASS: default F5 desktop, a copied user, duplicated notes and saved state after cold reboot; artifacts: {output}')
 
 
 if __name__ == '__main__':

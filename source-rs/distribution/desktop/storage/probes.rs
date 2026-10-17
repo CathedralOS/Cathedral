@@ -146,10 +146,10 @@ pub(super) fn launching(f: &Fixture) {
     f.owner(0, [wire::STOP, 1, 0, 0, 0, 0, 0, 0]);
     f.owner(0, [wire::RUN_PAGES, 1, 2, 0, 0, 0, 0, 0]);
     assert_eq!(
-        f.query(0, [wire::RUN_OBJECT, 1, 99, 4, 0, 0, 0, 0]),
+        f.query(0, [wire::RUN_OBJECT, 1, 99, 99, 0, 0, 0, 0]),
         wire::error(store::MISSING)
     );
-    f.owner(0, [wire::RUN_OBJECT, 1, 1, 4, 0, 0, 0, 0]);
+    f.owner(0, [wire::RUN_OBJECT, 1, 1, 1, 0, 0, 0, 0]);
     assert_eq!(realm(f, 3), Ok(1));
     assert_eq!(listing(f, 3).unwrap()[1], 0);
     expect(prefix(f, 3, 1, 4).unwrap(), b"\x7fELF");
@@ -169,4 +169,54 @@ pub(super) fn launching(f: &Fixture) {
     );
     // The whole-root holder still sees the program and its state beneath it.
     assert_eq!(listing(f, 2).unwrap()[1..7], [5, 1, 2, 3, 4, 6]);
+}
+pub(super) fn sibling(f: &Fixture) {
+    // The program copies itself into its realm, cheaply, and asks its host to
+    // run the copy as a sibling. The host reads it with the requester's scope,
+    // admits it into the slot the owner opened, and grants it the copy's
+    // subtree. What is not a program is refused by the kernel; what lies
+    // outside the requester's realm is refused by the provider.
+    let copy = copy(f, 3, 1, 1, 1).unwrap();
+    assert_eq!((copy.object, copy.revision), (9, 1));
+    assert_eq!(
+        f.query(3, [wire::LAUNCH, 9, 0, 0, 0, 0, 0, 0]),
+        wire::error(abi::BUSY)
+    );
+    f.owner(0, [wire::STOP, 0, 0, 0, 0, 0, 0, 0]);
+    assert_eq!(
+        f.query(3, [wire::LAUNCH, 9, 0, 0, 0, 0, 0, 0]),
+        wire::error(abi::DENIED)
+    );
+    f.owner(0, [wire::LAUNCH_POLICY, 0, 2, 0, 0, 0, 0, 0]);
+    assert_eq!(
+        f.query(3, [wire::LAUNCH, 8, 0, 0, 0, 0, 0, 0]),
+        wire::error(abi::BAD_EXECUTABLE)
+    );
+    assert_eq!(
+        f.query(3, [wire::LAUNCH, 2, 0, 0, 0, 0, 0, 0]),
+        wire::error(abi::DENIED)
+    );
+    assert_eq!(
+        f.query(3, [wire::LAUNCH, 9, 0, 0, 0, 0, 0, 0]),
+        [0, 0, 0, 0, 0, 0, 0, 0]
+    );
+    assert_eq!(realm(f, 1), Ok(9));
+    let state = publish(f, 1, 0, 0, b"sibling state").unwrap();
+    assert_eq!((state.object, state.revision), (10, 1));
+    assert_eq!(text(f, 1, 8), Err(abi::DENIED));
+    assert_eq!(listing(f, 3).unwrap()[1..4], [2, 8, 9]);
+    // The launcher may ask for its sibling to go; the host asks the sibling
+    // first, over the same forwarded control the owner's probes use, so the
+    // leaf asks on its own and the owner collects the answer afterwards.
+    f.owner(3, [leaf::DETACHED_PROBE, wire::CLOSE, 0, 0, 0, 0, 0, 0]);
+    assert_eq!(f.query(3, [leaf::LAST_PROBE, 0, 0, 0, 0, 0, 0, 0]), [0; 8]);
+    assert_eq!(
+        f.query(1, [wire::STORAGE_INFO, 0, 0, 0, 0, 0, 0, 0]),
+        wire::error(abi::PEER_CLOSED)
+    );
+    f.owner(3, [leaf::DETACHED_PROBE, wire::CLOSE, 0, 0, 0, 0, 0, 0]);
+    assert_eq!(
+        f.query(3, [leaf::LAST_PROBE, 0, 0, 0, 0, 0, 0, 0]),
+        wire::error(abi::PEER_CLOSED)
+    );
 }

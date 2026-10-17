@@ -45,7 +45,7 @@ struct Endpoint {
 }
 pub struct Ipc {
     epoch: u64,
-    retired_memory: u64,
+    retired_memory: u128,
     tasks: usize,
     alive: u16,
     endpoints: alloc::vec::Vec<Option<Endpoint>>,

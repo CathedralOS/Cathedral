@@ -65,10 +65,10 @@ pub(super) fn exercise(session: &mut admission::Session) {
     // Let the actual matrix deadline expire while the provider remains alive.
     // This reproduces the startup failure that used to panic on CREATE.
     assert_eq!(
-        session
-            .matrix
-            .1
-            .receive_until(&mut [0; 64], time::after(180).unwrap()),
+        session.matrix.1.receive_until(
+            &mut [0; 64],
+            time::after(wire::STORAGE_DEADLINE + 50).unwrap()
+        ),
         Err(Error(abi::TIMED_OUT as i64))
     );
     assert_eq!(app(session.matrix, 13)[0], abi::TIMED_OUT);

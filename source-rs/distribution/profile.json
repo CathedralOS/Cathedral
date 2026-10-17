@@ -76,7 +76,7 @@
         "clock": true,
         "argument": 1129270608,
         "framebuffer": true,
-        "shared_pages": 96
+        "shared_pages": 128
       },
       {
         "package": "cathedral-input-service",
@@ -94,7 +94,7 @@
         "argument": 0,
         "ipc_channels": 20,
         "private_pages": 128,
-        "shared_pages": 128
+        "shared_pages": 256
       },
       {
         "package": "cathedral-storage-service",
@@ -120,15 +120,30 @@
     "dynamic_tasks": 4,
     "programs": [
       {
+        "package": "cathedral-chooser",
+        "entry": "distribution/applications/chooser/main.rs",
+        "target": "x86_64-unknown-none"
+      },
+      {
+        "folder": true
+      },
+      {
         "package": "cathedral-matrix-service",
         "entry": "platform/services/matrix/main.rs",
-        "target": "x86_64-unknown-none"
+        "target": "x86_64-unknown-none",
+        "inside": 1
+      },
+      {
+        "package": "cathedral-chooser",
+        "entry": "distribution/applications/chooser/main.rs",
+        "target": "x86_64-unknown-none",
+        "inside": 2
       },
       {
         "package": "cathedral-notes",
         "entry": "distribution/applications/notes/main.rs",
         "target": "x86_64-unknown-none",
-        "inside": 0
+        "inside": 2
       },
       {
         "package": "cathedral-desktop",
@@ -137,15 +152,7 @@
         "features": [
           "shell"
         ],
-        "inside": 0
-      },
-      {
-        "package": "cathedral-desktop",
-        "entry": "distribution/desktop/main.rs",
-        "target": "x86_64-unknown-none",
-        "features": [
-          "shell"
-        ]
+        "inside": 2
       }
     ]
   }

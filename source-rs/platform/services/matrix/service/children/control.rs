@@ -1,11 +1,13 @@
-//! Forwarded owner requests stay pending while upstream child work can progress.
+//! Forwarded requests stay pending while upstream child work can progress.
 //! Control is a FIFO request/reply stream the child answers in order, so an
 //! unanswered request is counted and its late reply skipped rather than letting
-//! it be read as the answer to a newer request. A slow child costs the owner a
+//! it be read as the answer to a newer request. A slow child costs the asker a
 //! timeout; only a child that stops answering altogether loses its control link.
+//! One request may be pending per child: the owner's own, or a health probe
+//! sent before a sibling's close request, acted on when it answers.
 use super::*;
 
-/// Unanswered owner requests tolerated before the control link is retired.
+/// Unanswered requests tolerated before the control link is retired.
 const MAX_STALE: u8 = 8;
 
 impl Children {
@@ -22,21 +24,26 @@ impl Children {
             Err(Error(abi::PEER_CLOSED as i64))
         }
     }
-    pub(in crate::service) fn wait(&self) -> (Option<Handle>, Option<u64>) {
-        match &self.pending {
-            Some((_, slot, deadline)) => (
-                if self.retiring.is_some() {
-                    None
-                } else {
-                    self.slots[*slot]
-                        .as_ref()
-                        .and_then(|child| child.control)
-                        .map(|control| control.1)
-                },
-                Some(*deadline),
-            ),
-            None => (None, None),
+    /// The control replies to wait for and the earliest deadline among them.
+    pub(in crate::service) fn wait(&self) -> ([Option<Handle>; 2], Option<u64>) {
+        let mut handles = [None; 2];
+        let mut deadline: Option<u64> = None;
+        for (slot, handle) in handles.iter_mut().enumerate() {
+            let Some((_, until, _)) = &self.pending[slot] else {
+                continue;
+            };
+            if self.retiring[slot].is_none() {
+                *handle = self.slots[slot]
+                    .as_ref()
+                    .and_then(|child| child.control)
+                    .map(|control| control.1);
+            }
+            deadline = Some(match deadline {
+                Some(d) if !time::reached(d, *until) => d,
+                _ => *until,
+            });
         }
+        (handles, deadline)
     }
     pub(in crate::service) fn finish(
         &mut self,
@@ -44,13 +51,29 @@ impl Children {
         world: &mut World,
         parent: &mut Parent,
     ) -> Result<Option<usize>, Error> {
-        let Some((request, slot, deadline)) = self.pending else {
-            return Ok(None);
-        };
         let mut retired = None;
+        for slot in 0..2 {
+            if self.finish_slot(slot, server, world, parent)? {
+                retired = Some(slot);
+            }
+        }
+        Ok(retired)
+    }
+    /// Whether the child in `slot` was retired while answering.
+    fn finish_slot(
+        &mut self,
+        slot: usize,
+        server: &mut Server,
+        world: &mut World,
+        parent: &mut Parent,
+    ) -> Result<bool, Error> {
+        let Some((request, deadline, purpose)) = self.pending[slot] else {
+            return Ok(false);
+        };
+        let mut retired = false;
         let now = time::now()?;
         let mut bytes = [0; 64];
-        let result = if let Some(error) = self.retiring {
+        let result = if let Some(error) = self.retiring[slot] {
             Err(Error(error))
         } else {
             match self.slots[slot].as_ref().and_then(|child| child.control) {
@@ -58,18 +81,18 @@ impl Children {
                 None => Err(Error(abi::PEER_CLOSED as i64)),
             }
         };
-        let response = match result {
+        let answer = match result {
             Ok(len) => {
                 let child = self.slots[slot].as_mut().unwrap();
                 if child.stale > 0 {
-                    // The answer to a request the owner already gave up on.
+                    // The answer to a request the asker already gave up on.
                     child.stale -= 1;
-                    return Ok(None);
+                    return Ok(false);
                 }
-                wire::decode(&bytes[..len]).unwrap_or(wire::error(abi::IO_ERROR))
+                Ok(wire::decode(&bytes[..len]).unwrap_or(wire::error(abi::IO_ERROR)))
             }
             Err(Error(code)) if code == abi::TIMED_OUT as i64 && !time::reached(now, deadline) => {
-                return Ok(None);
+                return Ok(false);
             }
             Err(Error(code)) if code == abi::TIMED_OUT as i64 => {
                 let child = self.slots[slot].as_mut().unwrap();
@@ -80,22 +103,35 @@ impl Children {
                     send.close()?;
                     receive.close()?;
                 }
-                wire::error(abi::TIMED_OUT)
+                Err(abi::TIMED_OUT)
             }
             Err(error) => {
                 // Defer teardown while another exchange owns the parent/provider
-                // stream. A ready owner reply above can still complete normally.
+                // stream. A ready reply above can still complete normally.
                 if parent.upstream_busy() || parent.storing() {
-                    self.retiring = Some(error.0);
-                    return Ok(None);
+                    self.retiring[slot] = Some(error.0);
+                    return Ok(false);
                 }
                 // A dead child cannot answer; reclaim it and its subtree.
                 self.stop(slot, server, world, parent)?;
-                retired = Some(slot);
-                wire::error(error.0 as u64)
+                retired = true;
+                Err(error.0 as u64)
             }
         };
-        self.pending = None;
+        self.pending[slot] = None;
+        self.retiring[slot] = None;
+        let response = match (purpose, answer) {
+            (Purpose::Owner, Ok(words)) => words,
+            (Purpose::Owner, Err(code)) => wire::error(code),
+            // The sibling goes only if it answered and reported nothing it would lose.
+            (Purpose::Close, Ok(words)) if words[0] == 0 && words[1] == 0 => {
+                self.stop(slot, server, world, parent)?;
+                retired = true;
+                [0; 8]
+            }
+            (Purpose::Close, _) if retired => [0; 8],
+            (Purpose::Close, _) => wire::error(abi::BUSY),
+        };
         server.reply(&request, &wire::encode(response))?;
         Ok(retired)
     }

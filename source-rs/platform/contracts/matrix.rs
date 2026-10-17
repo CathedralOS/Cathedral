@@ -44,6 +44,10 @@ pub const KEY_SOURCE: u64 = 104; // key,state; physical/root adapter only
 pub const HEALTH: u64 = 105;
 pub const SPAWN: u64 = 106; // local child slot, current launch index, loan bitmask, argument
 pub const STOP: u64 = 107; // local child slot; return after complete subtree reclamation
+/// Host to child over its control link before stopping it for a sibling's
+/// CLOSE: [LOSS, 0..]. The reply's word one is the work the child would lose
+/// if stopped now, zero meaning none. A child that does not answer is kept.
+pub const LOSS: u64 = 121;
 // Owner-only routing. Two bits per hop (1/2 = local child 0/1); child endpoints
 // reject the entire encoded opcode. No process IDs or global paths are accepted.
 pub const OP_BITS: u32 = 16;
@@ -110,6 +114,14 @@ pub const PRESENT_LIMIT: usize = 4;
 /// local name u64, x/y/w/h u16 each, RGB u32; all little endian. An unused record
 /// is entirely zero. No buffers, erases or allocation; names remain caller-local.
 pub const PRESENT_RECTS: u64 = 13;
+
+/// Child requests on the interaction connection. LAUNCH: [LAUNCH, object, 0..]
+/// asks the host to run an object from the requester's realm as its sibling,
+/// in the other slot, which the owner must have opened with LAUNCH_POLICY; the
+/// reply names the slot. CLOSE: [CLOSE, 0..] asks the host to stop the sibling,
+/// which it does only after a LOSS probe answers with nothing it would lose.
+pub const LAUNCH: u64 = 14;
+pub const CLOSE: u64 = 15;
 pub fn rectangles(epoch: u64, revision: u64, updates: &[Packet]) -> Option<Packet> {
     if updates.is_empty() || updates.len() > 2 || epoch == 0 || revision == 0 {
         return None;
@@ -206,14 +218,29 @@ pub const STORAGE_REVOKE: u64 = 114;
 pub const STORAGE_STATUS: u64 = 115;
 pub const RUN_PAGES: u64 = 112; // owner: slot, private pages, reader pages; rest zero
 /// Owner-only: run a program held in this matrix's realm. [RUN_OBJECT, slot,
-/// object, role, argument, channels, descendant slots, CPU ceiling]. The matrix
-/// reads the object through its own binding, admits it with `role` as its first
-/// entry argument and `argument` as its second, and grants the child the
-/// object's subtree as its realm, so the program's state nests under its code.
-/// The root adapter reads from its first provider root. RUN_PAGES and
-/// RUN_MEMORY stage the child's allowances exactly as for RUN. Answered once
-/// the child is admitted, or with the provider's refusal.
+/// object, scope, argument, channels, descendant slots, CPU ceiling]. The matrix
+/// reads the object through its own binding, admits it with `argument` as its
+/// second entry argument, and grants the child `scope` as its realm: the
+/// object itself, so the program's state nests under its code, or zero for
+/// everything the matrix holds. The root adapter reads from its first provider
+/// root. RUN_PAGES and RUN_MEMORY stage the child's allowances exactly as for
+/// RUN. Answered once the child is admitted, or with the provider's refusal.
 pub const RUN_OBJECT: u64 = 117;
+/// Owner-only standing policy for what a child's LAUNCH may put into a slot:
+/// [LAUNCH_POLICY, slot, private pages, reader pages, channels, descendant
+/// slots, CPU ceiling, surfaces], then [LAUNCH_PLACE, slot, x, y, width,
+/// height, key mask, 0] for where it goes. A slot without a policy refuses
+/// launches. A launched child is granted its object as its realm.
+pub const LAUNCH_POLICY: u64 = 118;
+pub const LAUNCH_PLACE: u64 = 119;
+/// Owner-only: [STORAGE_BINDING, slot, 0..] -> [0, source, scope] of the
+/// child's live storage binding, or DENIED while it has none.
+pub const STORAGE_BINDING: u64 = 120;
+/// How long a matrix waits for its provider to answer one forwarded request
+/// before retiring that stream as stalled. A durable commit on the lab disk
+/// takes on the order of 150 ms, so the bound leaves it several times over;
+/// nested forwards and program reads add a hop's margin on top.
+pub const STORAGE_DEADLINE: u64 = 600;
 
 #[cfg(test)]
 mod rectangle_tests {

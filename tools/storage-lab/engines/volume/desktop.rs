@@ -1,19 +1,21 @@
 //! Independent oracle for the default desktop image after its interactive test:
 //! construct every expected record without importing the guest store, then
-//! compare the whole retained set. The notes root holds the installed programs
-//! as objects one to four; two notes whose first revisions share one manifest
-//! nest under the Notes program, and the color under the color program. The
-//! ungranted root holds nothing.
+//! compare the whole retained set. The notes root holds the installed objects
+//! one to six: the chooser, the folder of users, and inside it the template
+//! user with its chrome, Notes and Colors. The test copies the template into a
+//! user, so seven to ten share every manifest with three to six; two notes
+//! whose first revisions share one manifest nest under the user's Notes, and
+//! the color under its Colors. The ungranted root holds nothing.
 use super::*;
 use crate::chunks::{Layout, Policy, Store};
 use redb::ReadableTable;
 use std::collections::BTreeMap;
 
 const ROOT: u8 = 0;
-/// Object numbers, in profile order: workspace, Notes, Colors, launcher.
-const NOTES_PROGRAM: u64 = 2;
-const COLORS_PROGRAM: u64 = 3;
-const PROGRAMS: u64 = 4;
+/// Installed objects, in profile order.
+const USERS: u64 = 2;
+const TEMPLATE: u64 = 3;
+const INSTALLED: u64 = 6;
 
 fn key(kind: u8, suffix: &[u8]) -> Vec<u8> {
     let mut key = vec![ROOT, kind];
@@ -31,8 +33,8 @@ fn edge(parent: u64, child: u64) -> Vec<u8> {
     key(b't', &suffix)
 }
 pub fn verify(path: &Path, offset: u64, bytes: u64, programs: &[seed::Program]) -> Result<()> {
-    if programs.len() as u64 != PROGRAMS {
-        return Err("the desktop installs four programs".into());
+    if programs.len() as u64 != INSTALLED {
+        return Err("the desktop installs six objects".into());
     }
     let db = open(Region::new(Arc::new(Image::open(path)?), offset, bytes)?)?;
     let tx = db.begin_read()?;
@@ -43,6 +45,26 @@ pub fn verify(path: &Path, offset: u64, bytes: u64, programs: &[seed::Program]) 
         actual.insert(key.value().to_vec(), value.value().to_vec());
     }
     let mut expected = seed::expected(programs);
+    // The user is a subtree copy of the template: the template's own copy
+    // sits in the users folder, and its children follow in listing order with
+    // their parents remapped, all at revision one and sharing content.
+    let user = INSTALLED + 1;
+    for (index, program) in programs.iter().enumerate().skip(TEMPLATE as usize - 1) {
+        let source = index as u64 + 1;
+        let copy = user + source - TEMPLATE;
+        let parent = if source == TEMPLATE {
+            USERS
+        } else {
+            user + program.parent - TEMPLATE
+        };
+        let head = expected[&key(b'h', &source.to_be_bytes())].clone();
+        let mut head = head[..48].to_vec();
+        head.extend_from_slice(&parent.to_le_bytes());
+        expected.insert(key(b'h', &copy.to_be_bytes()), head.clone());
+        expected.insert(event(copy, 1), head);
+        expected.insert(edge(parent, copy), Vec::new());
+    }
+    let (notes, colors) = (user + 2, user + 3);
     let mut store = Store::new(Policy {
         chunk_bytes: 4096,
         inline_limit: 128,
@@ -55,8 +77,8 @@ pub fn verify(path: &Path, offset: u64, bytes: u64, programs: &[seed::Program]) 
     // its toggle.
     let original = store.put(b"NTS1hello cathedral");
     let edited = store.put(b"NTS1hello cathedral two");
-    let unset = store.put(b"MC01\x02\x00");
-    let toggled = store.put(b"MC01\x02\x01");
+    let unset = store.put(b"MC01\x00\x00");
+    let toggled = store.put(b"MC01\x00\x01");
     let mut manifests = Vec::new();
     for version in [&original, &edited, &unset, &toggled] {
         for (k, v) in store.records(version) {
@@ -70,17 +92,17 @@ pub fn verify(path: &Path, offset: u64, bytes: u64, programs: &[seed::Program]) 
             expected.insert(key(k[0], &k[1..]), v);
         }
     }
-    let first = colors::head(1, &manifests[0], 4 + "hello cathedral".len(), NOTES_PROGRAM);
-    let second = colors::head(2, &manifests[1], 4 + "hello cathedral two".len(), NOTES_PROGRAM);
-    let created = colors::head(1, &manifests[2], 6, COLORS_PROGRAM);
-    let color = colors::head(2, &manifests[3], 6, COLORS_PROGRAM);
-    let (note, copy, swatch) = (PROGRAMS + 1, PROGRAMS + 2, PROGRAMS + 3);
+    let first = colors::head(1, &manifests[0], 4 + "hello cathedral".len(), notes);
+    let second = colors::head(2, &manifests[1], 4 + "hello cathedral two".len(), notes);
+    let created = colors::head(1, &manifests[2], 6, colors);
+    let color = colors::head(2, &manifests[3], 6, colors);
+    let (note, copy, swatch) = (colors + 1, colors + 2, colors + 3);
     expected.insert(key(b'h', &note.to_be_bytes()), first.clone());
     expected.insert(key(b'h', &copy.to_be_bytes()), second.clone());
     expected.insert(key(b'h', &swatch.to_be_bytes()), color.clone());
-    expected.insert(edge(NOTES_PROGRAM, note), Vec::new());
-    expected.insert(edge(NOTES_PROGRAM, copy), Vec::new());
-    expected.insert(edge(COLORS_PROGRAM, swatch), Vec::new());
+    expected.insert(edge(notes, note), Vec::new());
+    expected.insert(edge(notes, copy), Vec::new());
+    expected.insert(edge(colors, swatch), Vec::new());
     expected.insert(event(note, 1), first);
     expected.insert(event(copy, 2), second);
     expected.insert(event(swatch, 1), created);
@@ -93,7 +115,7 @@ pub fn verify(path: &Path, offset: u64, bytes: u64, programs: &[seed::Program]) 
         return Err("desktop records differ from the independent object oracle".into());
     }
     println!(
-        "VERIFIED: four installed programs, two notes sharing one manifest under Notes, the color under Colors, exact heads/history/edges/quota, empty second root ({} records)",
+        "VERIFIED: six installed objects, a user copied from the template, two notes sharing one manifest under its Notes, the color under its Colors, exact heads/history/edges/quota, empty second root ({} records)",
         actual.len()
     );
     Ok(())

@@ -12,9 +12,10 @@ it runs the same default composition as:
 python tools/boot-harness-rs/run.py --release --window
 ```
 
-Click **Notes** or **Colors** in Programs, then click the workspace to focus it.
-Notes: type, F1 save/check, F2 reload. Colors: Enter changes color. Close App
-closes the workspace; unsaved notes block replacement until saved or reloaded.
+Click **NEW** to copy the template user, click the user to run it, then click
+**Notes** or **Colors** in its chrome and click the program to focus it. Notes:
+type, F1 save/check, F2 reload. Colors: Enter changes color. CLOSE stops the
+program unless it would lose work; an unsaved note stays until saved or reloaded.
 Build output and serial diagnostics appear in the integrated terminal. Close
 QEMU or press Ctrl+C there to stop. This uses VS Code's terminal launcher, not
 an attached kernel debugger.
@@ -267,7 +268,8 @@ sampling; this is regression evidence, not a response-time guarantee.
 Profiles with storage may list `startup.programs`: packages the harness builds,
 trims to their loadable bytes and installs into the storage image as objects
 one, two, three and so on of the notes root, each optionally `inside` an earlier
-program. A sidecar beside the image records what was installed, so an unchanged
+entry; an entry marked `folder` is an empty object for others to sit inside. A
+sidecar beside the image records what was installed, so an unchanged
 set never reopens the image and a changed program is republished as a new
 revision on the next launch. The installer replaces only programs: an image
 whose objects at those numbers hold anything else is refused rather than

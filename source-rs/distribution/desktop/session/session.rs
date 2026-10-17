@@ -1,9 +1,9 @@
-// The F5 desktop. Admit providers and the funded root matrix, lay out the
-// workspace and the program menu from the programs installed in the notes
-// root, start physical input, then serve menu choices and supervise storage.
-// What each choice does lives in shell/; the apps live in app/ and
-// ../applications/notes. The lab module composes the same admission, apps
-// and budgets into the probe desktop from the boot catalogue.
+// The F5 desktop. Admit providers and the funded root matrix, show the chooser
+// the folder of users, open the workspace slot to what it launches, start
+// physical input, then furnish each user matrix that appears and supervise
+// storage. Admission and standing policy live in shell/; the chooser and the
+// apps are programs in the store. The lab module composes the same admission,
+// apps and budgets into the probe desktop from the boot catalogue.
 use super::*;
 use cathedral_platform_contracts::input;
 use cathedral_user_runtime::{ipc, task::Launch};
@@ -33,24 +33,36 @@ pub(crate) fn run() -> u64 {
             0,
         ],
     );
+    shell::chooser(matrix);
     shell::workspace(matrix);
-    shell::menu(matrix);
     session.start_input();
-    cathedral_user_runtime::write(b"Cathedral desktop: ready; choose a program\n").unwrap();
-    let (mut sequence, mut active, mut blocked) = (0, 0, 0);
+    cathedral_user_runtime::write(b"Cathedral desktop: ready; choose a user\n").unwrap();
     loop {
-        let reply = call(
-            matrix,
-            wire::route([shell::MENU_STATUS, active, blocked, 0, 0, 0, 0, 0], 1).unwrap(),
-        );
-        assert_eq!(reply[0], 0);
-        if reply[1] != sequence {
-            sequence = reply[1];
-            blocked = shell::select(&mut session, &mut active, reply[2]);
+        // The chooser launches a user matrix into the workspace slot; the
+        // desktop learns of it by its realm and gives it its chrome. The app
+        // the chrome launches is tracked only so storage replacement can
+        // restore its realm.
+        let user = shell::realm_of(matrix, [wire::STORAGE_BINDING, 1, 0, 0, 0, 0, 0, 0]);
+        if user != session.user {
+            session.user = user;
+            session.app = 0;
+            if user != 0 {
+                shell::furnish(matrix, user);
+                cathedral_user_runtime::write(b"Cathedral desktop: user matrix furnished\n")
+                    .unwrap();
+            } else {
+                cathedral_user_runtime::write(b"Cathedral desktop: user matrix closed\n").unwrap();
+            }
+        }
+        if user != 0 {
+            session.app = shell::realm_of(
+                matrix,
+                wire::route([wire::STORAGE_BINDING, 1, 0, 0, 0, 0, 0, 0], 1).unwrap(),
+            );
         }
         persistence::supervise(&mut session);
-        // An owner poll is only the menu's notification path; rendering and input
-        // still wake the apps independently through their matrix connections.
+        // Polling is only how the owner notices; rendering and input wake the
+        // programs independently through their matrix connections.
         match matrix
             .1
             .receive_until(&mut [0; 64], time::after(10).unwrap())

@@ -7,22 +7,25 @@ instructions. [Owner questions](../OWNER_QUESTIONS.md) own unresolved semantics.
 ## Default desktop
 
 F5 and `python tools/boot-harness-rs/run.py --release --window` share
-[one composition](distribution/profile.json). Its Programs menu opens Notes or
-Colors in a nested workspace without restarting QEMU. Notes keeps up to eight
+[one composition](distribution/profile.json). It boots to a chooser over the
+folder of users: NEW copies the template user as a subtree copy, and choosing a
+user runs it as a matrix whose chrome, a second chooser over the user's realm,
+launches that user's Notes or Colors beside itself. Notes keeps up to eight
 notes as private objects on the experimental database disk; a duplicate is the
-store's copy of the saved note and shares its content. Unsaved drafts block
-switching/closing until saved or explicitly reloaded, and a busy note is left
-open. Colors keeps its color. Every program the desktop runs is an object in
-the store, launched from the matrix's own realm and granted its object's
-subtree, so its state nests under its code. [The distribution map](distribution/README.md)
-links admission, launcher, apps and provider boundaries.
+store's copy of the saved note and shares its content. Closing asks the program
+what it would lose and keeps it open on any answer but nothing, so an unsaved
+draft stays until saved or explicitly reloaded. Colors keeps its color. Every
+program is an object in the store, launched from a realm by whoever can see it
+there and granted its object's subtree, so its state nests under its code and
+a user's state nests under the user. [The distribution map](distribution/README.md)
+links admission, choosers, apps and provider boundaries.
 
 `python tools/boot-harness-rs/desktop_test.py` checks this actual image through
-physical input, exact saved text/status, duplicate and switch, repeated app
-replacement and cold reboot, then has an independent host model verify the
-retained records. Older profiles remain focused fault/mechanism fixtures. This is
-still a bounded installed menu and one active workspace app, not general app
-installation or a full window manager.
+physical input, a copied user, exact saved text/status, duplicate and switch,
+repeated app replacement and cold reboot, then has an independent host model
+verify the retained records. Older profiles remain focused fault/mechanism
+fixtures. This is still one chooser over a folder and one app per user at a
+time, not general app installation or a full window manager.
 
 ## Interface ownership
 
@@ -313,7 +316,9 @@ Read-only rights and per-subtree quotas remain future work; the visible desktop
 consumes these grants. A matrix also runs programs from its realm: `RUN_OBJECT`
 reads an object on the matrix's own binding, admits it from the sealed reply,
 and grants the child that object's subtree, whose root the provider keeps
-read-only to its holder.
+read-only to its holder. A child's `LAUNCH` does the same through the child's
+own binding into a slot the owner opened with a standing policy, and `CLOSE`
+stops that sibling only after it answers `LOSS` with nothing to lose.
 
 ## Userspace register and interrupt grants
 

@@ -10,9 +10,12 @@ pub(crate) struct Session {
     #[cfg(feature = "database-probes")]
     pub(crate) database_fresh: bool,
     pub matrix: Pair,
-    /// The program open in the workspace, by object number, or zero.
+    /// The realm of the user matrix in the workspace slot, and of the app its
+    /// chrome launched, by object number, or zero.
     #[cfg(feature = "shell")]
-    pub(crate) program: u64,
+    pub(crate) user: u64,
+    #[cfg(feature = "shell")]
+    pub(crate) app: u64,
     /// Lab compositions add a capped spinner; the shell never does.
     #[cfg(not(feature = "shell"))]
     pub pressure: bool,
@@ -124,16 +127,17 @@ pub(crate) fn start() -> Session {
     let labels: &[(u64, u64, &[u8])] = if cfg!(feature = "shell") {
         &[
             (40, 50, b"CATHEDRAL".as_slice()),
-            (40, 110, b"PROGRAMS"),
-            (330, 110, b"WORKSPACE"),
-            (40, 330, b"CLICK A PROGRAM"),
-            (40, 362, b"THEN CLICK APP"),
-            (40, 420, b"NOTES: F1 SAVE"),
-            (40, 452, b"F2 LOAD F3 COPY"),
-            (40, 484, b"F4 NEXT NOTE"),
-            (360, 420, b"COLORS: ENTER"),
-            (360, 452, b"CHANGES COLOR"),
-            (360, 484, b"NO REBOOT NEEDED"),
+            (40, 110, b"USERS"),
+            (280, 110, b"WORKSPACE"),
+            (40, 330, b"NEW COPIES THE"),
+            (40, 362, b"TEMPLATE USER"),
+            (40, 394, b"PICK ONE TO RUN"),
+            (40, 440, b"NOTES: F1 SAVE"),
+            (40, 472, b"F2 LOAD F3 COPY"),
+            (40, 504, b"F4 NEXT NOTE"),
+            (360, 440, b"COLORS: ENTER"),
+            (360, 472, b"CHANGES COLOR"),
+            (360, 504, b"CLOSE ASKS FIRST"),
         ]
     } else if cfg!(feature = "notes") {
         &[
@@ -173,11 +177,20 @@ pub(crate) fn start() -> Session {
     let root = Launch::at(2).unwrap();
     // Descendant reservations return to the surviving distribution owner on root
     // death. Re-fund the replacement explicitly; restarting never mints budgets.
+    // The numbers mirror what each profile grants the root matrix. The shell's
+    // root is a hub over a user matrix: it retains that subtree's images beside
+    // their replacements and lends the user matrix a reader budget of its own.
     cathedral_user_runtime::resources::assign(
         root,
         cathedral_user_runtime::resources::Limits {
             private_pages: if cfg!(feature = "notes") { 128 } else { 16 },
-            reader_pages: if cfg!(feature = "notes") { 128 } else { 8 },
+            reader_pages: if cfg!(feature = "shell") {
+                256
+            } else if cfg!(feature = "notes") {
+                128
+            } else {
+                8
+            },
             channels: 20,
         },
     )
@@ -218,7 +231,9 @@ pub(crate) fn start() -> Session {
         database_fresh,
         matrix,
         #[cfg(feature = "shell")]
-        program: 0,
+        user: 0,
+        #[cfg(feature = "shell")]
+        app: 0,
         #[cfg(not(feature = "shell"))]
         pressure,
         extent: [info[1], info[2]],

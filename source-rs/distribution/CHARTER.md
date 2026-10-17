@@ -15,10 +15,12 @@ The profile also selects the independent `platform/services/display` executable;
 composition chooses that provider without moving its implementation into the distro.
 
 `desktop` is the ordinary initial userspace executable. It starts display, input,
-database storage and a funded root matrix. Its isolated Programs menu requests
-Notes or Colors; desktop policy admits the selected app in a nested workspace and
-protects unsaved notes during replacement. Platform owners enforce capabilities,
-clipping, focus and resource conservation. Follow the [composition map](README.md).
+database storage and a funded root matrix, runs a chooser over the folder of
+users and opens a slot for what it launches; a user matrix gets its chrome, a
+chooser over the user's realm, the same way. Desktop policy sets budgets and
+placement; the matrices launch what their choosers can see and keep a program
+that would lose work. Platform owners enforce capabilities, clipping, focus and
+resource conservation. Follow the [composition map](README.md).
 
 `init` and the older status/counter composition remain an explicit legacy fixture.
 `user_programs` selects smoke fixtures; `startup` selects the ordinary desktop.

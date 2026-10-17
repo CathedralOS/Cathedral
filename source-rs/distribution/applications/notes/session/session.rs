@@ -172,6 +172,22 @@ pub fn run(style: u64, environment: Environment) {
             Ok(_) => {
                 let pair = control.unwrap();
                 match pair.0.receive(&mut bytes) {
+                    // Closing asks what would be lost: an unconfirmed draft.
+                    Ok(len)
+                        if wire::decode(&bytes[..len])
+                            .is_some_and(|words| words[0] == wire::LOSS) =>
+                    {
+                        let _ = pair.1.send(&wire::encode([
+                            0,
+                            u64::from(draft != confirmed),
+                            0,
+                            0,
+                            0,
+                            0,
+                            0,
+                            0,
+                        ]));
+                    }
                     Ok(_) => report(pair, &notes, &draft, draft != confirmed, error),
                     Err(_) => control = None,
                 }

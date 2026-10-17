@@ -1,8 +1,8 @@
 # Private notes
 
 An ordinary application of the matrix and object storage APIs. Press **F5**,
-click **Notes** in Programs, then click the workspace to focus it. The equivalent
-default boot is:
+choose a user, click **Notes** in its chrome, then click the note to focus it.
+The equivalent default boot is:
 
 ```powershell
 python tools/boot-harness-rs/run.py --release --window

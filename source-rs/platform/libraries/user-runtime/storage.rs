@@ -11,7 +11,10 @@ use crate::{
     time,
 };
 use cathedral_platform_contracts::{matrix, storage};
-const DEADLINE_TICKS: u64 = 300;
+/// Longer than the matrix chain's own deadline, which grows by a hop's margin
+/// at each level, so a stalled provider is reported by a matrix's verdict
+/// rather than by this client giving up first.
+const DEADLINE_TICKS: u64 = 2 * matrix::STORAGE_DEADLINE;
 pub struct Scope {
     pair: (Handle, Handle),
     binding: u64,

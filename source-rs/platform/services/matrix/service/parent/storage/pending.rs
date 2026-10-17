@@ -6,17 +6,23 @@
 //! Legacy shared-stream fixtures still serialize their upstream requests.
 use super::*;
 use cathedral_platform_contracts::storage as protocol;
-/// The owner's request to run a program from this matrix's realm, carried
-/// while the object is read and answered once the child is admitted.
+/// A request to run a program from this matrix's realm, carried while the
+/// object is read and answered once the child is admitted. The owner's names
+/// the realm to grant; a child's is read with the requester's scope stamped,
+/// so a launcher can only launch what it can see.
 #[derive(Clone, Copy)]
 pub(in crate::service) struct LaunchRequest {
     pub slot: usize,
     pub object: u64,
-    pub role: u64,
+    pub scope: u64,
     pub argument: u64,
     pub channels: u64,
     pub descendants: u64,
     pub cpu: u64,
+    /// A child's launch carries the slot's standing pages; the owner's uses
+    /// what RUN_PAGES and RUN_MEMORY staged, consumed only on admission.
+    pub pages: Option<[u64; 2]>,
+    pub stamp: u64,
 }
 /// A program read that finished: the owner's request to answer and the sealed
 /// image, or why there is none.
@@ -72,12 +78,16 @@ impl Pending {
                 Step::Forward
             },
             source: 0,
-            deadline: time::after(if upstream { 250 } else { 150 })?,
+            deadline: time::after(if upstream {
+                wire::STORAGE_DEADLINE + 100
+            } else {
+                wire::STORAGE_DEADLINE
+            })?,
             launch: None,
         })
     }
-    /// Read a program on this matrix's own binding; two round trips plus the
-    /// attachment, so the deadline is the longest of all.
+    /// Read a program on this matrix's own binding: a head and a bulk read,
+    /// behind a refresh when nested, each bounded like a forwarded request.
     pub(super) fn launch(
         request: Request,
         plan: LaunchRequest,
@@ -99,7 +109,7 @@ impl Pending {
             receive: None,
             step: if upstream { Step::Refresh } else { Step::Head },
             source: 0,
-            deadline: time::after(400)?,
+            deadline: time::after(if upstream { 3 } else { 2 } * wire::STORAGE_DEADLINE + 100)?,
             launch: Some(plan),
         })
     }
@@ -271,7 +281,15 @@ impl Parent {
     fn send_storage(&mut self, p: &mut Pending) -> Result<Option<wire::Packet>, Error> {
         let mut words = p.words;
         let op = words[0] & 0xffff;
-        if let Some(client) = p.request.client {
+        if let Some(plan) = p.launch {
+            // The matrix's own read: its upstream binding, or at the root its
+            // first provider root. A child's launch is narrowed to that child's
+            // realm; the parent stamps this matrix's scope on top.
+            p.source = 0;
+            if protocol::stamp(&mut words, plan.stamp).is_err() {
+                return Ok(Some(wire::error(abi::DENIED)));
+            }
+        } else if let Some(client) = p.request.client {
             let slot = self.storage_slot(client);
             let incarnation = p.request.incarnation;
             let (source, scope) = match self.scopes.binding(slot, incarnation) {
@@ -301,10 +319,6 @@ impl Parent {
             {
                 return Ok(Some(wire::error(abi::DENIED)));
             }
-        } else {
-            // The matrix's own read: its upstream binding, or at the root its
-            // first provider root. The parent stamps this matrix's scope.
-            p.source = 0;
         }
         let pair = if self.upstream {
             words[0] = op | (self.storage_epoch << wire::STORAGE_SCOPE_BITS);
@@ -323,7 +337,11 @@ impl Parent {
             } else {
                 "root-send"
             },
-            p.request.client.map_or(2, |c| self.storage_slot(c) as u64),
+            match (p.launch, p.request.client) {
+                (Some(_), _) => 2,
+                (None, Some(c)) => self.storage_slot(c) as u64,
+                (None, None) => 2,
+            },
             words[0] & 0xffff,
         );
         match p.attachment.take() {

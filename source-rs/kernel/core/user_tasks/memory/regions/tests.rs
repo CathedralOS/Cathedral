@@ -164,25 +164,52 @@ fn global_capacity_covers_all_object_budgets_including_orphan_readers() {
         .position(|r| r.owner == Some(0))
         .unwrap();
     regions.release(0, regions.handle(0, owned)).unwrap();
-    // Three orphan readers and three owned objects still charge account zero.
-    assert_eq!(regions.allocate(0, MAX_PAGES - 3), Err(abi::NO_MEMORY));
-    assert_eq!(regions.allocate(0, MAX_PAGES - 6), Ok(0));
+    // The remaining orphan readers and owned objects still charge account zero.
+    let charged = MAX_SHARED_REGIONS - 1 + MAX_PRIVATE_REGIONS - 1;
+    assert_eq!(
+        regions.allocate(0, MAX_PAGES - charged + 1),
+        Err(abi::NO_MEMORY)
+    );
+    assert_eq!(regions.allocate(0, MAX_PAGES - charged), Ok(0));
     assert_eq!(regions.access(1, reader), Err(abi::BAD_HANDLE));
 }
 #[test]
 fn object_pressure_is_separate_from_page_pressure() {
-    let mut regions = model();
+    // Pages are ample on both sides; only the counts of objects and readers bite.
+    let mut regions = Regions::new(
+        3,
+        &[
+            Grant {
+                task: 0,
+                private_pages: MAX_SHARED_REGIONS + MAX_PRIVATE_REGIONS,
+                shared_pages: 0,
+            },
+            Grant {
+                task: 1,
+                private_pages: 4,
+                shared_pages: MAX_SHARED_REGIONS,
+            },
+            Grant {
+                task: 2,
+                private_pages: 4,
+                shared_pages: 0,
+            },
+        ],
+    )
+    .unwrap();
+    // Task one accepts as many objects as it may hold readers for; each is
+    // closed by its producer once accepted, so the producer's own count stays free.
+    for _ in 0..MAX_SHARED_REGIONS {
+        let (index, h) = allocate(&mut regions, 0, 1);
+        regions.offer(0, h, 1).unwrap();
+        regions.accept(1, 0, h).unwrap();
+        regions.close(index, 0);
+    }
     for _ in 0..MAX_PRIVATE_REGIONS {
         allocate(&mut regions, 0, 1);
     }
     assert_eq!(regions.allocate(0, 1), Err(abi::NO_MEMORY));
     let (peer, _) = allocate(&mut regions, 1, 4);
-    for index in 0..MAX_SHARED_REGIONS {
-        let h = regions.handle(0, index);
-        regions.offer(0, h, 1).unwrap();
-        regions.accept(1, 0, h).unwrap();
-        regions.close(index, 0);
-    }
     let (extra, h) = allocate(&mut regions, 2, 1);
     regions.offer(2, h, 1).unwrap();
     assert_eq!(regions.accept(1, 2, h), Err(abi::NO_MEMORY));
@@ -208,7 +235,7 @@ fn invalid_grants_and_tokens_fail_closed() {
         alloc::vec![Grant {
             task: 0,
             private_pages: 0,
-            shared_pages: MAX_PAGES + 1
+            shared_pages: MAX_READER_PAGES + 1
         }],
         alloc::vec![Grant { task: 0, private_pages: 1, shared_pages: 0 }; 2],
     ] {

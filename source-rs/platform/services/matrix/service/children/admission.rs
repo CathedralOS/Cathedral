@@ -55,16 +55,22 @@ impl Children {
             return Err(Error(abi::DENIED as i64));
         }
         let executable = Executable::at(image)?;
+        let pages = self.next_pages[slot].take().unwrap_or([0, 0]);
+        let frames = self.next_frames[slot].take();
         self.admit(
             slot,
             executable,
+            pages,
+            frames,
             [argument, channels, descendants, images, cpu],
             server,
             world,
         )
     }
-    /// Code from a sealed object read out of this matrix's realm; it lends no
-    /// catalogue grants, because its children come from its own realm.
+    /// Code from a sealed object read out of this matrix's realm. It lends no
+    /// catalogue grants, because its children come from its own realm, and it
+    /// enters with no first argument: a program's shape comes from what it is
+    /// handed, not from a role word.
     pub(super) fn run_object(
         &mut self,
         plan: super::parent::LaunchRequest,
@@ -75,25 +81,35 @@ impl Children {
         if self.slots[plan.slot].is_some() || !server.available(plan.slot) {
             return Err(Error(abi::BUSY as i64));
         }
-        let executable = Executable::from_object(object, plan.role)?;
+        let executable = Executable::from_object(object, 0)?;
+        let (pages, frames) = match plan.pages {
+            Some(pages) => (pages, None),
+            None => (
+                self.next_pages[plan.slot].take().unwrap_or([0, 0]),
+                self.next_frames[plan.slot].take(),
+            ),
+        };
         self.admit(
             plan.slot,
             executable,
+            pages,
+            frames,
             [plan.argument, plan.channels, plan.descendants, 0, plan.cpu],
             server,
             world,
         )
     }
+    #[allow(clippy::too_many_arguments)]
     fn admit(
         &mut self,
         slot: usize,
         executable: Executable,
+        [private_pages, reader_pages]: [u64; 2],
+        requested_frames: Option<u64>,
         [argument, channels, descendants, images, cpu]: [u64; 5],
         server: &mut Server,
         world: &mut World,
     ) -> Result<(), Error> {
-        let requested_frames = self.next_frames[slot].take();
-        let [private_pages, reader_pages] = self.next_pages[slot].take().unwrap_or([0, 0]);
         let default_frames = descendants
             .checked_add(1)
             .and_then(|n| n.checked_mul(256))
