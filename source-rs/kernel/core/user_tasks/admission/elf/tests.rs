@@ -46,7 +46,13 @@ fn accepts_static_image_and_retains_file_bytes_separately_from_bss() {
     let image = parse(&bytes).unwrap();
     assert_eq!(image.entry, USER_CODE);
     assert_eq!(image.segments().len(), 2);
-    assert_eq!(image.segments()[1].bytes, &[0x42]);
+    assert_eq!(
+        (
+            image.segments()[1].file_offset,
+            image.segments()[1].file_size
+        ),
+        (8192, 1)
+    );
     assert_eq!(image.segments()[1].memory_size, 8193);
     assert!(image.segments()[0].executable && !image.segments()[0].writable);
     assert!(image.segments()[1].writable && !image.segments()[1].executable);
@@ -71,6 +77,39 @@ fn rejects_truncation_overflow_and_oversized_header_tables() {
     let mut b = fixture();
     put16(&mut b, 56, 17);
     assert!(parse(&b).is_err());
+    // Program headers must sit in the first page, wherever the file is held.
+    let mut b = fixture();
+    put64(&mut b, 32, 4096 - 56);
+    assert!(matches!(parse(&b), Err(Error::Header)));
+}
+
+#[test]
+fn frames_are_checked_and_copied_one_page_at_a_time() {
+    let bytes = fixture();
+    let pages: Vec<Vec<u8>> = bytes
+        .chunks(4096)
+        .map(|chunk| {
+            let mut page = chunk.to_vec();
+            page.resize(4096, 0);
+            page
+        })
+        .collect();
+    let frames: Vec<u64> = pages.iter().map(|page| page.as_ptr() as u64).collect();
+    let image = parse_with(&pages[0], Contents::Frames(&frames)).unwrap();
+    let contiguous = parse(&bytes).unwrap();
+    assert_eq!(image.entry, contiguous.entry);
+    assert_eq!(image.segments(), contiguous.segments());
+    assert_eq!(image.contents.len(), 3 * 4096);
+    // A segment may not reach past the frames that hold the file, and the
+    // header page must be a whole page or the file's shorter prefix.
+    assert!(matches!(
+        parse_with(&pages[0], Contents::Frames(&frames[..2])),
+        Err(Error::Bounds)
+    ));
+    assert!(matches!(
+        parse_with(&pages[0][..63], Contents::Frames(&frames)),
+        Err(Error::Header)
+    ));
 }
 
 #[test]

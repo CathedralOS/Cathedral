@@ -1,17 +1,53 @@
 //! Image descriptions and pure geometry/permission validation before allocating frames.
 use super::{MAX_IMAGE_PAGES, PAGE, USER_CODE, USER_IMAGE_END};
 
-#[derive(Clone, Copy, Debug)]
-pub struct UserSegment<'a> {
+/// One loadable range: file bytes at `file_offset`, zero-filled to `memory_size`.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct UserSegment {
     pub address: u64,
-    pub bytes: &'a [u8],
+    pub file_offset: u64,
+    pub file_size: u64,
     pub memory_size: u64,
     pub writable: bool,
     pub executable: bool,
 }
 
+/// Where an image's file bytes live: contiguous kernel-readable bytes, or one
+/// identity-mapped frame per file page in file order. Segments are page-aligned
+/// in the file, so file page k is frame k and loading never needs a contiguous copy.
+#[derive(Clone, Copy, Debug)]
+pub enum Contents<'a> {
+    Bytes(&'a [u8]),
+    Frames(&'a [u64]),
+}
+impl Contents<'_> {
+    pub fn len(&self) -> usize {
+        match self {
+            Self::Bytes(bytes) => bytes.len(),
+            Self::Frames(frames) => frames.len() * PAGE as usize,
+        }
+    }
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+    /// Copy `len` file bytes starting at a page-aligned `file_offset` into `to`.
+    /// # Safety
+    /// `to` is writable for `len` bytes; every frame is a live identity-mapped
+    /// page; the range lies within the contents and within one file page.
+    pub unsafe fn copy_page(&self, file_offset: u64, to: *mut u8, len: usize) {
+        debug_assert!(file_offset.is_multiple_of(PAGE) && len <= PAGE as usize);
+        let from = match self {
+            Self::Bytes(bytes) => bytes[file_offset as usize..][..len].as_ptr(),
+            Self::Frames(frames) => frames[(file_offset / PAGE) as usize] as *const u8,
+        };
+        // SAFETY: Both ranges are in bounds and cannot overlap: the target is a
+        // fresh frame the caller owns exclusively.
+        unsafe { core::ptr::copy_nonoverlapping(from, to, len) }
+    }
+}
+
 /// Geometry/permission check, independent of live paging and physical allocation.
-pub fn valid_segments(segments: &[UserSegment<'_>]) -> bool {
+pub fn valid_segments(segments: &[UserSegment]) -> bool {
     if segments.is_empty() || segments.len() > 8 {
         return false;
     }
@@ -19,7 +55,8 @@ pub fn valid_segments(segments: &[UserSegment<'_>]) -> bool {
     for (index, segment) in segments.iter().enumerate() {
         if segment.memory_size == 0
             || segment.memory_size > USER_IMAGE_END - USER_CODE
-            || segment.bytes.len() as u64 > segment.memory_size
+            || segment.file_size > segment.memory_size
+            || !segment.file_offset.is_multiple_of(PAGE)
             || segment.address < USER_CODE
             || !segment.address.is_multiple_of(PAGE)
             || (segment.writable && segment.executable)
@@ -47,4 +84,37 @@ pub fn valid_segments(segments: &[UserSegment<'_>]) -> bool {
         }
     }
     true
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use alloc::vec::Vec;
+    #[test]
+    fn frames_copy_one_file_page_each_and_bytes_copy_from_their_offset() {
+        let file: Vec<u8> = (0..8193u32).map(|i| (i % 251) as u8).collect();
+        let pages: Vec<Vec<u8>> = file
+            .chunks(PAGE as usize)
+            .map(|chunk| {
+                let mut page = chunk.to_vec();
+                page.resize(PAGE as usize, 0);
+                page
+            })
+            .collect();
+        let frames: Vec<u64> = pages.iter().map(|page| page.as_ptr() as u64).collect();
+        let framed = Contents::Frames(&frames);
+        let contiguous = Contents::Bytes(&file);
+        assert_eq!(framed.len(), 3 * PAGE as usize);
+        assert_eq!(contiguous.len(), 8193);
+        let mut out = [0u8; 4096];
+        // SAFETY: Host pages stand in for identity-mapped frames; copies stay in bounds.
+        unsafe {
+            framed.copy_page(PAGE, out.as_mut_ptr(), PAGE as usize);
+            assert_eq!(out[..], file[4096..8192]);
+            framed.copy_page(2 * PAGE, out.as_mut_ptr(), 1);
+            assert_eq!(out[0], file[8192]);
+            contiguous.copy_page(2 * PAGE, out.as_mut_ptr(), 1);
+            assert_eq!(out[0], file[8192]);
+        }
+    }
 }

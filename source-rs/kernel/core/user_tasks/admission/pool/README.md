@@ -91,3 +91,19 @@ releases returned idle descendant reservations after cancellation.
 python tools/boot-harness-rs/run.py --admission-test --release --timeout 120
 python tools/boot-harness-rs/run.py --admission-test --timeout 120
 ```
+
+## Code from a sealed object
+
+`Executable::from_object(object, role)` turns a sealed memory object the caller
+can read into a caller-local executable grant. The kernel takes its own read
+reference, so the object's frames stay alive and immutable whatever the caller
+does with its handle, and the ELF is checked and copied page-wise at admission:
+segments are page-aligned in the file, so file page k is frame k, and the header
+plus every program header must sit in the first page. The grant is consumed by
+one `reserve` and admitted once; after that the launch holds no code authority,
+so a dead child cannot be respawned from frames that may have been reclaimed.
+Object code can be neither lent to a child with `allow_executable` nor exported
+from a launch with `executable()`. Boot templates keep their behaviour. The
+reference is dropped on admission, on releasing the idle launch, or when the
+holder dies, and the frames return to their sponsor through the ordinary
+boot-stack reclamation.

@@ -9,7 +9,9 @@ pub(super) fn syscall(session: &mut Session, slot: usize, now: u64) -> Event {
     let mut event = Event::Continue;
     let call = [number, first, second, third];
     let result = match number {
-        abi::TASK_EXECUTABLE..=abi::TASK_CPU_ASSIGN => admission::dispatch(session, slot, call),
+        abi::TASK_EXECUTABLE..=abi::TASK_CPU_ASSIGN | abi::TASK_IMAGE_FROM_OBJECT => {
+            admission::dispatch(session, slot, call)
+        }
         abi::RESOURCE_BUDGET
         | abi::RESOURCE_ASSIGN
         | abi::PHYSICAL_BUDGET

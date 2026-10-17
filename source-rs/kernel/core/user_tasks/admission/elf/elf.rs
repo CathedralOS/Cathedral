@@ -1,14 +1,17 @@
 // Bounded ELF64 ET_EXEC preflight, entirely before physical allocation.
 // ELF shapes follow https://gabi.xinuos.com/elf/08-pheader.html. The accepted
 // subset is lab policy: selected CPU, static, page-disjoint readable PT_LOAD segments,
-// no W+X, no interpreter/dynamic/TLS headers, and a file-backed executable entry.
+// no W+X, no interpreter/dynamic/TLS headers, a file-backed executable entry,
+// and the header plus every program header within the first file page, so an
+// image held one frame per page needs no contiguous copy to be checked.
 
-use crate::user_tasks::address_space::{UserSegment, valid_segments};
+use crate::user_tasks::address_space::{Contents, UserSegment, valid_segments};
 
 const MAX_FILE: usize = 4 * 1024 * 1024;
-const EMPTY: UserSegment<'static> = UserSegment {
+const EMPTY: UserSegment = UserSegment {
     address: 0,
-    bytes: &[],
+    file_offset: 0,
+    file_size: 0,
     memory_size: 0,
     writable: false,
     executable: false,
@@ -26,18 +29,30 @@ pub enum Error {
 #[derive(Debug)]
 pub struct Image<'a> {
     pub entry: u64,
-    segments: [UserSegment<'a>; 8],
+    pub contents: Contents<'a>,
+    segments: [UserSegment; 8],
     count: usize,
 }
-impl<'a> Image<'a> {
-    pub fn segments(&self) -> &[UserSegment<'a>] {
+impl Image<'_> {
+    pub fn segments(&self) -> &[UserSegment] {
         &self.segments[..self.count]
     }
 }
 
+/// Check an image held as contiguous bytes.
 pub fn parse(bytes: &[u8]) -> Result<Image<'_>, Error> {
-    if bytes.len() < 64 || bytes.len() > MAX_FILE {
+    parse_with(&bytes[..bytes.len().min(4096)], Contents::Bytes(bytes))
+}
+/// Check an image whose first file page the caller has already read; the
+/// contents are only measured here and copied from at load time.
+pub fn parse_with<'a>(first_page: &[u8], contents: Contents<'a>) -> Result<Image<'a>, Error> {
+    let len = contents.len();
+    if !(64..=MAX_FILE).contains(&len) {
         return Err(Error::Bounds);
+    }
+    let bytes = first_page;
+    if !(64..=4096).contains(&bytes.len()) {
+        return Err(Error::Header);
     }
     if &bytes[..7] != b"\x7fELF\x02\x01\x01"
         || bytes[7..16].iter().any(|byte| *byte != 0)
@@ -55,9 +70,10 @@ pub fn parse(bytes: &[u8]) -> Result<Image<'_>, Error> {
     if count == 0 || count > 16 || offset < 64 {
         return Err(Error::Header);
     }
-    let headers = range(bytes, offset, (count * 56) as u64)?;
+    let headers = range(bytes, offset, (count * 56) as u64).map_err(|_| Error::Header)?;
     let mut image = Image {
         entry: u64_at(bytes, 24),
+        contents,
         segments: [EMPTY; 8],
         count: 0,
     };
@@ -90,9 +106,16 @@ pub fn parse(bytes: &[u8]) -> Result<Image<'_>, Error> {
         {
             return Err(Error::Segments);
         }
+        if offset
+            .checked_add(file_size)
+            .is_none_or(|end| end > len as u64)
+        {
+            return Err(Error::Bounds);
+        }
         image.segments[image.count] = UserSegment {
             address,
-            bytes: range(bytes, offset, file_size)?,
+            file_offset: offset,
+            file_size,
             memory_size,
             writable: flags & 2 != 0,
             executable: flags & 1 != 0,
@@ -105,7 +128,7 @@ pub fn parse(bytes: &[u8]) -> Result<Image<'_>, Error> {
     if !image.segments().iter().any(|segment| {
         segment.executable
             && image.entry >= segment.address
-            && image.entry - segment.address < segment.bytes.len() as u64
+            && image.entry - segment.address < segment.file_size
     }) {
         return Err(Error::Entry);
     }

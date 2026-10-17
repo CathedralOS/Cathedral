@@ -1,8 +1,9 @@
 // Address-space construction and task installation use separate stack frames.
 // Slots are allocated before execution; live admission never grows the arena.
 use super::{Error, Frames, Report, Session, Task};
-use crate::user_tasks::address_space::{USER_CODE, USER_STACK_TOP, UserSpace};
+use crate::user_tasks::address_space::{Contents, USER_CODE, USER_STACK_TOP, UserSpace};
 use crate::user_tasks::{Executable, Program};
+use cathedral_arch::memory::PAGE;
 use cathedral_arch::{self as arch, Context};
 
 pub(super) unsafe fn admit(
@@ -103,7 +104,32 @@ unsafe fn load(
             Executable::Elf(bytes) => {
                 let executable = elf::parse(bytes).map_err(Error::Executable)?;
                 entry = executable.entry;
-                UserSpace::from_segments(layout, image, executable.segments(), frames)
+                UserSpace::from_segments(
+                    layout,
+                    image,
+                    executable.segments(),
+                    executable.contents,
+                    frames,
+                )
+            }
+            Executable::Object(pages) => {
+                // The kernel's reference keeps these sealed frames alive and
+                // immutable until the launch is admitted or released, and every
+                // frame is identity-mapped, so the first page reads directly.
+                if pages.is_empty() {
+                    return Err(Error::Executable(elf::Error::Bounds));
+                }
+                let first = core::slice::from_raw_parts(pages[0] as *const u8, PAGE as usize);
+                let executable =
+                    elf::parse_with(first, Contents::Frames(pages)).map_err(Error::Executable)?;
+                entry = executable.entry;
+                UserSpace::from_segments(
+                    layout,
+                    image,
+                    executable.segments(),
+                    executable.contents,
+                    frames,
+                )
             }
         }
     };

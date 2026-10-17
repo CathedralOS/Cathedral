@@ -1,6 +1,7 @@
 // Resolve executable authority, reserve owned capacity, then publish a fresh launch.
 // Mapping still happens through lifecycle::spawn; failed loads keep the reservation retryable.
 use super::{Session, abi};
+use crate::user_tasks::admission::pool::Code;
 pub(super) fn dispatch(
     session: &mut Session,
     caller: usize,
@@ -14,10 +15,32 @@ pub(super) fn dispatch(
     }
     if !matches!(
         operation,
-        abi::TASK_POOL_ASSIGN | abi::TASK_IMAGE_ALLOW | abi::TASK_CPU_ASSIGN
+        abi::TASK_POOL_ASSIGN
+            | abi::TASK_IMAGE_ALLOW
+            | abi::TASK_CPU_ASSIGN
+            | abi::TASK_IMAGE_FROM_OBJECT
     ) && second != 0
     {
         return Err(abi::INVALID_ARGUMENT);
+    }
+    if operation == abi::TASK_IMAGE_FROM_OBJECT {
+        // Code from a sealed object the caller can read. The kernel's own
+        // reference outlives the caller's handle until admission or release.
+        let region = session.memory.model.access(caller, first)?;
+        if !session.memory.model.entries[region].sealed {
+            return Err(abi::DENIED);
+        }
+        let name = session.names.mint(caller)?;
+        session.executables.install(
+            caller,
+            Code::Object {
+                region,
+                role: second,
+            },
+            name,
+        )?;
+        session.memory.hold(region);
+        return Ok(name);
     }
     if operation == abi::TASK_IMAGE_AT {
         return session
@@ -43,18 +66,25 @@ pub(super) fn dispatch(
             if launch.keyboard || launch.disk || launch.framebuffer.is_some() {
                 return Err(abi::DENIED);
             }
-            let template = launch.template.ok_or(abi::BAD_HANDLE)?;
+            // Only a boot template can be exported; object code is single use.
+            let Some(Code::Template(template)) = launch.code else {
+                return Err(abi::DENIED);
+            };
             if let Some(name) = session.executables.find(caller, template) {
                 return Ok(name);
             }
             let name = session.names.mint(caller)?;
-            session.executables.install(caller, template, name)
+            session
+                .executables
+                .install(caller, Code::Template(template), name)
         }
         abi::TASK_IMAGE_ALLOW => {
             if !launch.model.idle() {
                 return Err(abi::BUSY);
             }
-            let template = session.executables.resolve(caller, second)?;
+            let Code::Template(template) = session.executables.resolve(caller, second)? else {
+                return Err(abi::DENIED);
+            };
             let images = &mut session.launches[index].images;
             if !images.contains(&Some(template)) {
                 *images
@@ -105,8 +135,13 @@ pub(super) fn dispatch(
                 .expect("validated physical refund");
             session.pool.release(caller, child);
             session.clock.allow(child, false);
-            session.executables.close(child);
-            session.launches[index].template = None;
+            for region in session.executables.close(child).into_iter().flatten() {
+                session.memory.unref_later(region);
+            }
+            if let Some(Code::Object { region, .. }) = session.launches[index].code {
+                session.memory.unref_later(region);
+            }
+            session.launches[index].code = None;
             session.launches[index].images.fill(None);
             session.launches[index].model =
                 crate::user_tasks::lifecycle::supervision::Supervisor::vacant(child);

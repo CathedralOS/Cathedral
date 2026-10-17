@@ -159,5 +159,8 @@ pub const DEVICE_RELEASE: u64 = 67; // handle, zero, zero; reset/revoke until ne
 /// Requires a clock grant. Returns first ready index, without consuming; validates
 /// the entire set first. Empty sets wait only for the deadline. IPC closure is ready.
 pub const EVENT_WAIT: u64 = 68;
+/// Sealed object handle, first entry argument, zero -> caller-local executable
+/// grant backed by that object, consumed by one reservation and admitted once.
+pub const TASK_IMAGE_FROM_OBJECT: u64 = 69;
 pub const WAIT_IPC: u64 = 0;
 pub const WAIT_DEVICE: u64 = 1;

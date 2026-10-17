@@ -49,7 +49,13 @@ pub(super) fn prepare(
         let name = session.names.mint(0).map_err(|_| Error::OutOfHeap)?;
         session
             .executables
-            .install(0, config.supervision.len() + index, name)
+            .install(
+                0,
+                crate::user_tasks::admission::pool::Code::Template(
+                    config.supervision.len() + index,
+                ),
+                name,
+            )
             .map_err(|_| Error::OutOfHeap)?;
     }
     session

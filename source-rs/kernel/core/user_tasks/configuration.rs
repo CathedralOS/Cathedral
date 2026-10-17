@@ -39,6 +39,8 @@ pub struct Supervision<'a> {
 pub enum Executable<'a> {
     Probe(&'a [u8]),
     Elf(&'a [u8]),
+    /// An ELF held one identity-mapped frame per file page, from a sealed object.
+    Object(&'a [u64]),
 }
 pub struct Program<'a> {
     pub executable: Executable<'a>,

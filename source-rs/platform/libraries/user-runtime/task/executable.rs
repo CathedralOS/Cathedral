@@ -11,6 +11,17 @@ impl Executable {
     pub fn from_raw(name: u64) -> Self {
         Self(name)
     }
+    /// Code from a sealed object this task can read, entered with `role` as its
+    /// first argument. The grant is consumed by one reservation and admitted
+    /// once; the object may be released as soon as this returns.
+    pub fn from_object(object: &crate::memory::Object, role: u64) -> Result<Self, Error> {
+        result(arch::call(
+            abi::TASK_IMAGE_FROM_OBJECT,
+            object.handle(),
+            role,
+        ))
+        .map(Self)
+    }
     pub fn raw(self) -> u64 {
         self.0
     }

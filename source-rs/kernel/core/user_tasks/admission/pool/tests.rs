@@ -37,13 +37,32 @@ fn funded_nested_slots_cannot_steal_sibling_capacity_and_death_returns_them() {
 #[test]
 fn executable_names_are_local_and_retired_on_death() {
     let mut images = Executables::new(3).unwrap();
-    images.install(0, 4, 10).unwrap();
-    images.install(1, 5, 10).unwrap();
-    assert_eq!(images.resolve(0, 10), Ok(4));
-    assert_eq!(images.resolve(1, 10), Ok(5));
+    images.install(0, Code::Template(4), 10).unwrap();
+    images.install(1, Code::Template(5), 10).unwrap();
+    assert_eq!(images.resolve(0, 10), Ok(Code::Template(4)));
+    assert_eq!(images.resolve(1, 10), Ok(Code::Template(5)));
     assert_eq!(images.resolve(2, 10), Err(abi::BAD_HANDLE));
-    images.close(0);
-    images.install(0, 4, 11).unwrap();
+    assert_eq!(images.close(0), [None; abi::MAX_LAUNCHES]);
+    images.install(0, Code::Template(4), 11).unwrap();
     assert_eq!(images.resolve(0, 10), Err(abi::BAD_HANDLE));
-    assert_eq!(images.resolve(1, 10), Ok(5));
+    assert_eq!(images.resolve(1, 10), Ok(Code::Template(5)));
+}
+#[test]
+fn object_grants_are_distinct_single_use_and_report_their_references_on_close() {
+    let mut images = Executables::new(2).unwrap();
+    let first = Code::Object { region: 3, role: 2 };
+    let second = Code::Object { region: 3, role: 7 };
+    // A template is shared per holder; every object grant is its own reference.
+    assert_eq!(images.install(0, Code::Template(1), 20), Ok(20));
+    assert_eq!(images.install(0, Code::Template(1), 21), Ok(20));
+    assert_eq!(images.install(0, first, 22), Ok(22));
+    assert_eq!(images.install(0, second, 23), Ok(23));
+    assert_eq!(images.resolve(0, 23), Ok(second));
+    assert_eq!(images.take(0, 22), Ok(first));
+    assert_eq!(images.resolve(0, 22), Err(abi::BAD_HANDLE));
+    assert_eq!(images.take(0, 22), Err(abi::BAD_HANDLE));
+    let mut held = [None; abi::MAX_LAUNCHES];
+    held[2] = Some(3);
+    assert_eq!(images.close(0), held);
+    assert_eq!(images.resolve(0, 20), Err(abi::BAD_HANDLE));
 }

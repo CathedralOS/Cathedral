@@ -1,5 +1,6 @@
 //! Validate all funding and names before installing a new executable/account pairing.
 use super::*;
+use crate::user_tasks::admission::pool::Code;
 use crate::user_tasks::lifecycle::supervision::Supervisor;
 pub(super) fn reserve(
     session: &mut Session,
@@ -7,7 +8,10 @@ pub(super) fn reserve(
     executable: u64,
     address: u64,
 ) -> Result<u64, u64> {
-    let template = session.executables.resolve(caller, executable)?;
+    let code = session.executables.resolve(caller, executable)?;
+    if code == Code::Admitted {
+        return Err(abi::BAD_HANDLE);
+    }
     let mut bytes = [0; 48];
     // SAFETY: Serialized trap; full source range checked before any mutation.
     if !unsafe {
@@ -33,7 +37,7 @@ pub(super) fn reserve(
         .iter()
         .position(|l| l.model.child == child)
         .ok_or(abi::NO_MEMORY)?;
-    assert!(session.launches[index].dynamic && session.launches[index].template.is_none());
+    assert!(session.launches[index].dynamic && session.launches[index].code.is_none());
     let requested = core::array::from_fn(|i| words[i] as usize);
     // Construct the same lender chain used for explicit launch loans. If the
     // creator dies, its new account returns to the nearest surviving ancestor.
@@ -71,9 +75,16 @@ pub(super) fn reserve(
         .expect("validated physical assignment");
     session.pool.commit(caller, child, mask);
     let ticket = model.launch(caller).unwrap();
+    // A single-use grant moves into the launch with the reference it carries.
+    if matches!(code, Code::Object { .. }) {
+        session
+            .executables
+            .take(caller, executable)
+            .expect("resolved grant present");
+    }
     let launch = &mut session.launches[index];
     launch.model = model;
-    launch.template = Some(template);
+    launch.code = Some(code);
     launch.frame_limit = words[4] as usize;
     // A reused arena slot must not reveal another reservation's CPU history.
     // Accounting/debt itself remains persistent in the scheduler.

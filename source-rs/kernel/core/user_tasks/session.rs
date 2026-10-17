@@ -45,7 +45,7 @@ pub(super) static EPOCH: AtomicU64 = AtomicU64::new(1);
 
 pub(super) struct LaunchState {
     pub(super) images: [Option<usize>; cathedral_kernel_contracts::user::MAX_LAUNCHES],
-    pub(super) template: Option<usize>,
+    pub(super) code: Option<crate::user_tasks::admission::pool::Code>,
     pub(super) dynamic: bool,
     pub(super) frame_limit: usize,
     pub(super) cpu_origin: u64,

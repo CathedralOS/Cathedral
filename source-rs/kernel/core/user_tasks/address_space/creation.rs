@@ -7,7 +7,8 @@ impl UserSpace {
         layout: &BootLayout,
         start: u64,
         end: u64,
-        segments: &[UserSegment<'_>],
+        segments: &[UserSegment],
+        contents: Contents<'_>,
         frames: &mut impl FrameSource,
     ) -> Result<(), MemoryError> {
         let pages = USER_STACK_PAGES
@@ -36,7 +37,8 @@ impl UserSpace {
         });
         let stack = UserSegment {
             address: USER_STACK,
-            bytes: &[],
+            file_offset: 0,
+            file_size: 0,
             memory_size: USER_STACK_PAGES as u64 * PAGE,
             writable: true,
             executable: false,
@@ -49,13 +51,9 @@ impl UserSpace {
                 // Zero BSS/tails before copying file bytes; cache maintenance precedes publication.
                 unsafe {
                     core::ptr::write_bytes(physical as *mut u8, 0, PAGE as usize);
-                    if (offset as usize) < segment.bytes.len() {
-                        let bytes = &segment.bytes[offset as usize..];
-                        core::ptr::copy_nonoverlapping(
-                            bytes.as_ptr(),
-                            physical as *mut u8,
-                            bytes.len().min(PAGE as usize),
-                        );
+                    if offset < segment.file_size {
+                        let len = (segment.file_size - offset).min(PAGE) as usize;
+                        contents.copy_page(segment.file_offset + offset, physical as *mut u8, len);
                     }
                     if segment.executable {
                         UserMappings::publish_code(physical);

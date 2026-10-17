@@ -7,6 +7,8 @@ pub(super) struct Memory {
     pub model: Regions,
     pub funding: crate::user_tasks::resources::physical::Funding,
     backing: [alloc::vec::Vec<u64>; wire::MAX_REGIONS],
+    /// Kernel references to drop on the boot stack, where frames can be reclaimed.
+    pending: [u8; wire::MAX_REGIONS],
 }
 impl Memory {
     pub fn new(
@@ -35,6 +37,7 @@ impl Memory {
             (&raw mut (*pointer).model).write(model);
             (&raw mut (*pointer).funding).write(funding);
             (&raw mut (*pointer).backing).write(core::array::from_fn(|_| alloc::vec::Vec::new()));
+            (&raw mut (*pointer).pending).write([0; wire::MAX_REGIONS]);
             Ok(alloc::boxed::Box::from_raw(pointer))
         }
     }
@@ -45,6 +48,33 @@ impl Memory {
             .filter(|&&frame| frame != 0)
             .count()
     }
+    /// The frames behind a sealed region, one per page in order.
+    pub fn frames_of(&self, region: usize) -> &[u64] {
+        &self.backing[region][..self.model.entries[region].pages]
+    }
+    /// Take a kernel reference: the region stays live whatever its holders do.
+    pub fn hold(&mut self, region: usize) {
+        self.model.entries[region].read_refs += 1;
+    }
+    /// Give a kernel reference back; reclamation waits for the boot stack.
+    pub fn unref_later(&mut self, region: usize) {
+        self.pending[region] += 1;
+    }
+    /// # Safety
+    /// Boot stack with frame custody; no user root is active.
+    unsafe fn settle(&mut self, frames: &mut Frames<'_>) {
+        for region in 0..wire::MAX_REGIONS {
+            if self.pending[region] == 0 {
+                continue;
+            }
+            self.model.entries[region].read_refs -= usize::from(self.pending[region]);
+            self.pending[region] = 0;
+            // SAFETY: Every alias this reference guarded is gone with it.
+            unsafe {
+                self.reclaim(region, frames);
+            }
+        }
+    }
 }
 /// # Safety
 /// Sole CPU, boot stack, kernel root active, IRQs off; every user root is inactive.
@@ -52,6 +82,7 @@ pub(super) unsafe fn process(session: &mut Session, frames: &mut Frames<'_>) {
     // SAFETY: Queue discards never published a mapping; same boot-stack custody.
     unsafe {
         objects::retire_escrow(session, frames);
+        session.memory.settle(frames);
     }
     for slot in 0..session.tasks.len() {
         let Some(call) = session.tasks[slot].memory_call.take() else {

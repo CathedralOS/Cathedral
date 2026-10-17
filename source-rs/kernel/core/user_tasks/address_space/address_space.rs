@@ -55,21 +55,23 @@ impl UserSpace {
         let segments = [
             UserSegment {
                 address: USER_CODE,
-                bytes: code,
+                file_offset: 0,
+                file_size: code.len() as u64,
                 memory_size: PAGE,
                 writable: false,
                 executable: true,
             },
             UserSegment {
                 address: USER_DATA,
-                bytes: &[],
+                file_offset: 0,
+                file_size: 0,
                 memory_size: PAGE,
                 writable: true,
                 executable: false,
             },
         ];
         // SAFETY: Same caller obligations; raw probes use two fixed disjoint pages.
-        unsafe { Self::from_segments(layout, image, &segments, frames) }
+        unsafe { Self::from_segments(layout, image, &segments, Contents::Bytes(code), frames) }
     }
 
     /// Build a bounded image from page-disjoint, immutable segment descriptions.
@@ -79,7 +81,8 @@ impl UserSpace {
     pub unsafe fn from_segments(
         layout: &BootLayout,
         image: ImageRange,
-        segments: &[UserSegment<'_>],
+        segments: &[UserSegment],
+        contents: Contents<'_>,
         frames: &mut impl FrameSource,
     ) -> Result<Self, MemoryError> {
         if image.bytes == 0 || !image.base.is_multiple_of(PAGE) || !valid_segments(segments) {
@@ -103,7 +106,7 @@ impl UserSpace {
             pages: 0,
         };
         // SAFETY: New frames are exclusively owned and identity-mapped in kernel translation root.
-        let result = unsafe { space.build(layout, image.base, end, segments, frames) };
+        let result = unsafe { space.build(layout, image.base, end, segments, contents, frames) };
         if let Err(error) = result {
             // SAFETY: This root was never activated, including partially built tables.
             unsafe {

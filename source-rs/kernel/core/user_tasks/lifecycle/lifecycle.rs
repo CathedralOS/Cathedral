@@ -1,12 +1,14 @@
 // Boot-context admission/reaping and grant teardown. No restart policy here.
 use super::{Error, Exit, Frames, Session, admission, next_epoch, syscalls, taskcalls};
-use crate::{scheduler::TaskState, user_tasks::Program};
+use crate::{scheduler::TaskState, user_tasks::Program, user_tasks::admission::pool::Code};
 use cathedral_arch as arch;
 use cathedral_kernel_contracts::user as abi;
 
 pub(super) fn close(session: &mut Session, slot: usize) {
     super::syscalls::devices::leased::close(session, slot);
-    session.executables.close(slot);
+    for region in session.executables.close(slot).into_iter().flatten() {
+        session.memory.unref_later(region);
+    }
     session.clock.install(slot, 0);
     session.tasks[slot].memory_call = None;
     session.tasks[slot].receive = None;
@@ -142,6 +144,13 @@ pub(super) unsafe fn spawn(
         return;
     };
     let (owner, child, peer) = (model.owner, model.child, model.peer);
+    if session.launches[index].code == Some(Code::Admitted) {
+        // Object code was consumed by an earlier admission; its frames may be gone.
+        session.launches[index].model.failed();
+        syscalls::complete(session, owner, Err(abi::BAD_EXECUTABLE));
+        session.scheduler.unblock(owner);
+        return;
+    }
     session.scheduler.account_cpu(arch::cpu_time_us());
     let initial = core::mem::take(&mut session.launches[index].initial);
     let initial_count = core::mem::take(&mut session.launches[index].initial_count);
@@ -201,6 +210,11 @@ pub(super) unsafe fn spawn(
                 }
                 let ticket = session.launches[index].model.started(ticket);
                 session.tasks[owner].report.spawned += 1;
+                if let Some(Code::Object { region, .. }) = session.launches[index].code {
+                    // The image is copied; nothing keeps the object's frames needed.
+                    session.memory.unref_later(region);
+                    session.launches[index].code = Some(Code::Admitted);
+                }
                 Ok(ticket)
             }
             Err(error) => Err(match error {

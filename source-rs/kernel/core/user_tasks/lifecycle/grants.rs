@@ -1,5 +1,6 @@
 //! Reserve every admission name before mapping; publish only after admission succeeds.
 use super::{Session, abi};
+use crate::user_tasks::admission::pool::Code;
 pub(super) struct Plan {
     pub child: u64,
     clock: u64,
@@ -28,9 +29,11 @@ impl Plan {
             plan.device = session.names.mint(child)?;
         }
         let mut templates = launch.images;
-        // The selected dynamic executable occupies the first child-local grant.
-        if launch.dynamic {
-            let selected = launch.template.unwrap();
+        // The selected dynamic template occupies the first child-local grant;
+        // object code is consumed by its own admission and lends nothing.
+        if launch.dynamic
+            && let Some(Code::Template(selected)) = launch.code
+        {
             let mut staged = [None; abi::MAX_LAUNCHES];
             staged[0] = Some(selected);
             let mut count = 1;
@@ -72,7 +75,7 @@ impl Plan {
         for (template, name) in self.executables.into_iter().flatten() {
             session
                 .executables
-                .install(child, template, name)
+                .install(child, Code::Template(template), name)
                 .expect("fresh executable grant arena");
         }
         super::links::admit(session, child, &self.links);
