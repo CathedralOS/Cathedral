@@ -149,6 +149,10 @@ fn setup(probes: bool) -> admission::Session {
     session
 }
 pub fn run() -> u64 {
+    if cfg!(feature = "shell") {
+        #[cfg(feature = "shell")]
+        return shell::run();
+    }
     let mut session = setup(cfg!(feature = "desktop-probes"));
     if cfg!(feature = "desktop-probes") && !recovery::sibling_saved(session.matrix) {
         session = providers::exercise(session);

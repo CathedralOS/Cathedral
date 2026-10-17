@@ -6,21 +6,7 @@
       "type": "node-terminal",
       "request": "launch",
       "cwd": "${workspaceFolder}",
-      "command": "python tools/boot-harness-rs/run.py --profile tools/boot-harness-rs/profiles/matrix-desktop.json --release --window"
-    },
-    {
-      "name": "Cathedral: Database Desktop in QEMU",
-      "type": "node-terminal",
-      "request": "launch",
-      "cwd": "${workspaceFolder}",
-      "command": "python tools/boot-harness-rs/run.py --profile tools/boot-harness-rs/profiles/matrix-database.json --release --window"
-    },
-    {
-      "name": "Cathedral: Notes in QEMU",
-      "type": "node-terminal",
-      "request": "launch",
-      "cwd": "${workspaceFolder}",
-      "command": "python tools/boot-harness-rs/run.py --profile tools/boot-harness-rs/profiles/notes.json --release --window"
+      "command": "python tools/boot-harness-rs/run.py --release --window"
     }
   ]
 }

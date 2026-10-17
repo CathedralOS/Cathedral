@@ -78,9 +78,9 @@ streaming and active quota changes are not implemented.
 
 [Host tests](tests.rs) cover conservation, exhaustion, independent name sequences,
 stale handles, clipping, retained moves, teardown and three-level stacking ranges.
-The desktop [app lifecycle](../../../../../distribution/lab/matrix/desktop/app/surfaces.rs)
+The desktop [app lifecycle](../../../../../distribution/desktop/session/app/surfaces.rs)
 fills its allowance, checks exhaustion, releases and reuses objects, and rejects
-stale names. [Desktop probes](../../../../../distribution/lab/matrix/desktop/probes.rs)
+stale names. [Desktop probes](../../../../../distribution/desktop/session/probes.rs)
 check real pixels after removing one surface, restoring it, moving a retained
 subtree, and overlapping it with an outside sibling. The same checks run under
 CPU pressure and after repeated dynamic subtree replacement.

@@ -1,15 +1,16 @@
 # Private notes scratchpad
 
-An ordinary application of the matrix/catalog APIs, selected by
-[notes.json](../../../../tools/boot-harness-rs/profiles/notes.json). Two instances
-receive different private catalogs; one lives inside a nested matrix. Neither
-knows its position, its sibling, the disk provider or the root owner's diagnostics.
-
-In VS Code select **Cathedral: Notes in QEMU**, then F5. Alternatively:
+An ordinary application of the matrix/catalog APIs. Press **F5**, click **Notes**
+in Programs, then click the workspace to focus it. The equivalent default boot is:
 
 ```powershell
-python tools/boot-harness-rs/run.py --profile tools/boot-harness-rs/profiles/notes.json --release --window
+python tools/boot-harness-rs/run.py --release --window
 ```
+
+The [notes fixture](../../../../tools/boot-harness-rs/profiles/notes.json) also runs
+two instances with separate private catalogs, one inside a nested matrix, for
+isolation and recovery tests. Neither knows its position, siblings, disk provider
+or the root owner's diagnostics.
 
 Click a note to focus it. Type letters, digits, spaces or Enter for a newline;
 Left/Right move the insertion cursor and Backspace deletes. F1 saves. Green means
@@ -38,7 +39,7 @@ retired; app replacement is required because replies lack correlation IDs.
 Storage IPC enters the parent's
 [storage coordinator](../../../platform/services/matrix/service/parent/storage/storage.rs),
 then the [database provider](../../../platform/services/storage/database/catalog.rs).
-The [distribution supervisor](../../lab/matrix/desktop/persistence/persistence.rs)
+The [distribution supervisor](../../desktop/session/persistence/persistence.rs)
 owns provider replacement and explicit re-grants. The app owns only its local
 binding and optimistic revision. Another app's replacement grant does not revive
 this app's cached binding: the first refused save preserves its draft, then F1
@@ -77,14 +78,15 @@ The ordinary run `20261017T032932558231Z` under
 | Database commit | 4 / 9.5 / 11 |
 | Pre-publication collection | 0 / 2 / 12 |
 
-One tick is nominally 10 ms. Each save's provider request issued 41â€“130 single-sector
-writes (20.5â€“65 KiB) and one or two flushes, including collection when needed.
+One tick is nominally 10 ms. Each save's provider request issued 41Ã¢â‚¬â€œ130 single-sector
+writes (20.5Ã¢â‚¬â€œ65 KiB) and one or two flushes, including collection when needed.
 The app publishes a 152-byte catalog snapshot regardless of note length; these
 numbers do not characterize bulk files. TCG, diagnostic logging, coarse clocks and
 the tiny six-save sample prevent latency guarantees. One startup provider-queue
 sample was 97 ticks; it is separate from the six save spans. The evidence points
 first to commit/collection and startup scheduling, not to text rendering SIMD.
 
-The ordinary disk is `build/boot-harness-rs/notes-storage.raw`, created only when
-absent and never auto-reformatted. It is separate from both color-desktop disks.
+The default desktop disk is `build/boot-harness-rs/cathedral-storage.raw`, created
+only when absent and never auto-reformatted. The isolated notes fixture retains
+its earlier `notes-storage.raw`; existing lab images are not migrated or deleted.
 QEMU termination does not emulate physical device-cache loss.

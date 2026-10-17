@@ -32,7 +32,7 @@ members = [
     "distribution/init",
     "distribution/lab/display",
     "distribution/lab/compositor",
-    "distribution/lab/matrix",
+    "distribution/desktop",
     "distribution/lab/hello",
     "distribution/lab/portability",
     "distribution/lab/shared-memory",

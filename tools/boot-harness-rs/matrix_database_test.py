@@ -132,7 +132,7 @@ def run(args):
         print(result.stdout, end='')
     sources = [profile, Path(__file__), HERE / 'notes_test.py', HERE / 'storage_timing.py', HERE / 'database_image.py', ROOT / 'source-rs/Cargo.lock',
                *(ROOT / 'source-rs/distribution/applications/notes').rglob('*.rs'),
-               *(ROOT / 'source-rs/distribution/lab/matrix/desktop').rglob('*.rs'),
+               *(ROOT / 'source-rs/distribution/desktop/session').rglob('*.rs'),
                *(ROOT / 'source-rs/platform/services/matrix/service').rglob('*.rs'),
                *(ROOT / 'source-rs/platform/services/matrix/world').rglob('*.rs'),
                *(ROOT / 'source-rs/platform/services/input/decoder').rglob('*.rs'),

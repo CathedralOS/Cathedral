@@ -24,16 +24,23 @@ fn regrant(session: &mut admission::Session) -> Result<(), Error> {
     if &bytes[..n] != b"ready" {
         return Err(Error(abi::IO_ERROR as i64));
     }
-    for slot in 0..2 {
+    #[cfg(feature = "shell")]
+    if session.notes_open {
+        super::shell::grant_notes(session.matrix);
+    }
+    #[cfg(not(feature = "shell"))]
+    {
+        for slot in 0..2 {
+            owner(
+                session.matrix,
+                [wire::STORAGE_GRANT, slot, slot, 0, 0, 0, 0, 0],
+            );
+        }
         owner(
             session.matrix,
-            [wire::STORAGE_GRANT, slot, slot, 0, 0, 0, 0, 0],
+            wire::route([wire::STORAGE_GRANT, 0, 0, 0, 0, 0, 0, 0], 0).unwrap(),
         );
     }
-    owner(
-        session.matrix,
-        wire::route([wire::STORAGE_GRANT, 0, 0, 0, 0, 0, 0, 0], 0).unwrap(),
-    );
     write(b"Cathedral matrix desktop: storage replaced; explicit grants restored\n")?;
     Ok(())
 }

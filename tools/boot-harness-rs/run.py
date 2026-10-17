@@ -150,7 +150,13 @@ def main():
         if args.kernel_only:
             parser.error("protocol/display tests require userspace")
         args.profile = Path(__file__).parent / ("profiles/matrix-storage.json" if args.matrix_storage_test else "profiles/admission.json" if args.admission_test else "profiles/matrix-desktop.json" if args.matrix_desktop_test else "profiles/channels.json" if args.ipc_test else "profiles/matrix.json" if args.matrix_test else "profiles/session.json" if args.session_test else "profiles/pointer.json" if args.pointer_test else "profiles/compositor.json")
-    database_desktop = args.profile.resolve() in [(Path(__file__).parent / f'profiles/{name}.json').resolve() for name in ('matrix-database', 'notes')]
+    default_profile = (WORKSPACE / "distribution/profile.json").resolve()
+    legacy_profile = (Path(__file__).parent / "profiles/legacy.json").resolve()
+    # These old scene oracles intentionally exercise the preserved legacy fixture.
+    if args.profile.resolve() == default_profile and (args.screenshot or args.input_test or args.recovery_test or args.storage_test):
+        args.profile = legacy_profile
+    desktop = args.profile.resolve() == default_profile and not (args.smoke or args.kernel_only)
+    database_desktop = desktop or args.profile.resolve() in [(Path(__file__).parent / f'profiles/{name}.json').resolve() for name in ('matrix-database', 'notes')]
     if database_desktop and not args.release:
         parser.error('the database desktop requires --release under TCG')
     if args.timeout <= 0 or args.memory < 64:
@@ -165,8 +171,8 @@ def main():
     custom_profile = args.profile.resolve() != (WORKSPACE / "distribution/profile.json").resolve()
     if custom_profile and args.kernel_only:
         parser.error("--kernel-only does not use a distribution profile")
-    if custom_profile and (args.recovery_test or args.storage_test):
-        parser.error("recovery/storage tests use the standard distribution profile")
+    if custom_profile and args.profile.resolve() != legacy_profile and (args.recovery_test or args.storage_test):
+        parser.error("recovery/storage tests use profiles/legacy.json")
     if custom_profile and args.smoke:
         parser.error("custom profiles select ordinary startup; smoke uses the standard lab profile")
     composition = ({"target": "x86_64-unknown-uefi", "boot_package": "cathedral-boot-uefi"}
@@ -178,7 +184,7 @@ def main():
             # Nine accounts exercise persistence and the capped spinner together.
             startup["dynamic_tasks"] = 4
             startup["executables"].append({
-                "package": "cathedral-matrix-lab", "entry": "distribution/lab/matrix/main.rs",
+                "package": "cathedral-desktop", "entry": "distribution/desktop/main.rs",
                 "target": "x86_64-unknown-none", "argument": 3,
                 "features": ["desktop"],
             })
@@ -255,13 +261,13 @@ def main():
         user_features = list(user.get("features", []))
         if args.startup_probes and user['package'] == 'cathedral-compositor-lab':
             user_features.append('session-probes')
-        if args.matrix_desktop_test and user["package"] == "cathedral-matrix-lab":
+        if args.matrix_desktop_test and user["package"] == "cathedral-desktop":
             user_features.append("desktop-probes")
         if args.matrix_desktop_test and user["package"] == "cathedral-storage-service":
             user_features.append("recovery-lab")
-        if args.trace_input and user["package"] in ("cathedral-matrix-service", "cathedral-input-service", "cathedral-matrix-lab"):
+        if args.trace_input and user["package"] in ("cathedral-matrix-service", "cathedral-input-service", "cathedral-desktop"):
             user_features.append("trace-input")
-        if args.trace_storage and user["package"] in ("cathedral-matrix-service", "cathedral-matrix-lab", "cathedral-database-storage", "cathedral-notes"):
+        if args.trace_storage and user["package"] in ("cathedral-matrix-service", "cathedral-desktop", "cathedral-database-storage", "cathedral-notes"):
             user_features.append("trace-storage")
         if user_features:
             user_cargo.extend(["--features", ",".join(user_features)])
@@ -285,7 +291,7 @@ def main():
     output = BUILD / (f"fault-{args.fault}" if args.fault else "smoke" if args.smoke else "storage-test" if args.storage_test else "recovery-test" if args.recovery_test else "input-test" if args.input_test else "test" if (args.compositor_test or args.pointer_test or args.session_test or args.matrix_test or args.matrix_desktop_test or args.matrix_storage_test or args.admission_test or args.ipc_test) else "capture" if args.screenshot else "interactive")
     if args.kernel_only:
         output = output.with_name("kernel-" + output.name)
-    if custom_profile:
+    if custom_profile and args.profile.resolve() != legacy_profile:
         output = output.with_name(args.profile.stem + "-" + output.name)
     if args.pressure:
         output = output.with_name("pressure-" + output.name)
@@ -304,7 +310,7 @@ def main():
     if not args.kernel_only and not args.smoke and any(child.get("disk", False) for child in launches):
         disposable = args.screenshot or args.input_test or args.recovery_test or args.storage_test or args.matrix_storage_test or args.matrix_desktop_test
         # Matrix app schemas must never reinterpret the default distribution's roots.
-        persistent = BUILD / ("notes-storage.raw" if args.profile.stem == "notes" else "matrix-database-storage.raw" if database_desktop else "matrix-desktop-storage.raw" if args.profile.stem == "matrix-desktop" else "storage.raw")
+        persistent = BUILD / ("cathedral-storage.raw" if desktop else "notes-storage.raw" if args.profile.stem == "notes" else "matrix-database-storage.raw" if database_desktop else "matrix-desktop-storage.raw" if args.profile.stem == "matrix-desktop" else "storage.raw")
         data_path = output / "test-storage.raw" if disposable else persistent
         if database_desktop:
             if disposable:

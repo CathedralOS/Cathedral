@@ -4,8 +4,8 @@
   "boot_package": "cathedral-boot-uefi",
   "startup": {
     "initial": {
-      "package": "cathedral-matrix-lab",
-      "entry": "distribution/lab/matrix/main.rs",
+      "package": "cathedral-desktop",
+      "entry": "distribution/desktop/main.rs",
       "target": "x86_64-unknown-none",
       "clock": true,
       "argument": 0
@@ -28,15 +28,15 @@
         "ipc_channels": 6
       },
       {
-        "package": "cathedral-matrix-lab",
-        "entry": "distribution/lab/matrix/main.rs",
+        "package": "cathedral-desktop",
+        "entry": "distribution/desktop/main.rs",
         "target": "x86_64-unknown-none",
         "clock": true,
         "argument": 1
       },
       {
-        "package": "cathedral-matrix-lab",
-        "entry": "distribution/lab/matrix/main.rs",
+        "package": "cathedral-desktop",
+        "entry": "distribution/desktop/main.rs",
         "target": "x86_64-unknown-none",
         "clock": true,
         "argument": 1

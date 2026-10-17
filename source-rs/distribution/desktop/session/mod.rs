@@ -1,4 +1,4 @@
-//! Rust module plumbing. Start reading in `desktop.rs`.
+//! Rust module plumbing. Start reading in `session.rs`.
 
 mod admission;
 mod app;
@@ -13,4 +13,9 @@ mod stalls;
 mod stalls_peer;
 pub use app::run as app;
 
-include!("desktop.rs");
+include!("session.rs");
+
+#[cfg(feature = "shell")]
+mod shell;
+#[cfg(feature = "shell")]
+pub use shell::launcher;

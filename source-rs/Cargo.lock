@@ -170,6 +170,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "cathedral-desktop"
+version = "0.0.0"
+dependencies = [
+ "cathedral-bitmap-font",
+ "cathedral-kernel-contracts",
+ "cathedral-platform-contracts",
+ "cathedral-user-runtime",
+]
+
+[[package]]
 name = "cathedral-device-lab"
 version = "0.0.0"
 dependencies = [
@@ -235,15 +245,6 @@ dependencies = [
 [[package]]
 name = "cathedral-kernel-contracts"
 version = "0.0.0"
-
-[[package]]
-name = "cathedral-matrix-lab"
-version = "0.0.0"
-dependencies = [
- "cathedral-kernel-contracts",
- "cathedral-platform-contracts",
- "cathedral-user-runtime",
-]
 
 [[package]]
 name = "cathedral-matrix-service"

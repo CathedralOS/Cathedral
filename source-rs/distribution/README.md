@@ -1,93 +1,79 @@
 # Follow the running distribution
 
-Start at [init/main.rs](init/main.rs), then [session entrance](init/session/session.rs).
-The session starts and readies providers, launches counter and status, then enters
-[supervision](init/session/supervision/supervision.rs). Provider protocol details live under
-[providers](init/session/providers/providers.rs); child cancellation, collection and spawn
-live in [child.rs](init/session/child.rs).
+Press **F5** at the repository root, or run:
 
-[profile.json](profile.json) is the host's executable composition. The harness
-builds those packages and supplies their ELF artifacts to
-[kernel startup](../kernel/boot/uefi/startup.rs). The kernel sees supplied code
-and grants; the distribution gives those children their roles.
+```powershell
+python tools/boot-harness-rs/run.py --release --window
+```
 
-| Role | Launch / task slot | Executable entrance | Protocol / implementation |
-| --- | --- | --- | --- |
-| Init | Initial / 0 | [init/main.rs](init/main.rs) | [App control](init/session/supervision/control.rs), [session protocol](libraries/session-protocol/lib.rs) |
-| Display | 0 / 1 | [display/main.rs](../platform/services/display/main.rs) | [Drawing contract](../platform/contracts/display/display.rs), [direct service](../platform/services/display/direct/direct.rs), [surface](../platform/services/display/surface/surface.rs) |
-| Input | 1 / 2 | [input/main.rs](../platform/services/input/main.rs) | [Event contract](../platform/contracts/input.rs), [keyboard service](../platform/services/input/keyboard/keyboard.rs), [decoder](../platform/services/input/decoder/decoder.rs) |
-| Application | 2 / 3 | [status/main.rs](applications/status/main.rs) | [Application workflow](applications/status/application/application.rs) |
-| Counter | 4 / 5 | [counter/main.rs](applications/counter/main.rs) | [Private counter workflow](applications/counter/session/session.rs) |
-| Storage | 3 / 4 | [storage/main.rs](../platform/services/storage/main.rs) | [Object contract](../platform/contracts/storage.rs), [service](../platform/services/storage/service/service.rs), [store](../platform/libraries/object-store/lib.rs) |
+One desktop boots. Click **Notes** or **Colors** in Programs, then click the
+workspace to give the app keyboard focus. Notes accepts up to 60 characters;
+**F1** saves (or checks an uncertain save), **F2** reloads the saved note. Colors
+changes on **Enter**. **Close App** closes the workspace. Opening a different
+program replaces the current one; an unsaved note stays open until explicitly
+saved or reloaded. The menu also supports Up/Down/Enter while focused.
 
-The app's [connections](applications/status/application/connection.rs) use a
-private init control pair plus three peer links, ordered display, input, storage.
-The corresponding names live in `session-protocol::launch` and `::link`; their
-indices must match the profile. Follow [input](applications/status/application/input.rs),
-[storage](applications/status/application/storage.rs) or
-[view](applications/status/application/view/view.rs) to see the app-side protocol use.
-The kernel's [IPC dispatcher](../kernel/core/user_tasks/syscalls/syscalls.rs)
-transports these messages; the service implementations interpret them.
+Notes persists in `build/boot-harness-rs/cathedral-storage.raw` across app launches
+and QEMU restarts. The first boot creates this experimental database image;
+subsequent boots preserve it. Earlier lab images remain separate and untouched.
+Colors is deliberately transient and receives no storage grant.
 
-For the pixel handoff, descend from `view` into
-[buffer.rs](applications/status/application/view/buffer.rs), then follow the
-[runtime ownership API](../platform/libraries/user-runtime/memory/memory.rs) and
-[display buffer consumer](../platform/services/display/surface/buffer.rs).
-The profile grants status four private pages and display four accepted shared
-pages. The `SHARED PIXELS` tile uses one page per redraw; the display completion
-precedes owner release. The kernel has no knowledge of pixels or screen layout.
+## Executable route
 
-`lab/` contains guest test executables selected by the profile's `user_programs`
-section for smoke runs. It is distinct from the ordinary `applications/` path.
-The minimal example profile also uses the lab's hello executable as its only task.
+Start at [desktop/main.rs](desktop/main.rs), then the
+[session entrance](desktop/session/session.rs) and
+[shell policy](desktop/session/shell/shell.rs). Admission starts providers and a
+funded root matrix. The root contains an isolated launcher and a workspace matrix;
+the workspace admits the selected app. Both matrices run the same platform code.
+The owner supervises storage and explicitly restores only Notes' storage grant
+when replacing the provider.
 
-The [rendering investigation](lab/rendering/README.md) has two entrances:
-[bench entrance](lab/rendering/bench/main.rs) compares native host pixel/storage costs, and
-[main entrance](lab/rendering/main.rs) dispatches guest page-backed rendering and bounds
-probes. Its shared algorithms live at [lib.rs](lab/rendering/lib.rs); ordinary
-applications and platform services do not depend on this research fixture.
+[profile.json](profile.json) is the executable composition shared by F5, ordinary
+CLI boot and [the desktop test](../../tools/boot-harness-rs/desktop_test.py).
+The harness builds these packages and supplies their ELF artifacts to
+[kernel startup](../kernel/boot/uefi/startup.rs). The kernel sees supplied code and
+grants; the distribution assigns application roles and placement.
 
-Storage accepts status on its first data link (root 0) and counter on its second
-(root 1). Counter has only that one data link. These are fixed persistent root
-bindings for this profile; reordering storage links on an existing disk is
-unsupported. [The catalog service](../platform/services/storage/CHARTER.md)
-explains the authority and transaction boundaries. Init checks counter through
-[counter supervision](init/session/counter.rs), independently of the status app.
+| Role | Composition entry | Entrance / receiving implementation |
+| --- | --- | --- |
+| Desktop owner | Initial | [main](desktop/main.rs), [admission](desktop/session/admission.rs), [shell](desktop/session/shell/shell.rs) |
+| Display | Launch 0 | [display main](../platform/services/display/main.rs), [retained compositor](../platform/services/display/compositor/compositor.rs) |
+| Input | Launch 1 | [input main](../platform/services/input/main.rs), [matrix source](../platform/services/input/matrix.rs) |
+| Root matrix | Launch 2 | [matrix main](../platform/services/matrix/main.rs), [service loop](../platform/services/matrix/service/service.rs) |
+| Database storage | Launch 3 | [database main](../platform/services/storage/database/main.rs), [catalog contract](../platform/contracts/storage.rs) |
+| Workspace matrix | Executable 0 | Same matrix service; child-local extent and attenuated input |
+| Notes | Executable 1 | [notes main](applications/notes/main.rs), [editing/storage/view](applications/notes/session/session.rs) |
+| Menu / Colors | Executable 2, supplied app argument 3 / 2 | [launcher](desktop/session/shell/launcher.rs), [color app](desktop/session/app/app.rs) |
 
-The separate [compositor profile and experiment](lab/compositor/README.md) starts
-its own supervisor and two isolated scene clients. Follow its coordinator into
-drawing and recovery checks, then the display service's compositor dispatch.
-It exercises retained scopes without changing this ordinary status composition.
-Its [persistent session profile](lab/compositor/SESSION.md) adds a third app
-hosted inside another app's scope, attenuated focus and live compositor recovery.
-The distribution still owns all process lifetimes; display enforces scene and
-input grants independently of those lifecycle rights.
+The menu reports a numbered choice over its private owner control connection.
+Only the desktop owner validates that choice and sends RUN/STOP to the matrix.
+The menu has no launch handles or storage capability. Notes receives a private
+catalog; Colors receives none. Apps see local geometry and input, not global
+placement, other apps or an ancestor's services. The
+[matrix contract](../platform/contracts/matrix.rs) and
+[child admission](../platform/services/matrix/service/children/admission.rs)
+connect this distribution policy to the platform mechanism.
 
-The [matrix boundary lab](lab/matrix/README.md) now lends launch budgets to the
-root matrix, which admits its own children. The inner matrix admits its leaf;
-the fixture holds only root control and has no descendant process handles.
-The [visible matrix policy](lab/matrix/desktop/desktop.rs) uses that same platform tree
-for local drawing, physical pointer input and focus through the existing
-compositor. See the [implementation map](../STATUS.md) for commands and limits.
+## Engineering proofs
 
-The [device lifecycle lab](lab/devices/README.md) pairs a userspace supervisor
-with an interrupt-driven serial driver. The kernel grants only the child access
-to COM2/IRQ3, and the supervisor replaces it after faults and blocked waits.
+```powershell
+python tools/boot-harness-rs/desktop_test.py
+```
 
-The [shared-memory lab](lab/shared-memory/README.md) forwards one sealed object
-through three processes on both CPUs. The matrix desktop uses the same ordinary
-IPC mechanism for retained bitmaps, with explicit child memory budgets.
+This builds the default composition, chooses programs with physical mouse and
+keyboard input, checks exact note glyphs and status, protects unsaved drafts,
+repeatedly replaces apps, and cold-boots the same disposable disk to check saved
+text. It never touches the interactive disk.
 
-The [ordinary channel lab](lab/channels/README.md) remains the focused proof for
-runtime endpoint moves, startup environments and recursive launch-loan lifetime.
-Its [scenario](lab/channels/scenario.rs) descends into each of those mechanisms.
+Other profiles remain focused mechanism and fault tests, not competing default
+OS entry points. [The desktop guide](desktop/README.md) describes its recursive
+matrix, storage and provider-recovery proofs. The old status/counter composition
+is preserved as [legacy.json](../../tools/boot-harness-rs/profiles/legacy.json),
+with its [init](init/session/session.rs) and
+[session protocol](libraries/session-protocol/lib.rs). Old scene capture/recovery
+flags deliberately select that fixture. `--smoke` still selects the profile's
+`user_programs` for exhaustive kernel exercises.
 
-The [private content lab](lab/objects/README.md) composes the experimental database
-provider with two explicitly connected storage clients. Its supervisor owns process
-lifetimes and crash-test milestones; the platform provider owns content publication
-and the disk. This is separate from the default desktop catalog composition.
-
-The separate [notes application](applications/notes/README.md) starts at
-[main.rs](applications/notes/main.rs) and [session.rs](applications/notes/session/session.rs).
-The `notes.json` composition selects it beneath ordinary root/nested matrix services;
-it does not import the distribution lab or any service implementation.
+The [implementation map](../STATUS.md) tracks remaining restrictions. In
+particular this is a fixed installed menu with one active workspace app, not a
+package installer, general desktop window manager or production filesystem.

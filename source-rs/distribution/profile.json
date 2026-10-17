@@ -1,5 +1,5 @@
 {
-  "name": "Cathedral Rust lab",
+  "name": "Cathedral desktop",
   "stage": "early-boot",
   "boot_entry": "kernel/boot/uefi/main.rs",
   "boot_package": "cathedral-boot-uefi",
@@ -59,66 +59,89 @@
   },
   "startup": {
     "initial": {
-      "package": "cathedral-init",
-      "entry": "distribution/init/main.rs",
+      "package": "cathedral-desktop",
+      "entry": "distribution/desktop/main.rs",
       "target": "x86_64-unknown-none",
-      "clock": true
+      "clock": true,
+      "argument": 0,
+      "features": [
+        "shell"
+      ]
     },
     "launches": [
       {
         "package": "cathedral-display-service",
         "entry": "platform/services/display/main.rs",
         "target": "x86_64-unknown-none",
-        "framebuffer": true,
-        "argument": 0,
         "clock": true,
-        "shared_pages": 4
+        "argument": 1129270608,
+        "framebuffer": true,
+        "shared_pages": 48
       },
       {
         "package": "cathedral-input-service",
         "entry": "platform/services/input/main.rs",
         "target": "x86_64-unknown-none",
-        "keyboard": true,
-        "clock": true
+        "clock": true,
+        "argument": 1296127058,
+        "keyboard": true
       },
       {
-        "package": "cathedral-status",
-        "entry": "distribution/applications/status/main.rs",
+        "package": "cathedral-matrix-service",
+        "entry": "platform/services/matrix/main.rs",
         "target": "x86_64-unknown-none",
         "clock": true,
-        "private_pages": 4
+        "argument": 1398034258,
+        "ipc_channels": 20,
+        "private_pages": 48,
+        "shared_pages": 64
       },
       {
-        "package": "cathedral-storage-service",
-        "entry": "platform/services/storage/main.rs",
+        "package": "cathedral-database-storage",
+        "entry": "platform/services/storage/database/main.rs",
         "target": "x86_64-unknown-none",
         "clock": true,
-        "disk": true
-      },
-      {
-        "package": "cathedral-counter",
-        "entry": "distribution/applications/counter/main.rs",
-        "target": "x86_64-unknown-none",
-        "clock": true
+        "disk": true,
+        "ipc_channels": 0,
+        "features": [
+          "catalog"
+        ],
+        "private_pages": 64
       }
     ],
     "links": [
       [
         3,
-        1
-      ],
-      [
-        3,
-        2
-      ],
-      [
-        3,
         4
       ],
       [
-        5,
+        3,
         4
       ]
-    ]
+    ],
+    "executables": [
+      {
+        "package": "cathedral-matrix-service",
+        "entry": "platform/services/matrix/main.rs",
+        "target": "x86_64-unknown-none",
+        "argument": 0
+      },
+      {
+        "package": "cathedral-notes",
+        "entry": "distribution/applications/notes/main.rs",
+        "target": "x86_64-unknown-none",
+        "argument": 2
+      },
+      {
+        "package": "cathedral-desktop",
+        "entry": "distribution/desktop/main.rs",
+        "target": "x86_64-unknown-none",
+        "argument": 2,
+        "features": [
+          "shell"
+        ]
+      }
+    ],
+    "dynamic_tasks": 4
   }
 }

@@ -1,13 +1,13 @@
 #![no_std]
 #![no_main]
 //! Distribution policy configures a matrix-owned process tree through its root.
-#[cfg(feature = "desktop")]
-mod desktop;
 #[cfg(not(feature = "desktop"))]
 mod fixture;
 mod leaf;
 #[cfg(not(any(feature = "desktop", feature = "storage-lab")))]
 mod scenario;
+#[cfg(feature = "desktop")]
+mod session;
 #[cfg(all(not(feature = "desktop"), feature = "storage-lab"))]
 mod storage;
 use cathedral_kernel_contracts::user as abi;
@@ -20,13 +20,19 @@ fn main(role: u64, argument: u64, environment: cathedral_user_runtime::task::Env
     let _ = argument;
     match role {
         #[cfg(feature = "desktop")]
-        0 => desktop::run(),
+        0 => session::run(),
         #[cfg(not(any(feature = "desktop", feature = "storage-lab")))]
         0 => scenario::run(),
         #[cfg(all(not(feature = "desktop"), feature = "storage-lab"))]
         0 => storage::run(),
         #[cfg(feature = "desktop")]
-        2 => desktop::app(argument, environment),
+        2 => {
+            #[cfg(feature = "shell")]
+            if argument == 3 {
+                return session::launcher(environment);
+            }
+            session::app(argument, environment)
+        }
         #[cfg(feature = "desktop")]
         3 => loop {
             core::hint::spin_loop();

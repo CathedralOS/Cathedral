@@ -56,7 +56,7 @@ orchestrating `main.rs`.
 
 The kernel can boot independently of the shared platform. In the Rust lab,
 ordinary boot optionally admits a host-supplied initial program and bounded
-launch authority. `distribution/init` chooses when to start and use the selected
+launch authority. `distribution/desktop` chooses when to start and use the selected
 platform providers. The profile chooses executable artifacts; the kernel enforces
 their grants. Exhaustive bring-up composition lives under `kernel/boot/uefi/lab`
 and is compiled only in smoke builds. The bounded launcher supports up to seven

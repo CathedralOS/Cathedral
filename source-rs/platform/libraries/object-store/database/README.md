@@ -46,16 +46,16 @@ No existing desktop disk is migrated or reformatted.
 
 The desktop still requires `--release` under TCG. The original dev timeout
 (`20261017T023355118118Z`) exposed an app bug: CREATE unwrapped a storage error.
-[App state](../../../../distribution/lab/matrix/desktop/app/state.rs) now retains
+[App state](../../../../distribution/desktop/session/app/state.rs) now retains
 confirmed state, reports failure visibly, and reads before any subsequent mutation.
 Enter on a red error mark reloads the current grant and stored value; it never
 blindly repeats a toggle. A failed CREATE may have committed, so readback settles
 it. Only the explicitly diskless sibling probe uses volatile state.
 
-The [recovery exercise](../../../../distribution/lab/matrix/desktop/database_recovery.rs)
+The [recovery exercise](../../../../distribution/desktop/session/database_recovery.rs)
 lets a committed CREATE exceed the actual matrix deadline, checks the app survives
 and shows its error, then lets the owner detect and replace the live stalled provider. The distribution's ordinary
-[supervisor](../../../../distribution/lab/matrix/desktop/persistence/persistence.rs) replaces
+[supervisor](../../../../distribution/desktop/session/persistence/persistence.rs) replaces
 the dead provider and explicitly re-grants both roots through the existing matrix
 tree. Readback finds revision 1 without duplicating CREATE. Further cuts before
 REPLACE and after its commit preserve the correct old/new values and exact
@@ -78,11 +78,11 @@ policy or automatic media repair. Loss of the app's own uncorrelated transport s
 requires app replacement. Apps keep confirmed state and reconcile fresh grants on
 Enter; no uncertain mutation is replayed automatically.
 
-VS Code's **Cathedral: Database Desktop in QEMU** entry retains
-`build/boot-harness-rs/matrix-database-storage.raw`. The host creates this guarded
-volume only when absent; an existing file is never reformatted. The guest validates
-its envelope/engine on every open. The older catalog desktop remains a separate
-launch option and disk. No migration is performed.
+F5's **Cathedral: Build & Run in QEMU** uses this provider for Notes, retaining
+`build/boot-harness-rs/cathedral-storage.raw`. The host creates the guarded volume
+only when absent; existing files are never reformatted. The guest validates its
+envelope/engine on every open. Explicit `matrix-database` and `notes` profiles
+keep their own older lab disks; no migration is performed.
 
 `--recovery` selects test-only provider gates and `trace-storage`. Artifacts include
 `timing-N.csv` and `ata-N.csv` alongside serial, scanout and independent host checks.

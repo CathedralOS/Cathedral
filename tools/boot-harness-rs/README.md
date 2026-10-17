@@ -4,32 +4,35 @@ Run `python tools/boot-harness-rs/run.py --smoke` from the repository root.
 This builds the separate `source-rs/` Cargo workspace and exercises its UEFI
 handoff under QEMU/OVMF. Host-side Python only; no extra Python packages.
 
-For an interactive desktop in VS Code, open the Cathedral repository root, select
-**Cathedral: Build & Run in QEMU** in Run and Debug, then press **F5**. The checked-in
-[launch configuration](../../.vscode/launch.json) builds the matrix desktop in
-release mode and opens QEMU's window. Build output and serial diagnostics appear
-in the integrated terminal. Close QEMU's window or press Ctrl+C in that terminal
-to stop. Python, Rust, QEMU and OVMF use the same setup as the CLI runner below.
-
-This uses VS Code's [terminal launch configuration](https://github.com/microsoft/vscode-js-debug/blob/main/OPTIONS.md#node-terminal-launch)
-to run the existing Python command; it does not attach a kernel debugger. The
-desktop keeps its existing `build/boot-harness-rs/matrix-desktop-storage.raw`
-between runs. **Cathedral: Database Desktop in QEMU** selects the newer backend
-and retains `build/boot-harness-rs/matrix-database-storage.raw` instead. Its first
-launch builds the host formatter and creates a new guarded database image; later
-launches preserve it. Existing files are never automatically reformatted.
-
-**Cathedral: Notes in QEMU** runs the [notes scratchpad](../../source-rs/distribution/applications/notes/README.md)
-with its own `build/boot-harness-rs/notes-storage.raw`. Its disposable proofs are
-`matrix_database_test.py --release --notes` and `--release --notes-recovery`;
-they add typing, draft preservation, exact glyph checks, workload timings and an
-independent database oracle. The recovery profile is build-only in `run.py`.
-
-The equivalent database desktop command is:
+For the OS desktop in VS Code, open the repository root and press **F5** with
+**Cathedral: Build & Run in QEMU** selected. There is one launch configuration;
+it runs the same default composition as:
 
 ```powershell
-python tools/boot-harness-rs/run.py --profile tools/boot-harness-rs/profiles/matrix-database.json --release --window
+python tools/boot-harness-rs/run.py --release --window
 ```
+
+Click **Notes** or **Colors** in Programs, then click the workspace to focus it.
+Notes: type, F1 save/check, F2 reload. Colors: Enter changes color. Close App
+closes the workspace; unsaved notes block replacement until saved or reloaded.
+Build output and serial diagnostics appear in the integrated terminal. Close
+QEMU or press Ctrl+C there to stop. This uses VS Code's terminal launcher, not
+an attached kernel debugger.
+
+The desktop retains `build/boot-harness-rs/cathedral-storage.raw`. First launch
+builds the host formatter and creates the image; later launches preserve it.
+Existing files are never automatically reformatted. Older lab disks are untouched.
+
+`python tools/boot-harness-rs/desktop_test.py` exercises this exact default image
+using physical input, repeated app launches, draft protection and cold-boot saved
+text checks on a disposable disk. [Distribution navigation](../../source-rs/distribution/README.md)
+connects the shell, apps and platform providers.
+
+The `notes`, `matrix-database` and recovery profiles remain focused engineering
+fixtures. Their tests are `matrix_database_test.py --release --notes` and
+`--release --notes-recovery`; they add isolated catalogs, exact glyph checks,
+workload timing and an independent database oracle. Recovery profiles are
+build-only in `run.py`.
 
 Add `--trace-storage` for opt-in timing. Run
 `python tools/boot-harness-rs/matrix_database_test.py --release --recovery` for
@@ -54,15 +57,15 @@ catalog delegation through two matrix levels, stale binding rejection, revocatio
 and tree/provider replacement. The proof uses a reset private disk at
 `build/boot-harness-rs/matrix-storage-test/test-storage.raw`; it never touches the
 ordinary interactive disk. The guest starts at
-[storage/storage.rs](../../source-rs/distribution/lab/matrix/storage/storage.rs).
+[storage/storage.rs](../../source-rs/distribution/desktop/storage/storage.rs).
 
 `source-rs/distribution/profile.json` selects the boot package, target and named user ELF programs. The
 Cargo workspace keeps kernel implementation under `kernel/` and the UART under
 `platform/drivers/`; replacing the distribution does not require moving those.
 
-Ordinary boots build only `startup.initial` and the optional `startup.launches` array.
-The kernel admits that initial executable; `distribution/init` launches and uses
-display/input/storage providers and the separate status and counter applications. The kernel fixtures below are compiled
+Ordinary boots build `startup.initial`, `startup.launches` and the executable
+catalog. The kernel admits the initial desktop owner; `distribution/desktop`
+starts providers and admits apps through recursive matrices. The kernel fixtures below are compiled
 only with `--smoke`. `--kernel-only --smoke` runs kernel and raw-user tests without
 building any platform service or distribution executable. `--kernel-only` boots
 the kernel alone. `--profile tools/boot-harness-rs/profiles/minimal.json` supplies
@@ -174,7 +177,7 @@ host replacement, and replaces the input source while a key is held. The host
 compares every scanout pixel at several stages. Add `--release` for the optimized
 build. Output is `build/boot-harness-rs/session-test/display.png`; see the
 [session guide](../../source-rs/distribution/lab/compositor/SESSION.md) for the
-interactive command and F4–F7 recovery controls.
+interactive command and F4â€“F7 recovery controls.
 
 Normal session startup skips destructive bring-up probes. Add `--startup-probes`
 to run those and the full-screen repaint timing probe. Session tests also drive
@@ -196,7 +199,7 @@ for navigation, checks and limits. Ordinary boots do not enable this workload.
 matrix provider and two isolated leaf processes, checks local-only views,
 clamped capture, attenuated keys, ancestor revocation, resize and replacement.
 Add `--release` for optimized verification. This profile has no display grant;
-its [guide](../../source-rs/distribution/lab/matrix/README.md) documents the
+its [guide](../../source-rs/distribution/desktop/README.md) documents the
 execution paths and remaining environment/lifecycle work.
 
 ## CPU turn sharing and measured ceilings
@@ -210,7 +213,7 @@ loops, repeated replacement and an all-throttled idle session. Reports include
 direct/subtree microseconds and exhaustion counts, with heap/frame reclamation.
 
 Each `startup.initial` or `startup.launches` entry may set `cpu_budget_us` to an
-integer 0–100000. For example, 20000 supplies a 20 ms burst and continuously refills
+integer 0â€“100000. For example, 20000 supplies a 20 ms burst and continuously refills
 at 20% of one CPU. Zero/default adds no local cap; ancestors still constrain the
 account. Limits persist through replacement and loans. These are token-bucket
 ceilings, not fixed windows or guaranteed reservations, so their sum need not fit

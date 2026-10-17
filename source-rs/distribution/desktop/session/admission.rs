@@ -8,6 +8,8 @@ pub(super) struct Session {
     #[cfg(feature = "database-probes")]
     pub(super) database_fresh: bool,
     pub matrix: Pair,
+    #[cfg(feature = "shell")]
+    pub(super) notes_open: bool,
     pub pressure: bool,
     pub extent: [u64; 2],
     pub(super) source: Pair,
@@ -102,7 +104,21 @@ pub(super) fn start() -> Session {
         display_call(display, display_task, [pointer::ENABLE, 1, 0, 0, 0, 0])[0],
         0
     );
-    let labels: &[(u64, u64, &[u8])] = if cfg!(feature = "notes") {
+    let labels: &[(u64, u64, &[u8])] = if cfg!(feature = "shell") {
+        &[
+            (40, 50, b"CATHEDRAL".as_slice()),
+            (40, 110, b"PROGRAMS"),
+            (330, 110, b"WORKSPACE"),
+            (40, 330, b"CLICK A PROGRAM"),
+            (40, 362, b"THEN CLICK APP"),
+            (40, 420, b"NOTES: 60 CHARS"),
+            (40, 452, b"F1 SAVE / CHECK"),
+            (40, 484, b"F2 RELOAD"),
+            (360, 420, b"COLORS: ENTER"),
+            (360, 452, b"CHANGES COLOR"),
+            (360, 484, b"NO REBOOT NEEDED"),
+        ]
+    } else if cfg!(feature = "notes") {
         &[
             (80, 60, b"PRIVATE NOTES"),
             (134, 140, b"NESTED NOTE"),
@@ -134,7 +150,7 @@ pub(super) fn start() -> Session {
     let (source_send, source_input) = ipc::channel().unwrap();
     let (source_output, source_recv) = ipc::channel().unwrap();
     let capacity = task::available_slots().unwrap();
-    let pressure = Executable::at(2).is_ok();
+    let pressure = !cfg!(feature = "shell") && Executable::at(2).is_ok();
     assert_eq!(capacity, 4);
     let root = Launch::at(2).unwrap();
     // Descendant reservations return to the surviving distribution owner on root
@@ -151,7 +167,11 @@ pub(super) fn start() -> Session {
     root.assign_slots(capacity).unwrap();
     root.assign_memory((capacity + 1) * abi::MAX_ADMISSION_FRAMES as u64)
         .unwrap();
-    for index in 0..if pressure { 3 } else { 2 } {
+    for index in 0..if pressure || cfg!(feature = "shell") {
+        3
+    } else {
+        2
+    } {
         root.allow_executable(Executable::at(index).unwrap())
             .unwrap();
     }
@@ -180,6 +200,8 @@ pub(super) fn start() -> Session {
         #[cfg(feature = "database-probes")]
         database_fresh,
         matrix,
+        #[cfg(feature = "shell")]
+        notes_open: false,
         pressure,
         extent: [info[1], info[2]],
         source: (source_send, source_recv),

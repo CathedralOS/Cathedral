@@ -1,0 +1,124 @@
+{
+  "name": "Cathedral Rust lab",
+  "stage": "early-boot",
+  "boot_entry": "kernel/boot/uefi/main.rs",
+  "boot_package": "cathedral-boot-uefi",
+  "target": "x86_64-unknown-uefi",
+  "user_programs": {
+    "hello": {
+      "package": "cathedral-hello",
+      "entry": "distribution/lab/hello/main.rs",
+      "target": "x86_64-unknown-none"
+    },
+    "ipc": {
+      "package": "cathedral-ipc-lab",
+      "entry": "distribution/lab/ipc/main.rs",
+      "target": "x86_64-unknown-none"
+    },
+    "supervision": {
+      "package": "cathedral-supervision-lab",
+      "entry": "distribution/lab/supervision/main.rs",
+      "target": "x86_64-unknown-none"
+    },
+    "display_service": {
+      "package": "cathedral-display-service",
+      "entry": "platform/services/display/main.rs",
+      "target": "x86_64-unknown-none",
+      "features": [
+        "lab"
+      ]
+    },
+    "display_lab": {
+      "package": "cathedral-display-lab",
+      "entry": "distribution/lab/display/main.rs",
+      "target": "x86_64-unknown-none"
+    },
+    "memory": {
+      "package": "cathedral-memory-lab",
+      "entry": "distribution/lab/memory/main.rs",
+      "target": "x86_64-unknown-none"
+    },
+    "rendering": {
+      "package": "cathedral-rendering-lab",
+      "entry": "distribution/lab/rendering/main.rs",
+      "target": "x86_64-unknown-none",
+      "features": [
+        "guest"
+      ]
+    },
+    "shared_memory": {
+      "package": "cathedral-shared-memory-lab",
+      "entry": "distribution/lab/shared-memory/main.rs",
+      "target": "x86_64-unknown-none"
+    },
+    "devices": {
+      "package": "cathedral-device-lab",
+      "entry": "distribution/lab/devices/main.rs",
+      "target": "x86_64-unknown-none"
+    }
+  },
+  "startup": {
+    "initial": {
+      "package": "cathedral-init",
+      "entry": "distribution/init/main.rs",
+      "target": "x86_64-unknown-none",
+      "clock": true
+    },
+    "launches": [
+      {
+        "package": "cathedral-display-service",
+        "entry": "platform/services/display/main.rs",
+        "target": "x86_64-unknown-none",
+        "framebuffer": true,
+        "argument": 0,
+        "clock": true,
+        "shared_pages": 4
+      },
+      {
+        "package": "cathedral-input-service",
+        "entry": "platform/services/input/main.rs",
+        "target": "x86_64-unknown-none",
+        "keyboard": true,
+        "clock": true
+      },
+      {
+        "package": "cathedral-status",
+        "entry": "distribution/applications/status/main.rs",
+        "target": "x86_64-unknown-none",
+        "clock": true,
+        "private_pages": 4
+      },
+      {
+        "package": "cathedral-storage-service",
+        "entry": "platform/services/storage/main.rs",
+        "target": "x86_64-unknown-none",
+        "clock": true,
+        "disk": true
+      },
+      {
+        "package": "cathedral-counter",
+        "entry": "distribution/applications/counter/main.rs",
+        "target": "x86_64-unknown-none",
+        "clock": true
+      }
+    ],
+    "links": [
+      [
+        3,
+        1
+      ],
+      [
+        3,
+        2
+      ],
+      [
+        3,
+        4
+      ],
+      [
+        5,
+        4
+      ]
+    ]
+  }
+}

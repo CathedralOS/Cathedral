@@ -4,6 +4,21 @@ This map connects implemented mechanisms to their integrated consumers, proofs
 and remaining restrictions. The [lab guide](README.md) owns detailed ABI/build
 instructions. [Owner questions](../OWNER_QUESTIONS.md) own unresolved semantics.
 
+## Default desktop
+
+F5 and `python tools/boot-harness-rs/run.py --release --window` share
+[one composition](distribution/profile.json). Its Programs menu opens Notes or
+Colors in a nested workspace without restarting QEMU. Notes saves to the
+experimental database disk; unsaved drafts block switching/closing until saved
+or explicitly reloaded. Colors is transient. [The distribution map](distribution/README.md)
+links admission, launcher, apps and provider boundaries.
+
+`python tools/boot-harness-rs/desktop_test.py` checks this actual image through
+physical input, exact saved text/status, repeated app replacement and cold reboot.
+Older profiles remain focused fault/mechanism fixtures. This is still a bounded
+installed menu and one active workspace app, not general app installation or a
+full window manager.
+
 ## Interface ownership
 
 The universal Rust contracts crate has been retired. [Kernel contracts](kernel/contracts/README.md)
@@ -177,8 +192,8 @@ Follow [storage forwarding](platform/services/matrix/service/parent/storage/stor
 [pending replies](platform/services/matrix/service/parent/storage/pending.rs) and
 [deferred stream policy](platform/services/matrix/service/deferred.rs).
 
-The [desktop stall proof](distribution/lab/matrix/desktop/stalls.rs) gates writes
-before execution and after durable commit. Its [nested peer](distribution/lab/matrix/desktop/stalls_peer.rs)
+The [desktop stall proof](distribution/desktop/session/stalls.rs) gates writes
+before execution and after durable commit. Its [nested peer](distribution/desktop/session/stalls_peer.rs)
 checks input and repaint while blocked, plus survival across catalog revocation,
 provider replacement and writer death. It also checks
 normal completion, timeout followed by a late reply, refusal to recycle an accepted
@@ -188,7 +203,7 @@ transport loss revokes the affected binding without killing display/input.
 Separate parent catalog transport loss retires that connection and its grants;
 legacy shared-stream failures still retire the nested matrix.
 
-[Provider recovery](distribution/lab/matrix/desktop/providers.rs) kills the physical
+[Provider recovery](distribution/desktop/session/providers.rs) kills the physical
 input decoder and display provider. Input loss cancels focus while apps survive;
 display loss retires the root. Distribution policy explicitly tears down/rebuilds
 adapters and the tree, re-funds the root from reclaimed reservations, then restores
@@ -229,8 +244,8 @@ in a fresh QEMU process. Ordinary window boots keep
 `--matrix-desktop-test` uses a disposable disk, adds staged rendering/storage death,
 revoked/stale writes and focus-loss checks, then cold-boots the same disk. Its first
 boot log is retained as `first-boot-serial.log` beside the reboot's `serial.log`.
-Follow [desktop recovery](distribution/lab/matrix/desktop/recovery.rs) and
-[app state](distribution/lab/matrix/desktop/app/state.rs).
+Follow [desktop recovery](distribution/desktop/session/recovery.rs) and
+[app state](distribution/desktop/session/app/state.rs).
 
 [Publication](platform/services/matrix/service/parent/presentation.rs) now resumes
 from the service loop after upstream replies. Other children's local reads can
@@ -387,7 +402,7 @@ the same lifecycle/rollback suite before its user-process proof.
 
 ## Current integrated path
 
-Start at [distribution desktop policy](distribution/lab/matrix/desktop/desktop.rs).
+Start at [distribution desktop policy](distribution/desktop/session/shell/shell.rs).
 It admits display/input adapters and gives a root matrix code grants and a funded
 process pool with physical-memory funding.
 The root matrix admits an inner matrix and an outside app; the inner admits its

@@ -52,7 +52,7 @@ Under the two-chrome model, drag-and-drop onto the desktop is chrome functionali
 
 ## Recursive composition
 
-The Rust [matrix boundary lab](../../../source-rs/distribution/lab/matrix/README.md)
+The Rust [matrix boundary lab](../../../source-rs/distribution/desktop/README.md)
 now runs the same local-world input/grant implementation at two levels. Its
 child protocol exposes only the child's own extent, attenuated keys and local
 input; parent position, sibling metadata and depth are absent. This implements

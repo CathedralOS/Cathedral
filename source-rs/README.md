@@ -11,6 +11,13 @@ mechanism-to-test coverage, restrictions and next kernel boundaries.
 The [ARM64 portability proof](kernel/arch/isa/aarch64/README.md) exercises the shared
 core on a second CPU architecture; the integrated desktop remains x86-64.
 
+Press **F5** at the repository root, or run
+`python tools/boot-harness-rs/run.py --release --window`. One desktop boots with a
+**Programs** menu: open Notes or Colors, click the workspace to focus, and use
+Close App to close it. Notes uses F1 to save/check and F2 to reload; Colors uses
+Enter. Saved notes survive QEMU restarts. See [controls and executable routes](distribution/README.md).
+`python tools/boot-harness-rs/desktop_test.py` tests this same default composition.
+
 Recent integrated proofs: `python tools/boot-harness-rs/run.py --matrix-desktop-test --release`
 checks recursive atomic presentation; `--matrix-storage-test --release` checks
 [private catalog delegation](platform/services/matrix/world/storage/README.md).
@@ -21,8 +28,8 @@ Run these commands from the repository root.
 
 Follow [boot main](kernel/boot/uefi/main.rs) for machine startup,
 [the user-task session](kernel/core/user_tasks/user_tasks.rs) for kernel execution,
-[init's session](distribution/init/session/session.rs) for distribution startup, or
-[the application workflow](distribution/applications/status/application/application.rs) for
+[desktop policy](distribution/desktop/session/shell/shell.rs) for distribution startup, or
+[the Notes workflow](distribution/applications/notes/session/session.rs) for
 input, persistence and drawing. The [composition map](distribution/README.md)
 bridges executable and IPC boundaries. The [discoverability convention](../wiki/architecture/discoverability.md)
 explains how to preserve these routes as the lab grows.
@@ -86,8 +93,9 @@ The entrance explains this level without exposing every detail below it.
 | `platform/libraries/user-runtime/` | Entry stub, syscall and protocol clients, linker script and optional funded heap |
 | `platform/services/display/` | Separately compiled userspace provider for linear framebuffer drawing |
 | `platform/services/input/` | Userspace PS/2 configuration, keyboard/mouse decoding and IPC event delivery |
-| `platform/services/matrix/` | Recursive local viewport and input grants; [headless boundary lab](distribution/lab/matrix/README.md) |
-| `distribution/init/` | Ordinary userspace startup, service health and restart policy |
+| `platform/services/matrix/` | Recursive local viewport and input grants; [headless boundary lab](distribution/desktop/README.md) |
+| `distribution/desktop/` | Default program launcher, app admission, recursive workspace and storage supervision |
+| `distribution/init/` | Legacy status/counter fixture startup and restart policy |
 | `distribution/applications/status/`, `distribution/libraries/boot-scene/` | Separate status application, retained UI state and drawing client |
 | `distribution/libraries/session-protocol/` | Init/app status messages kept inside the distribution |
 | `platform/libraries/bitmap-font/` | Original 5-by-7 printable ASCII glyphs |
@@ -329,7 +337,7 @@ The CPU profile is qemu64, with no claim to optional virtualization exception
 semantics or physical-hardware coverage. Unsafe wrappers are boot-only lab
 mechanisms, not application APIs.
 
-The runtime supports a configurable limit of 1Ã¢â‚¬â€œ64 trusted kernel tasks on one
+The runtime supports a configurable limit of 1ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œ64 trusted kernel tasks on one
 CPU (default 8), plus an optional frame budget for stacks and their tables.
 `kernel_tasks::spawn(fn())` returns a `TaskId` or an admission error. IDs contain slot
 generations and are scoped to a session; reused slots do not revive old IDs.
@@ -411,7 +419,7 @@ initial FP state is clean and I/O privilege is zero.
 | 30: Memory seal | Region handle, link token | Irreversibly remove WRITE and offer to that live service |
 | 31: Memory map | Producer-local offer, service link | Accept authorized RO/NX lease and return a fresh local reader handle |
 | 32: Memory pages | Region handle | Caller-owned or accepted region page count |
-| 33: IPC wait many | Pointer to 1Ã¢â‚¬â€œ8 LE u64 receive tickets, count, absolute deadline | Ready index or error; validates the copied array and all receive rights, consumes no data, requires clock |
+| 33: IPC wait many | Pointer to 1ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œ8 LE u64 receive tickets, count, absolute deadline | Ready index or error; validates the copied array and all receive rights, consumes no data, requires clock |
 | 34: IPC create | 16-byte writable destination, 0, 0 | 0 after installing local send/receive handles; `NO_MEMORY` at quota |
 | 35: IPC close | Local handle, 0, 0 | 0 after dropping the grant; copied handles become stale |
 | 36: IPC send capability | Destination handle, 80-byte packet, 0 | Payload length after atomic one-endpoint move into the queue |
@@ -1060,7 +1068,7 @@ catalog. Ordinary `matrix-desktop.json --release --window` boots retain
 `--matrix-desktop-test` enables destructive probes on a disposable image and then
 cold-boots that same image to check restoration. `--pressure` adds a ninth process
 for a capped spinner while retaining storage and all recovery checks. See the
-[matrix lab guide](distribution/lab/matrix/README.md) for navigation and limitations.
+[matrix lab guide](distribution/desktop/README.md) for navigation and limitations.
 
 The [private content publication lab](distribution/lab/objects/README.md) exercises
 real BLAKE3 chunks/manifests through an explicitly granted client connection:
@@ -1081,17 +1089,16 @@ catalog snapshots. See the [adapter guide](platform/libraries/object-store/datab
 for ownership and format limits, and the content guide for dev commands, heap
 samples and optional ATA tracing. The intermittent ATA timeout remains undiagnosed.
 
-VS Code's **Cathedral: Database Desktop in QEMU** launches the ordinary database
-composition with a persistent `build/boot-harness-rs/matrix-database-storage.raw`.
-It creates missing media only; existing images are never reformatted. The legacy
-desktop remains a separate launch option. The recovery proof adds a real startup
+F5's **Cathedral: Build & Run in QEMU** uses the database provider for Notes in
+the default program-launcher desktop, retaining `build/boot-harness-rs/cathedral-storage.raw`.
+It creates missing media only; existing images are never reformatted. Explicit
+lab profiles retain their separate images. The recovery proof adds a real startup
 deadline, provider death before commit and after commit-before-reply, explicit
 re-grants, live sibling interaction and per-stage timing. Apps retain confirmed
 state and show a red mark on uncertain saves; Enter reconciles by reading before
 another mutation. Bounded owner supervision now replaces dead/stalled providers
 and retired root data streams, with at most three replacements per desktop session.
 
-**Cathedral: Notes in QEMU** adds an ordinary 60-character scratchpad with physical
-text input, atomic saves, draft-preserving reconciliation and a separate persistent
-image. See the [notes guide](distribution/applications/notes/README.md) for controls,
+**Notes** in the Programs menu opens a 60-character scratchpad with physical
+text input, atomic saves and draft-preserving reconciliation. See the [notes guide](distribution/applications/notes/README.md) for controls,
 proofs, measured costs and the remaining bulk-content boundary.

@@ -57,7 +57,7 @@ Recovery reads committed state through fresh bindings;
 an error does not establish that a write failed to commit.
 
 Run `python tools/boot-harness-rs/run.py --matrix-storage-test --release` from
-the repository root. [The fixture](../../../../../distribution/lab/matrix/storage/storage.rs)
+the repository root. [The fixture](../../../../../distribution/desktop/storage/storage.rs)
 checks sibling data/list/generation isolation, over-delegation, stale requests,
 ancestor revocation, abandoned transactions, replacement, and committed data
 after reopening the provider and matrix tree. It uses a private reset test disk.
@@ -69,7 +69,7 @@ catalogs and storage quotas remain future work. The visible desktop saves privat
 app colors through this boundary and verifies them after a cold reboot. Parents remain trusted to delegate their own authority; this is not a
 claim of timing isolation or confinement from a malicious ancestor.
 
-The [nested peer proof](../../../../../distribution/lab/matrix/desktop/stalls_peer.rs)
+The [nested peer proof](../../../../../distribution/desktop/session/stalls_peer.rs)
 places two apps beneath one nested matrix. While one save is gated at the storage
 provider, its sibling consumes pointer and keyboard events and repaints before
 the storage deadline. The same peer survives catalog revocation, provider restart

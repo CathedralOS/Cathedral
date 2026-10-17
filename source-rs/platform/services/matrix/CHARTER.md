@@ -79,7 +79,7 @@ publication, rejected batches, repeated commits and bitmap forwarding.
 
 This is a protocol and input experiment: two local child slots, five navigation
 keys, eight queued events per child and extents up to 4096. The
-[distribution fixture](../../../distribution/lab/matrix/README.md) runs two
+[distribution fixture](../../../distribution/desktop/README.md) runs two
 identical service executables with separate state. Each owns and admits its own
 children using inherited launch loans and dynamic parent endpoints. Distribution
 policy uses private owner commands; children cannot invoke them. Input wakes idle clients through their granted hint channel. Upstream state
