@@ -12,6 +12,8 @@ members = [
     "platform/drivers/uart_16550",
     "platform/libraries/bitmap-font",
     "platform/libraries/block-device",
+    "platform/libraries/content-layout",
+    "platform/libraries/database-objects",
     "platform/libraries/object-store",
     "platform/libraries/storage-volume",
     "platform/libraries/storage-volume/engine",
@@ -20,6 +22,7 @@ members = [
     "platform/services/display",
     "platform/services/input",
     "platform/services/storage",
+    "platform/services/storage/database",
     "platform/services/matrix",
     # Distribution
     "distribution/applications/status",
@@ -34,6 +37,7 @@ members = [
     "distribution/lab/devices",
     "distribution/lab/volume",
     "distribution/lab/database",
+    "distribution/lab/objects",
     "distribution/lab/database/worker",
     "distribution/lab/ipc",
     "distribution/lab/channels",
@@ -52,6 +56,8 @@ rust-version = "1.94"
 publish = false
 
 [workspace.dependencies]
+cathedral-content-layout = { path = "platform/libraries/content-layout" }
+cathedral-database-objects = { path = "platform/libraries/database-objects" }
 cathedral-storage-engine = { path = "platform/libraries/storage-volume/engine" }
 cathedral-user-heap = { path = "platform/libraries/user-heap" }
 cathedral-storage-volume = { path = "platform/libraries/storage-volume" }
@@ -84,11 +90,13 @@ panic = "abort"
 [profile.dev.package.blake3]
 opt-level = "s"
 
-# The engine proof also monomorphizes a large database. Size-optimize redb and
-# its worker in dev; debug_assert! is off in these two packages only. Explicit
-# fixture assert! checks remain enabled. Strip worker DWARF for the ELF file cap.
+# Database fixtures monomorphize a large engine. Size-optimize their packages;
+# one redb codegen unit keeps the provider within the 240-page image budget.
+# Selected engine/fixture packages disable debug_assert! below; explicit assert!
+# checks remain enabled. Strip executable DWARF for the ELF file cap.
 [profile.dev.package.redb]
 opt-level = "s"
+codegen-units = 1
 debug-assertions = false
 
 [profile.dev.package.cathedral-database-worker]
@@ -106,3 +114,22 @@ opt-level = "s"
 [profile.release.package.cathedral-database-worker]
 opt-level = "s"
 strip = "debuginfo"
+
+[profile.dev.package.cathedral-database-storage]
+opt-level = "s"
+debug-assertions = false
+strip = "debuginfo"
+
+[profile.release.package.cathedral-database-storage]
+opt-level = "s"
+strip = "debuginfo"
+
+[profile.dev.package.cathedral-database-objects]
+opt-level = "s"
+debug-assertions = false
+
+[profile.dev.package.cathedral-storage-engine]
+opt-level = "s"
+
+[profile.dev.package.cathedral-content-layout]
+opt-level = "s"

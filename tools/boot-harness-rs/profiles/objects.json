@@ -1,0 +1,47 @@
+{
+  "name": "Private content publication and recovery proof",
+  "target": "x86_64-unknown-uefi",
+  "boot_package": "cathedral-boot-uefi",
+  "startup": {
+    "initial": {
+      "package": "cathedral-objects-lab",
+      "entry": "distribution/lab/objects/main.rs",
+      "target": "x86_64-unknown-none"
+    },
+    "launches": [
+      {
+        "package": "cathedral-database-storage",
+        "entry": "platform/services/storage/database/main.rs",
+        "target": "x86_64-unknown-none",
+        "clock": true,
+        "disk": true,
+        "private_pages": 64,
+        "shared_pages": 4
+      },
+      {
+        "package": "cathedral-objects-lab",
+        "entry": "distribution/lab/objects/main.rs",
+        "target": "x86_64-unknown-none",
+        "private_pages": 4,
+        "argument": 1
+      },
+      {
+        "package": "cathedral-objects-lab",
+        "entry": "distribution/lab/objects/main.rs",
+        "target": "x86_64-unknown-none",
+        "private_pages": 4,
+        "argument": 1
+      }
+    ],
+    "links": [
+      [
+        2,
+        1
+      ],
+      [
+        3,
+        1
+      ]
+    ]
+  }
+}

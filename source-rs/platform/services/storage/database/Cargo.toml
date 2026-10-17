@@ -1,0 +1,19 @@
+[package]
+name = "cathedral-database-storage"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+[[bin]]
+name = "cathedral-database-storage"
+path = "main.rs"
+test = false
+bench = false
+[dependencies]
+cathedral-user-runtime = { workspace = true, features = ["heap"] }
+cathedral-platform-contracts.workspace = true
+cathedral-database-objects.workspace = true
+cathedral-storage-engine.workspace = true
+cathedral-ata-pio.workspace = true
+[lints]
+workspace = true

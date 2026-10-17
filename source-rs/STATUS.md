@@ -105,6 +105,23 @@ kernel still has no engine dependency; the ordinary catalog format is unchanged.
 The engine and worker are size-optimized with debug_assert! disabled even in dev;
 explicit fixture assertions remain enabled. See the proof for commands and scope.
 
+## Private content through ordinary IPC
+
+The [content publication proof](distribution/lab/objects/README.md) now runs a
+separate platform database provider and two ordinary clients with disjoint roots.
+It persists real BLAKE3 chunks/manifests, current revision, change record and quota
+ledger atomically. The host and guest share the experimental content codec; the
+host model independently checks the complete retained record set. Clients have
+no disk grant and cannot select roots or look up arbitrary content hashes.
+
+Cold guest recovery reconstructs acknowledged content before replacing one byte.
+Stale, oversized, malformed and retained-quota refusals leave no partial records.
+A 256 KiB provider heap and four reader pages bound this fixture; serial samples
+report recovery, preparation and commit allocations. Its 24 KiB per-root quota
+bounds retained logical records, not physical full-volume progress. One early
+ATA busy timeout remains undiagnosed; the proof guide records this limitation.
+The ordinary desktop catalog and its matrix routing remain unchanged.
+
 ## Resumable storage and provider recovery
 
 Child storage requests now return to the matrix event loop while awaiting replies.

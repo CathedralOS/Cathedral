@@ -342,45 +342,20 @@ impl Store {
     }
 
     fn publish(&mut self, len: usize, contents: Contents) -> Version {
-        // Experimental exact encoding: mode:u8, length:u64, chunk size:u32,
-        // count:u32, then inline bytes, count 32-byte chunk digests, or a
-        // tree descriptor (fanout:u32, root digest:32). Tree nodes own their level.
-        // No padding, compression, object IDs, index entries or device headers.
-        let mut encoded = vec![match contents {
-            Contents::Inline(_) => 0,
-            Contents::Chunks(_) => 1,
-            Contents::Tree(_) => 2,
-        }];
-        encoded.extend_from_slice(&(len as u64).to_le_bytes());
-        encoded.extend_from_slice(&(self.policy.chunk_bytes as u32).to_le_bytes());
-        match &contents {
+        let body = match &contents {
+            Contents::Inline(bytes) => cathedral_content_layout::Contents::Inline(bytes),
+            Contents::Chunks(parts) => cathedral_content_layout::Contents::Chunks(parts),
             Contents::Tree(root) => {
-                encoded.extend_from_slice(
-                    &u32::try_from(len.div_ceil(self.policy.chunk_bytes))
-                        .expect("bounded workload")
-                        .to_le_bytes(),
-                );
                 let Layout::Tree { fanout } = self.policy.layout else {
                     unreachable!()
                 };
-                encoded.extend_from_slice(&(fanout as u32).to_le_bytes());
-                encoded.extend_from_slice(root);
-            }
-            Contents::Inline(bytes) => {
-                encoded.extend_from_slice(&0u32.to_le_bytes());
-                encoded.extend_from_slice(bytes);
-            }
-            Contents::Chunks(parts) => {
-                encoded.extend_from_slice(
-                    &u32::try_from(parts.len())
-                        .expect("bounded workload")
-                        .to_le_bytes(),
-                );
-                for part in parts {
-                    encoded.extend_from_slice(part);
+                cathedral_content_layout::Contents::Tree {
+                    fanout: fanout as u32,
+                    root,
                 }
             }
-        }
+        };
+        let encoded = cathedral_content_layout::manifest(len, self.policy.chunk_bytes as u32, body);
         let id = digest(b"cathedral.layout-lab.manifest.v1\0", &encoded);
         self.work.hashed_manifest += encoded.len();
         if let Some(existing) = self.manifests.get(&id) {
@@ -393,9 +368,4 @@ impl Store {
     }
 }
 
-pub(crate) fn digest(domain: &[u8], bytes: &[u8]) -> Digest {
-    let mut hasher = blake3::Hasher::new();
-    hasher.update(domain);
-    hasher.update(bytes);
-    *hasher.finalize().as_bytes()
-}
+pub(crate) use cathedral_content_layout::digest;

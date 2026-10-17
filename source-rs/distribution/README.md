@@ -81,3 +81,8 @@ IPC mechanism for retained bitmaps, with explicit child memory budgets.
 The [ordinary channel lab](lab/channels/README.md) remains the focused proof for
 runtime endpoint moves, startup environments and recursive launch-loan lifetime.
 Its [scenario](lab/channels/scenario.rs) descends into each of those mechanisms.
+
+The [private content lab](lab/objects/README.md) composes the experimental database
+provider with two explicitly connected storage clients. Its supervisor owns process
+lifetimes and crash-test milestones; the platform provider owns content publication
+and the disk. This is separate from the default desktop catalog composition.

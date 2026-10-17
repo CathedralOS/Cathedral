@@ -141,9 +141,9 @@ def main():
     parser.add_argument("--timeout", type=float, default=30, help="Smoke boot timeout in seconds (default: 30)")
     parser.add_argument("--memory", type=int, default=128, help="Guest RAM in MiB (default: 128)")
     args = parser.parse_args()
-    fixture_profiles = [Path(__file__).parent / f'profiles/{name}.json' for name in ('volume', 'database')]
+    fixture_profiles = [Path(__file__).parent / f'profiles/{name}.json' for name in ('volume', 'database', 'objects')]
     if args.profile.resolve() in [p.resolve() for p in fixture_profiles] and not args.build_only:
-        parser.error('storage fixtures require volume_test.py or database_test.py; these profiles are build-only here')
+        parser.error('storage fixtures require volume_test.py, database_test.py or objects_test.py; these profiles are build-only here')
     if args.compositor_test or args.pointer_test or args.session_test or args.matrix_test or args.matrix_desktop_test or args.matrix_storage_test or args.admission_test or args.ipc_test:
         if args.kernel_only:
             parser.error("protocol/display tests require userspace")

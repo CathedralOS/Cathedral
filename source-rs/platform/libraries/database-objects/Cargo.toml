@@ -1,0 +1,15 @@
+[package]
+name = "cathedral-database-objects"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+[lib]
+path = "lib.rs"
+[dependencies]
+cathedral-content-layout.workspace = true
+cathedral-storage-engine.workspace = true
+[features]
+host = ["cathedral-storage-engine/host"]
+[lints]
+workspace = true

@@ -13,6 +13,7 @@ const ID_KEY: &[u8] = b"volume-id";
 
 pub fn run(args: &[String]) -> Result<()> {
     match args.first().map(String::as_str) {
+        Some("verify-objects") if args.len() == 5 => objects::verify(Path::new(&args[1]), args[2].parse()?, args[3].parse()?, args[4].parse()?),
         Some("verify-guest") if args.len() == 5 => guest::verify(Path::new(&args[1]), args[2].parse()?, args[3].parse()?, args[4].parse()?),
         Some("prove") if args.len() == 2 => proof::run(Path::new(&args[1])),
         Some("format") if args.len() == 4 => {

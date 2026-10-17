@@ -71,7 +71,8 @@ The entrance explains this level without exposing every detail below it.
 | `platform/libraries/block-device/lib.rs`, `platform/contracts/storage.rs` | Experimental block durability and private-object messages |
 | `platform/drivers/ata-pio/` | Userspace bounded PIO driver for a dedicated QEMU data disk |
 | `platform/libraries/object-store/`, `platform/services/storage/` | Atomic object replacement, recovery and private service endpoint |
-| `platform/libraries/storage-volume/`, `distribution/lab/volume/` | Experimental shared envelope codec and guest block-region/flush proof; host redb only |
+| `platform/libraries/storage-volume/`, `distribution/lab/volume/` | Shared envelope and byte/sector adapter; separate transport and guest engine proofs |
+| `platform/libraries/database-objects/`, `platform/services/storage/database/` | Experimental atomic content publication behind private IPC roots |
 | `platform/contracts/input.rs` | Experimental physical-key events, independent of scan codes or UI policy |
 | `platform/contracts/display/pointer.rs` | Experimental logical pointers, source updates, capture and scoped synthetic leases |
 | `platform/contracts/display/interaction.rs` | Experimental attenuated keyboard focus and cross-process child placement |
@@ -1060,3 +1061,14 @@ catalog. Ordinary `matrix-desktop.json --release --window` boots retain
 cold-boots that same image to check restoration. `--pressure` adds a ninth process
 for a capped spinner while retaining storage and all recovery checks. See the
 [matrix lab guide](distribution/lab/matrix/README.md) for navigation and limitations.
+
+The [private content publication lab](distribution/lab/objects/README.md) exercises
+real BLAKE3 chunks/manifests through an explicitly granted client connection:
+
+```powershell
+python tools/boot-harness-rs/objects_test.py --release
+```
+
+It uses a new disposable image, checks atomic refusals, kills QEMU after acknowledged
+publication, cold-recovers contents and independently verifies every retained record.
+See its guide for the debug command, heap samples, bounds and known ATA timeout.

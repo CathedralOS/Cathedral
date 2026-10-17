@@ -1,0 +1,16 @@
+[package]
+name = "cathedral-objects-lab"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+[[bin]]
+name = "cathedral-objects-lab"
+path = "main.rs"
+test = false
+bench = false
+[dependencies]
+cathedral-user-runtime.workspace = true
+cathedral-platform-contracts.workspace = true
+[lints]
+workspace = true

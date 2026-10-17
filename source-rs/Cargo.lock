@@ -96,6 +96,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "cathedral-content-layout"
+version = "0.0.0"
+dependencies = [
+ "blake3",
+]
+
+[[package]]
 name = "cathedral-core"
 version = "0.0.0"
 dependencies = [
@@ -117,6 +124,25 @@ dependencies = [
 name = "cathedral-database-lab"
 version = "0.0.0"
 dependencies = [
+ "cathedral-user-runtime",
+]
+
+[[package]]
+name = "cathedral-database-objects"
+version = "0.0.0"
+dependencies = [
+ "cathedral-content-layout",
+ "cathedral-storage-engine",
+]
+
+[[package]]
+name = "cathedral-database-storage"
+version = "0.0.0"
+dependencies = [
+ "cathedral-ata-pio",
+ "cathedral-database-objects",
+ "cathedral-platform-contracts",
+ "cathedral-storage-engine",
  "cathedral-user-runtime",
 ]
 
@@ -229,6 +255,14 @@ dependencies = [
  "cathedral-block-device",
  "cathedral-kernel-contracts",
  "cathedral-platform-contracts",
+]
+
+[[package]]
+name = "cathedral-objects-lab"
+version = "0.0.0"
+dependencies = [
+ "cathedral-platform-contracts",
+ "cathedral-user-runtime",
 ]
 
 [[package]]

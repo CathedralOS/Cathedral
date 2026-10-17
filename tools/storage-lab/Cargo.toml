@@ -10,6 +10,7 @@ name = "storage-layout"
 path = "main.rs"
 
 [dependencies]
+cathedral-content-layout = { path = "../../source-rs/platform/libraries/content-layout" }
 cathedral-storage-volume = { path = "../../source-rs/platform/libraries/storage-volume", optional = true }
 blake3 = "1.8.7"
 redb = { version = "=4.4.0", optional = true }

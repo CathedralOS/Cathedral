@@ -32,10 +32,18 @@ name = "cathedral-block-device"
 version = "0.0.0"
 
 [[package]]
+name = "cathedral-content-layout"
+version = "0.0.0"
+dependencies = [
+ "blake3",
+]
+
+[[package]]
 name = "cathedral-storage-layout-lab"
 version = "0.0.0"
 dependencies = [
  "blake3",
+ "cathedral-content-layout",
  "cathedral-storage-volume",
  "redb",
  "rusqlite",

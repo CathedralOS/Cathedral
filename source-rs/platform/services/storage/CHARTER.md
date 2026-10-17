@@ -55,3 +55,7 @@ the provider; init resets the PIO transport and reopens committed state. App
 replacement leaves the provider and other app alive. Provider replacement retires
 both data connections and staging, then each app reconnects to its original root.
 See the object-store and driver charters for format and durability limits.
+
+The separately built [database provider](database/CHARTER.md) experiments with real
+chunked content and private-root IPC on redb. It has its own contract and lab
+composition; it does not reinterpret or migrate this catalog's format.

@@ -141,9 +141,9 @@ Batching 64 adjacent edits reduces tree-32 backend writes from 3,960,832 to 65,8
 bytes and syncs from 64 to one. File lengths and SQLite sidecars are recorded
 separately: neither means physical media writes or allocated disk blocks.
 An isolated redb `no_std` backend probe compiles for both x86-64 and ARM64
-bare-metal targets. This makes it a candidate for the next fault-model experiment,
-not a selected production engine. Runtime allocation, synchronization, bounded
-resources and Cathedral's device/capability adapter remain integration work.
+bare-metal targets. It remains an experimental candidate, not a selected production engine. The
+guest proofs below now integrate a funded allocator and bounded device adapter;
+production resource guarantees and concurrency remain further work.
 
 The [publication stress lab](../../tools/storage-lab/engines/stress/README.md) now
 prepares owned payloads/hashes before writer acquisition, validates expected
@@ -194,9 +194,26 @@ The [guest block-boundary proof](../../source-rs/platform/libraries/storage-volu
 now shares that envelope codec and checks byte/sector translation, explicit ATA
 flush, cold reboot and damaged-copy refusal. Its host-formatted database remains
 opaque to the guest; the host compares the whole image and reopens the engine.
-A funded userspace allocator and sufficient memory/image admission are still
-prerequisites for actual guest engine transactions. This does not change the
+The separate funded-heap proof now runs actual guest engine transactions and
+unclean recovery within bounded memory/image admission. This does not change the
 kernel/platform ownership or select a permanent database engine.
+
+The [private content guest proof](../../source-rs/distribution/lab/objects/README.md)
+now shares the host manifest encoder and BLAKE3 domains, and publishes real chunks,
+manifest, head, event and quota ledger in one guest transaction. Two clients have
+explicitly granted private roots and no disk authority. Immutable attachments keep
+hashing and persistence on the same bytes; preparation precedes writer acquisition
+and expected revisions are revalidated inside it. Refused writes abort all staged
+records. A cold guest reconstructs acknowledged contents, and an independent host
+model verifies exact retained records on image copies. Allocation samples cover
+recovery, preparation, commit and close.
+
+This remains one object per root with 16 KiB contents and a 24 KiB retained-record
+quota. That quota is not reserved physical engine space. General reclamation,
+full-volume progress, watcher replay, larger trees, crash cuts inside this guest
+protocol and multi-object predicates still need work. An intermittent ATA busy
+timeout is recorded in the proof guide. These are engineering gaps, not new owner
+semantics; the existing owner questions below remain open.
 
 ## Performance boundaries to preserve
 

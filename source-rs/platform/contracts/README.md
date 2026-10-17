@@ -7,6 +7,7 @@
 | Display/compositor | [display/display.rs](display/display.rs); sibling composition, pointer and interaction protocols | [display/main.rs](../services/display/main.rs) |
 | Physical keys | [input.rs](input.rs) | [input/main.rs](../services/input/main.rs) |
 | Recursive local worlds | [matrix.rs](matrix.rs) | [matrix/main.rs](../services/matrix/main.rs) |
+| Experimental content objects | [database.rs](database.rs) | [storage/database/main.rs](../services/storage/database/main.rs) |
 | Private catalogs | [storage.rs](storage.rs) | [storage/main.rs](../services/storage/main.rs) |
 
 These are experimental wire definitions and validators, with lab bounds and

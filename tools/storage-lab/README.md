@@ -174,3 +174,10 @@ arbitrary IO faults, active-reader pressure and near-full-store progress remain
 next evidence. This positional content tree is not a general B-tree database engine. The existing
 [catalog recovery tests](../../source-rs/platform/libraries/object-store/CHARTER.md)
 remain the durability evidence for the current guest implementation.
+
+The canonical experimental manifest encoder and BLAKE3 domains now live in the
+shared [content-layout library](../../source-rs/platform/libraries/content-layout/lib.rs).
+This host model still owns workload generation, tree construction and resident-map
+experiments. The [private guest content proof](../../source-rs/distribution/lab/objects/README.md)
+uses the same inline/flat representation behind an ordinary IPC provider; this host
+model independently verifies its full retained record set after each cold boot.
