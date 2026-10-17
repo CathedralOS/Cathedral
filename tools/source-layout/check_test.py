@@ -10,7 +10,7 @@ class OwnershipTests(unittest.TestCase):
             check_edge(source, 'kernel/contracts')
 
     def test_userspace_cannot_import_kernel_implementation_or_lookalike(self):
-        for source in ('platform/services/display', 'distribution/init'):
+        for source in ('platform/services/display', 'distribution/desktop'):
             for target in ('kernel/core', 'kernel/arch', 'kernel/boot/uefi',
                            'kernel/contracts-extra', 'kernel/contracts/internal-provider'):
                 with self.subTest(source=source, target=target), self.assertRaises(ValueError):
@@ -21,7 +21,7 @@ class OwnershipTests(unittest.TestCase):
                        'platform/contracts', 'platform/contracts/display',
                        'platform/libraries/block-device'):
             for target in ('kernel/core', 'platform/services/display',
-                           'platform/libraries/user-runtime', 'distribution/libraries/session-protocol'):
+                           'platform/libraries/user-runtime', 'distribution/libraries/boot-scene'):
                 with self.subTest(source=source, target=target), self.assertRaises(ValueError):
                     check_edge(source, target)
 
@@ -34,10 +34,10 @@ class OwnershipTests(unittest.TestCase):
         check_edge('kernel/boot/uefi', 'platform/drivers/uart_16550')
         check_edge('kernel/arch', 'platform/drivers/facts')
         check_edge('contracts/uefi/raw', 'contracts/uefi/scalars')
-        check_edge('distribution/init', 'distribution/libraries/session-protocol')
+        check_edge('distribution/desktop', 'distribution/libraries/boot-scene')
         for source in ('platform/services/matrix', 'kernel/core'):
             with self.assertRaises(ValueError):
-                check_edge(source, 'distribution/libraries/session-protocol')
+                check_edge(source, 'distribution/libraries/boot-scene')
         with self.assertRaises(ValueError):
             check_edge('kernel/contracts', 'platform/drivers/facts')
         with self.assertRaises(ValueError):

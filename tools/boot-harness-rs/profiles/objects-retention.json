@@ -13,8 +13,8 @@
     },
     "launches": [
       {
-        "package": "cathedral-database-storage",
-        "entry": "platform/services/storage/database/main.rs",
+        "package": "cathedral-storage-service",
+        "entry": "platform/services/storage/main.rs",
         "target": "x86_64-unknown-none",
         "clock": true,
         "disk": true,

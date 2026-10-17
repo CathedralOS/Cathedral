@@ -30,7 +30,7 @@ This guest store uses only inline and flat forms. Tree construction remains in t
 host lab until larger bounded guest workloads justify it.
 
 The caller must supply a trusted root binding; this library is not an authority
-validator. The [provider](../../services/storage/database/service.rs) obtains the
+validator. The [provider](../../services/storage/service.rs) obtains the
 binding from its kernel-authenticated connection. Publication callbacks observe
 preparation and successful commit outside the writer; the Committing observation
 runs inside the writer immediately before commit and must not reenter the store.

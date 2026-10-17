@@ -42,7 +42,7 @@ grants; the distribution assigns application roles and placement.
 | Display | Launch 0 | [display main](../platform/services/display/main.rs), [retained compositor](../platform/services/display/compositor/compositor.rs) |
 | Input | Launch 1 | [input main](../platform/services/input/main.rs), [matrix source](../platform/services/input/matrix.rs) |
 | Root matrix | Launch 2 | [matrix main](../platform/services/matrix/main.rs), [service loop](../platform/services/matrix/service/service.rs) |
-| Object storage | Launch 3 | [database main](../platform/services/storage/database/main.rs), [object contract](../platform/contracts/storage.rs) |
+| Object storage | Launch 3 | [storage main](../platform/services/storage/main.rs), [object contract](../platform/contracts/storage.rs) |
 | Workspace matrix | Executable 0 | Same matrix service; child-local extent and attenuated input |
 | Notes | Executable 1 | [notes main](applications/notes/main.rs), [editing/storage/view](applications/notes/session/session.rs) |
 | Menu / Colors | Executable 2, supplied app argument 3 / 2 | [launcher](desktop/session/shell/launcher.rs), [color app](desktop/session/app/app.rs) |
@@ -70,11 +70,7 @@ retained records. It never touches the interactive disk.
 
 Other profiles remain focused mechanism and fault tests, not competing default
 OS entry points. [The desktop guide](desktop/README.md) describes its recursive
-matrix, storage and provider-recovery proofs. The old status/counter composition
-is preserved as [legacy.json](../../tools/boot-harness-rs/profiles/legacy.json),
-with its [init](init/session/session.rs) and
-[session protocol](libraries/session-protocol/lib.rs). Old scene capture/recovery
-flags deliberately select that fixture. `--smoke` still selects the profile's
+matrix, storage and provider-recovery proofs. `--smoke` selects the profile's
 `user_programs` for exhaustive kernel exercises.
 
 The [implementation map](../STATUS.md) tracks remaining restrictions. In

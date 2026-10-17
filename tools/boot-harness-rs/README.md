@@ -112,37 +112,14 @@ distribution client. It verifies redraw after a provider fault, unrelated task
 progress, exclusive device mappings, NX/guard faults and all failed-admission
 budgets. The default QEMU display device must provide a linear RGB/BGR GOP mode.
 
-Run `python tools/boot-harness-rs/run.py --screenshot` for a bounded ordinary boot
-and an independent pixel-for-pixel scanout check through QMP. It saves
-`build/boot-harness-rs/capture/display.png` and the original PPM, then stops QEMU.
-No GUI or extra Python packages are required. `--window` instead opens the QEMU
-display for an ordinary interactive boot; Ctrl+C stops that run.
-Capture waits for userspace startup readiness and rejects accidental lab execution.
-The status application shares its distribution-owned drawing code with the smoke fixture.
+`--window` opens the QEMU display for an ordinary interactive boot; Ctrl+C
+stops that run. `desktop_test.py` is the bounded scanout check of that same
+composition; it needs no GUI or extra Python packages. Every capture waits for
+userspace startup readiness and rejects accidental lab execution.
 
 See [the Rust lab guide](../../source-rs/README.md) for setup, ordinary boots,
 firmware overrides, logs, checks, current limitations and the bring-up sequence.
 The existing `tools/boot-harness/` continues to build and boot Omega.
-
-`--input-test` boots normally, injects keyboard events over QMP and checks every
-pixel after navigation/toggling. Arrows select a labeled panel; Enter toggles it.
-The final capture is `build/boot-harness-rs/input-test/display.png`.
-
-`--recovery-test` enables init/provider/app `recovery-lab` features. It wedges both
-first-generation providers, then injects a crash, busy loop and blocked request
-loop into each provider. It checks automatic recovery, unchanged sibling and app
-identities, queued keyboard input during display loss and retained scene state.
-F3 then crashes/hangs the app and fills its reply queue, proving init and providers
-survive all three replacements.
-The replacement app probes denied task/device authority and rejected fault
-commands on data connections. Exact scanout checks include all text, generations
-and last-recovery labels. Healthy idle must not restart any task. Logs and the
-final screenshot go in `recovery-test/`. Add `--release` for optimized verification.
-Fault handlers and F1/F2/F3 recovery shortcuts are absent from normal builds.
-
-The debug storage-restart regression found on 2026-10-11 was a user-stack guard
-fault while reopening a populated catalog. Storage now opens the catalog before
-entering the request loop's frame; the complete debug recovery exercise passes.
 
 Smoke additionally checks a full three-child/two-link graph across 16 alternating
 app/provider replacements and complete memory reclamation. The readiness fixture

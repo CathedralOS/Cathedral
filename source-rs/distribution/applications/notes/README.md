@@ -46,7 +46,7 @@ keeps serving its world without it.
 
 Storage IPC enters the parent's
 [storage coordinator](../../../platform/services/matrix/service/parent/storage/storage.rs),
-then the [object provider](../../../platform/services/storage/database/service.rs).
+then the [object provider](../../../platform/services/storage/service.rs).
 The [distribution supervisor](../../desktop/session/persistence/persistence.rs)
 owns provider replacement and explicit re-grants. The app owns only its local
 binding and optimistic revision. Another app's replacement grant does not revive

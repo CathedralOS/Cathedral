@@ -2,7 +2,7 @@
 
 [main.rs](main.rs) selects the supervisor or ordinary client. The
 [supervisor](supervisor.rs) launches the separately compiled
-[platform provider](../../../platform/services/storage/database/main.rs), then
+[platform provider](../../../platform/services/storage/main.rs), then
 two [clients](client.rs). Each client has one explicit link and four private
 pages, with no disk, clock or sibling connection. The provider receives the disk,
 64 private pages split into a 56-page heap and eight output pages, plus four
@@ -104,6 +104,6 @@ zero allocation failures and a largest allocation of 9,432 bytes. Consult each
 run's `heap-*.txt` for per-boot cumulative peaks rather than treating a sample as
 an all-workload memory bound.
 
-The [database catalog adapter](../../../platform/libraries/object-store/database/README.md)
-now connects this content representation to the matrix desktop in a separate
-profile, preserving the ordinary catalog protocol and existing desktop images.
+The matrix desktop and Notes use this same provider through delegated roots;
+the [object store guide](../../../platform/libraries/database-objects/README.md)
+owns the representation.

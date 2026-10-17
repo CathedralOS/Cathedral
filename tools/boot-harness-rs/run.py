@@ -11,7 +11,6 @@ import sys
 import capture
 import disk_image
 import database_image
-import storage_test
 import compositor_test
 import pointer_test
 import session_test
@@ -127,10 +126,6 @@ def main():
     mode.add_argument("--compositor-test", action="store_true", help="Run the isolated retained-compositor profile and verify scanout")
     mode.add_argument("--build-only", action="store_true")
     mode.add_argument("--smoke", action="store_true")
-    mode.add_argument("--screenshot", action="store_true", help="Boot normally, verify scanout through QMP, save display.png and stop")
-    mode.add_argument("--input-test", action="store_true", help="Verify keyboard navigation and independent provider restarts through QMP")
-    mode.add_argument("--recovery-test", action="store_true", help="Inject provider failures and verify automatic deadline recovery")
-    mode.add_argument("--storage-test", action="store_true", help="Verify durable state across reboot and abrupt QEMU power cuts")
     parser.add_argument("--fault", choices=("guard", "invalid-opcode", "double-fault", "text-write", "rodata-write", "heap-execute", "stack-execute", "heap-alias-execute", "stack-alias-execute"), help="Expected-fault smoke test (requires --smoke)")
     parser.add_argument("--release", action="store_true")
     parser.add_argument("--startup-probes", action="store_true", help="Include destructive startup probes in the session lab")
@@ -151,10 +146,6 @@ def main():
             parser.error("protocol/display tests require userspace")
         args.profile = Path(__file__).parent / ("profiles/matrix-storage.json" if args.matrix_storage_test else "profiles/admission.json" if args.admission_test else "profiles/matrix-desktop.json" if args.matrix_desktop_test else "profiles/channels.json" if args.ipc_test else "profiles/matrix.json" if args.matrix_test else "profiles/session.json" if args.session_test else "profiles/pointer.json" if args.pointer_test else "profiles/compositor.json")
     default_profile = (WORKSPACE / "distribution/profile.json").resolve()
-    legacy_profile = (Path(__file__).parent / "profiles/legacy.json").resolve()
-    # These old scene oracles intentionally exercise the preserved legacy fixture.
-    if args.profile.resolve() == default_profile and (args.screenshot or args.input_test or args.recovery_test or args.storage_test):
-        args.profile = legacy_profile
     desktop = args.profile.resolve() == default_profile and not (args.smoke or args.kernel_only)
     database_desktop = desktop or args.profile.resolve() in [(Path(__file__).parent / f'profiles/{name}.json').resolve() for name in ('matrix-desktop', 'matrix-database-recovery', 'matrix-storage', 'notes', 'notes-recovery')]
     if database_desktop and not args.release:
@@ -163,16 +154,14 @@ def main():
         parser.error("timeout must be positive and memory must be at least 64 MiB")
     if args.fault and not args.smoke:
         parser.error("--fault requires --smoke")
-    if args.window and (args.smoke or args.screenshot or args.input_test or args.recovery_test or args.storage_test or args.compositor_test or args.pointer_test or args.session_test or args.matrix_test or args.matrix_desktop_test or args.matrix_storage_test or args.admission_test or args.ipc_test or args.build_only):
+    if args.window and (args.smoke or args.compositor_test or args.pointer_test or args.session_test or args.matrix_test or args.matrix_desktop_test or args.matrix_storage_test or args.admission_test or args.ipc_test or args.build_only):
         parser.error("--window requires an ordinary interactive boot")
 
-    if args.kernel_only and (args.screenshot or args.input_test or args.recovery_test or args.storage_test or args.matrix_storage_test):
-        parser.error("capture modes require the distribution scene")
+    if args.kernel_only and args.matrix_storage_test:
+        parser.error("the storage fixture requires the distribution")
     custom_profile = args.profile.resolve() != (WORKSPACE / "distribution/profile.json").resolve()
     if custom_profile and args.kernel_only:
         parser.error("--kernel-only does not use a distribution profile")
-    if custom_profile and args.profile.resolve() != legacy_profile and (args.recovery_test or args.storage_test):
-        parser.error("recovery/storage tests use profiles/legacy.json")
     if custom_profile and args.smoke:
         parser.error("custom profiles select ordinary startup; smoke uses the standard lab profile")
     composition = ({"target": "x86_64-unknown-uefi", "boot_package": "cathedral-boot-uefi"}
@@ -217,17 +206,12 @@ def main():
             for resource in ("private_pages", "shared_pages"):
                 pages = startup["initial"].get(resource, 0)
                 if type(pages) is not int or not 0 <= pages <= 128:
-                    parser.error(f"initial {resource} must be an integer in 0..64")
+                    parser.error(f"initial {resource} must be an integer in 0..128")
                 environment[f"CATHEDRAL_INIT_{resource.upper()}"] = str(pages)
             programs["init"] = startup["initial"]
             environment["CATHEDRAL_INIT_CLOCK"] = "1" if startup["initial"].get("clock", False) else "0"
             launches = startup.get("launches", [startup["launch"]] if startup.get("launch") else [])
             environment["CATHEDRAL_LINKS"] = ",".join(f"{edge[0]}:{edge[1]}" for edge in startup.get("links", []))
-            if args.recovery_test or args.storage_test:
-                startup["initial"]["features"] = ["recovery-lab"]
-                for index, child in enumerate(launches):
-                    child["features"] = ["recovery-lab"]
-                    child["argument"] = 2 if args.recovery_test and index < 2 else 0 # Provider startup wedges; application stays live.
             images = startup.get("executables", [])
             if not isinstance(images, list) or len(images) + len(launches) > 7:
                 parser.error("executable catalogue plus static launches must fit seven grants")
@@ -263,11 +247,11 @@ def main():
             user_features.append('session-probes')
         if args.matrix_desktop_test and user["package"] == "cathedral-desktop":
             user_features.append("desktop-probes")
-        if args.matrix_desktop_test and user["package"] == "cathedral-database-storage":
+        if args.matrix_desktop_test and user["package"] == "cathedral-storage-service":
             user_features.append("recovery-lab")
         if args.trace_input and user["package"] in ("cathedral-matrix-service", "cathedral-input-service", "cathedral-desktop"):
             user_features.append("trace-input")
-        if args.trace_storage and user["package"] in ("cathedral-matrix-service", "cathedral-desktop", "cathedral-database-storage", "cathedral-notes"):
+        if args.trace_storage and user["package"] in ("cathedral-matrix-service", "cathedral-desktop", "cathedral-storage-service", "cathedral-notes"):
             user_features.append("trace-storage")
         if user_features:
             user_cargo.extend(["--features", ",".join(user_features)])
@@ -288,10 +272,10 @@ def main():
         cargo.extend(["--features", ','.join(features)])
     subprocess.run(cargo, cwd=WORKSPACE, check=True, env=environment)
     # Keep smoke images and their terminating feature separate from normal boots.
-    output = BUILD / (f"fault-{args.fault}" if args.fault else "smoke" if args.smoke else "storage-test" if args.storage_test else "recovery-test" if args.recovery_test else "input-test" if args.input_test else "test" if (args.compositor_test or args.pointer_test or args.session_test or args.matrix_test or args.matrix_desktop_test or args.matrix_storage_test or args.admission_test or args.ipc_test) else "capture" if args.screenshot else "interactive")
+    output = BUILD / (f"fault-{args.fault}" if args.fault else "smoke" if args.smoke else "test" if (args.compositor_test or args.pointer_test or args.session_test or args.matrix_test or args.matrix_desktop_test or args.matrix_storage_test or args.admission_test or args.ipc_test) else "interactive")
     if args.kernel_only:
         output = output.with_name("kernel-" + output.name)
-    if custom_profile and args.profile.resolve() != legacy_profile:
+    if custom_profile:
         output = output.with_name(args.profile.stem + "-" + output.name)
     if args.pressure:
         output = output.with_name("pressure-" + output.name)
@@ -308,18 +292,15 @@ def main():
     command += ["-drive", "format=raw,file=fat:rw:esp", "-nic", "none",
                 "-monitor", "none", "-no-reboot"]
     if not args.kernel_only and not args.smoke and any(child.get("disk", False) for child in launches):
-        disposable = args.screenshot or args.input_test or args.recovery_test or args.storage_test or args.matrix_storage_test or args.matrix_desktop_test
+        disposable = args.matrix_storage_test or args.matrix_desktop_test
         # Matrix app schemas must never reinterpret the default distribution's roots.
-        persistent = BUILD / ("cathedral-storage.raw" if desktop else "notes-storage.raw" if args.profile.stem == "notes" else "matrix-database-storage.raw" if database_desktop else "storage.raw")
+        persistent = BUILD / ("cathedral-storage.raw" if desktop else "notes-storage.raw" if args.profile.stem == "notes" else "matrix-database-storage.raw")
         data_path = output / "test-storage.raw" if disposable else persistent
-        if database_desktop:
-            # A disposable proof starts from a freshly formatted object volume;
-            # persistent media is created once and never reformatted.
-            if disposable and data_path.exists():
-                data_path.unlink()
-            database_image.prepare(data_path)
-        else:
-            disk_image.prepare(data_path, reset=disposable)
+        # A disposable proof starts from a freshly formatted object volume;
+        # persistent media is created once and never reformatted.
+        if disposable and data_path.exists():
+            data_path.unlink()
+        database_image.prepare(data_path)
         command += disk_image.arguments(data_path)
     if not args.window:
         command += ["-display", "none"]
@@ -348,12 +329,6 @@ def main():
         return 0
     if args.compositor_test:
         capture.run(command, output, args.timeout, creationflags, ready_marker="Cathedral compositor: ready", verify=compositor_test.verify)
-        return 0
-    if args.storage_test:
-        storage_test.run(command, output, args.timeout, creationflags)
-        return 0
-    if args.screenshot or args.input_test or args.recovery_test:
-        capture.run(command, output, args.timeout, creationflags, args.input_test, args.recovery_test)
         return 0
     if not args.smoke:
         command += ["-serial", "stdio"]

@@ -112,15 +112,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "cathedral-counter"
-version = "0.0.0"
-dependencies = [
- "cathedral-kernel-contracts",
- "cathedral-platform-contracts",
- "cathedral-user-runtime",
-]
-
-[[package]]
 name = "cathedral-database-lab"
 version = "0.0.0"
 dependencies = [
@@ -133,18 +124,6 @@ version = "0.0.0"
 dependencies = [
  "cathedral-content-layout",
  "cathedral-storage-engine",
-]
-
-[[package]]
-name = "cathedral-database-storage"
-version = "0.0.0"
-dependencies = [
- "cathedral-ata-pio",
- "cathedral-database-objects",
- "cathedral-kernel-contracts",
- "cathedral-platform-contracts",
- "cathedral-storage-engine",
- "cathedral-user-runtime",
 ]
 
 [[package]]
@@ -203,16 +182,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "cathedral-init"
-version = "0.0.0"
-dependencies = [
- "cathedral-kernel-contracts",
- "cathedral-platform-contracts",
- "cathedral-session-protocol",
- "cathedral-user-runtime",
-]
-
-[[package]]
 name = "cathedral-input-service"
 version = "0.0.0"
 dependencies = [
@@ -261,15 +230,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "cathedral-object-store"
-version = "0.0.0"
-dependencies = [
- "cathedral-block-device",
- "cathedral-kernel-contracts",
- "cathedral-platform-contracts",
-]
-
-[[package]]
 name = "cathedral-objects-lab"
 version = "0.0.0"
 dependencies = [
@@ -302,25 +262,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "cathedral-session-protocol"
-version = "0.0.0"
-
-[[package]]
 name = "cathedral-shared-memory-lab"
 version = "0.0.0"
 dependencies = [
  "cathedral-kernel-contracts",
- "cathedral-user-runtime",
-]
-
-[[package]]
-name = "cathedral-status"
-version = "0.0.0"
-dependencies = [
- "cathedral-boot-scene",
- "cathedral-kernel-contracts",
- "cathedral-platform-contracts",
- "cathedral-session-protocol",
  "cathedral-user-runtime",
 ]
 
@@ -339,9 +284,10 @@ name = "cathedral-storage-service"
 version = "0.0.0"
 dependencies = [
  "cathedral-ata-pio",
+ "cathedral-database-objects",
  "cathedral-kernel-contracts",
- "cathedral-object-store",
  "cathedral-platform-contracts",
+ "cathedral-storage-engine",
  "cathedral-user-runtime",
 ]
 

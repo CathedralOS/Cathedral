@@ -1,22 +1,36 @@
 #![no_std]
 #![no_main]
-//! Storage executable entrance. service/service.rs serves platform/contracts/storage.rs messages
-//! using the object-store library and ata-pio driver; init owns its lifetime.
+//! Private object storage provider. Only this executable receives the disk
+//! grant. Fund the heap, recover the engine, serve two private roots.
+mod bulk;
+#[cfg(feature = "recovery-lab")]
+mod gate;
+mod metrics;
 mod service;
+use cathedral_user_runtime::heap::{self, Heap};
+#[global_allocator]
+static HEAP: Heap = Heap::empty();
 cathedral_user_runtime::entry!(main);
 fn main(_: u64, _: u64) -> u64 {
-    match service::run() {
-        Ok(()) => 0,
-        Err(error) => {
-            report(error);
-            1
-        }
+    // Leave eight private pages for bounded sealed read replies, separately from
+    // the allocator. Reader custody continues to charge this provider's budget.
+    heap::initialize(&HEAP, 56).unwrap();
+    let disk = cathedral_ata_pio::Ata::open().unwrap();
+    let db = cathedral_storage_engine::open(disk, 4096, 4 * 1024 * 1024, 32768).unwrap();
+    metrics::report("recovered");
+    {
+        let store = cathedral_database_objects::Store::open(&db).unwrap();
+        service::serve(&store);
     }
-}
-fn report(error: cathedral_user_runtime::Error) {
-    let mut message = *b"Cathedral: storage failed code=0000000000000000\n";
-    for (index, digit) in message[30..46].iter_mut().enumerate() {
-        *digit = b"0123456789abcdef"[((error.0 as u64 >> ((15 - index) * 4)) & 15) as usize];
-    }
-    cathedral_user_runtime::write(&message).ok();
+    assert_eq!(
+        cathedral_user_runtime::resources::budget()
+            .unwrap()
+            .used
+            .reader_pages,
+        0
+    );
+    drop(db);
+    metrics::report("closed");
+    assert_eq!(HEAP.stats().live, 0);
+    0
 }

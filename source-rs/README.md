@@ -39,8 +39,7 @@ explains how to preserve these routes as the lab grows.
 
 Public boundaries also have owners: [kernel contracts](kernel/contracts/README.md)
 define syscalls and grants; [platform contracts](platform/contracts/README.md) define
-service messages. These packages import no implementations. Distribution-specific
-coordination stays in `distribution/libraries/session-protocol/`.
+service messages. These packages import no implementations.
 
 Within a subsystem folder, start at its named entrance (`memory/memory.rs`, for
 example) for state, sequencing or dispatch, then follow the responsibilities
@@ -80,9 +79,9 @@ The entrance explains this level without exposing every detail below it.
 | `platform/contracts/display/display.rs` | Userspace drawing requests; sibling files own composition, pointers and focus |
 | `platform/libraries/block-device/lib.rs`, `platform/contracts/storage.rs` | Experimental block durability and private-object messages |
 | `platform/drivers/ata-pio/` | Userspace bounded PIO driver for a dedicated QEMU data disk |
-| `platform/libraries/object-store/`, `platform/services/storage/` | Atomic object replacement, recovery and private service endpoint |
+| `platform/services/storage/` | Private object provider: the disk grant, engine recovery, two private roots and sealed attachments |
 | `platform/libraries/storage-volume/`, `distribution/lab/volume/` | Shared envelope and byte/sector adapter; separate transport and guest engine proofs |
-| `platform/libraries/database-objects/`, `platform/services/storage/database/` | Experimental atomic content publication behind private IPC roots |
+| `platform/libraries/database-objects/` | Numbered objects over immutable content: shared chunks, cheap copies, pins and collection |
 | `platform/contracts/input.rs` | Experimental physical-key events, independent of scan codes or UI policy |
 | `platform/contracts/display/pointer.rs` | Experimental logical pointers, source updates, capture and scoped synthetic leases |
 | `platform/contracts/display/interaction.rs` | Experimental attenuated keyboard focus and cross-process child placement |
@@ -98,9 +97,7 @@ The entrance explains this level without exposing every detail below it.
 | `platform/services/input/` | Userspace PS/2 configuration, keyboard/mouse decoding and IPC event delivery |
 | `platform/services/matrix/` | Recursive local viewport and input grants; [headless boundary lab](distribution/desktop/README.md) |
 | `distribution/desktop/` | Default program launcher, app admission, recursive workspace and storage supervision |
-| `distribution/init/` | Legacy status/counter fixture startup and restart policy |
-| `distribution/applications/status/`, `distribution/libraries/boot-scene/` | Separate status application, retained UI state and drawing client |
-| `distribution/libraries/session-protocol/` | Init/app status messages kept inside the distribution |
+| `distribution/libraries/boot-scene/` | Retained test-pattern drawing client shared by the display lab |
 | `platform/libraries/bitmap-font/` | Original 5-by-7 printable ASCII glyphs |
 | `kernel/core/ipc/link.rs` | Boot-approved peer graph without lifecycle rights |
 | `distribution/lab/display/` | Test-pattern layout, display client and restart policy |
@@ -149,21 +146,15 @@ From the repository root:
 python tools/boot-harness-rs/run.py --build-only
 python tools/boot-harness-rs/run.py --smoke
 python tools/boot-harness-rs/run.py --kernel-only --smoke
-python tools/boot-harness-rs/run.py --screenshot
-python tools/boot-harness-rs/run.py --input-test
-python tools/boot-harness-rs/run.py --recovery-test
-python tools/boot-harness-rs/run.py --storage-test
 python tools/boot-harness-rs/run.py --window
 python tools/boot-harness-rs/run.py
 ```
 
-The final command keeps init, display, input, storage and the app alive; all block when
-there is no work, leaving the CPU idle with timer wakeups. Ctrl+C stops QEMU.
-`--window` shows the display during an ordinary boot. `--screenshot` runs a
-bounded ordinary boot, captures QEMU's actual scanout through local QMP, checks
-every pixel against the distribution pattern, confirms no lab suite ran, writes `capture/display.png`
-under the build directory, and stops QEMU. This uses only Python's standard
-library. The capture check requires the lab's 1024x768 mode.
+The final command boots the desktop with the serial console on stdio; every
+service blocks when there is no work, leaving the CPU idle with timer wakeups.
+Ctrl+C stops QEMU. `--window` shows the display during an ordinary boot.
+`python tools/boot-harness-rs/desktop_test.py` drives that same composition
+through QMP and checks its scanout; it uses only Python's standard library.
 `--release` selects an optimized build. `--memory 256` selects guest RAM in MiB.
 Smoke mode has a 30-second boot deadline, requires ordered serial milestones,
 and checks the QEMU debug-exit status. A panic, missing milestone, reset or hang
@@ -770,9 +761,8 @@ cancels the replacement after a successful redraw. An independent clock-granted
 task progresses across each drawing interval. Additional probes exercise missing
 authority, NX, both guard pages, checked metadata copyout, rejection of device
 memory as a syscall buffer, and two retries at every failed frame-admission budget.
-All sessions return their heap and RAM-frame counts to baseline. The ordinary
-status application uses the same distribution scene library; its live scanout is
-independently checked by the harness's `--screenshot` mode.
+All sessions return their heap and RAM-frame counts to baseline. The display
+lab draws through the same distribution scene library.
 
 ## Ordinary userspace startup
 
@@ -781,8 +771,8 @@ then enables frame reclamation. With `bundled-user` it admits a supplied initial
 ELF through `startup.rs`; without it, the kernel remains idle. The normal kernel
 path has no knowledge of the display service executable or distribution scene.
 The bootstrap UART remains the documented privileged platform-driver exception.
-`CATHEDRAL_RS_BOOT_OK` marks kernel initialization; `Cathedral: startup ready`
-marks the default distribution's successful drawing and service startup.
+`CATHEDRAL_RS_BOOT_OK` marks kernel initialization; `Cathedral desktop: ready;
+choose a program` marks the default distribution's successful startup.
 
 The host profile supplies `startup.initial` and an optional `startup.launches`
 array (up to eleven, within twelve total task slots). Each selects a package, entry and ELF target; a child may
@@ -794,39 +784,17 @@ lifetime; the initial program chooses when to spawn, connect and restart.
 No physical address or executable choice is accepted from untrusted syscall data.
 This host-selected authority is still lab composition, not signed manifest admission.
 
-`distribution/init` launches independent display/input/storage providers and the separate
-`distribution/applications/status` ELF. Init owns supervision and reports health;
-the application owns appearance, selection and toggle state. Arrows move the
-selection border; Enter toggles a panel stripe. Original 5-by-7 bitmap text labels
-the panels, ready generations and last recovery. These counters show successful
-replacements, starting at zero; they are not wall-clock availability metrics.
-
-`startup.links: [[3, 1], [3, 2], [3, 4]]` connects application slot 3 to display,
-input and storage slots 1, 2 and 4. Slot 0 is init; launch order determines reserved child slots. Init retains
-four private control pairs. Three data pairs connect app to providers,
-using fourteen of thirty-two bounded endpoint slots. The arena is allocated once
-at session admission and reclaimed at teardown; message operations allocate nothing.
-The shared contracts define task, launch and endpoint bounds. The app receives no device, launch, cancellation
-or provider control grants. Providers multiplex private control and client data;
-input HEALTH replies do not consume keyboard events. Normal F1 through F8 have no
-restart behavior. All tasks still have the lab diagnostic-write syscall.
-
-Each provider health/initialization reply and scene redraw has a 100-tick budget.
-Raw input waits use 25 ticks; app input requests allow 150 ticks. Init retries a
-failed provider up to three times, cancelling/reaping it before fresh admission.
-The app's 500-tick status wait permits a bounded provider recovery; an app silent
-for 300 ticks is replaced. These are experimental nominal 100 Hz PIT budgets,
-not calibrated wall-clock guarantees. Startup exhausts bounded retries rather
-than silently continuing with a failed provider.
-
-Provider replacement refreshes only the relevant data/control endpoints. The app
-accepts new endpoints and redraws retained state; its task identity stays live.
-Application exit/fault or silence replaces only the app and all three of its data edges.
-Providers accept the replacement without reinitializing their devices. App-owned
-selection/toggles are loaded from the private storage object on app replacement
-and full reboot. There is no restart backoff, general dependency manager or
-persistent supervisor state yet. Init failure
-still tears down all its children according to the existing lifetime experiment.
+The default profile's initial program is the [desktop owner](distribution/desktop/main.rs).
+It launches the display, input, root matrix and storage providers, funds the
+root matrix with code grants and a process pool, and from then on only validates
+menu choices, admits apps through the matrix and supervises storage. Links
+connect the root matrix to the provider's two private roots; the arena is
+allocated once at session admission and reclaimed at teardown, and message
+operations allocate nothing. Apps receive only their local connections and
+granted roots: no device, launch, cancellation or provider control. All tasks
+still have the lab diagnostic-write syscall. The [distribution map](distribution/README.md)
+follows the whole route; the [desktop guide](distribution/desktop/README.md)
+covers its probe compositions and recovery policy.
 
 A replacement initial program need not use the platform services. For example:
 
@@ -864,81 +832,15 @@ This is bounded and intentionally lossy, not a full keyboard/text stack. There i
 no USB, hotplug, layout, IME, seat routing, focus or production input authority.
 Unresponsive hardware now times out; repeated initialization failure ends startup.
 
-`--input-test` injects actual QEMU keyboard events over local QMP and validates
-every scanout pixel after navigation/toggling in the separate app. It saves
-`input-test/display.png` and stops. `--screenshot` verifies an ordinary boot.
-
-`--recovery-test` enables `recovery-lab` only on init, providers and the app. Display and input
-first-generation providers wedge during startup. F1/F2/F4 then inject crashes,
-syscall-free spins and blocked request loops into input, display and storage respectively.
-Tests check surviving sibling/app identities, queued input during display loss,
-retained selection/toggles and exact health text/pixels. F3 crashes, hangs, then stops draining init replies in the
-app; init replaces it while all providers retain identity and saved state survives. The fresh app checks
-that launch/cancellation, framebuffer, raw keyboard and raw disk access are denied, and
-that data-channel fault commands cannot control providers. Every replacement is
-followed by real keyboard navigation and drawing. Healthy idle must not trigger
-restarts. These fault handlers are absent from ordinary builds.
+The matrix desktop's fixtures drive physical keyboard and mouse events over
+QMP and check exact scanout; provider loss, stalls and replacement are covered
+by `--matrix-desktop-test` and `matrix_database_test.py --recovery`.
 
 Smoke additionally exercises a full four-child/three-link graph across 16 app or
 provider replacements, then checks complete heap and frame reclamation. IPC
 readiness tests cover denied clock/rights, non-consuming observations, first-ready
 precedence, closure and an all-blocked timeout. Existing tests retain deadline
 copyout, late replies, raw keyboard grants, sibling queues and admission rollback.
-
-## Legacy private catalog composition
-
-Ordinary boots create/reuse `build/boot-harness-rs/storage.raw`, a dedicated
-4 MiB image, separate from the ESP. Ordinary boots and tests never reset that
-image. Screenshot, input and recovery modes use disposable `test-storage.raw`
-images. `--storage-test` runs twelve boots over one test image for durability,
-then resets only that disposable image for two legacy-conversion boots.
-
-The status app has a private root with separate selection and toggle records.
-Every edit commits both with matching root revision tags before drawing. The
-APPLICATION panel lists saved records; the bottom line reports the root revision.
-App replacement reloads both records; provider replacement reconnects without
-restarting the app. Lost replies are reconciled by reading both committed records.
-Existing single-object scene data remains readable and converts on the next edit.
-Do not reopen a converted image with an older binary.
-
-A second isolated app, [counter](distribution/applications/counter/main.rs),
-maintains a durable boot counter and mirror in its own root using the same object
-numbers. Init checks it and replaces it independently. The platform service binds
-roots to accepted link positions, never to client-supplied root IDs. The static
-profile order is part of this lab's persistent ownership binding and must not be
-reordered on an existing disk. The kernel enforces endpoints and device access;
-the platform owns catalogs/transactions; apps own schemas and UI.
-
-The bounded engine supports two roots, four 32-byte objects per root, create,
-read, replace, delete, enumeration, and atomic transactions of up to two distinct
-objects. Root revisions detect stale writes, including delete/recreate. Pending
-changes belong to a connection incarnation and disappear on replacement. The
-service rotates control and data channels; a full client reply queue cannot block
-another client. There is no dynamic realm admission, pathname tree, content
-addressing, allocation engine, query language or cross-kernel transaction yet.
-
-See the [engine and format](platform/libraries/object-store/CHARTER.md),
-[service protocol](platform/services/storage/CHARTER.md),
-[composition map](distribution/README.md) and [PIO driver](platform/drivers/ata-pio/CHARTER.md).
-The engine alternates whole-catalog body/commit pairs, flushing each before
-acknowledgement. Unknown nonblank media fails closed; interrupted initial format
-can still require manual recovery and has no repair tool.
-
-`--recovery-test` and `--storage-test` enable second-client probes for catalog
-bounds, stale/guessed IDs, queue backpressure and client exit with staged changes.
-The replacement verifies that staging was discarded. The visible app continues
-to test independent provider recovery and lost-reply reconciliation.
-
-`--storage-test` kills QEMU before body write, after body flush, after commit write
-and after commit flush before reply. Reboot must recover a complete permitted
-old/new pair of app records. It also checks acknowledged durability and legacy
-conversion. Per-boot serial logs/screenshots are retained. Host tests additionally
-tear every write and failed flush at every byte prefix, including conversion,
-while checking the untouched root. This models guest power loss; it does not
-certify physical host power safety or simulate loss of the host page cache.
-
-F5 through F8 arm those four pause points only in recovery/storage builds.
-All fault injection and hostile-client probes are absent from ordinary builds.
 
 ## Bounded private pages and shared buffers
 
@@ -982,9 +884,8 @@ protocols must complete or recover the exchange. Non-reused local names reject s
 operations, but raw virtual addresses can be reused after release: the kernel
 does not make dangling pointers safe.
 
-In ordinary startup, the status app now supplies the DISPLAY panel's `SHARED
-PIXELS` checkerboard this way. The display provider validates pixels in its
-read-only mapping and copies them to GOP. The bounded compositor experiment is described below; GPU and capture
+The display lab supplies its checkerboard this way; the display provider
+validates pixels in its read-only mapping and copies them to GOP. The bounded compositor experiment is described below; GPU and capture
 protocols remain future platform work.
 
 `--smoke` exercises quota exhaustion, zeroing/reuse, stale and foreign handles,
@@ -1065,9 +966,9 @@ charges share conserved account funding, distinct from object quotas and the
 per-load failure ceiling. `Launch::assign_memory` subdivides it into idle children;
 `Executable::reserve_funded` includes it atomically with dynamic admission.
 
-The recursive desktop now persists each app's color through its matrix-local
-catalog. Ordinary `matrix-desktop.json --release --window` boots retain
-`build/boot-harness-rs/matrix-desktop-storage.raw`, separate from the default demo.
+The recursive desktop persists each app's color through its matrix-local
+object root. Ordinary `matrix-desktop.json --release --window` boots retain
+`build/boot-harness-rs/matrix-database-storage.raw`, separate from the default desktop.
 `--matrix-desktop-test` enables destructive probes on a disposable image and then
 cold-boots that same image to check restoration. `--pressure` adds a ninth process
 for a capped spinner while retaining storage and all recovery checks. See the

@@ -153,7 +153,7 @@ The [object store](platform/libraries/database-objects/README.md) holds many
 numbered objects per root. Chunks and manifests are shared within a root, so a
 copy writes a head and an event and nothing else, whatever the content's size;
 numbers are never reused; collection runs before every write and reclaims what no
-head or pin reaches. The [provider](platform/services/storage/database/main.rs)
+head or pin reaches. The [provider](platform/services/storage/main.rs)
 speaks one [object protocol](platform/contracts/storage.rs): 64-byte packets with
 sealed attachments for publications and bulk reads. The legacy sector catalog and
 its protocol remain only for the status/counter composition.
@@ -404,10 +404,7 @@ Shared event/frame vocabulary uses static backend selection and direct calls.
 
 This pass passed host tests (including device command restrictions), both UEFI
 Clippy targets (including smoke code), x86-64 debug/release smoke, ARM64
-debug/release proofs, the matrix
-desktop's physical input/recovery checks, and ordinary `--input-test` with seven
-acknowledged storage updates. The recovery and power-cut profiles also pass in
-release after correcting the stale lab expectations described below.
+debug/release proofs, and the matrix desktop's physical input/recovery checks.
 
 The ARM kernel-task bring-up caught excessive debug stack use in the lab's heap
 exhaustion cleanup. Borrowing its bookkeeping array avoids by-value iterator
@@ -437,8 +434,7 @@ repeated replacement and exact saved text after cold reboot.
 The older `matrix-desktop.json` remains the two-color-app fixture for recursive
 surface/input, replacement and resource probes; `--matrix-desktop-test --release`
 selects it. `session.json` retains richer compositor/input recovery cases.
-`legacy.json` preserves status/counter; the old capture/input/recovery/storage
-flags select it. These profiles are engineering proofs, not the default OS boot.
+These profiles are engineering proofs, not the default OS boot.
 [The Rust handoff](../TASKS_RUST.md) records current priorities and evidence.
 
 ## Mechanisms, consumers and evidence
@@ -457,14 +453,14 @@ flags select it. These profiles are engineering proofs, not the default OS boot.
 | [Owned surfaces](platform/services/matrix/world/surface/README.md) | App rectangles cross actual matrix boundaries to the existing compositor | Host quota/name/clipping/stacking tests; scanout removal and teardown checks | Sixteen surfaces; bounded immutable RGBX images; no text surfaces or vblank guarantees |
 | [Retained compositor and hardware input](platform/services/display/compositor/compositor.rs) | Root adapter uses existing scanout/cursor and shared input decoders | `--matrix-desktop-test`; `--session-test --pressure` | Existing richer scenes/hosting remain in the earlier session fixture |
 | [Private/shared page lifetime](kernel/core/user_tasks/memory/README.md) | Matrix bitmaps and existing rendering/storage labs | Host transactions; both CPU boot proofs; matrix desktop | Four shared-region slots per task, grants capped at 64 pages; sealed objects only; original sponsor retained |
-| [Object storage and recovery](platform/services/storage/service/service.rs) | Status/counter and private matrix app colors | Storage host tests; `--storage-test`; two-boot `--matrix-desktop-test` | Whole-root delegation only; not the custom database filesystem |
+| [Object storage and recovery](platform/services/storage/service.rs) | Notes and the probe desktop's colors through delegated roots | Store host tests; `objects_test.py`; `desktop_test.py`; `matrix_database_test.py` with and without faults | Two provider roots, whole-root delegation; not the production filesystem |
 
 ## Kernel boundary audit and next steps
 
 The discoverability pass reviewed all 27 Rust package trees and preserves the
 [entry routes](../wiki/architecture/discoverability.md): boot composition, task
 lifetime, CPU transitions, service event ordering, scene publication and lab
-scenario ownership. Contracts, small drivers, init/application workflows and the
+scenario ownership. Contracts, small drivers, application workflows and the
 matrix/input service boundaries remain cohesive without extra forwarding layers.
 
 Subsystem entrances live in named files inside their folders (`memory/memory.rs`),
@@ -474,20 +470,6 @@ The next reading level owns checked IPC delivery,
 page sharing/retirement, scene geometry, pointer queues and forwarded matrix
 control requests. Cohesive leaves remain sibling files; the guide treats this as
 a reading-path preference rather than a file-count or line-count rule.
-
-**Recovery verification restored:** the status app's
-[authority probe](distribution/applications/status/application/lab/lab.rs) and
-[buffer probe](distribution/applications/status/application/lab/buffers.rs) now
-expect `BAD_HANDLE` for cancellation of handle zero and an unoffered private page.
-These names confer no authority in the receiving namespace. Both probes had
-retained the older `DENIED` expectation; kernel behavior is unchanged.
-
-`--recovery-test --release --timeout 120` passes provider crash/spin/block
-recovery, application replacement, sibling preservation, checked disk transport,
-private storage authority, exact scanout and lost-reply reconciliation.
-`--storage-test --release --timeout 120` passes fourteen boots covering reboot
-durability, all four power-cut phases, continued writes, lost acknowledgements
-and legacy-format migration followed by another reboot.
 
 The matrix protocol exposes local state only. That is narrower than a claim of
 whole-system noninterference. The handle-locality pass now covers task, clock, link and page rights as well as

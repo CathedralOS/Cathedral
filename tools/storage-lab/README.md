@@ -171,9 +171,10 @@ No new owner semantics are selected by this experiment.
 The [engine comparison](engines/README.md) now exercises durable record publication,
 ordered scans, reopen, process death and capacity denial. Physical allocation,
 arbitrary IO faults, active-reader pressure and near-full-store progress remain
-next evidence. This positional content tree is not a general B-tree database engine. The existing
-[catalog recovery tests](../../source-rs/platform/libraries/object-store/CHARTER.md)
-remain the durability evidence for the current guest implementation.
+next evidence. This positional content tree is not a general B-tree database engine. The
+[object store](../../source-rs/platform/libraries/database-objects/README.md)
+host tests and guest proofs are the durability evidence for the current guest
+implementation.
 
 The canonical experimental manifest encoder and BLAKE3 domains now live in the
 shared [content-layout library](../../source-rs/platform/libraries/content-layout/lib.rs).

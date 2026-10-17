@@ -32,9 +32,10 @@ It uses x86-64 QEMU/TCG and UEFI.
 
 Interactive notes persist in **`build/boot-harness-rs/cathedral-storage.raw`**.
 Missing media is created; existing media is never automatically reformatted.
-Older `notes-storage.raw`, `matrix-database-storage.raw`, `matrix-desktop-storage.raw`
-and `storage.raw` belong to earlier fixtures. Do not overwrite them or silently
-reinterpret their schemas. Automated tests use separate disposable images.
+`notes-storage.raw` and `matrix-database-storage.raw` belong to the notes and
+probe desktop fixtures. Any `storage.raw` or `matrix-desktop-storage.raw` left in
+that folder came from the deleted sector-catalog fixtures and can be removed.
+Automated tests use separate disposable images.
 
 ## What the storage milestone established
 
@@ -44,8 +45,8 @@ shared within the root, and a copy writes only a new head and event. Notes
 exercises that from F5, and an independent host model verifies two notes sharing
 one manifest after a cold boot. One object protocol serves the provider, the
 matrix forwards it with sealed attachments both ways, and apps use a runtime
-scope for it. The legacy catalog protocol and sector provider exist only for the
-legacy status/counter composition and are named `catalog` to say so.
+scope for it. The sector catalog, its protocol and the status/counter
+composition that used them are deleted; git history is their only retention.
 
 ## Decisions and working expectations
 
@@ -58,8 +59,8 @@ legacy status/counter composition and are named `catalog` to say so.
   every other instance only forwards and attenuates. Nothing branches on depth
   or on an argument word.
 - Do not add debt to bridge old and new: when a protocol or layer is replaced,
-  retire the old one from every live composition in the same change. Legacy
-  compositions are sealed off and named as such, not extended.
+  retire the old one from every composition in the same change and delete it.
+  Git history is the only retention wanted.
 - Discoverability matters: a named entry shows sequencing/dispatch and leads
   into semantic subfolders. Rust `mod.rs` is plumbing only, beside the substantive
   named entrance. Avoid forwarding-only layers and unrelated folder dumping grounds.
@@ -116,11 +117,8 @@ and new present during replacement: the root matrix has 128 private and 128
 reader pages, the workspace 40/40, Notes 32/4, the menu 24/0, Colors 2/0, the
 provider 64/8. The kernel's per-task bound is 128 of each.
 
-The legacy status/counter boot survives as
-[profiles/legacy.json](tools/boot-harness-rs/profiles/legacy.json) with its own
-sector provider and catalog protocol. The `--input-test`, `--screenshot`,
-`--recovery-test` and `--storage-test` flags select that fixture; they do **not**
-test the menu. `--smoke` still uses the default profile's `user_programs`.
+`--smoke` uses the default profile's `user_programs`, not its desktop startup
+graph; the desktop is tested by `desktop_test.py`.
 
 ## Next work, in recommended order
 
@@ -134,11 +132,6 @@ future feature.
   then make "duplicate workspace" a copy of its subtree. This is the second half
   of the thesis. The identity/alias and cross-root sharing owner questions stay
   open; do not resolve them by implication.
-- [ ] **Decide whether the legacy composition still earns its keep.** The
-  status/counter boot, its sector provider, catalog protocol and four harness
-  flags are a sealed parallel world. Deleting them removes a protocol, a
-  provider, a library and two apps; keeping them preserves the kernel-only
-  provider-restart and power-cut evidence. That is an owner call, not a cleanup.
 - [ ] **Keep app lifecycle honest as apps grow.** Startup failure, app crash and
   provider loss while an app holds work still end in assertions in places. A
   refused control probe now leaves a note open; make the menu say why and offer
@@ -196,8 +189,8 @@ python tools/boot-harness-rs/arm64/run.py --release
 Passed before this handoff, on the object storage commit and again after the
 desktop reorganization: the three Cargo commands above, both layout checks and
 formatting, every harness command listed above, the x86 release smoke suite, the
-ARM64 release proof, `--matrix-test`, `--admission-test`, `--ipc-test` and the
-legacy `--input-test`. Oracles verified the F5 image (two notes sharing one
+ARM64 release proof, `--matrix-test`, `--admission-test` and `--ipc-test`.
+Oracles verified the F5 image (two notes sharing one
 manifest, empty second root), the probe desktop images at object revisions
 [2, 2] and [4, 2], the notes images, and both objects proofs.
 

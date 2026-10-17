@@ -16,7 +16,6 @@ mod diagnostics;
 mod entry;
 pub use diagnostics::{report_panic, write};
 pub use task::{exit, yield_now};
-pub mod catalog;
 pub mod device;
 pub mod disk;
 pub mod display;

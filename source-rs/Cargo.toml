@@ -14,7 +14,6 @@ members = [
     "platform/libraries/block-device",
     "platform/libraries/content-layout",
     "platform/libraries/database-objects",
-    "platform/libraries/object-store",
     "platform/libraries/storage-volume",
     "platform/libraries/storage-volume/engine",
     "platform/libraries/user-runtime",
@@ -22,13 +21,9 @@ members = [
     "platform/services/display",
     "platform/services/input",
     "platform/services/storage",
-    "platform/services/storage/database",
     "platform/services/matrix",
     # Distribution
-    "distribution/applications/status",
     "distribution/applications/notes",
-    "distribution/applications/counter",
-    "distribution/init",
     "distribution/lab/display",
     "distribution/lab/compositor",
     "distribution/desktop",
@@ -46,9 +41,8 @@ members = [
     "distribution/lab/rendering",
     "distribution/lab/supervision",
     "distribution/libraries/boot-scene",
-    "distribution/libraries/session-protocol",
 ]
-default-members = ["distribution/applications/notes", "platform/libraries/user-heap", "platform/libraries/storage-volume", "platform/drivers/uart_16550", "distribution/lab/rendering", "platform/libraries/object-store", "kernel/contracts", "platform/contracts", "platform/libraries/block-device", "kernel/core", "kernel/arch", "platform/services/input", "platform/services/display", "platform/services/matrix", "platform/libraries/bitmap-font"]
+default-members = ["distribution/applications/notes", "platform/libraries/user-heap", "platform/libraries/storage-volume", "platform/drivers/uart_16550", "distribution/lab/rendering", "kernel/contracts", "platform/contracts", "platform/libraries/block-device", "kernel/core", "kernel/arch", "platform/services/input", "platform/services/display", "platform/services/matrix", "platform/libraries/bitmap-font"]
 
 [workspace.package]
 version = "0.0.0"
@@ -63,9 +57,7 @@ cathedral-storage-engine = { path = "platform/libraries/storage-volume/engine" }
 cathedral-user-heap = { path = "platform/libraries/user-heap" }
 cathedral-storage-volume = { path = "platform/libraries/storage-volume" }
 cathedral-ata-pio = { path = "platform/drivers/ata-pio" }
-cathedral-object-store = { path = "platform/libraries/object-store" }
 cathedral-storage-service = { path = "platform/services/storage" }
-cathedral-session-protocol = { path = "distribution/libraries/session-protocol" }
 cathedral-bitmap-font = { path = "platform/libraries/bitmap-font" }
 cathedral-kernel-contracts = { path = "kernel/contracts" }
 cathedral-platform-contracts = { path = "platform/contracts" }
@@ -116,13 +108,13 @@ opt-level = "s"
 opt-level = "s"
 strip = "debuginfo"
 
-[profile.dev.package.cathedral-database-storage]
+[profile.dev.package.cathedral-storage-service]
 opt-level = "s"
 codegen-units = 1
 debug-assertions = false
 strip = "debuginfo"
 
-[profile.release.package.cathedral-database-storage]
+[profile.release.package.cathedral-storage-service]
 opt-level = "s"
 strip = "debuginfo"
 

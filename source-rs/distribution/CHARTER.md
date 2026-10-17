@@ -1,7 +1,7 @@
 # Cathedral distribution
 
 Owns the one built-in Cathedral experience: shell, settings, bundled applications, defaults and composition. A fork can replace this directory. There is no multi-distribution framework. profile.json selects the desktop owner, providers and installed app code. Depends on public platform packages, the public kernel contracts and foundation.
-Distribution-only status messages and launch ordering stay in `libraries/session-protocol`. Kernel and platform never depend on this implementation. Trusted platform owners retain permission and recovery enforcement.
+Kernel and platform never depend on this implementation. Trusted platform owners retain permission and recovery enforcement.
 
 See [the source layout](../../wiki/architecture/repository_layout.md).
 

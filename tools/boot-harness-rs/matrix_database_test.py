@@ -143,7 +143,7 @@ def run(args):
                ROOT / 'source-rs/platform/services/input/matrix.rs',
                ROOT / 'source-rs/platform/contracts/input.rs', ROOT / 'source-rs/platform/contracts/matrix.rs',
                *(ROOT / 'source-rs/platform/libraries/database-objects').glob('*.rs'),
-               *(ROOT / 'source-rs/platform/services/storage/database').glob('*.rs'),
+               *(ROOT / 'source-rs/platform/services/storage').glob('*.rs'),
                ROOT / 'tools/storage-lab/engines/volume/colors.rs', ROOT / 'tools/storage-lab/engines/volume/notes.rs']
     context = {'revision': subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip(),
                'release': args.release, 'recovery': args.recovery, 'notes': args.notes, 'notes_recovery': args.notes_recovery,

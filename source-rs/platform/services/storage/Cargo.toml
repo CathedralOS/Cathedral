@@ -11,13 +11,14 @@ test = false
 bench = false
 [dependencies]
 cathedral-kernel-contracts.workspace = true
+cathedral-user-runtime = { workspace = true, features = ["heap"] }
 cathedral-platform-contracts.workspace = true
-cathedral-user-runtime.workspace = true
+cathedral-database-objects.workspace = true
+cathedral-storage-engine.workspace = true
 cathedral-ata-pio.workspace = true
-cathedral-object-store.workspace = true
-
 [lints]
 workspace = true
 
 [features]
 recovery-lab = []
+trace-storage = ["cathedral-ata-pio/trace-storage"]

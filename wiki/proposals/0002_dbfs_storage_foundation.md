@@ -4,7 +4,7 @@
 | --- | --- |
 | Proposed | Engine-selection and layout experiment; no accepted disk format or production API |
 | Specification owner | Unwritten `spec/storage/realms_and_objects.md`; see the [coverage map](../spec/README.md) |
-| Existing evidence | [Private catalog](../../source-rs/platform/libraries/object-store/CHARTER.md): bounded disk transactions and recovery, without chunk allocation or snapshots |
+| Existing evidence | [Object store](../../source-rs/platform/libraries/database-objects/README.md): numbered objects, shared content, copies, pins and bounded collection behind private roots |
 | New evidence | [Host layout lab](../../tools/storage-lab/README.md): flat/tree chunk references, inline contents, range reads, batched edits and retained versions |
 
 ## Direction and boundaries
