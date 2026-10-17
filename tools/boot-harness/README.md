@@ -56,3 +56,22 @@ Host-only stale-image and milestone controls:
 ```text
 python tools/boot-harness/test_harness.py
 ```
+
+## Root geometry without firmware
+
+`root-geometry/main.omg` runs the kernel's `BootGeometry::check` on twelve
+cases: both range orders, adjacency in both orders, overlap, containment,
+identical ranges, either empty root, either overflowing endpoint, and the
+largest accepted one-past endpoint. A wrong result crashes; success exits 0.
+
+```text
+omega update --project tools/boot-harness/root-geometry
+omega run --both tools/boot-harness/root-geometry/main.omg
+```
+
+Complete ordinary package review if requested. The checkout-local lock is
+regenerated, not shared. Use an Omega compiler containing `711be509b7d2` or
+later for the payload reread proof repair this helper exercises. The native and
+Terminal runs validate numeric geometry only. The helper grants no storage,
+performs no firmware calls, and is not yet connected to the boot transaction;
+it cannot establish stack survival or successful UEFI handoff.

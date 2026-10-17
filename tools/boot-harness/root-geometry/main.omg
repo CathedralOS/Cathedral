@@ -1,0 +1,34 @@
+// Expected exit: 0. Exercise the actual boot geometry helper, not a test copy.
+// This validates numeric geometry only, not backing authority or UEFI handoff.
+use core::boot_geometry;
+
+machine accepted(geometry: BootGeometry) -> bool {
+    let checked: BootGeometryCheck = BootGeometry::check(geometry);
+    transition checked {
+        BootGeometryCheck::Rejected -> (false)
+        BootGeometryCheck::Ready { geometry } -> (true)
+    }
+}
+
+machine main() crashes Trap {
+    let ordered: bool = accepted(BootGeometry { image_base: 4096, image_length: 4096, storage_base: 16384, storage_length: 8192 });
+    let reversed: bool = accepted(BootGeometry { image_base: 16384, image_length: 8192, storage_base: 4096, storage_length: 4096 });
+    let adjacent: bool = accepted(BootGeometry { image_base: 4096, image_length: 4096, storage_base: 8192, storage_length: 4096 });
+    let reversed_adjacent: bool = accepted(BootGeometry { image_base: 8192, image_length: 4096, storage_base: 4096, storage_length: 4096 });
+    let overlap: bool = accepted(BootGeometry { image_base: 4096, image_length: 8192, storage_base: 8192, storage_length: 4096 });
+    let contained: bool = accepted(BootGeometry { image_base: 4096, image_length: 8192, storage_base: 8192, storage_length: 1024 });
+    let equal: bool = accepted(BootGeometry { image_base: 4096, image_length: 4096, storage_base: 4096, storage_length: 4096 });
+    let empty: bool = accepted(BootGeometry { image_base: 4096, image_length: 0, storage_base: 8192, storage_length: 4096 });
+    let storage_empty: bool = accepted(BootGeometry { image_base: 4096, image_length: 4096, storage_base: 8192, storage_length: 0 });
+    let wrapped: bool = accepted(BootGeometry { image_base: 18446744073709551615, image_length: 1, storage_base: 8192, storage_length: 4096 });
+    let storage_wrapped: bool = accepted(BootGeometry { image_base: 4096, image_length: 4096, storage_base: 18446744073709551615, storage_length: 2 });
+    let last_endpoint: bool = accepted(BootGeometry { image_base: 0, image_length: 4096, storage_base: 18446744073709551614, storage_length: 1 });
+    transition ordered && reversed && adjacent && reversed_adjacent &&
+        !overlap && !contained && !equal && !empty && !storage_empty &&
+        !wrapped && !storage_wrapped && last_endpoint {
+        true -> done()
+        _ -> wrong()
+    }
+    state done() {}
+    state wrong() { crash Trap; }
+}

@@ -41,6 +41,13 @@ acceptance as if it were portable.
 
 ## Work still required
 
+The firmware-neutral [joint root geometry checker](../../core/boot_geometry.omg)
+validates nonempty, nonoverflowing, disjoint image and initial-storage ranges.
+Its [host witness](../../../../tools/boot-harness/README.md#root-geometry-without-firmware)
+checks numeric acceptance and rejection without firmware. Integrating that
+qualified result before ExitBootServices and retaining it through the successful
+handoff are still required; geometry does not supply backing or stack custody.
+
 - Replace the compiler's fixed foreign-call stack contribution with the exact
   selected provider's admitted demand, then rerun the fresh-image harness.
   Ordinary package admission now publishes the five-package lock without

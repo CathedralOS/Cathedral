@@ -1,0 +1,45 @@
+// Joint numeric validation before either semantic boot root is introduced.
+// This creates no backing authority: firmware provenance, successful exit and
+// exclusion of live stack/bootstrap storage remain the boot adapter's duties.
+pub data BootGeometry [copy] {
+    image_base: u64;
+    image_length: u64;
+    storage_base: u64;
+    storage_length: u64;
+}
+
+// Match the map walker's representable one-past endpoint policy. Adjacency is
+// valid; an empty root, an overflowing endpoint or any overlap is not.
+pub domain BootGeometry::Separated(geometry)
+requires geometry.image_length > 0 && geometry.storage_length > 0 &&
+    embed(geometry.image_base) + embed(geometry.image_length) <= 18446744073709551615 &&
+    embed(geometry.storage_base) + embed(geometry.storage_length) <= 18446744073709551615 &&
+    (embed(geometry.image_base) + embed(geometry.image_length) <= embed(geometry.storage_base) ||
+     embed(geometry.storage_base) + embed(geometry.storage_length) <= embed(geometry.image_base));
+
+pub data BootGeometryCheck {
+    case Rejected;
+    case Ready(geometry: BootGeometry in Separated);
+}
+
+pub machine BootGeometry::check(geometry: BootGeometry) -> BootGeometryCheck {
+    transition geometry.image_length > 0 && geometry.storage_length > 0 &&
+        geometry.image_base <= 18446744073709551615 - geometry.image_length &&
+        geometry.storage_base <= 18446744073709551615 - geometry.storage_length {
+        true -> separate(geometry)
+        _ -> BootGeometryCheck::Rejected
+    }
+
+    state separate(geometry: BootGeometry) -> BootGeometryCheck
+    requires geometry.image_length > 0 && geometry.storage_length > 0 &&
+        geometry.image_base <= 18446744073709551615 - geometry.image_length &&
+        geometry.storage_base <= 18446744073709551615 - geometry.storage_length
+    {
+        let image_end: u64 = geometry.image_base + geometry.image_length;
+        let storage_end: u64 = geometry.storage_base + geometry.storage_length;
+        transition image_end <= geometry.storage_base || storage_end <= geometry.image_base {
+            true -> BootGeometryCheck::Ready { geometry: geometry }
+            _ -> BootGeometryCheck::Rejected
+        }
+    }
+}
