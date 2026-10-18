@@ -59,3 +59,10 @@ replay opens only a copy of the old fixture, enters its existing user, checks
 the actual labels, reads both saved notes, and closes/relaunches Notes through
 its X button inside the old user matrix. The ordinary desktop proof still
 covers fresh installs, storage attenuation and cold reboot.
+
+The same explicit stock upgrade now refreshes recognized copied launchers to
+user/app tiles. The interactive disk also has a one-time
+`.before-user-tiles.raw` backup. Compatibility replay defaults to selecting the
+existing user and checking saved Notes. `--fill-users` additionally creates users
+up to the bounded tile limit; see TASKS_RUST.md for the older-disk storage timeout
+found by that extra stress, separate from the launcher migration itself.

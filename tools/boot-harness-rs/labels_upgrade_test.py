@@ -18,7 +18,7 @@ import disk_image
 import run as harness
 
 
-def run(source):
+def run(source, fill_users=False):
     root = desktop_test.ROOT
     here = Path(__file__).resolve().parent
     subprocess.run([sys.executable, str(here / 'run.py'), '--release', '--build-only'], cwd=root, check=True)
@@ -41,11 +41,13 @@ def run(source):
     command += disk_image.arguments(path)
     capture.run(command, output, 180, subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0,
                 ready_marker='Cathedral desktop: ready; choose a user',
-                verify=lambda stream, output, serial: desktop_test.desktop(stream, output, serial, True))
-    print(f'PASS: existing user, readable labels, app-owned close and both original saved notes; artifacts: {output}')
+                verify=lambda stream, output, serial: desktop_test.desktop(stream, output, serial, True, fill_users=fill_users))
+    print(f'PASS: existing user, tile UI, app-owned close and both original saved notes; artifacts: {output}')
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--fill-users', action='store_true', help='also create users up to the three-tile limit')
     parser.add_argument('image', type=Path, help='retained pre-label desktop test image; never modified')
-    run(parser.parse_args().image)
+    args = parser.parse_args()
+    run(args.image, args.fill_users)

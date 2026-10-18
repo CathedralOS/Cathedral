@@ -4,9 +4,11 @@ use super::*;
 
 /// Also restores selection if the running user is lost; there is no logout UI.
 pub(in crate::session) fn select_user(matrix: Pair, [width, height]: [u64; 2]) {
-    let (x, y) = picker_origin([width, height]);
-    owner(matrix, [wire::SURFACE_LIMIT, 0, 2, 0, 0, 0, 0, 0]);
-    owner(matrix, [wire::PLACE, 0, x, y, 220, 180, wire::KEY_MASK, 0]);
+    owner(matrix, [wire::SURFACE_LIMIT, 0, 5, 0, 0, 0, 0, 0]);
+    owner(
+        matrix,
+        [wire::PLACE, 0, 0, 0, width, height, wire::KEY_MASK, 0],
+    );
 }
 
 pub(super) fn enter_user(matrix: Pair, [width, height]: [u64; 2]) {
@@ -15,7 +17,7 @@ pub(super) fn enter_user(matrix: Pair, [width, height]: [u64; 2]) {
     owner(matrix, [wire::REVOKE, 0, 0, 0, 0, 0, 0, 0]);
     owner(
         matrix,
-        wire::route([wire::SURFACE_LIMIT, 0, 2, 0, 0, 0, 0, 0], 1).unwrap(),
+        wire::route([wire::SURFACE_LIMIT, 0, 5, 0, 0, 0, 0, 0], 1).unwrap(),
     );
     owner(
         matrix,
@@ -42,8 +44,4 @@ pub(super) fn enter_user(matrix: Pair, [width, height]: [u64; 2]) {
         )
         .unwrap(),
     );
-}
-
-fn picker_origin([width, height]: [u64; 2]) -> (u64, u64) {
-    ((width - 220) / 2, (height - 180) / 2)
 }

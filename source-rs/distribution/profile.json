@@ -86,7 +86,8 @@
         "target": "x86_64-unknown-none",
         "clock": true,
         "argument": 1296127058,
-        "keyboard": true
+        "keyboard": true,
+        "features": ["absolute-pointer"]
       },
       {
         "package": "cathedral-matrix-service",

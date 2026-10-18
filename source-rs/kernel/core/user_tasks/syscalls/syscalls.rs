@@ -31,6 +31,7 @@ pub(super) fn syscall(session: &mut Session, slot: usize, now: u64) -> Event {
         }
         abi::DEVICE_HANDLE..=abi::DEVICE_RELEASE
         | abi::KEYBOARD_READ
+        | abi::INPUT_VIRTUAL_POINTER
         | abi::KEYBOARD_WRITE
         | abi::KEYBOARD_READ_UNTIL
         | abi::DISK_REGISTER_READ..=abi::DISK_TRANSFER

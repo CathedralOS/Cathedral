@@ -4,4 +4,5 @@ pub(super) mod disk;
 pub(super) mod keyboard;
 pub(crate) mod serial;
 pub(crate) mod timer;
+pub(super) mod vmmouse;
 include!("pc.rs");

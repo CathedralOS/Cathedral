@@ -15,7 +15,7 @@ child and its launch slot through its existing exit path. An uncertain storage
 result requires a second, explicit CLOSE ANYWAY click. Its LOSS reply also
 reports that uncertainty, so the chooser cannot silently close it.
 
-[Phase layout](session/shell/layout.rs) centers the initial user picker, then
+[Phase layout](session/shell/layout.rs) gives the initial user tiles the full display, then
 revokes its surfaces and input when a user is furnished. The user matrix owns
 the full display, with its launcher at the left and its app in the remaining
 space. The root keeps supervising and forwarding without visible boot chrome.

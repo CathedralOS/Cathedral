@@ -1,6 +1,8 @@
 #![no_std]
 #![no_main]
 //! Select physical-key requests or the compositor's physical pointer/key source.
+#[cfg(feature = "absolute-pointer")]
+mod absolute;
 mod controller;
 mod keyboard;
 mod matrix;

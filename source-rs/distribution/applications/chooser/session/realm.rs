@@ -49,7 +49,7 @@ impl Realm {
     /// A new entry: the first one copied whole, beside it. A user realm made
     /// this way shares every byte of the template until it diverges.
     pub fn copy_first(&mut self) -> Result<(), u64> {
-        if self.count == 0 {
+        if self.count == 0 || self.count == ENTRIES {
             return Err(abi::DENIED);
         }
         let template = self.ids[0];

@@ -18,12 +18,35 @@ fn serve(extent: u64, environment: Environment) -> Result<(), Error> {
         environment.endpoint(1).unwrap(),
     );
     super::controller::initialize_mouse()?;
+    #[cfg(feature = "absolute-pointer")]
+    let mut absolute = super::absolute::Pointer::open();
     let mut mouse = Mouse::default();
     let mut keys = Decoder::source();
     let (mut x, mut y) = (40, 40);
     publish(pair, [wire::POINTER_SOURCE, x, y, 0, 0, 0, 0, 0])?;
     Handle::bootstrap(1)?.send(b"ready")?;
     loop {
+        #[cfg(feature = "absolute-pointer")]
+        for _ in 0..64 {
+            match absolute.next(width, height) {
+                Ok(Some((px, py, buttons))) => {
+                    x = px;
+                    y = py;
+                    publish(pair, [wire::POINTER_SOURCE, x, y, buttons, 0, 0, 0, 0])?;
+                }
+                Ok(None) => break,
+                Err(_) => {
+                    absolute.disable();
+                    mouse.reset();
+                    keys.reset();
+                    publish(
+                        pair,
+                        [wire::KEY_SOURCE, input::RESET as u64, 0, 0, 0, 0, 0, 0],
+                    )?;
+                    break;
+                }
+            }
+        }
         let byte = match keyboard::read_until(time::after(10)?) {
             Ok(byte) => byte,
             Err(Error(code)) if code == abi::TIMED_OUT as i64 => continue,
@@ -37,6 +60,10 @@ fn serve(extent: u64, environment: Environment) -> Result<(), Error> {
                 [wire::KEY_SOURCE, input::RESET as u64, 0, 0, 0, 0, 0, 0],
             )?;
         } else if byte & keyboard::AUX != 0 {
+            #[cfg(feature = "absolute-pointer")]
+            if absolute.enabled() {
+                continue;
+            }
             if let Some(motion) = mouse.feed(byte as u8) {
                 x = (x as i64 + motion.dx as i64).clamp(0, width as i64 - 1) as u64;
                 y = (y as i64 + motion.dy as i64).clamp(0, height as i64 - 1) as u64;

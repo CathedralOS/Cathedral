@@ -10,8 +10,8 @@ const USERS: u64 = 2;
 /// A subtree copy numbers the copies in listing order after the realm's own
 /// object, so a user's chrome is the object right after its realm.
 const CHROME_OFFSET: u64 = 1;
-/// The chooser's bitmap is 20 pages; it holds two during replacement.
-const CHOOSER_PAGES: u64 = 40;
+/// Three 12-page tiles and one replacement fit in the chooser allowance.
+const CHOOSER_PAGES: u64 = 48;
 
 /// Root slot 0: the chooser, shown the folder of users and nothing else.
 pub(super) fn chooser(matrix: Pair, extent: [u64; 2]) {
@@ -22,10 +22,10 @@ pub(super) fn chooser(matrix: Pair, extent: [u64; 2]) {
 
 /// Root slot 1: whatever the chooser launches, which is a user matrix. It
 /// hosts two children, reads programs of up to 64 pages, and retains their
-/// bitmaps with the replacement beside each: two chooser-sized images and two
-/// Notes-sized ones alongside a program being read.
+/// bitmaps and replacements. The two stock app tiles retain 24 reader pages,
+/// leaving space for a program of up to 64 pages during admission.
 pub(super) fn workspace(matrix: Pair, [width, height]: [u64; 2]) {
-    owner(matrix, [wire::LAUNCH_POLICY, 1, 80, 96, 10, 2, 0, 8]);
+    owner(matrix, [wire::LAUNCH_POLICY, 1, 80, 96, 10, 2, 0, 11]);
     owner(
         matrix,
         [wire::LAUNCH_PLACE, 1, 0, 0, width, height, KEYS, 0],

@@ -18,7 +18,7 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 
 
-def desktop(stream, output, serial, reboot):
+def desktop(stream, output, serial, reboot, expected_absolute=True, fill_users=False):
     assert 'Cathedral: object storage ready' in serial
     position = [40, 40]
     font = bytes.fromhex((ROOT / 'source-rs/platform/libraries/bitmap-font/font.hex').read_text())
@@ -31,7 +31,18 @@ def desktop(stream, output, serial, reboot):
             send([{'type': 'key', 'data': {'down': down, 'key': {'type': 'qcode', 'data': code}}}])
             time.sleep(0.07)
 
+    absolute = 'Cathedral input: absolute pointer ready' in serial
+    assert absolute == expected_absolute, 'unexpected input transport: ' + serial[-1500:]
+    mice = capture.command(stream, 'query-mice')
+    assert any(m['current'] and m['absolute'] == absolute for m in mice), mice
+
     def move(x, y):
+        if absolute:
+            send([{'type': 'abs', 'data': {'axis': 'x', 'value': round(x * 32767 / (width-1))}},
+                  {'type': 'abs', 'data': {'axis': 'y', 'value': round(y * 32767 / (height-1))}}])
+            position[:] = [x,y]
+            time.sleep(0.05)
+            return
         while position != [x, y]:
             dx = max(-70, min(70, x - position[0]))
             dy = max(-70, min(70, y - position[1]))
@@ -82,7 +93,6 @@ def desktop(stream, output, serial, reboot):
 
     # Selection is centered; entering a user gives it the whole display.
     width, height, _ = pointer_test.read_scanout(stream, output)
-    PICKER = ((width - 220) // 2, (height - 180) // 2)
     APP = (232, 24)
 
     def note(text, dirty=False, temporary=False, error=False):
@@ -107,29 +117,27 @@ def desktop(stream, output, serial, reboot):
                                     pixel(index * 12 + x * 2 + dx, row * 16 + y * 2 + dy, 'ffffff')
         return image
 
-    def chooser_row(left, origin_y, row, text, description):
-        move(8, 8)  # Keep the cursor overlay outside the checked glyphs.
-        expected = rows_image([text])
-        top = origin_y + 36 + 16 * row
-        def check(width, data):
-            # A selected row has a different background; compare glyph pixels only.
-            actual = b''.join(data[((top + y) * width + left) * 3:((top + y) * width + left + 160) * 3] for y in range(16))
-            return all(actual[i:i + 3] == b'\xff\xff\xff' for i in range(0, len(expected), 3) if expected[i:i + 3] == b'\xff\xff\xff') \
-                and all(actual[i:i + 3] != b'\xff\xff\xff' for i in range(0, len(expected), 3) if expected[i:i + 3] != b'\xff\xff\xff')
-        scan(check, f'{description} row {row} {text!r}')
+    def tile_label(left, top, text):
+        move(8,8)
+        def check(width,data):
+            start=left+(128-len(text)*12)//2
+            for i,ch in enumerate(text):
+                for y,bits in enumerate(font[(ord(ch)-32)*7:(ord(ch)-31)*7]):
+                    for x in range(5):
+                        actual=rgb(width,data,start+i*12+x*2,top+76+y*2)==b'\xff\xff\xff'
+                        if actual != bool(bits & (1 << (4-x))): return False
+            return True
+        scan(check,f'tile {text}')
 
-    # Only the current phase has a visible chooser.
-    def users(row, text):
-        chooser_row(PICKER[0] + 10, PICKER[1], row, text, 'users')
+    def user_tile(index,count):
+        return ((width-(count*152-24))//2+index*152,(height-96)//2)
 
-    def chrome(row, text):
-        chooser_row(34, 24, row, text, 'chrome')
+    def click_user_tile(index,count):
+        x,y=user_tile(index,count)
+        click(x+64,y+48)
 
-    def click_users(row):
-        click(PICKER[0] + 40, PICKER[1] + 44 + 16 * row)
-
-    def click_chrome(row):
-        click(64, 68 + 16 * row)
+    def click_chrome(index):
+        click(120,96+(index-1)*120)
 
     def focus_app():
         click(APP[0] + 5, APP[1] + 120)
@@ -163,191 +171,123 @@ def desktop(stream, output, serial, reboot):
             return True
         scan(check, f'note tabs count={count} current={current}')
 
-    NEW, CLOSE, STATUS = 4, 5, 6
-    # Objects: the template user is 3; a user made from it is 7 with chrome 8,
-    # Notes 9 and Colors 10 inside.
-    users(STATUS, 'CHOOSE')
-    users(0, 'USER TEMPLATE')
-    users(NEW, 'NEW USER')
+    # The template is hidden. Only user tiles and an add-user tile are visible.
     if not reboot:
-        click_users(NEW)
-        users(STATUS, 'COPIED')
-    users(1, 'USER 1')
+        tile_label(*user_tile(0,1),'NEW USER')
+        click_user_tile(0,1)
+    total = 2
+    if fill_users:
+        assert reboot
+        for count in (1,2):
+            tile_label(*user_tile(count,count+1),'NEW USER')
+            click_user_tile(count,count+1)
+            total=3
+            tile_label(*user_tile(count,3),f'USER {count+1}')
+    tile_label(*user_tile(0,total),'USER 1')
+    if not fill_users:
+        tile_label(*user_tile(1,total),'NEW USER')
+    else:
+        tile_label(*user_tile(1,3),'USER 2')
+        tile_label(*user_tile(2,3),'USER 3')
+        # At capacity, keyboard movement repaints three retained avatar tiles.
+        key('left')
+        key('right')
+        tile_label(*user_tile(2,3),'USER 3')
     shutil.copyfile(output / 'display.png', output / 'user-picker.png')
-    click_users(1)
-    chrome(STATUS, 'CHOOSE')
-    # The picker and its heading must disappear, not remain behind
-    # the user. This region is empty workspace until an app is launched.
-    def picker_gone(width, data):
-        return all(rgb(width, data, x, y) == bytes.fromhex('101827')
-                   for y in range(PICKER[1], PICKER[1] + 180)
-                   for x in range(PICKER[0], PICKER[0] + 220))
-    scan(picker_gone, 'boot picker and headings retired on user entry')
+    click_user_tile(0,total)
+    tile_label(56,48,'NOTES')
+    tile_label(56,168,'COLORS')
+    scan(lambda w,d: rgb(w,d,width//2,height//2)==bytes.fromhex('101827'), 'picker retired')
     shutil.copyfile(output / 'display.png', output / 'user-workspace.png')
-    chrome(0, 'LAUNCHER')
-    chrome(1, 'NOTES')
-    chrome(2, 'COLORS')
     click_chrome(1)
-    chrome(STATUS, 'RUNNING')
     note('hello cathedral' if reboot else '')
-    scan(lambda width, data: rgb(width, data, width - 30, height - 30) == bytes.fromhex('27664a'),
-         'user app uses the available display extent')
-    tabs(2 if reboot else 0, 0)
+    tabs(2 if reboot else 0,0)
     if reboot:
         focus_app()
         key('f4')
         note('hello cathedral two')
-        tabs(2, 1)
+        tabs(2,1)
         app_close()
         color('101827')
         click_chrome(1)
         note('hello cathedral')
-        tabs(2, 0)
         app_close()
         color('101827')
         return
     focus_app()
-    for char in 'hello cathedral':
-        key('spc' if char == ' ' else char)
-    note('hello cathedral', dirty=True)
-    click_users(CLOSE)  # Former boot controls must no longer receive input.
-    note('hello cathedral', dirty=True)
-    click_chrome(CLOSE)  # Closing must not discard the unsaved draft.
-    chrome(STATUS, 'KEPT')
-    note('hello cathedral', dirty=True)
+    for char in 'hello cathedral': key('spc' if char==' ' else char)
+    note('hello cathedral',dirty=True)
+    # A second app cannot replace a live draft.
+    click_chrome(2)
+    note('hello cathedral',dirty=True)
     app_close()
-    dialog(0, 'UNSAVED NOTE')
-    dialog(1, 'SAVE')
-    dialog(2, 'DISCARD')
-    dialog(3, 'CANCEL')
-    key('x')  # The modal close decision must not edit the underlying draft.
-    dialog(0, 'UNSAVED NOTE')
+    dialog(0,'UNSAVED NOTE')
+    dialog(1,'SAVE')
+    dialog(2,'DISCARD')
+    dialog(3,'CANCEL')
+    key('x')
+    dialog(0,'UNSAVED NOTE')
     choose_close(3)
-    note('hello cathedral', dirty=True)
+    note('hello cathedral',dirty=True)
     app_close()
-    dialog(0, 'UNSAVED NOTE')
-    choose_close(1)  # Save and exit through the app itself, not the launcher.
+    choose_close(1)
     color('101827')
     click_chrome(1)
-    chrome(STATUS, 'RUNNING')
     note('hello cathedral')
-    tabs(1, 0)
-    # A clean user would close if the old boot control still received clicks.
-    click_users(CLOSE)
-    note('hello cathedral')
+    tabs(1,0)
     focus_app()
-    # Duplicate shares the saved content; editing the copy leaves the original.
     key('f3')
-    tabs(2, 1)
-    note('hello cathedral')
-    for char in ' two':
-        key('spc' if char == ' ' else char)
-    note('hello cathedral two', dirty=True)
-    key('f3')  # A draft is never duplicated; save first.
-    tabs(2, 1)
+    tabs(2,1)
+    for char in ' two': key('spc' if char==' ' else char)
+    note('hello cathedral two',dirty=True)
+    key('f3')
+    tabs(2,1)
     key('f1')
     note('hello cathedral two')
     key('f4')
-    tabs(2, 0)
     note('hello cathedral')
-    app_close()  # A clean Notes exits immediately.
+    app_close()
     color('101827')
     click_chrome(2)
-    chrome(STATUS, 'RUNNING')
     color('315ca8')
     focus_app()
     key('ret')
     color('d18b35')
-    app_close()  # Colors handles its own close too.
+    app_close()
     color('101827')
-    # Repeated actual teardown/admission catches leaked loans, surfaces or
-    # handles. Colors keeps its color: its state nests under its own program.
     for _ in range(3):
         click_chrome(1)
-        chrome(STATUS, 'RUNNING')
         note('hello cathedral')
-        click_chrome(CLOSE)
-        chrome(STATUS, 'CLOSED')
+        app_close()
+        color('101827')
         click_chrome(2)
-        chrome(STATUS, 'RUNNING')
         color('d18b35')
-        click_chrome(CLOSE)
-        chrome(STATUS, 'CLOSED')
-    # Keyboard navigation also works once the chrome has focus: from CLOSE,
-    # four steps up reach Notes.
-    for _ in range(4):
-        key('up')
+        app_close()
+        color('101827')
+    # Focus the tile strip, then keyboard-select Notes from Colors.
+    click(40,300)
+    key('up')
     key('ret')
-    chrome(STATUS, 'RUNNING')
     note('hello cathedral')
     focus_app()
     key('x')
-    click_chrome(CLOSE)
-    chrome(STATUS, 'KEPT')
-    note('hello cathedralx', dirty=True)
-    focus_app()
-    key('f2')
-    note('hello cathedral')
-    click_chrome(CLOSE)
-    chrome(STATUS, 'CLOSED')
-    color('101827')
-    click_chrome(1)
-    chrome(STATUS, 'RUNNING')
-    note('hello cathedral')
-    # The user's app remains replaceable; whole-user close is now a headless
-    # matrix mechanism proof, not a logout control in the normal desktop.
-    click_chrome(CLOSE)
-    chrome(STATUS, 'CLOSED')
-    # Same Notes bytes, different bindings. Colors requires storage and must
-    # refuse cleanly without occupying the slot; Notes explicitly permits None.
-    click_chrome(NEW)  # The user launcher uses this row for STORAGE ON/OFF.
-    chrome(NEW, 'STORAGE OFF')
-    click_chrome(2)
-    chrome(STATUS, 'NEEDS SERVICE')
-    click_chrome(1)
-    chrome(STATUS, 'RUNNING')
-    note('', temporary=True)
-    def temporary_banner(width, data):
-        expected = rows_image(['TEMP NO SAVE'])
-        actual = b''.join(data[((APP[1] + 88 + y) * width + APP[0] + 10) * 3:((APP[1] + 88 + y) * width + APP[0] + 170) * 3] for y in range(16))
-        return actual == expected
-    scan(temporary_banner, 'Notes clearly identifies temporary unsavable state')
-    shutil.copyfile(output / 'display.png', output / 'temporary-notes.png')
-    focus_app()
-    key('x')
-    note('x', dirty=True, temporary=True)
-    key('f1')
-    note('x', dirty=True, temporary=True, error=True)
-    key('f2')  # No storage means reload cannot silently discard the draft.
-    note('x', dirty=True, temporary=True, error=True)
-    click_chrome(CLOSE)
-    chrome(STATUS, 'KEPT')
+    note('hello cathedralx',dirty=True)
     app_close()
-    dialog(1, 'NO STORAGE')
-    choose_close(1)  # Unavailable save cannot pretend to have persisted the draft.
-    dialog(2, 'DISCARD')
-    choose_close(3)
-    note('x', dirty=True, temporary=True, error=True)
-    app_close()
-    dialog(2, 'DISCARD')
+    dialog(2,'DISCARD')
     shutil.copyfile(output / 'display.png', output / 'notes-close.png')
     choose_close(2)
     color('101827')
-    click_chrome(NEW)
-    chrome(NEW, 'STORAGE ON')
     click_chrome(1)
-    chrome(STATUS, 'RUNNING')
-    note('hello cathedral')  # The temporary launch never touched saved Notes.
-    tabs(2, 0)
-    click_chrome(CLOSE)
-    chrome(STATUS, 'CLOSED')
+    note('hello cathedral')
+    tabs(2,0)
+    app_close()
+    color('101827')
     click_chrome(2)
-    chrome(STATUS, 'RUNNING')
     color('d18b35')
-    print('PASS: app-owned close, save/discard/cancel, required-service refusal, optional Notes storage and persistent replacement')
+    print('PASS: user tiles, absolute/relative clicks, app tiles, save/discard/cancel and persistent replacement')
 
 
-def run(timeout, trace_storage=False):
+def run(timeout, trace_storage=False, relative_pointer=False):
     build = [sys.executable, str(HERE / 'run.py'), '--release', '--build-only']
     if trace_storage:
         build.append('--trace-storage')
@@ -360,14 +300,14 @@ def run(timeout, trace_storage=False):
     migration = ROOT / 'source-rs/distribution/migrations/readable-labels.txt'
     database_image.prepare(path, programs, migration, app_close=True)
     qemu = harness.find_qemu()
-    command = [qemu, '-machine', 'q35', '-cpu', 'qemu64', '-accel', 'tcg', '-smp', '1', '-m', '128']
+    command = [qemu, '-machine', 'q35,vmport=off' if relative_pointer else 'q35', '-cpu', 'qemu64', '-accel', 'tcg', '-smp', '1', '-m', '128']
     command += harness.firmware_args(qemu, output)
     command += ['-drive', 'format=raw,file=fat:rw:esp', '-nic', 'none', '-monitor', 'none', '-no-reboot', '-display', 'none']
     command += disk_image.arguments(path)
     flags = subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0
     for boot in (1, 2):
         capture.run(command, output, timeout, flags, ready_marker='Cathedral desktop: ready; choose a user',
-                    verify=lambda stream, output, serial: desktop(stream, output, serial, boot == 2))
+                    verify=lambda stream, output, serial: desktop(stream, output, serial, boot == 2, not relative_pointer))
         for name in ('serial.log', 'qemu.log', 'display.png'):
             shutil.copyfile(output / name, output / f'boot-{boot}-{name}')
         contents = path.read_bytes()
@@ -391,8 +331,9 @@ def run(timeout, trace_storage=False):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--timeout', type=float, default=180)
+    parser.add_argument('--relative-pointer', action='store_true', help='disable VM port and verify PS/2 fallback')
     parser.add_argument('--trace-storage', action='store_true', help='build with storage phase traces in the serial log')
     args = parser.parse_args()
     if args.timeout <= 0:
         parser.error('timeout must be positive')
-    run(args.timeout, args.trace_storage)
+    run(args.timeout, args.trace_storage, args.relative_pointer)

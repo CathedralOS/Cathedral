@@ -33,6 +33,11 @@ impl Probe<'_> {
     }
 }
 pub fn run(style: u64, environment: Environment) -> u64 {
+    // Apps have logical input only, never access to the physical pointer channel.
+    assert_eq!(
+        cathedral_user_runtime::keyboard::virtual_pointer(10, 0),
+        Err(Error(abi::DENIED as i64))
+    );
     let connections = cathedral_user_runtime::matrix::Connections::load(&environment).unwrap();
     assert!(Launch::at(0).is_err());
     assert!(cathedral_user_runtime::link::Link::at(0).is_err());

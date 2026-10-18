@@ -41,6 +41,20 @@ pub struct Disk {
 }
 impl Keyboard {
     /// # Safety
+    /// Sole CPU, IRQs masked, exclusive input custody. Fixed pointer transport only.
+    pub unsafe fn virtual_pointer(
+        &self,
+        _command: u64,
+        _data: u64,
+    ) -> Result<[u32; 4], DeviceError> {
+        match self.kind {
+            #[cfg(target_arch = "x86_64")]
+            // SAFETY: Adapter validates commands before privileged I/O.
+            KeyboardKind::Ps2 => unsafe { pc::vmmouse::exchange(_command, _data) },
+        }
+    }
+
+    /// # Safety
     /// Sole CPU, IRQs masked; own this controller's interrupt route and installed vectors.
     pub unsafe fn interrupts(&self, _enabled: bool) {
         match self.kind {

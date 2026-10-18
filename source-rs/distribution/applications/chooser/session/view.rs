@@ -1,24 +1,13 @@
-//! Bounded bitmap of fixed rows; only a changed selection or status replaces
-//! its sealed image. Display titles never participate in object addressing.
+//! Present only visible choices, then a short message when an action fails.
 use super::*;
 use cathedral_user_runtime::memory::Private;
-pub const WIDTH: usize = 160;
-pub const ROW: u64 = 16;
-const HEIGHT: usize = (ROWS + 1) * ROW as usize;
-/// Where the bitmap sits in the chooser's extent.
-pub const LEFT: u64 = 10;
-pub const TOP: u64 = 20;
-pub const ENTRY_TOP: u64 = TOP + ROW;
-/// Pages one bitmap occupies; the chooser holds two during replacement.
-pub const PAGES: usize = (WIDTH * HEIGHT * 4).div_ceil(4096);
 pub struct Scene {
     pub epoch: u64,
-    base: u64,
-    text: u64,
+    names: [u64; 5],
 }
 impl Scene {
     pub fn new(parent: Pair, epoch: u64) -> Self {
-        let mut names = [0; 2];
+        let mut names = [0; 5];
         for (rank, name) in names.iter_mut().enumerate() {
             let reply = call(
                 parent,
@@ -27,13 +16,8 @@ impl Scene {
             assert_eq!(reply[0], 0);
             *name = reply[1];
         }
-        Self {
-            epoch,
-            base: names[0],
-            text: names[1],
-        }
+        Self { epoch, names }
     }
-    #[allow(clippy::too_many_arguments)]
     pub fn paint(
         &self,
         parent: Pair,
@@ -41,8 +25,7 @@ impl Scene {
         realm: &realm::Realm,
         selected: usize,
         status: &str,
-        user_picker: bool,
-        without_storage: bool,
+        picker: bool,
     ) {
         assert_eq!(
             call(
@@ -50,75 +33,83 @@ impl Scene {
                 [
                     wire::PAINT,
                     self.epoch,
-                    self.base,
+                    self.names[0],
                     0,
                     0,
                     extent[2],
                     extent[3],
-                    0x202d43
+                    tiles::BACKGROUND as u64
                 ]
             )[0],
             0
         );
-        let mut pixels = Private::allocate(PAGES).unwrap();
-        for (i, pixel) in pixels.bytes_mut()[..WIDTH * HEIGHT * 4]
-            .chunks_exact_mut(4)
-            .enumerate()
-        {
-            let row = i / WIDTH / ROW as usize;
-            let color: u32 = if row == selected + 1 && row <= CLOSE + 1 {
-                0x315ca8
+        // Release the previous message before allocating replacement tiles.
+        assert_eq!(
+            call(
+                parent,
+                [
+                    wire::PAINT,
+                    self.epoch,
+                    self.names[4],
+                    0,
+                    0,
+                    1,
+                    1,
+                    tiles::BACKGROUND as u64
+                ]
+            )[0],
+            0
+        );
+        let (items, n) = layout::entries(realm.count, picker);
+        for (i, &index) in items[..n].iter().enumerate() {
+            let title: &[u8] = if index == NEW {
+                b"NEW USER"
             } else {
-                0x182132
+                &realm.labels[index]
             };
-            pixel.copy_from_slice(&color.to_le_bytes());
+            let pixels = tiles::paint(index, picker, selected == index, title);
+            let (x, y) = layout::origin(extent, n, picker, i);
+            self.image(
+                parent,
+                self.names[i + 1],
+                pixels,
+                [x, y, layout::WIDTH as u64, layout::HEIGHT as u64],
+            );
         }
-        let mut labels = [[0u8; 13]; ROWS + 1];
-        let title: &[u8] = if user_picker {
-            b"CHOOSE USER"
-        } else {
-            b"PROGRAMS"
-        };
-        labels[0][..title.len()].copy_from_slice(title);
-        for (row, label) in labels[1..].iter_mut().enumerate() {
-            let text: &[u8] = match row {
-                row if row < realm.count => {
-                    *label = realm.labels[row];
-                    continue;
-                }
-                NEW if user_picker => b"NEW USER",
-                NEW if without_storage => b"STORAGE OFF",
-                NEW => b"STORAGE ON",
-                CLOSE => b"CLOSE",
-                row if row == ROWS - 1 => status.as_bytes(),
-                _ => b"",
-            };
-            label[..text.len().min(13)].copy_from_slice(&text[..text.len().min(13)]);
+        for i in n..ENTRIES - 1 {
+            assert_eq!(
+                call(
+                    parent,
+                    [
+                        wire::PAINT,
+                        self.epoch,
+                        self.names[i + 1],
+                        0,
+                        0,
+                        1,
+                        1,
+                        tiles::BACKGROUND as u64
+                    ]
+                )[0],
+                0
+            );
         }
-        for (row, label) in labels.iter().enumerate() {
-            for (column, &ch) in label.iter().enumerate() {
-                if ch == 0 {
-                    continue;
-                }
-                for (y, bits) in cathedral_bitmap_font::glyph(ch).into_iter().enumerate() {
-                    for x in 0..5 {
-                        if bits & (1 << (4 - x)) != 0 {
-                            for dy in 0..2 {
-                                for dx in 0..2 {
-                                    let offset = ((row * ROW as usize + y * 2 + dy) * WIDTH
-                                        + column * 12
-                                        + x * 2
-                                        + dx)
-                                        * 4;
-                                    pixels.bytes_mut()[offset..offset + 4]
-                                        .copy_from_slice(&0xffffffu32.to_le_bytes());
-                                }
-                            }
-                        }
-                    }
-                }
+        if !status.is_empty() {
+            let mut pixels = Private::allocate(3).unwrap();
+            for pixel in pixels.bytes_mut().chunks_exact_mut(4) {
+                pixel.copy_from_slice(&tiles::BACKGROUND.to_le_bytes());
             }
+            tiles::label(pixels.bytes_mut(), 180, 0, 0, status.as_bytes());
+            let x = extent[2].saturating_sub(180) / 2;
+            let y = if picker {
+                extent[3] / 2 + 88
+            } else {
+                extent[3].saturating_sub(32)
+            };
+            self.image(parent, self.names[4], pixels, [x, y, 180, 16]);
         }
+    }
+    fn image(&self, parent: Pair, surface: u64, pixels: Private, [x, y, width, height]: [u64; 4]) {
         let mut image = pixels.freeze().unwrap();
         image.unmap().unwrap();
         parent
@@ -127,12 +118,12 @@ impl Scene {
                 &wire::encode([
                     wire::SURFACE_IMAGE,
                     self.epoch,
-                    self.text,
-                    LEFT,
-                    TOP,
-                    WIDTH as u64,
-                    HEIGHT as u64,
-                    WIDTH as u64,
+                    surface,
+                    x,
+                    y,
+                    width,
+                    height,
+                    width,
                 ]),
                 &image,
             )

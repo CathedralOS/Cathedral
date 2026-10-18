@@ -1,8 +1,6 @@
-// List the realm, run the chosen entry as a sibling, copy the first entry as
-// a new one, or ask the host to close the sibling. The chooser holds no
-// authority of its own beyond its realm: launching is the host's act, bounded
-// to what this program can see. Labels are presentation; requests still use
-// the scoped object identities returned by the realm.
+// List the realm, present users/apps, then launch a choice or copy the template.
+// Labels and hidden entries are distribution presentation; every request stays
+// within the scoped object identities returned by this child's realm.
 use cathedral_kernel_contracts::user as abi;
 use cathedral_platform_contracts::{input, matrix as wire};
 use cathedral_user_runtime::{
@@ -12,11 +10,9 @@ use cathedral_user_runtime::{
     time,
 };
 pub type Pair = (Handle, Handle);
-/// Rows: the first entries of the realm, then NEW, then CLOSE, then the status.
+/// Bounded realm listing; presentation hides the template/chrome at index zero.
 pub const ENTRIES: usize = 4;
 pub const NEW: usize = ENTRIES;
-pub const CLOSE: usize = ENTRIES + 1;
-pub const ROWS: usize = ENTRIES + 3;
 
 pub fn run(environment: Environment, user_picker: bool) -> u64 {
     let connections = cathedral_user_runtime::matrix::Connections::load(&environment).unwrap();
@@ -24,13 +20,12 @@ pub fn run(environment: Environment, user_picker: bool) -> u64 {
     let control = (Handle::bootstrap(0).unwrap(), Handle::bootstrap(1).unwrap());
     let mut realm = realm::Realm::new(connections.storage, user_picker);
     let mut status = match realm.reload() {
-        Ok(()) => "CHOOSE",
-        Err(_) => "NO REALM",
+        Ok(()) => "",
+        Err(_) => "CANNOT OPEN",
     };
-    let (mut selected, mut pressed) = (0usize, false);
+    let (mut selected, mut pressed) = (1usize, false);
     let mut scene: Option<view::Scene> = None;
     let mut repaint = true;
-    let mut without_storage = false;
     loop {
         let snapshot = call(parent, [wire::POLL, 0, 0, 0, 0, 0, 0, 0]);
         let extent = wire::poll_view(snapshot);
@@ -42,23 +37,22 @@ pub fn run(environment: Environment, user_picker: bool) -> u64 {
                     let down = event[5] & 1 != 0;
                     if down
                         && !pressed
-                        && (view::LEFT..view::LEFT + view::WIDTH as u64).contains(&event[3])
-                        && (view::ENTRY_TOP..view::ENTRY_TOP + view::ROW * (CLOSE as u64 + 1))
-                            .contains(&event[4])
+                        && let Some(index) =
+                            layout::hit(extent, realm.count, user_picker, event[3], event[4])
                     {
-                        selected = ((event[4] - view::ENTRY_TOP) / view::ROW) as usize;
+                        selected = index;
                         choose = true;
                     }
                     pressed = down;
                 }
                 wire::CANCEL => pressed = false,
                 wire::KEY if event[4] == input::PRESS as u64 => match event[3] as u8 {
-                    input::UP => {
-                        selected = if selected == 0 { CLOSE } else { selected - 1 };
+                    input::UP | input::LEFT => {
+                        selected = layout::step(selected, realm.count, user_picker, false);
                         repaint = true;
                     }
-                    input::DOWN => {
-                        selected = if selected == CLOSE { 0 } else { selected + 1 };
+                    input::DOWN | input::RIGHT => {
+                        selected = layout::step(selected, realm.count, user_picker, true);
                         repaint = true;
                     }
                     input::ENTER => choose = true,
@@ -67,13 +61,10 @@ pub fn run(environment: Environment, user_picker: bool) -> u64 {
                 _ => (),
             }
             if choose {
-                status = act(
-                    &mut realm,
-                    parent,
-                    selected,
-                    user_picker,
-                    &mut without_storage,
-                );
+                status = act(&mut realm, parent, selected, user_picker);
+                if status.is_empty() && selected == NEW {
+                    selected = realm.count.saturating_sub(1);
+                }
                 repaint = true;
             }
             if scene.as_ref().is_none_or(|s| s.epoch != extent[1]) {
@@ -88,7 +79,6 @@ pub fn run(environment: Environment, user_picker: bool) -> u64 {
                     selected,
                     status,
                     user_picker,
-                    without_storage,
                 );
                 repaint = false;
             }
@@ -118,62 +108,26 @@ pub fn run(environment: Environment, user_picker: bool) -> u64 {
         }
     }
 }
-/// Carry out the selected row and say what happened.
-fn act(
-    realm: &mut realm::Realm,
-    parent: Pair,
-    selected: usize,
-    user_picker: bool,
-    without_storage: &mut bool,
-) -> &'static str {
-    match selected {
-        row if row < realm.count => {
-            match call(
-                parent,
-                [
-                    wire::LAUNCH,
-                    realm.ids[row],
-                    if *without_storage {
-                        cathedral_platform_contracts::imports::STORAGE
-                    } else {
-                        0
-                    },
-                    0,
-                    0,
-                    0,
-                    0,
-                    0,
-                ],
-            )[0]
-            {
-                0 => "RUNNING",
-                abi::BUSY => "BUSY",
-                abi::DENIED => "NOT OPEN",
-                cathedral_platform_contracts::imports::MISSING => "NEEDS SERVICE",
-                cathedral_platform_contracts::imports::INCOMPATIBLE => "BAD VERSION",
-                _ => "REFUSED",
-            }
-        }
-        NEW if !user_picker => {
-            *without_storage = !*without_storage;
-            if *without_storage {
-                "TEMPORARY"
-            } else {
-                "PERSISTENT"
-            }
-        }
-        NEW => match realm.copy_first() {
-            Ok(()) => "COPIED",
-            Err(abi::NO_MEMORY) => "FULL",
-            Err(_) => "REFUSED",
-        },
-        CLOSE => match call(parent, [wire::CLOSE, 0, 0, 0, 0, 0, 0, 0])[0] {
-            0 => "CLOSED",
-            abi::BUSY => "KEPT",
-            abi::PEER_CLOSED => "NOTHING OPEN",
-            _ => "REFUSED",
-        },
-        _ => "CHOOSE",
+/// Launch a visible app/user, or copy the hidden user template.
+fn act(realm: &mut realm::Realm, parent: Pair, selected: usize, user_picker: bool) -> &'static str {
+    if user_picker && selected == NEW && realm.count < ENTRIES {
+        return match realm.copy_first() {
+            Ok(()) => "",
+            Err(abi::NO_MEMORY) => "NO ROOM",
+            Err(_) => "TRY AGAIN",
+        };
+    }
+    if selected == 0 || selected >= realm.count {
+        return "";
+    }
+    match call(
+        parent,
+        [wire::LAUNCH, realm.ids[selected], 0, 0, 0, 0, 0, 0],
+    )[0]
+    {
+        0 => "",
+        abi::BUSY => "CLOSE APP FIRST",
+        _ => "CANNOT OPEN",
     }
 }
 fn call(pair: Pair, words: wire::Packet) -> wire::Packet {

@@ -3,9 +3,10 @@
 Updated 2026-10-18 (local date). Implementation baseline: declared service
 imports and optional Notes persistence at **`8d1972a`**, followed by readable
 chooser labels at **`787344e`**, existing-user label upgrade at **`4f1c6c8`**,
-and the app-owned close milestone below. Store-based
+app-owned close at **`a40ed23`**, and the user tiles/absolute input milestone
+below. Store-based
 admission validates the program's required/optional interfaces against owner
-offers before spawning; the F5 launcher can withhold storage. Check Git for
+offers before spawning. Check Git for
 later work.
 
 ## Start here
@@ -21,35 +22,27 @@ This is exactly what the single [VS Code launch entry](.vscode/launch.json) runs
 The composition is [distribution/profile.json](source-rs/distribution/profile.json).
 It uses x86-64 QEMU/TCG and UEFI.
 
-- **NEW USER** copies USER TEMPLATE beside it as USER 1, USER 2, etc. Click a
-  user to run it: it is a
-  matrix whose chrome, a second chooser over the user's realm, lists the user's
-  LAUNCHER, NOTES and COLORS by display title. The centered boot picker
-  disappears; the user gets the whole
-  display, with its launcher on the left and its app in the remaining area.
-  Click one to launch it, then click the program to focus it. There is no logout
-  control yet; restart QEMU to select another user.
-- Notes keeps up to eight notes of 240 ASCII characters in its realm.
-  Type letters/digits/spaces; Enter inserts a newline, Left/Right move the
-  cursor, Backspace deletes. F1 saves or reconciles an uncertain save; F2
-  reloads confirmed storage; F3 duplicates the saved note as a new note that
-  shares its content; F4 switches to the next note. A bar below the text shows
-  the notes, with the current one bright.
-- The user's **STORAGE ON/OFF** row controls subsequent launches. OFF gives
-  Notes no storage endpoint: it shows **TEMP NO SAVE**, keeps edits in memory,
-  and refuses save/reload without losing a draft. Colors requires storage and
-  answers NEEDS SERVICE. Re-enable storage and relaunch for saved data. The
-  toggle does not change an already-running app's grant.
-- Colors changes its color on Enter and keeps it, because its state nests under
-  its own program like everything else's.
-- Notes and Colors have an **X** in their upper-right corner. Clean apps exit
-  directly. Notes offers **SAVE / DISCARD / CANCEL** for unsaved work; temporary
-  Notes offers discard/cancel without storage. A failed save keeps the draft
-  open. Colors asks **CLOSE ANYWAY** if its last storage result is uncertain.
-- **CLOSE** in a chooser asks the running program what it would lose and stops
-  it only on an answer of nothing; an unsaved note stays open. Launching while
-  the slot is taken answers BUSY. The hidden boot chooser cannot receive input.
-  Up/Down/Enter work in a focused chooser.
+- The full-screen user picker shows a horizontal row of avatar tiles. **NEW
+  USER** copies the hidden template; click a user to enter its workspace. Up
+  to three users fit the current bounded listing; the add tile then disappears.
+  No scrolling, passwords or logout yet. Restart QEMU to select another user.
+- The user's left-hand app strip shows **NOTES** and **COLORS** icon tiles. The
+  launcher itself and implementation controls are hidden. Click an app tile,
+  then the app to focus it. Arrows and Enter work in a focused tile strip.
+- Notes keeps up to eight notes of 240 ASCII characters. Letters, digits, spaces,
+  Enter, Left/Right and Backspace edit. **F1** saves/reconciles, **F2** reloads,
+  **F3** duplicates the saved note, **F4** switches notes. Colors changes and
+  saves its color on **Enter**.
+- Notes and Colors have an upper-right **X**. Clean apps exit; dirty Notes offers
+  **SAVE / DISCARD / CANCEL**. A failed save stays open. Colors asks **CLOSE
+  ANYWAY** if its last storage result is uncertain. Launching another app while
+  one is still open shows CLOSE APP FIRST.
+- The default input service negotiates QEMU's absolute virtual mouse. The guest
+  cursor follows the host pointer within the window; PS/2 remains the fallback.
+  Apps still receive only local matrix input, never the physical device grant.
+- The old STORAGE ON/OFF toggle and launcher CLOSE row are gone. Required/
+  optional service binding and the matrix LOSS/CLOSE mechanism still exist;
+  their engineering controls do not belong in the normal desktop.
 
 Interactive state persists in **`build/boot-harness-rs/cathedral-storage.raw`**:
 the users you made, their notes and colors. Missing media is created; existing
@@ -215,8 +208,8 @@ numbers and the bindings it observed.
 Page budgets are sized for sealed bitmaps held at every matrix level with old
 and new present during replacement, plus the largest program a matrix reads
 to run it: the root matrix has 128 private and 256 reader pages and lends the
-user matrix 80/96; the chooser has 40 private pages (two of its 20-page
-bitmaps); Notes 32/4; Colors fits in the same; the provider 128/64; the
+user matrix 80/96; the chooser has 48 private pages (three 12-page tiles
+and a replacement); Notes 32/4; Colors fits in the same; the provider 128/64; the
 display 128 reader pages. The kernel's per-task bound is 128 private and 512
 reader pages with eight reader rights; the kernel heap is 256 KiB. Objects
 hold at most 256 KiB (64 pages).
@@ -566,3 +559,76 @@ shortcut, or new focus indicators. Colors' uncertain-close confirmation was
 compiled but not separately fault-injected through the shell UI. Kernel and
 ARM64 suites were not rerun for this application/installer change. The existing
 intermittent ATA timeout remains unresolved; none appeared in these runs.
+
+
+## User tiles and absolute pointer
+
+The ordinary desktop now opens to horizontal user/avatar tiles across a
+full-screen picker, with the template hidden. NEW USER makes a copy; at the
+existing three-user listing limit the add tile disappears. No scrolling or
+account-management framework was added. Inside a user the same chooser shows
+Notes/Colors icon tiles. The self-launcher entry, STORAGE ON/OFF, launcher CLOSE
+and normal status rows are gone. Failed actions give brief text; apps retain
+their X buttons and close decisions. Required/optional imports and matrix
+LOSS/CLOSE remain platform mechanisms, without default GUI test controls.
+
+Chooser sequencing stays in `session/session.rs`; `layout.rs` shares geometry
+with pointer hit testing, `view.rs` publishes surfaces and `tiles.rs` owns raster
+icons. Five chooser surfaces plus six app surfaces fit the user matrix's eleven;
+the root's five picker surfaces and eleven user surfaces fit its sixteen.
+The chooser receives 48 private pages. Each tile uses 12; old failure text is
+released before replacements to keep three-user repaint within that budget.
+
+The default input profile enables `absolute-pointer`. The input service's
+`absolute.rs` negotiates QEMU VMMouse and scales absolute axes; the matrix API
+still gets ordinary local coordinates. A restricted INPUT_VIRTUAL_POINTER syscall
+requires the exclusive bootstrap input grant, validates the complete reply
+buffer before any device effect, and delegates whitelisted operations to the
+PC board adapter. No arbitrary ports or general hypervisor calls are exposed.
+The owner retirement path disables virtual input; unavailable/failed absolute
+input falls back to PS/2. Other lab profiles keep relative input. This is QEMU
+integration, not a USB/HID driver. See `platform/services/input/README.md`.
+
+The existing stock-program migration refreshed both launchers and Colors in the
+actual interactive disk (four copied objects). Notes data and user matrix code
+remain intact. A separate pre-upgrade backup is
+`build/boot-harness-rs/cathedral-storage.raw.before-user-tiles.raw`.
+A booted copy showed both user avatars, entered USER 2, and opened its Notes:
+`build/boot-harness-rs/labels-upgrade/interactive-tiles-20261018T174902/`.
+
+Verification:
+
+- Full Rust host suite, chooser/desktop/input and kernel target clippy,
+  layout/format/diff checks passed. The new board test rejects non-pointer
+  commands and oversized/truncated operands. Colors checks that an ordinary
+  app cannot access the physical virtual-pointer transport.
+- Default F5 desktop passed absolute-coordinate clicks, user creation, app
+  launching, dirty save/discard/cancel, repeated exit/relaunch and cold reboot;
+  host oracle verified 199 records:
+  `build/boot-harness-rs/desktop/20261018T174221890406Z/`.
+- The same desktop flow with VM port disabled passed PS/2 fallback:
+  `build/boot-harness-rs/desktop/20261018T174441789342Z/`.
+  Reproduce with `desktop_test.py --relative-pointer`.
+- Existing-user upgrade, saved notes and app close passed on the pre-label
+  fixture: `build/boot-harness-rs/labels-upgrade/20261018T174406660935Z/`.
+  Three-user creation, full-row keyboard repaint, existing notes and close also
+  passed on a newer fixture at `labels-upgrade/20261018T174733693334Z/`.
+  Use `labels_upgrade_test.py IMAGE --fill-users` for that additional limit check.
+- Release x86 smoke and ARM64 portability boots passed. No new ARM device was
+  introduced; the shared syscall routing still compiles/runs there.
+
+**Outstanding storage finding:** With the older
+`desktop/20261017T232223657195Z/guest.raw` fixture upgraded, adding USER 2 twice
+hit a storage deadline and provider replacement; the picker displayed TRY AGAIN.
+Existing-user selection/readback passed before that extra stress. Artifacts:
+`labels-upgrade/20261018T174631398112Z/` and `20261018T174825636437Z/`.
+The newer fixture's equivalent two extra copies passed. Cause is unproven;
+do not claim this is the previously recorded ATA timeout without tracing it.
+No retry of an uncertain copy was added. The original chooser already lacks a
+reconcile/reload action after uncertain creation; investigate that alongside the
+storage stall before adding broader account controls. The new capacity check
+is opt-in so its distinct purpose is explicit.
+
+The old F5 test's storage-toggle/temporary-Notes steps were removed with that
+UI. Earlier evidence remains above; service import policy host tests still run,
+but this milestone does not claim new end-to-end optional-storage UI coverage.

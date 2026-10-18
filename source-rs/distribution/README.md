@@ -6,29 +6,24 @@ Press **F5** at the repository root, or run:
 python tools/boot-harness-rs/run.py --release --window
 ```
 
-One desktop boots to a chooser over the folder of users. **NEW USER** copies the
-template user beside it; clicking a user replaces the boot picker with that
-user's full-screen workspace. A user is a
-matrix with its own chrome: a second chooser over the user's realm, listing the
-user's copies of Notes and Colors. Click one to launch it, and click the
-program's area to give it keyboard focus. Notes and Colors have an **X** in
-their upper-right corner. Notes asks Save / Discard / Cancel for unsaved work;
-temporary Notes offers Discard / Cancel. **CLOSE** in the launcher asks the running program
-whether it would lose work and keeps it open if so. The boot chooser's display
-and input grant is revoked on entry, leaving the user's launcher on the left
-and its app in the remaining area. There is no logout control yet; restart
-QEMU to select another user. Notes holds up to eight
-notes of 240 characters: **F1** saves (or checks an uncertain save), **F2**
-reloads the saved note, **F3** duplicates it as a new note sharing its content,
-**F4** switches to the next note. Colors changes on **Enter**. Both choosers
-also take Up/Down/Enter while focused. The user launcher's **STORAGE ON/OFF**
-row controls future launches: OFF runs Notes as a temporary unsavable editor;
-Colors refuses with NEEDS SERVICE because its storage import is required.
-Turn storage on and relaunch to return to saved data. Existing copied apps
-retain their code; use NEW USER for newly added app features. The explicit
-[stock-app upgrades](migrations/README.md) refresh recognized launchers and
-Notes/Colors in existing users for readable labels and app-owned close controls,
-preserving saved data and customized programs.
+F5 opens a full-screen user picker with a horizontal row of avatar tiles.
+**NEW USER** copies the hidden template; click a user to enter its workspace.
+The user gets an app strip with **Notes** and **Colors** tiles and the rest of
+the display for its app. Click the app to focus it. Each app has an **X**;
+Notes asks **Save / Discard / Cancel** for unsaved work. There is no storage test
+toggle, launcher entry or permanent status text in the ordinary UI.
+
+Notes holds up to eight notes of 240 characters: **F1** saves or reconciles,
+**F2** reloads, **F3** duplicates the saved note, **F4** switches notes. Colors
+changes on **Enter**. Arrows and Enter also navigate a focused picker/launcher.
+There is no logout yet; restart QEMU to select another user. The picker handles
+up to three users without scrolling and hides New User at its limit.
+
+The default input service negotiates QEMU's absolute virtual mouse so the guest
+cursor follows the host pointer within the window. It falls back to relative
+PS/2 input when that interface is unavailable. The explicit
+[stock-program upgrades](migrations/README.md) refresh existing recognized user
+launchers/apps while preserving saved data and customized programs.
 
 Everything persists in `build/boot-harness-rs/cathedral-storage.raw` across
 launches and QEMU restarts: the users you made, their notes and colors. The
@@ -62,8 +57,8 @@ them into the storage image as objects of
 the notes root, in order and nested as the profile says, with `folder` entries
 as empty containers. The kernel sees supplied code and grants; the distribution
 assigns budgets and placement, and the choosers launch programs from their
-realms by object number. The UI shows USER TEMPLATE / USER 1 in the picker and
-LAUNCHER / NOTES / COLORS in the user's workspace. See the
+realms by object number. The UI hides the template/launcher and shows user avatars at boot and
+NOTES / COLORS tiles inside the user. See the
 [chooser](applications/chooser/README.md) for the bounded display-title format.
 
 | Role | Composition entry | Entrance / receiving implementation |

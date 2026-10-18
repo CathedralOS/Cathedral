@@ -13,6 +13,9 @@ pub(super) fn dispatch(
         abi::DEVICE_HANDLE..=abi::DEVICE_RELEASE => {
             leased::dispatch(session, slot, [number, first, second, third], event)
         }
+        abi::INPUT_VIRTUAL_POINTER => {
+            keyboard::virtual_pointer(session, slot, first, second, third)
+        }
         abi::KEYBOARD_READ | abi::KEYBOARD_WRITE | abi::KEYBOARD_READ_UNTIL => {
             keyboard::syscall(session, slot, (number, first, second), event, now)
         }

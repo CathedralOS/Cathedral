@@ -12,17 +12,17 @@ it runs the same default composition as:
 python tools/boot-harness-rs/run.py --release --window
 ```
 
-Click **NEW USER** to copy USER TEMPLATE, click USER 1 to run it, then click
+Click **NEW USER** to create a user, click its avatar to enter, then click
 **Notes** or **Colors** in its chrome and click the program to focus it. Notes:
-type, F1 save/check, F2 reload. Colors: Enter changes color. CLOSE stops the
-program unless it would lose work. Notes and Colors also have their own **X**
+type, F1 save/check, F2 reload. Colors: Enter changes color. Notes and Colors have an **X**
 button; Notes presents Save / Discard / Cancel for a draft, or Discard / Cancel
 when storage is absent. Closing an app no longer requires using the launcher.
 Selecting a user removes the boot picker and gives the user the full display,
 with its launcher on the left. There is no logout UI yet; restart QEMU to select
-another user. The user launcher's STORAGE ON/OFF toggle controls future launches:
-Notes with storage off shows TEMP NO SAVE, while Colors refuses its missing
-required service. Re-enable storage and relaunch to use saved data again.
+another user. The picker shows horizontal user tiles, and the user's launcher
+shows only app tiles. Storage attenuation remains a platform mechanism, without
+a test toggle in the normal desktop. Default QEMU input uses absolute coordinates
+when its virtual mouse is available, with PS/2 fallback.
 Build output and serial diagnostics appear in the integrated terminal. Close
 QEMU or press Ctrl+C there to stop. This uses VS Code's terminal launcher, not
 an attached kernel debugger.

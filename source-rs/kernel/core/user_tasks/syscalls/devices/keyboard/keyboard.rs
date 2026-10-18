@@ -101,6 +101,7 @@ pub(in crate::user_tasks) fn reset(session: &mut Session) {
     let Some(device) = arch::board::devices().keyboard else {
         return;
     };
+    virtual_pointer::reset(&device);
     for _ in 0..64 {
         // SAFETY: Grant incarnation is retiring or not yet runnable; discard old bytes.
         if unsafe { device.read() }.is_none() {

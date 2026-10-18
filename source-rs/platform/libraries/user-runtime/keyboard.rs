@@ -26,3 +26,15 @@ fn result(value: u64) -> Result<u64, Error> {
         Ok(value)
     }
 }
+
+/// Restricted virtual-mouse command under the same exclusive input grant.
+pub fn virtual_pointer(command: u64, data: u64) -> Result<[u32; 4], Error> {
+    let mut reply = [0u32; 4];
+    result(arch::call3(
+        abi::INPUT_VIRTUAL_POINTER,
+        command,
+        data,
+        reply.as_mut_ptr() as u64,
+    ))?;
+    Ok(reply)
+}

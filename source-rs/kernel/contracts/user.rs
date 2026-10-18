@@ -162,5 +162,8 @@ pub const EVENT_WAIT: u64 = 68;
 /// Sealed object handle, first entry argument, zero -> caller-local executable
 /// grant backed by that object, consumed by one reservation and admitted once.
 pub const TASK_IMAGE_FROM_OBJECT: u64 = 69;
+/// Exclusive bootstrap input grant: command, data, writable 16-byte reply.
+/// Fixed virtual pointer transport, not arbitrary I/O or hypervisor access.
+pub const INPUT_VIRTUAL_POINTER: u64 = 70;
 pub const WAIT_IPC: u64 = 0;
 pub const WAIT_DEVICE: u64 = 1;
