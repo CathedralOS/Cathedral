@@ -2,8 +2,9 @@
 
 The [accepted copy contract](../../../../wiki/spec/storage/realms_and_objects.md)
 requires independent edits on both sides of a copy. This implementation shares
-content but duplicates hierarchy metadata; its numbered-object scheme is not
-the settled production identity or copied-reference model.
+content but duplicates hierarchy metadata. The contract now selects paths within
+a supplied view for persisted references; this numbered-object implementation
+does not yet provide named path lookup or stable persisted references.
 
 [lib.rs](lib.rs) opens the experimental table and defines the bounds.
 [records.rs](records.rs) owns key scoping and the fixed head, event, edge and

@@ -233,23 +233,25 @@ now resolves the startup/persisted-policy owner question. A matrix is an ordinar
 program whose parent grants its ceiling; the matrix controls its own children
 within it, using code, configuration, or both. The privileged startup environment
 need not be one matrix executable. The
-[copy contract](wiki/spec/storage/realms_and_objects.md) now requires independent edits on both sides with shared backing permitted. Names, kinds
-and copied-reference identity remain separate decisions.
+[storage contract](wiki/spec/storage/realms_and_objects.md) requires independent
+copies and unchanged path references resolved within the supplied view. Stable
+persisted IDs and aliases are deferred; names and kinds remain owner decisions.
 
 - [ ] **Make the user matrix own its startup arrangement.** Move launcher and
   child setup out of the initial owner's knowledge of the user's internal object
   ordering. Persist the stock matrix's arrangement in its authorized realm;
   delegate editing explicitly. Saving and applying to live children are separate
   operations. Custom matrix programs need not use the stock schema. The binary
-  encoding is implementation work, not a new source of authority. Resolve object
-  identity and copied-reference resolution before relying on persisted child
-  references.
+  encoding is implementation work, not a new source of authority. Use paths
+  within the supplied realm for persisted child references; missing targets
+  fail lookup. Settle name representation and add named lookup first.
 - [ ] **Give objects kinds and editable names.** The chooser now shows program
   display titles and user ordinals, while the
   user picker copies its first entry as the template. The user launcher exposes
   app tiles, but object roles remain implicit.
-  Resolve template selection and readable program labels without relying on
-  object ordering; authentication remains a separate decision.
+  Resolve name representation and kinds, then add named lookup for startup
+  paths and template selection without object ordering. Authentication remains
+  a separate decision.
 - [ ] **Keep app lifecycle honest as apps grow.** Startup failure, app crash and
   provider loss while an app holds work still end in assertions in places. A
   program that cannot be read from the realm answers REFUSED in the chooser
@@ -771,3 +773,17 @@ aliases remain the narrowed owner question; view-relative IDs are a proposal,
 not an accepted answer. This pass changes documentation and protocol comments
 only, with no runtime or wire changes. Markdown links and diff checks were
 verified; runtime tests were not rerun for this documentation change.
+
+## Persisted path-reference decision (2026-10-18)
+
+The owner accepted [paths within the supplied view](wiki/spec/storage/realms_and_objects.md)
+for ordinary persisted references. Copies preserve path strings; missing targets
+fail lookup, with no source-realm fallback or dependency repair. Rename/move may
+break a path. Stable persisted IDs and aliases are deferred, so the copied-reference
+owner question is closed rather than retained as a blocker.
+
+The guest still uses numbered objects and has no named path lookup. Name/kind
+representation is the remaining owner decision for matrix startup paths; internal
+number allocation is not itself a public stable-reference contract. No runtime or
+wire behavior changed in this documentation/comment pass. Local Markdown links
+and diff checks passed; runtime tests were not rerun.

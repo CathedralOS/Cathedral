@@ -4,9 +4,10 @@
 
 ## Design status
 
-The [independent-copy contract](../../spec/storage/realms_and_objects.md) now
-establishes symmetric copy-on-write behavior and hierarchy/backing separation.
-Identity and alias representations below remain candidates.
+The [storage contract](../../spec/storage/realms_and_objects.md) establishes
+symmetric copy-on-write behavior, hierarchy/backing separation and paths within
+a supplied view for persisted references. Stable persisted IDs and aliases are
+deferred. Internal identity representations below remain candidates.
 
 This chapter records intended product semantics, not an accepted storage-engine
 or on-disk specification. The [storage foundation proposal](../../proposals/0002_dbfs_storage_foundation.md)
@@ -56,14 +57,14 @@ The earlier proposal inferred an object's unique realm from its parent chain.
 That is insufficient for a graph with aliases or shared nodes: a node can have
 multiple incoming edges. Immutable content membership must be distinguished
 from namespace edges and the authority that permits traversal. Whether mutable
-object identity can itself be shared across realms remains an owner choice.
+object identity can itself be shared across realms is deferred with aliases.
 A privileged realm registry is a proposed management interface, not permission
 for ordinary callers to enumerate other roots. Cross-realm physical deduplication,
 encryption domains and charging also remain proposed.
 
 ### Copying is a reference operation
 
-An immutable content version can be shared by adding a reference without copying its payload. A file copy can create a new identity referring to that version. A directory snapshot can share immutable tree structure, but a writable directory copy's identity and alias representation still need definition: stable mutable cells cannot simply be shared while promising independent edits. O(1) reference creation describes content sharing, not an unconditional bound on authorization, identity creation, indexing or persistence costs.
+An immutable content version can be shared by adding a reference without copying its payload. A file copy can create a new identity referring to that version. A directory snapshot can share immutable tree structure, but internal identity and any future alias representation must preserve independent copies: stable mutable cells cannot simply be shared while promising independent edits. O(1) reference creation describes content sharing, not an unconditional bound on authorization, identity creation, indexing or persistence costs.
 
 The candidate immutable representation is a Merkle DAG with copy-on-write nodes. A bounded construction and validated decoding protocol must enforce node kinds, references and traversal limits; hashing alone is not validation of hostile input. Unchanged subtrees may be reused while changed paths are rebuilt. Aggregate queries must distinguish logical size, unique physical bytes and charged bytes. Shared backing does not define which realm pays for it.
 
@@ -77,7 +78,7 @@ The candidate file model has two levels: a small mutable **cell** with stable id
 - **Alias** (the proposed hardlink) is two names for the same mutable cell, so writes through either name affect the shared identity. Reclamation must account for retained versions, active readers and other permitted references, not only the last directory name. Cross-realm aliases are unresolved.
 - **Symlink** is a name that points at another name or path, and dangles if its target is renamed or removed. It is the weaker shortcut, for when you want a pointer that follows a location rather than a thing.
 
-In this candidate model, copy duplicates identity and alias shares it. A snapshot must freeze the identity-to-version mapping as well as content references; otherwise mutable cells can leak later edits into an old snapshot. Independent edits on either side of an ordinary copy are now required. Whether the mutable-cell level exists and how a subtree copy treats aliases remain owner choices. A path/version-identified store is an alternative with different alias semantics.
+In this candidate model, copy duplicates identity and alias shares it. A snapshot must freeze the identity-to-version mapping as well as content references; otherwise mutable cells can leak later edits into an old snapshot. Independent edits on either side of an ordinary copy are now required. The mutable-cell level is an internal representation candidate, not a requirement for stable public references. Ordinary persisted references now use paths; aliases and their copying behavior are deferred.
 
 ### Version history and retention
 
@@ -101,7 +102,7 @@ A large range patch can replace touched chunks and affected manifest/index paths
 
 Cross-realm sharing is a capability-gated edge, not a global path. When an app needs a user file, something mints a capability into the user realm for that one object: that is the file picker as an authority mint ([[human_permission_ux]]). The distinction to keep, which iOS and Android both blur, is app-private storage (the app realm) versus user-facing documents (the user realm). A file an app saves "for the user" lands in the user realm via a granted capability, not buried in the app's container.
 
-Cross-realm sharing requires an authorized reference, not merely a globally meaningful string. Durable references may name an identity or a realm-relative path depending on the eventual contract; those choices have different rename and alias behavior. Physical backing can be shared while naming and authority stay separate. Broad administrative, backup or search access requires explicit authority.
+Cross-realm sharing requires an authorized reference, not merely a globally meaningful string. Ordinary durable references now use paths within a supplied authorized view. Copying preserves those paths unchanged; missing targets fail lookup, and moves or renames may break references. Stable identity references and aliases are deferred. Physical backing can be shared while naming and authority stay separate. Broad administrative, backup or search access requires explicit authority.
 
 ### Storage is relocatable
 
@@ -203,7 +204,7 @@ There are three limits. Porting a legacy database wholesale still works but is w
 - **Placement and durability classes.** A subtree is tagged with where it lives and how many copies it keeps (default, pinned, mirrored), independent of its realm. Mirroring is cheap only without write contention, and changing a class is a managed cutover ([[memory_and_persistence]], [[distributed_boundary]]). Mirroring the system realm across drives makes every drive a valid boot drive ([[boot_and_trust_chain]]).
 - **Sealed subtrees.** Encryption at rest is a property a subtree can carry. The bytes are ciphertext and a content-key gates them, with a choice of hiding contents only (names visible) or the names too. The key is sealed to a credential and unsealed on demand ([[sessions_and_login]], [[secrets_and_keys]]).
 - **Two protection axes: metadata and content.** Names, metadata, the search index, and derived previews live in one layer (directory nodes and records). Object bodies live in another. The two are protected independently. A subtree can be excluded from search with enumeration gated behind a re-auth, so its existence and names are hidden whether or not the bodies are encrypted. Conversely, the bodies can be sealed while the names stay visible. Hiding that a file exists is a metadata-axis job that content encryption does not do on its own, since encrypted contents still leak names, sizes, and types. The whole-realm login seal already encrypts both layers at rest ([[sessions_and_login]]). The per-subtree controls exist for the in-session threat: a left-open laptop, or someone who knows the main credential.
-- **Mutable file identity.** A file is a mutable cell over immutable content, which yields copies (a new cell), aliases or hardlinks (a shared cell with no owner), and symlinks (a name pointing at a path). Whether the cell level exists is a real design choice with snapshot and dedup implications.
+- **Internal file identity.** Mutable cells remain a candidate representation over immutable content. Independent copies and path-based persisted references are accepted; public stable identities, aliases and symlinks remain deferred design extensions.
 - **Object views rather than a POSIX mmap API (proposed).** The runtime owns placement and view lifetime. Conventional mappings do not intrinsically pin disk locations; object views still need explicit residency and quiescence rules ([[memory_and_persistence]], [[ipc_and_service_invocation]]).
 - **Per-object capabilities.** A handle to an object is the authority over it. A directory view is an attenuated capability ([[capability_model]]), and a realm root is the top-most such capability.
 - **Capabilities are database-shaped.** A capability scopes by operation and projection, not only by subtree. Enumerating a directory (names and metadata) is a strictly weaker grant than reading object contents. A grant can be narrowed by record type (for example, read only image-typed objects) the way a database view restricts rows and columns, with the store enforcing the predicate at access. Listing names, reading previews, and reading contents are distinct capabilities over the same objects ([[capability_model]]).

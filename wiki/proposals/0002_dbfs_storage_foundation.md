@@ -3,7 +3,7 @@
 | Status | Scope |
 | --- | --- |
 | Proposed | Engine-selection and layout experiment; no accepted disk format or production API |
-| Specification owner | [Realms and objects](../spec/storage/realms_and_objects.md) accepts independent-copy behavior; engine, layout and identity remain proposed |
+| Specification owner | [Realms and objects](../spec/storage/realms_and_objects.md) accepts independent copies and persisted path references; engine and layout remain proposed |
 | Existing evidence | [Object store](../../source-rs/platform/libraries/database-objects/README.md): numbered objects, shared content, copies, pins and bounded collection behind private roots |
 | New evidence | [Host layout lab](../../tools/storage-lab/README.md): flat/tree chunk references, inline contents, range reads, batched edits and retained versions |
 
@@ -27,6 +27,11 @@ public model must not expose global hash lookup as read authority. Sharing
 physical content does not merge object identity or realm authority.
 
 ## Candidate representation
+
+Ordinary persisted application references use paths within the supplied view.
+The IDs below are candidate internal records, not a public stable-reference
+contract. Stable references and aliases are deferred; named lookup remains
+unimplemented in the guest.
 
 | Record | Meaning |
 | --- | --- |

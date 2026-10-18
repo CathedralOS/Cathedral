@@ -4,7 +4,8 @@
 //!
 //! COPY and COPY_TREE preserve independent edits in both directions while
 //! sharing immutable backing. See wiki/spec/storage/realms_and_objects.md;
-//! these lab object numbers do not settle production copied-reference identity.
+//! persisted references use paths in an authorized view. Named lookup is not
+//! implemented by this numbered-object lab protocol.
 //!
 //! Every request and reply is one 64-byte packet of eight little-endian words.
 //! Request: `[op, object, expected, argument, len, scope, scope, scope]`. The

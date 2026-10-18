@@ -32,49 +32,6 @@ standard.
 
 ## Open questions
 
-### DBFS identity, copied references and aliases
-
-**Settled boundary.** The [copy contract](wiki/spec/storage/realms_and_objects.md)
-now requires ordinary copies to diverge independently in both directions.
-Hierarchy and backing are distinct; shared immutable records and copy-on-write
-are the default direction. No special original writer may change a clone's
-state. Exclusive-use reuse is optional and must account for retained views,
-readers and crash consistency. Collector choice is implementation work, not an
-owner decision required before proceeding.
-
-**Requirement and remaining conflict.** A matrix must persist startup references
-that still work when its template is copied. Independent copy behavior does not
-determine whether logical IDs are new, preserved within a view, or path-based;
-nor does it determine how references stored inside configuration resolve after
-copying. Arbitrary payload bytes cannot be assumed to contain discoverable,
-rewritable references. Shared mutable aliases need a separate explicit contract.
-
-**Contracts checked.** The partial contract above deliberately excludes identity
-and aliases. The [Rust object protocol](source-rs/platform/contracts/storage.rs)
-uses root-relative numbers that are never reused, one parent per object, and
-new numbers for every copied descendant. It has no aliases or cross-realm graph.
-The [filesystem design](wiki/design/part_4_storage/00_filesystem_as_database.md)
-and [storage proposal](wiki/proposals/0002_dbfs_storage_foundation.md) retain
-candidate mutable-cell representations; neither settles reference resolution.
-
-**Owner choice.** Preserve logical IDs resolved within independent views, assign
-new identities with explicitly represented references remapped during copying,
-or use path/version references. Define rename/move behavior, external bindings
-and intentional aliases before relying on persistent references. Sharing backing
-or knowing an ID cannot grant access outside the authorized view.
-
-**Recommendation (unaccepted).** Explore view-relative logical IDs so copied
-configuration can retain its bytes while resolving to the copied view. Work
-through moves, deletion, aliases and external references before adopting it.
-Do not infer acceptance of this identity model from acceptance of CoW.
-
-**Related copied-program policy.** Ordinary copies do not follow later source
-updates under the accepted contract. The Rust desktop's explicit stock-program
-upgrades preserve customized code and saved data; they do not establish general
-managed-update membership. Before general app updates, define how an owner opts
-into that policy and who may change it. Such updates are separate authorized
-operations, not a consequence of sharing backing.
-
 ### DBFS deduplication domains and erasure
 
 **Requirement and tension.** The filesystem design combines cross-realm content
@@ -666,6 +623,10 @@ explicit funded adoption, and revocation, plus a policy for growing/reclaiming
 active memory envelopes. No new answer is needed to continue this bounded lab.
 
 ### Object kinds and names in a realm
+
+The [accepted storage contract](wiki/spec/storage/realms_and_objects.md) now
+uses paths for persisted references. This question selects name/kind
+representation needed for lookup; it does not reopen stable-ID references.
 
 **Requirement and conflict.** A chooser addresses its realm by object number and
 acts by position: NEW USER in the picker copies the first entry as the template.
