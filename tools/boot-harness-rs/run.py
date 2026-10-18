@@ -2,6 +2,7 @@
 """Build and boot the Rust lab; --smoke checks a bounded, real QEMU boot."""
 
 import argparse
+import artifacts
 import json
 import os
 from pathlib import Path
@@ -281,6 +282,7 @@ def main():
                     parser.error("launch argument must be a u64")
                 environment[f"CATHEDRAL_LAUNCH_{index}_ARGUMENT"] = str(argument)
     profile = "release" if args.release else "debug"
+    captured = {}
     for name, user in programs.items():
         user_cargo = ["cargo", "build", "--locked", "--package", user['package'],
                       "--target", user['target'], "--target-dir", str(BUILD / "cargo")]
@@ -301,7 +303,8 @@ def main():
             user_cargo.append("--release")
         subprocess.run(user_cargo, cwd=WORKSPACE, check=True)
         user_elf = BUILD / "cargo" / user['target'] / profile / user['package']
-        environment[f'CATHEDRAL_{name.upper()}_ELF'] = str(user_elf.resolve(strict=True))
+        captured[name] = artifacts.capture(user_elf, BUILD / 'artifacts')
+        environment[f'CATHEDRAL_{name.upper()}_ELF'] = str(captured[name])
 
     seeded = []
     if not args.kernel_only and not args.smoke:
@@ -310,7 +313,7 @@ def main():
                 trimmed.parent.mkdir(parents=True, exist_ok=True)
                 trimmed.write_bytes(b"")
             else:
-                elf_trim.trim(built, trimmed, startup["programs"][index].get("display_title"))
+                elf_trim.trim(captured[f'program_{index}'], trimmed, startup["programs"][index].get("display_title"))
             seeded.append((parent, trimmed))
     cargo = ["cargo", "build", "--locked", "--package", boot_package,
              "--target", target, "--target-dir", str(BUILD / "cargo")]

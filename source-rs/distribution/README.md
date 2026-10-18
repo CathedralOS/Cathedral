@@ -19,6 +19,12 @@ changes on **Enter**. Arrows and Enter also navigate a focused picker/launcher.
 There is no logout yet; restart QEMU to select another user. The picker handles
 up to three users without scrolling and hides New User at its limit.
 
+Click **SETTINGS** at the bottom of the user's app strip to adjust its width and
+outer spacing. **SAVE** persists the next-start arrangement; **CANCEL** discards
+local edits and returns to apps. Restart QEMU and choose that user to apply it.
+Running apps stay in place. Initial stock defaults live in [matrix.conf](matrix.conf);
+installation preserves existing saved arrangements.
+
 The default input service negotiates QEMU's absolute virtual mouse so the guest
 cursor follows the host pointer within the window. It falls back to relative
 PS/2 input when that interface is unavailable. The explicit

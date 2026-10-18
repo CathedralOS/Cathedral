@@ -52,6 +52,9 @@ nonempty metadata and existing configurations. Changes commit in one transaction
 after a `.before-hierarchy.raw` backup; a repeat is a no-op. The install sidecar
 records hierarchy version 1. Unknown custom programs remain untouched and may
 need explicit metadata before they appear in the executable-only chooser.
+Initial configuration values come from [matrix.conf](../matrix.conf), encoded
+by the host migration. Changing those defaults does not reset an existing
+template or user's saved `Matrix` object.
 
 The lab's fixed 4 MiB volume can run out of physical engine space when adding
 another set of program revisions. This is separate from the logical retained-byte

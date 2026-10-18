@@ -113,8 +113,10 @@ retain their existing design/specification owners.
   [stock matrix](../../../source-rs/platform/services/matrix/service/children/configuration.rs)
   reads its own `Matrix` configuration, resolves the launcher path in its realm,
   and installs child budgets and placement within the supplied ceiling. Startup
-  requires empty slots. There is no settings editor or live reconfiguration yet;
-  editing saved bytes does not alter running children.
+  requires empty slots. The distribution launcher now has a bounded editor for
+  saved strip width and outer spacing, using its supplied user-realm grant.
+  There is no live reconfiguration yet; editing saved bytes does not alter
+  running children.
 - Warden, encrypted realms and authentication are not implemented in the Rust
   reference OS. The current user picker selects an unencrypted subtree.
 

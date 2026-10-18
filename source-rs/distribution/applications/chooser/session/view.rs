@@ -27,39 +27,7 @@ impl Scene {
         status: &str,
         picker: bool,
     ) {
-        assert_eq!(
-            call(
-                parent,
-                [
-                    wire::PAINT,
-                    self.epoch,
-                    self.names[0],
-                    0,
-                    0,
-                    extent[2],
-                    extent[3],
-                    tiles::BACKGROUND as u64
-                ]
-            )[0],
-            0
-        );
-        // Release the previous message before allocating replacement tiles.
-        assert_eq!(
-            call(
-                parent,
-                [
-                    wire::PAINT,
-                    self.epoch,
-                    self.names[4],
-                    0,
-                    0,
-                    1,
-                    1,
-                    tiles::BACKGROUND as u64
-                ]
-            )[0],
-            0
-        );
+        self.background(parent, extent);
         let (items, n) = layout::entries(realm.count, picker);
         for (i, &index) in items[..n].iter().enumerate() {
             let title: &[u8] = if index == NEW {
@@ -94,19 +62,82 @@ impl Scene {
                 0
             );
         }
-        if !status.is_empty() {
-            let mut pixels = Private::allocate(3).unwrap();
+        self.footer(
+            parent,
+            extent,
+            status,
+            if picker { "" } else { "SETTINGS" },
+            picker,
+        );
+    }
+    pub fn settings(&self, parent: Pair, extent: wire::Packet, editor: &settings::Editor) {
+        self.background(parent, extent);
+        for row in 0..3 {
+            let (x, y) = settings::view::origin(extent, row);
+            self.image(
+                parent,
+                self.names[row + 1],
+                settings::view::paint(editor, row),
+                [
+                    x,
+                    y,
+                    settings::view::WIDTH as u64,
+                    settings::view::HEIGHT as u64,
+                ],
+            );
+        }
+        self.footer(parent, extent, editor.status, "", false);
+    }
+    fn background(&self, parent: Pair, extent: wire::Packet) {
+        assert_eq!(
+            call(
+                parent,
+                [
+                    wire::PAINT,
+                    self.epoch,
+                    self.names[0],
+                    0,
+                    0,
+                    extent[2],
+                    extent[3],
+                    tiles::BACKGROUND as u64
+                ]
+            )[0],
+            0
+        );
+        // Release the previous message before allocating replacement tiles.
+        assert_eq!(
+            call(
+                parent,
+                [
+                    wire::PAINT,
+                    self.epoch,
+                    self.names[4],
+                    0,
+                    0,
+                    1,
+                    1,
+                    tiles::BACKGROUND as u64
+                ]
+            )[0],
+            0
+        );
+    }
+    fn footer(&self, parent: Pair, extent: wire::Packet, status: &str, button: &str, picker: bool) {
+        if !status.is_empty() || !button.is_empty() {
+            let mut pixels = Private::allocate(8).unwrap();
             for pixel in pixels.bytes_mut().chunks_exact_mut(4) {
                 pixel.copy_from_slice(&tiles::BACKGROUND.to_le_bytes());
             }
             tiles::label(pixels.bytes_mut(), 180, 0, 0, status.as_bytes());
+            tiles::label(pixels.bytes_mut(), 180, 42, 24, button.as_bytes());
             let x = extent[2].saturating_sub(180) / 2;
             let y = if picker {
                 extent[3] / 2 + 88
             } else {
-                extent[3].saturating_sub(32)
+                extent[3].saturating_sub(48)
             };
-            self.image(parent, self.names[4], pixels, [x, y, 180, 16]);
+            self.image(parent, self.names[4], pixels, [x, y, 180, 40]);
         }
     }
     fn image(&self, parent: Pair, surface: u64, pixels: Private, [x, y, width, height]: [u64; 4]) {

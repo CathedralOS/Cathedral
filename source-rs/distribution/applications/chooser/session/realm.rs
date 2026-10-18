@@ -4,7 +4,7 @@ use super::*;
 use cathedral_platform_contracts::storage as store;
 use cathedral_user_runtime::storage::Scope;
 pub struct Realm {
-    scope: Scope,
+    pub(super) scope: Scope,
     pub ids: [u64; ENTRIES],
     pub labels: [[u8; 13]; ENTRIES],
     pub count: usize,

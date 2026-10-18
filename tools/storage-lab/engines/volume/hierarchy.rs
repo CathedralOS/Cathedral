@@ -11,19 +11,33 @@ use std::collections::BTreeMap;
 type Records = BTreeMap<Vec<u8>, Vec<u8>>;
 
 pub fn configuration() -> Vec<u8> {
-    matrix::config::Config {
-        launcher: metadata::field(b"Desktop").unwrap(),
-        launcher_pages: 48,
-        app_pages: 32,
-        app_readers: 4,
-        margin: 24,
-        launcher_width: 192,
-        gap: 16,
-        app_surfaces: 6,
+    // The host encodes the distribution's defaults; it does not select policy.
+    let fields: BTreeMap<_, _> = include_str!("../../../../source-rs/distribution/matrix.conf")
+        .lines()
+        .map(str::trim)
+        .filter(|line| !line.is_empty() && !line.starts_with('#'))
+        .map(|line| line.split_once('=').expect("matrix.conf key=value"))
+        .collect();
+    assert_eq!(fields.len(), 9, "matrix.conf fields");
+    let number = |key| fields[key].parse::<u64>().expect("matrix.conf integer");
+    assert_eq!(fields["keys"], "all", "matrix.conf key selection");
+    let config = matrix::config::Config {
+        launcher: metadata::field(fields["launcher"].as_bytes()).expect("matrix.conf launcher"),
+        launcher_pages: number("launcher_pages"),
+        app_pages: number("app_pages"),
+        app_readers: number("app_readers"),
+        margin: number("margin"),
+        launcher_width: number("launcher_width"),
+        gap: number("gap"),
+        app_surfaces: number("app_surfaces"),
         keys: matrix::VALID_KEY_MASK,
-    }
-    .encode()
-    .to_vec()
+    };
+    assert_eq!(
+        matrix::config::Config::decode(&config.encode()),
+        Some(config),
+        "invalid matrix.conf"
+    );
+    config.encode().to_vec()
 }
 fn edge(parent: u64, id: u64) -> Vec<u8> {
     let mut suffix = parent.to_be_bytes().to_vec();

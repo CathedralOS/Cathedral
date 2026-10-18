@@ -23,6 +23,8 @@ another user. The picker shows horizontal user tiles, and the user's launcher
 shows only app tiles. Storage attenuation remains a platform mechanism, without
 a test toggle in the normal desktop. Default QEMU input uses absolute coordinates
 when its virtual mouse is available, with PS/2 fallback.
+The user's app strip has SETTINGS for saved strip width and outer spacing.
+Save affects the next start; Cancel returns to apps without saving local edits.
 Build output and serial diagnostics appear in the integrated terminal. Close
 QEMU or press Ctrl+C there to stop. This uses VS Code's terminal launcher, not
 an attached kernel debugger.
@@ -67,6 +69,20 @@ desktop fixture and edits disposable copies. It verifies that a renamed launcher
 works through its updated saved path, an extension-looking text document stays
 out of executable filtering, installer reruns preserve edits, and a missing
 launcher returns to the picker without a panic. It does not edit the source image.
+
+`python tools/boot-harness-rs/settings_test.py PATH/guest.raw` takes a one-user
+desktop fixture and uses a disposable copy. Physical clicks check Cancel, Save,
+unchanged live placement, the saved layout after cold boot, and a newly created
+user retaining the template defaults. `--recovery` instead runs two boots with
+one deliberately lost settings-save acknowledgement and verifies readback before
+retrying. Generated recovery profiles and disks remain inside the artifact directory.
+
+The build harness captures each compiled role in [artifacts.py](artifacts.py)
+before Cargo reuses its package output path. Paths include the content digest,
+so changing cached feature sets changes the kernel build's watched ELF inputs
+even when Cargo restores an older timestamp. This prevents a normal build from
+reusing a previously bundled recovery image. Check with `python
+tools/boot-harness-rs/artifacts_test.py`; keep builds of different profiles sequential.
 
 The `notes`, `matrix-database` and recovery profiles remain focused engineering
 fixtures. Their tests are `matrix_database_test.py --release --notes` and

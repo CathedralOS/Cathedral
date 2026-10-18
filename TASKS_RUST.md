@@ -1,7 +1,7 @@
 # Rust reference OS: tasks and handoff
 
-Updated 2026-10-18 (local date). Current milestone: hierarchy names and indexed
-media types, named startup paths, and matrix-owned saved arrangements. F5 uses
+Updated 2026-10-18 (local date). Current milestone: a desktop editor for saved
+matrix layout, following hierarchy names/types and matrix-owned startup. F5 uses
 these mechanisms; explicit migration preserves existing stock users and data.
 See the latest evidence at the end of this handoff. Earlier baseline: declared service
 imports and optional Notes persistence at **`8d1972a`**, followed by readable
@@ -32,6 +32,10 @@ It uses x86-64 QEMU/TCG and UEFI.
 - The user's left-hand app strip shows **NOTES** and **COLORS** icon tiles. The
   launcher itself and implementation controls are hidden. Click an app tile,
   then the app to focus it. Arrows and Enter work in a focused tile strip.
+- **SETTINGS** at the bottom of the user strip (or F2 with strip focus) adjusts
+  strip width and outer spacing. Save affects the next start; Cancel discards
+  local edits and returns to apps. Restart QEMU and select the same user to
+  apply the saved arrangement. Running apps remain in place.
 - Notes keeps up to eight notes of 240 ASCII characters. Letters, digits, spaces,
   Enter, Left/Right and Backspace edit. **F1** saves/reconciles, **F2** reloads,
   **F3** duplicates the saved note, **F4** switches notes. Colors changes and
@@ -255,9 +259,15 @@ to hierarchy metadata; extensions are conventions, not authoritative types.
   loads `Matrix` in its realm and resolves its saved launcher path. Startup
   requires empty slots; missing paths return to the picker. Parent grants remain
   the ceiling. Custom matrix programs need not use this bounded schema.
-- [ ] **Make saved policy editable through the desktop.** There is no settings
-  UI yet. Delegate editing explicitly; saving and applying to live children
-  remain separate operations. Do not imply a live apply path already exists.
+- [x] **Make saved layout editable through the desktop.** The launcher edits
+  strip width and outer spacing using its existing user-realm grant. Expected
+  revisions prevent stale overwrites; lost replies require reconciliation.
+  Initial defaults now live in distribution/matrix.conf. Budgets and launcher
+  selection are not exposed in the UI.
+- [ ] **Consider explicit live layout application.** Saved settings apply on
+  next startup only. A live request needs an attenuated authorization route,
+  geometry validation and deliberate failure behavior; it must not reuse an
+  owner-control endpoint as an app permission.
 - [ ] **Keep app lifecycle honest as apps grow.** Startup failure, app crash and
   provider loss while an app holds work still end in assertions in places. A
   program that cannot be read from the realm answers REFUSED in the chooser
@@ -900,3 +910,73 @@ fresh fixture. This accumulated-upgrade capacity issue is not fixed by raising
 logical quota and remains work for the installer/storage lifecycle. Never
 silently replace or reformat a user's image to hide it. The prior intermittent
 ATA timeout and quiet fault-gate occurrence remain recorded above, unresolved.
+
+## Saved layout editor and reliable profile switching (2026-10-18)
+
+The normal user launcher now has SETTINGS, also reachable with F2 when it has
+focus. It edits strip width (192–320 pixels) and outer spacing (8–40 pixels).
+Save writes that user's `Matrix` configuration; Cancel discards local edits and
+returns to app tiles. The current app keeps running in the same position.
+Restart QEMU and select the user to apply the saved layout. This is a bounded
+saved-layout editor, not live reconfiguration or a budget/launcher editor.
+
+Start at the chooser's [session](source-rs/distribution/applications/chooser/session/session.rs):
+route local input to [selection](source-rs/distribution/applications/chooser/session/selection.rs)
+or [settings](source-rs/distribution/applications/chooser/session/settings/settings.rs),
+then publish the selected view. Settings owns its draft, storage decisions and
+small panel renderer. The launcher already has an explicit grant over the user
+realm; apps still receive their own subtrees. No new kernel or platform authority
+was added. Its zero reader-page allowance exposed an early bulk-read refusal;
+the final code reads this 104-byte record through inline replies checked against
+one revision, and retains the existing 48-page rendering allowance.
+
+Saving checks the path still names the same object and refuses an intervening
+different revision/content. Publication uses the expected revision. A lost
+acknowledgement remains uncertain; clicking Save again reads back the desired
+content before deciding whether a write is needed. Unsaved/uncertain work reports
+LOSS. Cancel does not undo a write that already committed. A provider outage can
+make opening the panel say CANNOT OPEN; retry after recovery. There is no editor
+for resolving concurrent conflicting drafts yet.
+
+Initial values moved from host-tool constants to
+[distribution/matrix.conf](source-rs/distribution/matrix.conf). The host encodes
+those defaults, preserving existing template/user configurations during upgrades.
+Changing the file does not silently reset saved arrangements.
+
+Testing revealed a separate build issue: after a recovery profile, a normal
+desktop run reused a kernel bundle containing the quiet fault gate. The failed
+default proof is `desktop/20261018T213314127325Z`; its log shows gate arming and
+stalling during Notes save. Cargo's package output paths were reused across
+feature sets, and cached outputs could restore older timestamps. The harness
+now [captures each built role](tools/boot-harness-rs/artifacts.py) at a path keyed
+by content digest, immediately after building it. The kernel build already
+watches those environment paths, so changing feature bytes invalidates the
+bundle independently of timestamps. Store-program trimming also uses each
+captured role, avoiding later same-package builds replacing its input. Keep
+different profile builds sequential; this is not a concurrent-build coordinator.
+
+Verification (artifacts under `build/boot-harness-rs/`):
+
+- `desktop/20261018T213552026966Z`: final normal desktop after recovery-profile
+  use passed user creation, Notes editing/duplication, close/switch, cold boot
+  and exact retained-record oracle (247 records).
+- `settings/20261018T213712506523Z`: final normal three-boot proof passed Cancel,
+  Save, unchanged live app placement, persisted dimensions after restart, and
+  a newly created second user retaining independent template defaults. Installer
+  reruns left the edited image byte-identical.
+- `settings/20261018T213417759204Z`: two-boot recovery proof passed a deliberately
+  lost committed settings-save reply, provider replacement, reconciliation and
+  cold layout restoration. Its trace contains exactly one publication despite
+  the retry. The third-boot new-user check belongs to the normal proof; running
+  it with the gate rearmed also stalls Colors' initial save and can transiently
+  refuse opening Settings, which is a separate fault from the settings save.
+- `cargo test --locked`, all 30 storage-lab engine tests, userspace clippy and
+  storage-lab clippy with warnings denied passed. The artifact regression test
+  checks distinct feature bytes with identical timestamps, preserved captured
+  inputs, and returning to the earlier content identity. Layout checks (35/87
+  package edges), five layout tests, formatting, Python compilation and diff
+  checks passed. Kernel smoke and ARM64 boots were not rerun.
+
+The prior fixed-volume upgrade capacity limit remains. All GUI/fault proofs used
+disposable copies; the interactive disk was left untouched. F5 installs the
+updated recognized stock launcher on its next normal run.

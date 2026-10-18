@@ -13,6 +13,7 @@ pub type Pair = (Handle, Handle);
 /// Bounded realm listing; presentation hides the template/chrome at index zero.
 pub const ENTRIES: usize = 4;
 pub const NEW: usize = ENTRIES;
+const SETTINGS: usize = NEW + 1;
 
 pub fn run(environment: Environment, user_picker: bool) -> u64 {
     let connections = cathedral_user_runtime::matrix::Connections::load(&environment).unwrap();
@@ -23,47 +24,43 @@ pub fn run(environment: Environment, user_picker: bool) -> u64 {
         Ok(()) => "",
         Err(_) => "CANNOT OPEN",
     };
-    let (mut selected, mut pressed) = (1usize, false);
+    let mut selection = selection::Selection::new();
     let mut scene: Option<view::Scene> = None;
     let mut repaint = true;
+    let mut editor: Option<settings::Editor> = None;
     loop {
         let snapshot = call(parent, [wire::POLL, 0, 0, 0, 0, 0, 0, 0]);
         let extent = wire::poll_view(snapshot);
         if extent[0] == 0 {
             let event = wire::poll_event(snapshot);
             let mut choose = false;
-            match event[2] {
-                wire::POINTER => {
-                    let down = event[5] & 1 != 0;
-                    if down
-                        && !pressed
-                        && let Some(index) =
-                            layout::hit(extent, realm.count, user_picker, event[3], event[4])
-                    {
-                        selected = index;
-                        choose = true;
-                    }
-                    pressed = down;
+            if let Some(edit) = &mut editor {
+                let (changed, closed) =
+                    edit.event(event, extent, &mut selection.pressed, &mut realm.scope);
+                repaint |= changed;
+                if closed {
+                    editor = None;
+                    status = "";
                 }
-                wire::CANCEL => pressed = false,
-                wire::KEY if event[4] == input::PRESS as u64 => match event[3] as u8 {
-                    input::UP | input::LEFT => {
-                        selected = layout::step(selected, realm.count, user_picker, false);
-                        repaint = true;
-                    }
-                    input::DOWN | input::RIGHT => {
-                        selected = layout::step(selected, realm.count, user_picker, true);
-                        repaint = true;
-                    }
-                    input::ENTER => choose = true,
-                    _ => (),
-                },
-                _ => (),
+            } else {
+                let (changed, activate) = selection.event(event, extent, realm.count, user_picker);
+                repaint |= changed;
+                choose = activate;
             }
             if choose {
-                status = act(&mut realm, parent, selected, user_picker);
-                if status.is_empty() && selected == NEW {
-                    selected = realm.count.saturating_sub(1);
+                if selection.index == SETTINGS && !user_picker {
+                    match settings::Editor::open(&mut realm.scope) {
+                        Ok(edit) => {
+                            editor = Some(edit);
+                            status = "";
+                        }
+                        Err(_) => status = "CANNOT OPEN",
+                    }
+                } else {
+                    status = act(&mut realm, parent, selection.index, user_picker);
+                }
+                if status.is_empty() && selection.index == NEW {
+                    selection.index = realm.count.saturating_sub(1);
                 }
                 repaint = true;
             }
@@ -72,14 +69,18 @@ pub fn run(environment: Environment, user_picker: bool) -> u64 {
                 repaint = true;
             }
             if repaint {
-                scene.as_ref().unwrap().paint(
-                    parent,
-                    extent,
-                    &realm,
-                    selected,
-                    status,
-                    user_picker,
-                );
+                if let Some(edit) = &editor {
+                    scene.as_ref().unwrap().settings(parent, extent, edit);
+                } else {
+                    scene.as_ref().unwrap().paint(
+                        parent,
+                        extent,
+                        &realm,
+                        selection.index,
+                        status,
+                        user_picker,
+                    );
+                }
                 repaint = false;
             }
         } else {
@@ -94,11 +95,20 @@ pub fn run(environment: Environment, user_picker: bool) -> u64 {
                 connections.wake.receive(&mut bytes).unwrap();
             }
             Ok(_) => {
-                // The owner's liveness probe: alive, with nothing to lose.
+                // Settings drafts participate in ordinary close/loss reporting.
                 let len = control.0.receive(&mut bytes).unwrap();
                 let reply = match wire::decode(&bytes[..len]) {
                     Some([wire::HEALTH, 0, 0, 0, 0, 0, 0, 0]) => [0; 8],
-                    Some([wire::LOSS, 0, 0, 0, 0, 0, 0, 0]) => [0; 8],
+                    Some([wire::LOSS, 0, 0, 0, 0, 0, 0, 0]) => [
+                        0,
+                        u64::from(editor.as_ref().is_some_and(settings::Editor::dirty)),
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                    ],
                     _ => wire::error(abi::DENIED),
                 };
                 control.1.send(&wire::encode(reply)).unwrap();
