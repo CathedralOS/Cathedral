@@ -14,6 +14,7 @@ bench = false
 [features]
 recovery-probes = []
 launcher-startup-fault = []
+picker-startup-fault = []
 
 [dependencies]
 cathedral-platform-contracts.workspace = true

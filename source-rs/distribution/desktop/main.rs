@@ -52,10 +52,11 @@ fn call(pair: Pair, words: wire::Packet) -> wire::Packet {
     let result = pair.0.send(&wire::encode(words)).and_then(|()| {
         pair.1.receive_until(
             &mut bytes,
-            time::after(if words[0] & 0xffff == wire::CONFIGURE {
-                wire::CONFIGURE_DEADLINE_TICKS + 100
-            } else {
-                300
+            time::after(match words[0] & 0xffff {
+                wire::CONFIGURE => wire::CONFIGURE_DEADLINE_TICKS + 100,
+                wire::RUN_OBJECT => 3 * wire::STORAGE_DEADLINE_TICKS + 200,
+                wire::RESOLVE_PATH => wire::CONFIGURE_DEADLINE_TICKS + 100,
+                _ => 300,
             })
             .unwrap(),
         )

@@ -23,13 +23,17 @@ pub fn prepare(path: &Path, offset: u64, bytes: u64, target: &str, content: &[u8
                 .try_into()?,
         ))
     };
-    let users = named(0, b"Users")?;
-    let user = named(users, b"User 1")?;
-    let id = match target {
-        "notes" => named(user, b"Notes")?,
-        "launcher" => named(user, b"Desktop")?,
-        "user" => user,
-        _ => return Err("fixture target must be notes, launcher or user".into()),
+    let id = if target == "login" {
+        named(0, b"Login")?
+    } else {
+        let users = named(0, b"Users")?;
+        let user = named(users, b"User 1")?;
+        match target {
+            "notes" => named(user, b"Notes")?,
+            "launcher" => named(user, b"Desktop")?,
+            "user" => user,
+            _ => return Err("fixture target must be login, notes, launcher or user".into()),
+        }
     };
     let head_key = seed::key(b'h', &id.to_be_bytes());
     let old = &rows[&head_key];
@@ -74,6 +78,46 @@ pub fn prepare(path: &Path, offset: u64, bytes: u64, target: &str, content: &[u8
     }
     drop(table);
     tx.commit()?;
-    println!("FAILURE FIXTURE: replaced User 1 {target}, object {id}; other state retained");
+    println!("FAILURE FIXTURE: replaced {target}, object {id}; other state retained");
+    Ok(())
+}
+
+/// Hide a root path by a consistent hierarchy rename, not database corruption.
+pub fn rename(path: &Path, offset: u64, bytes: u64, target: &str) -> Result<()> {
+    let name = match target {
+        "login" => b"Login".as_slice(),
+        "users" => b"Users".as_slice(),
+        _ => return Err("root path must be login or users".into()),
+    };
+    let db = open(Region::new(Arc::new(Image::open(path)?), offset, bytes)?)?;
+    let mut tx = db.begin_write()?;
+    tx.set_durability(redb::Durability::Immediate)?;
+    let mut table = tx.open_table(TableDefinition::<&[u8], &[u8]>::new("private-objects-v3"))?;
+    let mut rows = colors::records(&table)?;
+    let mut old = 0u64.to_be_bytes().to_vec();
+    old.extend_from_slice(&metadata::field(name).unwrap());
+    let id = rows
+        .remove(&seed::key(b'd', &old))
+        .ok_or("missing root path")?;
+    let mut edge = 0u64.to_be_bytes().to_vec();
+    edge.extend_from_slice(&id);
+    let key = seed::key(b't', &edge);
+    let mut m = metadata::Metadata::decode(&rows[&key]).ok_or("metadata")?;
+    m.name = metadata::field(b"Unavailable").unwrap();
+    let mut new = 0u64.to_be_bytes().to_vec();
+    new.extend_from_slice(&m.name);
+    if rows.contains_key(&seed::key(b'd', &new)) {
+        return Err("rename collision".into());
+    }
+    rows.insert(seed::key(b'd', &new), id);
+    rows.insert(key, m.encode().to_vec());
+    // Fixed-width names leave the accounted record size unchanged.
+    table.remove(seed::key(b'd', &old).as_slice())?;
+    for (key, value) in rows {
+        table.insert(key.as_slice(), value.as_slice())?;
+    }
+    drop(table);
+    tx.commit()?;
+    println!("FAILURE FIXTURE: renamed root {target}; object contents retained");
     Ok(())
 }

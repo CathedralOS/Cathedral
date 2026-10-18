@@ -3,7 +3,6 @@ use super::*;
 use cathedral_platform_contracts::display;
 use cathedral_platform_contracts::display::composition as c;
 use cathedral_platform_contracts::display::pointer;
-#[cfg(not(feature = "shell"))]
 use cathedral_user_runtime::task::Executable;
 use cathedral_user_runtime::task::{self, Port};
 pub(crate) struct Session {
@@ -13,6 +12,8 @@ pub(crate) struct Session {
     /// The realm of the user matrix in the workspace slot, or zero.
     #[cfg(feature = "shell")]
     pub(crate) user: u64,
+    #[cfg(feature = "shell")]
+    pub(crate) login: shell::Login,
     /// Lab compositions add a capped spinner; the shell never does.
     #[cfg(not(feature = "shell"))]
     pub pressure: bool,
@@ -182,8 +183,10 @@ pub(crate) fn start() -> Session {
     root.assign_slots(capacity).unwrap();
     root.assign_memory((capacity + 1) * abi::MAX_ADMISSION_FRAMES as u64)
         .unwrap();
-    // The shell's programs are installed in the notes root; the lab desktops
-    // lend their boot catalogue.
+    // The shell loads ordinary programs from storage, but its recovery screen
+    // must remain loadable when Login itself is missing or unusable.
+    #[cfg(feature = "shell")]
+    root.allow_executable(Executable::at(0).unwrap()).unwrap();
     #[cfg(not(feature = "shell"))]
     for index in 0..if pressure { 3 } else { 2 } {
         root.allow_executable(Executable::at(index).unwrap())
@@ -216,6 +219,8 @@ pub(crate) fn start() -> Session {
         matrix,
         #[cfg(feature = "shell")]
         user: 0,
+        #[cfg(feature = "shell")]
+        login: shell::Login::Stopped,
         #[cfg(not(feature = "shell"))]
         pressure,
         extent: [info[1], info[2]],

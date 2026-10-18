@@ -32,7 +32,7 @@ pub(crate) fn run() -> u64 {
             0,
         ],
     );
-    shell::chooser(matrix, session.extent, false);
+    session.login.start(matrix, session.extent, false);
     shell::workspace(matrix, session.extent);
     session.start_input();
     cathedral_user_runtime::write(b"Cathedral desktop: ready; choose a user\n").unwrap();
@@ -46,19 +46,23 @@ pub(crate) fn run() -> u64 {
         if user != session.user {
             session.user = user;
             if user != 0 {
+                session.login = shell::Login::Stopped;
                 if let Err(code) = shell::enter(matrix) {
                     cathedral_user_runtime::time::storage_sample("user-start-refused", &[code]);
                     shell::stop(matrix, 1).expect("failed user cleanup");
                     session.user = 0;
-                    shell::chooser(matrix, session.extent, true);
+                    session.login.start(matrix, session.extent, true);
                     continue;
                 }
                 cathedral_user_runtime::write(b"Cathedral desktop: user matrix furnished\n")
                     .unwrap();
             } else {
-                shell::chooser(matrix, session.extent, false);
+                session.login.start(matrix, session.extent, false);
                 cathedral_user_runtime::write(b"Cathedral desktop: user matrix closed\n").unwrap();
             }
+        }
+        if session.user == 0 {
+            session.login.poll(matrix, session.extent);
         }
         persistence::supervise(&mut session);
         #[cfg(any(feature = "launcher-stop-probe", feature = "launcher-revoke-probe"))]

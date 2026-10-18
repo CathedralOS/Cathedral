@@ -21,6 +21,7 @@ shell = ["notes"]
 notes-probes = ["notes"]
 launcher-stop-probe = ["shell"]
 launcher-revoke-probe = ["shell"]
+login-recovery-probe = ["shell"]
 desktop-probes = ["desktop"]
 database-probes = ["desktop"]
 

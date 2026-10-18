@@ -29,6 +29,7 @@ members = [
     "distribution/lab/display",
     "distribution/lab/compositor",
     "distribution/desktop",
+    "distribution/desktop/recovery",
     "distribution/lab/hello",
     "distribution/lab/portability",
     "distribution/lab/shared-memory",

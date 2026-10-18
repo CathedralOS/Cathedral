@@ -13,7 +13,10 @@ A failed user `CONFIGURE` returns to a fresh picker with CANNOT OPEN. Cleanup
 accepts an already-collected child, so the root survives a race between startup
 failure and normal task collection. App admission refusals and crash observations
 stay in the launcher process; the desktop does not inspect user grandchildren.
-Missing root Login/Users and initial provider admission remain separate work.
+Missing root Login/Users, rejected picker code and picker death enter the
+[login recovery controller](session/shell/login.rs). It runs the boot-bundled
+[recovery program](recovery/main.rs), which asks for an explicit retry without
+holding a storage realm. Initial provider admission remains separate work.
 The matrix now retries a failed configured launcher once without restarting its app.
 
 Colors' [close control](../applications/colors/session/closing.rs) renders an X and handles local

@@ -1,7 +1,8 @@
 # Rust reference OS: tasks and handoff
 
-Updated 2026-10-18 (local date). Current milestone: local configured-launcher
-recovery, following scoped lifecycle observations and close-channel failure handling, live
+Updated 2026-10-18 (local date). Current milestone: visible root login recovery
+and independent Colors, following local configured-launcher recovery,
+scoped lifecycle observations and close-channel failure handling, live
 matrix layout and named realms. F5 uses these mechanisms; explicit migration
 preserves existing stock users and data.
 F5 now compacts existing media before changed program installations, fixing
@@ -1348,3 +1349,61 @@ admission. Give that failure a visible, manually retryable distribution screen
 that does not depend on loading another program from the broken store. Provider
 startup failure and recovery controls for unresponsive apps remain separate
 unfinished work. No ARM64 boot was rerun for this userspace extraction.
+
+## Visible root login recovery (2026-10-18)
+
+F5 now shows **SIGN-IN UNAVAILABLE / TRY AGAIN** if root Login/Users lookup
+fails, the stored picker cannot be admitted, or the picker dies. Start at
+[session/session.rs](source-rs/distribution/desktop/session/session.rs), then
+[shell/login.rs](source-rs/distribution/desktop/session/shell/login.rs) for the
+Picker/Recovery/Stopped phases. The separate
+[recovery executable](source-rs/distribution/desktop/recovery/main.rs) is bundled
+in the boot catalogue, so showing a failure does not require another successful
+program read from storage. Ordinary picker and app code still come from storage.
+
+The recovery child has local matrix drawing/input, no bound storage realm,
+no devices and no descendants. The catalogue path currently supplies an unbound
+storage endpoint which it ignores. It coalesces a button click or focused Enter
+into one request on its owner-only control link; only the startup owner retries.
+The owner keeps the screen through path reads and retires it before admission.
+Repeated failure returns to the screen, with no automatic retry loop, disk
+formatting or names/program repair. A dead recovery child does not itself trigger
+admission retries. The path and program-read client deadlines now outlast the
+matrix's storage verdict, rather than panicking at the old three-second limit.
+
+The selected user continues to own the whole desktop, and the login child is
+stopped before user CONFIGURE. Storage replacement restores a picker realm only
+in the Picker phase; it never grants storage authority to the recovery screen.
+This does not handle failure of initial display, input, root or storage provider
+startup, which still precedes this phase and is the next lifecycle frontier.
+Unresponsive apps and exhausted configured-launcher recovery still lack manual
+operator controls. No owner semantic/trust decision was needed for this change.
+
+Verification:
+
+- `startup/20261018T232825283690Z` passed missing Login, missing Users, invalid
+  Login ELF, picker startup panic and a one-time injected admission refusal.
+  Each persistent failure accepts three mouse/keyboard retries and stays alive;
+  the transient case returns to the real picker, enters a user and saves,
+  closes/reopens Colors. Fault features are absent from the default composition.
+- Each failed guest is cold-compared against its prepared snapshot: all tables,
+  records, volume identity and guards are unchanged. Engine bookkeeping changed
+  55 physical bytes. The new preservation oracle also rejected deliberately
+  changed hierarchy records and guard bytes in negative controls. Source fixture
+  bytes remain unchanged. Early checker failures were a miscounted title width,
+  cursor occlusion and assuming the whole engine image stayed byte-identical;
+  none required relaxing the record-preservation check.
+- `desktop/20261018T232935589889Z` passed the normal F5 flow, app-owned close,
+  save/discard/cancel and cold persistence. Its independent host oracle verified
+  all 233 records and the exact hierarchy/history/quota. An earlier run passed too.
+- `colors/20261018T233104082301Z` passed a deliberately lost save reply, provider
+  replacement, explicit realm restoration, save reconciliation, reopen and cold
+  persistence. The live user was retained and the retired picker was not revived.
+- Workspace host tests, all 32 storage-lab tests, userspace clippy, shell/probe/
+  trace feature checks and host-engine clippy passed. Layout (35 Omega/96 Rust
+  edges), source formatting, Python compilation and diff checks passed. The two
+  changed host helper leaves were formatted; the host lab's broader formatting
+  check reports pre-existing drift in unrelated include files.
+
+Interactive QEMU and its disk/ESP were untouched; all GUI checks used disposable
+copies and separate ESPs. No kernel ABI changed. ARM64 boot was not rerun.

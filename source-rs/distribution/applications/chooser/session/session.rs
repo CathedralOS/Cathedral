@@ -45,6 +45,10 @@ pub fn run(environment: Environment, user_picker: bool, initial_status: &'static
         let snapshot = call(parent, [wire::POLL, 0, 0, 0, 0, 0, 0, 0]);
         let extent = wire::poll_view(snapshot);
         if extent[0] == 0 {
+            #[cfg(feature = "picker-startup-fault")]
+            if user_picker {
+                panic!("deliberate picker startup failure");
+            }
             #[cfg(feature = "launcher-startup-fault")]
             if !user_picker {
                 panic!("deliberate launcher startup failure");

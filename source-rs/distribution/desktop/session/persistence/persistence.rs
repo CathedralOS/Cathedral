@@ -25,7 +25,7 @@ fn regrant(session: &mut admission::Session) -> Result<(), Error> {
         return Err(Error(abi::IO_ERROR as i64));
     }
     #[cfg(feature = "shell")]
-    super::shell::regrant(session.matrix, session.user);
+    super::shell::regrant(session);
     #[cfg(not(feature = "shell"))]
     {
         for slot in 0..2 {

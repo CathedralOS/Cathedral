@@ -29,6 +29,13 @@ A refused program shows **CANNOT OPEN**; an admitted program that fails shows
 that fails while loading its arrangement returns to the user picker. Normal app
 close does not display a crash message.
 
+If `Login` or `Users` cannot be resolved, the login executable is rejected, or
+the picker dies, the startup owner shows **SIGN-IN UNAVAILABLE / TRY AGAIN**.
+The [recovery screen](desktop/recovery/main.rs) comes from boot media, so it
+does not need another readable stored program. Click the button, or press Enter
+with focus, to retry. It does not repair or overwrite data. Provider startup
+failures are not covered yet.
+
 If the configured app strip crashes, its matrix attempts one local restart,
 preserving the running app and its draft. The replacement keeps the current
 layout. A second crash leaves the app usable without the strip; apps can still
@@ -74,6 +81,7 @@ flowchart TD
     owner[Startup owner] --> services[Display / input / storage processes]
     owner --> root[Root matrix process]
     root --> picker[User picker: transient process]
+    root --> recovery[Recovery screen when picker is unavailable]
     root --> user[User matrix process]
     user --> launcher[App launcher process]
     user --> app[Notes or Colors process]
@@ -83,8 +91,8 @@ The root matrix admits the selected user as the picker's sibling. The startup
 owner then stops/collects the picker before asking the user to load its launcher;
 that wait can take time and must not leave the picker visible or interactive.
 The app launcher is a different process using the chooser executable, not a
-mode switch of the old picker. Likewise, Colors shares the desktop executable
-with the startup owner but runs in a separately confined app process.
+mode switch of the old picker. Colors has its own application executable and
+runs in a separately confined app process.
 
 The [login design](../../wiki/design/part_1_authority/07_sessions_and_login.md)
 already specifies a transient credential broker: it receives verification
@@ -115,6 +123,7 @@ NOTES / COLORS tiles inside the user. See the
 | Input | Launch 1 | [input main](../platform/services/input/main.rs), [matrix source](../platform/services/input/matrix.rs) |
 | Root matrix | Launch 2 | [matrix main](../platform/services/matrix/main.rs), [service loop](../platform/services/matrix/service/service.rs) |
 | Object storage | Launch 3 | [storage main](../platform/services/storage/main.rs), [object contract](../platform/contracts/storage.rs) |
+| Sign-in recovery | Catalogue executable 0 | [recovery main](desktop/recovery/main.rs), controlled by [login phases](desktop/session/shell/login.rs) |
 | Chooser | Program 1 | [chooser](applications/chooser/session/session.rs), shown the folder of users |
 | Users | Program 2, a folder | Holds the template and every user copied from it |
 | Template user | Program 3, inside Users | Same matrix service; a user matrix hosts its chrome and one app |

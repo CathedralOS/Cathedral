@@ -40,10 +40,17 @@ image, then commit without renumbering objects or replacing saved application
 data. `upgrade-hierarchy IMAGE OFFSET BYTES` repeats safely; `inspect-hierarchy`
 prints IDs, parents and content manifests for migration audits. The latter opens
 the engine and may recover it, so use an image copy when inspecting evidence.
-`failure-fixture IMAGE OFFSET BYTES notes|user CONTENT_FILE` enters
-[failure.rs](failure.rs). It replaces only the named User 1 Notes or user-matrix
+`failure-fixture IMAGE OFFSET BYTES login|notes|launcher|user CONTENT_FILE` enters
+[failure.rs](failure.rs). It replaces root Login or the named User 1 program's
 code on a disposable one-user fixture, preserving identity, metadata and saved
-subtree. It is used by the QEMU lifecycle proof, never by the interactive installer.
+subtree. `startup-path-fixture IMAGE OFFSET BYTES login|users` consistently
+renames that root entry to Unavailable. These are QEMU failure fixtures, never
+interactive installer operations.
+`verify-unchanged BEFORE AFTER OFFSET BYTES` cold-opens both disposable images,
+compares every table/record, volume identity and outside guard bytes. Engine
+bookkeeping may differ after boot; any logical record difference is refused.
+Like other host engine opens, this can recover/modify engine bookkeeping, so
+use evidence copies rather than a live or original user disk.
 `configure-fixture IMAGE OFFSET BYTES renamed|missing` is test preparation only,
 implemented in [configuration.rs](configuration.rs). It edits a disposable
 one-user fixture for the guest path test; it is not an interactive settings tool.

@@ -6,7 +6,7 @@ use std::{collections::BTreeMap, io::Write};
 
 type Records = BTreeMap<String, BTreeMap<Vec<u8>, Vec<u8>>>;
 
-fn records(db: &Database) -> Result<Records> {
+pub(super) fn records(db: &Database) -> Result<Records> {
     let tx = db.begin_read()?;
     if tx.list_multimap_tables()?.next().is_some() {
         return Err("installer compaction does not support multimap tables".into());

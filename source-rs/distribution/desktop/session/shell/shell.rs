@@ -1,23 +1,35 @@
 // Resolve the login programs, grant the user ceiling, then ask that matrix
 // to configure itself. The shell never interprets user-internal object order.
 use super::*;
-fn resolve(matrix: Pair, path: &[u8]) -> u64 {
+fn request(matrix: Pair, words: wire::Packet) -> Result<(), u64> {
+    match call(matrix, words)[0] {
+        0 => Ok(()),
+        code => Err(code),
+    }
+}
+fn resolve(matrix: Pair, path: &[u8]) -> Result<u64, u64> {
     let mut bytes = [0; 64];
     bytes[..8].copy_from_slice(&wire::RESOLVE_PATH.to_le_bytes());
     bytes[8..8 + path.len()].copy_from_slice(path);
     let reply = call(matrix, wire::decode(&bytes).unwrap());
-    assert_eq!(reply[0], 0, "desktop path lookup");
-    reply[1]
+    if reply[0] == 0 {
+        Ok(reply[1])
+    } else {
+        Err(reply[0])
+    }
 }
 /// Three 12-page tiles and one replacement fit in the chooser allowance.
 const CHOOSER_PAGES: u64 = 48;
 
 /// Root slot 0: the chooser, shown the folder of users and nothing else.
-pub(super) fn chooser(matrix: Pair, extent: [u64; 2], failed: bool) {
-    let chooser = resolve(matrix, b"Login");
-    let users = resolve(matrix, b"Users");
-    owner(matrix, [wire::RUN_PAGES, 0, CHOOSER_PAGES, 0, 0, 0, 0, 0]);
-    owner(
+fn chooser(login: &mut Login, matrix: Pair, extent: [u64; 2], failed: bool) -> Result<(), u64> {
+    let chooser = resolve(matrix, b"Login")?;
+    let users = resolve(matrix, b"Users")?;
+    // Keep an existing recovery screen visible through the path reads.
+    stop(matrix, 0)?;
+    *login = Login::Stopped;
+    request(matrix, [wire::RUN_PAGES, 0, CHOOSER_PAGES, 0, 0, 0, 0, 0])?;
+    request(
         matrix,
         [
             wire::RUN_OBJECT,
@@ -29,8 +41,8 @@ pub(super) fn chooser(matrix: Pair, extent: [u64; 2], failed: bool) {
             0,
             0,
         ],
-    );
-    select_user(matrix, extent);
+    )?;
+    select_user(matrix, extent)
 }
 
 /// Root slot 1: whatever the chooser launches, which is a user matrix. It
@@ -87,25 +99,27 @@ pub(super) fn realm_of(matrix: Pair, previous: u64) -> u64 {
 
 /// Restore the direct child's realm after provider replacement, then ask the
 /// user matrix to restore its own remembered child bindings.
-pub(crate) fn regrant(matrix: Pair, user: u64) {
-    if user == 0 {
-        owner(
-            matrix,
-            [
-                wire::STORAGE_GRANT,
-                0,
-                0,
-                resolve(matrix, b"Users"),
-                0,
-                0,
-                0,
-                0,
-            ],
-        );
+pub(crate) fn regrant(session: &mut admission::Session) {
+    let matrix = session.matrix;
+    if session.user == 0 {
+        if session.login != Login::Picker {
+            return;
+        }
+        let users = match resolve(matrix, b"Users") {
+            Ok(users) => users,
+            Err(code) => {
+                session.login.recover(matrix, session.extent, code);
+                return;
+            }
+        };
+        owner(matrix, [wire::STORAGE_GRANT, 0, 0, users, 0, 0, 0, 0]);
         return;
     }
     // The transient picker has been collected; do not restore its authority.
-    owner(matrix, [wire::STORAGE_GRANT, 1, 0, user, 0, 0, 0, 0]);
+    owner(
+        matrix,
+        [wire::STORAGE_GRANT, 1, 0, session.user, 0, 0, 0, 0],
+    );
     owner(
         matrix,
         wire::route([wire::RESTORE_STORAGE, 0, 0, 0, 0, 0, 0, 0], 1).unwrap(),
