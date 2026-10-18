@@ -19,7 +19,12 @@ QEMU to select another user. Notes holds up to eight
 notes of 240 characters: **F1** saves (or checks an uncertain save), **F2**
 reloads the saved note, **F3** duplicates it as a new note sharing its content,
 **F4** switches to the next note. Colors changes on **Enter**. Both choosers
-also take Up/Down/Enter while focused.
+also take Up/Down/Enter while focused. The user launcher's **STORAGE ON/OFF**
+row controls future launches: OFF runs Notes as a temporary unsavable editor;
+Colors refuses with NEEDS SERVICE because its storage import is required.
+Turn storage on and relaunch to return to saved data. Existing copied programs
+retain their code; use NEW in the user picker for a copy of the current template
+when trying newly added app features.
 
 Everything persists in `build/boot-harness-rs/cathedral-storage.raw` across
 launches and QEMU restarts: the users you made, their notes and colors. The
@@ -75,7 +80,8 @@ owner opened, grants it the entry's subtree, and names the slot in the reply.
 `CLOSE` asks the host to stop that sibling; the host first asks the sibling
 with `LOSS` what it would lose and stops it only on an answer of nothing. A
 chooser holds no other launch authority and writes to its realm only to copy
-its first entry on NEW. Apps see local geometry and input, not global
+its first entry on NEW in user-picker mode. In user-launcher mode that row
+instead withholds storage from future launches. Apps see local geometry and input, not global
 placement, other apps or an ancestor's services. The
 [matrix contract](../platform/contracts/matrix.rs) and
 [child launches](../platform/services/matrix/service/children/children.rs)
@@ -89,7 +95,8 @@ python tools/boot-harness-rs/desktop_test.py
 
 This builds the default composition, copies a user from the template, launches
 its programs with physical mouse and keyboard input, checks exact note glyphs
-and status, protects unsaved drafts, duplicates and switches notes, repeatedly
+and status, protects unsaved drafts, duplicates and switches notes, checks
+optional storage and required-service refusal, repeatedly
 replaces apps, checks the boot picker disappears and cannot receive input,
 cold-boots the same disposable disk to check saved state, and
 has an independent host model verify the retained records. It never touches

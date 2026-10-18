@@ -31,6 +31,7 @@ pub fn run(environment: Environment, user_picker: bool) -> u64 {
     let (mut selected, mut pressed) = (0usize, false);
     let mut scene: Option<view::Scene> = None;
     let mut repaint = true;
+    let mut without_storage = false;
     loop {
         let snapshot = call(parent, [wire::POLL, 0, 0, 0, 0, 0, 0, 0]);
         let extent = wire::poll_view(snapshot);
@@ -67,7 +68,13 @@ pub fn run(environment: Environment, user_picker: bool) -> u64 {
                 _ => (),
             }
             if choose {
-                status = act(&mut realm, parent, selected);
+                status = act(
+                    &mut realm,
+                    parent,
+                    selected,
+                    user_picker,
+                    &mut without_storage,
+                );
                 repaint = true;
             }
             if scene.as_ref().is_none_or(|s| s.epoch != extent[1]) {
@@ -82,6 +89,7 @@ pub fn run(environment: Environment, user_picker: bool) -> u64 {
                     selected,
                     status,
                     user_picker,
+                    without_storage,
                 );
                 repaint = false;
             }
@@ -112,14 +120,47 @@ pub fn run(environment: Environment, user_picker: bool) -> u64 {
     }
 }
 /// Carry out the selected row and say what happened.
-fn act(realm: &mut realm::Realm, parent: Pair, selected: usize) -> &'static str {
+fn act(
+    realm: &mut realm::Realm,
+    parent: Pair,
+    selected: usize,
+    user_picker: bool,
+    without_storage: &mut bool,
+) -> &'static str {
     match selected {
         row if row < realm.count => {
-            match call(parent, [wire::LAUNCH, realm.ids[row], 0, 0, 0, 0, 0, 0])[0] {
+            match call(
+                parent,
+                [
+                    wire::LAUNCH,
+                    realm.ids[row],
+                    if *without_storage {
+                        cathedral_platform_contracts::imports::STORAGE
+                    } else {
+                        0
+                    },
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                ],
+            )[0]
+            {
                 0 => "RUNNING",
                 abi::BUSY => "BUSY",
                 abi::DENIED => "NOT OPEN",
+                cathedral_platform_contracts::imports::MISSING => "NEEDS SERVICE",
+                cathedral_platform_contracts::imports::INCOMPATIBLE => "BAD VERSION",
                 _ => "REFUSED",
+            }
+        }
+        NEW if !user_picker => {
+            *without_storage = !*without_storage;
+            if *without_storage {
+                "TEMPORARY"
+            } else {
+                "PERSISTENT"
             }
         }
         NEW => match realm.copy_first() {

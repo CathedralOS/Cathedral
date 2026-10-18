@@ -653,49 +653,49 @@ Production still needs the already-open choice between persistent sponsors,
 explicit funded adoption, and revocation, plus a policy for growing/reclaiming
 active memory envelopes. No new answer is needed to continue this bounded lab.
 
-### The boot matrix as the initial program, and what a matrix persists
+### System startup composition and persisted matrix policy
 
-**Requirement and conflict.** The Rust desktop boots an owner program that
-admits a root matrix beside itself, runs a chooser over the folder of users and
-furnishes each user matrix the chooser launches with its chrome and a standing
-launch policy ([shell.rs](source-rs/distribution/desktop/session/shell/shell.rs)).
-The owner's framing is that the boot matrix is the privileged program: boot
-hands it everything, and the shell is a program it hosts from its realm. Making
-the matrix the initial program decides what a matrix persists for itself, since
-its budgets, placement and standing policy would have to come from its realm
-rather than from an owner's numbers, which is where the wiki's "a Matrix is an
-object owning its world-realm" lands. It also decides whether a user matrix is
-the login boundary: today a user is a subtree copy of a template with no
-authentication, session or seat semantics.
+**Owner clarification (2026-10-17).** "Boot matrix" means the privileged startup
+and service environment: drivers/providers touch real hardware and delegate
+attenuated service connections into user environments. It does not require a
+single matrix executable to implement or even start every service. The user
+picker is hosted presentation, not the authority root. Keep startup orchestration,
+service implementations and recursive matrices distinct even if some are
+composed in one initial program.
 
-**Contracts checked.** The [matrix contract](source-rs/platform/contracts/matrix.rs)
-separates owner-only policy from child requests and knows no persisted matrix
-state. The [component model](wiki/design/part_2_components/00_component_model.md)
-settles launch as a sibling spawn through a launcher broker, which `LAUNCH` now
-implements, but not what the host reads its policy from. The
-[storage design](wiki/design/part_4_storage/00_filesystem_as_database.md) and
-the [object contract](source-rs/platform/contracts/storage.rs) carry no manifest
-or policy object kind. Nothing in the specification covers login or sessions.
+Programs declare the interfaces they may use. The owner decides actual bindings;
+required imports must be fulfilled or launch is refused, optional imports can be
+absent. A startup bundle supplies those capabilities rather than ambient service
+lookup. Endpoint/incarnation identity authenticates requests; a caller-supplied
+PID is not authority. Scoped lookup and lazy activation can be added as explicit
+services later, not assumed to exist in the Rust lab.
 
-**Owner choice.** Keep the owner program as the initial program, with the
-matrix a pure mechanism driven by owner requests; or make the matrix the initial
-program, reading its standing policy and what it hosts from a manifest object in
-its realm, which requires choosing that object's format and who may write it;
-or a hybrid where the owner persists the policy on the matrix's behalf. The
-second choice also fixes where a user's identity and session live.
+**What remains open.** Where the system composition and each matrix's standing
+policy are persisted, who may edit which fields, and how changes apply to live
+children. These choices do not block an import/binding prototype and do not
+require deciding that the matrix executable itself must become init. The bounded
+Rust import record is an experiment, not the final installed-manifest format.
 
-**Recommendation (unaccepted).** Make the matrix the initial program once a
-manifest object kind exists, with the policy written by the installer and the
-owner of the enclosing realm only. Until then keep the owner program and its
-numbers, and do not add login semantics to subtree copies by implication.
+**Contracts checked.** [Component contexts](wiki/design/part_2_components/00_component_model.md)
+define typed manifest-derived entry contexts; [sessions and login](wiki/design/part_1_authority/07_sessions_and_login.md)
+defines the intended unseal/seat and confined-broker model. The previous statement
+that no login specification exists was incorrect. The Rust chooser's subtree
+copies implement neither authentication nor sealing. [Matrix requests](source-rs/platform/contracts/matrix.rs)
+still separate owner policy from child requests; [service imports](source-rs/platform/contracts/imports/README.md)
+now records the bounded launch-binding experiment.
+
+**Recommendation (not settled).** Keep the current startup owner while proving
+service bindings. Later persist composition/policy as realm-owned objects, with
+writes controlled by the enclosing owner and explicit delegated editing rights.
+Configuration can request only authority already available to its owner.
 
 ### Object kinds and names in a realm
 
 **Requirement and conflict.** A chooser lists its realm by object number and
-acts by position: NEW copies the first entry whole, which makes a user from the
-template over the users folder but duplicates the chrome program over a user's
-realm, because nothing in the store distinguishes a program, a folder, a
-document or a matrix. Heads carry revision, manifest, length and parent; edges
+acts by position: NEW in the user picker copies the first entry as the template.
+The user launcher now uses that control for STORAGE ON/OFF, so it no longer
+duplicates chrome, but nothing in the store distinguishes a program, a folder,
+a document or a matrix. Heads carry revision, manifest, length and parent; edges
 carry nothing. The desktop installs by position and names objects by number.
 Showing names, refusing to launch a note, or offering a terminal that navigates
 the same tree all need a kind and a name somewhere.

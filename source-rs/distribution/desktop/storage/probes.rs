@@ -188,6 +188,52 @@ pub(super) fn sibling(f: &Fixture) {
         wire::error(abi::DENIED)
     );
     f.owner(0, [wire::LAUNCH_POLICY, 0, 2, 0, 0, 0, 0, 0]);
+    // Declared required storage cannot be manufactured by a child request.
+    // Refusals happen before admission and leave funding available for retry.
+    let imports = cathedral_platform_contracts::imports::INTERACTION;
+    f.owner(0, [wire::LAUNCH_IMPORTS, 0, imports, 0, 0, 0, 0, 0]);
+    assert_eq!(
+        f.query(3, [wire::LAUNCH, 9, 0, 0, 0, 0, 0, 0]),
+        wire::error(cathedral_platform_contracts::imports::MISSING)
+    );
+    assert_eq!(
+        f.query(3, [wire::LAUNCH_IMPORTS, 0, 3, 0, 0, 0, 0, 0]),
+        wire::error(abi::DENIED)
+    );
+    f.owner(
+        0,
+        [
+            wire::LAUNCH_IMPORTS,
+            0,
+            cathedral_platform_contracts::imports::ALL,
+            0,
+            0,
+            0,
+            0,
+            0,
+        ],
+    );
+    assert_eq!(
+        f.query(
+            3,
+            [
+                wire::LAUNCH,
+                9,
+                cathedral_platform_contracts::imports::STORAGE,
+                0,
+                0,
+                0,
+                0,
+                0
+            ]
+        ),
+        wire::error(cathedral_platform_contracts::imports::MISSING)
+    );
+    assert_eq!(
+        f.query(3, [wire::LAUNCH, 9, 4, 0, 0, 0, 0, 0]),
+        wire::error(abi::INVALID_ARGUMENT)
+    );
+
     assert_eq!(
         f.query(3, [wire::LAUNCH, 8, 0, 0, 0, 0, 0, 0]),
         wire::error(abi::BAD_EXECUTABLE)

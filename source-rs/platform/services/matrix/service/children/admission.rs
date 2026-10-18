@@ -36,6 +36,7 @@ impl Children {
             &loans[..count],
             argument,
             false,
+            self.separate_storage,
             server,
             world,
         )
@@ -63,6 +64,7 @@ impl Children {
             pages,
             frames,
             [argument, channels, descendants, images, cpu],
+            self.separate_storage,
             server,
             world,
         )
@@ -74,13 +76,15 @@ impl Children {
     pub(super) fn run_object(
         &mut self,
         plan: super::parent::LaunchRequest,
-        object: &cathedral_user_runtime::memory::Object,
+        object: &mut cathedral_user_runtime::memory::Object,
         server: &mut Server,
         world: &mut World,
-    ) -> Result<(), Error> {
+    ) -> Result<bool, Error> {
         if self.slots[plan.slot].is_some() || !server.available(plan.slot) {
             return Err(Error(abi::BUSY as i64));
         }
+        let binding = imports::resolve(object, plan.imports)?;
+        let storage = binding & cathedral_platform_contracts::imports::STORAGE != 0;
         let executable = Executable::from_object(object, 0)?;
         let (pages, frames) = match plan.pages {
             Some(pages) => (pages, None),
@@ -95,9 +99,11 @@ impl Children {
             pages,
             frames,
             [plan.argument, plan.channels, plan.descendants, 0, plan.cpu],
+            storage && self.separate_storage,
             server,
             world,
-        )
+        )?;
+        Ok(storage)
     }
     #[allow(clippy::too_many_arguments)]
     fn admit(
@@ -107,6 +113,7 @@ impl Children {
         [private_pages, reader_pages]: [u64; 2],
         requested_frames: Option<u64>,
         [argument, channels, descendants, images, cpu]: [u64; 5],
+        separate_storage: bool,
         server: &mut Server,
         world: &mut World,
     ) -> Result<(), Error> {
@@ -131,7 +138,16 @@ impl Children {
                     target.allow_executable(Executable::at(index as u64)?)?;
                 }
             }
-            self.install(slot, target, &[], argument, true, server, world)
+            self.install(
+                slot,
+                target,
+                &[],
+                argument,
+                true,
+                separate_storage,
+                server,
+                world,
+            )
         })();
         if result.is_err() {
             target.release()?;
@@ -146,14 +162,15 @@ impl Children {
         loans: &[Launch],
         argument: u64,
         dynamic: bool,
+        separate_storage: bool,
         server: &mut Server,
         world: &mut World,
     ) -> Result<(), Error> {
         let port = target.port()?;
-        if self.separate_storage && !server.available(slot + 3) {
+        if separate_storage && !server.available(slot + 3) {
             return Err(Error(abi::BUSY as i64));
         }
-        let connections = connections::Connections::create(self.separate_storage)?;
+        let connections = connections::Connections::create(separate_storage)?;
         let child = match target.spawn_tree(argument, connections.initial(), loans) {
             Ok(child) => child,
             Err(error) => {

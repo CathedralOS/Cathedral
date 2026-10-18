@@ -119,7 +119,7 @@ pub const PRESENT_LIMIT: usize = 4;
 /// is entirely zero. No buffers, erases or allocation; names remain caller-local.
 pub const PRESENT_RECTS: u64 = 13;
 
-/// Child requests on the interaction connection. LAUNCH: [LAUNCH, object, 0..]
+/// Child requests on the interaction connection. LAUNCH: [LAUNCH, object, withhold, 0..]
 /// asks the host to run an object from the requester's realm as its sibling,
 /// in the other slot, which the owner must have opened with LAUNCH_POLICY; the
 /// reply names the slot. CLOSE: [CLOSE, 0..] asks the host to stop the sibling,
@@ -240,6 +240,12 @@ pub const LAUNCH_PLACE: u64 = 119;
 /// Owner-only: [STORAGE_BINDING, slot, 0..] -> [0, source, scope] of the
 /// child's live storage binding, or DENIED while it has none.
 pub const STORAGE_BINDING: u64 = 120;
+/// Owner policy for subsequent store launches: [LAUNCH_IMPORTS, slot, offered
+/// import mask, 0..]. Defaults to imports::ALL; cannot change an existing child.
+/// LAUNCH's second payload word is a withholding mask, intersected with this
+/// policy. Callers may remove offers, never add them. Undeclared imports are
+/// not supplied; missing required/version-incompatible imports refuse launch.
+pub const LAUNCH_IMPORTS: u64 = 121;
 /// Monotonic ticks a matrix waits for one forwarded storage request before
 /// retiring its provider stream. The current 100-Hz timer makes 600 ticks
 /// nominally six seconds, not 600 milliseconds. Nested forwards and program

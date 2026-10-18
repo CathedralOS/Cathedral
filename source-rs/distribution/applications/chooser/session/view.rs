@@ -42,6 +42,7 @@ impl Scene {
         selected: usize,
         status: &str,
         user_picker: bool,
+        without_storage: bool,
     ) {
         assert_eq!(
             call(
@@ -88,7 +89,9 @@ impl Scene {
                     *label = line;
                     continue;
                 }
-                NEW => b"NEW",
+                NEW if user_picker => b"NEW",
+                NEW if without_storage => b"STORAGE OFF",
+                NEW => b"STORAGE ON",
                 CLOSE => b"CLOSE",
                 row if row == ROWS - 1 => status.as_bytes(),
                 _ => b"",

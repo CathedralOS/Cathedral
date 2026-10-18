@@ -23,6 +23,8 @@ pub(in crate::service) struct LaunchRequest {
     /// what RUN_PAGES and RUN_MEMORY staged, consumed only on admission.
     pub pages: Option<[u64; 2]>,
     pub stamp: u64,
+    /// Offered services after owner policy and caller-requested withholding.
+    pub imports: u64,
 }
 /// A program read that finished: the owner's request to answer and the sealed
 /// image, or why there is none.

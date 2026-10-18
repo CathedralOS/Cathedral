@@ -80,8 +80,8 @@ pub(super) fn dispatch(
         }
         // A child asks for a sibling, or for its sibling to go; both are
         // answered later, from launch_object or the forwarded loss query.
-        Some([wire::LAUNCH, object, 0, 0, 0, 0, 0, 0]) if request.client.is_some() => {
-            return children.launch(request, object, parent, server);
+        Some([wire::LAUNCH, object, withhold, 0, 0, 0, 0, 0]) if request.client.is_some() => {
+            return children.launch(request, object, withhold, parent, server);
         }
         Some([wire::CLOSE, 0, 0, 0, 0, 0, 0, 0]) if request.client.is_some() => {
             return children.close(request, parent, world, server);

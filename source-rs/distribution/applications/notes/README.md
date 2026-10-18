@@ -25,6 +25,15 @@ switch act only on a clean, saved note.
 Below the text, a bar shows the notes in this realm: a dim segment per note and a
 bright one on the current note. A realm holds up to eight notes.
 
+In the F5 launcher, turn **STORAGE OFF** before launching Notes to run the same
+program with optional persistence absent. It starts empty, with a purple base
+and **TEMP NO SAVE** in place of the note bar. Editing makes a draft; F1/F2 cannot
+save or discard it and show an error. CLOSE still keeps an unsaved draft open.
+Explicitly erase the text to close cleanly, then re-enable storage and relaunch
+to see the original saved notes. Changing the launcher toggle affects future
+launches only. An absent grant is not the same as a supplied service failing;
+normal storage failures still follow the reconciliation path above.
+
 Each note is one private object of up to 240 ASCII characters, placed in the
 realm its storage binding reports. The capacity is this editor's choice, not a
 storage limit. The app cannot tell a subtree from a whole root and never sees
@@ -39,7 +48,7 @@ diagnostic font is uppercase-shaped.
 
 ## Follow execution
 
-[main.rs](main.rs) enters [session/session.rs](session/session.rs): load supplied
+[main.rs](main.rs) declares required interaction and optional storage imports, then enters [session/session.rs](session/session.rs): load supplied
 connections, read confirmed state, process local input, save/reconcile, present.
 [document.rs](document.rs) owns bounded edits and the `NTS1` encoding.
 [storage.rs](session/storage.rs) lists the realm, reads the current note through a

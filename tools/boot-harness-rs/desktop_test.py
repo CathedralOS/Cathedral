@@ -85,11 +85,11 @@ def desktop(stream, output, serial, reboot):
     PICKER = ((width - 220) // 2, (height - 180) // 2)
     APP = (232, 24)
 
-    def note(text, dirty=False):
+    def note(text, dirty=False, temporary=False, error=False):
         expected = text_image(text, cursor=True)
         def check(width, data):
             actual = b''.join(data[((APP[1] + 20 + y) * width + APP[0] + 10) * 3:((APP[1] + 20 + y) * width + APP[0] + 190) * 3] for y in range(64))
-            return actual == expected and rgb(width, data, APP[0] + 5, APP[1] + 10) == bytes.fromhex('9b7028' if dirty else '27664a')
+            return actual == expected and rgb(width, data, APP[0] + 5, APP[1] + 10) == bytes.fromhex('993f46' if error else '9b7028' if dirty else '55447a' if temporary else '27664a')
         scan(check, f'note text/status {text!r}, dirty={dirty}')
 
     def rows_image(lines):
@@ -265,10 +265,47 @@ def desktop(stream, output, serial, reboot):
     # matrix mechanism proof, not a logout control in the normal desktop.
     click_chrome(CLOSE)
     chrome(STATUS, 'CLOSED')
+    # Same Notes bytes, different bindings. Colors requires storage and must
+    # refuse cleanly without occupying the slot; Notes explicitly permits None.
+    click_chrome(NEW)  # The user launcher uses this row for STORAGE ON/OFF.
+    chrome(NEW, 'STORAGE OFF')
+    click_chrome(2)
+    chrome(STATUS, 'NEEDS SERVICE')
+    click_chrome(1)
+    chrome(STATUS, 'RUNNING')
+    note('', temporary=True)
+    def temporary_banner(width, data):
+        expected = rows_image(['TEMP NO SAVE'])
+        actual = b''.join(data[((APP[1] + 88 + y) * width + APP[0] + 10) * 3:((APP[1] + 88 + y) * width + APP[0] + 170) * 3] for y in range(16))
+        return actual == expected
+    scan(temporary_banner, 'Notes clearly identifies temporary unsavable state')
+    shutil.copyfile(output / 'display.png', output / 'temporary-notes.png')
+    focus_app()
+    key('x')
+    note('x', dirty=True, temporary=True)
+    key('f1')
+    note('x', dirty=True, temporary=True, error=True)
+    key('f2')  # No storage means reload cannot silently discard the draft.
+    note('x', dirty=True, temporary=True, error=True)
+    click_chrome(CLOSE)
+    chrome(STATUS, 'KEPT')
+    focus_app()
+    key('backspace')  # Explicitly remove the temporary draft before closing.
+    note('', temporary=True, error=True)
+    click_chrome(CLOSE)
+    chrome(STATUS, 'CLOSED')
+    click_chrome(NEW)
+    chrome(NEW, 'STORAGE ON')
+    click_chrome(1)
+    chrome(STATUS, 'RUNNING')
+    note('hello cathedral')  # The temporary launch never touched saved Notes.
+    tabs(2, 0)
+    click_chrome(CLOSE)
+    chrome(STATUS, 'CLOSED')
     click_chrome(2)
     chrome(STATUS, 'RUNNING')
     color('d18b35')
-    print('PASS: user entry retires boot UI/input, dirty app protection, saved notes/color and app replacement')
+    print('PASS: user entry, required-service refusal, optional Notes storage, draft protection and persistent app replacement')
 
 
 def run(timeout, trace_storage=False):

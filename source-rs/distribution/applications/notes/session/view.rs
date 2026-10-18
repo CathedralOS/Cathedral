@@ -62,6 +62,8 @@ impl Scene {
             0x993f46
         } else if dirty {
             0x9b7028
+        } else if notes.temporary() {
+            0x55447a
         } else {
             0x27664a
         };
@@ -69,6 +71,35 @@ impl Scene {
         self.image(parent, self.text, [10, 20, WIDTH, HEIGHT], |bytes| {
             text(bytes, doc, cursor)
         });
+        if notes.temporary() {
+            self.image(
+                parent,
+                self.track,
+                [10, TAB_TOP as usize, WIDTH, 16],
+                |bytes| {
+                    for (i, &ch) in b"TEMP NO SAVE".iter().enumerate() {
+                        for (y, bits) in cathedral_bitmap_font::glyph(ch).into_iter().enumerate() {
+                            for x in 0..5 {
+                                if bits & (1 << (4 - x)) != 0 {
+                                    for dy in 0..2 {
+                                        for dx in 0..2 {
+                                            pixel(
+                                                bytes,
+                                                WIDTH,
+                                                i * 12 + x * 2 + dx,
+                                                y * 2 + dy,
+                                                0xffffff,
+                                            );
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+            );
+            return;
+        }
         let width = |count: usize| count as u64 * TAB_PITCH - 4;
         let bar = |x: u64, width: u64| [x, TAB_TOP, width, TAB_HEIGHT];
         self.rectangle(

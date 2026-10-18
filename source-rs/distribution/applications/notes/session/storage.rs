@@ -10,7 +10,7 @@ use cathedral_platform_contracts::storage as store;
 use cathedral_user_runtime::{memory::Private, storage::Scope};
 pub const MAX_NOTES: usize = 8;
 pub struct Notes {
-    scope: Scope,
+    scope: Option<Scope>,
     ids: [u64; MAX_NOTES],
     pub count: usize,
     pub current: usize,
@@ -18,9 +18,9 @@ pub struct Notes {
     _style: u64,
 }
 impl Notes {
-    pub fn new(pair: Pair, style: u64) -> Self {
+    pub fn new(pair: Option<Pair>, style: u64) -> Self {
         Self {
-            scope: Scope::new(pair),
+            scope: pair.map(Scope::new),
             ids: [0; MAX_NOTES],
             count: 0,
             current: 0,
@@ -39,18 +39,20 @@ fn traced<T>(style: u64, op: u64, call: impl FnOnce() -> T) -> T {
     result
 }
 impl Notes {
+    pub fn temporary(&self) -> bool {
+        self.scope.is_none()
+    }
     /// Acquire the current binding, enumerate the realm and read the current
-    /// note. Reconciliation abandons nothing durable: every write was already atomic.
+    /// note. Missing authority is a refusal, never an empty successful reload.
     pub fn load(&mut self) -> Result<Document, u64> {
-        self.scope.bind()?;
-        let realm = self.scope.realm();
+        let scope = self.scope.as_mut().ok_or(abi::DENIED)?;
+        scope.bind()?;
+        let realm = scope.realm();
         self.count = 0;
         let mut after = 0;
         loop {
             let request = store::Request::new(store::LIST, realm, 0, after, 0);
-            let (reply, _) = traced(self._style, store::LIST, || {
-                self.scope.request(request, None)
-            })?;
+            let (reply, _) = traced(self._style, store::LIST, || scope.request(request, None))?;
             let words = store::unpack(&reply).ok_or(abi::IO_ERROR)?;
             if words[0] != 0 {
                 return Err(words[0]);
@@ -77,16 +79,16 @@ impl Notes {
         self.read()
     }
     fn read(&mut self) -> Result<Document, u64> {
+        let scope = self.scope.as_mut().ok_or(abi::DENIED)?;
         let id = self.ids[self.current];
         let request = store::Request::new(store::HEAD, id, 0, 0, 0);
-        let head = traced(self._style, store::HEAD, || self.scope.call(request))?;
+        let head = traced(self._style, store::HEAD, || scope.call(request))?;
         if head.length == 0 || head.length > cathedral_notes::document::ENCODED as u64 {
             return Err(abi::IO_ERROR);
         }
         let request = store::Request::new(store::BULK, id, head.revision, 0, head.length);
-        let (reply, attachment) = traced(self._style, store::BULK, || {
-            self.scope.request(request, None)
-        })?;
+        let (reply, attachment) =
+            traced(self._style, store::BULK, || scope.request(request, None))?;
         let reply = store::Reply::decode(&reply)?;
         let mut attachment = attachment.ok_or(abi::IO_ERROR)?;
         let bytes = attachment.map().map_err(|e| e.0 as u64)?;
@@ -103,13 +105,14 @@ impl Notes {
         result
     }
     fn publish(&mut self, doc: &Document) -> Result<(), u64> {
+        let scope = self.scope.as_mut().ok_or(abi::DENIED)?;
         let (bytes, len) = doc.encode();
         let mut pages = Private::allocate(1).map_err(|e| e.0 as u64)?;
         pages.bytes_mut()[..len].copy_from_slice(&bytes[..len]);
         let object = pages.freeze().map_err(|e| e.0 as u64)?;
         // A first note is created in the realm; later saves name the note.
         let request = if self.count == 0 {
-            store::Request::new(store::PUBLISH, 0, 0, self.scope.realm(), len as u64)
+            store::Request::new(store::PUBLISH, 0, 0, scope.realm(), len as u64)
         } else {
             store::Request::new(
                 store::PUBLISH,
@@ -120,7 +123,7 @@ impl Notes {
             )
         };
         let (reply, _) = traced(self._style, store::PUBLISH, || {
-            self.scope.request(request, Some(&object))
+            scope.request(request, Some(&object))
         })?;
         let reply = store::Reply::decode(&reply)?;
         if request.object == 0 {
@@ -133,6 +136,7 @@ impl Notes {
     }
     /// A new note beside the current one, sharing its confirmed content.
     pub fn duplicate(&mut self) -> Result<Document, u64> {
+        let scope = self.scope.as_mut().ok_or(abi::DENIED)?;
         if self.count == 0 || self.count == MAX_NOTES {
             return Err(abi::NO_MEMORY);
         }
@@ -140,10 +144,10 @@ impl Notes {
             store::COPY,
             self.ids[self.current],
             self.revision,
-            self.scope.realm(),
+            scope.realm(),
             0,
         );
-        let reply = traced(self._style, store::COPY, || self.scope.call(request))?;
+        let reply = traced(self._style, store::COPY, || scope.call(request))?;
         self.ids[self.count] = reply.object;
         self.current = self.count;
         self.count += 1;

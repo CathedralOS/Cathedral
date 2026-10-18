@@ -13,7 +13,10 @@ user runs it as a matrix whose chrome, a second chooser over the user's realm,
 launches that user's Notes or Colors beside itself. User entry revokes the boot
 chooser's display/input grant and gives the user the full screen: launcher on
 the left, app in the remaining space, no persistent boot help or logout control.
-Notes keeps up to eight
+The user launcher can withhold storage for future launches: Notes receives an
+actual optional binding and shows TEMP NO SAVE; Colors refuses missing required
+storage. [Declared imports](platform/contracts/imports/README.md) are checked
+before store-based admission. Notes keeps up to eight
 notes as private objects on the experimental database disk; a duplicate is the
 store's copy of the saved note and shares its content. Closing asks the program
 what it would lose and keeps it open on any answer but nothing, so an unsaved

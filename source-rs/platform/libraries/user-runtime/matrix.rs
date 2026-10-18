@@ -1,6 +1,30 @@
 //! Startup capabilities supplied by platform/services/matrix/service/children.
 //! These names describe local connections, never global services or disk locations.
 use crate::{Error, abi, ipc::Handle, task::Environment};
+pub use cathedral_platform_contracts::imports;
+
+/// Typed view of a version-1 matrix environment with optional persistence.
+/// An absent storage endpoint is not a dummy connection returning errors.
+pub struct OptionalConnections {
+    pub interaction: (Handle, Handle),
+    pub wake: Handle,
+    pub storage: Option<(Handle, Handle)>,
+}
+impl OptionalConnections {
+    pub fn load(environment: &Environment) -> Result<Self, Error> {
+        if !matches!(environment.len(), 3 | 5) {
+            return Err(Error(abi::INVALID_ARGUMENT as i64));
+        }
+        Ok(Self {
+            interaction: (
+                environment.endpoint(0).unwrap(),
+                environment.endpoint(1).unwrap(),
+            ),
+            wake: environment.endpoint(2).unwrap(),
+            storage: environment.endpoint(3).zip(environment.endpoint(4)),
+        })
+    }
+}
 pub struct Connections {
     pub interaction: (Handle, Handle),
     pub wake: Handle,

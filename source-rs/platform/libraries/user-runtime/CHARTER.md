@@ -16,7 +16,11 @@ with successful admission. `entry_with_environment!` passes their ordered
 startup names and never restores closed grants. Protocol roles belong to the app.
 The bundle supplements the existing profile-controlled boot/device grants.
 [Matrix connections](matrix.rs) interpret the platform's five-endpoint bundle as
-interaction, wake and private catalog channels. This is a userspace protocol;
+interaction, wake and private catalog channels. The optional-storage view
+accepts three endpoints with `storage: None`; five supply the storage pair.
+Programs can embed [service import declarations](../../contracts/imports/README.md)
+for the matrix to validate on store-based launch; this does not change the
+kernel endpoint transport or validate all boot/catalogue launches. This is a userspace protocol;
 the kernel does not recognize these service names or grant catalog contents.
 `Launch::spawn_tree` also lends idle launch/peer budgets at that admission boundary.
 The child enumerates only its assigned grants and may lend them further. Subtree

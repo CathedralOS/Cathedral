@@ -37,8 +37,21 @@ fn report(control: Pair, notes: &storage::Notes, draft: &Document, dirty: bool, 
     ]));
 }
 pub fn run(style: u64, environment: Environment) {
-    let connections = cathedral_user_runtime::matrix::Connections::load(&environment).unwrap();
+    let connections =
+        cathedral_user_runtime::matrix::OptionalConnections::load(&environment).unwrap();
     let parent = connections.interaction;
+    if connections.storage.is_none() {
+        // The interactive endpoint cannot substitute for the omitted service.
+        assert_eq!(
+            call(parent, [wire::STORAGE_INFO, 0, 0, 0, 0, 0, 0, 0]),
+            wire::error(abi::DENIED)
+        );
+        cathedral_user_runtime::write(
+            b"Cathedral Notes: temporary; no storage endpoint; interaction storage denied\n",
+        )
+        .unwrap();
+    }
+
     assert_eq!(
         call(parent, [wire::STORAGE_STATUS, 0, 0, 0, 0, 0, 0, 0]),
         wire::error(abi::DENIED)
@@ -58,7 +71,11 @@ pub fn run(style: u64, environment: Environment) {
         let extent = wire::poll_view(snapshot);
         if extent[0] == 0 {
             if !loaded {
-                match notes.load() {
+                match if notes.temporary() {
+                    Ok(Document::default())
+                } else {
+                    notes.load()
+                } {
                     Ok(doc) => {
                         confirmed = doc;
                         draft = doc;
@@ -93,42 +110,46 @@ pub fn run(style: u64, environment: Environment) {
                 let function = matches!(key, input::F1 | input::F2 | input::F3 | input::F4);
                 if function && event[4] == input::PRESS as u64 {
                     let dirty = draft != confirmed;
-                    let outcome = match key {
-                        // F1 saves a draft; on an unresolved error it reads first,
-                        // keeping the draft so a lost acknowledgement never
-                        // repeats a write blindly.
-                        input::F1 if error == 0 && (dirty || notes.revision == 0) => {
-                            notes.save(&draft).map(|()| {
-                                confirmed = draft;
-                                time::storage_sample(
-                                    "note-saved",
-                                    &[style, notes.revision, draft.len as u64],
-                                );
-                            })
-                        }
-                        input::F1 | input::F2 => notes.load().map(|doc| {
-                            confirmed = doc;
-                            if key == input::F2 {
-                                draft = doc;
-                                cursor = doc.len;
+                    let outcome = if notes.temporary() {
+                        Err(abi::DENIED) // No save/reload action may discard a temporary draft.
+                    } else {
+                        match key {
+                            // F1 saves a draft; on an unresolved error it reads first,
+                            // keeping the draft so a lost acknowledgement never
+                            // repeats a write blindly.
+                            input::F1 if error == 0 && (dirty || notes.revision == 0) => {
+                                notes.save(&draft).map(|()| {
+                                    confirmed = draft;
+                                    time::storage_sample(
+                                        "note-saved",
+                                        &[style, notes.revision, draft.len as u64],
+                                    );
+                                })
                             }
-                        }),
-                        // Duplicate and switch act on confirmed notes only.
-                        input::F3 if error == 0 && !dirty && notes.revision != 0 => {
-                            notes.duplicate().map(|doc| {
+                            input::F1 | input::F2 => notes.load().map(|doc| {
                                 confirmed = doc;
-                                draft = doc;
-                                cursor = doc.len;
-                            })
+                                if key == input::F2 {
+                                    draft = doc;
+                                    cursor = doc.len;
+                                }
+                            }),
+                            // Duplicate and switch act on confirmed notes only.
+                            input::F3 if error == 0 && !dirty && notes.revision != 0 => {
+                                notes.duplicate().map(|doc| {
+                                    confirmed = doc;
+                                    draft = doc;
+                                    cursor = doc.len;
+                                })
+                            }
+                            input::F4 if error == 0 && !dirty && notes.count > 1 => {
+                                notes.next().map(|doc| {
+                                    confirmed = doc;
+                                    draft = doc;
+                                    cursor = doc.len;
+                                })
+                            }
+                            _ => Ok(()),
                         }
-                        input::F4 if error == 0 && !dirty && notes.count > 1 => {
-                            notes.next().map(|doc| {
-                                confirmed = doc;
-                                draft = doc;
-                                cursor = doc.len;
-                            })
-                        }
-                        _ => Ok(()),
                     };
                     error = outcome.err().unwrap_or(0);
                     repaint = true;

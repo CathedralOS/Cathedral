@@ -1,0 +1,160 @@
+// Resolve a program's declared interfaces against its owner's offered services.
+// This describes connections, never grants authority or authenticates a provider.
+pub const INTERACTION: u64 = 1;
+pub const STORAGE: u64 = 2;
+pub const ALL: u64 = INTERACTION | STORAGE;
+pub const MAX_IMPORTS: usize = 4;
+pub const RECORD_BYTES: usize = 16 + MAX_IMPORTS * 32;
+pub const MAGIC: u64 = u64::from_le_bytes(*b"CTHIMP01");
+/// Platform launch refusals; these are not new kernel errors.
+pub const MISSING: u64 = 0x494d0001;
+pub const INCOMPATIBLE: u64 = 0x494d0002;
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Import {
+    pub contract: u64,
+    pub minimum: u64,
+    pub maximum: u64,
+    pub required: bool,
+}
+impl Import {
+    pub const fn v1(contract: u64, required: bool) -> Self {
+        Self {
+            contract,
+            minimum: 1,
+            maximum: 1,
+            required,
+        }
+    }
+}
+pub const REQUIRED: [Import; 2] = [Import::v1(INTERACTION, true), Import::v1(STORAGE, true)];
+pub const OPTIONAL_STORAGE: [Import; 2] =
+    [Import::v1(INTERACTION, true), Import::v1(STORAGE, false)];
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Refusal {
+    Malformed,
+    Missing(u64),
+    Version(u64),
+}
+
+/// Known providers currently implement version 1. Unknown optional imports
+/// remain absent; unknown required imports refuse admission. Order has no meaning.
+pub fn bind(imports: &[Import], offered: u64) -> Result<u64, Refusal> {
+    if imports.len() > MAX_IMPORTS || offered & !ALL != 0 {
+        return Err(Refusal::Malformed);
+    }
+    let mut bound = 0;
+    for (index, import) in imports.iter().enumerate() {
+        if import.contract == 0
+            || import.minimum == 0
+            || import.minimum > import.maximum
+            || imports[..index]
+                .iter()
+                .any(|prior| prior.contract == import.contract)
+        {
+            return Err(Refusal::Malformed);
+        }
+        let known = matches!(import.contract, INTERACTION | STORAGE);
+        if !known || offered & import.contract == 0 {
+            if import.required {
+                return Err(Refusal::Missing(import.contract));
+            }
+        } else if !(import.minimum..=import.maximum).contains(&1) {
+            if import.required {
+                return Err(Refusal::Version(import.contract));
+            }
+        } else {
+            bound |= import.contract;
+        }
+    }
+    Ok(bound)
+}
+
+/// Fixed-size little-endian record at the beginning of the read-only ELF load
+/// segment. Included in the sealed program bytes, independent of section headers.
+pub const fn encode(imports: &[Import]) -> [u8; RECORD_BYTES] {
+    assert!(imports.len() <= MAX_IMPORTS);
+    let mut words = [0u64; RECORD_BYTES / 8];
+    words[0] = MAGIC;
+    words[1] = imports.len() as u64;
+    let mut i = 0;
+    while i < imports.len() {
+        let entry = imports[i];
+        words[2 + i * 4] = entry.contract;
+        words[3 + i * 4] = entry.minimum;
+        words[4 + i * 4] = entry.maximum;
+        words[5 + i * 4] = entry.required as u64;
+        i += 1;
+    }
+    let mut bytes = [0; RECORD_BYTES];
+    i = 0;
+    while i < RECORD_BYTES {
+        bytes[i] = words[i / 8].to_le_bytes()[i % 8];
+        i += 1;
+    }
+    bytes
+}
+
+#[derive(Debug)]
+pub struct Declaration {
+    entries: [Import; MAX_IMPORTS],
+    count: usize,
+}
+impl Declaration {
+    pub fn entries(&self) -> &[Import] {
+        &self.entries[..self.count]
+    }
+    pub fn decode(bytes: &[u8]) -> Result<Self, Refusal> {
+        if bytes.len() != RECORD_BYTES || word(bytes, 0)? != MAGIC {
+            return Err(Refusal::Malformed);
+        }
+        let count = usize::try_from(word(bytes, 8)?).map_err(|_| Refusal::Malformed)?;
+        if count > MAX_IMPORTS {
+            return Err(Refusal::Malformed);
+        }
+        let mut declaration = Self {
+            entries: [Import::v1(0, false); MAX_IMPORTS],
+            count,
+        };
+        for (i, entry) in declaration.entries[..count].iter_mut().enumerate() {
+            let at = 16 + i * 32;
+            let required = word(bytes, at + 24)?;
+            if required > 1 {
+                return Err(Refusal::Malformed);
+            }
+            *entry = Import {
+                contract: word(bytes, at)?,
+                minimum: word(bytes, at + 8)?,
+                maximum: word(bytes, at + 16)?,
+                required: required != 0,
+            };
+        }
+        if bytes[16 + count * 32..].iter().any(|&byte| byte != 0) {
+            return Err(Refusal::Malformed);
+        }
+        // Validate syntax even when a required interface is unavailable.
+        for (i, entry) in declaration.entries().iter().enumerate() {
+            if entry.contract == 0
+                || entry.minimum == 0
+                || entry.minimum > entry.maximum
+                || declaration.entries()[..i]
+                    .iter()
+                    .any(|prior| prior.contract == entry.contract)
+            {
+                return Err(Refusal::Malformed);
+            }
+        }
+        Ok(declaration)
+    }
+}
+fn word(bytes: &[u8], at: usize) -> Result<u64, Refusal> {
+    let end = at.checked_add(8).ok_or(Refusal::Malformed)?;
+    Ok(u64::from_le_bytes(
+        bytes
+            .get(at..end)
+            .ok_or(Refusal::Malformed)?
+            .try_into()
+            .unwrap(),
+    ))
+}

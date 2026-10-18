@@ -82,8 +82,11 @@ cancellation uses the same path. Changing an inherited binding clears descendant
 grants; regranting the ancestor never implicitly revives descendants. Each
 request checks its revision at every hop, including requests already in flight
 when authority changes. Connection replacement requires explicit grants.
-The visible desktop supplies a five-endpoint startup bundle: interaction send/reply,
-wake receiver, and catalog send/reply. The [named runtime connections](../../../../libraries/user-runtime/matrix.rs)
+The visible desktop supplies interaction send/reply and a wake receiver, plus
+catalog send/reply only when storage is bound. [Declared imports](../../../../contracts/imports/README.md)
+are resolved before store-based admission: Notes can omit storage entirely,
+receiving three endpoints and no realm binding; required storage refuses launch
+when withheld. The [named runtime connections](../../../../libraries/user-runtime/matrix.rs)
 expose those roles without service discovery, and the
 [runtime scope](../../../../libraries/user-runtime/storage.rs) performs a child's
 scoped exchanges and reports its realm. Authority is bound to the catalog

@@ -41,6 +41,7 @@ pub(super) struct Children {
     next_frames: [Option<u64>; 2],
     next_pages: [Option<[u64; 2]>; 2],
     standing: [Option<Standing>; 2],
+    allowed_imports: [Option<u64>; 2],
     pending: [Option<(Request, u64, Purpose)>; 2],
     retiring: [Option<i64>; 2],
     loss: Option<loss::Survey>,
@@ -86,6 +87,7 @@ impl Children {
                     | wire::RUN_PAGES
                     | wire::LAUNCH_POLICY
                     | wire::LAUNCH_PLACE
+                    | wire::LAUNCH_IMPORTS
                     | wire::STOP
             )
         {
@@ -127,6 +129,8 @@ impl Children {
                         cpu,
                         pages: None,
                         stamp: 0,
+                        imports: self.allowed_imports[slot]
+                            .unwrap_or(cathedral_platform_contracts::imports::ALL),
                     },
                 )?;
             }
@@ -148,6 +152,12 @@ impl Children {
             }
         } else {
             match words {
+                [wire::LAUNCH_IMPORTS, slot @ 0..=1, offered, 0, 0, 0, 0, 0]
+                    if offered & !cathedral_platform_contracts::imports::ALL == 0 =>
+                {
+                    self.allowed_imports[slot as usize] = Some(offered);
+                    Ok(())
+                }
                 [wire::RUN_PAGES, slot @ 0..=1, private, readers, 0, 0, 0, 0]
                     if private <= cathedral_kernel_contracts::memory::MAX_PAGES as u64
                         && readers <= cathedral_kernel_contracts::memory::MAX_PAGES as u64 =>
@@ -252,6 +262,7 @@ impl Children {
         &mut self,
         request: Request,
         object: u64,
+        withhold: u64,
         parent: &mut Parent,
         server: &mut Server,
     ) -> Result<(), Error> {
@@ -262,7 +273,7 @@ impl Children {
         let slot = 1 - requester;
         let refusal = if parent.storing() || self.slots[slot].is_some() || !server.available(slot) {
             Some(abi::BUSY)
-        } else if object == 0 {
+        } else if object == 0 || withhold & !cathedral_platform_contracts::imports::ALL != 0 {
             Some(abi::INVALID_ARGUMENT)
         } else {
             None
@@ -288,6 +299,9 @@ impl Children {
                 cpu: standing.cpu,
                 pages: Some(standing.pages),
                 stamp,
+                imports: self.allowed_imports[slot]
+                    .unwrap_or(cathedral_platform_contracts::imports::ALL)
+                    & !withhold,
             },
         )
     }
@@ -325,11 +339,10 @@ impl Children {
         self.retiring[target] = None;
         Ok(())
     }
-    /// Admit a program the matrix just read from its realm, grant the child
-    /// that object's subtree, and answer whoever asked. A child launched for a
-    /// sibling also gets the slot's standing surfaces and placement. A child
-    /// that cannot be granted its realm is stopped rather than left running
-    /// without one.
+    /// Admit a program read from the matrix's realm and answer whoever asked.
+    /// Selected storage binds the child to that object's subtree; a failed
+    /// binding stops the child. Optional storage may instead be absent.
+    /// A sibling launch also gets the slot's standing surfaces and placement.
     pub(in crate::service) fn launch_object(
         &mut self,
         launched: parent::Launched,
@@ -344,12 +357,13 @@ impl Children {
         } = launched;
         let status = match result {
             Err(code) => Err(code),
-            Ok(object) => {
-                let admitted = self.run_object(plan, &object, server, world);
+            Ok(mut object) => {
+                let admitted = self.run_object(plan, &mut object, server, world);
                 drop(object); // The kernel holds its own reference to the image.
                 match admitted {
                     Err(error) => Err(error.0 as u64),
-                    Ok(()) => match parent.storage_grant(server, plan.slot, 0, plan.scope)? {
+                    Ok(false) => Ok(()),
+                    Ok(true) => match parent.storage_grant(server, plan.slot, 0, plan.scope)? {
                         Ok(()) => Ok(()),
                         Err(code) => {
                             self.stop(plan.slot, server, world, parent)?;

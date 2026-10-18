@@ -2,6 +2,21 @@
 //! The environment variant loads installed capabilities before invoking application code.
 //! Normal return and panic both terminate through the kernel task boundary.
 
+/// Declare matrix-hosted imports in the program image. Boot admission and the
+/// legacy catalogue fixtures have their own explicit wiring; store admission
+/// resolves this record against the owner's offered services before spawning.
+#[macro_export]
+macro_rules! service_imports {
+    ($imports:expr) => {
+        // Export ensures emission; user.ld KEEP retains it. #[used] would add
+        // GNU retain flags and change the ELF OSABI from our System V subset.
+        #[unsafe(no_mangle)]
+        #[unsafe(link_section = ".cathedral.imports")]
+        pub static CATHEDRAL_IMPORTS: [u8; $crate::matrix::imports::RECORD_BYTES] =
+            $crate::matrix::imports::encode($imports);
+    };
+}
+
 #[macro_export]
 macro_rules! entry {
     ($main:path) => {

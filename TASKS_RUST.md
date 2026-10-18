@@ -1,9 +1,10 @@
 # Rust reference OS: tasks and handoff
 
-Updated 2026-10-17 (local date). Implementation baseline: the desktop phase
-change following **`4b589cf`**. Selecting a user retires the boot chooser's
-display/input grant and gives the user the full display. Recursive LOSS remains
-a platform mechanism, exercised by the headless matrix proof. Check Git for later work.
+Updated 2026-10-17 (local date). Implementation baseline: declared service
+imports and optional Notes persistence following **`82d3d04`**. Store-based
+admission validates the program's required/optional interfaces against owner
+offers before spawning; the F5 launcher can withhold storage. Check Git for
+later work.
 
 ## Start here
 
@@ -30,6 +31,11 @@ It uses x86-64 QEMU/TCG and UEFI.
   reloads confirmed storage; F3 duplicates the saved note as a new note that
   shares its content; F4 switches to the next note. A bar below the text shows
   the notes, with the current one bright.
+- The user's **STORAGE ON/OFF** row controls subsequent launches. OFF gives
+  Notes no storage endpoint: it shows **TEMP NO SAVE**, keeps edits in memory,
+  and refuses save/reload without losing a draft. Colors requires storage and
+  answers NEEDS SERVICE. Re-enable storage and relaunch for saved data. The
+  toggle does not change an already-running app's grant.
 - Colors changes its color on Enter and keeps it, because its state nests under
   its own program like everything else's.
 - **CLOSE** in a chooser asks the running program what it would lose and stops
@@ -215,22 +221,20 @@ graph; the desktop is tested by `desktop_test.py`.
 
 ## Next work, in recommended order
 
-These are proposed follow-ups, not claims that the owner has approved every
-future feature. Two owner questions were recorded this session: the boot matrix
-as the initial program with what a matrix persists, and object kinds and names
-in a realm. Both block the first two items below.
+These are proposed follow-ups. The owner clarified that the boot environment
+orchestrates privileged providers and delegates services; it need not be one
+matrix executable. See the clarified startup/policy question in OWNER_QUESTIONS.
 
-- [ ] **Make the boot matrix the privileged program.** Today the initial
-  program is the desktop owner, which admits a root matrix beside itself and
-  furnishes matrices with numbers from `shell.rs`. In the owner's framing those
-  are one program: boot hands everything to the boot matrix, and the shell is
-  a program it hosts from its realm. That needs a policy object a matrix reads
-  from its realm, which is the owner question. Do not resolve it by
-  implication.
-- [ ] **Give objects kinds and names.** The chooser shows numbers and copies
-  by position; NEW over a user's realm duplicates the chrome because nothing
-  says what an entry is. Login, sessions and a terminal-style shell all wait
-  on the same answer.
+- [ ] **Persist startup composition and matrix policy.** Keep the initial owner
+  as the composition root while choosing where policy lives and who may edit
+  it. Do not merge drivers/providers into the matrix or conflate this with
+  authentication. Declared service imports and launch-time binding are now the
+  first bounded implementation of the supplied-environment model.
+- [ ] **Give objects kinds and names.** The chooser shows numbers and the
+  user picker copies its first entry as the template. The user launcher now
+  toggles storage instead of copying chrome, but object roles remain implicit.
+  Resolve template selection and readable program labels without relying on
+  object ordering; authentication remains a separate decision.
 - [ ] **Keep app lifecycle honest as apps grow.** Startup failure, app crash and
   provider loss while an app holds work still end in assertions in places. A
   program that cannot be read from the realm answers REFUSED in the chooser
@@ -394,3 +398,48 @@ clippy with warnings denied, layout and formatting checks, and the updated
 verified after cold boot). `user-picker.png` and `user-workspace.png` show the
 phase transition. No new kernel smoke, ARM64 or headless matrix run is claimed
 for this distribution-only change.
+
+## Declared imports and optional persistence handoff
+
+Store programs now carry a bounded required/optional service declaration in
+their sealed ELF. Start at [the import contract](source-rs/platform/contracts/imports/README.md)
+for parsing, version selection and the admission/runtime reading path. The
+matrix resolves it against the owner's offer before reserving or spawning.
+Children may withhold offered services but cannot widen that offer. Missing or
+incompatible required imports refuse launch; optional storage becomes an actual
+`Option` in the runtime view, with no storage endpoints or subtree grant.
+
+F5's user launcher now toggles STORAGE ON/OFF for subsequent launches. Notes
+accepts absence and labels its viewport TEMP NO SAVE. Save and reload refuse
+without discarding the draft, and dirty-close protection still applies. Colors
+requires storage and refuses with NEEDS SERVICE. Re-enable storage and relaunch
+Notes to recover saved data. Use NEW at the user picker for current copied app
+binaries; existing user copies retain their installed code. Undeclared legacy
+images explicitly require both services, so they still run with storage and
+refuse when it is withheld.
+
+This proves two wire contracts and the existing three/five-endpoint startup
+shape. It does not implement arbitrary endpoint tables, global discovery,
+first-request activation or a final persisted manifest. Boot/catalogue fixtures
+retain explicit wiring. The startup architecture notes now distinguish
+privileged service composition from the matrix executable and hosted login UI;
+persisted policy ownership and object kinds/names remain owner questions.
+
+Validation: `cargo test --locked`, the contract tests, `cargo check-userspace`,
+shell/chooser/Notes/matrix target clippy with warnings denied, layout and format
+checks passed. The updated `--matrix-storage-test --release` passed owner-offer
+attenuation, refused widening, refusal/retry, confinement and revocation checks.
+The F5 desktop test passed temporary-mode rendering, save/reload refusal, dirty
+close, storage restoration, repeated replacement and cold boot; its independent
+oracle verified 189 retained records with no temporary writes. Final evidence:
+`build/boot-harness-rs/desktop/20261018T052214126134Z/`, including
+`temporary-notes.png`.
+
+`matrix_database_test.py --release --notes-recovery` also passed, with 16 records
+verified after each cold boot. Evidence:
+`build/boot-harness-rs/matrix-database/20261018T052026510579Z/`. The earlier gate
+miss did not recur and remains open. During implementation, Rust's `#[used]`
+emitted GNU-retain ELF metadata that the kernel correctly refused; the final
+declaration uses an exported symbol plus linker KEEP, preserving the accepted
+ELF ABI without relaxing kernel validation. No kernel code changed; no new
+kernel smoke or ARM64 run is claimed for this milestone.

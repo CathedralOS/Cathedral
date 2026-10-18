@@ -5,6 +5,7 @@
 //! an upstream matrix bundle a nested world. Nothing branches on depth or on
 //! an argument word.
 mod service;
+cathedral_user_runtime::service_imports!(&cathedral_platform_contracts::imports::REQUIRED);
 cathedral_user_runtime::entry_with_environment!(main);
 fn main(_: u64, _: u64, environment: cathedral_user_runtime::task::Environment) -> u64 {
     if service::run(environment).is_ok() {
