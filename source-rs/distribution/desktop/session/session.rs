@@ -5,7 +5,6 @@
 // apps are programs in the store. The lab module composes the same admission,
 // apps and budgets into the probe desktop from the boot catalogue.
 use super::*;
-use cathedral_platform_contracts::input;
 use cathedral_user_runtime::{ipc, task::Launch};
 pub(crate) const KEYS: u64 = if cfg!(feature = "notes") {
     wire::VALID_KEY_MASK

@@ -5,7 +5,7 @@
 use super::*;
 use cathedral_platform_contracts::storage as store;
 use cathedral_user_runtime::{memory::Private, storage::Scope};
-pub(crate) struct State {
+pub struct State {
     scope: Scope,
     object: u64,
     pub revision: u64,

@@ -271,7 +271,7 @@ in a fresh QEMU process. Ordinary window boots keep
 revoked/stale writes and focus-loss checks, then cold-boots the same disk. Its first
 boot log is retained as `first-boot-serial.log` beside the reboot's `serial.log`.
 Follow [desktop recovery](distribution/desktop/lab/recovery.rs) and
-[app state](distribution/desktop/session/app/state.rs).
+[app state](distribution/applications/colors/session/state.rs).
 
 [Publication](platform/services/matrix/service/parent/presentation.rs) now resumes
 from the service loop after upstream replies. Other children's local reads can

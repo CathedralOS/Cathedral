@@ -13,9 +13,9 @@ bench = false
 
 [features]
 storage-lab = []
-trace-input = []
-trace-storage = []
-desktop = []
+trace-input = ["cathedral-colors?/trace-input"]
+trace-storage = ["cathedral-colors?/trace-storage"]
+desktop = ["dep:cathedral-colors"]
 notes = ["desktop"]
 shell = ["notes"]
 notes-probes = ["notes"]
@@ -25,6 +25,7 @@ desktop-probes = ["desktop"]
 database-probes = ["desktop"]
 
 [dependencies]
+cathedral-colors = { workspace = true, optional = true }
 cathedral-kernel-contracts.workspace = true
 cathedral-platform-contracts.workspace = true
 cathedral-user-runtime.workspace = true

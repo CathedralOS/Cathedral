@@ -4,8 +4,8 @@ The default boot enters [main.rs](main.rs), then [session/session.rs](session/se
 admit providers and the root matrix, run the chooser over the folder of users,
 open the workspace slot to what it launches, start input, request each user
 matrix's own startup and supervise storage. [shell/](session/shell/shell.rs)
-resolves `Login` and `Users` by path in the supplied root;
-[app/](session/app/app.rs) is the color program. See the
+resolves `Login` and `Users` by path in the supplied root.
+[Colors](../applications/colors/main.rs) is a separate installed program. See the
 [distribution map](../README.md) for F5, controls, composition and the
 same-image interactive test.
 
@@ -13,10 +13,10 @@ A failed user `CONFIGURE` returns to a fresh picker with CANNOT OPEN. Cleanup
 accepts an already-collected child, so the root survives a race between startup
 failure and normal task collection. App admission refusals and crash observations
 stay in the launcher process; the desktop does not inspect user grandchildren.
-Missing root Login/Users, initial provider admission, and recovery of a launcher
-that dies after successful configuration remain separate work.
+Missing root Login/Users and initial provider admission remain separate work.
+The matrix now retries a failed configured launcher once without restarting its app.
 
-Colors' [close control](session/app/closing.rs) renders an X and handles local
+Colors' [close control](../applications/colors/session/closing.rs) renders an X and handles local
 pointer clicks. A clean close returns from the app; the matrix reclaims the
 child and its launch slot through its existing exit path. An uncertain storage
 result requires a second, explicit CLOSE ANYWAY click. Its LOSS reply also
@@ -94,7 +94,7 @@ The [desktop policy](session/session.rs) supplies layout and initial appearance.
 platform matrix implementation owns input, clipping and child admission at both
 levels. The root environment additionally receives explicit compositor and
 physical-source endpoints; these are the only device-facing adapters. Apps get
-only their interaction pair, catalog pair and a child-local wake receiver. The [app](session/app/app.rs) waits for local input/view invalidations and
+only their interaction pair, catalog pair and a child-local wake receiver. The [app](../applications/colors/session/session.rs) waits for local input/view invalidations and
 submits an oversized rectangle that must be clipped at each ownership boundary.
 
 The probe desktop receives code-only catalogue grants and a funded process pool.
@@ -185,7 +185,7 @@ owns the store; the provider's recovery and timing proofs are driven by
 uses [persistence entrance](session/persistence/persistence.rs) to observe provider death,
 retired root streams and bounded health probes, reopen it,
 and explicitly restore root and nested grants. Apps remain alive; their
-[state entry](session/app/state.rs) preserves confirmed values and displays a red
+[state entry](../applications/colors/session/state.rs) preserves confirmed values and displays a red
 mark on failed saves. Enter reloads an unresolved save rather than toggling again.
 The test-only [database recovery entry](lab/database_recovery.rs) sequences
 startup timeout, before/after-commit cuts, sibling interaction and exact readback.

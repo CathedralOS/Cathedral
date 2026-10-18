@@ -24,6 +24,7 @@ members = [
     "platform/services/matrix",
     # Distribution
     "distribution/applications/chooser",
+    "distribution/applications/colors",
     "distribution/applications/notes",
     "distribution/lab/display",
     "distribution/lab/compositor",
@@ -52,6 +53,7 @@ rust-version = "1.94"
 publish = false
 
 [workspace.dependencies]
+cathedral-colors = { path = "distribution/applications/colors" }
 cathedral-content-layout = { path = "platform/libraries/content-layout" }
 cathedral-database-objects = { path = "platform/libraries/database-objects" }
 cathedral-storage-engine = { path = "platform/libraries/storage-volume/engine" }

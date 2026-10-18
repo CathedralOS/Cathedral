@@ -295,9 +295,9 @@ def main():
             user_features.append("desktop-probes")
         if args.matrix_desktop_test and user["package"] == "cathedral-storage-service":
             user_features.append("recovery-lab")
-        if args.trace_input and user["package"] in ("cathedral-matrix-service", "cathedral-input-service", "cathedral-desktop"):
+        if args.trace_input and user["package"] in ("cathedral-matrix-service", "cathedral-input-service", "cathedral-desktop", "cathedral-colors"):
             user_features.append("trace-input")
-        if args.trace_storage and user["package"] in ("cathedral-matrix-service", "cathedral-desktop", "cathedral-storage-service", "cathedral-notes"):
+        if args.trace_storage and user["package"] in ("cathedral-matrix-service", "cathedral-desktop", "cathedral-storage-service", "cathedral-notes", "cathedral-colors"):
             user_features.append("trace-storage")
         if user_features:
             user_cargo.extend(["--features", ",".join(user_features)])

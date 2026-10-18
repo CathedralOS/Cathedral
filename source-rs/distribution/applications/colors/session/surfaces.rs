@@ -1,17 +1,15 @@
 //! App-owned surface lifecycle and adversarial local-handle/allowance probes.
 use super::*;
 pub(super) const ACCENT: u64 = 0xe5e7eb;
-pub(crate) struct Scene {
+pub struct Scene {
     pub epoch: u64,
     base: u64,
     accent: Option<u64>,
     revision: u64,
-    #[cfg(feature = "shell")]
-    close: u64,
+    close: Option<u64>,
 }
 impl Scene {
-    #[cfg(not(feature = "shell"))]
-    pub fn new(parent: Pair, view: wire::Packet) -> Result<Self, u64> {
+    fn probe(parent: Pair, view: wire::Packet) -> Result<Self, u64> {
         assert_eq!(
             call(parent, [wire::RUN_MEMORY, 0, 0, 0, 0, 0, 0, 0]),
             wire::error(abi::DENIED)
@@ -34,7 +32,7 @@ impl Scene {
             call(parent, [wire::PAINT, view[1], 0, 0, 0, 1, 1, 0]),
             wire::error(abi::BAD_HANDLE)
         );
-        let retained = if cfg!(feature = "shell") { 4 } else { 3 };
+        let retained = 3;
         assert!(info[1] >= retained as u64);
         for &name in &names[retained..info[1] as usize] {
             assert_eq!(
@@ -47,16 +45,17 @@ impl Scene {
             base: names[0],
             accent: Some(names[1]),
             revision: 2,
-            #[cfg(feature = "shell")]
-            close: names[3],
+            close: None,
         };
         scene.remove_accent(parent);
         scene.restore_accent(parent);
-        image::submit(parent, view[1], names[2]).unwrap();
+        image::probe(parent, view[1], names[2]).unwrap();
         Ok(scene)
     }
-    #[cfg(feature = "shell")]
-    pub fn new(parent: Pair, view: wire::Packet) -> Result<Self, u64> {
+    pub fn new<const PROBES: bool>(parent: Pair, view: wire::Packet) -> Result<Self, u64> {
+        if PROBES {
+            return Self::probe(parent, view);
+        }
         let mut names = [0; 4];
         for (rank, name) in names.iter_mut().enumerate() {
             let reply = call(
@@ -72,12 +71,11 @@ impl Scene {
             base: names[0],
             accent: Some(names[1]),
             revision: 2,
-            close: names[3],
+            close: Some(names[3]),
         })
     }
-    #[cfg(feature = "shell")]
     pub fn close_button(&self, parent: Pair, view: wire::Packet, confirm: bool) -> Result<(), u64> {
-        closing::paint(parent, view, self.close, confirm)
+        closing::paint(parent, view, self.close.unwrap(), confirm)
     }
     pub fn paint(
         &mut self,
@@ -117,7 +115,6 @@ impl Scene {
         accepted(call(parent, packet)[0])
     }
 
-    #[cfg(not(feature = "shell"))]
     pub fn compact_probe(&mut self, parent: Pair) {
         self.revision += 1;
         let valid = [wire::PAINT, self.epoch, self.base, 0, 0, 200, 130, 0];
@@ -125,7 +122,6 @@ impl Scene {
         let packet = wire::rectangles(self.epoch, self.revision, &[valid, foreign]).unwrap();
         assert_eq!(call(parent, packet), wire::error(abi::BAD_HANDLE));
     }
-    #[cfg(not(feature = "shell"))]
     fn begin(&mut self, parent: Pair) {
         self.revision += 1;
         assert_eq!(
@@ -145,7 +141,6 @@ impl Scene {
             [0; 8]
         );
     }
-    #[cfg(not(feature = "shell"))]
     pub fn commit(&self, parent: Pair) {
         {
             assert_eq!(
@@ -166,7 +161,6 @@ impl Scene {
             );
         }
     }
-    #[cfg(not(feature = "shell"))]
     pub fn staged_probe(&mut self, parent: Pair) {
         self.begin(parent);
         assert_eq!(
@@ -193,7 +187,6 @@ impl Scene {
             [0; 8]
         );
     }
-    #[cfg(not(feature = "shell"))]
     pub fn rejected_probe(&mut self, parent: Pair) {
         self.begin(parent);
         assert_eq!(
@@ -240,7 +233,6 @@ impl Scene {
             [0; 8]
         );
     }
-    #[cfg(not(feature = "shell"))]
     fn paint_accent(&self, parent: Pair) {
         if let Some(name) = self.accent {
             assert_eq!(
@@ -252,7 +244,6 @@ impl Scene {
             );
         }
     }
-    #[cfg(not(feature = "shell"))]
     pub fn remove_accent(&mut self, parent: Pair) {
         if let Some(stale) = self.accent.take() {
             assert_eq!(
@@ -265,7 +256,6 @@ impl Scene {
             );
         }
     }
-    #[cfg(not(feature = "shell"))]
     pub fn restore_accent(&mut self, parent: Pair) {
         assert!(self.accent.is_none());
         let reply = call(parent, [wire::SURFACE_CREATE, self.epoch, 1, 0, 0, 0, 0, 0]);

@@ -120,7 +120,7 @@ NOTES / COLORS tiles inside the user. See the
 | Template user | Program 3, inside Users | Same matrix service; a user matrix hosts its chrome and one app |
 | Chrome | Program 4, inside the template | The chooser again, over the user's realm |
 | Notes | Program 5, inside the template | [notes main](applications/notes/main.rs), [editing/storage/view](applications/notes/session/session.rs) |
-| Colors | Program 6, inside the template, role 2 with argument 2 | [color app](desktop/session/app/app.rs) |
+| Colors | Program 6, inside the template | [Colors main](applications/colors/main.rs), [session](applications/colors/session/session.rs) |
 
 A chooser queries executable entries in its realm and asks its host to run an entry with `LAUNCH`. The
 host reads the object through the chooser's own binding, so only what the

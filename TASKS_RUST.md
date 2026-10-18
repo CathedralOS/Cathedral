@@ -1305,10 +1305,46 @@ Verification:
   control-channel failures, cleanup, recursive loss protection and delegation.
 - `colors/20261018T230536053670Z` passed upgrade/login/Colors save/reopen/cold
   boot on a copy of the actual two-user disk. Upgrade collected unreachable
-  history and charged 1,046,168 of 1,048,576 allowed bytes; this fixed lab quota
-  is close to its live-content ceiling. Launches took about 0.58/0.59 s. Growing
-  executables may reach genuine capacity; never describe collection as unlimited.
+  history and charged 1,046,168 of 1,048,576 allowed bytes. Collection stops once
+  the transaction fits, so this charge does not establish the live-content floor:
+  it can still include unreachable history. Launches took about 0.58/0.59 s.
+  Growing live content may reach genuine capacity; collection is not unlimited.
 - Desktop, Colors and the new recovery fixture now build identical compositions
   into separate ESPs, avoiding replacement of an active F5 guest's boot files.
   The interactive disk and old QEMU were left untouched. No kernel ABI changed;
   kernel boot/ARM64 suites were not rerun for this userspace milestone.
+
+## Independent Colors application (2026-10-18)
+
+The installed Colors program now starts at
+[applications/colors/main.rs](source-rs/distribution/applications/colors/main.rs),
+then its named session entrance. Previously it was another role of the desktop
+startup executable, so every owner change also enlarged the stored app. Its
+trimmed release image is now 45,288 bytes versus 78,104 before extraction.
+The profile installs it at the same template position, and normal stock refresh
+preserves existing user object identities, metadata and saved colors.
+
+The recursive desktop lab links the same Colors library, selecting its probe
+loop at compile time and supplying the lab-owned command handler. Ordinary
+Colors selects the app loop with its close button; it contains no provider
+startup. Shared state/surface behavior remains in the application, with probe
+composition and assertions under the desktop lab. No kernel ABI changed.
+
+Verification:
+
+- Workspace host tests, userspace clippy, desktop database-probe and shell trace
+  feature checks passed. Layout (35 Omega/92 Rust package edges), formatting and
+  diff checks passed.
+- `colors/20261018T231229384277Z` upgraded a copy of the retained two-user disk,
+  selected user 2, saved/reopened Colors and verified its color after cold boot.
+  Launches took 0.407/0.438 s. The source interactive disk was untouched.
+- `--matrix-desktop-test --release --timeout 180` passed the shared app's nested
+  rendering, physical input/focus, quotas, storage/provider/subtree recovery and
+  persisted colors after a fresh QEMU process. The repeat captured an explicit
+  successful harness exit after the earlier process handle was unavailable.
+
+Next: root startup still asserts on missing Login/Users or rejected picker
+admission. Give that failure a visible, manually retryable distribution screen
+that does not depend on loading another program from the broken store. Provider
+startup failure and recovery controls for unresponsive apps remain separate
+unfinished work. No ARM64 boot was rerun for this userspace extraction.

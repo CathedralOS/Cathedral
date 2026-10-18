@@ -7,8 +7,7 @@ fn send(parent: Pair, words: wire::Packet, object: &Object) -> wire::Packet {
     let len = parent.1.receive(&mut bytes).unwrap();
     wire::decode(&bytes[..len]).unwrap()
 }
-#[cfg(not(feature = "shell"))]
-pub(super) fn submit(parent: Pair, epoch: u64, surface: u64) -> Result<(), u64> {
+pub(super) fn probe(parent: Pair, epoch: u64, surface: u64) -> Result<(), u64> {
     let mut pixels = Private::allocate(1).unwrap();
     for (index, pixel) in pixels.bytes_mut().chunks_exact_mut(4).enumerate() {
         let color: u32 = if ((index % 32 / 8) ^ (index / 32 / 8)) & 1 == 0 {
@@ -58,7 +57,6 @@ pub(super) fn submit(parent: Pair, epoch: u64, surface: u64) -> Result<(), u64> 
 
 /// Ordinary presentation has no adversarial probes. A resized binding returns
 /// to the app loop so it can acquire fresh surfaces without losing state.
-#[cfg(feature = "shell")]
 pub(super) fn submit(parent: Pair, epoch: u64, surface: u64) -> Result<(), u64> {
     let mut pixels = Private::allocate(1).unwrap();
     for (index, pixel) in pixels.bytes_mut().chunks_exact_mut(4).enumerate() {

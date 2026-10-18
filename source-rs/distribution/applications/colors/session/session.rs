@@ -2,13 +2,20 @@
 // Enter toggles its color through its own private object. The owner may probe
 // it over the control link; lab compositions add proof commands to that link,
 // the shipped app answers every command with its liveness report.
-use super::*;
+use cathedral_kernel_contracts::user as abi;
+use cathedral_platform_contracts::{input, matrix as wire};
+use cathedral_user_runtime::{
+    Error,
+    ipc::{self, Handle},
+    task::Launch,
+    time,
+};
+pub type Pair = (Handle, Handle);
 use cathedral_user_runtime::task::Environment;
-pub(crate) const LEFT: u64 = 0x315ca8;
-pub(crate) const RIGHT: u64 = 0x2c8762;
+pub const LEFT: u64 = 0x315ca8;
+pub const RIGHT: u64 = 0x2c8762;
 /// What an owner command may act on: the scene, the state and the paint record.
-#[cfg(not(feature = "shell"))]
-pub(crate) struct Probe<'a> {
+pub struct Probe<'a> {
     pub style: u64,
     pub parent: Pair,
     pub control: Pair,
@@ -18,7 +25,6 @@ pub(crate) struct Probe<'a> {
     pub painted: &'a mut Option<(wire::Packet, u64, u64)>,
     pub save_status: &'a mut u64,
 }
-#[cfg(not(feature = "shell"))]
 impl Probe<'_> {
     pub fn repaint(&mut self, record: bool) {
         let state = self.state.as_ref().unwrap();
@@ -33,7 +39,11 @@ impl Probe<'_> {
         }
     }
 }
-pub fn run(style: u64, environment: Environment) -> u64 {
+pub fn run<const PROBES: bool>(
+    style: u64,
+    environment: Environment,
+    command: fn(u64, &mut Probe<'_>) -> Option<u64>,
+) -> u64 {
     // Apps have logical input only, never access to the physical pointer channel.
     assert_eq!(
         cathedral_user_runtime::keyboard::virtual_pointer(10, 0),
@@ -68,19 +78,14 @@ pub fn run(style: u64, environment: Environment) -> u64 {
     let mut scene: Option<surfaces::Scene> = None;
     let mut paints = 0;
     let mut wakes = 0;
-    #[cfg(not(feature = "shell"))]
     let mut save_status = 0;
-    #[cfg(feature = "shell")]
-    let save_status = 0;
     let mut pointers = 0;
-    #[cfg(feature = "shell")]
     let mut close = closing::Button::default();
     loop {
         let mut snapshot = call(parent, [wire::POLL, 0, 0, 0, 0, 0, 0, 0]);
         let mut view = wire::poll_view(snapshot);
         if view[0] == 0 {
-            #[cfg(feature = "shell")]
-            if scene.as_ref().is_some_and(|s| s.epoch != view[1]) {
+            if !PROBES && scene.as_ref().is_some_and(|s| s.epoch != view[1]) {
                 close.rebind();
             }
             if state.is_none() {
@@ -91,8 +96,7 @@ pub fn run(style: u64, environment: Environment) -> u64 {
                 if event[0] != 0 || event[2] == wire::NONE {
                     break;
                 }
-                #[cfg(feature = "shell")]
-                {
+                if !PROBES {
                     let previous = close.confirm;
                     if close.close(event, view[2], state.as_ref().unwrap().error != 0) {
                         return 0;
@@ -139,7 +143,7 @@ pub fn run(style: u64, environment: Environment) -> u64 {
             if painted != Some((view, color, error)) {
                 let rendered = (|| -> Result<(), u64> {
                     if scene.as_ref().is_none_or(|s| s.epoch != view[1]) {
-                        scene = Some(surfaces::Scene::new(parent, view)?);
+                        scene = Some(surfaces::Scene::new::<PROBES>(parent, view)?);
                     }
                     scene.as_mut().unwrap().paint(
                         parent,
@@ -147,11 +151,12 @@ pub fn run(style: u64, environment: Environment) -> u64 {
                         color,
                         state.as_ref().unwrap().error,
                     )?;
-                    #[cfg(feature = "shell")]
-                    scene
-                        .as_ref()
-                        .unwrap()
-                        .close_button(parent, view, close.confirm)?;
+                    if !PROBES {
+                        scene
+                            .as_ref()
+                            .unwrap()
+                            .close_button(parent, view, close.confirm)?;
+                    }
                     Ok(())
                 })();
                 if let Err(status) = rendered {
@@ -161,7 +166,6 @@ pub fn run(style: u64, environment: Environment) -> u64 {
                         "color drawing refused: {status}"
                     );
                     scene = None;
-                    #[cfg(feature = "shell")]
                     close.rebind();
                     painted = None;
                     continue;
@@ -185,9 +189,9 @@ pub fn run(style: u64, environment: Environment) -> u64 {
                 }
                 Ok(_) => {
                     let len = control.0.receive(&mut bytes).unwrap();
-                    let command = wire::decode(&bytes[..len]).map_or(0, |words| words[0]);
+                    let operation = wire::decode(&bytes[..len]).map_or(0, |words| words[0]);
                     // Closing asks what would be lost: a toggle whose save failed.
-                    if command == wire::LOSS {
+                    if operation == wire::LOSS {
                         control
                             .1
                             .send(&wire::encode([
@@ -208,23 +212,25 @@ pub fn run(style: u64, environment: Environment) -> u64 {
                     }
                     // The shipped app answers any owner command with its liveness
                     // report; lab compositions act on proof commands first.
-                    #[cfg(feature = "shell")]
-                    let status = 0;
-                    #[cfg(not(feature = "shell"))]
-                    let Some(status) = crate::lab::command(
-                        command,
-                        &mut Probe {
-                            style,
-                            parent,
-                            control,
-                            view,
-                            scene: &mut scene,
-                            state: &mut state,
-                            painted: &mut painted,
-                            save_status: &mut save_status,
-                        },
-                    ) else {
-                        continue;
+                    let status = if PROBES {
+                        let Some(status) = command(
+                            operation,
+                            &mut Probe {
+                                style,
+                                parent,
+                                control,
+                                view,
+                                scene: &mut scene,
+                                state: &mut state,
+                                painted: &mut painted,
+                                save_status: &mut save_status,
+                            },
+                        ) else {
+                            continue;
+                        };
+                        status
+                    } else {
+                        0
                     };
                     control
                         .1
@@ -245,4 +251,14 @@ pub fn run(style: u64, environment: Environment) -> u64 {
             }
         }
     }
+}
+
+fn call(pair: Pair, words: wire::Packet) -> wire::Packet {
+    pair.0.send(&wire::encode(words)).unwrap();
+    let mut bytes = [0; 64];
+    let len = pair
+        .1
+        .receive_until(&mut bytes, time::after(300).unwrap())
+        .unwrap_or_else(|error| panic!("Colors request {words:?}: {error:?}"));
+    wire::decode(&bytes[..len]).unwrap()
 }

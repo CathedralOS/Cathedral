@@ -1,0 +1,28 @@
+[package]
+name = "cathedral-colors"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[lib]
+path = "lib.rs"
+
+[[bin]]
+name = "cathedral-colors"
+path = "main.rs"
+test = false
+bench = false
+
+[features]
+trace-input = []
+trace-storage = []
+
+[target.'cfg(target_os = "none")'.dependencies]
+cathedral-kernel-contracts.workspace = true
+cathedral-platform-contracts.workspace = true
+cathedral-user-runtime.workspace = true
+cathedral-bitmap-font.workspace = true
+
+[lints]
+workspace = true

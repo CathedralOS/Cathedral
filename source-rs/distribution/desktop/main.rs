@@ -3,9 +3,9 @@
 //! Distribution policy configures a matrix-owned process tree through its root.
 //! Started by boot with nothing, this executable is the owner: the F5 desktop
 //! with the shell feature, the probe desktop with desktop alone, or a headless
-//! matrix fixture otherwise. Started by a matrix with a bundle it is a supplied
-//! app (role 0 from the store or 2 from the catalogue), role 3 the pressure
-//! spinner, and anything else a test leaf.
+//! matrix fixture otherwise. Lab builds also host the shared Colors probe loop
+//! (role 0 or 2), role 3 the pressure spinner, and test leaves. The installed
+//! Colors executable lives in applications/colors and contains no startup owner.
 #[cfg(not(feature = "desktop"))]
 mod fixture;
 #[cfg(all(feature = "desktop", not(feature = "shell")))]
@@ -37,8 +37,8 @@ fn main(role: u64, argument: u64, environment: cathedral_user_runtime::task::Env
         0 if owner => scenario::run(),
         #[cfg(all(not(feature = "desktop"), feature = "storage-lab"))]
         0 if owner => storage::run(),
-        #[cfg(feature = "desktop")]
-        0 | 2 => session::app(argument, environment),
+        #[cfg(all(feature = "desktop", not(feature = "shell")))]
+        0 | 2 => cathedral_colors::run::<true>(argument, environment, lab::command),
         #[cfg(feature = "desktop")]
         3 => loop {
             core::hint::spin_loop();
