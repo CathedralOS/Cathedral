@@ -4,7 +4,7 @@ use super::Result;
 use backend::Backend;
 use header::{Header, geometry};
 use image::Image;
-use redb::{Database, ReadableDatabase, StorageBackend, TableDefinition};
+use redb::{Database, ReadableDatabase, ReadableTable, StorageBackend, TableDefinition};
 use region::Region;
 use std::{path::Path, sync::Arc};
 

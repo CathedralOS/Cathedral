@@ -5,6 +5,8 @@ and rendering invalidation recovery, following saved configuration and named rea
 these mechanisms; explicit migration preserves existing stock users and data.
 F5 now compacts existing media before changed program installations, fixing
 the retained-disk upgrade failure described at the end of this handoff.
+Stock-copy refresh also collects unreachable revisions under logical quota
+pressure in the same transaction as its replacements; current data and pins survive.
 See the latest evidence at the end of this handoff. Earlier baseline: declared service
 imports and optional Notes persistence at **`8d1972a`**, followed by readable
 chooser labels at **`787344e`**, existing-user label upgrade at **`4f1c6c8`**,
@@ -1098,3 +1100,57 @@ against the same disk. No kernel or ARM64 behavior changed; those boot suites
 were not rerun. Live child replacement, resource-budget reconfiguration and
 startup/crash UI recovery remain separate next work. No new owner decision was
 needed for this bounded geometry request.
+
+
+## F5 retained-history quota repair (2026-10-18)
+
+A subsequent F5 failure was reproduced from a copy of the actual two-user disk:
+the Rust build passed, compaction preserved 614 records and reclaimed physical
+space, seeding updated five stock objects, but `upgrade-app-close` aborted with
+`label upgrade exceeds root quota`. Retained record bytes and physical engine
+space are separate limits; physical compaction alone cannot clear this failure.
+
+Stock refresh now plans recognized copies before removing any template history,
+stages all replacement heads, and, only under quota pressure, runs the same
+head/pin reachability collector as the guest inside its transaction. It commits
+the replacements and collection together. Current files, customized programs,
+hierarchy, identifiers and pinned revisions survive; unreferenced history may be
+collected under the existing retention semantics. Live/pinned content that still
+cannot fit refuses and rolls back the entire refresh. Pre-upgrade backups remain.
+The 1 MiB root quota and 4 MiB interactive extent are unchanged. Seeding and
+hierarchy migration remain separate transactions; installer-wide atomicity and
+true live-capacity exhaustion remain limitations.
+
+The reusable transaction pass is `collect_records` in
+[collection.rs](source-rs/platform/libraries/database-objects/collection.rs).
+Guest `Store::collect` still commits one bounded pass with identical policy.
+The host [stock refresh](tools/storage-lab/engines/volume/labels.rs) calls it
+only after its replacement plan has been staged, preserving stock recognition
+from history. The host tool now depends on this shared library instead of
+implementing another collector; redb's unified experimental API needs explicit
+ReadableTable imports in the existing adapters.
+
+Verification:
+
+- All 32 storage-lab tests and its ordinary clippy check passed. New pressure
+  coverage checks cold records, current data/custom code, durable pins and their
+  chunks, exact quota, backups, image guards, repeat idempotence, and complete
+  logical rollback when live content exceeds quota. The synthetic quota fixture
+  has 8 MiB physical space to isolate the 1 MiB logical admission limit.
+- Workspace host tests and all 12 database-object host tests passed, including
+  interrupted collection and fixed-extent reuse. Database-object clippy, source
+  layout, formatting and diff checks passed. A broader storage-lab `--all-targets`
+  clippy run found the existing `hierarchy.rs` test module before `inspect`; the
+  ordinary clippy target passes. No kernel/ARM64 checks were rerun.
+- `colors/20261018T223112972028Z` upgraded a copy of the actual retained disk:
+  charged bytes fell from 1,310,925 to 1,041,964 while refreshing eight stock
+  copies. Login, Colors launch/save/close/reopen, and cold persistence passed.
+  Picker startup took 3.80 s and 10.95 s; app launches about 0.48 s and 0.59 s.
+- The old interactive QEMU remains running against `cathedral-storage.raw`;
+  the real image was not upgraded underneath it. Close that window before F5;
+  the next launch applies this repair automatically without a reset.
+
+The earlier launch-outcome/startup-failure milestone is still uncommitted work
+in the tree, not part of this repair. Its lifecycle fixture reached the deliberate
+Notes fault but did not complete; finish that investigation before claiming the
+lifecycle milestone or including its changes in a later commit.

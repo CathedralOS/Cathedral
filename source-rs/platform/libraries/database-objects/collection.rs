@@ -77,89 +77,95 @@ impl Store<'_> {
     /// This frees engine pages for reuse; file shrinking is a separate operation.
     pub fn collect(&self, root: u8) -> Result<Collection> {
         let tx = self.writer()?;
-        let result;
-        {
+        let result = {
             let mut table = engine(tx.open_table(TABLE))?;
-            let mut live = BTreeSet::new();
-            let mut heads = Vec::new();
-            for row in engine(table.range(key(root, b'h', &[]).as_slice()..))? {
-                let (k, v) = engine(row)?;
-                let k = k.value();
-                if k.len() != 10 || k[0] != root || k[1] != b'h' {
-                    break;
-                }
-                heads.push((
-                    u64::from_be_bytes(k[2..].try_into().unwrap()),
-                    Head::decode(v.value())?,
-                ));
-            }
-            for (id, head) in heads {
-                closure(&table, root, id, head, &mut live)?;
-            }
-            for slot in 0..PIN_SLOTS {
-                if let Some(pin) = engine(table.get(key(root, b'p', &[slot]).as_slice()))? {
-                    let pinned = decode_pin(pin.value())?;
-                    closure(&table, root, pinned.id, pinned.head, &mut live)?;
-                }
-            }
-            // Retire event lookup authority before manifests, and manifests
-            // before chunks. A pin between passes must never resurrect a
-            // partially collected revision. The order of kinds scanned is the
-            // retirement order; the chunk index stands in for the chunks.
-            let mut retired = Vec::new();
-            let mut inspected = 0usize;
-            let mut more = false;
-            'kinds: for kind in [b'e', b'm', b'k'] {
-                for row in engine(table.range(key(root, kind, &[]).as_slice()..))? {
-                    let (k, v) = engine(row)?;
-                    let k = k.value();
-                    if k.len() < 2 || k[0] != root || k[1] != kind {
-                        break;
-                    }
-                    inspected = inspected
-                        .checked_add(k.len() + v.value().len())
-                        .ok_or(Error::Corrupt)?;
-                    if inspected > ROOT_QUOTA as usize {
-                        return Err(Error::Corrupt);
-                    }
-                    if live.contains(k) {
-                        continue;
-                    }
-                    if retired.len() == PASS_RECORDS {
-                        more = true;
-                        break 'kinds;
-                    }
-                    retired.push(k.to_vec());
-                }
-            }
-            let mut reclaimed = 0u64;
-            for key in &retired {
-                let old = engine(table.remove(key.as_slice()))?.ok_or(Error::Corrupt)?;
-                reclaimed += (key.len() + old.value().len()) as u64;
-                drop(old);
-                if key[1] == b'k' {
-                    let chunk = records::key(root, b'c', &key[2..]);
-                    let old = engine(table.remove(chunk.as_slice()))?.ok_or(Error::Corrupt)?;
-                    reclaimed += (chunk.len() + old.value().len()) as u64;
-                }
-            }
-            let charged = quota(&table, root)?
-                .checked_sub(reclaimed)
-                .ok_or(Error::Corrupt)?;
-            if !retired.is_empty() {
-                set_quota(&mut table, root, charged)?;
-            }
-            result = Collection {
-                removed: retired.len(),
-                charged,
-                more,
-            };
-        }
+            collect_records(&mut table, root)?
+        };
         if result.removed != 0 {
             engine(tx.commit())?;
         }
         Ok(result)
     }
+}
+/// Run the same bounded retention policy inside a caller-owned transaction.
+/// Offline program upgrades use this after staging every replacement, so quota
+/// reclamation and the new heads either commit together or roll back together.
+/// The caller must preserve the quota ledger and commit with durable semantics.
+pub fn collect_records(table: &mut Table<&[u8], &[u8]>, root: u8) -> Result<Collection> {
+    let mut live = BTreeSet::new();
+    let mut heads = Vec::new();
+    for row in engine(table.range(key(root, b'h', &[]).as_slice()..))? {
+        let (k, v) = engine(row)?;
+        let k = k.value();
+        if k.len() != 10 || k[0] != root || k[1] != b'h' {
+            break;
+        }
+        heads.push((
+            u64::from_be_bytes(k[2..].try_into().unwrap()),
+            Head::decode(v.value())?,
+        ));
+    }
+    for (id, head) in heads {
+        closure(table, root, id, head, &mut live)?;
+    }
+    for slot in 0..PIN_SLOTS {
+        if let Some(pin) = engine(table.get(key(root, b'p', &[slot]).as_slice()))? {
+            let pinned = decode_pin(pin.value())?;
+            closure(table, root, pinned.id, pinned.head, &mut live)?;
+        }
+    }
+    // Retire event lookup authority before manifests, and manifests
+    // before chunks. A pin between passes must never resurrect a
+    // partially collected revision. The order of kinds scanned is the
+    // retirement order; the chunk index stands in for the chunks.
+    let mut retired = Vec::new();
+    let mut inspected = 0usize;
+    let mut more = false;
+    'kinds: for kind in [b'e', b'm', b'k'] {
+        for row in engine(table.range(key(root, kind, &[]).as_slice()..))? {
+            let (k, v) = engine(row)?;
+            let k = k.value();
+            if k.len() < 2 || k[0] != root || k[1] != kind {
+                break;
+            }
+            inspected = inspected
+                .checked_add(k.len() + v.value().len())
+                .ok_or(Error::Corrupt)?;
+            if inspected > ROOT_QUOTA as usize {
+                return Err(Error::Corrupt);
+            }
+            if live.contains(k) {
+                continue;
+            }
+            if retired.len() == PASS_RECORDS {
+                more = true;
+                break 'kinds;
+            }
+            retired.push(k.to_vec());
+        }
+    }
+    let mut reclaimed = 0u64;
+    for key in &retired {
+        let old = engine(table.remove(key.as_slice()))?.ok_or(Error::Corrupt)?;
+        reclaimed += (key.len() + old.value().len()) as u64;
+        drop(old);
+        if key[1] == b'k' {
+            let chunk = records::key(root, b'c', &key[2..]);
+            let old = engine(table.remove(chunk.as_slice()))?.ok_or(Error::Corrupt)?;
+            reclaimed += (chunk.len() + old.value().len()) as u64;
+        }
+    }
+    let charged = quota(table, root)?
+        .checked_sub(reclaimed)
+        .ok_or(Error::Corrupt)?;
+    if !retired.is_empty() {
+        set_quota(table, root, charged)?;
+    }
+    Ok(Collection {
+        removed: retired.len(),
+        charged,
+        more,
+    })
 }
 /// Mark one revision's event, manifest and chunk index entries live. The
 /// manifest is read and authenticated; chunks are named by it, not read.

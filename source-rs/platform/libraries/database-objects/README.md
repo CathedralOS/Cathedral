@@ -82,6 +82,10 @@ chunk bytes, so a root holding programs costs a write no more than a root of
 notes; reads authenticate chunks when they are used. Obsolete events are retired
 before manifests and chunks so a pin between passes cannot resurrect a partially
 collected revision. It frees engine pages for reuse; it does not shrink the file.
+The exported `collect_records` applies that same bounded pass to a caller-owned
+transaction. The offline stock-program updater uses it under quota pressure after
+staging new heads, so replacement and collection commit or abort together. Guest
+`Store::collect` still runs one pass per transaction with unchanged semantics.
 
 Accounting includes exact retained keys and values, including the ledger itself.
 It excludes redb pages, allocator overhead and free-space reserves.

@@ -1,5 +1,6 @@
 //! Independent host verification of the actual guest's atomic three-record update.
 use super::*;
+use redb::ReadableTable;
 use redb::ReadableTableMetadata;
 pub fn verify(path: &Path, offset: u64, bytes: u64, revision: u64) -> Result<()> {
     let image = Arc::new(Image::open(path)?);

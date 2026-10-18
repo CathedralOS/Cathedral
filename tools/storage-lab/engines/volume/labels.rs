@@ -31,7 +31,14 @@ pub fn upgrade(
         records.insert(k.value().to_vec(), v.value().to_vec());
     }
     let replacements = plan(&records, legacy, refresh_apps)?;
-    if replacements.is_empty() {
+    let mut charged = u64::from_le_bytes(
+        records
+            .get(&key(b'q', &[]))
+            .ok_or("missing quota")?
+            .as_slice()
+            .try_into()?,
+    );
+    if replacements.is_empty() && charged <= cathedral_database_objects::ROOT_QUOTA {
         println!("LABELS: no stock copies need upgrading");
         return Ok(());
     }
@@ -68,13 +75,6 @@ pub fn upgrade(
         }
         Err(error) => return Err(error.into()),
     }
-    let mut charged = u64::from_le_bytes(
-        records
-            .get(&key(b'q', &[]))
-            .ok_or("missing quota")?
-            .as_slice()
-            .try_into()?,
-    );
     let mut store = Store::new(Policy {
         chunk_bytes: 4096,
         inline_limit: 128,
@@ -105,12 +105,28 @@ pub fn upgrade(
         retain(&mut table, &mut charged, &event(*object, revision), &next)?;
         table.insert(key(b'h', &object.to_be_bytes()).as_slice(), next.as_slice())?;
     }
-    if charged > 1024 * 1024 {
-        return Err("label upgrade exceeds root quota; no changes published".into());
-    }
     table.insert(key(b'q', &[]).as_slice(), charged.to_le_bytes().as_slice())?;
+    // Identify stock copies before retiring old template events. Reclaim only
+    // under pressure, after every replacement head has been staged, using the
+    // guest's head/pin reachability policy inside this same transaction.
+    let before_collection = charged;
+    while charged > cathedral_database_objects::ROOT_QUOTA {
+        let pass = cathedral_database_objects::collect_records(&mut table, 0)
+            .map_err(|error| format!("upgrade collection failed: {error:?}"))?;
+        charged = pass.charged;
+        if pass.removed == 0 {
+            return Err(
+                "live/pinned content exceeds root quota; no upgrade changes published".into(),
+            );
+        }
+    }
     drop(table);
     tx.commit()?;
+    if charged != before_collection {
+        println!(
+            "LABELS: collected unreachable revisions; charged bytes {before_collection} -> {charged}"
+        );
+    }
     println!(
         "LABELS: upgraded {} stock objects; saved data and custom programs preserved; backup {}",
         replacements.len(),

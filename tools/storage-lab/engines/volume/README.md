@@ -24,6 +24,16 @@ Identity, assigned extent and image size remain fixed. The host lab supports
 byte-key/byte-value tables here; other schemas are refused. This is offline
 maintenance, not guest collection, volume expansion or reformatting.
 
+Stock program refresh in [labels.rs](labels.rs) also handles logical quota
+pressure. It identifies all recognized copies before retiring template history,
+stages their replacement heads, then invokes the shared database-object collector
+inside the same transaction if retained bytes exceed the root quota. Current
+heads and durable pins protect their content, including user data and customized
+programs. Unreachable revisions may be reclaimed just as in the running provider.
+If live/pinned data still cannot fit, replacements and collection roll back
+together. The pre-upgrade backup remains available. Seeding and the later
+hierarchy migration remain separate transactions; this is not an atomic installer.
+
 The desktop's explicit stock migration enters [hierarchy.rs](hierarchy.rs):
 plan names, media types, indexes and matrix startup configuration, back up the
 image, then commit without renumbering objects or replacing saved application

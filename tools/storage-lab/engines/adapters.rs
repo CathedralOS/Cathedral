@@ -4,6 +4,7 @@ use super::{
     Result,
     backend::{Backend, Counts},
 };
+use redb::ReadableTable;
 use redb::{Database, ReadableDatabase, TableDefinition};
 use rusqlite::{Connection, params};
 use std::path::Path;

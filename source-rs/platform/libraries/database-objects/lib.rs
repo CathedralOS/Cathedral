@@ -15,7 +15,7 @@ mod publication;
 mod reading;
 mod records;
 use cathedral_storage_engine::redb::{self, Database, TableDefinition};
-pub use collection::{Collection, PIN_SLOTS};
+pub use collection::{Collection, PIN_SLOTS, collect_records};
 pub use records::{Head, Object};
 
 /// Largest object: 64 pages, so a program or a bulk reply fits in half a

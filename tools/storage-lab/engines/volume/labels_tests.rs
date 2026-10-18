@@ -262,3 +262,146 @@ fn old_matrix_upgrade_requires_exact_history_or_explicit_stock_digest() {
     );
     assert!(!changes.iter().any(|(id, _)| *id == 13));
 }
+
+#[test]
+fn quota_pressure_collects_only_unreachable_history_and_refuses_live_excess_atomically() {
+    for live_excess in [false, true] {
+        let dir = std::env::temp_dir().join(format!(
+            "cathedral-upgrade-quota-{}-{live_excess}",
+            std::process::id()
+        ));
+        std::fs::create_dir(&dir).unwrap();
+        let path = dir.join("guest.raw");
+        // Leave physical scratch space so this fixture isolates the logical quota.
+        let bytes = 8 * 1024 * 1024;
+        let image = Arc::new(Image::create(&path, bytes + 8192).unwrap());
+        image.write(0, &[0x5a; 4096]).unwrap();
+        image.write(bytes + 4096, &[0xa5; 4096]).unwrap();
+        format(Region::new(image.clone(), 4096, bytes).unwrap(), [1; 16]).unwrap();
+        drop(image);
+        let mut original = fixture();
+        for revision in 1u64..=6 {
+            let mut data = Vec::new();
+            for part in 0u64..6144 {
+                data.extend_from_slice(
+                    blake3::hash(&[revision.to_le_bytes(), part.to_le_bytes()].concat()).as_bytes(),
+                );
+            }
+            put(
+                &mut original,
+                if live_excess { 14 + revision } else { 15 },
+                if live_excess { 1 } else { revision },
+                0,
+                &data,
+            );
+        }
+        if !live_excess {
+            // A durable pin keeps an obsolete revision alive through the upgrade.
+            let mut pin = 15u64.to_be_bytes().to_vec();
+            pin.extend_from_slice(&original[&event(15, 1)]);
+            original.insert(key(b'p', &[0]), pin);
+            put(&mut original, 15, 7, 0, b"current data");
+        }
+        original.insert(key(b'n', &[]), 21u64.to_le_bytes().to_vec());
+        let charge: usize = original.iter().map(|(k, v)| k.len() + v.len()).sum();
+        original.insert(key(b'q', &[]), (charge as u64).to_le_bytes().to_vec());
+        assert!(charge as u64 > cathedral_database_objects::ROOT_QUOTA);
+        {
+            let db = open(Region::new(Arc::new(Image::open(&path).unwrap()), 4096, bytes).unwrap())
+                .unwrap();
+            let tx = db.begin_write().unwrap();
+            {
+                let mut table = tx
+                    .open_table(TableDefinition::<&[u8], &[u8]>::new("private-objects-v3"))
+                    .unwrap();
+                for (k, v) in &original {
+                    table.insert(k.as_slice(), v.as_slice()).unwrap();
+                }
+            }
+            tx.commit().unwrap();
+        }
+        let raw = std::fs::read(&path).unwrap();
+        let result = upgrade(&path, 4096, bytes, &[], true);
+        let read = || -> Records {
+            let db = open(Region::new(Arc::new(Image::open(&path).unwrap()), 4096, bytes).unwrap())
+                .unwrap();
+            let tx = db.begin_read().unwrap();
+            tx.open_table(TableDefinition::<&[u8], &[u8]>::new("private-objects-v3"))
+                .unwrap()
+                .iter()
+                .unwrap()
+                .map(|row| {
+                    let (k, v) = row.unwrap();
+                    (k.value().to_vec(), v.value().to_vec())
+                })
+                .collect()
+        };
+        let after = read();
+        if live_excess {
+            assert!(
+                result
+                    .unwrap_err()
+                    .to_string()
+                    .contains("live/pinned content exceeds")
+            );
+            assert_eq!(
+                after, original,
+                "refused upgrade must roll back replacements and collection"
+            );
+        } else {
+            result.unwrap();
+            let charge: usize = after.iter().map(|(k, v)| k.len() + v.len()).sum();
+            assert!(charge as u64 <= cathedral_database_objects::ROOT_QUOTA);
+            assert_eq!(after[&key(b'q', &[])], (charge as u64).to_le_bytes());
+            assert!(!after.contains_key(&event(15, 2)));
+            assert_eq!(after[&event(15, 1)], original[&event(15, 1)]);
+            // Compare every structural record, custom program, saved note and pin.
+            for (k, v) in &original {
+                if [b'e', b'm', b'c', b'k', b'q'].contains(&k[1])
+                    || (8u64..=10).any(|id| *k == key(b'h', &id.to_be_bytes()))
+                {
+                    continue;
+                }
+                assert_eq!(after.get(k), Some(v), "preserved record {k:?}");
+            }
+            // Independently follow each current/pinned manifest into its chunks.
+            for head in after
+                .iter()
+                .filter(|(k, _)| k[1] == b'h')
+                .map(|(_, v)| v.as_slice())
+                .chain([&after[&key(b'p', &[0])][8..]])
+            {
+                let manifest = &after[&key(b'm', &head[8..40])];
+                if manifest[0] == 1 {
+                    for digest in manifest[17..].chunks_exact(32) {
+                        assert_eq!(
+                            after.get(&key(b'c', digest)),
+                            original.get(&key(b'c', digest))
+                        );
+                        assert!(after.contains_key(&key(b'k', digest)));
+                    }
+                }
+            }
+            for id in 8u64..=10 {
+                assert_eq!(
+                    content(&after, &after[&key(b'h', &id.to_be_bytes())]).unwrap(),
+                    content(&original, &original[&key(b'h', &(id - 4).to_be_bytes())]).unwrap()
+                );
+            }
+            upgrade(&path, 4096, bytes, &[], true).unwrap();
+            assert_eq!(read(), after);
+        }
+        assert_eq!(
+            std::fs::read(dir.join("guest.raw.before-app-close.raw")).unwrap(),
+            raw
+        );
+        let final_image = std::fs::read(&path).unwrap();
+        assert_eq!(final_image.len(), raw.len());
+        assert_eq!(&final_image[..4096], &raw[..4096]);
+        assert_eq!(
+            &final_image[final_image.len() - 4096..],
+            &raw[raw.len() - 4096..]
+        );
+        std::fs::remove_dir_all(dir).unwrap();
+    }
+}

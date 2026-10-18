@@ -12,12 +12,13 @@ path = "main.rs"
 [dependencies]
 cathedral-platform-contracts = { path = "../../source-rs/platform/contracts" }
 cathedral-content-layout = { path = "../../source-rs/platform/libraries/content-layout" }
+cathedral-database-objects = { path = "../../source-rs/platform/libraries/database-objects", features = ["host"], optional = true }
 cathedral-storage-volume = { path = "../../source-rs/platform/libraries/storage-volume", optional = true }
 blake3 = "1.8.7"
 redb = { version = "=4.4.0", optional = true }
 rusqlite = { version = "=0.40.2", default-features = false, features = ["bundled", "libsqlite3-sys"], optional = true }
 
 [features]
-engines = ["dep:cathedral-storage-volume", "dep:redb", "dep:rusqlite"]
+engines = ["dep:cathedral-database-objects", "dep:cathedral-storage-volume", "dep:redb", "dep:rusqlite"]
 
 [workspace]
