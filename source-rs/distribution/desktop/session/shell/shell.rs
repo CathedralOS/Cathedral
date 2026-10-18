@@ -13,11 +13,23 @@ fn resolve(matrix: Pair, path: &[u8]) -> u64 {
 const CHOOSER_PAGES: u64 = 48;
 
 /// Root slot 0: the chooser, shown the folder of users and nothing else.
-pub(super) fn chooser(matrix: Pair, extent: [u64; 2]) {
+pub(super) fn chooser(matrix: Pair, extent: [u64; 2], failed: bool) {
     let chooser = resolve(matrix, b"Login");
     let users = resolve(matrix, b"Users");
     owner(matrix, [wire::RUN_PAGES, 0, CHOOSER_PAGES, 0, 0, 0, 0, 0]);
-    owner(matrix, [wire::RUN_OBJECT, 0, chooser, users, 1, 0, 0, 0]);
+    owner(
+        matrix,
+        [
+            wire::RUN_OBJECT,
+            0,
+            chooser,
+            users,
+            if failed { 2 } else { 1 },
+            0,
+            0,
+            0,
+        ],
+    );
     select_user(matrix, extent);
 }
 
@@ -38,14 +50,7 @@ pub(super) fn enter(matrix: Pair) -> Result<(), u64> {
     // Selection admitted a sibling, not a descendant of the picker. Reclaim
     // the picker process, surfaces, input and realm binding before any slow
     // storage reads needed to start the user's launcher.
-    owner(matrix, [wire::STOP, 0, 0, 0, 0, 0, 0, 0]);
-    assert_eq!(
-        call(
-            matrix,
-            wire::route([wire::HEALTH, 0, 0, 0, 0, 0, 0, 0], 0).unwrap()
-        ),
-        wire::error(abi::PEER_CLOSED)
-    );
+    stop(matrix, 0)?;
     cathedral_user_runtime::write(b"Cathedral desktop: picker stopped; loading user launcher\n")
         .unwrap();
     let reply = call(
@@ -53,6 +58,14 @@ pub(super) fn enter(matrix: Pair) -> Result<(), u64> {
         wire::route([wire::CONFIGURE, 0, 0, 0, 0, 0, 0, 0], 1).unwrap(),
     );
     if reply[0] == 0 { Ok(()) } else { Err(reply[0]) }
+}
+
+/// Collection may win the race with startup failure handling.
+pub(super) fn stop(matrix: Pair, slot: u64) -> Result<(), u64> {
+    match call(matrix, [wire::STOP, slot, 0, 0, 0, 0, 0, 0])[0] {
+        0 | abi::PEER_CLOSED => Ok(()),
+        code => Err(code),
+    }
 }
 
 /// Observe only the direct user matrix in slot 1.

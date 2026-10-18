@@ -9,6 +9,13 @@ resolves `Login` and `Users` by path in the supplied root;
 [distribution map](../README.md) for F5, controls, composition and the
 same-image interactive test.
 
+A failed user `CONFIGURE` returns to a fresh picker with CANNOT OPEN. Cleanup
+accepts an already-collected child, so the root survives a race between startup
+failure and normal task collection. App admission refusals and crash observations
+stay in the launcher process; the desktop does not inspect user grandchildren.
+Missing root Login/Users, initial provider admission, and recovery of a launcher
+that dies after successful configuration remain separate work.
+
 Colors' [close control](session/app/closing.rs) renders an X and handles local
 pointer clicks. A clean close returns from the app; the matrix reclaims the
 child and its launch slot through its existing exit path. An uncertain storage

@@ -248,9 +248,29 @@ pub(super) fn sibling(f: &Fixture) {
         f.query(3, [wire::LAUNCH, 2, 0, 0, 0, 0, 0, 0]),
         wire::error(abi::DENIED)
     );
+    // This headless host has no surface capacity. Placement failure must reclaim
+    // the admitted child and its funding, not report an invisible running app.
+    f.owner(0, [wire::LAUNCH_POLICY, 0, 2, 0, 0, 0, 0, 1]);
+    for _ in 0..3 {
+        assert_eq!(
+            f.query(3, [wire::LAUNCH, 9, 0, 0, 0, 0, 0, 0]),
+            wire::error(abi::NO_MEMORY)
+        );
+        assert_eq!(
+            f.query(3, [wire::LAUNCH_STATUS, 1, 0, 0, 0, 0, 0, 0]),
+            wire::error(abi::DENIED)
+        );
+    }
+    f.owner(0, [wire::LAUNCH_POLICY, 0, 2, 0, 0, 0, 0, 0]);
+    let launched = f.query(3, [wire::LAUNCH, 9, 0, 0, 0, 0, 0, 0]);
+    assert_eq!(launched, [0, 0, 1, 0, 0, 0, 0, 0]);
     assert_eq!(
-        f.query(3, [wire::LAUNCH, 9, 0, 0, 0, 0, 0, 0]),
-        [0, 0, 0, 0, 0, 0, 0, 0]
+        f.query(3, [wire::LAUNCH_STATUS, 1, 0, 0, 0, 0, 0, 0])[1],
+        wire::LAUNCH_RUNNING
+    );
+    assert_eq!(
+        f.query(1, [wire::LAUNCH_STATUS, 1, 0, 0, 0, 0, 0, 0]),
+        wire::error(abi::DENIED)
     );
     assert_eq!(realm(f, 1), Ok(9));
     let state = publish(f, 1, 0, 0, b"sibling state").unwrap();
@@ -262,6 +282,88 @@ pub(super) fn sibling(f: &Fixture) {
     // leaf asks on its own and the owner collects the answer afterwards.
     f.owner(3, [leaf::DETACHED_PROBE, wire::CLOSE, 0, 0, 0, 0, 0, 0]);
     assert_eq!(f.query(3, [leaf::LAST_PROBE, 0, 0, 0, 0, 0, 0, 0]), [0; 8]);
+    assert_eq!(
+        f.query(3, [wire::LAUNCH_STATUS, 1, 0, 0, 0, 0, 0, 0])[1],
+        wire::LAUNCH_STOPPED
+    );
+    // The next successful launch invalidates the old receipt. An owner-launched
+    // replacement afterwards must not inherit that result or expose its state.
+    assert_eq!(
+        f.query(3, [wire::LAUNCH, 9, 0, 0, 0, 0, 0, 0]),
+        [0, 0, 2, 0, 0, 0, 0, 0]
+    );
+    assert_eq!(
+        f.query(3, [wire::LAUNCH_STATUS, 1, 0, 0, 0, 0, 0, 0]),
+        wire::error(abi::DENIED)
+    );
+    assert_eq!(
+        f.query(3, [wire::LAUNCH_STATUS, 2, 0, 0, 0, 0, 0, 0])[1],
+        wire::LAUNCH_RUNNING
+    );
+    f.owner(1, [leaf::DROP_CONTROL_PROBE, 0, 0, 0, 0, 0, 0, 0]);
+    assert_eq!(
+        f.query(1, [wire::HEALTH, 0, 0, 0, 0, 0, 0, 0]),
+        wire::error(abi::BUSY)
+    );
+    f.owner(3, [leaf::DETACHED_PROBE, wire::CLOSE, 0, 0, 0, 0, 0, 0]);
+    assert_eq!(
+        f.query(3, [leaf::LAST_PROBE, 0, 0, 0, 0, 0, 0, 0]),
+        wire::error(abi::BUSY)
+    );
+    assert_eq!(
+        f.query(3, [wire::LAUNCH_STATUS, 2, 0, 0, 0, 0, 0, 0])[1],
+        wire::LAUNCH_RUNNING
+    );
+    f.owner(0, [wire::STOP, 0, 0, 0, 0, 0, 0, 0]);
+    assert_eq!(
+        f.query(3, [wire::LAUNCH, 9, 0, 0, 0, 0, 0, 0]),
+        [0, 0, 3, 0, 0, 0, 0, 0]
+    );
+    f.owner(1, [leaf::DROP_LOSS_REPLY_PROBE, 0, 0, 0, 0, 0, 0, 0]);
+    f.owner(3, [leaf::DETACHED_PROBE, wire::CLOSE, 0, 0, 0, 0, 0, 0]);
+    assert_eq!(
+        f.query(3, [leaf::LAST_PROBE, 0, 0, 0, 0, 0, 0, 0]),
+        wire::error(abi::BUSY)
+    );
+    assert_eq!(
+        f.query(3, [wire::LAUNCH_STATUS, 3, 0, 0, 0, 0, 0, 0])[1],
+        wire::LAUNCH_RUNNING
+    );
+    // Owner health routing also reports uncertainty rather than claiming death.
+    assert_eq!(
+        f.query(1, [wire::HEALTH, 0, 0, 0, 0, 0, 0, 0]),
+        wire::error(abi::BUSY)
+    );
+    f.owner(0, [wire::STOP, 0, 0, 0, 0, 0, 0, 0]);
+    assert_eq!(
+        f.query(3, [wire::LAUNCH, 9, 0, 0, 0, 0, 0, 0]),
+        [0, 0, 4, 0, 0, 0, 0, 0]
+    );
+    f.owner(1, [leaf::LOSS_PROBE, 0, 150, 0, 0, 0, 0, 0]);
+    f.owner(3, [leaf::DETACHED_PROBE, wire::CLOSE, 0, 0, 0, 0, 0, 0]);
+    f.owner(0, [wire::STOP, 0, 0, 0, 0, 0, 0, 0]);
+    assert_eq!(f.query(3, [leaf::LAST_PROBE, 0, 0, 0, 0, 0, 0, 0]), [0; 8]);
+    assert_eq!(
+        f.query(3, [wire::LAUNCH, 9, 0, 0, 0, 0, 0, 0]),
+        [0, 0, 5, 0, 0, 0, 0, 0]
+    );
+    f.owner(1, [leaf::EXIT_ON_LOSS_PROBE, 0, 0, 0, 0, 0, 0, 0]);
+    assert_ne!(f.query(0, [wire::LOSS, 0, 0, 0, 0, 0, 0, 0]), [0; 8]);
+    assert_eq!(
+        f.query(3, [wire::LAUNCH_STATUS, 5, 0, 0, 0, 0, 0, 0])[1],
+        wire::LAUNCH_EXITED
+    );
+    f.owner(0, [wire::RUN_PAGES, 0, 2, 0, 0, 0, 0, 0]);
+    f.owner(0, [wire::RUN_OBJECT, 0, 9, 9, 0, 0, 0, 0]);
+    assert_eq!(
+        f.query(3, [wire::LAUNCH_STATUS, 5, 0, 0, 0, 0, 0, 0])[1],
+        wire::LAUNCH_EXITED
+    );
+    assert_eq!(
+        f.query(1, [wire::LAUNCH_STATUS, 5, 0, 0, 0, 0, 0, 0]),
+        wire::error(abi::DENIED)
+    );
+    f.owner(0, [wire::STOP, 0, 0, 0, 0, 0, 0, 0]);
     assert_eq!(
         f.query(1, [wire::STORAGE_INFO, 0, 0, 0, 0, 0, 0, 0]),
         wire::error(abi::PEER_CLOSED)

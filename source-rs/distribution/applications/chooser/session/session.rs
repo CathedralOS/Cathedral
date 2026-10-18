@@ -15,20 +15,33 @@ pub const ENTRIES: usize = 4;
 pub const NEW: usize = ENTRIES;
 const SETTINGS: usize = NEW + 1;
 
-pub fn run(environment: Environment, user_picker: bool) -> u64 {
+pub fn run(environment: Environment, user_picker: bool, initial_status: &'static str) -> u64 {
     let connections = cathedral_user_runtime::matrix::Connections::load(&environment).unwrap();
     let parent = connections.interaction;
     let control = (Handle::bootstrap(0).unwrap(), Handle::bootstrap(1).unwrap());
     let mut realm = realm::Realm::new(connections.storage, user_picker);
     let mut status = match realm.reload() {
-        Ok(()) => "",
+        Ok(()) => initial_status,
         Err(_) => "CANNOT OPEN",
     };
     let mut selection = selection::Selection::new();
     let mut scene: Option<view::Scene> = None;
     let mut repaint = true;
     let mut editor: Option<settings::Editor> = None;
+    let mut launched = None;
     loop {
+        if let Some(receipt) = launched {
+            let reply = call(parent, [wire::LAUNCH_STATUS, receipt, 0, 0, 0, 0, 0, 0]);
+            if reply[0] != 0 || reply[1] != wire::LAUNCH_RUNNING {
+                launched = None;
+                status = if reply[0] == 0 && reply[1] == wire::LAUNCH_FAILED {
+                    "APP STOPPED"
+                } else {
+                    ""
+                };
+                repaint = true;
+            }
+        }
         let snapshot = call(parent, [wire::POLL, 0, 0, 0, 0, 0, 0, 0]);
         let extent = wire::poll_view(snapshot);
         if extent[0] == 0 {
@@ -70,7 +83,13 @@ pub fn run(environment: Environment, user_picker: bool) -> u64 {
                         Err(_) => status = "CANNOT OPEN",
                     }
                 } else {
-                    status = act(&mut realm, parent, selection.index, user_picker);
+                    status = act(
+                        &mut realm,
+                        parent,
+                        selection.index,
+                        user_picker,
+                        &mut launched,
+                    );
                 }
                 if status.is_empty() && selection.index == NEW {
                     selection.index = realm.count.saturating_sub(1);
@@ -146,7 +165,13 @@ pub fn run(environment: Environment, user_picker: bool) -> u64 {
     }
 }
 /// Launch a visible app/user, or copy the hidden user template.
-fn act(realm: &mut realm::Realm, parent: Pair, selected: usize, user_picker: bool) -> &'static str {
+fn act(
+    realm: &mut realm::Realm,
+    parent: Pair,
+    selected: usize,
+    user_picker: bool,
+    launched: &mut Option<u64>,
+) -> &'static str {
     if user_picker && selected == NEW && realm.count < ENTRIES {
         return match realm.copy_first() {
             Ok(()) => "",
@@ -157,12 +182,15 @@ fn act(realm: &mut realm::Realm, parent: Pair, selected: usize, user_picker: boo
     if selected == 0 || selected >= realm.count {
         return "";
     }
-    match call(
+    let reply = call(
         parent,
         [wire::LAUNCH, realm.ids[selected], 0, 0, 0, 0, 0, 0],
-    )[0]
-    {
-        0 => "",
+    );
+    match reply[0] {
+        0 => {
+            *launched = Some(reply[2]);
+            ""
+        }
         abi::BUSY => "CLOSE APP FIRST",
         _ => "CANNOT OPEN",
     }

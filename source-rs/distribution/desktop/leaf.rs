@@ -12,6 +12,9 @@ pub const DETACHED_PROBE: u64 = 0xfffd;
 pub const LAST_PROBE: u64 = 0xfffc;
 pub const LOSS_PROBE: u64 = 0xfffb;
 pub const LOSS_BATCH_PROBE: u64 = 0xfffa;
+pub const DROP_CONTROL_PROBE: u64 = 0xfff9;
+pub const DROP_LOSS_REPLY_PROBE: u64 = 0xfff8;
+pub const EXIT_ON_LOSS_PROBE: u64 = 0xfff7;
 pub fn run(environment: cathedral_user_runtime::task::Environment) -> u64 {
     assert_eq!(environment.len(), 3);
     assert!(matches!(Launch::at(0), Err(Error(code)) if code == abi::DENIED as i64));
@@ -37,6 +40,8 @@ pub fn run(environment: cathedral_user_runtime::task::Environment) -> u64 {
     let mut last = wire::error(abi::WOULD_BLOCK);
     let (mut loss, mut loss_delay, mut next_loss) = (0, 0, 0);
     let mut held_losses = None;
+    let mut drop_loss_reply = false;
+    let mut exit_on_loss = false;
     loop {
         let mut bytes = [0; 64];
         let Ok(len) = control.0.receive(&mut bytes) else {
@@ -47,6 +52,25 @@ pub fn run(environment: cathedral_user_runtime::task::Environment) -> u64 {
         };
         if words == [EXIT_PROBE, 0, 0, 0, 0, 0, 0, 0] {
             return 0;
+        }
+        if words == [DROP_CONTROL_PROBE, 0, 0, 0, 0, 0, 0, 0] {
+            // Remain alive with the interaction connection while refusing further
+            // control requests. A sibling cannot interpret this as clean consent.
+            control.0.close().unwrap();
+            control.1.send(&wire::encode([0; 8])).unwrap();
+            loop {
+                cathedral_user_runtime::yield_now();
+            }
+        }
+        if words == [EXIT_ON_LOSS_PROBE, 0, 0, 0, 0, 0, 0, 0] {
+            exit_on_loss = true;
+            control.1.send(&wire::encode([0; 8])).unwrap();
+            continue;
+        }
+        if words == [DROP_LOSS_REPLY_PROBE, 0, 0, 0, 0, 0, 0, 0] {
+            drop_loss_reply = true;
+            control.1.send(&wire::encode([0; 8])).unwrap();
+            continue;
         }
         if words == [LAST_PROBE, 0, 0, 0, 0, 0, 0, 0] {
             control.1.send(&wire::encode(last)).unwrap();
@@ -67,6 +91,15 @@ pub fn run(environment: cathedral_user_runtime::task::Environment) -> u64 {
         // Everything else, a liveness probe included, is relayed to the parent
         // so a fixture sees exactly what the matrix answers a child.
         if words == [wire::LOSS, 0, 0, 0, 0, 0, 0, 0] {
+            if exit_on_loss {
+                return 0;
+            }
+            if drop_loss_reply {
+                control.1.close().unwrap();
+                loop {
+                    cathedral_user_runtime::yield_now();
+                }
+            }
             if let Some(count) = &mut held_losses {
                 *count += 1;
                 if *count < 8 {

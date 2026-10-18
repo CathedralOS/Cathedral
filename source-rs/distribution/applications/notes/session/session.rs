@@ -44,6 +44,13 @@ pub fn run(style: u64, environment: Environment) {
         call(parent, [wire::APPLY_LAYOUT, 0, 24, 192, 16, 0, 0, 0])[0],
         abi::DENIED
     );
+    // A completed interaction round trip proves the host finished admission.
+    // The fixture can distinguish this receipt-bearing crash from an early
+    // death racing storage binding, which may instead refuse the launch.
+    #[cfg(feature = "admitted-fault")]
+    if !environment.is_empty() {
+        panic!("deliberate Notes admitted failure");
+    }
     if connections.storage.is_none() {
         // The interactive endpoint cannot substitute for the omitted service.
         assert_eq!(

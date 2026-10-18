@@ -4,6 +4,7 @@ mod compact;
 mod configuration;
 use cathedral_storage_volume::header;
 mod desktop;
+mod failure;
 mod difference;
 mod guest;
 mod image;

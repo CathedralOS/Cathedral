@@ -107,6 +107,11 @@ pub(super) fn dispatch(
         Some(words) if words[0] == wire::APPLY_LAYOUT => {
             children.apply_layout(&request, words, parent, world)?
         }
+        Some([wire::LAUNCH_STATUS, receipt, 0, 0, 0, 0, 0, 0]) => {
+            children
+                .observations
+                .query(request.client.unwrap(), request.incarnation, receipt)
+        }
         Some(words)
             if matches!(
                 words[0],

@@ -5,6 +5,10 @@ mod session;
 cathedral_user_runtime::service_imports!(&cathedral_platform_contracts::imports::OPTIONAL_STORAGE);
 cathedral_user_runtime::entry_with_environment!(main);
 fn main(_: u64, style: u64, environment: cathedral_user_runtime::task::Environment) -> u64 {
+    #[cfg(feature = "startup-fault")]
+    if !environment.is_empty() {
+        panic!("deliberate Notes startup failure");
+    }
     session::run(style, environment);
     0
 }

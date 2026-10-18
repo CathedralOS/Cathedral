@@ -8,6 +8,8 @@ use cathedral_user_runtime::{ipc::Handle, server::Request, task::Child, time};
 type Pair = (Handle, Handle);
 struct Owned {
     task: Child,
+    outcome: Option<cathedral_user_runtime::task::Outcome>,
+    disconnected: bool,
     reservation: Option<cathedral_user_runtime::task::Launch>,
     control: Option<Pair>,
     stale: u8,
@@ -46,6 +48,7 @@ pub(super) struct Children {
     pending: [Option<(Request, u64, Purpose)>; 2],
     retiring: [Option<i64>; 2],
     loss: Option<loss::Survey>,
+    pub(in crate::service) observations: cathedral_matrix_service::world::launches::Launches,
 }
 impl Children {
     /// Remember only successfully applied owner policy. Revocation must remain
@@ -301,6 +304,8 @@ impl Children {
         let slot = 1 - requester;
         let refusal = if parent.storing() || self.slots[slot].is_some() || !server.available(slot) {
             Some(abi::BUSY)
+        } else if !self.observations.available(requester) {
+            Some(abi::NO_MEMORY)
         } else if object == 0 || withhold & !cathedral_platform_contracts::imports::ALL != 0 {
             Some(abi::INVALID_ARGUMENT)
         } else {
@@ -360,9 +365,18 @@ impl Children {
         let Some(control) = child.control else {
             return server.reply(&request, &wire::encode(wire::error(abi::BUSY)));
         };
-        control
+        if control
             .0
-            .send(&wire::encode([wire::LOSS, 0, 0, 0, 0, 0, 0, 0]))?;
+            .send(&wire::encode([wire::LOSS, 0, 0, 0, 0, 0, 0, 0]))
+            .is_err()
+        {
+            // A closed control channel alone is not permission to discard work.
+            if self.completed(target)? {
+                self.stop(target, server, world, parent)?;
+                return server.reply(&request, &wire::encode([0; 8]));
+            }
+            return server.reply(&request, &wire::encode(wire::error(abi::BUSY)));
+        }
         self.pending[target] = Some((request, time::after(100)?, Purpose::Close));
         self.retiring[target] = None;
         Ok(())
@@ -383,7 +397,7 @@ impl Children {
             request,
             result,
         } = launched;
-        let status = match result {
+        let mut status = match result {
             Err(code) => Err(code),
             Ok(mut object) => {
                 let admitted = self.run_object(plan, &mut object, server, world);
@@ -408,9 +422,15 @@ impl Children {
             && request.client.is_some()
             && let Some(standing) = self.standing[plan.slot]
         {
-            let _ = world.surface_limit(plan.slot, standing.surfaces as usize);
-            if let Some((rect, keys)) = standing.place {
-                let _ = world.place(plan.slot, rect, keys);
+            let placement = world
+                .surface_limit(plan.slot, standing.surfaces as usize)
+                .and_then(|()| match standing.place {
+                    Some((rect, keys)) => world.place(plan.slot, rect, keys),
+                    None => Ok(()), // Headless policy deliberately has no placement.
+                });
+            if let Err(code) = placement {
+                self.stop(plan.slot, server, world, parent)?;
+                status = Err(code);
             }
         }
         super::requests::flush(parent, world)?;
@@ -418,76 +438,20 @@ impl Children {
         self.notify(world)?;
         // The owner named the slot; a child learns which one it got.
         let reply = match (status, request.client) {
-            (Ok(()), Some(_)) => [0, plan.slot as u64, 0, 0, 0, 0, 0, 0],
+            (Ok(()), Some(observer)) => {
+                let receipt = self
+                    .observations
+                    .record(
+                        observer,
+                        request.incarnation,
+                        self.slots[plan.slot].as_ref().unwrap().task.raw(),
+                    )
+                    .expect("checked receipt capacity");
+                [0, plan.slot as u64, receipt, 0, 0, 0, 0, 0]
+            }
             (Ok(()), None) => [0; 8],
             (Err(code), _) => wire::error(code),
         };
         server.reply(&request, &wire::encode(reply))
-    }
-    pub(super) fn disconnected(
-        &mut self,
-        slot: usize,
-        server: &mut Server,
-        world: &mut World,
-        parent: &mut Parent,
-    ) -> Result<(), Error> {
-        parent.storage_close(slot)?;
-        if self.pending[slot].is_some() {
-            parent.batches[slot] = Default::default();
-            world.disconnected(slot);
-            return Ok(());
-        }
-        if self.slots[slot].is_some() {
-            self.stop(slot, server, world, parent)?;
-        } else {
-            parent.batches[slot] = Default::default();
-            world.disconnected(slot);
-        }
-        Ok(())
-    }
-    pub(super) fn stop(
-        &mut self,
-        slot: usize,
-        server: &mut Server,
-        world: &mut World,
-        parent: &mut Parent,
-    ) -> Result<(), Error> {
-        parent.storage_close(slot)?;
-        let child = self.slots[slot]
-            .take()
-            .ok_or(Error(abi::PEER_CLOSED as i64))?;
-        self.saved_storage[slot] = None;
-        server.remove(slot);
-        if child.storage.is_some() {
-            server.remove(slot + 3);
-        }
-        world.disconnected(slot);
-        // Release retained upstream image readers before returning descendant funding.
-        super::requests::flush(parent, world)?;
-        child.task.cancel()?;
-        child.task.wait()?;
-        child.data.0.close()?;
-        child.data.1.close()?;
-        child.notify.close()?;
-        if let Some((input, output)) = child.storage {
-            input.close()?;
-            output.close()?;
-        }
-        if let Some(reservation) = child.reservation {
-            reservation.release()?;
-            // Creator death returns descendant reservations with fresh local names.
-            // Active siblings remain BUSY; static legacy grants remain DENIED.
-            let mut index = 0;
-            while let Ok(launch) = cathedral_user_runtime::task::Launch::at(index) {
-                match launch.release() {
-                    Ok(()) => (),
-                    Err(Error(code)) if code == abi::BUSY as i64 || code == abi::DENIED as i64 => {
-                        index += 1
-                    }
-                    Err(error) => return Err(error),
-                }
-            }
-        }
-        Ok(())
     }
 }

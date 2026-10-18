@@ -12,7 +12,7 @@ use super::*;
 pub(super) const MAX_STALE: u8 = 8;
 
 impl Children {
-    pub(super) fn forward(&self, mut words: wire::Packet, routed: u64) -> Result<usize, Error> {
+    pub(super) fn forward(&mut self, mut words: wire::Packet, routed: u64) -> Result<usize, Error> {
         let hop = routed & 3;
         if !(1..=2).contains(&hop) {
             Err(Error(abi::DENIED as i64))
@@ -22,7 +22,12 @@ impl Children {
             }
             let control = child.control.ok_or(Error(abi::PEER_CLOSED as i64))?;
             words[0] = (words[0] & 0xffff) | ((routed >> 2) << wire::OP_BITS);
-            control.0.send(&wire::encode(words))?;
+            if let Err(error) = control.0.send(&wire::encode(words)) {
+                if error.0 == abi::PEER_CLOSED as i64 && !self.completed((hop - 1) as usize)? {
+                    return Err(Error(abi::BUSY as i64));
+                }
+                return Err(error);
+            }
             Ok((hop - 1) as usize)
         } else {
             Err(Error(abi::PEER_CLOSED as i64))
@@ -81,6 +86,17 @@ impl Children {
         parent: &mut Parent,
     ) -> Result<bool, Error> {
         let Some((request, deadline, purpose)) = self.pending[slot] else {
+            // A disconnect observed while a reply was pending must not be lost
+            // when that reply (including a LOSS survey) completes.
+            if self.slots[slot]
+                .as_ref()
+                .is_some_and(|child| child.disconnected)
+                && !parent.upstream_busy()
+                && !parent.storing()
+            {
+                self.stop(slot, server, world, parent)?;
+                return Ok(true);
+            }
             if let Some(child) = &mut self.slots[slot]
                 && child.stale > 0
                 && let Some(control) = child.control
@@ -124,7 +140,6 @@ impl Children {
                 child.stale += 1;
                 Err(abi::TIMED_OUT)
             }
-            Err(error) if matches!(purpose, Purpose::Loss) => Err(error.0 as u64),
             Err(error) => {
                 // Defer teardown while another exchange owns the parent/provider
                 // stream. A ready reply above can still complete normally.
@@ -132,17 +147,27 @@ impl Children {
                     self.retiring[slot] = Some(error.0);
                     return Ok(false);
                 }
-                // A dead child cannot answer; reclaim it and its subtree.
-                self.stop(slot, server, world, parent)?;
-                retired = true;
-                Err(error.0 as u64)
+                // A failed control stream is not process death. Only the kernel
+                // outcome permits automatic reclamation; otherwise report busy
+                // so callers cannot mistake unknown loss for consent or death.
+                if self.slots[slot].is_none() {
+                    // An explicit owner STOP may have won a pending close race.
+                    retired = true;
+                    Err(abi::PEER_CLOSED)
+                } else if self.completed(slot)? {
+                    self.stop(slot, server, world, parent)?;
+                    retired = true;
+                    Err(error.0 as u64)
+                } else {
+                    Err(abi::BUSY)
+                }
             }
         };
         self.pending[slot] = None;
         self.retiring[slot] = None;
         if matches!(purpose, Purpose::Loss) {
             self.loss_answer(slot, answer, server)?;
-            return Ok(false);
+            return Ok(retired);
         }
         let response = match (purpose, answer) {
             (Purpose::Loss, _) => unreachable!("survey answered above"),

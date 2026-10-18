@@ -199,6 +199,8 @@ impl Children {
         }
         self.slots[slot] = Some(Owned {
             task: child,
+            outcome: None,
+            disconnected: false,
             reservation: dynamic.then_some(target),
             control: Some(control),
             stale: 0,

@@ -27,3 +27,4 @@ workspace = true
 [features]
 trace-input = []
 trace-storage = []
+startup-fault = []

@@ -169,6 +169,10 @@ impl World {
     pub fn take_notification(&mut self, slot: usize) -> bool {
         core::mem::take(&mut self.children[slot].notify)
     }
+    /// A child-local lifecycle result changed; wake its observer to query it.
+    pub fn notify(&mut self, slot: usize) {
+        self.children[slot].notify = true;
+    }
     /// Identity is supplied by the accepted endpoint, never a request field.
     pub fn request(&mut self, slot: usize, incarnation: u64, words: wire::Packet) -> wire::Packet {
         if slot >= self.children.len() {

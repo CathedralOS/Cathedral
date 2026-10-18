@@ -24,6 +24,11 @@ outer spacing. **SAVE** persists and applies the layout to running apps; **CANCE
 discards local edits and returns to apps. Apps keep their document state while
 rebuilding their local views. A saved layout survives reboot. If applying is
 refused, SAVED; RESTART distinguishes the durable save from live placement.
+A refused program shows **CANNOT OPEN**; an admitted program that fails shows
+**APP STOPPED**. The launcher stays available for another choice. A user matrix
+that fails while loading its arrangement returns to the user picker. Normal app
+close does not display a crash message.
+
 Initial stock defaults live in [matrix.conf](matrix.conf);
 installation preserves existing saved arrangements.
 

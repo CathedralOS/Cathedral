@@ -40,6 +40,10 @@ image, then commit without renumbering objects or replacing saved application
 data. `upgrade-hierarchy IMAGE OFFSET BYTES` repeats safely; `inspect-hierarchy`
 prints IDs, parents and content manifests for migration audits. The latter opens
 the engine and may recover it, so use an image copy when inspecting evidence.
+`failure-fixture IMAGE OFFSET BYTES notes|user CONTENT_FILE` enters
+[failure.rs](failure.rs). It replaces only the named User 1 Notes or user-matrix
+code on a disposable one-user fixture, preserving identity, metadata and saved
+subtree. It is used by the QEMU lifecycle proof, never by the interactive installer.
 `configure-fixture IMAGE OFFSET BYTES renamed|missing` is test preparation only,
 implemented in [configuration.rs](configuration.rs). It edits a disposable
 one-user fixture for the guest path test; it is not an interactive settings tool.

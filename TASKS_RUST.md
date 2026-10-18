@@ -1,8 +1,9 @@
 # Rust reference OS: tasks and handoff
 
-Updated 2026-10-18 (local date). Current milestone: authorized live matrix layout
-and rendering invalidation recovery, following saved configuration and named realms. F5 uses
-these mechanisms; explicit migration preserves existing stock users and data.
+Updated 2026-10-18 (local date). Current milestone: recoverable child launches,
+scoped lifecycle observations and close-channel failure handling, following live
+matrix layout and named realms. F5 uses these mechanisms; explicit migration
+preserves existing stock users and data.
 F5 now compacts existing media before changed program installations, fixing
 the retained-disk upgrade failure described at the end of this handoff.
 Stock-copy refresh also collects unreachable revisions under logical quota
@@ -274,14 +275,19 @@ to hierarchy metadata; extensions are conventions, not authoritative types.
   The child request validates both rectangles, updates future app placement,
   and never changes budgets, services or key masks. Apps recover stale drawing
   handles while retaining documents; tests force two rendering races.
-- [ ] **Keep app lifecycle honest as apps grow.** Startup failure, app crash and
-  provider loss while an app holds work still end in assertions in places. A
-  program that cannot be read from the realm answers REFUSED in the chooser
-  but the desktop still asserts on some root startup operations. User launcher
-  lookup failure now returns to the picker. Drawing invalidation during live
-  layout now rebuilds views without losing drafts. Add an adversarial test for
-  each failure actually fixed. App-owned close with unsaved-work choices now works;
-  owner recovery from an unresponsive app and clearer focus feedback remain.
+- [x] **Recover refused/crashed app launches and failed user startup.** The
+  launcher observes only its latest launched task, reports CANNOT OPEN or APP
+  STOPPED, and stays usable. User CONFIGURE failure returns to the picker even
+  if collection has already won the race. Placement failure rolls admission back.
+  Broken control channels alone cannot authorize close or prove process death;
+  task outcomes distinguish those cases. Tests exercise both control directions,
+  owner-stop races and exit during a loss survey.
+- [ ] **Continue lifecycle recovery where it is still incomplete.** Root Login/
+  Users resolution and provider startup still assert. A configured user's launcher
+  dying does not yet have a local restart policy. An unresponsive app is preserved,
+  but the desktop has no explicit force-stop/recovery UI. Provider loss while apps
+  hold work and clearer focus feedback still need further adversarial coverage.
+  Existing app-owned close protects dirty work, and layout invalidation keeps drafts.
 - [ ] **Bring storage write latency down.** Collection scans metadata before
   each write and durable commit writes through ATA PIO. Use explicit tick-to-time
   conversion and separate CPU time from elapsed time. Measure with
@@ -1150,7 +1156,78 @@ Verification:
   the real image was not upgraded underneath it. Close that window before F5;
   the next launch applies this repair automatically without a reset.
 
-The earlier launch-outcome/startup-failure milestone is still uncommitted work
-in the tree, not part of this repair. Its lifecycle fixture reached the deliberate
-Notes fault but did not complete; finish that investigation before claiming the
-lifecycle milestone or including its changes in a later commit.
+At the time of this repair, launch-outcome/startup-failure work remained
+uncommitted. The following milestone completes that work and its verification.
+
+
+## Recoverable child launch and scoped outcomes (2026-10-18)
+
+The ordinary launcher now displays CANNOT OPEN on refused admission and APP
+STOPPED when its admitted program faults or returns nonzero. It remains available
+for another program; a clean exit is not labeled a crash. User CONFIGURE failure
+returns to a fresh picker with CANNOT OPEN. Startup cleanup accepts a child that
+has already been collected, fixing the race where failed startup panicked the
+outer desktop. Root Login/Users lookup and initial provider admission still assert.
+
+A successful child LAUNCH returns an observation receipt. LAUNCH_STATUS reports
+only that requesting endpoint's latest successful launch, tied to its incarnation
+and the exact kernel task handle. Counters are per observer. No PID, fault details,
+other caller's launch count or later occupant of a reused slot is disclosed.
+Requester teardown clears observation authority. Terminal task collection wakes
+the observer. Start at [children.rs](source-rs/platform/services/matrix/service/children/children.rs)
+for admission/placement, [lifecycle.rs](source-rs/platform/services/matrix/service/children/lifecycle.rs)
+for outcome/cleanup, and [launches.rs](source-rs/platform/services/matrix/world/launches.rs)
+for the bounded receipt policy. Rust mod.rs remains plumbing.
+
+Surface-allocation or placement refusal now stops and refunds the just-admitted
+child instead of reporting an invisible success. Deliberately headless policy
+remains valid. A failed LOSS send returns a refusal rather than killing the matrix.
+More generally, a broken control direction is not proof of process death: owner
+probes and close handling check a nonblocking kernel task wait and preserve a live
+process with BUSY. Terminal outcomes are retained until cleanup so they are consumed
+only once. Explicit owner STOP remains distinct authority. Pending close can lose
+a race to owner STOP, and a task can exit during a recursive loss survey without
+leaking its slot; deferred disconnects remain remembered until cleanup.
+
+Verification:
+
+- Workspace host tests passed earlier in this milestone; all 23 matrix policy
+  tests passed after review, including receipt isolation, endpoint reuse, exact
+  task matching and counter exhaustion. Userspace clippy and matrix startup-fault,
+  Notes startup-fault/admitted-fault, desktop shell and storage-lab variants passed
+  with warnings denied. All 32 storage-lab tests and ordinary clippy passed.
+  Source layout, Rust formatting, Python compilation and diff checks passed.
+- `lifecycle/20261018T223552633573Z` and
+  `lifecycle/20261018T224234066969Z` passed four copied-image scenarios: malformed
+  program, Notes death racing admission, Notes fault after a completed
+  interaction round trip, and user-matrix death inside CONFIGURE. Each fails three
+  times, then launches/saves/closes a healthy Colors. The user-fault case creates
+  and enters a healthy second user from the unchanged template. Normal exit is
+  checked against a delayed false crash notice. Source fixture bytes stay intact.
+- Earlier lifecycle failures were checker assumptions: panic location and message
+  span separate lines; the avatar color was wrong; and an early task fault can
+  legitimately return admission refusal if it wins storage binding. Separate early
+  and post-admission fault gates now verify both behaviors. Fault-only features
+  are absent from ordinary F5; the copied fixture alone receives injected programs.
+- `--matrix-storage-test --release` passed repeated placement rollback, denied
+  foreign/stale receipts, monotonic own receipts, reuse by an owner-launched task,
+  closed control-request and control-reply directions with a surviving task,
+  uncertain owner health probes, owner STOP during pending CLOSE, and exit during
+  LOSS followed by successful replacement. Existing storage scope/recovery checks
+  also pass. `--matrix-test --release` passed recursive attenuation, dirty/delayed
+  loss protection, clean subtree replacement and recovery.
+- `desktop/20261018T224335105991Z` passed the normal F5 composition: user creation,
+  Notes editing/duplication, save/discard/cancel, app selection and cold persistence.
+  The independent host oracle verified all 247 records, exact hierarchy/history/
+  quota and the empty other root. No interactive disk or running QEMU was changed.
+- `colors/20261018T224602610580Z` rechecked the final build on a copy of the
+  retained two-user interactive disk. Upgrade/collection, login, Colors save,
+  close/reopen and cold boot passed; both app launches took about 0.58 s. This
+  keeps the F5 quota repair covered as the stock executables change.
+
+No kernel ABI or authority boundary changed, and no owner decision was required.
+Kernel/ARM64 suites were not rerun. The broader lifecycle queue remains open:
+restart a failed configured launcher within its own matrix, recover root startup
+failures, and offer explicit recovery for an unresponsive app without silently
+throwing away work. Previous storage capacity, ATA timeout and quiet fault-gate
+limitations remain as recorded above.

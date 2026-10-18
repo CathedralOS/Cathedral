@@ -5,6 +5,7 @@ mod configuration;
 mod connections;
 mod control;
 mod imports;
+mod lifecycle;
 mod loss;
 
 include!("children.rs");

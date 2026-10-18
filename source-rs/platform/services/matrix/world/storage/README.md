@@ -63,6 +63,25 @@ control link first and stops it only when the answer is nothing to lose. The
 owner learns what a slot holds from `STORAGE_BINDING`, the child's source and
 scope, and restores exactly that after replacing a provider.
 
+Successful child LAUNCH replies include a local receipt in word two.
+`LAUNCH_STATUS` observes only that endpoint's latest successful launch, with
+RUNNING, EXITED (return zero), FAILED (fault/nonzero return), or STOPPED (cancelled).
+The [receipt ledger](../launches.rs) binds it to the requesting connection's
+incarnation and the exact kernel child handle. Counters are per requester; no
+PID, fault address, sibling activity or later occupant of the slot is exposed.
+A new successful launch supersedes the old receipt; requester teardown clears it.
+Failed admission/placement issues no receipt and reclaims any admitted child.
+Headless standing policy may deliberately omit placement.
+
+The [child lifecycle](../../service/children/lifecycle.rs) captures the kernel's
+terminal outcome before retiring connections/funding and wakes the observer.
+A failed control send or receive alone does not prove death: the matrix performs
+a nonblocking task wait, preserving the result for cleanup if terminal. Otherwise
+CLOSE and owner probes report BUSY. Missing consent never cancels a live child;
+explicit owner STOP retains its separate authority. Pending close/survey replies
+can race owner STOP or actual task exit without leaking the slot or collecting it
+twice. A disconnect seen during a pending reply is remembered through cleanup.
+
 Every forwarded exchange is bounded by the contract's `STORAGE_DEADLINE_TICKS`, with
 a hop's margin added at each nesting level and for the reads of a launch. A
 provider that misses it has its stream retired and the owner replaces it, so

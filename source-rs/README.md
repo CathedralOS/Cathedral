@@ -20,6 +20,14 @@ F2 to reload; Colors uses Enter. Users, notes and colors survive QEMU restarts.
 See [controls and executable routes](distribution/README.md).
 `python tools/boot-harness-rs/desktop_test.py` tests this same default composition.
 
+`python tools/boot-harness-rs/lifecycle_test.py PATH_TO_ONE_USER_IMAGE` copies an
+existing one-user desktop fixture and injects invalid code, an early app fault,
+a fault after admission, and a user-matrix CONFIGURE fault. It checks repeated
+failures, visible recovery, healthy app saves and normal close; the source image
+is unchanged. Fault-only features are built into those copied programs and are
+absent from normal F5. The headless `--matrix-storage-test` also checks scoped
+launch receipts, placement rollback, broken control channels and close/exit races.
+
 Recent integrated proofs: `python tools/boot-harness-rs/run.py --matrix-desktop-test --release`
 checks recursive atomic presentation; `--matrix-storage-test --release` checks
 [private root delegation](platform/services/matrix/world/storage/README.md).

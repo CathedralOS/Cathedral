@@ -14,6 +14,10 @@ impl Children {
         if self.slots.iter().any(Option::is_some) || parent.storing() {
             return Err(Error(abi::BUSY as i64));
         }
+        #[cfg(feature = "startup-fault")]
+        if self.slots.iter().all(Option::is_none) {
+            panic!("deliberate matrix startup failure");
+        }
         parent.refresh(world)?;
         let (saved, launcher, mut code) = parent.local_storage(|scope| {
             scope.bind().map_err(|c| Error(c as i64))?;

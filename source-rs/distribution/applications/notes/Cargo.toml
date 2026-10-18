@@ -17,6 +17,8 @@ bench = false
 [features]
 trace-storage = []
 render-probes = []
+startup-fault = []
+admitted-fault = []
 
 [dependencies]
 cathedral-platform-contracts.workspace = true
