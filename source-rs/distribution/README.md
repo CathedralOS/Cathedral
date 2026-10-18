@@ -69,9 +69,10 @@ with the startup owner but runs in a separately confined app process.
 
 The [login design](../../wiki/design/part_1_authority/07_sessions_and_login.md)
 already specifies a transient credential broker: it receives verification
-authority, root unseals the authorized realm into the matrix's domain and
-transfers the seat, and the broker exits. The broker never receives the realm
-key or hosts the session. The Rust picker only exercises selection, sibling
+authority, root arranges authorized access to the unlocked realm and transfers
+the seat, and the broker exits. Neither broker nor matrix receives the realm
+key; the broker does not host the session. See the accepted
+[matrix authority boundary](../../wiki/spec/execution/components_and_matrices.md). The Rust picker only exercises selection, sibling
 admission and lifecycle; it has no Warden, authentication or sealed realms and
 currently holds broader unencrypted storage access than that future broker.
 

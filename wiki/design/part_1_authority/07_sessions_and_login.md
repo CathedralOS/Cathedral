@@ -8,19 +8,24 @@ On a legacy system, login produces an ambient session: authenticate once and you
 
 ## The Cathedral Model
 
-Login is an authority-minting event over **sealed** data. Authentication releases the key to the user's realm and binds a bounded, revocable session to the user's principal. Before login the realm is sealed: encrypted, with no principal holding its root, so the data is unreadable, not merely access-denied. A correct credential releases the realm's key, which is sealed to the credential plus a measured-good boot, and mints the session. Logout or lock revokes the session and re-seals the realm.
+Login is an authority-minting event over **sealed** data. Authentication authorizes access to the user's realm and binds a bounded, revocable session to the user's principal. Before login the realm is sealed: encrypted, with no principal holding its root, so the data is unreadable, not merely access-denied. A correct credential releases the realm's key, which is sealed to the credential plus a measured-good boot, and mints the session. Logout or lock revokes the session and re-seals the realm.
 
-"User" is not an OS concept. The OS knows only three things: **Matrices** (sealed realms), **seats** (a display region plus the input routing bound to it), and the **root** that hosts them. "User," "account," "login," and "corporate single-sign-on" are all policy inside a swappable login program. The OS exposes two primitives, unseal a realm given a credential-operation and bind a seat to a Matrix, and everything else is the login program's business. That is why a login program can be wired to a local password, a corporate VPN, a cloud identity provider, or a biometric with no change to the mechanism: it boots a Matrix and the OS hands it the seat.
+"User" is not an OS concept. The OS knows only three things: **Matrices** (programs hosting and attenuating children), **seats** (a display region plus the input routing bound to it), and the **root** that hosts them. "User," "account," "login," and "corporate single-sign-on" are all policy inside a swappable login program. The OS exposes two primitives, unseal a realm given a credential-operation and bind a seat to a Matrix, and everything else is the login program's business. That is why a login program can be wired to a local password, a corporate VPN, a cloud identity provider, or a biometric with no change to the mechanism: it boots a Matrix and the OS hands it the seat.
 
 ## The decided mechanism
 
 ### Realm unlocking is a general primitive, not a login feature
 
-`unseal(realm, credential-operation) → key released into the realm's own domain` is one OS primitive with several callers:
+`unseal(realm, credential-operation) → authorized realm-access capability` is one OS primitive with several callers:
 
 - the **boot login program**, which unseals the top-level realm and then rebinds the seat to the Matrix;
 - any **app or shell hitting a sealed sub-realm**, such as the password-protected vault inside your files, which unseals on demand and re-seals when done with no seat rebind, so you stay where you are;
 - a **nested login**, which unseals a child Matrix.
+
+The matrix receives access to plaintext through authorized storage operations,
+not the encryption key. The trusted storage/crypto implementation owns key
+custody; the [accepted matrix authority boundary](../../spec/execution/components_and_matrices.md)
+does not choose that implementation or a complete sealing protocol.
 
 Login is unseal plus seat-rebind. An in-place vault unlock is unseal only. Login is not special; it is the top-level instance of a general mechanism, which is why it nests: a custom login program can log into a nested Matrix, recursively.
 
@@ -30,7 +35,7 @@ Login runs as a **transient, confined broker** holding only a `Capability<Verify
 
 1. Root lends the seat to the broker to run authentication.
 2. The broker authenticates by whatever policy it implements (local password, corporate VPN, cloud provider). Its output is an authorization to unseal a specific realm. It never holds the realm key; it has only the credential-operation.
-3. The broker hands that authorization back to root. Root performs the unseal, releasing the key into the new Matrix's domain, and spawns the Matrix as a direct child of root.
+3. The broker hands that authorization back to root. Root authorizes the storage/crypto provider to unseal the realm and spawns the Matrix as a direct child of root with the resulting realm-access capability, not key bytes.
 4. Root reclaims the seat and binds it to the Matrix. The broker exits.
 
 The Matrix is a sibling of the broker, both children of root. The broker does not host or run the Matrix. Hosting it would interpose the login program permanently in the session's trusted base, seeing all input and output forever. Root is already the irreducible root of trust, so the Matrix is a child of root, not of the broker. "The broker holds no user authority" is then structural rather than a discipline. It is provable from the broker's reach ceiling: it never holds the realm root, and the mint delivers into the seat and Matrix, not through the broker.
@@ -56,7 +61,10 @@ When sealing hardware is absent, the realm degrades visibly. The key is derived 
 
 There is no "compositing" handed over as a subsystem. The compositor is trusted root infrastructure. A Matrix gets a surface plus input routing, which is the seat bound to it. "Full-screen" means the whole region the parent grants (whole-parent-view). A parent owns a compositor region and grants sub-regions to its children, and the window-resize and region-grant protocol is a compositor implementation detail ([[windowing_and_compositor]]), identical for a windowed app or a full-screen Matrix.
 
-Lock and timeout confirm the broker is never load-bearing. Root reclaims the seat from the Matrix, re-seals the realm by dropping the key, and spawns a fresh login broker. The Matrix is suspended and sealed, never dependent on the broker staying alive.
+Lock and timeout confirm the broker is never load-bearing. The intended lifecycle is for root to reclaim the seat, suspend the Matrix, arrange realm sealing, and spawn a fresh login broker without depending on the old broker staying alive. This is not a completed
+locking contract: withdrawing storage/key access alone cannot seal plaintext
+already held in process memory. Suspension, retained plaintext and subsequent
+resume remain part of that protocol's design work.
 
 ### The login chooser sees only a minimal, opt-in unsealed label
 
@@ -79,7 +87,7 @@ The recursion ends where authority stops being forwarded from above and starts b
 
 ## Key Questions
 
-- What is in the session bundle at mint? Only the realm root, the seat routing, and the identity, derived by releasing the realm key on credential and intersecting with any governing org ceiling. Richer authority is minted down by gesture, never held ambiently.
+- What is in the session bundle at mint? Only the realm root, the seat routing, and the identity, derived by authorized realm access after credential verification and intersecting with any governing org ceiling. Richer authority is minted down by gesture, never held ambiently.
 - What is the realm key sealed to, and what happens without sealing hardware? It is sealed to the credential (an operation-capability matched by a secure element) plus the boot measurement. Without the hardware, a passphrase-KDF keeps the realm encrypted but the session is marked unattestable.
 - Is a session a new principal kind or a lease? It is a seat-bound lease over the identity-world principal, not a new identity kind.
 - How is "the broker holds no user authority" guaranteed? Structurally, by the sibling-broker shape: the mint delivers into the seat and Matrix, the broker only triggers it, and credential capture is root's secure-entry.

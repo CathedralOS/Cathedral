@@ -664,52 +664,16 @@ Production still needs the already-open choice between persistent sponsors,
 explicit funded adoption, and revocation, plus a policy for growing/reclaiming
 active memory envelopes. No new answer is needed to continue this bounded lab.
 
-### System startup composition and persisted matrix policy
-
-**Owner clarification (2026-10-17).** "Boot matrix" means the privileged startup
-and service environment: drivers/providers touch real hardware and delegate
-attenuated service connections into user environments. It does not require a
-single matrix executable to implement or even start every service. The user
-picker is hosted presentation, not the authority root. Keep startup orchestration,
-service implementations and recursive matrices distinct even if some are
-composed in one initial program.
-
-Programs declare the interfaces they may use. The owner decides actual bindings;
-required imports must be fulfilled or launch is refused, optional imports can be
-absent. A startup bundle supplies those capabilities rather than ambient service
-lookup. Endpoint/incarnation identity authenticates requests; a caller-supplied
-PID is not authority. Scoped lookup and lazy activation can be added as explicit
-services later, not assumed to exist in the Rust lab.
-
-**What remains open.** Where the system composition and each matrix's standing
-policy are persisted, who may edit which fields, and how changes apply to live
-children. These choices do not block an import/binding prototype and do not
-require deciding that the matrix executable itself must become init. The bounded
-Rust import record is an experiment, not the final installed-manifest format.
-
-**Contracts checked.** [Component contexts](wiki/design/part_2_components/00_component_model.md)
-define typed manifest-derived entry contexts; [sessions and login](wiki/design/part_1_authority/07_sessions_and_login.md)
-defines the intended unseal/seat and confined-broker model. The previous statement
-that no login specification exists was incorrect. The Rust chooser's subtree
-copies implement neither authentication nor sealing. [Matrix requests](source-rs/platform/contracts/matrix.rs)
-still separate owner policy from child requests; [service imports](source-rs/platform/contracts/imports/README.md)
-now records the bounded launch-binding experiment.
-
-**Recommendation (not settled).** Keep the current startup owner while proving
-service bindings. Later persist composition/policy as realm-owned objects, with
-writes controlled by the enclosing owner and explicit delegated editing rights.
-Configuration can request only authority already available to its owner.
-
 ### Object kinds and names in a realm
 
 **Requirement and conflict.** A chooser addresses its realm by object number and
 acts by position: NEW USER in the picker copies the first entry as the template.
-The user launcher now uses that control for STORAGE ON/OFF, so it no longer
-duplicates chrome, but nothing in the store distinguishes a program, a folder,
+The current user launcher hides the template and exposes app tiles; the old
+STORAGE ON/OFF control is gone. Nothing in the store distinguishes a program, a folder,
 a document or a matrix. Heads carry revision, manifest, length and parent; edges
 carry nothing. The desktop still installs by position. The distribution now
 supplies display titles with installed program bytes, and the chooser shows
-USER TEMPLATE / USER 1 rather than raw IDs. These bounded display labels make
+app titles and USER 1 rather than raw IDs. These bounded display labels make
 the current UI usable without deciding editable filesystem names or kinds.
 General naming, refusing to launch a note, and a terminal navigating the same
 tree still need those semantics.

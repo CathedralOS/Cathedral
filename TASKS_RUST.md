@@ -228,19 +228,24 @@ graph; the desktop is tested by `desktop_test.py`.
 
 ## Next work, in recommended order
 
-These are proposed follow-ups. The owner clarified that the boot environment
-orchestrates privileged providers and delegates services; it need not be one
-matrix executable. See the clarified startup/policy question in OWNER_QUESTIONS.
+The accepted [matrix ownership contract](wiki/spec/execution/components_and_matrices.md)
+now resolves the startup/persisted-policy owner question. A matrix is an ordinary
+program whose parent grants its ceiling; the matrix controls its own children
+within it, using code, configuration, or both. The privileged startup environment
+need not be one matrix executable. Names, kinds and copied-reference semantics
+remain separate decisions.
 
-- [ ] **Persist startup composition and matrix policy.** Keep the initial owner
-  as the composition root while choosing where policy lives and who may edit
-  it. Do not merge drivers/providers into the matrix or conflate this with
-  authentication. Declared service imports and launch-time binding are now the
-  first bounded implementation of the supplied-environment model.
+- [ ] **Make the user matrix own its startup arrangement.** Move launcher and
+  child setup out of the initial owner's knowledge of the user's internal object
+  ordering. Persist the stock matrix's arrangement in its authorized realm;
+  delegate editing explicitly. Saving and applying to live children are separate
+  operations. Custom matrix programs need not use the stock schema. The binary
+  encoding is implementation work, not a new source of authority. Resolve object
+  references/copy behavior before relying on persisted child references.
 - [ ] **Give objects kinds and editable names.** The chooser now shows program
   display titles and user ordinals, while the
-  user picker copies its first entry as the template. The user launcher now
-  toggles storage instead of copying chrome, but object roles remain implicit.
+  user picker copies its first entry as the template. The user launcher exposes
+  app tiles, but object roles remain implicit.
   Resolve template selection and readable program labels without relying on
   object ordering; authentication remains a separate decision.
 - [ ] **Keep app lifecycle honest as apps grow.** Startup failure, app crash and
@@ -730,3 +735,21 @@ Final ordinary (fault gate absent) replay passed at
 interactive disk's recognized Colors copies upgraded with saved state intact;
 `cathedral-storage.raw.before-colors-launch.raw` preserves the disk before
 this update. The existing app-close migration backup is also retained.
+
+## Matrix policy ownership decision (2026-10-18)
+
+The owner question on startup composition and persisted matrix policy is closed
+into [components and matrices](wiki/spec/execution/components_and_matrices.md).
+The parent grants the ceiling; the matrix program controls and may persist its
+own internal arrangement, with explicitly delegated editing and explicit live
+application. Code-defined/custom attenuation is equally valid. Service imports
+are requests, never grants; secrets are supplied as operations, never credential
+bytes in a child's configuration. A Warden is a provider role, not necessarily
+one process or hardware backing.
+
+The decision does not choose a universal matrix schema, mandate a program's
+subtree as its realm, settle object naming/copy references, or implement Warden,
+authentication or encryption. The initial owner still furnishes user matrices;
+removing that special knowledge is the next implementation milestone. Existing
+Rust import/launch contracts document their bounded evidence; no ABI or runtime
+behavior changed in this documentation pass.

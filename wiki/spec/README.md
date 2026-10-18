@@ -30,6 +30,7 @@ subject. A current specification may precede implementation.
 | UEFI physical entry and Cathedral semantic handoff | [UEFI physical entry and Cathedral semantic handoff](boot/uefi_entry_handoff.md) | Partial | Partial |
 | UEFI boot-services ownership transition | [UEFI boot-services ownership transition](boot/uefi_boot_services.md) | Partial | Partial |
 | Initial root extent | [Initial root extent](resources/root_extent.md) | Partial | Partial |
+| Components and matrices: policy ownership and supplied authority | [Components and matrices](execution/components_and_matrices.md) | Partial | Partial |
 
 ## Owned but unwritten subjects
 
@@ -41,7 +42,6 @@ plus the active hardware frontier.
 | Subject | Intended specification owner | Current design owner | Implementation state |
 | --- | --- | --- | --- |
 | Capability meaning, delegation, attenuation, redemption, and revocation | `spec/authority/capabilities.md` | [Capability model](../design/part_1_authority/00_capability_model.md) and [lifecycle](../design/part_1_authority/01_capability_lifecycle.md) | Not started |
-| Components, Matrices, manifests, lifecycle, and host-chain semantics | `spec/execution/components_and_matrices.md` | [Component model](../design/part_2_components/00_component_model.md) | Not started |
 | IPC endpoints, shared regions, protocols, and transfer | `spec/communication/ipc.md` | [IPC and service invocation](../design/part_3_communication/00_ipc_and_service_invocation.md) | Not started |
 | Realm and filesystem object semantics | `spec/storage/realms_and_objects.md` | [Filesystem as database](../design/part_4_storage/00_filesystem_as_database.md); [storage foundation proposal](../proposals/0002_dbfs_storage_foundation.md) | [Bounded catalog](../../source-rs/platform/libraries/object-store/CHARTER.md) and [host layout experiment](../../tools/storage-lab/README.md); production realm/object semantics absent |
 | Package closure and component manifest | `spec/packages/package_and_manifest.md` | [Package system](../design/part_5_lifecycle/00_package_system.md) | Not started |

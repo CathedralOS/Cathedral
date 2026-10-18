@@ -13,6 +13,11 @@ not declared are not supplied. A bound service can fail or be revoked later;
 startup compatibility is not a permanent availability promise or proof that a
 provider implements its advertised behavior correctly.
 
+The accepted [component/matrix ownership contract](../../../../wiki/spec/execution/components_and_matrices.md)
+owns the parent-ceiling and supplied-service semantics. The Rust representation
+below is bounded implementation evidence, not the final manifest or a persisted
+matrix configuration schema.
+
 ## Current bounded representation
 
 The runtime's `service_imports!` macro emits `CTHIMP01` and a count, followed by

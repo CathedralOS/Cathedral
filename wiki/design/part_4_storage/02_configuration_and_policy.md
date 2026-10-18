@@ -1,5 +1,9 @@
 # Chapter 02: Configuration & Policy
 
+The accepted [matrix policy ownership and supplied-authority contract](../../spec/execution/components_and_matrices.md)
+is normative for that boundary. Broader design material below is not promoted
+to a complete specification by that decision.
+
 > Configuration is typed, owned, capability-scoped data living in distinct homes, not one global mutable namespace. Policy is a ceiling layered over those homes, not another store.
 
 ## The Legacy Model

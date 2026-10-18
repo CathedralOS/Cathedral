@@ -1,5 +1,9 @@
 # Chapter 00: Component Model
 
+The accepted [matrix policy ownership and supplied-authority contract](../../spec/execution/components_and_matrices.md)
+is normative for that boundary. Broader design material below is not promoted
+to a complete specification by that decision.
+
 > The unit Cathedral runs, isolates, restarts, and upgrades is not one unit. It is a family of overlapping ones, and each concern picks its own.
 
 ## The Legacy Model
