@@ -4,8 +4,9 @@
 //!
 //! COPY and COPY_TREE preserve independent edits in both directions while
 //! sharing immutable backing. See wiki/spec/storage/realms_and_objects.md;
-//! persisted references use paths in an authorized view. Named lookup is not
-//! implemented by this numbered-object lab protocol.
+//! persisted references use paths in an authorized view. Names and queryable
+//! media types belong to hierarchy metadata. Named lookup and type filtering
+//! are not implemented by this numbered-object lab protocol.
 //!
 //! Every request and reply is one 64-byte packet of eight little-endian words.
 //! Request: `[op, object, expected, argument, len, scope, scope, scope]`. The

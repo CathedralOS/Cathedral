@@ -621,37 +621,3 @@ eager, fixed session bank is lab policy, not the eventual manifest contract.
 Production still needs the already-open choice between persistent sponsors,
 explicit funded adoption, and revocation, plus a policy for growing/reclaiming
 active memory envelopes. No new answer is needed to continue this bounded lab.
-
-### Object kinds and names in a realm
-
-The [accepted storage contract](wiki/spec/storage/realms_and_objects.md) now
-uses paths for persisted references. This question selects name/kind
-representation needed for lookup; it does not reopen stable-ID references.
-
-**Requirement and conflict.** A chooser addresses its realm by object number and
-acts by position: NEW USER in the picker copies the first entry as the template.
-The current user launcher hides the template and exposes app tiles; the old
-STORAGE ON/OFF control is gone. Nothing in the store distinguishes a program, a folder,
-a document or a matrix. Heads carry revision, manifest, length and parent; edges
-carry nothing. The desktop still installs by position. The distribution now
-supplies display titles with installed program bytes, and the chooser shows
-app titles and USER 1 rather than raw IDs. These bounded display labels make
-the current UI usable without deciding editable filesystem names or kinds.
-General naming, refusing to launch a note, and a terminal navigating the same
-tree still need those semantics.
-
-**Contracts checked.** The [object contract](source-rs/platform/contracts/storage.rs)
-and the [store](source-rs/platform/libraries/database-objects/README.md) define
-heads, events, edges, chunks and pins only. The
-[filesystem design](wiki/design/part_4_storage/00_filesystem_as_database.md)
-says files are folders and content is shared, but does not place names or kinds.
-
-**Owner choice.** Put a kind and name in the head, so the store types its
-objects and every listing carries them; or keep the store untyped and put a
-conventional object inside each object, read by programs that care; or carry
-the name on the edge from the parent, so one object may be known by different
-names in different folders while its kind stays a property of the object.
-
-**Recommendation (unaccepted).** Carry the name on the edge and the kind in the
-head: a kind is what the object is wherever it sits, a name is what a folder
-calls it. Keep programs from interpreting payload bytes to discover either.

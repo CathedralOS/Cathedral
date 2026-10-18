@@ -2,6 +2,17 @@
 
 > A name resolves to authority, and a spoofed name steals it. Cathedral resolves to authority by unforgeable value, a capability or a content-hash or key, not by string. Names barely exist: the internals are nameless, local names are mundane, and the one hard case, a human-memorable global name for a stranger, is the network trust-bootstrap and belongs to the security work.
 
+## Current storage boundary
+
+The [accepted storage contract](../../spec/storage/realms_and_objects.md)
+supersedes this chapter's blanket stable-ID claims for persisted file references:
+ordinary references use paths within a supplied authorized view, and rename or
+move may break them. Names and declared media types are hierarchy metadata;
+type indexes operate within metadata visibility. Stable persisted file IDs are
+deferred. A content hash identifies bytes but is not an access grant, and a
+scoped namespace alone does not eliminate misleading names or hostile updates.
+The broader identity and network proposals below are not a completed contract.
+
 ## The Legacy Model
 
 Naming in legacy systems is a dozen uncoordinated schemes that calcify into permanent compatibility constraints: filesystem paths, DNS names, D-Bus service names, device nodes, package names, usernames, MIME types, URL schemes, port numbers. Each was invented separately, and each has different uniqueness, ownership, and spoofing properties. None was designed as a security boundary, yet all of them resolve to authority. A path resolves to a file you may write, a service name to a process you will trust, a package name to code you will run. Homograph domains, dependency-confusion package names, and service-name hijacking are all the same bug: a name resolved to the wrong authority. And strings sit everywhere, resolved constantly at real compute cost, even where nothing human ever reads them.

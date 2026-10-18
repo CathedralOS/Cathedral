@@ -30,7 +30,7 @@ subject. A current specification may precede implementation.
 | UEFI physical entry and Cathedral semantic handoff | [UEFI physical entry and Cathedral semantic handoff](boot/uefi_entry_handoff.md) | Partial | Partial |
 | UEFI boot-services ownership transition | [UEFI boot-services ownership transition](boot/uefi_boot_services.md) | Partial | Partial |
 | Initial root extent | [Initial root extent](resources/root_extent.md) | Partial | Partial |
-| Realms and objects: independent copies and path references | [Realms and objects](storage/realms_and_objects.md) | Partial | Partial |
+| Realms and objects: copies, paths and hierarchy metadata | [Realms and objects](storage/realms_and_objects.md) | Partial | Partial |
 | Components and matrices: policy ownership and supplied authority | [Components and matrices](execution/components_and_matrices.md) | Partial | Partial |
 
 ## Owned but unwritten subjects

@@ -4,7 +4,9 @@ The [accepted copy contract](../../../../wiki/spec/storage/realms_and_objects.md
 requires independent edits on both sides of a copy. This implementation shares
 content but duplicates hierarchy metadata. The contract now selects paths within
 a supplied view for persisted references; this numbered-object implementation
-does not yet provide named path lookup or stable persisted references.
+does not yet provide named path lookup or stable persisted references. Names
+and queryable media types belong to hierarchy metadata under that contract;
+the records here do not yet carry those fields or provide type filtering.
 
 [lib.rs](lib.rs) opens the experimental table and defines the bounds.
 [records.rs](records.rs) owns key scoping and the fixed head, event, edge and

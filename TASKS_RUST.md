@@ -235,7 +235,8 @@ within it, using code, configuration, or both. The privileged startup environmen
 need not be one matrix executable. The
 [storage contract](wiki/spec/storage/realms_and_objects.md) requires independent
 copies and unchanged path references resolved within the supplied view. Stable
-persisted IDs and aliases are deferred; names and kinds remain owner decisions.
+persisted IDs and aliases are deferred. Names and queryable media types belong
+to hierarchy metadata; extensions are conventions, not authoritative types.
 
 - [ ] **Make the user matrix own its startup arrangement.** Move launcher and
   child setup out of the initial owner's knowledge of the user's internal object
@@ -244,14 +245,15 @@ persisted IDs and aliases are deferred; names and kinds remain owner decisions.
   operations. Custom matrix programs need not use the stock schema. The binary
   encoding is implementation work, not a new source of authority. Use paths
   within the supplied realm for persisted child references; missing targets
-  fail lookup. Settle name representation and add named lookup first.
-- [ ] **Give objects kinds and editable names.** The chooser now shows program
-  display titles and user ordinals, while the
+  fail lookup. Add hierarchy name/type metadata and named lookup first.
+- [ ] **Implement hierarchy names and queryable media types.** The chooser now
+  shows program display titles and user ordinals, while the
   user picker copies its first entry as the template. The user launcher exposes
   app tiles, but object roles remain implicit.
-  Resolve name representation and kinds, then add named lookup for startup
-  paths and template selection without object ordering. Authentication remains
-  a separate decision.
+  Store names and declared media types in hierarchy metadata. Add named lookup
+  for startup paths and template selection without object ordering, and scoped
+  type filtering with index support. Validate content on use; type labels are
+  not execution authority. Authentication remains a separate decision.
 - [ ] **Keep app lifecycle honest as apps grow.** Startup failure, app crash and
   provider loss while an app holds work still end in assertions in places. A
   program that cannot be read from the realm answers REFUSED in the chooser
@@ -787,3 +789,19 @@ representation is the remaining owner decision for matrix startup paths; interna
 number allocation is not itself a public stable-reference contract. No runtime or
 wire behavior changed in this documentation/comment pass. Local Markdown links
 and diff checks passed; runtime tests were not rerun.
+
+## Hierarchy name and media-type decision (2026-10-18)
+
+The owner confirmed explicit [hierarchy metadata](wiki/spec/storage/realms_and_objects.md)
+for names and media types, enabling indexed database filtering without filename
+searches or opening every body. Extensions remain program conventions; importers
+and explorers may infer and set type metadata when authorized. A declared type
+is not proof of valid contents or permission to execute them. Content and
+children may coexist, and the same backing can have different metadata through
+independent entries.
+
+The names/kinds owner question is closed. The next storage work is implementation:
+metadata records, named lookup and scoped type filtering, followed by matrix-owned
+startup paths. The guest still has numbered objects without these features.
+No wire or runtime behavior changed in this documentation/comment pass. Local
+Markdown links and diff checks passed; runtime tests were not rerun.

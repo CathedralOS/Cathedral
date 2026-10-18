@@ -10,9 +10,9 @@
 ## Scope
 
 This contract establishes independent-copy behavior, path-based persisted
-references and the separation of hierarchy from stored backing, following the
-owner's 2026-10-18 decisions. It does not select internal object IDs, alias
-semantics or a production disk format.
+references, queryable hierarchy metadata and the separation of hierarchy from
+stored backing, following the owner's 2026-10-18 decisions. It does not select
+internal object IDs, alias semantics or a production disk format.
 
 ## Hierarchy and backing
 
@@ -33,6 +33,35 @@ duplicate all backing. This is not a constant-time cloning guarantee: authority,
 accounting, identity representation and durable publication have their own costs.
 The physical sharing permitted here grants no new authority and does not
 authorize deduplication across trust or encryption domains.
+
+## Names and media types are hierarchy metadata
+
+Names belong to entries in the parent hierarchy. Declared media/content type
+also belongs to the hierarchy metadata describing an entry, not to the shared
+content backing as a global property. Independent entries may describe the
+same bytes differently. Changing a name or declared type changes hierarchy
+state without changing the referenced file content. Hierarchy records may
+themselves be hashed and stored; their hashes can change on metadata edits.
+
+Content type is an explicit structured field that the database can index and
+filter. Finding entries by media type must not require parsing every filename
+or opening every content body. This is the basis for efficient type-based
+queries within the caller's authorized view, not a latency guarantee or a
+choice of index layout or query language. Query results and counts must respect
+metadata visibility; an index is not an alternate way to enumerate other realms.
+
+A filename extension is a convention, not the source of truth for the declared
+type. Importers, downloaders and explorers may infer a type from an extension or
+content and write metadata when authorized. Synchronizing extensions and type
+metadata is program policy, not an implicit storage rename operation. Unknown
+or absent type information does not make an extension authoritative. The type
+vocabulary and unknown-value encoding are not frozen by this contract.
+
+Declared type describes intended interpretation; it neither proves that bytes
+are valid nor grants execution or other authority. Consumers still validate
+formats and operations. Entries may have both content and children: media type
+does not impose a file-versus-folder split, and a matrix remains a program rather
+than requiring its own structural storage kind.
 
 ## Paths and copied configuration
 
@@ -83,17 +112,18 @@ introduce a live inherited view with local overrides or an automatic
 managed-update policy. Any future managed updates require separate authorized
 enrollment and editing rules; ordinary clones do not enroll themselves.
 
-Name representation, kinds, detailed path syntax, encryption domains, retention
-budgets and the complete snapshot and reclamation protocols are outside this
-partial contract.
+Metadata encoding, type vocabulary, detailed path syntax and name comparison,
+encryption domains, retention budgets and the complete snapshot and reclamation
+protocols are outside this partial contract.
 
 ## Implementation evidence
 
 The [Rust object store](../../../source-rs/platform/libraries/database-objects/README.md)
 implements independent copies sharing immutable manifests and chunks. Its
 subtree copy allocates new numbered objects and metadata per descendant; it
-does not implement shared hierarchy roots or named path lookup. The accepted
-path model is not yet implemented by the Rust storage wire protocol.
+does not implement shared hierarchy roots, named path lookup or queryable
+media-type metadata. These accepted metadata and path rules are not yet
+implemented by the Rust storage wire protocol.
 Its existing host tests exercise independent edits, shared content, subtree
 copies and bounded reclamation with retained pins.
 

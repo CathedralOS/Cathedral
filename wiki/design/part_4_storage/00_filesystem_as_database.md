@@ -6,15 +6,16 @@
 
 The [storage contract](../../spec/storage/realms_and_objects.md) establishes
 symmetric copy-on-write behavior, hierarchy/backing separation and paths within
-a supplied view for persisted references. Stable persisted IDs and aliases are
-deferred. Internal identity representations below remain candidates.
+a supplied view for persisted references. Names and explicit media types are
+queryable hierarchy metadata; extensions are not authoritative types. Stable
+persisted IDs and aliases are deferred. Internal identity representations below remain candidates.
 
 This chapter records intended product semantics, not an accepted storage-engine
 or on-disk specification. The [storage foundation proposal](../../proposals/0002_dbfs_storage_foundation.md)
 separates current direction, experimental choices and evidence still required.
 The Rust private catalog proves a bounded transaction/recovery path; the host
 chunk-layout lab measures representation costs. Neither implements this chapter.
-Unresolved identity, authority, retention and isolation choices are tracked in
+Unresolved authority, retention and isolation choices are tracked in
 [owner questions](../../../OWNER_QUESTIONS.md).
 
 ## The Legacy Model
@@ -183,7 +184,7 @@ There are three limits. Porting a legacy database wholesale still works but is w
 - **Realm-authority delegation.** An app can hold the authority over its synthetic realm, becoming root of it (mint, grant, revoke, sub-realm), confined by the rule that a realm-authority mints only within its own realm. Authority nests downward, and the host owns every realm through ancestor authority ([[capability_model]], [[identity_and_principals]]).
 - **Per-principal resolution.** Realm names (`system:`, `user:`) bind to roots in a private per-principal environment set at spawn ([[component_model]]), so the same qualified name resolves to different objects for different principals. Rebinding a name to a different root is how a sandbox is built, and the host owns every binding because it owns the tree.
 - **Records and views.** Files are typed records and directories are indexes or views. A query layer ([[observability_and_introspection]]) over metadata replaces `find`/`stat` loops. Search and indexing is a system service, scoped to the realms you hold.
-- **Type is metadata.** An object carries its content type as a typed, verifiable attribute rather than a filename extension. Renaming cannot change what a thing is, and the rename-an-executable-to-look-like-an-image trick does not exist. The type is recorded metadata, checkable against the bytes ([[naming_and_discovery]]).
+- **Type is queryable hierarchy metadata.** An entry carries an explicit declared media type, independent of its filename extension and shared content backing. Database indexes can filter by type without searching filenames or opening every body. Importers and explorers may infer and write this field when authorized; rename alone does not change it. The declaration does not prove that the bytes match: consumers must validate content, and a label never grants execution authority. Queries remain scoped to metadata the caller may see.
 - **One object kind: content and children.** A node has both a body and child edges, so "file" and "folder" are not different kinds. They are one object differing only in how much content versus how many children it carries: a folder is a near-empty body with children, and a plain file is a body with none. The Unix leaf-versus-branch split was an inode artifact, not a law.
 - **Owned child realms.** Because one object kind carries both content and children, an object can own a **child realm**. A running app's mutable per-app state is a sub-realm owned by its executable object, rooted in the file itself instead of a collision-prone sibling name, and dropping the executable reclaims its state with it. Copy and send are then type-driven: the immutable content-addressed body shares by default, and an owned child realm (private state) stays home unless the sender includes it. This is resource forks and alternate data streams generalized, and it cures sidecar-file litter. Thumbnails, versions, layers, and metadata become children of the object instead of `.DS_Store` / `file.jpg.xmp` siblings.
 - **Derived metadata and previews.** Thumbnails, extracted text, and dimensions are artifacts derived from content and stored as metadata, generated once by a read-capable broker. A component can be granted preview access without read access to the body, so a gallery shows thumbnails it could not open. A preview of sealed content must itself be sealed. Precomputing trades storage for avoiding a content read.
