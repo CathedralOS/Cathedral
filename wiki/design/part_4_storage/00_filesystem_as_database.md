@@ -4,6 +4,10 @@
 
 ## Design status
 
+The [independent-copy contract](../../spec/storage/realms_and_objects.md) now
+establishes symmetric copy-on-write behavior and hierarchy/backing separation.
+Identity and alias representations below remain candidates.
+
 This chapter records intended product semantics, not an accepted storage-engine
 or on-disk specification. The [storage foundation proposal](../../proposals/0002_dbfs_storage_foundation.md)
 separates current direction, experimental choices and evidence still required.
@@ -59,7 +63,7 @@ encryption domains and charging also remain proposed.
 
 ### Copying is a reference operation
 
-An immutable content version can be shared by adding a reference without copying its payload. A file copy can create a new identity referring to that version. A directory snapshot can share immutable tree structure, but a writable directory copy's identity and alias behavior still need definition: stable mutable cells cannot simply be shared while promising independent edits. O(1) reference creation describes content sharing, not an unconditional bound on authorization, identity creation, indexing or persistence costs.
+An immutable content version can be shared by adding a reference without copying its payload. A file copy can create a new identity referring to that version. A directory snapshot can share immutable tree structure, but a writable directory copy's identity and alias representation still need definition: stable mutable cells cannot simply be shared while promising independent edits. O(1) reference creation describes content sharing, not an unconditional bound on authorization, identity creation, indexing or persistence costs.
 
 The candidate immutable representation is a Merkle DAG with copy-on-write nodes. A bounded construction and validated decoding protocol must enforce node kinds, references and traversal limits; hashing alone is not validation of hostile input. Unchanged subtrees may be reused while changed paths are rebuilt. Aggregate queries must distinguish logical size, unique physical bytes and charged bytes. Shared backing does not define which realm pays for it.
 
@@ -73,7 +77,7 @@ The candidate file model has two levels: a small mutable **cell** with stable id
 - **Alias** (the proposed hardlink) is two names for the same mutable cell, so writes through either name affect the shared identity. Reclamation must account for retained versions, active readers and other permitted references, not only the last directory name. Cross-realm aliases are unresolved.
 - **Symlink** is a name that points at another name or path, and dangles if its target is renamed or removed. It is the weaker shortcut, for when you want a pointer that follows a location rather than a thing.
 
-In this candidate model, copy duplicates identity and alias shares it. A snapshot must freeze the identity-to-version mapping as well as content references; otherwise mutable cells can leak later edits into an old snapshot. Whether the mutable-cell level exists and how a subtree copy treats aliases are owner choices. A path/version-identified store is an alternative with different alias semantics.
+In this candidate model, copy duplicates identity and alias shares it. A snapshot must freeze the identity-to-version mapping as well as content references; otherwise mutable cells can leak later edits into an old snapshot. Independent edits on either side of an ordinary copy are now required. Whether the mutable-cell level exists and how a subtree copy treats aliases remain owner choices. A path/version-identified store is an alternative with different alias semantics.
 
 ### Version history and retention
 

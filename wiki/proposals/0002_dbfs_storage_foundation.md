@@ -3,7 +3,7 @@
 | Status | Scope |
 | --- | --- |
 | Proposed | Engine-selection and layout experiment; no accepted disk format or production API |
-| Specification owner | Unwritten `spec/storage/realms_and_objects.md`; see the [coverage map](../spec/README.md) |
+| Specification owner | [Realms and objects](../spec/storage/realms_and_objects.md) accepts independent-copy behavior; engine, layout and identity remain proposed |
 | Existing evidence | [Object store](../../source-rs/platform/libraries/database-objects/README.md): numbered objects, shared content, copies, pins and bounded collection behind private roots |
 | New evidence | [Host layout lab](../../tools/storage-lab/README.md): flat/tree chunk references, inline contents, range reads, batched edits and retained versions |
 

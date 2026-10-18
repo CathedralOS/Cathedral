@@ -2,6 +2,10 @@
 //! are numbered within it, arranged as a tree, and numbers are never reused.
 //! No global names, digests, root selectors or caller identities cross the wire.
 //!
+//! COPY and COPY_TREE preserve independent edits in both directions while
+//! sharing immutable backing. See wiki/spec/storage/realms_and_objects.md;
+//! these lab object numbers do not settle production copied-reference identity.
+//!
 //! Every request and reply is one 64-byte packet of eight little-endian words.
 //! Request: `[op, object, expected, argument, len, scope, scope, scope]`. The
 //! argument word is the byte offset for reads, the parent for creation and

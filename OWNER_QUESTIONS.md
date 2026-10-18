@@ -32,47 +32,48 @@ standard.
 
 ## Open questions
 
-### DBFS identity, aliases and realm authority
+### DBFS identity, copied references and aliases
 
-**Requirement and conflict.** A versioned object store needs stable references
-and independent copies. The [filesystem design](wiki/design/part_4_storage/00_filesystem_as_database.md)
-proposes mutable file cells, aliases and cheap subtree copies, while formerly
-deriving one realm from parent ancestry. Shared immutable content can have several
-parents, and sharing mutable cells during a subtree copy would also share edits.
-This blocks freezing namespace/copy and persisted-reference semantics.
+**Settled boundary.** The [copy contract](wiki/spec/storage/realms_and_objects.md)
+now requires ordinary copies to diverge independently in both directions.
+Hierarchy and backing are distinct; shared immutable records and copy-on-write
+are the default direction. No special original writer may change a clone's
+state. Exclusive-use reuse is optional and must account for retained views,
+readers and crash consistency. Collector choice is implementation work, not an
+owner decision required before proceeding.
 
-**Contracts checked.** The [specification index](wiki/spec/README.md) leaves
-`spec/storage/realms_and_objects.md` unwritten. The
-[Rust object protocol](source-rs/platform/contracts/storage.rs) supplies only
-root-relative object numbers that are never reused, one parent per object, a
-copy that is a new number sharing the source's content, and a subtree copy that
-gives every descendant a new number; it has no aliases, names or cross-realm
-object graph. The lab therefore already behaves as the recommendation below
-describes, without that being an accepted decision. The [storage proposal](wiki/proposals/0002_dbfs_storage_foundation.md)
-and host content-layout lab do not resolve those semantics.
+**Requirement and remaining conflict.** A matrix must persist startup references
+that still work when its template is copied. Independent copy behavior does not
+determine whether logical IDs are new, preserved within a view, or path-based;
+nor does it determine how references stored inside configuration resolve after
+copying. Arbitrary payload bytes cannot be assumed to contain discoverable,
+rewritable references. Shared mutable aliases need a separate explicit contract.
 
-**Owner choice.** Adopt stable mutable object identity with explicit alias edges,
-or path/version identity with copies and explicit references instead of shared
-mutable aliases. If cells exist, define whether they can be shared across realms
-and how writable subtree copies obtain independent identities. Authority must be
-checked for each authorized reference/traversal; content sharing cannot confer it.
-The alternatives change rename behavior, alias edits and persisted references.
+**Contracts checked.** The partial contract above deliberately excludes identity
+and aliases. The [Rust object protocol](source-rs/platform/contracts/storage.rs)
+uses root-relative numbers that are never reused, one parent per object, and
+new numbers for every copied descendant. It has no aliases or cross-realm graph.
+The [filesystem design](wiki/design/part_4_storage/00_filesystem_as_database.md)
+and [storage proposal](wiki/proposals/0002_dbfs_storage_foundation.md) retain
+candidate mutable-cell representations; neither settles reference resolution.
 
-**Recommendation (unaccepted).** Separate stable object identity from immutable
-content and namespace edges. Make ordinary copies independent identities; keep
-content sharing internal. Specify cross-realm aliases and subtree-copy identity
-rules before exposing them, without promising O(1) writable subtree copies yet.
+**Owner choice.** Preserve logical IDs resolved within independent views, assign
+new identities with explicitly represented references remapped during copying,
+or use path/version references. Define rename/move behavior, external bindings
+and intentional aliases before relying on persistent references. Sharing backing
+or knowing an ID cannot grant access outside the authorized view.
 
-**Related copied-program policy.** The Rust desktop's explicit readable-label
-upgrade refreshes recognized stock launchers inside existing user copies; the
-subsequent explicit app-close upgrade refreshes recognized stock Notes/Colors.
-Both preserve customized code and saved data. This does not make copied worlds
-generally track template updates. Before general app updates, choose whether
-copies pin executable revisions or opt into an owner-managed update policy,
-including who can change that policy. The object protocol above defines only
-copy/publication, not installed-package tracking. Prefer pinned copies by
-default with explicit managed-update membership; that recommendation is not
-yet adopted.
+**Recommendation (unaccepted).** Explore view-relative logical IDs so copied
+configuration can retain its bytes while resolving to the copied view. Work
+through moves, deletion, aliases and external references before adopting it.
+Do not infer acceptance of this identity model from acceptance of CoW.
+
+**Related copied-program policy.** Ordinary copies do not follow later source
+updates under the accepted contract. The Rust desktop's explicit stock-program
+upgrades preserve customized code and saved data; they do not establish general
+managed-update membership. Before general app updates, define how an owner opts
+into that policy and who may change it. Such updates are separate authorized
+operations, not a consequence of sharing backing.
 
 ### DBFS deduplication domains and erasure
 

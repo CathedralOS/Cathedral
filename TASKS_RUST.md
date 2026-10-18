@@ -232,8 +232,9 @@ The accepted [matrix ownership contract](wiki/spec/execution/components_and_matr
 now resolves the startup/persisted-policy owner question. A matrix is an ordinary
 program whose parent grants its ceiling; the matrix controls its own children
 within it, using code, configuration, or both. The privileged startup environment
-need not be one matrix executable. Names, kinds and copied-reference semantics
-remain separate decisions.
+need not be one matrix executable. The
+[copy contract](wiki/spec/storage/realms_and_objects.md) now requires independent edits on both sides with shared backing permitted. Names, kinds
+and copied-reference identity remain separate decisions.
 
 - [ ] **Make the user matrix own its startup arrangement.** Move launcher and
   child setup out of the initial owner's knowledge of the user's internal object
@@ -241,7 +242,8 @@ remain separate decisions.
   delegate editing explicitly. Saving and applying to live children are separate
   operations. Custom matrix programs need not use the stock schema. The binary
   encoding is implementation work, not a new source of authority. Resolve object
-  references/copy behavior before relying on persisted child references.
+  identity and copied-reference resolution before relying on persisted child
+  references.
 - [ ] **Give objects kinds and editable names.** The chooser now shows program
   display titles and user ordinals, while the
   user picker copies its first entry as the template. The user launcher exposes
@@ -753,3 +755,19 @@ authentication or encryption. The initial owner still furnishes user matrices;
 removing that special knowledge is the next implementation milestone. Existing
 Rust import/launch contracts document their bounded evidence; no ABI or runtime
 behavior changed in this documentation pass.
+
+## Independent-copy decision (2026-10-18)
+
+The owner accepted [independent copy semantics](wiki/spec/storage/realms_and_objects.md):
+hierarchy and backing are distinct, CoW is the default sharing model, and edits
+to either original or clone preserve the other. Start with immutable replacement
+writes; exclusive-use reuse can follow later without changing semantics.
+Retained views and readers count when deciding whether backing is reclaimable.
+
+The Rust store already shares immutable content with independent edits, but
+subtree copies still allocate numbered metadata per descendant. Shared hierarchy
+roots are not implemented. Logical IDs, copied configuration references and
+aliases remain the narrowed owner question; view-relative IDs are a proposal,
+not an accepted answer. This pass changes documentation and protocol comments
+only, with no runtime or wire changes. Markdown links and diff checks were
+verified; runtime tests were not rerun for this documentation change.
