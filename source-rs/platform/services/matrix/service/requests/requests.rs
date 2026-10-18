@@ -10,6 +10,20 @@ pub(super) fn dispatch(
 ) -> Result<(), Error> {
     let response = match wire::decode(&request.bytes[..request.len]) {
         Some(words) if request.control => {
+            if words[0] == wire::RESOLVE_PATH && words[5..] == [0; 3] {
+                let encoded = wire::encode(words);
+                let path = &encoded[8..40];
+                let len = path.iter().position(|b| *b == 0).unwrap_or(32);
+                let result = parent.local_storage(|scope| {
+                    scope.bind().map_err(|c| Error(c as i64))?;
+                    scope.lookup(&path[..len]).map_err(|c| Error(c as i64))
+                });
+                let reply = match result {
+                    Ok(id) => [0, id, 0, 0, 0, 0, 0, 0],
+                    Err(code) => wire::error(code.0 as u64),
+                };
+                return server.reply(&request, &wire::encode(reply));
+            }
             if let [wire::READ_PIXEL, x, y, 0, 0, 0, 0, 0] = words {
                 server.reply(&request, &wire::encode(parent.pixel(x, y)?))?;
                 return Ok(());
@@ -25,7 +39,11 @@ pub(super) fn dispatch(
                     | wire::STORAGE_STATUS
                     | wire::STORAGE_BINDING
             ) {
-                parent.storage_owner(server, words)?
+                let response = parent.storage_owner(server, words)?;
+                if response[0] == 0 {
+                    children.remember_storage(words);
+                }
+                response
             } else {
                 owner::dispatch(parent, world, words)
             };
@@ -117,7 +135,7 @@ pub(super) fn dispatch(
     server.reply(&request, &wire::encode(response))?;
     Ok(())
 }
-/// A sealed attachment on a catalog stream can only accompany a publication.
+/// Sealed attachments carry content or bounded hierarchy request payloads.
 pub(super) fn attachment(
     request: Request,
     object: cathedral_user_runtime::memory::Object,
@@ -127,8 +145,14 @@ pub(super) fn attachment(
     match wire::decode(&request.bytes[..request.len]) {
         Some(words)
             if !request.control
-                && words[0] & 0xffff
-                    == wire::STORAGE_BASE + cathedral_platform_contracts::storage::PUBLISH =>
+                && matches!(
+                    (words[0] & 0xffff).wrapping_sub(wire::STORAGE_BASE),
+                    cathedral_platform_contracts::storage::PUBLISH
+                        | cathedral_platform_contracts::storage::SET_METADATA
+                        | cathedral_platform_contracts::storage::LOOKUP
+                        | cathedral_platform_contracts::storage::FILTER
+                        | cathedral_platform_contracts::storage::COPY_TREE
+                ) =>
         {
             parent.storage_request(request, words, Some(object))
         }

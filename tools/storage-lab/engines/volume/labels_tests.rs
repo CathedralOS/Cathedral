@@ -241,3 +241,24 @@ fn transaction(refresh_apps: bool) {
     // Remove only this test's explicit private directory.
     std::fs::remove_dir_all(dir).unwrap();
 }
+
+#[test]
+fn old_matrix_upgrade_requires_exact_history_or_explicit_stock_digest() {
+    let mut rows = fixture();
+    let old: [u8; 32] = rows[&event(3, 1)][8..40].try_into().unwrap();
+    put(&mut rows, 3, 2, 2, b"\x7fELFnew matrix");
+    rows.remove(&event(3, 1));
+    assert!(
+        !plan(&rows, &[], true)
+            .unwrap()
+            .iter()
+            .any(|(id, _)| *id == 7)
+    );
+    let changes = plan(&rows, &[(3, old)], true).unwrap();
+    assert!(
+        changes
+            .iter()
+            .any(|(id, bytes)| *id == 7 && bytes == b"\x7fELFnew matrix")
+    );
+    assert!(!changes.iter().any(|(id, _)| *id == 13));
+}

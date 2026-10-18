@@ -133,6 +133,7 @@ name = "cathedral-database-objects"
 version = "0.0.0"
 dependencies = [
  "cathedral-content-layout",
+ "cathedral-platform-contracts",
  "cathedral-storage-engine",
 ]
 

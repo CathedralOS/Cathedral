@@ -41,12 +41,13 @@ Start at [desktop/main.rs](desktop/main.rs), then the
 funded root matrix. The desktop runs the chooser in the root's first slot,
 shown only the folder of users, and opens the second slot with a standing
 launch policy: whatever the chooser launches lands there with that budget and
-placement. When a user matrix appears, the desktop furnishes it the same way,
-its chrome in its first slot over the whole user realm and a standing policy
-for the second. [Phase layout](desktop/session/shell/layout.rs) retires the boot
-picker and places the user's chrome/app within the full display. The owner
-then supervises storage and restores the realms after a
-provider replacement. Every matrix runs the same platform code.
+placement. It resolves `Login` and `Users` by path. When a user matrix appears,
+the desktop retires the picker and requests `CONFIGURE`. The
+[user matrix](../platform/services/matrix/service/children/configuration.rs)
+loads its own `Matrix` object and resolves the saved launcher path, then sets
+its child budgets and placement. The outer owner supervises storage and restores
+the user's binding after provider replacement; that matrix restores its own
+child bindings. Every matrix runs the same platform code.
 
 The process tree is distinct from the executable/package tree:
 
@@ -61,7 +62,7 @@ flowchart TD
 ```
 
 The root matrix admits the selected user as the picker's sibling. The startup
-owner then stops/collects the picker before reading the user's launcher image;
+owner then stops/collects the picker before asking the user to load its launcher;
 that wait can take time and must not leave the picker visible or interactive.
 The app launcher is a different process using the chooser executable, not a
 mode switch of the old picker. Likewise, Colors shares the desktop executable
@@ -103,15 +104,14 @@ NOTES / COLORS tiles inside the user. See the
 | Notes | Program 5, inside the template | [notes main](applications/notes/main.rs), [editing/storage/view](applications/notes/session/session.rs) |
 | Colors | Program 6, inside the template, role 2 with argument 2 | [color app](desktop/session/app/app.rs) |
 
-A chooser lists its realm and asks its host to run an entry with `LAUNCH`. The
+A chooser queries executable entries in its realm and asks its host to run an entry with `LAUNCH`. The
 host reads the object through the chooser's own binding, so only what the
 chooser can see can run, starts it as the chooser's sibling in the slot its
 owner opened, grants it the entry's subtree, and names the slot in the reply.
 `CLOSE` asks the host to stop that sibling; the host first asks the sibling
 with `LOSS` what it would lose and stops it only on an answer of nothing. A
 chooser holds no other launch authority and writes to its realm only to copy
-its first entry on NEW in user-picker mode. In user-launcher mode that row
-instead withholds storage from future launches. Apps see local geometry and input, not global
+the named template on NEW in user-picker mode. Apps see local geometry and input, not global
 placement, other apps or an ancestor's services. The
 [matrix contract](../platform/contracts/matrix.rs) and
 [child launches](../platform/services/matrix/service/children/children.rs)

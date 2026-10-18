@@ -5,6 +5,7 @@
 mod bulk;
 #[cfg(feature = "recovery-lab")]
 mod gate;
+mod hierarchy;
 mod metrics;
 mod service;
 use cathedral_user_runtime::heap::{self, Heap};

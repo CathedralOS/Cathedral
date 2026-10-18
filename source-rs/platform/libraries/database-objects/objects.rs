@@ -176,6 +176,9 @@ impl Store<'_> {
                 parent,
             };
             object = place(&mut table, root, head, &mut charged)?;
+            let mut metadata = hierarchy::entry(&table, root, source, src)?;
+            metadata.name = [0; 32];
+            hierarchy::write(&mut table, root, object.id, head, metadata, &mut charged)?;
             set_quota(&mut table, root, charged)?;
         }
         engine(tx.commit())?;
@@ -186,6 +189,17 @@ impl Store<'_> {
     /// Only the source itself is checked against `expected`; descendants are
     /// copied as they are. More than COPY_LIMIT objects is refused whole.
     pub fn copy_tree(&self, root: u8, source: u64, expected: u64, parent: u64) -> Result<Object> {
+        self.copy_tree_named(root, source, expected, parent, b"")
+    }
+    pub fn copy_tree_named(
+        &self,
+        root: u8,
+        source: u64,
+        expected: u64,
+        parent: u64,
+        name: &[u8],
+    ) -> Result<Object> {
+        let copy_name = Metadata::new(name, b"").ok_or(Error::Invalid)?.name;
         let tx = self.writer()?;
         let copied;
         {
@@ -241,6 +255,18 @@ impl Store<'_> {
                     },
                     &mut charged,
                 )?;
+                let mut metadata = hierarchy::entry(&table, root, id, head)?;
+                if id == source {
+                    metadata.name = copy_name;
+                }
+                hierarchy::write(
+                    &mut table,
+                    root,
+                    object.id,
+                    object.head,
+                    metadata,
+                    &mut charged,
+                )?;
                 copies.push((id, object.id));
                 first.get_or_insert(object);
             }
@@ -265,12 +291,12 @@ impl Store<'_> {
                 return Err(Error::NotEmpty);
             }
             let head_key = head_key(root, id);
-            let edge_key = edge_key(root, head.parent, id);
-            let charged = quota(&table, root)?
-                .checked_sub((head_key.len() + Head::SIZE + edge_key.len()) as u64)
+            let mut charged = quota(&table, root)?;
+            hierarchy::clear(&mut table, root, id, head, &mut charged)?;
+            let charged = charged
+                .checked_sub((head_key.len() + Head::SIZE) as u64)
                 .ok_or(Error::Corrupt)?;
             engine(table.remove(head_key.as_slice()))?;
-            engine(table.remove(edge_key.as_slice()))?;
             set_quota(&mut table, root, charged)?;
         }
         engine(tx.commit())

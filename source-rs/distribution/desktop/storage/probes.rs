@@ -36,6 +36,8 @@ pub(super) fn revocation(f: &Fixture) {
     // Revoke and regrant the direct leaf without allowing it an INFO refresh:
     // its old binding number must not authorize anything in the new grant.
     f.owner(1, [wire::STORAGE_REVOKE, 0, 0, 0, 0, 0, 0, 0]);
+    f.owner(1, [wire::RESTORE_STORAGE, 0, 0, 0, 0, 0, 0, 0]);
+    assert_eq!(text(f, 2, 2), Err(abi::DENIED));
     f.owner(1, [wire::STORAGE_GRANT, 0, 0, 0, 0, 0, 0, 0]);
     assert_eq!(
         f.query(2, [wire::STORAGE_BASE + store::HEAD, 2, 0, 0, 0, 0, 0, 0]),
@@ -45,6 +47,9 @@ pub(super) fn revocation(f: &Fixture) {
     // Revoking the ancestor's grant cuts the descendant; regranting the
     // ancestor never implicitly revives it.
     f.owner(0, [wire::STORAGE_REVOKE, 0, 0, 0, 0, 0, 0, 0]);
+    f.owner(0, [wire::RESTORE_STORAGE, 0, 0, 0, 0, 0, 0, 0]);
+    // Restore keeps the outside child's source 1; it cannot switch to root 0.
+    expect(text(f, 3, 1).unwrap(), b"outside root");
     assert_eq!(publish(f, 2, 2, 1, b"must fail"), Err(abi::DENIED));
     f.owner(0, [wire::STORAGE_GRANT, 0, 0, 0, 0, 0, 0, 0]);
     assert_eq!(text(f, 2, 2), Err(abi::DENIED));
@@ -58,6 +63,7 @@ pub(super) fn replacement(f: &Fixture) {
     // Child death and replacement: the new leaf gets no implicit storage grant.
     f.owner(1, [wire::STOP, 0, 0, 0, 0, 0, 0, 0]);
     f.owner(1, [wire::SPAWN, 0, 0, 0, 0, 0, 0, 0]);
+    f.owner(1, [wire::RESTORE_STORAGE, 0, 0, 0, 0, 0, 0, 0]);
     assert_eq!(text(f, 2, 2), Err(abi::DENIED));
     f.owner(1, [wire::STORAGE_GRANT, 0, 0, 0, 0, 0, 0, 0]);
     expect(text(f, 2, 2).unwrap(), b"nested root");

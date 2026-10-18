@@ -1,6 +1,6 @@
 // The F5 desktop. Admit providers and the funded root matrix, show the chooser
 // the folder of users, open the workspace slot to what it launches, start
-// physical input, then furnish each user matrix that appears and supervise
+// physical input, then request each user matrix's own startup and supervise
 // storage. Admission and standing policy live in shell/; the chooser and the
 // apps are programs in the store. The lab module composes the same admission,
 // apps and budgets into the probe desktop from the boot catalogue.
@@ -39,24 +39,25 @@ pub(crate) fn run() -> u64 {
     cathedral_user_runtime::write(b"Cathedral desktop: ready; choose a user\n").unwrap();
     loop {
         // The chooser launches a user matrix into the workspace slot; the
-        // desktop learns of it by its realm and gives it its chrome. The app
-        // the chrome launches is tracked only so storage replacement can
-        // restore its realm.
-        let user = shell::realm_of(matrix, 0, session.user);
+        // desktop observes only that direct child's realm. The user matrix
+        // owns its launcher, app policy and recovery bindings.
+        let user = shell::realm_of(matrix, session.user);
         if user != session.user {
             session.user = user;
-            session.app = 0;
             if user != 0 {
-                shell::furnish(matrix, session.extent, user);
+                if let Err(code) = shell::enter(matrix) {
+                    cathedral_user_runtime::time::storage_sample("user-start-refused", &[code]);
+                    owner(matrix, [wire::STOP, 1, 0, 0, 0, 0, 0, 0]);
+                    session.user = 0;
+                    shell::chooser(matrix, session.extent);
+                    continue;
+                }
                 cathedral_user_runtime::write(b"Cathedral desktop: user matrix furnished\n")
                     .unwrap();
             } else {
                 shell::chooser(matrix, session.extent);
                 cathedral_user_runtime::write(b"Cathedral desktop: user matrix closed\n").unwrap();
             }
-        }
-        if user != 0 {
-            session.app = shell::realm_of(matrix, 1, session.app);
         }
         persistence::supervise(&mut session);
         // Polling is only how the owner notices; rendering and input wake the

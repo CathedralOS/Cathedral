@@ -29,7 +29,8 @@ def prepare(path, programs=(), label_migration=None, app_close=False):
     republished. The stock desktop may also request its explicit readable-label
     migration, which upgrades recognized copied launchers and labels old apps.
     The migration saves a backup and leaves customized code and user data alone.
-    app_close additionally refreshes recognized stock Notes/Colors code."""
+    app_close refreshes recognized stock Notes/Colors and matrix code. The stock
+    migration also installs hierarchy metadata and matrix configuration."""
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     if path.is_symlink() or (path.exists() and not path.is_file()):
@@ -57,7 +58,7 @@ def prepare(path, programs=(), label_migration=None, app_close=False):
         return
     installed = [[int(parent), hashlib.sha256(Path(file).read_bytes()).hexdigest()] for parent, file in programs]
     if label_migration is not None:
-        installed = {'programs': installed, 'readable_labels': hashlib.sha256(Path(label_migration).read_bytes()).hexdigest(), 'app_close': app_close}
+        installed = {'programs': installed, 'readable_labels': hashlib.sha256(Path(label_migration).read_bytes()).hexdigest(), 'app_close': app_close, 'hierarchy': 1}
     if sidecar.exists() and json.loads(sidecar.read_text(encoding='utf-8')) == installed:
         return
     if executable is None:
@@ -70,4 +71,6 @@ def prepare(path, programs=(), label_migration=None, app_close=False):
     if label_migration is not None:
         subprocess.run([str(executable), 'engines', 'volume', 'upgrade-app-close' if app_close else 'upgrade-labels', str(path),
                         str(OFFSET), str(VOLUME_BYTES), str(Path(label_migration).resolve())], cwd=lab, check=True)
+        subprocess.run([str(executable), 'engines', 'volume', 'upgrade-hierarchy', str(path),
+                        str(OFFSET), str(VOLUME_BYTES)], cwd=lab, check=True)
     sidecar.write_text(json.dumps(installed), encoding='utf-8')

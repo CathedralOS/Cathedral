@@ -55,6 +55,39 @@ impl Provider {
     }
 }
 impl Parent {
+    /// Retire a failed local exchange just as forwarded requests do: never
+    /// reuse a stream whose late reply could be mistaken for the next request.
+    pub(in crate::service) fn local_storage<T>(
+        &mut self,
+        operation: impl FnOnce(&mut cathedral_user_runtime::storage::Scope) -> Result<T, Error>,
+    ) -> Result<T, Error> {
+        let mut scope = self.own_scope()?;
+        let result = operation(&mut scope);
+        if !scope.connected() {
+            self.retire_storage(0, None)?;
+        }
+        result
+    }
+    fn own_scope(&mut self) -> Result<cathedral_user_runtime::storage::Scope, Error> {
+        if self.storing() {
+            return Err(Error(abi::BUSY as i64));
+        }
+        if !self.upstream {
+            return Ok(cathedral_user_runtime::storage::Scope::provider(
+                self.storage_links[0]
+                    .as_mut()
+                    .ok_or(Error(abi::DENIED as i64))?
+                    .pair()?,
+            ));
+        }
+        if !self.separate_storage {
+            return Err(Error(abi::DENIED as i64));
+        }
+        Ok(cathedral_user_runtime::storage::Scope::new(
+            self.storage_pair.ok_or(Error(abi::PEER_CLOSED as i64))?,
+        ))
+    }
+
     pub(in crate::service) fn storage_client(&self, slot: usize) -> usize {
         if self.separate_storage {
             slot + 3

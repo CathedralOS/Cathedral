@@ -38,6 +38,7 @@ pub(super) enum Purpose {
 pub(super) struct Children {
     pub separate_storage: bool,
     slots: [Option<Owned>; 2],
+    saved_storage: [Option<(usize, u64)>; 2],
     next_frames: [Option<u64>; 2],
     next_pages: [Option<[u64; 2]>; 2],
     standing: [Option<Standing>; 2],
@@ -47,6 +48,19 @@ pub(super) struct Children {
     loss: Option<loss::Survey>,
 }
 impl Children {
+    /// Remember only successfully applied owner policy. Revocation must remain
+    /// revoked when a later provider replacement restores the other children.
+    pub(super) fn remember_storage(&mut self, words: wire::Packet) {
+        match words {
+            [wire::STORAGE_GRANT, slot @ 0..=1, source, scope, 0, 0, 0, 0] => {
+                self.saved_storage[slot as usize] = Some((source as usize, scope));
+            }
+            [wire::STORAGE_REVOKE, slot @ 0..=1, 0, 0, 0, 0, 0, 0] => {
+                self.saved_storage[slot as usize] = None;
+            }
+            _ => {}
+        }
+    }
     pub(super) fn notify(&self, world: &mut World) -> Result<(), Error> {
         for (slot, child) in self.slots.iter().enumerate() {
             if world.take_notification(slot)
@@ -88,6 +102,8 @@ impl Children {
                     | wire::LAUNCH_POLICY
                     | wire::LAUNCH_PLACE
                     | wire::LAUNCH_IMPORTS
+                    | wire::CONFIGURE
+                    | wire::RESTORE_STORAGE
                     | wire::STOP
             )
         {
@@ -143,7 +159,15 @@ impl Children {
             } else {
                 match self.forward(words, routed) {
                     Ok(slot) => {
-                        self.pending[slot] = Some((*request, time::after(100)?, Purpose::Owner));
+                        self.pending[slot] = Some((
+                            *request,
+                            time::after(if words[0] & 0xffff == wire::CONFIGURE {
+                                wire::CONFIGURE_DEADLINE_TICKS
+                            } else {
+                                100
+                            })?,
+                            Purpose::Owner,
+                        ));
                         self.retiring[slot] = None;
                         return Ok(true);
                     }
@@ -152,6 +176,10 @@ impl Children {
             }
         } else {
             match words {
+                [wire::CONFIGURE, 0, 0, 0, 0, 0, 0, 0] => self.configure(parent, world, server),
+                [wire::RESTORE_STORAGE, 0, 0, 0, 0, 0, 0, 0] => {
+                    self.restore_storage(parent, server)
+                }
                 [wire::LAUNCH_IMPORTS, slot @ 0..=1, offered, 0, 0, 0, 0, 0]
                     if offered & !cathedral_platform_contracts::imports::ALL == 0 =>
                 {
@@ -364,7 +392,10 @@ impl Children {
                     Err(error) => Err(error.0 as u64),
                     Ok(false) => Ok(()),
                     Ok(true) => match parent.storage_grant(server, plan.slot, 0, plan.scope)? {
-                        Ok(()) => Ok(()),
+                        Ok(()) => {
+                            self.saved_storage[plan.slot] = Some((0, plan.scope));
+                            Ok(())
+                        }
                         Err(code) => {
                             self.stop(plan.slot, server, world, parent)?;
                             Err(code)
@@ -425,6 +456,7 @@ impl Children {
         let child = self.slots[slot]
             .take()
             .ok_or(Error(abi::PEER_CLOSED as i64))?;
+        self.saved_storage[slot] = None;
         server.remove(slot);
         if child.storage.is_some() {
             server.remove(slot + 3);

@@ -2,17 +2,19 @@
 
 The [accepted copy contract](../../../../wiki/spec/storage/realms_and_objects.md)
 requires independent edits on both sides of a copy. This implementation shares
-content but duplicates hierarchy metadata. The contract now selects paths within
-a supplied view for persisted references; this numbered-object implementation
-does not yet provide named path lookup or stable persisted references. Names
-and queryable media types belong to hierarchy metadata under that contract;
-the records here do not yet carry those fields or provide type filtering.
+content but duplicates hierarchy metadata. Persisted references use relative
+paths within a supplied view. Names and explicit media types live on hierarchy
+edges, with indexes for exact name lookup and direct-child type queries.
+Numbered IDs still address individual operations; stable cross-view IDs are deferred.
 
 [lib.rs](lib.rs) opens the experimental table and defines the bounds.
 [records.rs](records.rs) owns key scoping and the fixed head, event, edge and
 pin encodings. [objects.rs](objects.rs) numbers objects, keeps the tree and
 implements the head-only operations: look up, list a parent's children, test
 membership in a subtree, copy one object or a whole subtree, and delete.
+[hierarchy.rs](hierarchy.rs) owns metadata, name/type indexes, revision-checked
+rename/retype, relative lookup and filtering. These changes commit atomically
+with the head/event and exact retained-byte quota.
 [publication.rs](publication.rs) orders size/stale checks, preparation, writer
 revalidation, immutable-record insertion and the head/event/edge/quota update
 inside one immediate transaction. [reading.rs](reading.rs) pins a read
@@ -41,7 +43,20 @@ size. A subtree copy does the same for the source and every descendant,
 preserving the shape under new numbers, and is refused whole beyond
 `COPY_LIMIT` objects. Editing either side afterwards leaves the other untouched
 and keeps sharing every chunk the edit did not change. A realm made of many
-objects is copied for the price of three small records per object.
+objects is copied for the price of small hierarchy records and their indexes.
+Descendant names and types survive a subtree copy; the new root receives an
+explicit new name or remains unnamed. No copied path inside content is rewritten.
+
+Names and media types each occupy at most 32 UTF-8 bytes. Names compare exactly,
+are unique among named siblings, and exclude slash, ASCII controls, `.` and `..`.
+Empty fields preserve legacy unnamed/untyped entries. Paths are at most 256 bytes,
+relative to an explicit base; `.` is allowed, parent traversal and absolute paths
+are refused. Type filtering is exact and uses the scoped `(parent, type, id)`
+index, not content sniffing or extensions. These are lab bounds, not a final ABI.
+The existing `t` edge value carries the 64-byte metadata; `d` and `y` keys index
+names and media types. Metadata changes increment the object's revision without
+rewriting its content manifest. Pins retain content revisions, not historical
+hierarchy metadata snapshots.
 
 The shared [content encoding](../content-layout/lib.rs) is extracted from the host
 layout lab, preserving its exact BLAKE3 domains and inline/flat/tree manifest bytes.
@@ -79,6 +94,8 @@ subtree copy that preserves shape and shares content, refusal of a copy into
 itself or beyond the object limit, non-empty deletion, inline/chunk boundaries,
 corruption detection, writer revalidation after preparation, cold opening at every
 collection boundary with live pins, and 600 replacements inside a fixed extent
-beside unrelated data. See the [guest proof](../../../distribution/lab/objects/README.md)
+beside unrelated data. Hierarchy tests cover duplicate/stale rename rollback,
+index updates, independent copy metadata, deletion, collection accounting and
+reopening. See the [guest proof](../../../distribution/lab/objects/README.md)
 and the [storage proposal](../../../../wiki/proposals/0002_dbfs_storage_foundation.md)
 for evidence and unresolved production semantics.

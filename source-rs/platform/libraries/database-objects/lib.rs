@@ -8,6 +8,8 @@
 //! meaningful hash.
 extern crate alloc;
 mod collection;
+mod hierarchy;
+pub use cathedral_platform_contracts::storage::metadata::Metadata;
 mod objects;
 mod publication;
 mod reading;

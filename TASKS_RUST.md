@@ -1,6 +1,9 @@
 # Rust reference OS: tasks and handoff
 
-Updated 2026-10-18 (local date). Implementation baseline: declared service
+Updated 2026-10-18 (local date). Current milestone: hierarchy names and indexed
+media types, named startup paths, and matrix-owned saved arrangements. F5 uses
+these mechanisms; explicit migration preserves existing stock users and data.
+See the latest evidence at the end of this handoff. Earlier baseline: declared service
 imports and optional Notes persistence at **`8d1972a`**, followed by readable
 chooser labels at **`787344e`**, existing-user label upgrade at **`4f1c6c8`**,
 app-owned close at **`a40ed23`**, user tiles/absolute input at **`4901e65`**,
@@ -50,11 +53,15 @@ media is never automatically reformatted. The programs are installed into the
 image on first launch and republished as new revisions when their bytes
 change; the sidecar `cathedral-storage.raw.programs` records what is installed.
 The desktop's explicit compatibility upgrade refreshes recognized stock
-launchers and Notes/Colors in existing users, preserving their saved data and
-user matrices. The app-close upgrade saves
+launchers, Notes/Colors and recognized stock matrix executables in existing
+users, preserving their saved data and object identities. The app-close upgrade saves
 `cathedral-storage.raw.before-app-close.raw` before changing user copies; the
 earlier label-only backup remains separate. Customized/unrecognized programs
-stay intact.
+stay intact. Hierarchy migration then adds names, media types and a `Matrix`
+configuration, preserving existing metadata/configuration and saving
+`cathedral-storage.raw.before-hierarchy.raw` before its transaction. The fixed
+4 MiB lab volume can exhaust physical engine space during repeated program
+upgrades; installation refuses rather than resizing or reformatting it.
 An image from before this layout holds other objects at the numbers the
 programs need; the installer refuses to overwrite anything that is not a
 program, so move that image and its `.programs` sidecar (if present) to backup
@@ -73,10 +80,11 @@ of the matrix falls out for almost free. The real logic is then that a launched
 program gets its own subtree for free: everything nested under the program's
 object, because files are folders in this database.
 
-The intended shape, not yet built: boot into the boot matrix, which runs the
-user selection and creation software; a user matrix carries an installed
-windower or chrome. Today the owner program stands in for the boot matrix and
-the chooser stands in for both the user software and the chrome.
+The current bounded shape boots a startup owner that runs the providers, root
+matrix and user picker; a selected user matrix loads its installed launcher.
+The chooser executable serves both picker and launcher as separate processes.
+This demonstrates composition and attenuation, not authenticated login or the
+full windower design.
 
 ## What the store milestones established
 
@@ -96,13 +104,14 @@ can see, admits the sealed reply as the sibling's code in the slot the owner
 opened with a standing `LAUNCH_POLICY` and `LAUNCH_PLACE`, and grants it that
 object's subtree. `CLOSE` asks the host to stop the sibling; the host asks the
 sibling `LOSS` on its control link first and keeps it on any answer but
-nothing. The owner reads what a slot holds with `STORAGE_BINDING` and restores
-exactly that after replacing a provider.
+nothing. Each matrix remembers its own child storage grants; explicit revocation
+and child death clear that policy. After provider replacement the owner restores
+the direct user's realm and asks it to restore its own children.
 
 A user is a subtree copy of the template user: a matrix executable with the
-chrome, Notes and Colors inside it. The desktop furnishes every user matrix the
-same way it furnishes the root: the chrome in the first slot over the whole
-realm, a standing policy for the second. `desktop_test.py` drives this from F5
+chrome, Notes, Colors and a saved `Matrix` configuration inside it. The user
+matrix loads its own launcher path, placement and budgets within the outer
+owner's ceiling. `desktop_test.py` drives this from F5
 and an independent host model verifies the whole layout; the headless storage
 fixture runs a program from its realm, launches a sibling and closes it.
 
@@ -165,8 +174,8 @@ nested matrix. The kernel still knows no matrix, realm or store.
 | Architecture | Shared core with x86-64 and an ARM64 QEMU portability proof; ISA and board responsibilities separated | [Architecture](source-rs/kernel/arch/README.md), [ARM64 bounds](source-rs/kernel/arch/isa/aarch64/README.md) |
 | Matrix | Same service recursively owns children, local surfaces, focus, input, realm delegation with scope stamps and attachments, programs run from its realm by owner or child, standing launch policy per slot, close-after-asking, bounded budgets and deadlines; counts unanswered child requests instead of killing a slow child | [Service loop](source-rs/platform/services/matrix/service/service.rs), [protocol](source-rs/platform/contracts/matrix.rs), [child launches](source-rs/platform/services/matrix/service/children/children.rs), [storage forwarding](source-rs/platform/services/matrix/service/parent/storage/storage.rs) |
 | Display/input | Software compositor, retained rectangles and sealed bitmap objects, scoped pointer/focus routing, physical PS/2 input | [Display](source-rs/platform/services/display/main.rs), [input](source-rs/platform/services/input/main.rs) |
-| Storage | Userspace ATA PIO transport, guarded volume, redb-backed object store with a tree of numbered objects up to 256 KiB, shared content, copies, subtree copies, pins and metadata-only bounded collection; one object protocol with scope enforcement | [Provider](source-rs/platform/services/storage/main.rs), [store](source-rs/platform/libraries/database-objects/README.md), [contract](source-rs/platform/contracts/storage.rs) |
-| Desktop | Provider admission/supervision, chooser over users, furnishing of user matrices, all programs from the store; probe desktop under `lab/` on the boot catalogue without the shell feature | [Main](source-rs/distribution/desktop/main.rs), [session](source-rs/distribution/desktop/session/session.rs), [shell](source-rs/distribution/desktop/session/shell/shell.rs), [lab](source-rs/distribution/desktop/lab/desktop.rs) |
+| Storage | Userspace ATA PIO, guarded redb volume, objects up to 256 KiB, shared content, subtree copies, names/types on edges, scoped relative lookup and indexed type filtering, pins and bounded collection | [Provider](source-rs/platform/services/storage/main.rs), [store](source-rs/platform/libraries/database-objects/README.md), [contract](source-rs/platform/contracts/storage.rs) |
+| Desktop | Provider admission/supervision, named login paths, chooser over users, user ceiling and startup request; each user matrix loads its own arrangement. Probe desktop under `lab/` uses the boot catalogue without the shell feature | [Main](source-rs/distribution/desktop/main.rs), [session](source-rs/distribution/desktop/session/session.rs), [shell](source-rs/distribution/desktop/session/shell/shell.rs), [lab](source-rs/distribution/desktop/lab/desktop.rs) |
 | Chooser | Lists its realm, launches an entry as its sibling, copies the first entry on NEW, asks the host to close | [Chooser guide](source-rs/distribution/applications/chooser/README.md), [session](source-rs/distribution/applications/chooser/session/session.rs) |
 | Notes | Whole-document publication in the binding's realm, bulk reads, duplicate through the store's copy, note switching, explicit reconciliation, sealed bitmap presentation, answers the close question with its draft state | [Session](source-rs/distribution/applications/notes/session/session.rs), [storage](source-rs/distribution/applications/notes/session/storage.rs) |
 | Harness | Builds, trims and installs programs and folders; formats and seeds images; host oracles over copies of guest images | [Harness guide](tools/boot-harness-rs/README.md), [seeder](tools/storage-lab/engines/volume/seed.rs) |
@@ -188,22 +197,22 @@ The owner starts display (Launch 0), input (1), root matrix (2) and object
 storage (3) from boot. The programs are objects 1 to 6 of the notes root: the
 chooser; the folder of users; inside it the template user, a matrix
 executable; and inside the template its chrome (the chooser again), Notes and
-Colors. Identical bytes share content, so the second chooser costs three small
-records. The shell names only the first two by number
-([shell.rs](source-rs/distribution/desktop/session/shell/shell.rs)); everything
-below is found by listing. Roles come from each executable's entry: a matrix
+Colors. Identical bytes share content. These numbers are installer locations,
+not runtime naming policy: [shell.rs](source-rs/distribution/desktop/session/shell/shell.rs)
+resolves `Login` and `Users`; the picker resolves `Template`; each user matrix
+reads its `Matrix` configuration and resolves its launcher path. Roles come from each executable's entry: a matrix
 takes 0, the desktop executable's 2 runs Colors with argument 2, Notes and the
 chooser take 2.
 
 Root slot 0 holds the chooser, shown only the users folder; root slot 1 is
 opened by a standing policy and holds whatever the chooser launches, a user
 matrix. The desktop notices it by polling `STORAGE_BINDING` on that slot and
-furnishes it: its chrome in slot 0 over the whole user realm, slot 1 opened
-for what the chrome launches. A user made by NEW is a subtree copy of the
-template, so user 7 holds chrome 8, Notes 9 and Colors 10; their notes and
-color nest under 9 and 10. Apps do not know their global coordinates or
-siblings. Storage replacement regrants the chain explicitly from the shell's
-numbers and the bindings it observed.
+requests `CONFIGURE` after collecting the picker. The user loads its own chrome
+into slot 0 over its realm and opens slot 1 for an app using its saved policy.
+NEW copies the template's executable, programs, metadata and configuration;
+copied path strings stay unchanged. Apps do not know global coordinates or
+siblings. Storage replacement restores the direct user's binding, then requests
+`RESTORE_STORAGE`; the matrix retains responsibility for its children's grants.
 
 Page budgets are sized for sealed bitmaps held at every matrix level with old
 and new present during replacement, plus the largest program a matrix reads
@@ -238,26 +247,22 @@ copies and unchanged path references resolved within the supplied view. Stable
 persisted IDs and aliases are deferred. Names and queryable media types belong
 to hierarchy metadata; extensions are conventions, not authoritative types.
 
-- [ ] **Make the user matrix own its startup arrangement.** Move launcher and
-  child setup out of the initial owner's knowledge of the user's internal object
-  ordering. Persist the stock matrix's arrangement in its authorized realm;
-  delegate editing explicitly. Saving and applying to live children are separate
-  operations. Custom matrix programs need not use the stock schema. The binary
-  encoding is implementation work, not a new source of authority. Use paths
-  within the supplied realm for persisted child references; missing targets
-  fail lookup. Add hierarchy name/type metadata and named lookup first.
-- [ ] **Implement hierarchy names and queryable media types.** The chooser now
-  shows program display titles and user ordinals, while the
-  user picker copies its first entry as the template. The user launcher exposes
-  app tiles, but object roles remain implicit.
-  Store names and declared media types in hierarchy metadata. Add named lookup
-  for startup paths and template selection without object ordering, and scoped
-  type filtering with index support. Validate content on use; type labels are
-  not execution authority. Authentication remains a separate decision.
+- [x] **Hierarchy names and queryable media types.** Metadata and indexes commit
+  atomically with revisions; lookup and exact-type filtering obey subtree scopes.
+  The chooser uses names/types and resolves its hidden template/launcher by path.
+  Existing stock users migrate without renumbering or replacing their saved data.
+- [x] **Make the user matrix own its startup arrangement.** The stock matrix
+  loads `Matrix` in its realm and resolves its saved launcher path. Startup
+  requires empty slots; missing paths return to the picker. Parent grants remain
+  the ceiling. Custom matrix programs need not use this bounded schema.
+- [ ] **Make saved policy editable through the desktop.** There is no settings
+  UI yet. Delegate editing explicitly; saving and applying to live children
+  remain separate operations. Do not imply a live apply path already exists.
 - [ ] **Keep app lifecycle honest as apps grow.** Startup failure, app crash and
   provider loss while an app holds work still end in assertions in places. A
   program that cannot be read from the realm answers REFUSED in the chooser
-  but the desktop asserts on its own launches. Add an adversarial test for each
+  but the desktop still asserts on some root startup operations. User launcher
+  lookup failure now returns to the picker. Add an adversarial test for each
   failure actually fixed. App-owned close with unsaved-work choices now works;
   owner recovery from an unresponsive app and clearer focus feedback remain.
 - [ ] **Bring storage write latency down.** Collection scans metadata before
@@ -805,3 +810,93 @@ metadata records, named lookup and scoped type filtering, followed by matrix-own
 startup paths. The guest still has numbered objects without these features.
 No wire or runtime behavior changed in this documentation/comment pass. Local
 Markdown links and diff checks passed; runtime tests were not rerun.
+
+## Named realms and matrix-owned startup implemented (2026-10-18)
+
+This completes the first implementation of the preceding decisions. F5 still
+boots the ordinary desktop. The outer owner resolves `Login` and `Users`, grants
+the selected user its ceiling, collects the picker, then requests `CONFIGURE`.
+The user matrix loads its own `Matrix` object, resolves the saved launcher path,
+and installs launcher/app placement and budgets. It no longer relies on the
+outer owner knowing internal object numbers or observing its current app.
+
+Follow [hierarchy.rs](source-rs/platform/libraries/database-objects/hierarchy.rs)
+for edge metadata, exact name and type indexes, and atomic revision-checked
+updates; [provider dispatch](source-rs/platform/services/storage/hierarchy.rs)
+and [Scope](source-rs/platform/libraries/user-runtime/storage.rs) connect those
+operations across IPC. Names/types are bounded to 32 UTF-8 bytes each; relative
+lookup is bounded to 256 bytes, permits `.`, and rejects parent traversal and
+absolute paths. Named siblings are unique with exact comparison. FILTER returns
+up to six direct children of an exact media type. These lab bounds do not freeze
+the eventual schema or type vocabulary. Pins still preserve content revisions,
+not complete historical hierarchy metadata.
+
+The chooser uses the executable-type index and hierarchy names. Its hidden
+template is resolved by path; its hidden launcher comes from saved configuration.
+NEW copies the template as `User N`, preserving descendant names/types and path
+strings while sharing content. A misleading extension does not produce an app
+tile. Unknown legacy metadata remains representable; there is no explorer or
+metadata-editing UI yet. Name collisions refuse rather than overwrite.
+
+[Configuration](source-rs/platform/contracts/matrix_config.rs) is the stock
+matrix's bounded 104-byte `CTHMAT01` record: launcher path, page/reader budgets,
+margin, launcher width, gap, app surfaces and key mask. The
+[loader](source-rs/platform/services/matrix/service/children/configuration.rs)
+requires empty child slots, checks geometry/key limits and uses ordinary
+admission. Failed startup returns to the picker. No settings editor or live
+apply is implemented. Parent grants remain authoritative; saving policy never
+expands them. Current initial defaults are part of the explicit host migration;
+move their selection into distribution composition before supporting alternate
+stock arrangements or a settings workflow.
+
+Each matrix remembers the source and scope of its own live child grants.
+`RESTORE_STORAGE` restores those after provider replacement; successful explicit
+revocation and child death clear remembered policy. Matching live grants are
+left alone. Failed local storage exchanges retire their stream so a late reply
+cannot be consumed as the next request's reply.
+
+[Stock migration](source-rs/distribution/migrations/README.md) first refreshes
+exactly recognized program copies, including old user matrices, then adds names,
+indexes and configuration without renumbering or rewriting saved application
+data. Existing metadata/configurations survive repeats. The exact old matrix
+manifests added to the allowlist were checked against retained successful boot
+fixtures; arbitrary matrix-shaped bytes are not accepted. All guest migration
+tests used image copies; the live interactive disk was left untouched and F5
+will run the normal upgrade on its next launch.
+
+Evidence for this change (paths relative to `build/boot-harness-rs/`):
+
+- `cargo test --locked` passed, along with 12 database-object host tests and
+  30 storage-lab engine tests. Contract tests include invalid configuration
+  geometry/key masks. Database tests cover stale/duplicate metadata updates,
+  copied indexes, deletion, quota and reopening; migration tests preserve other
+  roots and saved state and verify idempotence.
+- Userspace and UEFI clippy, desktop shell/notes-probes/trace-storage and provider
+  recovery/trace feature checks, host database/storage-lab clippy with warnings
+  denied, source-layout checks (35 Omega/87 Rust edges), five layout tests,
+  formatting, Python compilation and diff checks passed. No new ARM64 boot or
+  full kernel smoke claim is made for this userspace/storage change.
+- `desktop/20261018T211244773335Z`: default F5 creation, Notes edit/duplicate,
+  app close/switch, cold boot and exact host oracle (241 records) passed.
+- `hierarchy/20261018T211015023781Z`: updated launcher path after rename,
+  extension-looking text exclusion, migration preserving owner edits, and
+  missing launcher returning visibly to the picker passed.
+- `objects/20261018T210147888941Z`: guest metadata/lookup/filter scope refusals,
+  valid in-scope query, existing object operations and both cold-boot oracles passed.
+- `colors/20261018T210311121562Z`: copy of the retained two-user interactive
+  disk upgraded, launched/saved/reopened Colors and cold-booted successfully.
+- `colors/20261018T211700524443Z`: final recovery code on a fresh one-user
+  fixture survived the injected lost committed-save reply, provider replacement,
+  explicit child grant restoration, reconciliation and cold boot.
+- `matrix-storage-test`: final recursive scope/admission/replacement suite passed,
+  including restoration preserving revocation, the outside child's source, and
+  no inheritance of a dead child's remembered grant.
+
+One limit found: recovery-profile installation on the older retained two-user
+disk copy exhausted the 4 MiB engine extent before QEMU started
+(`colors/20261018T210353517960Z`, requested 4,214,784 bytes, capacity 4,186,112).
+Normal migration/boot on that retained disk copy passed; recovery passed on the
+fresh fixture. This accumulated-upgrade capacity issue is not fixed by raising
+logical quota and remains work for the installer/storage lifecycle. Never
+silently replace or reformat a user's image to hide it. The prior intermittent
+ATA timeout and quiet fault-gate occurrence remain recorded above, unresolved.

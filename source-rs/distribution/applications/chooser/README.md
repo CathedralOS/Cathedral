@@ -12,9 +12,11 @@ CLOSE APP FIRST. Arrows and Enter work while the chooser has focus.
 This is selection, not authentication. The bounded listing accommodates the
 hidden template plus three users; at the limit the add-user tile disappears.
 There is deliberately no scrolling, pagination, account editor or logout yet.
-User labels are ordinals, not identities. Editable names and object kinds remain
-owner questions. Hiding the first entry follows the current stock layout and
-must change when explicit object roles replace that convention.
+User labels come from hierarchy names; NEW creates `User N`. This is not an
+identity or account model. The picker resolves `Template` by path. The app strip
+resolves its own hidden launcher from the matrix's saved configuration. Neither
+depends on listing position. An exact media-type index selects executable entries;
+an `.exe` extension alone does not add a tile or grant execution authority.
 
 Start at [session.rs](session/session.rs): load the realm, route input, dispatch
 launch/copy and repaint. [realm.rs](session/realm.rs) lists through the granted
@@ -28,8 +30,8 @@ through its binding; its owner supplies the launch policy, placement and service
 offers. Removing the storage test toggle does not remove required/optional
 service declarations or attenuation from the platform protocol.
 
-[labels.rs](session/labels.rs) reads the program's 32-byte display-title footer
-through the chooser's binding. It grants no authority. The host's explicit
+[labels.rs](session/labels.rs) constructs the bounded default user name. Visible
+labels use hierarchy metadata, not executable footers. The host's explicit
 [stock-program upgrade](../../migrations/README.md) refreshes recognized existing
 user launchers, retaining their child data and customized programs.
 

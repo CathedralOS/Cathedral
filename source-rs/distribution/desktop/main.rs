@@ -49,10 +49,17 @@ fn main(role: u64, argument: u64, environment: cathedral_user_runtime::task::Env
 #[cfg(feature = "desktop")]
 fn call(pair: Pair, words: wire::Packet) -> wire::Packet {
     let mut bytes = [0; 64];
-    let result = pair
-        .0
-        .send(&wire::encode(words))
-        .and_then(|()| pair.1.receive_until(&mut bytes, time::after(300).unwrap()));
+    let result = pair.0.send(&wire::encode(words)).and_then(|()| {
+        pair.1.receive_until(
+            &mut bytes,
+            time::after(if words[0] & 0xffff == wire::CONFIGURE {
+                wire::CONFIGURE_DEADLINE_TICKS + 100
+            } else {
+                300
+            })
+            .unwrap(),
+        )
+    });
     let len = result.unwrap_or_else(|error| {
         let root = ROOT_TASK.load(core::sync::atomic::Ordering::Relaxed);
         panic!(

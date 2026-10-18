@@ -45,24 +45,51 @@ pub fn verify(path: &Path, offset: u64, bytes: u64, programs: &[seed::Program]) 
         actual.insert(key.value().to_vec(), value.value().to_vec());
     }
     let mut expected = seed::expected(programs);
-    // The user is a subtree copy of the template: the template's own copy
-    // sits in the users folder, and its children follow in listing order with
-    // their parents remapped, all at revision one and sharing content.
-    let user = INSTALLED + 1;
-    for (index, program) in programs.iter().enumerate().skip(TEMPLATE as usize - 1) {
-        let source = index as u64 + 1;
+    for (id, name) in [
+        (1u64, b"Login".as_slice()),
+        (2, b"Users"),
+        (3, b"Template"),
+        (4, b"Desktop"),
+        (5, b"Notes"),
+        (6, b"Colors"),
+    ] {
+        hierarchy::describe(
+            &mut expected,
+            id,
+            name,
+            if id == 2 {
+                b""
+            } else {
+                cathedral_platform_contracts::storage::metadata::EXECUTABLE
+            },
+        )?;
+    }
+    hierarchy::insert_config(&mut expected, 7, TEMPLATE)?;
+    let user = 8u64;
+    for source in TEMPLATE..=7 {
         let copy = user + source - TEMPLATE;
-        let parent = if source == TEMPLATE {
-            USERS
-        } else {
-            user + program.parent - TEMPLATE
-        };
-        let head = expected[&key(b'h', &source.to_be_bytes())].clone();
-        let mut head = head[..48].to_vec();
+        let parent = if source == TEMPLATE { USERS } else { user };
+        let source_head = expected[&key(b'h', &source.to_be_bytes())].clone();
+        let source_parent = u64::from_le_bytes(source_head[48..].try_into()?);
+        let metadata = cathedral_platform_contracts::storage::metadata::Metadata::decode(
+            &expected[&edge(source_parent, source)],
+        )
+        .ok_or("source metadata")?;
+        let mut head = source_head[..48].to_vec();
         head.extend_from_slice(&parent.to_le_bytes());
         expected.insert(key(b'h', &copy.to_be_bytes()), head.clone());
         expected.insert(event(copy, 1), head);
         expected.insert(edge(parent, copy), Vec::new());
+        hierarchy::describe(
+            &mut expected,
+            copy,
+            if source == TEMPLATE {
+                b"User 1"
+            } else {
+                cathedral_platform_contracts::storage::metadata::text(&metadata.name)
+            },
+            cathedral_platform_contracts::storage::metadata::text(&metadata.media_type),
+        )?;
     }
     let (notes, colors) = (user + 2, user + 3);
     let mut store = Store::new(Policy {
@@ -96,7 +123,7 @@ pub fn verify(path: &Path, offset: u64, bytes: u64, programs: &[seed::Program]) 
     let second = colors::head(2, &manifests[1], 4 + "hello cathedral two".len(), notes);
     let created = colors::head(1, &manifests[2], 6, colors);
     let color = colors::head(2, &manifests[3], 6, colors);
-    let (note, copy, swatch) = (colors + 1, colors + 2, colors + 3);
+    let (note, copy, swatch) = (user + 5, user + 6, user + 7);
     expected.insert(key(b'h', &note.to_be_bytes()), first.clone());
     expected.insert(key(b'h', &copy.to_be_bytes()), second.clone());
     expected.insert(key(b'h', &swatch.to_be_bytes()), color.clone());
@@ -108,14 +135,18 @@ pub fn verify(path: &Path, offset: u64, bytes: u64, programs: &[seed::Program]) 
     expected.insert(event(swatch, 1), created);
     expected.insert(event(swatch, 2), color);
     expected.insert(key(b'n', &[]), (swatch + 1).to_le_bytes().to_vec());
-    let charge = expected.iter().map(|(k, v)| k.len() + v.len()).sum::<usize>() + 10;
+    let charge = expected
+        .iter()
+        .map(|(k, v)| k.len() + v.len())
+        .sum::<usize>()
+        + 10;
     expected.insert(key(b'q', &[]), (charge as u64).to_le_bytes().to_vec());
     if actual != expected {
         difference::report(&actual, &expected);
         return Err("desktop records differ from the independent object oracle".into());
     }
     println!(
-        "VERIFIED: six installed objects, a user copied from the template, two notes sharing one manifest under its Notes, the color under its Colors, exact heads/history/edges/quota, empty second root ({} records)",
+        "VERIFIED: six installed objects and matrix configuration, a named user copied from the template, two notes sharing one manifest under its Notes, the color under its Colors, exact heads/history/edges/quota, empty second root ({} records)",
         actual.len()
     );
     Ok(())

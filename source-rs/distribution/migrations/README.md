@@ -40,7 +40,22 @@ hashing the original bytes without that exact footer and matching the legacy
 allowlist or retained template history. A matching title alone never authorizes
 replacement. Saved objects and customized programs still remain untouched.
 Its separate backup suffix is `.before-app-close.raw`, and its opt-in is part
-of the installer receipt. This does not update the user's matrix executable.
+of the installer receipt. It now also refreshes recognized stock user matrix
+executables so old users can implement the new startup request. Exact retained
+template history or explicitly verified legacy digests are required; custom
+matrix programs are never identified merely by their location or title.
+
+After program upgrades, [hierarchy migration](../../../tools/storage-lab/engines/volume/hierarchy.rs)
+adds names/type indexes and a `Matrix` configuration to the stock template and
+recognized users. It preserves object numbers, saved Notes/Colors, existing
+nonempty metadata and existing configurations. Changes commit in one transaction
+after a `.before-hierarchy.raw` backup; a repeat is a no-op. The install sidecar
+records hierarchy version 1. Unknown custom programs remain untouched and may
+need explicit metadata before they appear in the executable-only chooser.
+
+The lab's fixed 4 MiB volume can run out of physical engine space when adding
+another set of program revisions. This is separate from the logical retained-byte
+quota. Installation reports failure; it does not resize or reformat the image.
 
 Verification:
 

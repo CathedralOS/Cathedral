@@ -16,6 +16,16 @@ range translation, [backend.rs](backend.rs) for file-length adaptation and
 native-image checks, refusal/bounds cases and simulated interruption. `mod.rs` is
 wiring only. The proof reuses the existing [fault device](../stress/device.rs).
 
+The desktop's explicit stock migration enters [hierarchy.rs](hierarchy.rs):
+plan names, media types, indexes and matrix startup configuration, back up the
+image, then commit without renumbering objects or replacing saved application
+data. `upgrade-hierarchy IMAGE OFFSET BYTES` repeats safely; `inspect-hierarchy`
+prints IDs, parents and content manifests for migration audits. The latter opens
+the engine and may recover it, so use an image copy when inspecting evidence.
+`configure-fixture IMAGE OFFSET BYTES renamed|missing` is test preparation only,
+implemented in [configuration.rs](configuration.rs). It edits a disposable
+one-user fixture for the guest path test; it is not an interactive settings tool.
+
 ## Commands
 
 From the repository root:

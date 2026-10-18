@@ -372,3 +372,75 @@ fn a_tree_copy_is_refused_whole_beyond_the_object_limit() {
     assert!(before.len() < before_refusal.len());
     accounted(&db, 0);
 }
+
+#[test]
+fn hierarchy_indexes_copy_independently_and_conflicts_are_atomic() {
+    use cathedral_platform_contracts::storage::metadata::{EXECUTABLE, TEXT};
+    let db = database();
+    let store = Store::open(&db).unwrap();
+    let folder = store.publish(0, 0, 0, b"", 0).unwrap();
+    let app = store.publish(0, 0, 0, b"code", folder.id).unwrap();
+    let app = store
+        .set_metadata(0, app.id, 1, Metadata::new(b"Notes", EXECUTABLE).unwrap())
+        .unwrap();
+    let document = store.publish(0, 0, 0, b"text", folder.id).unwrap();
+    store
+        .set_metadata(0, document.id, 1, Metadata::new(b"Readme", TEXT).unwrap())
+        .unwrap();
+    assert_eq!(store.lookup(0, folder.id, b"./Notes"), Ok(app.id));
+    assert_eq!(store.lookup(0, folder.id, b"../Notes"), Err(Error::Invalid));
+    assert_eq!(store.lookup(1, 0, b"Notes"), Err(Error::Missing));
+    let before = snapshot(&db);
+    assert_eq!(
+        store.set_metadata(0, document.id, 2, Metadata::new(b"Notes", TEXT).unwrap()),
+        Err(Error::Conflict)
+    );
+    assert_eq!(before, snapshot(&db));
+    let copy = store.copy_tree_named(0, folder.id, 1, 0, b"Alice").unwrap();
+    let before = snapshot(&db);
+    assert_eq!(
+        store.set_metadata(0, app.id, 1, Metadata::new(b"Stale", TEXT).unwrap()),
+        Err(Error::Conflict)
+    );
+    assert_eq!(before, snapshot(&db));
+    let copied = store.lookup(0, copy.id, b"Notes").unwrap();
+    assert_ne!(copied, app.id);
+    let renamed = store
+        .set_metadata(
+            0,
+            app.id,
+            app.head.revision,
+            Metadata::new(b"Editor", TEXT).unwrap(),
+        )
+        .unwrap();
+    assert_eq!(renamed.head.manifest, app.head.manifest);
+    assert_eq!(store.lookup(0, folder.id, b"Notes"), Err(Error::Missing));
+    assert_eq!(store.lookup(0, copy.id, b"Notes"), Ok(copied));
+    let mut ids = [0; 6];
+    assert_eq!(
+        store.filter(0, folder.id, EXECUTABLE, 0, &mut ids).unwrap(),
+        0
+    );
+    assert_eq!(
+        store.filter(0, copy.id, EXECUTABLE, 0, &mut ids).unwrap(),
+        1
+    );
+    assert_eq!(ids[0], copied);
+    assert_eq!(
+        store
+            .filter(0, copy.id, EXECUTABLE, copied, &mut ids)
+            .unwrap(),
+        0
+    );
+    store.delete(0, copied, 1).unwrap();
+    assert_eq!(
+        store.filter(0, copy.id, EXECUTABLE, 0, &mut ids).unwrap(),
+        0
+    );
+    assert_eq!(store.lookup(0, copy.id, b"Notes"), Err(Error::Missing));
+    collect(&store, 0);
+    accounted(&db, 0);
+    drop(store);
+    let reopened = Store::open(&db).unwrap();
+    assert_eq!(reopened.lookup(0, folder.id, b"Editor"), Ok(app.id));
+}

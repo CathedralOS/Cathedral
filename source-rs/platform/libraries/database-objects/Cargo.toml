@@ -7,6 +7,7 @@ publish.workspace = true
 [lib]
 path = "lib.rs"
 [dependencies]
+cathedral-platform-contracts.workspace = true
 cathedral-content-layout.workspace = true
 cathedral-storage-engine.workspace = true
 [features]

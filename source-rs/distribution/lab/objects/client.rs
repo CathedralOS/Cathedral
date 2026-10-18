@@ -111,7 +111,39 @@ pub fn run(root: u64) -> u64 {
         ),
         abi::INVALID_ARGUMENT
     );
+    // New hierarchy operations cannot enumerate an ancestor or mutate the
+    // delegated realm's own entry, even with a well-formed attachment.
+    for (op, subject) in [
+        (wire::LOOKUP, 0),
+        (wire::FILTER, 0),
+        (wire::SET_METADATA, 1),
+        (wire::METADATA, 2),
+    ] {
+        let mut request = packet(op, subject, 0, 0, 0);
+        request.scopes[0] = 1;
+        assert_eq!(
+            wire::word(&client.call(request, Some(&object)), 0),
+            abi::DENIED
+        );
+    }
     drop(object);
+    let mut pages = Private::allocate(1).unwrap();
+    pages.bytes_mut()[..wire::metadata::EXECUTABLE.len()]
+        .copy_from_slice(wire::metadata::EXECUTABLE);
+    let filter = pages.freeze().unwrap();
+    let mut request = packet(
+        wire::FILTER,
+        1,
+        0,
+        0,
+        wire::metadata::EXECUTABLE.len() as u64,
+    );
+    request.scopes[0] = 1;
+    assert_eq!(
+        wire::unpack(&client.call(request, Some(&filter))).unwrap(),
+        [0; 8]
+    );
+    drop(filter);
     assert_eq!(client.call(packet(wire::HEAD, 1, 0, 0, 0), None), accepted);
     assert_eq!(
         wire::word(

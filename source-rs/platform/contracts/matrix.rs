@@ -276,3 +276,16 @@ mod rectangle_tests {
         assert!(rectangle_updates(bad).is_none());
     }
 }
+
+/// Ask this stock matrix to load its own Matrix configuration; refuses if running.
+pub const CONFIGURE: u64 = 122;
+/// Restore the storage grants this matrix recorded for its own children.
+pub const RESTORE_STORAGE: u64 = 123;
+#[path = "matrix_config.rs"]
+pub mod config;
+
+/// Owner-only lookup: words 1..5 contain a zero-padded relative path (32 bytes).
+pub const RESOLVE_PATH: u64 = 124;
+
+/// Startup may read configuration and a program through several storage hops.
+pub const CONFIGURE_DEADLINE_TICKS: u64 = 8 * STORAGE_DEADLINE_TICKS + 100;

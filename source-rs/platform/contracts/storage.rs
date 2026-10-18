@@ -5,8 +5,9 @@
 //! COPY and COPY_TREE preserve independent edits in both directions while
 //! sharing immutable backing. See wiki/spec/storage/realms_and_objects.md;
 //! persisted references use paths in an authorized view. Names and queryable
-//! media types belong to hierarchy metadata. Named lookup and type filtering
-//! are not implemented by this numbered-object lab protocol.
+//! media types belong to hierarchy metadata. LOOKUP resolves relative paths;
+//! FILTER uses an exact-type index under a scoped parent. IDs remain transient
+//! request handles, not persisted cross-view references.
 //!
 //! Every request and reply is one 64-byte packet of eight little-endian words.
 //! Request: `[op, object, expected, argument, len, scope, scope, scope]`. The
@@ -46,9 +47,22 @@ pub const COLLECT: u64 = 11;
 pub const CLOSE: u64 = 12;
 /// `source object, expected, parent` → the copy of the source, whose whole
 /// subtree is copied beneath it with the same shape, sharing all content.
+/// An optional one-page attachment supplies a new root name of `len` bytes;
+/// without it the root is unnamed. Descendant names/types are preserved.
 pub const COPY_TREE: u64 = 13;
+/// `object, 0, field, 0`: field 0 is name, 1 is media type. Reply words 0/1
+/// hold status/revision; bytes 32..64 hold the zero-padded field.
+pub const METADATA: u64 = 14;
+/// `object, expected, 0, 64` plus Metadata attachment; atomic rename/retype.
+pub const SET_METADATA: u64 = 15;
+/// `base, 0, 0, path length` plus relative-path attachment; no parent traversal.
+pub const LOOKUP: u64 = 16;
+/// `parent, 0, after, type length` plus type attachment; indexed direct children.
+pub const FILTER: u64 = 17;
 /// Highest operation a delegated child may issue.
-pub const LAST: u64 = COPY_TREE;
+pub const LAST: u64 = FILTER;
+#[path = "storage_metadata.rs"]
+pub mod metadata;
 /// Largest object on the wire: 64 pages, so a program or a bulk reply fits in
 /// half a task's page allowance. The store's own bound must agree.
 pub const MAX_BYTES: usize = 256 * 1024;

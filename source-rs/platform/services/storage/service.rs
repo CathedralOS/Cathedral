@@ -110,7 +110,7 @@ pub fn serve(store: &Store<'_>) {
 fn scoped(store: &Store<'_>, root: u8, r: wire::Request) -> Result<(), u64> {
     let (subjects, count) = r.subjects();
     for &scope in r.scopes.iter().filter(|s| **s != 0) {
-        if matches!(r.op, wire::PUBLISH | wire::DELETE) && r.object == scope {
+        if matches!(r.op, wire::PUBLISH | wire::DELETE | wire::SET_METADATA) && r.object == scope {
             return Err(abi::DENIED);
         }
         for &subject in &subjects[..count] {
@@ -166,6 +166,16 @@ fn dispatch(
         }
         .encode();
     };
+    if matches!(
+        r.op,
+        wire::METADATA | wire::SET_METADATA | wire::LOOKUP | wire::FILTER
+    ) || (r.op == wire::COPY_TREE && attachment.is_some())
+    {
+        if matches!(r.op, wire::SET_METADATA | wire::COPY_TREE) {
+            collect(store, root)?;
+        }
+        return super::hierarchy::dispatch(store, root, r, attachment, response);
+    }
     let plain = attachment.is_none();
     match r.op {
         wire::HEAD if plain && r.expected == 0 && r.argument == 0 && r.len == 0 => {

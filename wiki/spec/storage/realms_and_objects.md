@@ -121,11 +121,15 @@ protocols are outside this partial contract.
 The [Rust object store](../../../source-rs/platform/libraries/database-objects/README.md)
 implements independent copies sharing immutable manifests and chunks. Its
 subtree copy allocates new numbered objects and metadata per descendant; it
-does not implement shared hierarchy roots, named path lookup or queryable
-media-type metadata. These accepted metadata and path rules are not yet
-implemented by the Rust storage wire protocol.
-Its existing host tests exercise independent edits, shared content, subtree
-copies and bounded reclamation with retained pins.
+does not implement shared hierarchy roots. It now implements bounded exact
+names and media types on edges, atomic index updates, scoped relative-path
+lookup and indexed direct-child type filtering. The Rust wire protocol carries
+these operations; extensions do not supply types or execution authority.
+Host tests exercise independent edits, shared content, subtree copies, index
+rollback and bounded reclamation with retained pins. Pins retain content
+revisions, not complete historical hierarchy metadata. The desktop proof uses
+names and a persisted launcher path; a renamed launcher works after the path is
+updated, while a missing path returns to user selection.
 
 The [storage protocol](../../../source-rs/platform/contracts/storage.rs)
 exposes these bounded operations. The [storage proposal](../../proposals/0002_dbfs_storage_foundation.md)

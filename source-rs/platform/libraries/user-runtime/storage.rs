@@ -20,6 +20,7 @@ pub struct Scope {
     binding: u64,
     realm: u64,
     alive: bool,
+    direct: bool,
 }
 impl Scope {
     pub fn new(pair: (Handle, Handle)) -> Self {
@@ -28,7 +29,14 @@ impl Scope {
             binding: 0,
             realm: 0,
             alive: true,
+            direct: false,
         }
+    }
+    /// A provider connection explicitly supplied to the storage root adapter.
+    pub fn provider(pair: (Handle, Handle)) -> Self {
+        let mut scope = Self::new(pair);
+        scope.direct = true;
+        scope
     }
     pub fn connected(&self) -> bool {
         self.alive
@@ -36,6 +44,9 @@ impl Scope {
     /// Acquire the currently granted binding. A revoked or replaced grant
     /// changes this number and every request scoped by the old one is denied.
     pub fn bind(&mut self) -> Result<u64, u64> {
+        if self.direct {
+            return Ok(1);
+        }
         let (reply, _) = self.exchange([matrix::STORAGE_INFO, 0, 0, 0, 0, 0, 0, 0], None)?;
         let words = storage::unpack(&reply).ok_or(abi::IO_ERROR)?;
         if words[0] != 0 {
@@ -57,8 +68,10 @@ impl Scope {
         attachment: Option<&Object>,
     ) -> Result<([u8; 64], Option<Object>), u64> {
         let mut words = request.words();
-        words[0] =
-            (self.binding << matrix::STORAGE_SCOPE_BITS) | (matrix::STORAGE_BASE + request.op);
+        if !self.direct {
+            words[0] =
+                (self.binding << matrix::STORAGE_SCOPE_BITS) | (matrix::STORAGE_BASE + request.op);
+        }
         self.exchange(words, attachment)
     }
     /// A request whose reply has the common shape and no attachment.
@@ -66,6 +79,63 @@ impl Scope {
         let (reply, attachment) = self.request(request, None)?;
         drop(attachment);
         storage::Reply::decode(&reply)
+    }
+    /// Small immutable request payload, with custody released after completion.
+    pub fn attached(&mut self, request: storage::Request, bytes: &[u8]) -> Result<[u8; 64], u64> {
+        if bytes.len() > 4096 || request.len != bytes.len() as u64 {
+            return Err(abi::INVALID_ARGUMENT);
+        }
+        let mut pages = crate::memory::Private::allocate(1).map_err(|e| e.0 as u64)?;
+        pages.bytes_mut()[..bytes.len()].copy_from_slice(bytes);
+        let object = pages.freeze().map_err(|e| e.0 as u64)?;
+        let (reply, extra) = self.request(request, Some(&object))?;
+        drop(extra);
+        if storage::word(&reply, 0) != 0 {
+            return Err(storage::word(&reply, 0));
+        }
+        Ok(reply)
+    }
+    pub fn lookup(&mut self, path: &[u8]) -> Result<u64, u64> {
+        let bytes = self.attached(
+            storage::Request::new(storage::LOOKUP, self.realm, 0, 0, path.len() as u64),
+            path,
+        )?;
+        Ok(storage::Reply::decode(&bytes)?.object)
+    }
+    pub fn metadata(&mut self, object: u64) -> Result<storage::metadata::Metadata, u64> {
+        let mut bytes = [0; 64];
+        let mut revision = 0;
+        for field in 0..2 {
+            let (reply, extra) = self.request(
+                storage::Request::new(storage::METADATA, object, 0, field, 0),
+                None,
+            )?;
+            drop(extra);
+            storage::Reply::decode(&reply)?;
+            let observed = storage::word(&reply, 1);
+            if field != 0 && observed != revision {
+                return Err(abi::WOULD_BLOCK);
+            }
+            revision = observed;
+            bytes[field as usize * 32..field as usize * 32 + 32].copy_from_slice(&reply[32..]);
+        }
+        storage::metadata::Metadata::decode(&bytes).ok_or(abi::IO_ERROR)
+    }
+    pub fn filter(&mut self, media_type: &[u8], after: u64, out: &mut [u64]) -> Result<usize, u64> {
+        let reply = self.attached(
+            storage::Request::new(
+                storage::FILTER,
+                self.realm,
+                0,
+                after,
+                media_type.len() as u64,
+            ),
+            media_type,
+        )?;
+        let words = storage::unpack(&reply).ok_or(abi::IO_ERROR)?;
+        let count = (words[1] as usize).min(out.len()).min(storage::LIST_IDS);
+        out[..count].copy_from_slice(&words[2..2 + count]);
+        Ok(count)
     }
     fn exchange(
         &mut self,

@@ -1,6 +1,5 @@
-//! The realm as this program sees it: the first entries under its binding's
-//! root, and the two ordinary object operations the chooser performs itself,
-//! listing and the subtree copy that makes a new entry from the first.
+//! Query executable entries in the supplied realm, resolve the hidden template
+//! or launcher by path, and copy the template to create a named user.
 use super::*;
 use cathedral_platform_contracts::storage as store;
 use cathedral_user_runtime::storage::Scope;
@@ -21,32 +20,62 @@ impl Realm {
             user_picker,
         }
     }
-    /// Acquire the current binding and list what it is rooted at.
+    /// Query executable entries; the hidden template/launcher is identified by
+    /// its path, never its listing position. Row zero is presentation only.
     pub fn reload(&mut self) -> Result<(), u64> {
         self.scope.bind()?;
-        let request = store::Request::new(store::LIST, self.scope.realm(), 0, 0, 0);
-        let (reply, _) = self.scope.request(request, None)?;
-        let words = store::unpack(&reply).ok_or(abi::IO_ERROR)?;
-        if words[0] != 0 {
-            return Err(words[0]);
-        }
-        self.count = (words[1] as usize).min(ENTRIES);
-        self.ids[..self.count].copy_from_slice(&words[2..2 + self.count]);
-        for row in 0..self.count {
-            self.labels[row] = if self.user_picker {
-                if row == 0 {
-                    *b"USER TEMPLATE"
-                } else {
-                    labels::numbered(b"USER ", row)
+        let hidden = if self.user_picker {
+            self.scope.lookup(b"Template")?
+        } else {
+            let config = self
+                .scope
+                .lookup(cathedral_platform_contracts::matrix::config::NAME)?;
+            let head = self
+                .scope
+                .call(store::Request::new(store::HEAD, config, 0, 0, 0))?;
+            let (reply, extra) = self.scope.request(
+                store::Request::new(store::READ, config, head.revision, 8, 32),
+                None,
+            )?;
+            drop(extra);
+            store::Reply::decode(&reply)?;
+            let name: [u8; 32] = reply[32..].try_into().unwrap();
+            self.scope.lookup(store::metadata::text(&name))?
+        };
+        self.ids = [0; ENTRIES];
+        self.ids[0] = hidden;
+        self.count = 1;
+        let mut after = 0;
+        loop {
+            let mut found = [0; store::LIST_IDS];
+            let count = self
+                .scope
+                .filter(store::metadata::EXECUTABLE, after, &mut found)?;
+            if count == 0 {
+                break;
+            }
+            for &id in &found[..count] {
+                after = id;
+                if id == hidden {
+                    continue;
                 }
-            } else {
-                labels::program(&mut self.scope, self.ids[row])
-                    .unwrap_or_else(|| labels::numbered(b"PROGRAM ", row + 1))
-            };
+                if self.count == ENTRIES {
+                    return Ok(());
+                }
+                let meta = self.scope.metadata(id)?;
+                let name = store::metadata::text(&meta.name);
+                let mut label = [0; 13];
+                for (to, from) in label.iter_mut().zip(name) {
+                    *to = from.to_ascii_uppercase();
+                }
+                self.ids[self.count] = id;
+                self.labels[self.count] = label;
+                self.count += 1;
+            }
         }
         Ok(())
     }
-    /// A new entry: the first one copied whole, beside it. A user realm made
+    /// A new entry: the resolved template copied whole, beside it. A user realm made
     /// this way shares every byte of the template until it diverges.
     pub fn copy_first(&mut self) -> Result<(), u64> {
         if self.count == 0 || self.count == ENTRIES {
@@ -56,13 +85,18 @@ impl Realm {
         let head = self
             .scope
             .call(store::Request::new(store::HEAD, template, 0, 0, 0))?;
-        self.scope.call(store::Request::new(
-            store::COPY_TREE,
-            template,
-            head.revision,
-            self.scope.realm(),
-            0,
-        ))?;
+        let label = labels::numbered(b"User ", self.count);
+        let len = label.iter().position(|b| *b == 0).unwrap_or(label.len());
+        self.scope.attached(
+            store::Request::new(
+                store::COPY_TREE,
+                template,
+                head.revision,
+                self.scope.realm(),
+                len as u64,
+            ),
+            &label[..len],
+        )?;
         self.reload()
     }
 }

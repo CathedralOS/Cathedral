@@ -10,12 +10,9 @@ pub(crate) struct Session {
     #[cfg(feature = "database-probes")]
     pub(crate) database_fresh: bool,
     pub matrix: Pair,
-    /// The realm of the user matrix in the workspace slot, and of the app its
-    /// chrome launched, by object number, or zero.
+    /// The realm of the user matrix in the workspace slot, or zero.
     #[cfg(feature = "shell")]
     pub(crate) user: u64,
-    #[cfg(feature = "shell")]
-    pub(crate) app: u64,
     /// Lab compositions add a capped spinner; the shell never does.
     #[cfg(not(feature = "shell"))]
     pub pressure: bool,
@@ -219,8 +216,6 @@ pub(crate) fn start() -> Session {
         matrix,
         #[cfg(feature = "shell")]
         user: 0,
-        #[cfg(feature = "shell")]
-        app: 0,
         #[cfg(not(feature = "shell"))]
         pressure,
         extent: [info[1], info[2]],

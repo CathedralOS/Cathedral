@@ -109,9 +109,12 @@ retain their existing design/specification owners.
   [child admission](../../../source-rs/platform/services/matrix/service/children/children.rs)
   exercise owner ceilings, restricted launches and recursive hosting.
 - The [distribution owner](../../../source-rs/distribution/desktop/session/shell/shell.rs)
-  still configures the user matrix from outside using object ordering and fixed
-  slots. Matrix-owned persisted arrangements and explicit live application are
-  not implemented by that desktop.
+  grants the user ceiling and requests startup. The
+  [stock matrix](../../../source-rs/platform/services/matrix/service/children/configuration.rs)
+  reads its own `Matrix` configuration, resolves the launcher path in its realm,
+  and installs child budgets and placement within the supplied ceiling. Startup
+  requires empty slots. There is no settings editor or live reconfiguration yet;
+  editing saved bytes does not alter running children.
 - Warden, encrypted realms and authentication are not implemented in the Rust
   reference OS. The current user picker selects an unencrypted subtree.
 

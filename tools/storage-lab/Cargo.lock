@@ -39,11 +39,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "cathedral-kernel-contracts"
+version = "0.0.0"
+
+[[package]]
+name = "cathedral-platform-contracts"
+version = "0.0.0"
+dependencies = [
+ "cathedral-kernel-contracts",
+]
+
+[[package]]
 name = "cathedral-storage-layout-lab"
 version = "0.0.0"
 dependencies = [
  "blake3",
  "cathedral-content-layout",
+ "cathedral-platform-contracts",
  "cathedral-storage-volume",
  "redb",
  "rusqlite",

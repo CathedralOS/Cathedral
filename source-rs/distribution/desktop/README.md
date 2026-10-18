@@ -2,10 +2,10 @@
 
 The default boot enters [main.rs](main.rs), then [session/session.rs](session/session.rs):
 admit providers and the root matrix, run the chooser over the folder of users,
-open the workspace slot to what it launches, start input, furnish each user
-matrix that appears and supervise storage. [shell/](session/shell/shell.rs)
-carries that policy by object number, since the shell's programs live in the
-notes root; [app/](session/app/app.rs) is the color program. See the
+open the workspace slot to what it launches, start input, request each user
+matrix's own startup and supervise storage. [shell/](session/shell/shell.rs)
+resolves `Login` and `Users` by path in the supplied root;
+[app/](session/app/app.rs) is the color program. See the
 [distribution map](../README.md) for F5, controls, composition and the
 same-image interactive test.
 
@@ -18,8 +18,9 @@ reports that uncertainty, so the chooser cannot silently close it.
 [Shell handoff](session/shell/shell.rs) stops and collects the picker as soon as
 its sibling user matrix is admitted, before loading the user launcher from
 storage. This retires the picker's display, input and storage binding; it does
-not leave an invisible login process behind. [Phase layout](session/shell/layout.rs)
-then places the separate launcher and app inside the user's display. The user matrix owns
+not leave an invisible login process behind. The
+[user matrix's configuration loader](../../platform/services/matrix/service/children/configuration.rs)
+places the separate launcher and app using its own saved arrangement. The user matrix owns
 the full display, with its launcher at the left and its app in the remaining
 space. The root keeps supervising and forwarding without visible boot chrome.
 If the user matrix is lost, the owner starts a fresh picker; storage recovery

@@ -141,6 +141,23 @@ fn plan(
     let mut replacements = Vec::new();
     for (&object, current) in &heads {
         let parent = u64::from_le_bytes(current[48..].try_into()?);
+        if refresh_apps && parent == 2 && object > 3 {
+            let known = legacy
+                .iter()
+                .any(|(id, digest)| *id == 3 && digest[..] == current[8..40])
+                || records.iter().any(|(k, v)| {
+                    k.len() == 18
+                        && k.starts_with(&key(b'e', &3u64.to_be_bytes()))
+                        && v.len() == 56
+                        && v[8..40] == current[8..40]
+                });
+            if known {
+                let next = content(records, heads.get(&3).ok_or("missing template matrix")?)?;
+                if content(records, current)? != next {
+                    replacements.push((object, next));
+                }
+            }
+        }
         let Some(user) = heads.get(&parent) else {
             continue;
         };
@@ -256,7 +273,7 @@ fn content(records: &Records, head: &[u8]) -> Result<Vec<u8>> {
 }
 
 /// Distribution-owned allowlist for stock revisions already swept from history.
-/// Lines are template object (4..6) and the content-layout manifest digest.
+/// Lines are template object (3..6) and the content-layout manifest digest.
 pub fn legacy(path: &Path) -> Result<Vec<(u64, [u8; 32])>> {
     let mut entries = Vec::new();
     for line in std::fs::read_to_string(path)?.lines() {
@@ -269,8 +286,10 @@ pub fn legacy(path: &Path) -> Result<Vec<(u64, [u8; 32])>> {
             return Err("invalid legacy title entry".into());
         }
         let object = words[0].parse()?;
-        if !(4..=6).contains(&object) {
-            return Err("legacy titles may identify only stock launcher/Notes/Colors".into());
+        if !(3..=6).contains(&object) {
+            return Err(
+                "legacy titles may identify only stock matrix/launcher/Notes/Colors".into(),
+            );
         }
         let mut digest = [0; 32];
         for (i, byte) in digest.iter_mut().enumerate() {

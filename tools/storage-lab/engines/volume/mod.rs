@@ -1,11 +1,13 @@
 mod backend;
 mod colors;
+mod configuration;
 use cathedral_storage_volume::header;
 mod desktop;
 mod difference;
 mod guest;
 mod image;
 mod labels;
+mod hierarchy;
 mod notes;
 mod objects;
 mod proof;

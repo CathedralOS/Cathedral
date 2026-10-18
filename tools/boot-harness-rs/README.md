@@ -36,6 +36,9 @@ their code and saved data. Customized/unrecognized programs remain untouched.
 A pre-migration backup is saved as `cathedral-storage.raw.before-readable-labels.raw`.
 The subsequent app-close upgrade refreshes recognized Notes/Colors code while
 keeping their saved state and backs up `cathedral-storage.raw.before-app-close.raw`.
+It also upgrades exactly recognized stock matrix executables. Hierarchy migration
+adds names/type indexes and matrix configuration, with a separate
+`.before-hierarchy.raw` backup. Existing metadata and configurations survive reruns.
 
 If F5 builds but no QEMU window appears, check the integrated terminal. An image
 from before programs were installed as objects can fail with "holds something
@@ -58,6 +61,12 @@ profile is written only under its artifact directory.
 using physical input, repeated app launches, draft protection and cold-boot saved
 text checks on a disposable disk. [Distribution navigation](../../source-rs/distribution/README.md)
 connects the shell, apps and platform providers.
+
+`python tools/boot-harness-rs/hierarchy_test.py PATH/guest.raw` takes a one-user
+desktop fixture and edits disposable copies. It verifies that a renamed launcher
+works through its updated saved path, an extension-looking text document stays
+out of executable filtering, installer reruns preserve edits, and a missing
+launcher returns to the picker without a panic. It does not edit the source image.
 
 The `notes`, `matrix-database` and recovery profiles remain focused engineering
 fixtures. Their tests are `matrix_database_test.py --release --notes` and

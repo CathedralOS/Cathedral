@@ -15,3 +15,10 @@
 4 37dc99b5b51c039ceec618d296a49572583ff384e51bc1d69f6c65e80fd02f36
 5 11c68792fb55cab7d8a706309dd4d4b8f9fe8a81499533c04aa2c079bcdd999e
 6 0ecdad8e1aafd944fdc0a3bc3c5c083b9b1c05439b342bf41ecb4f5c9d218065
+
+# Stock user matrices for hierarchy/configuration startup. Verified against
+# template object 3 in the retained successful fixtures named above.
+# 20261017T232223657195Z (also the existing interactive users):
+3 49f5ba0b791c61abf85a84beb39360de059786b7ffff4ea4956ba5a832f8105e
+# 20261018T052214126134Z:
+3 2a991a4abbbf999fd6985202868fd1682eddd45f5db17354aa602b34dd560026
