@@ -1,5 +1,6 @@
 """Check first creation and refusal to overwrite persistent database media."""
 from pathlib import Path
+import os
 import tempfile
 import subprocess
 import unittest
@@ -8,6 +9,28 @@ import database_image
 
 
 class DatabaseImageTests(unittest.TestCase):
+    @unittest.skipUnless(os.name == 'nt', 'Windows image sharing diagnostic')
+    def test_busy_desktop_refuses_before_build_or_disk_changes(self):
+        import run as harness
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / 'cathedral-storage.raw'
+            original = b'keep the running guest disk'
+            path.write_bytes(original)
+            with path.open('rb'), patch.object(harness, 'BUILD', Path(directory)), \
+                    patch('sys.argv', ['run.py', '--release', '--window']), \
+                    patch.object(harness.subprocess, 'run') as build:
+                with self.assertRaisesRegex(RuntimeError, 'Close the existing Cathedral QEMU'):
+                    harness.main()
+                build.assert_not_called()
+            self.assertEqual(path.read_bytes(), original)
+            database_image.require_available(path)  # Released handle permits a retry.
+
+    def test_availability_probe_does_not_create_missing_media(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / 'missing' / 'desktop.raw'
+            database_image.require_available(path)
+            self.assertFalse(path.parent.exists())
+
     def test_changed_install_compacts_first_and_unchanged_install_never_opens(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / 'desktop.raw'

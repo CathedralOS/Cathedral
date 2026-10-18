@@ -14,6 +14,38 @@ OFFSET = 4096
 IMAGE_BYTES = OFFSET + VOLUME_BYTES + 4096
 
 
+def require_available(path):
+    """Diagnose Windows sharing conflicts before building or changing boot files.
+
+    This read-only probe is not a reservation; the installer and QEMU still
+    enforce their own locks when they open the image.
+    """
+    if os.name != 'nt':
+        return
+    import ctypes
+    from ctypes import wintypes
+    kernel = ctypes.WinDLL('kernel32', use_last_error=True)
+    kernel.CreateFileW.argtypes = [wintypes.LPCWSTR, wintypes.DWORD, wintypes.DWORD,
+                                  wintypes.LPVOID, wintypes.DWORD, wintypes.DWORD,
+                                  wintypes.HANDLE]
+    kernel.CreateFileW.restype = wintypes.HANDLE
+    kernel.CloseHandle.argtypes = [wintypes.HANDLE]
+    # GENERIC_READ, no sharing, OPEN_EXISTING. Never creates or writes the disk.
+    handle = kernel.CreateFileW(str(Path(path).resolve()), 0x80000000, 0, None, 3, 0x80, None)
+    if handle == wintypes.HANDLE(-1).value:
+        error = ctypes.get_last_error()
+        if error in (2, 3):  # A missing image is created during installation.
+            return
+        if error in (32, 33):
+            raise RuntimeError(
+                f'Cathedral disk is already in use: {path}\n'
+                'Close the existing Cathedral QEMU window (save any work first), '
+                'or press Ctrl+C in its launch terminal, then press F5 again. '
+                'The saved disk has not been changed by this launch.')
+        raise ctypes.WinError(error)
+    kernel.CloseHandle(handle)
+
+
 def oracle():
     """Build the host storage lab once and return its executable."""
     root = Path(__file__).resolve().parents[2]

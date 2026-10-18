@@ -31,6 +31,12 @@ Build output and serial diagnostics appear in the integrated terminal. Close
 QEMU or press Ctrl+C there to stop. This uses VS Code's terminal launcher, not
 an attached kernel debugger.
 
+Close the previous QEMU before starting another F5 session. On Windows the
+default launcher checks for a busy saved disk before building or replacing boot
+files, and reports how to stop the existing session. It does not terminate the
+guest or discard unsaved work. This is an early diagnostic; the installer and
+QEMU still enforce their locks when opening the image.
+
 The desktop retains `build/boot-harness-rs/cathedral-storage.raw`. First launch
 builds the host formatter and creates the image; later launches preserve it.
 Existing files are never automatically reformatted. Older lab disks are untouched.

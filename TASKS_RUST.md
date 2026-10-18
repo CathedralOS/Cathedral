@@ -1231,3 +1231,23 @@ restart a failed configured launcher within its own matrix, recover root startup
 failures, and offer explicit recovery for an unresponsive app without silently
 throwing away work. Previous storage capacity, ATA timeout and quiet fault-gate
 limitations remain as recorded above.
+
+## F5 already-running diagnosis (2026-10-18)
+
+Another reported F5 failure had an existing interactive QEMU (PID 66056 at
+diagnosis) still holding `cathedral-storage.raw`. A read-only exclusive Windows
+open returned sharing violation 32. The default harness now checks availability
+before compilation or replacing boot files, and tells the user to save/close
+the previous QEMU and retry. It leaves that guest running. The probe is not a
+reservation; installer/QEMU locks remain authoritative. Build-only and disposable
+tests remain available while the interactive disk is busy.
+
+Six database-image harness tests passed, including a real Windows sharing
+conflict that refuses before any build and succeeds after the handle closes.
+The exact F5 command now exits immediately with the actionable diagnostic.
+Python compilation, layout and diff checks passed. No Rust code changed.
+`f5-diagnosis/20261018T225227024191Z` reused the last verified default build on
+a disposable copy of the current two-user disk: upgrade, picker, login, Colors
+save/close/reopen and cold boot passed. Picker readiness was 3.62 s and 9.33 s.
+The source disk hash was unchanged. The existing interactive QEMU and its boot
+files were untouched; closing it is still necessary before the next F5 launch.

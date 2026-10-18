@@ -202,6 +202,8 @@ def main():
         parser.error("custom profiles select ordinary startup; smoke uses the standard lab profile")
     composition = ({"target": "x86_64-unknown-uefi", "boot_package": "cathedral-boot-uefi"}
                    if args.kernel_only else json.loads(args.profile.read_text(encoding="utf-8")))
+    if desktop and not args.build_only:
+        database_image.require_available(BUILD / "cathedral-storage.raw")
     if args.pressure:
         startup = composition.get("startup", {})
         profile = args.profile.resolve()
