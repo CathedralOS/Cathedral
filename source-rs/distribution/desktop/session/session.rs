@@ -33,8 +33,8 @@ pub(crate) fn run() -> u64 {
             0,
         ],
     );
-    shell::chooser(matrix);
-    shell::workspace(matrix);
+    shell::chooser(matrix, session.extent);
+    shell::workspace(matrix, session.extent);
     session.start_input();
     cathedral_user_runtime::write(b"Cathedral desktop: ready; choose a user\n").unwrap();
     loop {
@@ -47,10 +47,11 @@ pub(crate) fn run() -> u64 {
             session.user = user;
             session.app = 0;
             if user != 0 {
-                shell::furnish(matrix, user);
+                shell::furnish(matrix, session.extent, user);
                 cathedral_user_runtime::write(b"Cathedral desktop: user matrix furnished\n")
                     .unwrap();
             } else {
+                shell::select_user(matrix, session.extent);
                 cathedral_user_runtime::write(b"Cathedral desktop: user matrix closed\n").unwrap();
             }
         }

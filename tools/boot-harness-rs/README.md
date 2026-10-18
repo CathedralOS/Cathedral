@@ -16,6 +16,9 @@ Click **NEW** to copy the template user, click the user to run it, then click
 **Notes** or **Colors** in its chrome and click the program to focus it. Notes:
 type, F1 save/check, F2 reload. Colors: Enter changes color. CLOSE stops the
 program unless it would lose work; an unsaved note stays until saved or reloaded.
+Selecting a user removes the boot picker and gives the user the full display,
+with its launcher on the left. There is no logout UI yet; restart QEMU to select
+another user.
 Build output and serial diagnostics appear in the integrated terminal. Close
 QEMU or press Ctrl+C there to stop. This uses VS Code's terminal launcher, not
 an attached kernel debugger.

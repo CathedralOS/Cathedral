@@ -10,7 +10,10 @@ F5 and `python tools/boot-harness-rs/run.py --release --window` share
 [one composition](distribution/profile.json). It boots to a chooser over the
 folder of users: NEW copies the template user as a subtree copy, and choosing a
 user runs it as a matrix whose chrome, a second chooser over the user's realm,
-launches that user's Notes or Colors beside itself. Notes keeps up to eight
+launches that user's Notes or Colors beside itself. User entry revokes the boot
+chooser's display/input grant and gives the user the full screen: launcher on
+the left, app in the remaining space, no persistent boot help or logout control.
+Notes keeps up to eight
 notes as private objects on the experimental database disk; a duplicate is the
 store's copy of the saved note and shares its content. Closing asks the program
 what it would lose and keeps it open on any answer but nothing, so an unsaved
@@ -320,8 +323,8 @@ read-only to its holder. A child's `LAUNCH` does the same through the child's
 own binding into a slot the owner opened with a standing policy, and `CLOSE`
 stops that sibling only after it answers `LOSS` with nothing to lose. A matrix
 answers by surveying all its direct children recursively, retaining the subtree
-when any answer is dirty, busy, missing or failed. The F5 desktop test closes and
-reopens whole user matrices; the headless matrix proof also exercises delayed
+when any answer is dirty, busy, missing or failed. The headless matrix proof
+closes and reopens whole user matrices and also exercises delayed
 replies and exhausted control-probe capacity without destroying the slow child.
 LOSS is advisory; it does not freeze future edits across processes.
 

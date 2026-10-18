@@ -5,6 +5,6 @@
 //! surface; hosted inside a user's realm it is the chrome.
 mod session;
 cathedral_user_runtime::entry_with_environment!(main);
-fn main(_: u64, _: u64, environment: cathedral_user_runtime::task::Environment) -> u64 {
-    session::run(environment)
+fn main(_: u64, role: u64, environment: cathedral_user_runtime::task::Environment) -> u64 {
+    session::run(environment, role == 1)
 }

@@ -19,7 +19,7 @@ pub const NEW: usize = ENTRIES;
 pub const CLOSE: usize = ENTRIES + 1;
 pub const ROWS: usize = ENTRIES + 3;
 
-pub fn run(environment: Environment) -> u64 {
+pub fn run(environment: Environment, user_picker: bool) -> u64 {
     let connections = cathedral_user_runtime::matrix::Connections::load(&environment).unwrap();
     let parent = connections.interaction;
     let control = (Handle::bootstrap(0).unwrap(), Handle::bootstrap(1).unwrap());
@@ -43,10 +43,10 @@ pub fn run(environment: Environment) -> u64 {
                     if down
                         && !pressed
                         && (view::LEFT..view::LEFT + view::WIDTH as u64).contains(&event[3])
-                        && (view::TOP..view::TOP + view::ROW * (CLOSE as u64 + 1))
+                        && (view::ENTRY_TOP..view::ENTRY_TOP + view::ROW * (CLOSE as u64 + 1))
                             .contains(&event[4])
                     {
-                        selected = ((event[4] - view::TOP) / view::ROW) as usize;
+                        selected = ((event[4] - view::ENTRY_TOP) / view::ROW) as usize;
                         choose = true;
                     }
                     pressed = down;
@@ -75,10 +75,14 @@ pub fn run(environment: Environment) -> u64 {
                 repaint = true;
             }
             if repaint {
-                scene
-                    .as_ref()
-                    .unwrap()
-                    .paint(parent, extent, &realm, selected, status);
+                scene.as_ref().unwrap().paint(
+                    parent,
+                    extent,
+                    &realm,
+                    selected,
+                    status,
+                    user_picker,
+                );
                 repaint = false;
             }
         } else {

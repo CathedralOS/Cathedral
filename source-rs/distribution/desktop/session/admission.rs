@@ -125,20 +125,7 @@ pub(crate) fn start() -> Session {
         0
     );
     let labels: &[(u64, u64, &[u8])] = if cfg!(feature = "shell") {
-        &[
-            (40, 50, b"CATHEDRAL".as_slice()),
-            (40, 110, b"USERS"),
-            (280, 110, b"WORKSPACE"),
-            (40, 330, b"NEW COPIES THE"),
-            (40, 362, b"TEMPLATE USER"),
-            (40, 394, b"PICK ONE TO RUN"),
-            (40, 440, b"NOTES: F1 SAVE"),
-            (40, 472, b"F2 LOAD F3 COPY"),
-            (40, 504, b"F4 NEXT NOTE"),
-            (360, 440, b"COLORS: ENTER"),
-            (360, 472, b"CHANGES COLOR"),
-            (360, 504, b"CLOSE ASKS FIRST"),
-        ]
+        &[] // The shell puts its headings inside the phase-specific chooser.
     } else if cfg!(feature = "notes") {
         &[
             (80, 60, b"PRIVATE NOTES"),

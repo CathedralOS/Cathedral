@@ -7,13 +7,15 @@ python tools/boot-harness-rs/run.py --release --window
 ```
 
 One desktop boots to a chooser over the folder of users. **NEW** copies the
-template user beside it; clicking a user runs it in the workspace. A user is a
+template user beside it; clicking a user replaces the boot picker with that
+user's full-screen workspace. A user is a
 matrix with its own chrome: a second chooser over the user's realm, listing the
 user's copies of Notes and Colors. Click one to launch it, and click the
 program's area to give it keyboard focus. **CLOSE** asks the running program
-whether it would lose work and keeps it open if so. The outer chooser can
-close an entire user matrix: it recursively checks its descendants, keeps dirty
-or unanswered work open, and permits reopening the same user after a clean close. Notes holds up to eight
+whether it would lose work and keeps it open if so. The boot chooser's display
+and input grant is revoked on entry, leaving the user's launcher on the left
+and its app in the remaining area. There is no logout control yet; restart
+QEMU to select another user. Notes holds up to eight
 notes of 240 characters: **F1** saves (or checks an uncertain save), **F2**
 reloads the saved note, **F3** duplicates it as a new note sharing its content,
 **F4** switches to the next note. Colors changes on **Enter**. Both choosers
@@ -37,7 +39,9 @@ shown only the folder of users, and opens the second slot with a standing
 launch policy: whatever the chooser launches lands there with that budget and
 placement. When a user matrix appears, the desktop furnishes it the same way,
 its chrome in its first slot over the whole user realm and a standing policy
-for the second, then only supervises storage and restores the realms after a
+for the second. [Phase layout](desktop/session/shell/layout.rs) retires the boot
+picker and places the user's chrome/app within the full display. The owner
+then supervises storage and restores the realms after a
 provider replacement. Every matrix runs the same platform code.
 
 [profile.json](profile.json) is the executable composition shared by F5,
@@ -86,9 +90,13 @@ python tools/boot-harness-rs/desktop_test.py
 This builds the default composition, copies a user from the template, launches
 its programs with physical mouse and keyboard input, checks exact note glyphs
 and status, protects unsaved drafts, duplicates and switches notes, repeatedly
-replaces apps and whole user matrices, cold-boots the same disposable disk to check saved state, and
+replaces apps, checks the boot picker disappears and cannot receive input,
+cold-boots the same disposable disk to check saved state, and
 has an independent host model verify the retained records. It never touches
 the interactive disk.
+
+Recursive whole-user LOSS and teardown/recreation remain covered by the
+headless `--matrix-test` fixture; they are not a logout workflow in this desktop.
 
 Other profiles remain focused mechanism and fault tests, not competing default
 OS entry points. [The desktop guide](desktop/README.md) describes its recursive

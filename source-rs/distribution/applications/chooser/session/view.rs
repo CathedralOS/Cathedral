@@ -4,10 +4,11 @@ use super::*;
 use cathedral_user_runtime::memory::Private;
 pub const WIDTH: usize = 160;
 pub const ROW: u64 = 16;
-const HEIGHT: usize = ROWS * ROW as usize;
+const HEIGHT: usize = (ROWS + 1) * ROW as usize;
 /// Where the bitmap sits in the chooser's extent.
 pub const LEFT: u64 = 10;
 pub const TOP: u64 = 20;
+pub const ENTRY_TOP: u64 = TOP + ROW;
 /// Pages one bitmap occupies; the chooser holds two during replacement.
 pub const PAGES: usize = (WIDTH * HEIGHT * 4).div_ceil(4096);
 pub struct Scene {
@@ -32,6 +33,7 @@ impl Scene {
             text: names[1],
         }
     }
+    #[allow(clippy::too_many_arguments)]
     pub fn paint(
         &self,
         parent: Pair,
@@ -39,6 +41,7 @@ impl Scene {
         realm: &realm::Realm,
         selected: usize,
         status: &str,
+        user_picker: bool,
     ) {
         assert_eq!(
             call(
@@ -62,15 +65,21 @@ impl Scene {
             .enumerate()
         {
             let row = i / WIDTH / ROW as usize;
-            let color: u32 = if row == selected && row <= CLOSE {
+            let color: u32 = if row == selected + 1 && row <= CLOSE + 1 {
                 0x315ca8
             } else {
                 0x182132
             };
             pixel.copy_from_slice(&color.to_le_bytes());
         }
-        let mut labels = [[0u8; 13]; ROWS];
-        for (row, label) in labels.iter_mut().enumerate() {
+        let mut labels = [[0u8; 13]; ROWS + 1];
+        let title: &[u8] = if user_picker {
+            b"CHOOSE USER"
+        } else {
+            b"PROGRAMS"
+        };
+        labels[0][..title.len()].copy_from_slice(title);
+        for (row, label) in labels[1..].iter_mut().enumerate() {
             let text: &[u8] = match row {
                 row if row < realm.count => {
                     let mut line = *b"OBJECT       ";

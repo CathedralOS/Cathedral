@@ -1,9 +1,9 @@
 # Rust reference OS: tasks and handoff
 
-Updated 2026-10-17 (local date). Implementation baseline: the recursive
-user-close change following **`cba1d49`**. The chooser/store architecture from that
-commit remains; matrices now aggregate descendant LOSS replies so a whole user
-can be closed and reopened. Check Git for later work.
+Updated 2026-10-17 (local date). Implementation baseline: the desktop phase
+change following **`4b589cf`**. Selecting a user retires the boot chooser's
+display/input grant and gives the user the full display. Recursive LOSS remains
+a platform mechanism, exercised by the headless matrix proof. Check Git for later work.
 
 ## Start here
 
@@ -20,7 +20,10 @@ It uses x86-64 QEMU/TCG and UEFI.
 
 - **NEW** copies the template user beside it. Click a user to run it: it is a
   matrix whose chrome, a second chooser over the user's realm, lists the user's
-  Notes and Colors. Click one to launch it, then click the program to focus it.
+  Notes and Colors. The centered boot picker disappears; the user gets the whole
+  display, with its launcher on the left and its app in the remaining area.
+  Click one to launch it, then click the program to focus it. There is no logout
+  control yet; restart QEMU to select another user.
 - Notes keeps up to eight notes of 240 ASCII characters in its realm.
   Type letters/digits/spaces; Enter inserts a newline, Left/Right move the
   cursor, Backspace deletes. F1 saves or reconciles an uncertain save; F2
@@ -31,9 +34,7 @@ It uses x86-64 QEMU/TCG and UEFI.
   its own program like everything else's.
 - **CLOSE** in a chooser asks the running program what it would lose and stops
   it only on an answer of nothing; an unsaved note stays open. Launching while
-  the slot is taken answers BUSY. The outer chooser can close a whole user:
-  its matrix recursively checks its children, retaining the user when a
-  descendant is dirty, busy or unresponsive. Reopening restores its stored state.
+  the slot is taken answers BUSY. The hidden boot chooser cannot receive input.
   Up/Down/Enter work in a focused chooser.
 
 Interactive state persists in **`build/boot-harness-rs/cathedral-storage.raw`**:
@@ -194,7 +195,7 @@ numbers and the bindings it observed.
 Page budgets are sized for sealed bitmaps held at every matrix level with old
 and new present during replacement, plus the largest program a matrix reads
 to run it: the root matrix has 128 private and 256 reader pages and lends the
-user matrix 72/96; the chooser has 36 private pages (two of its 18-page
+user matrix 80/96; the chooser has 40 private pages (two of its 20-page
 bitmaps); Notes 32/4; Colors fits in the same; the provider 128/64; the
 display 128 reader pages. The kernel's per-task bound is 128 private and 512
 reader pages with eight reader rights; the kernel heap is 256 KiB. Objects
@@ -332,10 +333,11 @@ The headless `--matrix-test --release` now checks dirty descendants, a deliberat
 delayed clean reply followed by dirty replies, subtree survival after refusal,
 exhaustion and restoration of the eight-unanswered-probe allowance without
 closing the live child's endpoint, and clean subtree close/recreation while an
-outside sibling survives. The actual
-F5 test checks the outer CLOSE against a dirty note, repeats whole-user close and
-reopen with clean Notes still running, closes a user containing only chrome, and
-verifies persistent Notes/Colors plus the cold-boot host oracle.
+outside sibling survives. At that baseline, the actual
+F5 test checked the outer CLOSE against a dirty note, repeated whole-user close and
+reopen with clean Notes still running, closed a user containing only chrome, and
+verified persistent Notes/Colors plus the cold-boot host oracle. The phase change
+below removes those outer controls from the ordinary desktop.
 
 Fresh traced F5 evidence: `build/boot-harness-rs/desktop/20261017T231701527969Z/`.
 The first boot had four measured publication spans and two note saves:
@@ -362,3 +364,33 @@ verified all 189 retained records after cold boot. Notes recovery evidence is
 `build/boot-harness-rs/matrix-database/20261017T232129731671Z/` (16 records).
 The earlier intermittent gate miss did not occur in this run; it remains open.
 No kernel code or timeout value changed, and no new smoke/ARM64 run is claimed.
+
+
+## Desktop phases after the recursive-close baseline
+
+The ordinary desktop now centers the user picker, then revokes that chooser's
+surface/input grant when a user is furnished. The boot matrix still hosts and
+supervises the user, but its picker and global help no longer occupy the screen.
+The user receives the full display: a launcher down the left and one app in the
+remaining area. No logout control is exposed. Restart QEMU to select another
+user; the headless matrix fixture remains the whole-user LOSS/teardown proof.
+
+Follow `shell/shell.rs` for admission and `shell/layout.rs` for phase placement.
+The chooser renders its own heading (entry argument 1: CHOOSE USER; otherwise
+PROGRAMS), so it retires with its ordinary surfaces. Its two images now require
+40 private pages; the user receives 80 to fund that chooser, Notes and spare
+capacity within the existing root budget. No kernel or platform protocol changed.
+
+The F5 test now checks picker removal, clicks the former boot CLOSE position
+with both a dirty and a clean note open, checks the app reaches the expanded
+viewport, replaces apps repeatedly, and cold-boots the same disk to verify
+saved text/color and the independent host oracle. Its previous interactive
+whole-user close/reopen steps are intentionally superseded by this phase flow.
+
+Validation: `cargo test --locked`, `cargo check-userspace`, shell/chooser target
+clippy with warnings denied, layout and formatting checks, and the updated
+`desktop_test.py` passed. Final desktop evidence:
+`build/boot-harness-rs/desktop/20261018T033411184475Z/` (189 retained records
+verified after cold boot). `user-picker.png` and `user-workspace.png` show the
+phase transition. No new kernel smoke, ARM64 or headless matrix run is claimed
+for this distribution-only change.

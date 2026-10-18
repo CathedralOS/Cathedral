@@ -24,7 +24,8 @@ stopping would lose work and stops it only on an answer of nothing. KEPT means
 it had work or did not answer; NOTHING OPEN means the slot was empty.
 
 The chooser answers `HEALTH` and `LOSS` on its control link with nothing to
-lose. It draws one bitmap of seven rows, the entries, NEW, CLOSE and the
+lose. Entry argument 1 labels it CHOOSE USER; otherwise it labels itself PROGRAMS.
+It draws one bitmap of eight rows: the heading, entries, NEW, CLOSE and the
 status, and is funded for two of them so a replacement can be drawn beside the
 one on screen. [session.rs](session/session.rs) is the loop,
 [realm.rs](session/realm.rs) the listing and copy, [view.rs](session/view.rs)

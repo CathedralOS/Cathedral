@@ -80,8 +80,10 @@ def desktop(stream, output, serial, reboot):
                 pixel(len(text) % 15 * 12 + dx, len(text) // 15 * 16 + 14, '66ccff')
         return image
 
-    # The app sits at (180, 40) inside the workspace at (280, 140).
-    APP = (460, 180)
+    # Selection is centered; entering a user gives it the whole display.
+    width, height, _ = pointer_test.read_scanout(stream, output)
+    PICKER = ((width - 220) // 2, (height - 180) // 2)
+    APP = (232, 24)
 
     def note(text, dirty=False):
         expected = text_image(text, cursor=True)
@@ -105,10 +107,10 @@ def desktop(stream, output, serial, reboot):
                                     pixel(index * 12 + x * 2 + dx, row * 16 + y * 2 + dy, 'ffffff')
         return image
 
-    def chooser_row(left, row, text, description):
-        move(270, 100)  # Keep the cursor overlay outside the checked glyphs.
+    def chooser_row(left, origin_y, row, text, description):
+        move(8, 8)  # Keep the cursor overlay outside the checked glyphs.
         expected = rows_image([text])
-        top = 160 + 16 * row
+        top = origin_y + 36 + 16 * row
         def check(width, data):
             # A selected row has a different background; compare glyph pixels only.
             actual = b''.join(data[((top + y) * width + left) * 3:((top + y) * width + left + 160) * 3] for y in range(16))
@@ -119,18 +121,18 @@ def desktop(stream, output, serial, reboot):
     def entry(number):
         return 'OBJECT ' + str(number).rjust(6)
 
-    # The chooser over the users folder sits at (50, 160); a user's chrome at (290, 160).
+    # Only the current phase has a visible chooser.
     def users(row, text):
-        chooser_row(50, row, text, 'users')
+        chooser_row(PICKER[0] + 10, PICKER[1], row, text, 'users')
 
     def chrome(row, text):
-        chooser_row(290, row, text, 'chrome')
+        chooser_row(34, 24, row, text, 'chrome')
 
     def click_users(row):
-        click(80, 168 + 16 * row)
+        click(PICKER[0] + 40, PICKER[1] + 44 + 16 * row)
 
     def click_chrome(row):
-        click(330, 168 + 16 * row)
+        click(64, 68 + 16 * row)
 
     def focus_app():
         click(APP[0] + 5, APP[1] + 120)
@@ -157,15 +159,25 @@ def desktop(stream, output, serial, reboot):
         click_users(NEW)
         users(STATUS, 'COPIED')
     users(1, entry(7))
+    shutil.copyfile(output / 'display.png', output / 'user-picker.png')
     click_users(1)
-    users(STATUS, 'RUNNING')
     chrome(STATUS, 'CHOOSE')
+    # The picker and its heading must disappear, not remain behind
+    # the user. This region is empty workspace until an app is launched.
+    def picker_gone(width, data):
+        return all(rgb(width, data, x, y) == bytes.fromhex('101827')
+                   for y in range(PICKER[1], PICKER[1] + 180)
+                   for x in range(PICKER[0], PICKER[0] + 220))
+    scan(picker_gone, 'boot picker and headings retired on user entry')
+    shutil.copyfile(output / 'display.png', output / 'user-workspace.png')
     chrome(0, entry(8))
     chrome(1, entry(9))
     chrome(2, entry(10))
     click_chrome(1)
     chrome(STATUS, 'RUNNING')
     note('hello cathedral' if reboot else '')
+    scan(lambda width, data: rgb(width, data, width - 30, height - 30) == bytes.fromhex('27664a'),
+         'user app uses the available display extent')
     tabs(2 if reboot else 0, 0)
     if reboot:
         focus_app()
@@ -177,8 +189,7 @@ def desktop(stream, output, serial, reboot):
     for char in 'hello cathedral':
         key('spc' if char == ' ' else char)
     note('hello cathedral', dirty=True)
-    click_users(CLOSE)  # The outer close must consult the nested note too.
-    users(STATUS, 'KEPT')
+    click_users(CLOSE)  # Former boot controls must no longer receive input.
     note('hello cathedral', dirty=True)
     click_chrome(CLOSE)  # Closing must not discard the unsaved draft.
     chrome(STATUS, 'KEPT')
@@ -187,6 +198,10 @@ def desktop(stream, output, serial, reboot):
     key('f1')
     note('hello cathedral')
     tabs(1, 0)
+    # A clean user would close if the old boot control still received clicks.
+    click_users(CLOSE)
+    note('hello cathedral')
+    focus_app()
     # Duplicate shares the saved content; editing the copy leaves the original.
     key('f3')
     tabs(2, 1)
@@ -246,30 +261,14 @@ def desktop(stream, output, serial, reboot):
     click_chrome(1)
     chrome(STATUS, 'RUNNING')
     note('hello cathedral')
-    # Close a clean user while Notes is still running, then reconstruct its
-    # chrome/apps from the same realm. Repeat to exercise whole-tree reclamation.
-    for _ in range(3):
-        click_users(CLOSE)
-        users(STATUS, 'CLOSED')
-        color('101827')
-        click_users(1)
-        users(STATUS, 'RUNNING')
-        chrome(STATUS, 'CHOOSE')
-        click_chrome(1)
-        chrome(STATUS, 'RUNNING')
-        note('hello cathedral')
-        tabs(2, 0)
+    # The user's app remains replaceable; whole-user close is now a headless
+    # matrix mechanism proof, not a logout control in the normal desktop.
     click_chrome(CLOSE)
     chrome(STATUS, 'CLOSED')
-    click_users(CLOSE)  # User with only chrome left is also clean.
-    users(STATUS, 'CLOSED')
-    click_users(1)
-    users(STATUS, 'RUNNING')
-    chrome(STATUS, 'CHOOSE')
     click_chrome(2)
     chrome(STATUS, 'RUNNING')
     color('d18b35')
-    print('PASS: recursive user close/reopen, dirty descendant protection, saved notes/color and app replacement')
+    print('PASS: user entry retires boot UI/input, dirty app protection, saved notes/color and app replacement')
 
 
 def run(timeout, trace_storage=False):

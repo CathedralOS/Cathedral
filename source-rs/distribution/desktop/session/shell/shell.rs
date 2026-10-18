@@ -10,34 +10,33 @@ const USERS: u64 = 2;
 /// A subtree copy numbers the copies in listing order after the realm's own
 /// object, so a user's chrome is the object right after its realm.
 const CHROME_OFFSET: u64 = 1;
-/// The chooser's bitmap is 18 pages; it holds two during replacement.
-const CHOOSER_PAGES: u64 = 36;
+/// The chooser's bitmap is 20 pages; it holds two during replacement.
+const CHOOSER_PAGES: u64 = 40;
 
 /// Root slot 0: the chooser, shown the folder of users and nothing else.
-pub(super) fn chooser(matrix: Pair) {
+pub(super) fn chooser(matrix: Pair, extent: [u64; 2]) {
     owner(matrix, [wire::RUN_PAGES, 0, CHOOSER_PAGES, 0, 0, 0, 0, 0]);
-    owner(matrix, [wire::RUN_OBJECT, 0, CHOOSER, USERS, 0, 0, 0, 0]);
-    owner(matrix, [wire::SURFACE_LIMIT, 0, 2, 0, 0, 0, 0, 0]);
-    owner(
-        matrix,
-        [wire::PLACE, 0, 40, 140, 220, 150, wire::KEY_MASK, 0],
-    );
+    owner(matrix, [wire::RUN_OBJECT, 0, CHOOSER, USERS, 1, 0, 0, 0]);
+    select_user(matrix, extent);
 }
 
 /// Root slot 1: whatever the chooser launches, which is a user matrix. It
 /// hosts two children, reads programs of up to 64 pages, and retains their
 /// bitmaps with the replacement beside each: two chooser-sized images and two
 /// Notes-sized ones alongside a program being read.
-pub(super) fn workspace(matrix: Pair) {
-    owner(matrix, [wire::LAUNCH_POLICY, 1, 72, 96, 10, 2, 0, 8]);
-    owner(matrix, [wire::LAUNCH_PLACE, 1, 280, 140, 540, 300, KEYS, 0]);
+pub(super) fn workspace(matrix: Pair, [width, height]: [u64; 2]) {
+    owner(matrix, [wire::LAUNCH_POLICY, 1, 80, 96, 10, 2, 0, 8]);
+    owner(
+        matrix,
+        [wire::LAUNCH_PLACE, 1, 0, 0, width, height, KEYS, 0],
+    );
 }
 
 /// A user matrix appeared with `realm`: give it its chrome in its first slot,
 /// holding the whole user realm so it sees what it may launch, and open its
 /// second slot to what the chrome launches. Notes needs 32 private pages and
 /// 4 reader pages; the color app fits in that.
-pub(super) fn furnish(matrix: Pair, realm: u64) {
+pub(super) fn furnish(matrix: Pair, extent: [u64; 2], realm: u64) {
     let chrome = realm + CHROME_OFFSET;
     owner(
         matrix,
@@ -49,20 +48,9 @@ pub(super) fn furnish(matrix: Pair, realm: u64) {
     );
     owner(
         matrix,
-        wire::route([wire::SURFACE_LIMIT, 0, 2, 0, 0, 0, 0, 0], 1).unwrap(),
-    );
-    owner(
-        matrix,
-        wire::route([wire::PLACE, 0, 0, 0, 170, 300, wire::KEY_MASK, 0], 1).unwrap(),
-    );
-    owner(
-        matrix,
         wire::route([wire::LAUNCH_POLICY, 1, 32, 4, 0, 0, 0, 6], 1).unwrap(),
     );
-    owner(
-        matrix,
-        wire::route([wire::LAUNCH_PLACE, 1, 180, 40, 360, 180, KEYS, 0], 1).unwrap(),
-    );
+    layout::enter_user(matrix, extent);
 }
 
 /// The realm a child of `matrix` holds, or zero. The user matrix is root

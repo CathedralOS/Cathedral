@@ -9,6 +9,12 @@ notes root; [app/](session/app/app.rs) is the color program. See the
 [distribution map](../README.md) for F5, controls, composition and the
 same-image interactive test.
 
+[Phase layout](session/shell/layout.rs) centers the initial user picker, then
+revokes its surfaces and input when a user is furnished. The user matrix owns
+the full display, with its launcher at the left and its app in the remaining
+space. The root keeps supervising and forwarding without visible boot chrome.
+There is no logout UI; recursive whole-user LOSS remains a headless proof.
+
 Without the `shell` feature the same package builds the probe desktop in
 [lab/](lab/desktop.rs): the same admission, apps and budgets laid out as a
 nested matrix beside an outside sibling, with destructive proofs selected by
