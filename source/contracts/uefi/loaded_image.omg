@@ -1,0 +1,96 @@
+// LoadedImage discovery remains an ordinary firmware call. General protocol
+// lookup can produce null. This narrower operation requires the exact physical
+// invocation's LoadedApplication handle and the LoadedImage GUID: UEFI installs
+// that protocol before entry, so the admitted firmware behavior guarantees a
+// live protocol view. A nonzero arbitrary handle is not enough. The view expires
+// with Boot Services, and its geometry grants no storage authority.
+use uefi;
+use boot_services;
+
+pub data EfiGuid [copy] {
+    data1: u32;
+    data2: u16;
+    data3: u16;
+    data4: [u8; 8];
+}
+
+pub domain EfiGuid::LoadedImageGuid(protocol)
+requires protocol.data1 == 0x5b1b31a1 && protocol.data2 == 0x9562 &&
+         protocol.data3 == 0x11d2 && protocol.data4[0] == 0x8e &&
+         protocol.data4[1] == 0x3f && protocol.data4[2] == 0 &&
+         protocol.data4[3] == 0xa0 && protocol.data4[4] == 0xc9 &&
+         protocol.data4[5] == 0x69 && protocol.data4[6] == 0x72 &&
+         protocol.data4[7] == 0x3b;
+
+pub const LOADED_IMAGE_PROTOCOL_GUID: EfiGuid = EfiGuid {
+    data1: 0x5b1b31a1,
+    data2: 0x9562,
+    data3: 0x11d2,
+    data4: [0x8e, 0x3f, 0x00, 0xa0, 0xc9, 0x69, 0x72, 0x3b],
+};
+
+// The complete x64 EFI_LOADED_IMAGE_PROTOCOL prefix through Unload. Pointer
+// fields not projected here stay inert addresses. Normal record alignment
+// supplies the pads after Revision and LoadOptionsSize.
+pub data EfiLoadedImage {
+    revision: u32;
+    parent_handle: addr;
+    system_table: addr;
+    device_handle: addr;
+    file_path: addr;
+    reserved: addr;
+    load_options_size: u32;
+    load_options: addr;
+    image_base: addr;
+    image_size: u64;
+    image_code_type: u32;
+    image_data_type: u32;
+    unload: addr;
+}
+
+// HandleProtocol writes one pointer into caller-owned output storage. Model
+// that storage explicitly: borrowing a reference reborrows its referent, not
+// its descriptor. This single-field record has the firmware output pointer at
+// offset zero; the calling plan passes its address, never a copied protocol.
+pub data LoadedImageOutput<'firmware> {
+    image: &'firmware EfiLoadedImage;
+}
+
+pub boundary trait LoadedImageAccess {
+    // This protocol-specific view of HandleProtocol accepts only its GUID.
+    // Not a general nullable HandleProtocol binding. The selected provider's
+    // postcondition is conditional on this exact admitted handle/protocol pair.
+    machine discover<'firmware>(
+        services: &'firmware BootServicesTable,
+        handle: EfiHandle in LoadedApplication,
+        protocol: &EfiGuid,
+        output: &mut LoadedImageOutput<'firmware>
+    ) -> EfiStatus
+    requires protocol in EfiGuid::LoadedImageGuid
+    ensures result.code == 0;
+}
+
+uefi_x86_64 machine BootServicesTable::loaded_image_leaf<'firmware>(
+    services: &'firmware BootServicesTable,
+    handle: EfiHandle in LoadedApplication,
+    protocol: &EfiGuid,
+    output: &mut LoadedImageOutput<'firmware>
+) -> EfiStatus
+satisfies LoadedImageAccess::discover
+via ForeignBinding::TableFunction(handle_protocol)
+requires protocol in EfiGuid::LoadedImageGuid
+ensures result.code == 0;
+
+pub UefiLoadedImageProvider satisfies LoadedImageAccess {
+    machine discover<'firmware>(
+        services: &'firmware BootServicesTable,
+        handle: EfiHandle in LoadedApplication,
+        protocol: &EfiGuid,
+        output: &mut LoadedImageOutput<'firmware>
+    ) -> EfiStatus
+    requires protocol in EfiGuid::LoadedImageGuid
+    ensures result.code == 0
+    {
+        BootServicesTable::loaded_image_leaf(services, handle, protocol, output)
+    }
+}

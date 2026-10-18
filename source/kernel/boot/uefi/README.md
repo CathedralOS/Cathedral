@@ -3,23 +3,40 @@
 This directory contains Cathedral's boot source and a bounded physical-entry
 ladder. `build.omg` selects `CathedralBootstrap` for firmware arrival and binds
 the target's semantic slot to `Kernel::enter(image, initial_storage)`.
-`physical_entry.omg` is written to validate the incoming table header, print
-`Hello from Omega`, and return `EFI_UNSUPPORTED`; it does not claim a successful
-handoff or fabricate the two storage roots. The preserved map/exit/report
-implementation in `own_machine.omg` is not yet reached by that adapter.
+`physical_entry.omg` validates the incoming table header and invokes the checked
+boot sequence. That sequence greets, discovers LoadedImage geometry, and enters
+the map/exit/report implementation in `own_machine.omg`. Connecting source does
+not establish a successful handoff: the two-root kernel continuation remains
+unfinished.
 
-The source selection passes ordinary package review and direct foreign-leaf
-settlement, but is **not native-build- or boot-verified**. The current refusal
-is physical entry stack admission: Omega assigns every foreign call a fixed
-256 KiB same-stack contribution. The fresh build reports 262,560 bytes of demand
-plus 4,096 bytes of reserve against the UEFI target's 131,072-byte arrival
-guarantee. This needs admitted per-provider demand, not a smaller unexplained
-constant or a larger invented guarantee.
-Historical boot comments and old images do not establish that this tree runs.
+The fresh-image harness now observes `Hello from Omega` followed by
+`Owned 35 MiB` under QEMU/OVMF. This requires the private-entry-stack repair
+published in Omega `0bdc137b7af` (or a later revision containing it).
+The report occurs only after successful ExitBootServices; it is not evidence
+that the still-unconnected two-root kernel continuation ran.
+
+The compiler provisions an image-backed private stack before the source adapter
+allocates its frames. Its backing includes the exact call-chain demand, both
+entry bridges and the target reserve. The foreign leaves retain their default
+256 KiB allowance; Cathedral keeps a 64 KiB map buffer. Neither allowance nor the
+128 KiB firmware arrival guarantee was reduced or inflated to make boot work.
+The active stack remains retained storage and must be excluded from the image
+extent eventually supplied to `Kernel::enter`.
+
+The owner resolved foreign-output admission in Omega's
+[provider-owned views contract](https://github.com/CathedralOS/Omega/blob/main/wiki/spec/build/foreign_storage.md#provider-owned-views-and-completion).
+Admission of the complete applied contract establishes the promised reference's
+backing, access and stability. No additional provider-root token is required.
+The LoadedImage object is not inside the Boot Services table: the compiler must
+retain its provider-invocation provenance separately from its lifetime anchors,
+and enforce subsequent use and replacement. The reference-custody repair is
+published in Omega `7f2341031b3`. Numeric root separation and a successful boot
+report still do not establish the missing two-root semantic installation.
 
 The intended acceptance is one freshly compiled `uefi_x86_64` image under
 QEMU/OVMF: `Hello from Omega`, successful firmware exit, `Owned N MiB` over
-COM1, then idle while retaining the granted root. A failed build or an old
+COM1, then enter the kernel retaining image and initial-storage roots with valid,
+accounted surviving stack storage. A failed build or an old
 `BOOTX64.EFI` cannot satisfy acceptance.
 
 ## Reproduce
@@ -44,17 +61,13 @@ acceptance as if it were portable.
 The firmware-neutral [joint root geometry checker](../../core/boot_geometry.omg)
 validates nonempty, nonoverflowing, disjoint image and initial-storage ranges.
 Its [host witness](../../../../tools/boot-harness/README.md#root-geometry-without-firmware)
-checks numeric acceptance and rejection without firmware. Integrating that
-qualified result before ExitBootServices and retaining it through the successful
-handoff are still required; geometry does not supply backing or stack custody.
+checks numeric acceptance and rejection without firmware. The boot transaction
+checks that geometry before ExitBootServices and retains it through success;
+geometry does not supply backing or stack custody.
 
-- Replace the compiler's fixed foreign-call stack contribution with the exact
-  selected provider's admitted demand, then rerun the fresh-image harness.
-  Ordinary package admission now publishes the five-package lock without
-  blanket-accepting unrelated host capabilities.
 - Connect the checked physical firmware adapter to the semantic entry and
-  Cathedral continuation: obtain the image through LoadedImage protocol
-  discovery, establish bootstrap stack/storage custody, validate nonoverlap,
+  Cathedral continuation: join the discovered LoadedImage occurrence to the
+  compiler's retained stack partition, expose only the disjoint image residual,
   and retain the successful final-map/ExitBootServices provenance for both
   semantic arguments. `Main::run` remains ordinary checked logic, not an
   implicitly installed raw ABI. PE subsystem selection, a same-shaped pointer,
@@ -74,6 +87,6 @@ handle and map key remain ordinary arguments. There are no `Binding` fields or
 implicit provider arguments. Selecting the implementations does not establish
 the validity or lifetime of those firmware values.
 
-The Rust bring-up lab and the returning physical-entry ladder do not discharge
-the full acceptance. Keep the full smoke harness failing visibly until this
-exact source produces a fresh image, exits firmware, and reports ownership.
+The smoke harness establishes greeting, firmware exit and ownership reporting,
+not the complete kernel-root acceptance above. Extend its oracle when the
+semantic continuation is connected; the Rust bring-up lab is separate evidence.

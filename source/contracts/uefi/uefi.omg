@@ -13,6 +13,7 @@
 // presence does not install a physical entry or establish pointer validity.
 
 use omega::language::core::extent; // ProgramStorageEntry
+use omega::language::core::assembly;
 use std::calling;
 
 // --- Scalars (UEFI spec) --------------------------------------------------
@@ -29,6 +30,12 @@ pub const EFI_BUFFER_TOO_SMALL:  EfiStatus = EfiStatus { code: 0x8000_0000_0000_
 // EFI_HANDLE — an opaque firmware handle. We never dereference it, only hold and
 // pass it (a gated token; extern brief §12.2 case 3, opaque).
 pub data EfiHandle [copy] { raw: addr; }
+
+// The physical UEFI invocation identifies this loaded application, not an
+// arbitrary handle whose numerical bits happen to be nonzero. UEFI installs
+// LoadedImage on that handle before entry. Copying the handle grants no bytes.
+pub domain EfiHandle::LoadedApplication(handle)
+established by UefiPhysicalEntry::enter;
 
 // --- Simple Text Output protocol (con_out) --------------------------------
 //
@@ -121,9 +128,13 @@ pub data EfiSystemTable {
 // requirement names that exact type rather than recasting an opaque target
 // table. Selecting its provider supplies code, not image/storage authority.
 pub boundary trait UefiPhysicalEntry {
-    machine enter(handle: EfiHandle, table: &EfiSystemTable) -> EfiStatus
-    reaches SimpleTextOutput
+    machine enter(handle: EfiHandle in LoadedApplication, table: &EfiSystemTable) -> EfiStatus
+    requires addr::Bound == 18446744073709551616
+    reaches SimpleTextOutput + LoadedImageAccess + BootServices + ExtentRootProvider + PortIo + MachineControl
     invokes SimpleTextOutput;
+    invokes LoadedImageAccess;
+    invokes BootServices;
+    invokes ExtentRootProvider;
 }
 
 // One source policy describes both signatures. The compiler checks the exact

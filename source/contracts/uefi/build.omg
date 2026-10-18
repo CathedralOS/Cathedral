@@ -5,7 +5,7 @@ machine build(builder: &mut Build) {
     Build::package(builder, "cathedral_uefi");
     Build::depend_as(builder, "std", Source::Git {
         repository: "https://github.com/CathedralOS/Omega.git",
-        revision: "cc43b6679d2ad343f8640a0630dd127c155a0c49",
+        revision: "37fdcd5b398e09dfa2c80ecb6c910c043fdf273f",
         selection: PackageSelection::Named { package: "omega_language_std" }
     });
     // The package's own review resolves the same named providers its consumer
@@ -13,4 +13,5 @@ machine build(builder: &mut Build) {
     // implicit implementation chosen by import order.
     Build::select_provider<SimpleTextOutput, UefiTextOutputProvider>(builder);
     Build::select_provider<BootServices, UefiBootServicesProvider>(builder);
+    Build::select_provider<LoadedImageAccess, UefiLoadedImageProvider>(builder);
 }

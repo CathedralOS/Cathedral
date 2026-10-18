@@ -1,8 +1,8 @@
 # Cathedral Omega boot harness
 
 This host-only tool compiles the Omega boot source and boots that invocation's
-image under QEMU/OVMF. The current source is not yet bootable; see the
-[boot frontier](../../source/kernel/boot/uefi/README.md). The Rust lab has its
+image under QEMU/OVMF. See the [boot frontier](../../source/kernel/boot/uefi/README.md)
+for the required compiler repair and remaining kernel-root installation. The Rust lab has its
 own harness and is not evidence that the Omega source works.
 
 ## Run
@@ -73,5 +73,5 @@ Complete ordinary package review if requested. The checkout-local lock is
 regenerated, not shared. Use an Omega compiler containing `711be509b7d2` or
 later for the payload reread proof repair this helper exercises. The native and
 Terminal runs validate numeric geometry only. The helper grants no storage,
-performs no firmware calls, and is not yet connected to the boot transaction;
-it cannot establish stack survival or successful UEFI handoff.
+performs no firmware calls, and cannot establish stack survival or successful
+UEFI handoff. The boot transaction separately invokes this checker before exit.

@@ -11,6 +11,7 @@ machine build(builder: &mut Build) {
     Build::select_provider<ExtentRootProvider, core::CathedralExtentRootProvider>(builder);
     Build::select_provider<uefi::SimpleTextOutput, uefi::UefiTextOutputProvider>(builder);
     Build::select_provider<uefi::BootServices, uefi::UefiBootServicesProvider>(builder);
+    Build::select_provider<uefi::LoadedImageAccess, uefi::UefiLoadedImageProvider>(builder);
     Build::select_provider<uefi::UefiPhysicalEntry, CathedralBootstrap>(builder);
     Build::bind(builder, uefi_x86_64::ProgramEntry, Kernel::enter);
 

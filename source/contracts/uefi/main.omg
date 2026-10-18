@@ -2,3 +2,4 @@
 // entry schema and its calling policy participate in ordinary admission.
 use uefi;
 use boot_services;
+use loaded_image;

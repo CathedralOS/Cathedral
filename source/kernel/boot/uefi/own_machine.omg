@@ -14,6 +14,7 @@
 use uefi::uefi;            // EfiHandle, EfiSystemTable, EfiStatus
 use uefi::boot_services;   // EfiMemoryDescriptor, EFI_CONVENTIONAL_MEMORY, MapKey, BootServicesTable
 use core::extent;          // PAGE_SIZE + checked ExtentRootProvider adapter
+use core::boot_geometry;   // numeric joint geometry; never backing authority
 use omega::language::core::assembly; // PortIo, MachineControl
 use omega::language::core::extent;   // Extent, Granted, ExtentRootProvider
 
@@ -38,13 +39,21 @@ pub data UefiMemoryMapStorage {
     bytes: [u8; 65536];
 }
 
-// Get the map, walk it, exit, grant, report. `context.map_buf.bytes` is fixed
+// Get the map, walk it, exit, grant, report.
+// The physical x64 entry selects a 64-bit address representation explicitly.
+// Carry that premise through the map transaction: it proves representation fit
+// for EFI_PHYSICAL_ADDRESS, not mapping, RAM ownership or storage authority.
+// UEFI 2.11 sections 2.3.4 and 7.2 retain those separate platform obligations.
+// https://uefi.org/specs/UEFI/2.11/02_Overview.html#x64-platforms
+//
+// `context.map_buf.bytes` is fixed
 // 64-KiB static storage behind an explicit 8-byte alignment anchor, not
 // allocated memory and not an Extent. Cathedral advertises 16 KiB first and
 // uses the remaining provision only after an exact EFI_BUFFER_TOO_SMALL result
 // reports a requirement within the fixed ceiling.
 machine Main::own_machine(context: &mut Main, handle: EfiHandle, table: &EfiSystemTable)
 reaches BootServices + ExtentRootProvider + PortIo + MachineControl
+requires addr::Bound == 18446744073709551616
 {
     // The boundary vouches the reference shape, not arbitrary firmware field
     // contents. Fail closed before projecting or dispatching through Boot
@@ -59,7 +68,9 @@ reaches BootServices + ExtentRootProvider + PortIo + MachineControl
     }
 
     state validate_boot_services(context: &mut Main, handle: EfiHandle,
-                                 table: &EfiSystemTable) {
+                                 table: &EfiSystemTable)
+    requires addr::Bound == 18446744073709551616
+    {
         let bs: &BootServicesTable = table.boot_services;
         transition bs.hdr.signature == EFI_BOOT_SERVICES_SIGNATURE &&
                    bs.hdr.revision == table.header.revision &&
@@ -75,7 +86,7 @@ reaches BootServices + ExtentRootProvider + PortIo + MachineControl
     // old key and every descriptor-derived candidate are discarded together.
     state refresh_map(context: &mut Main, bs: &BootServicesTable, handle: EfiHandle,
                       stale_retry_used: u64)
-    requires stale_retry_used <= 1
+    requires addr::Bound == 18446744073709551616 && stale_retry_used <= 1
     {
         transition { _ -> get_map(context, bs, handle, stale_retry_used, 16384) }
     }
@@ -83,7 +94,7 @@ reaches BootServices + ExtentRootProvider + PortIo + MachineControl
     state get_map(context: &mut Main, bs: &BootServicesTable, handle: EfiHandle,
                   stale_retry_used: u64,
                   attempted_capacity: u64)
-    requires stale_retry_used <= 1 && 16384 <= attempted_capacity && attempted_capacity <= 65536
+    requires addr::Bound == 18446744073709551616 && stale_retry_used <= 1 && 16384 <= attempted_capacity && attempted_capacity <= 65536
     {
         let mut map_size: u64 = attempted_capacity; // in = capacity, out = actual/needed
         let mut key: MapKey = MapKey { raw: 0 };
@@ -128,7 +139,7 @@ reaches BootServices + ExtentRootProvider + PortIo + MachineControl
                      stale_retry_used: u64,
                      attempted_capacity: u64,
                      status_code: u64, required_size: u64)
-    requires stale_retry_used <= 1 && 16384 <= attempted_capacity && attempted_capacity <= 65536
+    requires addr::Bound == 18446744073709551616 && stale_retry_used <= 1 && 16384 <= attempted_capacity && attempted_capacity <= 65536
     {
         transition attempted_capacity == 16384 && status_code == EFI_BUFFER_TOO_SMALL.code && required_size > 16384 && required_size <= 65536 {
             true -> get_map(context, bs, handle, stale_retry_used, 65536)
@@ -154,7 +165,7 @@ reaches BootServices + ExtentRootProvider + PortIo + MachineControl
                map_size: u64 in Trapping, desc_size: u64 in Trapping, key: MapKey,
                offset: u64 in Trapping, best_start: u64, best_pages: u64,
                best_offset: u64 in Trapping)
-    requires stale_retry_used <= 1 && offset <= 65496
+    requires addr::Bound == 18446744073709551616 && stale_retry_used <= 1 && offset <= 65496
     {
         let d: &EfiMemoryDescriptor = &context.map_buf.bytes[offset] as &EfiMemoryDescriptor;
         let is_free: bool = d.kind == EFI_CONVENTIONAL_MEMORY &&
@@ -174,7 +185,7 @@ reaches BootServices + ExtentRootProvider + PortIo + MachineControl
                map_size: u64 in Trapping, desc_size: u64 in Trapping, key: MapKey,
                offset: u64 in Trapping, best_start: u64, best_pages: u64,
                best_offset: u64 in Trapping)
-    requires stale_retry_used <= 1
+    requires addr::Bound == 18446744073709551616 && stale_retry_used <= 1
     {
         // The second conjunct is implied by the first (map_size <= 65536,
         // desc_size >= 40) but spelled out so the loop edge's bound is a
@@ -200,7 +211,7 @@ reaches BootServices + ExtentRootProvider + PortIo + MachineControl
                              desc_size: u64 in Trapping, key: MapKey,
                              best_start: u64, best_pages: u64,
                              best_offset: u64 in Trapping)
-    requires stale_retry_used <= 1
+    requires addr::Bound == 18446744073709551616 && stale_retry_used <= 1
     {
         transition best_pages > 0 &&
                    best_pages <= MAX_BOOTSTRAP_PAGE_COUNT &&
@@ -219,7 +230,7 @@ reaches BootServices + ExtentRootProvider + PortIo + MachineControl
                                  best_start: u64,
                                  best_pages: u64,
                                  best_offset: u64 in Trapping)
-    requires stale_retry_used <= 1 && 1 <= best_pages && best_pages <= 4503599627370495
+    requires addr::Bound == 18446744073709551616 && stale_retry_used <= 1 && 1 <= best_pages && best_pages <= 4503599627370495
     {
         let checked_pages: u64 in Trapping = best_pages as u64 in Trapping;
         let checked_length: u64 in Trapping = checked_pages * PAGE_SIZE;
@@ -247,7 +258,7 @@ reaches BootServices + ExtentRootProvider + PortIo + MachineControl
                         desc_size: u64 in Trapping, key: MapKey,
                         best_start: u64, best_pages: u64, length: u64,
                         best_offset: u64 in Trapping)
-    requires stale_retry_used <= 1
+    requires addr::Bound == 18446744073709551616 && stale_retry_used <= 1
     {
         let checked_start: u64 in Trapping = best_start as u64 in Trapping;
         let checked_length: u64 in Trapping = length as u64 in Trapping;
@@ -266,7 +277,7 @@ reaches BootServices + ExtentRootProvider + PortIo + MachineControl
                            best_end: u64 in Trapping,
                            best_offset: u64 in Trapping,
                            audit_offset: u64 in Trapping)
-    requires stale_retry_used <= 1 && audit_offset <= 65496
+    requires addr::Bound == 18446744073709551616 && stale_retry_used <= 1 && audit_offset <= 65496
     {
         let d: &EfiMemoryDescriptor = &context.map_buf.bytes[audit_offset] as &EfiMemoryDescriptor;
         transition { _ -> audit_geometry(context, bs, handle, stale_retry_used,
@@ -290,7 +301,7 @@ reaches BootServices + ExtentRootProvider + PortIo + MachineControl
                          other_start: u64,
                          other_virtual_start: u64,
                          other_pages: u64)
-    requires stale_retry_used <= 1
+    requires addr::Bound == 18446744073709551616 && stale_retry_used <= 1
     {
         transition (other_kind < EFI_MAX_MEMORY_TYPE ||
                     other_kind >= EFI_OEM_MEMORY_TYPE_MIN) &&
@@ -321,7 +332,7 @@ reaches BootServices + ExtentRootProvider + PortIo + MachineControl
                              audit_offset: u64 in Trapping,
                              other_start: u64, other_virtual_start: u64,
                              other_pages: u64)
-    requires stale_retry_used <= 1 && 1 <= other_pages && other_pages <= 4503599627370495
+    requires addr::Bound == 18446744073709551616 && stale_retry_used <= 1 && 1 <= other_pages && other_pages <= 4503599627370495
     {
         let checked_pages: u64 in Trapping = other_pages as u64 in Trapping;
         let checked_length: u64 in Trapping = checked_pages * PAGE_SIZE;
@@ -352,7 +363,7 @@ reaches BootServices + ExtentRootProvider + PortIo + MachineControl
                         best_offset: u64 in Trapping,
                         audit_offset: u64 in Trapping,
                         other_start: u64, last_offset: u64 in Trapping)
-    requires stale_retry_used <= 1
+    requires addr::Bound == 18446744073709551616 && stale_retry_used <= 1
     {
         transition audit_offset == best_offset {
             true -> audit_step(context, bs, handle, stale_retry_used,
@@ -375,7 +386,7 @@ reaches BootServices + ExtentRootProvider + PortIo + MachineControl
                          best_offset: u64 in Trapping,
                          audit_offset: u64 in Trapping,
                          other_start: u64, last_offset: u64 in Trapping)
-    requires stale_retry_used <= 1
+    requires addr::Bound == 18446744073709551616 && stale_retry_used <= 1
     {
         let checked_start: u64 in Trapping = other_start as u64 in Trapping;
         let other_last: u64 in Trapping = checked_start + last_offset;
@@ -400,7 +411,7 @@ reaches BootServices + ExtentRootProvider + PortIo + MachineControl
                      best_offset: u64 in Trapping,
                      audit_offset: u64 in Trapping,
                      other_last: u64 in Trapping)
-    requires stale_retry_used <= 1
+    requires addr::Bound == 18446744073709551616 && stale_retry_used <= 1
     {
         transition other_last < best_start {
             true -> audit_step(context, bs, handle, stale_retry_used,
@@ -418,7 +429,7 @@ reaches BootServices + ExtentRootProvider + PortIo + MachineControl
                       best_end: u64 in Trapping,
                       best_offset: u64 in Trapping,
                       audit_offset: u64 in Trapping, other_start: u64)
-    requires stale_retry_used <= 1
+    requires addr::Bound == 18446744073709551616 && stale_retry_used <= 1
     {
         transition other_start >= best_end {
             true -> audit_step(context, bs, handle, stale_retry_used,
@@ -436,7 +447,7 @@ reaches BootServices + ExtentRootProvider + PortIo + MachineControl
                      best_end: u64 in Trapping,
                      best_offset: u64 in Trapping,
                      audit_offset: u64 in Trapping)
-    requires stale_retry_used <= 1
+    requires addr::Bound == 18446744073709551616 && stale_retry_used <= 1
     {
         transition audit_offset + desc_size + desc_size <= map_size &&
                    audit_offset + desc_size <= 65496 {
@@ -444,8 +455,33 @@ reaches BootServices + ExtentRootProvider + PortIo + MachineControl
                                      map_size, desc_size, key,
                                      best_start, best_pages, length, best_end,
                                      best_offset, audit_offset + desc_size)
-            _ -> exit(context, bs, handle, stale_retry_used,
+            _ -> prepare_entry(context, bs, handle, stale_retry_used,
                       key, best_start, best_pages, length)
+        }
+    }
+
+    // Validate BOTH proposed semantic ranges before the irreversible exit.
+    // This value is numeric evidence only: successful firmware completion and
+    // surviving-stack/installation custody still establish the actual roots.
+    // A stale key discards this preparation with the map it was derived from.
+    state prepare_entry(context: &mut Main, bs: &BootServicesTable, handle: EfiHandle,
+                        stale_retry_used: u64, key: MapKey,
+                        best_start: u64, best_pages: u64, length: u64)
+    requires addr::Bound == 18446744073709551616 && stale_retry_used <= 1
+    {
+        // The explicit address-model premise proves this captured address
+        // fits firmware's 64-bit coordinates; host pointer width is irrelevant.
+        let geometry: BootGeometry = BootGeometry {
+            image_base: context.image_base as u64,
+            image_length: context.image_size,
+            storage_base: best_start,
+            storage_length: length,
+        };
+        let checked: BootGeometryCheck = BootGeometry::check(geometry);
+        transition checked {
+            BootGeometryCheck::Ready { geometry } -> exit(context, bs, handle,
+                stale_retry_used, key, best_pages, geometry)
+            BootGeometryCheck::Rejected -> idle()
         }
     }
 
@@ -456,13 +492,13 @@ reaches BootServices + ExtentRootProvider + PortIo + MachineControl
     // unowned.
     state exit(context: &mut Main, bs: &BootServicesTable, handle: EfiHandle,
                stale_retry_used: u64, key: MapKey,
-               best_start: u64, best_pages: u64, length: u64)
-    requires stale_retry_used <= 1
+               best_pages: u64, geometry: BootGeometry in Separated)
+    requires addr::Bound == 18446744073709551616 && stale_retry_used <= 1
     {
         let exit_status: EfiStatus = BootServices::exit_boot_services(bs, handle, key);
         let exit_code: u64 = exit_status.code;
         transition exit_code == 0 {
-            true -> own(context, best_start, best_pages, length)
+            true -> own(geometry, best_pages)
             _    -> exit_failed(context, bs, handle, stale_retry_used, exit_code)
         }
     }
@@ -472,7 +508,7 @@ reaches BootServices + ExtentRootProvider + PortIo + MachineControl
     // in an unbounded bootstrap loop, and no rejected transaction can grant.
     state exit_failed(context: &mut Main, bs: &BootServicesTable, handle: EfiHandle,
                       stale_retry_used: u64, exit_code: u64)
-    requires stale_retry_used <= 1
+    requires addr::Bound == 18446744073709551616 && stale_retry_used <= 1
     {
         transition stale_retry_used == 0 && exit_code == EFI_INVALID_PARAMETER.code {
             true -> refresh_map(context, bs, handle, 1)
@@ -485,10 +521,12 @@ reaches BootServices + ExtentRootProvider + PortIo + MachineControl
     // provider requirement.
     // Reconstructing these fields alone does not grant authority; exactly this
     // selected trait-slot call establishes the first qualified root.
-    state own(context: &mut Main, best_start: u64, best_pages: u64, length: u64) {
-        let base: addr = best_start as addr;
-        let geometry: Extent = Extent { base: base, length: length };
-        let first_extent: Extent = ExtentRootProvider::grant(geometry);
+    state own(geometry: BootGeometry in Separated, best_pages: u64)
+    requires addr::Bound == 18446744073709551616
+    {
+        let base: addr = geometry.storage_base as addr;
+        let storage: Extent = Extent { base: base, length: geometry.storage_length };
+        let first_extent: Extent = ExtentRootProvider::grant(storage);
         transition { _ -> serial_init(first_extent, best_pages as u64 in Trapping) }
     }
 

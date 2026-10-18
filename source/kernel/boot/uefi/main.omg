@@ -1,10 +1,11 @@
 // Cathedral's intended Omega boot sequence: greet, validate the memory map,
 // exit Boot Services, retain one admitted memory root, and report over COM1.
-// This source is not currently a bootable product; see README.md for the
-// compiler frontier and the missing physical-to-semantic entry adapter.
+// The fresh-image smoke reaches the report with Omega's private-stack repair;
+// see README.md for the still-missing two-root semantic kernel installation.
 
 use uefi::uefi;            // EfiHandle, EfiStatus, EFI_SUCCESS, EfiSystemTable, TextOutputProtocol, SimpleTextOutput
 use uefi::boot_services;   // BootServices
+use uefi::loaded_image;
 use own_machine;
 use physical_entry;
 use kernel_entry;
@@ -18,16 +19,20 @@ use omega::language::core::extent;   // ExtentRootProvider
 data Main {
     msg:      [u16; 19];         // "Hello from Omega\r\n\0" as UTF-16 CHAR16 code units
     map_buf:  UefiMemoryMapStorage; // aligned bounded map backing, no authority
+    image_base: addr;
+    image_size: u64;
 }
 
 // Ordinary checked boot logic, not a physical firmware entry declaration.
 // Selecting PE's subsystem alone cannot install this function or establish
 // the validity of table. The target adapter must supply those premises.
-machine Main::run(context: &mut Main, handle: EfiHandle, table: &EfiSystemTable) -> EfiStatus
-reaches SimpleTextOutput + BootServices + ExtentRootProvider + PortIo + MachineControl
+machine Main::run(context: &mut Main, handle: EfiHandle in LoadedApplication, table: &EfiSystemTable) -> EfiStatus
+reaches SimpleTextOutput + LoadedImageAccess + BootServices + ExtentRootProvider + PortIo + MachineControl
 invokes SimpleTextOutput;
+invokes LoadedImageAccess;
 invokes BootServices;
 invokes ExtentRootProvider;
+requires addr::Bound == 18446744073709551616
 {
     context.msg = utf16"Hello from Omega\r\n\0";
     // Project con_out through a frame local (the reference-param deref), then
@@ -38,10 +43,29 @@ invokes ExtentRootProvider;
     // A failed greeting must not silently proceed into irreversible handoff.
     // Preserve the firmware status while Boot Services are still available.
     transition status.code == 0 {
-        true -> take_ownership(context, handle, table)
+        true -> discover_image(context, handle, table)
         _ -> (status)
     }
-    state take_ownership(context: &mut Main, handle: EfiHandle, table: &EfiSystemTable) -> EfiStatus {
+    state discover_image(context: &mut Main, handle: EfiHandle in LoadedApplication,
+                         table: &EfiSystemTable) -> EfiStatus
+    requires addr::Bound == 18446744073709551616
+    {
+        let empty: EfiLoadedImage;
+        let mut output: LoadedImageOutput = LoadedImageOutput { image: &empty };
+        let status: EfiStatus = LoadedImageAccess::discover(
+            table.boot_services, handle, &LOADED_IMAGE_PROTOCOL_GUID, &mut output
+        );
+        context.image_base = output.image.image_base;
+        context.image_size = output.image.image_size;
+        transition status.code == 0 {
+            true -> take_ownership(context, handle as EfiHandle, table)
+            _ -> (status)
+        }
+    }
+
+    state take_ownership(context: &mut Main, handle: EfiHandle, table: &EfiSystemTable) -> EfiStatus
+    requires addr::Bound == 18446744073709551616
+    {
         // Walk the memory map, exit Boot Services, obtain the first qualified
         // Extent, then idle retaining it. The success route does not return.
         Main::own_machine(context, handle, table);

@@ -1,36 +1,38 @@
 use uefi::uefi;
+use uefi::boot_services;
+use uefi::loaded_image;
+use omega::language::core::extent;
+use omega::language::core::assembly;
 
 // Firmware arrival is selected explicitly by build.omg. The receiving UEFI
 // profile supplies the validity/lifetime of this exact incoming table borrow;
 // the declaration itself neither creates that borrow nor grants any Extent.
 pub CathedralBootstrap satisfies UefiPhysicalEntry {
-    machine enter(handle: EfiHandle, table: &EfiSystemTable) -> EfiStatus
-    reaches SimpleTextOutput
+    machine enter(handle: EfiHandle in LoadedApplication, table: &EfiSystemTable) -> EfiStatus
+    reaches SimpleTextOutput + LoadedImageAccess + BootServices + ExtentRootProvider + PortIo + MachineControl
     invokes SimpleTextOutput;
+    invokes LoadedImageAccess;
+    invokes BootServices;
+    invokes ExtentRootProvider;
+    requires addr::Bound == 18446744073709551616
     {
         transition table.header.signature == EFI_SYSTEM_TABLE_SIGNATURE &&
                    table.header.revision >= EFI_MIN_SUPPORTED_REVISION &&
                    table.header.header_size >= EFI_SYSTEM_TABLE_REQUIRED_SIZE &&
                    table.header.reserved == 0 {
-            true -> greet(table)
+            true -> boot(handle, table)
             _ -> (EFI_INVALID_PARAMETER)
         }
 
-        state greet(table: &EfiSystemTable) -> EfiStatus {
-            let message: [u16; 19] = utf16"Hello from Omega\r\n\0";
-            let console: &TextOutputProtocol = table.con_out;
-            let status: EfiStatus = SimpleTextOutput::output_string(console, &message);
-            transition status.code == 0 {
-                true -> (EFI_UNSUPPORTED)
-                _ -> (status)
-            }
+        state boot(handle: EfiHandle in LoadedApplication, table: &EfiSystemTable) -> EfiStatus
+        requires addr::Bound == 18446744073709551616
+        {
+            let mut context: Main;
+            Main::run(&mut context, handle, table)
         }
     }
 }
 
-// This is the bounded physical-arrival ladder, not a successful OS handoff.
-// It deliberately returns an error after greeting while Boot Services and
-// the firmware stack remain live. Until LoadedImage discovery, bootstrap
-// storage/stack custody and the final-map transaction are connected, calling
-// Kernel::enter would invent its two Granted arguments. The preserved map
-// implementation in own_machine.omg is not invoked through this route.
+// This source path reaches the map/exit/report transaction in the fresh-image
+// smoke. Complete kernel entry still needs image-root partition and semantic
+// installation; the compiler retains the private stack separately.
