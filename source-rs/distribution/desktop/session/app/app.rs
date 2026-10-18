@@ -63,6 +63,8 @@ pub fn run(style: u64, environment: Environment) -> u64 {
     #[cfg(feature = "shell")]
     let save_status = 0;
     let mut pointers = 0;
+    #[cfg(feature = "shell")]
+    let mut close = closing::Button::default();
     loop {
         let mut snapshot = call(parent, [wire::POLL, 0, 0, 0, 0, 0, 0, 0]);
         let mut view = wire::poll_view(snapshot);
@@ -74,6 +76,16 @@ pub fn run(style: u64, environment: Environment) -> u64 {
                 let event = wire::poll_event(snapshot);
                 if event[0] != 0 || event[2] == wire::NONE {
                     break;
+                }
+                #[cfg(feature = "shell")]
+                {
+                    let previous = close.confirm;
+                    if close.close(event, view[2], state.as_ref().unwrap().error != 0) {
+                        return 0;
+                    }
+                    if previous != close.confirm {
+                        painted = None;
+                    }
                 }
                 if event[2] == wire::POINTER {
                     pointers += 1;
@@ -118,6 +130,11 @@ pub fn run(style: u64, environment: Environment) -> u64 {
                     .as_mut()
                     .unwrap()
                     .paint(parent, view, color, state.as_ref().unwrap().error);
+                #[cfg(feature = "shell")]
+                scene
+                    .as_ref()
+                    .unwrap()
+                    .close_button(parent, view, close.confirm);
                 painted = Some((view, color, state.as_ref().unwrap().error));
                 paints += 1;
                 #[cfg(feature = "trace-input")]
@@ -144,7 +161,10 @@ pub fn run(style: u64, environment: Environment) -> u64 {
                             .1
                             .send(&wire::encode([
                                 0,
-                                u64::from(save_status != 0),
+                                u64::from(
+                                    save_status != 0
+                                        || state.as_ref().is_some_and(|s| s.error != 0),
+                                ),
                                 0,
                                 0,
                                 0,

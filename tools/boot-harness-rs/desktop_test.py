@@ -134,6 +134,22 @@ def desktop(stream, output, serial, reboot):
     def focus_app():
         click(APP[0] + 5, APP[1] + 120)
 
+    def app_close():
+        click(width - 38, APP[1] + 10)
+
+    def dialog(row, text):
+        move(8, 8)
+        expected = rows_image([text])
+        def check(width, data):
+            top = APP[1] + 20 + row * 16
+            actual = b''.join(data[((top + y) * width + APP[0] + 10) * 3:((top + y) * width + APP[0] + 170) * 3] for y in range(16))
+            return actual == expected
+        scan(check, f'Notes close dialog {text!r}')
+
+    def choose_close(row):
+        click(APP[0] + 40, APP[1] + 28 + row * 16)
+        move(8, 8)  # Do not compare a software cursor overlay with document pixels.
+
     def color(value):
         scan(lambda width, data: rgb(width, data, APP[0] + 5, APP[1] + 10) == bytes.fromhex(value), f'workspace color {value}')
 
@@ -182,6 +198,13 @@ def desktop(stream, output, serial, reboot):
         key('f4')
         note('hello cathedral two')
         tabs(2, 1)
+        app_close()
+        color('101827')
+        click_chrome(1)
+        note('hello cathedral')
+        tabs(2, 0)
+        app_close()
+        color('101827')
         return
     focus_app()
     for char in 'hello cathedral':
@@ -192,8 +215,21 @@ def desktop(stream, output, serial, reboot):
     click_chrome(CLOSE)  # Closing must not discard the unsaved draft.
     chrome(STATUS, 'KEPT')
     note('hello cathedral', dirty=True)
-    focus_app()
-    key('f1')
+    app_close()
+    dialog(0, 'UNSAVED NOTE')
+    dialog(1, 'SAVE')
+    dialog(2, 'DISCARD')
+    dialog(3, 'CANCEL')
+    key('x')  # The modal close decision must not edit the underlying draft.
+    dialog(0, 'UNSAVED NOTE')
+    choose_close(3)
+    note('hello cathedral', dirty=True)
+    app_close()
+    dialog(0, 'UNSAVED NOTE')
+    choose_close(1)  # Save and exit through the app itself, not the launcher.
+    color('101827')
+    click_chrome(1)
+    chrome(STATUS, 'RUNNING')
     note('hello cathedral')
     tabs(1, 0)
     # A clean user would close if the old boot control still received clicks.
@@ -214,16 +250,15 @@ def desktop(stream, output, serial, reboot):
     key('f4')
     tabs(2, 0)
     note('hello cathedral')
-    click_chrome(CLOSE)
-    chrome(STATUS, 'CLOSED')
+    app_close()  # A clean Notes exits immediately.
+    color('101827')
     click_chrome(2)
     chrome(STATUS, 'RUNNING')
     color('315ca8')
     focus_app()
     key('ret')
     color('d18b35')
-    click_chrome(CLOSE)
-    chrome(STATUS, 'CLOSED')
+    app_close()  # Colors handles its own close too.
     color('101827')
     # Repeated actual teardown/admission catches leaked loans, surfaces or
     # handles. Colors keeps its color: its state nests under its own program.
@@ -287,11 +322,17 @@ def desktop(stream, output, serial, reboot):
     note('x', dirty=True, temporary=True, error=True)
     click_chrome(CLOSE)
     chrome(STATUS, 'KEPT')
-    focus_app()
-    key('backspace')  # Explicitly remove the temporary draft before closing.
-    note('', temporary=True, error=True)
-    click_chrome(CLOSE)
-    chrome(STATUS, 'CLOSED')
+    app_close()
+    dialog(1, 'NO STORAGE')
+    choose_close(1)  # Unavailable save cannot pretend to have persisted the draft.
+    dialog(2, 'DISCARD')
+    choose_close(3)
+    note('x', dirty=True, temporary=True, error=True)
+    app_close()
+    dialog(2, 'DISCARD')
+    shutil.copyfile(output / 'display.png', output / 'notes-close.png')
+    choose_close(2)
+    color('101827')
     click_chrome(NEW)
     chrome(NEW, 'STORAGE ON')
     click_chrome(1)
@@ -303,7 +344,7 @@ def desktop(stream, output, serial, reboot):
     click_chrome(2)
     chrome(STATUS, 'RUNNING')
     color('d18b35')
-    print('PASS: user entry, required-service refusal, optional Notes storage, draft protection and persistent app replacement')
+    print('PASS: app-owned close, save/discard/cancel, required-service refusal, optional Notes storage and persistent replacement')
 
 
 def run(timeout, trace_storage=False):
@@ -317,7 +358,7 @@ def run(timeout, trace_storage=False):
     path = output / 'guest.raw'
     programs = harness.seeded_programs(ROOT / 'source-rs/distribution/profile.json', True)
     migration = ROOT / 'source-rs/distribution/migrations/readable-labels.txt'
-    database_image.prepare(path, programs, migration)
+    database_image.prepare(path, programs, migration, app_close=True)
     qemu = harness.find_qemu()
     command = [qemu, '-machine', 'q35', '-cpu', 'qemu64', '-accel', 'tcg', '-smp', '1', '-m', '128']
     command += harness.firmware_args(qemu, output)
@@ -330,7 +371,7 @@ def run(timeout, trace_storage=False):
         for name in ('serial.log', 'qemu.log', 'display.png'):
             shutil.copyfile(output / name, output / f'boot-{boot}-{name}')
         contents = path.read_bytes()
-        database_image.prepare(path, programs, migration)
+        database_image.prepare(path, programs, migration, app_close=True)
         assert contents == path.read_bytes(), 'relaunch must not reformat storage or reinstall unchanged programs'
     # An independent host model checks the retained records on a copy: the
     # installed programs, the user copied from the template, two notes sharing

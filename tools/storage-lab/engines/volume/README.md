@@ -186,10 +186,11 @@ and [notes.rs](notes.rs). Host verification never
 opens the original image before the next cold guest, so host cleanup cannot hide
 guest recovery problems. These are fixed fixture oracles, not general fsck tools.
 
-The stock desktop also invokes `upgrade-labels IMAGE OFFSET BYTES LEGACY_LIST`
+The stock desktop invokes `upgrade-app-close IMAGE OFFSET BYTES LEGACY_LIST`
 after seeding. [labels.rs](labels.rs) matches old copied stock programs against
 retained template content or the distribution's explicit legacy digests,
-refreshes their launcher, and appends display labels to unchanged app code.
+and refreshes their launcher and Notes/Colors. The earlier `upgrade-labels`
+mode only refreshes the launcher and appends labels to unchanged app code.
 It backs up the locked image and publishes all user-copy changes atomically;
 it does not rewrite saved notes/colors, tree edges or custom programs. Start at
 the [distribution migration](../../../../source-rs/distribution/migrations/README.md)

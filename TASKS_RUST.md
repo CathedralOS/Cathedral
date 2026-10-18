@@ -2,7 +2,8 @@
 
 Updated 2026-10-18 (local date). Implementation baseline: declared service
 imports and optional Notes persistence at **`8d1972a`**, followed by readable
-chooser labels at **`787344e`** and the existing-user label upgrade below. Store-based
+chooser labels at **`787344e`**, existing-user label upgrade at **`4f1c6c8`**,
+and the app-owned close milestone below. Store-based
 admission validates the program's required/optional interfaces against owner
 offers before spawning; the F5 launcher can withhold storage. Check Git for
 later work.
@@ -41,6 +42,10 @@ It uses x86-64 QEMU/TCG and UEFI.
   toggle does not change an already-running app's grant.
 - Colors changes its color on Enter and keeps it, because its state nests under
   its own program like everything else's.
+- Notes and Colors have an **X** in their upper-right corner. Clean apps exit
+  directly. Notes offers **SAVE / DISCARD / CANCEL** for unsaved work; temporary
+  Notes offers discard/cancel without storage. A failed save keeps the draft
+  open. Colors asks **CLOSE ANYWAY** if its last storage result is uncertain.
 - **CLOSE** in a chooser asks the running program what it would lose and stops
   it only on an answer of nothing; an unsaved note stays open. Launching while
   the slot is taken answers BUSY. The hidden boot chooser cannot receive input.
@@ -51,10 +56,12 @@ the users you made, their notes and colors. Missing media is created; existing
 media is never automatically reformatted. The programs are installed into the
 image on first launch and republished as new revisions when their bytes
 change; the sidecar `cathedral-storage.raw.programs` records what is installed.
-The desktop's explicit label upgrade refreshes recognized stock launchers in
-existing users and adds labels to old Notes/Colors while preserving their code
-and saved data. It saves `cathedral-storage.raw.before-readable-labels.raw`
-before changing the user copies. Customized/unrecognized programs stay intact.
+The desktop's explicit compatibility upgrade refreshes recognized stock
+launchers and Notes/Colors in existing users, preserving their saved data and
+user matrices. The app-close upgrade saves
+`cathedral-storage.raw.before-app-close.raw` before changing user copies; the
+earlier label-only backup remains separate. Customized/unrecognized programs
+stay intact.
 An image from before this layout holds other objects at the numbers the
 programs need; the installer refuses to overwrite anything that is not a
 program, so move that image and its `.programs` sidecar (if present) to backup
@@ -247,7 +254,8 @@ matrix executable. See the clarified startup/policy question in OWNER_QUESTIONS.
   provider loss while an app holds work still end in assertions in places. A
   program that cannot be read from the realm answers REFUSED in the chooser
   but the desktop asserts on its own launches. Add an adversarial test for each
-  failure actually fixed.
+  failure actually fixed. App-owned close with unsaved-work choices now works;
+  owner recovery from an unresponsive app and clearer focus feedback remain.
 - [ ] **Bring storage write latency down.** Collection scans metadata before
   each write and durable commit writes through ATA PIO. Use explicit tick-to-time
   conversion and separate CPU time from elapsed time. Measure with
@@ -510,3 +518,51 @@ logs remain under `interactive-copy-20261018T164207/` and
 `interactive-retry-20261018T164335/` in the same labels-upgrade directory. The
 next attempt passed without changing the driver or deadline; the cause remains
 unresolved. The interactive source image was never attached to those guest tests.
+
+
+## App-owned close controls
+
+Notes and Colors now render an X in their own local viewport. Closing returns
+from the app; the existing matrix child-disconnection path reclaims its grants,
+surfaces, input and launch slot. There is no new close syscall or matrix opcode.
+Notes presents SAVE / DISCARD / CANCEL when work is unconfirmed; temporary
+Notes disables save. Cancel preserves the draft and modal keyboard input cannot
+edit it. An uncertain save reconciles first; failure or a differing confirmed
+value keeps the dialog open for an explicit next action. Colors requires CLOSE
+ANYWAY after a storage error, and its LOSS reply now reports that error too.
+
+Follow Notes' session into `closing.rs` for pointer actions and `view.rs` for
+presentation; Colors' app entrance similarly descends into `closing.rs`.
+Notes uses its existing text bitmap for the dialog and its sixth allowed surface
+for the X. An initial separate dialog bitmap exceeded the 32-page allowance
+when replacing text; reusing the text bitmap fixed that without raising budgets.
+
+The profile explicitly opts into `app_close_migration`. Host installation
+refreshes only recognized stock Notes/Colors and launchers, including the old
+apps previously given title-only footers. Recognition checks content digests;
+a title alone cannot authorize replacement. User matrix code, object identities,
+child data and customized programs remain unchanged. The actual interactive
+image's two users received four app updates, backed up at
+`build/boot-harness-rs/cathedral-storage.raw.before-app-close.raw`.
+
+Verification for this change:
+
+- Notes host test, shell Notes/desktop and notes-probes target clippy with
+  warnings denied, four host migration tests, storage-lab clippy, two persistent
+  image tests, layout/format and diff checks passed.
+- Default F5 desktop proof covered clean exit/relaunch, dirty save/discard/cancel,
+  modal draft protection, temporary refusal/discard, launcher LOSS behavior,
+  saved colors and cold reboot. Host oracle verified 193 records. Artifacts:
+  `build/boot-harness-rs/desktop/20261018T172431571623Z/`.
+- Existing-user compatibility replay upgraded the pre-label fixture, checked
+  both saved notes, and used the X to close/relaunch inside its old matrix:
+  `build/boot-harness-rs/labels-upgrade/20261018T172626738714Z/`.
+- Notes recovery/focus/glyph checks and cold restoration passed, with exact
+  16-record host oracles:
+  `build/boot-harness-rs/matrix-database/20261018T172850295341Z/`.
+
+This does not supply owner force-close for an unresponsive app, a global escape
+shortcut, or new focus indicators. Colors' uncertain-close confirmation was
+compiled but not separately fault-injected through the shell UI. Kernel and
+ARM64 suites were not rerun for this application/installer change. The existing
+intermittent ATA timeout remains unresolved; none appeared in these runs.

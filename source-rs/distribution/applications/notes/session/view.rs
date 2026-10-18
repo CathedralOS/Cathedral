@@ -18,10 +18,11 @@ pub struct Scene {
     track: u64,
     filled: u64,
     current: u64,
+    close: u64,
 }
 impl Scene {
     pub fn new(parent: Pair, epoch: u64) -> Self {
-        let mut names = [0; 5];
+        let mut names = [0; 6];
         for (rank, name) in names.iter_mut().enumerate() {
             let reply = call(
                 parent,
@@ -37,6 +38,7 @@ impl Scene {
             track: names[2],
             filled: names[3],
             current: names[4],
+            close: names[5],
         }
     }
     /// Paint one retained rectangle at a local rectangle: x, y, width, height.
@@ -57,6 +59,7 @@ impl Scene {
         dirty: bool,
         error: u64,
         notes: &storage::Notes,
+        closing: bool,
     ) {
         let color = if error != 0 {
             0x993f46
@@ -69,8 +72,46 @@ impl Scene {
         };
         self.rectangle(parent, self.base, [0, 0, extent[2], extent[3]], color);
         self.image(parent, self.text, [10, 20, WIDTH, HEIGHT], |bytes| {
-            text(bytes, doc, cursor)
+            if closing {
+                label(
+                    bytes,
+                    WIDTH,
+                    0,
+                    0,
+                    if error == 0 {
+                        b"UNSAVED NOTE"
+                    } else {
+                        b"SAVE ERROR"
+                    },
+                );
+                label(
+                    bytes,
+                    WIDTH,
+                    0,
+                    16,
+                    if notes.temporary() {
+                        b"NO STORAGE"
+                    } else {
+                        b"SAVE"
+                    },
+                );
+                label(bytes, WIDTH, 0, 32, b"DISCARD");
+                label(bytes, WIDTH, 0, 48, b"CANCEL");
+            } else {
+                text(bytes, doc, cursor);
+            }
         });
+        self.image(
+            parent,
+            self.close,
+            [extent[2].saturating_sub(24) as usize, 2, 20, 16],
+            |bytes| {
+                for pixel in bytes.chunks_exact_mut(4) {
+                    pixel.copy_from_slice(&0x993f46u32.to_le_bytes());
+                }
+                label(bytes, 20, 5, 1, b"X");
+            },
+        );
         if notes.temporary() {
             self.image(
                 parent,
@@ -206,4 +247,25 @@ fn text(bytes: &mut [u8], doc: &Document, cursor: usize) {
 fn pixel(bytes: &mut [u8], width: usize, x: usize, y: usize, color: u32) {
     let offset = (y * width + x) * 4;
     bytes[offset..offset + 4].copy_from_slice(&color.to_le_bytes());
+}
+fn label(bytes: &mut [u8], width: usize, left: usize, top: usize, text: &[u8]) {
+    for (i, &ch) in text.iter().enumerate() {
+        for (y, bits) in cathedral_bitmap_font::glyph(ch).into_iter().enumerate() {
+            for x in 0..5 {
+                if bits & (1 << (4 - x)) != 0 {
+                    for dy in 0..2 {
+                        for dx in 0..2 {
+                            pixel(
+                                bytes,
+                                width,
+                                left + i * 12 + x * 2 + dx,
+                                top + y * 2 + dy,
+                                0xffffff,
+                            );
+                        }
+                    }
+                }
+            }
+        }
+    }
 }

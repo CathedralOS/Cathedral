@@ -9,6 +9,12 @@ notes root; [app/](session/app/app.rs) is the color program. See the
 [distribution map](../README.md) for F5, controls, composition and the
 same-image interactive test.
 
+Colors' [close control](session/app/closing.rs) renders an X and handles local
+pointer clicks. A clean close returns from the app; the matrix reclaims the
+child and its launch slot through its existing exit path. An uncertain storage
+result requires a second, explicit CLOSE ANYWAY click. Its LOSS reply also
+reports that uncertainty, so the chooser cannot silently close it.
+
 [Phase layout](session/shell/layout.rs) centers the initial user picker, then
 revokes its surfaces and input when a user is furnished. The user matrix owns
 the full display, with its launcher at the left and its app in the remaining

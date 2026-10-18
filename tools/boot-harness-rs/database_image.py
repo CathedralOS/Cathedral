@@ -22,13 +22,14 @@ def oracle():
     return lab / 'target/release' / ('storage-layout.exe' if os.name == 'nt' else 'storage-layout')
 
 
-def prepare(path, programs=(), label_migration=None):
+def prepare(path, programs=(), label_migration=None, app_close=False):
     """Create the image if missing, then install `programs`: (parent, file) pairs
     that become objects 1.. of root 0 in order, each under an earlier object or
     the root. An existing image keeps its data; only changed programs are
     republished. The stock desktop may also request its explicit readable-label
     migration, which upgrades recognized copied launchers and labels old apps.
-    The migration saves a backup and leaves customized code and user data alone."""
+    The migration saves a backup and leaves customized code and user data alone.
+    app_close additionally refreshes recognized stock Notes/Colors code."""
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     if path.is_symlink() or (path.exists() and not path.is_file()):
@@ -56,7 +57,7 @@ def prepare(path, programs=(), label_migration=None):
         return
     installed = [[int(parent), hashlib.sha256(Path(file).read_bytes()).hexdigest()] for parent, file in programs]
     if label_migration is not None:
-        installed = {'programs': installed, 'readable_labels': hashlib.sha256(Path(label_migration).read_bytes()).hexdigest()}
+        installed = {'programs': installed, 'readable_labels': hashlib.sha256(Path(label_migration).read_bytes()).hexdigest(), 'app_close': app_close}
     if sidecar.exists() and json.loads(sidecar.read_text(encoding='utf-8')) == installed:
         return
     if executable is None:
@@ -67,6 +68,6 @@ def prepare(path, programs=(), label_migration=None):
         command += [str(parent), str(file)]
     subprocess.run(command, cwd=lab, check=True)
     if label_migration is not None:
-        subprocess.run([str(executable), 'engines', 'volume', 'upgrade-labels', str(path),
+        subprocess.run([str(executable), 'engines', 'volume', 'upgrade-app-close' if app_close else 'upgrade-labels', str(path),
                         str(OFFSET), str(VOLUME_BYTES), str(Path(label_migration).resolve())], cwd=lab, check=True)
     sidecar.write_text(json.dumps(installed), encoding='utf-8')

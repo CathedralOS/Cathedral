@@ -35,9 +35,10 @@ General editable object names/kinds remain an owner question; this display
 convention does not change the database format or addressing.
 
 The desktop installer [upgrades recognized stock copies](../../migrations/README.md)
-of the launcher in existing users too. It adds titles to old stock Notes/Colors
-without replacing their executable bytes or saved data, and preserves customized
-or unrecognized programs. No new user is needed to get these labels.
+of the launcher in existing users too. The profile's subsequent app-close
+upgrade also refreshes recognized stock Notes/Colors, preserving their saved
+data and customized or unrecognized programs. No new user is needed to get
+these labels or the apps' own close buttons.
 
 **CLOSE** sends `CLOSE`: the host asks the running sibling with `LOSS` whether
 stopping would lose work and stops it only on an answer of nothing. KEPT means

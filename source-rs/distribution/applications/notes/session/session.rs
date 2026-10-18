@@ -66,6 +66,7 @@ pub fn run(style: u64, environment: Environment) {
     let mut cursor = 0;
     let mut scene: Option<view::Scene> = None;
     let mut repaint = true;
+    let mut closing = closing::Controls::default();
     loop {
         let snapshot = call(parent, [wire::POLL, 0, 0, 0, 0, 0, 0, 0]);
         let extent = wire::poll_view(snapshot);
@@ -105,7 +106,34 @@ pub fn run(style: u64, environment: Environment) {
                 }
             }
             let event = wire::poll_event(snapshot);
-            if event[2] == wire::KEY && event[4] != input::RELEASE as u64 {
+            match closing.action(event, extent[2], notes.temporary()) {
+                closing::Action::Request if draft == confirmed && error == 0 => return,
+                closing::Action::Request => {
+                    closing.open = true;
+                    repaint = true;
+                }
+                closing::Action::Discard => return,
+                closing::Action::Cancel => {
+                    closing.open = false;
+                    repaint = true;
+                }
+                closing::Action::Save => {
+                    // An uncertain previous write must be reconciled before retry.
+                    // A failed read/save keeps both the draft and dialog alive.
+                    let result = if error != 0 {
+                        notes.load().map(|doc| confirmed = doc)
+                    } else {
+                        notes.save(&draft).map(|()| confirmed = draft)
+                    };
+                    error = result.err().unwrap_or(0);
+                    if error == 0 && draft == confirmed {
+                        return;
+                    }
+                    repaint = true;
+                }
+                closing::Action::None => (),
+            }
+            if !closing.open && event[2] == wire::KEY && event[4] != input::RELEASE as u64 {
                 let key = event[3] as u8;
                 let function = matches!(key, input::F1 | input::F2 | input::F3 | input::F4);
                 if function && event[4] == input::PRESS as u64 {
@@ -170,6 +198,7 @@ pub fn run(style: u64, environment: Environment) {
                     draft != confirmed,
                     error,
                     &notes,
+                    closing.open,
                 );
                 repaint = false;
             }

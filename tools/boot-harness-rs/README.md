@@ -15,7 +15,9 @@ python tools/boot-harness-rs/run.py --release --window
 Click **NEW USER** to copy USER TEMPLATE, click USER 1 to run it, then click
 **Notes** or **Colors** in its chrome and click the program to focus it. Notes:
 type, F1 save/check, F2 reload. Colors: Enter changes color. CLOSE stops the
-program unless it would lose work; an unsaved note stays until saved or reloaded.
+program unless it would lose work. Notes and Colors also have their own **X**
+button; Notes presents Save / Discard / Cancel for a draft, or Discard / Cancel
+when storage is absent. Closing an app no longer requires using the launcher.
 Selecting a user removes the boot picker and gives the user the full display,
 with its launcher on the left. There is no logout UI yet; restart QEMU to select
 another user. The user launcher's STORAGE ON/OFF toggle controls future launches:
@@ -32,6 +34,8 @@ The desktop's explicit readable-label migration also updates recognized stock
 launchers inside existing users. Old Notes/Colors gain labels while keeping
 their code and saved data. Customized/unrecognized programs remain untouched.
 A pre-migration backup is saved as `cathedral-storage.raw.before-readable-labels.raw`.
+The subsequent app-close upgrade refreshes recognized Notes/Colors code while
+keeping their saved state and backs up `cathedral-storage.raw.before-app-close.raw`.
 
 If F5 builds but no QEMU window appears, check the integrated terminal. An image
 from before programs were installed as objects can fail with "holds something

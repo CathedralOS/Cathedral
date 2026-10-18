@@ -6,6 +6,8 @@ pub(crate) struct Scene {
     base: u64,
     accent: Option<u64>,
     revision: u64,
+    #[cfg(feature = "shell")]
+    close: u64,
 }
 impl Scene {
     pub fn new(parent: Pair, view: wire::Packet) -> Self {
@@ -31,7 +33,9 @@ impl Scene {
             call(parent, [wire::PAINT, view[1], 0, 0, 0, 1, 1, 0]),
             wire::error(abi::BAD_HANDLE)
         );
-        for &name in &names[3..info[1] as usize] {
+        let retained = if cfg!(feature = "shell") { 4 } else { 3 };
+        assert!(info[1] >= retained as u64);
+        for &name in &names[retained..info[1] as usize] {
             assert_eq!(
                 call(parent, [wire::ERASE, view[1], name, 0, 0, 0, 0, 0]),
                 [0; 8]
@@ -42,11 +46,17 @@ impl Scene {
             base: names[0],
             accent: Some(names[1]),
             revision: 2,
+            #[cfg(feature = "shell")]
+            close: names[3],
         };
         scene.remove_accent(parent);
         scene.restore_accent(parent);
         image::submit(parent, view[1], names[2]);
         scene
+    }
+    #[cfg(feature = "shell")]
+    pub fn close_button(&self, parent: Pair, view: wire::Packet, confirm: bool) {
+        closing::paint(parent, view, self.close, confirm);
     }
     pub fn paint(&mut self, parent: Pair, view: wire::Packet, color: u64, error: u64) {
         self.revision += 1;

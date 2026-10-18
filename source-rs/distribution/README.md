@@ -11,7 +11,9 @@ template user beside it; clicking a user replaces the boot picker with that
 user's full-screen workspace. A user is a
 matrix with its own chrome: a second chooser over the user's realm, listing the
 user's copies of Notes and Colors. Click one to launch it, and click the
-program's area to give it keyboard focus. **CLOSE** asks the running program
+program's area to give it keyboard focus. Notes and Colors have an **X** in
+their upper-right corner. Notes asks Save / Discard / Cancel for unsaved work;
+temporary Notes offers Discard / Cancel. **CLOSE** in the launcher asks the running program
 whether it would lose work and keeps it open if so. The boot chooser's display
 and input grant is revoked on entry, leaving the user's launcher on the left
 and its app in the remaining area. There is no logout control yet; restart
@@ -24,8 +26,9 @@ row controls future launches: OFF runs Notes as a temporary unsavable editor;
 Colors refuses with NEEDS SERVICE because its storage import is required.
 Turn storage on and relaunch to return to saved data. Existing copied apps
 retain their code; use NEW USER for newly added app features. The explicit
-[label upgrade](migrations/README.md) refreshes recognized stock launchers in
-existing users and labels their Notes/Colors without replacing app code or data.
+[stock-app upgrades](migrations/README.md) refresh recognized launchers and
+Notes/Colors in existing users for readable labels and app-owned close controls,
+preserving saved data and customized programs.
 
 Everything persists in `build/boot-harness-rs/cathedral-storage.raw` across
 launches and QEMU restarts: the users you made, their notes and colors. The

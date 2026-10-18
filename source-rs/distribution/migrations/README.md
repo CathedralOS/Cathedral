@@ -12,8 +12,8 @@ came from; it does not identify programs by title, ELF-looking bytes or object
 position. Retained template revision events also identify stock copies. The
 upgrader validates the content digest before any replacement.
 
-Only direct program children of existing users in the stock Users folder are
-considered. Recognized launcher copies receive the current template launcher.
+In the original label-only mode, only direct program children of existing users
+in the stock Users folder are considered. Recognized launcher copies receive the current template launcher.
 Recognized Notes/Colors receive a display-title footer while retaining their
 original executable bytes. The user matrices, object identities, tree edges,
 saved notes/colors, other roots and customized/unrecognized programs remain
@@ -32,6 +32,16 @@ not extend the allowlist from unidentified user bytes. A future general choice
 between pinned copied programs and managed updates still needs design; this
 explicit migration does not settle it.
 
+The profile also opts into `app_close_migration`. This subsequent upgrade
+refreshes recognized stock Notes/Colors as well as the launcher so existing
+users receive app-owned X buttons and Notes' save/discard/cancel interaction.
+It additionally recognizes the previous migration's title-only copies by
+hashing the original bytes without that exact footer and matching the legacy
+allowlist or retained template history. A matching title alone never authorizes
+replacement. Saved objects and customized programs still remain untouched.
+Its separate backup suffix is `.before-app-close.raw`, and its opt-in is part
+of the installer receipt. This does not update the user's matrix executable.
+
 Verification:
 
 ```powershell
@@ -46,5 +56,6 @@ Host tests check exact stock matching, a custom launcher with a misleading
 title, collected history, corrupt content, unchanged records outside the
 upgrade, quota, backup, fixed disk extent and repeatability. The compatibility
 replay opens only a copy of the old fixture, enters its existing user, checks
-the actual labels and reads both saved notes. The ordinary desktop proof still
+the actual labels, reads both saved notes, and closes/relaunches Notes through
+its X button inside the old user matrix. The ordinary desktop proof still
 covers fresh installs, storage attenuation and cold reboot.

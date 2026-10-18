@@ -1,5 +1,6 @@
 //! One distribution migration: refresh stock copied launchers and label old
-//! Notes/Colors without replacing their code. Match retained template content,
+//! Notes/Colors, optionally refreshing stock app code for app-owned close UI.
+//! Match retained template content,
 //! never infer executable identity from a title or position alone.
 use super::*;
 use crate::chunks::{Layout, Policy, Store};
@@ -10,7 +11,13 @@ use std::io::Write;
 
 type Records = BTreeMap<Vec<u8>, Vec<u8>>;
 
-pub fn upgrade(path: &Path, offset: u64, bytes: u64, legacy: &[(u64, [u8; 32])]) -> Result<()> {
+pub fn upgrade(
+    path: &Path,
+    offset: u64,
+    bytes: u64,
+    legacy: &[(u64, [u8; 32])],
+    refresh_apps: bool,
+) -> Result<()> {
     let image = Arc::new(Image::open(path)?); // Excludes QEMU/another installer.
     let mut backup = vec![0; usize::try_from(image.len()?)?];
     image.read(0, &mut backup)?;
@@ -23,17 +30,22 @@ pub fn upgrade(path: &Path, offset: u64, bytes: u64, legacy: &[(u64, [u8; 32])])
         let (k, v) = item?;
         records.insert(k.value().to_vec(), v.value().to_vec());
     }
-    let replacements = plan(&records, legacy)?;
+    let replacements = plan(&records, legacy, refresh_apps)?;
     if replacements.is_empty() {
         println!("LABELS: no stock copies need upgrading");
         return Ok(());
     }
     // Preserve a recoverable pre-migration image before publishing any changes.
     let backup_path = path.with_file_name(format!(
-        "{}.before-readable-labels.raw",
+        "{}.before-{}.raw",
         path.file_name()
             .ok_or("missing image name")?
-            .to_string_lossy()
+            .to_string_lossy(),
+        if refresh_apps {
+            "app-close"
+        } else {
+            "readable-labels"
+        }
     ));
     match std::fs::OpenOptions::new()
         .write(true)
@@ -107,7 +119,11 @@ pub fn upgrade(path: &Path, offset: u64, bytes: u64, legacy: &[(u64, [u8; 32])])
     Ok(())
 }
 
-fn plan(records: &Records, legacy: &[(u64, [u8; 32])]) -> Result<Vec<(u64, Vec<u8>)>> {
+fn plan(
+    records: &Records,
+    legacy: &[(u64, [u8; 32])],
+    refresh_apps: bool,
+) -> Result<Vec<(u64, Vec<u8>)>> {
     let mut heads = BTreeMap::new();
     for (k, v) in records {
         if k.starts_with(&[0, b'h']) {
@@ -136,20 +152,35 @@ fn plan(records: &Records, legacy: &[(u64, [u8; 32])]) -> Result<Vec<(u64, Vec<u
             (5, b"NOTES"),
             (6, b"COLORS"),
         ] {
-            let matches = legacy
-                .iter()
-                .any(|(id, digest)| *id == template && digest[..] == current[8..40])
-                || records.iter().any(|(k, v)| {
-                    k.len() == 18
-                        && k.starts_with(&key(b'e', &template.to_be_bytes()))
-                        && v.len() == 56
-                        && v[8..40] == current[8..40]
-                });
+            let known = |digest: &[u8]| {
+                legacy
+                    .iter()
+                    .any(|(id, saved)| *id == template && saved[..] == *digest)
+                    || records.iter().any(|(k, v)| {
+                        k.len() == 18
+                            && k.starts_with(&key(b'e', &template.to_be_bytes()))
+                            && v.len() == 56
+                            && v[8..40] == *digest
+                    })
+            };
+            let matches = known(&current[8..40])
+                || (refresh_apps
+                    && content(records, current).ok().is_some_and(|old| {
+                        // The previous label migration appended only this footer. Match
+                        // its original code, not the user-visible title by itself.
+                        old.ends_with(&title(label)) && known(&digest(&old[..old.len() - 32]))
+                    }));
             if !matches {
                 continue;
             }
             let old = content(records, current)?;
-            let new = if template == 4 {
+            let new = if refresh_apps {
+                let target = content(records, heads.get(&template).ok_or("missing stock app")?)?;
+                if !target.ends_with(&title(label)) {
+                    return Err("stock app title mismatch".into());
+                }
+                target
+            } else if template == 4 {
                 launcher.clone()
             } else if old.ends_with(&title(label)) {
                 old.clone()
@@ -168,6 +199,16 @@ fn plan(records: &Records, legacy: &[(u64, [u8; 32])]) -> Result<Vec<(u64, Vec<u
         }
     }
     Ok(replacements)
+}
+
+fn digest(data: &[u8]) -> Vec<u8> {
+    let mut store = Store::new(Policy {
+        chunk_bytes: 4096,
+        inline_limit: 128,
+        layout: Layout::Flat,
+    });
+    let version = store.put(data);
+    store.records(&version)[b"head".as_slice()].clone()
 }
 
 fn title(text: &[u8]) -> [u8; 32] {

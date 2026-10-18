@@ -352,7 +352,8 @@ def main():
         if disposable and data_path.exists():
             data_path.unlink()
         migration = composition.get("startup", {}).get("label_migration")
-        database_image.prepare(data_path, seeded, WORKSPACE / migration if migration else None)
+        database_image.prepare(data_path, seeded, WORKSPACE / migration if migration else None,
+                               composition.get("startup", {}).get("app_close_migration", False))
         command += disk_image.arguments(data_path)
     if not args.window:
         command += ["-display", "none"]

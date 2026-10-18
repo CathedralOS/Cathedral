@@ -25,11 +25,20 @@ switch act only on a clean, saved note.
 Below the text, a bar shows the notes in this realm: a dim segment per note and a
 bright one on the current note. A realm holds up to eight notes.
 
+The **X** in the upper-right corner belongs to Notes. A clean document closes
+immediately. Unsaved work opens **SAVE / DISCARD / CANCEL** in the editor area;
+typing is suspended until that choice is resolved. Cancel restores the draft.
+Save closes only after success (or reconciliation confirms the exact draft);
+a failed save keeps the dialog and draft. Discard explicitly exits without
+publishing the draft. Normal process exit lets the matrix release surfaces,
+input and the launch slot; no sibling-close request is needed.
+
 In the F5 launcher, turn **STORAGE OFF** before launching Notes to run the same
 program with optional persistence absent. It starts empty, with a purple base
 and **TEMP NO SAVE** in place of the note bar. Editing makes a draft; F1/F2 cannot
-save or discard it and show an error. CLOSE still keeps an unsaved draft open.
-Explicitly erase the text to close cleanly, then re-enable storage and relaunch
+save or discard it and show an error. The launcher's CLOSE still keeps an
+unsaved draft open. Notes' own X offers **DISCARD / CANCEL**, with **NO STORAGE**
+instead of Save. Discard, then re-enable storage and relaunch
 to see the original saved notes. Changing the launcher toggle affects future
 launches only. An absent grant is not the same as a supplied service failing;
 normal storage failures still follow the reconciliation path above.
@@ -51,6 +60,7 @@ diagnostic font is uppercase-shaped.
 [main.rs](main.rs) declares required interaction and optional storage imports, then enters [session/session.rs](session/session.rs): load supplied
 connections, read confirmed state, process local input, save/reconcile, present.
 [document.rs](document.rs) owns bounded edits and the `NTS1` encoding.
+[closing.rs](session/closing.rs) owns close-button and dialog hit testing.
 [storage.rs](session/storage.rs) lists the realm, reads the current note through a
 sealed bulk reply, publishes the whole encoded document as one attachment, and
 asks the store to copy. It never silently retries an uncertain commit. A lost
@@ -68,7 +78,8 @@ this app's cached binding: the first refused save preserves its draft, then F1
 reconciles the new binding.
 
 [view.rs](session/view.rs) publishes one sealed 180x64 text bitmap through the
-existing surface chain and draws the note bar as retained rectangles. The app
+existing surface chain and draws the note bar as retained rectangles. The close
+dialog reuses that bitmap; the X occupies one additional small surface. The app
 holds 32 private pages: the retained bitmap, its replacement, and one page per
 publication. Its four reader pages receive bulk replies. Matrix and display reader
 budgets are explicitly funded by the profile; every hop holds the old and new

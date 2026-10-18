@@ -29,10 +29,10 @@ def run(source):
     shutil.copyfile(source, path)
     programs = harness.seeded_programs(root / 'source-rs/distribution/profile.json', True)
     migration = root / 'source-rs/distribution/migrations/readable-labels.txt'
-    database_image.prepare(path, programs, migration)
-    assert path.with_name(path.name + '.before-readable-labels.raw').exists(), 'fixture must exercise an upgrade'
+    database_image.prepare(path, programs, migration, app_close=True)
+    assert path.with_name(path.name + '.before-app-close.raw').exists(), 'fixture must exercise an upgrade'
     migrated = path.read_bytes()
-    database_image.prepare(path, programs, migration)
+    database_image.prepare(path, programs, migration, app_close=True)
     assert migrated == path.read_bytes(), 'unchanged second installation must not rewrite the image'
     qemu = harness.find_qemu()
     command = [qemu, '-machine', 'q35', '-cpu', 'qemu64', '-accel', 'tcg', '-smp', '1', '-m', '128']
@@ -42,7 +42,7 @@ def run(source):
     capture.run(command, output, 180, subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0,
                 ready_marker='Cathedral desktop: ready; choose a user',
                 verify=lambda stream, output, serial: desktop_test.desktop(stream, output, serial, True))
-    print(f'PASS: existing user, readable program labels and both original saved notes; artifacts: {output}')
+    print(f'PASS: existing user, readable labels, app-owned close and both original saved notes; artifacts: {output}')
 
 
 if __name__ == '__main__':

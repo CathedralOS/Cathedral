@@ -32,6 +32,14 @@ fn fixture() -> Records {
     let mut new_launcher = b"\x7fELFnew launcher".to_vec();
     new_launcher.extend_from_slice(&title(b"LAUNCHER"));
     put(&mut records, 4, 2, 3, &new_launcher);
+    for (id, code, name) in [
+        (5, b"\x7fELFnew notes".as_slice(), b"NOTES".as_slice()),
+        (6, b"\x7fELFnew colors", b"COLORS"),
+    ] {
+        let mut bytes = code.to_vec();
+        bytes.extend_from_slice(&title(name));
+        put(&mut records, id, 2, 3, &bytes);
+    }
     // A customized launcher with a convincing title must never match stock.
     let mut custom = b"\x7fELFcustom launcher".to_vec();
     custom.extend_from_slice(&title(b"LAUNCHER"));
@@ -79,7 +87,7 @@ fn put(records: &mut Records, object: u64, revision: u64, parent: u64, data: &[u
 #[test]
 fn exact_stock_match_updates_launcher_only_and_labels_original_app_code() {
     let records = fixture();
-    let changes = plan(&records, &[]).unwrap();
+    let changes = plan(&records, &[], false).unwrap();
     assert_eq!(
         changes.iter().map(|(id, _)| *id).collect::<Vec<_>>(),
         vec![8, 9, 10]
@@ -105,20 +113,57 @@ fn collected_history_requires_exact_legacy_digest_and_corruption_refuses() {
     let mut records = fixture();
     let digest: [u8; 32] = records[&event(4, 1)][8..40].try_into().unwrap();
     records.remove(&event(4, 1));
-    assert!(!plan(&records, &[]).unwrap().iter().any(|(id, _)| *id == 8));
     assert!(
-        plan(&records, &[(4, digest)])
+        !plan(&records, &[], false)
+            .unwrap()
+            .iter()
+            .any(|(id, _)| *id == 8)
+    );
+    assert!(
+        plan(&records, &[(4, digest)], false)
             .unwrap()
             .iter()
             .any(|(id, _)| *id == 8)
     );
     let manifest = key(b'm', &digest);
     *records.get_mut(&manifest).unwrap().last_mut().unwrap() ^= 1;
-    assert!(plan(&records, &[(4, digest)]).is_err());
+    assert!(plan(&records, &[(4, digest)], false).is_err());
+}
+
+#[test]
+fn app_close_upgrade_recognizes_previously_labelled_stock_without_touching_custom_code() {
+    let mut records = fixture();
+    let legacy: Vec<_> = (4..=6)
+        .map(|id| (id, records[&event(id, 1)][8..40].try_into().unwrap()))
+        .collect();
+    for (id, data) in plan(&records, &[], false).unwrap() {
+        put(&mut records, id, 2, 7, &data);
+    }
+    for id in 4..=6 {
+        records.remove(&event(id, 1));
+    }
+    let changes = plan(&records, &legacy, true).unwrap();
+    assert_eq!(
+        changes.iter().map(|(id, _)| *id).collect::<Vec<_>>(),
+        vec![9, 10]
+    );
+    for (id, data) in changes {
+        assert_eq!(
+            data,
+            content(&records, &records[&key(b'h', &(id - 4).to_be_bytes())]).unwrap()
+        );
+        put(&mut records, id, 3, 7, &data);
+    }
+    assert!(plan(&records, &legacy, true).unwrap().is_empty());
 }
 
 #[test]
 fn transaction_preserves_data_custom_code_history_quota_and_is_idempotent() {
+    for refresh_apps in [false, true] {
+        transaction(refresh_apps);
+    }
+}
+fn transaction(refresh_apps: bool) {
     static NEXT: AtomicU64 = AtomicU64::new(0);
     let dir = std::env::temp_dir().join(format!(
         "cathedral-labels-{}-{}",
@@ -149,9 +194,14 @@ fn transaction_preserves_data_custom_code_history_quota_and_is_idempotent() {
         tx.commit().unwrap();
     }
     let raw = std::fs::read(&path).unwrap();
-    upgrade(&path, 4096, bytes, &[]).unwrap();
+    upgrade(&path, 4096, bytes, &[], refresh_apps).unwrap();
     assert_eq!(
-        std::fs::read(dir.join("guest.raw.before-readable-labels.raw")).unwrap(),
+        std::fs::read(dir.join(if refresh_apps {
+            "guest.raw.before-app-close.raw"
+        } else {
+            "guest.raw.before-readable-labels.raw"
+        }))
+        .unwrap(),
         raw
     );
     let read = || -> Records {
@@ -182,7 +232,7 @@ fn transaction_preserves_data_custom_code_history_quota_and_is_idempotent() {
         .sum::<usize>()
         + 10;
     assert_eq!(after[&key(b'q', &[])], (charge as u64).to_le_bytes());
-    upgrade(&path, 4096, bytes, &[]).unwrap();
+    upgrade(&path, 4096, bytes, &[], refresh_apps).unwrap();
     assert_eq!(read(), after);
     let raw_after = std::fs::read(&path).unwrap();
     assert_eq!(raw_after.len(), raw.len());
