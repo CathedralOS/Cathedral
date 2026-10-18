@@ -24,6 +24,12 @@ The desktop retains `build/boot-harness-rs/cathedral-storage.raw`. First launch
 builds the host formatter and creates the image; later launches preserve it.
 Existing files are never automatically reformatted. Older lab disks are untouched.
 
+If F5 builds but no QEMU window appears, check the integrated terminal. An image
+from before programs were installed as objects can fail with "holds something
+other than a program". Move `cathedral-storage.raw` and its `.programs` sidecar
+(if present) to backup paths, then launch again to create a fresh desktop.
+The backup preserves the old data; this is a fresh installation, not a migration.
+
 `python tools/boot-harness-rs/desktop_test.py` exercises this exact default image
 using physical input, repeated app launches, draft protection and cold-boot saved
 text checks on a disposable disk. [Distribution navigation](../../source-rs/distribution/README.md)

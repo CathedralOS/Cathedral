@@ -43,7 +43,10 @@ image on first launch and republished as new revisions when their bytes
 change; the sidecar `cathedral-storage.raw.programs` records what is installed.
 An image from before this layout holds other objects at the numbers the
 programs need; the installer refuses to overwrite anything that is not a
-program, so delete that file to start clean. `notes-storage.raw` and
+program, so move that image and its `.programs` sidecar (if present) to backup
+paths before relaunching to create a fresh desktop. The backup retains the old
+data; it is not migrated into the new desktop. This refusal happens before QEMU
+opens, so check the launch terminal if F5 appears to do nothing. `notes-storage.raw` and
 `matrix-database-storage.raw` belong to the notes and probe desktop fixtures.
 Automated tests use separate disposable images.
 

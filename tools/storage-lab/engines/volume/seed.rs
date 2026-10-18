@@ -105,7 +105,7 @@ pub fn seed(path: &Path, offset: u64, bytes: u64, programs: &[Program]) -> Resul
                     }
                     if !is_program(&table, &current[8..40])? {
                         return Err(format!(
-                            "object {object} holds something other than a program; this image predates installed programs, so delete it rather than overwrite it"
+                            "object {object} holds something other than a program; refusing to overwrite incompatible desktop data. Move this image and its .programs sidecar (if present) to backup paths, then relaunch to create a fresh desktop"
                         )
                         .into());
                     }
