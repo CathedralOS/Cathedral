@@ -23,6 +23,15 @@ entry bridges and the target reserve. The foreign leaves retain their default
 The active stack remains retained storage and must be excluded from the image
 extent eventually supplied to `Kernel::enter`.
 
+The adapter now queries `ProgramImage::retained_suffix_start` and excludes the
+entire suffix from its proposed image range before firmware exit. The compiler
+places that boundary before private stack alignment, saved firmware state and
+stack storage. The geometry checker first checks initial storage against the
+complete mapped image, so excluding the tail cannot conceal an overlap. A fresh
+QEMU image with this partition still reaches the greeting and ownership report.
+This numeric observation grants no memory authority and does not itself connect
+the two-root continuation.
+
 The owner resolved foreign-output admission in Omega's
 [provider-owned views contract](https://github.com/CathedralOS/Omega/blob/main/wiki/spec/build/foreign_storage.md#provider-owned-views-and-completion).
 Admission of the complete applied contract establishes the promised reference's

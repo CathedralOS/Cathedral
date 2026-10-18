@@ -12,6 +12,7 @@ use kernel_entry;
 use core::extent;
 use omega::language::core::assembly; // PortIo, MachineControl
 use omega::language::core::extent;   // ExtentRootProvider
+use omega::language::core::program_image;
 
 // Invocation-owned storage. Provider implementations are selected in build.omg;
 // firmware handles and table borrows stay explicit arguments. Neither this
@@ -21,17 +22,19 @@ data Main {
     map_buf:  UefiMemoryMapStorage; // aligned bounded map backing, no authority
     image_base: addr;
     image_size: u64;
+    image_retained_start: u64;
 }
 
 // Ordinary checked boot logic, not a physical firmware entry declaration.
 // Selecting PE's subsystem alone cannot install this function or establish
 // the validity of table. The target adapter must supply those premises.
 machine Main::run(context: &mut Main, handle: EfiHandle in LoadedApplication, table: &EfiSystemTable) -> EfiStatus
-reaches SimpleTextOutput + LoadedImageAccess + BootServices + ExtentRootProvider + PortIo + MachineControl
+reaches SimpleTextOutput + LoadedImageAccess + BootServices + ExtentRootProvider + ProgramImage + PortIo + MachineControl
 invokes SimpleTextOutput;
 invokes LoadedImageAccess;
 invokes BootServices;
 invokes ExtentRootProvider;
+invokes ProgramImage;
 requires addr::Bound == 18446744073709551616
 {
     context.msg = utf16"Hello from Omega\r\n\0";
@@ -57,6 +60,7 @@ requires addr::Bound == 18446744073709551616
         );
         context.image_base = output.image.image_base;
         context.image_size = output.image.image_size;
+        context.image_retained_start = ProgramImage::retained_suffix_start() as u64;
         transition status.code == 0 {
             true -> take_ownership(context, handle as EfiHandle, table)
             _ -> (status)

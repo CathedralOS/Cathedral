@@ -63,6 +63,10 @@ python tools/boot-harness/test_harness.py
 cases: both range orders, adjacency in both orders, overlap, containment,
 identical ranges, either empty root, either overflowing endpoint, and the
 largest accepted one-past endpoint. A wrong result crashes; success exits 0.
+Eight additional cases exercise `exclude_image_suffix`: valid interior cuts,
+either storage ordering, boundaries outside the image or leaving an empty
+residual, and initial storage overlapping the retained tail. All twenty cases
+must succeed in both native and Terminal execution.
 
 ```text
 omega update --project tools/boot-harness/root-geometry

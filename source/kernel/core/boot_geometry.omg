@@ -43,3 +43,38 @@ pub machine BootGeometry::check(geometry: BootGeometry) -> BootGeometryCheck {
         }
     }
 }
+
+// Validate storage against the complete mapped image before excluding the
+// retained tail. Checking only the resulting prefix would admit initial
+// storage overlapping the live stack or other retained image contents.
+// The boundary is numeric input; its provenance is the caller's obligation.
+pub machine BootGeometry::exclude_image_suffix(mapped: BootGeometry, retained_start: u64) -> BootGeometryCheck {
+    let checked: BootGeometryCheck = BootGeometry::check(mapped);
+    transition checked {
+        BootGeometryCheck::Ready { geometry } -> locate(geometry, retained_start)
+        BootGeometryCheck::Rejected -> BootGeometryCheck::Rejected
+    }
+
+    state locate(mapped: BootGeometry, retained_start: u64) -> BootGeometryCheck {
+        transition retained_start > mapped.image_base {
+            true -> partition(mapped, retained_start)
+            _ -> BootGeometryCheck::Rejected
+        }
+    }
+
+    state partition(mapped: BootGeometry, retained_start: u64) -> BootGeometryCheck
+    requires retained_start > mapped.image_base
+    {
+        let prefix: u64 = retained_start - mapped.image_base;
+        let residual: BootGeometry = BootGeometry {
+            image_base: mapped.image_base,
+            image_length: prefix,
+            storage_base: mapped.storage_base,
+            storage_length: mapped.storage_length,
+        };
+        transition prefix < mapped.image_length {
+            true -> (BootGeometry::check(residual))
+            _ -> BootGeometryCheck::Rejected
+        }
+    }
+}

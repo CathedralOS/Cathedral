@@ -477,7 +477,9 @@ requires addr::Bound == 18446744073709551616
             storage_base: best_start,
             storage_length: length,
         };
-        let checked: BootGeometryCheck = BootGeometry::check(geometry);
+        let checked: BootGeometryCheck = BootGeometry::exclude_image_suffix(
+            geometry, context.image_retained_start
+        );
         transition checked {
             BootGeometryCheck::Ready { geometry } -> exit(context, bs, handle,
                 stale_retry_used, key, best_pages, geometry)
