@@ -3,6 +3,8 @@
 Updated 2026-10-18 (local date). Current milestone: a desktop editor for saved
 matrix layout, following hierarchy names/types and matrix-owned startup. F5 uses
 these mechanisms; explicit migration preserves existing stock users and data.
+F5 now compacts existing media before changed program installations, fixing
+the retained-disk upgrade failure described at the end of this handoff.
 See the latest evidence at the end of this handoff. Earlier baseline: declared service
 imports and optional Notes persistence at **`8d1972a`**, followed by readable
 chooser labels at **`787344e`**, existing-user label upgrade at **`4f1c6c8`**,
@@ -977,6 +979,48 @@ Verification (artifacts under `build/boot-harness-rs/`):
   package edges), five layout tests, formatting, Python compilation and diff
   checks passed. Kernel smoke and ARM64 boots were not rerun.
 
-The prior fixed-volume upgrade capacity limit remains. All GUI/fault proofs used
-disposable copies; the interactive disk was left untouched. F5 installs the
-updated recognized stock launcher on its next normal run.
+At this milestone the prior fixed-volume upgrade capacity limit remained. These
+GUI/fault proofs used disposable copies; the interactive disk was left untouched.
+The follow-up below repairs the actual F5 installation path.
+
+## F5 upgrade capacity repair (2026-10-18)
+
+The owner's normal F5 launch failed before QEMU started: seeding updated apps
+requested 4,214,784 bytes from the 4,186,112-byte engine capacity. Reproduced on
+a copy of the actual two-user disk. Physical compaction alone allowed the
+same installation to finish, without collecting history or enlarging the volume.
+
+[database_image.py](tools/boot-harness-rs/database_image.py) now invokes offline
+[compaction](tools/storage-lab/engines/volume/compact.rs) before updating existing
+media whose installation receipt changed. Unchanged launches never open the
+database; newly formatted media skips maintenance. The host locks the image,
+saves and syncs a full `.before-compact-<BLAKE3>.raw` backup, compacts, cold-opens
+and checks all table records and volume identity. A conflicting backup is
+refused. Maintenance failure stops the install and does not write its receipt.
+No kernel, guest storage format, quota, hierarchy or saved-data semantics changed.
+
+Verification:
+
+- All 31 storage-lab tests and clippy with warnings denied passed. The new
+  integration test checks exact records across cold reopen/repeated maintenance,
+  retained history, reclaimed engine length, exact backup bytes, backup-conflict
+  refusal and unchanged image size/outside-region guards.
+- Five Python installer/artifact tests passed, including maintenance-before-seed,
+  unchanged receipt bypass and refusal without seeding or recording success.
+- `colors/20261018T220311689389Z`: a copy of the actual retained two-user disk
+  compacted from 2,109,440 to 1,425,408 logical engine bytes, preserving all 394
+  records. App installation/migration, login, Colors save/close/reopen and cold
+  boot passed. First and cold app launches took about 0.45 and 0.39 seconds.
+- The exact F5 command then upgraded the actual interactive disk successfully.
+  Its pre-maintenance backup is beside the disk, digest
+  `552ed73fd21d7be7b1abc1fe1b4e5a8e0279fba6870058006294befd26f57201`.
+  QEMU displayed both existing user tiles; the actual window capture is
+  `f5-diagnosis/actual-window.png`. The GUI was left open for the owner.
+- Layout and diff checks passed. Guest code was unchanged; kernel/ARM64 and the
+  full fault suite were not rerun.
+
+This fixes the observed reclaimable-space failure, not every capacity limit.
+The extent is still 4 MiB; truly full media or compaction without scratch space
+can still refuse. Volume growth and installer-wide atomicity remain future work.
+Backups accumulate only on changed installations and are never silently deleted.
+The prior ATA timeout and quiet fault-gate caveats remain unresolved.

@@ -16,6 +16,14 @@ range translation, [backend.rs](backend.rs) for file-length adaptation and
 native-image checks, refusal/bounds cases and simulated interruption. `mod.rs` is
 wiring only. The proof reuses the existing [fault device](../stress/device.rs).
 
+`compact IMAGE OFFSET BYTES` enters [compact.rs](compact.rs). Before installing
+changed programs, the boot harness uses it to reclaim physical engine slack
+without removing logical records. It locks the image, saves and syncs a complete
+content-named backup, compacts, cold-opens and compares every table's records.
+Identity, assigned extent and image size remain fixed. The host lab supports
+byte-key/byte-value tables here; other schemas are refused. This is offline
+maintenance, not guest collection, volume expansion or reformatting.
+
 The desktop's explicit stock migration enters [hierarchy.rs](hierarchy.rs):
 plan names, media types, indexes and matrix startup configuration, back up the
 image, then commit without renumbering objects or replacing saved application

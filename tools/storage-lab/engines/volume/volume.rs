@@ -13,6 +13,7 @@ const ID_KEY: &[u8] = b"volume-id";
 
 pub fn run(args: &[String]) -> Result<()> {
     match args.first().map(String::as_str) {
+        Some("compact") if args.len() == 4 => compact::run(Path::new(&args[1]), args[2].parse()?, args[3].parse()?),
         Some("configure-fixture") if args.len()==5 => configuration::prepare(Path::new(&args[1]),args[2].parse()?,args[3].parse()?,match args[4].as_str(){"missing"=>true,"renamed"=>false,_=>return Err("fixture mode".into())}),
         Some("inspect-hierarchy") if args.len()==4 => hierarchy::inspect(Path::new(&args[1]),args[2].parse()?,args[3].parse()?),
         Some("upgrade-hierarchy") if args.len()==4 => hierarchy::upgrade(Path::new(&args[1]), args[2].parse()?, args[3].parse()?),
@@ -45,7 +46,7 @@ pub fn run(args: &[String]) -> Result<()> {
             println!("VOLUME ready={} generation={} capacity={} logical_length={} id={:032x}", header.ready, header.generation, header.capacity(), header.length, u128::from_be_bytes(header.id));
             Ok(())
         }
-        _ => Err("usage: engines volume prove NEW_DIRECTORY | format NEW_IMAGE BYTES ID_HEX | open IMAGE OFFSET BYTES | inspect IMAGE OFFSET BYTES | verify-guest/verify-objects/verify-retention IMAGE OFFSET BYTES REVISION | verify-desktop IMAGE OFFSET BYTES (PARENT FILE)... | verify-colors/verify-notes IMAGE OFFSET BYTES LAST0 LAST1 | seed IMAGE OFFSET BYTES (PARENT FILE)... | upgrade-labels/upgrade-app-close IMAGE OFFSET BYTES LEGACY_LIST".into()),
+        _ => Err("usage: engines volume prove NEW_DIRECTORY | format NEW_IMAGE BYTES ID_HEX | open IMAGE OFFSET BYTES | inspect IMAGE OFFSET BYTES | compact IMAGE OFFSET BYTES | verify-guest/verify-objects/verify-retention IMAGE OFFSET BYTES REVISION | verify-desktop IMAGE OFFSET BYTES (PARENT FILE)... | verify-colors/verify-notes IMAGE OFFSET BYTES LAST0 LAST1 | seed IMAGE OFFSET BYTES (PARENT FILE)... | upgrade-labels/upgrade-app-close IMAGE OFFSET BYTES LEGACY_LIST".into()),
     }
 }
 

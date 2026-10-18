@@ -37,7 +37,8 @@ def prepare(path, programs=(), label_migration=None, app_close=False):
         raise RuntimeError(f'Database image must be a regular file: {path}')
     executable = None
     sidecar = path.with_name(path.name + '.programs')
-    if path.exists():
+    existing = path.exists()
+    if existing:
         if path.stat().st_size != IMAGE_BYTES:
             raise RuntimeError(f'Unexpected database image size; refusing to replace {path}')
     else:
@@ -64,6 +65,13 @@ def prepare(path, programs=(), label_migration=None, app_close=False):
     if executable is None:
         executable = oracle()
     lab = executable.parents[2]
+    # A guest may have freed records without shrinking the engine. Release
+    # that physical slack before an upgrade needs room for both old and new
+    # programs. The host backs up the locked image and verifies all records.
+    # Unchanged installations returned above without even opening the image.
+    if existing:
+        subprocess.run([str(executable), 'engines', 'volume', 'compact', str(path),
+                        str(OFFSET), str(VOLUME_BYTES)], cwd=lab, check=True)
     command = [str(executable), 'engines', 'volume', 'seed', str(path), str(OFFSET), str(VOLUME_BYTES)]
     for parent, file in programs:
         command += [str(parent), str(file)]

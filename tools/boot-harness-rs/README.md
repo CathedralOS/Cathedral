@@ -42,6 +42,14 @@ It also upgrades exactly recognized stock matrix executables. Hierarchy migratio
 adds names/type indexes and matrix configuration, with a separate
 `.before-hierarchy.raw` backup. Existing metadata and configurations survive reruns.
 
+Before updating an existing image's installed programs, the harness compacts
+the database's physical pages. This prevents reclaimable space in the tiny
+4 MiB lab extent from blocking F5 before QEMU starts. It preserves every record,
+including retained history, verifies them after reopening, and saves a full
+`.before-compact-<digest>.raw` backup while holding the image lock. An unchanged
+installation skips maintenance. This does not increase capacity or make a truly
+full volume unlimited; maintenance failures stop installation without formatting.
+
 If F5 builds but no QEMU window appears, check the integrated terminal. An image
 from before programs were installed as objects can fail with "holds something
 other than a program". Move `cathedral-storage.raw` and its `.programs` sidecar
