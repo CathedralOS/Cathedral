@@ -7,6 +7,9 @@ pub(super) struct Button {
     pressed: bool,
 }
 impl Button {
+    pub fn rebind(&mut self) {
+        self.pressed = false;
+    }
     pub fn close(&mut self, event: wire::Packet, width: u64, uncertain: bool) -> bool {
         if event[2] == wire::CANCEL {
             self.pressed = false;
@@ -34,7 +37,12 @@ impl Button {
         false
     }
 }
-pub(super) fn paint(parent: Pair, view: wire::Packet, surface: u64, confirm: bool) {
+pub(super) fn paint(
+    parent: Pair,
+    view: wire::Packet,
+    surface: u64,
+    confirm: bool,
+) -> Result<(), u64> {
     let (width, text): (usize, &[u8]) = if confirm {
         (144, b"CLOSE ANYWAY")
     } else {
@@ -82,5 +90,6 @@ pub(super) fn paint(parent: Pair, view: wire::Packet, surface: u64, confirm: boo
         .1
         .receive_until(&mut bytes, time::after(300).unwrap())
         .unwrap();
-    assert_eq!(wire::decode(&bytes[..len]).unwrap()[0], 0);
+    let status = wire::decode(&bytes[..len]).unwrap()[0];
+    if status == 0 { Ok(()) } else { Err(status) }
 }

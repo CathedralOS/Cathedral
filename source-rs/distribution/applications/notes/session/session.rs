@@ -40,6 +40,10 @@ pub fn run(style: u64, environment: Environment) {
     let connections =
         cathedral_user_runtime::matrix::OptionalConnections::load(&environment).unwrap();
     let parent = connections.interaction;
+    assert_eq!(
+        call(parent, [wire::APPLY_LAYOUT, 0, 24, 192, 16, 0, 0, 0])[0],
+        abi::DENIED
+    );
     if connections.storage.is_none() {
         // The interactive endpoint cannot substitute for the omitted service.
         assert_eq!(
@@ -71,6 +75,9 @@ pub fn run(style: u64, environment: Environment) {
         let snapshot = call(parent, [wire::POLL, 0, 0, 0, 0, 0, 0, 0]);
         let extent = wire::poll_view(snapshot);
         if extent[0] == 0 {
+            if scene.as_ref().is_some_and(|s| s.epoch != extent[1]) {
+                closing.rebind();
+            }
             if !loaded {
                 match if notes.temporary() {
                     Ok(Document::default())
@@ -185,22 +192,41 @@ pub fn run(style: u64, environment: Environment) {
                     repaint |= draft.edit(&mut cursor, key);
                 }
             }
-            if scene.as_ref().is_none_or(|s| s.epoch != extent[1]) {
-                scene = Some(view::Scene::new(parent, extent[1]));
-                repaint = true;
-            }
-            if repaint {
-                scene.as_ref().unwrap().paint(
-                    parent,
-                    extent,
-                    &draft,
-                    cursor,
-                    draft != confirmed,
-                    error,
-                    &notes,
-                    closing.open,
+            let painted = (|| -> Result<(), u64> {
+                if scene.as_ref().is_none_or(|s| s.epoch != extent[1]) {
+                    scene = Some(view::Scene::new(parent, extent[1])?);
+                    repaint = true;
+                }
+                if repaint {
+                    scene.as_ref().unwrap().paint(
+                        parent,
+                        extent,
+                        &draft,
+                        cursor,
+                        draft != confirmed,
+                        error,
+                        &notes,
+                        closing.open,
+                    )?;
+                    repaint = false;
+                }
+                Ok(())
+            })();
+            if let Err(status) = painted {
+                let now = call(parent, [wire::VIEW, 0, 0, 0, 0, 0, 0, 0]);
+                assert!(
+                    now[0] != 0 || now[1] != extent[1],
+                    "note drawing refused: {status}"
                 );
-                repaint = false;
+                #[cfg(feature = "render-probes")]
+                cathedral_user_runtime::write(
+                    b"Cathedral Notes: render invalidated; draft retained\n",
+                )
+                .unwrap();
+                scene = None;
+                closing.rebind();
+                repaint = true;
+                continue;
             }
         } else {
             scene = None;

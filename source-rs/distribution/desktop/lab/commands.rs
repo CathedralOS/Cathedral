@@ -13,7 +13,11 @@ pub(crate) fn command(op: u64, p: &mut app::Probe<'_>) -> Option<u64> {
         5 => p.scene.as_mut().unwrap().rejected_probe(p.parent),
         6 => {
             let color = if p.style == 0 { app::LEFT } else { app::RIGHT };
-            p.scene.as_mut().unwrap().paint(p.parent, p.view, color, 0);
+            p.scene
+                .as_mut()
+                .unwrap()
+                .paint(p.parent, p.view, color, 0)
+                .unwrap();
         }
         7 => {
             status = p.state.as_mut().unwrap().reload().err().unwrap_or(0);

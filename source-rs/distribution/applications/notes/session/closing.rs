@@ -14,6 +14,9 @@ pub enum Action {
     Cancel,
 }
 impl Controls {
+    pub fn rebind(&mut self) {
+        self.pressed = false;
+    }
     pub fn action(&mut self, event: wire::Packet, width: u64, temporary: bool) -> Action {
         if event[2] == wire::CANCEL {
             self.pressed = false;

@@ -20,9 +20,11 @@ There is no logout yet; restart QEMU to select another user. The picker handles
 up to three users without scrolling and hides New User at its limit.
 
 Click **SETTINGS** at the bottom of the user's app strip to adjust its width and
-outer spacing. **SAVE** persists the next-start arrangement; **CANCEL** discards
-local edits and returns to apps. Restart QEMU and choose that user to apply it.
-Running apps stay in place. Initial stock defaults live in [matrix.conf](matrix.conf);
+outer spacing. **SAVE** persists and applies the layout to running apps; **CANCEL**
+discards local edits and returns to apps. Apps keep their document state while
+rebuilding their local views. A saved layout survives reboot. If applying is
+refused, SAVED; RESTART distinguishes the durable save from live placement.
+Initial stock defaults live in [matrix.conf](matrix.conf);
 installation preserves existing saved arrangements.
 
 The default input service negotiates QEMU's absolute virtual mouse so the guest

@@ -26,7 +26,8 @@ impl Probe<'_> {
         self.scene
             .as_mut()
             .unwrap()
-            .paint(self.parent, self.view, color, state.error);
+            .paint(self.parent, self.view, color, state.error)
+            .unwrap();
         if record {
             *self.painted = Some((self.view, color, state.error));
         }
@@ -43,6 +44,10 @@ pub fn run(style: u64, environment: Environment) -> u64 {
     assert!(cathedral_user_runtime::link::Link::at(0).is_err());
     assert!(cathedral_user_runtime::display::mapping().is_err());
     let parent = connections.interaction;
+    assert_eq!(
+        call(parent, [wire::APPLY_LAYOUT, 0, 24, 192, 16, 0, 0, 0])[0],
+        abi::DENIED
+    );
     let storage = connections.storage;
     assert_eq!(
         call(parent, [wire::STORAGE_INFO, 0, 0, 0, 0, 0, 0, 0])[0],
@@ -74,6 +79,10 @@ pub fn run(style: u64, environment: Environment) -> u64 {
         let mut snapshot = call(parent, [wire::POLL, 0, 0, 0, 0, 0, 0, 0]);
         let mut view = wire::poll_view(snapshot);
         if view[0] == 0 {
+            #[cfg(feature = "shell")]
+            if scene.as_ref().is_some_and(|s| s.epoch != view[1]) {
+                close.rebind();
+            }
             if state.is_none() {
                 state = Some(state::State::open(storage, style));
             }
@@ -128,18 +137,35 @@ pub fn run(style: u64, environment: Environment) -> u64 {
             let color = state.as_ref().unwrap().color();
             let error = state.as_ref().unwrap().error;
             if painted != Some((view, color, error)) {
-                if scene.as_ref().is_none_or(|s| s.epoch != view[1]) {
-                    scene = Some(surfaces::Scene::new(parent, view));
+                let rendered = (|| -> Result<(), u64> {
+                    if scene.as_ref().is_none_or(|s| s.epoch != view[1]) {
+                        scene = Some(surfaces::Scene::new(parent, view)?);
+                    }
+                    scene.as_mut().unwrap().paint(
+                        parent,
+                        view,
+                        color,
+                        state.as_ref().unwrap().error,
+                    )?;
+                    #[cfg(feature = "shell")]
+                    scene
+                        .as_ref()
+                        .unwrap()
+                        .close_button(parent, view, close.confirm)?;
+                    Ok(())
+                })();
+                if let Err(status) = rendered {
+                    let now = call(parent, [wire::VIEW, 0, 0, 0, 0, 0, 0, 0]);
+                    assert!(
+                        now[0] != 0 || now[1] != view[1],
+                        "color drawing refused: {status}"
+                    );
+                    scene = None;
+                    #[cfg(feature = "shell")]
+                    close.rebind();
+                    painted = None;
+                    continue;
                 }
-                scene
-                    .as_mut()
-                    .unwrap()
-                    .paint(parent, view, color, state.as_ref().unwrap().error);
-                #[cfg(feature = "shell")]
-                scene
-                    .as_ref()
-                    .unwrap()
-                    .close_button(parent, view, close.confirm);
                 painted = Some((view, color, state.as_ref().unwrap().error));
                 paints += 1;
                 #[cfg(feature = "trace-input")]

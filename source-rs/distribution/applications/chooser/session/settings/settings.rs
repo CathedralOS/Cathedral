@@ -1,5 +1,5 @@
 // Edit a saved arrangement through the launcher's existing realm grant.
-// A draft never changes running children; saving uses revision-checked storage.
+// Saving uses revision-checked storage, then requests geometry from the matrix.
 use super::*;
 use cathedral_platform_contracts::matrix::config::Config;
 use cathedral_user_runtime::storage::Scope;
@@ -22,7 +22,7 @@ impl Editor {
             saved,
             draft: saved,
             selected: 0,
-            status: "NEXT START",
+            status: "",
             uncertain: false,
         })
     }
@@ -36,6 +36,7 @@ impl Editor {
         extent: wire::Packet,
         pressed: &mut bool,
         scope: &mut Scope,
+        parent: Pair,
     ) -> (bool, bool) {
         let action = match event[2] {
             wire::POINTER => {
@@ -83,7 +84,26 @@ impl Editor {
             3 => self.draft.margin = self.draft.margin.saturating_add(16).clamp(8, 40),
             4 => {
                 self.status = match self.save(scope) {
-                    Ok(()) => "SAVED",
+                    Ok(()) => {
+                        let reply = call(
+                            parent,
+                            [
+                                wire::APPLY_LAYOUT,
+                                extent[1],
+                                self.draft.margin,
+                                self.draft.launcher_width,
+                                self.draft.gap,
+                                0,
+                                0,
+                                0,
+                            ],
+                        );
+                        if reply[0] == 0 {
+                            "APPLIED"
+                        } else {
+                            "SAVED; RESTART"
+                        }
+                    }
                     Err(abi::WOULD_BLOCK) => "CHANGED",
                     Err(_) => "SAVE FAILED",
                 };
@@ -92,7 +112,7 @@ impl Editor {
             5 => return (true, true), // CANCEL explicitly discards the local draft.
             _ => unreachable!(),
         }
-        self.status = "NEXT START";
+        self.status = "UNSAVED";
         (true, false)
     }
     fn save(&mut self, scope: &mut Scope) -> Result<(), u64> {

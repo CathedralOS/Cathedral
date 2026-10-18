@@ -76,8 +76,37 @@ impl Children {
         }
         super::super::requests::flush(parent, world)?;
         self.notify(world)?;
+        world.grant_layout(0, server.incarnation(0).expect("configured launcher"));
         cathedral_user_runtime::write(b"Cathedral matrix: configured from realm paths\n")?;
         Ok(())
+    }
+    pub(in crate::service) fn apply_layout(
+        &mut self,
+        request: &Request,
+        words: wire::Packet,
+        parent: &mut Parent,
+        world: &mut World,
+    ) -> Result<wire::Packet, Error> {
+        if !world.layout_allowed(request.client.unwrap(), request.incarnation, words[1]) {
+            return Ok(wire::error(abi::DENIED));
+        }
+        if self.loss.is_some() || self.pending.iter().any(Option::is_some) {
+            return Ok(wire::error(abi::BUSY));
+        }
+        let rects = match world.layout(request.client.unwrap(), request.incarnation, words) {
+            Ok(rects) => rects,
+            Err(code) => return Ok(wire::error(code)),
+        };
+        if let Some(standing) = &mut self.standing[1]
+            && let Some((rect, _)) = &mut standing.place
+        {
+            *rect = rects[1];
+        }
+        super::super::requests::flush(parent, world)?;
+        for slot in 0..2 {
+            super::super::requests::replay(parent, world, slot)?;
+        }
+        Ok([0; 8])
     }
     pub(super) fn restore_storage(
         &mut self,

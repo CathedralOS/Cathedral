@@ -11,10 +11,11 @@ CLOSE APP FIRST. Arrows and Enter work while the chooser has focus.
 
 The user app strip has **SETTINGS** at the bottom (or F2 while the strip has
 focus). Its small editor changes strip width and outer spacing. **SAVE** writes
-the user's `Matrix` object for the next start; **CANCEL** discards local edits
-and returns to app tiles. Saving leaves current placement and the running app
-alone. Restart QEMU and select that user to see the saved arrangement. The
-picker has no settings editor. There is no live apply or budget/launcher editor.
+the user's `Matrix` object, then asks its matrix to apply geometry immediately.
+**CANCEL** discards local edits and returns to app tiles. Running apps retain
+their state and repaint their resized local views. SAVED; RESTART means the save
+committed but live application was refused; retry Save or restart. The picker
+has no settings editor. Budgets and launcher selection remain startup-only.
 
 [settings/settings.rs](session/settings/settings.rs) owns the draft and save
 decision; [persistence.rs](session/settings/persistence.rs) reads a consistent
@@ -24,6 +25,18 @@ desired bytes; an intervening different edit is refused as CHANGED. Cancel does
 not undo a write that already committed. Draft/uncertain work reports loss over
 the ordinary control link. The launcher uses its explicitly granted whole user
 realm; Notes and Colors still hold only their own subtrees.
+
+Saving then sends `APPLY_LAYOUT` on the launcher's interaction connection.
+[Stock configuration](../../../platform/services/matrix/service/children/configuration.rs)
+grants this operation only to the selected launcher's endpoint incarnation;
+the [world layout policy](../../../platform/services/matrix/world/layout.rs)
+checks current epoch, authority and complete geometry before moving either view.
+Ordinary apps, storage endpoints, stale launchers and unconfigured pickers are
+refused. This grants no owner-control endpoint, key mask or resource authority.
+Current views keep their key masks and surface limits; revoked sibling views
+stay revoked. The standing placement for later app launches follows the new
+layout. Save and apply are separate operations, so a failed application does
+not roll back durable configuration. Geometry retries are idempotent.
 
 This is selection, not authentication. The bounded listing accommodates the
 hidden template plus three users; at the limit the add-user tile disappears.
@@ -57,5 +70,7 @@ Five surfaces cover the background, up to three tiles/panels, and the footer.
 Each app tile uses 12 pages and each settings panel 10. The footer is released
 before replacing images, keeping the peak within the existing 48-page grant.
 The desktop proof exercises creation, selection, app launches, close decisions
-and cold boot. The settings proof checks cancel, saved layout, unchanged live
-placement, cold apply, independent new users and lost-save reconciliation.
+and cold boot. The settings proof checks cancel, live layout, dirty Notes drafts,
+post-resize input/close, later app placement, cold persistence, independent users
+and lost-save reconciliation. Its render-race mode forces invalidation during
+surface creation and bitmap publication, then checks document retention.

@@ -317,3 +317,68 @@ fn atomic_poll_is_local_reports_more_and_drops_events_on_rebinding() {
     assert_ne!(fresh[1], first[1]);
     assert_eq!(wire::poll_event(fresh)[2], wire::NONE);
 }
+
+#[test]
+fn layout_authority_is_explicit_incarnation_bound_and_cannot_revive_revoked_views() {
+    let mut w = world();
+    place(&mut w, 0, 0, 0);
+    place(&mut w, 1, 200, 0);
+    let old = [view(&mut w, 0), view(&mut w, 1)];
+    let request = [wire::APPLY_LAYOUT, old[0][1], 24, 192, 16, 0, 0, 0];
+    assert!(matches!(w.layout(0, 7, request), Err(abi::DENIED)));
+    w.grant_layout(0, 7);
+    assert!(matches!(w.layout(1, 7, request), Err(abi::DENIED)));
+    assert!(matches!(w.layout(0, 8, request), Err(abi::DENIED)));
+    let mut invalid = request;
+    invalid[3] = 800; // The first rectangle fits; there is no room for the second.
+    assert!(matches!(
+        w.layout(0, 7, invalid),
+        Err(abi::INVALID_ARGUMENT)
+    ));
+    invalid[2] = u64::MAX;
+    assert!(matches!(
+        w.layout(0, 7, invalid),
+        Err(abi::INVALID_ARGUMENT)
+    ));
+    invalid = request;
+    invalid[7] = 1;
+    assert!(matches!(
+        w.layout(0, 7, invalid),
+        Err(abi::INVALID_ARGUMENT)
+    ));
+    assert_eq!([view(&mut w, 0), view(&mut w, 1)], old);
+    w.prepare_surface(1, 7, old[1][1], 0).unwrap();
+    w.create_surface(1, 0, 100);
+    w.pointer(210, 10, 1);
+    w.key(input::ENTER as u64, input::PRESS as u64);
+    w.layout(0, 7, request).unwrap();
+    let current = [view(&mut w, 0), view(&mut w, 1)];
+    assert_eq!(&current[0][2..5], &[192, 552, wire::KEY_MASK]);
+    assert_eq!(&current[1][2..5], &[544, 552, wire::KEY_MASK]);
+    assert_ne!(current[0][1], old[0][1]);
+    assert_ne!(current[1][1], old[1][1]);
+    assert!(w.take_retired_surface().is_some());
+    assert_eq!(w.prepare_surface(1, 7, old[1][1], 0), Err(abi::DENIED));
+    assert!(matches!(w.layout(0, 7, request), Err(abi::DENIED)));
+    let mut again = request;
+    again[1] = current[0][1];
+    w.layout(0, 7, again).unwrap();
+    assert_eq!([view(&mut w, 0), view(&mut w, 1)], current);
+    w.pointer(250, 40, 0);
+    w.pointer(250, 40, 1);
+    w.key(input::ENTER as u64, input::REPEAT as u64);
+    loop {
+        let event = next(&mut w, 1, current[1][1]);
+        if event[2] == wire::NONE {
+            break;
+        }
+        assert_ne!(event[2], wire::KEY);
+    }
+    w.revoke(1).unwrap();
+    w.layout(0, 7, again).unwrap();
+    assert_eq!(view(&mut w, 1)[0], abi::DENIED);
+    w.disconnected(0);
+    place(&mut w, 0, 0, 0);
+    again[1] = view(&mut w, 0)[1];
+    assert!(matches!(w.layout(0, 7, again), Err(abi::DENIED)));
+}

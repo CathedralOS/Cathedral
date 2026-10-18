@@ -39,7 +39,7 @@ pub fn paint(editor: &Editor, row: usize) -> Private {
         WIDTH,
         4,
         2,
-        [b"APP STRIP".as_slice(), b"SPACING", b"NEXT START"][row],
+        [b"APP STRIP".as_slice(), b"SPACING", b"SAVE LAYOUT"][row],
     );
     if row < 2 {
         let value = if row == 0 {

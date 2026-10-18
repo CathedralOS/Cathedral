@@ -1,7 +1,7 @@
 # Rust reference OS: tasks and handoff
 
-Updated 2026-10-18 (local date). Current milestone: a desktop editor for saved
-matrix layout, following hierarchy names/types and matrix-owned startup. F5 uses
+Updated 2026-10-18 (local date). Current milestone: authorized live matrix layout
+and rendering invalidation recovery, following saved configuration and named realms. F5 uses
 these mechanisms; explicit migration preserves existing stock users and data.
 F5 now compacts existing media before changed program installations, fixing
 the retained-disk upgrade failure described at the end of this handoff.
@@ -35,9 +35,10 @@ It uses x86-64 QEMU/TCG and UEFI.
   launcher itself and implementation controls are hidden. Click an app tile,
   then the app to focus it. Arrows and Enter work in a focused tile strip.
 - **SETTINGS** at the bottom of the user strip (or F2 with strip focus) adjusts
-  strip width and outer spacing. Save affects the next start; Cancel discards
-  local edits and returns to apps. Restart QEMU and select the same user to
-  apply the saved arrangement. Running apps remain in place.
+  strip width and outer spacing. Save persists and applies the layout to running
+  apps; Cancel discards local edits and returns to apps. Apps retain their state.
+  SAVED; RESTART means persistence succeeded but live application was refused.
+  Retry Save or restart to use the saved arrangement.
 - Notes keeps up to eight notes of 240 ASCII characters. Letters, digits, spaces,
   Enter, Left/Right and Backspace edit. **F1** saves/reconciles, **F2** reloads,
   **F3** duplicates the saved note, **F4** switches notes. Colors changes and
@@ -266,16 +267,18 @@ to hierarchy metadata; extensions are conventions, not authoritative types.
   revisions prevent stale overwrites; lost replies require reconciliation.
   Initial defaults now live in distribution/matrix.conf. Budgets and launcher
   selection are not exposed in the UI.
-- [ ] **Consider explicit live layout application.** Saved settings apply on
-  next startup only. A live request needs an attenuated authorization route,
-  geometry validation and deliberate failure behavior; it must not reuse an
-  owner-control endpoint as an app permission.
+- [x] **Explicit live layout application.** Stock configuration grants its
+  selected launcher geometry authority tied to that endpoint incarnation.
+  The child request validates both rectangles, updates future app placement,
+  and never changes budgets, services or key masks. Apps recover stale drawing
+  handles while retaining documents; tests force two rendering races.
 - [ ] **Keep app lifecycle honest as apps grow.** Startup failure, app crash and
   provider loss while an app holds work still end in assertions in places. A
   program that cannot be read from the realm answers REFUSED in the chooser
   but the desktop still asserts on some root startup operations. User launcher
-  lookup failure now returns to the picker. Add an adversarial test for each
-  failure actually fixed. App-owned close with unsaved-work choices now works;
+  lookup failure now returns to the picker. Drawing invalidation during live
+  layout now rebuilds views without losing drafts. Add an adversarial test for
+  each failure actually fixed. App-owned close with unsaved-work choices now works;
   owner recovery from an unresponsive app and clearer focus feedback remain.
 - [ ] **Bring storage write latency down.** Collection scans metadata before
   each write and durable commit writes through ATA PIO. Use explicit tick-to-time
@@ -1024,3 +1027,74 @@ The extent is still 4 MiB; truly full media or compaction without scratch space
 can still refuse. Volume growth and installer-wide atomicity remain future work.
 Backups accumulate only on changed installations and are never silently deleted.
 The prior ATA timeout and quiet fault-gate caveats remain unresolved.
+
+## Authorized live layout and rendering invalidation (2026-10-18)
+
+SETTINGS / SAVE now persists the user's arrangement and requests immediate
+geometry application. Colors stays running, Notes keeps dirty drafts and close
+protection, and later launches use the updated app rectangle. Cancel still
+abandons only local edits. Saving and applying are separate operations: APPLIED
+means both succeeded; SAVED; RESTART means the durable save succeeded but live
+application was refused. Save can be retried without repeating an acknowledged
+write. Budgets, launcher selection and key-mask changes still require startup;
+editing the configuration object alone does not automatically change live policy.
+
+The stock matrix explicitly grants its configured launcher's interaction endpoint
+layout authority, bound to its incarnation and checked against its current view
+epoch. Ordinary apps, the picker, storage endpoints and stale incarnations cannot
+use it. Authority is checked before reporting busy owner operations. The new
+`APPLY_LAYOUT` request accepts only margin/strip width/gap, validates both
+rectangles before changing either, preserves current key masks and allowances,
+and does not revive a revoked sibling view. Controller revocation/death or
+parent-binding replacement clears the grant. Equal geometry is idempotent.
+Start at [configuration.rs](source-rs/platform/services/matrix/service/children/configuration.rs)
+for the grant and standing-placement update, then
+[layout.rs](source-rs/platform/services/matrix/world/layout.rs) for authority and
+geometry. The protocol is owned by platform/contracts/matrix.rs; no kernel
+change or owner-control endpoint was exposed to children.
+
+Actual resizes can invalidate a draw halfway through a frame. Chooser, Notes and
+Colors now propagate rendering refusals to their session, verify the view really
+changed or was revoked, and rebuild surfaces while keeping application state.
+Unrelated refusals under the same live epoch remain errors. Colors' ordinary
+surface setup no longer executes its adversarial lab probes; those remain in the
+lab build. Existing focus/held-key suppression handles changed extents; app-local
+button tracking resets for a new epoch.
+
+Verification (artifacts under build/boot-harness-rs):
+
+- Workspace host tests passed. The new policy test covers absent/sibling/stale
+  authority, malformed/overflow/no-room requests without partial placement,
+  stale drawing epochs, idempotence, held-key suppression, preserved revocation
+  and controller teardown. Userspace checks and clippy with warnings denied
+  passed for matrix, chooser, Notes including render probes, and desktop shell
+  and lab variants. Layout checks, five layout tests and formatting passed.
+- `settings/20261018T221332506921Z`: normal three-boot proof passed Cancel,
+  immediate Colors layout, repeated resizing with a dirty Notes draft, continued
+  editing, app-owned close protection, save/close, later app placement, persisted
+  geometry and independent new-user defaults. The earlier run's exact bitmap
+  comparison failed because the pointer covered the note; the corrected test
+  moves the pointer outside the compared bitmap before checking.
+- `settings/20261018T221519348512Z`: test-only Notes gates forced a resize after
+  the first surface allocation and another during bitmap rendering. Both stale
+  frame paths executed, Notes loaded its document exactly once and typing worked
+  afterward. These gates compile only with `render-probes`, never normal F5.
+- `settings/20261018T221620237698Z`: lost committed-save reply, provider recovery,
+  explicit storage restoration, readback reconciliation, live application and
+  cold boot passed. The trace still shows exactly one settings publication.
+- The matrix desktop suite passed nested clipping, focus, subtree replacement
+  and cold colors using the lab build's surface probes.
+- `desktop/20261018T221823899504Z`: the final default F5 composition passed
+  user creation, app selection, Notes editing/duplication, close choices,
+  repeated replacement and cold boot. The independent host oracle verified
+  all 243 retained records, including exact hierarchy/history/quota and the
+  empty ungranted root. This final build restored the normal F5 artifacts after
+  the test-only profiles.
+
+The interactive QEMU session and saved disk were left alone throughout this
+milestone. Tests used disposable copies. F5 installs updated recognized programs
+on the next launch; close the old QEMU window before launching another instance
+against the same disk. No kernel or ARM64 behavior changed; those boot suites
+were not rerun. Live child replacement, resource-budget reconfiguration and
+startup/crash UI recovery remain separate next work. No new owner decision was
+needed for this bounded geometry request.

@@ -104,6 +104,9 @@ pub(super) fn dispatch(
         Some([wire::CLOSE, 0, 0, 0, 0, 0, 0, 0]) if request.client.is_some() => {
             return children.close(request, parent, world, server);
         }
+        Some(words) if words[0] == wire::APPLY_LAYOUT => {
+            children.apply_layout(&request, words, parent, world)?
+        }
         Some(words)
             if matches!(
                 words[0],

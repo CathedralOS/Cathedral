@@ -32,15 +32,28 @@ pub fn run(environment: Environment, user_picker: bool) -> u64 {
         let snapshot = call(parent, [wire::POLL, 0, 0, 0, 0, 0, 0, 0]);
         let extent = wire::poll_view(snapshot);
         if extent[0] == 0 {
+            if scene.as_ref().is_some_and(|s| s.epoch != extent[1]) {
+                selection.pressed = false;
+            }
             let event = wire::poll_event(snapshot);
             let mut choose = false;
             if let Some(edit) = &mut editor {
-                let (changed, closed) =
-                    edit.event(event, extent, &mut selection.pressed, &mut realm.scope);
+                let (changed, closed) = edit.event(
+                    event,
+                    extent,
+                    &mut selection.pressed,
+                    &mut realm.scope,
+                    parent,
+                );
                 repaint |= changed;
                 if closed {
                     editor = None;
                     status = "";
+                }
+                if changed {
+                    // Saving may replace our geometry epoch. Poll before painting,
+                    // instead of drawing into the old coordinate space.
+                    continue;
                 }
             } else {
                 let (changed, activate) = selection.event(event, extent, realm.count, user_picker);
@@ -64,24 +77,38 @@ pub fn run(environment: Environment, user_picker: bool) -> u64 {
                 }
                 repaint = true;
             }
-            if scene.as_ref().is_none_or(|s| s.epoch != extent[1]) {
-                scene = Some(view::Scene::new(parent, extent[1]));
-                repaint = true;
-            }
-            if repaint {
-                if let Some(edit) = &editor {
-                    scene.as_ref().unwrap().settings(parent, extent, edit);
-                } else {
-                    scene.as_ref().unwrap().paint(
-                        parent,
-                        extent,
-                        &realm,
-                        selection.index,
-                        status,
-                        user_picker,
-                    );
+            let painted = (|| -> Result<(), u64> {
+                if scene.as_ref().is_none_or(|s| s.epoch != extent[1]) {
+                    scene = Some(view::Scene::new(parent, extent[1])?);
+                    repaint = true;
                 }
-                repaint = false;
+                if repaint {
+                    if let Some(edit) = &editor {
+                        scene.as_ref().unwrap().settings(parent, extent, edit)?;
+                    } else {
+                        scene.as_ref().unwrap().paint(
+                            parent,
+                            extent,
+                            &realm,
+                            selection.index,
+                            status,
+                            user_picker,
+                        )?;
+                    }
+                    repaint = false;
+                }
+                Ok(())
+            })();
+            if let Err(status) = painted {
+                let now = call(parent, [wire::VIEW, 0, 0, 0, 0, 0, 0, 0]);
+                assert!(
+                    now[0] != 0 || now[1] != extent[1],
+                    "chooser drawing refused: {status}"
+                );
+                scene = None;
+                selection.pressed = false;
+                repaint = true;
+                continue;
             }
         } else {
             scene = None;

@@ -10,7 +10,8 @@ pub(crate) struct Scene {
     close: u64,
 }
 impl Scene {
-    pub fn new(parent: Pair, view: wire::Packet) -> Self {
+    #[cfg(not(feature = "shell"))]
+    pub fn new(parent: Pair, view: wire::Packet) -> Result<Self, u64> {
         assert_eq!(
             call(parent, [wire::RUN_MEMORY, 0, 0, 0, 0, 0, 0, 0]),
             wire::error(abi::DENIED)
@@ -51,14 +52,40 @@ impl Scene {
         };
         scene.remove_accent(parent);
         scene.restore_accent(parent);
-        image::submit(parent, view[1], names[2]);
-        scene
+        image::submit(parent, view[1], names[2]).unwrap();
+        Ok(scene)
     }
     #[cfg(feature = "shell")]
-    pub fn close_button(&self, parent: Pair, view: wire::Packet, confirm: bool) {
-        closing::paint(parent, view, self.close, confirm);
+    pub fn new(parent: Pair, view: wire::Packet) -> Result<Self, u64> {
+        let mut names = [0; 4];
+        for (rank, name) in names.iter_mut().enumerate() {
+            let reply = call(
+                parent,
+                [wire::SURFACE_CREATE, view[1], rank as u64, 0, 0, 0, 0, 0],
+            );
+            accepted(reply[0])?;
+            *name = reply[1];
+        }
+        image::submit(parent, view[1], names[2])?;
+        Ok(Self {
+            epoch: view[1],
+            base: names[0],
+            accent: Some(names[1]),
+            revision: 2,
+            close: names[3],
+        })
     }
-    pub fn paint(&mut self, parent: Pair, view: wire::Packet, color: u64, error: u64) {
+    #[cfg(feature = "shell")]
+    pub fn close_button(&self, parent: Pair, view: wire::Packet, confirm: bool) -> Result<(), u64> {
+        closing::paint(parent, view, self.close, confirm)
+    }
+    pub fn paint(
+        &mut self,
+        parent: Pair,
+        view: wire::Packet,
+        color: u64,
+        error: u64,
+    ) -> Result<(), u64> {
         self.revision += 1;
         let base = [
             wire::PAINT,
@@ -87,7 +114,7 @@ impl Scene {
             &updates[..if self.accent.is_some() { 2 } else { 1 }],
         )
         .unwrap();
-        assert_eq!(call(parent, packet), [0; 8]);
+        accepted(call(parent, packet)[0])
     }
 
     #[cfg(not(feature = "shell"))]
@@ -213,6 +240,7 @@ impl Scene {
             [0; 8]
         );
     }
+    #[cfg(not(feature = "shell"))]
     fn paint_accent(&self, parent: Pair) {
         if let Some(name) = self.accent {
             assert_eq!(
@@ -224,6 +252,7 @@ impl Scene {
             );
         }
     }
+    #[cfg(not(feature = "shell"))]
     pub fn remove_accent(&mut self, parent: Pair) {
         if let Some(stale) = self.accent.take() {
             assert_eq!(
@@ -236,6 +265,7 @@ impl Scene {
             );
         }
     }
+    #[cfg(not(feature = "shell"))]
     pub fn restore_accent(&mut self, parent: Pair) {
         assert!(self.accent.is_none());
         let reply = call(parent, [wire::SURFACE_CREATE, self.epoch, 1, 0, 0, 0, 0, 0]);
@@ -243,4 +273,8 @@ impl Scene {
         self.accent = Some(reply[1]);
         self.paint_accent(parent);
     }
+}
+
+fn accepted(status: u64) -> Result<(), u64> {
+    if status == 0 { Ok(()) } else { Err(status) }
 }

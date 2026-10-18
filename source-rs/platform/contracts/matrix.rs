@@ -126,6 +126,12 @@ pub const PRESENT_RECTS: u64 = 13;
 /// which it does only after a LOSS probe answers with nothing it would lose.
 pub const LAUNCH: u64 = 14;
 pub const CLOSE: u64 = 15;
+/// Child interaction request: [APPLY_LAYOUT, current epoch, margin, strip width,
+/// gap, 0, 0, 0]. Only the launcher explicitly selected by stock CONFIGURE may
+/// request this. Changes geometry, never budgets, services, keys or executable
+/// selection. Saving configuration and applying it are separate operations.
+/// A retry with the same geometry is idempotent after refreshing the local view.
+pub const APPLY_LAYOUT: u64 = 16;
 pub fn rectangles(epoch: u64, revision: u64, updates: &[Packet]) -> Option<Packet> {
     if updates.is_empty() || updates.len() > 2 || epoch == 0 || revision == 0 {
         return None;

@@ -108,3 +108,17 @@ sibling keeps its own unsaved draft through binding replacement.
 The default desktop disk is `build/boot-harness-rs/cathedral-storage.raw`, created
 only when absent and never auto-reformatted. The notes fixture retains its own
 `notes-storage.raw`. QEMU termination does not emulate physical device-cache loss.
+
+Live layout changes retire old drawing handles. The session keeps the document,
+cursor, save uncertainty and close dialog, and rebuilds only its view. A drawing
+refusal triggers a fresh VIEW check: a changed/revoked epoch permits rebuilding;
+a refusal under the same live epoch remains an error rather than an endless retry.
+Input press tracking resets at rebinding. The chooser and Colors follow the same
+rule. Normal Colors setup no longer runs the adversarial surface probes; those
+remain in its lab build.
+
+The `render-probes` feature enables two Notes-only yield gates in
+[render_probe.rs](session/render_probe.rs). The settings harness's `--render-race`
+mode observes each gate before resizing, proving both partial surface creation
+and interrupted bitmap publication recover without reloading the document.
+The default distribution never enables these gates.

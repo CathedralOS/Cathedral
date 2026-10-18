@@ -70,20 +70,24 @@ impl Config {
         Some(result)
     }
     pub fn rectangles(self, width: u64, height: u64) -> Option<[[u64; 4]; 2]> {
-        let h = height.checked_sub(self.margin.checked_mul(2)?)?;
-        let x = self
-            .margin
-            .checked_add(self.launcher_width)?
-            .checked_add(self.gap)?;
-        let w = width.checked_sub(x.checked_add(self.margin)?)?;
-        if h == 0 || w == 0 || self.launcher_width == 0 {
-            return None;
-        }
-        Some([
-            [self.margin, self.margin, self.launcher_width, h],
-            [x, self.margin, w, h],
-        ])
+        rectangles(self.margin, self.launcher_width, self.gap, width, height)
     }
+}
+/// Checked geometry shared by saved startup and explicitly authorized live layout.
+pub fn rectangles(
+    margin: u64,
+    launcher_width: u64,
+    gap: u64,
+    width: u64,
+    height: u64,
+) -> Option<[[u64; 4]; 2]> {
+    let h = height.checked_sub(margin.checked_mul(2)?)?;
+    let x = margin.checked_add(launcher_width)?.checked_add(gap)?;
+    let w = width.checked_sub(x.checked_add(margin)?)?;
+    if h == 0 || w == 0 || launcher_width == 0 {
+        return None;
+    }
+    Some([[margin, margin, launcher_width, h], [x, margin, w, h]])
 }
 
 #[cfg(test)]

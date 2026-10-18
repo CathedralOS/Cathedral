@@ -26,6 +26,7 @@ pub struct World {
     capacity: usize,
     retired: [Option<wire::Packet>; wire::MAX_SURFACES],
     children: [Child; 2],
+    layout_controller: Option<(usize, u64)>,
     focus: Option<usize>,
     capture: Option<usize>,
     buttons: u64,
@@ -51,6 +52,7 @@ impl World {
             capacity: 0,
             retired: [None; wire::MAX_SURFACES],
             children: [const { Child::empty() }; 2],
+            layout_controller: None,
             focus: None,
             capture: None,
             buttons: 0,
@@ -71,6 +73,7 @@ impl World {
         }
         let replaced = self.parent.epoch != grant.epoch;
         if replaced {
+            self.layout_controller = None;
             self.cancel();
             if grant.valid() {
                 // A newly accepted binding is a fresh scoped stream. Its parent
@@ -136,6 +139,12 @@ impl World {
     pub fn revoke(&mut self, slot: usize) -> Result<(), u64> {
         if slot >= self.children.len() {
             return Err(abi::DENIED);
+        }
+        if self
+            .layout_controller
+            .is_some_and(|(controller, _)| controller == slot)
+        {
+            self.layout_controller = None;
         }
         if self.focus == Some(slot) {
             self.focus = None;

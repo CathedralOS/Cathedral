@@ -6,17 +6,17 @@ pub struct Scene {
     names: [u64; 5],
 }
 impl Scene {
-    pub fn new(parent: Pair, epoch: u64) -> Self {
+    pub fn new(parent: Pair, epoch: u64) -> Result<Self, u64> {
         let mut names = [0; 5];
         for (rank, name) in names.iter_mut().enumerate() {
             let reply = call(
                 parent,
                 [wire::SURFACE_CREATE, epoch, rank as u64, 0, 0, 0, 0, 0],
             );
-            assert_eq!(reply[0], 0);
+            accepted(reply[0])?;
             *name = reply[1];
         }
-        Self { epoch, names }
+        Ok(Self { epoch, names })
     }
     pub fn paint(
         &self,
@@ -26,8 +26,8 @@ impl Scene {
         selected: usize,
         status: &str,
         picker: bool,
-    ) {
-        self.background(parent, extent);
+    ) -> Result<(), u64> {
+        self.background(parent, extent)?;
         let (items, n) = layout::entries(realm.count, picker);
         for (i, &index) in items[..n].iter().enumerate() {
             let title: &[u8] = if index == NEW {
@@ -42,10 +42,10 @@ impl Scene {
                 self.names[i + 1],
                 pixels,
                 [x, y, layout::WIDTH as u64, layout::HEIGHT as u64],
-            );
+            )?;
         }
         for i in n..ENTRIES - 1 {
-            assert_eq!(
+            accepted(
                 call(
                     parent,
                     [
@@ -56,11 +56,10 @@ impl Scene {
                         0,
                         1,
                         1,
-                        tiles::BACKGROUND as u64
-                    ]
+                        tiles::BACKGROUND as u64,
+                    ],
                 )[0],
-                0
-            );
+            )?;
         }
         self.footer(
             parent,
@@ -68,10 +67,15 @@ impl Scene {
             status,
             if picker { "" } else { "SETTINGS" },
             picker,
-        );
+        )
     }
-    pub fn settings(&self, parent: Pair, extent: wire::Packet, editor: &settings::Editor) {
-        self.background(parent, extent);
+    pub fn settings(
+        &self,
+        parent: Pair,
+        extent: wire::Packet,
+        editor: &settings::Editor,
+    ) -> Result<(), u64> {
+        self.background(parent, extent)?;
         for row in 0..3 {
             let (x, y) = settings::view::origin(extent, row);
             self.image(
@@ -84,12 +88,12 @@ impl Scene {
                     settings::view::WIDTH as u64,
                     settings::view::HEIGHT as u64,
                 ],
-            );
+            )?;
         }
-        self.footer(parent, extent, editor.status, "", false);
+        self.footer(parent, extent, editor.status, "", false)
     }
-    fn background(&self, parent: Pair, extent: wire::Packet) {
-        assert_eq!(
+    fn background(&self, parent: Pair, extent: wire::Packet) -> Result<(), u64> {
+        accepted(
             call(
                 parent,
                 [
@@ -100,13 +104,12 @@ impl Scene {
                     0,
                     extent[2],
                     extent[3],
-                    tiles::BACKGROUND as u64
-                ]
+                    tiles::BACKGROUND as u64,
+                ],
             )[0],
-            0
-        );
+        )?;
         // Release the previous message before allocating replacement tiles.
-        assert_eq!(
+        accepted(
             call(
                 parent,
                 [
@@ -117,13 +120,20 @@ impl Scene {
                     0,
                     1,
                     1,
-                    tiles::BACKGROUND as u64
-                ]
+                    tiles::BACKGROUND as u64,
+                ],
             )[0],
-            0
-        );
+        )?;
+        Ok(())
     }
-    fn footer(&self, parent: Pair, extent: wire::Packet, status: &str, button: &str, picker: bool) {
+    fn footer(
+        &self,
+        parent: Pair,
+        extent: wire::Packet,
+        status: &str,
+        button: &str,
+        picker: bool,
+    ) -> Result<(), u64> {
         if !status.is_empty() || !button.is_empty() {
             let mut pixels = Private::allocate(8).unwrap();
             for pixel in pixels.bytes_mut().chunks_exact_mut(4) {
@@ -137,10 +147,17 @@ impl Scene {
             } else {
                 extent[3].saturating_sub(48)
             };
-            self.image(parent, self.names[4], pixels, [x, y, 180, 40]);
+            self.image(parent, self.names[4], pixels, [x, y, 180, 40])?;
         }
+        Ok(())
     }
-    fn image(&self, parent: Pair, surface: u64, pixels: Private, [x, y, width, height]: [u64; 4]) {
+    fn image(
+        &self,
+        parent: Pair,
+        surface: u64,
+        pixels: Private,
+        [x, y, width, height]: [u64; 4],
+    ) -> Result<(), u64> {
         let mut image = pixels.freeze().unwrap();
         image.unmap().unwrap();
         parent
@@ -164,6 +181,10 @@ impl Scene {
             .1
             .receive_until(&mut bytes, time::after(300).unwrap())
             .unwrap();
-        assert_eq!(wire::decode(&bytes[..n]).unwrap()[0], 0);
+        accepted(wire::decode(&bytes[..n]).unwrap()[0])
     }
+}
+
+fn accepted(status: u64) -> Result<(), u64> {
+    if status == 0 { Ok(()) } else { Err(status) }
 }

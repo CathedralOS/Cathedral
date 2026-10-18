@@ -24,7 +24,9 @@ shows only app tiles. Storage attenuation remains a platform mechanism, without
 a test toggle in the normal desktop. Default QEMU input uses absolute coordinates
 when its virtual mouse is available, with PS/2 fallback.
 The user's app strip has SETTINGS for saved strip width and outer spacing.
-Save affects the next start; Cancel returns to apps without saving local edits.
+Save persists and applies the layout immediately; running apps keep their state.
+Cancel returns to apps without saving local edits. SAVED; RESTART means live
+application was refused even though the save committed; retry Save or restart.
 Build output and serial diagnostics appear in the integrated terminal. Close
 QEMU or press Ctrl+C there to stop. This uses VS Code's terminal launcher, not
 an attached kernel debugger.
@@ -80,10 +82,17 @@ launcher returns to the picker without a panic. It does not edit the source imag
 
 `python tools/boot-harness-rs/settings_test.py PATH/guest.raw` takes a one-user
 desktop fixture and uses a disposable copy. Physical clicks check Cancel, Save,
-unchanged live placement, the saved layout after cold boot, and a newly created
-user retaining the template defaults. `--recovery` instead runs two boots with
+live placement with Colors and a dirty Notes draft, the saved layout after cold
+boot, and a newly created user retaining the template defaults. `--recovery`
+instead runs two boots with
 one deliberately lost settings-save acknowledgement and verifies readback before
 retrying. Generated recovery profiles and disks remain inside the artifact directory.
+
+`--render-race` instead enables test-only Notes gates during surface creation
+and bitmap publication. The driver observes each gate, changes layout through
+the real settings UI, then checks that both invalidation paths ran, the document
+loaded only once, and typing still works. These delays never enter the normal
+F5 build. This mode and `--recovery` are mutually exclusive.
 
 The build harness captures each compiled role in [artifacts.py](artifacts.py)
 before Cargo reuses its package output path. Paths include the content digest,

@@ -16,6 +16,7 @@ bench = false
 
 [features]
 trace-storage = []
+render-probes = []
 
 [dependencies]
 cathedral-platform-contracts.workspace = true

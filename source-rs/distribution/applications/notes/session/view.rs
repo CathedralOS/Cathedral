@@ -21,17 +21,21 @@ pub struct Scene {
     close: u64,
 }
 impl Scene {
-    pub fn new(parent: Pair, epoch: u64) -> Self {
+    pub fn new(parent: Pair, epoch: u64) -> Result<Self, u64> {
         let mut names = [0; 6];
         for (rank, name) in names.iter_mut().enumerate() {
             let reply = call(
                 parent,
                 [wire::SURFACE_CREATE, epoch, rank as u64, 0, 0, 0, 0, 0],
             );
-            assert_eq!(reply[0], 0);
+            accepted(reply[0])?;
             *name = reply[1];
+            #[cfg(feature = "render-probes")]
+            if rank == 0 {
+                super::render_probe::gate(1);
+            }
         }
-        Self {
+        Ok(Self {
             epoch,
             base: names[0],
             text: names[1],
@@ -39,15 +43,21 @@ impl Scene {
             filled: names[3],
             current: names[4],
             close: names[5],
-        }
+        })
     }
     /// Paint one retained rectangle at a local rectangle: x, y, width, height.
-    fn rectangle(&self, parent: Pair, surface: u64, [x, y, width, height]: [u64; 4], color: u64) {
+    fn rectangle(
+        &self,
+        parent: Pair,
+        surface: u64,
+        [x, y, width, height]: [u64; 4],
+        color: u64,
+    ) -> Result<(), u64> {
         let reply = call(
             parent,
             [wire::PAINT, self.epoch, surface, x, y, width, height, color],
         );
-        assert_eq!(reply[0], 0);
+        accepted(reply[0])
     }
     #[allow(clippy::too_many_arguments)]
     pub fn paint(
@@ -60,7 +70,7 @@ impl Scene {
         error: u64,
         notes: &storage::Notes,
         closing: bool,
-    ) {
+    ) -> Result<(), u64> {
         let color = if error != 0 {
             0x993f46
         } else if dirty {
@@ -70,7 +80,7 @@ impl Scene {
         } else {
             0x27664a
         };
-        self.rectangle(parent, self.base, [0, 0, extent[2], extent[3]], color);
+        self.rectangle(parent, self.base, [0, 0, extent[2], extent[3]], color)?;
         self.image(parent, self.text, [10, 20, WIDTH, HEIGHT], |bytes| {
             if closing {
                 label(
@@ -100,7 +110,7 @@ impl Scene {
             } else {
                 text(bytes, doc, cursor);
             }
-        });
+        })?;
         self.image(
             parent,
             self.close,
@@ -111,7 +121,7 @@ impl Scene {
                 }
                 label(bytes, 20, 5, 1, b"X");
             },
-        );
+        )?;
         if notes.temporary() {
             self.image(
                 parent,
@@ -138,8 +148,8 @@ impl Scene {
                         }
                     }
                 },
-            );
-            return;
+            )?;
+            return Ok(());
         }
         let width = |count: usize| count as u64 * TAB_PITCH - 4;
         let bar = |x: u64, width: u64| [x, TAB_TOP, width, TAB_HEIGHT];
@@ -148,12 +158,13 @@ impl Scene {
             self.track,
             bar(10, width(storage::MAX_NOTES)),
             0x182132,
-        );
+        )?;
         if notes.count > 0 {
-            self.rectangle(parent, self.filled, bar(10, width(notes.count)), 0x3a4a63);
+            self.rectangle(parent, self.filled, bar(10, width(notes.count)), 0x3a4a63)?;
             let x = 10 + notes.current as u64 * TAB_PITCH;
-            self.rectangle(parent, self.current, bar(x, width(1)), 0x66ccff);
+            self.rectangle(parent, self.current, bar(x, width(1)), 0x66ccff)?;
         }
+        Ok(())
     }
     /// Publish one sealed image at a local rectangle: x, y, width, height.
     fn image(
@@ -162,7 +173,7 @@ impl Scene {
         surface: u64,
         [x, y, width, height]: [usize; 4],
         draw: impl FnOnce(&mut [u8]),
-    ) {
+    ) -> Result<(), u64> {
         let mut pixels = Private::allocate((width * height * 4).div_ceil(4096)).unwrap();
         for pixel in pixels.bytes_mut()[..width * height * 4].chunks_exact_mut(4) {
             pixel.copy_from_slice(&0x182132u32.to_le_bytes());
@@ -191,7 +202,12 @@ impl Scene {
             .1
             .receive_until(&mut reply, time::after(300).unwrap())
             .unwrap();
-        assert_eq!(wire::decode(&reply[..n]).unwrap()[0], 0);
+        let result = accepted(wire::decode(&reply[..n]).unwrap()[0]);
+        #[cfg(feature = "render-probes")]
+        if result.is_ok() {
+            super::render_probe::gate(2);
+        }
+        result
     }
 }
 /// Glyph rows follow the cursor: the window shows the four rows around it.
@@ -268,4 +284,8 @@ fn label(bytes: &mut [u8], width: usize, left: usize, top: usize, text: &[u8]) {
             }
         }
     }
+}
+
+fn accepted(status: u64) -> Result<(), u64> {
+    if status == 0 { Ok(()) } else { Err(status) }
 }
