@@ -1,36 +1,56 @@
 use omega::language::core::extent;
 use omega::language::core::assembly;
 
+data KernelState {
+    entered: bool;
+    image_bytes: u64;
+    initial_storage_bytes: u64;
+}
+
 // The semantic entry is independent of the firmware ABI. A valid installed
 // caller must transfer both roots; declaring or taking the address of this
 // machine does not mint them. Reporting happens only after the selected bridge
 // has transferred both roots, and idle retains both claims for the OS lifetime.
-machine Kernel::enter(image: Extent in Granted, initial_storage: Extent in Granted)
+machine Kernel::enter(context: &mut KernelState, image: Extent in Granted,
+                      initial_storage: Extent in Granted)
 reaches PortIo + MachineControl
 {
-    transition { _ -> announce(image, initial_storage, 1000000) }
+    // The installed occurrence receives fresh zero state, not firmware data or
+    // a globally addressable record. Keep its borrow with the retained roots.
+    transition !context.entered && context.image_bytes == 0 && context.initial_storage_bytes == 0 {
+        true -> establish(context, image, initial_storage)
+        _ -> retain(context, image, initial_storage)
+    }
+
+    state establish(context: &mut KernelState, image: Extent in Granted,
+                    initial_storage: Extent in Granted) {
+        context.image_bytes = image.length;
+        context.initial_storage_bytes = initial_storage.length;
+        context.entered = true;
+        transition { _ -> announce(context, image, initial_storage, 1000000) }
+    }
 
     // Drain the preceding ownership report before one 16-byte FIFO burst.
     // A missing UART suppresses diagnostics, never ownership or kernel entry.
-    state announce(image: Extent in Granted, initial_storage: Extent in Granted,
+    state announce(context: &mut KernelState, image: Extent in Granted, initial_storage: Extent in Granted,
                    remaining: u64) {
         let mut status: u8 = 0;
         asm { in status, 1021 }
         transition (status & 32) != 0 {
-            true -> report(image, initial_storage)
-            _ -> wait(image, initial_storage, remaining)
+            true -> report(context, image, initial_storage)
+            _ -> wait(context, image, initial_storage, remaining)
         }
     }
 
-    state wait(image: Extent in Granted, initial_storage: Extent in Granted,
+    state wait(context: &mut KernelState, image: Extent in Granted, initial_storage: Extent in Granted,
                remaining: u64) {
         transition remaining > 1 {
-            true -> announce(image, initial_storage, remaining - 1)
-            _ -> retain(image, initial_storage)
+            true -> announce(context, image, initial_storage, remaining - 1)
+            _ -> retain(context, image, initial_storage)
         }
     }
 
-    state report(image: Extent in Granted, initial_storage: Extent in Granted) {
+    state report(context: &mut KernelState, image: Extent in Granted, initial_storage: Extent in Granted) {
         asm { out 1016, 75 }   // K
         asm { out 1016, 101 }  // e
         asm { out 1016, 114 }  // r
@@ -47,11 +67,11 @@ reaches PortIo + MachineControl
         asm { out 1016, 100 }  // d
         asm { out 1016, 13 }
         asm { out 1016, 10 }
-        transition { _ -> retain(image, initial_storage) }
+        transition { _ -> retain(context, image, initial_storage) }
     }
 
-    state retain(image: Extent in Granted, initial_storage: Extent in Granted) {
+    state retain(context: &mut KernelState, image: Extent in Granted, initial_storage: Extent in Granted) {
         asm { hlt }
-        transition { _ -> retain(image, initial_storage) }
+        transition { _ -> retain(context, image, initial_storage) }
     }
 }

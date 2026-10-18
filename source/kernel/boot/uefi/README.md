@@ -2,19 +2,20 @@
 
 This directory contains Cathedral's boot source and a bounded physical-entry
 ladder. `build.omg` selects `CathedralBootstrap` for firmware arrival and binds
-the target's semantic slot to `Kernel::enter(image, initial_storage)`.
+the target's semantic slot to `Kernel::enter(context, image, initial_storage)`.
 `physical_entry.omg` validates the incoming table header and invokes the checked
 boot sequence. That sequence greets, discovers LoadedImage geometry, and enters
 the map/exit/report implementation in `own_machine.omg`. After successful
 ExitBootServices it grants both retained roots and calls `ProgramStorageEntry`.
 The explicitly selected native provider transfers them to the exact
-Build-selected `Kernel::enter`, which reports arrival and retains both roots.
+Build-selected `Kernel::enter`, which checks its fresh context, records root
+lengths, reports arrival and retains the context borrow with both roots.
 
 The fresh-image harness requires `Hello from Omega`, a complete `Owned N MiB`
 line, and `Kernel entered`, in that order. QEMU/OVMF has exercised this route
 with 35 MiB reported. Use an Omega compiler containing the canonical
-`ProgramStorageEntryNativeProvider` implementation as well as the
-private-entry-stack repair (`0bdc137b7af`). The ownership report occurs only
+`ProgramStorageEntryNativeProvider` implementation, activation-local entry-context
+provisioning, and the private-entry-stack repair (`0bdc137b7af`). The ownership report occurs only
 after successful ExitBootServices; the final marker comes from the selected
 kernel continuation, not the firmware adapter.
 
@@ -25,6 +26,12 @@ entry bridges and the target reserve. The foreign leaves retain their default
 128 KiB firmware arrival guarantee was reduced or inflated to make boot work.
 The active stack remains retained storage and is excluded from the image
 extent supplied to `Kernel::enter`.
+
+The generated checked caller owns a zero-initialized `KernelState` on that
+private stack and lends its ordinary mutable reference at the declared argument
+position. The kernel refuses to report entry if any initial field is nonzero.
+Context backing is included in the call-closure demand and remains inside the
+retained suffix, never in either root transferred to the kernel.
 
 The adapter now queries `ProgramImage::retained_suffix_start` and excludes the
 entire suffix from its proposed image range before firmware exit. The compiler
@@ -79,10 +86,10 @@ checks numeric acceptance and rejection without firmware. The boot transaction
 checks that geometry before ExitBootServices and retains it through success;
 geometry does not supply backing or stack custody.
 
-The kernel currently retains its two arguments in a halt loop; it does not yet
-install page tables, an allocator, interrupts or a scheduler. The entry is a
-free machine: compiler provisioning for an additional mutable context parameter
-is separate unfinished Omega work, not exercised by this boot.
+The kernel currently retains its context and two storage roots in a halt loop;
+it does not yet install page tables, an allocator, interrupts or a scheduler.
+This non-returning boot exercises context initialization and lifetime, not
+normal-return cleanup or a returning application's allocation release protocol.
 
 `Main::run` remains ordinary checked logic, not an implicitly installed raw ABI.
 PE subsystem selection, a same-shaped pointer, or an empty root-provider body
