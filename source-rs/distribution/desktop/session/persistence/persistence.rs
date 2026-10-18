@@ -20,7 +20,7 @@ fn regrant(session: &mut admission::Session) -> Result<(), Error> {
     let n = session
         .storage_control
         .1
-        .receive_until(&mut bytes, time::after(500)?)?;
+        .receive_until(&mut bytes, time::after(policy::STARTUP_TIMEOUT)?)?;
     if &bytes[..n] != b"ready" {
         return Err(Error(abi::IO_ERROR as i64));
     }
@@ -92,7 +92,8 @@ pub(crate) fn supervise(session: &mut admission::Session) {
         write(b"Cathedral matrix desktop: storage offline; restart budget exhausted\n").unwrap();
         return;
     }
-    if regrant(session).is_err() {
+    if let Err(error) = regrant(session) {
+        time::storage_sample("storage-restart-failed", &[error.0 as u64]);
         let _ = session.storage.cancel();
         let _ = session.storage.wait();
         session.storage_watch.offline = true;

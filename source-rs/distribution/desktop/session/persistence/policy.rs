@@ -3,6 +3,9 @@
 //! retired by the matrix's verdict before the owner replaces it.
 pub const PROBE_INTERVAL: u64 = 500;
 pub const PROBE_TIMEOUT: u64 = cathedral_platform_contracts::matrix::STORAGE_DEADLINE_TICKS + 100;
+// Recovery may scan the whole unclean volume before accepting requests. Its
+// startup bound is separate from a single operation's deadline (100-Hz ticks).
+pub const STARTUP_TIMEOUT: u64 = 3000;
 pub const MAX_RESTARTS: u8 = 3;
 #[derive(Default)]
 pub struct Watchdog {

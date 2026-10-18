@@ -21,10 +21,16 @@ Objects hold up to 256 KiB, so programs fit; a root holds a megabyte. The deskto
 subtrees of them to its children; the [objects lab](../../../distribution/lab/objects/README.md)
 hands them to two bare clients instead.
 
-Every write is one engine transaction. Collection runs before each publication
-or copy, including a subtree copy, so retired history never blocks a live
-root; a refused write leaves no partial record. An engine or corruption failure ends the provider rather than
-serving uncertain state, and the distribution replaces it and regrants roots.
+Every write is one engine transaction. Before a publication or copy (including
+subtree copy), the provider performs **one** collection pass, removing at most
+eight records. It does not drain an upgrade backlog inside an application's
+save: repeated whole-root scans and durable commits exceeded the storage IPC
+deadline on retained desktop disks. Later mutations or explicit COLLECT calls
+continue maintenance. A root still at capacity can refuse a write even with
+reclaimable history; that refusal publishes no partial record. Background
+maintenance and quota-pressure scheduling remain future work. An engine or
+corruption failure ends the provider rather than serving uncertain state, and
+the distribution replaces it and regrants roots.
 
 The `recovery-lab` feature adds the owner-controlled [fault gate](gate.rs),
 which stalls one root's next matching request before execution or after

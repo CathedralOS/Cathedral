@@ -66,11 +66,25 @@ pub(super) fn furnish(matrix: Pair, extent: [u64; 2], realm: u64) {
     layout::enter_user(matrix, extent);
 }
 
-/// The realm a child of `matrix` holds, or zero. The user matrix is root
-/// slot 1, so requests into it are routed there.
-pub(super) fn realm_of(matrix: Pair, words: wire::Packet) -> u64 {
-    let reply = call(matrix, words);
-    if reply[0] == 0 { reply[2] } else { 0 }
+/// Observe the user (depth 0) or its app (depth 1), both in slot 1.
+/// Losing a storage binding is not process death. Keep the last known realm
+/// for recovery until the child's control link confirms it has gone away;
+/// busy or timed-out probes never turn a live session into a new picker.
+pub(super) fn realm_of(matrix: Pair, depth: usize, previous: u64) -> u64 {
+    let mut binding = [wire::STORAGE_BINDING, 1, 0, 0, 0, 0, 0, 0];
+    let mut health = wire::route([wire::HEALTH, 0, 0, 0, 0, 0, 0, 0], 1).unwrap();
+    for _ in 0..depth {
+        binding = wire::route(binding, 1).unwrap();
+        health = wire::route(health, 1).unwrap();
+    }
+    let reply = call(matrix, binding);
+    if reply[0] == 0 {
+        reply[2]
+    } else if previous != 0 && call(matrix, health)[0] != abi::PEER_CLOSED {
+        previous
+    } else {
+        0
+    }
 }
 
 /// After provider replacement, re-establish every realm the tree held: the

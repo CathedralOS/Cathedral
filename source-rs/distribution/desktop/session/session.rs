@@ -42,7 +42,7 @@ pub(crate) fn run() -> u64 {
         // desktop learns of it by its realm and gives it its chrome. The app
         // the chrome launches is tracked only so storage replacement can
         // restore its realm.
-        let user = shell::realm_of(matrix, [wire::STORAGE_BINDING, 1, 0, 0, 0, 0, 0, 0]);
+        let user = shell::realm_of(matrix, 0, session.user);
         if user != session.user {
             session.user = user;
             session.app = 0;
@@ -56,10 +56,7 @@ pub(crate) fn run() -> u64 {
             }
         }
         if user != 0 {
-            session.app = shell::realm_of(
-                matrix,
-                wire::route([wire::STORAGE_BINDING, 1, 0, 0, 0, 0, 0, 0], 1).unwrap(),
-            );
+            session.app = shell::realm_of(matrix, 1, session.app);
         }
         persistence::supervise(&mut session);
         // Polling is only how the owner notices; rendering and input wake the

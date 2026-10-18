@@ -124,15 +124,13 @@ fn scoped(store: &Store<'_>, root: u8, r: wire::Request) -> Result<(), u64> {
     Ok(())
 }
 
-/// Finish bounded old garbage before allocating the next content revision.
-/// Current heads remain intact even if maintenance fails or power is lost.
+/// Pay for one bounded maintenance pass before a mutation. Draining the whole
+/// backlog here makes the first save after program upgrades exceed the IPC
+/// deadline. Further requests (or explicit COLLECT) continue the work; a root
+/// still at capacity refuses the mutation without publishing it.
 fn collect(store: &Store<'_>, root: u8) -> Result<(), Error> {
-    for _ in 0..64 {
-        if !store.collect(root)?.more {
-            return Ok(());
-        }
-    }
-    Err(Error::Capacity)
+    store.collect(root)?;
+    Ok(())
 }
 
 fn observe(stage: Stage) {

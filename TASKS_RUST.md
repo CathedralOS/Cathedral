@@ -4,8 +4,8 @@ Updated 2026-10-18 (local date). Implementation baseline: declared service
 imports and optional Notes persistence at **`8d1972a`**, followed by readable
 chooser labels at **`787344e`**, existing-user label upgrade at **`4f1c6c8`**,
 app-owned close at **`a40ed23`**, user tiles/absolute input at **`4901e65`**,
-and the transient-picker handoff below. Store-based
-admission validates the program's required/optional interfaces against owner
+the transient-picker handoff at **`30f169b`**, and the retained-disk Colors fix
+below. Store-based admission validates the program's required/optional interfaces against owner
 offers before spawning. Check Git for
 later work.
 
@@ -617,13 +617,18 @@ Verification:
 - Release x86 smoke and ARM64 portability boots passed. No new ARM device was
   introduced; the shared syscall routing still compiles/runs there.
 
-**Outstanding storage finding:** With the older
+**Earlier storage finding (retest below now passes):** With the older
 `desktop/20261017T232223657195Z/guest.raw` fixture upgraded, adding USER 2 twice
 hit a storage deadline and provider replacement; the picker displayed TRY AGAIN.
 Existing-user selection/readback passed before that extra stress. Artifacts:
 `labels-upgrade/20261018T174631398112Z/` and `20261018T174825636437Z/`.
-The newer fixture's equivalent two extra copies passed. Cause is unproven;
-do not claim this is the previously recorded ATA timeout without tracing it.
+The newer fixture's equivalent two extra copies passed. At that point the
+cause was unproven. After bounding foreground collection, the exact older
+fixture now creates both extra users and preserves its notes:
+`labels-upgrade/20261018T181109147782Z/`. This is consistent with the traced
+Colors cleanup stall below; the earlier copy failure itself was not traced,
+so do not relabel it as a proven ATA fault or claim every uncertain-copy case
+is fixed.
 No retry of an uncertain copy was added. The original chooser already lacks a
 reconcile/reload action after uncertain creation; investigate that alongside the
 storage stall before adding broader account controls. The new capacity check
@@ -672,3 +677,56 @@ stock Colors copies were refreshed because Colors shares the owner executable;
 the actual fix runs in the booted owner, so old user matrix/launcher binaries
 need no changes. Saved data is preserved; the pre-update image is at
 `cathedral-storage.raw.before-picker-handoff.raw`.
+
+
+## Colors on retained desktop disks
+
+Reproduced the owner's actual failure on a copy of the two-user interactive
+image. Colors' initial six-byte state publication entered collection; the
+provider tried up to 64 passes (each rescanning liveness and committing eight
+removals) before doing the save. Accumulated program-upgrade history exceeded
+the 600-tick/six-second IPC bound. Root revoked the user's storage binding;
+the owner interpreted that as user death, attempted to restart the picker,
+and panicked on BUSY. The last frame then looked frozen. Before-fix evidence:
+`colors-check/20261018T180419Z/`, traced `colors-check/20261018T180654Z/`.
+
+The provider now performs one bounded pass per publication/copy. It preserves
+atomic publication and exact accounting; additional maintenance proceeds on
+later mutations or explicit COLLECT. It can return capacity before all garbage
+is drained. Background collection and quota-pressure scheduling remain future
+work. The owner separately confirms a closed control route before forgetting
+a remembered realm; a storage error, BUSY or timeout cannot restart login.
+
+`colors_test.py IMAGE --users N --user I` upgrades a disposable copy and checks
+Colors **first**, save, clean close, reopen, and cold-boot saved color, rejecting
+panics or provider replacement. Both actual saved users passed:
+`colors/20261018T180957340154Z/` (USER 2, first launch 2.52s, cold 0.38s),
+`colors/20261018T181122360912Z/` (USER 1, 3.30s / 0.73s). Times include scanout
+observation overhead and are TCG samples, not performance guarantees. The same
+USER 2 disk without the upgrade step opened in 1.36s after the click at
+`colors-check/20261018T180812Z/`.
+
+Full default desktop/cold boot and independent 201-record oracle passed at
+`desktop/20261018T180905741067Z/`. Object retention, bounded collection, exact
+accounting and three cold boots passed at `objects/20261018T181138302783Z/`.
+Host `cargo test --locked`, shell/storage target clippy, formatting and layout
+checks passed. Kernel/ISA behavior is unchanged; no new ARM boot claimed.
+
+
+The explicit lost-reply variant (`colors_test.py IMAGE --users 2 --user 2
+--recovery`) also passed, including reconciliation and cold boot, at
+`colors/20261018T181550212623Z/`. It adds the existing quiet post-commit gate to
+the F5 composition and checks that exactly one provider replacement occurs
+without restarting the picker. This exposed a second recovery bound: opening
+an unclean retained volume exceeded the old 500-tick startup wait. Replacement
+startup now has a separate 3000-tick/30-second bound; individual storage IPC
+operations retain their six-second bound. Replacement failures now log the
+actual error code. Earlier injected failures and the successful exploratory
+run are retained at `colors-check/20261018T181226Z/`, `20261018T181317Z/` and
+`20261018T181411Z/`. The longer startup bound is not a recovery-speed claim.
+
+Final ordinary (fault gate absent) replay passed at
+`colors/20261018T181641027782Z/`. The normal F5 EFI was rebuilt and the actual
+interactive disk's recognized Colors copies upgraded with saved state intact;
+`cathedral-storage.raw.before-colors-launch.raw` preserves the disk before
+this update. The existing app-close migration backup is also retained.

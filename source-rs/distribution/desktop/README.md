@@ -23,7 +23,13 @@ then places the separate launcher and app inside the user's display. The user ma
 the full display, with its launcher at the left and its app in the remaining
 space. The root keeps supervising and forwarding without visible boot chrome.
 If the user matrix is lost, the owner starts a fresh picker; storage recovery
-does not regrant the retired picker. There is no logout UI; recursive whole-user
+does not regrant the retired picker. A missing storage binding alone is not
+process death: the owner retains the remembered realm unless the child's
+control route confirms PEER_CLOSED. This keeps a storage failure from
+restarting login over a live user and preserves the realms needed for recovery.
+Replacement provider startup has a separate 30-second bound for unclean-volume
+recovery; the per-operation storage deadline remains six seconds. A failed
+replacement logs its actual error code before leaving storage offline. There is no logout UI; recursive whole-user
 LOSS remains a headless proof.
 
 Without the `shell` feature the same package builds the probe desktop in

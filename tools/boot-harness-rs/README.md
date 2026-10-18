@@ -43,6 +43,17 @@ other than a program". Move `cathedral-storage.raw` and its `.programs` sidecar
 (if present) to backup paths, then launch again to create a fresh desktop.
 The backup preserves the old data; this is a fresh installation, not a migration.
 
+For a retained desktop disk, run
+`python tools/boot-harness-rs/colors_test.py IMAGE --users 2 --user 2`
+(adjust counts to the disk). This only opens a disposable copy, upgrades its
+stock programs, launches Colors before any other app, verifies a saved toggle,
+close/reopen and cold-boot persistence. It rejects provider retirement and
+panics, and records launch timing. This catches upgrade-garbage stalls that a
+fresh desktop fixture misses. Add `--recovery` to inject one lost committed-save
+reply using the existing provider gate: the user must remain alive, Colors
+must reconcile, and the saved result must survive cold boot. The fixture's
+profile is written only under its artifact directory.
+
 `python tools/boot-harness-rs/desktop_test.py` exercises this exact default image
 using physical input, repeated app launches, draft protection and cold-boot saved
 text checks on a disposable disk. [Distribution navigation](../../source-rs/distribution/README.md)
@@ -175,7 +186,7 @@ host replacement, and replaces the input source while a key is held. The host
 compares every scanout pixel at several stages. Add `--release` for the optimized
 build. Output is `build/boot-harness-rs/session-test/display.png`; see the
 [session guide](../../source-rs/distribution/lab/compositor/SESSION.md) for the
-interactive command and F4â€“F7 recovery controls.
+interactive command and F4ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“F7 recovery controls.
 
 Normal session startup skips destructive bring-up probes. Add `--startup-probes`
 to run those and the full-screen repaint timing probe. Session tests also drive
@@ -211,7 +222,7 @@ loops, repeated replacement and an all-throttled idle session. Reports include
 direct/subtree microseconds and exhaustion counts, with heap/frame reclamation.
 
 Each `startup.initial` or `startup.launches` entry may set `cpu_budget_us` to an
-integer 0â€“100000. For example, 20000 supplies a 20 ms burst and continuously refills
+integer 0ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“100000. For example, 20000 supplies a 20 ms burst and continuously refills
 at 20% of one CPU. Zero/default adds no local cap; ancestors still constrain the
 account. Limits persist through replacement and loans. These are token-bucket
 ceilings, not fixed windows or guaranteed reservations, so their sum need not fit
