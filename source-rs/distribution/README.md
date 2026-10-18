@@ -6,7 +6,7 @@ Press **F5** at the repository root, or run:
 python tools/boot-harness-rs/run.py --release --window
 ```
 
-One desktop boots to a chooser over the folder of users. **NEW** copies the
+One desktop boots to a chooser over the folder of users. **NEW USER** copies the
 template user beside it; clicking a user replaces the boot picker with that
 user's full-screen workspace. A user is a
 matrix with its own chrome: a second chooser over the user's realm, listing the
@@ -23,7 +23,7 @@ also take Up/Down/Enter while focused. The user launcher's **STORAGE ON/OFF**
 row controls future launches: OFF runs Notes as a temporary unsavable editor;
 Colors refuses with NEEDS SERVICE because its storage import is required.
 Turn storage on and relaunch to return to saved data. Existing copied programs
-retain their code; use NEW in the user picker for a copy of the current template
+retain their code; use NEW USER in the picker for a copy of the current template
 when trying newly added app features.
 
 Everything persists in `build/boot-harness-rs/cathedral-storage.raw` across
@@ -53,11 +53,14 @@ provider replacement. Every matrix runs the same platform code.
 ordinary CLI boot and [the desktop test](../../tools/boot-harness-rs/desktop_test.py).
 The harness builds the boot launches and supplies their ELF artifacts to
 [kernel startup](../kernel/boot/uefi/startup.rs); it trims the `programs` to
-their loadable bytes and installs them into the storage image as objects of
+their loadable bytes, appends the optional `display_title` footer, and installs
+them into the storage image as objects of
 the notes root, in order and nested as the profile says, with `folder` entries
 as empty containers. The kernel sees supplied code and grants; the distribution
 assigns budgets and placement, and the choosers launch programs from their
-realms by object number.
+realms by object number. The UI shows USER TEMPLATE / USER 1 in the picker and
+LAUNCHER / NOTES / COLORS in the user's workspace. See the
+[chooser](applications/chooser/README.md) for the bounded display-title format.
 
 | Role | Composition entry | Entrance / receiving implementation |
 | --- | --- | --- |

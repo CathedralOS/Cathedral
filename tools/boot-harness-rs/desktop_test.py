@@ -118,9 +118,6 @@ def desktop(stream, output, serial, reboot):
                 and all(actual[i:i + 3] != b'\xff\xff\xff' for i in range(0, len(expected), 3) if expected[i:i + 3] != b'\xff\xff\xff')
         scan(check, f'{description} row {row} {text!r}')
 
-    def entry(number):
-        return 'OBJECT ' + str(number).rjust(6)
-
     # Only the current phase has a visible chooser.
     def users(row, text):
         chooser_row(PICKER[0] + 10, PICKER[1], row, text, 'users')
@@ -154,11 +151,12 @@ def desktop(stream, output, serial, reboot):
     # Objects: the template user is 3; a user made from it is 7 with chrome 8,
     # Notes 9 and Colors 10 inside.
     users(STATUS, 'CHOOSE')
-    users(0, entry(3))
+    users(0, 'USER TEMPLATE')
+    users(NEW, 'NEW USER')
     if not reboot:
         click_users(NEW)
         users(STATUS, 'COPIED')
-    users(1, entry(7))
+    users(1, 'USER 1')
     shutil.copyfile(output / 'display.png', output / 'user-picker.png')
     click_users(1)
     chrome(STATUS, 'CHOOSE')
@@ -170,9 +168,9 @@ def desktop(stream, output, serial, reboot):
                    for x in range(PICKER[0], PICKER[0] + 220))
     scan(picker_gone, 'boot picker and headings retired on user entry')
     shutil.copyfile(output / 'display.png', output / 'user-workspace.png')
-    chrome(0, entry(8))
-    chrome(1, entry(9))
-    chrome(2, entry(10))
+    chrome(0, 'LAUNCHER')
+    chrome(1, 'NOTES')
+    chrome(2, 'COLORS')
     click_chrome(1)
     chrome(STATUS, 'RUNNING')
     note('hello cathedral' if reboot else '')

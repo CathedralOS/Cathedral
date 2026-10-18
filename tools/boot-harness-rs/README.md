@@ -12,7 +12,7 @@ it runs the same default composition as:
 python tools/boot-harness-rs/run.py --release --window
 ```
 
-Click **NEW** to copy the template user, click the user to run it, then click
+Click **NEW USER** to copy USER TEMPLATE, click USER 1 to run it, then click
 **Notes** or **Colors** in its chrome and click the program to focus it. Notes:
 type, F1 save/check, F2 reload. Colors: Enter changes color. CLOSE stops the
 program unless it would lose work; an unsaved note stays until saved or reloaded.

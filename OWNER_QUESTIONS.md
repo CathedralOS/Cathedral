@@ -691,14 +691,17 @@ Configuration can request only authority already available to its owner.
 
 ### Object kinds and names in a realm
 
-**Requirement and conflict.** A chooser lists its realm by object number and
-acts by position: NEW in the user picker copies the first entry as the template.
+**Requirement and conflict.** A chooser addresses its realm by object number and
+acts by position: NEW USER in the picker copies the first entry as the template.
 The user launcher now uses that control for STORAGE ON/OFF, so it no longer
 duplicates chrome, but nothing in the store distinguishes a program, a folder,
 a document or a matrix. Heads carry revision, manifest, length and parent; edges
-carry nothing. The desktop installs by position and names objects by number.
-Showing names, refusing to launch a note, or offering a terminal that navigates
-the same tree all need a kind and a name somewhere.
+carry nothing. The desktop still installs by position. The distribution now
+supplies display titles with installed program bytes, and the chooser shows
+USER TEMPLATE / USER 1 rather than raw IDs. These bounded display labels make
+the current UI usable without deciding editable filesystem names or kinds.
+General naming, refusing to launch a note, and a terminal navigating the same
+tree still need those semantics.
 
 **Contracts checked.** The [object contract](source-rs/platform/contracts/storage.rs)
 and the [store](source-rs/platform/libraries/database-objects/README.md) define

@@ -84,6 +84,7 @@ def program_images(profile_path, composition, release):
     mode = "release" if release else "debug"
     images = []
     for index, program in enumerate(installed):
+        elf_trim.title_record(program.get("display_title"))
         inside = program.get("inside")
         if inside is not None and not (type(inside) is int and 0 <= inside < index):
             raise ValueError("a program may only sit inside an earlier program")
@@ -304,12 +305,12 @@ def main():
 
     seeded = []
     if not args.kernel_only and not args.smoke:
-        for parent, built, trimmed in installed:
+        for index, (parent, built, trimmed) in enumerate(installed):
             if built is None:
                 trimmed.parent.mkdir(parents=True, exist_ok=True)
                 trimmed.write_bytes(b"")
             else:
-                elf_trim.trim(built, trimmed)
+                elf_trim.trim(built, trimmed, startup["programs"][index].get("display_title"))
             seeded.append((parent, trimmed))
     cargo = ["cargo", "build", "--locked", "--package", boot_package,
              "--target", target, "--target-dir", str(BUILD / "cargo")]

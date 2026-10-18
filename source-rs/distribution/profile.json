@@ -122,7 +122,8 @@
       {
         "package": "cathedral-chooser",
         "entry": "distribution/applications/chooser/main.rs",
-        "target": "x86_64-unknown-none"
+        "target": "x86_64-unknown-none",
+        "display_title": "LAUNCHER"
       },
       {
         "folder": true
@@ -131,19 +132,22 @@
         "package": "cathedral-matrix-service",
         "entry": "platform/services/matrix/main.rs",
         "target": "x86_64-unknown-none",
-        "inside": 1
+        "inside": 1,
+        "display_title": "USER TEMPLATE"
       },
       {
         "package": "cathedral-chooser",
         "entry": "distribution/applications/chooser/main.rs",
         "target": "x86_64-unknown-none",
-        "inside": 2
+        "inside": 2,
+        "display_title": "LAUNCHER"
       },
       {
         "package": "cathedral-notes",
         "entry": "distribution/applications/notes/main.rs",
         "target": "x86_64-unknown-none",
-        "inside": 2
+        "inside": 2,
+        "display_title": "NOTES"
       },
       {
         "package": "cathedral-desktop",
@@ -152,7 +156,8 @@
         "features": [
           "shell"
         ],
-        "inside": 2
+        "inside": 2,
+        "display_title": "COLORS"
       }
     ]
   }

@@ -1,7 +1,8 @@
 # Rust reference OS: tasks and handoff
 
 Updated 2026-10-17 (local date). Implementation baseline: declared service
-imports and optional Notes persistence following **`82d3d04`**. Store-based
+imports and optional Notes persistence at **`8d1972a`**, followed by readable
+chooser labels. Store-based
 admission validates the program's required/optional interfaces against owner
 offers before spawning; the F5 launcher can withhold storage. Check Git for
 later work.
@@ -19,9 +20,11 @@ This is exactly what the single [VS Code launch entry](.vscode/launch.json) runs
 The composition is [distribution/profile.json](source-rs/distribution/profile.json).
 It uses x86-64 QEMU/TCG and UEFI.
 
-- **NEW** copies the template user beside it. Click a user to run it: it is a
+- **NEW USER** copies USER TEMPLATE beside it as USER 1, USER 2, etc. Click a
+  user to run it: it is a
   matrix whose chrome, a second chooser over the user's realm, lists the user's
-  Notes and Colors. The centered boot picker disappears; the user gets the whole
+  LAUNCHER, NOTES and COLORS by display title. The centered boot picker
+  disappears; the user gets the whole
   display, with its launcher on the left and its app in the remaining area.
   Click one to launch it, then click the program to focus it. There is no logout
   control yet; restart QEMU to select another user.
@@ -230,7 +233,8 @@ matrix executable. See the clarified startup/policy question in OWNER_QUESTIONS.
   it. Do not merge drivers/providers into the matrix or conflate this with
   authentication. Declared service imports and launch-time binding are now the
   first bounded implementation of the supplied-environment model.
-- [ ] **Give objects kinds and names.** The chooser shows numbers and the
+- [ ] **Give objects kinds and editable names.** The chooser now shows program
+  display titles and user ordinals, while the
   user picker copies its first entry as the template. The user launcher now
   toggles storage instead of copying chrome, but object roles remain implicit.
   Resolve template selection and readable program labels without relying on
@@ -443,3 +447,25 @@ emitted GNU-retain ELF metadata that the kernel correctly refused; the final
 declaration uses an exported symbol plus linker KEEP, preserving the accepted
 ELF ABI without relaxing kernel validation. No kernel code changed; no new
 kernel smoke or ARM64 run is claimed for this milestone.
+
+## Readable chooser labels
+
+The picker now shows USER TEMPLATE, USER 1, USER 2, etc., and NEW USER. The
+program launcher shows LAUNCHER, NOTES and COLORS. Profile `display_title`
+values are installed as a small footer in program objects, retained by subtree
+copies and read through the chooser's own scope. No kernel, platform protocol
+or database layout changed. These are display labels; user ordinals are not
+editable account names. General object naming/kinds remain open.
+
+Existing copied users retain their old launcher/code. NEW USER copies the
+updated template; this change neither replaces their programs nor migrates
+their notes. Missing or invalid program titles use PROGRAM 1, PROGRAM 2, etc.
+See the [chooser guide](source-rs/distribution/applications/chooser/README.md)
+for the bounded format and reading path.
+
+Verification: chooser target clippy with warnings denied, layout/format and
+diff checks passed. The F5 desktop test checked exact labels before and after
+cold boot, optional storage, draft protection and persistent state; the host
+oracle verified all 189 retained records. Evidence:
+`build/boot-harness-rs/desktop/20261018T053452234078Z/`, including
+`user-picker.png` and `user-workspace.png`. No new kernel/ARM64 run was needed.

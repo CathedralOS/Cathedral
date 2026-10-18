@@ -1,5 +1,5 @@
 //! Bounded bitmap of fixed rows; only a changed selection or status replaces
-//! its sealed image. Entries show their object numbers.
+//! its sealed image. Display titles never participate in object addressing.
 use super::*;
 use cathedral_user_runtime::memory::Private;
 pub const WIDTH: usize = 160;
@@ -83,13 +83,10 @@ impl Scene {
         for (row, label) in labels[1..].iter_mut().enumerate() {
             let text: &[u8] = match row {
                 row if row < realm.count => {
-                    let mut line = *b"OBJECT       ";
-                    let digits = decimal(realm.ids[row]);
-                    line[7..].copy_from_slice(&digits);
-                    *label = line;
+                    *label = realm.labels[row];
                     continue;
                 }
-                NEW if user_picker => b"NEW",
+                NEW if user_picker => b"NEW USER",
                 NEW if without_storage => b"STORAGE OFF",
                 NEW => b"STORAGE ON",
                 CLOSE => b"CLOSE",
@@ -147,19 +144,4 @@ impl Scene {
             .unwrap();
         assert_eq!(wire::decode(&bytes[..n]).unwrap()[0], 0);
     }
-}
-/// Six right-aligned decimal digits, blank-padded; larger numbers show their
-/// low six digits, which is honest for a lab that never reaches them.
-fn decimal(mut value: u64) -> [u8; 6] {
-    let mut digits = *b"      ";
-    let mut at = 6;
-    loop {
-        at -= 1;
-        digits[at] = b'0' + (value % 10) as u8;
-        value /= 10;
-        if value == 0 || at == 0 {
-            break;
-        }
-    }
-    digits
 }

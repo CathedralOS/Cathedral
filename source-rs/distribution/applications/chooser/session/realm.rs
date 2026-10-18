@@ -7,14 +7,18 @@ use cathedral_user_runtime::storage::Scope;
 pub struct Realm {
     scope: Scope,
     pub ids: [u64; ENTRIES],
+    pub labels: [[u8; 13]; ENTRIES],
     pub count: usize,
+    user_picker: bool,
 }
 impl Realm {
-    pub fn new(pair: Pair) -> Self {
+    pub fn new(pair: Pair, user_picker: bool) -> Self {
         Self {
             scope: Scope::new(pair),
             ids: [0; ENTRIES],
+            labels: [[0; 13]; ENTRIES],
             count: 0,
+            user_picker,
         }
     }
     /// Acquire the current binding and list what it is rooted at.
@@ -28,6 +32,18 @@ impl Realm {
         }
         self.count = (words[1] as usize).min(ENTRIES);
         self.ids[..self.count].copy_from_slice(&words[2..2 + self.count]);
+        for row in 0..self.count {
+            self.labels[row] = if self.user_picker {
+                if row == 0 {
+                    *b"USER TEMPLATE"
+                } else {
+                    labels::numbered(b"USER ", row)
+                }
+            } else {
+                labels::program(&mut self.scope, self.ids[row])
+                    .unwrap_or_else(|| labels::numbered(b"PROGRAM ", row + 1))
+            };
+        }
         Ok(())
     }
     /// A new entry: the first one copied whole, beside it. A user realm made

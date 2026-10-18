@@ -1,9 +1,8 @@
 // List the realm, run the chosen entry as a sibling, copy the first entry as
 // a new one, or ask the host to close the sibling. The chooser holds no
 // authority of its own beyond its realm: launching is the host's act, bounded
-// to what this program can see. Entries are object numbers in the order the
-// realm lists them; naming is an open owner question, not something this
-// program invents.
+// to what this program can see. Labels are presentation; requests still use
+// the scoped object identities returned by the realm.
 use cathedral_kernel_contracts::user as abi;
 use cathedral_platform_contracts::{input, matrix as wire};
 use cathedral_user_runtime::{
@@ -23,7 +22,7 @@ pub fn run(environment: Environment, user_picker: bool) -> u64 {
     let connections = cathedral_user_runtime::matrix::Connections::load(&environment).unwrap();
     let parent = connections.interaction;
     let control = (Handle::bootstrap(0).unwrap(), Handle::bootstrap(1).unwrap());
-    let mut realm = realm::Realm::new(connections.storage);
+    let mut realm = realm::Realm::new(connections.storage, user_picker);
     let mut status = match realm.reload() {
         Ok(()) => "CHOOSE",
         Err(_) => "NO REALM",
