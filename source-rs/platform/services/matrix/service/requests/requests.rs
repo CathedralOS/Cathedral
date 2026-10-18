@@ -47,6 +47,9 @@ pub(super) fn dispatch(
             } else {
                 owner::dispatch(parent, world, words)
             };
+            if response[0] == 0 {
+                children.recovery_owner_changed(words);
+            }
             if response[0] == 0 && matches!(words[0], wire::PLACE | wire::REVOKE) {
                 flush(parent, world)?;
                 surfaces::replay(parent, world, words[1] as usize)?;

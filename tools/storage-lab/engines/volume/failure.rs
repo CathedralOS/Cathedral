@@ -27,8 +27,9 @@ pub fn prepare(path: &Path, offset: u64, bytes: u64, target: &str, content: &[u8
     let user = named(users, b"User 1")?;
     let id = match target {
         "notes" => named(user, b"Notes")?,
+        "launcher" => named(user, b"Desktop")?,
         "user" => user,
-        _ => return Err("fixture target must be notes or user".into()),
+        _ => return Err("fixture target must be notes, launcher or user".into()),
     };
     let head_key = seed::key(b'h', &id.to_be_bytes());
     let old = &rows[&head_key];

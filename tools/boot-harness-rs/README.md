@@ -80,6 +80,14 @@ using physical input, repeated app launches, draft protection and cold-boot save
 text checks on a disposable disk. [Distribution navigation](../../source-rs/distribution/README.md)
 connects the shell, apps and platform providers.
 
+`python tools/boot-harness-rs/launcher_recovery_test.py IMAGE` takes a one-user
+desktop fixture and modifies only disposable copies. It crashes the configured
+launcher with an unsaved Notes draft, checks one local retry, fresh layout
+authority, a second crash without a loop, continued app input/save/close and cold
+persistence. Separate cases check clean exit, immediate repeated startup failure,
+explicit owner STOP and storage revocation. Test-only keys and owner probes are
+absent from F5; the test also builds into a separate ESP.
+
 `python tools/boot-harness-rs/hierarchy_test.py PATH/guest.raw` takes a one-user
 desktop fixture and edits disposable copies. It verifies that a renamed launcher
 works through its updated saved path, an extension-looking text document stays

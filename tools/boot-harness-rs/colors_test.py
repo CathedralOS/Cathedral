@@ -110,9 +110,10 @@ def run(args):
     root = harness.REPO
     output = harness.BUILD / 'colors' / datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S%fZ')
     output.mkdir(parents=True)
-    profile = root / 'source-rs/distribution/profile.json'
+    profile = output / 'colors-check.json'
+    shutil.copyfile(root / 'source-rs/distribution/profile.json', profile)
     build = [sys.executable, str(Path(__file__).with_name('run.py')), '--release', '--build-only']
-    esp = harness.BUILD / 'interactive/esp'
+    esp = harness.BUILD / 'colors-check-interactive/esp'
     if args.recovery:
         composition = json.loads(profile.read_text())
         startup = composition['startup']
@@ -122,8 +123,8 @@ def run(args):
         startup['launches'][3]['features'] = ['recovery-lab']
         profile = output / 'colors-recovery.json'
         profile.write_text(json.dumps(composition, indent=2), encoding='utf-8')
-        build += ['--profile', str(profile)]
         esp = harness.BUILD / 'colors-recovery-interactive/esp'
+    build += ['--profile', str(profile)]
     subprocess.run(build, cwd=root, check=True)
     shutil.copytree(esp, output / 'esp')
     path = output / 'guest.raw'

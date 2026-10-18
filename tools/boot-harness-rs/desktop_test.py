@@ -301,15 +301,19 @@ def desktop(stream, output, serial, reboot, expected_absolute=True, fill_users=F
 
 
 def run(timeout, trace_storage=False, relative_pointer=False):
-    build = [sys.executable, str(HERE / 'run.py'), '--release', '--build-only']
+    output = harness.BUILD / 'desktop' / datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S%fZ')
+    output.mkdir(parents=True)
+    # Exact default composition, with a separate build output so a regression
+    # run does not replace the ESP of an already-running interactive guest.
+    profile = output / 'desktop-check.json'
+    shutil.copyfile(ROOT / 'source-rs/distribution/profile.json', profile)
+    build = [sys.executable, str(HERE / 'run.py'), '--release', '--build-only', '--profile', str(profile)]
     if trace_storage:
         build.append('--trace-storage')
     subprocess.run(build, cwd=ROOT, check=True)
-    output = harness.BUILD / 'desktop' / datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S%fZ')
-    output.mkdir(parents=True)
-    shutil.copytree(harness.BUILD / 'interactive/esp', output / 'esp')
+    shutil.copytree(harness.BUILD / 'desktop-check-interactive/esp', output / 'esp')
     path = output / 'guest.raw'
-    programs = harness.seeded_programs(ROOT / 'source-rs/distribution/profile.json', True)
+    programs = harness.seeded_programs(profile, True)
     migration = ROOT / 'source-rs/distribution/migrations/readable-labels.txt'
     database_image.prepare(path, programs, migration, app_close=True)
     qemu = harness.find_qemu()

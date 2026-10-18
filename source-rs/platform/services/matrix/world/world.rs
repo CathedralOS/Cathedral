@@ -24,6 +24,7 @@ impl Grant {
 pub struct World {
     parent: Grant,
     capacity: usize,
+    authority: u64,
     retired: [Option<wire::Packet>; wire::MAX_SURFACES],
     children: [Child; 2],
     layout_controller: Option<(usize, u64)>,
@@ -50,6 +51,7 @@ impl World {
                 keys: 0,
             },
             capacity: 0,
+            authority: 0,
             retired: [None; wire::MAX_SURFACES],
             children: [const { Child::empty() }; 2],
             layout_controller: None,
@@ -71,6 +73,7 @@ impl World {
         if self.parent == grant {
             return;
         }
+        self.authority = self.authority.checked_add(1).expect("authority generation");
         let replaced = self.parent.epoch != grant.epoch;
         if replaced {
             self.layout_controller = None;

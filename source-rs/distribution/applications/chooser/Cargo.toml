@@ -11,6 +11,10 @@ path = "main.rs"
 test = false
 bench = false
 
+[features]
+recovery-probes = []
+launcher-startup-fault = []
+
 [dependencies]
 cathedral-platform-contracts.workspace = true
 

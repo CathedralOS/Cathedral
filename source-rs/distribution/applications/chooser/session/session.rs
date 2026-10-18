@@ -45,10 +45,22 @@ pub fn run(environment: Environment, user_picker: bool, initial_status: &'static
         let snapshot = call(parent, [wire::POLL, 0, 0, 0, 0, 0, 0, 0]);
         let extent = wire::poll_view(snapshot);
         if extent[0] == 0 {
+            #[cfg(feature = "launcher-startup-fault")]
+            if !user_picker {
+                panic!("deliberate launcher startup failure");
+            }
             if scene.as_ref().is_some_and(|s| s.epoch != extent[1]) {
                 selection.pressed = false;
             }
             let event = wire::poll_event(snapshot);
+            #[cfg(feature = "recovery-probes")]
+            if !user_picker && event[2] == wire::KEY && event[4] == input::PRESS as u64 {
+                match event[3] as u8 {
+                    input::F7 => return 0,
+                    input::F8 => panic!("deliberate launcher failure"),
+                    _ => {}
+                }
+            }
             let mut choose = false;
             if let Some(edit) = &mut editor {
                 let (changed, closed) = edit.event(

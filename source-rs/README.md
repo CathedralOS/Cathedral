@@ -15,7 +15,7 @@ Press **F5** at the repository root, or run
 `python tools/boot-harness-rs/run.py --release --window`. One desktop boots to a
 chooser over the folder of users: NEW copies the template user, clicking a user
 runs it, and its chrome launches Notes or Colors; click a program to focus it
-and CLOSE to stop it unless it would lose work. Notes uses F1 to save/check and
+and its upper-right X to close it with draft protection. Notes uses F1 to save/check and
 F2 to reload; Colors uses Enter. Users, notes and colors survive QEMU restarts.
 See [controls and executable routes](distribution/README.md).
 `python tools/boot-harness-rs/desktop_test.py` tests this same default composition.
@@ -27,6 +27,11 @@ failures, visible recovery, healthy app saves and normal close; the source image
 is unchanged. Fault-only features are built into those copied programs and are
 absent from normal F5. The headless `--matrix-storage-test` also checks scoped
 launch receipts, placement rollback, broken control channels and close/exit races.
+
+`python tools/boot-harness-rs/launcher_recovery_test.py PATH_TO_ONE_USER_IMAGE`
+checks one local launcher restart while Notes keeps a draft, retry exhaustion,
+clean exit, owner stop/revocation, fresh layout authority and cold persistence.
+Its injected programs and disks are disposable copies; ordinary F5 has no fault keys.
 
 Recent integrated proofs: `python tools/boot-harness-rs/run.py --matrix-desktop-test --release`
 checks recursive atomic presentation; `--matrix-storage-test --release` checks

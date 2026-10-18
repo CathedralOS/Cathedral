@@ -65,6 +65,9 @@ pub fn run(environment: Environment) -> Result<(), Error> {
             parent.refresh_notified(world)?;
             requests::flush(parent, world)?;
         }
+        if deferred.is_empty() && children.recover(parent, world, &mut server)? {
+            continue;
+        }
         let (handles, mut deadline) = children.wait();
         children.notify(world)?;
         let mut extra = [cathedral_user_runtime::ipc::Handle::from_raw(0); 5];

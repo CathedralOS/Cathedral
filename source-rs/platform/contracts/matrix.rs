@@ -296,6 +296,8 @@ mod rectangle_tests {
 }
 
 /// Ask this stock matrix to load its own Matrix configuration; refuses if running.
+/// Arms one local retry of a faulted/nonzero-exit launcher under unchanged
+/// authority. Explicit stop/owner policy changes cancel it; app state survives.
 pub const CONFIGURE: u64 = 122;
 /// Restore the storage grants this matrix recorded for its own children.
 pub const RESTORE_STORAGE: u64 = 123;

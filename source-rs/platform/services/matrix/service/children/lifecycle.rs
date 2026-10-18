@@ -10,6 +10,7 @@ impl Children {
         world: &mut World,
         parent: &mut Parent,
     ) -> Result<(), Error> {
+        self.capture_recovery(slot, world, parent);
         parent.storage_close(slot)?;
         if self.pending[slot].is_some() {
             if let Some(child) = &mut self.slots[slot] {
@@ -49,6 +50,7 @@ impl Children {
         world: &mut World,
         parent: &mut Parent,
     ) -> Result<(), Error> {
+        self.capture_recovery(slot, world, parent);
         parent.storage_close(slot)?;
         let child = self.slots[slot]
             .take()
@@ -74,6 +76,15 @@ impl Children {
             cathedral_user_runtime::task::Outcome::Cancelled => wire::LAUNCH_STOPPED,
             _ => wire::LAUNCH_FAILED,
         };
+        if slot == 0 {
+            if state == wire::LAUNCH_FAILED {
+                if let Some(launcher) = &mut self.launcher {
+                    launcher.retired = true;
+                }
+            } else {
+                self.launcher = None;
+            }
+        }
         if let Some(observer) = self.observations.finished(child.task.raw(), state) {
             world.notify(observer);
         }

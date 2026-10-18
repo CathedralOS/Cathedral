@@ -12,6 +12,8 @@ either a root grant or the upstream matrix endpoint into the same `Grant`.
 [requests entrance](service/requests/requests.rs) authenticates owner/source/child requests;
 [owner.rs](service/requests/owner.rs) handles local layout, while
 [children entrance](service/children/children.rs) owns admission, pending control replies and teardown.
+[lifecycle.rs](service/children/lifecycle.rs) collects exact task outcomes;
+[recovery.rs](service/children/recovery.rs) reloads a failed configured launcher.
 [world entrance](world/world.rs) owns grant changes and child dispatch; descend into
 [children.rs](world/children.rs) for views/epochs/queues and
 [input.rs](world/input.rs) for focus, capture and key attenuation.
@@ -46,8 +48,30 @@ Clients must discard them on provider replacement. A timed-out upstream RPC
 retires the service so a late reply cannot be mistaken for another operation.
 Owner requests routed to a child use a FIFO control stream the child answers in
 order: an unanswered request is counted and its late reply skipped, so a slow
-child costs the owner a timeout rather than its life. Only a child that stops
-answering altogether loses its control link; the owner decides whether to stop it.
+child costs the owner a timeout rather than its life. At the unanswered-request
+limit, probes stop until late replies drain. A broken control direction alone
+does not prove task death or authorize discarding work; the owner can explicitly stop it.
+
+## Configured launcher recovery
+
+Successful stock `CONFIGURE` arms one retry for its launcher after a fault or
+nonzero return. A clean return and explicit owner STOP do not restart it.
+The matrix collects the dead task, releases its surfaces and funding, then reads
+the executable again through its asynchronous storage path. Admission gives
+the replacement fresh endpoints, storage binding and layout authority. No old
+launch-observation receipt transfers to it. Code reads use the existing object
+identity within the same realm incarnation; this is not a persistent global reference.
+
+Recovery snapshots the launcher's current arrangement, rather than rerunning
+configuration. The sibling app retains its task, surfaces, geometry epoch, focus
+and draft. Changed ancestor display/storage authority, explicit owner changes
+to the launcher policy, or a separately admitted slot occupant cancel recovery.
+Old deferred events drain before replacement. The retry is consumed even when
+reading/admission fails; a second crash leaves the app alive without its strip.
+There is no backoff/reset policy or manual restart UI yet. The copied-image
+[launcher recovery fixture](../../../../tools/boot-harness-rs/launcher_recovery_test.py)
+exercises real faults, clean exit, owner STOP and storage revocation, and checks
+draft retention, live layout, input, saving and cold persistence.
 
 ## Limits of this milestone
 

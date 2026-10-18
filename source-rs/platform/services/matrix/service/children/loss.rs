@@ -18,7 +18,11 @@ impl Children {
     ) -> Result<(), Error> {
         // An in-flight admission must not install an unexamined child after we
         // report clean. Conservatively refuse while storage/admission is busy.
-        if self.loss.is_some() || self.pending.iter().any(Option::is_some) || parent.storing() {
+        if self.loss.is_some()
+            || self.pending.iter().any(Option::is_some)
+            || parent.storing()
+            || self.recovery_pending()
+        {
             return server.reply(&request, &wire::encode(wire::error(abi::BUSY)));
         }
         let mut survey = Survey {
@@ -68,7 +72,16 @@ impl Children {
             // identity, draft contents or local loss count escapes the matrix.
             server.reply(
                 &survey.request,
-                &wire::encode([0, u64::from(survey.uncertain), 0, 0, 0, 0, 0, 0]),
+                &wire::encode([
+                    0,
+                    u64::from(survey.uncertain || self.recovery_pending()),
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                ]),
             )?;
         }
         Ok(())

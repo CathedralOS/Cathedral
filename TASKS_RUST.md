@@ -1,7 +1,7 @@
 # Rust reference OS: tasks and handoff
 
-Updated 2026-10-18 (local date). Current milestone: recoverable child launches,
-scoped lifecycle observations and close-channel failure handling, following live
+Updated 2026-10-18 (local date). Current milestone: local configured-launcher
+recovery, following scoped lifecycle observations and close-channel failure handling, live
 matrix layout and named realms. F5 uses these mechanisms; explicit migration
 preserves existing stock users and data.
 F5 now compacts existing media before changed program installations, fixing
@@ -282,9 +282,13 @@ to hierarchy metadata; extensions are conventions, not authoritative types.
   Broken control channels alone cannot authorize close or prove process death;
   task outcomes distinguish those cases. Tests exercise both control directions,
   owner-stop races and exit during a loss survey.
+- [x] **Recover the configured launcher locally.** One automatic retry preserves
+  the running app, its draft and current layout. Fresh endpoints/bindings carry
+  fresh authority; ancestor changes, owner revocation and STOP cancel recovery.
+  A repeated failure stops the loop, and a clean exit stays closed.
 - [ ] **Continue lifecycle recovery where it is still incomplete.** Root Login/
-  Users resolution and provider startup still assert. A configured user's launcher
-  dying does not yet have a local restart policy. An unresponsive app is preserved,
+  Users resolution and provider startup still assert. Launcher retry exhaustion
+  has no explicit recovery UI. An unresponsive app is preserved,
   but the desktop has no explicit force-stop/recovery UI. Provider loss while apps
   hold work and clearer focus feedback still need further adversarial coverage.
   Existing app-owned close protects dirty work, and layout invalidation keeps drafts.
@@ -1251,3 +1255,60 @@ a disposable copy of the current two-user disk: upgrade, picker, login, Colors
 save/close/reopen and cold boot passed. Picker readiness was 3.62 s and 9.33 s.
 The source disk hash was unchanged. The existing interactive QEMU and its boot
 files were untouched; closing it is still necessary before the next F5 launch.
+
+## Local configured-launcher recovery (2026-10-18)
+
+Successful CONFIGURE now arms one local retry of its launcher after a fault or
+nonzero return. The child task's actual outcome decides eligibility; a clean
+return, explicit STOP or owner policy change does not restart it. Collection
+releases the old launcher before replacement. The same asynchronous HEAD/BULK
+path used by normal launches reloads its executable without blocking interaction
+on the separate parent stream or retaining an extra code reader indefinitely.
+
+Start at [recovery.rs](source-rs/platform/services/matrix/service/children/recovery.rs).
+It snapshots current placement, page policy and storage identity, waits for old
+deferred events/control replies/publication to retire, then admits fresh endpoints
+and issues fresh storage/layout grants. The app's task, scene, geometry epoch,
+focus and document remain intact. No launch receipt transfers to the replacement.
+It does not reload Matrix configuration or reinterpret an object number in a new
+realm. Parent display generation, storage connection/realm incarnation, explicit
+owner changes and new slot occupants prevent stale policy from reviving grants.
+A loss survey also reports uncertainty if recovery becomes pending during it.
+
+The retry is consumed on failure too. There is no timed retry reset, manual
+launcher restart UI or recovery of the dead launcher's own unsaved Settings
+draft. Reboot/configure can start a new session; live apps can still save and
+close after retry exhaustion. Initial root Login/Users lookup and provider
+startup remain the next lifecycle frontier, followed by explicit operator
+recovery for unresponsive apps and an exhausted launcher.
+
+Verification:
+
+- Workspace host tests, all 25 matrix policy tests, all 32 storage-lab tests and
+  ordinary storage clippy passed. New policy tests preserve app scene/epoch/focus/
+  queued input while replacing the launcher and reject ancestor revoke/regrant
+  or capacity changes. Userspace clippy and trace/startup/fault/owner-probe feature
+  sets passed with warnings denied. Layout, formatting, Python and diff checks pass.
+- `launcher-recovery/20261018T230048782616Z` passed five copied-image scenarios:
+  dirty Notes survives launcher fault/replacement, replacement changes live layout,
+  second fault stays stopped, Notes still accepts input/save/app-owned close,
+  and its exact rendered text survives cold boot. Separate cases verify clean
+  launcher exit, two immediate startup faults bounded to one retry, real routed
+  owner STOP, and owner storage revocation before a fault. Notes loads once per
+  boot; source fixture bytes are unchanged. An earlier three-case run also passed.
+  The chooser fault keys and desktop owner probes are absent from ordinary F5.
+- `desktop/20261018T230320916031Z` passed normal user creation, app selection,
+  Notes duplication, save/discard/cancel, replacement and cold persistence. The
+  independent host oracle verified 249 records and exact hierarchy/history/quota.
+- `--matrix-storage-test --release` and `--matrix-test --release` passed after
+  the loss-survey review, covering ordinary async launch, receipt scopes,
+  control-channel failures, cleanup, recursive loss protection and delegation.
+- `colors/20261018T230536053670Z` passed upgrade/login/Colors save/reopen/cold
+  boot on a copy of the actual two-user disk. Upgrade collected unreachable
+  history and charged 1,046,168 of 1,048,576 allowed bytes; this fixed lab quota
+  is close to its live-content ceiling. Launches took about 0.58/0.59 s. Growing
+  executables may reach genuine capacity; never describe collection as unlimited.
+- Desktop, Colors and the new recovery fixture now build identical compositions
+  into separate ESPs, avoiding replacement of an active F5 guest's boot files.
+  The interactive disk and old QEMU were left untouched. No kernel ABI changed;
+  kernel boot/ARM64 suites were not rerun for this userspace milestone.

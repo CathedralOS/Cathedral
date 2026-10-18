@@ -208,6 +208,11 @@ impl Children {
             storage,
             notify: connections.notify,
         });
+        if slot == 0 {
+            // A separately admitted task supersedes any old configured launcher's
+            // queued recovery. CONFIGURE arms its policy only after full success.
+            self.launcher = None;
+        }
         Ok(())
     }
 }

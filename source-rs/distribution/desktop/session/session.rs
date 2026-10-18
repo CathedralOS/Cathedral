@@ -37,6 +37,8 @@ pub(crate) fn run() -> u64 {
     shell::workspace(matrix, session.extent);
     session.start_input();
     cathedral_user_runtime::write(b"Cathedral desktop: ready; choose a user\n").unwrap();
+    #[cfg(any(feature = "launcher-stop-probe", feature = "launcher-revoke-probe"))]
+    let mut recovery_probed = false;
     loop {
         // The chooser launches a user matrix into the workspace slot; the
         // desktop observes only that direct child's realm. The user matrix
@@ -60,6 +62,10 @@ pub(crate) fn run() -> u64 {
             }
         }
         persistence::supervise(&mut session);
+        #[cfg(any(feature = "launcher-stop-probe", feature = "launcher-revoke-probe"))]
+        if session.user != 0 && !recovery_probed {
+            recovery_probed = recovery_probes::apply(matrix);
+        }
         // Polling is only how the owner notices; rendering and input wake the
         // programs independently through their matrix connections.
         match matrix

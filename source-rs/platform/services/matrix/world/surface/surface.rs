@@ -13,6 +13,7 @@ impl World {
         if capacity == self.capacity {
             return;
         }
+        self.authority = self.authority.checked_add(1).expect("authority generation");
         for slot in 0..2 {
             self.retire_surfaces(slot);
             self.children[slot].surface_limit = 0;

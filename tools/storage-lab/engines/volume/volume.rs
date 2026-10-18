@@ -47,7 +47,7 @@ pub fn run(args: &[String]) -> Result<()> {
             println!("VOLUME ready={} generation={} capacity={} logical_length={} id={:032x}", header.ready, header.generation, header.capacity(), header.length, u128::from_be_bytes(header.id));
             Ok(())
         }
-        _ => Err("usage: engines volume prove NEW_DIRECTORY | format NEW_IMAGE BYTES ID_HEX | open IMAGE OFFSET BYTES | inspect IMAGE OFFSET BYTES | compact IMAGE OFFSET BYTES | verify-guest/verify-objects/verify-retention IMAGE OFFSET BYTES REVISION | verify-desktop IMAGE OFFSET BYTES (PARENT FILE)... | verify-colors/verify-notes IMAGE OFFSET BYTES LAST0 LAST1 | seed IMAGE OFFSET BYTES (PARENT FILE)... | upgrade-labels/upgrade-app-close IMAGE OFFSET BYTES LEGACY_LIST | failure-fixture IMAGE OFFSET BYTES notes|user CONTENT_FILE".into()),
+        _ => Err("usage: engines volume prove NEW_DIRECTORY | format NEW_IMAGE BYTES ID_HEX | open IMAGE OFFSET BYTES | inspect IMAGE OFFSET BYTES | compact IMAGE OFFSET BYTES | verify-guest/verify-objects/verify-retention IMAGE OFFSET BYTES REVISION | verify-desktop IMAGE OFFSET BYTES (PARENT FILE)... | verify-colors/verify-notes IMAGE OFFSET BYTES LAST0 LAST1 | seed IMAGE OFFSET BYTES (PARENT FILE)... | upgrade-labels/upgrade-app-close IMAGE OFFSET BYTES LEGACY_LIST | failure-fixture IMAGE OFFSET BYTES notes|launcher|user CONTENT_FILE".into()),
     }
 }
 

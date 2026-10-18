@@ -7,6 +7,10 @@ pub(super) struct Deferred {
     events: [Option<Event>; 6],
 }
 impl Deferred {
+    /// Retire old incarnation events before installing a replacement connection.
+    pub fn is_empty(&self) -> bool {
+        self.events.iter().all(Option::is_none)
+    }
     pub fn blocks(event: &Event, parent: &Parent) -> bool {
         if parent.separate_storage
             && let Event::Request(r) | Event::Memory(r, _) = event

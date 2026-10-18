@@ -29,6 +29,11 @@ A refused program shows **CANNOT OPEN**; an admitted program that fails shows
 that fails while loading its arrangement returns to the user picker. Normal app
 close does not display a crash message.
 
+If the configured app strip crashes, its matrix attempts one local restart,
+preserving the running app and its draft. The replacement keeps the current
+layout. A second crash leaves the app usable without the strip; apps can still
+save and close themselves. There is no manual strip-restart control yet.
+
 Initial stock defaults live in [matrix.conf](matrix.conf);
 installation preserves existing saved arrangements.
 

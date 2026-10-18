@@ -26,11 +26,11 @@ pub(in crate::service) struct LaunchRequest {
     /// Offered services after owner policy and caller-requested withholding.
     pub imports: u64,
 }
-/// A program read that finished: the owner's request to answer and the sealed
-/// image, or why there is none.
+/// A program read that finished: the external request to answer (none for local
+/// launcher recovery) and the sealed image, or why there is none.
 pub(in crate::service) struct Launched {
     pub plan: LaunchRequest,
-    pub request: Request,
+    pub request: Option<Request>,
     pub result: Result<Object, u64>,
 }
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -43,7 +43,7 @@ enum Step {
     Forward,
 }
 pub(in crate::service::parent) struct Pending {
-    request: Request,
+    request: Option<Request>,
     words: wire::Packet,
     attachment: Option<Object>,
     receive: Option<Handle>,
@@ -70,7 +70,7 @@ impl Pending {
             words[0] & 0xffff,
         );
         Ok(Self {
-            request,
+            request: Some(request),
             words,
             attachment,
             receive: None,
@@ -91,7 +91,7 @@ impl Pending {
     /// Read a program on this matrix's own binding: a head and a bulk read,
     /// behind a refresh when nested, each bounded like a forwarded request.
     pub(super) fn launch(
-        request: Request,
+        request: Option<Request>,
         plan: LaunchRequest,
         upstream: bool,
     ) -> Result<Self, Error> {
@@ -127,9 +127,11 @@ impl Parent {
     pub(in crate::service) fn storing(&self) -> bool {
         self.storage_pending.is_some()
     }
-    /// The child whose request is in flight; none while the matrix reads a program.
+    /// The requesting child, if any; owner launches and local recovery have none.
     pub(in crate::service) fn storing_client(&self) -> Option<usize> {
-        self.storage_pending.as_ref().unwrap().request.client
+        self.storage_pending
+            .as_ref()
+            .and_then(|p| p.request.and_then(|r| r.client))
     }
     pub(in crate::service) fn upstream_busy(&self) -> bool {
         self.publishing() || (self.upstream && !self.separate_storage && self.storing())
@@ -242,6 +244,7 @@ impl Parent {
                 result,
             }));
         }
+        let request = p.request.expect("forwarded storage request");
         #[cfg(feature = "trace-storage")]
         time::storage_trace(
             if self.upstream {
@@ -249,7 +252,7 @@ impl Parent {
             } else {
                 "root-reply"
             },
-            p.request.client.unwrap() as u64,
+            request.client.unwrap() as u64,
             p.words[0] & 0xffff,
         );
         match object {
@@ -257,13 +260,13 @@ impl Parent {
             // refusal the provider gives an unfunded reader.
             Some(object) => {
                 if server
-                    .reply_memory(&p.request, &wire::encode(words), &object)
+                    .reply_memory(&request, &wire::encode(words), &object)
                     .is_err()
                 {
-                    server.reply(&p.request, &wire::encode(wire::error(abi::BUSY)))?;
+                    server.reply(&request, &wire::encode(wire::error(abi::BUSY)))?;
                 }
             }
-            None => server.reply(&p.request, &wire::encode(words))?,
+            None => server.reply(&request, &wire::encode(words))?,
         }
         Ok(None)
     }
@@ -278,7 +281,7 @@ impl Parent {
         if self.upstream && !self.separate_storage {
             return Err(error);
         }
-        self.retire_storage(p.source, p.request.client)?;
+        self.retire_storage(p.source, p.request.and_then(|r| r.client))?;
         *reply = Some((wire::error(error.0 as u64), None));
         Ok(())
     }
@@ -293,9 +296,10 @@ impl Parent {
             if protocol::stamp(&mut words, plan.stamp).is_err() {
                 return Ok(Some(wire::error(abi::DENIED)));
             }
-        } else if let Some(client) = p.request.client {
+        } else if let Some(request) = p.request {
+            let client = request.client.expect("forwarded child request");
             let slot = self.storage_slot(client);
-            let incarnation = p.request.incarnation;
+            let incarnation = request.incarnation;
             let (source, scope) = match self.scopes.binding(slot, incarnation) {
                 Ok(binding) => binding,
                 Err(status) => return Ok(Some(wire::error(status))),
@@ -341,7 +345,7 @@ impl Parent {
             } else {
                 "root-send"
             },
-            match (p.launch, p.request.client) {
+            match (p.launch, p.request.and_then(|r| r.client)) {
                 (Some(_), _) => 2,
                 (None, Some(c)) => self.storage_slot(c) as u64,
                 (None, None) => 2,

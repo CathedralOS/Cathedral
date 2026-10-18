@@ -10,5 +10,6 @@ mod surface;
 #[cfg(test)]
 mod tests;
 pub use children::Rect;
+pub use layout::LauncherPlacement;
 
 include!("world.rs");

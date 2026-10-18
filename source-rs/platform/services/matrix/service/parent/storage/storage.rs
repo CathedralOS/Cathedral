@@ -227,8 +227,33 @@ impl Parent {
         plan: LaunchRequest,
     ) -> Result<(), Error> {
         assert!(self.storage_pending.is_none());
-        self.storage_pending = Some(Pending::launch(request, plan, self.upstream)?);
+        self.storage_pending = Some(Pending::launch(Some(request), plan, self.upstream)?);
         Ok(())
+    }
+    /// A configured launcher recovery uses our own authority and has no caller
+    /// to answer. The child service consumes the sealed result in its event loop.
+    pub(in crate::service) fn storage_recover(&mut self, plan: LaunchRequest) -> Result<(), Error> {
+        assert!(self.storage_pending.is_none());
+        self.storage_pending = Some(Pending::launch(None, plan, self.upstream)?);
+        Ok(())
+    }
+    /// Internal identity only. Recovery must not reinterpret a saved object ID
+    /// under a different provider connection or upstream realm incarnation.
+    pub(in crate::service) fn storage_identity(&self) -> Option<[u64; 4]> {
+        let pair = if self.upstream {
+            if self.storage_epoch == 0 {
+                return None;
+            }
+            self.storage_pair?
+        } else {
+            self.storage_links[0].as_ref()?.pair?
+        };
+        Some([
+            pair.0.raw(),
+            pair.1.raw(),
+            self.storage_epoch,
+            self.storage_realm,
+        ])
     }
     /// Every object operation is atomic at the provider, so revoking a binding
     /// leaves nothing staged upstream; the stale scope simply stops authorizing.

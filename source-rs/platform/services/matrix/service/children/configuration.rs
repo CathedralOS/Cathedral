@@ -81,6 +81,11 @@ impl Children {
         super::super::requests::flush(parent, world)?;
         self.notify(world)?;
         world.grant_layout(0, server.incarnation(0).expect("configured launcher"));
+        self.launcher = Some(recovery::Launcher::new(
+            plan,
+            self.slots[0].as_ref().unwrap().task.raw(),
+            server.incarnation(0).unwrap(),
+        ));
         cathedral_user_runtime::write(b"Cathedral matrix: configured from realm paths\n")?;
         Ok(())
     }

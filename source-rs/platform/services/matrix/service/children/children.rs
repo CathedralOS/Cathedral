@@ -48,6 +48,7 @@ pub(super) struct Children {
     pending: [Option<(Request, u64, Purpose)>; 2],
     retiring: [Option<i64>; 2],
     loss: Option<loss::Survey>,
+    launcher: Option<recovery::Launcher>,
     pub(in crate::service) observations: cathedral_matrix_service::world::launches::Launches,
 }
 impl Children {
@@ -275,11 +276,17 @@ impl Children {
                     world,
                 ),
                 [wire::STOP, slot @ 0..=1, 0, 0, 0, 0, 0, 0] => {
+                    if slot == 0 {
+                        self.launcher = None;
+                    }
                     self.stop(slot as usize, server, world, parent)
                 }
                 _ => Err(Error(abi::DENIED as i64)),
             }
         };
+        if result.is_ok() {
+            self.recovery_owner_changed(words);
+        }
         server.reply(
             request,
             &wire::encode(wire::error(result.err().map_or(0, |e| e.0 as u64))),
@@ -397,6 +404,12 @@ impl Children {
             request,
             result,
         } = launched;
+        let Some(request) = request else {
+            if let Some(launcher) = &mut self.launcher {
+                launcher.result = Some(result);
+            }
+            return Ok(());
+        };
         let mut status = match result {
             Err(code) => Err(code),
             Ok(mut object) => {

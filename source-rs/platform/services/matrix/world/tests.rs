@@ -382,3 +382,59 @@ fn layout_authority_is_explicit_incarnation_bound_and_cannot_revive_revoked_view
     again[1] = view(&mut w, 0)[1];
     assert!(matches!(w.layout(0, 7, again), Err(abi::DENIED)));
 }
+
+#[test]
+fn launcher_replacement_preserves_app_scene_epoch_focus_and_queue() {
+    let mut w = world();
+    place(&mut w, 0, 0, 0);
+    place(&mut w, 1, 200, 0);
+    let old = view(&mut w, 0);
+    let app = view(&mut w, 1);
+    w.grant_layout(0, 7);
+    let placement = w.launcher_placement(7).unwrap();
+    assert!(w.launcher_placement(8).is_none());
+    w.prepare_surface(1, 7, app[1], 0).unwrap();
+    let surface = w.create_surface(1, 0, 100);
+    w.pointer(210, 10, 1);
+    w.pointer(210, 10, 0);
+    while next(&mut w, 1, app[1])[2] != wire::NONE {}
+    w.key(input::ENTER as u64, input::PRESS as u64);
+    w.disconnected(0);
+    w.restore_launcher(placement, 9).unwrap();
+    let fresh = w.request(0, 9, [wire::VIEW, 0, 0, 0, 0, 0, 0, 0]);
+    assert_ne!(fresh[1], old[1]);
+    assert!(w.layout_allowed(0, 9, fresh[1]));
+    assert!(!w.layout_allowed(0, 7, fresh[1]));
+    assert_eq!(view(&mut w, 1), app);
+    assert_eq!(w.children[1].surface_limit, 8);
+    assert_eq!(w.prepare_surface(1, 7, app[1], 0), Err(abi::BUSY));
+    assert!(surface != 0 && w.take_retired_surface().is_none());
+    assert_eq!(next(&mut w, 1, app[1])[2], wire::KEY);
+    w.key(input::ENTER as u64, input::RELEASE as u64);
+    assert_eq!(next(&mut w, 1, app[1])[2], wire::KEY);
+}
+
+#[test]
+fn launcher_snapshot_requires_live_authority_and_never_survives_ancestor_rebinding() {
+    let mut w = world();
+    place(&mut w, 0, 0, 0);
+    w.grant_layout(0, 7);
+    // Startup may fail before the launcher's first VIEW. The explicit controller
+    // incarnation, not whether it has polled already, determines eligibility.
+    let placement = w.launcher_placement(7).unwrap();
+    w.revoke(0).unwrap();
+    assert!(w.launcher_placement(7).is_none());
+    w.disconnected(0);
+    let original = w.parent;
+    w.inherit(Grant::default());
+    w.inherit(original);
+    assert_eq!(w.restore_launcher(placement, 9), Err(abi::DENIED));
+    place(&mut w, 0, 0, 0);
+    w.surface_limit(0, 8).unwrap();
+    w.grant_layout(0, 9);
+    let placement = w.launcher_placement(9).unwrap();
+    w.disconnected(0);
+    w.surface_capacity(0);
+    w.surface_capacity(16);
+    assert_eq!(w.restore_launcher(placement, 11), Err(abi::DENIED));
+}
