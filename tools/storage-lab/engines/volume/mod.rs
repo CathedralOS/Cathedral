@@ -5,6 +5,7 @@ mod desktop;
 mod difference;
 mod guest;
 mod image;
+mod labels;
 mod notes;
 mod objects;
 mod proof;

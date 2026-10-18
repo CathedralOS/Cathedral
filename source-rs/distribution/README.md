@@ -22,9 +22,10 @@ reloads the saved note, **F3** duplicates it as a new note sharing its content,
 also take Up/Down/Enter while focused. The user launcher's **STORAGE ON/OFF**
 row controls future launches: OFF runs Notes as a temporary unsavable editor;
 Colors refuses with NEEDS SERVICE because its storage import is required.
-Turn storage on and relaunch to return to saved data. Existing copied programs
-retain their code; use NEW USER in the picker for a copy of the current template
-when trying newly added app features.
+Turn storage on and relaunch to return to saved data. Existing copied apps
+retain their code; use NEW USER for newly added app features. The explicit
+[label upgrade](migrations/README.md) refreshes recognized stock launchers in
+existing users and labels their Notes/Colors without replacing app code or data.
 
 Everything persists in `build/boot-harness-rs/cathedral-storage.raw` across
 launches and QEMU restarts: the users you made, their notes and colors. The

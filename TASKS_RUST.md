@@ -1,8 +1,8 @@
 # Rust reference OS: tasks and handoff
 
-Updated 2026-10-17 (local date). Implementation baseline: declared service
+Updated 2026-10-18 (local date). Implementation baseline: declared service
 imports and optional Notes persistence at **`8d1972a`**, followed by readable
-chooser labels. Store-based
+chooser labels at **`787344e`** and the existing-user label upgrade below. Store-based
 admission validates the program's required/optional interfaces against owner
 offers before spawning; the F5 launcher can withhold storage. Check Git for
 later work.
@@ -51,6 +51,10 @@ the users you made, their notes and colors. Missing media is created; existing
 media is never automatically reformatted. The programs are installed into the
 image on first launch and republished as new revisions when their bytes
 change; the sidecar `cathedral-storage.raw.programs` records what is installed.
+The desktop's explicit label upgrade refreshes recognized stock launchers in
+existing users and adds labels to old Notes/Colors while preserving their code
+and saved data. It saves `cathedral-storage.raw.before-readable-labels.raw`
+before changing the user copies. Customized/unrecognized programs stay intact.
 An image from before this layout holds other objects at the numbers the
 programs need; the installer refuses to overwrite anything that is not a
 program, so move that image and its `.programs` sidecar (if present) to backup
@@ -457,9 +461,9 @@ copies and read through the chooser's own scope. No kernel, platform protocol
 or database layout changed. These are display labels; user ordinals are not
 editable account names. General object naming/kinds remain open.
 
-Existing copied users retain their old launcher/code. NEW USER copies the
-updated template; this change neither replaces their programs nor migrates
-their notes. Missing or invalid program titles use PROGRAM 1, PROGRAM 2, etc.
+At this milestone existing users still retained their old launcher; the upgrade
+below corrects that omission. Missing or invalid program titles use PROGRAM 1,
+PROGRAM 2, etc.
 See the [chooser guide](source-rs/distribution/applications/chooser/README.md)
 for the bounded format and reading path.
 
@@ -469,3 +473,40 @@ cold boot, optional storage, draft protection and persistent state; the host
 oracle verified all 189 retained records. Evidence:
 `build/boot-harness-rs/desktop/20261018T053452234078Z/`, including
 `user-picker.png` and `user-workspace.png`. No new kernel/ARM64 run was needed.
+
+## Existing-user label upgrade
+
+The first label fix only refreshed installed templates, leaving existing users
+with OBJECT rows. The [distribution migration](source-rs/distribution/migrations/README.md)
+now identifies old stock copies by retained template manifests or the verified
+legacy allowlist. It replaces their launcher and appends labels to old app code
+in place, preserving object identities, saved data and customized programs.
+F5 runs it after seeding and records its fingerprint in the install sidecar.
+The general policy for pinned copies versus managed program updates remains
+undecided; this is an explicit distribution compatibility upgrade.
+
+The interactive disk had two users with old stock code. Six program objects
+were upgraded, with a backup at
+`build/boot-harness-rs/cathedral-storage.raw.before-readable-labels.raw`. No
+new user is required. Old Notes/Colors retain their previous features.
+
+Verification: host migration tests and storage-lab clippy with warnings denied
+passed. Compatibility replay of the pre-label desktop fixture entered its
+existing user, checked the exact labels and read both saved notes:
+`build/boot-harness-rs/labels-upgrade/20261018T163807055999Z/`.
+The normal F5 desktop and cold-boot proof also passed, with all 189 records
+verified by the host oracle:
+`build/boot-harness-rs/desktop/20261018T163829248414Z/`.
+No guest code, kernel protocol or database schema changed in this correction.
+Layout/format checks and the persistent-image host tests passed too. The latter
+exposed an existing eager host-tool build before the no-op/invalid-image checks;
+image preparation now builds only when formatting, seeding or upgrading is needed.
+
+A booted copy of the actual interactive disk confirmed USER 2's corrected labels:
+`build/boot-harness-rs/labels-upgrade/interactive-check-20261018T164544/`.
+The preceding two attempts hit the already tracked ATA completion timeout before
+UI startup: op=30, LBA=24, status=d0, 50 ticks, with 4825 and 5347 polls. Their
+logs remain under `interactive-copy-20261018T164207/` and
+`interactive-retry-20261018T164335/` in the same labels-upgrade directory. The
+next attempt passed without changing the driver or deadline; the cause remains
+unresolved. The interactive source image was never attached to those guest tests.

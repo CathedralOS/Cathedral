@@ -28,6 +28,10 @@ an attached kernel debugger.
 The desktop retains `build/boot-harness-rs/cathedral-storage.raw`. First launch
 builds the host formatter and creates the image; later launches preserve it.
 Existing files are never automatically reformatted. Older lab disks are untouched.
+The desktop's explicit readable-label migration also updates recognized stock
+launchers inside existing users. Old Notes/Colors gain labels while keeping
+their code and saved data. Customized/unrecognized programs remain untouched.
+A pre-migration backup is saved as `cathedral-storage.raw.before-readable-labels.raw`.
 
 If F5 builds but no QEMU window appears, check the integrated terminal. An image
 from before programs were installed as objects can fail with "holds something

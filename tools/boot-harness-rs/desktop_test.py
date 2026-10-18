@@ -316,7 +316,8 @@ def run(timeout, trace_storage=False):
     shutil.copytree(harness.BUILD / 'interactive/esp', output / 'esp')
     path = output / 'guest.raw'
     programs = harness.seeded_programs(ROOT / 'source-rs/distribution/profile.json', True)
-    database_image.prepare(path, programs)
+    migration = ROOT / 'source-rs/distribution/migrations/readable-labels.txt'
+    database_image.prepare(path, programs, migration)
     qemu = harness.find_qemu()
     command = [qemu, '-machine', 'q35', '-cpu', 'qemu64', '-accel', 'tcg', '-smp', '1', '-m', '128']
     command += harness.firmware_args(qemu, output)
@@ -329,7 +330,7 @@ def run(timeout, trace_storage=False):
         for name in ('serial.log', 'qemu.log', 'display.png'):
             shutil.copyfile(output / name, output / f'boot-{boot}-{name}')
         contents = path.read_bytes()
-        database_image.prepare(path, programs)
+        database_image.prepare(path, programs, migration)
         assert contents == path.read_bytes(), 'relaunch must not reformat storage or reinstall unchanged programs'
     # An independent host model checks the retained records on a copy: the
     # installed programs, the user copied from the template, two notes sharing

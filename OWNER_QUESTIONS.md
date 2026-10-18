@@ -63,6 +63,16 @@ content and namespace edges. Make ordinary copies independent identities; keep
 content sharing internal. Specify cross-realm aliases and subtree-copy identity
 rules before exposing them, without promising O(1) writable subtree copies yet.
 
+**Related copied-program policy.** The Rust desktop's explicit readable-label
+upgrade refreshes recognized stock launchers inside existing user copies; it
+preserves customized code and saved data. This does not make copied worlds
+generally track template updates. Before general app updates, choose whether
+copies pin executable revisions or opt into an owner-managed update policy,
+including who can change that policy. The object protocol above defines only
+copy/publication, not installed-package tracking. Prefer pinned copies by
+default with explicit managed-update membership; that recommendation is not
+yet adopted.
+
 ### DBFS deduplication domains and erasure
 
 **Requirement and tension.** The filesystem design combines cross-realm content

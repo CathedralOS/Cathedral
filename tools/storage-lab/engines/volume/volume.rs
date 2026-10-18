@@ -13,6 +13,7 @@ const ID_KEY: &[u8] = b"volume-id";
 
 pub fn run(args: &[String]) -> Result<()> {
     match args.first().map(String::as_str) {
+        Some("upgrade-labels") if args.len() == 5 => labels::upgrade(Path::new(&args[1]), args[2].parse()?, args[3].parse()?, &labels::legacy(Path::new(&args[4]))?),
         Some("verify-desktop") if args.len() >= 4 => desktop::verify(Path::new(&args[1]), args[2].parse()?, args[3].parse()?, &seed::load(&args[4..])?),
         Some("verify-colors") | Some("verify-notes") if args.len() == 6 => {
             let last = [args[4].parse()?, args[5].parse()?];
@@ -41,7 +42,7 @@ pub fn run(args: &[String]) -> Result<()> {
             println!("VOLUME ready={} generation={} capacity={} logical_length={} id={:032x}", header.ready, header.generation, header.capacity(), header.length, u128::from_be_bytes(header.id));
             Ok(())
         }
-        _ => Err("usage: engines volume prove NEW_DIRECTORY | format NEW_IMAGE BYTES ID_HEX | open IMAGE OFFSET BYTES | inspect IMAGE OFFSET BYTES | verify-guest/verify-objects/verify-retention IMAGE OFFSET BYTES REVISION | verify-desktop IMAGE OFFSET BYTES (PARENT FILE)... | verify-colors/verify-notes IMAGE OFFSET BYTES LAST0 LAST1 | seed IMAGE OFFSET BYTES (PARENT FILE)...".into()),
+        _ => Err("usage: engines volume prove NEW_DIRECTORY | format NEW_IMAGE BYTES ID_HEX | open IMAGE OFFSET BYTES | inspect IMAGE OFFSET BYTES | verify-guest/verify-objects/verify-retention IMAGE OFFSET BYTES REVISION | verify-desktop IMAGE OFFSET BYTES (PARENT FILE)... | verify-colors/verify-notes IMAGE OFFSET BYTES LAST0 LAST1 | seed IMAGE OFFSET BYTES (PARENT FILE)... | upgrade-labels IMAGE OFFSET BYTES LEGACY_LIST".into()),
     }
 }
 

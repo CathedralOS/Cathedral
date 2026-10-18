@@ -18,19 +18,19 @@ pub struct Program {
     pub bytes: Vec<u8>,
 }
 
-fn key(kind: u8, suffix: &[u8]) -> Vec<u8> {
+pub(super) fn key(kind: u8, suffix: &[u8]) -> Vec<u8> {
     let mut key = vec![ROOT, kind];
     key.extend_from_slice(suffix);
     key
 }
-fn head(revision: u64, manifest: &[u8], len: usize, parent: u64) -> Vec<u8> {
+pub(super) fn head(revision: u64, manifest: &[u8], len: usize, parent: u64) -> Vec<u8> {
     let mut head = revision.to_le_bytes().to_vec();
     head.extend_from_slice(manifest);
     head.extend_from_slice(&(len as u64).to_le_bytes());
     head.extend_from_slice(&parent.to_le_bytes());
     head
 }
-fn event(object: u64, revision: u64) -> Vec<u8> {
+pub(super) fn event(object: u64, revision: u64) -> Vec<u8> {
     let mut suffix = object.to_be_bytes().to_vec();
     suffix.extend_from_slice(&revision.to_be_bytes());
     key(b'e', &suffix)
@@ -47,7 +47,7 @@ fn word(table: &Table<&[u8], &[u8]>, key: &[u8]) -> Result<Option<u64>> {
     })
 }
 /// Insert a record and charge it, unless an identical one is already retained.
-fn retain(table: &mut Table<&[u8], &[u8]>, charged: &mut u64, key: &[u8], value: &[u8]) -> Result<()> {
+pub(super) fn retain(table: &mut Table<&[u8], &[u8]>, charged: &mut u64, key: &[u8], value: &[u8]) -> Result<()> {
     if let Some(existing) = table.get(key)? {
         if existing.value() != value {
             return Err("retained record differs from the program's".into());
@@ -188,7 +188,7 @@ pub fn expected(programs: &[Program]) -> BTreeMap<Vec<u8>, Vec<u8>> {
     expected
 }
 pub fn load(args: &[String]) -> Result<Vec<Program>> {
-    if args.len() % 2 != 0 {
+    if !args.len().is_multiple_of(2) {
         return Err("programs are PARENT FILE pairs".into());
     }
     args.chunks(2)

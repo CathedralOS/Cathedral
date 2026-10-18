@@ -351,7 +351,8 @@ def main():
         # persistent media is created once and never reformatted.
         if disposable and data_path.exists():
             data_path.unlink()
-        database_image.prepare(data_path, seeded)
+        migration = composition.get("startup", {}).get("label_migration")
+        database_image.prepare(data_path, seeded, WORKSPACE / migration if migration else None)
         command += disk_image.arguments(data_path)
     if not args.window:
         command += ["-display", "none"]

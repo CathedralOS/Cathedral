@@ -34,8 +34,10 @@ Missing, malformed or unreadable titles fall back to PROGRAM 1, PROGRAM 2, etc.
 General editable object names/kinds remain an owner question; this display
 convention does not change the database format or addressing.
 
-Existing users retain their copied launcher and program bytes. NEW USER copies
-the updated template with these labels; no existing user data is migrated.
+The desktop installer [upgrades recognized stock copies](../../migrations/README.md)
+of the launcher in existing users too. It adds titles to old stock Notes/Colors
+without replacing their executable bytes or saved data, and preserves customized
+or unrecognized programs. No new user is needed to get these labels.
 
 **CLOSE** sends `CLOSE`: the host asks the running sibling with `LOSS` whether
 stopping would lose work and stops it only on an answer of nothing. KEPT means

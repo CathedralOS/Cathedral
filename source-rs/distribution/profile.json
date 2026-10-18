@@ -58,6 +58,7 @@
     }
   },
   "startup": {
+    "label_migration": "distribution/migrations/readable-labels.txt",
     "initial": {
       "package": "cathedral-desktop",
       "entry": "distribution/desktop/main.rs",

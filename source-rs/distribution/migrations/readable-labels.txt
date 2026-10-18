@@ -1,0 +1,17 @@
+# Readable labels migration: template object and BLAKE3 content-layout manifest.
+# Exact old stock bytes only. These digests are not executable titles, hashes of
+# user data, or permission identities. Never add an unrecognized user program.
+#
+# Recursive-close baseline; verified installed template objects 4/5/6 against
+# build/boot-harness-rs/desktop/20261017T232223657195Z/guest.raw.
+4 0d78814481ca6846f1502afddad1527c7d554806bfaa69b777dd2eebc627eec1
+5 34dc6e58ded840690048397e9a6420183ddd538a74b0f94598543ce938951645
+6 a8d0391315815ff6f4786ee5817f2291291c0329fc1b378f48c666d5cc607121
+# Full-screen user phase, 82d3d04; 20261018T033411184475Z/guest.raw.
+# Notes is byte-identical to the preceding entry.
+4 f70ada7f751cf76e9e69e543c174c8a1ba0f8e1660b1ffad4b4b6a975957eb90
+6 70c6b84f5395da41a6534d0bb990f34527fd7d5041e193de7c9934392fb86ca1
+# Declared imports, 8d1972a; 20261018T052214126134Z/guest.raw.
+4 37dc99b5b51c039ceec618d296a49572583ff384e51bc1d69f6c65e80fd02f36
+5 11c68792fb55cab7d8a706309dd4d4b8f9fe8a81499533c04aa2c079bcdd999e
+6 0ecdad8e1aafd944fdc0a3bc3c5c083b9b1c05439b342bf41ecb4f5c9d218065
