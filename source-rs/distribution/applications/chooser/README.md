@@ -2,7 +2,8 @@
 
 F5 opens a full-screen user picker. Existing users appear as a horizontal row
 of avatar tiles; **NEW USER** copies the hidden template. Click a user to enter
-its workspace. The same chooser program becomes the user's left-hand app strip,
+its workspace. Root stops and collects this picker before loading the user's
+left-hand app strip, a separate process running another instance of the chooser
 with icon tiles for **NOTES** and **COLORS**. The template and the launcher itself
 are hidden. There are no normal status rows, storage toggles or launcher CLOSE
 control; apps own their X buttons. A failed launch gives a short message such as

@@ -197,7 +197,20 @@ def desktop(stream, output, serial, reboot, expected_absolute=True, fill_users=F
     click_user_tile(0,total)
     tile_label(56,48,'NOTES')
     tile_label(56,168,'COLORS')
-    scan(lambda w,d: rgb(w,d,width//2,height//2)==bytes.fromhex('101827'), 'picker retired')
+    # Check the entire old tile band, not a background pixel between avatars.
+    # No picker process/control connection survives into the user workspace.
+    stopped = 'Cathedral desktop: picker stopped; loading user launcher'
+    ready = 'Cathedral desktop: user matrix furnished'
+    log = (output / 'serial.log').read_text(errors='replace')
+    assert stopped in log and ready in log and log.index(stopped) < log.index(ready), log[-2000:]
+    def picker_gone(w,d):
+        return all(rgb(w,d,x,y)==bytes.fromhex('101827')
+                   for y in range((height-96)//2,(height+96)//2)
+                   for x in range(256,width-24))
+    scan(picker_gone, 'every old user tile retired')
+    click_user_tile(total-1,total)  # Former New User/User tile must be inert.
+    move(8,8)
+    scan(picker_gone, 'old picker cannot redraw after a click')
     shutil.copyfile(output / 'display.png', output / 'user-workspace.png')
     click_chrome(1)
     note('hello cathedral' if reboot else '')

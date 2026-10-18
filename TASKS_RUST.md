@@ -3,8 +3,8 @@
 Updated 2026-10-18 (local date). Implementation baseline: declared service
 imports and optional Notes persistence at **`8d1972a`**, followed by readable
 chooser labels at **`787344e`**, existing-user label upgrade at **`4f1c6c8`**,
-app-owned close at **`a40ed23`**, and the user tiles/absolute input milestone
-below. Store-based
+app-owned close at **`a40ed23`**, user tiles/absolute input at **`4901e65`**,
+and the transient-picker handoff below. Store-based
 admission validates the program's required/optional interfaces against owner
 offers before spawning. Check Git for
 later work.
@@ -632,3 +632,43 @@ is opt-in so its distinct purpose is explicit.
 The old F5 test's storage-toggle/temporary-Notes steps were removed with that
 UI. Earlier evidence remains above; service import policy host tests still run,
 but this milestone does not claim new end-to-end optional-storage UI coverage.
+
+
+## Transient picker handoff
+
+The login design already says the broker exits after root transfers the seat.
+The Rust picker was instead kept alive with its display/input revoked only
+**after** loading the user's launcher. Slow storage therefore left the old
+picker visible during launcher startup. The chooser guide also misleadingly
+said the same program "becomes" the app strip; those were always separate
+process instances, now documented with the process tree in distribution/README.
+
+`shell::furnish` now starts by STOPping and collecting root slot 0 through its
+existing owner interface. That path flushes retired surfaces, removes input and
+storage connections, waits for process death and returns funding. The owner
+checks the old control route is PEER_CLOSED, then reads/starts the user launcher.
+No kernel/matrix protocol change. The selected user remains its sibling; picker
+teardown cannot kill that user's tree. If the user later disappears, the owner
+runs a fresh picker instead of trying to reveal the collected one. Provider
+recovery grants only the currently live side of this phase boundary.
+
+This implements lifecycle only. Warden verification, secure credential entry,
+realm unsealing and seat-bound session leases are still not implemented. The
+existing design is the reference; there is no new owner question about whether
+the broker should stay in the user's process ancestry.
+
+Validation: shell target clippy, layout/format/diff checks and the full default
+F5/cold-boot test passed at `desktop/20261018T175557759835Z/` (199 host-oracle
+records). The test now checks the whole former avatar band, clicks the old tile
+location and checks it stays clear, and checks the picker-collected milestone
+precedes user-launcher readiness. The former single-pixel check sampled a gap
+between tiles and could miss stale avatars. User-matrix crash recovery's fresh
+picker path was updated but not fault-injected in this pass. No kernel or ARM
+changes; those suites were not rerun.
+
+Existing-user compatibility replay also passed with the stronger handoff checks:
+`labels-upgrade/20261018T175748538255Z/`. The interactive image's recognized
+stock Colors copies were refreshed because Colors shares the owner executable;
+the actual fix runs in the booted owner, so old user matrix/launcher binaries
+need no changes. Saved data is preserved; the pre-update image is at
+`cathedral-storage.raw.before-picker-handoff.raw`.

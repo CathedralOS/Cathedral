@@ -37,6 +37,19 @@ pub(super) fn workspace(matrix: Pair, [width, height]: [u64; 2]) {
 /// second slot to what the chrome launches. Notes needs 32 private pages and
 /// 4 reader pages; the color app fits in that.
 pub(super) fn furnish(matrix: Pair, extent: [u64; 2], realm: u64) {
+    // Selection admitted a sibling, not a descendant of the picker. Reclaim
+    // the picker process, surfaces, input and realm binding before any slow
+    // storage reads needed to start the user's launcher.
+    owner(matrix, [wire::STOP, 0, 0, 0, 0, 0, 0, 0]);
+    assert_eq!(
+        call(
+            matrix,
+            wire::route([wire::HEALTH, 0, 0, 0, 0, 0, 0, 0], 0).unwrap()
+        ),
+        wire::error(abi::PEER_CLOSED)
+    );
+    cathedral_user_runtime::write(b"Cathedral desktop: picker stopped; loading user launcher\n")
+        .unwrap();
     let chrome = realm + CHROME_OFFSET;
     owner(
         matrix,
@@ -64,10 +77,11 @@ pub(super) fn realm_of(matrix: Pair, words: wire::Packet) -> u64 {
 /// chooser's folder, the user matrix's realm, its chrome over all of it, and
 /// its app.
 pub(crate) fn regrant(matrix: Pair, user: u64, app: u64) {
-    owner(matrix, [wire::STORAGE_GRANT, 0, 0, USERS, 0, 0, 0, 0]);
     if user == 0 {
+        owner(matrix, [wire::STORAGE_GRANT, 0, 0, USERS, 0, 0, 0, 0]);
         return;
     }
+    // The transient picker has been collected; do not restore its authority.
     owner(matrix, [wire::STORAGE_GRANT, 1, 0, user, 0, 0, 0, 0]);
     owner(
         matrix,

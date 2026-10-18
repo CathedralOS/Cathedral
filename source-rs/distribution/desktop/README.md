@@ -15,11 +15,16 @@ child and its launch slot through its existing exit path. An uncertain storage
 result requires a second, explicit CLOSE ANYWAY click. Its LOSS reply also
 reports that uncertainty, so the chooser cannot silently close it.
 
-[Phase layout](session/shell/layout.rs) gives the initial user tiles the full display, then
-revokes its surfaces and input when a user is furnished. The user matrix owns
+[Shell handoff](session/shell/shell.rs) stops and collects the picker as soon as
+its sibling user matrix is admitted, before loading the user launcher from
+storage. This retires the picker's display, input and storage binding; it does
+not leave an invisible login process behind. [Phase layout](session/shell/layout.rs)
+then places the separate launcher and app inside the user's display. The user matrix owns
 the full display, with its launcher at the left and its app in the remaining
 space. The root keeps supervising and forwarding without visible boot chrome.
-There is no logout UI; recursive whole-user LOSS remains a headless proof.
+If the user matrix is lost, the owner starts a fresh picker; storage recovery
+does not regrant the retired picker. There is no logout UI; recursive whole-user
+LOSS remains a headless proof.
 
 Without the `shell` feature the same package builds the probe desktop in
 [lab/](lab/desktop.rs): the same admission, apps and budgets laid out as a

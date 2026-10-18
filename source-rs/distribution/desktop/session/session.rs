@@ -51,7 +51,7 @@ pub(crate) fn run() -> u64 {
                 cathedral_user_runtime::write(b"Cathedral desktop: user matrix furnished\n")
                     .unwrap();
             } else {
-                shell::select_user(matrix, session.extent);
+                shell::chooser(matrix, session.extent);
                 cathedral_user_runtime::write(b"Cathedral desktop: user matrix closed\n").unwrap();
             }
         }

@@ -48,6 +48,33 @@ picker and places the user's chrome/app within the full display. The owner
 then supervises storage and restores the realms after a
 provider replacement. Every matrix runs the same platform code.
 
+The process tree is distinct from the executable/package tree:
+
+```mermaid
+flowchart TD
+    owner[Startup owner] --> services[Display / input / storage processes]
+    owner --> root[Root matrix process]
+    root --> picker[User picker: transient process]
+    root --> user[User matrix process]
+    user --> launcher[App launcher process]
+    user --> app[Notes or Colors process]
+```
+
+The root matrix admits the selected user as the picker's sibling. The startup
+owner then stops/collects the picker before reading the user's launcher image;
+that wait can take time and must not leave the picker visible or interactive.
+The app launcher is a different process using the chooser executable, not a
+mode switch of the old picker. Likewise, Colors shares the desktop executable
+with the startup owner but runs in a separately confined app process.
+
+The [login design](../../wiki/design/part_1_authority/07_sessions_and_login.md)
+already specifies a transient credential broker: it receives verification
+authority, root unseals the authorized realm into the matrix's domain and
+transfers the seat, and the broker exits. The broker never receives the realm
+key or hosts the session. The Rust picker only exercises selection, sibling
+admission and lifecycle; it has no Warden, authentication or sealed realms and
+currently holds broader unencrypted storage access than that future broker.
+
 [profile.json](profile.json) is the executable composition shared by F5,
 ordinary CLI boot and [the desktop test](../../tools/boot-harness-rs/desktop_test.py).
 The harness builds the boot launches and supplies their ELF artifacts to
