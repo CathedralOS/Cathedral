@@ -87,6 +87,9 @@ def check_boot_milestones(output):
     owned = re.search(rb'(?:^|[\r\n])Owned [0-9]+\+? MiB\r?\n', output)
     if greeting < 0 or owned is None or owned.start() <= greeting:
         raise ValueError('Expected greeting followed by a complete owned-memory report.')
+    kernel = output.find(b'Kernel entered\r\n', owned.end())
+    if kernel < 0:
+        raise ValueError('Expected selected kernel entry after the owned-memory report.')
 
 
 def main(arguments=None):
@@ -98,7 +101,8 @@ def main(arguments=None):
     parser.add_argument('--prepare', action='store_true',
                         help='run ordinary omega update for dependency review before building')
     parser.add_argument('--build-dir', type=Path, default=ROOT / 'build/boot-harness')
-    parser.add_argument('--smoke', action='store_true', help='require greeting and owned-memory report')
+    parser.add_argument('--smoke', action='store_true',
+                        help='require greeting, owned-memory report and selected kernel entry')
     parser.add_argument('--timeout', type=float, default=30)
     options = parser.parse_args(arguments)
     if options.timeout <= 0:
@@ -133,7 +137,7 @@ def main(arguments=None):
         invocation += ['-display', 'none']
         serial.write_bytes(b'')
         # Idle is the expected boot endpoint, so timeout is not success by itself.
-        # The guest must first produce both independent milestones in this run.
+        # The guest must first produce all three independent milestones in this run.
         try:
             subprocess.run(invocation, stdin=subprocess.DEVNULL, check=True,
                            timeout=options.timeout)

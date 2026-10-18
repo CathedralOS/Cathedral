@@ -1,13 +1,13 @@
 // source/boot/uefi/own_machine.omg
 //
 // MILESTONE 2 — own the machine. Get the firmware memory map, walk it for free
-// RAM, ExitBootServices, and obtain the FIRST qualified Extent from the largest
-// free span — the origin of Cathedral's authority graph. Runs after the
+// RAM, ExitBootServices, and grant the jointly checked image and initial-storage
+// extents — the origin of Cathedral's authority graph. Runs after the
 // milestone-1 greeting (con_out still works before exit).
 //
 // MILESTONE 3 — the first driver speaks. After the grant, the 16550 UART (COM1)
 // we now drive DIRECTLY — no firmware, no protocol — reports "Owned N MiB",
-// then the core parks on `hlt`. Reaching the report is itself the proof of the
+// then transfers both roots into the selected kernel. Reaching the report observes the
 // M2 chain: the machine only arrives there after a successful map walk, a
 // successful ExitBootServices, and the admitted grant.
 
@@ -27,7 +27,7 @@ const MAX_BOOTSTRAP_PAGE_COUNT: u64 = 4503599627370495;
 
 // Per-burst work budget for a stuck or absent 16550. This bounds status reads,
 // not elapsed time; exhaustion abandons the optional report and retains the
-// granted root in owned idle without writing into a busy transmitter.
+// granted roots through kernel entry without writing into a busy transmitter.
 const MAX_UART_STATUS_POLLS: u64 = 1000000;
 
 // The leading u64 gives the following byte array an 8-byte-aligned base under
@@ -37,6 +37,14 @@ const MAX_UART_STATUS_POLLS: u64 = 1000000;
 pub data UefiMemoryMapStorage {
     alignment_anchor: u64;
     bytes: [u8; 65536];
+}
+
+// Keep the jointly validated, separately granted roots together throughout
+// reporting. Its fields retain the two linear debts; the container declares
+// no additional nominal obligation. The semantic handoff consumes both fields.
+data KernelRoots {
+    image: Extent in Granted;
+    initial_storage: Extent in Granted;
 }
 
 // Get the map, walk it, exit, grant, report.
@@ -52,7 +60,7 @@ pub data UefiMemoryMapStorage {
 // uses the remaining provision only after an exact EFI_BUFFER_TOO_SMALL result
 // reports a requirement within the fixed ceiling.
 machine Main::own_machine(context: &mut Main, handle: EfiHandle, table: &EfiSystemTable)
-reaches BootServices + ExtentRootProvider + PortIo + MachineControl
+reaches BootServices + ExtentRootProvider + ProgramStorageEntry + PortIo + MachineControl
 requires addr::Bound == 18446744073709551616
 {
     // The boundary vouches the reference shape, not arbitrary firmware field
@@ -520,16 +528,23 @@ requires addr::Bound == 18446744073709551616
 
     // We own the machine. Construct inert range geometry from the exact
     // validated largest-span values, then cross the admitted owner-authored
-    // provider requirement.
-    // Reconstructing these fields alone does not grant authority; exactly this
-    // selected trait-slot call establishes the first qualified root.
+    // provider requirement for each root. Reconstructing these fields alone
+    // does not grant authority; the selected calls establish their claims.
     state own(geometry: BootGeometry in Separated, best_pages: u64)
     requires addr::Bound == 18446744073709551616
     {
-        let base: addr = geometry.storage_base as addr;
-        let storage: Extent = Extent { base: base, length: geometry.storage_length };
-        let first_extent: Extent = ExtentRootProvider::grant(storage);
-        transition { _ -> serial_init(first_extent, best_pages as u64 in Trapping) }
+        let image_geometry: Extent = Extent {
+            base: geometry.image_base as addr,
+            length: geometry.image_length,
+        };
+        let storage_geometry: Extent = Extent {
+            base: geometry.storage_base as addr,
+            length: geometry.storage_length,
+        };
+        let image: Extent = ExtentRootProvider::grant(image_geometry);
+        let storage: Extent = ExtentRootProvider::grant(storage_geometry);
+        let roots: KernelRoots = KernelRoots { image: image, initial_storage: storage };
+        transition { _ -> serial_init(roots, best_pages as u64 in Trapping) }
     }
 
     // --- MILESTONE 3: the serial report ------------------------------------
@@ -538,25 +553,25 @@ requires addr::Bound == 18446744073709551616
     // Register map = drivers/facts/uart_16550 (COM1 base 0x3F8 = 1016):
     // +1 IER (1017), +2 FCR (1018), +3 LCR (1019), +4 MCR (1020),
     // +5 LSR (1021). 115200 8N1, FIFOs enabled (16-byte) + cleared.
-    state serial_init(extent: Extent in Granted, best_pages: u64 in Trapping) {
+    state serial_init(roots: KernelRoots, best_pages: u64 in Trapping) {
         asm { out 1019, 128 }   // LCR: DLAB on — divisor latch reachable
         asm { out 1016, 1 }     // divisor low  = 1 -> 115200 baud
         asm { out 1017, 0 }     // divisor high = 0
         asm { out 1019, 3 }     // LCR: 8N1, DLAB off
         asm { out 1018, 7 }     // FCR: enable + clear both FIFOs
         asm { out 1020, 11 }    // MCR: DTR | RTS | OUT2
-        transition { _ -> to_mib(extent, best_pages, 0) }
+        transition { _ -> to_mib(roots, best_pages, 0) }
     }
 
     // Pages -> MiB by repeated subtraction (256 pages = 1 MiB; the runtime
     // lowering has no division yet). Stop at 100000 MiB because every larger
     // value shares the honest `99999+ MiB` report. The conversion therefore
     // takes at most 100000 rounds regardless of a hostile-but-valid span size.
-    state to_mib(extent: Extent in Granted,
+    state to_mib(roots: KernelRoots,
                  pages: u64 in Trapping, mib: u64 in Trapping) {
         transition pages >= 256 && mib < 100000 {
-            true -> to_mib(extent, pages - 256, mib + 1)
-            _    -> owned_wait(extent, mib, MAX_UART_STATUS_POLLS)
+            true -> to_mib(roots, pages - 256, mib + 1)
+            _    -> owned_wait(roots, mib, MAX_UART_STATUS_POLLS)
         }
     }
 
@@ -565,193 +580,193 @@ requires addr::Bound == 18446744073709551616
     // then at most 16 data bytes. Burst 1 = "Owned " (6 bytes); burst 2 = the
     // decimal digits + " MiB\r\n" (<= 11 bytes). That is the 16550's real
     // hardware handshake — no firmware ever polls for us again. Each wait has
-    // a finite status-read budget; an absent or wedged UART parks owned rather
-    // than spinning forever or writing while the transmitter remains busy.
-    state owned_wait(extent: Extent in Granted, mib: u64 in Trapping,
+    // a finite status-read budget; an absent or wedged UART skips reporting
+    // and enters the kernel without writing into a busy transmitter.
+    state owned_wait(roots: KernelRoots, mib: u64 in Trapping,
                      remaining_polls: u64 in Trapping) {
         let mut lsr: u8 = 0;
         asm { in lsr, 1021 }
         transition (lsr & 32) == 0 {
-            true -> owned_wait_busy(extent, mib, remaining_polls)
-            _    -> owned_send(extent, mib)
+            true -> owned_wait_busy(roots, mib, remaining_polls)
+            _    -> owned_send(roots, mib)
         }
     }
-    state owned_wait_busy(extent: Extent in Granted, mib: u64 in Trapping,
+    state owned_wait_busy(roots: KernelRoots, mib: u64 in Trapping,
                           remaining_polls: u64 in Trapping) {
         transition remaining_polls > 1 {
-            true -> owned_wait(extent, mib, remaining_polls - 1)
-            _    -> owned_idle(extent)
+            true -> owned_wait(roots, mib, remaining_polls - 1)
+            _    -> enter_kernel(roots)
         }
     }
-    state owned_send(extent: Extent in Granted, mib: u64 in Trapping) {
+    state owned_send(roots: KernelRoots, mib: u64 in Trapping) {
         asm { out 1016, 79 }    // 'O'
         asm { out 1016, 119 }   // 'w'
         asm { out 1016, 110 }   // 'n'
         asm { out 1016, 101 }   // 'e'
         asm { out 1016, 100 }   // 'd'
         asm { out 1016, 32 }    // ' '
-        transition { _ -> digits_wait(extent, mib, MAX_UART_STATUS_POLLS) }
+        transition { _ -> digits_wait(roots, mib, MAX_UART_STATUS_POLLS) }
     }
 
-    state digits_wait(extent: Extent in Granted, mib: u64 in Trapping,
+    state digits_wait(roots: KernelRoots, mib: u64 in Trapping,
                       remaining_polls: u64 in Trapping) {
         let mut lsr: u8 = 0;
         asm { in lsr, 1021 }
         transition (lsr & 32) == 0 {
-            true -> digits_wait_busy(extent, mib, remaining_polls)
-            _    -> report_size(extent, mib)
+            true -> digits_wait_busy(roots, mib, remaining_polls)
+            _    -> report_size(roots, mib)
         }
     }
-    state digits_wait_busy(extent: Extent in Granted, mib: u64 in Trapping,
+    state digits_wait_busy(roots: KernelRoots, mib: u64 in Trapping,
                            remaining_polls: u64 in Trapping) {
         transition remaining_polls > 1 {
-            true -> digits_wait(extent, mib, remaining_polls - 1)
-            _    -> owned_idle(extent)
+            true -> digits_wait(roots, mib, remaining_polls - 1)
+            _    -> enter_kernel(roots)
         }
     }
 
     // Five digits plus the tail fit in one 16-byte FIFO burst. Larger roots
     // take an explicit lower-bound route instead of wrapping `48 + count` into
     // a non-digit byte.
-    state report_size(extent: Extent in Granted, mib: u64 in Trapping) {
+    state report_size(roots: KernelRoots, mib: u64 in Trapping) {
         transition mib <= 99999 {
-            true -> ten_thousands(extent, mib, 0)
-            _ -> oversized_mib(extent)
+            true -> ten_thousands(roots, mib, 0)
+            _ -> oversized_mib(roots)
         }
     }
 
-    state oversized_mib(extent: Extent in Granted) {
+    state oversized_mib(roots: KernelRoots) {
         asm { out 1016, 57 }    // '9'
         asm { out 1016, 57 }    // '9'
         asm { out 1016, 57 }    // '9'
         asm { out 1016, 57 }    // '9'
         asm { out 1016, 57 }    // '9'
         asm { out 1016, 43 }    // '+'
-        transition { _ -> tail_send(extent) }
+        transition { _ -> tail_send(roots) }
     }
 
     // Decimal by PLACE SUBTRACTION, most-significant first: each place counts
     // how many times it fits, emits its digit, forwards the remainder.
     // `printed` suppresses leading zeros; the ones place always prints. This
     // route receives only values that fit its five decimal places.
-    state ten_thousands(extent: Extent in Granted,
+    state ten_thousands(roots: KernelRoots,
                         rest: u64 in Trapping, count: u64 in Trapping)
     requires count <= 9 && embed(rest) + embed(count) * 10000 <= 99999
     {
         transition rest >= 10000 {
-            true -> ten_thousands(extent, rest - 10000, count + 1)
-            _    -> ten_thousands_emit(extent, rest, count)
+            true -> ten_thousands(roots, rest - 10000, count + 1)
+            _    -> ten_thousands_emit(roots, rest, count)
         }
     }
-    state ten_thousands_emit(extent: Extent in Granted,
+    state ten_thousands_emit(roots: KernelRoots,
                              rest: u64 in Trapping, count: u64 in Trapping) {
         transition count == 0 {
-            true -> thousands(extent, rest, 0, 0)
-            _    -> ten_thousands_digit(extent, rest, 48 + count)
+            true -> thousands(roots, rest, 0, 0)
+            _    -> ten_thousands_digit(roots, rest, 48 + count)
         }
     }
-    state ten_thousands_digit(extent: Extent in Granted,
+    state ten_thousands_digit(roots: KernelRoots,
                               rest: u64 in Trapping, digit: u64 in Trapping)
     requires 48 <= digit && digit <= 57
     {
         let byte: u8 = digit as u8;
         asm { out 1016, byte }
-        transition { _ -> thousands(extent, rest, 0, 1) }
+        transition { _ -> thousands(roots, rest, 0, 1) }
     }
 
-    state thousands(extent: Extent in Granted, rest: u64 in Trapping,
+    state thousands(roots: KernelRoots, rest: u64 in Trapping,
                     count: u64 in Trapping, printed: u64)
     requires count <= 9 && embed(rest) + embed(count) * 1000 <= 9999
     {
         transition rest >= 1000 {
-            true -> thousands(extent, rest - 1000, count + 1, printed)
-            _    -> thousands_emit(extent, rest, count, printed)
+            true -> thousands(roots, rest - 1000, count + 1, printed)
+            _    -> thousands_emit(roots, rest, count, printed)
         }
     }
-    state thousands_emit(extent: Extent in Granted, rest: u64 in Trapping,
+    state thousands_emit(roots: KernelRoots, rest: u64 in Trapping,
                          count: u64 in Trapping, printed: u64) {
         transition count == 0 && printed == 0 {
-            true -> hundreds(extent, rest, 0, 0)
-            _    -> thousands_digit(extent, rest, 48 + count)
+            true -> hundreds(roots, rest, 0, 0)
+            _    -> thousands_digit(roots, rest, 48 + count)
         }
     }
-    state thousands_digit(extent: Extent in Granted,
+    state thousands_digit(roots: KernelRoots,
                           rest: u64 in Trapping, digit: u64 in Trapping)
     requires 48 <= digit && digit <= 57
     {
         let byte: u8 = digit as u8;
         asm { out 1016, byte }
-        transition { _ -> hundreds(extent, rest, 0, 1) }
+        transition { _ -> hundreds(roots, rest, 0, 1) }
     }
 
-    state hundreds(extent: Extent in Granted, rest: u64 in Trapping,
+    state hundreds(roots: KernelRoots, rest: u64 in Trapping,
                    count: u64 in Trapping, printed: u64)
     requires count <= 9 && embed(rest) + embed(count) * 100 <= 999
     {
         transition rest >= 100 {
-            true -> hundreds(extent, rest - 100, count + 1, printed)
-            _    -> hundreds_emit(extent, rest, count, printed)
+            true -> hundreds(roots, rest - 100, count + 1, printed)
+            _    -> hundreds_emit(roots, rest, count, printed)
         }
     }
-    state hundreds_emit(extent: Extent in Granted, rest: u64 in Trapping,
+    state hundreds_emit(roots: KernelRoots, rest: u64 in Trapping,
                         count: u64 in Trapping, printed: u64) {
         transition count == 0 && printed == 0 {
-            true -> tens(extent, rest, 0, 0)
-            _    -> hundreds_digit(extent, rest, 48 + count)
+            true -> tens(roots, rest, 0, 0)
+            _    -> hundreds_digit(roots, rest, 48 + count)
         }
     }
-    state hundreds_digit(extent: Extent in Granted,
+    state hundreds_digit(roots: KernelRoots,
                          rest: u64 in Trapping, digit: u64 in Trapping)
     requires 48 <= digit && digit <= 57
     {
         let byte: u8 = digit as u8;
         asm { out 1016, byte }
-        transition { _ -> tens(extent, rest, 0, 1) }
+        transition { _ -> tens(roots, rest, 0, 1) }
     }
 
-    state tens(extent: Extent in Granted, rest: u64 in Trapping,
+    state tens(roots: KernelRoots, rest: u64 in Trapping,
                count: u64 in Trapping, printed: u64)
     requires count <= 9 && embed(rest) + embed(count) * 10 <= 99
     {
         transition rest >= 10 {
-            true -> tens(extent, rest - 10, count + 1, printed)
-            _    -> tens_emit(extent, rest, count, printed)
+            true -> tens(roots, rest - 10, count + 1, printed)
+            _    -> tens_emit(roots, rest, count, printed)
         }
     }
-    state tens_emit(extent: Extent in Granted, rest: u64 in Trapping,
+    state tens_emit(roots: KernelRoots, rest: u64 in Trapping,
                     count: u64 in Trapping, printed: u64) {
         transition count == 0 && printed == 0 {
-            true -> ones_digit(extent, 48 + rest)
-            _    -> tens_digit(extent, rest, 48 + count)
+            true -> ones_digit(roots, 48 + rest)
+            _    -> tens_digit(roots, rest, 48 + count)
         }
     }
-    state tens_digit(extent: Extent in Granted,
+    state tens_digit(roots: KernelRoots,
                      rest: u64 in Trapping, digit: u64 in Trapping)
     requires 48 <= digit && digit <= 57
     {
         let byte: u8 = digit as u8;
         asm { out 1016, byte }
-        transition { _ -> ones_digit(extent, 48 + rest) }
+        transition { _ -> ones_digit(roots, 48 + rest) }
     }
 
     // The ones place always prints — "Owned 0 MiB" is an honest report of a
     // machine with no conventional span, never an empty number.
-    state ones_digit(extent: Extent in Granted, digit: u64 in Trapping)
+    state ones_digit(roots: KernelRoots, digit: u64 in Trapping)
     requires 48 <= digit && digit <= 57
     {
         let byte: u8 = digit as u8;
         asm { out 1016, byte }
-        transition { _ -> tail_send(extent) }
+        transition { _ -> tail_send(roots) }
     }
 
-    state tail_send(extent: Extent in Granted) {
+    state tail_send(roots: KernelRoots) {
         asm { out 1016, 32 }    // ' '
         asm { out 1016, 77 }    // 'M'
         asm { out 1016, 105 }   // 'i'
         asm { out 1016, 66 }    // 'B'
         asm { out 1016, 13 }    // CR
         asm { out 1016, 10 }    // LF
-        transition { _ -> owned_idle(extent) }
+        transition { _ -> enter_kernel(roots) }
     }
 
     // Failure park. This route owns no Extent and remains inside firmware after
@@ -764,12 +779,11 @@ requires addr::Bound == 18446744073709551616
         transition { _ -> idle() }
     }
 
-    // The first qualified root remains live for the owned machine's lifetime.
-    // This is the no-split/no-merge M2 endpoint: one admitted root enters this
-    // state and each wake transfers the same claim into the next iteration.
-    state owned_idle(extent: Extent in Granted) {
-        asm { hlt }
-        transition { _ -> owned_idle(extent) }
+    // The selected bridge consumes the existing claims. Build alone chooses
+    // the destination; this source does not hardcode a kernel implementation.
+    state enter_kernel(roots: KernelRoots) {
+        let { image, initial_storage } = roots;
+        ProgramStorageEntry::enter(image, initial_storage);
     }
 }
 

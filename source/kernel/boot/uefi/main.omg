@@ -1,7 +1,7 @@
 // Cathedral's intended Omega boot sequence: greet, validate the memory map,
-// exit Boot Services, retain one admitted memory root, and report over COM1.
-// The fresh-image smoke reaches the report with Omega's private-stack repair;
-// see README.md for the still-missing two-root semantic kernel installation.
+// exit Boot Services, report over COM1, then transfer both admitted roots to
+// the Build-selected kernel entry. See README.md for the fresh-image oracle
+// and the separate provider assumptions behind those grants.
 
 use uefi::uefi;            // EfiHandle, EfiStatus, EFI_SUCCESS, EfiSystemTable, TextOutputProtocol, SimpleTextOutput
 use uefi::boot_services;   // BootServices
@@ -29,11 +29,12 @@ data Main {
 // Selecting PE's subsystem alone cannot install this function or establish
 // the validity of table. The target adapter must supply those premises.
 machine Main::run(context: &mut Main, handle: EfiHandle in LoadedApplication, table: &EfiSystemTable) -> EfiStatus
-reaches SimpleTextOutput + LoadedImageAccess + BootServices + ExtentRootProvider + ProgramImage + PortIo + MachineControl
+reaches SimpleTextOutput + LoadedImageAccess + BootServices + ExtentRootProvider + ProgramStorageEntry + ProgramImage + PortIo + MachineControl
 invokes SimpleTextOutput;
 invokes LoadedImageAccess;
 invokes BootServices;
 invokes ExtentRootProvider;
+invokes ProgramStorageEntry;
 invokes ProgramImage;
 requires addr::Bound == 18446744073709551616
 {

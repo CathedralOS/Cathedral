@@ -9,6 +9,7 @@ machine build(builder: &mut Build) {
     Build::depend_as(builder, "core", Source::Path { location: "../../core" });
     Build::accept_boundary<ExtentRootProvider>(builder);
     Build::select_provider<ExtentRootProvider, core::CathedralExtentRootProvider>(builder);
+    Build::select_provider<ProgramStorageEntry, ProgramStorageEntryNativeProvider>(builder);
     Build::select_provider<ProgramImage, ProgramImageNativeProvider>(builder);
     Build::select_provider<uefi::SimpleTextOutput, uefi::UefiTextOutputProvider>(builder);
     Build::select_provider<uefi::BootServices, uefi::UefiBootServicesProvider>(builder);

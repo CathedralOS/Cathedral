@@ -5,32 +5,36 @@ ladder. `build.omg` selects `CathedralBootstrap` for firmware arrival and binds
 the target's semantic slot to `Kernel::enter(image, initial_storage)`.
 `physical_entry.omg` validates the incoming table header and invokes the checked
 boot sequence. That sequence greets, discovers LoadedImage geometry, and enters
-the map/exit/report implementation in `own_machine.omg`. Connecting source does
-not establish a successful handoff: the two-root kernel continuation remains
-unfinished.
+the map/exit/report implementation in `own_machine.omg`. After successful
+ExitBootServices it grants both retained roots and calls `ProgramStorageEntry`.
+The explicitly selected native provider transfers them to the exact
+Build-selected `Kernel::enter`, which reports arrival and retains both roots.
 
-The fresh-image harness now observes `Hello from Omega` followed by
-`Owned 35 MiB` under QEMU/OVMF. This requires the private-entry-stack repair
-published in Omega `0bdc137b7af` (or a later revision containing it).
-The report occurs only after successful ExitBootServices; it is not evidence
-that the still-unconnected two-root kernel continuation ran.
+The fresh-image harness requires `Hello from Omega`, a complete `Owned N MiB`
+line, and `Kernel entered`, in that order. QEMU/OVMF has exercised this route
+with 35 MiB reported. Use an Omega compiler containing the canonical
+`ProgramStorageEntryNativeProvider` implementation as well as the
+private-entry-stack repair (`0bdc137b7af`). The ownership report occurs only
+after successful ExitBootServices; the final marker comes from the selected
+kernel continuation, not the firmware adapter.
 
 The compiler provisions an image-backed private stack before the source adapter
 allocates its frames. Its backing includes the exact call-chain demand, both
 entry bridges and the target reserve. The foreign leaves retain their default
 256 KiB allowance; Cathedral keeps a 64 KiB map buffer. Neither allowance nor the
 128 KiB firmware arrival guarantee was reduced or inflated to make boot work.
-The active stack remains retained storage and must be excluded from the image
-extent eventually supplied to `Kernel::enter`.
+The active stack remains retained storage and is excluded from the image
+extent supplied to `Kernel::enter`.
 
 The adapter now queries `ProgramImage::retained_suffix_start` and excludes the
 entire suffix from its proposed image range before firmware exit. The compiler
 places that boundary before private stack alignment, saved firmware state and
 stack storage. The geometry checker first checks initial storage against the
 complete mapped image, so excluding the tail cannot conceal an overlap. A fresh
-QEMU image with this partition still reaches the greeting and ownership report.
-This numeric observation grants no memory authority and does not itself connect
-the two-root continuation.
+QEMU image with this partition reaches the kernel continuation. This numeric
+observation grants no memory authority: the admitted root provider establishes
+the roots after the successful firmware exit, and the semantic bridge only
+transfers those already-granted arguments.
 
 The owner resolved foreign-output admission in Omega's
 [provider-owned views contract](https://github.com/CathedralOS/Omega/blob/main/wiki/spec/build/foreign_storage.md#provider-owned-views-and-completion).
@@ -39,12 +43,13 @@ backing, access and stability. No additional provider-root token is required.
 The LoadedImage object is not inside the Boot Services table: the compiler must
 retain its provider-invocation provenance separately from its lifetime anchors,
 and enforce subsequent use and replacement. The reference-custody repair is
-published in Omega `7f2341031b3`. Numeric root separation and a successful boot
-report still do not establish the missing two-root semantic installation.
+published in Omega `7f2341031b3`. Numeric root separation alone does not
+establish backing; the firmware calls and admitted root provider retain their
+separate backing and lifecycle obligations.
 
 The intended acceptance is one freshly compiled `uefi_x86_64` image under
 QEMU/OVMF: `Hello from Omega`, successful firmware exit, `Owned N MiB` over
-COM1, then enter the kernel retaining image and initial-storage roots with valid,
+COM1, then `Kernel entered` while retaining image and initial-storage roots with
 accounted surviving stack storage. A failed build or an old
 `BOOTX64.EFI` cannot satisfy acceptance.
 
@@ -65,7 +70,7 @@ review again. The current local-source lock also identifies its checkout path;
 regenerate it in the receiving checkout rather than committing this worktree's
 acceptance as if it were portable.
 
-## Work still required
+## Boundaries and next work
 
 The firmware-neutral [joint root geometry checker](../../core/boot_geometry.omg)
 validates nonempty, nonoverflowing, disjoint image and initial-storage ranges.
@@ -74,13 +79,17 @@ checks numeric acceptance and rejection without firmware. The boot transaction
 checks that geometry before ExitBootServices and retains it through success;
 geometry does not supply backing or stack custody.
 
-- Connect the checked physical firmware adapter to the semantic entry and
-  Cathedral continuation: join the discovered LoadedImage occurrence to the
-  compiler's retained stack partition, expose only the disjoint image residual,
-  and retain the successful final-map/ExitBootServices provenance for both
-  semantic arguments. `Main::run` remains ordinary checked logic, not an
-  implicitly installed raw ABI. PE subsystem selection, a same-shaped pointer,
-  or an empty root provider is not proof of firmware validity or authority.
+The kernel currently retains its two arguments in a halt loop; it does not yet
+install page tables, an allocator, interrupts or a scheduler. The entry is a
+free machine: compiler provisioning for an additional mutable context parameter
+is separate unfinished Omega work, not exercised by this boot.
+
+`Main::run` remains ordinary checked logic, not an implicitly installed raw ABI.
+PE subsystem selection, a same-shaped pointer, or an empty root-provider body
+is not proof of firmware validity or authority. The selected provider's admitted
+contract and the successful final-map/ExitBootServices transaction remain part
+of the boot's trusted boundary; the serial marker does not independently prove
+firmware correctness or every backing assertion.
 
 The std pin includes the borrowed UTF-8 calling-policy rejection text. Older
 revisions declared a fixed 256-byte field but initialized it with shorter
@@ -96,6 +105,6 @@ handle and map key remain ordinary arguments. There are no `Binding` fields or
 implicit provider arguments. Selecting the implementations does not establish
 the validity or lifetime of those firmware values.
 
-The smoke harness establishes greeting, firmware exit and ownership reporting,
-not the complete kernel-root acceptance above. Extend its oracle when the
-semantic continuation is connected; the Rust bring-up lab is separate evidence.
+The smoke harness checks greeting, firmware exit, ownership reporting and
+arrival in the selected kernel continuation. It is a bounded boot witness, not
+a working operating-system claim; the Rust bring-up lab is separate evidence.

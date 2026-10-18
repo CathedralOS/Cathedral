@@ -131,11 +131,12 @@ pub data EfiSystemTable {
 pub boundary trait UefiPhysicalEntry {
     machine enter(handle: EfiHandle in LoadedApplication, table: &EfiSystemTable) -> EfiStatus
     requires addr::Bound == 18446744073709551616
-    reaches SimpleTextOutput + LoadedImageAccess + BootServices + ExtentRootProvider + ProgramImage + PortIo + MachineControl
+    reaches SimpleTextOutput + LoadedImageAccess + BootServices + ExtentRootProvider + ProgramStorageEntry + ProgramImage + PortIo + MachineControl
     invokes SimpleTextOutput;
     invokes LoadedImageAccess;
     invokes BootServices;
     invokes ExtentRootProvider;
+    invokes ProgramStorageEntry;
     invokes ProgramImage;
 }
 
