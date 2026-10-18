@@ -9,6 +9,14 @@ sealed attachment for publications and, through [bulk.rs](bulk.rs), a sealed
 attachment for bulk reads. The private control connection answers health and
 the supervisor's close; it conveys no object access.
 
+Readiness is the exact `ready` reply to HEALTH after the engine and store open.
+The [desktop startup controller](../../../distribution/desktop/session/persistence/startup.rs)
+keeps display/input active while waiting, bounds readiness, and collects a failed
+task and its control stream before manual retry. Opening never formats a missing
+or damaged envelope. The `startup-probes` feature adds
+[pre-open failure fixtures](startup_probe.rs) for death, silence and a malformed
+reply; ordinary builds contain none of those argument-controlled paths.
+
 Two boot-approved data links bind to private roots 0 and 1 by their
 service-local link position. The kernel isolates principals and grants
 endpoints; the provider enforces root-local object access, and no message

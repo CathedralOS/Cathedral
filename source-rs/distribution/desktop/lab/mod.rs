@@ -15,6 +15,5 @@ use crate::session::{BACKGROUND, KEYS, admission, owner, persistence};
 use crate::*;
 use cathedral_colors as app;
 use cathedral_platform_contracts::input;
-use cathedral_user_runtime::task::Launch;
 
 include!("desktop.rs");

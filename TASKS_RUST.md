@@ -1,7 +1,8 @@
 # Rust reference OS: tasks and handoff
 
-Updated 2026-10-18 (local date). Current milestone: visible root login recovery
-and independent Colors, following local configured-launcher recovery,
+Updated 2026-10-18 (local date). Current milestone: interactive storage-provider
+startup and explicit retry, following root login recovery, independent Colors,
+local configured-launcher recovery,
 scoped lifecycle observations and close-channel failure handling, live
 matrix layout and named realms. F5 uses these mechanisms; explicit migration
 preserves existing stock users and data.
@@ -287,8 +288,13 @@ to hierarchy metadata; extensions are conventions, not authoritative types.
   the running app, its draft and current layout. Fresh endpoints/bindings carry
   fresh authority; ancestor changes, owner revocation and STOP cancel recovery.
   A repeated failure stops the loop, and a clean exit stays closed.
-- [ ] **Continue lifecycle recovery where it is still incomplete.** Root Login/
-  Users resolution and provider startup still assert. Launcher retry exhaustion
+- [x] **Make login and storage-startup failure visible and retryable.** Missing
+  Login/Users paths, picker failure and failed storage readiness show a bundled
+  recovery screen. Storage opens behind live input/rendering; a fresh user action
+  authorizes each retry. Retries neither repair media nor replenish the automatic
+  provider replacement budget.
+- [ ] **Continue lifecycle recovery where it is still incomplete.** Initial
+  display/input/root admission still lacks recovery. Launcher retry exhaustion
   has no explicit recovery UI. An unresponsive app is preserved,
   but the desktop has no explicit force-stop/recovery UI. Provider loss while apps
   hold work and clearer focus feedback still need further adversarial coverage.
@@ -1407,3 +1413,70 @@ Verification:
 
 Interactive QEMU and its disk/ESP were untouched; all GUI checks used disposable
 copies and separate ESPs. No kernel ABI changed. ARM64 boot was not rerun.
+
+## Interactive storage-provider startup (2026-10-18)
+
+The default owner now admits display, the root matrix and physical input before
+opening storage. The boot-bundled screen shows **STARTING...** while
+[persistence/startup.rs](source-rs/distribution/desktop/session/persistence/startup.rs)
+polls the private readiness reply. The exact bytes must be `ready`; a matching
+length is insufficient. Process death, a malformed reply or the 3,000-tick
+readiness timeout collects that attempt and enables **TRY AGAIN**. Each click
+authorizes one attempt; initial failure does not start an automatic retry loop.
+There is still no formatting or repair fallback.
+
+[provider.rs](source-rs/distribution/desktop/session/persistence/provider.rs)
+owns one task, its control endpoints and pending readiness deadline. Both startup
+and runtime replacement use it, so partial connection/readiness failure closes
+the old stream and collects the old task before reusing its launch grant. The
+session explicitly has no provider while offline. Lab setup/runtime replacement
+retain their bounded synchronous readiness wait; the normal startup path polls.
+Successful manual retry does not replenish the three automatic replacements
+allowed later in the session. Live users are not eligible for startup recovery.
+
+The recovery program's distribution-private STATUS command changes its card.
+The owner revokes queued input and restores a fresh lease around that transition;
+the program preserves observed button state, so holding over Retry through a
+timeout does not request another attempt, and a later fresh click needs one press.
+The recovery child retains no storage realm. A 64-page allowance accommodates its
+32-page image and replacement; it is collected before the picker is admitted.
+
+Verification:
+
+- `provider-startup/20261018T234651309751Z` passed all five final cases: crash
+  before opening, malformed five-byte readiness, a live pre-open stall through
+  the normal timeout, repeated crashes, and two invalid volume headers. The stall
+  kept physical pointer rendering responsive while a button stayed held over
+  Retry; release/fresh click recovered into the real picker and a usable Colors
+  that saved, closed and reopened. Repeated failures each required a fresh click
+  with the cursor left in place. Crash/corrupt-header attempts left the complete
+  disk byte-identical, and the source fixture stayed untouched. Fault features
+  are absent from ordinary F5. Earlier checker failures had incorrect timeout
+  and error-text expectations; the guest had correctly reached recovery.
+- `startup/20261018T234529797906Z` passed all existing missing-path, malformed
+  executable, picker-crash and successful manual login-retry cases. Its host
+  oracle confirmed every record, volume identity and guard unchanged for failed
+  attempts. This preceded the final button-state refinement, which the provider
+  suite specifically exercises.
+- `desktop/20261018T233828976820Z` passed the normal F5 flow and cold persistence
+  after the startup reordering, with all 233 records checked by the host oracle.
+- `colors/20261018T235149916300Z` passed a deliberately lost save reply, provider
+  cancellation/collection, replacement and explicit grant restoration. The live
+  user reconciled its save, reopened the app and retained its color across cold
+  boot. This exercises the shared provider lifecycle after the startup refactor.
+- `run.py --matrix-desktop-test --release --timeout 180` passed the recursive
+  desktop's storage stalls, provider replacement, tree recovery, input confinement
+  and cold persistence. The earlier completed run had no recoverable process
+  result, so this final run supplied an explicit successful exit and both PASS
+  reports. Artifacts are under `matrix-desktop-test/`.
+- Workspace host tests, userspace and affected shell/lab/provider clippy feature
+  checks passed. The two restart-budget tests run through the new
+  `recovery_policy_test.py`, which supplies actual contract constants and an
+  isolated host unwind build; the previous documented standalone command was
+  stale and lacked the contract dependency. Layout remains 35 Omega/96 Rust edges.
+
+Initial display/input/root admission failures remain uncovered, as do explicit
+controls for a live unresponsive app or exhausted launcher recovery. No kernel
+ABI or driver authority changed; no owner-level semantic decision was required.
+The active interactive QEMU and its disk/ESP remain untouched. ARM64 boot was
+not rerun for this distribution lifecycle change.

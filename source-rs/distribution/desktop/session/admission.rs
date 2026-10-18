@@ -19,8 +19,7 @@ pub(crate) struct Session {
     pub pressure: bool,
     pub extent: [u64; 2],
     pub(crate) source: Pair,
-    pub(crate) storage: task::Child,
-    pub(crate) storage_control: Pair,
+    pub(crate) storage: Option<persistence::Provider>,
     pub(crate) storage_watch: persistence::Watchdog,
     /// Held so the owner keeps its children's handles; lab compositions also
     /// cancel and collect them when rebuilding the tree.
@@ -49,35 +48,17 @@ fn display_call(
     display::decode(&bytes[..len]).unwrap()
 }
 pub(crate) fn start() -> Session {
-    let (storage, storage_control) = {
-        let storage = Launch::at(3).unwrap().spawn(0).unwrap();
-        let control = Port::at(3).unwrap().connect().unwrap();
-        control
-            .0
-            .send(cathedral_platform_contracts::storage::HEALTH)
-            .unwrap();
-        assert_eq!(control.1.receive(&mut [0; 64]).unwrap(), 5);
-        (storage, control)
-    };
-    #[cfg(feature = "notes-probes")]
-    {
-        // Quiet post-commit gate: the ordinary watchdog must discover the stall.
-        // On cold reboot this stays armed, but the restore-only proof performs no save.
-        storage_control
-            .0
-            .send(&[
-                0xf5,
-                2,
-                cathedral_platform_contracts::storage::PUBLISH as u8,
-                0,
-            ])
-            .unwrap();
-        let mut bytes = [0; 64];
-        let n = storage_control.1.receive(&mut bytes).unwrap();
-        assert_eq!(&bytes[..n], b"armed");
-    }
+    // The normal desktop first brings up interaction, then opens storage in
+    // persistence/startup.rs. Labs require storage before their proof setup.
+    #[cfg(feature = "shell")]
+    let storage = None;
+    #[cfg(not(feature = "shell"))]
+    let storage = Some(persistence::Provider::start().unwrap());
+    #[cfg(all(feature = "notes-probes", not(feature = "shell")))]
+    storage.as_ref().unwrap().arm_notes();
     #[cfg(feature = "database-probes")]
-    let database_fresh = crate::lab::database_recovery::arm_startup(storage_control);
+    let database_fresh =
+        crate::lab::database_recovery::arm_startup(storage.as_ref().unwrap().control);
     assert_eq!(
         Launch::at(0).unwrap().executable().unwrap_err(),
         Error(abi::DENIED as i64)
@@ -226,7 +207,6 @@ pub(crate) fn start() -> Session {
         extent: [info[1], info[2]],
         source: (source_send, source_recv),
         storage,
-        storage_control,
         storage_watch: persistence::Watchdog::default(),
         display_task,
         root: _root,
@@ -234,6 +214,10 @@ pub(crate) fn start() -> Session {
     }
 }
 impl Session {
+    #[cfg(not(feature = "shell"))]
+    pub(crate) fn provider(&self) -> &persistence::Provider {
+        self.storage.as_ref().expect("lab requires ready storage")
+    }
     pub fn start_input(&mut self) {
         assert!(self.input.is_none());
         for op in [wire::SPAWN, wire::READ_PIXEL, wire::BIND] {
@@ -259,15 +243,10 @@ impl Session {
             .unwrap();
     }
     #[cfg(not(feature = "shell"))]
-    pub(crate) fn stop(self) {
-        for child in [
-            self.input,
-            Some(self.root),
-            Some(self.display_task),
-            Some(self.storage),
-        ]
-        .into_iter()
-        .flatten()
+    pub(crate) fn stop(mut self) {
+        for child in [self.input, Some(self.root), Some(self.display_task)]
+            .into_iter()
+            .flatten()
         {
             match child.wait_until(time::now().unwrap()) {
                 Ok(_) => (),
@@ -278,6 +257,9 @@ impl Session {
                 }
                 Err(error) => panic!("desktop shutdown {error:?}"),
             }
+        }
+        if let Some(provider) = self.storage.take() {
+            provider.retire();
         }
         if self.input.is_none() {
             self.source.0.close().unwrap();

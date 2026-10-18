@@ -21,4 +21,5 @@ workspace = true
 
 [features]
 recovery-lab = []
+startup-probes = []
 trace-storage = ["cathedral-ata-pio/trace-storage"]

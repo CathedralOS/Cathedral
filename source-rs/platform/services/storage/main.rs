@@ -8,11 +8,15 @@ mod gate;
 mod hierarchy;
 mod metrics;
 mod service;
+#[cfg(feature = "startup-probes")]
+mod startup_probe;
 use cathedral_user_runtime::heap::{self, Heap};
 #[global_allocator]
 static HEAP: Heap = Heap::empty();
 cathedral_user_runtime::entry!(main);
-fn main(_: u64, _: u64) -> u64 {
+fn main(_: u64, _argument: u64) -> u64 {
+    #[cfg(feature = "startup-probes")]
+    startup_probe::run(_argument);
     // Leave the rest of the private allowance for sealed read replies of up to
     // MAX_BYTES, separately from the allocator. Reader custody continues to
     // charge this provider's budget until the last reader releases a reply.

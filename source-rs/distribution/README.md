@@ -33,8 +33,10 @@ If `Login` or `Users` cannot be resolved, the login executable is rejected, or
 the picker dies, the startup owner shows **SIGN-IN UNAVAILABLE / TRY AGAIN**.
 The [recovery screen](desktop/recovery/main.rs) comes from boot media, so it
 does not need another readable stored program. Click the button, or press Enter
-with focus, to retry. It does not repair or overwrite data. Provider startup
-failures are not covered yet.
+with focus, to retry. Display/input come up before storage; while the volume opens,
+the same screen shows **STARTING...**. A failed, malformed or timed-out storage
+startup becomes retryable after its task and endpoints are collected. It does not
+repair or overwrite data. Initial display/input/root failures remain uncovered.
 
 If the configured app strip crashes, its matrix attempts one local restart,
 preserving the running app and its draft. The replacement keeps the current

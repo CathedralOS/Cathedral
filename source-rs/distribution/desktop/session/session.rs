@@ -1,7 +1,7 @@
-// The F5 desktop. Admit providers and the funded root matrix, show the chooser
-// the folder of users, open the workspace slot to what it launches, start
-// physical input, then request each user matrix's own startup and supervise
-// storage. Admission and standing policy live in shell/; the chooser and the
+// The F5 desktop. Admit display/input and the funded root matrix, open storage
+// behind an interactive recovery screen, then show the chooser the users realm.
+// Request each selected user matrix's own startup and supervise storage.
+// Admission and standing policy live in shell/; the chooser and the
 // apps are programs in the store. The lab module composes the same admission,
 // apps and budgets into the probe desktop from the boot catalogue.
 use super::*;
@@ -32,13 +32,14 @@ pub(crate) fn run() -> u64 {
             0,
         ],
     );
-    session.login.start(matrix, session.extent, false);
     shell::workspace(matrix, session.extent);
     session.start_input();
-    cathedral_user_runtime::write(b"Cathedral desktop: ready; choose a user\n").unwrap();
+    persistence::startup::begin(&mut session);
+    cathedral_user_runtime::write(b"Cathedral desktop: interactive startup ready\n").unwrap();
     #[cfg(any(feature = "launcher-stop-probe", feature = "launcher-revoke-probe"))]
     let mut recovery_probed = false;
     loop {
+        persistence::startup::progress(&mut session);
         // The chooser launches a user matrix into the workspace slot; the
         // desktop observes only that direct child's realm. The user matrix
         // owns its launcher, app policy and recovery bindings.
@@ -61,10 +62,22 @@ pub(crate) fn run() -> u64 {
                 cathedral_user_runtime::write(b"Cathedral desktop: user matrix closed\n").unwrap();
             }
         }
-        if session.user == 0 {
-            session.login.poll(matrix, session.extent);
+        if session.user == 0 && session.login.poll(matrix, session.extent) {
+            if session.storage.is_none() {
+                persistence::startup::begin(&mut session);
+            } else {
+                session.login.start(matrix, session.extent, false);
+            }
         }
         persistence::supervise(&mut session);
+        if session.user == 0
+            && session.storage_watch.offline
+            && session.login == shell::Login::Picker
+        {
+            session
+                .login
+                .recover(matrix, session.extent, abi::PEER_CLOSED);
+        }
         #[cfg(any(feature = "launcher-stop-probe", feature = "launcher-revoke-probe"))]
         if session.user != 0 && !recovery_probed {
             recovery_probed = recovery_probes::apply(matrix);

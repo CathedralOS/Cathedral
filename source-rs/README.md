@@ -173,6 +173,12 @@ missing login paths, invalid/crashing picker code and explicit retry on disposab
 copies. Its transient-refusal fixture verifies recovery into the normal picker
 and a working app; it does not modify the supplied image.
 
+`python tools/boot-harness-rs/provider_startup_test.py PATH_TO_ONE_USER_IMAGE`
+checks crashed, unresponsive and malformed storage startup, damaged volume
+headers, responsive input while waiting and manual retry into a working desktop.
+The two restart-budget policy tests run with
+`python tools/boot-harness-rs/recovery_policy_test.py`.
+
 `python tools/boot-harness-rs/desktop_test.py` drives that same composition
 through QMP and checks its scanout; it uses only Python's standard library.
 `--release` selects an optimized build. `--memory 256` selects guest RAM in MiB.

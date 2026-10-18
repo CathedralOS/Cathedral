@@ -2,7 +2,7 @@
 // streams, replace within a session budget, then explicitly restore matrix grants.
 use super::*;
 use cathedral_platform_contracts::storage;
-use cathedral_user_runtime::{task::Port, write};
+use cathedral_user_runtime::write;
 pub(crate) use policy::Watchdog;
 fn revoke(session: &admission::Session) {
     for slot in 0..2 {
@@ -13,17 +13,7 @@ fn revoke(session: &admission::Session) {
     }
 }
 fn regrant(session: &mut admission::Session) -> Result<(), Error> {
-    session.storage = Launch::at(3)?.spawn(0)?;
-    session.storage_control = Port::at(3)?.connect()?;
-    session.storage_control.0.send(storage::HEALTH)?;
-    let mut bytes = [0; 64];
-    let n = session
-        .storage_control
-        .1
-        .receive_until(&mut bytes, time::after(policy::STARTUP_TIMEOUT)?)?;
-    if &bytes[..n] != b"ready" {
-        return Err(Error(abi::IO_ERROR as i64));
-    }
+    session.storage = Some(Provider::start()?);
     #[cfg(feature = "shell")]
     super::shell::regrant(session);
     #[cfg(not(feature = "shell"))]
@@ -48,8 +38,14 @@ pub(crate) fn supervise(session: &mut admission::Session) {
     if session.storage_watch.offline {
         return;
     }
+    let Some(provider) = session.storage.as_ref() else {
+        return;
+    };
+    if provider.starting.is_some() {
+        return;
+    }
     let now = time::now().unwrap();
-    let dead = match session.storage.wait_until(now) {
+    let dead = match provider.child.wait_until(now) {
         Ok(_) => true,
         Err(Error(code)) if code == abi::TIMED_OUT as i64 => false,
         Err(error) => panic!("storage supervision: {error:?}"),
@@ -65,7 +61,7 @@ pub(crate) fn supervise(session: &mut admission::Session) {
     if !failed {
         if let Some(deadline) = session.storage_watch.pending {
             let mut bytes = [0; 64];
-            match session.storage_control.1.receive_until(&mut bytes, now) {
+            match provider.control.1.receive_until(&mut bytes, now) {
                 Ok(n) if &bytes[..n] == b"ready" => session.storage_watch.healthy(now),
                 Err(Error(code)) if code == abi::TIMED_OUT as i64 => {
                     failed = time::reached(now, deadline);
@@ -73,29 +69,27 @@ pub(crate) fn supervise(session: &mut admission::Session) {
                 _ => failed = true,
             }
         } else if time::reached(now, session.storage_watch.next_probe) {
-            failed = session.storage_control.0.send(storage::HEALTH).is_err();
+            failed = provider.control.0.send(storage::HEALTH).is_err();
             session.storage_watch.pending = Some(now.wrapping_add(policy::PROBE_TIMEOUT));
         }
     }
     if !failed {
         return;
     }
+    session.storage.take().unwrap().retire();
     if !dead {
-        session.storage.cancel().unwrap();
-        session.storage.wait().unwrap();
         write(b"Cathedral matrix desktop: stalled storage cancelled and collected\n").unwrap();
     }
     revoke(session);
-    let _ = session.storage_control.0.close();
-    let _ = session.storage_control.1.close();
     if !session.storage_watch.allow_restart() {
         write(b"Cathedral matrix desktop: storage offline; restart budget exhausted\n").unwrap();
         return;
     }
     if let Err(error) = regrant(session) {
         time::storage_sample("storage-restart-failed", &[error.0 as u64]);
-        let _ = session.storage.cancel();
-        let _ = session.storage.wait();
+        if let Some(provider) = session.storage.take() {
+            provider.retire();
+        }
         session.storage_watch.offline = true;
         write(b"Cathedral matrix desktop: storage offline; replacement failed\n").unwrap();
         return;

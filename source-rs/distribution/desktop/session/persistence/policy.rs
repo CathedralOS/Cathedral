@@ -15,6 +15,12 @@ pub struct Watchdog {
     restarts: u8,
 }
 impl Watchdog {
+    #[cfg(any(feature = "shell", test))]
+    pub fn manual_start(&mut self) {
+        self.offline = false;
+        self.pending = None;
+        // One explicit attempt never replenishes automatic restart authority.
+    }
     pub fn allow_restart(&mut self) -> bool {
         self.pending = None;
         if self.offline || self.restarts == MAX_RESTARTS {
@@ -44,5 +50,18 @@ mod tests {
         watch.healthy(2000);
         assert!(!watch.allow_restart());
         assert!(watch.offline);
+    }
+    #[test]
+    fn explicit_attempt_does_not_replenish_automatic_restarts() {
+        let mut watch = Watchdog::default();
+        for _ in 0..MAX_RESTARTS {
+            assert!(watch.allow_restart());
+        }
+        assert!(!watch.allow_restart());
+        watch.pending = Some(100);
+        watch.manual_start();
+        assert!(!watch.offline && watch.pending.is_none());
+        watch.healthy(200);
+        assert!(!watch.allow_restart());
     }
 }

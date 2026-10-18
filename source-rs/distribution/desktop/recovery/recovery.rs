@@ -21,7 +21,7 @@ pub(crate) fn call(pair: Pair, packet: wire::Packet) -> wire::Packet {
     wire::decode(&bytes[..n]).unwrap()
 }
 
-pub(crate) fn run(environment: Environment) -> u64 {
+pub(crate) fn run(environment: Environment, mut failed: bool) -> u64 {
     let connections =
         cathedral_user_runtime::matrix::OptionalConnections::load(&environment).unwrap();
     let parent = connections.interaction;
@@ -29,27 +29,47 @@ pub(crate) fn run(environment: Environment) -> u64 {
     let mut epoch = 0;
     let mut pressed = false;
     let mut retry = false;
+    let mut painted = None;
+    let mut surface = 0;
     loop {
         let snapshot = call(parent, [wire::POLL, 0, 0, 0, 0, 0, 0, 0]);
         let view = wire::poll_view(snapshot);
         if view[0] == 0 {
             if epoch != view[1] {
-                crate::screen::paint(parent, view);
+                let reply = call(parent, [wire::SURFACE_CREATE, view[1], 0, 0, 0, 0, 0, 0]);
+                assert_eq!(reply[0], 0);
+                surface = reply[1];
                 epoch = view[1];
-                pressed = false;
-                cathedral_user_runtime::write(b"Cathedral desktop: sign-in recovery visible\n")
-                    .unwrap();
+                painted = None;
+            }
+            if painted != Some(failed) {
+                crate::screen::paint(parent, view, surface, failed);
+                painted = Some(failed);
+                cathedral_user_runtime::write(if failed {
+                    b"Cathedral desktop: sign-in recovery visible\n"
+                } else {
+                    b"Cathedral desktop: storage starting visible\n"
+                })
+                .unwrap();
             }
             let event = wire::poll_event(snapshot);
             match event[2] {
-                wire::CANCEL => pressed = false,
+                // Cancellation clears the old lease, not the physical button.
+                // Keep the last observed button state across presentation
+                // phases: a held press cannot become a new retry, and an
+                // already released button needs only one fresh click.
+                wire::CANCEL => (),
                 wire::POINTER => {
                     let down = event[5] & 1 != 0;
-                    retry |= down && !pressed && crate::screen::button(view, event[3], event[4]);
+                    retry |= failed
+                        && down
+                        && !pressed
+                        && crate::screen::button(view, event[3], event[4]);
                     pressed = down;
                 }
                 wire::KEY => {
-                    retry |= event[3] == input::ENTER as u64 && event[4] == input::PRESS as u64
+                    retry |=
+                        failed && event[3] == input::ENTER as u64 && event[4] == input::PRESS as u64
                 }
                 _ => (),
             }
@@ -66,6 +86,13 @@ pub(crate) fn run(environment: Environment) -> u64 {
                 let n = control.0.receive(&mut bytes).unwrap();
                 let request = wire::decode(&bytes[..n]).unwrap();
                 let reply = match request[0] {
+                    crate::protocol::STATUS if request[1] <= crate::protocol::FAILED => {
+                        failed = request[1] != crate::protocol::STARTING;
+                        retry = false;
+                        // Owner revokes queued input before STATUS. Preserve
+                        // button state until a new local pointer report arrives.
+                        [0; 8]
+                    }
                     wire::HEALTH => {
                         let requested = core::mem::take(&mut retry);
                         [0, u64::from(requested), 0, 0, 0, 0, 0, 0]

@@ -11,6 +11,9 @@ mod fixture;
 #[cfg(all(feature = "desktop", not(feature = "shell")))]
 mod lab;
 mod leaf;
+#[cfg(feature = "shell")]
+#[path = "recovery/protocol.rs"]
+mod recovery_protocol;
 #[cfg(not(any(feature = "desktop", feature = "storage-lab")))]
 mod scenario;
 #[cfg(feature = "desktop")]

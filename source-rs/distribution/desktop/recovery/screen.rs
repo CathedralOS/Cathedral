@@ -1,5 +1,5 @@
 //! One retained card; the matrix supplies the background and clips local input.
-use crate::recovery::{Pair, call};
+use crate::recovery::Pair;
 use cathedral_platform_contracts::matrix as wire;
 use cathedral_user_runtime::{memory::Private, time};
 const WIDTH: usize = 288;
@@ -14,9 +14,7 @@ pub(crate) fn button(view: wire::Packet, x: u64, y: u64) -> bool {
     let (left, top) = origin(view);
     (left + 64..left + 224).contains(&x) && (top + 64..top + 104).contains(&y)
 }
-pub(crate) fn paint(parent: Pair, view: wire::Packet) {
-    let reply = call(parent, [wire::SURFACE_CREATE, view[1], 0, 0, 0, 0, 0, 0]);
-    assert_eq!(reply[0], 0);
+pub(crate) fn paint(parent: Pair, view: wire::Packet, surface: u64, failed: bool) {
     let mut pixels = Private::allocate((WIDTH * HEIGHT * 4).div_ceil(4096)).unwrap();
     for (index, pixel) in pixels.bytes_mut()[..WIDTH * HEIGHT * 4]
         .chunks_exact_mut(4)
@@ -24,7 +22,7 @@ pub(crate) fn paint(parent: Pair, view: wire::Packet) {
     {
         let x = index % WIDTH;
         let y = index / WIDTH;
-        let color: u32 = if (64..224).contains(&x) && (64..104).contains(&y) {
+        let color: u32 = if failed && (64..224).contains(&x) && (64..104).contains(&y) {
             0x315ca8
         } else {
             0x101827
@@ -32,8 +30,22 @@ pub(crate) fn paint(parent: Pair, view: wire::Packet) {
         pixel.copy_from_slice(&color.to_le_bytes());
     }
     for (y, text) in [
-        (16, b"SIGN-IN UNAVAILABLE".as_slice()),
-        (77, b"TRY AGAIN".as_slice()),
+        (
+            16,
+            if failed {
+                b"SIGN-IN UNAVAILABLE".as_slice()
+            } else {
+                b"STARTING...".as_slice()
+            },
+        ),
+        (
+            77,
+            if failed {
+                b"TRY AGAIN".as_slice()
+            } else {
+                b"".as_slice()
+            },
+        ),
     ] {
         let left = (WIDTH - text.len() * 12) / 2;
         for (i, &ch) in text.iter().enumerate() {
@@ -63,7 +75,7 @@ pub(crate) fn paint(parent: Pair, view: wire::Packet) {
             &wire::encode([
                 wire::SURFACE_IMAGE,
                 view[1],
-                reply[1],
+                surface,
                 x,
                 y,
                 WIDTH as u64,

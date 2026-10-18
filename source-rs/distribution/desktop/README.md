@@ -16,7 +16,11 @@ stay in the launcher process; the desktop does not inspect user grandchildren.
 Missing root Login/Users, rejected picker code and picker death enter the
 [login recovery controller](session/shell/login.rs). It runs the boot-bundled
 [recovery program](recovery/main.rs), which asks for an explicit retry without
-holding a storage realm. Initial provider admission remains separate work.
+holding a storage realm. [Storage startup](session/persistence/startup.rs) runs
+after display/input and polls readiness without blocking their event loops. A
+3,000-tick timeout, process death or non-`ready` response retires the task and its
+control stream and enables a single explicit retry. The initial display/input/root
+admission failures remain separate work.
 The matrix now retries a failed configured launcher once without restarting its app.
 
 Colors' [close control](../applications/colors/session/closing.rs) renders an X and handles local
@@ -203,8 +207,7 @@ session, then leaves storage offline; a failed reopen also stops recovery. A los
 app transport requires replacement. The standalone restart-budget policy test is:
 
 ```powershell
-rustc --edition 2024 --test source-rs/distribution/session/session/persistence/policy.rs -o build/recovery-policy.exe
-./build/recovery-policy.exe
+python tools/boot-harness-rs/recovery_policy_test.py
 ```
 
 The `notes` composition substitutes the separate [notes application](../applications/notes/README.md)

@@ -32,7 +32,7 @@ fn app(matrix: Pair, op: u64) -> wire::Packet {
     )
 }
 fn retire(session: &mut admission::Session) {
-    session.storage.cancel().unwrap();
+    session.provider().child.cancel().unwrap();
     assert_ne!(app(session.matrix, 13)[0], 0);
     for slot in 0..2 {
         owner(
@@ -59,7 +59,7 @@ pub(super) fn exercise(session: &mut admission::Session) {
         stalls_peer::stop(session);
         return;
     }
-    receive(session.storage_control, b"blocked");
+    receive(session.provider().control, b"blocked");
     // Initial CREATE committed, but the app never received success.
     stalls_peer::interact(session);
     // Let the actual matrix deadline expire while the provider remains alive.
@@ -73,9 +73,9 @@ pub(super) fn exercise(session: &mut admission::Session) {
     );
     assert_eq!(app(session.matrix, 13)[0], abi::TIMED_OUT);
     pixel(session.matrix, 170, 225, 0xe96f6f);
-    let old = session.storage.raw();
+    let old = session.provider().child.raw();
     let deadline = time::after(1000).unwrap();
-    while session.storage.raw() == old {
+    while session.provider().child.raw() == old {
         persistence::supervise(session);
         stalls_peer::interact(session);
         assert!(!time::reached(time::now().unwrap(), deadline));
@@ -94,10 +94,10 @@ pub(super) fn exercise(session: &mut admission::Session) {
     write(b"Cathedral database desktop: uncertain CREATE reconciled without duplication\n")
         .unwrap();
     for phase in 1..=2 {
-        arm(session.storage_control, phase, storage::PUBLISH as u8);
+        arm(session.provider().control, phase, storage::PUBLISH as u8);
         let started = time::now().unwrap();
         assert_eq!(app(session.matrix, 12)[0], 0);
-        receive(session.storage_control, b"blocked");
+        receive(session.provider().control, b"blocked");
         stalls_peer::interact(session);
         assert!(time::now().unwrap().wrapping_sub(started) < 150);
         retire(session);

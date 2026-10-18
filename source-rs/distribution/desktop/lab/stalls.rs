@@ -1,7 +1,6 @@
 //! Deliberately block saves on the provider, exercise the other branch, then
 //! reconcile a lost acknowledgement through explicit fresh storage grants.
 use super::*;
-use cathedral_user_runtime::task::Port;
 fn app(matrix: Pair, nested: bool, op: u64) -> wire::Packet {
     let words = wire::route([op, 0, 0, 0, 0, 0, 0, 0], if nested { 0 } else { 1 }).unwrap();
     call(
@@ -32,7 +31,8 @@ pub(super) fn exercise(session: &mut admission::Session) {
         // Stall the nested app's next publication on its root, before execution
         // or after commit; the sibling's root stays unaffected.
         session
-            .storage_control
+            .provider()
+            .control
             .0
             .send(&[
                 0xf2,
@@ -41,10 +41,10 @@ pub(super) fn exercise(session: &mut admission::Session) {
                 0,
             ])
             .unwrap();
-        receive(session.storage_control, b"armed");
+        receive(session.provider().control, b"armed");
         let started = time::now().unwrap();
         assert_eq!(app(matrix, true, 12)[0], 0);
-        receive(session.storage_control, b"blocked");
+        receive(session.provider().control, b"blocked");
         // Root control, physical-source ingress and sibling rendering still run
         // while storage is demonstrably blocked, not merely after it recovers.
         assert_eq!(
@@ -65,7 +65,7 @@ pub(super) fn exercise(session: &mut admission::Session) {
             "sibling waited for storage timeout: {elapsed} ticks"
         );
         if mode == 0 {
-            session.storage_control.0.send(&[0xf3]).unwrap();
+            session.provider().control.0.send(&[0xf3]).unwrap();
             assert_eq!(app(matrix, true, wire::HEALTH)[5], 0);
             pixel(matrix, 140, 190, 0xd18b35);
             assert_eq!(app(matrix, true, 8)[0], 0);
@@ -82,17 +82,18 @@ pub(super) fn exercise(session: &mut admission::Session) {
                 call(matrix, [wire::STORAGE_GRANT, 0, 0, 0, 0, 0, 0, 0])[0],
                 abi::BUSY
             );
-            session.storage_control.0.send(&[0xf3]).unwrap();
+            session.provider().control.0.send(&[0xf3]).unwrap();
             // Force the now-late reply to be sent before provider retirement.
             session
-                .storage_control
+                .provider()
+                .control
                 .0
                 .send(cathedral_platform_contracts::storage::HEALTH)
                 .unwrap();
-            receive(session.storage_control, b"ready");
+            receive(session.provider().control, b"ready");
         }
-        session.storage.cancel().unwrap();
-        session.storage.wait().unwrap();
+        session.provider().child.cancel().unwrap();
+        session.provider().child.wait().unwrap();
         let status = app(matrix, true, wire::HEALTH);
         assert_eq!(status[4], 0); // No acknowledgement: app still shows old state.
         if mode == 2 {
@@ -102,14 +103,8 @@ pub(super) fn exercise(session: &mut admission::Session) {
             owner(matrix, [wire::STORAGE_REVOKE, slot, 0, 0, 0, 0, 0, 0]);
         }
         stalls_peer::interact(session);
-        session.storage = Launch::at(3).unwrap().spawn(0).unwrap();
-        session.storage_control = Port::at(3).unwrap().connect().unwrap();
-        session
-            .storage_control
-            .0
-            .send(cathedral_platform_contracts::storage::HEALTH)
-            .unwrap();
-        receive(session.storage_control, b"ready");
+        session.storage.take().unwrap().retire();
+        session.storage = Some(persistence::Provider::start().unwrap());
         for slot in 0..2 {
             owner(matrix, [wire::STORAGE_GRANT, slot, slot, 0, 0, 0, 0, 0]);
         }

@@ -2,9 +2,12 @@
 //! Only a real retry request retries admission. A dead picker shows recovery;
 //! a dead recovery screen does not create an automatic restart loop.
 use super::*;
+// A 32-page card beside its retained predecessor while replacing its image.
+const RECOVERY_PAGES: u64 = 64;
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub(crate) enum Login {
     Stopped,
+    Starting,
     Picker,
     Recovery,
 }
@@ -28,20 +31,50 @@ impl Login {
     }
     pub(crate) fn recover(&mut self, matrix: Pair, extent: [u64; 2], code: u64) {
         time::storage_sample("login-start-refused", &[code]);
+        self.screen(matrix, extent, true);
+    }
+    pub(crate) fn waiting(&mut self, matrix: Pair, extent: [u64; 2]) {
+        self.screen(matrix, extent, false);
+    }
+    fn screen(&mut self, matrix: Pair, extent: [u64; 2], failed: bool) {
+        use crate::recovery_protocol as protocol;
+        let state = if failed {
+            Self::Recovery
+        } else {
+            Self::Starting
+        };
+        let mode = if failed {
+            protocol::FAILED
+        } else {
+            protocol::STARTING
+        };
         // A failed lookup leaves the existing recovery screen and its input
         // state alive. A failed admission may already have retired it.
-        if *self == Self::Recovery && health(matrix)[0] != abi::PEER_CLOSED {
+        if matches!(*self, Self::Recovery | Self::Starting) && health(matrix)[0] != abi::PEER_CLOSED
+        {
+            if *self != state {
+                // Retire queued input/focus before enabling a different state.
+                // A click during readiness must not become a later retry.
+                request(matrix, [wire::REVOKE, 0, 0, 0, 0, 0, 0, 0]).unwrap();
+                request(
+                    matrix,
+                    wire::route([protocol::STATUS, mode, 0, 0, 0, 0, 0, 0], 0).unwrap(),
+                )
+                .unwrap();
+                select_user(matrix, extent).unwrap();
+            }
+            *self = state;
             return;
         }
         stop(matrix, 0).expect("login cleanup");
-        request(matrix, [wire::RUN_PAGES, 0, 32, 0, 0, 0, 0, 0]).unwrap();
-        request(matrix, [wire::RUN, 0, 0, 0, 0, 0, 0, 0]).expect("bundled recovery admission");
+        request(matrix, [wire::RUN_PAGES, 0, RECOVERY_PAGES, 0, 0, 0, 0, 0]).unwrap();
+        request(matrix, [wire::RUN, 0, 0, mode, 0, 0, 0, 0]).expect("bundled recovery admission");
         select_user(matrix, extent).expect("recovery placement");
-        *self = Self::Recovery;
+        *self = state;
     }
-    pub(crate) fn poll(&mut self, matrix: Pair, extent: [u64; 2]) {
-        if *self == Self::Stopped {
-            return;
+    pub(crate) fn poll(&mut self, matrix: Pair, extent: [u64; 2]) -> bool {
+        if matches!(*self, Self::Stopped | Self::Starting) {
+            return false;
         }
         let reply = health(matrix);
         match *self {
@@ -49,10 +82,11 @@ impl Login {
             Self::Recovery if reply[0] == 0 && reply[1] == 1 => {
                 cathedral_user_runtime::write(b"Cathedral desktop: sign-in retry requested\n")
                     .unwrap();
-                self.start(matrix, extent, false);
+                return true;
             }
             _ => (),
         }
+        false
     }
 }
 fn health(matrix: Pair) -> wire::Packet {
