@@ -1,0 +1,142 @@
+//! Build missing names inside the supplied realm; never copy an ancestor or
+//! overwrite existing programs/data. Every operation is atomic and retryable.
+use cathedral_desktop_matrix_contracts::matrix::config;
+use cathedral_kernel_contracts::user as abi;
+use cathedral_platform_contracts::storage as store;
+use cathedral_user_runtime::storage::Scope;
+const SEEDS: [&[u8]; 5] = [b"User", b"Chooser", b"Notes", b"Colors", b"Background"];
+pub fn prepare(scope: &mut Scope, keys: u64) -> Result<(u64, u64), u64> {
+    let picker = scope.lookup(b"Chooser")?;
+    let users = create(scope, b"Users", scope.realm(), b"Users", &[])?;
+    let user_code = scope.lookup(b"User")?;
+    let template = copy(
+        scope,
+        b"Users/Template",
+        users,
+        b"Template",
+        user_code,
+        false,
+    )?;
+    for (source, name, path) in [
+        (
+            b"Chooser".as_slice(),
+            b"Desktop".as_slice(),
+            b"Users/Template/Desktop".as_slice(),
+        ),
+        (b"Background", b"Background", b"Users/Template/Background"),
+        (b"Notes", b"Notes", b"Users/Template/Notes"),
+        (b"Colors", b"Colors", b"Users/Template/Colors"),
+    ] {
+        let source = scope.lookup(source)?;
+        copy(scope, path, template, name, source, true)?;
+    }
+    let nested = copy(
+        scope,
+        b"Users/Template/Nested",
+        template,
+        b"Nested",
+        scope.realm(),
+        false,
+    )?;
+    for name in SEEDS {
+        let source = scope.lookup(name)?;
+        let mut path = [0; 64];
+        let prefix = b"Users/Template/Nested/";
+        path[..prefix.len()].copy_from_slice(prefix);
+        path[prefix.len()..prefix.len() + name.len()].copy_from_slice(name);
+        copy(
+            scope,
+            &path[..prefix.len() + name.len()],
+            nested,
+            name,
+            source,
+            true,
+        )?;
+    }
+    let mut launcher = [0; 32];
+    launcher[..7].copy_from_slice(b"Desktop");
+    let config = config::Config {
+        launcher,
+        launcher_pages: 96,
+        app_pages: 384,
+        app_readers: 768,
+        margin: 24,
+        launcher_width: 192,
+        gap: 16,
+        app_surfaces: 32,
+        keys,
+    };
+    create(
+        scope,
+        b"Users/Template/Matrix",
+        template,
+        b"Matrix",
+        &config.encode(),
+    )?;
+    Ok((picker, users))
+}
+fn existing(scope: &mut Scope, path: &[u8]) -> Result<Option<u64>, u64> {
+    match scope.lookup(path) {
+        Ok(id) => Ok(Some(id)),
+        Err(store::MISSING) => Ok(None),
+        Err(c) => Err(c),
+    }
+}
+fn copy(
+    scope: &mut Scope,
+    path: &[u8],
+    parent: u64,
+    name: &[u8],
+    source: u64,
+    tree: bool,
+) -> Result<u64, u64> {
+    if let Some(id) = existing(scope, path)? {
+        return Ok(id);
+    }
+    let head = scope.call(store::Request::new(store::HEAD, source, 0, 0, 0))?;
+    match scope.attached(
+        store::Request::new(
+            if tree { store::COPY_TREE } else { store::COPY },
+            source,
+            head.revision,
+            parent,
+            name.len() as u64,
+        ),
+        name,
+    ) {
+        Ok(bytes) => Ok(store::Reply::decode(&bytes)?.object),
+        Err(abi::WOULD_BLOCK) => scope.lookup(path),
+        Err(c) => Err(c),
+    }
+}
+fn create(
+    scope: &mut Scope,
+    path: &[u8],
+    parent: u64,
+    name: &[u8],
+    data: &[u8],
+) -> Result<u64, u64> {
+    if let Some(id) = existing(scope, path)? {
+        return Ok(id);
+    }
+    let metadata = store::metadata::Metadata::new(name, b"")
+        .ok_or(abi::INVALID_ARGUMENT)?
+        .encode();
+    let mut bytes = [0; store::metadata::BYTES + config::SIZE];
+    bytes[..metadata.len()].copy_from_slice(&metadata);
+    bytes[metadata.len()..metadata.len() + data.len()].copy_from_slice(data);
+    match scope.attached(
+        store::Request::new(
+            store::CREATE_NAMED,
+            0,
+            0,
+            parent,
+            (metadata.len() + data.len()) as u64,
+        ),
+        &bytes[..metadata.len() + data.len()],
+    ) {
+        Ok(bytes) => Ok(store::Reply::decode(&bytes)?.object),
+        Err(abi::WOULD_BLOCK) => scope.lookup(path),
+        Err(c) => Err(c),
+    }
+}

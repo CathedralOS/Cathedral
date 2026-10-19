@@ -64,7 +64,13 @@ impl Realm {
                 if id == hidden || Some(id) == background {
                     continue;
                 }
-                if self.count == ENTRIES {
+                if self.count
+                    == if self.user_picker {
+                        USER_ENTRIES
+                    } else {
+                        ENTRIES
+                    }
+                {
                     return Ok(());
                 }
                 let meta = self.scope.metadata(id)?;
@@ -83,7 +89,7 @@ impl Realm {
     /// A new entry: the resolved template copied whole, beside it. A user realm made
     /// this way shares every byte of the template until it diverges.
     pub fn copy_first(&mut self) -> Result<(), u64> {
-        if self.count == 0 || self.count == ENTRIES {
+        if self.count == 0 || self.count == USER_ENTRIES {
             return Err(abi::DENIED);
         }
         let template = self.ids[0];

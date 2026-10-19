@@ -12,7 +12,8 @@ use cathedral_user_runtime::{
 };
 pub type Pair = (Handle, Handle);
 /// Bounded realm listing; presentation hides the template/chrome at index zero.
-pub const ENTRIES: usize = 4;
+pub const ENTRIES: usize = 5;
+pub const USER_ENTRIES: usize = 4;
 pub const NEW: usize = ENTRIES;
 const SETTINGS: usize = NEW + 1;
 const END_APP: usize = SETTINGS + 1;
@@ -251,7 +252,7 @@ fn act(
     user_picker: bool,
     launched: &mut Option<u64>,
 ) -> &'static str {
-    if user_picker && selected == NEW && realm.count < ENTRIES {
+    if user_picker && selected == NEW && realm.count < USER_ENTRIES {
         return match realm.copy_first() {
             Ok(()) => "",
             Err(abi::NO_MEMORY) => "NO ROOM",

@@ -3,14 +3,14 @@ use super::*;
 use cathedral_user_runtime::memory::Private;
 pub struct Scene {
     pub epoch: u64,
-    names: [u64; 6],
+    names: [u64; 7],
 }
 impl Scene {
     pub fn new(parent: Pair, epoch: u64, picker: bool) -> Result<Self, u64> {
-        let mut names = [0; 6];
+        let mut names = [0; 7];
         for (rank, name) in names
             .iter_mut()
-            .take(if picker { 5 } else { 6 })
+            .take(if picker { 6 } else { 7 })
             .enumerate()
         {
             let reply = call(
@@ -84,7 +84,7 @@ impl Scene {
     ) -> Result<(), u64> {
         self.image(
             parent,
-            self.names[5],
+            self.names[6],
             tasks.paint(realm),
             [extent[2].saturating_sub(180) / 2, tasks::TOP, 180, 96],
         )
@@ -96,11 +96,14 @@ impl Scene {
         controls: &management::Controls,
     ) -> Result<(), u64> {
         self.background(parent, extent)?;
-        if self.names[5] != 0 {
+        for index in [4, 6] {
+            if self.names[index] == 0 {
+                continue;
+            }
             accepted(
                 call(
                     parent,
-                    [wire::PAINT, self.epoch, self.names[5], 0, 0, 0, 0, 0],
+                    [wire::PAINT, self.epoch, self.names[index], 0, 0, 0, 0, 0],
                 )[0],
             )?;
         }
@@ -127,11 +130,14 @@ impl Scene {
         editor: &settings::Editor,
     ) -> Result<(), u64> {
         self.background(parent, extent)?;
-        if self.names[5] != 0 {
+        for index in [4, 6] {
+            if self.names[index] == 0 {
+                continue;
+            }
             accepted(
                 call(
                     parent,
-                    [wire::PAINT, self.epoch, self.names[5], 0, 0, 0, 0, 0],
+                    [wire::PAINT, self.epoch, self.names[index], 0, 0, 0, 0, 0],
                 )[0],
             )?;
         }
@@ -174,7 +180,7 @@ impl Scene {
                 [
                     wire::PAINT,
                     self.epoch,
-                    self.names[4],
+                    self.names[5],
                     0,
                     0,
                     1,
@@ -213,7 +219,7 @@ impl Scene {
             };
             self.image(
                 parent,
-                self.names[4],
+                self.names[5],
                 pixels,
                 [x, y, 180, 40 + offset as u64],
             )?;

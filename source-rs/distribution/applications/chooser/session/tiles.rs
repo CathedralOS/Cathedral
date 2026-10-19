@@ -53,6 +53,16 @@ pub fn paint(index: usize, picker: bool, selected: bool, title: &[u8]) -> Privat
                 if (51..77).contains(&x) && [34, 35, 44, 45, 54, 55, 64, 65].contains(&y) {
                     color = 0x53718a;
                 }
+            } else if title.starts_with(b"NESTED") {
+                if (26..102).contains(&x) && (16..70).contains(&y) {
+                    color = 0x66ccff;
+                }
+                if (30..98).contains(&x) && (20..66).contains(&y) {
+                    color = CARD;
+                }
+                if (40..92).contains(&x) && (30..60).contains(&y) {
+                    color = 0xc7a2ed;
+                }
             } else if title.starts_with(b"SPLIT") {
                 if (36..61).contains(&x) && (24..72).contains(&y) {
                     color = 0x84d4ad;

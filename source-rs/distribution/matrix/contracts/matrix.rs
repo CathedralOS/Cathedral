@@ -70,3 +70,7 @@ pub const SAVE_RECOVERY_POLL: u64 = 129;
 pub const APP_ENTRY: u64 = 23;
 /// Configured chrome only: select an exact live instance, preserving other apps.
 pub const SELECT_APP: u64 = 24;
+
+/// Explicit stock-program startup intent. This only requests the same CONFIGURE
+/// flow the owner can invoke; grants still come exclusively from its environment.
+pub const WORKSPACE_ARGUMENT: u64 = 3;

@@ -41,7 +41,10 @@ fn capacity_and_epoch_changes_release_every_payload() {
             .unwrap();
     }
     assert_eq!(
-        batch.stage([wire::PAINT, 3, 9, 0, 0, 1, 1, 0], Reader(released.clone())),
+        batch.stage(
+            [wire::PAINT, 3, wire::PRESENT_LIMIT as u64, 0, 0, 1, 1, 0],
+            Reader(released.clone())
+        ),
         Err(abi::NO_MEMORY)
     );
     assert_eq!(released.get(), 1);

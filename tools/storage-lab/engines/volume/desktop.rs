@@ -2,8 +2,8 @@
 //! construct every expected record without importing the guest store, then
 //! compare the whole retained set. The notes root holds the installed objects
 //! one to six: the chooser, the folder of users, and inside it the template
-//! user with its chrome, Notes and Colors. Named additions install Background, Split and its
-//! Notes code. The copied user shares their content, while its saved notes/color
+//! user with its chrome, Notes and Colors. Named additions install Background,
+//! Split and Nested with their seeds. The copied user shares their content, while its saved notes/color
 //! are distinct objects. The ungranted root holds nothing.
 use super::*;
 use crate::chunks::{Layout, Policy, Store};
@@ -70,19 +70,36 @@ pub fn verify(
         )?;
     }
     hierarchy::insert_config(&mut expected, 7, TEMPLATE)?;
-    if additions.len() != 6
-        || additions[0] != "Background"
-        || additions[2] != "Split"
-        || additions[4] != "Split/Notes"
+    let names = [
+        "Background",
+        "Split",
+        "Split/Notes",
+        "Nested",
+        "Nested/User",
+        "Nested/Chooser",
+        "Nested/Notes",
+        "Nested/Colors",
+        "Nested/Background",
+    ];
+    if additions.len() != names.len() * 2
+        || names
+            .iter()
+            .enumerate()
+            .any(|(i, name)| additions[i * 2] != *name)
     {
-        return Err("expected Background, Split and its Notes program".into());
+        return Err("unexpected installed desktop programs".into());
     }
     // Construct the additive objects independently; no installer call is used.
-    for (id, parent, name, file) in [
-        (8u64, 3u64, b"Background".as_slice(), &additions[1]),
-        (9, 3, b"Split".as_slice(), &additions[3]),
-        (10, 9, b"Notes".as_slice(), &additions[5]),
-    ] {
+    for (index, path) in names.iter().enumerate() {
+        let id = 8 + index as u64;
+        let (parent, name) = match path.rsplit_once('/') {
+            Some((owner, name)) => (
+                8 + names.iter().position(|p| *p == owner).unwrap() as u64,
+                name.as_bytes(),
+            ),
+            None => (TEMPLATE, path.as_bytes()),
+        };
+        let file = &additions[index * 2 + 1];
         let bytes = std::fs::read(file)?;
         let mut store = Store::new(Policy {
             chunk_bytes: 4096,
@@ -110,18 +127,36 @@ pub fn verify(
             cathedral_platform_contracts::storage::metadata::EXECUTABLE,
         )?;
     }
-    let user = 11u64;
-    for source in TEMPLATE..=10 {
-        let copy = user + source - TEMPLATE;
-        let parent = if source == TEMPLATE {
-            USERS
-        } else if source == 10 {
-            user + 6
-        } else {
-            user
-        };
+    let last = 7 + names.len() as u64;
+    let user = last + 1;
+    // The subtree copy visits siblings before their descendants. Installation
+    // order can interleave grandchildren, so object numbers alone are not traversal.
+    let mut order = vec![TEMPLATE];
+    let mut cursor = 0;
+    while cursor < order.len() {
+        let parent = order[cursor];
+        for source in TEMPLATE + 1..=last {
+            let h = &expected[&key(b'h', &source.to_be_bytes())];
+            if u64::from_le_bytes(h[48..].try_into()?) == parent {
+                order.push(source);
+            }
+        }
+        cursor += 1;
+    }
+    let copies: BTreeMap<u64, u64> = order
+        .iter()
+        .enumerate()
+        .map(|(i, &source)| (source, user + i as u64))
+        .collect();
+    for source in order {
+        let copy = copies[&source];
         let source_head = expected[&key(b'h', &source.to_be_bytes())].clone();
         let source_parent = u64::from_le_bytes(source_head[48..].try_into()?);
+        let parent = if source == TEMPLATE {
+            USERS
+        } else {
+            copies[&source_parent]
+        };
         let metadata = cathedral_platform_contracts::storage::metadata::Metadata::decode(
             &expected[&edge(source_parent, source)],
         )
@@ -172,7 +207,8 @@ pub fn verify(
     let second = colors::head(2, &manifests[1], 4 + "hello cathedral two".len(), notes);
     let created = colors::head(1, &manifests[2], 6, colors);
     let color = colors::head(2, &manifests[3], 6, colors);
-    let (note, copy, swatch) = (user + 9, user + 10, user + 8);
+    let copied = last - TEMPLATE + 1;
+    let (note, copy, swatch) = (user + copied + 1, user + copied + 2, user + copied);
     expected.insert(key(b'h', &note.to_be_bytes()), first.clone());
     expected.insert(key(b'h', &copy.to_be_bytes()), second.clone());
     expected.insert(key(b'h', &swatch.to_be_bytes()), color.clone());
@@ -195,7 +231,7 @@ pub fn verify(
         return Err("desktop records differ from the independent object oracle".into());
     }
     println!(
-        "VERIFIED: six base objects, Background, Split and its Notes, and matrix configuration, a named user copied from the template, two notes sharing one manifest under its Notes, the color under its Colors, exact heads/history/edges/quota, empty second root ({} records)",
+        "VERIFIED: six base objects, Background, Split, Nested with its scoped seeds, and matrix configuration, a named user copied from the template, two notes sharing one manifest under its Notes, the color under its Colors, exact heads/history/edges/quota, empty second root ({} records)",
         actual.len()
     );
     Ok(())

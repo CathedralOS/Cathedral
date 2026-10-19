@@ -29,7 +29,14 @@ fn surface_limit(world: &mut World, slot: usize, count: usize) -> Result<(), u64
     world.surface_range(slot, base, count)
 }
 
-pub fn run(environment: Environment) -> Result<(), Error> {
+/// Startup policy never changes the authority in the supplied environment.
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum Startup {
+    Hosted,
+    Picker,
+    Workspace,
+}
+pub fn run(environment: Environment, mut startup: Startup) -> Result<(), Error> {
     // Supplied provider links make this instance the storage root; nothing else does.
     let storage_root = cathedral_user_runtime::link::Link::at(0).is_ok();
     static mut PARENT: Parent = Parent::empty();
@@ -91,6 +98,9 @@ pub fn run(environment: Environment) -> Result<(), Error> {
         }
         if deferred.is_empty() && children.recover(parent, world, &mut server)? {
             continue;
+        }
+        if !parent.storing() && !parent.upstream_busy() {
+            children.startup(&mut startup, parent, world, &mut server)?;
         }
         let (handles, mut deadline) = children.wait();
         children.notify(world)?;

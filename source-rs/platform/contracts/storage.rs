@@ -82,7 +82,7 @@ pub const PIN_SLOTS: u64 = 2;
 pub const SCOPES: usize = 2;
 /// End-to-end forwarding bound. Matrices preserve an earlier supplied deadline;
 /// only the root adapter applies the shorter provider-operation bound.
-pub const EXCHANGE_TICKS: u64 = 1200;
+pub const EXCHANGE_TICKS: u64 = 2 * crate::matrix::STORAGE_DEADLINE_TICKS;
 pub fn deadline(now: u64, requested: u64, budget: u64) -> Option<u64> {
     if budget == 0 || budget >= 1 << 63 {
         return None;

@@ -24,6 +24,7 @@ cathedral-user-runtime.workspace = true
 workspace = true
 
 [features]
+nested-desktop = []
 bootstrap-probes = []
 trace-input = []
 trace-storage = []

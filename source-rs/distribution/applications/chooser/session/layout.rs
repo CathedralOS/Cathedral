@@ -1,5 +1,5 @@
 //! One bounded row of users; a vertical strip of apps. Hit testing shares geometry.
-use super::{ENTRIES, NEW, wire};
+use super::{ENTRIES, NEW, USER_ENTRIES, wire};
 pub const WIDTH: usize = 128;
 pub const HEIGHT: usize = 96;
 pub const GAP: u64 = 24;
@@ -10,7 +10,7 @@ pub fn entries(count: usize, picker: bool) -> ([usize; ENTRIES], usize) {
         items[n] = index;
         n += 1;
     }
-    if picker && count < ENTRIES {
+    if picker && count < USER_ENTRIES {
         items[n] = NEW;
         n += 1;
     }

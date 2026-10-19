@@ -84,3 +84,18 @@ Stock store admission grants the minimum of each request and the owner's offer.
 These are ceilings, not required minima, and grant no extra service or executable.
 This prevents ordinary leaf programs from reserving the budget of an entire matrix.
 The older formats retain owner-offered resource policy for saved-code compatibility.
+
+
+`CTHIMP04` adds three little-endian u64 words after the 144-byte import record:
+private pages, reader pages and surface demand. Its channel/descendant header
+matches `CTHIMP03`, but it uses the ordered environment bootstrap currently used
+by the stock matrix. All five resource values are required funding for this form:
+stock admission refuses an insufficient owner offer before spawning. Resource
+requests never widen imports, storage scope, CPU authority or executable grants.
+The owner still enforces conserving budgets and may refuse an otherwise valid
+request. Earlier formats keep their existing semantics.
+
+The installed Nested program uses this form. Its source is the same stock matrix;
+the `nested-desktop` build selects scoped picker startup. The selected user matrix
+receives the explicit stock `WORKSPACE_ARGUMENT` to run its ordinary CONFIGURE
+path. Neither choice changes how the supplied environment is authenticated.

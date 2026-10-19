@@ -1,11 +1,10 @@
 # Rust reference OS: tasks and handoff
 
-Updated 2026-10-19 (local date). Current milestone: **multiple app instances and
-separate background/chrome roles**. F5 supports three running app instances,
-selection without losing drafts, loss-checked chrome close and app-owned close.
-The background is a separately installed executable with presentation-only funding.
-Split and DEEPER remain the recursive matrix proof; a full nested login desktop is
-next, not implemented. See the latest section for limits and verification.
+Updated 2026-10-19 (local date). Current milestone: **nested desktop through F5 and
+atomic app selection**. Baseline `feb66a95` supports three app instances and
+separate background/chrome roles. Nested now runs its own scoped picker and the
+same desktop, with one inner app under fixed funding. Verification and remaining
+limits are recorded in the latest section below.
 Previous baseline: atomic named creation and deeper recursive matrices at `102e416c`.
 F5 stages changed program installations in host scratch space, then verifies and
 publishes a result that fits the original disk extent.
@@ -37,7 +36,7 @@ It uses x86-64 QEMU/TCG and UEFI.
   USER** copies the hidden template; click a user to enter its workspace. Up
   to three users fit the current bounded listing; the add tile then disappears.
   No scrolling, passwords or logout yet. Restart QEMU to select another user.
-- The user's left-hand app strip shows **NOTES**, **COLORS** and **SPLIT** icon tiles. The
+- The user's left-hand app strip shows **NOTES**, **COLORS**, **SPLIT** and **NESTED** icon tiles. The
   launcher itself and implementation controls are hidden. Click an app tile,
   then the app to focus it. Arrows and Enter work in a focused tile strip.
 - **SPLIT** opens two persistent Notes side by side in a separate matrix process.
@@ -48,6 +47,11 @@ It uses x86-64 QEMU/TCG and UEFI.
   **DEEPER** checks for unsaved work, then enters another Split with independent
   saved notes. Reopen Split and click DEEPER to return there after a restart.
   Further nesting beyond its funding reports **NO ROOM**, retaining live drafts.
+- **NESTED** opens its own user picker and the same desktop, with Notes, Colors
+  and another Nested tile. Close other outer apps first. The current budget fits
+  one inner app; another nesting level reports **NO ROOM**. Inner saves survive
+  closing/reopening Nested and reboot. The outer task-row X refuses to close the
+  subtree while an inner app has unsaved work.
 - **SETTINGS** at the bottom of the user strip (or F2 with strip focus) adjusts
   strip width and outer spacing. Save persists and applies the layout to running
   apps; Cancel discards local edits and returns to apps. Apps retain their state.
@@ -164,8 +168,8 @@ nested matrix. The kernel still knows no matrix, realm or store.
   kernel/platform mechanism. Contracts live with the boundary owner.
 - A matrix is an ordinary program. The instance handed provider links is the
   storage root and the one handed display/input endpoints adapts hardware;
-  every other instance only forwards and attenuates. Nothing branches on depth
-  or on an argument word, and nothing tunnels through a matrix to use its
+  every other instance only forwards and attenuates. No authority policy branches on depth. Stock startup intent may select picker
+  or saved-workspace initialization; nothing tunnels through a matrix to use its
   authority: its owner grants, its children request, the provider decides.
 - Delegation narrows and never widens. A grant names a scope inside what the
   granting matrix holds; the provider, not the matrices, is what makes the chain
@@ -2449,3 +2453,95 @@ page funding. Forty scene surfaces now have 48 local reader slots, covering norm
 replacement/ingress headroom; the independent global read pool remains bounded at
 128. Exhaustion probes now use contract capacities rather than stale literals.
 Automated images are disposable; the interactive `cathedral-storage.raw` was untouched.
+
+
+## 2026-10-19 ? Nested desktop and atomic app selection
+
+The ordinary Nested tile is the stock matrix compiled with `nested-desktop`,
+not a new platform service. Start at `distribution/matrix/main.rs`, then
+`service/children/startup/startup.rs`. It copies finite installed seeds inside its
+own realm, prepares missing `Users/Template` names, and runs the same chooser in
+picker mode. Its selected user is another stock matrix using the usual CONFIGURE
+path. The picker is stopped before that user presents. Inner Notes and Colors
+keep saved data under their own program subtrees; there is no ancestor storage
+binding, physical input or display endpoint supplied to this program.
+
+The template carries another Nested executable with finite seeds. Preparing a
+world is lazy, not infinite eager copying. Existing names and data are never
+overwritten; each creation/copy is atomic and retryable, while preparation as a
+whole is not one transaction. This is selection of a realm, not Warden auth,
+encryption, guest-kernel execution or hardware virtualization.
+
+Bounded funding: Nested requests 320 private pages, 512 reader pages, 40 channels,
+five descendants and 24 surfaces. It gives its selected user 256/384 pages,
+24 channels and three descendants; that supports chrome, background and one leaf.
+Close other outer apps before launching Nested. Another inner Nested level is
+present in the chooser but refused with NO ROOM by the current resource ceiling.
+No task-count or kernel memory-cap increase was made for this milestone.
+Atomic switching exposed the framebuffer aperture overlapping shared mapping
+slots above the old sixteen-reader range. Its virtual address is now
+`0x0000_0080_0400_0000`; a compile-time assertion keeps the entire guarded object
+mapping arena below it. Display clients use DISPLAY_INFO, not a baked-in address.
+The normal outer desktop still supports three ordinary leaves. Fixed surface
+ranges may refuse fragmented capacity rather than moving live siblings.
+
+CTHIMP04 extends the sealed declaration with page/surface demand and requires all
+five requested resource amounts to fit the owner offer before spawn. It uses the
+stock matrix's ordered environment entry. Legacy declarations retain their prior
+rules. Stock config ceilings now admit larger matrix programs while ordinary
+leaves retain 128/128 pages and ten surfaces; old recognized stock configurations
+are upgraded without replacing custom layout. The fourth tile puts task rows at
+local y=504, and chrome has seven surfaces. The storage deadline is 1200 ticks
+(12 seconds at 100 Hz), with client and watchdog waits derived from it. The larger
+template copy exceeded the previous 600-tick bound during extent growth in
+disposable runs. The boot owner's health wait now covers the matrix storage
+deadline, avoiding a root-connection panic during a larger template copy.
+
+App selection stages old/new app visibility in the existing presentation protocol;
+its batch capacity now covers the 40-surface scene. Commit publishes the entire
+switch; refusal aborts and restores local selection. Startup, teardown, settings
+and individual app repaint are still separate operations; this is not vblank sync.
+
+Remaining follow-ups: scalable resource negotiation (including multiple inner
+apps/deeper desktop nesting), responsive narrow-screen chrome, nested background
+and picker recovery, explicit handling of user-matrix startup failure, automatic
+nested layout reflow, and stock-code upgrades inside already-created inner users.
+Current installation upgrades outer stock realms and Nested's installed seeds;
+existing inner snapshots deliberately retain their code. Reopen after a failed
+inner startup by closing Nested from its outer task row. Multiple instances of
+Nested share its saved Users subtree, just as multiple Notes instances share their
+program data. No implicit per-instance realm clone is made.
+
+Verification:
+
+- Rust workspace host tests and 36 storage-lab engine tests pass; userspace/UEFI
+  checks, Nested + trace clippy, formatting, layout (35 Omega / 121 Rust edges)
+  and 13 harness unit tests pass.
+- `desktop_test.py --nested-desktop --trace-storage` passes inner user creation,
+  Notes/Colors persistence across cold reboot, explicit UNSAVED WORK and NO ROOM
+  refusals, subtree teardown and outer/inner Notes isolation. Artifacts:
+  `desktop/20261019T234725230182Z`.
+- Normal desktop passes three Notes instances, switching, refusal, protected close,
+  slot reuse, cold reopen and the independent whole-store oracle (532 records):
+  `desktop/20261019T234900506491Z`.
+- Deep Split passes coexistence, resizing, recursive close, funding refusal and
+  cold reopen: `desktop/20261019T235047434065Z`.
+- ARM64 portability proof and x86-64 smoke pass after the framebuffer relocation,
+  including display restart, aperture guards and mapping rollback/reclamation.
+- Matrix desktop passes recursive atomic publication, admission rollback,
+  stalled-provider isolation, expired-request refusal, lost-ack reconciliation,
+  provider replacement, physical input and cold reopen. Matrix storage passes
+  scoped delegation/revocation, copies, realm-loaded programs and replacement.
+
+The fault-injection regression caught a client deadline still fixed at 1200 ticks
+after the provider bound was lengthened. `storage::EXCHANGE_TICKS` now derives
+from twice that bound, leaving time for the provider verdict to return without
+retiring the client connection. The stall fixture now distinguishes an expired
+pre-execution request (no write) from a committed request whose reply was lost;
+its former expectation that both committed contradicted provider deadline checks.
+
+One earlier disposable normal-desktop run (`desktop/20261019T234336003280Z`)
+reported NO_MEMORY during login and recovery-screen publication. It did not
+reproduce in subsequent normal, nested or deep runs; cause remains unresolved.
+The previous intermittent ATA busy timeout remains open too. Tests use disposable
+images; the interactive saved disk was not altered.

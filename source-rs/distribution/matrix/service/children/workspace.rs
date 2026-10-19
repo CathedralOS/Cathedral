@@ -53,8 +53,7 @@ impl Children {
         if parent.storing() || parent.upstream_busy() || self.loss.is_some() {
             return Ok(wire::error(abi::BUSY));
         }
-        self.activate(slot, parent, world, server)?;
-        Ok([0; 8])
+        Ok(wire::error(self.activate(slot, parent, world, server)?))
     }
     pub(super) fn activate(
         &mut self,
@@ -62,12 +61,23 @@ impl Children {
         parent: &mut Parent,
         world: &mut World,
         server: &Server,
-    ) -> Result<(), Error> {
+    ) -> Result<u64, Error> {
+        if self.active == Some(slot) {
+            return Ok(0);
+        }
         for sibling in 1..BACKGROUND {
             world
                 .visible(sibling, sibling == slot)
                 .map_err(|c| Error(c as i64))?;
-            super::super::requests::replay(parent, world, sibling)?;
+        }
+        let status = parent.switch_scene(world, self.active, slot)?;
+        if status != 0 {
+            for sibling in 1..BACKGROUND {
+                world
+                    .visible(sibling, self.active == Some(sibling))
+                    .map_err(|c| Error(c as i64))?;
+            }
+            return Ok(status);
         }
         self.active = Some(slot);
         if let Some(incarnation) = server.incarnation(0) {
@@ -76,6 +86,22 @@ impl Children {
                 .map_err(|c| Error(c as i64))?;
         }
         world.notify(0);
-        Ok(())
+        Ok(0)
+    }
+}
+
+impl Children {
+    pub(super) fn place_surface_range(
+        &self,
+        world: &mut World,
+        slot: usize,
+        count: usize,
+    ) -> Result<(), u64> {
+        for base in 1..world.backed_surfaces().saturating_sub(7) {
+            if world.surface_range(slot, base, count).is_ok() {
+                return Ok(());
+            }
+        }
+        Err(abi::NO_MEMORY)
     }
 }

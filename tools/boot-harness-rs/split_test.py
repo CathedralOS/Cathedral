@@ -35,7 +35,7 @@ def exercise(output, click, key, scan, width, height, resumed=False, deep=False)
             scan(lambda w,d: pixel(w,d,app_x+5,top+10)==bytes.fromhex('315ca8'), 'Colors beside live Split and Notes')
             click(width-margin-14,top+10)  # Close Colors; Split becomes selected.
             note(0,'a',True); note(1,'b',True)
-            click(90,24+384+32+16)  # Select the still-live outer Notes.
+            click(90,24+504+32+16)  # Select the still-live outer Notes.
             scan(lambda w,d: text(w,d,app_x+10,top+20,'q'), 'outer Notes draft survived matrix switch')
             click(width-margin-14,top+10)
             scan(lambda w,d: text(w,d,app_x+10,top+20,'UNSAVED NOTE'), 'outer Notes close')
@@ -46,7 +46,7 @@ def exercise(output, click, key, scan, width, height, resumed=False, deep=False)
             scan(lambda w,d:text(w,d,width-margin-256+8,top+6,'UNSAVED NOTES'),'recursive dirty close refused')
             note(0,'a',True); note(1,'b',True)
             # The outer matrix changes its placement. Both inner drafts survive.
-            click(40,430); key('f2')
+            click(40,514); key('f2')
             scan(lambda w,d:text(w,d,44,50,'APP STRIP'),'outer settings')
             click(160,100); click(80,260) # width +64; save
             app_x=296
@@ -64,7 +64,7 @@ def exercise(output, click, key, scan, width, height, resumed=False, deep=False)
                 scan(lambda w,d:pixel(w,d,x+5,y+10)==bytes.fromhex('101827'),f'child {slot} retired')
             click(width-margin-14,top+10); blank()
             # Restore saved layout so cold boot tests the identical composition.
-            click(40,430); key('f2')
+            click(40,514); key('f2')
             click(112,100); click(112,260) # smaller strip, save
             app_x=232
             scan(lambda w,d:text(w,d,44,50,'APP STRIP'),'restored outer layout')

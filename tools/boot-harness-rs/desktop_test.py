@@ -18,7 +18,7 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 
 
-def desktop(stream, output, serial, reboot, expected_absolute=True, fill_users=False, service_imports=None, nested=False, nested_saved=False, deep=False):
+def desktop(stream, output, serial, reboot, expected_absolute=True, fill_users=False, service_imports=None, nested=False, nested_saved=False, deep=False, nested_desktop=False):
     assert 'Cathedral: object storage ready' in serial
     position = [40, 40]
     font = bytes.fromhex((ROOT / 'source-rs/platform/libraries/bitmap-font/font.hex').read_text())
@@ -59,7 +59,7 @@ def desktop(stream, output, serial, reboot, expected_absolute=True, fill_users=F
             time.sleep(0.08)
 
     def scan(check, description):
-        deadline = time.monotonic() + 15
+        deadline = time.monotonic() + 45
         while True:
             serial = (output / 'serial.log').read_text(errors='replace')
             assert 'user panic:' not in serial and 'CATHEDRAL_RS_PANIC' not in serial, serial[-3000:]
@@ -230,6 +230,10 @@ def desktop(stream, output, serial, reboot, expected_absolute=True, fill_users=F
     move(8,8)
     scan(picker_gone, 'old picker cannot redraw after a click')
     shutil.copyfile(output / 'display.png', output / 'user-workspace.png')
+    if nested_desktop:
+        import nested_desktop_test
+        nested_desktop_test.exercise(output, click, key, scan, width, height, reboot)
+        return
     if nested:
         import split_test
         split_test.exercise(output, click, key, scan, width, height, nested_saved, deep)
@@ -351,7 +355,7 @@ def desktop(stream, output, serial, reboot, expected_absolute=True, fill_users=F
     print('PASS: user tiles, absolute/relative clicks, app tiles, save/discard/cancel and persistent replacement')
 
 
-def run(timeout, trace_storage=False, relative_pointer=False, service_imports=None, nested=False, deep=False):
+def run(timeout, trace_storage=False, relative_pointer=False, service_imports=None, nested=False, deep=False, nested_desktop=False):
     output = harness.BUILD / 'desktop' / datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S%fZ')
     output.mkdir(parents=True)
     # Exact default composition, with a separate build output so a regression
@@ -373,8 +377,8 @@ def run(timeout, trace_storage=False, relative_pointer=False, service_imports=No
         for parent, file in programs:
             if 'cathedral-notes.elf' in file.name:
                 data = bytearray(file.read_bytes())
-                assert data.count(b'CTHIMP02') == 1
-                at = data.index(b'CTHIMP02')
+                assert data.count(b'CTHIMP03') == 1
+                at = data.index(b'CTHIMP03')
                 assert int.from_bytes(data[at+48:at+56], 'little') == 2
                 if service_imports == 'undeclared':
                     data[at+8:at+16] = (1).to_bytes(8, 'little')
@@ -398,12 +402,15 @@ def run(timeout, trace_storage=False, relative_pointer=False, service_imports=No
     flags = subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0
     for boot in (1, 2):
         capture.run(command, output, timeout, flags, ready_marker='Cathedral desktop: ready; choose a user',
-                    verify=lambda stream, output, serial: desktop(stream, output, serial, boot == 2, not relative_pointer, service_imports=service_imports, nested=nested, nested_saved=boot == 2, deep=deep))
+                    verify=lambda stream, output, serial: desktop(stream, output, serial, boot == 2, not relative_pointer, service_imports=service_imports, nested=nested, nested_saved=boot == 2, deep=deep, nested_desktop=nested_desktop))
         for name in ('serial.log', 'qemu.log', 'display.png'):
             shutil.copyfile(output / name, output / f'boot-{boot}-{name}')
         contents = path.read_bytes()
         database_image.prepare(path, programs, migration, app_close=True, realm_programs=harness.realm_programs(profile, True))
         assert contents == path.read_bytes(), 'relaunch must not reformat storage or reinstall unchanged programs'
+    if nested_desktop:
+        print(f'PASS: nested desktop login, recursive close, confined persistence and cold reopen; artifacts: {output}')
+        return
     if nested:
         print(f'PASS: F5 nested Split matrix across cold reboot; artifacts: {output}')
         return
@@ -431,10 +438,11 @@ if __name__ == '__main__':
     parser.add_argument('--timeout', type=float, default=180)
     parser.add_argument('--relative-pointer', action='store_true', help='disable VM port and verify PS/2 fallback')
     parser.add_argument('--service-imports', choices=('undeclared', 'incompatible'), help='exercise absent optional storage in the ordinary desktop using a disposable manifest variant')
+    parser.add_argument('--nested-desktop', action='store_true', help='exercise the installed nested login and desktop')
     parser.add_argument('--nested', action='store_true', help='exercise the installed alternative Split matrix')
     parser.add_argument('--deep', action='store_true', help='also enter Split inside Split and check bounded admission')
     parser.add_argument('--trace-storage', action='store_true', help='build with storage phase traces in the serial log')
     args = parser.parse_args()
     if args.timeout <= 0:
         parser.error('timeout must be positive')
-    run(args.timeout, args.trace_storage, args.relative_pointer, args.service_imports, args.nested or args.deep, args.deep)
+    run(args.timeout, args.trace_storage, args.relative_pointer, args.service_imports, args.nested or args.deep, args.deep, args.nested_desktop)

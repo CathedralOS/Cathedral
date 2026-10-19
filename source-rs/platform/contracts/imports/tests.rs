@@ -138,3 +138,23 @@ fn requested_resources_are_bounded_metadata_and_do_not_add_services() {
     bytes[137] = 1; // Reserved header bits are not another permission channel.
     assert!(from_elf(&bytes).is_err());
 }
+
+#[test]
+fn profile_requires_its_complete_load_segment_and_preserves_service_requirements() {
+    let mut bytes = image();
+    let profile = encode_profile(&REQUIRED, 40, 5, [320, 512, 24]);
+    bytes[128..128 + PROFILE_BYTES].copy_from_slice(&profile);
+    assert!(from_elf(&bytes).is_err()); // Old segment size cannot contain the extension.
+    bytes[96..104].copy_from_slice(&(PROFILE_BYTES as u64).to_le_bytes());
+    let declaration = from_elf(&bytes).unwrap().unwrap();
+    assert!(!declaration.brokered);
+    assert_eq!(declaration.resources, Some((40, 5)));
+    assert_eq!(declaration.profile, Some([320, 512, 24]));
+    assert_eq!(
+        bind(declaration.entries(), INTERACTION),
+        Err(Refusal::Missing(STORAGE))
+    );
+    assert!(from_elf(&bytes[..128 + PROFILE_BYTES - 1]).is_err());
+    bytes[137] = 1;
+    assert!(from_elf(&bytes).is_err());
+}

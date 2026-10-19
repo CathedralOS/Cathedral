@@ -54,7 +54,11 @@ impl Children {
                 slot,
                 object,
                 scope: object,
-                argument: 0,
+                argument: if self.login {
+                    wire::WORKSPACE_ARGUMENT
+                } else {
+                    0
+                },
                 channels: standing.channels,
                 descendants: standing.descendants,
                 cpu: standing.cpu,
@@ -114,11 +118,13 @@ impl Children {
             && let Some(standing) = self.standing[plan.slot]
         {
             let placement = (if self.desktop {
-                world.surface_range(
+                self.place_surface_range(
+                    world,
                     plan.slot,
-                    1 + (plan.slot - 1) * 10,
-                    standing.surfaces as usize,
+                    self.requested_surfaces[plan.slot].unwrap_or(10) as usize,
                 )
+            } else if self.login {
+                world.surface_range(plan.slot, 0, standing.surfaces as usize)
             } else {
                 surface_limit(world, plan.slot, standing.surfaces as usize)
             })
@@ -136,7 +142,11 @@ impl Children {
         if status.is_ok() && self.desktop && request.client == Some(0) {
             self.next_ticket += 1;
             self.running[plan.slot] = Some((self.next_ticket, plan.object));
-            self.activate(plan.slot, parent, world, server)?;
+            let code = self.activate(plan.slot, parent, world, server)?;
+            if code != 0 {
+                self.stop(plan.slot, server, world, parent)?;
+                status = Err(code);
+            }
         }
         super::requests::flush(parent, world)?;
         super::requests::replay(parent, world, plan.slot)?;

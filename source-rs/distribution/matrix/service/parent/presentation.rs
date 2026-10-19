@@ -103,6 +103,13 @@ impl Parent {
         } else {
             display::decode(&bytes[..len]).ok_or(Error(abi::IO_ERROR as i64))?[0]
         };
+        if status != 0 {
+            let p = self.pending.as_ref().unwrap();
+            time::storage_sample(
+                "present-upstream-refused",
+                &[u64::from(self.upstream), p.step as u64, status],
+            );
+        }
         let p = self.pending.as_mut().unwrap();
         let batch = &self.batches[p.request.client.unwrap()];
         let done = if p.step == wire::PRESENT_LIMIT + 2 {

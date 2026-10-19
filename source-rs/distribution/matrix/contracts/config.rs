@@ -57,8 +57,8 @@ impl Config {
             keys: words[7],
         };
         if result.launcher_pages > 128
-            || result.app_pages > 128
-            || result.app_readers > 128
+            || result.app_pages > 1024
+            || result.app_readers > 1536
             || result.margin > 4096
             || result.launcher_width > 4096
             || result.gap > 4096

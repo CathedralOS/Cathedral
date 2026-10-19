@@ -29,6 +29,7 @@ pub fn from_elf(bytes: &[u8]) -> Result<Option<Declaration>, Refusal> {
         if data.get(..8) != Some(&MAGIC.to_le_bytes())
             && data.get(..8) != Some(&BROKER_MAGIC.to_le_bytes())
             && data.get(..8) != Some(&FUNDED_MAGIC.to_le_bytes())
+            && data.get(..8) != Some(&PROFILE_MAGIC.to_le_bytes())
         {
             return Err(Refusal::Malformed);
         }
@@ -36,7 +37,14 @@ pub fn from_elf(bytes: &[u8]) -> Result<Option<Declaration>, Refusal> {
             return Err(Refusal::Malformed);
         }
         found = Some(Declaration::decode(
-            data.get(..RECORD_BYTES).ok_or(Refusal::Malformed)?,
+            data.get(
+                ..if data.get(..8) == Some(&PROFILE_MAGIC.to_le_bytes()) {
+                    PROFILE_BYTES
+                } else {
+                    RECORD_BYTES
+                },
+            )
+            .ok_or(Refusal::Malformed)?,
         )?);
     }
     Ok(found)

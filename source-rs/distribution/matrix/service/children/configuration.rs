@@ -61,21 +61,21 @@ impl Children {
             return Err(Error(code as i64));
         }
         self.saved_storage[0] = Some((0, 0));
-        // Distribution resource policy: an app may host a matrix and two leaves.
+        // Distribution resource ceilings: a declared app may host a nested desktop.
         // This conveys no executable, storage or device authority by itself.
         self.desktop = true;
         for slot in 1..BACKGROUND {
             self.standing[slot] = Some(Standing {
                 pages: [saved.app_pages, saved.app_readers],
-                channels: 15,
-                descendants: 3,
+                channels: 40,
+                descendants: 5,
                 cpu: 0,
                 surfaces: saved.app_surfaces,
                 place: Some((rect(rects[1]), saved.keys)),
             });
         }
         let placement = world
-            .surface_range(0, world.backed_surfaces().saturating_sub(6), 6)
+            .surface_range(0, world.backed_surfaces().saturating_sub(7), 7)
             .and_then(|()| world.place(0, rect(rects[0]), saved.keys));
         if let Err(code) = placement {
             self.desktop = false;
@@ -232,7 +232,7 @@ fn rect([x, y, width, height]: [u64; 4]) -> Rect {
         height,
     }
 }
-fn read(
+pub(super) fn read(
     scope: &mut Scope,
     id: u64,
     expected: Option<usize>,

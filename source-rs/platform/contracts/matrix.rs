@@ -94,14 +94,14 @@ pub const SURFACE_BITS: u32 = 56;
 /// RGBX little-endian u32 pixels; clipping retains the original row stride.
 pub const SURFACE_IMAGE: u64 = 8;
 
-/// [op, view epoch, nonzero revision, 0..]. Stage at most four distinct existing
+/// [op, view epoch, nonzero revision, 0..]. Stage at most MAX_SURFACES distinct existing
 /// surfaces with PAINT/ERASE/SURFACE_IMAGE; no publication until COMMIT succeeds.
 /// A rejected stage poisons the batch. ABORT releases its readers. Repeating the
 /// latest successful COMMIT is idempotent within this connection and view epoch.
 pub const PRESENT_BEGIN: u64 = 9;
 pub const PRESENT_COMMIT: u64 = 10;
 pub const PRESENT_ABORT: u64 = 11;
-pub const PRESENT_LIMIT: usize = 4;
+pub const PRESENT_LIMIT: usize = MAX_SURFACES;
 
 /// One atomic publication of one or two rectangles, using the same revision space
 /// as BEGIN/COMMIT. Header: op/epoch/revision (24 bytes), then two 20-byte records:
@@ -253,11 +253,12 @@ pub const STORAGE_BINDING: u64 = 120;
 /// not supplied; missing required/version-incompatible imports refuse launch.
 pub const LAUNCH_IMPORTS: u64 = 121;
 /// Monotonic ticks a matrix waits for one forwarded storage request before
-/// retiring its provider stream. The current 100-Hz timer makes 600 ticks
-/// nominally six seconds, not 600 milliseconds. Nested forwards share the
-/// client's absolute 1200-tick bound; program reads have a bounded multi-step
-/// workflow. This is a failure bound, not a commit latency estimate.
-pub const STORAGE_DEADLINE_TICKS: u64 = 600;
+/// retiring its provider stream. The current 100-Hz timer makes 1200 ticks
+/// nominally twelve seconds. The larger scoped template can grow the disk extent
+/// while copying; nested forwards share the client's absolute 2400-tick bound.
+/// Program reads have a bounded multi-step workflow. This is a failure bound,
+/// not a commit latency estimate.
+pub const STORAGE_DEADLINE_TICKS: u64 = 1200;
 
 #[cfg(test)]
 mod rectangle_tests {

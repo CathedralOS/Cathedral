@@ -19,7 +19,7 @@ fn resolve(matrix: Pair, path: &[u8]) -> Result<u64, u64> {
     }
 }
 /// Three 12-page tiles and one replacement fit in the chooser allowance.
-const CHOOSER_PAGES: u64 = 48;
+const CHOOSER_PAGES: u64 = 64;
 
 /// Root slot 0: the chooser, shown the folder of users and nothing else.
 fn chooser(login: &mut Login, matrix: Pair, extent: [u64; 2], failed: bool) -> Result<(), u64> {

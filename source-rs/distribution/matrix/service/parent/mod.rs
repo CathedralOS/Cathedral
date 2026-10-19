@@ -4,6 +4,7 @@ mod images;
 mod presentation;
 mod recovery;
 mod rendering;
+mod scene;
 pub(in crate::service) mod storage;
 
 include!("parent.rs");

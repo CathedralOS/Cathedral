@@ -73,8 +73,7 @@ impl Children {
     }
     /// Code from a sealed object read out of this matrix's realm. It lends only
     /// explicitly owner-allowed executable grants (none by default), and it
-    /// enters with no first argument: a program's shape comes from what it is
-    /// handed, not from a role word.
+    /// receives only the owner-selected startup argument and environment.
     pub(super) fn run_object(
         &mut self,
         plan: super::parent::LaunchRequest,
@@ -85,8 +84,10 @@ impl Children {
         if self.slots[plan.slot].is_some() || !server.available(plan.slot) {
             return Err(Error(abi::BUSY as i64));
         }
+        self.requested_surfaces[plan.slot] = None;
         let imports::Bound {
             binding,
+            profile,
             brokered,
             resources,
         } = imports::resolve(object, plan.imports)?;
@@ -95,18 +96,43 @@ impl Children {
         }
         let storage = binding & cathedral_platform_contracts::imports::STORAGE != 0;
         let executable = Executable::from_object(object, 0)?;
-        let (pages, frames) = match plan.pages {
+        let (mut pages, frames) = match plan.pages {
             Some(pages) => (pages, None),
             None => (
                 self.next_pages[plan.slot].take().unwrap_or([0, 0]),
                 self.next_frames[plan.slot].take(),
             ),
         };
+        if let Some([private, readers, surfaces]) = profile {
+            if private > pages[0]
+                || readers > pages[1]
+                || resources.is_some_and(|(c, d)| c > plan.channels || d > plan.descendants)
+            {
+                return Err(Error(abi::NO_MEMORY as i64));
+            }
+            pages = [private, readers];
+            self.requested_surfaces[plan.slot] = Some(surfaces);
+        } else if self.desktop && (1..BACKGROUND).contains(&plan.slot) {
+            pages = [pages[0].min(128), pages[1].min(128)];
+            self.requested_surfaces[plan.slot] = Some(10);
+        }
+        // Reserve geometry before spawning so a nested matrix cannot start with
+        // less presentation capacity than it requested.
+        if self.desktop
+            && let Some(count) = self.requested_surfaces[plan.slot]
+        {
+            let ceiling = self.standing[plan.slot].map_or(0, |s| s.surfaces);
+            if count > ceiling {
+                return Err(Error(abi::NO_MEMORY as i64));
+            }
+            self.place_surface_range(world, plan.slot, count as usize)
+                .map_err(|c| Error(c as i64))?;
+        }
         let (channels, descendants) = resources
             .map_or((plan.channels, plan.descendants), |(c, d)| {
                 (c.min(plan.channels), d.min(plan.descendants))
             });
-        self.admit(
+        let admitted = self.admit(
             plan.slot,
             executable,
             pages,
@@ -122,7 +148,13 @@ impl Children {
             brokered.then_some(binding),
             server,
             world,
-        )?;
+        );
+        if admitted.is_err() && self.desktop {
+            world
+                .surface_range(plan.slot, 0, 0)
+                .map_err(|c| Error(c as i64))?;
+        }
+        admitted?;
         Ok(storage)
     }
     #[allow(clippy::too_many_arguments)]

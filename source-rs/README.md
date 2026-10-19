@@ -784,7 +784,7 @@ RAM allocation, even if firmware labels it conventional memory.
 
 Boot may bind that aperture to exactly one supervised child's launch grant. No syscall
 accepts an arbitrary physical address, and initial tasks receive no display grant.
-The x86-64 backend maps it at `0x0000_0080_0100_0000`, writable, user-accessible and
+The x86-64 backend maps it at `0x0000_0080_0400_0000`, writable, user-accessible and
 non-executable, with unmapped adjacent pages. It requires PAT support and an
 uncacheable entry at index 3, then uses PCD/PWT leaves. No write-combining setup or
 hardware GPU driver is implemented; inherited firmware aliases remain unused.
@@ -1086,3 +1086,15 @@ python tools/boot-harness-rs/desktop_test.py --service-imports incompatible
 The latter variants change only a disposable Notes import declaration. They check
 that absent optional storage stays absent, dirty-close protection still works,
 and the sibling Colors program persists its own state across cold reboot.
+
+
+### Nested desktop in the normal installation
+
+`python tools/boot-harness-rs/desktop_test.py --nested-desktop --trace-storage`
+uses a disposable image and the ordinary F5 composition. It creates an outer user,
+launches Nested, creates an inner user, saves inner Notes/Colors, checks recursive
+dirty-close refusal and budget refusal, closes the subtree and verifies the outer
+Notes did not inherit its data. It repeats the inner reads after cold reboot.
+See [the distribution route](distribution/README.md#nested-startup-and-scene-switching)
+for code navigation and current funding limits. This test never opens the interactive
+`cathedral-storage.raw`.

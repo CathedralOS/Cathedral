@@ -41,6 +41,9 @@ pub(super) enum Purpose {
 pub(super) struct Children {
     pub separate_storage: bool,
     desktop: bool,
+    requested_surfaces: [Option<u64>; CHILDREN],
+    login: bool,
+    entered: bool,
     active: Option<usize>,
     running: [Option<(u64, u64)>; CHILDREN], // local ticket, program object
     next_ticket: u64,

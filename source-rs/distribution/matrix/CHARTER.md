@@ -20,7 +20,7 @@ its children. The same [world](../../platform/libraries/matrix/world/world.rs) m
 every level. No world policy branches on depth or on a global task identity.
 The built-in distribution supplies layout and supervision policy.
 
-Start at [main.rs](main.rs), which selects the supplied parent adapter, then
+Start at [main.rs](main.rs), which selects startup intent, then
 [service entrance](service/service.rs): consume parent invalidations, wake affected children, observe connection lifetime,
 dispatch an owner or child request, reply. [parent entrance](service/parent/parent.rs) adapts
 either a root grant or the upstream matrix endpoint into the same `Grant`.
@@ -156,7 +156,7 @@ headless storage fixture and visible desktop exercise this boundary.
 Presentation follows [the bounded batch policy](../../platform/libraries/matrix/world/presentation/presentation.rs),
 [authenticated requests](service/requests/presentation.rs), then
 [upstream publication](service/parent/presentation.rs). `PRESENT_BEGIN` stages up
-to four distinct existing surfaces (including sealed images); `PRESENT_COMMIT`
+to forty distinct existing surfaces (including sealed images); `PRESENT_COMMIT`
 publishes the complete clipped batch recursively. A failed stage poisons the
 batch until abort. Abort, binding loss and death drop staged readers. The latest
 successful revision can be retried within its connection and view epoch.
@@ -239,3 +239,19 @@ Three apps fit the current desktop policy, subject to subtree funding. Split con
 more task/channel capacity than a leaf and may be refused while other subtrees run.
 The owner control route now uses three bits per hop (five children); recompile
 stock control clients together. The legacy unconfigured two-child lab policy remains.
+
+
+The installed Nested variant uses [startup](service/children/startup/startup.rs)
+to prepare a scoped user template and run the same chooser over its `Users`.
+Selecting a user retires the picker and expands the user's surface allowance
+before servicing its first publication. That user requests the usual CONFIGURE
+flow through `WORKSPACE_ARGUMENT`; the argument grants no authority. The outer
+boot owner still invokes CONFIGURE explicitly for its user. Provider/root adapter
+selection depends exclusively on supplied endpoints, at every depth.
+
+Desktop app declarations may request explicit funding via `CTHIMP04`; insufficient
+offers refuse before spawn. A failed reservation releases provisional geometry.
+App selection uses [scene publication](service/parent/scene.rs) to stage the old
+and new app surfaces together. A rejected stage/commit is aborted and local
+selection restored; unrelated hidden apps need no replay. This does not make
+startup, layout editing or process teardown one atomic scene transaction.

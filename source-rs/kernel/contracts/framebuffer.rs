@@ -1,6 +1,8 @@
 //! Experimental framebuffer aperture and DISPLAY_INFO syscall record.
 //! Geometry alone conveys no device custody or authority.
-pub const USER_ADDRESS: u64 = 0x0000_0080_0100_0000;
+// Keep the device aperture above every guarded page-object mapping slot.
+pub const USER_ADDRESS: u64 = 0x0000_0080_0400_0000;
+const _: () = assert!(crate::memory::address(crate::memory::MAX_MAPPING_SLOTS) <= USER_ADDRESS);
 pub const MAX_BYTES: u64 = 16 * 1024 * 1024;
 pub const INFO_BYTES: usize = 48;
 pub const RGB: u64 = 0;

@@ -10,6 +10,7 @@ mod loss;
 mod management;
 mod recovery;
 mod services;
+mod startup;
 mod workspace;
 
 include!("children.rs");

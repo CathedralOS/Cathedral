@@ -59,6 +59,9 @@ fn call(pair: Pair, words: wire::Packet) -> wire::Packet {
                 wire::CONFIGURE => wire::CONFIGURE_DEADLINE_TICKS + 100,
                 wire::RUN_OBJECT => 3 * wire::STORAGE_DEADLINE_TICKS + 200,
                 wire::RESOLVE_PATH => wire::CONFIGURE_DEADLINE_TICKS + 100,
+                // The root can defer completion while a storage exchange owns
+                // its stream; a slow picker is not a failed root connection.
+                wire::HEALTH => wire::STORAGE_DEADLINE_TICKS + 200,
                 _ => 300,
             })
             .unwrap(),

@@ -5,6 +5,8 @@ pub const STORAGE: u64 = 2;
 pub const ALL: u64 = INTERACTION | STORAGE;
 pub const MAX_IMPORTS: usize = 4;
 pub const RECORD_BYTES: usize = 16 + MAX_IMPORTS * 32;
+pub const PROFILE_MAGIC: u64 = u64::from_le_bytes(*b"CTHIMP04");
+pub const PROFILE_BYTES: usize = RECORD_BYTES + 24;
 pub const FUNDED_MAGIC: u64 = u64::from_le_bytes(*b"CTHIMP03");
 pub const BROKER_MAGIC: u64 = u64::from_le_bytes(*b"CTHIMP02");
 pub const MAGIC: u64 = u64::from_le_bytes(*b"CTHIMP01");
@@ -101,6 +103,8 @@ pub const fn encode(imports: &[Import]) -> [u8; RECORD_BYTES] {
 #[derive(Debug)]
 pub struct Declaration {
     pub brokered: bool,
+    /// Explicit private pages, reader pages and surface demand. Owner offers must cover it.
+    pub profile: Option<[u64; 3]>,
     /// Requested channel/descendant ceilings. The owner may grant less.
     pub resources: Option<(u64, u64)>,
     entries: [Import; MAX_IMPORTS],
@@ -111,13 +115,21 @@ impl Declaration {
         &self.entries[..self.count]
     }
     pub fn decode(bytes: &[u8]) -> Result<Self, Refusal> {
-        if bytes.len() != RECORD_BYTES
-            || !matches!(word(bytes, 0)?, MAGIC | BROKER_MAGIC | FUNDED_MAGIC)
+        if bytes.len()
+            != if word(bytes, 0)? == PROFILE_MAGIC {
+                PROFILE_BYTES
+            } else {
+                RECORD_BYTES
+            }
+            || !matches!(
+                word(bytes, 0)?,
+                MAGIC | BROKER_MAGIC | FUNDED_MAGIC | PROFILE_MAGIC
+            )
         {
             return Err(Refusal::Malformed);
         }
         let header = word(bytes, 8)?;
-        let resources = if word(bytes, 0)? == FUNDED_MAGIC {
+        let resources = if matches!(word(bytes, 0)?, FUNDED_MAGIC | PROFILE_MAGIC) {
             if header >> 48 != 0 || header & 0xff00 != 0 {
                 return Err(Refusal::Malformed);
             }
@@ -135,7 +147,16 @@ impl Declaration {
             return Err(Refusal::Malformed);
         }
         let mut declaration = Self {
-            brokered: word(bytes, 0)? != MAGIC,
+            brokered: matches!(word(bytes, 0)?, BROKER_MAGIC | FUNDED_MAGIC),
+            profile: if word(bytes, 0)? == PROFILE_MAGIC {
+                Some([
+                    word(bytes, RECORD_BYTES)?,
+                    word(bytes, RECORD_BYTES + 8)?,
+                    word(bytes, RECORD_BYTES + 16)?,
+                ])
+            } else {
+                None
+            },
             resources,
             entries: [Import::v1(0, false); MAX_IMPORTS],
             count,
@@ -153,7 +174,10 @@ impl Declaration {
                 required: required != 0,
             };
         }
-        if bytes[16 + count * 32..].iter().any(|&byte| byte != 0) {
+        if bytes[16 + count * 32..RECORD_BYTES]
+            .iter()
+            .any(|&byte| byte != 0)
+        {
             return Err(Refusal::Malformed);
         }
         // Validate syntax even when a required interface is unavailable.
@@ -209,6 +233,34 @@ pub const fn encode_funded(
     while i < 8 {
         bytes[i] = magic[i];
         bytes[i + 8] = header[i];
+        i += 1;
+    }
+    bytes
+}
+
+/// Explicit resource requirements with the existing ordered matrix entry protocol.
+/// The host refuses insufficient offers before spawning; this record grants nothing.
+pub const fn encode_profile(
+    imports: &[Import],
+    channels: u16,
+    descendants: u16,
+    profile: [u64; 3],
+) -> [u8; PROFILE_BYTES] {
+    let base = encode_funded(imports, channels, descendants);
+    let mut bytes = [0; PROFILE_BYTES];
+    let mut i = 0;
+    while i < RECORD_BYTES {
+        bytes[i] = base[i];
+        i += 1;
+    }
+    i = 0;
+    while i < 8 {
+        bytes[i] = PROFILE_MAGIC.to_le_bytes()[i];
+        i += 1;
+    }
+    i = 0;
+    while i < 24 {
+        bytes[RECORD_BYTES + i] = profile[i / 8].to_le_bytes()[i % 8];
         i += 1;
     }
     bytes

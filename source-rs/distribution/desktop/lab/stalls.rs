@@ -116,10 +116,20 @@ pub(super) fn exercise(session: &mut admission::Session) {
         for nested in [true, false] {
             assert_eq!(app(matrix, nested, 7)[0], 0);
         }
-        // The timeout's released request and the unacknowledged durable write
-        // both committed. Readback discovers that fact; no mutation is retried.
-        pixel(matrix, 140, 190, 0xd18b35);
+        // A request stalled before execution expires without a write. A request
+        // stalled after commit is durable despite its missing acknowledgement.
+        // Readback distinguishes them; neither uncertain mutation is retried.
+        pixel(
+            matrix,
+            140,
+            190,
+            if mode == 1 { app::LEFT } else { 0xd18b35 },
+        );
         assert_eq!(app(matrix, true, 8)[0], 0);
+        if mode == 1 {
+            pixel(matrix, 140, 190, 0xd18b35);
+            assert_eq!(app(matrix, true, 8)[0], 0);
+        }
         pixel(matrix, 140, 190, app::LEFT);
         stalls_peer::interact(session);
     }

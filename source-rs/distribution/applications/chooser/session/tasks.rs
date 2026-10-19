@@ -1,6 +1,6 @@
 //! Chrome-local running instances. Tickets are scoped to this matrix, never PIDs.
 use super::*;
-pub const TOP: u64 = 384;
+pub const TOP: u64 = 504;
 pub const ROW: u64 = 32;
 #[derive(Default)]
 pub struct Tasks {

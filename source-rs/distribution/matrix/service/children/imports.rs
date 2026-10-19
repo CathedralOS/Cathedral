@@ -5,6 +5,7 @@ use cathedral_user_runtime::{Error, memory::Object};
 
 pub(super) struct Bound {
     pub binding: u64,
+    pub profile: Option<[u64; 3]>,
     pub brokered: bool,
     pub resources: Option<(u64, u64)>,
 }
@@ -25,6 +26,7 @@ pub(super) fn resolve(object: &mut Object, offered: u64) -> Result<Bound, Error>
     }
     Ok(Bound {
         binding: bound,
+        profile: declaration.as_ref().and_then(|d| d.profile),
         brokered: declaration.as_ref().is_some_and(|d| d.brokered),
         resources: declaration.as_ref().and_then(|d| d.resources),
     })

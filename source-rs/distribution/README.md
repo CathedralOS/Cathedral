@@ -8,8 +8,8 @@ python tools/boot-harness-rs/run.py --release --window
 
 F5 opens a full-screen user picker with a horizontal row of avatar tiles.
 **NEW USER** copies the hidden template; click a user to enter its workspace.
-The user gets an app strip with **Notes**, **Colors** and **Split** tiles and the rest of
-the display for its app. Click the app to focus it. Each app has an **X**;
+The user gets an app strip with **Notes**, **Colors**, **Split** and **Nested** tiles and the rest of
+the display for its app. Click the app to focus it. Notes and Colors have an **X**;
 Notes asks **Save / Discard / Cancel** for unsaved work. There is no storage test
 toggle, launcher entry or permanent status text in the ordinary UI.
 
@@ -17,6 +17,14 @@ toggle, launcher entry or permanent status text in the ordinary UI.
 **DEEPER** asks them about unsaved work, then runs the same matrix beneath a
 separate saved realm. Both levels own their layout and attenuate their children's
 services. An unfunded further level reports **NO ROOM** without losing drafts.
+
+**Nested** starts a scoped copy of the same login/desktop flow inside the app
+area. Create and select an inner user, then run Notes or Colors there. Its files
+stay inside that Nested program's realm. Close it using the outer task-row X;
+any unsaved descendant refuses that close. The current fixed funding supports one
+inner app at a time and refuses another Nested level with **NO ROOM**. Close other
+outer apps before launching Nested. This is a bounded composition proof, without
+authentication, encryption or hardware virtualization.
 
 Notes holds up to eight notes of 240 characters: **F1** saves or reconciles,
 **F2** reloads, **F3** duplicates the saved note, **F4** switches notes. Colors
@@ -203,5 +211,27 @@ The app tiles launch new instances. Rows below them switch running instances; ea
 row's X requests a loss-checked close. Private drafts survive switching. The app's
 own X offers save/discard choices. The background and configured chrome are separate
 replaceable programs; see [stock matrix roles](matrix/CHARTER.md#desktop-roles-and-instances).
-Split remains the recursive demo. A nested desktop with its own user picker is not
-implemented yet. The platform owns neither this app limit nor these desktop roles.
+Split demonstrates a custom two-pane matrix; Nested runs the stock picker and
+desktop recursively. The platform owns neither this app limit nor these desktop roles.
+
+## Nested startup and scene switching
+
+The Nested tile loads the [stock matrix](matrix/main.rs) compiled with
+`nested-desktop`. Its [startup coordinator](matrix/service/children/startup/startup.rs)
+prepares missing seed names inside its supplied realm, runs the ordinary chooser
+over `Users`, retires that picker on selection, and lets the selected user matrix
+run the same saved CONFIGURE path used by the outer desktop. The nested template
+contains another Nested executable and finite seed programs; it does not recursively
+materialize more users until launched. Existing names/data are preserved.
+
+[Admission](matrix/service/children/admission.rs) checks declared resource needs
+against owner ceilings before spawn. Surface ranges are allocated without moving
+live siblings. The existing storage forwarding chain supplies every scope stamp;
+there is no direct provider or ancestor-realm connection in the nested program.
+The nested seed copier is distribution policy, not a platform filesystem operation.
+
+[Workspace selection](matrix/service/children/workspace.rs) stages changed app
+visibility through [scene publication](matrix/service/parent/scene.rs). The upstream
+matrix chain validates and commits the retained scene together, so switching cannot
+publish a half-hidden old app beside half of the new one. Rejection aborts the batch
+and preserves selection. This is scene atomicity, not display-vblank synchronization.
