@@ -29,7 +29,8 @@ impl<const N: usize> World<N> {
             .iter()
             .enumerate()
             .filter(|(_, c)| {
-                c.grant.valid()
+                c.visible
+                    && c.grant.valid()
                     && c.rect.is_some_and(|r| {
                         x >= r.x && y >= r.y && x - r.x < c.grant.width && y - r.y < c.grant.height
                     })

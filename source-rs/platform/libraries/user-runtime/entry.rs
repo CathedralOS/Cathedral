@@ -51,10 +51,13 @@ macro_rules! entry_with_environment {
 #[macro_export]
 macro_rules! service_bootstrap {
     ($imports:expr) => {
+        $crate::service_bootstrap!($imports, 0, 0);
+    };
+    ($imports:expr, $channels:expr, $descendants:expr) => {
         #[unsafe(no_mangle)]
         #[unsafe(link_section = ".cathedral.imports")]
         pub static CATHEDRAL_IMPORTS: [u8; $crate::matrix::imports::RECORD_BYTES] =
-            $crate::matrix::imports::encode_brokered($imports);
+            $crate::matrix::imports::encode_funded($imports, $channels, $descendants);
     };
 }
 /// Application entry receives scoped acquisition, not an ordered endpoint bundle.

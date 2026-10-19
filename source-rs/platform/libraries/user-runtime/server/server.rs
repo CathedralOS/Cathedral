@@ -24,7 +24,7 @@ pub struct Server {
     cursor: usize,
     memory: bool,
     closed: [Option<u64>; MAX_CLIENTS],
-    paused: u8,
+    paused: u32,
 }
 impl Server {
     fn control_only(&self) -> bool {
@@ -38,7 +38,7 @@ impl Server {
     /// Apply backpressure while the service holds one deferred event per stream.
     /// Bit zero is control; bit n+1 is local client n. Resuming preserves FIFO.
     /// Keep a stream unpaused or supply an extra wake channel to next_event_or.
-    pub fn pause(&mut self, streams: u8) {
+    pub fn pause(&mut self, streams: u32) {
         self.paused = streams;
     }
     /// Explicit opt-in: services must handle and release typed memory attachments.

@@ -1,9 +1,9 @@
 use super::*;
 #[test]
 fn high_accounts_delegate_exhaust_and_reclaim_without_truncating_masks() {
-    let mut p = Pool::new(8, abi::MAX_TASKS);
+    let mut p = Pool::new(abi::MAX_TASKS - 4, abi::MAX_TASKS);
     let (child, mask) = p.prepare(0, 3).unwrap();
-    assert_eq!(child, 8);
+    assert_eq!(child, abi::MAX_TASKS - 4);
     p.commit(0, child, mask);
     assert_eq!(p.available(0), 0);
     assert_eq!(p.available(child), 3);

@@ -20,7 +20,7 @@ const EMERGENCY_PAGES: u64 = 4;
 const HEAP_BASE: u64 = 0xffff_9000_0000_0000;
 // Holds the twelve-account session with its region, reader-right and address-space
 // ledgers (eight reader slots per task) and persistent CPU accounting, as on ARM64.
-pub const HEAP_BYTES: usize = 256 * 1024;
+pub const HEAP_BYTES: usize = 512 * 1024;
 // OVMF can map the qemu64 CPU's complete physical envelope, not just guest RAM.
 const TABLE_BUDGET: usize = 4096;
 

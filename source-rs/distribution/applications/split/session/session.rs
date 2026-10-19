@@ -140,7 +140,7 @@ pub fn run(mut services: Services) -> Result<(), Error> {
             count += 1;
         }
         server.pause(
-            u8::from(survey.as_ref().is_some_and(|s| s.request.is_some()))
+            u32::from(survey.as_ref().is_some_and(|s| s.request.is_some()))
                 | if storage_wait.is_some() {
                     (1 << 3) | (1 << 4)
                 } else {

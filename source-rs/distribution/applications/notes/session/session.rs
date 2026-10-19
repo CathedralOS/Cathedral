@@ -58,6 +58,12 @@ pub fn run(style: u64, mut services: Services) {
         call(parent, [wire::APPLY_LAYOUT, 0, 24, 192, 16, 0, 0, 0])[0],
         abi::DENIED
     );
+    for op in [wire::APP_ENTRY, wire::SELECT_APP] {
+        assert_eq!(
+            call(parent, [op, 1, 0, 0, 0, 0, 0, 0]),
+            wire::error(abi::DENIED)
+        );
+    }
     // A completed interaction round trip proves the host finished admission.
     // The fixture can distinguish this receipt-bearing crash from an early
     // death racing storage binding, which may instead refuse the launch.

@@ -90,23 +90,23 @@ impl Parent {
 
     pub(in crate::service) fn storage_client(&self, slot: usize) -> usize {
         if self.separate_storage {
-            slot + 3
+            slot + STORAGE_BASE
         } else {
             slot
         }
     }
     pub(in crate::service) fn storage_slot(&self, client: usize) -> usize {
         if self.separate_storage {
-            client - 3
+            client - STORAGE_BASE
         } else {
             client
         }
     }
     pub(in crate::service) fn storage_stream(&self, client: usize) -> bool {
         if self.separate_storage {
-            matches!(client, 3 | 4)
+            (STORAGE_BASE..STORAGE_BASE + CHILDREN).contains(&client)
         } else {
-            client < 2
+            client < CHILDREN
         }
     }
     fn storage_exchange(&mut self, words: wire::Packet) -> Result<wire::Packet, Error> {
@@ -162,17 +162,43 @@ impl Parent {
         if words == [wire::STORAGE_STATUS, 0, 0, 0, 0, 0, 0, 0] && !self.upstream {
             return Ok([0, self.storage_failed, 0, 0, 0, 0, 0, 0]);
         }
-        if let [wire::STORAGE_BINDING, slot @ 0..=1, 0, 0, 0, 0, 0, 0] = words {
+        if let [
+            wire::STORAGE_BINDING,
+            slot @ 0..=LAST_CHILD,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+        ] = words
+        {
             return Ok(match self.storage_binding(server, slot as usize) {
                 Some((source, scope)) => [0, source as u64, scope, 0, 0, 0, 0, 0],
                 None => wire::error(abi::DENIED),
             });
         }
         let status = match words {
-            [wire::STORAGE_GRANT, slot @ 0..=1, source, scope, 0, 0, 0, 0] => {
-                self.storage_grant(server, slot as usize, source as usize, scope)?
-            }
-            [wire::STORAGE_REVOKE, slot @ 0..=1, 0, 0, 0, 0, 0, 0] => {
+            [
+                wire::STORAGE_GRANT,
+                slot @ 0..=LAST_CHILD,
+                source,
+                scope,
+                0,
+                0,
+                0,
+                0,
+            ] => self.storage_grant(server, slot as usize, source as usize, scope)?,
+            [
+                wire::STORAGE_REVOKE,
+                slot @ 0..=LAST_CHILD,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+            ] => {
                 self.storage_close(slot as usize)?;
                 Ok(())
             }

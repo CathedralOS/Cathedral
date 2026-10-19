@@ -125,7 +125,7 @@ def exercise(stream, output, serial, mode, saved=None):
         scan(lambda d, s: 'launcher owner probe applied' in s, 'explicit owner action')
     # Focus the empty part of the strip so the fault key belongs to the launcher.
     if mode != 'owner-stop':
-        click(margin + strip // 2, margin + 330)
+        click(margin + strip // 2, margin + 370)
         key('f7' if mode == 'clean' else 'f8')
     restores = mode == 'recover' or mode.startswith('fallback-')
     expected = 1 if restores else 0
@@ -160,7 +160,7 @@ def exercise(stream, output, serial, mode, saved=None):
         focus()
         key('x')
         draft = bitmap(scan(lambda d, _: bitmap(d) != draft, 'input after launcher recovery'))
-        click(margin + strip // 2, margin + 330)
+        click(margin + strip // 2, margin + 370)
         key('f8')
         scan(lambda d, s: s.count('deliberate launcher failure') == 2
              and pixel(d, 100, 70) == '101827' and bitmap(d) == draft, 'second crash leaves app alive')
@@ -182,7 +182,7 @@ def exercise(stream, output, serial, mode, saved=None):
                  and pixel(d, margin + strip // 2 - 20, margin + 46) == 'd9e4ef'
                  and bitmap(d) == draft, 'explicit retry restores launcher without restarting Notes')
             if attempt == 1:
-                click(margin + strip // 2, margin + 330)
+                click(margin + strip // 2, margin + 370)
                 key('f8')
                 focus()
                 scan(lambda d, s: s.count('deliberate launcher failure') == 3

@@ -234,3 +234,36 @@ fn image_preview_preserves_old_state_and_replay_retains_source_stride() {
     assert!(cathedral_platform_contracts::display::composition::valid_image(10, 10, 40, 1480));
     assert!(!cathedral_platform_contracts::display::composition::valid_image(10, 10, 40, 1479));
 }
+
+#[test]
+fn hidden_scene_keeps_local_authority_but_cannot_draw_or_receive_input() {
+    let mut w = world();
+    place(&mut w, 0, 10, 20);
+    let original = view(&mut w, 0);
+    let name = surface(&mut w, 0, 0, 1);
+    w.surface(0, 7, [wire::PAINT, original[1], name, 0, 0, 80, 60, 123])
+        .unwrap();
+    w.pointer(20, 30, 1);
+    w.pointer(20, 30, 0);
+    w.visible(0, false).unwrap();
+    assert_eq!(&w.replay(0, 0).unwrap()[5..7], &[0, 0]);
+    assert_eq!(view(&mut w, 0), original);
+    assert_eq!(
+        w.request(0, 7, [wire::NEXT, original[1], 0, 0, 0, 0, 0, 0])[2],
+        wire::CANCEL
+    );
+    w.pointer(20, 30, 1);
+    w.pointer(20, 30, 0);
+    w.key(cathedral_platform_contracts::input::ENTER as u64, 1);
+    assert_eq!(
+        w.request(0, 7, [wire::NEXT, original[1], 0, 0, 0, 0, 0, 0])[2],
+        wire::NONE
+    );
+    let hidden = w
+        .surface(0, 7, [wire::PAINT, original[1], name, 0, 0, 70, 50, 456])
+        .unwrap();
+    assert_eq!(&hidden[5..7], &[0, 0]);
+    w.visible(0, true).unwrap();
+    assert_eq!(&w.replay(0, 0).unwrap()[5..], &[70, 50, 456]);
+    assert_eq!(view(&mut w, 0), original);
+}

@@ -3,7 +3,12 @@ use cathedral_kernel_contracts::user as abi;
 use cathedral_platform_contracts::imports::{self, Refusal};
 use cathedral_user_runtime::{Error, memory::Object};
 
-pub(super) fn resolve(object: &mut Object, offered: u64) -> Result<(u64, bool), Error> {
+pub(super) struct Bound {
+    pub binding: u64,
+    pub brokered: bool,
+    pub resources: Option<(u64, u64)>,
+}
+pub(super) fn resolve(object: &mut Object, offered: u64) -> Result<Bound, Error> {
     let declaration = imports::from_elf(object.map()?).map_err(status);
     object.unmap()?;
     let declaration = declaration?;
@@ -18,7 +23,11 @@ pub(super) fn resolve(object: &mut Object, offered: u64) -> Result<(u64, bool), 
     if bound & imports::INTERACTION == 0 {
         return Err(status(Refusal::Missing(imports::INTERACTION)));
     }
-    Ok((bound, declaration.as_ref().is_some_and(|d| d.brokered)))
+    Ok(Bound {
+        binding: bound,
+        brokered: declaration.as_ref().is_some_and(|d| d.brokered),
+        resources: declaration.as_ref().and_then(|d| d.resources),
+    })
 }
 fn status(refusal: Refusal) -> Error {
     Error(match refusal {

@@ -32,12 +32,14 @@ pub fn run(environment: Environment, user_picker: bool, initial_status: &'static
     let mut repaint = true;
     let mut editor: Option<settings::Editor> = None;
     let mut launched = None;
+    let mut tasks = tasks::Tasks::default();
     let mut management = management::Controls::default();
     let mut saves = wire::SAVES_READY;
     #[cfg(feature = "recovery-probes")]
     let mut management_probe = management::probe::Probe::default();
     loop {
         if !user_picker {
+            repaint |= tasks.refresh(parent, false);
             repaint |= management.refresh(parent);
             let reply = call(parent, [wire::SAVE_AVAILABILITY, 0, 0, 0, 0, 0, 0, 0]);
             let next = if reply[0] == 0 {
@@ -108,6 +110,13 @@ pub fn run(environment: Environment, user_picker: bool, initial_status: &'static
                     // instead of drawing into the old coordinate space.
                     continue;
                 }
+            } else if !user_picker
+                && let Some(message) = tasks.click(parent, extent, event, selection.pressed)
+            {
+                status = message;
+                selection.pressed = true;
+                tasks.refresh(parent, true);
+                repaint = true;
             } else {
                 let (changed, activate) = selection.event(
                     event,
@@ -146,11 +155,14 @@ pub fn run(environment: Environment, user_picker: bool, initial_status: &'static
                 if status.is_empty() && selection.index == NEW {
                     selection.index = realm.count.saturating_sub(1);
                 }
+                if !user_picker {
+                    tasks.refresh(parent, true);
+                }
                 repaint = true;
             }
             let painted = (|| -> Result<(), u64> {
                 if scene.as_ref().is_none_or(|s| s.epoch != extent[1]) {
-                    scene = Some(view::Scene::new(parent, extent[1])?);
+                    scene = Some(view::Scene::new(parent, extent[1], user_picker)?);
                     repaint = true;
                 }
                 if repaint {
@@ -174,6 +186,12 @@ pub fn run(environment: Environment, user_picker: bool, initial_status: &'static
                             },
                             management.available(),
                         )?;
+                        if !user_picker {
+                            scene
+                                .as_ref()
+                                .unwrap()
+                                .tasks(parent, extent, &tasks, &realm)?;
+                        }
                     }
                     repaint = false;
                 }
@@ -252,7 +270,8 @@ fn act(
             *launched = Some(reply[2]);
             ""
         }
-        abi::BUSY => "CLOSE APP FIRST",
+        abi::BUSY => "TRY AGAIN",
+        abi::NO_MEMORY => "NO ROOM",
         _ => "CANNOT OPEN",
     }
 }

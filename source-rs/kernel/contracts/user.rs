@@ -60,7 +60,7 @@ pub const INVALID_ARGUMENT: u64 = (-22i64) as u64;
 pub const UNKNOWN: u64 = (-38i64) as u64;
 
 /// Bounded lab arenas. Task slots follow composition; IPC reserves one fixed arena.
-pub const MAX_TASKS: usize = 12;
+pub const MAX_TASKS: usize = 15;
 // Core account masks use u16; reserve a bit so full-mask construction cannot overflow.
 const _: () = assert!(MAX_TASKS < u16::BITS as usize);
 pub const MAX_LAUNCHES: usize = MAX_TASKS - 1;
@@ -77,9 +77,9 @@ pub const MEMORY_SEAL: u64 = 30;
 pub const MEMORY_MAP: u64 = 31;
 pub const MEMORY_PAGES: u64 = 32;
 
-/// Wait on 1..=8 receive handles copied from a user array; return ready index.
+/// Wait on 1..=MAX_WAIT_HANDLES receive handles copied from a user array; return ready index.
 pub const IPC_WAIT_MANY: u64 = 33;
-pub const MAX_WAIT_HANDLES: usize = 8;
+pub const MAX_WAIT_HANDLES: usize = 32;
 
 /// Ordinary processes may create bounded, one-way copied-message channels.
 /// CREATE writes [send, receive] to 16 writable bytes at arg0; arg1/arg2 must be zero.
@@ -91,9 +91,9 @@ pub const IPC_SEND_CAP: u64 = 36;
 /// RECEIVE_CAP: arg0 receiver, arg1 writable packet, arg2 zero. Blocks like RECEIVE.
 pub const IPC_RECEIVE_CAP: u64 = 37;
 pub const IPC_PACKET_BYTES: usize = 80;
-pub const MAX_DYNAMIC_CHANNELS: usize = 40;
-pub const MAX_CREATED_CHANNELS: usize = 36;
-pub const MAX_DYNAMIC_HANDLES: usize = 24;
+pub const MAX_DYNAMIC_CHANNELS: usize = 96;
+pub const MAX_CREATED_CHANNELS: usize = 92;
+pub const MAX_DYNAMIC_HANDLES: usize = 48;
 
 /// Move up to five dynamic endpoints into a newly admitted child. arg0 launch,
 /// arg1 56-byte record (argument, count, five handles), arg2 zero. Unused words zero.

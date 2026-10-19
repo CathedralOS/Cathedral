@@ -99,13 +99,13 @@ pub fn wait_many(handles: &[Handle], deadline: u64) -> Result<usize, Error> {
     if handles.is_empty() || handles.len() > abi::MAX_WAIT_HANDLES {
         return Err(Error(abi::INVALID_ARGUMENT as i64));
     }
-    let mut buffer = Buffer([0; abi::MAX_MESSAGE]);
-    for (handle, chunk) in handles.iter().zip(buffer.0.chunks_exact_mut(8)) {
-        chunk.copy_from_slice(&handle.raw().to_le_bytes());
+    let mut buffer = [0u64; abi::MAX_WAIT_HANDLES];
+    for (slot, handle) in buffer.iter_mut().zip(handles) {
+        *slot = handle.raw();
     }
     result(arch::call3(
         abi::IPC_WAIT_MANY,
-        buffer.0.as_ptr() as u64,
+        buffer.as_ptr() as u64,
         handles.len() as u64,
         deadline,
     ))

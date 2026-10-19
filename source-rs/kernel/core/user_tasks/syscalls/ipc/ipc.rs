@@ -76,7 +76,11 @@ pub(super) fn dispatch(
             session,
             slot,
             readiness::Wait {
-                handles: [first, second, 0, 0, 0, 0, 0, 0],
+                handles: core::array::from_fn(|i| match i {
+                    0 => first,
+                    1 => second,
+                    _ => 0,
+                }),
                 kinds: [abi::WAIT_IPC; abi::MAX_WAIT_HANDLES],
                 count: 2,
                 deadline: third,

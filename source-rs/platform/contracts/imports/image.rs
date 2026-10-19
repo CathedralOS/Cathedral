@@ -28,6 +28,7 @@ pub fn from_elf(bytes: &[u8]) -> Result<Option<Declaration>, Refusal> {
         // A future/invalid record version is not an undeclared legacy image.
         if data.get(..8) != Some(&MAGIC.to_le_bytes())
             && data.get(..8) != Some(&BROKER_MAGIC.to_le_bytes())
+            && data.get(..8) != Some(&FUNDED_MAGIC.to_le_bytes())
         {
             return Err(Refusal::Malformed);
         }

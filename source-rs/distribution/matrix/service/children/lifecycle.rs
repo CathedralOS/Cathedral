@@ -56,12 +56,19 @@ impl Children {
             .take()
             .ok_or(Error(abi::PEER_CLOSED as i64))?;
         self.saved_storage[slot] = None;
+        self.running[slot] = None;
+        if self.desktop && slot != 0 {
+            world.notify(0);
+        }
+        if self.active == Some(slot) {
+            self.active = None;
+        }
         parent.grant_recovery(slot, None);
         self.observations.disconnected(slot);
         self.management.disconnected(slot);
         server.remove(slot);
         if child.storage.is_some() {
-            server.remove(slot + 3);
+            server.remove(slot + STORAGE_BASE);
         }
         world.disconnected(slot);
         // Release retained upstream image readers before returning descendant funding.
@@ -114,6 +121,70 @@ impl Children {
                 }
             }
         }
+        if self.desktop
+            && self.active.is_none()
+            && let Some(next) = (1..BACKGROUND).find(|s| self.running[*s].is_some())
+        {
+            self.activate(next, parent, world, server)?;
+        }
+        Ok(())
+    }
+}
+
+impl Children {
+    /// A child's request to stop its sibling. The sibling is asked first and
+    /// kept if it reports work it would lose or does not answer.
+    pub(in crate::service) fn close(
+        &mut self,
+        request: Request,
+        parent: &mut Parent,
+        world: &mut World,
+        server: &mut Server,
+    ) -> Result<(), Error> {
+        if self.loss.is_some() {
+            return server.reply(&request, &wire::encode(wire::error(abi::BUSY)));
+        }
+        let target = if self.desktop {
+            if !self.chrome(&request, world) {
+                return server.reply(&request, &wire::encode(wire::error(abi::DENIED)));
+            }
+            let Some(target) = self.active else {
+                return server.reply(&request, &wire::encode(wire::error(abi::PEER_CLOSED)));
+            };
+            target
+        } else if request.client.unwrap() < 2 {
+            1 - request.client.unwrap()
+        } else {
+            return server.reply(&request, &wire::encode(wire::error(abi::DENIED)));
+        };
+        // A reply the requester sent just before asking may still be queued.
+        self.finish(server, world, parent)?;
+        if self.pending[target].is_some() {
+            return server.reply(&request, &wire::encode(wire::error(abi::BUSY)));
+        }
+        let Some(child) = self.slots[target].as_ref() else {
+            return server.reply(&request, &wire::encode(wire::error(abi::PEER_CLOSED)));
+        };
+        if child.stale >= control::MAX_STALE {
+            return server.reply(&request, &wire::encode(wire::error(abi::BUSY)));
+        }
+        let Some(control) = child.control else {
+            return server.reply(&request, &wire::encode(wire::error(abi::BUSY)));
+        };
+        if control
+            .0
+            .send(&wire::encode([wire::LOSS, 0, 0, 0, 0, 0, 0, 0]))
+            .is_err()
+        {
+            // A closed control channel alone is not permission to discard work.
+            if self.completed(target)? {
+                self.stop(target, server, world, parent)?;
+                return server.reply(&request, &wire::encode([0; 8]));
+            }
+            return server.reply(&request, &wire::encode(wire::error(abi::BUSY)));
+        }
+        self.pending[target] = Some((request, time::after(100)?, Purpose::Close));
+        self.retiring[target] = None;
         Ok(())
     }
 }

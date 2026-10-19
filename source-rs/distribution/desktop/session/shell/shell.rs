@@ -51,7 +51,7 @@ fn chooser(login: &mut Login, matrix: Pair, extent: [u64; 2], failed: bool) -> R
 pub(crate) fn workspace(width: u64, height: u64) -> [wire::Packet; 3] {
     [
         [wire::LAUNCH_IMAGES, 1, 1, 0, 0, 0, 0, 0],
-        [wire::LAUNCH_POLICY, 1, 208, 256, 25, 5, 0, 11],
+        [wire::LAUNCH_POLICY, 1, 576, 1024, 72, 8, 0, 11],
         [wire::LAUNCH_PLACE, 1, 0, 0, width, height, KEYS, 0],
     ]
 }
@@ -62,7 +62,7 @@ pub(super) fn enter(matrix: Pair) -> Result<(), u64> {
     // the picker process, surfaces, input and realm binding before any slow
     // storage reads needed to start the user's launcher.
     stop(matrix, 0)?;
-    request(matrix, [wire::SURFACE_LIMIT, 1, 15, 0, 0, 0, 0, 0])?;
+    request(matrix, [wire::SURFACE_LIMIT, 1, 40, 0, 0, 0, 0, 0])?;
     cathedral_user_runtime::write(b"Cathedral desktop: picker stopped; loading user launcher\n")
         .unwrap();
     request(

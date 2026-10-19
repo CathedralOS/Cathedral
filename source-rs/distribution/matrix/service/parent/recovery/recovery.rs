@@ -26,7 +26,7 @@ impl Parent {
         match words {
             [
                 wire::SAVE_RECOVERY_GRANT,
-                slot @ 0..=1,
+                slot @ 0..=LAST_CHILD,
                 enabled @ 0..=1,
                 0,
                 0,
@@ -62,7 +62,7 @@ impl Parent {
         request: &Request,
         retry: bool,
     ) -> Result<wire::Packet, Error> {
-        let Some(slot @ 0..=1) = request.client else {
+        let Some(slot) = request.client.filter(|slot| *slot < CHILDREN) else {
             return Ok(wire::error(abi::DENIED));
         };
         if !self.recovery.authority.allowed(slot, request.incarnation) {

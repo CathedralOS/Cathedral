@@ -1,0 +1,162 @@
+//! Resolve a child launch through its own realm, then admit, place and observe it.
+use super::*;
+impl Children {
+    /// A child's request for a sibling. The other slot must be free and opened
+    /// by the owner; the program is read with the requester's own scope, so a
+    /// launcher can only launch what it can see.
+    pub(in crate::service) fn launch(
+        &mut self,
+        request: Request,
+        object: u64,
+        withhold: u64,
+        parent: &mut Parent,
+        world: &mut World,
+        server: &mut Server,
+    ) -> Result<(), Error> {
+        if self.loss.is_some() {
+            return server.reply(&request, &wire::encode(wire::error(abi::BUSY)));
+        }
+        let requester = request.client.unwrap();
+        let slot = if self.desktop {
+            if !self.chrome(&request, world) {
+                return server.reply(&request, &wire::encode(wire::error(abi::DENIED)));
+            }
+            let Some(slot) = (1..BACKGROUND).find(|s| self.slots[*s].is_none()) else {
+                return server.reply(&request, &wire::encode(wire::error(abi::NO_MEMORY)));
+            };
+            slot
+        } else if requester < 2 {
+            1 - requester
+        } else {
+            return server.reply(&request, &wire::encode(wire::error(abi::DENIED)));
+        };
+        let refusal = if parent.storing() || self.slots[slot].is_some() || !server.available(slot) {
+            Some(abi::BUSY)
+        } else if !self.observations.available(requester) || self.next_ticket == u64::MAX {
+            Some(abi::NO_MEMORY)
+        } else if object == 0 || withhold & !cathedral_platform_contracts::imports::ALL != 0 {
+            Some(abi::INVALID_ARGUMENT)
+        } else {
+            None
+        };
+        if let Some(code) = refusal {
+            return server.reply(&request, &wire::encode(wire::error(code)));
+        }
+        let (Some(standing), Some((_, stamp))) = (
+            self.standing[slot],
+            parent.storage_binding(server, requester),
+        ) else {
+            return server.reply(&request, &wire::encode(wire::error(abi::DENIED)));
+        };
+        parent.storage_launch(
+            request,
+            parent::LaunchRequest {
+                slot,
+                object,
+                scope: object,
+                argument: 0,
+                channels: standing.channels,
+                descendants: standing.descendants,
+                cpu: standing.cpu,
+                pages: Some(standing.pages),
+                stamp,
+                imports: self.allowed_imports[slot]
+                    .unwrap_or(cathedral_platform_contracts::imports::ALL)
+                    & !withhold,
+            },
+        )
+    }
+    /// Admit a program read from the matrix's realm and answer whoever asked.
+    /// Selected storage binds the child to that object's subtree; a failed
+    /// binding stops the child. Optional storage may instead be absent.
+    /// A sibling launch also gets the slot's standing surfaces and placement.
+    pub(in crate::service) fn launch_object(
+        &mut self,
+        launched: parent::Launched,
+        parent: &mut Parent,
+        world: &mut World,
+        server: &mut Server,
+    ) -> Result<(), Error> {
+        let parent::Launched {
+            plan,
+            request,
+            result,
+        } = launched;
+        let Some(request) = request else {
+            if let Some(launcher) = &mut self.launcher {
+                launcher.result = Some(result);
+            }
+            return Ok(());
+        };
+        let mut status = match result {
+            Err(code) => Err(code),
+            Ok(mut object) => {
+                let admitted = self.run_object(plan, &mut object, server, world);
+                drop(object); // The kernel holds its own reference to the image.
+                match admitted {
+                    Err(error) => Err(error.0 as u64),
+                    Ok(false) => Ok(()),
+                    Ok(true) => match parent.storage_grant(server, plan.slot, 0, plan.scope)? {
+                        Ok(()) => {
+                            self.saved_storage[plan.slot] = Some((0, plan.scope));
+                            Ok(())
+                        }
+                        Err(code) => {
+                            self.stop(plan.slot, server, world, parent)?;
+                            Err(code)
+                        }
+                    },
+                }
+            }
+        };
+        if status.is_ok()
+            && request.client.is_some()
+            && let Some(standing) = self.standing[plan.slot]
+        {
+            let placement = (if self.desktop {
+                world.surface_range(
+                    plan.slot,
+                    1 + (plan.slot - 1) * 10,
+                    standing.surfaces as usize,
+                )
+            } else {
+                surface_limit(world, plan.slot, standing.surfaces as usize)
+            })
+            .and_then(|()| {
+                match standing.place {
+                    Some((rect, keys)) => world.place(plan.slot, rect, keys),
+                    None => Ok(()), // Headless policy deliberately has no placement.
+                }
+            });
+            if let Err(code) = placement {
+                self.stop(plan.slot, server, world, parent)?;
+                status = Err(code);
+            }
+        }
+        if status.is_ok() && self.desktop && request.client == Some(0) {
+            self.next_ticket += 1;
+            self.running[plan.slot] = Some((self.next_ticket, plan.object));
+            self.activate(plan.slot, parent, world, server)?;
+        }
+        super::requests::flush(parent, world)?;
+        super::requests::replay(parent, world, plan.slot)?;
+        self.notify(world)?;
+        // The owner named the slot; a child learns which one it got.
+        let reply = match (status, request.client) {
+            (Ok(()), Some(observer)) => {
+                let receipt = self
+                    .observations
+                    .record(
+                        observer,
+                        request.incarnation,
+                        self.slots[plan.slot].as_ref().unwrap().task.raw(),
+                    )
+                    .expect("checked receipt capacity");
+                [0, plan.slot as u64, receipt, 0, 0, 0, 0, 0]
+            }
+            (Ok(()), None) => [0; 8],
+            (Err(code), _) => wire::error(code),
+        };
+        server.reply(&request, &wire::encode(reply))
+    }
+}

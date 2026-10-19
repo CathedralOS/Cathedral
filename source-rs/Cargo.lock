@@ -51,6 +51,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "cathedral-background"
+version = "0.0.0"
+dependencies = [
+ "cathedral-kernel-contracts",
+ "cathedral-platform-contracts",
+ "cathedral-user-runtime",
+]
+
+[[package]]
 name = "cathedral-bitmap-font"
 version = "0.0.0"
 

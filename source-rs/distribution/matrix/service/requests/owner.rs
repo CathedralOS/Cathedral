@@ -22,9 +22,16 @@ pub(super) fn dispatch(
                 Err(abi::DENIED)
             }
         }
-        [wire::SURFACE_LIMIT, child @ 0..=1, count, 0, 0, 0, 0, 0]
-            if count <= wire::MAX_SURFACES as u64 =>
-        {
+        [
+            wire::SURFACE_LIMIT,
+            child @ 0..=LAST_CHILD,
+            count,
+            0,
+            0,
+            0,
+            0,
+            0,
+        ] if count <= wire::MAX_SURFACES as u64 => {
             surface_limit(world, child as usize, count as usize)
         }
         _ if matches!(words[0], wire::POINTER_SOURCE | wire::KEY_SOURCE) && !parent.upstream => {

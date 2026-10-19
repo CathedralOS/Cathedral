@@ -13,15 +13,15 @@ pub(super) const MAX_STALE: u8 = 8;
 
 impl Children {
     pub(super) fn forward(&mut self, mut words: wire::Packet, routed: u64) -> Result<usize, Error> {
-        let hop = routed & 3;
-        if !(1..=2).contains(&hop) {
+        let hop = routed & 7;
+        if !(1..=CHILDREN as u64).contains(&hop) {
             Err(Error(abi::DENIED as i64))
         } else if let Some(child) = &self.slots[(hop - 1) as usize] {
             if child.stale >= MAX_STALE {
                 return Err(Error(abi::TIMED_OUT as i64));
             }
             let control = child.control.ok_or(Error(abi::PEER_CLOSED as i64))?;
-            words[0] = (words[0] & 0xffff) | ((routed >> 2) << wire::OP_BITS);
+            words[0] = (words[0] & 0xffff) | ((routed >> 3) << wire::OP_BITS);
             if let Err(error) = control.0.send(&wire::encode(words)) {
                 if error.0 == abi::PEER_CLOSED as i64 && !self.completed((hop - 1) as usize)? {
                     return Err(Error(abi::BUSY as i64));
@@ -34,8 +34,8 @@ impl Children {
         }
     }
     /// The control replies to wait for and the earliest deadline among them.
-    pub(in crate::service) fn wait(&self) -> ([Option<Handle>; 2], Option<u64>) {
-        let mut handles = [None; 2];
+    pub(in crate::service) fn wait(&self) -> ([Option<Handle>; CHILDREN], Option<u64>) {
+        let mut handles = [None; CHILDREN];
         let mut deadline: Option<u64> = None;
         for (slot, handle) in handles.iter_mut().enumerate() {
             let Some((_, until, _)) = &self.pending[slot] else {
@@ -70,7 +70,7 @@ impl Children {
         parent: &mut Parent,
     ) -> Result<Option<usize>, Error> {
         let mut retired = None;
-        for slot in 0..2 {
+        for slot in 0..CHILDREN {
             if self.finish_slot(slot, server, world, parent)? {
                 retired = Some(slot);
             }

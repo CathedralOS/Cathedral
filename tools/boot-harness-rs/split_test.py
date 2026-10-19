@@ -26,6 +26,21 @@ def exercise(output, click, key, scan, width, height, resumed=False, deep=False)
             for slot,ch in [(0,'a'),(1,'b')]:
                 x,y,_=positions()[slot]; click(x+5,y+120); key(ch); note(slot,ch,True)
             note(0,'a',True); note(1,'b',True)
+            # A matrix and two ordinary siblings fit together. Hidden descendants
+            # retain their drafts while chrome changes the selected outer app.
+            click(120, 96)  # Notes in outer app slot two.
+            scan(lambda w,d: pixel(w,d,app_x+5,top+10)==bytes.fromhex('27664a'), 'Notes beside live Split')
+            click(app_x+5,top+120); key('q')
+            click(120,216)  # Colors in slot three.
+            scan(lambda w,d: pixel(w,d,app_x+5,top+10)==bytes.fromhex('315ca8'), 'Colors beside live Split and Notes')
+            click(width-margin-14,top+10)  # Close Colors; Split becomes selected.
+            note(0,'a',True); note(1,'b',True)
+            click(90,24+384+32+16)  # Select the still-live outer Notes.
+            scan(lambda w,d: text(w,d,app_x+10,top+20,'q'), 'outer Notes draft survived matrix switch')
+            click(width-margin-14,top+10)
+            scan(lambda w,d: text(w,d,app_x+10,top+20,'UNSAVED NOTE'), 'outer Notes close')
+            click(app_x+40,top+60)  # Discard its private draft.
+            note(0,'a',True); note(1,'b',True)
             # Matrix close surveys children without blocking their upstream calls.
             click(width-margin-14,top+10)
             scan(lambda w,d:text(w,d,width-margin-256+8,top+6,'UNSAVED NOTES'),'recursive dirty close refused')

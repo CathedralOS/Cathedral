@@ -58,18 +58,17 @@ live session still lacks an explicit storage-retry control.
 physical input, a copied user, exact saved text/status, duplicate and switch,
 repeated app replacement and cold reboot, then has an independent host model
 verify the retained records. Older profiles remain focused fault/mechanism
-fixtures. This is still one chooser over a folder and one app per user at a
-time, not general app installation or a full window manager.
+fixtures. This is still one chooser over a folder and up to three app instances per user, not general app installation or a full window manager.
 
 ## Interface ownership
 
 The stock matrix executable now belongs to `distribution/matrix/`, including
-its saved desktop arrangement, launcher recovery and two-child control router.
+its saved desktop arrangement, launcher recovery and five-child control router.
 Its extension protocol and configuration codec live in its own `contracts/`.
 `platform/libraries/matrix/` contains the shared authority state with a caller-
 selected child count and owner-supplied rectangles. Three-child visual and
 four-child headless tests import no distribution code. The stock IPC loop still
-uses a two-child composition; this is not yet a general reusable server runtime.
+uses a bounded five-child composition; this is not yet a general reusable server runtime.
 An [independent three-peer matrix](distribution/lab/matrix-composition/README.md)
 now verifies local input, revocation and replacement over real IPC. It uses the
 existing runtime server and the same local command dispatch as F5, with no stock
@@ -278,16 +277,12 @@ display loss retires the root. Distribution policy explicitly tears down/rebuild
 adapters and the tree, re-funds the root from reclaimed reservations, then restores
 committed app colors. This is a lab restart policy, not a trusted recovery UI.
 
-The arena now supports twelve accounts; the pressure desktop uses nine so storage,
-the capped spinner and all recovery checks run together. IPC backing stays at 32
-channels and existing four-channel defaults remain: larger compositions must fit
-explicit reservations. Account liveness, clock, pool, cancellation and region masks
-use u16. The launch-loan packet is now 152 bytes with 256-byte-aligned runtime
-storage. Five startup endpoints, a twenty-channel per-account ceiling and twenty
-dynamic handles support the split. The global channel arena remains 32; startup
-explicitly funds the root/inner connections. Pausing catalog request streams
-while storage is pending preserves the eight-handle wait bound. Host tests cover
-high-account isolation, full startup bundles, exhaustion and reclamation.
+The current arena has fifteen task accounts, 96 dynamic channels, 92 reservable
+channels per account, 48 dynamic handles and a 32-handle wait bound. Account
+masks remain u16; explicit owner reservations bound recursive admission.
+The desktop uses five local slots (chrome, three apps, background), with resource
+ceilings requested by newer program declarations. Kernel heaps are 512 KiB.
+Host tests cover high-account isolation, startup bundles, exhaustion and reclamation.
 The traced debug matrix grew to 67 loaded pages. Admission limits have since
 increased for the database proof above, preserving the 1 MiB image window,
 and physical funding checks. The database milestone replaced the u128 write mask

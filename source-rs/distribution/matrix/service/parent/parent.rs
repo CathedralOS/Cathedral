@@ -7,7 +7,7 @@ pub(super) struct Parent {
     recovery: recovery::Recovery,
     pending: Option<presentation::Pending>,
     storage_pending: Option<storage::Pending>,
-    scopes: cathedral_matrix::world::storage::Scopes,
+    scopes: cathedral_matrix::world::storage::Scopes<CHILDREN>,
     storage_links: [Option<storage::Provider>; 2],
     storage_epoch: u64,
     /// The object the upstream binding is rooted at; children without a
@@ -16,7 +16,7 @@ pub(super) struct Parent {
     storage_failed: u64,
     pub batches: [cathedral_matrix::world::presentation::Batch<
         Option<cathedral_user_runtime::memory::Object>,
-    >; 2],
+    >; CHILDREN],
     next_revision: u64,
     pub upstream: bool,
     images: cathedral_user_runtime::matrix::upstream::Images,
@@ -51,7 +51,7 @@ impl Parent {
             storage_epoch: 0,
             storage_realm: 0,
             storage_failed: 0,
-            batches: [const { cathedral_matrix::world::presentation::Batch::empty() }; 2],
+            batches: [const { cathedral_matrix::world::presentation::Batch::empty() }; CHILDREN],
             next_revision: 0,
             images: cathedral_user_runtime::matrix::upstream::Images::empty(),
             upstream: false,

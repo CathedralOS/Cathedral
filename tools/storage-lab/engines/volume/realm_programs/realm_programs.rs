@@ -134,8 +134,8 @@ pub fn install(rows: &mut Records, args: &[String]) -> Result<()> {
             continue;
         };
         let previous_config = config;
-        if config.launcher_pages == 48 {
-            config.launcher_pages = 64;
+        if matches!(config.launcher_pages, 48 | 64) {
+            config.launcher_pages = 96;
         }
         if matches!(
             (config.app_pages, config.app_readers, config.app_surfaces),

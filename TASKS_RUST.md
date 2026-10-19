@@ -1,14 +1,12 @@
 # Rust reference OS: tasks and handoff
 
-Updated 2026-10-19 (local date). Current milestone: **atomic named creation and deeper recursive matrices**. **Split**
-is an independently implemented nested matrix installed in the ordinary F5 app strip. It owns two
-persistent Notes instances, chooses their layout, attenuates services and routes
-input through shared platform mechanisms. DEEPER runs that same matrix beneath
-another private saved realm. Scope folding removes the fixed stamp-chain depth
-cap; a shared absolute deadline bounds the whole exchange. See the latest section for verification,
-resource bounds and remaining gaps. Prior milestones include scoped application
-bootstrap, shared child admission, stock-policy/platform separation and provider
-recovery.
+Updated 2026-10-19 (local date). Current milestone: **multiple app instances and
+separate background/chrome roles**. F5 supports three running app instances,
+selection without losing drafts, loss-checked chrome close and app-owned close.
+The background is a separately installed executable with presentation-only funding.
+Split and DEEPER remain the recursive matrix proof; a full nested login desktop is
+next, not implemented. See the latest section for limits and verification.
+Previous baseline: atomic named creation and deeper recursive matrices at `102e416c`.
 F5 stages changed program installations in host scratch space, then verifies and
 publishes a result that fits the original disk extent.
 Stock-copy refresh also collects unreachable revisions under logical quota
@@ -61,8 +59,10 @@ It uses x86-64 QEMU/TCG and UEFI.
   saves its color on **Enter**.
 - Notes and Colors have an upper-right **X**. Clean apps exit; dirty Notes offers
   **SAVE / DISCARD / CANCEL**. A failed save stays open. Colors asks **CLOSE
-  ANYWAY** if its last storage result is uncertain. Launching another app while
-  one is still open shows CLOSE APP FIRST.
+  ANYWAY** if its last storage result is uncertain. Each app-tile click launches
+  another instance (up to three, subject to funding). Rows beneath the tiles switch
+  instances; their X requests close and refuses unsaved work. App-owned X offers
+  Save/Discard/Cancel. Multiple Notes instances share saved data but keep separate drafts.
 - **END APP** above Settings handles an unresponsive app. It warns about unsaved
   work and defaults to Cancel; confirmation stops the exact observed app/subtree.
   F3 opens it with launcher focus. A recovered launcher can manage the existing
@@ -151,7 +151,7 @@ and an independent host model verifies the whole layout; the headless storage
 fixture runs a program from its realm, launches a sibling and closes it.
 
 The kernel's contribution stays one syscall for code from sealed objects. It
-now allows sixteen reader rights per task and a reader page budget of up to four
+now allows 48 reader rights per task and a reader page budget of up to twelve
 times the per-object cap, because a matrix hub pins every image its subtree
 shows, holds old and new during replacement, and lends the same budget to each
 nested matrix. The kernel still knows no matrix, realm or store.
@@ -249,19 +249,16 @@ copied path strings stay unchanged. Apps do not know global coordinates or
 siblings. Storage replacement restores the direct user's binding, then requests
 `RESTORE_STORAGE`; the matrix retains responsibility for its children's grants.
 
-Page budgets are sized for sealed bitmaps held at every matrix level with old
-and new present during replacement, plus the largest program a matrix reads
-to run it: the root matrix has 256 private and 384 reader pages and lends the
-user matrix 160/192. The user launcher receives 64 private pages; its app slot
-receives 80/64 and can fund a small subtree. Split lends each temporary Notes
-32/4. The provider has 128/64; the display 128 reader pages. The kernel's per-task
-bound is 256 private and 512 reader pages with sixteen reader rights; the kernel
-heap is 256 KiB. Kernel memory objects hold at most 512 KiB (128 pages); the
-storage service's current per-object content limit remains 256 KiB (64 pages).
+Page budgets cover retained images at each matrix hop and admitted program code.
+The root has 640 private/1280 reader pages; the user matrix receives 576/1024.
+Chrome receives 96 private pages; each app receives 128/128. Display has 512
+reader pages. The kernel ceilings are 1024 private/1536 reader pages with 48
+reader rights, and its heap is 512 KiB. Kernel memory objects remain bounded at
+512 KiB; the storage content limit remains 256 KiB. Profile funding is explicit.
 
-A request carries three scope words, so three narrowing grants can stack on one
-path; a fourth is refused. Each scoped request costs the provider one ancestry
-walk per stamp. Collection before every write scans only metadata and the
+Recursive storage scopes are folded at each matrix boundary; the original fixed
+three-stamp limit no longer bounds tree depth. A shared deadline bounds the exchange.
+Collection before every write scans only metadata and the
 key-only chunk index. The older 50/100/150-ms collection/commit/save claims were
 not reliable unit conversions and are withdrawn. A fresh traced desktop run is
 recorded below. The matrix's base storage deadline is 600 **ticks**, nominally
@@ -2385,3 +2382,70 @@ replacement through an intact parent link restores standing grants without
 restarting live children. The old intermittent ATA busy timeout remains unexplained.
 No new owner decision was needed. Tests used disposable/copied disks; the
 interactive saved disk was not altered.
+
+## 2026-10-19 ? Multiple instances and replaceable visual roles
+
+F5's stock matrix now has five local child slots: chrome, three app instances and
+background. No kernel or platform code knows these desktop roles. The background
+is resolved at `Background`; chrome still comes from the persisted launcher path.
+Custom executable bytes remain protected by the existing installer rules. The
+background has one bottom surface, no keys/storage/descendants/channel creation.
+It sees pointer events only where no higher child is hit. There is no role-selection
+UI or automatic background restart yet.
+
+Start at `distribution/matrix/service/children/children.rs` for owner dispatch;
+`configuration.rs` establishes roles; `launch.rs` admits scoped code; `workspace.rs`
+selects and lists local instances; `lifecycle.rs` handles close/death. Chrome's
+`session/tasks.rs` paints running-app rows. Its instance tickets name only this
+matrix's live apps. Ordinary Notes is checked to receive DENIED for enumeration
+and selection. The platform's new owner-only visibility operation retains geometry
+and local scenes, cancels input, and clips hidden publications to zero upstream.
+It does not suspend processes or give them information about siblings.
+
+Resource changes: 15 kernel task accounts, 96 dynamic channels (92 reservable),
+32-handle waits, 48 reader rights per task, 48 dynamic handles and 512 KiB kernel heaps on both ISAs. Per-task
+private/reader budget ceilings are 1024/1536 pages; individual objects remain 128
+pages. The stock scene has 40 surface slots. These are bounded lab capacities,
+not a scalable production allocator. Runtime wait serialization now sizes its
+handle array from the contract; the old 64-byte message buffer only held eight.
+`CTHIMP03` adds channel/descendant request ceilings to scoped service declarations;
+leaf apps request zero, Split requests its subtree funding. Owner offers still cap
+actual grants. Older declarations preserve their former funding behavior.
+
+The compositor now builds immutable image views once per redraw, rather than
+once per 256-pixel scanline fragment. The desktop test measures QMP key injection
+to screenshot-observed text (including capture/polling overhead); this is an upper
+bound, not a renderer CPU benchmark. It does not establish a frame-rate guarantee.
+
+Outstanding: full nested desktop/login, arbitrary dynamic app counts, richer
+swappable background grants, background recovery, keyboard task selection and
+further measured chrome/compositor work. Selection currently replays surfaces
+individually rather than publishing a whole switch atomically. Multiple instances
+share their executable's realm; no implicit per-instance copy is made. Split's
+subtree can hit funding limits before all three app slots are occupied. Existing
+storage revision/conflict semantics remain in force.
+
+Verification passed:
+
+- `cargo test --locked` in `source-rs/`; storage-lab host tests with `--features engines`.
+- `cargo check-userspace`, `cargo check-uefi`, source-layout (35 Omega / 121 Rust edges),
+  Rust formatting and the 13 discovered harness unit tests.
+- Normal `desktop_test.py --trace-storage`: three independent drafts, fourth-launch
+  refusal, protected close, slot reuse, Colors over dirty Notes, cold reopen and
+  independent whole-store oracle. Artifacts: `desktop/20261019T225656787818Z`.
+  QMP-to-visible-text upper-bound samples: 105.5, 113.7, 111.4 ms.
+- `desktop_test.py --deep --trace-storage`: Split + Notes + Colors coexist, nested
+  drafts survive switching, repeated close/reclamation, live layout, deeper Split,
+  funding refusal and cold reopen. Artifacts: `desktop/20261019T230236259836Z`.
+- Launcher recovery `--mode recover` on a disposable copy (automatic retry, fallback,
+  explicit retries, draft retention and cold save); other recovery modes were not rerun.
+  Artifacts: `launcher-recovery/20261019T230133569587Z`.
+- x86 smoke, ARM64 portability, `--ipc-test`, `--matrix-storage-test`, `--session-test`.
+  Session also checks the full 32-handle wait and sustained drag (120 reports,
+  no lost motion; 31 ms to final observed cursor in that run).
+
+The mixed test exposed the old sixteen-reader metadata allowance despite sufficient
+page funding. Forty scene surfaces now have 48 local reader slots, covering normal
+replacement/ingress headroom; the independent global read pool remains bounded at
+128. Exhaustion probes now use contract capacities rather than stale literals.
+Automated images are disposable; the interactive `cathedral-storage.raw` was untouched.

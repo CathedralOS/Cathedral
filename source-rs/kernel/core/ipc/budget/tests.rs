@@ -24,7 +24,7 @@ fn reservation_validation_rejects_overcommit_and_keeps_defaults_constant() {
         ),
         (2, &[1][..]),
         (1, &[abi::MAX_CREATED_CHANNELS + 1][..]),
-        (8, &[8; 8][..]),
+        (8, &[abi::MAX_DYNAMIC_CHANNELS / 8 + 1; 8][..]),
     ] {
         assert_eq!(reservations(tasks, limits), Err(abi::INVALID_ARGUMENT));
         assert!(Ipc::with_reservations(1, tasks, &[], limits).is_err());
@@ -41,11 +41,13 @@ fn reservation_validation_rejects_overcommit_and_keeps_defaults_constant() {
 }
 #[test]
 fn every_task_can_fill_its_reservation_even_after_other_accounts_exhaust() {
-    let tasks = abi::MAX_DYNAMIC_CHANNELS / abi::DEFAULT_CHANNELS;
-    let mut ipc = Ipc::new(1, tasks, &[]).unwrap();
+    let tasks = 8;
+    let per_task = abi::MAX_DYNAMIC_CHANNELS / tasks;
+    let mut ipc =
+        Ipc::with_reservations(1, tasks, &[], &[abi::MAX_DYNAMIC_CHANNELS / 8; 8]).unwrap();
     let mut all = alloc::vec::Vec::new();
     for task in 0..tasks {
-        for _ in 0..abi::DEFAULT_CHANNELS {
+        for _ in 0..per_task {
             all.push((task, ipc.create(task).unwrap()));
         }
         let before = ipc.budget(task).unwrap();

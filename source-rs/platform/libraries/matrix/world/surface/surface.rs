@@ -170,7 +170,7 @@ impl<const N: usize> World<N> {
         let placement = child.rect.unwrap();
         let w = w.min(view[2].saturating_sub(x));
         let h = h.min(view[3].saturating_sub(y));
-        if w == 0 || h == 0 {
+        if !child.visible || w == 0 || h == 0 {
             return Ok([op, self.parent.epoch, upstream, 0, 0, 0, 0, color]);
         }
         Ok([

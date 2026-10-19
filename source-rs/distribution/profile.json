@@ -85,7 +85,7 @@
         "clock": true,
         "argument": 1129270608,
         "framebuffer": true,
-        "shared_pages": 128,
+        "shared_pages": 512,
         "ipc_channels": 0
       },
       {
@@ -106,9 +106,9 @@
         "target": "x86_64-unknown-none",
         "clock": true,
         "argument": 0,
-        "ipc_channels": 36,
-        "private_pages": 256,
-        "shared_pages": 384
+        "ipc_channels": 84,
+        "private_pages": 640,
+        "shared_pages": 1280
       },
       {
         "package": "cathedral-storage-service",
@@ -131,7 +131,7 @@
         4
       ]
     ],
-    "dynamic_tasks": 7,
+    "dynamic_tasks": 10,
     "programs": [
       {
         "package": "cathedral-chooser",
@@ -172,6 +172,13 @@
       }
     ],
     "realm_programs": [
+      {
+        "path": "Background",
+        "package": "cathedral-background",
+        "entry": "distribution/applications/background/main.rs",
+        "target": "x86_64-unknown-none",
+        "display_title": "BACKGROUND"
+      },
       {
         "path": "Split",
         "package": "cathedral-split",

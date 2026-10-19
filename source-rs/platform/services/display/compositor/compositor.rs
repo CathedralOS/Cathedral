@@ -122,17 +122,17 @@ impl Compositor {
             return;
         }
         self.stats[3] += 1;
+        let images = core::array::from_fn(|i| {
+            self.images[i]
+                .as_ref()
+                .and_then(|o| o.bytes())
+                .unwrap_or(&[])
+        });
         let mut row = [0u32; 256];
         for y in rect.y..rect.y + rect.h {
             for x in (rect.x..rect.x + rect.w).step_by(row.len()) {
                 let len = (rect.x + rect.w - x).min(row.len() as u64) as usize;
                 let row = &mut row[..len];
-                let images = core::array::from_fn(|i| {
-                    self.images[i]
-                        .as_ref()
-                        .and_then(|o| o.bytes())
-                        .unwrap_or(&[])
-                });
                 self.composition.paint_images(x, y, row, &images);
                 self.output.row(x, y, row);
             }

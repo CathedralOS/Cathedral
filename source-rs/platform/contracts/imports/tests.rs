@@ -111,3 +111,30 @@ fn broker_bootstrap_is_explicit_and_keeps_import_semantics() {
     assert_eq!(bind(declaration.entries(), INTERACTION), Ok(INTERACTION));
     assert!(!Declaration::decode(&encode(&REQUIRED)).unwrap().brokered);
 }
+
+#[test]
+fn requested_resources_are_bounded_metadata_and_do_not_add_services() {
+    let mut bytes = image();
+    bytes[128..128 + RECORD_BYTES].copy_from_slice(&encode_funded(&REQUIRED, 15, 3));
+    let declaration = from_elf(&bytes).unwrap().unwrap();
+    assert!(declaration.brokered);
+    assert_eq!(declaration.resources, Some((15, 3)));
+    assert_eq!(
+        bind(declaration.entries(), INTERACTION),
+        Err(Refusal::Missing(STORAGE))
+    );
+    assert_eq!(
+        Declaration::decode(&encode_funded(&OPTIONAL_STORAGE, 0, 0))
+            .unwrap()
+            .resources,
+        Some((0, 0))
+    );
+    assert_eq!(
+        Declaration::decode(&encode_brokered(&REQUIRED))
+            .unwrap()
+            .resources,
+        None
+    );
+    bytes[137] = 1; // Reserved header bits are not another permission channel.
+    assert!(from_elf(&bytes).is_err());
+}

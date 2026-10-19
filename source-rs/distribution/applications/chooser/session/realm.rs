@@ -42,6 +42,11 @@ impl Realm {
             let name: [u8; 32] = reply[32..].try_into().unwrap();
             self.scope.lookup(store::metadata::text(&name))?
         };
+        let background = if self.user_picker {
+            None
+        } else {
+            self.scope.lookup(b"Background").ok()
+        };
         self.ids = [0; ENTRIES];
         self.ids[0] = hidden;
         self.count = 1;
@@ -56,7 +61,7 @@ impl Realm {
             }
             for &id in &found[..count] {
                 after = id;
-                if id == hidden {
+                if id == hidden || Some(id) == background {
                     continue;
                 }
                 if self.count == ENTRIES {

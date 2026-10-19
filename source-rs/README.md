@@ -14,11 +14,13 @@ core on a second CPU architecture; the integrated desktop remains x86-64.
 Press **F5** at the repository root, or run
 `python tools/boot-harness-rs/run.py --release --window`. One desktop boots to a
 chooser over the folder of users: NEW copies the template user, clicking a user
-runs it, and its chrome launches Notes or Colors; click a program to focus it
+runs it, and its chrome launches Notes, Colors or Split instances; use the running-app rows to switch, click a program to focus it
 and its upper-right X to close it with draft protection. Notes uses F1 to save/check and
 F2 to reload; Colors uses Enter. Users, notes and colors survive QEMU restarts.
 See [controls and executable routes](distribution/README.md).
-`python tools/boot-harness-rs/desktop_test.py` tests this same default composition.
+`python tools/boot-harness-rs/desktop_test.py` tests this same default composition,
+including three independent Notes drafts, capacity refusal, switching and close.
+It records QMP-to-observed-text latency upper bounds in `input-latency.json`.
 
 **Split** runs two independently saved Notes. Its **DEEPER** button enters another
 copy of that matrix in a separate saved realm; unsaved work prevents replacement.

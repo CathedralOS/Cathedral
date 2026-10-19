@@ -4,7 +4,7 @@ use super::*;
 use cathedral_user_runtime::server::Request;
 
 pub(super) struct Deferred {
-    events: [Option<Event>; 6],
+    events: [Option<Event>; STREAMS],
 }
 impl Deferred {
     /// Retire old incarnation events before installing a replacement connection.
@@ -31,7 +31,7 @@ impl Deferred {
                 }
                 match wire::decode(&r.bytes[..r.len]) {
                     Some(w) if r.control => {
-                        let hop = (w[0] >> wire::OP_BITS) & 3;
+                        let hop = (w[0] >> wire::OP_BITS) & 7;
                         !(matches!(
                             w[0],
                             wire::HEALTH
@@ -40,7 +40,7 @@ impl Deferred {
                                 | wire::STORAGE_STATUS
                                 | wire::SAVE_RECOVERY_POLL
                                 | wire::STORAGE_BINDING
-                        ) || matches!(hop, 1 | 2)
+                        ) || (1..=CHILDREN as u64).contains(&hop)
                             && (parent.separate_storage
                                 || parent
                                     .storing_client()
@@ -60,7 +60,7 @@ impl Deferred {
     }
     pub const fn empty() -> Self {
         Self {
-            events: [const { None }; 6],
+            events: [const { None }; STREAMS],
         }
     }
     pub fn take(&mut self, parent: &Parent) -> Option<Event> {
@@ -76,10 +76,10 @@ impl Deferred {
     }
     pub fn pause(&self, server: &mut Server, parent: &Parent) {
         // One catalog request at a time; unread requests remain in their bounded
-        // queues. Excluding these two receivers keeps the live wait set <= eight,
-        // even with presentation, storage, owner-reply and wake handles present.
+        // queues. Exclude all child storage receivers while their shared upstream
+        // exchange is active; interaction and owner replies remain serviceable.
         let storage = if parent.separate_storage && parent.storing() {
-            (1 << 4) | (1 << 5)
+            ((1u32 << CHILDREN) - 1) << (STORAGE_BASE + 1)
         } else {
             0
         };
@@ -90,7 +90,7 @@ impl Deferred {
         event: Event,
         server: &mut Server,
         world: &mut World,
-        blocked_clients: u8,
+        blocked_clients: u32,
     ) -> Result<(), Error> {
         if let Event::Request(request) = &event
             && request
@@ -110,7 +110,7 @@ impl Deferred {
         server.pause(self.mask());
         Ok(())
     }
-    fn mask(&self) -> u8 {
+    fn mask(&self) -> u32 {
         let mut mask = 0;
         for i in 0..self.events.len() {
             if self.events[i].is_some() {
@@ -128,7 +128,8 @@ impl Deferred {
         let Some(words) = wire::decode(&request.bytes[..request.len]) else {
             return Ok(false);
         };
-        if let Some(slot @ 0..=1) = request.client
+        if let Some(slot) = request.client
+            && slot < CHILDREN
             && matches!(
                 words[0],
                 wire::VIEW | wire::POLL | wire::NEXT | wire::SURFACE_INFO

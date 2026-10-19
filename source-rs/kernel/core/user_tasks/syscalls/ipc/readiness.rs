@@ -158,8 +158,8 @@ mod tests {
     #[test]
     fn whole_set_validation_and_ready_before_deadline() {
         let mut wait = Wait {
-            handles: [7; 8],
-            kinds: [abi::WAIT_IPC; 8],
+            handles: [7; abi::MAX_WAIT_HANDLES],
+            kinds: [abi::WAIT_IPC; abi::MAX_WAIT_HANDLES],
             count: 2,
             deadline: 10,
         };

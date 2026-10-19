@@ -31,21 +31,22 @@ pub const LAUNCHER_FALLBACK: u64 = 127;
 /// Startup may read configuration and a program through several storage hops.
 pub const CONFIGURE_DEADLINE_TICKS: u64 = 8 * STORAGE_DEADLINE_TICKS + 100;
 
-// Owner-only routing. Two bits per hop (1/2 = local child 0/1); child endpoints
+// Owner-only routing. Three bits per hop (1..=5 = local child 0..=4); child endpoints
 // reject the entire encoded opcode. No process IDs or global paths are accepted.
 pub const OP_BITS: u32 = 16;
 pub fn route(mut words: Packet, child: usize) -> Option<Packet> {
-    if child > 1 || words[0] >> 62 != 0 {
+    if child > 4 || words[0] >> 61 != 0 {
         return None;
     }
-    words[0] = (words[0] & 0xffff) | (((words[0] >> OP_BITS) * 4 + child as u64 + 1) << OP_BITS);
+    words[0] = (words[0] & 0xffff) | (((words[0] >> OP_BITS) * 8 + child as u64 + 1) << OP_BITS);
     Some(words)
 }
 
 /// Child requests on the interaction connection. LAUNCH: [LAUNCH, object, withhold, 0..]
 /// asks the host to run an object from the requester's realm as its sibling,
-/// in the other slot, which the owner must have opened with LAUNCH_POLICY; the
-/// reply names the slot and local observation receipt. CLOSE: [CLOSE, 0..] asks the host to stop the sibling,
+/// in a free configured app slot (legacy lab: the other owner-opened slot). The
+/// reply names the slot and local observation receipt. Configured desktops accept
+/// this only from chrome. CLOSE: [CLOSE, 0..] asks to stop the selected app,
 /// which it does only after a LOSS probe answers with nothing it would lose.
 pub const LAUNCH: u64 = 14;
 pub const CLOSE: u64 = 15;
@@ -62,3 +63,10 @@ pub const SAVE_RECOVERY_GRANT: u64 = 128;
 /// Root owner: publish state and consume one still-authorized queued retry.
 /// [SAVE_RECOVERY_POLL, state, 0..] -> [0, requested (0/1), 0..].
 pub const SAVE_RECOVERY_POLL: u64 = 129;
+
+/// Configured chrome only: enumerate one of three local app positions.
+/// [APP_ENTRY,index,0..] -> [0,opaque instance ticket,program object,selected,0..].
+/// Empty positions return zero. No descendant/process identities are disclosed.
+pub const APP_ENTRY: u64 = 23;
+/// Configured chrome only: select an exact live instance, preserving other apps.
+pub const SELECT_APP: u64 = 24;

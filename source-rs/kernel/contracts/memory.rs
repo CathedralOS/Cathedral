@@ -28,18 +28,18 @@ pub const PAGE_BYTES: usize = 4096;
 /// Maximum pages in one object.
 pub const MAX_PAGES: usize = 128;
 /// A subtree owner may fund several objects and descendant accounts.
-pub const MAX_PRIVATE_PAGES: usize = 2 * MAX_PAGES;
+pub const MAX_PRIVATE_PAGES: usize = 8 * MAX_PAGES;
 /// Maximum per-task reader page budget. Reader pages pin other tasks' backing
 /// rather than funding frames, and a matrix hub needs far more of them than
 /// any one object: it retains every image its subtree shows, holds old and new
 /// during each replacement, and lends the same kind of budget to each nested
 /// matrix below it.
-pub const MAX_READER_PAGES: usize = 4 * MAX_PAGES;
+pub const MAX_READER_PAGES: usize = 12 * MAX_PAGES;
 /// Separate metadata limits: larger page grants must not buy every global slot.
 /// A matrix or the compositor retains one sealed image per surface it shows
 /// and holds its replacement beside it, including images below nested matrices.
 pub const MAX_PRIVATE_REGIONS: usize = 4;
-pub const MAX_SHARED_REGIONS: usize = 16;
+pub const MAX_SHARED_REGIONS: usize = 48;
 pub const MAX_MAPPING_SLOTS: usize = MAX_PRIVATE_REGIONS + MAX_SHARED_REGIONS;
 // Every live object has an owner or an accepted reader. This capacity covers
 // every task's object limits, including readers whose producer has exited.

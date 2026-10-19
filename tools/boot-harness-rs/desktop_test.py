@@ -102,6 +102,23 @@ def desktop(stream, output, serial, reboot, expected_absolute=True, fill_users=F
             return actual == expected and rgb(width, data, APP[0] + 5, APP[1] + 10) == bytes.fromhex('993f46' if error else '9b7028' if dirty else '55447a' if temporary else '27664a')
         scan(check, f'note text/status {text!r}, dirty={dirty}')
 
+    def measure_input(text):
+        # End-to-end upper bounds: QMP key injection through screenshot observation.
+        # No deliberate key delay; scan polling/capture overhead remains included.
+        samples = []
+        for char in 'xyz':
+            start = time.perf_counter()
+            send([{'type': 'key', 'data': {'down': down, 'key': {'type': 'qcode', 'data': char}}}
+                  for down in (True, False)])
+            text += char
+            note(text, dirty=True)
+            samples.append(round((time.perf_counter() - start) * 1000, 1))
+        import json
+        (output / 'input-latency.json').write_text(json.dumps({'qmp_to_observed_text_ms': samples}, indent=2))
+        print(f'Input-to-observed-text upper bounds (QMP + capture included): {samples} ms')
+        for _ in 'xyz': key('backspace')
+        note(text[:-3], dirty=True)
+
     def rows_image(lines):
         """The chooser bitmap: 160 px wide rows of 13 glyph cells."""
         image = bytearray(bytes.fromhex('182132') * (160 * 16 * len(lines)))
@@ -217,6 +234,9 @@ def desktop(stream, output, serial, reboot, expected_absolute=True, fill_users=F
         import split_test
         split_test.exercise(output, click, key, scan, width, height, nested_saved, deep)
         return
+    if not reboot and not service_imports:
+        import multitask_test
+        multitask_test.exercise(click_chrome, click, key, note, focus_app, app_close, dialog, choose_close, color, measure_input)
     click_chrome(1)
     if service_imports:
         note('', temporary=True)
@@ -259,8 +279,10 @@ def desktop(stream, output, serial, reboot, expected_absolute=True, fill_users=F
     focus_app()
     for char in 'hello cathedral': key('spc' if char==' ' else char)
     note('hello cathedral',dirty=True)
-    # A second app cannot replace a live draft.
+    # A second app coexists; closing it reveals the untouched live draft.
     click_chrome(2)
+    color('315ca8')
+    app_close()
     note('hello cathedral',dirty=True)
     app_close()
     dialog(0,'UNSAVED NOTE')

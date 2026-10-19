@@ -148,10 +148,10 @@ fn frame_failure() {
 
 fn heap_failure() {
     use core::alloc::{GlobalAlloc, Layout};
-    // Cover the largest current 256-KiB heap with bounded stack bookkeeping. Fragments below
+    // Cover the largest current 512-KiB heap with bounded stack bookkeeping. Fragments below
     // 256 bytes cannot hold a task context (its floating state alone is 512).
     let layout = Layout::from_size_align(256, 16).unwrap();
-    let mut blocks = [core::ptr::null_mut(); 1024];
+    let mut blocks = [core::ptr::null_mut(); 2049];
     let frames = kernel_tasks::allocated_frames();
     // SAFETY: Keep each successful allocation uniquely owned and free using the
     // same layout. Context switches allocate nothing; the peer's data is stable.

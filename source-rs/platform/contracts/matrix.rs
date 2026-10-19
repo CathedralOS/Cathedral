@@ -84,7 +84,7 @@ pub const RUN_MEMORY: u64 = 111; // slot, frames,0,0,0,0,0
 /// Child requests: create at a requested local stacking rank; query only own allowance.
 pub const SURFACE_CREATE: u64 = 6; // epoch, rank,0,0,0,0,0; reply status, local handle
 pub const SURFACE_INFO: u64 = 7; // all zero; reply status, allowance, allocated count
-pub const MAX_SURFACES: usize = 16;
+pub const MAX_SURFACES: usize = 40;
 /// Owner-only conserving subdivision of the matrix's upstream allowance.
 pub const SURFACE_LIMIT: u64 = 110; // child slot, allowance,0,0,0,0,0
 /// POLL carries the surface allowance above the key mask in word four.

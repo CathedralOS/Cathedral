@@ -21,7 +21,8 @@ matrix configuration schema.
 ## Current bounded representation
 
 The runtime's `service_imports!` emits `CTHIMP01`; `service_bootstrap!` emits
-`CTHIMP02` for [scoped acquisition](../services/README.md). Both contain a count followed by
+`CTHIMP03` for [scoped acquisition](../services/README.md) and requested resources.
+The earlier `CTHIMP02` scoped-acquisition format remains accepted. All contain a header followed by
 four reserved records of four little-endian u64 words: contract, minimum version,
 maximum version, required (0/1). Unused records are zero. The linker retains this
 144-byte record first in the read-only PT_LOAD segment, so trimming debug/section
@@ -74,3 +75,12 @@ missing required and optional services, malformed records and truncated ELF.
 `--matrix-storage-test` checks owner policy, child withholding/refused widening, successful retry, realm confinement and revocation. Service discovery,
 first-request activation, dynamic grant addition and final manifest persistence
 remain separate work.
+
+`CTHIMP03` packs the import count in header bits 0..7, requested channel creation
+in 16..31 and requested descendant capacity in 32..47. Other header bits must be
+zero. `service_bootstrap!(imports)` requests zero channels/descendants;
+`service_bootstrap!(imports, channels, descendants)` requests explicit ceilings.
+Stock store admission grants the minimum of each request and the owner's offer.
+These are ceilings, not required minima, and grant no extra service or executable.
+This prevents ordinary leaf programs from reserving the budget of an entire matrix.
+The older formats retain owner-offered resource policy for saved-code compatibility.

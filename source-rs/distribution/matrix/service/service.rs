@@ -1,7 +1,13 @@
 // Consume local invalidations, wake children, then dispatch ownership and input.
 use cathedral_kernel_contracts::user as abi;
 use cathedral_matrix::world::{Grant, Rect};
-type World = cathedral_matrix::world::World<2>;
+const CHILDREN: usize = 5;
+const LAST_CHILD: u64 = CHILDREN as u64 - 1;
+const SOURCE: usize = CHILDREN;
+const STORAGE_BASE: usize = CHILDREN + 1;
+const STREAMS: usize = 2 * CHILDREN + 2;
+const BACKGROUND: usize = 4;
+type World = cathedral_matrix::world::World<CHILDREN>;
 use cathedral_desktop_matrix_contracts::matrix as wire;
 use cathedral_user_runtime::{
     Error,
@@ -39,12 +45,16 @@ pub fn run(environment: Environment) -> Result<(), Error> {
     let world = unsafe { &mut *world_address };
     let mut server = Server::open_clients_from(
         if storage_root { 2 } else { 0 },
-        if parent.separate_storage { 5 } else { 3 },
+        if parent.separate_storage {
+            STREAMS - 1
+        } else {
+            CHILDREN + 1
+        },
     )?;
     server.enable_memory();
     if environment.len() == 4 {
         server.install(
-            2,
+            SOURCE,
             (
                 environment.endpoint(2).unwrap(),
                 environment.endpoint(3).unwrap(),
@@ -84,7 +94,7 @@ pub fn run(environment: Environment) -> Result<(), Error> {
         }
         let (handles, mut deadline) = children.wait();
         children.notify(world)?;
-        let mut extra = [cathedral_user_runtime::ipc::Handle::from_raw(0); 5];
+        let mut extra = [cathedral_user_runtime::ipc::Handle::from_raw(0); CHILDREN + 3];
         let mut count = 0;
         if parent.upstream_busy() || parent.storing() {
             deadline = None;
@@ -169,9 +179,9 @@ pub fn run(environment: Environment) -> Result<(), Error> {
         }
         match event {
             Event::Disconnected { client, .. } => {
-                if client < 2 {
+                if client < CHILDREN {
                     children.disconnected(client, &mut server, world, parent)?;
-                } else if client == 2 {
+                } else if client == SOURCE {
                     world.cancel();
                 } else {
                     parent.storage_close(parent.storage_slot(client))?;

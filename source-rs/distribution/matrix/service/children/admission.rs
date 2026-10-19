@@ -85,7 +85,11 @@ impl Children {
         if self.slots[plan.slot].is_some() || !server.available(plan.slot) {
             return Err(Error(abi::BUSY as i64));
         }
-        let (binding, brokered) = imports::resolve(object, plan.imports)?;
+        let imports::Bound {
+            binding,
+            brokered,
+            resources,
+        } = imports::resolve(object, plan.imports)?;
         if brokered && !self.separate_storage {
             return Err(Error(abi::DENIED as i64));
         }
@@ -98,6 +102,10 @@ impl Children {
                 self.next_frames[plan.slot].take(),
             ),
         };
+        let (channels, descendants) = resources
+            .map_or((plan.channels, plan.descendants), |(c, d)| {
+                (c.min(plan.channels), d.min(plan.descendants))
+            });
         self.admit(
             plan.slot,
             executable,
@@ -105,8 +113,8 @@ impl Children {
             frames,
             [
                 plan.argument,
-                plan.channels,
-                plan.descendants,
+                channels,
+                descendants,
                 self.allowed_images[plan.slot],
                 plan.cpu,
             ],
@@ -196,7 +204,7 @@ impl Children {
         server: &mut Server,
         world: &mut World,
     ) -> Result<(), Error> {
-        if separate_storage && !server.available(slot + 3) {
+        if separate_storage && !server.available(slot + STORAGE_BASE) {
             return Err(Error(abi::BUSY as i64));
         }
         use cathedral_user_runtime::matrix::admission;
@@ -211,7 +219,7 @@ impl Children {
         let storage = admitted.storage;
         if let Some(pair) = storage {
             server
-                .install(slot + 3, pair)
+                .install(slot + STORAGE_BASE, pair)
                 .expect("child catalog slot changed");
         }
         self.slots[slot] = Some(Owned {

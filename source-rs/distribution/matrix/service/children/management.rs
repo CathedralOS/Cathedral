@@ -48,10 +48,13 @@ impl Children {
     }
     pub(in crate::service) fn management_owner_changed(&mut self, words: wire::Packet) {
         match words {
-            [wire::REVOKE, slot @ 0..=1, 0, 0, 0, 0, 0, 0] => self.management.revoke(slot as usize),
+            [wire::REVOKE, slot @ 0..=LAST_CHILD, 0, 0, 0, 0, 0, 0] => {
+                self.management.revoke(slot as usize)
+            }
             [wire::BIND, ..] => {
-                self.management.revoke(0);
-                self.management.revoke(1);
+                for slot in 0..CHILDREN {
+                    self.management.revoke(slot);
+                }
             }
             _ => (),
         }

@@ -17,8 +17,8 @@ impl Rect {
             && self.height <= wire::MAX_EXTENT
     }
 }
-#[derive(Default)]
 pub(super) struct Child {
+    pub visible: bool,
     pub rect: Option<Rect>,
     pub keys: u64,
     pub grant: Grant,
@@ -35,6 +35,7 @@ pub(super) struct Child {
 impl Child {
     pub const fn empty() -> Self {
         Self {
+            visible: true,
             rect: None,
             keys: 0,
             grant: Grant {
@@ -123,5 +124,11 @@ impl Child {
         reply[6] = event[3];
         reply[7] = event[4];
         reply
+    }
+}
+
+impl Default for Child {
+    fn default() -> Self {
+        Self::empty()
     }
 }

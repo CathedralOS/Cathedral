@@ -66,7 +66,12 @@ pub(in crate::service) fn replay(
 ) -> Result<(), Error> {
     for rank in 0..wire::MAX_SURFACES {
         if let Some(words) = world.replay(slot, rank) {
-            parent.surface(words)?;
+            parent.surface(words).inspect_err(|error| {
+                cathedral_user_runtime::time::storage_sample(
+                    "surface-replay-failed",
+                    &[slot as u64, rank as u64, words[0], words[2], error.0 as u64],
+                );
+            })?;
         }
     }
     Ok(())

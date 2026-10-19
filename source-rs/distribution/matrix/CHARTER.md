@@ -1,6 +1,6 @@
 # Cathedral's stock matrix program
 
-This executable belongs to the replaceable distribution. Its two-child control
+This executable belongs to the replaceable distribution. Its bounded child control
 router, persisted `Matrix` desktop arrangement, launcher/app roles and recovery
 policy are not requirements on other matrix programs. The
 [desktop extension contract](contracts/matrix.rs) owns those wire operations
@@ -11,7 +11,7 @@ The [platform matrix library](../../platform/libraries/matrix/README.md) owns
 reusable attenuation, local input, surface allowances, storage scopes and task
 management ledgers. It takes a child capacity and owner-supplied geometry; it
 does not load desktop configuration or choose launchers. This executable uses
-that library with two children. Its IPC service loop and forwarding adapters
+that library with five children: chrome, three app instances and background. Its IPC service loop and forwarding adapters
 remain here with its current composition; there is not yet a separately packaged
 general-purpose matrix server runtime.
 
@@ -209,3 +209,33 @@ through the same intersection/focus rules; the default navigation grant is uncha
 conserved owner funding. The root-only owner `STORAGE_STATUS` reports retired
 provider streams without reconnecting them. It is unavailable to app connections
 and nested adapters; distribution supervision interprets it.
+
+## Desktop roles and instances
+
+[Configuration](service/children/configuration.rs) resolves the chrome from the
+saved `Matrix.launcher` path and the background from the realm-local `Background`
+path. Both are installed executables, replaceable independently of the platform.
+The background gets one bottom surface, no keys, storage, channel-creation budget
+or descendants. It can see pointer events in uncovered background space. Chrome
+gets its own top surfaces, layout authority and local app management. The installer
+preserves customized executable bytes; the current UI does not offer role selection.
+
+[Workspace](service/children/workspace.rs) authenticates the current chrome endpoint
+before listing or selecting an instance. Tickets are local, monotonic and retired
+on exit. Ordinary apps cannot enumerate siblings. [Launch](service/children/launch.rs)
+chooses a free app slot and reads code through the requester's scoped realm.
+[Lifecycle](service/children/lifecycle.rs) asks LOSS before chrome-requested close,
+reclaims the exact process/subtree and selects a surviving app.
+
+Selection hides sibling surfaces and input without changing their local geometry,
+process state or grants. Hidden updates remain clipped to zero upstream; selecting
+an instance replays its retained scene. This is distribution tab-switching policy
+over the platform's owner-controlled visibility mechanism. It is not process
+suspension, per-instance storage cloning, or a universal window-manager protocol.
+Multiple instances of one program share its persistent realm; their private drafts
+are independent and existing revision checks govern conflicting saves.
+
+Three apps fit the current desktop policy, subject to subtree funding. Split consumes
+more task/channel capacity than a leaf and may be refused while other subtrees run.
+The owner control route now uses three bits per hop (five children); recompile
+stock control clients together. The legacy unconfigured two-child lab policy remains.

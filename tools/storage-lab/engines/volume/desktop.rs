@@ -2,7 +2,7 @@
 //! construct every expected record without importing the guest store, then
 //! compare the whole retained set. The notes root holds the installed objects
 //! one to six: the chooser, the folder of users, and inside it the template
-//! user with its chrome, Notes and Colors. Named additions install Split and its
+//! user with its chrome, Notes and Colors. Named additions install Background, Split and its
 //! Notes code. The copied user shares their content, while its saved notes/color
 //! are distinct objects. The ungranted root holds nothing.
 use super::*;
@@ -70,13 +70,18 @@ pub fn verify(
         )?;
     }
     hierarchy::insert_config(&mut expected, 7, TEMPLATE)?;
-    if additions.len() != 4 || additions[0] != "Split" || additions[2] != "Split/Notes" {
-        return Err("expected Split and its Notes program".into());
+    if additions.len() != 6
+        || additions[0] != "Background"
+        || additions[2] != "Split"
+        || additions[4] != "Split/Notes"
+    {
+        return Err("expected Background, Split and its Notes program".into());
     }
     // Construct the additive objects independently; no installer call is used.
     for (id, parent, name, file) in [
-        (8u64, 3u64, b"Split".as_slice(), &additions[1]),
-        (9, 8, b"Notes".as_slice(), &additions[3]),
+        (8u64, 3u64, b"Background".as_slice(), &additions[1]),
+        (9, 3, b"Split".as_slice(), &additions[3]),
+        (10, 9, b"Notes".as_slice(), &additions[5]),
     ] {
         let bytes = std::fs::read(file)?;
         let mut store = Store::new(Policy {
@@ -105,13 +110,13 @@ pub fn verify(
             cathedral_platform_contracts::storage::metadata::EXECUTABLE,
         )?;
     }
-    let user = 10u64;
-    for source in TEMPLATE..=9 {
+    let user = 11u64;
+    for source in TEMPLATE..=10 {
         let copy = user + source - TEMPLATE;
         let parent = if source == TEMPLATE {
             USERS
-        } else if source == 9 {
-            user + 5
+        } else if source == 10 {
+            user + 6
         } else {
             user
         };
@@ -143,11 +148,9 @@ pub fn verify(
         inline_limit: 128,
         layout: Layout::Flat,
     });
-    // Note one is saved once; note two is copied from it, then edited and
-    // saved; the color is created, then toggled once. Collection runs before
-    // each write, so the copy's first event went when the color was created,
-    // while the color's first event survives because nothing was written after
-    // its toggle.
+    // Colors creates its default before either note is saved. Note one is saved
+    // once; note two is copied then edited. Colors is toggled last. Collection
+    // removes the copy's old event, while the last color's prior event survives.
     let original = store.put(b"NTS1hello cathedral");
     let edited = store.put(b"NTS1hello cathedral two");
     let unset = store.put(b"MC01\x00\x00");
@@ -169,7 +172,7 @@ pub fn verify(
     let second = colors::head(2, &manifests[1], 4 + "hello cathedral two".len(), notes);
     let created = colors::head(1, &manifests[2], 6, colors);
     let color = colors::head(2, &manifests[3], 6, colors);
-    let (note, copy, swatch) = (user + 7, user + 8, user + 9);
+    let (note, copy, swatch) = (user + 9, user + 10, user + 8);
     expected.insert(key(b'h', &note.to_be_bytes()), first.clone());
     expected.insert(key(b'h', &copy.to_be_bytes()), second.clone());
     expected.insert(key(b'h', &swatch.to_be_bytes()), color.clone());
@@ -180,7 +183,7 @@ pub fn verify(
     expected.insert(event(copy, 2), second);
     expected.insert(event(swatch, 1), created);
     expected.insert(event(swatch, 2), color);
-    expected.insert(key(b'n', &[]), (swatch + 1).to_le_bytes().to_vec());
+    expected.insert(key(b'n', &[]), (copy + 1).to_le_bytes().to_vec());
     let charge = expected
         .iter()
         .map(|(k, v)| k.len() + v.len())
@@ -192,7 +195,7 @@ pub fn verify(
         return Err("desktop records differ from the independent object oracle".into());
     }
     println!(
-        "VERIFIED: six base objects, Split and its Notes, and matrix configuration, a named user copied from the template, two notes sharing one manifest under its Notes, the color under its Colors, exact heads/history/edges/quota, empty second root ({} records)",
+        "VERIFIED: six base objects, Background, Split and its Notes, and matrix configuration, a named user copied from the template, two notes sharing one manifest under its Notes, the color under its Colors, exact heads/history/edges/quota, empty second root ({} records)",
         actual.len()
     );
     Ok(())

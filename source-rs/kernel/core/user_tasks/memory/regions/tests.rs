@@ -255,7 +255,7 @@ fn subtree_budget_is_separate_from_the_single_object_limit() {
         1,
         &[Grant {
             task: 0,
-            private_pages: MAX_PRIVATE_PAGES,
+            private_pages: 2 * MAX_PAGES,
             shared_pages: 0,
         }],
     )

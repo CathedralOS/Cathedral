@@ -3,12 +3,16 @@ use super::*;
 use cathedral_user_runtime::memory::Private;
 pub struct Scene {
     pub epoch: u64,
-    names: [u64; 5],
+    names: [u64; 6],
 }
 impl Scene {
-    pub fn new(parent: Pair, epoch: u64) -> Result<Self, u64> {
-        let mut names = [0; 5];
-        for (rank, name) in names.iter_mut().enumerate() {
+    pub fn new(parent: Pair, epoch: u64, picker: bool) -> Result<Self, u64> {
+        let mut names = [0; 6];
+        for (rank, name) in names
+            .iter_mut()
+            .take(if picker { 5 } else { 6 })
+            .enumerate()
+        {
             let reply = call(
                 parent,
                 [wire::SURFACE_CREATE, epoch, rank as u64, 0, 0, 0, 0, 0],
@@ -71,6 +75,20 @@ impl Scene {
             managed,
         )
     }
+    pub fn tasks(
+        &self,
+        parent: Pair,
+        extent: wire::Packet,
+        tasks: &tasks::Tasks,
+        realm: &realm::Realm,
+    ) -> Result<(), u64> {
+        self.image(
+            parent,
+            self.names[5],
+            tasks.paint(realm),
+            [extent[2].saturating_sub(180) / 2, tasks::TOP, 180, 96],
+        )
+    }
     pub fn management(
         &self,
         parent: Pair,
@@ -78,6 +96,14 @@ impl Scene {
         controls: &management::Controls,
     ) -> Result<(), u64> {
         self.background(parent, extent)?;
+        if self.names[5] != 0 {
+            accepted(
+                call(
+                    parent,
+                    [wire::PAINT, self.epoch, self.names[5], 0, 0, 0, 0, 0],
+                )[0],
+            )?;
+        }
         for row in 0..3 {
             let (x, y) = management::view::origin(extent, row);
             self.image(
@@ -101,6 +127,14 @@ impl Scene {
         editor: &settings::Editor,
     ) -> Result<(), u64> {
         self.background(parent, extent)?;
+        if self.names[5] != 0 {
+            accepted(
+                call(
+                    parent,
+                    [wire::PAINT, self.epoch, self.names[5], 0, 0, 0, 0, 0],
+                )[0],
+            )?;
+        }
         for row in 0..3 {
             let (x, y) = settings::view::origin(extent, row);
             self.image(

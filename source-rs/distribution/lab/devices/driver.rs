@@ -62,7 +62,12 @@ pub fn run(previous: u64) -> u64 {
         Err(Error(abi::BAD_ADDRESS as i64))
     );
     assert_eq!(
-        device::raw(abi::EVENT_WAIT, 0, 9, time::after(10).unwrap()),
+        device::raw(
+            abi::EVENT_WAIT,
+            0,
+            abi::MAX_WAIT_HANDLES as u64 + 1,
+            time::after(10).unwrap()
+        ),
         Err(Error(abi::INVALID_ARGUMENT as i64))
     );
     let mut command = [0; 64];

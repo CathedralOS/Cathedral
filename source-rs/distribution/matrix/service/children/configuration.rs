@@ -63,22 +63,29 @@ impl Children {
         self.saved_storage[0] = Some((0, 0));
         // Distribution resource policy: an app may host a matrix and two leaves.
         // This conveys no executable, storage or device authority by itself.
-        self.standing[1] = Some(Standing {
-            pages: [saved.app_pages, saved.app_readers],
-            channels: 15,
-            descendants: 3,
-            cpu: 0,
-            surfaces: saved.app_surfaces,
-            place: Some((rect(rects[1]), saved.keys)),
-        });
-        let placement = surface_limit(world, 0, 5)
-            .and_then(|()| surface_limit(world, 1, saved.app_surfaces as usize))
+        self.desktop = true;
+        for slot in 1..BACKGROUND {
+            self.standing[slot] = Some(Standing {
+                pages: [saved.app_pages, saved.app_readers],
+                channels: 15,
+                descendants: 3,
+                cpu: 0,
+                surfaces: saved.app_surfaces,
+                place: Some((rect(rects[1]), saved.keys)),
+            });
+        }
+        let placement = world
+            .surface_range(0, world.backed_surfaces().saturating_sub(6), 6)
             .and_then(|()| world.place(0, rect(rects[0]), saved.keys));
         if let Err(code) = placement {
-            self.standing[1] = None;
+            self.desktop = false;
+            self.standing = [None; CHILDREN];
             self.stop(0, server, world, parent)?;
             surface_limit(world, 1, 0).map_err(|c| Error(c as i64))?;
             return Err(Error(code as i64));
+        }
+        if let Err(error) = self.background(parent, world, server) {
+            time::storage_sample("background-start-refused", &[error.0 as u64]);
         }
         super::super::requests::flush(parent, world)?;
         self.notify(world)?;
@@ -93,6 +100,53 @@ impl Children {
             server.incarnation(0).unwrap(),
         ));
         cathedral_user_runtime::write(b"Cathedral matrix: configured from realm paths\n")?;
+        Ok(())
+    }
+    /// Background is a separately installed role at a realm-local path. Replacing
+    /// its executable replaces the background; it receives interaction only.
+    fn background(
+        &mut self,
+        parent: &mut Parent,
+        world: &mut World,
+        server: &mut Server,
+    ) -> Result<(), Error> {
+        let (object, mut code) = parent.local_storage(|scope| {
+            scope.bind().map_err(|c| Error(c as i64))?;
+            let object = scope.lookup(b"Background").map_err(|c| Error(c as i64))?;
+            Ok((object, read(scope, object, None)?))
+        })?;
+        let plan = parent::LaunchRequest {
+            slot: BACKGROUND,
+            object,
+            scope: 0,
+            argument: 0,
+            channels: 0,
+            descendants: 0,
+            cpu: 0,
+            pages: Some([4, 0]),
+            stamp: 0,
+            imports: cathedral_platform_contracts::imports::INTERACTION,
+        };
+        self.run_object(plan, &mut code, server, world)?;
+        let result = world.surface_range(BACKGROUND, 0, 1).and_then(|()| {
+            world.place(
+                BACKGROUND,
+                Rect {
+                    x: 0,
+                    y: 0,
+                    width: parent.grant.width,
+                    height: parent.grant.height,
+                },
+                0,
+            )
+        });
+        if let Err(code) = result {
+            self.stop(BACKGROUND, server, world, parent)?;
+            return Err(Error(code as i64));
+        }
+        cathedral_user_runtime::write(
+            b"Cathedral matrix: background admitted with presentation only\n",
+        )?;
         Ok(())
     }
     pub(in crate::service) fn apply_layout(
@@ -115,18 +169,34 @@ impl Children {
         let Some(rects) = config::rectangles(margin, strip, gap, grant.width, grant.height) else {
             return Ok(wire::error(abi::INVALID_ARGUMENT));
         };
-        let rects = rects.map(rect);
+        let pair = rects.map(rect);
+        let rects = core::array::from_fn(|i| {
+            if i == 0 {
+                pair[0]
+            } else if i == BACKGROUND {
+                Rect {
+                    x: 0,
+                    y: 0,
+                    width: grant.width,
+                    height: grant.height,
+                }
+            } else {
+                pair[1]
+            }
+        });
         let rects = match world.layout(request.client.unwrap(), request.incarnation, epoch, rects) {
             Ok(rects) => rects,
             Err(code) => return Ok(wire::error(code)),
         };
-        if let Some(standing) = &mut self.standing[1]
-            && let Some((rect, _)) = &mut standing.place
-        {
-            *rect = rects[1];
+        for (slot, next) in rects.iter().enumerate().take(BACKGROUND).skip(1) {
+            if let Some(standing) = &mut self.standing[slot]
+                && let Some((rect, _)) = &mut standing.place
+            {
+                *rect = *next;
+            }
         }
         super::super::requests::flush(parent, world)?;
-        for slot in 0..2 {
+        for slot in 0..CHILDREN {
             super::super::requests::replay(parent, world, slot)?;
         }
         Ok([0; 8])
@@ -136,7 +206,7 @@ impl Children {
         parent: &mut Parent,
         server: &Server,
     ) -> Result<(), Error> {
-        for slot in 0..2 {
+        for slot in 0..CHILDREN {
             if self.slots[slot].is_some()
                 && let Some((source, scope)) = self.saved_storage[slot]
             {

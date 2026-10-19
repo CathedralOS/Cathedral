@@ -4,10 +4,12 @@ mod admission;
 mod configuration;
 mod control;
 mod imports;
+mod launch;
 mod lifecycle;
 mod loss;
 mod management;
 mod recovery;
 mod services;
+mod workspace;
 
 include!("children.rs");

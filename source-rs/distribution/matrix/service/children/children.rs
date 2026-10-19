@@ -40,30 +40,52 @@ pub(super) enum Purpose {
 #[derive(Default)]
 pub(super) struct Children {
     pub separate_storage: bool,
-    slots: [Option<Owned>; 2],
-    saved_storage: [Option<(usize, u64)>; 2],
-    next_frames: [Option<u64>; 2],
-    next_pages: [Option<[u64; 2]>; 2],
-    standing: [Option<Standing>; 2],
-    allowed_imports: [Option<u64>; 2],
-    allowed_images: [u64; 2],
-    pending: [Option<(Request, u64, Purpose)>; 2],
-    retiring: [Option<i64>; 2],
+    desktop: bool,
+    active: Option<usize>,
+    running: [Option<(u64, u64)>; CHILDREN], // local ticket, program object
+    next_ticket: u64,
+    slots: [Option<Owned>; CHILDREN],
+    saved_storage: [Option<(usize, u64)>; CHILDREN],
+    next_frames: [Option<u64>; CHILDREN],
+    next_pages: [Option<[u64; 2]>; CHILDREN],
+    standing: [Option<Standing>; CHILDREN],
+    allowed_imports: [Option<u64>; CHILDREN],
+    allowed_images: [u64; CHILDREN],
+    pending: [Option<(Request, u64, Purpose)>; CHILDREN],
+    retiring: [Option<i64>; CHILDREN],
     loss: Option<loss::Survey>,
     launcher: Option<recovery::Launcher>,
     fallback: Option<recovery::Fallback>,
-    pub(in crate::service) observations: cathedral_matrix::world::launches::Launches,
-    management: cathedral_matrix::world::management::Management,
+    pub(in crate::service) observations: cathedral_matrix::world::launches::Launches<CHILDREN>,
+    management: cathedral_matrix::world::management::Management<CHILDREN>,
 }
 impl Children {
     /// Remember only successfully applied owner policy. Revocation must remain
     /// revoked when a later provider replacement restores the other children.
     pub(super) fn remember_storage(&mut self, words: wire::Packet) {
         match words {
-            [wire::STORAGE_GRANT, slot @ 0..=1, source, scope, 0, 0, 0, 0] => {
+            [
+                wire::STORAGE_GRANT,
+                slot @ 0..=LAST_CHILD,
+                source,
+                scope,
+                0,
+                0,
+                0,
+                0,
+            ] => {
                 self.saved_storage[slot as usize] = Some((source as usize, scope));
             }
-            [wire::STORAGE_REVOKE, slot @ 0..=1, 0, 0, 0, 0, 0, 0] => {
+            [
+                wire::STORAGE_REVOKE,
+                slot @ 0..=LAST_CHILD,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+            ] => {
                 self.saved_storage[slot as usize] = None;
             }
             _ => {}
@@ -136,7 +158,7 @@ impl Children {
         if routed == 0
             && let [
                 wire::RUN_OBJECT,
-                slot @ 0..=1,
+                slot @ 0..=LAST_CHILD,
                 object,
                 scope,
                 argument,
@@ -171,8 +193,8 @@ impl Children {
             return Ok(true);
         }
         let result = if routed != 0 {
-            let hop = (routed & 3) as usize;
-            if (1..=2).contains(&hop) && self.pending[hop - 1].is_some() {
+            let hop = (routed & 7) as usize;
+            if (1..=CHILDREN).contains(&hop) && self.pending[hop - 1].is_some() {
                 Err(Error(abi::BUSY as i64))
             } else {
                 match self.forward(words, routed) {
@@ -194,9 +216,16 @@ impl Children {
             }
         } else {
             match words {
-                [wire::LAUNCH_IMAGES, slot @ 0..=1, images, 0, 0, 0, 0, 0]
-                    if images >> abi::MAX_LAUNCHES == 0 =>
-                {
+                [
+                    wire::LAUNCH_IMAGES,
+                    slot @ 0..=LAST_CHILD,
+                    images,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                ] if images >> abi::MAX_LAUNCHES == 0 => {
                     let result = (0..abi::MAX_LAUNCHES)
                         .filter(|i| images & (1 << i) != 0)
                         .try_for_each(|i| {
@@ -209,8 +238,8 @@ impl Children {
                 }
                 [
                     wire::MANAGEMENT_GRANT,
-                    manager @ 0..=1,
-                    target @ 0..=2,
+                    manager @ 0..=LAST_CHILD,
+                    target @ 0..=5,
                     0,
                     0,
                     0,
@@ -235,16 +264,30 @@ impl Children {
                 [wire::RESTORE_STORAGE, 0, 0, 0, 0, 0, 0, 0] => {
                     self.restore_storage(parent, server)
                 }
-                [wire::LAUNCH_IMPORTS, slot @ 0..=1, offered, 0, 0, 0, 0, 0]
-                    if offered & !cathedral_platform_contracts::imports::ALL == 0 =>
-                {
+                [
+                    wire::LAUNCH_IMPORTS,
+                    slot @ 0..=LAST_CHILD,
+                    offered,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                ] if offered & !cathedral_platform_contracts::imports::ALL == 0 => {
                     self.allowed_imports[slot as usize] = Some(offered);
                     Ok(())
                 }
-                [wire::RUN_PAGES, slot @ 0..=1, private, readers, 0, 0, 0, 0]
-                    if private <= cathedral_kernel_contracts::memory::MAX_PRIVATE_PAGES as u64
-                        && readers
-                            <= cathedral_kernel_contracts::memory::MAX_READER_PAGES as u64 =>
+                [
+                    wire::RUN_PAGES,
+                    slot @ 0..=LAST_CHILD,
+                    private,
+                    readers,
+                    0,
+                    0,
+                    0,
+                    0,
+                ] if private <= cathedral_kernel_contracts::memory::MAX_PRIVATE_PAGES as u64
+                    && readers <= cathedral_kernel_contracts::memory::MAX_READER_PAGES as u64 =>
                 {
                     if self.slots[slot as usize].is_some() {
                         Err(Error(abi::BUSY as i64))
@@ -253,7 +296,16 @@ impl Children {
                         Ok(())
                     }
                 }
-                [wire::RUN_MEMORY, slot @ 0..=1, frames, 0, 0, 0, 0, 0] => {
+                [
+                    wire::RUN_MEMORY,
+                    slot @ 0..=LAST_CHILD,
+                    frames,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                ] => {
                     if self.slots[slot as usize].is_some() {
                         Err(Error(abi::BUSY as i64))
                     } else {
@@ -263,7 +315,7 @@ impl Children {
                 }
                 [
                     wire::LAUNCH_POLICY,
-                    slot @ 0..=1,
+                    slot @ 0..=LAST_CHILD,
                     private,
                     readers,
                     channels,
@@ -287,7 +339,7 @@ impl Children {
                 }
                 [
                     wire::LAUNCH_PLACE,
-                    slot @ 0..=1,
+                    slot @ 0..=LAST_CHILD,
                     x,
                     y,
                     width,
@@ -309,12 +361,19 @@ impl Children {
                     }
                     None => Err(Error(abi::DENIED as i64)),
                 },
-                [wire::SPAWN, slot @ 0..=1, launch, loans, argument, 0, 0, 0] => {
-                    self.start(slot as usize, launch, loans, argument, server, world)
-                }
+                [
+                    wire::SPAWN,
+                    slot @ 0..=LAST_CHILD,
+                    launch,
+                    loans,
+                    argument,
+                    0,
+                    0,
+                    0,
+                ] => self.start(slot as usize, launch, loans, argument, server, world),
                 [
                     wire::RUN,
-                    slot @ 0..=1,
+                    slot @ 0..=LAST_CHILD,
                     image,
                     argument,
                     channels,
@@ -327,7 +386,7 @@ impl Children {
                     server,
                     world,
                 ),
-                [wire::STOP, slot @ 0..=1, 0, 0, 0, 0, 0, 0] => {
+                [wire::STOP, slot @ 0..=LAST_CHILD, 0, 0, 0, 0, 0, 0] => {
                     if slot == 0 {
                         self.launcher = None;
                     }
@@ -344,180 +403,5 @@ impl Children {
             &wire::encode(wire::error(result.err().map_or(0, |e| e.0 as u64))),
         )?;
         Ok(true)
-    }
-    /// A child's request for a sibling. The other slot must be free and opened
-    /// by the owner; the program is read with the requester's own scope, so a
-    /// launcher can only launch what it can see.
-    pub(in crate::service) fn launch(
-        &mut self,
-        request: Request,
-        object: u64,
-        withhold: u64,
-        parent: &mut Parent,
-        server: &mut Server,
-    ) -> Result<(), Error> {
-        if self.loss.is_some() {
-            return server.reply(&request, &wire::encode(wire::error(abi::BUSY)));
-        }
-        let requester = request.client.unwrap();
-        let slot = 1 - requester;
-        let refusal = if parent.storing() || self.slots[slot].is_some() || !server.available(slot) {
-            Some(abi::BUSY)
-        } else if !self.observations.available(requester) {
-            Some(abi::NO_MEMORY)
-        } else if object == 0 || withhold & !cathedral_platform_contracts::imports::ALL != 0 {
-            Some(abi::INVALID_ARGUMENT)
-        } else {
-            None
-        };
-        if let Some(code) = refusal {
-            return server.reply(&request, &wire::encode(wire::error(code)));
-        }
-        let (Some(standing), Some((_, stamp))) = (
-            self.standing[slot],
-            parent.storage_binding(server, requester),
-        ) else {
-            return server.reply(&request, &wire::encode(wire::error(abi::DENIED)));
-        };
-        parent.storage_launch(
-            request,
-            parent::LaunchRequest {
-                slot,
-                object,
-                scope: object,
-                argument: 0,
-                channels: standing.channels,
-                descendants: standing.descendants,
-                cpu: standing.cpu,
-                pages: Some(standing.pages),
-                stamp,
-                imports: self.allowed_imports[slot]
-                    .unwrap_or(cathedral_platform_contracts::imports::ALL)
-                    & !withhold,
-            },
-        )
-    }
-    /// A child's request to stop its sibling. The sibling is asked first and
-    /// kept if it reports work it would lose or does not answer.
-    pub(in crate::service) fn close(
-        &mut self,
-        request: Request,
-        parent: &mut Parent,
-        world: &mut World,
-        server: &mut Server,
-    ) -> Result<(), Error> {
-        if self.loss.is_some() {
-            return server.reply(&request, &wire::encode(wire::error(abi::BUSY)));
-        }
-        let target = 1 - request.client.unwrap();
-        // A reply the requester sent just before asking may still be queued.
-        self.finish(server, world, parent)?;
-        if self.pending[target].is_some() {
-            return server.reply(&request, &wire::encode(wire::error(abi::BUSY)));
-        }
-        let Some(child) = self.slots[target].as_ref() else {
-            return server.reply(&request, &wire::encode(wire::error(abi::PEER_CLOSED)));
-        };
-        if child.stale >= control::MAX_STALE {
-            return server.reply(&request, &wire::encode(wire::error(abi::BUSY)));
-        }
-        let Some(control) = child.control else {
-            return server.reply(&request, &wire::encode(wire::error(abi::BUSY)));
-        };
-        if control
-            .0
-            .send(&wire::encode([wire::LOSS, 0, 0, 0, 0, 0, 0, 0]))
-            .is_err()
-        {
-            // A closed control channel alone is not permission to discard work.
-            if self.completed(target)? {
-                self.stop(target, server, world, parent)?;
-                return server.reply(&request, &wire::encode([0; 8]));
-            }
-            return server.reply(&request, &wire::encode(wire::error(abi::BUSY)));
-        }
-        self.pending[target] = Some((request, time::after(100)?, Purpose::Close));
-        self.retiring[target] = None;
-        Ok(())
-    }
-    /// Admit a program read from the matrix's realm and answer whoever asked.
-    /// Selected storage binds the child to that object's subtree; a failed
-    /// binding stops the child. Optional storage may instead be absent.
-    /// A sibling launch also gets the slot's standing surfaces and placement.
-    pub(in crate::service) fn launch_object(
-        &mut self,
-        launched: parent::Launched,
-        parent: &mut Parent,
-        world: &mut World,
-        server: &mut Server,
-    ) -> Result<(), Error> {
-        let parent::Launched {
-            plan,
-            request,
-            result,
-        } = launched;
-        let Some(request) = request else {
-            if let Some(launcher) = &mut self.launcher {
-                launcher.result = Some(result);
-            }
-            return Ok(());
-        };
-        let mut status = match result {
-            Err(code) => Err(code),
-            Ok(mut object) => {
-                let admitted = self.run_object(plan, &mut object, server, world);
-                drop(object); // The kernel holds its own reference to the image.
-                match admitted {
-                    Err(error) => Err(error.0 as u64),
-                    Ok(false) => Ok(()),
-                    Ok(true) => match parent.storage_grant(server, plan.slot, 0, plan.scope)? {
-                        Ok(()) => {
-                            self.saved_storage[plan.slot] = Some((0, plan.scope));
-                            Ok(())
-                        }
-                        Err(code) => {
-                            self.stop(plan.slot, server, world, parent)?;
-                            Err(code)
-                        }
-                    },
-                }
-            }
-        };
-        if status.is_ok()
-            && request.client.is_some()
-            && let Some(standing) = self.standing[plan.slot]
-        {
-            let placement =
-                surface_limit(world, plan.slot, standing.surfaces as usize).and_then(|()| {
-                    match standing.place {
-                        Some((rect, keys)) => world.place(plan.slot, rect, keys),
-                        None => Ok(()), // Headless policy deliberately has no placement.
-                    }
-                });
-            if let Err(code) = placement {
-                self.stop(plan.slot, server, world, parent)?;
-                status = Err(code);
-            }
-        }
-        super::requests::flush(parent, world)?;
-        super::requests::replay(parent, world, plan.slot)?;
-        self.notify(world)?;
-        // The owner named the slot; a child learns which one it got.
-        let reply = match (status, request.client) {
-            (Ok(()), Some(observer)) => {
-                let receipt = self
-                    .observations
-                    .record(
-                        observer,
-                        request.incarnation,
-                        self.slots[plan.slot].as_ref().unwrap().task.raw(),
-                    )
-                    .expect("checked receipt capacity");
-                [0, plan.slot as u64, receipt, 0, 0, 0, 0, 0]
-            }
-            (Ok(()), None) => [0; 8],
-            (Err(code), _) => wire::error(code),
-        };
-        server.reply(&request, &wire::encode(reply))
     }
 }

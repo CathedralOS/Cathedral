@@ -1,7 +1,6 @@
 //! Small retained matrix surfaces. Clipping/authority live in the matrix provider;
 //! the compositor retains flattened primitives and uses its ordinary scanout.
 use super::Rect;
-#[derive(Default)]
 pub struct Tiles {
     entries: [Option<(Rect, Option<u32>, u64)>;
         cathedral_platform_contracts::display::composition::MATRIX_TILES],
@@ -140,5 +139,13 @@ mod tests {
         assert_eq!(tiles.set(8, Rect::default(), 0), rect);
         tiles.paint_row(0, 3, &mut row);
         assert_eq!(row, [0, 0, 1, 1, 1, 1, 0, 0]);
+    }
+}
+
+impl Default for Tiles {
+    fn default() -> Self {
+        Self {
+            entries: [None; cathedral_platform_contracts::display::composition::MATRIX_TILES],
+        }
     }
 }

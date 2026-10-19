@@ -5,6 +5,7 @@ pub const STORAGE: u64 = 2;
 pub const ALL: u64 = INTERACTION | STORAGE;
 pub const MAX_IMPORTS: usize = 4;
 pub const RECORD_BYTES: usize = 16 + MAX_IMPORTS * 32;
+pub const FUNDED_MAGIC: u64 = u64::from_le_bytes(*b"CTHIMP03");
 pub const BROKER_MAGIC: u64 = u64::from_le_bytes(*b"CTHIMP02");
 pub const MAGIC: u64 = u64::from_le_bytes(*b"CTHIMP01");
 /// Platform launch refusals; these are not new kernel errors.
@@ -100,6 +101,8 @@ pub const fn encode(imports: &[Import]) -> [u8; RECORD_BYTES] {
 #[derive(Debug)]
 pub struct Declaration {
     pub brokered: bool,
+    /// Requested channel/descendant ceilings. The owner may grant less.
+    pub resources: Option<(u64, u64)>,
     entries: [Import; MAX_IMPORTS],
     count: usize,
 }
@@ -108,15 +111,32 @@ impl Declaration {
         &self.entries[..self.count]
     }
     pub fn decode(bytes: &[u8]) -> Result<Self, Refusal> {
-        if bytes.len() != RECORD_BYTES || !matches!(word(bytes, 0)?, MAGIC | BROKER_MAGIC) {
+        if bytes.len() != RECORD_BYTES
+            || !matches!(word(bytes, 0)?, MAGIC | BROKER_MAGIC | FUNDED_MAGIC)
+        {
             return Err(Refusal::Malformed);
         }
-        let count = usize::try_from(word(bytes, 8)?).map_err(|_| Refusal::Malformed)?;
+        let header = word(bytes, 8)?;
+        let resources = if word(bytes, 0)? == FUNDED_MAGIC {
+            if header >> 48 != 0 || header & 0xff00 != 0 {
+                return Err(Refusal::Malformed);
+            }
+            Some(((header >> 16) & 0xffff, (header >> 32) & 0xffff))
+        } else {
+            None
+        };
+        let count = usize::try_from(if resources.is_some() {
+            header & 0xff
+        } else {
+            header
+        })
+        .map_err(|_| Refusal::Malformed)?;
         if count > MAX_IMPORTS {
             return Err(Refusal::Malformed);
         }
         let mut declaration = Self {
-            brokered: word(bytes, 0)? == BROKER_MAGIC,
+            brokered: word(bytes, 0)? != MAGIC,
+            resources,
             entries: [Import::v1(0, false); MAX_IMPORTS],
             count,
         };
@@ -169,6 +189,26 @@ pub const fn encode_brokered(imports: &[Import]) -> [u8; RECORD_BYTES] {
     let mut i = 0;
     while i < 8 {
         bytes[i] = magic[i];
+        i += 1;
+    }
+    bytes
+}
+
+/// Requested funding is metadata, never authority. Owners cap it to their offer;
+/// ordinary leaves request no channel-creation or descendant capacity.
+pub const fn encode_funded(
+    imports: &[Import],
+    channels: u16,
+    descendants: u16,
+) -> [u8; RECORD_BYTES] {
+    let mut bytes = encode_brokered(imports);
+    let magic = FUNDED_MAGIC.to_le_bytes();
+    let header = (imports.len() as u64 | ((channels as u64) << 16) | ((descendants as u64) << 32))
+        .to_le_bytes();
+    let mut i = 0;
+    while i < 8 {
+        bytes[i] = magic[i];
+        bytes[i + 8] = header[i];
         i += 1;
     }
     bytes

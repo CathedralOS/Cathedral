@@ -62,7 +62,7 @@ pub(super) fn dispatch(
                 children.recovery_owner_changed(words);
                 children.management_owner_changed(words);
                 match words {
-                    [wire::REVOKE, slot @ 0..=1, 0, 0, 0, 0, 0, 0] => {
+                    [wire::REVOKE, slot @ 0..=LAST_CHILD, 0, 0, 0, 0, 0, 0] => {
                         parent.grant_recovery(slot as usize, None)
                     }
                     [wire::BIND, ..] => {
@@ -77,14 +77,14 @@ pub(super) fn dispatch(
                 surfaces::replay(parent, world, words[1] as usize)?;
             }
             if response[0] == 0 && words[0] == wire::BIND {
-                for slot in 0..2 {
+                for slot in 0..CHILDREN {
                     flush(parent, world)?;
                     surfaces::replay(parent, world, slot)?;
                 }
             }
             response
         }
-        Some(words) if request.client == Some(2) => match words {
+        Some(words) if request.client == Some(SOURCE) => match words {
             [wire::POINTER_SOURCE, x, y, 0..=7, 0, 0, 0, 0]
                 if x < parent.grant.width && y < parent.grant.height =>
             {
@@ -116,17 +116,23 @@ pub(super) fn dispatch(
             parent.storage_request(request, words, None)?;
             return Ok(());
         }
-        _ if request.client.is_some_and(|client| client >= 3) => {
+        _ if request.client.is_some_and(|client| client >= STORAGE_BASE) => {
             // A catalog endpoint confers no interaction or source authority.
             return server.reply(&request, &wire::encode(wire::error(abi::DENIED)));
         }
         // A child asks for a sibling, or for its sibling to go; both are
         // answered later, from launch_object or the forwarded loss query.
         Some([wire::LAUNCH, object, withhold, 0, 0, 0, 0, 0]) if request.client.is_some() => {
-            return children.launch(request, object, withhold, parent, server);
+            return children.launch(request, object, withhold, parent, world, server);
         }
         Some([wire::CLOSE, 0, 0, 0, 0, 0, 0, 0]) if request.client.is_some() => {
             return children.close(request, parent, world, server);
+        }
+        Some([wire::APP_ENTRY, index, 0, 0, 0, 0, 0, 0]) => {
+            children.app_entry(&request, index, world)
+        }
+        Some([wire::SELECT_APP, ticket, 0, 0, 0, 0, 0, 0]) => {
+            children.select_app(&request, ticket, parent, world, server)?
         }
         Some(words) if words[0] == wire::APPLY_LAYOUT => {
             children.apply_layout(&request, words, parent, world)?

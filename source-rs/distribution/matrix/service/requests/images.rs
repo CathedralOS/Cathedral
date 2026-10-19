@@ -13,7 +13,7 @@ pub(in super::super) fn image(
     let response = (|| {
         let words = wire::decode(&request.bytes[..request.len]).ok_or(abi::INVALID_ARGUMENT)?;
         if request.control
-            || !matches!(request.client, Some(0 | 1))
+            || request.client.is_none_or(|slot| slot >= CHILDREN)
             || words[0] != wire::SURFACE_IMAGE
         {
             return Err(abi::DENIED);
@@ -43,7 +43,8 @@ pub(in super::super) fn image(
     .unwrap_or_else(wire::error);
     if response[0] != 0
         && !request.control
-        && let Some(slot @ 0..=1) = request.client
+        && let Some(slot) = request.client
+        && slot < CHILDREN
     {
         parent.batches[slot].poison(response[0]);
     }

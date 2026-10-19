@@ -106,7 +106,8 @@ flowchart TD
     root --> recovery[Recovery screen when picker is unavailable]
     root --> user[User matrix process]
     user --> launcher[App launcher process]
-    user --> app[Notes or Colors process]
+    user --> background[Replaceable background process]
+    user --> app[Up to three Notes / Colors / Split instances]
 ```
 
 The root matrix admits the selected user as the picker's sibling. The startup
@@ -197,3 +198,10 @@ not a package installer, general desktop window manager or production filesystem
 It demonstrates a different matrix program: two temporary Notes instances, its
 own arrangement and close policy, and no storage offered to its children. The
 stock desktop still owns user selection, its launcher and saved outer layout.
+
+The app tiles launch new instances. Rows below them switch running instances; each
+row's X requests a loss-checked close. Private drafts survive switching. The app's
+own X offers save/discard choices. The background and configured chrome are separate
+replaceable programs; see [stock matrix roles](matrix/CHARTER.md#desktop-roles-and-instances).
+Split remains the recursive demo. A nested desktop with its own user picker is not
+implemented yet. The platform owns neither this app limit nor these desktop roles.

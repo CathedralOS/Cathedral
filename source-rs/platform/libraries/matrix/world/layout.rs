@@ -105,3 +105,28 @@ impl<const N: usize> World<N> {
             && self.binding_matches(slot, incarnation, epoch)
     }
 }
+
+impl<const N: usize> World<N> {
+    /// Owner-selected visibility preserves the child's local scene and extent.
+    /// The owner replays retained surfaces after changing it. Hidden children
+    /// receive no input and cannot make their output visible through publication.
+    pub fn visible(&mut self, slot: usize, visible: bool) -> Result<(), u64> {
+        let child = self.children.get_mut(slot).ok_or(abi::DENIED)?;
+        if child.visible == visible {
+            return Ok(());
+        }
+        child.visible = visible;
+        if !visible {
+            child.cancel();
+            if self.focus == Some(slot) {
+                self.focus = None;
+                self.suppressed |= self.held;
+            }
+            if self.capture == Some(slot) {
+                self.capture = None;
+                self.blocked |= self.buttons != 0;
+            }
+        }
+        Ok(())
+    }
+}

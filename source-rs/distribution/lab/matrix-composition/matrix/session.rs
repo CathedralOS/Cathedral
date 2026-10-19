@@ -51,7 +51,7 @@ pub fn run() -> Result<(), Error> {
         {
             pending = None;
         }
-        server.pause(u8::from(pending.is_some()));
+        server.pause(u32::from(pending.is_some()));
         let handles = pending.as_ref().map(|p| [p.wait().0]);
         let until = pending.as_ref().map(|p| p.wait().1);
         let Some(event) = server.next_event_or(handles.as_ref().map_or(&[], |h| &h[..]), until)?

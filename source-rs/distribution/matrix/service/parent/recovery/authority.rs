@@ -1,12 +1,13 @@
 //! One pending action, bound to an explicitly granted live connection.
+use crate::service::CHILDREN;
 pub struct Authority {
-    grants: [Option<u64>; 2],
+    grants: [Option<u64>; CHILDREN],
     pending: Option<(usize, u64)>,
 }
 impl Authority {
     pub const fn empty() -> Self {
         Self {
-            grants: [None; 2],
+            grants: [None; CHILDREN],
             pending: None,
         }
     }
