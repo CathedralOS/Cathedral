@@ -39,22 +39,21 @@ a failed save keeps the dialog and draft. Discard explicitly exits without
 publishing the draft. Normal process exit lets the matrix release surfaces,
 input and the launch slot; no sibling-close request is needed.
 
-In the F5 launcher, turn **STORAGE OFF** before launching Notes to run the same
-program with optional persistence absent. It starts empty, with a purple base
-and **TEMP NO SAVE** in place of the note bar. Editing makes a draft; F1/F2 cannot
-save or discard it and show an error. The launcher's CLOSE still keeps an
-unsaved draft open. Notes' own X offers **DISCARD / CANCEL**, with **NO STORAGE**
-instead of Save. Discard, then re-enable storage and relaunch
-to see the original saved notes. Changing the launcher toggle affects future
-launches only. An absent grant is not the same as a supplied service failing;
-normal storage failures still follow the reconciliation path above.
+If the owner withholds optional persistence, Notes starts empty with a purple
+base and **TEMP NO SAVE** instead of the note bar. Its X offers Discard/Cancel;
+F1/F2 cannot save or discard the draft. The normal F5 launcher grants storage;
+`desktop_test.py --service-imports undeclared` tests the absent-service case.
+A supplied service failing is different from an absent grant: failed saves
+retain the reconciliation path above. After automatic recovery exhaustion,
+the launcher's **RETRY SAVES** action permits one new provider attempt.
 
 Each note is one private object of up to 240 ASCII characters, placed in the
 realm its storage binding reports. The capacity is this editor's choice, not a
 storage limit. The app cannot tell a subtree from a whole root and never sees
 what lies beside its realm; on the desktop its realm is its own program object,
-so the notes nest under the code that edits them, and the object itself stays
-read-only to the app.
+so the notes nest under the code that edits them. Notes writes its child documents
+and leaves that root object alone. Split instead grants each instance a separate
+Left/Right container.
 A duplicate is the store's copy operation: a new object number beside the
 original pointing at the same content, written without reading, hashing or
 rewriting the text. Editing either note afterwards leaves the other as it was.
@@ -128,3 +127,6 @@ The `render-probes` feature enables two Notes-only yield gates in
 mode observes each gate before resizing, proving both partial surface creation
 and interrupted bitmap publication recover without reloading the document.
 The default distribution never enables these gates.
+
+The view uses four surfaces in either mode: base, text, tabs/status and close.
+Tabs are one small bitmap, keeping persistence independent of surface funding.

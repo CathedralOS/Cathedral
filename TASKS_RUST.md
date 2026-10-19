@@ -1,8 +1,8 @@
 # Rust reference OS: tasks and handoff
 
-Updated 2026-10-19 (local date). Current milestone: **Split**, an independently
-implemented nested matrix installed in the ordinary F5 app strip. It owns two
-temporary Notes instances, chooses their layout, attenuates services and routes
+Updated 2026-10-19 (local date). Current milestone: **nested persistence and explicit save recovery**. **Split**
+is an independently implemented nested matrix installed in the ordinary F5 app strip. It owns two
+persistent Notes instances, chooses their layout, attenuates services and routes
 input through shared platform mechanisms. See the latest section for verification,
 resource bounds and remaining gaps. Prior milestones include scoped application
 bootstrap, shared child admission, stock-policy/platform separation and provider
@@ -40,9 +40,10 @@ It uses x86-64 QEMU/TCG and UEFI.
 - The user's left-hand app strip shows **NOTES**, **COLORS** and **SPLIT** icon tiles. The
   launcher itself and implementation controls are hidden. Click an app tile,
   then the app to focus it. Arrows and Enter work in a focused tile strip.
-- **SPLIT** opens two temporary Notes side by side in a separate matrix process.
+- **SPLIT** opens two persistent Notes side by side in a separate matrix process.
   Click either child to type. Its own top-right X asks both children about drafts;
-  UNSAVED NOTES keeps it open. Discard drafts with the child apps' X dialogs.
+  UNSAVED NOTES keeps it open. Save/discard drafts with the child apps' X dialogs.
+  F1 saves to separate Left/Right realms; both survive relaunch and cold reboot.
   Outer Settings resizes the two columns while retaining both drafts.
 - **SETTINGS** at the bottom of the user strip (or F2 with strip focus) adjusts
   strip width and outer spacing. Save persists and applies the layout to running
@@ -61,6 +62,10 @@ It uses x86-64 QEMU/TCG and UEFI.
   work and defaults to Cancel; confirmation stops the exact observed app/subtree.
   F3 opens it with launcher focus. A recovered launcher can manage the existing
   app. This is delegated authority, not a protected system-wide escape key.
+- After storage recovery is exhausted, **RETRY SAVES** appears above Settings.
+  Click it (or F4 with strip focus) for one explicit attempt. It preserves live
+  drafts and does not reset the automatic restart budget. F1 in Notes first
+  reconciles an uncertain save; press again to save an unsaved reconciled draft.
 - If the launcher exhausts its retry, **LAUNCHER UNAVAILABLE / TRY AGAIN** takes
   its place. A click or Enter with that screen focused requests one new attempt,
   preserving the app and current arrangement. Failure of that screen stays stopped.
@@ -2182,3 +2187,95 @@ Still in progress: explicit storage retry after automatic recovery exhaustion;
 shared asynchronous scoped forwarding and persistent isolated Split children;
 resource/admission diagnostics for that nested composition. Split still ships
 with temporary children at this checkpoint.
+
+
+## Nested persistence and explicit save recovery (2026-10-19)
+
+The ATA growth fix above is pushed as **`581d6175`**. It was rebased over the
+independent Omega UEFI baseline update `e298c25a`; those changes are preserved.
+This follow-up makes the same F5 desktop exercise persistent nested applications.
+
+### Current behavior and boundaries
+
+- Split's two Notes instances receive separate storage channels rooted at named
+  `Left`/`Right` containers beneath Split. Saved text survives subtree teardown
+  and cold reboot. Split still has no stock-matrix contract or implementation
+  dependency. Its named [storage entrance](source-rs/distribution/applications/split/session/storage/storage.rs)
+  sequences refresh, authorization and asynchronous forwarding; realm creation
+  lives in its sibling `realms.rs`.
+- Platform `Scopes::prepare` now supplies connection/revision validation and
+  append-only scope stamping to both implementations. The shared runtime
+  `matrix/upstream/exchange.rs` polls one bounded packet/attachment reply without
+  blocking interaction. A changed upstream binding invalidates child revisions;
+  Split restores only its standing child grants within the same newly authorized
+  realm. Transport uncertainty retires the stream rather than reusing late replies.
+- Notes uses four surfaces regardless of storage availability; its tab bar is one
+  small bitmap. Split retains nine surfaces total, so the surface pool stays 16.
+- The stock launcher displays **RETRY SAVES** when the owner reports recovery
+  exhaustion/failure. Click it, or F4 with strip focus, for one explicit attempt.
+  The action passes through grants bound to live interaction connections (launcher
+  to user matrix to root); ordinary Notes is denied both retry and availability.
+  Only the desktop owner replaces the provider. Queued attempts are deduplicated,
+  revoked on grant changes, and checked again against the live direct child before
+  consumption. Success/failure never replenishes automatic restart authority.
+  Live apps and drafts remain. The root dispatcher and its small authority model
+  are in `distribution/matrix/service/parent/recovery/`; provider ownership stays
+  in `distribution/desktop/session/persistence/`.
+- The IPC backing pool is 36 channels; an account can hold 32 channel reservations
+  and 24 dynamic handles. F5 funds root/user/app channel ceilings at 32/20/10;
+  ordinary leaf apps still create none. Two persistent child admissions need ten
+  channels and up to 23 handles while their service offers remain pending. These
+  are explicit bounds, not global resource discovery. Admission failures now log
+  the failed reserve/start stage, requested funding and local limits/charges.
+  The initial prototype forgot the desktop's runtime funding override and then
+  hit the old handle cap; both are corrected and recorded by the diagnostics.
+
+### Evidence
+
+- Default host tests and 13 harness unit tests pass. Recovery policy tests cover
+  consumed restart authority plus stale, revoked, replaced, duplicate and dead
+  requesters. Shared scope tests cover stale revision, connection substitution
+  and refusing a full stamp chain without dropping an ancestor scope.
+- Default userspace/UEFI clippy and the changed shell/live-recovery/trace,
+  Notes management, chooser recovery and storage recovery feature set pass.
+  Layout still enforces 35 Omega/118 Rust edges; no dependency edges were added.
+- `desktop_test.py --nested --trace-storage`:
+  `desktop/20261019T172240376279Z` passes separate saves, resize with two drafts,
+  dirty close, three complete admissions/teardowns and a cold reboot.
+- `provider_live_test.py` on a copied ordinary desktop:
+  `provider-live/20261019T172352620786Z` passes precommit and postcommit loss,
+  automatic restart exhaustion followed by visible explicit retry and durable
+  save of the retained draft, and a failed explicit readiness retry that remains
+  bounded while preserving the draft. Every case cold-opens the expected data.
+- New `provider_live_test.py --case nested` on a copied Split desktop:
+  `provider-live/20261019T172735251575Z` passes failure/replacement/regrant through
+  root/user/Split, preserves the live child draft and unchanged sibling bitmap,
+  reconciles, saves and cold-opens the result. Both Notes tasks remain alive during
+  recovery. The provider probe feature only changes where it observes a dirty
+  draft; production supervision and forwarding handle the failure.
+- Normal `desktop_test.py --trace-storage`:
+  `desktop/20261019T172830077591Z` passes the full F5 UI, cold reboot and exact
+  308-record host oracle. `--matrix-storage-test` passes scoped roots, recursive
+  delegation, revocation, copies, realm-loaded programs and provider replacement.
+- x86-64 smoke, dynamic IPC, admission suites and the ARM64 portability proof
+  pass after the changed channel/handle ceilings.
+- Retained-disk upgrade plus nested saves passes on the original older fixture:
+  `labels-upgrade/20261019T173130306794Z`. Installer idempotence and both existing
+  saved notes pass, followed by separate Split saves and complete teardown.
+
+### Remaining limits and sensible follow-up
+
+The old intermittent ATA busy timeout is still not explained by the diagnosed
+large extent-growth stall. Keep the traces; do not claim that all stalls are fixed.
+The current protocol admits three nonzero scope stamps. Root/user/Split forwarding
+uses 600/700/800-tick bounds under the client's 1200-tick ceiling; arbitrary depth
+needs a protocol-level treatment instead of repeating the stock one-hop constant.
+
+First-time creation and naming of Left/Right use separate durable transactions.
+An interruption between them can leave an unnamed empty container in Split's own
+realm. Existing named data is never overwritten; atomic named creation is the
+next useful storage operation to design and test. Split has no child restart UI,
+dynamic child chooser or presentation batches yet. A permanently failed parent
+transport still requires subtree relaunch; ordinary provider replacement through
+an intact parent connection is covered above. No new owner semantic decision
+was needed for this milestone, and the interactive saved disk was not altered.

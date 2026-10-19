@@ -40,6 +40,11 @@ pub(super) fn dispatch(
             }
             let response = if matches!(
                 words[0],
+                wire::SAVE_RECOVERY_GRANT | wire::SAVE_RECOVERY_POLL
+            ) {
+                parent.recovery_owner(server, words)
+            } else if matches!(
+                words[0],
                 wire::STORAGE_GRANT
                     | wire::STORAGE_REVOKE
                     | wire::STORAGE_STATUS
@@ -56,6 +61,16 @@ pub(super) fn dispatch(
             if response[0] == 0 {
                 children.recovery_owner_changed(words);
                 children.management_owner_changed(words);
+                match words {
+                    [wire::REVOKE, slot @ 0..=1, 0, 0, 0, 0, 0, 0] => {
+                        parent.grant_recovery(slot as usize, None)
+                    }
+                    [wire::BIND, ..] => {
+                        parent.grant_recovery(0, None);
+                        parent.grant_recovery(1, None);
+                    }
+                    _ => (),
+                }
             }
             if response[0] == 0 && matches!(words[0], wire::PLACE | wire::REVOKE) {
                 flush(parent, world)?;
@@ -120,6 +135,12 @@ pub(super) fn dispatch(
             children
                 .observations
                 .query(request.client.unwrap(), request.incarnation, receipt)
+        }
+        Some([wire::SAVE_AVAILABILITY, 0, 0, 0, 0, 0, 0, 0]) => {
+            parent.recovery_request(&request, false)?
+        }
+        Some([wire::RETRY_SAVES, 0, 0, 0, 0, 0, 0, 0]) => {
+            parent.recovery_request(&request, true)?
         }
         Some([wire::MANAGED_TASK, 0, 0, 0, 0, 0, 0, 0]) => children.managed_task(&request),
         Some([wire::RETRY_LAUNCHER, 0, 0, 0, 0, 0, 0, 0]) => children.retry_launcher(&request),

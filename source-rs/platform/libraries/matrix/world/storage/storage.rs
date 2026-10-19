@@ -4,6 +4,12 @@
 // it and the owner holds all of it anyway. The scope is what the matrix
 // stamps on the child's requests; zero passes on everything the matrix holds.
 use cathedral_kernel_contracts::user as abi;
+use cathedral_platform_contracts::{matrix as wire, storage as protocol};
+/// A local binding reply, or a stamped request still needing upstream transport.
+pub enum Prepared {
+    Reply(wire::Packet),
+    Forward { source: usize, words: wire::Packet },
+}
 #[derive(Clone, Copy)]
 struct Binding {
     incarnation: u64,
@@ -75,6 +81,37 @@ impl<const N: usize> Scopes<N> {
             return Err(abi::DENIED);
         }
         self.binding(slot, incarnation)
+    }
+    /// Authenticate the connection and revision before appending this owner's
+    /// scope. Child-provided stamps only narrow authority; a full chain refuses.
+    pub fn prepare(
+        &self,
+        slot: usize,
+        incarnation: u64,
+        mut words: wire::Packet,
+        realm: u64,
+    ) -> Result<Prepared, u64> {
+        let (source, scope) = self.binding(slot, incarnation)?;
+        if words == [wire::STORAGE_INFO, 0, 0, 0, 0, 0, 0, 0] {
+            return Ok(Prepared::Reply([
+                0,
+                self.revision(slot, incarnation)?,
+                if scope == 0 { realm } else { scope },
+                0,
+                0,
+                0,
+                0,
+                0,
+            ]));
+        }
+        self.authorize(slot, incarnation, words[0] >> wire::STORAGE_SCOPE_BITS)?;
+        if !(wire::STORAGE_BASE + protocol::HEAD..=wire::STORAGE_BASE + protocol::LAST)
+            .contains(&(words[0] & 0xffff))
+        {
+            return Err(abi::DENIED);
+        }
+        protocol::stamp(&mut words, scope)?;
+        Ok(Prepared::Forward { source, words })
     }
     pub fn revoke(&mut self, slot: usize) -> Option<usize> {
         self.bindings.get_mut(slot)?.take().map(|b| b.source)

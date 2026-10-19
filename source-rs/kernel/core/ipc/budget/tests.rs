@@ -18,7 +18,10 @@ fn reservation_validation_rejects_overcommit_and_keeps_defaults_constant() {
     assert_eq!(&reservations(8, &[]).unwrap()[..8], &[4; 8]);
     assert_eq!(&reservations(2, &[]).unwrap()[..2], &[4; 2]);
     for (tasks, limits) in [
-        (9, &[][..]),
+        (
+            abi::MAX_DYNAMIC_CHANNELS / abi::DEFAULT_CHANNELS + 1,
+            &[][..],
+        ),
         (2, &[1][..]),
         (1, &[abi::MAX_CREATED_CHANNELS + 1][..]),
         (8, &[8; 8][..]),
@@ -38,9 +41,10 @@ fn reservation_validation_rejects_overcommit_and_keeps_defaults_constant() {
 }
 #[test]
 fn every_task_can_fill_its_reservation_even_after_other_accounts_exhaust() {
-    let mut ipc = Ipc::new(1, 8, &[]).unwrap();
+    let tasks = abi::MAX_DYNAMIC_CHANNELS / abi::DEFAULT_CHANNELS;
+    let mut ipc = Ipc::new(1, tasks, &[]).unwrap();
     let mut all = alloc::vec::Vec::new();
-    for task in 0..8 {
+    for task in 0..tasks {
         for _ in 0..abi::DEFAULT_CHANNELS {
             all.push((task, ipc.create(task).unwrap()));
         }
@@ -61,7 +65,7 @@ fn every_task_can_fill_its_reservation_even_after_other_accounts_exhaust() {
     let fresh = ipc.create(task).unwrap();
     assert_ne!(fresh[0], s);
     assert_eq!(ipc.send(task, s, b"stale"), Err(abi::BAD_HANDLE));
-    for task in 0..8 {
+    for task in 0..tasks {
         ipc.close_task(task);
     }
     assert!(ipc.endpoints[MAX_ENDPOINTS..].iter().all(Option::is_none));

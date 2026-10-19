@@ -43,7 +43,7 @@ pub(super) fn limits() -> cathedral_user_runtime::resources::Limits {
         } else {
             8
         },
-        channels: if cfg!(feature = "shell") { 28 } else { 20 },
+        channels: if cfg!(feature = "shell") { 32 } else { 20 },
     }
 }
 

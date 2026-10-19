@@ -12,6 +12,7 @@ impl Selection {
         }
     }
     /// Return repaint/activate; hovering alone does not repaint retained tiles.
+    #[allow(clippy::too_many_arguments)]
     pub fn event(
         &mut self,
         event: wire::Packet,
@@ -19,12 +20,18 @@ impl Selection {
         count: usize,
         picker: bool,
         managed: bool,
+        retry_saves: bool,
     ) -> (bool, bool) {
         match event[2] {
             wire::POINTER => {
                 let down = event[5] & 1 != 0;
                 let hit = if !picker && event[4] >= extent[3].saturating_sub(32) {
                     Some(SETTINGS)
+                } else if retry_saves
+                    && (extent[3].saturating_sub(48)..extent[3].saturating_sub(32))
+                        .contains(&event[4])
+                {
+                    Some(RETRY_SAVES)
                 } else if managed
                     && (extent[3].saturating_sub(72)..extent[3].saturating_sub(48))
                         .contains(&event[4])
@@ -56,6 +63,10 @@ impl Selection {
                 input::ENTER => (true, true),
                 input::F2 if !picker => {
                     self.index = SETTINGS;
+                    (true, true)
+                }
+                input::F4 if retry_saves => {
+                    self.index = RETRY_SAVES;
                     (true, true)
                 }
                 input::F3 if managed => {

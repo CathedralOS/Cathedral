@@ -51,7 +51,7 @@ fn chooser(login: &mut Login, matrix: Pair, extent: [u64; 2], failed: bool) -> R
 pub(crate) fn workspace(width: u64, height: u64) -> [wire::Packet; 3] {
     [
         [wire::LAUNCH_IMAGES, 1, 1, 0, 0, 0, 0, 0],
-        [wire::LAUNCH_POLICY, 1, 160, 192, 16, 4, 0, 11],
+        [wire::LAUNCH_POLICY, 1, 160, 192, 20, 4, 0, 11],
         [wire::LAUNCH_PLACE, 1, 0, 0, width, height, KEYS, 0],
     ]
 }
@@ -86,7 +86,10 @@ pub(super) fn enter(matrix: Pair) -> Result<(), u64> {
         matrix,
         wire::route([wire::CONFIGURE, 0, 0, 0, 0, 0, 0, 0], 1).unwrap(),
     );
-    if reply[0] == 0 { Ok(()) } else { Err(reply[0]) }
+    if reply[0] != 0 {
+        return Err(reply[0]);
+    }
+    request(matrix, [wire::SAVE_RECOVERY_GRANT, 1, 1, 0, 0, 0, 0, 0])
 }
 
 /// Collection may win the race with startup failure handling.

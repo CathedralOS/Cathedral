@@ -14,10 +14,12 @@ import disk_image
 import pointer_test
 import run as harness
 
-CASES = ('precommit', 'postcommit', 'exhausted', 'readiness-stall')
+CASES = ('precommit', 'postcommit', 'exhausted', 'readiness-stall', 'nested')
 
 
 def exercise(stream, folder, mode, saved=None):
+    nested = mode == 'nested'
+    offset_y = 32 if nested else 0
     width, height, _ = pointer_test.read_scanout(stream, folder)
     font = bytes.fromhex((harness.WORKSPACE / 'platform/libraries/bitmap-font/font.hex').read_text())
 
@@ -30,10 +32,10 @@ def exercise(stream, folder, mode, saved=None):
         return data[(y * width + x) * 3:(y * width + x) * 3 + 3].hex()
 
     def bitmap(data):
-        return b''.join(data[((44 + y) * width + 242) * 3:((44 + y) * width + 422) * 3] for y in range(64))
+        return b''.join(data[((44 + offset_y + y) * width + 242) * 3:((44 + offset_y + y) * width + 422) * 3] for y in range(64))
 
     def header(data):
-        return pixel(data, 237, 34)
+        return pixel(data, 237, 34 + offset_y)
 
     def text(data, value, y):
         for i, ch in enumerate(value):
@@ -84,15 +86,19 @@ def exercise(stream, folder, mode, saved=None):
 
     click((width - 280) // 2 + 64, height // 2)
     scan(lambda d, _: pixel(d, 100, 70) == 'd9e4ef', 'user launcher')
-    click(120, 96)
+    click(120, 336 if nested else 96)
     scan(lambda d, _: header(d) == '27664a', 'Notes loaded')
     focus()
+    def sibling(data):
+        x = 232 + (width - 24 - 232 - 12) // 2 + 12 + 10
+        return b''.join(data[((76 + y) * width + x) * 3:((76 + y) * width + x + 180) * 3] for y in range(64))
     initial = bitmap(scan(lambda d, _: header(d) == '27664a', 'initial saved note'))
     if saved is not None:
         assert initial == saved, 'cold-open contents differ'
-        assert log().count('note-loaded') == 1
+        assert log().count('note-loaded') == (2 if nested else 1)
         return saved
 
+    right = sibling(pointer_test.read_scanout(stream, folder)[2]) if nested else None
     key('z')
     draft = bitmap(scan(lambda d, _: header(d) == '9b7028', 'dirty draft'))
     attempts = 4 if mode == 'exhausted' else 1
@@ -138,16 +144,36 @@ def exercise(stream, folder, mode, saved=None):
         scan(lambda d, _: bitmap(d) == draft, 'draft after failed close-save')
         time.sleep(2)
         assert log().count('storage replacement starting') == (3 if mode == 'exhausted' else 1)
-        expected = initial  # Every injected failed write was before commit.
+        # Only the configured launcher can request a single new attempt. This
+        # goes through the real visible action and leaves the app process intact.
+        click(80, height - 65)
+        scan(lambda d, s: s.count('explicit save retry') == 1 and bitmap(d) == draft,
+             'explicit retry accepted without replacing Notes')
+        if mode == 'exhausted':
+            scan(lambda d, s: s.count('storage replaced; explicit grants restored') == 4 and bitmap(d) == draft,
+                 'explicit retry restores storage after budget exhaustion')
+            focus(); key('f1')
+            scan(lambda d, _: bitmap(d) == draft and header(d) == '9b7028', 'retry reconciles the retained draft')
+            key('f1')
+            scan(lambda d, _: bitmap(d) == draft and header(d) == '27664a', 'retry saves the same retained draft')
+            expected = draft
+        else:
+            scan(lambda d, s: s.count('storage offline; replacement failed') == 2 and bitmap(d) == draft,
+                 'failed explicit attempt stays bounded and retains draft')
+            time.sleep(2)
+            assert log().count('storage replacement starting') == 2
+            expected = initial  # Both attempts failed before becoming ready.
     else:
         key('x')
         draft = bitmap(scan(lambda d, _: bitmap(d) != draft and header(d) == '9b7028', 'editing after recovery'))
         key('f1')
         scan(lambda d, _: bitmap(d) == draft and header(d) == '27664a', 'save after reconciliation')
+        if nested:
+            assert sibling(pointer_test.read_scanout(stream, folder)[2]) == right, 'sibling contents changed'
         click(width - 38, 34)
         scan(lambda d, _: header(d) == '101827', 'saved app closes')
         expected = draft
-    assert log().count('note-loaded') == 1, 'Notes task was restarted'
+    assert log().count('note-loaded') == (2 if nested else 1), 'Notes task was restarted'
     assert 'user matrix closed' not in log() and 'sign-in recovery visible' not in log()
     return expected
 
@@ -161,7 +187,7 @@ def run(source, cases):
         folder.mkdir()
         composition = json.loads((harness.WORKSPACE / 'distribution/profile.json').read_text())
         feature = {'precommit': 'storage-live-probes', 'postcommit': 'storage-live-postcommit',
-                   'exhausted': 'storage-live-repeat', 'readiness-stall': 'storage-live-readiness-stall'}[mode]
+                   'exhausted': 'storage-live-repeat', 'readiness-stall': 'storage-live-readiness-stall', 'nested': 'storage-live-nested'}[mode]
         composition['startup']['initial']['features'].append(feature)
         composition['startup']['launches'][3]['features'] = ['recovery-lab', 'startup-probes', 'trace-storage']
         profile = folder / 'provider-live.json'
@@ -172,7 +198,8 @@ def run(source, cases):
         image = folder / 'guest.raw'
         image.write_bytes(original)
         database_image.prepare(image, harness.seeded_programs(profile, True),
-                               harness.WORKSPACE / 'distribution/migrations/readable-labels.txt', True)
+                               harness.WORKSPACE / 'distribution/migrations/readable-labels.txt', True,
+                               realm_programs=harness.realm_programs(profile, True))
         qemu = harness.find_qemu()
         command = [qemu, '-machine', 'q35', '-cpu', 'qemu64', '-accel', 'tcg', '-smp', '1', '-m', '128']
         command += harness.firmware_args(qemu, folder)

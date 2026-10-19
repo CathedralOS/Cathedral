@@ -84,6 +84,12 @@ pub fn run(style: u64, mut services: Services) {
         call(parent, [wire::STORAGE_STATUS, 0, 0, 0, 0, 0, 0, 0]),
         wire::error(abi::DENIED)
     );
+    for op in [wire::SAVE_AVAILABILITY, wire::RETRY_SAVES] {
+        assert_eq!(
+            call(parent, [op, 0, 0, 0, 0, 0, 0, 0]),
+            wire::error(abi::DENIED)
+        );
+    }
     // The owner may retire this control link; the app keeps serving its world.
     let mut control = Some((Handle::bootstrap(0).unwrap(), Handle::bootstrap(1).unwrap()));
     let mut notes = storage::Notes::new(connections.storage, style);
@@ -220,7 +226,7 @@ pub fn run(style: u64, mut services: Services) {
             }
             let painted = (|| -> Result<(), u64> {
                 if scene.as_ref().is_none_or(|s| s.epoch != extent[1]) {
-                    scene = Some(view::Scene::new(parent, extent[1], notes.temporary())?);
+                    scene = Some(view::Scene::new(parent, extent[1])?);
                     repaint = true;
                 }
                 if repaint {

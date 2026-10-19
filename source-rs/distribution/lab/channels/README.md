@@ -196,12 +196,12 @@ transport/revocation question remains in [OWNER_QUESTIONS.md](../../../../OWNER_
 
 ## Bounds and remaining work
 
-There are 32 reserved boot endpoint slots plus a separate pool of 32 dynamic
+There are 32 reserved boot endpoint slots plus a separate pool of 36 dynamic
 one-way channels. Each channel stores one message of up to 64 bytes and at most
-one attachment. Each process may hold/reserve 20 dynamic grants, including hidden
+one attachment. Each process may hold/reserve 24 dynamic grants, including hidden
 incoming escrow. Each boot/launch account reserves four channels by default;
-the profile's `ipc_channels` may choose 0..20. All reservations, including dormant
-children, must fit the 32-channel backing pool. Host composition and kernel
+the profile's `ipc_channels` may choose 0..32. All reservations, including dormant
+children, must fit the 36-channel backing pool. Host composition and kernel
 admission reject overcommit before execution. Another account cannot consume
 this reservation. Creation still requires two available local handle slots and
 fresh names; exhaustion returns `NO_MEMORY` without partial creation or transfer.

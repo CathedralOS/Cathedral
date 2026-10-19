@@ -24,7 +24,8 @@ use this machinery with the existing runtime IPC server.
   there is no strip width, margin, launcher path or configuration schema here.
 - [Storage scopes](world/storage/storage.rs), [management](world/management.rs)
   and [launch observations](world/launches.rs) use independently selected child
-  capacities. They work without display state.
+  capacities. They work without display state. `Scopes::prepare` is the shared
+  connection/revision check and scope-stamping path for stock and Split storage.
 
 This is a library, not a compulsory initial process or a desktop server. Another
 distribution can compose these mechanisms with its own processes and protocols,

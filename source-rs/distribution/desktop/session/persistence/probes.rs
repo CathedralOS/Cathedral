@@ -3,7 +3,14 @@
 use super::*;
 use core::sync::atomic::{AtomicU64, Ordering};
 
+static DISABLED: core::sync::atomic::AtomicBool = core::sync::atomic::AtomicBool::new(false);
+pub(super) fn disable() {
+    DISABLED.store(true, Ordering::Relaxed);
+}
 pub(super) fn observe(session: &admission::Session) {
+    if DISABLED.load(Ordering::Relaxed) {
+        return;
+    }
     static ARMED: AtomicU64 = AtomicU64::new(0);
     if session.user == 0 || session.storage_watch.pending.is_some() {
         return;
@@ -19,7 +26,12 @@ pub(super) fn observe(session: &admission::Session) {
     {
         return;
     }
-    if call(session.matrix, [wire::READ_PIXEL, 237, 34, 0, 0, 0, 0, 0])[..2] != [0, 0x9b7028] {
+    let y = if cfg!(feature = "storage-live-nested") {
+        66
+    } else {
+        34
+    };
+    if call(session.matrix, [wire::READ_PIXEL, 237, y, 0, 0, 0, 0, 0])[..2] != [0, 0x9b7028] {
         return;
     }
     let phase = if cfg!(feature = "storage-live-postcommit") {

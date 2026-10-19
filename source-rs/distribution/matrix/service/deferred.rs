@@ -38,6 +38,7 @@ impl Deferred {
                                 | wire::LOSS
                                 | wire::READ_PIXEL
                                 | wire::STORAGE_STATUS
+                                | wire::SAVE_RECOVERY_POLL
                                 | wire::STORAGE_BINDING
                         ) || matches!(hop, 1 | 2)
                             && (parent.separate_storage

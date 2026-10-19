@@ -1,6 +1,6 @@
 //! Rasterize a bounded note into one sealed bitmap and show the note count as
-//! retained rectangles: a track for the capacity, a fill for the notes that
-//! exist and a mark on the current one. The ordinary matrix surface chain owns
+//! one small tab bitmap: a track for capacity, a fill for existing notes
+//! and a mark on the current one. The ordinary matrix surface chain owns
 //! clipping/placement and shares the bitmap's read capability without copying.
 use super::*;
 use cathedral_user_runtime::memory::Private;
@@ -16,18 +16,12 @@ pub struct Scene {
     base: u64,
     text: u64,
     track: u64,
-    filled: u64,
-    current: u64,
     close: u64,
 }
 impl Scene {
-    pub fn new(parent: Pair, epoch: u64, temporary: bool) -> Result<Self, u64> {
-        let mut names = [0; 6];
-        for (rank, name) in names
-            .iter_mut()
-            .enumerate()
-            .take(if temporary { 4 } else { 6 })
-        {
+    pub fn new(parent: Pair, epoch: u64) -> Result<Self, u64> {
+        let mut names = [0; 4];
+        for (rank, name) in names.iter_mut().enumerate() {
             let reply = call(
                 parent,
                 [wire::SURFACE_CREATE, epoch, rank as u64, 0, 0, 0, 0, 0],
@@ -44,9 +38,7 @@ impl Scene {
             base: names[0],
             text: names[1],
             track: names[2],
-            filled: names[3],
-            current: names[4],
-            close: names[if temporary { 3 } else { 5 }],
+            close: names[3],
         })
     }
     /// Paint one retained rectangle at a local rectangle: x, y, width, height.
@@ -155,19 +147,32 @@ impl Scene {
             )?;
             return Ok(());
         }
-        let width = |count: usize| count as u64 * TAB_PITCH - 4;
-        let bar = |x: u64, width: u64| [x, TAB_TOP, width, TAB_HEIGHT];
-        self.rectangle(
+        // One small retained bitmap describes all tabs. Surface funding does
+        // not depend on whether this instance was granted persistence.
+        let width = storage::MAX_NOTES * TAB_PITCH as usize - 4;
+        self.image(
             parent,
             self.track,
-            bar(10, width(storage::MAX_NOTES)),
-            0x182132,
+            [10, TAB_TOP as usize, width, TAB_HEIGHT as usize],
+            |bytes| {
+                for x in 0..width {
+                    let color = if notes.count != 0
+                        && (notes.current * TAB_PITCH as usize
+                            ..notes.current * TAB_PITCH as usize + 12)
+                            .contains(&x)
+                    {
+                        0x66ccff
+                    } else if notes.count != 0 && x < notes.count * TAB_PITCH as usize - 4 {
+                        0x3a4a63
+                    } else {
+                        0x182132
+                    };
+                    for y in 0..TAB_HEIGHT as usize {
+                        pixel(bytes, width, x, y, color);
+                    }
+                }
+            },
         )?;
-        if notes.count > 0 {
-            self.rectangle(parent, self.filled, bar(10, width(notes.count)), 0x3a4a63)?;
-            let x = 10 + notes.current as u64 * TAB_PITCH;
-            self.rectangle(parent, self.current, bar(x, width(1)), 0x66ccff)?;
-        }
         Ok(())
     }
     /// Publish one sealed image at a local rectangle: x, y, width, height.

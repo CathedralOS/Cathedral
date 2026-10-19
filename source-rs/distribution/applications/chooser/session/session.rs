@@ -16,6 +16,7 @@ pub const ENTRIES: usize = 4;
 pub const NEW: usize = ENTRIES;
 const SETTINGS: usize = NEW + 1;
 const END_APP: usize = SETTINGS + 1;
+const RETRY_SAVES: usize = END_APP + 1;
 
 pub fn run(environment: Environment, user_picker: bool, initial_status: &'static str) -> u64 {
     let connections = cathedral_user_runtime::matrix::Connections::load(&environment).unwrap();
@@ -32,11 +33,20 @@ pub fn run(environment: Environment, user_picker: bool, initial_status: &'static
     let mut editor: Option<settings::Editor> = None;
     let mut launched = None;
     let mut management = management::Controls::default();
+    let mut saves = wire::SAVES_READY;
     #[cfg(feature = "recovery-probes")]
     let mut management_probe = management::probe::Probe::default();
     loop {
         if !user_picker {
             repaint |= management.refresh(parent);
+            let reply = call(parent, [wire::SAVE_AVAILABILITY, 0, 0, 0, 0, 0, 0, 0]);
+            let next = if reply[0] == 0 {
+                reply[1]
+            } else {
+                wire::SAVES_READY
+            };
+            repaint |= saves != next;
+            saves = next;
         }
         if let Some(receipt) = launched {
             let reply = call(parent, [wire::LAUNCH_STATUS, receipt, 0, 0, 0, 0, 0, 0]);
@@ -105,12 +115,16 @@ pub fn run(environment: Environment, user_picker: bool, initial_status: &'static
                     realm.count,
                     user_picker,
                     management.available(),
+                    saves == wire::SAVES_OFFLINE,
                 );
                 repaint |= changed;
                 choose = activate;
             }
             if choose {
-                if selection.index == END_APP && !user_picker {
+                if selection.index == RETRY_SAVES && saves == wire::SAVES_OFFLINE {
+                    let reply = call(parent, [wire::RETRY_SAVES, 0, 0, 0, 0, 0, 0, 0]);
+                    status = if reply[0] == 0 { "" } else { "TRY AGAIN" };
+                } else if selection.index == END_APP && !user_picker {
                     management.begin();
                 } else if selection.index == SETTINGS && !user_picker {
                     match settings::Editor::open(&mut realm.scope) {
@@ -153,7 +167,11 @@ pub fn run(environment: Environment, user_picker: bool, initial_status: &'static
                             extent,
                             &realm,
                             selection.index,
-                            status,
+                            match saves {
+                                wire::SAVES_OFFLINE => "RETRY SAVES",
+                                wire::SAVES_RESTARTING => "STARTING SAVES",
+                                _ => status,
+                            },
                             management.available(),
                         )?;
                     }

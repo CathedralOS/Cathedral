@@ -34,6 +34,8 @@ fn regrant(session: &mut admission::Session) -> Result<(), Error> {
 /// Called periodically by the owner; never blocks waiting for an ordinary probe.
 /// A timed-out probe is never reused: kill, collect, close, then reconnect.
 pub(crate) fn supervise(session: &mut admission::Session) {
+    #[cfg(feature = "shell")]
+    explicit::poll(session);
     if session.storage_watch.offline {
         return;
     }

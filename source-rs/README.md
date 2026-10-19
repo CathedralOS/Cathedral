@@ -567,16 +567,17 @@ attached authority with `TOO_SMALL` and preserves the message. Boot grants canno
 be moved; dynamic grants cannot yet be duplicated or independently revoked.
 
 Each initial/launch account has a backed channel reservation: four by default,
-or profile `ipc_channels` in 0..20. All accounts, including dormant children, must
-fit the 32-channel pool. [Accounting](kernel/core/ipc/budget/budget.rs) retains the original
+or profile `ipc_channels` in 0..32. All accounts, including dormant children, must
+fit the 36-channel pool. [Accounting](kernel/core/ipc/budget/budget.rs) retains the original
 account's charge through endpoint moves, creator death and replacement; final
 closure of both ends refunds it. Each recipient separately pays for its dynamic
-handles, including hidden escrow, within a limit of 20. Creation also requires
+handles, including hidden escrow, within a limit of 24. Creation also requires
 available handles and fresh names. [`ipc::budget()`](platform/libraries/user-runtime/ipc/budget.rs)
 reads only these caller-local limits/charges. The profile and kernel reject
 overcommit, so unrelated accounts cannot exhaust promised channel storage.
-This is static launch-account funding, not hierarchical resource subdivision or
-CPU/timing isolation; retained endpoints can exhaust their original account.
+Owners can subdivide these reservations through launch grants; capacity is
+conserved down the tree. Retained endpoints can exhaust their original account.
+CPU ceilings are accounted separately.
 
 Send returns `WOULD_BLOCK` (-11) for a full queue. Ordinary receives validate the
 complete destination before dequeueing or parking. Raw buffers must fit inside a

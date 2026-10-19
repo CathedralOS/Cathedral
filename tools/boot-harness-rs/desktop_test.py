@@ -18,7 +18,7 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 
 
-def desktop(stream, output, serial, reboot, expected_absolute=True, fill_users=False, service_imports=None, nested=False):
+def desktop(stream, output, serial, reboot, expected_absolute=True, fill_users=False, service_imports=None, nested=False, nested_saved=False):
     assert 'Cathedral: object storage ready' in serial
     position = [40, 40]
     font = bytes.fromhex((ROOT / 'source-rs/platform/libraries/bitmap-font/font.hex').read_text())
@@ -215,7 +215,7 @@ def desktop(stream, output, serial, reboot, expected_absolute=True, fill_users=F
     shutil.copyfile(output / 'display.png', output / 'user-workspace.png')
     if nested:
         import split_test
-        split_test.exercise(output, click, key, scan, width, height)
+        split_test.exercise(output, click, key, scan, width, height, nested_saved)
         return
     click_chrome(1)
     if service_imports:
@@ -376,7 +376,7 @@ def run(timeout, trace_storage=False, relative_pointer=False, service_imports=No
     flags = subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0
     for boot in (1, 2):
         capture.run(command, output, timeout, flags, ready_marker='Cathedral desktop: ready; choose a user',
-                    verify=lambda stream, output, serial: desktop(stream, output, serial, boot == 2, not relative_pointer, service_imports=service_imports, nested=nested))
+                    verify=lambda stream, output, serial: desktop(stream, output, serial, boot == 2, not relative_pointer, service_imports=service_imports, nested=nested, nested_saved=boot == 2))
         for name in ('serial.log', 'qemu.log', 'display.png'):
             shutil.copyfile(output / name, output / f'boot-{boot}-{name}')
         contents = path.read_bytes()

@@ -134,16 +134,25 @@ impl Children {
             .checked_add(1)
             .and_then(|n| n.checked_mul(256))
             .ok_or(Error(abi::INVALID_ARGUMENT as i64))?;
-        let target = executable.reserve_funded(
-            Limits {
-                private_pages,
-                reader_pages,
-                channels,
-            },
-            descendants,
-            256,
-            requested_frames.unwrap_or(default_frames),
-        )?;
+        let target = executable
+            .reserve_funded(
+                Limits {
+                    private_pages,
+                    reader_pages,
+                    channels,
+                },
+                descendants,
+                256,
+                requested_frames.unwrap_or(default_frames),
+            )
+            .inspect_err(|error| {
+                refused(
+                    "matrix-reserve-refused",
+                    slot,
+                    error,
+                    [private_pages, reader_pages, channels],
+                );
+            })?;
         let result = (|| {
             target.assign_cpu(cpu)?;
             for index in 0..abi::MAX_LAUNCHES {
@@ -163,7 +172,13 @@ impl Children {
                 world,
             )
         })();
-        if result.is_err() {
+        if let Err(error) = &result {
+            refused(
+                "matrix-start-refused",
+                slot,
+                error,
+                [private_pages, reader_pages, channels],
+            );
             target.release()?;
         }
         result
@@ -217,5 +232,32 @@ impl Children {
             self.launcher = None;
         }
         Ok(())
+    }
+}
+
+/// Local budget diagnostics only; no other process's resources or names leak.
+fn refused(stage: &str, slot: usize, error: &Error, requested: [u64; 3]) {
+    time::storage_sample(
+        stage,
+        &[
+            slot as u64,
+            error.0 as u64,
+            requested[0],
+            requested[1],
+            requested[2],
+        ],
+    );
+    if let Ok(budget) = cathedral_user_runtime::resources::budget() {
+        time::storage_sample(
+            "matrix-local-capacity",
+            &[
+                budget.limits.private_pages,
+                budget.used.private_pages,
+                budget.limits.reader_pages,
+                budget.used.reader_pages,
+                budget.limits.channels,
+                budget.used.channels,
+            ],
+        );
     }
 }

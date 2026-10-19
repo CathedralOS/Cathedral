@@ -2,6 +2,7 @@
 
 mod images;
 mod presentation;
+mod recovery;
 mod rendering;
 pub(in crate::service) mod storage;
 

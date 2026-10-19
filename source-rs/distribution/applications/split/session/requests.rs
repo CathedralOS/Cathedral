@@ -7,18 +7,31 @@ pub fn dispatch(
     children: &mut Children,
     server: &mut Server,
     survey: &mut Option<loss::Survey>,
+    storage: &mut storage::Storage,
 ) -> Result<(), Error> {
     match event {
         Event::Disconnected { client, .. } => {
+            if client >= 2 {
+                storage.revoke(client - 2);
+                server.remove(client);
+                return Ok(());
+            }
+            storage.revoke(client);
             world.disconnected(client);
             output.flush(world)?;
             children.stop(client, server)?;
         }
         Event::Memory(request, object) => {
+            if request.client.is_some_and(|c| c >= 2) {
+                return storage.start(request, Some(object), server);
+            }
             let reply = output.image(world, &request, object)?;
             server.reply(&request, &wire::encode(reply))?;
         }
         Event::Request(request) => {
+            if request.client.is_some_and(|c| c >= 2) {
+                return storage.start(request, None, server);
+            }
             let words = wire::decode(&request.bytes[..request.len]);
             if request.control
                 && words == Some([wire::LOSS, 0, 0, 0, 0, 0, 0, 0])

@@ -36,3 +36,44 @@ fn sources_are_exclusive_connection_bound_and_regrant_is_fresh() {
     assert_eq!(scopes.grant(0, 9, 0, 0, 2), Err(abi::BUSY));
     scopes.grant(0, 9, 0, 3, 2).unwrap();
 }
+
+#[test]
+fn forwarded_requests_require_live_revision_and_never_drop_scope_stamps() {
+    let mut scopes = Scopes::<2>::empty();
+    scopes.grant(0, 7, 0, 40, 1).unwrap();
+    let revision = scopes.revision(0, 7).unwrap();
+    let mut words = [
+        (wire::STORAGE_BASE + protocol::HEAD) | (revision << wire::STORAGE_SCOPE_BITS),
+        999,
+        0,
+        0,
+        0,
+        10,
+        20,
+        0,
+    ];
+    match scopes.prepare(0, 7, words, 1).unwrap() {
+        Prepared::Forward { source, words } => {
+            assert_eq!(source, 0);
+            assert_eq!(words[5..], [10, 20, 40]);
+        }
+        _ => panic!("expected forwarding"),
+    }
+    words[7] = 30;
+    assert!(matches!(scopes.prepare(0, 7, words, 1), Err(abi::DENIED)));
+    words[7] = 0;
+    assert!(matches!(scopes.prepare(0, 8, words, 1), Err(abi::DENIED)));
+    scopes.clear();
+    scopes.grant(0, 7, 0, 40, 1).unwrap();
+    assert!(matches!(scopes.prepare(0, 7, words, 1), Err(abi::DENIED)));
+    match scopes
+        .prepare(0, 7, [wire::STORAGE_INFO, 0, 0, 0, 0, 0, 0, 0], 1)
+        .unwrap()
+    {
+        Prepared::Reply(reply) => {
+            assert!(reply[1] > revision);
+            assert_eq!(reply[2], 40);
+        }
+        _ => panic!("expected local binding"),
+    }
+}

@@ -15,3 +15,10 @@ Parent grant/input interpretation lives in the pure matrix library's
 [upstream snapshot handler](../../../matrix/world/upstream.rs). Root-compositor
 adaptation and transactional presentation orchestration still live in the stock
 implementation; this extraction does not make those paths reusable yet.
+
+[exchange.rs](exchange.rs) polls a framed reply and optional sealed attachment
+without blocking, against an absolute deadline. Both stock storage forwarding
+and Split use it; callers own serialization and retire ambiguous streams. Scope
+authorization and append-only stamps live in the platform matrix library's
+[Scopes](../../../matrix/world/storage/storage.rs), separate from transport and
+each matrix program's child-realm policy.

@@ -147,17 +147,8 @@ impl Parent {
         };
         let mut reply: Option<(wire::Packet, Option<Object>)> = None;
         if let Some(receive) = p.receive {
-            let now = time::now()?;
-            let mut bytes = [0; 64];
-            let result = receive
-                .try_receive_memory(&mut bytes)
-                .and_then(|(len, object)| {
-                    wire::decode(&bytes[..len])
-                        .map(|words| (words, object))
-                        .ok_or(Error(abi::IO_ERROR as i64))
-                });
-            match result {
-                Ok((words, object)) => match p.step {
+            match cathedral_user_runtime::matrix::upstream::exchange::poll(receive, p.deadline) {
+                Ok(Some((words, object))) => match p.step {
                     Step::Refresh => {
                         drop(object);
                         self.adopt_upstream(words);
@@ -190,15 +181,9 @@ impl Parent {
                     }
                     Step::Forward => reply = Some((words, object)),
                 },
-                Err(Error(code))
-                    if (code == abi::TIMED_OUT as i64 || code == abi::WOULD_BLOCK as i64)
-                        && !time::reached(now, p.deadline) =>
-                {
+                Ok(None) => {
                     self.storage_pending = Some(p);
                     return Ok(None);
-                }
-                Err(Error(code)) if code == abi::WOULD_BLOCK as i64 => {
-                    self.retire_after(&p, Error(abi::TIMED_OUT as i64), &mut reply)?;
                 }
                 Err(error) => {
                     self.retire_after(&p, error, &mut reply)?;
@@ -310,33 +295,20 @@ impl Parent {
         } else if let Some(request) = p.request {
             let client = request.client.expect("forwarded child request");
             let slot = self.storage_slot(client);
-            let incarnation = request.incarnation;
-            let (source, scope) = match self.scopes.binding(slot, incarnation) {
-                Ok(binding) => binding,
-                Err(status) => return Ok(Some(wire::error(status))),
-            };
-            p.source = source;
-            if p.words == [wire::STORAGE_INFO, 0, 0, 0, 0, 0, 0, 0] {
-                // A binding without a scope of its own is rooted wherever this
-                // matrix's own binding is.
-                let realm = if scope != 0 {
-                    scope
-                } else {
-                    self.storage_realm
-                };
-                let revision = self.scopes.revision(slot, incarnation).unwrap();
-                return Ok(Some([0, revision, realm, 0, 0, 0, 0, 0]));
-            }
-            // The child's scope narrows the request; the provider checks every stamp.
-            if self
+            use cathedral_matrix::world::storage::Prepared;
+            match self
                 .scopes
-                .authorize(slot, incarnation, p.words[0] >> wire::STORAGE_SCOPE_BITS)
-                .is_err()
-                || !(wire::STORAGE_BASE + protocol::HEAD..=wire::STORAGE_BASE + protocol::LAST)
-                    .contains(&op)
-                || protocol::stamp(&mut words, scope).is_err()
+                .prepare(slot, request.incarnation, words, self.storage_realm)
             {
-                return Ok(Some(wire::error(abi::DENIED)));
+                Ok(Prepared::Reply(reply)) => return Ok(Some(reply)),
+                Ok(Prepared::Forward {
+                    source,
+                    words: stamped,
+                }) => {
+                    p.source = source;
+                    words = stamped;
+                }
+                Err(code) => return Ok(Some(wire::error(code))),
             }
         }
         let pair = if self.upstream {

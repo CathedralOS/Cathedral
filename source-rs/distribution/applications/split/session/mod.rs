@@ -3,4 +3,5 @@ mod children;
 mod loss;
 mod rendering;
 mod requests;
+mod storage;
 include!("session.rs");

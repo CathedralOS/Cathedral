@@ -49,3 +49,16 @@ pub fn route(mut words: Packet, child: usize) -> Option<Packet> {
 /// which it does only after a LOSS probe answers with nothing it would lose.
 pub const LAUNCH: u64 = 14;
 pub const CLOSE: u64 = 15;
+
+/// Delegated interaction: observe save availability, or request one explicit retry.
+/// No task/provider identifiers cross this interface. Ordinary apps receive neither.
+pub const SAVE_AVAILABILITY: u64 = 21;
+pub const RETRY_SAVES: u64 = 22;
+pub const SAVES_READY: u64 = 0;
+pub const SAVES_OFFLINE: u64 = 1;
+pub const SAVES_RESTARTING: u64 = 2;
+/// Owner: [SAVE_RECOVERY_GRANT, slot, enabled (0/1), 0..]. Bound to live interaction.
+pub const SAVE_RECOVERY_GRANT: u64 = 128;
+/// Root owner: publish state and consume one still-authorized queued retry.
+/// [SAVE_RECOVERY_POLL, state, 0..] -> [0, requested (0/1), 0..].
+pub const SAVE_RECOVERY_POLL: u64 = 129;

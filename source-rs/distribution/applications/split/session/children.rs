@@ -1,4 +1,4 @@
-//! Load declared code from our realm, reserve bounded tasks, withhold persistence.
+//! Load declared code and fund children; each receives its own persistent realm.
 use super::*;
 use cathedral_platform_contracts::storage;
 use cathedral_user_runtime::{
@@ -20,9 +20,15 @@ impl Children {
             uncertain: [false; 2],
         }
     }
-    pub fn start(&mut self, storage: Pair, server: &mut Server) -> Result<(), Error> {
+    pub fn start(
+        &mut self,
+        storage: Pair,
+        server: &mut Server,
+    ) -> Result<super::storage::Storage, Error> {
         let mut scope = Scope::new(storage);
         scope.bind().map_err(|c| Error(c as i64))?;
+        let roots = super::storage::open(&mut scope)?;
+        let mut forwarding = super::storage::Storage::new(storage, scope.realm(), roots);
         let id = scope.lookup(b"Notes").map_err(|c| Error(c as i64))?;
         let head = scope
             .call(storage::Request::new(storage::HEAD, id, 0, 0, 0))
@@ -39,9 +45,9 @@ impl Children {
             .map_err(|_| Error(abi::BAD_EXECUTABLE as i64))?
             .ok_or(Error(abi::BAD_EXECUTABLE as i64))?;
         code.unmap()?;
-        let granted = imports::bind(declaration.entries(), imports::INTERACTION)
+        let granted = imports::bind(declaration.entries(), imports::ALL)
             .map_err(|_| Error(imports::MISSING as i64))?;
-        if !declaration.brokered || granted != imports::INTERACTION {
+        if !declaration.brokered || granted != imports::ALL {
             return Err(Error(abi::DENIED as i64));
         }
         for slot in 0..2 {
@@ -57,18 +63,32 @@ impl Children {
             let child = match admission::spawn_brokered(launch, 0, &[], granted) {
                 Ok(child) => child,
                 Err(e) => {
+                    let budget = cathedral_user_runtime::ipc::budget().unwrap();
+                    cathedral_user_runtime::time::storage_sample(
+                        "split-admission-refused",
+                        &[
+                            slot as u64,
+                            e.0 as u64,
+                            budget.channel_limit,
+                            budget.charged_channels,
+                            budget.handle_limit,
+                            budget.charged_handles,
+                        ],
+                    );
                     launch.release()?;
                     return Err(e);
                 }
             };
             server.install(slot, child.data)?;
+            server.install(slot + 2, child.storage.unwrap())?;
+            forwarding.install(slot, server.incarnation(slot + 2).unwrap());
             self.launches[slot] = Some(launch);
             self.slots[slot] = Some(child);
         }
         cathedral_user_runtime::write(
-            b"Cathedral Split: two Notes admitted; storage withheld from children\n",
+            b"Cathedral Split: two Notes admitted with separate persistent realms\n",
         )?;
-        Ok(())
+        Ok(forwarding)
     }
     pub fn notify(&self, world: &mut World) -> Result<(), Error> {
         for slot in 0..2 {
@@ -92,6 +112,7 @@ impl Children {
     pub fn stop(&mut self, slot: usize, server: &mut Server) -> Result<(), Error> {
         if let Some(child) = self.slots[slot].take() {
             server.remove(slot);
+            server.remove(slot + 2);
             child.task.cancel()?;
             child.task.wait()?;
             child.close_connections()?;

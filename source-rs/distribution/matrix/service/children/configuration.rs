@@ -65,7 +65,7 @@ impl Children {
         // This conveys no executable, storage or device authority by itself.
         self.standing[1] = Some(Standing {
             pages: [saved.app_pages, saved.app_readers],
-            channels: 6,
+            channels: 10,
             descendants: 2,
             cpu: 0,
             surfaces: saved.app_surfaces,
@@ -82,6 +82,7 @@ impl Children {
         }
         super::super::requests::flush(parent, world)?;
         self.notify(world)?;
+        parent.grant_recovery(0, server.incarnation(0));
         world.grant_layout(0, server.incarnation(0).expect("configured launcher"));
         self.management
             .grant(0, server.incarnation(0).unwrap(), 1)

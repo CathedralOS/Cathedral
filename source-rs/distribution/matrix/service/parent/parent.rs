@@ -4,6 +4,7 @@ use super::*;
 use cathedral_user_runtime::{ipc::Handle, task::Environment, time};
 pub(in crate::service) use storage::{LaunchRequest, Launched};
 pub(super) struct Parent {
+    recovery: recovery::Recovery,
     pending: Option<presentation::Pending>,
     storage_pending: Option<storage::Pending>,
     scopes: cathedral_matrix::world::storage::Scopes,
@@ -42,6 +43,7 @@ impl Parent {
     }
     pub const fn empty() -> Self {
         Self {
+            recovery: recovery::Recovery::empty(),
             pending: None,
             storage_pending: None,
             scopes: cathedral_matrix::world::storage::Scopes::empty(),

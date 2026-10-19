@@ -135,6 +135,7 @@ impl Children {
             self.management
                 .grant(0, launcher.incarnation, 1)
                 .map_err(|c| Error(c as i64))?;
+            parent.grant_recovery(0, Some(launcher.incarnation));
             self.notify(world)?;
             cathedral_user_runtime::write(
                 b"Cathedral matrix: launcher recovered; retry consumed\n",

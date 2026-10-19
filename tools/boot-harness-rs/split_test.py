@@ -2,7 +2,7 @@
 from pathlib import Path
 import shutil
 
-def exercise(output, click, key, scan, width, height):
+def exercise(output, click, key, scan, width, height, resumed=False):
     font = bytes.fromhex((Path(__file__).resolve().parents[2] / 'source-rs/platform/libraries/bitmap-font/font.hex').read_text())
     def pixel(w,d,x,y): return d[(y*w+x)*3:(y*w+x+1)*3]
     def text(w,d,x,y,value):
@@ -17,12 +17,12 @@ def exercise(output, click, key, scan, width, height):
         return [(app_x,top+32,column),(app_x+column+12,top+32,column)]
     def note(slot,value,dirty=False):
         x,y,_=positions()[slot]
-        scan(lambda w,d: pixel(w,d,x+5,y+10)==bytes.fromhex('9b7028' if dirty else '55447a') and text(w,d,x+10,y+20,value), f'Split child {slot} text {value!r}')
+        scan(lambda w,d: pixel(w,d,x+5,y+10)==bytes.fromhex('9b7028' if dirty else '27664a') and text(w,d,x+10,y+20,value), f'Split child {slot} text {value!r}')
     def blank(): scan(lambda w,d: pixel(w,d,app_x+5,top+10)==bytes.fromhex('101827'),'Split subtree retired')
     for round in range(3):
         click(120,336)
-        note(0,''); note(1,'')
-        if round==0:
+        note(0,'ax' if resumed or round else ''); note(1,'by' if resumed or round else '')
+        if round==0 and not resumed:
             for slot,ch in [(0,'a'),(1,'b')]:
                 x,y,_=positions()[slot]; click(x+5,y+120); key(ch); note(slot,ch,True)
             note(0,'a',True); note(1,'b',True)
@@ -45,7 +45,7 @@ def exercise(output, click, key, scan, width, height):
                 x,y,cw=positions()[slot]
                 click(x+cw-14,y+10)
                 scan(lambda w,d:text(w,d,x+10,y+20,'UNSAVED NOTE'),f'child {slot} owns close dialog')
-                click(x+40,y+60) # Discard temporary note
+                click(x+40,y+44) # Save this child's draft before closing
                 scan(lambda w,d:pixel(w,d,x+5,y+10)==bytes.fromhex('101827'),f'child {slot} retired')
             click(width-margin-14,top+10); blank()
             # Restore saved layout so cold boot tests the identical composition.
@@ -58,6 +58,6 @@ def exercise(output, click, key, scan, width, height):
         else:
             click(width-margin-14,top+10); blank()
     log=(output/'serial.log').read_text(errors='replace')
-    assert log.count('Cathedral Split: two Notes admitted; storage withheld from children')==3,log[-3000:]
-    assert log.count('Cathedral Notes: temporary; no storage endpoint; interaction storage denied')==6,log[-3000:]
-    print('PASS: independent Split layout, focus, attenuated storage, dirty-close, resize and three reclaimed subtrees')
+    assert log.count('Cathedral Split: two Notes admitted with separate persistent realms')==3,log[-3000:]
+    assert 'Cathedral Notes: temporary' not in log,log[-3000:]
+    print('PASS: independent Split layout, focus, isolated persistence, dirty-close, resize and three reclaimed subtrees')

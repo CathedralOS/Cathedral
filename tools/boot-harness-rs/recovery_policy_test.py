@@ -23,6 +23,10 @@ def run():
                     '-L', 'dependency=' + str(target / 'debug/deps'), '-o', str(program)],
                    cwd=harness.WORKSPACE, check=True)
     subprocess.run([str(program)], check=True)
+    subprocess.run(['rustc', '--edition', '2024', '--test',
+                    str(harness.WORKSPACE / 'distribution/matrix/service/parent/recovery/authority.rs'),
+                    '-o', str(program)], cwd=harness.WORKSPACE, check=True)
+    subprocess.run([str(program)], check=True)
 
 
 if __name__ == '__main__':

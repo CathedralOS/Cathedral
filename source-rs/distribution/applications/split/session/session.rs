@@ -1,5 +1,5 @@
 // Acquire the enclosing world's services, admit two children, then route events.
-// Children receive only interaction; this matrix uses storage solely to load code.
+// Children receive interaction and separate scoped storage connections.
 use cathedral_kernel_contracts::user as abi;
 use cathedral_matrix::world::{Grant, Rect, World};
 use cathedral_platform_contracts::{imports, matrix as wire, services};
@@ -16,7 +16,7 @@ use rendering::Output;
 pub fn run(mut services: Services) -> Result<(), Error> {
     let interaction = services.interaction(1, 1)?;
     let storage = services.storage(1, 1)?;
-    let mut server = Server::open_clients(2)?;
+    let mut server = Server::open_clients(4)?;
     server.enable_memory();
     static mut WORLD: World = World::empty();
     let arena = &raw mut WORLD;
@@ -24,11 +24,12 @@ pub fn run(mut services: Services) -> Result<(), Error> {
     let world = unsafe { &mut *arena };
     let mut output = Output::new(interaction.pair);
     let mut children = Children::empty();
-    children.start(storage, &mut server)?;
+    let mut storage = children.start(storage, &mut server)?;
     let mut survey: Option<loss::Survey> = None;
     let mut button = false;
     let mut refresh = true;
     loop {
+        storage.progress(&mut server)?;
         // Consume the wake before polling. A notification racing the poll stays
         // queued, so sleeping below cannot lose it.
         match interaction.wake.receive_until(&mut [0; 64], time::now()?) {
@@ -80,7 +81,7 @@ pub fn run(mut services: Services) -> Result<(), Error> {
         if refresh {
             continue;
         }
-        let mut wake = [interaction.wake; 3];
+        let mut wake = [interaction.wake; 4];
         let mut count = 1;
         if let Some(s) = &survey {
             for slot in 0..2 {
@@ -90,12 +91,27 @@ pub fn run(mut services: Services) -> Result<(), Error> {
                 }
             }
         }
-        server.pause(u8::from(
-            survey.as_ref().is_some_and(|s| s.request.is_some()),
-        ));
-        let Some(event) =
-            server.next_event_or(&wake[..count], survey.as_ref().map(|s| s.deadline))?
-        else {
+        let storage_wait = storage.wait();
+        if let Some((handle, _)) = storage_wait {
+            wake[count] = handle;
+            count += 1;
+        }
+        server.pause(
+            u8::from(survey.as_ref().is_some_and(|s| s.request.is_some()))
+                | if storage_wait.is_some() {
+                    (1 << 3) | (1 << 4)
+                } else {
+                    0
+                },
+        );
+        let deadline = match (
+            survey.as_ref().map(|s| s.deadline),
+            storage_wait.map(|(_, deadline)| deadline),
+        ) {
+            (Some(a), Some(b)) => Some(a.min(b)),
+            (a, b) => a.or(b),
+        };
+        let Some(event) = server.next_event_or(&wake[..count], deadline)? else {
             continue;
         };
         requests::dispatch(
@@ -105,6 +121,7 @@ pub fn run(mut services: Services) -> Result<(), Error> {
             &mut children,
             &mut server,
             &mut survey,
+            &mut storage,
         )?;
     }
 }
