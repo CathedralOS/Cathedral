@@ -23,6 +23,8 @@ members = [
     "platform/services/storage",
     "platform/libraries/matrix",
     # Distribution
+    "distribution/lab/matrix-composition",
+    "distribution/lab/matrix-composition/matrix",
     "distribution/matrix",
     "distribution/matrix/contracts",
     "distribution/applications/chooser",

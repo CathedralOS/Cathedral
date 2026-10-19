@@ -62,6 +62,11 @@ Its extension protocol and configuration codec live in its own `contracts/`.
 selected child count and owner-supplied rectangles. Three-child visual and
 four-child headless tests import no distribution code. The stock IPC loop still
 uses a two-child composition; this is not yet a general reusable server runtime.
+An [independent three-peer matrix](distribution/lab/matrix-composition/README.md)
+now verifies local input, revocation and replacement over real IPC. It uses the
+existing runtime server and the same local command dispatch as F5, with no stock
+contract or implementation dependency. Admission and rendering are outside that
+proof; it does not supply a complete alternative desktop or matrix runtime.
 
 The universal Rust contracts crate has been retired. [Kernel contracts](kernel/contracts/README.md)
 define the public syscall/page/framebuffer boundary; [platform contracts](platform/contracts/README.md)

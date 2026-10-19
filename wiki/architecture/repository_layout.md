@@ -80,6 +80,10 @@ surface, storage-scope and task-management state with caller-selected child
 capacity. It imposes no launcher, desktop strip or persisted configuration.
 The stock program's IPC loop still composes these mechanisms directly; a
 general-purpose matrix server runtime is not yet a separate platform package.
+The independent Rust `distribution/lab/matrix-composition/matrix` program uses
+the shared runtime server and matrix commands for three local peers without any
+stock distribution import. This verifies that subset over actual IPC; it does
+not yet share the stock program's admission, rendering or upstream adapters.
 
 Capture pickers, settings screens and desktop controls use platform contracts.
 Authority semantics, protected surfaces, observation visibility and the operator's

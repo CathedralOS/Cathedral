@@ -46,6 +46,11 @@ checks recursive atomic presentation; `--matrix-storage-test --release` checks
 The smoke suite covers [combined IPC/IRQ/deadline waits](kernel/core/user_tasks/devices/README.md).
 Run these commands from the repository root.
 
+`python tools/boot-harness-rs/matrix_composition_test.py` checks an
+[independent three-peer matrix](distribution/lab/matrix-composition/README.md)
+over real IPC, with no stock matrix/desktop contract or storage disk. The ordinary
+F5 matrix shares its local grant and input command implementation.
+
 ## Start reading
 
 For ongoing work or an agent handoff, read [TASKS_RUST.md](../TASKS_RUST.md) first.

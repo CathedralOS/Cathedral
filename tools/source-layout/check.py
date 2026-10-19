@@ -20,6 +20,10 @@ def check_edge(source, target):
     if owner not in LAYERS or dependency not in LAYERS:
         raise ValueError(f'Unknown source layer: {source} -> {target}')
 
+    # This executable is evidence that stock desktop code/contracts are optional.
+    if within(source, 'distribution/lab/matrix-composition') and dependency == 'distribution':
+        raise ValueError(f'Independent matrix proof imports distribution code: {source} -> {target}')
+
     kernel_contract = within(source, 'kernel/contracts')
     platform_contract = within(source, 'platform/contracts')
     distribution_contract = within(source, 'distribution/matrix/contracts')

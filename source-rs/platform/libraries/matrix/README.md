@@ -5,6 +5,12 @@ grant, place local children, invalidate revoked views, and dispatch local reques
 The owner chooses the child count through `World<N>`. No slot has a launcher,
 application, login or desktop role.
 
+[Local commands](world/commands.rs) dispatch placement/revocation and input after
+the program authenticates its owner/source endpoint. Child requests use a separate
+dispatcher and cannot select these operations. Both the stock matrix and the
+[independent three-peer program](../../../distribution/lab/matrix-composition/README.md)
+use this machinery with the existing runtime IPC server.
+
 - [Input](world/input.rs) confines focus, capture, coordinates and keys to grants.
   Pointer hit testing follows the owner's surface ranges; equal ranges use slot
   order for input-only children.
@@ -32,3 +38,6 @@ authorized controller, stable surface ranges through sibling allowance changes,
 and four-child headless scope/management ledgers. Those are mechanism proofs,
 not claims of a runnable phone or embedded distribution. The fixed surface and
 input limits in the experimental protocol remain explicit resource bounds.
+The independent program additionally exercises real IPC, malformed requests,
+revocation and peer replacement in QEMU. It has no stock distribution dependency;
+admission, nested adaptation and rendering are outside that proof's scope.

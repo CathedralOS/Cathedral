@@ -64,20 +64,19 @@ pub(super) fn dispatch(
             response
         }
         Some(words) if request.client == Some(2) => match words {
-            [wire::POINTER_SOURCE, x, y, buttons @ 0..=7, 0, 0, 0, 0]
+            [wire::POINTER_SOURCE, x, y, 0..=7, 0, 0, 0, 0]
                 if x < parent.grant.width && y < parent.grant.height =>
             {
                 parent.pointer(x, y)?;
-                world.pointer(x, y, buttons);
-                [0; 8]
+                world.source_command(words)
             }
-            [wire::KEY_SOURCE, key, state, 0, 0, 0, 0, 0] => {
+            [wire::KEY_SOURCE, key, _, 0, 0, 0, 0, 0] => {
                 if key == cathedral_platform_contracts::input::RESET as u64 {
                     world.cancel();
+                    [0; 8]
                 } else {
-                    world.key(key, state);
+                    world.source_command(words)
                 }
-                [0; 8]
             }
             _ => wire::error(abi::DENIED),
         },

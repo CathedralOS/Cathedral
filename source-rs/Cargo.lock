@@ -243,6 +243,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "cathedral-matrix-composition-lab"
+version = "0.0.0"
+dependencies = [
+ "cathedral-kernel-contracts",
+ "cathedral-platform-contracts",
+ "cathedral-user-runtime",
+]
+
+[[package]]
 name = "cathedral-memory-lab"
 version = "0.0.0"
 dependencies = [
@@ -358,6 +367,16 @@ name = "cathedral-supervision-lab"
 version = "0.0.0"
 dependencies = [
  "cathedral-kernel-contracts",
+ "cathedral-user-runtime",
+]
+
+[[package]]
+name = "cathedral-three-peer-matrix"
+version = "0.0.0"
+dependencies = [
+ "cathedral-kernel-contracts",
+ "cathedral-matrix",
+ "cathedral-platform-contracts",
  "cathedral-user-runtime",
 ]
 

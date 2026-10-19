@@ -87,7 +87,9 @@ the desktop retires the picker and requests `CONFIGURE`. The
 loads its own `Matrix` object and resolves the saved launcher path, then sets
 its child budgets and placement. The outer owner supervises storage and restores
 the user's binding after provider replacement; that matrix restores its own
-child bindings. Every matrix runs the same platform code.
+child bindings. Each level of this stock tree runs the same distribution matrix
+program over shared platform mechanisms. The independent
+[three-peer matrix proof](lab/matrix-composition/README.md) uses a different program.
 
 The process tree is distinct from the executable/package tree:
 

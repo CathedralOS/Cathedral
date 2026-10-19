@@ -1,7 +1,8 @@
 # Rust reference OS: tasks and handoff
 
-Updated 2026-10-18 (local date). Current milestone: separate stock matrix policy
-from reusable platform mechanisms, following live storage-provider recovery
+Updated 2026-10-18 (local date). Current milestone: independent three-peer matrix
+over real IPC, following the split of stock policy from reusable platform mechanisms
+and live storage-provider recovery
 without restarting apps, following explicit launcher recovery
 after retry exhaustion, following app termination and bounded early bootstrap recovery,
 interactive storage-provider startup and explicit retry,
@@ -329,8 +330,10 @@ to hierarchy metadata; extensions are conventions, not authoritative types.
   executable/configuration/recovery/control router belong to distribution. Platform
   supplies local authority state with caller-selected child capacity and geometry.
   Alternative visual/headless arrangements have host tests without distro imports.
-  A reusable IPC server runtime is still future extraction work; do not move the
-  stock program back into platform merely to make its loop reusable.
+  An independent three-peer executable now exercises real IPC, source authority,
+  revocation and replacement with the existing runtime server and shared local
+  commands. Child admission and upstream/rendering orchestration still need a
+  second consumer before extraction; do not move stock policy back into platform.
 - [ ] **Bring storage write latency down.** Collection scans metadata before
   each write and durable commit writes through ATA PIO. Use explicit tick-to-time
   conversion and separate CPU time from elapsed time. Measure with
@@ -1824,3 +1827,48 @@ alternative-layout matrix program, then extract the shared IPC orchestration it
 actually needs. Do not move stock config/recovery policy back into platform or
 invent a universal desktop framework. The outstanding delegated live-storage
 retry and protected-chrome owner question remain separate work.
+
+## Independent matrix over real IPC, 2026-10-18
+
+The [alternative matrix](source-rs/distribution/lab/matrix-composition/matrix/main.rs)
+is a separately compiled program with three equal virtual input regions. It has
+no stock matrix, desktop contract, saved configuration, storage or device grant.
+It composes `World<3>` with the existing runtime `Server`; the latter already
+handles more than two peers and orders disconnection before reconnection.
+The [proof](source-rs/distribution/lab/matrix-composition/README.md) admits this
+program and three isolated peer processes through explicit links. It checks
+local-only views, malformed packets, denied owner/source requests, input to the
+third region, revocation, and replacement requiring a fresh grant while siblings
+keep their state. The first bring-up used the supervisor role for the relays;
+setting their explicit profile argument corrected that fixture wiring mistake.
+
+[Local command dispatch](source-rs/platform/libraries/matrix/world/commands.rs)
+now owns common placement/revocation and trusted-source input. Both programs use
+it; F5 also uses it on the physical input connection. Endpoint authentication,
+parent binding, stacking, configuration and launch policy stay with each program.
+Children enter the separate restricted dispatcher. No protocol numbers, persisted
+bytes, device deadlines or kernel implementation changed.
+
+This closes the lack of a real independent IPC consumer for the local-world API.
+It does not yet extract the stock admission, upstream, storage or rendering loops:
+the test supervisor admits these peers as siblings. There is no need to invent
+another generic server abstraction for the subset that the runtime already serves.
+The source-layout check now rejects all distribution dependencies from this proof's
+packages, so adding a stock contract cannot quietly invalidate the evidence.
+
+Verification:
+
+- `python tools/boot-harness-rs/matrix_composition_test.py` passed in
+  `matrix-composition/20261019T021047276260Z`, using private firmware/ESP and no disk.
+- `run.py --matrix-test --release --timeout 120` passed the stock recursive
+  matrix's locality, input, teardown and recovery checks after shared dispatch.
+- `desktop/20261019T021239109327Z` passed the default F5 user/app flow and cold
+  persistence. The independent host oracle verified all 235 records. This run
+  had no ATA timeout; it does not resolve the previously recorded occurrences.
+- Workspace host tests and `cargo check-userspace` passed. Layout checks passed
+  (35 Omega/113 Rust edges) with seven checker tests; named-body formatting and
+  diff checks passed.
+
+The prior ATA completion failures and live-storage retry gap remain unresolved.
+The next matrix extraction should target independent child admission or upstream
+adaptation, with both actual consumers preserving their distinct policy.

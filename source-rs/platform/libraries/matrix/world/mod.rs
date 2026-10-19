@@ -3,6 +3,7 @@
 #[cfg(test)]
 mod arrangements;
 mod children;
+mod commands;
 mod input;
 pub mod launches;
 mod layout;

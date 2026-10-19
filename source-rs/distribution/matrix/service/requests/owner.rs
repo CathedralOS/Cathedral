@@ -22,32 +22,15 @@ pub(super) fn dispatch(
                 Err(abi::DENIED)
             }
         }
-        [wire::PLACE, child @ 0..=1, x, y, width, height, keys, 0] => world.place(
-            child as usize,
-            Rect {
-                x,
-                y,
-                width,
-                height,
-            },
-            keys,
-        ),
         [wire::SURFACE_LIMIT, child @ 0..=1, count, 0, 0, 0, 0, 0]
             if count <= wire::MAX_SURFACES as u64 =>
         {
             surface_limit(world, child as usize, count as usize)
         }
-        [wire::REVOKE, child @ 0..=1, 0, 0, 0, 0, 0, 0] => world.revoke(child as usize),
-        [wire::POINTER_SOURCE, x, y, buttons @ 0..=7, 0, 0, 0, 0] if !parent.upstream => {
-            world.pointer(x, y, buttons);
-            Ok(())
+        _ if matches!(words[0], wire::POINTER_SOURCE | wire::KEY_SOURCE) && !parent.upstream => {
+            return world.source_command(words);
         }
-        [wire::KEY_SOURCE, key, state, 0, 0, 0, 0, 0] if !parent.upstream => {
-            world.key(key, state);
-            Ok(())
-        }
-        [wire::HEALTH, 0, 0, 0, 0, 0, 0, 0] => Ok(()),
-        _ => Err(abi::DENIED),
+        _ => return world.owner_command(words),
     };
     wire::error(result.err().unwrap_or(0))
 }
