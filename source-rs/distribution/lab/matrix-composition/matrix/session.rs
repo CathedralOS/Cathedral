@@ -25,7 +25,7 @@ pub fn run() -> Result<(), Error> {
     let mut children = Children([None, None, None]);
     // Admission installs no view. This program chooses virtual regions afterwards.
     for slot in 0..3 {
-        children.start(slot as usize, &mut server, world)?;
+        children.start(slot as usize, 0, &mut server, world)?;
         if slot == 0 {
             children.prove_rollback(abi::BUSY)?;
         }
@@ -69,6 +69,19 @@ pub fn run() -> Result<(), Error> {
                 server.reply(&request, &wire::encode(wire::error(abi::DENIED)))?;
             }
             Event::Request(request) => {
+                if !request.control
+                    && let Some(words) = wire::decode(&request.bytes[..request.len])
+                    && words[0] == cathedral_platform_contracts::services::ACQUIRE
+                {
+                    let child = children.0[request.client.unwrap()].as_mut().unwrap();
+                    assert_eq!(child.data.0.raw(), request.incarnation);
+                    child
+                        .services
+                        .as_mut()
+                        .unwrap()
+                        .reply(&mut server, &request, words)?;
+                    continue;
+                }
                 let reply = match wire::decode(&request.bytes[..request.len]) {
                     Some(words) if request.control => {
                         if words[0] >> 32 != 0 {
@@ -81,10 +94,12 @@ pub fn run() -> Result<(), Error> {
                                     .err()
                                     .map_or(0, |e| e.0 as u64),
                             )
-                        } else if let [wire::SPAWN, slot @ 0..=2, 0, 0, 0, 0, 0, 0] = words {
+                        } else if let [wire::SPAWN, slot @ 0..=2, mode @ 0..=2, 0, 0, 0, 0, 0] =
+                            words
+                        {
                             wire::error(
                                 children
-                                    .start(slot as usize, &mut server, world)
+                                    .start(slot as usize, mode, &mut server, world)
                                     .err()
                                     .map_or(0, |e| e.0 as u64),
                             )

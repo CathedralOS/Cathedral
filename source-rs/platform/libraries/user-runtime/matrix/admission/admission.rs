@@ -15,6 +15,7 @@ pub struct Admitted {
     pub data: Pair,
     pub notify: Handle,
     pub storage: Option<Pair>,
+    pub services: Option<crate::services::Offer>,
 }
 
 pub fn spawn(
@@ -23,9 +24,45 @@ pub fn spawn(
     loans: &[Launch],
     storage: bool,
 ) -> Result<Admitted, Error> {
+    spawn_mode(target, argument, loans, storage, None)
+}
+/// Admit only the broker pair; other preallocated endpoints remain in its offer.
+pub fn spawn_brokered(
+    target: Launch,
+    argument: u64,
+    loans: &[Launch],
+    granted: u64,
+) -> Result<Admitted, Error> {
+    use cathedral_platform_contracts::imports;
+    if granted & !imports::ALL != 0 || granted & imports::INTERACTION == 0 {
+        return Err(Error(crate::abi::INVALID_ARGUMENT as i64));
+    }
+    spawn_mode(
+        target,
+        argument,
+        loans,
+        granted & imports::STORAGE != 0,
+        Some(granted),
+    )
+}
+fn spawn_mode(
+    target: Launch,
+    argument: u64,
+    loans: &[Launch],
+    storage: bool,
+    granted: Option<u64>,
+) -> Result<Admitted, Error> {
     let port = target.port()?;
     let connections = connections::Connections::create(storage)?;
-    let child = match target.spawn_tree(argument, connections.initial(), loans) {
+    let child = match target.spawn_tree(
+        argument,
+        if granted.is_some() {
+            connections.broker_initial()
+        } else {
+            connections.initial()
+        },
+        loans,
+    ) {
         Ok(child) => child,
         Err(error) => {
             connections.rollback()?;
@@ -37,11 +74,16 @@ pub fn spawn(
         Err(error) => {
             child.cancel()?;
             child.wait()?;
+            if granted.is_some() {
+                connections.close_deferred()?;
+            }
             connections.close_parent()?;
             return Err(error);
         }
     };
     Ok(Admitted {
+        services: granted
+            .map(|granted| crate::services::Offer::new(granted, connections.deferred())),
         task: child,
         control,
         data: connections.data,
@@ -54,6 +96,9 @@ impl Admitted {
     /// After reclaiming the task and detaching server slots, close retained rights.
     /// Does not release a launch reservation or choose a restart policy.
     pub fn close_connections(self) -> Result<(), Error> {
+        if let Some(services) = self.services {
+            services.close()?;
+        }
         for endpoint in [
             self.control.0,
             self.control.1,

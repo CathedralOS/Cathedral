@@ -29,3 +29,9 @@ uses three launch loans without any stock policy. Its QEMU proof checks repeated
 busy-spawn rollback, partial channel-allocation rollback, replacement and whole-
 subtree reclamation. Control-connect failure cleanup is preserved from the stock
 implementation but is not independently fault-injected by that proof.
+
+`spawn_brokered` installs only the request/reply pair. The remaining child ends
+stay in the returned `services::Offer` until acquired or reclaimed. Callers
+must delay wake sends until `Offer::interaction_ready`; otherwise queued hints
+prevent receive-endpoint transfer. `close_connections` also releases retained
+untransferred endpoints. See [the bootstrap contract](../../../../contracts/services/README.md).

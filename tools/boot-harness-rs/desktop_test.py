@@ -18,7 +18,7 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 
 
-def desktop(stream, output, serial, reboot, expected_absolute=True, fill_users=False):
+def desktop(stream, output, serial, reboot, expected_absolute=True, fill_users=False, service_imports=None):
     assert 'Cathedral: object storage ready' in serial
     position = [40, 40]
     font = bytes.fromhex((ROOT / 'source-rs/platform/libraries/bitmap-font/font.hex').read_text())
@@ -213,6 +213,30 @@ def desktop(stream, output, serial, reboot, expected_absolute=True, fill_users=F
     scan(picker_gone, 'old picker cannot redraw after a click')
     shutil.copyfile(output / 'display.png', output / 'user-workspace.png')
     click_chrome(1)
+    if service_imports:
+        note('', temporary=True)
+        focus_app()
+        key('a')
+        note('a', dirty=True, temporary=True)
+        app_close()
+        dialog(0, 'UNSAVED NOTE')
+        choose_close(2)
+        color('101827')
+        click_chrome(1)
+        note('', temporary=True)
+        app_close()
+        color('101827')
+        # The unavailable Notes binding must not affect its sibling's storage.
+        click_chrome(2)
+        color('d18b35' if reboot else '315ca8')
+        if not reboot:
+            focus_app()
+            key('ret')
+            color('d18b35')
+        log = (output / 'serial.log').read_text(errors='replace')
+        assert log.count('Cathedral Notes: temporary; no storage endpoint; interaction storage denied') >= 2
+        print(f'PASS: {service_imports} Notes storage stays absent, dirty-close works, Colors retains its own binding')
+        return
     note('hello cathedral' if reboot else '')
     tabs(2 if reboot else 0,0)
     if reboot:
@@ -300,7 +324,7 @@ def desktop(stream, output, serial, reboot, expected_absolute=True, fill_users=F
     print('PASS: user tiles, absolute/relative clicks, app tiles, save/discard/cancel and persistent replacement')
 
 
-def run(timeout, trace_storage=False, relative_pointer=False):
+def run(timeout, trace_storage=False, relative_pointer=False, service_imports=None):
     output = harness.BUILD / 'desktop' / datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S%fZ')
     output.mkdir(parents=True)
     # Exact default composition, with a separate build output so a regression
@@ -314,6 +338,29 @@ def run(timeout, trace_storage=False, relative_pointer=False):
     shutil.copytree(harness.BUILD / 'desktop-check-interactive/esp', output / 'esp')
     path = output / 'guest.raw'
     programs = harness.seeded_programs(profile, True)
+    if service_imports:
+        # Alter only a disposable sealed-image input to exercise the real launcher
+        # with an undeclared or incompatible optional import. No grant/UI override.
+        changed = []
+        replacements = 0
+        for parent, file in programs:
+            if 'cathedral-notes.elf' in file.name:
+                data = bytearray(file.read_bytes())
+                assert data.count(b'CTHIMP02') == 1
+                at = data.index(b'CTHIMP02')
+                assert int.from_bytes(data[at+48:at+56], 'little') == 2
+                if service_imports == 'undeclared':
+                    data[at+8:at+16] = (1).to_bytes(8, 'little')
+                    data[at+48:at+144] = bytes(96)
+                else:
+                    data[at+56:at+64] = (2).to_bytes(8, 'little')
+                    data[at+64:at+72] = (2).to_bytes(8, 'little')
+                file = output / file.name
+                file.write_bytes(data)
+                replacements += 1
+            changed.append((parent, file))
+        assert replacements == 1
+        programs = changed
     migration = ROOT / 'source-rs/distribution/migrations/readable-labels.txt'
     database_image.prepare(path, programs, migration, app_close=True)
     qemu = harness.find_qemu()
@@ -324,12 +371,15 @@ def run(timeout, trace_storage=False, relative_pointer=False):
     flags = subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0
     for boot in (1, 2):
         capture.run(command, output, timeout, flags, ready_marker='Cathedral desktop: ready; choose a user',
-                    verify=lambda stream, output, serial: desktop(stream, output, serial, boot == 2, not relative_pointer))
+                    verify=lambda stream, output, serial: desktop(stream, output, serial, boot == 2, not relative_pointer, service_imports=service_imports))
         for name in ('serial.log', 'qemu.log', 'display.png'):
             shutil.copyfile(output / name, output / f'boot-{boot}-{name}')
         contents = path.read_bytes()
         database_image.prepare(path, programs, migration, app_close=True)
         assert contents == path.read_bytes(), 'relaunch must not reformat storage or reinstall unchanged programs'
+    if service_imports:
+        print(f'PASS: scoped service acquisition with {service_imports} storage across cold reboot; artifacts: {output}')
+        return
     # An independent host model checks the retained records on a copy: the
     # installed programs, the user copied from the template, two notes sharing
     # one manifest under the user's Notes, the color under its Colors, nothing
@@ -349,8 +399,9 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--timeout', type=float, default=180)
     parser.add_argument('--relative-pointer', action='store_true', help='disable VM port and verify PS/2 fallback')
+    parser.add_argument('--service-imports', choices=('undeclared', 'incompatible'), help='exercise absent optional storage in the ordinary desktop using a disposable manifest variant')
     parser.add_argument('--trace-storage', action='store_true', help='build with storage phase traces in the serial log')
     args = parser.parse_args()
     if args.timeout <= 0:
         parser.error('timeout must be positive')
-    run(args.timeout, args.trace_storage, args.relative_pointer)
+    run(args.timeout, args.trace_storage, args.relative_pointer, args.service_imports)

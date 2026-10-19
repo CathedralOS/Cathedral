@@ -7,6 +7,7 @@ use super::*;
 use cathedral_user_runtime::{ipc::Handle, server::Request, task::Child, time};
 type Pair = (Handle, Handle);
 struct Owned {
+    services: Option<cathedral_user_runtime::services::Offer>,
     task: Child,
     outcome: Option<cathedral_user_runtime::task::Outcome>,
     disconnected: bool,
@@ -70,6 +71,13 @@ impl Children {
     }
     pub(super) fn notify(&self, world: &mut World) -> Result<(), Error> {
         for (slot, child) in self.slots.iter().enumerate() {
+            if child
+                .as_ref()
+                .and_then(|c| c.services.as_ref())
+                .is_some_and(|offer| !offer.interaction_ready())
+            {
+                continue;
+            }
             if world.take_notification(slot)
                 && let Some(child) = child
             {

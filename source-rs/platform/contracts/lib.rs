@@ -8,4 +8,5 @@ pub mod display;
 pub mod imports;
 pub mod input;
 pub mod matrix;
+pub mod services;
 pub mod storage;

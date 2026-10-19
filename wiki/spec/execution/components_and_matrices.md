@@ -79,6 +79,22 @@ in software, or that an authorized operation cannot be abused within its limits.
 Unlocking a realm supplies authorized access to its contents; it does not imply
 delivery of its encryption key to the matrix program.
 
+## Scoped application bootstrap
+
+The owner-approved model supplies one matrix-scoped service broker at application
+startup. A manifest declares required/optional imports; the launching owner
+resolves the authority ceiling before launch. The application requests its service
+connections through that broker and retains them for ordinary operations. A new
+service need not change main's argument structure. The broker authenticates the
+connection, never an application-supplied identity, and cannot widen its approved
+ceiling. Returned connections preserve the matrix's chosen mediation and revocation.
+Bootstrap and service protocol versions evolve independently.
+
+The Rust [bootstrap contract](../../../source-rs/platform/contracts/services/README.md)
+records the first bounded implementation and its compatibility path. Direct
+startup grants remain necessary for the privileged programs establishing brokers;
+this does not mandate a registry in the kernel or eliminate explicit handles.
+
 ## Privileged startup
 
 The privileged startup environment orchestrates resource owners and delegates

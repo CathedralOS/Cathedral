@@ -8,6 +8,12 @@ pub(super) fn dispatch(
     children: &mut children::Children,
     server: &mut Server,
 ) -> Result<(), Error> {
+    if !request.control
+        && let Some(words) = wire::decode(&request.bytes[..request.len])
+        && words[0] == cathedral_platform_contracts::services::ACQUIRE
+    {
+        return children.acquire(&request, words, server);
+    }
     let response = match wire::decode(&request.bytes[..request.len]) {
         Some(words) if request.control => {
             if words[0] == wire::RESOLVE_PATH && words[5..] == [0; 3] {

@@ -49,6 +49,34 @@ pub fn run() -> u64 {
         slot: Some(i as u64),
     });
     let views = peers.map(view);
+    use cathedral_platform_contracts::{imports, services};
+    for peer in peers {
+        for _ in 0..16 {
+            assert_eq!(
+                call(peer, services::request(imports::INTERACTION, 1, 1, 0)),
+                wire::error(services::TAKEN)
+            );
+            assert_eq!(
+                call(peer, services::request(imports::STORAGE, 1, 1, 0)),
+                wire::error(if peer.slot == Some(2) {
+                    services::TAKEN
+                } else {
+                    services::UNAVAILABLE
+                })
+            );
+            assert_eq!(
+                call(peer, services::request(99, 1, 1, 0)),
+                wire::error(services::UNAVAILABLE)
+            );
+        }
+        assert_eq!(
+            call(peer, services::request(imports::INTERACTION, 2, 2, 0)),
+            wire::error(services::INCOMPATIBLE)
+        );
+        let mut forged = services::request(imports::INTERACTION, 1, 1, 0);
+        forged[6] = 1; // A requested sibling identity cannot select another offer.
+        assert_eq!(call(peer, forged), wire::error(services::INVALID));
+    }
     for (i, peer) in peers.iter().enumerate() {
         assert_eq!(views[i][0], 0);
         assert_eq!(&views[i][2..4], &[300, 200]);
@@ -123,6 +151,16 @@ pub fn run() -> u64 {
         assert_eq!(view(peers[0]), views[0]);
         assert_eq!(view(peers[2]), views[2]);
     }
+    // Reclaim fully retained and partially transferred offers repeatedly. A VIEW
+    // round trip proves each fixture reached its deliberately interrupted stage.
+    for _ in 0..16 {
+        for mode in [1, 2] {
+            assert_eq!(call(owner, [wire::STOP, 2, 0, 0, 0, 0, 0, 0]), [0; 8]);
+            assert_eq!(call(owner, [wire::SPAWN, 2, mode, 0, 0, 0, 0, 0]), [0; 8]);
+            assert_eq!(view(peers[2]), wire::error(abi::DENIED));
+            assert_eq!(view(peers[0]), views[0]);
+        }
+    }
     matrix.cancel().unwrap();
     matrix.wait().unwrap();
     owner.pair.0.close().unwrap();
@@ -140,7 +178,7 @@ pub fn run() -> u64 {
     matrix.wait().unwrap();
     owner.pair.0.close().unwrap();
     owner.pair.1.close().unwrap();
-    cathedral_user_runtime::write(b"Cathedral alternative matrix: owned admission, rollback, local input and subtree reclamation passed\n").unwrap();
+    cathedral_user_runtime::write(b"Cathedral alternative matrix: scoped acquisition, interrupted handoffs, rollback and subtree reclamation passed\n").unwrap();
     let (_, idle) = ipc::channel().unwrap();
     let _ = idle.receive(&mut [0; 64]);
     0

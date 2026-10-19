@@ -1,5 +1,13 @@
 # Rust implementation map
 
+Notes and Colors now acquire interaction/storage through a
+[scoped startup broker](platform/contracts/services/README.md). Sealed imports
+select the broker format; existing programs retain legacy startup. Both the stock
+and independent matrix use platform acquisition/custody, without a kernel locator.
+Required imports still gate launch, optional ones may be absent, and ordinary
+operations go directly over the acquired connections. Provider startup remains
+eager; arbitrary discovery and dynamic grant additions are not implemented.
+
 This map connects implemented mechanisms to their integrated consumers, proofs
 and remaining restrictions. The [lab guide](README.md) owns detailed ABI/build
 instructions. [Owner questions](../OWNER_QUESTIONS.md) own unresolved semantics.

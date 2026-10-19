@@ -8,5 +8,6 @@ mod lifecycle;
 mod loss;
 mod management;
 mod recovery;
+mod services;
 
 include!("children.rs");

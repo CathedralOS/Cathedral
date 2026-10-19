@@ -14,13 +14,23 @@ impl Children {
     pub fn start(
         &mut self,
         slot: usize,
+        mode: u64,
         server: &mut Server,
         world: &mut World<3>,
     ) -> Result<(), Error> {
         if self.0[slot].is_some() || !server.available(slot) {
             return Err(Error(abi::BUSY as i64));
         }
-        let child = admission::spawn(Launch::at(slot as u64)?, 0, &[], false)?;
+        let child = admission::spawn_brokered(
+            Launch::at(slot as u64)?,
+            if mode == 0 { slot as u64 } else { mode + 2 },
+            &[],
+            if slot == 2 {
+                cathedral_platform_contracts::imports::ALL
+            } else {
+                cathedral_platform_contracts::imports::INTERACTION
+            },
+        )?;
         world.disconnected(slot);
         server
             .install(slot, child.data)
@@ -49,7 +59,7 @@ impl Children {
         }
         for _ in 0..16 {
             assert!(
-                matches!(admission::spawn(Launch::at(0)?, 0, &[], false), Err(Error(code)) if code == expected as i64)
+                matches!(admission::spawn_brokered(Launch::at(0)?, 0, &[], cathedral_platform_contracts::imports::INTERACTION), Err(Error(code)) if code == expected as i64)
             );
             assert_eq!(resources::budget()?, before);
         }

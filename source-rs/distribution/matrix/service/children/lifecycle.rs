@@ -88,6 +88,9 @@ impl Children {
         if let Some(observer) = self.observations.finished(child.task.raw(), state) {
             world.notify(observer);
         }
+        if let Some(services) = child.services {
+            services.close()?;
+        }
         child.data.0.close()?;
         child.data.1.close()?;
         child.notify.close()?;

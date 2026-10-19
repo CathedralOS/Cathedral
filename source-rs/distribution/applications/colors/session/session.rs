@@ -45,12 +45,29 @@ pub fn run<const PROBES: bool>(
     environment: Environment,
     command: fn(u64, &mut Probe<'_>) -> Option<u64>,
 ) -> u64 {
+    run_services::<PROBES>(
+        style,
+        cathedral_user_runtime::services::Services::load(&environment).unwrap(),
+        command,
+    )
+}
+pub fn run_services<const PROBES: bool>(
+    style: u64,
+    mut services: cathedral_user_runtime::services::Services,
+    command: fn(u64, &mut Probe<'_>) -> Option<u64>,
+) -> u64 {
     // Apps have logical input only, never access to the physical pointer channel.
     assert_eq!(
         cathedral_user_runtime::keyboard::virtual_pointer(10, 0),
         Err(Error(abi::DENIED as i64))
     );
-    let connections = cathedral_user_runtime::matrix::Connections::load(&environment).unwrap();
+    let interaction = services.interaction(1, 1).unwrap();
+    let storage = services.storage(1, 1).unwrap();
+    let connections = cathedral_user_runtime::matrix::Connections {
+        interaction: interaction.pair,
+        wake: interaction.wake,
+        storage,
+    };
     assert!(Launch::at(0).is_err());
     assert!(cathedral_user_runtime::link::Link::at(0).is_err());
     assert!(cathedral_user_runtime::display::mapping().is_err());

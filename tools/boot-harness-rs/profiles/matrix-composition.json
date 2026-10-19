@@ -16,7 +16,7 @@
         "clock": true,
         "package": "cathedral-three-peer-matrix",
         "entry": "distribution/lab/matrix-composition/matrix/main.rs",
-        "ipc_channels": 11
+        "ipc_channels": 13
       },
       {
         "target": "x86_64-unknown-none",

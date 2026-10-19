@@ -20,7 +20,8 @@ matrix configuration schema.
 
 ## Current bounded representation
 
-The runtime's `service_imports!` macro emits `CTHIMP01` and a count, followed by
+The runtime's `service_imports!` emits `CTHIMP01`; `service_bootstrap!` emits
+`CTHIMP02` for [scoped acquisition](../services/README.md). Both contain a count followed by
 four reserved records of four little-endian u64 words: contract, minimum version,
 maximum version, required (0/1). Unused records are zero. The linker retains this
 144-byte record first in the read-only PT_LOAD segment, so trimming debug/section
@@ -42,11 +43,12 @@ binds the admitted program to its own subtree. No-storage launches receive no
 storage endpoints or realm binding. Attempts through the interaction endpoint
 are denied in the desktop's separate-stream protocol.
 
-The version-1 startup transport still uses the existing five-endpoint kernel
+Legacy startup transport uses the existing five-endpoint kernel
 bundle: interaction pair, wake receiver, and optional storage pair. Three
 endpoints mean storage is absent; five mean present. [Runtime views](../../libraries/user-runtime/matrix/matrix.rs)
 provide required connections or `OptionalConnections` with an actual `Option`
-storage pair. The compiler checks these view types, not whole-program reach or
+storage pair. Broker startup instead installs one request/reply pair and transfers approved
+service endpoints on request. The compiler checks view types, not whole-program reach or
 the honesty of arbitrary executable declarations.
 
 Old program copies without a record use the **explicit legacy declaration**:
@@ -59,16 +61,16 @@ binding; withholding the binding denies that access too.
 
 ## Visible proof
 
-The F5 user launcher has STORAGE ON/OFF for subsequent launches. Notes declares
-optional storage and displays TEMP NO SAVE when absent; editing and dirty-close
-protection still work, while save/reload cannot claim persistence or discard a
-draft. Colors requires storage, so the same offer produces NEEDS SERVICE without
-occupying the slot. Restoring the offer and relaunching Notes reads saved notes.
+Notes and Colors now enter through scoped service acquisition in F5. Notes accepts
+absent storage and keeps editing/dirty-close protection; Colors requires storage.
+The old launcher STORAGE toggle is gone. The disposable desktop test variants
+`--service-imports undeclared` and `--service-imports incompatible` remove Notes'
+storage binding while Colors keeps its own persistent connection. No runtime
+request can widen the result resolved from the sealed import record.
 
 Host tests cover declaration parsing, version compatibility, unknown contracts,
 missing required and optional services, malformed records and truncated ELF.
-`desktop_test.py` drives both modes of the same Notes image and cold-reopens the
-disk; `--matrix-storage-test` checks owner policy, child withholding/refused
-widening, successful retry, realm confinement and revocation. Service discovery,
+`desktop_test.py` drives the actual desktop and cold-reopens the disk;
+`--matrix-storage-test` checks owner policy, child withholding/refused widening, successful retry, realm confinement and revocation. Service discovery,
 first-request activation, dynamic grant addition and final manifest persistence
 remain separate work.

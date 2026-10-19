@@ -87,7 +87,7 @@ fn imports_survive_missing_section_headers_and_truncated_headers_refuse() {
 #[test]
 fn legacy_images_and_duplicate_declarations_are_distinguished() {
     let mut future = image();
-    future[135] = b'2';
+    future[135] = b'9';
     assert!(from_elf(&future).is_err());
     let mut bytes = image();
     bytes[128..136].fill(0);
@@ -100,4 +100,14 @@ fn legacy_images_and_duplicate_declarations_are_distinguished() {
     bytes[128..136].copy_from_slice(&256u64.to_le_bytes());
     bytes[256..256 + RECORD_BYTES].copy_from_slice(&encode(&REQUIRED));
     assert!(from_elf(&bytes).is_err());
+}
+
+#[test]
+fn broker_bootstrap_is_explicit_and_keeps_import_semantics() {
+    let mut bytes = image();
+    bytes[128..128 + RECORD_BYTES].copy_from_slice(&encode_brokered(&OPTIONAL_STORAGE));
+    let declaration = from_elf(&bytes).unwrap().unwrap();
+    assert!(declaration.brokered);
+    assert_eq!(bind(declaration.entries(), INTERACTION), Ok(INTERACTION));
+    assert!(!Declaration::decode(&encode(&REQUIRED)).unwrap().brokered);
 }

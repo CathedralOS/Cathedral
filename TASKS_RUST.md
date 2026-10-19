@@ -1,19 +1,12 @@
 # Rust reference OS: tasks and handoff
 
-Updated 2026-10-18 (local date). Current milestone: shared matrix child admission
-and independently owned three-child subtree, following the independent IPC proof
-and the split of stock policy from reusable platform mechanisms
-and live storage-provider recovery
-without restarting apps, following explicit launcher recovery
-after retry exhaustion, following app termination and bounded early bootstrap recovery,
-interactive storage-provider startup and explicit retry,
-root login recovery, independent Colors,
-local configured-launcher recovery,
-scoped lifecycle observations and close-channel failure handling, live
-matrix layout and named realms. F5 uses these mechanisms; explicit migration
-preserves existing stock users and data.
-F5 now compacts existing media before changed program installations, fixing
-the retained-disk upgrade failure described at the end of this handoff.
+Updated 2026-10-18 (local date). Current milestone: scoped application bootstrap
+and service acquisition, shared by the stock and independent matrices. Notes and
+Colors use this path in F5; sealed imports select broker startup while existing
+programs retain legacy bundles. Prior milestones include shared child admission,
+stock-policy/platform separation and live storage-provider recovery. See the
+latest verification and bounded limitations at the end of this handoff.
+F5 still compacts existing media before changed program installations.
 Stock-copy refresh also collects unreachable revisions under logical quota
 pressure in the same transaction as its replacements; current data and pins survive.
 See the latest evidence at the end of this handoff. Earlier baseline: declared service
@@ -336,6 +329,13 @@ to hierarchy metadata; extensions are conventions, not authoritative types.
   commands. Runtime child admission is now shared with the stock matrix, including
   channel rollback and retained endpoint custody; the alternative owns its subtree.
   Upstream/rendering orchestration still needs a second consumer before extraction.
+- [x] **Give ordinary apps scoped service acquisition.** One broker connection
+  at startup replaces their positional interaction/storage bundle. The sealed
+  manifest bounds the offer; endpoint/incarnation selects caller authority.
+  Notes and Colors use it in F5. Repeat requests allocate nothing; interrupted
+  handoffs reclaim retained rights. Optional/undeclared/incompatible imports and
+  cached bindings have host, real-IPC and disposable desktop coverage. This does
+  not yet start providers lazily or grant new services after launch.
 - [ ] **Bring storage write latency down.** Collection scans metadata before
   each write and durable commit writes through ATA PIO. Use explicit tick-to-time
   conversion and separate CPU time from elapsed time. Measure with
@@ -975,7 +975,7 @@ ATA timeout and quiet fault-gate occurrence remain recorded above, unresolved.
 ## Saved layout editor and reliable profile switching (2026-10-18)
 
 The normal user launcher now has SETTINGS, also reachable with F2 when it has
-focus. It edits strip width (192ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“320 pixels) and outer spacing (8ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“40 pixels).
+focus. It edits strip width (192ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“320 pixels) and outer spacing (8ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“40 pixels).
 Save writes that user's `Matrix` configuration; Cancel discards local edits and
 returns to app tiles. The current app keeps running in the same position.
 Restart QEMU and select the user to apply the saved layout. This is a bounded
@@ -1921,3 +1921,70 @@ leaves two spare with three children live and makes partial-allocation rollback
 observable. Remaining matrix extraction targets are upstream adaptation and
 rendering/storage forwarding; alternative dynamic-reservation policy is not yet
 proved. The recorded ATA issue and live-storage retry gap remain separate work.
+
+## Scoped application bootstrap, 2026-10-18
+
+The owner-approved [bootstrap model](source-rs/platform/contracts/services/README.md)
+separates manifest requests, launch-approved authority, and acquired connections.
+Applications enter with `Services` and request interaction/storage before their
+ordinary loops. The platform owns the protocol, client, endpoint custody and
+admission mechanics; the stock matrix authenticates its child connection and
+selects its approved offer. No PID, sibling number or requested realm in a packet
+can choose another offer. There is no new kernel syscall or global service locator.
+
+`CTHIMP02` opts sealed stored programs into broker startup. Older import records
+and undeclared legacy code keep their existing bundles. The runtime compatibility
+path also supports explicitly wired catalogue fixtures. The new environment has
+two endpoints for one logical broker; existing kernel owner control is separate.
+The current interaction service shares the broker RPC pair and acquires its wake
+receiver. Storage acquires a separate pair in two endpoint-transfer replies.
+Service and bootstrap versions are separate. Required imports still refuse launch
+when missing/incompatible; unavailable optional ones remain absent.
+
+Channels are allocated before spawn from existing budgets. Acquisition only moves
+preapproved rights, each at most once. Repeat application calls cache bindings;
+repeat wire requests cannot duplicate them. Unsent rights remain owned by the
+broker and are closed on task teardown, including interrupted pair acquisition.
+Ambiguous client transport failure closes the shared broker/interaction stream so
+a late capability reply cannot contaminate a subsequent ordinary RPC. Acquisition
+must be serialized with interaction; current apps acquire during startup.
+
+The first F5 run (`desktop/20261019T033724803621Z`) found a real ordering bug:
+notification preceded wake-receiver transfer, so the kernel refused the nonempty
+queue. The stock owner now preserves pending notification state until that receiver
+has transferred. Expected transfer capacity/busy errors return refusals rather
+than ending the matrix. The later default desktop passed.
+
+Verification:
+
+- `matrix-composition/20261019T034140088220Z` passed acquisition, unknown/ungranted
+  and version refusals, forged identity fields, repeated raw/cache requests,
+  rollback, replacement and whole-subtree reclamation. Sixteen cycles interrupt
+  acquisition before any service or after one storage endpoint. The third peer's
+  storage endpoints test custody only; this headless fixture has no filesystem.
+  Its thirteen channels fund eleven live channels plus two for partial rollback.
+- `desktop/20261019T033908741405Z` passed ordinary F5 Notes/Colors behavior and cold
+  persistence; the independent host oracle verified 239 records.
+- `desktop_test.py --service-imports undeclared` passed in
+  `desktop/20261019T034306507571Z`: a disposable Notes declaration omits storage,
+  which stays absent even though the owner offers it. Editing, dirty-close and
+  independent Colors persistence pass across cold reboot.
+- `desktop_test.py --service-imports incompatible` passed in
+  `desktop/20261019T034431375347Z` with optional storage version 2. Notes degrades
+  to temporary storage; Colors retains its separate usable version-1 binding.
+  These variants use visual/serial checks; the default test alone runs the full
+  independent retained-record oracle. Interactive saved media was untouched.
+- `run.py --matrix-test --release --timeout 120` passed legacy recursive matrix
+  startup/locality/recovery. `--matrix-storage-test` passed existing scoped roots,
+  recursive delegation, revocation, realm launches, siblings and replacement.
+- Workspace host tests and `cargo check-userspace` passed. Notes clippy also passed
+  startup-fault/admitted-fault/management/render/trace feature composition.
+  Layout passed (35 Omega/113 Rust edges), with seven checker tests, and named-body
+  formatting passed.
+
+This is a bounded bootstrap, not arbitrary service enumeration, dynamic grant
+addition or lazy provider startup. All service channels remain preallocated.
+The stock broker path currently requires interaction and separate storage streams;
+legacy headless multiplexing retains its prior protocol. Upstream/rendering
+extraction, the recorded ATA completion issue and live-session storage retry
+remain separate work. No disk schema, kernel ABI or default desktop budget changed.

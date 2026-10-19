@@ -5,6 +5,7 @@ pub const STORAGE: u64 = 2;
 pub const ALL: u64 = INTERACTION | STORAGE;
 pub const MAX_IMPORTS: usize = 4;
 pub const RECORD_BYTES: usize = 16 + MAX_IMPORTS * 32;
+pub const BROKER_MAGIC: u64 = u64::from_le_bytes(*b"CTHIMP02");
 pub const MAGIC: u64 = u64::from_le_bytes(*b"CTHIMP01");
 /// Platform launch refusals; these are not new kernel errors.
 pub const MISSING: u64 = 0x494d0001;
@@ -98,6 +99,7 @@ pub const fn encode(imports: &[Import]) -> [u8; RECORD_BYTES] {
 
 #[derive(Debug)]
 pub struct Declaration {
+    pub brokered: bool,
     entries: [Import; MAX_IMPORTS],
     count: usize,
 }
@@ -106,7 +108,7 @@ impl Declaration {
         &self.entries[..self.count]
     }
     pub fn decode(bytes: &[u8]) -> Result<Self, Refusal> {
-        if bytes.len() != RECORD_BYTES || word(bytes, 0)? != MAGIC {
+        if bytes.len() != RECORD_BYTES || !matches!(word(bytes, 0)?, MAGIC | BROKER_MAGIC) {
             return Err(Refusal::Malformed);
         }
         let count = usize::try_from(word(bytes, 8)?).map_err(|_| Refusal::Malformed)?;
@@ -114,6 +116,7 @@ impl Declaration {
             return Err(Refusal::Malformed);
         }
         let mut declaration = Self {
+            brokered: word(bytes, 0)? == BROKER_MAGIC,
             entries: [Import::v1(0, false); MAX_IMPORTS],
             count,
         };
@@ -157,4 +160,16 @@ fn word(bytes: &[u8], at: usize) -> Result<u64, Refusal> {
             .try_into()
             .unwrap(),
     ))
+}
+
+/// Same import semantics, opting into the two-endpoint scoped bootstrap.
+pub const fn encode_brokered(imports: &[Import]) -> [u8; RECORD_BYTES] {
+    let mut bytes = encode(imports);
+    let magic = BROKER_MAGIC.to_le_bytes();
+    let mut i = 0;
+    while i < 8 {
+        bytes[i] = magic[i];
+        i += 1;
+    }
+    bytes
 }

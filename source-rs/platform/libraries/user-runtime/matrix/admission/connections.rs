@@ -42,6 +42,22 @@ impl Connections {
     pub fn initial(&self) -> &[Handle] {
         &self.initial[..self.count]
     }
+    pub fn broker_initial(&self) -> &[Handle] {
+        &self.initial[..2]
+    }
+    pub fn deferred(&self) -> [Option<Handle>; 3] {
+        [
+            Some(self.initial[2]),
+            (self.count == 5).then_some(self.initial[3]),
+            (self.count == 5).then_some(self.initial[4]),
+        ]
+    }
+    pub fn close_deferred(&self) -> Result<(), Error> {
+        for endpoint in self.deferred().into_iter().flatten() {
+            endpoint.close()?;
+        }
+        Ok(())
+    }
     /// Admission failed: none of the endpoints moved into the child.
     pub fn rollback(self) -> Result<(), Error> {
         for endpoint in self.initial() {

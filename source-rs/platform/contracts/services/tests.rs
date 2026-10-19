@@ -1,0 +1,49 @@
+use super::*;
+#[test]
+fn acquisition_cannot_widen_the_resolved_manifest() {
+    let grants = imports::bind(
+        &[imports::Import::v1(imports::INTERACTION, true)],
+        imports::ALL,
+    )
+    .unwrap();
+    assert_eq!(
+        select(grants, request(imports::STORAGE, 1, 1, 0)),
+        Err(UNAVAILABLE)
+    );
+    let grants = imports::bind(&imports::OPTIONAL_STORAGE, imports::INTERACTION).unwrap();
+    assert_eq!(
+        select(grants, request(imports::STORAGE, 1, 1, 1)),
+        Err(UNAVAILABLE)
+    );
+    assert_eq!(select(grants, request(99, 1, 1, 0)), Err(UNAVAILABLE));
+    assert_eq!(
+        select(grants, request(imports::INTERACTION, 1, 1, 0)),
+        Ok(0)
+    );
+}
+#[test]
+fn version_shape_and_endpoint_selection_are_independent() {
+    assert_eq!(
+        select(imports::ALL, request(imports::STORAGE, 1, 2, 0)),
+        Ok(1)
+    );
+    assert_eq!(
+        select(imports::ALL, request(imports::STORAGE, 1, 1, 1)),
+        Ok(2)
+    );
+    assert_eq!(
+        select(imports::ALL, request(imports::STORAGE, 2, 2, 0)),
+        Err(INCOMPATIBLE)
+    );
+    assert_eq!(
+        select(imports::ALL, request(imports::STORAGE, 0, 1, 0)),
+        Err(INVALID)
+    );
+    let mut forged = request(imports::INTERACTION, 1, 1, 0);
+    forged[6] = 123; // No caller-selected identity/scope extension.
+    assert_eq!(select(imports::ALL, forged), Err(INVALID));
+    assert_eq!(
+        select(imports::ALL, request(imports::STORAGE, 1, 1, 2)),
+        Err(INVALID)
+    );
+}

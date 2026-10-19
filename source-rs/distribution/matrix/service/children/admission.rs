@@ -37,6 +37,7 @@ impl Children {
             argument,
             false,
             self.separate_storage,
+            None,
             server,
             world,
         )
@@ -65,6 +66,7 @@ impl Children {
             frames,
             [argument, channels, descendants, images, cpu],
             self.separate_storage,
+            None,
             server,
             world,
         )
@@ -83,7 +85,10 @@ impl Children {
         if self.slots[plan.slot].is_some() || !server.available(plan.slot) {
             return Err(Error(abi::BUSY as i64));
         }
-        let binding = imports::resolve(object, plan.imports)?;
+        let (binding, brokered) = imports::resolve(object, plan.imports)?;
+        if brokered && !self.separate_storage {
+            return Err(Error(abi::DENIED as i64));
+        }
         let storage = binding & cathedral_platform_contracts::imports::STORAGE != 0;
         let executable = Executable::from_object(object, 0)?;
         let (pages, frames) = match plan.pages {
@@ -106,6 +111,7 @@ impl Children {
                 plan.cpu,
             ],
             storage && self.separate_storage,
+            brokered.then_some(binding),
             server,
             world,
         )?;
@@ -120,6 +126,7 @@ impl Children {
         requested_frames: Option<u64>,
         [argument, channels, descendants, images, cpu]: [u64; 5],
         separate_storage: bool,
+        services: Option<u64>,
         server: &mut Server,
         world: &mut World,
     ) -> Result<(), Error> {
@@ -151,6 +158,7 @@ impl Children {
                 argument,
                 true,
                 separate_storage,
+                services,
                 server,
                 world,
             )
@@ -169,18 +177,18 @@ impl Children {
         argument: u64,
         dynamic: bool,
         separate_storage: bool,
+        services: Option<u64>,
         server: &mut Server,
         world: &mut World,
     ) -> Result<(), Error> {
         if separate_storage && !server.available(slot + 3) {
             return Err(Error(abi::BUSY as i64));
         }
-        let admitted = cathedral_user_runtime::matrix::admission::spawn(
-            target,
-            argument,
-            loans,
-            separate_storage,
-        )?;
+        use cathedral_user_runtime::matrix::admission;
+        let admitted = match services {
+            Some(granted) => admission::spawn_brokered(target, argument, loans, granted)?,
+            None => admission::spawn(target, argument, loans, separate_storage)?,
+        };
         world.disconnected(slot);
         server
             .install(slot, admitted.data)
@@ -192,6 +200,7 @@ impl Children {
                 .expect("child catalog slot changed");
         }
         self.slots[slot] = Some(Owned {
+            services: admitted.services,
             task: admitted.task,
             outcome: None,
             disconnected: false,

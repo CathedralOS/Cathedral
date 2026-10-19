@@ -7,11 +7,11 @@ use cathedral_platform_contracts::matrix as wire;
 use cathedral_user_runtime::{ipc::Handle, time};
 type Pair = (Handle, Handle);
 cathedral_user_runtime::entry_with_environment!(main);
-fn main(role: u64, _: u64, environment: cathedral_user_runtime::task::Environment) -> u64 {
+fn main(role: u64, argument: u64, environment: cathedral_user_runtime::task::Environment) -> u64 {
     if role == 0 {
         proof::run()
     } else {
-        peer::run(environment)
+        peer::run(environment, argument)
     }
 }
 fn call(pair: Pair, words: wire::Packet) -> wire::Packet {

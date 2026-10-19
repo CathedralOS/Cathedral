@@ -18,13 +18,23 @@ The [proof entrance](main.rs) selects the [supervisor](proof.rs) or a
 [child relay](peer.rs). The supervisor lends three launch grants to the matrix;
 only the matrix admits and controls those children. Its [children.rs](matrix/children.rs)
 uses [shared runtime admission](../../../platform/libraries/user-runtime/matrix/admission/README.md)
-to install explicit startup connections. No static peer links remain. It tests local views, malformed/forbidden
+to install one scoped broker connection. No static peer links remain. It tests local views, malformed/forbidden
 requests, input confined to the third region, revocation and connection replacement.
 Replacement cannot inherit the old grant, and unrelated peers keep their views.
 The relays have no launch or device authority and no peer links. Sixteen busy
 spawn failures and sixteen partial allocation failures preserve channel charges.
 Sixteen replacements reuse the middle slot without changing siblings. Killing
 the matrix collects its whole subtree and returns the loans for a fresh matrix.
+
+The [service acquisition contract](../../../platform/contracts/services/README.md)
+is exercised by every peer. The third peer can acquire a storage pair; the other
+two cannot. These storage endpoints exercise custody only, not a filesystem or
+storage provider. Unknown/ungranted services, incompatible versions and forged
+identity fields refuse. Repeat wire acquisition cannot duplicate a transferred
+right; repeat runtime calls return the cached binding. Sixteen cycles cancel a
+child before any acquisition or halfway through storage transfer, then replace
+it without consuming its siblings' resources. The matrix has thirteen channels:
+eleven for the three children and two spare for partial-allocation rollback.
 
 The lab's owner probe envelope routes to a child with the high 32-bit word of
 the opcode (slot + 1); the low word remains its requested operation. This is

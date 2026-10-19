@@ -124,3 +124,16 @@ impl Server {
         request.reply.send_memory(bytes, object)
     }
 }
+
+impl Server {
+    /// Move a retained endpoint in a reply. Unlike copied replies, errors must not
+    /// be swallowed: the caller releases custody only after successful transfer.
+    pub fn reply_endpoint(
+        &self,
+        request: &Request,
+        bytes: &[u8],
+        endpoint: Handle,
+    ) -> Result<(), Error> {
+        request.reply.send_with(bytes, endpoint)
+    }
+}

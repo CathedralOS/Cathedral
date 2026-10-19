@@ -4,4 +4,4 @@
 #[cfg(target_os = "none")]
 mod session;
 #[cfg(target_os = "none")]
-pub use session::{LEFT, Probe, RIGHT, run};
+pub use session::{LEFT, Probe, RIGHT, run, run_services};

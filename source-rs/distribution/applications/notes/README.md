@@ -1,6 +1,12 @@
 # Private notes
 
-An ordinary application of the matrix and object storage APIs. Press **F5**,
+An ordinary application of the matrix and object storage APIs. [main.rs](main.rs)
+receives a scoped `Services` interface; [session/session.rs](session/session.rs)
+acquires interaction and optional storage before entering the editor loop.
+The [bootstrap contract](../../../platform/contracts/services/README.md) keeps
+manifest requests distinct from matrix-approved connections.
+
+ Press **F5**,
 choose a user, click **Notes** in its chrome, then click the note to focus it.
 The equivalent default boot is:
 

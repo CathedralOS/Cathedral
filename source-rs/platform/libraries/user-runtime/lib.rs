@@ -29,6 +29,7 @@ pub mod matrix;
 pub mod memory;
 pub mod resources;
 pub mod server;
+pub mod services;
 pub mod storage;
 pub mod task;
 pub mod time;

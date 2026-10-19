@@ -7,7 +7,7 @@ use cathedral_platform_contracts::input;
 use cathedral_user_runtime::{
     Error,
     ipc::{self, Handle},
-    task::Environment,
+    services::Services,
     time,
 };
 type Pair = (Handle, Handle);
@@ -37,9 +37,20 @@ fn report(control: Pair, notes: &storage::Notes, draft: &Document, dirty: bool, 
         0,
     ]));
 }
-pub fn run(style: u64, environment: Environment) {
-    let connections =
-        cathedral_user_runtime::matrix::OptionalConnections::load(&environment).unwrap();
+pub fn run(style: u64, mut services: Services) {
+    let interaction = services.interaction(1, 1).unwrap();
+    let storage = match services.storage(1, 1) {
+        Ok(pair) => Some(pair),
+        Err(Error(code)) if code == cathedral_platform_contracts::services::UNAVAILABLE as i64 => {
+            None
+        }
+        Err(error) => panic!("storage acquisition: {:?}", error),
+    };
+    let connections = cathedral_user_runtime::matrix::OptionalConnections {
+        interaction: interaction.pair,
+        wake: interaction.wake,
+        storage,
+    };
     let parent = connections.interaction;
     #[cfg(feature = "management-probes")]
     management_probe::denied(&connections);
@@ -51,7 +62,10 @@ pub fn run(style: u64, environment: Environment) {
     // The fixture can distinguish this receipt-bearing crash from an early
     // death racing storage binding, which may instead refuse the launch.
     #[cfg(feature = "admitted-fault")]
-    if !environment.is_empty() {
+    if !cathedral_user_runtime::task::Environment::load()
+        .unwrap()
+        .is_empty()
+    {
         panic!("deliberate Notes admitted failure");
     }
     if connections.storage.is_none() {

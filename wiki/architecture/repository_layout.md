@@ -86,7 +86,9 @@ stock distribution import. This verifies that subset over actual IPC; it does
 not yet share the stock program's rendering or upstream adapters. Child connection
 construction, spawn and failure rollback are shared through
 `platform/libraries/user-runtime/matrix/admission/`; each program retains code,
-budget, placement and recovery policy.
+budget, placement and recovery policy. Scoped service acquisition also lives in
+platform contracts/runtime; the stock owner resolves declarations and selects the
+per-child offer. The kernel transfers endpoints without knowing service names.
 
 Capture pickers, settings screens and desktop controls use platform contracts.
 Authority semantics, protected surfaces, observation visibility and the operator's

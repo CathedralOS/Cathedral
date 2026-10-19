@@ -46,3 +46,31 @@ macro_rules! entry_with_environment {
         $crate::entry!(cathedral_environment_entry);
     };
 }
+
+/// Opt into broker bootstrap and declare its required/optional service imports.
+#[macro_export]
+macro_rules! service_bootstrap {
+    ($imports:expr) => {
+        #[unsafe(no_mangle)]
+        #[unsafe(link_section = ".cathedral.imports")]
+        pub static CATHEDRAL_IMPORTS: [u8; $crate::matrix::imports::RECORD_BYTES] =
+            $crate::matrix::imports::encode_brokered($imports);
+    };
+}
+/// Application entry receives scoped acquisition, not an ordered endpoint bundle.
+#[macro_export]
+macro_rules! entry_with_services {
+    ($main:path) => {
+        fn cathedral_services_entry(
+            first: u64,
+            second: u64,
+            environment: $crate::task::Environment,
+        ) -> u64 {
+            let services =
+                $crate::services::Services::load(&environment).expect("service bootstrap");
+            let main: fn(u64, u64, $crate::services::Services) -> u64 = $main;
+            main(first, second, services)
+        }
+        $crate::entry_with_environment!(cathedral_services_entry);
+    };
+}
