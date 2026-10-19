@@ -32,8 +32,8 @@ class BootHarnessTests(unittest.TestCase):
             self.assertEqual((first / 'serial.log').read_bytes(), b'first')
 
     def test_smoke_requires_ordered_complete_numeric_report_and_kernel_entry(self):
-        boot.check_boot_milestones(b'Hello from Omega\r\nOwned 128 MiB\r\nKernel entered\r\n')
-        boot.check_boot_milestones(b'Hello from Omega\nOwned 99999+ MiB\nKernel entered\r\n')
+        boot.check_boot_milestones(b'Hello from Omega\r\nOwned 128 MiB\r\nKernel entered\r\nMemory split\r\n')
+        boot.check_boot_milestones(b'Hello from Omega\nOwned 99999+ MiB\nKernel entered\r\nMemory split\r\n')
         for output in (b'', b'Hello from Omega\r\n',
                        b'Owned 128 MiB\nHello from Omega\n',
                        b'Hello from Omega\nOwned rubbish MiB\n',
@@ -41,7 +41,10 @@ class BootHarnessTests(unittest.TestCase):
                        b'Hello from Omega\nOwned 128 MiB\n',
                        b'Hello from Omega\nKernel entered\r\nOwned 128 MiB\n',
                        b'Hello from Omega\nOwned 128 MiB\nKernel entered',
-                       b'Hello from Omega\nOwned rubbish MiB\nKernel entered\r\n'):
+                       b'Hello from Omega\nOwned rubbish MiB\nKernel entered\r\n',
+                       b'Hello from Omega\nOwned 128 MiB\nKernel entered\r\n',
+                       b'Hello from Omega\nOwned 128 MiB\nMemory split\r\nKernel entered\r\n',
+                       b'Hello from Omega\nOwned 128 MiB\nKernel entered\r\nMemory split'):
             with self.subTest(output=output):
                 with self.assertRaises(ValueError):
                     boot.check_boot_milestones(output)

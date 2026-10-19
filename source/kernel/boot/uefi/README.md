@@ -9,18 +9,20 @@ the map/exit/report implementation in `own_machine.omg`. After successful
 ExitBootServices it grants both retained roots and calls `ProgramStorageEntry`.
 The explicitly selected native provider transfers them to the exact
 Build-selected `Kernel::enter`, which checks its fresh context, records root
-lengths, reports arrival and retains the context borrow with both roots.
+lengths and reports arrival. It then admits vacancy for the fresh initial-storage
+root, partitions 4096 bytes, and retains both children with the context and image.
 
 The fresh-image harness requires `Hello from Omega`, a complete `Owned N MiB`
-line, and `Kernel entered`, in that order. QEMU/OVMF has exercised this route
-with 35 MiB reported. The current source requires Omega's exact address-model
+line, `Kernel entered`, and `Memory split`, in that order. A fresh four-marker
+boot reported 35 MiB in QEMU/OVMF. The current source requires Omega's exact address-model
 typing, representation-recast effect tracking and occurrence-local state-prefix
 checking, in addition to the canonical `ProgramStorageEntryNativeProvider`,
 activation-local entry-context provisioning and private entry stack. A clean
-compiler with these repairs freshly compiled and booted this source through all
-three markers; this was not a replay of an older image. The ownership report occurs only
-after successful ExitBootServices; the final marker comes from the selected
-kernel continuation, not the firmware adapter.
+compiler with these repairs freshly compiled and booted this source;
+this was not a replay of an older image. The memory step additionally
+requires preserved result-membership contracts through provider settlement and
+linear returns. The ownership report occurs only after successful ExitBootServices;
+the kernel markers come from the selected continuation, not the firmware adapter.
 
 The compiler provisions an image-backed private stack before the source adapter
 allocates its frames. Its backing includes the exact call-chain demand, both
@@ -59,8 +61,8 @@ separate backing and lifecycle obligations.
 
 The intended acceptance is one freshly compiled `uefi_x86_64` image under
 QEMU/OVMF: `Hello from Omega`, successful firmware exit, `Owned N MiB` over
-COM1, then `Kernel entered` while retaining image and initial-storage roots with
-accounted surviving stack storage. A failed build or an old
+COM1, then `Kernel entered` and `Memory split` while retaining image, both
+initial-storage children and accounted surviving stack storage. A failed build or an old
 `BOOTX64.EFI` cannot satisfy acceptance.
 
 ## Reproduce
@@ -89,7 +91,22 @@ checks numeric acceptance and rejection without firmware. The boot transaction
 checks that geometry before ExitBootServices and retains it through success;
 geometry does not supply backing or stack custody.
 
-The kernel currently retains its context and two storage roots in a halt loop;
+The selected `BootVacantStorageProvider` admits absence of live Omega residents
+only for the reachable initial-storage transfer in this closed boot artifact.
+The premise comes from the final-map ConventionalMemory selection, excluded
+attributes, overlap audit and successful ExitBootServices transaction. The
+provider body forwards the existing Granted claim; it does not zero memory or
+invent backing. Direct calls cannot introduce Vacant. Its signature does not
+enforce the boot-only premise: selecting it is not permission to reclassify an
+image range or an occupied allocation, and future call sites need fresh review.
+
+`split_vacant_extent` then conserves Granted and Vacant independently. The kernel
+checks the returned 4096-byte prefix and remaining length before printing
+`Memory split`, and retains both pieces. It neither discards the unused tail nor
+claims that vacancy makes bytes readable. Stable access-profile establishment,
+resident initialization, write/readback and exact retirement remain unfinished.
+
+The kernel currently retains its context, image and storage children in a halt loop;
 it does not yet install page tables, an allocator, interrupts or a scheduler.
 This non-returning boot exercises context initialization and lifetime, not
 normal-return cleanup or a returning application's allocation release protocol.
@@ -117,6 +134,6 @@ handle and map key remain ordinary arguments. There are no `Binding` fields or
 implicit provider arguments. Selecting the implementations does not establish
 the validity or lifetime of those firmware values.
 
-The smoke harness checks greeting, firmware exit, ownership reporting and
-arrival in the selected kernel continuation. It is a bounded boot witness, not
+The smoke harness checks greeting, firmware exit, ownership reporting,
+arrival in the selected kernel continuation and real-root partition. It is a bounded boot witness, not
 a working operating-system claim; the Rust bring-up lab is separate evidence.

@@ -90,6 +90,9 @@ def check_boot_milestones(output):
     kernel = output.find(b'Kernel entered\r\n', owned.end())
     if kernel < 0:
         raise ValueError('Expected selected kernel entry after the owned-memory report.')
+    memory = output.find(b'Memory split\r\n', kernel + len(b'Kernel entered\r\n'))
+    if memory < 0:
+        raise ValueError('Expected checked memory partition after kernel entry.')
 
 
 def main(arguments=None):
@@ -102,7 +105,7 @@ def main(arguments=None):
                         help='run ordinary omega update for dependency review before building')
     parser.add_argument('--build-dir', type=Path, default=ROOT / 'build/boot-harness')
     parser.add_argument('--smoke', action='store_true',
-                        help='require greeting, owned-memory report and selected kernel entry')
+                        help='require greeting, owned-memory report, kernel entry and memory split')
     parser.add_argument('--timeout', type=float, default=30)
     options = parser.parse_args(arguments)
     if options.timeout <= 0:
