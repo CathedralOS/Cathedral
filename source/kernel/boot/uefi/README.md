@@ -13,9 +13,12 @@ lengths, reports arrival and retains the context borrow with both roots.
 
 The fresh-image harness requires `Hello from Omega`, a complete `Owned N MiB`
 line, and `Kernel entered`, in that order. QEMU/OVMF has exercised this route
-with 35 MiB reported. Use an Omega compiler containing the canonical
-`ProgramStorageEntryNativeProvider` implementation, activation-local entry-context
-provisioning, and the private-entry-stack repair (`0bdc137b7af`). The ownership report occurs only
+with 35 MiB reported. The current source requires Omega's exact address-model
+typing, representation-recast effect tracking and occurrence-local state-prefix
+checking, in addition to the canonical `ProgramStorageEntryNativeProvider`,
+activation-local entry-context provisioning and private entry stack. A clean
+compiler with these repairs freshly compiled and booted this source through all
+three markers; this was not a replay of an older image. The ownership report occurs only
 after successful ExitBootServices; the final marker comes from the selected
 kernel continuation, not the firmware adapter.
 
@@ -98,9 +101,11 @@ contract and the successful final-map/ExitBootServices transaction remain part
 of the boot's trusted boundary; the serial marker does not independently prove
 firmware correctness or every backing assertion.
 
-The std pin includes the borrowed UTF-8 calling-policy rejection text. Older
-revisions declared a fixed 256-byte field but initialized it with shorter
-literals, which rejects before this program's entry can be selected.
+The std pin is `fc16effcf3628e74d6302c5b5919c2cc320da6c6`. It includes the
+borrowed UTF-8 calling-policy rejection text and copy eligibility for ABI tag
+values. Older revisions either reject the text initialization or consume ABI
+tags while checking the firmware calling policy. The pin supplies library
+source; use a compiler containing the newer checking repairs described above.
 
 The local calling policy deliberately remains a normal named implementation;
 it must not collide with std's same-spelled policy. Firmware layouts and OS
