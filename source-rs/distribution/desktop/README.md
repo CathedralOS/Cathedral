@@ -49,9 +49,16 @@ does not regrant the retired picker. A missing storage binding alone is not
 process death: the owner retains the remembered realm unless the child's
 control route confirms PEER_CLOSED. This keeps a storage failure from
 restarting login over a live user and preserves the realms needed for recovery.
-Replacement provider startup has a separate 30-second bound for unclean-volume
-recovery; the per-operation storage deadline remains six seconds. A failed
-replacement logs its actual error code before leaving storage offline. There is no logout UI; recursive whole-user
+The [replacement controller](session/persistence/replacement.rs) polls fresh
+provider readiness without blocking the F5 owner. Its separate 30-second bound
+allows unclean-volume recovery; the per-operation deadline remains six seconds.
+Only accepted readiness restores grants to the current user and remembered
+child realms. The lab desktop retains its bounded synchronous setup/replacement.
+A failed replacement logs its actual error code before leaving storage offline.
+Apps retain their tasks and drafts; Notes reports failed saves and keeps its
+close dialog open when saving fails. Automatic recovery permits three provider
+replacements for the session and never replenishes that budget on a healthy
+reply. No live-session manual storage retry is exposed yet. There is no logout UI; recursive whole-user
 LOSS remains a headless proof.
 
 Without the `shell` feature the same package builds the probe desktop in

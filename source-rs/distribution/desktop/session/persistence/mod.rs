@@ -1,6 +1,9 @@
 //! Rust plumbing; start with persistence.rs.
 mod policy;
+#[cfg(feature = "storage-live-probes")]
+mod probes;
 mod provider;
+mod replacement;
 #[cfg(feature = "shell")]
 pub(crate) mod startup;
 pub(crate) use provider::Provider;

@@ -13,7 +13,6 @@ fn revoke(session: &admission::Session) {
     }
 }
 fn regrant(session: &mut admission::Session) -> Result<(), Error> {
-    session.storage = Some(Provider::start()?);
     #[cfg(feature = "shell")]
     super::shell::regrant(session);
     #[cfg(not(feature = "shell"))]
@@ -38,6 +37,13 @@ pub(crate) fn supervise(session: &mut admission::Session) {
     if session.storage_watch.offline {
         return;
     }
+    #[cfg(feature = "shell")]
+    if session.storage_watch.replacing {
+        replacement::progress(session);
+        return;
+    }
+    #[cfg(feature = "storage-live-probes")]
+    probes::observe(session);
     let Some(provider) = session.storage.as_ref() else {
         return;
     };
@@ -85,14 +91,5 @@ pub(crate) fn supervise(session: &mut admission::Session) {
         write(b"Cathedral matrix desktop: storage offline; restart budget exhausted\n").unwrap();
         return;
     }
-    if let Err(error) = regrant(session) {
-        time::storage_sample("storage-restart-failed", &[error.0 as u64]);
-        if let Some(provider) = session.storage.take() {
-            provider.retire();
-        }
-        session.storage_watch.offline = true;
-        write(b"Cathedral matrix desktop: storage offline; replacement failed\n").unwrap();
-        return;
-    }
-    session.storage_watch.healthy(time::now().unwrap());
+    replacement::begin(session);
 }

@@ -37,6 +37,9 @@ fn probe_argument() -> u64 {
     0
 }
 pub(crate) fn progress(session: &mut admission::Session) {
+    if session.storage_watch.replacing {
+        return;
+    }
     let Some(provider) = session.storage.as_mut() else {
         return;
     };

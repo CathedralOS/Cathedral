@@ -1,0 +1,44 @@
+//! F5 copied-image faults: arm a real provider only after a visible dirty note.
+//! The normal owner watchdog handles every timeout and replacement afterward.
+use super::*;
+use core::sync::atomic::{AtomicU64, Ordering};
+
+pub(super) fn observe(session: &admission::Session) {
+    static ARMED: AtomicU64 = AtomicU64::new(0);
+    if session.user == 0 || session.storage_watch.pending.is_some() {
+        return;
+    }
+    let Some(provider) = session.storage.as_ref() else {
+        return;
+    };
+    if provider.starting.is_some() {
+        return;
+    }
+    let previous = ARMED.load(Ordering::Relaxed);
+    if previous == provider.child.raw() || (previous != 0 && !cfg!(feature = "storage-live-repeat"))
+    {
+        return;
+    }
+    if call(session.matrix, [wire::READ_PIXEL, 237, 34, 0, 0, 0, 0, 0])[..2] != [0, 0x9b7028] {
+        return;
+    }
+    let phase = if cfg!(feature = "storage-live-postcommit") {
+        2
+    } else {
+        1
+    };
+    provider
+        .control
+        .0
+        .send(&[0xf5, phase, storage::PUBLISH as u8, 0])
+        .unwrap();
+    let mut bytes = [0; 64];
+    let len = provider
+        .control
+        .1
+        .receive_until(&mut bytes, time::after(300).unwrap())
+        .unwrap();
+    assert_eq!(&bytes[..len], b"armed");
+    ARMED.store(provider.child.raw(), Ordering::Relaxed);
+    write(b"Cathedral desktop: live storage probe armed\n").unwrap();
+}

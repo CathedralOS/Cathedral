@@ -186,6 +186,13 @@ headers, responsive input while waiting and manual retry into a working desktop.
 The two restart-budget policy tests run with
 `python tools/boot-harness-rs/recovery_policy_test.py`.
 
+`python tools/boot-harness-rs/provider_live_test.py PATH_TO_ONE_USER_IMAGE`
+injects precommit/lost-reply stalls into the F5 storage provider while Notes holds
+a draft. It checks reconciliation, replacement readiness timeout, exhausted
+restart budget, editing and close protection while offline, and exact cold-open
+contents. The supplied default-layout, one-user image is copied, never modified.
+Use `--case precommit`, `postcommit`, `exhausted` or `readiness-stall` for a subset.
+
 `python tools/boot-harness-rs/bootstrap_test.py PATH_TO_ONE_USER_IMAGE` checks
 initial display/root/input death, stall, malformed readiness and admission
 refusal. Each is exercised once and persistently: successful retry reaches a

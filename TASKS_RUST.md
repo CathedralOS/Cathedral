@@ -1,6 +1,7 @@
 # Rust reference OS: tasks and handoff
 
-Updated 2026-10-18 (local date). Current milestone: explicit launcher recovery
+Updated 2026-10-18 (local date). Current milestone: live storage-provider recovery
+without restarting apps, following explicit launcher recovery
 after retry exhaustion, following app termination and bounded early bootstrap recovery,
 interactive storage-provider startup and explicit retry,
 root login recovery, independent Colors,
@@ -314,8 +315,14 @@ to hierarchy metadata; extensions are conventions, not authoritative types.
 - [x] **Offer explicit recovery after launcher retry exhaustion.** Owner-supplied
   fallback code occupies only the retired launcher view. Its current connection
   may request one new attempt; no automatic budget is restored. App drafts survive.
-- [ ] **Continue lifecycle recovery where it is still incomplete.** Provider loss while apps
-  hold work and clearer focus feedback still need further adversarial coverage.
+- [x] **Exercise live storage loss in the F5 desktop.** Replacement readiness is
+  asynchronous; fresh grants follow readiness, without restarting Notes or login.
+  Precommit/lost-reply faults, exhausted retries and blocked replacement readiness
+  exercise draft retention, reconciliation and offline close protection.
+- [ ] **Continue lifecycle recovery where it is still incomplete.** Explicit
+  live-session storage retry, display/input/root loss and clearer focus feedback
+  remain. A live storage retry needs delegated authority and a discoverable
+  control without replacing the user's app or expanding an app's service grants.
   Existing app-owned close protects dirty work, and layout invalidation keeps drafts.
 - [ ] **Bring storage write latency down.** Collection scans metadata before
   each write and durable commit writes through ATA PIO. Use explicit tick-to-time
@@ -1680,3 +1687,54 @@ Verification:
 Next: live provider-loss behavior that preserves app drafts. The trusted-chrome
 owner question remains open. The user's interactive QEMU, disk and ESP remain
 untouched; fault tests use disposable copies and separate boot media.
+
+## Live storage loss with app drafts, 2026-10-18
+
+F5 now polls replacement-provider readiness through
+[replacement.rs](source-rs/distribution/desktop/session/persistence/replacement.rs).
+It no longer blocks the startup owner for the provider's 30-second recovery
+deadline. Initial login readiness and live replacement are distinct phases;
+replacement success restores grants to the current user and its remembered
+child realms without restarting the picker, launcher or app. The old provider
+and its control endpoints are collected before a fresh attempt. Failure leaves
+storage offline and the existing user processes alive. The three-replacement
+session budget and six-second operation deadline are unchanged; the older lab
+desktop keeps its synchronous replacement contract.
+
+The new [live-provider fixture](tools/boot-harness-rs/provider_live_test.py) copies
+a one-user default-layout image and uses the actual F5 composition. Opt-in owner
+probes arm the storage service's existing fault gate only after a dirty note is
+visible. No fault commands or probe features ship in the ordinary profile.
+
+Verification:
+
+- `provider-live/20261019T005500307323Z` passed precommit and postcommit stalls,
+  including cold boot. Notes retained its draft and task, then F1 reconciliation
+  correctly distinguished an uncommitted write from a committed lost reply.
+  Subsequent editing/saving/closing worked and exact note pixels survived cold
+  boot. Neither case restarted login; the source image was unchanged.
+- `provider-live/20261019T005609024283Z` passed exhausted retries and blocked
+  replacement readiness, both with cold boot and unchanged source media. Four
+  precommit failures consumed exactly three replacement attempts. A provider
+  that never answered readiness was collected at the existing deadline. Notes
+  stayed editable while waiting and offline; Cancel retained its draft and a
+  failed Save in the close dialog kept the dialog/process alive. Cold boot read
+  the original saved note, proving the failed precommit writes were not published.
+- `desktop/20261019T005819433872Z` passed the default F5 flow and cold persistence;
+  the independent host oracle verified all 237 records, including the copied
+  user, duplicate notes and saved color.
+- `matrix-database/20261019T005930291094Z` passed the older recursive recovery
+  lab: stalled-provider watchdog, uncertain CREATE reconciliation, precommit
+  and lost-reply replacement, live sibling progress and cold persistence. The
+  host oracle verified exact revisions `[4, 2]` and all 16 records on both boots.
+- Workspace host tests, userspace clippy, shell and combined live-probe feature
+  clippy, restart-budget policy tests, layout (35 Omega/96 Rust edges), formatting,
+  Python compilation and diff checks passed. This changes only distribution
+  supervision and its fixtures; no kernel, ABI or stored schema changes.
+
+Remaining limits: this proves storage-provider failure, not display/input/root
+replacement. Offline Notes keeps failed saves and close attempts visibly failed;
+there is still no delegated live-session control to retry storage once automatic
+recovery is exhausted. The existing protected-chrome owner question remains
+separate from ordinary delegated recovery. Failure while restoring grants and
+simultaneous provider/launcher death are not exhaustively injected here.

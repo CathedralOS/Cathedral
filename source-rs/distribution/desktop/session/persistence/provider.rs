@@ -29,7 +29,8 @@ impl Provider {
         }
         Ok(provider)
     }
-    /// Lab setup and runtime replacement retain their bounded synchronous wait.
+    /// Lab setup retains its bounded synchronous wait; F5 polls readiness.
+    #[cfg(not(feature = "shell"))]
     pub fn start() -> Result<Self, Error> {
         let mut provider = Self::begin(0)?;
         let deadline = provider.starting.unwrap();

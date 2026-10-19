@@ -9,6 +9,9 @@ pub const STARTUP_TIMEOUT: u64 = 3000;
 pub const MAX_RESTARTS: u8 = 3;
 #[derive(Default)]
 pub struct Watchdog {
+    /// Readiness of an automatic replacement, distinct from initial login.
+    #[cfg(feature = "shell")]
+    pub replacing: bool,
     pub pending: Option<u64>,
     pub next_probe: u64,
     pub offline: bool,

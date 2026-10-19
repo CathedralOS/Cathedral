@@ -38,6 +38,14 @@ layout, management or child capacity. Its own failure does not request another
 retry. The [launcher recovery fixture](../tools/boot-harness-rs/launcher_recovery_test.py)
 exercises pointer/keyboard retries, repeated failure, live drafts and cold persistence.
 
+Live storage replacement polls readiness without blocking the startup owner;
+fresh grants follow accepted readiness. The
+[F5 storage fault fixture](../tools/boot-harness-rs/provider_live_test.py) keeps
+Notes alive through precommit and lost-reply failures, exhausted restart budget
+and replacement readiness timeout. It verifies continued editing, failed-save
+close protection, reconciliation and exact cold-open contents. An exhausted
+live session still lacks an explicit storage-retry control.
+
 `python tools/boot-harness-rs/desktop_test.py` checks this actual image through
 physical input, a copied user, exact saved text/status, duplicate and switch,
 repeated app replacement and cold reboot, then has an independent host model
