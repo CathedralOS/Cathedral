@@ -1,11 +1,9 @@
 //! Explicit stock-desktop migration. Add hierarchy metadata and each matrix's
 //! saved arrangement atomically; existing names/configuration are never replaced.
 use super::*;
-use cathedral_desktop_matrix_contracts::matrix;
 use crate::chunks::{Layout, Policy, Store};
-use cathedral_platform_contracts::{
-    storage::metadata::{self, Metadata},
-};
+use cathedral_desktop_matrix_contracts::matrix;
+use cathedral_platform_contracts::storage::metadata::{self, Metadata};
 use redb::ReadableTable;
 use std::collections::BTreeMap;
 type Records = BTreeMap<Vec<u8>, Vec<u8>>;
@@ -117,7 +115,11 @@ pub fn upgrade(path: &Path, offset: u64, bytes: u64, additions: &[String]) -> Re
     let backup_path = path.with_file_name(format!(
         "{}.before-{}.raw",
         path.file_name().ok_or("image name")?.to_string_lossy(),
-        if additions.is_empty() { "hierarchy" } else { "realm-programs" }
+        if additions.is_empty() {
+            "hierarchy"
+        } else {
+            "realm-programs"
+        }
     ));
     use std::io::Write;
     match std::fs::OpenOptions::new()
@@ -140,6 +142,15 @@ pub fn upgrade(path: &Path, offset: u64, bytes: u64, additions: &[String]) -> Re
     for (k, v) in &records {
         if before.get(k) != Some(v) {
             table.insert(k.as_slice(), v.as_slice())?;
+        }
+    }
+    let mut charged = u64::from_le_bytes(records[&seed::key(b'q', &[])].as_slice().try_into()?);
+    while charged > cathedral_database_objects::ROOT_QUOTA {
+        let pass = cathedral_database_objects::collect_records(&mut table, 0)
+            .map_err(|error| format!("hierarchy collection failed: {error:?}"))?;
+        charged = pass.charged;
+        if pass.removed == 0 {
+            return Err("live/pinned realm programs exceed logical quota".into());
         }
     }
     drop(table);

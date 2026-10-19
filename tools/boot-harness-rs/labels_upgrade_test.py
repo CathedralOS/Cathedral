@@ -30,7 +30,7 @@ def run(source, fill_users=False, nested=False):
     programs = harness.seeded_programs(root / 'source-rs/distribution/profile.json', True)
     migration = root / 'source-rs/distribution/migrations/readable-labels.txt'
     database_image.prepare(path, programs, migration, app_close=True, realm_programs=harness.realm_programs(root / 'source-rs/distribution/profile.json', True))
-    assert path.with_name(path.name + '.before-app-close.raw').exists(), 'fixture must exercise an upgrade'
+    assert any(output.glob('guest.raw.before-compact-*.raw')), 'installer must preserve the pre-upgrade disk'
     migrated = path.read_bytes()
     database_image.prepare(path, programs, migration, app_close=True, realm_programs=harness.realm_programs(root / 'source-rs/distribution/profile.json', True))
     assert migrated == path.read_bytes(), 'unchanged second installation must not rewrite the image'

@@ -31,15 +31,15 @@ class DatabaseImageTests(unittest.TestCase):
             database_image.require_available(path)
             self.assertFalse(path.parent.exists())
 
-    def test_changed_install_compacts_first_and_unchanged_install_never_opens(self):
+    def test_changed_install_is_staged_and_unchanged_install_never_opens(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / 'desktop.raw'
             path.write_bytes(bytes(database_image.IMAGE_BYTES))
             program = Path(directory) / 'app.elf'
             program.write_bytes(b'app')
-            with patch.object(database_image, 'oracle', return_value=Path(directory) / 'target/release/oracle.exe'), patch.object(database_image.subprocess, 'run') as run:
+            with patch.object(database_image, 'oracle', return_value=Path(directory) / 'target/release/oracle.exe'), patch.object(database_image.subprocess, 'run', return_value=subprocess.CompletedProcess([], 0, '', '')) as run:
                 database_image.prepare(path, [(0, program)])
-                self.assertEqual([call.args[0][3] for call in run.call_args_list], ['compact', 'seed'])
+                self.assertEqual([call.args[0][3] for call in run.call_args_list], ['install'])
                 run.reset_mock()
                 database_image.prepare(path, [(0, program)])
                 run.assert_not_called()
@@ -50,11 +50,11 @@ class DatabaseImageTests(unittest.TestCase):
             path.write_bytes(bytes(database_image.IMAGE_BYTES))
             program = Path(directory) / 'app.elf'
             program.write_bytes(b'app')
-            with patch.object(database_image, 'oracle', return_value=Path(directory) / 'target/release/oracle.exe'), patch.object(database_image.subprocess, 'run', side_effect=subprocess.CalledProcessError(1, 'compact')) as run:
+            with patch.object(database_image, 'oracle', return_value=Path(directory) / 'target/release/oracle.exe'), patch.object(database_image.subprocess, 'run', side_effect=subprocess.CalledProcessError(1, 'install')) as run:
                 with self.assertRaises(subprocess.CalledProcessError):
                     database_image.prepare(path, [(0, program)])
                 self.assertEqual(run.call_count, 1)
-                self.assertEqual(run.call_args.args[0][3], 'compact')
+                self.assertEqual(run.call_args.args[0][3], 'install')
             self.assertFalse(path.with_name(path.name + '.programs').exists())
 
     def test_new_volume_has_guarded_extent_and_existing_bytes_are_never_reformatted(self):

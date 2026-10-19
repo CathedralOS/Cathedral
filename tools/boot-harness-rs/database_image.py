@@ -102,28 +102,22 @@ def prepare(path, programs=(), label_migration=None, app_close=False, realm_prog
     if executable is None:
         executable = oracle()
     lab = executable.parents[2]
-    # A guest may have freed records without shrinking the engine. Release
-    # that physical slack before an upgrade needs room for both old and new
-    # programs. The host backs up the locked image and verifies all records.
-    # Unchanged installations returned above without even opening the image.
-    if existing:
-        subprocess.run([str(executable), 'engines', 'volume', 'compact', str(path),
-                        str(OFFSET), str(VOLUME_BYTES)], cwd=lab, check=True)
-    command = [str(executable), 'engines', 'volume', 'seed', str(path), str(OFFSET), str(VOLUME_BYTES)]
-    for parent, file in programs:
-        command += [str(parent), str(file)]
-    subprocess.run(command, cwd=lab, check=True)
+    # Stage the entire upgrade outside the fixed guest extent. In-place redb
+    # compaction/transactions can need more scratch pages than that extent holds.
+    # The host locks and backs up the source, verifies the result fits its original
+    # capacity and cold-compares every resulting record before returning success.
+    known = previous.get('realm_manifests', {}) if isinstance(previous, dict) else {}
+    additions = [str(item) for name, file in realm_programs for item in (name, file, known.get(name, '-'))]
+    command = [str(executable), 'engines', 'volume', 'install', str(path), str(OFFSET), str(VOLUME_BYTES),
+               str(Path(label_migration).resolve()) if label_migration else '-', str(app_close).lower(), str(len(programs))]
+    command += [str(item) for parent, file in programs for item in (parent, file)]
+    print('Preparing installed programs; saved users remain unchanged until verification passes.', flush=True)
+    result = subprocess.run(command + additions, cwd=lab, check=False, capture_output=True, text=True)
+    print(result.stdout, end='', flush=True)
+    if result.returncode:
+        print(result.stderr, end='', file=sys.stderr)
+        result.check_returncode()
     if label_migration is not None:
-        subprocess.run([str(executable), 'engines', 'volume', 'upgrade-app-close' if app_close else 'upgrade-labels', str(path),
-                        str(OFFSET), str(VOLUME_BYTES), str(Path(label_migration).resolve())], cwd=lab, check=True)
-        known = previous.get('realm_manifests', {}) if isinstance(previous, dict) else {}
-        additions = [str(item) for name, file in realm_programs for item in (name, file, known.get(name, '-'))]
-        result = subprocess.run([str(executable), 'engines', 'volume', 'upgrade-hierarchy', str(path),
-                                 str(OFFSET), str(VOLUME_BYTES), *additions], cwd=lab, check=False, capture_output=True, text=True)
-        print(result.stdout, end='')
-        if result.returncode:
-            print(result.stderr, end='', file=sys.stderr)
-            result.check_returncode()
         installed['realm_manifests'] = dict(line.removeprefix('REALM_PROGRAM ').rsplit(' ', 1)
                                             for line in result.stdout.splitlines() if line.startswith('REALM_PROGRAM '))
     sidecar.write_text(json.dumps(installed), encoding='utf-8')

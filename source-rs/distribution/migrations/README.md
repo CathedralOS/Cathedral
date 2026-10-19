@@ -110,3 +110,24 @@ new persistent configuration format.
 Host tests cover existing-user data/IDs, custom layout, exact program replacement,
 name collisions and idempotence. `labels_upgrade_test.py` verifies a retained
 six-program desktop copy through the actual F5 installer and user boot.
+
+## Complete F5 installation
+
+F5 now calls [install.rs](../../../tools/storage-lab/engines/volume/install.rs)
+with all programs and migration inputs together. It keeps the saved disk locked,
+saves a content-named `.before-compact-<digest>.raw` backup, and runs the stages
+above on a private host scratch image. Their individual backups are scratch-only;
+the durable recovery point is the full original disk beside the saved image.
+
+[compact.rs](../../../tools/storage-lab/engines/volume/compact.rs) rebuilds and
+cold-compares every prepared record, refusing a result that exceeds the original
+extent. Only then is it published and verified again. No disk resize is involved.
+A failed preparation leaves the source bytes and installation receipt unchanged.
+Publication errors attempt rollback; process/power loss during the offline copy
+requires restoring the synced backup. This is not an atomic disk-image replacement.
+
+Named additions now use the same head/pin reachability collector as stock-copy
+refresh when their staged records exceed the logical quota. Live/pinned excess
+still refuses the entire installation. This resolves the case where enough old
+revisions remained for Split's addition to cross the quota after the earlier
+stock-copy stage had already finished below it.

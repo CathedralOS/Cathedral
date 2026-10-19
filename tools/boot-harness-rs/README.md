@@ -43,20 +43,21 @@ Existing files are never automatically reformatted. Older lab disks are untouche
 The desktop's explicit readable-label migration also updates recognized stock
 launchers inside existing users. Old Notes/Colors gain labels while keeping
 their code and saved data. Customized/unrecognized programs remain untouched.
-A pre-migration backup is saved as `cathedral-storage.raw.before-readable-labels.raw`.
-The subsequent app-close upgrade refreshes recognized Notes/Colors code while
-keeping their saved state and backs up `cathedral-storage.raw.before-app-close.raw`.
-It also upgrades exactly recognized stock matrix executables. Hierarchy migration
-adds names/type indexes and matrix configuration, with a separate
-`.before-hierarchy.raw` backup. Existing metadata and configurations survive reruns.
+Changed installs save a complete `.before-compact-<digest>.raw` backup before
+preparation. Program publication, stock-copy refresh and named additions run on a
+private larger host scratch disk. The resulting database is compacted, checked
+against the original 4 MiB extent and cold-compared before publication to the
+locked saved disk. The guest disk is never enlarged or reformatted. Rejected
+preparation leaves its bytes and receipt unchanged; unchanged installs do not
+open it. Collection under logical quota pressure preserves current data and pins.
 
-Before updating an existing image's installed programs, the harness compacts
-the database's physical pages. This prevents reclaimable space in the tiny
-4 MiB lab extent from blocking F5 before QEMU starts. It preserves every record,
-including retained history, verifies them after reopening, and saves a full
-`.before-compact-<digest>.raw` backup while holding the image lock. An unchanged
-installation skips maintenance. This does not increase capacity or make a truly
-full volume unlimited; maintenance failures stop installation without formatting.
+The full-image publication is offline maintenance, not a power-loss-atomic disk
+transaction. Ordinary publication errors attempt to restore the original; an
+interruption during that copy requires restoring the content-named backup.
+Direct standalone migration commands still create their older per-stage backups.
+
+This does not increase capacity or make a truly full volume unlimited;
+maintenance failures stop installation without formatting.
 
 If F5 builds but no QEMU window appears, check the integrated terminal. An image
 from before programs were installed as objects can fail with "holds something

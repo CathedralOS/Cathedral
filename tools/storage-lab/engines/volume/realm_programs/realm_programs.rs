@@ -151,9 +151,8 @@ pub fn install(rows: &mut Records, args: &[String]) -> Result<()> {
         .filter(|(k, _)| k[0] == 0)
         .map(|(k, v)| k.len() + v.len())
         .sum::<usize>();
-    if charge > 1024 * 1024 {
-        return Err("realm programs exceed logical quota".into());
-    }
+    // The owning transaction collects unreachable history under quota pressure
+    // after every new head has been staged, preserving live content and pins.
     rows.insert(seed::key(b'q', &[]), (charge as u64).to_le_bytes().to_vec());
     Ok(())
 }

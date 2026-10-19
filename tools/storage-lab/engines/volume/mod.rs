@@ -1,6 +1,7 @@
 mod backend;
 mod colors;
 mod compact;
+mod install;
 mod configuration;
 use cathedral_storage_volume::header;
 mod desktop;

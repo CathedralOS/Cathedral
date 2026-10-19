@@ -1,13 +1,14 @@
 # Rust reference OS: tasks and handoff
 
-Updated 2026-10-18 (local date). Current milestone: **Split**, an independently
+Updated 2026-10-19 (local date). Current milestone: **Split**, an independently
 implemented nested matrix installed in the ordinary F5 app strip. It owns two
 temporary Notes instances, chooses their layout, attenuates services and routes
 input through shared platform mechanisms. See the latest section for verification,
 resource bounds and remaining gaps. Prior milestones include scoped application
 bootstrap, shared child admission, stock-policy/platform separation and provider
 recovery.
-F5 still compacts existing media before changed program installations.
+F5 stages changed program installations in host scratch space, then verifies and
+publishes a result that fits the original disk extent.
 Stock-copy refresh also collects unreachable revisions under logical quota
 pressure in the same transaction as its replacements; current data and pins survive.
 See the latest evidence at the end of this handoff. Earlier baseline: declared service
@@ -77,14 +78,14 @@ image on first launch and republished as new revisions when their bytes
 change; the sidecar `cathedral-storage.raw.programs` records what is installed.
 The desktop's explicit compatibility upgrade refreshes recognized stock
 launchers, Notes/Colors and recognized stock matrix executables in existing
-users, preserving their saved data and object identities. The app-close upgrade saves
-`cathedral-storage.raw.before-app-close.raw` before changing user copies; the
-earlier label-only backup remains separate. Customized/unrecognized programs
-stay intact. Hierarchy migration then adds names, media types and a `Matrix`
-configuration, preserving existing metadata/layout and saving
-`cathedral-storage.raw.before-hierarchy.raw` before its transaction. The fixed
-4 MiB lab volume can exhaust physical engine space during repeated program
-upgrades; installation refuses rather than resizing or reformatting it.
+users, preserving their saved data and object identities. Changed installations
+save a complete content-named `.before-compact-<digest>.raw` backup before work.
+All migration stages run on a private host scratch disk, including reachability
+collection under quota pressure. The final result must fit the original 4 MiB
+volume and pass cold record comparison before it is written to the locked disk.
+A refused preparation leaves that disk and its installation receipt unchanged.
+Existing older migration backups remain useful recovery points. Customized code,
+live data, pinned revisions, metadata and saved layout retain their prior rules.
 An image from before this layout holds other objects at the numbers the
 programs need; the installer refuses to overwrite anything that is not a
 program, so move that image and its `.programs` sidecar (if present) to backup
@@ -2095,3 +2096,50 @@ All disk tests used disposable images or copies. The interactive saved disk was
 not opened or modified. The previously recorded intermittent ATA completion issue
 and live-session storage retry gap remain outstanding; these passing runs do not
 claim to resolve them.
+
+
+## F5 installation capacity repair, 2026-10-19
+
+The actual saved desktop failed before QEMU started. In-place redb compaction
+requested 4,296,704 bytes inside the 4,186,112-byte engine extent. Rebuilding alone
+was insufficient: subsequent seeding also needed temporary allocation, and adding
+Split crossed the logical quota while old unpinned history remained.
+
+The host [install entrance](tools/storage-lab/engines/volume/install.rs) now
+stages seed, stock-copy refresh and hierarchy/named additions together on a private
+host scratch volume, with the original image locked. A content-named full backup
+is synced first. Rebuilding uses separate scratch capacity, then enforces the
+original extent and cold-compares every prepared record before publishing. A failed
+preparation leaves the original disk and sidecar unchanged. Named additions now
+collect unreachable history under quota pressure after staging their new heads;
+current data and pins survive. Actual live/pinned excess still refuses.
+
+There is no kernel, guest-volume-size or syscall change. This remains offline
+image maintenance: publication errors attempt restoration, but process/power loss
+during the final copy requires restoring the synced backup. Individual migration
+backups printed inside the temporary directory are not durable recovery points;
+the `.before-compact-<digest>.raw` beside the saved disk is the recovery point.
+
+Verification:
+
+- Storage host tests: 36 passed; storage host clippy passed with warnings denied.
+  The new near-capacity fixture demonstrates that
+  the old in-place compactor fails, the rebuild preserves all records, and failed
+  edits/oversized results leave the original bytes unchanged. A named-addition
+  quota test preserves current user content while collecting old revisions.
+- Harness Python tests: 13 passed. Changed installation invokes one staged host
+  operation; unchanged installation never opens the image; failed preparation
+  never records success.
+- `desktop/20261019T071938153217Z`: ordinary Notes/Colors interaction and cold
+  persistence passed; independent host oracle verified all 300 records.
+- `launch-repair/fixed-copy`: a copy of the exact failing saved disk completed
+  installation and booted to the user picker (3.16 seconds after QMP connection).
+  The normal `--release --window` command then upgraded the actual saved disk and
+  opened QEMU. It retains the same extent; its full original backup is
+  `cathedral-storage.raw.before-compact-872824a45ab20d65f4d9dfd3a1085b2523044e6c740aba827a93159319575b6c.raw`.
+- `labels-upgrade/20261019T072105675488Z`: existing-user saved-notes compatibility
+  passed. Its subsequent `--nested` pass failed at live layout Save: the provider
+  stalled and was collected, leaving SAVE FAILED and the old placement. This is
+  not a passing nested regression. The trace includes ATA FLUSH completion work;
+  the precise cause was not diagnosed here. The recorded runtime storage/retry
+  issues remain open, separately from this pre-QEMU installation fix.

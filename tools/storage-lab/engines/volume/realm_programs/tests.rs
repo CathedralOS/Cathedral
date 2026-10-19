@@ -136,3 +136,70 @@ fn first_install_does_not_claim_an_existing_template_name() {
     assert_eq!(resolve(&rows, 3, "Split/Notes").unwrap(), None);
     assert_eq!(resolve(&rows, 8, "Split").unwrap(), None);
 }
+
+#[test]
+fn named_addition_collects_old_history_after_staging_and_keeps_current_user_data() {
+    let mut rows = base();
+    for revision in 0u64..7 {
+        let mut data = vec![0; 128 * 1024];
+        for (i, chunk) in data.chunks_mut(4096).enumerate() {
+            chunk[..8].copy_from_slice(&(revision * 32 + i as u64).to_le_bytes());
+            chunk[8..].fill(42);
+        }
+        put(&mut rows, 9, 8, &data).unwrap();
+    }
+    put(&mut rows, 9, 8, b"valuable user data").unwrap();
+    let saved = rows[&seed::key(b'h', &9u64.to_be_bytes())].clone();
+    let charge: usize = rows.iter().map(|(k, v)| k.len() + v.len()).sum();
+    assert!(charge < cathedral_database_objects::ROOT_QUOTA as usize);
+    rows.insert(seed::key(b'q', &[]), (charge as u64).to_le_bytes().to_vec());
+    let mut program = vec![0; 160 * 1024];
+    for (i, chunk) in program.chunks_mut(4096).enumerate() {
+        chunk[..8].copy_from_slice(&(i as u64).to_le_bytes());
+        chunk[8..].fill(77);
+    }
+    program[..4].copy_from_slice(b"\x7fELF");
+    let program = File::new(&program);
+    let directory =
+        std::env::temp_dir().join(format!("cathedral-realm-quota-{}", std::process::id()));
+    std::fs::create_dir(&directory).unwrap();
+    let path = directory.join("guest.raw");
+    let bytes = 16 * 1024 * 1024;
+    let region = Region::new(Arc::new(Image::create(&path, bytes).unwrap()), 0, bytes).unwrap();
+    format(region.clone(), [9; 16]).unwrap();
+    let db = open(region).unwrap();
+    let tx = db.begin_write().unwrap();
+    {
+        let mut table = tx
+            .open_table(TableDefinition::<&[u8], &[u8]>::new("private-objects-v3"))
+            .unwrap();
+        for (k, v) in &rows {
+            table.insert(k.as_slice(), v.as_slice()).unwrap();
+        }
+    }
+    tx.commit().unwrap();
+    drop(db);
+    hierarchy::upgrade(
+        &path,
+        0,
+        bytes,
+        &["Split".into(), program.path(), "-".into()],
+    )
+    .unwrap();
+    let db = open(Region::new(Arc::new(Image::open(&path).unwrap()), 0, bytes).unwrap()).unwrap();
+    let all = compact::records(&db).unwrap();
+    let actual = &all["private-objects-v3"];
+    assert_eq!(actual[&seed::key(b'h', &9u64.to_be_bytes())], saved);
+    assert!(resolve(actual, 8, "Split").unwrap().is_some());
+    assert!(
+        rows.keys()
+            .any(|key| key[1] == b'e' && !actual.contains_key(key)),
+        "old revisions must have been collected"
+    );
+    assert!(
+        u64::from_le_bytes(actual[&seed::key(b'q', &[])].as_slice().try_into().unwrap())
+            <= cathedral_database_objects::ROOT_QUOTA
+    );
+    drop(db);
+    std::fs::remove_dir_all(directory).unwrap();
+}

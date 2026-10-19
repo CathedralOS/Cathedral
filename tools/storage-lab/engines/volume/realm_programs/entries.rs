@@ -30,10 +30,10 @@ pub(super) fn resolve(rows: &Records, root: u64, path: &str) -> Result<Option<u6
 }
 pub(super) fn put(rows: &mut Records, id: u64, parent: u64, data: &[u8]) -> Result<()> {
     let key = seed::key(b'h', &id.to_be_bytes());
-    if let Some(head) = rows.get(&key) {
-        if head.len() != 56 || u64::from_le_bytes(head[48..].try_into()?) != parent {
-            return Err("refusing to move an existing object during install".into());
-        }
+    if let Some(head) = rows.get(&key)
+        && (head.len() != 56 || u64::from_le_bytes(head[48..].try_into()?) != parent)
+    {
+        return Err("refusing to move an existing object during install".into());
     }
     let mut store = Store::new(Policy {
         chunk_bytes: 4096,

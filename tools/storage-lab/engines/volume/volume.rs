@@ -13,6 +13,7 @@ const ID_KEY: &[u8] = b"volume-id";
 
 pub fn run(args: &[String]) -> Result<()> {
     match args.first().map(String::as_str) {
+        Some("install") => install::run(&args[1..]),
         Some("failure-fixture") if args.len() == 6 => failure::prepare(Path::new(&args[1]), args[2].parse()?, args[3].parse()?, &args[4], &std::fs::read(&args[5])?),
         Some("startup-path-fixture") if args.len() == 5 => failure::rename(Path::new(&args[1]), args[2].parse()?, args[3].parse()?, &args[4]),
         Some("verify-unchanged") if args.len() == 5 => difference::unchanged(Path::new(&args[1]), Path::new(&args[2]), args[3].parse()?, args[4].parse()?),

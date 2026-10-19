@@ -69,3 +69,56 @@ fn maintenance_preserves_cold_records_guards_backup_and_reclaims_space() {
     // Only the private directory created by this test is removed.
     std::fs::remove_dir_all(directory).unwrap();
 }
+
+#[test]
+fn full_extent_rebuild_preserves_records_and_failed_edits_leave_input_untouched() {
+    let directory =
+        std::env::temp_dir().join(format!("cathedral-compact-full-{}", std::process::id()));
+    std::fs::create_dir(&directory).unwrap();
+    let path = directory.join("guest.raw");
+    let bytes = 4 * 1024 * 1024;
+    let header = Header {
+        id: [8; 16],
+        generation: 1,
+        region_bytes: bytes,
+        length: 0,
+        ready: true,
+    };
+    let mut rows = BTreeMap::new();
+    rows.insert(ID_KEY.to_vec(), header.id.to_vec());
+    for i in 0u64..500 {
+        rows.insert(i.to_le_bytes().to_vec(), vec![9; 4096]);
+    }
+    let expected = BTreeMap::from([("volume-lab".to_owned(), rows)]);
+    let raw = rebuild(&expected, &header).unwrap();
+    std::fs::write(&path, &raw).unwrap();
+    // Reproduce the old in-place compactor's allocation failure on an isolated copy.
+    let copy = Arc::new(redb::backends::InMemoryBackend::new());
+    copy.set_len(bytes).unwrap();
+    copy.write(0, &raw).unwrap();
+    let mut db = open(Region::new(copy, 0, bytes).unwrap()).unwrap();
+    assert!(
+        db.compact().is_err(),
+        "fixture must exhaust in-place scratch capacity"
+    );
+    drop(db);
+    run(&path, 0, bytes).unwrap();
+    let original = std::fs::read(&path).unwrap();
+    assert!(rewrite(&path, 0, bytes, |_, _| Err("refused upgrade".into())).is_err());
+    assert_eq!(std::fs::read(&path).unwrap(), original);
+    assert!(
+        rewrite(&path, 0, bytes, |mut records, _| {
+            records
+                .get_mut("volume-lab")
+                .unwrap()
+                .insert(b"too big".to_vec(), vec![1; 6 * 1024 * 1024]);
+            Ok(records)
+        })
+        .is_err()
+    );
+    assert_eq!(std::fs::read(&path).unwrap(), original);
+    let db = open(Region::new(Arc::new(Image::open(&path).unwrap()), 0, bytes).unwrap()).unwrap();
+    assert_eq!(records(&db).unwrap(), expected);
+    drop(db);
+    std::fs::remove_dir_all(directory).unwrap();
+}

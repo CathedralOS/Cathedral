@@ -1,10 +1,11 @@
-//! Offline installer maintenance: back up the locked image, compact physical
-//! pages, then cold-open and compare every record. No history is collected.
+//! Offline installer maintenance: back up the locked image, rebuild its records
+//! in host scratch space, then capacity-check, publish and cold-verify. No history is collected.
+//! Rebuilding off-image avoids the spare pages required by in-place compaction.
 use super::*;
 use redb::{ReadableTable, TableHandle};
 use std::{collections::BTreeMap, io::Write};
 
-type Records = BTreeMap<String, BTreeMap<Vec<u8>, Vec<u8>>>;
+pub(super) type Records = BTreeMap<String, BTreeMap<Vec<u8>, Vec<u8>>>;
 
 pub(super) fn records(db: &Database) -> Result<Records> {
     let tx = db.begin_read()?;
@@ -25,6 +26,16 @@ pub(super) fn records(db: &Database) -> Result<Records> {
 }
 
 pub fn run(path: &Path, offset: u64, bytes: u64) -> Result<()> {
+    rewrite(path, offset, bytes, |records, _| Ok(records))
+}
+
+/// Keep the source locked and unchanged while a host-only edit prepares its result.
+pub(super) fn rewrite(
+    path: &Path,
+    offset: u64,
+    bytes: u64,
+    edit: impl FnOnce(Records, &Header) -> Result<Records>,
+) -> Result<()> {
     let image = Arc::new(Image::open(path)?); // Keep the exclusive lock through verification.
     let region = Region::new(image.clone(), offset, bytes)?;
     let header = region.headers()?;
@@ -63,26 +74,103 @@ pub fn run(path: &Path, offset: u64, bytes: u64) -> Result<()> {
         Err(error) => return Err(error.into()),
     }
     println!("COMPACT: backup {}", backup.display());
-    let mut db = open(region.clone())?;
+    // Even opening redb can write recovery metadata. Work entirely on a copy
+    // until the rebuilt, capacity-checked volume has passed a cold comparison.
+    let source = Arc::new(redb::backends::InMemoryBackend::new());
+    source.set_len(bytes)?;
+    source.write(0, &original[offset as usize..(offset + bytes) as usize])?;
+    let db = open(Region::new(source, 0, bytes)?)
+        .map_err(|e| format!("opening source copy for maintenance: {e}"))?;
     let before = records(&db)?;
-    db.compact()?;
     drop(db);
-    let db = open(region.clone())?;
-    if records(&db)? != before {
-        return Err("compaction changed records; retain the backup and stop".into());
-    }
-    drop(db);
-    let after = region.headers()?;
-    if after.id != header.id || after.region_bytes != header.region_bytes {
-        return Err("compaction changed volume identity or assigned extent".into());
-    }
+    let before = edit(before, &header)?;
+    let rebuilt = rebuild(&before, &header).map_err(|e| {
+        format!(
+            "rebuilding {} records: {e}",
+            before.values().map(BTreeMap::len).sum::<usize>()
+        )
+    })?;
+    let publish = (|| -> Result<_> {
+        region.write(0, &rebuilt)?;
+        region.sync()?;
+        let db = open(region.clone())?;
+        if records(&db)? != before {
+            return Err("rebuilt volume changed records".into());
+        }
+        drop(db);
+        let after = region.headers()?;
+        if after.id != header.id || after.region_bytes != header.region_bytes {
+            return Err("rebuild changed volume identity or assigned extent".into());
+        }
+        Ok(after)
+    })();
+    let after = match publish {
+        Ok(after) => after,
+        Err(error) => {
+            // Ordinary I/O failures restore the input. A process/power loss during
+            // publication instead requires recovery from the synced backup.
+            image.write(0, &original)?;
+            image.sync_data()?;
+            return Err(error);
+        }
+    };
     println!(
-        "COMPACTED: {} records preserved; engine bytes {} -> {}",
+        "VERIFIED: {} prepared records; engine bytes {} -> {}",
         before.values().map(BTreeMap::len).sum::<usize>(),
         header.length,
         after.length
     );
     Ok(())
+}
+
+/// Rebuild in bounded host scratch space. Only a result fitting the original
+/// extent can be published; every table, including history, survives.
+pub(super) fn rebuild(before: &Records, header: &Header) -> Result<Vec<u8>> {
+    let memory = Arc::new(redb::backends::InMemoryBackend::new());
+    let scratch_bytes = header
+        .region_bytes
+        .checked_mul(4)
+        .ok_or("scratch overflow")?;
+    memory.set_len(scratch_bytes)?;
+    let region = Region::new(memory.clone(), 0, scratch_bytes)?;
+    format(region.clone(), header.id)?;
+    let mut db = open(region.clone())?;
+    let mut tx = db.begin_write()?;
+    tx.set_durability(redb::Durability::Immediate)?;
+    for (name, rows) in before {
+        let mut table = tx.open_table(TableDefinition::<&[u8], &[u8]>::new(name))?;
+        for (key, value) in rows {
+            table.insert(key.as_slice(), value.as_slice())?;
+        }
+    }
+    tx.commit()?;
+    db.compact()?;
+    drop(db);
+    let db = open(region.clone())?;
+    if records(&db)? != *before {
+        return Err("rebuilt volume differs before publication".into());
+    }
+    drop(db);
+    // Continue the envelope generation rather than resetting an existing volume.
+    let mut fresh = region.headers()?;
+    if fresh.length > header.capacity() {
+        return Err("compacted records do not fit the assigned volume".into());
+    }
+    fresh.region_bytes = header.region_bytes;
+    fresh.generation = header
+        .generation
+        .checked_add(1)
+        .ok_or("generation exhausted")?;
+    let target = Region::new(memory.clone(), 0, header.region_bytes)?;
+    target.publish_header(&fresh)?;
+    let db = open(target)?;
+    if records(&db)? != *before {
+        return Err("rebuilt volume differs at original capacity".into());
+    }
+    drop(db);
+    let mut result = vec![0; usize::try_from(header.region_bytes)?];
+    memory.read(0, &mut result)?;
+    Ok(result)
 }
 
 #[cfg(test)]
