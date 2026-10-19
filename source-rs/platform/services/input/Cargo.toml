@@ -25,6 +25,7 @@ cathedral-user-runtime.workspace = true
 workspace = true
 
 [features]
+bootstrap-probes = []
 absolute-pointer = []
 trace-input = []
 recovery-lab = []

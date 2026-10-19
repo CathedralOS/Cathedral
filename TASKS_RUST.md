@@ -1,7 +1,8 @@
 # Rust reference OS: tasks and handoff
 
-Updated 2026-10-18 (local date). Current milestone: interactive storage-provider
-startup and explicit retry, following root login recovery, independent Colors,
+Updated 2026-10-18 (local date). Current milestone: bounded early bootstrap
+recovery, following interactive storage-provider startup and explicit retry,
+root login recovery, independent Colors,
 local configured-launcher recovery,
 scoped lifecycle observations and close-channel failure handling, live
 matrix layout and named realms. F5 uses these mechanisms; explicit migration
@@ -293,8 +294,11 @@ to hierarchy metadata; extensions are conventions, not authoritative types.
   recovery screen. Storage opens behind live input/rendering; a fresh user action
   authorizes each retry. Retries neither repair media nor replenish the automatic
   provider replacement budget.
-- [ ] **Continue lifecycle recovery where it is still incomplete.** Initial
-  display/input/root admission still lacks recovery. Launcher retry exhaustion
+- [x] **Bound and unwind early bootstrap failures.** Initial display/input/root
+  admission gets one retry after task/endpoint cleanup and conservation checks.
+  Exhausted root/input recovery shows a static restart screen; failed display
+  leaves an explicit launch-terminal diagnostic. Storage has not started yet.
+- [ ] **Continue lifecycle recovery where it is still incomplete.** Launcher retry exhaustion
   has no explicit recovery UI. An unresponsive app is preserved,
   but the desktop has no explicit force-stop/recovery UI. Provider loss while apps
   hold work and clearer focus feedback still need further adversarial coverage.
@@ -938,7 +942,7 @@ ATA timeout and quiet fault-gate occurrence remain recorded above, unresolved.
 ## Saved layout editor and reliable profile switching (2026-10-18)
 
 The normal user launcher now has SETTINGS, also reachable with F2 when it has
-focus. It edits strip width (192–320 pixels) and outer spacing (8–40 pixels).
+focus. It edits strip width (192ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œ320 pixels) and outer spacing (8ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œ40 pixels).
 Save writes that user's `Matrix` configuration; Cancel discards local edits and
 returns to app tiles. The current app keeps running in the same position.
 Restart QEMU and select the user to apply the saved layout. This is a bounded
@@ -1480,3 +1484,65 @@ controls for a live unresponsive app or exhausted launcher recovery. No kernel
 ABI or driver authority changed; no owner-level semantic decision was required.
 The active interactive QEMU and its disk/ESP remain untouched. ARM64 boot was
 not rerun for this distribution lifecycle change.
+
+
+## Bounded early bootstrap recovery (2026-10-18)
+
+[Admission](source-rs/distribution/desktop/session/admission/admission.rs) now has
+an explicit partial-attempt lifetime and named display, root/funding and input
+steps. Its F5 startup boundary permits two attempts total before storage or any stored user is admitted. A failed
+stage collects input/root/display in that order, closes endpoints still held by
+the owner and restores root funding. Successful endpoint moves are removed from
+the partial-attempt inventory immediately. Input readiness now has a 300-tick
+bound and checks exactly `ready`; root readiness must decode to an all-zero HEALTH
+reply, and display INFO must decode successfully with supported nonzero extents.
+
+Every rollback compares the owner's available process slots, physical reservation
+and charge, page/channel limits, private/reader charges and dynamic-handle charge
+with its pre-attempt snapshot. Root page/channel allowances remain in that idle
+account: combining the full allowance with the owner's would exceed its individual
+cap. Root process slots and physical reservations are reclaimed, then explicitly
+re-funded for the next attempt. These checks use existing syscalls; no kernel ABI
+or device authority changed.
+
+Exhaustion logs the stage (display 0, input 1, root 2) and error. For root/input
+failures, the owner re-admits display alone and renders **COULD NOT START / PLEASE
+RESTART**, then blocks. This requires no matrix, input, storage or raw framebuffer
+access by the owner. Display failure itself cannot provide graphical recovery;
+the terminal reports it and the initial program returns. No user session is torn
+down by this path, and no storage is opened, formatted or repaired.
+
+The fault suite injects pre-initialization task exit, a blocked readiness reply,
+malformed readiness, and admission refusal after staging but before endpoint
+moves. Features are absent from the stock profile. These are not exhaustive
+hardware-initialization or live-driver-replacement tests.
+
+Verification:
+
+- All 24 bootstrap cases passed across the recorded runs. Under `bootstrap/`,
+  `20261019T000429090327Z` passed all eight display cases and transient input
+  death, then caught the restart message exceeding the display protocol's
+  16-character text limit. The corrected **PLEASE RESTART** screen passed repeated
+  input/root death in `20261019T000742913873Z`; `20261019T000822525080Z` passed the
+  remaining thirteen cases. Every transient failure reached a real user and a
+  Colors app that saved, closed and reopened. Repeated failures stopped after
+  two attempts, returned the measured budgets, and left the entire guest storage
+  image byte-identical. Source fixtures were unchanged. Root/input terminal
+  screens were checked from scanout; one was also inspected visually.
+- `desktop/20261019T000008384217Z` passed the ordinary F5 user/app flow, app-owned
+  close and save/discard/cancel, cold persistence and the independent oracle's
+  exact 233-record check. This preceded the final diagnostic text correction and
+  function relocation; the later fault cases exercised the final startup path.
+- `run.py --matrix-desktop-test --release --timeout 180` passed with the final
+  admission layout: recursive isolation, provider/tree recovery, physical focus
+  and both saved colors after cold boot. This covers the catalogue labs sharing
+  the new admission, input readiness and cleanup code.
+- Workspace host tests, userspace clippy, shell/probe/trace and catalogue/database
+  feature checks passed. Layout (35 Omega/96 Rust edges), source formatting,
+  Python compilation and diff checks passed. No kernel ABI changed; ARM64 boot
+  was not rerun for this distribution-level change.
+
+Next: explicit operator controls for an unresponsive app or exhausted local
+launcher recovery. Initial recovery is bounded now; live display/input/root loss
+still needs a separate policy that accounts for unsaved user work. The active
+interactive QEMU and its disk/ESP remain untouched; all tests use separate media.

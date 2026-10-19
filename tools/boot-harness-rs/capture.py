@@ -26,7 +26,7 @@ def command(stream, name, arguments=None):
             return reply["return"]
 
 
-def run(qemu_command, output, timeout, creationflags, ready_marker, verify):
+def run(qemu_command, output, timeout, creationflags, ready_marker, verify, *, allow_initial_exit=False):
     serial = output / "serial.log"
     serial.write_text("", encoding="utf-8")
     with socket.socket() as listener, (output / "qemu.log").open("w") as log:
@@ -51,7 +51,10 @@ def run(qemu_command, output, timeout, creationflags, ready_marker, verify):
                         text = serial.read_text(encoding="utf-8", errors="replace").replace("Cathedral Rust lab: ", "")
                         if "CATHEDRAL_RS_PANIC" in text or "CATHEDRAL_RS_FAULT:" in text:
                             raise RuntimeError(f"Capture boot failed; logs: {output}")
-                        if any(marker in text for marker in ("Cathedral: startup failed", "initial program stopped", "admission failed", "requires unavailable framebuffer")):
+                        failures = ["Cathedral: startup failed", "admission failed", "requires unavailable framebuffer"]
+                        if not allow_initial_exit:
+                            failures.append("initial program stopped")
+                        if any(marker in text for marker in failures):
                             raise RuntimeError(f"Userspace startup failed; logs: {output}")
                         if ready_marker in text:
                             break

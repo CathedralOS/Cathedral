@@ -179,6 +179,13 @@ headers, responsive input while waiting and manual retry into a working desktop.
 The two restart-budget policy tests run with
 `python tools/boot-harness-rs/recovery_policy_test.py`.
 
+`python tools/boot-harness-rs/bootstrap_test.py PATH_TO_ONE_USER_IMAGE` checks
+initial display/root/input death, stall, malformed readiness and admission
+refusal. Each is exercised once and persistently: successful retry reaches a
+usable app, exhausted retry leaves storage byte-identical, and guest resource
+snapshots check rollback. Root/input exhaustion also checks the restart screen.
+The fixture uses disposable copies and separate boot files.
+
 `python tools/boot-harness-rs/desktop_test.py` drives that same composition
 through QMP and checks its scanout; it uses only Python's standard library.
 `--release` selects an optimized build. `--memory 256` selects guest RAM in MiB.

@@ -49,12 +49,11 @@ fn chooser(login: &mut Login, matrix: Pair, extent: [u64; 2], failed: bool) -> R
 /// hosts two children, reads programs of up to 64 pages, and retains their
 /// bitmaps and replacements. The two stock app tiles retain 24 reader pages,
 /// leaving space for a program of up to 64 pages during admission.
-pub(super) fn workspace(matrix: Pair, [width, height]: [u64; 2]) {
-    owner(matrix, [wire::LAUNCH_POLICY, 1, 80, 96, 10, 2, 0, 11]);
-    owner(
-        matrix,
+pub(crate) fn workspace(width: u64, height: u64) -> [wire::Packet; 2] {
+    [
+        [wire::LAUNCH_POLICY, 1, 80, 96, 10, 2, 0, 11],
         [wire::LAUNCH_PLACE, 1, 0, 0, width, height, KEYS, 0],
-    );
+    ]
 }
 
 /// Retire the picker and request the user matrix's own saved startup policy.

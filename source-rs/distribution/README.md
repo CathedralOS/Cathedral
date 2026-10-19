@@ -36,7 +36,10 @@ does not need another readable stored program. Click the button, or press Enter
 with focus, to retry. Display/input come up before storage; while the volume opens,
 the same screen shows **STARTING...**. A failed, malformed or timed-out storage
 startup becomes retryable after its task and endpoints are collected. It does not
-repair or overwrite data. Initial display/input/root failures remain uncovered.
+repair or overwrite data. Earlier display/input/root admission gets one bounded
+retry after full cleanup. If root or input still cannot start, display alone shows
+**COULD NOT START / PLEASE RESTART**. If display itself cannot start, the launch
+terminal reports the failed stage and error. These failures never open storage.
 
 If the configured app strip crashes, its matrix attempts one local restart,
 preserving the running app and its draft. The replacement keeps the current
@@ -120,7 +123,7 @@ NOTES / COLORS tiles inside the user. See the
 
 | Role | Composition entry | Entrance / receiving implementation |
 | --- | --- | --- |
-| Desktop owner | Initial | [main](desktop/main.rs), [admission](desktop/session/admission.rs), [shell](desktop/session/shell/shell.rs) |
+| Desktop owner | Initial | [main](desktop/main.rs), [admission](desktop/session/admission/admission.rs), [shell](desktop/session/shell/shell.rs) |
 | Display | Launch 0 | [display main](../platform/services/display/main.rs), [retained compositor](../platform/services/display/compositor/compositor.rs) |
 | Input | Launch 1 | [input main](../platform/services/input/main.rs), [matrix source](../platform/services/input/matrix.rs) |
 | Root matrix | Launch 2 | [matrix main](../platform/services/matrix/main.rs), [service loop](../platform/services/matrix/service/service.rs) |

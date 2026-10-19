@@ -23,6 +23,7 @@ cathedral-platform-contracts.workspace = true
 cathedral-user-runtime.workspace = true
 
 [features]
+bootstrap-probes = []
 lab = []
 recovery-lab = []
 

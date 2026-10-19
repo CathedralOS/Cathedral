@@ -1,0 +1,86 @@
+//! Ownership during partial admission. Track only endpoints still held here;
+//! successful spawn moves remove them before any later allocation can reuse names.
+use super::*;
+pub(super) struct Attempt {
+    tasks: [Option<task::Child>; 3],
+    handles: [Option<Handle>; 10],
+}
+impl Attempt {
+    pub fn new() -> Self {
+        Self {
+            tasks: [None; 3],
+            handles: [None; 10],
+        }
+    }
+    pub fn track(&mut self, pair: Pair) -> Pair {
+        for handle in [pair.0, pair.1] {
+            *self
+                .handles
+                .iter_mut()
+                .find(|entry| entry.is_none())
+                .expect("admission endpoints") = Some(handle);
+        }
+        pair
+    }
+    pub fn channel(&mut self) -> Result<Pair, Error> {
+        Ok(self.track(ipc::channel()?))
+    }
+    pub fn spawn(&mut self, stage: Stage, argument: u64, moved: &[Handle]) -> Result<(), Error> {
+        #[cfg(feature = "bootstrap-probes")]
+        probes::refusal(argument)?;
+        let child = Launch::at(stage as u64)?.spawn_with(argument, moved)?;
+        self.tasks[stage as usize] = Some(child);
+        for handle in moved {
+            let entry = self
+                .handles
+                .iter_mut()
+                .find(|entry| entry.is_some_and(|h| h.raw() == handle.raw()))
+                .expect("owned endpoint move");
+            *entry = None;
+        }
+        Ok(())
+    }
+    pub fn retire(self) {
+        for index in [1, 2, 0] {
+            if let Some(child) = self.tasks[index] {
+                retire_task(child);
+            }
+        }
+        for handle in self.handles.into_iter().flatten() {
+            handle.close().expect("admission endpoint cleanup");
+        }
+    }
+    pub fn commit(self, matrix: Pair, source: Pair, extent: [u64; 2]) -> Session {
+        let root = self.tasks[2].unwrap();
+        crate::ROOT_TASK.store(root.raw(), core::sync::atomic::Ordering::Relaxed);
+        Session {
+            #[cfg(feature = "database-probes")]
+            database_fresh: false,
+            matrix,
+            source,
+            extent,
+            #[cfg(feature = "shell")]
+            user: 0,
+            #[cfg(feature = "shell")]
+            login: shell::Login::Stopped,
+            #[cfg(not(feature = "shell"))]
+            pressure: task::Executable::at(2).is_ok(),
+            storage: None,
+            storage_watch: persistence::Watchdog::default(),
+            display_task: self.tasks[0].unwrap(),
+            root,
+            input: None,
+        }
+    }
+}
+pub(super) fn retire_task(child: task::Child) {
+    match child.wait_until(time::now().unwrap()) {
+        Ok(_) => (),
+        Err(Error(code)) if code == abi::BAD_HANDLE as i64 => (),
+        Err(Error(code)) if code == abi::TIMED_OUT as i64 => {
+            child.cancel().unwrap();
+            child.wait().unwrap();
+        }
+        Err(error) => panic!("bootstrap collection: {error:?}"),
+    }
+}

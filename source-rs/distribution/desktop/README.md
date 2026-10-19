@@ -1,8 +1,8 @@
 # Cathedral desktop
 
 The default boot enters [main.rs](main.rs), then [session/session.rs](session/session.rs):
-admit providers and the root matrix, run the chooser over the folder of users,
-open the workspace slot to what it launches, start input, request each user
+admit display and the root matrix, configure workspace policy, start input, open
+storage, run the chooser over the folder of users, request each user
 matrix's own startup and supervise storage. [shell/](session/shell/shell.rs)
 resolves `Login` and `Users` by path in the supplied root.
 [Colors](../applications/colors/main.rs) is a separate installed program. See the
@@ -19,8 +19,15 @@ Missing root Login/Users, rejected picker code and picker death enter the
 holding a storage realm. [Storage startup](session/persistence/startup.rs) runs
 after display/input and polls readiness without blocking their event loops. A
 3,000-tick timeout, process death or non-`ready` response retires the task and its
-control stream and enables a single explicit retry. The initial display/input/root
-admission failures remain separate work.
+control stream and enables a single explicit retry.
+[Bootstrap admission](session/admission/admission.rs) gives initial display, root
+and input two attempts before storage or users start. Each failed attempt collects
+its tasks and closes its retained endpoints before restoring root funding and
+checking the owner's resource snapshot. Display/root requests and input readiness
+have a 300-tick deadline and validate reply contents. Persistent root/input failure
+starts display alone with **COULD NOT START / PLEASE RESTART**; persistent
+display failure is reported to the launch terminal. There is no automatic loop
+and no attempt to reconstruct a running user through this path.
 The matrix now retries a failed configured launcher once without restarting its app.
 
 Colors' [close control](../applications/colors/session/closing.rs) renders an X and handles local
@@ -105,7 +112,7 @@ only their interaction pair, catalog pair and a child-local wake receiver. The [
 submits an oversized rectangle that must be clipped at each ownership boundary.
 
 The probe desktop receives code-only catalogue grants and a funded process pool.
-[Startup admission](session/admission.rs) stages these into the root; owner-only
+[Startup admission](session/admission/admission.rs) stages these into the root; owner-only
 RUN requests select and fund descendants using the same provider at each level.
 The shell lends no catalogue: it runs the chooser with RUN_OBJECT and opens
 slots with LAUNCH_POLICY, so every other program comes from a realm by the

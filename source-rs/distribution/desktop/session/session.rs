@@ -17,23 +17,10 @@ pub(crate) fn owner(pair: Pair, words: wire::Packet) {
 }
 #[cfg(feature = "shell")]
 pub(crate) fn run() -> u64 {
-    let mut session = admission::start();
+    let Some(mut session) = admission::interactive() else {
+        return 1;
+    };
     let matrix = session.matrix;
-    owner(
-        matrix,
-        [
-            wire::BIND,
-            session.extent[0],
-            session.extent[1],
-            KEYS,
-            0,
-            0,
-            0,
-            0,
-        ],
-    );
-    shell::workspace(matrix, session.extent);
-    session.start_input();
     persistence::startup::begin(&mut session);
     cathedral_user_runtime::write(b"Cathedral desktop: interactive startup ready\n").unwrap();
     #[cfg(any(feature = "launcher-stop-probe", feature = "launcher-revoke-probe"))]
