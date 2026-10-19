@@ -1,8 +1,9 @@
 // List the realm, present users/apps, then launch a choice or copy the template.
 // Labels and hidden entries are distribution presentation; every request stays
 // within the scoped object identities returned by this child's realm.
+use cathedral_desktop_matrix_contracts::matrix as wire;
 use cathedral_kernel_contracts::user as abi;
-use cathedral_platform_contracts::{input, matrix as wire};
+use cathedral_platform_contracts::input;
 use cathedral_user_runtime::{
     Error,
     ipc::{self, Handle},

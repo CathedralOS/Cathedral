@@ -1,4 +1,4 @@
-//! Startup capabilities supplied by platform/services/matrix/service/children.
+//! Startup capabilities supplied by distribution/matrix/service/children.
 //! These names describe local connections, never global services or disk locations.
 use crate::{Error, abi, ipc::Handle, task::Environment};
 pub use cathedral_platform_contracts::imports;

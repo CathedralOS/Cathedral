@@ -22,11 +22,13 @@ def check_edge(source, target):
 
     kernel_contract = within(source, 'kernel/contracts')
     platform_contract = within(source, 'platform/contracts')
+    distribution_contract = within(source, 'distribution/matrix/contracts')
     block_boundary = source == 'platform/libraries/block-device'
-    if kernel_contract or platform_contract or block_boundary:
+    if kernel_contract or platform_contract or distribution_contract or block_boundary:
         allowed = dependency == 'foundation'
         allowed |= kernel_contract and within(target, 'kernel/contracts')
         allowed |= platform_contract and (within(target, 'platform/contracts') or target == 'kernel/contracts')
+        allowed |= distribution_contract and (within(target, 'platform/contracts') or target == 'kernel/contracts')
         if not allowed:
             raise ValueError(f'Public boundary imports implementation: {source} -> {target}')
 

@@ -1,6 +1,7 @@
 # Rust reference OS: tasks and handoff
 
-Updated 2026-10-18 (local date). Current milestone: live storage-provider recovery
+Updated 2026-10-18 (local date). Current milestone: separate stock matrix policy
+from reusable platform mechanisms, following live storage-provider recovery
 without restarting apps, following explicit launcher recovery
 after retry exhaustion, following app termination and bounded early bootstrap recovery,
 interactive storage-provider startup and explicit retry,
@@ -194,7 +195,7 @@ nested matrix. The kernel still knows no matrix, realm or store.
 | --- | --- | --- |
 | Kernel | UEFI exit, owned mappings/stacks, frame/heap allocation, interrupts/timer, preemption, isolated user processes, capability syscalls, IPC, admission/teardown from boot templates or sealed objects, recursive resource funding and CPU ceilings; 128 private and up to 512 reader pages per task, eight reader rights | [Boot](source-rs/kernel/boot/uefi/main.rs), [user tasks](source-rs/kernel/core/user_tasks/user_tasks.rs), [code grants](source-rs/kernel/core/user_tasks/admission/pool/README.md) |
 | Architecture | Shared core with x86-64 and an ARM64 QEMU portability proof; ISA and board responsibilities separated | [Architecture](source-rs/kernel/arch/README.md), [ARM64 bounds](source-rs/kernel/arch/isa/aarch64/README.md) |
-| Matrix | Same service recursively owns children, local surfaces, focus, input, realm delegation with scope stamps and attachments, programs run from its realm by owner or child, standing launch policy per slot, close-after-asking, bounded budgets and deadlines; counts unanswered child requests instead of killing a slow child | [Service loop](source-rs/platform/services/matrix/service/service.rs), [protocol](source-rs/platform/contracts/matrix.rs), [child launches](source-rs/platform/services/matrix/service/children/children.rs), [storage forwarding](source-rs/platform/services/matrix/service/parent/storage/storage.rs) |
+| Matrix | Same service recursively owns children, local surfaces, focus, input, realm delegation with scope stamps and attachments, programs run from its realm by owner or child, standing launch policy per slot, close-after-asking, bounded budgets and deadlines; counts unanswered child requests instead of killing a slow child | [Service loop](source-rs/distribution/matrix/service/service.rs), [protocol](source-rs/platform/contracts/matrix.rs), [child launches](source-rs/distribution/matrix/service/children/children.rs), [storage forwarding](source-rs/distribution/matrix/service/parent/storage/storage.rs) |
 | Display/input | Software compositor, retained rectangles and sealed bitmap objects, scoped pointer/focus routing, physical PS/2 input | [Display](source-rs/platform/services/display/main.rs), [input](source-rs/platform/services/input/main.rs) |
 | Storage | Userspace ATA PIO, guarded redb volume, objects up to 256 KiB, shared content, subtree copies, names/types on edges, scoped relative lookup and indexed type filtering, pins and bounded collection | [Provider](source-rs/platform/services/storage/main.rs), [store](source-rs/platform/libraries/database-objects/README.md), [contract](source-rs/platform/contracts/storage.rs) |
 | Desktop | Provider admission/supervision, named login paths, chooser over users, user ceiling and startup request; each user matrix loads its own arrangement. Probe desktop under `lab/` uses the boot catalogue without the shell feature | [Main](source-rs/distribution/desktop/main.rs), [session](source-rs/distribution/desktop/session/session.rs), [shell](source-rs/distribution/desktop/session/shell/shell.rs), [lab](source-rs/distribution/desktop/lab/desktop.rs) |
@@ -324,6 +325,12 @@ to hierarchy metadata; extensions are conventions, not authoritative types.
   remain. A live storage retry needs delegated authority and a discoverable
   control without replacing the user's app or expanding an app's service grants.
   Existing app-owned close protects dirty work, and layout invalidation keeps drafts.
+- [x] **Remove desktop requirements from shared matrix machinery.** The stock
+  executable/configuration/recovery/control router belong to distribution. Platform
+  supplies local authority state with caller-selected child capacity and geometry.
+  Alternative visual/headless arrangements have host tests without distro imports.
+  A reusable IPC server runtime is still future extraction work; do not move the
+  stock program back into platform merely to make its loop reusable.
 - [ ] **Bring storage write latency down.** Collection scans metadata before
   each write and durable commit writes through ATA PIO. Use explicit tick-to-time
   conversion and separate CPU time from elapsed time. Measure with
@@ -408,7 +415,7 @@ docs, and avoid leaving two conflicting descriptions of the default OS boot.
 
 ## Recursive-close handoff evidence
 
-The matrix's [loss survey](source-rs/platform/services/matrix/service/children/loss.rs)
+The matrix's [loss survey](source-rs/distribution/matrix/service/children/loss.rs)
 asks both children without blocking their upstream IPC. It replies only after
 all requested answers settle and returns only a boolean aggregate, never child
 identities or draft contents. Dirty, missing, busy and failed answers keep the
@@ -897,10 +904,10 @@ strings while sharing content. A misleading extension does not produce an app
 tile. Unknown legacy metadata remains representable; there is no explorer or
 metadata-editing UI yet. Name collisions refuse rather than overwrite.
 
-[Configuration](source-rs/platform/contracts/matrix_config.rs) is the stock
+[Configuration](source-rs/distribution/matrix/contracts/config.rs) is the stock
 matrix's bounded 104-byte `CTHMAT01` record: launcher path, page/reader budgets,
 margin, launcher width, gap, app surfaces and key mask. The
-[loader](source-rs/platform/services/matrix/service/children/configuration.rs)
+[loader](source-rs/distribution/matrix/service/children/configuration.rs)
 requires empty child slots, checks geometry/key limits and uses ordinary
 admission. Failed startup returns to the picker. No settings editor or live
 apply is implemented. Parent grants remain authoritative; saving policy never
@@ -963,7 +970,7 @@ ATA timeout and quiet fault-gate occurrence remain recorded above, unresolved.
 ## Saved layout editor and reliable profile switching (2026-10-18)
 
 The normal user launcher now has SETTINGS, also reachable with F2 when it has
-focus. It edits strip width (192ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œ320 pixels) and outer spacing (8ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œ40 pixels).
+focus. It edits strip width (192ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“320 pixels) and outer spacing (8ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“40 pixels).
 Save writes that user's `Matrix` configuration; Cancel discards local edits and
 returns to app tiles. The current app keeps running in the same position.
 Restart QEMU and select the user to apply the saved layout. This is a bounded
@@ -1091,9 +1098,9 @@ use it. Authority is checked before reporting busy owner operations. The new
 rectangles before changing either, preserves current key masks and allowances,
 and does not revive a revoked sibling view. Controller revocation/death or
 parent-binding replacement clears the grant. Equal geometry is idempotent.
-Start at [configuration.rs](source-rs/platform/services/matrix/service/children/configuration.rs)
+Start at [configuration.rs](source-rs/distribution/matrix/service/children/configuration.rs)
 for the grant and standing-placement update, then
-[layout.rs](source-rs/platform/services/matrix/world/layout.rs) for authority and
+[layout.rs](source-rs/platform/libraries/matrix/world/layout.rs) for authority and
 geometry. The protocol is owned by platform/contracts/matrix.rs; no kernel
 change or owner-control endpoint was exposed to children.
 
@@ -1210,9 +1217,9 @@ only that requesting endpoint's latest successful launch, tied to its incarnatio
 and the exact kernel task handle. Counters are per observer. No PID, fault details,
 other caller's launch count or later occupant of a reused slot is disclosed.
 Requester teardown clears observation authority. Terminal task collection wakes
-the observer. Start at [children.rs](source-rs/platform/services/matrix/service/children/children.rs)
-for admission/placement, [lifecycle.rs](source-rs/platform/services/matrix/service/children/lifecycle.rs)
-for outcome/cleanup, and [launches.rs](source-rs/platform/services/matrix/world/launches.rs)
+the observer. Start at [children.rs](source-rs/distribution/matrix/service/children/children.rs)
+for admission/placement, [lifecycle.rs](source-rs/distribution/matrix/service/children/lifecycle.rs)
+for outcome/cleanup, and [launches.rs](source-rs/platform/libraries/matrix/world/launches.rs)
 for the bounded receipt policy. Rust mod.rs remains plumbing.
 
 Surface-allocation or placement refusal now stops and refunds the just-admitted
@@ -1297,7 +1304,7 @@ releases the old launcher before replacement. The same asynchronous HEAD/BULK
 path used by normal launches reloads its executable without blocking interaction
 on the separate parent stream or retaining an extra code reader indefinitely.
 
-Start at [recovery.rs](source-rs/platform/services/matrix/service/children/recovery/recovery.rs).
+Start at [recovery.rs](source-rs/distribution/matrix/service/children/recovery/recovery.rs).
 It snapshots current placement, page policy and storage identity, waits for old
 deferred events/control replies/publication to retire, then admits fresh endpoints
 and issues fresh storage/layout grants. The app's task, scene, geometry epoch,
@@ -1738,3 +1745,82 @@ there is still no delegated live-session control to retry storage once automatic
 recovery is exhausted. The existing protected-chrome owner question remains
 separate from ordinary delegated recovery. Failure while restoring grants and
 simultaneous provider/launcher death are not exhaustively injected here.
+
+## Stock matrix and reusable platform boundary, 2026-10-18
+
+The stock matrix is now [a distribution executable](source-rs/distribution/matrix/main.rs),
+`cathedral-stock-matrix`. Its launcher/app roles, two-child owner router, sibling
+launch/close requests, saved strip arrangement and configured-launcher recovery
+are optional stock policy. Their [extension contract](source-rs/distribution/matrix/contracts/matrix.rs)
+and unchanged configuration codec live beside that program. The normal profile,
+focused profiles, installer and fault builds use the new package. Wire operation
+numbers and saved configuration bytes are unchanged; there is no data migration.
+
+[The platform library](source-rs/platform/libraries/matrix/README.md), `cathedral-matrix`,
+retains reusable authority and geometry. `World<N>`, storage scopes, launch
+observations and management ledgers take independently selected child capacities.
+Layout accepts owner-supplied rectangles; no slot is intrinsically a launcher.
+Surface ranges may be explicitly selected or allocated from free space, cannot
+overlap, and cannot move while live. Pointer hit testing follows those ranges.
+Replacement snapshots retain their original range without changing siblings.
+The stock executable explicitly chooses its previous bottom/top sibling ordering.
+
+This is not yet a general-purpose matrix server runtime: the existing IPC loop,
+admission orchestration and forwarding adapters remain in the stock executable.
+Another distribution can use the platform mechanisms and contracts with its own
+program; it does not yet get a separately packaged configurable server loop.
+The new host proofs exercise three visual children (last slot controlling layout),
+arbitrary owner stacking, four-child headless ledgers, and zero visual slots.
+These prove removal of the two-slot/desktop assumptions from shared state, not
+that a phone or embedded distribution has been built. Fixed protocol resource
+bounds remain. Kernel implementation and ABI are unchanged.
+
+Architecture checks now reject platform/kernel imports of the stock contract,
+and reject implementation dependencies from that contract. Reading paths and
+package maps were updated across executable/IPC seams; `mod.rs` stays plumbing.
+
+Verification and findings:
+
+- Workspace host tests passed, including 30 shared matrix tests and the moved
+  configuration codec test. Userspace clippy and stock matrix fault/trace feature
+  clippy passed, as did the shell/live-probe feature set and restart-budget tests.
+- `desktop/20261019T011839687704Z` passed the default F5 flow and cold persistence;
+  the independent oracle checked all 235 records. This preceded the explicit
+  stacking correction described below.
+- `launcher-recovery/20261019T012031252420Z` passed recover, startup and
+  owner-revocation cases, including live layout, automatic and explicit retries,
+  retained app draft, save/close and cold persistence. Source media was unchanged.
+- The recursive desktop test caught an introduced stacking regression: first-fit
+  range allocation made launch order determine overlap order. The fix makes the
+  owner's stacking choice explicit, tests arbitrary order and replacement on the
+  host, and keeps the stock bottom/top policy in the distribution. The recursive
+  desktop then passed nested pixels, focus, lifecycle recovery and cold colors.
+- The management fixture initially exhausted the 4 MiB engine before boot while
+  upgrading old code and installing two probes. Its preparation now compacts its
+  disposable copy before each injection; it never changes source/interactive media.
+  Compaction alone was insufficient: the host injector rewrote every unchanged
+  record too. It now inserts only changed records, preserving unrelated pages.
+- `management/20261019T013555980484Z` then passed all three scenarios on the
+  final code: hung app termination, both Cancel actions, stale/ungranted authority,
+  recovered launcher management, replacement apps and cold persistence. The
+  source fixture was unchanged. Its successful setup also exercises the corrected
+  host injector on an upgraded image, with both fault programs installed.
+- Two recursive storage runs reached an ATA FLUSH timeout (`op=e7`, status `c0`,
+  50 ticks) and the provider's existing engine-failure panic. The second ran after
+  host tests finished. This remains the tracked ATA completion issue, not a pass;
+  no storage driver/deadline changes are part of this boundary cleanup. Logs are
+  `build/boot-harness-rs/matrix-storage-timeout-20261019.log` and
+  `build/boot-harness-rs/matrix-storage-test/serial.log`.
+- The later default-desktop run `desktop/20261019T013226419025Z` hit the existing
+  ATA WRITE completion timeout before login (`op=30`, LBA 24, status `d0`, 50
+  ticks). The stock recovery screen appeared; this is not a passing desktop run.
+- Layout checks passed (35 Omega/106 Rust package edges), including six checker
+  unit tests. Named-body formatting, changed Python compilation, Markdown links
+  and diff checks passed. The host installer checks with its locked engine feature
+  set. ARM64 was not rerun: this changes no kernel/architecture implementation.
+
+Follow-up architecture proof: compose a small independently owned headless or
+alternative-layout matrix program, then extract the shared IPC orchestration it
+actually needs. Do not move stock config/recovery policy back into platform or
+invent a universal desktop framework. The outstanding delegated live-storage
+retry and protected-chrome owner question remain separate work.

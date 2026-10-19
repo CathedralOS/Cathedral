@@ -1,0 +1,16 @@
+[package]
+name = "cathedral-matrix"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[lib]
+path = "lib.rs"
+
+[dependencies]
+cathedral-kernel-contracts.workspace = true
+cathedral-platform-contracts.workspace = true
+
+[lints]
+workspace = true

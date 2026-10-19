@@ -27,9 +27,9 @@ the ordinary control link. The launcher uses its explicitly granted whole user
 realm; Notes and Colors still hold only their own subtrees.
 
 Saving then sends `APPLY_LAYOUT` on the launcher's interaction connection.
-[Stock configuration](../../../platform/services/matrix/service/children/configuration.rs)
+[Stock configuration](../../../distribution/matrix/service/children/configuration.rs)
 grants this operation only to the selected launcher's endpoint incarnation;
-the [world layout policy](../../../platform/services/matrix/world/layout.rs)
+the [world layout policy](../../../platform/libraries/matrix/world/layout.rs)
 checks current epoch, authority and complete geometry before moving either view.
 Ordinary apps, storage endpoints, stale launchers and unconfigured pickers are
 refused. This grants no owner-control endpoint, key mask or resource authority.

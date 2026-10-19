@@ -1,8 +1,9 @@
 // Load local connections, reconcile durable state, handle editing, then present.
 // Storage owns the object exchanges; view owns immutable bitmap publication.
+use cathedral_desktop_matrix_contracts::matrix as wire;
 use cathedral_kernel_contracts::user as abi;
 use cathedral_notes::document::Document;
-use cathedral_platform_contracts::{input, matrix as wire};
+use cathedral_platform_contracts::input;
 use cathedral_user_runtime::{
     Error,
     ipc::{self, Handle},

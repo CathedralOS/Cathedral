@@ -71,6 +71,16 @@ implementations and conformance tests belong here. A desktop profile can require
 a common set of interfaces independently of its shell.
 
 `distribution/` owns presentation, interaction design, defaults and bundled apps.
+The Rust stock matrix is also a distribution program: `distribution/matrix/`
+owns its launcher/app roles, saved desktop configuration, two-child control
+router and recovery choices. Its extension contract lives beside it in
+`distribution/matrix/contracts/`. Other distributions need not implement it.
+`platform/libraries/matrix/` supplies reusable local authority, input, geometry,
+surface, storage-scope and task-management state with caller-selected child
+capacity. It imposes no launcher, desktop strip or persisted configuration.
+The stock program's IPC loop still composes these mechanisms directly; a
+general-purpose matrix server runtime is not yet a separate platform package.
+
 Capture pickers, settings screens and desktop controls use platform contracts.
 Authority semantics, protected surfaces, observation visibility and the operator's
 recovery/revoke path remain enforced by trusted platform owners. Styling a prompt
@@ -103,6 +113,9 @@ foundation         -> no implementation packages
   platform display protocol.
 - A contract package cannot import its provider implementation. Nesting it under
   its owner identifies responsibility, not a dependency on that owner's executable.
+- Distribution extension contracts may depend on public platform/kernel contracts,
+  but cannot depend on their implementations. Platform and kernel cannot import
+  distribution extensions. The layout checker enforces the stock matrix boundary.
 - Profiles select the kernel entry as composition data, not a userspace import.
 - The Rust profile also selects a separately compiled distribution program.
   Host tooling supplies its ELF artifact to boot; the kernel's loader consumes

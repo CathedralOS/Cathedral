@@ -91,6 +91,7 @@ name = "cathedral-chooser"
 version = "0.0.0"
 dependencies = [
  "cathedral-bitmap-font",
+ "cathedral-desktop-matrix-contracts",
  "cathedral-kernel-contracts",
  "cathedral-platform-contracts",
  "cathedral-user-runtime",
@@ -101,6 +102,7 @@ name = "cathedral-colors"
 version = "0.0.0"
 dependencies = [
  "cathedral-bitmap-font",
+ "cathedral-desktop-matrix-contracts",
  "cathedral-kernel-contracts",
  "cathedral-platform-contracts",
  "cathedral-user-runtime",
@@ -162,9 +164,17 @@ version = "0.0.0"
 dependencies = [
  "cathedral-bitmap-font",
  "cathedral-colors",
+ "cathedral-desktop-matrix-contracts",
  "cathedral-kernel-contracts",
  "cathedral-platform-contracts",
  "cathedral-user-runtime",
+]
+
+[[package]]
+name = "cathedral-desktop-matrix-contracts"
+version = "0.0.0"
+dependencies = [
+ "cathedral-platform-contracts",
 ]
 
 [[package]]
@@ -225,12 +235,11 @@ name = "cathedral-kernel-contracts"
 version = "0.0.0"
 
 [[package]]
-name = "cathedral-matrix-service"
+name = "cathedral-matrix"
 version = "0.0.0"
 dependencies = [
  "cathedral-kernel-contracts",
  "cathedral-platform-contracts",
- "cathedral-user-runtime",
 ]
 
 [[package]]
@@ -246,6 +255,7 @@ name = "cathedral-notes"
 version = "0.0.0"
 dependencies = [
  "cathedral-bitmap-font",
+ "cathedral-desktop-matrix-contracts",
  "cathedral-kernel-contracts",
  "cathedral-platform-contracts",
  "cathedral-user-runtime",
@@ -296,7 +306,19 @@ name = "cathedral-startup-recovery"
 version = "0.0.0"
 dependencies = [
  "cathedral-bitmap-font",
+ "cathedral-desktop-matrix-contracts",
  "cathedral-kernel-contracts",
+ "cathedral-platform-contracts",
+ "cathedral-user-runtime",
+]
+
+[[package]]
+name = "cathedral-stock-matrix"
+version = "0.0.0"
+dependencies = [
+ "cathedral-desktop-matrix-contracts",
+ "cathedral-kernel-contracts",
+ "cathedral-matrix",
  "cathedral-platform-contracts",
  "cathedral-user-runtime",
 ]

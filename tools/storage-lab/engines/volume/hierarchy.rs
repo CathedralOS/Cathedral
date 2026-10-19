@@ -1,9 +1,9 @@
 //! Explicit stock-desktop migration. Add hierarchy metadata and each matrix's
 //! saved arrangement atomically; existing names/configuration are never replaced.
 use super::*;
+use cathedral_desktop_matrix_contracts::matrix;
 use crate::chunks::{Layout, Policy, Store};
 use cathedral_platform_contracts::{
-    matrix,
     storage::metadata::{self, Metadata},
 };
 use redb::ReadableTable;
@@ -250,6 +250,7 @@ fn plan(records: &mut Records) -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+use cathedral_desktop_matrix_contracts::matrix;
     #[test]
     fn migration_preserves_existing_state_and_is_idempotent() {
         let programs = [

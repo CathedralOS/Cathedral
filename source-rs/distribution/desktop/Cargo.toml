@@ -43,6 +43,7 @@ desktop-probes = ["desktop"]
 database-probes = ["desktop"]
 
 [dependencies]
+cathedral-desktop-matrix-contracts.workspace = true
 cathedral-colors = { workspace = true, optional = true }
 cathedral-kernel-contracts.workspace = true
 cathedral-platform-contracts.workspace = true

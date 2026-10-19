@@ -1,6 +1,7 @@
 //! Resolve Matrix within the supplied realm; check its codec and revision.
 use super::*;
-use cathedral_platform_contracts::{matrix::config, storage};
+use cathedral_desktop_matrix_contracts::matrix::config;
+use cathedral_platform_contracts::storage;
 pub(super) fn load(scope: &mut Scope) -> Result<(u64, u64, Config), u64> {
     scope.bind()?;
     let object = scope.lookup(config::NAME)?;

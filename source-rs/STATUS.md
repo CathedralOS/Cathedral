@@ -55,6 +55,14 @@ time, not general app installation or a full window manager.
 
 ## Interface ownership
 
+The stock matrix executable now belongs to `distribution/matrix/`, including
+its saved desktop arrangement, launcher recovery and two-child control router.
+Its extension protocol and configuration codec live in its own `contracts/`.
+`platform/libraries/matrix/` contains the shared authority state with a caller-
+selected child count and owner-supplied rectangles. Three-child visual and
+four-child headless tests import no distribution code. The stock IPC loop still
+uses a two-child composition; this is not yet a general reusable server runtime.
+
 The universal Rust contracts crate has been retired. [Kernel contracts](kernel/contracts/README.md)
 define the public syscall/page/framebuffer boundary; [platform contracts](platform/contracts/README.md)
 define service messages without importing their providers. Display requests and
@@ -234,9 +242,9 @@ through a blocked save. Nested matrices in the visible desktop now receive a sep
 save leaves a sibling inside that same matrix able to consume pointer/keyboard
 input and repaint. The legacy headless fixtures retain their shared-stream mode.
 Owner grant/revoke and teardown aborts remain synchronous bounded operations.
-Follow [storage forwarding](platform/services/matrix/service/parent/storage/storage.rs),
-[pending replies](platform/services/matrix/service/parent/storage/pending.rs) and
-[deferred stream policy](platform/services/matrix/service/deferred.rs).
+Follow [storage forwarding](distribution/matrix/service/parent/storage/storage.rs),
+[pending replies](distribution/matrix/service/parent/storage/pending.rs) and
+[deferred stream policy](distribution/matrix/service/deferred.rs).
 
 The [desktop stall proof](distribution/desktop/lab/stalls.rs) gates writes
 before execution and after durable commit. Its [nested peer](distribution/desktop/lab/stalls_peer.rs)
@@ -293,7 +301,7 @@ boot log is retained as `first-boot-serial.log` beside the reboot's `serial.log`
 Follow [desktop recovery](distribution/desktop/lab/recovery.rs) and
 [app state](distribution/applications/colors/session/state.rs).
 
-[Publication](platform/services/matrix/service/parent/presentation.rs) now resumes
+[Publication](distribution/matrix/service/parent/presentation.rs) now resumes
 from the service loop after upstream replies. Other children's local reads can
 proceed; dependent mutations retain one event per stream with backpressure, keeping
 geometry stable until commit. FIFO is preserved within each stream. This does not
@@ -316,7 +324,7 @@ four distinct retained surfaces, staged sealed readers, all-or-nothing publicati
 and latest-commit retry scoped to connection/view. Host policy tests and the
 release desktop fixture under CPU pressure verify rejection, old pixels before
 commit, bitmap forwarding, input and subtree recovery. See the
-[matrix charter](platform/services/matrix/CHARTER.md) for the transaction path and
+[matrix charter](distribution/matrix/CHARTER.md) for the transaction path and
 limits, including non-transactional owner placement and no vblank guarantee.
 
 Debug integration also checks the fixed userspace stack/image bounds. Persistent
@@ -326,7 +334,7 @@ The debug desktop and matrix-storage fixtures pass without enlarging kernel limi
 
 ## Recursive storage delegation
 
-[Matrix storage scopes](platform/services/matrix/world/storage/README.md) delegate
+[Matrix storage scopes](platform/libraries/matrix/world/storage/README.md) delegate
 private object roots, or subtrees of them, through the ordinary matrix
 executable, which becomes the storage root by being handed provider links rather
 than by an argument. A realm is that attenuated view; a matrix is a program that
@@ -464,7 +472,7 @@ the same lifecycle/rollback suite before its user-process proof.
 The default [distribution policy](distribution/desktop/session/shell/shell.rs)
 starts display/input/storage providers and funds a root matrix. Root slot 1 is the
 program menu; root slot 0 is a workspace matrix containing the selected app.
-Both matrices run the same [service](platform/services/matrix/service/service.rs).
+Both matrices run the same [service](distribution/matrix/service/service.rs).
 Only the root adapts physical input and compositor output. The menu requests
 choices; the distribution owner supplies launch, storage and placement policy.
 
@@ -496,9 +504,9 @@ These profiles are engineering proofs, not the default OS boot.
 | [Physical-memory funding](kernel/core/user_tasks/resources/physical/README.md) | Every admitted image, stack, page table and runtime buffer; recursive matrix pool | Host conservation/bank tests; smoke rollback and retained readers; admission exhaustion and desktop pixel checks | Eager bounded bank; idle-child assignment; no swap, active rebudgeting or sponsorship transfer |
 | [Recursive launch loans](kernel/core/user_tasks/lifecycle/supervision/delegation.rs) | Matrices own direct children, lend budgets further, reclaim subtrees | `--ipc-test` plus matrix replacement tests | Static launch loans plus executable-authorized process pools; fixed account arena |
 | [Executable-authorized admission](kernel/core/user_tasks/admission/pool/README.md) | Apps and the matrix desktop construct descendants from code authority and a process pool; the shell admits code from sealed objects read out of the store | `--admission-test`: recursive launch, exhaustion, load rollback, retained funding, sibling survival; `--matrix-storage-test` and `desktop_test.py` admit programs from the realm | Boot catalogue or a sealed object, admitted once per reservation; twelve accounts; device grants remain static |
-| [Matrix lifecycle](platform/services/matrix/service/children/children.rs) | Same provider above apps and another matrix | `--matrix-test`: replacement preserves an outside sibling | Two direct children; distribution supplies policy through owner-only control |
-| [Local viewport, focus and capture](platform/services/matrix/world/world.rs) | Nested and sibling visible apps | Host policy tests; `--matrix-test`; `--matrix-desktop-test` physical focus | Navigation plus bounded ASCII physical keys; coalesced wake channels; synchronous upward refresh |
-| [Owned surfaces](platform/services/matrix/world/surface/README.md) | App rectangles cross actual matrix boundaries to the existing compositor | Host quota/name/clipping/stacking tests; scanout removal and teardown checks | Sixteen surfaces; bounded immutable RGBX images; no text surfaces or vblank guarantees |
+| [Matrix lifecycle](distribution/matrix/service/children/children.rs) | Same provider above apps and another matrix | `--matrix-test`: replacement preserves an outside sibling | Two direct children; distribution supplies policy through owner-only control |
+| [Local viewport, focus and capture](platform/libraries/matrix/world/world.rs) | Nested and sibling visible apps | Host policy tests; `--matrix-test`; `--matrix-desktop-test` physical focus | Navigation plus bounded ASCII physical keys; coalesced wake channels; synchronous upward refresh |
+| [Owned surfaces](platform/libraries/matrix/world/surface/README.md) | App rectangles cross actual matrix boundaries to the existing compositor | Host quota/name/clipping/stacking tests; scanout removal and teardown checks | Sixteen surfaces; bounded immutable RGBX images; no text surfaces or vblank guarantees |
 | [Retained compositor and hardware input](platform/services/display/compositor/compositor.rs) | Root adapter uses existing scanout/cursor and shared input decoders | `--matrix-desktop-test`; `--session-test --pressure` | Existing richer scenes/hosting remain in the earlier session fixture |
 | [Private/shared page lifetime](kernel/core/user_tasks/memory/README.md) | Matrix bitmaps and existing rendering/storage labs | Host transactions; both CPU boot proofs; matrix desktop | Four shared-region slots per task, grants capped at 64 pages; sealed objects only; original sponsor retained |
 | [Object storage and recovery](platform/services/storage/service.rs) | Notes and the probe desktop's colors through delegated roots | Store host tests; `objects_test.py`; `desktop_test.py`; `matrix_database_test.py` with and without faults | Two provider roots, whole-root delegation; not the production filesystem |

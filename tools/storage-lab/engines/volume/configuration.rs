@@ -1,9 +1,9 @@
 //! Host fixture preparation for the guest path/configuration proof. Call only on
 //! a disposable image copy. No program bytes or application state are replaced.
 use super::*;
+use cathedral_desktop_matrix_contracts::matrix;
 use crate::chunks::{Layout, Policy, Store};
 use cathedral_platform_contracts::{
-    matrix,
     storage::metadata::{self, Metadata},
 };
 

@@ -19,7 +19,7 @@ class OwnershipTests(unittest.TestCase):
     def test_contracts_cannot_hide_provider_dependencies(self):
         for source in ('kernel/contracts', 'kernel/contracts/nested',
                        'platform/contracts', 'platform/contracts/display',
-                       'platform/libraries/block-device'):
+                       'platform/libraries/block-device', 'distribution/matrix/contracts'):
             for target in ('kernel/core', 'platform/services/display',
                            'platform/libraries/user-runtime', 'distribution/libraries/boot-scene'):
                 with self.subTest(source=source, target=target), self.assertRaises(ValueError):
@@ -35,13 +35,22 @@ class OwnershipTests(unittest.TestCase):
         check_edge('kernel/arch', 'platform/drivers/facts')
         check_edge('contracts/uefi/raw', 'contracts/uefi/scalars')
         check_edge('distribution/desktop', 'distribution/libraries/boot-scene')
-        for source in ('platform/services/matrix', 'kernel/core'):
+        for source in ('platform/libraries/matrix', 'kernel/core'):
             with self.assertRaises(ValueError):
                 check_edge(source, 'distribution/libraries/boot-scene')
         with self.assertRaises(ValueError):
             check_edge('kernel/contracts', 'platform/drivers/facts')
         with self.assertRaises(ValueError):
             check_edge('contracts/uefi/raw', 'platform/libraries/uefi')
+
+    def test_stock_matrix_extensions_cannot_become_platform_dependencies(self):
+        check_edge('distribution/matrix', 'platform/libraries/matrix')
+        check_edge('distribution/matrix/contracts', 'platform/contracts')
+        for source in ('platform/libraries/matrix', 'platform/contracts', 'kernel/core'):
+            with self.assertRaises(ValueError):
+                check_edge(source, 'distribution/matrix/contracts')
+        with self.assertRaises(ValueError):
+            check_edge('distribution/matrix/contracts', 'distribution/matrix')
 
 
 if __name__ == '__main__':

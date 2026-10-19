@@ -22,6 +22,7 @@ admitted-fault = []
 management-probes = []
 
 [dependencies]
+cathedral-desktop-matrix-contracts.workspace = true
 cathedral-platform-contracts.workspace = true
 
 [target.'cfg(target_os = "none")'.dependencies]

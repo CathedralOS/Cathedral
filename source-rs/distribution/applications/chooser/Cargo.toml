@@ -17,6 +17,7 @@ launcher-startup-fault = []
 picker-startup-fault = []
 
 [dependencies]
+cathedral-desktop-matrix-contracts.workspace = true
 cathedral-platform-contracts.workspace = true
 
 [target.'cfg(target_os = "none")'.dependencies]

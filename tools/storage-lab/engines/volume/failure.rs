@@ -74,7 +74,14 @@ pub fn prepare(path: &Path, offset: u64, bytes: u64, target: &str, content: &[u8
     }
     rows.insert(seed::key(b'q', &[]), (charge as u64).to_le_bytes().to_vec());
     for (key, value) in rows {
-        table.insert(key.as_slice(), value.as_slice())?;
+        // Preserve unchanged pages. Rewriting every installed program for one
+        // probe can exhaust the tiny volume's copy-on-write transaction space.
+        let changed = table
+            .get(key.as_slice())?
+            .is_none_or(|old| old.value() != value.as_slice());
+        if changed {
+            table.insert(key.as_slice(), value.as_slice())?;
+        }
     }
     drop(table);
     tx.commit()?;

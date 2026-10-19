@@ -182,6 +182,10 @@ def run(source):
         database_image.prepare(image, harness.seeded_programs(profile, True),
                                harness.WORKSPACE / 'distribution/migrations/readable-labels.txt', True)
         for target, program in images.items():
+            # Upgrading old code and installing two probes can exhaust the small
+            # engine's physical history. Compact only this disposable copy.
+            subprocess.run([str(oracle), 'engines', 'volume', 'compact', str(image),
+                            str(database_image.OFFSET), str(database_image.VOLUME_BYTES)], check=True)
             subprocess.run([str(oracle), 'engines', 'volume', 'failure-fixture', str(image),
                             str(database_image.OFFSET), str(database_image.VOLUME_BYTES), target, str(program)], check=True)
         qemu = harness.find_qemu()

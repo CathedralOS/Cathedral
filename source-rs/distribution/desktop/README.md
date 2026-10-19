@@ -40,7 +40,7 @@ reports that uncertainty, so the chooser cannot silently close it.
 its sibling user matrix is admitted, before loading the user launcher from
 storage. This retires the picker's display, input and storage binding; it does
 not leave an invisible login process behind. The
-[user matrix's configuration loader](../../platform/services/matrix/service/children/configuration.rs)
+[user matrix's configuration loader](../../distribution/matrix/service/children/configuration.rs)
 places the separate launcher and app using its own saved arrangement. The user matrix owns
 the full display, with its launcher at the left and its app in the remaining
 space. The root keeps supervising and forwarding without visible boot chrome.
@@ -106,7 +106,7 @@ roots at the root. Tests cover recursive grants, sibling isolation, stale
 binding revisions, revocation during transactions, child replacement, subtrees
 granted as attenuated realms, subtree copies and durable data after restarting
 the tree/provider. No leaf has a disk or provider link.
-See [storage scopes](../../platform/services/matrix/world/storage/README.md)
+See [storage scopes](../../platform/libraries/matrix/world/storage/README.md)
 for the bounded realm policy and protocol.
 
 ## Visible integration
@@ -130,7 +130,7 @@ click requests another attempt. Ordinary apps inherit no catalogue grants.
 The test checks rollback, exhausted frame funding and repeated subtree replacement.
 Device launches remain explicit static grants.
 
-[Owned surfaces](../../platform/services/matrix/world/surface/README.md) use
+[Owned surfaces](../../platform/libraries/matrix/world/surface/README.md) use
 fresh child-local handles and conserving allowances. Each app owns a base rectangle
 and an accent object. Every matrix clips/translates one level and preserves subtree
 stacking; the root flattens into the existing compositor. Same-extent placement

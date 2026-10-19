@@ -44,24 +44,14 @@ pub const KEY_SOURCE: u64 = 104; // key,state; physical/root adapter only
 pub const HEALTH: u64 = 105;
 pub const SPAWN: u64 = 106; // local child slot, current launch index, loan bitmask, argument
 pub const STOP: u64 = 107; // local child slot; return after complete subtree reclamation
-/// Host to child over its control link before stopping it for a sibling's
-/// CLOSE: [LOSS, 0..]. The reply's word one is the work the child would lose
+/// Host to child over its control link before a lifecycle decision: [LOSS, 0..].
+/// The reply's word one is the work the child would lose
 /// if stopped now, zero meaning none. A child that does not answer is kept.
 /// A matrix asynchronously asks all its direct children and returns a boolean
 /// aggregate. Unknown/busy/error answers count as loss; descendants are never
 /// stopped by the query. This is an advisory observation, not a freeze/commit
 /// transaction preventing subsequent edits or background work.
 pub const LOSS: u64 = 121;
-// Owner-only routing. Two bits per hop (1/2 = local child 0/1); child endpoints
-// reject the entire encoded opcode. No process IDs or global paths are accepted.
-pub const OP_BITS: u32 = 16;
-pub fn route(mut words: Packet, child: usize) -> Option<Packet> {
-    if child > 1 || words[0] >> 62 != 0 {
-        return None;
-    }
-    words[0] = (words[0] & 0xffff) | (((words[0] >> OP_BITS) * 4 + child as u64 + 1) << OP_BITS);
-    Some(words)
-}
 pub const MAX_EXTENT: u64 = 4096;
 pub fn encode(words: Packet) -> [u8; 64] {
     let mut bytes = [0; 64];
@@ -119,19 +109,6 @@ pub const PRESENT_LIMIT: usize = 4;
 /// is entirely zero. No buffers, erases or allocation; names remain caller-local.
 pub const PRESENT_RECTS: u64 = 13;
 
-/// Child requests on the interaction connection. LAUNCH: [LAUNCH, object, withhold, 0..]
-/// asks the host to run an object from the requester's realm as its sibling,
-/// in the other slot, which the owner must have opened with LAUNCH_POLICY; the
-/// reply names the slot and local observation receipt. CLOSE: [CLOSE, 0..] asks the host to stop the sibling,
-/// which it does only after a LOSS probe answers with nothing it would lose.
-pub const LAUNCH: u64 = 14;
-pub const CLOSE: u64 = 15;
-/// Child interaction request: [APPLY_LAYOUT, current epoch, margin, strip width,
-/// gap, 0, 0, 0]. Only the launcher explicitly selected by stock CONFIGURE may
-/// request this. Changes geometry, never budgets, services, keys or executable
-/// selection. Saving configuration and applying it are separate operations.
-/// A retry with the same geometry is idempotent after refreshing the local view.
-pub const APPLY_LAYOUT: u64 = 16;
 /// LAUNCH succeeds with [0, slot, receipt, 0..]. A receipt names only the
 /// caller's latest successful launch, on that endpoint incarnation. Query with
 /// [LAUNCH_STATUS, receipt, 0..] -> [0, state, 0..]. No PID, fault address, other
@@ -145,10 +122,6 @@ pub const LAUNCH_STATUS: u64 = 17;
 /// chosen manager's responsibility. Missing/revoked grants and stale tickets deny.
 pub const MANAGED_TASK: u64 = 18;
 pub const TERMINATE_TASK: u64 = 19;
-/// Only the configured fallback's current interaction endpoint may request this.
-/// [RETRY_LAUNCHER, 0..] acknowledges one attempt before that fallback is retired.
-/// No automatic retry is replenished; app state and placement remain intact.
-pub const RETRY_LAUNCHER: u64 = 20;
 pub const LAUNCH_RUNNING: u64 = 1;
 /// The task returned zero.
 pub const LAUNCH_EXITED: u64 = 2;
@@ -307,33 +280,16 @@ mod rectangle_tests {
     }
 }
 
-/// Ask this stock matrix to load its own Matrix configuration; refuses if running.
-/// Arms one local retry of a faulted/nonzero-exit launcher under unchanged
-/// authority. Explicit stop/owner policy changes cancel it; app state survives.
-pub const CONFIGURE: u64 = 122;
 /// Restore the storage grants this matrix recorded for its own children.
 pub const RESTORE_STORAGE: u64 = 123;
-#[path = "matrix_config.rs"]
-pub mod config;
 
 /// Owner-only lookup: words 1..5 contain a zero-padded relative path (32 bytes).
 pub const RESOLVE_PATH: u64 = 124;
 /// Owner-only: [MANAGEMENT_GRANT, manager slot, target slot + 1, 0..]. Zero target
 /// revokes. Requires a live manager and a different target slot. The grant is
 /// tied to that connection incarnation; reconnecting does not inherit it.
-/// Stock CONFIGURE grants its selected launcher management of the app slot.
 pub const MANAGEMENT_GRANT: u64 = 125;
 /// Owner-only: [LAUNCH_IMAGES, slot, executable mask, 0..]. Explicit executable
 /// grants for future store-based admissions in this slot; default none. This
 /// never grants code authority to a running child or changes its realm.
 pub const LAUNCH_IMAGES: u64 = 126;
-/// Owner-only: [LAUNCHER_FALLBACK, executable index + 1, argument, 0..]. Zero
-/// removes the policy. Set before CONFIGURE; changing it cancels any previously
-/// configured recovery, including queued retries. CONFIGURE may use this code
-/// after launcher retry exhaustion. The fallback has local interaction and retry authority;
-/// no storage, layout, task-management or descendant capacity. Template
-/// admission retains its own code grant, with no additional executable grants.
-pub const LAUNCHER_FALLBACK: u64 = 127;
-
-/// Startup may read configuration and a program through several storage hops.
-pub const CONFIGURE_DEADLINE_TICKS: u64 = 8 * STORAGE_DEADLINE_TICKS + 100;

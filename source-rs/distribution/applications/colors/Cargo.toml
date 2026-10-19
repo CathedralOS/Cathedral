@@ -19,6 +19,7 @@ trace-input = []
 trace-storage = []
 
 [target.'cfg(target_os = "none")'.dependencies]
+cathedral-desktop-matrix-contracts.workspace = true
 cathedral-kernel-contracts.workspace = true
 cathedral-platform-contracts.workspace = true
 cathedral-user-runtime.workspace = true

@@ -20,8 +20,8 @@ mod scenario;
 mod session;
 #[cfg(all(not(feature = "desktop"), feature = "storage-lab"))]
 mod storage;
+use cathedral_desktop_matrix_contracts::matrix as wire;
 use cathedral_kernel_contracts::user as abi;
-use cathedral_platform_contracts::matrix as wire;
 use cathedral_user_runtime::{Error, ipc::Handle, time};
 type Pair = (Handle, Handle);
 #[cfg(feature = "desktop")]

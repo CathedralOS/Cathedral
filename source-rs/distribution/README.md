@@ -83,7 +83,7 @@ shown only the folder of users, and opens the second slot with a standing
 launch policy: whatever the chooser launches lands there with that budget and
 placement. It resolves `Login` and `Users` by path. When a user matrix appears,
 the desktop retires the picker and requests `CONFIGURE`. The
-[user matrix](../platform/services/matrix/service/children/configuration.rs)
+[user matrix](../distribution/matrix/service/children/configuration.rs)
 loads its own `Matrix` object and resolves the saved launcher path, then sets
 its child budgets and placement. The outer owner supervises storage and restores
 the user's binding after provider replacement; that matrix restores its own
@@ -136,7 +136,7 @@ NOTES / COLORS tiles inside the user. See the
 | Desktop owner | Initial | [main](desktop/main.rs), [admission](desktop/session/admission/admission.rs), [shell](desktop/session/shell/shell.rs) |
 | Display | Launch 0 | [display main](../platform/services/display/main.rs), [retained compositor](../platform/services/display/compositor/compositor.rs) |
 | Input | Launch 1 | [input main](../platform/services/input/main.rs), [matrix source](../platform/services/input/matrix.rs) |
-| Root matrix | Launch 2 | [matrix main](../platform/services/matrix/main.rs), [service loop](../platform/services/matrix/service/service.rs) |
+| Root matrix | Launch 2 | [matrix main](../distribution/matrix/main.rs), [service loop](../distribution/matrix/service/service.rs) |
 | Object storage | Launch 3 | [storage main](../platform/services/storage/main.rs), [object contract](../platform/contracts/storage.rs) |
 | Sign-in recovery | Catalogue executable 0 | [recovery main](desktop/recovery/main.rs), controlled by [login phases](desktop/session/shell/login.rs) |
 | Chooser | Program 1 | [chooser](applications/chooser/session/session.rs), shown the folder of users |
@@ -156,7 +156,7 @@ chooser holds no other launch authority and writes to its realm only to copy
 the named template on NEW in user-picker mode. Apps see local geometry and input, not global
 placement, other apps or an ancestor's services. The
 [matrix contract](../platform/contracts/matrix.rs) and
-[child launches](../platform/services/matrix/service/children/children.rs)
+[child launches](../distribution/matrix/service/children/children.rs)
 connect this distribution policy to the platform mechanism.
 
 ## Engineering proofs

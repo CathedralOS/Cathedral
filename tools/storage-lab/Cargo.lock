@@ -48,6 +48,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "cathedral-desktop-matrix-contracts"
+version = "0.0.0"
+dependencies = [
+ "cathedral-platform-contracts",
+]
+
+[[package]]
 name = "cathedral-kernel-contracts"
 version = "0.0.0"
 
@@ -75,6 +82,7 @@ dependencies = [
  "blake3",
  "cathedral-content-layout",
  "cathedral-database-objects",
+ "cathedral-desktop-matrix-contracts",
  "cathedral-platform-contracts",
  "cathedral-storage-volume",
  "redb",

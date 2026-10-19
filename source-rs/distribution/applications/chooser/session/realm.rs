@@ -29,7 +29,7 @@ impl Realm {
         } else {
             let config = self
                 .scope
-                .lookup(cathedral_platform_contracts::matrix::config::NAME)?;
+                .lookup(cathedral_desktop_matrix_contracts::matrix::config::NAME)?;
             let head = self
                 .scope
                 .call(store::Request::new(store::HEAD, config, 0, 0, 0))?;

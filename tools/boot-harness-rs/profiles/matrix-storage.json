@@ -15,8 +15,8 @@
     },
     "launches": [
       {
-        "package": "cathedral-matrix-service",
-        "entry": "platform/services/matrix/main.rs",
+        "package": "cathedral-stock-matrix",
+        "entry": "distribution/matrix/main.rs",
         "target": "x86_64-unknown-none",
         "clock": true,
         "argument": 0,
@@ -25,8 +25,8 @@
         "private_pages": 8
       },
       {
-        "package": "cathedral-matrix-service",
-        "entry": "platform/services/matrix/main.rs",
+        "package": "cathedral-stock-matrix",
+        "entry": "distribution/matrix/main.rs",
         "target": "x86_64-unknown-none",
         "clock": true,
         "argument": 1,

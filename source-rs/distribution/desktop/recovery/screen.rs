@@ -1,6 +1,6 @@
 //! One retained card; the matrix supplies the background and clips local input.
 use crate::recovery::Pair;
-use cathedral_platform_contracts::matrix as wire;
+use cathedral_desktop_matrix_contracts::matrix as wire;
 use cathedral_user_runtime::{memory::Private, time};
 const HEIGHT: usize = 112;
 fn width(launcher: bool) -> usize {

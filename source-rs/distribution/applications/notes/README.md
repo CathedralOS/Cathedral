@@ -69,7 +69,7 @@ correlation identities. The owner may retire the app's control link; the app
 keeps serving its world without it.
 
 Storage IPC enters the parent's
-[storage coordinator](../../../platform/services/matrix/service/parent/storage/storage.rs),
+[storage coordinator](../../../distribution/matrix/service/parent/storage/storage.rs),
 then the [object provider](../../../platform/services/storage/service.rs).
 The [distribution supervisor](../../desktop/session/persistence/persistence.rs)
 owns provider replacement and explicit re-grants. The app owns only its local

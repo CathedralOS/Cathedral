@@ -2,8 +2,9 @@
 //! desktop/session/shell/login.rs over the owner control link, or to the local
 //! matrix's explicit launcher-retry grant. HEALTH consumes a sign-in request;
 //! silence or process death never requests retry.
+use cathedral_desktop_matrix_contracts::matrix as wire;
 use cathedral_kernel_contracts::user as abi;
-use cathedral_platform_contracts::{input, matrix as wire};
+use cathedral_platform_contracts::input;
 use cathedral_user_runtime::{
     Error,
     ipc::{self, Handle},

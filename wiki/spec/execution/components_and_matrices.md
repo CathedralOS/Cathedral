@@ -106,11 +106,11 @@ retain their existing design/specification owners.
   implement bounded required/optional binding and owner withholding. The record
   and endpoint bundle are experiments, not a frozen component manifest.
 - [Matrix requests](../../../source-rs/platform/contracts/matrix.rs) and
-  [child admission](../../../source-rs/platform/services/matrix/service/children/children.rs)
+  [child admission](../../../source-rs/distribution/matrix/service/children/children.rs)
   exercise owner ceilings, restricted launches and recursive hosting.
 - The [distribution owner](../../../source-rs/distribution/desktop/session/shell/shell.rs)
   grants the user ceiling and requests startup. The
-  [stock matrix](../../../source-rs/platform/services/matrix/service/children/configuration.rs)
+  [stock matrix](../../../source-rs/distribution/matrix/service/children/configuration.rs)
   reads its own `Matrix` configuration, resolves the launcher path in its realm,
   and installs child budgets and placement within the supplied ceiling. Startup
   requires empty slots. The distribution launcher now has a bounded editor for

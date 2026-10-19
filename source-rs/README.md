@@ -42,7 +42,7 @@ manager authority cannot stop an app. Only disposable copies receive fault keys.
 
 Recent integrated proofs: `python tools/boot-harness-rs/run.py --matrix-desktop-test --release`
 checks recursive atomic presentation; `--matrix-storage-test --release` checks
-[private root delegation](platform/services/matrix/world/storage/README.md).
+[private root delegation](platform/libraries/matrix/world/storage/README.md).
 The smoke suite covers [combined IPC/IRQ/deadline waits](kernel/core/user_tasks/devices/README.md).
 Run these commands from the repository root.
 
@@ -117,7 +117,8 @@ The entrance explains this level without exposing every detail below it.
 | `platform/libraries/user-runtime/` | Entry stub, syscall and protocol clients, linker script and optional funded heap |
 | `platform/services/display/` | Separately compiled userspace provider for linear framebuffer drawing |
 | `platform/services/input/` | Userspace PS/2 configuration, keyboard/mouse decoding and IPC event delivery |
-| `platform/services/matrix/` | Recursive local viewport and input grants; [headless boundary lab](distribution/desktop/README.md) |
+| `platform/libraries/matrix/` | Reusable view/input/surface/scope authority with caller-selected child capacity |
+| `distribution/matrix/` | Stock matrix executable, desktop configuration and recovery; [headless boundary lab](distribution/desktop/README.md) |
 | `distribution/desktop/` | Default desktop: provider admission, chooser and user-matrix policy, storage supervision |
 | `distribution/libraries/boot-scene/` | Retained test-pattern drawing client shared by the display lab |
 | `platform/libraries/bitmap-font/` | Original 5-by-7 printable ASCII glyphs |

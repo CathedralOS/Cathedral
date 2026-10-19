@@ -1,7 +1,7 @@
 // Edit a saved arrangement through the launcher's existing realm grant.
 // Saving uses revision-checked storage, then requests geometry from the matrix.
 use super::*;
-use cathedral_platform_contracts::matrix::config::Config;
+use cathedral_desktop_matrix_contracts::matrix::config::Config;
 use cathedral_user_runtime::storage::Scope;
 
 pub struct Editor {

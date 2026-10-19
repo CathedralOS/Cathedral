@@ -21,8 +21,10 @@ members = [
     "platform/services/display",
     "platform/services/input",
     "platform/services/storage",
-    "platform/services/matrix",
+    "platform/libraries/matrix",
     # Distribution
+    "distribution/matrix",
+    "distribution/matrix/contracts",
     "distribution/applications/chooser",
     "distribution/applications/colors",
     "distribution/applications/notes",
@@ -45,7 +47,7 @@ members = [
     "distribution/lab/supervision",
     "distribution/libraries/boot-scene",
 ]
-default-members = ["distribution/applications/notes", "platform/libraries/user-heap", "platform/libraries/storage-volume", "platform/drivers/uart_16550", "distribution/lab/rendering", "kernel/contracts", "platform/contracts", "platform/libraries/block-device", "kernel/core", "kernel/arch", "platform/services/input", "platform/services/display", "platform/services/matrix", "platform/libraries/bitmap-font"]
+default-members = ["distribution/matrix/contracts", "distribution/applications/notes", "platform/libraries/user-heap", "platform/libraries/storage-volume", "platform/drivers/uart_16550", "distribution/lab/rendering", "kernel/contracts", "platform/contracts", "platform/libraries/block-device", "kernel/core", "kernel/arch", "platform/services/input", "platform/services/display", "platform/libraries/matrix", "platform/libraries/bitmap-font"]
 
 [workspace.package]
 version = "0.0.0"
@@ -54,6 +56,8 @@ rust-version = "1.94"
 publish = false
 
 [workspace.dependencies]
+cathedral-matrix = { path = "platform/libraries/matrix" }
+cathedral-desktop-matrix-contracts = { path = "distribution/matrix/contracts" }
 cathedral-colors = { path = "distribution/applications/colors" }
 cathedral-content-layout = { path = "platform/libraries/content-layout" }
 cathedral-database-objects = { path = "platform/libraries/database-objects" }

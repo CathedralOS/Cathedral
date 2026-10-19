@@ -59,7 +59,7 @@ on both x86-64 and ARM64. A produces one page, B forwards without mapping, and C
 maps after both A and B have exited. Repeated map/unmap, invalid copyout, queued
 discard, reader write faults and final frame/heap reclamation are checked.
 
-The integrated [matrix image path](../../../../platform/services/matrix/world/surface/README.md)
+The integrated [matrix image path](../../../../platform/libraries/matrix/world/surface/README.md)
 uses the same API for retained bitmaps. Matrices clip metadata and keep unmapped
 read rights; the final compositor maps the original backing. The app owns the
 content and funds its lifetime; process-local pixel storage is not copied at each

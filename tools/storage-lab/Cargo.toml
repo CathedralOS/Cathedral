@@ -10,6 +10,7 @@ name = "storage-layout"
 path = "main.rs"
 
 [dependencies]
+cathedral-desktop-matrix-contracts = { path = "../../source-rs/distribution/matrix/contracts" }
 cathedral-platform-contracts = { path = "../../source-rs/platform/contracts" }
 cathedral-content-layout = { path = "../../source-rs/platform/libraries/content-layout" }
 cathedral-database-objects = { path = "../../source-rs/platform/libraries/database-objects", features = ["host"], optional = true }

@@ -15,6 +15,7 @@ bench = false
 fallback-probes = []
 
 [dependencies]
+cathedral-desktop-matrix-contracts.workspace = true
 cathedral-kernel-contracts.workspace = true
 cathedral-platform-contracts.workspace = true
 cathedral-user-runtime.workspace = true

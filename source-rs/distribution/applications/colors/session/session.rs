@@ -2,8 +2,9 @@
 // Enter toggles its color through its own private object. The owner may probe
 // it over the control link; lab compositions add proof commands to that link,
 // the shipped app answers every command with its liveness report.
+use cathedral_desktop_matrix_contracts::matrix as wire;
 use cathedral_kernel_contracts::user as abi;
-use cathedral_platform_contracts::{input, matrix as wire};
+use cathedral_platform_contracts::input;
 use cathedral_user_runtime::{
     Error,
     ipc::{self, Handle},

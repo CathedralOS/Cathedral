@@ -110,7 +110,7 @@ def run(source):
     fault_images = {}
     for target, package, feature in [('early', 'cathedral-notes', 'startup-fault'),
                                      ('notes', 'cathedral-notes', 'admitted-fault'),
-                                     ('user', 'cathedral-matrix-service', 'startup-fault')]:
+                                     ('user', 'cathedral-stock-matrix', 'startup-fault')]:
         subprocess.run(['cargo', 'build', '--locked', '--release', '--target', 'x86_64-unknown-none',
                         '--target-dir', str(harness.BUILD / 'cargo'), '--package', package,
                         '--features', feature], cwd=harness.WORKSPACE, check=True)
