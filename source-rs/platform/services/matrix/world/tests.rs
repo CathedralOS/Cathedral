@@ -400,7 +400,7 @@ fn launcher_replacement_preserves_app_scene_epoch_focus_and_queue() {
     while next(&mut w, 1, app[1])[2] != wire::NONE {}
     w.key(input::ENTER as u64, input::PRESS as u64);
     w.disconnected(0);
-    w.restore_launcher(placement, 9).unwrap();
+    w.restore_launcher(placement, 9, true).unwrap();
     let fresh = w.request(0, 9, [wire::VIEW, 0, 0, 0, 0, 0, 0, 0]);
     assert_ne!(fresh[1], old[1]);
     assert!(w.layout_allowed(0, 9, fresh[1]));
@@ -412,6 +412,14 @@ fn launcher_replacement_preserves_app_scene_epoch_focus_and_queue() {
     assert_eq!(next(&mut w, 1, app[1])[2], wire::KEY);
     w.key(input::ENTER as u64, input::RELEASE as u64);
     assert_eq!(next(&mut w, 1, app[1])[2], wire::KEY);
+    w.disconnected(0);
+    w.restore_launcher(placement, 11, false).unwrap();
+    let fallback = w.request(0, 11, [wire::VIEW, 0, 0, 0, 0, 0, 0, 0]);
+    assert_eq!(fallback[0], 0);
+    assert!(!w.layout_allowed(0, 11, fallback[1]));
+    assert!(w.launcher_placement(11).is_none());
+    assert_eq!(view(&mut w, 1), app);
+    assert!(w.take_retired_surface().is_none());
 }
 
 #[test]
@@ -428,7 +436,7 @@ fn launcher_snapshot_requires_live_authority_and_never_survives_ancestor_rebindi
     let original = w.parent;
     w.inherit(Grant::default());
     w.inherit(original);
-    assert_eq!(w.restore_launcher(placement, 9), Err(abi::DENIED));
+    assert_eq!(w.restore_launcher(placement, 9, true), Err(abi::DENIED));
     place(&mut w, 0, 0, 0);
     w.surface_limit(0, 8).unwrap();
     w.grant_layout(0, 9);
@@ -436,5 +444,5 @@ fn launcher_snapshot_requires_live_authority_and_never_survives_ancestor_rebindi
     w.disconnected(0);
     w.surface_capacity(0);
     w.surface_capacity(16);
-    assert_eq!(w.restore_launcher(placement, 11), Err(abi::DENIED));
+    assert_eq!(w.restore_launcher(placement, 11, true), Err(abi::DENIED));
 }

@@ -30,6 +30,7 @@ launch receipts, placement rollback, broken control channels and close/exit race
 
 `python tools/boot-harness-rs/launcher_recovery_test.py PATH_TO_ONE_USER_IMAGE`
 checks one local launcher restart while Notes keeps a draft, retry exhaustion,
+explicit pointer/keyboard retries, repeated startup failure, fallback failure/exit,
 clean exit, owner stop/revocation, fresh layout authority and cold persistence.
 Its injected programs and disks are disposable copies; ordinary F5 has no fault keys.
 

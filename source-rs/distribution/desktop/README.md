@@ -114,9 +114,12 @@ submits an oversized rectangle that must be clipped at each ownership boundary.
 The probe desktop receives code-only catalogue grants and a funded process pool.
 [Startup admission](session/admission/admission.rs) stages these into the root; owner-only
 RUN requests select and fund descendants using the same provider at each level.
-The shell lends no catalogue: it runs the chooser with RUN_OBJECT and opens
-slots with LAUNCH_POLICY, so every other program comes from a realm by the
-number a chooser saw there.
+The shell runs the chooser with RUN_OBJECT and opens slots with LAUNCH_POLICY,
+so everyday programs come from the supplied realm. It explicitly lends one
+boot recovery executable to the user matrix with LAUNCH_IMAGES, then selects it
+as LAUNCHER_FALLBACK before CONFIGURE. On exhausted launcher recovery this program
+runs only in the retired strip, with no storage or child-task capacity; a local
+click requests another attempt. Ordinary apps inherit no catalogue grants.
 The test checks rollback, exhausted frame funding and repeated subtree replacement.
 Device launches remain explicit static grants.
 

@@ -135,8 +135,8 @@ to the unwritten `spec/human_surface/compositor_and_seat.md`. Neither the
 [Rust profile](source-rs/distribution/profile.json) defines a shell or recovery
 interface. The Rust profile composes a startup owner, display/input/storage
 providers, root and user matrices, and separate picker/launcher/app processes.
-Bounded startup and launcher recovery, and the launcher's explicitly delegated
-END APP control, provide ordinary distribution recovery. None provides a
+Bounded startup and launcher recovery, the owner-supplied launcher fallback,
+and explicitly delegated END APP provide ordinary distribution recovery. None provides a
 protected prompt, trusted indicator or guaranteed operator escape if the
 distribution or its matrix/input path is broken. They do not resolve this choice.
 

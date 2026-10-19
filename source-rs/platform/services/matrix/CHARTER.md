@@ -13,7 +13,8 @@ either a root grant or the upstream matrix endpoint into the same `Grant`.
 [owner.rs](service/requests/owner.rs) handles local layout, while
 [children entrance](service/children/children.rs) owns admission, pending control replies and teardown.
 [lifecycle.rs](service/children/lifecycle.rs) collects exact task outcomes;
-[recovery.rs](service/children/recovery.rs) reloads a failed configured launcher.
+[recovery.rs](service/children/recovery/recovery.rs) reloads a failed configured launcher;
+[fallback.rs](service/children/recovery/fallback.rs) admits explicitly supplied recovery code.
 [world entrance](world/world.rs) owns grant changes and child dispatch; descend into
 [children.rs](world/children.rs) for views/epochs/queues and
 [input.rs](world/input.rs) for focus, capture and key attenuation.
@@ -93,11 +94,34 @@ configuration. The sibling app retains its task, surfaces, geometry epoch, focus
 and draft. Changed ancestor display/storage authority, explicit owner changes
 to the launcher policy, or a separately admitted slot occupant cancel recovery.
 Old deferred events drain before replacement. The retry is consumed even when
-reading/admission fails; a second crash leaves the app alive without its strip.
-There is no backoff/reset policy or manual restart UI yet. The copied-image
+reading/admission fails. If the owner supplied a `LAUNCHER_FALLBACK` before
+CONFIGURE, exhaustion admits that executable into the retired launcher's view
+and budget. Otherwise the app remains alive without its strip. The fallback
+gets local interaction, a control link and a single-use `RETRY_LAUNCHER` request
+bound to its exact task/connection. It receives no storage, layout, management,
+additional images or descendant capacity. Boot-template admission includes its
+own code grant, which cannot reserve a process with zero available child slots.
+The selected fallback decides when to send the request; the provider authenticates
+its endpoint, not a physical human gesture.
+
+The fallback request is acknowledged before retirement; the next asynchronous
+read uses the captured realm identity and placement. Each explicit request buys
+one attempt, never another automatic retry. A new failure can show a fresh
+fallback, while fallback death/clean exit and owner STOP/revocation never act as
+input or request another attempt. Ancestor authority changes cancel the saved
+context. Recovery remains dependent on the live matrix, input and storage paths;
+this is not the platform's still-unspecified protected global escape surface.
+
+`LAUNCH_IMAGES` explicitly allows the owner's existing executable grants to
+accompany future store-based admissions in one slot. It defaults to none. F5
+uses it to give the user matrix the boot recovery program, then selects that
+program as its fallback. Neither ordinary apps nor the fallback inherit the
+user matrix's executable catalogue. The platform chooses no distribution binary
+or UI text. The copied-image
 [launcher recovery fixture](../../../../tools/boot-harness-rs/launcher_recovery_test.py)
-exercises real faults, clean exit, owner STOP and storage revocation, and checks
-draft retention, live layout, input, saving and cold persistence.
+exercises real faults, explicit retries, fallback failure/exit, clean launcher
+exit, owner STOP and storage revocation, checking draft retention, live layout,
+input, saving and cold persistence.
 
 ## Limits of this milestone
 

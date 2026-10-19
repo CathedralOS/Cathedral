@@ -11,6 +11,9 @@ path = "main.rs"
 test = false
 bench = false
 
+[features]
+fallback-probes = []
+
 [dependencies]
 cathedral-kernel-contracts.workspace = true
 cathedral-platform-contracts.workspace = true

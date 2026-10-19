@@ -4,3 +4,4 @@
 pub const STATUS: u64 = 0xff01;
 pub const STARTING: u64 = 0;
 pub const FAILED: u64 = 1;
+pub const LAUNCHER: u64 = 2;

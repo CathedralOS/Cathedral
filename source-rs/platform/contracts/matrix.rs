@@ -145,6 +145,10 @@ pub const LAUNCH_STATUS: u64 = 17;
 /// chosen manager's responsibility. Missing/revoked grants and stale tickets deny.
 pub const MANAGED_TASK: u64 = 18;
 pub const TERMINATE_TASK: u64 = 19;
+/// Only the configured fallback's current interaction endpoint may request this.
+/// [RETRY_LAUNCHER, 0..] acknowledges one attempt before that fallback is retired.
+/// No automatic retry is replenished; app state and placement remain intact.
+pub const RETRY_LAUNCHER: u64 = 20;
 pub const LAUNCH_RUNNING: u64 = 1;
 /// The task returned zero.
 pub const LAUNCH_EXITED: u64 = 2;
@@ -319,6 +323,17 @@ pub const RESOLVE_PATH: u64 = 124;
 /// tied to that connection incarnation; reconnecting does not inherit it.
 /// Stock CONFIGURE grants its selected launcher management of the app slot.
 pub const MANAGEMENT_GRANT: u64 = 125;
+/// Owner-only: [LAUNCH_IMAGES, slot, executable mask, 0..]. Explicit executable
+/// grants for future store-based admissions in this slot; default none. This
+/// never grants code authority to a running child or changes its realm.
+pub const LAUNCH_IMAGES: u64 = 126;
+/// Owner-only: [LAUNCHER_FALLBACK, executable index + 1, argument, 0..]. Zero
+/// removes the policy. Set before CONFIGURE; changing it cancels any previously
+/// configured recovery, including queued retries. CONFIGURE may use this code
+/// after launcher retry exhaustion. The fallback has local interaction and retry authority;
+/// no storage, layout, task-management or descendant capacity. Template
+/// admission retains its own code grant, with no additional executable grants.
+pub const LAUNCHER_FALLBACK: u64 = 127;
 
 /// Startup may read configuration and a program through several storage hops.
 pub const CONFIGURE_DEADLINE_TICKS: u64 = 8 * STORAGE_DEADLINE_TICKS + 100;

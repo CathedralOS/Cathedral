@@ -77,14 +77,13 @@ impl Children {
             cathedral_user_runtime::task::Outcome::Cancelled => wire::LAUNCH_STOPPED,
             _ => wire::LAUNCH_FAILED,
         };
-        if slot == 0 {
-            if state == wire::LAUNCH_FAILED {
-                if let Some(launcher) = &mut self.launcher {
-                    launcher.retired = true;
-                }
-            } else {
-                self.launcher = None;
-            }
+        if slot == 0
+            && self
+                .launcher
+                .as_mut()
+                .is_some_and(|l| !l.retired(state == wire::LAUNCH_FAILED))
+        {
+            self.launcher = None;
         }
         if let Some(observer) = self.observations.finished(child.task.raw(), state) {
             world.notify(observer);

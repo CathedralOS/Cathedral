@@ -50,8 +50,11 @@ terminal reports the failed stage and error. These failures never open storage.
 
 If the configured app strip crashes, its matrix attempts one local restart,
 preserving the running app and its draft. The replacement keeps the current
-layout. A second crash leaves the app usable without the strip; apps can still
-save and close themselves. There is no manual strip-restart control yet.
+layout. A second crash, or failure to read/admit its replacement, shows
+**LAUNCHER UNAVAILABLE / TRY AGAIN** within the strip. Click Try Again, or focus
+that screen and press Enter, to request one more attempt. It preserves the app's
+draft and current layout, and does not replenish automatic retries. A broken
+recovery screen does not restart itself. Apps can still save and close themselves.
 
 Initial stock defaults live in [matrix.conf](matrix.conf);
 installation preserves existing saved arrangements.

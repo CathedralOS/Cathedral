@@ -49,8 +49,9 @@ fn chooser(login: &mut Login, matrix: Pair, extent: [u64; 2], failed: bool) -> R
 /// hosts two children, reads programs of up to 64 pages, and retains their
 /// bitmaps and replacements. The two stock app tiles retain 24 reader pages,
 /// leaving space for a program of up to 64 pages during admission.
-pub(crate) fn workspace(width: u64, height: u64) -> [wire::Packet; 2] {
+pub(crate) fn workspace(width: u64, height: u64) -> [wire::Packet; 3] {
     [
+        [wire::LAUNCH_IMAGES, 1, 1, 0, 0, 0, 0, 0],
         [wire::LAUNCH_POLICY, 1, 80, 96, 10, 2, 0, 11],
         [wire::LAUNCH_PLACE, 1, 0, 0, width, height, KEYS, 0],
     ]
@@ -64,6 +65,23 @@ pub(super) fn enter(matrix: Pair) -> Result<(), u64> {
     stop(matrix, 0)?;
     cathedral_user_runtime::write(b"Cathedral desktop: picker stopped; loading user launcher\n")
         .unwrap();
+    request(
+        matrix,
+        wire::route(
+            [
+                wire::LAUNCHER_FALLBACK,
+                1,
+                crate::recovery_protocol::LAUNCHER,
+                0,
+                0,
+                0,
+                0,
+                0,
+            ],
+            1,
+        )
+        .unwrap(),
+    )?;
     let reply = call(
         matrix,
         wire::route([wire::CONFIGURE, 0, 0, 0, 0, 0, 0, 0], 1).unwrap(),

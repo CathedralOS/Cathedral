@@ -117,6 +117,7 @@ pub(super) fn dispatch(
                 .query(request.client.unwrap(), request.incarnation, receipt)
         }
         Some([wire::MANAGED_TASK, 0, 0, 0, 0, 0, 0, 0]) => children.managed_task(&request),
+        Some([wire::RETRY_LAUNCHER, 0, 0, 0, 0, 0, 0, 0]) => children.retry_launcher(&request),
         Some([wire::TERMINATE_TASK, ticket, 0, 0, 0, 0, 0, 0]) => {
             children.terminate_task(&request, ticket, parent, world, server)?
         }

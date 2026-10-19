@@ -26,7 +26,7 @@ def exercise(stream, output, serial, mode, saved=None):
         assert all(s not in value for s in ('CATHEDRAL_RS_PANIC', 'initial program stopped', 'storage offline', 'launcher-recovery-refused')), value[-3000:]
         for report in value.replace('Cathedral Rust lab: ', '').split('Cathedral user panic:')[1:]:
             if report.count('\n') >= 2:
-                assert report.splitlines()[1] in ('deliberate launcher failure', 'deliberate launcher startup failure'), value[-3000:]
+                assert report.splitlines()[1] in ('deliberate launcher failure', 'deliberate launcher startup failure', 'deliberate launcher fallback failure'), value[-3000:]
         return value
 
     def click(x, y):
@@ -91,9 +91,16 @@ def exercise(stream, output, serial, mode, saved=None):
     if mode == 'startup':
         scan(lambda d, s: s.count('deliberate launcher startup failure') == 2
              and s.count('launcher recovered; retry consumed') == 1
-             and pixel(d, 100, 70) == '101827', 'startup retry is bounded')
+             and text(d, 72, height // 2 - 40, 'LAUNCHER'), 'startup retry is bounded and fallback is visible')
         time.sleep(3)
         assert log().count('deliberate launcher startup failure') == 2
+        for attempt in (1, 2):
+            click(120, height // 2 + 28)
+            scan(lambda d, s: s.count('explicit launcher retry') == attempt
+                 and s.count('deliberate launcher startup failure') == 2 + attempt
+                 and text(d, 72, height // 2 - 40, 'LAUNCHER'), 'one startup attempt per explicit retry')
+            time.sleep(2)
+            assert log().count('deliberate launcher startup failure') == 2 + attempt
         return None
     scan(lambda d, _: pixel(d, margin + strip // 2 - 20, margin + 46) == 'd9e4ef', 'launcher')
     click(margin + strip // 2, margin + 72)
@@ -120,11 +127,25 @@ def exercise(stream, output, serial, mode, saved=None):
     if mode != 'owner-stop':
         click(margin + strip // 2, margin + 330)
         key('f7' if mode == 'clean' else 'f8')
-    expected = 1 if mode == 'recover' else 0
+    restores = mode == 'recover' or mode.startswith('fallback-')
+    expected = 1 if restores else 0
     scan(lambda d, s: s.count('launcher recovered; retry consumed') == expected
-         and pixel(d, margin + strip // 2 - 20, margin + 46) == ('d9e4ef' if mode == 'recover' else '101827')
+         and pixel(d, margin + strip // 2 - 20, margin + 46) == ('d9e4ef' if restores else '101827')
          and bitmap(d) == draft and header(d) == '9b7028', 'draft retained across launcher termination')
     assert log().count('note-loaded') == 1, 'Notes was reloaded/restarted'
+    if mode.startswith('fallback-'):
+        click(120, 354)
+        key('f8')
+        focus()
+        scan(lambda d, s: s.count('deliberate launcher failure') == 2
+             and text(d, 72, height // 2 - 40, 'LAUNCHER') and bitmap(d) == draft, 'fallback before termination')
+        click(120, height // 2 - 40)
+        key('f7' if mode == 'fallback-clean' else 'f8')
+        scan(lambda d, s: pixel(d, 120, height // 2 + 28) == '101827'
+             and bitmap(d) == draft, 'fallback termination preserves app')
+        time.sleep(2)
+        assert log().count('launcher fallback admitted') == 1
+        assert 'explicit launcher retry' not in log()
     if mode == 'recover':
         # The replacement received fresh layout authority; this also checks the
         # standing placement used by later app launches follows the new layout.
@@ -143,6 +164,29 @@ def exercise(stream, output, serial, mode, saved=None):
         key('f8')
         scan(lambda d, s: s.count('deliberate launcher failure') == 2
              and pixel(d, 100, 70) == '101827' and bitmap(d) == draft, 'second crash leaves app alive')
+        focus()  # Keep the cursor out of the fallback's glyph scan.
+        for attempt in (1, 2):
+            left = margin + (strip - 160) // 2
+            scan(lambda d, _: text(d, left + 32, height // 2 - 40, 'LAUNCHER')
+                 and text(d, left + 26, height // 2 + 21, 'TRY AGAIN') and bitmap(d) == draft,
+                 'fallback stays within launcher view; app draft retained')
+            shutil.copyfile(output / 'display.png', output / f'fallback-{attempt}.png')
+            if attempt == 1:
+                click(margin + strip // 2, height // 2 + 28)
+            else:
+                click(margin + strip // 2, height // 2 - 40)
+                key('ret')
+            expected += 1
+            scan(lambda d, s: s.count('explicit launcher retry') == attempt
+                 and s.count('launcher recovered; retry consumed') == expected
+                 and pixel(d, margin + strip // 2 - 20, margin + 46) == 'd9e4ef'
+                 and bitmap(d) == draft, 'explicit retry restores launcher without restarting Notes')
+            if attempt == 1:
+                click(margin + strip // 2, margin + 330)
+                key('f8')
+                focus()
+                scan(lambda d, s: s.count('deliberate launcher failure') == 3
+                     and text(d, left + 32, height // 2 - 40, 'LAUNCHER'), 'manual retry does not replenish automatic retries')
     focus()
     key('y')
     draft = bitmap(scan(lambda d, _: bitmap(d) != draft, 'app input without launcher'))
@@ -156,12 +200,14 @@ def exercise(stream, output, serial, mode, saved=None):
     assert log().count('note-loaded') == 1
     time.sleep(3)
     assert log().count('launcher recovered; retry consumed') == expected, 'unexpected additional retry'
+    if not restores:
+        assert 'launcher fallback admitted' not in log(), 'explicit stop/clean exit/revocation must not launch fallback'
     click(width - margin - 14, margin + 10)
     scan(lambda d, _: header(d) == '101827', 'app-owned close without launcher')
     return draft
 
 
-def run(source):
+def run(source, selected=None):
     before = source.read_bytes()
     output = harness.BUILD / 'launcher-recovery' / datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S%fZ')
     output.mkdir(parents=True)
@@ -179,11 +225,21 @@ def run(source):
         elf_trim.trim(harness.BUILD / 'cargo/x86_64-unknown-none/release/cathedral-chooser', images[feature], None)
     oracle = database_image.oracle()
     programs = harness.seeded_programs(profile, True)
-    modes = ('recover', 'clean', 'startup', 'owner-stop', 'owner-revoke')
+    modes = ('recover', 'clean', 'startup', 'owner-stop', 'owner-revoke', 'fallback-clean', 'fallback-fault')
+    if selected is not None:
+        modes = tuple(selected)
     for mode in modes:
         folder = output / mode
         folder.mkdir()
         esp = harness.BUILD / 'launcher-recovery-interactive/esp'
+        if mode.startswith('fallback-'):
+            composition = json.loads(profile.read_text())
+            composition['startup']['executables'][0]['features'] = ['fallback-probes']
+            fallback_profile = folder / 'launcher-fallback-probes.json'
+            fallback_profile.write_text(json.dumps(composition), encoding='utf-8', newline='\n')
+            subprocess.run([sys.executable, str(Path(__file__).with_name('run.py')), '--release', '--build-only',
+                            '--profile', str(fallback_profile)], cwd=harness.REPO, check=True)
+            esp = harness.BUILD / 'launcher-fallback-probes-interactive/esp'
         if mode.startswith('owner-'):
             composition = json.loads(profile.read_text())
             composition['startup']['initial']['features'].append('launcher-' + mode[6:] + '-probe')
@@ -214,10 +270,12 @@ def run(source):
                 shutil.copyfile(folder / name, folder / f'boot-{boot + 1}-{name}')
     assert source.read_bytes() == before, 'source fixture changed'
     (output / 'result.json').write_text(json.dumps({'source_unchanged': True, 'modes': modes}), encoding='utf-8')
-    print(f'PASS: bounded launcher recovery, live Notes draft/layout/input/save/close, clean exit and cold persistence; artifacts: {output}')
+    print(f'PASS: configured launcher recovery modes={modes}; source unchanged; artifacts: {output}')
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('image', type=Path, help='one-user desktop fixture; only copies are changed')
-    run(parser.parse_args().image)
+    parser.add_argument('--mode', nargs='+', choices=('recover', 'clean', 'startup', 'owner-stop', 'owner-revoke', 'fallback-clean', 'fallback-fault'))
+    args = parser.parse_args()
+    run(args.image, args.mode)

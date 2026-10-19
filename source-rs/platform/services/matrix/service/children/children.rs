@@ -45,10 +45,12 @@ pub(super) struct Children {
     next_pages: [Option<[u64; 2]>; 2],
     standing: [Option<Standing>; 2],
     allowed_imports: [Option<u64>; 2],
+    allowed_images: [u64; 2],
     pending: [Option<(Request, u64, Purpose)>; 2],
     retiring: [Option<i64>; 2],
     loss: Option<loss::Survey>,
     launcher: Option<recovery::Launcher>,
+    fallback: Option<recovery::Fallback>,
     pub(in crate::service) observations: cathedral_matrix_service::world::launches::Launches,
     management: cathedral_matrix_service::world::management::Management,
 }
@@ -111,6 +113,8 @@ impl Children {
                     | wire::RESTORE_STORAGE
                     | wire::STOP
                     | wire::MANAGEMENT_GRANT
+                    | wire::LAUNCH_IMAGES
+                    | wire::LAUNCHER_FALLBACK
             )
         {
             return Ok(false);
@@ -182,6 +186,19 @@ impl Children {
             }
         } else {
             match words {
+                [wire::LAUNCH_IMAGES, slot @ 0..=1, images, 0, 0, 0, 0, 0]
+                    if images >> abi::MAX_LAUNCHES == 0 =>
+                {
+                    let result = (0..abi::MAX_LAUNCHES)
+                        .filter(|i| images & (1 << i) != 0)
+                        .try_for_each(|i| {
+                            cathedral_user_runtime::task::Executable::at(i as u64).map(|_| ())
+                        });
+                    result.map(|()| self.allowed_images[slot as usize] = images)
+                }
+                [wire::LAUNCHER_FALLBACK, image, argument, 0, 0, 0, 0, 0] => {
+                    self.set_fallback(image, argument)
+                }
                 [
                     wire::MANAGEMENT_GRANT,
                     manager @ 0..=1,

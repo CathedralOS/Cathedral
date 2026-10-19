@@ -42,6 +42,7 @@ impl World {
         &mut self,
         placement: LauncherPlacement,
         incarnation: u64,
+        controls_layout: bool,
     ) -> Result<(), u64> {
         if !self.launcher_parent_matches(placement)
             || incarnation == 0
@@ -52,7 +53,9 @@ impl World {
         }
         self.surface_limit(0, placement.surfaces)?;
         self.place(0, placement.rect, placement.keys)?;
-        self.grant_layout(0, incarnation);
+        if controls_layout {
+            self.grant_layout(0, incarnation);
+        }
         Ok(())
     }
 

@@ -69,8 +69,8 @@ impl Children {
             world,
         )
     }
-    /// Code from a sealed object read out of this matrix's realm. It lends no
-    /// catalogue grants, because its children come from its own realm, and it
+    /// Code from a sealed object read out of this matrix's realm. It lends only
+    /// explicitly owner-allowed executable grants (none by default), and it
     /// enters with no first argument: a program's shape comes from what it is
     /// handed, not from a role word.
     pub(super) fn run_object(
@@ -98,7 +98,13 @@ impl Children {
             executable,
             pages,
             frames,
-            [plan.argument, plan.channels, plan.descendants, 0, plan.cpu],
+            [
+                plan.argument,
+                plan.channels,
+                plan.descendants,
+                self.allowed_images[plan.slot],
+                plan.cpu,
+            ],
             storage && self.separate_storage,
             server,
             world,
@@ -106,7 +112,7 @@ impl Children {
         Ok(storage)
     }
     #[allow(clippy::too_many_arguments)]
-    fn admit(
+    pub(super) fn admit(
         &mut self,
         slot: usize,
         executable: Executable,

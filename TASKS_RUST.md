@@ -1,7 +1,7 @@
 # Rust reference OS: tasks and handoff
 
-Updated 2026-10-18 (local date). Current milestone: explicit delegated app
-termination, following bounded early bootstrap recovery,
+Updated 2026-10-18 (local date). Current milestone: explicit launcher recovery
+after retry exhaustion, following app termination and bounded early bootstrap recovery,
 interactive storage-provider startup and explicit retry,
 root login recovery, independent Colors,
 local configured-launcher recovery,
@@ -58,6 +58,9 @@ It uses x86-64 QEMU/TCG and UEFI.
   work and defaults to Cancel; confirmation stops the exact observed app/subtree.
   F3 opens it with launcher focus. A recovered launcher can manage the existing
   app. This is delegated authority, not a protected system-wide escape key.
+- If the launcher exhausts its retry, **LAUNCHER UNAVAILABLE / TRY AGAIN** takes
+  its place. A click or Enter with that screen focused requests one new attempt,
+  preserving the app and current arrangement. Failure of that screen stays stopped.
 - The default input service negotiates QEMU's absolute virtual mouse. The guest
   cursor follows the host pointer within the window; PS/2 remains the fallback.
   Apps still receive only local matrix input, never the physical device grant.
@@ -308,8 +311,10 @@ to hierarchy metadata; extensions are conventions, not authoritative types.
   about unsaved work, defaults to Cancel and names the exact observed task;
   stale/revoked tickets cannot kill replacements. A recovered launcher receives
   fresh authority over the existing app. Apps and storage-only endpoints deny it.
-- [ ] **Continue lifecycle recovery where it is still incomplete.** Launcher retry exhaustion
-  has no explicit recovery UI. Provider loss while apps
+- [x] **Offer explicit recovery after launcher retry exhaustion.** Owner-supplied
+  fallback code occupies only the retired launcher view. Its current connection
+  may request one new attempt; no automatic budget is restored. App drafts survive.
+- [ ] **Continue lifecycle recovery where it is still incomplete.** Provider loss while apps
   hold work and clearer focus feedback still need further adversarial coverage.
   Existing app-owned close protects dirty work, and layout invalidation keeps drafts.
 - [ ] **Bring storage write latency down.** Collection scans metadata before
@@ -1285,7 +1290,7 @@ releases the old launcher before replacement. The same asynchronous HEAD/BULK
 path used by normal launches reloads its executable without blocking interaction
 on the separate parent stream or retaining an extra code reader indefinitely.
 
-Start at [recovery.rs](source-rs/platform/services/matrix/service/children/recovery.rs).
+Start at [recovery.rs](source-rs/platform/services/matrix/service/children/recovery/recovery.rs).
 It snapshots current placement, page policy and storage identity, waits for old
 deferred events/control replies/publication to retire, then admits fresh endpoints
 and issues fresh storage/layout grants. The app's task, scene, geometry epoch,
@@ -1606,3 +1611,72 @@ trusted platform chrome remains open; its outdated description of the Rust
 status-app experiment has been corrected. Next: explicit recovery after launcher
 retry exhaustion, then live provider-loss behavior without discarding app drafts.
 The user's existing interactive QEMU, saved disk and ESP were left untouched.
+
+## Explicit launcher recovery after exhaustion, 2026-10-18
+
+The user matrix now replaces an exhausted launcher with the distribution's
+LAUNCHER UNAVAILABLE / TRY AGAIN screen. The screen occupies the old launcher's
+view; the app keeps its task, surfaces, current arrangement and unsaved work.
+Clicking Try Again or pressing Enter with that view focused requests one new
+stored-program read and admission. The acknowledgement precedes retirement of
+the requesting screen. A successful replacement gets fresh layout and app
+management authority, but no replenished automatic retry. Repeated failure
+returns to the screen; its own exit or fault stays stopped.
+
+The platform does not select distribution code. LAUNCH_IMAGES explicitly lends
+existing executable grants to future store-based admissions, with none by default.
+The startup owner lends its recovery executable to the user matrix and supplies
+LAUNCHER_FALLBACK before CONFIGURE. The fallback has local interaction and a
+connection-bound RETRY_LAUNCHER request, without storage, layout, task management
+or descendant capacity. Kernel template admission retains its own code grant;
+it does not grant capacity to spawn anything. Ordinary stored apps still receive
+no executable grants. No kernel ABI, resource ceiling or stored schema changed.
+
+Changing the owner's fallback policy cancels configured recovery, including a
+queued request. Existing owner placement/storage/management revocation rules
+also cancel recovery. This is an ordinary delegated recovery UI, not physical
+human attestation or a protected global escape. It requires a live matrix and
+its upstream services; live provider loss remains separate work.
+
+Verification:
+
+- Launcher cases passed across `launcher-recovery/` runs:
+  `20261019T004036309505Z` completed recover (including cold boot) and clean-exit
+  cases before a startup screenshot assertion failed. That assertion used the
+  wrong glyph coordinate; corrected startup passed in `20261019T004252229040Z`.
+  Recover exercised both pointer and keyboard retries, retained live layout and
+  a dirty Notes draft, and saved/closed without restarting Notes. Startup faults
+  proved each click permits exactly one additional attempt, without an automatic
+  loop. `20261019T004341827568Z` completed owner-stop and owner-revocation cases
+  before a fallback screenshot check caught the cursor covering its text.
+  Moving the cursor away fixed the check; fallback clean-exit and fault cases
+  passed in `20261019T004519997743Z`, with Notes still editable/saveable/closable.
+  Successful subset runs confirmed the source fixture was unchanged.
+- The initial fallback assertion incorrectly expected no code grant at all;
+  kernel template admission intentionally includes the template's own code.
+  The corrected runtime assertions verify no extra code and zero child capacity,
+  plus denied storage/layout/management operations. No kernel change was needed.
+  Read/admission refusal paths lead to the same fallback but were not separately
+  fault-injected in this milestone.
+- `management/20261019T004803880775Z` passed all three existing scenarios,
+  including force-ending a hung app, both Cancel actions, stale/revoked authority,
+  recovered launcher management, replacement apps and cold persistence. Notes
+  now also asserts denial of fallback retry/policy and executable delegation on
+  its interaction/storage endpoints, and absence of inherited executable grants.
+- `desktop/20261019T004939308363Z` passed the normal F5 user/app flow and cold
+  persistence, with the independent oracle checking all 237 records. The picker
+  was ready 2.48 seconds after QMP connection on the first boot and 4.30 seconds
+  on cold reboot. These timings exclude compilation/installation; they do not
+  diagnose the owner's separate delayed-window report.
+- `provider-startup/20261019T005026283061Z` passed `crash-once`: the shared
+  distribution screen still handles failed provider readiness and explicit
+  retry through to a usable session. `run.py --matrix-storage-test --release
+  --timeout 180` passed recursive delegation, scoped launches, loss handling,
+  owner stop/revocation and replacement through the shared admission/cleanup path.
+- Workspace host tests, userspace and changed feature-set clippy passed. Layout
+  (35 Omega/96 Rust edges), source formatting, Python compilation and diff checks
+  passed. No kernel/architecture changes; ARM64 was not rerun.
+
+Next: live provider-loss behavior that preserves app drafts. The trusted-chrome
+owner question remains open. The user's interactive QEMU, disk and ESP remain
+untouched; fault tests use disposable copies and separate boot media.

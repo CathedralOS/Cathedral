@@ -31,6 +31,13 @@ there and granted its object's subtree, so its state nests under its code and
 a user's state nests under the user. [The distribution map](distribution/README.md)
 links admission, choosers, apps and provider boundaries.
 
+An exhausted launcher retry can show the owner's boot-supplied recovery program
+in that strip. Try Again requests one attempt through the fallback's current
+connection, preserving the app and its arrangement. This fallback has no storage,
+layout, management or child capacity. Its own failure does not request another
+retry. The [launcher recovery fixture](../tools/boot-harness-rs/launcher_recovery_test.py)
+exercises pointer/keyboard retries, repeated failure, live drafts and cold persistence.
+
 `python tools/boot-harness-rs/desktop_test.py` checks this actual image through
 physical input, a copied user, exact saved text/status, duplicate and switch,
 repeated app replacement and cold reboot, then has an independent host model

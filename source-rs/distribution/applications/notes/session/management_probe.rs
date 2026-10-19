@@ -1,6 +1,7 @@
 //! Test-only unprivileged calls and a non-yielding app for desktop recovery.
 use super::*;
 pub fn denied(connections: &cathedral_user_runtime::matrix::OptionalConnections) {
+    assert!(cathedral_user_runtime::task::Executable::at(0).is_err());
     for pair in [Some(connections.interaction), connections.storage]
         .into_iter()
         .flatten()
@@ -9,6 +10,9 @@ pub fn denied(connections: &cathedral_user_runtime::matrix::OptionalConnections)
             [wire::MANAGED_TASK, 0, 0, 0, 0, 0, 0, 0],
             [wire::TERMINATE_TASK, 1, 0, 0, 0, 0, 0, 0],
             [wire::MANAGEMENT_GRANT, 1, 1, 0, 0, 0, 0, 0],
+            [wire::RETRY_LAUNCHER, 0, 0, 0, 0, 0, 0, 0],
+            [wire::LAUNCH_IMAGES, 1, 1, 0, 0, 0, 0, 0],
+            [wire::LAUNCHER_FALLBACK, 1, 2, 0, 0, 0, 0, 0],
         ] {
             assert_eq!(call(pair, words), wire::error(abi::DENIED));
         }
