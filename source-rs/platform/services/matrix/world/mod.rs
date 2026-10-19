@@ -4,6 +4,7 @@ mod children;
 mod input;
 pub mod launches;
 mod layout;
+pub mod management;
 pub mod presentation;
 pub mod storage;
 mod surface;

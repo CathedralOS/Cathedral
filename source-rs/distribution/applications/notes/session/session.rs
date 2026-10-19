@@ -40,6 +40,8 @@ pub fn run(style: u64, environment: Environment) {
     let connections =
         cathedral_user_runtime::matrix::OptionalConnections::load(&environment).unwrap();
     let parent = connections.interaction;
+    #[cfg(feature = "management-probes")]
+    management_probe::denied(&connections);
     assert_eq!(
         call(parent, [wire::APPLY_LAYOUT, 0, 24, 192, 16, 0, 0, 0])[0],
         abi::DENIED
@@ -120,6 +122,8 @@ pub fn run(style: u64, environment: Environment) {
                 }
             }
             let event = wire::poll_event(snapshot);
+            #[cfg(feature = "management-probes")]
+            management_probe::event(event);
             match closing.action(event, extent[2], notes.temporary()) {
                 closing::Action::Request if draft == confirmed && error == 0 => return,
                 closing::Action::Request => {

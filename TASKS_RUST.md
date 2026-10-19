@@ -1,7 +1,8 @@
 # Rust reference OS: tasks and handoff
 
-Updated 2026-10-18 (local date). Current milestone: bounded early bootstrap
-recovery, following interactive storage-provider startup and explicit retry,
+Updated 2026-10-18 (local date). Current milestone: explicit delegated app
+termination, following bounded early bootstrap recovery,
+interactive storage-provider startup and explicit retry,
 root login recovery, independent Colors,
 local configured-launcher recovery,
 scoped lifecycle observations and close-channel failure handling, live
@@ -53,6 +54,10 @@ It uses x86-64 QEMU/TCG and UEFI.
   **SAVE / DISCARD / CANCEL**. A failed save stays open. Colors asks **CLOSE
   ANYWAY** if its last storage result is uncertain. Launching another app while
   one is still open shows CLOSE APP FIRST.
+- **END APP** above Settings handles an unresponsive app. It warns about unsaved
+  work and defaults to Cancel; confirmation stops the exact observed app/subtree.
+  F3 opens it with launcher focus. A recovered launcher can manage the existing
+  app. This is delegated authority, not a protected system-wide escape key.
 - The default input service negotiates QEMU's absolute virtual mouse. The guest
   cursor follows the host pointer within the window; PS/2 remains the fallback.
   Apps still receive only local matrix input, never the physical device grant.
@@ -298,9 +303,13 @@ to hierarchy metadata; extensions are conventions, not authoritative types.
   admission gets one retry after task/endpoint cleanup and conservation checks.
   Exhausted root/input recovery shows a static restart screen; failed display
   leaves an explicit launch-terminal diagnostic. Storage has not started yet.
+- [x] **Explicitly end an unresponsive app.** The configured launcher receives
+  management authority bound to its endpoint and the app slot. END APP warns
+  about unsaved work, defaults to Cancel and names the exact observed task;
+  stale/revoked tickets cannot kill replacements. A recovered launcher receives
+  fresh authority over the existing app. Apps and storage-only endpoints deny it.
 - [ ] **Continue lifecycle recovery where it is still incomplete.** Launcher retry exhaustion
-  has no explicit recovery UI. An unresponsive app is preserved,
-  but the desktop has no explicit force-stop/recovery UI. Provider loss while apps
+  has no explicit recovery UI. Provider loss while apps
   hold work and clearer focus feedback still need further adversarial coverage.
   Existing app-owned close protects dirty work, and layout invalidation keeps drafts.
 - [ ] **Bring storage write latency down.** Collection scans metadata before
@@ -1546,3 +1555,54 @@ Next: explicit operator controls for an unresponsive app or exhausted local
 launcher recovery. Initial recovery is bounded now; live display/input/root loss
 still needs a separate policy that accounts for unsaved user work. The active
 interactive QEMU and its disk/ESP remain untouched; all tests use separate media.
+
+## Explicit app termination, 2026-10-18
+
+The F5 launcher now offers END APP above Settings while its delegated app slot
+is occupied. F3 with launcher focus opens the same warning. Cancel is the default
+keyboard choice; a fresh confirmation cancels the observed app/subtree without
+requiring cooperation from a broken app. Ordinary app X and sibling CLOSE retain
+their loss-protection rules. The existing three tile surfaces render the warning
+and choices; the optional footer stays within the launcher's current page grant.
+
+The matrix owner can grant/revoke management independently of launch receipts.
+The ledger binds authority to the authenticated endpoint incarnation; queries
+issue endpoint-local tickets for exact kernel child handles. There is no PID or
+caller-supplied slot selector. Regrant, revocation and task retirement invalidate
+tickets; counters reset only when the manager connection dies. CONFIGURE and its
+bounded launcher restart explicitly grant the selected launcher management of
+the app slot. An explicit owner policy change cancels automatic recovery, so a
+restart cannot restore revoked authority. Teardown uses the existing task,
+surface, endpoint and funding cleanup. No kernel ABI or stored schema changed.
+
+Verification:
+
+- `management/20261019T002724060034Z` passed original-launcher, recovered-launcher
+  and owner-revocation scenarios. Physical input exercised both Cancel actions,
+  forced termination of a non-yielding dirty Notes task, replacement Notes with
+  only saved content, Colors save, and two cold reboots. Real IPC denied app
+  self-grants, management on app/storage endpoints, retained tickets after target
+  replacement, and retained tickets after owner revocation. Revocation also
+  cancelled launcher auto-recovery while Notes kept its draft and could save/close.
+  The full confirmation was checked in scanout and visually inspected. The source
+  fixture was byte-identical afterward. Earlier two-mode evidence is under
+  `management/20261019T002509885704Z`.
+- `desktop/20261019T002848038329Z` passed the unchanged default F5 composition,
+  user creation, app-owned save/discard/cancel, app replacement, cold persistence
+  and the host oracle's exact 235-record check.
+- `run.py --matrix-storage-test --release --timeout 180` passed existing recursive
+  delegation, scoped launches/receipts, failed control links, owner-stop/close
+  races, loss surveys and replacement. These exercise the shared cleanup path;
+  the new force-stop-versus-pending-control interleavings are not exhaustively
+  injected. Active storage/publication and loss survey gates remain bounded by
+  existing deadlines; BUSY needs another explicit confirmation.
+- Workspace host tests, userspace clippy and changed fixture-feature clippy passed.
+  Layout (35 Omega/96 Rust edges), format, Python compilation and diff checks pass.
+  No kernel or architecture changes; ARM64 was not rerun.
+
+This is ordinary manager authority with a distribution confirmation, not proof
+of human consent or an unspoofable system escape. The owner question about minimal
+trusted platform chrome remains open; its outdated description of the Rust
+status-app experiment has been corrected. Next: explicit recovery after launcher
+retry exhaustion, then live provider-loss behavior without discarding app drafts.
+The user's existing interactive QEMU, saved disk and ESP were left untouched.

@@ -7,6 +7,7 @@ mod control;
 mod imports;
 mod lifecycle;
 mod loss;
+mod management;
 mod recovery;
 
 include!("children.rs");

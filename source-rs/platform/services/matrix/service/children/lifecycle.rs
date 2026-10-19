@@ -57,6 +57,7 @@ impl Children {
             .ok_or(Error(abi::PEER_CLOSED as i64))?;
         self.saved_storage[slot] = None;
         self.observations.disconnected(slot);
+        self.management.disconnected(slot);
         server.remove(slot);
         if child.storage.is_some() {
             server.remove(slot + 3);

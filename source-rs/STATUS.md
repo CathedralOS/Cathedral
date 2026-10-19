@@ -13,14 +13,19 @@ user runs it as a matrix whose chrome, a second chooser over the user's realm,
 launches that user's Notes or Colors beside itself. User entry revokes the boot
 chooser's display/input grant and gives the user the full screen: launcher on
 the left, app in the remaining space, no persistent boot help or logout control.
-The user launcher can withhold storage for future launches: Notes receives an
+The launch protocol can withhold storage for future launches: Notes receives an
 actual optional binding and shows TEMP NO SAVE; Colors refuses missing required
-storage. [Declared imports](platform/contracts/imports/README.md) are checked
+storage. The ordinary launcher has no storage toggle. [Declared imports](platform/contracts/imports/README.md) are checked
 before store-based admission. Notes keeps up to eight
 notes as private objects on the experimental database disk; a duplicate is the
-store's copy of the saved note and shares its content. Closing asks the program
-what it would lose and keeps it open on any answer but nothing, so an unsaved
-draft stays until saved or explicitly reloaded. Colors keeps its color. Every
+store's copy of the saved note and shares its content. App-owned X offers
+Save / Discard / Cancel for a dirty note; a sibling's ordinary CLOSE requires
+a clean loss reply. The launcher's separately granted END APP control can stop
+an unresponsive app after a loss warning, using a ticket bound to that exact
+task. Default Cancel preserves work; stale or revoked tickets deny. The
+[management fixture](../tools/boot-harness-rs/management_test.py) checks this
+through real input with a spinning app and a restarted launcher. This is not a
+protected global escape from a failed desktop. Colors keeps its color. Every
 program is an object in the store, launched from a realm by whoever can see it
 there and granted its object's subtree, so its state nests under its code and
 a user's state nests under the user. [The distribution map](distribution/README.md)

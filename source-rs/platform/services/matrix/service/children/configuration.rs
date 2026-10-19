@@ -81,6 +81,9 @@ impl Children {
         super::super::requests::flush(parent, world)?;
         self.notify(world)?;
         world.grant_layout(0, server.incarnation(0).expect("configured launcher"));
+        self.management
+            .grant(0, server.incarnation(0).unwrap(), 1)
+            .map_err(|c| Error(c as i64))?;
         self.launcher = Some(recovery::Launcher::new(
             plan,
             self.slots[0].as_ref().unwrap().task.raw(),

@@ -3,7 +3,11 @@
 pub(crate) mod admission;
 
 pub(crate) mod persistence;
-#[cfg(any(feature = "launcher-stop-probe", feature = "launcher-revoke-probe"))]
+#[cfg(any(
+    feature = "launcher-stop-probe",
+    feature = "launcher-revoke-probe",
+    feature = "management-revoke-probe"
+))]
 mod recovery_probes;
 #[cfg(feature = "shell")]
 mod shell;

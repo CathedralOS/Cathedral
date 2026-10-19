@@ -49,6 +49,7 @@ pub(super) fn dispatch(
             };
             if response[0] == 0 {
                 children.recovery_owner_changed(words);
+                children.management_owner_changed(words);
             }
             if response[0] == 0 && matches!(words[0], wire::PLACE | wire::REVOKE) {
                 flush(parent, world)?;
@@ -114,6 +115,10 @@ pub(super) fn dispatch(
             children
                 .observations
                 .query(request.client.unwrap(), request.incarnation, receipt)
+        }
+        Some([wire::MANAGED_TASK, 0, 0, 0, 0, 0, 0, 0]) => children.managed_task(&request),
+        Some([wire::TERMINATE_TASK, ticket, 0, 0, 0, 0, 0, 0]) => {
+            children.terminate_task(&request, ticket, parent, world, server)?
         }
         Some(words)
             if matches!(

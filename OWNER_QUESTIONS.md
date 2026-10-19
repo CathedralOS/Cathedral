@@ -133,10 +133,12 @@ not the already accepted folder split.
 to the unwritten `spec/human_surface/compositor_and_seat.md`. Neither the
 [Omega distribution profile](source/distribution/profile.json) nor the
 [Rust profile](source-rs/distribution/profile.json) defines a shell or recovery
-interface. The Rust profile now composes init, display/input providers and a
-separate status application, but its whole-screen drawing and automatic restart
-experiment provides no protected prompt, trusted indicator or operator escape
-surface. It does not resolve this owner choice.
+interface. The Rust profile composes a startup owner, display/input/storage
+providers, root and user matrices, and separate picker/launcher/app processes.
+Bounded startup and launcher recovery, and the launcher's explicitly delegated
+END APP control, provide ordinary distribution recovery. None provides a
+protected prompt, trusted indicator or guaranteed operator escape if the
+distribution or its matrix/input path is broken. They do not resolve this choice.
 
 **Owner choice.** Must the platform retain a complete fallback desktop, or only
 a minimal trusted interaction and recovery surface? A complete fallback would

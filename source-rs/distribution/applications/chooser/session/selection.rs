@@ -18,12 +18,18 @@ impl Selection {
         extent: wire::Packet,
         count: usize,
         picker: bool,
+        managed: bool,
     ) -> (bool, bool) {
         match event[2] {
             wire::POINTER => {
                 let down = event[5] & 1 != 0;
                 let hit = if !picker && event[4] >= extent[3].saturating_sub(32) {
                     Some(SETTINGS)
+                } else if managed
+                    && (extent[3].saturating_sub(72)..extent[3].saturating_sub(48))
+                        .contains(&event[4])
+                {
+                    Some(END_APP)
                 } else {
                     layout::hit(extent, count, picker, event[3], event[4])
                 };
@@ -50,6 +56,10 @@ impl Selection {
                 input::ENTER => (true, true),
                 input::F2 if !picker => {
                     self.index = SETTINGS;
+                    (true, true)
+                }
+                input::F3 if managed => {
+                    self.index = END_APP;
                     (true, true)
                 }
                 _ => (false, false),

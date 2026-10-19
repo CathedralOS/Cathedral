@@ -52,13 +52,39 @@ child costs the owner a timeout rather than its life. At the unanswered-request
 limit, probes stop until late replies drain. A broken control direction alone
 does not prove task death or authorize discarding work; the owner can explicitly stop it.
 
+## Delegated task management
+
+The owner may grant a live child management of the other local slot using
+`MANAGEMENT_GRANT`. The [management ledger](world/management.rs) binds this to
+the authenticated connection incarnation. `MANAGED_TASK` reveals only whether
+that permitted slot holds a task, issuing an endpoint-local ticket for that exact
+task. `TERMINATE_TASK` checks the ticket against the current private kernel child
+handle before [collecting it](service/children/management.rs). It bypasses LOSS;
+the manager already holds authority to discard the task's work. It cannot grant
+itself authority, select another slot, identify a PID, or use an old confirmation
+against a replacement. Revocation/regrant invalidates outstanding tickets.
+Disconnect removes the grant and its local counter; target teardown invalidates
+observations. Owner REVOKE/BIND also clear management grants.
+
+Stock CONFIGURE grants its chosen launcher management of the app slot alongside
+layout authority. Local launcher recovery explicitly grants the new connection
+fresh authority, including over an app it did not launch. An explicit owner
+management change cancels that automatic recovery policy. No configuration-file
+schema or kernel ABI changes. The distribution's
+[confirmation controls](../../../distribution/applications/chooser/session/management/management.rs)
+provide the loss warning and default Cancel; the platform does not claim to
+authenticate a human click or provide a protected global escape surface.
+Active storage/publication exchanges and loss surveys must finish before a stop
+can run; BUSY requires another explicit request. Ordinary CLOSE still requires
+a clean LOSS reply and a launch receipt alone conveys no management authority.
+
 ## Configured launcher recovery
 
 Successful stock `CONFIGURE` arms one retry for its launcher after a fault or
 nonzero return. A clean return and explicit owner STOP do not restart it.
 The matrix collects the dead task, releases its surfaces and funding, then reads
 the executable again through its asynchronous storage path. Admission gives
-the replacement fresh endpoints, storage binding and layout authority. No old
+the replacement fresh endpoints, storage binding, layout and management authority. No old
 launch-observation receipt transfers to it. Code reads use the existing object
 identity within the same realm incarnation; this is not a persistent global reference.
 

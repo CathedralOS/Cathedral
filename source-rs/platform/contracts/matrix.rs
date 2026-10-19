@@ -137,6 +137,14 @@ pub const APPLY_LAYOUT: u64 = 16;
 /// [LAUNCH_STATUS, receipt, 0..] -> [0, state, 0..]. No PID, fault address, other
 /// caller's activity or later occupant of the same slot is exposed.
 pub const LAUNCH_STATUS: u64 = 17;
+/// Explicitly delegated management, separate from launch observation. QUERY:
+/// [MANAGED_TASK, 0..] -> [0, ticket, 0..], zero means the allowed slot is empty.
+/// Tickets are local to the manager's endpoint and identify an exact task, never
+/// a PID or a later occupant. [TERMINATE_TASK, ticket, 0..] cancels that subtree
+/// without a LOSS survey. The grant authorizes this; human confirmation is the
+/// chosen manager's responsibility. Missing/revoked grants and stale tickets deny.
+pub const MANAGED_TASK: u64 = 18;
+pub const TERMINATE_TASK: u64 = 19;
 pub const LAUNCH_RUNNING: u64 = 1;
 /// The task returned zero.
 pub const LAUNCH_EXITED: u64 = 2;
@@ -306,6 +314,11 @@ pub mod config;
 
 /// Owner-only lookup: words 1..5 contain a zero-padded relative path (32 bytes).
 pub const RESOLVE_PATH: u64 = 124;
+/// Owner-only: [MANAGEMENT_GRANT, manager slot, target slot + 1, 0..]. Zero target
+/// revokes. Requires a live manager and a different target slot. The grant is
+/// tied to that connection incarnation; reconnecting does not inherit it.
+/// Stock CONFIGURE grants its selected launcher management of the app slot.
+pub const MANAGEMENT_GRANT: u64 = 125;
 
 /// Startup may read configuration and a program through several storage hops.
 pub const CONFIGURE_DEADLINE_TICKS: u64 = 8 * STORAGE_DEADLINE_TICKS + 100;

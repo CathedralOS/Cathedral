@@ -14,6 +14,7 @@ pub type Pair = (Handle, Handle);
 pub const ENTRIES: usize = 4;
 pub const NEW: usize = ENTRIES;
 const SETTINGS: usize = NEW + 1;
+const END_APP: usize = SETTINGS + 1;
 
 pub fn run(environment: Environment, user_picker: bool, initial_status: &'static str) -> u64 {
     let connections = cathedral_user_runtime::matrix::Connections::load(&environment).unwrap();
@@ -29,7 +30,13 @@ pub fn run(environment: Environment, user_picker: bool, initial_status: &'static
     let mut repaint = true;
     let mut editor: Option<settings::Editor> = None;
     let mut launched = None;
+    let mut management = management::Controls::default();
+    #[cfg(feature = "recovery-probes")]
+    let mut management_probe = management::probe::Probe::default();
     loop {
+        if !user_picker {
+            repaint |= management.refresh(parent);
+        }
         if let Some(receipt) = launched {
             let reply = call(parent, [wire::LAUNCH_STATUS, receipt, 0, 0, 0, 0, 0, 0]);
             if reply[0] != 0 || reply[1] != wire::LAUNCH_RUNNING {
@@ -58,6 +65,10 @@ pub fn run(environment: Environment, user_picker: bool, initial_status: &'static
             }
             let event = wire::poll_event(snapshot);
             #[cfg(feature = "recovery-probes")]
+            if !user_picker {
+                management_probe.event(parent, event);
+            }
+            #[cfg(feature = "recovery-probes")]
             if !user_picker && event[2] == wire::KEY && event[4] == input::PRESS as u64 {
                 match event[3] as u8 {
                     input::F7 => return 0,
@@ -66,7 +77,9 @@ pub fn run(environment: Environment, user_picker: bool, initial_status: &'static
                 }
             }
             let mut choose = false;
-            if let Some(edit) = &mut editor {
+            if management.open() {
+                repaint |= management.event(event, extent, &mut selection.pressed, parent);
+            } else if let Some(edit) = &mut editor {
                 let (changed, closed) = edit.event(
                     event,
                     extent,
@@ -85,12 +98,20 @@ pub fn run(environment: Environment, user_picker: bool, initial_status: &'static
                     continue;
                 }
             } else {
-                let (changed, activate) = selection.event(event, extent, realm.count, user_picker);
+                let (changed, activate) = selection.event(
+                    event,
+                    extent,
+                    realm.count,
+                    user_picker,
+                    management.available(),
+                );
                 repaint |= changed;
                 choose = activate;
             }
             if choose {
-                if selection.index == SETTINGS && !user_picker {
+                if selection.index == END_APP && !user_picker {
+                    management.begin();
+                } else if selection.index == SETTINGS && !user_picker {
                     match settings::Editor::open(&mut realm.scope) {
                         Ok(edit) => {
                             editor = Some(edit);
@@ -118,7 +139,12 @@ pub fn run(environment: Environment, user_picker: bool, initial_status: &'static
                     repaint = true;
                 }
                 if repaint {
-                    if let Some(edit) = &editor {
+                    if management.open() {
+                        scene
+                            .as_ref()
+                            .unwrap()
+                            .management(parent, extent, &management)?;
+                    } else if let Some(edit) = &editor {
                         scene.as_ref().unwrap().settings(parent, extent, edit)?;
                     } else {
                         scene.as_ref().unwrap().paint(
@@ -127,7 +153,7 @@ pub fn run(environment: Environment, user_picker: bool, initial_status: &'static
                             &realm,
                             selection.index,
                             status,
-                            user_picker,
+                            management.available(),
                         )?;
                     }
                     repaint = false;

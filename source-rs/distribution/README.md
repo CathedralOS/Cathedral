@@ -29,6 +29,13 @@ A refused program shows **CANNOT OPEN**; an admitted program that fails shows
 that fails while loading its arrangement returns to the user picker. Normal app
 close does not display a crash message.
 
+For an app that cannot close itself, **END APP** appears above Settings while an
+app is running. It warns **UNSAVED WORK MAY BE LOST** and defaults to **CANCEL**.
+Confirming ends that exact app and its descendants; saved work remains. With
+launcher focus, **F3** opens this warning, arrows choose, and Enter activates.
+The restarted launcher can manage an already-running app. This is ordinary
+delegated launcher authority; it cannot recover a failed matrix or input service.
+
 If `Login` or `Users` cannot be resolved, the login executable is rejected, or
 the picker dies, the startup owner shows **SIGN-IN UNAVAILABLE / TRY AGAIN**.
 The [recovery screen](desktop/recovery/main.rs) comes from boot media, so it

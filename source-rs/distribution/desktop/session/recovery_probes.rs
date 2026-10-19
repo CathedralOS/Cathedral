@@ -9,6 +9,8 @@ pub(super) fn apply(matrix: Pair) -> bool {
     }
     let operation = if cfg!(feature = "launcher-stop-probe") {
         wire::STOP
+    } else if cfg!(feature = "management-revoke-probe") {
+        wire::MANAGEMENT_GRANT
     } else {
         wire::STORAGE_REVOKE
     };

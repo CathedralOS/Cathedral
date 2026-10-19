@@ -8,7 +8,7 @@ pub struct Realm {
     pub ids: [u64; ENTRIES],
     pub labels: [[u8; 13]; ENTRIES],
     pub count: usize,
-    user_picker: bool,
+    pub(super) user_picker: bool,
 }
 impl Realm {
     pub fn new(pair: Pair, user_picker: bool) -> Self {

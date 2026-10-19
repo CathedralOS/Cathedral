@@ -19,6 +19,7 @@ trace-storage = []
 render-probes = []
 startup-fault = []
 admitted-fault = []
+management-probes = []
 
 [dependencies]
 cathedral-platform-contracts.workspace = true

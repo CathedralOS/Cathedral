@@ -71,6 +71,7 @@ impl Children {
                         | wire::RUN_MEMORY
                         | wire::LAUNCH_POLICY
                         | wire::LAUNCH_PLACE
+                        | wire::MANAGEMENT_GRANT
                 ))
         {
             self.launcher = None;
@@ -142,6 +143,9 @@ impl Children {
             time::storage_sample("launcher-recovery-refused", &[code]);
         } else {
             self.saved_storage[0] = Some((0, 0));
+            self.management
+                .grant(0, server.incarnation(0).unwrap(), 1)
+                .map_err(|c| Error(c as i64))?;
             self.notify(world)?;
             cathedral_user_runtime::write(
                 b"Cathedral matrix: launcher recovered; retry consumed\n",

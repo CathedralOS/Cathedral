@@ -78,7 +78,8 @@ terminal outcome before retiring connections/funding and wakes the observer.
 A failed control send or receive alone does not prove death: the matrix performs
 a nonblocking task wait, preserving the result for cleanup if terminal. Otherwise
 CLOSE and owner probes report BUSY. Missing consent never cancels a live child;
-explicit owner STOP retains its separate authority. Pending close/survey replies
+explicit owner STOP and explicitly delegated `TERMINATE_TASK` retain separate
+authority (see [task management](../../CHARTER.md#delegated-task-management)). Pending close/survey replies
 can race owner STOP or actual task exit without leaking the slot or collecting it
 twice. A disconnect seen during a pending reply is remembered through cleanup.
 

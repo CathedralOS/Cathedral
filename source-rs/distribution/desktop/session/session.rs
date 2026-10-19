@@ -23,7 +23,11 @@ pub(crate) fn run() -> u64 {
     let matrix = session.matrix;
     persistence::startup::begin(&mut session);
     cathedral_user_runtime::write(b"Cathedral desktop: interactive startup ready\n").unwrap();
-    #[cfg(any(feature = "launcher-stop-probe", feature = "launcher-revoke-probe"))]
+    #[cfg(any(
+        feature = "launcher-stop-probe",
+        feature = "launcher-revoke-probe",
+        feature = "management-revoke-probe"
+    ))]
     let mut recovery_probed = false;
     loop {
         persistence::startup::progress(&mut session);
@@ -65,7 +69,11 @@ pub(crate) fn run() -> u64 {
                 .login
                 .recover(matrix, session.extent, abi::PEER_CLOSED);
         }
-        #[cfg(any(feature = "launcher-stop-probe", feature = "launcher-revoke-probe"))]
+        #[cfg(any(
+            feature = "launcher-stop-probe",
+            feature = "launcher-revoke-probe",
+            feature = "management-revoke-probe"
+        ))]
         if session.user != 0 && !recovery_probed {
             recovery_probed = recovery_probes::apply(matrix);
         }

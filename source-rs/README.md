@@ -33,6 +33,12 @@ checks one local launcher restart while Notes keeps a draft, retry exhaustion,
 clean exit, owner stop/revocation, fresh layout authority and cold persistence.
 Its injected programs and disks are disposable copies; ordinary F5 has no fault keys.
 
+`python tools/boot-harness-rs/management_test.py PATH_TO_ONE_USER_IMAGE` exercises
+the launcher's **END APP** confirmation with a non-yielding Notes process, both
+Cancel actions, saved-state retention, a recovered launcher and cold reboot.
+It checks that ungranted app/storage endpoints, stale task tickets and revoked
+manager authority cannot stop an app. Only disposable copies receive fault keys.
+
 Recent integrated proofs: `python tools/boot-harness-rs/run.py --matrix-desktop-test --release`
 checks recursive atomic presentation; `--matrix-storage-test --release` checks
 [private root delegation](platform/services/matrix/world/storage/README.md).

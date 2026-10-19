@@ -25,8 +25,9 @@ impl Scene {
         realm: &realm::Realm,
         selected: usize,
         status: &str,
-        picker: bool,
+        managed: bool,
     ) -> Result<(), u64> {
+        let picker = realm.user_picker;
         self.background(parent, extent)?;
         let (items, n) = layout::entries(realm.count, picker);
         for (i, &index) in items[..n].iter().enumerate() {
@@ -67,7 +68,31 @@ impl Scene {
             status,
             if picker { "" } else { "SETTINGS" },
             picker,
+            managed,
         )
+    }
+    pub fn management(
+        &self,
+        parent: Pair,
+        extent: wire::Packet,
+        controls: &management::Controls,
+    ) -> Result<(), u64> {
+        self.background(parent, extent)?;
+        for row in 0..3 {
+            let (x, y) = management::view::origin(extent, row);
+            self.image(
+                parent,
+                self.names[row + 1],
+                management::view::paint(controls, row),
+                [
+                    x,
+                    y,
+                    management::view::WIDTH as u64,
+                    management::view::height(row) as u64,
+                ],
+            )?;
+        }
+        self.footer(parent, extent, controls.status, "", false, false)
     }
     pub fn settings(
         &self,
@@ -90,7 +115,7 @@ impl Scene {
                 ],
             )?;
         }
-        self.footer(parent, extent, editor.status, "", false)
+        self.footer(parent, extent, editor.status, "", false, false)
     }
     fn background(&self, parent: Pair, extent: wire::Packet) -> Result<(), u64> {
         accepted(
@@ -133,21 +158,31 @@ impl Scene {
         status: &str,
         button: &str,
         picker: bool,
+        managed: bool,
     ) -> Result<(), u64> {
-        if !status.is_empty() || !button.is_empty() {
-            let mut pixels = Private::allocate(8).unwrap();
+        if !status.is_empty() || !button.is_empty() || managed {
+            let mut pixels = Private::allocate(if managed { 12 } else { 8 }).unwrap();
             for pixel in pixels.bytes_mut().chunks_exact_mut(4) {
                 pixel.copy_from_slice(&tiles::BACKGROUND.to_le_bytes());
             }
-            tiles::label(pixels.bytes_mut(), 180, 0, 0, status.as_bytes());
-            tiles::label(pixels.bytes_mut(), 180, 42, 24, button.as_bytes());
+            let offset = if managed { 24 } else { 0 };
+            if managed {
+                tiles::label(pixels.bytes_mut(), 180, 48, 0, b"END APP");
+            }
+            tiles::label(pixels.bytes_mut(), 180, 0, offset, status.as_bytes());
+            tiles::label(pixels.bytes_mut(), 180, 42, offset + 24, button.as_bytes());
             let x = extent[2].saturating_sub(180) / 2;
             let y = if picker {
                 extent[3] / 2 + 88
             } else {
-                extent[3].saturating_sub(48)
+                extent[3].saturating_sub(48 + offset as u64)
             };
-            self.image(parent, self.names[4], pixels, [x, y, 180, 40])?;
+            self.image(
+                parent,
+                self.names[4],
+                pixels,
+                [x, y, 180, 40 + offset as u64],
+            )?;
         }
         Ok(())
     }

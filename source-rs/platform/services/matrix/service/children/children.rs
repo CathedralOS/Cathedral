@@ -50,6 +50,7 @@ pub(super) struct Children {
     loss: Option<loss::Survey>,
     launcher: Option<recovery::Launcher>,
     pub(in crate::service) observations: cathedral_matrix_service::world::launches::Launches,
+    management: cathedral_matrix_service::world::management::Management,
 }
 impl Children {
     /// Remember only successfully applied owner policy. Revocation must remain
@@ -109,6 +110,7 @@ impl Children {
                     | wire::CONFIGURE
                     | wire::RESTORE_STORAGE
                     | wire::STOP
+                    | wire::MANAGEMENT_GRANT
             )
         {
             return Ok(false);
@@ -180,6 +182,30 @@ impl Children {
             }
         } else {
             match words {
+                [
+                    wire::MANAGEMENT_GRANT,
+                    manager @ 0..=1,
+                    target @ 0..=2,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                ] => {
+                    if target == 0 {
+                        self.management.revoke(manager as usize);
+                        Ok(())
+                    } else {
+                        server
+                            .incarnation(manager as usize)
+                            .ok_or(Error(abi::DENIED as i64))
+                            .and_then(|incarnation| {
+                                self.management
+                                    .grant(manager as usize, incarnation, (target - 1) as usize)
+                                    .map_err(|c| Error(c as i64))
+                            })
+                    }
+                }
                 [wire::CONFIGURE, 0, 0, 0, 0, 0, 0, 0] => self.configure(parent, world, server),
                 [wire::RESTORE_STORAGE, 0, 0, 0, 0, 0, 0, 0] => {
                     self.restore_storage(parent, server)
