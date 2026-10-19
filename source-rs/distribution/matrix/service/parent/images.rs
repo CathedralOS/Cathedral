@@ -9,15 +9,10 @@ impl Parent {
         words: wire::Packet,
         object: Object,
     ) -> Result<wire::Packet, Error> {
-        let slot = self
-            .images
-            .iter()
-            .position(|i| i.as_ref().is_some_and(|(key, _)| *key == words[2]))
-            .or_else(|| self.images.iter().position(Option::is_none))
-            .ok_or(Error(abi::NO_MEMORY as i64))?;
+        self.images.room(words[2])?;
         let reply = self.image_call(words, &object)?;
         if reply[0] == 0 {
-            self.images[slot] = Some((words[2], object));
+            self.images.commit(words[2], Some(object));
         }
         Ok(reply)
     }
@@ -28,10 +23,11 @@ impl Parent {
     ) -> Result<wire::Packet, Error> {
         let mut bytes = [0; 64];
         if self.upstream {
-            let (send, receive) = self.pair.unwrap();
-            send.send_memory(&wire::encode(words), object)?;
-            let len = receive.receive_until(&mut bytes, time::after(100)?)?;
-            return wire::decode(&bytes[..len]).ok_or(Error(abi::IO_ERROR as i64));
+            return cathedral_user_runtime::matrix::upstream::exchange(
+                self.pair.unwrap(),
+                words,
+                Some(object),
+            );
         }
         let (send, receive) = self.display.ok_or(Error(abi::DENIED as i64))?;
         let [_, _, key, x, y, w, h, stride] = words;

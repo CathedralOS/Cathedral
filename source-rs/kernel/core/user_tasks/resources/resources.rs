@@ -33,7 +33,7 @@ pub fn assign(
     let mut remaining = [0; 3];
     for i in 0..3 {
         let maximum = match i {
-            0 => memory::MAX_PAGES,
+            0 => memory::MAX_PRIVATE_PAGES,
             1 => memory::MAX_READER_PAGES,
             _ => abi::MAX_CREATED_CHANNELS,
         };

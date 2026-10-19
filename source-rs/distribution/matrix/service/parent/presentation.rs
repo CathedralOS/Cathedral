@@ -147,21 +147,7 @@ impl Parent {
                 world
                     .surface(slot, p.request.incarnation, *local)
                     .expect("publication holds geometry stable");
-                let mut previous = None;
-                let mut vacant = None;
-                for index in 0..self.images.len() {
-                    match &self.images[index] {
-                        Some((key, _)) if *key == words[2] => previous = Some(index),
-                        None if vacant.is_none() => vacant = Some(index),
-                        _ => (),
-                    }
-                }
-                if let Some(object) = object.take() {
-                    let index = previous.or(vacant).expect("one reader per live surface");
-                    self.images[index] = Some((words[2], object));
-                } else if let Some(index) = previous {
-                    self.images[index] = None;
-                }
+                self.images.commit(words[2], object.take());
             }
             batch.committed(p.local_revision);
         } else if wire::decode(&p.request.bytes[..p.request.len])

@@ -93,7 +93,7 @@ pub(super) fn insert_config(records: &mut Records, id: u64, parent: u64) -> Resu
     records.insert(edge(parent, id), Vec::new());
     describe(records, id, matrix::config::NAME, metadata::MATRIX_CONFIG)
 }
-pub fn upgrade(path: &Path, offset: u64, bytes: u64) -> Result<()> {
+pub fn upgrade(path: &Path, offset: u64, bytes: u64, additions: &[String]) -> Result<()> {
     let image = Arc::new(Image::open(path)?);
     let mut backup = vec![0; usize::try_from(image.len()?)?];
     image.read(0, &mut backup)?;
@@ -108,14 +108,16 @@ pub fn upgrade(path: &Path, offset: u64, bytes: u64) -> Result<()> {
     }
     let before = records.clone();
     plan(&mut records)?;
+    realm_programs::install(&mut records, additions)?;
     if records == before {
         println!("HIERARCHY: already installed");
         return Ok(());
     }
     // Save the exclusively opened image before the single migration commit.
     let backup_path = path.with_file_name(format!(
-        "{}.before-hierarchy.raw",
-        path.file_name().ok_or("image name")?.to_string_lossy()
+        "{}.before-{}.raw",
+        path.file_name().ok_or("image name")?.to_string_lossy(),
+        if additions.is_empty() { "hierarchy" } else { "realm-programs" }
     ));
     use std::io::Write;
     match std::fs::OpenOptions::new()
@@ -250,7 +252,6 @@ fn plan(records: &mut Records) -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
-use cathedral_desktop_matrix_contracts::matrix;
     #[test]
     fn migration_preserves_existing_state_and_is_idempotent() {
         let programs = [

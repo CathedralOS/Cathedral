@@ -85,7 +85,8 @@
         "clock": true,
         "argument": 1129270608,
         "framebuffer": true,
-        "shared_pages": 128
+        "shared_pages": 128,
+        "ipc_channels": 0
       },
       {
         "package": "cathedral-input-service",
@@ -94,7 +95,10 @@
         "clock": true,
         "argument": 1296127058,
         "keyboard": true,
-        "features": ["absolute-pointer"]
+        "features": [
+          "absolute-pointer"
+        ],
+        "ipc_channels": 0
       },
       {
         "package": "cathedral-stock-matrix",
@@ -102,9 +106,9 @@
         "target": "x86_64-unknown-none",
         "clock": true,
         "argument": 0,
-        "ipc_channels": 20,
-        "private_pages": 128,
-        "shared_pages": 256
+        "ipc_channels": 28,
+        "private_pages": 256,
+        "shared_pages": 384
       },
       {
         "package": "cathedral-storage-service",
@@ -127,7 +131,7 @@
         4
       ]
     ],
-    "dynamic_tasks": 4,
+    "dynamic_tasks": 6,
     "programs": [
       {
         "package": "cathedral-chooser",
@@ -165,6 +169,22 @@
         "target": "x86_64-unknown-none",
         "inside": 2,
         "display_title": "COLORS"
+      }
+    ],
+    "realm_programs": [
+      {
+        "path": "Split",
+        "package": "cathedral-split",
+        "entry": "distribution/applications/split/main.rs",
+        "target": "x86_64-unknown-none",
+        "display_title": "SPLIT"
+      },
+      {
+        "path": "Split/Notes",
+        "package": "cathedral-notes",
+        "entry": "distribution/applications/notes/main.rs",
+        "target": "x86_64-unknown-none",
+        "display_title": "NOTES"
       }
     ]
   }

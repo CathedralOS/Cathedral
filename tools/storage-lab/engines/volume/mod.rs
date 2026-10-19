@@ -10,6 +10,7 @@ mod guest;
 mod image;
 mod labels;
 mod hierarchy;
+mod realm_programs;
 mod notes;
 mod objects;
 mod proof;

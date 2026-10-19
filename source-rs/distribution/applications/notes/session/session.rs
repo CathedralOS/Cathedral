@@ -220,7 +220,7 @@ pub fn run(style: u64, mut services: Services) {
             }
             let painted = (|| -> Result<(), u64> {
                 if scene.as_ref().is_none_or(|s| s.epoch != extent[1]) {
-                    scene = Some(view::Scene::new(parent, extent[1])?);
+                    scene = Some(view::Scene::new(parent, extent[1], notes.temporary())?);
                     repaint = true;
                 }
                 if repaint {

@@ -18,7 +18,7 @@ pub(super) struct Parent {
     >; 2],
     next_revision: u64,
     pub upstream: bool,
-    images: [Option<(u64, cathedral_user_runtime::memory::Object)>; wire::MAX_SURFACES],
+    images: cathedral_user_runtime::matrix::upstream::Images,
     pair: Option<(Handle, Handle)>,
     storage_pair: Option<(Handle, Handle)>,
     pub separate_storage: bool,
@@ -51,7 +51,7 @@ impl Parent {
             storage_failed: 0,
             batches: [const { cathedral_matrix::world::presentation::Batch::empty() }; 2],
             next_revision: 0,
-            images: [const { None }; wire::MAX_SURFACES],
+            images: cathedral_user_runtime::matrix::upstream::Images::empty(),
             upstream: false,
             pair: None,
             storage_pair: None,
@@ -123,35 +123,13 @@ impl Parent {
                 }
                 Err(error) => return Err(error),
             };
-            self.grant = if reply[0] == 0 {
-                Grant {
-                    epoch: reply[1],
-                    width: reply[2],
-                    height: reply[3],
-                    keys: reply[4] & wire::VALID_KEY_MASK,
-                }
-            } else {
-                Grant::default()
-            };
-            world.inherit(self.grant);
-            world.surface_capacity((reply[4] >> wire::SURFACE_BITS) as usize);
+            #[cfg(feature = "trace-input")]
+            if wire::poll_event(reply)[2] == wire::KEY {
+                time::trace("matrix-key");
+            }
+            self.grant = world.inherit_poll(reply);
             if !self.grant.valid() {
                 return Ok(());
-            }
-            let event = wire::poll_event(reply);
-            match event[2] {
-                wire::NONE => (),
-                wire::POINTER => world.pointer(event[3], event[4], event[5]),
-                wire::KEY => {
-                    #[cfg(feature = "trace-input")]
-                    time::trace("matrix-key");
-                    world.key(event[3], event[4]);
-                }
-                wire::CANCEL => world.cancel(),
-                _ => {
-                    world.inherit(Grant::default());
-                    break;
-                }
             }
             if reply[5] & wire::MORE == 0 {
                 break;
@@ -160,10 +138,6 @@ impl Parent {
         Ok(())
     }
     fn call(&self, words: wire::Packet) -> Result<wire::Packet, Error> {
-        let (send, receive) = self.pair.unwrap();
-        send.send(&wire::encode(words))?;
-        let mut bytes = [0; 64];
-        let len = receive.receive_until(&mut bytes, time::after(100)?)?;
-        wire::decode(&bytes[..len]).ok_or(Error(abi::IO_ERROR as i64))
+        cathedral_user_runtime::matrix::upstream::call(self.pair.unwrap(), words)
     }
 }

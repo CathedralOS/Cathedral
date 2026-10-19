@@ -242,8 +242,9 @@ impl Children {
                     Ok(())
                 }
                 [wire::RUN_PAGES, slot @ 0..=1, private, readers, 0, 0, 0, 0]
-                    if private <= cathedral_kernel_contracts::memory::MAX_PAGES as u64
-                        && readers <= cathedral_kernel_contracts::memory::MAX_PAGES as u64 =>
+                    if private <= cathedral_kernel_contracts::memory::MAX_PRIVATE_PAGES as u64
+                        && readers
+                            <= cathedral_kernel_contracts::memory::MAX_READER_PAGES as u64 =>
                 {
                     if self.slots[slot as usize].is_some() {
                         Err(Error(abi::BUSY as i64))
@@ -269,8 +270,8 @@ impl Children {
                     descendants,
                     cpu,
                     surfaces,
-                ] if private <= cathedral_kernel_contracts::memory::MAX_PAGES as u64
-                    && readers <= cathedral_kernel_contracts::memory::MAX_PAGES as u64
+                ] if private <= cathedral_kernel_contracts::memory::MAX_PRIVATE_PAGES as u64
+                    && readers <= cathedral_kernel_contracts::memory::MAX_READER_PAGES as u64
                     && surfaces <= wire::MAX_SURFACES as u64 =>
                 {
                     let place = self.standing[slot as usize].and_then(|s| s.place);

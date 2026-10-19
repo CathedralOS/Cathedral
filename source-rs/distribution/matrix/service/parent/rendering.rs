@@ -5,24 +5,14 @@ use cathedral_platform_contracts::display::composition;
 impl Parent {
     pub(in super::super) fn surface(&mut self, words: wire::Packet) -> Result<wire::Packet, Error> {
         if words[0] == wire::SURFACE_IMAGE {
-            let object = &self
-                .images
-                .iter()
-                .flatten()
-                .find(|(key, _)| *key == words[2])
-                .ok_or(Error(abi::BAD_HANDLE as i64))?
-                .1;
+            let object = self.images.get(words[2])?;
             return self.image_call(words, object);
         }
         let reply = self.rectangle(words)?;
-        if (reply[0] == 0
-            || (words[0] == wire::ERASE && matches!(reply[0], abi::DENIED | abi::BAD_HANDLE)))
-            && let Some(slot) = self
-                .images
-                .iter()
-                .position(|item| item.as_ref().is_some_and(|(key, _)| *key == words[2]))
+        if reply[0] == 0
+            || (words[0] == wire::ERASE && matches!(reply[0], abi::DENIED | abi::BAD_HANDLE))
         {
-            self.images[slot] = None;
+            self.images.commit(words[2], None);
         }
         Ok(reply)
     }

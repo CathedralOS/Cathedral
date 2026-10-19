@@ -53,6 +53,13 @@ pub fn paint(index: usize, picker: bool, selected: bool, title: &[u8]) -> Privat
                 if (51..77).contains(&x) && [34, 35, 44, 45, 54, 55, 64, 65].contains(&y) {
                     color = 0x53718a;
                 }
+            } else if title.starts_with(b"SPLIT") {
+                if (36..61).contains(&x) && (24..72).contains(&y) {
+                    color = 0x84d4ad;
+                }
+                if (67..92).contains(&x) && (24..72).contains(&y) {
+                    color = 0xc7a2ed;
+                }
             } else {
                 for (cx, cy, c) in [
                     (52, 34, 0x66ccff),

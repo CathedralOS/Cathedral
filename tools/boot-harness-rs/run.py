@@ -25,7 +25,7 @@ WORKSPACE = REPO / "source-rs"
 BUILD = REPO / "build" / "boot-harness-rs"
 # The kernel contract's per-task caps: private pages fund frames; reader pages
 # pin other tasks' objects, and a matrix hub needs several objects' worth.
-PAGE_LIMITS = (("private_pages", 128), ("shared_pages", 512))
+PAGE_LIMITS = (("private_pages", 256), ("shared_pages", 512))
 MARKERS = (
     "Cathedral Rust lab: UEFI entry",
     "Cathedral Rust lab: ExitBootServices complete",
@@ -106,6 +106,26 @@ def seeded_programs(profile_path, release):
     """What a fixture passes to database_image.prepare after a --build-only run."""
     composition = json.loads(Path(profile_path).read_text(encoding="utf-8"))
     return [(parent, trimmed) for parent, _, trimmed in program_images(profile_path, composition, release)]
+
+
+def realm_programs(profile_path, release):
+    """Named additions under each recognized stock user, independent of object IDs."""
+    composition = json.loads(Path(profile_path).read_text(encoding="utf-8"))
+    result = []
+    seen = set()
+    for i, program in enumerate(composition.get('startup', {}).get('realm_programs', [])):
+        name = program['path']
+        parts = name.split('/')
+        if any(not part or part in ('.', '..') or len(part.encode('utf-8')) > 32 for part in parts) or name in seen:
+            raise ValueError('realm program paths must be unique relative names')
+        if len(parts) > 1 and '/'.join(parts[:-1]) not in seen:
+            raise ValueError('a realm program must follow its installed parent')
+        if any(program.get(key) for key in ('argument', 'framebuffer', 'keyboard', 'disk', 'clock', 'private_pages', 'shared_pages', 'ipc_channels', 'cpu_budget_us')):
+            raise ValueError('realm programs carry code only; the owner grants resources')
+        elf_trim.title_record(program.get('display_title'))
+        result.append((name, BUILD / 'programs' / Path(profile_path).stem / f"realm-{i}-{program['package']}.elf"))
+        seen.add(name)
+    return result
 
 
 def find_qemu():
@@ -257,6 +277,8 @@ def main():
                 installed = program_images(args.profile, composition, args.release)
             except ValueError as error:
                 parser.error(str(error))
+            for index, program in enumerate(startup.get("realm_programs", [])):
+                programs[f"realm_{index}"] = program
             for index, program in enumerate(startup.get("programs", [])):
                 if "package" in program:
                     programs[f"program_{index}"] = program
@@ -317,6 +339,9 @@ def main():
             else:
                 elf_trim.trim(captured[f'program_{index}'], trimmed, startup["programs"][index].get("display_title"))
             seeded.append((parent, trimmed))
+    if not args.kernel_only and not args.smoke:
+        for index, (_, trimmed) in enumerate(realm_programs(args.profile, args.release)):
+            elf_trim.trim(captured[f'realm_{index}'], trimmed, startup['realm_programs'][index].get('display_title'))
     cargo = ["cargo", "build", "--locked", "--package", boot_package,
              "--target", target, "--target-dir", str(BUILD / "cargo")]
     if args.release:
@@ -358,7 +383,8 @@ def main():
             data_path.unlink()
         migration = composition.get("startup", {}).get("label_migration")
         database_image.prepare(data_path, seeded, WORKSPACE / migration if migration else None,
-                               composition.get("startup", {}).get("app_close_migration", False))
+                               composition.get("startup", {}).get("app_close_migration", False),
+                               realm_programs(args.profile, args.release))
         command += disk_image.arguments(data_path)
     if not args.window:
         command += ["-display", "none"]

@@ -84,3 +84,29 @@ user/app tiles. The interactive disk also has a one-time
 existing user and checking saved Notes. `--fill-users` additionally creates users
 up to the bounded tile limit; see TASKS_RUST.md for the older-disk storage timeout
 found by that extra stress, separate from the launcher migration itself.
+
+## Named realm programs
+
+`startup.realm_programs` adds **Split** and **Split/Notes** by local path to the
+template and recognized existing stock users. Unlike the original six bootstrap
+objects, these additions allocate fresh object numbers. One hierarchy
+transaction covers names, code and budget changes, after a separate
+`.before-realm-programs.raw` backup.
+
+The installation sidecar records each addition's content manifest. A later update
+replaces only that exact previous manifest or already-current bytes. An existing
+custom entry blocks its path and descendants; a name alone never authorizes
+replacement. Losing the sidecar therefore leaves unrecognized older additions
+unchanged. The unchanged-install fast path excludes manifest receipts from the
+input fingerprint and does not open the disk.
+
+The migration raises only recognized old stock resource defaults: launcher pages
+48 to 64 and app pages/readers/surfaces `(32,4,6)` to `(80,64,9)`. It preserves the
+launcher path, strip width, spacing, key policy and custom resource choices. The
+outer desktop now funds a matrix-capable app slot with six channels and two child
+slots. These are bounded distribution defaults, not executable privileges or a
+new persistent configuration format.
+
+Host tests cover existing-user data/IDs, custom layout, exact program replacement,
+name collisions and idempotence. `labels_upgrade_test.py` verifies a retained
+six-program desktop copy through the actual F5 installer and user boot.

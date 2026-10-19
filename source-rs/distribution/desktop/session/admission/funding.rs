@@ -5,7 +5,7 @@ use cathedral_user_runtime::resources;
 use cathedral_user_runtime::task::Executable;
 pub(super) fn assign(root: Launch) -> Result<(), Error> {
     let capacity = task::available_slots()?;
-    assert_eq!(capacity, 4);
+    assert_eq!(capacity, if cfg!(feature = "shell") { 6 } else { 4 });
     #[cfg(not(feature = "shell"))]
     let pressure = Executable::at(2).is_ok();
     // Descendant reservations return to the surviving distribution owner on root
@@ -29,15 +29,21 @@ pub(super) fn assign(root: Launch) -> Result<(), Error> {
 
 pub(super) fn limits() -> cathedral_user_runtime::resources::Limits {
     cathedral_user_runtime::resources::Limits {
-        private_pages: if cfg!(feature = "notes") { 128 } else { 16 },
-        reader_pages: if cfg!(feature = "shell") {
+        private_pages: if cfg!(feature = "shell") {
             256
+        } else if cfg!(feature = "notes") {
+            128
+        } else {
+            16
+        },
+        reader_pages: if cfg!(feature = "shell") {
+            384
         } else if cfg!(feature = "notes") {
             128
         } else {
             8
         },
-        channels: 20,
+        channels: if cfg!(feature = "shell") { 28 } else { 20 },
     }
 }
 

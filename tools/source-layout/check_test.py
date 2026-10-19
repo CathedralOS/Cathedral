@@ -53,12 +53,12 @@ class OwnershipTests(unittest.TestCase):
             check_edge('distribution/matrix/contracts', 'distribution/matrix')
 
     def test_alternative_matrix_is_independent_of_stock_distribution(self):
-        source = 'distribution/lab/matrix-composition/matrix'
-        check_edge(source, 'platform/libraries/matrix')
-        check_edge(source, 'platform/libraries/user-runtime')
-        for target in ('distribution/matrix', 'distribution/matrix/contracts', 'distribution/desktop'):
-            with self.assertRaises(ValueError):
-                check_edge(source, target)
+        for source in ('distribution/lab/matrix-composition/matrix', 'distribution/applications/split'):
+            check_edge(source, 'platform/libraries/matrix')
+            check_edge(source, 'platform/libraries/user-runtime')
+            for target in ('distribution/matrix', 'distribution/matrix/contracts', 'distribution/desktop'):
+                with self.assertRaises(ValueError):
+                    check_edge(source, target)
 
 
 if __name__ == '__main__':

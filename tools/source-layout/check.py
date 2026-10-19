@@ -21,7 +21,7 @@ def check_edge(source, target):
         raise ValueError(f'Unknown source layer: {source} -> {target}')
 
     # This executable is evidence that stock desktop code/contracts are optional.
-    if within(source, 'distribution/lab/matrix-composition') and dependency == 'distribution':
+    if (within(source, 'distribution/lab/matrix-composition') or within(source, 'distribution/applications/split')) and dependency == 'distribution':
         raise ValueError(f'Independent matrix proof imports distribution code: {source} -> {target}')
 
     kernel_contract = within(source, 'kernel/contracts')
@@ -104,6 +104,7 @@ def check_rust():
     users = [*profile['user_programs'].values(), startup['initial']]
     users.extend(startup.get('launches', [startup['launch']] if startup.get('launch') else []))
     users.extend(startup.get('executables', []))
+    users.extend(startup.get('realm_programs', []))
     users.extend(program for program in startup.get('programs', []) if 'package' in program)
     for path in (ROOT / 'tools/boot-harness-rs/profiles').glob('*.json'):
         lab = json.loads(path.read_text(encoding='utf-8'))['startup']

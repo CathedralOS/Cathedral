@@ -229,7 +229,7 @@ fn invalid_grants_and_tokens_fail_closed() {
         }],
         alloc::vec![Grant {
             task: 0,
-            private_pages: MAX_PAGES + 1,
+            private_pages: MAX_PRIVATE_PAGES + 1,
             shared_pages: 0
         }],
         alloc::vec![Grant {
@@ -247,4 +247,24 @@ fn invalid_grants_and_tokens_fail_closed() {
     for token in [0, 256, MAX_REGIONS as u64 + 1, u64::MAX] {
         assert_eq!(regions.access(0, token), Err(abi::BAD_HANDLE));
     }
+}
+
+#[test]
+fn subtree_budget_is_separate_from_the_single_object_limit() {
+    let mut regions = Regions::new(
+        1,
+        &[Grant {
+            task: 0,
+            private_pages: MAX_PRIVATE_PAGES,
+            shared_pages: 0,
+        }],
+    )
+    .unwrap();
+    assert_eq!(
+        regions.allocate(0, MAX_PAGES + 1),
+        Err(abi::INVALID_ARGUMENT)
+    );
+    regions.allocate(0, MAX_PAGES).unwrap();
+    regions.allocate(0, MAX_PAGES).unwrap();
+    assert_eq!(regions.allocate(0, 1), Err(abi::NO_MEMORY));
 }

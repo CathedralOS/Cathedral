@@ -187,3 +187,8 @@ matrix, storage and provider-recovery proofs. `--smoke` selects the profile's
 The [implementation map](../STATUS.md) tracks remaining restrictions. In
 particular this is one chooser over a folder and one app per user at a time,
 not a package installer, general desktop window manager or production filesystem.
+
+[Split](applications/split/README.md) is also installed in the ordinary app strip.
+It demonstrates a different matrix program: two temporary Notes instances, its
+own arrangement and close policy, and no storage offered to its children. The
+stock desktop still owns user selection, its launcher and saved outer layout.

@@ -311,6 +311,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "cathedral-split"
+version = "0.0.0"
+dependencies = [
+ "cathedral-bitmap-font",
+ "cathedral-kernel-contracts",
+ "cathedral-matrix",
+ "cathedral-platform-contracts",
+ "cathedral-user-runtime",
+]
+
+[[package]]
 name = "cathedral-startup-recovery"
 version = "0.0.0"
 dependencies = [

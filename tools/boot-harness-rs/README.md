@@ -13,7 +13,7 @@ python tools/boot-harness-rs/run.py --release --window
 ```
 
 Click **NEW USER** to create a user, click its avatar to enter, then click
-**Notes** or **Colors** in its chrome and click the program to focus it. Notes:
+**Notes**, **Colors** or **Split** in its chrome and click the program to focus it. Notes:
 type, F1 save/check, F2 reload. Colors: Enter changes color. Notes and Colors have an **X**
 button; Notes presents Save / Discard / Cancel for a draft, or Discard / Cancel
 when storage is absent. Closing an app no longer requires using the launcher.
@@ -394,3 +394,9 @@ fails, before restoring the normal tree. See the
 funding, exhaustion and fault reclamation, an acknowledged live-engine commit,
 QEMU kill, cold guest recovery and independent host verification. It creates fresh
 guarded images and never uses the ordinary session disk.
+
+The installed **Split** program opens two temporary Notes in an independently
+arranged matrix. Its children have no persistence service. Run
+`python tools/boot-harness-rs/desktop_test.py --nested` for its mouse/keyboard,
+close, live-resize, repeated teardown and cold-boot checks. This uses disposable
+media and a private ESP; the saved interactive disk is untouched.

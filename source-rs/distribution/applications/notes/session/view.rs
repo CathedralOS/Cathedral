@@ -21,9 +21,13 @@ pub struct Scene {
     close: u64,
 }
 impl Scene {
-    pub fn new(parent: Pair, epoch: u64) -> Result<Self, u64> {
+    pub fn new(parent: Pair, epoch: u64, temporary: bool) -> Result<Self, u64> {
         let mut names = [0; 6];
-        for (rank, name) in names.iter_mut().enumerate() {
+        for (rank, name) in names
+            .iter_mut()
+            .enumerate()
+            .take(if temporary { 4 } else { 6 })
+        {
             let reply = call(
                 parent,
                 [wire::SURFACE_CREATE, epoch, rank as u64, 0, 0, 0, 0, 0],
@@ -42,7 +46,7 @@ impl Scene {
             track: names[2],
             filled: names[3],
             current: names[4],
-            close: names[5],
+            close: names[if temporary { 3 } else { 5 }],
         })
     }
     /// Paint one retained rectangle at a local rectangle: x, y, width, height.

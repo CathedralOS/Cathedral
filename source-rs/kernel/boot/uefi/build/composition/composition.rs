@@ -20,7 +20,7 @@ pub(super) fn generate() {
         "const INITIAL_CLOCK: bool = {};\nstatic LAUNCHES: &[InitialLaunch] = &[\n",
         flag("CATHEDRAL_INIT_CLOCK")
     );
-    let initial_private = pages("CATHEDRAL_INIT_PRIVATE_PAGES", memory::MAX_PAGES);
+    let initial_private = pages("CATHEDRAL_INIT_PRIVATE_PAGES", memory::MAX_PRIVATE_PAGES);
     let initial_shared = pages("CATHEDRAL_INIT_SHARED_PAGES", memory::MAX_READER_PAGES);
     append_launches(&mut source, count);
     source.push_str(&format!(
@@ -42,7 +42,10 @@ fn append_launches(source: &mut String, count: usize) {
         let clock = flag(&format!("{prefix}_CLOCK"));
         let keyboard = flag(&format!("{prefix}_KEYBOARD"));
         let disk = flag(&format!("{prefix}_DISK"));
-        let private_pages = pages(&format!("{prefix}_PRIVATE_PAGES"), memory::MAX_PAGES);
+        let private_pages = pages(
+            &format!("{prefix}_PRIVATE_PAGES"),
+            memory::MAX_PRIVATE_PAGES,
+        );
         let shared_pages = pages(&format!("{prefix}_SHARED_PAGES"), memory::MAX_READER_PAGES);
         let argument: u64 = env::var(format!("{prefix}_ARGUMENT"))
             .unwrap_or_else(|_| "0".into())

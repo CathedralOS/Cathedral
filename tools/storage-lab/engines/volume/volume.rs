@@ -19,9 +19,9 @@ pub fn run(args: &[String]) -> Result<()> {
         Some("compact") if args.len() == 4 => compact::run(Path::new(&args[1]), args[2].parse()?, args[3].parse()?),
         Some("configure-fixture") if args.len()==5 => configuration::prepare(Path::new(&args[1]),args[2].parse()?,args[3].parse()?,match args[4].as_str(){"missing"=>true,"renamed"=>false,_=>return Err("fixture mode".into())}),
         Some("inspect-hierarchy") if args.len()==4 => hierarchy::inspect(Path::new(&args[1]),args[2].parse()?,args[3].parse()?),
-        Some("upgrade-hierarchy") if args.len()==4 => hierarchy::upgrade(Path::new(&args[1]), args[2].parse()?, args[3].parse()?),
+        Some("upgrade-hierarchy") if args.len()>=4 => hierarchy::upgrade(Path::new(&args[1]), args[2].parse()?, args[3].parse()?, &args[4..]),
         Some("upgrade-labels" | "upgrade-app-close") if args.len() == 5 => labels::upgrade(Path::new(&args[1]), args[2].parse()?, args[3].parse()?, &labels::legacy(Path::new(&args[4]))?, args[0] == "upgrade-app-close"),
-        Some("verify-desktop") if args.len() >= 4 => desktop::verify(Path::new(&args[1]), args[2].parse()?, args[3].parse()?, &seed::load(&args[4..])?),
+        Some("verify-desktop") if args.len() == 20 => desktop::verify(Path::new(&args[1]), args[2].parse()?, args[3].parse()?, &seed::load(&args[4..16])?, &args[16..]),
         Some("verify-colors") | Some("verify-notes") if args.len() == 6 => {
             let last = [args[4].parse()?, args[5].parse()?];
             if args[0] == "verify-colors" { colors::verify(Path::new(&args[1]), args[2].parse()?, args[3].parse()?, last) }

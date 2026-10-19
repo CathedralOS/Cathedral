@@ -43,3 +43,9 @@ revocation and peer replacement in QEMU. It has no stock distribution dependency
 it now owns child admission through the shared runtime's
 [admission coordinator](../user-runtime/matrix/admission/README.md). Nested
 adaptation and rendering remain outside that proof's scope.
+
+The installed [Split program](../../../distribution/applications/split/README.md)
+is a second visible consumer. Its two-column policy uses the shared
+[parent snapshot handler](world/upstream.rs), runtime admission, service offers
+and [retained image custody](../user-runtime/matrix/upstream/README.md). The
+ordinary desktop test separately checks the stock transaction/persistence path.

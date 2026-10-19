@@ -2,10 +2,9 @@
 //! construct every expected record without importing the guest store, then
 //! compare the whole retained set. The notes root holds the installed objects
 //! one to six: the chooser, the folder of users, and inside it the template
-//! user with its chrome, Notes and Colors. The test copies the template into a
-//! user, so seven to ten share every manifest with three to six; two notes
-//! whose first revisions share one manifest nest under the user's Notes, and
-//! the color under its Colors. The ungranted root holds nothing.
+//! user with its chrome, Notes and Colors. Named additions install Split and its
+//! Notes code. The copied user shares their content, while its saved notes/color
+//! are distinct objects. The ungranted root holds nothing.
 use super::*;
 use crate::chunks::{Layout, Policy, Store};
 use redb::ReadableTable;
@@ -32,7 +31,13 @@ fn edge(parent: u64, child: u64) -> Vec<u8> {
     suffix.extend_from_slice(&child.to_be_bytes());
     key(b't', &suffix)
 }
-pub fn verify(path: &Path, offset: u64, bytes: u64, programs: &[seed::Program]) -> Result<()> {
+pub fn verify(
+    path: &Path,
+    offset: u64,
+    bytes: u64,
+    programs: &[seed::Program],
+    additions: &[String],
+) -> Result<()> {
     if programs.len() as u64 != INSTALLED {
         return Err("the desktop installs six objects".into());
     }
@@ -65,10 +70,51 @@ pub fn verify(path: &Path, offset: u64, bytes: u64, programs: &[seed::Program]) 
         )?;
     }
     hierarchy::insert_config(&mut expected, 7, TEMPLATE)?;
-    let user = 8u64;
-    for source in TEMPLATE..=7 {
+    if additions.len() != 4 || additions[0] != "Split" || additions[2] != "Split/Notes" {
+        return Err("expected Split and its Notes program".into());
+    }
+    // Construct the additive objects independently; no installer call is used.
+    for (id, parent, name, file) in [
+        (8u64, 3u64, b"Split".as_slice(), &additions[1]),
+        (9, 8, b"Notes".as_slice(), &additions[3]),
+    ] {
+        let bytes = std::fs::read(file)?;
+        let mut store = Store::new(Policy {
+            chunk_bytes: 4096,
+            inline_limit: 128,
+            layout: Layout::Flat,
+        });
+        let version = store.put(&bytes);
+        let content = store.records(&version);
+        let head = seed::head(1, &content[b"head".as_slice()], bytes.len(), parent);
+        for (k, v) in content {
+            if k != b"head" {
+                if k[0] == b'c' {
+                    expected.insert(key(b'k', &k[1..]), vec![]);
+                }
+                expected.insert(key(k[0], &k[1..]), v);
+            }
+        }
+        expected.insert(key(b'h', &id.to_be_bytes()), head.clone());
+        expected.insert(event(id, 1), head);
+        expected.insert(edge(parent, id), vec![]);
+        hierarchy::describe(
+            &mut expected,
+            id,
+            name,
+            cathedral_platform_contracts::storage::metadata::EXECUTABLE,
+        )?;
+    }
+    let user = 10u64;
+    for source in TEMPLATE..=9 {
         let copy = user + source - TEMPLATE;
-        let parent = if source == TEMPLATE { USERS } else { user };
+        let parent = if source == TEMPLATE {
+            USERS
+        } else if source == 9 {
+            user + 5
+        } else {
+            user
+        };
         let source_head = expected[&key(b'h', &source.to_be_bytes())].clone();
         let source_parent = u64::from_le_bytes(source_head[48..].try_into()?);
         let metadata = cathedral_platform_contracts::storage::metadata::Metadata::decode(
@@ -123,7 +169,7 @@ pub fn verify(path: &Path, offset: u64, bytes: u64, programs: &[seed::Program]) 
     let second = colors::head(2, &manifests[1], 4 + "hello cathedral two".len(), notes);
     let created = colors::head(1, &manifests[2], 6, colors);
     let color = colors::head(2, &manifests[3], 6, colors);
-    let (note, copy, swatch) = (user + 5, user + 6, user + 7);
+    let (note, copy, swatch) = (user + 7, user + 8, user + 9);
     expected.insert(key(b'h', &note.to_be_bytes()), first.clone());
     expected.insert(key(b'h', &copy.to_be_bytes()), second.clone());
     expected.insert(key(b'h', &swatch.to_be_bytes()), color.clone());
@@ -146,7 +192,7 @@ pub fn verify(path: &Path, offset: u64, bytes: u64, programs: &[seed::Program]) 
         return Err("desktop records differ from the independent object oracle".into());
     }
     println!(
-        "VERIFIED: six installed objects and matrix configuration, a named user copied from the template, two notes sharing one manifest under its Notes, the color under its Colors, exact heads/history/edges/quota, empty second root ({} records)",
+        "VERIFIED: six base objects, Split and its Notes, and matrix configuration, a named user copied from the template, two notes sharing one manifest under its Notes, the color under its Colors, exact heads/history/edges/quota, empty second root ({} records)",
         actual.len()
     );
     Ok(())

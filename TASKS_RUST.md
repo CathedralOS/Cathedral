@@ -1,11 +1,12 @@
 # Rust reference OS: tasks and handoff
 
-Updated 2026-10-18 (local date). Current milestone: scoped application bootstrap
-and service acquisition, shared by the stock and independent matrices. Notes and
-Colors use this path in F5; sealed imports select broker startup while existing
-programs retain legacy bundles. Prior milestones include shared child admission,
-stock-policy/platform separation and live storage-provider recovery. See the
-latest verification and bounded limitations at the end of this handoff.
+Updated 2026-10-18 (local date). Current milestone: **Split**, an independently
+implemented nested matrix installed in the ordinary F5 app strip. It owns two
+temporary Notes instances, chooses their layout, attenuates services and routes
+input through shared platform mechanisms. See the latest section for verification,
+resource bounds and remaining gaps. Prior milestones include scoped application
+bootstrap, shared child admission, stock-policy/platform separation and provider
+recovery.
 F5 still compacts existing media before changed program installations.
 Stock-copy refresh also collects unreachable revisions under logical quota
 pressure in the same transaction as its replacements; current data and pins survive.
@@ -35,9 +36,13 @@ It uses x86-64 QEMU/TCG and UEFI.
   USER** copies the hidden template; click a user to enter its workspace. Up
   to three users fit the current bounded listing; the add tile then disappears.
   No scrolling, passwords or logout yet. Restart QEMU to select another user.
-- The user's left-hand app strip shows **NOTES** and **COLORS** icon tiles. The
+- The user's left-hand app strip shows **NOTES**, **COLORS** and **SPLIT** icon tiles. The
   launcher itself and implementation controls are hidden. Click an app tile,
   then the app to focus it. Arrows and Enter work in a focused tile strip.
+- **SPLIT** opens two temporary Notes side by side in a separate matrix process.
+  Click either child to type. Its own top-right X asks both children about drafts;
+  UNSAVED NOTES keeps it open. Discard drafts with the child apps' X dialogs.
+  Outer Settings resizes the two columns while retaining both drafts.
 - **SETTINGS** at the bottom of the user strip (or F2 with strip focus) adjusts
   strip width and outer spacing. Save persists and applies the layout to running
   apps; Cancel discards local edits and returns to apps. Apps retain their state.
@@ -76,7 +81,7 @@ users, preserving their saved data and object identities. The app-close upgrade 
 `cathedral-storage.raw.before-app-close.raw` before changing user copies; the
 earlier label-only backup remains separate. Customized/unrecognized programs
 stay intact. Hierarchy migration then adds names, media types and a `Matrix`
-configuration, preserving existing metadata/configuration and saving
+configuration, preserving existing metadata/layout and saving
 `cathedral-storage.raw.before-hierarchy.raw` before its transaction. The fixed
 4 MiB lab volume can exhaust physical engine space during repeated program
 upgrades; installation refuses rather than resizing or reformatting it.
@@ -127,14 +132,15 @@ and child death clear that policy. After provider replacement the owner restores
 the direct user's realm and asks it to restore its own children.
 
 A user is a subtree copy of the template user: a matrix executable with the
-chrome, Notes, Colors and a saved `Matrix` configuration inside it. The user
+chrome, Notes, Colors, Split (with its own Notes code) and a saved `Matrix`
+configuration inside it. The user
 matrix loads its own launcher path, placement and budgets within the outer
 owner's ceiling. `desktop_test.py` drives this from F5
 and an independent host model verifies the whole layout; the headless storage
 fixture runs a program from its realm, launches a sibling and closes it.
 
 The kernel's contribution stays one syscall for code from sealed objects. It
-now allows eight reader rights per task and a reader page budget of up to four
+now allows sixteen reader rights per task and a reader page budget of up to four
 times the per-object cap, because a matrix hub pins every image its subtree
 shows, holds old and new during replacement, and lends the same budget to each
 nested matrix. The kernel still knows no matrix, realm or store.
@@ -188,7 +194,7 @@ nested matrix. The kernel still knows no matrix, realm or store.
 
 | Area | Current implementation | Reading entrance |
 | --- | --- | --- |
-| Kernel | UEFI exit, owned mappings/stacks, frame/heap allocation, interrupts/timer, preemption, isolated user processes, capability syscalls, IPC, admission/teardown from boot templates or sealed objects, recursive resource funding and CPU ceilings; 128 private and up to 512 reader pages per task, eight reader rights | [Boot](source-rs/kernel/boot/uefi/main.rs), [user tasks](source-rs/kernel/core/user_tasks/user_tasks.rs), [code grants](source-rs/kernel/core/user_tasks/admission/pool/README.md) |
+| Kernel | UEFI exit, owned mappings/stacks, frame/heap allocation, interrupts/timer, preemption, isolated user processes, capability syscalls, IPC, admission/teardown from boot templates or sealed objects, recursive resource funding and CPU ceilings; 256 private and up to 512 reader pages per task, sixteen reader rights | [Boot](source-rs/kernel/boot/uefi/main.rs), [user tasks](source-rs/kernel/core/user_tasks/user_tasks.rs), [code grants](source-rs/kernel/core/user_tasks/admission/pool/README.md) |
 | Architecture | Shared core with x86-64 and an ARM64 QEMU portability proof; ISA and board responsibilities separated | [Architecture](source-rs/kernel/arch/README.md), [ARM64 bounds](source-rs/kernel/arch/isa/aarch64/README.md) |
 | Matrix | Same service recursively owns children, local surfaces, focus, input, realm delegation with scope stamps and attachments, programs run from its realm by owner or child, standing launch policy per slot, close-after-asking, bounded budgets and deadlines; counts unanswered child requests instead of killing a slow child | [Service loop](source-rs/distribution/matrix/service/service.rs), [protocol](source-rs/platform/contracts/matrix.rs), [child launches](source-rs/distribution/matrix/service/children/children.rs), [storage forwarding](source-rs/distribution/matrix/service/parent/storage/storage.rs) |
 | Display/input | Software compositor, retained rectangles and sealed bitmap objects, scoped pointer/focus routing, physical PS/2 input | [Display](source-rs/platform/services/display/main.rs), [input](source-rs/platform/services/input/main.rs) |
@@ -234,12 +240,13 @@ siblings. Storage replacement restores the direct user's binding, then requests
 
 Page budgets are sized for sealed bitmaps held at every matrix level with old
 and new present during replacement, plus the largest program a matrix reads
-to run it: the root matrix has 128 private and 256 reader pages and lends the
-user matrix 80/96; the chooser has 48 private pages (three 12-page tiles
-and a replacement); Notes 32/4; Colors fits in the same; the provider 128/64; the
-display 128 reader pages. The kernel's per-task bound is 128 private and 512
-reader pages with eight reader rights; the kernel heap is 256 KiB. Objects
-hold at most 256 KiB (64 pages).
+to run it: the root matrix has 256 private and 384 reader pages and lends the
+user matrix 160/192. The user launcher receives 64 private pages; its app slot
+receives 80/64 and can fund a small subtree. Split lends each temporary Notes
+32/4. The provider has 128/64; the display 128 reader pages. The kernel's per-task
+bound is 256 private and 512 reader pages with sixteen reader rights; the kernel
+heap is 256 KiB. Kernel memory objects hold at most 512 KiB (128 pages); the
+storage service's current per-object content limit remains 256 KiB (64 pages).
 
 A request carries three scope words, so three narrowing grants can stack on one
 path; a fourth is refused. Each scoped request costs the provider one ancestry
@@ -1988,3 +1995,103 @@ The stock broker path currently requires interaction and separate storage stream
 legacy headless multiplexing retains its prior protocol. Upstream/rendering
 extraction, the recorded ATA completion issue and live-session storage retry
 remain separate work. No disk schema, kernel ABI or default desktop budget changed.
+
+## Visible alternative matrix, 2026-10-18
+
+[Split](source-rs/distribution/applications/split/README.md) is installed under the
+stock template and recognized existing users, with its Notes code beneath it.
+The normal executable-only chooser discovers it by path/metadata. No demo-specific
+launcher dispatch or boot catalogue grant is involved. It enters through Services,
+uses its own storage binding to load code, validates sealed imports, and admits two
+independent Notes processes with interaction-only offers. Both apps prove storage
+is absent and cannot be reached through interaction. Their temporary drafts never
+enter the object store.
+
+The shared mechanisms now include `World::inherit_poll`, synchronous upstream
+exchanges and retained image custody, alongside the existing admission, service
+broker, geometry, surface naming and input rules. The stock parent consumes the
+same snapshot/custody code, including its asynchronous presentation commits.
+Split imports no stock implementation or desktop contracts; the layout checker
+rejects such dependencies. Its named session entrance leads to children, requests,
+rendering and loss leaves; mod.rs only wires them.
+
+The enclosing matrix controls Split's placement; Split computes its children's
+two columns from its local extent. It shares sealed image readers, never maps or
+copies descendant pixels. An asynchronous LOSS survey continues serving children,
+and silence/malformed replies prevent close. After a timed-out child control
+exchange that stream stays uncertain until child death. Individual closes retire
+surfaces before returning reservations; whole-program exit lets the kernel reclaim
+its subtree. The visible proof repeatedly starts the same program after teardown.
+
+### Lab funding and limits
+
+The larger live subtree exposed several old ceilings. Funding is explicit:
+
+- Root: 256 private pages, 384 reader pages, 28 channels and six dynamic slots.
+  Display/input reserve no unused dynamic channels. Initial owner plus root still
+  reserve only the existing 32-channel global pool.
+- User: 160 private pages, 192 readers, 16 channels and four descendant slots.
+  Its launcher receives 64 private pages; its app receives 80 private/64 reader
+  pages, six channels and two descendant slots. This is stock distribution policy.
+- Split lends each Notes 32 private/four reader pages, no channels or descendants.
+  It retains bounded header images within its remaining sixteen private pages.
+- Single objects remain capped at 128 pages; the separate private-budget ceiling
+  is now 256. Per-task reader slots are sixteen, with an independently bounded
+  global copied-reader pool of 128 (the IPC retirement bitmap remains u128).
+- Compositor surface capacity remains sixteen. Login overlaps user admission with
+  five picker/eleven user surfaces; after stopping the picker, the owner grants
+  fourteen to the user. The launcher uses five, Split nine (four per temporary
+  Notes plus its header). Temporary Notes no longer allocates two unused surfaces.
+
+Named additions allocate fresh object IDs; original six-object bootstrap identities
+remain valid. The installer receipt authorizes exact previous addition manifests,
+not arbitrary programs with matching names. Custom entries block installation into
+that path. Migration preserves saved content, identities, launcher choice and
+geometry; only known old resource defaults change. It has a separate
+`.before-realm-programs.raw` backup and unchanged installations do not reopen the
+image. The independent desktop oracle now models both added programs and their
+nested subtree copy.
+
+### Remaining boundaries
+
+Split is a bounded alternative implementation, not a general replacement desktop.
+It does not forward child storage, accept presentation transactions, dynamically
+choose children or restart them. Parent snapshot handling and bitmap custody are
+shared; full transaction scheduling and root-display adaptation remain in the stock
+matrix. Loss of upstream transport ends this subtree rather than recovering it.
+Parent revocation/regrant is covered by the pure World test; live outer resize and
+whole-subtree close are covered visually. No owner semantic decision is needed for
+these implementation gaps.
+
+Next useful work: finish extracting transactional presentation and scoped storage
+forwarding when a second consumer needs them; diagnose the recorded ATA WRITE/FLUSH
+completion timeout; then address live-session storage retry delegation. Keep the
+F5 desktop as the ordinary way to use new capabilities. No authenticated login,
+Warden key handling or encrypted realm unlock is implemented by this milestone.
+
+### Verification
+
+- Workspace `cargo test --locked`, `cargo check-userspace` and `cargo check-uefi`
+  passed. After adding the final revocation/budget regressions, core's 108 and
+  matrix's 31 tests passed again. Storage host tests passed all 34 cases, including
+  named installation, exact receipt updates and preservation of custom programs.
+- Harness Python tests (13), layout tests (7), layout check (35 Omega/118 Rust
+  edges), named-body formatting and changed Markdown links passed.
+- `desktop/20261019T064749690692Z`: ordinary F5 Notes/Colors and cold persistence;
+  the independent host oracle verified all 300 records.
+- `desktop/20261019T064900399844Z`: `desktop_test.py --nested` passed two cold boots,
+  independent child focus/drafts, denied persistence, dirty-close, outer resize
+  and three complete subtree launches/teardowns per boot.
+- `labels-upgrade/20261019T065815917067Z`: `labels_upgrade_test.py --nested` copied
+  the retained six-program desktop disk, preserved both saved notes and identities,
+  installed Split, and passed the same nested interaction/reclamation checks inside
+  the migrated user. An unchanged second installation left the disk byte-identical.
+- x86 release smoke, ARM64 release portability, stock `--matrix-test` and
+  `--matrix-storage-test` passed. Independent matrix composition passed in
+  `matrix-composition/20261019T065431646805Z`, including interrupted acquisition,
+  rollback and subtree reclamation.
+
+All disk tests used disposable images or copies. The interactive saved disk was
+not opened or modified. The previously recorded intermittent ATA completion issue
+and live-session storage retry gap remain outstanding; these passing runs do not
+claim to resolve them.

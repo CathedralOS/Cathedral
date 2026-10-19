@@ -90,7 +90,7 @@ pub const IPC_SEND_CAP: u64 = 36;
 pub const IPC_RECEIVE_CAP: u64 = 37;
 pub const IPC_PACKET_BYTES: usize = 80;
 pub const MAX_DYNAMIC_CHANNELS: usize = 32;
-pub const MAX_CREATED_CHANNELS: usize = 20;
+pub const MAX_CREATED_CHANNELS: usize = 28;
 pub const MAX_DYNAMIC_HANDLES: usize = 20;
 
 /// Move up to five dynamic endpoints into a newly admitted child. arg0 launch,

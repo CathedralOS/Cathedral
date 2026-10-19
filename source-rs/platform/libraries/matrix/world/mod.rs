@@ -13,6 +13,7 @@ pub mod storage;
 mod surface;
 #[cfg(test)]
 mod tests;
+mod upstream;
 pub use children::Rect;
 pub use layout::Placement;
 
