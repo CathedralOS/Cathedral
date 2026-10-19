@@ -1,6 +1,6 @@
 //! Allocate the child's startup bundle; each rollback closes only retained rights.
 use super::*;
-use cathedral_user_runtime::ipc;
+use crate::ipc;
 pub(super) struct Connections {
     pub data: Pair,
     pub notify: Handle,

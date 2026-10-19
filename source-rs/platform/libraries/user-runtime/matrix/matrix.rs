@@ -1,5 +1,6 @@
-//! Startup capabilities supplied by distribution/matrix/service/children.
-//! These names describe local connections, never global services or disk locations.
+// Matrix startup connections: parent admission builds them, child entry reads them.
+// These names describe local connections, never global services or disk locations.
+// Parent construction and rollback: admission/admission.rs. Children load this view.
 use crate::{Error, abi, ipc::Handle, task::Environment};
 pub use cathedral_platform_contracts::imports;
 

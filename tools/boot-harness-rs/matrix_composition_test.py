@@ -22,7 +22,7 @@ def main():
     command += harness.firmware_args(qemu, output)
     command += ['-drive', 'format=raw,file=fat:rw:esp', '-nic', 'none', '-monitor', 'none', '-no-reboot', '-display', 'none']
     protocol_test.run(command, output, 120, subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0,
-                      'Cathedral alternative matrix: three peers, local input, denied owner commands and replacement passed')
+                      'Cathedral alternative matrix: owned admission, rollback, local input and subtree reclamation passed')
 
 
 if __name__ == '__main__':

@@ -6,9 +6,13 @@ mod proof;
 use cathedral_platform_contracts::matrix as wire;
 use cathedral_user_runtime::{ipc::Handle, time};
 type Pair = (Handle, Handle);
-cathedral_user_runtime::entry!(main);
-fn main(role: u64, _: u64) -> u64 {
-    if role == 0 { proof::run() } else { peer::run() }
+cathedral_user_runtime::entry_with_environment!(main);
+fn main(role: u64, _: u64, environment: cathedral_user_runtime::task::Environment) -> u64 {
+    if role == 0 {
+        proof::run()
+    } else {
+        peer::run(environment)
+    }
 }
 fn call(pair: Pair, words: wire::Packet) -> wire::Packet {
     pair.0.send(&wire::encode(words)).unwrap();

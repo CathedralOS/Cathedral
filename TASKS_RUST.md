@@ -1,7 +1,8 @@
 # Rust reference OS: tasks and handoff
 
-Updated 2026-10-18 (local date). Current milestone: independent three-peer matrix
-over real IPC, following the split of stock policy from reusable platform mechanisms
+Updated 2026-10-18 (local date). Current milestone: shared matrix child admission
+and independently owned three-child subtree, following the independent IPC proof
+and the split of stock policy from reusable platform mechanisms
 and live storage-provider recovery
 without restarting apps, following explicit launcher recovery
 after retry exhaustion, following app termination and bounded early bootstrap recovery,
@@ -332,8 +333,9 @@ to hierarchy metadata; extensions are conventions, not authoritative types.
   Alternative visual/headless arrangements have host tests without distro imports.
   An independent three-peer executable now exercises real IPC, source authority,
   revocation and replacement with the existing runtime server and shared local
-  commands. Child admission and upstream/rendering orchestration still need a
-  second consumer before extraction; do not move stock policy back into platform.
+  commands. Runtime child admission is now shared with the stock matrix, including
+  channel rollback and retained endpoint custody; the alternative owns its subtree.
+  Upstream/rendering orchestration still needs a second consumer before extraction.
 - [ ] **Bring storage write latency down.** Collection scans metadata before
   each write and durable commit writes through ATA PIO. Use explicit tick-to-time
   conversion and separate CPU time from elapsed time. Measure with
@@ -1872,3 +1874,50 @@ Verification:
 The prior ATA completion failures and live-storage retry gap remain unresolved.
 The next matrix extraction should target independent child admission or upstream
 adaptation, with both actual consumers preserving their distinct policy.
+
+## Shared child admission and independent subtree, 2026-10-18
+
+[Runtime admission](source-rs/platform/libraries/user-runtime/matrix/admission/README.md)
+now owns channel construction, startup-endpoint transfer, child spawn and control
+connection acceptance. It closes all endpoints on pre-spawn failure, or cancels
+and collects the child before closing retained parent ends on control-connect
+failure. Successful admission returns the task and retained connections; callers
+choose installation, authority grants, teardown and reservation release. There is
+no implicit Drop cancellation. The stock matrix uses it for template, catalogue
+and stored-object admission, preserving its budgets and recovery policy. The
+runtime matrix folder has a named entrance and plumbing-only `mod.rs` files.
+
+The independent matrix now receives three launch loans and admits its own
+children. Its supervisor has neither their launch authority nor their control
+ports while the matrix is alive. Children receive the normal three-endpoint
+matrix environment, no storage pair, no static peer links, and no launch/device
+authority. The matrix's small asynchronous lab probe loop keeps serving children
+while it waits for their control replies. Probe failure ends this test program;
+that deliberately limited behavior is not a shared application recovery policy.
+
+The QEMU proof checks, per matrix startup, sixteen busy-spawn failures after
+channel construction and sixteen channel-budget failures after allocating two of
+three required channels. Every failure preserves the original resource charges.
+It also checks sixteen middle-child replacements, no inherited local grant,
+unaffected sibling views, whole-subtree cancellation and a fresh matrix using the
+returned launch loans. These prove actual custody/rollback, not just pure state.
+The control-connect failure branch was preserved but not separately injected.
+
+Verification:
+
+- `matrix-composition/20261019T022726897765Z` passed owned admission, both rollback
+  paths, local input, denied authority, replacement and subtree reclamation.
+- `run.py --matrix-test --release --timeout 120` passed stock recursive admission,
+  locality, input, teardown and recovery with the shared helper.
+- `desktop/20261019T022923861143Z` passed the default F5 desktop and cold-reboot
+  persistence; its host oracle verified all 237 records. No ATA timeout occurred
+  in this run; the previously recorded failures remain unresolved.
+- Workspace host tests, `cargo check-userspace`, layout (35 Omega/113 Rust edges),
+  seven layout-checker tests, named-body formatting and diff checks passed.
+
+No kernel ABI, stored schema, channel budget or device deadline changed for the
+ordinary desktop. The independent profile funds eleven channels explicitly; this
+leaves two spare with three children live and makes partial-allocation rollback
+observable. Remaining matrix extraction targets are upstream adaptation and
+rendering/storage forwarding; alternative dynamic-reservation policy is not yet
+proved. The recorded ATA issue and live-storage retry gap remain separate work.

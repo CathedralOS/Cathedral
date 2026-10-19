@@ -1,4 +1,5 @@
 //! Choose this program's arrangement, then serve isolated peer connections.
+use super::{children::Children, probes::Pending};
 use cathedral_kernel_contracts::user as abi;
 use cathedral_matrix::world::{Grant, World};
 use cathedral_platform_contracts::matrix as wire;
@@ -19,8 +20,15 @@ pub fn run() -> Result<(), Error> {
         height: 600,
         keys: wire::KEY_MASK,
     });
-    // These are virtual input regions. No framebuffer/device capability is held.
+    let mut server = Server::open_clients(3)?;
+    server.enable_memory();
+    let mut children = Children([None, None, None]);
+    // Admission installs no view. This program chooses virtual regions afterwards.
     for slot in 0..3 {
+        children.start(slot as usize, &mut server, world)?;
+        if slot == 0 {
+            children.prove_rollback(abi::BUSY)?;
+        }
         assert_eq!(
             world.owner_command([
                 wire::PLACE,
@@ -35,11 +43,27 @@ pub fn run() -> Result<(), Error> {
             [0; 8]
         );
     }
-    let mut server = Server::open_clients(3)?;
-    server.enable_memory();
+    children.prove_rollback(abi::NO_MEMORY)?;
+    let mut pending: Option<Pending> = None;
     loop {
-        match server.next_event()? {
-            Event::Disconnected { client, .. } => world.disconnected(client),
+        if let Some(probe) = &pending
+            && probe.progress(&mut server)?
+        {
+            pending = None;
+        }
+        server.pause(u8::from(pending.is_some()));
+        let handles = pending.as_ref().map(|p| [p.wait().0]);
+        let until = pending.as_ref().map(|p| p.wait().1);
+        let Some(event) = server.next_event_or(handles.as_ref().map_or(&[], |h| &h[..]), until)?
+        else {
+            continue;
+        };
+        match event {
+            Event::Disconnected { client, .. } => {
+                if children.0[client].is_some() {
+                    children.stop(client, &mut server, world)?;
+                }
+            }
             Event::Memory(request, object) => {
                 drop(object);
                 server.reply(&request, &wire::encode(wire::error(abi::DENIED)))?;
@@ -47,7 +71,24 @@ pub fn run() -> Result<(), Error> {
             Event::Request(request) => {
                 let reply = match wire::decode(&request.bytes[..request.len]) {
                     Some(words) if request.control => {
-                        if matches!(words[0], wire::POINTER_SOURCE | wire::KEY_SOURCE) {
+                        if words[0] >> 32 != 0 {
+                            pending = Some(Pending::start(request, words, &children)?);
+                            continue;
+                        } else if let [wire::STOP, slot @ 0..=2, 0, 0, 0, 0, 0, 0] = words {
+                            wire::error(
+                                children
+                                    .stop(slot as usize, &mut server, world)
+                                    .err()
+                                    .map_or(0, |e| e.0 as u64),
+                            )
+                        } else if let [wire::SPAWN, slot @ 0..=2, 0, 0, 0, 0, 0, 0] = words {
+                            wire::error(
+                                children
+                                    .start(slot as usize, &mut server, world)
+                                    .err()
+                                    .map_or(0, |e| e.0 as u64),
+                            )
+                        } else if matches!(words[0], wire::POINTER_SOURCE | wire::KEY_SOURCE) {
                             world.source_command(words)
                         } else {
                             world.owner_command(words)

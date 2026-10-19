@@ -33,7 +33,7 @@ offer/withholding masks use bits 1 and 2. Unknown optional contracts are ignored
 unknown required ones refuse. This is not yet an arbitrary extensible endpoint
 table or the final installed component manifest.
 
-For new store programs, [matrix admission](../../services/matrix/service/children/admission.rs)
+For new store programs, [matrix admission](../../../distribution/matrix/service/children/admission.rs)
 maps the immutable image, resolves its imports, unmaps it, then reserves and
 installs only the selected connections. Owner `LAUNCH_IMPORTS` selects the offer
 mask for future launches in a slot. A child's `LAUNCH` can additionally withhold
@@ -44,7 +44,7 @@ are denied in the desktop's separate-stream protocol.
 
 The version-1 startup transport still uses the existing five-endpoint kernel
 bundle: interaction pair, wake receiver, and optional storage pair. Three
-endpoints mean storage is absent; five mean present. [Runtime views](../../libraries/user-runtime/matrix.rs)
+endpoints mean storage is absent; five mean present. [Runtime views](../../libraries/user-runtime/matrix/matrix.rs)
 provide required connections or `OptionalConnections` with an actual `Option`
 storage pair. The compiler checks these view types, not whole-program reach or
 the honesty of arbitrary executable declarations.

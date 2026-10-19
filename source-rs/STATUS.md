@@ -65,7 +65,9 @@ uses a two-child composition; this is not yet a general reusable server runtime.
 An [independent three-peer matrix](distribution/lab/matrix-composition/README.md)
 now verifies local input, revocation and replacement over real IPC. It uses the
 existing runtime server and the same local command dispatch as F5, with no stock
-contract or implementation dependency. Admission and rendering are outside that
+contract or implementation dependency. It owns three child admissions through
+shared runtime channel construction/spawn/rollback, and tests failure/replacement
+and subtree reclamation. Rendering and upstream forwarding remain outside that
 proof; it does not supply a complete alternative desktop or matrix runtime.
 
 The universal Rust contracts crate has been retired. [Kernel contracts](kernel/contracts/README.md)
@@ -243,7 +245,7 @@ records device/block events. Instrumented runs passed without reproducing it.
 Child storage requests now return to the matrix event loop while awaiting replies.
 The root's separate provider links let physical input and sibling rendering continue
 through a blocked save. Nested matrices in the visible desktop now receive a separate catalog pair in
-[their named startup bundle](platform/libraries/user-runtime/matrix.rs). A gated
+[their named startup bundle](platform/libraries/user-runtime/matrix/matrix.rs). A gated
 save leaves a sibling inside that same matrix able to consume pointer/keyboard
 input and repaint. The legacy headless fixtures retain their shared-stream mode.
 Owner grant/revoke and teardown aborts remain synchronous bounded operations.

@@ -83,7 +83,10 @@ general-purpose matrix server runtime is not yet a separate platform package.
 The independent Rust `distribution/lab/matrix-composition/matrix` program uses
 the shared runtime server and matrix commands for three local peers without any
 stock distribution import. This verifies that subset over actual IPC; it does
-not yet share the stock program's admission, rendering or upstream adapters.
+not yet share the stock program's rendering or upstream adapters. Child connection
+construction, spawn and failure rollback are shared through
+`platform/libraries/user-runtime/matrix/admission/`; each program retains code,
+budget, placement and recovery policy.
 
 Capture pickers, settings screens and desktop controls use platform contracts.
 Authority semantics, protected surfaces, observation visibility and the operator's

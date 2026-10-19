@@ -2,7 +2,6 @@
 
 mod admission;
 mod configuration;
-mod connections;
 mod control;
 mod imports;
 mod lifecycle;

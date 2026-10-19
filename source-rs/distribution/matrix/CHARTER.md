@@ -145,8 +145,8 @@ through the same matrix chain, independently of display grants, with sealed
 attachments forwarded in both directions. Owner assignment
 is exclusive between siblings; every request checks a local binding revision.
 The visible desktop admits children with separate interaction and catalog pairs,
-plus a wake receiver. [Connection construction](service/children/connections.rs)
-owns allocation and rollback; the [runtime bundle](../../platform/libraries/user-runtime/matrix.rs)
+plus a wake receiver. [Shared admission](../../platform/libraries/user-runtime/matrix/admission/admission.rs)
+owns channel construction, endpoint transfer and rollback; the [runtime bundle](../../platform/libraries/user-runtime/matrix/matrix.rs)
 names the child-visible roles. Child storage forwarding resumes from the service
 loop without occupying the upstream interaction pair. Root provider failures
 retire the affected storage binding. A separate parent catalog transport failure

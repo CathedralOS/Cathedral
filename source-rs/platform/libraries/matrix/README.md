@@ -40,4 +40,6 @@ not claims of a runnable phone or embedded distribution. The fixed surface and
 input limits in the experimental protocol remain explicit resource bounds.
 The independent program additionally exercises real IPC, malformed requests,
 revocation and peer replacement in QEMU. It has no stock distribution dependency;
-admission, nested adaptation and rendering are outside that proof's scope.
+it now owns child admission through the shared runtime's
+[admission coordinator](../user-runtime/matrix/admission/README.md). Nested
+adaptation and rendering remain outside that proof's scope.

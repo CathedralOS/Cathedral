@@ -172,47 +172,35 @@ impl Children {
         server: &mut Server,
         world: &mut World,
     ) -> Result<(), Error> {
-        let port = target.port()?;
         if separate_storage && !server.available(slot + 3) {
             return Err(Error(abi::BUSY as i64));
         }
-        let connections = connections::Connections::create(separate_storage)?;
-        let child = match target.spawn_tree(argument, connections.initial(), loans) {
-            Ok(child) => child,
-            Err(error) => {
-                connections.rollback()?;
-                return Err(error);
-            }
-        };
-        let control = match port.connect() {
-            Ok(pair) => pair,
-            Err(error) => {
-                child.cancel()?;
-                child.wait()?;
-                connections.close_parent()?;
-                return Err(error);
-            }
-        };
+        let admitted = cathedral_user_runtime::matrix::admission::spawn(
+            target,
+            argument,
+            loans,
+            separate_storage,
+        )?;
         world.disconnected(slot);
         server
-            .install(slot, connections.data)
+            .install(slot, admitted.data)
             .expect("validated local client slot changed");
-        let storage = connections.storage;
+        let storage = admitted.storage;
         if let Some(pair) = storage {
             server
                 .install(slot + 3, pair)
                 .expect("child catalog slot changed");
         }
         self.slots[slot] = Some(Owned {
-            task: child,
+            task: admitted.task,
             outcome: None,
             disconnected: false,
             reservation: dynamic.then_some(target),
-            control: Some(control),
+            control: Some(admitted.control),
             stale: 0,
-            data: connections.data,
+            data: admitted.data,
             storage,
-            notify: connections.notify,
+            notify: admitted.notify,
         });
         if slot == 0 {
             // A separately admitted task supersedes any old configured launcher's

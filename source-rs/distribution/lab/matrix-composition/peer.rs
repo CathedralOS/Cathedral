@@ -1,12 +1,15 @@
 //! An ordinary peer can relay packets only through its explicitly supplied link.
 use super::*;
 use cathedral_user_runtime::{link::Link, task::Launch};
-pub fn run() -> u64 {
+pub fn run(environment: cathedral_user_runtime::task::Environment) -> u64 {
     assert!(Launch::at(0).is_err());
-    assert!(Link::at(1).is_err());
+    assert!(Link::at(0).is_err());
     assert!(cathedral_user_runtime::display::mapping().is_err());
     assert!(cathedral_user_runtime::keyboard::read(false).is_err());
-    let parent = Link::at(0).unwrap().connect().unwrap();
+    let connections =
+        cathedral_user_runtime::matrix::OptionalConnections::load(&environment).unwrap();
+    assert!(connections.storage.is_none());
+    let parent = connections.interaction;
     let control = (Handle::bootstrap(0).unwrap(), Handle::bootstrap(1).unwrap());
     loop {
         let mut bytes = [0; 64];
