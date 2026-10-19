@@ -30,8 +30,14 @@ in its lower 16 bits; the other seven words keep the object protocol's layout.
 Every matrix authenticates the connection and revision, stamps the binding's
 scope into the first free scope word, then substitutes its own upstream
 revision. The provider checks every stamp, so a scoped child cannot widen itself
-by filling in scope words, and a request that leaves no room for a matrix's
-stamp is refused. No child can select a provider root, sibling, ancestor or
+by filling in scope words, and a full packet needs a containment proof before forwarding. The matrix
+sends HEAD for the innermost scope restricted by the remaining scope and its
+own grant. Only success permits folding the restrictions into that innermost
+scope; it rechecks the child connection/revision before sending the original
+operation. Immutable parent relationships and never-reused IDs make the proof
+valid across the two reads. Deletion can only turn the later operation into a
+refusal. Future moves or aliases require revisiting this invariant. Nested
+proofs use the same forwarding path, so packet capacity no longer caps depth. No child can select a provider root, sibling, ancestor or
 global process. Keeping roots exclusive between siblings also keeps object
 numbers and revisions independent. Binding revisions do not measure sibling
 activity.
@@ -83,10 +89,13 @@ authority (see [task management](../../../../../distribution/matrix/CHARTER.md#d
 can race owner STOP or actual task exit without leaking the slot or collecting it
 twice. A disconnect seen during a pending reply is remembered through cleanup.
 
-Every forwarded exchange is bounded by the contract's `STORAGE_DEADLINE_TICKS`, with
-a hop's margin added at each nesting level and for the reads of a launch. A
-provider that misses it has its stream retired and the owner replaces it, so
-the bound sits several times above a durable commit on the lab disk.
+Every data request carries an absolute deadline in word seven. The client
+allows 1200 ticks end to end; intermediaries preserve or shorten it, including
+containment proofs. The root adapter additionally caps its provider exchange at
+`STORAGE_DEADLINE_TICKS` (600). Adding another matrix never adds time to an
+existing request. Legacy/direct callers may supply zero to request the first
+adapter's default. Program admission has a separate bounded multi-read workflow.
+A timed-out transport is retired because a late reply has no correlation ID.
 
 Sealed attachments travel with the packet in both directions. A publication's
 attachment arrives on the child's catalog stream, is forwarded with the request
@@ -141,8 +150,10 @@ under its own object but cannot replace it, and committed objects and edges
 after reopening the provider and matrix tree. It uses a private reset test disk. Host tests cover exclusivity, stale
 incarnations, binding revisions and scoped regrants.
 
-This bounded experiment retains the provider's two roots and three scope words
-per request, so three narrowing grants can stack on one path. Read-only
+This bounded experiment retains the provider's two roots and two scope words
+per request, with checked folding and an end-to-end deadline instead of a fixed
+number of narrowing grants. Proof traffic grows with nesting; no cache or
+unbounded-latency guarantee is implied. Read-only
 attenuation, shared writable subtrees and per-subtree quotas remain future work.
 Parents remain trusted to delegate their own authority; this is not a claim of
 timing isolation or confinement from a malicious ancestor.

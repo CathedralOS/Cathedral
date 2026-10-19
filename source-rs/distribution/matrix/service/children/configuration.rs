@@ -61,12 +61,12 @@ impl Children {
             return Err(Error(code as i64));
         }
         self.saved_storage[0] = Some((0, 0));
-        // Distribution resource policy: any app may host two bounded children.
+        // Distribution resource policy: an app may host a matrix and two leaves.
         // This conveys no executable, storage or device authority by itself.
         self.standing[1] = Some(Standing {
             pages: [saved.app_pages, saved.app_readers],
-            channels: 10,
-            descendants: 2,
+            channels: 15,
+            descendants: 3,
             cpu: 0,
             surfaces: saved.app_surfaces,
             place: Some((rect(rects[1]), saved.keys)),

@@ -84,7 +84,7 @@ fn named_install_preserves_ids_data_layout_and_custom_code() {
             config.app_readers,
             config.app_surfaces
         ),
-        (40, 256, 80, 64, 9)
+        (40, 256, 128, 128, 10)
     );
     let once = rows.clone();
     install(&mut rows, &args).unwrap();

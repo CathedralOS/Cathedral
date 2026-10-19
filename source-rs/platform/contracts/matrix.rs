@@ -204,14 +204,17 @@ pub fn rectangle_updates(p: Packet) -> Option<([Packet; 2], usize)> {
     Some((updates, count))
 }
 
-/// Child-local storage binding: [INFO,0..] -> [0, binding revision, realm,0..].
+/// Child-local binding: [INFO,0,0,0,0,0,0,deadline] -> [0,revision,realm,0..].
+/// Deadline zero requests the adapter's default; refreshes preserve an earlier bound.
 /// Storage packets retain storage.rs's layout; opcode is
 /// (binding revision << STORAGE_SCOPE_BITS) | (STORAGE_BASE + storage opcode).
 /// No root selector crosses the child connection. A binding is a realm: the
 /// subtree under the granted scope object, or the whole of what the matrix
 /// itself holds when the grant names no scope. The matrix stamps a granted
-/// scope into the request's free scope words, so the provider enforces the
-/// entire chain of attenuation.
+/// scope into the request's free scope words. A full packet requires an
+/// upstream containment proof before folding restrictions; see storage.rs and
+/// the platform Scopes coordinator. Every data request preserves its absolute
+/// deadline in word seven across all hops.
 pub const STORAGE_INFO: u64 = 12;
 pub const STORAGE_BASE: u64 = 256;
 pub const STORAGE_SCOPE_BITS: u32 = 16;
@@ -251,8 +254,9 @@ pub const STORAGE_BINDING: u64 = 120;
 pub const LAUNCH_IMPORTS: u64 = 121;
 /// Monotonic ticks a matrix waits for one forwarded storage request before
 /// retiring its provider stream. The current 100-Hz timer makes 600 ticks
-/// nominally six seconds, not 600 milliseconds. Nested forwards and program
-/// reads add a margin. This is a failure bound, not a commit latency estimate.
+/// nominally six seconds, not 600 milliseconds. Nested forwards share the
+/// client's absolute 1200-tick bound; program reads have a bounded multi-step
+/// workflow. This is a failure bound, not a commit latency estimate.
 pub const STORAGE_DEADLINE_TICKS: u64 = 600;
 
 #[cfg(test)]

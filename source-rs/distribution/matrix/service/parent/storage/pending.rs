@@ -39,6 +39,8 @@ enum Step {
     Refresh,
     /// Learn the program's revision and length.
     Head,
+    /// Prove a full scope packet's intersection before forwarding its mutation.
+    Validate,
     /// The request itself: a child's, or the program's bulk read.
     Forward,
 }
@@ -51,6 +53,7 @@ pub(in crate::service::parent) struct Pending {
     source: usize,
     deadline: u64,
     launch: Option<LaunchRequest>,
+    validated: Option<wire::Packet>,
 }
 impl Pending {
     pub(super) fn new(
@@ -59,6 +62,16 @@ impl Pending {
         attachment: Option<Object>,
         upstream: bool,
     ) -> Result<Self, Error> {
+        let now = time::now()?;
+        let deadline = protocol::deadline(
+            now,
+            words[7],
+            if upstream {
+                protocol::EXCHANGE_TICKS
+            } else {
+                wire::STORAGE_DEADLINE_TICKS
+            },
+        );
         #[cfg(feature = "trace-storage")]
         time::storage_trace(
             if upstream {
@@ -74,18 +87,15 @@ impl Pending {
             words,
             attachment,
             receive: None,
-            step: if upstream {
+            step: if upstream && deadline.is_some() {
                 Step::Refresh
             } else {
                 Step::Forward
             },
             source: 0,
-            deadline: time::after(if upstream {
-                wire::STORAGE_DEADLINE_TICKS + 100
-            } else {
-                wire::STORAGE_DEADLINE_TICKS
-            })?,
+            deadline: deadline.unwrap_or(now),
             launch: None,
+            validated: None,
         })
     }
     /// Read a program on this matrix's own binding: a head and a bulk read,
@@ -115,6 +125,7 @@ impl Pending {
                 if upstream { 3 } else { 2 } * wire::STORAGE_DEADLINE_TICKS + 100,
             )?,
             launch: Some(plan),
+            validated: None,
         })
     }
 }
@@ -179,6 +190,15 @@ impl Parent {
                             p.receive = None;
                         }
                     }
+                    Step::Validate => {
+                        drop(object);
+                        if words[0] != 0 {
+                            reply = Some((words, None));
+                        } else {
+                            p.step = Step::Forward;
+                            p.receive = None;
+                        }
+                    }
                     Step::Forward => reply = Some((words, object)),
                 },
                 Ok(None) => {
@@ -196,7 +216,16 @@ impl Parent {
                     .storage_pair
                     .ok_or(Error(abi::PEER_CLOSED as i64))
                     .and_then(|(send, receive)| {
-                        send.send(&wire::encode([wire::STORAGE_INFO, 0, 0, 0, 0, 0, 0, 0]))?;
+                        send.send(&wire::encode([
+                            wire::STORAGE_INFO,
+                            0,
+                            0,
+                            0,
+                            0,
+                            0,
+                            0,
+                            p.deadline,
+                        ]))?;
                         Ok(receive)
                     });
                 match result {
@@ -282,8 +311,10 @@ impl Parent {
         Ok(())
     }
     fn send_storage(&mut self, p: &mut Pending) -> Result<Option<wire::Packet>, Error> {
+        if time::reached(time::now()?, p.deadline) {
+            return Ok(Some(wire::error(abi::TIMED_OUT)));
+        }
         let mut words = p.words;
-        let op = words[0] & 0xffff;
         if let Some(plan) = p.launch {
             // The matrix's own read: its upstream binding, or at the root its
             // first provider root. A child's launch is narrowed to that child's
@@ -296,21 +327,44 @@ impl Parent {
             let client = request.client.expect("forwarded child request");
             let slot = self.storage_slot(client);
             use cathedral_matrix::world::storage::Prepared;
-            match self
-                .scopes
-                .prepare(slot, request.incarnation, words, self.storage_realm)
-            {
-                Ok(Prepared::Reply(reply)) => return Ok(Some(reply)),
-                Ok(Prepared::Forward {
-                    source,
-                    words: stamped,
-                }) => {
-                    p.source = source;
-                    words = stamped;
+            if let Some(validated) = p.validated.take() {
+                if let Err(code) = self.scopes.authorize(
+                    slot,
+                    request.incarnation,
+                    words[0] >> wire::STORAGE_SCOPE_BITS,
+                ) {
+                    return Ok(Some(wire::error(code)));
                 }
-                Err(code) => return Ok(Some(wire::error(code))),
+                words = validated;
+            } else {
+                match self
+                    .scopes
+                    .prepare(slot, request.incarnation, words, self.storage_realm)
+                {
+                    Ok(Prepared::Reply(reply)) => return Ok(Some(reply)),
+                    Ok(Prepared::Forward {
+                        source,
+                        words: stamped,
+                    }) => {
+                        p.source = source;
+                        words = stamped;
+                    }
+                    Ok(Prepared::Validate {
+                        source,
+                        check,
+                        words: folded,
+                    }) => {
+                        p.source = source;
+                        p.validated = Some(folded);
+                        p.step = Step::Validate;
+                        words = check;
+                    }
+                    Err(code) => return Ok(Some(wire::error(code))),
+                }
             }
         }
+        words[7] = p.deadline;
+        let op = words[0] & 0xffff;
         let pair = if self.upstream {
             words[0] = op | (self.storage_epoch << wire::STORAGE_SCOPE_BITS);
             self.storage_pair.ok_or(Error(abi::PEER_CLOSED as i64))?
@@ -335,7 +389,12 @@ impl Parent {
             },
             words[0] & 0xffff,
         );
-        match p.attachment.take() {
+        let attachment = if p.step == Step::Validate {
+            None
+        } else {
+            p.attachment.take()
+        };
+        match attachment {
             Some(object) => pair.0.send_memory(&wire::encode(words), &object)?,
             None => pair.0.send(&wire::encode(words))?,
         }

@@ -191,10 +191,12 @@ pub(super) fn attachment(
                 && matches!(
                     (words[0] & 0xffff).wrapping_sub(wire::STORAGE_BASE),
                     cathedral_platform_contracts::storage::PUBLISH
+                        | cathedral_platform_contracts::storage::CREATE_NAMED
                         | cathedral_platform_contracts::storage::SET_METADATA
                         | cathedral_platform_contracts::storage::LOOKUP
                         | cathedral_platform_contracts::storage::FILTER
                         | cathedral_platform_contracts::storage::COPY_TREE
+                        | cathedral_platform_contracts::storage::COPY
                 ) =>
         {
             parent.storage_request(request, words, Some(object))

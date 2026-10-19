@@ -2,7 +2,7 @@
 from pathlib import Path
 import shutil
 
-def exercise(output, click, key, scan, width, height, resumed=False):
+def exercise(output, click, key, scan, width, height, resumed=False, deep=False):
     font = bytes.fromhex((Path(__file__).resolve().parents[2] / 'source-rs/platform/libraries/bitmap-font/font.hex').read_text())
     def pixel(w,d,x,y): return d[(y*w+x)*3:(y*w+x+1)*3]
     def text(w,d,x,y,value):
@@ -61,3 +61,32 @@ def exercise(output, click, key, scan, width, height, resumed=False):
     assert log.count('Cathedral Split: two Notes admitted with separate persistent realms')==3,log[-3000:]
     assert 'Cathedral Notes: temporary' not in log,log[-3000:]
     print('PASS: independent Split layout, focus, isolated persistence, dirty-close, resize and three reclaimed subtrees')
+    if not deep:
+        return
+    for round in range(2):
+        click(120,336)
+        note(0,'ax'); note(1,'by') # Deep edits never replace these siblings.
+        click(width-margin-256+130,top+10)
+        scan(lambda w,d:text(w,d,width-margin-256+8,top+6,'NESTED'),'same-code child matrix admitted')
+        top += 32
+        note(0,'axa' if resumed or round else 'ax')
+        note(1,'byb' if resumed or round else 'by')
+        if not resumed and round == 0:
+            for slot,ch in [(0,'a'),(1,'b')]:
+                x,y,_=positions()[slot]; click(x+5,y+120); key(ch)
+            note(0,'axa',True); note(1,'byb',True)
+            click(width-margin-14,24+10)
+            scan(lambda w,d:text(w,d,width-margin-256+8,24+6,'UNSAVED NOTES'),'deep dirty close refused')
+            # The inner matrix lacks another subtree's funding. Refusal must
+            # retain its live children and drafts, and leave closing usable.
+            click(width-margin-256+130,top+10)
+            scan(lambda w,d:text(w,d,width-margin-256+8,top+6,'NO ROOM'),'bounded deeper admission refusal')
+            note(0,'axa',True); note(1,'byb',True)
+            for slot in (0,1):
+                x,y,_=positions()[slot]; click(x+5,y+120); key('f1')
+            note(0,'axa'); note(1,'byb')
+            shutil.copyfile(output/'display.png',output/'split-deeper.png')
+        click(width-margin-14,24+10)
+        top -= 32
+        blank()
+    print('PASS: same matrix at another level, confined durable edits, recursive close and funded refusal')

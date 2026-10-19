@@ -11,7 +11,7 @@ Start at [main.rs](main.rs), then [session/session.rs](session/session.rs): acqu
 the supplied interaction/storage services, load children, consume upstream
 notifications, survey loss asynchronously, and dispatch authenticated requests.
 
-- [Children](session/children.rs) reads `Notes` from this program's own realm,
+- [Children](session/children/children.rs) reads `Notes` from this program's own realm,
   validates its sealed import declaration, reserves two tasks, and uses platform
   admission with interaction and a separate scoped storage connection. The two
   `Left` and `Right` realms are siblings beneath Split, with independent contents.
@@ -48,16 +48,32 @@ cross-scope access (shared policy tests), dirty close, live resize, repeated sub
 The host `World` test separately covers parent revocation/regrant; the visible
 fixture does not inject that control operation into the outer desktop.
 
-Split currently forwards through three matrix scope stamps (root, user, Split),
-with an 800-tick deadline above the stock user/root's 700/600. This is a bounded
-reference chain, not unbounded recursion. The stock launcher funds ten channels
-for its two children. A 24-handle process cap covers five supplied endpoints,
-eight retained rights while the first child acquires services, and ten temporary
-rights while admitting the second. The distribution supplies 32 root channels,
-lends 20 to the user matrix and 10 to Split; the global backing pool has 36.
-All reservations remain conserved; ordinary Notes still creates no channels.
+The **DEEPER** button asks the current children about unsaved work, collects
+clean children, and runs the same Split executable under a `Nested` realm. Its
+code is a named immutable content copy; missing `Notes`, `Left` and `Right`
+subtrees are copied individually. Every copy is atomic. An interrupted setup
+resumes by name and never replaces existing nested data. The complete setup is
+not one transaction; it is kept private until admission. Reopening Split starts
+its normal two notes; DEEPER reopens the saved nested workspace. Copies are
+snapshots, not enrollment in managed code updates.
 
-`Left`/`Right` are resolved by name on each launch. Initial empty-object creation
-and naming are separate transactions; interrupted first-time naming can leave an
-unnamed empty object in Split's own realm. No established child data is overwritten.
-Atomic named creation remains follow-up storage work.
+The wrapper grants nine surfaces and a bounded two-child budget to its nested
+matrix. Its inner DEEPER refuses with **NO ROOM** while preserving live notes.
+The F5 distribution funds root/user/app channels at 36/25/15, from a 40-channel
+backing pool. User/app private pages are 208/128 and reader pages 256/128; the
+inner Split receives 80 private pages, 64 readers and ten channels. Seven dynamic
+slots cover login overlap and the deeper subtree. No child acquires devices or
+ambient code/storage authority. Ordinary Notes still creates no channels.
+
+Scope restrictions are folded only after upstream containment checks; a shared
+absolute deadline bounds the full exchange. See the platform
+[delegation contract](../../../platform/libraries/matrix/world/storage/README.md).
+This removes the packet's fixed depth cap without promising unlimited resources
+or cheap unbounded recursion. The current proof path adds reads; it is not cached.
+
+`Left`/`Right` use atomic named creation: content, hierarchy edge, name/type
+indexes and quota publish together. A collision resolves the existing name;
+uncertain transport aborts setup and the next launch reconciles by lookup.
+`python tools/boot-harness-rs/desktop_test.py --deep --trace-storage` adds actual
+same-code nesting, independent edits, dirty-close propagation, capacity refusal,
+repeated collection and cold reboot to the usual visible Split checks.

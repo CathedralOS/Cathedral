@@ -355,7 +355,11 @@ executable, which becomes the storage root by being handed provider links rather
 than by an argument. A realm is that attenuated view; a matrix is a program that
 attenuates. Every hop checks connection identity and a local binding revision
 and stamps the binding's scope on the request; the provider enforces every
-stamp, so a child sees its realm and nothing beside it. Siblings have separate
+stamp, so a child sees its realm and nothing beside it. A full scope packet is
+folded only after an upstream containment proof, with the caller revision checked
+again before forwarding. Immutable parents and never-reused IDs are required.
+One absolute deadline bounds forwarding and proofs; depth does not add time.
+Siblings have separate
 numbers and revisions. Every operation is atomic at the provider, so revocation
 leaves nothing staged, and regranting an ancestor does not restore descendants
 automatically. The headless `--matrix-storage-test --release` fixture checks

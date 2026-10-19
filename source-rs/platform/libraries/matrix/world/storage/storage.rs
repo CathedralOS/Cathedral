@@ -8,7 +8,17 @@ use cathedral_platform_contracts::{matrix as wire, storage as protocol};
 /// A local binding reply, or a stamped request still needing upstream transport.
 pub enum Prepared {
     Reply(wire::Packet),
-    Forward { source: usize, words: wire::Packet },
+    Forward {
+        source: usize,
+        words: wire::Packet,
+    },
+    /// Send the read-only check upstream first. Only its successful reply
+    /// permits forwarding `words`, after rechecking the caller's revision.
+    Validate {
+        source: usize,
+        check: wire::Packet,
+        words: wire::Packet,
+    },
 }
 #[derive(Clone, Copy)]
 struct Binding {
@@ -92,7 +102,7 @@ impl<const N: usize> Scopes<N> {
         realm: u64,
     ) -> Result<Prepared, u64> {
         let (source, scope) = self.binding(slot, incarnation)?;
-        if words == [wire::STORAGE_INFO, 0, 0, 0, 0, 0, 0, 0] {
+        if words[..7] == [wire::STORAGE_INFO, 0, 0, 0, 0, 0, 0] {
             return Ok(Prepared::Reply([
                 0,
                 self.revision(slot, incarnation)?,
@@ -110,7 +120,23 @@ impl<const N: usize> Scopes<N> {
         {
             return Err(abi::DENIED);
         }
-        protocol::stamp(&mut words, scope)?;
+        if protocol::stamp(&mut words, scope).is_err() {
+            // Object parents never move and IDs are never reused. Proving that
+            // the innermost scope is inside both remaining restrictions makes
+            // it their intersection for this request. Deletion can only make
+            // the subsequent request fail; it cannot broaden authority.
+            let mut check = protocol::Request::new(protocol::HEAD, words[5], 0, 0, 0).words();
+            check[0] = (words[0] & !0xffff) | (wire::STORAGE_BASE + protocol::HEAD);
+            check[5] = words[6];
+            check[6] = scope;
+            check[7] = words[7];
+            words[6] = 0;
+            return Ok(Prepared::Validate {
+                source,
+                check,
+                words,
+            });
+        }
         Ok(Prepared::Forward { source, words })
     }
     pub fn revoke(&mut self, slot: usize) -> Option<usize> {

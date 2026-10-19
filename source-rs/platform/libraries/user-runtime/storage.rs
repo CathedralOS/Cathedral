@@ -11,10 +11,9 @@ use crate::{
     time,
 };
 use cathedral_platform_contracts::{matrix, storage};
-/// Longer than the matrix chain's own deadline, which grows by a hop's margin
-/// at each level, so a stalled provider is reported by a matrix's verdict
-/// rather than by this client giving up first.
-const DEADLINE_TICKS: u64 = 2 * matrix::STORAGE_DEADLINE_TICKS;
+/// End-to-end budget, preserved by every matrix. The root caps provider work
+/// more tightly, leaving room for its failure verdict to return to the client.
+const DEADLINE_TICKS: u64 = storage::EXCHANGE_TICKS;
 pub struct Scope {
     pair: (Handle, Handle),
     binding: u64,
@@ -47,7 +46,8 @@ impl Scope {
         if self.direct {
             return Ok(1);
         }
-        let (reply, _) = self.exchange([matrix::STORAGE_INFO, 0, 0, 0, 0, 0, 0, 0], None)?;
+        let deadline = time::after(DEADLINE_TICKS).map_err(|e| e.0 as u64)?;
+        let (reply, _) = self.exchange([matrix::STORAGE_INFO, 0, 0, 0, 0, 0, 0, deadline], None)?;
         let words = storage::unpack(&reply).ok_or(abi::IO_ERROR)?;
         if words[0] != 0 {
             return Err(words[0]);
@@ -68,6 +68,12 @@ impl Scope {
         attachment: Option<&Object>,
     ) -> Result<([u8; 64], Option<Object>), u64> {
         let mut words = request.words();
+        words[7] = storage::deadline(
+            time::now().map_err(|e| e.0 as u64)?,
+            words[7],
+            DEADLINE_TICKS,
+        )
+        .ok_or(abi::TIMED_OUT)?;
         if !self.direct {
             words[0] =
                 (self.binding << matrix::STORAGE_SCOPE_BITS) | (matrix::STORAGE_BASE + request.op);
@@ -101,6 +107,35 @@ impl Scope {
             path,
         )?;
         Ok(storage::Reply::decode(&bytes)?.object)
+    }
+    /// Atomic creation in this realm. An ambiguous transport failure retires
+    /// this stream; reacquire and LOOKUP the name before deciding what to do.
+    pub fn create_named(
+        &mut self,
+        metadata: storage::metadata::Metadata,
+        contents: &[u8],
+    ) -> Result<storage::Reply, u64> {
+        let length = contents
+            .len()
+            .checked_add(storage::metadata::BYTES)
+            .filter(|length| *length <= storage::MAX_BYTES)
+            .ok_or(storage::TOO_LARGE)?;
+        if metadata.name == [0; storage::metadata::FIELD]
+            || storage::metadata::Metadata::decode(&metadata.encode()) != Some(metadata)
+        {
+            return Err(abi::INVALID_ARGUMENT);
+        }
+        let mut pages =
+            crate::memory::Private::allocate(length.div_ceil(4096)).map_err(|e| e.0 as u64)?;
+        pages.bytes_mut()[..storage::metadata::BYTES].copy_from_slice(&metadata.encode());
+        pages.bytes_mut()[storage::metadata::BYTES..length].copy_from_slice(contents);
+        let object = pages.freeze().map_err(|e| e.0 as u64)?;
+        let (reply, extra) = self.request(
+            storage::Request::new(storage::CREATE_NAMED, 0, 0, self.realm, length as u64),
+            Some(&object),
+        )?;
+        drop(extra);
+        storage::Reply::decode(&reply)
     }
     pub fn metadata(&mut self, object: u64) -> Result<storage::metadata::Metadata, u64> {
         let mut bytes = [0; 64];
@@ -151,7 +186,12 @@ impl Scope {
                 Some(object) => self.pair.0.send_memory(&bytes, object)?,
                 None => self.pair.0.send(&bytes)?,
             }
-            ipc::wait_many(&[self.pair.1], time::after(DEADLINE_TICKS)?)?;
+            let deadline = if words[7] == 0 {
+                time::after(DEADLINE_TICKS)?
+            } else {
+                words[7]
+            };
+            ipc::wait_many(&[self.pair.1], deadline)?;
             let mut reply = [0; 64];
             let (len, object) = self.pair.1.try_receive_memory(&mut reply)?;
             if len != 64 {

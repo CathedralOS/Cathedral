@@ -4,13 +4,14 @@
 use super::*;
 use cathedral_matrix::world::storage::{Prepared, Scopes};
 use cathedral_user_runtime::{ipc::Handle, memory::Object, server::Request};
-const DEADLINE: u64 = wire::STORAGE_DEADLINE_TICKS + 200;
 struct Pending {
     request: Request,
     words: wire::Packet,
     object: Option<Object>,
     refresh: bool,
     deadline: u64,
+    validating: bool,
+    folded: Option<wire::Packet>,
 }
 pub struct Storage {
     pair: Option<Pair>,
@@ -22,6 +23,13 @@ pub struct Storage {
     pending: Option<Pending>,
 }
 impl Storage {
+    pub fn idle_pair(&self) -> Option<Pair> {
+        if self.pending.is_none() {
+            self.pair
+        } else {
+            None
+        }
+    }
     pub fn new(pair: Pair, realm: u64, roots: [u64; 2]) -> Self {
         Self {
             pair: Some(pair),
@@ -58,6 +66,13 @@ impl Storage {
         if self.incarnations[slot] != Some(request.incarnation) || self.pair.is_none() {
             return server.reply(&request, &wire::encode(wire::error(abi::DENIED)));
         }
+        let Some(deadline) = cathedral_platform_contracts::storage::deadline(
+            time::now()?,
+            words[7],
+            cathedral_platform_contracts::storage::EXCHANGE_TICKS,
+        ) else {
+            return server.reply(&request, &wire::encode(wire::error(abi::TIMED_OUT)));
+        };
         assert!(
             self.pending.is_none(),
             "storage streams must be paused during exchange"
@@ -67,14 +82,20 @@ impl Storage {
             words,
             object,
             refresh: true,
-            deadline: time::after(DEADLINE)?,
+            deadline,
+            validating: false,
+            folded: None,
         });
-        match self
-            .pair
-            .unwrap()
-            .0
-            .send(&wire::encode([wire::STORAGE_INFO, 0, 0, 0, 0, 0, 0, 0]))
-        {
+        match self.pair.unwrap().0.send(&wire::encode([
+            wire::STORAGE_INFO,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            deadline,
+        ])) {
             Ok(()) => Ok(()),
             Err(e) => self.retire(e, server),
         }
@@ -88,6 +109,24 @@ impl Storage {
             Ok(None) => return Ok(()),
             Err(e) => return self.retire(e, server),
         };
+        if self.pending.as_ref().unwrap().validating {
+            drop(object);
+            if reply[0] != 0 {
+                return self.finish(reply, None, server);
+            }
+            let pending = self.pending.as_mut().unwrap();
+            let slot = pending.request.client.unwrap() - 2;
+            if let Err(code) = self.scopes.authorize(
+                slot,
+                pending.request.incarnation,
+                pending.words[0] >> wire::STORAGE_SCOPE_BITS,
+            ) {
+                return self.finish(wire::error(code), None, server);
+            }
+            pending.validating = false;
+            let words = pending.folded.take().unwrap();
+            return self.send(words, server);
+        }
         if !self.pending.as_ref().unwrap().refresh {
             return self.finish(reply, object, server);
         }
@@ -112,19 +151,37 @@ impl Storage {
         }
         let pending = self.pending.as_mut().unwrap();
         let slot = pending.request.client.unwrap() - 2;
-        let mut words =
+        let words =
             match self
                 .scopes
                 .prepare(slot, pending.request.incarnation, pending.words, self.realm)
             {
                 Ok(Prepared::Reply(reply)) => return self.finish(reply, None, server),
                 Ok(Prepared::Forward { words, .. }) => words,
+                Ok(Prepared::Validate { check, words, .. }) => {
+                    pending.validating = true;
+                    pending.folded = Some(words);
+                    check
+                }
                 Err(code) => return self.finish(wire::error(code), None, server),
             };
-        words[0] = words[0] & 0xffff | self.epoch << wire::STORAGE_SCOPE_BITS;
         pending.refresh = false;
+        self.send(words, server)
+    }
+    fn send(&mut self, mut words: wire::Packet, server: &mut Server) -> Result<(), Error> {
+        let pending = self.pending.as_mut().unwrap();
+        if time::reached(time::now()?, pending.deadline) {
+            return self.finish(wire::error(abi::TIMED_OUT), None, server);
+        }
+        words[0] = words[0] & 0xffff | self.epoch << wire::STORAGE_SCOPE_BITS;
+        words[7] = pending.deadline;
         let send = self.pair.unwrap().0;
-        let result = match pending.object.take() {
+        let object = if pending.validating {
+            None
+        } else {
+            pending.object.take()
+        };
+        let result = match object {
             Some(object) => send.send_memory(&wire::encode(words), &object),
             None => send.send(&wire::encode(words)),
         };

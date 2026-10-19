@@ -1,9 +1,11 @@
 # Rust reference OS: tasks and handoff
 
-Updated 2026-10-19 (local date). Current milestone: **nested persistence and explicit save recovery**. **Split**
+Updated 2026-10-19 (local date). Current milestone: **atomic named creation and deeper recursive matrices**. **Split**
 is an independently implemented nested matrix installed in the ordinary F5 app strip. It owns two
 persistent Notes instances, chooses their layout, attenuates services and routes
-input through shared platform mechanisms. See the latest section for verification,
+input through shared platform mechanisms. DEEPER runs that same matrix beneath
+another private saved realm. Scope folding removes the fixed stamp-chain depth
+cap; a shared absolute deadline bounds the whole exchange. See the latest section for verification,
 resource bounds and remaining gaps. Prior milestones include scoped application
 bootstrap, shared child admission, stock-policy/platform separation and provider
 recovery.
@@ -45,6 +47,9 @@ It uses x86-64 QEMU/TCG and UEFI.
   UNSAVED NOTES keeps it open. Save/discard drafts with the child apps' X dialogs.
   F1 saves to separate Left/Right realms; both survive relaunch and cold reboot.
   Outer Settings resizes the two columns while retaining both drafts.
+  **DEEPER** checks for unsaved work, then enters another Split with independent
+  saved notes. Reopen Split and click DEEPER to return there after a restart.
+  Further nesting beyond its funding reports **NO ROOM**, retaining live drafts.
 - **SETTINGS** at the bottom of the user strip (or F2 with strip focus) adjusts
   strip width and outer spacing. Save persists and applies the layout to running
   apps; Cancel discards local edits and returns to apps. Apps retain their state.
@@ -2279,3 +2284,104 @@ dynamic child chooser or presentation batches yet. A permanently failed parent
 transport still requires subtree relaunch; ordinary provider replacement through
 an intact parent connection is covered above. No new owner semantic decision
 was needed for this milestone, and the interactive saved disk was not altered.
+
+## Atomic creation and another real matrix level (2026-10-19)
+
+This section supersedes the previous checkpoint's separate create/name operation,
+three-stamp depth cap, per-depth deadlines and resource ceilings.
+
+### Current behavior and reading path
+
+- F5 -> user -> Split -> **DEEPER** now runs the same Split executable beneath
+  another saved realm, with independent Notes children. It checks both current
+  children's loss reports before replacing them. Reopening Split returns to its
+  normal two children; DEEPER revisits the saved nested workspace. A further
+  unfunded level says **NO ROOM** without discarding either draft.
+- `CREATE_NAMED` commits initial contents, hierarchy metadata, name/type indexes,
+  revision/event and quota together. Split uses it for Left/Right. An existing
+  name returns a conflict without changing anything; uncertain callers reconcile
+  by lookup/head. The sealed request includes 64 metadata bytes within the
+  existing 256 KiB payload ceiling. Later publication still permits 256 KiB.
+- Named shallow `COPY` shares the source's content and atomically installs its
+  new hierarchy name. DEEPER uses it for its executable, then named subtree copies
+  for Notes/Left/Right. `COPY_TREE` still refuses copying a subtree into itself.
+  Setup is several individually atomic operations, repaired by name on retry;
+  the new child is not admitted until preparation finishes. Existing nested
+  contents are never overwritten.
+- The shared platform scope policy uses two packet scope slots and a read-only
+  containment proof when another restriction will not fit. Only successful proof
+  plus renewed caller-revision validation permits the folded original request.
+  Attachments remain held locally during proof. This works because hierarchy
+  parents are immutable and object IDs are never reused; moves or aliases would
+  require revisiting it. Tests simulate eight levels and reject escaped scopes.
+- Word seven carries one absolute deadline through refresh, containment checks
+  and the actual request. Each hop may shorten it, never extend it. Expired
+  requests are refused before touching upstream IPC; the next request remains
+  usable. The root retains its 600-tick provider bound under the client's
+  1200-tick exchange bound. Active durable commits can still have uncertain
+  outcomes when a response is lost.
+- Start at Split's `session/session.rs`, then `children/children.rs` for admission
+  and `children/nesting.rs` for the deeper transition. `children/image.rs` holds
+  executable reading/validation. Its `mod.rs` is only Rust plumbing. Platform
+  policy remains in `matrix/world/storage/storage.rs`; stock and Split transport
+  orchestration remain in their own service/session implementations.
+
+### Funding and kernel correction
+
+The global dynamic channel pool is 40, with up to 36 reservations and the existing
+24 dynamic handles per account. F5 root/user/app channel funding is 36/25/15;
+private pages are 256/208/128 and reader pages 384/256/128. Root funds seven dynamic
+slots, user five and app three. Inner Split receives 80 private pages, 64 reader
+pages, ten channels and two descendants. App presentation funding is ten surfaces;
+inner Split uses nine and the global surface pool remains sixteen. Picker-to-user
+overlap is included. These are explicit admission bounds, not promised unlimited
+recursion. The installer upgrades only recognized stock funding configurations.
+
+Reusing a collected task slot under a different parent exposed a kernel control
+pair assertion that assumed the old owner would return. `ipc/bootstrap.rs` now
+requires the old child's side closed and a fresh epoch, then clears old grants,
+queued messages and escrow before installing the new authorized pair. Live service
+pair replacement keeps its stricter same-peer checks. A regression proves the old
+parent cannot use its handles and the new parent cannot receive an old reply.
+
+### Verification
+
+- Workspace host tests, 14 database-object host tests, 36 storage-lab engine
+  tests and 13 harness tests pass. Named creation tests include collision/invalid
+  inputs, transaction abort and cold opening a snapshot after every backend write:
+  each image exposes either the old state or the complete named object and indexes.
+- Default userspace/UEFI and changed deep-recovery/trace clippy checks pass.
+  Layout still enforces 35 Omega/118 Rust edges; no implementation dependency
+  between Split and the stock matrix was introduced.
+- `desktop_test.py --deep --trace-storage` passes repeated admission/collection,
+  independent durable edits, dirty close, resource refusal and cold reboot:
+  `desktop/20261019T185329329096Z`.
+- The complete live provider suite passes precommit/postcommit loss, exhausted
+  automatic recovery and explicit retry, readiness-stall refusal, nested and
+  deeper replacement: `provider-live/20261019T185352551039Z`. Drafts and the
+  unchanged sibling survive; live children remain running, regain storage and
+  save durably across cold reboot, including root/user/Split/Split/Notes.
+- `--matrix-storage-test --release` passes scoped delegation/revocation, copies,
+  realm-loaded programs and replacement, plus full-packet folding, denied foreign
+  scopes and an expired request followed by a successful fresh request.
+- Normal desktop plus exact 312-record host oracle passes:
+  `desktop/20261019T185007998065Z`. Retained-disk upgrade, installer idempotence,
+  preservation of existing notes and independent Split saves pass:
+  `labels-upgrade/20261019T185217790387Z`.
+- x86-64 smoke, dynamic IPC and admission suites and the ARM64 portability proof
+  pass after the kernel reparenting correction and funding changes.
+
+### Remaining limits and follow-up
+
+Containment proofs add reads as depth grows; no proof cache or arbitrary-depth
+performance claim is made. Nested executables/data are snapshots, not managed
+program updates. The experimental wire changed, so arbitrary old compiled nested
+snapshots are not promised compatibility. Whole workspace preparation is not one
+transaction, though each named operation is atomic and retryable.
+
+Split still lacks a child restart UI, dynamic chooser and presentation batches.
+A permanently failed parent transport requires subtree relaunch. Provider
+replacement through an intact parent link restores standing grants without
+restarting live children. The old intermittent ATA busy timeout remains unexplained.
+No new owner decision was needed. Tests used disposable/copied disks; the
+interactive saved disk was not altered.

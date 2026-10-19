@@ -1,4 +1,6 @@
-//! Load declared code and fund children; each receives its own persistent realm.
+// Start ordinary leaves or descend into another matrix; retain ownership of
+// their channels and reservations until collection. Image validation lives in
+// image.rs, while nesting.rs owns the persistent copy and child-matrix policy.
 use super::*;
 use cathedral_platform_contracts::storage;
 use cathedral_user_runtime::{
@@ -30,26 +32,7 @@ impl Children {
         let roots = super::storage::open(&mut scope)?;
         let mut forwarding = super::storage::Storage::new(storage, scope.realm(), roots);
         let id = scope.lookup(b"Notes").map_err(|c| Error(c as i64))?;
-        let head = scope
-            .call(storage::Request::new(storage::HEAD, id, 0, 0, 0))
-            .map_err(|c| Error(c as i64))?;
-        let (reply, object) = scope
-            .request(
-                storage::Request::new(storage::BULK, id, head.revision, 0, head.length),
-                None,
-            )
-            .map_err(|c| Error(c as i64))?;
-        storage::Reply::decode(&reply).map_err(|c| Error(c as i64))?;
-        let mut code = object.ok_or(Error(abi::IO_ERROR as i64))?;
-        let declaration = imports::from_elf(code.map()?)
-            .map_err(|_| Error(abi::BAD_EXECUTABLE as i64))?
-            .ok_or(Error(abi::BAD_EXECUTABLE as i64))?;
-        code.unmap()?;
-        let granted = imports::bind(declaration.entries(), imports::ALL)
-            .map_err(|_| Error(imports::MISSING as i64))?;
-        if !declaration.brokered || granted != imports::ALL {
-            return Err(Error(abi::DENIED as i64));
-        }
+        let (code, granted) = image::read(&mut scope, id)?;
         for slot in 0..2 {
             let launch = Executable::from_object(&code, 0)?.reserve(
                 Limits {

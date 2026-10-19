@@ -8,10 +8,15 @@ python tools/boot-harness-rs/run.py --release --window
 
 F5 opens a full-screen user picker with a horizontal row of avatar tiles.
 **NEW USER** copies the hidden template; click a user to enter its workspace.
-The user gets an app strip with **Notes** and **Colors** tiles and the rest of
+The user gets an app strip with **Notes**, **Colors** and **Split** tiles and the rest of
 the display for its app. Click the app to focus it. Each app has an **X**;
 Notes asks **Save / Discard / Cancel** for unsaved work. There is no storage test
 toggle, launcher entry or permanent status text in the ordinary UI.
+
+[Split](applications/split/README.md) runs two persistent Notes in its own matrix.
+**DEEPER** asks them about unsaved work, then runs the same matrix beneath a
+separate saved realm. Both levels own their layout and attenuate their children's
+services. An unfunded further level reports **NO ROOM** without losing drafts.
 
 Notes holds up to eight notes of 240 characters: **F1** saves or reconciles,
 **F2** reloads, **F3** duplicates the saved note, **F4** switches notes. Colors

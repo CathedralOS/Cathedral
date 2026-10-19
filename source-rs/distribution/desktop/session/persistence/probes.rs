@@ -26,7 +26,9 @@ pub(super) fn observe(session: &admission::Session) {
     {
         return;
     }
-    let y = if cfg!(feature = "storage-live-nested") {
+    let y = if cfg!(feature = "storage-live-deep") {
+        98
+    } else if cfg!(feature = "storage-live-nested") {
         66
     } else {
         34

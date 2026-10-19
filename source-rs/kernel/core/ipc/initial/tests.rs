@@ -1,4 +1,28 @@
 use super::*;
+
+#[test]
+fn collected_child_slot_can_return_under_another_parent_without_old_authority() {
+    let mut ipc = Ipc::new(1, 3, &[]).unwrap();
+    ipc.close_task(1);
+    ipc.prepare_child_with(0, 0, 1, 2, 0, &[]).unwrap();
+    let old_index = ipc.accept_child(0, 0);
+    let old_send = ipc.handle(0, old_index).unwrap();
+    let old_receive = ipc.handle(0, old_index + 1).unwrap();
+    let child_send = ipc.handle(1, 1).unwrap();
+    ipc.send(1, child_send, b"old child reply").unwrap();
+    ipc.close_task(1);
+    ipc.prepare_child_with(0, 2, 1, 3, 2, &[]).unwrap();
+    assert_eq!(ipc.send(0, old_send, b"old parent"), Err(abi::BAD_HANDLE));
+    assert_eq!(ipc.receive(0, old_receive, 64), Err(abi::BAD_HANDLE));
+    let new_index = ipc.accept_child(0, 2);
+    let new_send = ipc.handle(2, new_index).unwrap();
+    let new_receive = ipc.handle(2, new_index + 1).unwrap();
+    assert_eq!(ipc.receive(2, new_receive, 64).unwrap(), None);
+    ipc.send(2, new_send, b"new parent").unwrap();
+    let child_receive = ipc.handle(1, 0).unwrap();
+    let message = ipc.receive(1, child_receive, 64).unwrap().unwrap();
+    assert_eq!(&message.bytes[..message.len], b"new parent");
+}
 fn dormant() -> Ipc {
     let mut ipc = Ipc::new(1, 3, &[]).unwrap();
     ipc.close_task(1);

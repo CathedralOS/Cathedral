@@ -125,6 +125,10 @@ does not implement shared hierarchy roots. It now implements bounded exact
 names and media types on edges, atomic index updates, scoped relative-path
 lookup and indexed direct-child type filtering. The Rust wire protocol carries
 these operations; extensions do not supply types or execution authority.
+Named creation also publishes initial content, hierarchy metadata and indexes in
+one transaction. A name collision refuses the whole operation. An ambiguous reply
+is reconciled by path within the same authorized view before deciding on further
+work; it never grants authority to replace whatever happens to occupy that name.
 Host tests exercise independent edits, shared content, subtree copies, index
 rollback and bounded reclamation with retained pins. Pins retain content
 revisions, not complete historical hierarchy metadata. The desktop proof uses

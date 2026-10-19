@@ -26,6 +26,7 @@ pub fn run(mut services: Services) -> Result<(), Error> {
     let mut children = Children::empty();
     let mut storage = children.start(storage, &mut server)?;
     let mut survey: Option<loss::Survey> = None;
+    let mut deepen = false;
     let mut button = false;
     let mut refresh = true;
     loop {
@@ -53,7 +54,23 @@ pub fn run(mut services: Services) -> Result<(), Error> {
                     && event[3] >= grant.width.saturating_sub(28)
                     && survey.is_none()
                 {
+                    deepen = false;
                     survey = Some(loss::Survey::start(None, &mut children)?);
+                } else if pressed
+                    && !button
+                    && survey.is_none()
+                    && storage.idle_pair().is_some()
+                    && output.deepen_hit(event[3], event[4])
+                {
+                    if output.can_deepen()
+                        && cathedral_user_runtime::resources::budget()?.limits.channels >= 15
+                    {
+                        deepen = true;
+                        survey = Some(loss::Survey::start(None, &mut children)?);
+                    } else {
+                        output.failure = Some(b"NO ROOM");
+                        output.header(false)?;
+                    }
                 }
                 button = pressed;
             } else if event[2] == wire::CANCEL {
@@ -71,6 +88,32 @@ pub fn run(mut services: Services) -> Result<(), Error> {
                     &request,
                     &wire::encode([0, u64::from(!clean), 0, 0, 0, 0, 0, 0]),
                 )?;
+            } else if clean && deepen {
+                // Descendants answered clean; collect their grants and images
+                // before lending the same conserved funding to the new matrix.
+                if let Some(pair) = storage.idle_pair() {
+                    for slot in 0..2 {
+                        storage.revoke(slot);
+                        world.disconnected(slot);
+                        output.flush(world)?;
+                        children.stop(slot, &mut server)?;
+                    }
+                    match children.deepen(pair, &mut server) {
+                        Ok(next) => {
+                            storage = next;
+                            output.nested_layout(world)?;
+                        }
+                        Err(error) => {
+                            cathedral_user_runtime::time::storage_sample(
+                                "split-nesting-refused",
+                                &[error.0 as u64],
+                            );
+                            output.failure = Some(b"CANNOT OPEN");
+                            output.header(false)?;
+                        }
+                    }
+                }
+                deepen = false;
             } else if clean {
                 return Ok(());
             } else {

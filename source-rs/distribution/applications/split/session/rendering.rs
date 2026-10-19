@@ -12,6 +12,8 @@ pub struct Output {
     images: Images,
     header: u64,
     capacity: usize,
+    pub nested: bool,
+    pub failure: Option<&'static [u8]>,
 }
 impl Output {
     pub fn new(pair: Pair) -> Self {
@@ -21,6 +23,8 @@ impl Output {
             images: Images::empty(),
             header: 0,
             capacity: 0,
+            nested: false,
+            failure: None,
         }
     }
     pub fn arrange(&mut self, grant: Grant, world: &mut World) -> Result<(), Error> {
@@ -34,16 +38,21 @@ impl Output {
         if !grant.valid() {
             return Ok(());
         }
-        if grant.width < 80 || grant.height < 64 || self.capacity < 9 {
+        let needed = if self.nested { 10 } else { 9 };
+        if grant.width < 80 || grant.height < 64 || self.capacity < needed {
             for slot in 0..2 {
                 world.revoke(slot).map_err(|c| Error(c as i64))?;
             }
             return self.flush(world);
         }
-        let width = (grant.width - 12) / 2;
-        for slot in 0..2 {
+        let width = if self.nested {
+            grant.width
+        } else {
+            (grant.width - 12) / 2
+        };
+        for slot in 0..if self.nested { 1 } else { 2 } {
             world
-                .surface_range(slot, slot * 4, 4)
+                .surface_range(slot, slot * 4, if self.nested { 9 } else { 4 })
                 .map_err(|c| Error(c as i64))?;
             world
                 .place(
@@ -60,7 +69,16 @@ impl Output {
         }
         let reply = upstream::call(
             self.pair,
-            [wire::SURFACE_CREATE, grant.epoch, 8, 0, 0, 0, 0, 0],
+            [
+                wire::SURFACE_CREATE,
+                grant.epoch,
+                needed as u64 - 1,
+                0,
+                0,
+                0,
+                0,
+                0,
+            ],
         )?;
         if reply[0] != 0 {
             return Err(Error(reply[0] as i64));
@@ -80,10 +98,22 @@ impl Output {
         for (left, text) in [
             (
                 8,
-                if dirty {
+                if let Some(message) = self.failure {
+                    message
+                } else if dirty {
                     b"UNSAVED NOTES".as_slice()
+                } else if self.nested {
+                    b"NESTED".as_slice()
                 } else {
                     b"SPLIT"
+                },
+            ),
+            (
+                100,
+                if !self.nested && !dirty && self.failure.is_none() {
+                    b"DEEPER".as_slice()
+                } else {
+                    b""
                 },
             ),
             (width.saturating_sub(20), b"X"),
@@ -128,6 +158,26 @@ impl Output {
             return Err(Error(reply[0] as i64));
         }
         Ok(())
+    }
+    pub fn deepen_hit(&self, x: u64, y: u64) -> bool {
+        let left = self.grant.width.saturating_sub(256) + 100;
+        !self.nested && self.failure.is_none() && y < 28 && (left..left + 80).contains(&x)
+    }
+    pub fn can_deepen(&self) -> bool {
+        self.capacity >= 10
+    }
+    pub fn nested_layout(&mut self, world: &mut World) -> Result<(), Error> {
+        self.nested = true;
+        let grant = self.grant;
+        // Retire our former header; child surfaces were already retired.
+        if self.header != 0 {
+            upstream::call(
+                self.pair,
+                [wire::ERASE, grant.epoch, self.header, 0, 0, 0, 0, 0],
+            )?;
+        }
+        self.capacity = 0;
+        self.arrange(grant, world)
     }
     pub fn flush(&mut self, world: &mut World) -> Result<(), Error> {
         while let Some(words) = world.take_retired_surface() {

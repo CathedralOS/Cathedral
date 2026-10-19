@@ -106,7 +106,7 @@
         "target": "x86_64-unknown-none",
         "clock": true,
         "argument": 0,
-        "ipc_channels": 32,
+        "ipc_channels": 36,
         "private_pages": 256,
         "shared_pages": 384
       },
@@ -131,7 +131,7 @@
         4
       ]
     ],
-    "dynamic_tasks": 6,
+    "dynamic_tasks": 7,
     "programs": [
       {
         "package": "cathedral-chooser",

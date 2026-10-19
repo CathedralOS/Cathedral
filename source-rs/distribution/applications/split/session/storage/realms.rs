@@ -8,23 +8,17 @@ pub fn open(scope: &mut Scope) -> Result<[u64; 2], Error> {
         roots[slot] = match scope.lookup(name) {
             Ok(id) => id,
             Err(wire::MISSING) => {
-                let created = scope
-                    .call(wire::Request::new(wire::PUBLISH, 0, 0, scope.realm(), 0))
-                    .map_err(|c| Error(c as i64))?;
-                let metadata = wire::metadata::Metadata::new(name, b"").unwrap().encode();
-                scope
-                    .attached(
-                        wire::Request::new(
-                            wire::SET_METADATA,
-                            created.object,
-                            created.revision,
-                            0,
-                            metadata.len() as u64,
-                        ),
-                        &metadata,
-                    )
-                    .map_err(|c| Error(c as i64))?;
-                created.object
+                let metadata = wire::metadata::Metadata::new(name, b"").unwrap();
+                match scope.create_named(metadata, &[]) {
+                    Ok(created) => created.object,
+                    // Another creator won. Resolve the standing name, without
+                    // overwriting it. A lost reply instead aborts this launch;
+                    // the next launch starts with LOOKUP on a fresh stream.
+                    Err(cathedral_kernel_contracts::user::WOULD_BLOCK) => {
+                        scope.lookup(name).map_err(|c| Error(c as i64))?
+                    }
+                    Err(code) => return Err(Error(code as i64)),
+                }
             }
             Err(code) => return Err(Error(code as i64)),
         };

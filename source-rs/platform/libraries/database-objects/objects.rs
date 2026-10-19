@@ -156,6 +156,19 @@ impl Store<'_> {
     /// A new object under `parent` whose first revision shares the source's
     /// current content. The write is three small records regardless of size.
     pub fn copy(&self, root: u8, source: u64, expected: u64, parent: u64) -> Result<Object> {
+        self.copy_named(root, source, expected, parent, b"")
+    }
+    /// Copy just the content, optionally naming its new hierarchy entry in the
+    /// same transaction. Unlike a subtree copy this may live under its source.
+    pub fn copy_named(
+        &self,
+        root: u8,
+        source: u64,
+        expected: u64,
+        parent: u64,
+        name: &[u8],
+    ) -> Result<Object> {
+        let name = Metadata::new(name, b"").ok_or(Error::Invalid)?.name;
         let tx = self.writer()?;
         let object;
         {
@@ -177,7 +190,7 @@ impl Store<'_> {
             };
             object = place(&mut table, root, head, &mut charged)?;
             let mut metadata = hierarchy::entry(&table, root, source, src)?;
-            metadata.name = [0; 32];
+            metadata.name = name;
             hierarchy::write(&mut table, root, object.id, head, metadata, &mut charged)?;
             set_quota(&mut table, root, charged)?;
         }

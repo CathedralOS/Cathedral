@@ -70,6 +70,20 @@ request to the subtrees its scope stamps name. Publication callbacks observe
 preparation and successful commit outside the writer; the Committing observation
 runs inside the writer immediately before commit and must not reenter the store.
 
+`create_named` uses the publication transaction for initial content, revision one,
+hierarchy edge, exact name/type indexes and quota. Invalid metadata, collision or
+capacity failure aborts the entire writer. `copy_named` similarly names a new
+content-sharing object in the copy transaction. Neither overwrites a collision.
+The runtime sends `CREATE_NAMED` with a 64-byte metadata prefix and initial content
+in one sealed attachment (total at most 256 KiB). Ordinary PUBLISH retains its full
+256 KiB content bound. An uncertain create reply requires name lookup and inspection,
+not blind replacement; provider failure still retires the ambiguous stream.
+
+Host checks interrupt staging and cold-open disk snapshots after every backend
+write during named creation. Each recovered state contains either no new object
+or the complete named content/index set, with an exact quota ledger. A retry after
+an unobserved committed result collides without allocating another object.
+
 History is retained until collection, which the provider runs before every write
 to a root and which clients may also request; the fixed logical quota can refuse
 new publications first. Two persistent root-owned pin slots preserve selected

@@ -10,14 +10,17 @@
 //! request handles, not persisted cross-view references.
 //!
 //! Every request and reply is one 64-byte packet of eight little-endian words.
-//! Request: `[op, object, expected, argument, len, scope, scope, scope]`. The
+//! Request: `[op, object, expected, argument, len, scope, scope, deadline]`. The
 //! argument word is the byte offset for reads, the parent for creation and
-//! copies, the pin slot for pins and the listing cursor. The three scope words
+//! copies, the pin slot for pins and the listing cursor. The two scope words
 //! are stamped by matrices on the way to the provider (matrix.rs): every
 //! nonzero scope names an object, and the request may only touch objects at
 //! or below each of them. A client that stamps its own scope only narrows
-//! itself. A failed or lost reply may hide a commit: read HEAD before
-//! repeating a write.
+//! itself. A matrix can fold a full packet only after proving containment of
+//! its innermost scope under all other restrictions. Immutable parent links
+//! and never-reused IDs make that proof stable. The last word is an absolute
+//! end-to-end deadline; intermediaries never extend it. A failed or lost reply
+//! may hide a commit: reconcile HEAD, or LOOKUP for a named creation.
 use cathedral_kernel_contracts::user as abi;
 /// `object` → status, object, revision, length.
 pub const HEAD: u64 = 1;
@@ -28,6 +31,7 @@ pub const READ: u64 = 2;
 /// content is empty, which is how a container object is made.
 pub const PUBLISH: u64 = 3;
 /// `source object, expected, parent` → a new object sharing the source's content.
+/// An optional name attachment names the copy atomically, as with COPY_TREE.
 pub const COPY: u64 = 4;
 /// `object, expected`; an object that still has children is refused BUSY.
 pub const DELETE: u64 = 5;
@@ -59,8 +63,14 @@ pub const SET_METADATA: u64 = 15;
 pub const LOOKUP: u64 = 16;
 /// `parent, 0, after, type length` plus type attachment; indexed direct children.
 pub const FILTER: u64 = 17;
+/// `0, 0, parent, payload length`: one sealed attachment containing 64 bytes
+/// of Metadata followed by initial content. Name must be nonempty. Content,
+/// entry, indexes and quota commit atomically; collisions return WOULD_BLOCK.
+/// A lost reply requires LOOKUP/HEAD reconciliation, never blind replacement.
+/// Total payload is at most MAX_BYTES (initial content at most MAX_BYTES - 64).
+pub const CREATE_NAMED: u64 = 18;
 /// Highest operation a delegated child may issue.
-pub const LAST: u64 = FILTER;
+pub const LAST: u64 = CREATE_NAMED;
 #[path = "storage_metadata.rs"]
 pub mod metadata;
 /// Largest object on the wire: 64 pages, so a program or a bulk reply fits in
@@ -69,7 +79,28 @@ pub const MAX_BYTES: usize = 256 * 1024;
 pub const READ_BYTES: usize = 32;
 pub const LIST_IDS: usize = 6;
 pub const PIN_SLOTS: u64 = 2;
-pub const SCOPES: usize = 3;
+pub const SCOPES: usize = 2;
+/// End-to-end forwarding bound. Matrices preserve an earlier supplied deadline;
+/// only the root adapter applies the shorter provider-operation bound.
+pub const EXCHANGE_TICKS: u64 = 1200;
+pub fn deadline(now: u64, requested: u64, budget: u64) -> Option<u64> {
+    if budget == 0 || budget >= 1 << 63 {
+        return None;
+    }
+    let remaining = if requested == 0 {
+        budget
+    } else {
+        requested.wrapping_sub(now)
+    };
+    if remaining == 0 || remaining >= 1 << 63 {
+        return None;
+    }
+    let result = now.wrapping_add(remaining.min(budget));
+    // Zero denotes an unspecified deadline on the wire, so expire one tick
+    // earlier when the bound would land exactly on that sentinel.
+    let result = if result == 0 { u64::MAX } else { result };
+    (result != now).then_some(result)
+}
 pub const ROOTS: usize = 2;
 pub const HEALTH: &[u8] = b"health";
 /// Provider refusals use kernel status codes plus these two.
@@ -84,6 +115,9 @@ pub struct Request {
     pub argument: u64,
     pub len: u64,
     pub scopes: [u64; SCOPES],
+    /// Absolute monotonic tick, never extended by forwarding. Zero asks the
+    /// first adapter to supply its bounded default (legacy/direct clients).
+    pub deadline: u64,
 }
 impl Request {
     /// A request with no scope of its own; matrices stamp the scope words.
@@ -95,6 +129,7 @@ impl Request {
             argument,
             len,
             scopes: [0; SCOPES],
+            deadline: 0,
         }
     }
     pub fn words(self) -> [u64; 8] {
@@ -106,7 +141,7 @@ impl Request {
             self.len,
             self.scopes[0],
             self.scopes[1],
-            self.scopes[2],
+            self.deadline,
         ]
     }
     pub fn encode(self) -> [u8; 64] {
@@ -120,13 +155,15 @@ impl Request {
             expected: words[2],
             argument: words[3],
             len: words[4],
-            scopes: [words[5], words[6], words[7]],
+            scopes: [words[5], words[6]],
+            deadline: words[7],
         })
     }
     /// The objects every scope must contain: the subject, and the parent a
     /// creation or copy would place its result under.
     pub fn subjects(self) -> ([u64; 2], usize) {
         match self.op {
+            CREATE_NAMED => ([self.argument, 0], 1),
             PUBLISH if self.object == 0 => ([self.argument, 0], 1),
             COPY | COPY_TREE => ([self.object, self.argument], 2),
             COLLECT => ([0; 2], 0),
@@ -170,13 +207,13 @@ impl Reply {
         })
     }
 }
-/// Narrow a request by one more scope. Fails when all three are taken: a
-/// request is never forwarded past the scope a matrix must apply to it.
+/// Append a restriction when the packet has room. A full packet needs a
+/// containment proof before restrictions can be folded; never drop one here.
 pub fn stamp(words: &mut [u64; 8], scope: u64) -> Result<(), u64> {
-    if scope == 0 {
+    if scope == 0 || words[5..7].contains(&scope) {
         return Ok(());
     }
-    let free = words[5..]
+    let free = words[5..7]
         .iter_mut()
         .find(|s| **s == 0)
         .ok_or(abi::DENIED)?;
@@ -221,9 +258,13 @@ mod tests {
         stamp(&mut words, 0).unwrap();
         stamp(&mut words, 4).unwrap();
         stamp(&mut words, 9).unwrap();
-        stamp(&mut words, 2).unwrap();
-        assert_eq!(stamp(&mut words, 5), Err(abi::DENIED));
-        assert_eq!(Request::decode(&pack(words)).unwrap().scopes, [4, 9, 2]);
+        assert_eq!(stamp(&mut words, 2), Err(abi::DENIED));
+        assert_eq!(Request::decode(&pack(words)).unwrap().scopes, [4, 9]);
+        assert_eq!(deadline(10, 100, 200), Some(100));
+        assert_eq!(deadline(10, 1000, 200), Some(210));
+        assert_eq!(deadline(10, 10, 200), None);
+        assert_eq!(deadline(u64::MAX - 2, 1, 10), Some(1));
+        assert_eq!(deadline(u64::MAX - 2, 0, 3), Some(u64::MAX));
         assert_eq!(Request::new(COPY_TREE, 3, 1, 8, 0).subjects(), ([3, 8], 2));
         assert_eq!(Request::new(LIST, 3, 0, 0, 0).subjects(), ([3, 0], 1));
         assert_eq!(Request::new(COLLECT, 0, 0, 0, 0).subjects().1, 0);

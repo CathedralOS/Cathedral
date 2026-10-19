@@ -57,8 +57,12 @@ pub fn dispatch(
             words[2..].copy_from_slice(&ids);
             *response = wire::pack(words);
         }
-        wire::COPY_TREE => {
-            let object = store.copy_tree_named(root, r.object, r.expected, r.argument, bytes)?;
+        wire::COPY | wire::COPY_TREE => {
+            let object = if r.op == wire::COPY {
+                store.copy_named(root, r.object, r.expected, r.argument, bytes)?
+            } else {
+                store.copy_tree_named(root, r.object, r.expected, r.argument, bytes)?
+            };
             *response = wire::Reply {
                 object: object.id,
                 revision: object.head.revision,

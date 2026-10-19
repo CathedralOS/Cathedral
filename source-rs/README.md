@@ -20,6 +20,12 @@ F2 to reload; Colors uses Enter. Users, notes and colors survive QEMU restarts.
 See [controls and executable routes](distribution/README.md).
 `python tools/boot-harness-rs/desktop_test.py` tests this same default composition.
 
+**Split** runs two independently saved Notes. Its **DEEPER** button enters another
+copy of that matrix in a separate saved realm; unsaved work prevents replacement.
+An unfunded further level reports **NO ROOM** and retains the live notes.
+`python tools/boot-harness-rs/desktop_test.py --deep --trace-storage` exercises
+this through F5's composition, including repeated close and cold reboot.
+
 `python tools/boot-harness-rs/lifecycle_test.py PATH_TO_ONE_USER_IMAGE` copies an
 existing one-user desktop fixture and injects invalid code, an early app fault,
 a fault after admission, and a user-matrix CONFIGURE fault. It checks repeated

@@ -14,12 +14,13 @@ import disk_image
 import pointer_test
 import run as harness
 
-CASES = ('precommit', 'postcommit', 'exhausted', 'readiness-stall', 'nested')
+CASES = ('precommit', 'postcommit', 'exhausted', 'readiness-stall', 'nested', 'deep')
 
 
 def exercise(stream, folder, mode, saved=None):
-    nested = mode == 'nested'
-    offset_y = 32 if nested else 0
+    nested = mode in ('nested', 'deep')
+    offset_y = 64 if mode == 'deep' else 32 if nested else 0
+    loaded = 4 if mode == 'deep' else 2 if nested else 1
     width, height, _ = pointer_test.read_scanout(stream, folder)
     font = bytes.fromhex((harness.WORKSPACE / 'platform/libraries/bitmap-font/font.hex').read_text())
 
@@ -87,15 +88,19 @@ def exercise(stream, folder, mode, saved=None):
     click((width - 280) // 2 + 64, height // 2)
     scan(lambda d, _: pixel(d, 100, 70) == 'd9e4ef', 'user launcher')
     click(120, 336 if nested else 96)
+    if mode == 'deep':
+        scan(lambda d, _: pixel(d, 237, 66) == '27664a', 'outer Notes loaded')
+        click(width-24-256+130, 34)
+        scan(lambda d, s: 'nested matrix admitted in separate realm' in s, 'deeper matrix admitted')
     scan(lambda d, _: header(d) == '27664a', 'Notes loaded')
     focus()
     def sibling(data):
         x = 232 + (width - 24 - 232 - 12) // 2 + 12 + 10
-        return b''.join(data[((76 + y) * width + x) * 3:((76 + y) * width + x + 180) * 3] for y in range(64))
+        return b''.join(data[((44 + offset_y + y) * width + x) * 3:((44 + offset_y + y) * width + x + 180) * 3] for y in range(64))
     initial = bitmap(scan(lambda d, _: header(d) == '27664a', 'initial saved note'))
     if saved is not None:
         assert initial == saved, 'cold-open contents differ'
-        assert log().count('note-loaded') == (2 if nested else 1)
+        assert log().count('note-loaded') == loaded
         return saved
 
     right = sibling(pointer_test.read_scanout(stream, folder)[2]) if nested else None
@@ -173,7 +178,7 @@ def exercise(stream, folder, mode, saved=None):
         click(width - 38, 34)
         scan(lambda d, _: header(d) == '101827', 'saved app closes')
         expected = draft
-    assert log().count('note-loaded') == (2 if nested else 1), 'Notes task was restarted'
+    assert log().count('note-loaded') == loaded, 'Notes task was restarted'
     assert 'user matrix closed' not in log() and 'sign-in recovery visible' not in log()
     return expected
 
@@ -187,7 +192,7 @@ def run(source, cases):
         folder.mkdir()
         composition = json.loads((harness.WORKSPACE / 'distribution/profile.json').read_text())
         feature = {'precommit': 'storage-live-probes', 'postcommit': 'storage-live-postcommit',
-                   'exhausted': 'storage-live-repeat', 'readiness-stall': 'storage-live-readiness-stall', 'nested': 'storage-live-nested'}[mode]
+                   'exhausted': 'storage-live-repeat', 'readiness-stall': 'storage-live-readiness-stall', 'nested': 'storage-live-nested', 'deep': 'storage-live-deep'}[mode]
         composition['startup']['initial']['features'].append(feature)
         composition['startup']['launches'][3]['features'] = ['recovery-lab', 'startup-probes', 'trace-storage']
         profile = folder / 'provider-live.json'

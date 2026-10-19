@@ -62,7 +62,15 @@ pub fn serve(store: &Store<'_>) {
         let io_before = cathedral_ata_pio::metrics::snapshot();
         #[cfg(feature = "recovery-lab")]
         gate.wait(1, r.op, root);
-        if let Err(code) = scoped(store, root, r) {
+        let authority = if r.deadline != 0
+            && cathedral_user_runtime::time::now()
+                .is_ok_and(|now| cathedral_user_runtime::time::reached(now, r.deadline))
+        {
+            Err(abi::TIMED_OUT)
+        } else {
+            scoped(store, root, r)
+        };
+        if let Err(code) = authority {
             drop(attachment);
             server.reply(&request, &wire::error(code)).unwrap();
         } else if matches!(r.op, wire::BULK | wire::BULK_PIN) && attachment.is_none() {
@@ -169,9 +177,9 @@ fn dispatch(
     if matches!(
         r.op,
         wire::METADATA | wire::SET_METADATA | wire::LOOKUP | wire::FILTER
-    ) || (r.op == wire::COPY_TREE && attachment.is_some())
+    ) || (matches!(r.op, wire::COPY | wire::COPY_TREE) && attachment.is_some())
     {
-        if matches!(r.op, wire::SET_METADATA | wire::COPY_TREE) {
+        if matches!(r.op, wire::SET_METADATA | wire::COPY | wire::COPY_TREE) {
             collect(store, root)?;
         }
         return super::hierarchy::dispatch(store, root, r, attachment, response);
@@ -195,7 +203,12 @@ fn dispatch(
             describe(response, Object { id: r.object, head });
             response[32..].copy_from_slice(&bytes);
         }
-        wire::PUBLISH if r.object == 0 || r.argument == 0 => {
+        wire::PUBLISH | wire::CREATE_NAMED if r.object == 0 || r.argument == 0 => {
+            if r.op == wire::CREATE_NAMED
+                && (r.object != 0 || r.expected != 0 || r.len < wire::metadata::BYTES as u64)
+            {
+                return Err(Error::Invalid);
+            }
             // Check logical and backing sizes before mapping or hashing input.
             if r.len > wire::MAX_BYTES as u64 {
                 return Err(Error::TooLarge);
@@ -225,8 +238,19 @@ fn dispatch(
             collect(store, root)?;
             #[cfg(feature = "trace-storage")]
             cathedral_user_runtime::time::storage_trace("publish-begin", root as u64, r.op);
-            let object =
-                store.publish_observed(root, r.object, r.expected, bytes, r.argument, observe)?;
+            let object = if r.op == wire::CREATE_NAMED {
+                let metadata = wire::metadata::Metadata::decode(&bytes[..wire::metadata::BYTES])
+                    .ok_or(Error::Invalid)?;
+                store.create_named_observed(
+                    root,
+                    r.argument,
+                    metadata,
+                    &bytes[wire::metadata::BYTES..],
+                    observe,
+                )?
+            } else {
+                store.publish_observed(root, r.object, r.expected, bytes, r.argument, observe)?
+            };
             describe(response, object);
         }
         wire::COPY if plain && r.len == 0 => {

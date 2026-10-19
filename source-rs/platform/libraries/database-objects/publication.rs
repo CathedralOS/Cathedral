@@ -27,6 +27,43 @@ impl Store<'_> {
         expected: u64,
         bytes: &[u8],
         parent: u64,
+        observe: impl FnMut(Stage),
+    ) -> Result<Object> {
+        self.publication(root, id, expected, bytes, parent, None, observe)
+    }
+    /// Create a named entry and its initial content in one durable transaction.
+    /// A collision refuses the entire creation, including allocation and quota.
+    pub fn create_named(
+        &self,
+        root: u8,
+        parent: u64,
+        metadata: Metadata,
+        bytes: &[u8],
+    ) -> Result<Object> {
+        self.create_named_observed(root, parent, metadata, bytes, |_| {})
+    }
+    pub fn create_named_observed(
+        &self,
+        root: u8,
+        parent: u64,
+        metadata: Metadata,
+        bytes: &[u8],
+        observe: impl FnMut(Stage),
+    ) -> Result<Object> {
+        if metadata.name == [0; 32] || Metadata::decode(&metadata.encode()) != Some(metadata) {
+            return Err(Error::Invalid);
+        }
+        self.publication(root, 0, 0, bytes, parent, Some(metadata), observe)
+    }
+    #[allow(clippy::too_many_arguments)]
+    fn publication(
+        &self,
+        root: u8,
+        id: u64,
+        expected: u64,
+        bytes: &[u8],
+        parent: u64,
+        metadata: Option<Metadata>,
         mut observe: impl FnMut(Stage),
     ) -> Result<Object> {
         if bytes.len() > MAX_BYTES {
@@ -110,6 +147,9 @@ impl Store<'_> {
                     &[],
                     &mut charged,
                 )?;
+            }
+            if let Some(metadata) = metadata {
+                hierarchy::write(&mut table, root, id, head, metadata, &mut charged)?;
             }
             if engine(table.get(key(root, b'q', &[]).as_slice()))?.is_none() {
                 records::charge(&mut charged, 2 + 8)?;

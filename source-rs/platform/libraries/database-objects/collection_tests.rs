@@ -7,6 +7,32 @@ use std::{
 };
 #[derive(Clone, Debug)]
 struct Disk(Arc<Mutex<Vec<u8>>>);
+#[derive(Debug)]
+struct RecordingDisk {
+    disk: Disk,
+    cuts: Arc<Mutex<Option<Vec<Vec<u8>>>>>,
+}
+impl StorageBackend for RecordingDisk {
+    fn len(&self) -> io::Result<u64> {
+        self.disk.len()
+    }
+    fn set_len(&self, len: u64) -> io::Result<()> {
+        self.disk.set_len(len)
+    }
+    fn read(&self, offset: u64, out: &mut [u8]) -> io::Result<()> {
+        self.disk.read(offset, out)
+    }
+    fn write(&self, offset: u64, bytes: &[u8]) -> io::Result<()> {
+        self.disk.write(offset, bytes)?;
+        if let Some(cuts) = self.cuts.lock().unwrap().as_mut() {
+            cuts.push(self.disk.0.lock().unwrap().clone());
+        }
+        Ok(())
+    }
+    fn sync_data(&self) -> io::Result<()> {
+        self.disk.sync_data()
+    }
+}
 const CAPACITY: usize = 1_056_768;
 impl StorageBackend for Disk {
     fn len(&self) -> io::Result<u64> {
@@ -63,6 +89,60 @@ fn accounting(db: &Database) {
     }
     assert_eq!(charged, actual as u64);
     assert!(charged <= ROOT_QUOTA);
+}
+#[test]
+fn named_creation_cold_opens_whole_at_every_backend_write() {
+    let disk = Disk(Arc::new(Mutex::new(Vec::new())));
+    let cuts = Arc::new(Mutex::new(None));
+    let db = Database::builder()
+        .set_cache_size(32768)
+        .create_with_backend(RecordingDisk {
+            disk: disk.clone(),
+            cuts: cuts.clone(),
+        })
+        .unwrap();
+    let store = Store::open(&db).unwrap();
+    let parent = store.publish(0, 0, 0, b"parent", 0).unwrap().id;
+    *cuts.lock().unwrap() = Some(vec![disk.0.lock().unwrap().clone()]);
+    let metadata = Metadata::new(b"Left", b"text/plain").unwrap();
+    let contents = vec![42; 8192];
+    let created = store.create_named(0, parent, metadata, &contents).unwrap();
+    let cuts = cuts.lock().unwrap().take().unwrap();
+    assert!(cuts.len() > 2);
+    let mut old = 0;
+    let mut new = 0;
+    for cut in cuts {
+        let recovered = open(Disk(Arc::new(Mutex::new(cut))));
+        let reader = Store::open(&recovered).unwrap();
+        let mut ids = [0; 4];
+        match reader.lookup(0, parent, b"Left") {
+            Err(Error::Missing) => {
+                old += 1;
+                assert_eq!(reader.list(0, parent, 0, &mut ids), Ok(0));
+                assert_eq!(reader.filter(0, parent, b"text/plain", 0, &mut ids), Ok(0));
+                assert_eq!(reader.head(0, created.id), Err(Error::Missing));
+            }
+            Ok(id) => {
+                new += 1;
+                assert_eq!(id, created.id);
+                assert_eq!(reader.list(0, parent, 0, &mut ids), Ok(1));
+                assert_eq!(ids[0], id);
+                assert_eq!(reader.filter(0, parent, b"text/plain", 0, &mut ids), Ok(1));
+                assert_eq!(ids[0], id);
+                assert_eq!(reader.metadata(0, id).unwrap().1, metadata);
+                let mut out = vec![0; contents.len()];
+                reader.read(0, id, 1, 0, &mut out).unwrap();
+                assert_eq!(out, contents);
+                assert_eq!(
+                    reader.create_named(0, parent, metadata, b"retry"),
+                    Err(Error::Conflict)
+                );
+            }
+            result => panic!("partial named creation: {result:?}"),
+        }
+        accounting(&recovered);
+    }
+    assert!(old > 0 && new > 0);
 }
 #[test]
 fn every_collection_boundary_cold_opens_with_live_pins_and_exact_accounting() {

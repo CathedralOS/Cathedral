@@ -54,6 +54,75 @@ fn accounted(db: &Database, root: u8) {
 }
 
 #[test]
+fn named_creation_commits_content_indexes_and_quota_or_nothing() {
+    let db = database();
+    let store = Store::open(&db).unwrap();
+    let parent = store.publish(0, 0, 0, b"parent", 0).unwrap().id;
+    let metadata = Metadata::new(b"Notes", b"text/plain").unwrap();
+    let bytes = content();
+    let created = store.create_named(0, parent, metadata, &bytes).unwrap();
+    assert_eq!(created.head.revision, 1);
+    assert_eq!(store.lookup(0, parent, b"Notes"), Ok(created.id));
+    assert_eq!(store.metadata(0, created.id).unwrap().1, metadata);
+    let mut ids = [0; 4];
+    assert_eq!(store.filter(0, parent, b"text/plain", 0, &mut ids), Ok(1));
+    assert_eq!(ids[0], created.id);
+    let mut out = vec![0; bytes.len()];
+    store.read(0, created.id, 1, 0, &mut out).unwrap();
+    assert_eq!(out, bytes);
+    accounted(&db, 0);
+    let before = snapshot(&db);
+    // Also models a retry after the first success reply was lost.
+    assert_eq!(
+        store.create_named(0, parent, metadata, b"replacement"),
+        Err(Error::Conflict)
+    );
+    assert_eq!(snapshot(&db), before);
+    assert_eq!(
+        store.create_named(0, parent, Metadata::default(), b""),
+        Err(Error::Invalid)
+    );
+    assert_eq!(
+        store.create_named(0, 999, metadata, b""),
+        Err(Error::Missing)
+    );
+    assert_eq!(snapshot(&db), before);
+    // Abort after all records have been staged, before publication.
+    let aborted = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+        store.create_named_observed(
+            0,
+            parent,
+            Metadata::new(b"aborted", b"text/plain").unwrap(),
+            &bytes,
+            |stage| {
+                if matches!(stage, Stage::Committing) {
+                    panic!("interrupt staged creation");
+                }
+            },
+        )
+    }));
+    assert!(aborted.is_err());
+    assert_eq!(snapshot(&db), before);
+    assert_eq!(store.lookup(0, parent, b"aborted"), Err(Error::Missing));
+    let copy = store
+        .copy_named(0, created.id, 1, created.id, b"Nested")
+        .unwrap();
+    assert_eq!(copy.head.manifest, created.head.manifest);
+    assert_eq!(store.lookup(0, created.id, b"Nested"), Ok(copy.id));
+    assert_eq!(
+        store.metadata(0, copy.id).unwrap().1.media_type,
+        metadata.media_type
+    );
+    let before = snapshot(&db);
+    assert_eq!(
+        store.copy_named(0, created.id, 1, created.id, b"Nested"),
+        Err(Error::Conflict)
+    );
+    assert_eq!(snapshot(&db), before);
+    accounted(&db, 0);
+}
+
+#[test]
 fn refusals_abort_every_record_and_other_roots_stay_private() {
     let db = database();
     let store = Store::open(&db).unwrap();

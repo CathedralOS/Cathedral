@@ -101,8 +101,7 @@ pub(super) fn attenuation(f: &Fixture) {
     assert_eq!((inside.object, inside.revision), (5, 1));
     assert_eq!(listing(f, 2).unwrap()[1..3], [1, 5]);
     // Copies cross the boundary in neither direction, and the leaf cannot
-    // widen itself: scope words it fills only narrow, and filling them all
-    // leaves the matrix no room for its stamp.
+    // widen itself: a full packet folds only after a successful containment proof.
     assert_eq!(copy(f, 2, 2, 1, realm), Err(abi::DENIED));
     assert_eq!(copy(f, 2, 5, 1, 0), Err(abi::DENIED));
     assert_eq!(
@@ -114,8 +113,21 @@ pub(super) fn attenuation(f: &Fixture) {
         wire::error(abi::DENIED)
     );
     assert_eq!(
-        f.query(2, [wire::STORAGE_BASE + store::HEAD, 5, 0, 0, 0, 5, 5, 5]),
+        f.query(2, [wire::STORAGE_BASE + store::HEAD, 5, 0, 0, 0, 5, 2, 0]),
         wire::error(abi::DENIED)
+    );
+    assert_eq!(
+        f.query(2, [wire::STORAGE_BASE + store::HEAD, 5, 0, 0, 0, 5, 5, 0])[0],
+        0
+    );
+    assert_eq!(
+        f.query(2, [wire::STORAGE_BASE + store::HEAD, 5, 0, 0, 0, 0, 0, 1]),
+        wire::error(abi::TIMED_OUT)
+    );
+    // Refuse an already expired request before touching/retiring upstream IPC.
+    assert_eq!(
+        f.query(2, [wire::STORAGE_BASE + store::HEAD, 5, 0, 0, 0, 0, 0, 0])[0],
+        0
     );
     // A subtree cannot be copied into itself.
     assert_eq!(copy_tree(f, 2, realm, 1, realm), Err(abi::INVALID_ARGUMENT));

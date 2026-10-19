@@ -80,8 +80,21 @@ impl Ipc {
     pub fn prepare_child(&mut self, first: usize, peer: usize, child: usize, epoch: u64) {
         assert!(first + 1 < MAX_ENDPOINTS && self.live(peer) && !self.live(child));
         assert!(child < self.tasks && child != peer && epoch > self.epoch && epoch <= MAX_EPOCH);
+        // A collected dynamic slot may return under a different owner. Its
+        // reserved control pair belongs to the child slot, not the old parent.
+        // Require the old child's side to be closed, then invalidate all old
+        // grants and escrow while installing the newly authorized owner pair.
+        for index in first..first + 2 {
+            if let Some(old) = self.endpoints[index] {
+                assert!(old.account.is_none() && old.epoch < epoch);
+                assert!(
+                    (old.spec.sender == child && !old.sender_alive)
+                        || (old.spec.receiver == child && !old.receiver_alive)
+                );
+            }
+        }
         self.alive |= 1 << child;
-        self.prepare_pair(first, peer, child, epoch);
+        self.install_pair(first, peer, child, epoch);
         self.accept_child(first, child);
     }
     pub fn prepare_pair(&mut self, first: usize, peer: usize, child: usize, epoch: u64) {
@@ -96,6 +109,9 @@ impl Ipc {
                 );
             }
         }
+        self.install_pair(first, peer, child, epoch);
+    }
+    fn install_pair(&mut self, first: usize, peer: usize, child: usize, epoch: u64) {
         for (index, sender, receiver) in [(first, peer, child), (first + 1, child, peer)] {
             self.install_boot(
                 index,

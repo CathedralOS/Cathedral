@@ -137,10 +137,13 @@ pub fn install(rows: &mut Records, args: &[String]) -> Result<()> {
         if config.launcher_pages == 48 {
             config.launcher_pages = 64;
         }
-        if (config.app_pages, config.app_readers, config.app_surfaces) == (32, 4, 6) {
-            config.app_pages = 80;
-            config.app_readers = 64;
-            config.app_surfaces = 9;
+        if matches!(
+            (config.app_pages, config.app_readers, config.app_surfaces),
+            (32, 4, 6) | (80, 64, 9)
+        ) {
+            config.app_pages = 128;
+            config.app_readers = 128;
+            config.app_surfaces = 10;
         }
         if config != previous_config {
             put(rows, id, root, &config.encode())?;
