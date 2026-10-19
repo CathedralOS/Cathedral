@@ -50,6 +50,16 @@ impl<'a, D: Device> BlockRegion<'a, D> {
         while !out.is_empty() {
             let physical = self.start + offset;
             let within = physical as usize % SECTOR;
+            if within == 0 && out.len() >= SECTOR {
+                let count = out.len() / SECTOR * SECTOR;
+                let (blocks, _) = out[..count].as_chunks_mut::<SECTOR>();
+                self.device
+                    .read_many(physical / SECTOR as u64, blocks)
+                    .map_err(Error::Device)?;
+                offset += count as u64;
+                out = &mut out[count..];
+                continue;
+            }
             let count = out.len().min(SECTOR - within);
             self.device
                 .read(physical / SECTOR as u64, &mut sector)
@@ -67,6 +77,14 @@ impl<'a, D: Device> BlockRegion<'a, D> {
             while !bytes.is_empty() {
                 let physical = self.start + offset;
                 let within = physical as usize % SECTOR;
+                if within == 0 && bytes.len() >= SECTOR {
+                    let count = bytes.len() / SECTOR * SECTOR;
+                    let (blocks, _) = bytes[..count].as_chunks::<SECTOR>();
+                    self.device.write_many(physical / SECTOR as u64, blocks)?;
+                    offset += count as u64;
+                    bytes = &bytes[count..];
+                    continue;
+                }
                 let count = bytes.len().min(SECTOR - within);
                 if within != 0 || count != SECTOR {
                     self.device.read(physical / SECTOR as u64, &mut sector)?;

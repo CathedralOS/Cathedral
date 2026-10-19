@@ -18,10 +18,10 @@ import disk_image
 import run as harness
 
 
-def run(source, fill_users=False, nested=False):
+def run(source, fill_users=False, nested=False, trace_storage=False):
     root = desktop_test.ROOT
     here = Path(__file__).resolve().parent
-    subprocess.run([sys.executable, str(here / 'run.py'), '--release', '--build-only'], cwd=root, check=True)
+    subprocess.run([sys.executable, str(here / 'run.py'), '--release', '--build-only'] + (['--trace-storage'] if trace_storage else []), cwd=root, check=True)
     output = harness.BUILD / 'labels-upgrade' / datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S%fZ')
     output.mkdir(parents=True)
     shutil.copytree(harness.BUILD / 'interactive/esp', output / 'esp')
@@ -51,8 +51,9 @@ def run(source, fill_users=False, nested=False):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--trace-storage', action='store_true', help='trace provider, matrix and disk timing')
     parser.add_argument('--nested', action='store_true', help='also launch the installed Split subtree in the migrated user')
     parser.add_argument('--fill-users', action='store_true', help='also create users up to the three-tile limit')
     parser.add_argument('image', type=Path, help='retained pre-label desktop test image; never modified')
     args = parser.parse_args()
-    run(args.image, args.fill_users, args.nested)
+    run(args.image, args.fill_users, args.nested, args.trace_storage)

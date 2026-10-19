@@ -1,6 +1,6 @@
 #![no_std]
 #![forbid(unsafe_code)]
-//! Userspace LBA28 single-sector PIO on the boot-granted secondary ATA master.
+//! Userspace LBA28 bounded multi-sector PIO on the boot-granted secondary ATA master.
 #[cfg(feature = "trace-storage")]
 pub mod metrics;
 mod polling;
@@ -68,16 +68,21 @@ impl Ata {
         }
         Ok(Self { sectors })
     }
-    fn command(&self, sector: u64, op: u8) -> Result<(), u64> {
-        if sector >= self.sectors {
+    fn command(&self, sector: u64, op: u8, count: usize) -> Result<(), u64> {
+        if count == 0
+            || count > abi::DISK_BATCH_SECTORS
+            || sector
+                .checked_add(count as u64)
+                .is_none_or(|end| end > self.sectors)
+        {
             return Err(abi::INVALID_ARGUMENT);
         }
         #[cfg(feature = "trace-storage")]
-        metrics::operation(op);
+        metrics::operation(op, count as u64);
         wait(false, op, "before", sector)?;
         write(6, 0xe0 | ((sector >> 24) as u8 & 15))?;
         delay()?;
-        write(2, 1)?;
+        write(2, count as u8)?;
         for (reg, shift) in [(3, 0), (4, 8), (5, 16)] {
             write(reg, (sector >> shift) as u8)?;
         }
@@ -91,19 +96,62 @@ impl Device for Ata {
         self.sectors
     }
     fn read(&mut self, sector: u64, bytes: &mut [u8; 512]) -> Result<(), u64> {
-        self.command(sector, 0x20)?;
+        self.command(sector, 0x20, 1)?;
         disk::transfer(bytes, false).map_err(code)?;
         wait(false, 0x20, "complete", sector)
     }
     fn write(&mut self, sector: u64, bytes: &[u8; 512]) -> Result<(), u64> {
-        self.command(sector, 0x30)?;
+        self.command(sector, 0x30, 1)?;
         let mut buffer = *bytes;
         disk::transfer(&mut buffer, true).map_err(code)?;
         wait(false, 0x30, "complete", sector)
     }
+    fn read_many(&mut self, sector: u64, bytes: &mut [[u8; 512]]) -> Result<(), u64> {
+        if sector
+            .checked_add(bytes.len() as u64)
+            .is_none_or(|end| end > self.sectors)
+        {
+            return Err(abi::INVALID_ARGUMENT);
+        }
+        for (batch, blocks) in bytes.chunks_mut(abi::DISK_BATCH_SECTORS).enumerate() {
+            let start = sector + batch as u64 * abi::DISK_BATCH_SECTORS as u64;
+            self.command(start, 0x20, blocks.len())?;
+            for (index, block) in blocks.iter_mut().enumerate() {
+                if index != 0 {
+                    wait(true, 0x20, "data", start + index as u64)?;
+                }
+                disk::transfer(block, false).map_err(code)?;
+                delay()?;
+            }
+            wait(false, 0x20, "complete", start)?;
+        }
+        Ok(())
+    }
+    fn write_many(&mut self, sector: u64, bytes: &[[u8; 512]]) -> Result<(), u64> {
+        if sector
+            .checked_add(bytes.len() as u64)
+            .is_none_or(|end| end > self.sectors)
+        {
+            return Err(abi::INVALID_ARGUMENT);
+        }
+        for (batch, blocks) in bytes.chunks(abi::DISK_BATCH_SECTORS).enumerate() {
+            let start = sector + batch as u64 * abi::DISK_BATCH_SECTORS as u64;
+            self.command(start, 0x30, blocks.len())?;
+            for (index, block) in blocks.iter().enumerate() {
+                if index != 0 {
+                    wait(true, 0x30, "data", start + index as u64)?;
+                }
+                let mut buffer = *block;
+                disk::transfer(&mut buffer, true).map_err(code)?;
+                delay()?;
+            }
+            wait(false, 0x30, "complete", start)?;
+        }
+        Ok(())
+    }
     fn flush(&mut self) -> Result<(), u64> {
         #[cfg(feature = "trace-storage")]
-        metrics::operation(0xe7);
+        metrics::operation(0xe7, 1);
         wait(false, 0xe7, "before", 0)?;
         write(7, 0xe7)?;
         delay()?;

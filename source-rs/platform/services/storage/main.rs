@@ -22,7 +22,14 @@ fn main(_: u64, _argument: u64) -> u64 {
     // charge this provider's budget until the last reader releases a reply.
     heap::initialize(&HEAP, 56).unwrap();
     let disk = cathedral_ata_pio::Ata::open().unwrap();
-    let db = cathedral_storage_engine::open(disk, 4096, 4 * 1024 * 1024, 32768).unwrap();
+    let db = cathedral_storage_engine::open_observed(
+        disk,
+        4096,
+        4 * 1024 * 1024,
+        32768,
+        metrics::extent,
+    )
+    .unwrap();
     metrics::report("recovered");
     {
         let store = cathedral_database_objects::Store::open(&db).unwrap();

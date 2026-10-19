@@ -56,7 +56,7 @@ pub unsafe fn transfer(bytes: &mut [u8; 512], write: bool) -> Result<(), DeviceE
 
 fn valid_write(register: u64, value: u64) -> bool {
     match register {
-        2 => value == 1,
+        2 => (1..=cathedral_kernel_contracts::user::DISK_BATCH_SECTORS as u64).contains(&value),
         3..=5 => value <= 255,
         6 => (0xe0..=0xef).contains(&value),
         7 => matches!(value, 0x20 | 0x30 | 0xe7 | 0xec),
@@ -68,9 +68,10 @@ fn valid_write(register: u64, value: u64) -> bool {
 mod tests {
     use super::valid_write;
     #[test]
-    fn bounded_pio_whitelist_excludes_dma_multisector_and_other_devices() {
+    fn bounded_pio_whitelist_excludes_dma_oversized_batches_and_other_devices() {
         for (register, value) in [
             (2, 1),
+            (2, 32),
             (3, 255),
             (6, 0xef),
             (7, 0x20),
@@ -85,7 +86,8 @@ mod tests {
             (0, 0),
             (1, 0),
             (9, 0),
-            (2, 2),
+            (2, 0),
+            (2, 33),
             (3, 256),
             (6, 0xf0),
             (7, 0xc8),

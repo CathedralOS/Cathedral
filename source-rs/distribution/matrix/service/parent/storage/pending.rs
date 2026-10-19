@@ -281,6 +281,17 @@ impl Parent {
         if self.upstream && !self.separate_storage {
             return Err(error);
         }
+        #[cfg(feature = "trace-storage")]
+        time::storage_sample(
+            "storage-retire",
+            &[
+                u64::from(self.upstream),
+                p.words[0] & 0xffff,
+                p.deadline,
+                time::now()?,
+                error.0 as u64,
+            ],
+        );
         self.retire_storage(p.source, p.request.and_then(|r| r.client))?;
         *reply = Some((wire::error(error.0 as u64), None));
         Ok(())

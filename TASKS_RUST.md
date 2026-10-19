@@ -2143,3 +2143,42 @@ Verification:
   not a passing nested regression. The trace includes ATA FLUSH completion work;
   the precise cause was not diagnosed here. The recorded runtime storage/retry
   issues remain open, separately from this pre-QEMU installation fix.
+
+
+## Storage growth diagnosis and bounded PIO (2026-10-19)
+
+The retained-disk nested Split layout-save stall is reproducible and diagnosed.
+Trace `labels-upgrade/20261019T170130555475Z` enters extent growth from
+1,503,232 to 3,002,368 bytes at tick 1525 and the root retires its stream at
+tick 1962 (600 ticks after the request). Zeroing the new extent through
+single-sector PIO commands exceeds the request deadline. This evidence does
+not explain the older intermittent ATA busy timeout.
+
+The block-device boundary now admits contiguous sector slices, with checked
+fallbacks. BlockRegion batches aligned interiors while preserving partial-sector
+read/modify/write and whole-range confinement. ATA uses at most 32 sectors per
+command; kernel register validation admits exactly that bounded count, and each
+kernel data transfer still checks readiness and transfers only 512 bytes. No DMA,
+write retry, enlarged deadline or flush reordering was introduced. Engine growth
+zeros through an immutable 16 KiB buffer in read-only image memory. A development
+attempt using stack storage killed the provider during commit; moving the buffer
+off its 32 KiB stack fixed that regression.
+
+`labels_upgrade_test.py --nested --trace-storage` now passes on the same retained
+source disk: `labels-upgrade/20261019T170820481411Z`. Growth takes 111 ticks,
+commit 122 ticks, and both resized drafts, three subtree launches/teardowns and
+original saved notes pass. Ordinary desktop with tracing also passes cold reboot
+and the exact 302-record host oracle: `desktop/20261019T171005498588Z`.
+The interactive saved disk was not used or changed. Full default host tests,
+engine/volume failure-injection tests, both default target clippy aliases, format
+and layout checks pass. New host checks cover contiguous range rejection before
+IO, actual aligned batch dispatch, and retiring after an uncertain batch write.
+
+Tracing now records extent begin/end and stream retirement with deadline and
+error; timing summaries write retirements separately. ATA read/write counters
+count requested sectors; flushes remain command counts.
+
+Still in progress: explicit storage retry after automatic recovery exhaustion;
+shared asynchronous scoped forwarding and persistent isolated Split children;
+resource/admission diagnostics for that nested composition. Split still ships
+with temporary children at this checkpoint.

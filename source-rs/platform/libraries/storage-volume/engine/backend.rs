@@ -14,6 +14,7 @@ struct State<D> {
     start: u64,
     header: Header,
     failed: bool,
+    observe: fn(crate::ExtentChange),
 }
 pub struct Backend<D>(Spinlock<State<D>>);
 impl<D> core::fmt::Debug for Backend<D> {
@@ -22,12 +23,18 @@ impl<D> core::fmt::Debug for Backend<D> {
     }
 }
 impl<D: Device> Backend<D> {
+    pub fn with_observer(mut self, observe: fn(crate::ExtentChange)) -> Self {
+        self.0.get_mut().observe = observe;
+        self
+    }
+
     pub fn new(device: D, start: u64, header: Header) -> Self {
         Self(Spinlock::new(State {
             device,
             start,
             header,
             failed: false,
+            observe: |_| {},
         }))
     }
 }
@@ -105,11 +112,16 @@ impl<D: Device + Send + 'static> StorageBackend for Backend<D> {
             .ok_or_else(|| io::Error::other("generation exhausted"))?;
         let start = state.start;
         let old = state.header.length;
+        (state.observe)(crate::ExtentChange {
+            old,
+            new: length,
+            completed: false,
+        });
         let result = (|| {
             let mut region = BlockRegion::new(&mut state.device, start, header.region_bytes)?;
-            let zeros = [0; 512];
-            for offset in (old..length).step_by(512) {
-                let count = (length - offset).min(512) as usize;
+            let zeros: &[u8; 16 * 1024] = &[0; 16 * 1024];
+            for offset in (old..length).step_by(zeros.len()) {
+                let count = (length - offset).min(zeros.len() as u64) as usize;
                 region.write(DATA_START + offset, &zeros[..count])?;
             }
             region.flush()?;
@@ -122,6 +134,11 @@ impl<D: Device + Send + 'static> StorageBackend for Backend<D> {
         })();
         state.finish(result)?;
         state.header = header;
+        (state.observe)(crate::ExtentChange {
+            old,
+            new: length,
+            completed: true,
+        });
         Ok(())
     }
 }

@@ -1,10 +1,11 @@
 # ATA PIO lab driver
 
-Userspace, single-sector LBA28 read/write and FLUSH CACHE for the harness's
+Userspace, bounded multi-sector LBA28 read/write and FLUSH CACHE for the harness's
 dedicated secondary ISA ATA master. Kernel wrappers expose only registers
 0x171–0x177, alternate status/control 0x376, and one checked 512-byte transfer
 through 0x170. The boot profile grants this controller to one child; arbitrary
-ports, slave selection, multi-sector and DMA commands are unavailable.
+ports, slave selection and DMA commands are unavailable. Each command carries
+1?32 sectors; each kernel data transfer remains limited to one checked sector.
 
 Opening resets any interrupted command, disables device IRQs, identifies the
 device, and checks LBA, flush support, capacity and `CATHEDRAL-LAB-DATA` serial.
@@ -20,7 +21,7 @@ undiagnosed; `objects_test.py --release --ata-trace` captures QEMU ATA/block eve
 alongside these diagnostics. See the [proof guide](../../../distribution/lab/objects/README.md).
 
 The optional `trace-storage` feature exposes [metrics.rs](metrics.rs) counters for
-read/write/flush commands and cumulative readiness ticks/polls. The database
+read/write sectors, flush commands and cumulative readiness ticks/polls. The database
 provider samples differences around requests. These describe driver activity,
 not physical-media latency; ordinary builds omit the counters.
 

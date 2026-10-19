@@ -162,3 +162,63 @@ fn envelope_inspection_uses_shared_codec_without_writes_or_repairs() {
     disk.visible[512 + BLOCK as usize] ^= 1;
     assert!(inspect(&mut BlockRegion::new(&mut disk, 512, size as u64).unwrap()).is_err());
 }
+
+#[test]
+fn contiguous_device_range_is_checked_before_fallback_io() {
+    let mut disk = Disk::new();
+    let mut blocks = [[0; SECTOR]; 2];
+    for sector in [15, u64::MAX] {
+        assert_eq!(
+            disk.read_many(sector, &mut blocks),
+            Err(cathedral_block_device::OUT_OF_RANGE)
+        );
+        assert_eq!(
+            disk.write_many(sector, &blocks),
+            Err(cathedral_block_device::OUT_OF_RANGE)
+        );
+    }
+    assert_eq!(disk.calls, 0);
+    disk.read_many(14, &mut blocks).unwrap();
+    assert_eq!(blocks.as_flattened(), &disk.visible[14 * SECTOR..]);
+}
+
+#[test]
+fn aligned_region_dispatches_batches_and_retires_after_partial_batch_failure() {
+    struct BatchDisk {
+        calls: usize,
+    }
+    impl Device for BatchDisk {
+        fn sectors(&self) -> u64 {
+            16
+        }
+        fn read(&mut self, _: u64, _: &mut [u8; SECTOR]) -> Result<(), u64> {
+            panic!("unbatched")
+        }
+        fn write(&mut self, _: u64, _: &[u8; SECTOR]) -> Result<(), u64> {
+            panic!("unbatched")
+        }
+        fn read_many(&mut self, sector: u64, out: &mut [[u8; SECTOR]]) -> Result<(), u64> {
+            assert_eq!((sector, out.len()), (2, 3));
+            self.calls += 1;
+            out.fill([42; SECTOR]);
+            Ok(())
+        }
+        fn write_many(&mut self, sector: u64, bytes: &[[u8; SECTOR]]) -> Result<(), u64> {
+            assert_eq!((sector, bytes.len()), (2, 3));
+            self.calls += 1;
+            Err(77) // Some sectors may already have reached the device.
+        }
+        fn flush(&mut self) -> Result<(), u64> {
+            panic!("continued uncertain IO")
+        }
+    }
+    let mut disk = BatchDisk { calls: 0 };
+    let mut region = BlockRegion::new(&mut disk, 512, 4096).unwrap();
+    let mut bytes = [0; 3 * SECTOR];
+    region.read(512, &mut bytes).unwrap();
+    assert_eq!(bytes, [42; 3 * SECTOR]);
+    assert_eq!(region.write(512, &bytes), Err(Error::Device(77)));
+    assert_eq!(region.flush(), Err(Error::Failed));
+    assert_eq!(region.read(512, &mut bytes), Err(Error::Failed));
+    assert_eq!(disk.calls, 2);
+}

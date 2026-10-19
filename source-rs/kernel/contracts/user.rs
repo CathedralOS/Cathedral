@@ -65,6 +65,8 @@ pub const MAX_TASKS: usize = 12;
 const _: () = assert!(MAX_TASKS < u16::BITS as usize);
 pub const MAX_LAUNCHES: usize = MAX_TASKS - 1;
 pub const MAX_ENDPOINTS: usize = 32;
+/// Maximum LBA28 sectors per bootstrap PIO command. Transfers remain 512 bytes.
+pub const DISK_BATCH_SECTORS: usize = 32;
 pub const DISK_REGISTER_READ: u64 = 24;
 pub const DISK_REGISTER_WRITE: u64 = 25;
 pub const DISK_TRANSFER: u64 = 26;

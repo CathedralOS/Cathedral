@@ -13,15 +13,23 @@ PAIRS = {
     'provider-end': ('provider-begin', 'provider request'),
     'publish-begin': ('collect-begin', 'collection'),
     'committed': ('commit-begin', 'commit'),
+    'extent-end': ('extent-begin', 'extent growth'),
 }
 
 
 def summarize(output, serial, boot):
-    pending, spans, io = {}, [], []
+    pending, spans, io, retirements = {}, [], [], []
     text = serial.replace('Cathedral Rust lab: ', '')
     for label, numbers in re.findall(r'STORAGE_TRACE ([\w-]+) ([0-9 ]+)\r?\n', text):
         values = list(map(int, numbers.split()))
         if label in ('note-loaded', 'note-saved', 'note-budget', 'matrix-budget'): continue
+        if label == 'storage-retire':
+            assert len(values) == 5
+            retirements.append(values)
+            continue
+        if label == 'storage-restart-failed':
+            assert len(values) == 1
+            continue
         if label == 'ata-io':
             assert len(values) == 7
             io.append(values)
@@ -44,6 +52,10 @@ def summarize(output, serial, boot):
         writer = csv.writer(file)
         writer.writerow(['root', 'opcode', 'reads', 'writes', 'flushes', 'wait_ticks', 'polls'])
         writer.writerows(io)
+    with (output / f'retirements-{boot}.csv').open('w', newline='', encoding='utf-8') as file:
+        writer = csv.writer(file)
+        writer.writerow(['upstream', 'opcode', 'deadline', 'tick', 'error'])
+        writer.writerows(retirements)
     assert io
     if boot == 1:
         assert any(row[4] > 0 for row in io)
