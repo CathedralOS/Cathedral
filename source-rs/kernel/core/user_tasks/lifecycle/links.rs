@@ -1,5 +1,5 @@
 //! Refresh only graph edges touching a newly admitted incarnation.
-use super::{Session, next_epoch, syscalls};
+use super::{Session, next_epoch};
 
 pub(super) fn admit(session: &mut Session, slot: usize, names: &[u64]) {
     for (index, link) in session.links.iter_mut().enumerate() {
@@ -15,5 +15,5 @@ pub(super) fn admit(session: &mut Session, slot: usize, names: &[u64]) {
             );
         }
     }
-    syscalls::wake_receivers(session);
+    crate::user_tasks::execution::waits::wake(session, cathedral_arch::ticks());
 }

@@ -7,7 +7,7 @@ pub(in crate::user_tasks) fn virtual_pointer(
     data: u64,
     address: u64,
 ) -> Result<u64, u64> {
-    if owner(session) != Some(slot) {
+    if session.keyboard_owner != Some(slot) {
         return Err(abi::DENIED);
     }
     let space = session.tasks[slot].space.as_ref().unwrap();

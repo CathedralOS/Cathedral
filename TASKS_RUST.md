@@ -1,10 +1,10 @@
 # Rust reference OS: tasks and handoff
 
-Updated 2026-10-20 (local date). Current milestone: **scheduler timing preparation:
-active branches, lazy accounting, indexed deadlines and a periodic contention lab**,
-on baseline `e94a9ef0` (live matrices survive slow interaction replies).
-The latest section records verification, the IRQ-masked work audit and remaining
-steps toward bounded execution. This does not introduce real-time reservations.
+Updated 2026-10-20 (local date). Current milestone: **event-targeted wait completion
+and cached physical device routes**, on baseline `46cd674a` (active scheduler
+branches, lazy accounting, indexed deadlines and a periodic contention lab).
+The latest section records verification and remaining steps toward bounded
+execution. This does not introduce real-time reservations.
 The fresh-lab reset is `30572c9f`. Compact recursive desktops landed as `c7571191`,
 and the launch request ABI repair as `a287ae39`. No recursive legacy snapshot
 upgrade is required. The saved-disk quota/headroom repair remains in place. Current
@@ -3328,3 +3328,56 @@ Keep this regression visible; do not silently increase
 control deadlines, treat a timeout as permission to discard, or weaken the
 fixture to hide it. All desktop checks use disposable/copied media; the owner's
 interactive disk has not been modified.
+
+## Event-targeted wait completion (2026-10-20)
+
+Baseline: `46cd674a`. Start at
+[waits.rs](source-rs/kernel/core/user_tasks/execution/waits/waits.rs), then its
+[routing guide](source-rs/kernel/core/user_tasks/execution/waits/README.md).
+Syscalls and interrupts no longer probe every task's IPC, readiness and child
+waits. IPC emits coalesced receiver hints for message delivery, revocation,
+peer/grant closure, escrow discard, receive-right movement and boot rebinding.
+Device policy targets installed owners; reclamation targets subscribers to the
+changed child launch. A preallocated indexed heap selects only due wait timers.
+Validated physical device routes and the keyboard owner are cached at startup.
+
+Hints carry no authority or result. The existing syscall owners still validate
+live grants and tickets, check copyout, and prefer queued data or terminal
+results over expiry. Whole-set readiness validation is unchanged. Cancellation
+removes subscriptions and timers before slot reuse; replacement cannot inherit
+an old child wait or device hint. Registration always follows a current-state
+check, avoiding lost readiness when an earlier hint was drained.
+
+This is receiver-level indexing, not one subscription per endpoint. An unrelated
+endpoint of the same task may cause a harmless bounded recheck. Bitmaps retain
+the current 31-task arena limit; no OS capacity increase is claimed. Wake routing
+allocates no storage, but simultaneous completions still require proportional
+work. No kernel ABI, platform policy, distribution behavior, priority scheme or
+reservation contract changed.
+
+Verification:
+
+- Workspace host tests pass; all 126 core tests pass after adding event-route,
+  device replacement, cancellation/reuse, wraparound and populated-waiter
+  regressions. IPC coverage includes byte/memory sends, moved receive rights,
+  escrow closure and boot-pair replacement.
+- Default UEFI and smoke-feature clippy pass; source layout, Rust formatting and
+  whitespace checks pass. x86 release smoke and ARM64 portability proof pass.
+  Logs: `build/waiter-host-tests.log`, `build/waiter-core-tests.log`,
+  `build/waiter-clippy.log`, `build/waiter-smoke-clippy.log`,
+  `build/waiter-smoke.log`, `build/waiter-arm64.log`.
+- Three nested desktops under continuous pointer motion pass on both fresh and
+  cold boots, including delayed/mismatched polling, deepest saved Notes,
+  dirty-close protection, two subtree teardown/reopen cycles per boot and
+  isolation: `desktop/20261020T191448080068Z`.
+  This run did not reproduce the prior intermittent clean-close LOSS timeout;
+  its cause remains unresolved, and the prior section's evidence still applies.
+  Interactive saved media was not modified.
+
+Next: index deferred admission/reclamation work, then introduce explicit
+consistent suspension points for long IRQ-masked operations. Follow the
+[timing audit](source-rs/kernel/core/scheduler/timing.md). Remaining scans,
+grant lookup, heap behavior and device polling still preclude a bounded latency
+claim. The exclusive session borrow still forbids simply enabling interrupts
+inside ongoing operations. Owner decisions are not blocking these mechanics;
+a separately admitted timing profile and its policy remain future work.

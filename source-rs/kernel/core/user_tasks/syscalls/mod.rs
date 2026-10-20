@@ -8,6 +8,6 @@ mod memory;
 mod resources;
 pub(super) mod tasks;
 mod time;
-pub(super) use ipc::{Receive, wake_receivers};
+pub(super) use ipc::Receive;
 
 include!("syscalls.rs");

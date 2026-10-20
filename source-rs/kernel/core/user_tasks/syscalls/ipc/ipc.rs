@@ -94,9 +94,3 @@ pub(super) fn dispatch(
         _ => Err(abi::UNKNOWN),
     }
 }
-
-/// Complete readiness waits before retrying blocked copied-message receivers.
-pub(in crate::user_tasks) fn wake_receivers(session: &mut Session) {
-    readiness::wake(session);
-    delivery::wake_receivers(session);
-}

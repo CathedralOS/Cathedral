@@ -4,13 +4,6 @@ use crate::user_tasks::syscalls::{Session, complete};
 use cathedral_arch as arch;
 use cathedral_kernel_contracts::user as abi;
 
-fn owner(session: &Session) -> Option<usize> {
-    session
-        .launches
-        .iter()
-        .find(|launch| launch.keyboard)
-        .map(|launch| launch.model.child)
-}
 pub(in crate::user_tasks) fn syscall(
     session: &mut Session,
     slot: usize,
@@ -19,7 +12,7 @@ pub(in crate::user_tasks) fn syscall(
     now: u64,
 ) -> Result<u64, u64> {
     let (number, first, second) = call;
-    if owner(session) != Some(slot) {
+    if session.keyboard_owner != Some(slot) {
         return Err(abi::DENIED);
     }
     if number == abi::KEYBOARD_WRITE {
@@ -58,7 +51,7 @@ pub(in crate::user_tasks) fn syscall(
     Ok(0)
 }
 pub(in crate::user_tasks) fn poll(session: &mut Session, now: u64) {
-    let Some(slot) = owner(session) else {
+    let Some(slot) = session.keyboard_owner else {
         return;
     };
     let Some(device) = arch::board::devices().keyboard else {

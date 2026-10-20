@@ -102,8 +102,9 @@ one net calculation, preserving fractional credit and the burst ceiling.
 Exhausted accounts have one indexed repayment deadline each; at exactly zero
 credit they remain ineligible. Cancellation/restart does not discard that debt.
 Boot configuration may scan the arena; `vacancy()` remains an admission scan.
-Ready/finished queries use maintained state. None of this removes scans in the
-separate IPC, device, task-wait or deferred-work owners.
+Ready/finished queries use maintained state. The separate
+[wait coordinator](../user_tasks/execution/waits/README.md) now targets IPC,
+device and child waiters too. Deferred-work scans remain in the boot/trap loop.
 
 ## What a turn means
 

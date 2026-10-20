@@ -6,11 +6,7 @@ use cathedral_arch::board::DeviceId;
 use cathedral_kernel_contracts::user as abi;
 
 fn device(session: &Session, slot: usize) -> Option<DeviceId> {
-    session
-        .launches
-        .iter()
-        .find(|l| l.model.child == slot)
-        .and_then(|l| l.device)
+    session.device_routes[slot]
 }
 pub(super) fn dispatch(
     session: &mut Session,
@@ -75,7 +71,10 @@ pub(super) fn dispatch(
 }
 
 pub(in crate::user_tasks) fn interrupts(session: &mut Session) {
-    for slot in 0..session.tasks.len() {
+    let mut owners = session.devices.owners();
+    while owners != 0 {
+        let slot = owners.trailing_zeros() as usize;
+        owners &= owners - 1;
         let Some(device) = device(session, slot) else {
             continue;
         };

@@ -30,6 +30,7 @@ impl Ipc {
         };
         message.bytes[..bytes.len()].copy_from_slice(bytes);
         self.endpoints[index].as_mut().unwrap().message = Some(message);
+        self.changed_receivers |= 1 << self.endpoints[index].as_ref().unwrap().spec.receiver;
     }
     pub fn memory_retirement_pending(&self) -> bool {
         self.retired_memory.iter().any(|&word| word != 0)

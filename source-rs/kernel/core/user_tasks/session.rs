@@ -22,6 +22,10 @@ pub(super) struct Task {
     pub(super) keyboard_deadline: Option<u64>,
 }
 pub(super) struct Session {
+    pub(super) waits: super::execution::waits::Registry,
+    pub(super) device_routes:
+        [Option<cathedral_arch::board::DeviceId>; cathedral_kernel_contracts::user::MAX_TASKS],
+    pub(super) keyboard_owner: Option<usize>,
     pub(super) devices: super::devices::Devices,
     pub(super) pool: crate::user_tasks::admission::pool::Pool,
     pub(super) executables: crate::user_tasks::admission::pool::Executables,

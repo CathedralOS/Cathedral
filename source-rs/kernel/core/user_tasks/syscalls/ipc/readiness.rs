@@ -55,23 +55,28 @@ pub(in crate::user_tasks) fn syscall(
     }
     session.tasks[slot].report.readiness_blocked += 1;
     session.tasks[slot].notify = Some(wait);
+    session.waits.register(
+        slot,
+        crate::user_tasks::execution::waits::Kind::Readiness,
+        Some(wait.deadline),
+        now,
+    );
     *event = Event::Block;
     Ok(0)
 }
-pub(in crate::user_tasks) fn wake(session: &mut Session) {
-    for slot in 0..session.tasks.len() {
-        let Some(wait) = session.tasks[slot].notify else {
-            continue;
-        };
-        let result = match ready(session, slot, wait, cathedral_arch::ticks()) {
-            Ok(None) => continue,
-            Ok(Some(index)) => Ok(index),
-            Err(error) => Err(error),
-        };
-        session.tasks[slot].notify = None;
-        complete(session, slot, result);
-        session.scheduler.unblock(slot);
-    }
+pub(in crate::user_tasks) fn wake(session: &mut Session, slot: usize, now: u64) {
+    let wait = session.tasks[slot]
+        .notify
+        .expect("registered readiness wait missing");
+    let result = match ready(session, slot, wait, now) {
+        Ok(None) => return,
+        Ok(Some(index)) => Ok(index),
+        Err(error) => Err(error),
+    };
+    session.tasks[slot].notify = None;
+    session.waits.remove(slot);
+    complete(session, slot, result);
+    session.scheduler.unblock(slot);
 }
 
 pub(in crate::user_tasks) fn many(

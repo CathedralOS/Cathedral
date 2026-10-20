@@ -20,6 +20,9 @@ and userspace execution system.
   These are useful boundaries for future evidence, not timing guarantees.
 - A repeatable periodic workload in the ordinary x86 smoke suite. The desktop
   uses the same scheduler; it does not acquire special priority or a new ABI.
+- [Targeted wait completion](../user_tasks/execution/waits/README.md): IPC receiver
+  hints, child-outcome subscriptions, device-owner routes and indexed wait
+  deadlines replace broad waiter scans. Completion owners still validate authority.
 
 ## Non-preemptible work inventory
 
@@ -30,8 +33,8 @@ The table describes structural bounds; none is a qualified time bound.
 
 | Path | Work while IRQs are masked | Next boundary needed |
 | --- | --- | --- |
-| [Trap dispatch](../user_tasks/execution/traps.rs) | Device/keyboard polling, IPC/readiness/task waiter scans; scans for pending memory, exit and launch work | Register waiters with their event owner, maintain pending work, and index deadlines. Readiness, terminal outcomes and timeout precedence must remain unchanged |
-| [Copied IPC delivery](../user_tasks/syscalls/ipc/delivery.rs), [readiness](../user_tasks/syscalls/ipc/readiness.rs) | Bounded message copy, capability/handle validation and full waiter passes after notifications | Target affected waiters and charge bounded completion batches; preserve messages on failed copyout and wake on revocation/death |
+| [Trap dispatch](../user_tasks/execution/traps.rs) | Poll installed device owners and keyboard; complete affected/due waiters; scan for pending memory, exit and launch work | Maintain deferred-work indexes and bound completion batches. Readiness, terminal outcomes and timeout precedence must remain unchanged |
+| [Copied IPC delivery](../user_tasks/syscalls/ipc/delivery.rs), [readiness](../user_tasks/syscalls/ipc/readiness.rs) | Bounded message copy and capability/handle validation for each affected/due waiter | Bound bursts of completions and grant lookup; preserve messages on failed copyout and wake on revocation/death |
 | [Spawn](../user_tasks/lifecycle/lifecycle.rs), [image construction](../user_tasks/address_space/creation.rs) | Validate a complete ELF; allocate, zero, copy and map its image/stack; prepare runtime tables; rollback failures before returning | An unpublished construction state with page/work allowance per step; commit authority atomically only after success, retain rollback custody across interruptions |
 | [Runtime memory](../user_tasks/memory/memory.rs), [allocation](../user_tasks/memory/allocation.rs) | Process all queued calls; zero/map/seal/unmap a whole region; settle pending references | Per-operation progress and private staging, bounded page batches, retained funding and explicit cancellation. Publication cannot expose a partly initialized or writable sealed object |
 | [Cancellation and reclamation](../user_tasks/lifecycle/lifecycle.rs), [region retirement](../user_tasks/memory/retirement.rs) | Cascade across owned launches, close grants/queues, scan reader/region arenas, remove mappings and free all dead-task frames before returning loans | Retire authority first; reclaim a bounded amount per turn; return funding and reusable slots only after aliases/readers and descendants are settled |
@@ -81,8 +84,9 @@ restart debt, hierarchical overload and all-accounts-exhausted idle recovery.
 
 ## Next preparation steps
 
-1. Replace trap-wide waiter/pending-work scans with event-owner indexes, preserving
-   generation checks and terminal/deadline ordering. Extend observations to
+1. Extend the completed waiter indexing to pending admission, memory and retired
+   task work. Bound event bursts while preserving terminal/deadline ordering.
+   Extend observations to
    distinguish becoming ready from actually being selected.
 2. Make admission, page operations and descendant reclamation resumable at
    explicit consistent boundaries; measure the largest remaining uninterrupted

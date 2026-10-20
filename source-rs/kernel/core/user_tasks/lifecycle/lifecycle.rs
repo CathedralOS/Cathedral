@@ -1,10 +1,11 @@
 // Boot-context admission/reaping and grant teardown. No restart policy here.
-use super::{Error, Exit, Frames, Session, admission, next_epoch, syscalls, taskcalls};
+use super::{Error, Exit, Frames, Session, admission, next_epoch, syscalls};
 use crate::{scheduler::TaskState, user_tasks::Program, user_tasks::admission::pool::Code};
 use cathedral_arch as arch;
 use cathedral_kernel_contracts::user as abi;
 
 pub(super) fn close(session: &mut Session, slot: usize) {
+    session.waits.remove(slot);
     super::syscalls::devices::leased::close(session, slot);
     for region in session.executables.close(slot).into_iter().flatten() {
         session.memory.unref_later(region);
@@ -37,7 +38,7 @@ pub(super) fn close(session: &mut Session, slot: usize) {
             launch.delegated_count = 0;
         }
     }
-    syscalls::wake_receivers(session);
+    super::execution::waits::wake(session, arch::ticks());
 }
 
 pub(super) unsafe fn reap(session: &mut Session, source: &mut Frames<'_>) {
@@ -83,15 +84,17 @@ pub(super) unsafe fn reap(session: &mut Session, source: &mut Frames<'_>) {
             ancestor = session.scheduler.parent(ancestor).unwrap_or(0);
         }
         session.pool.reclaim(slot, ancestor);
-        if let Some(launch) = session
+        if let Some((index, launch)) = session
             .launches
             .iter_mut()
-            .find(|launch| launch.model.child == slot)
+            .enumerate()
+            .find(|(_, launch)| launch.model.child == slot)
         {
             launch
                 .model
                 .reaped(outcome(session.tasks[slot].report.exit.unwrap()));
             session.tasks[launch.model.owner].report.reaped += 1;
+            session.waits.child_changed(index);
         }
     }
     let owned: usize = session
@@ -122,7 +125,7 @@ pub(super) unsafe fn reap(session: &mut Session, source: &mut Frames<'_>) {
                 .set_parent(launch.model.child, launch.model.owner);
         }
     }
-    taskcalls::wake(session, arch::ticks());
+    super::execution::waits::wake(session, arch::ticks());
     for owner in 0..session.tasks.len() {
         if requesters & (1 << owner) != 0 && session.tasks[owner].space.is_some() {
             syscalls::complete(session, owner, Ok(0));

@@ -54,6 +54,12 @@ pub(super) fn receive_call(
         return Err(abi::TIMED_OUT);
     }
     session.tasks[slot].receive = Some(wait);
+    session.waits.register(
+        slot,
+        crate::user_tasks::execution::waits::Kind::Receive,
+        deadline,
+        now,
+    );
     session.tasks[slot].report.receives_blocked += 1;
     *event = Event::Block;
     Ok(0)
@@ -135,27 +141,20 @@ fn receive(session: &mut Session, slot: usize, wait: Receive) -> Result<Option<u
     task.report.ipc_received += 1;
     Ok(Some(message.len as u64))
 }
-pub(super) fn wake_receivers(session: &mut Session) {
-    for slot in 0..session.tasks.len() {
-        let Some(wait) = session.tasks[slot].receive else {
-            continue;
-        };
-        let result = match receive(session, slot, wait) {
-            Ok(None)
-                if crate::user_tasks::time::timed_out(
-                    cathedral_arch::ticks(),
-                    wait.deadline,
-                    false,
-                ) =>
-            {
-                Err(abi::TIMED_OUT)
-            }
-            Ok(None) => continue,
-            Ok(Some(length)) => Ok(length),
-            Err(error) => Err(error),
-        };
-        session.tasks[slot].receive = None;
-        complete(session, slot, result);
-        session.scheduler.unblock(slot);
-    }
+pub(in crate::user_tasks) fn wake(session: &mut Session, slot: usize, now: u64) {
+    let wait = session.tasks[slot]
+        .receive
+        .expect("registered receive missing");
+    let result = match receive(session, slot, wait) {
+        Ok(None) if crate::user_tasks::time::timed_out(now, wait.deadline, false) => {
+            Err(abi::TIMED_OUT)
+        }
+        Ok(None) => return,
+        Ok(Some(length)) => Ok(length),
+        Err(error) => Err(error),
+    };
+    session.tasks[slot].receive = None;
+    session.waits.remove(slot);
+    complete(session, slot, result);
+    session.scheduler.unblock(slot);
 }

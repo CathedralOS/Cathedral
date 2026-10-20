@@ -25,6 +25,7 @@ impl Ipc {
             tasks,
             reservations,
             alive: (1u32 << tasks) - 1,
+            changed_receivers: 0,
             endpoints,
             grants: Grants::new(tasks)?,
             initial: [[0; abi::MAX_INITIAL_ENDPOINTS]; MAX_TASKS],
@@ -42,7 +43,8 @@ impl Ipc {
         Ok(ipc)
     }
     fn install_boot(&mut self, index: usize, spec: EndpointSpec, epoch: u64, visible: bool) {
-        if self.endpoints[index].is_some() {
+        if let Some(old) = self.endpoints[index] {
+            self.changed_receivers |= 1 << old.spec.receiver;
             self.discard(index);
         }
         for grant in &mut self.grants.entries {
@@ -94,6 +96,7 @@ impl Ipc {
             }
         }
         self.alive |= 1 << child;
+        self.changed_receivers &= !(1 << child);
         self.install_pair(first, peer, child, epoch);
         self.accept_child(first, child);
     }

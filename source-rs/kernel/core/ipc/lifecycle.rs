@@ -11,6 +11,7 @@ impl Ipc {
             return;
         };
         let endpoint = self.endpoints[grant.endpoint].as_mut().unwrap();
+        self.changed_receivers |= 1 << endpoint.spec.receiver;
         match grant.right {
             Right::Send => endpoint.sender_alive = false,
             Right::Receive => {
@@ -40,6 +41,7 @@ impl Ipc {
                 continue;
             };
             let endpoint = self.endpoints[grant.endpoint].as_mut().unwrap();
+            self.changed_receivers |= 1 << endpoint.spec.receiver;
             match grant.right {
                 Right::Send => endpoint.sender_alive = false,
                 Right::Receive => {
@@ -65,6 +67,7 @@ impl Ipc {
     pub fn close_task(&mut self, task: usize) {
         assert!(task < self.tasks);
         self.alive &= !(1 << task);
+        self.changed_receivers &= !(1 << task);
         self.initial[task] = [0; abi::MAX_INITIAL_ENDPOINTS];
         for slot in 0..self.grants.entries.len() {
             if self.grants.entries[slot].is_some_and(|g| g.owner == task) {

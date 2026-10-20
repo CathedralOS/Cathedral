@@ -1,7 +1,7 @@
 //! Interrupt/syscall entrance: save context, dispatch syscalls, wake waiters and select a root.
 //! Allocating and reclaiming remain deferred to execution/execution.rs on the boot stack.
 use crate::scheduler::{Event, TaskState};
-use crate::user_tasks::{ACTIVE, Exit, arch, keyboard, lifecycle, syscalls, taskcalls};
+use crate::user_tasks::{ACTIVE, Exit, arch, keyboard, lifecycle, syscalls};
 use cathedral_arch::{Context, SwitchCause};
 use core::sync::atomic::Ordering;
 pub(super) unsafe fn schedule(context: &Context, cause: SwitchCause, now: u64) -> *const Context {
@@ -37,8 +37,7 @@ pub(super) unsafe fn schedule(context: &Context, cause: SwitchCause, now: u64) -
     if matches!(cause, SwitchCause::Timer | SwitchCause::Device) {
         syscalls::devices::leased::interrupts(session);
         keyboard::poll(session, now);
-        syscalls::wake_receivers(session);
-        taskcalls::wake(session, now);
+        super::waits::wake(session, now);
     }
     let next = if matches!(event, Event::Exit) {
         lifecycle::close(session, previous.unwrap());

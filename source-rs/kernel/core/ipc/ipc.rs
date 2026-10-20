@@ -48,12 +48,20 @@ pub struct Ipc {
     retired_memory: [u64; cathedral_kernel_contracts::memory::MAX_READ_HANDLES.div_ceil(64)],
     tasks: usize,
     alive: u32,
+    // Hints only: the wait owner revalidates the current local grant and payload.
+    changed_receivers: u32,
     endpoints: alloc::vec::Vec<Option<Endpoint>>,
     grants: Grants,
     reservations: [usize; MAX_TASKS],
     initial: [[u64; abi::MAX_INITIAL_ENDPOINTS]; MAX_TASKS],
 }
 impl Ipc {
+    /// Coalesced receiver hints for the task wait coordinator. Taking these does
+    /// not consume messages or confer authority; it must recheck the live grant.
+    /// See user_tasks/execution/waits/waits.rs for completion and deadline order.
+    pub(crate) fn take_changed_receivers(&mut self) -> u32 {
+        core::mem::take(&mut self.changed_receivers) & self.alive
+    }
     pub fn check(&self, caller: usize, ticket: u64, needed: Right) -> Result<usize, u64> {
         let (_, grant) = self.lookup(caller, ticket)?;
         if grant.right != needed {
@@ -106,6 +114,7 @@ impl Ipc {
         };
         message.bytes[..bytes.len()].copy_from_slice(bytes);
         self.endpoints[index].as_mut().unwrap().message = Some(message);
+        self.changed_receivers |= 1 << receiver;
         Ok(())
     }
     pub fn receive(
@@ -169,6 +178,7 @@ impl Ipc {
     pub fn revoke(&mut self, caller: usize, ticket: u64) -> Result<(), u64> {
         let index = self.check(caller, ticket, Right::Revoke)?;
         self.endpoints[index].as_mut().unwrap().revoked = true;
+        self.changed_receivers |= 1 << self.endpoints[index].as_ref().unwrap().spec.receiver;
         self.discard(index);
         Ok(())
     }

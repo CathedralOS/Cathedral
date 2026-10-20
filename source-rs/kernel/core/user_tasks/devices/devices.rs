@@ -14,12 +14,22 @@ struct Grant {
 #[derive(Default)]
 pub(crate) struct Devices {
     grants: [Grant; abi::MAX_TASKS],
+    owners: u32,
+    changed: u32,
 }
 
 impl Devices {
+    pub fn owners(&self) -> u32 {
+        self.owners
+    }
+    pub fn take_changed(&mut self) -> u32 {
+        core::mem::take(&mut self.changed)
+    }
     pub fn install(&mut self, slot: usize, name: u64, registers: u64) {
         assert_ne!(name, 0);
         assert_eq!(self.grants[slot].name, 0);
+        self.owners |= 1 << slot;
+        self.changed &= !(1 << slot);
         self.grants[slot] = Grant {
             name,
             registers,
@@ -88,12 +98,15 @@ impl Devices {
             true
         } else {
             grant.pending = true;
+            self.changed |= 1 << slot;
             false
         }
     }
     pub fn close(&mut self, slot: usize) -> bool {
         let live = self.grants[slot].name != 0;
         self.grants[slot] = Grant::default();
+        self.owners &= !(1 << slot);
+        self.changed |= 1 << slot;
         live
     }
 }

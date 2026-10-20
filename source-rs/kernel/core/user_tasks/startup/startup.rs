@@ -27,6 +27,19 @@ pub(super) fn prepare(
             }
         })?;
     let mut session = Session {
+        waits: super::execution::waits::Registry::new(count),
+        device_routes: core::array::from_fn(|slot| {
+            grants
+                .launches
+                .iter()
+                .find(|launch| launch.model.child == slot)
+                .and_then(|launch| launch.device)
+        }),
+        keyboard_owner: grants
+            .launches
+            .iter()
+            .find(|launch| launch.keyboard)
+            .map(|launch| launch.model.child),
         devices: super::devices::Devices::default(),
         pool: crate::user_tasks::admission::pool::Pool::new(count - config.dynamic_tasks, count),
         executables: crate::user_tasks::admission::pool::Executables::new(count)

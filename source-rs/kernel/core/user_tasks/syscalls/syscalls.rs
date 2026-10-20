@@ -57,7 +57,7 @@ pub(super) fn syscall(session: &mut Session, slot: usize, now: u64) -> Event {
         _ => Err(abi::UNKNOWN),
     };
     complete(session, slot, result);
-    ipc::wake_receivers(session);
+    super::execution::waits::wake(session, now);
     event
 }
 

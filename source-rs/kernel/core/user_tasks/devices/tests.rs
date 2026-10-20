@@ -44,3 +44,24 @@ fn irq_before_wait_and_wait_before_irq_are_both_lossless() {
     devices.install(0, 4, 8);
     assert!(!devices.interrupt(0)); // No inherited waiter or arm.
 }
+
+#[test]
+fn owner_routes_and_mixed_wait_hints_do_not_survive_device_replacement() {
+    let mut devices = Devices::default();
+    devices.install(30, 1, 8);
+    devices.install(2, 2, 8);
+    assert_eq!(devices.owners(), (1 << 30) | (1 << 2));
+    assert_eq!(devices.take_changed(), 0);
+    devices.arm(30, 1).unwrap();
+    assert!(!devices.interrupt(30));
+    assert_eq!(devices.take_changed(), 1 << 30);
+    assert_eq!(devices.take_changed(), 0);
+    assert_eq!(devices.ready(30, 1), Ok(true)); // Hint drain did not consume IRQ.
+    devices.close(30);
+    assert_eq!(devices.owners(), 1 << 2);
+    devices.install(30, 3, 8);
+    assert_eq!(devices.take_changed(), 0);
+    assert_eq!(devices.ready(30, 1), Err(abi::BAD_HANDLE));
+    assert_eq!(devices.ready(30, 3), Ok(false));
+    assert!(!devices.interrupt(30)); // New incarnation has not armed its device.
+}

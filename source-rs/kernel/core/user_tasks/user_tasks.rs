@@ -7,7 +7,7 @@ use cathedral_arch as arch;
 use core::sync::atomic::Ordering;
 use memory::frames::Frames;
 use session::{ACTIVE, LaunchState, LinkState, Session, Task, next_epoch};
-use syscalls::{devices::keyboard, tasks as taskcalls};
+use syscalls::devices::keyboard;
 /// Run tasks with explicit boot-issued endpoint, launch and clock grants.
 /// # Safety
 /// Same obligations as run. Endpoint indices refer to initial programs; clock

@@ -99,7 +99,10 @@ impl Ipc {
         let endpoint = self.endpoints[endpoint].as_mut().unwrap();
         match right {
             Right::Send => endpoint.spec.sender = receiver,
-            Right::Receive => endpoint.spec.receiver = receiver,
+            Right::Receive => {
+                self.changed_receivers |= (1 << endpoint.spec.receiver) | (1 << receiver);
+                endpoint.spec.receiver = receiver;
+            }
             Right::Revoke => unreachable!(),
         }
         target

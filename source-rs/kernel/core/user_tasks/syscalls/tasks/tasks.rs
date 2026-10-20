@@ -116,6 +116,13 @@ pub(in super::super) fn dispatch(
             };
             if !finish_wait(session, slot, wait, now)? {
                 session.tasks[slot].wait = Some(wait);
+                session.waits.register(
+                    slot,
+                    crate::user_tasks::execution::waits::Kind::Child,
+                    wait.deadline,
+                    now,
+                );
+                session.waits.watch_child(slot, index);
                 session.tasks[slot].report.waits_blocked += 1;
                 *event = Event::Block;
             }
@@ -147,18 +154,17 @@ fn finish_wait(session: &mut Session, slot: usize, wait: Wait, now: u64) -> Resu
     model.consume();
     Ok(true)
 }
-pub(in super::super) fn wake(session: &mut Session, now: u64) {
-    for slot in 0..session.tasks.len() {
-        let Some(wait) = session.tasks[slot].wait else {
-            continue;
-        };
-        let result = match finish_wait(session, slot, wait, now) {
-            Ok(false) => continue,
-            Ok(true) => Ok(0),
-            Err(error) => Err(error),
-        };
-        session.tasks[slot].wait = None;
-        complete(session, slot, result);
-        session.scheduler.unblock(slot);
-    }
+pub(in super::super) fn wake(session: &mut Session, slot: usize, now: u64) {
+    let wait = session.tasks[slot]
+        .wait
+        .expect("registered child wait missing");
+    let result = match finish_wait(session, slot, wait, now) {
+        Ok(false) => return,
+        Ok(true) => Ok(0),
+        Err(error) => Err(error),
+    };
+    session.tasks[slot].wait = None;
+    session.waits.remove(slot);
+    complete(session, slot, result);
+    session.scheduler.unblock(slot);
 }

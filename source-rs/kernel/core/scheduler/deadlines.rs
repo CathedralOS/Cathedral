@@ -3,7 +3,7 @@
 // supply extended timestamps so wrapping tick clocks do not reorder the heap.
 use alloc::{vec, vec::Vec};
 
-pub(super) struct Deadlines {
+pub(crate) struct Deadlines {
     heap: Vec<usize>,
     positions: Vec<Option<usize>>,
     times: Vec<u128>,
@@ -12,7 +12,7 @@ pub(super) struct Deadlines {
 }
 
 impl Deadlines {
-    pub(super) fn new(count: usize) -> Self {
+    pub(crate) fn new(count: usize) -> Self {
         Self {
             heap: Vec::with_capacity(count),
             positions: vec![None; count],
@@ -22,7 +22,7 @@ impl Deadlines {
         }
     }
 
-    pub(super) fn set(&mut self, slot: usize, time: u128) {
+    pub(crate) fn set(&mut self, slot: usize, time: u128) {
         self.remove(slot);
         self.times[slot] = time;
         self.positions[slot] = Some(self.heap.len());
@@ -30,7 +30,7 @@ impl Deadlines {
         self.up(self.heap.len() - 1);
     }
 
-    pub(super) fn remove(&mut self, slot: usize) {
+    pub(crate) fn remove(&mut self, slot: usize) {
         let Some(index) = self.positions[slot].take() else {
             return;
         };
@@ -42,7 +42,7 @@ impl Deadlines {
         }
     }
 
-    pub(super) fn pop_due(&mut self, now: u128) -> Option<usize> {
+    pub(crate) fn pop_due(&mut self, now: u128) -> Option<usize> {
         #[cfg(test)]
         {
             self.inspections += 1;
