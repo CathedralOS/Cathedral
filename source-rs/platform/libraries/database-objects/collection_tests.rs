@@ -34,6 +34,30 @@ impl StorageBackend for RecordingDisk {
     }
 }
 const CAPACITY: usize = 1_056_768;
+#[derive(Debug)]
+struct CountReads {
+    disk: Disk,
+    bytes: Arc<std::sync::atomic::AtomicUsize>,
+}
+impl StorageBackend for CountReads {
+    fn len(&self) -> io::Result<u64> {
+        self.disk.len()
+    }
+    fn set_len(&self, len: u64) -> io::Result<()> {
+        self.disk.set_len(len)
+    }
+    fn read(&self, offset: u64, out: &mut [u8]) -> io::Result<()> {
+        self.bytes
+            .fetch_add(out.len(), std::sync::atomic::Ordering::Relaxed);
+        self.disk.read(offset, out)
+    }
+    fn write(&self, offset: u64, bytes: &[u8]) -> io::Result<()> {
+        self.disk.write(offset, bytes)
+    }
+    fn sync_data(&self) -> io::Result<()> {
+        self.disk.sync_data()
+    }
+}
 impl StorageBackend for Disk {
     fn len(&self) -> io::Result<u64> {
         Ok(self.0.lock().unwrap().len() as u64)
@@ -89,6 +113,39 @@ fn accounting(db: &Database) {
     }
     assert_eq!(charged, actual as u64);
     assert!(charged <= ROOT_QUOTA);
+}
+
+#[test]
+fn shared_program_collection_has_bounded_metadata_io_with_a_small_cache() {
+    let disk = Disk(Arc::new(Mutex::new(Vec::new())));
+    let db = open(disk.clone());
+    let store = Store::open(&db).unwrap();
+    let mut body = vec![0; CHUNK_BYTES * 32];
+    for (i, chunk) in body.chunks_mut(CHUNK_BYTES).enumerate() {
+        chunk.fill(i as u8);
+    }
+    for variant in 0..12 {
+        body[0] = 128 + variant;
+        store.publish(0, 0, 0, &body, 0).unwrap();
+    }
+    drop(db);
+    let reads = Arc::new(std::sync::atomic::AtomicUsize::new(0));
+    let db = Database::builder()
+        .set_cache_size(64 * 1024)
+        .create_with_backend(CountReads {
+            disk,
+            bytes: reads.clone(),
+        })
+        .unwrap();
+    let store = Store::open(&db).unwrap();
+    reads.store(0, std::sync::atomic::Ordering::Relaxed);
+    assert_eq!(store.collect(0).unwrap().removed, 0);
+    let bytes = reads.load(std::sync::atomic::Ordering::Relaxed);
+    assert!(
+        bytes <= 256 * 1024,
+        "metadata collection read {bytes} bytes"
+    );
+    accounting(&db);
 }
 #[test]
 fn named_creation_cold_opens_whole_at_every_backend_write() {

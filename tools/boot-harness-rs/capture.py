@@ -35,6 +35,7 @@ def run(qemu_command, output, timeout, creationflags, ready_marker, verify, *, a
         listener.settimeout(timeout)
         port = listener.getsockname()[1]
         qemu_command = qemu_command + ["-qmp", f"tcp:127.0.0.1:{port},server=off", "-serial", "file:serial.log"]
+        launched = time.monotonic()
         process = subprocess.Popen(qemu_command, cwd=output, stdout=log, stderr=log,
                                    creationflags=creationflags)
         try:
@@ -44,7 +45,8 @@ def run(qemu_command, output, timeout, creationflags, ready_marker, verify, *, a
                     if "QMP" not in json.loads(stream.readline()):
                         raise RuntimeError("Missing QMP greeting")
                     command(stream, "qmp_capabilities")
-                    deadline = time.monotonic() + timeout
+                    connected = time.monotonic()
+                    deadline = connected + timeout
                     while True:
                         # User writes split at page boundaries; each chunk has a
                         # boot diagnostic prefix, even in the middle of a marker.
@@ -66,6 +68,10 @@ def run(qemu_command, output, timeout, creationflags, ready_marker, verify, *, a
                     if any(marker in text for marker in ("ring3 private memory", "fault contained mode=", "display service faulted and restarted")):
                         raise RuntimeError("Ordinary boot unexpectedly ran lab exercises")
                     print(f"Userspace scene ready after {time.monotonic() - (deadline - timeout):.2f}s from QMP connection", flush=True)
+                    (output / 'boot-timing.json').write_text(json.dumps(dict(
+                        qemu_launch_to_qmp_ms=round((connected-launched)*1000, 1),
+                        qmp_to_ready_marker_ms=round((time.monotonic()-connected)*1000, 1),
+                        ready_marker=ready_marker), indent=2))
                     verify(stream, output, text)
                     if process.poll() is None:
                         command(stream, "quit")

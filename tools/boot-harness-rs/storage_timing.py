@@ -17,6 +17,40 @@ PAIRS = {
 }
 
 
+def provider_samples(serial):
+    """One serialized provider, including nested phases; never join matrix CPU clocks."""
+    samples = []
+    pending = {}
+    begins = {'provider-begin': 'provider', 'extent-begin': 'extent',
+              'collect-begin': 'collection', 'commit-begin': 'commit'}
+    ends = {'provider-end': 'provider', 'extent-end': 'extent',
+            'publish-begin': 'collection', 'committed': 'commit'}
+    for line in serial.replace('Cathedral Rust lab: ', '').splitlines():
+        match = re.search(r'STORAGE_TRACE (\S+) ([\d ]+)$', line)
+        if not match:
+            continue
+        label, numbers = match.groups()
+        values = [int(value) for value in numbers.split()]
+        if label in begins and len(values) == 4:
+            pending[begins[label]] = (values, {})
+        elif label == 'ata-io' and len(values) == 7 and 'provider' in pending:
+            start, extra = pending['provider']
+            if values[:2] == start[:2]:
+                extra.update(zip(('read_sectors', 'written_sectors', 'flushes', 'wait_ticks', 'polls'), values[2:]))
+        elif label in ends and len(values) == 4:
+            phase = ends[label]
+            entry = pending.pop(phase, None)
+            if entry is None:
+                continue
+            start, extra = entry
+            if values[:2] != start[:2] or any(end < begin for begin, end in zip(start[2:], values[2:])):
+                continue
+            samples.append(dict(phase=phase, subject=start[0], operation=start[1],
+                                guest_ticks=values[2]-start[2], cpu_us=values[3]-start[3], **extra))
+    return samples
+
+
+
 def summarize(output, serial, boot):
     pending, spans, io, retirements = {}, [], [], []
     text = serial.replace('Cathedral Rust lab: ', '')

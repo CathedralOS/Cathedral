@@ -40,7 +40,9 @@ impl Store<'_> {
             if head.revision != revision {
                 return Err(Error::Corrupt);
             }
-            closure(&table, root, id, head, &mut BTreeSet::new())?;
+            let mut live = BTreeSet::new();
+            closure(&table, root, id, head, &mut live)?;
+            validate_chunks(&table, root, &live)?;
             let value = encode_pin(Object { id, head });
             let mut charged = quota(&table, root)?;
             charge(&mut charged, pin.len() + value.len())?;
@@ -72,8 +74,8 @@ impl Store<'_> {
         }
         engine(tx.commit())
     }
-    /// At most eight removals and ROOT_QUOTA bytes of metadata in the scan per
-    /// pass. A crash leaves every head/pin closure valid and an exact ledger.
+    /// At most eight removals; each ordered metadata scan is bounded by ROOT_QUOTA.
+    /// A crash leaves every head/pin closure valid and an exact ledger.
     /// This frees engine pages for reuse; file shrinking is a separate operation.
     pub fn collect(&self, root: u8) -> Result<Collection> {
         let tx = self.writer()?;
@@ -114,6 +116,10 @@ pub fn collect_records(table: &mut Table<&[u8], &[u8]>, root: u8) -> Result<Coll
             closure(table, root, pinned.id, pinned.head, &mut live)?;
         }
     }
+    // Validate the distinct live chunk names in index order. Random lookups for
+    // every occurrence in every manifest thrash a small engine cache, especially
+    // when installed program variants share most of their chunks.
+    validate_chunks(table, root, &live)?;
     // Retire event lookup authority before manifests, and manifests
     // before chunks. A pin between passes must never resurrect a
     // partially collected revision. The order of kinds scanned is the
@@ -195,12 +201,36 @@ fn closure(
     if let records::Contents::Chunks(parts) = body {
         for id in parts.chunks_exact(32) {
             let index = key(root, b'k', id);
-            if engine(table.get(index.as_slice()))?.is_none() {
-                return Err(Error::Corrupt);
-            }
             live.insert(index);
         }
     }
     live.insert(manifest);
+    Ok(())
+}
+
+/// Prove every referenced chunk has its index entry before pinning or deleting
+/// any records. Only index metadata is scanned; payload bytes remain untouched.
+fn validate_chunks(table: &Table<&[u8], &[u8]>, root: u8, live: &BTreeSet<Vec<u8>>) -> Result<()> {
+    let expected = live.iter().filter(|key| key.get(1) == Some(&b'k')).count();
+    if expected == 0 {
+        return Ok(());
+    }
+    let mut found = 0;
+    let mut inspected = 0;
+    for row in engine(table.range(key(root, b'k', &[]).as_slice()..))? {
+        let (k, v) = engine(row)?;
+        let k = k.value();
+        if k.len() < 2 || k[..2] != [root, b'k'] {
+            break;
+        }
+        inspected += k.len() + v.value().len();
+        if inspected > ROOT_QUOTA as usize || k.len() != 34 || !v.value().is_empty() {
+            return Err(Error::Corrupt);
+        }
+        found += usize::from(live.contains(k));
+    }
+    if found != expected {
+        return Err(Error::Corrupt);
+    }
     Ok(())
 }

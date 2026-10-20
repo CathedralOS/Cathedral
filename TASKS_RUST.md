@@ -1,10 +1,11 @@
 # Rust reference OS: tasks and handoff
 
-Updated 2026-10-19 (local date). Current milestone: **nested desktop through F5 and
-atomic app selection**. Baseline `feb66a95` supports three app instances and
-separate background/chrome roles. Nested now runs its own scoped picker and the
-same desktop, with one inner app under fixed funding. Verification and remaining
-limits are recorded in the latest section below.
+Updated 2026-10-19 (local date). Current milestone: **desktop latency measurement
+and storage collection I/O reduction**. Baseline `d96548f0` supplies nested
+desktops and atomic app selection. The ordinary desktop now records repeatable
+timing observations; ordered chunk-index validation reduces measured save I/O.
+Nested still supports one inner app under fixed funding. Verification and
+remaining limits are recorded in the latest section below.
 Previous baseline: atomic named creation and deeper recursive matrices at `102e416c`.
 F5 stages changed program installations in host scratch space, then verifies and
 publishes a result that fits the original disk extent.
@@ -2545,3 +2546,76 @@ reported NO_MEMORY during login and recovery-screen publication. It did not
 reproduce in subsequent normal, nested or deep runs; cause remains unresolved.
 The previous intermittent ATA busy timeout remains open too. Tests use disposable
 images; the interactive saved disk was not altered.
+
+## 2026-10-19 - Desktop measurement and collection I/O
+
+The next performance step uses the ordinary F5 composition. Start at
+`tools/boot-harness-rs/desktop_test.py`, whose steps feed `desktop_timing.py`;
+`storage_timing.py` parses the serialized provider's phases. Each boot records
+host boot/login/launch/typing/switch/save observations. Optional `--trace-storage
+--trace-input` adds provider CPU, sector counts, collection/commit/extent spans
+and compositor redraw CPU. Reports and interpretation are in the harness README.
+Host observations include QMP, deliberate input spacing and screenshot polling;
+guest ticks, per-process CPU and host wall time are distinct clocks. Tracing
+perturbs execution. These are diagnostic observations, not performance promises.
+
+The main measured save cost was reachability collection: repeated per-chunk
+index lookups across shared program manifests thrashed the small engine cache.
+`platform/libraries/database-objects/collection.rs` now marks distinct referenced
+index keys, validates them in one ordered metadata scan, then performs the same
+bounded removals. Missing indexes still refuse collection or pinning before any
+mutation. Pin validation also uses this scan, trading individual lookups for a
+root-wide ordered index walk when the pinned object has chunks. Metadata work
+still scales with the live set; at most eight removals does not bound total
+collection CPU to eight records. No storage format, durability, retention or
+kernel authority changes were made.
+
+The provider cache is 64 KiB instead of 32 KiB, inside its existing 56-page heap.
+A 128 KiB trial exhausted that heap while copying a user and was discarded.
+Ordered validation with 32 KiB also reduced reads, but 64 KiB further improved
+the measured working set. This is a bounded tuning choice, not general memory
+negotiation or proof that every future workload fits.
+
+Comparable `--trace-storage` runs (artifacts under `build/boot-harness-rs/desktop`):
+
+| Observation | Baseline `20261020T002203005756Z` | Optimized `20261020T002630278955Z` |
+| --- | --- | --- |
+| Notes save host upper bound | 1506.6 ms | 358.4 ms |
+| Notes provider sectors read | 2785 | 201 |
+| Colors save host upper bound | 3053.4 ms | 525.9 ms |
+| Colors provider sectors read | 5410 | 194 |
+| Create user host upper bound | 3117.6 ms | 2045.1 ms |
+
+Host load varied. Login and launch did not show a corresponding improvement;
+do not generalize these save results to all desktop latency. The final run with
+both trace features (`20261020T002959149665Z`) measured about 2-3 ms compositor
+CPU per typed character, within 132-136 ms host observations. This does not
+attribute all remaining latency to scheduling: app rendering, IPC and fixture
+overhead are not separately resolved by these spans.
+
+Verification:
+
+- Rust workspace host tests; 16 database-object tests with `--features host`,
+  including shared chunks/pins, corrupt-index refusal without mutation, existing
+  cold-write recovery tests and a cold 64 KiB-cache collection I/O regression;
+  all 36 storage-lab engine tests pass.
+- Userspace clippy, display input tracing and storage trace/recovery feature
+  clippy, formatting, layout (35 Omega / 121 Rust edges), and 17 harness unit
+  tests pass. No kernel/ISA code changed; ARM64 was not rerun for this milestone.
+- Ordinary desktop with both traces passes three app instances, input, switching,
+  saves, protected close, cold reopen and the independent whole-store oracle
+  (536 records): `desktop/20261020T002959149665Z`.
+- Nested desktop passes both boots, inner Notes/Colors persistence, recursive
+  dirty-close refusal, funding refusal and outer isolation:
+  `desktop/20261020T003211305619Z`.
+- `run.py --matrix-desktop-test --release --timeout 120` passes stalled-provider
+  isolation, expired request refusal, lost acknowledgement reconciliation,
+  replacement, focus/clipping and cold reopen; artifacts in `matrix-desktop-test`.
+
+Next: resource accounting and funding negotiation, then nested background/picker
+recovery and layout reflow. Keep timing evidence alongside those changes rather
+than raising capacities blindly. Initial-user creation and login remain visible
+costs worth separating further. Previous unresolved NO_MEMORY and intermittent
+ATA reports remain open; the deliberately oversized cache trial above is a
+separate, reproducible and reverted experiment. All guest runs used disposable
+images; the interactive `cathedral-storage.raw` was untouched.

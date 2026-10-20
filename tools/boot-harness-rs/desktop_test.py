@@ -11,6 +11,7 @@ import time
 import capture
 import database_image
 import disk_image
+import desktop_timing
 import pointer_test
 import run as harness
 
@@ -21,6 +22,7 @@ ROOT = HERE.parents[1]
 def desktop(stream, output, serial, reboot, expected_absolute=True, fill_users=False, service_imports=None, nested=False, nested_saved=False, deep=False, nested_desktop=False):
     assert 'Cathedral: object storage ready' in serial
     position = [40, 40]
+    timings = desktop_timing.Timings(output, reboot)
     font = bytes.fromhex((ROOT / 'source-rs/platform/libraries/bitmap-font/font.hex').read_text())
 
     def send(events):
@@ -107,12 +109,13 @@ def desktop(stream, output, serial, reboot, expected_absolute=True, fill_users=F
         # No deliberate key delay; scan polling/capture overhead remains included.
         samples = []
         for char in 'xyz':
-            start = time.perf_counter()
-            send([{'type': 'key', 'data': {'down': down, 'key': {'type': 'qcode', 'data': char}}}
-                  for down in (True, False)])
-            text += char
-            note(text, dirty=True)
-            samples.append(round((time.perf_counter() - start) * 1000, 1))
+            with timings.step('type-character'):
+                start = time.perf_counter()
+                send([{'type': 'key', 'data': {'down': down, 'key': {'type': 'qcode', 'data': char}}}
+                      for down in (True, False)])
+                text += char
+                note(text, dirty=True)
+                samples.append(round((time.perf_counter() - start) * 1000, 1))
         import json
         (output / 'input-latency.json').write_text(json.dumps({'qmp_to_observed_text_ms': samples}, indent=2))
         print(f'Input-to-observed-text upper bounds (QMP + capture included): {samples} ms')
@@ -191,7 +194,9 @@ def desktop(stream, output, serial, reboot, expected_absolute=True, fill_users=F
     # The template is hidden. Only user tiles and an add-user tile are visible.
     if not reboot:
         tile_label(*user_tile(0,1),'NEW USER')
-        click_user_tile(0,1)
+        with timings.step('create-user'):
+            click_user_tile(0,1)
+            tile_label(*user_tile(0,2),'USER 1')
     total = 2
     if fill_users:
         assert reboot
@@ -211,10 +216,11 @@ def desktop(stream, output, serial, reboot, expected_absolute=True, fill_users=F
         key('right')
         tile_label(*user_tile(2,3),'USER 3')
     shutil.copyfile(output / 'display.png', output / 'user-picker.png')
-    click_user_tile(0,total)
-    tile_label(56,48,'NOTES')
-    tile_label(56,168,'COLORS')
-    tile_label(56,288,'SPLIT')
+    with timings.step('enter-user'):
+        click_user_tile(0,total)
+        tile_label(56,48,'NOTES')
+        tile_label(56,168,'COLORS')
+        tile_label(56,288,'SPLIT')
     # Check the entire old tile band, not a background pixel between avatars.
     # No picker process/control connection survives into the user workspace.
     stopped = 'Cathedral desktop: picker stopped; loading user launcher'
@@ -240,7 +246,7 @@ def desktop(stream, output, serial, reboot, expected_absolute=True, fill_users=F
         return
     if not reboot and not service_imports:
         import multitask_test
-        multitask_test.exercise(click_chrome, click, key, note, focus_app, app_close, dialog, choose_close, color, measure_input)
+        multitask_test.exercise(click_chrome, click, key, note, focus_app, app_close, dialog, choose_close, color, measure_input, timings)
     click_chrome(1)
     if service_imports:
         note('', temporary=True)
@@ -310,17 +316,20 @@ def desktop(stream, output, serial, reboot, expected_absolute=True, fill_users=F
     note('hello cathedral two',dirty=True)
     key('f3')
     tabs(2,1)
-    key('f1')
-    note('hello cathedral two')
+    with timings.step('save-note'):
+        key('f1')
+        note('hello cathedral two')
     key('f4')
     note('hello cathedral')
     app_close()
     color('101827')
-    click_chrome(2)
-    color('315ca8')
+    with timings.step('launch-colors'):
+        click_chrome(2)
+        color('315ca8')
     focus_app()
-    key('ret')
-    color('d18b35')
+    with timings.step('save-color'):
+        key('ret')
+        color('d18b35')
     app_close()
     color('101827')
     for _ in range(3):
@@ -355,7 +364,7 @@ def desktop(stream, output, serial, reboot, expected_absolute=True, fill_users=F
     print('PASS: user tiles, absolute/relative clicks, app tiles, save/discard/cancel and persistent replacement')
 
 
-def run(timeout, trace_storage=False, relative_pointer=False, service_imports=None, nested=False, deep=False, nested_desktop=False):
+def run(timeout, trace_storage=False, relative_pointer=False, service_imports=None, nested=False, deep=False, nested_desktop=False, trace_input=False):
     output = harness.BUILD / 'desktop' / datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S%fZ')
     output.mkdir(parents=True)
     # Exact default composition, with a separate build output so a regression
@@ -365,6 +374,8 @@ def run(timeout, trace_storage=False, relative_pointer=False, service_imports=No
     build = [sys.executable, str(HERE / 'run.py'), '--release', '--build-only', '--profile', str(profile)]
     if trace_storage:
         build.append('--trace-storage')
+    if trace_input:
+        build.append('--trace-input')
     subprocess.run(build, cwd=ROOT, check=True)
     shutil.copytree(harness.BUILD / 'desktop-check-interactive/esp', output / 'esp')
     path = output / 'guest.raw'
@@ -403,7 +414,7 @@ def run(timeout, trace_storage=False, relative_pointer=False, service_imports=No
     for boot in (1, 2):
         capture.run(command, output, timeout, flags, ready_marker='Cathedral desktop: ready; choose a user',
                     verify=lambda stream, output, serial: desktop(stream, output, serial, boot == 2, not relative_pointer, service_imports=service_imports, nested=nested, nested_saved=boot == 2, deep=deep, nested_desktop=nested_desktop))
-        for name in ('serial.log', 'qemu.log', 'display.png'):
+        for name in ('serial.log', 'qemu.log', 'display.png', 'boot-timing.json'):
             shutil.copyfile(output / name, output / f'boot-{boot}-{name}')
         contents = path.read_bytes()
         database_image.prepare(path, programs, migration, app_close=True, realm_programs=harness.realm_programs(profile, True))
@@ -442,7 +453,8 @@ if __name__ == '__main__':
     parser.add_argument('--nested', action='store_true', help='exercise the installed alternative Split matrix')
     parser.add_argument('--deep', action='store_true', help='also enter Split inside Split and check bounded admission')
     parser.add_argument('--trace-storage', action='store_true', help='build with storage phase traces in the serial log')
+    parser.add_argument('--trace-input', action='store_true', help='include input and compositor CPU traces')
     args = parser.parse_args()
     if args.timeout <= 0:
         parser.error('timeout must be positive')
-    run(args.timeout, args.trace_storage, args.relative_pointer, args.service_imports, args.nested or args.deep, args.deep, args.nested_desktop)
+    run(args.timeout, args.trace_storage, args.relative_pointer, args.service_imports, args.nested or args.deep, args.deep, args.nested_desktop, args.trace_input)

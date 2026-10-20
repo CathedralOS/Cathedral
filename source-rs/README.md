@@ -21,6 +21,10 @@ See [controls and executable routes](distribution/README.md).
 `python tools/boot-harness-rs/desktop_test.py` tests this same default composition,
 including three independent Notes drafts, capacity refusal, switching and close.
 It records QMP-to-observed-text latency upper bounds in `input-latency.json`.
+Add `--trace-storage --trace-input` for provider I/O, storage phase and compositor
+CPU samples alongside host observations of boot, login, launches, typing,
+switching and saves. See [desktop timing interpretation](../tools/boot-harness-rs/README.md#ordinary-desktop-timings)
+before comparing these measurements.
 
 **Split** runs two independently saved Notes. Its **DEEPER** button enters another
 copy of that matrix in a separate saved realm; unsaved work prevents replacement.

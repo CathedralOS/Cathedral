@@ -91,9 +91,13 @@ revisions of any object, and a pinned revision stays readable after its object i
 deleted. Collection derives reachability from every current head and both pins
 under one writer and removes at most eight records per immediate commit. A pass
 reads only metadata: it marks chunks by the digests their live manifests name
-and sweeps them through a key-only chunk index, never reading or re-hashing
-chunk bytes, so a root holding programs costs a write no more than a root of
-notes; reads authenticate chunks when they are used. Obsolete events are retired
+and sweeps them through a key-only chunk index. It does not fetch or hash payload
+entries; underlying engine pages can still contain neighboring payload data.
+Work grows with live heads, manifests and distinct chunk references, so installed
+programs do affect save cost. Chunk-index presence is validated in one ordered scan
+before any deletions, avoiding repeated random lookups for shared chunks. Pinning
+uses the same validation before committing its new reference. Reads authenticate
+chunk contents when they are used. Obsolete events are retired
 before manifests and chunks so a pin between passes cannot resurrect a partially
 collected revision. It frees engine pages for reuse; it does not shrink the file.
 The exported `collect_records` applies that same bounded pass to a caller-owned

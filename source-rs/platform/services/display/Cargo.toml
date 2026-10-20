@@ -26,6 +26,7 @@ cathedral-user-runtime.workspace = true
 bootstrap-probes = []
 lab = []
 recovery-lab = []
+trace-input = []
 
 [lints]
 workspace = true

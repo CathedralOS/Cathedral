@@ -396,8 +396,28 @@ funding, exhaustion and fault reclamation, an acknowledged live-engine commit,
 QEMU kill, cold guest recovery and independent host verification. It creates fresh
 guarded images and never uses the ordinary session disk.
 
-The installed **Split** program opens two temporary Notes in an independently
-arranged matrix. Its children have no persistence service. Run
+The installed **Split** program opens two persistent Notes in an independently
+arranged matrix, each with its own scoped realm. Run
 `python tools/boot-harness-rs/desktop_test.py --nested` for its mouse/keyboard,
 close, live-resize, repeated teardown and cold-boot checks. This uses disposable
 media and a private ESP; the saved interactive disk is untouched.
+
+## Ordinary desktop timings
+
+`python tools/boot-harness-rs/desktop_test.py --trace-storage --trace-input`
+drives the normal installed desktop on a disposable image through two boots.
+The test records user creation/login, Notes launches, typing, switching and saves.
+Use `python tools/boot-harness-rs/desktop_timing.py <artifact-directory>` for a
+compact report. `boot-N-latency.json` holds host observations and matched storage
+and compositor samples; `boot-N-boot-timing.json` separates QEMU launch-to-QMP
+from QMP-to-ready-marker. Build/install time is outside those boot measurements.
+
+Host observations include input spacing, QMP and screenshot polling; they are
+upper bounds, not service CPU benchmarks or latency guarantees. Storage samples
+include provider CPU, nominal 100-Hz ticks, sector/flush/poll counts and nested
+collection/commit/extent phases. Nested phases must not be added to the enclosing
+provider total. Compositor samples cover redraw through framebuffer output. They
+exclude app bitmap generation, matrix IPC and scheduling. Trace logging perturbs
+execution; absent spans mean no measurement, not proof of zero work. CPU values
+are compared only within the same producer; no scheduler time is inferred by
+subtracting unrelated clocks. Normal F5 builds omit these trace features.

@@ -53,6 +53,12 @@ the last reader releases them. Profiles fund both explicitly: 128 private pages
 leave room for a 64-page reply beside the heap, and 64 reader pages take the
 largest publication.
 
+The engine cache is 64 KiB within the existing 56-page heap. A larger cache is
+not free capacity: the engine also holds writer and allocator state. A 128 KiB
+cache exhausted this heap during the desktop template copy. The 64 KiB setting
+and ordered chunk-index validation reduce collection I/O; neither changes the
+immediate durability barrier or permits reporting a save before commit.
+
 Proofs, from the repository root:
 
 ```powershell

@@ -123,6 +123,43 @@ fn named_creation_commits_content_indexes_and_quota_or_nothing() {
 }
 
 #[test]
+fn shared_chunk_index_scan_preserves_pins_and_rejects_missing_entries_before_mutation() {
+    let db = database();
+    let store = Store::open(&db).unwrap();
+    let mut body = vec![7; CHUNK_BYTES * 3];
+    let first = store.publish(0, 0, 0, &body, 0).unwrap();
+    body[CHUNK_BYTES * 2] = 9;
+    let second = store.publish(0, 0, 0, &body, 0).unwrap();
+    store.pin(0, first.id, 1, 0).unwrap();
+    store.delete(0, first.id, 1).unwrap();
+    collect(&store, 0);
+    let mut out = vec![0; body.len()];
+    store.read(0, second.id, 1, 0, &mut out).unwrap();
+    assert_eq!(out, body);
+    store.read_pinned(0, 0, first.id, 1, 0, &mut out).unwrap();
+    assert!(out.iter().all(|&byte| byte == 7));
+    accounted(&db, 0);
+
+    // Corrupt the shared index, leaving the actual chunk and both manifests.
+    let digest = cathedral_content_layout::digest(
+        cathedral_content_layout::CHUNK_DOMAIN,
+        &body[..CHUNK_BYTES],
+    );
+    let tx = db.begin_write().unwrap();
+    {
+        let mut table = tx.open_table(TABLE).unwrap();
+        table
+            .remove(records::key(0, b'k', &digest).as_slice())
+            .unwrap();
+    }
+    tx.commit().unwrap();
+    let before = snapshot(&db);
+    assert!(matches!(store.collect(0), Err(Error::Corrupt)));
+    assert_eq!(store.pin(0, second.id, 1, 1), Err(Error::Corrupt));
+    assert_eq!(snapshot(&db), before);
+}
+
+#[test]
 fn refusals_abort_every_record_and_other_roots_stay_private() {
     let db = database();
     let store = Store::open(&db).unwrap();

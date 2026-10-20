@@ -121,6 +121,8 @@ impl Compositor {
         if !rect.valid() {
             return;
         }
+        #[cfg(feature = "trace-input")]
+        cathedral_user_runtime::time::trace("compositor-redraw-begin");
         self.stats[3] += 1;
         let images = core::array::from_fn(|i| {
             self.images[i]
@@ -137,6 +139,8 @@ impl Compositor {
                 self.output.row(x, y, row);
             }
         }
+        #[cfg(feature = "trace-input")]
+        cathedral_user_runtime::time::trace("compositor-redraw-end");
     }
 }
 

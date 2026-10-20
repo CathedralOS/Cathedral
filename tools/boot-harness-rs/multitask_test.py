@@ -1,8 +1,9 @@
 """Multiple instances in the normal F5 desktop; no fixture-only app behavior."""
-def exercise(launch, click, key, note, focus, close, dialog, choose_close, color, measure):
+def exercise(launch, click, key, note, focus, close, dialog, choose_close, color, measure, timings):
     for word in ('one', 'two', 'three'):
-        launch(1)
-        note('')
+        with timings.step('launch-notes'):
+            launch(1)
+            note('')
         focus()
         for char in word:
             key(char)
@@ -12,8 +13,9 @@ def exercise(launch, click, key, note, focus, close, dialog, choose_close, color
     launch(1)
     note('three', dirty=True)
     for index, word in enumerate(('one', 'two', 'three')):
-        click(90, 24 + 504 + index * 32 + 16)
-        note(word, dirty=True)
+        with timings.step('switch-notes'):
+            click(90, 24 + 504 + index * 32 + 16)
+            note(word, dirty=True)
     # Chrome's close requests LOSS, and cannot silently discard a draft.
     click(190, 24 + 504 + 16)
     note('one', dirty=True)
