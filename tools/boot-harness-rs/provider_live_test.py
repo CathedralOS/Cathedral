@@ -33,16 +33,16 @@ def exercise(stream, folder, mode, saved=None):
         return data[(y * width + x) * 3:(y * width + x) * 3 + 3].hex()
 
     def bitmap(data):
-        return b''.join(data[((44 + offset_y + y) * width + 242) * 3:((44 + offset_y + y) * width + 422) * 3] for y in range(64))
+        return b''.join(data[((28 + offset_y + y) * width + 18) * 3:((28 + offset_y + y) * width + 198) * 3] for y in range(64))
 
     def header(data):
-        return pixel(data, 237, 34 + offset_y)
+        return pixel(data, 13, 18 + offset_y)
 
     def text(data, value, y):
         for i, ch in enumerate(value):
             for row, bits in enumerate(font[(ord(ch) - 32) * 7:(ord(ch) - 31) * 7]):
                 for col in range(5):
-                    if (pixel(data, 242 + i * 12 + col * 2, y + row * 2) == 'ffffff') != bool(bits & (1 << (4 - col))):
+                    if (pixel(data, 18 + i * 12 + col * 2, y + row * 2) == 'ffffff') != bool(bits & (1 << (4 - col))):
                         return False
         return True
 
@@ -79,24 +79,24 @@ def exercise(stream, folder, mode, saved=None):
         click(448, 154)
 
     def cancel_close(draft):
-        click(width - 38, 34)
-        scan(lambda d, _: text(d, 'SAVE ERROR', 44), 'failed save protects app close')
-        click(278, 100)
+        click(width - 22, 18)
+        scan(lambda d, _: text(d, 'SAVE ERROR', 28), 'failed save protects app close')
+        click(54, 84)
         focus()
         scan(lambda d, _: bitmap(d) == draft and header(d) == '993f46', 'Cancel retains draft')
 
     click((width - 280) // 2 + 64, height // 2)
-    scan(lambda d, _: pixel(d, 100, 70) == 'd9e4ef', 'user launcher')
-    click(120, 336 if nested else 96)
+    scan(lambda d, _: pixel(d, 32, height-56) == 'd6e5ef', 'user launcher')
+    click(152 if nested else 40, height-48)
     if mode == 'deep':
-        scan(lambda d, _: pixel(d, 237, 66) == '27664a', 'outer Notes loaded')
-        click(width-24-256+130, 34)
+        scan(lambda d, _: pixel(d, 13, 50) == '27664a', 'outer Notes loaded')
+        click(width-8-256+130, 18)
         scan(lambda d, s: 'nested matrix admitted in separate realm' in s, 'deeper matrix admitted')
     scan(lambda d, _: header(d) == '27664a', 'Notes loaded')
     focus()
     def sibling(data):
-        x = 232 + (width - 24 - 232 - 12) // 2 + 12 + 10
-        return b''.join(data[((44 + offset_y + y) * width + x) * 3:((44 + offset_y + y) * width + x + 180) * 3] for y in range(64))
+        x = 8 + (width - 8 - 8 - 12) // 2 + 12 + 10
+        return b''.join(data[((28 + offset_y + y) * width + x) * 3:((28 + offset_y + y) * width + x + 180) * 3] for y in range(64))
     initial = bitmap(scan(lambda d, _: header(d) == '27664a', 'initial saved note'))
     if saved is not None:
         assert initial == saved, 'cold-open contents differ'
@@ -140,11 +140,11 @@ def exercise(stream, folder, mode, saved=None):
         scan(lambda d, _: bitmap(d) == draft and header(d) == '993f46', 'offline save does not claim success')
         cancel_close(draft)
         # Trying Save in the close dialog must keep the process and dialog alive.
-        click(width - 38, 34)
-        scan(lambda d, _: text(d, 'SAVE ERROR', 44), 'close warning')
+        click(width - 22, 18)
+        scan(lambda d, _: text(d, 'SAVE ERROR', 28), 'close warning')
         click(278, 68)
-        scan(lambda d, _: text(d, 'SAVE ERROR', 44), 'failed close-save keeps dialog')
-        click(278, 100)
+        scan(lambda d, _: text(d, 'SAVE ERROR', 28), 'failed close-save keeps dialog')
+        click(54, 84)
         focus()
         scan(lambda d, _: bitmap(d) == draft, 'draft after failed close-save')
         time.sleep(2)
@@ -175,7 +175,7 @@ def exercise(stream, folder, mode, saved=None):
         scan(lambda d, _: bitmap(d) == draft and header(d) == '27664a', 'save after reconciliation')
         if nested:
             assert sibling(pointer_test.read_scanout(stream, folder)[2]) == right, 'sibling contents changed'
-        click(width - 38, 34)
+        click(width - 22, 18)
         scan(lambda d, _: header(d) == '101827', 'saved app closes')
         expected = draft
     assert log().count('note-loaded') == loaded, 'Notes task was restarted'

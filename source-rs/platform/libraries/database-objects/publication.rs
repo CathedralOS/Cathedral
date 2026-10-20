@@ -158,7 +158,7 @@ impl Store<'_> {
             object = Object { id, head };
         }
         observe(Stage::Committing);
-        engine(tx.commit())?; // No success response before durable publication.
+        commit(tx)?; // No success response before durable publication.
         observe(Stage::Committed);
         Ok(object)
     }

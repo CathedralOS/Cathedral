@@ -11,7 +11,7 @@ pub(super) fn wait(data: bool, operation: u8, phase: &str, sector: u64) -> Resul
         let status = read(8)?;
         polls += 1;
         let elapsed = now()?.wrapping_sub(start);
-        let state = classify(status, data, elapsed);
+        let state = classify(status, data, elapsed, super::status::deadline(operation));
         if matches!(state, State::Failed | State::Timeout)
             || (state == State::Ready && elapsed >= 10)
         {

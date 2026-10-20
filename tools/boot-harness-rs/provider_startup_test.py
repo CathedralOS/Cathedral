@@ -119,17 +119,17 @@ def exercise(stream, folder, mode):
         user_x = (width - 280) // 2 + 64
         scan(lambda d, l: pixel(d, user_x, height // 2 - 12) == '66ccff', 'picker after explicit provider retry')
         click(user_x, height // 2)
-        scan(lambda d, l: pixel(d, 100, 70) == 'd9e4ef', 'user workspace after retry')
-        click(120, 216)
-        data = scan(lambda d, l: pixel(d, 237, 34) in ('315ca8', 'd18b35') and pixel(d, 264, 66) == 'e5e7eb', 'Colors after retry')
-        color = 'd18b35' if pixel(data, 237, 34) == '315ca8' else '315ca8'
+        scan(lambda d, l: pixel(d, 32, height-56) == 'd6e5ef', 'user workspace after retry')
+        click(96, height - 48)
+        data = scan(lambda d, l: pixel(d, 13, 18) in ('315ca8', 'd18b35') and pixel(d, 40, 50) == 'e5e7eb', 'Colors after retry')
+        color = 'd18b35' if pixel(data, 13, 18) == '315ca8' else '315ca8'
         click(440, 180)
         enter()
-        scan(lambda d, l: pixel(d, 237, 34) == color and pixel(d, 264, 66) == 'e5e7eb', 'save after provider retry')
-        click(width - 38, 34)
-        scan(lambda d, l: pixel(d, 237, 34) == '101827', 'close saved app')
-        click(120, 216)
-        scan(lambda d, l: pixel(d, 237, 34) == color and pixel(d, 264, 66) == 'e5e7eb', 'reopen saved app')
+        scan(lambda d, l: pixel(d, 13, 18) == color and pixel(d, 40, 50) == 'e5e7eb', 'save after provider retry')
+        click(width - 22, 18)
+        scan(lambda d, l: pixel(d, 13, 18) == '101827', 'close saved app')
+        click(96, height - 48)
+        scan(lambda d, l: pixel(d, 13, 18) == color and pixel(d, 40, 50) == 'e5e7eb', 'reopen saved app')
         assert log().count('storage startup attempt') == 2 and log().count('storage startup accepted') == 1
     print(f'PASS: {mode}, visible readiness/recovery, explicit attempts and cleanup; {folder}', flush=True)
 

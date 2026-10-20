@@ -21,10 +21,10 @@ impl Ipc {
         endpoints.resize(MAX_ENDPOINTS + abi::MAX_DYNAMIC_CHANNELS, None);
         let mut ipc = Self {
             epoch,
-            retired_memory: 0,
+            retired_memory: [0; cathedral_kernel_contracts::memory::MAX_READ_HANDLES.div_ceil(64)],
             tasks,
             reservations,
-            alive: (1u16 << tasks) - 1,
+            alive: (1u32 << tasks) - 1,
             endpoints,
             grants: Grants::new(tasks)?,
             initial: [[0; abi::MAX_INITIAL_ENDPOINTS]; MAX_TASKS],

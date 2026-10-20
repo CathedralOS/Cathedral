@@ -45,6 +45,7 @@ pub(super) struct Children {
     requested_surfaces: [Option<u64>; CHILDREN],
     login: bool,
     entered: bool,
+    startup_recovery: startup::Recovery,
     active: Option<usize>,
     running: [Option<(u64, u64)>; CHILDREN], // local ticket, program object
     next_ticket: u64,

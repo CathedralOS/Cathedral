@@ -4,8 +4,8 @@ use cathedral_user_runtime::memory::Private;
 pub const WIDTH: usize = 180;
 pub fn origin(extent: wire::Packet, row: usize) -> (u64, u64) {
     (
-        extent[2].saturating_sub(WIDTH as u64) / 2,
-        [24, 104, 152][row],
+        extent[2].saturating_sub(3 * WIDTH as u64 + 32) / 2 + row as u64 * 196,
+        16,
     )
 }
 pub fn height(row: usize) -> usize {

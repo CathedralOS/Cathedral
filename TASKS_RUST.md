@@ -1,11 +1,9 @@
 # Rust reference OS: tasks and handoff
 
-Updated 2026-10-19 (local date). Current milestone: **saved-disk F5 quota and
-transaction headroom repair**, on baseline `5ccfd810` (owner-mediated resource
-growth and concurrent apps in Nested). Earlier baseline `65d0209e` supplies desktop
-timing and reduced collection I/O. Live funding now travels through immediate
-owners under finite policy ceilings; a fresh nested user can run two leaf apps.
-Verification and remaining limits are recorded in the latest section below.
+Updated 2026-10-19 (local date). Current milestone: **compact taskbar, deeper
+recursive desktops, bounded startup recovery and ordinary storage refusal**, on
+baseline `f3d6d2a2`. The saved-disk quota/headroom repair remains in place. Current
+verification and limitations are recorded in the newest section at the end.
 Previous baseline: atomic named creation and deeper recursive matrices at `102e416c`.
 F5 stages changed program installations in host scratch space, then verifies and
 publishes a result that fits the assigned disk extent. Legacy 4 MiB desktop
@@ -39,9 +37,9 @@ It uses x86-64 QEMU/TCG and UEFI.
   USER** copies the hidden template; click a user to enter its workspace. Up
   to three users fit the current bounded listing; the add tile then disappears.
   No scrolling, passwords or logout yet. Restart QEMU to select another user.
-- The user's left-hand app strip shows **NOTES**, **COLORS**, **SPLIT** and **NESTED** icon tiles. The
+- The user's compact bottom taskbar shows **NOTES**, **COLORS**, **SPLIT** and **NESTED** icon tiles. The
   launcher itself and implementation controls are hidden. Click an app tile,
-  then the app to focus it. Arrows and Enter work in a focused tile strip.
+  then the app to focus it. Arrows and Enter work in a focused taskbar.
 - **SPLIT** opens two persistent Notes side by side in a separate matrix process.
   Click either child to type. Its own top-right X asks both children about drafts;
   UNSAVED NOTES keeps it open. Save/discard drafts with the child apps' X dialogs.
@@ -52,13 +50,13 @@ It uses x86-64 QEMU/TCG and UEFI.
   Further nesting beyond its funding reports **NO ROOM**, retaining live drafts.
 - **NESTED** opens its own user picker and the same desktop, with Notes, Colors
   and another Nested tile. Close other outer apps first. The current budget fits
-  two inner leaf apps through owner-mediated funding; a third app or another
-  nesting level reports **NO ROOM**. Existing inner users keep their old code;
-  create a new inner user to exercise the new implementation. Inner saves survive
-  closing/reopening Nested and reboot. The outer task-row X refuses to close the
-  subtree while an inner app has unsaved work.
-- **SETTINGS** at the bottom of the user strip (or F2 with strip focus) adjusts
-  strip width and outer spacing. Save persists and applies the layout to running
+  three nested desktops beneath the outer one, with Notes at the deepest level.
+  Further launches remain bounded by conserved grants. Existing inner users and
+  templates retain their old code; start a fresh outer user for the new implementation
+  throughout. Inner saves survive closing/reopening Nested and reboot. The outer
+  taskbar X refuses to close the subtree while an inner app has unsaved work.
+- **SETTINGS** at the right of the taskbar (or F2 with taskbar focus) adjusts
+  bar height and outer spacing. Save persists and applies the layout to running
   apps; Cancel discards local edits and returns to apps. Apps retain their state.
   SAVED; RESTART means persistence succeeded but live application was refused.
   Retry Save or restart to use the saved arrangement.
@@ -69,7 +67,7 @@ It uses x86-64 QEMU/TCG and UEFI.
 - Notes and Colors have an upper-right **X**. Clean apps exit; dirty Notes offers
   **SAVE / DISCARD / CANCEL**. A failed save stays open. Colors asks **CLOSE
   ANYWAY** if its last storage result is uncertain. Each app-tile click launches
-  another instance (up to three, subject to funding). Rows beneath the tiles switch
+  another instance (up to three, subject to funding). Buttons beside the icons switch
   instances; their X requests close and refuses unsaved work. App-owned X offers
   Save/Discard/Cancel. Multiple Notes instances share saved data but keep separate drafts.
 - **END APP** above Settings handles an unresponsive app. It warns about unsaved
@@ -2757,3 +2755,89 @@ These remain fixed lab capacities, not a general quota/volume expansion policy.
 Saved inner-user code snapshots are still deliberately retained. The previous
 live-growth milestone's recovery/layout follow-ups remain next; no new owner
 semantic decision was needed for this launch repair.
+
+
+## Compact taskbar and bounded recursive desktop (2026-10-19)
+
+The stock launcher occupies an 80-pixel bottom bar with 48-pixel app icons,
+horizontal running-instance buttons and right-side controls. Defaults use eight
+pixels of margin/gap. Login remains full-screen. Matrix configuration writes
+CTHMAT02; CTHMAT01 decodes to compact geometry while preserving launcher selection,
+key authority and resource fields. Saved version-2 arrangements remain unchanged.
+
+The bounded kernel arena has 31 accounts, 64 boot endpoints, 192 dynamic channels,
+512 sealed reader handles and a maximum 4096 reader-page grant. Both architecture
+heaps are 2 MiB. Memory backing vectors initialize directly in their heap arena;
+the kernel exhaustion probe keeps bookkeeping in its allocations. The enlarged
+spawn record is aligned to 512 bytes so checked single-page copy-in remains valid.
+IPC escrow retirement uses a word array, tested across every 64-bit boundary.
+Abandoned executable references force a return to the boot loop for reclamation
+before the next caller budget query. Their pending counters cover a whole subtree;
+the admission guest checks that physical and grant budgets return to baseline.
+
+The display/matrix surface ceiling is 64. Admission may lend descendant hosts
+up to 24 spare ranks above their declared minimum, within existing disjoint ranges
+and standing ceilings. Funding keeps 256 reader pages at forwarding owners for
+code and image replacement. These changes conserve authority; manifests do not
+mint budgets. Presentation batches reset in place to avoid stack-size-dependent
+teardown faults while dropping all retained readers.
+
+Nested startup recovery is local: one automatic picker retry, then exit to the
+outer taskbar; failed selected-user startup restores its picker; one background
+retry, then a usable desktop without a background process. Outer drafts/siblings
+survive repeated attempts. Saved inner executable/template snapshots are still
+intentionally retained. Use a fresh outer user for new code at every depth; a
+managed recursive upgrade policy is separate work.
+
+Storage distinguishes retained quota refusal from known pre-commit extent refusal.
+For the latter it drops/reopens the poisoned engine before returning capacity,
+keeping authenticated connections. Commit failures remain uncertain and other
+I/O/corruption failures still retire the provider. Opening an existing object table
+uses no writer. The ATA flush deadline is 250 ticks (other phases remain 50), inside
+the existing request deadline; there is no automatic retry of a failed write.
+
+Verification completed during this milestone:
+
+- Workspace host tests, 17 database-object host tests, 38 storage-lab engine tests,
+  19 harness unit tests, userspace/UEFI clippy and layout checks pass.
+- Ordinary desktop, three simultaneous Notes drafts, fourth-launch refusal,
+  close protection, reuse and cold reopen: `desktop/20261020T043449182055Z`.
+- Settings cancel/live geometry/cold persistence: `settings/20261020T043606799710Z`.
+- Launcher crash recovery and startup fallback: `launcher-recovery/20261020T043733935425Z`.
+- Full retained quota, three save refusals, failed close-save, surviving draft,
+  sibling reads and two boots; independent oracle confirms every record unchanged:
+  `storage-capacity/20261020T043905119323Z`. Physical extent poison/reopen and cleanup
+  retry are separately tested against the real redb engine on the host.
+- Nested picker, selected user and background fault injection, repeated cleanup
+  and surviving outer Notes draft: `nested-failures/20261020T044335198301Z`.
+- Three Nested desktops beneath the outer desktop, deepest Notes save/read,
+  recursive dirty-close protection, two subtree close/re-enter cycles, isolation
+  and all checks repeated after cold reboot: `desktop/20261020T044754085311Z`.
+- Deep Split coexistence, drafts, resize, nested close, funding refusal and cold
+  persistence: `desktop/20261020T044435628405Z`. Management original/recovered/revoked
+  authority cases pass: `management/20261020T044828618328Z`.
+- Provider live pre/post-commit recovery: `provider-live/20261020T044643905697Z`;
+  startup crash-once/bad-volume: `provider-startup/20261020T045010333443Z`;
+  all four lifecycle cases: `lifecycle/20261020T045034245325Z`. Other provider
+  fixture variants were not rerun in this milestone.
+- Matrix desktop, admission and IPC guest suites pass, including executable
+  release and reclaimed resource baselines.
+- Full current F5 installation on a copy of the owner's two-user saved disk,
+  Colors launch/save/close/reopen and cold boot: `colors/20261020T045258562388Z`.
+  The upgraded store contains 1188 records and fits the existing assigned extent.
+- ARM64 portability proof and x86-64 smoke pass; smoke used a 90-second host timeout
+  under concurrent load after the default 30-second run timed out late in the suite.
+
+Deep startup remains a performance follow-up: the successful run observed up to
+55 seconds at the third level. An earlier run exceeded the old 45-second scene
+wait; nested checks now allow 120 seconds and report time at each depth. This is
+an observation bound, not a guest deadline change or a latency fix. Concurrent
+desktop tests also exposed shared profile artifacts overwriting each other's
+installed programs before cold verification; each run now has its own profile
+and program paths. The isolated three-level rerun passed both boots.
+
+Next: profile recursive startup and steady-state rendering/IPC costs, deliberate
+upgrades for saved inner code snapshots, and flexible surface funding/live quota
+return. No interactive saved disk has been modified during this milestone; F5
+will install the new stock code normally. A fresh outer user is needed to get
+the current implementation throughout the Nested template chain.

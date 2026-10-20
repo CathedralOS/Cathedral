@@ -194,7 +194,7 @@ impl Store<'_> {
             hierarchy::write(&mut table, root, object.id, head, metadata, &mut charged)?;
             set_quota(&mut table, root, charged)?;
         }
-        engine(tx.commit())?;
+        commit(tx)?;
         Ok(object)
     }
     /// Copy `source` and every descendant under `parent`, preserving shape.
@@ -286,7 +286,7 @@ impl Store<'_> {
             set_quota(&mut table, root, charged)?;
             copied = first.ok_or(Error::Corrupt)?;
         }
-        engine(tx.commit())?;
+        commit(tx)?;
         Ok(copied)
     }
     /// Remove a childless object's head and edge. History and content stay
@@ -312,6 +312,6 @@ impl Store<'_> {
             engine(table.remove(head_key.as_slice()))?;
             set_quota(&mut table, root, charged)?;
         }
-        engine(tx.commit())
+        commit(tx)
     }
 }

@@ -102,7 +102,7 @@ pub unsafe fn prepare_memory(
     let stack_top = stack_bottom + 16 * PAGE;
     let emergency_tops = core::array::from_fn(|i| stack_top + (i as u64 + 1) * 6 * PAGE);
     let heap_start = 0x20_0000_1000;
-    let heap_bytes = 512 * 1024;
+    let heap_bytes = 2 * 1024 * 1024;
     for (base, pages) in [(stack_bottom, 16), (heap_start, heap_bytes / PAGE as usize)]
         .into_iter()
         .chain(emergency_tops.iter().map(|top| (top - 4 * PAGE, 4)))

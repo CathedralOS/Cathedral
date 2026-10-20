@@ -14,7 +14,8 @@ core on a second CPU architecture; the integrated desktop remains x86-64.
 Press **F5** at the repository root, or run
 `python tools/boot-harness-rs/run.py --release --window`. One desktop boots to a
 chooser over the folder of users: NEW copies the template user, clicking a user
-runs it, and its chrome launches Notes, Colors or Split instances; use the running-app rows to switch, click a program to focus it
+runs it, and its bottom taskbar launches Notes, Colors, Split or Nested instances;
+use the running-app buttons to switch, click a program to focus it
 and its upper-right X to close it with draft protection. Notes uses F1 to save/check and
 F2 to reload; Colors uses Enter. Users, notes and colors survive QEMU restarts.
 See [controls and executable routes](distribution/README.md).
@@ -31,6 +32,21 @@ copy of that matrix in a separate saved realm; unsaved work prevents replacement
 An unfunded further level reports **NO ROOM** and retains the live notes.
 `python tools/boot-harness-rs/desktop_test.py --deep --trace-storage` exercises
 this through F5's composition, including repeated close and cold reboot.
+
+`python tools/boot-harness-rs/desktop_test.py --nested-desktop` exercises three
+Nested desktops inside the outer desktop, deepest Notes persistence, dirty-close
+protection and repeated subtree reclamation across reboot. Use a fresh outer user
+for current code at every depth: existing inner templates retain their snapshots.
+The stock bottom bar is 80 pixels high; Settings changes bar height and spacing.
+
+`python tools/boot-harness-rs/nested_failures_test.py PATH_TO_THREE_LEVEL_IMAGE`
+faults the local picker, selected user and background on disposable copies, checking
+bounded retries and a surviving outer draft. Supply the image from the nested test.
+`python tools/boot-harness-rs/storage_capacity_test.py PATH_TO_ONE_USER_IMAGE`
+fills real retained quota on a copy of the completed ordinary desktop fixture,
+checks refused saves and close-save, sibling reads, reload and unchanged records
+after cold reboot. Physical extent refusal/reopen is also covered by the real-engine
+host test in `platform/libraries/database-objects/capacity_tests.rs`.
 
 `python tools/boot-harness-rs/lifecycle_test.py PATH_TO_ONE_USER_IMAGE` copies an
 existing one-user desktop fixture and injects invalid code, an early app fault,
@@ -1096,10 +1112,11 @@ and the sibling Colors program persists its own state across cold reboot.
 
 `python tools/boot-harness-rs/desktop_test.py --nested-desktop --trace-storage`
 uses a disposable image and the ordinary F5 composition. It creates an outer user,
-launches Nested, creates an inner user, runs Notes and Colors concurrently through
-owner-mediated funding, checks repeated refusal and admission after closing an
-app, saves both apps, checks recursive dirty-close refusal, closes the subtree and verifies the outer
-Notes did not inherit its data. It repeats the inner reads after cold reboot.
+enters three successive Nested desktops with separate users, and saves Notes at
+the deepest level. It checks recursive dirty-close refusal, closes and reopens
+the whole subtree twice, and verifies that outer Notes did not inherit its data.
+It repeats the deepest reads and subtree reclamation after cold reboot. Deep
+startup is still slow; this fixture allows 120 seconds for a nested scene.
 See [the distribution route](distribution/README.md#nested-startup-and-scene-switching)
 for code navigation and current funding limits. This test never opens the interactive
 `cathedral-storage.raw`.

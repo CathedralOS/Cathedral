@@ -50,5 +50,8 @@ impl Launch {
         result(arch::call3(number, self.raw(), record.0.as_ptr() as u64, 0)).map(Child)
     }
 }
-#[repr(align(256))]
+// Kernel copy-in accepts a single mapped page. Keep the entire bounded record
+// within one alignment block even when the lab process capacity grows.
+const _: () = assert!(abi::SPAWN_TREE_BYTES <= 512);
+#[repr(align(512))]
 struct Record([u8; abi::SPAWN_TREE_BYTES]);

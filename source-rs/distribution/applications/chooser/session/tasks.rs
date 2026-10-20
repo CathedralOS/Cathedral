@@ -1,7 +1,12 @@
 //! Chrome-local running instances. Tickets are scoped to this matrix, never PIDs.
 use super::*;
-pub const TOP: u64 = 504;
+pub const LEFT: u64 = 240;
+pub const CELL: usize = 144;
+pub const WIDTH: usize = CELL * 3;
 pub const ROW: u64 = 32;
+pub fn top(view: wire::Packet) -> u64 {
+    view[3].saturating_sub(ROW) / 2
+}
 #[derive(Default)]
 pub struct Tasks {
     pub entries: [wire::Packet; 3],
@@ -30,11 +35,13 @@ impl Tasks {
         if event[2] != wire::POINTER
             || event[5] & 1 == 0
             || pressed
-            || !(TOP..TOP + 3 * ROW).contains(&event[4])
+            || !(top(view)..top(view) + ROW).contains(&event[4])
+            || !(LEFT..LEFT + WIDTH as u64).contains(&event[3])
         {
             return None;
         }
-        let entry = self.entries[((event[4] - TOP) / ROW) as usize];
+        let index = ((event[3] - LEFT) / CELL as u64) as usize;
+        let entry = self.entries[index];
         if entry[0] != 0 || entry[1] == 0 {
             return Some("");
         }
@@ -42,25 +49,29 @@ impl Tasks {
         if reply[0] != 0 {
             return Some("TRY AGAIN");
         }
-        let left = view[2].saturating_sub(180) / 2;
-        if event[3] >= left + 156 {
+        let left = LEFT + index as u64 * CELL as u64;
+        if event[3] >= left + 124 {
             let reply = call(parent, [wire::CLOSE, 0, 0, 0, 0, 0, 0, 0]);
             return Some(if reply[0] == 0 { "" } else { "UNSAVED WORK" });
         }
         Some("")
     }
     pub fn paint(&self, realm: &realm::Realm) -> cathedral_user_runtime::memory::Private {
-        let mut pixels = cathedral_user_runtime::memory::Private::allocate(17).unwrap();
+        let mut pixels = cathedral_user_runtime::memory::Private::allocate(
+            (WIDTH * ROW as usize * 4).div_ceil(4096),
+        )
+        .unwrap();
         for (i, entry) in self.entries.iter().enumerate() {
             let color: u32 = if entry[0] == 0 && entry[1] != 0 {
                 if entry[3] != 0 { 0x31506c } else { tiles::CARD }
             } else {
                 tiles::BACKGROUND
             };
-            for pixel in
-                pixels.bytes_mut()[i * 180 * 32 * 4..(i + 1) * 180 * 32 * 4].chunks_exact_mut(4)
-            {
-                pixel.copy_from_slice(&color.to_le_bytes());
+            for y in 0..ROW as usize {
+                for x in i * CELL..(i + 1) * CELL {
+                    let offset = (y * WIDTH + x) * 4;
+                    pixels.bytes_mut()[offset..offset + 4].copy_from_slice(&color.to_le_bytes());
+                }
             }
             if entry[0] == 0 && entry[1] != 0 {
                 let label = realm
@@ -68,9 +79,21 @@ impl Tasks {
                     .iter()
                     .position(|id| *id == entry[2])
                     .map_or(b"APP".as_slice(), |index| &realm.labels[index]);
-                tiles::label(pixels.bytes_mut(), 180, 4, i * 32 + 8, label);
-                tiles::label(pixels.bytes_mut(), 180, 136, i * 32 + 8, &[b'1' + i as u8]);
-                tiles::label(pixels.bytes_mut(), 180, 160, i * 32 + 8, b"X");
+                tiles::label(
+                    pixels.bytes_mut(),
+                    WIDTH,
+                    i * CELL + 4,
+                    8,
+                    &label[..label.len().min(8)],
+                );
+                tiles::label(
+                    pixels.bytes_mut(),
+                    WIDTH,
+                    i * CELL + 108,
+                    8,
+                    &[b'1' + i as u8],
+                );
+                tiles::label(pixels.bytes_mut(), WIDTH, i * CELL + 128, 8, b"X");
             }
         }
         pixels

@@ -106,9 +106,9 @@
         "target": "x86_64-unknown-none",
         "clock": true,
         "argument": 0,
-        "ipc_channels": 84,
-        "private_pages": 640,
-        "shared_pages": 1280
+        "ipc_channels": 180,
+        "private_pages": 1024,
+        "shared_pages": 4096
       },
       {
         "package": "cathedral-storage-service",
@@ -131,7 +131,7 @@
         4
       ]
     ],
-    "dynamic_tasks": 10,
+    "dynamic_tasks": 26,
     "programs": [
       {
         "package": "cathedral-chooser",

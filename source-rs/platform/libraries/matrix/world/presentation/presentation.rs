@@ -32,7 +32,7 @@ impl<T> Batch<T> {
     }
     pub fn bind(&mut self, incarnation: u64, epoch: u64) {
         if (self.incarnation, self.epoch) != (incarnation, epoch) {
-            *self = Self::default();
+            self.reset();
             self.incarnation = incarnation;
             self.epoch = epoch;
         }
@@ -106,8 +106,18 @@ impl<T> Batch<T> {
         Ok(())
     }
     fn clear(&mut self) {
-        self.entries = [const { None }; wire::PRESENT_LIMIT];
+        for entry in &mut self.entries {
+            *entry = None;
+        }
         self.revision = None;
         self.failed = None;
+    }
+    /// Retire this binding in place. Payloads can own reader capabilities; avoid
+    /// constructing a second full arena on a bounded userspace stack.
+    pub fn reset(&mut self) {
+        self.clear();
+        self.incarnation = 0;
+        self.epoch = 0;
+        self.last = 0;
     }
 }

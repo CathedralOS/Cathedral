@@ -21,6 +21,7 @@ impl Children {
             }
             *mode = Startup::Hosted;
         }
+        self.recover_startup(parent, world, server)?;
         // A selected user's admission and picker retirement are sequenced in
         // children/launch.rs, before that user's first placement is published.
         Ok(())
@@ -31,6 +32,7 @@ impl Children {
         world: &mut World,
         server: &mut Server,
     ) -> Result<(), Error> {
+        self.startup_recovery.picker_attempts += 1;
         let parent_keys = parent.grant.keys;
         let (picker, users, mut code) = parent.local_storage(|scope| {
             scope.bind().map_err(|c| Error(c as i64))?;
@@ -48,7 +50,7 @@ impl Children {
                 slot: 0,
                 object: picker,
                 scope: users,
-                argument: 1,
+                argument: if self.startup_recovery.selection_failed { 2 } else { 1 },
                 channels: 0,
                 descendants: 0,
                 cpu: 0,

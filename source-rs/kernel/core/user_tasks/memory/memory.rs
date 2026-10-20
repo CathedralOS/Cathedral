@@ -8,8 +8,12 @@ pub(super) struct Memory {
     pub funding: crate::user_tasks::resources::physical::Funding,
     backing: [alloc::vec::Vec<u64>; wire::MAX_REGIONS],
     /// Kernel references to drop on the boot stack, where frames can be reclaimed.
-    pending: [u8; wire::MAX_REGIONS],
+    pending: [u16; wire::MAX_REGIONS],
+    retirement_pending: bool,
 }
+// A whole subtree can surrender every executable reference before the boot
+// loop settles them. The counter must cover all accounts, not just one task.
+const _: () = assert!(abi::MAX_TASKS * abi::MAX_LAUNCHES <= u16::MAX as usize);
 impl Memory {
     pub fn new(
         tasks: usize,
@@ -36,8 +40,14 @@ impl Memory {
             }
             (&raw mut (*pointer).model).write(model);
             (&raw mut (*pointer).funding).write(funding);
-            (&raw mut (*pointer).backing).write(core::array::from_fn(|_| alloc::vec::Vec::new()));
+            // Initialize each vector directly; a temporary array scales with
+            // task capacity and would overflow the guarded boot stack.
+            let backing = (&raw mut (*pointer).backing).cast::<alloc::vec::Vec<u64>>();
+            for index in 0..wire::MAX_REGIONS {
+                backing.add(index).write(alloc::vec::Vec::new());
+            }
             (&raw mut (*pointer).pending).write([0; wire::MAX_REGIONS]);
+            (&raw mut (*pointer).retirement_pending).write(false);
             Ok(alloc::boxed::Box::from_raw(pointer))
         }
     }
@@ -59,10 +69,18 @@ impl Memory {
     /// Give a kernel reference back; reclamation waits for the boot stack.
     pub fn unref_later(&mut self, region: usize) {
         self.pending[region] += 1;
+        self.retirement_pending = true;
+    }
+    pub fn retirement_pending(&self) -> bool {
+        self.retirement_pending
     }
     /// # Safety
     /// Boot stack with frame custody; no user root is active.
     unsafe fn settle(&mut self, frames: &mut Frames<'_>) {
+        if !self.retirement_pending {
+            return;
+        }
+        self.retirement_pending = false;
         for region in 0..wire::MAX_REGIONS {
             if self.pending[region] == 0 {
                 continue;

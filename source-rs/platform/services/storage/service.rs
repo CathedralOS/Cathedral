@@ -14,7 +14,10 @@ use cathedral_user_runtime::{
 /// The protocol's object bound is the store's; neither may drift alone.
 const _: () = assert!(wire::MAX_BYTES == cathedral_database_objects::MAX_BYTES);
 
-pub fn serve(store: &Store<'_>) {
+pub fn serve(
+    mut db: cathedral_storage_engine::redb::Database,
+    reopen: fn() -> cathedral_storage_engine::redb::Database,
+) -> cathedral_storage_engine::redb::Database {
     let mut server = Server::open_clients(wire::ROOTS).unwrap();
     server.enable_memory();
     #[cfg(feature = "recovery-lab")]
@@ -26,6 +29,7 @@ pub fn serve(store: &Store<'_>) {
             Event::Memory(request, object) => (request, Some(object)),
             Event::Disconnected { .. } => continue,
         };
+        let store = Store::open(&db).unwrap();
         let bytes = &request.bytes[..request.len];
         let command = wire::Request::decode(bytes);
         if request.control {
@@ -37,10 +41,10 @@ pub fn serve(store: &Store<'_>) {
                 && command.is_some_and(|r| r == wire::Request::new(wire::CLOSE, 0, 0, 0, 0))
             {
                 server.reply(&request, &[0; 64]).unwrap();
-                return;
+                return db;
             }
             #[cfg(feature = "recovery-lab")]
-            if attachment.is_none() && gate.control(store, &mut server, &request) {
+            if attachment.is_none() && gate.control(&store, &mut server, &request) {
                 continue;
             }
             server
@@ -68,16 +72,16 @@ pub fn serve(store: &Store<'_>) {
         {
             Err(abi::TIMED_OUT)
         } else {
-            scoped(store, root, r)
+            scoped(&store, root, r)
         };
         if let Err(code) = authority {
             drop(attachment);
             server.reply(&request, &wire::error(code)).unwrap();
         } else if matches!(r.op, wire::BULK | wire::BULK_PIN) && attachment.is_none() {
-            super::bulk::reply(store, root, r, &mut server, &request);
+            super::bulk::reply(&store, root, r, &mut server, &request);
         } else {
             let mut response = [0; 64];
-            let result = dispatch(store, root, r, attachment.as_mut(), &mut response);
+            let result = dispatch(&store, root, r, attachment.as_mut(), &mut response);
             // Release the reader grant before replying: synchronous callers can
             // release/reuse their pages immediately after observing completion.
             drop(attachment);
@@ -85,6 +89,14 @@ pub fn serve(store: &Store<'_>) {
             gate.wait(2, r.op, root);
             let bytes = match result {
                 Ok(()) => response,
+                Err(Error::ReopenCapacity) => {
+                    // The uncommitted writer and attachment are gone. Keep the
+                    // service's authenticated connections while recovering redb.
+                    drop(db);
+                    db = reopen();
+                    write(b"Cathedral storage: capacity refused; engine reopened\n").unwrap();
+                    wire::error(abi::NO_MEMORY)
+                }
                 Err(error) => wire::error(status(error)),
             };
             server.reply(&request, &bytes).unwrap();

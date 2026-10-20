@@ -5,8 +5,8 @@ pub const WIDTH: usize = 160;
 pub const HEIGHT: usize = 64;
 pub fn origin(extent: wire::Packet, row: usize) -> (u64, u64) {
     (
-        extent[2].saturating_sub(WIDTH as u64) / 2,
-        24 + row as u64 * 80,
+        extent[2].saturating_sub(3 * WIDTH as u64 + 32) / 2 + row as u64 * 176,
+        8,
     )
 }
 pub fn hit(extent: wire::Packet, x: u64, y: u64) -> Option<usize> {
@@ -39,11 +39,11 @@ pub fn paint(editor: &Editor, row: usize) -> Private {
         WIDTH,
         4,
         2,
-        [b"APP STRIP".as_slice(), b"SPACING", b"SAVE LAYOUT"][row],
+        [b"BAR HEIGHT".as_slice(), b"SPACING", b"SAVE LAYOUT"][row],
     );
     if row < 2 {
         let value = if row == 0 {
-            editor.draft.launcher_width
+            editor.draft.launcher_height
         } else {
             editor.draft.margin
         };

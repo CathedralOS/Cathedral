@@ -75,29 +75,29 @@ def exercise(stream, output, serial, mode):
         click(width // 2, height // 2)
     else:
         click(user_x, height // 2)
-    scan(lambda d: pixel(d, 100, 70) == 'd9e4ef', 'launcher available')
+    scan(lambda d: pixel(d, 32, height-56) == 'd6e5ef', 'launcher available')
     if mode != 'user-fault':
         for attempt in range(1, 4):
-            click(120, 96)
+            click(40, height - 48)
             expected = ('CANNOT OPEN',) if mode == 'bad-program' else ('CANNOT OPEN', 'APP STOPPED') if mode == 'early-fault' else ('APP STOPPED',)
-            scan(lambda d: any(text(d, 30, height - 72, message) for message in expected)
-                 and pixel(d, 237, 34) == '101827', 'failed app leaves launcher usable',
+            scan(lambda d: any(text(d, width - 192, height - 56, message) for message in expected)
+                 and pixel(d, 13, 18) == '101827', 'failed app leaves launcher usable',
                  attempt if mode in ('early-fault', 'app-fault') else 0)
-    click(120, 216)
-    data = scan(lambda d: pixel(d, 237, 34) in ('315ca8', 'd18b35')
-                and pixel(d, 264, 66) == 'e5e7eb', 'Colors starts after repeated failures')
-    original = pixel(data, 237, 34)
+    click(96, height - 48)
+    data = scan(lambda d: pixel(d, 13, 18) in ('315ca8', 'd18b35')
+                and pixel(d, 40, 50) == 'e5e7eb', 'Colors starts after repeated failures')
+    original = pixel(data, 13, 18)
     click(440, 180)
     for down in (True, False):
         capture.command(stream, 'input-send-event', {'events': [
             {'type': 'key', 'data': {'down': down, 'key': {'type': 'qcode', 'data': 'ret'}}}]})
         time.sleep(0.07)
-    scan(lambda d: pixel(d, 237, 34) != original and pixel(d, 264, 66) == 'e5e7eb', 'save after failures')
-    click(width - 38, 34)
-    scan(lambda d: pixel(d, 237, 34) == '101827', 'normal close after failures')
+    scan(lambda d: pixel(d, 13, 18) != original and pixel(d, 40, 50) == 'e5e7eb', 'save after failures')
+    click(width - 22, 18)
+    scan(lambda d: pixel(d, 13, 18) == '101827', 'normal close after failures')
     # A normal exit must not be mislabeled as a crash by a delayed observation.
     time.sleep(1.2)
-    scan(lambda d: not text(d, 30, height - 72, 'APP STOPPED'), 'clean exit receipt')
+    scan(lambda d: not text(d, width - 192, height - 56, 'APP STOPPED'), 'clean exit receipt')
 
 
 def run(source):

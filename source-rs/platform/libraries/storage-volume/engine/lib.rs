@@ -12,6 +12,12 @@ use alloc::string::{String, ToString};
 use cathedral_block_device::Device;
 use cathedral_storage_volume::{BlockRegion, inspect};
 pub use redb;
+/// Internal adapter marker: no device operation was attempted for this growth.
+/// redb poisons its instance even on this refusal; drop and reopen before reuse.
+pub const CAPACITY_REFUSAL: &str = "Cathedral bounded extent: capacity refused before IO";
+pub fn capacity_refusal(error: redb::Error) -> bool {
+    matches!(error, redb::Error::Io(error) if error.to_string() == CAPACITY_REFUSAL)
+}
 use redb::{Database, ReadableDatabase, ReadableTable, TableDefinition};
 
 /// Optional local diagnostics around engine extent changes. No device authority.

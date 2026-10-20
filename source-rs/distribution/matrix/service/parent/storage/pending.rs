@@ -273,11 +273,9 @@ impl Parent {
             // The child must have reader funding; otherwise it gets the same
             // refusal the provider gives an unfunded reader.
             Some(object) => {
-                if server
-                    .reply_memory(&request, &wire::encode(words), &object)
-                    .is_err()
-                {
-                    server.reply(&request, &wire::encode(wire::error(abi::BUSY)))?;
+                if let Err(error) = server.reply_memory(&request, &wire::encode(words), &object) {
+                    time::storage_sample("storage-reader-refused", &[error.0 as u64]);
+                    server.reply(&request, &wire::encode(wire::error(error.0 as u64)))?;
                 }
             }
             None => server.reply(&request, &wire::encode(words))?,

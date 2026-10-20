@@ -218,3 +218,24 @@ fn peer_replacement_discards_escrow_without_rebinding_transferred_channels() {
     ipc.close(0, r).unwrap();
     empty(&ipc);
 }
+
+#[test]
+fn discarded_memory_escrow_is_reported_across_every_retirement_word() {
+    for slot in [
+        0,
+        63,
+        64,
+        127,
+        128,
+        cathedral_kernel_contracts::memory::MAX_READ_HANDLES - 1,
+    ] {
+        let (mut ipc, send, _) = setup();
+        ipc.send_memory(0, send, b"sealed", slot);
+        ipc.close_task(1);
+        assert!(ipc.memory_retirement_pending());
+        let retired = ipc.take_retired_memory();
+        assert_eq!(retired[slot / 64], 1 << (slot % 64));
+        assert_eq!(retired.iter().map(|w| w.count_ones()).sum::<u32>(), 1);
+        assert!(!ipc.memory_retirement_pending());
+    }
+}

@@ -66,83 +66,83 @@ def exercise(stream, output, serial, mode, saved=None):
             time.sleep(0.1)
 
     def bitmap(data):
-        return b''.join(data[((44 + y) * width + 242) * 3:((44 + y) * width + 422) * 3] for y in range(64))
+        return b''.join(data[((28 + y) * width + 18) * 3:((28 + y) * width + 198) * 3] for y in range(64))
 
     def warning():
-        click(120, height - 90)
-        scan(lambda d, _: text(d, 48, 52, 'UNSAVED WORK') and text(d, 78, 136, 'END APP')
-             and text(d, 84, 184, 'CANCEL'), 'explicit loss warning and both choices')
+        click(width - 100, height - 72)
+        scan(lambda d, _: text(d, (width-572)//2+18, height-68, 'UNSAVED WORK') and text(d, (width-572)//2+196+48, height-64, 'END APP')
+             and text(d, (width-572)//2+392+54, height-64, 'CANCEL'), 'explicit loss warning and both choices')
 
     click((width - 280) // 2 + 64, height // 2)
-    scan(lambda d, _: pixel(d, 100, 70) == 'd9e4ef', 'launcher')
-    click(120, 96)
-    scan(lambda d, s: pixel(d, 237, 34) == '27664a' and 'ungranted management denied' in s, 'Notes and denied app authority')
+    scan(lambda d, _: pixel(d, 32, height-56) == 'd6e5ef', 'launcher')
+    click(40, height - 48)
+    scan(lambda d, s: pixel(d, 13, 18) == '27664a' and 'ungranted management denied' in s, 'Notes and denied app authority')
     if saved is not None:
         scan(lambda d, _: bitmap(d) == saved, 'only saved work survives cold reboot')
         return saved
     if mode == 'revoked':
-        click(120, 350)
+        click(232, height-48)
         key('f6')
         scan(lambda d, s: 'management ticket retained' in s, 'ticket before revocation')
     click(440, 180)
     key('z')
-    draft = bitmap(scan(lambda d, _: pixel(d, 237, 34) == '9b7028', 'dirty Notes'))
+    draft = bitmap(scan(lambda d, _: pixel(d, 13, 18) == '9b7028', 'dirty Notes'))
     if mode == 'revoked':
         scan(lambda d, s: 'launcher owner probe applied' in s
-             and not text(d, 78, height - 96, 'END APP'), 'owner revocation removes management visibility')
-        click(120, 350)
+             and not text(d, width - 144, height - 80, 'END APP'), 'owner revocation removes management visibility')
+        click(232, height-48)
         key('f5')
         scan(lambda d, s: 'stale management ticket denied' in s and bitmap(d) == draft, 'revoked ticket cannot stop app')
         key('f8')
-        scan(lambda d, s: 'deliberate launcher failure' in s and pixel(d, 100, 70) == '101827'
+        scan(lambda d, s: 'deliberate launcher failure' in s and pixel(d, 32, height-56) == '101827'
              and bitmap(d) == draft, 'explicit revoke cancels automatic launcher policy')
         click(440, 180)
         key('f1')
-        scan(lambda d, s: pixel(d, 237, 34) == '27664a' and 'launcher recovered' not in s, 'app saves after authority revocation')
-        click(width - 38, 34)
-        scan(lambda d, _: pixel(d, 237, 34) == '101827', 'app-owned close after revocation')
+        scan(lambda d, s: pixel(d, 13, 18) == '27664a' and 'launcher recovered' not in s, 'app saves after authority revocation')
+        click(width - 22, 18)
+        scan(lambda d, _: pixel(d, 13, 18) == '101827', 'app-owned close after revocation')
         return draft
     warning()
     key('ret')  # Cancel is the default keyboard choice.
-    scan(lambda d, s: bitmap(d) == draft and pixel(d, 100, 70) == 'd9e4ef'
+    scan(lambda d, s: bitmap(d) == draft and pixel(d, 32, height-56) == 'd6e5ef'
          and 'managed task stopped' not in s, 'default Cancel preserves the task and draft')
     warning()
-    click(120, 192)  # Explicit pointer Cancel.
-    scan(lambda d, _: bitmap(d) == draft and pixel(d, 100, 70) == 'd9e4ef', 'pointer Cancel')
+    click((width-572)//2+392+90, height-56)  # Explicit pointer Cancel.
+    scan(lambda d, _: bitmap(d) == draft and pixel(d, 32, height-56) == 'd6e5ef', 'pointer Cancel')
     click(440, 180)
     key('f1')
-    saved = bitmap(scan(lambda d, _: pixel(d, 237, 34) == '27664a', 'saved baseline'))
+    saved = bitmap(scan(lambda d, _: pixel(d, 13, 18) == '27664a', 'saved baseline'))
     key('x')
-    draft = bitmap(scan(lambda d, _: pixel(d, 237, 34) == '9b7028', 'unsaved suffix'))
+    draft = bitmap(scan(lambda d, _: pixel(d, 13, 18) == '9b7028', 'unsaved suffix'))
     key('f8')
     scan(lambda d, s: 'deliberate management hang' in s and bitmap(d) == draft, 'non-yielding app')
     if recover:
-        click(120, 350)
+        click(232, height-48)
         key('f8')
         scan(lambda d, s: 'launcher recovered; retry consumed' in s
-             and pixel(d, 100, 70) == 'd9e4ef' and bitmap(d) == draft, 'new launcher with the existing hung app')
-    click(120, 350)
+             and pixel(d, 32, height-56) == 'd6e5ef' and bitmap(d) == draft, 'new launcher with the existing hung app')
+    click(232, height-48)
     key('f6')
     scan(lambda d, s: 'management ticket retained' in s, 'retain the old task ticket')
     warning()
     shutil.copyfile(output / 'display.png', output / 'confirmation.png')
-    click(120, 144)
-    scan(lambda d, s: pixel(d, 237, 34) == '101827' and s.count('managed task stopped') == 1, 'explicit stop reclaims hung task')
-    click(120, 96)
-    scan(lambda d, s: pixel(d, 237, 34) == '27664a' and bitmap(d) == saved
+    click((width-572)//2+196+90, height-56)
+    scan(lambda d, s: pixel(d, 13, 18) == '101827' and s.count('managed task stopped') == 1, 'explicit stop reclaims hung task')
+    click(40, height - 48)
+    scan(lambda d, s: pixel(d, 13, 18) == '27664a' and bitmap(d) == saved
          and s.count('ungranted management denied') == 2, 'replacement Notes contains only saved work')
-    click(120, 350)
+    click(232, height-48)
     key('f5')
     scan(lambda d, s: 'stale management ticket denied' in s and bitmap(d) == saved
-         and pixel(d, 237, 34) == '27664a', 'old confirmation cannot stop replacement')
-    click(width - 38, 34)
-    scan(lambda d, _: pixel(d, 237, 34) == '101827', 'ordinary app close')
-    click(120, 216)
-    before = pixel(scan(lambda d, _: pixel(d, 237, 34) in ('315ca8', 'd18b35'), 'Colors after force stop'), 237, 34)
+         and pixel(d, 13, 18) == '27664a', 'old confirmation cannot stop replacement')
+    click(width - 22, 18)
+    scan(lambda d, _: pixel(d, 13, 18) == '101827', 'ordinary app close')
+    click(96, height - 48)
+    before = pixel(scan(lambda d, _: pixel(d, 13, 18) in ('315ca8', 'd18b35'), 'Colors after force stop'), 13, 18)
     click(440, 180)
     key('ret')
-    scan(lambda d, _: pixel(d, 237, 34) in ('315ca8', 'd18b35') and pixel(d, 237, 34) != before
-         and pixel(d, 264, 66) == 'e5e7eb', 'Colors still saves')
+    scan(lambda d, _: pixel(d, 13, 18) in ('315ca8', 'd18b35') and pixel(d, 13, 18) != before
+         and pixel(d, 40, 50) == 'e5e7eb', 'Colors still saves')
     return saved
 
 

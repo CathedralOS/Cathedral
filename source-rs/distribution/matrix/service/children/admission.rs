@@ -91,7 +91,9 @@ impl Children {
             profile,
             brokered,
             resources,
-        } = imports::resolve(object, plan.imports)?;
+        } = imports::resolve(object, plan.imports).inspect_err(|error| {
+            refused("matrix-import-refused", plan.slot, error, [0; 3]);
+        })?;
         if brokered && !self.separate_storage {
             return Err(Error(abi::DENIED as i64));
         }
@@ -138,8 +140,9 @@ impl Children {
         let connected_channels = channels
             .checked_add(connection_channels)
             .ok_or(Error(abi::INVALID_ARGUMENT as i64))?;
-        // Reserve geometry before spawning so a nested matrix cannot start with
-        // less presentation capacity than it requested.
+        // Reserve the declared minimum before spawning. Descendant hosts may
+        // receive spare surface capacity within this owner's explicit ceiling;
+        // that capacity is still confined to a disjoint range in our own grant.
         if self.desktop
             && let Some(count) = self.requested_surfaces[plan.slot]
         {
@@ -148,7 +151,20 @@ impl Children {
                 time::storage_sample("funding-surface-refused", &[count, ceiling]);
                 return Err(Error(abi::NO_MEMORY as i64));
             }
-            self.place_surface_range(world, plan.slot, count as usize)
+            let preferred = if descendants != 0 {
+                ceiling
+                    .min(count + 24)
+                    .min(world.backed_surfaces().saturating_sub(8) as u64)
+            } else {
+                count
+            };
+            let allocated = (count..=preferred).rev().find(|&amount| {
+                self.place_surface_range(world, plan.slot, amount as usize)
+                    .is_ok()
+            });
+            let result = allocated.ok_or(abi::NO_MEMORY);
+            self.requested_surfaces[plan.slot] = allocated;
+            result
                 .inspect_err(|_| {
                     time::storage_sample(
                         "funding-surface-refused",
@@ -162,7 +178,9 @@ impl Children {
                 parent,
                 [pages[0], pages[1], connected_channels, slots, physical],
             )?;
-            let executable = Executable::from_object(object, 0)?;
+            let executable = Executable::from_object(object, 0).inspect_err(|error| {
+                refused("matrix-image-refused", plan.slot, error, [0; 3]);
+            })?;
             let result = self.admit(
                 plan.slot,
                 executable,

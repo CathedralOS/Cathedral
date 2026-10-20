@@ -148,32 +148,28 @@ fn frame_failure() {
 
 fn heap_failure() {
     use core::alloc::{GlobalAlloc, Layout};
-    // Cover the largest current 512-KiB heap with bounded stack bookkeeping. Fragments below
+    // Keep the free list inside the allocations, independent of heap size. Fragments below
     // 256 bytes cannot hold a task context (its floating state alone is 512).
     let layout = Layout::from_size_align(256, 16).unwrap();
-    let mut blocks = [core::ptr::null_mut(); 2049];
+    let mut blocks: *mut u8 = core::ptr::null_mut();
     let frames = kernel_tasks::allocated_frames();
     // SAFETY: Keep each successful allocation uniquely owned and free using the
     // same layout. Context switches allocate nothing; the peer's data is stable.
     unsafe {
-        for block in &mut blocks {
-            *block = HEAP.alloc(layout);
+        loop {
+            let block = HEAP.alloc(layout);
             if block.is_null() {
                 break;
             }
+            block.cast::<*mut u8>().write(blocks);
+            blocks = block;
         }
-        assert!(
-            blocks.last().unwrap().is_null(),
-            "heap exhaustion probe too small"
-        );
         assert_eq!(kernel_tasks::spawn(never_run), Err(SpawnError::OutOfHeap));
         assert_eq!(kernel_tasks::allocated_frames(), frames);
-        // Borrow the bookkeeping array: IntoIterator by value copies it through
-        // large debug frames and can exhaust the guarded 64-KiB task stack.
-        for &block in &blocks {
-            if !block.is_null() {
-                HEAP.dealloc(block, layout);
-            }
+        while !blocks.is_null() {
+            let block = blocks;
+            blocks = block.cast::<*mut u8>().read();
+            HEAP.dealloc(block, layout);
         }
     }
 }

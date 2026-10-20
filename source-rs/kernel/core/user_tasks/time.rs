@@ -5,7 +5,7 @@ use cathedral_kernel_contracts::user as abi;
 /// Boot-bound read authority. Reserved child slots require an explicit grant; they never inherit access.
 pub struct Clock {
     handles: [u64; abi::MAX_TASKS],
-    readers: u16,
+    readers: u32,
 }
 impl Clock {
     pub fn new(tasks: usize, readers: &[usize]) -> Result<Self, u64> {

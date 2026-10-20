@@ -45,9 +45,9 @@ struct Endpoint {
 }
 pub struct Ipc {
     epoch: u64,
-    retired_memory: u128,
+    retired_memory: [u64; cathedral_kernel_contracts::memory::MAX_READ_HANDLES.div_ceil(64)],
     tasks: usize,
-    alive: u16,
+    alive: u32,
     endpoints: alloc::vec::Vec<Option<Endpoint>>,
     grants: Grants,
     reservations: [usize; MAX_TASKS],

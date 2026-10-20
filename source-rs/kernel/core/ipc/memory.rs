@@ -32,9 +32,11 @@ impl Ipc {
         self.endpoints[index].as_mut().unwrap().message = Some(message);
     }
     pub fn memory_retirement_pending(&self) -> bool {
-        self.retired_memory != 0
+        self.retired_memory.iter().any(|&word| word != 0)
     }
-    pub fn take_retired_memory(&mut self) -> u128 {
+    pub fn take_retired_memory(
+        &mut self,
+    ) -> [u64; cathedral_kernel_contracts::memory::MAX_READ_HANDLES.div_ceil(64)] {
         core::mem::take(&mut self.retired_memory)
     }
 }

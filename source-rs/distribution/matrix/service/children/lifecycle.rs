@@ -16,14 +16,14 @@ impl Children {
             if let Some(child) = &mut self.slots[slot] {
                 child.disconnected = true;
             }
-            parent.batches[slot] = Default::default();
+            parent.batches[slot].reset();
             world.disconnected(slot);
             return Ok(());
         }
         if self.slots[slot].is_some() {
             self.stop(slot, server, world, parent)?;
         } else {
-            parent.batches[slot] = Default::default();
+            parent.batches[slot].reset();
             world.disconnected(slot);
         }
         Ok(())
@@ -85,6 +85,19 @@ impl Children {
             cathedral_user_runtime::task::Outcome::Cancelled => wire::LAUNCH_STOPPED,
             _ => wire::LAUNCH_FAILED,
         };
+        if let cathedral_user_runtime::task::Outcome::Fault {
+            vector,
+            error,
+            address,
+            instruction,
+        } = outcome
+        {
+            time::storage_sample(
+                "matrix-child-fault",
+                &[slot as u64, vector, error, address, instruction],
+            );
+        }
+        self.startup_retired(slot, state == wire::LAUNCH_FAILED);
         if slot == 0
             && self
                 .launcher

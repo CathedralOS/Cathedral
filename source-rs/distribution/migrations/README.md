@@ -56,9 +56,9 @@ Initial configuration values come from [matrix.conf](../matrix.conf), encoded
 by the host migration. Changing those defaults does not reset an existing
 template or user's saved `Matrix` object.
 
-The lab's fixed 4 MiB volume can run out of physical engine space when adding
-another set of program revisions. This is separate from the logical retained-byte
-quota. Installation reports failure; it does not resize or reformat the image.
+The lab uses an 8 MiB volume and a 2 MiB retained-record quota. F5 backs up
+and grows legacy 4 MiB images offline before installation. Physical extent and
+logical quota exhaustion remain separate refusals; neither reformats the image.
 
 Verification:
 
@@ -102,7 +102,8 @@ input fingerprint and does not open the disk.
 
 The migration raises only recognized old stock resource defaults: launcher pages
 48 to 64 and app pages/readers/surfaces `(32,4,6)` to `(80,64,9)`. It preserves the
-launcher path, strip width, spacing, key policy and custom resource choices. The
+launcher path, key policy and custom resource choices. Version 1 vertical
+geometry decodes as compact bottom-bar geometry; version 2 records bar height. The
 outer desktop now funds a matrix-capable app slot with six channels and two child
 slots. These are bounded distribution defaults, not executable privileges or a
 new persistent configuration format.
@@ -121,7 +122,8 @@ the durable recovery point is the full original disk beside the saved image.
 
 [compact.rs](../../../tools/storage-lab/engines/volume/compact.rs) rebuilds and
 cold-compares every prepared record, refusing a result that exceeds the original
-extent. Only then is it published and verified again. No disk resize is involved.
+extent. Only then is it published and verified again. Compaction itself does
+not resize; the explicit legacy growth step precedes it.
 A failed preparation leaves the source bytes and installation receipt unchanged.
 Publication errors attempt rollback; process/power loss during the offline copy
 requires restoring the synced backup. This is not an atomic disk-image replacement.

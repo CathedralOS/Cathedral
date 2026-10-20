@@ -19,7 +19,7 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 
 
-def desktop(stream, output, serial, reboot, expected_absolute=True, fill_users=False, service_imports=None, nested=False, nested_saved=False, deep=False, nested_desktop=False):
+def desktop(stream, output, serial, reboot, expected_absolute=True, fill_users=False, service_imports=None, nested=False, nested_saved=False, deep=False, nested_desktop=False, user_check=None, allowed_panics=()):
     assert 'Cathedral: object storage ready' in serial
     position = [40, 40]
     timings = desktop_timing.Timings(output, reboot)
@@ -61,10 +61,13 @@ def desktop(stream, output, serial, reboot, expected_absolute=True, fill_users=F
             time.sleep(0.08)
 
     def scan(check, description):
-        deadline = time.monotonic() + 45
+        deadline = time.monotonic() + (120 if nested_desktop else 45)
         while True:
             serial = (output / 'serial.log').read_text(errors='replace')
-            assert 'user panic:' not in serial and 'CATHEDRAL_RS_PANIC' not in serial, serial[-3000:]
+            assert 'CATHEDRAL_RS_PANIC' not in serial and 'initial program stopped' not in serial, serial[-3000:]
+            for report in serial.replace('Cathedral Rust lab: ', '').split('Cathedral user panic:')[1:]:
+                if report.count('\n') >= 2:
+                    assert report.splitlines()[1] in allowed_panics, serial[-3000:]
             width, height, data = pointer_test.read_scanout(stream, output)
             if check(width, data):
                 capture.save_png(output, width, height, data)
@@ -95,7 +98,7 @@ def desktop(stream, output, serial, reboot, expected_absolute=True, fill_users=F
 
     # Selection is centered; entering a user gives it the whole display.
     width, height, _ = pointer_test.read_scanout(stream, output)
-    APP = (232, 24)
+    APP = (8, 8)
 
     def note(text, dirty=False, temporary=False, error=False):
         expected = text_image(text, cursor=True)
@@ -157,13 +160,13 @@ def desktop(stream, output, serial, reboot, expected_absolute=True, fill_users=F
         click(x+64,y+48)
 
     def click_chrome(index):
-        click(120,96+(index-1)*120)
+        click(40+(index-1)*56,height-48)
 
     def focus_app():
         click(APP[0] + 5, APP[1] + 120)
 
     def app_close():
-        click(width - 38, APP[1] + 10)
+        click(width - 22, APP[1] + 10)
 
     def dialog(row, text):
         move(8, 8)
@@ -218,9 +221,8 @@ def desktop(stream, output, serial, reboot, expected_absolute=True, fill_users=F
     shutil.copyfile(output / 'display.png', output / 'user-picker.png')
     with timings.step('enter-user'):
         click_user_tile(0,total)
-        tile_label(56,48,'NOTES')
-        tile_label(56,168,'COLORS')
-        tile_label(56,288,'SPLIT')
+        scan(lambda w,d: rgb(w,d,32,height-56)==bytes.fromhex('d6e5ef'), 'bottom taskbar Notes icon')
+    move(2, 2)
     # Check the entire old tile band, not a background pixel between avatars.
     # No picker process/control connection survives into the user workspace.
     stopped = 'Cathedral desktop: picker stopped; loading user launcher'
@@ -236,6 +238,9 @@ def desktop(stream, output, serial, reboot, expected_absolute=True, fill_users=F
     move(8,8)
     scan(picker_gone, 'old picker cannot redraw after a click')
     shutil.copyfile(output / 'display.png', output / 'user-workspace.png')
+    if user_check is not None:
+        user_check(output, click, key, scan, width, height, reboot)
+        return
     if nested_desktop:
         import nested_desktop_test
         nested_desktop_test.exercise(output, click, key, scan, width, height, reboot)
@@ -342,7 +347,7 @@ def desktop(stream, output, serial, reboot, expected_absolute=True, fill_users=F
         app_close()
         color('101827')
     # Focus the tile strip, then keyboard-select Notes from Colors.
-    click(40,300)
+    click(232,height-48)
     key('up')
     key('ret')
     note('hello cathedral')
@@ -369,7 +374,7 @@ def run(timeout, trace_storage=False, relative_pointer=False, service_imports=No
     output.mkdir(parents=True)
     # Exact default composition, with a separate build output so a regression
     # run does not replace the ESP of an already-running interactive guest.
-    profile = output / 'desktop-check.json'
+    profile = output / f'desktop-check-{output.name}.json'
     shutil.copyfile(ROOT / 'source-rs/distribution/profile.json', profile)
     build = [sys.executable, str(HERE / 'run.py'), '--release', '--build-only', '--profile', str(profile)]
     if trace_storage:
@@ -377,7 +382,7 @@ def run(timeout, trace_storage=False, relative_pointer=False, service_imports=No
     if trace_input:
         build.append('--trace-input')
     subprocess.run(build, cwd=ROOT, check=True)
-    shutil.copytree(harness.BUILD / 'desktop-check-interactive/esp', output / 'esp')
+    shutil.copytree(harness.BUILD / f'{profile.stem}-interactive/esp', output / 'esp')
     path = output / 'guest.raw'
     programs = harness.seeded_programs(profile, True)
     if service_imports:

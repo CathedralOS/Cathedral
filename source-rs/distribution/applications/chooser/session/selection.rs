@@ -25,14 +25,17 @@ impl Selection {
         match event[2] {
             wire::POINTER => {
                 let down = event[5] & 1 != 0;
-                let hit = if !picker && event[4] >= extent[3].saturating_sub(32) {
+                let controls = !picker && event[3] >= extent[2].saturating_sub(184);
+                let hit = if controls && event[4] >= extent[3].saturating_sub(32) {
                     Some(SETTINGS)
-                } else if retry_saves
+                } else if controls
+                    && retry_saves
                     && (extent[3].saturating_sub(48)..extent[3].saturating_sub(32))
                         .contains(&event[4])
                 {
                     Some(RETRY_SAVES)
-                } else if managed
+                } else if controls
+                    && managed
                     && (extent[3].saturating_sub(72)..extent[3].saturating_sub(48))
                         .contains(&event[4])
                 {

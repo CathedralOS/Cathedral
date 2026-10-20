@@ -25,7 +25,7 @@ pub fn configuration() -> Vec<u8> {
         app_pages: number("app_pages"),
         app_readers: number("app_readers"),
         margin: number("margin"),
-        launcher_width: number("launcher_width"),
+        launcher_height: number("launcher_height"),
         gap: number("gap"),
         app_surfaces: number("app_surfaces"),
         keys: matrix::VALID_KEY_MASK,

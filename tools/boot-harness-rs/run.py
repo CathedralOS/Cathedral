@@ -25,7 +25,7 @@ WORKSPACE = REPO / "source-rs"
 BUILD = REPO / "build" / "boot-harness-rs"
 # The kernel contract's per-task caps: private pages fund frames; reader pages
 # pin other tasks' objects, and a matrix hub needs several objects' worth.
-PAGE_LIMITS = (("private_pages", 1024), ("shared_pages", 1536))
+PAGE_LIMITS = (("private_pages", 1024), ("shared_pages", 4096))
 MARKERS = (
     "Cathedral Rust lab: UEFI entry",
     "Cathedral Rust lab: ExitBootServices complete",

@@ -27,6 +27,9 @@ pub fn label(pixels: &mut [u8], width: usize, left: usize, top: usize, text: &[u
     }
 }
 pub fn paint(index: usize, picker: bool, selected: bool, title: &[u8]) -> Private {
+    if !picker {
+        return icon(selected, title);
+    }
     let mut pixels = Private::allocate((WIDTH * HEIGHT * 4).div_ceil(4096)).unwrap();
     for y in 0..HEIGHT {
         for x in 0..WIDTH {
@@ -34,53 +37,16 @@ pub fn paint(index: usize, picker: bool, selected: bool, title: &[u8]) -> Privat
             let mut color = if selected && edge { 0x66ccff } else { CARD };
             let dx = x as i32 - 64;
             let dy = y as i32 - 36;
-            if picker {
-                if index == NEW {
-                    if ((61..67).contains(&x) && (24..68).contains(&y))
-                        || ((42..86).contains(&x) && (43..49).contains(&y))
-                    {
-                        color = 0x91a8c8;
-                    }
-                } else if dx * dx + dy * dy <= 14 * 14
-                    || ((52..76).contains(&y) && dx * dx + (y as i32 - 76).pow(2) < 30 * 30)
+            if index == NEW {
+                if ((61..67).contains(&x) && (24..68).contains(&y))
+                    || ((42..86).contains(&x) && (43..49).contains(&y))
                 {
-                    color = [0x66ccff, 0xc7a2ed, 0x84d4ad][(index - 1) % 3];
+                    color = 0x91a8c8;
                 }
-            } else if title.starts_with(b"NOTES") {
-                if (43..85).contains(&x) && (20..74).contains(&y) {
-                    color = 0xd9e4ef;
-                }
-                if (51..77).contains(&x) && [34, 35, 44, 45, 54, 55, 64, 65].contains(&y) {
-                    color = 0x53718a;
-                }
-            } else if title.starts_with(b"NESTED") {
-                if (26..102).contains(&x) && (16..70).contains(&y) {
-                    color = 0x66ccff;
-                }
-                if (30..98).contains(&x) && (20..66).contains(&y) {
-                    color = CARD;
-                }
-                if (40..92).contains(&x) && (30..60).contains(&y) {
-                    color = 0xc7a2ed;
-                }
-            } else if title.starts_with(b"SPLIT") {
-                if (36..61).contains(&x) && (24..72).contains(&y) {
-                    color = 0x84d4ad;
-                }
-                if (67..92).contains(&x) && (24..72).contains(&y) {
-                    color = 0xc7a2ed;
-                }
-            } else {
-                for (cx, cy, c) in [
-                    (52, 34, 0x66ccff),
-                    (76, 34, 0xc7a2ed),
-                    (52, 58, 0x84d4ad),
-                    (76, 58, 0xeeb46a),
-                ] {
-                    if (x as i32 - cx).pow(2) + (y as i32 - cy).pow(2) <= 12 * 12 {
-                        color = c;
-                    }
-                }
+            } else if dx * dx + dy * dy <= 14 * 14
+                || ((52..76).contains(&y) && dx * dx + (y as i32 - 76).pow(2) < 30 * 30)
+            {
+                color = [0x66ccff, 0xc7a2ed, 0x84d4ad][(index - 1) % 3];
             }
             let at = (y * WIDTH + x) * 4;
             pixels.bytes_mut()[at..at + 4].copy_from_slice(&color.to_le_bytes());
@@ -94,5 +60,58 @@ pub fn paint(index: usize, picker: bool, selected: bool, title: &[u8]) -> Privat
         76,
         &title[..len],
     );
+    pixels
+}
+
+fn icon(selected: bool, title: &[u8]) -> Private {
+    const SIDE: usize = super::layout::ICON;
+    let mut pixels = Private::allocate((SIDE * SIDE * 4).div_ceil(4096)).unwrap();
+    for y in 0..SIDE {
+        for x in 0..SIDE {
+            let mut color: u32 = if selected && y >= SIDE - 3 {
+                0x66ccff
+            } else {
+                CARD
+            };
+            if title.starts_with(b"NOTES") {
+                if (14..34).contains(&x) && (8..36).contains(&y) {
+                    color = 0xd6e5ef;
+                }
+                if (18..30).contains(&x) && [16, 22, 28].contains(&y) {
+                    color = 0x53718a;
+                }
+            } else if title.starts_with(b"NESTED") {
+                if (8..40).contains(&x) && (10..34).contains(&y) {
+                    color = 0x66ccff;
+                }
+                if (11..37).contains(&x) && (13..31).contains(&y) {
+                    color = CARD;
+                }
+                if (17..33).contains(&x) && (18..28).contains(&y) {
+                    color = 0xc7a2ed;
+                }
+            } else if title.starts_with(b"SPLIT") {
+                if (12..23).contains(&x) && (10..35).contains(&y) {
+                    color = 0x84d4ad;
+                }
+                if (26..37).contains(&x) && (10..35).contains(&y) {
+                    color = 0xc7a2ed;
+                }
+            } else {
+                for (cx, cy, c) in [
+                    (18, 17, 0x66ccff),
+                    (30, 17, 0xc7a2ed),
+                    (18, 29, 0x84d4ad),
+                    (30, 29, 0xeeb46a),
+                ] {
+                    if (x as i32 - cx).pow(2) + (y as i32 - cy).pow(2) <= 36 {
+                        color = c;
+                    }
+                }
+            }
+            let at = (y * SIDE + x) * 4;
+            pixels.bytes_mut()[at..at + 4].copy_from_slice(&color.to_le_bytes());
+        }
+    }
     pixels
 }

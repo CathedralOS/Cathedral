@@ -38,8 +38,12 @@ save: repeated whole-root scans and durable commits exceeded the storage IPC
 deadline on retained desktop disks. Later mutations or explicit COLLECT calls
 continue maintenance. A root still at capacity can refuse a write even with
 reclaimable history; that refusal publishes no partial record. Background
-maintenance and quota-pressure scheduling remain future work. An engine or
-corruption failure ends the provider rather than serving uncertain state, and
+maintenance and quota-pressure scheduling remain future work. A known extent
+allocation refusal before commit drops and reopens the engine through
+[database.rs](database.rs), retaining authenticated service connections and
+returning ordinary capacity refusal. Opening the existing object table is read-only.
+Commit errors remain uncertain, including capacity errors during commit. Other engine or
+corruption failures end the provider rather than serving uncertain state, and
 the distribution replaces it and regrants roots.
 
 The `recovery-lab` feature adds the owner-controlled [fault gate](gate.rs),

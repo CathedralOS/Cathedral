@@ -20,7 +20,7 @@ impl Pool {
             .filter(|&i| self.owners[i] == Some(owner) && !self.occupied[i])
             .count()
     }
-    pub fn prepare(&self, owner: usize, descendants: usize) -> Result<(usize, u16), u64> {
+    pub fn prepare(&self, owner: usize, descendants: usize) -> Result<(usize, u32), u64> {
         let mut free = (owner + 1..abi::MAX_TASKS)
             .filter(|&i| self.owners[i] == Some(owner) && !self.occupied[i]);
         let child = free.next().ok_or(abi::NO_MEMORY)?;
@@ -30,7 +30,7 @@ impl Pool {
         }
         Ok((child, mask))
     }
-    pub fn commit(&mut self, owner: usize, child: usize, descendants: u16) {
+    pub fn commit(&mut self, owner: usize, child: usize, descendants: u32) {
         assert_eq!(self.owners[child], Some(owner));
         assert!(!self.occupied[child]);
         self.occupied[child] = true;
@@ -59,7 +59,7 @@ impl Pool {
         }
         let mask = candidates
             .take(needed)
-            .fold(0u16, |bits, i| bits | (1 << i));
+            .fold(0u32, |bits, i| bits | (1 << i));
         for i in 0..abi::MAX_TASKS {
             if mask & (1 << i) != 0 {
                 self.owners[i] = Some(to);

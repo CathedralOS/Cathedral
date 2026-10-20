@@ -45,7 +45,7 @@ fn base() -> Records {
     hierarchy::insert_config(&mut rows, 10, 8).unwrap();
     let mut config = Config::decode(&hierarchy::configuration()).unwrap();
     config.margin = 40;
-    config.launcher_width = 256;
+    config.launcher_height = 256;
     config.app_pages = 32;
     config.app_readers = 4;
     config.app_surfaces = 6;
@@ -79,12 +79,12 @@ fn named_install_preserves_ids_data_layout_and_custom_code() {
     assert_eq!(
         (
             config.margin,
-            config.launcher_width,
+            config.launcher_height,
             config.app_pages,
             config.app_readers,
             config.app_surfaces
         ),
-        (40, 256, 384, 768, 32)
+        (40, 256, 384, 768, 64)
     );
     let once = rows.clone();
     install(&mut rows, &args).unwrap();

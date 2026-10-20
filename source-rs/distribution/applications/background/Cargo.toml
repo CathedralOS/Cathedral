@@ -13,5 +13,7 @@ bench = false
 cathedral-kernel-contracts.workspace = true
 cathedral-platform-contracts.workspace = true
 cathedral-user-runtime.workspace = true
+[features]
+startup-fault = []
 [lints]
 workspace = true

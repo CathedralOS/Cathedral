@@ -10,7 +10,7 @@ class Reservations(unittest.TestCase):
         startup = {"initial": {}, "launches": [{}], "dynamic_tasks": 6}
         self.assertEqual(channel_limits(startup), [4, 4, 0, 0, 0, 0, 0, 0])
         self.assertEqual(cpu_limits(startup), [0] * 8)
-        for value in [-1, 14, True, "2"]:
+        for value in [-1, 30, True, "2"]:
             with self.subTest(value=value), self.assertRaises(ValueError):
                 channel_limits({"initial": {}, "launches": [{}], "dynamic_tasks": value})
     def test_cpu_inheritance_and_ceiling_values(self):
@@ -28,13 +28,13 @@ class Reservations(unittest.TestCase):
         self.assertEqual(channel_limits({"initial": {"ipc_channels": 8}, "launches": [{"ipc_channels": 8}, {}, {}, {}, {}]}), [8, 8, 4, 4, 4, 4])
 
     def test_invalid_values_and_overcommit(self):
-        for value in [-1, 93, True, "4", 1.5, None]:
+        for value in [-1, 189, True, "4", 1.5, None]:
             with self.subTest(value=value), self.assertRaises(ValueError):
                 channel_limits({"initial": {"ipc_channels": value}})
         with self.assertRaises(ValueError):
-            channel_limits({"initial": {"ipc_channels": 8}, "launches": [{"ipc_channels": 12} for _ in range(9)]})
+            channel_limits({"initial": {"ipc_channels": 8}, "launches": [{"ipc_channels": 12} for _ in range(16)]})
         with self.assertRaises(ValueError):
-            channel_limits({"initial": {}, "launches": [{} for _ in range(15)]})
+            channel_limits({"initial": {}, "launches": [{} for _ in range(31)]})
 
 if __name__ == "__main__":
     unittest.main()

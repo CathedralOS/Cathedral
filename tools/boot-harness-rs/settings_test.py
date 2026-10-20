@@ -61,11 +61,11 @@ def exercise(stream, output, serial, boot, recovery=False, render_race=False):
         click(width // 2, height // 2)
     else:
         click((width - 280) // 2 + 64, height // 2)
-    margin, strip = (40, 256) if boot == 2 else (24, 192)
-    center = margin + strip // 2
-    scan(lambda d: pixel(d, center - 20, margin + 46) == 'd9e4ef', 'launcher')
-    click(center, margin + (72 if render_race else 192))
-    app_x = margin + strip + 16
+    margin, bar = (24, 96) if boot == 2 else (8, 80)
+    center = margin + 32
+    scan(lambda d: pixel(d, margin+24, height-margin-bar//2-8) == 'd6e5ef', 'launcher')
+    click(margin+32+(0 if render_race else 56), height-margin-bar//2)
+    app_x = margin
 
     def gate(marker):
         deadline = time.monotonic() + 90
@@ -79,34 +79,34 @@ def exercise(stream, output, serial, boot, recovery=False, render_race=False):
         scan(lambda d: pixel(d, app_x + 5, margin + 10) in ('315ca8', 'd18b35'), 'Colors')
 
     def open_settings():
-        click(center, height - margin - 16)
-        scan(lambda d: text(d, margin + (strip - 160) // 2 + 4, margin + 26, 'APP STRIP'), 'settings panel')
+        click(width-margin-100, height-margin-16)
+        scan(lambda d: text(d, (width-512)//2+4, height-margin-bar+10, 'BAR HEIGHT'), 'settings panel')
 
     def action(row, right):
-        click(margin + (strip - 160) // 2 + (120 if right else 40), margin + 76 + row * 80)
+        click((width-512)//2 + row*176 + (120 if right else 40), height-margin-bar+60)
 
     def values(expected_width, expected_margin):
         def x(value):
-            return margin + (strip - 160) // 2 + (160 - len(str(value)) * 12) // 2
-        scan(lambda d: text(d, x(expected_width), margin + 46, str(expected_width))
-             and text(d, x(expected_margin), margin + 126, str(expected_margin)), 'saved values')
+            return (width-512)//2 + (160 - len(str(value)) * 12) // 2
+        scan(lambda d: text(d, x(expected_width), height-margin-bar+30, str(expected_width))
+             and text(d, x(expected_margin)+176, height-margin-bar+30, str(expected_margin)), 'saved values')
 
     open_settings()
-    values(strip, margin)
+    values(bar, margin)
     if render_race:
         action(0, True)
         action(2, False)
-        strip = 256
-        center = margin + strip // 2
-        app_x = margin + strip + 16
-        scan(lambda d: text(d, margin + (strip - 180) // 2, height - margin - 48, 'APPLIED'), 'resize during creation')
+        bar = 96
+        center = margin + 32
+        app_x = margin
+        scan(lambda d: text(d, width-margin-184, height-margin-48, 'APPLIED'), 'resize during creation')
         gate('render gate image')
         action(1, True)
         action(2, False)
-        margin = 40
-        center = margin + strip // 2
-        app_x = margin + strip + 16
-        scan(lambda d: text(d, margin + (strip - 180) // 2, height - margin - 48, 'APPLIED'), 'resize during bitmap publication')
+        margin = 24
+        center = margin + 32
+        app_x = margin
+        scan(lambda d: text(d, width-margin-184, height-margin-48, 'APPLIED'), 'resize during bitmap publication')
         # Both invalidation paths must actually execute, not just leave a green screen.
         deadline = time.monotonic() + 90
         while True:
@@ -128,32 +128,32 @@ def exercise(stream, output, serial, boot, recovery=False, render_race=False):
     if boot == 1:
         action(0, True)
         action(1, True)
-        values(256, 40)
+        values(96, 24)
         action(2, True)  # CANCEL
         open_settings()
-        values(192, 24)
+        values(80, 8)
         action(0, True)
         action(1, True)
         action(2, False)  # SAVE
         if recovery:
-            scan(lambda d: text(d, margin + (strip - 180) // 2, height - margin - 48, 'SAVE FAILED'), 'lost save acknowledgement')
+            scan(lambda d: text(d, width-margin-184, height-margin-48, 'SAVE FAILED'), 'lost save acknowledgement')
             deadline = time.monotonic() + 45
             while 'storage replaced; explicit grants restored' not in (output / 'serial.log').read_text(encoding='utf-8', errors='replace'):
                 assert time.monotonic() < deadline, 'provider was not restored'
                 time.sleep(0.1)
             action(2, False)  # Reconcile the committed bytes before retrying.
-        margin, strip = 40, 256
-        center = margin + strip // 2
-        app_x = margin + strip + 16
-        data = scan(lambda d: text(d, margin + (strip - 180) // 2, height - margin - 48, 'APPLIED'), 'live layout acknowledgement')
+        margin, bar = 24, 96
+        center = margin + 32
+        app_x = margin
+        data = scan(lambda d: text(d, width-margin-184, height-margin-48, 'APPLIED'), 'live layout acknowledgement')
         if recovery:
             log = (output / 'serial.log').read_text(encoding='utf-8', errors='replace')
             assert log.count('STORAGE_TRACE provider-begin 0 3 ') == 1, 'reconciliation repeated the committed write'
         assert pixel(data, app_x + 5, margin + 10) in ('315ca8', 'd18b35'), 'live layout lost the running Colors app'
-        values(256, 40)
+        values(96, 24)
         shutil.copyfile(output / 'display.png', output / 'settings-panel.png')
     action(2, True)
-    scan(lambda d: pixel(d, center - 20, margin + 46) == 'd9e4ef', 'return to apps')
+    scan(lambda d: pixel(d, margin+24, height-margin-bar//2-8) == 'd6e5ef', 'return to apps')
 
     if boot == 1 and not recovery:
         # Keep a dirty Notes process alive through two more live arrangements.
@@ -169,7 +169,7 @@ def exercise(stream, output, serial, boot, recovery=False, render_race=False):
 
         click(width - margin - 14, margin + 10)  # Close Colors at its new position.
         scan(lambda d: pixel(d, app_x + 5, margin + 10) == '101827', 'resized Colors close')
-        click(center, margin + 72)  # A later launch must use the new standing layout.
+        click(margin+32, height-margin-bar//2)  # A later launch must use the new standing layout.
         scan(lambda d: pixel(d, app_x + 5, margin + 10) == '27664a', 'Notes under new layout')
         click(app_x + 200, margin + 130)
         key('z')
@@ -178,10 +178,10 @@ def exercise(stream, output, serial, boot, recovery=False, render_race=False):
         action(0, True)
         action(1, False)
         action(2, False)
-        margin, strip = 24, 320
-        center = margin + strip // 2
-        app_x = margin + strip + 16
-        scan(lambda d: text(d, margin + (strip - 180) // 2, height - margin - 48, 'APPLIED')
+        margin, bar = 8, 112
+        center = margin + 32
+        app_x = margin
+        scan(lambda d: text(d, width-margin-184, height-margin-48, 'APPLIED')
              and note_bitmap(d) == draft and pixel(d, app_x + 5, margin + 10) == '9b7028', 'dirty note survived resize')
         action(2, True)
         click(app_x + 200, margin + 130)
@@ -191,10 +191,10 @@ def exercise(stream, output, serial, boot, recovery=False, render_race=False):
         action(0, False)
         action(1, True)
         action(2, False)
-        margin, strip = 40, 256
-        center = margin + strip // 2
-        app_x = margin + strip + 16
-        scan(lambda d: text(d, margin + (strip - 180) // 2, height - margin - 48, 'APPLIED')
+        margin, bar = 24, 96
+        center = margin + 32
+        app_x = margin
+        scan(lambda d: text(d, width-margin-184, height-margin-48, 'APPLIED')
              and note_bitmap(d) == draft, 'second live resize preserved edited draft')
         action(2, True)
         click(width - margin - 14, margin + 10)
@@ -206,7 +206,7 @@ def exercise(stream, output, serial, boot, recovery=False, render_race=False):
         scan(lambda d: pixel(d, app_x + 5, margin + 10) == '27664a', 'save after resize')
         click(width - margin - 14, margin + 10)
         scan(lambda d: pixel(d, app_x + 5, margin + 10) == '101827', 'clean Notes close after resize')
-        click(center, margin + 192)
+        click(margin+88, height-margin-bar//2)
         scan(lambda d: pixel(d, app_x + 5, margin + 10) in ('315ca8', 'd18b35'), 'future launch follows final layout')
 
 

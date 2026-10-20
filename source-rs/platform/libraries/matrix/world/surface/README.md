@@ -11,7 +11,7 @@ No ancestor image buffer or process identity is exposed to a child.
 
 ## Capacity and ownership
 
-The root has sixteen backed primitive slots. Owner-only `SURFACE_LIMIT` subdivides
+The current compositor has 64 backed primitive slots. Owner-only `SURFACE_LIMIT` subdivides
 that allowance between direct children; their total cannot exceed the parent's.
 A nested matrix learns only its own allowance through `POLL`, and applies the same
 subdivision rule. Counts do not mint extra capacity at each level. A changed
@@ -90,9 +90,9 @@ subtree, and overlapping it with an outside sibling. The same checks run under
 CPU pressure and after repeated dynamic subtree replacement.
 
 This is a bounded rectangle/immutable-image lab, not a complete compositor API.
-The stock executable still has two direct children; the shared `World<N>` selects
-its capacity independently. The lab has sixteen root primitives and twelve
-process accounts. Text, streaming image updates, active quota redistribution
+The stock executable has five direct child slots (chrome, three apps, background);
+the shared `World<N>` selects its capacity independently. The lab has 64 root
+primitives and 31 process accounts. Rich text, streaming image updates, active quota redistribution
 remain separate work. The desktop now tests explicit root-tree recovery after provider loss. Bounded atomic presentation is
 implemented through BEGIN/stage/COMMIT and the compact rectangle operation below.
 The prior fixed six path keys and two-level rendering encoding are gone;

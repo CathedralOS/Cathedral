@@ -8,7 +8,7 @@ python tools/boot-harness-rs/run.py --release --window
 
 F5 opens a full-screen user picker with a horizontal row of avatar tiles.
 **NEW USER** copies the hidden template; click a user to enter its workspace.
-The user gets an app strip with **Notes**, **Colors**, **Split** and **Nested** tiles and the rest of
+The user gets an bottom taskbar with **Notes**, **Colors**, **Split** and **Nested** tiles and the rest of
 the display for its app. Click the app to focus it. Notes and Colors have an **X**;
 Notes asks **Save / Discard / Cancel** for unsaved work. There is no storage test
 toggle, launcher entry or permanent status text in the ordinary UI.
@@ -21,8 +21,9 @@ services. An unfunded further level reports **NO ROOM** without losing drafts.
 **Nested** starts a scoped copy of the same login/desktop flow inside the app
 area. Create and select an inner user, then run Notes or Colors there. Its files
 stay inside that Nested program's realm. Close it using the outer task-row X;
-any unsaved descendant refuses that close. Owner-mediated funding supports two
-inner leaf apps at a time; a third or another Nested level reports **NO ROOM**. Close other
+any unsaved descendant refuses that close. Owner-mediated funding supports three nested desktops inside the outer one,
+with a leaf app at the deepest level. Further launches remain subject to finite
+process, surface and memory grants; refusal reports **NO ROOM**. Close other
 outer apps before launching Nested. This is a bounded composition proof, without
 authentication, encryption or hardware virtualization.
 
@@ -32,7 +33,7 @@ changes on **Enter**. Arrows and Enter also navigate a focused picker/launcher.
 There is no logout yet; restart QEMU to select another user. The picker handles
 up to three users without scrolling and hides New User at its limit.
 
-Click **SETTINGS** at the bottom of the user's app strip to adjust its width and
+Click **SETTINGS** at the bottom of the user's bottom taskbar to adjust its height and
 outer spacing. **SAVE** persists and applies the layout to running apps; **CANCEL**
 discards local edits and returns to apps. Apps keep their document state while
 rebuilding their local views. A saved layout survives reboot. If applying is
@@ -61,16 +62,19 @@ retry after full cleanup. If root or input still cannot start, display alone sho
 **COULD NOT START / PLEASE RESTART**. If display itself cannot start, the launch
 terminal reports the failed stage and error. These failures never open storage.
 
-If the configured app strip crashes, its matrix attempts one local restart,
+If the configured bottom taskbar crashes, its matrix attempts one local restart,
 preserving the running app and its draft. The replacement keeps the current
 layout. A second crash, or failure to read/admit its replacement, shows
-**LAUNCHER UNAVAILABLE / TRY AGAIN** within the strip. Click Try Again, or focus
+**LAUNCHER UNAVAILABLE / TRY AGAIN** within the bar. Click Try Again, or focus
 that screen and press Enter, to request one more attempt. It preserves the app's
 draft and current layout, and does not replenish automatic retries. A broken
 recovery screen does not restart itself. Apps can still save and close themselves.
 
 Initial stock defaults live in [matrix.conf](matrix.conf);
-installation preserves existing saved arrangements.
+installation preserves saved configuration. Legacy vertical arrangements decode
+as an 80-pixel bottom bar with compact spacing; authority fields stay unchanged.
+Existing inner users/templates retain their executable snapshots. Start a fresh
+outer user to exercise the current recursive desktop throughout.
 
 The default input service negotiates QEMU's absolute virtual mouse so the guest
 cursor follows the host pointer within the window. It falls back to relative
@@ -202,7 +206,7 @@ The [implementation map](../STATUS.md) tracks remaining restrictions. In
 particular this is one chooser over a folder and one app per user at a time,
 not a package installer, general desktop window manager or production filesystem.
 
-[Split](applications/split/README.md) is also installed in the ordinary app strip.
+[Split](applications/split/README.md) is also installed in the ordinary bottom taskbar.
 It demonstrates a different matrix program: two temporary Notes instances, its
 own arrangement and close policy, and no storage offered to its children. The
 stock desktop still owns user selection, its launcher and saved outer layout.

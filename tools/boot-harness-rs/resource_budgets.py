@@ -5,19 +5,19 @@ These fixed lab limits mirror kernel/contracts/user.rs; kernel admission revalid
 def programs(startup):
     launches = startup.get("launches", [startup["launch"]] if startup.get("launch") else [])
     dynamic = startup.get("dynamic_tasks", 0)
-    if type(dynamic) is not int or not 0 <= dynamic <= 14:
-        raise ValueError("dynamic_tasks must be an integer in 0..14")
+    if type(dynamic) is not int or not 0 <= dynamic <= 30:
+        raise ValueError("dynamic_tasks must be an integer in 0..30")
     entries = [startup["initial"], *launches, *({"ipc_channels": 0} for _ in range(dynamic))]
-    if not 1 <= len(entries) <= 15:
-        raise ValueError("resource budgets require 1..15 boot/launch accounts")
+    if not 1 <= len(entries) <= 31:
+        raise ValueError("resource budgets require 1..31 boot/launch accounts")
     return entries
 
 def channel_limits(startup):
     limits = [program.get("ipc_channels", 4) for program in programs(startup)]
-    if any(type(limit) is not int or not 0 <= limit <= 92 for limit in limits):
-        raise ValueError("ipc_channels must be an integer between 0 and 92")
-    if sum(limits) > 96:
-        raise ValueError("IPC channel reservations exceed the 96-channel backing pool")
+    if any(type(limit) is not int or not 0 <= limit <= 188 for limit in limits):
+        raise ValueError("ipc_channels must be an integer between 0 and 188")
+    if sum(limits) > 192:
+        raise ValueError("IPC channel reservations exceed the 192-channel backing pool")
     return limits
 
 def cpu_limits(startup):

@@ -49,7 +49,7 @@ impl Store<'_> {
             engine(table.insert(pin.as_slice(), value.as_slice()))?;
             set_quota(&mut table, root, charged)?;
         }
-        engine(tx.commit())
+        commit(tx)
     }
     pub fn release(&self, root: u8, id: u64, revision: u64, slot: u8) -> Result<()> {
         if slot >= PIN_SLOTS || revision == 0 || id == 0 {
@@ -72,7 +72,7 @@ impl Store<'_> {
             engine(table.remove(pin.as_slice()))?;
             set_quota(&mut table, root, charged)?;
         }
-        engine(tx.commit())
+        commit(tx)
     }
     /// At most eight removals; each ordered metadata scan is bounded by ROOT_QUOTA.
     /// A crash leaves every head/pin closure valid and an exact ledger.
@@ -84,7 +84,7 @@ impl Store<'_> {
             collect_records(&mut table, root)?
         };
         if result.removed != 0 {
-            engine(tx.commit())?;
+            commit(tx)?;
         }
         Ok(result)
     }

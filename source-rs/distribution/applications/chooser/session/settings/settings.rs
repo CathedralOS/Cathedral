@@ -73,12 +73,12 @@ impl Editor {
         self.selected = action;
         match action {
             0 => {
-                self.draft.launcher_width =
-                    self.draft.launcher_width.saturating_sub(64).clamp(192, 320)
+                self.draft.launcher_height =
+                    self.draft.launcher_height.saturating_sub(16).clamp(80, 128)
             }
             1 => {
-                self.draft.launcher_width =
-                    self.draft.launcher_width.saturating_add(64).clamp(192, 320)
+                self.draft.launcher_height =
+                    self.draft.launcher_height.saturating_add(16).clamp(80, 128)
             }
             2 => self.draft.margin = self.draft.margin.saturating_sub(16).clamp(8, 40),
             3 => self.draft.margin = self.draft.margin.saturating_add(16).clamp(8, 40),
@@ -91,7 +91,7 @@ impl Editor {
                                 wire::APPLY_LAYOUT,
                                 extent[1],
                                 self.draft.margin,
-                                self.draft.launcher_width,
+                                self.draft.launcher_height,
                                 self.draft.gap,
                                 0,
                                 0,

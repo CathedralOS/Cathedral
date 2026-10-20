@@ -47,11 +47,11 @@ fn chooser(login: &mut Login, matrix: Pair, extent: [u64; 2], failed: bool) -> R
 
 /// Root slot 1: a user matrix with a launcher and a matrix-capable app slot.
 /// Admission briefly overlaps the picker, so only eleven surfaces are lent
-/// here. `enter` retires the picker before expanding that allowance to fourteen.
+/// here. `enter` retires the picker before lending the full surface allowance.
 pub(crate) fn workspace(width: u64, height: u64) -> [wire::Packet; 3] {
     [
         [wire::LAUNCH_IMAGES, 1, 1, 0, 0, 0, 0, 0],
-        [wire::LAUNCH_POLICY, 1, 576, 1024, 72, 8, 0, 11],
+        [wire::LAUNCH_POLICY, 1, 960, 3584, 168, 24, 0, 11],
         [wire::LAUNCH_PLACE, 1, 0, 0, width, height, KEYS, 0],
     ]
 }
@@ -62,7 +62,7 @@ pub(super) fn enter(matrix: Pair) -> Result<(), u64> {
     // the picker process, surfaces, input and realm binding before any slow
     // storage reads needed to start the user's launcher.
     stop(matrix, 0)?;
-    request(matrix, [wire::SURFACE_LIMIT, 1, 40, 0, 0, 0, 0, 0])?;
+    request(matrix, [wire::SURFACE_LIMIT, 1, wire::MAX_SURFACES as u64, 0, 0, 0, 0, 0])?;
     cathedral_user_runtime::write(b"Cathedral desktop: picker stopped; loading user launcher\n")
         .unwrap();
     request(

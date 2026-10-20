@@ -60,10 +60,10 @@ pub fn prepare(scope: &mut Scope, keys: u64) -> Result<(u64, u64), u64> {
         launcher_pages: 96,
         app_pages: 384,
         app_readers: 768,
-        margin: 24,
-        launcher_width: 192,
-        gap: 16,
-        app_surfaces: 32,
+        margin: 8,
+        launcher_height: 80,
+        gap: 8,
+        app_surfaces: 64,
         keys,
     };
     create(

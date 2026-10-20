@@ -16,12 +16,10 @@ pub fn reply(
 ) {
     let mut bytes = [0; 64];
     match prepare(store, root, r, &mut bytes) {
-        Ok(object) => {
-            if server.reply_memory(request, &bytes, &object).is_ok() {
-                return;
-            }
-            bytes = wire::error(abi::BUSY);
-        }
+        Ok(object) => match server.reply_memory(request, &bytes, &object) {
+            Ok(()) => return,
+            Err(error) => bytes = wire::error(error.0 as u64),
+        },
         Err(status) => bytes = wire::error(status),
     }
     server.reply(request, &bytes).unwrap();
@@ -40,7 +38,8 @@ fn prepare(
         return Err(abi::INVALID_ARGUMENT);
     }
     let offset = usize::try_from(r.argument).map_err(|_| abi::INVALID_ARGUMENT)?;
-    let mut pages = Private::allocate((r.len as usize).div_ceil(4096)).map_err(|_| abi::BUSY)?;
+    let mut pages =
+        Private::allocate((r.len as usize).div_ceil(4096)).map_err(|error| error.0 as u64)?;
     let out = &mut pages.bytes_mut()[..r.len as usize];
     let head = if r.op == wire::BULK_PIN {
         store.read_pinned(root, r.argument as u8, r.object, r.expected, 0, out)
@@ -55,5 +54,5 @@ fn prepare(
         extra: r.len,
     }
     .encode();
-    pages.freeze().map_err(|_| abi::BUSY)
+    pages.freeze().map_err(|error| error.0 as u64)
 }

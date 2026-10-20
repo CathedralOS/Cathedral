@@ -19,7 +19,7 @@ import run as harness
 def exercise(stream, output, serial, mode, saved=None):
     width, height, _ = pointer_test.read_scanout(stream, output)
     font = bytes.fromhex((harness.WORKSPACE / 'platform/libraries/bitmap-font/font.hex').read_text())
-    margin, strip = (24, 320) if saved is not None else (24, 192)
+    margin, bar = (8, 112) if saved is not None else (8, 80)
 
     def log():
         value = (output / 'serial.log').read_text(encoding='utf-8', errors='replace')
@@ -70,40 +70,40 @@ def exercise(stream, output, serial, mode, saved=None):
             time.sleep(0.1)
 
     def bitmap(data):
-        app = margin + strip + 16
+        app = margin
         return b''.join(data[((margin + 20 + y) * width + app + 10) * 3:
                             ((margin + 20 + y) * width + app + 190) * 3] for y in range(64))
 
     def header(data):
-        return pixel(data, margin + strip + 21, margin + 10)
+        return pixel(data, margin + 5, margin + 10)
 
     def focus():
-        click(margin + strip + 216, margin + 130)
+        click(margin + 200, margin + 130)
 
     def settings():
-        click(margin + strip // 2, height - margin - 16)
-        scan(lambda d, _: text(d, margin + (strip - 160) // 2 + 4, margin + 26, 'APP STRIP'), 'settings')
+        click(width-margin-100, height-margin-16)
+        scan(lambda d, _: text(d, (width-512)//2+4, height-margin-bar+10, 'BAR HEIGHT'), 'settings')
 
     def action(row, right):
-        click(margin + (strip - 160) // 2 + (120 if right else 40), margin + 76 + row * 80)
+        click((width-512)//2 + row*176 + (120 if right else 40), height-margin-bar+60)
 
     click((width - 280) // 2 + 64, height // 2)
     if mode == 'startup':
         scan(lambda d, s: s.count('deliberate launcher startup failure') == 2
              and s.count('launcher recovered; retry consumed') == 1
-             and text(d, 72, height // 2 - 40, 'LAUNCHER'), 'startup retry is bounded and fallback is visible')
+             and text(d, width//2-120, height-margin-bar//2-30, 'LAUNCHER'), 'startup retry is bounded and fallback is visible')
         time.sleep(3)
         assert log().count('deliberate launcher startup failure') == 2
         for attempt in (1, 2):
-            click(120, height // 2 + 28)
+            click(width//2, height-margin-bar//2+16)
             scan(lambda d, s: s.count('explicit launcher retry') == attempt
                  and s.count('deliberate launcher startup failure') == 2 + attempt
-                 and text(d, 72, height // 2 - 40, 'LAUNCHER'), 'one startup attempt per explicit retry')
+                 and text(d, width//2-120, height-margin-bar//2-30, 'LAUNCHER'), 'one startup attempt per explicit retry')
             time.sleep(2)
             assert log().count('deliberate launcher startup failure') == 2 + attempt
         return None
-    scan(lambda d, _: pixel(d, margin + strip // 2 - 20, margin + 46) == 'd9e4ef', 'launcher')
-    click(margin + strip // 2, margin + 72)
+    scan(lambda d, _: pixel(d, margin+24, height-margin-bar//2-8) == 'd6e5ef', 'launcher')
+    click(margin+32, height-margin-bar//2)
     scan(lambda d, _: header(d) == '27664a', 'Notes')
     focus()
     if saved is not None:
@@ -117,31 +117,31 @@ def exercise(stream, output, serial, mode, saved=None):
         action(0, True)
         action(1, True)
         action(2, False)
-        margin, strip = 40, 256
-        scan(lambda d, _: text(d, margin + (strip - 180) // 2, height - margin - 48, 'APPLIED')
+        margin, bar = 24, 96
+        scan(lambda d, _: text(d, width-margin-184, height-margin-48, 'APPLIED')
              and bitmap(d) == draft, 'live arrangement before crash')
         action(2, True)
     if mode.startswith('owner-'):
         scan(lambda d, s: 'launcher owner probe applied' in s, 'explicit owner action')
-    # Focus the empty part of the strip so the fault key belongs to the launcher.
+    # Focus the empty part of the bar so the fault key belongs to the launcher.
     if mode != 'owner-stop':
-        click(margin + strip // 2, margin + 490)
+        click(margin+224, height-margin-bar//2)
         key('f7' if mode == 'clean' else 'f8')
     restores = mode == 'recover' or mode.startswith('fallback-')
     expected = 1 if restores else 0
     scan(lambda d, s: s.count('launcher recovered; retry consumed') == expected
-         and pixel(d, margin + strip // 2 - 20, margin + 46) == ('d9e4ef' if restores else '101827')
+         and pixel(d, margin+24, height-margin-bar//2-8) == ('d6e5ef' if restores else '101827')
          and bitmap(d) == draft and header(d) == '9b7028', 'draft retained across launcher termination')
     assert log().count('note-loaded') == 1, 'Notes was reloaded/restarted'
     if mode.startswith('fallback-'):
-        click(120, 354)
+        click(margin+224, height-margin-bar//2)
         key('f8')
         focus()
         scan(lambda d, s: s.count('deliberate launcher failure') == 2
-             and text(d, 72, height // 2 - 40, 'LAUNCHER') and bitmap(d) == draft, 'fallback before termination')
-        click(120, height // 2 - 40)
+             and text(d, width//2-120, height-margin-bar//2-30, 'LAUNCHER') and bitmap(d) == draft, 'fallback before termination')
+        click(width//2, height-margin-bar//2-24)
         key('f7' if mode == 'fallback-clean' else 'f8')
-        scan(lambda d, s: pixel(d, 120, height // 2 + 28) == '101827'
+        scan(lambda d, s: pixel(d, width//2, height-margin-bar//2+16) == '101827'
              and bitmap(d) == draft, 'fallback termination preserves app')
         time.sleep(2)
         assert log().count('launcher fallback admitted') == 1
@@ -153,46 +153,46 @@ def exercise(stream, output, serial, mode, saved=None):
         action(0, True)
         action(1, False)
         action(2, False)
-        margin, strip = 24, 320
-        scan(lambda d, _: text(d, margin + (strip - 180) // 2, height - margin - 48, 'APPLIED')
+        margin, bar = 8, 112
+        scan(lambda d, _: text(d, width-margin-184, height-margin-48, 'APPLIED')
              and bitmap(d) == draft, 'replacement layout authority and retained draft')
         action(2, True)
         focus()
         key('x')
         draft = bitmap(scan(lambda d, _: bitmap(d) != draft, 'input after launcher recovery'))
-        click(margin + strip // 2, margin + 490)
+        click(margin+224, height-margin-bar//2)
         key('f8')
         scan(lambda d, s: s.count('deliberate launcher failure') == 2
-             and pixel(d, 100, 70) == '101827' and bitmap(d) == draft, 'second crash leaves app alive')
+             and pixel(d, margin+24, height-margin-bar//2-8) == '101827' and bitmap(d) == draft, 'second crash leaves app alive')
         focus()  # Keep the cursor out of the fallback's glyph scan.
         for attempt in (1, 2):
-            left = margin + (strip - 160) // 2
-            scan(lambda d, _: text(d, left + 32, height // 2 - 40, 'LAUNCHER')
-                 and text(d, left + 26, height // 2 + 21, 'TRY AGAIN') and bitmap(d) == draft,
+            left = width//2-144
+            scan(lambda d, _: text(d, width//2-120, height-margin-bar//2-30, 'LAUNCHER')
+                 and text(d, width//2-54, height-margin-bar//2+10, 'TRY AGAIN') and bitmap(d) == draft,
                  'fallback stays within launcher view; app draft retained')
             shutil.copyfile(output / 'display.png', output / f'fallback-{attempt}.png')
             if attempt == 1:
-                click(margin + strip // 2, height // 2 + 28)
+                click(width//2, height-margin-bar//2+16)
             else:
-                click(margin + strip // 2, height // 2 - 40)
+                click(width//2, height-margin-bar//2-24)
                 key('ret')
             expected += 1
             scan(lambda d, s: s.count('explicit launcher retry') == attempt
                  and s.count('launcher recovered; retry consumed') == expected
-                 and pixel(d, margin + strip // 2 - 20, margin + 46) == 'd9e4ef'
+                 and pixel(d, margin+24, height-margin-bar//2-8) == 'd6e5ef'
                  and bitmap(d) == draft, 'explicit retry restores launcher without restarting Notes')
             if attempt == 1:
-                click(margin + strip // 2, margin + 490)
+                click(margin+224, height-margin-bar//2)
                 key('f8')
                 focus()
                 scan(lambda d, s: s.count('deliberate launcher failure') == 3
-                     and text(d, left + 32, height // 2 - 40, 'LAUNCHER'), 'manual retry does not replenish automatic retries')
+                     and text(d, width//2-120, height-margin-bar//2-30, 'LAUNCHER'), 'manual retry does not replenish automatic retries')
     focus()
     key('y')
     draft = bitmap(scan(lambda d, _: bitmap(d) != draft, 'app input without launcher'))
     click(width - margin - 14, margin + 10)
-    scan(lambda d, _: text(d, margin + strip + 26, margin + 20, 'UNSAVED NOTE'), 'close still protects draft')
-    click(margin + strip + 46, margin + 76)  # Cancel.
+    scan(lambda d, _: text(d, margin + 10, margin + 20, 'UNSAVED NOTE'), 'close still protects draft')
+    click(margin + 30, margin + 76)  # Cancel.
     focus()
     scan(lambda d, _: bitmap(d) == draft, 'cancel preserved draft')
     key('f1')

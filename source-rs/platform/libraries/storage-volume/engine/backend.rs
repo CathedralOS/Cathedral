@@ -98,8 +98,12 @@ impl<D: Device + Send + 'static> StorageBackend for Backend<D> {
     fn set_len(&self, length: u64) -> Result<(), io::Error> {
         let mut state = self.0.lock();
         state.checked(0, 0)?;
-        if length == 0 || length > state.header.capacity() {
-            return Err(io::Error::other("invalid engine extent or volume full"));
+        if length > state.header.capacity() {
+            // Exact marker reserved for this pre-I/O refusal, never device errors.
+            return Err(io::Error::other(crate::CAPACITY_REFUSAL));
+        }
+        if length == 0 {
+            return Err(io::Error::other("invalid zero engine extent"));
         }
         if length == state.header.length {
             return Ok(());

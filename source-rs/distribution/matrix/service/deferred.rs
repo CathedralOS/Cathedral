@@ -47,7 +47,7 @@ impl Deferred {
                                     .is_none_or(|client| hop as usize != client + 1)))
                     }
                     Some(w) => {
-                        w[0] == wire::STORAGE_INFO
+                        matches!(w[0], wire::STORAGE_INFO | wire::LAUNCH)
                             || (wire::STORAGE_BASE..wire::STORAGE_BASE + 256)
                                 .contains(&(w[0] & 0xffff))
                     }

@@ -141,7 +141,7 @@ impl Store<'_> {
             set_quota(&mut table, root, charged)?;
             object = Object { id, head };
         }
-        engine(tx.commit())?;
+        commit(tx)?;
         Ok(object)
     }
     /// Resolve from an explicit base in one read transaction; no `..`, global

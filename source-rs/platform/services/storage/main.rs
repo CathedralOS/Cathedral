@@ -3,6 +3,7 @@
 //! Private object storage provider. Only this executable receives the disk
 //! grant. Fund the heap, recover the engine, serve two private roots.
 mod bulk;
+mod database;
 #[cfg(feature = "recovery-lab")]
 mod gate;
 mod hierarchy;
@@ -21,22 +22,8 @@ fn main(_: u64, _argument: u64) -> u64 {
     // MAX_BYTES, separately from the allocator. Reader custody continues to
     // charge this provider's budget until the last reader releases a reply.
     heap::initialize(&HEAP, 56).unwrap();
-    let disk = cathedral_ata_pio::Ata::open().unwrap();
-    let db = cathedral_storage_engine::open_observed(
-        disk,
-        4096,
-        8 * 1024 * 1024,
-        // Retain the hot metadata pages without consuming the heap headroom
-        // needed for a subtree-copy writer. See the measured desktop handoff.
-        64 * 1024,
-        metrics::extent,
-    )
-    .unwrap();
-    metrics::report("recovered");
-    {
-        let store = cathedral_database_objects::Store::open(&db).unwrap();
-        service::serve(&store);
-    }
+    let db = database::open();
+    let db = service::serve(db, database::open);
     assert_eq!(
         cathedral_user_runtime::resources::budget()
             .unwrap()

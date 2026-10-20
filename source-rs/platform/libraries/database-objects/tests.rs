@@ -6,7 +6,7 @@ fn database() -> Database {
         .create_with_backend(InMemoryBackend::new())
         .unwrap()
 }
-fn snapshot(db: &Database) -> Vec<(Vec<u8>, Vec<u8>)> {
+pub(super) fn snapshot(db: &Database) -> Vec<(Vec<u8>, Vec<u8>)> {
     let tx = db.begin_read().unwrap();
     tx.open_table(TABLE)
         .unwrap()
@@ -29,7 +29,7 @@ fn content() -> Vec<u8> {
         .map(|i| ((i * 17 + i / 4096 * 71) % 251) as u8)
         .collect()
 }
-fn collect(store: &Store<'_>, root: u8) {
+pub(super) fn collect(store: &Store<'_>, root: u8) {
     for _ in 0..100 {
         if !store.collect(root).unwrap().more {
             return;

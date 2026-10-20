@@ -3,14 +3,14 @@
 F5 opens a full-screen user picker. Existing users appear as a horizontal row
 of avatar tiles; **NEW USER** copies the hidden template. Click a user to enter
 its workspace. Root stops and collects this picker before loading the user's
-left-hand app strip, a separate process running another instance of the chooser
-with icon tiles for **NOTES** and **COLORS**. The template and the launcher itself
+compact bottom taskbar, a separate process running another instance of the chooser
+with icon tiles for **Notes**, **Colors**, **Split** and **Nested**. The template and the launcher itself
 are hidden. There are no normal status rows, storage toggles or launcher CLOSE
 control; apps own their X buttons. A failed launch gives a short message such as
-CLOSE APP FIRST. Arrows and Enter work while the chooser has focus.
+NO ROOM. Arrows and Enter work while the chooser has focus.
 
-The user app strip has **SETTINGS** at the bottom (or F2 while the strip has
-focus). Its small editor changes strip width and outer spacing. **SAVE** writes
+The user taskbar has **SETTINGS** at the bottom (or F2 while the taskbar has
+focus). Its small editor changes bar height and outer spacing. **SAVE** writes
 the user's `Matrix` object, then asks its matrix to apply geometry immediately.
 **CANCEL** discards local edits and returns to app tiles. Running apps retain
 their state and repaint their resized local views. SAVED; RESTART means the save
@@ -42,7 +42,7 @@ This is selection, not authentication. The bounded listing accommodates the
 hidden template plus three users; at the limit the add-user tile disappears.
 There is deliberately no scrolling, pagination, account editor or logout yet.
 User labels come from hierarchy names; NEW creates `User N`. This is not an
-identity or account model. The picker resolves `Template` by path. The app strip
+identity or account model. The picker resolves `Template` by path. The taskbar
 resolves its own hidden launcher from the matrix's saved configuration. Neither
 depends on listing position. An exact media-type index selects executable entries;
 an `.exe` extension alone does not add a tile or grant execution authority.

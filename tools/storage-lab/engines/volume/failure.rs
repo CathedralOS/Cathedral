@@ -23,18 +23,30 @@ pub fn prepare(path: &Path, offset: u64, bytes: u64, target: &str, content: &[u8
                 .try_into()?,
         ))
     };
-    let id = if target == "login" {
-        named(0, b"Login")?
-    } else {
-        let users = named(0, b"Users")?;
-        let user = named(users, b"User 1")?;
-        match target {
-            "notes" => named(user, b"Notes")?,
-            "launcher" => named(user, b"Desktop")?,
-            "user" => user,
-            _ => return Err("fixture target must be login, notes, launcher or user".into()),
-        }
-    };
+    let id =
+        if target == "login" {
+            named(0, b"Login")?
+        } else {
+            let users = named(0, b"Users")?;
+            let user = named(users, b"User 1")?;
+            if let Some(path) = target.strip_prefix("path:") {
+                let mut id = user;
+                for part in path.split('/') {
+                    id = named(id, part.as_bytes())?;
+                }
+                id
+            } else {
+                match target {
+                    "notes" => named(user, b"Notes")?,
+                    "launcher" => named(user, b"Desktop")?,
+                    "user" => user,
+                    _ => return Err(
+                        "fixture target must be login, notes, launcher, user or path:relative/path"
+                            .into(),
+                    ),
+                }
+            }
+        };
     let head_key = seed::key(b'h', &id.to_be_bytes());
     let old = &rows[&head_key];
     let revision = u64::from_le_bytes(old[..8].try_into()?)

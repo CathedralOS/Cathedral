@@ -34,7 +34,7 @@ pub const MAX_PRIVATE_PAGES: usize = 8 * MAX_PAGES;
 /// any one object: it retains every image its subtree shows, holds old and new
 /// during each replacement, and lends the same kind of budget to each nested
 /// matrix below it.
-pub const MAX_READER_PAGES: usize = 12 * MAX_PAGES;
+pub const MAX_READER_PAGES: usize = 32 * MAX_PAGES;
 /// Separate metadata limits: larger page grants must not buy every global slot.
 /// A matrix or the compositor retains one sealed image per surface it shows
 /// and holds its replacement beside it, including images below nested matrices.
@@ -58,7 +58,6 @@ pub struct Grant {
 }
 
 /// Includes queued/unmapped read capabilities, bounded independently of backing.
-/// Retirement tracks them in a 128-bit mask.
+/// IPC retirement uses a word array sized to this arena.
 /// The global pool is independent of each task's local slot allowance.
-pub const MAX_READ_HANDLES: usize = 128;
-const _: () = assert!(MAX_READ_HANDLES <= 128);
+pub const MAX_READ_HANDLES: usize = 512;

@@ -120,6 +120,9 @@ impl Children {
                 }
             }
         };
+        if let Err(code) = status {
+            time::storage_sample("stored-launch-refused", &[plan.slot as u64, code]);
+        }
         // Retire the picker before publishing the user's first view. Otherwise
         // a workspace can configure chrome against a temporary smaller allowance.
         if status.is_ok() && self.login && !self.entered && plan.slot == 1 {
@@ -130,7 +133,9 @@ impl Children {
             )?;
         }
         if status.is_err() && self.login && !self.entered && self.slots[0].is_none() {
-            self.start_picker(parent, world, server)?;
+            self.startup_recovery.picker_pending = true;
+            self.startup_recovery.selection_failed = true;
+            self.startup_recovery.picker_attempts = 0;
         }
         if status.is_ok()
             && request.client.is_some()
@@ -157,6 +162,17 @@ impl Children {
                 self.stop(plan.slot, server, world, parent)?;
                 status = Err(code);
             }
+        }
+        if status.is_err()
+            && self.login
+            && plan.slot == 1
+            && self.slots[1].is_none()
+            && self.slots[0].is_none()
+        {
+            self.entered = false;
+            self.startup_recovery.picker_pending = true;
+            self.startup_recovery.selection_failed = true;
+            self.startup_recovery.picker_attempts = 0;
         }
         if status.is_ok() && self.desktop && request.client == Some(0) {
             self.next_ticket += 1;

@@ -85,7 +85,9 @@ fn queue_discard_returns_escrow_and_capacity_without_touching_sender() {
     assert_eq!(model.reserve_read(0, owner, 1), Err(abi::NO_MEMORY));
     assert_eq!(ipc.memory_receiver(0, send, 1), Err(abi::WOULD_BLOCK));
     ipc.revoke(0, ipc.handle(0, 1).unwrap()).unwrap();
-    assert_eq!(ipc.take_retired_memory(), 1 << slot);
+    let retired = ipc.take_retired_memory();
+    assert_eq!(retired[slot / 64], 1 << (slot % 64));
+    assert_eq!(retired.iter().map(|word| word.count_ones()).sum::<u32>(), 1);
     assert!(!ipc.memory_retirement_pending());
     model.drop_read(slot);
     assert_eq!(model.charged(1), [0, 0]);
@@ -133,7 +135,9 @@ fn nested_endpoint_escrow_discard_releases_memory_and_never_rebinds_it() {
         Err(abi::TOO_SMALL)
     );
     ipc.close_task(1);
-    assert_eq!(ipc.take_retired_memory(), 1 << escrow);
+    let retired = ipc.take_retired_memory();
+    assert_eq!(retired[escrow / 64], 1 << (escrow % 64));
+    assert_eq!(retired.iter().map(|word| word.count_ones()).sum::<u32>(), 1);
     model.drop_read(escrow);
     assert_eq!(model.charged(1), [0, 0]);
     assert_eq!(ipc.memory_receiver(0, send, 1), Err(abi::PEER_CLOSED));

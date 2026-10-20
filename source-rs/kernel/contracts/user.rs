@@ -63,11 +63,11 @@ pub const INVALID_ARGUMENT: u64 = (-22i64) as u64;
 pub const UNKNOWN: u64 = (-38i64) as u64;
 
 /// Bounded lab arenas. Task slots follow composition; IPC reserves one fixed arena.
-pub const MAX_TASKS: usize = 15;
-// Core account masks use u16; reserve a bit so full-mask construction cannot overflow.
-const _: () = assert!(MAX_TASKS < u16::BITS as usize);
+pub const MAX_TASKS: usize = 31;
+// Core account masks use u32; reserve a bit so full-mask construction cannot overflow.
+const _: () = assert!(MAX_TASKS < u32::BITS as usize);
 pub const MAX_LAUNCHES: usize = MAX_TASKS - 1;
-pub const MAX_ENDPOINTS: usize = 32;
+pub const MAX_ENDPOINTS: usize = 64;
 /// Maximum LBA28 sectors per bootstrap PIO command. Transfers remain 512 bytes.
 pub const DISK_BATCH_SECTORS: usize = 32;
 pub const DISK_REGISTER_READ: u64 = 24;
@@ -94,8 +94,8 @@ pub const IPC_SEND_CAP: u64 = 36;
 /// RECEIVE_CAP: arg0 receiver, arg1 writable packet, arg2 zero. Blocks like RECEIVE.
 pub const IPC_RECEIVE_CAP: u64 = 37;
 pub const IPC_PACKET_BYTES: usize = 80;
-pub const MAX_DYNAMIC_CHANNELS: usize = 96;
-pub const MAX_CREATED_CHANNELS: usize = 92;
+pub const MAX_DYNAMIC_CHANNELS: usize = 192;
+pub const MAX_CREATED_CHANNELS: usize = 188;
 pub const MAX_DYNAMIC_HANDLES: usize = 48;
 
 /// Move up to five dynamic endpoints into a newly admitted child. arg0 launch,
@@ -119,7 +119,7 @@ pub const SPAWN_TREE_BYTES: usize = SPAWN_BYTES + 8 + MAX_LAUNCHES * 8;
 pub const IPC_BUDGET: u64 = 41;
 pub const IPC_BUDGET_BYTES: usize = 32;
 /// Stable per-account default; larger compositions must explicitly subdivide
-/// the unchanged 32-channel backing pool.
+/// the bounded backing pool.
 pub const DEFAULT_CHANNELS: usize = 4;
 /// Lab CPU burst allowances refill at allowance/period of one execution CPU.
 pub const CPU_REFILL_PERIOD_US: u64 = 100_000;

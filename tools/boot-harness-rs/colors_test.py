@@ -57,7 +57,7 @@ def exercise(stream, output, serial, users, user, saved, recovery=False):
             time.sleep(0.05)
 
     def enter():
-        click(237, 144)
+        click(13, 128)
         for down in (True, False):
             send([{'type': 'key', 'data': {'down': down, 'key': {'type': 'qcode', 'data': 'ret'}}}])
             time.sleep(0.08)
@@ -72,33 +72,33 @@ def exercise(stream, output, serial, users, user, saved, recovery=False):
             assert time.monotonic() < deadline, log[-3000:]
             time.sleep(0.05)
         enter()  # Reload the committed state after its acknowledgement was lost.
-        scan(lambda d: pixel(d, 264, 66) == 'e5e7eb', 'reconciled storage')
+        scan(lambda d: pixel(d, 40, 50) == 'e5e7eb', 'reconciled storage')
 
     cold = saved is not None
     count = min(users + 1, 3)
     click((width - (count * 152 - 24)) // 2 + (user - 1) * 152 + 64, height // 2)
-    scan(lambda d: pixel(d, 100, 70) == 'd9e4ef', 'user app strip')
-    click(120, 216)  # Colors, before any Notes save can drain the garbage.
-    data, latency = scan(lambda d: pixel(d, 237, 34) in ('315ca8', 'd18b35')
-                        and (recovery or pixel(d, 264, 66) == 'e5e7eb'), 'Colors launch')
-    if recovery and pixel(data, 264, 66) == 'e96f6f':
+    scan(lambda d: pixel(d, 32, height-56) == 'd6e5ef', 'user app strip')
+    click(96, height - 48)  # Colors, before any Notes save can drain the garbage.
+    data, latency = scan(lambda d: pixel(d, 13, 18) in ('315ca8', 'd18b35')
+                        and (recovery or pixel(d, 40, 50) == 'e5e7eb'), 'Colors launch')
+    if recovery and pixel(data, 40, 50) == 'e96f6f':
         reconcile()
         data = pointer_test.read_scanout(stream, output)[2]
-    current = pixel(data, 237, 34)
+    current = pixel(data, 13, 18)
     if saved is not None:
         assert current == saved, 'cold-open lost the saved color'
     else:
         enter()
         saved = 'd18b35' if current == '315ca8' else '315ca8'
         if recovery:
-            data, _ = scan(lambda d: pixel(d, 237, 34) == saved or pixel(d, 264, 66) == 'e96f6f', 'toggle result')
-            if pixel(data, 264, 66) == 'e96f6f':
+            data, _ = scan(lambda d: pixel(d, 13, 18) == saved or pixel(d, 40, 50) == 'e96f6f', 'toggle result')
+            if pixel(data, 40, 50) == 'e96f6f':
                 reconcile()
-        scan(lambda d: pixel(d, 237, 34) == saved and pixel(d, 264, 66) == 'e5e7eb', 'saved toggle')
-    click(width - 38, 34)
-    scan(lambda d: pixel(d, 237, 34) == '101827', 'clean app-owned close')
-    click(120, 216)
-    scan(lambda d: pixel(d, 237, 34) == saved and pixel(d, 264, 66) == 'e5e7eb', 'reopened color')
+        scan(lambda d: pixel(d, 13, 18) == saved and pixel(d, 40, 50) == 'e5e7eb', 'saved toggle')
+    click(width - 22, 18)
+    scan(lambda d: pixel(d, 13, 18) == '101827', 'clean app-owned close')
+    click(96, height - 48)
+    scan(lambda d: pixel(d, 13, 18) == saved and pixel(d, 40, 50) == 'e5e7eb', 'reopened color')
     log = (output / 'serial.log').read_text(errors='replace')
     assert log.count('picker stopped; loading user launcher') == 1, 'storage failure restarted login'
     if recovery:
@@ -130,7 +130,8 @@ def run(args):
     path = output / 'guest.raw'
     shutil.copyfile(args.image, path)
     database_image.prepare(path, harness.seeded_programs(profile, True),
-                           root / 'source-rs/distribution/migrations/readable-labels.txt', app_close=True)
+                           root / 'source-rs/distribution/migrations/readable-labels.txt', app_close=True,
+                           realm_programs=harness.realm_programs(profile, True))
     qemu = harness.find_qemu()
     command = [qemu, '-machine', 'q35', '-cpu', 'qemu64', '-accel', 'tcg', '-smp', '1', '-m', '128']
     command += harness.firmware_args(qemu, output)

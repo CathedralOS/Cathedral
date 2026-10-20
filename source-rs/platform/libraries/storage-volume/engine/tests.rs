@@ -126,3 +126,19 @@ fn failed_write_or_flush_retires_backend_after_temporary_region_is_gone() {
         assert_eq!(disk.0.lock().unwrap().calls, 1);
     }
 }
+
+#[test]
+fn only_capacity_refusal_has_the_recoverable_marker() {
+    let (backend, disk) = fixture();
+    assert!(super::capacity_refusal(
+        backend.set_len(u64::MAX).unwrap_err().into()
+    ));
+    assert!(!super::capacity_refusal(
+        backend.set_len(0).unwrap_err().into()
+    ));
+    assert_eq!(disk.0.lock().unwrap().calls, 0);
+    disk.0.lock().unwrap().fail = 1;
+    assert!(!super::capacity_refusal(
+        backend.set_len(16384).unwrap_err().into()
+    ));
+}

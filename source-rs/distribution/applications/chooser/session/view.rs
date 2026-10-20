@@ -42,11 +42,12 @@ impl Scene {
             };
             let pixels = tiles::paint(index, picker, selected == index, title);
             let (x, y) = layout::origin(extent, n, picker, i);
+            let (width, height) = layout::dimensions(picker);
             self.image(
                 parent,
                 self.names[i + 1],
                 pixels,
-                [x, y, layout::WIDTH as u64, layout::HEIGHT as u64],
+                [x, y, width as u64, height as u64],
             )?;
         }
         for i in n..ENTRIES - 1 {
@@ -86,7 +87,12 @@ impl Scene {
             parent,
             self.names[6],
             tasks.paint(realm),
-            [extent[2].saturating_sub(180) / 2, tasks::TOP, 180, 96],
+            [
+                tasks::LEFT,
+                tasks::top(extent),
+                tasks::WIDTH as u64,
+                tasks::ROW,
+            ],
         )
     }
     pub fn management(
@@ -211,7 +217,11 @@ impl Scene {
             }
             tiles::label(pixels.bytes_mut(), 180, 0, offset, status.as_bytes());
             tiles::label(pixels.bytes_mut(), 180, 42, offset + 24, button.as_bytes());
-            let x = extent[2].saturating_sub(180) / 2;
+            let x = if picker {
+                extent[2].saturating_sub(180) / 2
+            } else {
+                extent[2].saturating_sub(184)
+            };
             let y = if picker {
                 extent[3] / 2 + 88
             } else {

@@ -86,6 +86,7 @@ impl Children {
         }
         if let Err(error) = self.background(parent, world, server) {
             time::storage_sample("background-start-refused", &[error.0 as u64]);
+            self.startup_recovery.background_pending = true;
         }
         super::super::requests::flush(parent, world)?;
         self.notify(world)?;
@@ -104,7 +105,7 @@ impl Children {
     }
     /// Background is a separately installed role at a realm-local path. Replacing
     /// its executable replaces the background; it receives interaction only.
-    fn background(
+    pub(super) fn background(
         &mut self,
         parent: &mut Parent,
         world: &mut World,
@@ -162,11 +163,11 @@ impl Children {
         if self.loss.is_some() || self.pending.iter().any(Option::is_some) {
             return Ok(wire::error(abi::BUSY));
         }
-        let [wire::APPLY_LAYOUT, epoch, margin, strip, gap, 0, 0, 0] = words else {
+        let [wire::APPLY_LAYOUT, epoch, margin, bar, gap, 0, 0, 0] = words else {
             return Ok(wire::error(abi::INVALID_ARGUMENT));
         };
         let grant = parent.grant;
-        let Some(rects) = config::rectangles(margin, strip, gap, grant.width, grant.height) else {
+        let Some(rects) = config::rectangles(margin, bar, gap, grant.width, grant.height) else {
             return Ok(wire::error(abi::INVALID_ARGUMENT));
         };
         let pair = rects.map(rect);

@@ -1,7 +1,6 @@
 //! Resume publication after each upstream reply. One in-flight batch owns the
 //! stream; transport loss retires the matrix before any late reply can be reused.
 use super::*;
-use cathedral_matrix::world::presentation::Batch;
 use cathedral_platform_contracts::display;
 use cathedral_platform_contracts::display::composition;
 use cathedral_user_runtime::server::Request;
@@ -31,7 +30,7 @@ impl Parent {
     pub(in super::super) fn prune_batches(&mut self, world: &World) {
         for (slot, batch) in self.batches.iter_mut().enumerate() {
             if !world.binding_matches(slot, batch.incarnation, batch.epoch) {
-                *batch = Batch::default();
+                batch.reset();
             }
         }
     }

@@ -22,11 +22,17 @@ fn available() -> Result<[u64; 5], Error> {
 pub(super) fn policy(funded: [u64; 5]) -> Option<Funding> {
     (funded[3] != 0).then(|| Funding {
         funded,
-        ceiling: core::array::from_fn(|i| funded[i].max([384, 768, 40, 6, 1792][i])),
+        ceiling: core::array::from_fn(|i| funded[i].max([960, 3584, 168, 24, 6400][i])),
     })
 }
 
 pub(super) fn ensure(parent: &mut Parent, needed: [u64; 5]) -> Result<(), Error> {
+    let mut needed = needed;
+    // This process must still receive code and replacement images after lending
+    // to a child. Admission funding cannot consume the forwarding path itself.
+    if needed[1] != 0 {
+        needed[1] += 256;
+    }
     let delta = shortfall(available()?, needed);
     if delta != [0; 5] {
         time::storage_sample("funding-shortfall", &delta);

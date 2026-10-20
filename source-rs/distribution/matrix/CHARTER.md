@@ -267,21 +267,31 @@ kernel's atomic five-resource growth operation. No ancestor or sibling budget is
 sent to the requester. Leaves without delegated growth policy are refused.
 
 The current stock policy permits admitted programs with descendant capacity to
-grow to at least 384 private pages, 768 reader pages, 40 channels, six descendants
-and 1792 physical frames, or their larger initial grant. These are finite distro
+grow to at least 960 private pages, 3584 reader pages, 168 channels, 24 descendants
+and 6400 physical frames, or their larger initial grant. These are finite distro
 defaults, independent of manifest requests; they do not enlarge the global pool.
 Growth remains reserved to the child until its subtree is closed. A successful
 ancestor transfer can remain at an intermediate owner after a downstream refusal;
 it is reusable capacity there, not an all-or-nothing multi-hop transaction. Failed
 transport retires the upstream stream instead of risking a stale acknowledgement.
 
-Nested starts with 32 surfaces rather than 24; surfaces remain fixed disjoint
-ranges and are not part of live funding negotiation. Its picker is retired before
+Nested declares a minimum of 32 surfaces. Admission can lend up to 24 additional
+spare ranks within the standing ceiling, leaving eight for this desktop's chrome
+and background. Surfaces remain disjoint ranges and are not part of live funding
+negotiation. Forwarding owners keep 256 reader pages of headroom when funding a
+child, so code and replacement images can still traverse the chain.
+The picker is retired before
 workspace reservation so that the workspace can reuse its process account, then
 receives the full viewport allowance before its first view. Admission refusal
-restarts the picker. The fresh nested desktop supports two ordinary leaves;
-three leaves and deeper Nested still exceed the current composition. Existing
-inner users retain their saved code snapshots; new inner users use current seeds.
+restarts the picker. The composition supports three Nested desktops beneath the
+outer desktop, with a leaf at the deepest level. Existing inner users and templates
+retain their saved code snapshots; use a fresh outer user for current code throughout.
+
+A failed selected user restores its local picker with CANNOT OPEN. Picker startup
+gets one automatic retry; a second failure exits this Nested instance so the outer
+taskbar can offer a fresh launch. A failed background gets one local retry, then
+stays absent while chrome and apps remain usable. These policies run in the same
+matrix executable at every depth; they do not ask an ancestor to inspect local realms.
 
 `--trace-storage` reports five-dimensional `funding-shortfall`, `funding-granted`
 and `funding-policy-refused` samples in the order private/readers/channels/slots/

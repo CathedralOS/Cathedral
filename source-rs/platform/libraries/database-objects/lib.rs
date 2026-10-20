@@ -14,7 +14,7 @@ mod objects;
 mod publication;
 mod reading;
 mod records;
-use cathedral_storage_engine::redb::{self, Database, TableDefinition};
+use cathedral_storage_engine::redb::{self, Database, ReadableDatabase, TableDefinition};
 pub use collection::{Collection, PIN_SLOTS, collect_records};
 pub use records::{Head, Object};
 
@@ -39,6 +39,9 @@ pub enum Error {
     TooLarge,
     Conflict,
     Capacity,
+    /// A pre-commit extent allocation was refused. The request did not publish,
+    /// but redb must be dropped and reopened before another operation.
+    ReopenCapacity,
     Invalid,
     Missing,
     /// The object still has children; delete them first.
@@ -54,8 +57,19 @@ pub enum Stage {
     Committed,
 }
 pub type Result<T> = core::result::Result<T, Error>;
-fn engine<T, E>(result: core::result::Result<T, E>) -> Result<T> {
-    result.map_err(|_| Error::Engine)
+fn engine<T, E: Into<redb::Error>>(result: core::result::Result<T, E>) -> Result<T> {
+    result.map_err(|error| {
+        if cathedral_storage_engine::capacity_refusal(error.into()) {
+            Error::ReopenCapacity
+        } else {
+            Error::Engine
+        }
+    })
+}
+/// Commit failures have an uncertain outcome, even if they mention capacity.
+/// Never report a definite refusal after crossing the publication boundary.
+fn commit(tx: redb::WriteTransaction) -> Result<()> {
+    tx.commit().map_err(|_| Error::Engine)
 }
 
 pub struct Store<'a> {
@@ -64,10 +78,19 @@ pub struct Store<'a> {
 impl<'a> Store<'a> {
     /// Called only after the ready volume and engine identity have been checked.
     pub fn open(db: &'a Database) -> Result<Self> {
+        // Reopening a verified store does not need a writer or fresh disk space.
+        {
+            let read = engine(db.begin_read())?;
+            match read.open_table(TABLE) {
+                Ok(_) => return Ok(Self { db }),
+                Err(redb::TableError::TableDoesNotExist(_)) => (),
+                Err(_) => return Err(Error::Engine),
+            }
+        }
         let mut tx = engine(db.begin_write())?;
         engine(tx.set_durability(redb::Durability::Immediate))?;
         engine(tx.open_table(TABLE))?;
-        engine(tx.commit())?;
+        commit(tx)?;
         Ok(Self { db })
     }
     fn writer(&self) -> Result<redb::WriteTransaction> {
@@ -83,3 +106,6 @@ extern crate std;
 mod collection_tests;
 #[cfg(all(test, feature = "host"))]
 mod tests;
+
+#[cfg(all(test, feature = "host"))]
+mod capacity_tests;

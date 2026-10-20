@@ -11,7 +11,7 @@ def exercise(output, click, key, scan, width, height, resumed=False, deep=False)
                 for col in range(5):
                     if (pixel(w,d,x+i*12+col*2,y+row*2)==b'\xff\xff\xff') != bool(bits & (1<<(4-col))): return False
         return True
-    app_x, top, margin = 232,24,24
+    app_x, top, margin = 8,8,8
     def positions():
         column=(width-margin-app_x-12)//2
         return [(app_x,top+32,column),(app_x+column+12,top+32,column)]
@@ -20,7 +20,7 @@ def exercise(output, click, key, scan, width, height, resumed=False, deep=False)
         scan(lambda w,d: pixel(w,d,x+5,y+10)==bytes.fromhex('9b7028' if dirty else '27664a') and text(w,d,x+10,y+20,value), f'Split child {slot} text {value!r}')
     def blank(): scan(lambda w,d: pixel(w,d,app_x+5,top+10)==bytes.fromhex('101827'),'Split subtree retired')
     for round in range(3):
-        click(120,336)
+        click(152,height-48)
         note(0,'ax' if resumed or round else ''); note(1,'by' if resumed or round else '')
         if round==0 and not resumed:
             for slot,ch in [(0,'a'),(1,'b')]:
@@ -28,14 +28,14 @@ def exercise(output, click, key, scan, width, height, resumed=False, deep=False)
             note(0,'a',True); note(1,'b',True)
             # A matrix and two ordinary siblings fit together. Hidden descendants
             # retain their drafts while chrome changes the selected outer app.
-            click(120, 96)  # Notes in outer app slot two.
+            click(40,height-48)  # Notes in outer app slot two.
             scan(lambda w,d: pixel(w,d,app_x+5,top+10)==bytes.fromhex('27664a'), 'Notes beside live Split')
             click(app_x+5,top+120); key('q')
-            click(120,216)  # Colors in slot three.
+            click(96,height-48)  # Colors in slot three.
             scan(lambda w,d: pixel(w,d,app_x+5,top+10)==bytes.fromhex('315ca8'), 'Colors beside live Split and Notes')
             click(width-margin-14,top+10)  # Close Colors; Split becomes selected.
             note(0,'a',True); note(1,'b',True)
-            click(90,24+504+32+16)  # Select the still-live outer Notes.
+            click(464,height-48)  # Select the still-live outer Notes.
             scan(lambda w,d: text(w,d,app_x+10,top+20,'q'), 'outer Notes draft survived matrix switch')
             click(width-margin-14,top+10)
             scan(lambda w,d: text(w,d,app_x+10,top+20,'UNSAVED NOTE'), 'outer Notes close')
@@ -46,12 +46,12 @@ def exercise(output, click, key, scan, width, height, resumed=False, deep=False)
             scan(lambda w,d:text(w,d,width-margin-256+8,top+6,'UNSAVED NOTES'),'recursive dirty close refused')
             note(0,'a',True); note(1,'b',True)
             # The outer matrix changes its placement. Both inner drafts survive.
-            click(40,514); key('f2')
-            scan(lambda w,d:text(w,d,44,50,'APP STRIP'),'outer settings')
-            click(160,100); click(80,260) # width +64; save
-            app_x=296
+            click(margin+224,height-margin-40); key('f2')
+            scan(lambda w,d:text(w,d,(width-512)//2+4,height-78,'BAR HEIGHT'),'outer settings')
+            click((width-512)//2+176+120,height-28); click((width-512)//2+352+40,height-28) # spacing +16; save
+            app_x=24; top=24; margin=24
             note(0,'a',True); note(1,'b',True)
-            click(208,260) # new panel Cancel (margin + (256-160)/2 +120)
+            click((width-512)//2+352+120,height-44) # Cancel at the new spacing
             for slot,ch in [(0,'x'),(1,'y')]:
                 x,y,_=positions()[slot]; click(x+5,y+120); key(ch)
             note(0,'ax',True); note(1,'by',True)
@@ -64,12 +64,12 @@ def exercise(output, click, key, scan, width, height, resumed=False, deep=False)
                 scan(lambda w,d:pixel(w,d,x+5,y+10)==bytes.fromhex('101827'),f'child {slot} retired')
             click(width-margin-14,top+10); blank()
             # Restore saved layout so cold boot tests the identical composition.
-            click(40,514); key('f2')
-            click(112,100); click(112,260) # smaller strip, save
-            app_x=232
-            scan(lambda w,d:text(w,d,44,50,'APP STRIP'),'restored outer layout')
-            click(160,260) # Cancel in the original panel
-            scan(lambda w,d: pixel(w,d,100,70)==bytes.fromhex('d9e4ef'),'launcher restored')
+            click(margin+224,height-margin-40); key('f2')
+            click((width-512)//2+176+40,height-44); click((width-512)//2+352+40,height-44) # smaller spacing; save
+            app_x=8; top=8; margin=8
+            scan(lambda w,d:text(w,d,(width-512)//2+4,height-78,'BAR HEIGHT'),'restored outer layout')
+            click((width-512)//2+352+120,height-28) # Cancel in the original panel
+            scan(lambda w,d: pixel(w,d,32,height-56)==bytes.fromhex('d6e5ef'),'launcher restored')
         else:
             click(width-margin-14,top+10); blank()
     log=(output/'serial.log').read_text(errors='replace')
@@ -79,7 +79,7 @@ def exercise(output, click, key, scan, width, height, resumed=False, deep=False)
     if not deep:
         return
     for round in range(2):
-        click(120,336)
+        click(152,height-48)
         note(0,'ax'); note(1,'by') # Deep edits never replace these siblings.
         click(width-margin-256+130,top+10)
         scan(lambda w,d:text(w,d,width-margin-256+8,top+6,'NESTED'),'same-code child matrix admitted')
@@ -90,8 +90,8 @@ def exercise(output, click, key, scan, width, height, resumed=False, deep=False)
             for slot,ch in [(0,'a'),(1,'b')]:
                 x,y,_=positions()[slot]; click(x+5,y+120); key(ch)
             note(0,'axa',True); note(1,'byb',True)
-            click(width-margin-14,24+10)
-            scan(lambda w,d:text(w,d,width-margin-256+8,24+6,'UNSAVED NOTES'),'deep dirty close refused')
+            click(width-margin-14,8+10)
+            scan(lambda w,d:text(w,d,width-margin-256+8,8+6,'UNSAVED NOTES'),'deep dirty close refused')
             # The inner matrix lacks another subtree's funding. Refusal must
             # retain its live children and drafts, and leave closing usable.
             click(width-margin-256+130,top+10)
@@ -101,7 +101,7 @@ def exercise(output, click, key, scan, width, height, resumed=False, deep=False)
                 x,y,_=positions()[slot]; click(x+5,y+120); key('f1')
             note(0,'axa'); note(1,'byb')
             shutil.copyfile(output/'display.png',output/'split-deeper.png')
-        click(width-margin-14,24+10)
+        click(width-margin-14,8+10)
         top -= 32
         blank()
     print('PASS: same matrix at another level, confined durable edits, recursive close and funded refusal')
