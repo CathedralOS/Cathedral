@@ -28,6 +28,8 @@ and userspace execution system.
   at most eight pages per step, retaining its unpublished state and funding.
   Executable admission likewise batches image/stack pages behind a format decoder
   and commits the child and its authority only after construction finishes.
+  Before image loading, x86 prepares at most 64 supervisor mapping leaves per
+  step; ARM64 borrows its permanent supervisor branch without copying leaves.
 - Physical subtree retirement now advances one task/draft per step, returning up
   to eight private frames. Dead-task alias cleanup scans up to 32 entries and
   cleans at most one page object. Slots, outcomes and loans wait for collection.
@@ -44,7 +46,7 @@ The table describes structural bounds; none is a qualified time bound.
 | --- | --- | --- |
 | [Trap dispatch](../user_tasks/execution/traps.rs) | Poll installed device owners and keyboard; complete affected/due waiters; inspect fixed deferred-work flags/sets | Bound completion batches and grant lookup. Readiness, terminal outcomes and timeout precedence must remain unchanged |
 | [Copied IPC delivery](../user_tasks/syscalls/ipc/delivery.rs), [readiness](../user_tasks/syscalls/ipc/readiness.rs) | Bounded message copy and capability/handle validation for each affected/due waiter | Bound bursts of completions and grant lookup; preserve messages on failed copyout and wake on revocation/death |
-| [Spawn](../user_tasks/lifecycle/spawn.rs), [construction](../user_tasks/admission/construction.rs) | One rotating admission per step; at most eight image/stack pages; decoding, root creation, runtime tables, framebuffer mapping, final grant commit and rollback remain whole phases | Measure and bound remaining phases and rollback; retain private root/source custody and revalidate authority after suspension |
+| [Spawn](../user_tasks/lifecycle/spawn.rs), [construction](../user_tasks/admission/construction.rs) | One rotating admission per step; at most 64 x86 supervisor leaves or eight image/stack pages; decoding, bare-root allocation, runtime tables, framebuffer mapping, final grant commit and rollback remain whole phases | Measure and bound remaining phases and rollback; retain private root/source custody and revalidate authority after suspension |
 | [Runtime memory](../user_tasks/memory/memory.rs), [allocation](../user_tasks/memory/allocation.rs) | Advance one rotating caller per step; allocation zeros up to eight pages; final map, seal/unmap/release and rollback still process a whole region; settle indexed pending references | Extend staged allocation's retained funding/cancellation to other page operations and rollback. Publication cannot expose a partly initialized or writable sealed object |
 | [Reclamation](../user_tasks/lifecycle/reclamation.rs), [alias cleanup](../user_tasks/memory/closing.rs) | Withdraw all canceled authority; one rotating task/draft cleanup step with up to 32 metadata entries, one page object or eight private frames; final collection, pending reference settlement and conservation assertions remain whole operations | Bound single-object unmap/free, staging cancellation, reference retirement and metadata bursts; keep admissions/outcomes/loan return behind complete physical retirement |
 | [Kernel heap](../memory/heap.rs) | Interrupt masking covers the allocator lock; allocation/free cost depends on free-list state | Keep timing-critical paths allocation-free; preallocate their working sets rather than assume a lock makes allocation time predictable |
@@ -75,7 +77,7 @@ returns to boot. An asynchronous idle IRQ cannot bypass queued reclamation.
 Run the ordinary release smoke command from the scheduler guide.
 
 Each of 16 jobs waits for an absolute release eight nominal 100-Hz ticks apart,
-then consumes at least 1,000 microseconds of its accounted execution. The three
+then consumes at least 1,000 microseconds of its accounted execution. The first three
 compositions use a busy peer, a yielding peer, then a busy peer with the periodic
 account capped at 1,000 us per 100,000 us of refill time. That last rate cannot
 fund 1 ms every 80 ms indefinitely, even before syscall overhead. It is an
@@ -105,7 +107,8 @@ are emitted as `KERNEL_PHASE` only after the session has stopped. Ordinary build
 have no sample storage or additional clock reads. This does not alter the app ABI.
 
 The outer trap and deferred-step spans include their nested phases. Admission
-separates decode/root creation, image batches, runtime tables and framebuffer
+separates decoding, bare-root allocation, supervisor mapping batches, image
+batches, runtime tables and framebuffer
 mapping; reclamation separates withdrawal, retirement, collection and conservation.
 Memory dispatch distinguishes operation types and executable/escrow retirement.
 These are inclusive observations: do not add them. Trap samples omit assembly
@@ -113,6 +116,12 @@ entry/exit, and deferred samples omit the boot-loop suspension machinery. They
 are not complete IRQ-mask durations. Ordinary user diagnostic writes still
 appear within syscall samples. Initial boot admission is outside these runtime
 admission samples.
+
+`DecodeRoot` includes the first step's `Decode` and `Root` subspans. `Root` now
+ends after bare-root allocation (plus the constant ARM64 supervisor borrow);
+`KernelMappings` records the subsequent mapping steps. Before this split, x86
+root creation rebuilt all required supervisor leaves uninterrupted. Do not compare
+the new `Root` duration to the old duration as if the mapping work disappeared.
 
 The periodic fixture also runs beside repeated one-page and 128-page allocations,
 freeze, unmap, remap and release. Each peer leaves four owned objects at exit,

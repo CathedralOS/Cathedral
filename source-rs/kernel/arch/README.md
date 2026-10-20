@@ -68,6 +68,17 @@ at admission; checked copies consult the same live backing and permission ledger
 These unsafe obligations currently assume one CPU, masked interrupts and no
 concurrent task execution. They are not an SMP synchronization design.
 
+Root allocation and supervisor mapping preparation are separate operations.
+Core chooses a work allowance and retains the private space across steps;
+`UserMappings::prepare_kernel` completes the CPU-specific entry mappings. On
+x86, [creation](isa/x86_64/user/memory/creation.rs) copies a bounded number of
+leaves from the permanent boot tree, storing only owned ranges/cursor values.
+The root cannot be selected until that cursor finishes. ARM64 borrows its
+supervisor branch at creation and has no per-leaf preparation work. Every owned
+table frame, including a partial batch, remains in core's rollback ledger.
+Initial admission completes this same engine synchronously; live launches yield
+between steps after dropping all table/session borrows.
+
 Board selection currently follows the CPU target: x86-64 selects the PC lab,
 ARM64 selects QEMU virt. `devices()` reports absent PS2/ATA adapters on virt;
 composition rejects those grants. A second board for one CPU will need explicit

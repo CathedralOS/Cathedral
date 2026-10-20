@@ -37,6 +37,29 @@ impl UserSpace {
         Ok(())
     }
 
+    /// Advance the ISA's supervisor mappings without exposing a runnable root.
+    /// # Safety
+    /// Same permanently live boot resources and exclusive private-root custody
+    /// as begin, including between calls. Retire the whole space on error.
+    pub unsafe fn prepare_kernel(
+        &mut self,
+        frames: &mut impl FrameSource,
+        budget: usize,
+    ) -> Result<bool, MemoryError> {
+        let mut source = Tracked {
+            frames,
+            addresses: &mut self.owned,
+            len: &mut self.len,
+        };
+        // SAFETY: Backend retains owned progress only; caller owns every table frame.
+        unsafe {
+            self.mapping
+                .as_mut()
+                .unwrap()
+                .prepare_kernel(&mut source, budget)
+        }
+    }
+
     /// Copy a bounded number of image/stack pages into a private inactive root.
     /// # Safety
     /// Same frame/root custody as from_segments. Segments and contents describe

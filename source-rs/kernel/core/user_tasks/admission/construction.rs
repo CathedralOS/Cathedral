@@ -6,7 +6,10 @@ use crate::user_tasks::execution::timing::{self, Phase as TimedPhase};
 use cathedral_arch::{self as arch, Context};
 
 pub(super) const PAGE_BATCH: usize = 8;
+// Leaf edits are lighter than image copying; this is a work allowance, not WCET.
+const KERNEL_PAGE_BATCH: usize = 64;
 enum Phase {
+    Kernel,
     Image,
     Regions,
     Framebuffer,
@@ -21,6 +24,10 @@ pub(in crate::user_tasks) struct Draft {
 impl Draft {
     pub(in crate::user_tasks) fn frames(&self) -> usize {
         self.space.frame_count()
+    }
+    #[cfg(feature = "memory-lab")]
+    pub(super) fn preparing_kernel(&self) -> bool {
+        matches!(self.phase, Phase::Kernel)
     }
 }
 
@@ -53,6 +60,7 @@ pub(in crate::user_tasks) unsafe fn advance(
         .map(|draft| &draft.phase)
     {
         None => TimedPhase::DecodeRoot,
+        Some(Phase::Kernel) => TimedPhase::KernelMappings,
         Some(Phase::Image) => TimedPhase::ImageBatch,
         Some(Phase::Regions) => TimedPhase::RegionTables,
         Some(Phase::Framebuffer) => TimedPhase::Framebuffer,
@@ -88,16 +96,21 @@ unsafe fn step(
 ) -> Result<bool, Error> {
     let child = session.launches[index].model.child;
     if session.launches[index].draft.is_none() {
+        let start = timing::start();
         // SAFETY: The launch holds the source object or immutable boot template.
-        let (plan, _) = unsafe { image::decode(program)? };
+        let decoded = unsafe { image::decode(program) };
+        session.timing.record(TimedPhase::Decode, start);
+        let (plan, _) = decoded?;
+        let start = timing::start();
         // SAFETY: Private root; begin refunds its own partial tree on failure.
-        let space = unsafe { UserSpace::begin(layout, image_range, &plan.segments, frames) }
-            .map_err(Error::Memory)?;
+        let created = unsafe { UserSpace::begin(layout, image_range, &plan.segments, frames) };
+        session.timing.record(TimedPhase::Root, start);
+        let space = created.map_err(Error::Memory)?;
         session.launches[index].draft = Some(Draft {
             space,
             plan,
             cursor: LoadCursor::default(),
-            phase: Phase::Image,
+            phase: Phase::Kernel,
         });
         return Ok(false);
     }
@@ -107,6 +120,15 @@ unsafe fn step(
     // changes. Every table/backing allocation is captured by the space ledger.
     unsafe {
         match draft.phase {
+            Phase::Kernel => {
+                if draft
+                    .space
+                    .prepare_kernel(frames, KERNEL_PAGE_BATCH)
+                    .map_err(Error::Memory)?
+                {
+                    draft.phase = Phase::Image;
+                }
+            }
             Phase::Image => {
                 if draft
                     .space

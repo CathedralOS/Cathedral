@@ -147,8 +147,16 @@ unsafe fn physical(
     // SAFETY: Exclusive machine/frame custody for this entire fixture.
     let mut f = unsafe { setup(frames, layout, image, program) };
     let mut steps = 0;
+    let mut kernel_steps = 0;
     loop {
         steps += 1;
+        if f.session.launches[0]
+            .draft
+            .as_ref()
+            .is_some_and(Draft::preparing_kernel)
+        {
+            kernel_steps += 1;
+        }
         // SAFETY: Immutable ELF retained; child remains outside runnable context storage.
         let ready =
             unsafe { advance(&mut f.session, layout, image, program, &mut f.source, 0) }.unwrap();
@@ -156,9 +164,15 @@ unsafe fn physical(
         if ready {
             break;
         }
-        assert!(steps < 64);
+        // The smoke kernel embeds the lab executables; its supervisor image can
+        // need more batches as fixtures grow. Keep only a generous stall guard.
+        assert!(steps < image.bytes.div_ceil(4096) as usize + 128);
     }
     assert!(steps > 8); // 64 image pages + stack, not just a tiny probe.
+    #[cfg(target_arch = "x86_64")]
+    assert!(kernel_steps > 1); // The heap alone requires several supervisor batches.
+    #[cfg(target_arch = "aarch64")]
+    assert_eq!(kernel_steps, 1); // This backend borrows a permanent branch at creation.
     let required = f.source.allocated() - f.admitted;
     // SAFETY: Even a complete draft is private until final authority commit.
     unsafe {

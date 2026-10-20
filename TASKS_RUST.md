@@ -1,7 +1,7 @@
 # Rust reference OS: tasks and handoff
 
-Updated 2026-10-20 (local date). Current milestone: **kernel-phase observations
-and single-pass page-object edits**, on baseline `09c1e774` (incremental subtree reclamation).
+Updated 2026-10-20 (local date). Current milestone: **resumable supervisor mappings
+during admission**, on baseline `fab5207d` (kernel-phase observations).
 The latest section records verification and remaining steps toward bounded
 execution. This does not introduce real-time reservations.
 The fresh-lab reset is `30572c9f`. Compact recursive desktops landed as `c7571191`,
@@ -3648,3 +3648,73 @@ bound whichever phase warrants it. Pending-reference bursts and single-object
 cleanup remain atomic. Keep the ARM64 exhausted-stack entry/reporting audit and
 the intermittent clean-close LOSS timeout open. Guaranteed-service admission is
 still separate; these mechanical changes need no owner decision.
+
+## Resumable supervisor mappings during admission (2026-10-20)
+
+Baseline: `fab5207d`. Separating `Decode` and `Root` observations identified x86
+supervisor mapping construction as the substantial part of the old `DecodeRoot`
+phase. In the baseline's 32-restart fixture, decoding totaled 1,363 us and root
+construction 214,587 us. These are QEMU elapsed observations, affected by host
+scheduling and calibration, not native cost bounds.
+
+[Construction](source-rs/kernel/core/user_tasks/admission/construction.rs) now
+allocates a private root, then prepares its supervisor mappings before loading
+user pages. Core supplies a 64-leaf work allowance; the
+[x86 backend](source-rs/kernel/arch/isa/x86_64/user/memory/creation.rs) owns the
+boot-root address, kernel image/heap/stack ranges and cursor. Each step preserves
+the original supervisor permissions. No mapper or mutable page-table borrow
+survives the return to boot. The root accessor refuses an unfinished supervisor
+tree. ARM64 retains its existing permanent supervisor-branch borrow and completes
+the same preparation interface immediately. Initial boot admission runs this
+engine synchronously; ordinary child launches may yield between batches.
+
+All partial table allocations stay in the existing core frame ledger. Funding is
+charged after each step and refunded on refusal or owner/peer death. Source and
+initial-grant custody, revalidation and final publication remain unchanged.
+This is a smaller uninterrupted work unit, not less total work: in the final
+32-restart sample, bare-root allocation totaled 747 us and mapping preparation
+258,996 us spread across 2,112 steps. Both binaries include lab programs in their
+kernel image; normal F5 has a different mapping footprint. Admission can take
+longer under contention because peers can run between those steps.
+
+The longer startup exposed a test-interval error in the CPU-turn fixture: early
+children spun while later siblings were still being built, but the assertion
+compared their lifetime preemption counts against an outside peer that began
+later. Workers now park on their existing IPC ports until all admissions finish
+and the owner starts measurement. The fairness tolerance is unchanged. Final
+counts were outside/subtree 64/64 with one spinner and 65/65 with three. The
+admission rollback fixture's old fixed 64-step stall guard also had to account
+for the embedded kernel image; no production capacity or deadline was enlarged.
+
+Verification:
+
+- Workspace host tests pass, including the new x86 cursor regression over empty
+  ranges, gaps, high addresses and differing batch sizes, plus 132 core tests.
+- Release x86 smoke and ARM64 portability pass. Physical admission coverage
+  fails every frame allowance, cancels at every stage (now including supervisor
+  batches), checks unpublished authority and exact refunds, and checks owner/
+  peer loss and retained executable-source reclamation. It verifies multiple
+  x86 supervisor steps and one ARM64 preparation step.
+- Executable-authority integration passes: recursive funded pools, executable
+  capabilities, failed loads, stale grants and surviving siblings. Default x86,
+  smoke x86/ARM64 and supervision-guest clippy pass. Layout, formatting and
+  whitespace checks pass.
+- Fresh and cold three-level desktop runs pass with pointer stress, deepest
+  Notes persistence, protected close, isolation and two teardown/reopen cycles
+  per boot: `desktop/20261020T232137338052Z`, `build/root-desktop.log`. This
+  exercises the ordinary build with timing collection disabled. Interactive
+  saved media was untouched. The intermittent clean-close LOSS timeout did not
+  recur; delayed interaction replies were not enabled in this run.
+- Logs: `build/root-host.log`, `build/root-baseline.log`,
+  `build/root-baseline-serial.log`, `build/root-smoke-final.log`,
+  `build/root-final-serial.log`, `build/root-arm64.log`,
+  `build/root-authority.log`, `build/root-default.log`,
+  `build/root-clippy-final.log`, `build/root-arm64-clippy.log`,
+  `build/root-guest-clippy.log`. The initial test-interval failure is retained in
+  `build/root-smoke.log` and `build/root-pre-barrier-serial.log`.
+
+Next: use the now-separated phases to choose among runtime-table preparation,
+framebuffer mapping, rollback and reference-retirement bursts. Do not infer a
+latency guarantee from the work allowance. The ARM64 exhausted-stack entry audit,
+intermittent clean-close LOSS timeout and guaranteed-service admission remain
+open; no owner decision was needed for this mechanical step.

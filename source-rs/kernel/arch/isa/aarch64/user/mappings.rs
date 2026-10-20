@@ -42,6 +42,18 @@ impl UserMappings {
         }
         Ok(Self { root })
     }
+    /// ARM64 borrows its permanent supervisor branch in create; no leaf copy is needed.
+    /// # Safety
+    /// Same private inactive root and permanent boot-branch custody as create.
+    pub unsafe fn prepare_kernel(
+        &mut self,
+        _frames: &mut impl FrameSource,
+        budget: usize,
+    ) -> Result<bool, MemoryError> {
+        assert!(budget != 0);
+        self.assert_inactive();
+        Ok(true)
+    }
     /// # Safety
     /// Inactive owned tree, IRQs off; disjoint valid aligned VA/backing. Caller retains
     /// backing and every new table frame, retiring the tree on allocation failure.

@@ -88,10 +88,13 @@ impl UserSpace {
         // SAFETY: Same inactive-root and immutable-source obligations.
         let mut space = unsafe { Self::begin(layout, image, segments, frames)? };
         let mut cursor = LoadCursor::default();
-        if let Err(error) =
-            // SAFETY: Serialized wrapper for initial boot/fixtures; same batched page engine.
+        // SAFETY: Initial boot/fixtures construct synchronously with the same engines.
+        let result = unsafe { space.prepare_kernel(frames, usize::MAX) }.and_then(|complete| {
+            assert!(complete);
+            // SAFETY: Private root with complete supervisor mappings, retained image.
             unsafe { space.load_pages(segments, contents, &mut cursor, usize::MAX, frames) }
-        {
+        });
+        if let Err(error) = result {
             // SAFETY: Private root, never runnable, including partially built tables.
             unsafe {
                 space.release(frames);
@@ -102,6 +105,7 @@ impl UserSpace {
     }
 
     /// Start a private address space without installing any user image/stack pages.
+    /// Complete prepare_kernel before this root can be published or activated.
     /// # Safety
     /// Same exclusive inactive-root and frame custody as from_segments.
     pub unsafe fn begin(

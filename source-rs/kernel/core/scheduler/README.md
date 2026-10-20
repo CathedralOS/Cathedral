@@ -144,6 +144,10 @@ remain approximately half the sample while the other account divides its turns.
 The guest checks every spinner progressed, loan return, cancellation and complete
 heap/frame reclamation. Startup/teardown may cross timer boundaries, so host tests
 own exact counts and QEMU checks a bounded tolerance.
+Workers now park on their existing IPC ports until the whole subtree is admitted
+and the owner starts measurement. Otherwise early children can accumulate many
+preemptions while later children are built in batches, contaminating the lifetime
+reports used by this fixture. The fairness tolerance is unchanged.
 
 [Budget host tests](budget/tests.rs) prove fractional charging, ancestor limits,
 overrun debt, restart persistence, idle refill, yield pressure and loan movement.

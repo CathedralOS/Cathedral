@@ -13,9 +13,11 @@ use ::x86_64::{
 };
 pub struct UserMappings {
     root: u64,
+    kernel: creation::Kernel,
 }
 impl UserMappings {
     pub fn root(&self) -> u64 {
+        assert!(self.kernel.done(), "incomplete supervisor mappings");
         self.root
     }
     pub fn assert_inactive(&self) {

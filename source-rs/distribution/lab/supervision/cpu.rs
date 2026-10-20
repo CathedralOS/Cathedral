@@ -12,9 +12,10 @@ pub fn owner(argument: u64) -> u64 {
         .unwrap()
         .spawn_tree(argument, &[], &loans[..descendants as usize])
         .unwrap();
-    let (_, ready) = Port::at(0).unwrap().connect().unwrap();
+    let (start, ready) = Port::at(0).unwrap().connect().unwrap();
     ready.receive(&mut [0; 64]).unwrap();
     Handle::bootstrap(0).unwrap().send(b"measure").unwrap();
+    start.send(b"go").unwrap();
     Handle::bootstrap(1).unwrap().receive(&mut [0; 64]).unwrap();
     child.cancel().unwrap();
     assert_eq!(child.wait().unwrap(), Outcome::Cancelled);
@@ -39,13 +40,27 @@ pub fn peer(yielding: u64) -> u64 {
 }
 pub fn branch(argument: u64) -> u64 {
     let descendants = argument & 255;
+    let mut starts = [None; 2];
     for index in 0..descendants {
-        Launch::at(index).unwrap().spawn(argument & 256).unwrap();
+        // Children wait while later siblings are constructed. Their lifetime
+        // preemption reports must not count spinning before the sampling window.
+        Launch::at(index)
+            .unwrap()
+            .spawn((argument & 256) | 512)
+            .unwrap();
+        starts[index as usize] = Some(Port::at(index).unwrap().connect().unwrap().0);
     }
     Handle::bootstrap(1).unwrap().send(b"ready").unwrap();
+    Handle::bootstrap(0).unwrap().receive(&mut [0; 64]).unwrap();
+    for start in starts.into_iter().flatten() {
+        start.send(b"go").unwrap();
+    }
     worker(argument)
 }
 pub fn worker(argument: u64) -> ! {
+    if argument & 512 != 0 {
+        Handle::bootstrap(0).unwrap().receive(&mut [0; 64]).unwrap();
+    }
     if argument & 256 != 0 {
         loop {
             cathedral_user_runtime::yield_now();

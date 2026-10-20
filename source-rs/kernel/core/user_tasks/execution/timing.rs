@@ -14,6 +14,9 @@ pub(in crate::user_tasks) enum Phase {
     Conservation,
     Admission,
     DecodeRoot,
+    Decode,
+    Root,
+    KernelMappings,
     ImageBatch,
     RegionTables,
     Framebuffer,
@@ -31,7 +34,7 @@ pub(in crate::user_tasks) enum Phase {
 }
 
 #[cfg(feature = "memory-lab")]
-const PHASES: [Phase; 25] = [
+const PHASES: [Phase; 28] = [
     Phase::Trap,
     Phase::Syscall,
     Phase::InterruptWork,
@@ -43,6 +46,9 @@ const PHASES: [Phase; 25] = [
     Phase::Conservation,
     Phase::Admission,
     Phase::DecodeRoot,
+    Phase::Decode,
+    Phase::Root,
+    Phase::KernelMappings,
     Phase::ImageBatch,
     Phase::RegionTables,
     Phase::Framebuffer,

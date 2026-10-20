@@ -66,10 +66,18 @@ operation, with complete rollback on failure.
 [Spawn](../../lifecycle/spawn.rs) revalidates the owner, original peer consent and
 initial endpoint bundle, then advances a private [construction](../../admission/construction.rs).
 The first step decodes the executable through [image.rs](../../admission/image.rs)
-and creates an inactive root. Later steps copy, zero and map at most eight image
+and allocates an inactive root. Supervisor entry mappings are then prepared in
+batches: x86 copies at most 64 kernel image/heap/stack leaves per step, preserving
+their boot permissions. ARM64 already borrows its permanent supervisor branch
+and completes this phase immediately. The ISA retains owned range/cursor values,
+never a page-table borrow across suspension. The x86 root accessor refuses an
+unfinished supervisor tree. Later steps copy, zero and map at most eight image
 or stack pages, then reserve runtime mapping tables and map any approved
 framebuffer in separate phases. The generic page cursor knows segments, not ELF.
 Initial boot admission remains synchronous because no users are runnable yet.
+It runs the same mapping engine to completion before loading the user image.
+As with image batching, extra yields can lengthen admission under contention;
+they provide other tasks an opportunity to run, not a faster-launch guarantee.
 
 The launch retains the immutable executable source across steps; a draft owns
 its segment plan, page cursor, root and frame ledger without retaining borrowed
@@ -116,7 +124,7 @@ Final collection and whole-session conservation assertions are still atomic.
 
 ## Limits and evidence
 
-This is not a bounded-time kernel: executable decoding, root creation, runtime
+This is not a bounded-time kernel: executable decoding, bare-root allocation, runtime
 table reservation, framebuffer mapping, final authority commit, subtree
 authority withdrawal, final collection, failure rollback, final page-object mapping,
 sealing/unmapping, heap operations and event bursts still run uninterrupted.
