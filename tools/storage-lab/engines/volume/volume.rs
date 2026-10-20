@@ -18,6 +18,7 @@ pub fn run(args: &[String]) -> Result<()> {
         Some("startup-path-fixture") if args.len() == 5 => failure::rename(Path::new(&args[1]), args[2].parse()?, args[3].parse()?, &args[4]),
         Some("verify-unchanged") if args.len() == 5 => difference::unchanged(Path::new(&args[1]), Path::new(&args[2]), args[3].parse()?, args[4].parse()?),
         Some("compact") if args.len() == 4 => compact::run(Path::new(&args[1]), args[2].parse()?, args[3].parse()?),
+        Some("grow") if args.len() == 5 => compact::grow(Path::new(&args[1]), args[2].parse()?, args[3].parse()?, args[4].parse()?),
         Some("configure-fixture") if args.len()==5 => configuration::prepare(Path::new(&args[1]),args[2].parse()?,args[3].parse()?,match args[4].as_str(){"missing"=>true,"renamed"=>false,_=>return Err("fixture mode".into())}),
         Some("inspect-hierarchy") if args.len()==4 => hierarchy::inspect(Path::new(&args[1]),args[2].parse()?,args[3].parse()?),
         Some("upgrade-hierarchy") if args.len()>=4 => hierarchy::upgrade(Path::new(&args[1]), args[2].parse()?, args[3].parse()?, &args[4..]),
@@ -50,7 +51,7 @@ pub fn run(args: &[String]) -> Result<()> {
             println!("VOLUME ready={} generation={} capacity={} logical_length={} id={:032x}", header.ready, header.generation, header.capacity(), header.length, u128::from_be_bytes(header.id));
             Ok(())
         }
-        _ => Err("usage: engines volume prove NEW_DIRECTORY | format NEW_IMAGE BYTES ID_HEX | open IMAGE OFFSET BYTES | inspect IMAGE OFFSET BYTES | compact IMAGE OFFSET BYTES | verify-guest/verify-objects/verify-retention IMAGE OFFSET BYTES REVISION | verify-desktop IMAGE OFFSET BYTES (PARENT FILE)... | verify-colors/verify-notes IMAGE OFFSET BYTES LAST0 LAST1 | seed IMAGE OFFSET BYTES (PARENT FILE)... | upgrade-labels/upgrade-app-close IMAGE OFFSET BYTES LEGACY_LIST | failure-fixture IMAGE OFFSET BYTES login|notes|launcher|user CONTENT_FILE | startup-path-fixture IMAGE OFFSET BYTES login|users | verify-unchanged BEFORE AFTER OFFSET BYTES".into()),
+        _ => Err("usage: engines volume prove NEW_DIRECTORY | format NEW_IMAGE BYTES ID_HEX | open IMAGE OFFSET BYTES | inspect IMAGE OFFSET BYTES | compact IMAGE OFFSET BYTES | grow IMAGE OFFSET OLD_BYTES NEW_BYTES | verify-guest/verify-objects/verify-retention IMAGE OFFSET BYTES REVISION | verify-desktop IMAGE OFFSET BYTES (PARENT FILE)... | verify-colors/verify-notes IMAGE OFFSET BYTES LAST0 LAST1 | seed IMAGE OFFSET BYTES (PARENT FILE)... | upgrade-labels/upgrade-app-close IMAGE OFFSET BYTES LEGACY_LIST | failure-fixture IMAGE OFFSET BYTES login|notes|launcher|user CONTENT_FILE | startup-path-fixture IMAGE OFFSET BYTES login|users | verify-unchanged BEFORE AFTER OFFSET BYTES".into()),
     }
 }
 

@@ -102,9 +102,12 @@ before manifests and chunks so a pin between passes cannot resurrect a partially
 collected revision. It frees engine pages for reuse; it does not shrink the file.
 The exported `collect_records` applies that same bounded pass to a caller-owned
 transaction. The offline stock-program updater uses it under quota pressure after
-staging new heads, so replacement and collection commit or abort together. Guest
+staging all stock and named replacement heads in host scratch space. The complete
+result is quota-checked before publication; standalone migrations still enforce
+their own final quota. Guest
 `Store::collect` still runs one pass per transaction with unchanged semantics.
 
+The lab allowance is 2 MiB per root, including installed code and nested snapshots.
 Accounting includes exact retained keys and values, including the ledger itself.
 It excludes redb pages, allocator overhead and free-space reserves.
 

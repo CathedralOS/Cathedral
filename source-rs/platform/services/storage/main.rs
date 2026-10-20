@@ -25,7 +25,7 @@ fn main(_: u64, _argument: u64) -> u64 {
     let db = cathedral_storage_engine::open_observed(
         disk,
         4096,
-        4 * 1024 * 1024,
+        8 * 1024 * 1024,
         // Retain the hot metadata pages without consuming the heap headroom
         // needed for a subtree-copy writer. See the measured desktop handoff.
         64 * 1024,

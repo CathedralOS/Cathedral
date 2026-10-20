@@ -39,25 +39,30 @@ QEMU still enforce their locks when opening the image.
 
 The desktop retains `build/boot-harness-rs/cathedral-storage.raw`. First launch
 builds the host formatter and creates the image; later launches preserve it.
-Existing files are never automatically reformatted. Older lab disks are untouched.
+Existing files are never automatically reformatted. On launch, the old 4 MiB
+database extent is backed up and grown offline to 8 MiB, preserving every record,
+volume identity and outside guard bytes. This leaves transaction space for the
+2 MiB logical root allowance; installed code and saved nested snapshots count too.
 The desktop's explicit readable-label migration also updates recognized stock
 launchers inside existing users. Old Notes/Colors gain labels while keeping
 their code and saved data. Customized/unrecognized programs remain untouched.
 Changed installs save a complete `.before-compact-<digest>.raw` backup before
 preparation. Program publication, stock-copy refresh and named additions run on a
 private larger host scratch disk. The resulting database is compacted, checked
-against the original 4 MiB extent and cold-compared before publication to the
-locked saved disk. The guest disk is never enlarged or reformatted. Rejected
-preparation leaves its bytes and receipt unchanged; unchanged installs do not
-open it. Collection under logical quota pressure preserves current data and pins.
+against the assigned extent and cold-compared before publication to the locked
+saved disk. Rejected program preparation leaves its bytes and receipt unchanged
+after any successful extent growth; unchanged installs on current-size media do
+not open it. Quota admission follows all stock and named program replacements,
+so mixed generations are never mistaken for the final live set. Collection under
+pressure preserves current data and pins.
 
 The full-image publication is offline maintenance, not a power-loss-atomic disk
 transaction. Ordinary publication errors attempt to restore the original; an
 interruption during that copy requires restoring the content-named backup.
 Direct standalone migration commands still create their older per-stage backups.
 
-This does not increase capacity or make a truly full volume unlimited;
-maintenance failures stop installation without formatting.
+The fixed extent and root quota remain lab limits; maintenance failures stop
+installation without formatting.
 
 If F5 builds but no QEMU window appears, check the integrated terminal. An image
 from before programs were installed as objects can fail with "holds something

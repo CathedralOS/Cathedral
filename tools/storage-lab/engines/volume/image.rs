@@ -1,5 +1,6 @@
 //! Locked regular host images only. Creation refuses existing paths; opening
-//! never creates, truncates or resizes. The volume adapter cannot resize the image.
+//! never creates, truncates or resizes. Only offline maintenance can resize the
+//! locked file; the volume adapter cannot resize it through StorageBackend.
 use redb::StorageBackend;
 use std::{
     fs::{File, OpenOptions},
@@ -11,6 +12,9 @@ use std::{
 #[derive(Debug)]
 pub struct Image(Mutex<File>);
 impl Image {
+    pub(super) fn resize_for_maintenance(&self, bytes: u64) -> io::Result<()> {
+        self.0.lock().unwrap().set_len(bytes)
+    }
     pub fn create(path: &Path, bytes: u64) -> io::Result<Self> {
         let file = OpenOptions::new()
             .read(true)

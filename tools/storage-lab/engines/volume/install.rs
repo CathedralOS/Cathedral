@@ -51,7 +51,10 @@ pub fn run(args: &[String]) -> Result<()> {
             drop(image);
             seed::seed(&path, 0, scratch.region_bytes, &programs)?;
             if let Some(legacy) = legacy {
-                labels::upgrade(&path, 0, scratch.region_bytes, &legacy, refresh)?;
+                // Keep history until every stock/named copy has been matched.
+                // Hierarchy finishes replacements, collects unreachable history
+                // under pressure and checks final quota before publication.
+                labels::stage(&path, 0, scratch.region_bytes, &legacy, refresh)?;
                 hierarchy::upgrade(&path, 0, scratch.region_bytes, &args[end..])?;
             }
             let db = open(Region::new(

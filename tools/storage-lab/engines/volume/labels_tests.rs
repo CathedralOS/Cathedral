@@ -273,14 +273,15 @@ fn quota_pressure_collects_only_unreachable_history_and_refuses_live_excess_atom
         std::fs::create_dir(&dir).unwrap();
         let path = dir.join("guest.raw");
         // Leave physical scratch space so this fixture isolates the logical quota.
-        let bytes = 8 * 1024 * 1024;
+        let bytes = 16 * 1024 * 1024;
         let image = Arc::new(Image::create(&path, bytes + 8192).unwrap());
         image.write(0, &[0x5a; 4096]).unwrap();
         image.write(bytes + 4096, &[0xa5; 4096]).unwrap();
         format(Region::new(image.clone(), 4096, bytes).unwrap(), [1; 16]).unwrap();
         drop(image);
         let mut original = fixture();
-        for revision in 1u64..=6 {
+        let revisions = cathedral_database_objects::ROOT_QUOTA / (192 * 1024) + 1;
+        for revision in 1u64..=revisions {
             let mut data = Vec::new();
             for part in 0u64..6144 {
                 data.extend_from_slice(
@@ -300,9 +301,9 @@ fn quota_pressure_collects_only_unreachable_history_and_refuses_live_excess_atom
             let mut pin = 15u64.to_be_bytes().to_vec();
             pin.extend_from_slice(&original[&event(15, 1)]);
             original.insert(key(b'p', &[0]), pin);
-            put(&mut original, 15, 7, 0, b"current data");
+            put(&mut original, 15, revisions + 1, 0, b"current data");
         }
-        original.insert(key(b'n', &[]), 21u64.to_le_bytes().to_vec());
+        original.insert(key(b'n', &[]), (15 + revisions).to_le_bytes().to_vec());
         let charge: usize = original.iter().map(|(k, v)| k.len() + v.len()).sum();
         original.insert(key(b'q', &[]), (charge as u64).to_le_bytes().to_vec());
         assert!(charge as u64 > cathedral_database_objects::ROOT_QUOTA);
@@ -402,6 +403,148 @@ fn quota_pressure_collects_only_unreachable_history_and_refuses_live_excess_atom
             &final_image[final_image.len() - 4096..],
             &raw[raw.len() - 4096..]
         );
+        std::fs::remove_dir_all(dir).unwrap();
+    }
+}
+#[test]
+fn coordinated_upgrade_checks_final_generation_and_preserves_pinned_excess() {
+    for pinned in [false, true] {
+        let dir = std::env::temp_dir().join(format!(
+            "cathedral-install-quota-{}-{pinned}",
+            std::process::id()
+        ));
+        std::fs::create_dir(&dir).unwrap();
+        let path = dir.join("guest.raw");
+        let bytes = 16 * 1024 * 1024;
+        let image = Arc::new(Image::create(&path, bytes + 8192).unwrap());
+        image.write(0, &[0x5a; 4096]).unwrap();
+        image.write(bytes + 4096, &[0xa5; 4096]).unwrap();
+        format(Region::new(image.clone(), 4096, bytes).unwrap(), [2; 16]).unwrap();
+        drop(image);
+        let payload = |tag: u64| {
+            let mut data = vec![0; cathedral_database_objects::MAX_BYTES];
+            for (i, chunk) in data.chunks_mut(4096).enumerate() {
+                chunk[..8].copy_from_slice(&tag.to_le_bytes());
+                chunk[8..16].copy_from_slice(&(i as u64).to_le_bytes());
+            }
+            data[..4].copy_from_slice(b"\x7fELF");
+            data
+        };
+        let mut rows = fixture();
+        let old = payload(100);
+        let named = dir.join("nested.elf");
+        std::fs::write(&named, &old).unwrap();
+        let mut additions = vec![
+            "Nested".into(),
+            named.to_string_lossy().into_owned(),
+            "-".into(),
+        ];
+        realm_programs::install(&mut rows, &additions).unwrap();
+        additions[2] = digest(&old).iter().map(|b| format!("{b:02x}")).collect();
+        // Original live state fits. A new large matrix temporarily pushes it
+        // over quota until the later named replacement retires the old code.
+        let count = cathedral_database_objects::ROOT_QUOTA
+            / cathedral_database_objects::MAX_BYTES as u64
+            - 2;
+        for i in 0..count {
+            put(&mut rows, 100 + i, 1, 0, &payload(i));
+        }
+        rows.insert(key(b'n', &[]), (100 + count).to_le_bytes().to_vec());
+        if pinned {
+            let mut pin = 15u64.to_be_bytes().to_vec();
+            pin.extend_from_slice(&rows[&key(b'h', &15u64.to_be_bytes())]);
+            rows.insert(key(b'p', &[0]), pin);
+        }
+        let charge: usize = rows.iter().map(|(k, v)| k.len() + v.len()).sum();
+        rows.insert(key(b'q', &[]), (charge as u64).to_le_bytes().to_vec());
+        assert!(charge as u64 <= cathedral_database_objects::ROOT_QUOTA);
+        assert!(charge as u64 + payload(101).len() as u64 > cathedral_database_objects::ROOT_QUOTA);
+        {
+            let db = open(Region::new(Arc::new(Image::open(&path).unwrap()), 4096, bytes).unwrap())
+                .unwrap();
+            let tx = db.begin_write().unwrap();
+            {
+                let mut table = tx
+                    .open_table(TableDefinition::<&[u8], &[u8]>::new("private-objects-v3"))
+                    .unwrap();
+                for (k, v) in &rows {
+                    table.insert(k.as_slice(), v.as_slice()).unwrap();
+                }
+            }
+            tx.commit().unwrap();
+        }
+        let original = std::fs::read(&path).unwrap();
+        let migration = dir.join("migration.txt");
+        std::fs::write(&migration, "").unwrap();
+        let mut args = vec![
+            path.to_string_lossy().into_owned(),
+            "4096".into(),
+            bytes.to_string(),
+            migration.to_string_lossy().into_owned(),
+            "true".into(),
+            "6".into(),
+        ];
+        for id in 1u64..=6 {
+            let h = &rows[&key(b'h', &id.to_be_bytes())];
+            let data = match id {
+                2 => vec![],
+                3 => payload(101),
+                _ => content(&rows, h).unwrap(),
+            };
+            let file = dir.join(format!("{id}.elf"));
+            std::fs::write(&file, data).unwrap();
+            args.push(u64::from_le_bytes(h[48..].try_into().unwrap()).to_string());
+            args.push(file.to_string_lossy().into_owned());
+        }
+        std::fs::write(&named, b"\x7fELFsmall replacement").unwrap();
+        args.extend(additions);
+        let result = install::run(&args);
+        if pinned {
+            assert!(result.unwrap_err().to_string().contains("live/pinned"));
+            assert_eq!(std::fs::read(&path).unwrap(), original);
+        } else {
+            result.unwrap();
+            let read = || {
+                let db =
+                    open(Region::new(Arc::new(Image::open(&path).unwrap()), 4096, bytes).unwrap())
+                        .unwrap();
+                compact::records(&db).unwrap()
+            };
+            let after = read();
+            let actual = &after["private-objects-v3"];
+            for (k, v) in &rows {
+                if matches!(k[1], b'h' | b'p')
+                    && ![7u64, 8, 9, 10, 15, 16, 3]
+                        .iter()
+                        .any(|id| *k == key(b'h', &id.to_be_bytes()))
+                {
+                    assert_eq!(actual.get(k), Some(v), "saved/custom head or pin changed");
+                }
+            }
+            assert_eq!(
+                content(actual, &actual[&key(b'h', &7u64.to_be_bytes())]).unwrap(),
+                payload(101)
+            );
+            for id in [15u64, 16] {
+                assert_eq!(
+                    content(actual, &actual[&key(b'h', &id.to_be_bytes())]).unwrap(),
+                    b"\x7fELFsmall replacement"
+                );
+            }
+            let charge: usize = actual
+                .iter()
+                .filter(|(k, _)| k[0] == 0)
+                .map(|(k, v)| k.len() + v.len())
+                .sum();
+            assert!(charge as u64 <= cathedral_database_objects::ROOT_QUOTA);
+            assert_eq!(actual[&key(b'q', &[])], (charge as u64).to_le_bytes());
+            install::run(&args).unwrap();
+            assert_eq!(read(), after);
+            let raw = std::fs::read(&path).unwrap();
+            assert_eq!(&raw[..4096], &original[..4096]);
+            assert_eq!(&raw[raw.len() - 4096..], &original[original.len() - 4096..]);
+        }
+        // Only this test's exclusively created private directory.
         std::fs::remove_dir_all(dir).unwrap();
     }
 }

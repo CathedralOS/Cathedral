@@ -25,7 +25,9 @@ three scope words name subtrees it must stay inside: before dispatch the
 provider checks that every stamped scope is an ancestor of every object the
 request would touch, refusing an object outside the scope and one that does
 not exist alike, and refusing to replace or delete the scope object itself.
-Objects hold up to 256 KiB, so programs fit; a root holds a megabyte. The desktop's root matrix holds both links and delegates
+Objects hold up to 256 KiB, so programs fit; a root has a 2 MiB retained-record
+allowance. The lab volume occupies 8 MiB, including engine transaction headroom.
+The desktop's root matrix holds both links and delegates
 subtrees of them to its children; the [objects lab](../../../distribution/lab/objects/README.md)
 hands them to two bare clients instead.
 

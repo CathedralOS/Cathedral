@@ -206,11 +206,13 @@ fn the_root_quota_refuses_a_write_whole_after_staging_its_chunks() {
     let db = database();
     let store = Store::open(&db).unwrap();
     // Distinct chunks every time, so nothing is shared and the root fills up.
-    let mut object = 0;
+    let mut object = 0u64;
     loop {
-        let bytes: Vec<_> = (0..MAX_BYTES)
-            .map(|i| ((i / 4096 + object as usize * 64) % 251) as u8)
-            .collect();
+        let mut bytes = vec![0; MAX_BYTES];
+        for (index, chunk) in bytes.chunks_mut(CHUNK_BYTES).enumerate() {
+            chunk[..8].copy_from_slice(&object.to_le_bytes());
+            chunk[8..16].copy_from_slice(&(index as u64).to_le_bytes());
+        }
         let before = snapshot(&db);
         match store.publish(0, 0, 0, &bytes, 0) {
             Ok(created) => object = created.id,
@@ -546,7 +548,6 @@ fn hierarchy_indexes_copy_independently_and_conflicts_are_atomic() {
     assert_eq!(store.lookup(0, copy.id, b"Notes"), Err(Error::Missing));
     collect(&store, 0);
     accounted(&db, 0);
-    drop(store);
     let reopened = Store::open(&db).unwrap();
     assert_eq!(reopened.lookup(0, folder.id, b"Editor"), Ok(app.id));
 }

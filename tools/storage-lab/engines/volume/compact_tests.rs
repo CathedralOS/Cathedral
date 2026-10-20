@@ -122,3 +122,58 @@ fn full_extent_rebuild_preserves_records_and_failed_edits_leave_input_untouched(
     drop(db);
     std::fs::remove_dir_all(directory).unwrap();
 }
+#[test]
+fn offline_growth_preserves_records_identity_guards_and_backup() {
+    let directory = std::env::temp_dir().join(format!("cathedral-grow-{}", std::process::id()));
+    std::fs::create_dir(&directory).unwrap();
+    let path = directory.join("guest.raw");
+    let bytes = 4 * 1024 * 1024;
+    let image = Arc::new(Image::create(&path, bytes + 8192).unwrap());
+    image.write(0, &[0x5a; 4096]).unwrap();
+    image.write(bytes + 4096, &[0xa5; 4096]).unwrap();
+    let region = Region::new(image.clone(), 4096, bytes).unwrap();
+    format(region.clone(), [3; 16]).unwrap();
+    let db = open(region.clone()).unwrap();
+    let tx = db.begin_write().unwrap();
+    {
+        tx.open_table(TABLE)
+            .unwrap()
+            .insert(b"keep".as_slice(), b"all saved content".as_slice())
+            .unwrap();
+    }
+    tx.commit().unwrap();
+    let expected = records(&db).unwrap();
+    drop(db);
+    let header = region.headers().unwrap();
+    drop(region);
+    drop(image);
+    let original = std::fs::read(&path).unwrap();
+    assert!(grow(&path, 4096, bytes, bytes / 2).is_err());
+    assert!(
+        rewrite_extent(&path, 4096, bytes, bytes * 2, |_, _| Err(
+            "refuse staged edit".into()
+        ))
+        .is_err()
+    );
+    assert_eq!(std::fs::read(&path).unwrap(), original);
+    grow(&path, 4096, bytes, bytes * 2).unwrap();
+    let raw = std::fs::read(&path).unwrap();
+    assert_eq!(raw.len() as u64, bytes * 2 + 8192);
+    assert_eq!(&raw[..4096], &original[..4096]);
+    assert_eq!(&raw[raw.len() - 4096..], &original[original.len() - 4096..]);
+    let backup = directory.join(format!(
+        "guest.raw.before-compact-{}.raw",
+        blake3::hash(&original).to_hex()
+    ));
+    assert_eq!(std::fs::read(backup).unwrap(), original);
+    let region = Region::new(Arc::new(Image::open(&path).unwrap()), 4096, bytes * 2).unwrap();
+    let after = region.headers().unwrap();
+    assert_eq!(after.id, header.id);
+    assert_eq!(after.region_bytes, bytes * 2);
+    assert!(after.generation > header.generation);
+    let db = open(region).unwrap();
+    assert_eq!(records(&db).unwrap(), expected);
+    drop(db);
+    // Only this test's exclusively created private directory.
+    std::fs::remove_dir_all(directory).unwrap();
+}

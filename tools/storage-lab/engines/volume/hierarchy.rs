@@ -107,7 +107,8 @@ pub fn upgrade(path: &Path, offset: u64, bytes: u64, additions: &[String]) -> Re
     let before = records.clone();
     plan(&mut records)?;
     realm_programs::install(&mut records, additions)?;
-    if records == before {
+    let mut charged = u64::from_le_bytes(records[&seed::key(b'q', &[])].as_slice().try_into()?);
+    if records == before && charged <= cathedral_database_objects::ROOT_QUOTA {
         println!("HIERARCHY: already installed");
         return Ok(());
     }
@@ -144,17 +145,25 @@ pub fn upgrade(path: &Path, offset: u64, bytes: u64, additions: &[String]) -> Re
             table.insert(k.as_slice(), v.as_slice())?;
         }
     }
-    let mut charged = u64::from_le_bytes(records[&seed::key(b'q', &[])].as_slice().try_into()?);
+    let before_collection = charged;
     while charged > cathedral_database_objects::ROOT_QUOTA {
         let pass = cathedral_database_objects::collect_records(&mut table, 0)
             .map_err(|error| format!("hierarchy collection failed: {error:?}"))?;
         charged = pass.charged;
         if pass.removed == 0 {
-            return Err("live/pinned realm programs exceed logical quota".into());
+            return Err(format!(
+                "live/pinned realm programs need {charged} bytes, exceeding root quota {}; no upgrade changes published",
+                cathedral_database_objects::ROOT_QUOTA
+            ).into());
         }
     }
     drop(table);
     tx.commit()?;
+    if charged != before_collection {
+        println!(
+            "HIERARCHY: collected unreachable revisions; charged bytes {before_collection} -> {charged}"
+        );
+    }
     println!(
         "HIERARCHY: installed names, media indexes and matrix configuration; backup {}",
         backup_path.display()
@@ -250,13 +259,33 @@ fn plan(records: &mut Records) -> Result<()> {
         .filter(|(k, _)| k[0] == 0)
         .map(|(k, v)| k.len() + v.len())
         .sum::<usize>();
-    if charged > 1024 * 1024 {
-        return Err("hierarchy migration exceeds quota".into());
-    }
+    // Admission follows all named replacements and reachability collection in
+    // upgrade(); intermediate old/new generations may exceed the final quota.
     records.insert(
         seed::key(b'q', &[]),
         (charged as u64).to_le_bytes().to_vec(),
     );
+    Ok(())
+}
+
+pub fn inspect(path: &Path, offset: u64, bytes: u64) -> Result<()> {
+    let db = open(Region::new(Arc::new(Image::open(path)?), offset, bytes)?)?;
+    let tx = db.begin_read()?;
+    let table = tx.open_table(TableDefinition::<&[u8], &[u8]>::new("private-objects-v3"))?;
+    for row in table.iter()? {
+        let (k, v) = row?;
+        let k = k.value();
+        let v = v.value();
+        if k.len() == 10 && k.starts_with(&[0, b'h']) && v.len() == 56 {
+            let id = u64::from_be_bytes(k[2..].try_into()?);
+            let parent = u64::from_le_bytes(v[48..].try_into()?);
+            let digest = v[8..40]
+                .iter()
+                .map(|b| format!("{b:02x}"))
+                .collect::<String>();
+            println!("OBJECT {id} parent={parent} manifest={digest}");
+        }
+    }
     Ok(())
 }
 
@@ -317,25 +346,4 @@ mod tests {
             .sum::<usize>();
         assert_eq!(rows[&seed::key(b'q', &[])], (charged as u64).to_le_bytes());
     }
-}
-
-pub fn inspect(path: &Path, offset: u64, bytes: u64) -> Result<()> {
-    let db = open(Region::new(Arc::new(Image::open(path)?), offset, bytes)?)?;
-    let tx = db.begin_read()?;
-    let table = tx.open_table(TableDefinition::<&[u8], &[u8]>::new("private-objects-v3"))?;
-    for row in table.iter()? {
-        let (k, v) = row?;
-        let k = k.value();
-        let v = v.value();
-        if k.len() == 10 && k.starts_with(&[0, b'h']) && v.len() == 56 {
-            let id = u64::from_be_bytes(k[2..].try_into()?);
-            let parent = u64::from_le_bytes(v[48..].try_into()?);
-            let digest = v[8..40]
-                .iter()
-                .map(|b| format!("{b:02x}"))
-                .collect::<String>();
-            println!("OBJECT {id} parent={parent} manifest={digest}");
-        }
-    }
-    Ok(())
 }

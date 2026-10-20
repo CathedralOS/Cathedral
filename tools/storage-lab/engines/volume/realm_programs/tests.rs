@@ -140,7 +140,7 @@ fn first_install_does_not_claim_an_existing_template_name() {
 #[test]
 fn named_addition_collects_old_history_after_staging_and_keeps_current_user_data() {
     let mut rows = base();
-    for revision in 0u64..7 {
+    for revision in 0u64..(cathedral_database_objects::ROOT_QUOTA / (128 * 1024) - 1) {
         let mut data = vec![0; 128 * 1024];
         for (i, chunk) in data.chunks_mut(4096).enumerate() {
             chunk[..8].copy_from_slice(&(revision * 32 + i as u64).to_le_bytes());

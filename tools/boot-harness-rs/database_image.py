@@ -10,7 +10,8 @@ import subprocess
 import sys
 import tempfile
 
-VOLUME_BYTES = 4 * 1024 * 1024
+VOLUME_BYTES = 8 * 1024 * 1024
+LEGACY_VOLUME_BYTES = 4 * 1024 * 1024
 OFFSET = 4096
 IMAGE_BYTES = OFFSET + VOLUME_BYTES + 4096
 
@@ -74,6 +75,12 @@ def prepare(path, programs=(), label_migration=None, app_close=False, realm_prog
     sidecar = path.with_name(path.name + '.programs')
     existing = path.exists()
     if existing:
+        if path.stat().st_size == OFFSET + LEGACY_VOLUME_BYTES + 4096:
+            # Preserve all records/identity and move the trailing guard. The host
+            # locks, backs up and cold-verifies this explicit offline growth.
+            executable = oracle()
+            subprocess.run([str(executable), 'engines', 'volume', 'grow', str(path),
+                            str(OFFSET), str(LEGACY_VOLUME_BYTES), str(VOLUME_BYTES)], check=True)
         if path.stat().st_size != IMAGE_BYTES:
             raise RuntimeError(f'Unexpected database image size; refusing to replace {path}')
     else:

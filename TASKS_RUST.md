@@ -1,15 +1,18 @@
 # Rust reference OS: tasks and handoff
 
-Updated 2026-10-19 (local date). Current milestone: **owner-mediated resource
-growth and concurrent apps in Nested**. Baseline `65d0209e` supplies desktop
+Updated 2026-10-19 (local date). Current milestone: **saved-disk F5 quota and
+transaction headroom repair**, on baseline `5ccfd810` (owner-mediated resource
+growth and concurrent apps in Nested). Earlier baseline `65d0209e` supplies desktop
 timing and reduced collection I/O. Live funding now travels through immediate
 owners under finite policy ceilings; a fresh nested user can run two leaf apps.
 Verification and remaining limits are recorded in the latest section below.
 Previous baseline: atomic named creation and deeper recursive matrices at `102e416c`.
 F5 stages changed program installations in host scratch space, then verifies and
-publishes a result that fits the original disk extent.
-Stock-copy refresh also collects unreachable revisions under logical quota
-pressure in the same transaction as its replacements; current data and pins survive.
+publishes a result that fits the assigned disk extent. Legacy 4 MiB desktop
+volumes are backed up and grown offline to 8 MiB without changing their records;
+the root's logical allowance is now 2 MiB. Final quota admission follows all
+stock and named replacements, with reachability collection under pressure.
+Current data and pins survive.
 See the latest evidence at the end of this handoff. Earlier baseline: declared service
 imports and optional Notes persistence at **`8d1972a`**, followed by readable
 chooser labels at **`787344e`**, existing-user label upgrade at **`4f1c6c8`**,
@@ -2695,3 +2698,62 @@ Existing inner users retain their code; create a new inner user to try live
 growth. Flexible surface funding and live quota return are still separate work.
 Previous intermittent ATA and unreproduced NO_MEMORY reports remain unresolved.
 All tests used disposable images; the interactive saved disk was not touched.
+
+## F5 live quota and transaction headroom repair (2026-10-19)
+
+The owner's saved image reproduced `live/pinned content exceeds root quota`
+before QEMU launch. There were two separate problems: labels checked admission
+before named replacements, and the complete upgraded live/pinned set genuinely
+needed 1,287,797 bytes, beyond the old 1 MiB allowance. Existing nested users keep
+their older code snapshots; they cannot be silently discarded as upgrade garbage.
+
+The coordinated installer now stages labels without collection/admission, then
+finishes hierarchy and named programs before collecting unreachable history and
+checking final quota. Standalone label/hierarchy migrations still enforce quota.
+Hierarchy checks even when its own plan has no changes, and no longer rejects the
+intermediate plan before named replacements. Final excess reports required bytes
+and leaves program publication untouched.
+
+The logical root allowance is 2 MiB. Merely raising it exposed a second failure
+on the owner's fuller image: it booted, but the next Notes save ended the provider
+with `Engine`. The compacted database occupied 2,609,152 bytes and the old 4 MiB
+extent did not leave enough transaction allocation space. Database lab media and
+the provider now use an 8 MiB assigned extent. F5 recognizes legacy guarded 4 MiB
+images and invokes explicit offline `grow` before installation, even if the
+program receipt already matches. Growth holds the image lock, syncs a complete
+content-named backup, prepares and cold-compares every record off-image, then
+grows the file and moves its trailing guard. Identity and contents survive. It
+can restore the original length/bytes on ordinary publication errors. Like the
+existing offline compactor, interruption during publication requires its backup;
+this is not a power-loss-atomic resize. A successful growth may remain if a later
+program upgrade refuses. No existing media is reformatted.
+
+Verification:
+
+- Workspace host tests, all 16 database-object host tests and all 38 storage-lab
+  engine tests pass. Regression coverage crosses quota with mixed generations,
+  admits the final replacement, preserves user/custom heads, and refuses pinned
+  final excess with byte-identical input. Offline growth checks records, identity,
+  guards, backup, shrink refusal and refusal before publication.
+- Quota-pressure fixtures scale with the allowance. The object quota fixture now
+  uses unique chunk identities rather than wrapping byte values after 251 chunks.
+- All 19 harness unit tests pass, including growth with an unchanged receipt and
+  refusal without replacing media/receipt. Userspace, storage-lab and object-host
+  clippy, workspace formatting and layout checks pass.
+- Default desktop creation, concurrent Notes drafts, close, saves, cold reopen
+  and the 536-record whole-store oracle pass on 8 MiB media:
+  `desktop/20261020T034543188251Z`.
+- The exact saved disk was tested in `quota-upgrade-repro`: 77 heads survive;
+  only nine recognized stock program heads change. It boots to the existing
+  users, enters User 1, launches Notes, saves `quotacheck`, and cold-opens that
+  text with healthy storage. Test text was written only to a disposable copy.
+- The interactive `cathedral-storage.raw` and receipt have now been upgraded.
+  Its complete tables/records, identity, guards and even physical bytes match the
+  verified upgraded copy. The original content-named backup ends in
+  `be036e6641b95064e652fb60da2483aaab47ec14f01cf8ceae620eee9eea8387.raw`;
+  the old receipt is also kept in `quota-upgrade-repro/interactive-before.programs`.
+
+These remain fixed lab capacities, not a general quota/volume expansion policy.
+Saved inner-user code snapshots are still deliberately retained. The previous
+live-growth milestone's recovery/layout follow-ups remain next; no new owner
+semantic decision was needed for this launch repair.

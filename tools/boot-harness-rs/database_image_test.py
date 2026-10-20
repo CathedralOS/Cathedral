@@ -9,6 +9,37 @@ import database_image
 
 
 class DatabaseImageTests(unittest.TestCase):
+    def test_legacy_extent_grows_even_when_installed_programs_are_unchanged(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / 'desktop.raw'
+            path.write_bytes(bytes(database_image.OFFSET + database_image.LEGACY_VOLUME_BYTES + 4096))
+            program = Path(directory) / 'app.elf'
+            program.write_bytes(b'app')
+            import hashlib
+            import json
+            receipt = json.dumps([[0, hashlib.sha256(b'app').hexdigest()]])
+            path.with_name(path.name + '.programs').write_text(receipt)
+            def grow(command, **kwargs):
+                self.assertEqual(command[3], 'grow')
+                path.write_bytes(bytes(database_image.IMAGE_BYTES))
+            with patch.object(database_image, 'oracle', return_value=Path(directory) / 'oracle.exe'), patch.object(database_image.subprocess, 'run', side_effect=grow) as run:
+                database_image.prepare(path, [(0, program)])
+                self.assertEqual(run.call_count, 1)
+            self.assertEqual(path.with_name(path.name + '.programs').read_text(), receipt)
+
+    def test_failed_growth_keeps_original_image_and_receipt(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / 'desktop.raw'
+            original = bytes(database_image.OFFSET + database_image.LEGACY_VOLUME_BYTES + 4096)
+            path.write_bytes(original)
+            sidecar = path.with_name(path.name + '.programs')
+            sidecar.write_text('[]')
+            with patch.object(database_image, 'oracle', return_value=Path(directory) / 'oracle.exe'), patch.object(database_image.subprocess, 'run', side_effect=subprocess.CalledProcessError(1, 'grow')):
+                with self.assertRaises(subprocess.CalledProcessError):
+                    database_image.prepare(path)
+            self.assertEqual(path.read_bytes(), original)
+            self.assertEqual(sidecar.read_text(), '[]')
+
     @unittest.skipUnless(os.name == 'nt', 'Windows image sharing diagnostic')
     def test_busy_desktop_refuses_before_build_or_disk_changes(self):
         import run as harness

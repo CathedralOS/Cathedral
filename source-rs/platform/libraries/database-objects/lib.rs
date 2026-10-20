@@ -26,7 +26,9 @@ pub const INLINE_BYTES: usize = 128;
 /// Retained record bytes per root, including keys and event history. This is an
 /// admission limit, not a claim about physical redb space or allocator overhead.
 /// It also bounds one collection pass's scan.
-pub const ROOT_QUOTA: u64 = 1024 * 1024;
+// Installed code and saved nested snapshots share this lab allowance with data.
+// The volume's physical extent remains an independent capacity limit.
+pub const ROOT_QUOTA: u64 = 2 * 1024 * 1024;
 /// Objects one tree copy may produce; it bounds one request's work, not the
 /// root's size.
 pub const COPY_LIMIT: usize = 64;

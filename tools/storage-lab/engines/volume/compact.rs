@@ -29,6 +29,15 @@ pub fn run(path: &Path, offset: u64, bytes: u64) -> Result<()> {
     rewrite(path, offset, bytes, |records, _| Ok(records))
 }
 
+/// Explicit offline growth keeps the volume identity, every record and both
+/// outside guards. The original image is backed up before its extent changes.
+pub fn grow(path: &Path, offset: u64, bytes: u64, target: u64) -> Result<()> {
+    if target < bytes {
+        return Err("volume growth cannot shrink the assigned extent".into());
+    }
+    rewrite_extent(path, offset, bytes, target, |records, _| Ok(records))
+}
+
 /// Keep the source locked and unchanged while a host-only edit prepares its result.
 pub(super) fn rewrite(
     path: &Path,
@@ -36,6 +45,17 @@ pub(super) fn rewrite(
     bytes: u64,
     edit: impl FnOnce(Records, &Header) -> Result<Records>,
 ) -> Result<()> {
+    rewrite_extent(path, offset, bytes, bytes, edit)
+}
+
+fn rewrite_extent(
+    path: &Path,
+    offset: u64,
+    bytes: u64,
+    target: u64,
+    edit: impl FnOnce(Records, &Header) -> Result<Records>,
+) -> Result<()> {
+    geometry(target)?;
     let image = Arc::new(Image::open(path)?); // Keep the exclusive lock through verification.
     let region = Region::new(image.clone(), offset, bytes)?;
     let header = region.headers()?;
@@ -44,6 +64,10 @@ pub(super) fn rewrite(
     }
     let mut original = vec![0; usize::try_from(image.len()?)?];
     image.read(0, &mut original)?;
+    let target_len = (original.len() as u64)
+        .checked_add(target - bytes)
+        .ok_or("image growth overflow")?;
+    let suffix = &original[usize::try_from(offset + bytes)?..];
     // A content-named backup never overwrites an earlier recovery point, and
     // repeated attempts on identical input do not accumulate duplicate backups.
     let backup = path.with_file_name(format!(
@@ -84,13 +108,20 @@ pub(super) fn rewrite(
     let before = records(&db)?;
     drop(db);
     let before = edit(before, &header)?;
-    let rebuilt = rebuild(&before, &header).map_err(|e| {
+    let mut target_header = header.clone();
+    target_header.region_bytes = target;
+    let rebuilt = rebuild(&before, &target_header).map_err(|e| {
         format!(
             "rebuilding {} records: {e}",
             before.values().map(BTreeMap::len).sum::<usize>()
         )
     })?;
     let publish = (|| -> Result<_> {
+        if target != bytes {
+            image.resize_for_maintenance(target_len)?;
+            image.write(offset + target, suffix)?;
+        }
+        let region = Region::new(image.clone(), offset, target)?;
         region.write(0, &rebuilt)?;
         region.sync()?;
         let db = open(region.clone())?;
@@ -99,8 +130,13 @@ pub(super) fn rewrite(
         }
         drop(db);
         let after = region.headers()?;
-        if after.id != header.id || after.region_bytes != header.region_bytes {
+        if after.id != header.id || after.region_bytes != target {
             return Err("rebuild changed volume identity or assigned extent".into());
+        }
+        let mut guards = vec![0; suffix.len()];
+        image.read(offset + target, &mut guards)?;
+        if guards != suffix {
+            return Err("rebuild changed trailing guard bytes".into());
         }
         Ok(after)
     })();
@@ -109,6 +145,7 @@ pub(super) fn rewrite(
         Err(error) => {
             // Ordinary I/O failures restore the input. A process/power loss during
             // publication instead requires recovery from the synced backup.
+            image.resize_for_maintenance(original.len() as u64)?;
             image.write(0, &original)?;
             image.sync_data()?;
             return Err(error);

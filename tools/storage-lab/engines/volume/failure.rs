@@ -69,7 +69,7 @@ pub fn prepare(path: &Path, offset: u64, bytes: u64, target: &str, content: &[u8
         .filter(|(key, _)| key[0] == 0)
         .map(|(key, value)| key.len() + value.len())
         .sum::<usize>();
-    if charge > 1024 * 1024 {
+    if charge as u64 > cathedral_database_objects::ROOT_QUOTA {
         return Err("fixture exceeds root quota".into());
     }
     rows.insert(seed::key(b'q', &[]), (charge as u64).to_le_bytes().to_vec());

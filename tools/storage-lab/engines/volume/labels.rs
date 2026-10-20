@@ -18,6 +18,30 @@ pub fn upgrade(
     legacy: &[(u64, [u8; 32])],
     refresh_apps: bool,
 ) -> Result<()> {
+    upgrade_with_quota(path, offset, bytes, legacy, refresh_apps, true)
+}
+
+/// The coordinated installer owns this scratch image and must finish the named
+/// program replacements and enforce quota before publishing it. Collecting here
+/// would judge a mixed generation and retire history needed by later migrations.
+pub(super) fn stage(
+    path: &Path,
+    offset: u64,
+    bytes: u64,
+    legacy: &[(u64, [u8; 32])],
+    refresh_apps: bool,
+) -> Result<()> {
+    upgrade_with_quota(path, offset, bytes, legacy, refresh_apps, false)
+}
+
+fn upgrade_with_quota(
+    path: &Path,
+    offset: u64,
+    bytes: u64,
+    legacy: &[(u64, [u8; 32])],
+    refresh_apps: bool,
+    enforce_quota: bool,
+) -> Result<()> {
     let image = Arc::new(Image::open(path)?); // Excludes QEMU/another installer.
     let mut backup = vec![0; usize::try_from(image.len()?)?];
     image.read(0, &mut backup)?;
@@ -110,7 +134,7 @@ pub fn upgrade(
     // under pressure, after every replacement head has been staged, using the
     // guest's head/pin reachability policy inside this same transaction.
     let before_collection = charged;
-    while charged > cathedral_database_objects::ROOT_QUOTA {
+    while enforce_quota && charged > cathedral_database_objects::ROOT_QUOTA {
         let pass = cathedral_database_objects::collect_records(&mut table, 0)
             .map_err(|error| format!("upgrade collection failed: {error:?}"))?;
         charged = pass.charged;
