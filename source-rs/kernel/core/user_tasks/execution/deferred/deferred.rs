@@ -1,6 +1,7 @@
 // Boot-stack work entrance: retire authority/backing first, advance one admission,
 // then advance one memory call. No session borrow survives the caller's yield.
 use super::{Config, Frames, Session, arch, lifecycle};
+use crate::user_tasks::execution::timing::{self, Phase as TimedPhase};
 use crate::user_tasks::{Executable, Program, admission::pool::Code};
 
 pub(super) unsafe fn step(
@@ -10,6 +11,7 @@ pub(super) unsafe fn step(
     image: arch::ImageRange,
     config: &Config<'_>,
 ) {
+    let start = timing::start();
     // SAFETY: Boot stack, kernel root, exclusive session and IRQs off throughout.
     unsafe {
         lifecycle::reap(session, source);
@@ -46,10 +48,15 @@ pub(super) unsafe fn step(
                     arguments: [0, 0],
                 },
             };
+            let admission_start = timing::start();
             lifecycle::spawn(session, source, layout, image, program, index);
+            session
+                .timing
+                .record(TimedPhase::Admission, admission_start);
         }
         crate::user_tasks::memory::process(session, source);
     }
+    session.timing.record(TimedPhase::Deferred, start);
 }
 
 pub(super) fn pending(session: &Session) -> bool {

@@ -92,34 +92,45 @@ impl UserSpace {
     /// # Safety
     /// Inactive root, IRQs masked, fully mapped region; no mutable borrow crosses sealing.
     pub unsafe fn seal_region(&mut self, index: usize, pages: usize) {
-        for offset in 0..pages {
-            let address = wire::address(index) + offset as u64 * PAGE;
-            let position = self.backing[..self.pages]
-                .iter()
-                .position(|p| p.address == address)
-                .unwrap();
+        let base = wire::address(index);
+        let end = base + pages as u64 * PAGE;
+        let mut sealed = 0;
+        // Visit the ledger once, rather than search it again for every page.
+        // Backing order need not match virtual address order.
+        for backing in &mut self.backing[..self.pages] {
+            if !(base..end).contains(&backing.address) {
+                continue;
+            }
             // SAFETY: Existing ordinary user RAM leaf; only remove write permission.
             unsafe {
-                self.mapping.as_mut().unwrap().seal_page(address);
+                self.mapping.as_mut().unwrap().seal_page(backing.address);
             }
-            self.backing[position].writable = false;
+            backing.writable = false;
+            sealed += 1;
         }
+        assert_eq!(sealed, pages, "incomplete region during sealing");
     }
     /// # Safety
     /// Inactive root, IRQs masked; backing retained until every alias is removed.
     pub unsafe fn unmap_region(&mut self, index: usize, pages: usize) {
-        for offset in 0..pages {
-            let address = wire::address(index) + offset as u64 * PAGE;
-            let position = self.backing[..self.pages]
-                .iter()
-                .position(|p| p.address == address)
-                .unwrap();
+        let base = wire::address(index);
+        let end = base + pages as u64 * PAGE;
+        let mapping = self.mapping.as_mut().unwrap();
+        let mut removed = 0;
+        assert_eq!(self.backing.len(), self.pages);
+        // Compact once, preserving every unrelated image, stack and object leaf.
+        self.backing.retain(|backing| {
+            if !(base..end).contains(&backing.address) {
+                return true;
+            }
             // SAFETY: Existing inactive leaf; translation removal precedes any backing refund.
             unsafe {
-                self.mapping.as_mut().unwrap().unmap_page(address);
+                mapping.unmap_page(backing.address);
             }
-            self.pages -= 1;
-            self.backing.swap_remove(position);
-        }
+            removed += 1;
+            false
+        });
+        self.pages -= removed;
+        assert_eq!(removed, pages, "incomplete region during unmapping");
     }
 }

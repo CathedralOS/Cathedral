@@ -1,12 +1,14 @@
 //! Interrupt/syscall entrance: save context, dispatch syscalls, wake waiters and select a root.
 //! Allocating and reclaiming remain deferred to execution/execution.rs on the boot stack.
 use crate::scheduler::Event;
+use crate::user_tasks::execution::timing::{self, Phase as TimedPhase};
 use crate::user_tasks::{ACTIVE, Exit, arch, keyboard, lifecycle, syscalls};
 use cathedral_arch::{Context, SwitchCause};
 use core::sync::atomic::Ordering;
 pub(super) unsafe fn schedule(context: &Context, cause: SwitchCause, now: u64) -> *const Context {
     // SAFETY: IRQs masked, kernel root active, run pins the session across syscalls.
     let session = unsafe { &mut *ACTIVE.load(Ordering::Acquire) };
+    let trap_start = timing::start();
     let previous = session.scheduler.current();
     let mut event = match cause {
         SwitchCause::Timer => Event::Timer,
@@ -27,7 +29,9 @@ pub(super) unsafe fn schedule(context: &Context, cause: SwitchCause, now: u64) -
                 event = Event::Exit;
             }
             SwitchCause::Syscall => {
+                let start = timing::start();
                 event = syscalls::syscall(session, slot, now);
+                session.timing.record(TimedPhase::Syscall, start);
             }
         }
     } else {
@@ -35,9 +39,11 @@ pub(super) unsafe fn schedule(context: &Context, cause: SwitchCause, now: u64) -
         session.boot = context.clone();
     }
     if matches!(cause, SwitchCause::Timer | SwitchCause::Device) {
+        let start = timing::start();
         syscalls::devices::leased::interrupts(session);
         keyboard::poll(session, now);
         super::waits::wake(session, now);
+        session.timing.record(TimedPhase::InterruptWork, start);
     }
     let next = if matches!(event, Event::Exit) {
         lifecycle::close(session, previous.unwrap());
@@ -72,5 +78,6 @@ pub(super) unsafe fn schedule(context: &Context, cause: SwitchCause, now: u64) -
     unsafe {
         arch::select_user_root(next.map(|slot| session.tasks[slot].space.as_ref().unwrap().root()));
     }
+    session.timing.record(TimedPhase::Trap, trap_start);
     next.map_or(&session.boot, |slot| &session.tasks[slot].context)
 }

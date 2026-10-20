@@ -2,6 +2,7 @@
 //! state is installed here. Lifecycle revalidates authority before publication.
 use super::{Error, Frames, Program, Report, Session, image};
 use crate::user_tasks::address_space::{LoadCursor, USER_STACK_TOP, UserSpace};
+use crate::user_tasks::execution::timing::{self, Phase as TimedPhase};
 use cathedral_arch::{self as arch, Context};
 
 pub(super) const PAGE_BATCH: usize = 8;
@@ -46,8 +47,21 @@ pub(in crate::user_tasks) unsafe fn advance(
         .saturating_sub(used)
         .min(session.memory.funding.available(child));
     let baseline = frames.allocated();
+    let phase = match session.launches[index]
+        .draft
+        .as_ref()
+        .map(|draft| &draft.phase)
+    {
+        None => TimedPhase::DecodeRoot,
+        Some(Phase::Image) => TimedPhase::ImageBatch,
+        Some(Phase::Regions) => TimedPhase::RegionTables,
+        Some(Phase::Framebuffer) => TimedPhase::Framebuffer,
+        Some(Phase::Ready) => unreachable!("completed draft advanced"),
+    };
+    let start = timing::start();
     // SAFETY: Same private-root and executable custody as advance.
     let result = unsafe { step(session, layout, image_range, program, frames, index) };
+    session.timing.record(phase, start);
     let allocated = frames.allocated() - baseline;
     session
         .memory
@@ -137,10 +151,12 @@ pub(in crate::user_tasks) unsafe fn abort(
     frames: &mut Frames<'_>,
     index: usize,
 ) {
+    let start = timing::start();
     // SAFETY: Whole rollback wrapper; same permanently inactive-root custody.
     unsafe {
         abort_step(session, frames, index, usize::MAX);
     }
+    session.timing.record(TimedPhase::Rollback, start);
 }
 
 /// # Safety

@@ -1,5 +1,6 @@
 // Boot-stack page-object operations. Traps enqueue; this owner maps, seals and reclaims.
 use super::{Frames, Session, syscalls};
+use crate::user_tasks::execution::timing::{self, Phase as TimedPhase};
 use cathedral_kernel_contracts::memory as wire;
 use cathedral_kernel_contracts::user as abi;
 use regions::Regions;
@@ -113,8 +114,16 @@ impl Memory {
 pub(super) unsafe fn process(session: &mut Session, frames: &mut Frames<'_>) {
     // SAFETY: Queue discards never published a mapping; same boot-stack custody.
     unsafe {
-        objects::retire_escrow(session, frames);
-        session.memory.settle(frames);
+        if session.ipc.memory_retirement_pending() {
+            let start = timing::start();
+            objects::retire_escrow(session, frames);
+            session.timing.record(TimedPhase::Escrow, start);
+        }
+        if session.memory.retirement_pending() {
+            let start = timing::start();
+            session.memory.settle(frames);
+            session.timing.record(TimedPhase::References, start);
+        }
     }
     use crate::user_tasks::execution::deferred::Work;
     if let Some(slot) = session.deferred.next(Work::Memory) {
@@ -126,6 +135,7 @@ pub(super) unsafe fn process(session: &mut Session, frames: &mut Frames<'_>) {
         if session.memory.allocations[slot].is_none() {
             session.tasks[slot].report.memory.deferred_calls += 1;
         }
+        let start = timing::start();
         // SAFETY: Same machine and ownership obligations as process.
         let result = unsafe {
             if call[0] == abi::MEMORY_ALLOCATE {
@@ -134,6 +144,17 @@ pub(super) unsafe fn process(session: &mut Session, frames: &mut Frames<'_>) {
                 Some(dispatch(session, frames, slot, call))
             }
         };
+        let phase = match call[0] {
+            abi::MEMORY_ALLOCATE => TimedPhase::Allocate,
+            abi::MEMORY_SEAL => TimedPhase::Seal,
+            abi::MEMORY_MAP => TimedPhase::Map,
+            abi::MEMORY_RELEASE => TimedPhase::Release,
+            abi::MEMORY_FREEZE => TimedPhase::Freeze,
+            abi::MEMORY_MAP_OBJECT => TimedPhase::MapObject,
+            abi::MEMORY_UNMAP_OBJECT => TimedPhase::UnmapObject,
+            _ => TimedPhase::OtherMemory,
+        };
+        session.timing.record(phase, start);
         if let Some(result) = result {
             session.tasks[slot].memory_call = None;
             syscalls::complete(session, slot, result);

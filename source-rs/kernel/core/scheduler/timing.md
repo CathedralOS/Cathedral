@@ -95,6 +95,50 @@ wakes, completed work, peer progress, throttling in the capped case, and complet
 heap/frame reclamation. The existing budget fixtures separately exercise
 restart debt, hierarchical overload and all-accounts-exhausted idle recovery.
 
+## Buffered kernel-phase observations
+
+[Execution timing](../user_tasks/execution/timing.rs) records count, elapsed
+microseconds, maximum and observations at least 1 ms for selected Rust bodies.
+The `memory-lab` feature used by smoke enables it. Counters are allocated once at
+session preparation; samples perform no allocation or serial output. Reports
+are emitted as `KERNEL_PHASE` only after the session has stopped. Ordinary builds
+have no sample storage or additional clock reads. This does not alter the app ABI.
+
+The outer trap and deferred-step spans include their nested phases. Admission
+separates decode/root creation, image batches, runtime tables and framebuffer
+mapping; reclamation separates withdrawal, retirement, collection and conservation.
+Memory dispatch distinguishes operation types and executable/escrow retirement.
+These are inclusive observations: do not add them. Trap samples omit assembly
+entry/exit, and deferred samples omit the boot-loop suspension machinery. They
+are not complete IRQ-mask durations. Ordinary user diagnostic writes still
+appear within syscall samples. Initial boot admission is outside these runtime
+admission samples.
+
+The periodic fixture also runs beside repeated one-page and 128-page allocations,
+freeze, unmap, remap and release. Each peer leaves four owned objects at exit,
+two mapped and two unmapped, to exercise production retirement. The mapping
+ledger allows two maximum-size objects beside the program image. Assertions
+check successful operations, periodic and peer progress, and full reclamation;
+there is no elapsed-time pass threshold.
+
+```powershell
+python tools/boot-harness-rs/run.py --smoke --release --timeout 180
+python tools/boot-harness-rs/timing_report.py build/boot-harness-rs/smoke/serial.log
+```
+
+The report separates the five periodic compositions. `--all` also aggregates
+other sessions; preserve the original serial log to keep their surrounding
+fixture labels. Host descheduling, QEMU translation and the probes themselves
+affect observations. Compare repeated runs and structural work, not a single
+observed maximum. No desktop performance gain or WCET bound follows from these
+samples alone.
+
+Seal/unmap now traverse the mapping ledger once per region, rather than searching
+it again for every page. Unmap compacts the ledger while removing translations;
+it preserves unrelated image, stack and object entries. Both still run atomically.
+The real-frame fixture checks every removed page and every retained owner alias,
+including table-boundary and last-slot cases on both ISAs.
+
 ## Next preparation steps
 
 1. Bound event and retirement bursts while preserving terminal/deadline ordering.

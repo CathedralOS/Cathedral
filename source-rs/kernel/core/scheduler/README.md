@@ -168,8 +168,10 @@ per idle dispatch. These are host policy checks, not a claim that the booted
 OS admits 50,000 tasks.
 
 The smoke suite also runs a [periodic userspace probe](../../../distribution/lab/supervision/timing.rs)
-beside a busy peer, a yielding peer, and under an inadequate CPU ceiling.
+beside a busy peer, a yielding peer, under an inadequate CPU ceiling, and beside
+one-page/maximum-size page-object churn.
 It buffers 16 release/start/finish/CPU samples before serial output, checks
-progress, actual throttling and full reclamation. See the
+progress, actual throttling and full reclamation. Smoke builds also buffer
+kernel-phase observations until session completion. See the
 [timing preparation and kernel-work audit](timing.md) for interpretation,
 remaining bounds and the next implementation steps.

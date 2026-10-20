@@ -198,7 +198,16 @@ unsafe fn mapping_boundaries(session: &mut Session, handle: u64) {
         assert!(!unsafe { space.copy_from_user(guard, &mut [0]) });
         // SAFETY: No reader can execute; remove borrowed aliases before owner release.
         unsafe { space.unmap_region(alias, wire::MAX_PAGES) };
-        // SAFETY: Validation must reject the entire retired alias.
-        assert!(!unsafe { space.copy_from_user(wire::address(alias), &mut [0]) });
+        for page in 0..wire::MAX_PAGES {
+            let offset = (page * wire::PAGE_BYTES) as u64;
+            // SAFETY: Validation must reject every removed page, not just the first.
+            assert!(!unsafe { space.copy_from_user(wire::address(alias) + offset, &mut [0]) });
+            let mut byte = [0];
+            // SAFETY: The original sealed owner alias must survive compaction intact.
+            assert!(unsafe { space.copy_from_user(wire::address(mapping) + offset, &mut byte) });
+            assert_eq!(byte, [page as u8 + 1]);
+            assert!(!space.writable_range(wire::address(mapping) + offset, 1));
+        }
+        assert!(space.writable_range(super::super::address_space::USER_STACK, 1));
     }
 }

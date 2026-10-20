@@ -1,7 +1,7 @@
 # Rust reference OS: tasks and handoff
 
-Updated 2026-10-20 (local date). Current milestone: **incremental subtree
-reclamation**, on baseline `1428451e` (resumable executable admission).
+Updated 2026-10-20 (local date). Current milestone: **kernel-phase observations
+and single-pass page-object edits**, on baseline `09c1e774` (incremental subtree reclamation).
 The latest section records verification and remaining steps toward bounded
 execution. This does not introduce real-time reservations.
 The fresh-lab reset is `30572c9f`. Compact recursive desktops landed as `c7571191`,
@@ -3591,3 +3591,60 @@ split single-object unmap/free and pending-reference retirement where those
 measurements warrant it. Retain the ARM64 stack-exhaustion entry/reporting audit
 from the previous milestone. Guaranteed-service admission remains separate from
 these mechanisms; no new owner decision is needed for this cleanup work.
+
+## Kernel-phase observations and single-pass page edits (2026-10-20)
+
+Baseline: `09c1e774`. [Execution timing](source-rs/kernel/core/user_tasks/execution/timing.rs)
+buffers selected uninterrupted Rust-body spans, including nested trap/deferred
+work, admission construction, reclamation and individual memory operations.
+Only `memory-lab` builds collect them; normal F5 builds have no additional sample
+storage or clock reads. Reports print after the session stops, outside measured
+work. The [timing audit](source-rs/kernel/core/scheduler/timing.md) describes the
+sampling boundaries and [report tool](tools/boot-harness-rs/timing_report.py).
+
+The periodic probe now has two additional competitors: repeated one-page and
+maximum-size allocations, freeze, unmap, remap and release. Both leave four owned
+objects at exit, two unmapped, so actual task cleanup is measured too. The first
+development fixture tried to keep four maximum-size objects mapped, exceeding
+the separate address-space mapping ledger limit. That fixture was corrected;
+no production capacity was enlarged to accommodate the test.
+
+Measurements plus inspection identified repeated ledger searches during seal
+and unmap. [Region edits](source-rs/kernel/core/user_tasks/address_space/regions.rs)
+now traverse the ledger once; unmap compacts it while removing translations.
+Both remain atomic. There is no new suspended mapping state, handle behavior,
+authority rule or scheduling policy. The real-frame fixture checks every removed
+page, every retained owner page, read-only state and surviving writable stack,
+including table-boundary and last-slot aliases on both ISAs.
+
+The complete baseline and final x86 smoke runs pass. Host load makes their elapsed
+maxima and averages too variable for a reliable speedup claim (including spikes
+in tiny operations). The structural improvement is removal of repeated scans;
+this does not establish a desktop latency gain or a real-time bound. The combined
+decode/root-creation phase repeatedly registers millisecond-scale work and is
+the next useful place to narrow instrumentation before adding more state machines.
+Initial boot admission and assembly entry/exit are outside the runtime samples.
+
+Verification:
+
+- Workspace host tests pass, including 132 core tests. Default x86 UEFI and
+  smoke-feature x86/ARM64 clippy pass. Release x86 smoke and ARM64 portability
+  pass, including real page tables, permissions, shared readers, failure rollback,
+  subtree cleanup and full heap/frame refunds. Layout, formatting and whitespace pass.
+- Fresh and cold three-level desktop runs pass with pointer stress, delayed/
+  mismatched interaction replies, deepest Notes persistence, protected close,
+  isolation and two teardown/reopen cycles per boot:
+  `desktop/20261020T224834092056Z`, `build/phase-desktop.log`. This exercises the
+  ordinary build with timing collection disabled. Interactive saved media was
+  untouched. The earlier intermittent LOSS timeout did not recur.
+- Logs: `build/phase-host-final.log`, `build/phase-default.log`,
+  `build/phase-clippy-final.log`, `build/phase-arm64-clippy.log`,
+  `build/phase-smoke-baseline.log`, `build/phase-smoke-final.log`,
+  `build/phase-arm64.log`. Preserved observations:
+  `build/phase-baseline-serial.log`, `build/phase-final-serial.log`.
+
+Next: separate executable decoding from root/table construction costs, then
+bound whichever phase warrants it. Pending-reference bursts and single-object
+cleanup remain atomic. Keep the ARM64 exhausted-stack entry/reporting audit and
+the intermittent clean-close LOSS timeout open. Guaranteed-service admission is
+still separate; these mechanical changes need no owner decision.

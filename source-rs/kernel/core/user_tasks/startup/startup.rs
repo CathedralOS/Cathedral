@@ -27,6 +27,7 @@ pub(super) fn prepare(
             }
         })?;
     let mut session = Session {
+        timing: Default::default(),
         cancel_waiters: 0,
         deferred: super::execution::deferred::Pending::default(),
         child_launch: core::array::from_fn(|slot| {
