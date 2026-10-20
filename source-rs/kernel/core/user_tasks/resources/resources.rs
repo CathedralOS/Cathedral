@@ -23,15 +23,26 @@ pub fn grow(
     for i in 0..3 {
         limits[i] = old[i].checked_add(delta[i]).ok_or(abi::INVALID_ARGUMENT)?;
     }
-    let frames = funding.snapshot(child)[0].checked_add(delta[4]).ok_or(abi::INVALID_ARGUMENT)?;
+    let frames = funding.snapshot(child)[0]
+        .checked_add(delta[4])
+        .ok_or(abi::INVALID_ARGUMENT)?;
     funding.check_assign(owner, child, frames)?;
-    let slots = pool.available(child).checked_add(delta[3]).ok_or(abi::INVALID_ARGUMENT)?;
+    let slots = pool
+        .available(child)
+        .checked_add(delta[3])
+        .ok_or(abi::INVALID_ARGUMENT)?;
     let mut staged_pool = pool.clone();
     staged_pool.assign(owner, child, slots).map_err(|error| {
-        if error == abi::NO_MEMORY { abi::NO_PROCESS_CAPACITY } else { error }
+        if error == abi::NO_MEMORY {
+            abi::NO_PROCESS_CAPACITY
+        } else {
+            error
+        }
     })?;
     assign(ipc, regions, owner, child, limits)?;
-    funding.assign(owner, child, frames).expect("validated growth");
+    funding
+        .assign(owner, child, frames)
+        .expect("validated growth");
     *pool = staged_pool;
     Ok(())
 }

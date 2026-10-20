@@ -128,9 +128,11 @@ pub(super) fn dispatch(
         Some([wire::CLOSE, 0, 0, 0, 0, 0, 0, 0]) if request.client.is_some() => {
             return children.close(request, parent, world, server);
         }
-        Some([wire::FUND, private, readers, channels, slots, frames, 0, 0]) => {
-            children.fund(&request, [private, readers, channels, slots, frames], parent)?
-        }
+        Some([wire::FUND, private, readers, channels, slots, frames, 0, 0]) => children.fund(
+            &request,
+            [private, readers, channels, slots, frames],
+            parent,
+        )?,
         Some([wire::APP_ENTRY, index, 0, 0, 0, 0, 0, 0]) => {
             children.app_entry(&request, index, world)
         }

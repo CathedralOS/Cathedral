@@ -32,8 +32,9 @@ impl Provider {
     /// An owner grant re-establishes the connection: a replaced provider is a
     /// fresh incarnation and connects, while a still-live accepted link refuses
     /// with BUSY and the existing pair stays. The owner never names processes;
-    /// the link itself distinguishes the two cases.
-    pub fn refresh(&mut self) -> Result<(Handle, Handle), Error> {
+    /// the link itself distinguishes the two cases. True means a new provider
+    /// connection, so the caller must invalidate grants/proofs from the old one.
+    pub fn refresh(&mut self) -> Result<bool, Error> {
         match self.link.connect() {
             Ok(pair) => {
                 // The superseded endpoints belonged to a provider that is gone;
@@ -42,11 +43,9 @@ impl Provider {
                     let _ = send.close();
                     let _ = receive.close();
                 }
-                Ok(pair)
+                Ok(true)
             }
-            Err(Error(code)) if code == abi::BUSY as i64 && self.pair.is_some() => {
-                Ok(self.pair.unwrap())
-            }
+            Err(Error(code)) if code == abi::BUSY as i64 && self.pair.is_some() => Ok(false),
             Err(error) => Err(error),
         }
     }
@@ -64,7 +63,7 @@ impl Parent {
         let mut scope = self.own_scope()?;
         let result = operation(&mut scope);
         if !scope.connected() {
-            self.retire_storage(0, None)?;
+            self.retire_storage(0)?;
         }
         result
     }
@@ -117,7 +116,7 @@ impl Parent {
             .and_then(|()| receive.receive_until(&mut bytes, time::after(100)?))
             .and_then(|len| wire::decode(&bytes[..len]).ok_or(Error(abi::IO_ERROR as i64)));
         if result.is_err() && self.separate_storage {
-            self.retire_storage(0, None)?;
+            self.retire_storage(0)?;
         }
         result
     }
@@ -225,8 +224,10 @@ impl Parent {
                 .as_mut()
                 .ok_or(Error(abi::DENIED as i64))
                 .and_then(|provider| provider.refresh());
-            if let Err(error) = result {
-                return Ok(Err(error.0 as u64));
+            match result {
+                Ok(true) => self.scopes.revoke_source(source),
+                Ok(false) => (),
+                Err(error) => return Ok(Err(error.0 as u64)),
             }
         }
         Ok(self
@@ -298,7 +299,7 @@ impl Parent {
         self.storage_pending = Some(Pending::new(request, words, attachment, self.upstream)?);
         Ok(())
     }
-    fn retire_storage(&mut self, source: usize, client: Option<usize>) -> Result<(), Error> {
+    fn retire_storage(&mut self, source: usize) -> Result<(), Error> {
         if self.upstream {
             if let Some((send, receive)) = self.storage_pair.take() {
                 send.close()?;
@@ -312,9 +313,7 @@ impl Parent {
             if let Some(provider) = &mut self.storage_links[source] {
                 provider.invalidate();
             }
-            if let Some(client) = client {
-                self.scopes.revoke(self.storage_slot(client));
-            }
+            self.scopes.revoke_source(source);
         }
         Ok(())
     }

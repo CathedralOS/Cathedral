@@ -5,16 +5,19 @@ use cathedral_kernel_contracts::user as abi;
 use cathedral_platform_contracts::storage as store;
 use cathedral_user_runtime::storage::Scope;
 const SEEDS: [&[u8]; 5] = [b"User", b"Chooser", b"Notes", b"Colors", b"Background"];
+enum Source<'a> {
+    Named(&'a [u8]),
+    Realm,
+}
 pub fn prepare(scope: &mut Scope, keys: u64) -> Result<(u64, u64), u64> {
     let picker = scope.lookup(b"Chooser")?;
     let users = create(scope, b"Users", scope.realm(), b"Users", &[])?;
-    let user_code = scope.lookup(b"User")?;
     let template = copy(
         scope,
         b"Users/Template",
         users,
         b"Template",
-        user_code,
+        Source::Named(b"User"),
         false,
     )?;
     for (source, name, path) in [
@@ -27,19 +30,17 @@ pub fn prepare(scope: &mut Scope, keys: u64) -> Result<(u64, u64), u64> {
         (b"Notes", b"Notes", b"Users/Template/Notes"),
         (b"Colors", b"Colors", b"Users/Template/Colors"),
     ] {
-        let source = scope.lookup(source)?;
-        copy(scope, path, template, name, source, true)?;
+        copy(scope, path, template, name, Source::Named(source), true)?;
     }
     let nested = copy(
         scope,
         b"Users/Template/Nested",
         template,
         b"Nested",
-        scope.realm(),
+        Source::Realm,
         false,
     )?;
     for name in SEEDS {
-        let source = scope.lookup(name)?;
         let mut path = [0; 64];
         let prefix = b"Users/Template/Nested/";
         path[..prefix.len()].copy_from_slice(prefix);
@@ -49,7 +50,7 @@ pub fn prepare(scope: &mut Scope, keys: u64) -> Result<(u64, u64), u64> {
             &path[..prefix.len() + name.len()],
             nested,
             name,
-            source,
+            Source::Named(name),
             true,
         )?;
     }
@@ -87,12 +88,18 @@ fn copy(
     path: &[u8],
     parent: u64,
     name: &[u8],
-    source: u64,
+    source: Source<'_>,
     tree: bool,
 ) -> Result<u64, u64> {
     if let Some(id) = existing(scope, path)? {
         return Ok(id);
     }
+    // Existing templates need no source lookup. On a cold reopen each avoided
+    // lookup also avoids walking the entire upstream confinement/IPC chain.
+    let source = match source {
+        Source::Named(path) => scope.lookup(path)?,
+        Source::Realm => scope.realm(),
+    };
     let head = scope.call(store::Request::new(store::HEAD, source, 0, 0, 0))?;
     match scope.attached(
         store::Request::new(

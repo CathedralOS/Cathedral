@@ -2,7 +2,7 @@
 // Platform Scopes authenticates/stamps; Split chooses two distinct child roots.
 // An upstream regrant only restores these standing grants in the same realm.
 use super::*;
-use cathedral_matrix::world::storage::{Prepared, Scopes};
+use cathedral_matrix::world::storage::{Prepared, Proof, Scopes};
 use cathedral_user_runtime::{ipc::Handle, memory::Object, server::Request};
 struct Pending {
     request: Request,
@@ -11,7 +11,7 @@ struct Pending {
     refresh: bool,
     deadline: u64,
     validating: bool,
-    folded: Option<wire::Packet>,
+    folded: Option<(wire::Packet, Proof)>,
 }
 pub struct Storage {
     pair: Option<Pair>,
@@ -115,16 +115,11 @@ impl Storage {
                 return self.finish(reply, None, server);
             }
             let pending = self.pending.as_mut().unwrap();
-            let slot = pending.request.client.unwrap() - 2;
-            if let Err(code) = self.scopes.authorize(
-                slot,
-                pending.request.incarnation,
-                pending.words[0] >> wire::STORAGE_SCOPE_BITS,
-            ) {
+            let (words, proof) = pending.folded.take().unwrap();
+            if let Err(code) = self.scopes.confirm(proof) {
                 return self.finish(wire::error(code), None, server);
             }
             pending.validating = false;
-            let words = pending.folded.take().unwrap();
             return self.send(words, server);
         }
         if !self.pending.as_ref().unwrap().refresh {
@@ -158,9 +153,14 @@ impl Storage {
             {
                 Ok(Prepared::Reply(reply)) => return self.finish(reply, None, server),
                 Ok(Prepared::Forward { words, .. }) => words,
-                Ok(Prepared::Validate { check, words, .. }) => {
+                Ok(Prepared::Validate {
+                    check,
+                    words,
+                    proof,
+                    ..
+                }) => {
                     pending.validating = true;
-                    pending.folded = Some(words);
+                    pending.folded = Some((words, proof));
                     check
                 }
                 Err(code) => return self.finish(wire::error(code), None, server),

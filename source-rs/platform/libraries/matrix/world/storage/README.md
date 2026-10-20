@@ -14,9 +14,9 @@ being handed provider links, not by an argument: its first two links are the
 provider's two private roots. Owner-only `STORAGE_GRANT` assigns one source to
 a live child connection, with an optional scope: an object in that source whose
 subtree is all the child may touch. A scope of zero passes on everything the
-matrix itself holds. Each source can belong to only one direct child; the nested
-matrix can delegate its one inherited source, whole or narrowed to a subtree of
-what it was given, to one of its children. The root can combine these links
+matrix itself holds. Only one child may hold a whole-source grant at a time;
+narrowed subtree grants may coexist. A nested matrix can delegate its inherited
+source, whole or narrowed, within the authority it received. The root can combine these links
 with the four-endpoint display/input environment. The visible desktop uses that
 composition; the dedicated storage fixture exercises the same delegation without
 a display adapter.
@@ -34,12 +34,16 @@ by filling in scope words, and a full packet needs a containment proof before fo
 sends HEAD for the innermost scope restricted by the remaining scope and its
 own grant. Only success permits folding the restrictions into that innermost
 scope; it rechecks the child connection/revision before sending the original
-operation. Immutable parent relationships and never-reused IDs make the proof
-valid across the two reads. Deletion can only turn the later operation into a
+operation. Each binding retains at most four successful proofs, confirmed only
+after the exact check succeeds on its live upstream stream. Repeated requests
+still reach the provider with the innermost scope; this caches neither data nor
+object existence nor permission to perform an operation. Immutable parent
+relationships and never-reused IDs make the proof valid across requests.
+Deletion can only turn the later operation into a
 refusal. Future moves or aliases require revisiting this invariant. Nested
 proofs use the same forwarding path, so packet capacity no longer caps depth. No child can select a provider root, sibling, ancestor or
-global process. Keeping roots exclusive between siblings also keeps object
-numbers and revisions independent. Binding revisions do not measure sibling
+global process. Separate provider roots have independent object-number spaces;
+subtree bindings within one source share its number space. Binding revisions do not measure sibling
 activity.
 
 Subtrees are made by whoever holds the wider realm, as ordinary object
@@ -90,9 +94,9 @@ can race owner STOP or actual task exit without leaking the slot or collecting i
 twice. A disconnect seen during a pending reply is remembered through cleanup.
 
 Every data request carries an absolute deadline in word seven. The client
-allows 1200 ticks end to end; intermediaries preserve or shorten it, including
+allows `EXCHANGE_TICKS` end to end; intermediaries preserve or shorten it, including
 containment proofs. The root adapter additionally caps its provider exchange at
-`STORAGE_DEADLINE_TICKS` (600). Adding another matrix never adds time to an
+`STORAGE_DEADLINE_TICKS`. Adding another matrix never adds time to an
 existing request. Legacy/direct callers may supply zero to request the first
 adapter's default. Program admission has a separate bounded multi-read workflow.
 A timed-out transport is retired because a late reply has no correlation ID.
@@ -110,7 +114,8 @@ staged upstream: the stale binding simply stops authorizing. Child exit, fault o
 cancellation uses the same path. Changing an inherited binding clears descendant
 grants; regranting the ancestor never implicitly revives descendants. Each
 request checks its revision at every hop, including requests already in flight
-when authority changes. Connection replacement requires explicit grants.
+when authority changes. Connection replacement requires explicit grants. Proofs
+are discarded with their binding on revocation, regrant or upstream changes.
 The visible desktop supplies interaction send/reply and a wake receiver, plus
 catalog send/reply only when storage is bound. [Declared imports](../../../../contracts/imports/README.md)
 are resolved before store-based admission: Notes can omit storage entirely,
@@ -129,8 +134,10 @@ Deferred events resume as soon as their own dependency clears. The combined live
 wait set stays within the existing eight-handle limit. Manually assembled headless
 fixtures retain their legacy shared stream and its serialization limitation.
 
-A root provider timeout or closure revokes the requesting child's storage binding
-and retires that link, without killing display/input or retrying the mutation.
+A root provider timeout or closure revokes all bindings for that source and
+retires that link, without killing display/input or retrying the mutation.
+Connecting a replacement provider also invalidates that source's old grants and
+proofs. Other sources remain independent.
 A live accepted link cannot reconnect after timeout; provider replacement and
 explicit owner grants are required. A separate parent catalog transport failure
 closes only that stream and clears descendant catalog bindings; interaction stays

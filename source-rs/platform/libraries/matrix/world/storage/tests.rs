@@ -93,8 +93,15 @@ fn forwarded_requests_require_live_revision_and_a_proof_before_folding() {
 fn repeated_folding_preserves_ancestor_and_sibling_confinement() {
     // Model an immutable chain 1/2/.../9 and an unrelated sibling 99. Run the
     // same proof/forward protocol recursively, not just its packet encoding.
-    fn forward(level: u64, mut words: wire::Packet, writes: &mut usize) -> Result<(), u64> {
+    fn forward(
+        chain: &mut [Scopes<1>],
+        mut words: wire::Packet,
+        counts: &mut [usize; 2],
+        cache: bool,
+    ) -> Result<(), u64> {
+        let level = chain.len() as u64;
         if level == 0 {
+            counts[0] += 1;
             let request = protocol::Request::decode(&protocol::pack(words)).unwrap();
             let (subjects, count) = request.subjects();
             for &scope in request.scopes.iter().filter(|s| **s != 0) {
@@ -108,22 +115,29 @@ fn repeated_folding_preserves_ancestor_and_sibling_confinement() {
                 }
             }
             if request.op == protocol::PUBLISH {
-                *writes += 1;
+                counts[1] += 1;
             }
             return Ok(());
         }
-        let mut scopes = Scopes::<1>::empty();
-        scopes.grant(0, 1, 0, level, 1)?;
+        let (scopes, ancestors) = chain.split_last_mut().unwrap();
         words[0] = (words[0] & 0xffff) | (1 << wire::STORAGE_SCOPE_BITS);
         let narrowed = match scopes.prepare(0, 1, words, level - 1)? {
             Prepared::Forward { words, .. } => words,
-            Prepared::Validate { check, words, .. } => {
+            Prepared::Validate {
+                check,
+                words,
+                proof,
+                ..
+            } => {
                 let mut check = check;
                 if level == 1 {
                     check[0] = (check[0] & 0xffff) - wire::STORAGE_BASE;
                 }
-                forward(level - 1, check, writes)?;
+                forward(ancestors, check, counts, cache)?;
                 scopes.authorize(0, 1, 1)?;
+                if cache {
+                    scopes.confirm(proof)?;
+                }
                 words
             }
             Prepared::Reply(_) => unreachable!(),
@@ -132,21 +146,143 @@ fn repeated_folding_preserves_ancestor_and_sibling_confinement() {
         if level == 1 {
             narrowed[0] = (narrowed[0] & 0xffff) - wire::STORAGE_BASE;
         }
-        forward(level - 1, narrowed, writes)
+        forward(ancestors, narrowed, counts, cache)
     }
-    let mut writes = 0;
+    let mut chain = core::array::from_fn::<_, 8, _>(|index| {
+        let mut scopes = Scopes::<1>::empty();
+        scopes.grant(0, 1, 0, index as u64 + 1, 1).unwrap();
+        scopes
+    });
+    let mut counts = [0, 0];
     let mut words = protocol::Request::new(protocol::PUBLISH, 9, 1, 0, 0).words();
     words[0] += wire::STORAGE_BASE;
     words[7] = 1200;
-    forward(8, words, &mut writes).unwrap();
-    assert_eq!(writes, 1);
+    forward(&mut chain, words, &mut counts, false).unwrap();
+    assert_eq!(counts, [21, 1]); // One write expanded to twenty ancestry HEADs.
+    counts = [0, 0];
+    forward(&mut chain, words, &mut counts, true).unwrap();
+    assert_eq!(counts[1], 1);
+    counts = [0, 0];
+    forward(&mut chain, words, &mut counts, true).unwrap();
+    assert_eq!(counts, [1, 1]); // A warm chain forwards only the actual request.
     for object in [1, 7, 8, 99] {
         words[1] = object;
-        assert_eq!(forward(8, words, &mut writes), Err(abi::DENIED));
+        assert_eq!(
+            forward(&mut chain, words, &mut counts, true),
+            Err(abi::DENIED)
+        );
     }
-    assert_eq!(writes, 1);
+    assert_eq!(counts[1], 1);
     words[1] = 9;
     words[5] = 99; // A forged inner restriction cannot erase the actual realm.
-    assert_eq!(forward(8, words, &mut writes), Err(abi::DENIED));
-    assert_eq!(writes, 1);
+    assert_eq!(
+        forward(&mut chain, words, &mut counts, true),
+        Err(abi::DENIED)
+    );
+    assert_eq!(counts[1], 1);
+}
+
+#[test]
+fn proofs_require_success_and_die_with_the_binding_or_source() {
+    let mut scopes = Scopes::<3>::empty();
+    scopes.grant(0, 7, 0, 10, 2).unwrap();
+    scopes.grant(1, 8, 1, 10, 2).unwrap();
+    scopes.grant(2, 9, 0, 10, 2).unwrap();
+    let words = [
+        wire::STORAGE_BASE + protocol::PUBLISH | (1 << wire::STORAGE_SCOPE_BITS),
+        90,
+        1,
+        0,
+        0,
+        30,
+        20,
+        1200,
+    ];
+    let proof = match scopes.prepare(0, 7, words, 1).unwrap() {
+        Prepared::Validate { proof, .. } => proof,
+        _ => panic!("uncached check required"),
+    };
+    // A failed, timed-out or unconsumed check cannot populate the cache.
+    assert!(matches!(
+        scopes.prepare(0, 7, words, 1),
+        Ok(Prepared::Validate { .. })
+    ));
+    scopes.confirm(proof).unwrap();
+    assert!(matches!(
+        scopes.prepare(0, 7, words, 1),
+        Ok(Prepared::Forward { .. })
+    ));
+    // Same numbers on other connections/sources do not inherit the proof.
+    assert!(matches!(
+        scopes.prepare(1, 8, words, 1),
+        Ok(Prepared::Validate { .. })
+    ));
+    assert!(matches!(
+        scopes.prepare(2, 9, words, 1),
+        Ok(Prepared::Validate { .. })
+    ));
+    if let Prepared::Validate { proof, .. } = scopes.prepare(1, 8, words, 1).unwrap() {
+        scopes.confirm(proof).unwrap();
+    }
+    for (inner, outer) in [(99, 20), (30, 99), (20, 30)] {
+        let mut forged = words;
+        forged[5] = inner;
+        forged[6] = outer;
+        assert!(matches!(
+            scopes.prepare(0, 7, forged, 1),
+            Ok(Prepared::Validate { .. })
+        ));
+    }
+    scopes.revoke_source(0);
+    assert_eq!(scopes.confirm(proof), Err(abi::DENIED));
+    assert!(scopes.binding(2, 9).is_err());
+    assert_eq!(scopes.binding(1, 8), Ok((1, 10)));
+    assert!(matches!(
+        scopes.prepare(1, 8, words, 1),
+        Ok(Prepared::Forward { .. })
+    ));
+    scopes.grant(0, 7, 0, 10, 2).unwrap();
+    assert_eq!(scopes.confirm(proof), Err(abi::DENIED));
+    assert!(matches!(scopes.prepare(0, 7, words, 1), Err(abi::DENIED)));
+    let mut fresh = words;
+    fresh[0] = wire::STORAGE_BASE + protocol::PUBLISH | (2 << wire::STORAGE_SCOPE_BITS);
+    assert!(matches!(
+        scopes.prepare(0, 7, fresh, 1),
+        Ok(Prepared::Validate { .. })
+    ));
+    scopes.clear();
+    assert_eq!(scopes.confirm(proof), Err(abi::DENIED));
+}
+
+#[test]
+fn proof_eviction_rechecks_instead_of_broadening_the_binding() {
+    let mut scopes = Scopes::<1>::empty();
+    scopes.grant(0, 1, 0, 10, 1).unwrap();
+    let mut words = [
+        wire::STORAGE_BASE + protocol::HEAD | (1 << wire::STORAGE_SCOPE_BITS),
+        90,
+        0,
+        0,
+        0,
+        30,
+        20,
+        1200,
+    ];
+    for inner in 30..30 + PROOFS as u64 + 1 {
+        words[5] = inner;
+        let Prepared::Validate { proof, .. } = scopes.prepare(0, 1, words, 1).unwrap() else {
+            panic!("new restriction must be checked");
+        };
+        scopes.confirm(proof).unwrap();
+    }
+    words[5] = 30;
+    assert!(matches!(
+        scopes.prepare(0, 1, words, 1),
+        Ok(Prepared::Validate { .. })
+    ));
+    words[5] += PROOFS as u64;
+    assert!(matches!(
+        scopes.prepare(0, 1, words, 1),
+        Ok(Prepared::Forward { .. })
+    ));
 }

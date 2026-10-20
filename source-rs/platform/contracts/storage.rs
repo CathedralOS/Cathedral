@@ -18,7 +18,9 @@
 //! or below each of them. A client that stamps its own scope only narrows
 //! itself. A matrix can fold a full packet only after proving containment of
 //! its innermost scope under all other restrictions. Immutable parent links
-//! and never-reused IDs make that proof stable. The last word is an absolute
+//! and never-reused IDs make that proof stable. A matrix may retain successful
+//! proofs only within the live binding/provider incarnation that checked them;
+//! revocation or upstream replacement invalidates them. The last word is an absolute
 //! end-to-end deadline; intermediaries never extend it. A failed or lost reply
 //! may hide a commit: reconcile HEAD, or LOOKUP for a named creation.
 use cathedral_kernel_contracts::user as abi;

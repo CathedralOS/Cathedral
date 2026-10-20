@@ -27,7 +27,10 @@ pub fn run() {
     );
     let live = resources::budget().unwrap();
     resources::grow(launch, [1, 1, 0, 0, 0]).unwrap();
-    assert_eq!(resources::budget().unwrap().limits.private_pages, live.limits.private_pages - 1);
+    assert_eq!(
+        resources::budget().unwrap().limits.private_pages,
+        live.limits.private_pages - 1
+    );
     commands.send(b"grow").unwrap();
     assert_eq!(&receive(events).0[..5], b"grown");
     child.cancel().unwrap();

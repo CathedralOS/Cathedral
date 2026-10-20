@@ -1,10 +1,10 @@
 # Rust reference OS: tasks and handoff
 
-Updated 2026-10-19 (local date). Current milestone: **compact taskbar, deeper
-recursive desktops, bounded startup recovery and ordinary storage refusal**, on
-baseline `f3d6d2a2`, landed as `c7571191`. The launch request ABI repair is
-`a287ae39`; current follow-up adds an explicit fresh-lab reset instead of further
-legacy snapshot upgrades. The saved-disk quota/headroom repair remains in place. Current
+Updated 2026-10-19 (local date). Current milestone: **measured nested startup,
+bounded storage containment proofs and fewer cold-start lookups**, on baseline
+`30572c9f` (fresh-lab reset). Compact recursive desktops landed as `c7571191`,
+and the launch request ABI repair as `a287ae39`. No recursive legacy snapshot
+upgrade is required. The saved-disk quota/headroom repair remains in place. Current
 verification and limitations are recorded in the newest section at the end.
 Previous baseline: atomic named creation and deeper recursive matrices at `102e416c`.
 F5 stages changed program installations in host scratch space, then verifies and
@@ -2903,3 +2903,91 @@ at all three Nested levels, then repeats those checks after cold reboot:
 copy. This focused check does not repeat the previous milestone's full subtree
 close/exhaustion suite. Deep startup remains slow. Focus subsequent work on actual
 OS behavior, not legacy lab upgrades.
+
+## Nested storage request amplification (2026-10-19)
+
+The latency workload now lives in `tools/boot-harness-rs/desktop_latency.py`,
+entered through `desktop_test.py --latency --trace-storage --trace-input`.
+It builds the ordinary F5 composition on a disposable disk, measures the outer
+desktop and three Nested levels, saves at each depth, then cold-opens the same
+disk. Picker launch, user creation/entry, Notes launch, pointer, typing, save
+and close have separate observations in `boot-*-latency.json`. The existing
+`desktop_timing.py` reports provider operations, sectors and compositor CPU.
+
+The two-slot scope packet was causing repeated ancestry HEADs at each ancestor.
+At eight forwarding hops, the host model expanded one write into 21 provider
+operations. `platform/libraries/matrix/world/storage` now retains four successful
+containment proofs per binding, reducing a repeated write to one provider call.
+Stock and Split confirm proofs only after the matching upstream check succeeds.
+Requests still authenticate the live connection/revision and reach the provider
+with their innermost scope. Proofs never authorize an operation or cache its data.
+Immutable parents and never-reused object numbers are essential to this rule.
+Revocation, regrant and upstream changes invalidate proofs; retiring/replacing a
+root provider revokes **all** its bindings, leaving other sources independent.
+Eviction requires another proof. No kernel mechanism or IPC wire format changed.
+
+The stock nested seed copier also checks whether a destination exists before
+looking up its source. This removes ten unnecessary source lookups on reopening
+an existing template, without replacing its programs or data.
+
+Measured third-level observations (seconds, traced QEMU/TCG):
+
+| Phase | Before | After | Provider calls before → after |
+| --- | ---: | ---: | ---: |
+| Fresh picker launch | 41.62 | 21.41 | 449 → 60 |
+| Fresh user entry | 27.40 | 7.91 | 312 → 27 |
+| Cold picker launch | 26.23 | 6.34 | 283 → 28 |
+| Cold user entry | 40.22 | 7.83 | 312 → 27 |
+| Cold Notes launch | 13.43 | 3.36 | 89 → 9 |
+| Cold Notes save | 5.20 | 3.00 | 21 → 1 |
+
+Baseline artifacts: `desktop/20261020T054908071290Z`; revised artifacts:
+`desktop/20261020T055706461711Z`, both beneath `build/boot-harness-rs/`.
+The baseline cold workload was rerun against its original ESP/disk after fixing
+a fixture mistake: retyping identical saved text makes Notes clean, so the cold
+workload now types different text and checks each deletion. Fresh baseline data
+is from the original completed first boot. Both corrected cold workloads passed.
+Host observations include QMP/screenshot overhead, host load varies and tracing
+adds work. These are observations, not timing promises; operation counts show
+the eliminated work independently of host scheduling.
+
+This does **not** establish an input latency improvement. Revised third-level
+typing observations span 187–335 ms across both boots; root pointer observations
+span 40–136 ms there. The compositor CPU for the three cold typed characters was
+about 2–6 ms each, measured on its own clock. Do not subtract it from host time
+and label the remainder scheduler or IPC cost.
+
+Next measured targets: first-time seed creation still takes 21 seconds at depth
+three; a single cold save still reads 938 sectors and writes 146, with about two
+seconds of provider-account CPU in this run. Investigate collection/commit/read
+work and serialized seed creation before blaming rasterization or adding SIMD.
+Separately measure chrome polling and interaction round trips; their costs have
+not yet been isolated. No new owner decision is needed for this work. The
+interactive disk was not reset or modified during these measurements; Fresh Lab
+remains the way to discard obsolete executable snapshots.
+
+The subtree-reopen fixture also needed a stronger close observation. A blank
+canvas appears before child collection, and all nested backgrounds use the same
+color. Its old one-pixel assertion could pass with the subtree still alive;
+the next launch then exhausted surface funding. Both nested/latency workloads
+now wait for the owner's running-task cell to clear too. The first full-tree
+run (`desktop/20261020T060137243348Z`) hit that sequence and ultimately ended in
+a host Python `MemoryError` during screenshot capture, not a guest panic.
+
+Verification completed: Rust workspace host tests (including real recursive
+proof forwarding, stale bindings, forged scopes, source invalidation and bounded
+eviction), 21 Python harness tests, default userspace clippy and the stock matrix's
+nested/trace/fault/probe feature set, formatting and layout checks. Formatting
+also normalized a few pre-existing named Rust bodies; kernel edits are cosmetic.
+The latency workload passed both boots. Provider replacement, uncertain commits,
+independent roots and cold verification passed in
+`matrix-database/20261020T060012433920Z`. Two-level Split persistence, protected
+close, funded refusal and repeated reclamation passed both boots in
+`desktop/20261020T060035553703Z`. ARM64 and kernel smoke were not rerun for this
+userspace change.
+The corrected three-level desktop fixture passed both boots, deepest saved
+Notes, protected close, two complete subtree teardown/reopen cycles per boot,
+and an isolated outer note in `desktop/20261020T060627976276Z`. No guest code
+change was needed for that fixture race; waiting for actual task removal fixed
+the observation. These later untraced runs experienced different host load and
+are functional verification, not additional before/after performance samples.

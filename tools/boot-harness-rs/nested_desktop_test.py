@@ -50,7 +50,11 @@ def exercise(output, click, key, scan, width, height, reboot):
         scan(lambda sw,d: pixel(sw,d,x+13,y+18)==bytes.fromhex('9b7028' if dirty else '27664a') and text(sw,d,x+18,y+28,value),f'depth {depth} Notes {value!r}')
     def background(depth):
         x,y,w,h = viewport(depth)
-        scan(lambda sw,d: pixel(sw,d,x+13,y+18)==bytes.fromhex('101827'),f'depth {depth} cleared')
+        # Clearing a surface precedes child collection. Every nested background
+        # has the same color, so it cannot prove that a subtree was stopped.
+        # Wait for the owner's first running-task cell to become empty as well.
+        scan(lambda sw,d: pixel(sw,d,x+13,y+18)==bytes.fromhex('101827')
+             and pixel(sw,d,x+249,y+h-60)==bytes.fromhex('101827'),f'depth {depth} closed and collected')
 
     for depth in range(1,4):
         enter(depth, not reboot)

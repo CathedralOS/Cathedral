@@ -18,13 +18,26 @@ pub enum Prepared {
         source: usize,
         check: wire::Packet,
         words: wire::Packet,
+        proof: Proof,
     },
 }
+/// Opaque bookkeeping for one upstream containment check. Only confirm it
+/// after that exact check succeeds on the binding's live upstream connection.
+#[derive(Clone, Copy)]
+pub struct Proof {
+    slot: usize,
+    incarnation: u64,
+    revision: u64,
+    scopes: [u64; 2],
+}
+const PROOFS: usize = 4;
 #[derive(Clone, Copy)]
 struct Binding {
     incarnation: u64,
     source: usize,
     scope: u64,
+    proofs: [Option<[u64; 2]>; PROOFS],
+    next_proof: usize,
 }
 pub struct Scopes<const N: usize = 2> {
     bindings: [Option<Binding>; N],
@@ -65,6 +78,8 @@ impl<const N: usize> Scopes<N> {
             incarnation,
             source,
             scope,
+            proofs: [None; PROOFS],
+            next_proof: 0,
         });
         Ok(())
     }
@@ -93,7 +108,8 @@ impl<const N: usize> Scopes<N> {
         self.binding(slot, incarnation)
     }
     /// Authenticate the connection and revision before appending this owner's
-    /// scope. Child-provided stamps only narrow authority; a full chain refuses.
+    /// scope. Child-provided stamps only narrow authority; folding a full packet
+    /// requires a confirmed containment proof under this exact binding.
     pub fn prepare(
         &self,
         slot: usize,
@@ -125,6 +141,20 @@ impl<const N: usize> Scopes<N> {
             // the innermost scope is inside both remaining restrictions makes
             // it their intersection for this request. Deletion can only make
             // the subsequent request fail; it cannot broaden authority.
+            let proof = Proof {
+                slot,
+                incarnation,
+                revision: self.revisions[slot],
+                scopes: [words[5], words[6]],
+            };
+            if self.bindings[slot]
+                .unwrap()
+                .proofs
+                .contains(&Some(proof.scopes))
+            {
+                words[6] = 0;
+                return Ok(Prepared::Forward { source, words });
+            }
             let mut check = protocol::Request::new(protocol::HEAD, words[5], 0, 0, 0).words();
             check[0] = (words[0] & !0xffff) | (wire::STORAGE_BASE + protocol::HEAD);
             check[5] = words[6];
@@ -135,9 +165,33 @@ impl<const N: usize> Scopes<N> {
                 source,
                 check,
                 words,
+                proof,
             });
         }
         Ok(Prepared::Forward { source, words })
+    }
+    /// Memoize only successful checks. The request itself still reaches the
+    /// provider with its innermost scope. Immutable parents/non-reused IDs make
+    /// this proof reusable, not the operation's result or existence of an object.
+    /// Revoke/regrant, upstream revision changes and provider retirement discard
+    /// the binding and its bounded FIFO of proofs together.
+    pub fn confirm(&mut self, proof: Proof) -> Result<(), u64> {
+        self.authorize(proof.slot, proof.incarnation, proof.revision)?;
+        let binding = self.bindings[proof.slot].as_mut().unwrap();
+        if !binding.proofs.contains(&Some(proof.scopes)) {
+            binding.proofs[binding.next_proof] = Some(proof.scopes);
+            binding.next_proof = (binding.next_proof + 1) % PROOFS;
+        }
+        Ok(())
+    }
+    /// A replaced/retired provider invalidates every grant naming that source.
+    /// Other providers' bindings are independent and remain usable.
+    pub fn revoke_source(&mut self, source: usize) {
+        for binding in &mut self.bindings {
+            if binding.is_some_and(|b| b.source == source) {
+                *binding = None;
+            }
+        }
     }
     pub fn revoke(&mut self, slot: usize) -> Option<usize> {
         self.bindings.get_mut(slot)?.take().map(|b| b.source)

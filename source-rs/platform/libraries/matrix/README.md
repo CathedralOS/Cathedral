@@ -26,6 +26,8 @@ use this machinery with the existing runtime IPC server.
   and [launch observations](world/launches.rs) use independently selected child
   capacities. They work without display state. `Scopes::prepare` is the shared
   connection/revision check and scope-stamping path for stock and Split storage.
+  Successful containment proofs are bounded and tied to the binding/provider
+  lifetime; see [the forwarding and invalidation rules](world/storage/README.md).
 - [Funding](funding.rs) computes a local shortfall and validates growth against
   caller-selected ceilings. It contains no desktop limits or automatic grants.
   The `FUND` protocol reaches the supplying matrix over its interaction endpoint;

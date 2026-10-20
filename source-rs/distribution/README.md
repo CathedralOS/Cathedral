@@ -229,6 +229,10 @@ over `Users`, retires that picker on selection, and lets the selected user matri
 run the same saved CONFIGURE path used by the outer desktop. The nested template
 contains another Nested executable and finite seed programs; it does not recursively
 materialize more users until launched. Existing names/data are preserved.
+On reopen, a seed that already exists is used without first resolving its copy
+source. The shared scope machinery retains bounded successful ancestry proofs,
+so repeated storage requests need not recursively re-prove the same intersection.
+Neither optimization grants a child a direct provider connection.
 
 [Admission](matrix/service/children/admission.rs) checks declared resource needs
 against owner ceilings before spawn. Surface ranges are allocated without moving

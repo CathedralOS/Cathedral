@@ -31,6 +31,8 @@ Add `--trace-storage --trace-input` for provider I/O, storage phase and composit
 CPU samples alongside host observations of boot, login, launches, typing,
 switching and saves. See [desktop timing interpretation](../tools/boot-harness-rs/README.md#ordinary-desktop-timings)
 before comparing these measurements.
+Add `--latency` to measure picker/user entry, Notes, pointer, typing and saves
+at each of three Nested levels, including a cold reopen of their saved state.
 
 **Split** runs two independently saved Notes. Its **DEEPER** button enters another
 copy of that matrix in a separate saved realm; unsaved work prevents replacement.

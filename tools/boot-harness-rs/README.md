@@ -423,6 +423,21 @@ compact report. `boot-N-latency.json` holds host observations and matched storag
 and compositor samples; `boot-N-boot-timing.json` separates QEMU launch-to-QMP
 from QMP-to-ready-marker. Build/install time is outside those boot measurements.
 
+For the same measurements through the recursive desktop:
+
+```powershell
+python tools/boot-harness-rs/desktop_test.py --latency --trace-storage --trace-input
+python tools/boot-harness-rs/desktop_timing.py build/boot-harness-rs/desktop/ARTIFACT_DIRECTORY
+```
+
+The [latency workload](desktop_latency.py) measures picker launch, user creation,
+user entry, Notes launch, pointer movement, typing, saving and closing, from the
+outer desktop through three Nested levels. A cold boot checks saved text and
+repeats the applicable phases. It uses a disposable disk and private ESP built
+from the F5 composition. Reports, serial logs and per-depth screenshots stay in
+that artifact directory. Compare operation counts as well as wall observations;
+there is no host-independent performance threshold.
+
 Host observations include input spacing, QMP and screenshot polling; they are
 upper bounds, not service CPU benchmarks or latency guarantees. Storage samples
 include provider CPU, nominal 100-Hz ticks, sector/flush/poll counts and nested

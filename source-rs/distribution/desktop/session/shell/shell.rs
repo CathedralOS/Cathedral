@@ -62,7 +62,19 @@ pub(super) fn enter(matrix: Pair) -> Result<(), u64> {
     // the picker process, surfaces, input and realm binding before any slow
     // storage reads needed to start the user's launcher.
     stop(matrix, 0)?;
-    request(matrix, [wire::SURFACE_LIMIT, 1, wire::MAX_SURFACES as u64, 0, 0, 0, 0, 0])?;
+    request(
+        matrix,
+        [
+            wire::SURFACE_LIMIT,
+            1,
+            wire::MAX_SURFACES as u64,
+            0,
+            0,
+            0,
+            0,
+            0,
+        ],
+    )?;
     cathedral_user_runtime::write(b"Cathedral desktop: picker stopped; loading user launcher\n")
         .unwrap();
     request(

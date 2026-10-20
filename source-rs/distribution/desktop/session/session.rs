@@ -84,7 +84,10 @@ pub(crate) fn run() -> u64 {
             .receive_until(&mut [0; 64], time::after(10).unwrap())
         {
             Err(Error(code)) if code == abi::TIMED_OUT as i64 => (),
-            result => panic!("desktop idle {result:?}; root {:?}", session.root.wait_until(time::now().unwrap())),
+            result => panic!(
+                "desktop idle {result:?}; root {:?}",
+                session.root.wait_until(time::now().unwrap())
+            ),
         }
     }
 }

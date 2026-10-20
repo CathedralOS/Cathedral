@@ -5,6 +5,7 @@
 //! same path on the matrix's own binding: HEAD the object, then BULK it.
 //! Legacy shared-stream fixtures still serialize their upstream requests.
 use super::*;
+use cathedral_matrix::world::storage::Proof;
 use cathedral_platform_contracts::storage as protocol;
 /// A request to run a program from this matrix's realm, carried while the
 /// object is read and answered once the child is admitted. The owner's names
@@ -53,7 +54,7 @@ pub(in crate::service::parent) struct Pending {
     source: usize,
     deadline: u64,
     launch: Option<LaunchRequest>,
-    validated: Option<wire::Packet>,
+    validated: Option<(wire::Packet, Proof)>,
 }
 impl Pending {
     pub(super) fn new(
@@ -194,6 +195,10 @@ impl Parent {
                         drop(object);
                         if words[0] != 0 {
                             reply = Some((words, None));
+                        } else if let Err(code) =
+                            self.scopes.confirm(p.validated.as_ref().unwrap().1)
+                        {
+                            reply = Some((wire::error(code), None));
                         } else {
                             p.step = Step::Forward;
                             p.receive = None;
@@ -304,7 +309,7 @@ impl Parent {
                 error.0 as u64,
             ],
         );
-        self.retire_storage(p.source, p.request.and_then(|r| r.client))?;
+        self.retire_storage(p.source)?;
         *reply = Some((wire::error(error.0 as u64), None));
         Ok(())
     }
@@ -325,7 +330,7 @@ impl Parent {
             let client = request.client.expect("forwarded child request");
             let slot = self.storage_slot(client);
             use cathedral_matrix::world::storage::Prepared;
-            if let Some(validated) = p.validated.take() {
+            if let Some((validated, _)) = p.validated.take() {
                 if let Err(code) = self.scopes.authorize(
                     slot,
                     request.incarnation,
@@ -351,9 +356,10 @@ impl Parent {
                         source,
                         check,
                         words: folded,
+                        proof,
                     }) => {
                         p.source = source;
-                        p.validated = Some(folded);
+                        p.validated = Some((folded, proof));
                         p.step = Step::Validate;
                         words = check;
                     }
