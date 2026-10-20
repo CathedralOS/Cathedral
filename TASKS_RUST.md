@@ -1,8 +1,10 @@
 # Rust reference OS: tasks and handoff
 
-Updated 2026-10-20 (local date). Current milestone: **preserving live matrices
-across slow interaction replies**, on baseline `66787f05` (nested input dispatch
-fairness and reproducible continuous-pointer testing).
+Updated 2026-10-20 (local date). Current milestone: **scheduler timing preparation:
+active branches, lazy accounting, indexed deadlines and a periodic contention lab**,
+on baseline `e94a9ef0` (live matrices survive slow interaction replies).
+The latest section records verification, the IRQ-masked work audit and remaining
+steps toward bounded execution. This does not introduce real-time reservations.
 The fresh-lab reset is `30572c9f`. Compact recursive desktops landed as `c7571191`,
 and the launch request ABI repair as `a287ae39`. No recursive legacy snapshot
 upgrade is required. The saved-disk quota/headroom repair remains in place. Current
@@ -3250,3 +3252,79 @@ Verification:
   Provider replacement, ambiguous writes, independent roots and exact cold
   storage records pass at `matrix-database/20261020T172005490015Z`.
 - No kernel behavior changed; kernel smoke and ARM64 were not rerun.
+
+
+## Scheduler timing preparation and periodic contention (2026-10-20)
+
+Baseline: `e94a9ef0`. The shared scheduler now maintains active ownership
+branches instead of rebuilding readiness over every reserved account. Each
+selection visits active direct-child contenders along its descent and preserves
+the previous slot-ordered rotation. State/gate changes update the affected
+ancestor chain. Local exhaustion hides a whole subtree without rewriting every
+descendant; reattachment, restart and slot reuse preserve rotation and debt.
+
+CPU accounting charges only the running ancestor chain and accounts whose
+repayment deadlines are due. Idle credit refills lazily, including before a rate
+change; running refill/consumption remains one net operation. Indexed heaps hold
+one deadline per sleeper/exhausted account, with explicit removal on sleep
+cancellation. Ready/finished queries use maintained state. Storage is allocated
+at construction, with no allocation in dispatch/accounting/wakeup. This adds
+linear metadata per reserved slot in exchange for removing dormant-slot scans.
+
+Exact existing policy tests still pass. New regressions compare 20,000 mixed
+readiness/gate/reparenting operations with the old selection model and 10,000
+CPU samples/rate/tree changes with independent eager accounting. Another 20,000
+heap mutations compare expiry/removal with an ordered model across the u64
+boundary. A three-account workload inspects the same scheduler work in a
+three-slot and a 50,000-slot arena; 10,000 future sleepers require only one root
+inspection per idle dispatch. These host tests do not raise the OS task limit
+or establish constant-time selection for a large *active* sibling set.
+
+The x86 smoke suite now includes a periodic userspace task beside busy and
+yielding peers, then with an intentionally inadequate 1,000-us CPU ceiling.
+Sixteen jobs use absolute releases eight nominal 100-Hz ticks apart and consume
+at least 1,000 accounted microseconds each. Samples are buffered before serial
+output. In this run both uncapped modes started and finished in the release
+tick (coarse observations, not zero elapsed time); the capped mode reached 61
+ticks of start lateness and 73 ticks of response, with 15 of 16 jobs finishing
+past the next period. Peer progress, cap enforcement and complete reclamation
+passed. This is an overload/timing baseline, not guaranteed service admission.
+Serial records are in `build/boot-harness-rs/smoke/serial.log` (`CPU_TIMING`).
+
+Read the [timing audit](source-rs/kernel/core/scheduler/timing.md) before extending
+this work. Trap dispatch still scans IPC/readiness/device/task waiters and
+pending work. Boot admission, whole page operations and descendant reclamation
+still run with IRQs masked; the heap and polling diagnostic/device paths also
+need bounded-time review. The pinned session's exclusive borrow forbids simply
+enabling interrupts inside those operations. Next: event-owner waiter indexes,
+explicit consistent suspension points for long operations, then a separately
+admitted restricted timing profile. Ceilings still are not reservations.
+Compiler requests, trusted evidence and runtime grants remain distinct; no
+Omega certificate ABI, priority policy or real-time guarantee was invented.
+
+Verification: workspace host tests; all 26 scheduler tests;
+default UEFI and smoke-feature clippy, supervision-userspace clippy; Rust format,
+layout and whitespace checks; x86 release smoke including the new periodic lab;
+ARM64 release portability proof. Logs: `build/scheduler-host-tests.log`,
+`build/scheduler-policy-tests.log`, `build/scheduler-smoke.log`,
+`build/scheduler-arm64.log`.
+
+The nested desktop pointer stress run passed its fresh boot, deepest saved
+Notes, dirty-close protection and two subtree close/reopen cycles, but the cold
+boot refused a clean outer close during the second cycle:
+`desktop/20261020T185301025767Z`. The log records `matrix-close-refused` and
+recursive `matrix-loss-uncertain` with TIMED_OUT, without kernel panic or matrix
+exit. Child control LOSS/CLOSE still use `time::after(100)` per hop; an uncertain
+answer correctly cannot authorize discarding the subtree. This is an outstanding
+timing-sensitive close failure, not a claimed passing full two-boot stress run.
+
+An unchanged revised-kernel cold replay on a copy of that exact saved fixture
+passed all three levels, both teardown/reopen cycles and isolated outer Notes:
+`desktop/scheduler-cold-recheck`. The same copied saved fixture also passed with
+the preserved pre-change EFI from `desktop/20261020T173847824501Z`, at
+`desktop/scheduler-baseline-cold`. Neither replay reproduced the refusal, so its
+relationship to this scheduler change is not established.
+Keep this regression visible; do not silently increase
+control deadlines, treat a timeout as permission to discard, or weaken the
+fixture to hide it. All desktop checks use disposable/copied media; the owner's
+interactive disk has not been modified.

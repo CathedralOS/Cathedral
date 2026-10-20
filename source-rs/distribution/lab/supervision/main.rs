@@ -6,6 +6,7 @@ mod failures;
 mod links;
 mod multiple;
 mod restarts;
+mod timing;
 mod watchdog;
 cathedral_user_runtime::entry!(main);
 fn main(role: u64, argument: u64) -> u64 {
@@ -46,6 +47,8 @@ fn main(role: u64, argument: u64) -> u64 {
         27 => cpu::worker(argument),
         28 => cpu::restarts(),
         29 => cpu::idle_refill(),
+        30 => timing::periodic(),
+        31 => timing::noise(argument),
         _ => 254,
     }
 }

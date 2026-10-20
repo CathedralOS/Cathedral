@@ -63,4 +63,5 @@ pub(super) fn exercise(memory: &mut PreparedMemory, console: &mut SerialPort) {
     }
     writeln!(console, "Cathedral Rust lab: hierarchical CPU turns preserved outside progress under subtree growth; loan return and full reclamation passed").ok();
     budget::exercise(memory, console);
+    timing::exercise(memory, console);
 }

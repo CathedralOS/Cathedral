@@ -31,8 +31,17 @@ with the launch authority after descendants have been physically reclaimed.
 IPC storage sponsorship remains tied to its original launch account independently.
 
 The bounded launch graph already requires parents to precede their children.
-Readiness propagates upward in a reverse pass; selection descends iteratively,
-without recursion or allocation. Rotation cursors survive task exit, slot reuse
+State changes maintain intrusive lists of active direct-child branches. A local
+budget gate hides the entire branch without rewriting every descendant.
+Readiness changes propagate only through ancestors whose activity changes;
+selection visits active siblings along the chosen descent, preserving cyclic
+slot order. It does not scan vacant, blocked or sleeping siblings. Selection
+still scales with active sibling count and tree depth; it is not constant time.
+All lists and [indexed deadline heaps](deadlines.rs) are allocated at scheduler
+construction. Sleep cancellation removes its deadline before slot reuse.
+Sleep ticks extend the wrapping clock internally; successive samples, as well
+as sleep durations, must stay within half the clock range.
+Rotation cursors survive task exit, slot reuse
 and loan transfer. Merely restarting cannot reset an ancestor's rotation.
 The kernel-task fixture keeps a flat tree and retains its previous round robin.
 CPU usage, credit and overrun debt also survive replacement and loan transfer.
@@ -86,6 +95,16 @@ new dynamic reservations subtract a private baseline when reusing an arena slot;
 no other account or machine total is exposed. A blocked caller's request
 executing in an independent provider still charges that provider's tree.
 
+Accounting touches the charged chain and accounts whose repayment deadlines are
+due, rather than every reserved account. Idle refill is materialized before an
+account is charged or its rate changes. Running refill and consumption remain
+one net calculation, preserving fractional credit and the burst ceiling.
+Exhausted accounts have one indexed repayment deadline each; at exactly zero
+credit they remain ineligible. Cancellation/restart does not discard that debt.
+Boot configuration may scan the arena; `vacancy()` remains an admission scan.
+Ready/finished queries use maintained state. None of this removes scans in the
+separate IPC, device, task-wait or deferred-work owners.
+
 ## What a turn means
 
 The current x86-64 lab preempts at the next periodic timer interrupt. Blocking,
@@ -136,3 +155,18 @@ Run `cargo test --locked` in `source-rs/`, then from the repository root:
 ```powershell
 python tools/boot-harness-rs/run.py --smoke --release --timeout 120
 ```
+
+Randomized regressions compare maintained selection against the original
+slot-scan policy for 20,000 state/gate/reparenting changes, and lazy accounting
+against independent eager arithmetic for 10,000 samples/rate/tree changes.
+Operation-count checks compare a three-account workload with 50,000 reserved
+slots and verify that 10,000 future sleepers require one heap-root inspection
+per idle dispatch. These are host policy checks, not a claim that the booted
+OS admits 50,000 tasks.
+
+The smoke suite also runs a [periodic userspace probe](../../../distribution/lab/supervision/timing.rs)
+beside a busy peer, a yielding peer, and under an inadequate CPU ceiling.
+It buffers 16 release/start/finish/CPU samples before serial output, checks
+progress, actual throttling and full reclamation. See the
+[timing preparation and kernel-work audit](timing.md) for interpretation,
+remaining bounds and the next implementation steps.

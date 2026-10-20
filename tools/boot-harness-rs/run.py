@@ -64,6 +64,7 @@ MARKERS = (
     "Cathedral Rust lab: peer graph survived 16 app/provider replacements; all endpoints, frames and heap reclaimed",
     "Cathedral Rust lab: hierarchical CPU turns preserved outside progress under subtree growth; loan return and full reclamation passed",
     "Cathedral Rust lab: measured CPU ceilings, descendant charging, yield pressure, restart debt and idle refill passed",
+    "Cathedral Rust lab: periodic timing under busy/yielding peers and CPU exhaustion reclaimed all state",
     "Cathedral Rust lab: deadlines recovered 4 silent and 4 spinning services; independent observer progressed; all memory reclaimed",
     "Cathedral Rust lab: clock grants copy checks and deadline completion/cancellation precedence passed",
     "Cathedral Rust lab: deadline woke an idle session with every user task blocked; all memory reclaimed",

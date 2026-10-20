@@ -112,3 +112,71 @@ fn admission_requires_reaping_and_reused_slots_reject_stale_ids() {
         Some(survivor.slot)
     );
 }
+
+#[test]
+fn cancelled_sleep_cannot_wake_a_replacement_and_equal_deadlines_all_wake() {
+    let mut scheduler = populated(3);
+    scheduler.advance(Event::Yield, 0, true);
+    scheduler.advance(Event::Sleep(5), 0, true);
+    scheduler.advance(Event::Sleep(5), 0, true);
+    scheduler.advance(Event::Sleep(10), 0, true);
+    scheduler.cancel(0);
+    scheduler.reap(0);
+    scheduler.admit(0);
+    scheduler.advance(Event::Yield, 1, true);
+    scheduler.advance(Event::Sleep(20), 1, true);
+    assert_eq!(scheduler.advance(Event::Timer, 5, true), Some(1));
+    assert_eq!(scheduler.states()[0], TaskState::Sleeping { deadline: 21 });
+    assert_eq!(scheduler.advance(Event::Exit, 10, true), Some(2));
+    assert_eq!(scheduler.advance(Event::Exit, 20, true), None);
+    assert_eq!(scheduler.advance(Event::Timer, 21, true), Some(0));
+
+    let mut scheduler = populated(3);
+    scheduler.advance(Event::Yield, 0, true);
+    for _ in 0..3 {
+        scheduler.advance(Event::Sleep(10), 0, true);
+    }
+    scheduler.advance(Event::Timer, 10, true);
+    assert_eq!(
+        scheduler.states(),
+        &[TaskState::Running, TaskState::Ready, TaskState::Ready]
+    );
+}
+
+#[test]
+fn dormant_capacity_does_not_scale_dispatch_accounting_or_timer_inspections() {
+    fn workload(capacity: usize) -> (usize, usize, usize) {
+        let mut scheduler = Scheduler::new(capacity);
+        scheduler.set_parent(2, 0);
+        for slot in 0..3 {
+            scheduler.admit(slot);
+        }
+        scheduler.account_cpu(0);
+        for now in 0..100 {
+            scheduler.advance(Event::Timer, now, true);
+            scheduler.account_cpu((now + 1) * 100);
+            assert!(!scheduler.finished());
+            assert!(scheduler.has_eligible_ready());
+        }
+        (
+            scheduler.shares.inspections,
+            scheduler.budgets.visits,
+            scheduler.sleepers.inspections,
+        )
+    }
+    assert_eq!(workload(3), workload(50_000));
+}
+
+#[test]
+fn future_sleepers_require_only_one_deadline_inspection_per_dispatch() {
+    let mut scheduler = populated(10_000);
+    scheduler.advance(Event::Yield, 0, true);
+    for _ in 0..10_000 {
+        scheduler.advance(Event::Sleep(1_000), 0, true);
+    }
+    let before = scheduler.sleepers.inspections;
+    for tick in 1..100 {
+        assert_eq!(scheduler.advance(Event::Timer, tick, true), None);
+    }
+    assert_eq!(scheduler.sleepers.inspections - before, 99);
+}

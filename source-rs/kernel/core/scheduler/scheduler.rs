@@ -5,6 +5,7 @@
 
 use alloc::{vec, vec::Vec};
 use budget::Budgets;
+use deadlines::Deadlines;
 use shares::Shares;
 
 /// A slot and generation within one runtime session. Reuse never revives an ID.
@@ -47,6 +48,10 @@ pub struct Scheduler {
     current: Option<usize>,
     shares: Shares,
     budgets: Budgets,
+    sleepers: Deadlines,
+    last_tick: Option<u64>,
+    ticks: u128,
+    alive: usize,
 }
 
 impl Scheduler {
@@ -57,6 +62,10 @@ impl Scheduler {
             current: None,
             shares: Shares::new(limit),
             budgets: Budgets::new(limit),
+            sleepers: Deadlines::new(limit),
+            last_tick: None,
+            ticks: 0,
+            alive: 0,
         }
     }
     /// Attach a dormant launch account to its current owner. The bounded launch
@@ -65,32 +74,32 @@ impl Scheduler {
         assert_eq!(self.states[child], TaskState::Vacant);
         assert!(parent < child);
         self.shares.set_parent(child, parent);
-        self.budgets.refresh(&self.shares);
     }
-    /// Boot configuration only. Zero inherits ancestor ceilings; it adds no cap.
+    /// Configure a dormant account. Zero inherits ancestor ceilings; it adds no cap.
     pub fn assign_cpu(&mut self, slot: usize, limit: u64) -> bool {
-        self.states[slot] == TaskState::Vacant && self.budgets.assign(slot, limit, &self.shares)
+        self.states[slot] == TaskState::Vacant && self.budgets.assign(slot, limit, &mut self.shares)
     }
     pub fn configure_cpu(&mut self, limits: &[u64]) -> bool {
-        self.budgets.configure(limits)
+        if !self.budgets.configure(limits) {
+            return false;
+        }
+        self.budgets.configured_gates(&mut self.shares);
+        true
     }
     /// Account the interval since the preceding sample to the running process.
     pub fn account_cpu(&mut self, now_us: u64) {
-        self.budgets.advance(now_us, self.current, &self.shares);
+        self.budgets.advance(now_us, self.current, &mut self.shares);
     }
     /// Boot-stack work is charged explicitly to its requester or retired account.
     pub fn charge_cpu(&mut self, owner: usize, now_us: u64) {
         assert!(self.current.is_none());
-        self.budgets.advance(now_us, Some(owner), &self.shares);
+        self.budgets.advance(now_us, Some(owner), &mut self.shares);
     }
     pub fn cpu_report(&self, slot: usize) -> CpuReport {
         self.budgets.report(slot)
     }
     pub fn has_eligible_ready(&self) -> bool {
-        self.states
-            .iter()
-            .enumerate()
-            .any(|(slot, state)| *state == TaskState::Ready && self.budgets.eligible[slot])
+        self.shares.has_ready()
     }
     pub fn current(&self) -> Option<usize> {
         self.current
@@ -102,9 +111,7 @@ impl Scheduler {
         &self.states
     }
     pub fn finished(&self) -> bool {
-        self.states
-            .iter()
-            .all(|state| matches!(state, TaskState::Vacant | TaskState::Exited))
+        self.alive == 0
     }
 
     pub fn vacancy(&self) -> Option<usize> {
@@ -119,6 +126,8 @@ impl Scheduler {
             .checked_add(1)
             .expect("task generation exhausted");
         self.states[slot] = TaskState::Ready;
+        self.alive += 1;
+        self.shares.ready(slot, true);
         self.id(slot)
     }
     pub fn id(&self, slot: usize) -> TaskId {
@@ -148,14 +157,15 @@ impl Scheduler {
     /// Sleep durations must be below half the wrapping clock's range.
     pub fn advance(&mut self, event: Event, now: u64, preempt: bool) -> Option<usize> {
         if (matches!(event, Event::Continue) || (matches!(event, Event::Timer) && !preempt))
-            && self.current.is_some_and(|slot| self.budgets.eligible[slot])
+            && self.current.is_some_and(|slot| self.shares.eligible(slot))
         {
             self.wake(now);
             return self.current;
         }
         self.park(event, now);
-        if let Some(candidate) = self.shares.select(&self.states, &self.budgets.eligible) {
+        if let Some(candidate) = self.shares.select() {
             self.states[candidate] = TaskState::Running;
+            self.shares.ready(candidate, false);
             self.current = Some(candidate);
         }
         self.current
@@ -164,6 +174,7 @@ impl Scheduler {
     pub fn unblock(&mut self, slot: usize) {
         if self.states[slot] == TaskState::Blocked {
             self.states[slot] = TaskState::Ready;
+            self.shares.ready(slot, true);
         }
     }
 
@@ -175,15 +186,23 @@ impl Scheduler {
             TaskState::Ready | TaskState::Blocked | TaskState::Sleeping { .. }
         ));
         self.states[slot] = TaskState::Exited;
+        self.alive -= 1;
+        self.shares.ready(slot, false);
+        self.sleepers.remove(slot);
     }
 
     fn wake(&mut self, now: u64) {
-        for state in &mut self.states {
-            if let TaskState::Sleeping { deadline } = *state
-                && now.wrapping_sub(deadline) < (1 << 63)
-            {
-                *state = TaskState::Ready;
-            }
+        if let Some(last) = self.last_tick.replace(now) {
+            let elapsed = now.wrapping_sub(last);
+            assert!(
+                elapsed < (1 << 63),
+                "tick sample exceeds clock comparison range"
+            );
+            self.ticks += u128::from(elapsed);
+        }
+        while let Some(slot) = self.sleepers.pop_due(self.ticks) {
+            self.states[slot] = TaskState::Ready;
+            self.shares.ready(slot, true);
         }
     }
 
@@ -198,14 +217,20 @@ impl Scheduler {
                     if delay == 0 {
                         TaskState::Ready
                     } else {
+                        self.sleepers.set(current, self.ticks + u128::from(delay));
                         TaskState::Sleeping {
                             deadline: now.wrapping_add(delay),
                         }
                     }
                 }
-                Event::Exit => TaskState::Exited,
+                Event::Exit => {
+                    self.alive -= 1;
+                    TaskState::Exited
+                }
                 Event::Block => TaskState::Blocked,
             };
+            self.shares
+                .ready(current, self.states[current] == TaskState::Ready);
         }
         self.current = None;
     }

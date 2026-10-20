@@ -98,3 +98,71 @@ fn dormant_and_failed_admission_do_not_contend_for_turns() {
     }
     assert_eq!(&scheduler.states()[2..], &[TaskState::Vacant; 2]);
 }
+
+#[test]
+fn maintained_branches_match_slot_scan_across_wakes_gates_and_reattachment() {
+    use super::Shares;
+    let mut shares = Shares::new(16);
+    let mut parents = [None; 16];
+    let mut ready = [false; 16];
+    let mut allowed = [true; 16];
+    let mut cursors = [0; 16];
+    let mut root_cursor = 0;
+    let mut random = 97u64;
+    for step in 0..20_000 {
+        random = random.wrapping_mul(6364136223846793005).wrapping_add(1);
+        let slot = (random >> 32) as usize % 16;
+        match step % 3 {
+            0 => {
+                ready[slot] = !ready[slot];
+                shares.ready(slot, ready[slot]);
+            }
+            1 => {
+                allowed[slot] = !allowed[slot];
+                shares.allow(slot, allowed[slot]);
+            }
+            _ if slot > 0 => {
+                let parent = (random >> 16) as usize % slot;
+                parents[slot] = Some(parent);
+                shares.set_parent(slot, parent);
+            }
+            _ => {}
+        }
+        let mut eligible = [false; 16];
+        let mut active = [false; 16];
+        for slot in 0..16 {
+            eligible[slot] = allowed[slot] && parents[slot].is_none_or(|p| eligible[p]);
+            active[slot] = ready[slot] && eligible[slot];
+        }
+        for slot in (0..16).rev() {
+            if active[slot]
+                && let Some(parent) = parents[slot]
+            {
+                active[parent] = true;
+            }
+        }
+        let mut parent = None;
+        let expected = loop {
+            let cursor = parent.map_or(root_cursor, |p| cursors[p]);
+            let next = (0..16).map(|offset| (cursor + offset) % 16).find(|&slot| {
+                if parent == Some(slot) {
+                    ready[slot] && eligible[slot]
+                } else {
+                    parents[slot] == parent && active[slot]
+                }
+            });
+            let Some(next) = next else { break None };
+            if let Some(parent) = parent {
+                cursors[parent] = (next + 1) % 16;
+            } else {
+                root_cursor = (next + 1) % 16;
+            }
+            if parent == Some(next) {
+                break Some(next);
+            }
+            parent = Some(next);
+        };
+        assert_eq!(shares.has_ready(), expected.is_some(), "step {step}");
+        assert_eq!(shares.select(), expected, "step {step}");
+    }
+}
