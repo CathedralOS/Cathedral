@@ -11,6 +11,7 @@ use alloc::vec::Vec;
 use cathedral_arch::Context;
 use core::sync::atomic::{AtomicPtr, AtomicU64, Ordering};
 pub(super) struct Task {
+    pub(super) closing: super::memory::Closing,
     pub(super) memory_call: Option<[u64; 3]>,
     pub(super) context: Context,
     pub(super) space: Option<UserSpace>,
@@ -22,6 +23,7 @@ pub(super) struct Task {
     pub(super) keyboard_deadline: Option<u64>,
 }
 pub(super) struct Session {
+    pub(super) cancel_waiters: u32,
     pub(super) deferred: super::execution::deferred::Pending,
     pub(super) child_launch: [Option<usize>; cathedral_kernel_contracts::user::MAX_TASKS],
     pub(super) waits: super::execution::waits::Registry,

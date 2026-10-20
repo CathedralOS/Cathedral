@@ -9,12 +9,14 @@ pub(in crate::user_tasks) enum Work {
     Cancel,
     Retire,
     Return,
+    Collect,
+    Abandon,
 }
 
 #[derive(Default)]
 pub(in crate::user_tasks) struct Pending {
-    sets: [u32; 5],
-    cursors: [usize; 5],
+    sets: [u32; 7],
+    cursors: [usize; 7],
 }
 
 impl Pending {
@@ -30,6 +32,18 @@ impl Pending {
     }
     pub(in crate::user_tasks) fn has(&self, kind: Work) -> bool {
         self.sets[kind as usize] != 0
+    }
+    /// Admission cannot reuse capacity while any cleanup phase remains.
+    pub(in crate::user_tasks) fn reclaiming(&self) -> bool {
+        [
+            Work::Cancel,
+            Work::Retire,
+            Work::Return,
+            Work::Collect,
+            Work::Abandon,
+        ]
+        .iter()
+        .any(|&kind| self.has(kind))
     }
     /// Cancellation/reaping preserve increasing child order; newly enqueued
     /// descendants participate in the same drain, rather than a stale snapshot.

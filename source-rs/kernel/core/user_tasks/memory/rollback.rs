@@ -116,7 +116,7 @@ unsafe fn page_objects(frames: &mut FrameAllocator, layout: &BootLayout, image: 
         }
         // SAFETY: Same cleanup used for a dead blocked caller; staging has no aliases.
         unsafe {
-            retirement::close(&mut session, 0, &mut source);
+            closing::close(&mut session, 0, &mut source);
         }
         assert_eq!(session.memory.reserved_unbacked(), 0);
         assert_eq!(source.allocated(), admitted);

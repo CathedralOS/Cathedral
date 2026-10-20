@@ -221,6 +221,35 @@ unsafe fn physical(
     }
     assert!(!space.writable_range(USER_CODE, 1));
     assert!(space.writable_range(USER_DATA, 1));
+    f.session.scheduler.cancel(0);
+    f.session.tasks[0].report.exit = Some(crate::user_tasks::Exit::Cancelled);
+    lifecycle::close(&mut f.session, 0);
+    let mut batches = 0;
+    while f.session.deferred.reclaiming() {
+        let before = f.source.allocated();
+        // SAFETY: Production cancellation withdraws the child before the first yield.
+        unsafe {
+            lifecycle::reap(&mut f.session, &mut f.source);
+        }
+        batches += 1;
+        assert!(batches < 256);
+        assert!(before - f.source.allocated() <= 8);
+        assert_eq!(f.session.scheduler.states()[1], TaskState::Ready);
+        assert_eq!(
+            f.session.ipc.send(1, f.producer, b"late"),
+            Err(abi::PEER_CLOSED)
+        );
+        if f.session.deferred.reclaiming() {
+            // Neither the parent nor child slot/outcome is reusable mid-wave.
+            assert_eq!(f.session.scheduler.states()[0], TaskState::Exited);
+            assert_eq!(f.session.scheduler.states()[2], TaskState::Exited);
+            assert_eq!(f.session.tasks[0].report.reaped, 0);
+        }
+    }
+    assert!(batches > 8);
+    assert_eq!(f.session.scheduler.states()[0], TaskState::Vacant);
+    assert_eq!(f.session.scheduler.states()[2], TaskState::Vacant);
+    assert_eq!(f.session.tasks[0].report.reaped, 1);
     // SAFETY: No fixture context was ever activated.
     unsafe {
         finish(f);
@@ -252,7 +281,7 @@ unsafe fn interrupted(
         lifecycle::close(&mut f.session, death);
         // SAFETY: Exited fixture task cannot resume; exercise owner-return cleanup too.
         unsafe {
-            lifecycle::reap(&mut f.session, &mut f.source);
+            reclaim(&mut f);
         }
     } else {
         // A receive right with queued data is no longer movable. The independent
@@ -352,7 +381,7 @@ unsafe fn abandoned_object(
     lifecycle::close(&mut f.session, 0);
     // SAFETY: Owner cannot resume; abort draft before settling its source reference.
     unsafe {
-        lifecycle::reap(&mut f.session, &mut f.source);
+        reclaim(&mut f);
         crate::user_tasks::memory::process(&mut f.session, &mut f.source);
     }
     assert!(f.session.launches[0].draft.is_none());
@@ -362,6 +391,18 @@ unsafe fn abandoned_object(
     // SAFETY: Only the inactive initial peer remains.
     unsafe {
         finish(f);
+    }
+}
+
+unsafe fn reclaim(f: &mut Fixture<'_>) {
+    let mut steps = 0;
+    while f.session.deferred.reclaiming() {
+        steps += 1;
+        assert!(steps < 256);
+        // SAFETY: Fixture contexts never execute; retain all custody through collection.
+        unsafe {
+            lifecycle::reap(&mut f.session, &mut f.source);
+        }
     }
 }
 

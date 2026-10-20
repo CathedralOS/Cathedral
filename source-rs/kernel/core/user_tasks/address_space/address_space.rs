@@ -165,15 +165,30 @@ impl UserSpace {
     /// # Safety
     /// Kernel root active, IRQs off. Task can never resume; no saved references
     /// or mappings outside this retired root refer to these owned frames.
-    pub unsafe fn release(self, frames: &mut impl FrameSource) {
+    pub unsafe fn release(mut self, frames: &mut impl FrameSource) {
+        // SAFETY: Whole-operation wrapper for construction rollback and initial boot.
+        unsafe {
+            self.release_pages(frames, usize::MAX);
+        }
+    }
+
+    /// Release at most budget frames from a permanently retired root, root last.
+    /// No mapping or checked-copy operation may use this space after the first step.
+    /// # Safety
+    /// Same custody as release. All borrowed page-object mappings must be removed
+    /// first. No context can resume this tree, including between steps.
+    pub unsafe fn release_pages(&mut self, frames: &mut impl FrameSource, budget: usize) -> bool {
         if let Some(mapping) = &self.mapping {
             mapping.assert_inactive();
         }
-        for address in self.owned[..self.len].iter().rev() {
+        for _ in 0..budget.min(self.len) {
+            self.len -= 1;
+            let address = self.owned[self.len];
             // SAFETY: Inactive root; translation root switch flushed its non-global translations.
             unsafe {
-                frames.release(*address);
+                frames.release(address);
             }
         }
+        self.len == 0
     }
 }

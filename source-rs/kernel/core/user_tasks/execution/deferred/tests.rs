@@ -52,3 +52,23 @@ fn only_an_explicit_boot_yield_may_run_peers_past_pending_work() {
     assert!(!return_to_boot(false, true, false));
     assert!(!return_to_boot(false, false, false));
 }
+
+#[test]
+fn collection_and_abandoned_drafts_hold_admission_until_cleanup_finishes() {
+    let mut pending = Pending::default();
+    pending.insert(Work::Admission, 8);
+    assert!(!pending.reclaiming());
+    for kind in [
+        Work::Cancel,
+        Work::Retire,
+        Work::Return,
+        Work::Collect,
+        Work::Abandon,
+    ] {
+        pending.insert(kind, 3);
+        assert!(pending.reclaiming());
+        pending.remove(kind, 3);
+        assert!(!pending.reclaiming());
+    }
+    assert_eq!(pending.next(Work::Admission), Some(8));
+}

@@ -73,6 +73,7 @@ unsafe fn construct(
             return Err(Error::Memory(error));
         }
     }
+    task.closing = Default::default();
     task.context = Context::user(entry, USER_STACK_TOP, program.arguments);
     task.receive = None;
     task.wait = None;
@@ -124,6 +125,7 @@ unsafe fn discard(task: &mut Task, frames: &mut Frames<'_>) {
 
 pub(super) fn reserve_slot(session: &mut Session) {
     session.tasks.push(Task {
+        closing: Default::default(),
         memory_call: None,
         context: Context::default(),
         space: None,

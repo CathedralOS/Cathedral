@@ -137,17 +137,36 @@ pub(in crate::user_tasks) unsafe fn abort(
     frames: &mut Frames<'_>,
     index: usize,
 ) {
-    if let Some(draft) = session.launches[index].draft.take() {
-        let count = draft.frames();
-        // SAFETY: All mappings belong solely to this unpublished root.
-        unsafe {
-            draft.space.release(frames);
-        }
-        session
-            .memory
-            .funding
-            .refund(session.launches[index].model.child, count);
+    // SAFETY: Whole rollback wrapper; same permanently inactive-root custody.
+    unsafe {
+        abort_step(session, frames, index, usize::MAX);
     }
+}
+
+/// # Safety
+/// Dead or withdrawing owner, private root never activated. Caller keeps the
+/// launch unavailable until every frame and the retained source are settled.
+pub(in crate::user_tasks) unsafe fn abort_step(
+    session: &mut Session,
+    frames: &mut Frames<'_>,
+    index: usize,
+    budget: usize,
+) -> bool {
+    let child = session.launches[index].model.child;
+    let Some(draft) = session.launches[index].draft.as_mut() else {
+        return true;
+    };
+    let before = draft.frames();
+    // SAFETY: No context or page-object aliases were published into this draft.
+    let done = unsafe { draft.space.release_pages(frames, budget) };
+    session
+        .memory
+        .funding
+        .refund(child, before - draft.frames());
+    if done {
+        session.launches[index].draft = None;
+    }
+    done
 }
 
 /// Final serialized commit only: caller has revalidated/reserved all grants and
@@ -161,6 +180,7 @@ pub(in crate::user_tasks) fn publish(session: &mut Session, index: usize, argume
     let child = session.launches[index].model.child;
     let task = &mut session.tasks[child];
     assert!(task.space.is_none());
+    task.closing = Default::default();
     task.context = Context::user(draft.plan.entry, USER_STACK_TOP, arguments);
     task.report = Report {
         frames: draft.frames(),

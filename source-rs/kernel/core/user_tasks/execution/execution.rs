@@ -22,7 +22,7 @@ pub(super) unsafe fn run(
         }
         loop {
             deferred::step(&mut *session, source, layout, image, config);
-            if (*session).scheduler.finished() {
+            if (*session).scheduler.finished() && !deferred::pending(&*session) {
                 break;
             }
             // The step has returned: no exclusive session borrow or partial

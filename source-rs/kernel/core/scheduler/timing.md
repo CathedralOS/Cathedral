@@ -28,6 +28,9 @@ and userspace execution system.
   at most eight pages per step, retaining its unpublished state and funding.
   Executable admission likewise batches image/stack pages behind a format decoder
   and commits the child and its authority only after construction finishes.
+- Physical subtree retirement now advances one task/draft per step, returning up
+  to eight private frames. Dead-task alias cleanup scans up to 32 entries and
+  cleans at most one page object. Slots, outcomes and loans wait for collection.
 
 ## Non-preemptible work inventory
 
@@ -43,7 +46,7 @@ The table describes structural bounds; none is a qualified time bound.
 | [Copied IPC delivery](../user_tasks/syscalls/ipc/delivery.rs), [readiness](../user_tasks/syscalls/ipc/readiness.rs) | Bounded message copy and capability/handle validation for each affected/due waiter | Bound bursts of completions and grant lookup; preserve messages on failed copyout and wake on revocation/death |
 | [Spawn](../user_tasks/lifecycle/spawn.rs), [construction](../user_tasks/admission/construction.rs) | One rotating admission per step; at most eight image/stack pages; decoding, root creation, runtime tables, framebuffer mapping, final grant commit and rollback remain whole phases | Measure and bound remaining phases and rollback; retain private root/source custody and revalidate authority after suspension |
 | [Runtime memory](../user_tasks/memory/memory.rs), [allocation](../user_tasks/memory/allocation.rs) | Advance one rotating caller per step; allocation zeros up to eight pages; final map, seal/unmap/release and rollback still process a whole region; settle indexed pending references | Extend staged allocation's retained funding/cancellation to other page operations and rollback. Publication cannot expose a partly initialized or writable sealed object |
-| [Cancellation and reclamation](../user_tasks/lifecycle/lifecycle.rs), [region retirement](../user_tasks/memory/retirement.rs) | Drain indexed cancellations/retired tasks, close grants/queues, scan reader/region arenas, remove mappings and free all dead-task frames before returning indexed loans; run conservation assertions | Retire authority first; reclaim a bounded amount per turn; return funding and reusable slots only after aliases/readers and descendants are settled |
+| [Reclamation](../user_tasks/lifecycle/reclamation.rs), [alias cleanup](../user_tasks/memory/closing.rs) | Withdraw all canceled authority; one rotating task/draft cleanup step with up to 32 metadata entries, one page object or eight private frames; final collection, pending reference settlement and conservation assertions remain whole operations | Bound single-object unmap/free, staging cancellation, reference retirement and metadata bursts; keep admissions/outcomes/loan return behind complete physical retirement |
 | [Kernel heap](../memory/heap.rs) | Interrupt masking covers the allocator lock; allocation/free cost depends on free-list state | Keep timing-critical paths allocation-free; preallocate their working sets rather than assume a lock makes allocation time predictable |
 | [Diagnostic sink](../../boot/uefi/diagnostics.rs) and privileged device adapters | Bounded user writes can still poll hardware under IRQ masking; close/reset also invokes device operations | Audit polling bounds per device and decouple ordinary diagnostics; buffer timing samples outside the measured workload |
 
@@ -97,8 +100,8 @@ restart debt, hierarchical overload and all-accounts-exhausted idle recovery.
 1. Bound event and retirement bursts while preserving terminal/deadline ordering.
    Waiter and deferred-work indexes are in place. Extend observations to
    distinguish becoming ready from actually being selected.
-2. Extend incremental allocation/admission to mapping/rollback and descendant
-   reclamation; measure the largest remaining uninterrupted chunks under competing
+2. Extend incremental allocation/admission/retirement to single-object mapping,
+   rollback and reference retirement; measure remaining uninterrupted chunks under competing
    work. Keep requester charging, private staging and rollback tests.
 3. Define guaranteed service separately from ceilings: amount, replenishment/
    service window, deadline and overrun behavior. A child cannot promise finer

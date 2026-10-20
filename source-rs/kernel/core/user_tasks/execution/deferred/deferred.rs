@@ -13,7 +13,13 @@ pub(super) unsafe fn step(
     // SAFETY: Boot stack, kernel root, exclusive session and IRQs off throughout.
     unsafe {
         lifecycle::reap(session, source);
-        if let Some(index) = session.deferred.next(Work::Admission) {
+        // Collection can surrender the last executable/escrow reference. Settle
+        // those credits below before trying a new admission against its budget.
+        if !session.deferred.reclaiming()
+            && !session.memory.retirement_pending()
+            && !session.ipc.memory_retirement_pending()
+            && let Some(index) = session.deferred.next(Work::Admission)
+        {
             let mut pages = [0; cathedral_kernel_contracts::memory::MAX_PAGES];
             let program = match session.launches[index]
                 .code

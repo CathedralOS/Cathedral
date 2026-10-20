@@ -1,8 +1,7 @@
 # Rust reference OS: tasks and handoff
 
-Updated 2026-10-20 (local date). Current milestone: **resumable executable
-admission**, on baseline `8555aed8` (indexed deferred work and incremental
-private allocation).
+Updated 2026-10-20 (local date). Current milestone: **incremental subtree
+reclamation**, on baseline `1428451e` (resumable executable admission).
 The latest section records verification and remaining steps toward bounded
 execution. This does not introduce real-time reservations.
 The fresh-lab reset is `30572c9f`. Compact recursive desktops landed as `c7571191`,
@@ -3522,3 +3521,73 @@ withdrawal before physical reuse and ancestor funding return. Measure remaining
 uninterrupted phases under competing work before making timing claims. Follow the
 [timing audit](source-rs/kernel/core/scheduler/timing.md). No owner decision blocks
 that mechanical work; guaranteed-service admission remains a separate design step.
+
+
+## Incremental subtree reclamation (2026-10-20)
+
+Baseline: `1428451e`. Start at
+[lifecycle.rs](source-rs/kernel/core/user_tasks/lifecycle/lifecycle.rs), which
+withdraws canceled authority, advances physical cleanup, then checks conservation.
+[Reclamation](source-rs/kernel/core/user_tasks/lifecycle/reclamation.rs) separates
+stopping tasks from collecting their slots and publishing outcomes.
+
+Cancellation still stops the complete affected subtree and closes endpoints,
+waits and device routes before the first yield. Physical retirement then rotates
+among dead tasks. Alias cleanup scans at most 32 reader/region entries and cleans
+at most one page object per step. After aliases disappear, each step returns at
+most eight private image/stack/table frames. Abandoned admission drafts use the
+same eight-frame allowance. Funding refunds track the remaining frame ledgers;
+retirement CPU work is charged to the dead task, draft cleanup to its requester.
+Accepted live readers retain backing after producer death.
+
+Dead slots remain Exited until the entire cleanup wave finishes. Final metadata
+collection publishes child outcomes, returns launch loans and completes blocked
+cancellation callers. Admission waits behind cleanup and pending executable/IPC
+reference refunds; existing users and their IPC/memory work can continue between
+steps. Preventing new admissions also prevents a stream of new tasks from keeping
+one cleanup wave alive indefinitely. The boot loop now drains pending cleanup
+even after the last live task exits. No application ABI or distribution policy
+changed.
+
+Remaining large operations: complete authority withdrawal over the current
+31-slot arena, final metadata collection, conservation assertions, individual
+page-object unmap/free, abandoned private-allocation rollback, pending-reference
+settlement and the previously recorded loader phases. This is a work allowance,
+not a certified time bound. New launches can wait behind unrelated cleanup;
+per-subtree collection dependencies are a future refinement if measurements
+justify the extra state.
+
+Verification:
+
+- Workspace host tests pass, including 132 core tests. Pending-set coverage now
+  checks that physical retirement, collection and abandoned drafts all hold the
+  admission gate until their work is removed.
+- The real-frame fixture cancels a committed parent/child and checks every step:
+  at most eight private frames returned, endpoints withdrawn before the first
+  pause, unaffected peer still Ready, both slots unavailable and child outcome
+  unpublished until collection. Final frame/funding refunds are exact. Existing
+  abandoned-source and interrupted-admission tests now drain multiple steps.
+- Release x86 smoke and ARM64 portability pass with staged teardown, including
+  live shared readers, peer faults, repeated cancellation/restarts and complete
+  heap/frame reclamation. Executable-authority and IPC channel/startup-bundle
+  integration suites pass. Default x86, smoke-feature x86 and smoke-feature ARM64
+  UEFI clippy, layout, formatting and whitespace checks pass.
+- Fresh and cold three-level desktop runs pass with continuous pointer motion,
+  delayed/mismatched interaction replies, Notes persistence, clean/dirty close,
+  isolation and two subtree teardown/reopen cycles per boot:
+  `desktop/20261020T211451406375Z`. This preceded only the final gate holding
+  admission until pending executable/IPC reference refunds settle; the final
+  kernel is checked by the x86/ARM64 and executable-authority suites.
+  Interactive saved media was not modified. The earlier intermittent clean-close
+  LOSS timeout did not recur; its cause remains unresolved.
+- Logs: `build/reclamation-host.log`, `build/reclamation-clippy.log`,
+  `build/reclamation-smoke-clippy.log`, `build/reclamation-arm64-clippy.log`,
+  `build/reclamation-smoke.log`, `build/reclamation-arm64.log`,
+  `build/reclamation-desktop.log`, `build/reclamation-authority.log`,
+  `build/reclamation-ipc.log`.
+
+Next: measure the largest remaining masked phases under competing work, then
+split single-object unmap/free and pending-reference retirement where those
+measurements warrant it. Retain the ARM64 stack-exhaustion entry/reporting audit
+from the previous milestone. Guaranteed-service admission remains separate from
+these mechanisms; no new owner decision is needed for this cleanup work.

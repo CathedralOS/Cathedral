@@ -1,5 +1,5 @@
 //! Remove surrendered aliases before refunding unreferenced physical backing.
-use super::{Frames, Memory, Session, wire};
+use super::{Frames, Memory, Session};
 use cathedral_arch::FrameSource;
 
 impl Memory {
@@ -56,57 +56,4 @@ pub(super) unsafe fn release(
         session.memory.reclaim(index, frames);
     }
     Ok(0)
-}
-
-/// # Safety
-/// Retired task cannot resume; boot stack/kernel root/IRQs off. Remove its aliases before freeing backing.
-pub(in crate::user_tasks) unsafe fn close(
-    session: &mut Session,
-    slot: usize,
-    frames: &mut Frames<'_>,
-) {
-    // SAFETY: Dead task cannot resume; unfinished allocation has no published aliases.
-    unsafe {
-        super::allocation::cancel(session, frames, slot);
-    }
-    for read in 0..wire::MAX_READ_HANDLES {
-        let Some(grant) = session.memory.model.reads[read].filter(|r| r.task == slot) else {
-            continue;
-        };
-        if let Some(mapping) = grant.mapping {
-            let pages = session.memory.model.entries[grant.object].pages;
-            // SAFETY: Retired task cannot resume; no other process mapping changes.
-            unsafe {
-                session.tasks[slot]
-                    .space
-                    .as_mut()
-                    .unwrap()
-                    .unmap_region(mapping, pages);
-            }
-            session.tasks[slot].report.memory.unmapped_pages += pages;
-            session.memory.model.reads[read].as_mut().unwrap().mapping = None;
-        }
-        session.memory.model.drop_read(read);
-    }
-    for index in 0..wire::MAX_REGIONS {
-        let region = session.memory.model.entries[index];
-        if (region.owner == Some(slot) && region.owner_mapped)
-            || (region.peer == Some(slot) && region.accepted)
-        {
-            // SAFETY: Only the dead task's mappings disappear. Accepted live readers keep their physical lease.
-            unsafe {
-                session.tasks[slot]
-                    .space
-                    .as_mut()
-                    .unwrap()
-                    .unmap_region(session.memory.model.mapping(slot, index), region.pages);
-            }
-            session.tasks[slot].report.memory.unmapped_pages += region.pages;
-        }
-        session.memory.model.close(index, slot);
-        // SAFETY: Model has no remaining live alias when reclamation proceeds.
-        unsafe {
-            session.memory.reclaim(index, frames);
-        }
-    }
 }
