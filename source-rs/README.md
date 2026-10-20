@@ -19,6 +19,11 @@ use the running-app buttons to switch, click a program to focus it
 and its upper-right X to close it with draft protection. Notes uses F1 to save/check and
 F2 to reload; Colors uses Enter. Users, notes and colors survive QEMU restarts.
 See [controls and executable routes](distribution/README.md).
+For a clean prototype, choose **Cathedral: Fresh Lab in QEMU** in the VS Code
+launch selector, or add `--fresh` to that command. It sets the old disk and its
+receipt aside under `build/boot-harness-rs/before-fresh-*`, then seeds a new disk
+with current programs. Create users again; the normal launch preserves their
+state. Legacy lab users/templates are not a compatibility target.
 `python tools/boot-harness-rs/desktop_test.py` tests this same default composition,
 including three independent Notes drafts, capacity refusal, switching and close.
 It records QMP-to-observed-text latency upper bounds in `input-latency.json`.
@@ -35,8 +40,8 @@ this through F5's composition, including repeated close and cold reboot.
 
 `python tools/boot-harness-rs/desktop_test.py --nested-desktop` exercises three
 Nested desktops inside the outer desktop, deepest Notes persistence, dirty-close
-protection and repeated subtree reclamation across reboot. Use a fresh outer user
-for current code at every depth: existing inner templates retain their snapshots.
+protection and repeated subtree reclamation across reboot. Use Fresh Lab when
+discarding stale template snapshots; new users then get current code at every depth.
 The stock bottom bar is 80 pixels high; Settings changes bar height and spacing.
 
 `python tools/boot-harness-rs/nested_failures_test.py PATH_TO_THREE_LEVEL_IMAGE`

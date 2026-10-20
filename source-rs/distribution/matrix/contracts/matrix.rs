@@ -49,6 +49,10 @@ pub fn route(mut words: Packet, child: usize) -> Option<Packet> {
 /// this only from chrome. CLOSE: [CLOSE, 0..] asks to stop the selected app,
 /// which it does only after a LOSS probe answers with nothing it would lose.
 pub const LAUNCH: u64 = 14;
+/// Loading code, growing delegated funding and binding storage are sequential
+/// operations. The caller must outwait their bounded work before retiring its
+/// interaction connection; the ordinary short UI timeout is insufficient.
+pub const LAUNCH_DEADLINE_TICKS: u64 = 8 * STORAGE_DEADLINE_TICKS + 100;
 pub const CLOSE: u64 = 15;
 
 /// Delegated interaction: observe save availability, or request one explicit retry.

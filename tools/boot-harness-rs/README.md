@@ -5,12 +5,18 @@ This builds the separate `source-rs/` Cargo workspace and exercises its UEFI
 handoff under QEMU/OVMF. Host-side Python only; no extra Python packages.
 
 For the OS desktop in VS Code, open the repository root and press **F5** with
-**Cathedral: Build & Run in QEMU** selected. There is one launch configuration;
-it runs the same default composition as:
+**Cathedral: Build & Run in QEMU** selected. It runs the same default composition as:
 
 ```powershell
 python tools/boot-harness-rs/run.py --release --window
 ```
+
+For a clean prototype, select **Cathedral: Fresh Lab in QEMU**, or add `--fresh`
+to that command. After a successful build, it moves the saved disk and installation
+receipt into `build/boot-harness-rs/before-fresh-*` and seeds a fresh disk with
+current stock programs. Recreate users. Normal launches keep the resulting state;
+Fresh Lab resets it each time. Old lab users/templates are not a compatibility
+target. The reset refuses a busy disk and rolls back if moving the receipt fails.
 
 Click **NEW USER** to create a user, click its avatar to enter, then click
 **Notes**, **Colors** or **Split** in its chrome and click the program to focus it. Notes:
@@ -18,12 +24,12 @@ type, F1 save/check, F2 reload. Colors: Enter changes color. Notes and Colors ha
 button; Notes presents Save / Discard / Cancel for a draft, or Discard / Cancel
 when storage is absent. Closing an app no longer requires using the launcher.
 Selecting a user removes the boot picker and gives the user the full display,
-with its launcher on the left. There is no logout UI yet; restart QEMU to select
+with its taskbar at the bottom. There is no logout UI yet; restart QEMU to select
 another user. The picker shows horizontal user tiles, and the user's launcher
 shows only app tiles. Storage attenuation remains a platform mechanism, without
 a test toggle in the normal desktop. Default QEMU input uses absolute coordinates
 when its virtual mouse is available, with PS/2 fallback.
-The user's app strip has SETTINGS for saved strip width and outer spacing.
+The user's taskbar has SETTINGS for saved bar height and outer spacing.
 Save persists and applies the layout immediately; running apps keep their state.
 Cancel returns to apps without saving local edits. SAVED; RESTART means live
 application was refused even though the save committed; retry Save or restart.

@@ -191,6 +191,7 @@ def main():
     parser.add_argument("--kernel-only", action="store_true", help="Build/boot without any platform or distribution executable")
     parser.add_argument("--profile", type=Path, default=WORKSPACE / "distribution/profile.json", help="Host composition profile")
     parser.add_argument("--window", action="store_true", help="Show QEMU's display during an ordinary interactive boot")
+    parser.add_argument("--fresh", action="store_true", help="Back up the desktop disk and install a freshly seeded lab disk")
     parser.add_argument("--timeout", type=float, default=30, help="Smoke boot timeout in seconds (default: 30)")
     parser.add_argument("--memory", type=int, default=128, help="Guest RAM in MiB (default: 128)")
     args = parser.parse_args()
@@ -203,6 +204,8 @@ def main():
         args.profile = Path(__file__).parent / ("profiles/matrix-storage.json" if args.matrix_storage_test else "profiles/admission.json" if args.admission_test else "profiles/matrix-desktop.json" if args.matrix_desktop_test else "profiles/channels.json" if args.ipc_test else "profiles/matrix.json" if args.matrix_test else "profiles/session.json" if args.session_test else "profiles/pointer.json" if args.pointer_test else "profiles/compositor.json")
     default_profile = (WORKSPACE / "distribution/profile.json").resolve()
     desktop = args.profile.resolve() == default_profile and not (args.smoke or args.kernel_only)
+    if args.fresh and (not desktop or args.build_only):
+        parser.error('--fresh requires an ordinary default desktop boot')
     database_desktop = desktop or args.profile.resolve() in [(Path(__file__).parent / f'profiles/{name}.json').resolve() for name in ('matrix-desktop', 'matrix-database-recovery', 'matrix-storage', 'notes', 'notes-recovery')]
     if database_desktop and not args.release:
         parser.error('the database desktop requires --release under TCG')
@@ -382,6 +385,8 @@ def main():
         if disposable and data_path.exists():
             data_path.unlink()
         migration = composition.get("startup", {}).get("label_migration")
+        if args.fresh:
+            database_image.reset(data_path)
         database_image.prepare(data_path, seeded, WORKSPACE / migration if migration else None,
                                composition.get("startup", {}).get("app_close_migration", False),
                                realm_programs(args.profile, args.release))

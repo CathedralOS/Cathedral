@@ -9,6 +9,36 @@ import database_image
 
 
 class DatabaseImageTests(unittest.TestCase):
+    def test_fresh_lab_sets_aside_disk_and_receipt_without_reusing_templates(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / 'desktop.raw'
+            sidecar = path.with_name(path.name + '.programs')
+            path.write_bytes(b'old users and template snapshots')
+            sidecar.write_bytes(b'old program receipt')
+            backup = database_image.reset(path)
+            self.assertEqual((backup / path.name).read_bytes(), b'old users and template snapshots')
+            self.assertEqual((backup / sidecar.name).read_bytes(), b'old program receipt')
+            self.assertFalse(path.exists())
+            self.assertFalse(sidecar.exists())
+            self.assertIsNone(database_image.reset(path))
+
+    def test_failed_fresh_lab_restores_disk_if_receipt_move_fails(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / 'desktop.raw'
+            sidecar = path.with_name(path.name + '.programs')
+            path.write_bytes(b'old disk')
+            sidecar.write_bytes(b'old receipt')
+            move = database_image.shutil.move
+            def fail_receipt(source, destination):
+                if source == str(sidecar):
+                    raise OSError('receipt move refused')
+                return move(source, destination)
+            with patch.object(database_image.shutil, 'move', side_effect=fail_receipt):
+                with self.assertRaisesRegex(OSError, 'receipt move refused'):
+                    database_image.reset(path)
+            self.assertEqual(path.read_bytes(), b'old disk')
+            self.assertEqual(sidecar.read_bytes(), b'old receipt')
+
     def test_legacy_extent_grows_even_when_installed_programs_are_unchanged(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / 'desktop.raw'

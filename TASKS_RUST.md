@@ -2,8 +2,9 @@
 
 Updated 2026-10-19 (local date). Current milestone: **compact taskbar, deeper
 recursive desktops, bounded startup recovery and ordinary storage refusal**, on
-baseline `f3d6d2a2`, landed as `c7571191`. Follow-up restores the fixed launch
-request ABI for saved Nested programs. The saved-disk quota/headroom repair remains in place. Current
+baseline `f3d6d2a2`, landed as `c7571191`. The launch request ABI repair is
+`a287ae39`; current follow-up adds an explicit fresh-lab reset instead of further
+legacy snapshot upgrades. The saved-disk quota/headroom repair remains in place. Current
 verification and limitations are recorded in the newest section at the end.
 Previous baseline: atomic named creation and deeper recursive matrices at `102e416c`.
 F5 stages changed program installations in host scratch space, then verifies and
@@ -30,7 +31,11 @@ the default experience.** From the repository root:
 python tools/boot-harness-rs/run.py --release --window
 ```
 
-This is exactly what the single [VS Code launch entry](.vscode/launch.json) runs.
+This is what the normal [VS Code launch entry](.vscode/launch.json) runs.
+**Cathedral: Fresh Lab in QEMU** adds `--fresh`: it backs up the disk and receipt
+under `build/boot-harness-rs/before-fresh-*` and installs current seeds on a fresh
+disk. Recreate users there. The owner explicitly does not require compatibility
+or recursive migrations for old lab users; use a fresh lab when templates change.
 The composition is [distribution/profile.json](source-rs/distribution/profile.json).
 It uses x86-64 QEMU/TCG and UEFI.
 
@@ -52,9 +57,9 @@ It uses x86-64 QEMU/TCG and UEFI.
 - **NESTED** opens its own user picker and the same desktop, with Notes, Colors
   and another Nested tile. Close other outer apps first. The current budget fits
   three nested desktops beneath the outer one, with Notes at the deepest level.
-  Further launches remain bounded by conserved grants. Existing inner users and
-  templates retain their old code; start a fresh outer user for the new implementation
-  throughout. Inner saves survive closing/reopening Nested and reboot. The outer
+  Further launches remain bounded by conserved grants. Use Fresh Lab to discard
+  stale template snapshots and create users with current code throughout.
+  Inner saves survive closing/reopening Nested and reboot. The outer
   taskbar X refuses to close the subtree while an inner app has unsaved work.
 - **SETTINGS** at the right of the taskbar (or F2 with taskbar focus) adjusts
   bar height and outer spacing. Save persists and applies the layout to running
@@ -2867,3 +2872,34 @@ suite including a real recursive spawn with nonzero adjacent bytes after the old
 kernel reaches the inner desktop (`nested-saved-fixed`), where the original
 vertical launcher renders. A second boot from another unchanged copy also launches
 inner Notes (`nested-saved-fixed-app`). The interactive saved disk was not modified.
+
+## Fresh lab state instead of recursive legacy upgrades (2026-10-19)
+
+Owner direction: legacy lab users do not need compatibility or migration; making
+new users is cheap. This supersedes the earlier proposed recursive snapshot
+upgrade milestone. Current stock seeds already produce the bottom taskbar at
+every depth. Cached inner templates on the retained disk explain the old UI.
+
+The default launch still keeps session data. The new **Cathedral: Fresh Lab in
+QEMU** launch entry adds `--fresh`. After building, it sets the disk and receipt
+aside together, then uses normal first-install seeding. It refuses a busy disk;
+a failed receipt move restores the disk. No kernel/platform changes or recursive
+program migrations were added. Use this route when discarding obsolete lab state.
+
+Fresh creation verified all three taskbars. Cold reopen then exposed the chooser's
+hard-coded 600-tick LAUNCH receive timeout, shorter than the matrix's bounded code
+load/funding work. It panicked while selecting the third nested user. LAUNCH now
+uses a named stock-contract budget of eight storage intervals plus reply margin,
+like multi-stage CONFIGURE. Other UI requests retain their short deadline; no
+operation is automatically replayed after an uncertain timeout.
+
+The interactive disk was reset through this command. Its prior disk and receipt
+are in `build/boot-harness-rs/before-fresh-rc75aito/`; the fresh disk contains only
+current stock seeds, ready for NEW USER. Validation: 21 harness tests, Rust host
+tests, userspace clippy, formatting and layout checks pass. A copy of this newly
+seeded interactive disk passes fresh user creation and bottom-taskbar rendering
+at all three Nested levels, then repeats those checks after cold reboot:
+`build/boot-harness-rs/fresh-taskbars-fixed/`. The test's users are only on that
+copy. This focused check does not repeat the previous milestone's full subtree
+close/exhaustion suite. Deep startup remains slow. Focus subsequent work on actual
+OS behavior, not legacy lab upgrades.

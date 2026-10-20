@@ -5,6 +5,7 @@ a sidecar beside the image, so an unchanged set never reopens the image."""
 import hashlib
 import json
 import os
+import shutil
 from pathlib import Path
 import subprocess
 import sys
@@ -14,6 +15,32 @@ VOLUME_BYTES = 8 * 1024 * 1024
 LEGACY_VOLUME_BYTES = 4 * 1024 * 1024
 OFFSET = 4096
 IMAGE_BYTES = OFFSET + VOLUME_BYTES + 4096
+
+
+def reset(path):
+    """Explicit lab reset: set the disk and receipt aside, ready for fresh seeds."""
+    path = Path(path)
+    if path.is_symlink() or (path.exists() and not path.is_file()):
+        raise RuntimeError(f'Database image must be a regular file: {path}')
+    require_available(path)
+    sidecar = path.with_name(path.name + '.programs')
+    if sidecar.is_symlink() or (sidecar.exists() and not sidecar.is_file()):
+        raise RuntimeError(f'Installation receipt must be a regular file: {sidecar}')
+    if not path.exists() and not sidecar.exists():
+        return None
+    backup = Path(tempfile.mkdtemp(prefix='before-fresh-', dir=path.parent))
+    moved = []
+    try:
+        for source in (path, sidecar):
+            if source.exists():
+                shutil.move(str(source), str(backup / source.name))
+                moved.append(source)
+    except Exception:
+        for source in reversed(moved):
+            shutil.move(str(backup / source.name), str(source))
+        raise
+    print(f'Fresh Cathedral lab; previous state saved in {backup}', flush=True)
+    return backup
 
 
 def require_available(path):

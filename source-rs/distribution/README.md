@@ -73,8 +73,10 @@ recovery screen does not restart itself. Apps can still save and close themselve
 Initial stock defaults live in [matrix.conf](matrix.conf);
 installation preserves saved configuration. Legacy vertical arrangements decode
 as an 80-pixel bottom bar with compact spacing; authority fields stay unchanged.
-Existing inner users/templates retain their executable snapshots. Start a fresh
-outer user to exercise the current recursive desktop throughout.
+Existing inner users/templates retain their executable snapshots. Use the
+**Cathedral: Fresh Lab in QEMU** launch entry (`--fresh`) to set the lab disk aside
+and seed the current recursive desktop. Recreate users; recursive migration of
+old lab snapshots is not required.
 
 The default input service negotiates QEMU's absolute virtual mouse so the guest
 cursor follows the host pointer within the window. It falls back to relative
