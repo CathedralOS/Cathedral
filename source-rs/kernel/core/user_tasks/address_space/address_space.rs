@@ -85,6 +85,31 @@ impl UserSpace {
         contents: Contents<'_>,
         frames: &mut impl FrameSource,
     ) -> Result<Self, MemoryError> {
+        // SAFETY: Same inactive-root and immutable-source obligations.
+        let mut space = unsafe { Self::begin(layout, image, segments, frames)? };
+        let mut cursor = LoadCursor::default();
+        if let Err(error) =
+            // SAFETY: Serialized wrapper for initial boot/fixtures; same batched page engine.
+            unsafe { space.load_pages(segments, contents, &mut cursor, usize::MAX, frames) }
+        {
+            // SAFETY: Private root, never runnable, including partially built tables.
+            unsafe {
+                space.release(frames);
+            }
+            return Err(error);
+        }
+        Ok(space)
+    }
+
+    /// Start a private address space without installing any user image/stack pages.
+    /// # Safety
+    /// Same exclusive inactive-root and frame custody as from_segments.
+    pub unsafe fn begin(
+        layout: &BootLayout,
+        image: ImageRange,
+        segments: &[UserSegment],
+        frames: &mut impl FrameSource,
+    ) -> Result<Self, MemoryError> {
         if image.bytes == 0 || !image.base.is_multiple_of(PAGE) || !valid_segments(segments) {
             return Err(MemoryError::InvalidFrame);
         }
@@ -106,7 +131,7 @@ impl UserSpace {
             pages: 0,
         };
         // SAFETY: New frames are exclusively owned and identity-mapped in kernel translation root.
-        let result = unsafe { space.build(layout, image.base, end, segments, contents, frames) };
+        let result = unsafe { space.build(layout, image.base, end, segments, frames) };
         if let Err(error) = result {
             // SAFETY: This root was never activated, including partially built tables.
             unsafe {

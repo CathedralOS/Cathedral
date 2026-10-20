@@ -50,6 +50,7 @@ pub(super) static ACTIVE: AtomicPtr<Session> = AtomicPtr::new(core::ptr::null_mu
 pub(super) static EPOCH: AtomicU64 = AtomicU64::new(1);
 
 pub(super) struct LaunchState {
+    pub(super) draft: Option<super::admission::Draft>,
     pub(super) images: [Option<usize>; cathedral_kernel_contracts::user::MAX_LAUNCHES],
     pub(super) code: Option<crate::user_tasks::admission::pool::Code>,
     pub(super) dynamic: bool,

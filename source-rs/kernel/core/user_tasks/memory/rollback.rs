@@ -9,7 +9,23 @@ use cathedral_arch::{BootLayout, ImageRange};
 /// Exercise runtime allocation rollback and admission of the reserved region table.
 /// # Safety
 /// Sole boot CPU, IRQs off, no active tasks, live kernel layout/image, initialized heap.
-pub unsafe fn exercise(frames: &mut FrameAllocator, layout: &BootLayout, image: ImageRange) {
+/// Output must be bounded, allocation-free and unable to suspend.
+pub unsafe fn exercise(
+    frames: &mut FrameAllocator,
+    layout: &BootLayout,
+    image: ImageRange,
+    output: fn(&[u8]) -> bool,
+) {
+    // SAFETY: Independent fixtures return every frame before the next starts.
+    // Keep their large session temporaries in separate, non-inlined stack frames.
+    unsafe {
+        admission::rollback::exercise(frames, layout, image, output);
+        page_objects(frames, layout, image);
+    }
+}
+
+#[inline(never)]
+unsafe fn page_objects(frames: &mut FrameAllocator, layout: &BootLayout, image: ImageRange) {
     let baseline = frames.allocated();
     let config = Config {
         executables: &[],

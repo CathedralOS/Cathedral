@@ -107,7 +107,12 @@ pub(super) fn rollback(
     ));
     // SAFETY: Boot owns the live layout and reclaiming allocator outside a session.
     unsafe {
-        user_tasks::exercise_memory_rollback(&mut memory.frames, &memory.layout, memory.image);
+        user_tasks::exercise_memory_rollback(
+            &mut memory.frames,
+            &memory.layout,
+            memory.image,
+            user_output,
+        );
     }
     reclaimed(memory, baseline, heap);
     for budget in 0..admission {

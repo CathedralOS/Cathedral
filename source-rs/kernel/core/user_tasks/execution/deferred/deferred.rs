@@ -1,4 +1,4 @@
-// Boot-stack work entrance: retire authority/backing first, admit one child,
+// Boot-stack work entrance: retire authority/backing first, advance one admission,
 // then advance one memory call. No session borrow survives the caller's yield.
 use super::{Config, Frames, Session, arch, lifecycle};
 use crate::user_tasks::{Executable, Program, admission::pool::Code};

@@ -96,7 +96,9 @@ def exercise(output, click, key, scan, width, height, reboot, pointer_stress=Fal
         # Lateness is not input loss: subsequent keys must retain this focus.
         delayed('f7', lambda: key('x'), ('interaction-delayed', 'interaction-resumed'))
         note(3,'deepx',True)
-        key('backspace'); note(3,'deep',True)
+        # On cold open, deleting the added x restores the confirmed document.
+        # On the fresh boot, deep itself has not been saved yet.
+        key('backspace'); note(3,'deep',not reboot)
         if reboot:
             key('f1'); note(3,'deep')
     if not reboot:

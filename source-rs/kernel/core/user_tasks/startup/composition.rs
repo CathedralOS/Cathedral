@@ -87,6 +87,7 @@ pub(super) fn grants(
         }
 
         launches.push(LaunchState {
+            draft: None,
             images: [None; cathedral_kernel_contracts::user::MAX_LAUNCHES],
             code: Some(crate::user_tasks::admission::pool::Code::Template(index)),
             dynamic: false,
@@ -114,6 +115,7 @@ pub(super) fn grants(
     }
     for index in config.supervision.len()..count - initial_count {
         launches.push(LaunchState {
+            draft: None,
             images: [None; cathedral_kernel_contracts::user::MAX_LAUNCHES],
             code: None,
             dynamic: true,

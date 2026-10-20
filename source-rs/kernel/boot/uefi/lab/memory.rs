@@ -14,7 +14,12 @@ pub fn exercise(memory: &mut PreparedMemory, console: &mut SerialPort) {
     let heap = unsafe { HEAP.used() };
     // SAFETY: Boot-owned live image/layout and reclaiming frame allocator.
     unsafe {
-        user_tasks::exercise_memory_rollback(&mut memory.frames, &memory.layout, memory.image)
+        user_tasks::exercise_memory_rollback(
+            &mut memory.frames,
+            &memory.layout,
+            memory.image,
+            user_output,
+        )
     };
     assert_eq!(memory.frames.allocated(), baseline);
     // SAFETY: No task owns heap state now.

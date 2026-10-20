@@ -1,8 +1,8 @@
 # Rust reference OS: tasks and handoff
 
-Updated 2026-10-20 (local date). Current milestone: **indexed deferred work and
-incremental private allocation**, on baseline `6f73a85c` (event-targeted wait
-completion and cached physical device routes).
+Updated 2026-10-20 (local date). Current milestone: **resumable executable
+admission**, on baseline `8555aed8` (indexed deferred work and incremental
+private allocation).
 The latest section records verification and remaining steps toward bounded
 execution. This does not introduce real-time reservations.
 The fresh-lab reset is `30572c9f`. Compact recursive desktops landed as `c7571191`,
@@ -3448,3 +3448,77 @@ tracks these limits. This work does not change application ABI, platform policy,
 distribution UI, CPU priorities or reservation semantics, and makes no measured
 desktop-speedup or real-time guarantee. No owner decision blocks the next
 mechanical steps.
+
+
+## Resumable executable admission (2026-10-20)
+
+Baseline: `8555aed8`. Live launch now follows
+[lifecycle/spawn.rs](source-rs/kernel/core/user_tasks/lifecycle/spawn.rs): validate
+current authority, advance a private draft, then prepare and commit its grants.
+[Image decoding](source-rs/kernel/core/user_tasks/admission/image.rs) translates
+today's ELF/probe input into segment descriptions. The resumable page engine,
+funding, cancellation and publication do not depend on ELF as the future format.
+No new executable or application ABI is established.
+
+The first step creates an inactive root. Subsequent steps initialize/map at most
+eight image or stack pages, then prepare runtime tables and any framebuffer in
+separate phases. Launch state retains the immutable source and private draft;
+no runnable context, task root or transferred endpoint appears before the final
+serialized commit. Every step rechecks original peer consent and initial rights.
+Delegation/grant plans and epochs are prepared after the last yield. Frame use
+is charged incrementally to the child, CPU work to the requesting owner.
+
+Failure or owner/peer death refunds all draft frames. Returning a dead owner's
+launch first aborts any draft; no surviving lender means its executable-source
+reference is also released. Conservation includes unfinished roots. Initial boot
+admission remains synchronous. Decoding, kernel-root construction, runtime table
+reservation, framebuffer mapping, final commit and rollback are still whole
+operations; the batch size is a work allowance, not a latency guarantee.
+
+Verification and findings:
+
+- Workspace host tests pass, including 131 core tests. The new cursor regression
+  covers partial pages, gaps, differing batch sizes and the stack without skips
+  or duplicates.
+- The real-frame admission fixture runs on x86 and ARM64. It fails at every frame
+  allowance, withdraws at every stage boundary, checks BSS/permissions and proves
+  that grants stay with the owner until commit. Production lifecycle cases cover
+  owner/peer death, a queued message making an initial receive right unmovable,
+  and reclamation of an abandoned object-backed source.
+- Large by-value fixture sessions overflowed boot-stack headroom during development;
+  the retained fixture session is now heap-owned and scenarios have separate stack
+  frames. The fixture also avoids assuming syscall result registers match x86.
+  ARM64 exception entry still saves onto the interrupted stack before switching
+  stacks: audit stack-exhaustion reporting/emergency entry separately. The observed
+  ARM fault report was delayed and did not identify the initial overflowing frame.
+- The nested desktop harness incorrectly required dirty state after cold-open
+  typing followed by deletion restored the saved document. Its screenshot showed
+  the correct text and clean background; the expectation now distinguishes fresh
+  unsaved content from cold-open confirmed content. Failure evidence:
+  `desktop/20261020T200328028156Z`.
+
+- Release x86 smoke passes with `--timeout 90`, including IPC, contention,
+  cancellation/restart, display protection and final heap/frame reclamation.
+  The first complete-suite attempt exceeded the default 30-second harness budget
+  while still progressing; this does not change any guest protocol deadline.
+- Release ARM64 portability and the executable-authority integration suite pass.
+  Default x86 UEFI, smoke-feature x86 UEFI and smoke-feature ARM64 UEFI clippy pass,
+  along with layout, formatting and whitespace checks.
+- Logs: `build/admission-host-tests.log`, `build/admission-clippy.log`,
+  `build/admission-smoke-clippy.log`, `build/admission-smoke.log`,
+  `build/admission-arm64.log`, `build/admission-authority.log`.
+
+- Fresh and cold desktop boots pass with three nested desktops, continuous pointer
+  motion and deliberately delayed/mismatched interaction replies. Deepest Notes,
+  clean/dirty close, persistence, isolation and two teardown/reopen cycles per boot
+  pass: `desktop/20261020T201043556840Z`, `build/admission-desktop.log`.
+  Interactive saved media was not modified.
+
+The previously recorded intermittent clean-close LOSS timeout remains unresolved;
+this milestone does not weaken its assertions or change protocol deadlines.
+
+Next: bound subtree reclamation and mapping/rollback phases, preserving authority
+withdrawal before physical reuse and ancestor funding return. Measure remaining
+uninterrupted phases under competing work before making timing claims. Follow the
+[timing audit](source-rs/kernel/core/scheduler/timing.md). No owner decision blocks
+that mechanical work; guaranteed-service admission remains a separate design step.

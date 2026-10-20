@@ -26,6 +26,8 @@ and userspace execution system.
 - [Deferred work](../user_tasks/execution/deferred/README.md) uses maintained
   pending sets. Coherent boot steps may yield to peers; private allocation zeros
   at most eight pages per step, retaining its unpublished state and funding.
+  Executable admission likewise batches image/stack pages behind a format decoder
+  and commits the child and its authority only after construction finishes.
 
 ## Non-preemptible work inventory
 
@@ -39,7 +41,7 @@ The table describes structural bounds; none is a qualified time bound.
 | --- | --- | --- |
 | [Trap dispatch](../user_tasks/execution/traps.rs) | Poll installed device owners and keyboard; complete affected/due waiters; inspect fixed deferred-work flags/sets | Bound completion batches and grant lookup. Readiness, terminal outcomes and timeout precedence must remain unchanged |
 | [Copied IPC delivery](../user_tasks/syscalls/ipc/delivery.rs), [readiness](../user_tasks/syscalls/ipc/readiness.rs) | Bounded message copy and capability/handle validation for each affected/due waiter | Bound bursts of completions and grant lookup; preserve messages on failed copyout and wake on revocation/death |
-| [Spawn](../user_tasks/lifecycle/lifecycle.rs), [image construction](../user_tasks/address_space/creation.rs) | Validate a complete ELF; allocate, zero, copy and map its image/stack; prepare runtime tables; rollback failures before returning | An unpublished construction state with page/work allowance per step; commit authority atomically only after success, retain rollback custody across interruptions |
+| [Spawn](../user_tasks/lifecycle/spawn.rs), [construction](../user_tasks/admission/construction.rs) | One rotating admission per step; at most eight image/stack pages; decoding, root creation, runtime tables, framebuffer mapping, final grant commit and rollback remain whole phases | Measure and bound remaining phases and rollback; retain private root/source custody and revalidate authority after suspension |
 | [Runtime memory](../user_tasks/memory/memory.rs), [allocation](../user_tasks/memory/allocation.rs) | Advance one rotating caller per step; allocation zeros up to eight pages; final map, seal/unmap/release and rollback still process a whole region; settle indexed pending references | Extend staged allocation's retained funding/cancellation to other page operations and rollback. Publication cannot expose a partly initialized or writable sealed object |
 | [Cancellation and reclamation](../user_tasks/lifecycle/lifecycle.rs), [region retirement](../user_tasks/memory/retirement.rs) | Drain indexed cancellations/retired tasks, close grants/queues, scan reader/region arenas, remove mappings and free all dead-task frames before returning indexed loans; run conservation assertions | Retire authority first; reclaim a bounded amount per turn; return funding and reusable slots only after aliases/readers and descendants are settled |
 | [Kernel heap](../memory/heap.rs) | Interrupt masking covers the allocator lock; allocation/free cost depends on free-list state | Keep timing-critical paths allocation-free; preallocate their working sets rather than assume a lock makes allocation time predictable |
@@ -95,7 +97,7 @@ restart debt, hierarchical overload and all-accounts-exhausted idle recovery.
 1. Bound event and retirement bursts while preserving terminal/deadline ordering.
    Waiter and deferred-work indexes are in place. Extend observations to
    distinguish becoming ready from actually being selected.
-2. Extend incremental allocation to ELF admission, mapping/rollback and descendant
+2. Extend incremental allocation/admission to mapping/rollback and descendant
    reclamation; measure the largest remaining uninterrupted chunks under competing
    work. Keep requester charging, private staging and rollback tests.
 3. Define guaranteed service separately from ceilings: amount, replenishment/

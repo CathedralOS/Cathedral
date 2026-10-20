@@ -1,5 +1,6 @@
 //! Refresh only graph edges touching a newly admitted incarnation.
-use super::{Session, next_epoch};
+use super::Session;
+use crate::user_tasks::next_epoch;
 
 pub(super) fn admit(session: &mut Session, slot: usize, names: &[u64]) {
     for (index, link) in session.links.iter_mut().enumerate() {

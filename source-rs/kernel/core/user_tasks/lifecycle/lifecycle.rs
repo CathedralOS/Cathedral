@@ -1,7 +1,7 @@
 // Boot-context admission/reaping and grant teardown. No restart policy here.
-use super::{Error, Exit, Frames, Session, admission, next_epoch, syscalls};
+use super::{Exit, Frames, Session, admission, syscalls};
+use crate::scheduler::TaskState;
 use crate::user_tasks::execution::deferred::Work;
-use crate::{scheduler::TaskState, user_tasks::Program, user_tasks::admission::pool::Code};
 use cathedral_arch as arch;
 use cathedral_kernel_contracts::user as abi;
 
@@ -101,26 +101,27 @@ pub(super) unsafe fn reap(session: &mut Session, source: &mut Frames<'_>) {
             session.waits.child_changed(index);
         }
     }
-    let owned: usize = session
-        .tasks
-        .iter()
-        .filter(|task| task.space.is_some())
-        .map(|task| task.report.frames)
-        .sum();
-    assert_eq!(
-        source.allocated(),
-        session.frame_baseline + owned + session.memory.frames()
-    );
-    assert_eq!(
-        session.memory.funding.charged(),
-        owned + session.memory.frames() + session.memory.reserved_unbacked()
-    );
     // Increasing owner/child slots made cancellation cascade in the first pass.
     // Return empty budgets only after every descendant address space is gone.
     while let Some(index) = session.deferred.first(Work::Return) {
+        let owner = session.launches[index].model.owner;
+        session.scheduler.account_cpu(arch::cpu_time_us());
+        // SAFETY: Owner died before commit; no draft context or rights were published.
+        unsafe {
+            admission::abort(session, source, index);
+        }
+        session.scheduler.charge_cpu(owner, arch::cpu_time_us());
         let launch = &mut session.launches[index];
         let previous_owner = launch.model.owner;
         launch.model.reclaim();
+        if launch.model.launch(launch.model.owner).is_err()
+            && let Some(admission::pool::Code::Object { region, .. }) = launch.code
+        {
+            // No surviving lender can use this launch. Its source reference
+            // must not pin backing after the unpublished draft was withdrawn.
+            session.memory.unref_later(region);
+            launch.code = None;
+        }
         if launch.model.owner != previous_owner {
             session
                 .pool
@@ -130,6 +131,26 @@ pub(super) unsafe fn reap(session: &mut Session, source: &mut Frames<'_>) {
                 .set_parent(launch.model.child, launch.model.owner);
         }
     }
+    let owned: usize = session
+        .tasks
+        .iter()
+        .filter(|task| task.space.is_some())
+        .map(|task| task.report.frames)
+        .sum::<usize>()
+        + session
+            .launches
+            .iter()
+            .filter_map(|launch| launch.draft.as_ref())
+            .map(admission::Draft::frames)
+            .sum::<usize>();
+    assert_eq!(
+        source.allocated(),
+        session.frame_baseline + owned + session.memory.frames()
+    );
+    assert_eq!(
+        session.memory.funding.charged(),
+        owned + session.memory.frames() + session.memory.reserved_unbacked()
+    );
     super::execution::waits::wake(session, arch::ticks());
     for owner in 0..session.tasks.len() {
         if requesters & (1 << owner) != 0 && session.tasks[owner].space.is_some() {
@@ -137,111 +158,6 @@ pub(super) unsafe fn reap(session: &mut Session, source: &mut Frames<'_>) {
             session.scheduler.unblock(owner);
         }
     }
-}
-
-pub(super) unsafe fn spawn(
-    session: &mut Session,
-    source: &mut Frames<'_>,
-    layout: &arch::BootLayout,
-    image: arch::ImageRange,
-    executable: &Program<'_>,
-    index: usize,
-) {
-    let model = &session.launches[index].model;
-    let Some(argument) = model.pending() else {
-        return;
-    };
-    let (owner, child, peer) = (model.owner, model.child, model.peer);
-    if session.launches[index].code == Some(Code::Admitted) {
-        // Object code was consumed by an earlier admission; its frames may be gone.
-        session.launches[index].model.failed();
-        syscalls::complete(session, owner, Err(abi::BAD_EXECUTABLE));
-        session.scheduler.unblock(owner);
-        return;
-    }
-    session.scheduler.account_cpu(arch::cpu_time_us());
-    let initial = core::mem::take(&mut session.launches[index].initial);
-    let initial_count = core::mem::take(&mut session.launches[index].initial_count);
-    let delegated = core::mem::take(&mut session.launches[index].delegated);
-    let delegated_count = core::mem::take(&mut session.launches[index].delegated_count);
-    let handles = &initial[..initial_count];
-    let baseline = source.allocated();
-    // A blocked parent retains its rights through every fallible admission step.
-    let plan = session.launches[index]
-        .model
-        .admission_ready()
-        .and_then(|()| session.ipc.validate_initial(owner, child, handles))
-        .and_then(|()| {
-            let loans =
-                delegation::Plan::prepare(session, owner, child, &delegated[..delegated_count])?;
-            Ok((loans, grants::Plan::prepare(session, owner, child)?))
-        });
-    let result = if let Err(error) = plan {
-        Err(error)
-    } else if let Some(epoch) =
-        next_epoch().filter(|epoch| *epoch <= crate::ipc::MAX_EPOCH - session.links.len() as u64)
-    {
-        let program = Program {
-            executable: executable.executable,
-            arguments: [executable.arguments[0], argument],
-        };
-        source.remaining = session.launches[index].frame_limit;
-        // SAFETY: Boot context, sole CPU/IRQs off. Child slot is vacant; peer roots
-        // stay live. All partial admission is rolled back before returning errors.
-        match unsafe { admission::admit(session, layout, image, &program, source, child) } {
-            Ok(()) => {
-                // No user/trap can run between validation, address-space admission,
-                // and this infallible commit (sole boot CPU, interrupts disabled).
-                // Although admit marks Ready, execution resumes only after spawn returns.
-                session
-                    .ipc
-                    .prepare_child_with(
-                        session.launches[index].endpoint_base,
-                        peer,
-                        child,
-                        epoch,
-                        owner,
-                        handles,
-                    )
-                    .expect("validated initial bundle changed during admission");
-                let (loans, names) = plan.unwrap();
-                let ticket = names.child;
-                if let Some(device) = session.launches[index].device {
-                    // SAFETY: Child admitted but not runnable; boot owns exclusive device custody.
-                    unsafe {
-                        device.reset();
-                    }
-                }
-                names.commit(session, child);
-                loans.commit(session, child);
-                if session.launches[index].keyboard {
-                    super::keyboard::reset(session);
-                }
-                let ticket = session.launches[index].model.started(ticket);
-                session.tasks[owner].report.spawned += 1;
-                if let Some(Code::Object { region, .. }) = session.launches[index].code {
-                    // The image is copied; nothing keeps the object's frames needed.
-                    session.memory.unref_later(region);
-                    session.launches[index].code = Some(Code::Admitted);
-                }
-                Ok(ticket)
-            }
-            Err(error) => Err(match error {
-                Error::Executable(_) => abi::BAD_EXECUTABLE,
-                Error::Memory(arch::MemoryError::OutOfFrames) | Error::OutOfHeap => abi::NO_MEMORY,
-                _ => abi::INVALID_ARGUMENT,
-            }),
-        }
-    } else {
-        Err(abi::NO_MEMORY)
-    };
-    if result.is_err() {
-        assert_eq!(source.allocated(), baseline);
-        session.launches[index].model.failed();
-    }
-    syscalls::complete(session, owner, result);
-    session.scheduler.unblock(owner);
-    session.scheduler.charge_cpu(owner, arch::cpu_time_us());
 }
 
 fn outcome(exit: Exit) -> [u8; abi::EXIT_BYTES] {

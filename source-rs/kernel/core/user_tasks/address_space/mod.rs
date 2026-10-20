@@ -1,5 +1,6 @@
 mod access;
 mod creation;
+pub use creation::LoadCursor;
 mod frames;
 mod image;
 mod regions;
