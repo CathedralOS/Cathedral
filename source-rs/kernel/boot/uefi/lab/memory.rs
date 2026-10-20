@@ -21,7 +21,7 @@ pub fn exercise(memory: &mut PreparedMemory, console: &mut SerialPort) {
     assert_eq!(unsafe { HEAP.used() }, heap);
     writeln!(
         console,
-        "Cathedral Rust lab: runtime page allocation rolled back at every frame boundary"
+        "Cathedral Rust lab: runtime page allocation rolled back at every frame boundary; staged cancellation refunded every page batch"
     )
     .ok();
     for _ in 0..2 {

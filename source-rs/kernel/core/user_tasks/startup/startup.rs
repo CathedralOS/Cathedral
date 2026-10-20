@@ -27,6 +27,13 @@ pub(super) fn prepare(
             }
         })?;
     let mut session = Session {
+        deferred: super::execution::deferred::Pending::default(),
+        child_launch: core::array::from_fn(|slot| {
+            grants
+                .launches
+                .iter()
+                .position(|launch| launch.model.child == slot)
+        }),
         waits: super::execution::waits::Registry::new(count),
         device_routes: core::array::from_fn(|slot| {
             grants

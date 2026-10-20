@@ -104,7 +104,9 @@ credit they remain ineligible. Cancellation/restart does not discard that debt.
 Boot configuration may scan the arena; `vacancy()` remains an admission scan.
 Ready/finished queries use maintained state. The separate
 [wait coordinator](../user_tasks/execution/waits/README.md) now targets IPC,
-device and child waiters too. Deferred-work scans remain in the boot/trap loop.
+device and child waiters too. [Deferred work](../user_tasks/execution/deferred/README.md)
+uses pending sets and coherent boot-stack steps; allocation can yield between
+page batches. Admission and subtree reclamation still need finer work bounds.
 
 ## What a turn means
 

@@ -1,6 +1,30 @@
 use super::*;
 
 #[test]
+fn queued_admission_rechecks_peer_death_before_any_child_is_published() {
+    let mut model = Supervisor::new([1, 2], 0, 1, 2).unwrap();
+    assert_eq!(model.admission_ready(), Err(abi::BUSY));
+    model.request(0, model.launch(0).unwrap(), 99).unwrap();
+    assert_eq!(model.admission_ready(), Ok(()));
+    model.close(1); // An unrelated boot step ran first; peer exited meanwhile.
+    assert_eq!(model.pending(), Some(99)); // Owner still needs its refusal result.
+    assert_eq!(model.admission_ready(), Err(abi::PEER_CLOSED));
+    model.failed();
+    assert!(model.idle());
+    assert!(!model.cancel_child());
+    assert_eq!(
+        model.request(0, model.launch(0).unwrap(), 0),
+        Err(abi::PEER_CLOSED)
+    );
+
+    let mut model = Supervisor::new([3, 4], 0, 1, 2).unwrap();
+    model.request(0, model.launch(0).unwrap(), 100).unwrap();
+    model.close(0);
+    assert_eq!(model.pending(), None);
+    assert_eq!(model.admission_ready(), Err(abi::DENIED));
+}
+
+#[test]
 fn loan_moves_launch_and_peer_and_returns_fresh_authority_after_reaping() {
     let mut model = Supervisor::new([1, 2], 0, 0, 3).unwrap();
     let original = model.launch(0).unwrap();

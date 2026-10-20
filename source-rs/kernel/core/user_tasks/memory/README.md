@@ -6,6 +6,12 @@ stack. [Regions](regions/regions.rs) own names, quotas and object lifetime;
 [Objects](objects.rs) perform freeze/map/unmap and escrow retirement;
 [retirement](retirement.rs) removes aliases before refunding physical frames.
 
+[Allocation](allocation.rs) reserves funding once and zeros at most eight pages
+per boot-stack step. The caller stays blocked and the region unmapped until all
+pages are ready. Cancellation refunds the unfinished reservation and backing
+before slot reuse. Follow the [deferred-work entrance](../execution/deferred/README.md)
+for selection, interrupt windows and the remaining non-preemptible operations.
+
 ## Transfer contract
 
 `Private::freeze` consumes writable access and returns an immutable `Object`.
@@ -35,13 +41,13 @@ handle in message bytes conveys no authority. These are experimental syscalls
 
 Backing remains charged to its original persistent account, including after its
 producer exits or releases its handle. Each copied read right charges the
-recipient's reader-page quota and one of eight reader-capability slots, whether
+recipient's reader-page quota and a reader-capability slot, whether
 queued, mapped or unmapped. Multiple rights to the same object are individually
 charged. Unmapping returns a virtual slot, not the capability/page reservation.
-An object holds up to 128 pages, as does a private page budget; a reader page
-budget may reach four times that, since a matrix hub pins every image its
-subtree shows and lends the same budget downward. The global arenas are backed
-for the twelve-account lab. No extra frames are allocated by forwarding.
+An object holds up to 128 pages; private and reader budgets can fund several
+objects, since a matrix hub pins images and lends budget downward. Current
+per-task and global arena bounds live in the [memory contract](../../../contracts/memory.rs).
+No extra frames are allocated by forwarding.
 A retained reader can prevent returning or reassigning its sponsor's funding.
 
 Copying read authority permits further forwarding. This does not implement

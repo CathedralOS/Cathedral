@@ -31,6 +31,9 @@ pub(super) fn syscall(
     }
     assert!(session.tasks[slot].memory_call.is_none());
     session.tasks[slot].memory_call = Some([number, first, second]);
+    session
+        .deferred
+        .insert(crate::user_tasks::execution::deferred::Work::Memory, slot);
     *event = Event::Block;
     Ok(0)
 }

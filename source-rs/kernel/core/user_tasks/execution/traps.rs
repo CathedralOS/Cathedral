@@ -1,6 +1,6 @@
 //! Interrupt/syscall entrance: save context, dispatch syscalls, wake waiters and select a root.
 //! Allocating and reclaiming remain deferred to execution/execution.rs on the boot stack.
-use crate::scheduler::{Event, TaskState};
+use crate::scheduler::Event;
 use crate::user_tasks::{ACTIVE, Exit, arch, keyboard, lifecycle, syscalls};
 use cathedral_arch::{Context, SwitchCause};
 use core::sync::atomic::Ordering;
@@ -46,20 +46,16 @@ pub(super) unsafe fn schedule(context: &Context, cause: SwitchCause, now: u64) -
         session.scheduler.account_cpu(arch::cpu_time_us());
         session.scheduler.park(event, now);
         None // Always reclaim from the boot context, never an interrupt stack.
-    } else if session.ipc.memory_retirement_pending()
-        || session.memory.retirement_pending()
-        || session.tasks.iter().any(|task| task.memory_call.is_some())
-        || session.scheduler.states().contains(&TaskState::Exited)
-        || session
-            .launches
-            .iter()
-            .any(|launch| launch.model.pending().is_some() || launch.model.cancellation_pending())
-    {
+    } else if super::deferred::return_to_boot(
+        super::deferred::pending(session),
+        previous.is_some(),
+        cause == SwitchCause::Yield,
+    ) {
         session.scheduler.account_cpu(arch::cpu_time_us());
         session.scheduler.park(event, now);
-        // An IRQ can interrupt the restored idle boot context before it reaches
-        // reap. Keep returning there until all deferred work is done; otherwise
-        // runnable peers can indefinitely starve collection of an exited child.
+        // Async boot IRQs return to boot so peers cannot starve collection.
+        // Only an explicit yield after a coherent step may dispatch a peer;
+        // that peer's next trap returns here while work remains.
         None // Admission/reclamation use the boot stack, never the trap stack.
     } else {
         session.scheduler.account_cpu(arch::cpu_time_us());

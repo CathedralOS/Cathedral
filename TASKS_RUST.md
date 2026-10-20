@@ -1,8 +1,8 @@
 # Rust reference OS: tasks and handoff
 
-Updated 2026-10-20 (local date). Current milestone: **event-targeted wait completion
-and cached physical device routes**, on baseline `46cd674a` (active scheduler
-branches, lazy accounting, indexed deadlines and a periodic contention lab).
+Updated 2026-10-20 (local date). Current milestone: **indexed deferred work and
+incremental private allocation**, on baseline `6f73a85c` (event-targeted wait
+completion and cached physical device routes).
 The latest section records verification and remaining steps toward bounded
 execution. This does not introduce real-time reservations.
 The fresh-lab reset is `30572c9f`. Compact recursive desktops landed as `c7571191`,
@@ -3381,3 +3381,70 @@ grant lookup, heap behavior and device polling still preclude a bounded latency
 claim. The exclusive session borrow still forbids simply enabling interrupts
 inside ongoing operations. Owner decisions are not blocking these mechanics;
 a separately admitted timing profile and its policy remain future work.
+
+## Indexed deferred work and incremental allocation (2026-10-20)
+
+Baseline: `6f73a85c`. Follow the new
+[deferred-work entrance](source-rs/kernel/core/user_tasks/execution/deferred/deferred.rs)
+and its [suspension/lifetime guide](source-rs/kernel/core/user_tasks/execution/deferred/README.md).
+Trap-side pending detection no longer scans task/launch arenas or retired-memory
+words. Accepted work populates fixed sets for admission, memory, cancellation,
+retired tasks and loan return. Admission and memory steps rotate across pending
+slots. Teardown clears queued calls/admissions before reuse, drains newly added
+descendant cancellations, then returns loans only after physical reclamation.
+Cached child-to-launch routes survive lending and dynamic reservation reuse.
+Executable-reference and IPC escrow retirement visit marked entries rather than
+every entry; their bounded bitmap-word iteration remains.
+
+A boot step reclaims, admits at most one child and advances at most one memory
+caller. After it returns, with no mutable session borrow or allocator lock held,
+an explicit interrupt window and scheduler yield may run peers even while work
+remains. A peer's next trap returns to boot for progress. An asynchronous boot
+IRQ cannot bypass pending cleanup. This preserves deferred work on the boot
+stack and avoids an artificial timer-tick delay when every caller is blocked.
+
+Private allocation now reserves quota/funding once, acquires and zeros at most
+eight pages per step, and retains unpublished progress in session state. It
+returns no handle and exposes no mapping until all pages are ready. Each batch
+is charged to its requester. Cancellation/failure refunds unbacked reservations
+and allocated frames exactly once, before account reuse. Conservation checks
+include reserved-but-unbacked pages. Final mapping and rollback remain whole
+operations. The allocation batch size is a work allowance, not a latency promise.
+
+Review caught a race newly possible across queued admissions: a consenting peer
+can exit while another boot step runs. Admission now rechecks its original
+consent, returning `PEER_CLOSED` before allocating/publishing a child instead of
+reaching the live-peer assertion in IPC boot-pair installation. A replacement
+task does not inherit that consent. Owner death removes the queued request.
+
+Verification:
+
+- Workspace host tests pass; all 130 core tests pass after the final peer-consent
+  regression. Pending-set tests cover coalescing, rotating requeue, cancellation,
+  reuse, newly queued descendants and boot/user routing.
+- The real-frame rollback fixture fails maximum-size allocation at every frame
+  boundary and cancels it at all 15 partial eight-page boundaries. Every case
+  checks exact funding/frame recovery; partial batches expose no writable map.
+  x86 release smoke passes, including IPC deadlines, cancellation/restarts,
+  hierarchical CPU contention, memory faults and final heap/frame reclamation.
+- ARM64 release portability passes; its private-memory peers now allocate full
+  128-page regions through multiple steps, check zeroing/private data across
+  preemption, and reclaim them after peer faults. ARM64 also runs the partial
+  allocation rollback fixture.
+- Default UEFI, smoke-feature and ARM64 portability-program clippy pass; layout,
+  Rust formatting and whitespace checks pass. Logs are `build/deferred-*.log`.
+- Three nested desktops under continuous pointer motion pass on fresh and cold
+  boots, including deepest saved Notes, protected close, repeated teardown/reopen
+  and isolation: `desktop/20261020T193010071854Z`. This desktop run preceded only
+  the final queued-peer-consent check and test-only ARM64 expansion; the final
+  kernel also passed x86 smoke. The earlier intermittent LOSS timeout did not
+  recur and remains unresolved. Interactive saved media was not modified.
+
+Next: make ELF construction and physical subtree reclamation resumable, with
+private progress and cancellation state before further suspension boundaries.
+Map/seal/unmap, allocation rollback, heap behavior and large event batches also
+remain non-preemptible. The [timing audit](source-rs/kernel/core/scheduler/timing.md)
+tracks these limits. This work does not change application ABI, platform policy,
+distribution UI, CPU priorities or reservation semantics, and makes no measured
+desktop-speedup or real-time guarantee. No owner decision blocks the next
+mechanical steps.

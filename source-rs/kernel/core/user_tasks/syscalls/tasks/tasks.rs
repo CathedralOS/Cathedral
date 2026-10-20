@@ -81,6 +81,9 @@ pub(in super::super) fn dispatch(
         }
         abi::TASK_CANCEL => {
             if model.request_cancel(slot, first)? {
+                session
+                    .deferred
+                    .insert(crate::user_tasks::execution::deferred::Work::Cancel, index);
                 *event = Event::Block;
             }
             Ok(0) // Boot reclaims a live child before completing this call.

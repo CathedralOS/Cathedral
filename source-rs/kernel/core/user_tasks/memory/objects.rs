@@ -62,8 +62,10 @@ pub(super) unsafe fn unmap(session: &mut Session, task: usize, name: u64) -> Res
 }
 pub(super) unsafe fn retire_escrow(session: &mut Session, frames: &mut Frames<'_>) {
     let pending = session.ipc.take_retired_memory();
-    for slot in 0..wire::MAX_READ_HANDLES {
-        if pending[slot / 64] & (1u64 << (slot % 64)) != 0 {
+    for (word, mut bits) in pending.into_iter().enumerate() {
+        while bits != 0 {
+            let slot = word * 64 + bits.trailing_zeros() as usize;
+            bits &= bits - 1;
             if let Some(grant) = session.memory.model.reads[slot] {
                 assert!(!grant.published && grant.mapping.is_none());
             }

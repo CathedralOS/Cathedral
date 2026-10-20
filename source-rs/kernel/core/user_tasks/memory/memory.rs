@@ -10,6 +10,8 @@ pub(super) struct Memory {
     /// Kernel references to drop on the boot stack, where frames can be reclaimed.
     pending: [u16; wire::MAX_REGIONS],
     retirement_pending: bool,
+    pending_regions: [u64; wire::MAX_REGIONS.div_ceil(64)],
+    allocations: [Option<allocation::Staging>; abi::MAX_TASKS],
 }
 // A whole subtree can surrender every executable reference before the boot
 // loop settles them. The counter must cover all accounts, not just one task.
@@ -48,6 +50,8 @@ impl Memory {
             }
             (&raw mut (*pointer).pending).write([0; wire::MAX_REGIONS]);
             (&raw mut (*pointer).retirement_pending).write(false);
+            (&raw mut (*pointer).pending_regions).write([0; wire::MAX_REGIONS.div_ceil(64)]);
+            (&raw mut (*pointer).allocations).write([None; abi::MAX_TASKS]);
             Ok(alloc::boxed::Box::from_raw(pointer))
         }
     }
@@ -69,7 +73,15 @@ impl Memory {
     /// Give a kernel reference back; reclamation waits for the boot stack.
     pub fn unref_later(&mut self, region: usize) {
         self.pending[region] += 1;
+        self.pending_regions[region / 64] |= 1 << (region % 64);
         self.retirement_pending = true;
+    }
+    pub fn reserved_unbacked(&self) -> usize {
+        self.allocations
+            .iter()
+            .flatten()
+            .map(allocation::Staging::reserved)
+            .sum()
     }
     pub fn retirement_pending(&self) -> bool {
         self.retirement_pending
@@ -81,15 +93,17 @@ impl Memory {
             return;
         }
         self.retirement_pending = false;
-        for region in 0..wire::MAX_REGIONS {
-            if self.pending[region] == 0 {
-                continue;
-            }
-            self.model.entries[region].read_refs -= usize::from(self.pending[region]);
-            self.pending[region] = 0;
-            // SAFETY: Every alias this reference guarded is gone with it.
-            unsafe {
-                self.reclaim(region, frames);
+        let pending = core::mem::take(&mut self.pending_regions);
+        for (word, mut bits) in pending.into_iter().enumerate() {
+            while bits != 0 {
+                let region = word * 64 + bits.trailing_zeros() as usize;
+                bits &= bits - 1;
+                self.model.entries[region].read_refs -= usize::from(self.pending[region]);
+                self.pending[region] = 0;
+                // SAFETY: Every alias this reference guarded is gone with it.
+                unsafe {
+                    self.reclaim(region, frames);
+                }
             }
         }
     }
@@ -102,18 +116,31 @@ pub(super) unsafe fn process(session: &mut Session, frames: &mut Frames<'_>) {
         objects::retire_escrow(session, frames);
         session.memory.settle(frames);
     }
-    for slot in 0..session.tasks.len() {
-        let Some(call) = session.tasks[slot].memory_call.take() else {
-            continue;
-        };
+    use crate::user_tasks::execution::deferred::Work;
+    if let Some(slot) = session.deferred.next(Work::Memory) {
+        let call = session.tasks[slot]
+            .memory_call
+            .expect("queued memory call missing");
         session.scheduler.account_cpu(cathedral_arch::cpu_time_us());
-        // Admission budgets are distinct from runtime page budgets enforced by Regions.
         frames.remaining = usize::MAX;
-        session.tasks[slot].report.memory.deferred_calls += 1;
+        if session.memory.allocations[slot].is_none() {
+            session.tasks[slot].report.memory.deferred_calls += 1;
+        }
         // SAFETY: Same machine and ownership obligations as process.
-        let result = unsafe { dispatch(session, frames, slot, call) };
-        syscalls::complete(session, slot, result);
-        session.scheduler.unblock(slot);
+        let result = unsafe {
+            if call[0] == abi::MEMORY_ALLOCATE {
+                allocation::step(session, frames, slot, call[1] as usize)
+            } else {
+                Some(dispatch(session, frames, slot, call))
+            }
+        };
+        if let Some(result) = result {
+            session.tasks[slot].memory_call = None;
+            syscalls::complete(session, slot, result);
+            session.scheduler.unblock(slot);
+        } else {
+            session.deferred.insert(Work::Memory, slot);
+        }
         session
             .scheduler
             .charge_cpu(slot, cathedral_arch::cpu_time_us());
@@ -126,10 +153,6 @@ unsafe fn dispatch(
     [number, first, second]: [u64; 3],
 ) -> Result<u64, u64> {
     match number {
-        // SAFETY: Caller provides exclusive inactive roots and frame custody.
-        abi::MEMORY_ALLOCATE => unsafe {
-            allocation::allocate(session, frames, slot, first as usize)
-        },
         // SAFETY: Caller provides exclusive inactive roots and frame custody.
         abi::MEMORY_SEAL => unsafe { sharing::seal(session, slot, first, second) },
         // SAFETY: Caller provides exclusive inactive roots and frame custody.

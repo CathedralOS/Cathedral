@@ -46,6 +46,7 @@ struct Endpoint {
 pub struct Ipc {
     epoch: u64,
     retired_memory: [u64; cathedral_kernel_contracts::memory::MAX_READ_HANDLES.div_ceil(64)],
+    retired_memory_pending: bool,
     tasks: usize,
     alive: u32,
     // Hints only: the wait owner revalidates the current local grant and payload.

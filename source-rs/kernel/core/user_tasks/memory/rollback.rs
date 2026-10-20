@@ -71,6 +71,49 @@ pub unsafe fn exercise(frames: &mut FrameAllocator, layout: &BootLayout, image: 
         );
         assert_eq!(session.memory.frames(), 0);
     }
+    // Cancel at every suspension boundary of a maximum-size allocation. A
+    // staged object reserves all its funding but exposes no partially zeroed map.
+    for steps in 1..wire::MAX_PAGES.div_ceil(allocation::PAGE_BATCH) {
+        source.remaining = usize::MAX;
+        for step in 1..=steps {
+            assert_eq!(
+                // SAFETY: Inactive prepared root and exclusive frame custody.
+                unsafe { allocation::step(&mut session, &mut source, 0, wire::MAX_PAGES) },
+                None
+            );
+            assert_eq!(source.allocated(), admitted + step * allocation::PAGE_BATCH);
+            assert_eq!(
+                session.memory.funding.charged(),
+                table_budget + wire::MAX_PAGES
+            );
+            assert_eq!(
+                session.memory.reserved_unbacked(),
+                wire::MAX_PAGES - step * allocation::PAGE_BATCH
+            );
+            assert!(
+                !session.tasks[0]
+                    .space
+                    .as_ref()
+                    .unwrap()
+                    .writable_range(wire::address(0), 1)
+            );
+        }
+        // SAFETY: Same cleanup used for a dead blocked caller; staging has no aliases.
+        unsafe {
+            retirement::close(&mut session, 0, &mut source);
+        }
+        assert_eq!(session.memory.reserved_unbacked(), 0);
+        assert_eq!(source.allocated(), admitted);
+        assert_eq!(session.memory.funding.charged(), table_budget);
+        assert!(
+            session
+                .memory
+                .model
+                .entries
+                .iter()
+                .all(|region| !region.live())
+        );
+    }
     // SAFETY: Never activated, no remaining borrowed regions.
     unsafe { admission::retire(&mut session, 0, &mut source) };
     assert_eq!(source.allocated(), baseline);

@@ -74,6 +74,10 @@ pub(super) fn request(
     launch.initial_count = count;
     launch.delegated = delegated;
     launch.delegated_count = delegated_count;
+    session.deferred.insert(
+        crate::user_tasks::execution::deferred::Work::Admission,
+        index,
+    );
     *event = Event::Block;
     Ok(0) // The boot-stack admission path returns the committed child or an error.
 }

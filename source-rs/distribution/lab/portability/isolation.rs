@@ -1,7 +1,8 @@
 //! Deliberate EL0 violations must retire only their own process.
 use cathedral_user_runtime::{memory::Private, time};
 pub fn survive(pattern: u8) -> u64 {
-    let mut region = Private::allocate(2).unwrap();
+    // A maximum-size allocation spans multiple boot-stack suspension boundaries.
+    let mut region = Private::allocate(cathedral_kernel_contracts::memory::MAX_PAGES).unwrap();
     assert!(region.bytes_mut().iter().all(|b| *b == 0));
     region.bytes_mut().fill(pattern);
     let deadline = time::after(5).unwrap();

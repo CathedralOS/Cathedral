@@ -8,7 +8,7 @@ mod memory;
 mod stacks;
 mod user;
 pub use crate::isa::x86::{disable_interrupts, halt_forever};
-pub use context::{Context, set_switch_handler, suspend};
+pub use context::{Context, service_pending_interrupts, set_switch_handler, suspend};
 pub use interrupts::{
     install_interrupts, last_irq_stack, probe_double_fault, probe_invalid_opcode, start_timer,
     test_breakpoint, ticks, wait_for_ticks,

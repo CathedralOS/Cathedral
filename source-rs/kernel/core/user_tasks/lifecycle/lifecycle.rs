@@ -1,11 +1,14 @@
 // Boot-context admission/reaping and grant teardown. No restart policy here.
 use super::{Error, Exit, Frames, Session, admission, next_epoch, syscalls};
+use crate::user_tasks::execution::deferred::Work;
 use crate::{scheduler::TaskState, user_tasks::Program, user_tasks::admission::pool::Code};
 use cathedral_arch as arch;
 use cathedral_kernel_contracts::user as abi;
 
 pub(super) fn close(session: &mut Session, slot: usize) {
     session.waits.remove(slot);
+    session.deferred.remove(Work::Memory, slot);
+    session.deferred.insert(Work::Retire, slot);
     super::syscalls::devices::leased::close(session, slot);
     for region in session.executables.close(slot).into_iter().flatten() {
         session.memory.unref_later(region);
@@ -20,17 +23,18 @@ pub(super) fn close(session: &mut Session, slot: usize) {
     session.tasks[slot].wait = None;
     session.tasks[slot].keyboard_wait = false;
     session.tasks[slot].keyboard_deadline = None;
-    if session
-        .launches
-        .iter()
-        .any(|launch| launch.model.child == slot && launch.keyboard)
-    {
+    if session.keyboard_owner == Some(slot) {
         super::keyboard::reset(session);
     }
     session.ipc.close_task(slot);
-    for launch in &mut session.launches {
+    for (index, launch) in session.launches.iter_mut().enumerate() {
         launch.model.close(slot);
         if launch.model.owner == slot {
+            if launch.model.cancel_child() {
+                session.deferred.insert(Work::Cancel, index);
+            }
+            session.deferred.remove(Work::Admission, index);
+            session.deferred.insert(Work::Return, index);
             launch.images.fill(None);
             launch.initial = [0; abi::MAX_INITIAL_ENDPOINTS];
             launch.initial_count = 0;
@@ -42,8 +46,14 @@ pub(super) fn close(session: &mut Session, slot: usize) {
 }
 
 pub(super) unsafe fn reap(session: &mut Session, source: &mut Frames<'_>) {
+    if !session.deferred.has(Work::Cancel)
+        && !session.deferred.has(Work::Retire)
+        && !session.deferred.has(Work::Return)
+    {
+        return;
+    }
     let mut requesters = 0u32;
-    for index in 0..session.launches.len() {
+    while let Some(index) = session.deferred.first(Work::Cancel) {
         let model = &session.launches[index].model;
         let (slot, owner) = (model.child, model.owner);
         if model.cancellation_pending() {
@@ -64,10 +74,8 @@ pub(super) unsafe fn reap(session: &mut Session, source: &mut Frames<'_>) {
         session.tasks[owner].report.cancelled += 1;
         close(session, slot);
     }
-    for slot in 0..session.tasks.len() {
-        if session.scheduler.states()[slot] != TaskState::Exited {
-            continue;
-        }
+    while let Some(slot) = session.deferred.first(Work::Retire) {
+        assert_eq!(session.scheduler.states()[slot], TaskState::Exited);
         session.scheduler.account_cpu(arch::cpu_time_us());
         // SAFETY: No context can resume this task. Kernel root, IRQs off.
         unsafe {
@@ -84,12 +92,8 @@ pub(super) unsafe fn reap(session: &mut Session, source: &mut Frames<'_>) {
             ancestor = session.scheduler.parent(ancestor).unwrap_or(0);
         }
         session.pool.reclaim(slot, ancestor);
-        if let Some((index, launch)) = session
-            .launches
-            .iter_mut()
-            .enumerate()
-            .find(|(_, launch)| launch.model.child == slot)
-        {
+        if let Some(index) = session.child_launch[slot] {
+            let launch = &mut session.launches[index];
             launch
                 .model
                 .reaped(outcome(session.tasks[slot].report.exit.unwrap()));
@@ -109,11 +113,12 @@ pub(super) unsafe fn reap(session: &mut Session, source: &mut Frames<'_>) {
     );
     assert_eq!(
         session.memory.funding.charged(),
-        owned + session.memory.frames()
+        owned + session.memory.frames() + session.memory.reserved_unbacked()
     );
     // Increasing owner/child slots made cancellation cascade in the first pass.
     // Return empty budgets only after every descendant address space is gone.
-    for launch in &mut session.launches {
+    while let Some(index) = session.deferred.first(Work::Return) {
+        let launch = &mut session.launches[index];
         let previous_owner = launch.model.owner;
         launch.model.reclaim();
         if launch.model.owner != previous_owner {
@@ -162,9 +167,10 @@ pub(super) unsafe fn spawn(
     let handles = &initial[..initial_count];
     let baseline = source.allocated();
     // A blocked parent retains its rights through every fallible admission step.
-    let plan = session
-        .ipc
-        .validate_initial(owner, child, handles)
+    let plan = session.launches[index]
+        .model
+        .admission_ready()
+        .and_then(|()| session.ipc.validate_initial(owner, child, handles))
         .and_then(|()| {
             let loans =
                 delegation::Plan::prepare(session, owner, child, &delegated[..delegated_count])?;

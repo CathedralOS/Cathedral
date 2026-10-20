@@ -4,7 +4,7 @@ mod interrupts;
 mod memory;
 mod stacks;
 mod user;
-pub use context::{Context, set_switch_handler, suspend};
+pub use context::{Context, service_pending_interrupts, set_switch_handler, suspend};
 pub use interrupts::{
     calibrate_cpu_clock, cpu_time_us, install_interrupts, last_irq_stack, start_timer,
     test_breakpoint, ticks, wait_for_ticks,

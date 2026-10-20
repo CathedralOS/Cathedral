@@ -11,9 +11,9 @@ pub use isa::selected::{
     BootLayout, CPU_NAME, Context, ELF_MACHINE, INTERRUPT_READY, MAX_TASK_SLOTS, UserMappings,
     allocate_stack, begin_user_session, calibrate_cpu_clock, cpu_time_us, disable_interrupts,
     end_user_session, enter_stack, halt_forever, install_interrupts, last_irq_stack,
-    prepare_memory, release_stack, select_user_root, set_switch_handler, stack_pointer,
-    start_timer, suspend, task_stack_range, test_breakpoint, ticks, wait_for_ticks,
-    without_interrupts,
+    prepare_memory, release_stack, select_user_root, service_pending_interrupts,
+    set_switch_handler, stack_pointer, start_timer, suspend, task_stack_range, test_breakpoint,
+    ticks, wait_for_ticks, without_interrupts,
 };
 #[cfg(target_arch = "x86_64")]
 pub use isa::selected::{probe_double_fault, probe_invalid_opcode};

@@ -5,6 +5,7 @@ use cathedral_core::{
     ipc::EndpointSpec,
     user_tasks::{self, Config, Executable, Exit, Program},
 };
+use cathedral_kernel_contracts::memory::MAX_PAGES;
 use core::fmt::Write;
 static ELF: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/arm64.elf"));
 pub(super) fn exchange(
@@ -52,13 +53,13 @@ pub(super) fn isolation(
             report.preemptions > 0,
             "timer did not switch EL0 peers: {report:?}"
         );
-        assert_eq!(report.memory.allocated_pages, 2);
+        assert_eq!(report.memory.allocated_pages, MAX_PAGES);
     }
     drop(reports);
     reclaimed(memory, baseline, heap);
     writeln!(
         console,
-        "Cathedral Rust lab: ARM64 timer preempted both private EL0 peers"
+        "Cathedral Rust lab: ARM64 timer preempted both private EL0 peers after incremental maximum-size allocations"
     )
     .ok();
     for (role, address, ec) in [
@@ -82,7 +83,7 @@ pub(super) fn isolation(
         assert_eq!(fault.vector, ec);
         assert_eq!(fault.address, address);
         assert_eq!(reports[1].exit, Some(Exit::Returned(0)));
-        assert_eq!(reports[1].memory.allocated_pages, 2);
+        assert_eq!(reports[1].memory.allocated_pages, MAX_PAGES);
         drop(reports);
         reclaimed(memory, baseline, heap);
         writeln!(console,"Cathedral Rust lab: ARM64 fault contained role={role} address={address:#x}; peer and private pages survived").ok();
@@ -138,7 +139,7 @@ fn run(
 ) -> Result<alloc::vec::Vec<user_tasks::Report>, user_tasks::Error> {
     let grants = [0, 1].map(|task| cathedral_kernel_contracts::memory::Grant {
         task,
-        private_pages: 2,
+        private_pages: MAX_PAGES,
         shared_pages: 2,
     });
     // SAFETY: Sole CPU, IRQs masked, owned initialized layout and reclaiming allocator.

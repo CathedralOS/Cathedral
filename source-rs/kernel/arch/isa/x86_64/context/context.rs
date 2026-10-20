@@ -113,3 +113,15 @@ pub unsafe fn suspend() {
         asm!("int 0x30");
     }
 }
+
+/// Give pending maskable interrupts an opportunity at a consistent boot boundary.
+/// # Safety
+/// Boot context, IRQs initially masked, installed vectors/handler, and no mutable
+/// session borrow or non-suspendable lock. A callback may switch to userspace.
+/// Returns with IRQs masked; this is not a delay or an interrupt-drain guarantee.
+pub unsafe fn service_pending_interrupts() {
+    // SAFETY: Caller establishes a reentrant boundary before this short IRQ window.
+    unsafe {
+        asm!("sti", "nop", "cli", options(nostack));
+    }
+}

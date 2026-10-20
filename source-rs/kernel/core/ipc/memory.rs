@@ -33,11 +33,12 @@ impl Ipc {
         self.changed_receivers |= 1 << self.endpoints[index].as_ref().unwrap().spec.receiver;
     }
     pub fn memory_retirement_pending(&self) -> bool {
-        self.retired_memory.iter().any(|&word| word != 0)
+        self.retired_memory_pending
     }
     pub fn take_retired_memory(
         &mut self,
     ) -> [u64; cathedral_kernel_contracts::memory::MAX_READ_HANDLES.div_ceil(64)] {
+        self.retired_memory_pending = false;
         core::mem::take(&mut self.retired_memory)
     }
 }

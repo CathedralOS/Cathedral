@@ -22,6 +22,8 @@ pub(super) struct Task {
     pub(super) keyboard_deadline: Option<u64>,
 }
 pub(super) struct Session {
+    pub(super) deferred: super::execution::deferred::Pending,
+    pub(super) child_launch: [Option<usize>; cathedral_kernel_contracts::user::MAX_TASKS],
     pub(super) waits: super::execution::waits::Registry,
     pub(super) device_routes:
         [Option<cathedral_arch::board::DeviceId>; cathedral_kernel_contracts::user::MAX_TASKS],

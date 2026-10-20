@@ -65,6 +65,10 @@ pub(in crate::user_tasks) unsafe fn close(
     slot: usize,
     frames: &mut Frames<'_>,
 ) {
+    // SAFETY: Dead task cannot resume; unfinished allocation has no published aliases.
+    unsafe {
+        super::allocation::cancel(session, frames, slot);
+    }
     for read in 0..wire::MAX_READ_HANDLES {
         let Some(grant) = session.memory.model.reads[read].filter(|r| r.task == slot) else {
             continue;

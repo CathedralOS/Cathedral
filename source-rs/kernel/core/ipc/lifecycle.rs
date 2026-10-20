@@ -26,6 +26,7 @@ impl Ipc {
         let queued = self.endpoints[index].as_mut().unwrap().message.take();
         if let Some(slot) = queued.and_then(|q| q.memory) {
             self.retired_memory[slot / 64] |= 1u64 << (slot % 64);
+            self.retired_memory_pending = true;
         }
         if let Some(slot) = queued.and_then(|q| q.attachment) {
             // Queued receives cannot themselves be moved. However the endpoint
@@ -49,6 +50,7 @@ impl Ipc {
                     let queued = endpoint.message.take();
                     if let Some(slot) = queued.and_then(|q| q.memory) {
                         self.retired_memory[slot / 64] |= 1u64 << (slot % 64);
+                        self.retired_memory_pending = true;
                     }
                     pending = queued.and_then(|q| q.attachment);
                 }

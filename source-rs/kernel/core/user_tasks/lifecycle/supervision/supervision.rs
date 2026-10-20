@@ -88,9 +88,24 @@ impl Supervisor {
     pub fn idle(&self) -> bool {
         self.state == Child::Empty
     }
+    /// A queued request may cross boot-stack suspension. Recheck original peer
+    /// consent before allocating/publishing; a replacement in its slot cannot
+    /// revive the dead incarnation's consent.
+    pub fn admission_ready(&self) -> Result<(), u64> {
+        if !self.owner_alive {
+            return Err(abi::DENIED);
+        }
+        if !self.peer_alive {
+            return Err(abi::PEER_CLOSED);
+        }
+        if self.pending().is_none() {
+            return Err(abi::BUSY);
+        }
+        Ok(())
+    }
     /// The admission plan reserves this fresh owner-local name before mapping.
     pub fn started(&mut self, ticket: u64) -> u64 {
-        assert!(self.pending().is_some() && ticket != 0 && ticket <= i64::MAX as u64);
+        assert!(self.admission_ready().is_ok() && ticket != 0 && ticket <= i64::MAX as u64);
         self.state = Child::Live(ticket);
         self.connected = false;
         ticket
