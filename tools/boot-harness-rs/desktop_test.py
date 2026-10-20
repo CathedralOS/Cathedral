@@ -19,9 +19,10 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 
 
-def desktop(stream, output, serial, reboot, expected_absolute=True, fill_users=False, service_imports=None, nested=False, nested_saved=False, deep=False, nested_desktop=False, user_check=None, allowed_panics=(), latency=False):
+def desktop(stream, output, serial, reboot, expected_absolute=True, fill_users=False, service_imports=None, nested=False, nested_saved=False, deep=False, nested_desktop=False, user_check=None, allowed_panics=(), latency=False, pointer_stress=False):
     assert 'Cathedral: object storage ready' in serial
     position = [40, 40]
+    motion_step = 0
     timings = desktop_timing.Timings(output, reboot)
     font = bytes.fromhex((ROOT / 'source-rs/platform/libraries/bitmap-font/font.hex').read_text())
 
@@ -61,10 +62,18 @@ def desktop(stream, output, serial, reboot, expected_absolute=True, fill_users=F
             time.sleep(0.08)
 
     def scan(check, description):
+        nonlocal motion_step
         deadline = time.monotonic() + (120 if nested_desktop or latency else 45)
         while True:
+            if pointer_stress:
+                motion_step += 1
+                send([{'type': 'abs', 'data': {'axis': axis, 'value': value}}
+                      for axis, value in [('x', 12000 + (motion_step * 941) % 18000),
+                                          ('y', 4000 + (motion_step * 677) % 24000)]])
             serial = (output / 'serial.log').read_text(errors='replace')
             assert 'CATHEDRAL_RS_PANIC' not in serial and 'initial program stopped' not in serial, serial[-3000:]
+            if pointer_stress:
+                assert 'matrix-service-exit' not in serial, serial[-5000:]
             for report in serial.replace('Cathedral Rust lab: ', '').split('Cathedral user panic:')[1:]:
                 if report.count('\n') >= 2:
                     assert report.splitlines()[1] in allowed_panics, serial[-3000:]
@@ -247,7 +256,7 @@ def desktop(stream, output, serial, reboot, expected_absolute=True, fill_users=F
         return
     if nested_desktop:
         import nested_desktop_test
-        nested_desktop_test.exercise(output, click, key, scan, width, height, reboot)
+        nested_desktop_test.exercise(output, click, key, scan, width, height, reboot, pointer_stress)
         return
     if nested:
         import split_test
@@ -373,7 +382,7 @@ def desktop(stream, output, serial, reboot, expected_absolute=True, fill_users=F
     print('PASS: user tiles, absolute/relative clicks, app tiles, save/discard/cancel and persistent replacement')
 
 
-def run(timeout, trace_storage=False, relative_pointer=False, service_imports=None, nested=False, deep=False, nested_desktop=False, trace_input=False, latency=False):
+def run(timeout, trace_storage=False, relative_pointer=False, service_imports=None, nested=False, deep=False, nested_desktop=False, trace_input=False, latency=False, pointer_stress=False):
     output = harness.BUILD / 'desktop' / datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S%fZ')
     output.mkdir(parents=True)
     # Exact default composition, with a separate build output so a regression
@@ -422,7 +431,7 @@ def run(timeout, trace_storage=False, relative_pointer=False, service_imports=No
     flags = subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0
     for boot in (1, 2):
         capture.run(command, output, timeout, flags, ready_marker='Cathedral desktop: ready; choose a user',
-                    verify=lambda stream, output, serial: desktop(stream, output, serial, boot == 2, not relative_pointer, service_imports=service_imports, nested=nested, nested_saved=boot == 2, deep=deep, nested_desktop=nested_desktop, latency=latency))
+                    verify=lambda stream, output, serial: desktop(stream, output, serial, boot == 2, not relative_pointer, service_imports=service_imports, nested=nested, nested_saved=boot == 2, deep=deep, nested_desktop=nested_desktop, latency=latency, pointer_stress=pointer_stress))
         for name in ('serial.log', 'qemu.log', 'display.png', 'boot-timing.json'):
             shutil.copyfile(output / name, output / f'boot-{boot}-{name}')
         contents = path.read_bytes()
@@ -468,9 +477,12 @@ if __name__ == '__main__':
     parser.add_argument('--deep', action='store_true', help='also enter Split inside Split and check bounded admission')
     parser.add_argument('--trace-storage', action='store_true', help='build with storage phase traces in the serial log')
     parser.add_argument('--trace-input', action='store_true', help='include input and compositor CPU traces')
+    parser.add_argument('--pointer-stress', action='store_true', help='move the pointer continuously while waiting for nested startup and scenes')
     args = parser.parse_args()
     if args.timeout <= 0:
         parser.error('timeout must be positive')
     if args.latency and (args.relative_pointer or args.service_imports or args.nested or args.deep or args.nested_desktop):
         parser.error('--latency uses the ordinary absolute-pointer desktop without other workload variants')
-    run(args.timeout, args.trace_storage, args.relative_pointer, args.service_imports, args.nested or args.deep, args.deep, args.nested_desktop, args.trace_input, args.latency)
+    if args.pointer_stress and (not args.nested_desktop or args.relative_pointer):
+        parser.error('--pointer-stress requires --nested-desktop with absolute input')
+    run(args.timeout, args.trace_storage, args.relative_pointer, args.service_imports, args.nested or args.deep, args.deep, args.nested_desktop, args.trace_input, args.latency, args.pointer_stress)

@@ -94,6 +94,23 @@ impl Child {
         if !self.grant.valid() {
             return true;
         }
+        // Keep the first report of a button state at its original coordinates.
+        // Only replace a trailing motion report preceded by the same state;
+        // never merge across a press, release, key, cancellation or epoch.
+        if kind == wire::POINTER && self.len >= 2 {
+            let tail = self.queue[self.len - 1];
+            let before = self.queue[self.len - 2];
+            if tail[2] == wire::POINTER
+                && before[2] == wire::POINTER
+                && tail[5] == value
+                && before[5] == value
+            {
+                self.queue[self.len - 1][3] = x;
+                self.queue[self.len - 1][4] = y;
+                self.notify = true;
+                return true;
+            }
+        }
         if self.len == self.queue.len() {
             self.cancel();
             return false;

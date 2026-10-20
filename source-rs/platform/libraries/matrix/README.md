@@ -13,7 +13,10 @@ use this machinery with the existing runtime IPC server.
 
 - [Input](world/input.rs) confines focus, capture, coordinates and keys to grants.
   Pointer hit testing follows the owner's surface ranges; equal ranges use slot
-  order for input-only children.
+  order for input-only children. The bounded [child queue](world/children.rs)
+  coalesces trailing motion within one button state, retaining its first report
+  and newest coordinates. It never coalesces across button transitions, keys or
+  cancellation. Non-coalescible overflow still cancels that child's input.
 - [Surfaces](world/surface/surface.rs) conserves allowances, assigns disjoint rank
   ranges (explicit owner placement or free-space allocation), and clips/translates
   retained drawing. Changing one child's allowance

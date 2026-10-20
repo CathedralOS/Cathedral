@@ -4,7 +4,7 @@ import shutil
 import time
 
 
-def exercise(output, click, key, scan, width, height, reboot):
+def exercise(output, click, key, scan, width, height, reboot, pointer_stress=False):
     font = bytes.fromhex((Path(__file__).resolve().parents[2] / 'source-rs/platform/libraries/bitmap-font/font.hex').read_text())
     def pixel(w, data, x, y):
         return data[(y*w+x)*3:(y*w+x+1)*3]
@@ -30,7 +30,21 @@ def exercise(output, click, key, scan, width, height, reboot):
         click(x+w-22, y+18)
     def desktop(depth):
         x,y,w,h = viewport(depth)
-        scan(lambda sw,d: pixel(sw,d,x+148,y+h-48)==bytes.fromhex('c7a2ed') and text(sw,d,x+w-150,y+h-32,'SETTINGS'), f'depth {depth} taskbar')
+        # Keep the scan's motion running after the desktop first becomes visible.
+        # Startup-only input misses failures while an idle subtree is already live.
+        visible_since = None
+        def visible(sw, data):
+            nonlocal visible_since
+            shown = pixel(sw,data,x+148,y+h-48)==bytes.fromhex('c7a2ed') and text(sw,data,x+w-150,y+h-32,'SETTINGS')
+            if not shown:
+                visible_since = None
+                return False
+            if not pointer_stress:
+                return True
+            if visible_since is None:
+                visible_since = time.monotonic()
+            return time.monotonic() - visible_since >= 3
+        scan(visible, f'depth {depth} taskbar')
     def enter(depth, create):
         started = time.monotonic()
         launch(depth-1, 3 if depth==1 else 2)

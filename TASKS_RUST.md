@@ -1,8 +1,9 @@
 # Rust reference OS: tasks and handoff
 
-Updated 2026-10-20 (local date). Current milestone: **pressure-driven storage
-maintenance, reused template source lookups and measured Notes input/rendering**,
-on baseline `6b2de881` (bounded storage containment proofs).
+Updated 2026-10-20 (local date). Current milestone: **nested input dispatch fairness
+and reproducible continuous-pointer testing**, on baseline `67445b3c`
+(pressure-driven storage maintenance, reused template source lookups and measured
+Notes input/rendering).
 The fresh-lab reset is `30572c9f`. Compact recursive desktops landed as `c7571191`,
 and the launch request ABI repair as `a287ae39`. No recursive legacy snapshot
 upgrade is required. The saved-disk quota/headroom repair remains in place. Current
@@ -3096,3 +3097,65 @@ Verification:
   two subtree close/reopen cycles per boot, confinement and cold recovery pass:
   `desktop/20261020T160310046094Z`.
 - No kernel behavior changed; ARM64 and kernel smoke were not rerun.
+
+## Continuous pointer movement and nested matrix exits
+
+The owner reported APP STOPPED followed by losing inner desktops during normal
+F5 use. A fresh disposable desktop reproduced a matrix exit while creating a
+nested user with pointer motion during every scene wait. The first reproduction
+is `desktop/20261020T162724840470Z`; the instrumented reproduction is
+`desktop/20261020T163058173648Z`. The latter identifies `POLL` (operation 5)
+timing out with `-110`, followed by `matrix-service-exit`. This is a userspace
+matrix failure, not an observed kernel fault or an old-disk-only failure.
+
+The stock matrix used to drain up to eight upstream input events at the start
+of a turn, then refresh again before dispatching the selected child request.
+Each ancestor could do the same before answering that child's POLL. Under
+continuous motion this delayed nested replies past the unchanged interaction
+deadline. The parent now consumes one snapshot per service turn. MORE records
+remaining work and makes the next idle wait immediately runnable, while an
+already-selected child request gets its turn before another refresh. Quiet
+notification-driven matrices still park; legacy two-endpoint fixtures still
+refresh on demand. No scheduling grants or IPC deadline were increased.
+
+The first fairness-only stress run completed its fresh boot but lost a deepest
+Notes close click during a cold reopen (`desktop/20261020T163320913383Z`);
+there was no matrix exit. Bounded child queues now coalesce trailing pointer
+motion within a button state, retaining the first report's coordinates and the
+latest motion. Button transitions, keys and cancellations remain ordered.
+Non-coalescible overflow still cancels only that child's queue. Host regressions
+cover a motion flood around press/release, key/cancel boundaries, and sibling
+isolation on genuine overflow.
+
+`desktop_test.py --nested-desktop --pointer-stress` moves the pointer throughout
+startup/scene waits and for three seconds after each desktop becomes visible.
+It fails immediately on any matrix service exit, and retains the three-level
+Notes, dirty-close, recursive reclamation and cold-persistence checks.
+Synchronous interaction receive failures now log the operation and status.
+Normal F5 also saves serial output to `build/boot-harness-rs/interactive/serial.log`
+while still printing it to the terminal. The next boot replaces that log.
+
+The owner's saved interactive disk has not been reset. Use **Cathedral: Fresh
+Lab in QEMU**, then create users, to get the corrected executable throughout the
+tree; existing user realms intentionally retain their copied programs.
+
+Verification:
+
+- The complete motion stress workload passes on fresh and cold boots, with
+  three nested desktops and two subtree close/reopen cycles per boot:
+  `desktop/20261020T163904829764Z`.
+- Workspace host tests pass, including all 39 matrix tests. The 22 Python
+  harness tests, default userspace clippy, stock matrix nested/trace/probe/fault
+  feature clippy, layout and Rust format checks pass.
+- A disposable headless boot using the interactive stdio chardev reaches the
+  user picker with the readiness marker in both terminal output and the live
+  serial file: `interactive-log-check/20261020T164355066761Z`.
+- Ordinary desktop fresh/cold behavior and the independent 541-record storage
+  oracle pass at `desktop/20261020T164622379795Z`. An earlier attempt at
+  `desktop/20261020T164407521583Z` lost its host Python process without a
+  traceback or test result, leaving its QEMU child alive; that owned orphan was
+  stopped before the successful rerun. No guest panic or matrix-exit marker was
+  recorded in the interrupted attempt; the host termination cause is unknown.
+- The existing headless matrix protocol test passes (`matrix-test`): identical
+  worlds, local views, attenuated input and recovery over the legacy connection
+  shape. No kernel behavior changed; kernel smoke and ARM64 were not rerun.

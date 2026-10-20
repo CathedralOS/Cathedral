@@ -420,8 +420,9 @@ def main():
         capture.run(command, output, args.timeout, creationflags, ready_marker="Cathedral compositor: ready", verify=compositor_test.verify)
         return 0
     if not args.smoke:
-        command += ["-serial", "stdio"]
-        print("Booting; Ctrl+C stops QEMU.", flush=True)
+        command += ["-chardev", "stdio,id=serial0,logfile=serial.log,logappend=off",
+                    "-serial", "chardev:serial0"]
+        print(f"Booting; serial log: {output / 'serial.log'}; Ctrl+C stops QEMU.", flush=True)
         process = subprocess.Popen(command, cwd=output, creationflags=creationflags)
         try:
             return process.wait()

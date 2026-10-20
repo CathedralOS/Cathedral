@@ -1127,3 +1127,9 @@ startup is still slow; this fixture allows 120 seconds for a nested scene.
 See [the distribution route](distribution/README.md#nested-startup-and-scene-switching)
 for code navigation and current funding limits. This test never opens the interactive
 `cathedral-storage.raw`.
+
+Add `--pointer-stress` to keep moving the absolute pointer during those scene
+waits and for three seconds after each nested desktop becomes visible. It rejects
+any matrix service exit immediately, then exercises the same Notes, recursive
+close and cold-reopen checks. This reproduces input-poll starvation that ordinary
+clicks separated by completed scenes did not catch.

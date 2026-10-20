@@ -16,6 +16,11 @@ pub fn exchange(
         None => pair.0.send(&wire::encode(words))?,
     }
     let mut bytes = [0; 64];
-    let len = pair.1.receive_until(&mut bytes, time::after(100)?)?;
+    let len = pair
+        .1
+        .receive_until(&mut bytes, time::after(100)?)
+        .inspect_err(|error| {
+            time::storage_sample("matrix-exchange-failed", &[words[0], error.0 as u64]);
+        })?;
     wire::decode(&bytes[..len]).ok_or(Error(abi::IO_ERROR as i64))
 }

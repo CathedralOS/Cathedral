@@ -131,6 +131,9 @@ pub fn run(environment: Environment, mut startup: Startup) -> Result<(), Error> 
             extra[count] = handle;
             count += 1;
         }
+        if !parent.upstream_busy() && parent.refresh_due {
+            deadline = Some(cathedral_user_runtime::time::now()?);
+        }
         if !parent.upstream_busy()
             && let Some(wake) = parent.wake
         {
@@ -177,15 +180,12 @@ pub fn run(environment: Environment, mut startup: Startup) -> Result<(), Error> 
             deferred.hold(event, &mut server, world, blocked)?;
             continue;
         }
-        // Admitted children receive coalesced invalidations on their wake channel.
-        // Legacy manually assembled two-endpoint fixtures still refresh on demand.
-        if !parent.upstream_busy() {
-            if parent.wake.is_none() {
-                parent.refresh(world)?;
-            } else {
-                // A parent hint may arrive while waiting for a child request.
-                parent.refresh_notified(world)?;
-            }
+        // Notification-driven input ran at the start of this turn. Do not
+        // drain it again ahead of an already-selected child request: recursive
+        // polling can otherwise starve that request under continuous movement.
+        // Manually assembled two-endpoint fixtures still refresh on demand.
+        if !parent.upstream_busy() && parent.wake.is_none() {
+            parent.refresh(world)?;
         }
         match event {
             Event::Disconnected { client, .. } => {

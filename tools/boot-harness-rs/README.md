@@ -215,6 +215,9 @@ budgets. The default QEMU display device must provide a linear RGB/BGR GOP mode.
 stops that run. `desktop_test.py` is the bounded scanout check of that same
 composition; it needs no GUI or extra Python packages. Every capture waits for
 userspace startup readiness and rejects accidental lab execution.
+Interactive serial output also goes to `serial.log` in the printed boot output
+directory (`build/boot-harness-rs/interactive/` for default F5). Each boot replaces
+that log; copy it before restarting when investigating a failure.
 
 See [the Rust lab guide](../../source-rs/README.md) for setup, ordinary boots,
 firmware overrides, logs, checks, current limitations and the bring-up sequence.

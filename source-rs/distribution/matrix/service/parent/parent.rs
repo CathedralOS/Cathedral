@@ -26,6 +26,8 @@ pub(super) struct Parent {
     pub grant: Grant,
     display: Option<(Handle, Handle)>,
     pub wake: Option<Handle>,
+    /// MORE from the last snapshot; drain it on another service turn.
+    pub refresh_due: bool,
 }
 impl Parent {
     pub(in crate::service) fn request_funding(&mut self, delta: [u64; 5]) -> Result<(), Error> {
@@ -62,6 +64,9 @@ impl Parent {
         self.pair.is_some() || self.display.is_some()
     }
     pub fn refresh_notified(&mut self, world: &mut World) -> Result<(), Error> {
+        if self.refresh_due {
+            return self.refresh(world);
+        }
         if let Some(wake) = self.wake {
             match wake.receive_until(&mut [0; 64], time::now()?) {
                 Ok(_) => self.refresh(world)?,
@@ -96,6 +101,7 @@ impl Parent {
             },
             display: None,
             wake: None,
+            refresh_due: false,
         }
     }
     pub fn initialize(
@@ -135,6 +141,7 @@ impl Parent {
         Ok(())
     }
     pub fn refresh(&mut self, world: &mut World) -> Result<(), Error> {
+        self.refresh_due = false;
         if !self.upstream {
             world.inherit(self.grant);
             return Ok(());
@@ -143,32 +150,25 @@ impl Parent {
             world.inherit(Grant::default());
             return Ok(());
         }
-        // Each round trip returns a consistent local grant and event. MORE avoids
-        // spending another scheduling turn merely to discover an empty queue.
-        for _ in 0..8 {
-            let reply = match self.call([wire::POLL, 0, 0, 0, 0, 0, 0, 0]) {
-                Ok(reply) => reply,
-                Err(Error(code)) if code == abi::PEER_CLOSED as i64 => {
-                    self.pair = None;
-                    world.inherit(Grant::default());
-                    return Ok(());
-                }
-                Err(error) => return Err(error),
-            };
-            #[cfg(feature = "trace-input")]
-            if wire::poll_event(reply)[2] == wire::KEY
-                && wire::poll_event(reply)[4] != cathedral_platform_contracts::input::RELEASE as u64
-            {
-                time::trace("matrix-key");
-            }
-            self.grant = world.inherit_poll(reply);
-            if !self.grant.valid() {
+        // Consume one event per service turn so input cannot monopolize dispatch.
+        // MORE keeps the next turn runnable without waiting for another hint.
+        let reply = match self.call([wire::POLL, 0, 0, 0, 0, 0, 0, 0]) {
+            Ok(reply) => reply,
+            Err(Error(code)) if code == abi::PEER_CLOSED as i64 => {
+                self.pair = None;
+                world.inherit(Grant::default());
                 return Ok(());
             }
-            if reply[5] & wire::MORE == 0 {
-                break;
-            }
+            Err(error) => return Err(error),
+        };
+        #[cfg(feature = "trace-input")]
+        if wire::poll_event(reply)[2] == wire::KEY
+            && wire::poll_event(reply)[4] != cathedral_platform_contracts::input::RELEASE as u64
+        {
+            time::trace("matrix-key");
         }
+        self.grant = world.inherit_poll(reply);
+        self.refresh_due = self.grant.valid() && reply[5] & wire::MORE != 0;
         Ok(())
     }
     fn call(&self, words: wire::Packet) -> Result<wire::Packet, Error> {

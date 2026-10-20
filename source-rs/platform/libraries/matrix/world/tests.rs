@@ -264,12 +264,59 @@ fn overflowing_one_child_does_not_emit_events_or_metadata_to_its_sibling() {
     place(&mut w, 1, 200, 0);
     let a = view(&mut w, 0)[1];
     let b = view(&mut w, 1);
-    for _ in 0..9 {
-        w.pointer(10, 10, 0);
+    for i in 0..9 {
+        w.pointer(10, 10, i % 2);
     }
     assert_eq!(next(&mut w, 0, a)[2], wire::CANCEL);
     assert_eq!(view(&mut w, 1), b);
     assert_eq!(next(&mut w, 1, b[1])[2], wire::NONE);
+}
+
+#[test]
+fn motion_flood_keeps_press_and_release_coordinates_and_latest_motion() {
+    let mut w = world();
+    place(&mut w, 0, 0, 0);
+    let epoch = view(&mut w, 0)[1];
+    w.pointer(10, 10, 1);
+    for x in 11..90 {
+        w.pointer(x, 10, 1);
+    }
+    w.pointer(90, 10, 0);
+    for x in 91..100 {
+        w.pointer(x, 10, 0);
+    }
+    for (x, buttons) in [(10, 1), (89, 1), (90, 0), (99, 0)] {
+        let event = next(&mut w, 0, epoch);
+        assert_eq!(&event[2..6], &[wire::POINTER, x, 10, buttons]);
+    }
+    assert_eq!(next(&mut w, 0, epoch)[2], wire::NONE);
+}
+
+#[test]
+fn motion_never_coalesces_across_a_key_or_cancellation() {
+    let mut w = world();
+    place(&mut w, 0, 0, 0);
+    let epoch = view(&mut w, 0)[1];
+    w.pointer(10, 10, 1);
+    w.pointer(11, 10, 1);
+    w.key(input::ENTER as u64, input::PRESS as u64);
+    for x in 12..90 {
+        w.pointer(x, 10, 1);
+    }
+    assert_eq!(next(&mut w, 0, epoch)[3], 10);
+    assert_eq!(next(&mut w, 0, epoch)[3], 11);
+    assert_eq!(next(&mut w, 0, epoch)[2], wire::KEY);
+    assert_eq!(next(&mut w, 0, epoch)[3], 12);
+    assert_eq!(next(&mut w, 0, epoch)[3], 89);
+    w.cancel();
+    w.pointer(90, 10, 0); // Clear held-button suppression after cancellation.
+    for x in 91..100 {
+        w.pointer(x, 10, 0);
+    }
+    assert_eq!(next(&mut w, 0, epoch)[2], wire::CANCEL);
+    assert_eq!(next(&mut w, 0, epoch)[3], 91);
+    assert_eq!(next(&mut w, 0, epoch)[3], 99);
+    assert_eq!(next(&mut w, 0, epoch)[2], wire::NONE);
 }
 
 #[test]
