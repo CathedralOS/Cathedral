@@ -75,6 +75,13 @@ and 1–2 GiB as supervisor normal RAM; the runner supplies only 128 MiB at
 
 Task roots borrow the supervisor-only kernel branch and own their user branch.
 EL0 cannot use the physical aliases; the lab checks this directly.
+Runtime page-object table reservation visits one address per 2-MiB leaf-table
+span, including partially covered first/last tables. With the current 52 guarded
+slots, this takes 14 walks instead of 6,708 per-page walks. It allocates the same
+tables without installing leaf mappings; frame custody and rollback remain in
+core. The real-frame fixture reserves twice without additional frames, maps and
+unmaps every slot using no additional table allocations, checks read-only data
+and guards, and fails admission at every physical-frame allowance.
 [Kernel image protection](../../memory/README.md) gives code RX, immutable data
 RO/NX and mutable data RW/NX; all other identity RAM is NX, including heap and
 stack backing. Fatal probes verify these permissions on the CPU.

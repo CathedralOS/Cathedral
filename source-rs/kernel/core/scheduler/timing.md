@@ -160,6 +160,14 @@ it preserves unrelated image, stack and object entries. Both still run atomicall
 The real-frame fixture checks every removed page and every retained owner alias,
 including table-boundary and last-slot cases on both ISAs.
 
+ARM64 runtime-table reservation now visits each 2-MiB leaf-table span once,
+matching the granularity already used by x86. The current guarded mapping
+window needs 14 walks rather than 6,708. This removes redundant walks without
+introducing suspended state or changing table ownership. Reservation still runs
+atomically; timing includes table allocation/zeroing and host scheduling. The
+shared physical fixture verifies every mapping slot with no table allocation
+allowed at map time, repeat reservation and complete failure rollback.
+
 ## Next preparation steps
 
 1. Bound event and retirement bursts while preserving terminal/deadline ordering.

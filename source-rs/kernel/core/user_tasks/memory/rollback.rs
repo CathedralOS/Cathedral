@@ -60,6 +60,18 @@ unsafe fn page_objects(
     unsafe { admission::admit(&mut session, layout, image, &program, &mut source, 0) }.unwrap();
     let admitted = source.allocated();
     let table_budget = admitted - baseline;
+    // Reserving the same empty window twice must not allocate tables or publish
+    // leaves. Subsequent map_region calls use NoFrames and cover every slot.
+    // SAFETY: Prepared inactive tree; no runtime region has been installed yet.
+    unsafe {
+        session.tasks[0]
+            .space
+            .as_mut()
+            .unwrap()
+            .prepare_regions(&mut source)
+    }
+    .unwrap();
+    assert_eq!(source.allocated(), admitted);
     for budget in 0..=wire::MAX_PAGES {
         source.remaining = budget;
         // SAFETY: Inactive prepared root and exclusive backing ownership.
@@ -172,7 +184,7 @@ unsafe fn page_objects(
     }
 }
 
-/// Exercise a region crossing a 2-MiB table boundary and the last virtual slot.
+/// Exercise every reserved slot, including regions crossing leaf-table boundaries.
 /// These inactive aliases are removed before the model releases the backing.
 unsafe fn mapping_boundaries(session: &mut Session, handle: u64) {
     let index = session.memory.model.access(0, handle).unwrap();
@@ -191,7 +203,7 @@ unsafe fn mapping_boundaries(session: &mut Session, handle: u64) {
     // SAFETY: No executing user or Rust borrow; remove writer before reader aliases.
     unsafe { space.seal_region(mapping, wire::MAX_PAGES) };
     assert!(!space.writable_range(wire::address(mapping), 1));
-    for alias in [wire::MAX_PRIVATE_REGIONS, wire::MAX_MAPPING_SLOTS - 1] {
+    for alias in (0..wire::MAX_MAPPING_SLOTS).filter(|&slot| slot != mapping) {
         // SAFETY: Prepared empty slot; immutable frames stay owned until all aliases are gone.
         unsafe { space.map_region(alias, &backing, false) }.unwrap();
         for page in 0..wire::MAX_PAGES {

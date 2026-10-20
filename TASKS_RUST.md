@@ -1,7 +1,7 @@
 # Rust reference OS: tasks and handoff
 
-Updated 2026-10-20 (local date). Current milestone: **staged framebuffer admission
-and retirement-burst observations**, on baseline `929db9c8` (supervisor mappings).
+Updated 2026-10-20 (local date). Current milestone: **ARM64 table reservation by
+leaf-table span**, on baseline `601edf25` (staged framebuffer admission).
 The latest section records verification and remaining steps toward bounded
 execution. This does not introduce real-time reservations.
 The fresh-lab reset is `30572c9f`. Compact recursive desktops landed as `c7571191`,
@@ -3791,3 +3791,42 @@ single-object cleanup and reference/escrow bursts remain bounded only by their
 capacity limits. Keep the ARM64 exhausted-stack entry/reporting audit and the
 intermittent clean-close LOSS timeout open. Guaranteed-service admission remains
 a separate design decision; this milestone required no owner decision.
+
+## ARM64 runtime-table reservation by span (2026-10-20)
+
+Baseline: `601edf25`. [ARM64 user mappings](source-rs/kernel/arch/isa/aarch64/user/mappings.rs)
+now reserve one address per 2-MiB leaf-table span. Advancing to the next boundary
+also handles a start inside a table. For the current 52 guarded mapping slots,
+this reduces 6,708 walks to 14 while allocating the same tables and installing
+no user leaves. No new cursor, ABI, capacity or scheduling policy is needed;
+reservation remains atomic. Core retains physical custody and rollback.
+
+The shared [real-frame fixture](source-rs/kernel/core/user_tasks/memory/rollback.rs)
+now repeats reservation and checks that no frames were added, then maps/unmaps
+every reserved slot with a maximum-size object. Runtime mapping prohibits table
+allocation, so an omitted table fails directly. The test checks each page's
+contents and read-only state, guard rejection, removal of every alias, and
+preservation of the owner mapping and stack. Existing failure injection still
+covers every admission allocation and exact frame/heap refunds.
+
+The complete-construction ARM64 sample recorded runtime-table preparation at
+121 us before and 50 us afterward. Other samples varied upward as well as down;
+these host-sensitive observations are not a latency bound or a reliable speedup
+ratio. The defensible improvement is removal of 6,694 redundant table walks.
+
+Verification: release ARM64 baseline and final portability suites pass,
+including the expanded mapping test and all 66 admission failure boundaries.
+Release x86 smoke also passes the expanded shared fixture. Workspace host tests,
+x86/ARM64 smoke-feature clippy, layout, formatting and whitespace checks pass.
+Production changes are ARM64-only; the nested graphical desktop test was not
+repeated, and interactive saved media was untouched. Logs:
+`build/reserve-arm64-baseline.log`, `build/reserve-arm64-final.log`,
+`build/reserve-host.log`, `build/reserve-arm64-clippy.log`,
+`build/reserve-x86-smoke.log`, `build/reserve-x86-clippy.log`.
+
+Next: prioritize the outstanding ARM64 exhausted-stack entry/reporting audit.
+Runtime table reservation is now a small fixed number of walks at current
+limits. Whole error rollback, single-object mapping/cleanup, reference/escrow
+bursts and event bursts remain atomic; do not claim bounded-time execution.
+The intermittent clean-close LOSS timeout and guaranteed-service admission stay
+open. No owner question was needed for this simplification.

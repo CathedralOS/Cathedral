@@ -94,11 +94,18 @@ impl UserMappings {
         _scratch: u64,
         frames: &mut impl FrameSource,
     ) -> Result<(), MemoryError> {
-        for address in (start..end).step_by(PAGE as usize) {
-            // SAFETY: Reserve only tables; no leaf backing is installed.
+        // With 4-KiB granules, each leaf table covers 512 pages (2 MiB).
+        // One walk creates that whole table; visiting its other leaves adds no
+        // reservation. Advance to the boundary, even for an unaligned start.
+        const TABLE_BYTES: u64 = 512 * PAGE;
+        let mut address = start;
+        while address < end {
+            // SAFETY: Reserve only tables; no leaf backing is installed. The
+            // caller's valid user VA range keeps boundary arithmetic in range.
             unsafe {
                 tables::leaf(self.root, address, &mut || table_frame(frames))?;
             }
+            address = (address | (TABLE_BYTES - 1)) + 1;
         }
         Ok(())
     }
