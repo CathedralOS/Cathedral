@@ -34,7 +34,7 @@ const MAX_UART_STATUS_POLLS: u64 = 1000000;
 // Omega's ordinary record layout. UEFI writes only `bytes`; `alignment_anchor`
 // is representation padding made explicit in Cathedral source and carries no
 // capability or validity fact.
-pub data UefiMemoryMapStorage {
+public data UefiMemoryMapStorage {
     alignment_anchor: u64;
     bytes: [u8; 65536];
 }

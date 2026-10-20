@@ -118,11 +118,15 @@ contract and the successful final-map/ExitBootServices transaction remain part
 of the boot's trusted boundary; the serial marker does not independently prove
 firmware correctness or every backing assertion.
 
-The std pin is `fc16effcf3628e74d6302c5b5919c2cc320da6c6`. It includes the
-borrowed UTF-8 calling-policy rejection text and copy eligibility for ABI tag
-values. Older revisions either reject the text initialization or consume ABI
-tags while checking the firmware calling policy. The pin supplies library
-source; use a compiler containing the newer checking repairs described above.
+The std pin is `7d9848e51eb2c7df9634f52366d69bd70e95d66b`. It uses the current
+`public` visibility spelling, as do the loaded Cathedral boot dependencies.
+It retains the borrowed UTF-8 calling-policy rejection text and copy eligibility
+for ABI tag values. The pin supplies library source, not a compiler binary.
+Use a compiler containing the checking repairs described above and separate
+repository-metadata acquisition limits: this pinned repository exceeds 65,536
+entries although the selected std source does not. Selected-package source and
+cache custody limits remain unchanged. A fresh image built from this source
+reached all four markers under QEMU/OVMF after ordinary package review.
 
 The local calling policy deliberately remains a normal named implementation;
 it must not collide with std's same-spelled policy. Firmware layouts and OS

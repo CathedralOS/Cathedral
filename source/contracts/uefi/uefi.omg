@@ -21,21 +21,21 @@ use std::calling;
 
 // EFI_STATUS is UINTN (pointer-width). On x86-64 that is 64-bit; 0 == success,
 // high bit set == error.
-pub data EfiStatus [copy] { code: u64; }
+public data EfiStatus [copy] { code: u64; }
 
-pub const EFI_SUCCESS:           EfiStatus = EfiStatus { code: 0 };
-pub const EFI_UNSUPPORTED:       EfiStatus = EfiStatus { code: 0x8000_0000_0000_0003 };
-pub const EFI_INVALID_PARAMETER: EfiStatus = EfiStatus { code: 0x8000_0000_0000_0002 };
-pub const EFI_BUFFER_TOO_SMALL:  EfiStatus = EfiStatus { code: 0x8000_0000_0000_0005 };
+public const EFI_SUCCESS:           EfiStatus = EfiStatus { code: 0 };
+public const EFI_UNSUPPORTED:       EfiStatus = EfiStatus { code: 0x8000_0000_0000_0003 };
+public const EFI_INVALID_PARAMETER: EfiStatus = EfiStatus { code: 0x8000_0000_0000_0002 };
+public const EFI_BUFFER_TOO_SMALL:  EfiStatus = EfiStatus { code: 0x8000_0000_0000_0005 };
 
 // EFI_HANDLE — an opaque firmware handle. We never dereference it, only hold and
 // pass it (a gated token; extern brief §12.2 case 3, opaque).
-pub data EfiHandle [copy] { raw: addr; }
+public data EfiHandle [copy] { raw: addr; }
 
 // The physical UEFI invocation identifies this loaded application, not an
 // arbitrary handle whose numerical bits happen to be nonzero. UEFI installs
 // LoadedImage on that handle before entry. Copying the handle grants no bytes.
-pub domain EfiHandle::LoadedApplication(handle)
+public domain EfiHandle::LoadedApplication(handle)
 established by UefiPhysicalEntry::enter;
 
 // --- Simple Text Output protocol (con_out) --------------------------------
@@ -46,13 +46,13 @@ established by UefiPhysicalEntry::enter;
 // the FIELD to call — no magic slot index. The string argument is a
 // null-terminated [u16] (CHAR16*, UCS-2).
 
-pub data TextOutputProtocol {
+public data TextOutputProtocol {
     reset:         addr;   // EFI_TEXT_RESET (unused; present so output_string's offset is right)
     output_string: addr;   // EFI_TEXT_STRING — bound below
     // test_string, query_mode, set_mode, … follow (unread at milestone 1).
 }
 
-pub boundary trait SimpleTextOutput {
+public boundary trait SimpleTextOutput {
     // Milestone-1's exact null-terminated greeting carrier. A bare slice is
     // deliberately not a native ABI: it leaves pointer/length/terminator
     // choices unstated. This fixed-array reference lowers as the firmware's
@@ -73,7 +73,7 @@ uefi_x86_64 machine TextOutputProtocol::output_string_leaf(
 
 // Selection chooses code. The console occurrence remains an explicit borrow,
 // not state stored in the provider or a fabricated Binding value.
-pub UefiTextOutputProvider satisfies SimpleTextOutput {
+public UefiTextOutputProvider satisfies SimpleTextOutput {
     machine output_string(console: &TextOutputProtocol, string: &[u16; 19]) -> EfiStatus {
         TextOutputProtocol::output_string_leaf(console, string)
     }
@@ -85,7 +85,7 @@ pub UefiTextOutputProvider satisfies SimpleTextOutput {
 // needs are named; the trailing service pointers are spec-defined and unread at
 // milestone 1.
 
-pub data EfiTableHeader {
+public data EfiTableHeader {
     signature:   u64;
     revision:    u32;
     header_size: u32;
@@ -97,16 +97,16 @@ pub data EfiTableHeader {
 // HeaderSize may grow in a later compatible revision, but it must cover every
 // declared EFI_SYSTEM_TABLE field through ConfigurationTable before boot
 // projects BootServices from the firmware-vouched reference.
-pub const EFI_SYSTEM_TABLE_SIGNATURE: u64 = 0x5453_5953_2049_4249;
-pub const EFI_SYSTEM_TABLE_REQUIRED_SIZE: u32 = 120;
+public const EFI_SYSTEM_TABLE_SIGNATURE: u64 = 0x5453_5953_2049_4249;
+public const EFI_SYSTEM_TABLE_REQUIRED_SIZE: u32 = 120;
 // Cathedral's x86-64 calling profile begins at UEFI 2.0. Later revisions are
 // prefix-compatible when HeaderSize covers every consumed field.
-pub const EFI_MIN_SUPPORTED_REVISION: u32 = 0x0002_0000;
+public const EFI_MIN_SUPPORTED_REVISION: u32 = 0x0002_0000;
 
 // Every field is listed in spec order — the C-ABI (`Uefi`) policy computes each
 // offset from the field before it, so an unread field still has to be present or
 // the ones after it land at the wrong offset.
-pub data EfiSystemTable {
+public data EfiSystemTable {
     header:                  EfiTableHeader;
     firmware_vendor:         addr;              // CHAR16*
     firmware_revision:       u32;
@@ -128,7 +128,7 @@ pub data EfiSystemTable {
 // This package owns the concrete firmware table layout, so its physical
 // requirement names that exact type rather than recasting an opaque target
 // table. Selecting its provider supplies code, not image/storage authority.
-pub boundary trait UefiPhysicalEntry {
+public boundary trait UefiPhysicalEntry {
     machine enter(handle: EfiHandle in LoadedApplication, table: &EfiSystemTable) -> EfiStatus
     requires addr::Bound == 18446744073709551616
     reaches SimpleTextOutput + LoadedImageAccess + BootServices + ExtentRootProvider + ProgramStorageEntry + ProgramImage + PortIo + MachineControl
@@ -144,7 +144,7 @@ pub boundary trait UefiPhysicalEntry {
 // requirement and adapts physical arrival to the selected ordinary callable;
 // Cathedral obtains the roots before calling the semantic continuation.
 // The policy owns its implementation directly; no attached data or member alias.
-pub UefiX86_64CallingPolicy satisfies CallingPolicy {
+public UefiX86_64CallingPolicy satisfies CallingPolicy {
 machine plan(
     signature: BoundarySignature
 ) -> BoundaryPlanResult
@@ -304,7 +304,7 @@ machine plan(
 }
 }
 
-pub boundary trait UefiApplication:
+public boundary trait UefiApplication:
     ProgramStorageEntry + UefiPhysicalEntry + Calling<UefiX86_64CallingPolicy>
 {
 }

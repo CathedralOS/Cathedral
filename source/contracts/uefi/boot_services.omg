@@ -17,46 +17,46 @@
 // The boot audit accepts standard values below EFI_MAX_MEMORY_TYPE and the
 // vendor ranges beginning at EFI_OEM_MEMORY_TYPE_MIN; the reserved middle
 // interval fails closed.
-pub const EFI_LOADER_DATA:         u32 = 2;
-pub const EFI_BOOT_SERVICES_CODE:  u32 = 3;
-pub const EFI_BOOT_SERVICES_DATA:  u32 = 4;
-pub const EFI_CONVENTIONAL_MEMORY: u32 = 7;   // free RAM boot may claim after exit
-pub const EFI_ACPI_RECLAIM:        u32 = 9;
-pub const EFI_MAX_MEMORY_TYPE:     u32 = 16;          // exclusive standard bound
-pub const EFI_OEM_MEMORY_TYPE_MIN: u32 = 0x7000_0000; // OEM then OS-loader ranges
+public const EFI_LOADER_DATA:         u32 = 2;
+public const EFI_BOOT_SERVICES_CODE:  u32 = 3;
+public const EFI_BOOT_SERVICES_DATA:  u32 = 4;
+public const EFI_CONVENTIONAL_MEMORY: u32 = 7;   // free RAM boot may claim after exit
+public const EFI_ACPI_RECLAIM:        u32 = 9;
+public const EFI_MAX_MEMORY_TYPE:     u32 = 16;          // exclusive standard bound
+public const EFI_OEM_MEMORY_TYPE_MIN: u32 = 0x7000_0000; // OEM then OS-loader ranges
 
 // Revision of the descriptor prefix Cathedral currently knows how to read.
 // Unknown revisions fail closed in boot source before any typed recast.
-pub const EFI_MEMORY_DESCRIPTOR_VERSION: u32 = 1;
+public const EFI_MEMORY_DESCRIPTOR_VERSION: u32 = 1;
 
 // Memory that must retain an OS virtual mapping for firmware runtime services.
 // Cathedral's current bootstrap cannot admit such a region as ordinary RAM.
-pub data EfiMemoryAttribute [copy] { bits: u64; }
-pub const EFI_MEMORY_RUNTIME: EfiMemoryAttribute = EfiMemoryAttribute {
+public data EfiMemoryAttribute [copy] { bits: u64; }
+public const EFI_MEMORY_RUNTIME: EfiMemoryAttribute = EfiMemoryAttribute {
     bits: 0x8000_0000_0000_0000,
 };
 // Memory that the platform may dynamically remove. Cathedral's retained,
 // non-relocatable bootstrap root must not originate from such a descriptor.
-pub const EFI_MEMORY_HOT_PLUGGABLE: EfiMemoryAttribute = EfiMemoryAttribute {
+public const EFI_MEMORY_HOT_PLUGGABLE: EfiMemoryAttribute = EfiMemoryAttribute {
     bits: 0x0000_0000_0010_0000,
 };
 // Memory earmarked for a device or application. The UEFI contract advises the
 // OS not to place non-relocatable core data or code in such a region.
-pub const EFI_MEMORY_SP: EfiMemoryAttribute = EfiMemoryAttribute {
+public const EFI_MEMORY_SP: EfiMemoryAttribute = EfiMemoryAttribute {
     bits: 0x0000_0000_0004_0000,
 };
 // ISA-specific cacheability bits describe a region only when their validity
 // flag is present. The boot audit enforces this relation before consuming the
 // map as authority-bearing input.
-pub const EFI_MEMORY_ISA_VALID: EfiMemoryAttribute = EfiMemoryAttribute {
+public const EFI_MEMORY_ISA_VALID: EfiMemoryAttribute = EfiMemoryAttribute {
     bits: 0x4000_0000_0000_0000,
 };
-pub const EFI_MEMORY_ISA_MASK: EfiMemoryAttribute = EfiMemoryAttribute {
+public const EFI_MEMORY_ISA_MASK: EfiMemoryAttribute = EfiMemoryAttribute {
     bits: 0x0FFF_F000_0000_0000,
 };
 // Complement of every standard revision-1 attribute bit, EFI_MEMORY_ISA_MASK,
 // EFI_MEMORY_ISA_VALID, and EFI_MEMORY_RUNTIME. Any intersection is reserved.
-pub const EFI_MEMORY_RESERVED_MASK: EfiMemoryAttribute = EfiMemoryAttribute {
+public const EFI_MEMORY_RESERVED_MASK: EfiMemoryAttribute = EfiMemoryAttribute {
     bits: 0x3000_0FFF_FFE0_0FE0,
 };
 
@@ -66,7 +66,7 @@ pub const EFI_MEMORY_RESERVED_MASK: EfiMemoryAttribute = EfiMemoryAttribute {
 // append fields) — never sizeof. Cathedral's consumer also requires that
 // runtime stride and its byte backing preserve the descriptor's 8-byte
 // alignment before performing a reference recast.
-pub data EfiMemoryDescriptor {
+public data EfiMemoryDescriptor {
     kind:            u32;   // EFI_MEMORY_TYPE
     physical_start:  u64;   // EFI_PHYSICAL_ADDRESS
     virtual_start:   u64;   // EFI_VIRTUAL_ADDRESS
@@ -76,14 +76,14 @@ pub data EfiMemoryDescriptor {
 
 // The map key GetMemoryMap returns; ExitBootServices only succeeds against the
 // current key (the freshness contract).
-pub data MapKey [copy] { raw: u64; }   // UINTN; freshness is a call contract
+public data MapKey [copy] { raw: u64; }   // UINTN; freshness is a call contract
 
 // --- EFI_BOOT_SERVICES table (field model) ---------------------------------
 // EFI_TABLE_HEADER then the boot services in spec order through the last field
 // Cathedral currently binds. Keeping the complete consumed prefix lets the
 // layout policy compute each offset and the FFI audit read by NAME. We call
 // get_memory_map (5th) and exit_boot_services (27th).
-pub data BootServicesTable {
+public data BootServicesTable {
     hdr:                          EfiTableHeader;
     raise_tpl:                    addr;
     restore_tpl:                  addr;
@@ -118,10 +118,10 @@ pub data BootServicesTable {
 // Cathedral does not read the later EFI_BOOT_SERVICES fields yet, so its
 // minimum is the end of the last bound field rather than a claim that this
 // provisional source type models the complete revision-specific table.
-pub const EFI_BOOT_SERVICES_SIGNATURE: u64 = 0x5652_4553_544F_4F42;
-pub const EFI_BOOT_SERVICES_REQUIRED_SIZE: u32 = 240;
+public const EFI_BOOT_SERVICES_SIGNATURE: u64 = 0x5652_4553_544F_4F42;
+public const EFI_BOOT_SERVICES_REQUIRED_SIZE: u32 = 240;
 
-pub boundary trait BootServices {
+public boundary trait BootServices {
     // GetMemoryMap(IN OUT MemoryMapSize, OUT MemoryMap, OUT MapKey,
     //              OUT DescriptorSize, OUT DescriptorVersion). `map_size` is
     // in/out; `descriptor_size` returns the RUNTIME stride (never sizeof), and
@@ -176,7 +176,7 @@ uefi_x86_64 machine BootServicesTable::exit_boot_services_leaf(
     map_key:      MapKey
 ) -> EfiStatus satisfies BootServices::exit_boot_services via ForeignBinding::TableFunction(exit_boot_services);
 
-pub UefiBootServicesProvider satisfies BootServices {
+public UefiBootServicesProvider satisfies BootServices {
     machine get_memory_map(
         table: &BootServicesTable,
         map_size: &mut u64,
@@ -208,7 +208,7 @@ pub UefiBootServicesProvider satisfies BootServices {
 // qualified Extent through
 // core/'s admitted provider adapter. Every later memory authority descends from
 // that receipt-backed root.
-pub data FinalMemoryMap {
+public data FinalMemoryMap {
     buffer:          &[u8];   // the validated descriptor bytes
     descriptor_size: u64;     // the runtime stride
 }

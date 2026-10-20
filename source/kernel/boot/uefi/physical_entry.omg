@@ -8,7 +8,7 @@ use omega::language::core::program_image;
 // Firmware arrival is selected explicitly by build.omg. The receiving UEFI
 // profile supplies the validity/lifetime of this exact incoming table borrow;
 // the declaration itself neither creates that borrow nor grants any Extent.
-pub CathedralBootstrap satisfies UefiPhysicalEntry {
+public CathedralBootstrap satisfies UefiPhysicalEntry {
     machine enter(handle: EfiHandle in LoadedApplication, table: &EfiSystemTable) -> EfiStatus
     reaches SimpleTextOutput + LoadedImageAccess + BootServices + ExtentRootProvider + ProgramStorageEntry + ProgramImage + PortIo + MachineControl
     invokes SimpleTextOutput;
