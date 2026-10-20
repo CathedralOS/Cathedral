@@ -262,10 +262,13 @@ impl Scene {
             )
             .unwrap();
         let mut bytes = [0; 64];
-        let n = parent
-            .1
-            .receive_until(&mut bytes, time::after(300).unwrap())
-            .unwrap();
+        let n = cathedral_user_runtime::matrix::upstream::receive(
+            parent.1,
+            &mut bytes,
+            wire::SURFACE_IMAGE,
+            300,
+        )
+        .unwrap();
         accepted(wire::decode(&bytes[..n]).unwrap()[0])
     }
 }

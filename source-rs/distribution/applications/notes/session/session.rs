@@ -14,9 +14,7 @@ type Pair = (Handle, Handle);
 fn call(pair: Pair, words: wire::Packet) -> wire::Packet {
     pair.0.send(&wire::encode(words)).unwrap();
     let mut bytes = [0; 64];
-    let n = pair
-        .1
-        .receive_until(&mut bytes, time::after(300).unwrap())
+    let n = cathedral_user_runtime::matrix::upstream::receive(pair.1, &mut bytes, words[0], 300)
         .unwrap();
     wire::decode(&bytes[..n]).unwrap()
 }

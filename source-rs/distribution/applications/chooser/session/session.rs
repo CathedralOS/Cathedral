@@ -284,9 +284,8 @@ fn call(pair: Pair, words: wire::Packet) -> wire::Packet {
     };
     let mut bytes = [0; 64];
     pair.0.send(&wire::encode(words)).unwrap();
-    let len = pair
-        .1
-        .receive_until(&mut bytes, time::after(budget).unwrap())
-        .unwrap_or_else(|error| panic!("chooser request {words:?}: {error:?}"));
+    let len =
+        cathedral_user_runtime::matrix::upstream::receive(pair.1, &mut bytes, words[0], budget)
+            .unwrap_or_else(|error| panic!("chooser request {words:?}: {error:?}"));
     wire::decode(&bytes[..len]).unwrap()
 }

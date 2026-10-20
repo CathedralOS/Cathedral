@@ -258,18 +258,73 @@ fn focus_cancellation_does_not_transfer_a_held_key_to_a_sibling() {
 }
 
 #[test]
+fn short_typing_burst_preserves_click_and_all_key_transitions_before_drain() {
+    let mut w = world();
+    place(&mut w, 0, 0, 0);
+    let epoch = view(&mut w, 0)[1];
+    w.pointer(10, 10, 1);
+    w.pointer(10, 10, 0);
+    for _ in 0..4 {
+        w.key(input::ENTER as u64, input::PRESS as u64);
+        w.key(input::ENTER as u64, input::RELEASE as u64);
+    }
+    for buttons in [1, 0] {
+        assert_eq!(
+            &next(&mut w, 0, epoch)[2..6],
+            &[wire::POINTER, 10, 10, buttons]
+        );
+    }
+    for _ in 0..4 {
+        for state in [input::PRESS, input::RELEASE] {
+            assert_eq!(
+                &next(&mut w, 0, epoch)[2..6],
+                &[wire::KEY, input::ENTER as u64, state as u64, 0]
+            );
+        }
+    }
+    assert_eq!(next(&mut w, 0, epoch)[2], wire::NONE);
+}
+
+#[test]
 fn overflowing_one_child_does_not_emit_events_or_metadata_to_its_sibling() {
     let mut w = world();
     place(&mut w, 0, 0, 0);
     place(&mut w, 1, 200, 0);
     let a = view(&mut w, 0)[1];
     let b = view(&mut w, 1);
-    for i in 0..9 {
+    for i in 0..17 {
         w.pointer(10, 10, i % 2);
     }
     assert_eq!(next(&mut w, 0, a)[2], wire::CANCEL);
     assert_eq!(view(&mut w, 1), b);
     assert_eq!(next(&mut w, 1, b[1])[2], wire::NONE);
+}
+
+#[test]
+fn tagged_poll_preserves_snapshot_and_rejects_another_requests_reply() {
+    let mut w = world();
+    place(&mut w, 0, 0, 0);
+    w.pointer(14, 19, 1);
+    let reply = w.request(0, 1, [wire::POLL_TAGGED, 71, 0, 0, 0, 0, 0, 0]);
+    assert!(wire::untag_poll(reply, 70).is_none());
+    assert!(wire::untag_poll(reply, 72).is_none());
+    let decoded = wire::untag_poll(reply, 71).unwrap();
+    assert_eq!(decoded[0], 0);
+    assert_eq!(
+        &wire::poll_event(decoded)[2..6],
+        &[wire::POINTER, 14, 19, 1]
+    );
+    w.inherit(Grant::default());
+    let revoked = w.request(0, 1, [wire::POLL_TAGGED, u32::MAX as u64, 0, 0, 0, 0, 0, 0]);
+    assert_eq!(
+        wire::untag_poll(revoked, u32::MAX),
+        Some(wire::error(abi::DENIED))
+    );
+    assert!(wire::untag_poll(revoked, 71).is_none());
+    assert_eq!(
+        w.request(0, 1, [wire::POLL_TAGGED, 0, 0, 0, 0, 0, 0, 0])[0],
+        abi::DENIED
+    );
 }
 
 #[test]

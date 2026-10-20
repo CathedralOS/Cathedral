@@ -28,6 +28,8 @@ pub(super) struct Parent {
     pub wake: Option<Handle>,
     /// MORE from the last snapshot; drain it on another service turn.
     pub refresh_due: bool,
+    polling: Option<polling::Pending>,
+    next_poll: u32,
 }
 impl Parent {
     pub(in crate::service) fn request_funding(&mut self, delta: [u64; 5]) -> Result<(), Error> {
@@ -63,19 +65,6 @@ impl Parent {
     pub(in super::super) fn has_output(&self) -> bool {
         self.pair.is_some() || self.display.is_some()
     }
-    pub fn refresh_notified(&mut self, world: &mut World) -> Result<(), Error> {
-        if self.refresh_due {
-            return self.refresh(world);
-        }
-        if let Some(wake) = self.wake {
-            match wake.receive_until(&mut [0; 64], time::now()?) {
-                Ok(_) => self.refresh(world)?,
-                Err(Error(code)) if code == abi::TIMED_OUT as i64 => (),
-                Err(error) => return Err(error),
-            }
-        }
-        Ok(())
-    }
     pub const fn empty() -> Self {
         Self {
             recovery: recovery::Recovery::empty(),
@@ -102,6 +91,8 @@ impl Parent {
             display: None,
             wake: None,
             refresh_due: false,
+            polling: None,
+            next_poll: 0,
         }
     }
     pub fn initialize(
@@ -161,6 +152,10 @@ impl Parent {
             }
             Err(error) => return Err(error),
         };
+        self.inherit_reply(world, reply);
+        Ok(())
+    }
+    fn inherit_reply(&mut self, world: &mut World, reply: wire::Packet) {
         #[cfg(feature = "trace-input")]
         if wire::poll_event(reply)[2] == wire::KEY
             && wire::poll_event(reply)[4] != cathedral_platform_contracts::input::RELEASE as u64
@@ -169,7 +164,6 @@ impl Parent {
         }
         self.grant = world.inherit_poll(reply);
         self.refresh_due = self.grant.valid() && reply[5] & wire::MORE != 0;
-        Ok(())
     }
     fn call(&self, words: wire::Packet) -> Result<wire::Packet, Error> {
         cathedral_user_runtime::matrix::upstream::call(self.pair.unwrap(), words)

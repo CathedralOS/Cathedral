@@ -228,10 +228,13 @@ impl Scene {
             )
             .unwrap();
         let mut reply = [0; 64];
-        let n = parent
-            .1
-            .receive_until(&mut reply, time::after(300).unwrap())
-            .unwrap();
+        let n = cathedral_user_runtime::matrix::upstream::receive(
+            parent.1,
+            &mut reply,
+            wire::SURFACE_IMAGE,
+            300,
+        )
+        .unwrap();
         let result = accepted(wire::decode(&reply[..n]).unwrap()[0]);
         #[cfg(feature = "render-probes")]
         if result.is_ok() {

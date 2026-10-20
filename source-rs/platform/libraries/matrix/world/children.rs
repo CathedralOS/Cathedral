@@ -29,7 +29,10 @@ pub(super) struct Child {
     pub surface_limit: usize,
     pub next_surface: u64,
     epoch: u64,
-    queue: [wire::Packet; 8],
+    // kind, x/key, y/state, buttons. Status/padding are not stored, and refresh
+    // clears the queue before changing its epoch. Sixteen events use the same
+    // 512 bytes as the former eight fully encoded reply packets.
+    queue: [[u64; 4]; 16],
     len: usize,
 }
 impl Child {
@@ -51,7 +54,7 @@ impl Child {
             surface_limit: 0,
             next_surface: 0,
             epoch: 0,
-            queue: [[0; 8]; 8],
+            queue: [[0; 4]; 16],
             len: 0,
         }
     }
@@ -100,13 +103,13 @@ impl Child {
         if kind == wire::POINTER && self.len >= 2 {
             let tail = self.queue[self.len - 1];
             let before = self.queue[self.len - 2];
-            if tail[2] == wire::POINTER
-                && before[2] == wire::POINTER
-                && tail[5] == value
-                && before[5] == value
+            if tail[0] == wire::POINTER
+                && before[0] == wire::POINTER
+                && tail[3] == value
+                && before[3] == value
             {
-                self.queue[self.len - 1][3] = x;
-                self.queue[self.len - 1][4] = y;
+                self.queue[self.len - 1][1] = x;
+                self.queue[self.len - 1][2] = y;
                 self.notify = true;
                 return true;
             }
@@ -115,7 +118,7 @@ impl Child {
             self.cancel();
             return false;
         }
-        self.queue[self.len] = [0, self.grant.epoch, kind, x, y, value, 0, 0];
+        self.queue[self.len] = [kind, x, y, value];
         self.len += 1;
         self.notify = true;
         true
@@ -128,10 +131,10 @@ impl Child {
         if self.len == 0 {
             return [0, self.grant.epoch, wire::NONE, 0, 0, 0, 0, 0];
         }
-        let event = self.queue[0];
+        let [kind, x, y, value] = self.queue[0];
         self.queue.copy_within(1..self.len, 0);
         self.len -= 1;
-        event
+        [0, self.grant.epoch, kind, x, y, value, 0, 0]
     }
     pub fn poll(&mut self) -> wire::Packet {
         let event = self.next();

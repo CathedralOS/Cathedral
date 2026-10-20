@@ -11,6 +11,12 @@ impl Deferred {
     pub fn is_empty(&self) -> bool {
         self.events.iter().all(Option::is_none)
     }
+    pub fn has_ready(&self, parent: &Parent) -> bool {
+        self.events
+            .iter()
+            .flatten()
+            .any(|event| !Self::blocks(event, parent))
+    }
     pub fn blocks(event: &Event, parent: &Parent) -> bool {
         if parent.separate_storage
             && let Event::Request(r) | Event::Memory(r, _) = event
@@ -128,11 +134,17 @@ impl Deferred {
         let Some(words) = wire::decode(&request.bytes[..request.len]) else {
             return Ok(false);
         };
+        if request.control && words == [wire::HEALTH, 0, 0, 0, 0, 0, 0, 0] {
+            // Liveness is local. LOSS not handled by the read-only polling path
+            // stays queued here until publication/admission can safely finish.
+            server.reply(request, &wire::encode([0; 8]))?;
+            return Ok(true);
+        }
         if let Some(slot) = request.client
             && slot < CHILDREN
             && matches!(
                 words[0],
-                wire::VIEW | wire::POLL | wire::NEXT | wire::SURFACE_INFO
+                wire::VIEW | wire::POLL | wire::POLL_TAGGED | wire::NEXT | wire::SURFACE_INFO
             )
         {
             let response = world.request(slot, request.incarnation, words);

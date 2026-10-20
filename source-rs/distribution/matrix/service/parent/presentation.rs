@@ -1,5 +1,5 @@
 //! Resume publication after each upstream reply. One in-flight batch owns the
-//! stream; transport loss retires the matrix before any late reply can be reused.
+//! stream. Slow replies retain that ownership and never trigger a replay.
 use super::*;
 use cathedral_platform_contracts::display;
 use cathedral_platform_contracts::display::composition;
@@ -14,6 +14,7 @@ pub(super) struct Pending {
     compact: bool,
     waiting: bool,
     deadline: u64,
+    late: bool,
 }
 impl Parent {
     pub(in super::super) fn publishing_client(&self) -> usize {
@@ -22,10 +23,10 @@ impl Parent {
     pub(in super::super) fn publishing(&self) -> bool {
         self.pending.is_some()
     }
-    pub(in super::super) fn presentation_wait(&self) -> Option<(Handle, u64)> {
+    pub(in super::super) fn presentation_wait(&self) -> Option<(Handle, Option<u64>)> {
         self.pending
             .as_ref()
-            .map(|p| (self.output().unwrap().1, p.deadline))
+            .map(|p| (self.output().unwrap().1, (!p.late).then_some(p.deadline)))
     }
     pub(in super::super) fn prune_batches(&mut self, world: &World) {
         for (slot, batch) in self.batches.iter_mut().enumerate() {
@@ -54,6 +55,7 @@ impl Parent {
             compact: false,
             waiting: false,
             deadline: time::after(300)?,
+            late: false,
         });
         #[cfg(feature = "trace-input")]
         time::trace("present-start");
@@ -90,9 +92,11 @@ impl Parent {
         let mut bytes = [0; 64];
         let len = match self.output()?.1.receive_until(&mut bytes, now) {
             Ok(len) => len,
-            Err(Error(code))
-                if code == abi::TIMED_OUT as i64 && !time::reached(now, p.deadline) =>
-            {
+            Err(Error(code)) if code == abi::TIMED_OUT as i64 => {
+                if !p.late && time::reached(now, p.deadline) {
+                    time::storage_sample("matrix-present-delayed", &[p.revision]);
+                    self.pending.as_mut().unwrap().late = true;
+                }
                 return Ok(());
             }
             Err(error) => return Err(error),
@@ -138,6 +142,9 @@ impl Parent {
             return self.send_presentation(world);
         }
         let p = self.pending.take().unwrap();
+        if p.late {
+            time::storage_sample("matrix-present-resumed", &[p.revision]);
+        }
         let slot = p.request.client.unwrap();
         let batch = &mut self.batches[slot];
         if p.status == 0 {

@@ -86,14 +86,25 @@ pub fn run(environment: Environment, mut startup: Startup) -> Result<(), Error> 
     let deferred_address = &raw mut DEFERRED;
     // SAFETY: Same single-entry process lifetime as the parent/world arenas above.
     let deferred = unsafe { &mut *deferred_address };
+    let mut ready_launch = None;
+    #[cfg(feature = "interaction-delay")]
+    let mut delay = delay_probe::Gate::default();
     loop {
+        parent.progress_refresh(world)?;
         if let Some(launched) = parent.progress_storage(&mut server)? {
+            assert!(ready_launch.is_none());
+            ready_launch = Some(launched);
+        }
+        // Storage progresses independently. Admission waits for interaction
+        // ownership, rather than consuming an outstanding snapshot's reply.
+        if !parent.upstream_busy()
+            && let Some(launched) = ready_launch.take()
+        {
             children.launch_object(launched, parent, world, &mut server)?;
         }
         parent.progress_presentation(world, &mut server)?;
         children.finish(&mut server, world, parent)?;
         if !parent.upstream_busy() {
-            parent.refresh_notified(world)?;
             requests::flush(parent, world)?;
         }
         if deferred.is_empty() && children.recover(parent, world, &mut server)? {
@@ -102,7 +113,12 @@ pub fn run(environment: Environment, mut startup: Startup) -> Result<(), Error> 
         if !parent.storing() && !parent.upstream_busy() {
             children.startup(&mut startup, parent, world, &mut server)?;
         }
-        let (handles, mut deadline) = children.wait();
+        // Ready mutations get their turn before another poll. A queue waiting
+        // on independent storage must not prevent consuming interaction wakes.
+        if !parent.upstream_busy() && !deferred.has_ready(parent) {
+            parent.refresh_notified()?;
+        }
+        let (handles, mut deadline) = children.wait(parent.upstream_busy() || parent.storing());
         children.notify(world)?;
         let mut extra = [cathedral_user_runtime::ipc::Handle::from_raw(0); CHILDREN + 3];
         let mut count = 0;
@@ -114,18 +130,21 @@ pub fn run(environment: Environment, mut startup: Startup) -> Result<(), Error> 
             count += 1;
             deadline = Some(until);
         }
-        if let Some((receive, until)) = parent.presentation_wait() {
+        if let Some((receive, until)) = parent.refresh_wait().or_else(|| parent.presentation_wait())
+        {
             extra[count] = receive;
             count += 1;
             // Ready owner replies still progress. Deferred teardown must not
             // spin on its expired deadline while publication owns the stream.
-            deadline = Some(deadline.map_or(until, |d| {
-                if cathedral_user_runtime::time::reached(d, until) {
-                    until
-                } else {
-                    d
-                }
-            }));
+            if let Some(until) = until {
+                deadline = Some(deadline.map_or(until, |d| {
+                    if cathedral_user_runtime::time::reached(d, until) {
+                        until
+                    } else {
+                        d
+                    }
+                }));
+            }
         }
         for handle in handles.into_iter().flatten() {
             extra[count] = handle;
@@ -134,13 +153,26 @@ pub fn run(environment: Environment, mut startup: Startup) -> Result<(), Error> 
         if !parent.upstream_busy() && parent.refresh_due {
             deadline = Some(cathedral_user_runtime::time::now()?);
         }
+        #[cfg(feature = "interaction-delay")]
+        if let Some(until) = delay.deadline() {
+            deadline = Some(deadline.map_or(until, |d| {
+                if cathedral_user_runtime::time::reached(d, until) {
+                    until
+                } else {
+                    d
+                }
+            }));
+        }
         if !parent.upstream_busy()
             && let Some(wake) = parent.wake
         {
             extra[count] = wake;
             count += 1;
         }
+        #[cfg(not(feature = "interaction-delay"))]
         let queued = deferred.take(parent);
+        #[cfg(feature = "interaction-delay")]
+        let queued = delay.take(&server)?.or_else(|| deferred.take(parent));
         deferred.pause(&mut server, parent);
         #[cfg(feature = "trace-storage")]
         let from_queue = queued.is_some();
@@ -150,6 +182,15 @@ pub fn run(environment: Environment, mut startup: Startup) -> Result<(), Error> 
                 Some(event) => event,
                 None => continue,
             },
+        };
+        #[cfg(feature = "interaction-delay")]
+        let event = if !parent.upstream {
+            match delay.intercept(event, &mut server, world)? {
+                Some(event) => event,
+                None => continue,
+            }
+        } else {
+            event
         };
         #[cfg(feature = "trace-storage")]
         if !from_queue
@@ -167,7 +208,20 @@ pub fn run(environment: Environment, mut startup: Startup) -> Result<(), Error> 
                 op,
             );
         }
+        // A read-only loss survey uses child control links, not the occupied
+        // upstream poll stream. Do not race a completed but unadmitted launch.
+        if ready_launch.is_none() && children.query_during_refresh(&event, parent, &mut server)? {
+            continue;
+        }
         if deferred::Deferred::blocks(&event, parent) {
+            #[cfg(feature = "interaction-delay")]
+            if parent.refresh_late()
+                && let Event::Request(r) = &event
+                && wire::decode(&r.bytes[..r.len])
+                    .is_some_and(|w| w[0] == wire::POLL_TAGGED || w[0] == wire::POLL)
+            {
+                cathedral_user_runtime::time::storage_sample("matrix-poll-local", &[]);
+            }
             let mut blocked = 0;
             if parent.publishing() {
                 blocked |= 1 << parent.publishing_client();

@@ -146,7 +146,9 @@ impl Parent {
             .and_then(|p| p.request.and_then(|r| r.client))
     }
     pub(in crate::service) fn upstream_busy(&self) -> bool {
-        self.publishing() || (self.upstream && !self.separate_storage && self.storing())
+        self.refreshing()
+            || self.publishing()
+            || (self.upstream && !self.separate_storage && self.storing())
     }
     /// Advance the pending exchange. A finished program read is handed back
     /// for admission; a finished child request is answered here.

@@ -14,6 +14,22 @@ pub const PAINT: u64 = 3; // epoch, owned surface handle, local x,y,width,height
 pub const ERASE: u64 = 4; // epoch, owned surface handle,0,0,0,0,0 (release)
 /// Atomic local view plus one event; response tag includes pointer buttons and MORE.
 pub const POLL: u64 = 5;
+/// Correlated snapshot request: [POLL_TAGGED, nonzero u32 id, 0..].
+/// Reply retains POLL's payload. Word zero packs id in its high 32 bits and
+/// signed i32 status in its low 32 bits. IDs are local to one connection,
+/// never authority, and must not wrap or be reused on that connection.
+pub const POLL_TAGGED: u64 = 26;
+pub fn tag_poll(mut reply: Packet, id: u32) -> Packet {
+    reply[0] = ((id as u64) << 32) | (reply[0] as u32 as u64);
+    reply
+}
+pub fn untag_poll(mut reply: Packet, id: u32) -> Option<Packet> {
+    if id == 0 || (reply[0] >> 32) != id as u64 {
+        return None;
+    }
+    reply[0] = reply[0] as u32 as i32 as i64 as u64;
+    Some(reply)
+}
 pub const MORE: u64 = 1 << 16;
 pub fn poll_event(reply: Packet) -> Packet {
     [

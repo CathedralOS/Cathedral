@@ -69,7 +69,8 @@ impl Parent {
         let (send, recv) = self.display.unwrap();
         send.send(&display::encode(words))?;
         let mut bytes = [0; 64];
-        let len = recv.receive_until(&mut bytes, time::after(100)?)?;
+        let len =
+            cathedral_user_runtime::matrix::upstream::receive(recv, &mut bytes, words[0], 100)?;
         display::decode(&bytes[..len]).ok_or(Error(abi::IO_ERROR as i64))
     }
 }

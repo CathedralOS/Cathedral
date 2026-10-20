@@ -34,11 +34,14 @@ impl Children {
         }
     }
     /// The control replies to wait for and the earliest deadline among them.
-    pub(in crate::service) fn wait(&self) -> ([Option<Handle>; CHILDREN], Option<u64>) {
+    pub(in crate::service) fn wait(
+        &self,
+        teardown_busy: bool,
+    ) -> ([Option<Handle>; CHILDREN], Option<u64>) {
         let mut handles = [None; CHILDREN];
         let mut deadline: Option<u64> = None;
         for (slot, handle) in handles.iter_mut().enumerate() {
-            let Some((_, until, _)) = &self.pending[slot] else {
+            let Some((_, until, purpose)) = &self.pending[slot] else {
                 // Late replies are drained even while nobody is asking. This
                 // restores probe capacity without mistaking an old answer for
                 // a fresh observation or abandoning the live child's channel.
@@ -50,6 +53,9 @@ impl Children {
                 });
                 continue;
             };
+            if teardown_busy && matches!(purpose, Purpose::Close) {
+                continue;
+            }
             if self.retiring[slot].is_none() {
                 *handle = self.slots[slot]
                     .as_ref()
@@ -111,6 +117,13 @@ impl Children {
             }
             return Ok(false);
         };
+        // Teardown publishes erasures on the parent stream. Leave a close's
+        // answer queued until that stream is free; ordinary polling must not
+        // turn a clean answer into a spurious refusal. wait() excludes this
+        // receiver meanwhile so a ready reply cannot cause a busy loop.
+        if matches!(purpose, Purpose::Close) && (parent.upstream_busy() || parent.storing()) {
+            return Ok(false);
+        }
         let mut retired = false;
         let now = time::now()?;
         let mut bytes = [0; 64];
@@ -180,7 +193,14 @@ impl Children {
                 [0; 8]
             }
             (Purpose::Close, _) if retired => [0; 8],
-            (Purpose::Close, _) => wire::error(abi::BUSY),
+            (Purpose::Close, answer) => {
+                let (status, loss) = match answer {
+                    Ok(words) => (words[0], words[1]),
+                    Err(code) => (code, 0),
+                };
+                time::storage_sample("matrix-close-refused", &[slot as u64, status, loss]);
+                wire::error(abi::BUSY)
+            }
         };
         server.reply(&request, &wire::encode(response))?;
         Ok(retired)

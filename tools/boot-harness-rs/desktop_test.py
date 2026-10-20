@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Exercise the ordinary F5 composition: make a user, launch its programs, edit, switch and cold-open."""
 import argparse
+import json
 from datetime import datetime, timezone
 import os
 from pathlib import Path
@@ -19,7 +20,7 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 
 
-def desktop(stream, output, serial, reboot, expected_absolute=True, fill_users=False, service_imports=None, nested=False, nested_saved=False, deep=False, nested_desktop=False, user_check=None, allowed_panics=(), latency=False, pointer_stress=False):
+def desktop(stream, output, serial, reboot, expected_absolute=True, fill_users=False, service_imports=None, nested=False, nested_saved=False, deep=False, nested_desktop=False, user_check=None, allowed_panics=(), latency=False, pointer_stress=False, interaction_delay=False):
     assert 'Cathedral: object storage ready' in serial
     position = [40, 40]
     motion_step = 0
@@ -256,7 +257,7 @@ def desktop(stream, output, serial, reboot, expected_absolute=True, fill_users=F
         return
     if nested_desktop:
         import nested_desktop_test
-        nested_desktop_test.exercise(output, click, key, scan, width, height, reboot, pointer_stress)
+        nested_desktop_test.exercise(output, click, key, scan, width, height, reboot, pointer_stress, interaction_delay)
         return
     if nested:
         import split_test
@@ -382,13 +383,23 @@ def desktop(stream, output, serial, reboot, expected_absolute=True, fill_users=F
     print('PASS: user tiles, absolute/relative clicks, app tiles, save/discard/cancel and persistent replacement')
 
 
-def run(timeout, trace_storage=False, relative_pointer=False, service_imports=None, nested=False, deep=False, nested_desktop=False, trace_input=False, latency=False, pointer_stress=False):
+def run(timeout, trace_storage=False, relative_pointer=False, service_imports=None, nested=False, deep=False, nested_desktop=False, trace_input=False, latency=False, pointer_stress=False, interaction_delay=False):
     output = harness.BUILD / 'desktop' / datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S%fZ')
     output.mkdir(parents=True)
     # Exact default composition, with a separate build output so a regression
     # run does not replace the ESP of an already-running interactive guest.
     profile = output / f'desktop-check-{output.name}.json'
-    shutil.copyfile(ROOT / 'source-rs/distribution/profile.json', profile)
+    composition = json.loads((ROOT / 'source-rs/distribution/profile.json').read_text())
+    if interaction_delay:
+        def enable(value):
+            if isinstance(value, dict):
+                if value.get('package') == 'cathedral-stock-matrix':
+                    value.setdefault('features', []).append('interaction-delay')
+                for child in value.values(): enable(child)
+            elif isinstance(value, list):
+                for child in value: enable(child)
+        enable(composition)
+    profile.write_text(json.dumps(composition, indent=2), encoding='utf-8', newline='\n')
     build = [sys.executable, str(HERE / 'run.py'), '--release', '--build-only', '--profile', str(profile)]
     if trace_storage:
         build.append('--trace-storage')
@@ -431,7 +442,7 @@ def run(timeout, trace_storage=False, relative_pointer=False, service_imports=No
     flags = subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0
     for boot in (1, 2):
         capture.run(command, output, timeout, flags, ready_marker='Cathedral desktop: ready; choose a user',
-                    verify=lambda stream, output, serial: desktop(stream, output, serial, boot == 2, not relative_pointer, service_imports=service_imports, nested=nested, nested_saved=boot == 2, deep=deep, nested_desktop=nested_desktop, latency=latency, pointer_stress=pointer_stress))
+                    verify=lambda stream, output, serial: desktop(stream, output, serial, boot == 2, not relative_pointer, service_imports=service_imports, nested=nested, nested_saved=boot == 2, deep=deep, nested_desktop=nested_desktop, latency=latency, pointer_stress=pointer_stress, interaction_delay=interaction_delay))
         for name in ('serial.log', 'qemu.log', 'display.png', 'boot-timing.json'):
             shutil.copyfile(output / name, output / f'boot-{boot}-{name}')
         contents = path.read_bytes()
@@ -478,11 +489,14 @@ if __name__ == '__main__':
     parser.add_argument('--trace-storage', action='store_true', help='build with storage phase traces in the serial log')
     parser.add_argument('--trace-input', action='store_true', help='include input and compositor CPU traces')
     parser.add_argument('--pointer-stress', action='store_true', help='move the pointer continuously while waiting for nested startup and scenes')
+    parser.add_argument('--interaction-delay', action='store_true', help='hold upstream polls, images and commits past the old timeout; requires --nested-desktop')
     args = parser.parse_args()
     if args.timeout <= 0:
         parser.error('timeout must be positive')
     if args.latency and (args.relative_pointer or args.service_imports or args.nested or args.deep or args.nested_desktop):
         parser.error('--latency uses the ordinary absolute-pointer desktop without other workload variants')
+    if args.interaction_delay and not args.nested_desktop:
+        parser.error('--interaction-delay requires --nested-desktop')
     if args.pointer_stress and (not args.nested_desktop or args.relative_pointer):
         parser.error('--pointer-stress requires --nested-desktop with absolute input')
-    run(args.timeout, args.trace_storage, args.relative_pointer, args.service_imports, args.nested or args.deep, args.deep, args.nested_desktop, args.trace_input, args.latency, args.pointer_stress)
+    run(args.timeout, args.trace_storage, args.relative_pointer, args.service_imports, args.nested or args.deep, args.deep, args.nested_desktop, args.trace_input, args.latency, args.pointer_stress, args.interaction_delay)

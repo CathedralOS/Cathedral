@@ -111,15 +111,9 @@ fn serve(extent: u64, environment: Environment) -> Result<(), Error> {
     }
 }
 fn publish(pair: (Handle, Handle), words: wire::Packet) -> Result<(), Error> {
-    if exchange(pair, words)?[0] == 0 {
+    if cathedral_user_runtime::matrix::upstream::call(pair, words)?[0] == 0 {
         Ok(())
     } else {
         Err(Error(abi::IO_ERROR as i64))
     }
-}
-fn exchange(pair: (Handle, Handle), words: wire::Packet) -> Result<wire::Packet, Error> {
-    pair.0.send(&wire::encode(words))?;
-    let mut bytes = [0; 64];
-    let len = pair.1.receive_until(&mut bytes, time::after(100)?)?;
-    wire::decode(&bytes[..len]).ok_or(Error(abi::IO_ERROR as i64))
 }

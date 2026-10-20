@@ -106,7 +106,15 @@ impl Services {
             self.broker.0.send(&matrix::encode(wire::request(
                 contract, minimum, maximum, part,
             )))?;
-            ipc::wait_many(&[self.broker.1], time::after(300)?)?;
+            match ipc::wait_many(&[self.broker.1], time::after(300)?) {
+                Err(Error(code)) if code == abi::TIMED_OUT as i64 => {
+                    // This request still owns the reply stream. A late endpoint
+                    // belongs to this acquisition, not a new request or process.
+                    time::storage_sample("service-acquire-delayed", &[contract, part]);
+                }
+                Err(error) => return Err(error),
+                Ok(_) => (),
+            }
             let mut bytes = [0; 64];
             let (len, endpoint) = self.broker.1.receive_with(&mut bytes)?;
             match (matrix::decode(&bytes[..len]), endpoint) {

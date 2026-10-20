@@ -48,20 +48,47 @@ Each child has its own revision counter. Moving its parent or changing a sibling
 does not advance it. Capture keeps delivering but clamps coordinates to the
 child's viewport; cancellation has zero coordinates. Keys intersect the upstream
 mask. Changing focus cancels undelivered old input and suppresses held-key
-transfer. Overflow cancels the affected child without notifying its siblings.
+transfer. Each child's bounded queue holds sixteen compact events, reconstructing
+the wire reply on dequeue. Overflow cancels the affected child without notifying
+its siblings.
 
 Admitted children receive an empty coalesced wake hint over a separate endpoint.
-The service consumes pending parent hints before ordinary child dispatch and refreshes
-local authority/input through the parent protocol. During publication it can answer
-other children's queries from the existing local snapshot; parent refresh and
-dependent mutations resume after publication completes. Older two-endpoint fixtures
-refresh on every request. Hints disclose no state; full hint queues already contain
+The service starts at most one identified upstream snapshot per turn through
+[polling.rs](service/parent/polling.rs), then continues dispatching local work.
+`POLL_TAGGED` binds the reply to a non-reused connection-local request ID; an
+unmatched reply cannot change the view or deliver input. Polling and publication
+each own the interaction stream until their reply arrives. Other children's
+queries use the existing local snapshot, while dependent mutations wait in
+bounded per-stream queues. Storage has its own stream; completed executable reads
+wait for interaction ownership before admission. Older two-endpoint fixtures
+refresh synchronously on demand. Hints disclose no state; full hint queues already contain
 a wake. Parent transport closure retires the service. Parent loss or a new
 parent binding clears descendant placement; reappearance requires explicit
 owner regranting. Old revisions cannot read queued events in a new binding.
 Revisions are scoped to the accepted connection, not transferable capabilities.
-Clients must discard them on provider replacement. A timed-out upstream RPC
-retires the service so a late reply cannot be mistaken for another operation.
+Clients must discard them on provider replacement.
+
+Interaction deadlines diagnose lateness; they do not prove process death.
+A late snapshot retains the last view, focus and input ordering while waiting
+for that exact reply. Lateness alone is not an input-loss signal; upstream
+cancellation and actual queue overflow still clear input state.
+Late [publication](service/parent/presentation.rs) retains
+its transaction and reader custody, without resubmission. Expired diagnostic
+deadlines leave the wait set so a delayed provider cannot cause a timer spin.
+Other interaction operations still use the runtime's
+[serialized exchange](../../platform/libraries/user-runtime/matrix/upstream/upstream.rs):
+one request remains outstanding until its reply or terminal transport error,
+including image uploads and startup acquisition. These synchronous operations
+can still stall dispatch, and a live silent provider can leave a caller waiting
+indefinitely. This is not general asynchronous RPC or automatic reconnection.
+Malformed replies and terminal transport failures remain errors. Storage keeps
+its separate transaction deadlines and uncertain-write recovery rules.
+
+Local HEALTH remains answerable during an asynchronous wait. Read-only LOSS
+surveys use child control links and can progress during an upstream poll;
+publication and pending admission still defer them. A clean close answer stays
+queued until teardown can publish its erasures. Ordinary polling therefore
+neither implies unsaved work nor lets teardown consume a snapshot's reply.
 Owner requests routed to a child use a FIFO control stream the child answers in
 order: an unanswered request is counted and its late reply skipped, so a slow
 child costs the owner a timeout rather than its life. At the unanswered-request
@@ -172,7 +199,7 @@ provider death. The desktop fixture checks old pixels before commit, complete
 publication, rejected batches, repeated commits and bitmap forwarding.
 
 This is a protocol and input experiment: two local child slots, five navigation
-keys, eight queued events per child and extents up to 4096. The
+keys, sixteen queued events per child and extents up to 4096. The
 [distribution fixture](../desktop/README.md) runs two
 identical service executables with separate state. Each owns and admits its own
 children using inherited launch loans and dynamic parent endpoints. Distribution

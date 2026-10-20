@@ -2,6 +2,7 @@
 //! The event loop keeps serving their upstream work; no child is stopped by a
 //! survey. Missing, malformed, busy or late answers never count as permission.
 use super::*;
+use cathedral_user_runtime::server::Event;
 
 pub(super) struct Survey {
     request: Request,
@@ -10,6 +11,26 @@ pub(super) struct Survey {
 }
 
 impl Children {
+    /// A loss survey only uses child control links. It must keep progressing
+    /// through an ancestor snapshot wait, just like local child polling.
+    pub(in crate::service) fn query_during_refresh(
+        &mut self,
+        event: &Event,
+        parent: &Parent,
+        server: &mut Server,
+    ) -> Result<bool, Error> {
+        if parent.refreshing()
+            && let Event::Request(request) = event
+            && request.control
+            && wire::decode(&request.bytes[..request.len])
+                == Some([wire::LOSS, 0, 0, 0, 0, 0, 0, 0])
+        {
+            self.survey_loss(*request, parent, server)?;
+            return Ok(true);
+        }
+        Ok(false)
+    }
+
     pub(super) fn survey_loss(
         &mut self,
         request: Request,
@@ -23,6 +44,7 @@ impl Children {
             || parent.storing()
             || self.recovery_pending()
         {
+            time::storage_sample("matrix-loss-busy", &[]);
             return server.reply(&request, &wire::encode(wire::error(abi::BUSY)));
         }
         let mut survey = Survey {
@@ -61,6 +83,13 @@ impl Children {
     ) -> Result<(), Error> {
         let survey = self.loss.as_mut().expect("loss reply without survey");
         survey.waiting &= !(1 << slot);
+        if !matches!(answer, Ok(words) if words[0] == 0 && words[1] == 0) {
+            let (status, loss) = match answer {
+                Ok(words) => (words[0], words[1]),
+                Err(code) => (code, 0),
+            };
+            time::storage_sample("matrix-loss-uncertain", &[slot as u64, status, loss]);
+        }
         survey.uncertain |= !matches!(answer, Ok(words) if words[0] == 0 && words[1] == 0);
         self.finish_survey(server)
     }

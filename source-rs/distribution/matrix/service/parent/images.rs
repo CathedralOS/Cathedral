@@ -45,7 +45,8 @@ impl Parent {
             ]),
             object,
         )?;
-        let len = receive.receive_until(&mut bytes, time::after(100)?)?;
+        let len =
+            cathedral_user_runtime::matrix::upstream::receive(receive, &mut bytes, words[0], 100)?;
         let reply = display::decode(&bytes[..len]).ok_or(Error(abi::IO_ERROR as i64))?;
         Ok(wire::error(reply[0]))
     }

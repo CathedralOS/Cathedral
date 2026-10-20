@@ -4,7 +4,7 @@ import shutil
 import time
 
 
-def exercise(output, click, key, scan, width, height, reboot, pointer_stress=False):
+def exercise(output, click, key, scan, width, height, reboot, pointer_stress=False, interaction_delay=False):
     font = bytes.fromhex((Path(__file__).resolve().parents[2] / 'source-rs/platform/libraries/bitmap-font/font.hex').read_text())
     def pixel(w, data, x, y):
         return data[(y*w+x)*3:(y*w+x+1)*3]
@@ -70,6 +70,16 @@ def exercise(output, click, key, scan, width, height, reboot, pointer_stress=Fal
         scan(lambda sw,d: pixel(sw,d,x+13,y+18)==bytes.fromhex('101827')
              and pixel(sw,d,x+249,y+h-60)==bytes.fromhex('101827'),f'depth {depth} closed and collected')
 
+    def delayed(trigger, action, markers):
+        offset = len((output/'serial.log').read_text(errors='replace'))
+        key(trigger)
+        action()
+        def resumed(_width, _data):
+            log = (output/'serial.log').read_text(errors='replace')[offset:]
+            assert 'matrix-service-exit' not in log and 'Cathedral user panic:' not in log, log
+            return all(marker in log for marker in ('interaction-delay-released', *markers))
+        scan(resumed, f'{trigger} delayed reply recovered: {markers}')
+
     for depth in range(1,4):
         enter(depth, not reboot)
     shutil.copyfile(output/'display.png', output/'three-nested-desktops.png')
@@ -79,11 +89,27 @@ def exercise(output, click, key, scan, width, height, reboot, pointer_stress=Fal
         click(37,144)
         for ch in 'deep': key(ch)
         note(3,'deep',True)
+    if interaction_delay:
+        click(37,144)
+        delayed('f8', lambda: None, ('matrix-poll-delayed', 'matrix-poll-unmatched', 'matrix-poll-local', 'matrix-poll-resumed'))
+        note(3,'deep',not reboot)
+        # Lateness is not input loss: subsequent keys must retain this focus.
+        delayed('f7', lambda: key('x'), ('interaction-delayed', 'interaction-resumed'))
+        note(3,'deepx',True)
+        key('backspace'); note(3,'deep',True)
+        if reboot:
+            key('f1'); note(3,'deep')
+    if not reboot:
         task_close(0) # Loss propagates through the whole subtree.
         label(width-192,height-56,'UNSAVED WORK')
         note(3,'deep',True)
         click(37,144); key('f1'); note(3,'deep')
     app_close(3); background(3)
+    if interaction_delay:
+        delayed('f6', lambda: launch(3,1), ('matrix-present-delayed', 'matrix-present-resumed'))
+        x,y,w,h = viewport(3)
+        scan(lambda sw,d: pixel(sw,d,x+13,y+18)==bytes.fromhex('315ca8'), 'delayed Colors publication')
+        app_close(3); background(3)
     # Collapse each level, then re-enter all three. Old child accounts, image
     # readers and endpoints must be reusable without rebooting the outer desktop.
     for _ in range(2):

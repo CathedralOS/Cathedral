@@ -1,9 +1,8 @@
 # Rust reference OS: tasks and handoff
 
-Updated 2026-10-20 (local date). Current milestone: **nested input dispatch fairness
-and reproducible continuous-pointer testing**, on baseline `67445b3c`
-(pressure-driven storage maintenance, reused template source lookups and measured
-Notes input/rendering).
+Updated 2026-10-20 (local date). Current milestone: **preserving live matrices
+across slow interaction replies**, on baseline `66787f05` (nested input dispatch
+fairness and reproducible continuous-pointer testing).
 The fresh-lab reset is `30572c9f`. Compact recursive desktops landed as `c7571191`,
 and the launch request ABI repair as `a287ae39`. No recursive legacy snapshot
 upgrade is required. The saved-disk quota/headroom repair remains in place. Current
@@ -3159,3 +3158,95 @@ Verification:
 - The existing headless matrix protocol test passes (`matrix-test`): identical
   worlds, local views, attenuated input and recovery over the legacy connection
   shape. No kernel behavior changed; kernel smoke and ARM64 were not rerun.
+
+## Slow interaction replies preserve live matrices
+
+The owner's next normal F5 run still lost inner desktops after the fairness
+change. The captured live log is
+`build/boot-harness-rs/interaction-delay-owner/serial.log`: a Background unwrap
+panics with `-110`, followed by `matrix-service-exit`. Fair dispatch reduced one
+cause of delay but did not fix treating a receive deadline as fatal process loss.
+The desktop still uses one emulated CPU, 128 MiB and TCG; this repair does not
+change those resources, the kernel scheduler or the kernel ABI.
+
+The stock matrix now progresses one asynchronous upstream `POLL_TAGGED` through
+its service loop. A connection-local, non-reused request ID associates each
+reply with its pending snapshot; it grants no authority. Mismatched
+replies are ignored. After the diagnostic threshold it retains its view, focus
+and input ordering while waiting for that same reply and serving local child queries.
+Deferred mutations stay bounded per stream. Separate storage work progresses;
+completed program reads wait for interaction ownership before child admission.
+Ready deferred requests precede another poll; requests blocked on independent
+storage do not prevent consuming an interaction wake.
+
+Asynchronous presentation also retains its original transaction and readers
+across delay. Other serialized interaction calls, image uploads, physical input
+forwarding and service acquisition keep waiting for their original response
+instead of exiting or retrying the operation. None of these changes retries
+ambiguous mutations. Storage transaction deadlines and reconciliation are
+unchanged. Expired diagnostic timers leave the asynchronous wait set.
+
+The first five-second-stall run survived all three delays but caught a clean
+subtree close being refused during an unrelated poll
+(`desktop/20261020T170942625177Z`). Simply queuing LOSS behind that poll still
+refused a later clean close under load (`desktop/20261020T172247533354Z`).
+Read-only loss surveys now progress on their child control links during polling,
+provided no completed admission is waiting. Publication still defers them.
+A close reply stays queued until teardown can publish erasures; its ready
+receiver is excluded while teardown is blocked. Dirty, missing and uncertain
+replies still cannot authorize discarding work. Busy surveys, uncertain child
+answers and refused close now have distinct diagnostic traces.
+
+The next run passed its fresh boot but lost a Backspace after the cold boot's
+delay sequence (`desktop/20261020T171509381534Z`). Clearing focus on a diagnostic
+timeout manufactured an input discontinuity despite retaining the original
+ordered reply. Lateness now preserves focus; real upstream cancellation and
+queue overflow still cancel input. The test-only late-poll hook wakes children
+to prove local queries can complete during the held upstream request.
+
+A later loaded run lost three letters from the initial four-key entry before
+any injected delay (`desktop/20261020T172943269969Z`). A host regression confirmed
+that a click plus four press/release pairs overflowed the eight-entry child
+queue before draining. The queue now stores only the four event fields instead
+of full eight-word reply packets, fitting sixteen events in the same 512 bytes.
+Replies reconstruct their status, current epoch and padding; grant changes
+already clear queued input before advancing the epoch. Motion coalescing and
+bounded overflow cancellation retain their ordering and sibling-isolation tests.
+
+`desktop_test.py --nested-desktop --pointer-stress --interaction-delay --timeout 240`
+compiles test-only F8/F7/F6 gates at the root. They retain a poll, image upload
+and compact publication for 500 guest ticks each. The poll gate first sends an
+unrelated DENIED reply; the test requires rejection of that reply, child polling
+during the delay, eventual recovery, preserved Notes contents and dirty state,
+Colors publication, clean close, subtree reclamation and cold persistence.
+Ordinary F5 has no gates. The interactive disk was not reset or changed; use
+**Cathedral: Fresh Lab in QEMU** for corrected executables throughout copied
+user realms.
+
+Remaining scope: only polling has explicit wire request IDs. Other interaction
+operations serialize one outstanding request; this is not a multiplexed RPC
+transport. Startup and individual surface exchanges can still block dispatch,
+and a live provider that never responds can leave them waiting indefinitely.
+Terminal transport errors and malformed replies remain failures. Further work
+should make those exchanges resumable and provide recoverable unavailable state
+without losing drafts; SMP or larger budgets do not replace that work.
+
+Verification:
+
+- Workspace host tests pass; the matrix suite now has 41 passing tests, including
+  tagged replies and the burst regression (observed failing before queue compaction).
+  All 22 Python harness unit tests pass. Default userspace and
+  matrix nested/delay/trace/probe/fault feature clippy checks pass, as do layout,
+  Rust formatting and whitespace checks.
+- Ordinary F5 fresh/cold behavior, three independent Notes drafts, close/save/
+  discard, Colors and the independent 553-record storage oracle pass:
+  `desktop/20261020T173847824501Z`.
+- Three nested desktops under continuous pointer motion pass on fresh and cold
+  boots with all three five-second delays, mismatched poll rejection, local
+  polling during the stall, uninterrupted keyboard focus, draft protection and
+  two subtree close/reopen cycles per boot:
+  `desktop/20261020T173552869333Z`.
+- The legacy two-endpoint matrix protocol fixture passes (`matrix-test`).
+  Provider replacement, ambiguous writes, independent roots and exact cold
+  storage records pass at `matrix-database/20261020T172005490015Z`.
+- No kernel behavior changed; kernel smoke and ARM64 were not rerun.

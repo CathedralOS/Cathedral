@@ -189,6 +189,14 @@ impl<const N: usize> World<N> {
         match words {
             [wire::VIEW, 0, 0, 0, 0, 0, 0, 0] => child.view(),
             [wire::POLL, 0, 0, 0, 0, 0, 0, 0] if child.grant.valid() => child.poll(),
+            [wire::POLL_TAGGED, id @ 1..=0xffff_ffff, 0, 0, 0, 0, 0, 0] => wire::tag_poll(
+                if child.grant.valid() {
+                    child.poll()
+                } else {
+                    wire::error(abi::DENIED)
+                },
+                id as u32,
+            ),
             [wire::SURFACE_INFO, 0, 0, 0, 0, 0, 0, 0] if child.grant.valid() => [
                 0,
                 child.surface_limit as u64,
