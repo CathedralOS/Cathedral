@@ -25,6 +25,11 @@ impl Executable {
     pub fn raw(self) -> u64 {
         self.0
     }
+    /// Release an object executable when admission was abandoned. Reservation
+    /// consumes this name on success; template grants cannot be released here.
+    pub fn release(self) -> Result<(), Error> {
+        result(arch::call(abi::TASK_IMAGE_RELEASE, self.0, 0)).map(|_| ())
+    }
     pub fn reserve(
         self,
         limits: Limits,

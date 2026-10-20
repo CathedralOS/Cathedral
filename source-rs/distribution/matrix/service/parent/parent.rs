@@ -28,6 +28,23 @@ pub(super) struct Parent {
     pub wake: Option<Handle>,
 }
 impl Parent {
+    pub(in crate::service) fn request_funding(&mut self, delta: [u64; 5]) -> Result<(), Error> {
+        if !self.upstream || self.pair.is_none() {
+            return Err(Error(abi::NO_MEMORY as i64));
+        }
+        let response = match self.call([wire::FUND, delta[0], delta[1], delta[2], delta[3], delta[4], 0, 0]) {
+            Ok(reply) => reply,
+            Err(error) => {
+                // A late acknowledgement must never satisfy the next exchange.
+                if let Some((send, receive)) = self.pair.take() {
+                    let _ = send.close();
+                    let _ = receive.close();
+                }
+                return Err(error);
+            }
+        };
+        if response[0] == 0 { Ok(()) } else { Err(Error(response[0] as i64)) }
+    }
     pub(in super::super) fn has_output(&self) -> bool {
         self.pair.is_some() || self.display.is_some()
     }

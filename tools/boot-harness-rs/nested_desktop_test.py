@@ -37,12 +37,24 @@ def exercise(output, click, key, scan, width, height, reboot):
         label(30,696,'NO ROOM')
         note('inner',True)
         click(470,168);key('f1');note('inner')
-    click(962,58) # Inner Notes closes itself.
+    # Keep Notes alive while another leaf requests funding through both owners.
     click(352,240)
     scan(lambda w,d:pixel(w,d,469,58)==bytes.fromhex('d18b35' if reboot else '315ca8'),'inner Colors')
+    # A third leaf does not fit the surface grant. Repeated refusal must leave
+    # both live apps usable, then closing one must allow admission again.
+    for _ in range(3):
+        click(352,120)
+        label(262,672,'NO ROOM')
+    click(320,568) # Inner running-app row: Notes.
+    note('inner')
+    click(962,58)
+    scan(lambda w,d:pixel(w,d,469,58)==bytes.fromhex('d18b35' if reboot else '315ca8'),'Colors survived sibling close')
     if not reboot:
         click(470,168);key('ret')
         scan(lambda w,d:pixel(w,d,469,58)==bytes.fromhex('d18b35'),'saved inner color')
+    click(962,58)
+    click(352,120)
+    note('inner')
     click(962,58)
     click(352,360) # Same Nested app is present; another level exceeds this grant.
     label(316,388,'NESTED')
@@ -54,4 +66,7 @@ def exercise(output, click, key, scan, width, height, reboot):
     click(120,96)
     scan(lambda w,d:pixel(w,d,237,34)==bytes.fromhex('27664a') and not text(w,d,242,44,'inner'),'outer Notes never sees inner save')
     click(width-38,34)
-    print('PASS: scoped nested picker, same desktop apps, recursive dirty close, bounded funding, isolated Notes/Colors')
+    traces=(output/'serial.log').read_text(errors='replace')
+    if 'STORAGE_TRACE matrix-budget' in traces:
+        assert 'funding-granted' in traces, 'nested app launch must exercise owner-mediated growth'
+    print('PASS: nested desktop, concurrent Notes/Colors, recursive funding, bounded refusal, reclamation and isolation')

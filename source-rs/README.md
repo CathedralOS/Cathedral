@@ -1096,8 +1096,9 @@ and the sibling Colors program persists its own state across cold reboot.
 
 `python tools/boot-harness-rs/desktop_test.py --nested-desktop --trace-storage`
 uses a disposable image and the ordinary F5 composition. It creates an outer user,
-launches Nested, creates an inner user, saves inner Notes/Colors, checks recursive
-dirty-close refusal and budget refusal, closes the subtree and verifies the outer
+launches Nested, creates an inner user, runs Notes and Colors concurrently through
+owner-mediated funding, checks repeated refusal and admission after closing an
+app, saves both apps, checks recursive dirty-close refusal, closes the subtree and verifies the outer
 Notes did not inherit its data. It repeats the inner reads after cold reboot.
 See [the distribution route](distribution/README.md#nested-startup-and-scene-switching)
 for code navigation and current funding limits. This test never opens the interactive

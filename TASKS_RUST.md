@@ -1,11 +1,10 @@
 # Rust reference OS: tasks and handoff
 
-Updated 2026-10-19 (local date). Current milestone: **desktop latency measurement
-and storage collection I/O reduction**. Baseline `d96548f0` supplies nested
-desktops and atomic app selection. The ordinary desktop now records repeatable
-timing observations; ordered chunk-index validation reduces measured save I/O.
-Nested still supports one inner app under fixed funding. Verification and
-remaining limits are recorded in the latest section below.
+Updated 2026-10-19 (local date). Current milestone: **owner-mediated resource
+growth and concurrent apps in Nested**. Baseline `65d0209e` supplies desktop
+timing and reduced collection I/O. Live funding now travels through immediate
+owners under finite policy ceilings; a fresh nested user can run two leaf apps.
+Verification and remaining limits are recorded in the latest section below.
 Previous baseline: atomic named creation and deeper recursive matrices at `102e416c`.
 F5 stages changed program installations in host scratch space, then verifies and
 publishes a result that fits the original disk extent.
@@ -50,7 +49,9 @@ It uses x86-64 QEMU/TCG and UEFI.
   Further nesting beyond its funding reports **NO ROOM**, retaining live drafts.
 - **NESTED** opens its own user picker and the same desktop, with Notes, Colors
   and another Nested tile. Close other outer apps first. The current budget fits
-  one inner app; another nesting level reports **NO ROOM**. Inner saves survive
+  two inner leaf apps through owner-mediated funding; a third app or another
+  nesting level reports **NO ROOM**. Existing inner users keep their old code;
+  create a new inner user to exercise the new implementation. Inner saves survive
   closing/reopening Nested and reboot. The outer task-row X refuses to close the
   subtree while an inner app has unsaved work.
 - **SETTINGS** at the bottom of the user strip (or F2 with strip focus) adjusts
@@ -2619,3 +2620,78 @@ costs worth separating further. Previous unresolved NO_MEMORY and intermittent
 ATA reports remain open; the deliberately oversized cache trial above is a
 separate, reproducible and reverted experiment. All guest runs used disposable
 images; the interactive `cathedral-storage.raw` was untouched.
+
+## 2026-10-19 - Live resource growth through matrix owners
+
+Start at `distribution/matrix/service/children/admission.rs`: resolve imports,
+check surface placement, ask for a local funding shortfall, then reserve/spawn.
+`children/funding.rs` authenticates a requesting child's endpoint, applies stock
+ceilings and obtains its own shortfall upstream before transferring funds. Shared
+amount/ceiling checks live in `platform/libraries/matrix/funding.rs`; the platform
+`FUND` packet is on the supplied interaction connection. The kernel knows neither
+matrix roles nor this protocol.
+
+`RESOURCE_GROW` (71) atomically transfers increments of private pages, reader
+pages, channels, free descendant slots and physical frames along an owned launch
+edge, including a live child. The syscall validates the complete input before
+touching ledgers; the resource entrance validates all five families before any
+commit. Runtime mapping tables already cover the fixed mapping arena. This does
+not enlarge global pools, mapping/handle limits or CPU allowances. A separate
+`NO_PROCESS_CAPACITY` refusal identifies unavailable transferable slots, including
+the existing ordering constraint, without revealing account identities.
+
+Current stock growth policy is explicitly bounded: programs admitted with
+descendants can grow to the larger of their initial grant or
+384/768 pages, 40 channels, six descendants and 1792 physical frames. Ordinary
+leaves have no growth policy. Each transfer is atomic; the complete ancestor chain
+is not one transaction. Capacity granted to an intermediary may remain there
+after a downstream refusal and is reused or returned when that subtree closes.
+There is no live shrink/recall protocol or automatic retransmission after a lost
+reply; a failed transport retires the upstream connection.
+
+The ordinary Nested program now requests 32 surfaces, still from the existing
+40-surface scene. Its fresh user runs Notes and Colors concurrently. A third leaf
+or another Nested still refuses. Surface ranges remain fixed, and the global
+15-task ceiling remains unchanged. The initial simultaneous-app test exposed a
+stranded picker account below the selected user's process-order boundary. Nested
+now loads user code, retires the picker, reserves the user (reusing that account),
+then publishes its full view. Admission refusal restarts the picker. A later
+user-startup fault still needs the broader recovery work listed below.
+
+Refusal cleanup also exposed an unused object-executable reference: the old path
+minted it before policy checks and could retain it on reservation refusal.
+`TASK_IMAGE_RELEASE` (72) now drops an unused caller-local object grant; templates
+are refused and consumed grants are stale. Stock admission creates the grant only
+after preflight and releases it on reservation failure. This preserves the
+existing reservation rollback after a failed spawn.
+
+Trace diagnostics distinguish page/reader/channel/process/frame shortfalls,
+policy ceilings, transfer failures, surface range exhaustion and local app slots.
+The desktop keeps NO ROOM. In the nested run, the inner matrix requested
+`[100,0,0,1,97]`; its owner obtained `[36,0,0,0,0]` from the outer user, then granted
+the full inner request. No resource inventory crossed a child-facing boundary.
+
+Verification:
+
+- Workspace host tests pass, including five-family atomic refusal with live
+  charges and platform ceiling/overflow tests. Userspace/UEFI clippy, layout
+  (35 Omega / 121 Rust edges) and 17 harness unit tests pass.
+- IPC QEMU passes live page growth/use, invalid-address/handle refusal, subtree
+  cancellation and budget restoration. Its executable probes drop more than one
+  grant-table's worth of abandoned grants and verify stale names plus exact quota,
+  process and physical baselines.
+- Concurrent Nested Notes/Colors, repeated refusal, switching, reuse after close,
+  isolation and both cold boots pass: `desktop/20261020T030752847109Z`.
+- Normal desktop, three independent Notes drafts and whole-store oracle pass:
+  `desktop/20261020T030423386464Z` (536 records). Deep Split passes coexistence,
+  nested close/resize/funding refusal and cold persistence:
+  `desktop/20261020T030320712540Z`.
+- Matrix desktop recovery and cold reopen pass. ARM64 portability proof passes;
+  the new live-growth syscall's guest exercise is currently x86-64.
+
+Next: nested background/picker and post-admission user-startup recovery, live
+layout reflow, and a deliberate upgrade route for saved inner code snapshots.
+Existing inner users retain their code; create a new inner user to try live
+growth. Flexible surface funding and live quota return are still separate work.
+Previous intermittent ATA and unreproduced NO_MEMORY reports remain unresolved.
+All tests used disposable images; the interactive saved disk was not touched.

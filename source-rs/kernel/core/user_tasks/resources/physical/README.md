@@ -51,7 +51,10 @@ The frame bank has no fallible metadata growth after preparation. IPC arenas,
 kernel heap/boot allocations and permanently reserved hardware storage remain
 separate fixed kernel costs. Enough frame funding does not promise that other
 bounds (image size, objects, mappings, handles or process slots) permit an operation.
-There is no demand paging, swap, active-child rebudgeting or sponsorship transfer.
+`RESOURCE_GROW` can add physical funding to a live child atomically with its
+page/channel/process allowances; see [resource growth](../README.md). Shrinking
+still requires an idle account and respects retained charges. There is no demand
+paging, swap or sponsorship transfer.
 
 ## Evidence and matrix integration
 

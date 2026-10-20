@@ -107,7 +107,7 @@ impl Children {
         let status = match launcher.result.take().unwrap() {
             Err(code) => Err(code),
             Ok(mut object) => {
-                let admitted = self.run_object(launcher.plan, &mut object, server, world);
+                let admitted = self.run_object(launcher.plan, &mut object, parent, server, world);
                 drop(object);
                 match admitted {
                     Err(error) => Err(error.0 as u64),

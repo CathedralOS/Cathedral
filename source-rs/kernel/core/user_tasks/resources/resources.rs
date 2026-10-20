@@ -4,6 +4,38 @@ use crate::{ipc::Ipc, user_tasks::memory::regions::Regions};
 use cathedral_kernel_contracts::memory;
 use cathedral_kernel_contracts::user as abi;
 
+/// Validate every family against the same serialized snapshot, then publish all.
+/// Existing mappings/charges are untouched; growth spends only unused owner funds.
+pub fn grow(
+    ipc: &mut Ipc,
+    regions: &mut Regions,
+    funding: &mut physical::Funding,
+    pool: &mut crate::user_tasks::admission::pool::Pool,
+    owner: usize,
+    child: usize,
+    delta: [usize; 5],
+) -> Result<(), u64> {
+    if owner >= abi::MAX_TASKS || child >= abi::MAX_TASKS || owner == child {
+        return Err(abi::INVALID_ARGUMENT);
+    }
+    let old = snapshot(ipc, regions, child);
+    let mut limits = [0; 3];
+    for i in 0..3 {
+        limits[i] = old[i].checked_add(delta[i]).ok_or(abi::INVALID_ARGUMENT)?;
+    }
+    let frames = funding.snapshot(child)[0].checked_add(delta[4]).ok_or(abi::INVALID_ARGUMENT)?;
+    funding.check_assign(owner, child, frames)?;
+    let slots = pool.available(child).checked_add(delta[3]).ok_or(abi::INVALID_ARGUMENT)?;
+    let mut staged_pool = pool.clone();
+    staged_pool.assign(owner, child, slots).map_err(|error| {
+        if error == abi::NO_MEMORY { abi::NO_PROCESS_CAPACITY } else { error }
+    })?;
+    assign(ipc, regions, owner, child, limits)?;
+    funding.assign(owner, child, frames).expect("validated growth");
+    *pool = staged_pool;
+    Ok(())
+}
+
 pub fn snapshot(ipc: &Ipc, regions: &Regions, account: usize) -> [usize; 6] {
     let [private, shared] = regions.limits(account);
     let [pages, readers] = regions.charged(account);

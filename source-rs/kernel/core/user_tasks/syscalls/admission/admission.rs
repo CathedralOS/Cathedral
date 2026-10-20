@@ -42,6 +42,14 @@ pub(super) fn dispatch(
         session.memory.hold(region);
         return Ok(name);
     }
+    if operation == abi::TASK_IMAGE_RELEASE {
+        let Code::Object { region, .. } = session.executables.resolve(caller, first)? else {
+            return Err(abi::DENIED);
+        };
+        session.executables.take(caller, first)?;
+        session.memory.unref_later(region);
+        return Ok(0);
+    }
     if operation == abi::TASK_IMAGE_AT {
         return session
             .executables

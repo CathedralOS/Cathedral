@@ -19,7 +19,7 @@ pub static CATHEDRAL_IMPORTS: [u8; cathedral_platform_contracts::imports::PROFIL
         &cathedral_platform_contracts::imports::REQUIRED,
         40,
         5,
-        [320, 512, 24],
+        [320, 512, 32],
     );
 cathedral_user_runtime::entry_with_environment!(main);
 fn main(_: u64, _argument: u64, environment: cathedral_user_runtime::task::Environment) -> u64 {

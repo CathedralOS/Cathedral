@@ -41,6 +41,9 @@ pub const TIMED_OUT: u64 = (-110i64) as u64;
 pub const MAX_INTERVAL: u64 = (1 << 63) - 1;
 pub const BUSY: u64 = (-16i64) as u64;
 pub const NO_MEMORY: u64 = (-12i64) as u64;
+/// Resource growth cannot transfer the requested unused descendant slots.
+/// Includes slots below the child's ordering boundary; no account IDs disclosed.
+pub const NO_PROCESS_CAPACITY: u64 = (-201i64) as u64;
 pub const BAD_EXECUTABLE: u64 = (-8i64) as u64;
 pub const EXIT_BYTES: usize = 40;
 pub const EXIT_RETURNED: u64 = 0;
@@ -167,5 +170,11 @@ pub const TASK_IMAGE_FROM_OBJECT: u64 = 69;
 /// Exclusive bootstrap input grant: command, data, writable 16-byte reply.
 /// Fixed virtual pointer transport, not arbitrary I/O or hypervisor access.
 pub const INPUT_VIRTUAL_POINTER: u64 = 70;
+/// Owned launch, pointer to five u64 increments, zero: private pages, readers,
+/// channels, unused descendant slots, physical frames. Atomic conserving growth,
+/// including live children. Does not change mapping/handle maxima or CPU limits.
+pub const RESOURCE_GROW: u64 = 71;
+/// Drop an unused caller-local object executable grant; consumed grants are invalid.
+pub const TASK_IMAGE_RELEASE: u64 = 72;
 pub const WAIT_IPC: u64 = 0;
 pub const WAIT_DEVICE: u64 = 1;

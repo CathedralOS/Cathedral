@@ -7,6 +7,7 @@ use super::*;
 use cathedral_user_runtime::{ipc::Handle, server::Request, task::Child, time};
 type Pair = (Handle, Handle);
 struct Owned {
+    funding: Option<cathedral_matrix::funding::Grant>,
     services: Option<cathedral_user_runtime::services::Offer>,
     task: Child,
     outcome: Option<cathedral_user_runtime::task::Outcome>,

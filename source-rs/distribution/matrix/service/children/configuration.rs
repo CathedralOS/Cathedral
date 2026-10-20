@@ -51,7 +51,7 @@ impl Children {
             stamp: 0,
             imports: cathedral_platform_contracts::imports::ALL,
         };
-        if !self.run_object(plan, &mut code, server, world)? {
+        if !self.run_object(plan, &mut code, parent, server, world)? {
             self.stop(0, server, world, parent)?;
             return Err(Error(abi::DENIED as i64));
         }
@@ -127,7 +127,7 @@ impl Children {
             stamp: 0,
             imports: cathedral_platform_contracts::imports::INTERACTION,
         };
-        self.run_object(plan, &mut code, server, world)?;
+        self.run_object(plan, &mut code, parent, server, world)?;
         let result = world.surface_range(BACKGROUND, 0, 1).and_then(|()| {
             world.place(
                 BACKGROUND,

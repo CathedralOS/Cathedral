@@ -255,3 +255,36 @@ App selection uses [scene publication](service/parent/scene.rs) to stage the old
 and new app surfaces together. A rejected stage/commit is aborted and local
 selection restored; unrelated hidden apps need no replay. This does not make
 startup, layout editing or process teardown one atomic scene transaction.
+
+## Owner-mediated funding
+
+[Admission](service/children/admission.rs) checks imports, placement and the local
+budget before creating an executable grant. [Funding](service/children/funding.rs)
+requests only the shortfall through the immediate parent's interaction endpoint.
+The receiver authenticates that exact live child, checks its owner-selected
+ceiling, requests its own shortfall upstream if necessary, then invokes the
+kernel's atomic five-resource growth operation. No ancestor or sibling budget is
+sent to the requester. Leaves without delegated growth policy are refused.
+
+The current stock policy permits admitted programs with descendant capacity to
+grow to at least 384 private pages, 768 reader pages, 40 channels, six descendants
+and 1792 physical frames, or their larger initial grant. These are finite distro
+defaults, independent of manifest requests; they do not enlarge the global pool.
+Growth remains reserved to the child until its subtree is closed. A successful
+ancestor transfer can remain at an intermediate owner after a downstream refusal;
+it is reusable capacity there, not an all-or-nothing multi-hop transaction. Failed
+transport retires the upstream stream instead of risking a stale acknowledgement.
+
+Nested starts with 32 surfaces rather than 24; surfaces remain fixed disjoint
+ranges and are not part of live funding negotiation. Its picker is retired before
+workspace reservation so that the workspace can reuse its process account, then
+receives the full viewport allowance before its first view. Admission refusal
+restarts the picker. The fresh nested desktop supports two ordinary leaves;
+three leaves and deeper Nested still exceed the current composition. Existing
+inner users retain their saved code snapshots; new inner users use current seeds.
+
+`--trace-storage` reports five-dimensional `funding-shortfall`, `funding-granted`
+and `funding-policy-refused` samples in the order private/readers/channels/slots/
+frames. Surface and local app-slot refusals have separate tags. The desktop keeps
+its existing NO ROOM response. This is not a resource-management UI, live quota
+withdrawal, CPU renegotiation or dynamic surface relocation.

@@ -9,8 +9,17 @@ pub(super) fn check(launch: cathedral_user_runtime::task::Launch) {
             raw(abi::RESOURCE_ASSIGN, launch.raw(), address, 0),
             abi::BAD_ADDRESS
         );
+        assert_eq!(
+            raw(abi::RESOURCE_GROW, launch.raw(), address, 0),
+            abi::BAD_ADDRESS
+        );
     }
     assert_eq!(raw(abi::RESOURCE_ASSIGN, 0, 0, 0), abi::BAD_HANDLE);
+    assert_eq!(raw(abi::RESOURCE_GROW, 0, 0, 0), abi::BAD_HANDLE);
+    assert_eq!(
+        raw(abi::RESOURCE_GROW, launch.raw(), 0, 1),
+        abi::INVALID_ARGUMENT
+    );
     assert_eq!(
         raw(abi::RESOURCE_ASSIGN, launch.raw(), 0, 1),
         abi::INVALID_ARGUMENT

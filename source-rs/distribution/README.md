@@ -21,8 +21,8 @@ services. An unfunded further level reports **NO ROOM** without losing drafts.
 **Nested** starts a scoped copy of the same login/desktop flow inside the app
 area. Create and select an inner user, then run Notes or Colors there. Its files
 stay inside that Nested program's realm. Close it using the outer task-row X;
-any unsaved descendant refuses that close. The current fixed funding supports one
-inner app at a time and refuses another Nested level with **NO ROOM**. Close other
+any unsaved descendant refuses that close. Owner-mediated funding supports two
+inner leaf apps at a time; a third or another Nested level reports **NO ROOM**. Close other
 outer apps before launching Nested. This is a bounded composition proof, without
 authentication, encryption or hardware virtualization.
 

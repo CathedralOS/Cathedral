@@ -1,6 +1,13 @@
 //! Experimental local-world protocol. Children can address only their own binding.
 //! No ancestor coordinates, global IDs, sibling enumeration or depth on the wire.
 pub type Packet = [u64; 8];
+/// Child interaction request: five incremental amounts (private pages, reader
+/// pages, channels, descendant slots, physical frames), then two zero words.
+/// The authenticated immediate owner may grant or refuse, and may ask its owner
+/// for its own shortfall. Success transfers all requested amounts atomically on
+/// this edge. Earlier ancestor grants may remain reserved after downstream refusal.
+/// No global/ancestor budget inspection or automatic retry after transport failure.
+pub const FUND: u64 = 25;
 pub const VIEW: u64 = 1;
 pub const NEXT: u64 = 2;
 pub const PAINT: u64 = 3; // epoch, owned surface handle, local x,y,width,height,rgb

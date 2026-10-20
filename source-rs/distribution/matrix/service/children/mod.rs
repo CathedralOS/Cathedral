@@ -3,6 +3,7 @@
 mod admission;
 mod configuration;
 mod control;
+mod funding;
 mod imports;
 mod launch;
 mod lifecycle;

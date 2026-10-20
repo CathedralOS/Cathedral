@@ -1,5 +1,6 @@
 // Backed process capacity and caller-local executable grants, separate from running tasks.
 use cathedral_kernel_contracts::user as abi;
+#[derive(Clone)]
 pub struct Pool {
     owners: [Option<usize>; abi::MAX_TASKS],
     occupied: [bool; abi::MAX_TASKS],

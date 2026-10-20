@@ -78,6 +78,7 @@ impl Children {
         &mut self,
         plan: super::parent::LaunchRequest,
         object: &mut cathedral_user_runtime::memory::Object,
+        parent: &mut Parent,
         server: &mut Server,
         world: &mut World,
     ) -> Result<bool, Error> {
@@ -95,7 +96,6 @@ impl Children {
             return Err(Error(abi::DENIED as i64));
         }
         let storage = binding & cathedral_platform_contracts::imports::STORAGE != 0;
-        let executable = Executable::from_object(object, 0)?;
         let (mut pages, frames) = match plan.pages {
             Some(pages) => (pages, None),
             None => (
@@ -116,6 +116,28 @@ impl Children {
             pages = [pages[0].min(128), pages[1].min(128)];
             self.requested_surfaces[plan.slot] = Some(10);
         }
+        let (channels, descendants) = resources
+            .map_or((plan.channels, plan.descendants), |(c, d)| {
+                (c.min(plan.channels), d.min(plan.descendants))
+            });
+        let slots = descendants
+            .checked_add(1)
+            .ok_or(Error(abi::INVALID_ARGUMENT as i64))?;
+        let physical = frames.unwrap_or(
+            slots
+                .checked_mul(256)
+                .ok_or(Error(abi::INVALID_ARGUMENT as i64))?,
+        );
+        // The control pair belongs to the reserved process slot. Only the
+        // interaction/wake/storage channels are charged to this creator.
+        let connection_channels = if storage && self.separate_storage {
+            5
+        } else {
+            3
+        };
+        let connected_channels = channels
+            .checked_add(connection_channels)
+            .ok_or(Error(abi::INVALID_ARGUMENT as i64))?;
         // Reserve geometry before spawning so a nested matrix cannot start with
         // less presentation capacity than it requested.
         if self.desktop
@@ -123,32 +145,52 @@ impl Children {
         {
             let ceiling = self.standing[plan.slot].map_or(0, |s| s.surfaces);
             if count > ceiling {
+                time::storage_sample("funding-surface-refused", &[count, ceiling]);
                 return Err(Error(abi::NO_MEMORY as i64));
             }
             self.place_surface_range(world, plan.slot, count as usize)
+                .inspect_err(|_| {
+                    time::storage_sample(
+                        "funding-surface-refused",
+                        &[count, world.backed_surfaces() as u64],
+                    )
+                })
                 .map_err(|c| Error(c as i64))?;
         }
-        let (channels, descendants) = resources
-            .map_or((plan.channels, plan.descendants), |(c, d)| {
-                (c.min(plan.channels), d.min(plan.descendants))
-            });
-        let admitted = self.admit(
-            plan.slot,
-            executable,
-            pages,
-            frames,
-            [
-                plan.argument,
-                channels,
-                descendants,
-                self.allowed_images[plan.slot],
-                plan.cpu,
-            ],
-            storage && self.separate_storage,
-            brokered.then_some(binding),
-            server,
-            world,
-        );
+        let admitted = (|| {
+            funding::ensure(
+                parent,
+                [pages[0], pages[1], connected_channels, slots, physical],
+            )?;
+            let executable = Executable::from_object(object, 0)?;
+            let result = self.admit(
+                plan.slot,
+                executable,
+                pages,
+                frames,
+                [
+                    plan.argument,
+                    channels,
+                    descendants,
+                    self.allowed_images[plan.slot],
+                    plan.cpu,
+                ],
+                storage && self.separate_storage,
+                brokered.then_some(binding),
+                server,
+                world,
+            );
+            if result.is_err() {
+                // A successful reservation consumes the grant; otherwise its held
+                // image reference must be released even when admission never began.
+                match executable.release() {
+                    Ok(()) => (),
+                    Err(Error(code)) if code == abi::BAD_HANDLE as i64 => (),
+                    Err(error) => return Err(error),
+                }
+            }
+            result
+        })();
         if admitted.is_err() && self.desktop {
             world
                 .surface_range(plan.slot, 0, 0)
@@ -220,6 +262,14 @@ impl Children {
                 [private_pages, reader_pages, channels],
             );
             target.release()?;
+        } else {
+            self.slots[slot].as_mut().unwrap().funding = funding::policy([
+                private_pages,
+                reader_pages,
+                channels,
+                descendants,
+                requested_frames.unwrap_or(default_frames),
+            ]);
         }
         result
     }
@@ -255,6 +305,7 @@ impl Children {
                 .expect("child catalog slot changed");
         }
         self.slots[slot] = Some(Owned {
+            funding: None,
             services: admitted.services,
             task: admitted.task,
             outcome: None,

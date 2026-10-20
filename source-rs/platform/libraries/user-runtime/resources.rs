@@ -57,6 +57,16 @@ pub fn assign(child: Launch, limits: Limits) -> Result<(), Error> {
         0,
     ))
 }
+/// Atomic increments along an owned launch edge; allowed while the child runs.
+pub fn grow(child: Launch, delta: [u64; 5]) -> Result<(), Error> {
+    let record = Record([delta[0], delta[1], delta[2], delta[3], delta[4], 0]);
+    result(arch::call3(
+        abi::RESOURCE_GROW,
+        child.raw(),
+        record.0.as_ptr() as u64,
+        0,
+    ))
+}
 fn result(value: u64) -> Result<(), Error> {
     if (value as i64) < 0 {
         Err(Error(value as i64))

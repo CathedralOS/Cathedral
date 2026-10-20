@@ -19,12 +19,17 @@ pub fn run() {
     probes::check(launch);
     let loan = Launch::at(2).unwrap();
     let child = launch.spawn_tree(20, &[], &[loan]).unwrap();
-    let (_, events) = Port::at(1).unwrap().connect().unwrap();
+    let (commands, events) = Port::at(1).unwrap().connect().unwrap();
     assert_eq!(&receive(events).0[..5], b"ready");
     assert_eq!(
         resources::assign(launch, limits(8, 4)),
         Err(Error(abi::BUSY as i64))
     );
+    let live = resources::budget().unwrap();
+    resources::grow(launch, [1, 1, 0, 0, 0]).unwrap();
+    assert_eq!(resources::budget().unwrap().limits.private_pages, live.limits.private_pages - 1);
+    commands.send(b"grow").unwrap();
+    assert_eq!(&receive(events).0[..5], b"grown");
     child.cancel().unwrap();
     assert_eq!(child.wait().unwrap(), Outcome::Cancelled);
     // Returned accounts retain their reservations; explicitly reclaim only unused capacity.
@@ -52,5 +57,12 @@ pub fn worker(mode: u64) -> u64 {
     assert_eq!(resources::budget().unwrap().used.channels, 4);
     Handle::bootstrap(1).unwrap().send(b"ready").unwrap();
     Handle::bootstrap(0).unwrap().receive(&mut [0; 64]).unwrap();
+    if mode == 20 {
+        assert_eq!(resources::budget().unwrap().limits.private_pages, 5);
+        raw::allocate(1).unwrap();
+        assert_eq!(raw::allocate(1), Err(Error(abi::NO_MEMORY as i64)));
+        Handle::bootstrap(1).unwrap().send(b"grown").unwrap();
+        Handle::bootstrap(0).unwrap().receive(&mut [0; 64]).unwrap();
+    }
     0
 }

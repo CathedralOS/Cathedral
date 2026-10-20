@@ -21,22 +21,11 @@ impl Children {
             }
             *mode = Startup::Hosted;
         }
-        if self.login && !self.entered && self.slots[1].is_some() {
-            self.stop(0, server, world, parent)?;
-            // Expansion keeps the child's rank base unchanged: the initial
-            // allowance starts at zero; the picker was stacked above it.
-            world
-                .surface_range(1, 0, world.backed_surfaces())
-                .map_err(|c| Error(c as i64))?;
-            self.entered = true;
-            self.notify(world)?;
-            cathedral_user_runtime::write(
-                b"Cathedral nested desktop: picker retired; user owns viewport\n",
-            )?;
-        }
+        // A selected user's admission and picker retirement are sequenced in
+        // children/launch.rs, before that user's first placement is published.
         Ok(())
     }
-    fn start_picker(
+    pub(super) fn start_picker(
         &mut self,
         parent: &mut Parent,
         world: &mut World,
@@ -68,6 +57,7 @@ impl Children {
                 imports: cathedral_platform_contracts::imports::ALL,
             },
             &mut code,
+            parent,
             server,
             world,
         )?;

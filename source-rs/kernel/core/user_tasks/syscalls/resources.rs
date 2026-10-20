@@ -1,4 +1,4 @@
-//! Caller-local account inspection and atomic subdivision into an owned idle child.
+//! Caller-local inspection, idle reassignment and atomic growth of an owned child.
 use super::{Session, abi};
 pub(super) fn dispatch(
     session: &mut Session,
@@ -38,6 +38,35 @@ pub(super) fn dispatch(
             .find(|launch| launch.model.launch(slot) == Ok(first))
             .ok_or(abi::BAD_HANDLE)?
             .model;
+        if operation == abi::RESOURCE_GROW {
+            let child = model.child;
+            let mut bytes = [0; 40];
+            // SAFETY: Full caller range checked before any ledger changes; sole CPU.
+            if !unsafe {
+                session.tasks[slot]
+                    .space
+                    .as_ref()
+                    .unwrap()
+                    .copy_from_user(second, &mut bytes)
+            } {
+                return Err(abi::BAD_ADDRESS);
+            }
+            let mut delta = [0; 5];
+            for (value, bytes) in delta.iter_mut().zip(bytes.chunks_exact(8)) {
+                *value = usize::try_from(u64::from_le_bytes(bytes.try_into().unwrap()))
+                    .map_err(|_| abi::INVALID_ARGUMENT)?;
+            }
+            crate::user_tasks::resources::grow(
+                &mut session.ipc,
+                &mut session.memory.model,
+                &mut session.memory.funding,
+                &mut session.pool,
+                slot,
+                child,
+                delta,
+            )?;
+            return Ok(0);
+        }
         if !model.idle() {
             return Err(abi::BUSY);
         }

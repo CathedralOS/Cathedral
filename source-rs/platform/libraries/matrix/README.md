@@ -26,12 +26,16 @@ use this machinery with the existing runtime IPC server.
   and [launch observations](world/launches.rs) use independently selected child
   capacities. They work without display state. `Scopes::prepare` is the shared
   connection/revision check and scope-stamping path for stock and Split storage.
+- [Funding](funding.rs) computes a local shortfall and validates growth against
+  caller-selected ceilings. It contains no desktop limits or automatic grants.
+  The `FUND` protocol reaches the supplying matrix over its interaction endpoint;
+  the kernel's `RESOURCE_GROW` performs the conserving transfer.
 
 This is a library, not a compulsory initial process or a desktop server. Another
 distribution can compose these mechanisms with its own processes and protocols,
 or implement the public service interfaces itself. The existing
 [stock matrix executable](../../../distribution/matrix/main.rs) remains the
-F5 consumer and owns its two-slot layout, configuration, control router and
+F5 consumer and owns its desktop slots, configuration, control router and
 recovery policy. Shared protocols stay in [platform contracts](../../contracts/matrix.rs).
 
 Host tests cover a three-child vertical arrangement with the last child as the

@@ -22,6 +22,7 @@ impl Children {
                 return server.reply(&request, &wire::encode(wire::error(abi::DENIED)));
             }
             let Some(slot) = (1..BACKGROUND).find(|s| self.slots[*s].is_none()) else {
+                time::storage_sample("funding-local-slots-refused", &[3]);
                 return server.reply(&request, &wire::encode(wire::error(abi::NO_MEMORY)));
             };
             slot
@@ -95,7 +96,13 @@ impl Children {
         let mut status = match result {
             Err(code) => Err(code),
             Ok(mut object) => {
-                let admitted = self.run_object(plan, &mut object, server, world);
+                if self.login && !self.entered && plan.slot == 1 {
+                    // Reuse the picker account for the workspace. Keeping it
+                    // alive through reservation strands that lower slot outside
+                    // the workspace's descendant pool. Code is already loaded.
+                    self.stop(0, server, world, parent)?;
+                }
+                let admitted = self.run_object(plan, &mut object, parent, server, world);
                 drop(object); // The kernel holds its own reference to the image.
                 match admitted {
                     Err(error) => Err(error.0 as u64),
@@ -113,6 +120,18 @@ impl Children {
                 }
             }
         };
+        // Retire the picker before publishing the user's first view. Otherwise
+        // a workspace can configure chrome against a temporary smaller allowance.
+        if status.is_ok() && self.login && !self.entered && plan.slot == 1 {
+            self.entered = true;
+            self.standing[1].as_mut().unwrap().surfaces = world.backed_surfaces() as u64;
+            cathedral_user_runtime::write(
+                b"Cathedral nested desktop: picker retired; user owns viewport\n",
+            )?;
+        }
+        if status.is_err() && self.login && !self.entered && self.slots[0].is_none() {
+            self.start_picker(parent, world, server)?;
+        }
         if status.is_ok()
             && request.client.is_some()
             && let Some(standing) = self.standing[plan.slot]
