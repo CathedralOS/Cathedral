@@ -72,8 +72,13 @@ their boot permissions. ARM64 already borrows its permanent supervisor branch
 and completes this phase immediately. The ISA retains owned range/cursor values,
 never a page-table borrow across suspension. The x86 root accessor refuses an
 unfinished supervisor tree. Later steps copy, zero and map at most eight image
-or stack pages, then reserve runtime mapping tables and map any approved
-framebuffer in separate phases. The generic page cursor knows segments, not ELF.
+or stack pages, then reserve runtime mapping tables. An approved framebuffer is
+mapped in batches of at most 64 leaves through
+[framebuffer.rs](../../address_space/framebuffer.rs). Core retains only its byte
+offset; the ISA validates each slice and encodes device permissions/cache policy.
+Only table frames enter the owned ledger, never device backing. No context or
+device route is published during this construction. The generic image cursor
+knows segments, not ELF.
 Initial boot admission remains synchronous because no users are runnable yet.
 It runs the same mapping engine to completion before loading the user image.
 As with image batching, extra yields can lengthen admission under contention;
@@ -125,7 +130,7 @@ Final collection and whole-session conservation assertions are still atomic.
 ## Limits and evidence
 
 This is not a bounded-time kernel: executable decoding, bare-root allocation, runtime
-table reservation, framebuffer mapping, final authority commit, subtree
+table reservation, final authority commit, subtree
 authority withdrawal, final collection, failure rollback, final page-object mapping,
 sealing/unmapping, heap operations and event bursts still run uninterrupted.
 Subtree physical retirement is now staged, but single-object cleanup and pending
@@ -147,6 +152,12 @@ absence of mappings and exact funding/frame refunds. The
 [admission fixture](../../admission/rollback.rs) builds a multi-batch image,
 fails at every physical-frame allowance, cancels at every phase boundary and
 checks unpublished task/IPC state, zeroed BSS, final permissions and exact refunds.
+On x86 it also maps the real reserved framebuffer, checks the batch count and
+aborts at every device-mapping boundary. Display probes still verify guard/NX
+faults and rejection by RAM checked-copy helpers. A
+[reference burst fixture](../../memory/references_test.rs) settles 140 kernel
+references across 70 objects, checks exact backing/funding refunds and preserves
+a sealed live owner mapping. Reference settlement remains atomic.
 It also exercises owner/peer death, newly busy initial rights and abandonment of
 an object-backed executable through the production lifecycle on both ISAs. A
 committed parent/child teardown checks the eight-frame allowance on every step,

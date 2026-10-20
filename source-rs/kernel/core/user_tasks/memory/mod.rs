@@ -7,6 +7,8 @@ mod retirement;
 mod sharing;
 pub(in crate::user_tasks) use closing::{Closing, step as close_step};
 pub(super) mod frames;
+#[cfg(feature = "memory-lab")]
+mod references_test;
 #[deny(unsafe_code)]
 pub(crate) mod regions;
 #[cfg(feature = "memory-lab")]

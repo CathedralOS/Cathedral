@@ -8,6 +8,7 @@ use cathedral_arch::{self as arch, Context};
 pub(super) const PAGE_BATCH: usize = 8;
 // Leaf edits are lighter than image copying; this is a work allowance, not WCET.
 const KERNEL_PAGE_BATCH: usize = 64;
+pub(super) const FRAMEBUFFER_PAGE_BATCH: usize = 64;
 enum Phase {
     Kernel,
     Image,
@@ -19,6 +20,7 @@ pub(in crate::user_tasks) struct Draft {
     space: UserSpace,
     plan: image::Plan,
     cursor: LoadCursor,
+    framebuffer_offset: u64,
     phase: Phase,
 }
 impl Draft {
@@ -28,6 +30,10 @@ impl Draft {
     #[cfg(feature = "memory-lab")]
     pub(super) fn preparing_kernel(&self) -> bool {
         matches!(self.phase, Phase::Kernel)
+    }
+    #[cfg(feature = "memory-lab")]
+    pub(super) fn preparing_framebuffer(&self) -> bool {
+        matches!(self.phase, Phase::Framebuffer)
     }
 }
 
@@ -59,17 +65,25 @@ pub(in crate::user_tasks) unsafe fn advance(
         .as_ref()
         .map(|draft| &draft.phase)
     {
-        None => TimedPhase::DecodeRoot,
-        Some(Phase::Kernel) => TimedPhase::KernelMappings,
-        Some(Phase::Image) => TimedPhase::ImageBatch,
-        Some(Phase::Regions) => TimedPhase::RegionTables,
-        Some(Phase::Framebuffer) => TimedPhase::Framebuffer,
+        None => Some(TimedPhase::DecodeRoot),
+        Some(Phase::Kernel) => Some(TimedPhase::KernelMappings),
+        Some(Phase::Image) => Some(TimedPhase::ImageBatch),
+        Some(Phase::Regions) => session
+            .memory
+            .model
+            .enabled(child)
+            .then_some(TimedPhase::RegionTables),
+        Some(Phase::Framebuffer) => session.launches[index]
+            .framebuffer
+            .map(|_| TimedPhase::Framebuffer),
         Some(Phase::Ready) => unreachable!("completed draft advanced"),
     };
     let start = timing::start();
     // SAFETY: Same private-root and executable custody as advance.
     let result = unsafe { step(session, layout, image_range, program, frames, index) };
-    session.timing.record(phase, start);
+    if let Some(phase) = phase {
+        session.timing.record(phase, start);
+    }
     let allocated = frames.allocated() - baseline;
     session
         .memory
@@ -110,6 +124,7 @@ unsafe fn step(
             space,
             plan,
             cursor: LoadCursor::default(),
+            framebuffer_offset: 0,
             phase: Phase::Kernel,
         });
         return Ok(false);
@@ -151,11 +166,18 @@ unsafe fn step(
                 draft.phase = Phase::Framebuffer;
             }
             Phase::Framebuffer => {
-                if let Some(fb) = framebuffer {
-                    draft
+                if let Some(fb) = framebuffer
+                    && !draft
                         .space
-                        .map_framebuffer(fb, frames)
-                        .map_err(Error::Memory)?;
+                        .map_framebuffer_pages(
+                            fb,
+                            &mut draft.framebuffer_offset,
+                            FRAMEBUFFER_PAGE_BATCH,
+                            frames,
+                        )
+                        .map_err(Error::Memory)?
+                {
+                    return Ok(false);
                 }
                 draft.phase = Phase::Ready;
             }

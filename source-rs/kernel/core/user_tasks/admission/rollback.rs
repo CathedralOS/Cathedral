@@ -20,11 +20,13 @@ struct Fixture<'a> {
 
 /// # Safety
 /// Sole boot CPU, inactive user machinery, initialized heap and live kernel layout.
+/// Any supplied framebuffer is the exclusively held, reserved boot aperture.
 #[inline(never)]
 pub(in crate::user_tasks) unsafe fn exercise(
     frames: &mut FrameAllocator,
     layout: &arch::BootLayout,
     image: arch::ImageRange,
+    framebuffer: Option<cathedral_kernel_contracts::framebuffer::Framebuffer>,
     output: fn(&[u8]) -> bool,
 ) {
     output(b"staged admission: physical rollback\n");
@@ -35,7 +37,7 @@ pub(in crate::user_tasks) unsafe fn exercise(
     };
     // SAFETY: No fixture root is ever executed; all frames are privately held here.
     unsafe {
-        physical(frames, layout, image, &program, output);
+        physical(frames, layout, image, &program, framebuffer, output);
         output(b"staged admission: interrupted authority\n");
         for death in 0..3 {
             interrupted(frames, layout, image, &program, death);
@@ -142,12 +144,17 @@ unsafe fn physical(
     layout: &arch::BootLayout,
     image: arch::ImageRange,
     program: &Program<'_>,
+    framebuffer: Option<cathedral_kernel_contracts::framebuffer::Framebuffer>,
     output: fn(&[u8]) -> bool,
 ) {
     // SAFETY: Exclusive machine/frame custody for this entire fixture.
     let mut f = unsafe { setup(frames, layout, image, program) };
+    // Only the private draft may borrow the real boot-approved aperture. No
+    // fixture root executes or accesses device backing, including across aborts.
+    f.session.launches[0].framebuffer = framebuffer;
     let mut steps = 0;
     let mut kernel_steps = 0;
+    let mut framebuffer_steps = 0;
     loop {
         steps += 1;
         if f.session.launches[0]
@@ -156,6 +163,13 @@ unsafe fn physical(
             .is_some_and(Draft::preparing_kernel)
         {
             kernel_steps += 1;
+        }
+        if f.session.launches[0]
+            .draft
+            .as_ref()
+            .is_some_and(Draft::preparing_framebuffer)
+        {
+            framebuffer_steps += 1;
         }
         // SAFETY: Immutable ELF retained; child remains outside runnable context storage.
         let ready =
@@ -173,6 +187,14 @@ unsafe fn physical(
     assert!(kernel_steps > 1); // The heap alone requires several supervisor batches.
     #[cfg(target_arch = "aarch64")]
     assert_eq!(kernel_steps, 1); // This backend borrows a permanent branch at creation.
+    if let Some(fb) = framebuffer {
+        assert_eq!(
+            framebuffer_steps,
+            (fb.bytes as usize / 4096).div_ceil(super::construction::FRAMEBUFFER_PAGE_BATCH)
+        );
+    }
+    output(b"staged admission: complete construction observations\n");
+    f.session.timing.report(output);
     let required = f.source.allocated() - f.admitted;
     // SAFETY: Even a complete draft is private until final authority commit.
     unsafe {
@@ -222,6 +244,8 @@ unsafe fn physical(
         Err(abi::BAD_HANDLE)
     );
     let space = f.session.tasks[2].space.as_ref().unwrap();
+    // Device mappings never enter the checked-copy RAM ledger.
+    assert!(!space.writable_range(cathedral_kernel_contracts::framebuffer::USER_ADDRESS, 1));
     let mut byte = [0];
     // SAFETY: Live inactive committed root; copies validate the complete ranges.
     unsafe {

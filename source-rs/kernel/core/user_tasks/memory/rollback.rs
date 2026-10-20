@@ -9,23 +9,30 @@ use cathedral_arch::{BootLayout, ImageRange};
 /// Exercise runtime allocation rollback and admission of the reserved region table.
 /// # Safety
 /// Sole boot CPU, IRQs off, no active tasks, live kernel layout/image, initialized heap.
+/// Any framebuffer is a reserved boot aperture with exclusive custody for the fixture.
 /// Output must be bounded, allocation-free and unable to suspend.
 pub unsafe fn exercise(
     frames: &mut FrameAllocator,
     layout: &BootLayout,
     image: ImageRange,
+    framebuffer: Option<cathedral_kernel_contracts::framebuffer::Framebuffer>,
     output: fn(&[u8]) -> bool,
 ) {
     // SAFETY: Independent fixtures return every frame before the next starts.
     // Keep their large session temporaries in separate, non-inlined stack frames.
     unsafe {
-        admission::rollback::exercise(frames, layout, image, output);
-        page_objects(frames, layout, image);
+        admission::rollback::exercise(frames, layout, image, framebuffer, output);
+        page_objects(frames, layout, image, output);
     }
 }
 
 #[inline(never)]
-unsafe fn page_objects(frames: &mut FrameAllocator, layout: &BootLayout, image: ImageRange) {
+unsafe fn page_objects(
+    frames: &mut FrameAllocator,
+    layout: &BootLayout,
+    image: ImageRange,
+    output: fn(&[u8]) -> bool,
+) {
     let baseline = frames.allocated();
     let config = Config {
         executables: &[],
@@ -39,7 +46,7 @@ unsafe fn page_objects(frames: &mut FrameAllocator, layout: &BootLayout, image: 
         clock_readers: &[],
         memory: &[wire::Grant {
             task: 0,
-            private_pages: wire::MAX_PAGES,
+            private_pages: wire::MAX_PRIVATE_PAGES,
             shared_pages: 0,
         }],
     };
@@ -130,6 +137,8 @@ unsafe fn page_objects(frames: &mut FrameAllocator, layout: &BootLayout, image: 
                 .all(|region| !region.live())
         );
     }
+    // SAFETY: Prior objects retired; same inactive root and real frame custody.
+    unsafe { super::references_test::exercise(&mut session, &mut source, output) };
     // SAFETY: Never activated, no remaining borrowed regions.
     unsafe { admission::retire(&mut session, 0, &mut source) };
     assert_eq!(source.allocated(), baseline);

@@ -30,6 +30,8 @@ and userspace execution system.
   and commits the child and its authority only after construction finishes.
   Before image loading, x86 prepares at most 64 supervisor mapping leaves per
   step; ARM64 borrows its permanent supervisor branch without copying leaves.
+  Device framebuffer mappings also advance at most 64 leaves per step before
+  the child context or device authority can be published.
 - Physical subtree retirement now advances one task/draft per step, returning up
   to eight private frames. Dead-task alias cleanup scans up to 32 entries and
   cleans at most one page object. Slots, outcomes and loans wait for collection.
@@ -46,7 +48,7 @@ The table describes structural bounds; none is a qualified time bound.
 | --- | --- | --- |
 | [Trap dispatch](../user_tasks/execution/traps.rs) | Poll installed device owners and keyboard; complete affected/due waiters; inspect fixed deferred-work flags/sets | Bound completion batches and grant lookup. Readiness, terminal outcomes and timeout precedence must remain unchanged |
 | [Copied IPC delivery](../user_tasks/syscalls/ipc/delivery.rs), [readiness](../user_tasks/syscalls/ipc/readiness.rs) | Bounded message copy and capability/handle validation for each affected/due waiter | Bound bursts of completions and grant lookup; preserve messages on failed copyout and wake on revocation/death |
-| [Spawn](../user_tasks/lifecycle/spawn.rs), [construction](../user_tasks/admission/construction.rs) | One rotating admission per step; at most 64 x86 supervisor leaves or eight image/stack pages; decoding, bare-root allocation, runtime tables, framebuffer mapping, final grant commit and rollback remain whole phases | Measure and bound remaining phases and rollback; retain private root/source custody and revalidate authority after suspension |
+| [Spawn](../user_tasks/lifecycle/spawn.rs), [construction](../user_tasks/admission/construction.rs) | One rotating admission per step; at most 64 supervisor/device leaves or eight image/stack pages; decoding, bare-root allocation, runtime tables, final grant commit and rollback remain whole phases | Measure and bound remaining phases and rollback; retain private root/source custody and revalidate authority after suspension |
 | [Runtime memory](../user_tasks/memory/memory.rs), [allocation](../user_tasks/memory/allocation.rs) | Advance one rotating caller per step; allocation zeros up to eight pages; final map, seal/unmap/release and rollback still process a whole region; settle indexed pending references | Extend staged allocation's retained funding/cancellation to other page operations and rollback. Publication cannot expose a partly initialized or writable sealed object |
 | [Reclamation](../user_tasks/lifecycle/reclamation.rs), [alias cleanup](../user_tasks/memory/closing.rs) | Withdraw all canceled authority; one rotating task/draft cleanup step with up to 32 metadata entries, one page object or eight private frames; final collection, pending reference settlement and conservation assertions remain whole operations | Bound single-object unmap/free, staging cancellation, reference retirement and metadata bursts; keep admissions/outcomes/loan return behind complete physical retirement |
 | [Kernel heap](../memory/heap.rs) | Interrupt masking covers the allocator lock; allocation/free cost depends on free-list state | Keep timing-critical paths allocation-free; preallocate their working sets rather than assume a lock makes allocation time predictable |
@@ -141,6 +143,16 @@ fixture labels. Host descheduling, QEMU translation and the probes themselves
 affect observations. Compare repeated runs and structural work, not a single
 observed maximum. No desktop performance gain or WCET bound follows from these
 samples alone.
+
+`RegionTables` and `Framebuffer` now count only admissions that actually request
+those mappings. Earlier reports included no-op phases, which dilute averages.
+`Framebuffer` is now one sample per batch, not per completed aperture. The
+real-frame admission fixture reports a complete construction separately, before
+its failure/cancellation sweep. The reference-retirement fixture adds a burst of
+70 objects (65 one-page and five maximum-size) with two kernel references each;
+one owner mapping survives. It measures the production settlement path without
+claiming a maximum-size arena or concurrent workload. These fixtures fill gaps
+in ordinary smoke coverage; elapsed observations still include host scheduling.
 
 Seal/unmap now traverse the mapping ledger once per region, rather than searching
 it again for every page. Unmap compacts the ledger while removing translations;

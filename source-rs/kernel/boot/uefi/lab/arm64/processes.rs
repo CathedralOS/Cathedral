@@ -111,6 +111,7 @@ pub(super) fn rollback(
             &mut memory.frames,
             &memory.layout,
             memory.image,
+            memory.framebuffer,
             user_output,
         );
     }

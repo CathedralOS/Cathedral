@@ -79,6 +79,15 @@ table frame, including a partial batch, remains in core's rollback ledger.
 Initial admission completes this same engine synchronously; live launches yield
 between steps after dropping all table/session borrows.
 
+Framebuffer construction uses the same private-root lifetime. Core's
+[framebuffer coordinator](../core/user_tasks/address_space/framebuffer.rs) chooses
+a page batch and retains its offset; the x86
+[device backend](isa/x86_64/user/memory/device.rs) validates that slice within the
+reserved aperture and preserves user RW/NX and uncached PAT permissions. Each
+call drops its mapper before returning. Only page-table RAM is owned/refunded;
+device backing is absent from the normal RAM copy ledger. ARM64 still rejects
+framebuffer grants; this interface change does not add a display backend there.
+
 Board selection currently follows the CPU target: x86-64 selects the PC lab,
 ARM64 selects QEMU virt. `devices()` reports absent PS2/ATA adapters on virt;
 composition rejects those grants. A second board for one CPU will need explicit

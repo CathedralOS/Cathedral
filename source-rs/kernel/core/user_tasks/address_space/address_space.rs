@@ -1,5 +1,6 @@
 // Process address-space ownership: validate, construct with a frame ledger, and retire.
-// creation loads images; regions borrows page objects; access checks copies against live backing.
+// creation loads images; framebuffer borrows device pages; regions borrows page objects;
+// access checks copies against live RAM backing.
 use cathedral_arch::{
     BootLayout, FrameSource, ImageRange, MemoryError, UserMappings, memory::PAGE,
 };
@@ -146,26 +147,6 @@ impl UserSpace {
         Ok(space)
     }
 
-    /// # Safety
-    /// Inactive exclusively owned root, boot-approved reserved aperture. On error retire this space.
-    pub unsafe fn map_framebuffer(
-        &mut self,
-        fb: cathedral_kernel_contracts::framebuffer::Framebuffer,
-        frames: &mut impl FrameSource,
-    ) -> Result<(), MemoryError> {
-        let mut source = Tracked {
-            frames,
-            addresses: &mut self.owned,
-            len: &mut self.len,
-        };
-        // SAFETY: Track every allocated table, never device backing; caller retains aperture custody.
-        unsafe {
-            self.mapping
-                .as_mut()
-                .unwrap()
-                .map_framebuffer(fb, &mut source)
-        }
-    }
     /// # Safety
     /// Kernel root active, IRQs off. Task can never resume; no saved references
     /// or mappings outside this retired root refer to these owned frames.

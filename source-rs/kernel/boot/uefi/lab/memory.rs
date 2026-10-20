@@ -18,6 +18,7 @@ pub fn exercise(memory: &mut PreparedMemory, console: &mut SerialPort) {
             &mut memory.frames,
             &memory.layout,
             memory.image,
+            memory.framebuffer,
             user_output,
         )
     };

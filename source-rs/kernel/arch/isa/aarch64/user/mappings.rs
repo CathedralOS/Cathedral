@@ -136,6 +136,8 @@ impl UserMappings {
     pub unsafe fn map_framebuffer(
         &mut self,
         _fb: cathedral_kernel_contracts::framebuffer::Framebuffer,
+        _offset: u64,
+        _bytes: u64,
         _frames: &mut impl FrameSource,
     ) -> Result<(), MemoryError> {
         Err(MemoryError::UnsupportedCpu)

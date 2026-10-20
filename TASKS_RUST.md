@@ -1,7 +1,7 @@
 # Rust reference OS: tasks and handoff
 
-Updated 2026-10-20 (local date). Current milestone: **resumable supervisor mappings
-during admission**, on baseline `fab5207d` (kernel-phase observations).
+Updated 2026-10-20 (local date). Current milestone: **staged framebuffer admission
+and retirement-burst observations**, on baseline `929db9c8` (supervisor mappings).
 The latest section records verification and remaining steps toward bounded
 execution. This does not introduce real-time reservations.
 The fresh-lab reset is `30572c9f`. Compact recursive desktops landed as `c7571191`,
@@ -3718,3 +3718,76 @@ framebuffer mapping, rollback and reference-retirement bursts. Do not infer a
 latency guarantee from the work allowance. The ARM64 exhausted-stack entry audit,
 intermittent clean-close LOSS timeout and guaranteed-service admission remain
 open; no owner decision was needed for this mechanical step.
+
+## Staged framebuffer admission and retirement observations (2026-10-20)
+
+Baseline: `929db9c8`. The next audit found a sampling problem: `RegionTables` and
+`Framebuffer` counted admissions that requested neither mapping. Those no-op
+samples no longer dilute the reports. The real-frame admission fixture now
+reports a complete private construction and, on x86, receives the actual reserved
+GOP aperture. Initial boot admission remains outside these runtime samples.
+
+[Construction](source-rs/kernel/core/user_tasks/admission/construction.rs) now
+advances framebuffer mapping by at most 64 device leaves per step. Core's
+[framebuffer coordinator](source-rs/kernel/core/user_tasks/address_space/framebuffer.rs)
+retains the byte offset and tracks table allocations; the
+[x86 device backend](source-rs/kernel/arch/isa/x86_64/user/memory/device.rs)
+validates each slice and preserves RW/NX, guards and uncached PAT policy. Device
+backing never becomes owned RAM or accessible through ordinary checked-copy
+helpers. The draft stays private and unrunnable until all mappings and the final
+authority commit complete. Every step retains the existing owner/peer and initial
+endpoint revalidation, CPU charging and physical funding. Partial failure or
+withdrawal refunds all owned tables, never the device aperture.
+
+The normal 1024x768 GOP aperture spans 768 pages and now takes 12 mapping steps;
+the contract's maximum 16 MiB aperture takes at most 64. Initial boot uses the
+same engine synchronously. ARM64 keeps its explicit unsupported framebuffer
+result; no display backend, ABI, deadline or capacity changed. The framebuffer
+coordinator is a named sibling of image construction and page-object mappings;
+`mod.rs` remains plumbing.
+
+A new [reference-retirement fixture](source-rs/kernel/core/user_tasks/memory/references_test.rs)
+creates 70 real objects across bitmap words: 65 one-page objects and five
+128-page objects, each held by two kernel references. It drops those references
+through production settlement, verifies exact backing/funding refunds and keeps
+one sealed owner mapping readable. The baseline settled the burst in 30 us;
+the final x86 sample was 49 us and ARM64 155 us. Settlement remains atomic: these
+observations do not justify prioritizing another state machine there yet, and
+this is not a full-arena worst case or a competing-workload measurement.
+
+The new complete-construction sample observed runtime-table preparation at
+140 us on x86 and 134 us on ARM64. x86 framebuffer preparation totaled 828 us
+across 12 batches, with a 412 us maximum. Earlier successful whole-framebuffer
+samples were in the hundreds of microseconds; batching does not remove work,
+and host scheduling makes these unsuitable for a speedup or latency-bound claim.
+The reason for this split is the explicit cap on uninterrupted leaf edits.
+
+Verification:
+
+- Workspace host tests, default x86 UEFI clippy and smoke-feature x86/ARM64 clippy
+  pass. Layout, formatting and whitespace checks pass.
+- Release x86 smoke passes. Real-frame admission cancels at every construction
+  boundary, now including each framebuffer batch, and fails every physical frame
+  allowance while checking unpublished context/IPC state and exact refunds.
+  Display probes still pass NX/guard faults, checked-copy rejection, provider
+  restart and every device-table allocation failure. ARM64 portability passes,
+  including admission rollback and the new reference burst.
+- Fresh and cold three-level desktop runs pass with pointer stress, protected
+  close, deepest Notes persistence, isolation and two teardown/reopen cycles per
+  boot: `desktop/20261020T234449530073Z`, `build/aperture-desktop.log`. These use
+  ordinary builds with timing collection disabled. The interactive saved disk
+  was untouched. The intermittent LOSS timeout did not recur; delayed interaction
+  replies were not enabled in this run.
+- Logs: `build/burst-baseline.log`, `build/burst-baseline-serial.log`,
+  `build/aperture-smoke.log`, `build/aperture-final-serial.log`,
+  `build/aperture-host.log`, `build/aperture-clippy.log`,
+  `build/aperture-default.log`, `build/aperture-arm64-clippy.log`,
+  `build/aperture-arm64.log`.
+
+Next: runtime-table preparation still runs atomically; ARM64 currently walks
+all leaves to reserve tables where one visit per leaf-table span should suffice.
+Measure that simplification before adding a cursor. Whole error rollback,
+single-object cleanup and reference/escrow bursts remain bounded only by their
+capacity limits. Keep the ARM64 exhausted-stack entry/reporting audit and the
+intermittent clean-close LOSS timeout open. Guaranteed-service admission remains
+a separate design decision; this milestone required no owner decision.
