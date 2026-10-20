@@ -156,7 +156,9 @@ impl Parent {
                 Err(error) => return Err(error),
             };
             #[cfg(feature = "trace-input")]
-            if wire::poll_event(reply)[2] == wire::KEY {
+            if wire::poll_event(reply)[2] == wire::KEY
+                && wire::poll_event(reply)[4] != cathedral_platform_contracts::input::RELEASE as u64
+            {
                 time::trace("matrix-key");
             }
             self.grant = world.inherit_poll(reply);

@@ -84,9 +84,13 @@ write during named creation. Each recovered state contains either no new object
 or the complete named content/index set, with an exact quota ledger. A retry after
 an unobserved committed result collides without allocating another object.
 
-History is retained until collection, which the provider runs before every write
-to a root and which clients may also request; the fixed logical quota can refuse
-new publications first. Two persistent root-owned pin slots preserve selected
+History is retained until collection. Before mutations, the provider calls
+`collect_under_pressure`: below a 1.5 MiB ledger it performs no writer/scan, and
+otherwise runs one bounded pass. This leaves 512 KiB of the 2 MiB allowance as
+publication headroom; exact quota admission still happens inside every writer.
+Explicit `collect` is unconditional. Unpinned history has no retention guarantee;
+the fixed logical quota can still refuse new publications before a backlog is
+drained. Two persistent root-owned pin slots preserve selected
 revisions of any object, and a pinned revision stays readable after its object is
 deleted. Collection derives reachability from every current head and both pins
 under one writer and removes at most eight records per immediate commit. A pass

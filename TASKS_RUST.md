@@ -1,8 +1,9 @@
 # Rust reference OS: tasks and handoff
 
-Updated 2026-10-19 (local date). Current milestone: **measured nested startup,
-bounded storage containment proofs and fewer cold-start lookups**, on baseline
-`30572c9f` (fresh-lab reset). Compact recursive desktops landed as `c7571191`,
+Updated 2026-10-20 (local date). Current milestone: **pressure-driven storage
+maintenance, reused template source lookups and measured Notes input/rendering**,
+on baseline `6b2de881` (bounded storage containment proofs).
+The fresh-lab reset is `30572c9f`. Compact recursive desktops landed as `c7571191`,
 and the launch request ABI repair as `a287ae39`. No recursive legacy snapshot
 upgrade is required. The saved-disk quota/headroom repair remains in place. Current
 verification and limitations are recorded in the newest section at the end.
@@ -2991,3 +2992,107 @@ and an isolated outer note in `desktop/20261020T060627976276Z`. No guest code
 change was needed for that fixture race; waiting for actual task removal fixed
 the observation. These later untraced runs experienced different host load and
 are functional verification, not additional before/after performance samples.
+
+## Storage maintenance and nested interaction costs (2026-10-20)
+
+The previous traced cold third-level save spent 1,601,597 us of provider CPU in
+collection and 262,889 us in its publication commit. The provider was scanning
+every live head/manifest before every small mutation, including each template
+copy. `Store::collect_under_pressure` now reads the durable quota ledger first:
+below 1.5 MiB it does no writer/collection scan; at or above that watermark it
+runs the same eight-record bounded pass. The 512 KiB reserve is maintenance
+headroom, not a new admission rule. Every mutation still checks exact quota,
+and explicit COLLECT remains unconditional. There is no automatic retry of an
+uncertain write. Pins, immutable content, immediate durability and the on-disk
+format are unchanged. Unpinned old revisions can remain longer; they have no
+retention guarantee. The independent small-workload host oracles now expect
+that retained history rather than assuming every request collected it.
+
+Nested realm preparation also resolves each named source at most once in that
+preparation. Workspace and next-level template copies share those local
+source/head results. Destination checks still precede lookup; nothing survives
+the preparation, and each COPY still validates the expected source revision.
+This removes ten provider requests from fresh third-level picker setup, from
+60 to 50, without a new batch protocol, authority shortcut or partial-tree
+publication rule.
+
+Notes now retains its unchanged background, close button and tab bitmap.
+Subsequent ordinary text edits publish only a replacement text bitmap. Successful
+decoration updates are remembered within one scene, and invalidation discards
+the scene so every surface is recreated. The `trace-input` route now includes
+Notes key receipt and paint begin/end. Per-step JSON records the ordered
+source/matrix/Notes observations; source and matrix releases are excluded from
+the key-delivery series. Different matrix CPU counters must never be joined.
+An incomplete paint span can cross a screenshot observation boundary, so do not
+pair an old end with the next key's begin.
+
+Traced QEMU/TCG observations at the third nested level:
+
+| Measurement | Previous milestone | Revised |
+| --- | ---: | ---: |
+| Cold save observed time | 2998 ms | 739 ms |
+| Cold save provider CPU | 1986 ms | 391 ms |
+| Cold save collection/ledger CPU | 1602 ms | 18 ms |
+| Cold save sectors read / written | 938 / 146 | 217 / 97 |
+| Cold save durable flushes | 2 | 1 |
+| Fresh picker observed time | 21410 ms | 16323 ms |
+| Fresh picker provider requests | 60 | 50 |
+
+Baseline: `desktop/20261020T055706461711Z`. A pressure-only intermediate run
+with input instrumentation is `desktop/20261020T155022438947Z`; it completed both
+boots before the Notes/seed changes. The completed revised workload is
+`desktop/20261020T155343691135Z`. All paths are under `build/boot-harness-rs/`.
+Host load and trace overhead vary; counts and eliminated work are stronger
+evidence than a timing ratio. Cold user entry still took 8.3 seconds and fresh
+entry 11.5 seconds in the revised run; these phases were not fixed.
+
+Deep typing observed 209–240 ms fresh and 114–118 ms cold, so responsiveness is
+still uneven. Source-to-Notes delivery crossed seven matrix processes and took
+5–8 nominal 100-Hz guest ticks in the revised samples. For one cold character,
+delivery took six ticks, Notes paint took five ticks including IPC, Notes charged
+about 1.8 ms CPU during that paint, and compositor redraw about 0.9 ms. These
+separate clocks are not a decomposition of host elapsed time. The useful next
+measurement is wake/dispatch and interaction round trips across the chain,
+including chrome status polling; do not assume rasterization or assign all
+remaining time to kernel scheduling.
+
+Remaining storage limits: a pressured root still pays for a whole live-metadata
+scan; physical engine capacity is independent of logical quota; creation still
+does multiple durable transactions. The revised deep save still reads 217
+sectors for a tiny payload. Investigate scope walks, engine reads/cache and
+commit allocation separately before increasing cache/heap funding or adding a
+general transaction API. Kernel scheduling and ABI are unchanged in this work.
+No new owner question blocks these follow-ups. The interactive disk was not
+modified or reset; use **Fresh Lab** for updated programs at every nested level.
+
+Verification:
+
+- Workspace host tests, 18 database-object host tests (including a cheap
+  cold-cache ledger check, bounded pressure collection, pin survival, exact
+  accounting and unchanged independent roots), 38 storage-engine host tests and
+  22 Python harness tests pass. Default userspace and changed trace/fault/probe
+  feature clippy checks pass, as do layout and Rust format checks.
+- The default F5 desktop passes fresh/cold operation, three Notes instances,
+  draft switching, close/save/discard, tabs and the independent 541-record oracle:
+  `desktop/20261020T155644324318Z`.
+- The standalone object fixtures had two stale assumptions: their 4 MiB image
+  no longer matched the 8 MiB provider, and reader-page exhaustion expected BUSY
+  instead of the kernel's NO_MEMORY. The volume seeder now accepts a size while
+  retaining its original default for the separate volume-IO lab; the object
+  fixture uses the database extent and still verifies outside guards. The
+  pressure assertion still requires reads to resume after readers are dropped.
+  Two-boot publication/refusal/cold recovery passes at
+  `objects/20261020T155909026335Z`; three-boot pins, bounded collection, bulk
+  pressure, exact cold records and final heap/reader release pass at
+  `objects/20261020T160023934011Z`.
+- Provider replacement, ambiguous commits, independent roots and exact cold
+  oracle pass at `matrix-database/20261020T160057846155Z`.
+- Two forced Notes rendering invalidations during creation/publication retain
+  the draft and restore input: `settings/20261020T160125588429Z`.
+- Full retained quota repeatedly refuses save and close-save while preserving
+  drafts, sibling reads and all persisted records across two boots:
+  `storage-capacity/20261020T160241919815Z`.
+- Three nested desktops, deepest saved Notes, recursive dirty-close protection,
+  two subtree close/reopen cycles per boot, confinement and cold recovery pass:
+  `desktop/20261020T160310046094Z`.
+- No kernel behavior changed; ARM64 and kernel smoke were not rerun.

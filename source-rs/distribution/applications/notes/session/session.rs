@@ -149,6 +149,10 @@ pub fn run(style: u64, mut services: Services) {
                 }
             }
             let event = wire::poll_event(snapshot);
+            #[cfg(feature = "trace-input")]
+            if event[2] == wire::KEY && event[4] == input::PRESS as u64 {
+                time::trace("notes-key");
+            }
             #[cfg(feature = "management-probes")]
             management_probe::event(event);
             match closing.action(event, extent[2], notes.temporary()) {
@@ -236,7 +240,9 @@ pub fn run(style: u64, mut services: Services) {
                     repaint = true;
                 }
                 if repaint {
-                    scene.as_ref().unwrap().paint(
+                    #[cfg(feature = "trace-input")]
+                    time::trace("notes-paint-begin");
+                    scene.as_mut().unwrap().paint(
                         parent,
                         extent,
                         &draft,
@@ -246,6 +252,8 @@ pub fn run(style: u64, mut services: Services) {
                         &notes,
                         closing.open,
                     )?;
+                    #[cfg(feature = "trace-input")]
+                    time::trace("notes-paint-end");
                     repaint = false;
                 }
                 Ok(())

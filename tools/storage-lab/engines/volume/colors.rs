@@ -1,7 +1,6 @@
 //! Independent oracle for the probe desktop image: each root holds one object
-//! at its top, whose payload alternates colors across revisions. Collection
-//! runs before every write, so exactly the last two revisions' events and
-//! manifests remain.
+//! at its top, whose payload alternates colors across revisions. This tiny
+//! workload stays below automatic collection pressure; all revisions remain.
 use super::*;
 use crate::chunks::{Layout, Policy, Store};
 use redb::ReadableTable;
@@ -24,7 +23,7 @@ pub(super) fn head(revision: u64, manifest: &[u8], len: usize, parent: u64) -> V
     head
 }
 /// One object numbered one at the top of the root, with `payload(revision)`
-/// for the last two revisions retained and everything older collected.
+/// for every revision retained below automatic maintenance pressure.
 pub(super) fn expect(expected: &mut BTreeMap<Vec<u8>, Vec<u8>>, root: u8, last: u64, payload: impl Fn(u64) -> Vec<u8>) {
     let mut store = Store::new(Policy {
         chunk_bytes: 4096,
@@ -36,7 +35,7 @@ pub(super) fn expect(expected: &mut BTreeMap<Vec<u8>, Vec<u8>>, root: u8, last: 
         key.extend_from_slice(suffix);
         key
     };
-    for revision in last.saturating_sub(1).max(1)..=last {
+    for revision in 1..=last {
         let bytes = payload(revision);
         let version = store.put(&bytes);
         let records = store.records(&version);

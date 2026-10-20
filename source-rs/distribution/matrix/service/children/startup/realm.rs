@@ -10,6 +10,10 @@ enum Source<'a> {
     Realm,
 }
 pub fn prepare(scope: &mut Scope, keys: u64) -> Result<(u64, u64), u64> {
+    // The same seed is copied into the workspace and its Nested template.
+    // Resolve lazily, once in this preparation only. COPY still checks the
+    // source revision, so a concurrent source edit refuses instead of drifting.
+    let mut sources = [None; SEEDS.len()];
     let picker = scope.lookup(b"Chooser")?;
     let users = create(scope, b"Users", scope.realm(), b"Users", &[])?;
     let template = copy(
@@ -19,6 +23,7 @@ pub fn prepare(scope: &mut Scope, keys: u64) -> Result<(u64, u64), u64> {
         b"Template",
         Source::Named(b"User"),
         false,
+        &mut sources,
     )?;
     for (source, name, path) in [
         (
@@ -30,7 +35,15 @@ pub fn prepare(scope: &mut Scope, keys: u64) -> Result<(u64, u64), u64> {
         (b"Notes", b"Notes", b"Users/Template/Notes"),
         (b"Colors", b"Colors", b"Users/Template/Colors"),
     ] {
-        copy(scope, path, template, name, Source::Named(source), true)?;
+        copy(
+            scope,
+            path,
+            template,
+            name,
+            Source::Named(source),
+            true,
+            &mut sources,
+        )?;
     }
     let nested = copy(
         scope,
@@ -39,6 +52,7 @@ pub fn prepare(scope: &mut Scope, keys: u64) -> Result<(u64, u64), u64> {
         b"Nested",
         Source::Realm,
         false,
+        &mut sources,
     )?;
     for name in SEEDS {
         let mut path = [0; 64];
@@ -52,6 +66,7 @@ pub fn prepare(scope: &mut Scope, keys: u64) -> Result<(u64, u64), u64> {
             name,
             Source::Named(name),
             true,
+            &mut sources,
         )?;
     }
     let mut launcher = [0; 32];
@@ -90,21 +105,31 @@ fn copy(
     name: &[u8],
     source: Source<'_>,
     tree: bool,
+    sources: &mut [Option<store::Reply>; SEEDS.len()],
 ) -> Result<u64, u64> {
     if let Some(id) = existing(scope, path)? {
         return Ok(id);
     }
     // Existing templates need no source lookup. On a cold reopen each avoided
     // lookup also avoids walking the entire upstream confinement/IPC chain.
-    let source = match source {
-        Source::Named(path) => scope.lookup(path)?,
-        Source::Realm => scope.realm(),
+    let head = match source {
+        Source::Named(path) => {
+            let index = SEEDS.iter().position(|name| *name == path).unwrap();
+            if let Some(head) = sources[index] {
+                head
+            } else {
+                let id = scope.lookup(path)?;
+                let head = scope.call(store::Request::new(store::HEAD, id, 0, 0, 0))?;
+                sources[index] = Some(head);
+                head
+            }
+        }
+        Source::Realm => scope.call(store::Request::new(store::HEAD, scope.realm(), 0, 0, 0))?,
     };
-    let head = scope.call(store::Request::new(store::HEAD, source, 0, 0, 0))?;
     match scope.attached(
         store::Request::new(
             if tree { store::COPY_TREE } else { store::COPY },
-            source,
+            head.object,
             head.revision,
             parent,
             name.len() as u64,

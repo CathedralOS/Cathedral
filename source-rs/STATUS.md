@@ -206,9 +206,10 @@ The [object store](platform/libraries/database-objects/README.md) holds many
 numbered objects per root, arranged as a tree. Chunks and manifests are shared
 within a root, so a copy writes a head, an event and an edge and nothing else,
 whatever the content's size, and a subtree copy does that for every object
-beneath the source; numbers are never reused; collection runs before every write
-and reclaims what no head or pin reaches, reading only metadata and a key-only
-chunk index. Objects hold up to 256 KiB and a root a megabyte, enough for the
+beneath the source; numbers are never reused. Automatic collection runs before
+mutations under quota pressure; explicit collection is unconditional. It reclaims
+what no head or pin reaches, reading only metadata and a key-only chunk index.
+Objects hold up to 256 KiB and a root 2 MiB, enough for the
 desktop's programs to live in the store as objects. The [provider](platform/services/storage/main.rs)
 speaks one [object protocol](platform/contracts/storage.rs): 64-byte packets with
 sealed attachments for publications and bulk reads. The legacy sector catalog and

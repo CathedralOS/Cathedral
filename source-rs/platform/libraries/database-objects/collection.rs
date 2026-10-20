@@ -19,6 +19,26 @@ pub struct Collection {
 }
 
 impl Store<'_> {
+    /// Automatic maintenance is pressure-driven. Reserve twice the largest
+    /// content publication for its records/indexes and the next bounded copy.
+    /// Below this watermark, read only the durable ledger: opening a writer
+    /// and walking every live revision on every small save is unnecessary.
+    /// This is a trigger, not admission; each mutation still checks exact quota.
+    /// Old unpinned revisions are eligible for collection, never guaranteed.
+    pub fn collect_under_pressure(&self, root: u8) -> Result<Option<Collection>> {
+        let charged = {
+            let read = engine(self.db.begin_read())?;
+            let table = engine(read.open_table(TABLE))?;
+            quota(&table, root)?
+        };
+        if charged > ROOT_QUOTA {
+            return Err(Error::Corrupt);
+        }
+        if charged < ROOT_QUOTA - 2 * MAX_BYTES as u64 {
+            return Ok(None);
+        }
+        self.collect(root).map(Some)
+    }
     /// Pins are persistent root-owned snapshots, not process-local handles.
     /// Only a retained revision can be pinned; occupied slots are never replaced.
     pub fn pin(&self, root: u8, id: u64, revision: u64, slot: u8) -> Result<()> {

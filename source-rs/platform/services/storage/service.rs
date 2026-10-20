@@ -144,12 +144,11 @@ fn scoped(store: &Store<'_>, root: u8, r: wire::Request) -> Result<(), u64> {
     Ok(())
 }
 
-/// Pay for one bounded maintenance pass before a mutation. Draining the whole
-/// backlog here makes the first save after program upgrades exceed the IPC
-/// deadline. Further requests (or explicit COLLECT) continue the work; a root
-/// still at capacity refuses the mutation without publishing it.
+/// Consult the retained-byte ledger before a mutation; scan only under quota
+/// pressure. Never drain the whole backlog inside an application's deadline.
+/// Further requests (or explicit COLLECT) continue bounded reclamation.
 fn collect(store: &Store<'_>, root: u8) -> Result<(), Error> {
-    store.collect(root)?;
+    store.collect_under_pressure(root)?;
     Ok(())
 }
 

@@ -55,12 +55,15 @@ pub fn verify(path: &Path, offset: u64, bytes: u64, revision: u64, retention: bo
             heads.push(colors::head(n, &records[b"head".as_slice()], 8192, 0));
             versions.push(version);
         }
-        // The provider collects before every write, including refused ones, so
-        // only the current revision and pinned revisions survive a later write.
+        // Retention explicitly collects. The small publication fixture stays
+        // below automatic maintenance pressure and retains its old revision.
         let pinned = retention && revision == 9;
         let mut roots = vec![versions.last().unwrap().clone()];
         if pinned {
             roots.push(versions[0].clone());
+        }
+        if !retention {
+            roots = versions.clone();
         }
         store.retain(&roots);
         for (key, value) in store.records(versions.last().unwrap()) {
@@ -78,7 +81,7 @@ pub fn verify(path: &Path, offset: u64, bytes: u64, revision: u64, retention: bo
         }
         for (i, head) in heads.iter().enumerate() {
             let n = i as u64 + 1;
-            if n == revision || (pinned && n == 1) {
+            if !retention || n == revision || (pinned && n == 1) {
                 let mut event = vec![root, b'e'];
                 event.extend_from_slice(&1u64.to_be_bytes());
                 event.extend_from_slice(&n.to_be_bytes());

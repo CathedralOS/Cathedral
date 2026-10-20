@@ -4,7 +4,7 @@
 //! number and the quota ledger. Programs are numbered in the order given, so a
 //! profile's program list is its catalogue. Seeding an image that already holds
 //! the programs republishes only those whose bytes changed, as a new revision;
-//! the guest collects the superseded history before its next write.
+//! the guest may collect superseded history when under quota pressure.
 use super::*;
 use crate::chunks::{Layout, Policy, Store};
 use redb::{ReadableTable, Table};

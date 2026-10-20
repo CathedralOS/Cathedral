@@ -17,6 +17,11 @@ pub struct Scene {
     text: u64,
     track: u64,
     close: u64,
+    // Retained decorations already live at the compositor. Editing text needs
+    // no new close-button bitmap, tab bitmap or unchanged background request.
+    background: Option<(u64, u64, u64)>,
+    close_width: Option<u64>,
+    tabs: Option<(usize, usize, bool)>,
 }
 impl Scene {
     pub fn new(parent: Pair, epoch: u64) -> Result<Self, u64> {
@@ -39,6 +44,9 @@ impl Scene {
             text: names[1],
             track: names[2],
             close: names[3],
+            background: None,
+            close_width: None,
+            tabs: None,
         })
     }
     /// Paint one retained rectangle at a local rectangle: x, y, width, height.
@@ -57,7 +65,7 @@ impl Scene {
     }
     #[allow(clippy::too_many_arguments)]
     pub fn paint(
-        &self,
+        &mut self,
         parent: Pair,
         extent: wire::Packet,
         doc: &Document,
@@ -76,7 +84,11 @@ impl Scene {
         } else {
             0x27664a
         };
-        self.rectangle(parent, self.base, [0, 0, extent[2], extent[3]], color)?;
+        let background = (extent[2], extent[3], color);
+        if self.background != Some(background) {
+            self.rectangle(parent, self.base, [0, 0, extent[2], extent[3]], color)?;
+            self.background = Some(background);
+        }
         self.image(parent, self.text, [10, 20, WIDTH, HEIGHT], |bytes| {
             if closing {
                 label(
@@ -107,17 +119,24 @@ impl Scene {
                 text(bytes, doc, cursor);
             }
         })?;
-        self.image(
-            parent,
-            self.close,
-            [extent[2].saturating_sub(24) as usize, 2, 20, 16],
-            |bytes| {
-                for pixel in bytes.chunks_exact_mut(4) {
-                    pixel.copy_from_slice(&0x993f46u32.to_le_bytes());
-                }
-                label(bytes, 20, 5, 1, b"X");
-            },
-        )?;
+        if self.close_width != Some(extent[2]) {
+            self.image(
+                parent,
+                self.close,
+                [extent[2].saturating_sub(24) as usize, 2, 20, 16],
+                |bytes| {
+                    for pixel in bytes.chunks_exact_mut(4) {
+                        pixel.copy_from_slice(&0x993f46u32.to_le_bytes());
+                    }
+                    label(bytes, 20, 5, 1, b"X");
+                },
+            )?;
+            self.close_width = Some(extent[2]);
+        }
+        let tabs = (notes.count, notes.current, notes.temporary());
+        if self.tabs == Some(tabs) {
+            return Ok(());
+        }
         if notes.temporary() {
             self.image(
                 parent,
@@ -145,6 +164,7 @@ impl Scene {
                     }
                 },
             )?;
+            self.tabs = Some(tabs);
             return Ok(());
         }
         // One small retained bitmap describes all tabs. Surface funding does
@@ -173,6 +193,7 @@ impl Scene {
                 }
             },
         )?;
+        self.tabs = Some(tabs);
         Ok(())
     }
     /// Publish one sealed image at a local rectangle: x, y, width, height.

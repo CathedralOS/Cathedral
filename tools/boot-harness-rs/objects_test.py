@@ -10,6 +10,7 @@ import subprocess
 import sys
 from pathlib import Path
 import disk_image
+import database_image
 import protocol_test
 import run as harness
 import volume_test
@@ -29,7 +30,10 @@ def run(args):
     output = harness.BUILD / 'objects' / datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S%fZ')
     output.mkdir(parents=True)
     shutil.copytree(harness.BUILD / f'{name}-interactive/esp', output / 'esp')
-    path, original = volume_test.seed(executable, output)
+    # The object provider owns the database extent, not the smaller volume-IO
+    # lab's extent. Keep neighbor guards while matching the provider's 8 MiB.
+    size = database_image.VOLUME_BYTES
+    path, original = volume_test.seed(executable, output, size)
     qemu = harness.find_qemu()
     command = [qemu, '-machine', 'q35', '-cpu', 'qemu64', '-accel', 'tcg', '-smp', '1', '-m', '128']
     command += harness.firmware_args(qemu, output)
@@ -59,17 +63,18 @@ def run(args):
         actual = path.read_bytes()
         assert len(actual) == len(original)
         assert actual[:4096] == original[:4096]
-        assert actual[4096 + volume_test.SIZE:] == original[4096 + volume_test.SIZE:]
+        assert actual[4096 + size:] == original[4096 + size:]
         # Verify a copy so host recovery/close cannot clean up the guest image
         # before the next cold guest opens it.
         snapshot = output / f'host-reopen-{boot}.raw'
         with snapshot.open('xb') as file: file.write(actual)
         result = subprocess.run([str(executable), 'engines', 'volume', ('verify-retention' if args.retention else 'verify-objects'), str(snapshot),
-                                 '4096', str(volume_test.SIZE), str(revision)], cwd=lab,
+                                 '4096', str(size), str(revision)], cwd=lab,
                                 check=True, capture_output=True, text=True)
         (output / f'host-{boot}.txt').write_text(result.stdout, encoding='utf-8')
         print(result.stdout, end='')
-    sources = [profile, Path(__file__), ROOT / 'source-rs/Cargo.toml', ROOT / 'source-rs/Cargo.lock',
+    sources = [profile, Path(__file__), HERE / 'volume_test.py', HERE / 'database_image.py',
+               ROOT / 'source-rs/Cargo.toml', ROOT / 'source-rs/Cargo.lock',
                ROOT / 'source-rs/platform/libraries/block-device/lib.rs',
                * (ROOT / 'source-rs/distribution/lab/objects').rglob('*.rs'),
                * (ROOT / 'source-rs/platform/libraries/user-heap').glob('*.rs'),

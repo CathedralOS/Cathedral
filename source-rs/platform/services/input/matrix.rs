@@ -89,7 +89,11 @@ fn serve(extent: u64, environment: Environment) -> Result<(), Error> {
             }
         } else if let Some(event) = keys.feed(byte as u8) {
             #[cfg(feature = "trace-input")]
-            time::trace("source-key");
+            time::trace(if event.state == input::RELEASE {
+                "source-release"
+            } else {
+                "source-key"
+            });
             publish(
                 pair,
                 [

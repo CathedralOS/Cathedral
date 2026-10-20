@@ -83,12 +83,17 @@ this app's cached binding: the first refused save preserves its draft, then F1
 reconciles the new binding.
 
 [view.rs](session/view.rs) publishes one sealed 180x64 text bitmap through the
-existing surface chain and draws the note bar as retained rectangles. The close
+existing surface chain and draws the note bar as a small retained bitmap. The close
 dialog reuses that bitmap; the X occupies one additional small surface. The app
 holds 32 private pages: the retained bitmap, its replacement, and one page per
 publication. Its four reader pages receive bulk replies. Matrix and display reader
 budgets are explicitly funded by the profile; every hop holds the old and new
-bitmap during replacement. No kernel, device or storage policy is added for this app.
+bitmap during replacement. Unchanged background, close button and tab indicators
+stay retained: an ordinary subsequent character edit sends just its new text
+bitmap. Successful decoration updates are remembered only within the current
+scene; geometry invalidation recreates the scene and all surfaces. The
+`trace-input` feature marks key receipt and paint begin/end; paint time includes
+synchronous matrix IPC. No kernel, device or storage policy is added for this app.
 
 ## Proofs
 

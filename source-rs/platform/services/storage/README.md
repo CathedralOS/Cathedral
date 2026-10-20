@@ -21,7 +21,7 @@ Two boot-approved data links bind to private roots 0 and 1 by their
 service-local link position. The kernel isolates principals and grants
 endpoints; the provider enforces root-local object access, and no message
 carries a root selector. Within a root, objects form a tree, and a request's
-three scope words name subtrees it must stay inside: before dispatch the
+two scope words name subtrees it must stay inside: before dispatch the
 provider checks that every stamped scope is an ancestor of every object the
 request would touch, refusing an object outside the scope and one that does
 not exist alike, and refusing to replace or delete the scope object itself.
@@ -31,15 +31,20 @@ The desktop's root matrix holds both links and delegates
 subtrees of them to its children; the [objects lab](../../../distribution/lab/objects/README.md)
 hands them to two bare clients instead.
 
-Every write is one engine transaction. Before a publication or copy (including
-subtree copy), the provider performs **one** collection pass, removing at most
-eight records. It does not drain an upgrade backlog inside an application's
-save: repeated whole-root scans and durable commits exceeded the storage IPC
-deadline on retained desktop disks. Later mutations or explicit COLLECT calls
-continue maintenance. A root still at capacity can refuse a write even with
-reclaimable history; that refusal publishes no partial record. Background
-maintenance and quota-pressure scheduling remain future work. A known extent
-allocation refusal before commit drops and reopens the engine through
+Every write is one engine transaction. Before a publication, metadata update or
+copy (including subtree copy), the provider checks the durable retained-byte
+ledger. Below 1.5 MiB it skips collection. At or above that watermark it performs
+**one** collection pass, removing at most eight records. The 512 KiB reserve
+allows room for a maximum publication and its record/index overhead; it is a
+maintenance trigger, not admission. Every mutation still checks exact quota.
+This avoids scanning all installed programs on every tiny save or seed copy.
+Old unpinned revisions remain eligible for collection, with no retention promise.
+Explicit COLLECT always performs a pass, independent of the watermark. Later
+mutations under pressure continue bounded maintenance; no request drains the
+backlog. A root still at capacity can refuse a write even with reclaimable
+history; that refusal publishes no partial record. Physical engine headroom
+remains independent of logical quota. Background maintenance is future work.
+A known extent allocation refusal before commit drops and reopens the engine through
 [database.rs](database.rs), retaining authenticated service connections and
 returning ordinary capacity refusal. Opening the existing object table is read-only.
 Commit errors remain uncertain, including capacity errors during commit. Other engine or

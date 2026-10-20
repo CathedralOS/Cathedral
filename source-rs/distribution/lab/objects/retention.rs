@@ -85,7 +85,9 @@ fn pressure(client: &Client, root: u64, revision: u64) {
     assert_eq!(wire::word(&b, 0), 0);
     let (reply, refused) = bulk(client, packet(wire::BULK, 1, revision, 0, 8192));
     assert!(refused.is_none());
-    assert_eq!(wire::word(&reply, 0), abi::BUSY);
+    // Two replies pin all four reader pages. The current kernel reports reader
+    // capacity as NO_MEMORY; dropping them must make the next reply possible.
+    assert_eq!(wire::word(&reply, 0), abi::NO_MEMORY);
     drop(first);
     drop(second);
     verify(client, root, revision, false);

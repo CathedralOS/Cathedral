@@ -442,7 +442,13 @@ Host observations include input spacing, QMP and screenshot polling; they are
 upper bounds, not service CPU benchmarks or latency guarantees. Storage samples
 include provider CPU, nominal 100-Hz ticks, sector/flush/poll counts and nested
 collection/commit/extent phases. Nested phases must not be added to the enclosing
-provider total. Compositor samples cover redraw through framebuffer output. They
+provider total. The collection span includes the cheap ledger check when
+automatic maintenance is skipped below pressure. Per-step `input` observations
+record source presses, successive matrix receipt ticks, Notes receipt and Notes
+paint begin/end. Source-to-Notes guest ticks describe delivery only for isolated
+single-key steps; matrix account CPU values belong to different processes and
+must not be paired. Notes paint includes its synchronous drawing IPC, not just
+rasterization. Compositor samples cover redraw through framebuffer output. They
 exclude app bitmap generation, matrix IPC and scheduling. Trace logging perturbs
 execution; absent spans mean no measurement, not proof of zero work. CPU values
 are compared only within the same producer; no scheduler time is inferred by

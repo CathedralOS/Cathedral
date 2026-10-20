@@ -26,9 +26,9 @@ def command(*args, cwd=ROOT):
     return subprocess.run(args, cwd=cwd, check=True, text=True, capture_output=True)
 
 
-def seed(executable, output):
+def seed(executable, output, size=SIZE):
     source = output / 'formatted.raw'
-    command(str(executable), 'engines', 'volume', 'format', str(source), str(SIZE), '1')
+    command(str(executable), 'engines', 'volume', 'format', str(source), str(size), '1')
     volume = source.read_bytes()
     scratch = bytearray([0xc3] * BLOCK)
     scratch[:256] = volume[8192:8192 + 256]

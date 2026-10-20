@@ -54,6 +54,54 @@ fn accounted(db: &Database, root: u8) {
 }
 
 #[test]
+fn automatic_collection_defers_history_until_pressure_and_preserves_pins() {
+    let db = database();
+    let store = Store::open(&db).unwrap();
+    let mut object = store.publish(0, 0, 0, b"pinned original", 0).unwrap();
+    store.pin(0, object.id, object.head.revision, 0).unwrap();
+    let pinned = object;
+    let other = store.publish(1, 0, 0, b"other root", 0).unwrap();
+    object = store
+        .publish(0, object.id, object.head.revision, b"draft", 0)
+        .unwrap();
+    let before = snapshot(&db);
+    assert!(store.collect_under_pressure(0).unwrap().is_none());
+    assert_eq!(snapshot(&db), before);
+    // Accumulate distinct obsolete content; admission still counts every byte.
+    let mut seed = 1u64;
+    for _ in 0..6 {
+        let bytes: Vec<u8> = (0..MAX_BYTES)
+            .map(|_| {
+                seed ^= seed << 13;
+                seed ^= seed >> 7;
+                seed ^= seed << 17;
+                seed as u8
+            })
+            .collect();
+        object = store
+            .publish(0, object.id, object.head.revision, &bytes, 0)
+            .unwrap();
+    }
+    accounted(&db, 0);
+    // One pass is bounded, even when many revisions could be reclaimed.
+    let pass = store.collect_under_pressure(0).unwrap().unwrap();
+    assert!(pass.removed > 0 && pass.removed <= 8 && pass.more);
+    accounted(&db, 0);
+    assert_eq!(store.head(0, object.id).unwrap(), object.head);
+    assert_eq!(store.head(1, other.id).unwrap(), other.head);
+    // Explicit collection still drains history without waiting for pressure.
+    collect(&store, 0);
+    assert_eq!(count(&db, 0, b'e'), 2); // current head and durable pin
+    let mut bytes = [0; 15];
+    store
+        .read_pinned(0, 0, pinned.id, pinned.head.revision, 0, &mut bytes)
+        .unwrap();
+    assert_eq!(&bytes, b"pinned original");
+    accounted(&db, 0);
+    assert!(store.collect_under_pressure(0).unwrap().is_none());
+}
+
+#[test]
 fn named_creation_commits_content_indexes_and_quota_or_nothing() {
     let db = database();
     let store = Store::open(&db).unwrap();

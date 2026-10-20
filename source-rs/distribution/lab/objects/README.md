@@ -22,7 +22,7 @@ python tools/boot-harness-rs/objects_test.py --retention --timeout 240
 python tools/boot-harness-rs/objects_test.py --release --ata-trace
 ```
 
-The runner formats a new 4 MiB volume, surrounds it with guard bytes and boots
+The runner formats a new 8 MiB volume, surrounds it with guard bytes and boots
 the separate `objects.json` composition. Each root creates an 8 KiB object with
 distinct deterministic contents. Clients reconstruct it through revision-pinned
 range reads and check stale-write, oversized-request, short-attachment and
@@ -50,7 +50,7 @@ The retention profile selects [retention.rs](retention.rs). Boot one pins revisi
 1 and replaces through revision 9, collecting between writes. Boot two recovers
 both heads, refuses a stale release, releases the pin, then replaces through 25.
 Boot three verifies current contents and the absence of the collected revision.
-The host oracle checks exactly 20 records after boot one and 12 after each later
+The host oracle checks exactly 30 records after boot one and 20 after each later
 boot. Sealed bulk replies exercise full reads, a cross-chunk partial read, zero
 page padding, reader-page exhaustion returning BUSY, and reuse after dropping
 read objects. These backings are charged to the provider until their last reader

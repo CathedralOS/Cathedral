@@ -1,9 +1,18 @@
 """Timing reports must not invent durations from incomplete or mismatched traces."""
 import unittest
-from desktop_timing import storage_samples, redraw_samples
+from desktop_timing import storage_samples, redraw_samples, input_samples
 
 
 class StorageTimingTests(unittest.TestCase):
+    def test_input_keeps_hops_separate_and_ignores_releases(self):
+        samples = input_samples('''INPUT_TRACE source-key 10 5000
+INPUT_TRACE source-release 10 5100
+INPUT_TRACE matrix-key 11 100
+INPUT_TRACE matrix-key 12 9000
+INPUT_TRACE notes-key 13 50''')
+        self.assertEqual([s['guest_tick'] for s in samples], [10, 11, 12, 13])
+        self.assertEqual([s['account_cpu_us'] for s in samples], [5000, 100, 9000, 50])
+
     def test_extent_is_nested_in_provider_and_io_belongs_to_matching_request(self):
         samples = storage_samples('''Cathedral Rust lab: STORAGE_TRACE provider-begin 0 13 10 100
 STORAGE_TRACE nested-send 0 269 11 900

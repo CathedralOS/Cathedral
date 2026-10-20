@@ -15,6 +15,7 @@ test = false
 bench = false
 
 [features]
+trace-input = []
 trace-storage = []
 render-probes = []
 startup-fault = []

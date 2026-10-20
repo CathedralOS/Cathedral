@@ -139,6 +139,13 @@ fn shared_program_collection_has_bounded_metadata_io_with_a_small_cache() {
         .unwrap();
     let store = Store::open(&db).unwrap();
     reads.store(0, std::sync::atomic::Ordering::Relaxed);
+    assert!(store.collect_under_pressure(0).unwrap().is_none());
+    let maintenance_bytes = reads.load(std::sync::atomic::Ordering::Relaxed);
+    assert!(
+        maintenance_bytes <= 16 * 1024,
+        "ledger check read {maintenance_bytes} bytes"
+    );
+    reads.store(0, std::sync::atomic::Ordering::Relaxed);
     assert_eq!(store.collect(0).unwrap().removed, 0);
     let bytes = reads.load(std::sync::atomic::Ordering::Relaxed);
     assert!(

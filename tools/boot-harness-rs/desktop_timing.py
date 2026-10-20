@@ -24,6 +24,17 @@ def redraw_samples(serial):
     return samples
 
 
+def input_samples(serial):
+    """Ordered observations only; matrix CPU clocks belong to different tasks.
+
+    A typing step injects one key, so source -> Notes ticks measure delivery
+    along that route. No global task identity or event identifier is inferred.
+    """
+    return [dict(stage=stage, guest_tick=int(ticks), account_cpu_us=int(cpu))
+            for stage, ticks, cpu in re.findall(
+                r'INPUT_TRACE (source-key|matrix-key|notes-key|notes-paint-begin|notes-paint-end) (\d+) (\d+)', serial)]
+
+
 class Timings:
     def __init__(self, output, reboot):
         self.output = output
@@ -45,7 +56,8 @@ class Timings:
                 stream.seek(offset)
                 text = stream.read().decode(errors='replace')
             self.samples.append(dict(name=name, observed_ms=elapsed, completed=completed,
-                                     storage=storage_samples(text), redraws=redraw_samples(text)))
+                                     storage=storage_samples(text), redraws=redraw_samples(text),
+                                     input=input_samples(text)))
             self.path.write_text(json.dumps(dict(
                 measurement='Host upper bounds including QMP, input spacing and screenshot polling; guest ticks nominally 100 Hz; trace logging perturbs execution.',
                 steps=self.samples), indent=2))
