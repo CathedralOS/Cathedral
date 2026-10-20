@@ -2,7 +2,8 @@
 
 Updated 2026-10-19 (local date). Current milestone: **compact taskbar, deeper
 recursive desktops, bounded startup recovery and ordinary storage refusal**, on
-baseline `f3d6d2a2`. The saved-disk quota/headroom repair remains in place. Current
+baseline `f3d6d2a2`, landed as `c7571191`. Follow-up restores the fixed launch
+request ABI for saved Nested programs. The saved-disk quota/headroom repair remains in place. Current
 verification and limitations are recorded in the newest section at the end.
 Previous baseline: atomic named creation and deeper recursive matrices at `102e416c`.
 F5 stages changed program installations in host scratch space, then verifies and
@@ -98,8 +99,9 @@ launchers, Notes/Colors and recognized stock matrix executables in existing
 users, preserving their saved data and object identities. Changed installations
 save a complete content-named `.before-compact-<digest>.raw` backup before work.
 All migration stages run on a private host scratch disk, including reachability
-collection under quota pressure. The final result must fit the original 4 MiB
-volume and pass cold record comparison before it is written to the locked disk.
+collection under quota pressure. The final result must fit the assigned volume
+after any explicit legacy growth and pass cold record comparison before it is
+written to the locked disk.
 A refused preparation leaves that disk and its installation receipt unchanged.
 Existing older migration backups remain useful recovery points. Customized code,
 live data, pinned revisions, metadata and saved layout retain their prior rules.
@@ -2841,3 +2843,27 @@ upgrades for saved inner code snapshots, and flexible surface funding/live quota
 return. No interactive saved disk has been modified during this milestone; F5
 will install the new stock code normally. A fresh outer user is needed to get
 the current implementation throughout the Nested template chain.
+
+## Saved Nested user launch ABI repair (2026-10-19)
+
+The owner's saved Nested user returned CANNOT OPEN after the task-capacity
+increase. Reproduced on an unchanged copy of the interactive disk:
+`nested-saved-repro`. The old user matrix reached startup but its launcher spawn
+returned INVALID_ARGUMENT. Raising MAX_LAUNCHES from 14 to 30 had also enlarged
+TASK_SPAWN_TREE's implicit request from 176 to 304 bytes. The kernel read unrelated
+bytes beyond the old request and rejected them as nonzero unused grant entries.
+Fresh-image tests rebuilt every executable together and missed this compatibility
+failure; preserved code must also be exercised against a new kernel.
+
+MAX_SPAWN_LOANS now fixes that syscall's wire capacity at 14 independently of the
+31-account kernel arena. The kernel and runtime enforce the same limit. Dynamic
+descendant reservations and the three-level desktop capacity remain unchanged.
+No executable snapshots, configuration or user data need replacement for this fix.
+Saved desktops continue to use their saved UI; fresh users get the new taskbar.
+
+Verification: host tests, userspace/UEFI clippy, layout and format checks; IPC guest
+suite including a real recursive spawn with nonzero adjacent bytes after the old
+176-byte record; admission guest suite. An unchanged saved-disk copy with the new
+kernel reaches the inner desktop (`nested-saved-fixed`), where the original
+vertical launcher renders. A second boot from another unchanged copy also launches
+inner Notes (`nested-saved-fixed-app`). The interactive saved disk was not modified.

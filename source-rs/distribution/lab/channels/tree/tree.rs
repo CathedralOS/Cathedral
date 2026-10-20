@@ -31,9 +31,13 @@ pub fn run() {
             assert_eq!(input.receive(&mut [0; 64]).unwrap(), 8);
             assert_eq!(Launch::at(2).unwrap().raw(), loans[0].raw());
         }
-        let child = launch
-            .spawn_tree(2, &[input, output, audit], &loans)
-            .unwrap();
+        let child = if round == 0 {
+            probes::legacy_spawn(launch, [input, output, audit], loans)
+        } else {
+            launch
+                .spawn_tree(2, &[input, output, audit], &loans)
+                .unwrap()
+        };
         assert_eq!(Launch::at(2).unwrap().raw(), withheld.raw());
         assert!(Launch::at(3).is_err());
         for old in loans {

@@ -27,7 +27,7 @@ impl Launch {
         endpoints: &[Handle],
         launches: &[Launch],
     ) -> Result<Child, Error> {
-        if endpoints.len() > abi::MAX_INITIAL_ENDPOINTS || launches.len() > abi::MAX_LAUNCHES {
+        if endpoints.len() > abi::MAX_INITIAL_ENDPOINTS || launches.len() > abi::MAX_SPAWN_LOANS {
             return Err(Error(abi::INVALID_ARGUMENT as i64));
         }
         let mut record = Record([0; abi::SPAWN_TREE_BYTES]);

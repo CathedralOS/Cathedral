@@ -108,11 +108,16 @@ pub const MAX_INITIAL_ENDPOINTS: usize = 5;
 pub const SPAWN_BYTES: usize = 16 + MAX_INITIAL_ENDPOINTS * 8;
 pub const ENVIRONMENT_BYTES: usize = 8 + MAX_INITIAL_ENDPOINTS * 8;
 
-/// SPAWN_WITH's prefix followed by count and MAX_LAUNCHES grants.
+/// SPAWN_WITH's prefix followed by count and MAX_SPAWN_LOANS grants.
 /// Successful admission lends idle launch/peer authority until the child exits.
 /// Endpoints move as usual. arg0 launch, arg1 SPAWN_TREE_BYTES-byte record, arg2 zero; tails zero.
 pub const TASK_SPAWN_TREE: u64 = 40;
-pub const SPAWN_TREE_BYTES: usize = SPAWN_BYTES + 8 + MAX_LAUNCHES * 8;
+/// Fixed wire capacity: saved executables use this 176-byte request. Increasing
+/// the kernel's task arena must not change how much user memory this call reads.
+/// This bounds explicit launch loans per spawn, not dynamic descendant budgets.
+pub const MAX_SPAWN_LOANS: usize = 14;
+pub const SPAWN_TREE_BYTES: usize = SPAWN_BYTES + 8 + MAX_SPAWN_LOANS * 8;
+const _: () = assert!(MAX_SPAWN_LOANS <= MAX_LAUNCHES);
 
 /// Caller-local IPC account snapshot at arg0: channel reservation, charged channels,
 /// dynamic-handle limit, charged handles (including escrow). arg1/arg2 must be zero.

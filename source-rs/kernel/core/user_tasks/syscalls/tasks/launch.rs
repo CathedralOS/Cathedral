@@ -51,7 +51,7 @@ pub(super) fn request(
                 .try_into()
                 .unwrap(),
         );
-        if requested > abi::MAX_LAUNCHES as u64 {
+        if requested > abi::MAX_SPAWN_LOANS as u64 {
             return Err(abi::INVALID_ARGUMENT);
         }
         delegated_count = requested as usize;

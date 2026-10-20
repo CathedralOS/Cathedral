@@ -117,6 +117,11 @@ Launch and consenting peer must currently belong to the same lender; separate
 peer consent cannot be transferred implicitly. Busy slots, uncollected outcomes,
 duplicates, stale/foreign grants and cycles are rejected before admission.
 
+The spawn-tree wire record is fixed at 176 bytes with up to 14 explicit loans,
+independent of the kernel's task arena capacity. Dynamic descendant reservations
+are a separate mechanism. The tree probe launches with nonzero adjacent bytes
+after that original record to catch accidental ABI growth against saved programs.
+
 Endpoint moves and launch loans commit together after successful mapping.
 Failures preserve all endpoints, launch names and peer ports. Successful loans
 remove the lender's launch and peer authority; copied old names no longer work.
