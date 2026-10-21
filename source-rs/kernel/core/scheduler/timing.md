@@ -68,6 +68,13 @@ The [capacity policy tests](../ipc/tests/withdrawal.rs) fill all 192 dynamic
 channels, 64 boot endpoints and a task's 48 visible or hidden grants, preserving
 unrelated queues, channel charges, memory-discard notifications and fresh restart names.
 
+Every reclamation step still checks physical and funding conservation. The two
+equations reuse one count of page-object backing from the same immutable session,
+so that ledger is scanned once instead of twice. This is a local observation,
+not a maintained counter: tasks, drafts and backing are still recounted on each
+step and checked against the allocator and funding ledgers independently.
+The remaining full recount is still atomic and scales with occupied backing.
+
 | Path | Work while IRQs are masked | Next boundary needed |
 | --- | --- | --- |
 | [Trap dispatch](../user_tasks/execution/traps.rs) | Poll installed device owners and keyboard; gather due waiters and retry up to eight candidates per wake invocation; inspect fixed deferred-work flags/sets | Measure whole-trap work, due-timer extraction, direct wakes and grant lookup; standalone close and boot/collection retain independent completion calls |

@@ -142,13 +142,13 @@ pub(super) fn conserved(session: &Session, source: &Frames<'_>) {
             .filter_map(|launch| launch.draft.as_ref())
             .map(admission::Draft::frames)
             .sum::<usize>();
-    assert_eq!(
-        source.allocated(),
-        session.frame_baseline + owned + session.memory.frames()
-    );
+    // Both equations observe the same immutable state. Walk object backing once;
+    // retain the independent allocator and funding comparisons on every step.
+    let backed = session.memory.frames();
+    assert_eq!(source.allocated(), session.frame_baseline + owned + backed);
     assert_eq!(
         session.memory.funding.charged(),
-        owned + session.memory.frames() + session.memory.reserved_unbacked()
+        owned + backed + session.memory.reserved_unbacked()
     );
 }
 

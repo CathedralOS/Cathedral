@@ -1,7 +1,7 @@
 # Rust reference OS: tasks and handoff
 
-Updated 2026-10-20 (local date). Current milestone: **scoped grant withdrawal
-at task capacity**, on baseline `691bc714` (bounded image-copy work).
+Updated 2026-10-20 (local date). Current milestone: **reuse the cleanup backing
+count**, on baseline `2a1f4b89` (scoped grant withdrawal at task capacity).
 The latest section records verification and remaining steps toward bounded
 execution. This does not introduce real-time reservations.
 The fresh-lab reset is `30572c9f`. Compact recursive desktops landed as `c7571191`,
@@ -4511,3 +4511,34 @@ retaining both physical and funding conservation checks. Authority's remaining
 link/launch scans, channel sponsorship scans, escrow chains and simultaneous
 deadline extraction still run atomically. No real-time entitlement or owner
 semantic was added. The intermittent clean-close LOSS timeout remains open.
+
+## Reuse the cleanup backing count (2026-10-20)
+
+Baseline: `2a1f4b89`. Each cleanup step's
+[conservation check](source-rs/kernel/core/user_tasks/lifecycle/reclamation.rs)
+counted page-object backing twice against an immutable session. It now counts
+once and reuses the result in the physical-allocation and funding equations.
+Both assertions still run after every step, with the same task/draft counts,
+allocator baseline and unfinished allocation reservations. No maintained counter,
+sampling interval or allocation/retirement behavior was introduced.
+
+Verification: workspace host tests, x86 release smoke, ARM64 release portability,
+x86 smoke clippy, formatting and whitespace checks pass. The real-frame suites
+exercise partial allocation/rollback, retained backing and escrow, and the full
+31-task subtree with exact refunds. All five periodic wait/selection checks pass.
+Logs: `build/accounting-host.log`, `build/accounting-x86-smoke.log`,
+`build/accounting-arm64-release.log`, `build/accounting-clippy.log`, and
+`build/accounting-report.log`. No desktop rerun was needed for this local count
+reuse; the prior milestone's desktop evidence is unchanged. F5 media was untouched.
+
+The full-capacity x86 fixture still performs 2,131 conservation checks. This run
+recorded 13,768 us total versus the previous 19,912 us; retirement itself recorded
+4,861 us versus 2,678 us. Host/QEMU timing variation prevents attributing a precise
+elapsed speedup. The structural result is one backing scan instead of two.
+
+Next: conservation remains an atomic full recount. Avoid adding cached totals
+without an independent audit that catches drift across allocation refusal,
+partial cancellation and retained escrow. The timing inventory still identifies
+simultaneous deadline extraction and aggregate authority work as remaining
+boundaries. No owner choice or ABI changed; the intermittent clean-close LOSS
+timeout remains open.
