@@ -1,7 +1,7 @@
 # Rust reference OS: tasks and handoff
 
-Updated 2026-10-20 (local date). Current milestone: **bounded image-copy work
-and page initialization**, on baseline `c4351353` (reserved-range installation).
+Updated 2026-10-20 (local date). Current milestone: **scoped grant withdrawal
+at task capacity**, on baseline `691bc714` (bounded image-copy work).
 The latest section records verification and remaining steps toward bounded
 execution. This does not introduce real-time reservations.
 The fresh-lab reset is `30572c9f`. Compact recursive desktops landed as `c7571191`,
@@ -4445,3 +4445,69 @@ evidence: its wider grant scans still run atomically, while the existing subtree
 fixture covers nine descendants. Deadline work also remains in the timing audit.
 Guaranteed CPU service is still a separate design from ceilings. The intermittent clean-close LOSS
 timeout remains open; no owner semantics or userspace ABI changed here.
+
+## Scoped grant withdrawal at task capacity (2026-10-20)
+
+Baseline: `691bc714`. IPC task closure previously scanned the entire grant arena
+even though dynamic records already occupy recipient-local reserved ranges.
+[Grants](source-rs/kernel/core/ipc/grants.rs) now provides the common range used
+by lookup, vacancy search, handle-budget accounting and
+[withdrawal](source-rs/kernel/core/ipc/lifecycle.rs). Installation asserts that
+dynamic grants use their owner's vacant range and refer to dynamic endpoints.
+This includes invisible incoming moves: transfer vacates the source and installs
+a new recipient-local record. No ownership index or additional state was added.
+
+At the current 31-task capacity, close scans 192 packed boot records plus the
+task's 48 dynamic slots (240 candidates), instead of all 1,680 records. Escrow
+discard still walks its actual affected grant chain. Sponsorship and channel
+accounting remain independent of custody, with charges held until final closure.
+Boot endpoint replacement clears its three fixed records, including an old
+revoker. Control-pair acceptance touches six records and finds its peer-local
+ordinal in the boot prefix. Local handle-budget queries scan only 48 dynamic
+records. Names, visibility, permissions and the application ABI are unchanged.
+
+[Capacity policy tests](source-rs/kernel/core/ipc/tests/withdrawal.rs) fill all
+64 boot endpoints and 192 dynamic channels. One case closes the last task slot
+with all 48 visible dynamic grants, checks exact discarded-memory notifications,
+preserves every unrelated dynamic grant/queue, then restarts with fresh names.
+Another fills all 48 recipient slots with a chain of hidden receive rights, with
+memory escrow at its tail. Closing the recipient drains the chain, preserves
+the surviving sender's sponsorship charge until final close and leaves peers'
+queued messages intact. Both cases finish with no dynamic channels left.
+
+The [real-frame subtree fixture](source-rs/kernel/core/user_tasks/lifecycle/withdrawal_test.rs)
+now fills all 31 task slots: initial owner, unrelated survivor and 29 descendants
+in two delegated branches. Each spawn stays within the existing 14-loan wire
+capacity. It queues grandchild data after owner death, then proves every descendant
+is stopped and stripped of authority before one survivor completion batch runs.
+No canceled child consumes its data; physical cleanup retains slots/outcomes until
+collection and returns every frame/funding unit. The cleanup stall guard scales
+with task capacity; the full fixture needed 2,130 retirement visits in this run.
+
+Verification:
+
+- Workspace host tests and core host clippy pass, including both full-arena
+  scenarios and existing transfer, initial-bundle, restart and sponsorship tests.
+- x86 release smoke and ARM64 debug/release pass, including all 31 real roots,
+  both delegated branches, survivor delivery and exact reclamation. The x86
+  fixture observed its one authority sweep at 125 us; this is a QEMU observation,
+  not a bound or an elapsed comparison against the previous nine-descendant case.
+- All five periodic wait/selection checks pass. Default x86 UEFI and x86/ARM64
+  smoke clippy, layout, formatting and whitespace checks pass.
+- Nested desktop passes three levels, pointer stress, protected close, confined
+  persistence, repeated subtree teardown and cold reopen on disposable media.
+  Interactive F5 media was untouched.
+- Logs: `build/authority-host.log`, `build/authority-core.log`,
+  `build/authority-capacity.log`, `build/authority-host-clippy.log`,
+  `build/authority-arm64-release.log`, `build/authority-arm64-debug.log`,
+  `build/authority-x86-smoke.log`, `build/authority-report.log`,
+  `build/authority-clippy.log`, `build/authority-smoke-clippy.log`,
+  `build/authority-arm64-clippy.log`, `build/authority-desktop.log`.
+
+Next: full-capacity cleanup exposes repeated conservation-accounting work:
+2,131 observations totaled 19,912 us in this fixture, versus 2,678 us in retirement
+bodies. Inspect repeated ledger scans before adding more scheduling machinery,
+retaining both physical and funding conservation checks. Authority's remaining
+link/launch scans, channel sponsorship scans, escrow chains and simultaneous
+deadline extraction still run atomically. No real-time entitlement or owner
+semantic was added. The intermittent clean-close LOSS timeout remains open.

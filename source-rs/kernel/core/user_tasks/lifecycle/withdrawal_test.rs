@@ -9,8 +9,9 @@ use crate::{
     scheduler::{Event, TaskState},
 };
 
-const LEAVES: usize = 8;
-const TASKS: usize = LEAVES + 3;
+const TASKS: usize = abi::MAX_TASKS;
+const LAUNCHES: usize = TASKS - 2; // Initial owner and unrelated survivor.
+const GROUP: usize = abi::MAX_SPAWN_LOANS + 1;
 
 /// # Safety
 /// Sole boot CPU, IRQs masked, live kernel layout, initialized heap and exclusive
@@ -26,9 +27,11 @@ pub unsafe fn exercise(
     let (mut session, mut frames) = unsafe { prepare(frames, layout, image, output) };
     let [send, receive] = session.ipc.create(1).unwrap();
     receive_on(&mut session, 1, receive);
-    for child in 3..TASKS {
-        let receive = session.ipc.handle(child, 0).unwrap();
-        receive_on(&mut session, child, receive);
+    for child in 2..TASKS {
+        if session.launches[child - 2].model.owner != 0 {
+            let receive = session.ipc.handle(child, 0).unwrap();
+            receive_on(&mut session, child, receive);
+        }
     }
     for _ in 0..TASKS {
         assert!(
@@ -45,11 +48,15 @@ pub unsafe fn exercise(
     // The owner is gone; withdrawal of its child and the lent grandchildren is
     // pending. Queue data before that sweep, without executing any user context.
     session.ipc.send(1, send, b"survivor").unwrap();
-    for index in 1..=LEAVES {
+    for index in 0..LAUNCHES {
+        let owner = session.launches[index].model.owner;
+        if owner == 0 {
+            continue;
+        }
         let base = session.launches[index].endpoint_base;
-        let local = session.ipc.accept_child(base, 2);
-        let send = session.ipc.handle(2, local).unwrap();
-        session.ipc.send(2, send, b"must not copy").unwrap();
+        let local = session.ipc.accept_child(base, owner);
+        let send = session.ipc.handle(owner, local).unwrap();
+        session.ipc.send(owner, send, b"must not copy").unwrap();
     }
     let wakes = session.timing.count(Phase::WaitCompletion);
     let before = frames.allocated();
@@ -69,7 +76,12 @@ pub unsafe fn exercise(
         assert!(session.ipc.handle(child, 0).is_err());
         assert!(session.tasks[child].receive.is_none());
     }
-    assert_eq!(session.tasks[2].report.cancelled_blocked, LEAVES);
+    for branch in (0..LAUNCHES).step_by(GROUP) {
+        assert_eq!(
+            session.tasks[branch + 2].report.cancelled_blocked,
+            (LAUNCHES - branch - 1).min(abi::MAX_SPAWN_LOANS)
+        );
+    }
     assert_eq!(session.scheduler.states()[1], TaskState::Ready);
     assert_eq!(session.tasks[1].report.ipc_received, 1);
     let mut bytes = [0; 8];
@@ -87,7 +99,8 @@ pub unsafe fn exercise(
         // SAFETY: All canceled roots are permanently inactive; no aliases escape.
         unsafe { reap(&mut session, &mut frames) };
         steps += 1;
-        assert!(steps < 2048);
+        // Cover each task's bounded metadata scans and frame-retirement visits.
+        assert!(steps < TASKS * 256);
         assert_eq!(session.scheduler.states()[1], TaskState::Ready);
     }
     assert!(steps > TASKS);
@@ -117,7 +130,7 @@ unsafe fn prepare<'a>(
         executable: Executable::Probe(&[0xcc]),
         arguments: [0, 0],
     };
-    let supervision: [_; LEAVES + 1] = core::array::from_fn(|_| Supervision {
+    let supervision: [_; LAUNCHES] = core::array::from_fn(|_| Supervision {
         owner: 0,
         peer: 0,
         disk: false,
@@ -149,11 +162,19 @@ unsafe fn prepare<'a>(
         unsafe { admission::admit(&mut session, layout, image, &program, &mut frames, slot) }
             .unwrap();
     }
-    for index in 1..=LEAVES {
-        session.launches[0].delegated[index - 1] = session.launches[index].model.launch(0).unwrap();
+    // Two branches fill today's 31 task slots without exceeding the wire's
+    // per-spawn loan capacity. Both their children must join the same sweep.
+    for branch in (0..LAUNCHES).step_by(GROUP) {
+        let count = (LAUNCHES - branch - 1).min(abi::MAX_SPAWN_LOANS);
+        for offset in 0..count {
+            session.launches[branch].delegated[offset] = session.launches[branch + 1 + offset]
+                .model
+                .launch(0)
+                .unwrap();
+        }
+        session.launches[branch].delegated_count = count;
     }
-    session.launches[0].delegated_count = LEAVES;
-    for index in 0..=LEAVES {
+    for index in 0..LAUNCHES {
         let model = &mut session.launches[index].model;
         let owner = model.owner;
         model
@@ -169,11 +190,16 @@ unsafe fn prepare<'a>(
         }
         assert!(session.tasks[index + 2].space.is_some());
     }
-    assert!(
-        session.launches[1..]
-            .iter()
-            .all(|launch| launch.model.owner == 2)
-    );
+    for (index, launch) in session.launches.iter().enumerate() {
+        assert_eq!(
+            launch.model.owner,
+            if index.is_multiple_of(GROUP) {
+                0
+            } else {
+                (index / GROUP) * GROUP + 2
+            }
+        );
+    }
     (session, frames)
 }
 

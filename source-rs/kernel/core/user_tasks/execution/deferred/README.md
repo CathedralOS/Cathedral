@@ -210,10 +210,17 @@ executable through partial rollback before withdrawing its owner. A
 committed parent/child teardown checks the eight-frame allowance on every step,
 endpoint withdrawal before the first pause, an unaffected ready peer, unavailable
 slots/outcomes throughout cleanup and exact final refunds.
-The [lent-subtree fixture](../../lifecycle/withdrawal_test.rs) builds a parent and
-eight children through production admission/loan commits. On owner death it
+The [lent-subtree fixture](../../lifecycle/withdrawal_test.rs) fills all 31 task
+slots through production admission/loan commits: an initial owner, an unrelated
+survivor and 29 descendants in two branches. Each spawn respects the wire's loan
+limit. On owner death it
 checks one completion batch for the sweep, no canceled child receive/copy,
 complete authority withdrawal before the first pause, an unaffected receiver
 and exact final reclamation on both ISAs.
+IPC task closure visits the shared boot grants and only that task's dynamic
+range, including unpublished transfers. Full-arena
+[host policy tests](../../../ipc/tests/withdrawal.rs) separately cover 192 live
+dynamic channels, a 48-grant escrow chain, discarded memory, unrelated queues and
+restart. Escrow chains and launch/link scans still complete atomically.
 Existing smoke and desktop fixtures exercise IPC, deadlines, repeated task
 replacement and subtree teardown.

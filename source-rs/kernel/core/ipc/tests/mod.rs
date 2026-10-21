@@ -2,5 +2,6 @@
 
 mod channels;
 mod notifications;
+mod withdrawal;
 
 include!("tests.rs");

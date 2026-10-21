@@ -42,9 +42,7 @@ impl Ipc {
         if !self.live(caller) {
             return Err(abi::BAD_HANDLE);
         }
-        let handles = self
-            .grants
-            .entries
+        let handles = self.grants.entries[Grants::dynamic_slots(caller)]
             .iter()
             .flatten()
             .filter(|g| g.owner == caller && g.endpoint >= MAX_ENDPOINTS)

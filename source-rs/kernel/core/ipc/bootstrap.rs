@@ -53,11 +53,9 @@ impl Ipc {
             self.changed_receivers |= 1 << old.spec.receiver;
             self.discard(index);
         }
-        for grant in &mut self.grants.entries {
-            if grant.is_some_and(|g| g.endpoint == index) {
-                *grant = None;
-            }
-        }
+        // Boot rights cannot move into dynamic ranges; this endpoint owns three
+        // fixed records, including its optional old revoker.
+        self.grants.clear_boot(index);
         self.endpoints[index] = Some(Endpoint {
             epoch,
             spec,
@@ -137,12 +135,12 @@ impl Ipc {
     pub fn accept_child(&mut self, first: usize, peer: usize) -> u64 {
         assert!(self.live(peer));
         let entries = &mut self.grants.entries;
-        for grant in entries.iter_mut().flatten() {
+        for grant in entries[first * 3..(first + 2) * 3].iter_mut().flatten() {
             if grant.owner == peer && (first..first + 2).contains(&grant.endpoint) {
                 grant.visible = true;
             }
         }
-        entries
+        entries[..MAX_ENDPOINTS * 3]
             .iter()
             .flatten()
             .filter(|g| g.owner == peer && g.visible)

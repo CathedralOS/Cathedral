@@ -18,6 +18,21 @@ pub(super) struct Grants {
     dynamic_next: [u64; abi::MAX_TASKS],
 }
 impl Grants {
+    /// Dynamic grants, including unpublished transfers, are installed in their
+    /// recipient's reserved range. Moving a right vacates the source slot.
+    pub fn dynamic_slots(task: usize) -> core::ops::Range<usize> {
+        let first = BOOT + task * abi::MAX_DYNAMIC_HANDLES;
+        first..first + abi::MAX_DYNAMIC_HANDLES
+    }
+    /// Only boot grants are globally packed. No task operation needs to inspect
+    /// another task's dynamic range, regardless of the session's task count.
+    pub fn task_slots(task: usize) -> impl Iterator<Item = usize> {
+        (0..BOOT).chain(Self::dynamic_slots(task))
+    }
+    pub fn clear_boot(&mut self, endpoint: usize) {
+        assert!(endpoint < abi::MAX_ENDPOINTS);
+        self.entries[endpoint * 3..endpoint * 3 + 3].fill(None);
+    }
     pub fn new(tasks: usize) -> Result<Self, u64> {
         let mut entries = alloc::vec::Vec::new();
         entries
@@ -34,9 +49,7 @@ impl Grants {
         // Boot records are packed once globally, but lookup is always scoped by
         // caller. Dynamic slots have a reserved per-process budget. Neither
         // physical table placement nor endpoint indices appear in local names.
-        let dynamic = BOOT + task * abi::MAX_DYNAMIC_HANDLES;
-        (0..BOOT)
-            .chain(dynamic..dynamic + abi::MAX_DYNAMIC_HANDLES)
+        Self::task_slots(task)
             .find_map(|i| {
                 self.entries[i]
                     .filter(|g| g.owner == task && g.visible && g.ticket == ticket)
@@ -83,8 +96,7 @@ impl Grants {
             return Ok(slots);
         }
         let mut found = 0;
-        let first = BOOT + task * abi::MAX_DYNAMIC_HANDLES;
-        for i in first..first + abi::MAX_DYNAMIC_HANDLES {
+        for i in Self::dynamic_slots(task) {
             if self.entries[i].is_none() {
                 slots[found] = i;
                 found += 1;
@@ -110,6 +122,8 @@ impl Grants {
         right: Right,
         visible: bool,
     ) -> u64 {
+        assert!(Self::dynamic_slots(task).contains(&slot));
+        assert!(endpoint >= abi::MAX_ENDPOINTS && self.entries[slot].is_none());
         let ticket = self.dynamic_next[task];
         self.dynamic_next[task] += 2;
         self.entries[slot] = Some(Grant {

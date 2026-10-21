@@ -54,6 +54,20 @@ between them. Increasing arena or object limits therefore
 can increase interrupt latency even after the scheduler stops scanning them.
 The table describes structural bounds; none is a qualified time bound.
 
+IPC grant placement now bounds per-task withdrawal to the 192 packed boot
+records plus the task's 48 dynamic slots. At 31 tasks that is 240 candidates,
+instead of scanning all 1,680 records per close. Incoming unpublished transfers
+live in the recipient's dynamic range; installation asserts that invariant.
+Cascading escrow discard still visits the affected hidden rights. Channel
+sponsorship/account scans, launch/link scans and the complete subtree sweep
+remain atomic. This change adds no index or counter to maintain.
+Boot endpoint replacement clears exactly its three reserved grant records;
+pair acceptance examines six records before locating the peer's boot ordinal.
+Caller handle-budget queries inspect only their dynamic range, including escrow.
+The [capacity policy tests](../ipc/tests/withdrawal.rs) fill all 192 dynamic
+channels, 64 boot endpoints and a task's 48 visible or hidden grants, preserving
+unrelated queues, channel charges, memory-discard notifications and fresh restart names.
+
 | Path | Work while IRQs are masked | Next boundary needed |
 | --- | --- | --- |
 | [Trap dispatch](../user_tasks/execution/traps.rs) | Poll installed device owners and keyboard; gather due waiters and retry up to eight candidates per wake invocation; inspect fixed deferred-work flags/sets | Measure whole-trap work, due-timer extraction, direct wakes and grant lookup; standalone close and boot/collection retain independent completion calls |
@@ -128,8 +142,12 @@ Memory dispatch distinguishes operation types and executable/escrow retirement.
 descendant authority sweep and its single completion batch. Previous counts
 included every empty reclamation visit; those averages are not comparable.
 Neither phase includes later physical retirement. The shared
-[subtree fixture](../user_tasks/lifecycle/withdrawal_test.rs) checks nine affected
-descendants, newly queued grandchildren, surviving delivery and exact reclamation.
+[subtree fixture](../user_tasks/lifecycle/withdrawal_test.rs) fills all 31 task slots:
+an initial owner, an unrelated survivor and 29 descendants in two lent branches.
+Each branch respects the per-spawn loan limit. The fixture checks newly queued
+grandchildren, one completion batch after all authority is removed, surviving
+delivery and exact reclamation. Earlier runs covered only nine descendants;
+their sweep timings describe a smaller workload.
 `WaitCompletion` measures hint/timer gathering and one batch of waiter retries,
 including empty invocations. The shared [burst fixture](../user_tasks/execution/waits/burst.rs)
 exercises 24 simultaneous waiters over three visits without another interrupt.
