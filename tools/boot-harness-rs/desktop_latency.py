@@ -1,4 +1,4 @@
-"""The F5 desktop at depths 0..3: launch phases and visible input/save completion.
+"""The F5 desktop through the selected depth: launch and input/save completion.
 
 Run through desktop_test.py --latency. Each boot uses the same workload; no
 latency threshold depends on host load. Screenshots and QMP add measurement cost.
@@ -8,7 +8,7 @@ import shutil
 import capture
 
 
-def exercise(stream, output, click, scan, width, height, reboot, timings):
+def exercise(stream, output, click, scan, width, height, reboot, timings, nested_depth=3):
     font = bytes.fromhex((Path(__file__).resolve().parents[2] / 'source-rs/platform/libraries/bitmap-font/font.hex').read_text())
 
     def pixel(w, data, x, y):
@@ -25,7 +25,7 @@ def exercise(stream, output, click, scan, width, height, reboot, timings):
             {'type': 'key', 'data': {'down': down, 'key': {'type': 'qcode', 'data': code}}}
             for down in (True, False)]})
 
-    for depth in range(4):
+    for depth in range(nested_depth+1):
         # Every nested user matrix has the same 8px inset and 80px taskbar.
         x = y = 8*depth
         w, h = width-16*depth, height-104*depth

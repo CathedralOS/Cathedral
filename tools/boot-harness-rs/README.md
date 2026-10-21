@@ -430,16 +430,32 @@ For the same measurements through the recursive desktop:
 
 ```powershell
 python tools/boot-harness-rs/desktop_test.py --latency --trace-storage --trace-input
+python tools/boot-harness-rs/desktop_test.py --nested-desktop --nested-depth 4 --pointer-stress --trace-storage --timeout 300
 python tools/boot-harness-rs/desktop_timing.py build/boot-harness-rs/desktop/ARTIFACT_DIRECTORY
 ```
 
 The [latency workload](desktop_latency.py) measures picker launch, user creation,
 user entry, Notes launch, pointer movement, typing, saving and closing, from the
-outer desktop through three Nested levels. A cold boot checks saved text and
+outer desktop through three Nested levels (four with `--nested-depth 4`). A cold boot checks saved text and
 repeats the applicable phases. It uses a disposable disk and private ESP built
 from the F5 composition. Reports, serial logs and per-depth screenshots stay in
 that artifact directory. Compare operation counts as well as wall observations;
 there is no host-independent performance threshold.
+
+[nested_existing_test.py](nested_existing_test.py) takes a saved disk path and
+`--depth 1..4` (default 3). It copies the disk, builds the current kernel/providers
+in a private ESP, and drives existing nested programs without an installer or
+migration. It enters or creates nested users, edits/saves Notes, checks dirty
+subtree close protection and clean collection, then repeats after a cold boot.
+The fixture expects one outer User 1 and stock compact chrome. It fails on a
+provider restart or matrix exit. The source stays untouched. Retained executable
+snapshots can still fail where freshly installed current programs pass; this
+replay deliberately exposes that distinction rather than upgrading the evidence.
+
+`--trace-storage` also records recursive LOSS/CLOSE sends, answers, deferrals and
+stale reply drainage. Incarnations and slots are local to each matrix, not global
+process identifiers; do not correlate unrelated matrices by those values alone.
+No close deadline or refusal policy is changed by tracing.
 
 Host observations include input spacing, QMP and screenshot polling; they are
 upper bounds, not service CPU benchmarks or latency guarantees. Storage samples

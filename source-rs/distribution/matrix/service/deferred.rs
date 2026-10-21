@@ -155,3 +155,22 @@ impl Deferred {
         Ok(false)
     }
 }
+
+/// Local diagnostic context only; handle names can repeat in other matrices.
+#[cfg(feature = "trace-storage")]
+pub(super) fn trace_loss(event: &Event, parent: &Parent) {
+    if let Event::Request(r) = event
+        && r.control
+        && wire::decode(&r.bytes[..r.len]) == Some([wire::LOSS, 0, 0, 0, 0, 0, 0, 0])
+    {
+        cathedral_user_runtime::time::storage_sample(
+            "matrix-loss-deferred",
+            &[
+                r.incarnation,
+                cathedral_user_runtime::time::now().unwrap_or(0),
+                u64::from(parent.publishing()),
+                u64::from(parent.storing()),
+            ],
+        );
+    }
+}

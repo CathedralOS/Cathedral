@@ -140,6 +140,17 @@ impl Children {
                 let child = self.slots[slot].as_mut().unwrap();
                 if child.stale > 0 {
                     // The answer to a request the asker already gave up on.
+                    #[cfg(feature = "trace-storage")]
+                    time::storage_sample(
+                        "matrix-control-stale",
+                        &[
+                            request.incarnation,
+                            slot as u64,
+                            now,
+                            deadline,
+                            child.stale as u64,
+                        ],
+                    );
                     child.stale -= 1;
                     return Ok(false);
                 }
@@ -176,6 +187,20 @@ impl Children {
                 }
             }
         };
+        #[cfg(feature = "trace-storage")]
+        if matches!(purpose, Purpose::Loss | Purpose::Close) {
+            time::storage_sample(
+                "matrix-control-answer",
+                &[
+                    request.incarnation,
+                    slot as u64,
+                    u64::from(matches!(purpose, Purpose::Close)),
+                    now,
+                    deadline,
+                    answer.as_ref().map_or_else(|code| *code, |words| words[0]),
+                ],
+            );
+        }
         self.pending[slot] = None;
         self.retiring[slot] = None;
         if matches!(purpose, Purpose::Loss) {

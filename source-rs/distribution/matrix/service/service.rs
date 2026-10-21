@@ -214,6 +214,8 @@ pub fn run(environment: Environment, mut startup: Startup) -> Result<(), Error> 
             continue;
         }
         if deferred::Deferred::blocks(&event, parent) {
+            #[cfg(feature = "trace-storage")]
+            deferred::trace_loss(&event, parent);
             #[cfg(feature = "interaction-delay")]
             if parent.refresh_late()
                 && let Event::Request(r) = &event

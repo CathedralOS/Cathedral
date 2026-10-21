@@ -1,10 +1,10 @@
-"""Recursive ordinary desktops: three nested logins, persistence and reclamation."""
+"""Recursive ordinary desktops: nested logins, persistence and reclamation."""
 from pathlib import Path
 import shutil
 import time
 
 
-def exercise(output, click, key, scan, width, height, reboot, pointer_stress=False, interaction_delay=False):
+def exercise(output, click, key, scan, width, height, reboot, pointer_stress=False, interaction_delay=False, nested_depth=3):
     font = bytes.fromhex((Path(__file__).resolve().parents[2] / 'source-rs/platform/libraries/bitmap-font/font.hex').read_text())
     def pixel(w, data, x, y):
         return data[(y*w+x)*3:(y*w+x+1)*3]
@@ -80,45 +80,45 @@ def exercise(output, click, key, scan, width, height, reboot, pointer_stress=Fal
             return all(marker in log for marker in ('interaction-delay-released', *markers))
         scan(resumed, f'{trigger} delayed reply recovered: {markers}')
 
-    for depth in range(1,4):
+    for depth in range(1,nested_depth+1):
         enter(depth, not reboot)
-    shutil.copyfile(output/'display.png', output/'three-nested-desktops.png')
-    launch(3,0)
-    note(3,'deep' if reboot else '')
+    shutil.copyfile(output/'display.png', output/f'{nested_depth}-nested-desktops.png')
+    launch(nested_depth,0)
+    note(nested_depth,'deep' if reboot else '')
     if not reboot:
-        click(37,144)
+        click(8*nested_depth+13,144)
         for ch in 'deep': key(ch)
-        note(3,'deep',True)
+        note(nested_depth,'deep',True)
     if interaction_delay:
-        click(37,144)
+        click(8*nested_depth+13,144)
         delayed('f8', lambda: None, ('matrix-poll-delayed', 'matrix-poll-unmatched', 'matrix-poll-local', 'matrix-poll-resumed'))
-        note(3,'deep',not reboot)
+        note(nested_depth,'deep',not reboot)
         # Lateness is not input loss: subsequent keys must retain this focus.
         delayed('f7', lambda: key('x'), ('interaction-delayed', 'interaction-resumed'))
-        note(3,'deepx',True)
+        note(nested_depth,'deepx',True)
         # On cold open, deleting the added x restores the confirmed document.
         # On the fresh boot, deep itself has not been saved yet.
-        key('backspace'); note(3,'deep',not reboot)
+        key('backspace'); note(nested_depth,'deep',not reboot)
         if reboot:
-            key('f1'); note(3,'deep')
+            key('f1'); note(nested_depth,'deep')
     if not reboot:
         task_close(0) # Loss propagates through the whole subtree.
         label(width-192,height-56,'UNSAVED WORK')
-        note(3,'deep',True)
-        click(37,144); key('f1'); note(3,'deep')
-    app_close(3); background(3)
+        note(nested_depth,'deep',True)
+        click(8*nested_depth+13,144); key('f1'); note(nested_depth,'deep')
+    app_close(nested_depth); background(nested_depth)
     if interaction_delay:
-        delayed('f6', lambda: launch(3,1), ('matrix-present-delayed', 'matrix-present-resumed'))
-        x,y,w,h = viewport(3)
+        delayed('f6', lambda: launch(nested_depth,1), ('matrix-present-delayed', 'matrix-present-resumed'))
+        x,y,w,h = viewport(nested_depth)
         scan(lambda sw,d: pixel(sw,d,x+13,y+18)==bytes.fromhex('315ca8'), 'delayed Colors publication')
-        app_close(3); background(3)
-    # Collapse each level, then re-enter all three. Old child accounts, image
+        app_close(nested_depth); background(nested_depth)
+    # Collapse each level, then re-enter the subtree. Old child accounts, image
     # readers and endpoints must be reusable without rebooting the outer desktop.
     for _ in range(2):
         task_close(0); background(0)
-        for depth in range(1,4): enter(depth,False)
-        launch(3,0); note(3,'deep'); app_close(3); background(3)
+        for depth in range(1,nested_depth+1): enter(depth,False)
+        launch(nested_depth,0); note(nested_depth,'deep'); app_close(nested_depth); background(nested_depth)
     task_close(0); background(0)
     launch(0,0); note(0,'') # Inner saved content never leaks to the outer realm.
     app_close(0); background(0)
-    print('PASS: three recursive desktops, protected close, saved inner data, repeated subtree reclamation and isolation')
+    print(f'PASS: {nested_depth} recursive desktops, protected close, saved inner data, repeated subtree reclamation and isolation')

@@ -191,9 +191,18 @@ fn dispatch(
     ) || (matches!(r.op, wire::COPY | wire::COPY_TREE) && attachment.is_some())
     {
         if matches!(r.op, wire::SET_METADATA | wire::COPY | wire::COPY_TREE) {
+            #[cfg(feature = "trace-storage")]
+            crate::metrics::report("hierarchy-before-collection");
             collect(store, root)?;
+            #[cfg(feature = "trace-storage")]
+            crate::metrics::report("hierarchy-before-write");
         }
-        return super::hierarchy::dispatch(store, root, r, attachment, response);
+        let result = super::hierarchy::dispatch(store, root, r, attachment, response);
+        #[cfg(feature = "trace-storage")]
+        if matches!(r.op, wire::SET_METADATA | wire::COPY | wire::COPY_TREE) {
+            crate::metrics::report("hierarchy-after-write");
+        }
+        return result;
     }
     let plain = attachment.is_none();
     match r.op {

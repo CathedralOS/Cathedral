@@ -37,6 +37,8 @@ impl Children {
         parent: &Parent,
         server: &mut Server,
     ) -> Result<(), Error> {
+        #[cfg(feature = "trace-storage")]
+        time::storage_trace("matrix-loss-begin", request.incarnation, 0);
         // An in-flight admission must not install an unexamined child after we
         // report clean. Conservatively refuse while storage/admission is busy.
         if self.loss.is_some()
@@ -64,10 +66,14 @@ impl Children {
                         .is_ok()
                 });
             if sent {
+                #[cfg(feature = "trace-storage")]
+                time::storage_trace("matrix-loss-send", request.incarnation, slot as u64);
                 survey.waiting |= 1 << slot;
                 self.pending[slot] = Some((request, time::after(100)?, Purpose::Loss));
                 self.retiring[slot] = None;
             } else {
+                #[cfg(feature = "trace-storage")]
+                time::storage_trace("matrix-loss-unsent", request.incarnation, slot as u64);
                 survey.uncertain = true;
             }
         }
@@ -82,6 +88,12 @@ impl Children {
         server: &mut Server,
     ) -> Result<(), Error> {
         let survey = self.loss.as_mut().expect("loss reply without survey");
+        #[cfg(feature = "trace-storage")]
+        time::storage_trace(
+            "matrix-loss-answer",
+            survey.request.incarnation,
+            slot as u64,
+        );
         survey.waiting &= !(1 << slot);
         if !matches!(answer, Ok(words) if words[0] == 0 && words[1] == 0) {
             let (status, loss) = match answer {
@@ -97,6 +109,12 @@ impl Children {
     fn finish_survey(&mut self, server: &mut Server) -> Result<(), Error> {
         if self.loss.as_ref().is_some_and(|survey| survey.waiting == 0) {
             let survey = self.loss.take().unwrap();
+            #[cfg(feature = "trace-storage")]
+            time::storage_trace(
+                "matrix-loss-end",
+                survey.request.incarnation,
+                u64::from(survey.uncertain || self.recovery_pending()),
+            );
             // Only a boolean aggregate crosses the boundary; no descendant
             // identity, draft contents or local loss count escapes the matrix.
             server.reply(

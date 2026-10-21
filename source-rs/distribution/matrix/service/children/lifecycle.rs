@@ -197,6 +197,8 @@ impl Children {
             return server.reply(&request, &wire::encode(wire::error(abi::BUSY)));
         }
         self.pending[target] = Some((request, time::after(100)?, Purpose::Close));
+        #[cfg(feature = "trace-storage")]
+        time::storage_trace("matrix-close-send", request.incarnation, target as u64);
         self.retiring[target] = None;
         Ok(())
     }

@@ -283,7 +283,12 @@ pub fn inspect(path: &Path, offset: u64, bytes: u64) -> Result<()> {
                 .iter()
                 .map(|b| format!("{b:02x}"))
                 .collect::<String>();
-            println!("OBJECT {id} parent={parent} manifest={digest}");
+            let entry = table.get(edge(parent, id).as_slice())?;
+            let metadata = entry.as_ref().and_then(|v| Metadata::decode(v.value()));
+            let name = metadata
+                .as_ref()
+                .map(|m| String::from_utf8_lossy(metadata::text(&m.name)));
+            println!("OBJECT {id} parent={parent} manifest={digest} name={name:?}");
         }
     }
     Ok(())

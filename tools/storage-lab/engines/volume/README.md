@@ -225,6 +225,11 @@ and [notes.rs](notes.rs). Host verification never
 opens the original image before the next cold guest, so host cleanup cannot hide
 guest recovery problems. These are fixed fixture oracles, not general fsck tools.
 
+`inspect-hierarchy IMAGE OFFSET BYTES` prints object numbers, parents, content
+manifests and hierarchy names, so retained program snapshots can be distinguished
+from the current template. Inspect a copy: opening the engine can perform recovery
+and close-time housekeeping even though this command only queries records.
+
 The stock desktop invokes `upgrade-app-close IMAGE OFFSET BYTES LEGACY_LIST`
 after seeding. [labels.rs](labels.rs) matches old copied stock programs against
 retained template content or the distribution's explicit legacy digests,

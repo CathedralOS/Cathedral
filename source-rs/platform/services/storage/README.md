@@ -64,11 +64,18 @@ the last reader releases them. Profiles fund both explicitly: 128 private pages
 leave room for a 64-page reply beside the heap, and 64 reader pages take the
 largest publication.
 
-The engine cache is 64 KiB within the existing 56-page heap. A larger cache is
-not free capacity: the engine also holds writer and allocator state. A 128 KiB
-cache exhausted this heap during the desktop template copy. The 64 KiB setting
-and ordered chunk-index validation reduce collection I/O; neither changes the
-immediate durability barrier or permits reporting a save before commit.
+The engine cache is 32 KiB within the existing 56-page heap. The engine also
+holds writer and allocator state, and collection needs a transient live set.
+A retained desktop disk exhausted this heap with a 64 KiB cache during automatic
+collection before a nested template copy. Live sets now store fixed-size event,
+manifest and chunk identities inside tree nodes, avoiding an allocation for each
+key; the smaller cache leaves room for that metadata alongside engine state.
+Ordered chunk-index validation still avoids random chunk lookups. Durability,
+quota and pin rules are unchanged. This fixes the reproduced workload, not an
+arbitrary-record-count heap bound: the complete live census still scales with
+root metadata, and fallible/bounded collection workspace remains future work.
+`trace-storage` reports heap use before collection, before hierarchy writes and
+after them, including the allocator's lifetime peak and failed allocation count.
 
 Proofs, from the repository root:
 

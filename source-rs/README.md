@@ -33,6 +33,9 @@ switching and saves. See [desktop timing interpretation](../tools/boot-harness-r
 before comparing these measurements.
 Add `--latency` to measure picker/user entry, Notes, pointer, typing and saves
 at each of three Nested levels, including a cold reopen of their saved state.
+Use `--nested-depth 4` with `--latency` or `--nested-desktop` to exercise four
+levels beneath the outer desktop. `--pointer-stress --trace-storage` adds motion
+throughout the checks and recursive close diagnostics.
 
 **Split** runs two independently saved Notes. Its **DEEPER** button enters another
 copy of that matrix in a separate saved realm; unsaved work prevents replacement.
@@ -44,6 +47,11 @@ this through F5's composition, including repeated close and cold reboot.
 Nested desktops inside the outer desktop, deepest Notes persistence, dirty-close
 protection and repeated subtree reclamation across reboot. Use Fresh Lab when
 discarding stale template snapshots; new users then get current code at every depth.
+`python tools/boot-harness-rs/nested_existing_test.py PATH_TO_SAVED_DISK --depth 4`
+instead replays an untouched copy with its existing program snapshots and current
+kernel/providers, without an installer. It expects one outer User 1 and stock
+compact chrome; old executables may still time out. See the
+[harness guide](../tools/boot-harness-rs/README.md#ordinary-desktop-timings).
 The stock bottom bar is 80 pixels high; Settings changes bar height and spacing.
 
 `python tools/boot-harness-rs/nested_failures_test.py PATH_TO_THREE_LEVEL_IMAGE`

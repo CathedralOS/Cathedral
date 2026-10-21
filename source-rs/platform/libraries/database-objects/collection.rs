@@ -2,15 +2,39 @@
 //! derives liveness from all current heads and durable pins under one writer.
 //! No persisted cursor can skip newly live records between passes. A pass
 //! reads only metadata: heads, events, manifests and the chunk index. Chunk
-//! bytes are never read or re-hashed here, so a root full of programs costs a
-//! write no more than a root full of notes; reads verify chunks when they
-//! are used.
+//! bytes are never read or re-hashed here: collection work scales with revision
+//! and chunk metadata rather than payload bytes. Reads verify chunks when used.
 use super::*;
 use alloc::{collections::BTreeSet, vec::Vec};
 use records::{charge, decode_pin, encode_pin, event_key, key, quota, set_quota};
 use redb::{ReadableTable, Table};
 pub const PIN_SLOTS: u8 = 2;
 const PASS_RECORDS: usize = 8;
+/// One root's transient mark set. Fixed identities live inside tree nodes,
+/// avoiding a separate allocation and Vec header for every marked record.
+/// Root and record kind are supplied by the enclosing scan, not stored per key.
+#[derive(Default)]
+struct Live {
+    events: BTreeSet<[u8; 16]>,
+    manifests: BTreeSet<[u8; 32]>,
+    chunks: BTreeSet<[u8; 32]>,
+}
+impl Live {
+    fn contains(&self, key: &[u8]) -> bool {
+        match key.get(1) {
+            Some(b'e') => key[2..]
+                .try_into()
+                .is_ok_and(|id: &[u8; 16]| self.events.contains(id)),
+            Some(b'm') => key[2..]
+                .try_into()
+                .is_ok_and(|id: &[u8; 32]| self.manifests.contains(id)),
+            Some(b'k') => key[2..]
+                .try_into()
+                .is_ok_and(|id: &[u8; 32]| self.chunks.contains(id)),
+            _ => false,
+        }
+    }
+}
 #[derive(Debug, Default)]
 pub struct Collection {
     pub removed: usize,
@@ -60,7 +84,7 @@ impl Store<'_> {
             if head.revision != revision {
                 return Err(Error::Corrupt);
             }
-            let mut live = BTreeSet::new();
+            let mut live = Live::default();
             closure(&table, root, id, head, &mut live)?;
             validate_chunks(&table, root, &live)?;
             let value = encode_pin(Object { id, head });
@@ -114,7 +138,7 @@ impl Store<'_> {
 /// reclamation and the new heads either commit together or roll back together.
 /// The caller must preserve the quota ledger and commit with durable semantics.
 pub fn collect_records(table: &mut Table<&[u8], &[u8]>, root: u8) -> Result<Collection> {
-    let mut live = BTreeSet::new();
+    let mut live = Live::default();
     let mut heads = Vec::new();
     for row in engine(table.range(key(root, b'h', &[]).as_slice()..))? {
         let (k, v) = engine(row)?;
@@ -200,7 +224,7 @@ fn closure(
     root: u8,
     id: u64,
     head: Head,
-    live: &mut BTreeSet<Vec<u8>>,
+    live: &mut Live,
 ) -> Result<()> {
     let event = event_key(root, id, head.revision);
     if engine(table.get(event.as_slice()))?
@@ -210,9 +234,9 @@ fn closure(
     {
         return Err(Error::Corrupt);
     }
-    live.insert(event);
+    live.events.insert(event[2..].try_into().unwrap());
     let manifest = key(root, b'm', &head.manifest);
-    if live.contains(&manifest) {
+    if live.manifests.contains(&head.manifest) {
         return Ok(()); // Shared content was already validated through another head.
     }
     let value = engine(table.get(manifest.as_slice()))?.ok_or(Error::Corrupt)?;
@@ -220,18 +244,17 @@ fn closure(
     let body = records::manifest(head, data)?;
     if let records::Contents::Chunks(parts) = body {
         for id in parts.chunks_exact(32) {
-            let index = key(root, b'k', id);
-            live.insert(index);
+            live.chunks.insert(id.try_into().unwrap());
         }
     }
-    live.insert(manifest);
+    live.manifests.insert(head.manifest);
     Ok(())
 }
 
 /// Prove every referenced chunk has its index entry before pinning or deleting
 /// any records. Only index metadata is scanned; payload bytes remain untouched.
-fn validate_chunks(table: &Table<&[u8], &[u8]>, root: u8, live: &BTreeSet<Vec<u8>>) -> Result<()> {
-    let expected = live.iter().filter(|key| key.get(1) == Some(&b'k')).count();
+fn validate_chunks(table: &Table<&[u8], &[u8]>, root: u8, live: &Live) -> Result<()> {
+    let expected = live.chunks.len();
     if expected == 0 {
         return Ok(());
     }

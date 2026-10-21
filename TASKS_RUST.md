@@ -1,9 +1,10 @@
 # Rust reference OS: tasks and handoff
 
-Updated 2026-10-20 (local date). Current milestone: **reuse the cleanup backing
-count**, on baseline `2a1f4b89` (scoped grant withdrawal at task capacity).
-The latest section records verification and remaining steps toward bounded
-execution. This does not introduce real-time reservations.
+Updated 2026-10-20 (local date). Current milestone: **nested desktop diagnosis
+and storage collection heap pressure**, on baseline `29d5f02e` (cleanup backing
+count reuse). The latest section distinguishes current-program four-level
+verification from failures in retained executable snapshots. No scheduler,
+resource entitlement or close deadline is changed.
 The fresh-lab reset is `30572c9f`. Compact recursive desktops landed as `c7571191`,
 and the launch request ABI repair as `a287ae39`. No recursive legacy snapshot
 upgrade is required. The saved-disk quota/headroom repair remains in place. Current
@@ -58,7 +59,7 @@ It uses x86-64 QEMU/TCG and UEFI.
   Further nesting beyond its funding reports **NO ROOM**, retaining live drafts.
 - **NESTED** opens its own user picker and the same desktop, with Notes, Colors
   and another Nested tile. Close other outer apps first. The current budget fits
-  three nested desktops beneath the outer one, with Notes at the deepest level.
+  four nested desktops beneath the outer one, with Notes at the deepest level.
   Further launches remain bounded by conserved grants. Use Fresh Lab to discard
   stale template snapshots and create users with current code throughout.
   Inner saves survive closing/reopening Nested and reboot. The outer
@@ -4542,3 +4543,94 @@ partial cancellation and retained escrow. The timing inventory still identifies
 simultaneous deadline extraction and aggregate authority work as remaining
 boundaries. No owner choice or ABI changed; the intermittent clean-close LOSS
 timeout remains open.
+
+## Four-level desktops and retained-store heap pressure (2026-10-20)
+
+Baseline: `29d5f02e`. The owner reported lag around four nested matrices in
+normal F5 with existing users. The desktop and latency runners now accept
+`--nested-depth 4`, exercising four nested desktops **beneath** the outer one.
+The deepest Notes focus coordinate scales with depth; the first exploratory
+four-level failure was a harness click outside that app, corrected before the
+passing runs. No kernel scheduling, authority, ABI or page budget changed.
+
+The saved F5 disk was copied, never installed into, repaired or reset in place.
+On that copy, automatic collection before a nested subtree copy panicked with
+`memory allocation of 8208 bytes failed`. Heap tracing placed the failure before
+the copy writer: engine state, its 64 KiB cache and the transient live-record
+census exhausted the provider's 56-page heap. This was a real provider crash,
+not just slow framebuffer writes. The collector now stores fixed-size identities
+inside separate event/manifest/chunk sets rather than separately allocated full
+keys. The cache is 32 KiB, leaving more room in the same heap. Pins, authentication,
+deletion order, exact quota and immediate durability are unchanged.
+
+Compact identities alone still exhausted the heap. With both changes, the
+initial saved-disk replay created and entered the third nested user without a
+provider restart; observed requested-allocation peak fell from 215,004 to 172,158
+bytes. These allocator samples exclude allocator overhead, stack and reader
+pages. They do not establish a universal bound. The full live census still
+scales with root metadata; fallible/bounded collection workspace remains open.
+
+**Retained-program caveat:** the same disk contains older nested program
+manifests than its current outer template. Two extended replays exited a matrix
+with `TIMED_OUT` while a copy was underway, after getting past the original OOM.
+One ran alongside the retention test; the second ran alone and also failed.
+Do not call the owner's existing tree fixed. Older interaction timeout behavior
+is a plausible cause, not yet attributed to an exact executable/call site.
+No recursive legacy upgrade was added; the owner does not require one. Fresh
+Lab recreates users with current executables, while retaining a backup of old data.
+
+[nested_existing_test.py](tools/boot-harness-rs/nested_existing_test.py) preserves
+this diagnostic path: source availability check, byte copy, current private boot
+image, no object-store installer, nested login/create, deepest edit/save,
+dirty-close refusal and clean teardown across cold boot. It expects one outer
+User 1 and compact stock chrome; it deliberately fails on old-program timeouts.
+The host hierarchy inspector now prints names beside IDs/parents/manifests.
+Use a copy because engine open/close can recover or maintain records.
+
+`trace-storage` adds recursive LOSS/CLOSE send, answer, deferred and stale-reply
+events. Incarnations and slots are matrix-local, not globally unique task IDs.
+The intermittent clean-close LOSS timeout was not reproduced or declared fixed;
+its existing refusal policy and deadlines remain unchanged.
+
+Evidence before the storage fix:
+
+- Four-level current-program pointer stress and cold reboot passed, including
+  dirty-close protection, deepest persistence and repeated whole-subtree teardown:
+  `build/nested-four-focused.log`.
+- Four-level latency/cold reopen passed: `build/nested-four-latency.log`. Fresh
+  deepest typing observations were 120–133 ms and save 412 ms; user entry was
+  5.2 s. Host injection/capture and tracing perturb these upper bounds. Earlier
+  isolated key tracing saw 1–4 guest ticks from source to Notes. This does not
+  isolate scheduler delay or claim a host-independent performance threshold.
+- Five-second delayed interaction fixtures at four levels passed with pointer
+  stress and cold reopen: `build/nested-four-delayed.log`.
+- Saved-disk OOM, compact-only OOM and initial successful third-user replay:
+  `build/nested-existing-inspect/replay-metrics.log`, `replay-fixed.log`,
+  `replay-cache.log` in that directory. Extended retained-program failures:
+  `build/nested-existing-final.log`, `build/nested-existing-solo.log`.
+
+Final storage verification: workspace host tests, all 38 storage-lab host tests,
+default and trace/delay x86 storage/matrix clippy, 27 Python harness tests,
+layout, formatting and whitespace checks pass. The three-boot objects retention
+suite passes exact host record comparisons, pins, collection and cold recovery:
+`build/nested-retention.log` (artifact `objects/20261021T041418057534Z`). Host logs:
+`build/nested-lag-host.log`, `build/nested-storage-host.log`,
+`build/nested-default-clippy.log`, `build/nested-final-clippy.log`,
+`build/nested-final-python.log`. No ARM64 or kernel smoke rerun: this changes
+userspace collection/cache and diagnostics, not kernel or architecture code.
+
+The final storage build also passes four nested desktops under pointer stress
+on both fresh and cold boots, including exact deepest saved text, dirty-close
+protection, isolation and two complete close/reopen cycles per boot:
+`build/nested-four-final.log`, artifact `desktop/20261021T041745289469Z`.
+The storage-lab host clippy check passes after the inspector change.
+The saved-disk replay runner also passes both boots at depth four on a copy of
+that current-program fixture (`build/nested-replay-current.log`, artifact
+`nested-existing/20261021T042304676407Z`), including edits, save confirmation,
+protected close and clean collection. Its source bytes remain identical. This
+validates the replay path without reclassifying the older F5 disk's failure.
+
+Next: bound collection workspace independently of record count and measure
+launch/seed phases under retained-store pressure. Preserve the failing saved
+copy for exact timeout attribution if needed. Current-program desktop evidence
+must stay separate from legacy snapshots and from the still-open LOSS timeout.
