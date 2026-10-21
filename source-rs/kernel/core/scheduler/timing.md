@@ -178,11 +178,17 @@ one owner mapping survives. It measures the production settlement path without
 claiming a maximum-size arena or concurrent workload. These fixtures fill gaps
 in ordinary smoke coverage; elapsed observations still include host scheduling.
 
-Seal/unmap now traverse the mapping ledger once per region, rather than searching
-it again for every page. Unmap compacts the ledger while removing translations;
-it preserves unrelated image, stack and object entries. Both still run atomically.
-The real-frame fixture checks every removed page and every retained owner alias,
-including table-boundary and last-slot cases on both ISAs.
+Seal/unmap traverse the mapping ledger once per region, rather than searching
+it again for every page. Their ISA backends now walk the translation hierarchy
+once per leaf table and edit the contiguous leaves before core updates the ledger.
+A 128-page object requires one or two hierarchy walks instead of 128 on either
+current ISA. Unmap compacts the ledger while preserving unrelated image, stack
+and object entries. Both still run atomically; the remaining leaf writes and
+ledger visit scale with their bounded populations. Map installation still walks
+per page. The real-frame fixture checks every removed page and every retained
+owner alias, including sealing/removal at every slot alignment on both ISAs.
+An independent x86 translator test also checks actual leaf permissions and
+physical addresses across all three parent-table boundary levels.
 
 ARM64 runtime-table reservation now visits each 2-MiB leaf-table span once,
 matching the granularity already used by x86. The current guarded mapping

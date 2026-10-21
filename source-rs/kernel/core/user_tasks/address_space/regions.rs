@@ -94,16 +94,15 @@ impl UserSpace {
     pub unsafe fn seal_region(&mut self, index: usize, pages: usize) {
         let base = wire::address(index);
         let end = base + pages as u64 * PAGE;
+        // SAFETY: Contiguous fully mapped ordinary RAM, inactive owned root.
+        // The backend walks once per leaf table, keeping ISA geometry out of core.
+        unsafe { self.mapping.as_mut().unwrap().seal_pages(base, pages) };
         let mut sealed = 0;
         // Visit the ledger once, rather than search it again for every page.
         // Backing order need not match virtual address order.
         for backing in &mut self.backing[..self.pages] {
             if !(base..end).contains(&backing.address) {
                 continue;
-            }
-            // SAFETY: Existing ordinary user RAM leaf; only remove write permission.
-            unsafe {
-                self.mapping.as_mut().unwrap().seal_page(backing.address);
             }
             backing.writable = false;
             sealed += 1;
@@ -115,17 +114,15 @@ impl UserSpace {
     pub unsafe fn unmap_region(&mut self, index: usize, pages: usize) {
         let base = wire::address(index);
         let end = base + pages as u64 * PAGE;
-        let mapping = self.mapping.as_mut().unwrap();
+        // SAFETY: Remove the entire inactive translation range before changing
+        // bookkeeping; backing stays pinned until this operation returns.
+        unsafe { self.mapping.as_mut().unwrap().unmap_pages(base, pages) };
         let mut removed = 0;
         assert_eq!(self.backing.len(), self.pages);
         // Compact once, preserving every unrelated image, stack and object leaf.
         self.backing.retain(|backing| {
             if !(base..end).contains(&backing.address) {
                 return true;
-            }
-            // SAFETY: Existing inactive leaf; translation removal precedes any backing refund.
-            unsafe {
-                mapping.unmap_page(backing.address);
             }
             removed += 1;
             false

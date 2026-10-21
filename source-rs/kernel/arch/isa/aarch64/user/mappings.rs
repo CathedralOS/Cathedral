@@ -1,4 +1,5 @@
-//! AArch64 inactive translations; core owns frame custody and virtual layout.
+//! AArch64 inactive translations; regions batches ordinary RAM permission/removal edits.
+//! Core owns frame custody and virtual layout.
 use super::super::memory::tables;
 use crate::{
     BootLayout, FrameSource, ImageRange, MemoryError,
@@ -108,15 +109,6 @@ impl UserMappings {
             address = (address | (TABLE_BYTES - 1)) + 1;
         }
         Ok(())
-    }
-    /// # Safety
-    /// Inactive tree, IRQs off; existing RAM leaf with no mutable borrowers.
-    pub unsafe fn seal_page(&mut self, address: u64) {
-        // SAFETY: Existing leaf loses WRITE; next root load flushes all translations.
-        unsafe {
-            let entry = self.entry(address);
-            entry.write(entry.read() | tables::RO);
-        }
     }
     /// # Safety
     /// Inactive tree, IRQs off; existing leaf, backing retained until all aliases retire.

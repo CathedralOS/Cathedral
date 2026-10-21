@@ -1,7 +1,7 @@
 # Rust reference OS: tasks and handoff
 
-Updated 2026-10-20 (local date). Current milestone: **wait-to-selection
-observations**, on baseline `74ceb818` (coalesced subtree withdrawal).
+Updated 2026-10-20 (local date). Current milestone: **batched page-table
+permission/removal edits**, on baseline `d8450d09` (wait-to-selection observations).
 The latest section records verification and remaining steps toward bounded
 execution. This does not introduce real-time reservations.
 The fresh-lab reset is `30572c9f`. Compact recursive desktops landed as `c7571191`,
@@ -4254,3 +4254,58 @@ authority or deadline operation. They do not justify changing CPU entitlement
 or assigning privileged processes implicit priority. Guaranteed service remains
 separate from ceilings. The intermittent clean-close LOSS timeout is still open;
 these probes have not reproduced or diagnosed it. No owner decision was needed.
+
+## Batched page-table permission/removal edits (2026-10-20)
+
+Baseline: `d8450d09`. The page-object timing workloads exposed repeated hierarchy
+walks inside atomic freeze/unmap operations. The
+[core region coordinator](source-rs/kernel/core/user_tasks/address_space/regions.rs)
+now sends the contiguous range to the selected ISA before updating its backing
+ledger. [x86](source-rs/kernel/arch/isa/x86_64/user/memory/regions.rs) and
+[ARM64](source-rs/kernel/arch/isa/aarch64/user/regions.rs) walk once per leaf table,
+then edit only the requested entries. A current 128-page object needs one or two
+walks instead of 128. The backends own table geometry/encoding; core retains
+frame lifetime, capability publication and its single ledger pass.
+
+There is no suspended cursor, allocation or new authority state. Both operations
+remain atomic with an inactive root, pinned backing and masked interrupts. Leaf
+writes still scale with object size; ledger work still scales with mapped pages.
+The existing next-root synchronization remains required. This is less work in
+an uninterrupted operation, not a real-time bound or an SMP design. Mapping new
+leaves and its failure rollback remain unchanged.
+
+The new x86 host test constructs tables through the x86 crate and translates the
+result independently. It checks physical addresses, RO/NX permissions, complete
+removal and untouched neighbors across PT, PD and PDPT boundaries. The shared
+real-frame allocation fixture now seals temporary aliases at every guarded slot
+alignment on both ISAs, then checks each removed page and surviving owner/stack
+mapping. All backing is reclaimed. An initial fixture assertion incorrectly used
+the single-page copy validator for an entire object; that assertion was corrected
+to validate each page before the successful boot runs.
+
+Verification:
+
+- Workspace host tests and arch host clippy pass, including the new table test.
+- x86 release smoke and ARM64 debug/release portability pass, including existing
+  reader write-fault containment, allocation/refusal sweeps and exact reclamation.
+- The report verifier accepts all five periodic wait populations. This run's
+  128-page freeze/unmap means were 14.11/24.72 us; unchanged map installation was
+  46.36 us. These are elapsed observations with host/probe effects, not an isolated
+  before/after benchmark or a desktop speedup claim.
+- Nested desktop passes three levels, pointer stress, protected close, confined
+  persistence, repeated subtree teardown and cold reopen on disposable media.
+  Interactive F5 media was untouched.
+- Default x86 UEFI clippy, x86/ARM64 smoke clippy, layout, formatting and
+  whitespace checks pass.
+- Logs: `build/region-edit-host.log`, `build/region-edit-host-clippy.log`,
+  `build/region-edit-arm64-debug.log`, `build/region-edit-arm64-release.log`,
+  `build/region-edit-x86-smoke.log`, `build/region-edit-report.log`,
+  `build/region-edit-clippy.log`, `build/region-edit-smoke-clippy.log`,
+  `build/region-edit-arm64-clippy.log`, `build/region-edit-desktop.log`.
+
+Next: runtime mapping installation still repeats hierarchy walks per page and
+must preserve complete rollback on refusal. Investigate a reserved-table range
+transaction before adding suspension state. The authority sweep, deadline
+extraction and other audited atomic work remain; guaranteed CPU service is still
+separate from ceilings. The intermittent clean-close LOSS timeout remains open.
+No owner semantics or application ABI changed.

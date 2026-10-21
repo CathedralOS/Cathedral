@@ -68,6 +68,24 @@ at admission; checked copies consult the same live backing and permission ledger
 These unsafe obligations currently assume one CPU, masked interrupts and no
 concurrent task execution. They are not an SMP synchronization design.
 
+Contiguous page-object sealing/removal enters `seal_pages`/`unmap_pages` in
+[x86 regions](isa/x86_64/user/memory/regions.rs) or
+[ARM64 regions](isa/aarch64/user/regions.rs). Each backend walks once per leaf
+table, then edits only the requested entries, stopping before the table boundary.
+Core still owns its single-pass backing/permission ledger update. A current
+128-page object needs at most two hierarchy walks instead of 128; individual
+leaf writes remain proportional to its size. These operations allocate nothing,
+retain all tables/backing, and remain atomic under the inactive-root contract.
+The next root activation supplies the existing translation synchronization.
+Runtime mapping installation and its rollback still use individual-page edits.
+
+The [x86 table test](isa/x86_64/user/memory/regions_test.rs) builds tables with the
+x86 crate and independently translates the edited result. It checks physical
+addresses, read-only/NX permissions, complete removal and untouched neighbors
+across PT, PD and PDPT boundaries. The shared
+[real-frame fixture](../core/user_tasks/memory/rollback.rs) exercises sealing and
+removal in every guarded object slot on both CPUs, with complete reclamation.
+
 Root allocation and supervisor mapping preparation are separate operations.
 Core chooses a work allowance and retains the private space across steps;
 `UserMappings::prepare_kernel` completes the CPU-specific entry mappings. On

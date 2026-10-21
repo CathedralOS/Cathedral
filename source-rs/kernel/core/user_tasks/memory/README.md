@@ -90,6 +90,11 @@ cleanup visit checks its frame allowance and physical funding conservation.
 The [allocation sweep](rollback.rs) refuses every frame allowance and cancels at
 each partial batch; [reference retirement](references_test.rs) drains 140
 references across 70 objects while preserving a live owner's sealed mapping.
+The allocation sweep also seals/unmaps maximum-size aliases in every guarded
+slot, including slots spanning leaf tables. [ISA range edits](../../../arch/README.md)
+walk each leaf table once; translation writes and the core ledger update remain
+atomic, with backing retained throughout. This changes neither capability
+publication nor the ordering of final refunds.
 
 The integrated [matrix image path](../../../../platform/libraries/matrix/world/surface/README.md)
 uses the same API for retained bitmaps. Matrices clip metadata and keep unmapped

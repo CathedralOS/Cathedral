@@ -197,8 +197,18 @@ unsafe fn mapping_boundaries(session: &mut Session, handle: u64) {
     unsafe { space.seal_region(mapping, wire::MAX_PAGES) };
     assert!(!space.writable_range(wire::address(mapping), 1));
     for alias in (0..wire::MAX_MAPPING_SLOTS).filter(|&slot| slot != mapping) {
-        // SAFETY: Prepared empty slot; immutable frames stay owned until all aliases are gone.
-        unsafe { space.map_region(alias, &backing, false) }.unwrap();
+        // SAFETY: Private inactive fixture root, no executing or borrowed reader;
+        // this temporary writer is sealed before any reads. Backing remains owned.
+        unsafe { space.map_region(alias, &backing, true) }.unwrap();
+        for page in 0..wire::MAX_PAGES {
+            assert!(space.writable_range(
+                wire::address(alias) + (page * wire::PAGE_BYTES) as u64,
+                wire::PAGE_BYTES,
+            ));
+        }
+        // SAFETY: Same private fixture custody. Exercise sealing at every table
+        // alignment too, including slots that straddle two leaf tables.
+        unsafe { space.seal_region(alias, wire::MAX_PAGES) };
         for page in 0..wire::MAX_PAGES {
             let address = wire::address(alias) + (page * wire::PAGE_BYTES) as u64;
             let mut byte = [0];

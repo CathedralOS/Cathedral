@@ -1,5 +1,5 @@
 // Inactive x86 user translations. Core owns frames, executable layout, copies and rollback.
-// creation borrows the entry mappings; device handles PAT; this entrance edits ordinary leaves.
+// creation borrows entry mappings; device handles PAT; regions batches ordinary RAM edits.
 use crate::{
     FrameSource, MemoryError,
     memory::{PAGE, Permissions},
@@ -86,22 +86,6 @@ impl UserMappings {
             }
         }
         Ok(())
-    }
-    /// # Safety
-    /// Inactive tree, IRQs off; existing user RAM leaf, all mutable users retired.
-    pub unsafe fn seal_page(&mut self, address: u64) {
-        // SAFETY: Only remove WRITE from a live ordinary RAM leaf; next root load flushes TLB.
-        unsafe {
-            let mut target =
-                OffsetPageTable::new(&mut *(self.root as *mut PageTable), VirtAddr::zero());
-            target
-                .update_flags(
-                    Page::<Size4KiB>::from_start_address(VirtAddr::new(address)).unwrap(),
-                    Flags::PRESENT | Flags::USER_ACCESSIBLE | Flags::NO_EXECUTE,
-                )
-                .unwrap()
-                .ignore();
-        }
     }
     /// # Safety
     /// Inactive tree, IRQs off; existing leaf, backing retained until every alias is removed.
