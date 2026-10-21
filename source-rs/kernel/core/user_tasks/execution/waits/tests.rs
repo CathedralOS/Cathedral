@@ -1,6 +1,59 @@
 use super::{Kind, Registry, slots};
 
 #[test]
+fn bursts_keep_readiness_before_receive_and_drain_without_new_events() {
+    let mut waits = Registry::new(31);
+    for slot in 0..31 {
+        let kind = if slot < 10 {
+            Kind::Receive
+        } else if slot < 20 {
+            Kind::Readiness
+        } else {
+            Kind::Child
+        };
+        waits.register(slot, kind, Some(100), 0);
+    }
+    let mut observed = alloc::vec::Vec::new();
+    for turn in 0..4 {
+        let batch = waits.batch(100 + turn, 0, 0);
+        assert!(
+            batch.iter().map(|bits| bits.count_ones()).sum::<u32>()
+                <= super::COMPLETION_BATCH as u32
+        );
+        for kind in [1, 0, 2] {
+            for slot in slots(batch[kind]) {
+                observed.push(slot);
+                waits.remove(slot);
+            }
+        }
+        assert_eq!(waits.pending(), turn != 3);
+    }
+    let expected: alloc::vec::Vec<_> = (10..20).chain(0..10).chain(20..31).collect();
+    assert_eq!(observed, expected);
+    assert_eq!(waits.batch(104, u32::MAX, u32::MAX), [0; 3]);
+}
+
+#[test]
+fn new_hints_cannot_starve_a_finite_wave_and_reuse_clears_both_queues() {
+    let mut waits = Registry::new(31);
+    for slot in 0..31 {
+        waits.register(slot, Kind::Receive, None, 0);
+    }
+    assert_eq!(waits.batch(0, 0x7fff_ffff, 0), [0xff, 0, 0]);
+    // Repeated low-slot hints wait behind the already selected wave.
+    assert_eq!(waits.batch(1, 0xff | (1 << 30), 0), [0xff00, 0, 0]);
+    // Slot 30 is in both queues. A replacement wait must inherit neither hint.
+    waits.remove(30);
+    waits.register(30, Kind::Readiness, Some(10), 1);
+    assert_eq!(waits.batch(2, 0xff, 0), [0xff0000, 0, 0]);
+    assert_eq!(waits.batch(3, 0xff, 0), [0x3f000000, 0, 0]);
+    assert_eq!(waits.batch(4, 0, 0), [0xff, 0, 0]);
+    assert!(!waits.pending());
+    assert_eq!(waits.batch(10, 0, 0), [0, 1 << 30, 0]);
+    assert!(!waits.pending());
+}
+
+#[test]
 fn unrelated_events_do_not_select_waiters_and_hints_do_not_consume_a_wait() {
     let mut waits = Registry::new(31);
     waits.register(2, Kind::Receive, None, 0);

@@ -6,6 +6,7 @@ pub(in crate::user_tasks) enum Phase {
     Trap,
     Syscall,
     InterruptWork,
+    WaitCompletion,
     Deferred,
     Withdraw,
     Retire,
@@ -34,10 +35,11 @@ pub(in crate::user_tasks) enum Phase {
 }
 
 #[cfg(feature = "memory-lab")]
-const PHASES: [Phase; 28] = [
+const PHASES: [Phase; 29] = [
     Phase::Trap,
     Phase::Syscall,
     Phase::InterruptWork,
+    Phase::WaitCompletion,
     Phase::Deferred,
     Phase::Withdraw,
     Phase::Retire,

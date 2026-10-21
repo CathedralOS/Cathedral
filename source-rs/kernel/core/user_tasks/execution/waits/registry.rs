@@ -11,6 +11,8 @@ pub(in crate::user_tasks) enum Kind {
 }
 
 pub(in crate::user_tasks) struct Registry {
+    pending: [u32; 3],
+    queued: [u32; 3],
     active: [u32; 3],
     children: [u32; abi::MAX_LAUNCHES],
     child_of: [Option<usize>; abi::MAX_TASKS],
@@ -30,6 +32,8 @@ impl Registry {
     ) -> Result<Self, alloc::collections::TryReserveError> {
         assert!(tasks <= abi::MAX_TASKS);
         Ok(Self {
+            pending: [0; 3],
+            queued: [0; 3],
             active: [0; 3],
             children: [0; abi::MAX_LAUNCHES],
             child_of: [None; abi::MAX_TASKS],
@@ -73,6 +77,9 @@ impl Registry {
     }
 
     pub(in crate::user_tasks) fn remove(&mut self, slot: usize) {
+        for pending in self.pending.iter_mut().chain(&mut self.queued) {
+            *pending &= !(1 << slot);
+        }
         for active in &mut self.active {
             *active &= !(1 << slot);
         }
@@ -94,6 +101,36 @@ impl Registry {
             (ipc | devices | due) & self.active[Kind::Readiness as usize],
             (core::mem::take(&mut self.changed_children) | due) & self.active[Kind::Child as usize],
         ]
+    }
+
+    pub(in crate::user_tasks) fn pending(&self) -> bool {
+        self.pending
+            .iter()
+            .chain(&self.queued)
+            .any(|&bits| bits != 0)
+    }
+
+    /// Retain a finite wave: later hints cannot repeatedly move ahead of it.
+    /// Within a wave, readiness is observed before copied receives consume data.
+    pub(super) fn batch(&mut self, now: u64, ipc: u32, devices: u32) -> [u32; 3] {
+        for (kind, candidates) in self.candidates(now, ipc, devices).into_iter().enumerate() {
+            self.queued[kind] |= candidates;
+        }
+        if self.pending == [0; 3] {
+            self.pending = core::mem::take(&mut self.queued);
+        }
+        let mut batch = [0; 3];
+        let mut remaining = super::COMPLETION_BATCH;
+        for kind in [Kind::Readiness, Kind::Receive, Kind::Child] {
+            let kind = kind as usize;
+            while remaining != 0 && self.pending[kind] != 0 {
+                let bit = 1 << self.pending[kind].trailing_zeros();
+                self.pending[kind] &= !bit;
+                batch[kind] |= bit;
+                remaining -= 1;
+            }
+        }
+        batch
     }
 
     fn advance(&mut self, now: u64) {

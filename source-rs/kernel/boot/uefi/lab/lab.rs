@@ -10,6 +10,7 @@ pub fn run(boot: &mut crate::handoff::BootState) {
         shared_memory::exercise(&mut boot.memory, &mut boot.console);
         applications::exercise(&mut boot.memory, &mut boot.console);
         ipc::exercise(&mut boot.memory, &mut boot.console);
+        waits::exercise(&mut boot.memory);
         supervision::exercise(&mut boot.memory, &mut boot.console);
         memory::exercise(&mut boot.memory, &mut boot.console);
         rendering::exercise(&mut boot.memory, &mut boot.console);

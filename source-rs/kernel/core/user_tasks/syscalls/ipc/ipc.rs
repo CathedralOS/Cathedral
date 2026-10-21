@@ -4,7 +4,7 @@ use super::{Session, complete};
 use crate::scheduler::Event;
 use cathedral_kernel_contracts::user as abi;
 use delivery::ReceiveMode;
-pub(super) fn dispatch(
+pub(in crate::user_tasks) fn dispatch(
     session: &mut Session,
     slot: usize,
     [number, first, second, third]: [u64; 4],

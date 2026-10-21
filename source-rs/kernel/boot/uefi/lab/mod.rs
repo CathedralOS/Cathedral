@@ -29,3 +29,5 @@ pub use arm64::run;
 
 #[cfg(feature = "bundled-user")]
 mod shared_memory;
+#[cfg(feature = "bundled-user")]
+mod waits;

@@ -14,6 +14,7 @@ pub fn run(boot: &mut crate::handoff::BootState) {
     // SAFETY: Sole CPU outside a session, exclusive heap ownership.
     let heap = unsafe { crate::heap::HEAP.used() };
     super::shared_memory::exercise(memory, console);
+    super::waits::exercise(memory);
     let admission = processes::exchange(memory, console, baseline, heap);
     processes::isolation(memory, console, baseline, heap);
     sharing::exercise(memory, console, baseline, heap);

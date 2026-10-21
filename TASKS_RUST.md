@@ -1,7 +1,7 @@
 # Rust reference OS: tasks and handoff
 
-Updated 2026-10-20 (local date). Current milestone: **bounded page-object
-backing retirement**, on baseline `2e10113a` (bounded failed-launch rollback).
+Updated 2026-10-20 (local date). Current milestone: **batched wait completion**,
+on baseline `592aacd7` (bounded page-object backing retirement).
 The latest section records verification and remaining steps toward bounded
 execution. This does not introduce real-time reservations.
 The fresh-lab reset is `30572c9f`. Compact recursive desktops landed as `c7571191`,
@@ -4087,3 +4087,58 @@ deadline ordering when introducing further suspension points. The intermittent
 clean-close LOSS timeout remains open; passing this regression does not diagnose
 it. Guaranteed-service admission still needs its separate owner-level design.
 No new owner decision was needed for this milestone.
+
+## Batched wait completion (2026-10-20)
+
+Baseline: `592aacd7`. [Wait completion](source-rs/kernel/core/user_tasks/execution/waits/waits.rs)
+previously retried all affected receive, readiness and child waiters within one
+invocation. It now selects at most eight candidates per visit and retains the
+rest in the registry. A finite current wave preserves readiness-before-receive-
+before-child order; later hints coalesce into the next wave so repeated low-slot
+events cannot continually overtake older candidates. No allocation is introduced
+on the wake path. Cancellation/completion clears both sets before slot reuse.
+
+Pending candidates participate in the ordinary boot-work detection and interrupt
+routing. The boot step continues a batch before yielding, without requiring a
+fresh hardware event or runnable user. Syscall owners still validate the current
+capability, destination, message/child state and deadline. Data or a terminal
+error wins over timeout at the actual retry; no arrival timestamp or successful
+result is cached in the registry. This preserves existing completion rules while
+allowing completion to occur later under contention. No scheduling priority or
+new application ABI is added.
+
+Host tests cover a full 31-slot burst, ordering across kinds, draining without new
+events, repeated low-slot hints and clearing both queues before a slot changes
+wait kind. The [real-frame burst](source-rs/kernel/core/user_tasks/execution/waits/burst.rs)
+parks 25 inactive roots and triggers 24 waiters. They complete over exactly three
+visits, including two through the production deferred step with no new interrupt.
+Assertions check queued data/terminal errors before expiry, readiness without
+dequeue, a too-small receive preserving its message, empty-queue timeouts and
+exact frame/heap recovery. This fixture does not execute guests; ordinary smoke
+and desktop regressions cover real task suspension and execution.
+
+Verification:
+
+- ARM64 debug/release portability and x86 release smoke pass the expanded suite.
+  The new buffered `WaitCompletion` phase records gathering plus one retry batch;
+  it includes empty invocations and overlaps enclosing trap/boot observations.
+- Nested desktop passes three recursive levels, pointer stress, protected close,
+  confined persistence, repeated reclamation and cold reopen on disposable media.
+- Workspace host tests and the final core tests pass, as do default x86 UEFI
+  clippy, x86/ARM64 smoke clippy, layout, formatting and whitespace checks.
+  Interactive F5 saved media was untouched.
+- Logs: `build/wait-host.log`, `build/wait-core.log`,
+  `build/wait-arm64-debug.log`, `build/wait-arm64-release.log`,
+  `build/wait-x86-smoke.log`, `build/wait-desktop.log`,
+  `build/wait-x86-clippy.log`, `build/wait-x86-smoke-clippy.log`,
+  `build/wait-arm64-clippy.log`.
+
+Remaining: eight candidates is a per-invocation allowance, not a whole-trap or
+whole-boot-step limit. Subtree withdrawal can call wake repeatedly. Due waiter
+timers still drain the at-most-31-entry heap atomically; scheduler sleepers,
+physical keyboard and direct device wakes are separate. Grant lookup, mapping
+edits and collection also retain atomic work. The timing audit names these gaps;
+next work should measure aggregate closure/completion and separate ready-time
+from dispatch-time observations before claiming latency improvements. The known
+intermittent clean-close LOSS timeout remains undiagnosed. No owner decision was
+needed for this mechanism change.

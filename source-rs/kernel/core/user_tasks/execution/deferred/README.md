@@ -1,7 +1,8 @@
 # Deferred kernel work
 
 Start at [deferred.rs](deferred.rs): advance reclamation, advance at most one
-child admission when cleanup is complete, then at most one memory call.
+child admission when cleanup is complete, then at most one memory call and a
+pending [wait-completion batch](../waits/README.md).
 [The boot loop](../execution.rs) provides the suspension boundary after that
 step returns. [Traps](../traps.rs) only route to boot; they never use the frame
 bank or construct an address space on an interrupt stack.
@@ -29,6 +30,12 @@ launches or retired memory words. Escrow retirement and deferred executable
 reference release iterate set bits within their bounded word arrays. Expensive
 whole-session conservation assertions run during actual reclamation, not every
 ordinary return to the boot loop.
+
+The waiter registry retains overflow candidates from a completion burst. Those
+sets also keep boot work pending; a boot step retries at most eight candidates
+when a batch remains. No extra interrupt is needed to finish a burst. Other
+paths, including task closure, may invoke wait completion independently within
+the same boot turn, so this allowance does not bound the whole turn.
 
 ## Consistent suspension
 
@@ -149,7 +156,9 @@ Final collection and whole-session conservation assertions are still atomic.
 This is not a bounded-time kernel: executable decoding, bare-root allocation, runtime
 table reservation, final authority commit, subtree
 authority withdrawal, final collection, initial-boot/bare-root rollback, final page-object mapping,
-sealing/unmapping, heap operations and event bursts still run uninterrupted.
+sealing/unmapping and heap operations still run uninterrupted. Waiter retries
+advance in eight-candidate visits, but due-timer extraction, scheduler deadlines,
+direct device/keyboard wakes and repeated closure callbacks remain atomic work.
 Subtree and single-object backing retirement are staged. Executable references
 rotate among pending objects; IPC escrow drains finite discard snapshots, keeping
 unconsumed reader slots reserved across receiver death. Each path returns at most

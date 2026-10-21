@@ -56,11 +56,17 @@ pub(super) unsafe fn step(
         }
         crate::user_tasks::memory::process(session, source);
     }
+    // A burst may outlive its triggering trap, including when every user blocks.
+    // Continue it before yielding; no new interrupt is required to finish it.
+    if session.waits.pending() {
+        super::waits::wake(session, arch::ticks());
+    }
     session.timing.record(TimedPhase::Deferred, start);
 }
 
 pub(super) fn pending(session: &Session) -> bool {
     session.deferred.any()
+        || session.waits.pending()
         || session.ipc.memory_retirement_pending()
         || session.memory.retirement_pending()
 }
