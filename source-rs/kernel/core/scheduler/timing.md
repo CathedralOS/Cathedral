@@ -25,6 +25,8 @@ and userspace execution system.
   deadlines replace broad waiter scans. Completion owners still validate authority.
   Retry bursts now advance in finite waves, at most eight candidates per wake
   invocation, with pending work continued by the boot loop.
+  Subtree cancellation coalesces retries until every affected descendant loses
+  authority, then runs one completion batch for survivors.
 - [Deferred work](../user_tasks/execution/deferred/README.md) uses maintained
   pending sets. Coherent boot steps may yield to peers; private allocation zeros
   at most eight pages per step, retaining its unpublished state and funding.
@@ -51,7 +53,7 @@ The table describes structural bounds; none is a qualified time bound.
 
 | Path | Work while IRQs are masked | Next boundary needed |
 | --- | --- | --- |
-| [Trap dispatch](../user_tasks/execution/traps.rs) | Poll installed device owners and keyboard; gather due waiters and retry up to eight candidates per wake invocation; inspect fixed deferred-work flags/sets | Measure whole-trap bursts, due-timer extraction, direct wakes and grant lookup; repeated closure callbacks can invoke several batches |
+| [Trap dispatch](../user_tasks/execution/traps.rs) | Poll installed device owners and keyboard; gather due waiters and retry up to eight candidates per wake invocation; inspect fixed deferred-work flags/sets | Measure whole-trap work, due-timer extraction, direct wakes and grant lookup; standalone close and boot/collection retain independent completion calls |
 | [Copied IPC delivery](../user_tasks/syscalls/ipc/delivery.rs), [readiness](../user_tasks/syscalls/ipc/readiness.rs) | Bounded message copy and capability/handle validation for each candidate in a finite retry wave; overflow continues on the boot stack | Bound grant lookup and aggregate closure work; preserve messages on failed copyout and wake on revocation/death |
 | [Spawn](../user_tasks/lifecycle/spawn.rs), [construction](../user_tasks/admission/construction.rs) | One rotating admission per step; at most 64 supervisor/device leaves or eight image/stack pages; a refused draft returns up to eight frames per visit before waking its caller; decoding, bare-root allocation/rollback, runtime tables and final grant commit remain whole phases | Measure and bound remaining phases; retain private root/source custody and revalidate authority before publication |
 | [Runtime memory](../user_tasks/memory/memory.rs), [allocation](../user_tasks/memory/allocation.rs) | Advance one rotating caller per step; allocation zeros up to eight pages; release/cancellation return up to eight frames; final map and seal/unmap remain whole-region operations; separate reference and escrow paths each retire up to eight frames | Measure and bound remaining mapping phases. Publication cannot expose a partly initialized or writable sealed object |
@@ -118,6 +120,13 @@ separates decoding, bare-root allocation, supervisor mapping batches, image
 batches, runtime tables and framebuffer
 mapping; reclamation separates withdrawal, retirement, collection and conservation.
 Memory dispatch distinguishes operation types and executable/escrow retirement.
+`Close` includes one standalone task's authority withdrawal and waiter retry.
+`Withdraw` now records only visits with queued cancellations, including the full
+descendant authority sweep and its single completion batch. Previous counts
+included every empty reclamation visit; those averages are not comparable.
+Neither phase includes later physical retirement. The shared
+[subtree fixture](../user_tasks/lifecycle/withdrawal_test.rs) checks nine affected
+descendants, newly queued grandchildren, surviving delivery and exact reclamation.
 `WaitCompletion` measures hint/timer gathering and one batch of waiter retries,
 including empty invocations. The shared [burst fixture](../user_tasks/execution/waits/burst.rs)
 exercises 24 simultaneous waiters over three visits without another interrupt.
@@ -179,8 +188,9 @@ allowed at map time, repeat reservation and complete failure rollback.
 ## Next preparation steps
 
 1. Bound remaining event and retirement bursts while preserving terminal/deadline
-   ordering. Waiter retries now use finite eight-candidate visits; repeated
-   closure callbacks, due-timer extraction and direct device wakes remain.
+   ordering. Waiter retries now use finite eight-candidate visits and subtree
+   withdrawal coalesces them once per sweep. The authority sweep itself,
+   due-timer extraction and direct device wakes remain atomic.
    Waiter and deferred-work indexes are in place. Extend observations to
    distinguish becoming ready from actually being selected.
 2. Extend incremental allocation/admission/retirement to single-object mapping;

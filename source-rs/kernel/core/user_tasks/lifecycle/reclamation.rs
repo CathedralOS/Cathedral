@@ -1,11 +1,12 @@
 //! Retire backing incrementally; publish outcomes and return loans only when the
 //! finite cleanup wave is empty. Admission is held while this wave is pending.
-use super::{Exit, Frames, Session, abi, admission, arch, close, syscalls};
+use super::{Exit, Frames, Session, abi, admission, arch, syscalls, withdrawal};
 use crate::scheduler::TaskState;
 use crate::user_tasks::execution::deferred::Work;
 pub(super) const FRAME_BATCH: usize = 8;
 
 pub(super) fn withdraw(session: &mut Session) {
+    let mut changed = false;
     while let Some(index) = session.deferred.first(Work::Cancel) {
         let model = &session.launches[index].model;
         let (slot, owner) = (model.child, model.owner);
@@ -25,7 +26,13 @@ pub(super) fn withdraw(session: &mut Session) {
         session.completed += 1;
         session.tasks[slot].report.completion_order = session.completed;
         session.tasks[owner].report.cancelled += 1;
-        close(session, slot);
+        withdrawal::task(session, slot);
+        changed = true;
+    }
+    if changed {
+        // Complete surviving observers only after every canceled descendant has
+        // lost its authority and wait registration. One batch for the whole sweep.
+        crate::user_tasks::execution::waits::wake(session, arch::ticks());
     }
 }
 

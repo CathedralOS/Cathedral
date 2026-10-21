@@ -58,9 +58,11 @@ Completion or cancellation clears both candidate sets before a new wait can use
 the slot. A hint that does not complete a wait consumes its retry, retaining its
 subscription and future timer. Newly arriving hints can select it again.
 
-The eight-candidate allowance is per wake invocation. A subtree withdrawal can
-invoke wake more than once; this does not bound an entire trap or boot turn to
-eight retries. Due-timer extraction still drains the fixed, at-most-31-task heap
+The eight-candidate allowance is per wake invocation. A subtree cancellation
+sweep withdraws all affected authority before invoking wake once for survivors;
+individual task close, final collection and the boot step can each retry waiters.
+This does not bound an entire trap or boot turn to eight retries.
+Due-timer extraction still drains the fixed, at-most-31-task heap
 atomically. Device/keyboard direct completions and scheduler sleep deadlines
 remain separate mechanisms. `WaitCompletion` phase samples include gathering
 and retry work, including invocations with no candidates; ordinary builds omit

@@ -130,6 +130,13 @@ stops every newly canceled descendant before yielding: none may run with a dead
 owner. Endpoints, waits and device routes close immediately. This authority pass
 still handles the whole bounded task arena in one operation.
 
+[Task withdrawal](../../lifecycle/withdrawal.rs) removes one stopped task's
+authority and queues newly affected descendants without retrying waiters.
+The cancellation sweep drains those descendants first, then runs one completion
+batch for surviving observers. Canceled descendants cannot dequeue data or copy
+into their buffers partway through that sweep. Standalone task close retains its
+own completion batch; final collection and the boot step can also retry waiters.
+
 Physical retirement rotates between dead tasks. [Alias cleanup](../../memory/closing.rs)
 scans at most 32 reader/region entries and removes at most one page object's
 mappings/references per step. Live readers retain backing after producer death.
@@ -158,7 +165,7 @@ table reservation, final authority commit, subtree
 authority withdrawal, final collection, initial-boot/bare-root rollback, final page-object mapping,
 sealing/unmapping and heap operations still run uninterrupted. Waiter retries
 advance in eight-candidate visits, but due-timer extraction, scheduler deadlines,
-direct device/keyboard wakes and repeated closure callbacks remain atomic work.
+direct device/keyboard wakes and the full authority sweep remain atomic work.
 Subtree and single-object backing retirement are staged. Executable references
 rotate among pending objects; IPC escrow drains finite discard snapshots, keeping
 unconsumed reader slots reserved across receiver death. Each path returns at most
@@ -199,5 +206,10 @@ executable through partial rollback before withdrawing its owner. A
 committed parent/child teardown checks the eight-frame allowance on every step,
 endpoint withdrawal before the first pause, an unaffected ready peer, unavailable
 slots/outcomes throughout cleanup and exact final refunds.
+The [lent-subtree fixture](../../lifecycle/withdrawal_test.rs) builds a parent and
+eight children through production admission/loan commits. On owner death it
+checks one completion batch for the sweep, no canceled child receive/copy,
+complete authority withdrawal before the first pause, an unaffected receiver
+and exact final reclamation on both ISAs.
 Existing smoke and desktop fixtures exercise IPC, deadlines, repeated task
 replacement and subtree teardown.

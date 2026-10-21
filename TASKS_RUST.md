@@ -1,7 +1,7 @@
 # Rust reference OS: tasks and handoff
 
-Updated 2026-10-20 (local date). Current milestone: **batched wait completion**,
-on baseline `592aacd7` (bounded page-object backing retirement).
+Updated 2026-10-20 (local date). Current milestone: **coalesced subtree
+withdrawal**, on baseline `6552c20a` (batched wait completion).
 The latest section records verification and remaining steps toward bounded
 execution. This does not introduce real-time reservations.
 The fresh-lab reset is `30572c9f`. Compact recursive desktops landed as `c7571191`,
@@ -4142,3 +4142,55 @@ next work should measure aggregate closure/completion and separate ready-time
 from dispatch-time observations before claiming latency improvements. The known
 intermittent clean-close LOSS timeout remains undiagnosed. No owner decision was
 needed for this mechanism change.
+
+## Coalesced subtree withdrawal (2026-10-20)
+
+Baseline: `6552c20a`. Cancellation previously called the ordinary task-close
+entry for each descendant. Each close retried waiters, multiplying completion
+batches inside the uninterrupted authority sweep. A descendant queued for later
+cancellation could also receive/copy data before the sweep reached it.
+
+[Lifecycle](source-rs/kernel/core/user_tasks/lifecycle/lifecycle.rs) now separates
+standalone close from [task authority withdrawal](source-rs/kernel/core/user_tasks/lifecycle/withdrawal.rs).
+[The cancellation sweep](source-rs/kernel/core/user_tasks/lifecycle/reclamation.rs)
+stops and withdraws every affected descendant, including newly discovered
+grandchildren, then runs one waiter batch for surviving observers. Slot, outcome,
+loan and physical retirement rules are unchanged. A standalone close still has
+its own completion batch; collection and the boot step may also retry waiters.
+This reduces repeated work within the sweep without inserting a suspension point
+while descendants retain canceled authority.
+
+The shared [real-frame regression](source-rs/kernel/core/user_tasks/lifecycle/withdrawal_test.rs)
+uses production admission and loan commits to construct a parent with eight
+children. After the initial owner dies, it queues descendant messages and an
+unrelated receive before the authority sweep. It checks that all nine descendants
+are stopped and their rights/waits removed before the first pause, none consumes
+or copies its queued data, and exactly one waiter-completion invocation occurs
+for the whole sweep. The unrelated receiver completes successfully. Physical
+cleanup then returns every frame and heap allocation while preserving that peer.
+
+`Close` phase samples now expose standalone withdrawal plus completion. `Withdraw`
+samples exclude empty cancellation visits and include the whole nonempty sweep
+plus its single completion batch. Earlier averages included empty visits and
+must not be compared as though this were an elapsed-time speedup. Both are
+inclusive QEMU observations, with later physical retirement measured separately.
+
+Verification:
+
+- ARM64 debug/release portability and x86 release smoke pass, including the new
+  subtree regression, existing cancellation counts, waiter burst and exact refunds.
+- Nested desktop passes three levels, pointer stress, protected close, confined
+  persistence, repeated subtree teardown and cold reopen on disposable media.
+- Workspace host tests, default x86 UEFI clippy, x86/ARM64 smoke clippy, layout,
+  formatting and whitespace checks pass. Interactive F5 media was untouched.
+- Logs: `build/withdraw-host.log`, `build/withdraw-core.log`,
+  `build/withdraw-arm64-debug.log`, `build/withdraw-arm64-release.log`,
+  `build/withdraw-x86-smoke.log`, `build/withdraw-desktop.log`,
+  `build/withdraw-x86-clippy.log`, `build/withdraw-x86-smoke-clippy.log`,
+  `build/withdraw-arm64-clippy.log`.
+
+Next: distinguish becoming runnable from actual CPU selection in the periodic
+observations. The authority sweep, grant-table scans, deadline extraction and
+mapping edits still run atomically; a whole trap/boot turn is not limited to one
+waiter batch. The known intermittent clean-close LOSS timeout remains open.
+No owner semantics or application ABI changed, and no real-time guarantee follows.

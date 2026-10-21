@@ -12,6 +12,12 @@ pub(super) fn exercise(memory: &mut PreparedMemory) {
             memory.image,
             user_output,
         );
+        cathedral_core::user_tasks::exercise_subtree_withdrawal(
+            &mut memory.frames,
+            &memory.layout,
+            memory.image,
+            user_output,
+        );
         assert_eq!(HEAP.used(), heap);
     }
     assert_eq!(memory.frames.allocated(), baseline);

@@ -7,6 +7,7 @@ pub(in crate::user_tasks) enum Phase {
     Syscall,
     InterruptWork,
     WaitCompletion,
+    Close,
     Deferred,
     Withdraw,
     Retire,
@@ -35,11 +36,12 @@ pub(in crate::user_tasks) enum Phase {
 }
 
 #[cfg(feature = "memory-lab")]
-const PHASES: [Phase; 29] = [
+const PHASES: [Phase; 30] = [
     Phase::Trap,
     Phase::Syscall,
     Phase::InterruptWork,
     Phase::WaitCompletion,
+    Phase::Close,
     Phase::Deferred,
     Phase::Withdraw,
     Phase::Retire,
@@ -95,6 +97,10 @@ pub(in crate::user_tasks) fn start() -> u64 {
 }
 
 impl Timing {
+    #[cfg(feature = "memory-lab")]
+    pub(in crate::user_tasks) fn count(&self, phase: Phase) -> u64 {
+        self.samples[phase as usize].count
+    }
     pub(in crate::user_tasks) fn try_new() -> Result<Self, alloc::collections::TryReserveError> {
         #[cfg(feature = "memory-lab")]
         {

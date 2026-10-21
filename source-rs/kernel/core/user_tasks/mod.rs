@@ -20,6 +20,8 @@ pub use configuration::{Config, Error, Executable, Program, Supervision};
 #[cfg(feature = "memory-lab")]
 pub use execution::waits::burst::exercise as exercise_wait_burst;
 #[cfg(feature = "memory-lab")]
+pub use lifecycle::withdrawal_test::exercise as exercise_subtree_withdrawal;
+#[cfg(feature = "memory-lab")]
 pub use memory::rollback::exercise as exercise_memory_rollback;
 pub use outcomes::{Exit, MemoryReport, Report};
 
