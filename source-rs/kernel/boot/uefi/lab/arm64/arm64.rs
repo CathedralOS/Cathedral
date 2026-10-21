@@ -3,6 +3,7 @@
 pub fn run(boot: &mut crate::handoff::BootState) {
     use core::fmt::Write;
     super::kernel_tasks::exercise(&mut boot.memory, &mut boot.console);
+    super::startup::exercise(&mut boot.memory, &mut boot.console);
     let memory = &mut boot.memory;
     let console = &mut boot.console;
     assert!(

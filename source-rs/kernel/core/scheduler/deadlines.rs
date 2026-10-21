@@ -1,7 +1,7 @@
 // Indexed deadline heap: one entry per account, removed on cancellation/reuse.
 // All storage is reserved at construction; updates never allocate. Callers
 // supply extended timestamps so wrapping tick clocks do not reorder the heap.
-use alloc::{vec, vec::Vec};
+use alloc::{collections::TryReserveError, vec::Vec};
 
 pub(crate) struct Deadlines {
     heap: Vec<usize>,
@@ -12,14 +12,26 @@ pub(crate) struct Deadlines {
 }
 
 impl Deadlines {
+    #[cfg(test)]
     pub(crate) fn new(count: usize) -> Self {
-        Self {
-            heap: Vec::with_capacity(count),
-            positions: vec![None; count],
-            times: vec![0; count],
+        Self::try_new(count).unwrap()
+    }
+    pub(crate) fn try_new(count: usize) -> Result<Self, TryReserveError> {
+        let mut heap = Vec::new();
+        heap.try_reserve_exact(count)?;
+        let mut positions = Vec::new();
+        positions.try_reserve_exact(count)?;
+        positions.resize(count, None);
+        let mut times = Vec::new();
+        times.try_reserve_exact(count)?;
+        times.resize(count, 0);
+        Ok(Self {
+            heap,
+            positions,
+            times,
             #[cfg(test)]
             inspections: 0,
-        }
+        })
     }
 
     pub(crate) fn set(&mut self, slot: usize, time: u128) {

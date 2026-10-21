@@ -3,7 +3,7 @@
 // using measured CPU ceilings. CPU context mechanics stay outside policy; all
 // scheduling storage is allocated at construction.
 
-use alloc::{vec, vec::Vec};
+use alloc::{collections::TryReserveError, vec::Vec};
 use budget::Budgets;
 use deadlines::Deadlines;
 use shares::Shares;
@@ -56,17 +56,26 @@ pub struct Scheduler {
 
 impl Scheduler {
     pub fn new(limit: usize) -> Self {
-        Self {
-            states: vec![TaskState::Vacant; limit],
-            generations: vec![0; limit],
+        Self::try_new(limit).expect("scheduler storage exhausted")
+    }
+    pub fn try_new(limit: usize) -> Result<Self, TryReserveError> {
+        let mut states = Vec::new();
+        states.try_reserve_exact(limit)?;
+        states.resize(limit, TaskState::Vacant);
+        let mut generations = Vec::new();
+        generations.try_reserve_exact(limit)?;
+        generations.resize(limit, 0);
+        Ok(Self {
+            states,
+            generations,
             current: None,
-            shares: Shares::new(limit),
-            budgets: Budgets::new(limit),
-            sleepers: Deadlines::new(limit),
+            shares: Shares::try_new(limit)?,
+            budgets: Budgets::try_new(limit)?,
+            sleepers: Deadlines::try_new(limit)?,
             last_tick: None,
             ticks: 0,
             alive: 0,
-        }
+        })
     }
     /// Attach a dormant launch account to its current owner. The bounded launch
     /// tree requires increasing slot order. Cursor state survives loans/restarts.

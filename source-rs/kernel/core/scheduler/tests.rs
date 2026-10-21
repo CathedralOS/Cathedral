@@ -1,5 +1,10 @@
 use super::*;
 #[test]
+fn impossible_scheduler_capacity_is_a_recoverable_error() {
+    assert!(Scheduler::try_new(usize::MAX).is_err());
+    assert!(Scheduler::try_new(0).unwrap().finished());
+}
+#[test]
 fn nonblocking_operations_keep_the_quantum_but_timer_and_yield_rotate() {
     let mut scheduler = populated(2);
     assert_eq!(scheduler.advance(Event::Yield, 0, true), Some(0));

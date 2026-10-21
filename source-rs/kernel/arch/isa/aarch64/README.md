@@ -84,12 +84,14 @@ task admission and are separate from the healthy-stack guard-access probe.
 
 ## Evidence and bounds
 
-The release portability suite exercises:
+The debug and release portability suites exercise:
 
 - Firmware exit, owned tables/stack, breakpoint return, heap exhaustion/reuse,
   timer delivery on the exception stack.
 - Trusted EL1 tasks yielding, sleeping and preempting with GPR/FP/SIMD/FPCR/FPSR
   sentinels; dynamic spawn, stale IDs, frame/heap exhaustion and live-peer progress.
+- Userspace-session startup under progressively released heap pressure, with
+  recoverable refusal and exact heap/frame reclamation before any task runs.
 - Two private EL0 peers switched by the timer, with different page contents
   and SIMD register sentinels surviving switches.
 - Repeated 32-message IPC exchanges, blocking receives, local rights, stale names.
@@ -103,11 +105,11 @@ The release portability suite exercises:
   shared core runtime-allocation rollback, and full frame/heap reclamation.
 
 The targeted stack-entry/exhaustion probes also pass in debug builds. The full
-debug boot currently reaches the end of trusted-task tests, then reports a
-kernel guard read inside `__chkstk` while entering the shared-memory userspace
-suite. That stack-pressure issue remains open; the terminal entrance now reports
-it instead of recursively faulting during context save. See the current Rust
-handoff for the exact diagnostic and verification scope.
+debug suite's former `__chkstk` guard fault is fixed: shared core constructs its
+session directly in fallibly allocated heap storage, and IPC reserves startup
+handle rows on the heap for the configured task slots. Neither aggregate crosses
+startup/result frames as a large inline value. The 64-KiB boot stack and its guard
+remain unchanged. See the current Rust handoff for verification scope.
 
 The board addresses are intentionally fixed, following
 [QEMU's virt machine](https://www.qemu.org/docs/master/system/arm/virt.html).

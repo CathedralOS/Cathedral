@@ -74,11 +74,10 @@ struct Sample {
     over_ms: u64,
 }
 
-#[derive(Default)]
 pub(in crate::user_tasks) struct Timing {
     // Allocate once at session preparation, never on a measured path or stack.
     #[cfg(feature = "memory-lab")]
-    samples: alloc::boxed::Box<[Sample; PHASES.len()]>,
+    samples: alloc::vec::Vec<Sample>,
 }
 
 #[inline]
@@ -94,6 +93,18 @@ pub(in crate::user_tasks) fn start() -> u64 {
 }
 
 impl Timing {
+    pub(in crate::user_tasks) fn try_new() -> Result<Self, alloc::collections::TryReserveError> {
+        #[cfg(feature = "memory-lab")]
+        {
+            let mut samples = alloc::vec::Vec::new();
+            samples.try_reserve_exact(PHASES.len())?;
+            samples.resize(PHASES.len(), Sample::default());
+            Ok(Self { samples })
+        }
+        #[cfg(not(feature = "memory-lab"))]
+        Ok(Self {})
+    }
+
     #[inline]
     pub(in crate::user_tasks) fn record(&mut self, phase: Phase, start: u64) {
         #[cfg(feature = "memory-lab")]

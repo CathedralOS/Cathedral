@@ -19,7 +19,7 @@ pub unsafe fn exercise(
     output: fn(&[u8]) -> bool,
 ) {
     // SAFETY: Independent fixtures return every frame before the next starts.
-    // Keep their large session temporaries in separate, non-inlined stack frames.
+    // Keep each fixture's local construction state in a separate stack frame.
     unsafe {
         admission::rollback::exercise(frames, layout, image, framebuffer, output);
         page_objects(frames, layout, image, output);

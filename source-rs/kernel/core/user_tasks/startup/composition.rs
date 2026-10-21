@@ -164,8 +164,14 @@ pub(super) fn grants(
     } else {
         config.channel_limits
     };
-    let mut ipc = Ipc::with_reservations(epoch, count, config.endpoints, limits)
-        .map_err(|_| Error::InvalidEndpoints)?;
+    let mut ipc =
+        Ipc::with_reservations(epoch, count, config.endpoints, limits).map_err(|code| {
+            if code == cathedral_kernel_contracts::user::NO_MEMORY {
+                Error::OutOfHeap
+            } else {
+                Error::InvalidEndpoints
+            }
+        })?;
     for launch in &launches {
         ipc.close_task(launch.model.child);
     }

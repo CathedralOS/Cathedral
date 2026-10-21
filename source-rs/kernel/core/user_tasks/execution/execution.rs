@@ -12,7 +12,7 @@ pub(super) unsafe fn run(
 ) {
     let session = &raw mut *session;
     ACTIVE.store(session, Ordering::Release);
-    // SAFETY: Session remains pinned on mapped boot stack. Its vectors never grow;
+    // SAFETY: Session remains at its stable mapped heap address. Its vectors never grow;
     // callbacks get exclusive access only across suspension, never a live borrow.
     unsafe {
         arch::begin_user_session();

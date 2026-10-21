@@ -19,6 +19,11 @@ impl Ipc {
             .try_reserve_exact(MAX_ENDPOINTS + abi::MAX_DYNAMIC_CHANNELS)
             .map_err(|_| abi::NO_MEMORY)?;
         endpoints.resize(MAX_ENDPOINTS + abi::MAX_DYNAMIC_CHANNELS, None);
+        let mut initial = alloc::vec::Vec::new();
+        initial
+            .try_reserve_exact(tasks)
+            .map_err(|_| abi::NO_MEMORY)?;
+        initial.resize(tasks, [0; abi::MAX_INITIAL_ENDPOINTS]);
         let mut ipc = Self {
             epoch,
             retired_memory: [0; cathedral_kernel_contracts::memory::MAX_READ_HANDLES.div_ceil(64)],
@@ -29,7 +34,7 @@ impl Ipc {
             retired_memory_pending: false,
             endpoints,
             grants: Grants::new(tasks)?,
-            initial: [[0; abi::MAX_INITIAL_ENDPOINTS]; MAX_TASKS],
+            initial,
         };
         for (index, &spec) in specs.iter().enumerate() {
             if spec.sender >= tasks

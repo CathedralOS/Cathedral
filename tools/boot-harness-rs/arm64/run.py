@@ -81,7 +81,8 @@ def main():
                   'dynamic spawn limit stale IDs and live-peer progress passed',
                   'task stacks unmapped; heap and physical frames returned to baseline']
     if not args.kernel_only:
-        milestones += ['shared objects forwarded without mappings; lifetime and reclamation passed', 'ARM64 IPC round=0', 'ARM64 IPC round=1',
+        milestones += ['session startup heap refusals=', 'exact reclamation passed',
+                       'shared objects forwarded without mappings; lifetime and reclamation passed', 'ARM64 IPC round=0', 'ARM64 IPC round=1',
                        'ARM64 timer preempted both private EL0 peers',
                        'ARM64 sealed pages rejected writes', 'ARM64 admission rollback passed',
                        'ARM64 portability proof passed']

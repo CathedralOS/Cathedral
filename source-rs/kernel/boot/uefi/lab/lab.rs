@@ -2,6 +2,7 @@
 
 pub fn run(boot: &mut crate::handoff::BootState) {
     kernel_tasks::exercise(&mut boot.memory, &mut boot.console);
+    startup::exercise(&mut boot.memory, &mut boot.console);
     user_tasks::exercise(&mut boot.memory, &mut boot.console);
     #[cfg(feature = "bundled-user")]
     {

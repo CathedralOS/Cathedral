@@ -1,7 +1,7 @@
 # Rust reference OS: tasks and handoff
 
-Updated 2026-10-20 (local date). Current milestone: **ARM64 stack-safe exception
-entry and terminal reporting**, on baseline `1fe5af72` (table reservation).
+Updated 2026-10-20 (local date). Current milestone: **stack-safe, fallible userspace
+session startup**, on baseline `7331c086` (ARM64 exception entry).
 The latest section records verification and remaining steps toward bounded
 execution. This does not introduce real-time reservations.
 The fresh-lab reset is `30572c9f`. Compact recursive desktops landed as `c7571191`,
@@ -3893,3 +3893,70 @@ guards. The exhausted-stack entrance/reporting gap is addressed; the newly
 localized debug boot failure is separate. Keep the intermittent clean-close
 LOSS timeout open. Atomic cleanup/event bursts and guaranteed-service admission
 remain future work; no owner decision was needed here.
+
+
+## Stack-safe, fallible userspace session startup (2026-10-20)
+
+Baseline: `7331c086`. Full ARM64 debug portability now passes. The previous
+`__chkstk` guard read came from stacked startup frames carrying inline session
+and IPC startup-handle tables. The old debug userspace runner reserved 28,000
+bytes and preparation reserved another 38,912 bytes, before their callees and
+boot callers. The stack probe faulted before entering the oversized frame.
+
+[Preparation](source-rs/kernel/core/user_tasks/startup/startup.rs) now returns
+an owned heap session. [Arena construction](source-rs/kernel/core/user_tasks/startup/arena.rs)
+allocates fallibly and initializes fields directly, without a whole-session
+stack temporary. All fallible work precedes raw initialization; no partially
+initialized session is published. The owner remains at a stable mapped address
+until execution clears the switch handler and `ACTIVE`, then ordinary drop
+reclaims its storage. The admission fixture uses that same owner, removing its
+extra box/copy. This preserves the existing raw-pointer suspension obligations.
+
+[IPC startup](source-rs/kernel/core/ipc/bootstrap.rs) reserves its initial-handle
+rows for the configured task slots, including dormant children, once on the
+heap. Rows never grow during a trap. Its allocation refusal now reaches callers
+as `OutOfHeap`, not `InvalidEndpoints`. Scheduler accounts/deadlines, waiter
+storage and lab timing samples also have fallible constructors used by userspace
+startup. The trusted-kernel-task session still uses the existing infallible
+`Scheduler::new` wrapper; this is not a whole-kernel allocation-failure audit.
+
+Disassembly of the final ARM64 debug build shows preparation's probed allocation
+at 6,432 bytes; the userspace runner no longer needs a stack probe. Other
+constructors still have sizable debug frames. This is not a global stack-use
+bound. Boot/task stack capacities and guards are unchanged, and the fatal-stack
+entry/reporting mechanism from the previous milestone remains intact.
+
+The new shared [startup fixture](source-rs/kernel/boot/uefi/lab/startup.rs)
+exhausts the real kernel heap and releases it in 4-KiB increments. Every refusal
+must return `OutOfHeap` with exact heap/frame recovery. Once startup fits, a zero
+physical-frame allowance must refuse image admission, again refunding everything.
+It reaches 73 heap refusals on both ISAs before that boundary. This samples
+available capacities rather than injecting a fault at every allocation call.
+Subsequent ordinary sessions still boot and reclaim successfully. A host test
+also verifies that impossible scheduler capacity returns an error.
+
+Verification:
+
+- Full ARM64 debug and release portability pass, including the new heap-pressure
+  fixture, private-process isolation, shared-object lifetime and admission rollback
+  (78 frame boundaries in debug, 66 in release).
+- Full x86 release smoke passes, including the same heap-pressure fixture,
+  supervision, device/display recovery and exact memory reclamation.
+- Workspace host tests, default x86 UEFI clippy, x86/ARM64 smoke clippy, layout,
+  formatting and whitespace checks pass. ARM64 kernel-only smoke excludes the
+  userspace fixture because that build omits the required image metadata.
+- Nested desktop regression covers fresh/cold boot, three recursive desktops,
+  pointer stress, draft-protected close, confined persistence and repeated subtree
+  reclamation. Disposable images only; interactive F5 saved media was untouched.
+- Logs: `build/session-arm64-debug.log`, `build/session-arm64-release.log`,
+  `build/session-x86-smoke.log`, `build/session-host.log`,
+  `build/session-x86-clippy.log`, `build/session-x86-smoke-clippy.log`,
+  `build/session-arm64-clippy.log`, `build/session-desktop.log`,
+  `build/session-desktop-final.log`, `build/session-debug-stack-frames.txt`.
+
+Next: both the exhausted-stack reporting gap and the resulting debug startup
+failure are resolved. Return to the measured atomic cleanup/event bursts,
+starting with rollback and single-object mapping/cleanup before adding more
+cursors. Keep the intermittent clean-close LOSS timeout open; no failure in this
+milestone proves that issue fixed. Guaranteed-service admission remains a
+separate owner-level design choice. No new owner decision was needed here.

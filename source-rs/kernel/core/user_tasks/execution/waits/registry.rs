@@ -21,17 +21,23 @@ pub(in crate::user_tasks) struct Registry {
 }
 
 impl Registry {
+    #[cfg(test)]
     pub(in crate::user_tasks) fn new(tasks: usize) -> Self {
+        Self::try_new(tasks).unwrap()
+    }
+    pub(in crate::user_tasks) fn try_new(
+        tasks: usize,
+    ) -> Result<Self, alloc::collections::TryReserveError> {
         assert!(tasks <= abi::MAX_TASKS);
-        Self {
+        Ok(Self {
             active: [0; 3],
             children: [0; abi::MAX_LAUNCHES],
             child_of: [None; abi::MAX_TASKS],
             changed_children: 0,
-            deadlines: Deadlines::new(tasks),
+            deadlines: Deadlines::try_new(tasks)?,
             last: None,
             ticks: 0,
-        }
+        })
     }
 
     pub(in crate::user_tasks) fn register(

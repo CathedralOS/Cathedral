@@ -13,6 +13,8 @@ mod kernel_tasks;
 mod memory;
 #[cfg(all(feature = "bundled-user", target_arch = "x86_64"))]
 mod rendering;
+#[cfg(any(feature = "bundled-user", target_arch = "x86_64"))]
+mod startup;
 #[cfg(all(feature = "bundled-user", target_arch = "x86_64"))]
 mod supervision;
 #[cfg(target_arch = "x86_64")]

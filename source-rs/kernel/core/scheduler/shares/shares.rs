@@ -1,7 +1,7 @@
 // Hierarchical turns over maintained active branches. State/gate changes update
 // only ancestors whose runnable status changes. Each level visits active direct
 // children, preserving slot-ordered rotation without scanning dormant accounts.
-use alloc::{vec, vec::Vec};
+use alloc::{collections::TryReserveError, vec::Vec};
 
 #[derive(Clone, Copy)]
 struct Account {
@@ -37,14 +37,21 @@ pub(super) struct Shares {
     pub(super) inspections: usize,
 }
 impl Shares {
+    #[cfg(test)]
     pub(super) fn new(count: usize) -> Self {
-        Self {
-            accounts: vec![Account::default(); count],
+        Self::try_new(count).unwrap()
+    }
+    pub(super) fn try_new(count: usize) -> Result<Self, TryReserveError> {
+        let mut accounts = Vec::new();
+        accounts.try_reserve_exact(count)?;
+        accounts.resize(count, Account::default());
+        Ok(Self {
+            accounts,
             root_cursor: 0,
             first: None,
             #[cfg(test)]
             inspections: 0,
-        }
+        })
     }
     pub(super) fn set_parent(&mut self, child: usize, parent: usize) {
         let old = self.accounts[child].parent;

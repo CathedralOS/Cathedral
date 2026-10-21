@@ -54,7 +54,8 @@ pub struct Ipc {
     endpoints: alloc::vec::Vec<Option<Endpoint>>,
     grants: Grants,
     reservations: [usize; MAX_TASKS],
-    initial: [[u64; abi::MAX_INITIAL_ENDPOINTS]; MAX_TASKS],
+    // Reserved once at boot, including dormant children; never grows in a trap.
+    initial: alloc::vec::Vec<[u64; abi::MAX_INITIAL_ENDPOINTS]>,
 }
 impl Ipc {
     /// Coalesced receiver hints for the task wait coordinator. Taking these does

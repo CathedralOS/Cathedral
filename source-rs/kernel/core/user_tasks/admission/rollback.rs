@@ -96,10 +96,7 @@ unsafe fn setup<'a>(
             },
         ],
     };
-    let (session, _) = startup::prepare(2, &config, baseline, |_| true).unwrap();
-    // Keep callers' retained sessions off the boot stack: returning or retiring
-    // several by-value Session temporaries can exhaust either ISA's guarded stack.
-    let mut session = alloc::boxed::Box::new(session);
+    let (mut session, _) = startup::prepare(2, &config, baseline, |_| true).unwrap();
     let mut source = Frames::new(frames, session.memory.funding.capacity(), usize::MAX).unwrap();
     let initial = Program {
         executable: Executable::Probe(&[0xcc]),

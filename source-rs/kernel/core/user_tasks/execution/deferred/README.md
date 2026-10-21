@@ -46,6 +46,13 @@ to continue work when every user is blocked. The pinned session is accessed
 through the existing raw-pointer suspension contract; the frame bank stays
 exclusively on the boot stack, outside trap callbacks.
 
+[Startup](../../startup/startup.rs) returns an owned heap session;
+[arena construction](../../startup/arena.rs) initializes it in place before
+publication. Scheduler, deadline, diagnostic and IPC startup storage is reserved
+fallibly. Startup/result frames carry the owner pointer instead of whole session
+copies. The owner stays alive at that address until execution removes the switch
+handler and clears `ACTIVE`; ordinary drop then reclaims its arenas.
+
 ## Incremental private allocation
 
 [Allocation](../../memory/allocation.rs) reserves quota, physical funding and a

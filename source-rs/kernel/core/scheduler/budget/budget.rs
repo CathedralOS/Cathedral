@@ -2,7 +2,7 @@
 // accounts lazily, and reopen exhausted gates at indexed repayment deadlines.
 // Admission, reaping and loan movement never clear credit, debt or reports.
 use super::{deadlines::Deadlines, shares::Shares};
-use alloc::{vec, vec::Vec};
+use alloc::{collections::TryReserveError, vec::Vec};
 pub const PERIOD_US: u64 = cathedral_kernel_contracts::user::CPU_REFILL_PERIOD_US;
 
 #[derive(Clone, Copy, Default, Debug, PartialEq, Eq)]
@@ -28,15 +28,22 @@ pub(super) struct Budgets {
     pub(super) visits: usize,
 }
 impl Budgets {
+    #[cfg(test)]
     pub(super) fn new(count: usize) -> Self {
-        Self {
-            accounts: vec![Account::default(); count],
-            repayments: Deadlines::new(count),
+        Self::try_new(count).unwrap()
+    }
+    pub(super) fn try_new(count: usize) -> Result<Self, TryReserveError> {
+        let mut accounts = Vec::new();
+        accounts.try_reserve_exact(count)?;
+        accounts.resize(count, Account::default());
+        Ok(Self {
+            accounts,
+            repayments: Deadlines::try_new(count)?,
             last: None,
             elapsed: 0,
             #[cfg(test)]
             visits: 0,
-        }
+        })
     }
     pub(super) fn configure(&mut self, limits: &[u64]) -> bool {
         if self.last.is_some()
