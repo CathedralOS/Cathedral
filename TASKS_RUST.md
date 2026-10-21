@@ -1,7 +1,7 @@
 # Rust reference OS: tasks and handoff
 
-Updated 2026-10-20 (local date). Current milestone: **atomic reserved-range
-installation**, on baseline `2771bad8` (batched sealing/removal).
+Updated 2026-10-20 (local date). Current milestone: **bounded image-copy work
+and page initialization**, on baseline `c4351353` (reserved-range installation).
 The latest section records verification and remaining steps toward bounded
 execution. This does not introduce real-time reservations.
 The fresh-lab reset is `30572c9f`. Compact recursive desktops landed as `c7571191`,
@@ -4370,3 +4370,78 @@ deadline extraction and the other audited atomic paths also remain. Keep the
 timing audit honest about complete trap/boot turns versus individual phases.
 The intermittent clean-close LOSS timeout remains open; guaranteed CPU service
 is still separate from ceilings.
+
+## Bounded image-copy work and page initialization (2026-10-20)
+
+Baseline: `c4351353`. Investigation of the larger `ImageBatch` samples found
+redundant writes: the loader zeroed each entire page, then overwrote its file
+prefix. [Page population](source-rs/kernel/core/user_tasks/address_space/image.rs)
+now copies that prefix directly and zeroes only the tail. A wholly zero BSS or
+stack page never reads source contents. Every byte is initialized before cache
+maintenance or mapping; ownership, rollback and publication order are unchanged.
+
+New lab-only per-page observations separate backing allocation, initialization
+of file-backed pages, initialization of all-zero pages, and cache/translation
+publication. They narrowed the larger x86 samples to file-backed initialization;
+allocation, zero-only pages and publication were much smaller in the observed
+population. Disassembly of the measured build showed word-sized `rep movsq` and
+`rep stosq` in its standard copy/fill routines. That does not diagnose the remaining
+emulator/host contribution or justify replacing those routines with custom ISA code.
+
+[Runtime construction](source-rs/kernel/core/user_tasks/admission/construction.rs)
+now gives [the loader](source-rs/kernel/core/user_tasks/address_space/creation.rs)
+two independent allowances: eight initialized/mapped pages and 8 KiB of file bytes
+per turn. A page whose prefix would exceed the remaining byte allowance stays at
+the cursor until the next turn. Partial file pages spend their actual prefix size;
+BSS/stack pages spend only the page allowance. The allowance must accommodate at
+least one full page, so a valid next page cannot strand the cursor. Initial boot
+admission remains synchronous through the same engine. More turns permit peer
+execution but can lengthen total launch time under contention.
+
+`ImageBacking`, `ImageFile`, `ImageZero` and `ImagePublish` are per-page attempts
+inside the per-turn `ImageBatch`. File includes a partial page's zeroed tail;
+Publish includes cache maintenance and table allocation/leaf installation, not
+making a task runnable. Failed allocation is sampled before returning; failed
+mapping is also sampled. Counts can therefore differ. Ordinary builds omit these
+hooks and clocks, and synchronous initial construction supplies no observer.
+The report tool labels the distinct populations. See the
+[timing audit](source-rs/kernel/core/scheduler/timing.md) for scope and units.
+
+Verification:
+
+- Workspace host tests pass. All 4,097 possible prefix lengths are tested against
+  poisoned destination pages and adjacent sentinels for byte-backed and frame-backed
+  contents. Partial final source pages and empty-source BSS pass too. The cursor
+  test crosses partial pages, BSS, gaps and stack with both allowances, preserving
+  exact address order and progress on every turn.
+- x86 release smoke and ARM64 debug/release pass. Every observed admission turn checks
+  its copied-byte allowance. The complete real-frame synthetic construction checks
+  exactly 72 backing/publication attempts, one file page and 71 zero pages; initial
+  synchronous roots are excluded. Existing physical refusal, withdrawal, retained
+  source, fault-containment and exact reclamation sweeps pass.
+- All five periodic wait/selection checks pass. The instrumented run before the
+  copy allowance recorded 903 image turns, mean 165.96 us and 24 samples >=1 ms;
+  afterward it recorded 2,443 turns, mean 67.36 us and one sample >=1 ms. These are
+  different subdivisions and mixed session populations, not a total-launch speedup
+  or a time bound. A single file-page sample still exceeded 1 ms afterward.
+- Core host clippy, default x86 UEFI and x86/ARM64 smoke clippy, Python report tests,
+  layout, formatting and whitespace checks pass.
+- Nested desktop passes three levels, pointer stress, protected close, confined
+  persistence, repeated subtree teardown and cold reopen on disposable media after
+  the copy allowance change. Interactive F5 media was untouched.
+- Logs: `build/image-load-host.log`, `build/image-load-host-clippy.log`, `build/image-load-clippy.log`,
+  `build/image-load-smoke-clippy.log`, `build/image-load-arm64-clippy.log`,
+  `build/image-load-x86-smoke.log`, `build/image-load-arm64-release.log`,
+  `build/image-load-arm64-debug.log`, `build/image-load-desktop.log`,
+  `build/image-load-report.log`. The earlier instrumented run is preserved as
+  `build/image-load-before-budget-report.log` and
+  `build/image-load-before-budget-serial.log`; the initial copy-routine inspection
+  is in `build/image-load-symbols.log` and `build/image-load-disassembly.log`.
+
+Next: the largest copy unit is now one file page. Do not shrink it or introduce
+SIMD merely from QEMU maxima; use a controlled source/copy probe if investigating
+that remaining cost. Next prioritize capacity-focused authority-withdrawal
+evidence: its wider grant scans still run atomically, while the existing subtree
+fixture covers nine descendants. Deadline work also remains in the timing audit.
+Guaranteed CPU service is still a separate design from ceilings. The intermittent clean-close LOSS
+timeout remains open; no owner semantics or userspace ABI changed here.

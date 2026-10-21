@@ -31,7 +31,10 @@ and userspace execution system.
   pending sets. Coherent boot steps may yield to peers; private allocation zeros
   at most eight pages per step, retaining its unpublished state and funding.
   Executable admission likewise batches image/stack pages behind a format decoder
-  and commits the child and its authority only after construction finishes.
+  with at most eight pages and 8 KiB of file bytes per turn, and commits the child
+  and its authority only after construction finishes. A page that would exceed
+  the copy allowance stays at the cursor for the next turn. BSS/stack pages spend
+  the page allowance without spending file bytes.
   Before image loading, x86 prepares at most 64 supervisor mapping leaves per
   step; ARM64 borrows its permanent supervisor branch without copying leaves.
   Device framebuffer mappings also advance at most 64 leaves per step before
@@ -135,6 +138,32 @@ entry/exit, and deferred samples omit the boot-loop suspension machinery. They
 are not complete IRQ-mask durations. Ordinary user diagnostic writes still
 appear within syscall samples. Initial boot admission is outside these runtime
 admission samples.
+
+Image loading also records lab-only per-page stages within `ImageBatch`:
+`ImageBacking` includes physical allocation and ownership-ledger growth;
+`ImageFile` initializes a page with a nonempty file prefix and zeroes its tail;
+`ImageZero` initializes a wholly zero BSS/stack page; `ImagePublish` includes
+executable cache maintenance, table allocation and leaf installation. The latter
+does not mean publishing a runnable task. Backing refusals are sampled before
+returning, so their count can exceed initialized/published pages. A mapping
+refusal is included in `ImagePublish`. These means/maxima are per attempted page,
+whereas `ImageBatch` is per loading turn; do not add their means or maxima.
+Initial synchronous admission passes no observer and collects no extra clocks.
+Ordinary builds omit the observer and counters entirely.
+
+The loader now copies the file prefix directly and zeroes only the remainder,
+avoiding full-page zeroing followed by overwrite. Every byte is initialized
+before executable cache publication or mapping. The host proof checks all
+4,097 prefix lengths with poisoned targets and neighboring sentinels for both
+contiguous and frame-backed sources. The cursor proof covers partial file pages,
+BSS, gaps and stack under both allowances. Booted admission asserts that observed
+file bytes stay within 8 KiB on every turn; the complete synthetic construction
+also checks exact per-page observation counts on both ISAs.
+
+The new file-byte allowance follows the observed dominance of file-backed page
+initialization over zero-only pages and table publication in the x86 QEMU lab.
+It is a structural work bound, not a qualified time bound. Single-page copies
+remain atomic, and emulator/host effects remain in all elapsed observations.
 
 [Registered-wait observations](../user_tasks/execution/timing/README.md) separately
 record completion-to-first-selection microseconds and deadline lateness in ticks.

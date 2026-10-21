@@ -86,7 +86,11 @@ their boot permissions. ARM64 already borrows its permanent supervisor branch
 and completes this phase immediately. The ISA retains owned range/cursor values,
 never a page-table borrow across suspension. The x86 root accessor refuses an
 unfinished supervisor tree. Later steps copy, zero and map at most eight image
-or stack pages, then reserve runtime mapping tables. An approved framebuffer is
+or stack pages and copy at most 8 KiB of file bytes. The cursor leaves a page for
+the next turn if its file prefix would exceed the remaining byte allowance;
+BSS and stack pages spend only the page allowance. Each page copies its prefix
+and zeroes its tail once before cache publication or mapping. After loading,
+construction reserves runtime mapping tables. An approved framebuffer is
 mapped in batches of at most 64 leaves through
 [framebuffer.rs](../../address_space/framebuffer.rs). Core retains only its byte
 offset; the ISA validates each slice and encodes device permissions/cache policy.

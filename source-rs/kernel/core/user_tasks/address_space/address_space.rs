@@ -93,7 +93,20 @@ impl UserSpace {
         let result = unsafe { space.prepare_kernel(frames, usize::MAX) }.and_then(|complete| {
             assert!(complete);
             // SAFETY: Private root with complete supervisor mappings, retained image.
-            unsafe { space.load_pages(segments, contents, &mut cursor, usize::MAX, frames) }
+            unsafe {
+                space.load_pages(
+                    segments,
+                    contents,
+                    &mut cursor,
+                    LoadBudget {
+                        pages: usize::MAX,
+                        file_bytes: usize::MAX,
+                    },
+                    frames,
+                    #[cfg(feature = "memory-lab")]
+                    None,
+                )
+            }
         });
         if let Err(error) = result {
             // SAFETY: Private root, never runnable, including partially built tables.

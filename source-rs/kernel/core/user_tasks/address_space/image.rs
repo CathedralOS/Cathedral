@@ -30,19 +30,27 @@ impl Contents<'_> {
     pub fn is_empty(&self) -> bool {
         self.len() == 0
     }
-    /// Copy `len` file bytes starting at a page-aligned `file_offset` into `to`.
+    /// Initialize a whole destination page: copy its file prefix, then zero
+    /// only the remaining tail. Full file pages are never zeroed and overwritten.
     /// # Safety
-    /// `to` is writable for `len` bytes; every frame is a live identity-mapped
-    /// page; the range lies within the contents and within one file page.
-    pub unsafe fn copy_page(&self, file_offset: u64, to: *mut u8, len: usize) {
+    /// `to` is exclusive writable RAM for PAGE bytes, disjoint from the source;
+    /// len <= PAGE. For a nonempty prefix, every source frame is live identity RAM
+    /// and the range lies within the contents and one aligned file page. With
+    /// len == 0, file_offset need not refer to contents (BSS and stack pages).
+    pub unsafe fn populate_page(&self, file_offset: u64, to: *mut u8, len: usize) {
         debug_assert!(file_offset.is_multiple_of(PAGE) && len <= PAGE as usize);
-        let from = match self {
-            Self::Bytes(bytes) => bytes[file_offset as usize..][..len].as_ptr(),
-            Self::Frames(frames) => frames[(file_offset / PAGE) as usize] as *const u8,
-        };
-        // SAFETY: Both ranges are in bounds and cannot overlap: the target is a
-        // fresh frame the caller owns exclusively.
-        unsafe { core::ptr::copy_nonoverlapping(from, to, len) }
+        // SAFETY: Caller retains a full fresh page and the validated immutable
+        // prefix. These two disjoint writes initialize every byte before mapping.
+        unsafe {
+            if len != 0 {
+                let from = match self {
+                    Self::Bytes(bytes) => bytes[file_offset as usize..][..len].as_ptr(),
+                    Self::Frames(frames) => frames[(file_offset / PAGE) as usize] as *const u8,
+                };
+                core::ptr::copy_nonoverlapping(from, to, len);
+            }
+            core::ptr::write_bytes(to.add(len), 0, PAGE as usize - len);
+        }
     }
 }
 
@@ -109,12 +117,39 @@ mod tests {
         let mut out = [0u8; 4096];
         // SAFETY: Host pages stand in for identity-mapped frames; copies stay in bounds.
         unsafe {
-            framed.copy_page(PAGE, out.as_mut_ptr(), PAGE as usize);
+            framed.populate_page(PAGE, out.as_mut_ptr(), PAGE as usize);
             assert_eq!(out[..], file[4096..8192]);
-            framed.copy_page(2 * PAGE, out.as_mut_ptr(), 1);
+            framed.populate_page(2 * PAGE, out.as_mut_ptr(), 1);
             assert_eq!(out[0], file[8192]);
-            contiguous.copy_page(2 * PAGE, out.as_mut_ptr(), 1);
+            assert!(out[1..].iter().all(|&byte| byte == 0));
+            out.fill(0xa5);
+            contiguous.populate_page(2 * PAGE, out.as_mut_ptr(), 1);
             assert_eq!(out[0], file[8192]);
+            assert!(out[1..].iter().all(|&byte| byte == 0));
+        }
+    }
+
+    #[test]
+    fn every_prefix_length_initializes_poisoned_pages_without_touching_neighbors() {
+        let bytes: Vec<u8> = (0..8192).map(|index| (index % 251 + 1) as u8).collect();
+        let frames = [bytes.as_ptr() as u64, bytes[4096..].as_ptr() as u64];
+        for contents in [Contents::Bytes(&bytes), Contents::Frames(&frames)] {
+            for len in 0..=4096 {
+                let mut guarded = [0xa5; 4098];
+                // SAFETY: Interior page is exclusive; the retained second source
+                // page supplies every prefix. Sentinel bytes surround the target.
+                unsafe { contents.populate_page(PAGE, guarded.as_mut_ptr().add(1), len) };
+                assert_eq!(guarded[0], 0xa5);
+                assert_eq!(guarded[4097], 0xa5);
+                assert_eq!(&guarded[1..1 + len], &bytes[4096..4096 + len]);
+                assert!(guarded[1 + len..4097].iter().all(|&byte| byte == 0));
+            }
+        }
+        for empty in [Contents::Bytes(&[]), Contents::Frames(&[])] {
+            let mut page = [0xa5; 4096];
+            // SAFETY: Full destination page; a BSS page has no source bytes.
+            unsafe { empty.populate_page(256 * PAGE, page.as_mut_ptr(), 0) };
+            assert_eq!(page, [0; 4096]);
         }
     }
 }

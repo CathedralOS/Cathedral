@@ -1,11 +1,14 @@
 //! Private resumable address-space construction. No task context, grant or runnable
 //! state is installed here. Lifecycle revalidates authority before publication.
 use super::{Error, Frames, Program, Report, Session, image};
-use crate::user_tasks::address_space::{LoadCursor, USER_STACK_TOP, UserSpace};
+use crate::user_tasks::address_space::{LoadBudget, LoadCursor, USER_STACK_TOP, UserSpace};
 use crate::user_tasks::execution::timing::{self, Phase as TimedPhase};
 use cathedral_arch::{self as arch, Context};
 
 pub(super) const PAGE_BATCH: usize = 8;
+// File copies dominate the observed image-loading bursts. Bound their bytes
+// separately while retaining eight cheap zero-only pages; neither is WCET.
+const FILE_BYTES_BATCH: usize = 2 * arch::memory::PAGE as usize;
 // Leaf edits are lighter than image copying; this is a work allowance, not WCET.
 const KERNEL_PAGE_BATCH: usize = 64;
 pub(super) const FRAMEBUFFER_PAGE_BATCH: usize = 64;
@@ -140,17 +143,41 @@ unsafe fn step(
                 }
             }
             Phase::Image => {
-                if draft
-                    .space
-                    .load_pages(
-                        &draft.plan.segments,
-                        image::contents(program),
-                        &mut draft.cursor,
-                        PAGE_BATCH,
-                        frames,
-                    )
-                    .map_err(Error::Memory)?
-                {
+                #[cfg(feature = "memory-lab")]
+                let mut copied_bytes = 0;
+                let loaded = draft.space.load_pages(
+                    &draft.plan.segments,
+                    image::contents(program),
+                    &mut draft.cursor,
+                    LoadBudget {
+                        pages: PAGE_BATCH,
+                        file_bytes: FILE_BYTES_BATCH,
+                    },
+                    frames,
+                    #[cfg(feature = "memory-lab")]
+                    Some(&mut |stage, elapsed| {
+                        use crate::user_tasks::address_space::LoadStage;
+                        let phase = match stage {
+                            LoadStage::Backing => TimedPhase::ImageBacking,
+                            LoadStage::Populate { file_bytes } => {
+                                copied_bytes += file_bytes;
+                                if file_bytes == 0 {
+                                    TimedPhase::ImageZero
+                                } else {
+                                    TimedPhase::ImageFile
+                                }
+                            }
+                            LoadStage::Publish => TimedPhase::ImagePublish,
+                        };
+                        session.timing.record_elapsed(phase, elapsed);
+                    }),
+                );
+                #[cfg(feature = "memory-lab")]
+                assert!(
+                    copied_bytes <= FILE_BYTES_BATCH,
+                    "image turn exceeded file-byte allowance"
+                );
+                if loaded.map_err(Error::Memory)? {
                     draft.phase = Phase::Regions;
                 }
             }

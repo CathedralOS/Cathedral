@@ -18,6 +18,14 @@ pub(in crate::user_tasks) enum Phase {
     Root,
     KernelMappings,
     ImageBatch,
+    #[cfg(feature = "memory-lab")]
+    ImageBacking,
+    #[cfg(feature = "memory-lab")]
+    ImageFile,
+    #[cfg(feature = "memory-lab")]
+    ImageZero,
+    #[cfg(feature = "memory-lab")]
+    ImagePublish,
     RegionTables,
     Framebuffer,
     Rollback,
@@ -34,7 +42,7 @@ pub(in crate::user_tasks) enum Phase {
 }
 
 #[cfg(feature = "memory-lab")]
-pub(super) const PHASES: [Phase; 30] = [
+pub(super) const PHASES: [Phase; 34] = [
     Phase::Trap,
     Phase::Syscall,
     Phase::InterruptWork,
@@ -52,6 +60,10 @@ pub(super) const PHASES: [Phase; 30] = [
     Phase::Root,
     Phase::KernelMappings,
     Phase::ImageBatch,
+    Phase::ImageBacking,
+    Phase::ImageFile,
+    Phase::ImageZero,
+    Phase::ImagePublish,
     Phase::RegionTables,
     Phase::Framebuffer,
     Phase::Rollback,

@@ -1,6 +1,8 @@
 mod access;
 mod creation;
-pub use creation::LoadCursor;
+#[cfg(feature = "memory-lab")]
+pub use creation::LoadStage;
+pub use creation::{LoadBudget, LoadCursor};
 mod framebuffer;
 mod frames;
 mod image;

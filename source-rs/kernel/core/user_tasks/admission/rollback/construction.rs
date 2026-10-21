@@ -46,6 +46,20 @@ pub(super) unsafe fn physical(
         assert!(steps < image.bytes.div_ceil(4096) as usize + 128);
     }
     assert!(steps > 8); // 64 image pages + stack, not just a tiny probe.
+    // Initial synchronous roots do not contribute to these runtime observations.
+    // This fixture has 64 image pages plus the stack, each fully initialized and
+    // mapped exactly once before completion, regardless of the eight-page grouping.
+    let pages = 64 + crate::user_tasks::address_space::USER_STACK_PAGES;
+    use crate::user_tasks::execution::timing::Phase;
+    for phase in [Phase::ImageBacking, Phase::ImagePublish] {
+        assert_eq!(f.session.timing.count(phase), pages as u64);
+    }
+    assert_eq!(f.session.timing.count(Phase::ImageFile), 1); // one-byte RX segment
+    assert_eq!(f.session.timing.count(Phase::ImageZero), (pages - 1) as u64);
+    assert_eq!(
+        f.session.timing.count(Phase::ImageBatch),
+        pages.div_ceil(crate::user_tasks::admission::construction::PAGE_BATCH) as u64
+    );
     #[cfg(target_arch = "x86_64")]
     assert!(kernel_steps > 1); // The heap alone requires several supervisor batches.
     #[cfg(target_arch = "aarch64")]

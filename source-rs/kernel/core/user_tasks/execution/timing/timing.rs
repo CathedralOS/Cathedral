@@ -73,14 +73,19 @@ impl Timing {
         #[cfg(feature = "memory-lab")]
         {
             let elapsed = cathedral_arch::cpu_time_us().saturating_sub(start);
-            let sample = &mut self.samples[phase as usize];
-            sample.count = sample.count.saturating_add(1);
-            sample.total_us = sample.total_us.saturating_add(elapsed);
-            sample.max_us = sample.max_us.max(elapsed);
-            sample.over_ms = sample.over_ms.saturating_add(u64::from(elapsed >= 1_000));
+            self.record_elapsed(phase, elapsed);
         }
         #[cfg(not(feature = "memory-lab"))]
         let _ = (phase, start);
+    }
+
+    #[cfg(feature = "memory-lab")]
+    pub(in crate::user_tasks) fn record_elapsed(&mut self, phase: Phase, elapsed: u64) {
+        let sample = &mut self.samples[phase as usize];
+        sample.count = sample.count.saturating_add(1);
+        sample.total_us = sample.total_us.saturating_add(elapsed);
+        sample.max_us = sample.max_us.max(elapsed);
+        sample.over_ms = sample.over_ms.saturating_add(u64::from(elapsed >= 1_000));
     }
 
     /// Only after the session has stopped: no diagnostic I/O in the samples.

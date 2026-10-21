@@ -137,6 +137,8 @@ def main():
         print(f"{'phase':18} {'count':>9} {'mean us':>12} {'max us':>12} {'>=1 ms':>9}")
         for phase, (count, total, maximum, over) in sorted(phases.items(), key=lambda item: -item[1][2]):
             print(f"{phase:18} {count:9} {total / count:12.2f} {maximum:12} {over:9}")
+        if "ImageBacking" in phases:
+            print("ImageBacking/File/Zero/Publish: per-page attempts inside ImageBatch; File includes any zero tail, Publish includes cache maintenance and mapping.")
         if case in waits:
             print_waits(waits[case])
     print("\nOverlapping elapsed observations, including host descheduling and probe overhead; no WCET bound.")
