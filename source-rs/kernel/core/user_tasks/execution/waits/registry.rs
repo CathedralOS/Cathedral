@@ -3,7 +3,7 @@
 use crate::scheduler::deadlines::Deadlines;
 use cathedral_kernel_contracts::user as abi;
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub(in crate::user_tasks) enum Kind {
     Receive,
     Readiness,

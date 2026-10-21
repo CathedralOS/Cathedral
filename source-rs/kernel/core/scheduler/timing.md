@@ -108,7 +108,7 @@ restart debt, hierarchical overload and all-accounts-exhausted idle recovery.
 
 ## Buffered kernel-phase observations
 
-[Execution timing](../user_tasks/execution/timing.rs) records count, elapsed
+[Execution timing](../user_tasks/execution/timing/timing.rs) records count, elapsed
 microseconds, maximum and observations at least 1 ms for selected Rust bodies.
 The `memory-lab` feature used by smoke enables it. Counters are allocated once at
 session preparation; samples perform no allocation or serial output. Reports
@@ -135,6 +135,13 @@ entry/exit, and deferred samples omit the boot-loop suspension machinery. They
 are not complete IRQ-mask durations. Ordinary user diagnostic writes still
 appear within syscall samples. Initial boot admission is outside these runtime
 admission samples.
+
+[Registered-wait observations](../user_tasks/execution/timing/README.md) separately
+record completion-to-first-selection microseconds and deadline lateness in ticks.
+They include CPU-ceiling delays after a task becomes ready. Cancellation clears
+unfinished timestamps before reuse. Immediate results and non-wait wake paths
+are excluded; `--verify-waits` compares periodic samples to actual blocked waits,
+which can be fewer than the 16 jobs if later deadlines are already expired.
 
 `DecodeRoot` includes the first step's `Decode` and `Root` subspans. `Root` now
 ends after bare-root allocation (plus the constant ARM64 supervisor borrow);
@@ -191,8 +198,9 @@ allowed at map time, repeat reservation and complete failure rollback.
    ordering. Waiter retries now use finite eight-candidate visits and subtree
    withdrawal coalesces them once per sweep. The authority sweep itself,
    due-timer extraction and direct device wakes remain atomic.
-   Waiter and deferred-work indexes are in place. Extend observations to
-   distinguish becoming ready from actually being selected.
+   Waiter and deferred-work indexes are in place. Registered waits now distinguish
+   completion from first selection; use those observations before changing
+   dispatch policy. Other ready transitions remain outside these probes.
 2. Extend incremental allocation/admission/retirement to single-object mapping;
    backing refunds, allocation rollback and reference retirement now advance in
    batches. Measure remaining uninterrupted chunks under competing

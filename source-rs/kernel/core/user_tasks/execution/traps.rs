@@ -79,5 +79,7 @@ pub(super) unsafe fn schedule(context: &Context, cause: SwitchCause, now: u64) -
         arch::select_user_root(next.map(|slot| session.tasks[slot].space.as_ref().unwrap().root()));
     }
     session.timing.record(TimedPhase::Trap, trap_start);
+    #[cfg(feature = "memory-lab")]
+    session.timing.wait_selected(next);
     next.map_or(&session.boot, |slot| &session.tasks[slot].context)
 }

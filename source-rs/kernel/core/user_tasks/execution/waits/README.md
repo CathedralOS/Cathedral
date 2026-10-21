@@ -68,6 +68,11 @@ remain separate mechanisms. `WaitCompletion` phase samples include gathering
 and retry work, including invocations with no candidates; ordinary builds omit
 these timing clocks and storage.
 
+The completion owners also feed [wait-to-selection observations](../timing/README.md)
+in lab builds: after an actual unblock, retain a timestamp until first selection
+or cancellation. Deadline lateness and selection delay have separate units and
+sample populations. This does not alter the registry, authority or timeout rules.
+
 Device routes and the physical keyboard owner are cached from validated boot
 composition. Leased-device polling visits installed owners; it does not walk
 every process/launch to discover them. Those physical device bindings remain

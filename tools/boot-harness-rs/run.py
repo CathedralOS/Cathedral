@@ -19,6 +19,7 @@ import session_test
 import protocol_test
 import matrix_desktop_test
 import resource_budgets
+import timing_report
 
 REPO = Path(__file__).resolve().parents[2]
 WORKSPACE = REPO / "source-rs"
@@ -458,6 +459,13 @@ def main():
     # isa-debug-exit returns (guest_value << 1) | 1, so guest 0x10 means 33.
     if result.returncode != 33 or "CATHEDRAL_RS_PANIC" in serial:
         raise RuntimeError(f"Boot failed (QEMU exit {result.returncode}); logs: {output}")
+    if not args.kernel_only and not args.fault:
+        try:
+            cases = timing_report.verify_periodic_waits(serial)
+        except ValueError as error:
+            raise RuntimeError(f"Wait/selection observations failed: {error}; logs: {output}") from error
+        if cases != 5:
+            raise RuntimeError(f"Expected five periodic wait observations, got {cases}; logs: {output}")
     print("PASS: standalone kernel boot and raw user isolation" if args.kernel_only and not args.fault else f"PASS: expected {args.fault} exception" if args.fault else "PASS: boot, preemption, fault containment, static ELF programs, capability IPC, userspace supervision, deadline/display recovery and memory reclamation")
     return 0
 

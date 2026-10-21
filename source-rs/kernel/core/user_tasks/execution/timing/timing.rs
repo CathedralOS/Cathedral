@@ -1,87 +1,15 @@
-//! Buffered observations of uninterrupted kernel phases. Samples include nested
-//! phases and host descheduling; they are not additive or hardware latency bounds.
-//! The memory lab enables collection; ordinary builds erase the clocks/storage.
-#[derive(Clone, Copy, Debug)]
-pub(in crate::user_tasks) enum Phase {
-    Trap,
-    Syscall,
-    InterruptWork,
-    WaitCompletion,
-    Close,
-    Deferred,
-    Withdraw,
-    Retire,
-    Abandon,
-    Collect,
-    Conservation,
-    Admission,
-    DecodeRoot,
-    Decode,
-    Root,
-    KernelMappings,
-    ImageBatch,
-    RegionTables,
-    Framebuffer,
-    Rollback,
-    Escrow,
-    References,
-    Allocate,
-    Seal,
-    Map,
-    Release,
-    Freeze,
-    MapObject,
-    UnmapObject,
-    OtherMemory,
-}
-
+// Buffered kernel-phase and wait-to-selection observations. Reports are emitted
+// only after execution; phases overlap and include host descheduling.
+// The memory lab enables collection; ordinary builds erase the clocks/storage.
 #[cfg(feature = "memory-lab")]
-const PHASES: [Phase; 30] = [
-    Phase::Trap,
-    Phase::Syscall,
-    Phase::InterruptWork,
-    Phase::WaitCompletion,
-    Phase::Close,
-    Phase::Deferred,
-    Phase::Withdraw,
-    Phase::Retire,
-    Phase::Abandon,
-    Phase::Collect,
-    Phase::Conservation,
-    Phase::Admission,
-    Phase::DecodeRoot,
-    Phase::Decode,
-    Phase::Root,
-    Phase::KernelMappings,
-    Phase::ImageBatch,
-    Phase::RegionTables,
-    Phase::Framebuffer,
-    Phase::Rollback,
-    Phase::Escrow,
-    Phase::References,
-    Phase::Allocate,
-    Phase::Seal,
-    Phase::Map,
-    Phase::Release,
-    Phase::Freeze,
-    Phase::MapObject,
-    Phase::UnmapObject,
-    Phase::OtherMemory,
-];
-
-#[cfg(feature = "memory-lab")]
-#[derive(Clone, Copy, Default)]
-struct Sample {
-    count: u64,
-    total_us: u64,
-    max_us: u64,
-    over_ms: u64,
-}
+use phases::{PHASES, Sample};
 
 pub(in crate::user_tasks) struct Timing {
     // Allocate once at session preparation, never on a measured path or stack.
     #[cfg(feature = "memory-lab")]
     samples: alloc::vec::Vec<Sample>,
+    #[cfg(feature = "memory-lab")]
+    waits: waits::Observations,
 }
 
 #[inline]
@@ -107,10 +35,37 @@ impl Timing {
             let mut samples = alloc::vec::Vec::new();
             samples.try_reserve_exact(PHASES.len())?;
             samples.resize(PHASES.len(), Sample::default());
-            Ok(Self { samples })
+            Ok(Self {
+                samples,
+                waits: waits::Observations::try_new(cathedral_kernel_contracts::user::MAX_TASKS)?,
+            })
         }
         #[cfg(not(feature = "memory-lab"))]
         Ok(Self {})
+    }
+
+    #[cfg(feature = "memory-lab")]
+    pub(in crate::user_tasks) fn wait_ready(
+        &mut self,
+        slot: usize,
+        kind: super::waits::Kind,
+        deadline: Option<u64>,
+        now: u64,
+    ) {
+        self.waits
+            .complete(slot, kind, deadline, now, cathedral_arch::cpu_time_us());
+    }
+
+    #[cfg(feature = "memory-lab")]
+    pub(in crate::user_tasks) fn wait_selected(&mut self, next: Option<usize>) {
+        if let Some(slot) = next.filter(|&slot| self.waits.pending(slot)) {
+            self.waits.select(slot, cathedral_arch::cpu_time_us());
+        }
+    }
+
+    #[cfg(feature = "memory-lab")]
+    pub(in crate::user_tasks) fn cancel_wait(&mut self, slot: usize) {
+        self.waits.cancel(slot);
     }
 
     #[inline]
@@ -133,6 +88,7 @@ impl Timing {
         #[cfg(feature = "memory-lab")]
         {
             use core::fmt::Write;
+            self.waits.report(output);
             for phase in PHASES {
                 let sample = self.samples[phase as usize];
                 if sample.count == 0 {
@@ -157,12 +113,12 @@ impl Timing {
 }
 
 #[cfg(feature = "memory-lab")]
-struct Line {
-    bytes: [u8; 192],
+struct Line<const N: usize> {
+    bytes: [u8; N],
     len: usize,
 }
 #[cfg(feature = "memory-lab")]
-impl core::fmt::Write for Line {
+impl<const N: usize> core::fmt::Write for Line<N> {
     fn write_str(&mut self, text: &str) -> core::fmt::Result {
         let end = self.len + text.len();
         self.bytes

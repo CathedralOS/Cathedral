@@ -2,6 +2,8 @@
 use super::{Session, Work, abi};
 
 pub(super) fn task(session: &mut Session, slot: usize) {
+    #[cfg(feature = "memory-lab")]
+    session.timing.cancel_wait(slot);
     session.cancel_waiters &= !(1 << slot);
     session.waits.remove(slot);
     session.deferred.remove(Work::Memory, slot);

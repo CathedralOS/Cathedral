@@ -1,7 +1,7 @@
 # Rust reference OS: tasks and handoff
 
-Updated 2026-10-20 (local date). Current milestone: **coalesced subtree
-withdrawal**, on baseline `6552c20a` (batched wait completion).
+Updated 2026-10-20 (local date). Current milestone: **wait-to-selection
+observations**, on baseline `74ceb818` (coalesced subtree withdrawal).
 The latest section records verification and remaining steps toward bounded
 execution. This does not introduce real-time reservations.
 The fresh-lab reset is `30572c9f`. Compact recursive desktops landed as `c7571191`,
@@ -3594,7 +3594,7 @@ these mechanisms; no new owner decision is needed for this cleanup work.
 
 ## Kernel-phase observations and single-pass page edits (2026-10-20)
 
-Baseline: `09c1e774`. [Execution timing](source-rs/kernel/core/user_tasks/execution/timing.rs)
+Baseline: `09c1e774`. [Execution timing](source-rs/kernel/core/user_tasks/execution/timing/timing.rs)
 buffers selected uninterrupted Rust-body spans, including nested trap/deferred
 work, admission construction, reclamation and individual memory operations.
 Only `memory-lab` builds collect them; normal F5 builds have no additional sample
@@ -4194,3 +4194,63 @@ observations. The authority sweep, grant-table scans, deadline extraction and
 mapping edits still run atomically; a whole trap/boot turn is not limited to one
 waiter batch. The known intermittent clean-close LOSS timeout remains open.
 No owner semantics or application ABI changed, and no real-time guarantee follows.
+
+## Wait-to-selection observations (2026-10-20)
+
+Baseline: `74ceb818`. Registered IPC receives, readiness waits and child waits
+now record two separate observations in `memory-lab` builds: deadline lateness
+at completion in ticks, and elapsed microseconds from completion/unblock to the
+first selected return. The latter includes peer execution, boot work, CPU-ceiling
+gates and host descheduling. It ends before assembly restores user context; it
+does not timestamp the first user instruction or the original hardware event.
+
+The [timing entrance](source-rs/kernel/core/user_tasks/execution/timing/timing.rs)
+now lives in a named folder with separate phase definitions, wait observations
+and host tests. Rust module plumbing contains no implementation. Storage is
+reserved fallibly at session preparation; hooks allocate and print nothing.
+Ordinary builds omit the extra storage, clocks and hooks. The ARM64 heap-pressure
+fixture exercises 75 sampled startup refusals with the larger lab-only storage,
+with exact reclamation; debug boot retains its existing guarded stack size.
+
+`WAIT_DISPATCH` reports per-slot/per-kind completed, selected, canceled and still
+pending populations. Cancellation clears unfinished timestamps before slot
+reuse. Later returns cannot count a completion twice. Only selected observations
+contribute to selection durations; only reached deadlines contribute to lateness.
+Data/terminal-before-timeout rules are unchanged, so a reached deadline does not
+necessarily mean the wait returned a timeout. No-deadline waits, immediate
+syscall results and other wake mechanisms are not silently mixed into these
+populations. The [contract and reading guide](source-rs/kernel/core/user_tasks/execution/timing/README.md)
+records the full scope and units.
+
+[The report tool](tools/boot-harness-rs/timing_report.py) displays these spans
+separately from inclusive execution phases. `--verify-waits` checks periodic
+observations against the actual number of registered blocked waits. Normal x86
+smoke performs that check for all five periodic cases, requiring selected counts
+to agree and no pending/canceled samples. It imposes no latency threshold; zero
+blocked waits is valid when all deadlines are already expired at the call.
+The capped workload can therefore have fewer blocked-wait samples than its 16
+jobs. This is observable now rather than being mistaken for missing samples.
+
+Verification:
+
+- Workspace host tests pass, including a ready task held behind an actual
+  scheduler CPU ceiling, first-selection accounting, cancellation/reuse, zero
+  timestamps, deadline equality and wrapping ticks.
+- ARM64 debug/release portability and x86 release smoke pass. All five x86
+  periodic wait counts agree with selection reports. Report-tool tests reject
+  missing/duplicate/inconsistent observations and preserve separate populations.
+- Default x86 UEFI clippy, x86/ARM64 smoke clippy, source layout, formatting and
+  whitespace checks pass. No ordinary desktop policy or saved F5 media changed;
+  the nested desktop was not rerun for these lab-only hooks.
+- Logs: `build/dispatch-host.log`, `build/dispatch-core.log`,
+  `build/dispatch-arm64-debug.log`, `build/dispatch-arm64-release.log`,
+  `build/dispatch-x86-smoke.log`, `build/dispatch-report.log`,
+  `build/dispatch-x86-clippy.log`, `build/dispatch-x86-smoke-clippy.log`,
+  `build/dispatch-arm64-clippy.log`. Python check:
+  `python tools/boot-harness-rs/timing_report_test.py`.
+
+Next: use these observations to select the next remaining atomic mapping,
+authority or deadline operation. They do not justify changing CPU entitlement
+or assigning privileged processes implicit priority. Guaranteed service remains
+separate from ceilings. The intermittent clean-close LOSS timeout is still open;
+these probes have not reproduced or diagnosed it. No owner decision was needed.

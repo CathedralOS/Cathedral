@@ -58,8 +58,8 @@ pub(super) fn exercise(memory: &mut PreparedMemory, console: &mut SerialPort) {
         }
         writeln!(
             console,
-            "Cathedral CPU timing: periodic={:?} peer={:?}",
-            reports[0].cpu, reports[1].cpu
+            "Cathedral CPU timing: periodic={:?} peer={:?} periodic_waits={}",
+            reports[0].cpu, reports[1].cpu, reports[0].readiness_blocked
         )
         .ok();
         drop(reports);

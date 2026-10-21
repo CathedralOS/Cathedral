@@ -170,4 +170,13 @@ pub(in super::super) fn wake(session: &mut Session, slot: usize, now: u64) {
     session.waits.remove(slot);
     complete(session, slot, result);
     session.scheduler.unblock(slot);
+    #[cfg(feature = "memory-lab")]
+    if session.scheduler.states()[slot] == crate::scheduler::TaskState::Ready {
+        session.timing.wait_ready(
+            slot,
+            crate::user_tasks::execution::waits::Kind::Child,
+            wait.deadline,
+            now,
+        );
+    }
 }

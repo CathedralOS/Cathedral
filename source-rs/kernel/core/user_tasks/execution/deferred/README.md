@@ -173,7 +173,7 @@ eight frames per visit; several paths can advance within one boot step.
 Eight pages is an engineering work allowance, not a measured or certified latency limit. No new priority,
 reservation or application ABI is introduced.
 
-Smoke builds buffer phase observations in [execution timing](../timing.rs),
+Smoke builds buffer phase observations in [execution timing](../timing/timing.rs),
 reporting only after a session stops. The [timing audit](../../../scheduler/timing.md)
 describes the competing-memory workload, report command and measurement limits.
 Page-object seal/unmap use one ledger traversal; they remain atomic and preserve
