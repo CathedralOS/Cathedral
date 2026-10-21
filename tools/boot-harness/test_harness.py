@@ -32,8 +32,8 @@ class BootHarnessTests(unittest.TestCase):
             self.assertEqual((first / 'serial.log').read_bytes(), b'first')
 
     def test_smoke_requires_ordered_complete_reports_through_resident_readback(self):
-        boot.check_boot_milestones(b'Hello from Omega\r\nOwned 128 MiB\r\nKernel entered\r\nMemory split\r\nMemory checked\r\nMemory paired\r\nPage ready\r\n')
-        boot.check_boot_milestones(b'Hello from Omega\nOwned 99999+ MiB\nKernel entered\r\nMemory split\r\nMemory checked\nMemory paired\nPage ready\n')
+        boot.check_boot_milestones(b'Hello from Omega\r\nOwned 128 MiB\r\nKernel entered\r\nMemory split\r\nMemory checked\r\nMemory paired\r\nPage ready\r\nTables ready\r\n')
+        boot.check_boot_milestones(b'Hello from Omega\nOwned 99999+ MiB\nKernel entered\r\nMemory split\r\nMemory checked\nMemory paired\nPage ready\nTables ready\n')
         for output in (b'', b'Hello from Omega\r\n',
                        b'Owned 128 MiB\nHello from Omega\n',
                        b'Hello from Omega\nOwned rubbish MiB\n',
@@ -101,6 +101,15 @@ class BootHarnessTests(unittest.TestCase):
                 with self.assertRaises(subprocess.CalledProcessError):
                     boot.build_image(['omega'], Path('main.omg'), 'uefi_x86_64', directory)
             self.assertEqual(stale.read_bytes(), b'old')
+
+    def test_page_only_or_invalid_table_report_cannot_satisfy_smoke(self):
+        prefix = b'Hello from Omega\r\nOwned 128 MiB\r\nKernel entered\r\nMemory split\r\nMemory checked\r\nMemory paired\r\nPage ready\r\n'
+        for output in (prefix, prefix + b'Tables ready', prefix + b'Tables ready\r',
+                       prefix + b'Not Tables ready\r\n', b'Tables ready\r\n' + prefix,
+                       prefix.replace(b'Page ready\r\n', b'Tables ready\r\nPage ready\r\n')):
+            with self.subTest(output=output):
+                with self.assertRaisesRegex(ValueError, 'page-table links'):
+                    boot.check_boot_milestones(output)
 
     def test_success_without_product_rejects_stale_image(self):
         with tempfile.TemporaryDirectory() as temporary:

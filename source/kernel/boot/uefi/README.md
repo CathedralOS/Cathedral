@@ -20,8 +20,8 @@ prepares an aligned page from the outer remainder, retaining every skipped byte,
 the initialized page and the remaining tail with the context and image.
 
 The fresh-image harness requires `Hello from Omega`, a complete `Owned N MiB`
-line, `Kernel entered`, `Memory split`, `Memory checked`, `Memory paired`, and
-`Page ready`, in that order. The six-marker baseline reported 35 MiB in
+line, `Kernel entered`, `Memory split`, `Memory checked`, `Memory paired`,
+`Page ready`, and `Tables ready`, in that order. The six-marker baseline reported 35 MiB in
 QEMU/OVMF using Omega `9e04918b1d1`. The current source requires Omega's exact address-model
 typing, representation-recast effect tracking and occurrence-local state-prefix
 checking, in addition to the canonical `ProgramStorageEntryNativeProvider`,
@@ -72,7 +72,8 @@ separate backing and lifecycle obligations.
 
 The intended acceptance is one freshly compiled `uefi_x86_64` image under
 QEMU/OVMF: `Hello from Omega`, successful firmware exit, `Owned N MiB` over
-COM1, then `Kernel entered`, `Memory split`, `Memory checked`, `Memory paired`, and `Page ready`
+COM1, then `Kernel entered`, `Memory split`, `Memory checked`, `Memory paired`,
+`Page ready`, and `Tables ready`
 while retaining image, every initial-storage descendant and accounted surviving
 stack storage. `Memory checked` requires common-root reunion after all three partition sizes,
 initialization/readback of 17, write/readback/extraction of 29, and return of the
@@ -193,6 +194,36 @@ Changing only the expected extracted final word from 97 to 98 still boots throug
 The harness also rejects missing, partial, forged-prefix and out-of-order page
 markers. These observations do not establish page-table installation or validate
 the provider's external backing premise independently.
+
+## Retained inactive page tables
+
+After `Page ready`, the kernel passes the remaining vacant tail to the
+firmware-neutral `core::page_tables` builder and lends the existing resident
+page as the target. Four consecutive aligned pages hold PML4, PDPT, PD and PT
+words. Four Stable array permissions cover their 2048 slots; the builder uses
+the shared hardware-facts codec rather than relying on ordinary record layout.
+
+The selected leaf is RW, supervisor-only and NX; links are present and writable.
+The builder reads all four selected words from resident RAM, checks their exact
+encoding and link/endpoint consistency, then scans every other slot for zero.
+Only that complete readback permits `Tables ready`. Every outcome retains the
+target, alignment padding, table reservation and remaining storage.
+
+A fresh QEMU/OVMF image reaches all eight markers and reports 35 MiB.
+Changing only the first link from the PDPT page to the PD page still reaches
+`Page ready`, but suppresses `Tables ready` and fails the smoke oracle. This
+checks the resident link readback, not merely source-level codec arithmetic.
+Compilation needs Omega's declaration-preserving reference-call proof repair
+and occurrence-local cleanup case evidence: a rejected nested reservation
+must retain its storage even when earlier partial transfers retire live facts.
+
+The proposed 1-GiB virtual address is only a candidate. No virtual destination
+is reserved and no translations are installed. Activation still needs the live
+mapping policy, preserved image/private-stack mappings, a suitable CPU profile,
+hardware-aware table custody for accessed/dirty writes, root installation and
+TLB handling, and an actual mapped read/write witness. The ordinary Stable
+construction loan must end before hardware can walk these pages; a Boolean
+readback result grants none of that authority.
 
 The kernel currently retains its context, image and storage children in a halt loop;
 it does not yet install page tables, a general kernel heap, interrupts or a scheduler.

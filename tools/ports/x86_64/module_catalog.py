@@ -3,13 +3,13 @@ F='pure-fact-layout'; A='pure-algorithm'; E='existing-representation'; I='instru
 FACT='source/platform/drivers/facts/'
 CORE='source/kernel/core/'
 def ref(path,anchor):return {'path':path,'anchor':anchor}
-PTE=ref(FACT+'x86_page_table_entry.omg','pub data X86PageTableEntry')
+PTE=ref(FACT+'x86_page_table_entry.omg','public data X86PageTableEntry')
 IDT=ref(FACT+'x86_idt_gate.omg','pub data X86IdtGate')
 EXC=ref(FACT+'x86_exception_vectors.omg','pub const X86_EXCEPTION_VECTOR_COUNT')
 IST=ref(FACT+'x86_interrupt_stacks.omg','pub data X86IstStackClass')
-WALK=ref(CORE+'x86_page_table.omg','pub machine x86_validate_bootstrap_four_level_walk_descriptor')
-ADDR=ref(CORE+'x86_page_table.omg','pub machine x86_decompose_bootstrap_virtual_address')
-PHYS=ref(CORE+'x86_page_table.omg','pub machine x86_validate_bootstrap_physical_frame_geometry')
+WALK=ref(CORE+'x86_page_table.omg','public machine x86_validate_bootstrap_four_level_walk_descriptor')
+ADDR=ref(CORE+'x86_page_table.omg','public machine x86_decompose_bootstrap_virtual_address')
+PHYS=ref(CORE+'x86_page_table.omg','public machine x86_validate_bootstrap_physical_frame_geometry')
 APIC=ref(FACT+'local_apic.omg','pub const IA32_APIC_BASE_MSR')
 PORT=ref(CORE+'pic_8259.omg','reaches PortIo')
 MSR=ref(CORE+'x2apic_timer.omg','reaches MachineControl')

@@ -83,8 +83,13 @@ while leaving every non-address field uninterpreted. The source state
 represents one 4-KiB candidate as 512 existing 8-byte x86 PTE values. A checked 512-step scan
 accepts only exact all-zero/non-present encoding and returns the whole ordinary
 candidate; it does not establish storage, hierarchy page count, mapping, or
-installation. Physical placement still requires qualified pre-reserved backing;
-hierarchy storage and link construction remain.
+installation. `page_tables.omg` now connects those numeric checks to owned
+backing: it splits and retains four aligned resident pages, writes packed
+links and one RW/supervisor/NX leaf, and checks actual readback plus every unused
+slot. The boot continuation retains the target and all reservation children.
+This constructs an inactive hierarchy; destination authority, hardware-aware
+table custody, preservation of live image/stack mappings, CR3/TLB installation
+and a mapped access witness remain.
 
 The interrupt-provider bootstrap also has checked 8259 PIC and 8254 PIT
 port-operation helpers plus checked x2APIC one-shot, stop, and acknowledgement

@@ -1,4 +1,7 @@
-// source/drivers/facts/x86_page_table_entry.omg
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Packed codec adapted from the x86_64 page_table.rs port at
+// cc35c876d3badb57df54a66e22f7768a52be95f2 (previously in x86_64/page_entries.omg).
+// source/platform/drivers/facts/x86_page_table_entry.omg
 //
 // Pure x86-64 paging-entry geometry for the 52-bit architectural physical
 // address envelope. The corresponding x86_page_table_layout.omg is a placement policy, not page-table
@@ -9,12 +12,12 @@
 // under frame/mapping authority. Runtime-known addresses are ordinary data;
 // unlike IDT entry identities, they need no symbolic relocation source.
 
-pub const X86_PAGE_SHIFT: u8 = 12;
-pub const X86_PAGE_BYTES: u64 = 4096;
-pub const X86_MAX_PHYSICAL_ADDRESS_BITS: u8 = 52;
-pub const X86_PAGE_FRAME_NUMBER_MAX: u64 = 1099511627775;
+public const X86_PAGE_SHIFT: u8 = 12;
+public const X86_PAGE_BYTES: u64 = 4096;
+public const X86_MAX_PHYSICAL_ADDRESS_BITS: u8 = 52;
+public const X86_PAGE_FRAME_NUMBER_MAX: u64 = 1099511627775;
 
-pub data X86PageTableEntry {
+public data X86PageTableEntry {
     present: bool;
     writable: bool;
     user: bool;
@@ -29,4 +32,30 @@ pub data X86PageTableEntry {
     software_high: u8 [0..=127];
     protection_key: u8 [0..=15];
     no_execute: bool;
+}
+
+// The packed hardware representation belongs with its schema. Both the kernel
+// and the userspace x86-values port use this codec; neither receives authority
+// merely by encoding an address. Ordinary record layout is not a paging word.
+public machine x86_decode_page_table_entry(word: u64) -> X86PageTableEntry {
+    X86PageTableEntry {
+        present: (word & 1) != 0, writable: (word & 2) != 0,
+        user: (word & 4) != 0, write_through: (word & 8) != 0,
+        cache_disable: (word & 16) != 0, accessed: (word & 32) != 0,
+        dirty: (word & 64) != 0, page_size_or_pat: (word & 128) != 0,
+        global: (word & 256) != 0, software_low: ((word >> 9) & 7) as u8,
+        frame_number: (word >> 12) & 1099511627775,
+        software_high: ((word >> 52) & 127) as u8,
+        protection_key: ((word >> 59) & 15) as u8, no_execute: (word >> 63) != 0
+    }
+}
+
+public machine x86_encode_page_table_entry(value: &X86PageTableEntry) -> u64 {
+    (value.present as u64) | ((value.writable as u64) << 1) |
+    ((value.user as u64) << 2) | ((value.write_through as u64) << 3) |
+    ((value.cache_disable as u64) << 4) | ((value.accessed as u64) << 5) |
+    ((value.dirty as u64) << 6) | ((value.page_size_or_pat as u64) << 7) |
+    ((value.global as u64) << 8) | ((value.software_low as u64) << 9) |
+    (value.frame_number << 12) | ((value.software_high as u64) << 52) |
+    ((value.protection_key as u64) << 59) | ((value.no_execute as u64) << 63)
 }

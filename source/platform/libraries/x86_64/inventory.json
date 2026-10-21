@@ -661,11 +661,11 @@
       "comparison_targets": [
         {
           "path": "source/kernel/core/x86_page_table.omg",
-          "anchor": "pub machine x86_decompose_bootstrap_virtual_address"
+          "anchor": "public machine x86_decompose_bootstrap_virtual_address"
         },
         {
           "path": "source/kernel/core/x86_page_table.omg",
-          "anchor": "pub machine x86_validate_bootstrap_physical_frame_geometry"
+          "anchor": "public machine x86_validate_bootstrap_physical_frame_geometry"
         }
       ]
     },
@@ -1457,7 +1457,7 @@
       "comparison_targets": [
         {
           "path": "source/kernel/core/x86_page_table.omg",
-          "anchor": "pub machine x86_validate_bootstrap_four_level_walk_descriptor"
+          "anchor": "public machine x86_validate_bootstrap_four_level_walk_descriptor"
         }
       ]
     },
@@ -2035,7 +2035,7 @@
       "comparison_targets": [
         {
           "path": "source/kernel/core/x86_page_table.omg",
-          "anchor": "pub machine x86_decompose_bootstrap_virtual_address"
+          "anchor": "public machine x86_decompose_bootstrap_virtual_address"
         },
         {
           "path": "source/kernel/core/x2apic_timer.omg",
@@ -5168,11 +5168,11 @@
       "comparison_targets": [
         {
           "path": "source/platform/drivers/facts/x86_page_table_entry.omg",
-          "anchor": "pub data X86PageTableEntry"
+          "anchor": "public data X86PageTableEntry"
         },
         {
           "path": "source/kernel/core/x86_page_table.omg",
-          "anchor": "pub machine x86_validate_bootstrap_four_level_walk_descriptor"
+          "anchor": "public machine x86_validate_bootstrap_four_level_walk_descriptor"
         }
       ]
     },
@@ -5666,7 +5666,7 @@
       "comparison_targets": [
         {
           "path": "source/kernel/core/x86_page_table.omg",
-          "anchor": "pub machine x86_validate_bootstrap_physical_frame_geometry"
+          "anchor": "public machine x86_validate_bootstrap_physical_frame_geometry"
         }
       ]
     },
@@ -6007,7 +6007,7 @@
       "comparison_targets": [
         {
           "path": "source/kernel/core/x86_page_table.omg",
-          "anchor": "pub machine x86_validate_bootstrap_four_level_walk_descriptor"
+          "anchor": "public machine x86_validate_bootstrap_four_level_walk_descriptor"
         },
         {
           "path": "source/kernel/core/extent.omg",
@@ -6277,7 +6277,7 @@
       "comparison_targets": [
         {
           "path": "source/kernel/core/x86_page_table.omg",
-          "anchor": "pub machine x86_validate_bootstrap_four_level_walk_descriptor"
+          "anchor": "public machine x86_validate_bootstrap_four_level_walk_descriptor"
         },
         {
           "path": "source/kernel/core/extent.omg",
@@ -6485,7 +6485,7 @@
       "comparison_targets": [
         {
           "path": "source/kernel/core/x86_page_table.omg",
-          "anchor": "pub machine x86_validate_bootstrap_four_level_walk_descriptor"
+          "anchor": "public machine x86_validate_bootstrap_four_level_walk_descriptor"
         },
         {
           "path": "source/kernel/core/extent.omg",
@@ -6748,7 +6748,7 @@
       "comparison_targets": [
         {
           "path": "source/kernel/core/x86_page_table.omg",
-          "anchor": "pub machine x86_validate_bootstrap_four_level_walk_descriptor"
+          "anchor": "public machine x86_validate_bootstrap_four_level_walk_descriptor"
         },
         {
           "path": "source/kernel/core/extent.omg",
@@ -6846,11 +6846,11 @@
       "comparison_targets": [
         {
           "path": "source/platform/drivers/facts/x86_page_table_entry.omg",
-          "anchor": "pub data X86PageTableEntry"
+          "anchor": "public data X86PageTableEntry"
         },
         {
           "path": "source/kernel/core/x86_page_table.omg",
-          "anchor": "pub machine x86_validate_bootstrap_four_level_walk_descriptor"
+          "anchor": "public machine x86_validate_bootstrap_four_level_walk_descriptor"
         }
       ]
     },
@@ -7577,7 +7577,7 @@
       "comparison_targets": [
         {
           "path": "source/kernel/core/x86_page_table.omg",
-          "anchor": "pub machine x86_decompose_bootstrap_virtual_address"
+          "anchor": "public machine x86_decompose_bootstrap_virtual_address"
         }
       ]
     },
@@ -8107,11 +8107,11 @@
       "comparison_targets": [
         {
           "path": "source/platform/drivers/facts/x86_page_table_entry.omg",
-          "anchor": "pub data X86PageTableEntry"
+          "anchor": "public data X86PageTableEntry"
         },
         {
           "path": "source/kernel/core/x86_page_table.omg",
-          "anchor": "pub machine x86_validate_bootstrap_four_level_walk_descriptor"
+          "anchor": "public machine x86_validate_bootstrap_four_level_walk_descriptor"
         }
       ]
     },

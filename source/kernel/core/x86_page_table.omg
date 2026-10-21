@@ -11,17 +11,17 @@
 
 use facts::x86_page_table_entry;
 
-pub const X86_PAGE_TABLE_ENTRY_COUNT: u64 = 512;
-pub const X86_BOOTSTRAP_LOW_CANONICAL_MAX: u64 = 0x00007FFFFFFFFFFF;
-pub const X86_BOOTSTRAP_HIGH_CANONICAL_MIN: u64 = 0xFFFF800000000000;
-pub const X86_PAGE_TABLE_INDEX_MASK: u64 = 511;
-pub const X86_PAGE_OFFSET_MASK: u64 = 4095;
-pub const X86_MAX_ALIGNED_PHYSICAL_FRAME_ADDRESS: u64 = 0x000FFFFFFFFFF000;
+public const X86_PAGE_TABLE_ENTRY_COUNT: u64 = 512;
+public const X86_BOOTSTRAP_LOW_CANONICAL_MAX: u64 = 0x00007FFFFFFFFFFF;
+public const X86_BOOTSTRAP_HIGH_CANONICAL_MIN: u64 = 0xFFFF800000000000;
+public const X86_PAGE_TABLE_INDEX_MASK: u64 = 511;
+public const X86_PAGE_OFFSET_MASK: u64 = 4095;
+public const X86_MAX_ALIGNED_PHYSICAL_FRAME_ADDRESS: u64 = 0x000FFFFFFFFFF000;
 
 // Cathedral's first QEMU/UEFI-x64 bootstrap profile deliberately uses the
 // baseline four-level translation regime. LA57 remains a future alternate
 // platform profile rather than an inferred property of ordinary x86-64 code.
-pub data X86BootstrapAddressSpaceProfile {
+public data X86BootstrapAddressSpaceProfile {
     canonical_virtual_address_bits: u8;
     translation_level_count: u8;
     index_bits_per_level: u8;
@@ -34,7 +34,7 @@ pub data X86BootstrapAddressSpaceProfile {
 
 // Pure Cathedral policy data. It selects no virtual layout or page count and
 // grants no storage, mapping, placement, TLB, or machine-control authority.
-pub machine x86_bootstrap_address_space_profile()
+public machine x86_bootstrap_address_space_profile()
     -> X86BootstrapAddressSpaceProfile
 {
     X86BootstrapAddressSpaceProfile {
@@ -52,7 +52,7 @@ pub machine x86_bootstrap_address_space_profile()
 // Ordinary numeric decomposition under the selected four-level profile. The
 // original address is retained so later mapping policy can bind these indexes
 // to the exact request rather than treating them as a free-standing path.
-pub data X86BootstrapVirtualAddressIndices {
+public data X86BootstrapVirtualAddressIndices {
     address: u64;
     pml4_index: u64 [0..=511];
     pdpt_index: u64 [0..=511];
@@ -61,7 +61,7 @@ pub data X86BootstrapVirtualAddressIndices {
     page_offset: u64 [0..=4095];
 }
 
-pub data X86BootstrapVirtualAddressCheck {
+public data X86BootstrapVirtualAddressCheck {
     case Rejected;
     case Canonical(indices: X86BootstrapVirtualAddressIndices);
 }
@@ -69,7 +69,7 @@ pub data X86BootstrapVirtualAddressCheck {
 // Reject the noncanonical hole, then derive the exact page-walk indexes and
 // byte offset. Success remains ordinary data: it grants no Extent, frame,
 // hierarchy, mapping, placement, TLB, or installation authority.
-pub machine x86_decompose_bootstrap_virtual_address(
+public machine x86_decompose_bootstrap_virtual_address(
     address: u64
 ) -> X86BootstrapVirtualAddressCheck {
     // Bind the unsigned high bound to its u64 place before using it in the
@@ -112,7 +112,7 @@ pub machine x86_decompose_bootstrap_virtual_address(
 // consumer trusts its numeric coordinates. This proves only that the candidate
 // matches Cathedral's selected canonical-address profile; it grants no table,
 // mapping, backing, placement, TLB, or installation authority.
-pub machine x86_validate_bootstrap_virtual_address_indices(
+public machine x86_validate_bootstrap_virtual_address_indices(
     candidate: X86BootstrapVirtualAddressIndices
 ) -> X86BootstrapVirtualAddressCheck {
     let low_canonical_max: u64 = X86_BOOTSTRAP_LOW_CANONICAL_MAX;
@@ -155,19 +155,19 @@ pub machine x86_validate_bootstrap_virtual_address_indices(
 // is intentionally not a frame, mapping claim, or provider receipt. The later
 // authority-bearing page-table operation must rebind the same address and PFN
 // while holding the exact physical source and mapping authority.
-pub data X86BootstrapPhysicalFrameGeometry {
+public data X86BootstrapPhysicalFrameGeometry {
     address: u64;
     frame_number: u64 [0..=1099511627775];
 }
 
-pub data X86BootstrapPhysicalFrameGeometryCheck {
+public data X86BootstrapPhysicalFrameGeometryCheck {
     case Rejected;
     case GeometryConsistent(frame: X86BootstrapPhysicalFrameGeometry);
 }
 
 // Accept only a 4-KiB-aligned frame base inside the architectural 52-bit
 // physical-address envelope, then derive bits 12..51 as the bounded PFN.
-pub machine x86_validate_bootstrap_physical_frame_geometry(
+public machine x86_validate_bootstrap_physical_frame_geometry(
     address: u64
 ) -> X86BootstrapPhysicalFrameGeometryCheck {
     let page_offset: u64 [0..=4095] = address & X86_PAGE_OFFSET_MASK;
@@ -200,7 +200,7 @@ pub machine x86_validate_bootstrap_physical_frame_geometry(
 // Every non-address bit of one detached paging entry. Cathedral does not assign
 // role semantics here: in particular, `page_size_or_pat` remains the hardware
 // fact's role-dependent field, and the caller supplies every policy value.
-pub data X86BootstrapPageTableEntryNonAddressFields {
+public data X86BootstrapPageTableEntryNonAddressFields {
     present: bool;
     writable: bool;
     user: bool;
@@ -218,12 +218,12 @@ pub data X86BootstrapPageTableEntryNonAddressFields {
 
 // Ordinary detached encoding candidate. Retaining the numeric source address
 // prevents the derived PFN from becoming a free-standing address claim.
-pub data X86BootstrapAddressBoundPageTableEntryCandidate {
+public data X86BootstrapAddressBoundPageTableEntryCandidate {
     physical_address: u64;
     entry: X86PageTableEntry;
 }
 
-pub data X86BootstrapAddressBoundPageTableEntryCheck {
+public data X86BootstrapAddressBoundPageTableEntryCheck {
     case Rejected;
     case Composed(candidate: X86BootstrapAddressBoundPageTableEntryCandidate);
 }
@@ -232,7 +232,7 @@ pub data X86BootstrapAddressBoundPageTableEntryCheck {
 // explicitly. This establishes numeric consistency only. It does not validate
 // a leaf/link role, select page size or hierarchy policy, prove a frame or
 // backing exists, establish a mapping, or authorize placement/installation.
-pub machine x86_compose_bootstrap_address_bound_page_table_entry(
+public machine x86_compose_bootstrap_address_bound_page_table_entry(
     physical_address: u64,
     fields: X86BootstrapPageTableEntryNonAddressFields
 ) -> X86BootstrapAddressBoundPageTableEntryCheck {
@@ -283,7 +283,7 @@ pub machine x86_compose_bootstrap_address_bound_page_table_entry(
 // consumes it. The address must still be aligned and inside the selected
 // physical envelope, and the entry's PFN must be exactly derived from it. All
 // non-address fields remain uninterpreted ordinary data.
-pub machine x86_validate_bootstrap_address_bound_page_table_entry(
+public machine x86_validate_bootstrap_address_bound_page_table_entry(
     candidate: X86BootstrapAddressBoundPageTableEntryCandidate
 ) -> X86BootstrapAddressBoundPageTableEntryCheck {
     let page_offset: u64 [0..=4095] =
@@ -327,7 +327,7 @@ pub machine x86_validate_bootstrap_address_bound_page_table_entry(
 // which the detached entry was observed. The address-bound entry records the
 // numeric target encoded by bits 12..51. None of these values proves that the
 // table or target exists, is backed, belongs to Cathedral, or may be read.
-pub data X86BootstrapPageTableWalkStep {
+public data X86BootstrapPageTableWalkStep {
     table_address: u64;
     index: u64 [0..=511];
     entry_address: u64;
@@ -338,7 +338,7 @@ pub data X86BootstrapPageTableWalkStep {
 // Named fields make the level order explicit. The descriptor remains ordinary
 // pre-authority data: it is not a mapping, hierarchy, placement, frame, TLB, or
 // installation claim, and it assigns no leaf/link semantics to the entry bits.
-pub data X86BootstrapFourLevelWalkDescriptor {
+public data X86BootstrapFourLevelWalkDescriptor {
     indices: X86BootstrapVirtualAddressIndices;
     pml4: X86BootstrapPageTableWalkStep;
     pdpt: X86BootstrapPageTableWalkStep;
@@ -346,7 +346,7 @@ pub data X86BootstrapFourLevelWalkDescriptor {
     pt: X86BootstrapPageTableWalkStep;
 }
 
-pub data X86BootstrapFourLevelWalkDescriptorCheck {
+public data X86BootstrapFourLevelWalkDescriptorCheck {
     case Rejected;
     case NumericallyConsistent(
         descriptor: X86BootstrapFourLevelWalkDescriptor
@@ -358,7 +358,7 @@ pub data X86BootstrapFourLevelWalkDescriptorCheck {
 // entry address. The detached entry's target address and PFN must also retain
 // the already-selected 52-bit physical geometry.
 machine x86_bootstrap_page_table_walk_step_is_consistent(
-    step: X86BootstrapPageTableWalkStep,
+    step: &X86BootstrapPageTableWalkStep,
     expected_index: u64 [0..=511]
 ) -> bool {
     let table_page_offset: u64 [0..=4095] =
@@ -387,7 +387,7 @@ machine x86_bootstrap_page_table_walk_step_is_consistent(
 // entry's detached target is only checked as aligned address/PFN data. Success
 // does not establish that any entry is present, that large pages are disabled,
 // that the PT target is backed, or that a hardware translation exists.
-pub machine x86_validate_bootstrap_four_level_walk_descriptor(
+public machine x86_validate_bootstrap_four_level_walk_descriptor(
     candidate: X86BootstrapFourLevelWalkDescriptor
 ) -> X86BootstrapFourLevelWalkDescriptorCheck {
     let low_canonical_max: u64 = X86_BOOTSTRAP_LOW_CANONICAL_MAX;
@@ -404,22 +404,22 @@ pub machine x86_validate_bootstrap_four_level_walk_descriptor(
         candidate.indices.address & X86_PAGE_OFFSET_MASK;
     let pml4_consistent: bool =
         x86_bootstrap_page_table_walk_step_is_consistent(
-            candidate.pml4,
+            &candidate.pml4,
             pml4_index
         );
     let pdpt_consistent: bool =
         x86_bootstrap_page_table_walk_step_is_consistent(
-            candidate.pdpt,
+            &candidate.pdpt,
             pdpt_index
         );
     let pd_consistent: bool =
         x86_bootstrap_page_table_walk_step_is_consistent(
-            candidate.pd,
+            &candidate.pd,
             pd_index
         );
     let pt_consistent: bool =
         x86_bootstrap_page_table_walk_step_is_consistent(
-            candidate.pt,
+            &candidate.pt,
             pt_index
         );
     transition (
@@ -467,14 +467,14 @@ pub machine x86_validate_bootstrap_four_level_walk_descriptor(
 // PT entry remains caller-supplied PAT data, and every other permission/cache
 // field remains uninterpreted. Success grants no backing, mapping, placement,
 // TLB, installation, CR3, or machine-control authority.
-pub data X86BootstrapFourLevelWalkRoleCheck {
+public data X86BootstrapFourLevelWalkRoleCheck {
     case Rejected;
     case RoleConsistent(
         descriptor: X86BootstrapFourLevelWalkDescriptor
     );
 }
 
-pub machine x86_validate_bootstrap_four_level_walk_roles(
+public machine x86_validate_bootstrap_four_level_walk_roles(
     candidate: X86BootstrapFourLevelWalkDescriptor
 ) -> X86BootstrapFourLevelWalkRoleCheck {
     let numeric: X86BootstrapFourLevelWalkDescriptorCheck =
@@ -523,20 +523,20 @@ pub machine x86_validate_bootstrap_four_level_walk_roles(
 // entry. This intent data chooses no virtual layout or permission/cache policy
 // and grants no Extent, backing, hierarchy-page, mapping, placement, TLB,
 // installation, CR3, or machine-control authority.
-pub data X86BootstrapFourKilobyteWalkEndpoints {
+public data X86BootstrapFourKilobyteWalkEndpoints {
     virtual_page_address: u64;
     physical_frame_address: u64;
     descriptor: X86BootstrapFourLevelWalkDescriptor;
 }
 
-pub data X86BootstrapFourKilobyteWalkEndpointCheck {
+public data X86BootstrapFourKilobyteWalkEndpointCheck {
     case Rejected;
     case EndpointConsistent(
         candidate: X86BootstrapFourKilobyteWalkEndpoints
     );
 }
 
-pub machine x86_validate_bootstrap_four_kilobyte_walk_endpoints(
+public machine x86_validate_bootstrap_four_kilobyte_walk_endpoints(
     candidate: X86BootstrapFourKilobyteWalkEndpoints
 ) -> X86BootstrapFourKilobyteWalkEndpointCheck {
     let virtual_page_address: u64 = candidate.virtual_page_address;
@@ -597,11 +597,11 @@ pub machine x86_validate_bootstrap_four_kilobyte_walk_endpoints(
 // Ordinary candidate data. A future placed-page provider must bind this shape
 // to pre-reserved qualified storage; declaring the array grants no Extent,
 // capacity, placement, mapping, or installation authority.
-pub data X86PageTablePageCandidate {
+public data X86PageTablePageCandidate {
     entries: [X86PageTableEntry; 512];
 }
 
-pub data X86EmptyPageTablePagePolicyCheck {
+public data X86EmptyPageTablePagePolicyCheck {
     case Rejected;
     case ZeroConsistent(candidate: X86PageTablePageCandidate);
 }
@@ -610,7 +610,7 @@ pub data X86EmptyPageTablePagePolicyCheck {
 // insufficient for this bootstrap baseline: accepting residual software or
 // address bits would make zero-initialized storage and a reused dirty page
 // indistinguishable at the policy boundary.
-machine x86_page_table_entry_is_zero(entry: X86PageTableEntry) -> bool {
+machine x86_page_table_entry_is_zero(entry: &X86PageTableEntry) -> bool {
     !entry.present &&
     !entry.writable &&
     !entry.user &&
@@ -629,7 +629,7 @@ machine x86_page_table_entry_is_zero(entry: X86PageTableEntry) -> bool {
 
 // Validate the whole page as one transaction. A failed slot rejects the page;
 // no partially checked candidate escapes.
-pub machine x86_validate_empty_page_table_page(
+public machine x86_validate_empty_page_table_page(
     candidate: X86PageTablePageCandidate
 ) -> X86EmptyPageTablePagePolicyCheck {
     x86_scan_empty_page_table_page(candidate, X86_PAGE_TABLE_ENTRY_COUNT, true)
@@ -647,7 +647,7 @@ terminates by remaining;
 -> X86EmptyPageTablePagePolicyCheck
 {
     let index: u64 [0..=511] = X86_PAGE_TABLE_ENTRY_COUNT - remaining;
-    let entry: X86PageTableEntry = candidate.entries[index];
+    let entry: &X86PageTableEntry = &candidate.entries[index];
     let still_zero: bool = zero_so_far && x86_page_table_entry_is_zero(entry);
     transition remaining > 1 {
         true -> x86_scan_empty_page_table_page(
@@ -685,12 +685,12 @@ terminates by remaining;
 // its sole populated slot. The retained table and target addresses remain
 // numeric data; this carrier establishes no backing, placement, hierarchy,
 // mapping, TLB, installation, CR3, or machine-control authority.
-pub data X86BootstrapSingleEntryPageImageCandidate {
+public data X86BootstrapSingleEntryPageImageCandidate {
     step: X86BootstrapPageTableWalkStep;
     page: X86PageTablePageCandidate;
 }
 
-pub data X86BootstrapSingleEntryPageImageCheck {
+public data X86BootstrapSingleEntryPageImageCheck {
     case Rejected;
     case ImageConsistent(
         candidate: X86BootstrapSingleEntryPageImageCandidate
@@ -701,8 +701,8 @@ pub data X86BootstrapSingleEntryPageImageCheck {
 // permission, cache, software, address, and role-dependent field is copied as
 // uninterpreted data rather than inferred or normalized here.
 machine x86_page_table_entries_are_equal(
-    left: X86PageTableEntry,
-    right: X86PageTableEntry
+    left: &X86PageTableEntry,
+    right: &X86PageTableEntry
 ) -> bool {
     left.present == right.present &&
     left.writable == right.writable &&
@@ -726,22 +726,22 @@ machine x86_page_table_entries_are_equal(
 // level step retained by the endpoint-consistent descriptor without assigning
 // any further meaning to the entry fields.
 machine x86_bootstrap_page_table_walk_steps_are_equal(
-    left: X86BootstrapPageTableWalkStep,
-    right: X86BootstrapPageTableWalkStep
+    left: &X86BootstrapPageTableWalkStep,
+    right: &X86BootstrapPageTableWalkStep
 ) -> bool {
     left.table_address == right.table_address &&
     left.index == right.index &&
     left.entry_address == right.entry_address &&
     left.entry.physical_address == right.entry.physical_address &&
-    x86_page_table_entries_are_equal(left.entry.entry, right.entry.entry)
+    x86_page_table_entries_are_equal(&left.entry.entry, &right.entry.entry)
 }
 
 // Keep the selected-versus-zero policy explicit while leaving the recursive
 // scanner with one visibly decreasing edge. The selected slot preserves every
 // retained entry field; an unselected slot preserves the exact-zero baseline.
 machine x86_bootstrap_single_entry_page_slot_is_consistent(
-    entry: X86PageTableEntry,
-    expected: X86PageTableEntry,
+    entry: &X86PageTableEntry,
+    expected: &X86PageTableEntry,
     selected: bool
 ) -> bool {
     transition selected {
@@ -750,14 +750,14 @@ machine x86_bootstrap_single_entry_page_slot_is_consistent(
     }
 
     state compare_selected_bootstrap_page_entry(
-        entry: X86PageTableEntry,
-        expected: X86PageTableEntry
+        entry: &X86PageTableEntry,
+        expected: &X86PageTableEntry
     ) -> bool {
         x86_page_table_entries_are_equal(entry, expected)
     }
 
     state compare_zero_bootstrap_page_entry(
-        entry: X86PageTableEntry
+        entry: &X86PageTableEntry
     ) -> bool {
         x86_page_table_entry_is_zero(entry)
     }
@@ -765,12 +765,12 @@ machine x86_bootstrap_single_entry_page_slot_is_consistent(
 
 // Validate the complete final image as one transaction. Step geometry and a
 // present selected entry are prerequisites; no partial image escapes failure.
-pub machine x86_validate_bootstrap_single_entry_page_image(
+public machine x86_validate_bootstrap_single_entry_page_image(
     candidate: X86BootstrapSingleEntryPageImageCandidate
 ) -> X86BootstrapSingleEntryPageImageCheck {
     let step_consistent: bool =
         x86_bootstrap_page_table_walk_step_is_consistent(
-            candidate.step,
+            &candidate.step,
             candidate.step.index
         );
     transition step_consistent && candidate.step.entry.entry.present {
@@ -801,12 +801,12 @@ terminates by remaining;
 -> X86BootstrapSingleEntryPageImageCheck
 {
     let index: u64 [0..=511] = X86_PAGE_TABLE_ENTRY_COUNT - remaining;
-    let entry: X86PageTableEntry = candidate.page.entries[index];
+    let entry: &X86PageTableEntry = &candidate.page.entries[index];
     let selected: bool = index == candidate.step.index;
     let slot_consistent: bool =
         x86_bootstrap_single_entry_page_slot_is_consistent(
             entry,
-            candidate.step.entry.entry,
+            &candidate.step.entry.entry,
             selected
         );
     let still_consistent: bool = consistent_so_far && slot_consistent;
@@ -853,7 +853,7 @@ terminates by remaining;
 // they prove no backing, placement, hierarchy ownership, mapping, TLB state,
 // installation, CR3 value, or machine-control authority and choose no layout,
 // permission, or cache policy.
-pub data X86BootstrapFourPageWalkImageCandidate {
+public data X86BootstrapFourPageWalkImageCandidate {
     endpoints: X86BootstrapFourKilobyteWalkEndpoints;
     pml4: X86BootstrapSingleEntryPageImageCandidate;
     pdpt: X86BootstrapSingleEntryPageImageCandidate;
@@ -861,7 +861,7 @@ pub data X86BootstrapFourPageWalkImageCandidate {
     pt: X86BootstrapSingleEntryPageImageCandidate;
 }
 
-pub data X86BootstrapFourPageWalkImageCheck {
+public data X86BootstrapFourPageWalkImageCheck {
     case Rejected;
     case ImagesConsistent(
         candidate: X86BootstrapFourPageWalkImageCandidate
@@ -871,7 +871,7 @@ pub data X86BootstrapFourPageWalkImageCheck {
 // Replay the endpoint/role/descriptor policy and each complete single-entry
 // image independently. Only the exact successful payload from every validator
 // reaches the final level-binding check.
-pub machine x86_validate_bootstrap_four_page_walk_images(
+public machine x86_validate_bootstrap_four_page_walk_images(
     candidate: X86BootstrapFourPageWalkImageCandidate
 ) -> X86BootstrapFourPageWalkImageCheck {
     let pml4: X86BootstrapSingleEntryPageImageCandidate = candidate.pml4;
@@ -996,23 +996,23 @@ pub machine x86_validate_bootstrap_four_page_walk_images(
     ) -> X86BootstrapFourPageWalkImageCheck {
         let pml4_matches: bool =
             x86_bootstrap_page_table_walk_steps_are_equal(
-                pml4.step,
-                endpoints.descriptor.pml4
+                &pml4.step,
+                &endpoints.descriptor.pml4
             );
         let pdpt_matches: bool =
             x86_bootstrap_page_table_walk_steps_are_equal(
-                pdpt.step,
-                endpoints.descriptor.pdpt
+                &pdpt.step,
+                &endpoints.descriptor.pdpt
             );
         let pd_matches: bool =
             x86_bootstrap_page_table_walk_steps_are_equal(
-                pd.step,
-                endpoints.descriptor.pd
+                &pd.step,
+                &endpoints.descriptor.pd
             );
         let pt_matches: bool =
             x86_bootstrap_page_table_walk_steps_are_equal(
-                pt.step,
-                endpoints.descriptor.pt
+                &pt.step,
+                &endpoints.descriptor.pt
             );
         transition pml4_matches && pdpt_matches && pd_matches && pt_matches {
             true -> accept_bootstrap_four_page_walk_images(

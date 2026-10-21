@@ -526,7 +526,7 @@
           "targets": [
             {
               "path": "source/platform/libraries/x86_64/page_entries.omg",
-              "anchor": "pub machine set_flags("
+              "anchor": "public machine set_flags("
             }
           ]
         },
@@ -537,7 +537,7 @@
           "targets": [
             {
               "path": "source/platform/libraries/x86_64/page_entries.omg",
-              "anchor": "pub const ADDRESS_MASK:"
+              "anchor": "public const ADDRESS_MASK:"
             }
           ]
         },
@@ -563,7 +563,7 @@
           "targets": [
             {
               "path": "source/platform/drivers/facts/x86_page_table_entry.omg",
-              "anchor": "pub data X86PageTableEntry {"
+              "anchor": "public data X86PageTableEntry {"
             }
           ]
         },
@@ -574,7 +574,7 @@
           "targets": [
             {
               "path": "source/platform/libraries/x86_64/page_entries.omg",
-              "anchor": "pub machine decode("
+              "anchor": "public machine decode("
             }
           ]
         },
@@ -585,7 +585,7 @@
           "targets": [
             {
               "path": "source/platform/libraries/x86_64/page_entries.omg",
-              "anchor": "pub machine decode("
+              "anchor": "public machine decode("
             }
           ]
         },
@@ -596,7 +596,7 @@
           "targets": [
             {
               "path": "source/platform/libraries/x86_64/page_entries.omg",
-              "anchor": "pub machine decode("
+              "anchor": "public machine decode("
             }
           ]
         },
@@ -607,7 +607,7 @@
           "targets": [
             {
               "path": "source/platform/libraries/x86_64/page_entries.omg",
-              "anchor": "pub machine decode("
+              "anchor": "public machine decode("
             }
           ]
         },
@@ -618,7 +618,7 @@
           "targets": [
             {
               "path": "source/platform/libraries/x86_64/page_entries.omg",
-              "anchor": "pub machine decode("
+              "anchor": "public machine decode("
             }
           ]
         },
@@ -629,7 +629,7 @@
           "targets": [
             {
               "path": "source/platform/libraries/x86_64/page_entries.omg",
-              "anchor": "pub machine decode("
+              "anchor": "public machine decode("
             }
           ]
         },
@@ -640,7 +640,7 @@
           "targets": [
             {
               "path": "source/platform/libraries/x86_64/page_entries.omg",
-              "anchor": "pub machine decode("
+              "anchor": "public machine decode("
             }
           ]
         },
@@ -651,7 +651,7 @@
           "targets": [
             {
               "path": "source/platform/libraries/x86_64/page_entries.omg",
-              "anchor": "pub machine decode("
+              "anchor": "public machine decode("
             }
           ]
         },
@@ -662,7 +662,7 @@
           "targets": [
             {
               "path": "source/platform/libraries/x86_64/page_entries.omg",
-              "anchor": "pub machine decode("
+              "anchor": "public machine decode("
             }
           ]
         },
@@ -673,7 +673,7 @@
           "targets": [
             {
               "path": "source/platform/libraries/x86_64/page_entries.omg",
-              "anchor": "pub machine decode("
+              "anchor": "public machine decode("
             }
           ]
         },
@@ -684,7 +684,7 @@
           "targets": [
             {
               "path": "source/platform/libraries/x86_64/page_entries.omg",
-              "anchor": "pub machine decode("
+              "anchor": "public machine decode("
             }
           ]
         },
@@ -695,7 +695,7 @@
           "targets": [
             {
               "path": "source/platform/libraries/x86_64/page_entries.omg",
-              "anchor": "pub machine decode("
+              "anchor": "public machine decode("
             }
           ]
         },
@@ -706,7 +706,7 @@
           "targets": [
             {
               "path": "source/platform/libraries/x86_64/page_entries.omg",
-              "anchor": "pub machine decode("
+              "anchor": "public machine decode("
             }
           ]
         },
@@ -717,7 +717,7 @@
           "targets": [
             {
               "path": "source/platform/libraries/x86_64/page_entries.omg",
-              "anchor": "pub machine decode("
+              "anchor": "public machine decode("
             }
           ]
         },
@@ -728,7 +728,7 @@
           "targets": [
             {
               "path": "source/platform/libraries/x86_64/page_entries.omg",
-              "anchor": "pub machine decode("
+              "anchor": "public machine decode("
             }
           ]
         },
@@ -739,7 +739,7 @@
           "targets": [
             {
               "path": "source/platform/libraries/x86_64/page_entries.omg",
-              "anchor": "pub machine decode("
+              "anchor": "public machine decode("
             }
           ]
         },
@@ -750,7 +750,7 @@
           "targets": [
             {
               "path": "source/platform/libraries/x86_64/page_entries.omg",
-              "anchor": "pub machine decode("
+              "anchor": "public machine decode("
             }
           ]
         },
@@ -761,7 +761,7 @@
           "targets": [
             {
               "path": "source/platform/libraries/x86_64/page_entries.omg",
-              "anchor": "pub machine decode("
+              "anchor": "public machine decode("
             }
           ]
         },
@@ -772,7 +772,7 @@
           "targets": [
             {
               "path": "source/platform/libraries/x86_64/page_entries.omg",
-              "anchor": "pub machine decode("
+              "anchor": "public machine decode("
             }
           ]
         },
@@ -783,7 +783,7 @@
           "targets": [
             {
               "path": "source/platform/libraries/x86_64/page_entries.omg",
-              "anchor": "pub machine decode("
+              "anchor": "public machine decode("
             }
           ]
         },
@@ -794,7 +794,7 @@
           "targets": [
             {
               "path": "source/platform/libraries/x86_64/page_entries.omg",
-              "anchor": "pub machine decode("
+              "anchor": "public machine decode("
             }
           ]
         },
@@ -805,7 +805,7 @@
           "targets": [
             {
               "path": "source/platform/libraries/x86_64/page_entries.omg",
-              "anchor": "pub data FrameResult {"
+              "anchor": "public data FrameResult {"
             }
           ]
         },
@@ -816,7 +816,7 @@
           "targets": [
             {
               "path": "source/platform/libraries/x86_64/page_entries.omg",
-              "anchor": "pub machine decode("
+              "anchor": "public machine decode("
             }
           ]
         },
@@ -827,7 +827,7 @@
           "targets": [
             {
               "path": "source/platform/libraries/x86_64/page_entries.omg",
-              "anchor": "pub machine decode("
+              "anchor": "public machine decode("
             }
           ]
         },
@@ -838,7 +838,7 @@
           "targets": [
             {
               "path": "source/platform/libraries/x86_64/page_entries.omg",
-              "anchor": "pub machine decode("
+              "anchor": "public machine decode("
             }
           ]
         },
@@ -860,7 +860,7 @@
           "targets": [
             {
               "path": "source/kernel/core/x86_page_table.omg",
-              "anchor": "pub data X86PageTablePageCandidate {"
+              "anchor": "public data X86PageTablePageCandidate {"
             }
           ]
         },
@@ -1006,7 +1006,7 @@
           "targets": [
             {
               "path": "source/platform/libraries/x86_64/page_entries.omg",
-              "anchor": "pub machine index_checked("
+              "anchor": "public machine index_checked("
             }
           ]
         },
@@ -1017,7 +1017,7 @@
           "targets": [
             {
               "path": "source/platform/libraries/x86_64/page_entries.omg",
-              "anchor": "pub machine index_checked("
+              "anchor": "public machine index_checked("
             }
           ]
         },
@@ -1028,7 +1028,7 @@
           "targets": [
             {
               "path": "source/platform/libraries/x86_64/page_entries.omg",
-              "anchor": "pub machine index_truncate("
+              "anchor": "public machine index_truncate("
             }
           ]
         },
@@ -1039,7 +1039,7 @@
           "targets": [
             {
               "path": "source/platform/drivers/facts/x86_page_table_entry.omg",
-              "anchor": "pub data X86PageTableEntry {"
+              "anchor": "public data X86PageTableEntry {"
             }
           ]
         },
@@ -1075,7 +1075,7 @@
           "targets": [
             {
               "path": "source/platform/libraries/x86_64/page_entries.omg",
-              "anchor": "pub machine index_distance("
+              "anchor": "public machine index_distance("
             }
           ]
         },
@@ -1086,7 +1086,7 @@
           "targets": [
             {
               "path": "source/platform/libraries/x86_64/page_entries.omg",
-              "anchor": "pub machine index_step("
+              "anchor": "public machine index_step("
             }
           ]
         },
@@ -1097,7 +1097,7 @@
           "targets": [
             {
               "path": "source/platform/libraries/x86_64/page_entries.omg",
-              "anchor": "pub machine index_step("
+              "anchor": "public machine index_step("
             }
           ]
         },
@@ -1108,7 +1108,7 @@
           "targets": [
             {
               "path": "source/platform/libraries/x86_64/page_entries.omg",
-              "anchor": "pub machine index_overflowing("
+              "anchor": "public machine index_overflowing("
             }
           ]
         },
@@ -1119,7 +1119,7 @@
           "targets": [
             {
               "path": "source/platform/libraries/x86_64/page_entries.omg",
-              "anchor": "pub machine index_overflowing("
+              "anchor": "public machine index_overflowing("
             }
           ]
         },
@@ -1130,7 +1130,7 @@
           "targets": [
             {
               "path": "source/platform/libraries/x86_64/page_entries.omg",
-              "anchor": "pub machine decode("
+              "anchor": "public machine decode("
             }
           ]
         },
@@ -1141,7 +1141,7 @@
           "targets": [
             {
               "path": "source/platform/libraries/x86_64/page_entries.omg",
-              "anchor": "pub machine offset_checked("
+              "anchor": "public machine offset_checked("
             }
           ]
         },
@@ -1152,7 +1152,7 @@
           "targets": [
             {
               "path": "source/platform/libraries/x86_64/page_entries.omg",
-              "anchor": "pub machine offset_checked("
+              "anchor": "public machine offset_checked("
             }
           ]
         },
@@ -1163,7 +1163,7 @@
           "targets": [
             {
               "path": "source/platform/libraries/x86_64/page_entries.omg",
-              "anchor": "pub machine offset_truncate("
+              "anchor": "public machine offset_truncate("
             }
           ]
         },
@@ -1194,7 +1194,7 @@
           "targets": [
             {
               "path": "source/platform/libraries/x86_64/page_entries.omg",
-              "anchor": "pub machine next_level("
+              "anchor": "public machine next_level("
             }
           ]
         },
@@ -1205,7 +1205,7 @@
           "targets": [
             {
               "path": "source/platform/libraries/x86_64/page_entries.omg",
-              "anchor": "pub machine next_level("
+              "anchor": "public machine next_level("
             }
           ]
         },
@@ -1216,7 +1216,7 @@
           "targets": [
             {
               "path": "source/platform/libraries/x86_64/page_entries.omg",
-              "anchor": "pub machine is_unused("
+              "anchor": "public machine is_unused("
             }
           ]
         },
@@ -1227,7 +1227,7 @@
           "targets": [
             {
               "path": "source/platform/libraries/x86_64/page_entries.omg",
-              "anchor": "pub machine next_level("
+              "anchor": "public machine next_level("
             }
           ]
         },
@@ -1238,7 +1238,7 @@
           "targets": [
             {
               "path": "source/platform/libraries/x86_64/page_entries.omg",
-              "anchor": "pub machine next_level("
+              "anchor": "public machine next_level("
             }
           ]
         },
@@ -1249,7 +1249,7 @@
           "targets": [
             {
               "path": "source/platform/libraries/x86_64/page_entries.omg",
-              "anchor": "pub machine level_alignment("
+              "anchor": "public machine level_alignment("
             }
           ]
         },
@@ -1260,7 +1260,7 @@
           "targets": [
             {
               "path": "source/platform/libraries/x86_64/page_entries.omg",
-              "anchor": "pub machine level_alignment("
+              "anchor": "public machine level_alignment("
             }
           ]
         },
@@ -1287,7 +1287,7 @@
           "targets": [
             {
               "path": "source/platform/libraries/x86_64/page_entries.omg",
-              "anchor": "pub machine decode("
+              "anchor": "public machine decode("
             }
           ]
         },
@@ -1298,7 +1298,7 @@
           "targets": [
             {
               "path": "source/platform/libraries/x86_64/page_entries.omg",
-              "anchor": "pub machine flags("
+              "anchor": "public machine flags("
             }
           ]
         },
@@ -1309,7 +1309,7 @@
           "targets": [
             {
               "path": "source/platform/libraries/x86_64/page_entries.omg",
-              "anchor": "pub machine address("
+              "anchor": "public machine address("
             }
           ]
         },
@@ -1320,7 +1320,7 @@
           "targets": [
             {
               "path": "source/platform/libraries/x86_64/page_entries.omg",
-              "anchor": "pub machine frame("
+              "anchor": "public machine frame("
             }
           ]
         },
@@ -1331,7 +1331,7 @@
           "targets": [
             {
               "path": "source/platform/libraries/x86_64/page_entries.omg",
-              "anchor": "pub machine set_address("
+              "anchor": "public machine set_address("
             }
           ]
         },
@@ -1342,7 +1342,7 @@
           "targets": [
             {
               "path": "source/platform/libraries/x86_64/page_entries.omg",
-              "anchor": "pub machine set_frame("
+              "anchor": "public machine set_frame("
             }
           ]
         }

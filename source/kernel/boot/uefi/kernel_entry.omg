@@ -3,6 +3,14 @@ use omega::language::core::assembly;
 use omega::language::core::layout;
 use memory_lifecycle;
 use page_frame;
+use core::page_tables;
+
+data BootPageTables {
+    leading: Extent in Granted & Vacant;
+    target_padding: Extent in Granted & Vacant;
+    target: Extent in Granted & Resident<KernelPagePlacement, KernelPage>;
+    reservation: PageTableReservation;
+}
 
 data KernelState {
     entered: bool;
@@ -381,7 +389,99 @@ invokes PlacementLifecycle;
         asm { out 1016, 121 } // y
         asm { out 1016, 13 }
         asm { out 1016, 10 }
-        transition { _ -> retain_page(context, image, pair, page) }
+        transition page.reservation.tail.length >= 20479 {
+            true -> prepare_tables(context, image, pair, page)
+            _ -> retain_page(context, image, pair, page)
+        }
+    }
+
+    state prepare_tables(context: &mut KernelState, image: Extent in Granted,
+                         pair: KernelMemoryPair, page: BootPage)
+    requires addr::Bound == 18446744073709551616 && page.reservation.tail.length >= 20479
+    {
+        transition page.reservation.page {
+            PreparedPage::Ready { storage } -> build_tables(context, image, pair,
+                page.leading, page.reservation.padding, storage, page.reservation.tail)
+            PreparedPage::Rejected { storage } -> retain_page(context, image, pair, BootPage {
+                leading: page.leading, reservation: PageReservation {
+                    padding: page.reservation.padding, page: PreparedPage::Rejected { storage: storage },
+                    tail: page.reservation.tail, verified: false,
+                },
+            })
+        }
+    }
+
+    state build_tables(context: &mut KernelState, image: Extent in Granted,
+                       pair: KernelMemoryPair, leading: Extent in Granted & Vacant,
+                       padding: Extent in Granted & Vacant,
+                       target: Extent in Granted & Resident<KernelPagePlacement, KernelPage>,
+                       tail: Extent in Granted & Vacant)
+    requires addr::Bound == 18446744073709551616 && tail.length >= 20479
+    {
+        // This is an inactive candidate for a single virtual page, not a
+        // replacement for the firmware mappings of our live image and stack.
+        let reservation: PageTableReservation = PageTableBuilder::prepare(
+            tail, &target as &Extent in Granted, 1073741824
+        );
+        let verified: bool = reservation.verified;
+        let tables: BootPageTables = BootPageTables {
+            leading: leading, target_padding: padding, target: target, reservation: reservation,
+        };
+        transition verified {
+            true -> tables_wait(context, image, pair, tables, 1000000)
+            _ -> retain_tables(context, image, pair, tables)
+        }
+    }
+
+    state tables_wait(context: &mut KernelState, image: Extent in Granted,
+                      pair: KernelMemoryPair, tables: BootPageTables, remaining: u64)
+    requires addr::Bound == 18446744073709551616
+    {
+        let mut status: u8 = 0;
+        asm { in status, 1021 }
+        transition (status & 32) != 0 {
+            true -> tables_report(context, image, pair, tables)
+            _ -> tables_retry(context, image, pair, tables, remaining)
+        }
+    }
+
+    state tables_retry(context: &mut KernelState, image: Extent in Granted,
+                       pair: KernelMemoryPair, tables: BootPageTables, remaining: u64)
+    requires addr::Bound == 18446744073709551616
+    {
+        transition remaining > 1 {
+            true -> tables_wait(context, image, pair, tables, remaining - 1)
+            _ -> retain_tables(context, image, pair, tables)
+        }
+    }
+
+    state tables_report(context: &mut KernelState, image: Extent in Granted,
+                        pair: KernelMemoryPair, tables: BootPageTables)
+    requires addr::Bound == 18446744073709551616
+    {
+        asm { out 1016, 84 } // T
+        asm { out 1016, 97 } // a
+        asm { out 1016, 98 } // b
+        asm { out 1016, 108 } // l
+        asm { out 1016, 101 } // e
+        asm { out 1016, 115 } // s
+        asm { out 1016, 32 }
+        asm { out 1016, 114 } // r
+        asm { out 1016, 101 } // e
+        asm { out 1016, 97 } // a
+        asm { out 1016, 100 } // d
+        asm { out 1016, 121 } // y
+        asm { out 1016, 13 }
+        asm { out 1016, 10 }
+        transition { _ -> retain_tables(context, image, pair, tables) }
+    }
+
+    state retain_tables(context: &mut KernelState, image: Extent in Granted,
+                        pair: KernelMemoryPair, tables: BootPageTables)
+    requires addr::Bound == 18446744073709551616
+    {
+        asm { hlt }
+        transition { _ -> retain_tables(context, image, pair, tables) }
     }
 
     state retain_page(context: &mut KernelState, image: Extent in Granted,
