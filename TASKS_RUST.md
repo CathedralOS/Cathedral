@@ -1,7 +1,7 @@
 # Rust reference OS: tasks and handoff
 
-Updated 2026-10-20 (local date). Current milestone: **stack-safe, fallible userspace
-session startup**, on baseline `7331c086` (ARM64 exception entry).
+Updated 2026-10-20 (local date). Current milestone: **bounded failed-launch
+rollback**, on baseline `e5a13906` (fallible session startup).
 The latest section records verification and remaining steps toward bounded
 execution. This does not introduce real-time reservations.
 The fresh-lab reset is `30572c9f`. Compact recursive desktops landed as `c7571191`,
@@ -3960,3 +3960,62 @@ starting with rollback and single-object mapping/cleanup before adding more
 cursors. Keep the intermittent clean-close LOSS timeout open; no failure in this
 milestone proves that issue fixed. Guaranteed-service admission remains a
 separate owner-level design choice. No new owner decision was needed here.
+
+
+## Bounded failed-launch rollback (2026-10-20)
+
+Baseline: `e5a13906`. A live process's failed child launch previously released
+its entire draft synchronously, including errors after image/table construction
+or final authority validation. It now retains the first refusal in the launch
+account and uses later admission turns to return at most eight private frames
+per visit, through the same frame-release engine as abandoned/dead-task cleanup.
+[Spawn](source-rs/kernel/core/user_tasks/lifecycle/spawn.rs) shows the choice
+between advancing construction and advancing rollback. No additional cleanup
+cursor or ABI is introduced.
+
+The parent remains blocked, the launch remains busy and its child stays
+unpublished until all private frames are refunded. Then the original error is
+returned and the launch becomes retryable. Initial rights/messages remain with
+the parent throughout refusal. Each cleanup step charges the requester and
+refunds the child's physical account. If the parent dies mid-rollback, close
+clears its refusal, removes pending admission and transfers the partial draft
+to ordinary abandonment before returning launch capacity/source custody.
+Executable-object references remain pinned until the appropriate owner/loan
+cleanup settles them. No partly retired root can resume or serve checked copies.
+
+The [shared real-frame suite](source-rs/kernel/core/user_tasks/admission/rollback/rollback.rs)
+now has a small sequencing entrance and named construction, refusal, authority
+and fixture leaves. Existing sweeps still refuse every physical-frame allowance
+and withdraw at every construction phase, including framebuffer batches on x86;
+those tests assert the eight-frame cleanup allowance and exact refunds.
+New production-lifecycle cases cover a failure at the last allocation, a busy
+initial receive right after complete private construction, blocked-parent and
+selectable-peer state between batches, no early launch reuse, successful retry,
+and owner death after partial rollback. Object-backed executable tests cover
+both interrupted construction and interrupted rollback with final source refund.
+
+Verification:
+
+- Full ARM64 debug/release portability and x86 release smoke pass the expanded
+  suite, including all physical-allocation failure boundaries, authority checks,
+  object lifetime, preemption and exact heap/frame reclamation.
+- The release userspace admission profile passes recursive funded pools, load
+  rollback, stale grants and sibling survival. The nested desktop regression
+  covers three levels, pointer stress, protected close, confined persistence,
+  repeated subtree reclamation and cold reopen on disposable images.
+- Workspace host tests, default x86 UEFI clippy, x86/ARM64 smoke clippy, layout,
+  formatting and whitespace checks pass. Interactive saved media is untouched.
+- Logs: `build/refusal-arm64-debug.log`, `build/refusal-arm64-release.log`,
+  `build/refusal-x86-smoke.log`, `build/refusal-admission.log`,
+  `build/refusal-desktop.log`, `build/refusal-host.log`,
+  `build/refusal-x86-clippy.log`, `build/refusal-x86-smoke-clippy.log`,
+  `build/refusal-arm64-clippy.log`.
+
+This bounds private-draft frame returns per visit, not elapsed time. Heap drops
+and bookkeeping remain atomic; pre-draft bare-root failure and synchronous
+initial-boot construction still perform their small/whole rollback internally.
+Runtime page-object mapping, unmapping/free, allocation rollback, pending
+reference/escrow settlement and event bursts remain separate work. More turns
+can lengthen the wait for a failed launch under contention; there is no faster
+launch or hard-real-time claim. The intermittent clean-close LOSS timeout remains
+open. No owner question was needed for this mechanism change.

@@ -100,6 +100,15 @@ and the epoch are prepared after the last yield. A queued message can make an
 initial receive right unmovable while loading; refusal leaves the message and
 right with the owner and rolls back the draft.
 
+A refusal retains its first error and private draft in the launch account.
+Later admission turns release at most eight frames, charging cleanup to the
+requester and refunding the child as frames return. The parent stays blocked and
+the launch stays busy until the last frame is gone; only then is the error
+returned. A changing peer or newly transferable right cannot restart a refused
+construction. If the parent dies during rollback, close removes its queued
+admission and transfers the remaining draft to ordinary abandonment. The retained
+executable reference follows the existing owner/loan cleanup rules.
+
 Failure and owner/peer death release every private frame exactly once. Owner
 return aborts drafts before returning launch capacity to a surviving ancestor.
 When no lender survives, it also drops the launch's executable source reference;
@@ -138,7 +147,7 @@ Final collection and whole-session conservation assertions are still atomic.
 
 This is not a bounded-time kernel: executable decoding, bare-root allocation, runtime
 table reservation, final authority commit, subtree
-authority withdrawal, final collection, failure rollback, final page-object mapping,
+authority withdrawal, final collection, initial-boot/bare-root rollback, final page-object mapping,
 sealing/unmapping, heap operations and event bursts still run uninterrupted.
 Subtree physical retirement is now staged, but single-object cleanup and pending
 reference settlement still need smaller work allowances before latency claims.
@@ -156,7 +165,7 @@ reuse, dynamically added descendants, and boot/user routing. The real-frame
 [rollback fixture](../../memory/rollback.rs) fails allocation at every frame
 boundary and cancels at every partial batch of a maximum-size object, checking
 absence of mappings and exact funding/frame refunds. The
-[admission fixture](../../admission/rollback.rs) builds a multi-batch image,
+[admission fixture](../../admission/rollback/rollback.rs) builds a multi-batch image,
 fails at every physical-frame allowance, cancels at every phase boundary and
 checks unpublished task/IPC state, zeroed BSS, final permissions and exact refunds.
 On x86 it also maps the real reserved framebuffer, checks the batch count and
@@ -166,7 +175,12 @@ faults and rejection by RAM checked-copy helpers. A
 references across 70 objects, checks exact backing/funding refunds and preserves
 a sealed live owner mapping. Reference settlement remains atomic.
 It also exercises owner/peer death, newly busy initial rights and abandonment of
-an object-backed executable through the production lifecycle on both ISAs. A
+an object-backed executable through the production lifecycle on both ISAs.
+[Refusal tests](../../admission/rollback/refusal.rs) check late allocation and
+authority errors, the eight-frame bound, a blocked parent and selectable peer
+between cleanup turns, unchanged rights/messages, retry and owner death mid-rollback.
+[Authority tests](../../admission/rollback/authority.rs) also retain an object-backed
+executable through partial rollback before withdrawing its owner. A
 committed parent/child teardown checks the eight-frame allowance on every step,
 endpoint withdrawal before the first pause, an unaffected ready peer, unavailable
 slots/outcomes throughout cleanup and exact final refunds.

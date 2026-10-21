@@ -54,6 +54,8 @@ pub(super) static EPOCH: AtomicU64 = AtomicU64::new(1);
 
 pub(super) struct LaunchState {
     pub(super) draft: Option<super::admission::Draft>,
+    // Keep the caller blocked and its launch occupied until private rollback ends.
+    pub(super) refusal: Option<u64>,
     pub(super) images: [Option<usize>; cathedral_kernel_contracts::user::MAX_LAUNCHES],
     pub(super) code: Option<crate::user_tasks::admission::pool::Code>,
     pub(super) dynamic: bool,

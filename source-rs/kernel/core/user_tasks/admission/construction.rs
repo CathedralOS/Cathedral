@@ -40,6 +40,7 @@ impl Draft {
 /// # Safety
 /// Boot stack, sole CPU/kernel root/IRQs off. Launch retains immutable executable
 /// custody across calls; caller rechecks its live owner/peer before every step.
+/// Errors retain any charged private draft; caller must retire it before reuse.
 pub(in crate::user_tasks) unsafe fn advance(
     session: &mut Session,
     layout: &arch::BootLayout,
@@ -91,12 +92,6 @@ pub(in crate::user_tasks) unsafe fn advance(
         .charge(child, allocated)
         .expect("construction exceeded funding");
     frames.remaining = previous;
-    if result.is_err() {
-        // SAFETY: Construction has published no user root/context/authority.
-        unsafe {
-            abort(session, frames, index);
-        }
-    }
     result
 }
 
@@ -188,23 +183,7 @@ unsafe fn step(
 }
 
 /// # Safety
-/// Private draft never activated. Caller must abort before reusing its account
-/// or returning its launch authority. Funding was charged after each step.
-pub(in crate::user_tasks) unsafe fn abort(
-    session: &mut Session,
-    frames: &mut Frames<'_>,
-    index: usize,
-) {
-    let start = timing::start();
-    // SAFETY: Whole rollback wrapper; same permanently inactive-root custody.
-    unsafe {
-        abort_step(session, frames, index, usize::MAX);
-    }
-    session.timing.record(TimedPhase::Rollback, start);
-}
-
-/// # Safety
-/// Dead or withdrawing owner, private root never activated. Caller keeps the
+/// Refused or withdrawn launch, private root never activated. Caller keeps the
 /// launch unavailable until every frame and the retained source are settled.
 pub(in crate::user_tasks) unsafe fn abort_step(
     session: &mut Session,
@@ -212,6 +191,7 @@ pub(in crate::user_tasks) unsafe fn abort_step(
     index: usize,
     budget: usize,
 ) -> bool {
+    let start = timing::start();
     let child = session.launches[index].model.child;
     let Some(draft) = session.launches[index].draft.as_mut() else {
         return true;
@@ -226,6 +206,7 @@ pub(in crate::user_tasks) unsafe fn abort_step(
     if done {
         session.launches[index].draft = None;
     }
+    session.timing.record(TimedPhase::Rollback, start);
     done
 }
 

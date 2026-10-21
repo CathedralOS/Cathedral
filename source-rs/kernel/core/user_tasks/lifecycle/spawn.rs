@@ -19,17 +19,34 @@ pub(in crate::user_tasks) unsafe fn spawn(
     };
     let owner = session.launches[index].model.owner;
     session.scheduler.account_cpu(arch::cpu_time_us());
-    // SAFETY: Boot stack, exclusive inactive roots, pinned executable and frame custody.
-    let result = unsafe { progress(session, source, layout, image, executable, argument, index) };
+    let result = if let Some(error) = session.launches[index].refusal {
+        // SAFETY: A refused draft was never runnable; all its charged frames
+        // remain in the private ledger. No authority/source is returned mid-step.
+        if unsafe { admission::abort_step(session, source, index, super::reclamation::FRAME_BATCH) }
+        {
+            session.launches[index].refusal = None;
+            Err(error)
+        } else {
+            Ok(None)
+        }
+    } else {
+        // SAFETY: Boot stack, exclusive inactive roots, pinned executable and frame custody.
+        match unsafe { progress(session, source, layout, image, executable, argument, index) } {
+            Err(error) if session.launches[index].draft.is_some() => {
+                // Finish this visit at the construction/validation boundary.
+                // Rollback uses later turns; the first error remains definitive.
+                session.launches[index].refusal = Some(error);
+                Ok(None)
+            }
+            result => result,
+        }
+    };
     match result {
         Ok(None) => session.deferred.insert(Work::Admission, index),
         finished => {
             let result = finished.map(|ticket| ticket.unwrap());
             if result.is_err() {
-                // SAFETY: Refusal has published no task or grant; release every staged frame.
-                unsafe {
-                    admission::abort(session, source, index);
-                }
+                assert!(session.launches[index].draft.is_none());
                 session.launches[index].model.failed();
             }
             session.launches[index].initial.fill(0);

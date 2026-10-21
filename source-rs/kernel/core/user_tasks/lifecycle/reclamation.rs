@@ -3,7 +3,7 @@
 use super::{Exit, Frames, Session, abi, admission, arch, close, syscalls};
 use crate::scheduler::TaskState;
 use crate::user_tasks::execution::deferred::Work;
-const FRAME_BATCH: usize = 8;
+pub(super) const FRAME_BATCH: usize = 8;
 
 pub(super) fn withdraw(session: &mut Session) {
     while let Some(index) = session.deferred.first(Work::Cancel) {

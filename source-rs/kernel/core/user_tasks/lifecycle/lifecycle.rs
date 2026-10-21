@@ -31,6 +31,7 @@ pub(super) fn close(session: &mut Session, slot: usize) {
     for (index, launch) in session.launches.iter_mut().enumerate() {
         launch.model.close(slot);
         if launch.model.owner == slot {
+            launch.refusal = None;
             if launch.model.cancel_child() {
                 session.deferred.insert(Work::Cancel, index);
             }
