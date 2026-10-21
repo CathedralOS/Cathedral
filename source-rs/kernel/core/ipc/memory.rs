@@ -35,6 +35,10 @@ impl Ipc {
     pub fn memory_retirement_pending(&self) -> bool {
         self.retired_memory_pending
     }
+    /// A pending discard retains this escrow slot until the memory owner takes it.
+    pub(crate) fn memory_retiring(&self, slot: usize) -> bool {
+        self.retired_memory[slot / 64] & (1 << (slot % 64)) != 0
+    }
     pub fn take_retired_memory(
         &mut self,
     ) -> [u64; cathedral_kernel_contracts::memory::MAX_READ_HANDLES.div_ceil(64)] {

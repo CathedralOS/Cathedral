@@ -36,15 +36,20 @@ pub(super) unsafe fn exercise(
         session.memory.unref_later(region);
     }
     output(b"reference retirement: retained-object burst\n");
+    let mut steps = 0;
     while session.memory.retirement_pending() {
+        let before = frames.allocated();
         // SAFETY: Production settlement, exclusively owned inactive machine state.
         unsafe { process(session, frames) };
+        steps += 1;
+        assert!(before - frames.allocated() <= retirement::FRAME_BATCH);
         assert_eq!(frames.allocated() - baseline, session.memory.frames());
         assert_eq!(
             session.memory.funding.charged() - charged,
             session.memory.frames()
         );
     }
+    assert!(steps >= OBJECTS);
     session.timing.report(output);
     assert_eq!(frames.allocated(), baseline + wire::MAX_PAGES);
     let region = session.memory.model.access(0, survivor).unwrap();

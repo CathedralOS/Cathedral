@@ -1,7 +1,7 @@
 # Rust reference OS: tasks and handoff
 
-Updated 2026-10-20 (local date). Current milestone: **bounded failed-launch
-rollback**, on baseline `e5a13906` (fallible session startup).
+Updated 2026-10-20 (local date). Current milestone: **bounded page-object
+backing retirement**, on baseline `2e10113a` (bounded failed-launch rollback).
 The latest section records verification and remaining steps toward bounded
 execution. This does not introduce real-time reservations.
 The fresh-lab reset is `30572c9f`. Compact recursive desktops landed as `c7571191`,
@@ -4019,3 +4019,71 @@ reference/escrow settlement and event bursts remain separate work. More turns
 can lengthen the wait for a failed launch under contention; there is no faster
 launch or hard-real-time claim. The intermittent clean-close LOSS timeout remains
 open. No owner question was needed for this mechanism change.
+
+## Bounded page-object backing retirement (2026-10-20)
+
+Baseline: `2e10113a`. Runtime page-object release, allocation refusal/cancellation,
+dead-task object cleanup, deferred executable references and discarded IPC
+attachments now return at most eight physical frames per path visit. The
+[memory entrance](source-rs/kernel/core/user_tasks/memory/memory.rs) selects each
+owner; [retirement](source-rs/kernel/core/user_tasks/memory/retirement.rs) owns the
+shared physical refund operation. This extends the existing boot-loop suspension
+mechanism without a new syscall or scheduler policy.
+
+Final release removes the alias first and keeps the caller blocked until its
+backing refund completes. Death inherits a partly completed release. Allocation
+failure refunds the unbacked reservation exactly once, then retires initialized
+pages incrementally before returning the error. A retiring object retains its
+metadata slot and whole-object logical quota until completion; physical funding
+returns to its original sponsor batch by batch. Other users can continue memory
+operations between visits, and live readers still pin shared backing.
+
+[Executable references](source-rs/kernel/core/user_tasks/memory/references.rs)
+rotate across pending objects, consuming surrendered reference counts once.
+[IPC escrow](source-rs/kernel/core/user_tasks/memory/escrow.rs) drains one finite
+discard snapshot before taking the next. Review found a slot-reuse hazard in
+the incremental implementation: receiver teardown could release an unpublished
+reader before its pending discard bit was consumed. Teardown now preserves
+slots owned by either the current snapshot or the next IPC discard batch. A
+consumed slot may safely be reused while its old object's backing finishes
+retiring. The regression deliberately kills both receivers with both batches
+pending, reuses the first slot, and checks that the new published right survives.
+
+The [real-frame suite](source-rs/kernel/core/user_tasks/memory/retirement_tests/retirement_tests.rs)
+also checks maximum-size release, blocked caller/ready peer state, competing
+allocation, death after the first release batch and exact conservation after
+each cleanup visit. Existing allocation sweeps refuse every frame allowance and
+cancel at each partial batch, now checking the refund allowance in their test
+wrappers. The 140-reference/70-object burst takes 130 bounded settlement visits
+while retaining a live owner's sealed mapping. Host policy tests check retiring
+slot/quota retention, stale authority and eventual safe reuse.
+
+Verification:
+
+- ARM64 debug/release portability and x86 release smoke pass, including the
+  expanded real-frame suite and exact heap/frame reclamation.
+- Release admission passes recursive funded pools, load rollback, stale grants
+  and sibling survival. Nested desktop passes three levels, pointer stress,
+  protected close, confined persistence, repeated reclamation and cold reopen.
+- Workspace host tests, default x86 UEFI clippy, x86/ARM64 smoke clippy, layout,
+  formatting and whitespace checks pass. Interactive F5 saved media was untouched;
+  automated desktop/admission runs used disposable images.
+- Logs: `build/object-host.log`, `build/object-arm64-debug.log`,
+  `build/object-arm64-release.log`, `build/object-x86-smoke.log`,
+  `build/object-admission.log`, `build/object-desktop.log`,
+  `build/object-x86-clippy.log`, `build/object-x86-smoke-clippy.log`,
+  `build/object-arm64-clippy.log`.
+
+The allowance is per cleanup path visit, not a total of eight frames across a
+whole boot turn. Mapping removal still happens atomically before any backing
+refund. Final map/seal/unmap, heap operations, metadata scans, collection,
+authority withdrawal and event bursts remain uninterrupted. More cleanup visits
+can increase completion latency under contention; these are structural work
+bounds, not a desktop speedup or real-time guarantee.
+
+Next: use the existing phase observations to choose between remaining mapping
+work and bursts of event completions. Preserve mapping visibility and terminal/
+deadline ordering when introducing further suspension points. The intermittent
+clean-close LOSS timeout remains open; passing this regression does not diagnose
+it. Guaranteed-service admission still needs its separate owner-level design.
+No new owner decision was needed for this milestone.

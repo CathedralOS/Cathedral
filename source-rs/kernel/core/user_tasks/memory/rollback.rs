@@ -23,6 +23,7 @@ pub unsafe fn exercise(
     unsafe {
         admission::rollback::exercise(frames, layout, image, framebuffer, output);
         page_objects(frames, layout, image, output);
+        super::retirement_tests::exercise(frames, layout, image, output);
     }
 }
 
@@ -84,15 +85,7 @@ unsafe fn page_objects(
             // SAFETY: Root has never executed and all frames remain pinned here.
             unsafe { mapping_boundaries(&mut session, handle) };
             // SAFETY: Root never ran; no user borrows or outstanding peer references.
-            unsafe {
-                dispatch(
-                    &mut session,
-                    &mut source,
-                    0,
-                    [abi::MEMORY_RELEASE, handle, 0],
-                )
-            }
-            .unwrap();
+            unsafe { retirement::release(&mut session, &mut source, 0, handle) }.unwrap();
         }
         assert_eq!(source.allocated(), admitted);
         assert_eq!(session.memory.funding.charged(), table_budget);

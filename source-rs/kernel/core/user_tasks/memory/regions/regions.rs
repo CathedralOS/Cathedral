@@ -7,6 +7,8 @@ use cathedral_kernel_contracts::memory::{
 use cathedral_kernel_contracts::user as abi;
 #[derive(Clone, Copy, Debug, Default)]
 pub struct Region {
+    /// Backing retirement owns this slot after the last authority disappears.
+    pub retiring: bool,
     /// Persistent backing sponsor; accepted readers can outlive its process.
     pub account: Option<usize>,
     pub read_refs: usize,
@@ -90,7 +92,7 @@ impl Regions {
         let index = self
             .entries
             .iter()
-            .position(|r| !r.live())
+            .position(|r| !r.live() && !r.retiring)
             .ok_or(abi::NO_MEMORY)?;
         let owner_slot = (0..MAX_PRIVATE_REGIONS)
             .find(|&slot| {
@@ -233,7 +235,7 @@ impl Regions {
         [
             self.entries
                 .iter()
-                .filter(|r| r.live() && r.account == Some(task))
+                .filter(|r| (r.live() || r.retiring) && r.account == Some(task))
                 .map(|r| r.pages)
                 .sum(),
             self.entries

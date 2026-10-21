@@ -2,7 +2,9 @@
 
 mod allocation;
 mod closing;
+mod escrow;
 mod objects;
+mod references;
 mod retirement;
 mod sharing;
 pub(in crate::user_tasks) use closing::{Closing, step as close_step};
@@ -11,6 +13,8 @@ pub(super) mod frames;
 mod references_test;
 #[deny(unsafe_code)]
 pub(crate) mod regions;
+#[cfg(feature = "memory-lab")]
+mod retirement_tests;
 #[cfg(feature = "memory-lab")]
 pub(super) mod rollback;
 

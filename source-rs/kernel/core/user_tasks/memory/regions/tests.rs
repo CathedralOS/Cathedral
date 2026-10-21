@@ -1,4 +1,20 @@
 use super::*;
+#[test]
+fn retiring_backing_keeps_its_slot_and_logical_charge_without_authority() {
+    let mut regions = model();
+    let (index, handle) = allocate(&mut regions, 0, 4);
+    regions.release(0, handle).unwrap();
+    regions.entries[index].retiring = true;
+    assert!(!regions.entries[index].live());
+    assert_eq!(regions.access(0, handle), Err(abi::BAD_HANDLE));
+    assert_eq!(regions.charged(0)[0], 4);
+    assert_eq!(regions.allocate(0, 1), Err(abi::NO_MEMORY));
+    assert_ne!(regions.allocate(1, 1).unwrap(), index);
+    regions.entries[index].retiring = false;
+    assert_eq!(regions.charged(0)[0], 0);
+    assert_eq!(regions.allocate(0, 4).unwrap(), index);
+    assert_ne!(regions.handle(0, index), handle);
+}
 fn model() -> Regions {
     Regions::new(
         3,

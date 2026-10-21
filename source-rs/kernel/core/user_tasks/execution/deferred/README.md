@@ -63,8 +63,8 @@ cannot run during staging, and other tasks have no authority over that region.
 
 Physical funding counts both allocated frames and the unbacked reservation;
 conservation assertions include both. Each batch is charged to the requester.
-On failure or caller death, cleanup refunds the unbacked part and releases the
-allocated part exactly once. A dead caller's staging is settled before its
+On failure or caller death, cleanup refunds the unbacked part once and releases
+at most eight allocated frames per visit. A dead caller's staging is settled before its
 address space, funding or slot can be reused. Final mapping still commits as one
 operation, with complete rollback on failure.
 
@@ -126,9 +126,10 @@ still handles the whole bounded task arena in one operation.
 Physical retirement rotates between dead tasks. [Alias cleanup](../../memory/closing.rs)
 scans at most 32 reader/region entries and removes at most one page object's
 mappings/references per step. Live readers retain backing after producer death.
-Dropping a dead reader's last reference reclaims backing before another task can
-reuse the object index. Unfinished private allocation cancellation and each
-object's unmap/free remain whole operations, bounded by their page caps.
+Dropping a dead reader's last reference removes its mapping atomically, then
+returns at most eight backing frames per visit. A cursor retains the object index
+and logical quota until completion. Unfinished private allocation cancellation
+and a release interrupted by death follow the same physical batch allowance.
 After aliases disappear, at most eight private image/stack/table frames are
 returned per step, in reverse allocation order. Abandoned admission drafts also
 return at most eight frames per step. Every freed frame refunds its owning
@@ -149,8 +150,10 @@ This is not a bounded-time kernel: executable decoding, bare-root allocation, ru
 table reservation, final authority commit, subtree
 authority withdrawal, final collection, initial-boot/bare-root rollback, final page-object mapping,
 sealing/unmapping, heap operations and event bursts still run uninterrupted.
-Subtree physical retirement is now staged, but single-object cleanup and pending
-reference settlement still need smaller work allowances before latency claims.
+Subtree and single-object backing retirement are staged. Executable references
+rotate among pending objects; IPC escrow drains finite discard snapshots, keeping
+unconsumed reader slots reserved across receiver death. Each path returns at most
+eight frames per visit; several paths can advance within one boot step.
 Eight pages is an engineering work allowance, not a measured or certified latency limit. No new priority,
 reservation or application ABI is introduced.
 
@@ -173,8 +176,11 @@ aborts at every device-mapping boundary. Display probes still verify guard/NX
 faults and rejection by RAM checked-copy helpers. A
 [reference burst fixture](../../memory/references_test.rs) settles 140 kernel
 references across 70 objects, checks exact backing/funding refunds and preserves
-a sealed live owner mapping. Reference settlement remains atomic.
-It also exercises owner/peer death, newly busy initial rights and abandonment of
+a sealed live owner mapping, checking the frame allowance at every visit.
+The [object retirement suite](../../memory/retirement_tests/retirement_tests.rs)
+checks release/death, competing allocation and reader-slot custody through two
+discard batches and receiver teardown. The admission fixture also exercises
+owner/peer death, newly busy initial rights and abandonment of
 an object-backed executable through the production lifecycle on both ISAs.
 [Refusal tests](../../admission/rollback/refusal.rs) check late allocation and
 authority errors, the eight-frame bound, a blocked parent and selectable peer

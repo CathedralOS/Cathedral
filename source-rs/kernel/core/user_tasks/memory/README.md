@@ -3,14 +3,32 @@
 Start at [memory.rs](memory.rs): traps defer mapping/allocation work to the boot
 stack. [Regions](regions/regions.rs) own names, quotas and object lifetime;
 [readers](regions/readers.rs) separate read capabilities from virtual mappings.
-[Objects](objects.rs) perform freeze/map/unmap and escrow retirement;
+[Objects](objects.rs) perform freeze/map/unmap;
 [retirement](retirement.rs) removes aliases before refunding physical frames.
+[References](references.rs) settle surrendered executable references;
+[escrow](escrow.rs) retains custody of discarded IPC attachments.
 
 [Allocation](allocation.rs) reserves funding once and zeros at most eight pages
 per boot-stack step. The caller stays blocked and the region unmapped until all
 pages are ready. Cancellation refunds the unfinished reservation and backing
 before slot reuse. Follow the [deferred-work entrance](../execution/deferred/README.md)
 for selection, interrupt windows and the remaining non-preemptible operations.
+
+Backing retirement returns at most eight frames per path visit. Explicit release
+removes the caller's alias first and keeps it blocked until any final backing
+refund completes. Death inherits a pending release; allocation refusal/death
+refunds the unbacked reservation once and retires initialized pages in batches.
+The retiring region keeps its metadata slot and whole-object logical quota
+until completion, while physical funding returns to its sponsor batch by batch.
+Other tasks can continue memory operations between visits.
+
+Executable-reference settlement rotates among pending objects. IPC discard takes
+a finite snapshot and advances one object at a time; later discards wait in IPC.
+Both sets retain their unpublished reader slots through receiver death, preventing
+a stale discard bit from consuming a newly reused slot. A consumed slot can be
+reused while its old object's backing finishes retirement. These are separate
+paths, each with an eight-frame allowance, not an eight-frame total per boot turn.
+Mapping removal remains atomic and precedes every backing refund.
 
 ## Transfer contract
 
@@ -64,6 +82,14 @@ runs [three ordinary programs](../../../../distribution/lab/shared-memory/main.r
 on both x86-64 and ARM64. A produces one page, B forwards without mapping, and C
 maps after both A and B have exited. Repeated map/unmap, invalid copyout, queued
 discard, reader write faults and final frame/heap reclamation are checked.
+
+The [retirement suite](retirement_tests/retirement_tests.rs) checks maximum-size
+release, death during release, competing allocation, two pending discard batches,
+receiver death and reader-slot reuse against real frames on both ISAs. Every
+cleanup visit checks its frame allowance and physical funding conservation.
+The [allocation sweep](rollback.rs) refuses every frame allowance and cancels at
+each partial batch; [reference retirement](references_test.rs) drains 140
+references across 70 objects while preserving a live owner's sealed mapping.
 
 The integrated [matrix image path](../../../../platform/libraries/matrix/world/surface/README.md)
 uses the same API for retained bitmaps. Matrices clip metadata and keep unmapped

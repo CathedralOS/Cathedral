@@ -8,6 +8,7 @@ pub(in crate::user_tasks) struct Closing {
     started: bool,
     read: usize,
     region: usize,
+    retiring: Option<usize>,
 }
 
 /// # Safety
@@ -19,12 +20,21 @@ pub(in crate::user_tasks) unsafe fn step(
     frames: &mut Frames<'_>,
     cursor: &mut Closing,
 ) -> bool {
+    if let Some(index) = cursor.retiring {
+        // SAFETY: The dead task's last alias is gone; cursor retains the retiring slot.
+        if unsafe { session.memory.reclaim_step(index, frames) } {
+            cursor.retiring = None;
+        }
+        return false;
+    }
+    if session.memory.releases[slot].is_some() {
+        // SAFETY: Death inherits an explicit release whose alias was already removed.
+        let _ = unsafe { super::retirement::step(session, frames, slot, 0) };
+        return false;
+    }
     if !cursor.started {
         // SAFETY: An unpublished allocation has no user aliases.
-        unsafe {
-            super::allocation::cancel(session, frames, slot);
-        }
-        cursor.started = true;
+        cursor.started = unsafe { super::allocation::cancel_step(session, frames, slot) };
         return false;
     }
     for _ in 0..SCAN_BATCH {
@@ -34,6 +44,14 @@ pub(in crate::user_tasks) unsafe fn step(
             let Some(grant) = session.memory.model.reads[read].filter(|r| r.task == slot) else {
                 continue;
             };
+            // The escrow snapshot owns this unpublished slot until it drops the
+            // reference. Do not free/reuse it under a pending discard bit.
+            if session.memory.escrow_slots[read / 64] & (1 << (read % 64)) != 0
+                || session.ipc.memory_retiring(read)
+            {
+                assert!(!grant.published && grant.mapping.is_none());
+                continue;
+            }
             if let Some(mapping) = grant.mapping {
                 let pages = session.memory.model.entries[grant.object].pages;
                 // SAFETY: Retired task cannot resume; no other process mapping changes.
@@ -50,8 +68,8 @@ pub(in crate::user_tasks) unsafe fn step(
             session.memory.model.drop_read(read);
 
             // SAFETY: The last dead reader's alias was removed before dropping its ref.
-            unsafe {
-                session.memory.reclaim(grant.object, frames);
+            if !unsafe { session.memory.reclaim_step(grant.object, frames) } {
+                cursor.retiring = Some(grant.object);
             }
             return false;
         }
@@ -77,8 +95,8 @@ pub(in crate::user_tasks) unsafe fn step(
             }
             session.memory.model.close(index, slot);
             // SAFETY: Model has no remaining live alias when reclamation proceeds.
-            unsafe {
-                session.memory.reclaim(index, frames);
+            if !unsafe { session.memory.reclaim_step(index, frames) } {
+                cursor.retiring = Some(index);
             }
 
             return false;
@@ -91,6 +109,13 @@ pub(in crate::user_tasks) unsafe fn step(
 #[cfg(feature = "memory-lab")]
 pub(super) unsafe fn close(session: &mut Session, slot: usize, frames: &mut Frames<'_>) {
     let mut cursor = Closing::default();
-    // SAFETY: Synchronous test wrapper with the same inactive-root custody.
-    while !unsafe { step(session, slot, frames, &mut cursor) } {}
+    loop {
+        let before = frames.allocated();
+        // SAFETY: Synchronous test wrapper with the same inactive-root custody.
+        let done = unsafe { step(session, slot, frames, &mut cursor) };
+        assert!(before - frames.allocated() <= super::retirement::FRAME_BATCH);
+        if done {
+            break;
+        }
+    }
 }
