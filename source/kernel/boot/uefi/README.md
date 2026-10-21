@@ -176,16 +176,19 @@ target; it does not assume that every Omega target has 64-bit addresses.
 
 The page is one `KernelPage` containing 512 words, not 512 separately authorized
 fields. Checked vacant splits preserve the leading reservation, padding, page
-and tail. Native placement initializes the first and last words to 17 and 73,
-extracts the whole value and checks every word, initializes a zero page,
+and tail. Native placement initializes the first and last words to 17 and 73.
+Indexed resident access through helper calls reads those words, writes 29 and
+97, and rereads both. It then extracts the whole value and independently checks
+the updated words and untouched interior, initializes a zero page,
 extracts and checks all 512 zeros, then reinstalls and retains that exact image.
 Every rejected placement retains its returned vacant extent. The success marker
 requires the aligned base, exact page length and both content checks.
 
-Whole-value initialization and extraction use an Inaccessible field plan: they
-do not grant projected reads or writes. General indexed resident-array access
-remains compiler work, not a reason to expand this array into scalar fields.
-Changing only the expected final word from 73 to 74 still boots through
+One Stable read/write field permission covers the page array. Each bounded
+index derives a scalar accessor from that same live resident occurrence; the
+array is not expanded into 512 permissions. Whole-value initialization and
+extraction retain their separate custody transitions.
+Changing only the expected extracted final word from 97 to 98 still boots through
 `Memory paired`, but suppresses `Page ready` and fails the fresh-image smoke.
 The harness also rejects missing, partial, forged-prefix and out-of-order page
 markers. These observations do not establish page-table installation or validate

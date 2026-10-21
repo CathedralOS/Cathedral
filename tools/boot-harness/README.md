@@ -58,9 +58,11 @@ request with unchanged tail base, length and capacity, two simultaneous resident
 initialized with 17 and 41, independent
 writes of 29 and 73, rereading the first after the second write, and extraction
 of both updated values. `Page ready` additionally requires an aligned 4096-byte
-page prepared after an eight-byte reservation, whole-page pattern readback,
+page prepared after an eight-byte reservation, indexed resident reads of 17 and
+73, helper writes of 29 and 97 to the first and last words, rereads and independent
+whole-page extraction of those updated values,
 zero readback of all 512 words, and retention of the initialized page, padding
-and remaining tail. Changing the expected last pattern word from 73 to 74
+and remaining tail. Changing the expected extracted last word from 97 to 98
 suppresses the page marker while the preceding markers still appear.
 All storage descendants remain retained. A split-only, single-resident, or
 paired-allocation-only boot does not satisfy this acceptance. Missing, truncated or

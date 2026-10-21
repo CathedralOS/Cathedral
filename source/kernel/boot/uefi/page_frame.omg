@@ -36,10 +36,8 @@ machine KernelPagePlacement::plan(schema: Schema) -> PlacementPlan {
             entries: entries, entry_count: 1, size_fixed: 4096,
             size_is_dynamic: false, align: 4096,
         },
-        // Whole-value lifecycle encoding and extraction are independent of
-        // projected access permission. Indexed resident access remains separate
-        // compiler work; this page exposes no field accessor yet.
-        access: AccessPlan::inaccessible(&schema),
+        access: AccessPlan::with(AccessPlan::inaccessible(&schema), schema.fields[0].key,
+            FieldAccess::Stable { read: true, write: true, exposure: Exposure::Exported }),
         reach: BoundaryReach { services: services, service_count: 0 },
     }
 }
@@ -74,8 +72,12 @@ reaches ResourceProfileSupply
         storage: Extent in Granted & Resident<KernelPagePlacement, KernelPage>,
         tail: Extent in Granted & Vacant, geometry: bool
     ) -> PageReservation {
-        transition NativePlacement<KernelPagePlacement, KernelPage>::move_out(storage) {
-            PlacementExtraction::Moved { storage, value } -> clear(padding, storage, tail, geometry, value)
+        let mut retained: Extent in Granted & Resident<KernelPagePlacement, KernelPage> = storage;
+        let indexed: bool = PageFrame::overwrite(
+            Placed::view_resident_mut<KernelPagePlacement, KernelPage>(&mut retained)
+        );
+        transition NativePlacement<KernelPagePlacement, KernelPage>::move_out(retained) {
+            PlacementExtraction::Moved { storage, value } -> clear(padding, storage, tail, geometry && indexed, value)
         }
     }
 
@@ -119,7 +121,7 @@ reaches ResourceProfileSupply
 }
 
 machine PageFrame::check_image(page: &KernelPage) -> bool {
-    transition page.words[0] == 17 && page.words[511] == 73 {
+    transition page.words[0] == 29 && page.words[511] == 97 {
         true -> interior(page, 1)
         _ -> false
     }
@@ -136,6 +138,26 @@ machine PageFrame::check_image(page: &KernelPage) -> bool {
     {
         transition page.words[index] == 0 { true -> interior(page, index + 1) _ -> false }
     }
+}
+
+// Each indexed event borrows the same resident page. Read the first word again
+// after changing the last, then let whole extraction independently observe both.
+machine PageFrame::overwrite(view: &mut Placed<KernelPagePlacement, KernelPage>) -> bool {
+    let first: u64 = placed_read(&view.words[0]);
+    let last: u64 = placed_read(&view.words[511]);
+    PageFrame::write_word(view, 0, 29);
+    PageFrame::write_word(view, 511, 97);
+    let updated_first: u64 = placed_read(&view.words[0]);
+    let updated_last: u64 = placed_read(&view.words[511]);
+    first == 17 && last == 73 && updated_first == 29 && updated_last == 97
+}
+
+machine PageFrame::write_word(
+    view: &mut Placed<KernelPagePlacement, KernelPage>, index: u64, value: u64
+)
+requires index < 512
+{
+    placed_write(&mut view.words[index], value);
 }
 
 machine PageFrame::check_zero(page: &KernelPage, index: u64) -> bool
