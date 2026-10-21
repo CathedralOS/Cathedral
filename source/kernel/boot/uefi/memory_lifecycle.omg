@@ -104,6 +104,25 @@ reaches ResourceProfileSupply + PlacementLifecycle
     }
 }
 
+// Exercise empty, interior and exhausted partitions on the real allocation
+// before accessing it. Reconstructed geometry must retain the original backing
+// through checked common-root ancestry, not through a fresh provider grant.
+machine KernelMemory::reunite_partition(
+    storage: Extent in Granted & Vacant, requested: u64
+) -> Extent
+requires requested <= storage.length
+ensures result in Granted & Vacant,
+        result.base == storage.base,
+        result.length == storage.length,
+        Granted::content(old(&storage)) == Granted::content(&result),
+        Vacant::content(old(&storage)) == Vacant::content(&result)
+{
+    let parts: VacantExtentParts = split_vacant_extent(storage, requested);
+    let { base as prefix_base, length as prefix_length } = parts.taken;
+    let { base as remainder_base, length as remainder_length } = parts.rest;
+    Extent { base: prefix_base, length: prefix_length + remainder_length }
+}
+
 // Keep the mutation across a helper boundary. The view ends before whole-value
 // extraction; ending this loan alone cannot turn resident content into vacancy.
 machine KernelMemory::overwrite(

@@ -10,8 +10,9 @@ ExitBootServices it grants both retained roots and calls `ProgramStorageEntry`.
 The explicitly selected native provider transfers them to the exact
 Build-selected `Kernel::enter`, which checks its fresh context, records root
 lengths and reports arrival. It then admits vacancy for the fresh initial-storage
-root, partitions 4096 bytes, exercises resident memory on that prefix, and
-retains both children with the context and image.
+root, partitions 4096 bytes, splits and reunites that prefix at zero, half, and
+full length, exercises resident memory on the reconstructed extent, and retains
+both children with the context and image.
 
 The fresh-image harness requires `Hello from Omega`, a complete `Owned N MiB`
 line, `Kernel entered`, `Memory split`, and `Memory checked`, in that order.
@@ -65,8 +66,9 @@ The intended acceptance is one freshly compiled `uefi_x86_64` image under
 QEMU/OVMF: `Hello from Omega`, successful firmware exit, `Owned N MiB` over
 COM1, then `Kernel entered`, `Memory split`, and `Memory checked` while retaining
 image, both initial-storage children and accounted surviving stack storage.
-The last marker requires initialization/readback of 17, write/readback/extraction
-of 29, and return of the original extent base and length. A failed build or an old
+The last marker requires common-root reunion after all three partition sizes,
+initialization/readback of 17, write/readback/extraction of 29, and return of the
+original extent base and length. A failed build or an old
 `BOOTX64.EFI` cannot satisfy acceptance.
 
 ## Reproduce
@@ -112,7 +114,14 @@ supplies the explicitly admitted Stable read/write premise for this retained
 ConventionalMemory range. Its complete profile is bound to the unchanged extent;
 an independently constructed profile is not authority.
 
-`memory_lifecycle.omg` then initializes one `KernelWord` with 17, lends a mutable
+`memory_lifecycle.omg` first reconstructs the prefix from each partition's
+complete live descendants. Its ordinary checked contract conserves Granted and
+Vacant separately; numeric equality supplies neither backing nor a fresh grant.
+The zero/full cases retain empty children as distinct claims. This requires
+Omega's local common-root content-reunion support, including composition through
+completed helper calls. It is not independent-root merging or allocation release.
+
+It then initializes one `KernelWord` with 17, lends a mutable
 resident view through a helper, writes and reads 29, ends that loan, and extracts
 29. The kernel checks those observations and the original returned extent before
 printing `Memory checked`. The rest of the split allocation remains owned. This

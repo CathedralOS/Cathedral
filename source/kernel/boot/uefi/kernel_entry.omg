@@ -179,7 +179,10 @@ invokes PlacementLifecycle;
                           parts: VacantExtentParts) {
         let original_base: addr = parts.taken.base;
         let original_length: u64 = parts.taken.length;
-        let result: KernelMemoryResult = KernelMemory::exercise(parts.taken);
+        let empty: Extent in Granted & Vacant = KernelMemory::reunite_partition(parts.taken, 0);
+        let interior: Extent in Granted & Vacant = KernelMemory::reunite_partition(empty, original_length / 2);
+        let full: Extent in Granted & Vacant = KernelMemory::reunite_partition(interior, original_length);
+        let result: KernelMemoryResult = KernelMemory::exercise(full);
         // These are runtime observations, not establishment of custody. The
         // lifecycle's checked result must already conserve the original claim.
         let verified: bool = result.initialized &&
