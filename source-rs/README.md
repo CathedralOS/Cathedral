@@ -12,18 +12,18 @@ The [ARM64 portability proof](kernel/arch/isa/aarch64/README.md) exercises the s
 core on a second CPU architecture; the integrated desktop remains x86-64.
 
 Press **F5** at the repository root, or run
-`python tools/boot-harness-rs/run.py --release --window`. One desktop boots to a
+`python tools/boot-harness-rs/run.py --release --window --fresh`. One desktop boots to a
 chooser over the folder of users: NEW copies the template user, clicking a user
 runs it, and its bottom taskbar launches Notes, Colors, Split or Nested instances;
 use the running-app buttons to switch, click a program to focus it
 and its upper-right X to close it with draft protection. Notes uses F1 to save/check and
-F2 to reload; Colors uses Enter. Users, notes and colors survive QEMU restarts.
+F2 to reload; Colors uses Enter.
 See [controls and executable routes](distribution/README.md).
-For a clean prototype, choose **Cathedral: Fresh Lab in QEMU** in the VS Code
-launch selector, or add `--fresh` to that command. It sets the old disk and its
+Normal F5 starts a fresh prototype each time. It sets the old disk and its
 receipt aside under `build/boot-harness-rs/before-fresh-*`, then seeds a new disk
-with current programs. Create users again; the normal launch preserves their
-state. Legacy lab users/templates are not a compatibility target.
+with current programs. Create users again. Choose **Cathedral: Resume Saved Lab
+in QEMU**, or omit `--fresh`, to keep users, notes and colors across launches.
+Legacy lab users/templates are not a compatibility target.
 `python tools/boot-harness-rs/desktop_test.py` tests this same default composition,
 including three independent Notes drafts, capacity refusal, switching and close.
 It records QMP-to-observed-text latency upper bounds in `input-latency.json`.
@@ -1098,8 +1098,9 @@ for ownership and format limits, and the content guide for dev commands, heap
 samples and optional ATA tracing. The intermittent ATA timeout remains undiagnosed.
 
 F5's **Cathedral: Build & Run in QEMU** uses the database provider for users and
-their programs in the default desktop, retaining `build/boot-harness-rs/cathedral-storage.raw`.
-It creates missing media only; existing images are never reformatted. Explicit
+their programs in the default desktop. Each launch backs up
+`build/boot-harness-rs/cathedral-storage.raw` and seeds a new disk. **Resume Saved
+Lab** keeps the existing disk and installs changed programs. Explicit
 lab profiles retain their separate images. The recovery proof adds a real startup
 deadline, provider death before commit and after commit-before-reply, explicit
 re-grants, live sibling interaction and per-stage timing. Apps retain confirmed

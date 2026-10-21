@@ -1,16 +1,16 @@
 # Rust reference OS: tasks and handoff
 
-Updated 2026-10-20 (local date). Current milestone: **nested desktop diagnosis
-and storage collection heap pressure**, on baseline `29d5f02e` (cleanup backing
-count reuse). The latest section distinguishes current-program four-level
-verification from failures in retained executable snapshots. No scheduler,
-resource entitlement or close deadline is changed.
+Updated 2026-10-20 (local date). Current milestone: **fresh lab on every F5
+launch**, on baseline `35bb3943` (four-level desktop verification and reduced
+collection heap pressure). Saved-state testing is an explicit launch choice.
+The preceding section distinguishes current-program four-level verification
+from failures in retained executable snapshots.
 The fresh-lab reset is `30572c9f`. Compact recursive desktops landed as `c7571191`,
 and the launch request ABI repair as `a287ae39`. No recursive legacy snapshot
 upgrade is required. The saved-disk quota/headroom repair remains in place. Current
 verification and limitations are recorded in the newest section at the end.
 Previous baseline: atomic named creation and deeper recursive matrices at `102e416c`.
-F5 stages changed program installations in host scratch space, then verifies and
+The saved-lab launch stages changed program installations in host scratch space, then verifies and
 publishes a result that fits the assigned disk extent. Legacy 4 MiB desktop
 volumes are backed up and grown offline to 8 MiB without changing their records;
 the root's logical allowance is now 2 MiB. Final quota admission follows all
@@ -31,13 +31,14 @@ F5 boots one desktop to a chooser over the folder of users. **Preserve that as
 the default experience.** From the repository root:
 
 ```powershell
-python tools/boot-harness-rs/run.py --release --window
+python tools/boot-harness-rs/run.py --release --window --fresh
 ```
 
 This is what the normal [VS Code launch entry](.vscode/launch.json) runs.
-**Cathedral: Fresh Lab in QEMU** adds `--fresh`: it backs up the disk and receipt
+**Cathedral: Build & Run in QEMU** uses `--fresh`: it backs up the disk and receipt
 under `build/boot-harness-rs/before-fresh-*` and installs current seeds on a fresh
-disk. Recreate users there. The owner explicitly does not require compatibility
+disk on every launch. Recreate users there. **Cathedral: Resume Saved Lab in QEMU**
+omits `--fresh` for explicit persistence testing. The owner explicitly does not require compatibility
 or recursive migrations for old lab users; use a fresh lab when templates change.
 The composition is [distribution/profile.json](source-rs/distribution/profile.json).
 It uses x86-64 QEMU/TCG and UEFI.
@@ -97,8 +98,9 @@ It uses x86-64 QEMU/TCG and UEFI.
   optional service binding and the matrix LOSS/CLOSE mechanism still exist;
   their engineering controls do not belong in the normal desktop.
 
-Interactive state persists in **`build/boot-harness-rs/cathedral-storage.raw`**:
-the users you made, their notes and colors. Missing media is created; existing
+Interactive state is stored in **`build/boot-harness-rs/cathedral-storage.raw`**:
+the users you made, their notes and colors. Normal F5 sets this disk aside and
+starts fresh; **Resume Saved Lab** reuses it. On that saved-lab path, missing media is created; existing
 media is never automatically reformatted. The programs are installed into the
 image on first launch and republished as new revisions when their bytes
 change; the sidecar `cathedral-storage.raw.programs` records what is installed.
@@ -4634,3 +4636,17 @@ Next: bound collection workspace independently of record count and measure
 launch/seed phases under retained-store pressure. Preserve the failing saved
 copy for exact timeout attribution if needed. Current-program desktop evidence
 must stay separate from legacy snapshots and from the still-open LOSS timeout.
+
+## Fresh lab as the F5 default (2026-10-20)
+
+The owner prefers a fresh OS on every F5 launch over retaining old nested
+program snapshots. **Cathedral: Build & Run in QEMU** now passes `--fresh`.
+The existing reset backs up the disk and receipt under `before-fresh-*`, then
+seeds current programs; users must be created again. **Cathedral: Resume Saved
+Lab in QEMU** explicitly reuses the disk for persistence work. The bare CLI
+without `--fresh` still preserves state. No reset mechanism or migration changed.
+
+Verification: launch JSON and both command arguments checked; all ten existing
+database-image tests pass, including reset backup/rollback and busy-disk refusal.
+Whitespace checks pass. No guest rerun was needed for selecting the already
+tested fresh launch path. The current disk was not reset during this change.

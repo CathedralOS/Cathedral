@@ -8,14 +8,14 @@ For the OS desktop in VS Code, open the repository root and press **F5** with
 **Cathedral: Build & Run in QEMU** selected. It runs the same default composition as:
 
 ```powershell
-python tools/boot-harness-rs/run.py --release --window
+python tools/boot-harness-rs/run.py --release --window --fresh
 ```
 
-For a clean prototype, select **Cathedral: Fresh Lab in QEMU**, or add `--fresh`
-to that command. After a successful build, it moves the saved disk and installation
+Each normal F5 launch starts a fresh prototype. After a successful build, it moves the saved disk and installation
 receipt into `build/boot-harness-rs/before-fresh-*` and seeds a fresh disk with
-current stock programs. Recreate users. Normal launches keep the resulting state;
-Fresh Lab resets it each time. Old lab users/templates are not a compatibility
+current stock programs. Recreate users. To keep state across launches, select
+**Cathedral: Resume Saved Lab in QEMU**, or omit `--fresh` from the command.
+Old lab users/templates are not a compatibility
 target. The reset refuses a busy disk and rolls back if moving the receipt fails.
 
 Click **NEW USER** to create a user, click its avatar to enter, then click
