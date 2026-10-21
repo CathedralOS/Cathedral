@@ -233,7 +233,71 @@ invokes PlacementLifecycle;
         asm { out 1016, 100 } // d
         asm { out 1016, 13 }
         asm { out 1016, 10 }
-        transition { _ -> retain_parts(context, image, parts) }
+        transition parts.taken.length >= 16 {
+            true -> exercise_pair(context, image, parts)
+            _ -> retain_parts(context, image, parts)
+        }
+    }
+
+    state exercise_pair(context: &mut KernelState, image: Extent in Granted,
+                        parts: VacantExtentParts)
+    requires parts.taken.length >= 16
+    {
+        let length: u64 = parts.taken.length;
+        let base: addr = parts.taken.base;
+        let pair: KernelMemoryPair = KernelMemory::exercise_pair(parts.taken);
+        let verified: bool = pair.verified && pair.first.base == base &&
+            pair.first.length == 8 && pair.second.length == 8 && pair.tail.length == length - 16;
+        transition verified {
+            true -> paired_wait(context, image, pair, parts.rest, 1000000)
+            _ -> retain_pair(context, image, pair, parts.rest)
+        }
+    }
+
+    state paired_wait(context: &mut KernelState, image: Extent in Granted,
+                      pair: KernelMemoryPair, rest: Extent in Granted & Vacant,
+                      remaining: u64) {
+        let mut status: u8 = 0;
+        asm { in status, 1021 }
+        transition (status & 32) != 0 {
+            true -> paired_report(context, image, pair, rest)
+            _ -> paired_retry(context, image, pair, rest, remaining)
+        }
+    }
+
+    state paired_retry(context: &mut KernelState, image: Extent in Granted,
+                       pair: KernelMemoryPair, rest: Extent in Granted & Vacant,
+                       remaining: u64) {
+        transition remaining > 1 {
+            true -> paired_wait(context, image, pair, rest, remaining - 1)
+            _ -> retain_pair(context, image, pair, rest)
+        }
+    }
+
+    state paired_report(context: &mut KernelState, image: Extent in Granted,
+                        pair: KernelMemoryPair, rest: Extent in Granted & Vacant) {
+        asm { out 1016, 77 }  // M
+        asm { out 1016, 101 } // e
+        asm { out 1016, 109 } // m
+        asm { out 1016, 111 } // o
+        asm { out 1016, 114 } // r
+        asm { out 1016, 121 } // y
+        asm { out 1016, 32 }
+        asm { out 1016, 112 } // p
+        asm { out 1016, 97 }  // a
+        asm { out 1016, 105 } // i
+        asm { out 1016, 114 } // r
+        asm { out 1016, 101 } // e
+        asm { out 1016, 100 } // d
+        asm { out 1016, 13 }
+        asm { out 1016, 10 }
+        transition { _ -> retain_pair(context, image, pair, rest) }
+    }
+
+    state retain_pair(context: &mut KernelState, image: Extent in Granted,
+                      pair: KernelMemoryPair, rest: Extent in Granted & Vacant) {
+        asm { hlt }
+        transition { _ -> retain_pair(context, image, pair, rest) }
     }
 
     state retain_parts(context: &mut KernelState, image: Extent in Granted,

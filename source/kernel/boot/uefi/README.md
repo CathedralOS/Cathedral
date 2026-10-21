@@ -11,13 +11,15 @@ The explicitly selected native provider transfers them to the exact
 Build-selected `Kernel::enter`, which checks its fresh context, records root
 lengths and reports arrival. It then admits vacancy for the fresh initial-storage
 root, partitions 4096 bytes, splits and reunites that prefix at zero, half, and
-full length, exercises resident memory on the reconstructed extent, and retains
-both children with the context and image.
+full length, exercises resident memory on the reconstructed extent, then issues
+two eight-byte children through brief mutable-tail borrows. Both children hold
+live residents at once. After extraction, it retains those two vacant children,
+the prefix's unused tail and the outer remainder with the context and image.
 
 The fresh-image harness requires `Hello from Omega`, a complete `Owned N MiB`
-line, `Kernel entered`, `Memory split`, and `Memory checked`, in that order.
-A fresh five-marker boot reported 35 MiB in QEMU/OVMF with the companion Omega
-native-lifecycle repairs. The current source requires Omega's exact address-model
+line, `Kernel entered`, `Memory split`, `Memory checked`, and `Memory paired`,
+in that order. A fresh six-marker boot reported 35 MiB in QEMU/OVMF using
+Omega `ceb07da2eef`. The current source requires Omega's exact address-model
 typing, representation-recast effect tracking and occurrence-local state-prefix
 checking, in addition to the canonical `ProgramStorageEntryNativeProvider`,
 activation-local entry-context provisioning and private entry stack. A clean
@@ -64,11 +66,14 @@ separate backing and lifecycle obligations.
 
 The intended acceptance is one freshly compiled `uefi_x86_64` image under
 QEMU/OVMF: `Hello from Omega`, successful firmware exit, `Owned N MiB` over
-COM1, then `Kernel entered`, `Memory split`, and `Memory checked` while retaining
-image, both initial-storage children and accounted surviving stack storage.
-The last marker requires common-root reunion after all three partition sizes,
+COM1, then `Kernel entered`, `Memory split`, `Memory checked`, and `Memory paired`
+while retaining image, every initial-storage descendant and accounted surviving
+stack storage. `Memory checked` requires common-root reunion after all three partition sizes,
 initialization/readback of 17, write/readback/extraction of 29, and return of the
-original extent base and length. A failed build or an old
+original extent base and length. `Memory paired` additionally requires two live
+resident allocations, distinct initial values 17 and 41, writes of 29 and 73,
+reread of 29 after the second write, and extraction of both updated values.
+A failed build or an old
 `BOOTX64.EFI` cannot satisfy acceptance.
 
 ## Reproduce
@@ -129,6 +134,20 @@ is real access to retained firmware memory, not a snapshot restored by the
 interpreter. It does not establish a general allocator or independently verify
 the provider's memory-mapping premise.
 
+The subsequent `exercise_pair` calls the same checked carve operation twice,
+borrowing the allocatable tail only for each call. It preserves Granted and
+Vacant separately, restores the borrowed tail, and returns an owned child.
+Both eight-byte children are then initialized together, mutated and extracted.
+Reading the first again after writing the second checks their runtime separation.
+Every rejected initialization path retains the vacant storage and extracts any
+resident already established; it cannot announce success. No failure path
+discards the unused tail.
+
+This is a bounded physical allocation witness, not the complete `alloc::bump`
+package or a reset implementation. It deliberately retains all returned children
+instead of merging unrelated formal claims. Omega's open Q1 governs that modular
+lineage contract; it does not prevent allocation or simultaneous live residents.
+
 The kernel currently retains its context, image and storage children in a halt loop;
 it does not yet install page tables, an allocator, interrupts or a scheduler.
 This non-returning boot exercises context initialization and lifetime, not
@@ -149,7 +168,7 @@ Use a compiler containing the checking repairs described above and separate
 repository-metadata acquisition limits: this pinned repository exceeds 65,536
 entries although the selected std source does not. Selected-package source and
 cache custody limits remain unchanged. A fresh image built from this source
-reached all five markers under QEMU/OVMF after ordinary package review, using
+reached all six markers under QEMU/OVMF after ordinary package review, using
 the companion compiler repairs for native resident initialization and extraction.
 
 The local calling policy deliberately remains a normal named implementation;
@@ -163,6 +182,6 @@ implicit provider arguments. Selecting the implementations does not establish
 the validity or lifetime of those firmware values.
 
 The smoke harness checks greeting, firmware exit, ownership reporting,
-arrival in the selected kernel continuation, real-root partition and resident
-read/write/extraction. It is a bounded boot witness, not
+arrival in the selected kernel continuation, real-root partition and coexisting
+resident read/write/extraction. It is a bounded boot witness, not
 a working operating-system claim; the Rust bring-up lab is separate evidence.

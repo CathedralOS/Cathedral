@@ -32,8 +32,8 @@ class BootHarnessTests(unittest.TestCase):
             self.assertEqual((first / 'serial.log').read_bytes(), b'first')
 
     def test_smoke_requires_ordered_complete_reports_through_resident_readback(self):
-        boot.check_boot_milestones(b'Hello from Omega\r\nOwned 128 MiB\r\nKernel entered\r\nMemory split\r\nMemory checked\r\n')
-        boot.check_boot_milestones(b'Hello from Omega\nOwned 99999+ MiB\nKernel entered\r\nMemory split\r\nMemory checked\n')
+        boot.check_boot_milestones(b'Hello from Omega\r\nOwned 128 MiB\r\nKernel entered\r\nMemory split\r\nMemory checked\r\nMemory paired\r\n')
+        boot.check_boot_milestones(b'Hello from Omega\nOwned 99999+ MiB\nKernel entered\r\nMemory split\r\nMemory checked\nMemory paired\n')
         for output in (b'', b'Hello from Omega\r\n',
                        b'Owned 128 MiB\nHello from Omega\n',
                        b'Hello from Omega\nOwned rubbish MiB\n',
@@ -68,6 +68,15 @@ class BootHarnessTests(unittest.TestCase):
             (repository / 'Cargo.toml').touch()
             command = boot.compiler_command(None, repository)
             self.assertEqual(command[-3:], ['-p', 'omega', '--'])
+
+    def test_single_resident_or_invalid_pair_report_cannot_satisfy_smoke(self):
+        prefix = b'Hello from Omega\r\nOwned 128 MiB\r\nKernel entered\r\nMemory split\r\nMemory checked\r\n'
+        for output in (prefix, prefix + b'Memory paired', prefix + b'Memory paired\r',
+                       prefix + b'Not Memory paired\r\n', b'Memory paired\r\n' + prefix,
+                       prefix.replace(b'Memory checked\r\n', b'Memory paired\r\nMemory checked\r\n')):
+            with self.subTest(output=output):
+                with self.assertRaisesRegex(ValueError, 'coexisting resident'):
+                    boot.check_boot_milestones(output)
 
     def test_explicit_binary_wins(self):
         command = boot.compiler_command('selected-omega', Path('absent'))

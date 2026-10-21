@@ -94,8 +94,12 @@ def check_boot_milestones(output):
     if memory < 0:
         raise ValueError('Expected checked memory partition after kernel entry.')
     after_partition = output[memory + len(b'Memory split\r\n'):]
-    if re.search(rb'(?:^|\n)Memory checked\r?\n', after_partition) is None:
+    checked = re.search(rb'(?:^|\n)Memory checked\r?\n', after_partition)
+    if checked is None:
         raise ValueError('Expected resident initialization, read/write and extraction after memory split.')
+    after_checked = after_partition[checked.end():]
+    if re.search(rb'(?:^|\n)Memory paired\r?\n', after_checked) is None:
+        raise ValueError('Expected two coexisting resident allocations after memory checked.')
 
 
 def main(arguments=None):
@@ -108,7 +112,7 @@ def main(arguments=None):
                         help='run ordinary omega update for dependency review before building')
     parser.add_argument('--build-dir', type=Path, default=ROOT / 'build/boot-harness')
     parser.add_argument('--smoke', action='store_true',
-                        help='require greeting, owned-memory report, kernel entry, memory split and memory checked')
+                        help='require greeting, owned-memory report, kernel entry, memory split, memory checked and memory paired')
     parser.add_argument('--timeout', type=float, default=30)
     options = parser.parse_args(arguments)
     if options.timeout <= 0:

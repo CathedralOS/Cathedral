@@ -83,7 +83,7 @@ reaches ResourceProfileSupply + PlacementLifecycle
     ) -> KernelMemoryResult {
         let mut active: Extent in Granted & Resident<KernelWordPlacement, KernelWord> = storage;
         let observation: KernelMemoryObservation = KernelMemory::overwrite(
-            Placed::view_resident_mut<KernelWordPlacement, KernelWord>(&mut active)
+            Placed::view_resident_mut<KernelWordPlacement, KernelWord>(&mut active), 29
         );
         let returned: PlacementReturn<Extent in Granted & Vacant, KernelWord> =
             Placed::move_out_owned<KernelWordPlacement, KernelWord>(active);
@@ -126,10 +126,114 @@ ensures result in Granted & Vacant,
 // Keep the mutation across a helper boundary. The view ends before whole-value
 // extraction; ending this loan alone cannot turn resident content into vacancy.
 machine KernelMemory::overwrite(
-    view: &mut Placed<KernelWordPlacement, KernelWord>
+    view: &mut Placed<KernelWordPlacement, KernelWord>, replacement: u64
 ) -> KernelMemoryObservation {
     let initial: u64 = placed_read(&view.value);
-    placed_write(&mut view.value, 29u64);
+    placed_write(&mut view.value, replacement);
     let updated: u64 = placed_read(&view.value);
     KernelMemoryObservation { initial: initial, updated: updated }
+}
+
+// Preserve all three descendants, including rejected initialization paths.
+// This boot witness does not merge independently received formal roots: the
+// allocator's modular return/reset contract is a separate owner decision.
+data KernelMemoryPair {
+    first: Extent in Granted & Vacant;
+    second: Extent in Granted & Vacant;
+    tail: Extent in Granted & Vacant;
+    verified: bool;
+}
+
+// The caller retains the tail variable while each brief borrow returns one
+// independently owned child. No provider call or numeric address creates it.
+machine KernelMemory::carve(
+    tail: &mut Extent in Granted & Vacant, available: u64, requested: u64
+) -> Extent in Granted & Vacant
+requires available == tail.length && requested <= available
+ensures result.length == requested, tail.length == available - requested
+{
+    let previous: Extent in Granted & Vacant = tail;
+    let parts: VacantExtentParts = split_vacant_extent(previous, requested);
+    tail = parts.rest;
+    parts.taken
+}
+
+// Initialize two disjoint children concurrently, mutate each through the same
+// ordinary placement path, and read the first again after mutating the second.
+// A wrong alias, lost borrow restoration or native address calculation cannot
+// pass merely by returning the requested scalar lengths.
+machine KernelMemory::exercise_pair(storage: Extent in Granted & Vacant) -> KernelMemoryPair
+requires storage.length >= 16
+reaches ResourceProfileSupply + PlacementLifecycle
+{
+    let available: u64 = storage.length;
+    let mut tail: Extent in Granted & Vacant = storage;
+    let first: Extent in Granted & Vacant = KernelMemory::carve(&mut tail, available, 8);
+    let second: Extent in Granted & Vacant = KernelMemory::carve(&mut tail, available - 8, 8);
+    transition Placed::initialize_owned<KernelWordPlacement, KernelWord>(
+        first, KernelWord { value: 17 }
+    ) {
+        PlacementOutcome::Ready { view } -> initialize_second(view, second, tail)
+        PlacementOutcome::Rejected { returned, reason } -> KernelMemoryPair {
+            first: returned.source, second: second, tail: tail, verified: false,
+        }
+    }
+
+    state initialize_second(
+        first: Extent in Granted & Resident<KernelWordPlacement, KernelWord>,
+        second: Extent in Granted & Vacant, tail: Extent in Granted & Vacant
+    ) -> KernelMemoryPair {
+        transition Placed::initialize_owned<KernelWordPlacement, KernelWord>(
+            second, KernelWord { value: 41 }
+        ) {
+            PlacementOutcome::Ready { view } -> observe(first, view, tail)
+            PlacementOutcome::Rejected { returned, reason } -> reject_second(first, returned, tail)
+        }
+    }
+
+    state reject_second(
+        first: Extent in Granted & Resident<KernelWordPlacement, KernelWord>,
+        second: PlacementReturn<Extent in Granted & Vacant, KernelWord>,
+        tail: Extent in Granted & Vacant
+    ) -> KernelMemoryPair {
+        let returned: PlacementReturn<Extent in Granted & Vacant, KernelWord> =
+            Placed::move_out_owned<KernelWordPlacement, KernelWord>(first);
+        KernelMemoryPair {
+            first: returned.source, second: second.source, tail: tail, verified: false,
+        }
+    }
+
+    state observe(
+        first: Extent in Granted & Resident<KernelWordPlacement, KernelWord>,
+        second: Extent in Granted & Resident<KernelWordPlacement, KernelWord>,
+        tail: Extent in Granted & Vacant
+    ) -> KernelMemoryPair {
+        let mut first_active: Extent in Granted & Resident<KernelWordPlacement, KernelWord> = first;
+        let mut second_active: Extent in Granted & Resident<KernelWordPlacement, KernelWord> = second;
+        let first_observation: KernelMemoryObservation = KernelMemory::overwrite(
+            Placed::view_resident_mut<KernelWordPlacement, KernelWord>(&mut first_active), 29
+        );
+        let second_observation: KernelMemoryObservation = KernelMemory::overwrite(
+            Placed::view_resident_mut<KernelWordPlacement, KernelWord>(&mut second_active), 73
+        );
+        let first_after_second: u64 = KernelMemory::read(
+            Placed::view_resident_mut<KernelWordPlacement, KernelWord>(&mut first_active)
+        );
+        let first_returned: PlacementReturn<Extent in Granted & Vacant, KernelWord> =
+            Placed::move_out_owned<KernelWordPlacement, KernelWord>(first_active);
+        let second_returned: PlacementReturn<Extent in Granted & Vacant, KernelWord> =
+            Placed::move_out_owned<KernelWordPlacement, KernelWord>(second_active);
+        let verified: bool = first_observation.initial == 17 && first_observation.updated == 29 &&
+            second_observation.initial == 41 && second_observation.updated == 73 &&
+            first_after_second == 29 && first_returned.custody.value == 29 &&
+            second_returned.custody.value == 73;
+        KernelMemoryPair {
+            first: first_returned.source, second: second_returned.source,
+            tail: tail, verified: verified,
+        }
+    }
+}
+
+machine KernelMemory::read(view: &mut Placed<KernelWordPlacement, KernelWord>) -> u64 {
+    placed_read(&view.value)
 }
