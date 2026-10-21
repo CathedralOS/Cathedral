@@ -1,5 +1,6 @@
 use omega::language::core::extent;
 use omega::language::core::layout;
+use alloc::bump;
 
 public data KernelWord { value: u64; }
 public data KernelWordPlacement {}
@@ -144,20 +145,6 @@ data KernelMemoryPair {
     verified: bool;
 }
 
-// The caller retains the tail variable while each brief borrow returns one
-// independently owned child. No provider call or numeric address creates it.
-machine KernelMemory::carve(
-    tail: &mut Extent in Granted & Vacant, available: u64, requested: u64
-) -> Extent in Granted & Vacant
-requires available == tail.length && requested <= available
-ensures result.length == requested, tail.length == available - requested
-{
-    let previous: Extent in Granted & Vacant = tail;
-    let parts: VacantExtentParts = split_vacant_extent(previous, requested);
-    tail = parts.rest;
-    parts.taken
-}
-
 // Initialize two disjoint children concurrently, mutate each through the same
 // ordinary placement path, and read the first again after mutating the second.
 // A wrong alias, lost borrow restoration or native address calculation cannot
@@ -167,9 +154,10 @@ requires storage.length >= 16
 reaches ResourceProfileSupply + PlacementLifecycle
 {
     let available: u64 = storage.length;
-    let mut tail: Extent in Granted & Vacant = storage;
-    let first: Extent in Granted & Vacant = KernelMemory::carve(&mut tail, available, 8);
-    let second: Extent in Granted & Vacant = KernelMemory::carve(&mut tail, available - 8, 8);
+    let mut strategy: Bump = Bump { tail: storage, remaining: available };
+    let first: Extent in Granted & Vacant = allocate(&mut strategy, 8, available);
+    let second: Extent in Granted & Vacant = allocate(&mut strategy, 8, available - 8);
+    let tail: Extent in Granted & Vacant = strategy.tail;
     transition Placed::initialize_owned<KernelWordPlacement, KernelWord>(
         first, KernelWord { value: 17 }
     ) {

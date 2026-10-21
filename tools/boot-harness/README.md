@@ -52,8 +52,9 @@ requires the kernel to establish vacancy for its initial-storage root, split
 Both children remain owned. `Memory checked` additionally requires successful
 resident initialization with 17, readback of 17, mutation and readback of 29,
 extraction of 29, and return of the original extent base and length.
-`Memory paired` requires two owned eight-byte allocations returned through brief
-tail borrows, two simultaneous residents initialized with 17 and 41, independent
+`Memory paired` requires two owned eight-byte allocations from the checked
+`alloc::bump` package through brief strategy borrows, two simultaneous residents
+initialized with 17 and 41, independent
 writes of 29 and 73, rereading the first after the second write, and extraction
 of both updated values. All storage descendants remain retained. A split-only
 or single-resident boot does not satisfy this acceptance. Missing, truncated or

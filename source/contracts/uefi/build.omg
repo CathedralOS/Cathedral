@@ -5,7 +5,7 @@ machine build(builder: &mut Build) {
     Build::package(builder, "cathedral_uefi");
     Build::depend_as(builder, "std", Source::Git {
         repository: "https://github.com/CathedralOS/Omega.git",
-        revision: "7d9848e51eb2c7df9634f52366d69bd70e95d66b",
+        revision: "849161c59ff74176dafc3f8de5ff66148581de22",
         selection: PackageSelection::Named { package: "omega_language_std" }
     });
     // The package's own review resolves the same named providers its consumer

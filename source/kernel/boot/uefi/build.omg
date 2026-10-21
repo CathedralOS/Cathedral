@@ -4,9 +4,14 @@
 machine build(builder: &mut Build) {
     Build::application(builder, "cathedral");
     // Reach: the boot hand-off ABI + the kernel's checked Extent provider.
-    // The boot package may name `uefi` and `core` and nothing else.
+    // Allocation policy is the ordinary checked alloc package.
     Build::depend_as(builder, "uefi", Source::Path { location: "../../../contracts/uefi" });
     Build::depend_as(builder, "core", Source::Path { location: "../../core" });
+    Build::depend_as(builder, "alloc", Source::Git {
+        repository: "https://github.com/CathedralOS/Omega.git",
+        revision: "849161c59ff74176dafc3f8de5ff66148581de22",
+        selection: PackageSelection::Named { package: "alloc" }
+    });
     Build::accept_boundary<ExtentRootProvider>(builder);
     Build::select_provider<ExtentRootProvider, core::CathedralExtentRootProvider>(builder);
     Build::accept_boundary<VacantContentTransfer>(builder);

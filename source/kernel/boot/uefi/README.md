@@ -134,22 +134,22 @@ is real access to retained firmware memory, not a snapshot restored by the
 interpreter. It does not establish a general allocator or independently verify
 the provider's memory-mapping premise.
 
-The subsequent `exercise_pair` calls the same checked carve operation twice,
-borrowing the allocatable tail only for each call. It preserves Granted and
-Vacant separately, restores the borrowed tail, and returns an owned child.
+The subsequent `exercise_pair` calls the ordinary `alloc::bump` package twice,
+borrowing its `Bump` strategy only for each allocation. It preserves Granted and
+Vacant separately, restores the tail and remaining count, and returns an owned child.
 Both eight-byte children are then initialized together, mutated and extracted.
 Reading the first again after writing the second checks their runtime separation.
 Every rejected initialization path retains the vacant storage and extracts any
 resident already established; it cannot announce success. No failure path
 discards the unused tail.
 
-This is a bounded physical allocation witness, not the complete `alloc::bump`
-package or a reset implementation. It deliberately retains all returned children
+This is a bounded physical witness of `alloc::bump` allocation, not its complete
+retirement/reset lifecycle. It deliberately retains all returned children
 instead of merging unrelated formal claims. Omega's open Q1 governs that modular
 lineage contract; it does not prevent allocation or simultaneous live residents.
 
 The kernel currently retains its context, image and storage children in a halt loop;
-it does not yet install page tables, an allocator, interrupts or a scheduler.
+it does not yet install page tables, a general kernel heap, interrupts or a scheduler.
 This non-returning boot exercises context initialization and lifetime, not
 normal-return cleanup or a returning application's allocation release protocol.
 
@@ -160,10 +160,11 @@ contract and the successful final-map/ExitBootServices transaction remain part
 of the boot's trusted boundary; the serial marker does not independently prove
 firmware correctness or every backing assertion.
 
-The std pin is `7d9848e51eb2c7df9634f52366d69bd70e95d66b`. It uses the current
-`public` visibility spelling, as do the loaded Cathedral boot dependencies.
-It retains the borrowed UTF-8 calling-policy rejection text and copy eligibility
-for ABI tag values. The pin supplies library source, not a compiler binary.
+The `std` and `alloc` dependencies select the same immutable Omega workspace
+revision, `849161c59ff74176dafc3f8de5ff66148581de22`. The former supplies the
+firmware calling vocabulary; the latter exports the borrowed `Bump` API.
+One workspace lineage cannot resolve to conflicting source roots. These pins
+supply library source, not a compiler binary, and require no sibling checkout.
 Use a compiler containing the checking repairs described above and separate
 repository-metadata acquisition limits: this pinned repository exceeds 65,536
 entries although the selected std source does not. Selected-package source and
