@@ -14,12 +14,14 @@ root, partitions 4096 bytes, splits and reunites that prefix at zero, half, and
 full length, exercises resident memory on the reconstructed extent, then issues
 two eight-byte children through brief mutable-tail borrows. An oversized request
 must then report exhaustion without changing the tail's base, length or capacity.
-Both children subsequently hold live residents at once. After extraction, it retains those two vacant children,
-the prefix's unused tail and the outer remainder with the context and image.
+Both children subsequently hold live residents at once. After extraction, the
+kernel retains those two vacant children and the prefix's unused tail. It then
+prepares an aligned page from the outer remainder, retaining every skipped byte,
+the initialized page and the remaining tail with the context and image.
 
 The fresh-image harness requires `Hello from Omega`, a complete `Owned N MiB`
-line, `Kernel entered`, `Memory split`, `Memory checked`, and `Memory paired`,
-in that order. The pre-exhaustion six-marker baseline reported 35 MiB in
+line, `Kernel entered`, `Memory split`, `Memory checked`, `Memory paired`, and
+`Page ready`, in that order. The six-marker baseline reported 35 MiB in
 QEMU/OVMF using Omega `9e04918b1d1`. The current source requires Omega's exact address-model
 typing, representation-recast effect tracking and occurrence-local state-prefix
 checking, in addition to the canonical `ProgramStorageEntryNativeProvider`,
@@ -29,6 +31,9 @@ this was not a replay of an older image. The memory step additionally
 requires preserved result-membership contracts through provider settlement and
 linear returns. The ownership report occurs only after successful ExitBootServices;
 the kernel markers come from the selected continuation, not the firmware adapter.
+Page preparation additionally requires exact generic case correspondence for
+computed results: word and page placement outcomes coexist, and neither may
+select the other's prepared case classifier.
 
 The compiler provisions an image-backed private stack before the source adapter
 allocates its frames. Its backing includes the exact call-chain demand, both
@@ -67,7 +72,7 @@ separate backing and lifecycle obligations.
 
 The intended acceptance is one freshly compiled `uefi_x86_64` image under
 QEMU/OVMF: `Hello from Omega`, successful firmware exit, `Owned N MiB` over
-COM1, then `Kernel entered`, `Memory split`, `Memory checked`, and `Memory paired`
+COM1, then `Kernel entered`, `Memory split`, `Memory checked`, `Memory paired`, and `Page ready`
 while retaining image, every initial-storage descendant and accounted surviving
 stack storage. `Memory checked` requires common-root reunion after all three partition sizes,
 initialization/readback of 17, write/readback/extraction of 29, and return of the
@@ -160,6 +165,31 @@ This is a bounded physical witness of `alloc::bump` allocation, not its complete
 retirement/reset lifecycle. It deliberately retains all returned children
 instead of merging unrelated formal claims. Omega's open Q1 governs that modular
 lineage contract; it does not prevent allocation or simultaneous live residents.
+
+## Aligned page preparation
+
+`page_frame.omg` reserves one aligned 4096-byte page after an ordinary eight-byte
+leading reservation. The resulting misalignment exercises retained padding,
+rather than relying only on firmware-aligned input. Address-to-count conversion
+uses the explicit 64-bit address-model premise already supplied by this UEFI
+target; it does not assume that every Omega target has 64-bit addresses.
+
+The page is one `KernelPage` containing 512 words, not 512 separately authorized
+fields. Checked vacant splits preserve the leading reservation, padding, page
+and tail. Native placement initializes the first and last words to 17 and 73,
+extracts the whole value and checks every word, initializes a zero page,
+extracts and checks all 512 zeros, then reinstalls and retains that exact image.
+Every rejected placement retains its returned vacant extent. The success marker
+requires the aligned base, exact page length and both content checks.
+
+Whole-value initialization and extraction use an Inaccessible field plan: they
+do not grant projected reads or writes. General indexed resident-array access
+remains compiler work, not a reason to expand this array into scalar fields.
+Changing only the expected final word from 73 to 74 still boots through
+`Memory paired`, but suppresses `Page ready` and fails the fresh-image smoke.
+The harness also rejects missing, partial, forged-prefix and out-of-order page
+markers. These observations do not establish page-table installation or validate
+the provider's external backing premise independently.
 
 The kernel currently retains its context, image and storage children in a halt loop;
 it does not yet install page tables, a general kernel heap, interrupts or a scheduler.

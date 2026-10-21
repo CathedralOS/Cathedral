@@ -45,7 +45,7 @@ Without `--smoke`, QEMU's serial console is interactive. With it, the guest
 runs headlessly for at most `--timeout` seconds (default 30), and this run's
 serial log must contain the greeting followed by a complete numeric
 `Owned N MiB` line, then `Kernel entered`, `Memory split`, `Memory checked`,
-and `Memory paired`.
+`Memory paired`, and `Page ready`.
 The partition marker
 requires the kernel to establish vacancy for its initial-storage root, split
 4096 bytes with the checked core operation, and observe both returned lengths.
@@ -57,8 +57,13 @@ extraction of 29, and return of the original extent base and length.
 request with unchanged tail base, length and capacity, two simultaneous residents
 initialized with 17 and 41, independent
 writes of 29 and 73, rereading the first after the second write, and extraction
-of both updated values. All storage descendants remain retained. A split-only
-or single-resident boot does not satisfy this acceptance. Missing, truncated or
+of both updated values. `Page ready` additionally requires an aligned 4096-byte
+page prepared after an eight-byte reservation, whole-page pattern readback,
+zero readback of all 512 words, and retention of the initialized page, padding
+and remaining tail. Changing the expected last pattern word from 73 to 74
+suppresses the page marker while the preceding markers still appear.
+All storage descendants remain retained. A split-only, single-resident, or
+paired-allocation-only boot does not satisfy this acceptance. Missing, truncated or
 out-of-order markers fail.
 Timeout alone is not success. The check observes those
 milestones; it does not prove firmware correctness or long-term liveness.

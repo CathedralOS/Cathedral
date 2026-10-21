@@ -32,8 +32,8 @@ class BootHarnessTests(unittest.TestCase):
             self.assertEqual((first / 'serial.log').read_bytes(), b'first')
 
     def test_smoke_requires_ordered_complete_reports_through_resident_readback(self):
-        boot.check_boot_milestones(b'Hello from Omega\r\nOwned 128 MiB\r\nKernel entered\r\nMemory split\r\nMemory checked\r\nMemory paired\r\n')
-        boot.check_boot_milestones(b'Hello from Omega\nOwned 99999+ MiB\nKernel entered\r\nMemory split\r\nMemory checked\nMemory paired\n')
+        boot.check_boot_milestones(b'Hello from Omega\r\nOwned 128 MiB\r\nKernel entered\r\nMemory split\r\nMemory checked\r\nMemory paired\r\nPage ready\r\n')
+        boot.check_boot_milestones(b'Hello from Omega\nOwned 99999+ MiB\nKernel entered\r\nMemory split\r\nMemory checked\nMemory paired\nPage ready\n')
         for output in (b'', b'Hello from Omega\r\n',
                        b'Owned 128 MiB\nHello from Omega\n',
                        b'Hello from Omega\nOwned rubbish MiB\n',
@@ -81,6 +81,15 @@ class BootHarnessTests(unittest.TestCase):
     def test_explicit_binary_wins(self):
         command = boot.compiler_command('selected-omega', Path('absent'))
         self.assertEqual(command, [str(Path('selected-omega').resolve())])
+
+    def test_pair_only_or_invalid_page_report_cannot_satisfy_smoke(self):
+        prefix = b'Hello from Omega\r\nOwned 128 MiB\r\nKernel entered\r\nMemory split\r\nMemory checked\r\nMemory paired\r\n'
+        for output in (prefix, prefix + b'Page ready', prefix + b'Page ready\r',
+                       prefix + b'Not Page ready\r\n', b'Page ready\r\n' + prefix,
+                       prefix.replace(b'Memory paired\r\n', b'Page ready\r\nMemory paired\r\n')):
+            with self.subTest(output=output):
+                with self.assertRaisesRegex(ValueError, 'aligned page'):
+                    boot.check_boot_milestones(output)
 
     def test_failed_build_does_not_replace_or_return_stale_image(self):
         with tempfile.TemporaryDirectory() as temporary:

@@ -2,6 +2,7 @@ use omega::language::core::extent;
 use omega::language::core::assembly;
 use omega::language::core::layout;
 use memory_lifecycle;
+use page_frame;
 
 data KernelState {
     entered: bool;
@@ -53,6 +54,7 @@ BootMemoryProfileProvider satisfies ResourceProfileSupply {
 // has transferred both roots, and idle retains both claims for the OS lifetime.
 machine Kernel::enter(context: &mut KernelState, image: Extent in Granted,
                       initial_storage: Extent in Granted)
+requires addr::Bound == 18446744073709551616
 reaches PortIo + MachineControl + VacantContentTransfer + ResourceProfileSupply + PlacementLifecycle
 invokes VacantContentTransfer;
 invokes ResourceProfileSupply;
@@ -66,7 +68,9 @@ invokes PlacementLifecycle;
     }
 
     state establish(context: &mut KernelState, image: Extent in Granted,
-                    initial_storage: Extent in Granted) {
+                    initial_storage: Extent in Granted)
+    requires addr::Bound == 18446744073709551616
+    {
         context.image_bytes = image.length;
         context.initial_storage_bytes = initial_storage.length;
         context.entered = true;
@@ -76,7 +80,9 @@ invokes PlacementLifecycle;
     // Drain the preceding ownership report before one 16-byte FIFO burst.
     // A missing UART suppresses diagnostics, never ownership or kernel entry.
     state announce(context: &mut KernelState, image: Extent in Granted, initial_storage: Extent in Granted,
-                   remaining: u64) {
+                   remaining: u64)
+    requires addr::Bound == 18446744073709551616
+    {
         let mut status: u8 = 0;
         asm { in status, 1021 }
         transition (status & 32) != 0 {
@@ -86,14 +92,18 @@ invokes PlacementLifecycle;
     }
 
     state wait(context: &mut KernelState, image: Extent in Granted, initial_storage: Extent in Granted,
-               remaining: u64) {
+               remaining: u64)
+    requires addr::Bound == 18446744073709551616
+    {
         transition remaining > 1 {
             true -> announce(context, image, initial_storage, remaining - 1)
             _ -> retain(context, image, initial_storage)
         }
     }
 
-    state report(context: &mut KernelState, image: Extent in Granted, initial_storage: Extent in Granted) {
+    state report(context: &mut KernelState, image: Extent in Granted, initial_storage: Extent in Granted)
+    requires addr::Bound == 18446744073709551616
+    {
         asm { out 1016, 75 }   // K
         asm { out 1016, 101 }  // e
         asm { out 1016, 114 }  // r
@@ -119,7 +129,7 @@ invokes PlacementLifecycle;
 
     state reserve(context: &mut KernelState, image: Extent in Granted,
                   storage: Extent in Granted & Vacant)
-    requires storage.length >= 4096
+    requires addr::Bound == 18446744073709551616 && storage.length >= 4096
     {
         let parts: VacantExtentParts = split_vacant_extent(storage, 4096);
         let profile: ResourceProfile = ResourceProfileSupply::profile(
@@ -139,7 +149,9 @@ invokes PlacementLifecycle;
     }
 
     state memory_wait(context: &mut KernelState, image: Extent in Granted,
-                      parts: VacantExtentParts, remaining: u64) {
+                      parts: VacantExtentParts, remaining: u64)
+    requires addr::Bound == 18446744073709551616
+    {
         let mut status: u8 = 0;
         asm { in status, 1021 }
         transition (status & 32) != 0 {
@@ -149,7 +161,9 @@ invokes PlacementLifecycle;
     }
 
     state memory_retry(context: &mut KernelState, image: Extent in Granted,
-                       parts: VacantExtentParts, remaining: u64) {
+                       parts: VacantExtentParts, remaining: u64)
+    requires addr::Bound == 18446744073709551616
+    {
         transition remaining > 1 {
             true -> memory_wait(context, image, parts, remaining - 1)
             _ -> retain_parts(context, image, parts)
@@ -157,7 +171,9 @@ invokes PlacementLifecycle;
     }
 
     state memory_report(context: &mut KernelState, image: Extent in Granted,
-                        parts: VacantExtentParts) {
+                        parts: VacantExtentParts)
+    requires addr::Bound == 18446744073709551616
+    {
         asm { out 1016, 77 }  // M
         asm { out 1016, 101 } // e
         asm { out 1016, 109 } // m
@@ -176,7 +192,9 @@ invokes PlacementLifecycle;
     }
 
     state exercise_memory(context: &mut KernelState, image: Extent in Granted,
-                          parts: VacantExtentParts) {
+                          parts: VacantExtentParts)
+    requires addr::Bound == 18446744073709551616
+    {
         let original_base: addr = parts.taken.base;
         let original_length: u64 = parts.taken.length;
         let empty: Extent in Granted & Vacant = KernelMemory::reunite_partition(parts.taken, 0);
@@ -198,7 +216,9 @@ invokes PlacementLifecycle;
     }
 
     state verified_wait(context: &mut KernelState, image: Extent in Granted,
-                        parts: VacantExtentParts, remaining: u64) {
+                        parts: VacantExtentParts, remaining: u64)
+    requires addr::Bound == 18446744073709551616
+    {
         let mut status: u8 = 0;
         asm { in status, 1021 }
         transition (status & 32) != 0 {
@@ -208,7 +228,9 @@ invokes PlacementLifecycle;
     }
 
     state verified_retry(context: &mut KernelState, image: Extent in Granted,
-                         parts: VacantExtentParts, remaining: u64) {
+                         parts: VacantExtentParts, remaining: u64)
+    requires addr::Bound == 18446744073709551616
+    {
         transition remaining > 1 {
             true -> verified_wait(context, image, parts, remaining - 1)
             _ -> retain_parts(context, image, parts)
@@ -216,7 +238,9 @@ invokes PlacementLifecycle;
     }
 
     state verified_report(context: &mut KernelState, image: Extent in Granted,
-                          parts: VacantExtentParts) {
+                          parts: VacantExtentParts)
+    requires addr::Bound == 18446744073709551616
+    {
         asm { out 1016, 77 }  // M
         asm { out 1016, 101 } // e
         asm { out 1016, 109 } // m
@@ -241,7 +265,7 @@ invokes PlacementLifecycle;
 
     state exercise_pair(context: &mut KernelState, image: Extent in Granted,
                         parts: VacantExtentParts)
-    requires parts.taken.length >= 16
+    requires addr::Bound == 18446744073709551616 && parts.taken.length >= 16
     {
         let length: u64 = parts.taken.length;
         let base: addr = parts.taken.base;
@@ -256,7 +280,9 @@ invokes PlacementLifecycle;
 
     state paired_wait(context: &mut KernelState, image: Extent in Granted,
                       pair: KernelMemoryPair, rest: Extent in Granted & Vacant,
-                      remaining: u64) {
+                      remaining: u64)
+    requires addr::Bound == 18446744073709551616
+    {
         let mut status: u8 = 0;
         asm { in status, 1021 }
         transition (status & 32) != 0 {
@@ -267,7 +293,9 @@ invokes PlacementLifecycle;
 
     state paired_retry(context: &mut KernelState, image: Extent in Granted,
                        pair: KernelMemoryPair, rest: Extent in Granted & Vacant,
-                       remaining: u64) {
+                       remaining: u64)
+    requires addr::Bound == 18446744073709551616
+    {
         transition remaining > 1 {
             true -> paired_wait(context, image, pair, rest, remaining - 1)
             _ -> retain_pair(context, image, pair, rest)
@@ -275,7 +303,9 @@ invokes PlacementLifecycle;
     }
 
     state paired_report(context: &mut KernelState, image: Extent in Granted,
-                        pair: KernelMemoryPair, rest: Extent in Granted & Vacant) {
+                        pair: KernelMemoryPair, rest: Extent in Granted & Vacant)
+    requires addr::Bound == 18446744073709551616
+    {
         asm { out 1016, 77 }  // M
         asm { out 1016, 101 } // e
         asm { out 1016, 109 } // m
@@ -291,28 +321,104 @@ invokes PlacementLifecycle;
         asm { out 1016, 100 } // d
         asm { out 1016, 13 }
         asm { out 1016, 10 }
-        transition { _ -> retain_pair(context, image, pair, rest) }
+        transition rest.length >= 8199 {
+            true -> prepare_page(context, image, pair, rest)
+            _ -> retain_pair(context, image, pair, rest)
+        }
+    }
+
+    state prepare_page(context: &mut KernelState, image: Extent in Granted,
+                       pair: KernelMemoryPair, rest: Extent in Granted & Vacant)
+    requires addr::Bound == 18446744073709551616 && rest.length >= 8199
+    {
+        // Retain an ordinary leading reservation so alignment is exercised
+        // after a non-page-sized allocation, not only on firmware-aligned input.
+        let parts: VacantExtentParts = split_vacant_extent(rest, 8);
+        let page: BootPage = BootPage {
+            leading: parts.taken, reservation: PageFrame::prepare(parts.rest),
+        };
+        transition page.reservation.verified {
+            true -> page_wait(context, image, pair, page, 1000000)
+            _ -> retain_page(context, image, pair, page)
+        }
+    }
+
+    state page_wait(context: &mut KernelState, image: Extent in Granted,
+                    pair: KernelMemoryPair, page: BootPage, remaining: u64)
+    requires addr::Bound == 18446744073709551616
+    {
+        let mut status: u8 = 0;
+        asm { in status, 1021 }
+        transition (status & 32) != 0 {
+            true -> page_report(context, image, pair, page)
+            _ -> page_retry(context, image, pair, page, remaining)
+        }
+    }
+
+    state page_retry(context: &mut KernelState, image: Extent in Granted,
+                     pair: KernelMemoryPair, page: BootPage, remaining: u64)
+    requires addr::Bound == 18446744073709551616
+    {
+        transition remaining > 1 {
+            true -> page_wait(context, image, pair, page, remaining - 1)
+            _ -> retain_page(context, image, pair, page)
+        }
+    }
+
+    state page_report(context: &mut KernelState, image: Extent in Granted,
+                      pair: KernelMemoryPair, page: BootPage)
+    requires addr::Bound == 18446744073709551616
+    {
+        asm { out 1016, 80 }  // P
+        asm { out 1016, 97 }  // a
+        asm { out 1016, 103 } // g
+        asm { out 1016, 101 } // e
+        asm { out 1016, 32 }
+        asm { out 1016, 114 } // r
+        asm { out 1016, 101 } // e
+        asm { out 1016, 97 }  // a
+        asm { out 1016, 100 } // d
+        asm { out 1016, 121 } // y
+        asm { out 1016, 13 }
+        asm { out 1016, 10 }
+        transition { _ -> retain_page(context, image, pair, page) }
+    }
+
+    state retain_page(context: &mut KernelState, image: Extent in Granted,
+                      pair: KernelMemoryPair, page: BootPage)
+    requires addr::Bound == 18446744073709551616
+    {
+        asm { hlt }
+        transition { _ -> retain_page(context, image, pair, page) }
     }
 
     state retain_pair(context: &mut KernelState, image: Extent in Granted,
-                      pair: KernelMemoryPair, rest: Extent in Granted & Vacant) {
+                      pair: KernelMemoryPair, rest: Extent in Granted & Vacant)
+    requires addr::Bound == 18446744073709551616
+    {
         asm { hlt }
         transition { _ -> retain_pair(context, image, pair, rest) }
     }
 
     state retain_parts(context: &mut KernelState, image: Extent in Granted,
-                       parts: VacantExtentParts) {
+                       parts: VacantExtentParts)
+    requires addr::Bound == 18446744073709551616
+    {
         asm { hlt }
         transition { _ -> retain_parts(context, image, parts) }
     }
 
     state retain_vacant(context: &mut KernelState, image: Extent in Granted,
-                        storage: Extent in Granted & Vacant) {
+                        storage: Extent in Granted & Vacant)
+    requires addr::Bound == 18446744073709551616
+    {
         asm { hlt }
         transition { _ -> retain_vacant(context, image, storage) }
     }
 
-    state retain(context: &mut KernelState, image: Extent in Granted, initial_storage: Extent in Granted) {
+    state retain(context: &mut KernelState, image: Extent in Granted, initial_storage: Extent in Granted)
+    requires addr::Bound == 18446744073709551616
+    {
         asm { hlt }
         transition { _ -> retain(context, image, initial_storage) }
     }

@@ -1,0 +1,155 @@
+use omega::language::core::extent;
+use omega::language::core::layout;
+
+// Boot owns this first page and all skipped bytes until a later kernel owner
+// takes them. Alignment is geometry, not authority: both splits conserve the
+// original grant and vacancy, and only placement establishes resident content.
+public data KernelPage { words: [u64; 512]; }
+public data KernelPagePlacement {}
+data PageFrame {}
+
+data PreparedPage {
+    case Ready(storage: Extent in Granted & Resident<KernelPagePlacement, KernelPage>);
+    case Rejected(storage: Extent in Granted & Vacant);
+}
+
+data PageReservation {
+    padding: Extent in Granted & Vacant;
+    page: PreparedPage;
+    tail: Extent in Granted & Vacant;
+    verified: bool;
+}
+
+data BootPage {
+    leading: Extent in Granted & Vacant;
+    reservation: PageReservation;
+}
+
+machine KernelPagePlacement::plan(schema: Schema) -> PlacementPlan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry {
+        key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 },
+    };
+    let services: [u64; 32];
+    PlacementPlan {
+        layout: Plan {
+            entries: entries, entry_count: 1, size_fixed: 4096,
+            size_is_dynamic: false, align: 4096,
+        },
+        // Whole-value lifecycle encoding and extraction are independent of
+        // projected access permission. Indexed resident access remains separate
+        // compiler work; this page exposes no field accessor yet.
+        access: AccessPlan::inaccessible(&schema),
+        reach: BoundaryReach { services: services, service_count: 0 },
+    }
+}
+
+// Worst-case padding is 4095 bytes. Subtract it before reserving the page;
+// never round an address up past its representable bound. The returned padding
+// remains owned even when it is empty. This is not allocator reset or mapping.
+machine PageFrame::prepare(storage: Extent in Granted & Vacant) -> PageReservation
+requires storage.length >= 8191 && addr::Bound == 18446744073709551616
+reaches ResourceProfileSupply
+{
+    let residue: u64 = (storage.base as u64) % 4096;
+    let padding_length: u64 = (4096 - residue) % 4096;
+    let prefix: VacantExtentParts = split_vacant_extent(storage, padding_length);
+    let parts: VacantExtentParts = split_vacant_extent(prefix.rest, 4096);
+    let geometry: bool = (parts.taken.base as u64) % 4096 == 0 && parts.taken.length == 4096;
+    let mut words: [u64; 512];
+    words[0] = 17;
+    words[511] = 73;
+    transition NativePlacement<KernelPagePlacement, KernelPage>::initialize(
+        parts.taken, KernelPage { words: words }
+    ) {
+        PlacementOutcome::Ready { view } -> verify(prefix.taken, view, parts.rest, geometry)
+        PlacementOutcome::Rejected { returned, reason } -> PageReservation {
+            padding: prefix.taken, page: PreparedPage::Rejected { storage: returned.source },
+            tail: parts.rest, verified: false,
+        }
+    }
+
+    state verify(
+        padding: Extent in Granted & Vacant,
+        storage: Extent in Granted & Resident<KernelPagePlacement, KernelPage>,
+        tail: Extent in Granted & Vacant, geometry: bool
+    ) -> PageReservation {
+        transition NativePlacement<KernelPagePlacement, KernelPage>::move_out(storage) {
+            PlacementExtraction::Moved { storage, value } -> clear(padding, storage, tail, geometry, value)
+        }
+    }
+
+    state clear(padding: Extent in Granted & Vacant, storage: Extent in Granted & Vacant,
+                tail: Extent in Granted & Vacant, geometry: bool, observed: KernelPage) -> PageReservation {
+        let valid: bool = geometry && PageFrame::check_image(&observed);
+        let words: [u64; 512];
+        transition NativePlacement<KernelPagePlacement, KernelPage>::initialize(storage, KernelPage { words: words }) {
+            PlacementOutcome::Ready { view } -> check_cleared(padding, view, tail, valid)
+            PlacementOutcome::Rejected { returned, reason } -> PageReservation {
+                padding: padding, page: PreparedPage::Rejected { storage: returned.source },
+                tail: tail, verified: false,
+            }
+        }
+    }
+
+    state check_cleared(padding: Extent in Granted & Vacant,
+                        storage: Extent in Granted & Resident<KernelPagePlacement, KernelPage>,
+                        tail: Extent in Granted & Vacant, valid: bool) -> PageReservation {
+        transition NativePlacement<KernelPagePlacement, KernelPage>::move_out(storage) {
+            PlacementExtraction::Moved { storage, value } -> retain(padding, storage, tail, valid, value)
+        }
+    }
+
+    state retain(padding: Extent in Granted & Vacant, storage: Extent in Granted & Vacant,
+                 tail: Extent in Granted & Vacant, valid: bool, value: KernelPage) -> PageReservation {
+        let cleared: bool = PageFrame::check_zero(&value, 0);
+        // Reinstall the exact zero image just read back. Ready retains the
+        // complete resident page; extraction never drops the original extent.
+        transition NativePlacement<KernelPagePlacement, KernelPage>::initialize(storage, value) {
+            PlacementOutcome::Ready { view } -> PageReservation {
+                padding: padding, page: PreparedPage::Ready { storage: view },
+                tail: tail, verified: valid && cleared,
+            }
+            PlacementOutcome::Rejected { returned, reason } -> PageReservation {
+                padding: padding, page: PreparedPage::Rejected { storage: returned.source },
+                tail: tail, verified: false,
+            }
+        }
+    }
+}
+
+machine PageFrame::check_image(page: &KernelPage) -> bool {
+    transition page.words[0] == 17 && page.words[511] == 73 {
+        true -> interior(page, 1)
+        _ -> false
+    }
+    state interior(page: &KernelPage, index: u64) -> bool
+    requires index <= 511
+    {
+        transition index < 511 {
+            true -> advance(page, index)
+            _ -> true
+        }
+    }
+    state advance(page: &KernelPage, index: u64) -> bool
+    requires index < 511
+    {
+        transition page.words[index] == 0 { true -> interior(page, index + 1) _ -> false }
+    }
+}
+
+machine PageFrame::check_zero(page: &KernelPage, index: u64) -> bool
+requires index <= 512
+{
+    transition index < 512 { true -> inspect(page, index) _ -> true }
+    state inspect(page: &KernelPage, index: u64) -> bool
+    requires index < 512
+    {
+        transition page.words[index] == 0 { true -> next(page, index + 1) _ -> false }
+    }
+    state next(page: &KernelPage, index: u64) -> bool
+    requires index <= 512
+    {
+        transition index < 512 { true -> inspect(page, index) _ -> true }
+    }
+}
