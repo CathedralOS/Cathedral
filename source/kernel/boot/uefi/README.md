@@ -12,14 +12,15 @@ Build-selected `Kernel::enter`, which checks its fresh context, records root
 lengths and reports arrival. It then admits vacancy for the fresh initial-storage
 root, partitions 4096 bytes, splits and reunites that prefix at zero, half, and
 full length, exercises resident memory on the reconstructed extent, then issues
-two eight-byte children through brief mutable-tail borrows. Both children hold
-live residents at once. After extraction, it retains those two vacant children,
+two eight-byte children through brief mutable-tail borrows. An oversized request
+must then report exhaustion without changing the tail's base, length or capacity.
+Both children subsequently hold live residents at once. After extraction, it retains those two vacant children,
 the prefix's unused tail and the outer remainder with the context and image.
 
 The fresh-image harness requires `Hello from Omega`, a complete `Owned N MiB`
 line, `Kernel entered`, `Memory split`, `Memory checked`, and `Memory paired`,
-in that order. A fresh six-marker boot reported 35 MiB in QEMU/OVMF using
-Omega `ceb07da2eef`. The current source requires Omega's exact address-model
+in that order. The pre-exhaustion six-marker baseline reported 35 MiB in
+QEMU/OVMF using Omega `9e04918b1d1`. The current source requires Omega's exact address-model
 typing, representation-recast effect tracking and occurrence-local state-prefix
 checking, in addition to the canonical `ProgramStorageEntryNativeProvider`,
 activation-local entry-context provisioning and private entry stack. A clean
@@ -73,6 +74,8 @@ initialization/readback of 17, write/readback/extraction of 29, and return of th
 original extent base and length. `Memory paired` additionally requires two live
 resident allocations, distinct initial values 17 and 41, writes of 29 and 73,
 reread of 29 after the second write, and extraction of both updated values.
+Before placement, a request for the original capacity must return `Exhausted`
+and preserve the residual base, length and count after both allocations.
 A failed build or an old
 `BOOTX64.EFI` cannot satisfy acceptance.
 
@@ -137,11 +140,21 @@ the provider's memory-mapping premise.
 The subsequent `exercise_pair` calls the ordinary `alloc::bump` package twice,
 borrowing its `Bump` strategy only for each allocation. It preserves Granted and
 Vacant separately, restores the tail and remaining count, and returns an owned child.
+It then calls `try_allocate` for the original capacity, sixteen bytes more than
+the residual. The boot observes `Exhausted` and unchanged tail base, length and
+capacity; these observations grant no custody or static allocation premise.
+The result stays owned even if the allocator unexpectedly returns another
+extent, so the failed oracle cannot hide dropped custody.
 Both eight-byte children are then initialized together, mutated and extracted.
 Reading the first again after writing the second checks their runtime separation.
 Every rejected initialization path retains the vacant storage and extracts any
 resident already established; it cannot announce success. No failure path
 discards the unused tail.
+
+A zero-byte request is a discriminating control: it succeeds without changing
+tail geometry, but must suppress `Memory paired` because it is not exhaustion.
+That freshly compiled control reaches `Memory checked` and then fails the smoke
+oracle. This distinguishes the result-tag check from the numeric comparisons.
 
 This is a bounded physical witness of `alloc::bump` allocation, not its complete
 retirement/reset lifecycle. It deliberately retains all returned children

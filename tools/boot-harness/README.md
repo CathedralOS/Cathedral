@@ -53,7 +53,8 @@ Both children remain owned. `Memory checked` additionally requires successful
 resident initialization with 17, readback of 17, mutation and readback of 29,
 extraction of 29, and return of the original extent base and length.
 `Memory paired` requires two owned eight-byte allocations from the checked
-`alloc::bump` package through brief strategy borrows, two simultaneous residents
+`alloc::bump` package through brief strategy borrows, rejection of an oversized
+request with unchanged tail base, length and capacity, two simultaneous residents
 initialized with 17 and 41, independent
 writes of 29 and 73, rereading the first after the second write, and extraction
 of both updated values. All storage descendants remain retained. A split-only
@@ -63,6 +64,10 @@ Timeout alone is not success. The check observes those
 milestones; it does not prove firmware correctness or long-term liveness.
 The serial oracle observes the kernel's checks; it does not independently grant
 Stable access, prove compiler correctness, or demonstrate a general allocator.
+The exhaustion result remains owned through the retained kernel state. Replacing
+only the oversized request with zero bytes creates a success result with unchanged
+geometry; the final marker must disappear. This is a source-level boot control,
+not an alternative harness success condition.
 
 Logs, firmware copies and the ESP stay in a unique retained `run-*` directory
 under `--build-dir` (default `build/boot-harness`). Concurrent invocations never
