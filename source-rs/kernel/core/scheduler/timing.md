@@ -190,3 +190,10 @@ identify its executable, target, assumptions and applicable cost model. Manual
 Rust-lab assumptions must stay labeled assumptions. No compiler-certificate ABI,
 real-time admission syscall, scheduler priority class or certification claim is
 introduced by this milestone.
+
+ARM64 exception entry now saves directly on its permanent interrupt stack;
+fatal kernel faults use a separate terminal stack even when the IRQ stack is
+exhausted. [The entry probes](../../arch/isa/aarch64/README.md#stack-safe-entry-and-terminal-faults)
+check original fault metadata and return with minimal stack headroom. These
+assembly changes remain outside the buffered Rust phase samples and do not
+establish a timing bound or recovery from kernel-stack corruption.

@@ -88,7 +88,31 @@ extern "C" fn dispatch(context: &mut Context, kind: u64, esr: u64, address: u64)
     }
     next
 }
-global_asm!(include_str!("entry.S"),dispatch=sym dispatch,irq_stack=sym super::interrupts::IRQ_STACK);
+// Terminal entrance receives the original machine fault without saving anything
+// onto the interrupted stack. All task roots retain the supervisor boot branch.
+extern "C" fn fatal_entry(
+    vector: u64,
+    error: u64,
+    address: u64,
+    instruction: u64,
+    stack: u64,
+) -> ! {
+    super::interrupts::fatal(Fault {
+        vector,
+        error,
+        address,
+        instruction,
+        stack,
+    })
+}
+
+global_asm!(include_str!("entry.S"),
+    dispatch=sym dispatch,
+    irq_stack=sym super::interrupts::IRQ_STACK,
+    fault_stack=sym super::interrupts::FAULT_STACK,
+    fatal_active=sym super::interrupts::FATAL_ACTIVE,
+    fatal_entry=sym fatal_entry,
+);
 unsafe extern "C" {
     pub(super) fn cathedral_vectors();
 }

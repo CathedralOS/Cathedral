@@ -104,4 +104,5 @@ mixed kernel/user run queue.
 
 The [ARM64 guide](isa/aarch64/README.md) records its proof and limitations.
 Userspace framebuffer mapping and the graphical distribution remain x86-64.
-Kernel stack-overflow recovery remains unimplemented on ARM64.
+ARM64 now reports exhausted kernel/interrupt stacks from a separate fault stack;
+it does not recover execution after a kernel stack overflow.

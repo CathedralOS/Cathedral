@@ -1,7 +1,7 @@
 # Rust reference OS: tasks and handoff
 
-Updated 2026-10-20 (local date). Current milestone: **ARM64 table reservation by
-leaf-table span**, on baseline `601edf25` (staged framebuffer admission).
+Updated 2026-10-20 (local date). Current milestone: **ARM64 stack-safe exception
+entry and terminal reporting**, on baseline `1fe5af72` (table reservation).
 The latest section records verification and remaining steps toward bounded
 execution. This does not introduce real-time reservations.
 The fresh-lab reset is `30572c9f`. Compact recursive desktops landed as `c7571191`,
@@ -3830,3 +3830,66 @@ limits. Whole error rollback, single-object mapping/cleanup, reference/escrow
 bursts and event bursts remain atomic; do not claim bounded-time execution.
 The intermittent clean-close LOSS timeout and guaranteed-service admission stay
 open. No owner question was needed for this simplification.
+
+## ARM64 stack-safe exception entry and terminal reporting (2026-10-20)
+
+Baseline: `1fe5af72`. The previous entrance saved its 800-byte context onto the
+interrupted EL1 stack before switching to the permanent IRQ stack. A new probe
+moved SP into the boot guard and faulted on an identified store; the baseline
+timed out without a fault report (`build/stack-before.log`,
+`build/stack-before-serial.log`). This reproduces the earlier diagnostic gap.
+
+[Entry assembly](source-rs/kernel/arch/isa/aarch64/context/entry.S) now saves
+normal contexts directly into the reserved top of the permanent IRQ stack.
+A transient `TPIDR_EL1` scratch value preserves x0 while x1 and the original SP
+are saved there; the register is reserved by this backend and cleared before
+Rust dispatch. No store depends on the interrupted kernel stack. Register layout,
+EL0 SP handling, shared scheduling and return-root selection remain unchanged.
+
+Fatal EL1 synchronous faults take a separate assembly entrance before any normal
+context save. It captures the original ESR/FAR/ELR/SP, switches to a distinct
+permanent fault stack, and calls the existing terminal reporter. FIQ/SError also
+use the terminal entrance. A second fatal fault parks without recursively
+restarting reporting. Returning BRK/SVC/IRQ paths retain ordinary dispatch, and
+EL0 faults still go through core's process-containment path. This remains a
+single-CPU EL1h profile with masked dispatch and no nested resumable callbacks.
+Kernel exhaustion is terminal; emergency-stack/mapping corruption is not recovered.
+
+The new [boot probes](source-rs/kernel/boot/uefi/smoke/stack.rs) require the exact
+faulting instruction, guard address, original SP and reporting-stack range for
+both boot-stack and interrupt-stack exhaustion. A positive probe gives BRK, SVC
+and a real timer IRQ only 16 bytes of interrupted-stack headroom, checks x0/x1
+preservation, and returns to the original caller stack. Run with the ARM64
+harness's `--fault stack-exhaustion`, `--fault irq-stack-exhaustion`, or
+`--fault stack-entry`; these probes are absent from normal boots.
+
+Verification:
+
+- All three targeted probes pass in release and debug builds. The seven existing
+  ARM64 guard/code/data/NX probes pass in release. The full release portability
+  suite passes, including EL1/EL0 register preservation, timer preemption, IPC,
+  user-fault containment, admission rollback and full reclamation.
+- Workspace host tests, ARM64 smoke/probe clippy, default x86 UEFI clippy, layout,
+  formatting and whitespace checks pass. Production code changes are ARM64-only;
+  no graphical desktop test or x86 QEMU rerun was needed. Saved desktop media
+  was untouched.
+- Full debug portability does NOT pass: after the trusted-task tests it reports
+  a read translation fault in `__chkstk` before shared-memory userspace work.
+  Diagnostic: vector 37, ESR `0x96000007`, PC `0x43b7d31c`, FAR `0x1000000b00`,
+  original SP `0x1000006b00`. The guard access occurs during stack probing before
+  SP itself moves into the guard. The original instruction was resolved against
+  that build's PDB/disassembly; the exact oversized caller remains to be located.
+  This is now an immediate terminal report, not a delayed secondary entry fault.
+- Logs: `build/stack-exhaustion.log`, `build/stack-irq-stack-exhaustion.log`,
+  `build/stack-stack-entry.log`, `build/stack-debug-*.log`,
+  `build/stack-arm64-release.log`, `build/stack-arm64-debug.log`,
+  `build/stack-debug-overflow-serial.log`, `build/stack-host.log`,
+  `build/stack-clippy.log`, `build/stack-probes-clippy.log`,
+  `build/stack-x86-default.log`. Other protection logs are `build/stack-*.log`.
+
+Next: trace and reduce debug userspace-session setup's stack pressure (inspect
+large by-value Session/result temporaries) without widening stacks or discarding
+guards. The exhausted-stack entrance/reporting gap is addressed; the newly
+localized debug boot failure is separate. Keep the intermittent clean-close
+LOSS timeout open. Atomic cleanup/event bursts and guaranteed-service admission
+remain future work; no owner decision was needed here.

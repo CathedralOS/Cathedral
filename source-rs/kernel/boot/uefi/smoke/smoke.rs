@@ -11,6 +11,8 @@ static EXPECTED_VECTOR: AtomicU64 = AtomicU64::new(u64::MAX);
 static EXPECTED_STACK_TOP: AtomicU64 = AtomicU64::new(0);
 
 pub fn probe_faults(layout: &arch::BootLayout) {
+    #[cfg(target_arch = "aarch64")]
+    stack::probe(layout);
     protection::probe(layout);
     if cfg!(feature = "fault-guard") {
         protection::expect_guard(layout.stack_guard);
@@ -38,6 +40,11 @@ pub fn probe_faults(layout: &arch::BootLayout) {
 }
 
 pub fn finish_fault(fault: &arch::Fault, console: &mut SerialPort) -> ! {
+    #[cfg(target_arch = "aarch64")]
+    if stack::matches(fault) {
+        writeln!(console, "CATHEDRAL_RS_EXPECTED_FAULT").ok();
+        complete();
+    }
     let top = EXPECTED_STACK_TOP.load(Ordering::Acquire);
     let expected = protection::matches(fault)
         || (EXPECTED_VECTOR.load(Ordering::Acquire) == fault.vector

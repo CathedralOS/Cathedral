@@ -6,12 +6,15 @@ use core::{
     sync::atomic::{AtomicPtr, AtomicU64, Ordering},
 };
 pub(super) static IRQ_STACK: AtomicU64 = AtomicU64::new(0);
+pub(super) static FAULT_STACK: AtomicU64 = AtomicU64::new(0);
+pub(super) static FATAL_ACTIVE: AtomicU64 = AtomicU64::new(0);
 static FAULT: AtomicPtr<()> = AtomicPtr::new(core::ptr::null_mut());
 use crate::Fault;
 /// # Safety
 /// Own EL1 vectors and permanent exception stack; IRQs masked, sole CPU.
 pub unsafe fn install_interrupts(layout: &BootLayout, handler: fn(Fault) -> !) {
     IRQ_STACK.store(layout.emergency_tops[3], Ordering::Release);
+    FAULT_STACK.store(layout.emergency_tops[0], Ordering::Release);
     FAULT.store(handler as *mut (), Ordering::Release);
     // SAFETY: Vectors are 2-KiB aligned, permanently mapped; permit eagerly saved FP/SIMD.
     unsafe {

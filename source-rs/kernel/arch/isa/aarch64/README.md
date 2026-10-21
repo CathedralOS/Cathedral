@@ -46,9 +46,45 @@ The selected context returns through `eret`. x8 carries the operation,
 x0/x1/x2 its arguments, and x0 its result. Application entry receives x0/x1.
 The runtime changes only this CPU stub; callers keep the same capability APIs.
 
+### Stack-safe entry and terminal faults
+
+[Entry assembly](context/entry.S) saves the 800-byte context at the top of the
+permanent interrupt stack before calling Rust below its reserved 1-KiB area.
+It never stores onto the interrupted kernel stack. `TPIDR_EL1` is reserved as
+temporary single-CPU entry scratch to preserve x0 while moving x1 and the original
+SP to that frame; it is cleared before dispatch and is not a kernel TLS register.
+EL0's original stack still comes from `SP_EL0`. The
+[Arm exception model](https://developer.arm.com/-/media/Arm%20Developer%20Community/PDF/Learn%20the%20Architecture/Exception%20model.pdf)
+describes the hardware exception registers and stack selection; the independent
+interrupt/fault-stack policy here is software-owned.
+
+Fatal EL1 synchronous exceptions bypass the normal save/dispatch path. Assembly
+captures ESR/FAR/ELR and the original SP, switches to a separate permanent fault
+stack, then calls the terminal reporter. This also works when the interrupted
+stack was the IRQ stack itself. Returning EL1 BRK/SVC and timer IRQs retain the
+normal path; EL0 faults still reach core for process containment. Faults during
+terminal reporting park without recursively restarting the reporter.
+
+The profile remains one EL1h kernel CPU, with masked interrupts during dispatch
+and no nested resumable callbacks. Stack exhaustion terminates the kernel; it
+does not recover a kernel task or promise diagnostics after arbitrary corruption
+of the emergency stack, supervisor mappings or UART.
+
+```text
+python tools/boot-harness-rs/arm64/run.py --release --kernel-only --fault stack-exhaustion
+python tools/boot-harness-rs/arm64/run.py --release --kernel-only --fault irq-stack-exhaustion
+python tools/boot-harness-rs/arm64/run.py --release --kernel-only --fault stack-entry
+```
+
+The first two probes require the exact faulting store, guard address, original
+exhausted SP and reporting on the dedicated fault stack. The last leaves only
+16 bytes of stack headroom and checks return from BRK, SVC and a real timer IRQ,
+including preservation of x0/x1 and the original stack. They run before ordinary
+task admission and are separate from the healthy-stack guard-access probe.
+
 ## Evidence and bounds
 
-Debug and release boots exercise:
+The release portability suite exercises:
 
 - Firmware exit, owned tables/stack, breakpoint return, heap exhaustion/reuse,
   timer delivery on the exception stack.
@@ -65,6 +101,13 @@ Debug and release boots exercise:
   post-exit reads, checked copyout, queue discard and sealed reader write faults.
 - Rejection of the wrong ELF machine, admission failure at every frame boundary,
   shared core runtime-allocation rollback, and full frame/heap reclamation.
+
+The targeted stack-entry/exhaustion probes also pass in debug builds. The full
+debug boot currently reaches the end of trusted-task tests, then reports a
+kernel guard read inside `__chkstk` while entering the shared-memory userspace
+suite. That stack-pressure issue remains open; the terminal entrance now reports
+it instead of recursively faulting during context save. See the current Rust
+handoff for the exact diagnostic and verification scope.
 
 The board addresses are intentionally fixed, following
 [QEMU's virt machine](https://www.qemu.org/docs/master/system/arm/virt.html).
@@ -94,8 +137,8 @@ EL1 task stack occupies a separate 2-MiB slot in a dedicated root branch.
 Teardown detaches empty tables and flushes translations before refund; admission
 failure tests cover all nineteen allocations for the first stack.
 
-This port does not recover from kernel stack overflow or map a userspace
-framebuffer. PC PS/2 and ATA grants are rejected at composition. The matrix
+This port reports kernel stack exhaustion terminally; recovery and userspace
+framebuffer mapping remain unimplemented. PC PS/2 and ATA grants are rejected at composition. The matrix
 desktop remains on x86-64 until ARM device
 adapters exist. CPU-budget policies are shared; their full stress suite has only
 been exercised on x86-64. Passing these tests is not full backend parity.

@@ -4,7 +4,7 @@
 .p2align 11
 .globl cathedral_vectors
 cathedral_vectors:
-    b vector_0
+    b kernel_sync
     .balign 128
     b vector_1
     .balign 128
@@ -12,7 +12,7 @@ cathedral_vectors:
     .balign 128
     b vector_3
     .balign 128
-    b vector_0
+    b kernel_sync
     .balign 128
     b vector_1
     .balign 128
@@ -37,9 +37,20 @@ cathedral_vectors:
     b vector_3
     .balign 128
 .macro save_vector kind
-    sub sp, sp, #800
+    // TPIDR_EL1 is reserved as single-CPU entry scratch (not a TLS register).
+    // Preserve x0 there, then x1 and the interrupted SP on the permanent IRQ
+    // stack before changing SP. Never store onto an interrupted kernel stack.
+    msr tpidr_el1, x0
+    adrp x0, {irq_stack}
+    ldr x0, [x0, :lo12:{irq_stack}]
+    sub x0, x0, #800
+    str x1, [x0, #520]
+    mov x1, sp
+    str x1, [x0, #760]
+    mov sp, x0
+    mrs x0, tpidr_el1
+    msr tpidr_el1, xzr
     str x0, [sp, #512]
-    str x1, [sp, #520]
     str x2, [sp, #528]
     str x3, [sp, #536]
     str x4, [sp, #544]
@@ -89,25 +100,36 @@ cathedral_vectors:
     b saved
     .endm
 
+// EL1 synchronous faults must not overwrite an active IRQ frame/stack. Only
+// supported returning BRK/SVC enter the normal save/dispatch path.
+kernel_sync:
+    msr tpidr_el1, x0
+    mrs x0, esr_el1
+    lsr x0, x0, #26
+    cmp x0, #0x15
+    b.eq returning_sync
+    cmp x0, #0x3c
+    b.ne fatal_vector
+returning_sync:
+    mrs x0, tpidr_el1
 vector_0:
     save_vector 0
 vector_1:
     save_vector 1
 vector_2:
-    save_vector 2
+    mov x0, #2
+    b fatal_vector
 vector_3:
-    save_vector 3
+    mov x0, #3
+    b fatal_vector
 saved:
     mrs x9, spsr_el1
     str x9, [sp, #776]
     and x10, x9, #15
-    cbz x10, user_stack
-    add x10, sp, #800
-    b save_stack
-user_stack:
+    cbnz x10, save_pc
     mrs x10, sp_el0
-save_stack:
     str x10, [sp, #760]
+save_pc:
     mrs x10, elr_el1
     str x10, [sp, #768]
     mrs x10, fpcr
@@ -119,7 +141,7 @@ save_stack:
     mrs x3, far_el1
     adrp x9, {irq_stack}
     ldr x9, [x9, :lo12:{irq_stack}]
-    // Reserve top 1024 bytes for the saved EL0 frame; Rust dispatch grows below it.
+    // Reserve top 1024 bytes for the saved frame; Rust dispatch grows below it.
     sub x9, x9, #1024
     mov sp, x9
     bl {dispatch}
@@ -188,3 +210,29 @@ kernel_stack:
     ldr x29, [x30, #744]
     ldr x30, [x30, #752]
     eret
+
+// No stack memory accesses until SP points to the dedicated fatal stack.
+// A second fatal fault cannot safely restart reporting: park without recursion.
+fatal_vector:
+    msr daifset, #15
+    adrp x9, {fatal_active}
+    ldr x10, [x9, :lo12:{fatal_active}]
+    cbnz x10, fatal_halt
+    mov x10, #1
+    str x10, [x9, :lo12:{fatal_active}]
+    mrs x1, esr_el1
+    mrs x2, far_el1
+    mrs x3, elr_el1
+    mov x4, sp
+    mrs x9, spsr_el1
+    and x9, x9, #15
+    cbnz x9, fatal_stack
+    mrs x4, sp_el0
+fatal_stack:
+    adrp x9, {fault_stack}
+    ldr x9, [x9, :lo12:{fault_stack}]
+    mov sp, x9
+    bl {fatal_entry}
+fatal_halt:
+    wfi
+    b fatal_halt

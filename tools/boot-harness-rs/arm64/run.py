@@ -11,7 +11,7 @@ ROOT = Path(__file__).resolve().parents[3]
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--fault', choices=('guard', 'text-write', 'rodata-write', 'heap-execute', 'stack-execute', 'heap-alias-execute', 'stack-alias-execute'))
+    parser.add_argument('--fault', choices=('guard', 'text-write', 'rodata-write', 'heap-execute', 'stack-execute', 'heap-alias-execute', 'stack-alias-execute', 'stack-exhaustion', 'irq-stack-exhaustion', 'stack-entry'))
     parser.add_argument('--release', action='store_true')
     parser.add_argument('--kernel-only', action='store_true')
     parser.add_argument('--build-only', action='store_true')
@@ -65,7 +65,8 @@ def main():
     log = (out / 'serial.log').read_text(errors='replace')
     print(log[max(0, log.find('Cathedral Rust lab: UEFI entry')):])
     if args.fault:
-        if result.returncode != 0 or 'CATHEDRAL_RS_EXPECTED_FAULT' not in log or 'CATHEDRAL_RS_PANIC' in log:
+        marker = 'CATHEDRAL_RS_STACK_ENTRY_OK' if args.fault == 'stack-entry' else 'CATHEDRAL_RS_EXPECTED_FAULT'
+        if result.returncode != 0 or marker not in log or 'CATHEDRAL_RS_PANIC' in log:
             raise SystemExit(f'ARM64 expected fault failed ({result.returncode})')
         print(f'PASS: expected ARM64 {args.fault} exception')
         return
