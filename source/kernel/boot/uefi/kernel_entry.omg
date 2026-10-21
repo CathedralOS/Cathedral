@@ -4,6 +4,7 @@ use omega::language::core::layout;
 use memory_lifecycle;
 use page_frame;
 use core::page_tables;
+use core::paging_profile;
 
 data BootPageTables {
     leading: Extent in Granted & Vacant;
@@ -16,6 +17,25 @@ data KernelState {
     entered: bool;
     image_bytes: u64;
     initial_storage_bytes: u64;
+}
+
+data Kernel {}
+
+// The privileged observer belongs to this boot composition. The shared core
+// predicate consumes only a sample and grants no machine or mapping authority.
+uefi_x86_64 machine Kernel::observe_paging() -> BootstrapPagingProfile
+reaches MachineControl
+{
+    let mut control0: u64 = 0;
+    let mut control4: u64 = 0;
+    let mut extended_features: u64 = 0;
+    let extended_feature_register: u32 = 3221225600;
+    asm { read_cr0 control0 }
+    asm { read_cr4 control4 }
+    asm { rdmsr extended_features, extended_feature_register }
+    BootstrapPagingProfile {
+        control0: control0, control4: control4, extended_features: extended_features,
+    }
 }
 
 // This selected provider belongs to the boot transaction, not to the allocator.
@@ -471,6 +491,59 @@ invokes PlacementLifecycle;
         asm { out 1016, 97 } // a
         asm { out 1016, 100 } // d
         asm { out 1016, 121 } // y
+        asm { out 1016, 13 }
+        asm { out 1016, 10 }
+        transition { _ -> inspect_paging(context, image, pair, tables) }
+    }
+
+    state inspect_paging(context: &mut KernelState, image: Extent in Granted,
+                         pair: KernelMemoryPair, tables: BootPageTables)
+    requires addr::Bound == 18446744073709551616
+    {
+        let profile: BootstrapPagingProfile = Kernel::observe_paging();
+        transition BootstrapPaging::supported(&profile) {
+            true -> paging_wait(context, image, pair, tables, 1000000)
+            _ -> retain_tables(context, image, pair, tables)
+        }
+    }
+
+    state paging_wait(context: &mut KernelState, image: Extent in Granted,
+                      pair: KernelMemoryPair, tables: BootPageTables, remaining: u64)
+    requires addr::Bound == 18446744073709551616
+    {
+        let mut status: u8 = 0;
+        asm { in status, 1021 }
+        transition (status & 32) != 0 {
+            true -> paging_report(context, image, pair, tables)
+            _ -> paging_retry(context, image, pair, tables, remaining)
+        }
+    }
+
+    state paging_retry(context: &mut KernelState, image: Extent in Granted,
+                       pair: KernelMemoryPair, tables: BootPageTables, remaining: u64)
+    requires addr::Bound == 18446744073709551616
+    {
+        transition remaining > 1 {
+            true -> paging_wait(context, image, pair, tables, remaining - 1)
+            _ -> retain_tables(context, image, pair, tables)
+        }
+    }
+
+    state paging_report(context: &mut KernelState, image: Extent in Granted,
+                        pair: KernelMemoryPair, tables: BootPageTables)
+    requires addr::Bound == 18446744073709551616
+    {
+        asm { out 1016, 67 } // CPU checked
+        asm { out 1016, 80 }
+        asm { out 1016, 85 }
+        asm { out 1016, 32 }
+        asm { out 1016, 99 }
+        asm { out 1016, 104 }
+        asm { out 1016, 101 }
+        asm { out 1016, 99 }
+        asm { out 1016, 107 }
+        asm { out 1016, 101 }
+        asm { out 1016, 100 }
         asm { out 1016, 13 }
         asm { out 1016, 10 }
         transition { _ -> retain_tables(context, image, pair, tables) }

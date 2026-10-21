@@ -1,0 +1,8 @@
+machine build(builder: &mut Build) {
+    Build::application(builder, "cathedral_boot_paging_profile");
+    Build::depend_as(builder, "core", Source::Path { location: "../../../source/kernel/core" });
+    Build::bind(builder, macos_arm64::ProgramEntry, main);
+    Build::bind(builder, linux_arm64::ProgramEntry, main);
+    Build::bind(builder, linux_x86_64::ProgramEntry, main);
+    Build::bind(builder, windows_x86_64::ProgramEntry, main);
+}

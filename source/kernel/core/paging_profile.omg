@@ -1,0 +1,26 @@
+// This is a sampled CPU configuration, not authority over its translations.
+// The activation provider must check the configuration again at its transition
+// and separately retain image, stack, table and source/destination custody.
+public data BootstrapPagingProfile {
+    control0: u64;
+    control4: u64;
+    extended_features: u64;
+}
+
+public data BootstrapPaging {}
+
+// Required policy is PE+PG+WP, PAE, and LME+LMA+NXE. Five-level paging,
+// global translations and PCID require different root-switch/invalidation
+// protocols and are not silently treated as this initial four-level profile.
+// Bit positions are the shared x86 register facts in drivers/facts/x86_registers.omg;
+// these masks compose that hardware vocabulary into the bootstrap policy.
+public machine BootstrapPaging::supported(profile: &BootstrapPagingProfile) -> bool {
+    let required_control0: u64 = (1u64 << 0) | (1u64 << 16) | (1u64 << 31);
+    let required_control4: u64 = 1u64 << 5;
+    let excluded_control4: u64 = (1u64 << 7) | (1u64 << 12) | (1u64 << 17);
+    let required_extended: u64 = (1u64 << 8) | (1u64 << 10) | (1u64 << 11);
+    (profile.control0 & required_control0) == required_control0 &&
+        (profile.control4 & required_control4) == required_control4 &&
+        (profile.control4 & excluded_control4) == 0 &&
+        (profile.extended_features & required_extended) == required_extended
+}

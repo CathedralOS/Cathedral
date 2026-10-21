@@ -1,0 +1,34 @@
+// Expected exit: 0.
+// Exercise the actual boot policy. These numeric profiles are not hardware
+// observations, machine-owner authority or persistent translation evidence.
+use core::paging_profile;
+
+machine supported(control0: u64, control4: u64, extended: u64) -> bool {
+    let profile: BootstrapPagingProfile = BootstrapPagingProfile {
+        control0: control0, control4: control4, extended_features: extended,
+    };
+    BootstrapPaging::supported(&profile)
+}
+
+machine main() crashes Trap {
+    let ready: bool = supported(2147549185, 32, 3328);
+    let unrelated: bool = supported(2147549187, 544, 3329);
+    let no_protection: bool = supported(2147549184, 32, 3328);
+    let no_write_protection: bool = supported(2147483649, 32, 3328);
+    let no_paging: bool = supported(65537, 32, 3328);
+    let no_pae: bool = supported(2147549185, 0, 3328);
+    let global_pages: bool = supported(2147549185, 160, 3328);
+    let five_levels: bool = supported(2147549185, 4128, 3328);
+    let tagged_contexts: bool = supported(2147549185, 131104, 3328);
+    let no_long_enable: bool = supported(2147549185, 32, 3072);
+    let no_long_active: bool = supported(2147549185, 32, 2304);
+    let no_execute_disable: bool = supported(2147549185, 32, 1280);
+    transition ready && unrelated && !no_protection && !no_write_protection &&
+        !no_paging && !no_pae && !global_pages && !five_levels &&
+        !tagged_contexts && !no_long_enable && !no_long_active && !no_execute_disable {
+        true -> done()
+        false -> wrong()
+    }
+    state done() {}
+    state wrong() { crash Trap; }
+}

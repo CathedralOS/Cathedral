@@ -32,8 +32,8 @@ class BootHarnessTests(unittest.TestCase):
             self.assertEqual((first / 'serial.log').read_bytes(), b'first')
 
     def test_smoke_requires_ordered_complete_reports_through_resident_readback(self):
-        boot.check_boot_milestones(b'Hello from Omega\r\nOwned 128 MiB\r\nKernel entered\r\nMemory split\r\nMemory checked\r\nMemory paired\r\nPage ready\r\nTables ready\r\n')
-        boot.check_boot_milestones(b'Hello from Omega\nOwned 99999+ MiB\nKernel entered\r\nMemory split\r\nMemory checked\nMemory paired\nPage ready\nTables ready\n')
+        boot.check_boot_milestones(b'Hello from Omega\r\nOwned 128 MiB\r\nKernel entered\r\nMemory split\r\nMemory checked\r\nMemory paired\r\nPage ready\r\nTables ready\r\nCPU checked\r\n')
+        boot.check_boot_milestones(b'Hello from Omega\nOwned 99999+ MiB\nKernel entered\r\nMemory split\r\nMemory checked\nMemory paired\nPage ready\nTables ready\nCPU checked\n')
         for output in (b'', b'Hello from Omega\r\n',
                        b'Owned 128 MiB\nHello from Omega\n',
                        b'Hello from Omega\nOwned rubbish MiB\n',
@@ -118,6 +118,15 @@ class BootHarnessTests(unittest.TestCase):
             with patch.object(boot, 'run_checked'):
                 with self.assertRaisesRegex(ValueError, 'without publishing'):
                     boot.build_image(['omega'], Path('main.omg'), 'uefi_x86_64', directory)
+
+    def test_tables_without_supported_cpu_report_cannot_satisfy_smoke(self):
+        prefix = b'Hello from Omega\r\nOwned 128 MiB\r\nKernel entered\r\nMemory split\r\nMemory checked\r\nMemory paired\r\nPage ready\r\nTables ready\r\n'
+        for output in (prefix, prefix + b'CPU checked', prefix + b'CPU checked\r',
+                       prefix + b'Not CPU checked\r\n', b'CPU checked\r\n' + prefix,
+                       prefix.replace(b'Tables ready\r\n', b'CPU checked\r\nTables ready\r\n')):
+            with self.subTest(output=output):
+                with self.assertRaisesRegex(ValueError, 'CPU paging profile'):
+                    boot.check_boot_milestones(output)
 
     def test_publishes_only_fresh_product(self):
         with tempfile.TemporaryDirectory() as temporary:

@@ -105,8 +105,12 @@ def check_boot_milestones(output):
     page = re.search(rb'(?:^|\n)Page ready\r?\n', after_paired)
     if page is None:
         raise ValueError('Expected aligned page initialization and zero readback after memory paired.')
-    if re.search(rb'(?:^|\n)Tables ready\r?\n', after_paired[page.end():]) is None:
+    after_page = after_paired[page.end():]
+    tables = re.search(rb'(?:^|\n)Tables ready\r?\n', after_page)
+    if tables is None:
         raise ValueError('Expected resident page-table links and unused-slot readback after page ready.')
+    if re.search(rb'(?:^|\n)CPU checked\r?\n', after_page[tables.end():]) is None:
+        raise ValueError('Expected supported CPU paging profile after tables ready.')
 
 
 def main(arguments=None):
@@ -119,7 +123,7 @@ def main(arguments=None):
                         help='run ordinary omega update for dependency review before building')
     parser.add_argument('--build-dir', type=Path, default=ROOT / 'build/boot-harness')
     parser.add_argument('--smoke', action='store_true',
-                        help='require greeting, owned-memory report, kernel entry, memory split, memory checked, memory paired, page ready and tables ready')
+                        help='require greeting, owned-memory report, kernel entry, memory split, memory checked, memory paired, page ready, tables ready and CPU checked')
     parser.add_argument('--timeout', type=float, default=30)
     options = parser.parse_args(arguments)
     if options.timeout <= 0:

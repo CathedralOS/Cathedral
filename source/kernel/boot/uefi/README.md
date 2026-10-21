@@ -21,7 +21,7 @@ the initialized page and the remaining tail with the context and image.
 
 The fresh-image harness requires `Hello from Omega`, a complete `Owned N MiB`
 line, `Kernel entered`, `Memory split`, `Memory checked`, `Memory paired`,
-`Page ready`, and `Tables ready`, in that order. The six-marker baseline reported 35 MiB in
+`Page ready`, `Tables ready`, and `CPU checked`, in that order. The six-marker baseline reported 35 MiB in
 QEMU/OVMF using Omega `9e04918b1d1`. The current source requires Omega's exact address-model
 typing, representation-recast effect tracking and occurrence-local state-prefix
 checking, in addition to the canonical `ProgramStorageEntryNativeProvider`,
@@ -73,7 +73,7 @@ separate backing and lifecycle obligations.
 The intended acceptance is one freshly compiled `uefi_x86_64` image under
 QEMU/OVMF: `Hello from Omega`, successful firmware exit, `Owned N MiB` over
 COM1, then `Kernel entered`, `Memory split`, `Memory checked`, `Memory paired`,
-`Page ready`, and `Tables ready`
+`Page ready`, `Tables ready`, and `CPU checked`
 while retaining image, every initial-storage descendant and accounted surviving
 stack storage. `Memory checked` requires common-root reunion after all three partition sizes,
 initialization/readback of 17, write/readback/extraction of 29, and return of the
@@ -217,9 +217,27 @@ Compilation needs Omega's declaration-preserving reference-call proof repair
 and occurrence-local cleanup case evidence: a rejected nested reservation
 must retain its storage even when earlier partial transfers retire live facts.
 
+## CPU paging profile
+
+After table readback, `Kernel::observe_paging` reads CR0, CR4 and IA32_EFER through
+checked assembly. The pure `core::paging_profile` policy requires protected mode,
+paging, write protection, PAE, active/enabled long mode and NX. It excludes
+five-level paging, global pages and PCID: those need different table or
+invalidation protocols. Only an accepted observation permits `CPU checked`.
+The native QEMU/OVMF boot reaches this marker; the hosted policy witness checks
+every required bit, every excluded bit, and unrelated-bit tolerance through both
+execution engines. The privileged observer remains in the boot composition so
+ordinary clients can use the pure policy without machine-owner authority.
+
+This is a CPU observation, not a persistent regime claim or mapping permission.
+Activation must recheck under its held authority and preserve the regime through
+the transition. No control register is written by this milestone. Omega needs
+catalogued control-register events retained through executable lowering; merely
+recognizing their assembly spelling or accepting source is insufficient.
+
 The proposed 1-GiB virtual address is only a candidate. No virtual destination
 is reserved and no translations are installed. Activation still needs the live
-mapping policy, preserved image/private-stack mappings, a suitable CPU profile,
+mapping policy, preserved image/private-stack mappings, a live CPU-profile guarantee,
 hardware-aware table custody for accessed/dirty writes, root installation and
 TLB handling, and an actual mapped read/write witness. The ordinary Stable
 construction loan must end before hardware can walk these pages; a Boolean

@@ -45,7 +45,7 @@ Without `--smoke`, QEMU's serial console is interactive. With it, the guest
 runs headlessly for at most `--timeout` seconds (default 30), and this run's
 serial log must contain the greeting followed by a complete numeric
 `Owned N MiB` line, then `Kernel entered`, `Memory split`, `Memory checked`,
-`Memory paired`, `Page ready`, and `Tables ready`.
+`Memory paired`, `Page ready`, `Tables ready`, and `CPU checked`.
 The partition marker
 requires the kernel to establish vacancy for its initial-storage root, split
 4096 bytes with the checked core operation, and observe both returned lengths.
