@@ -93,6 +93,9 @@ def check_boot_milestones(output):
     memory = output.find(b'Memory split\r\n', kernel + len(b'Kernel entered\r\n'))
     if memory < 0:
         raise ValueError('Expected checked memory partition after kernel entry.')
+    after_partition = output[memory + len(b'Memory split\r\n'):]
+    if re.search(rb'(?:^|\n)Memory checked\r?\n', after_partition) is None:
+        raise ValueError('Expected resident initialization, read/write and extraction after memory split.')
 
 
 def main(arguments=None):
@@ -105,7 +108,7 @@ def main(arguments=None):
                         help='run ordinary omega update for dependency review before building')
     parser.add_argument('--build-dir', type=Path, default=ROOT / 'build/boot-harness')
     parser.add_argument('--smoke', action='store_true',
-                        help='require greeting, owned-memory report, kernel entry and memory split')
+                        help='require greeting, owned-memory report, kernel entry, memory split and memory checked')
     parser.add_argument('--timeout', type=float, default=30)
     options = parser.parse_args(arguments)
     if options.timeout <= 0:
@@ -140,7 +143,7 @@ def main(arguments=None):
         invocation += ['-display', 'none']
         serial.write_bytes(b'')
         # Idle is the expected boot endpoint, so timeout is not success by itself.
-        # The guest must first produce all three independent milestones in this run.
+        # The guest must first produce every required milestone in this run.
         try:
             subprocess.run(invocation, stdin=subprocess.DEVNULL, check=True,
                            timeout=options.timeout)

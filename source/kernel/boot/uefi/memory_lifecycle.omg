@@ -1,0 +1,116 @@
+use omega::language::core::extent;
+use omega::language::core::layout;
+
+public data KernelWord { value: u64; }
+public data KernelWordPlacement {}
+data KernelMemory {}
+
+// Build selects a closed implementation declaration. This map fixes the
+// kernel's policy/schema pair; the library owns the actual memory operations.
+KernelMemoryPlacement satisfies PlacementLifecycle<KernelWordPlacement, KernelWord> {
+    machine initialize(
+        storage: Extent in Granted & Vacant,
+        value: KernelWord
+    ) -> PlacementOutcome<
+        Extent in Granted & Resident<KernelWordPlacement, KernelWord>,
+        PlacementReturn<Extent in Granted & Vacant, KernelWord>,
+        PlacementInitializationFailure
+    >
+    reaches ResourceProfileSupply
+    {
+        NativePlacement<KernelWordPlacement, KernelWord>::initialize(storage, value)
+    }
+
+    machine move_out(
+        storage: Extent in Granted & Resident<KernelWordPlacement, KernelWord>
+    ) -> PlacementExtraction<Extent in Granted & Vacant, KernelWord>
+    reaches ResourceProfileSupply
+    {
+        NativePlacement<KernelWordPlacement, KernelWord>::move_out(storage)
+    }
+}
+
+machine KernelWordPlacement::plan(schema: Schema) -> PlacementPlan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry {
+        key: schema.fields[0].key,
+        placement: FieldPlan::At { offset: 0 },
+    };
+    let access: AccessPlan = AccessPlan::with(
+        AccessPlan::inaccessible(&schema), schema.fields[0].key,
+        FieldAccess::Stable { read: true, write: true, exposure: Exposure::Exported }
+    );
+    let services: [u64; 32];
+    PlacementPlan {
+        layout: Plan {
+            entries: entries, entry_count: 1, size_fixed: 8,
+            size_is_dynamic: false, align: 8,
+        },
+        access: access,
+        reach: BoundaryReach { services: services, service_count: 0 },
+    }
+}
+
+data KernelMemoryObservation {
+    initial: u64;
+    updated: u64;
+}
+
+data KernelMemoryResult {
+    storage: Extent in Granted & Vacant;
+    initialized: bool;
+    initial: u64;
+    updated: u64;
+    extracted: u64;
+}
+
+// The input is the real retained firmware allocation, never an address-created
+// substitute. Ready must encode the value before lending its resident storage;
+// rejection returns the original vacant allocation and unconsumed value.
+// Neither branch drops the allocation's unused tail.
+machine KernelMemory::exercise(storage: Extent in Granted & Vacant) -> KernelMemoryResult
+reaches ResourceProfileSupply + PlacementLifecycle
+{
+    transition Placed::initialize_owned<KernelWordPlacement, KernelWord>(
+        storage, KernelWord { value: 17 }
+    ) {
+        PlacementOutcome::Ready { view } -> use_resident(view)
+        PlacementOutcome::Rejected { returned, reason } -> rejected(returned)
+    }
+
+    state use_resident(
+        storage: Extent in Granted & Resident<KernelWordPlacement, KernelWord>
+    ) -> KernelMemoryResult {
+        let mut active: Extent in Granted & Resident<KernelWordPlacement, KernelWord> = storage;
+        let observation: KernelMemoryObservation = KernelMemory::overwrite(
+            Placed::view_resident_mut<KernelWordPlacement, KernelWord>(&mut active)
+        );
+        let returned: PlacementReturn<Extent in Granted & Vacant, KernelWord> =
+            Placed::move_out_owned<KernelWordPlacement, KernelWord>(active);
+        KernelMemoryResult {
+            storage: returned.source, initialized: true,
+            initial: observation.initial, updated: observation.updated,
+            extracted: returned.custody.value,
+        }
+    }
+
+    state rejected(
+        returned: PlacementReturn<Extent in Granted & Vacant, KernelWord>
+    ) -> KernelMemoryResult {
+        KernelMemoryResult {
+            storage: returned.source, initialized: false,
+            initial: 0, updated: 0, extracted: returned.custody.value,
+        }
+    }
+}
+
+// Keep the mutation across a helper boundary. The view ends before whole-value
+// extraction; ending this loan alone cannot turn resident content into vacancy.
+machine KernelMemory::overwrite(
+    view: &mut Placed<KernelWordPlacement, KernelWord>
+) -> KernelMemoryObservation {
+    let initial: u64 = placed_read(&view.value);
+    placed_write(&mut view.value, 29u64);
+    let updated: u64 = placed_read(&view.value);
+    KernelMemoryObservation { initial: initial, updated: updated }
+}

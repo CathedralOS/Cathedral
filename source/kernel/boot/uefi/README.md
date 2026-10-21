@@ -10,11 +10,13 @@ ExitBootServices it grants both retained roots and calls `ProgramStorageEntry`.
 The explicitly selected native provider transfers them to the exact
 Build-selected `Kernel::enter`, which checks its fresh context, records root
 lengths and reports arrival. It then admits vacancy for the fresh initial-storage
-root, partitions 4096 bytes, and retains both children with the context and image.
+root, partitions 4096 bytes, exercises resident memory on that prefix, and
+retains both children with the context and image.
 
 The fresh-image harness requires `Hello from Omega`, a complete `Owned N MiB`
-line, `Kernel entered`, and `Memory split`, in that order. A fresh four-marker
-boot reported 35 MiB in QEMU/OVMF. The current source requires Omega's exact address-model
+line, `Kernel entered`, `Memory split`, and `Memory checked`, in that order.
+A fresh five-marker boot reported 35 MiB in QEMU/OVMF with the companion Omega
+native-lifecycle repairs. The current source requires Omega's exact address-model
 typing, representation-recast effect tracking and occurrence-local state-prefix
 checking, in addition to the canonical `ProgramStorageEntryNativeProvider`,
 activation-local entry-context provisioning and private entry stack. A clean
@@ -61,8 +63,10 @@ separate backing and lifecycle obligations.
 
 The intended acceptance is one freshly compiled `uefi_x86_64` image under
 QEMU/OVMF: `Hello from Omega`, successful firmware exit, `Owned N MiB` over
-COM1, then `Kernel entered` and `Memory split` while retaining image, both
-initial-storage children and accounted surviving stack storage. A failed build or an old
+COM1, then `Kernel entered`, `Memory split`, and `Memory checked` while retaining
+image, both initial-storage children and accounted surviving stack storage.
+The last marker requires initialization/readback of 17, write/readback/extraction
+of 29, and return of the original extent base and length. A failed build or an old
 `BOOTX64.EFI` cannot satisfy acceptance.
 
 ## Reproduce
@@ -103,8 +107,18 @@ image range or an occupied allocation, and future call sites need fresh review.
 `split_vacant_extent` then conserves Granted and Vacant independently. The kernel
 checks the returned 4096-byte prefix and remaining length before printing
 `Memory split`, and retains both pieces. It neither discards the unused tail nor
-claims that vacancy makes bytes readable. Stable access-profile establishment,
-resident initialization, write/readback and exact retirement remain unfinished.
+claims that vacancy makes bytes readable. The selected `BootMemoryProfileProvider`
+supplies the explicitly admitted Stable read/write premise for this retained
+ConventionalMemory range. Its complete profile is bound to the unchanged extent;
+an independently constructed profile is not authority.
+
+`memory_lifecycle.omg` then initializes one `KernelWord` with 17, lends a mutable
+resident view through a helper, writes and reads 29, ends that loan, and extracts
+29. The kernel checks those observations and the original returned extent before
+printing `Memory checked`. The rest of the split allocation remains owned. This
+is real access to retained firmware memory, not a snapshot restored by the
+interpreter. It does not establish a general allocator or independently verify
+the provider's memory-mapping premise.
 
 The kernel currently retains its context, image and storage children in a halt loop;
 it does not yet install page tables, an allocator, interrupts or a scheduler.
@@ -126,7 +140,8 @@ Use a compiler containing the checking repairs described above and separate
 repository-metadata acquisition limits: this pinned repository exceeds 65,536
 entries although the selected std source does not. Selected-package source and
 cache custody limits remain unchanged. A fresh image built from this source
-reached all four markers under QEMU/OVMF after ordinary package review.
+reached all five markers under QEMU/OVMF after ordinary package review, using
+the companion compiler repairs for native resident initialization and extraction.
 
 The local calling policy deliberately remains a normal named implementation;
 it must not collide with std's same-spelled policy. Firmware layouts and OS
@@ -139,5 +154,6 @@ implicit provider arguments. Selecting the implementations does not establish
 the validity or lifetime of those firmware values.
 
 The smoke harness checks greeting, firmware exit, ownership reporting,
-arrival in the selected kernel continuation and real-root partition. It is a bounded boot witness, not
+arrival in the selected kernel continuation, real-root partition and resident
+read/write/extraction. It is a bounded boot witness, not
 a working operating-system claim; the Rust bring-up lab is separate evidence.

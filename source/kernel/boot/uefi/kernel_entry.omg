@@ -1,5 +1,7 @@
 use omega::language::core::extent;
 use omega::language::core::assembly;
+use omega::language::core::layout;
+use memory_lifecycle;
 
 data KernelState {
     entered: bool;
@@ -24,14 +26,37 @@ BootVacantStorageProvider satisfies VacantContentTransfer {
     }
 }
 
+// Admitted only for the initial ConventionalMemory root retained after the
+// successful firmware handoff and its conserved children. The boot mapping
+// remains live, CPU-readable/writable and exclusive for the idle kernel's
+// lifetime; no remap, firmware service or device loan may revoke it. This
+// describes backing supply, not initialized contents or a second root.
+BootMemoryProfileProvider satisfies ResourceProfileSupply {
+    machine profile(storage: &Extent in Granted) -> ResourceProfile {
+        let services: [u64; 32];
+        let mut regions: [ResourceRegion; 32];
+        regions[0] = ResourceRegion {
+            range: RelativeRange { offset: 0, length: storage.length },
+            peer: PeerWritability::Exclusive,
+            stable: StableCapability::ReadWrite,
+            external: ExternalCapability::None,
+            atomic: AtomicCapability::None,
+            reach: BoundaryReach { services: services, service_count: 0 },
+        };
+        ResourceProfile { regions: regions, region_count: 1 }
+    }
+}
+
 // The semantic entry is independent of the firmware ABI. A valid installed
 // caller must transfer both roots; declaring or taking the address of this
 // machine does not mint them. Reporting happens only after the selected bridge
 // has transferred both roots, and idle retains both claims for the OS lifetime.
 machine Kernel::enter(context: &mut KernelState, image: Extent in Granted,
                       initial_storage: Extent in Granted)
-reaches PortIo + MachineControl + VacantContentTransfer
+reaches PortIo + MachineControl + VacantContentTransfer + ResourceProfileSupply + PlacementLifecycle
 invokes VacantContentTransfer;
+invokes ResourceProfileSupply;
+invokes PlacementLifecycle;
 {
     // The installed occurrence receives fresh zero state, not firmware data or
     // a globally addressable record. Keep its borrow with the retained roots.
@@ -97,10 +122,15 @@ invokes VacantContentTransfer;
     requires storage.length >= 4096
     {
         let parts: VacantExtentParts = split_vacant_extent(storage, 4096);
+        let profile: ResourceProfile = ResourceProfileSupply::profile(
+            (&parts.taken) as &Extent in Granted
+        );
         // Observe the actual returned geometry before announcing success. The
         // comparison grants no custody; the checked split already conserved
         // Granted and Vacant independently. Both children stay owned below.
-        transition parts.taken.length == 4096 &&
+        transition profile.region_count == 1 &&
+                   profile.regions[0].range.length == parts.taken.length &&
+                   parts.taken.length == 4096 &&
                    parts.rest.length <= context.initial_storage_bytes &&
                    context.initial_storage_bytes - parts.rest.length == 4096 {
             true -> memory_wait(context, image, parts, 1000000)
@@ -140,6 +170,64 @@ invokes VacantContentTransfer;
         asm { out 1016, 108 } // l
         asm { out 1016, 105 } // i
         asm { out 1016, 116 } // t
+        asm { out 1016, 13 }
+        asm { out 1016, 10 }
+        transition { _ -> exercise_memory(context, image, parts) }
+    }
+
+    state exercise_memory(context: &mut KernelState, image: Extent in Granted,
+                          parts: VacantExtentParts) {
+        let original_base: addr = parts.taken.base;
+        let original_length: u64 = parts.taken.length;
+        let result: KernelMemoryResult = KernelMemory::exercise(parts.taken);
+        // These are runtime observations, not establishment of custody. The
+        // lifecycle's checked result must already conserve the original claim.
+        let verified: bool = result.initialized &&
+            result.initial == 17 && result.updated == 29 && result.extracted == 29 &&
+            result.storage.base == original_base && result.storage.length == original_length;
+        let recovered: VacantExtentParts = VacantExtentParts {
+            taken: result.storage, rest: parts.rest,
+        };
+        transition verified {
+            true -> verified_wait(context, image, recovered, 1000000)
+            _ -> retain_parts(context, image, recovered)
+        }
+    }
+
+    state verified_wait(context: &mut KernelState, image: Extent in Granted,
+                        parts: VacantExtentParts, remaining: u64) {
+        let mut status: u8 = 0;
+        asm { in status, 1021 }
+        transition (status & 32) != 0 {
+            true -> verified_report(context, image, parts)
+            _ -> verified_retry(context, image, parts, remaining)
+        }
+    }
+
+    state verified_retry(context: &mut KernelState, image: Extent in Granted,
+                         parts: VacantExtentParts, remaining: u64) {
+        transition remaining > 1 {
+            true -> verified_wait(context, image, parts, remaining - 1)
+            _ -> retain_parts(context, image, parts)
+        }
+    }
+
+    state verified_report(context: &mut KernelState, image: Extent in Granted,
+                          parts: VacantExtentParts) {
+        asm { out 1016, 77 }  // M
+        asm { out 1016, 101 } // e
+        asm { out 1016, 109 } // m
+        asm { out 1016, 111 } // o
+        asm { out 1016, 114 } // r
+        asm { out 1016, 121 } // y
+        asm { out 1016, 32 }
+        asm { out 1016, 99 }  // c
+        asm { out 1016, 104 } // h
+        asm { out 1016, 101 } // e
+        asm { out 1016, 99 }  // c
+        asm { out 1016, 107 } // k
+        asm { out 1016, 101 } // e
+        asm { out 1016, 100 } // d
         asm { out 1016, 13 }
         asm { out 1016, 10 }
         transition { _ -> retain_parts(context, image, parts) }

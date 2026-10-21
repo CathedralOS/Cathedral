@@ -31,9 +31,9 @@ class BootHarnessTests(unittest.TestCase):
             self.assertEqual(second_image.read_bytes(), second.name.encode())
             self.assertEqual((first / 'serial.log').read_bytes(), b'first')
 
-    def test_smoke_requires_ordered_complete_numeric_report_and_kernel_entry(self):
-        boot.check_boot_milestones(b'Hello from Omega\r\nOwned 128 MiB\r\nKernel entered\r\nMemory split\r\n')
-        boot.check_boot_milestones(b'Hello from Omega\nOwned 99999+ MiB\nKernel entered\r\nMemory split\r\n')
+    def test_smoke_requires_ordered_complete_reports_through_resident_readback(self):
+        boot.check_boot_milestones(b'Hello from Omega\r\nOwned 128 MiB\r\nKernel entered\r\nMemory split\r\nMemory checked\r\n')
+        boot.check_boot_milestones(b'Hello from Omega\nOwned 99999+ MiB\nKernel entered\r\nMemory split\r\nMemory checked\n')
         for output in (b'', b'Hello from Omega\r\n',
                        b'Owned 128 MiB\nHello from Omega\n',
                        b'Hello from Omega\nOwned rubbish MiB\n',
@@ -47,6 +47,19 @@ class BootHarnessTests(unittest.TestCase):
                        b'Hello from Omega\nOwned 128 MiB\nKernel entered\r\nMemory split'):
             with self.subTest(output=output):
                 with self.assertRaises(ValueError):
+                    boot.check_boot_milestones(output)
+
+    def test_split_only_or_invalid_resident_report_cannot_satisfy_smoke(self):
+        through_split = b'Hello from Omega\r\nOwned 128 MiB\r\nKernel entered\r\nMemory split\r\n'
+        for output in (through_split,
+                       through_split + b'Memory checked',
+                       through_split + b'Memory checked\r',
+                       through_split + b'Memory failed\r\n',
+                       through_split + b'Not Memory checked\r\n',
+                       b'Memory checked\r\n' + through_split,
+                       through_split.replace(b'Memory split\r\n', b'Memory checked\r\nMemory split\r\n')):
+            with self.subTest(output=output):
+                with self.assertRaisesRegex(ValueError, 'resident initialization'):
                     boot.check_boot_milestones(output)
 
     def test_source_checkout_uses_current_cli_package(self):

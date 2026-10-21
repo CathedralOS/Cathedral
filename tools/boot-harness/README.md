@@ -44,14 +44,18 @@ firmware is an error. Split firmware gets a fresh writable variable store.
 Without `--smoke`, QEMU's serial console is interactive. With it, the guest
 runs headlessly for at most `--timeout` seconds (default 30), and this run's
 serial log must contain the greeting followed by a complete numeric
-`Owned N MiB` line, then `Kernel entered`, then `Memory split`. The last marker
+`Owned N MiB` line, then `Kernel entered`, `Memory split`, and `Memory checked`.
+The partition marker
 requires the kernel to establish vacancy for its initial-storage root, split
 4096 bytes with the checked core operation, and observe both returned lengths.
-Both children remain owned. Missing, truncated or out-of-order markers fail.
+Both children remain owned. `Memory checked` additionally requires successful
+resident initialization with 17, readback of 17, mutation and readback of 29,
+extraction of 29, and return of the original extent base and length. A split-only
+boot does not satisfy this acceptance. Missing, truncated or out-of-order markers fail.
 Timeout alone is not success. The check observes those
 milestones; it does not prove firmware correctness or long-term liveness.
-It does not establish a Stable access profile, initialize a resident value, or
-demonstrate allocator write/readback or retirement.
+The serial oracle observes the kernel's checks; it does not independently grant
+Stable access, prove compiler correctness, or demonstrate a general allocator.
 
 Logs, firmware copies and the ESP stay in a unique retained `run-*` directory
 under `--build-dir` (default `build/boot-harness`). Concurrent invocations never
