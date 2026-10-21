@@ -1,6 +1,5 @@
 //! Borrow page-object backing; reserve tables before runtime edits and publish bookkeeping atomically.
 use super::*;
-use cathedral_arch::memory::{NoFrames, Permissions};
 use cathedral_kernel_contracts::memory as wire;
 impl UserSpace {
     /// # Safety
@@ -56,29 +55,14 @@ impl UserSpace {
         self.backing
             .try_reserve_exact(physical.len())
             .map_err(|_| MemoryError::OutOfFrames)?;
-        let permissions = Permissions {
-            writable,
-            executable: false,
-        };
-        for (offset, &frame) in physical.iter().enumerate() {
-            // SAFETY: Inactive reserved branch; no allocation or running aliases. Roll back earlier leaves on failure.
-            unsafe {
-                if let Err(error) = self.mapping.as_mut().unwrap().map_page(
-                    base + offset as u64 * PAGE,
-                    frame,
-                    permissions,
-                    &mut NoFrames,
-                ) {
-                    for undo in 0..offset {
-                        self.mapping
-                            .as_mut()
-                            .unwrap()
-                            .unmap_page(base + undo as u64 * PAGE);
-                    }
-                    return Err(error);
-                }
-            }
-        }
+        // SAFETY: Inactive reserved tree and retained backing. The backend
+        // validates the entire range before writing; refusal changes no table.
+        unsafe {
+            self.mapping
+                .as_mut()
+                .unwrap()
+                .map_pages(base, physical, writable)
+        }?;
         for (offset, &frame) in physical.iter().enumerate() {
             self.backing.push(Backing {
                 address: base + offset as u64 * PAGE,

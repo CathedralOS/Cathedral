@@ -76,7 +76,10 @@ impl UserMappings {
                     address,
                     scratch,
                     Permissions {
-                        writable: false,
+                        // Reserve writable parent tables now. The temporary
+                        // leaf is removed before publication; runtime mapping
+                        // must never widen parent permissions as a side effect.
+                        writable: true,
                         executable: false,
                     },
                     frames,
@@ -89,7 +92,7 @@ impl UserMappings {
     }
     /// # Safety
     /// Inactive tree, IRQs off; existing leaf, backing retained until every alias is removed.
-    pub unsafe fn unmap_page(&mut self, address: u64) {
+    unsafe fn unmap_page(&mut self, address: u64) {
         // SAFETY: Caller retains backing; no table/frame ownership is consumed here.
         unsafe {
             let mut target =

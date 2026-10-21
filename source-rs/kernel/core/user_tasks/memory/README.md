@@ -95,6 +95,11 @@ slot, including slots spanning leaf tables. [ISA range edits](../../../arch/READ
 walk each leaf table once; translation writes and the core ledger update remain
 atomic, with backing retained throughout. This changes neither capability
 publication nor the ordering of final refunds.
+Runtime mapping installation validates the complete range before writing any
+leaf, then publishes the core ledger only on success. The shared
+[mapping refusal proof](../address_space/regions_test.rs) sweeps every possible
+collision across a maximum-size range spanning two tables and rejects invalid
+backing, checking successful retry and unchanged ledger state on both CPUs.
 
 The integrated [matrix image path](../../../../platform/libraries/matrix/world/surface/README.md)
 uses the same API for retained bitmaps. Matrices clip metadata and keep unmapped

@@ -184,11 +184,17 @@ once per leaf table and edit the contiguous leaves before core updates the ledge
 A 128-page object requires one or two hierarchy walks instead of 128 on either
 current ISA. Unmap compacts the ledger while preserving unrelated image, stack
 and object entries. Both still run atomically; the remaining leaf writes and
-ledger visit scale with their bounded populations. Map installation still walks
-per page. The real-frame fixture checks every removed page and every retained
+ledger visit scale with their bounded populations. Map installation now validates
+the complete range and then commits through reserved tables: two hierarchy walks
+per leaf table, with no allocation or parent-permission edits. Admission prepares
+the x86 parent permissions. Invalid frames, occupied leaves or missing/restrictive
+parents leave all translations unchanged; core publishes its ledger only after
+success. The real-frame fixture checks every removed page and every retained
 owner alias, including sealing/removal at every slot alignment on both ISAs.
 An independent x86 translator test also checks actual leaf permissions and
 physical addresses across all three parent-table boundary levels.
+Refusal tests snapshot complete x86 tables, and both booted CPUs sweep every
+possible leaf collision with a successful retry after removing only that conflict.
 
 ARM64 runtime-table reservation now visits each 2-MiB leaf-table span once,
 matching the granularity already used by x86. The current guarded mapping
@@ -207,10 +213,11 @@ allowed at map time, repeat reservation and complete failure rollback.
    Waiter and deferred-work indexes are in place. Registered waits now distinguish
    completion from first selection; use those observations before changing
    dispatch policy. Other ready transitions remain outside these probes.
-2. Extend incremental allocation/admission/retirement to single-object mapping;
-   backing refunds, allocation rollback and reference retirement now advance in
-   batches. Measure remaining uninterrupted chunks under competing
-   work. Keep requester charging, private staging and rollback tests.
+2. Measure remaining uninterrupted allocation/admission/retirement work under
+   competing loads. Backing refunds, allocation rollback and reference retirement
+   now advance in batches; object mapping/sealing/removal visit each table in
+   bulk but remain atomic. Add suspension state where remaining measured work
+   warrants it, keeping requester charging, private staging and refusal tests.
 3. Define guaranteed service separately from ceilings: amount, replenishment/
    service window, deadline and overrun behavior. A child cannot promise finer
    service than the parent receives. Admission must account for interrupts,

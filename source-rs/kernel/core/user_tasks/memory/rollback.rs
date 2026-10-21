@@ -62,7 +62,7 @@ unsafe fn page_objects(
     let admitted = source.allocated();
     let table_budget = admitted - baseline;
     // Reserving the same empty window twice must not allocate tables or publish
-    // leaves. Subsequent map_region calls use NoFrames and cover every slot.
+    // leaves. Subsequent map_region calls cannot allocate tables and cover every slot.
     // SAFETY: Prepared inactive tree; no runtime region has been installed yet.
     unsafe {
         session.tasks[0]
@@ -196,6 +196,11 @@ unsafe fn mapping_boundaries(session: &mut Session, handle: u64) {
     // SAFETY: No executing user or Rust borrow; remove writer before reader aliases.
     unsafe { space.seal_region(mapping, wire::MAX_PAGES) };
     assert!(!space.writable_range(wire::address(mapping), 1));
+    // Slots 3 and 7 straddle leaf-table boundaries in the current guarded
+    // layout. Keep the original mapping untouched throughout refusal/retry.
+    let vacant = if mapping == 3 { 7 } else { 3 };
+    // SAFETY: Private inactive fixture root and pinned backing; selected slot vacant.
+    unsafe { super::super::address_space::regions_test::exercise(space, vacant, &backing) };
     for alias in (0..wire::MAX_MAPPING_SLOTS).filter(|&slot| slot != mapping) {
         // SAFETY: Private inactive fixture root, no executing or borrowed reader;
         // this temporary writer is sealed before any reads. Backing remains owned.

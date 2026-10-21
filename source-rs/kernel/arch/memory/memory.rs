@@ -30,18 +30,6 @@ pub struct Permissions {
     pub writable: bool,
     pub executable: bool,
 }
-/// Runtime leaf edits must use the hierarchy reserved at admission.
-pub struct NoFrames;
-// SAFETY: Never allocates or owns a physical frame.
-unsafe impl FrameSource for NoFrames {
-    fn allocate(&mut self) -> Option<u64> {
-        None
-    }
-    unsafe fn release(&mut self, _address: u64) {
-        unreachable!("non-owning frame source");
-    }
-}
-
 /// Geometry only; constructing this record does not grant ownership.
 #[derive(Clone, Copy, Debug)]
 pub struct StackRange {

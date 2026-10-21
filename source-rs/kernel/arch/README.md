@@ -77,7 +77,15 @@ Core still owns its single-pass backing/permission ledger update. A current
 leaf writes remain proportional to its size. These operations allocate nothing,
 retain all tables/backing, and remain atomic under the inactive-root contract.
 The next root activation supplies the existing translation synchronization.
-Runtime mapping installation and its rollback still use individual-page edits.
+Runtime installation uses `map_pages` in the same backends. It validates every
+backing address, ancestor and destination leaf before a second pass publishes
+any entries. A maximum-size object needs two or four hierarchy walks total.
+Failures leave parents and leaves unchanged; there is no partial installation
+to roll back. Core reserves ledger capacity before calling this transaction and
+appends its entries only after success. Admission reserves x86 parents with
+user/write permissions using a temporary scratch leaf that is removed before
+publication. Runtime installation never widens parent permissions or allocates
+tables. Single-page construction remains available for admission/device work.
 
 The [x86 table test](isa/x86_64/user/memory/regions_test.rs) builds tables with the
 x86 crate and independently translates the edited result. It checks physical
@@ -85,6 +93,12 @@ addresses, read-only/NX permissions, complete removal and untouched neighbors
 across PT, PD and PDPT boundaries. The shared
 [real-frame fixture](../core/user_tasks/memory/rollback.rs) exercises sealing and
 removal in every guarded object slot on both CPUs, with complete reclamation.
+The host test snapshots all tables across every possible collision, a missing
+later table, a restrictive parent, a huge-page conflict and invalid frames.
+The shared [refusal/retry proof](../core/user_tasks/address_space/regions_test.rs)
+injects each possible occupied leaf in a maximum-size range spanning two tables,
+checks that core publishes no ledger entries on refusal, removes only the injected
+leaf, then retries successfully. It also refuses an invalid final backing address.
 
 Root allocation and supervisor mapping preparation are separate operations.
 Core chooses a work allowance and retains the private space across steps;

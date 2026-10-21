@@ -111,18 +111,6 @@ impl UserMappings {
         Ok(())
     }
     /// # Safety
-    /// Inactive tree, IRQs off; existing leaf, backing retained until all aliases retire.
-    pub unsafe fn unmap_page(&mut self, address: u64) {
-        // SAFETY: Remove translation only, never release the caller's backing.
-        unsafe {
-            self.entry(address).write(0);
-        }
-    }
-    unsafe fn entry(&self, address: u64) -> *mut u64 {
-        // SAFETY: Caller requires an existing leaf in the owned inactive tree.
-        unsafe { tables::leaf(self.root, address, &mut || Err(MemoryError::OutOfFrames)).unwrap() }
-    }
-    /// # Safety
     /// Newly loaded executable RAM, no running users or writers until publication.
     pub unsafe fn publish_code(physical: u64) {
         // SAFETY: Caller keeps code private until instruction/data cache synchronization finishes.

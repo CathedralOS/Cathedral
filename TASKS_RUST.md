@@ -1,7 +1,7 @@
 # Rust reference OS: tasks and handoff
 
-Updated 2026-10-20 (local date). Current milestone: **batched page-table
-permission/removal edits**, on baseline `d8450d09` (wait-to-selection observations).
+Updated 2026-10-20 (local date). Current milestone: **atomic reserved-range
+installation**, on baseline `2771bad8` (batched sealing/removal).
 The latest section records verification and remaining steps toward bounded
 execution. This does not introduce real-time reservations.
 The fresh-lab reset is `30572c9f`. Compact recursive desktops landed as `c7571191`,
@@ -4309,3 +4309,64 @@ transaction before adding suspension state. The authority sweep, deadline
 extraction and other audited atomic work remain; guaranteed CPU service is still
 separate from ceilings. The intermittent clean-close LOSS timeout remains open.
 No owner semantics or application ABI changed.
+
+## Atomic reserved-range installation (2026-10-20)
+
+Baseline: `2771bad8`. Runtime page-object installation now enters `map_pages` in
+the [x86](source-rs/kernel/arch/isa/x86_64/user/memory/regions.rs) or
+[ARM64](source-rs/kernel/arch/isa/aarch64/user/regions.rs) backend. The first pass
+validates all backing addresses, table branches and vacant destination leaves;
+the second installs ordinary RW/NX or RO/NX entries. Both passes visit each
+leaf table once, giving a maximum-size object two or four hierarchy walks rather
+than one per page. No allocation or external work separates the passes.
+
+Refusal changes neither parent nor leaf tables. Core reserves its ledger space
+first, then publishes entries only after the complete mapping succeeds. No
+partial runtime installation needs rollback. x86 admission now reserves parent
+tables with user/write permission using its unpublished scratch alias; runtime
+installation refuses restrictive parents instead of widening them. The scratch
+leaf is removed before any task runs. Obsolete `NoFrames` and ARM64 single-page
+rollback helpers were removed; x86 keeps a private scratch-unmap helper.
+
+This remains an atomic inactive-root operation under the current single-CPU,
+IRQs-masked contract. Leaf validation/writes, backing validation and ledger work
+still scale with bounded populations. Frame custody, allocation cancellation,
+caller charging, final refunds and capability publication retain their existing
+ordering. No owner decision or userspace ABI change was needed.
+
+Verification:
+
+- Workspace host tests pass. The expanded x86 tests independently translate RW/NX
+  and RO/NX mappings across PT, PD and PDPT boundaries. Complete table snapshots
+  remain unchanged for all 128 possible collisions, a missing later table,
+  read-only parents, a huge-page conflict and invalid frames. Retrying after
+  refusal succeeds; neighbors and table counts remain unchanged.
+- x86 release smoke and ARM64 debug/release pass. The shared
+  [real-frame proof](source-rs/kernel/core/user_tasks/address_space/regions_test.rs)
+  injects all 128 possible conflicts across two tables, checks that core adds no
+  ledger entries on refusal, removes only the conflict and successfully retries.
+  Invalid final backing and all-slot mapping/sealing/removal also pass, with the
+  existing exact frame/funding/heap reclamation checks.
+- All five periodic wait/selection population checks pass. This run's 128-page
+  mapping mean was 19.56 us (max 152 us). Host scheduling and workload mix prevent
+  treating this as an isolated speedup or a real-time bound.
+- Nested desktop passes three levels, pointer stress, protected close, confined
+  persistence, repeated subtree teardown and cold reopen on disposable media.
+  Interactive F5 media was untouched.
+- Arch host clippy, default x86 UEFI clippy, x86/ARM64 smoke clippy, source layout,
+  formatting and whitespace checks pass.
+- Logs: `build/region-map-host.log`, `build/region-map-arch.log`,
+  `build/region-map-host-clippy.log`, `build/region-map-arm64-debug.log`,
+  `build/region-map-arm64-release.log`, `build/region-map-x86-smoke.log`,
+  `build/region-map-report.log`, `build/region-map-all-phases.log`,
+  `build/region-map-clippy.log`, `build/region-map-smoke-clippy.log`,
+  `build/region-map-arm64-clippy.log`, `build/region-map-desktop.log`.
+
+Next: inspect image-loading work behind the remaining larger admission samples
+before choosing another split. The all-session report observed 895 `ImageBatch`
+visits with a 179.62-us mean and 20 samples at least 1 ms; these include mixed
+fixtures and host effects and do not establish a cause. Authority withdrawal,
+deadline extraction and the other audited atomic paths also remain. Keep the
+timing audit honest about complete trap/boot turns versus individual phases.
+The intermittent clean-close LOSS timeout remains open; guaranteed CPU service
+is still separate from ceilings.
