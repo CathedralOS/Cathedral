@@ -3,6 +3,10 @@
 //! A child's request is authorized by its binding and stamped with its scope.
 //! The matrix's own reads, which fetch a program it was asked to run, take the
 //! same path on the matrix's own binding: HEAD the object, then BULK it.
+//! A nested matrix learns its upstream binding once, before its first
+//! exchange, and again only after the parent refuses a stamped revision; it
+//! does not ask before every request, because each refresh would itself be
+//! answered by the parent only after the parent refreshed, all the way up.
 //! Legacy shared-stream fixtures still serialize their upstream requests.
 use super::*;
 use cathedral_matrix::world::storage::Proof;
@@ -36,7 +40,8 @@ pub(in crate::service) struct Launched {
 }
 #[derive(Clone, Copy, PartialEq, Eq)]
 enum Step {
-    /// Refresh the upstream binding before anything else.
+    /// Learn the upstream binding revision: before this matrix's first
+    /// exchange, or once more after the parent refuses a stamped revision.
     Refresh,
     /// Learn the program's revision and length.
     Head,
@@ -55,13 +60,23 @@ pub(in crate::service::parent) struct Pending {
     deadline: u64,
     launch: Option<LaunchRequest>,
     validated: Option<(wire::Packet, Proof)>,
+    /// The parent refused this exchange's stamped revision once already; one
+    /// refresh follows, never a loop.
+    refreshed: bool,
+    /// Where an own program read continues after that refresh.
+    resume: Option<Step>,
+    /// A child's refusal, answered after the refresh; its attachment is gone.
+    denied: Option<wire::Packet>,
 }
 impl Pending {
+    /// `bound` says this matrix already holds its upstream binding revision;
+    /// otherwise the exchange begins by learning it.
     pub(super) fn new(
         request: Request,
         words: wire::Packet,
         attachment: Option<Object>,
         upstream: bool,
+        bound: bool,
     ) -> Result<Self, Error> {
         let now = time::now()?;
         let deadline = protocol::deadline(
@@ -88,7 +103,7 @@ impl Pending {
             words,
             attachment,
             receive: None,
-            step: if upstream && deadline.is_some() {
+            step: if upstream && deadline.is_some() && !bound {
                 Step::Refresh
             } else {
                 Step::Forward
@@ -97,14 +112,19 @@ impl Pending {
             deadline: deadline.unwrap_or(now),
             launch: None,
             validated: None,
+            refreshed: false,
+            resume: None,
+            denied: None,
         })
     }
     /// Read a program on this matrix's own binding: a head and a bulk read,
-    /// behind a refresh when nested, each bounded like a forwarded request.
+    /// behind a refresh when nested and not yet bound, each bounded like a
+    /// forwarded request.
     pub(super) fn launch(
         request: Option<Request>,
         plan: LaunchRequest,
         upstream: bool,
+        bound: bool,
     ) -> Result<Self, Error> {
         Ok(Self {
             request,
@@ -120,13 +140,20 @@ impl Pending {
             ],
             attachment: None,
             receive: None,
-            step: if upstream { Step::Refresh } else { Step::Head },
+            step: if upstream && !bound {
+                Step::Refresh
+            } else {
+                Step::Head
+            },
             source: 0,
             deadline: time::after(
                 if upstream { 3 } else { 2 } * wire::STORAGE_DEADLINE_TICKS + 100,
             )?,
             launch: Some(plan),
             validated: None,
+            refreshed: false,
+            resume: None,
+            denied: None,
         })
     }
 }
@@ -162,16 +189,40 @@ impl Parent {
         let mut reply: Option<(wire::Packet, Option<Object>)> = None;
         if let Some(receive) = p.receive {
             match cathedral_user_runtime::matrix::upstream::exchange::poll(receive, p.deadline) {
+                // The parent may have regranted this matrix's binding since it
+                // was learned. Learn the current revision once; a child's
+                // refusal stands (its attachment already travelled), while
+                // this matrix's own program read repeats its step.
+                Ok(Some((words, object)))
+                    if self.upstream
+                        && p.step != Step::Refresh
+                        && !p.refreshed
+                        && words[0] == abi::DENIED =>
+                {
+                    drop(object);
+                    p.refreshed = true;
+                    if p.launch.is_some() {
+                        p.resume = Some(p.step);
+                    } else {
+                        p.denied = Some(words);
+                    }
+                    p.step = Step::Refresh;
+                    p.receive = None;
+                }
                 Ok(Some((words, object))) => match p.step {
                     Step::Refresh => {
                         drop(object);
                         self.adopt_upstream(words);
-                        p.step = if p.launch.is_some() {
-                            Step::Head
+                        if let Some(denied) = p.denied.take() {
+                            reply = Some((denied, None));
                         } else {
-                            Step::Forward
-                        };
-                        p.receive = None;
+                            p.step = p.resume.take().unwrap_or(if p.launch.is_some() {
+                                Step::Head
+                            } else {
+                                Step::Forward
+                            });
+                            p.receive = None;
+                        }
                     }
                     Step::Head => {
                         drop(object);

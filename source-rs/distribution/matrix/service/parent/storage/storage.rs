@@ -254,14 +254,24 @@ impl Parent {
         plan: LaunchRequest,
     ) -> Result<(), Error> {
         assert!(self.storage_pending.is_none());
-        self.storage_pending = Some(Pending::launch(Some(request), plan, self.upstream)?);
+        self.storage_pending = Some(Pending::launch(
+            Some(request),
+            plan,
+            self.upstream,
+            self.storage_epoch != 0,
+        )?);
         Ok(())
     }
     /// A configured launcher recovery uses our own authority and has no caller
     /// to answer. The child service consumes the sealed result in its event loop.
     pub(in crate::service) fn storage_recover(&mut self, plan: LaunchRequest) -> Result<(), Error> {
         assert!(self.storage_pending.is_none());
-        self.storage_pending = Some(Pending::launch(None, plan, self.upstream)?);
+        self.storage_pending = Some(Pending::launch(
+            None,
+            plan,
+            self.upstream,
+            self.storage_epoch != 0,
+        )?);
         Ok(())
     }
     /// Internal identity only. Recovery must not reinterpret a saved object ID
@@ -296,7 +306,13 @@ impl Parent {
         attachment: Option<Object>,
     ) -> Result<(), Error> {
         assert!(self.storage_pending.is_none());
-        self.storage_pending = Some(Pending::new(request, words, attachment, self.upstream)?);
+        self.storage_pending = Some(Pending::new(
+            request,
+            words,
+            attachment,
+            self.upstream,
+            self.storage_epoch != 0,
+        )?);
         Ok(())
     }
     fn retire_storage(&mut self, source: usize) -> Result<(), Error> {

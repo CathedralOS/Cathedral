@@ -1,10 +1,13 @@
 # Rust reference OS: tasks and handoff
 
-Updated 2026-10-20 (local date). Current milestone: **fresh lab on every F5
-launch**, on baseline `35bb3943` (four-level desktop verification and reduced
-collection heap pressure). Saved-state testing is an explicit launch choice.
-The preceding section distinguishes current-program four-level verification
-from failures in retained executable snapshots.
+Updated 2026-10-21 (local date). Current milestone: **bounded collection
+workspace, one refresh per nested binding and a long-session soak**, on baseline
+`7697b70e` (fresh lab on every F5 launch). Entering the fourth nested desktop
+now takes about two seconds per step instead of five; the newest section at the
+end records the measurements, the provider heap sizing and the open items.
+Saved-state testing is an explicit launch choice. The section before it
+distinguishes current-program four-level verification from failures in
+retained executable snapshots.
 The fresh-lab reset is `30572c9f`. Compact recursive desktops landed as `c7571191`,
 and the launch request ABI repair as `a287ae39`. No recursive legacy snapshot
 upgrade is required. The saved-disk quota/headroom repair remains in place. Current
@@ -202,8 +205,9 @@ nested matrix. The kernel still knows no matrix, realm or store.
   margin, the runtime's storage client waits twice it, and the desktop's
   provider watchdog probes past it, so a stalled provider is always reported by
   the matrix's verdict first. These numbers are **ticks**: the current timer
-  runs nominally at 100 Hz, so the base deadline is **six seconds**, not 600 ms.
-  Keep units explicit and measure actual spans before tuning deadlines.
+  runs nominally at 100 Hz, so the 1200-tick base deadline is **twelve
+  seconds**, not 1.2 s. Keep units explicit and measure actual spans before
+  tuning deadlines.
 - Do not add debt to bridge old and new: when a protocol or layer is replaced,
   retire the old one from every composition in the same change and delete it.
   Git history is the only retention wanted.
@@ -280,9 +284,9 @@ three-stamp limit no longer bounds tree depth. A shared deadline bounds the exch
 Collection before every write scans only metadata and the
 key-only chunk index. The older 50/100/150-ms collection/commit/save claims were
 not reliable unit conversions and are withdrawn. A fresh traced desktop run is
-recorded below. The matrix's base storage deadline is 600 **ticks**, nominally
-six seconds; the runtime's 1200-tick wait is nominally twelve. Values were not
-retuned in the recursive-close change. All are lab bounds.
+recorded below. The matrix contract's base storage deadline is 1200 **ticks**,
+nominally twelve seconds; the runtime's exchange bound is twice that. Values
+were not retuned in the recursive-close change. All are lab bounds.
 
 `--smoke` uses the default profile's `user_programs`, not its desktop startup
 graph; the desktop is tested by `desktop_test.py`.
@@ -4650,3 +4654,174 @@ Verification: launch JSON and both command arguments checked; all ten existing
 database-image tests pass, including reset backup/rollback and busy-disk refusal.
 Whitespace checks pass. No guest rerun was needed for selecting the already
 tested fresh launch path. The current disk was not reset during this change.
+
+## Bounded collection, one refresh per nested binding and a soak (2026-10-21)
+
+Baseline: `7697b70e`. The owner asked for the previous handoff's three targets in
+order: bound collection's memory, stress one long session, and reduce nested
+entry delays. The measurements below come from the four-level latency workload
+with storage traces on disposable media; F5 media was untouched.
+
+**Collection workspace.** [collection.rs](source-rs/platform/libraries/database-objects/collection.rs)
+no longer gathers every head into a vector or every live identity into one set.
+A pass marks one record kind at a time inside one window of identities (events
+by the low byte of their object number, manifests and chunks by their first
+digest byte), reading heads in batches of 32. A window whose marks would exceed
+`WORKSPACE_BYTES` (24 KiB at a conservative 64 bytes per mark) is split in two
+and marked again, down to 256 windows per kind; a window that still overflows
+returns the new `Error::Workspace` with nothing removed. The provider skips that
+maintenance turn, records `collect-workspace-exhausted` in every build and lets
+exact quota admit or refuse the write; explicit COLLECT answers NO_MEMORY. Chunk
+indexes are still validated before any removal, the event pass authenticates
+every head's event first, pins are validated for their one revision, and
+retirement order is unchanged. `Collection` now reports the windows a pass
+computed and its largest marked set, sampled as `collect-pass` under tracing.
+Two host tests collect a crowded root with a workspace too small for one window
+per kind and reach exactly the unbounded result, and refuse whole with a
+workspace too small for one mark.
+
+**Provider heap and cache.** [main.rs](source-rs/platform/services/storage/main.rs)
+sizes the heap from the funded private pages: 64 pages stay outside for one
+maximal reply plus eight of headroom, and the rest is heap, clamped between the
+56 pages the engine has always run in and the 128 pages one private object may
+hold. [database.rs](source-rs/platform/services/storage/database.rs) reserves
+256 KiB of that heap for engine state, the writer and the collection workspace
+and gives the remainder to the engine cache, never below the previous 32 KiB.
+The desktop profile now funds the provider with 200 private pages, so its heap
+is 512 KiB and its cache 256 KiB (64 pages) instead of 8 pages; every lab
+profile keeps its previous 56-page heap and 32 KiB cache. The first attempt
+funded 384 pages and asked for a 312-page heap, which the kernel refused as one
+object: the provider panicked at startup and the desktop showed its sign-in
+recovery screen as designed. Provider heap peaks in the traced four-level runs
+were 373 KB (fresh) and 376 KB (cold) of 524,288, with recovery itself peaking
+near 370 KB; the heap report line now prints `capacity=`.
+
+**One refresh per nested binding.** The trace showed why entry cost grew faster
+than depth: before forwarding any child request, a nested matrix sent
+STORAGE_INFO upstream, and the parent answered that only after refreshing in
+turn, so one request from the deepest of the nine matrix hops at depth four
+cost about eighty transits before reaching the provider. The depth-four save
+spent nine ticks on the request path and none on the reply path.
+[pending.rs](source-rs/distribution/matrix/service/parent/storage/pending.rs)
+now refreshes before the first exchange only, while `storage_epoch` is zero,
+and once more when the parent refuses a stamped revision: a child's refusal is
+answered after that refresh (its attachment already travelled), while the
+matrix's own program read repeats its step. Grants, revocations and provider
+replacement still clear bindings exactly as before; a stale revision is still
+refused by the parent rather than accepted. In the cold-boot trace the
+nested-receive count fell from 3,672 to 683 and root-receive from 1,360 to 170
+for the same 293 provider requests; the depth-four app round trip fell from
+25 ticks to 8 to 13.
+
+**Control-stream failures wait briefly for the outcome.** The headless
+`--matrix-test` recovery scenario had depended on that refresh chatter: with
+the matrix always mid-exchange, a leaf exiting during a forwarded control RPC
+was deferred until the kernel reported its outcome, and the asker saw
+PEER_CLOSED. Without the chatter the matrix answered BUSY before reclamation
+finished. [control.rs](source-rs/distribution/matrix/service/children/control.rs)
+now keeps such a request pending, polling each tick, until the child's outcome
+arrives or `OUTCOME_GRACE_TICKS` (50) pass inside the asker's deadline, then
+answers BUSY as before. A live child that merely dropped its control link still
+gets BUSY, half a second later; the `--matrix-storage-test` probes wait 100.
+
+**Soak.** `desktop_test.py --soak CYCLES --nested-depth D` runs
+[desktop_soak.py](tools/boot-harness-rs/desktop_soak.py): each cycle enters the
+nested desktops, checks the text the previous cycle saved, replaces it with a
+cycle token, saves, closes the app and tears the subtree down from the outer
+taskbar; a cold boot checks the last token and runs two more cycles. It records
+per-phase seconds, provider heap live/peak/capacity, request and collection
+counts, and fails on replacements, offline storage, matrix exits, workspace
+exhaustion, allocation failure or less than 32 KiB of heap headroom. The
+nested-desktop helpers moved into a `Nested` class shared with the existing
+workload. The harness's first cold boot failed on its own numbering bug (it
+counted the fresh boot's cycles while they were still being written and
+expected `c12` where `c23` had been saved); the OS was fine. Sixteen cycles at
+depth two then passed on a fresh lab and two more after a cold boot:
+
+| Cycle | Seconds | enter-1 | enter-2 | edit | save | close | teardown | Heap live | Heap peak |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 (creates users) | 9.67 | 3.64 | 4.23 | 1.03 | 0.20 | 0.28 | 0.28 | 326,664 | 369,932 |
+| 2 to 16 | 7.12 to 8.08 | 2.11 to 2.61 | 2.67 to 2.89 | 1.38 to 1.84 | 0.19 to 0.23 | 0.28 to 0.31 | 0.28 to 0.31 | 322,536 to 339,032 | up to 373,116 |
+| cold 1, 2 | 7.64, 9.61 | 2.16, 2.95 | 2.86, 3.78 | 1.81, 1.98 | 0.22, 0.30 | 0.30 | 0.30 | 326,872, 326,920 | up to 376,876 |
+
+Every cycle issued 105 provider requests (165 with user creation), automatic
+collection never triggered (the root stayed below its watermark) and no
+replacement, exit or exhaustion marker appeared. Edit time rises with the token
+length. An earlier twelve-cycle run drifted from 5.5 to 8.7 seconds per cycle
+with the same flat heap and request counts; the sixteen-cycle run did not, so
+treat that as host variation until a kernel-side per-cycle sample exists.
+
+**Nested entry, before and after**, host-observed milliseconds on the cold
+boot of `desktop_test.py --latency --nested-depth 4 --trace-storage`:
+
+| Depth | Launch picker | Enter user | Launch Notes | Save |
+| --- | --- | --- | --- | --- |
+| 1 | 1,257 to 969 | 1,579 to 1,287 | 490 to 483 | 193 to 225 |
+| 2 | 1,757 to 1,100 | 2,480 to 1,359 | 878 to 450 | 211 to 210 |
+| 3 | 3,324 to 1,447 | 3,528 to 1,856 | 1,184 to 645 | 395 to 240 |
+| 4 | 5,037 to 1,995 | 5,196 to 2,173 | 1,737 to 746 | 333 to 226 |
+
+At depth four the picker launch's provider CPU fell from 1,681 ms to 765 ms and
+its sectors read from 3,336 to 1,576; user entry from 1,130 ms to 785 ms. On the
+fresh boot, which also installs each level's template closure, depth-four picker
+launch fell from 8,306 ms to 3,337 ms, user entry from 5,205 ms to 1,996 ms and
+user creation from 1,792 ms to 486 ms (provider CPU 727 ms to 98 ms). Typing
+stayed at about 125 ms per key at every depth; it is bounded by injection and
+capture, not the guest. One depth-zero Notes close on the fresh boot took
+1,341 ms against 250 to 300 ms everywhere else, with nothing in the guest trace
+between the save's completion and the next launch; it is recorded, not attributed.
+Before: `build/boot-harness-rs/desktop/20261021T040219186638Z`; after:
+`build/boot-harness-rs/desktop/20261022T022034263570Z`.
+
+**Fixture repair.** `provider_live_test.py` still clicked the pre-compact
+taskbar's left-hand RETRY SAVES position; its exhausted and readiness-stall
+cases now click the right-hand column's row.
+
+**Documentation.** The distribution map now says four nested desktops and names
+the current launch entries; this handoff's deadline figures match the contract's
+1200-tick base; the provider, store and harness guides describe the funded heap,
+windowed collection and soak.
+
+Verification:
+
+- Host: workspace `cargo test --locked` (261 tests), `cathedral-database-objects
+  --features host` (20, including the two new window tests), storage-lab engines
+  (38), harness Python (12 including the soak bookkeeping), clippy for the store,
+  provider and matrix in default and trace builds, `check-userspace`, layout,
+  formatting and whitespace checks pass.
+- Guest, on disposable media: four-level latency on fresh and cold boots; four
+  nested desktops under pointer stress with protected close, confined
+  persistence, repeated subtree teardown and cold reopen (three runs);
+  `objects_test.py --retention`; `matrix_database_test.py --recovery` (twice);
+  the plain default desktop with host verification of 553 records; the full
+  provider-replacement suite on that fixture (precommit, postcommit, exhausted,
+  readiness-stall, nested and deep); `--matrix-storage-test`, `--matrix-test`
+  and `--matrix-desktop-test` with the final grace code; the sixteen-cycle soak.
+- Logs: `build/soak-latency-four.log`, `build/suite-*.log`, `build/suite2-*.log`,
+  `build/suite3-*.log`; soak artifact
+  `build/boot-harness-rs/desktop/20261022T024618213478Z`.
+
+Next, in order:
+
+1. Fresh-boot entry is now dominated by each level's first launch installing
+   its template closure (nine subtree copies, two copies and two named
+   creations, 1.3 to 1.5 s of provider CPU per level) and by the engine extent
+   growing from 1.5 MiB to 3.1 MiB during the first user creation, which zeroes
+   3,300 sectors (0.8 s). Seed the extent at its working size and measure
+   whether the closure can be shared or installed lazily.
+2. Bulk program reads still cost 1.2k to 1.6k sectors per level: each 4 KiB
+   chunk pulls two to three tree pages through the cache. A larger cache needs
+   either a multi-object heap or a page cache outside the allocator; measure the
+   hit rate before choosing.
+3. Each Nested level is two matrix hops (the user matrix and the nested root).
+   The refresh fix made a hop cost one transit each way; the remaining
+   per-hop cost is event-loop turns, visible in the cold trace as one to two
+   ticks per request at depth four.
+4. The intermittent clean-close LOSS timeout did not reproduce in these runs.
+   Less storage traffic means fewer turns in which a matrix is `storing()` and
+   answers LOSS with BUSY; keep the trace on and attribute the next occurrence.
+5. The desktop never reached the collection watermark here, so windowed
+   collection ran only under host tests and the guest retention proof. A soak
+   that fills a root (larger notes, more users) would exercise it live.
+6. The soak samples the provider's heap only. Kernel task-slot, frame and grant
+   accounting per cycle would turn the host-side cycle time into evidence.

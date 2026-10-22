@@ -20,7 +20,7 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 
 
-def desktop(stream, output, serial, reboot, expected_absolute=True, fill_users=False, service_imports=None, nested=False, nested_saved=False, deep=False, nested_desktop=False, user_check=None, allowed_panics=(), latency=False, pointer_stress=False, interaction_delay=False, nested_depth=3):
+def desktop(stream, output, serial, reboot, expected_absolute=True, fill_users=False, service_imports=None, nested=False, nested_saved=False, deep=False, nested_desktop=False, user_check=None, allowed_panics=(), latency=False, pointer_stress=False, interaction_delay=False, nested_depth=3, soak=0):
     assert 'Cathedral: object storage ready' in serial
     position = [40, 40]
     motion_step = 0
@@ -64,7 +64,7 @@ def desktop(stream, output, serial, reboot, expected_absolute=True, fill_users=F
 
     def scan(check, description):
         nonlocal motion_step
-        deadline = time.monotonic() + (120 if nested_desktop or latency else 45)
+        deadline = time.monotonic() + (120 if nested_desktop or latency or soak else 45)
         while True:
             if pointer_stress:
                 motion_step += 1
@@ -255,6 +255,10 @@ def desktop(stream, output, serial, reboot, expected_absolute=True, fill_users=F
     if user_check is not None:
         user_check(output, click, key, scan, width, height, reboot)
         return
+    if soak:
+        import desktop_soak
+        desktop_soak.exercise(output, click, key, scan, width, height, reboot, soak, pointer_stress, nested_depth)
+        return
     if nested_desktop:
         import nested_desktop_test
         nested_desktop_test.exercise(output, click, key, scan, width, height, reboot, pointer_stress, interaction_delay, nested_depth)
@@ -383,7 +387,7 @@ def desktop(stream, output, serial, reboot, expected_absolute=True, fill_users=F
     print('PASS: user tiles, absolute/relative clicks, app tiles, save/discard/cancel and persistent replacement')
 
 
-def run(timeout, trace_storage=False, relative_pointer=False, service_imports=None, nested=False, deep=False, nested_desktop=False, trace_input=False, latency=False, pointer_stress=False, interaction_delay=False, nested_depth=3):
+def run(timeout, trace_storage=False, relative_pointer=False, service_imports=None, nested=False, deep=False, nested_desktop=False, trace_input=False, latency=False, pointer_stress=False, interaction_delay=False, nested_depth=3, soak=0):
     output = harness.BUILD / 'desktop' / datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S%fZ')
     output.mkdir(parents=True)
     # Exact default composition, with a separate build output so a regression
@@ -442,12 +446,17 @@ def run(timeout, trace_storage=False, relative_pointer=False, service_imports=No
     flags = subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0
     for boot in (1, 2):
         capture.run(command, output, timeout, flags, ready_marker='Cathedral desktop: ready; choose a user',
-                    verify=lambda stream, output, serial: desktop(stream, output, serial, boot == 2, not relative_pointer, service_imports=service_imports, nested=nested, nested_saved=boot == 2, deep=deep, nested_desktop=nested_desktop, latency=latency, pointer_stress=pointer_stress, interaction_delay=interaction_delay, nested_depth=nested_depth))
+                    verify=lambda stream, output, serial: desktop(stream, output, serial, boot == 2, not relative_pointer, service_imports=service_imports, nested=nested, nested_saved=boot == 2, deep=deep, nested_desktop=nested_desktop, latency=latency, pointer_stress=pointer_stress, interaction_delay=interaction_delay, nested_depth=nested_depth, soak=soak))
         for name in ('serial.log', 'qemu.log', 'display.png', 'boot-timing.json'):
             shutil.copyfile(output / name, output / f'boot-{boot}-{name}')
         contents = path.read_bytes()
         database_image.prepare(path, programs, migration, app_close=True, realm_programs=harness.realm_programs(profile, True))
         assert contents == path.read_bytes(), 'relaunch must not reformat storage or reinstall unchanged programs'
+    if soak:
+        import desktop_soak
+        desktop_soak.report(output)
+        print(f'PASS: {soak} soak cycles through {nested_depth} nested desktops, exact saved text, bounded provider heap and cold reopen; artifacts: {output}')
+        return
     if latency:
         desktop_timing.report(output)
         print(f'PASS: outer and {nested_depth} nested desktop latency, saved text and cold reopen; artifacts: {output}')
@@ -483,7 +492,8 @@ if __name__ == '__main__':
     parser.add_argument('--relative-pointer', action='store_true', help='disable VM port and verify PS/2 fallback')
     parser.add_argument('--service-imports', choices=('undeclared', 'incompatible'), help='exercise absent optional storage in the ordinary desktop using a disposable manifest variant')
     parser.add_argument('--nested-desktop', action='store_true', help='exercise the installed nested login and desktop')
-    parser.add_argument('--nested-depth', type=int, choices=(3, 4), default=3, help='nested desktops below the outer user; requires --nested-desktop or --latency')
+    parser.add_argument('--nested-depth', type=int, choices=(1, 2, 3, 4), default=3, help='nested desktops below the outer user; 3 or 4 for --nested-desktop/--latency, any for --soak')
+    parser.add_argument('--soak', type=int, default=0, metavar='CYCLES', help='repeat enter/edit/save/teardown through the nested depth this many times in one session, then two more after a cold boot')
     parser.add_argument('--latency', action='store_true', help='measure launch, typing and save through the selected nested depth on fresh/cold boots')
     parser.add_argument('--nested', action='store_true', help='exercise the installed alternative Split matrix')
     parser.add_argument('--deep', action='store_true', help='also enter Split inside Split and check bounded admission')
@@ -496,10 +506,14 @@ if __name__ == '__main__':
         parser.error('timeout must be positive')
     if args.latency and (args.relative_pointer or args.service_imports or args.nested or args.deep or args.nested_desktop):
         parser.error('--latency uses the ordinary absolute-pointer desktop without other workload variants')
-    if args.nested_depth != 3 and not (args.nested_desktop or args.latency):
-        parser.error('--nested-depth requires --nested-desktop or --latency')
+    if args.nested_depth != 3 and not (args.nested_desktop or args.latency or args.soak):
+        parser.error('--nested-depth requires --nested-desktop, --latency or --soak')
+    if (args.nested_desktop or args.latency) and args.nested_depth not in (3, 4):
+        parser.error('--nested-desktop and --latency run at depth 3 or 4')
+    if args.soak and (args.soak < 1 or args.latency or args.nested_desktop or args.nested or args.deep or args.relative_pointer or args.service_imports or args.interaction_delay):
+        parser.error('--soak takes a positive cycle count and runs alone, optionally with --pointer-stress and traces')
     if args.interaction_delay and not args.nested_desktop:
         parser.error('--interaction-delay requires --nested-desktop')
-    if args.pointer_stress and (not args.nested_desktop or args.relative_pointer):
-        parser.error('--pointer-stress requires --nested-desktop with absolute input')
-    run(args.timeout, args.trace_storage, args.relative_pointer, args.service_imports, args.nested or args.deep, args.deep, args.nested_desktop, args.trace_input, args.latency, args.pointer_stress, args.interaction_delay, args.nested_depth)
+    if args.pointer_stress and (not (args.nested_desktop or args.soak) or args.relative_pointer):
+        parser.error('--pointer-stress requires --nested-desktop or --soak with absolute input')
+    run(args.timeout, args.trace_storage, args.relative_pointer, args.service_imports, args.nested or args.deep, args.deep, args.nested_desktop, args.trace_input, args.latency, args.pointer_stress, args.interaction_delay, args.nested_depth, args.soak)

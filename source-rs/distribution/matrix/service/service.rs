@@ -118,7 +118,10 @@ pub fn run(environment: Environment, mut startup: Startup) -> Result<(), Error> 
         if !parent.upstream_busy() && !deferred.has_ready(parent) {
             parent.refresh_notified()?;
         }
-        let (handles, mut deadline) = children.wait(parent.upstream_busy() || parent.storing());
+        let (handles, mut deadline) = children.wait(
+            parent.upstream_busy() || parent.storing(),
+            cathedral_user_runtime::time::now()?,
+        );
         children.notify(world)?;
         let mut extra = [cathedral_user_runtime::ipc::Handle::from_raw(0); CHILDREN + 3];
         let mut count = 0;

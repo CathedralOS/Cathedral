@@ -60,22 +60,34 @@ builds contain neither.
 
 The provider's reader pages receive publication attachments; its private pages
 hold the heap and the pages behind bulk replies, which stay charged to it until
-the last reader releases them. Profiles fund both explicitly: 128 private pages
-leave room for a 64-page reply beside the heap, and 64 reader pages take the
-largest publication.
+the last reader releases them. Profiles fund both explicitly. [main.rs](main.rs)
+keeps 64 pages for one maximal reply and eight for headroom outside the
+allocator and gives every other funded private page to the heap, never less
+than the 56 pages the engine has always run in and never more than the 128
+pages one private object may hold. The lab fixtures fund 64 private pages and
+keep that smallest heap; the desktop funds 200, so its heap is the full 128.
 
-The engine cache is 32 KiB within the existing 56-page heap. The engine also
-holds writer and allocator state, and collection needs a transient live set.
-A retained desktop disk exhausted this heap with a 64 KiB cache during automatic
-collection before a nested template copy. Live sets now store fixed-size event,
-manifest and chunk identities inside tree nodes, avoiding an allocation for each
-key; the smaller cache leaves room for that metadata alongside engine state.
-Ordered chunk-index validation still avoids random chunk lookups. Durability,
-quota and pin rules are unchanged. This fixes the reproduced workload, not an
-arbitrary-record-count heap bound: the complete live census still scales with
-root metadata, and fallible/bounded collection workspace remains future work.
-`trace-storage` reports heap use before collection, before hierarchy writes and
-after them, including the allocator's lifetime peak and failed allocation count.
+[database.rs](database.rs) sizes the engine page cache from the heap: 256 KiB
+is reserved for engine state, the writer and the collection workspace, and the
+rest is cache, never less than 32 KiB. The smallest heap therefore keeps its
+32 KiB cache, which holds only eight pages, so after one bulk program read every
+metadata lookup went back to the disk and scope-ancestry checks grew with depth.
+The desktop's 512 KiB heap gives the engine 256 KiB of cache, 64 pages, which
+holds the metadata working set and a share of the stock program chunks that
+every nested level reads.
+
+Collection runs inside a fixed workspace, independent of the root's record
+count: the [store](../../libraries/database-objects/README.md) marks one record
+kind at a time inside one identity window, splitting a window that would exceed
+24 KiB of marks. A census that cannot fit even at the finest split is reported
+as `Error::Workspace`; this provider then skips that maintenance turn, records
+`collect-workspace-exhausted` in every build, and lets exact quota admit or
+refuse the write. Nothing is removed on that path, and pins are untouched.
+An explicit COLLECT answers it with NO_MEMORY. `trace-storage` reports heap use
+before collection, before hierarchy writes and after them, including the
+allocator's lifetime peak, failed allocation count and capacity, and samples
+each automatic pass as `collect-pass` with its removals, ledger, windows and
+largest marked set.
 
 Proofs, from the repository root:
 

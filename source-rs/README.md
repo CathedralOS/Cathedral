@@ -30,7 +30,10 @@ It records QMP-to-observed-text latency upper bounds in `input-latency.json`.
 Add `--trace-storage --trace-input` for provider I/O, storage phase and compositor
 CPU samples alongside host observations of boot, login, launches, typing,
 switching and saves. See [desktop timing interpretation](../tools/boot-harness-rs/README.md#ordinary-desktop-timings)
-before comparing these measurements.
+before comparing these measurements. `--soak CYCLES --nested-depth D` keeps one
+session busy instead: it enters the nested desktops, edits and saves at the
+deepest level and tears the subtree down that many times, checking exact saved
+text, provider heap headroom and the absence of provider replacements.
 Add `--latency` to measure picker/user entry, Notes, pointer, typing and saves
 at each of three Nested levels, including a cold reopen of their saved state.
 Use `--nested-depth 4` with `--latency` or `--nested-desktop` to exercise four

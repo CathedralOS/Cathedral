@@ -98,12 +98,24 @@ reads only metadata: it marks chunks by the digests their live manifests name
 and sweeps them through a key-only chunk index. It does not fetch or hash payload
 entries; underlying engine pages can still contain neighboring payload data.
 Work grows with live heads, manifests and distinct chunk references, so installed
-programs do affect save cost. Chunk-index presence is validated in one ordered scan
-before any deletions, avoiding repeated random lookups for shared chunks. Pinning
-uses the same validation before committing its new reference. Reads authenticate
-chunk contents when they are used. Obsolete events are retired
+programs do affect save cost. Memory does not: a pass marks one record kind at a
+time inside one window of identities, and a window whose marks would exceed
+`WORKSPACE_BYTES` (24 KiB, counted at 64 bytes per mark) is split in two and
+marked again, down to 256 windows per kind. Events are windowed by the low byte
+of their object number, manifests and chunks by the first digest byte. Heads are
+read in batches of 32, never gathered whole. A window that still overflows at the
+finest split returns `Error::Workspace` with nothing removed; it needs more than
+384 live identities sharing one bucket byte, beyond what the root quota admits.
+Chunk-index presence is validated window by window in ordered scans before any
+deletions, avoiding repeated random lookups for shared chunks. Pinning uses the
+same validation for its one revision before committing its new reference. Reads
+authenticate chunk contents when they are used. Obsolete events are retired
 before manifests and chunks so a pin between passes cannot resurrect a partially
-collected revision. It frees engine pages for reuse; it does not shrink the file.
+collected revision; the event pass authenticates every head's event first. It
+frees engine pages for reuse; it does not shrink the file. `Collection` reports
+how many windows a pass computed and its largest marked set, so a provider can
+observe when a root starts needing splits. `collect_records_within` takes an
+explicit workspace for host tests and tools.
 The exported `collect_records` applies that same bounded pass to a caller-owned
 transaction. The offline stock-program updater uses it under quota pressure after
 staging all stock and named replacement heads in host scratch space. The complete
@@ -122,8 +134,10 @@ content, number reuse never happening, listing by parent, subtree membership, a
 subtree copy that preserves shape and shares content, refusal of a copy into
 itself or beyond the object limit, non-empty deletion, inline/chunk boundaries,
 corruption detection, writer revalidation after preparation, cold opening at every
-collection boundary with live pins, and 600 replacements inside a fixed extent
-beside unrelated data. Hierarchy tests cover duplicate/stale rename rollback,
+collection boundary with live pins, 600 replacements inside a fixed extent
+beside unrelated data, a crowded root collected with a workspace too small for
+one window per kind reaching exactly the unbounded result with every live read
+and pin intact, and a workspace too small for one mark refusing whole. Hierarchy tests cover duplicate/stale rename rollback,
 index updates, independent copy metadata, deletion, collection accounting and
 reopening. See the [guest proof](../../../distribution/lab/objects/README.md)
 and the [storage proposal](../../../../wiki/proposals/0002_dbfs_storage_foundation.md)

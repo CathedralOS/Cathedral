@@ -1,3 +1,4 @@
+use super::tests::snapshot;
 use super::*;
 use alloc::{vec, vec::Vec};
 use redb::{ReadableDatabase, ReadableTable, StorageBackend};
@@ -331,4 +332,124 @@ fn collected_payload_pages_are_reused_with_unrelated_data_in_a_fixed_extent() {
                 .all(|b| *b == 77)
         );
     }
+}
+
+/// Many objects sharing a few contents, with history and pins, as a nested
+/// desktop produces: copies cost heads and events, replacements leave garbage.
+fn crowded(store: &Store<'_>) -> (Vec<u64>, Object) {
+    let mut body = vec![0u8; CHUNK_BYTES * 6];
+    for (i, chunk) in body.chunks_mut(CHUNK_BYTES).enumerate() {
+        chunk.fill(i as u8 + 1);
+    }
+    let mut ids = Vec::new();
+    for variant in 0..6u8 {
+        body[0] = 100 + variant;
+        let original = store.publish(0, 0, 0, &body, 0).unwrap();
+        ids.push(original.id);
+        for _ in 0..12 {
+            ids.push(store.copy(0, original.id, 1, 0).unwrap().id);
+        }
+    }
+    // Replace half of the copies twice, so events, manifests and chunks all
+    // leave unreachable history behind.
+    for (index, id) in ids.clone().into_iter().enumerate() {
+        if index % 2 == 0 {
+            body[1] = index as u8;
+            store.publish(0, id, 1, &body, 0).unwrap();
+            body[2] = index as u8;
+            store.publish(0, id, 2, &body, 0).unwrap();
+        }
+    }
+    let pinned = store
+        .publish(0, 0, 0, b"pinned and later deleted", 0)
+        .unwrap();
+    store.pin(0, pinned.id, 1, 0).unwrap();
+    store.delete(0, pinned.id, 1).unwrap();
+    (ids, pinned)
+}
+fn collect_within(db: &Database, workspace: usize) -> Collection {
+    let tx = db.begin_write().unwrap();
+    let result = {
+        let mut table = tx.open_table(TABLE).unwrap();
+        collect_records_within(&mut table, 0, workspace).unwrap()
+    };
+    tx.commit().unwrap();
+    result
+}
+fn drain_within(db: &Database, workspace: usize) -> (usize, u32) {
+    let mut removed = 0;
+    let mut windows = 0;
+    for _ in 0..400 {
+        let pass = collect_within(db, workspace);
+        removed += pass.removed;
+        windows = windows.max(pass.windows);
+        assert!(pass.removed <= 8);
+        if !pass.more {
+            return (removed, windows);
+        }
+    }
+    panic!("collection failed to converge");
+}
+#[test]
+fn a_small_workspace_splits_windows_and_reaches_the_same_result() {
+    let unbounded = Disk(Arc::new(Mutex::new(Vec::new())));
+    let bounded = Disk(Arc::new(Mutex::new(Vec::new())));
+    let (ids, pinned) = {
+        let db = open(unbounded.clone());
+        let store = Store::open(&db).unwrap();
+        let built = crowded(&store);
+        drop(db);
+        *bounded.0.lock().unwrap() = unbounded.0.lock().unwrap().clone();
+        built
+    };
+    let full = open(unbounded);
+    let small = open(bounded);
+    let (removed_full, windows_full) = drain_within(&full, WORKSPACE_BYTES);
+    assert_eq!(windows_full, 4, "everything fits one window per kind");
+    // Room for roughly a dozen marks per window: well below the 79 live events.
+    let (removed_small, windows_small) = drain_within(&small, 12 * 64 + 63);
+    assert!(
+        windows_small > 4,
+        "the small workspace had to split: {windows_small}"
+    );
+    assert_eq!(removed_small, removed_full);
+    assert!(removed_full > 0);
+    assert_eq!(snapshot(&small), snapshot(&full));
+    accounting(&small);
+    let store = Store::open(&small).unwrap();
+    let mut out = vec![0; CHUNK_BYTES * 6];
+    for (index, id) in ids.iter().enumerate() {
+        let head = store.read(0, *id, 0, 0, &mut out).unwrap();
+        assert_eq!(head.revision, if index % 2 == 0 { 3 } else { 1 });
+        assert_eq!(out[CHUNK_BYTES], 2);
+    }
+    let mut text = vec![0; 24];
+    store.read_pinned(0, 0, pinned.id, 1, 0, &mut text).unwrap();
+    assert_eq!(&text, b"pinned and later deleted");
+    // Pinning still validates one revision's chunks under the finest window.
+    store.pin(0, ids[1], 1, 1).unwrap();
+    store.release(0, ids[1], 1, 1).unwrap();
+}
+#[test]
+fn an_unusable_workspace_refuses_whole_and_removes_nothing() {
+    let disk = Disk(Arc::new(Mutex::new(Vec::new())));
+    let db = open(disk);
+    let store = Store::open(&db).unwrap();
+    crowded(&store);
+    let before = snapshot(&db);
+    let tx = db.begin_write().unwrap();
+    {
+        let mut table = tx.open_table(TABLE).unwrap();
+        // Not even one mark fits: every window overflows down to the finest split.
+        assert!(matches!(
+            collect_records_within(&mut table, 0, 63),
+            Err(Error::Workspace)
+        ));
+    }
+    tx.abort().unwrap();
+    assert_eq!(snapshot(&db), before);
+    // Automatic maintenance reports the same refusal instead of removing records.
+    let (_, windows) = drain_within(&db, WORKSPACE_BYTES);
+    assert_eq!(windows, 4);
+    accounting(&db);
 }

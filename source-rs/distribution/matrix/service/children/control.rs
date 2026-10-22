@@ -4,12 +4,19 @@
 //! it be read as the answer to a newer request. A slow child costs the asker a
 //! timeout. At the unanswered-request limit, stop issuing probes rather than
 //! closing the child's endpoint (which could destroy its unsaved work).
+//! A stream that fails outright is not death either: the request stays pending
+//! for a short grace so the kernel's outcome, not the broken link, decides
+//! between PEER_CLOSED and BUSY.
 //! One request may be pending per child: the owner's own, or a loss query
 //! sent before a sibling's close request, acted on when it answers.
 use super::*;
 
 /// Unanswered requests tolerated before the control link is retired.
 pub(super) const MAX_STALE: u8 = 8;
+/// Ticks a request waits for the kernel outcome of a child whose control
+/// stream failed before it is answered BUSY. Reclamation of an exited child
+/// takes a few ticks; a live child that merely broke its link stays unknown.
+const OUTCOME_GRACE_TICKS: u64 = 50;
 
 impl Children {
     pub(super) fn forward(&mut self, mut words: wire::Packet, routed: u64) -> Result<usize, Error> {
@@ -34,9 +41,12 @@ impl Children {
         }
     }
     /// The control replies to wait for and the earliest deadline among them.
+    /// A slot whose stream already failed is polled again next tick, so the
+    /// child's kernel outcome is observed soon after reclamation.
     pub(in crate::service) fn wait(
         &self,
         teardown_busy: bool,
+        now: u64,
     ) -> ([Option<Handle>; CHILDREN], Option<u64>) {
         let mut handles = [None; CHILDREN];
         let mut deadline: Option<u64> = None;
@@ -56,15 +66,18 @@ impl Children {
             if teardown_busy && matches!(purpose, Purpose::Close) {
                 continue;
             }
-            if self.retiring[slot].is_none() {
+            let until = if self.retiring[slot].is_none() {
                 *handle = self.slots[slot]
                     .as_ref()
                     .and_then(|child| child.control)
                     .map(|control| control.1);
-            }
+                *until
+            } else {
+                now.wrapping_add(1)
+            };
             deadline = Some(match deadline {
-                Some(d) if !time::reached(d, *until) => d,
-                _ => *until,
+                Some(d) if !time::reached(d, until) => d,
+                _ => until,
             });
         }
         (handles, deadline)
@@ -182,6 +195,19 @@ impl Children {
                     self.stop(slot, server, world, parent)?;
                     retired = true;
                     Err(error.0 as u64)
+                } else if !time::reached(now, deadline) {
+                    // Reclamation is incremental, so the outcome usually follows
+                    // the broken stream within a few ticks. Keep the request
+                    // pending for a bounded grace, inside the asker's deadline.
+                    // Shortening is idempotent: later visits never extend it.
+                    let grace = now.wrapping_add(OUTCOME_GRACE_TICKS);
+                    if let Some(pending) = &mut self.pending[slot]
+                        && !time::reached(grace, pending.1)
+                    {
+                        pending.1 = grace;
+                    }
+                    self.retiring[slot] = Some(error.0);
+                    return Ok(false);
                 } else {
                     Err(abi::BUSY)
                 }

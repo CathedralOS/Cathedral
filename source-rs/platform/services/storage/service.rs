@@ -148,8 +148,36 @@ fn scoped(store: &Store<'_>, root: u8, r: wire::Request) -> Result<(), u64> {
 /// pressure. Never drain the whole backlog inside an application's deadline.
 /// Further requests (or explicit COLLECT) continue bounded reclamation.
 fn collect(store: &Store<'_>, root: u8) -> Result<(), Error> {
-    store.collect_under_pressure(root)?;
-    Ok(())
+    match store.collect_under_pressure(root) {
+        Ok(_pass) => {
+            #[cfg(feature = "trace-storage")]
+            if let Some(pass) = _pass {
+                cathedral_user_runtime::time::storage_sample(
+                    "collect-pass",
+                    &[
+                        root as u64,
+                        pass.removed as u64,
+                        pass.charged,
+                        u64::from(pass.more),
+                        u64::from(pass.windows),
+                        pass.marked as u64,
+                    ],
+                );
+            }
+            Ok(())
+        }
+        // The live census does not fit the provider's workspace. Skip this
+        // maintenance turn: exact quota still admits or refuses the write, and
+        // committed data and pins are untouched. Recorded in every build.
+        Err(Error::Workspace) => {
+            cathedral_user_runtime::time::storage_sample(
+                "collect-workspace-exhausted",
+                &[root as u64],
+            );
+            Ok(())
+        }
+        Err(error) => Err(error),
+    }
 }
 
 fn observe(stage: Stage) {
@@ -329,6 +357,8 @@ pub(super) fn status(error: Error) -> u64 {
         Error::Capacity => abi::NO_MEMORY,
         Error::Missing => wire::MISSING,
         Error::NotEmpty => abi::BUSY,
+        // Explicit COLLECT whose census exceeds the workspace: nothing removed.
+        Error::Workspace => abi::NO_MEMORY,
         // An engine error may hide publication. Retire rather than claim refusal.
         error => panic!("private-object engine failed: {:?}", error),
     }

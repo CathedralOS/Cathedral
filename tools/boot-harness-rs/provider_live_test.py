@@ -151,7 +151,9 @@ def exercise(stream, folder, mode, saved=None):
         assert log().count('storage replacement starting') == (3 if mode == 'exhausted' else 1)
         # Only the configured launcher can request a single new attempt. This
         # goes through the real visible action and leaves the app process intact.
-        click(80, height - 65)
+        # The compact taskbar keeps RETRY SAVES in its right-hand column, between
+        # END APP and SETTINGS.
+        click(width - 100, height - 48)
         scan(lambda d, s: s.count('explicit save retry') == 1 and bitmap(d) == draft,
              'explicit retry accepted without replacing Notes')
         if mode == 'exhausted':

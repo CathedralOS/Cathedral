@@ -15,7 +15,9 @@ mod publication;
 mod reading;
 mod records;
 use cathedral_storage_engine::redb::{self, Database, ReadableDatabase, TableDefinition};
-pub use collection::{Collection, PIN_SLOTS, collect_records};
+pub use collection::{
+    Collection, PIN_SLOTS, WORKSPACE_BYTES, collect_records, collect_records_within,
+};
 pub use records::{Head, Object};
 
 /// Largest object: 64 pages, so a program or a bulk reply fits in half a
@@ -46,6 +48,9 @@ pub enum Error {
     Missing,
     /// The object still has children; delete them first.
     NotEmpty,
+    /// One window of live identities would exceed the collection workspace
+    /// even at the finest split. Nothing was removed; the store is unchanged.
+    Workspace,
     Corrupt,
     Engine,
 }

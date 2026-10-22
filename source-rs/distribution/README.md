@@ -21,7 +21,7 @@ services. An unfunded further level reports **NO ROOM** without losing drafts.
 **Nested** starts a scoped copy of the same login/desktop flow inside the app
 area. Create and select an inner user, then run Notes or Colors there. Its files
 stay inside that Nested program's realm. Close it using the outer task-row X;
-any unsaved descendant refuses that close. Owner-mediated funding supports three nested desktops inside the outer one,
+any unsaved descendant refuses that close. Owner-mediated funding supports four nested desktops inside the outer one,
 with a leaf app at the deepest level. Further launches remain subject to finite
 process, surface and memory grants; refusal reports **NO ROOM**. Close other
 outer apps before launching Nested. This is a bounded composition proof, without
@@ -73,10 +73,11 @@ recovery screen does not restart itself. Apps can still save and close themselve
 Initial stock defaults live in [matrix.conf](matrix.conf);
 installation preserves saved configuration. Legacy vertical arrangements decode
 as an 80-pixel bottom bar with compact spacing; authority fields stay unchanged.
-Existing inner users/templates retain their executable snapshots. Use the
-**Cathedral: Fresh Lab in QEMU** launch entry (`--fresh`) to set the lab disk aside
-and seed the current recursive desktop. Recreate users; recursive migration of
-old lab snapshots is not required.
+Existing inner users/templates retain their executable snapshots. The normal
+**Cathedral: Build & Run in QEMU** launch entry passes `--fresh`: it sets the lab
+disk aside and seeds the current recursive desktop, so users are recreated each
+launch. **Cathedral: Resume Saved Lab in QEMU** keeps the disk for persistence
+work. Recursive migration of old lab snapshots is not required.
 
 The default input service negotiates QEMU's absolute virtual mouse so the guest
 cursor follows the host pointer within the window. It falls back to relative
@@ -84,11 +85,10 @@ PS/2 input when that interface is unavailable. The explicit
 [stock-program upgrades](migrations/README.md) refresh existing recognized user
 launchers/apps while preserving saved data and customized programs.
 
-Everything persists in `build/boot-harness-rs/cathedral-storage.raw` across
-launches and QEMU restarts: the users you made, their notes and colors. The
-first boot creates this experimental database image and installs the programs
-into it; later boots preserve it and reinstall only programs whose bytes
-changed. Earlier lab images remain separate and untouched. Every program's
+State lives in `build/boot-harness-rs/cathedral-storage.raw`: the users you
+made, their notes and colors. A fresh launch sets that disk aside and seeds a
+new one; Resume Saved Lab reuses it across launches and QEMU restarts, creating
+it only when missing and reinstalling only programs whose bytes changed. Earlier lab images remain separate and untouched. Every program's
 state nests under its own object, and a user is a subtree copy of the template,
 so a new user costs a few records until its notes diverge.
 

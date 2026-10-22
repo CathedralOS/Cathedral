@@ -73,8 +73,11 @@ def summarize(output, serial, boot):
             assert len(values) == 5
             retirements.append(values)
             continue
-        if label == 'storage-restart-failed':
+        if label in ('storage-restart-failed', 'collect-workspace-exhausted'):
             assert len(values) == 1
+            continue
+        if label == 'collect-pass':
+            assert len(values) == 6
             continue
         if label == 'ata-io':
             assert len(values) == 7

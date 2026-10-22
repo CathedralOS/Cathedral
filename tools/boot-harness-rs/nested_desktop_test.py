@@ -4,71 +4,100 @@ import shutil
 import time
 
 
-def exercise(output, click, key, scan, width, height, reboot, pointer_stress=False, interaction_delay=False, nested_depth=3):
-    font = bytes.fromhex((Path(__file__).resolve().parents[2] / 'source-rs/platform/libraries/bitmap-font/font.hex').read_text())
+class Nested:
+    """Coordinates and screen checks shared by every recursive-desktop workload.
+
+    Every nested user matrix has the same 8px inset and 80px taskbar, so a
+    depth selects one viewport. Checks compare exact glyphs and status colors.
+    """
+
+    def __init__(self, click, key, scan, width, height, pointer_stress=False):
+        self.click, self.key, self.scan = click, key, scan
+        self.width, self.height, self.pointer_stress = width, height, pointer_stress
+        self.font = bytes.fromhex((Path(__file__).resolve().parents[2] / 'source-rs/platform/libraries/bitmap-font/font.hex').read_text())
+
+    @staticmethod
     def pixel(w, data, x, y):
         return data[(y*w+x)*3:(y*w+x+1)*3]
-    def text(w, data, x, y, value):
+
+    def text(self, w, data, x, y, value):
         for i, ch in enumerate(value):
-            for row, bits in enumerate(font[(ord(ch)-32)*7:(ord(ch)-31)*7]):
+            for row, bits in enumerate(self.font[(ord(ch)-32)*7:(ord(ch)-31)*7]):
                 for col in range(5):
-                    if (pixel(w,data,x+i*12+col*2,y+row*2)==b'\xff\xff\xff') != bool(bits & (1 << (4-col))):
+                    if (self.pixel(w,data,x+i*12+col*2,y+row*2)==b'\xff\xff\xff') != bool(bits & (1 << (4-col))):
                         return False
         return True
-    def label(x, y, value):
-        scan(lambda w,d: text(w,d,x,y,value), value)
-    def viewport(depth):
-        return (8*depth, 8*depth, width-16*depth, height-104*depth)
-    def launch(depth, index):
-        x,y,w,h = viewport(depth)
-        click(x+40+56*index, y+h-48)
-    def task_close(depth, index=0):
-        x,y,w,h = viewport(depth)
-        click(x+376+144*index, y+h-48)
-    def app_close(depth):
-        x,y,w,h = viewport(depth)
-        click(x+w-22, y+18)
-    def desktop(depth):
-        x,y,w,h = viewport(depth)
+
+    def label(self, x, y, value):
+        self.scan(lambda w,d: self.text(w,d,x,y,value), value)
+
+    def viewport(self, depth):
+        return (8*depth, 8*depth, self.width-16*depth, self.height-104*depth)
+
+    def launch(self, depth, index):
+        x,y,w,h = self.viewport(depth)
+        self.click(x+40+56*index, y+h-48)
+
+    def task_close(self, depth, index=0):
+        x,y,w,h = self.viewport(depth)
+        self.click(x+376+144*index, y+h-48)
+
+    def app_close(self, depth):
+        x,y,w,h = self.viewport(depth)
+        self.click(x+w-22, y+18)
+
+    def focus_note(self, depth):
+        self.click(8*depth+13, 144)
+
+    def desktop(self, depth):
+        x,y,w,h = self.viewport(depth)
         # Keep the scan's motion running after the desktop first becomes visible.
         # Startup-only input misses failures while an idle subtree is already live.
         visible_since = None
         def visible(sw, data):
             nonlocal visible_since
-            shown = pixel(sw,data,x+148,y+h-48)==bytes.fromhex('c7a2ed') and text(sw,data,x+w-150,y+h-32,'SETTINGS')
+            shown = self.pixel(sw,data,x+148,y+h-48)==bytes.fromhex('c7a2ed') and self.text(sw,data,x+w-150,y+h-32,'SETTINGS')
             if not shown:
                 visible_since = None
                 return False
-            if not pointer_stress:
+            if not self.pointer_stress:
                 return True
             if visible_since is None:
                 visible_since = time.monotonic()
             return time.monotonic() - visible_since >= 3
-        scan(visible, f'depth {depth} taskbar')
-    def enter(depth, create):
+        self.scan(visible, f'depth {depth} taskbar')
+
+    def enter(self, depth, create):
         started = time.monotonic()
-        launch(depth-1, 3 if depth==1 else 2)
-        x,y,w,h = viewport(depth)
+        self.launch(depth-1, 3 if depth==1 else 2)
+        x,y,w,h = self.viewport(depth)
         top = y+(h-96)//2
         if create:
             left = x+(w-128)//2
-            label(left+16,top+76,'NEW USER')
-            click(left+64,top+48)
+            self.label(left+16,top+76,'NEW USER')
+            self.click(left+64,top+48)
         left = x+(w-280)//2
-        label(left+28,top+76,'USER 1')
-        click(left+64,top+48)
-        desktop(depth)
+        self.label(left+28,top+76,'USER 1')
+        self.click(left+64,top+48)
+        self.desktop(depth)
         print(f'Nested desktop depth {depth} ready after {time.monotonic()-started:.2f}s', flush=True)
-    def note(depth, value, dirty=False):
-        x,y,w,h = viewport(depth)
-        scan(lambda sw,d: pixel(sw,d,x+13,y+18)==bytes.fromhex('9b7028' if dirty else '27664a') and text(sw,d,x+18,y+28,value),f'depth {depth} Notes {value!r}')
-    def background(depth):
-        x,y,w,h = viewport(depth)
+
+    def note(self, depth, value, dirty=False):
+        x,y,w,h = self.viewport(depth)
+        self.scan(lambda sw,d: self.pixel(sw,d,x+13,y+18)==bytes.fromhex('9b7028' if dirty else '27664a') and self.text(sw,d,x+18,y+28,value),f'depth {depth} Notes {value!r}')
+
+    def background(self, depth):
+        x,y,w,h = self.viewport(depth)
         # Clearing a surface precedes child collection. Every nested background
         # has the same color, so it cannot prove that a subtree was stopped.
         # Wait for the owner's first running-task cell to become empty as well.
-        scan(lambda sw,d: pixel(sw,d,x+13,y+18)==bytes.fromhex('101827')
-             and pixel(sw,d,x+249,y+h-60)==bytes.fromhex('101827'),f'depth {depth} closed and collected')
+        self.scan(lambda sw,d: self.pixel(sw,d,x+13,y+18)==bytes.fromhex('101827')
+                  and self.pixel(sw,d,x+249,y+h-60)==bytes.fromhex('101827'),f'depth {depth} closed and collected')
+
+
+def exercise(output, click, key, scan, width, height, reboot, pointer_stress=False, interaction_delay=False, nested_depth=3):
+    n = Nested(click, key, scan, width, height, pointer_stress)
+    launch, task_close, app_close, enter, note, background = n.launch, n.task_close, n.app_close, n.enter, n.note, n.background
 
     def delayed(trigger, action, markers):
         offset = len((output/'serial.log').read_text(errors='replace'))
@@ -86,11 +115,11 @@ def exercise(output, click, key, scan, width, height, reboot, pointer_stress=Fal
     launch(nested_depth,0)
     note(nested_depth,'deep' if reboot else '')
     if not reboot:
-        click(8*nested_depth+13,144)
+        n.focus_note(nested_depth)
         for ch in 'deep': key(ch)
         note(nested_depth,'deep',True)
     if interaction_delay:
-        click(8*nested_depth+13,144)
+        n.focus_note(nested_depth)
         delayed('f8', lambda: None, ('matrix-poll-delayed', 'matrix-poll-unmatched', 'matrix-poll-local', 'matrix-poll-resumed'))
         note(nested_depth,'deep',not reboot)
         # Lateness is not input loss: subsequent keys must retain this focus.
@@ -103,14 +132,14 @@ def exercise(output, click, key, scan, width, height, reboot, pointer_stress=Fal
             key('f1'); note(nested_depth,'deep')
     if not reboot:
         task_close(0) # Loss propagates through the whole subtree.
-        label(width-192,height-56,'UNSAVED WORK')
+        n.label(width-192,height-56,'UNSAVED WORK')
         note(nested_depth,'deep',True)
-        click(8*nested_depth+13,144); key('f1'); note(nested_depth,'deep')
+        n.focus_note(nested_depth); key('f1'); note(nested_depth,'deep')
     app_close(nested_depth); background(nested_depth)
     if interaction_delay:
         delayed('f6', lambda: launch(nested_depth,1), ('matrix-present-delayed', 'matrix-present-resumed'))
-        x,y,w,h = viewport(nested_depth)
-        scan(lambda sw,d: pixel(sw,d,x+13,y+18)==bytes.fromhex('315ca8'), 'delayed Colors publication')
+        x,y,w,h = n.viewport(nested_depth)
+        scan(lambda sw,d: n.pixel(sw,d,x+13,y+18)==bytes.fromhex('315ca8'), 'delayed Colors publication')
         app_close(nested_depth); background(nested_depth)
     # Collapse each level, then re-enter the subtree. Old child accounts, image
     # readers and endpoints must be reusable without rebooting the outer desktop.

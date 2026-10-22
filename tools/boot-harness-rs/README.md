@@ -442,6 +442,20 @@ from the F5 composition. Reports, serial logs and per-depth screenshots stay in
 that artifact directory. Compare operation counts as well as wall observations;
 there is no host-independent performance threshold.
 
+`python tools/boot-harness-rs/desktop_test.py --soak 12 --nested-depth 2 --trace-storage --timeout 400`
+runs one long session through the [soak workload](desktop_soak.py): each cycle
+enters the nested desktops to the selected depth, opens Notes there, checks the
+text the previous cycle saved, replaces it with a cycle token, saves, closes the
+app and tears the whole subtree down from the outer taskbar, then the next cycle
+re-enters. A cold boot checks the last token and runs two more cycles. Every
+cycle records its host-observed seconds, the provider's heap live/peak/capacity
+from its own allocator reports, provider request and collection counts, and
+fails on a provider replacement, offline storage, a matrix exit, a workspace
+exhaustion, an allocation failure or less than 32 KiB of provider heap headroom.
+`soak-boot-N.json` keeps the records; `python tools/boot-harness-rs/desktop_soak.py ARTIFACT_DIRECTORY`
+prints them. Cycle times are upper bounds under host load, not a trend proof.
+`--pointer-stress` moves the pointer throughout; depth 1 to 4 is accepted.
+
 [nested_existing_test.py](nested_existing_test.py) takes a saved disk path and
 `--depth 1..4` (default 3). It copies the disk, builds the current kernel/providers
 in a private ESP, and drives existing nested programs without an installer or

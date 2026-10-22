@@ -22,8 +22,8 @@ pub fn report(phase: &str) {
     };
     writeln!(
         line,
-        "Cathedral objects heap: {phase} live={} peak={} largest={} failures={}",
-        s.live, s.peak, s.largest, s.failures
+        "Cathedral objects heap: {phase} live={} peak={} largest={} failures={} capacity={}",
+        s.live, s.peak, s.largest, s.failures, s.capacity
     )
     .unwrap();
     cathedral_user_runtime::write(&line.bytes[..line.len]).unwrap();
