@@ -10,6 +10,7 @@ use core::boot_geometry;
 use memory_map::firmware_root;
 use boot_memory;
 use paging_handoff;
+use firmware_tables;
 
 data BootPageTables {
     leading: Extent in Granted & Vacant;
@@ -766,7 +767,84 @@ invokes PlacementLifecycle;
         asm { out 1016, 100 }
         asm { out 1016, 13 }
         asm { out 1016, 10 }
-        transition { _ -> retain_firmware_root(context, image, pair, tables, retained_root) }
+        transition { _ -> collect_firmware_tables(context, image, pair, tables, retained_root) }
+    }
+
+    state collect_firmware_tables(context: &mut KernelState, image: Extent in Granted,
+                                  pair: KernelMemoryPair, tables: BootPageTables,
+                                  retained_root: Extent in Granted)
+    requires addr::Bound == 18446744073709551616
+    {
+        let excluded: BootGeometry = BootGeometry {
+            image_base: context.boot_information.image_base,
+            image_length: context.boot_information.image_size,
+            storage_base: context.initial_storage_base,
+            storage_length: context.initial_storage_bytes,
+        };
+        let inventory: FirmwareTableInventory = FirmwareTables::collect(
+            retained_root, &context.boot_information, &excluded);
+        transition inventory.complete {
+            true -> closure_wait(context, image, pair, tables, inventory, 1000000)
+            _ -> retain_firmware_tables(context, image, pair, tables, inventory)
+        }
+    }
+
+    state closure_wait(context: &mut KernelState, image: Extent in Granted,
+                       pair: KernelMemoryPair, tables: BootPageTables,
+                       inventory: FirmwareTableInventory, remaining: u64)
+    requires addr::Bound == 18446744073709551616
+    {
+        let mut status: u8 = 0;
+        asm { in status, 1021 }
+        transition (status & 32) != 0 {
+            true -> closure_report(context, image, pair, tables, inventory)
+            _ -> closure_retry(context, image, pair, tables, inventory, remaining)
+        }
+    }
+
+    state closure_retry(context: &mut KernelState, image: Extent in Granted,
+                        pair: KernelMemoryPair, tables: BootPageTables,
+                        inventory: FirmwareTableInventory, remaining: u64)
+    requires addr::Bound == 18446744073709551616
+    {
+        transition remaining > 1 {
+            true -> closure_wait(context, image, pair, tables, inventory, remaining - 1)
+            _ -> retain_firmware_tables(context, image, pair, tables, inventory)
+        }
+    }
+
+    state closure_report(context: &mut KernelState, image: Extent in Granted,
+                         pair: KernelMemoryPair, tables: BootPageTables,
+                         inventory: FirmwareTableInventory)
+    requires addr::Bound == 18446744073709551616
+    {
+        asm { out 1016, 84 } // Tables retained
+        asm { out 1016, 97 }
+        asm { out 1016, 98 }
+        asm { out 1016, 108 }
+        asm { out 1016, 101 }
+        asm { out 1016, 115 }
+        asm { out 1016, 32 }
+        asm { out 1016, 114 }
+        asm { out 1016, 101 }
+        asm { out 1016, 116 }
+        asm { out 1016, 97 }
+        asm { out 1016, 105 }
+        asm { out 1016, 110 }
+        asm { out 1016, 101 }
+        asm { out 1016, 100 }
+        asm { out 1016, 13 }
+        asm { out 1016, 10 }
+        transition { _ -> retain_firmware_tables(context, image, pair, tables, inventory) }
+    }
+
+    state retain_firmware_tables(context: &mut KernelState, image: Extent in Granted,
+                                 pair: KernelMemoryPair, tables: BootPageTables,
+                                 inventory: FirmwareTableInventory)
+    requires addr::Bound == 18446744073709551616
+    {
+        asm { hlt }
+        transition { _ -> retain_firmware_tables(context, image, pair, tables, inventory) }
     }
 
     state retain_firmware_root(context: &mut KernelState, image: Extent in Granted,

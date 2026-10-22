@@ -45,7 +45,7 @@ Without `--smoke`, QEMU's serial console is interactive. With it, the guest
 runs headlessly for at most `--timeout` seconds (default 30), and this run's
 serial log must contain the greeting followed by a complete numeric
 `Owned N MiB` line, then `Boot map ready`, `Kernel entered`, `Memory split`, `Memory checked`,
-`Memory paired`, `Page ready`, `Tables ready`, `CPU checked`, `Root located`, and `Root read`.
+`Memory paired`, `Page ready`, `Tables ready`, `CPU checked`, `Root located`, `Root read`, and `Tables retained`.
 The boot-map marker requires the kernel to copy the final memory map from the
 explicit initial-storage packet and check its format, byte count, descriptor
 stride, checksum, original storage base and image-prefix correspondence. It
@@ -89,6 +89,14 @@ an External-only profile and an actual 512-entry snapshot containing a present
 entry. The grant remains retained. This tests root observation, not full
 reachable-table retention or activation; the backing and identity-mapping
 premises remain explicit external admissions.
+`Tables retained` additionally requires completing the reachable four-level
+table inventory: every distinct frame has one retained grant, every frame/level
+pair is visited once, every new child passes final-map/exclusion checks, and
+large leaves end traversal. The 2048-frame/8192-item budgets must not be exhausted.
+Every failure retains the incomplete inventory without emitting that marker.
+The backing, identity mapping and quiescent-topology premises are explicit
+boundary admissions, not facts established by descriptor bytes. This marker
+does not mean the replacement hierarchy is active.
 All storage descendants remain retained. A split-only, single-resident, or
 paired-allocation-only or page-only boot does not satisfy this acceptance. Missing, truncated or
 out-of-order markers fail.
@@ -151,3 +159,17 @@ Both engines must exit 0. These synthetic bytes establish numeric policy
 behavior, never physical backing or access authority. The firmware smoke test
 separately observes the real CR3 and retained final map. Neither test establishes
 successful mapping installation.
+
+## Firmware table-entry policy
+
+`table-walk/main.omg` checks the kernel's four-level entry classifier on sixteen
+numeric cases, including absent entries, child links, both large-page sizes,
+large-page PAT, reserved alignment bits, PT PAT and invalid levels.
+
+```text
+omega update --project tools/boot-harness/table-walk
+omega run --both tools/boot-harness/table-walk/main.omg
+```
+
+Both engines must exit 0. These decisions grant no backing or table authority;
+the UEFI boot separately acquires and retains each reached physical frame.

@@ -1,0 +1,36 @@
+// Expected exit: 0. Four-level table topology is numeric policy, not authority.
+use core::x86_table_walk;
+
+machine require(value: bool) crashes Trap {
+    transition value { true -> done() false -> wrong() }
+    state done() {}
+    state wrong() { crash Trap; }
+}
+
+machine check(word: u64, level: u64, kind: u64, expected: u64) crashes Trap {
+    let route: X86TableEntryRoute = X86TableWalk::classify(word, level);
+    transition route {
+        X86TableEntryRoute::End -> require(kind == 0)
+        X86TableEntryRoute::Link { address } -> require(kind == 1 && address == expected)
+        X86TableEntryRoute::Invalid -> require(kind == 2)
+    }
+}
+
+machine main() crashes Trap {
+    check(0, 4, 0, 0);                  // absent
+    check(0x4003, 4, 1, 0x4000);        // root link
+    check(0x8000000000004003, 3, 1, 0x4000); // NX is not part of the frame
+    check(0x000FFFFFFFFFF003, 2, 1, 0x000FFFFFFFFFF000);
+    check(1, 4, 2, 0);                  // null child cannot be admitted
+    check(0x4081, 4, 2, 0);             // reserved PML4 PS
+    check(0x40000081, 3, 0, 0);         // 1 GiB leaf
+    check(0x40001081, 3, 0, 0);         // large-page PAT
+    check(0x40002081, 3, 2, 0);         // reserved alignment bit
+    check(0x200081, 2, 0, 0);           // 2 MiB leaf
+    check(0x201081, 2, 0, 0);           // large-page PAT
+    check(0x202081, 2, 2, 0);           // reserved alignment bit
+    check(0x4081, 1, 0, 0);             // PT bit 7 is PAT, no child
+    check(1, 1, 0, 0);                  // physical-zero leaf is not a table grant
+    check(0, 0, 2, 0);
+    check(0x4003, 5, 2, 0);
+}

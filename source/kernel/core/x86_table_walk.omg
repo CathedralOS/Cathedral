@@ -1,0 +1,47 @@
+use facts::x86_page_table_entry;
+
+// A route through one observed four-level paging word. This is numeric
+// interpretation only: a Link supplies no backing, grant or read permission.
+public data X86TableEntryRoute {
+    case End;
+    case Link(address: u64);
+    case Invalid;
+}
+public data X86TableWalk {}
+
+public machine X86TableWalk::classify(word: u64, level: u64) -> X86TableEntryRoute {
+    transition level >= 1 && level <= 4 {
+        true -> entry(word, level)
+        _ -> X86TableEntryRoute::Invalid
+    }
+    state entry(word: u64, level: u64) -> X86TableEntryRoute {
+        let decoded: X86PageTableEntry = x86_decode_page_table_entry(word);
+        transition !decoded.present || level == 1 {
+            true -> X86TableEntryRoute::End
+            _ -> present(word, level, decoded)
+        }
+    }
+    state present(word: u64, level: u64, decoded: X86PageTableEntry) -> X86TableEntryRoute {
+        transition decoded.page_size_or_pat {
+            true -> large(word, level)
+            _ -> link(word)
+        }
+    }
+    state link(word: u64) -> X86TableEntryRoute {
+        let address: u64 = word & 0x000FFFFFFFFFF000;
+        transition address != 0 {
+            true -> (X86TableEntryRoute::Link { address: address })
+            _ -> X86TableEntryRoute::Invalid
+        }
+    }
+    state large(word: u64, level: u64) -> X86TableEntryRoute {
+        // PS is reserved at PML4. A large leaf's bit 12 is PAT; only the
+        // intervening address bits are reserved by its alignment. PT bit 7
+        // was handled as a leaf above, where it is PAT rather than PS.
+        transition (level == 3 && (word & 0x3FFFE000) == 0) ||
+                   (level == 2 && (word & 0x1FE000) == 0) {
+            true -> X86TableEntryRoute::End
+            _ -> X86TableEntryRoute::Invalid
+        }
+    }
+}

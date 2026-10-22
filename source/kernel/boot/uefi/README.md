@@ -22,7 +22,7 @@ the initialized page and the remaining tail with the context and image.
 
 The fresh-image harness requires `Hello from Omega`, a complete `Owned N MiB`
 line, `Boot map ready`, `Kernel entered`, `Memory split`, `Memory checked`, `Memory paired`,
-`Page ready`, `Tables ready`, `CPU checked`, `Root located`, and `Root read`, in that order. The six-marker baseline reported 35 MiB in
+`Page ready`, `Tables ready`, `CPU checked`, `Root located`, `Root read`, and `Tables retained`, in that order. The six-marker baseline reported 35 MiB in
 QEMU/OVMF using Omega `9e04918b1d1`. The current source requires Omega's exact address-model
 typing, representation-recast effect tracking and occurrence-local state-prefix
 checking, in addition to the canonical `ProgramStorageEntryNativeProvider`,
@@ -75,7 +75,7 @@ separate backing and lifecycle obligations.
 The intended acceptance is one freshly compiled `uefi_x86_64` image under
 QEMU/OVMF: `Hello from Omega`, successful firmware exit, `Owned N MiB` over
 COM1, then `Boot map ready`, `Kernel entered`, `Memory split`, `Memory checked`, `Memory paired`,
-`Page ready`, `Tables ready`, `CPU checked`, `Root located`, and `Root read`
+`Page ready`, `Tables ready`, `CPU checked`, `Root located`, `Root read`, and `Tables retained`
 while retaining image, every initial-storage descendant and accounted surviving
 stack storage. `Memory checked` requires common-root reunion after all three partition sizes,
 initialization/readback of 17, write/readback/extraction of 29, and return of the
@@ -321,9 +321,33 @@ entry. The original grant is retained on every subsequent success and failure
 path. The root is not reclassified as Vacant or an Omega Resident. Hardware
 may update entries during the copy: it is not an atomic hierarchy snapshot.
 
-Retention and validation of every reachable lower-level table page remain
-unfinished. Reading this root does not establish the full firmware-table
-closure, mapping equivalence, or authority to activate a replacement hierarchy.
+`firmware_tables.omg` continues from that root into a bounded four-level
+traversal. Every new child must pass the same complete-map and full image/
+original allocator-root exclusions before its separately admitted grant.
+Physical frames are deduplicated; the same frame may be visited once at each
+translation level without acquiring duplicate authority. Large 1-GiB/2-MiB
+leaves end descent, while PT bit 7 remains PAT, not a child-table selector.
+The numeric classifier's hosted witness is
+[`tools/boot-harness/table-walk`](../../../../tools/boot-harness/table-walk/main.omg).
+It establishes no physical access permission.
+
+The inventory retains at most 2048 distinct table frames and 8192 frame/level
+work items. Exhaustion, invalid topology, failed eligibility or unavailable
+External observation returns an incomplete inventory; success and failure
+retain every acquired root. `Tables retained` requires complete traversal,
+not merely reading the root or filling the budget. The external admission
+extends readable, identity-mapped backing to these exact reached pages and
+requires quiescent table topology during this closed boot; hardware A/D writes
+remain permitted. Numeric bytes do not prove those premises. This bounded
+inventory is not a general allocator or a mapping-equivalence proof.
+The QEMU/OVMF boot used here has 1028 reachable frames, so the former 256-frame
+budget could not complete it. A fresh image built with the compiler's
+conditional-custody and bounded membership-selection repairs
+reached all thirteen serial milestones through `Tables retained`; the otherwise
+identical control limiting queue admission to one item reached `Root read` but
+did not emit `Tables retained`. Both images were freshly compiled and booted.
+The positive build and thirty-second smoke took 554.47 seconds, with 10.93 GB
+maximum resident memory; this is a development-workflow cost, not guest boot time.
 The fresh-allocation StableRW profile is not authority over arbitrary firmware
 addresses.
 

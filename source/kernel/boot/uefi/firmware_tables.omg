@@ -1,0 +1,289 @@
+use omega::language::core::extent;
+use paging_handoff;
+use boot_handoff;
+use memory_map::firmware_root;
+use core::boot_geometry;
+use core::x86_table_walk;
+
+// A bounded boot inventory, not an allocator. Each distinct physical page has
+// exactly one retained grant; a page used at several translation levels is
+// visited once at each level without issuing duplicate authority. The fixed
+// budget is explicit and exhaustion cannot announce a complete closure.
+data FirmwareTableSlot {
+    case Empty;
+    case Held(storage: Extent in Granted);
+}
+
+data FirmwareTableInventory {
+    roots: [FirmwareTableSlot; 2048];
+    addresses: [u64; 2048];
+    levels_seen: [u64; 2048];
+    table_count: u64;
+    queue_tables: [u64; 8192];
+    queue_levels: [u64; 8192];
+    queue_count: u64;
+    complete: bool;
+}
+
+data FirmwareTables {}
+
+machine FirmwareTables::begin(root: Extent in Granted) -> FirmwareTableInventory
+requires addr::Bound == 18446744073709551616
+{
+    let mut inventory: FirmwareTableInventory;
+    inventory.addresses[0] = root.base as u64;
+    inventory.roots[0] = FirmwareTableSlot::Held { storage: root };
+    inventory.levels_seen[0] = 16;
+    inventory.table_count = 1;
+    inventory.queue_levels[0] = 4;
+    inventory.queue_count = 1;
+    inventory
+}
+
+machine FirmwareTables::snapshot(inventory: &FirmwareTableInventory, table_index: u64)
+    -> FirmwareRootSnapshot
+requires table_index < 2048
+reaches ResourceProfileSupply
+{
+    transition &inventory.roots[table_index] {
+        FirmwareTableSlot::Held { storage } -> (PagingHandoff::snapshot<FirmwareMemory>(storage))
+        FirmwareTableSlot::Empty -> FirmwareRootSnapshot::Unavailable
+    }
+}
+
+// Geometry is checked before this occurrence admits another root. The selected
+// external premise covers only live table pages reached from the admitted CR3,
+// identity mapped and retained after the successful exit. The translation
+// topology is quiescent during this closed uniprocessor boot (hardware A/D
+// writes remain permitted). Descriptor bytes alone establish none of this.
+machine FirmwareTables::retain_child(slot: &mut FirmwareTableSlot, address: u64) -> bool
+requires addr::Bound == 18446744073709551616 &&
+         address > 0 && address % 4096 == 0 && address <= 0x000FFFFFFFFFF000
+reaches ExtentRootProvider
+invokes ExtentRootProvider;
+{
+    transition slot {
+        FirmwareTableSlot::Empty -> insert(slot, address)
+        FirmwareTableSlot::Held { storage } -> false
+    }
+
+    state insert(slot: &mut FirmwareTableSlot, address: u64) -> bool
+    requires addr::Bound == 18446744073709551616 &&
+             address > 0 && address % 4096 == 0 && address <= 0x000FFFFFFFFFF000 &&
+             (slot in FirmwareTableSlot::Empty)
+    {
+        let storage: Extent in Granted = ExtentRootProvider::grant(
+            Extent { base: address as addr, length: 4096 }
+        );
+        slot = FirmwareTableSlot::Held { storage: storage };
+        true
+    }
+}
+
+machine FirmwareTables::find(inventory: &FirmwareTableInventory, address: u64) -> u64 {
+    transition { _ -> scan(inventory, address, 0) }
+    state scan(inventory: &FirmwareTableInventory, address: u64, next: u64) -> u64
+    requires next <= 2048
+    {
+        transition next < inventory.table_count && next < 2048 {
+            true -> compare(inventory, address, next)
+            _ -> 2048
+        }
+    }
+    state compare(inventory: &FirmwareTableInventory, address: u64, next: u64) -> u64
+    requires next < 2048
+    {
+        transition inventory.addresses[next] == address {
+            true -> next
+            _ -> scan(inventory, address, next + 1)
+        }
+    }
+}
+
+machine FirmwareTables::collect(root: Extent in Granted, information: &BootInformation,
+                                excluded: &BootGeometry) -> FirmwareTableInventory
+requires addr::Bound == 18446744073709551616
+reaches ExtentRootProvider + ResourceProfileSupply
+invokes ExtentRootProvider;
+invokes ResourceProfileSupply;
+{
+    let mut inventory: FirmwareTableInventory = FirmwareTables::begin(root);
+    let complete: bool = FirmwareTables::walk(&mut inventory, information, excluded);
+    inventory.complete = complete;
+    inventory
+}
+
+// Keep one owned ledger in the collecting activation. Traversal lends it;
+// state jumps carry only that loan and their scalar cursor, not repeated
+// copies and whole-claim transfers of every previously retained table.
+machine FirmwareTables::walk(inventory: &mut FirmwareTableInventory,
+                             information: &BootInformation, excluded: &BootGeometry) -> bool
+requires addr::Bound == 18446744073709551616
+reaches ExtentRootProvider + ResourceProfileSupply
+invokes ExtentRootProvider;
+invokes ResourceProfileSupply;
+{
+    transition { _ -> next_table(inventory, information, excluded, 0) }
+
+    state next_table(inventory: &mut FirmwareTableInventory, information: &BootInformation,
+                     excluded: &BootGeometry, queue_index: u64) -> bool
+    requires addr::Bound == 18446744073709551616 && queue_index <= 8192
+    {
+        transition queue_index < inventory.queue_count && queue_index < 8192 {
+            true -> open(inventory, information, excluded, queue_index)
+            _ -> finish(inventory, queue_index)
+        }
+    }
+
+    state open(inventory: &mut FirmwareTableInventory, information: &BootInformation,
+               excluded: &BootGeometry, queue_index: u64) -> bool
+    requires addr::Bound == 18446744073709551616 && queue_index < 8192
+    {
+        let table_index: u64 = inventory.queue_tables[queue_index];
+        transition table_index < 2048 {
+            true -> snapshot(inventory, information, excluded, queue_index, table_index)
+            _ -> false
+        }
+    }
+
+    state snapshot(inventory: &mut FirmwareTableInventory, information: &BootInformation,
+                   excluded: &BootGeometry, queue_index: u64, table_index: u64)
+        -> bool
+    requires addr::Bound == 18446744073709551616 && queue_index < 8192 && table_index < 2048
+    {
+        let copied: FirmwareRootSnapshot = FirmwareTables::snapshot(inventory, table_index);
+        transition copied {
+            FirmwareRootSnapshot::Ready { entries } -> scan(inventory, information, excluded, queue_index, entries, 0)
+            FirmwareRootSnapshot::Unavailable -> false
+        }
+    }
+
+    state scan(inventory: &mut FirmwareTableInventory, information: &BootInformation,
+               excluded: &BootGeometry, queue_index: u64, entries: [u64; 512], entry_index: u64)
+        -> bool
+    requires addr::Bound == 18446744073709551616 && queue_index < 8192 && entry_index <= 512
+    {
+        transition entry_index < 512 {
+            true -> inspect(inventory, information, excluded, queue_index, entries, entry_index)
+            _ -> next_table(inventory, information, excluded, queue_index + 1)
+        }
+    }
+
+    state inspect(inventory: &mut FirmwareTableInventory, information: &BootInformation,
+                  excluded: &BootGeometry, queue_index: u64, entries: [u64; 512], entry_index: u64)
+        -> bool
+    requires addr::Bound == 18446744073709551616 && queue_index < 8192 && entry_index < 512
+    {
+        let level: u64 = inventory.queue_levels[queue_index];
+        let route: X86TableEntryRoute = X86TableWalk::classify(entries[entry_index], level);
+        transition route {
+            X86TableEntryRoute::End -> scan(inventory, information, excluded, queue_index, entries, entry_index + 1)
+            X86TableEntryRoute::Invalid -> false
+            X86TableEntryRoute::Link { address } -> locate(inventory, information, excluded, queue_index, entries, entry_index, level, address)
+        }
+    }
+
+    state locate(inventory: &mut FirmwareTableInventory, information: &BootInformation,
+                 excluded: &BootGeometry, queue_index: u64, entries: [u64; 512], entry_index: u64,
+                 level: u64, child: u64) -> bool
+    requires addr::Bound == 18446744073709551616 && queue_index < 8192 && entry_index < 512
+    {
+        let known: u64 = FirmwareTables::find(inventory, child);
+        transition known < 2048 {
+            true -> enqueue(inventory, information, excluded, queue_index, entries, entry_index, level, known)
+            _ -> admit(inventory, information, excluded, queue_index, entries, entry_index, level, child)
+        }
+    }
+
+    state admit(inventory: &mut FirmwareTableInventory, information: &BootInformation,
+                excluded: &BootGeometry, queue_index: u64, entries: [u64; 512], entry_index: u64,
+                level: u64, child: u64) -> bool
+    requires addr::Bound == 18446744073709551616 && queue_index < 8192 && entry_index < 512
+    {
+        let eligible: bool = FirmwareRootMap::contains(&information.bytes, information.map_size,
+            information.descriptor_size, child, excluded);
+        transition eligible && inventory.table_count < 2048 && child > 0 && child % 4096 == 0 &&
+            child <= 0x000FFFFFFFFFF000 {
+            true -> retain(inventory, information, excluded, queue_index, entries, entry_index, level, child)
+            _ -> false
+        }
+    }
+
+    state retain(inventory: &mut FirmwareTableInventory, information: &BootInformation,
+                 excluded: &BootGeometry, queue_index: u64, entries: [u64; 512], entry_index: u64,
+                 level: u64, child: u64) -> bool
+    requires addr::Bound == 18446744073709551616 && queue_index < 8192 && entry_index < 512 &&
+             inventory.table_count < 2048 && child > 0 && child % 4096 == 0 && child <= 0x000FFFFFFFFFF000
+    {
+        let table_index: u64 = inventory.table_count;
+        let stored: bool = FirmwareTables::retain_child(&mut inventory.roots[table_index], child);
+        transition stored {
+            true -> registered(inventory, information, excluded, queue_index, entries, entry_index, level, child, table_index)
+            _ -> false
+        }
+    }
+
+    state registered(inventory: &mut FirmwareTableInventory, information: &BootInformation,
+                     excluded: &BootGeometry, queue_index: u64, entries: [u64; 512], entry_index: u64,
+                     level: u64, child: u64, table_index: u64) -> bool
+    requires addr::Bound == 18446744073709551616 && queue_index < 8192 && entry_index < 512 && table_index < 2048
+    {
+        inventory.addresses[table_index] = child;
+        inventory.table_count = table_index + 1;
+        transition { _ -> enqueue(inventory, information, excluded, queue_index, entries, entry_index, level, table_index) }
+    }
+
+    state enqueue(inventory: &mut FirmwareTableInventory, information: &BootInformation,
+                  excluded: &BootGeometry, queue_index: u64, entries: [u64; 512], entry_index: u64,
+                  level: u64, table_index: u64) -> bool
+    requires addr::Bound == 18446744073709551616 && queue_index < 8192 && entry_index < 512
+    {
+        transition level > 1 && level <= 4 && table_index < 2048 {
+            true -> remember(inventory, information, excluded, queue_index, entries, entry_index, level, table_index)
+            _ -> false
+        }
+    }
+
+    state remember(inventory: &mut FirmwareTableInventory, information: &BootInformation,
+                   excluded: &BootGeometry, queue_index: u64, entries: [u64; 512], entry_index: u64,
+                   level: u64, table_index: u64) -> bool
+    requires addr::Bound == 18446744073709551616 && queue_index < 8192 && entry_index < 512 &&
+             level > 1 && level <= 4 && table_index < 2048
+    {
+        let bit: u64 = 1u64 << (level - 1);
+        transition (inventory.levels_seen[table_index] & bit) == 0 {
+            true -> reserve(inventory, information, excluded, queue_index, entries, entry_index, level, table_index, bit)
+            _ -> scan(inventory, information, excluded, queue_index, entries, entry_index + 1)
+        }
+    }
+
+    state reserve(inventory: &mut FirmwareTableInventory, information: &BootInformation,
+                  excluded: &BootGeometry, queue_index: u64, entries: [u64; 512], entry_index: u64,
+                  level: u64, table_index: u64, bit: u64) -> bool
+    requires addr::Bound == 18446744073709551616 && queue_index < 8192 && entry_index < 512 &&
+             level > 1 && table_index < 2048
+    {
+        transition inventory.queue_count < 8192 {
+            true -> append(inventory, information, excluded, queue_index, entries, entry_index, level, table_index, bit)
+            _ -> false
+        }
+    }
+
+    state append(inventory: &mut FirmwareTableInventory, information: &BootInformation,
+                 excluded: &BootGeometry, queue_index: u64, entries: [u64; 512], entry_index: u64,
+                 level: u64, table_index: u64, bit: u64) -> bool
+    requires addr::Bound == 18446744073709551616 && queue_index < 8192 && entry_index < 512 &&
+             level > 1 && table_index < 2048 && inventory.queue_count < 8192
+    {
+        let next: u64 = inventory.queue_count;
+        inventory.queue_tables[next] = table_index;
+        inventory.queue_levels[next] = level - 1;
+        inventory.queue_count = next + 1;
+        inventory.levels_seen[table_index] = inventory.levels_seen[table_index] | bit;
+        transition { _ -> scan(inventory, information, excluded, queue_index, entries, entry_index + 1) }
+    }
+
+    state finish(inventory: &mut FirmwareTableInventory, traversed: u64) -> bool {
+        traversed == inventory.queue_count
+    }
+}

@@ -4,9 +4,11 @@ use omega::language::core::layout;
 public data FirmwareMemory {}
 public boundary trait FirmwareMemorySupply: ResourceProfileSupply<FirmwareMemory> {}
 
-// Admission covers the actual CR3 root accepted from this boot's final map
-// and the known initial-storage page used to check role isolation. Both are
-// observed after exit with their grants retained. The current identity mapping and
+// Admission covers the actual CR3 root and its reachable table pages accepted
+// from this boot's complete final map, plus the known initial-storage page
+// used to check role isolation. All are observed after exit with their grants
+// retained. During this closed uniprocessor boot, firmware table topology is
+// quiescent except for hardware accessed/dirty updates. Identity mapping and
 // physical backing must remain valid for the lifetime of that grant. Hardware
 // may update accessed/dirty bits; no Stable access or CPU write is promised.
 // Selecting this role alone cannot turn arbitrary geometry into table access.

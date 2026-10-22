@@ -32,8 +32,8 @@ class BootHarnessTests(unittest.TestCase):
             self.assertEqual((first / 'serial.log').read_bytes(), b'first')
 
     def test_smoke_requires_ordered_complete_reports_through_resident_readback(self):
-        boot.check_boot_milestones(b'Hello from Omega\r\nOwned 128 MiB\r\nBoot map ready\r\nKernel entered\r\nMemory split\r\nMemory checked\r\nMemory paired\r\nPage ready\r\nTables ready\r\nCPU checked\r\nRoot located\r\nRoot read\r\n')
-        boot.check_boot_milestones(b'Hello from Omega\nOwned 99999+ MiB\nBoot map ready\nKernel entered\r\nMemory split\r\nMemory checked\nMemory paired\nPage ready\nTables ready\nCPU checked\nRoot located\nRoot read\n')
+        boot.check_boot_milestones(b'Hello from Omega\r\nOwned 128 MiB\r\nBoot map ready\r\nKernel entered\r\nMemory split\r\nMemory checked\r\nMemory paired\r\nPage ready\r\nTables ready\r\nCPU checked\r\nRoot located\r\nRoot read\r\nTables retained\r\n')
+        boot.check_boot_milestones(b'Hello from Omega\nOwned 99999+ MiB\nBoot map ready\nKernel entered\r\nMemory split\r\nMemory checked\nMemory paired\nPage ready\nTables ready\nCPU checked\nRoot located\nRoot read\nTables retained\n')
         for output in (b'', b'Hello from Omega\r\n',
                        b'Owned 128 MiB\nHello from Omega\n',
                        b'Hello from Omega\nOwned rubbish MiB\n',
@@ -168,6 +168,16 @@ class BootHarnessTests(unittest.TestCase):
                 image = boot.build_image(['omega'], Path('main.omg'), 'uefi_x86_64', directory)
             self.assertEqual(image.read_bytes(), b'new')
             self.assertEqual(list(directory.glob('compile-*')), [])
+
+    def test_root_snapshot_without_complete_table_closure_does_not_count(self):
+        prefix = b'Hello from Omega\r\nOwned 128 MiB\r\nBoot map ready\r\nKernel entered\r\nMemory split\r\nMemory checked\r\nMemory paired\r\nPage ready\r\nTables ready\r\nCPU checked\r\nRoot located\r\nRoot read\r\n'
+        for output in (prefix, prefix + b'Tables retained',
+                       prefix + b'Tables retained\r',
+                       prefix + b'Not Tables retained\n',
+                       b'Tables retained\n' + prefix):
+            with self.subTest(output=output):
+                with self.assertRaisesRegex(ValueError, 'reachable firmware-table retention'):
+                    boot.check_boot_milestones(output)
 
 
 if __name__ == '__main__':
