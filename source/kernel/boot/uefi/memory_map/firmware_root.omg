@@ -33,7 +33,8 @@ requires addr::Bound == 18446744073709551616
 
     state exclusions(bytes: &[u8; 65536], map_size: u64, descriptor_size: u64,
                      root: u64, excluded: &BootGeometry) -> bool
-    requires addr::Bound == 18446744073709551616 && root <= 0x000FFFFFFFFFF000
+    requires addr::Bound == 18446744073709551616 && root <= 0x000FFFFFFFFFF000 &&
+        map_size > 0 && map_size <= 65536 && descriptor_size >= 40 && descriptor_size <= map_size
     {
         let geometry: BootGeometry = BootGeometry {
             image_base: excluded.image_base, image_length: excluded.image_length,
@@ -47,21 +48,25 @@ requires addr::Bound == 18446744073709551616
 
     state separate(bytes: &[u8; 65536], map_size: u64, descriptor_size: u64,
                    root: u64, excluded: BootGeometry in Separated) -> bool
-    requires addr::Bound == 18446744073709551616 && root <= 0x000FFFFFFFFFF000
+    requires addr::Bound == 18446744073709551616 && root <= 0x000FFFFFFFFFF000 &&
+        map_size > 0 && map_size <= 65536 && descriptor_size >= 40 && descriptor_size <= map_size
     {
         let end: u64 = root + 4096;
         transition (end <= excluded.image_base || root >= excluded.image_base + excluded.image_length) &&
             (end <= excluded.storage_base || root >= excluded.storage_base + excluded.storage_length) {
-            true -> walk(bytes, map_size as u64 in Trapping, descriptor_size as u64 in Trapping,
-                         root, 0, false)
+            true -> walk(bytes, map_size, descriptor_size, root, 0, false)
             _ -> false
         }
     }
 
-    state walk(bytes: &[u8; 65536], map_size: u64 in Trapping,
-               descriptor_size: u64 in Trapping, root: u64,
-               offset: u64 in Trapping, found: bool) -> bool
-    requires addr::Bound == 18446744073709551616 && offset <= 65496 && root <= 0x000FFFFFFFFFF000
+    // Keep the validated descriptor geometry at every loop arrival. In
+    // particular, offset + descriptor_size cannot overflow its u64 carrier;
+    // a malformed map returns false instead of acquiring a Trap route.
+    state walk(bytes: &[u8; 65536], map_size: u64,
+               descriptor_size: u64, root: u64,
+               offset: u64, found: bool) -> bool
+    requires addr::Bound == 18446744073709551616 && offset <= 65496 && root <= 0x000FFFFFFFFFF000 &&
+        map_size > 0 && map_size <= 65536 && descriptor_size >= 40 && descriptor_size <= map_size
     {
         let descriptor: &EfiMemoryDescriptor = &bytes[offset] as &EfiMemoryDescriptor;
         transition descriptor.number_of_pages > 0 && descriptor.number_of_pages <= 4503599627370495 &&
@@ -76,10 +81,11 @@ requires addr::Bound == 18446744073709551616
         }
     }
 
-    state compare(bytes: &[u8; 65536], map_size: u64 in Trapping,
-                  descriptor_size: u64 in Trapping, root: u64,
-                  offset: u64 in Trapping, found: bool, descriptor: &EfiMemoryDescriptor) -> bool
+    state compare(bytes: &[u8; 65536], map_size: u64,
+                  descriptor_size: u64, root: u64,
+                  offset: u64, found: bool, descriptor: &EfiMemoryDescriptor) -> bool
     requires addr::Bound == 18446744073709551616 && offset <= 65496 && root <= 0x000FFFFFFFFFF000 &&
+        map_size > 0 && map_size <= 65536 && descriptor_size >= 40 && descriptor_size <= map_size &&
         descriptor.number_of_pages <= 4503599627370495 &&
         descriptor.physical_start <= 18446744073709551615 - descriptor.number_of_pages * 4096
     {
@@ -90,11 +96,12 @@ requires addr::Bound == 18446744073709551616
         }
     }
 
-    state covering(bytes: &[u8; 65536], map_size: u64 in Trapping,
-                   descriptor_size: u64 in Trapping, root: u64,
-                   offset: u64 in Trapping, found: bool,
+    state covering(bytes: &[u8; 65536], map_size: u64,
+                   descriptor_size: u64, root: u64,
+                   offset: u64, found: bool,
                    descriptor: &EfiMemoryDescriptor, end: u64) -> bool
-    requires addr::Bound == 18446744073709551616 && offset <= 65496 && root <= 0x000FFFFFFFFFF000
+    requires addr::Bound == 18446744073709551616 && offset <= 65496 && root <= 0x000FFFFFFFFFF000 &&
+        map_size > 0 && map_size <= 65536 && descriptor_size >= 40 && descriptor_size <= map_size
     {
         // UEFI 2.11 table 7.6 returns these non-runtime allocations to OS
         // ownership after ExitBootServices. Do not infer that Conventional,
@@ -108,10 +115,11 @@ requires addr::Bound == 18446744073709551616
         }
     }
 
-    state advance(bytes: &[u8; 65536], map_size: u64 in Trapping,
-                  descriptor_size: u64 in Trapping, root: u64,
-                  offset: u64 in Trapping, found: bool) -> bool
-    requires addr::Bound == 18446744073709551616 && offset <= 65496 && root <= 0x000FFFFFFFFFF000
+    state advance(bytes: &[u8; 65536], map_size: u64,
+                  descriptor_size: u64, root: u64,
+                  offset: u64, found: bool) -> bool
+    requires addr::Bound == 18446744073709551616 && offset <= 65496 && root <= 0x000FFFFFFFFFF000 &&
+        map_size > 0 && map_size <= 65536 && descriptor_size >= 40 && descriptor_size <= map_size
     {
         transition offset + descriptor_size < map_size && offset + descriptor_size <= 65496 {
             true -> walk(bytes, map_size, descriptor_size, root, offset + descriptor_size, found)

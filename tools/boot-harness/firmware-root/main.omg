@@ -28,6 +28,17 @@ requires offset <= 65528
     state done() {}
 }
 
+// The kernel publishes Abort, never Trap. Keep this arbitrary-input caller
+// under the same ceiling so runtime-trapping arithmetic cannot silently return
+// to the map scanner even though the assertions below themselves use Trap.
+machine scan(bytes: &[u8; 65536], map_size: u64, descriptor_size: u64,
+             root: u64, excluded: &BootGeometry) -> bool
+requires addr::Bound == 18446744073709551616
+crashes Abort false
+{
+    FirmwareRootMap::contains(bytes, map_size, descriptor_size, root, excluded)
+}
+
 machine main() crashes Trap
 requires addr::Bound == 18446744073709551616
 {
@@ -47,7 +58,7 @@ requires addr::Bound == 18446744073709551616
     require(FirmwareRootMap::frame(4198401) == 0);
     require(FirmwareRootMap::frame(0x8000000000401000) == 0);
     require(FirmwareRootMap::frame(0) == 0);
-    require(FirmwareRootMap::contains(&bytes, 96, 48, 4198400, &excluded));
+    require(scan(&bytes, 96, 48, 4198400, &excluded));
     require(!FirmwareRootMap::contains(&bytes, 0, 48, 4198400, &excluded));
     require(!FirmwareRootMap::contains(&bytes, 95, 48, 4198400, &excluded));
     require(!FirmwareRootMap::contains(&bytes, 96, 32, 4198400, &excluded));

@@ -149,6 +149,9 @@ the CPU observation. It covers a valid root in an unsorted runtime-stride map,
 CR3 flags/reserved bits, malformed map and descriptor sizes, missing/duplicate
 coverage, image/storage exclusions, disallowed ownership and attributes, and
 page-count/end overflow. An incorrect decision crashes; success exits 0.
+The scan carries its validated map/stride bounds through every loop state and
+uses Exact arithmetic. An arbitrary-input caller in the harness forbids Trap
+independently of the assertion helper, matching the kernel's crash restriction.
 
 ```text
 omega update --project tools/boot-harness/firmware-root
