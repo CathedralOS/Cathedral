@@ -47,7 +47,12 @@ fn word(table: &Table<&[u8], &[u8]>, key: &[u8]) -> Result<Option<u64>> {
     })
 }
 /// Insert a record and charge it, unless an identical one is already retained.
-pub(super) fn retain(table: &mut Table<&[u8], &[u8]>, charged: &mut u64, key: &[u8], value: &[u8]) -> Result<()> {
+pub(super) fn retain(
+    table: &mut Table<&[u8], &[u8]>,
+    charged: &mut u64,
+    key: &[u8],
+    value: &[u8],
+) -> Result<()> {
     if let Some(existing) = table.get(key)? {
         if existing.value() != value {
             return Err("retained record differs from the program's".into());
@@ -66,7 +71,8 @@ pub fn seed(path: &Path, offset: u64, bytes: u64, programs: &[Program]) -> Resul
     let mut installed = 0;
     let mut updated = 0;
     {
-        let mut table = tx.open_table(TableDefinition::<&[u8], &[u8]>::new("private-objects-v3"))?;
+        let mut table =
+            tx.open_table(TableDefinition::<&[u8], &[u8]>::new("private-objects-v3"))?;
         let quota = key(b'q', &[]);
         let next = key(b'n', &[]);
         let mut charged = word(&table, &quota)?.unwrap_or(2 + 8);
@@ -84,11 +90,16 @@ pub fn seed(path: &Path, offset: u64, bytes: u64, programs: &[Program]) -> Resul
             let version = store.put(&program.bytes);
             let records = store.records(&version);
             let manifest = records[b"head".as_slice()].clone();
-            let current = table.get(key(b'h', &object.to_be_bytes()).as_slice())?.map(|v| v.value().to_vec());
+            let current = table
+                .get(key(b'h', &object.to_be_bytes()).as_slice())?
+                .map(|v| v.value().to_vec());
             let revision = match &current {
                 None => {
                     if number != object {
-                        return Err(format!("object {object} is missing but numbers run to {number}").into());
+                        return Err(format!(
+                            "object {object} is missing but numbers run to {number}"
+                        )
+                        .into());
                     }
                     number += 1;
                     1
@@ -98,7 +109,9 @@ pub fn seed(path: &Path, offset: u64, bytes: u64, programs: &[Program]) -> Resul
                         return Err("retained head has an unexpected shape".into());
                     }
                     if u64::from_le_bytes(current[48..].try_into()?) != program.parent {
-                        return Err(format!("program {object} is installed under another parent").into());
+                        return Err(
+                            format!("program {object} is installed under another parent").into(),
+                        );
                     }
                     if current[8..40] == manifest[..] {
                         continue; // Same bytes: nothing to republish.
@@ -146,14 +159,20 @@ pub fn seed(path: &Path, offset: u64, bytes: u64, programs: &[Program]) -> Resul
 /// manifest: inline bytes, or the first chunk. Installation only ever
 /// replaces programs.
 fn is_program(table: &Table<&[u8], &[u8]>, manifest: &[u8]) -> Result<bool> {
-    let record = table.get(key(b'm', manifest).as_slice())?.ok_or("retained head names a missing manifest")?;
+    let record = table
+        .get(key(b'm', manifest).as_slice())?
+        .ok_or("retained head names a missing manifest")?;
     let encoded = record.value().to_vec();
     drop(record);
     let head = match encoded.first() {
         Some(0) => encoded.get(17..21).map(<[u8]>::to_vec),
         Some(1) => {
-            let digest = encoded.get(17..49).ok_or("manifest shorter than one chunk digest")?;
-            table.get(key(b'c', digest).as_slice())?.map(|chunk| chunk.value()[..4.min(chunk.value().len())].to_vec())
+            let digest = encoded
+                .get(17..49)
+                .ok_or("manifest shorter than one chunk digest")?;
+            table
+                .get(key(b'c', digest).as_slice())?
+                .map(|chunk| chunk.value()[..4.min(chunk.value().len())].to_vec())
         }
         _ => None,
     };

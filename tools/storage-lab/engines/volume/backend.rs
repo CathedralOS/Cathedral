@@ -1,5 +1,6 @@
-//! File-length semantics inside fixed capacity. Growth is zeroed and length is
-//! durably mirrored before exposing new space; underlying image size never changes.
+//! File-length semantics inside fixed capacity. The engine's layout length is
+//! durably mirrored in the envelope; the underlying image size never changes and
+//! no range is zeroed, because the engine never reads space it has not written.
 use super::{
     header::{DATA_START, Header},
     region::{Region, invalid},
@@ -113,12 +114,7 @@ impl StorageBackend for Backend {
             .checked_add(1)
             .ok_or_else(|| invalid("generation exhausted"))?;
         let result = (|| {
-            let zeros = [0; 64 * 1024];
-            for offset in (state.header.length..length).step_by(zeros.len()) {
-                let count = (length - offset).min(zeros.len() as u64) as usize;
-                self.region.write(DATA_START + offset, &zeros[..count])?;
-            }
-            // Covers zeroing and any earlier engine writes before persisting length.
+            // Earlier engine writes reach the device before the length that keeps them.
             self.region.sync()?;
             self.region.publish_header(&header)
         })();

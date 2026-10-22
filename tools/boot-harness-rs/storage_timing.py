@@ -13,7 +13,6 @@ PAIRS = {
     'provider-end': ('provider-begin', 'provider request'),
     'publish-begin': ('collect-begin', 'collection'),
     'committed': ('commit-begin', 'commit'),
-    'extent-end': ('extent-begin', 'extent growth'),
 }
 
 
@@ -21,10 +20,8 @@ def provider_samples(serial):
     """One serialized provider, including nested phases; never join matrix CPU clocks."""
     samples = []
     pending = {}
-    begins = {'provider-begin': 'provider', 'extent-begin': 'extent',
-              'collect-begin': 'collection', 'commit-begin': 'commit'}
-    ends = {'provider-end': 'provider', 'extent-end': 'extent',
-            'publish-begin': 'collection', 'committed': 'commit'}
+    begins = {'provider-begin': 'provider', 'collect-begin': 'collection', 'commit-begin': 'commit'}
+    ends = {'provider-end': 'provider', 'publish-begin': 'collection', 'committed': 'commit'}
     for line in serial.replace('Cathedral Rust lab: ', '').splitlines():
         match = re.search(r'STORAGE_TRACE (\S+) ([\d ]+)$', line)
         if not match:

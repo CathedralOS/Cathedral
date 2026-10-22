@@ -28,17 +28,3 @@ pub fn report(phase: &str) {
     .unwrap();
     cathedral_user_runtime::write(&line.bytes[..line.len]).unwrap();
 }
-
-/// Extent growth can zero many sectors before a commit can finish.
-pub fn extent(_change: cathedral_storage_engine::ExtentChange) {
-    #[cfg(feature = "trace-storage")]
-    cathedral_user_runtime::time::storage_trace(
-        if _change.completed {
-            "extent-end"
-        } else {
-            "extent-begin"
-        },
-        _change.old,
-        _change.new,
-    );
-}

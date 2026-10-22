@@ -11,12 +11,11 @@ fn cache_bytes(heap: usize) -> usize {
 }
 pub fn open() -> cathedral_storage_engine::redb::Database {
     let disk = cathedral_ata_pio::Ata::open().unwrap();
-    let db = cathedral_storage_engine::open_observed(
+    let db = cathedral_storage_engine::open(
         disk,
         4096,
         8 * 1024 * 1024,
         cache_bytes(crate::HEAP.stats().capacity),
-        crate::metrics::extent,
     )
     .unwrap();
     cathedral_database_objects::Store::open(&db).unwrap();

@@ -147,8 +147,10 @@ record volume ID, version, geometry, formatting state and logical engine length.
 Formatting requires blank assigned space; ready is published only after durable
 engine initialization. Opening refuses unsupported, unfinished or invalid volumes
 without creating a replacement database. Native-image checks cover exclusive ownership,
-capacity refusal, reopen and preservation of neighbouring ranges; 939 simulated cuts
-exercise formatting, publication and compaction with logical-length changes. This adds no GPT/EFI,
+capacity refusal, reopen and preservation of neighbouring ranges; 501 simulated cuts
+exercise formatting, publication and compaction with logical-length changes. The
+engine owns the whole assigned region from format: a length change publishes the
+envelope and nothing else, so no range is zeroed at runtime. This adds no GPT/EFI,
 installer or accepted disk ABI.
 
 The [shared volume boundary](platform/libraries/storage-volume/CHARTER.md) now has

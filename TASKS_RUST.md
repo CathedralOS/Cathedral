@@ -1,10 +1,12 @@
 # Rust reference OS: tasks and handoff
 
-Updated 2026-10-21 (local date). Current milestone: **bounded collection
-workspace, one refresh per nested binding and a long-session soak**, on baseline
-`7697b70e` (fresh lab on every F5 launch). Entering the fourth nested desktop
-now takes about two seconds per step instead of five; the newest section at the
-end records the measurements, the provider heap sizing and the open items.
+Updated 2026-10-21 (local date). Current milestone: **the engine owns its region
+from format**, on baseline `6c27d97d` (bounded collection workspace, one refresh
+per nested binding and a long-session soak). Entering the fourth nested desktop
+takes about two seconds per step instead of five, and the first user creation on
+a fresh lab no longer zeroes a megabyte and a half of disk; the two newest
+sections at the end record the measurements, the provider heap sizing and the
+open items.
 Saved-state testing is an explicit launch choice. The section before it
 distinguishes current-program four-level verification from failures in
 retained executable snapshots.
@@ -4825,3 +4827,69 @@ Next, in order:
    that fills a root (larger notes, more users) would exercise it live.
 6. The soak samples the provider's heap only. Kernel task-slot, frame and grant
    accounting per cycle would turn the host-side cycle time into evidence.
+
+## The engine owns its region from format (2026-10-21)
+
+Baseline: `6c27d97d`. The owner asked why the storage engine's extent grew at
+runtime at all, since the provider is handed one fixed region and Cathedral's
+attenuation pattern is exactly that: you get this much, manage inside it. It
+grew because redb thinks it writes an ordinary file, and the adapter turned
+each file extension into a zeroing pass over the newly claimed range, 3,300
+sectors and 0.8 s on the first user creation.
+
+The region is now the engine's from format and nothing is zeroed at runtime.
+redb still keeps a layout length and, at open, requires the backend to report
+exactly the length it stored, so the envelope keeps mirroring that length: a
+change flushes earlier engine writes, then publishes and flushes both envelope
+copies, and writes nothing else. Zeroing was never a redb requirement. The
+engine never reads space it has not written, and after an unclean stop it
+rebuilds its allocators from its trees rather than trusting region headers, so
+the bytes a regrown range hands back may be whatever the engine last wrote
+there. Pinning the reported length to the capacity was considered and rejected:
+redb shrinks its layout at commit whenever the last region's trailing free
+space exceeds half, with a crate-private policy, and a stored layout that
+differs from the reported length sends every open through its recovery path.
+Mirroring the layout keeps every open clean.
+
+Changed: [the guest adapter](source-rs/platform/libraries/storage-volume/engine/backend.rs)
+and [the host adapter](tools/storage-lab/engines/volume/backend.rs) publish the
+envelope only; the extent observer, `open_observed`, the provider's extent
+trace and the timing tools' extent phase are gone. The guest adapter's growth
+test now counts the exact device operations of a length change (one flush, two
+envelope writes, two flushes) and proves engine bytes untouched across shrink
+and regrowth; the host proof checks the same and its crash-cut census fell from
+939 to 501 cuts because a length change has fewer operations to cut.
+
+Measurements, host-observed milliseconds on the fresh boot of
+`desktop_test.py --latency --nested-depth 4 --trace-storage`, before and after:
+
+| Step | Observed | Provider CPU |
+| --- | --- | --- |
+| create-user (first, grows the layout) | 1,143 to 350 | 1,004 to 90 |
+| enter-user | 1,096 to 1,014 | 580 to 514 |
+| depth-1 launch picker | 2,021 to 1,652 | 1,414 to 1,104 |
+| depth-4 launch picker | 3,337 to 3,249 | 1,486 to 1,493 |
+
+No `extent` trace appears in the new run. Every other step moved within host
+variation in both directions; typing stayed at about 125 ms per key. An
+eight-cycle soak at depth two ran 5.1 to 5.5 s per cycle after its first, with
+the provider heap peaking at 374,908 of 524,288 bytes and no failure marker.
+Artifacts: `build/boot-harness-rs/desktop/20261022T033219328260Z` (latency),
+`20261022T033652312438Z` (soak), `20261022T033332334361Z` (four levels under
+pointer stress); logs `build/suite5-*.log`.
+
+Verification: guest adapter tests (4), storage-lab host tests (38) and the
+volume crash-cut proof; workspace `cargo test --locked` (261); harness Python
+tests; clippy for the provider and adapter; `check-userspace`; formatting and
+whitespace checks. Guest, on disposable media: the volume transport proof, the
+funded-heap database proof, `objects_test.py --retention`,
+`matrix_database_test.py`, the plain default desktop with host verification,
+four-level latency on fresh and cold boots, four nested desktops under pointer
+stress with cold reopen, and the eight-cycle soak.
+
+Next: the fresh-boot entry cost is now the nested template closure installed
+at each level's first launch (nine subtree copies, two copies and two named
+creations per level, 1.1 to 1.5 s of provider CPU). Whether that closure
+should be seeded or shared is an owner-level question about what a Nested
+instance owns; measure the copy work and ask before changing it. Bulk program
+reads and the per-hop event-loop cost remain as recorded in the previous entry.

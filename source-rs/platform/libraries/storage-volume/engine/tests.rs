@@ -66,7 +66,7 @@ fn fixture() -> (Backend<Disk>, Disk) {
     (Backend::new(disk.clone(), 512, header), disk)
 }
 #[test]
-fn growth_is_zeroed_mirrored_and_confined_and_invalid_requests_do_no_io() {
+fn growth_publishes_only_the_envelope_and_invalid_requests_do_no_io() {
     let (backend, mut disk) = fixture();
     for length in [0, u64::MAX] {
         assert!(backend.set_len(length).is_err());
@@ -76,14 +76,17 @@ fn growth_is_zeroed_mirrored_and_confined_and_invalid_requests_do_no_io() {
     assert_eq!(disk.0.lock().unwrap().calls, 0);
     backend.set_len(16385).unwrap();
     assert_eq!(backend.len().unwrap(), 16385);
+    // One flush of earlier engine writes, then each envelope copy written and flushed.
+    assert_eq!(disk.0.lock().unwrap().calls, 1 + 2 * (8 + 1));
     let header = inspect(&mut BlockRegion::new(&mut disk, 512, 4 * 1024 * 1024).unwrap()).unwrap();
     assert_eq!(header.length, 16385);
     backend.set_len(8193).unwrap();
+    assert!(backend.read(8193, &mut [0]).is_err());
     backend.set_len(16385).unwrap();
     let s = disk.0.lock().unwrap();
     let start = 512 + DATA_START as usize;
-    assert!(s.bytes[start..start + 8192].iter().all(|b| *b == 0xa7));
-    assert!(s.bytes[start + 8192..start + 16385].iter().all(|b| *b == 0));
+    // Engine bytes are never zeroed or otherwise touched by a length change.
+    assert!(s.bytes[start..start + 16385].iter().all(|b| *b == 0xa7));
     assert!(
         s.bytes[..512]
             .iter()

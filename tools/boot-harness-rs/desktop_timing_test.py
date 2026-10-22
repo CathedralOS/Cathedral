@@ -13,14 +13,14 @@ INPUT_TRACE notes-key 13 50''')
         self.assertEqual([s['guest_tick'] for s in samples], [10, 11, 12, 13])
         self.assertEqual([s['account_cpu_us'] for s in samples], [5000, 100, 9000, 50])
 
-    def test_extent_is_nested_in_provider_and_io_belongs_to_matching_request(self):
-        samples = storage_samples('''Cathedral Rust lab: STORAGE_TRACE provider-begin 0 13 10 100
-STORAGE_TRACE nested-send 0 269 11 900
-STORAGE_TRACE extent-begin 4096 8192 12 200
-STORAGE_TRACE extent-end 4096 8192 15 500
-STORAGE_TRACE ata-io 0 13 4 9 3 2 18
-STORAGE_TRACE provider-end 0 13 17 800''')
-        self.assertEqual([s['phase'] for s in samples], ['extent', 'provider'])
+    def test_collection_is_nested_in_provider_and_io_belongs_to_matching_request(self):
+        samples = storage_samples('''Cathedral Rust lab: STORAGE_TRACE provider-begin 0 3 10 100
+STORAGE_TRACE nested-send 0 259 11 900
+STORAGE_TRACE collect-begin 0 3 12 200
+STORAGE_TRACE publish-begin 0 3 15 500
+STORAGE_TRACE ata-io 0 3 4 9 3 2 18
+STORAGE_TRACE provider-end 0 3 17 800''')
+        self.assertEqual([s['phase'] for s in samples], ['collection', 'provider'])
         self.assertEqual(samples[0]['cpu_us'], 300)
         self.assertEqual(samples[1]['guest_ticks'], 7)
         self.assertEqual(samples[1]['read_sectors'], 4)

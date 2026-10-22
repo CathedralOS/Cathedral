@@ -174,17 +174,18 @@ fn refusals_and_bounds(baseline: &[u8]) -> Result<()> {
     assert!(backend.read(u64::MAX, &mut [0]).is_err());
     assert!(backend.set_len(header.capacity() + 1).is_err());
     assert!(device.operations().is_empty());
-    // Standalone adapter shrink/regrow must zero newly exposed bytes.
+    // Standalone adapter shrink/regrow changes only the envelope: the engine
+    // bytes it hands back are whatever the engine last wrote there.
     backend.write(0, &[0xab; 4096])?;
     backend.set_len(1024)?;
+    assert!(backend.read(1024, &mut [0]).is_err());
     backend.set_len(4096)?;
     let mut bytes = [0; 4096];
     backend.read(0, &mut bytes)?;
-    assert!(bytes[..1024].iter().all(|b| *b == 0xab));
-    assert!(bytes[1024..].iter().all(|b| *b == 0));
+    assert!(bytes.iter().all(|b| *b == 0xab));
     guards(&device.crash());
     println!(
-        "VERIFIED: corrupt/unknown/incomplete/truncated refusal, single-copy recovery, bounds and zero regrowth"
+        "VERIFIED: corrupt/unknown/incomplete/truncated refusal, single-copy recovery, bounds and untouched regrowth"
     );
     Ok(())
 }

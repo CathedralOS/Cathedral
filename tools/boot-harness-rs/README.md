@@ -474,7 +474,7 @@ No close deadline or refusal policy is changed by tracing.
 Host observations include input spacing, QMP and screenshot polling; they are
 upper bounds, not service CPU benchmarks or latency guarantees. Storage samples
 include provider CPU, nominal 100-Hz ticks, sector/flush/poll counts and nested
-collection/commit/extent phases. Nested phases must not be added to the enclosing
+collection/commit phases. Nested phases must not be added to the enclosing
 provider total. The collection span includes the cheap ledger check when
 automatic maintenance is skipped below pressure. Per-step `input` observations
 record source presses, successive matrix receipt ticks, Notes receipt and Notes

@@ -1,11 +1,9 @@
 //! Host fixture preparation for the guest path/configuration proof. Call only on
 //! a disposable image copy. No program bytes or application state are replaced.
 use super::*;
-use cathedral_desktop_matrix_contracts::matrix;
 use crate::chunks::{Layout, Policy, Store};
-use cathedral_platform_contracts::{
-    storage::metadata::{self, Metadata},
-};
+use cathedral_desktop_matrix_contracts::matrix;
+use cathedral_platform_contracts::storage::metadata::{self, Metadata};
 
 pub fn prepare(path: &Path, offset: u64, bytes: u64, missing: bool) -> Result<()> {
     let db = open(Region::new(Arc::new(Image::open(path)?), offset, bytes)?)?;

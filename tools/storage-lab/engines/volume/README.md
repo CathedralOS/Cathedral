@@ -146,18 +146,20 @@ sync does the formatter publish ready. Interrupted format may therefore leave a
 refused incomplete volume or a valid ready volume, including a lost acknowledgement.
 There is no automatic resume, erase or repair command.
 
-redb expects a growable file; the assigned disk region has fixed capacity. Its
-logical length is therefore envelope metadata, not the raw image's file length.
-On growth, the backend checks capacity, zeros the newly exposed range, syncs and
-durably publishes the new length before returning to the engine. On shrink it
-syncs prior engine writes and publishes the shorter length without truncating the
-physical image. Subsequent regrowth zeroes that range again. Reads/writes must fit
-the current logical length, and checked translation keeps them inside the assigned
-range. A ready engine cannot be resized to zero.
+redb expects a growable file; the assigned disk region has fixed capacity and is
+the engine's from format. redb still stores a layout length and requires the
+backend to report exactly that length, so the envelope mirrors it: on a change
+the backend checks capacity, syncs prior engine writes and durably publishes the
+new length, without truncating the physical image and without zeroing anything.
+The engine never reads space it has not written, and after an unclean stop it
+rebuilds its allocators from its trees, so the bytes a regrown range hands back
+are whatever the engine last wrote there. Reads/writes must fit the current
+length, and checked translation keeps them inside the assigned range. A ready
+engine cannot be resized to zero.
 
 Length updates add three syncs and two header writes, beyond redb's own durability
-work. Whole-range blank checks and growth zeroing are deliberately conservative.
-This is a correctness baseline, not a tuned allocation or installation strategy.
+work. The whole-range blank check at format is deliberately conservative. This is
+a correctness baseline, not a tuned allocation or installation strategy.
 Capacity must account for engine reserve and transient allocation: the initial
 8 MiB fixture could not admit the 2 MiB payload workload, while the 24 MiB fixture
 does. Payload size alone does not predict required engine capacity.

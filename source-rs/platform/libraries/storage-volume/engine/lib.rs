@@ -20,27 +20,11 @@ pub fn capacity_refusal(error: redb::Error) -> bool {
 }
 use redb::{Database, ReadableDatabase, ReadableTable, TableDefinition};
 
-/// Optional local diagnostics around engine extent changes. No device authority.
-#[derive(Clone, Copy)]
-pub struct ExtentChange {
-    pub old: u64,
-    pub new: u64,
-    pub completed: bool,
-}
 pub fn open<D: Device + Send + 'static>(
-    device: D,
-    start: u64,
-    bytes: u64,
-    cache: usize,
-) -> Result<Database, String> {
-    open_observed(device, start, bytes, cache, |_| {})
-}
-pub fn open_observed<D: Device + Send + 'static>(
     mut device: D,
     start: u64,
     bytes: u64,
     cache: usize,
-    observe: fn(ExtentChange),
 ) -> Result<Database, String> {
     let header =
         inspect(&mut BlockRegion::new(&mut device, start, bytes).map_err(|e| e.to_string())?)
@@ -53,7 +37,7 @@ pub fn open_observed<D: Device + Send + 'static>(
     // Nonempty invalid engine bytes are rejected rather than reformatted.
     let db = Database::builder()
         .set_cache_size(cache)
-        .create_with_backend(backend::Backend::new(device, start, header).with_observer(observe))
+        .create_with_backend(backend::Backend::new(device, start, header))
         .map_err(|e| e.to_string())?;
     {
         let read = db.begin_read().map_err(|e| e.to_string())?;
