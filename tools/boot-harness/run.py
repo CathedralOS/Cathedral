@@ -125,8 +125,16 @@ def check_boot_milestones(output):
     observed = re.search(rb'(?:^|\n)Root read\r?\n', after_root)
     if observed is None:
         raise ValueError('Expected admitted firmware root snapshot after root location.')
-    if re.search(rb'(?:^|\n)Tables retained\r?\n', after_root[observed.end():]) is None:
+    after_observed = after_root[observed.end():]
+    retained = re.search(rb'(?:^|\n)Tables retained\r?\n', after_observed)
+    if retained is None:
         raise ValueError('Expected complete reachable firmware-table retention after root read.')
+    after_retained = after_observed[retained.end():]
+    retired = re.search(rb'(?:^|\n)Mapping retired\r?\n', after_retained)
+    if retired is None:
+        raise ValueError('Expected completed mapping retirement and original root readback after table retention.')
+    if re.search(rb'(?:^|\n)Mapping checked\r?\n', after_retained[retired.end():]) is None:
+        raise ValueError('Expected mapped writes and physical readback after mapping retirement.')
 
 
 def main(arguments=None):
@@ -139,7 +147,7 @@ def main(arguments=None):
                         help='run ordinary omega update for dependency review before building')
     parser.add_argument('--build-dir', type=Path, default=ROOT / 'build/boot-harness')
     parser.add_argument('--smoke', action='store_true',
-                        help='require ordered boot milestones through Tables retained')
+                        help='require ordered boot milestones through Mapping checked')
     parser.add_argument('--timeout', type=float, default=30)
     options = parser.parse_args(arguments)
     if options.timeout <= 0:

@@ -20,12 +20,15 @@ machine main() crashes Trap {
     let global_pages: bool = supported(2147549185, 160, 3328);
     let five_levels: bool = supported(2147549185, 4128, 3328);
     let tagged_contexts: bool = supported(2147549185, 131104, 3328);
+    let control_flow_enforcement: bool = supported(2147549185, 8388640, 3328);
+    let supervisor_keys: bool = supported(2147549185, 16777248, 3328);
     let no_long_enable: bool = supported(2147549185, 32, 3072);
     let no_long_active: bool = supported(2147549185, 32, 2304);
     let no_execute_disable: bool = supported(2147549185, 32, 1280);
     transition ready && unrelated && !no_protection && !no_write_protection &&
         !no_paging && !no_pae && !global_pages && !five_levels &&
-        !tagged_contexts && !no_long_enable && !no_long_active && !no_execute_disable {
+        !tagged_contexts && !control_flow_enforcement && !supervisor_keys &&
+        !no_long_enable && !no_long_active && !no_execute_disable {
         true -> done()
         false -> wrong()
     }

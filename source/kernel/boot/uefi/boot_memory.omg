@@ -8,9 +8,15 @@ public boundary trait BootMemorySupply: ResourceProfileSupply<BootMemory> {}
 
 // Admitted only for the initial ConventionalMemory root retained after the
 // successful firmware handoff and its conserved children. The boot mapping
-// remains live, CPU-readable/writable and exclusive for the idle kernel's
-// lifetime; no remap, firmware service or device loan may revoke it. This
-// describes backing supply, not initialized contents or a second root.
+// remains live and CPU-readable/writable. Stable access is exclusive only
+// during construction and again after synchronous mapping retirement: no
+// physical Stable loan crosses the temporary virtual alias, and replacement
+// tables cease to use this supply when their Resident is extracted. Hardware
+// then accesses them under HardwareTableSupply's External-only phase. The
+// initial RAM and its identity aliases have compatible effective WB cache type
+// for that closed transaction; neither Granted nor ConventionalMemory alone
+// proves it. No firmware service or device loan may revoke the backing. This
+// describes phase-bounded backing supply, not contents or a second root.
 BootMemoryProfileProvider satisfies BootMemorySupply {
     machine profile(storage: &Extent in Granted) -> ResourceProfile {
         let services: [u64; 32];

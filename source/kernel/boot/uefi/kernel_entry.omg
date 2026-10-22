@@ -11,13 +11,8 @@ use memory_map::firmware_root;
 use boot_memory;
 use paging_handoff;
 use firmware_tables;
-
-data BootPageTables {
-    leading: Extent in Granted & Vacant;
-    target_padding: Extent in Granted & Vacant;
-    target: Extent in Granted & Resident<KernelPagePlacement, KernelPage>;
-    reservation: PageTableReservation;
-}
+use mapping_exercise;
+use mapping_activation;
 
 data KernelState {
     entered: bool;
@@ -71,11 +66,14 @@ BootVacantStorageProvider satisfies VacantContentTransfer {
 machine Kernel::enter(context: &mut KernelState, image: Extent in Granted,
                       initial_storage: Extent in Granted)
 requires addr::Bound == 18446744073709551616
-reaches PortIo + MachineControl + VacantContentTransfer + ResourceProfileSupply + PlacementLifecycle + ExtentRootProvider
+reaches PortIo + MachineControl + VacantContentTransfer + ResourceProfileSupply + PlacementLifecycle + ExtentRootProvider + BootVirtualReservation + BootTranslation
 invokes ExtentRootProvider;
 invokes VacantContentTransfer;
 invokes ResourceProfileSupply;
 invokes PlacementLifecycle;
+invokes BootVirtualReservation;
+invokes BootTranslation;
+crashes Abort
 {
     // The installed occurrence receives fresh zero state, not firmware data or
     // a globally addressable record. Keep its borrow with the retained roots.
@@ -835,7 +833,151 @@ invokes PlacementLifecycle;
         asm { out 1016, 100 }
         asm { out 1016, 13 }
         asm { out 1016, 10 }
-        transition { _ -> retain_firmware_tables(context, image, pair, tables, inventory) }
+        transition { _ -> mapping(context, image, pair, tables, inventory) }
+    }
+
+    state mapping(context: &mut KernelState, image: Extent in Granted,
+                  pair: KernelMemoryPair, tables: BootPageTables,
+                  inventory: FirmwareTableInventory)
+    requires addr::Bound == 18446744073709551616
+    {
+        // Per-occurrence root admission: issue a fresh claim in the continuing
+        // kernel's VIRTUAL namespace, excluding every live image, stack,
+        // callback and other claimant. Firmware's old identity mapping does
+        // not own this namespace. This grant supplies no physical backing;
+        // the independently retained source page supplies that separately.
+        // Neither this address's geometry nor reserve below proves issuance.
+        let reservation: Extent in Granted = ExtentRootProvider::grant(
+            Extent { base: 0x40000000 as addr, length: 4096 }
+        );
+        let destination: Extent in Granted & BootVirtualDestination = BootVirtualReservation::reserve(reservation);
+        let attempt: MappingAttempt = MappingExercise::run(tables, destination, &inventory, context.firmware_root);
+        let retired: bool = MappingExercise::retired(&attempt);
+        let verified: bool = MappingExercise::verified(&attempt);
+        // Observe independently of the provider's Boolean and private saved
+        // CR3 word. Only a returned activation transaction can reach this marker.
+        let mut observed: u64 = 0;
+        asm { read_cr3 observed }
+        transition retired && (observed & 0x000FFFFFFFFFF000) == context.firmware_root {
+            true -> mapping_retired_wait(context, image, pair, inventory, attempt, verified, 1000000)
+            _ -> retain_mapping(context, image, pair, inventory, attempt)
+        }
+    }
+
+    state mapping_retired_wait(context: &mut KernelState, image: Extent in Granted,
+                               pair: KernelMemoryPair, inventory: FirmwareTableInventory,
+                               attempt: MappingAttempt, verified: bool, remaining: u64)
+    requires addr::Bound == 18446744073709551616
+    {
+        let mut status: u8 = 0;
+        asm { in status, 1021 }
+        transition (status & 32) != 0 {
+            true -> mapping_retired_report(context, image, pair, inventory, attempt, verified)
+            _ -> mapping_retired_retry(context, image, pair, inventory, attempt, verified, remaining)
+        }
+    }
+
+    state mapping_retired_retry(context: &mut KernelState, image: Extent in Granted,
+                                pair: KernelMemoryPair, inventory: FirmwareTableInventory,
+                                attempt: MappingAttempt, verified: bool, remaining: u64)
+    requires addr::Bound == 18446744073709551616
+    {
+        transition remaining > 1 {
+            true -> mapping_retired_wait(context, image, pair, inventory, attempt, verified, remaining - 1)
+            _ -> retain_mapping(context, image, pair, inventory, attempt)
+        }
+    }
+
+    state mapping_retired_report(context: &mut KernelState, image: Extent in Granted,
+                                 pair: KernelMemoryPair, inventory: FirmwareTableInventory,
+                                 attempt: MappingAttempt, verified: bool)
+    requires addr::Bound == 18446744073709551616
+    {
+        asm { out 1016, 77 } // Mapping retired
+        asm { out 1016, 97 }
+        asm { out 1016, 112 }
+        asm { out 1016, 112 }
+        asm { out 1016, 105 }
+        asm { out 1016, 110 }
+        asm { out 1016, 103 }
+        asm { out 1016, 32 }
+        asm { out 1016, 114 }
+        asm { out 1016, 101 }
+        asm { out 1016, 116 }
+        asm { out 1016, 105 }
+        asm { out 1016, 114 }
+        asm { out 1016, 101 }
+        asm { out 1016, 100 }
+        asm { out 1016, 13 }
+        asm { out 1016, 10 }
+        transition { _ -> mapping_checked(context, image, pair, inventory, attempt, verified) }
+    }
+
+    state mapping_checked(context: &mut KernelState, image: Extent in Granted,
+                          pair: KernelMemoryPair, inventory: FirmwareTableInventory,
+                          attempt: MappingAttempt, verified: bool)
+    requires addr::Bound == 18446744073709551616
+    {
+        transition verified {
+            true -> mapping_wait(context, image, pair, inventory, attempt, 1000000)
+            _ -> retain_mapping(context, image, pair, inventory, attempt)
+        }
+    }
+
+    state mapping_wait(context: &mut KernelState, image: Extent in Granted,
+                       pair: KernelMemoryPair, inventory: FirmwareTableInventory,
+                       attempt: MappingAttempt, remaining: u64)
+    requires addr::Bound == 18446744073709551616
+    {
+        let mut status: u8 = 0;
+        asm { in status, 1021 }
+        transition (status & 32) != 0 {
+            true -> mapping_report(context, image, pair, inventory, attempt)
+            _ -> mapping_retry(context, image, pair, inventory, attempt, remaining)
+        }
+    }
+
+    state mapping_retry(context: &mut KernelState, image: Extent in Granted,
+                        pair: KernelMemoryPair, inventory: FirmwareTableInventory,
+                        attempt: MappingAttempt, remaining: u64)
+    requires addr::Bound == 18446744073709551616
+    {
+        transition remaining > 1 {
+            true -> mapping_wait(context, image, pair, inventory, attempt, remaining - 1)
+            _ -> retain_mapping(context, image, pair, inventory, attempt)
+        }
+    }
+
+    state mapping_report(context: &mut KernelState, image: Extent in Granted,
+                         pair: KernelMemoryPair, inventory: FirmwareTableInventory, attempt: MappingAttempt)
+    requires addr::Bound == 18446744073709551616
+    {
+        asm { out 1016, 77 } // Mapping checked
+        asm { out 1016, 97 }
+        asm { out 1016, 112 }
+        asm { out 1016, 112 }
+        asm { out 1016, 105 }
+        asm { out 1016, 110 }
+        asm { out 1016, 103 }
+        asm { out 1016, 32 }
+        asm { out 1016, 99 }
+        asm { out 1016, 104 }
+        asm { out 1016, 101 }
+        asm { out 1016, 99 }
+        asm { out 1016, 107 }
+        asm { out 1016, 101 }
+        asm { out 1016, 100 }
+        asm { out 1016, 13 }
+        asm { out 1016, 10 }
+        transition { _ -> retain_mapping(context, image, pair, inventory, attempt) }
+    }
+
+    state retain_mapping(context: &mut KernelState, image: Extent in Granted,
+                         pair: KernelMemoryPair, inventory: FirmwareTableInventory, attempt: MappingAttempt)
+    requires addr::Bound == 18446744073709551616
+    {
+        asm { hlt }
+        transition { _ -> retain_mapping(context, image, pair, inventory, attempt) }
     }
 
     state retain_firmware_tables(context: &mut KernelState, image: Extent in Granted,

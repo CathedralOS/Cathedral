@@ -45,7 +45,8 @@ Without `--smoke`, QEMU's serial console is interactive. With it, the guest
 runs headlessly for at most `--timeout` seconds (default 30), and this run's
 serial log must contain the greeting followed by a complete numeric
 `Owned N MiB` line, then `Boot map ready`, `Kernel entered`, `Memory split`, `Memory checked`,
-`Memory paired`, `Page ready`, `Tables ready`, `CPU checked`, `Root located`, `Root read`, and `Tables retained`.
+`Memory paired`, `Page ready`, `Tables ready`, `CPU checked`, `Root located`, `Root read`,
+`Tables retained`, `Mapping retired`, and `Mapping checked`.
 The boot-map marker requires the kernel to copy the final memory map from the
 explicit initial-storage packet and check its format, byte count, descriptor
 stride, checksum, original storage base and image-prefix correspondence. It
@@ -97,6 +98,14 @@ Every failure retains the incomplete inventory without emitting that marker.
 The backing, identity mapping and quiescent-topology premises are explicit
 boundary admissions, not facts established by descriptor bytes. This marker
 does not mean the replacement hierarchy is active.
+`Mapping retired` follows a closed temporary CR3 installation, mapped-page probe
+and exact restoration, with an independent root readback by the caller.
+`Mapping checked` additionally requires successful mapped writes of 73 and 97
+and physical resident readback after retirement. Firmware translations and every
+storage descendant remain retained. The live CPU profile is rechecked with
+interrupts disabled. This is a synchronous uniprocessor single-page transaction,
+not a multi-page or remote-TLB completion protocol. Virtual-namespace issuance,
+effective cache compatibility and backing remain explicit provider admissions.
 All storage descendants remain retained. A split-only, single-resident, or
 paired-allocation-only or page-only boot does not satisfy this acceptance. Missing, truncated or
 out-of-order markers fail.
@@ -176,3 +185,27 @@ omega run --both tools/boot-harness/table-walk/main.omg
 
 Both engines must exit 0. These decisions grant no backing or table authority;
 the UEFI boot separately acquires and retains each reached physical frame.
+
+## Path-copy policy and retirement control
+
+`table-clone/main.omg` exercises the actual `core::page_table_clone` operation:
+absent paths, 4-KiB/2-MiB/1-GiB paths, large-leaf PAT conversion, read-only
+parent ceilings, NX and supervisor/user preservation, unchanged off-path words,
+and malformed geometry or supplied-child links. This is numeric policy, not a
+root grant or hardware activation.
+
+```text
+omega update --project tools/boot-harness/table-clone
+omega run --both tools/boot-harness/table-clone/main.omg
+```
+
+Both engines must exit 0. For the source-level retirement control, copy the
+authored source tree to an isolated scratch project, change only the final
+mapped-probe expectation in `mapping_activation.omg` from `first == 73` to
+`first == 74`, complete ordinary package review, then build and boot a fresh
+image. The writes and retirement code stay unchanged. The guest must reach
+`Mapping retired` but never `Mapping checked`; the normal smoke oracle must
+reject that stream for the missing mapped-write/physical-readback marker.
+An old image, an early boot failure or a timeout without retirement does not
+satisfy this control. Do not change the production source to keep the negative
+expectation, or weaken the smoke oracle to accept it as a successful boot.

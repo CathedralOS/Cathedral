@@ -22,7 +22,8 @@ the initialized page and the remaining tail with the context and image.
 
 The fresh-image harness requires `Hello from Omega`, a complete `Owned N MiB`
 line, `Boot map ready`, `Kernel entered`, `Memory split`, `Memory checked`, `Memory paired`,
-`Page ready`, `Tables ready`, `CPU checked`, `Root located`, `Root read`, and `Tables retained`, in that order. The six-marker baseline reported 35 MiB in
+`Page ready`, `Tables ready`, `CPU checked`, `Root located`, `Root read`,
+`Tables retained`, `Mapping retired`, and `Mapping checked`, in that order. The six-marker baseline reported 35 MiB in
 QEMU/OVMF using Omega `9e04918b1d1`. The current source requires Omega's exact address-model
 typing, representation-recast effect tracking and occurrence-local state-prefix
 checking, in addition to the canonical `ProgramStorageEntryNativeProvider`,
@@ -75,7 +76,8 @@ separate backing and lifecycle obligations.
 The intended acceptance is one freshly compiled `uefi_x86_64` image under
 QEMU/OVMF: `Hello from Omega`, successful firmware exit, `Owned N MiB` over
 COM1, then `Boot map ready`, `Kernel entered`, `Memory split`, `Memory checked`, `Memory paired`,
-`Page ready`, `Tables ready`, `CPU checked`, `Root located`, `Root read`, and `Tables retained`
+`Page ready`, `Tables ready`, `CPU checked`, `Root located`, `Root read`,
+`Tables retained`, `Mapping retired`, and `Mapping checked`
 while retaining image, every initial-storage descendant and accounted surviving
 stack storage. `Memory checked` requires common-root reunion after all three partition sizes,
 initialization/readback of 17, write/readback/extraction of 29, and return of the
@@ -351,16 +353,58 @@ maximum resident memory; this is a development-workflow cost, not guest boot tim
 The fresh-allocation StableRW profile is not authority over arbitrary firmware
 addresses.
 
-The proposed 1-GiB virtual address is only a candidate. No virtual destination
-is reserved and no translations are installed. Activation still needs the live
-mapping policy, preserved image/private-stack mappings, a live CPU-profile guarantee,
-hardware-aware table custody for accessed/dirty writes, root installation and
-TLB handling, and an actual mapped read/write witness. The ordinary Stable
-construction loan must end before hardware can walk these pages; a Boolean
-readback result grants none of that authority.
+## Closed mapping activation and retirement
+
+After table retention, `mapping_handoff.omg` snapshots the firmware path to the
+reserved virtual page and `core::page_table_clone` copies only that path into
+the four owned table pages. Off-path translations remain intact, including
+image and private-stack mappings. Splitting large leaves preserves their PAT
+encoding. Making a selected parent writable first pushes its previous read-only
+ceiling into every copied child; supervisor/user and NX ceilings stay on the
+new pointer. Hosted native/Terminal controls exercise these numeric rules.
+
+The root grant beside `Kernel::mapping` explicitly admits a fresh virtual-space
+claim at 1 GiB; it is not a physical-memory grant inferred from an address.
+`BootVirtualReservation` qualifies that already granted claim. The physical
+source page, replacement table allocation and complete firmware inventory stay
+independently owned. Neither numeric layout nor a copied table word grants
+backing, freshness or authority.
+
+Before hardware use, the Stable table-construction loan ends and the table
+resident is extracted. Hardware then accesses the table allocation through
+the admitted External-only table role, permitting accessed/dirty writes without
+pretending those bytes are an immutable Omega resident. The selected closed
+provider additionally admits effective write-back cache compatibility, including
+the physical identity aliases and MTRR/platform effects. A PAT[0] check alone
+does not establish that premise.
+
+`mapping_activation.omg` exclusively borrows the whole `BootMapping` carrier,
+disables interrupts and rechecks the live CR0/CR3/CR4/EFER/PAT profile immediately
+before installation. The supported uniprocessor regime excludes PGE, PCID,
+five-level paging, CET and PKS. MOV CR3 publishes the new root and flushes its
+non-global translations. A temporary External view reads the mapped page,
+writes 73 and 97 to its endpoints, and reads them back. That view ends before
+restoring the exact original CR3 and checking it again. No physical Stable view
+is live across the alias or activation window.
+
+Only a returned, retired transaction and an independent root observation permit
+`Mapping retired`. Physical resident readback after restoration must then find
+73 and 97 before `Mapping checked`. A failed probe must still retire; it cannot
+announce mapped success. All storage descendants and the firmware hierarchy
+remain retained on every normal return. An unrecoverable activation failure
+aborts without returning storage for reuse.
+
+A fresh image produced by Omega's checked interrupt-control realization repair
+reaches all fifteen ordered milestones under QEMU/OVMF. This is one synchronous,
+single-page boot transaction, not a general address-space API, multi-page
+mapping/shootdown protocol, independent backing proof or enabled interrupts.
+The full build's payload-history CPU and memory cost remains a measured compiler
+iteration issue; guest boot time and compiler build time are separate.
+Use an Omega compiler containing `8d202634513c` or later for checked CLI/STI
+native realization; source recognition alone did not support this activation.
 
 The kernel currently retains its context, image and storage children in a halt loop;
-it does not yet install page tables, a general kernel heap, interrupts or a scheduler.
+it does not yet provide a general kernel heap, interrupts or a scheduler.
 This non-returning boot exercises context initialization and lifetime, not
 normal-return cleanup or a returning application's allocation release protocol.
 

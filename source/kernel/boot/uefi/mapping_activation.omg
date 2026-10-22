@@ -1,0 +1,213 @@
+use omega::language::core::assembly;
+use omega::language::core::extent;
+use omega::language::core::layout;
+use core::paging_profile;
+use page_frame;
+use mapping_handoff;
+
+// A virtual reservation is independent of physical source authority. This
+// exact admitted boot occurrence reserves [1GiB, 1GiB+4096) in the continuing
+// kernel's virtual namespace. Firmware's old identity translation there is
+// not ownership of that namespace. Admission asserts no live image, stack,
+// firmware callback or other claimant uses it. Geometry cannot prove freshness.
+domain Extent::BootVirtualDestination established by BootVirtualReservation::reserve;
+
+boundary trait BootVirtualReservation {
+    machine reserve(storage: Extent in Granted) -> Extent in Granted
+    requires addr::Bound == 18446744073709551616
+    ensures result in Granted & BootVirtualDestination,
+        Granted::content(old(&storage)) == Granted::content(&result);
+}
+
+BootstrapVirtualReservationProvider satisfies BootVirtualReservation {
+    machine reserve(storage: Extent in Granted) -> Extent in Granted
+    requires addr::Bound == 18446744073709551616
+    ensures result in Granted,
+        Granted::content(old(&storage)) == Granted::content(&result)
+    {
+        // Qualify the existing namespace grant; this requirement is not an
+        // Extent issuer and cannot manufacture Granted on a fresh result.
+        storage
+    }
+}
+
+// Retained backing for a closed, synchronous, uniprocessor transaction. The
+// caller lends this whole carrier exclusively and receives it back only after
+// the provider has retired every temporary translation. No active handle or
+// mapped view escapes the invocation. This is not a general address-space API.
+// Admission additionally binds this closed artifact's validated path-copy to
+// these exact table/source claims; the structural signature alone does not
+// establish that arbitrary table bytes encode that image. The initial RAM's
+// physical identity aliases and all four replacement table pages must have
+// effective WB cache type, compatible with the new PAT-0 aliases, including
+// MTRR/platform contributions. Granted and ConventionalMemory do not prove
+// that premise. Activation checks PAT[0] itself, not those external conditions.
+data BootMapping {
+    source: Extent in Granted & Resident<KernelPagePlacement, KernelPage>;
+    destination: Extent in Granted & BootVirtualDestination;
+    tables: Extent in Granted & Vacant;
+    firmware_root: u64;
+}
+
+boundary trait BootTranslation {
+    machine exercise(mapping: &mut BootMapping) -> bool
+    requires addr::Bound == 18446744073709551616
+    reaches MachineControl + ResourceProfileSupply
+    crashes Abort;
+}
+
+BootstrapTranslationProvider satisfies BootTranslation {
+    machine exercise(mapping: &mut BootMapping) -> bool
+    requires addr::Bound == 18446744073709551616
+    reaches MachineControl + ResourceProfileSupply
+    crashes Abort
+    { BootstrapTranslationNative::exercise(mapping) }
+}
+
+data BootstrapTranslationNative {}
+
+uefi_x86_64 machine BootstrapTranslationNative::exercise(mapping: &mut BootMapping) -> bool
+requires addr::Bound == 18446744073709551616
+reaches MachineControl + ResourceProfileSupply
+crashes Abort
+    {
+        // No firmware calls or enabled interrupt roots follow this handoff.
+        // Recheck the live CPU regime immediately before switching; an earlier
+        // sampled Boolean is not a guarantee about the activation transition.
+        asm { cli }
+        let mut control0: u64 = 0;
+        let mut control3: u64 = 0;
+        let mut control4: u64 = 0;
+        let mut extended_features: u64 = 0;
+        let mut page_attributes: u64 = 0;
+        let extended_feature_register: u32 = 3221225600;
+        let page_attribute_register: u32 = 631;
+        asm { read_cr0 control0 }
+        asm { read_cr3 control3 }
+        asm { read_cr4 control4 }
+        asm { rdmsr extended_features, extended_feature_register }
+        asm { rdmsr page_attributes, page_attribute_register }
+        let profile: BootstrapPagingProfile = BootstrapPagingProfile {
+            control0: control0, control4: control4, extended_features: extended_features,
+        };
+        let supported: bool = BootstrapPaging::supported(&profile);
+        // New paging pointers and the target leaf select PAT entry zero.
+        // The external admission above still owes the effective cache type
+        // and physical identity-alias compatibility; this test is not that proof.
+        let write_back: bool = (page_attributes & 255) == 6;
+        // Geometry is checked after entry has independently established the
+        // address model. A contract cannot use its own conjunction to justify
+        // forming the partial address-to-count casts inside that conjunction.
+        let root: u64 = mapping.tables.base as u64;
+        transition supported && write_back &&
+            (control3 & 0x000FFFFFFFFFF000) == mapping.firmware_root &&
+            mapping.tables.length == 16384 && root % 4096 == 0 &&
+            root <= 0x000FFFFFFFFFC000 && mapping.source.length == 4096 &&
+            mapping.destination.length == 4096 {
+            true -> install(mapping, control3)
+            _ -> wrong()
+        }
+        state install(mapping: &mut BootMapping, previous: u64) -> bool
+        requires addr::Bound == 18446744073709551616
+        {
+            let root: u64 = mapping.tables.base as u64;
+            // The selected profile has neither PGE nor PCID. MOV CR3 is the
+            // local serializing publication and complete non-global TLB flush.
+            asm { write_cr3 root }
+            let mut installed: u64 = 0;
+            asm { read_cr3 installed }
+            transition installed == root {
+                true -> probe(mapping, previous)
+                _ -> wrong()
+            }
+        }
+        state probe(mapping: &mut BootMapping, previous: u64) -> bool {
+            // This private helper's only admitted invocation is below the
+            // successful installation above. Its view dies on return, even
+            // when a post-install geometry/readback check fails.
+            let verified: bool = MappingAccess::probe(&mut mapping.destination);
+            asm { write_cr3 previous }
+            let mut restored: u64 = 0;
+            asm { read_cr3 restored }
+            transition restored == previous {
+                true -> verified
+                _ -> wrong()
+            }
+        }
+        state wrong() -> bool { crash Abort; }
+}
+
+public data MappedPageMemory {}
+public boundary trait MappedPageSupply: ResourceProfileSupply<MappedPageMemory> {}
+public data MappedPagePlacement {}
+
+// Admitted only for this transaction's exact reserved virtual page after the
+// selected activation occurrence and before retirement. Its backing is the
+// physical page retained in the exclusively borrowed carrier. No physical Stable view is
+// live across this alias, and every mapped view ends before the CR3 restore.
+MappedPageProfileProvider satisfies MappedPageSupply {
+    machine profile(storage: &Extent in Granted) -> ResourceProfile {
+        let services: [u64; 32];
+        let mut transfers: [TransferRule; 16];
+        transfers[0] = TransferRule { width_bits: 64, alignment_bytes: 8 };
+        let mut regions: [ResourceRegion; 32];
+        regions[0] = ResourceRegion {
+            range: RelativeRange { offset: 0, length: storage.length },
+            peer: PeerWritability::HostileShared,
+            stable: StableCapability::None,
+            external: ExternalCapability::Access {
+                read: ExternalReadBehavior::Repeatable, write: true,
+                transfers: TransferRules { entries: transfers, rule_count: 1 },
+            },
+            atomic: AtomicCapability::None,
+            reach: BoundaryReach { services: services, service_count: 0 },
+        };
+        ResourceProfile { regions: regions, region_count: 1 }
+    }
+}
+
+machine MappedPagePlacement::plan(schema: Schema) -> PlacementPlan {
+    let mut fields: [FieldEntry; 64];
+    fields[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    let services: [u64; 32];
+    PlacementPlan {
+        layout: Plan {
+            entries: fields, entry_count: 1, size_fixed: 4096, size_is_dynamic: false, align: 4096,
+        },
+        access: AccessPlan::with(AccessPlan::inaccessible(&schema), schema.fields[0].key,
+            FieldAccess::External { read: ExternalRead::Read, write: true, exposure: Exposure::Exported }),
+        reach: BoundaryReach { services: services, service_count: 0 },
+    }
+}
+
+data MappingAccess {}
+
+// Private implementation detail of BootTranslation's admitted closed body,
+// not a general pre-activation mapping API. No mapped reference is returned.
+machine MappingAccess::probe(destination: &mut Extent in Granted) -> bool
+requires destination in BootVirtualDestination
+ensures destination in BootVirtualDestination
+reaches ResourceProfileSupply
+{
+    transition Placed::view_extent_mut<MappedPagePlacement, KernelPage, MappedPageMemory>(
+        destination
+    ) {
+        PlacementOutcome::Ready { view } -> observe(view)
+        PlacementOutcome::Rejected { returned, reason } -> false
+    }
+    state observe(view: &mut Placed<MappedPagePlacement, KernelPage>) -> bool {
+        let first: u64 = placed_read(&view.words[0]);
+        let last: u64 = placed_read(&view.words[511]);
+        transition first == 0 && last == 0 {
+            true -> write(view)
+            _ -> false
+        }
+    }
+    state write(view: &mut Placed<MappedPagePlacement, KernelPage>) -> bool {
+        placed_write(&mut view.words[0], 73u64);
+        placed_write(&mut view.words[511], 97u64);
+        let first: u64 = placed_read(&view.words[0]);
+        let last: u64 = placed_read(&view.words[511]);
+        first == 73 && last == 97
+    }
+}

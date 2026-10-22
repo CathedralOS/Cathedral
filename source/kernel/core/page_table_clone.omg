@@ -1,0 +1,189 @@
+use x86_page_table;
+use x86_table_walk;
+
+// Numeric path-copying, not a grant or a hardware activation. The boot owner
+// supplies snapshots read through its retained firmware-table grants. Every
+// existing link must name the next supplied page. Only four newly owned table
+// pages are changed; the old hierarchy and all off-path links remain intact.
+public data X86ObservedTablePage {
+    available: bool;
+    address: u64;
+    entries: [u64; 512];
+}
+
+public data X86PagingPathSnapshot {
+    pml4: X86ObservedTablePage;
+    pdpt: X86ObservedTablePage;
+    pd: X86ObservedTablePage;
+    pt: X86ObservedTablePage;
+}
+
+public data X86ClonedPageTables {
+    pml4: [u64; 512];
+    pdpt: [u64; 512];
+    pd: [u64; 512];
+    pt: [u64; 512];
+}
+
+public data X86PageTableCloneResult {
+    case Invalid;
+    case Ready(tables: X86ClonedPageTables);
+}
+
+public data X86PageTableClone {}
+
+// Intel SDM volume 3A, sections 4.5, 4.6 and 4.9:
+// https://www.intel.com/content/www/us/en/developer/articles/technical/intel-sdm.html
+// Splitting a large leaf preserves its mapping attributes. PAT is bit12 in
+// large leaves but bit7 in a 4-KiB PTE; an address-only mask would lose it.
+// Making an on-path pointer writable first pushes the old read-only ceiling
+// into every copied child. Otherwise a replacement could silently widen all
+// sibling mappings below an originally read-only parent. U/S and NX ceilings
+// remain on the new pointer. New table pages use the boot owner's WB supply;
+// leaf PWT/PCD/PAT attributes continue describing the original mapped memory.
+machine X86PageTableClone::child_word(parent: u64, level: u64, index: u64,
+                                     observed: u64) -> u64
+requires index < 512 && level >= 2 && level <= 4
+{
+    transition (parent & 1) != 0 {
+        true -> present(parent, level, index, observed)
+        _ -> 0
+    }
+    state present(parent: u64, level: u64, index: u64, observed: u64) -> u64
+    requires index < 512 && level >= 2 && level <= 4
+    {
+        transition (parent & 128) != 0 {
+            true -> large(parent, level, index)
+            _ -> restrict_write(parent, observed)
+        }
+    }
+    state large(parent: u64, level: u64, index: u64) -> u64
+    requires index < 512 && level >= 2 && level <= 4
+    {
+        let flags: u64 = parent & ~0x000FFFFFFFFFF000u64;
+        transition level == 3 {
+            true -> restrict_write(parent,
+                flags | (parent & 4096) | ((parent & 0x000FFFFFC0000000) + (index << 21)))
+            _ -> restrict_write(parent,
+                (flags & ~128u64) | ((parent & 4096) >> 5) |
+                ((parent & 0x000FFFFFFFE00000) + (index << 12)))
+        }
+    }
+    state restrict_write(parent: u64, word: u64) -> u64 {
+        transition (parent & 2) != 0 {
+            true -> word
+            _ -> (word & ~2u64)
+        }
+    }
+}
+
+machine X86PageTableClone::child_available(parent: u64, level: u64,
+                                         observed: &X86ObservedTablePage) -> bool {
+    transition X86TableWalk::classify(parent, level) {
+        X86TableEntryRoute::Invalid -> false
+        X86TableEntryRoute::End -> true
+        X86TableEntryRoute::Link { address } -> (observed.available && observed.address == address)
+    }
+}
+
+machine X86PageTableClone::copy_child(parent: u64, level: u64,
+                                    observed: &[u64; 512], result: &mut [u64; 512])
+requires level >= 2 && level <= 4
+{
+    transition { _ -> copy(parent, level, observed, result, 0) }
+    state copy(parent: u64, level: u64, observed: &[u64; 512],
+               result: &mut [u64; 512], next: u64)
+    requires level >= 2 && level <= 4 && next <= 512
+    {
+        transition next < 512 {
+            true -> word(parent, level, observed, result, next)
+            _ -> done()
+        }
+    }
+    state word(parent: u64, level: u64, observed: &[u64; 512],
+               result: &mut [u64; 512], next: u64)
+    requires level >= 2 && level <= 4 && next < 512
+    {
+        result[next] = X86PageTableClone::child_word(parent, level, next, observed[next]);
+        transition { _ -> copy(parent, level, observed, result, next + 1) }
+    }
+    state done() {}
+}
+
+machine X86PageTableClone::pointer(parent: u64, address: u64) -> u64 {
+    // Present + writable; keep supervisor/user and no-execute ceilings. The
+    // old parent's read-only ceiling was already distributed into its children.
+    address | 3u64 | (parent & 0x8000000000000004)
+}
+
+public machine X86PageTableClone::prepare(source: &X86PagingPathSnapshot,
+                                         new_root: u64, target: u64, virtual_address: u64)
+    -> X86PageTableCloneResult
+{
+    transition source.pml4.available && source.pml4.address % 4096 == 0 &&
+        source.pml4.address <= 0x000FFFFFFFFFF000 && new_root % 4096 == 0 &&
+        new_root <= 0x000FFFFFFFFFC000 && target % 4096 == 0 && target <= 0x000FFFFFFFFFF000 &&
+        virtual_address % 4096 == 0 {
+        true -> canonical(source, new_root, target, virtual_address)
+        _ -> X86PageTableCloneResult::Invalid
+    }
+    state canonical(source: &X86PagingPathSnapshot, new_root: u64, target: u64, virtual_address: u64)
+        -> X86PageTableCloneResult
+    requires new_root <= 0x000FFFFFFFFFC000
+    {
+        transition x86_decompose_bootstrap_virtual_address(virtual_address) {
+            X86BootstrapVirtualAddressCheck::Canonical { indices } -> root(source, new_root, target, indices)
+            _ -> X86PageTableCloneResult::Invalid
+        }
+    }
+    state root(source: &X86PagingPathSnapshot, new_root: u64, target: u64,
+               indices: X86BootstrapVirtualAddressIndices) -> X86PageTableCloneResult
+    requires new_root <= 0x000FFFFFFFFFC000
+    {
+        let parent: u64 = source.pml4.entries[indices.pml4_index];
+        transition X86PageTableClone::child_available(parent, 4, &source.pdpt) {
+            true -> directory_pointer(source, new_root, target, indices, parent)
+            _ -> X86PageTableCloneResult::Invalid
+        }
+    }
+    state directory_pointer(source: &X86PagingPathSnapshot, new_root: u64, target: u64,
+                            indices: X86BootstrapVirtualAddressIndices, parent: u64)
+        -> X86PageTableCloneResult
+    requires new_root <= 0x000FFFFFFFFFC000
+    {
+        let mut tables: X86ClonedPageTables;
+        tables.pml4 = source.pml4.entries;
+        X86PageTableClone::copy_child(parent, 4, &source.pdpt.entries, &mut tables.pdpt);
+        tables.pml4[indices.pml4_index] = X86PageTableClone::pointer(parent, new_root + 4096);
+        let next: u64 = tables.pdpt[indices.pdpt_index];
+        transition X86PageTableClone::child_available(next, 3, &source.pd) {
+            true -> directory(source, new_root, target, indices, tables, next)
+            _ -> X86PageTableCloneResult::Invalid
+        }
+    }
+    state directory(source: &X86PagingPathSnapshot, new_root: u64, target: u64,
+                    indices: X86BootstrapVirtualAddressIndices, tables: X86ClonedPageTables, parent: u64)
+        -> X86PageTableCloneResult
+    requires new_root <= 0x000FFFFFFFFFC000
+    {
+        let mut copied: X86ClonedPageTables = tables;
+        X86PageTableClone::copy_child(parent, 3, &source.pd.entries, &mut copied.pd);
+        copied.pdpt[indices.pdpt_index] = X86PageTableClone::pointer(parent, new_root + 8192);
+        let next: u64 = copied.pd[indices.pd_index];
+        transition X86PageTableClone::child_available(next, 2, &source.pt) {
+            true -> leaves(source, new_root, target, indices, copied, next)
+            _ -> X86PageTableCloneResult::Invalid
+        }
+    }
+    state leaves(source: &X86PagingPathSnapshot, new_root: u64, target: u64,
+                 indices: X86BootstrapVirtualAddressIndices, tables: X86ClonedPageTables, parent: u64)
+        -> X86PageTableCloneResult
+    requires new_root <= 0x000FFFFFFFFFC000
+    {
+        let mut copied: X86ClonedPageTables = tables;
+        X86PageTableClone::copy_child(parent, 2, &source.pt.entries, &mut copied.pt);
+        copied.pd[indices.pd_index] = X86PageTableClone::pointer(parent, new_root + 12288);
+        copied.pt[indices.pt_index] = target | 0x8000000000000003;
+        X86PageTableCloneResult::Ready { tables: copied }
+    }
+}

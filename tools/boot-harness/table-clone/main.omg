@@ -1,0 +1,177 @@
+// Expected exit: 0. Path-copying preserves off-path translations and permissions.
+// This is numeric policy only; no address or snapshot grants memory authority.
+use core::page_table_clone;
+
+machine require(value: bool) crashes Trap {
+    transition value { true -> done() false -> wrong() }
+    state done() {}
+    state wrong() { crash Trap; }
+}
+
+machine source(kind: u64, writable: bool) -> X86PagingPathSnapshot {
+    let mut snapshot: X86PagingPathSnapshot;
+    snapshot.pml4.available = true;
+    snapshot.pml4.address = 0x1000;
+    snapshot.pml4.entries[511] = 0x9003;
+    snapshot.pdpt.available = true;
+    snapshot.pdpt.address = 0x2000;
+    snapshot.pdpt.entries[0] = 0x6003;
+    snapshot.pdpt.entries[511] = 0x80000083;
+    snapshot.pd.available = true;
+    snapshot.pd.address = 0x3000;
+    snapshot.pt.available = true;
+    snapshot.pt.address = 0x4000;
+    snapshot.pt.entries[1] = 0x12345083;
+    transition writable {
+        true -> root(snapshot, kind, 0x2003)
+        _ -> root(snapshot, kind, 0x2001)
+    }
+    state root(snapshot: X86PagingPathSnapshot, kind: u64, word: u64) -> X86PagingPathSnapshot {
+        let mut saved: X86PagingPathSnapshot = snapshot;
+        saved.pml4.entries[0] = word;
+        transition kind {
+            1 -> gigabyte(saved)
+            2 -> megabyte(saved)
+            3 -> four_kilobyte(saved)
+            _ -> absent(saved)
+        }
+    }
+    state gigabyte(snapshot: X86PagingPathSnapshot) -> X86PagingPathSnapshot {
+        let mut saved: X86PagingPathSnapshot = snapshot;
+        saved.pdpt.entries[1] = 0x40001083; // 1 GiB leaf, PAT set.
+        saved.pd.available = false;
+        saved.pt.available = false;
+        saved
+    }
+    state megabyte(snapshot: X86PagingPathSnapshot) -> X86PagingPathSnapshot {
+        let mut saved: X86PagingPathSnapshot = snapshot;
+        saved.pdpt.entries[1] = 0x3003;
+        saved.pd.entries[0] = 0x20001083; // 2 MiB leaf, PAT set.
+        saved.pt.available = false;
+        saved
+    }
+    state four_kilobyte(snapshot: X86PagingPathSnapshot) -> X86PagingPathSnapshot {
+        let mut saved: X86PagingPathSnapshot = snapshot;
+        saved.pdpt.entries[1] = 0x3003;
+        saved.pd.entries[0] = 0x4003;
+        saved
+    }
+    state absent(snapshot: X86PagingPathSnapshot) -> X86PagingPathSnapshot {
+        let mut saved: X86PagingPathSnapshot = snapshot;
+        saved.pml4.entries[0] = 0;
+        saved.pdpt.available = false;
+        saved.pd.available = false;
+        saved.pt.available = false;
+        saved
+    }
+}
+
+machine check(kind: u64, writable: bool, neighbor: u64, directory_neighbor: u64)
+crashes Trap
+{
+    let before: X86PagingPathSnapshot = source(kind, writable);
+    let result: X86PageTableCloneResult = X86PageTableClone::prepare(&before, 0x10000, 0x80000, 0x40000000);
+    transition result {
+        X86PageTableCloneResult::Ready { tables } -> inspect(before, tables, kind, writable, neighbor, directory_neighbor)
+        _ -> wrong()
+    }
+    state inspect(before: X86PagingPathSnapshot, tables: X86ClonedPageTables,
+                  kind: u64, writable: bool, neighbor: u64, directory_neighbor: u64)
+    {
+        require(tables.pml4[0] == 0x11003 && tables.pdpt[1] == 0x12003 && tables.pd[0] == 0x13003);
+        require(tables.pt[0] == 0x8000000000080003);
+        require(tables.pt[1] == neighbor && tables.pd[1] == directory_neighbor);
+        preserved(&before, &tables, kind, writable, 0);
+    }
+    state wrong() { crash Trap; }
+}
+
+machine preserved(before: &X86PagingPathSnapshot, after: &X86ClonedPageTables,
+                  kind: u64, writable: bool, next: u64)
+requires next <= 512
+crashes Trap
+{
+    transition next < 512 {
+        true -> inspect(before, after, kind, writable, next)
+        _ -> done()
+    }
+    state inspect(before: &X86PagingPathSnapshot, after: &X86ClonedPageTables,
+                  kind: u64, writable: bool, next: u64)
+    requires next < 512
+    {
+        transition next != 0 {
+            true -> root(before, after, kind, writable, next)
+            _ -> directory(before, after, kind, writable, next)
+        }
+    }
+    state root(before: &X86PagingPathSnapshot, after: &X86ClonedPageTables,
+               kind: u64, writable: bool, next: u64)
+    requires next < 512
+    {
+        require(before.pml4.entries[next] == after.pml4[next]);
+        transition { _ -> directory(before, after, kind, writable, next) }
+    }
+    state directory(before: &X86PagingPathSnapshot, after: &X86ClonedPageTables,
+                    kind: u64, writable: bool, next: u64)
+    requires next < 512
+    {
+        let mask: u64 = match writable { true -> 0xFFFFFFFFFFFFFFFF, false -> 0xFFFFFFFFFFFFFFFD };
+        let expected: u64 = match kind == 0 { true -> 0, false -> before.pdpt.entries[next] & mask };
+        require(next == 1 || after.pdpt[next] == expected);
+        transition { _ -> preserved(before, after, kind, writable, next + 1) }
+    }
+    state done() {}
+}
+
+machine rejected(result: X86PageTableCloneResult) crashes Trap {
+    transition result {
+        X86PageTableCloneResult::Invalid -> done()
+        _ -> wrong()
+    }
+    state done() {}
+    state wrong() { crash Trap; }
+}
+
+machine restricted_parents() crashes Trap {
+    let mut before: X86PagingPathSnapshot = source(3, true);
+    // A user-capable NX ancestor must retain both ceilings on the copied
+    // pointer; a lower supervisor pointer must not gain user permission.
+    before.pml4.entries[0] = 0x8000000000002007;
+    before.pdpt.entries[1] = 0x8000000000003003;
+    before.pd.entries[0] = 0x4007;
+    let result: X86PageTableCloneResult = X86PageTableClone::prepare(&before, 0x10000, 0x80000, 0x40000000);
+    transition result {
+        X86PageTableCloneResult::Ready { tables } -> inspect(tables)
+        _ -> wrong()
+    }
+    state inspect(tables: X86ClonedPageTables) {
+        require(tables.pml4[0] == 0x8000000000011007);
+        require(tables.pdpt[1] == 0x8000000000012003);
+        require(tables.pd[0] == 0x13007);
+        require(tables.pt[0] == 0x8000000000080003);
+        require(tables.pt[1] == 0x12345083);
+    }
+    state wrong() { crash Trap; }
+}
+
+machine main() crashes Trap {
+    restricted_parents();
+    check(0, true, 0, 0);
+    check(1, true, 0x40001083, 0x40201083);
+    check(1, false, 0x40001081, 0x40201081);
+    check(2, true, 0x20001083, 0);
+    check(3, true, 0x12345083, 0);
+    check(3, false, 0x12345081, 0);
+    let mut original: X86PagingPathSnapshot = source(1, true);
+    rejected(X86PageTableClone::prepare(&original, 0x10001, 0x80000, 0x40000000));
+    rejected(X86PageTableClone::prepare(&original, 0x10000, 0x80001, 0x40000000));
+    rejected(X86PageTableClone::prepare(&original, 0x10000, 0x80000, 0x800000000000));
+    original.pdpt.address = 0x3000;
+    rejected(X86PageTableClone::prepare(&original, 0x10000, 0x80000, 0x40000000));
+    original.pdpt.address = 0x2000;
+    original.pml4.entries[0] = 0x2083; // Reserved PS at PML4.
+    rejected(X86PageTableClone::prepare(&original, 0x10000, 0x80000, 0x40000000));
+    original.pml4.entries[0] = 0x2003;
+    original.pdpt.entries[1] = 0x40002083; // Reserved 1 GiB alignment bit.
+    rejected(X86PageTableClone::prepare(&original, 0x10000, 0x80000, 0x40000000));
+}

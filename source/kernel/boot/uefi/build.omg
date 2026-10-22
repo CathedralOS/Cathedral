@@ -22,6 +22,14 @@ machine build(builder: &mut Build) {
     Build::accept_boundary<FirmwareMemorySupply>(builder);
     Build::select_provider<BootMemorySupply, BootMemoryProfileProvider>(builder);
     Build::select_provider<FirmwareMemorySupply, FirmwareMemoryProfileProvider>(builder);
+    Build::accept_boundary<HardwareTableSupply>(builder);
+    Build::select_provider<HardwareTableSupply, HardwareTableProfileProvider>(builder);
+    Build::accept_boundary<MappedPageSupply>(builder);
+    Build::select_provider<MappedPageSupply, MappedPageProfileProvider>(builder);
+    Build::accept_boundary<BootVirtualReservation>(builder);
+    Build::select_provider<BootVirtualReservation, BootstrapVirtualReservationProvider>(builder);
+    Build::accept_boundary<BootTranslation>(builder);
+    Build::select_provider<BootTranslation, BootstrapTranslationProvider>(builder);
     Build::select_provider<PlacementLifecycle, KernelMemoryPlacement>(builder);
     Build::select_provider<ProgramStorageEntry, ProgramStorageEntryNativeProvider>(builder);
     Build::select_provider<ProgramImage, ProgramImageNativeProvider>(builder);

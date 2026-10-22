@@ -1,0 +1,214 @@
+use omega::language::core::extent;
+use omega::language::core::layout;
+use core::page_table_clone;
+use core::x86_page_table;
+use core::x86_table_walk;
+use firmware_tables;
+use paging_handoff;
+
+data MappingHandoff {}
+
+public data HardwareTableMemory {}
+public boundary trait HardwareTableSupply: ResourceProfileSupply<HardwareTableMemory> {}
+public data HardwareTablePlacement {}
+
+// This occurrence covers only the four owned replacement pages after their
+// Stable resident has been extracted and every construction loan has ended.
+// From publication until root retirement, CPU page walks may update A/D bits.
+// The backing remains identity mapped and retained, but never Stable. The boot
+// provider admits that exact phase/range, not arbitrary Granted geometry.
+HardwareTableProfileProvider satisfies HardwareTableSupply {
+    machine profile(storage: &Extent in Granted) -> ResourceProfile {
+        let services: [u64; 32];
+        let mut transfers: [TransferRule; 16];
+        transfers[0] = TransferRule { width_bits: 64, alignment_bytes: 8 };
+        let mut regions: [ResourceRegion; 32];
+        regions[0] = ResourceRegion {
+            range: RelativeRange { offset: 0, length: storage.length },
+            peer: PeerWritability::HostileShared,
+            stable: StableCapability::None,
+            external: ExternalCapability::Access {
+                read: ExternalReadBehavior::Repeatable, write: true,
+                transfers: TransferRules { entries: transfers, rule_count: 1 },
+            },
+            atomic: AtomicCapability::None,
+            reach: BoundaryReach { services: services, service_count: 0 },
+        };
+        ResourceProfile { regions: regions, region_count: 1 }
+    }
+}
+
+machine HardwareTablePlacement::plan(schema: Schema) -> PlacementPlan {
+    let mut fields: [FieldEntry; 64];
+    fields[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    fields[1] = FieldEntry { key: schema.fields[1].key, placement: FieldPlan::At { offset: 4096 } };
+    fields[2] = FieldEntry { key: schema.fields[2].key, placement: FieldPlan::At { offset: 8192 } };
+    fields[3] = FieldEntry { key: schema.fields[3].key, placement: FieldPlan::At { offset: 12288 } };
+    let first: AccessPlan = AccessPlan::with(AccessPlan::inaccessible(&schema), schema.fields[0].key, HardwareTablePlacement::access());
+    let second: AccessPlan = AccessPlan::with(first, schema.fields[1].key, HardwareTablePlacement::access());
+    let third: AccessPlan = AccessPlan::with(second, schema.fields[2].key, HardwareTablePlacement::access());
+    let services: [u64; 32];
+    PlacementPlan {
+        layout: Plan {
+            entries: fields, entry_count: 4, size_fixed: 16384, size_is_dynamic: false, align: 4096,
+        },
+        access: AccessPlan::with(third, schema.fields[3].key, HardwareTablePlacement::access()),
+        reach: BoundaryReach { services: services, service_count: 0 },
+    }
+}
+
+machine HardwareTablePlacement::access() -> FieldAccess {
+    FieldAccess::External { read: ExternalRead::Read, write: true, exposure: Exposure::Exported }
+}
+
+// Extraction retires the Omega resident; it does not promise which bytes an
+// extraction implementation leaves behind. Therefore write every word again
+// through the External-only policy before publishing the new root. Vacancy
+// here means absence of an Omega resident, not zero bytes or absence of the
+// hardware's page-table representation. No Stable view crosses publication.
+machine MappingHandoff::program(storage: &mut Extent in Granted, image: &X86ClonedPageTables) -> bool
+requires storage in Vacant
+ensures storage in Vacant
+reaches ResourceProfileSupply
+{
+    transition Placed::view_extent_mut<HardwareTablePlacement, X86ClonedPageTables, HardwareTableMemory>(storage) {
+        PlacementOutcome::Ready { view } -> write(view, image, 0)
+        PlacementOutcome::Rejected { returned, reason } -> false
+    }
+    state write(view: &mut Placed<HardwareTablePlacement, X86ClonedPageTables>,
+                image: &X86ClonedPageTables, next: u64) -> bool
+    requires next <= 512
+    {
+        transition next < 512 {
+            true -> word(view, image, next)
+            _ -> verify(view, image, 0, true)
+        }
+    }
+    state word(view: &mut Placed<HardwareTablePlacement, X86ClonedPageTables>,
+               image: &X86ClonedPageTables, next: u64) -> bool
+    requires next < 512
+    {
+        placed_write(&mut view.pml4[next], image.pml4[next]);
+        placed_write(&mut view.pdpt[next], image.pdpt[next]);
+        placed_write(&mut view.pd[next], image.pd[next]);
+        placed_write(&mut view.pt[next], image.pt[next]);
+        transition { _ -> write(view, image, next + 1) }
+    }
+    state verify(view: &mut Placed<HardwareTablePlacement, X86ClonedPageTables>,
+                 image: &X86ClonedPageTables, next: u64, matched: bool) -> bool
+    requires next <= 512
+    {
+        transition next < 512 {
+            true -> compare(view, image, next, matched)
+            _ -> matched
+        }
+    }
+    state compare(view: &mut Placed<HardwareTablePlacement, X86ClonedPageTables>,
+                  image: &X86ClonedPageTables, next: u64, matched: bool) -> bool
+    requires next < 512
+    {
+        let root: u64 = placed_read(&view.pml4[next]);
+        let pointer: u64 = placed_read(&view.pdpt[next]);
+        let directory: u64 = placed_read(&view.pd[next]);
+        let leaf: u64 = placed_read(&view.pt[next]);
+        let same: bool = root == image.pml4[next] && pointer == image.pdpt[next] &&
+            directory == image.pd[next] && leaf == image.pt[next];
+        transition { _ -> verify(view, image, next + 1, matched && same) }
+    }
+}
+
+// A path snapshot contains numbers, never new authority. Each observed page is
+// read through the exact retained grant, and its address comes from that grant
+// rather than the inventory's parallel lookup array. Missing or invalid links
+// leave unavailable pages; the core cloner independently validates the whole
+// path before accepting it. Large leaves need no invented child observation.
+machine MappingHandoff::observe(inventory: &FirmwareTableInventory, address: u64)
+    -> X86ObservedTablePage
+requires addr::Bound == 18446744073709551616
+reaches ResourceProfileSupply
+{
+    let index: u64 = FirmwareTables::find(inventory, address);
+    transition index < 2048 {
+        true -> slot(inventory, address, index)
+        _ -> unavailable()
+    }
+    state slot(inventory: &FirmwareTableInventory, address: u64, index: u64)
+        -> X86ObservedTablePage
+    requires index < 2048 && addr::Bound == 18446744073709551616
+    {
+        transition &inventory.roots[index] {
+            FirmwareTableSlot::Held { storage } -> backing(storage, address)
+            _ -> unavailable()
+        }
+    }
+    state backing(storage: &Extent in Granted, address: u64) -> X86ObservedTablePage
+    requires addr::Bound == 18446744073709551616
+    {
+        transition storage.base as u64 == address && storage.length == 4096 {
+            true -> read(storage, address)
+            _ -> unavailable()
+        }
+    }
+    state read(storage: &Extent in Granted, address: u64) -> X86ObservedTablePage {
+        transition PagingHandoff::snapshot<FirmwareMemory>(storage) {
+            FirmwareRootSnapshot::Ready { entries } -> (X86ObservedTablePage {
+                available: true, address: address, entries: entries,
+            })
+            _ -> unavailable()
+        }
+    }
+    state unavailable() -> X86ObservedTablePage {
+        let page: X86ObservedTablePage;
+        page
+    }
+}
+
+machine MappingHandoff::child(inventory: &FirmwareTableInventory, word: u64, level: u64)
+    -> X86ObservedTablePage
+requires addr::Bound == 18446744073709551616
+reaches ResourceProfileSupply
+{
+    transition X86TableWalk::classify(word, level) {
+        X86TableEntryRoute::Link { address } -> MappingHandoff::observe(inventory, address)
+        _ -> unavailable()
+    }
+    state unavailable() -> X86ObservedTablePage {
+        let page: X86ObservedTablePage;
+        page
+    }
+}
+
+data MappingCloneResult {
+    case Unavailable;
+    case Ready(tables: X86ClonedPageTables);
+}
+
+machine MappingHandoff::clone(inventory: &FirmwareTableInventory, firmware_root: u64,
+                              new_root: u64, target: u64, virtual_address: u64)
+    -> MappingCloneResult
+requires addr::Bound == 18446744073709551616
+reaches ResourceProfileSupply
+{
+    transition x86_decompose_bootstrap_virtual_address(virtual_address) {
+        X86BootstrapVirtualAddressCheck::Canonical { indices } -> observe(inventory, firmware_root, new_root, target, indices)
+        _ -> MappingCloneResult::Unavailable
+    }
+    state observe(inventory: &FirmwareTableInventory, firmware_root: u64,
+                  new_root: u64, target: u64, indices: X86BootstrapVirtualAddressIndices)
+        -> MappingCloneResult
+    requires addr::Bound == 18446744073709551616
+    {
+        let mut source: X86PagingPathSnapshot;
+        source.pml4 = MappingHandoff::observe(inventory, firmware_root);
+        let root: u64 = source.pml4.entries[indices.pml4_index];
+        source.pdpt = MappingHandoff::child(inventory, root, 4);
+        let directory_pointer: u64 = source.pdpt.entries[indices.pdpt_index];
+        source.pd = MappingHandoff::child(inventory, directory_pointer, 3);
+        let directory: u64 = source.pd.entries[indices.pd_index];
+        source.pt = MappingHandoff::child(inventory, directory, 2);
+        transition X86PageTableClone::prepare(&source, new_root, target, indices.address) {
+            X86PageTableCloneResult::Ready { tables } -> (MappingCloneResult::Ready { tables: tables })
+            _ -> MappingCloneResult::Unavailable
+        }
+    }
+}
