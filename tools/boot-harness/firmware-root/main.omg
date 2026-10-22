@@ -1,0 +1,92 @@
+// Expected exit: 0.
+// Run the same complete-map policy used after firmware exit. Synthetic map
+// bytes prove numeric rejection behavior, never backing or grant authority.
+use memory_map::firmware_root;
+use core::boot_geometry;
+
+machine require(value: bool) crashes Trap {
+    transition value { true -> done() false -> wrong() }
+    state done() {}
+    state wrong() { crash Trap; }
+}
+
+machine word(bytes: &mut [u8; 65536], offset: u64, value: u64)
+requires offset <= 65528
+{
+    transition { _ -> copy(bytes, offset, value, 0) }
+    state copy(bytes: &mut [u8; 65536], offset: u64, value: u64, next: u64)
+    requires offset <= 65528 && next <= 8
+    {
+        transition next < 8 { true -> write(bytes, offset, value, next) _ -> done() }
+    }
+    state write(bytes: &mut [u8; 65536], offset: u64, value: u64, next: u64)
+    requires offset <= 65528 && next < 8
+    {
+        bytes[offset + next] = ((value >> (next * 8)) & 255) as u8;
+        transition { _ -> copy(bytes, offset, value, next + 1) }
+    }
+    state done() {}
+}
+
+machine main() crashes Trap
+requires addr::Bound == 18446744073709551616
+{
+    let mut bytes: [u8; 65536];
+    let excluded: BootGeometry = BootGeometry {
+        image_base: 1048576, image_length: 65536,
+        storage_base: 2097152, storage_length: 65536,
+    };
+    // Runtime stride 48, unsorted descriptors, root in the second one.
+    word(&mut bytes, 0, 7);
+    word(&mut bytes, 8, 8388608);
+    word(&mut bytes, 24, 4);
+    word(&mut bytes, 48, 4);
+    word(&mut bytes, 56, 4194304);
+    word(&mut bytes, 72, 3);
+    require(FirmwareRootMap::frame(4198424) == 4198400);
+    require(FirmwareRootMap::frame(4198401) == 0);
+    require(FirmwareRootMap::frame(0x8000000000401000) == 0);
+    require(FirmwareRootMap::frame(0) == 0);
+    require(FirmwareRootMap::contains(&bytes, 96, 48, 4198400, &excluded));
+    require(!FirmwareRootMap::contains(&bytes, 0, 48, 4198400, &excluded));
+    require(!FirmwareRootMap::contains(&bytes, 95, 48, 4198400, &excluded));
+    require(!FirmwareRootMap::contains(&bytes, 96, 32, 4198400, &excluded));
+    require(!FirmwareRootMap::contains(&bytes, 96, 48, 4198401, &excluded));
+    require(!FirmwareRootMap::contains(&bytes, 96, 48, 4206592, &excluded));
+    // Runtime, removable, special-purpose and reserved attributes refuse.
+    word(&mut bytes, 80, 0x8000000000000000);
+    require(!FirmwareRootMap::contains(&bytes, 96, 48, 4198400, &excluded));
+    word(&mut bytes, 80, 0x00100000);
+    require(!FirmwareRootMap::contains(&bytes, 96, 48, 4198400, &excluded));
+    word(&mut bytes, 80, 0x00040000);
+    require(!FirmwareRootMap::contains(&bytes, 96, 48, 4198400, &excluded));
+    word(&mut bytes, 80, 0x20);
+    require(!FirmwareRootMap::contains(&bytes, 96, 48, 4198400, &excluded));
+    word(&mut bytes, 80, 0);
+    word(&mut bytes, 48, 7);
+    require(!FirmwareRootMap::contains(&bytes, 96, 48, 4198400, &excluded));
+    word(&mut bytes, 48, 9);
+    require(!FirmwareRootMap::contains(&bytes, 96, 48, 4198400, &excluded));
+    word(&mut bytes, 48, 4);
+    // A later duplicate must reject even after a covering descriptor.
+    word(&mut bytes, 0, 4);
+    word(&mut bytes, 8, 4194304);
+    require(!FirmwareRootMap::contains(&bytes, 96, 48, 4198400, &excluded));
+    word(&mut bytes, 8, 8388608);
+    word(&mut bytes, 56, 1048576);
+    require(!FirmwareRootMap::contains(&bytes, 96, 48, 1048576, &excluded));
+    word(&mut bytes, 56, 2097152);
+    require(!FirmwareRootMap::contains(&bytes, 96, 48, 2097152, &excluded));
+    word(&mut bytes, 56, 4194305);
+    require(!FirmwareRootMap::contains(&bytes, 96, 48, 4198400, &excluded));
+    word(&mut bytes, 56, 4194304);
+    word(&mut bytes, 72, 0);
+    require(!FirmwareRootMap::contains(&bytes, 96, 48, 4198400, &excluded));
+    word(&mut bytes, 72, 4503599627370496);
+    require(!FirmwareRootMap::contains(&bytes, 96, 48, 4198400, &excluded));
+    word(&mut bytes, 72, 3);
+    word(&mut bytes, 56, 0xFFFFFFFFFFFFF000);
+    require(!FirmwareRootMap::contains(&bytes, 96, 48, 4198400, &excluded));
+    word(&mut bytes, 56, 4194304);
+    require(FirmwareRootMap::contains(&bytes, 96, 48, 4198400, &excluded));
+}

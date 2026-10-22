@@ -1,0 +1,64 @@
+// UEFI memory-map data is usable after firmware services cease and on hosted
+// policy tests. It imports no executable firmware providers or calling policy.
+// --- EFI_MEMORY_TYPE (the important values) --------------------------------
+// Named `const` tags (u32), not a sum — robust to valid OEM/OS-loader memory
+// kinds we don't model (a too-narrow EfiMemoryType sum would fail to read them).
+// The boot audit accepts standard values below EFI_MAX_MEMORY_TYPE and the
+// vendor ranges beginning at EFI_OEM_MEMORY_TYPE_MIN; the reserved middle
+// interval fails closed.
+public const EFI_LOADER_DATA:         u32 = 2;
+public const EFI_BOOT_SERVICES_CODE:  u32 = 3;
+public const EFI_BOOT_SERVICES_DATA:  u32 = 4;
+public const EFI_CONVENTIONAL_MEMORY: u32 = 7;   // free RAM boot may claim after exit
+public const EFI_ACPI_RECLAIM:        u32 = 9;
+public const EFI_MAX_MEMORY_TYPE:     u32 = 16;          // exclusive standard bound
+public const EFI_OEM_MEMORY_TYPE_MIN: u32 = 0x7000_0000; // OEM then OS-loader ranges
+
+// Revision of the descriptor prefix Cathedral currently knows how to read.
+// Unknown revisions fail closed in boot source before any typed recast.
+public const EFI_MEMORY_DESCRIPTOR_VERSION: u32 = 1;
+
+// Memory that must retain an OS virtual mapping for firmware runtime services.
+// Cathedral's current bootstrap cannot admit such a region as ordinary RAM.
+public data EfiMemoryAttribute [copy] { bits: u64; }
+public const EFI_MEMORY_RUNTIME: EfiMemoryAttribute = EfiMemoryAttribute {
+    bits: 0x8000_0000_0000_0000,
+};
+// Memory that the platform may dynamically remove. Cathedral's retained,
+// non-relocatable bootstrap root must not originate from such a descriptor.
+public const EFI_MEMORY_HOT_PLUGGABLE: EfiMemoryAttribute = EfiMemoryAttribute {
+    bits: 0x0000_0000_0010_0000,
+};
+// Memory earmarked for a device or application. The UEFI contract advises the
+// OS not to place non-relocatable core data or code in such a region.
+public const EFI_MEMORY_SP: EfiMemoryAttribute = EfiMemoryAttribute {
+    bits: 0x0000_0000_0004_0000,
+};
+// ISA-specific cacheability bits describe a region only when their validity
+// flag is present. The boot audit enforces this relation before consuming the
+// map as authority-bearing input.
+public const EFI_MEMORY_ISA_VALID: EfiMemoryAttribute = EfiMemoryAttribute {
+    bits: 0x4000_0000_0000_0000,
+};
+public const EFI_MEMORY_ISA_MASK: EfiMemoryAttribute = EfiMemoryAttribute {
+    bits: 0x0FFF_F000_0000_0000,
+};
+// Complement of every standard revision-1 attribute bit, EFI_MEMORY_ISA_MASK,
+// EFI_MEMORY_ISA_VALID, and EFI_MEMORY_RUNTIME. Any intersection is reserved.
+public const EFI_MEMORY_RESERVED_MASK: EfiMemoryAttribute = EfiMemoryAttribute {
+    bits: 0x3000_0FFF_FFE0_0FE0,
+};
+
+// --- EFI_MEMORY_DESCRIPTOR -------------------------------------------------
+// The `Uefi` policy pads `kind` to 8-align `physical_start`. sizeof is 40, BUT
+// the map array MUST be strided by the runtime DescriptorSize (firmware may
+// append fields) — never sizeof. Cathedral's consumer also requires that
+// runtime stride and its byte backing preserve the descriptor's 8-byte
+// alignment before performing a reference recast.
+public data EfiMemoryDescriptor {
+    kind:            u32;   // EFI_MEMORY_TYPE
+    physical_start:  u64;   // EFI_PHYSICAL_ADDRESS
+    virtual_start:   u64;   // EFI_VIRTUAL_ADDRESS
+    number_of_pages: u64;
+    attribute:       u64;   // revision-1 standard/ISA EFI_MEMORY_* bits only
+}

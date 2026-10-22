@@ -6,6 +6,8 @@ use page_frame;
 use core::page_tables;
 use core::paging_profile;
 use boot_handoff;
+use core::boot_geometry;
+use memory_map::firmware_root;
 
 data BootPageTables {
     leading: Extent in Granted & Vacant;
@@ -18,6 +20,8 @@ data KernelState {
     entered: bool;
     image_bytes: u64;
     initial_storage_bytes: u64;
+    initial_storage_base: u64;
+    firmware_root: u64;
     boot_information: BootInformation;
 }
 
@@ -92,7 +96,8 @@ invokes PlacementLifecycle;
 {
     // The installed occurrence receives fresh zero state, not firmware data or
     // a globally addressable record. Keep its borrow with the retained roots.
-    transition !context.entered && context.image_bytes == 0 && context.initial_storage_bytes == 0 {
+    transition !context.entered && context.image_bytes == 0 && context.initial_storage_bytes == 0 &&
+        context.initial_storage_base == 0 && context.firmware_root == 0 {
         true -> establish(context, image, initial_storage)
         _ -> retain(context, image, initial_storage)
     }
@@ -129,6 +134,7 @@ invokes PlacementLifecycle;
     {
         context.image_bytes = image.length;
         context.initial_storage_bytes = initial_storage.length;
+        context.initial_storage_base = initial_storage.base as u64;
         context.entered = true;
         // The complete final map is now ordinary invocation-owned context.
         // The temporary external packet contains no Omega resident and can be
@@ -618,6 +624,73 @@ invokes PlacementLifecycle;
         asm { out 1016, 101 }
         asm { out 1016, 99 }
         asm { out 1016, 107 }
+        asm { out 1016, 101 }
+        asm { out 1016, 100 }
+        asm { out 1016, 13 }
+        asm { out 1016, 10 }
+        transition { _ -> locate_firmware_root(context, image, pair, tables) }
+    }
+
+    state locate_firmware_root(context: &mut KernelState, image: Extent in Granted,
+                               pair: KernelMemoryPair, tables: BootPageTables)
+    requires addr::Bound == 18446744073709551616
+    {
+        let mut control3: u64 = 0;
+        asm { read_cr3 control3 }
+        let root: u64 = FirmwareRootMap::frame(control3);
+        let excluded: BootGeometry = BootGeometry {
+            image_base: context.boot_information.image_base,
+            image_length: context.boot_information.image_size,
+            storage_base: context.initial_storage_base,
+            storage_length: context.initial_storage_bytes,
+        };
+        let located: bool = FirmwareRootMap::contains(&context.boot_information.bytes,
+            context.boot_information.map_size, context.boot_information.descriptor_size, root, &excluded);
+        // This retained number is deliberately not a Granted extent or an
+        // ordinary reference. No table memory is accessed at this milestone.
+        context.firmware_root = root;
+        transition located {
+            true -> root_wait(context, image, pair, tables, 1000000)
+            _ -> retain_tables(context, image, pair, tables)
+        }
+    }
+
+    state root_wait(context: &mut KernelState, image: Extent in Granted,
+                    pair: KernelMemoryPair, tables: BootPageTables, remaining: u64)
+    requires addr::Bound == 18446744073709551616
+    {
+        let mut status: u8 = 0;
+        asm { in status, 1021 }
+        transition (status & 32) != 0 {
+            true -> root_report(context, image, pair, tables)
+            _ -> root_retry(context, image, pair, tables, remaining)
+        }
+    }
+
+    state root_retry(context: &mut KernelState, image: Extent in Granted,
+                     pair: KernelMemoryPair, tables: BootPageTables, remaining: u64)
+    requires addr::Bound == 18446744073709551616
+    {
+        transition remaining > 1 {
+            true -> root_wait(context, image, pair, tables, remaining - 1)
+            _ -> retain_tables(context, image, pair, tables)
+        }
+    }
+
+    state root_report(context: &mut KernelState, image: Extent in Granted,
+                      pair: KernelMemoryPair, tables: BootPageTables)
+    requires addr::Bound == 18446744073709551616
+    {
+        asm { out 1016, 82 } // Root located
+        asm { out 1016, 111 }
+        asm { out 1016, 111 }
+        asm { out 1016, 116 }
+        asm { out 1016, 32 }
+        asm { out 1016, 108 }
+        asm { out 1016, 111 }
+        asm { out 1016, 99 }
+        asm { out 1016, 97 }
+        asm { out 1016, 116 }
         asm { out 1016, 101 }
         asm { out 1016, 100 }
         asm { out 1016, 13 }

@@ -22,7 +22,7 @@ the initialized page and the remaining tail with the context and image.
 
 The fresh-image harness requires `Hello from Omega`, a complete `Owned N MiB`
 line, `Boot map ready`, `Kernel entered`, `Memory split`, `Memory checked`, `Memory paired`,
-`Page ready`, `Tables ready`, and `CPU checked`, in that order. The six-marker baseline reported 35 MiB in
+`Page ready`, `Tables ready`, `CPU checked`, and `Root located`, in that order. The six-marker baseline reported 35 MiB in
 QEMU/OVMF using Omega `9e04918b1d1`. The current source requires Omega's exact address-model
 typing, representation-recast effect tracking and occurrence-local state-prefix
 checking, in addition to the canonical `ProgramStorageEntryNativeProvider`,
@@ -75,7 +75,7 @@ separate backing and lifecycle obligations.
 The intended acceptance is one freshly compiled `uefi_x86_64` image under
 QEMU/OVMF: `Hello from Omega`, successful firmware exit, `Owned N MiB` over
 COM1, then `Boot map ready`, `Kernel entered`, `Memory split`, `Memory checked`, `Memory paired`,
-`Page ready`, `Tables ready`, and `CPU checked`
+`Page ready`, `Tables ready`, `CPU checked`, and `Root located`
 while retaining image, every initial-storage descendant and accounted surviving
 stack storage. `Memory checked` requires common-root reunion after all three partition sizes,
 initialization/readback of 17, write/readback/extraction of 29, and return of the
@@ -280,6 +280,33 @@ Activation must recheck under its held authority and preserve the regime through
 the transition. No control register is written by this milestone. Omega needs
 catalogued control-register events retained through executable lowering; merely
 recognizing their assembly spelling or accepting source is insufficient.
+
+## Active firmware-root location
+
+After the CPU checks, `Kernel::locate_firmware_root` reads CR3 and calls
+`memory_map::firmware_root::FirmwareRootMap`. The checker uses the retained
+final map's actual descriptor stride, scans the complete map, and requires one
+descriptor to cover the complete aligned root page. It rejects duplicate or
+partial coverage, malformed geometry, reserved attributes, runtime/removable/
+special-purpose backing, and ownership outside the selected post-exit
+LoaderData/BootServicesCode/BootServicesData policy.
+
+The complete mapped image, including the retained private-stack suffix, and
+the original initial-storage allocation are exclusions. Checking only the
+current residual tails would miss memory already partitioned into children.
+Only successful numeric location permits `Root located`; the root address
+is retained in the invocation-owned kernel context.
+
+The pure descriptor vocabulary lives in `contracts/uefi/memory`, separately
+from callable Boot Services. This lets the same map checker run after exit
+and in the hosted [policy witness](../../../../tools/boot-harness/README.md#firmware-root-map-policy)
+without inventing hosted firmware providers.
+
+This is not an admitted Extent or a table read. Next, firmware-table access
+needs explicit backing/lifetime admission, an External observation profile
+that does not promise Stable RAM while hardware writes accessed/dirty bits,
+and retention of every reachable table page. The fresh-allocation StableRW
+profile is not authority over arbitrary firmware addresses.
 
 The proposed 1-GiB virtual address is only a candidate. No virtual destination
 is reserved and no translations are installed. Activation still needs the live

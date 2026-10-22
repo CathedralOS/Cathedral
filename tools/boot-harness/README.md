@@ -45,7 +45,7 @@ Without `--smoke`, QEMU's serial console is interactive. With it, the guest
 runs headlessly for at most `--timeout` seconds (default 30), and this run's
 serial log must contain the greeting followed by a complete numeric
 `Owned N MiB` line, then `Boot map ready`, `Kernel entered`, `Memory split`, `Memory checked`,
-`Memory paired`, `Page ready`, `Tables ready`, and `CPU checked`.
+`Memory paired`, `Page ready`, `Tables ready`, `CPU checked`, and `Root located`.
 The boot-map marker requires the kernel to copy the final memory map from the
 explicit initial-storage packet and check its format, byte count, descriptor
 stride, checksum, original storage base and image-prefix correspondence. It
@@ -78,6 +78,10 @@ RW/supervisor/NX leaf to the retained target page, reads the actual packed words
 back, validates their complete fields and walk endpoints, and reads every unused
 slot as zero. Padding, target, tables and remaining tail stay owned. This is
 inactive hierarchy construction, not a CR3 switch or a successful virtual access.
+`CPU checked` requires the supported four-level paging regime. `Root located`
+requires the actual CR3 frame to pass the full final-map eligibility scan and
+complete image/private-stack and original allocator-root exclusions. It grants
+no table access and does not retain the reachable firmware-table closure.
 All storage descendants remain retained. A split-only, single-resident, or
 paired-allocation-only or page-only boot does not satisfy this acceptance. Missing, truncated or
 out-of-order markers fail.
@@ -122,3 +126,21 @@ later for the payload reread proof repair this helper exercises. The native and
 Terminal runs validate numeric geometry only. The helper grants no storage,
 performs no firmware calls, and cannot establish stack survival or successful
 UEFI handoff. The boot transaction separately invokes this checker before exit.
+
+## Firmware-root map policy
+
+`firmware-root/main.omg` runs the same `FirmwareRootMap` checker used after
+the CPU observation. It covers a valid root in an unsorted runtime-stride map,
+CR3 flags/reserved bits, malformed map and descriptor sizes, missing/duplicate
+coverage, image/storage exclusions, disallowed ownership and attributes, and
+page-count/end overflow. An incorrect decision crashes; success exits 0.
+
+```text
+omega update --project tools/boot-harness/firmware-root
+omega run --both tools/boot-harness/firmware-root/main.omg
+```
+
+Both engines must exit 0. These synthetic bytes establish numeric policy
+behavior, never physical backing or access authority. The firmware smoke test
+separately observes the real CR3 and retained final map. Neither test establishes
+successful mapping installation.

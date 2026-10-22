@@ -12,7 +12,8 @@
 // successful ExitBootServices, and the admitted grant.
 
 use uefi::uefi;            // EfiHandle, EfiSystemTable, EfiStatus
-use uefi::boot_services;   // EfiMemoryDescriptor, EFI_CONVENTIONAL_MEMORY, MapKey, BootServicesTable
+use uefi::boot_services;   // MapKey, BootServicesTable and callable services
+use memory::memory_map;    // EfiMemoryDescriptor and memory type/attribute data
 use core::extent;          // PAGE_SIZE + checked ExtentRootProvider adapter
 use core::boot_geometry;   // numeric joint geometry; never backing authority
 use omega::language::core::assembly; // PortIo, MachineControl

@@ -3,6 +3,7 @@
 
 machine build(builder: &mut Build) {
     Build::package(builder, "cathedral_uefi");
+    Build::depend_as(builder, "memory", Source::Path { location: "memory" });
     Build::depend_as(builder, "std", Source::Git {
         repository: "https://github.com/CathedralOS/Omega.git",
         revision: "849161c59ff74176dafc3f8de5ff66148581de22",

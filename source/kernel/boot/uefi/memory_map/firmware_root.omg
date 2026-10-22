@@ -1,0 +1,121 @@
+use memory::memory_map;
+use core::boot_geometry;
+
+// Locate the live four-level root in the final successful UEFI memory map.
+// This is numeric eligibility, not Extent issuance or permission to dereference
+// CR3. The caller must retain the complete image (including its private stack)
+// and original allocator root as exclusions, not just their remaining tails.
+// Scan the complete map: the first covering descriptor cannot hide a later
+// overlapping descriptor. Unknown/reserved ownership never becomes table RAM.
+public data FirmwareRootMap {}
+
+public machine FirmwareRootMap::frame(control3: u64) -> u64 {
+    // The boot CPU policy excludes PCID and five-level paging. Only PWT/PCD
+    // may accompany the 52-bit physical frame; zero is not a boot table root.
+    transition (control3 & 0xFFF0000000000FE7) == 0 {
+        true -> (control3 & 0x000FFFFFFFFFF000)
+        _ -> 0
+    }
+}
+
+public machine FirmwareRootMap::contains(bytes: &[u8; 65536], map_size: u64,
+                                         descriptor_size: u64, root: u64,
+                                         excluded: &BootGeometry) -> bool
+requires addr::Bound == 18446744073709551616
+{
+    transition map_size > 0 && map_size <= 65536 && descriptor_size >= 40 &&
+        descriptor_size <= map_size && descriptor_size % 8 == 0 &&
+        map_size % descriptor_size == 0 && root > 0 && root % 4096 == 0 &&
+        root <= 0x000FFFFFFFFFF000 {
+        true -> exclusions(bytes, map_size, descriptor_size, root, excluded)
+        _ -> false
+    }
+
+    state exclusions(bytes: &[u8; 65536], map_size: u64, descriptor_size: u64,
+                     root: u64, excluded: &BootGeometry) -> bool
+    requires addr::Bound == 18446744073709551616 && root <= 0x000FFFFFFFFFF000
+    {
+        let geometry: BootGeometry = BootGeometry {
+            image_base: excluded.image_base, image_length: excluded.image_length,
+            storage_base: excluded.storage_base, storage_length: excluded.storage_length,
+        };
+        transition BootGeometry::check(geometry) {
+            BootGeometryCheck::Ready { geometry } -> separate(bytes, map_size, descriptor_size, root, geometry)
+            BootGeometryCheck::Rejected -> false
+        }
+    }
+
+    state separate(bytes: &[u8; 65536], map_size: u64, descriptor_size: u64,
+                   root: u64, excluded: BootGeometry in Separated) -> bool
+    requires addr::Bound == 18446744073709551616 && root <= 0x000FFFFFFFFFF000
+    {
+        let end: u64 = root + 4096;
+        transition (end <= excluded.image_base || root >= excluded.image_base + excluded.image_length) &&
+            (end <= excluded.storage_base || root >= excluded.storage_base + excluded.storage_length) {
+            true -> walk(bytes, map_size as u64 in Trapping, descriptor_size as u64 in Trapping,
+                         root, 0, false)
+            _ -> false
+        }
+    }
+
+    state walk(bytes: &[u8; 65536], map_size: u64 in Trapping,
+               descriptor_size: u64 in Trapping, root: u64,
+               offset: u64 in Trapping, found: bool) -> bool
+    requires addr::Bound == 18446744073709551616 && offset <= 65496 && root <= 0x000FFFFFFFFFF000
+    {
+        let descriptor: &EfiMemoryDescriptor = &bytes[offset] as &EfiMemoryDescriptor;
+        transition descriptor.number_of_pages > 0 && descriptor.number_of_pages <= 4503599627370495 &&
+            descriptor.physical_start % 4096 == 0 &&
+            descriptor.physical_start <= 18446744073709551615 - descriptor.number_of_pages * 4096 &&
+            (descriptor.kind < EFI_MAX_MEMORY_TYPE || descriptor.kind >= EFI_OEM_MEMORY_TYPE_MIN) &&
+            (descriptor.attribute & EFI_MEMORY_RESERVED_MASK.bits) == 0 &&
+            ((descriptor.attribute & EFI_MEMORY_ISA_MASK.bits) == 0 ||
+             (descriptor.attribute & EFI_MEMORY_ISA_VALID.bits) != 0) {
+            true -> compare(bytes, map_size, descriptor_size, root, offset, found, descriptor)
+            _ -> false
+        }
+    }
+
+    state compare(bytes: &[u8; 65536], map_size: u64 in Trapping,
+                  descriptor_size: u64 in Trapping, root: u64,
+                  offset: u64 in Trapping, found: bool, descriptor: &EfiMemoryDescriptor) -> bool
+    requires addr::Bound == 18446744073709551616 && offset <= 65496 && root <= 0x000FFFFFFFFFF000 &&
+        descriptor.number_of_pages <= 4503599627370495 &&
+        descriptor.physical_start <= 18446744073709551615 - descriptor.number_of_pages * 4096
+    {
+        let end: u64 = descriptor.physical_start + descriptor.number_of_pages * 4096;
+        transition root < end && descriptor.physical_start < root + 4096 {
+            true -> covering(bytes, map_size, descriptor_size, root, offset, found, descriptor, end)
+            _ -> advance(bytes, map_size, descriptor_size, root, offset, found)
+        }
+    }
+
+    state covering(bytes: &[u8; 65536], map_size: u64 in Trapping,
+                   descriptor_size: u64 in Trapping, root: u64,
+                   offset: u64 in Trapping, found: bool,
+                   descriptor: &EfiMemoryDescriptor, end: u64) -> bool
+    requires addr::Bound == 18446744073709551616 && offset <= 65496 && root <= 0x000FFFFFFFFFF000
+    {
+        // UEFI 2.11 table 7.6 returns these non-runtime allocations to OS
+        // ownership after ExitBootServices. Do not infer that Conventional,
+        // runtime, ACPI, reserved or device memory contains a live table.
+        transition !found && descriptor.physical_start <= root && root + 4096 <= end &&
+            (descriptor.kind == EFI_LOADER_DATA || descriptor.kind == EFI_BOOT_SERVICES_CODE ||
+             descriptor.kind == EFI_BOOT_SERVICES_DATA) &&
+            (descriptor.attribute & (EFI_MEMORY_RUNTIME.bits | EFI_MEMORY_HOT_PLUGGABLE.bits | EFI_MEMORY_SP.bits)) == 0 {
+            true -> advance(bytes, map_size, descriptor_size, root, offset, true)
+            _ -> false
+        }
+    }
+
+    state advance(bytes: &[u8; 65536], map_size: u64 in Trapping,
+                  descriptor_size: u64 in Trapping, root: u64,
+                  offset: u64 in Trapping, found: bool) -> bool
+    requires addr::Bound == 18446744073709551616 && offset <= 65496 && root <= 0x000FFFFFFFFFF000
+    {
+        transition offset + descriptor_size < map_size && offset + descriptor_size <= 65496 {
+            true -> walk(bytes, map_size, descriptor_size, root, offset + descriptor_size, found)
+            _ -> found
+        }
+    }
+}
