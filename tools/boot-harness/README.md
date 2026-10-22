@@ -59,11 +59,16 @@ initialized with 17 and 41, independent
 writes of 29 and 73, rereading the first after the second write, and extraction
 of both updated values. `Page ready` additionally requires an aligned 4096-byte
 page prepared after an eight-byte reservation, indexed resident reads of 17 and
-73, helper writes of 29 and 97 to the first and last words, rereads and independent
-whole-page extraction of those updated values,
+73, helper writes of 29 and 97 to the first and last words, rereads, a borrowed
+External snapshot of all 512 words, and independent whole-page extraction of
+those updated values,
 zero readback of all 512 words, and retention of the initialized page, padding
 and remaining tail. Changing the expected extracted last word from 97 to 98
-suppresses the page marker while the preceding markers still appear.
+suppresses the page marker while the preceding markers still appear. Requiring
+98 instead of 97 in `PageFrame::check_snapshot` also suppresses that marker:
+the snapshot's copied bytes participate in acceptance. The snapshot borrows
+the original grant without moving resident custody or claiming Stable access.
+This known-page control does not yet observe the active firmware root.
 `Tables ready` additionally requires four aligned, resident 4096-byte table
 pages carved from the retained tail. The kernel writes the three links and one
 RW/supervisor/NX leaf to the retained target page, reads the actual packed words

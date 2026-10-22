@@ -1,5 +1,6 @@
 use omega::language::core::extent;
 use omega::language::core::layout;
+use paging_handoff;
 
 // Boot owns this first page and all skipped bytes until a later kernel owner
 // takes them. Alignment is geometry, not authority: both splits conserve the
@@ -76,8 +77,15 @@ reaches ResourceProfileSupply
         let indexed: bool = PageFrame::overwrite(
             Placed::view_resident_mut<KernelPagePlacement, KernelPage>(&mut retained)
         );
+        // Exercise the same conservative External snapshot needed for the
+        // active firmware root while its bytes still have a known oracle.
+        // This borrows the existing grant; resident custody stays with retained.
+        let snapshot: FirmwareRootSnapshot = PagingHandoff::snapshot(
+            (&retained) as &Extent in Granted
+        );
+        let copied: bool = PageFrame::check_snapshot(snapshot);
         transition NativePlacement<KernelPagePlacement, KernelPage>::move_out(retained) {
-            PlacementExtraction::Moved { storage, value } -> clear(padding, storage, tail, geometry && indexed, value)
+            PlacementExtraction::Moved { storage, value } -> clear(padding, storage, tail, geometry && indexed && copied, value)
         }
     }
 
@@ -117,6 +125,17 @@ reaches ResourceProfileSupply
                 tail: tail, verified: false,
             }
         }
+    }
+}
+
+machine PageFrame::check_snapshot(snapshot: FirmwareRootSnapshot) -> bool {
+    transition snapshot {
+        FirmwareRootSnapshot::Ready { entries } -> check(entries)
+        FirmwareRootSnapshot::Unavailable -> false
+    }
+    state check(entries: [u64; 512]) -> bool {
+        let page: KernelPage = KernelPage { words: entries };
+        PageFrame::check_image(&page)
     }
 }
 

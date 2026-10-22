@@ -1,0 +1,69 @@
+use omega::language::core::extent;
+use omega::language::core::layout;
+
+// The firmware root remains active while it is observed. Hardware may set
+// accessed bits, so a Stable borrow would assert a property we do not own.
+// This view copies full-width entries without claiming resident custody or
+// changing their permissions. The caller must retain the original table
+// closure and supply an admitted profile for this exact granted range.
+public data FirmwarePageRoot {
+    entries: [u64; 512];
+}
+
+public data FirmwarePageRootPlacement {}
+data PagingHandoff {}
+
+data FirmwareRootSnapshot {
+    case Unavailable;
+    case Ready(entries: [u64; 512]);
+}
+
+machine FirmwarePageRootPlacement::plan(schema: Schema) -> PlacementPlan {
+    let mut fields: [FieldEntry; 64];
+    fields[0] = FieldEntry {
+        key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 },
+    };
+    let services: [u64; 32];
+    PlacementPlan {
+        layout: Plan {
+            entries: fields, entry_count: 1, size_fixed: 4096,
+            size_is_dynamic: false, align: 4096,
+        },
+        access: AccessPlan::with(AccessPlan::inaccessible(&schema), schema.fields[0].key,
+            FieldAccess::External {
+                read: ExternalRead::Read, write: false, exposure: Exposure::Exported,
+            }),
+        reach: BoundaryReach { services: services, service_count: 0 },
+    }
+}
+
+machine PagingHandoff::snapshot(root: &Extent in Granted) -> FirmwareRootSnapshot
+reaches ResourceProfileSupply
+{
+    let entries: [u64; 512];
+    let opened: PlacementOutcome<&Placed<FirmwarePageRootPlacement, FirmwarePageRoot>, PlacementBorrowReturn, PlacementInitializationFailure> =
+        Placed::view_extent<FirmwarePageRootPlacement, FirmwarePageRoot>(root);
+    transition opened {
+        PlacementOutcome::Ready { view } -> copy(view, 0, entries)
+        PlacementOutcome::Rejected { returned, reason } -> FirmwareRootSnapshot::Unavailable
+    }
+
+    state copy(view: &Placed<FirmwarePageRootPlacement, FirmwarePageRoot>,
+               next: u64, entries: [u64; 512]) -> FirmwareRootSnapshot
+    requires next <= 512
+    {
+        transition next < 512 {
+            true -> read(view, next, entries)
+            _ -> FirmwareRootSnapshot::Ready { entries: entries }
+        }
+    }
+
+    state read(view: &Placed<FirmwarePageRootPlacement, FirmwarePageRoot>,
+               next: u64, entries: [u64; 512]) -> FirmwareRootSnapshot
+    requires next < 512
+    {
+        let mut copied: [u64; 512] = entries;
+        copied[next] = placed_read(&view.entries[next]);
+        transition { _ -> copy(view, next + 1, copied) }
+    }
+}

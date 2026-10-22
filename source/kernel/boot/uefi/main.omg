@@ -9,6 +9,7 @@ use uefi::loaded_image;
 use own_machine;
 use physical_entry;
 use kernel_entry;
+use paging_handoff;
 use core::extent;
 use omega::language::core::assembly; // PortIo, MachineControl
 use omega::language::core::extent;   // ExtentRootProvider

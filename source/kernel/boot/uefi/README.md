@@ -217,6 +217,28 @@ Compilation needs Omega's declaration-preserving reference-call proof repair
 and occurrence-local cleanup case evidence: a rejected nested reservation
 must retain its storage even when earlier partial transfers retire live facts.
 
+## Borrowed page snapshot
+
+`paging_handoff.omg` copies a qualified 4096-byte page through a read-only
+External placed view. It retains the view through the copying states and
+returns an ordinary 512-word snapshot; the caller keeps the original extent.
+`PageFrame::prepare` exercises it on the known resident page before extraction,
+checking 29 and 97 at its endpoints and zero in every interior slot. Only a
+valid snapshot permits `Page ready`. A fresh QEMU image with the snapshot
+oracle changed to require 98 stops after `Memory paired`.
+
+The view needs Omega's borrowed nonresident placement operation and preservation
+of its result lifetime and exact backing through local storage, case selection,
+state parameters and indexed reads. It creates no Granted, Vacant or Resident
+qualification. The selected provider still supplies the exact range's profile.
+External observation is deliberate: hardware may change accessed bits in active
+firmware tables, so Stable observation would be an unsupported promise.
+
+The current test snapshots our known allocated page, not the active firmware
+CR3 root. Actual firmware-table observation still needs an admitted root and
+retained reachable table closure from the final memory map; a numeric CR3 value
+alone grants neither. Snapshot success does not install translations.
+
 ## CPU paging profile
 
 After table readback, `Kernel::observe_paging` reads CR0, CR4 and IA32_EFER through
