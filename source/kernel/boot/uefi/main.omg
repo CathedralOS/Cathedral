@@ -10,10 +10,12 @@ use own_machine;
 use physical_entry;
 use kernel_entry;
 use paging_handoff;
+use boot_handoff;
 use core::extent;
 use omega::language::core::assembly; // PortIo, MachineControl
 use omega::language::core::extent;   // ExtentRootProvider
 use omega::language::core::program_image;
+use omega::language::core::layout;
 
 // Invocation-owned storage. Provider implementations are selected in build.omg;
 // firmware handles and table borrows stay explicit arguments. Neither this
@@ -21,6 +23,8 @@ use omega::language::core::program_image;
 data Main {
     msg:      [u16; 19];         // "Hello from Omega\r\n\0" as UTF-16 CHAR16 code units
     map_buf:  UefiMemoryMapStorage; // aligned bounded map backing, no authority
+    final_map_size: u64;
+    final_descriptor_size: u64;
     image_base: addr;
     image_size: u64;
     image_retained_start: u64;
@@ -30,13 +34,14 @@ data Main {
 // Selecting PE's subsystem alone cannot install this function or establish
 // the validity of table. The target adapter must supply those premises.
 machine Main::run(context: &mut Main, handle: EfiHandle in LoadedApplication, table: &EfiSystemTable) -> EfiStatus
-reaches SimpleTextOutput + LoadedImageAccess + BootServices + ExtentRootProvider + ProgramStorageEntry + ProgramImage + PortIo + MachineControl
+reaches SimpleTextOutput + LoadedImageAccess + BootServices + ExtentRootProvider + ProgramStorageEntry + ProgramImage + ResourceProfileSupply + PortIo + MachineControl
 invokes SimpleTextOutput;
 invokes LoadedImageAccess;
 invokes BootServices;
 invokes ExtentRootProvider;
 invokes ProgramStorageEntry;
 invokes ProgramImage;
+invokes ResourceProfileSupply;
 requires addr::Bound == 18446744073709551616
 {
     context.msg = utf16"Hello from Omega\r\n\0";

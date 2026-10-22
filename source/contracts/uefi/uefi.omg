@@ -15,6 +15,7 @@
 use omega::language::core::extent; // ProgramStorageEntry
 use omega::language::core::assembly;
 use omega::language::core::program_image;
+use omega::language::core::layout;
 use std::calling;
 
 // --- Scalars (UEFI spec) --------------------------------------------------
@@ -131,13 +132,14 @@ public data EfiSystemTable {
 public boundary trait UefiPhysicalEntry {
     machine enter(handle: EfiHandle in LoadedApplication, table: &EfiSystemTable) -> EfiStatus
     requires addr::Bound == 18446744073709551616
-    reaches SimpleTextOutput + LoadedImageAccess + BootServices + ExtentRootProvider + ProgramStorageEntry + ProgramImage + PortIo + MachineControl
+    reaches SimpleTextOutput + LoadedImageAccess + BootServices + ExtentRootProvider + ProgramStorageEntry + ProgramImage + ResourceProfileSupply + PortIo + MachineControl
     invokes SimpleTextOutput;
     invokes LoadedImageAccess;
     invokes BootServices;
     invokes ExtentRootProvider;
     invokes ProgramStorageEntry;
     invokes ProgramImage;
+    invokes ResourceProfileSupply;
 }
 
 // One source policy describes both signatures. The compiler checks the exact

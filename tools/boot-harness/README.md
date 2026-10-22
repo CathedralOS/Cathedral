@@ -44,9 +44,12 @@ firmware is an error. Split firmware gets a fresh writable variable store.
 Without `--smoke`, QEMU's serial console is interactive. With it, the guest
 runs headlessly for at most `--timeout` seconds (default 30), and this run's
 serial log must contain the greeting followed by a complete numeric
-`Owned N MiB` line, then `Kernel entered`, `Memory split`, `Memory checked`,
+`Owned N MiB` line, then `Boot map ready`, `Kernel entered`, `Memory split`, `Memory checked`,
 `Memory paired`, `Page ready`, `Tables ready`, and `CPU checked`.
-The partition marker
+The boot-map marker requires the kernel to copy the final memory map from the
+explicit initial-storage packet and check its format, byte count, descriptor
+stride, checksum, original storage base and image-prefix correspondence. It
+does not authenticate firmware or grant table-root authority. The partition marker
 requires the kernel to establish vacancy for its initial-storage root, split
 4096 bytes with the checked core operation, and observe both returned lengths.
 Both children remain owned. `Memory checked` additionally requires successful

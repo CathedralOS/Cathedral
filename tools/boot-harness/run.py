@@ -87,9 +87,13 @@ def check_boot_milestones(output):
     owned = re.search(rb'(?:^|[\r\n])Owned [0-9]+\+? MiB\r?\n', output)
     if greeting < 0 or owned is None or owned.start() <= greeting:
         raise ValueError('Expected greeting followed by a complete owned-memory report.')
-    kernel = output.find(b'Kernel entered\r\n', owned.end())
+    after_owned = output[owned.end():]
+    handoff = re.search(rb'(?:^|\n)Boot map ready\r?\n', after_owned)
+    if handoff is None:
+        raise ValueError('Expected complete boot-map handoff after the owned-memory report.')
+    kernel = output.find(b'Kernel entered\r\n', owned.end() + handoff.end())
     if kernel < 0:
-        raise ValueError('Expected selected kernel entry after the owned-memory report.')
+        raise ValueError('Expected selected kernel entry after the boot-map handoff.')
     memory = output.find(b'Memory split\r\n', kernel + len(b'Kernel entered\r\n'))
     if memory < 0:
         raise ValueError('Expected checked memory partition after kernel entry.')
@@ -123,7 +127,7 @@ def main(arguments=None):
                         help='run ordinary omega update for dependency review before building')
     parser.add_argument('--build-dir', type=Path, default=ROOT / 'build/boot-harness')
     parser.add_argument('--smoke', action='store_true',
-                        help='require greeting, owned-memory report, kernel entry, memory split, memory checked, memory paired, page ready, tables ready and CPU checked')
+                        help='require greeting, owned-memory report, boot-map handoff, kernel entry, memory split, memory checked, memory paired, page ready, tables ready and CPU checked')
     parser.add_argument('--timeout', type=float, default=30)
     options = parser.parse_args(arguments)
     if options.timeout <= 0:

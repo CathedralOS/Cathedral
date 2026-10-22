@@ -1,0 +1,193 @@
+use omega::language::core::extent;
+use omega::language::core::layout;
+
+// The semantic entry carries two extents, not hidden firmware parameters.
+// Boot writes this copy-only packet into its granted initial storage after
+// successful firmware exit. Kernel reads it before partitioning that storage.
+// The bytes describe the final map; they never establish backing or new grants.
+// No Omega Resident is created: these are explicit External byte transfers.
+public data BootHandoffImage {
+    header: [u64; 9];
+    bytes: [u8; 65536];
+}
+public data BootHandoffPlacement {}
+data BootHandoff {}
+
+data BootInformation {
+    map_size: u64;
+    descriptor_size: u64;
+    image_base: u64;
+    image_size: u64;
+    retained_start: u64;
+    bytes: [u8; 65536];
+}
+
+const BOOT_HANDOFF_MAGIC: u64 = 0x43415448424F4F54;
+const BOOT_HANDOFF_BYTES: u64 = 65608;
+
+machine BootHandoffPlacement::plan(schema: Schema) -> PlacementPlan {
+    let mut fields: [FieldEntry; 64];
+    fields[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    fields[1] = FieldEntry { key: schema.fields[1].key, placement: FieldPlan::At { offset: 72 } };
+    let services: [u64; 32];
+    let access: AccessPlan = AccessPlan::with(
+        AccessPlan::inaccessible(&schema), schema.fields[0].key,
+        FieldAccess::External { read: ExternalRead::Read, write: true, exposure: Exposure::Exported }
+    );
+    PlacementPlan {
+        layout: Plan { entries: fields, entry_count: 2, size_fixed: BOOT_HANDOFF_BYTES, size_is_dynamic: false, align: 8 },
+        access: AccessPlan::with(access, schema.fields[1].key,
+            FieldAccess::External { read: ExternalRead::Read, write: true, exposure: Exposure::Exported }),
+        reach: BoundaryReach { services: services, service_count: 0 },
+    }
+}
+
+machine BootHandoff::publish(storage: &mut Extent in Granted, bytes: &[u8; 65536],
+                             map_size: u64, descriptor_size: u64,
+                             image_base: u64, image_size: u64, retained_start: u64) -> bool
+requires addr::Bound == 18446744073709551616
+reaches ResourceProfileSupply
+{
+    transition map_size > 0 && map_size <= 65536 &&
+               descriptor_size >= 40 && descriptor_size <= map_size &&
+               descriptor_size % 8 == 0 && map_size % descriptor_size == 0 &&
+               storage.length >= BOOT_HANDOFF_BYTES {
+        true -> open(storage, bytes, map_size, descriptor_size, image_base, image_size, retained_start)
+        _ -> false
+    }
+
+    state open(storage: &mut Extent in Granted, bytes: &[u8; 65536],
+               map_size: u64, descriptor_size: u64,
+               image_base: u64, image_size: u64, retained_start: u64) -> bool
+    requires addr::Bound == 18446744073709551616 && map_size <= 65536
+    {
+        let base: u64 = storage.base as u64;
+        transition Placed::view_extent_mut<BootHandoffPlacement, BootHandoffImage>(storage) {
+            PlacementOutcome::Ready { view } -> header(view, bytes, map_size, descriptor_size,
+                image_base, image_size, retained_start, base)
+            PlacementOutcome::Rejected { returned, reason } -> false
+        }
+    }
+
+    state header(view: &mut Placed<BootHandoffPlacement, BootHandoffImage>, bytes: &[u8; 65536],
+                 map_size: u64, descriptor_size: u64, image_base: u64, image_size: u64,
+                 retained_start: u64, storage_base: u64) -> bool
+    requires map_size <= 65536
+    {
+        // Clear completion first and publish it last. A partial packet must
+        // not become an accepted handoff even if its numeric header fits.
+        placed_write(&mut view.header[0], 0u64);
+        placed_write(&mut view.header[1], 1u64);
+        placed_write(&mut view.header[2], map_size);
+        placed_write(&mut view.header[3], descriptor_size);
+        placed_write(&mut view.header[4], image_base);
+        placed_write(&mut view.header[5], image_size);
+        placed_write(&mut view.header[6], retained_start);
+        placed_write(&mut view.header[7], storage_base);
+        transition { _ -> copy(view, bytes, map_size, 0, 0) }
+    }
+
+    state copy(view: &mut Placed<BootHandoffPlacement, BootHandoffImage>,
+               bytes: &[u8; 65536], map_size: u64, next: u64,
+               checksum: u64 in Wrapping) -> bool
+    requires map_size <= 65536 && next <= map_size
+    {
+        transition next < map_size {
+            true -> write_byte(view, bytes, map_size, next, checksum)
+            _ -> complete(view, checksum)
+        }
+    }
+
+    state write_byte(view: &mut Placed<BootHandoffPlacement, BootHandoffImage>,
+                     bytes: &[u8; 65536], map_size: u64, next: u64,
+                     checksum: u64 in Wrapping) -> bool
+    requires map_size <= 65536 && next < map_size
+    {
+        let byte: u8 = bytes[next];
+        placed_write(&mut view.bytes[next], byte);
+        let summed: u64 in Wrapping = checksum + (byte as u64 in Wrapping);
+        transition { _ -> copy(view, bytes, map_size, next + 1, summed) }
+    }
+
+    state complete(view: &mut Placed<BootHandoffPlacement, BootHandoffImage>,
+                   checksum: u64 in Wrapping) -> bool {
+        // This copy-integrity checksum is not authentication or memory authority.
+        placed_write(&mut view.header[8], checksum as u64);
+        placed_write(&mut view.header[0], BOOT_HANDOFF_MAGIC);
+        true
+    }
+}
+
+machine BootHandoff::receive(storage: &Extent in Granted, information: &mut BootInformation) -> bool
+requires addr::Bound == 18446744073709551616
+reaches ResourceProfileSupply
+{
+    let base: u64 = storage.base as u64;
+    transition storage.length >= BOOT_HANDOFF_BYTES {
+        true -> open(storage, information, base)
+        _ -> false
+    }
+
+    state open(storage: &Extent in Granted, information: &mut BootInformation, base: u64) -> bool {
+        transition Placed::view_extent<BootHandoffPlacement, BootHandoffImage>(storage) {
+            PlacementOutcome::Ready { view } -> header(view, information, base)
+            PlacementOutcome::Rejected { returned, reason } -> false
+        }
+    }
+
+    state header(view: &Placed<BootHandoffPlacement, BootHandoffImage>,
+                 information: &mut BootInformation, base: u64) -> bool {
+        let magic: u64 = placed_read(&view.header[0]);
+        let version: u64 = placed_read(&view.header[1]);
+        let map_size: u64 = placed_read(&view.header[2]);
+        let descriptor_size: u64 = placed_read(&view.header[3]);
+        let storage_base: u64 = placed_read(&view.header[7]);
+        transition magic == BOOT_HANDOFF_MAGIC && version == 1 && storage_base == base &&
+                   map_size > 0 && map_size <= 65536 &&
+                   descriptor_size >= 40 && descriptor_size <= map_size &&
+                   descriptor_size % 8 == 0 && map_size % descriptor_size == 0 {
+            true -> metadata(view, information, map_size, descriptor_size)
+            _ -> false
+        }
+    }
+
+    state metadata(view: &Placed<BootHandoffPlacement, BootHandoffImage>,
+                   information: &mut BootInformation, map_size: u64, descriptor_size: u64) -> bool
+    requires map_size <= 65536
+    {
+        information.map_size = map_size;
+        information.descriptor_size = descriptor_size;
+        information.image_base = placed_read(&view.header[4]);
+        information.image_size = placed_read(&view.header[5]);
+        information.retained_start = placed_read(&view.header[6]);
+        transition { _ -> copy(view, information, map_size, 0, 0) }
+    }
+
+    state copy(view: &Placed<BootHandoffPlacement, BootHandoffImage>,
+               information: &mut BootInformation, map_size: u64, next: u64,
+               checksum: u64 in Wrapping) -> bool
+    requires map_size <= 65536 && next <= map_size
+    {
+        transition next < map_size {
+            true -> read_byte(view, information, map_size, next, checksum)
+            _ -> complete(view, checksum)
+        }
+    }
+
+    state complete(view: &Placed<BootHandoffPlacement, BootHandoffImage>,
+                   checksum: u64 in Wrapping) -> bool {
+        let expected: u64 = placed_read(&view.header[8]);
+        checksum as u64 == expected
+    }
+
+    state read_byte(view: &Placed<BootHandoffPlacement, BootHandoffImage>,
+                    information: &mut BootInformation, map_size: u64, next: u64,
+                    checksum: u64 in Wrapping) -> bool
+    requires map_size <= 65536 && next < map_size
+    {
+        let byte: u8 = placed_read(&view.bytes[next]);
+        information.bytes[next] = byte;
+        let summed: u64 in Wrapping = checksum + (byte as u64 in Wrapping);
+        transition { _ -> copy(view, information, map_size, next + 1, summed) }
+    }
+}

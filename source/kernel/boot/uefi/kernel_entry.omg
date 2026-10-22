@@ -5,6 +5,7 @@ use memory_lifecycle;
 use page_frame;
 use core::page_tables;
 use core::paging_profile;
+use boot_handoff;
 
 data BootPageTables {
     leading: Extent in Granted & Vacant;
@@ -17,6 +18,7 @@ data KernelState {
     entered: bool;
     image_bytes: u64;
     initial_storage_bytes: u64;
+    boot_information: BootInformation;
 }
 
 data Kernel {}
@@ -99,9 +101,83 @@ invokes PlacementLifecycle;
                     initial_storage: Extent in Granted)
     requires addr::Bound == 18446744073709551616
     {
+        let copied: bool = BootHandoff::receive(&initial_storage, &mut context.boot_information);
+        transition copied {
+            true -> check_handoff(context, image, initial_storage)
+            _ -> retain(context, image, initial_storage)
+        }
+    }
+
+    state check_handoff(context: &mut KernelState, image: Extent in Granted,
+                        initial_storage: Extent in Granted)
+    requires addr::Bound == 18446744073709551616
+    {
+        // Packet geometry must describe the same image partition the entry
+        // already owns. These comparisons supply no additional grant.
+        transition context.boot_information.image_base == image.base as u64 &&
+                   context.boot_information.retained_start >= context.boot_information.image_base &&
+                   context.boot_information.retained_start - context.boot_information.image_base == image.length &&
+                   context.boot_information.image_size >= image.length {
+            true -> accept_handoff(context, image, initial_storage)
+            _ -> retain(context, image, initial_storage)
+        }
+    }
+
+    state accept_handoff(context: &mut KernelState, image: Extent in Granted,
+                         initial_storage: Extent in Granted)
+    requires addr::Bound == 18446744073709551616
+    {
         context.image_bytes = image.length;
         context.initial_storage_bytes = initial_storage.length;
         context.entered = true;
+        // The complete final map is now ordinary invocation-owned context.
+        // The temporary external packet contains no Omega resident and can be
+        // overwritten by the subsequent vacant-storage allocator.
+        transition { _ -> handoff_wait(context, image, initial_storage, 1000000) }
+    }
+
+    state handoff_wait(context: &mut KernelState, image: Extent in Granted,
+                       initial_storage: Extent in Granted, remaining: u64)
+    requires addr::Bound == 18446744073709551616
+    {
+        let mut status: u8 = 0;
+        asm { in status, 1021 }
+        transition (status & 32) != 0 {
+            true -> handoff_report(context, image, initial_storage)
+            _ -> handoff_retry(context, image, initial_storage, remaining)
+        }
+    }
+
+    state handoff_retry(context: &mut KernelState, image: Extent in Granted,
+                        initial_storage: Extent in Granted, remaining: u64)
+    requires addr::Bound == 18446744073709551616
+    {
+        transition remaining > 1 {
+            true -> handoff_wait(context, image, initial_storage, remaining - 1)
+            _ -> retain(context, image, initial_storage)
+        }
+    }
+
+    state handoff_report(context: &mut KernelState, image: Extent in Granted,
+                         initial_storage: Extent in Granted)
+    requires addr::Bound == 18446744073709551616
+    {
+        asm { out 1016, 66 } // Boot map ready
+        asm { out 1016, 111 }
+        asm { out 1016, 111 }
+        asm { out 1016, 116 }
+        asm { out 1016, 32 }
+        asm { out 1016, 109 }
+        asm { out 1016, 97 }
+        asm { out 1016, 112 }
+        asm { out 1016, 32 }
+        asm { out 1016, 114 }
+        asm { out 1016, 101 }
+        asm { out 1016, 97 }
+        asm { out 1016, 100 }
+        asm { out 1016, 121 }
+        asm { out 1016, 13 }
+        asm { out 1016, 10 }
         transition { _ -> announce(context, image, initial_storage, 1000000) }
     }
 

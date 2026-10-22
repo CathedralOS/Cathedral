@@ -17,6 +17,8 @@ use core::extent;          // PAGE_SIZE + checked ExtentRootProvider adapter
 use core::boot_geometry;   // numeric joint geometry; never backing authority
 use omega::language::core::assembly; // PortIo, MachineControl
 use omega::language::core::extent;   // Extent, Granted, ExtentRootProvider
+use omega::language::core::layout;
+use boot_handoff;
 
 // Conservative runtime geometry ceiling for one page-count multiplication.
 // This is ordinary Cathedral policy over firmware data, not evidence that the
@@ -60,7 +62,7 @@ data KernelRoots {
 // uses the remaining provision only after an exact EFI_BUFFER_TOO_SMALL result
 // reports a requirement within the fixed ceiling.
 machine Main::own_machine(context: &mut Main, handle: EfiHandle, table: &EfiSystemTable)
-reaches BootServices + ExtentRootProvider + ProgramStorageEntry + PortIo + MachineControl
+reaches BootServices + ExtentRootProvider + ProgramStorageEntry + ResourceProfileSupply + PortIo + MachineControl
 requires addr::Bound == 18446744073709551616
 {
     // The boundary vouches the reference shape, not arbitrary firmware field
@@ -117,6 +119,8 @@ requires addr::Bound == 18446744073709551616
             &mut desc_version
         );
         let status_code: u64 = status.code;
+        context.final_map_size = map_size;
+        context.final_descriptor_size = desc_size;
 
         // Sanity-gate the firmware's out-values BEFORE trusting them: the call
         // must report SUCCESS with the exact descriptor revision this source
@@ -244,7 +248,9 @@ requires addr::Bound == 18446744073709551616
         let checked_length: u64 in Trapping = checked_pages * PAGE_SIZE;
         let length: u64 = checked_length as u64;
         let max_address: u64 = 0xFFFF_FFFF_FFFF_FFFF;
-        transition best_start <= max_address - length {
+        // The selected span must hold the complete handoff packet before we
+        // make the irreversible ExitBootServices call.
+        transition length >= BOOT_HANDOFF_BYTES && best_start <= max_address - length {
             true -> prepare_audit(context, bs, handle, stale_retry_used,
                                   map_size, desc_size, key, best_start,
                                   best_pages, length, best_offset)
@@ -508,7 +514,7 @@ requires addr::Bound == 18446744073709551616
         let exit_status: EfiStatus = BootServices::exit_boot_services(bs, handle, key);
         let exit_code: u64 = exit_status.code;
         transition exit_code == 0 {
-            true -> own(geometry, best_pages)
+            true -> own(context, geometry, best_pages)
             _    -> exit_failed(context, bs, handle, stale_retry_used, exit_code)
         }
     }
@@ -530,7 +536,7 @@ requires addr::Bound == 18446744073709551616
     // validated largest-span values, then cross the admitted owner-authored
     // provider requirement for each root. Reconstructing these fields alone
     // does not grant authority; the selected calls establish their claims.
-    state own(geometry: BootGeometry in Separated, best_pages: u64)
+    state own(context: &mut Main, geometry: BootGeometry in Separated, best_pages: u64)
     requires addr::Bound == 18446744073709551616
     {
         let image_geometry: Extent = Extent {
@@ -542,9 +548,20 @@ requires addr::Bound == 18446744073709551616
             length: geometry.storage_length,
         };
         let image: Extent = ExtentRootProvider::grant(image_geometry);
-        let storage: Extent = ExtentRootProvider::grant(storage_geometry);
+        let mut storage: Extent in Granted = ExtentRootProvider::grant(storage_geometry);
+        let published: bool = BootHandoff::publish(&mut storage, &context.map_buf.bytes,
+            context.final_map_size, context.final_descriptor_size,
+            context.image_base as u64, context.image_size, context.image_retained_start);
         let roots: KernelRoots = KernelRoots { image: image, initial_storage: storage };
-        transition { _ -> serial_init(roots, best_pages as u64 in Trapping) }
+        transition published {
+            true -> serial_init(roots, best_pages as u64 in Trapping)
+            _ -> retain_roots(roots)
+        }
+    }
+
+    state retain_roots(roots: KernelRoots) {
+        asm { hlt }
+        transition { _ -> retain_roots(roots) }
     }
 
     // --- MILESTONE 3: the serial report ------------------------------------

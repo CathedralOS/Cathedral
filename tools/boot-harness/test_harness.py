@@ -32,8 +32,8 @@ class BootHarnessTests(unittest.TestCase):
             self.assertEqual((first / 'serial.log').read_bytes(), b'first')
 
     def test_smoke_requires_ordered_complete_reports_through_resident_readback(self):
-        boot.check_boot_milestones(b'Hello from Omega\r\nOwned 128 MiB\r\nKernel entered\r\nMemory split\r\nMemory checked\r\nMemory paired\r\nPage ready\r\nTables ready\r\nCPU checked\r\n')
-        boot.check_boot_milestones(b'Hello from Omega\nOwned 99999+ MiB\nKernel entered\r\nMemory split\r\nMemory checked\nMemory paired\nPage ready\nTables ready\nCPU checked\n')
+        boot.check_boot_milestones(b'Hello from Omega\r\nOwned 128 MiB\r\nBoot map ready\r\nKernel entered\r\nMemory split\r\nMemory checked\r\nMemory paired\r\nPage ready\r\nTables ready\r\nCPU checked\r\n')
+        boot.check_boot_milestones(b'Hello from Omega\nOwned 99999+ MiB\nBoot map ready\nKernel entered\r\nMemory split\r\nMemory checked\nMemory paired\nPage ready\nTables ready\nCPU checked\n')
         for output in (b'', b'Hello from Omega\r\n',
                        b'Owned 128 MiB\nHello from Omega\n',
                        b'Hello from Omega\nOwned rubbish MiB\n',
@@ -50,7 +50,7 @@ class BootHarnessTests(unittest.TestCase):
                     boot.check_boot_milestones(output)
 
     def test_split_only_or_invalid_resident_report_cannot_satisfy_smoke(self):
-        through_split = b'Hello from Omega\r\nOwned 128 MiB\r\nKernel entered\r\nMemory split\r\n'
+        through_split = b'Hello from Omega\r\nOwned 128 MiB\r\nBoot map ready\r\nKernel entered\r\nMemory split\r\n'
         for output in (through_split,
                        through_split + b'Memory checked',
                        through_split + b'Memory checked\r',
@@ -62,6 +62,18 @@ class BootHarnessTests(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, 'resident initialization'):
                     boot.check_boot_milestones(output)
 
+    def test_missing_partial_or_misordered_handoff_does_not_count(self):
+        before = b'Hello from Omega\r\nOwned 128 MiB\r\n'
+        after = b'Kernel entered\r\nMemory split\r\nMemory checked\r\nMemory paired\r\nPage ready\r\nTables ready\r\nCPU checked\r\n'
+        for output in (before + after,
+                       before + b'Boot map ready' + after,
+                       before + b'Not Boot map ready\r\n' + after,
+                       b'Boot map ready\r\n' + before + after,
+                       before + after + b'Boot map ready\r\n'):
+            with self.subTest(output=output):
+                with self.assertRaisesRegex(ValueError, 'boot-map handoff'):
+                    boot.check_boot_milestones(output)
+
     def test_source_checkout_uses_current_cli_package(self):
         with tempfile.TemporaryDirectory() as temporary:
             repository = Path(temporary)
@@ -70,7 +82,7 @@ class BootHarnessTests(unittest.TestCase):
             self.assertEqual(command[-3:], ['-p', 'omega', '--'])
 
     def test_single_resident_or_invalid_pair_report_cannot_satisfy_smoke(self):
-        prefix = b'Hello from Omega\r\nOwned 128 MiB\r\nKernel entered\r\nMemory split\r\nMemory checked\r\n'
+        prefix = b'Hello from Omega\r\nOwned 128 MiB\r\nBoot map ready\r\nKernel entered\r\nMemory split\r\nMemory checked\r\n'
         for output in (prefix, prefix + b'Memory paired', prefix + b'Memory paired\r',
                        prefix + b'Not Memory paired\r\n', b'Memory paired\r\n' + prefix,
                        prefix.replace(b'Memory checked\r\n', b'Memory paired\r\nMemory checked\r\n')):
@@ -83,7 +95,7 @@ class BootHarnessTests(unittest.TestCase):
         self.assertEqual(command, [str(Path('selected-omega').resolve())])
 
     def test_pair_only_or_invalid_page_report_cannot_satisfy_smoke(self):
-        prefix = b'Hello from Omega\r\nOwned 128 MiB\r\nKernel entered\r\nMemory split\r\nMemory checked\r\nMemory paired\r\n'
+        prefix = b'Hello from Omega\r\nOwned 128 MiB\r\nBoot map ready\r\nKernel entered\r\nMemory split\r\nMemory checked\r\nMemory paired\r\n'
         for output in (prefix, prefix + b'Page ready', prefix + b'Page ready\r',
                        prefix + b'Not Page ready\r\n', b'Page ready\r\n' + prefix,
                        prefix.replace(b'Memory paired\r\n', b'Page ready\r\nMemory paired\r\n')):
@@ -103,7 +115,7 @@ class BootHarnessTests(unittest.TestCase):
             self.assertEqual(stale.read_bytes(), b'old')
 
     def test_page_only_or_invalid_table_report_cannot_satisfy_smoke(self):
-        prefix = b'Hello from Omega\r\nOwned 128 MiB\r\nKernel entered\r\nMemory split\r\nMemory checked\r\nMemory paired\r\nPage ready\r\n'
+        prefix = b'Hello from Omega\r\nOwned 128 MiB\r\nBoot map ready\r\nKernel entered\r\nMemory split\r\nMemory checked\r\nMemory paired\r\nPage ready\r\n'
         for output in (prefix, prefix + b'Tables ready', prefix + b'Tables ready\r',
                        prefix + b'Not Tables ready\r\n', b'Tables ready\r\n' + prefix,
                        prefix.replace(b'Page ready\r\n', b'Tables ready\r\nPage ready\r\n')):
@@ -120,7 +132,7 @@ class BootHarnessTests(unittest.TestCase):
                     boot.build_image(['omega'], Path('main.omg'), 'uefi_x86_64', directory)
 
     def test_tables_without_supported_cpu_report_cannot_satisfy_smoke(self):
-        prefix = b'Hello from Omega\r\nOwned 128 MiB\r\nKernel entered\r\nMemory split\r\nMemory checked\r\nMemory paired\r\nPage ready\r\nTables ready\r\n'
+        prefix = b'Hello from Omega\r\nOwned 128 MiB\r\nBoot map ready\r\nKernel entered\r\nMemory split\r\nMemory checked\r\nMemory paired\r\nPage ready\r\nTables ready\r\n'
         for output in (prefix, prefix + b'CPU checked', prefix + b'CPU checked\r',
                        prefix + b'Not CPU checked\r\n', b'CPU checked\r\n' + prefix,
                        prefix.replace(b'Tables ready\r\n', b'CPU checked\r\nTables ready\r\n')):

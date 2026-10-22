@@ -6,10 +6,11 @@ the target's semantic slot to `Kernel::enter(context, image, initial_storage)`.
 `physical_entry.omg` validates the incoming table header and invokes the checked
 boot sequence. That sequence greets, discovers LoadedImage geometry, and enters
 the map/exit/report implementation in `own_machine.omg`. After successful
-ExitBootServices it grants both retained roots and calls `ProgramStorageEntry`.
+ExitBootServices it grants both retained roots, writes the final-map handoff
+packet into initial storage, and calls `ProgramStorageEntry`.
 The explicitly selected native provider transfers them to the exact
-Build-selected `Kernel::enter`, which checks its fresh context, records root
-lengths and reports arrival. It then admits vacancy for the fresh initial-storage
+Build-selected `Kernel::enter`, which checks its fresh context, copies and checks
+the handoff packet, records root lengths and reports arrival. It then admits vacancy for the fresh initial-storage
 root, partitions 4096 bytes, splits and reunites that prefix at zero, half, and
 full length, exercises resident memory on the reconstructed extent, then issues
 two eight-byte children through brief mutable-tail borrows. An oversized request
@@ -20,7 +21,7 @@ prepares an aligned page from the outer remainder, retaining every skipped byte,
 the initialized page and the remaining tail with the context and image.
 
 The fresh-image harness requires `Hello from Omega`, a complete `Owned N MiB`
-line, `Kernel entered`, `Memory split`, `Memory checked`, `Memory paired`,
+line, `Boot map ready`, `Kernel entered`, `Memory split`, `Memory checked`, `Memory paired`,
 `Page ready`, `Tables ready`, and `CPU checked`, in that order. The six-marker baseline reported 35 MiB in
 QEMU/OVMF using Omega `9e04918b1d1`. The current source requires Omega's exact address-model
 typing, representation-recast effect tracking and occurrence-local state-prefix
@@ -45,7 +46,8 @@ extent supplied to `Kernel::enter`.
 
 The generated checked caller owns a zero-initialized `KernelState` on that
 private stack and lends its ordinary mutable reference at the declared argument
-position. The kernel refuses to report entry if any initial field is nonzero.
+position. The kernel refuses to report entry if its entered flag or either
+initial root-length field is nonzero.
 Context backing is included in the call-closure demand and remains inside the
 retained suffix, never in either root transferred to the kernel.
 
@@ -72,7 +74,7 @@ separate backing and lifecycle obligations.
 
 The intended acceptance is one freshly compiled `uefi_x86_64` image under
 QEMU/OVMF: `Hello from Omega`, successful firmware exit, `Owned N MiB` over
-COM1, then `Kernel entered`, `Memory split`, `Memory checked`, `Memory paired`,
+COM1, then `Boot map ready`, `Kernel entered`, `Memory split`, `Memory checked`, `Memory paired`,
 `Page ready`, `Tables ready`, and `CPU checked`
 while retaining image, every initial-storage descendant and accounted surviving
 stack storage. `Memory checked` requires common-root reunion after all three partition sizes,
@@ -103,6 +105,28 @@ regenerate it in the receiving checkout rather than committing this worktree's
 acceptance as if it were portable.
 
 ## Boundaries and next work
+
+`boot_handoff.omg` preserves the exact successful final map and its runtime
+descriptor stride, full image geometry and retained-suffix boundary. The
+physical adapter writes this copy-only packet through an exclusive External
+view of its existing initial-storage grant. The kernel opens a shared view
+and copies the map into its invocation-owned `BootInformation` before that
+storage is handed to the allocator. Entry still takes exactly two extents;
+there is no hidden firmware parameter or extra root.
+
+The packet checks format/version, map bounds and stride, original storage base,
+image-prefix correspondence, and a byte-sum copy checksum before announcing
+`Boot map ready`. Completion is published last. The checksum detects the tested
+copy corruption; it is not authentication or proof of firmware truth. These
+External byte transfers establish no Omega Resident, so no resident custody is
+erased when the temporary packet storage is reused. The existing selected
+profile supplies compatibility for this exact ConventionalMemory allocation.
+Its selection is now explicit in the physical entry's service reach as well.
+The span's packet capacity is checked before the irreversible firmware exit.
+
+The retained map is prerequisite data for firmware-table admission, not that
+admission itself. A numeric descriptor or CR3 value still cannot establish a
+qualified table root, stable memory, or a retained reachable table closure.
 
 The firmware-neutral [joint root geometry checker](../../core/boot_geometry.omg)
 validates nonempty, nonoverflowing, disjoint image and initial-storage ranges.
