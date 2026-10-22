@@ -1,0 +1,28 @@
+use omega::language::core::extent;
+use omega::language::core::layout;
+
+// A static supply role selects this closed boot composition's initial RAM.
+// It is not a grant and cannot make unrelated firmware storage Stable.
+public data BootMemory {}
+public boundary trait BootMemorySupply: ResourceProfileSupply<BootMemory> {}
+
+// Admitted only for the initial ConventionalMemory root retained after the
+// successful firmware handoff and its conserved children. The boot mapping
+// remains live, CPU-readable/writable and exclusive for the idle kernel's
+// lifetime; no remap, firmware service or device loan may revoke it. This
+// describes backing supply, not initialized contents or a second root.
+BootMemoryProfileProvider satisfies BootMemorySupply {
+    machine profile(storage: &Extent in Granted) -> ResourceProfile {
+        let services: [u64; 32];
+        let mut regions: [ResourceRegion; 32];
+        regions[0] = ResourceRegion {
+            range: RelativeRange { offset: 0, length: storage.length },
+            peer: PeerWritability::Exclusive,
+            stable: StableCapability::ReadWrite,
+            external: ExternalCapability::None,
+            atomic: AtomicCapability::None,
+            reach: BoundaryReach { services: services, service_count: 0 },
+        };
+        ResourceProfile { regions: regions, region_count: 1 }
+    }
+}

@@ -51,7 +51,7 @@ machine InactivePageTablePlacement::plan(schema: Schema) -> PlacementPlan {
     }
 }
 
-public machine PageTableBuilder::prepare(
+public machine PageTableBuilder::prepare<Role>(
     storage: Extent in Granted & Vacant, target: &Extent in Granted, virtual_address: u64
 ) -> PageTableReservation
 requires storage.length >= 20479 && addr::Bound == 18446744073709551616
@@ -86,7 +86,7 @@ invokes ResourceProfileSupply;
     requires base <= 4503599627354112 && target <= 4503599627366400
     {
         let words: [u64; 512];
-        transition NativePlacement<InactivePageTablePlacement, InactivePageTables>::initialize(
+        transition NativePlacement<InactivePageTablePlacement, InactivePageTables, Role>::initialize(
             storage, InactivePageTables { pml4: words, pdpt: words, pd: words, pt: words }
         ) {
             PlacementOutcome::Ready { view } -> populate(padding, view, tail, base, target, indices)

@@ -1,5 +1,6 @@
 use omega::language::core::extent;
 use omega::language::core::layout;
+use boot_memory;
 
 // The semantic entry carries two extents, not hidden firmware parameters.
 // Boot writes this copy-only packet into its granted initial storage after
@@ -62,7 +63,7 @@ reaches ResourceProfileSupply
     requires addr::Bound == 18446744073709551616 && map_size <= 65536
     {
         let base: u64 = storage.base as u64;
-        transition Placed::view_extent_mut<BootHandoffPlacement, BootHandoffImage>(storage) {
+        transition Placed::view_extent_mut<BootHandoffPlacement, BootHandoffImage, BootMemory>(storage) {
             PlacementOutcome::Ready { view } -> header(view, bytes, map_size, descriptor_size,
                 image_base, image_size, retained_start, base)
             PlacementOutcome::Rejected { returned, reason } -> false
@@ -129,7 +130,7 @@ reaches ResourceProfileSupply
     }
 
     state open(storage: &Extent in Granted, information: &mut BootInformation, base: u64) -> bool {
-        transition Placed::view_extent<BootHandoffPlacement, BootHandoffImage>(storage) {
+        transition Placed::view_extent<BootHandoffPlacement, BootHandoffImage, BootMemory>(storage) {
             PlacementOutcome::Ready { view } -> header(view, information, base)
             PlacementOutcome::Rejected { returned, reason } -> false
         }

@@ -117,8 +117,12 @@ def check_boot_milestones(output):
     cpu = re.search(rb'(?:^|\n)CPU checked\r?\n', after_tables)
     if cpu is None:
         raise ValueError('Expected supported CPU paging profile after tables ready.')
-    if re.search(rb'(?:^|\n)Root located\r?\n', after_tables[cpu.end():]) is None:
+    after_cpu = after_tables[cpu.end():]
+    root = re.search(rb'(?:^|\n)Root located\r?\n', after_cpu)
+    if root is None:
         raise ValueError('Expected firmware root location in the final map after CPU checked.')
+    if re.search(rb'(?:^|\n)Root read\r?\n', after_cpu[root.end():]) is None:
+        raise ValueError('Expected admitted firmware root snapshot after root location.')
 
 
 def main(arguments=None):
@@ -131,7 +135,7 @@ def main(arguments=None):
                         help='run ordinary omega update for dependency review before building')
     parser.add_argument('--build-dir', type=Path, default=ROOT / 'build/boot-harness')
     parser.add_argument('--smoke', action='store_true',
-                        help='require ordered boot milestones through CPU checked and Root located')
+                        help='require ordered boot milestones through Root located and Root read')
     parser.add_argument('--timeout', type=float, default=30)
     options = parser.parse_args(arguments)
     if options.timeout <= 0:

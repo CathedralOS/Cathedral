@@ -1,6 +1,7 @@
 use omega::language::core::extent;
 use omega::language::core::layout;
 use paging_handoff;
+use boot_memory;
 
 // Boot owns this first page and all skipped bytes until a later kernel owner
 // takes them. Alignment is geometry, not authority: both splits conserve the
@@ -58,7 +59,7 @@ reaches ResourceProfileSupply
     let mut words: [u64; 512];
     words[0] = 17;
     words[511] = 73;
-    transition NativePlacement<KernelPagePlacement, KernelPage>::initialize(
+    transition NativePlacement<KernelPagePlacement, KernelPage, BootMemory>::initialize(
         parts.taken, KernelPage { words: words }
     ) {
         PlacementOutcome::Ready { view } -> verify(prefix.taken, view, parts.rest, geometry)
@@ -80,12 +81,18 @@ reaches ResourceProfileSupply
         // Exercise the same conservative External snapshot needed for the
         // active firmware root while its bytes still have a known oracle.
         // This borrows the existing grant; resident custody stays with retained.
-        let snapshot: FirmwareRootSnapshot = PagingHandoff::snapshot(
+        let snapshot: FirmwareRootSnapshot = PagingHandoff::snapshot<BootMemory>(
             (&retained) as &Extent in Granted
         );
         let copied: bool = PageFrame::check_snapshot(snapshot);
-        transition NativePlacement<KernelPagePlacement, KernelPage>::move_out(retained) {
-            PlacementExtraction::Moved { storage, value } -> clear(padding, storage, tail, geometry && indexed && copied, value)
+        // Both supply roles coexist over this exact known backing. A stronger
+        // neighboring RAM profile must not satisfy a request made through the
+        // read-only External role. No memory access follows the rejected view.
+        let isolated: bool = PageFrame::reject_unstable_supply(
+            (&retained) as &Extent in Granted
+        );
+        transition NativePlacement<KernelPagePlacement, KernelPage, BootMemory>::move_out(retained) {
+            PlacementExtraction::Moved { storage, value } -> clear(padding, storage, tail, geometry && indexed && copied && isolated, value)
         }
     }
 
@@ -93,7 +100,7 @@ reaches ResourceProfileSupply
                 tail: Extent in Granted & Vacant, geometry: bool, observed: KernelPage) -> PageReservation {
         let valid: bool = geometry && PageFrame::check_image(&observed);
         let words: [u64; 512];
-        transition NativePlacement<KernelPagePlacement, KernelPage>::initialize(storage, KernelPage { words: words }) {
+        transition NativePlacement<KernelPagePlacement, KernelPage, BootMemory>::initialize(storage, KernelPage { words: words }) {
             PlacementOutcome::Ready { view } -> check_cleared(padding, view, tail, valid)
             PlacementOutcome::Rejected { returned, reason } -> PageReservation {
                 padding: padding, page: PreparedPage::Rejected { storage: returned.source },
@@ -105,7 +112,7 @@ reaches ResourceProfileSupply
     state check_cleared(padding: Extent in Granted & Vacant,
                         storage: Extent in Granted & Resident<KernelPagePlacement, KernelPage>,
                         tail: Extent in Granted & Vacant, valid: bool) -> PageReservation {
-        transition NativePlacement<KernelPagePlacement, KernelPage>::move_out(storage) {
+        transition NativePlacement<KernelPagePlacement, KernelPage, BootMemory>::move_out(storage) {
             PlacementExtraction::Moved { storage, value } -> retain(padding, storage, tail, valid, value)
         }
     }
@@ -115,7 +122,7 @@ reaches ResourceProfileSupply
         let cleared: bool = PageFrame::check_zero(&value, 0);
         // Reinstall the exact zero image just read back. Ready retains the
         // complete resident page; extraction never drops the original extent.
-        transition NativePlacement<KernelPagePlacement, KernelPage>::initialize(storage, value) {
+        transition NativePlacement<KernelPagePlacement, KernelPage, BootMemory>::initialize(storage, value) {
             PlacementOutcome::Ready { view } -> PageReservation {
                 padding: padding, page: PreparedPage::Ready { storage: view },
                 tail: tail, verified: valid && cleared,
@@ -124,6 +131,21 @@ reaches ResourceProfileSupply
                 padding: padding, page: PreparedPage::Rejected { storage: returned.source },
                 tail: tail, verified: false,
             }
+        }
+    }
+}
+
+machine PageFrame::reject_unstable_supply(storage: &Extent in Granted) -> bool
+reaches ResourceProfileSupply
+{
+    transition Placed::view_extent<KernelPagePlacement, KernelPage, FirmwareMemory>(storage) {
+        PlacementOutcome::Ready { view } -> false
+        PlacementOutcome::Rejected { returned, reason } -> rejected(reason)
+    }
+    state rejected(reason: PlacementInitializationFailure) -> bool {
+        transition reason {
+            PlacementInitializationFailure::IncompatibleSupply -> true
+            _ -> false
         }
     }
 }

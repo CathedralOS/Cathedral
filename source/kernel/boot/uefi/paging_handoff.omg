@@ -1,6 +1,36 @@
 use omega::language::core::extent;
 use omega::language::core::layout;
 
+public data FirmwareMemory {}
+public boundary trait FirmwareMemorySupply: ResourceProfileSupply<FirmwareMemory> {}
+
+// Admission covers the actual CR3 root accepted from this boot's final map
+// and the known initial-storage page used to check role isolation. Both are
+// observed after exit with their grants retained. The current identity mapping and
+// physical backing must remain valid for the lifetime of that grant. Hardware
+// may update accessed/dirty bits; no Stable access or CPU write is promised.
+// Selecting this role alone cannot turn arbitrary geometry into table access.
+FirmwareMemoryProfileProvider satisfies FirmwareMemorySupply {
+    machine profile(storage: &Extent in Granted) -> ResourceProfile {
+        let services: [u64; 32];
+        let mut transfers: [TransferRule; 16];
+        transfers[0] = TransferRule { width_bits: 64, alignment_bytes: 8 };
+        let mut regions: [ResourceRegion; 32];
+        regions[0] = ResourceRegion {
+            range: RelativeRange { offset: 0, length: storage.length },
+            peer: PeerWritability::HostileShared,
+            stable: StableCapability::None,
+            external: ExternalCapability::Access {
+                read: ExternalReadBehavior::Repeatable, write: false,
+                transfers: TransferRules { entries: transfers, rule_count: 1 },
+            },
+            atomic: AtomicCapability::None,
+            reach: BoundaryReach { services: services, service_count: 0 },
+        };
+        ResourceProfile { regions: regions, region_count: 1 }
+    }
+}
+
 // The firmware root remains active while it is observed. Hardware may set
 // accessed bits, so a Stable borrow would assert a property we do not own.
 // This view copies full-width entries without claiming resident custody or
@@ -16,6 +46,25 @@ data PagingHandoff {}
 data FirmwareRootSnapshot {
     case Unavailable;
     case Ready(entries: [u64; 512]);
+}
+
+// The live root must contain at least one present entry to execute this kernel.
+// This only checks an observed snapshot, not a coherent transitive hierarchy.
+machine PagingHandoff::has_present_entry(entries: &[u64; 512]) -> bool {
+    transition { _ -> scan(entries, 0, false) }
+    state scan(entries: &[u64; 512], next: u64, found: bool) -> bool
+    requires next <= 512
+    {
+        transition next < 512 {
+            true -> inspect(entries, next, found)
+            _ -> found
+        }
+    }
+    state inspect(entries: &[u64; 512], next: u64, found: bool) -> bool
+    requires next < 512
+    {
+        transition { _ -> scan(entries, next + 1, found || (entries[next] & 1) != 0) }
+    }
 }
 
 machine FirmwarePageRootPlacement::plan(schema: Schema) -> PlacementPlan {
@@ -37,12 +86,12 @@ machine FirmwarePageRootPlacement::plan(schema: Schema) -> PlacementPlan {
     }
 }
 
-machine PagingHandoff::snapshot(root: &Extent in Granted) -> FirmwareRootSnapshot
+machine PagingHandoff::snapshot<Role>(root: &Extent in Granted) -> FirmwareRootSnapshot
 reaches ResourceProfileSupply
 {
     let entries: [u64; 512];
     let opened: PlacementOutcome<&Placed<FirmwarePageRootPlacement, FirmwarePageRoot>, PlacementBorrowReturn, PlacementInitializationFailure> =
-        Placed::view_extent<FirmwarePageRootPlacement, FirmwarePageRoot>(root);
+        Placed::view_extent<FirmwarePageRootPlacement, FirmwarePageRoot, Role>(root);
     transition opened {
         PlacementOutcome::Ready { view } -> copy(view, 0, entries)
         PlacementOutcome::Rejected { returned, reason } -> FirmwareRootSnapshot::Unavailable

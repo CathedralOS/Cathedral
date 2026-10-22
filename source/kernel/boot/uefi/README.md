@@ -22,7 +22,7 @@ the initialized page and the remaining tail with the context and image.
 
 The fresh-image harness requires `Hello from Omega`, a complete `Owned N MiB`
 line, `Boot map ready`, `Kernel entered`, `Memory split`, `Memory checked`, `Memory paired`,
-`Page ready`, `Tables ready`, `CPU checked`, and `Root located`, in that order. The six-marker baseline reported 35 MiB in
+`Page ready`, `Tables ready`, `CPU checked`, `Root located`, and `Root read`, in that order. The six-marker baseline reported 35 MiB in
 QEMU/OVMF using Omega `9e04918b1d1`. The current source requires Omega's exact address-model
 typing, representation-recast effect tracking and occurrence-local state-prefix
 checking, in addition to the canonical `ProgramStorageEntryNativeProvider`,
@@ -75,7 +75,7 @@ separate backing and lifecycle obligations.
 The intended acceptance is one freshly compiled `uefi_x86_64` image under
 QEMU/OVMF: `Hello from Omega`, successful firmware exit, `Owned N MiB` over
 COM1, then `Boot map ready`, `Kernel entered`, `Memory split`, `Memory checked`, `Memory paired`,
-`Page ready`, `Tables ready`, `CPU checked`, and `Root located`
+`Page ready`, `Tables ready`, `CPU checked`, `Root located`, and `Root read`
 while retaining image, every initial-storage descendant and accounted surviving
 stack storage. `Memory checked` requires common-root reunion after all three partition sizes,
 initialization/readback of 17, write/readback/extraction of 29, and return of the
@@ -258,10 +258,13 @@ qualification. The selected provider still supplies the exact range's profile.
 External observation is deliberate: hardware may change accessed bits in active
 firmware tables, so Stable observation would be an unsupported promise.
 
-The current test snapshots our known allocated page, not the active firmware
-CR3 root. Actual firmware-table observation still needs an admitted root and
-retained reachable table closure from the final memory map; a numeric CR3 value
-alone grants neither. Snapshot success does not install translations.
+The known-page test also requests a Stable view through the External-only
+`FirmwareMemory` supply role. It must return `IncompatibleSupply` even though
+`BootMemory` supplies stronger permissions for that same backing. Both roles
+are explicit applied boundary requirements; choosing a role does not grant
+storage or borrow permissions. The ordinary RAM provider lives in
+`boot_memory.omg`; the firmware provider lives beside the snapshot operation.
+Snapshot success does not install translations.
 
 ## CPU paging profile
 
@@ -302,11 +305,27 @@ from callable Boot Services. This lets the same map checker run after exit
 and in the hosted [policy witness](../../../../tools/boot-harness/README.md#firmware-root-map-policy)
 without inventing hosted firmware providers.
 
-This is not an admitted Extent or a table read. Next, firmware-table access
-needs explicit backing/lifetime admission, an External observation profile
-that does not promise Stable RAM while hardware writes accessed/dirty bits,
-and retention of every reachable table page. The fresh-allocation StableRW
-profile is not authority over arbitrary firmware addresses.
+Numeric location itself is not an admitted Extent or a table read. After that
+check, the selected root provider admits exactly the aligned 4096-byte root
+range. This third root is acquired inside the kernel; the physical handoff
+still transfers exactly two roots. Admission asserts readable physical backing
+and a live identity mapping after firmware exit, retained throughout the idle
+kernel's lifetime. The map scan and numeric exclusions do not prove those
+external premises. No firmware call, allocator reuse or remap may revoke them.
+
+`FirmwareMemorySupply` provides only External full-width 64-bit reads, with
+hostile peer writability, no Stable permission and no CPU write permission.
+`PagingHandoff::snapshot<FirmwareMemory>` copies all 512 entries from the
+admitted root; `Root read` requires a successful copy with at least one present
+entry. The original grant is retained on every subsequent success and failure
+path. The root is not reclassified as Vacant or an Omega Resident. Hardware
+may update entries during the copy: it is not an atomic hierarchy snapshot.
+
+Retention and validation of every reachable lower-level table page remain
+unfinished. Reading this root does not establish the full firmware-table
+closure, mapping equivalence, or authority to activate a replacement hierarchy.
+The fresh-allocation StableRW profile is not authority over arbitrary firmware
+addresses.
 
 The proposed 1-GiB virtual address is only a candidate. No virtual destination
 is reserved and no translations are installed. Activation still needs the live

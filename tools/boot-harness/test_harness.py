@@ -32,8 +32,8 @@ class BootHarnessTests(unittest.TestCase):
             self.assertEqual((first / 'serial.log').read_bytes(), b'first')
 
     def test_smoke_requires_ordered_complete_reports_through_resident_readback(self):
-        boot.check_boot_milestones(b'Hello from Omega\r\nOwned 128 MiB\r\nBoot map ready\r\nKernel entered\r\nMemory split\r\nMemory checked\r\nMemory paired\r\nPage ready\r\nTables ready\r\nCPU checked\r\nRoot located\r\n')
-        boot.check_boot_milestones(b'Hello from Omega\nOwned 99999+ MiB\nBoot map ready\nKernel entered\r\nMemory split\r\nMemory checked\nMemory paired\nPage ready\nTables ready\nCPU checked\nRoot located\n')
+        boot.check_boot_milestones(b'Hello from Omega\r\nOwned 128 MiB\r\nBoot map ready\r\nKernel entered\r\nMemory split\r\nMemory checked\r\nMemory paired\r\nPage ready\r\nTables ready\r\nCPU checked\r\nRoot located\r\nRoot read\r\n')
+        boot.check_boot_milestones(b'Hello from Omega\nOwned 99999+ MiB\nBoot map ready\nKernel entered\r\nMemory split\r\nMemory checked\nMemory paired\nPage ready\nTables ready\nCPU checked\nRoot located\nRoot read\n')
         for output in (b'', b'Hello from Omega\r\n',
                        b'Owned 128 MiB\nHello from Omega\n',
                        b'Hello from Omega\nOwned rubbish MiB\n',
@@ -147,6 +147,15 @@ class BootHarnessTests(unittest.TestCase):
                        prefix.replace(b'CPU checked\r\n', b'Root located\r\nCPU checked\r\n')):
             with self.subTest(output=output):
                 with self.assertRaisesRegex(ValueError, 'firmware root location'):
+                    boot.check_boot_milestones(output)
+
+    def test_root_location_without_complete_ordered_snapshot_does_not_count(self):
+        prefix = b'Hello from Omega\r\nOwned 128 MiB\r\nBoot map ready\r\nKernel entered\r\nMemory split\r\nMemory checked\r\nMemory paired\r\nPage ready\r\nTables ready\r\nCPU checked\r\nRoot located\r\n'
+        for output in (prefix, prefix + b'Root read', prefix + b'Root read\r',
+                       prefix + b'Not Root read\r\n', b'Root read\r\n' + prefix,
+                       prefix.replace(b'Root located\r\n', b'Root read\r\nRoot located\r\n')):
+            with self.subTest(output=output):
+                with self.assertRaisesRegex(ValueError, 'firmware root snapshot'):
                     boot.check_boot_milestones(output)
 
     def test_publishes_only_fresh_product(self):

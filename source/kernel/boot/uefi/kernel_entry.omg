@@ -8,6 +8,8 @@ use core::paging_profile;
 use boot_handoff;
 use core::boot_geometry;
 use memory_map::firmware_root;
+use boot_memory;
+use paging_handoff;
 
 data BootPageTables {
     leading: Extent in Granted & Vacant;
@@ -61,27 +63,6 @@ BootVacantStorageProvider satisfies VacantContentTransfer {
     }
 }
 
-// Admitted only for the initial ConventionalMemory root retained after the
-// successful firmware handoff and its conserved children. The boot mapping
-// remains live, CPU-readable/writable and exclusive for the idle kernel's
-// lifetime; no remap, firmware service or device loan may revoke it. This
-// describes backing supply, not initialized contents or a second root.
-BootMemoryProfileProvider satisfies ResourceProfileSupply {
-    machine profile(storage: &Extent in Granted) -> ResourceProfile {
-        let services: [u64; 32];
-        let mut regions: [ResourceRegion; 32];
-        regions[0] = ResourceRegion {
-            range: RelativeRange { offset: 0, length: storage.length },
-            peer: PeerWritability::Exclusive,
-            stable: StableCapability::ReadWrite,
-            external: ExternalCapability::None,
-            atomic: AtomicCapability::None,
-            reach: BoundaryReach { services: services, service_count: 0 },
-        };
-        ResourceProfile { regions: regions, region_count: 1 }
-    }
-}
-
 // The semantic entry is independent of the firmware ABI. A valid installed
 // caller must transfer both roots; declaring or taking the address of this
 // machine does not mint them. Reporting happens only after the selected bridge
@@ -89,7 +70,8 @@ BootMemoryProfileProvider satisfies ResourceProfileSupply {
 machine Kernel::enter(context: &mut KernelState, image: Extent in Granted,
                       initial_storage: Extent in Granted)
 requires addr::Bound == 18446744073709551616
-reaches PortIo + MachineControl + VacantContentTransfer + ResourceProfileSupply + PlacementLifecycle
+reaches PortIo + MachineControl + VacantContentTransfer + ResourceProfileSupply + PlacementLifecycle + ExtentRootProvider
+invokes ExtentRootProvider;
 invokes VacantContentTransfer;
 invokes ResourceProfileSupply;
 invokes PlacementLifecycle;
@@ -242,7 +224,7 @@ invokes PlacementLifecycle;
     requires addr::Bound == 18446744073709551616 && storage.length >= 4096
     {
         let parts: VacantExtentParts = split_vacant_extent(storage, 4096);
-        let profile: ResourceProfile = ResourceProfileSupply::profile(
+        let profile: ResourceProfile = ResourceProfileSupply<BootMemory>::profile(
             (&parts.taken) as &Extent in Granted
         );
         // Observe the actual returned geometry before announcing success. The
@@ -522,7 +504,7 @@ invokes PlacementLifecycle;
     {
         // This is an inactive candidate for a single virtual page, not a
         // replacement for the firmware mappings of our live image and stack.
-        let reservation: PageTableReservation = PageTableBuilder::prepare(
+        let reservation: PageTableReservation = PageTableBuilder::prepare<BootMemory>(
             tail, &target as &Extent in Granted, 1073741824
         );
         let verified: bool = reservation.verified;
@@ -646,8 +628,8 @@ invokes PlacementLifecycle;
         };
         let located: bool = FirmwareRootMap::contains(&context.boot_information.bytes,
             context.boot_information.map_size, context.boot_information.descriptor_size, root, &excluded);
-        // This retained number is deliberately not a Granted extent or an
-        // ordinary reference. No table memory is accessed at this milestone.
+        // Numeric eligibility precedes the separately admitted grant. It does
+        // not itself establish readable backing or a retained table closure.
         context.firmware_root = root;
         transition located {
             true -> root_wait(context, image, pair, tables, 1000000)
@@ -695,7 +677,105 @@ invokes PlacementLifecycle;
         asm { out 1016, 100 }
         asm { out 1016, 13 }
         asm { out 1016, 10 }
-        transition { _ -> retain_tables(context, image, pair, tables) }
+        transition { _ -> admit_firmware_root(context, image, pair, tables) }
+    }
+
+    state admit_firmware_root(context: &mut KernelState, image: Extent in Granted,
+                             pair: KernelMemoryPair, tables: BootPageTables)
+    requires addr::Bound == 18446744073709551616
+    {
+        let root: u64 = context.firmware_root;
+        transition root != 0 && root % 4096 == 0 && root <= 4503599627366400 {
+            true -> grant_firmware_root(context, image, pair, tables, root)
+            _ -> retain_tables(context, image, pair, tables)
+        }
+    }
+
+    state grant_firmware_root(context: &mut KernelState, image: Extent in Granted,
+                             pair: KernelMemoryPair, tables: BootPageTables, root: u64)
+    requires addr::Bound == 18446744073709551616 && root != 0 &&
+             root % 4096 == 0 && root <= 4503599627366400
+    {
+        // This is the third, disjoint root in the closed boot transaction.
+        // Admission extends the root provider's premise to this accepted live
+        // CR3 frame: identity-mapped readable physical RAM retained after exit.
+        // No allocator, remap or firmware call may reuse/revoke it. The map
+        // checks exclude all initial-storage descendants and the full image.
+        // Every following success/failure path retains this linear claim.
+        let retained_root: Extent in Granted = ExtentRootProvider::grant(
+            Extent { base: root as addr, length: 4096 }
+        );
+        let snapshot: FirmwareRootSnapshot = PagingHandoff::snapshot<FirmwareMemory>(&retained_root);
+        transition snapshot {
+            FirmwareRootSnapshot::Ready { entries } ->
+                check_firmware_root(context, image, pair, tables, retained_root, entries)
+            FirmwareRootSnapshot::Unavailable ->
+                retain_firmware_root(context, image, pair, tables, retained_root)
+        }
+    }
+
+    state check_firmware_root(context: &mut KernelState, image: Extent in Granted,
+                             pair: KernelMemoryPair, tables: BootPageTables,
+                             retained_root: Extent in Granted, entries: [u64; 512])
+    requires addr::Bound == 18446744073709551616
+    {
+        let populated: bool = PagingHandoff::has_present_entry(&entries);
+        transition populated {
+            true -> root_read_wait(context, image, pair, tables, retained_root, 1000000)
+            _ -> retain_firmware_root(context, image, pair, tables, retained_root)
+        }
+    }
+
+    state root_read_wait(context: &mut KernelState, image: Extent in Granted,
+                         pair: KernelMemoryPair, tables: BootPageTables,
+                         retained_root: Extent in Granted, remaining: u64)
+    requires addr::Bound == 18446744073709551616
+    {
+        let mut status: u8 = 0;
+        asm { in status, 1021 }
+        transition (status & 32) != 0 {
+            true -> root_read_report(context, image, pair, tables, retained_root)
+            _ -> root_read_retry(context, image, pair, tables, retained_root, remaining)
+        }
+    }
+
+    state root_read_retry(context: &mut KernelState, image: Extent in Granted,
+                          pair: KernelMemoryPair, tables: BootPageTables,
+                          retained_root: Extent in Granted, remaining: u64)
+    requires addr::Bound == 18446744073709551616
+    {
+        transition remaining > 1 {
+            true -> root_read_wait(context, image, pair, tables, retained_root, remaining - 1)
+            _ -> retain_firmware_root(context, image, pair, tables, retained_root)
+        }
+    }
+
+    state root_read_report(context: &mut KernelState, image: Extent in Granted,
+                           pair: KernelMemoryPair, tables: BootPageTables,
+                           retained_root: Extent in Granted)
+    requires addr::Bound == 18446744073709551616
+    {
+        asm { out 1016, 82 } // Root read
+        asm { out 1016, 111 }
+        asm { out 1016, 111 }
+        asm { out 1016, 116 }
+        asm { out 1016, 32 }
+        asm { out 1016, 114 }
+        asm { out 1016, 101 }
+        asm { out 1016, 97 }
+        asm { out 1016, 100 }
+        asm { out 1016, 13 }
+        asm { out 1016, 10 }
+        transition { _ -> retain_firmware_root(context, image, pair, tables, retained_root) }
+    }
+
+    state retain_firmware_root(context: &mut KernelState, image: Extent in Granted,
+                               pair: KernelMemoryPair, tables: BootPageTables,
+                               retained_root: Extent in Granted)
+    requires addr::Bound == 18446744073709551616
+    {
+        asm { hlt }
+        transition { _ -> retain_firmware_root(context, image, pair, tables, retained_root) }
     }
 
     state retain_tables(context: &mut KernelState, image: Extent in Granted,

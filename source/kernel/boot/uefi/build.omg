@@ -18,8 +18,10 @@ machine build(builder: &mut Build) {
     Build::select_provider<ExtentRootProvider, core::CathedralExtentRootProvider>(builder);
     Build::accept_boundary<VacantContentTransfer>(builder);
     Build::select_provider<VacantContentTransfer, BootVacantStorageProvider>(builder);
-    Build::accept_boundary<ResourceProfileSupply>(builder);
-    Build::select_provider<ResourceProfileSupply, BootMemoryProfileProvider>(builder);
+    Build::accept_boundary<BootMemorySupply>(builder);
+    Build::accept_boundary<FirmwareMemorySupply>(builder);
+    Build::select_provider<BootMemorySupply, BootMemoryProfileProvider>(builder);
+    Build::select_provider<FirmwareMemorySupply, FirmwareMemoryProfileProvider>(builder);
     Build::select_provider<PlacementLifecycle, KernelMemoryPlacement>(builder);
     Build::select_provider<ProgramStorageEntry, ProgramStorageEntryNativeProvider>(builder);
     Build::select_provider<ProgramImage, ProgramImageNativeProvider>(builder);

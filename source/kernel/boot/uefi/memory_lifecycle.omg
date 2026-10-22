@@ -1,6 +1,7 @@
 use omega::language::core::extent;
 use omega::language::core::layout;
 use alloc::bump;
+use boot_memory;
 
 public data KernelWord { value: u64; }
 public data KernelWordPlacement {}
@@ -19,7 +20,7 @@ KernelMemoryPlacement satisfies PlacementLifecycle<KernelWordPlacement, KernelWo
     >
     reaches ResourceProfileSupply
     {
-        NativePlacement<KernelWordPlacement, KernelWord>::initialize(storage, value)
+        NativePlacement<KernelWordPlacement, KernelWord, BootMemory>::initialize(storage, value)
     }
 
     machine move_out(
@@ -27,7 +28,7 @@ KernelMemoryPlacement satisfies PlacementLifecycle<KernelWordPlacement, KernelWo
     ) -> PlacementExtraction<Extent in Granted & Vacant, KernelWord>
     reaches ResourceProfileSupply
     {
-        NativePlacement<KernelWordPlacement, KernelWord>::move_out(storage)
+        NativePlacement<KernelWordPlacement, KernelWord, BootMemory>::move_out(storage)
     }
 }
 

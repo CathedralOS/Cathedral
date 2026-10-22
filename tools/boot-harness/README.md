@@ -45,7 +45,7 @@ Without `--smoke`, QEMU's serial console is interactive. With it, the guest
 runs headlessly for at most `--timeout` seconds (default 30), and this run's
 serial log must contain the greeting followed by a complete numeric
 `Owned N MiB` line, then `Boot map ready`, `Kernel entered`, `Memory split`, `Memory checked`,
-`Memory paired`, `Page ready`, `Tables ready`, `CPU checked`, and `Root located`.
+`Memory paired`, `Page ready`, `Tables ready`, `CPU checked`, `Root located`, and `Root read`.
 The boot-map marker requires the kernel to copy the final memory map from the
 explicit initial-storage packet and check its format, byte count, descriptor
 stride, checksum, original storage base and image-prefix correspondence. It
@@ -71,7 +71,9 @@ suppresses the page marker while the preceding markers still appear. Requiring
 98 instead of 97 in `PageFrame::check_snapshot` also suppresses that marker:
 the snapshot's copied bytes participate in acceptance. The snapshot borrows
 the original grant without moving resident custody or claiming Stable access.
-This known-page control does not yet observe the active firmware root.
+On that same known backing, an External-only supply role must refuse Stable
+view formation despite the stronger ordinary-RAM role also being selected.
+This refusal is another prerequisite for `Page ready`.
 `Tables ready` additionally requires four aligned, resident 4096-byte table
 pages carved from the retained tail. The kernel writes the three links and one
 RW/supervisor/NX leaf to the retained target page, reads the actual packed words
@@ -82,6 +84,11 @@ inactive hierarchy construction, not a CR3 switch or a successful virtual access
 requires the actual CR3 frame to pass the full final-map eligibility scan and
 complete image/private-stack and original allocator-root exclusions. It grants
 no table access and does not retain the reachable firmware-table closure.
+The subsequent `Root read` requires an explicitly admitted root extent,
+an External-only profile and an actual 512-entry snapshot containing a present
+entry. The grant remains retained. This tests root observation, not full
+reachable-table retention or activation; the backing and identity-mapping
+premises remain explicit external admissions.
 All storage descendants remain retained. A split-only, single-resident, or
 paired-allocation-only or page-only boot does not satisfy this acceptance. Missing, truncated or
 out-of-order markers fail.
