@@ -27,6 +27,18 @@ BUILD = REPO / "build" / "boot-harness-rs"
 # The kernel contract's per-task caps: private pages fund frames; reader pages
 # pin other tasks' objects, and a matrix hub needs several objects' worth.
 PAGE_LIMITS = (("private_pages", 1024), ("shared_pages", 4096))
+# The store's largest object (its MAX_BYTES): an installed program must fit one.
+# The installer refuses a larger one; reporting the margin here shows how close
+# each build sits before that happens.
+OBJECT_BYTES = 256 * 1024
+
+
+def report_program(trimmed):
+    """Print a trimmed program's size against the object limit; refuse one over it."""
+    size = Path(trimmed).stat().st_size
+    print(f"program {Path(trimmed).name}: {size} bytes, {100 * size // OBJECT_BYTES}% of the object limit", flush=True)
+    if size > OBJECT_BYTES:
+        raise SystemExit(f"{trimmed} is {size} bytes; a program must fit one object of {OBJECT_BYTES} bytes")
 MARKERS = (
     "Cathedral Rust lab: UEFI entry",
     "Cathedral Rust lab: ExitBootServices complete",
@@ -377,11 +389,13 @@ def main():
                 trimmed.write_bytes(b"")
             else:
                 elf_trim.trim(captured[f'program_{index}'], trimmed, startup["programs"][index].get("display_title"))
+                report_program(trimmed)
             seeded.append((parent, trimmed))
     if not args.kernel_only and not args.smoke:
         for index, (_, trimmed) in enumerate(realm_programs(args.profile, args.release)):
             if not isinstance(trimmed, str):
                 elf_trim.trim(captured[f'realm_{index}'], trimmed, startup['realm_programs'][index].get('display_title'))
+                report_program(trimmed)
     cargo = ["cargo", "build", "--locked", "--package", boot_package,
              "--target", target, "--target-dir", str(BUILD / "cargo")]
     if args.release:

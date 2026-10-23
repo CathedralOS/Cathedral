@@ -5280,6 +5280,18 @@ attachment. [matrix.rs](source-rs/distribution/matrix/contracts/matrix.rs) names
 `CHOOSER_READERS`, two pages, and the shell's root picker, the nested picker and
 the configured launcher are lent that beside their private pages.
 
+**Size headroom.** The stock matrix is now built at `opt-level = "s"`
+([Cargo.toml](source-rs/Cargo.toml)): 220,704 bytes trimmed instead of 257,568,
+leaving 16 percent of the object limit rather than two. The four-level latency
+run measured no change: nested service averaged 0.84 ms of CPU per request
+against 0.87 before, root service 0.96 against 0.92, typing 107 to 123 ms per
+key either way, and every step moved within host variation. Four nested
+desktops under pointer stress, the nested startup failures, the three matrix
+suites and a three-cycle soak pass on it (`build/suite17-*.log`), the soak's
+root settling at 95 frames after each teardown instead of 105 with the smaller
+image. `run.py` prints each trimmed program's size as a share of the limit at
+every build and refuses one over it before the installer does.
+
 Measurements, host-observed milliseconds and provider request spans on
 `desktop_test.py --latency --nested-depth 4 --trace-storage`, the previous
 entry's figures first:
@@ -5325,10 +5337,10 @@ Next, in order:
    retirement around them. The background's lookup could ride the listing the
    matrix already read, and a launcher could receive its arrangement with its
    launch instead of reading it; beyond that the hop count itself is the cost.
-2. The stock matrix is 257,568 bytes against a 262,144-byte object limit, under
-   two percent of headroom; the chooser is 78,008. Either the matrix sheds code
-   or the limit grows with the provider's reply pages, and the harness should
-   report trimmed sizes against the limit so the margin is visible per build.
+2. The stock matrix is 220,704 bytes against a 262,144-byte object limit and
+   every build prints the margin. If it grows past that, the limit would have to
+   grow with the provider's reply pages, which is a budget decision across the
+   provider, the matrices' reader allowances and the kernel's backing ceiling.
 3. The clean-close LOSS timeout did not reproduce in these runs either.
 4. The soak holds the root's kernel accounting steady across cycles; nested
    matrices' samples are recorded but not yet compared, and nothing samples the

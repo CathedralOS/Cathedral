@@ -115,11 +115,18 @@ debug = 2
 
 [profile.release.package.redb]
 opt-level = "s"
+# The stock matrix is installed as one storage object of at most 256 KiB and
+# sat within two percent of that; size optimization leaves 16 percent, and the
+# four-level latency run measured no change in its per-hop CPU.
+[profile.release.package.cathedral-stock-matrix]
+opt-level = "s"
 
 [profile.release.package.cathedral-database-worker]
 opt-level = "s"
 strip = "debuginfo"
 
+[profile.dev.package.cathedral-stock-matrix]
+opt-level = "s"
 [profile.dev.package.cathedral-storage-service]
 opt-level = "s"
 codegen-units = 1
