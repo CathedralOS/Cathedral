@@ -1,6 +1,6 @@
 use super::*;
 use alloc::{vec, vec::Vec};
-use redb::{ReadableDatabase, ReadableTable, backends::InMemoryBackend};
+use redb::{ReadableDatabase, ReadableTable, ReadableTableMetadata, backends::InMemoryBackend};
 fn database() -> Database {
     Database::builder()
         .create_with_backend(InMemoryBackend::new())
@@ -25,8 +25,8 @@ fn count(db: &Database, root: u8, kind: u8) -> usize {
         .count()
 }
 fn content() -> Vec<u8> {
-    (0..8192)
-        .map(|i| ((i * 17 + i / 4096 * 71) % 251) as u8)
+    (0..CHUNK_BYTES * 2)
+        .map(|i| ((i * 17 + i / CHUNK_BYTES * 71) % 251) as u8)
         .collect()
 }
 pub(super) fn collect(store: &Store<'_>, root: u8) {
@@ -356,7 +356,7 @@ fn deleted_objects_release_only_unshared_content_and_numbers_are_never_reused() 
 fn inline_boundaries_empty_objects_and_checked_ranges() {
     let db = database();
     let store = Store::open(&db).unwrap();
-    for (root, len) in [0, 1, 128, 129, 4096, 4097, MAX_BYTES]
+    for (root, len) in [0, 1, 128, 129, CHUNK_BYTES, CHUNK_BYTES + 1, MAX_BYTES]
         .into_iter()
         .enumerate()
     {
@@ -376,12 +376,12 @@ fn inline_boundaries_empty_objects_and_checked_ranges() {
             store.read(root as u8, object.id, 1, len, &mut [0]),
             Err(Error::Invalid)
         );
-        if len > 4096 {
+        if len > CHUNK_BYTES {
             let mut cross = [0; 2];
             store
-                .read(root as u8, object.id, 1, 4095, &mut cross)
+                .read(root as u8, object.id, 1, CHUNK_BYTES - 1, &mut cross)
                 .unwrap();
-            assert_eq!(cross, data[4095..4097]);
+            assert_eq!(cross, data[CHUNK_BYTES - 1..CHUNK_BYTES + 1]);
         }
     }
 }
@@ -403,7 +403,10 @@ fn corruption_of_event_manifest_or_payload_is_detected() {
             .insert(key.as_slice(), bytes.as_slice())
             .unwrap();
         tx.commit().unwrap();
-        assert_eq!(store.read(0, 1, 1, 0, &mut [0; 8192]), Err(Error::Corrupt));
+        assert_eq!(
+            store.read(0, 1, 1, 0, &mut vec![0; CHUNK_BYTES * 2]),
+            Err(Error::Corrupt)
+        );
     }
 }
 
@@ -598,4 +601,26 @@ fn hierarchy_indexes_copy_independently_and_conflicts_are_atomic() {
     accounted(&db, 0);
     let reopened = Store::open(&db).unwrap();
     assert_eq!(reopened.lookup(0, folder.id, b"Editor"), Ok(app.id));
+}
+
+#[test]
+fn a_chunk_record_fills_one_engine_page() {
+    let db = database();
+    let store = Store::open(&db).unwrap();
+    let body: Vec<u8> = (0..CHUNK_BYTES * 32).map(|i| (i % 251) as u8).collect();
+    store.publish(0, 0, 0, &body, 0).unwrap();
+    let tx = db.begin_read().unwrap();
+    let stats = tx.open_table(TABLE).unwrap().stats().unwrap();
+    // One leaf per chunk, each a few bytes short of a page. A 4 KiB chunk made
+    // every chunk a two-page leaf, leaving a page of fragmentation per chunk.
+    assert!(
+        stats.leaf_pages() >= 32,
+        "leaf pages {}",
+        stats.leaf_pages()
+    );
+    assert!(
+        stats.fragmented_bytes() < 32 * 1024,
+        "fragmented bytes {}",
+        stats.fragmented_bytes()
+    );
 }

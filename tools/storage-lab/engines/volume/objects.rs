@@ -24,7 +24,7 @@ pub fn verify(path: &Path, offset: u64, bytes: u64, revision: u64, retention: bo
     let mut expected = BTreeMap::new();
     for root in [0u8, 1] {
         let mut store = Store::new(Policy {
-            chunk_bytes: 4096,
+            chunk_bytes: cathedral_database_objects::CHUNK_BYTES,
             inline_limit: 128,
             layout: Layout::Flat,
         });

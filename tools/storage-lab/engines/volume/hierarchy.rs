@@ -74,7 +74,7 @@ pub(super) fn describe(records: &mut Records, id: u64, name: &[u8], kind: &[u8])
 pub(super) fn insert_config(records: &mut Records, id: u64, parent: u64) -> Result<()> {
     let bytes = configuration();
     let mut store = Store::new(Policy {
-        chunk_bytes: 4096,
+        chunk_bytes: cathedral_database_objects::CHUNK_BYTES,
         inline_limit: 128,
         layout: Layout::Flat,
     });

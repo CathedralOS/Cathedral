@@ -1,11 +1,11 @@
 # Rust reference OS: tasks and handoff
 
-Updated 2026-10-22 (local date). Current milestone: **a matrix is configured by
-its realm**, on baseline `241412ad` (the engine owns its region from format).
-The stock matrix reads its realm to become a workspace or a desktop, the
-nested closure is prebuilt by the installer so a first launch copies nothing,
-and the collector has run live under pressure; the three newest sections at
-the end record the measurements and the open items.
+Updated 2026-10-22 (local date). Current milestone: **one-page chunks and a
+two-object provider heap**, on baseline `65d7528b` (a matrix is configured by
+its realm). A content chunk fills one engine page, the desktop's provider runs
+a 1 MiB heap with a 768 KiB cache across two private objects, and the kernel's
+mapped-backing ceiling covers every private slot; the newest section at the
+end records the measurements and the open items.
 Saved-state testing is an explicit launch choice. The section before it
 distinguishes current-program four-level verification from failures in
 retained executable snapshots.
@@ -5032,3 +5032,111 @@ Next, in order:
 6. Launching one program over one realm twice is now an owner question in
    [OWNER_QUESTIONS.md](OWNER_QUESTIONS.md). The Nested tile launches the single
    installed matrix, and no lab fixture launches it twice.
+
+## One-page chunks and a two-object provider heap (2026-10-22)
+
+Baseline: `65d7528b`. The previous entry's first item asked why a nested user
+copy of 42 objects cost seven times the IO of the outer copy of 53. The latency
+run's per-request samples answer it: the whole cost is one COPY_TREE request,
+and its reads vary with what the engine cache holds, not with the subtree.
+Every picker launch reads a program through the same 256 KiB cache and evicts
+the metadata pages the next copy needs. Two things made that worse than it had
+to be, and both are fixed here.
+
+**A chunk record fills one engine page.** A 4 KiB chunk, its 34-byte key and
+redb's leaf bookkeeping exceeded one 4 KiB page, so redb stored every chunk as
+a single-large-value leaf of two pages: a program read moved twice its bytes
+through the cache and the stock matrix's 257 KB read moved a megabyte.
+[lib.rs](source-rs/platform/libraries/database-objects/lib.rs) sets
+`CHUNK_BYTES` to 4,032 so the record fits one page; the manifest bound and the
+pin marks use `div_ceil`, the host oracles in the storage lab chunk with the
+same constant, and a new store test publishes 32 chunks and checks the table's
+fragmented bytes stay under a kilobyte per chunk. The plain desktop still
+matches the oracle record for record.
+
+**The provider heap spans two private objects.** [user-heap](source-rs/platform/libraries/user-heap/lib.rs)
+now manages up to four extents, allocating first-fit through them in order and
+returning each free to the extent that holds it; a third host test covers
+overflow into a second extent, frees returning home, overlap and the extent
+limit. [heap.rs](source-rs/platform/libraries/user-runtime/heap.rs) installs as
+many private objects as the per-object cap requires and releases an object
+whose installation fails. The provider's heap is capped at two objects so one
+of its four slots stays free for the pages behind a bulk reply, and the desktop
+profile funds it with 328 pages: a 1 MiB heap and a 768 KiB cache instead of
+512 KiB and 256 KiB.
+
+**A kernel bookkeeping ceiling.** The first run with two heap objects failed its
+first bulk reply with NO_MEMORY although the provider had 72 pages and 84 frames
+to spare. [address_space.rs](source-rs/kernel/core/user_tasks/address_space/address_space.rs)
+bounded a task's mapped backing at its image, stack and two full page objects,
+so the heap's two objects left nothing for a reply mapping. The ceiling now
+covers every private slot plus two reader mappings; it bounds bookkeeping, not
+funding, and every allocation still charges its account. The provider records
+`bulk-reply-refused` in every build with the page count, the error and its page
+and frame budgets, the soak treats that marker as a failure and the timing
+summary accepts it.
+
+Measurements, host-observed milliseconds on the fresh boot of
+`desktop_test.py --latency --nested-depth 4 --trace-storage`: the previous
+entry, then one-page chunks alone, then both changes.
+
+| Step | Observed | Provider CPU | Sectors read |
+| --- | --- | --- | --- |
+| enter-user | 1,003 / 808 / 460 | 581 / 306 / 164 | 1,280 / 592 / 568 |
+| depth-1 launch picker | 957 / 662 / 374 | 560 / 267 / 107 | 1,192 / 544 / 360 |
+| depth-4 launch picker | 1,785 / 1,476 / 949 | 812 / 496 / 40 | 1,560 / 976 / 64 |
+| depth-1 create-user | 1,079 / 873 / 278 | 856 / 600 / 62 | 977 / 585 / 1 |
+| depth-4 create-user | 840 / 818 / 377 | 425 / 395 / 56 | 449 / 401 / 25 |
+| depth-4 enter-user | 2,195 / 2,313 / 1,178 | 667 / 490 / 69 | 1,296 / 968 / 104 |
+
+The nested copy now reads one sector at depth one and 25 at depth four: the
+template's pages stay cached across the picker's program read, which itself
+moved 360 sectors instead of 1,192 because the chooser's chunks are one page
+each and partly shared with the root picker. Picker launches at depth four cost
+40 ms of provider CPU instead of 812. The four-cycle soak at depth two ran 4.0
+to 4.2 s per cycle (4.9 to 5.9 before), entering each level in 0.9 to 1.3 s,
+with the provider heap live at 843 to 858 KB and peaking at 900,132 of
+1,048,576 bytes: the engine cache fills to its budget, and the 32 KiB headroom
+assertion holds with 148 KB to spare. In the per-stage spans of the new run the
+nested dispatch stage averages 0.04 ticks, nested service 0.80, root service
+0.58 and the provider request beneath them 0.51; an app's storage round trip
+averages 3.9 ticks against 11.5 before. The cold boot's depth-4 user entry took
+2,880 ms with 158 ms of provider CPU and 40 sectors read, so what remains there
+is not storage.
+
+Verification:
+
+- Host: workspace `cargo test --locked` (262, with the new heap and chunk
+  tests); storage-lab with `--features engines` (39); harness Python (29);
+  `cargo check-userspace`, `cargo check-uefi`, clippy for the provider with
+  `collection-pressure` and the store with `host`; formatting, layout and
+  whitespace checks.
+- Guest, on disposable media: the plain default desktop with oracle
+  verification (twice, with the chunk change alone and with both); four-level
+  latency on fresh and cold boots (twice); four nested desktops under pointer
+  stress with cold reopen; nested startup failures (picker, user, background);
+  the provider-replacement suite (precommit, postcommit, exhausted,
+  readiness-stall, nested, deep); `objects_test.py` plain and `--retention`;
+  `matrix_database_test.py --recovery`; `--matrix-storage-test`,
+  `--matrix-test` and `--matrix-desktop-test`; the four-cycle soak at depth
+  two, plain and under collection pressure.
+- Logs `build/suite9-*.log` (chunks alone), `build/suite11-*.log` and
+  `build/suite12-*.log` (both changes); the two refused boots are
+  `build/probe-plain.log` and `build/probe-plain2.log`.
+
+Next, in order:
+
+1. Attribute the cold boot's depth-4 user entry: 2,880 ms observed, 158 ms of
+   provider CPU, 40 sectors. The latency JSON carries input and redraw samples
+   beside the storage ones; admission of the user matrix and its first
+   placement through four hops are the candidates.
+2. Each Nested level is two matrix hops, but the hop itself is cheap now:
+   in the one-page-chunk run the nested dispatch stage averaged 0.05 ticks,
+   nested service 2.8 ticks against 2.4 for the provider request beneath it.
+   The remaining per-level time is the provider's own work on program reads
+   and copies, plus admission.
+3. The clean-close LOSS timeout did not reproduce in these runs either.
+4. The soak samples the provider heap only; kernel task-slot, frame and grant
+   accounting per cycle remain to be added.
+5. Launching one program over one realm twice stays an owner question in
+   [OWNER_QUESTIONS.md](OWNER_QUESTIONS.md).

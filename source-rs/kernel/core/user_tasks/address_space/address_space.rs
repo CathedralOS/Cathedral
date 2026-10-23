@@ -12,8 +12,13 @@ pub const USER_STACK: u64 = USER_CODE + 2 * 1024 * 1024;
 pub const USER_STACK_PAGES: usize = 8;
 pub const USER_STACK_TOP: u64 = USER_STACK + USER_STACK_PAGES as u64 * PAGE;
 pub const MAX_IMAGE_PAGES: usize = 240;
-const MAX_BACKING: usize =
-    MAX_IMAGE_PAGES + USER_STACK_PAGES + 2 * cathedral_kernel_contracts::memory::MAX_PAGES;
+// Image, stack, every private object slot fully mapped and two full reader
+// mappings beside them. A task may own MAX_PRIVATE_REGIONS objects, so a heap
+// spanning several of them must still leave a bulk reply or attachment mappable.
+const MAX_BACKING: usize = MAX_IMAGE_PAGES
+    + USER_STACK_PAGES
+    + (cathedral_kernel_contracts::memory::MAX_PRIVATE_REGIONS + 2)
+        * cathedral_kernel_contracts::memory::MAX_PAGES;
 // Owned image/stack frames and translation tables; page objects retain their own ledger.
 // This bounds bookkeeping, not funding: every allocation still charges its account.
 const MAX_FRAMES: usize = cathedral_kernel_contracts::user::MAX_ADMISSION_FRAMES;

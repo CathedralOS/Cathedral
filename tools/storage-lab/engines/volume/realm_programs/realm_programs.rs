@@ -34,7 +34,7 @@ impl Source {
                     return Err("realm addition is not a program".into());
                 }
                 let mut content = Store::new(Policy {
-                    chunk_bytes: 4096,
+                    chunk_bytes: cathedral_database_objects::CHUNK_BYTES,
                     inline_limit: 128,
                     layout: Layout::Flat,
                 });

@@ -421,9 +421,9 @@ fn mark_revision(
         }
     }
 }
-/// The chunks one revision names, for pinning: at most MAX_BYTES / CHUNK_BYTES.
+/// The chunks one revision names, for pinning: at most MAX_BYTES.div_ceil(CHUNK_BYTES).
 fn revision_chunks(table: &Table<&[u8], &[u8]>, root: u8, id: u64, head: Head) -> Result<Marks> {
-    let mut marks = Marks::new((MAX_BYTES / CHUNK_BYTES + 1) * MARK_BYTES);
+    let mut marks = Marks::new((MAX_BYTES.div_ceil(CHUNK_BYTES) + 1) * MARK_BYTES);
     let mut expanded = Marks::new(MARK_BYTES);
     match mark_revision(
         table,

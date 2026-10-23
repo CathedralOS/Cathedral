@@ -38,8 +38,25 @@ fn prepare(
         return Err(abi::INVALID_ARGUMENT);
     }
     let offset = usize::try_from(r.argument).map_err(|_| abi::INVALID_ARGUMENT)?;
-    let mut pages =
-        Private::allocate((r.len as usize).div_ceil(4096)).map_err(|error| error.0 as u64)?;
+    let count = (r.len as usize).div_ceil(4096);
+    let mut pages = Private::allocate(count).map_err(|error| {
+        // Diagnosable in every build: the pages behind earlier replies stay
+        // charged here until their last reader releases them.
+        let budget = cathedral_user_runtime::resources::budget().ok();
+        let physical = cathedral_user_runtime::resources::physical_budget().ok();
+        cathedral_user_runtime::time::storage_sample(
+            "bulk-reply-refused",
+            &[
+                count as u64,
+                error.0 as u64,
+                budget.map_or(0, |b| b.used.private_pages),
+                budget.map_or(0, |b| b.limits.private_pages),
+                physical.map_or(0, |p| p.charged),
+                physical.map_or(0, |p| p.reserved),
+            ],
+        );
+        error.0 as u64
+    })?;
     let out = &mut pages.bytes_mut()[..r.len as usize];
     let head = if r.op == wire::BULK_PIN {
         store.read_pinned(root, r.argument as u8, r.object, r.expected, 0, out)

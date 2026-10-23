@@ -54,7 +54,7 @@ fn resolve(expected: &Records, base: u64, path: &str) -> Result<u64> {
 /// A new object with its own content: a program or an empty folder.
 fn place(expected: &mut Records, id: u64, parent: u64, bytes: &[u8], name: &[u8], kind: &[u8]) -> Result<()> {
     let mut store = Store::new(Policy {
-        chunk_bytes: 4096,
+        chunk_bytes: cathedral_database_objects::CHUNK_BYTES,
         inline_limit: 128,
         layout: Layout::Flat,
     });
@@ -202,7 +202,7 @@ pub fn verify(
     let copied = copy_tree(&mut expected, TEMPLATE, USERS, b"User 1", &mut next)?;
     let (notes, colors) = (user + 2, user + 3);
     let mut store = Store::new(Policy {
-        chunk_bytes: 4096,
+        chunk_bytes: cathedral_database_objects::CHUNK_BYTES,
         inline_limit: 128,
         layout: Layout::Flat,
     });

@@ -54,7 +54,7 @@ pub fn prepare(path: &Path, offset: u64, bytes: u64, target: &str, content: &[u8
         .ok_or("revision overflow")?;
     let parent = u64::from_le_bytes(old[48..].try_into()?);
     let mut store = Store::new(Policy {
-        chunk_bytes: 4096,
+        chunk_bytes: cathedral_database_objects::CHUNK_BYTES,
         inline_limit: 128,
         layout: Layout::Flat,
     });

@@ -65,18 +65,26 @@ hold the heap and the pages behind bulk replies, which stay charged to it until
 the last reader releases them. Profiles fund both explicitly. [main.rs](main.rs)
 keeps 64 pages for one maximal reply and eight for headroom outside the
 allocator and gives every other funded private page to the heap, never less
-than the 56 pages the engine has always run in and never more than the 128
-pages one private object may hold. The lab fixtures fund 64 private pages and
-keep that smallest heap; the desktop funds 200, so its heap is the full 128.
+than the 56 pages the engine has always run in and never more than two private
+objects, 256 pages, so one of the task's four object slots stays free for the
+pages behind a bulk reply. The lab fixtures fund 64 private pages and keep that
+smallest heap; the desktop funds 328, so its heap is the full 1 MiB. A reply
+whose pages cannot be allocated is recorded as `bulk-reply-refused` in every
+build, with the page count, the error and the provider's page and frame budgets;
+the kernel's per-task mapped-backing ceiling covers every private slot plus two
+reader mappings, so the heap's objects never crowd a reply out.
 
 [database.rs](database.rs) sizes the engine page cache from the heap: 256 KiB
 is reserved for engine state, the writer and the collection workspace, and the
 rest is cache, never less than 32 KiB. The smallest heap therefore keeps its
 32 KiB cache, which holds only eight pages, so after one bulk program read every
 metadata lookup went back to the disk and scope-ancestry checks grew with depth.
-The desktop's 512 KiB heap gives the engine 256 KiB of cache, 64 pages, which
-holds the metadata working set and a share of the stock program chunks that
-every nested level reads.
+The desktop's 1 MiB heap gives the engine 768 KiB of cache, 192 pages, which
+holds the metadata working set beside the stock programs every nested level
+reads. A content chunk fills one engine page, so a program read moves its own
+bytes and no more through that cache; with 4 KiB chunks every chunk was a
+two-page leaf, a matrix program read moved a megabyte, and the 256 KiB cache
+of the previous heap lost its metadata pages to each launch.
 
 Collection runs inside a fixed workspace, independent of the root's record
 count: the [store](../../libraries/database-objects/README.md) marks one record

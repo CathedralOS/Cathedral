@@ -33,8 +33,11 @@ An object with children cannot be deleted. Each object has a head (current
 revision, manifest digest, length, parent) and one event record per published
 revision. Chunks and manifests are keyed by digest within the root and inserted
 only when absent, so identical content is stored once however many objects or
-revisions refer to it. Nothing is shared across roots: cross-root deduplication
-and digest-based access are not introduced accidentally.
+revisions refer to it. A chunk holds `CHUNK_BYTES` (4,032) so that its record,
+key and leaf bookkeeping fill one 4 KiB engine page: a 4 KiB chunk was a
+two-page leaf, and reading a program moved twice its bytes through the engine
+cache. Nothing is shared across roots: cross-root deduplication and
+digest-based access are not introduced accidentally.
 
 A copy is therefore cheap by construction: it allocates a number under the
 chosen parent and writes a head, an event and an edge that reference the

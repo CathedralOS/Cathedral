@@ -137,7 +137,7 @@ pub(crate) enum Contents<'a> {
 pub(crate) fn manifest(head: Head, bytes: &[u8]) -> Result<Contents<'_>> {
     use cathedral_content_layout::{self as layout, digest};
     if bytes.len() < 17
-        || bytes.len() > 17 + MAX_BYTES / CHUNK_BYTES * 32
+        || bytes.len() > 17 + MAX_BYTES.div_ceil(CHUNK_BYTES) * 32
         || digest(layout::MANIFEST_DOMAIN, bytes) != head.manifest
     {
         return Err(Error::Corrupt);

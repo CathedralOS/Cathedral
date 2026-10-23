@@ -18,6 +18,7 @@ FAILURES = (
     'stalled storage cancelled',
     'matrix-service-exit',
     'STORAGE_TRACE collect-workspace-exhausted',
+    'STORAGE_TRACE bulk-reply-refused',
 )
 # The provider must keep this much heap free at every report; closer than this
 # and one copy or collection away from exhausting the allocator.

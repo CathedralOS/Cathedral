@@ -78,7 +78,7 @@ pub fn seed(path: &Path, offset: u64, bytes: u64, programs: &[Program]) -> Resul
         let mut charged = word(&table, &quota)?.unwrap_or(2 + 8);
         let mut number = word(&table, &next)?.unwrap_or(1);
         let mut store = Store::new(Policy {
-            chunk_bytes: 4096,
+            chunk_bytes: cathedral_database_objects::CHUNK_BYTES,
             inline_limit: 128,
             layout: Layout::Flat,
         });
@@ -181,7 +181,7 @@ fn is_program(table: &Table<&[u8], &[u8]>, manifest: &[u8]) -> Result<bool> {
 /// The records a seeded set of programs leaves behind on a fresh root, for oracles.
 pub fn expected(programs: &[Program]) -> BTreeMap<Vec<u8>, Vec<u8>> {
     let mut store = Store::new(Policy {
-        chunk_bytes: 4096,
+        chunk_bytes: cathedral_database_objects::CHUNK_BYTES,
         inline_limit: 128,
         layout: Layout::Flat,
     });

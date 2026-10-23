@@ -33,7 +33,7 @@ pub(super) fn expect(
     payload: impl Fn(u64) -> Vec<u8>,
 ) {
     let mut store = Store::new(Policy {
-        chunk_bytes: 4096,
+        chunk_bytes: cathedral_database_objects::CHUNK_BYTES,
         inline_limit: 128,
         layout: Layout::Flat,
     });

@@ -68,3 +68,49 @@ fn mixed_lifetimes_preserve_live_data_and_refuse_oversized_requests() {
         assert_eq!(heap.stats().failures, 1);
     }
 }
+#[test]
+fn further_extents_take_overflow_and_frees_return_to_their_extent() {
+    let mut first = vec![0u64; 2048];
+    let mut second = vec![0u64; 2048];
+    let heap = Heap::empty();
+    let range = |extent: &std::vec::Vec<u64>| {
+        extent.as_ptr() as usize..extent.as_ptr() as usize + extent.len() * 8
+    };
+    // SAFETY: Both vectors outlive the heap and every allocation; only the heap
+    // accesses their bytes, and each pointer is freed with its original layout.
+    unsafe {
+        assert!(heap.extend(second.as_mut_ptr().cast(), 16384).is_err());
+        heap.initialize(first.as_mut_ptr().cast(), first.len() * 8)
+            .unwrap();
+        assert!(heap.extend(first.as_mut_ptr().cast(), 1024).is_err());
+        heap.extend(second.as_mut_ptr().cast(), second.len() * 8)
+            .unwrap();
+        assert_eq!(heap.stats().capacity, 32768);
+        let big = Layout::from_size_align(12 * 1024, 16).unwrap();
+        let a = heap.alloc(big);
+        let b = heap.alloc(big);
+        assert!(range(&first).contains(&(a as usize)));
+        assert!(range(&second).contains(&(b as usize)));
+        a.write_bytes(0xa5, big.size());
+        b.write_bytes(0x5a, big.size());
+        heap.dealloc(a, big);
+        let c = heap.alloc(big);
+        assert!(range(&first).contains(&(c as usize)));
+        assert!(heap.alloc(big).is_null());
+        assert!(
+            core::slice::from_raw_parts(b, big.size())
+                .iter()
+                .all(|byte| *byte == 0x5a)
+        );
+        heap.dealloc(b, big);
+        heap.dealloc(c, big);
+        assert_eq!(heap.stats().live, 0);
+        assert_eq!(heap.stats().failures, 1);
+        let mut spares: std::vec::Vec<std::vec::Vec<u64>> =
+            (0..3).map(|_| vec![0u64; 64]).collect();
+        for spare in spares.iter_mut().take(MAX_EXTENTS - 2) {
+            heap.extend(spare.as_mut_ptr().cast(), 512).unwrap();
+        }
+        assert!(heap.extend(spares[2].as_mut_ptr().cast(), 512).is_err());
+    }
+}

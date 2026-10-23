@@ -73,7 +73,7 @@ def summarize(output, serial, boot):
         if label in ('storage-restart-failed', 'collect-workspace-exhausted'):
             assert len(values) == 1
             continue
-        if label == 'collect-pass':
+        if label in ('collect-pass', 'bulk-reply-refused'):
             assert len(values) == 6
             continue
         if label in ('surface-create-refused', 'surface-replay-failed'):

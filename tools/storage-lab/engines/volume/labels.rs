@@ -100,7 +100,7 @@ fn upgrade_with_quota(
         Err(error) => return Err(error.into()),
     }
     let mut store = Store::new(Policy {
-        chunk_bytes: 4096,
+        chunk_bytes: cathedral_database_objects::CHUNK_BYTES,
         inline_limit: 128,
         layout: Layout::Flat,
     });
@@ -260,7 +260,7 @@ fn plan(
 
 fn digest(data: &[u8]) -> Vec<u8> {
     let mut store = Store::new(Policy {
-        chunk_bytes: 4096,
+        chunk_bytes: cathedral_database_objects::CHUNK_BYTES,
         inline_limit: 128,
         layout: Layout::Flat,
     });
@@ -301,7 +301,7 @@ fn content(records: &Records, head: &[u8]) -> Result<Vec<u8>> {
     }
     // Independently reconstruct the digest before identifying or replacing code.
     let mut store = Store::new(Policy {
-        chunk_bytes: 4096,
+        chunk_bytes: cathedral_database_objects::CHUNK_BYTES,
         inline_limit: 128,
         layout: Layout::Flat,
     });

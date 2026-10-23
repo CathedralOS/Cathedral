@@ -23,7 +23,12 @@ pub use records::{Head, Object};
 /// Largest object: 64 pages, so a program or a bulk reply fits in half a
 /// task's page allowance while the other half holds what it already retains.
 pub const MAX_BYTES: usize = 256 * 1024;
-pub const CHUNK_BYTES: usize = 4096;
+/// Bytes per content chunk. A chunk record is this many value bytes, its
+/// 34-byte key and 12 bytes of leaf bookkeeping (a page header and two
+/// lengths), which fill one 4 KiB engine page; a 4 KiB chunk was a
+/// single-large-value leaf of two pages, so a program read moved twice its
+/// bytes through the cache and evicted the metadata working set.
+pub const CHUNK_BYTES: usize = 4096 - 64;
 pub const INLINE_BYTES: usize = 128;
 /// Retained record bytes per root, including keys and event history. This is an
 /// admission limit, not a claim about physical redb space or allocator overhead.

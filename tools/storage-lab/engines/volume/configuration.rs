@@ -41,7 +41,7 @@ pub fn prepare(path: &Path, offset: u64, bytes: u64, missing: bool) -> Result<()
     let mut saved = matrix::config::Config::decode(&hierarchy::configuration()).unwrap();
     saved.launcher = metadata::field(if missing { b"Missing" } else { b"./Workspace" }).unwrap();
     let mut content = Store::new(Policy {
-        chunk_bytes: 4096,
+        chunk_bytes: cathedral_database_objects::CHUNK_BYTES,
         inline_limit: 128,
         layout: Layout::Flat,
     });

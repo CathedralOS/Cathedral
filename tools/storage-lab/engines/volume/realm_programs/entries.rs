@@ -36,7 +36,7 @@ pub(super) fn put(rows: &mut Records, id: u64, parent: u64, data: &[u8]) -> Resu
         return Err("refusing to move an existing object during install".into());
     }
     let mut store = Store::new(Policy {
-        chunk_bytes: 4096,
+        chunk_bytes: cathedral_database_objects::CHUNK_BYTES,
         inline_limit: 128,
         layout: Layout::Flat,
     });
