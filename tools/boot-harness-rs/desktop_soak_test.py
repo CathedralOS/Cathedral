@@ -3,7 +3,7 @@ import json
 from pathlib import Path
 import tempfile
 import unittest
-from desktop_soak import cycles_before, heap_reports, last_token
+from desktop_soak import cycles_before, heap_reports, last_token, reclaimed
 
 
 class SoakTests(unittest.TestCase):
@@ -14,6 +14,14 @@ class SoakTests(unittest.TestCase):
         reports = heap_reports(log)
         self.assertEqual([r['phase'] for r in reports], ['recovered', 'committed'])
         self.assertEqual(reports[1], dict(phase='committed', live=134408, peak=160332, failures=1, capacity=229376))
+
+    def test_reclamation_samples_keep_slot_pages_frames_and_free_slots(self):
+        log = ('Cathedral Rust lab: STORAGE_TRACE matrix-reclaimed 3 40 96 612 20\n'
+               'Cathedral Rust lab: STORAGE_TRACE matrix-budget 1024 4096 40 96\n'
+               'Cathedral Rust lab: STORAGE_TRACE matrix-reclaimed 1 24 64 420 26\n')
+        self.assertEqual(reclaimed(log), [
+            dict(slot=3, private_pages=40, reader_pages=96, frames=612, free_slots=20),
+            dict(slot=1, private_pages=24, reader_pages=64, frames=420, free_slots=26)])
 
     def test_cold_boot_continues_the_fresh_boot_numbering(self):
         with tempfile.TemporaryDirectory() as directory:

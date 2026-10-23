@@ -26,6 +26,14 @@ HEAP_HEADROOM = 32 * 1024
 COLD_CYCLES = 2
 
 
+def reclaimed(log):
+    """Each matrix's account after it reclaimed a child: pages and frames still
+    charged and launch slots free. The cycle's last sample is the root's teardown."""
+    return [dict(slot=int(slot), private_pages=int(private), reader_pages=int(reader), frames=int(frames), free_slots=int(slots))
+            for slot, private, reader, frames, slots in re.findall(
+                r'STORAGE_TRACE matrix-reclaimed (\d+) (\d+) (\d+) (\d+) (\d+)', log)]
+
+
 def heap_reports(log):
     return [dict(phase=phase, live=int(live), peak=int(peak), failures=int(failures), capacity=int(capacity))
             for phase, live, peak, failures, capacity in re.findall(
@@ -87,6 +95,7 @@ def exercise(output, click, key, scan, width, height, reboot, cycles, pointer_st
             stream.seek(offset)
             log = stream.read().decode(errors='replace')
         heaps = heap_reports(log)
+        accounts = reclaimed(log)
         failures = {marker: log.count(marker) for marker in FAILURES if marker in log}
         record = dict(cycle=cycle, token=token, seconds=elapsed, phases=phases,
                       windows=max((int(w) for w in re.findall(r'STORAGE_TRACE collect-pass \d+ \d+ \d+ \d+ (\d+) \d+', log)), default=0),
@@ -95,12 +104,17 @@ def exercise(output, click, key, scan, width, height, reboot, cycles, pointer_st
                       heap_capacity=heaps[-1]['capacity'] if heaps else None,
                       provider_requests=log.count('STORAGE_TRACE provider-begin'),
                       collection_passes=log.count('STORAGE_TRACE collect-pass'),
+                      account=accounts[-1] if accounts else None,
                       failures=failures)
         records.append(record)
         path.write_text(json.dumps(dict(nested_depth=nested_depth, reboot=reboot, cycles=records), indent=2))
         print(f"Soak cycle {cycle}: {elapsed}s; heap live {record['heap_live_end']} peak {record['heap_peak']} of {record['heap_capacity']}; "
               f"provider requests {record['provider_requests']}", flush=True)
         assert not failures, f'cycle {cycle} saw {failures}; logs: {output}'
+        # The root matrix reclaimed the Nested subtree last. What the kernel still
+        # charges it, and the slots it can launch into, must match cycle to cycle.
+        assert accounts, f'cycle {cycle} recorded no reclamation sample; logs: {output}'
+        assert record['account'] == records[0]['account'], f"cycle {cycle} kernel accounting drifted: {records[0]['account']} -> {record['account']}"
         assert all(h['failures'] == 0 for h in heaps), f'provider allocation failed in cycle {cycle}: {heaps}'
         assert all(h['capacity'] - h['peak'] >= HEAP_HEADROOM for h in heaps), f'provider heap headroom lost in cycle {cycle}: {heaps}'
         if collection_pressure:
@@ -138,8 +152,11 @@ def report(output):
         print(f"{path.name}: depth {data['nested_depth']}, {'cold' if data['reboot'] else 'fresh'} boot")
         for c in data['cycles']:
             phases = ' '.join(f"{name} {seconds}" for name, seconds in c.get('phases', {}).items())
+            account = c.get('account') or {}
             print(f"  cycle {c['cycle']:3} {c['seconds']:7.2f}s heap live {c['heap_live_end']} peak {c['heap_peak']} / {c['heap_capacity']} "
-                  f"requests {c['provider_requests']} collections {c['collection_passes']} (windows up to {c.get('windows', 0)}) failures {c['failures'] or 'none'}; {phases}")
+                  f"requests {c['provider_requests']} collections {c['collection_passes']} (windows up to {c.get('windows', 0)}) "
+                  f"root after teardown: pages {account.get('private_pages')}/{account.get('reader_pages')} frames {account.get('frames')} free slots {account.get('free_slots')}; "
+                  f"failures {c['failures'] or 'none'}; {phases}")
         times = [c['seconds'] for c in data['cycles']]
         if len(times) >= 4:
             first, last = sum(times[:2]) / 2, sum(times[-2:]) / 2

@@ -140,6 +140,24 @@ impl Children {
         {
             self.activate(next, parent, world, server)?;
         }
+        // The kernel's view of this account once the subtree is gone: pages
+        // and frames still charged and launch slots free again. A soak compares
+        // these across cycles, so a leak shows as drift rather than as time.
+        #[cfg(feature = "trace-storage")]
+        {
+            let budget = cathedral_user_runtime::resources::budget()?;
+            let physical = cathedral_user_runtime::resources::physical_budget()?;
+            time::storage_sample(
+                "matrix-reclaimed",
+                &[
+                    slot as u64,
+                    budget.used.private_pages,
+                    budget.used.reader_pages,
+                    physical.charged,
+                    cathedral_user_runtime::task::available_slots()?,
+                ],
+            );
+        }
         Ok(())
     }
 }

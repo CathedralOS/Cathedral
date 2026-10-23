@@ -5076,6 +5076,16 @@ funding, and every allocation still charges its account. The provider records
 and frame budgets, the soak treats that marker as a failure and the timing
 summary accepts it.
 
+**Per-cycle kernel accounting.** After a matrix reclaims a child subtree,
+[lifecycle.rs](source-rs/distribution/matrix/service/children/lifecycle.rs)
+samples `matrix-reclaimed` under `trace-storage`: the slot, the private and
+reader pages the kernel still charges this account, its charged frames and the
+launch slots free again. The soak records the cycle's last sample, which is the
+root's teardown of the Nested tile, and fails if it differs from the first
+cycle's. Across three cycles and a cold boot's two the root settled at 0 private
+and 38 reader pages, 104 frames and 22 free slots every time, so a leaked slot,
+page or frame now shows as drift rather than as a slower cycle.
+
 Measurements, host-observed milliseconds on the fresh boot of
 `desktop_test.py --latency --nested-depth 4 --trace-storage`: the previous
 entry, then one-page chunks alone, then both changes.
@@ -5107,7 +5117,7 @@ is not storage.
 Verification:
 
 - Host: workspace `cargo test --locked` (262, with the new heap and chunk
-  tests); storage-lab with `--features engines` (39); harness Python (29);
+  tests); storage-lab with `--features engines` (39); harness Python (30);
   `cargo check-userspace`, `cargo check-uefi`, clippy for the provider with
   `collection-pressure` and the store with `host`; formatting, layout and
   whitespace checks.
@@ -5119,7 +5129,8 @@ Verification:
   readiness-stall, nested, deep); `objects_test.py` plain and `--retention`;
   `matrix_database_test.py --recovery`; `--matrix-storage-test`,
   `--matrix-test` and `--matrix-desktop-test`; the four-cycle soak at depth
-  two, plain and under collection pressure.
+  two, plain and under collection pressure; a three-cycle soak with the
+  accounting check (`build/soak-accounting.log`).
 - Logs `build/suite9-*.log` (chunks alone), `build/suite11-*.log` and
   `build/suite12-*.log` (both changes); the two refused boots are
   `build/probe-plain.log` and `build/probe-plain2.log`.
@@ -5136,7 +5147,8 @@ Next, in order:
    The remaining per-level time is the provider's own work on program reads
    and copies, plus admission.
 3. The clean-close LOSS timeout did not reproduce in these runs either.
-4. The soak samples the provider heap only; kernel task-slot, frame and grant
-   accounting per cycle remain to be added.
+4. The soak now holds the root's kernel accounting steady across cycles; the
+   nested matrices' samples are recorded but not yet compared, and nothing
+   samples the provider's or the desktop's own accounts.
 5. Launching one program over one realm twice stays an owner question in
    [OWNER_QUESTIONS.md](OWNER_QUESTIONS.md).

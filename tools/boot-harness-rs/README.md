@@ -454,9 +454,13 @@ text the previous cycle saved, replaces it with a cycle token, saves, closes the
 app and tears the whole subtree down from the outer taskbar, then the next cycle
 re-enters. A cold boot checks the last token and runs two more cycles. Every
 cycle records its host-observed seconds, the provider's heap live/peak/capacity
-from its own allocator reports, provider request and collection counts, and
-fails on a provider replacement, offline storage, a matrix exit, a workspace
-exhaustion, an allocation failure or less than 32 KiB of provider heap headroom.
+from its own allocator reports, provider request and collection counts, and the
+root matrix's account after it reclaimed the subtree (`matrix-reclaimed`: pages
+and frames the kernel still charges it and the launch slots free again), which
+must match the first cycle's exactly. It fails on a provider replacement,
+offline storage, a matrix exit, a workspace exhaustion, a refused bulk reply, an
+allocation failure, less than 32 KiB of provider heap headroom or drifting
+kernel accounting.
 `soak-boot-N.json` keeps the records; `python tools/boot-harness-rs/desktop_soak.py ARTIFACT_DIRECTORY`
 prints them. Cycle times are upper bounds under host load, not a trend proof.
 `--pointer-stress` moves the pointer throughout; depth 1 to 4 is accepted.

@@ -54,7 +54,7 @@ def summarize(output, serial, boot):
     for label, numbers in re.findall(r'STORAGE_TRACE ([\w-]+) ([0-9 ]+)\r?\n', text):
         values = list(map(int, numbers.split()))
         if label in ('note-loaded', 'note-saved', 'note-budget', 'matrix-budget'): continue
-        if label in ('funding-shortfall', 'funding-granted', 'funding-policy-refused'):
+        if label in ('funding-shortfall', 'funding-granted', 'funding-policy-refused', 'matrix-reclaimed'):
             assert len(values) == 5
             continue
         if label == 'funding-surface-refused':
