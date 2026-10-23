@@ -76,6 +76,8 @@ def summarize(output, serial, boot):
         if label == 'collect-pass':
             assert len(values) == 6
             continue
+        if label in ('surface-create-refused', 'surface-replay-failed'):
+            continue
         if label == 'ata-io':
             assert len(values) == 7
             io.append(values)

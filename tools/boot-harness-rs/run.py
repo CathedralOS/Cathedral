@@ -110,8 +110,27 @@ def seeded_programs(profile_path, release):
     return [(parent, trimmed) for parent, _, trimmed in program_images(profile_path, composition, release)]
 
 
+def realm_source(program):
+    """A realm entry's source: a program package, or a directive the installer applies."""
+    directives = [key for key in ('folder', 'matrix_config', 'copy') if program.get(key)]
+    if 'package' in program:
+        if directives:
+            raise ValueError('a realm entry is either a program or one directive')
+        return None
+    if len(directives) != 1:
+        raise ValueError('a realm entry without a package needs exactly one directive')
+    if directives[0] == 'copy':
+        return '@copy=' + program['copy']
+    return '@' + directives[0].replace('_', '-')
+
+
 def realm_programs(profile_path, release):
-    """Named additions under each recognized stock user, independent of object IDs."""
+    """Named entries under each recognized stock user, independent of object IDs.
+
+    Each item pairs the entry's path with its source: a built program file, or
+    a directive string for an empty folder, a stock matrix configuration or a
+    subtree copy of an earlier entry.
+    """
     composition = json.loads(Path(profile_path).read_text(encoding="utf-8"))
     result = []
     seen = set()
@@ -124,8 +143,19 @@ def realm_programs(profile_path, release):
             raise ValueError('a realm program must follow its installed parent')
         if any(program.get(key) for key in ('argument', 'framebuffer', 'keyboard', 'disk', 'clock', 'private_pages', 'shared_pages', 'ipc_channels', 'cpu_budget_us')):
             raise ValueError('realm programs carry code only; the owner grants resources')
-        elf_trim.title_record(program.get('display_title'))
-        result.append((name, BUILD / 'programs' / Path(profile_path).stem / f"realm-{i}-{program['package']}.elf"))
+        source = realm_source(program)
+        if source is None:
+            elf_trim.title_record(program.get('display_title'))
+            source = BUILD / 'programs' / Path(profile_path).stem / f"realm-{i}-{program['package']}.elf"
+        elif source.startswith('@copy='):
+            origin = source[len('@copy='):]
+            if origin not in seen or name == origin:
+                raise ValueError('a realm copy must name an earlier, different entry')
+            # The installer enumerates the origin before writing, so a copy may
+            # land inside its origin's own subtree. The copy then carries every
+            # entry beneath the origin, so later entries may be placed inside it.
+            seen.update(name + path[len(origin):] for path in list(seen) if path.startswith(origin + '/'))
+        result.append((name, source))
         seen.add(name)
     return result
 
@@ -189,6 +219,7 @@ def main():
     parser.add_argument("--startup-probes", action="store_true", help="Include destructive startup probes in the session lab")
     parser.add_argument("--trace-storage", action="store_true", help="Log app/matrix/database/ATA stages; diagnostic timing perturbs execution")
     parser.add_argument("--trace-input", action="store_true", help="Log local matrix input stages (diagnostic timing perturbs execution)")
+    parser.add_argument("--collection-pressure", action="store_true", help="Lab only: the storage provider collects before every write inside a tiny workspace")
     parser.add_argument("--pressure", action="store_true", help="Add a pressure peer to the session or matrix desktop")
     parser.add_argument("--kernel-only", action="store_true", help="Build/boot without any platform or distribution executable")
     parser.add_argument("--profile", type=Path, default=WORKSPACE / "distribution/profile.json", help="Host composition profile")
@@ -283,7 +314,8 @@ def main():
             except ValueError as error:
                 parser.error(str(error))
             for index, program in enumerate(startup.get("realm_programs", [])):
-                programs[f"realm_{index}"] = program
+                if "package" in program:
+                    programs[f"realm_{index}"] = program
             for index, program in enumerate(startup.get("programs", [])):
                 if "package" in program:
                     programs[f"program_{index}"] = program
@@ -326,6 +358,8 @@ def main():
             user_features.append("trace-input")
         if args.trace_storage and user["package"] in ("cathedral-stock-matrix", "cathedral-desktop", "cathedral-storage-service", "cathedral-notes", "cathedral-colors"):
             user_features.append("trace-storage")
+        if args.collection_pressure and user["package"] == "cathedral-storage-service":
+            user_features.append("collection-pressure")
         if user_features:
             user_cargo.extend(["--features", ",".join(user_features)])
         if args.release:
@@ -346,7 +380,8 @@ def main():
             seeded.append((parent, trimmed))
     if not args.kernel_only and not args.smoke:
         for index, (_, trimmed) in enumerate(realm_programs(args.profile, args.release)):
-            elf_trim.trim(captured[f'realm_{index}'], trimmed, startup['realm_programs'][index].get('display_title'))
+            if not isinstance(trimmed, str):
+                elf_trim.trim(captured[f'realm_{index}'], trimmed, startup['realm_programs'][index].get('display_title'))
     cargo = ["cargo", "build", "--locked", "--package", boot_package,
              "--target", target, "--target-dir", str(BUILD / "cargo")]
     if args.release:

@@ -29,14 +29,14 @@ fn surface_limit(world: &mut World, slot: usize, count: usize) -> Result<(), u64
     world.surface_range(slot, base, count)
 }
 
-/// Startup policy never changes the authority in the supplied environment.
+/// Whether this matrix still has to read its realm for what to become. The
+/// root adapter and owner-driven fixtures are configured by commands instead.
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum Startup {
     Hosted,
-    Picker,
-    Workspace,
+    Realm,
 }
-pub fn run(environment: Environment, mut startup: Startup) -> Result<(), Error> {
+pub fn run(environment: Environment) -> Result<(), Error> {
     // Supplied provider links make this instance the storage root; nothing else does.
     let storage_root = cathedral_user_runtime::link::Link::at(0).is_ok();
     static mut PARENT: Parent = Parent::empty();
@@ -45,6 +45,11 @@ pub fn run(environment: Environment, mut startup: Startup) -> Result<(), Error> 
     // process-owned data pages, not constructor temporaries on the guarded stack.
     let parent = unsafe { &mut *parent_address };
     parent.initialize(&environment, storage_root)?;
+    let mut startup = if parent.upstream {
+        Startup::Realm
+    } else {
+        Startup::Hosted
+    };
     static mut WORLD: World = World::empty();
     let world_address = &raw mut WORLD;
     // SAFETY: Single-threaded executable enters this service exactly once. This

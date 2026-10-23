@@ -8,10 +8,15 @@ pub(in crate::service::children) struct Recovery {
     pub selection_failed: bool,
     pub background_pending: bool,
     pub background_retried: bool,
+    /// The realm's picker and users folder, resolved once at startup.
+    pub picker: Option<(u64, u64)>,
+    /// The owner ran the picker itself and restarts it; this matrix only
+    /// orders admission around it.
+    pub owner_recovers: bool,
 }
 impl Children {
     pub(in crate::service::children) fn startup_retired(&mut self, slot: usize, failed: bool) {
-        if !failed {
+        if !failed || (self.login && self.startup_recovery.owner_recovers) {
             return;
         }
         if self.login && slot == 1 && self.entered {
@@ -44,7 +49,11 @@ impl Children {
                 )?;
                 return Err(Error(abi::IO_ERROR as i64));
             }
-            self.start_picker(parent, world, server)?;
+            let (picker, users) = self
+                .startup_recovery
+                .picker
+                .ok_or(Error(abi::IO_ERROR as i64))?;
+            self.start_picker(parent, world, server, picker, users)?;
             cathedral_user_runtime::write(b"Cathedral nested desktop: local picker restored\n")?;
         }
         if self.startup_recovery.background_pending {

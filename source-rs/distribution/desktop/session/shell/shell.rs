@@ -46,8 +46,9 @@ fn chooser(login: &mut Login, matrix: Pair, extent: [u64; 2], failed: bool) -> R
 }
 
 /// Root slot 1: a user matrix with a launcher and a matrix-capable app slot.
-/// Admission briefly overlaps the picker, so only eleven surfaces are lent
-/// here. `enter` retires the picker before lending the full surface allowance.
+/// Only eleven surfaces are lent here; the root matrix recognizes the picker
+/// it is running over `Users`, retires it before admitting the chosen user and
+/// lends that user the full allowance itself, so `enter` finds both done.
 pub(crate) fn workspace(width: u64, height: u64) -> [wire::Packet; 3] {
     [
         [wire::LAUNCH_IMAGES, 1, 1, 0, 0, 0, 0, 0],

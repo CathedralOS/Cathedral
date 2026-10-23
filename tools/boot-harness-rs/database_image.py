@@ -83,6 +83,13 @@ def oracle():
     return lab / 'target/release' / ('storage-layout.exe' if os.name == 'nt' else 'storage-layout')
 
 
+def realm_fingerprint(source):
+    """What a realm entry contributes to the installation receipt: a program's bytes or a directive."""
+    if isinstance(source, str) and source.startswith('@'):
+        return hashlib.sha256(source.encode('utf-8')).hexdigest()
+    return hashlib.sha256(Path(source).read_bytes()).hexdigest()
+
+
 def prepare(path, programs=(), label_migration=None, app_close=False, realm_programs=()):
     """Create the image if missing, then install `programs`: (parent, file) pairs
     that become objects 1.. of root 0 in order, each under an earlier object or
@@ -128,7 +135,7 @@ def prepare(path, programs=(), label_migration=None, app_close=False, realm_prog
         return
     installed = [[int(parent), hashlib.sha256(Path(file).read_bytes()).hexdigest()] for parent, file in programs]
     if label_migration is not None:
-        installed = {'programs': installed, 'readable_labels': hashlib.sha256(Path(label_migration).read_bytes()).hexdigest(), 'app_close': app_close, 'hierarchy': 1, 'realm_programs': [[name, hashlib.sha256(Path(file).read_bytes()).hexdigest()] for name, file in realm_programs]}
+        installed = {'programs': installed, 'readable_labels': hashlib.sha256(Path(label_migration).read_bytes()).hexdigest(), 'app_close': app_close, 'hierarchy': 1, 'realm_programs': [[name, realm_fingerprint(source)] for name, source in realm_programs]}
     previous = json.loads(sidecar.read_text(encoding='utf-8')) if sidecar.exists() else {}
     fingerprint = {k: v for k, v in previous.items() if k != 'realm_manifests'} if isinstance(previous, dict) else previous
     if fingerprint == installed:

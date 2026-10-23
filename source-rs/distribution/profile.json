@@ -199,44 +199,71 @@
         "entry": "distribution/matrix/main.rs",
         "target": "x86_64-unknown-none",
         "features": [
-          "nested-desktop"
+          "desktop-host"
         ],
         "display_title": "NESTED"
       },
       {
-        "path": "Nested/User",
-        "package": "cathedral-stock-matrix",
-        "entry": "distribution/matrix/main.rs",
-        "target": "x86_64-unknown-none",
-        "display_title": "USER"
-      },
-      {
-        "path": "Nested/Chooser",
+        "path": "Nested/Login",
         "package": "cathedral-chooser",
         "entry": "distribution/applications/chooser/main.rs",
         "target": "x86_64-unknown-none",
-        "display_title": "CHOOSER"
+        "display_title": "LAUNCHER"
       },
       {
-        "path": "Nested/Notes",
+        "path": "Nested/Users",
+        "folder": true
+      },
+      {
+        "path": "Nested/Users/Template",
+        "package": "cathedral-stock-matrix",
+        "entry": "distribution/matrix/main.rs",
+        "target": "x86_64-unknown-none",
+        "display_title": "USER TEMPLATE"
+      },
+      {
+        "path": "Nested/Users/Template/Desktop",
+        "package": "cathedral-chooser",
+        "entry": "distribution/applications/chooser/main.rs",
+        "target": "x86_64-unknown-none",
+        "display_title": "LAUNCHER"
+      },
+      {
+        "path": "Nested/Users/Template/Background",
+        "package": "cathedral-background",
+        "entry": "distribution/applications/background/main.rs",
+        "target": "x86_64-unknown-none",
+        "display_title": "BACKGROUND"
+      },
+      {
+        "path": "Nested/Users/Template/Notes",
         "package": "cathedral-notes",
         "entry": "distribution/applications/notes/main.rs",
         "target": "x86_64-unknown-none",
         "display_title": "NOTES"
       },
       {
-        "path": "Nested/Colors",
+        "path": "Nested/Users/Template/Colors",
         "package": "cathedral-colors",
         "entry": "distribution/applications/colors/main.rs",
         "target": "x86_64-unknown-none",
         "display_title": "COLORS"
       },
       {
-        "path": "Nested/Background",
-        "package": "cathedral-background",
-        "entry": "distribution/applications/background/main.rs",
-        "target": "x86_64-unknown-none",
-        "display_title": "BACKGROUND"
+        "path": "Nested/Users/Template/Matrix",
+        "matrix_config": true
+      },
+      {
+        "path": "Nested/Users/Template/Nested",
+        "copy": "Nested"
+      },
+      {
+        "path": "Nested/Users/Template/Nested/Users/Template/Nested",
+        "copy": "Nested"
+      },
+      {
+        "path": "Nested/Users/Template/Nested/Users/Template/Nested/Users/Template/Nested/Users/Template/Nested",
+        "copy": "Nested/Users/Template/Nested/Users/Template/Nested/Users/Template/Nested"
       }
     ]
   }

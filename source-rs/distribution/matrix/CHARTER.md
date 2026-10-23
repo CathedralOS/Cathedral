@@ -268,13 +268,20 @@ The owner control route now uses three bits per hop (five children); recompile
 stock control clients together. The legacy unconfigured two-child lab policy remains.
 
 
-The installed Nested variant uses [startup](service/children/startup/startup.rs)
-to prepare a scoped user template and run the same chooser over its `Users`.
-Selecting a user retires the picker and expands the user's surface allowance
-before servicing its first publication. That user requests the usual CONFIGURE
-flow through `WORKSPACE_ARGUMENT`; the argument grants no authority. The outer
-boot owner still invokes CONFIGURE explicitly for its user. Provider/root adapter
-selection depends exclusively on supplied endpoints, at every depth.
+A hosted matrix uses [startup](service/children/startup/startup.rs) to read
+its realm: a `Matrix` configuration makes it a workspace, a `Login` picker
+beside `Users` makes it a desktop that runs the same chooser over those users,
+and a realm with neither waits for its owner's commands. Selecting a user
+retires the picker and expands the user's surface allowance before servicing
+its first publication; that user reads its own `Matrix` and runs the usual
+CONFIGURE flow. The root adapter orders admission the same way: when its owner
+runs the realm's `Login` over its `Users` in slot zero, the root treats that
+child as the picker and retires it before admitting the user it chooses, so
+the user's first grant is final; the owner keeps that picker's recovery. An
+owner's explicit CONFIGURE is satisfied by a matrix that already configured
+itself from its realm, so either order works. Provider/root adapter selection
+depends exclusively on supplied endpoints, at every depth; the realm selects
+policy, never authority.
 
 Desktop app declarations may request explicit funding via `CTHIMP04`; insufficient
 offers refuse before spawn. A failed reservation releases provisional geometry.

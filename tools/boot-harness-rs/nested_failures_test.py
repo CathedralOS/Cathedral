@@ -59,7 +59,7 @@ def run(source):
     profile=output/'nested-failures.json'
     shutil.copyfile(harness.WORKSPACE/'distribution/profile.json',profile)
     subprocess.run([sys.executable,str(Path(__file__).with_name('run.py')),'--release','--build-only','--profile',str(profile)],check=True)
-    specs=[('picker','cathedral-chooser','picker-startup-fault','Nested/Chooser','deliberate picker startup failure'),
+    specs=[('picker','cathedral-chooser','picker-startup-fault','Nested/Login','deliberate picker startup failure'),
            ('user','cathedral-stock-matrix','startup-fault','Nested/Users/User 1','deliberate matrix startup failure'),
            ('background','cathedral-background','startup-fault','Nested/Users/User 1/Background','deliberate background startup failure')]
     oracle=database_image.oracle()

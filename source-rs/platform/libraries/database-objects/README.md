@@ -115,7 +115,10 @@ collected revision; the event pass authenticates every head's event first. It
 frees engine pages for reuse; it does not shrink the file. `Collection` reports
 how many windows a pass computed and its largest marked set, so a provider can
 observe when a root starts needing splits. `collect_records_within` takes an
-explicit workspace for host tests and tools.
+explicit workspace for host tests and tools. The lab-only `pressure` feature
+sets the workspace to 2 KiB and collects before every mutation regardless of
+the ledger, so the desktop soak can watch windows split on real records;
+ordinary builds never enable it.
 The exported `collect_records` applies that same bounded pass to a caller-owned
 transaction. The offline stock-program updater uses it under quota pressure after
 staging all stock and named replacement heads in host scratch space. The complete

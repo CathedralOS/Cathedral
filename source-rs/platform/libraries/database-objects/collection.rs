@@ -17,7 +17,12 @@ pub const PIN_SLOTS: u8 = 2;
 const PASS_RECORDS: usize = 8;
 /// Heap bytes one collection pass may hold in live marks. The provider's heap
 /// also carries engine state and the writer; this stays well inside the rest.
-pub const WORKSPACE_BYTES: usize = 24 * 1024;
+/// The lab `pressure` feature shrinks it so ordinary roots need split windows.
+pub const WORKSPACE_BYTES: usize = if cfg!(feature = "pressure") {
+    2 * 1024
+} else {
+    24 * 1024
+};
 /// Conservative heap cost of one marked identity: a 32-byte key inside a
 /// B-tree set node, including node headers and partial fill.
 const MARK_BYTES: usize = 64;
@@ -129,7 +134,8 @@ impl Store<'_> {
         if charged > ROOT_QUOTA {
             return Err(Error::Corrupt);
         }
-        if charged < ROOT_QUOTA - 2 * MAX_BYTES as u64 {
+        // Under the lab pressure feature every mutation collects, as a full root would.
+        if !cfg!(feature = "pressure") && charged < ROOT_QUOTA - 2 * MAX_BYTES as u64 {
             return Ok(None);
         }
         self.collect(root).map(Some)

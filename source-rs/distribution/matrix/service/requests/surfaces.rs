@@ -19,10 +19,21 @@ pub(super) fn dispatch(
         }
         let rank = match world.prepare_surface(slot, request.incarnation, words[1], words[2]) {
             Ok(rank) => rank,
-            Err(status) => return Ok(wire::error(status)),
+            Err(status) => {
+                cathedral_user_runtime::time::storage_sample(
+                    "surface-create-refused",
+                    &[slot as u64, words[2], 0, status],
+                );
+                return Ok(wire::error(status));
+            }
         };
         let reply = parent.create_surface(rank)?;
         if reply[0] != 0 {
+            // Upstream refusals name the rank this matrix asked its parent for.
+            cathedral_user_runtime::time::storage_sample(
+                "surface-create-refused",
+                &[slot as u64, words[2], rank, reply[0]],
+            );
             return Ok(wire::error(reply[0]));
         }
         let name = world.create_surface(slot, words[2] as usize, reply[1]);

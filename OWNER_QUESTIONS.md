@@ -623,3 +623,32 @@ eager, fixed session bank is lab policy, not the eventual manifest contract.
 Production still needs the already-open choice between persistent sponsors,
 explicit funded adoption, and revocation, plus a policy for growing/reclaiming
 active memory envelopes. No new answer is needed to continue this bounded lab.
+
+### Launching one program over one realm twice
+
+**Requirement and tension.** A matrix is a program with files beneath it, and
+its configuration is the set of programs installed in its realm; the
+[matrix charter](source-rs/distribution/matrix/CHARTER.md) lets several
+instances of one program share its persistent realm. Two live instances of the
+stock matrix over one realm would run two pickers over the same `Users` and
+could admit one user from two sessions, writing one subtree twice. The owner's
+instinct (2026-10-21) is that a second launch should clone the program so each
+instance owns its subtree, which makes instances sub-systems rather than one
+generic runner; whether that is the long-term shape is undecided.
+
+**Contracts checked.** The store copies a subtree as hierarchy records only,
+sharing every chunk, so a clone is cheap. Nothing in the kernel, the store or
+the distribution distinguishes a matrix from any other program; the Nested tile
+launches like any app. No contract says whether a second launch of a program
+that holds a realm shares it, clones it or is refused.
+
+**Owner choice.** Share, as today, and leave concurrent state to each program;
+clone on every launch after the first, so a launch is a subtree copy plus a run;
+or refuse a second live instance over one realm. Whichever is chosen is a rule
+for every program, not a case for matrices.
+
+**Recommendation (unaccepted).** Keep sharing as the mechanism and make the
+clone an explicit gesture: copy the entry, then launch the copy. No program
+becomes special, and the copy is the same subtree copy the installer and the
+user picker already use. The lab never launches a matrix twice; the first
+fixture that needs to should settle this first.

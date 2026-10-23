@@ -55,11 +55,7 @@ impl Children {
                 slot,
                 object,
                 scope: object,
-                argument: if self.login {
-                    wire::WORKSPACE_ARGUMENT
-                } else {
-                    0
-                },
+                argument: 0,
                 channels: standing.channels,
                 descendants: standing.descendants,
                 cpu: standing.cpu,
@@ -129,7 +125,7 @@ impl Children {
             self.entered = true;
             self.standing[1].as_mut().unwrap().surfaces = world.backed_surfaces() as u64;
             cathedral_user_runtime::write(
-                b"Cathedral nested desktop: picker retired; user owns viewport\n",
+                b"Cathedral matrix: picker retired; user owns viewport\n",
             )?;
         }
         if status.is_err() && self.login && !self.entered && self.slots[0].is_none() {

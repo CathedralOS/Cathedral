@@ -31,7 +31,7 @@ def heap_reports(log):
                 r'Cathedral objects heap: (\w+) live=(\d+) peak=(\d+) largest=\d+ failures=(\d+) capacity=(\d+)', log)]
 
 
-def exercise(output, click, key, scan, width, height, reboot, cycles, pointer_stress=False, nested_depth=2):
+def exercise(output, click, key, scan, width, height, reboot, cycles, pointer_stress=False, nested_depth=2, collection_pressure=False):
     n = Nested(click, key, scan, width, height, pointer_stress)
     serial = output / 'serial.log'
     path = output / f'soak-boot-{2 if reboot else 1}.json'
@@ -88,6 +88,7 @@ def exercise(output, click, key, scan, width, height, reboot, cycles, pointer_st
         heaps = heap_reports(log)
         failures = {marker: log.count(marker) for marker in FAILURES if marker in log}
         record = dict(cycle=cycle, token=token, seconds=elapsed, phases=phases,
+                      windows=max((int(w) for w in re.findall(r'STORAGE_TRACE collect-pass \d+ \d+ \d+ \d+ (\d+) \d+', log)), default=0),
                       heap_live_end=heaps[-1]['live'] if heaps else None,
                       heap_peak=max((h['peak'] for h in heaps), default=None),
                       heap_capacity=heaps[-1]['capacity'] if heaps else None,
@@ -101,6 +102,10 @@ def exercise(output, click, key, scan, width, height, reboot, cycles, pointer_st
         assert not failures, f'cycle {cycle} saw {failures}; logs: {output}'
         assert all(h['failures'] == 0 for h in heaps), f'provider allocation failed in cycle {cycle}: {heaps}'
         assert all(h['capacity'] - h['peak'] >= HEAP_HEADROOM for h in heaps), f'provider heap headroom lost in cycle {cycle}: {heaps}'
+        if collection_pressure:
+            # The pressure build collects before every write inside a tiny
+            # workspace, so every cycle must show passes that split windows.
+            assert record['collection_passes'] and record['windows'] > 4, f'cycle {cycle} ran no windowed collection under pressure: {record}'
     # The outer realm never sees the inner note, however many cycles ran.
     n.launch(0, 0)
     n.note(0, '')
@@ -133,7 +138,7 @@ def report(output):
         for c in data['cycles']:
             phases = ' '.join(f"{name} {seconds}" for name, seconds in c.get('phases', {}).items())
             print(f"  cycle {c['cycle']:3} {c['seconds']:7.2f}s heap live {c['heap_live_end']} peak {c['heap_peak']} / {c['heap_capacity']} "
-                  f"requests {c['provider_requests']} collections {c['collection_passes']} failures {c['failures'] or 'none'}; {phases}")
+                  f"requests {c['provider_requests']} collections {c['collection_passes']} (windows up to {c.get('windows', 0)}) failures {c['failures'] or 'none'}; {phases}")
         times = [c['seconds'] for c in data['cycles']]
         if len(times) >= 4:
             first, last = sum(times[:2]) / 2, sum(times[-2:]) / 2

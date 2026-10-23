@@ -55,8 +55,10 @@ The `recovery-lab` feature adds the owner-controlled [fault gate](gate.rs),
 which stalls one root's next matching request before execution or after
 commit, so proofs can exercise lost acknowledgements and provider replacement.
 `trace-storage` emits per-request timing and ATA counters for the
-[timing summary](../../../../tools/boot-harness-rs/storage_timing.py). Ordinary
-builds contain neither.
+[timing summary](../../../../tools/boot-harness-rs/storage_timing.py).
+`collection-pressure` makes the store collect before every write inside a
+2 KiB workspace, so the desktop soak can watch windowed collection run and
+split on real records. Ordinary builds contain none of these.
 
 The provider's reader pages receive publication attachments; its private pages
 hold the heap and the pages behind bulk replies, which stay charged to it until

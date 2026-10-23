@@ -78,7 +78,16 @@ impl Login {
         }
         let reply = health(matrix);
         match *self {
-            Self::Picker if reply[0] == abi::PEER_CLOSED => self.recover(matrix, extent, reply[0]),
+            Self::Picker if reply[0] == abi::PEER_CLOSED => {
+                // The root retires the picker itself once it admits the user
+                // it chose. A live user binding beside a closed picker is an
+                // entry, furnished on the owner's next turn, not a crash.
+                if realm_of(matrix, 0) != 0 {
+                    *self = Self::Stopped;
+                } else {
+                    self.recover(matrix, extent, reply[0]);
+                }
+            }
             Self::Recovery if reply[0] == 0 && reply[1] == 1 => {
                 cathedral_user_runtime::write(b"Cathedral desktop: sign-in retry requested\n")
                     .unwrap();

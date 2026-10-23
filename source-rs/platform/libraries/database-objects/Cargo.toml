@@ -12,5 +12,9 @@ cathedral-content-layout.workspace = true
 cathedral-storage-engine.workspace = true
 [features]
 host = ["cathedral-storage-engine/host"]
+# Lab only, for guest soak builds: collect before every mutation inside a tiny
+# workspace, so the windowed collector runs and splits live in ordinary desktop
+# sessions. The host tests assume the ordinary watermark and run without it.
+pressure = []
 [lints]
 workspace = true

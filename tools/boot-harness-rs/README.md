@@ -53,7 +53,12 @@ The desktop's explicit readable-label migration also updates recognized stock
 launchers inside existing users. Old Notes/Colors gain labels while keeping
 their code and saved data. Customized/unrecognized programs remain untouched.
 Changed installs save a complete `.before-compact-<digest>.raw` backup before
-preparation. Program publication, stock-copy refresh and named additions run on a
+preparation. Realm entries in the profile's `realm_programs` list are placed
+under each recognized stock user by path: a program (built from its package), a
+`folder`, a stock `matrix_config`, or a `copy` of an earlier entry's subtree,
+which the installer enumerates before writing so it may land inside its own
+origin; that is how the nested desktops are prebuilt five levels deep.
+Program publication, stock-copy refresh and named additions run on a
 private larger host scratch disk. The resulting database is compacted, checked
 against the assigned extent and cold-compared before publication to the locked
 saved disk. Rejected program preparation leaves its bytes and receipt unchanged
@@ -455,6 +460,11 @@ exhaustion, an allocation failure or less than 32 KiB of provider heap headroom.
 `soak-boot-N.json` keeps the records; `python tools/boot-harness-rs/desktop_soak.py ARTIFACT_DIRECTORY`
 prints them. Cycle times are upper bounds under host load, not a trend proof.
 `--pointer-stress` moves the pointer throughout; depth 1 to 4 is accepted.
+`--collection-pressure` (with `--trace-storage`) builds the storage provider
+with its lab `collection-pressure` feature: every write collects first inside a
+2 KiB workspace, so the windowed collector runs and splits live on the real
+desktop's records, and the soak fails any cycle without such passes. Ordinary
+builds never carry the feature.
 
 [nested_existing_test.py](nested_existing_test.py) takes a saved disk path and
 `--depth 1..4` (default 3). It copies the disk, builds the current kernel/providers

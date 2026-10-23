@@ -23,3 +23,5 @@ workspace = true
 recovery-lab = []
 startup-probes = []
 trace-storage = ["cathedral-ata-pio/trace-storage"]
+# Lab only: every mutation collects inside a tiny workspace; see the store's feature.
+collection-pressure = ["cathedral-database-objects/pressure"]

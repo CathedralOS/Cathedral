@@ -104,7 +104,8 @@ def check_rust():
     users = [*profile['user_programs'].values(), startup['initial']]
     users.extend(startup.get('launches', [startup['launch']] if startup.get('launch') else []))
     users.extend(startup.get('executables', []))
-    users.extend(startup.get('realm_programs', []))
+    # Realm entries without a package are installer directives, not executables.
+    users.extend(entry for entry in startup.get('realm_programs', []) if 'package' in entry)
     users.extend(program for program in startup.get('programs', []) if 'package' in program)
     for path in (ROOT / 'tools/boot-harness-rs/profiles').glob('*.json'):
         lab = json.loads(path.read_text(encoding='utf-8'))['startup']

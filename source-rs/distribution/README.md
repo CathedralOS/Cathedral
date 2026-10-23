@@ -222,17 +222,25 @@ desktop recursively. The platform owns neither this app limit nor these desktop 
 
 ## Nested startup and scene switching
 
-The Nested tile loads the [stock matrix](matrix/main.rs) compiled with
-`nested-desktop`. Its [startup coordinator](matrix/service/children/startup/startup.rs)
-prepares missing seed names inside its supplied realm, runs the ordinary chooser
-over `Users`, retires that picker on selection, and lets the selected user matrix
-run the same saved CONFIGURE path used by the outer desktop. The nested template
-contains another Nested executable and finite seed programs; it does not recursively
-materialize more users until launched. Existing names/data are preserved.
-On reopen, a seed that already exists is used without first resolving its copy
-source. The shared scope machinery retains bounded successful ancestry proofs,
-so repeated storage requests need not recursively re-prove the same intersection.
-Neither optimization grants a child a direct provider connection.
+The Nested tile is the [stock matrix](matrix/main.rs) itself, launched like any
+app and granted its own object's subtree. A hosted matrix reads that realm to
+learn what it is: a `Matrix` configuration makes it a workspace running the
+launcher it names, a `Login` picker beside a `Users` folder makes it a desktop
+offering those users, and a realm with neither leaves it to its owner's
+commands. No launch argument or build selects this; the `desktop-host` build
+only declares the funding a desktop needs when launched into an app slot. Its
+[startup coordinator](matrix/service/children/startup/startup.rs) runs the
+picker over `Users`, retires it on selection, and lets the selected user matrix
+run the same saved CONFIGURE path as the outer desktop. The nested realm is
+prebuilt by the installer five levels deep, so a first launch copies nothing;
+each level's template holds its own chrome, Notes, Colors, configuration and
+the next Nested, the four nested desktops the lab exercises each offer a
+NESTED tile, and the fifth template holds no Nested. Creating a user at any
+level is one subtree copy: 52 objects beneath the new user for the outer
+template, 42 for the first nested one, and fewer at each level below. The
+shared scope machinery retains bounded successful ancestry proofs, so repeated
+storage requests need not recursively re-prove the same intersection. None of
+this grants a child a direct provider connection.
 
 [Admission](matrix/service/children/admission.rs) checks declared resource needs
 against owner ceilings before spawn. Surface ranges are allocated without moving

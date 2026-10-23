@@ -1,22 +1,35 @@
 //! Bounded diagnostic writes and panic formatting; no allocator or retries.
 use crate::{Error, abi, arch};
 
-/// Split arbitrary slices at both ABI-size and page boundaries.
+#[repr(C, align(4096))]
+struct Page([u8; abi::MAX_WRITE]);
+/// Split arbitrary slices at both ABI-size and page boundaries. One message
+/// that fits a single write goes out as one call even when it straddles a
+/// page in its process: split, another task's line and prefix could land
+/// between its halves, and fixtures count whole lines.
 pub fn write(mut bytes: &[u8]) -> Result<(), Error> {
+    if bytes.len() <= abi::MAX_WRITE && (bytes.as_ptr() as usize & 4095) + bytes.len() > 4096 {
+        let mut page = Page([0; abi::MAX_WRITE]);
+        page.0[..bytes.len()].copy_from_slice(bytes);
+        return chunk(&page.0[..bytes.len()]);
+    }
     while !bytes.is_empty() {
-        let address = bytes.as_ptr() as u64;
         let length = bytes
             .len()
             .min(abi::MAX_WRITE)
-            .min(4096 - (address as usize & 4095));
-        let result = arch::call(abi::WRITE, address, length as u64);
-        if (result as i64) < 0 {
-            return Err(Error(result as i64));
-        }
-        if result != length as u64 {
-            return Err(Error(abi::IO_ERROR as i64));
-        }
+            .min(4096 - (bytes.as_ptr() as usize & 4095));
+        chunk(&bytes[..length])?;
         bytes = &bytes[length..];
+    }
+    Ok(())
+}
+fn chunk(bytes: &[u8]) -> Result<(), Error> {
+    let result = arch::call(abi::WRITE, bytes.as_ptr() as u64, bytes.len() as u64);
+    if (result as i64) < 0 {
+        return Err(Error(result as i64));
+    }
+    if result != bytes.len() as u64 {
+        return Err(Error(abi::IO_ERROR as i64));
     }
     Ok(())
 }

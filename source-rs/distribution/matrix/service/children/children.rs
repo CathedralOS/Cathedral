@@ -178,6 +178,24 @@ impl Children {
             } else if object == 0 {
                 server.reply(request, &wire::encode(wire::error(abi::INVALID_ARGUMENT)))?;
             } else {
+                // The owner running this realm's Login over its Users in slot
+                // zero is the picker. Admit its chosen user as a nested desktop
+                // does, retiring the picker first so the user's first grant is
+                // final. The picker's recovery stays with the owner.
+                if !parent.upstream && slot == 0 && scope != 0 {
+                    let named = parent.local_storage(|realm| {
+                        realm.bind().map_err(|c| Error(c as i64))?;
+                        Ok((realm.lookup(b"Login").ok(), realm.lookup(b"Users").ok()))
+                    });
+                    if let Ok((Some(login), Some(users))) = named
+                        && login == object
+                        && users == scope
+                    {
+                        self.login = true;
+                        self.entered = false;
+                        self.startup_recovery.owner_recovers = true;
+                    }
+                }
                 parent.storage_launch(
                     *request,
                     parent::LaunchRequest {

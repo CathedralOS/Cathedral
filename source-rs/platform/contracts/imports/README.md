@@ -95,7 +95,8 @@ requests never widen imports, storage scope, CPU authority or executable grants.
 The owner still enforces conserving budgets and may refuse an otherwise valid
 request. Earlier formats keep their existing semantics.
 
-The installed Nested program uses this form. Its source is the same stock matrix;
-the `nested-desktop` build selects scoped picker startup. The selected user matrix
-receives the explicit stock `WORKSPACE_ARGUMENT` to run its ordinary CONFIGURE
-path. Neither choice changes how the supplied environment is authenticated.
+The installed Nested program uses this form. Its source is the same stock
+matrix; the `desktop-host` build only adds this funding declaration, because a
+program launched into an app slot otherwise receives an app's share. What the
+matrix then does comes from its realm, not from the build or any argument, and
+nothing here changes how the supplied environment is authenticated.

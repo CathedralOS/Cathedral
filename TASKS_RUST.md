@@ -1,12 +1,11 @@
 # Rust reference OS: tasks and handoff
 
-Updated 2026-10-21 (local date). Current milestone: **the engine owns its region
-from format**, on baseline `6c27d97d` (bounded collection workspace, one refresh
-per nested binding and a long-session soak). Entering the fourth nested desktop
-takes about two seconds per step instead of five, and the first user creation on
-a fresh lab no longer zeroes a megabyte and a half of disk; the two newest
-sections at the end record the measurements, the provider heap sizing and the
-open items.
+Updated 2026-10-22 (local date). Current milestone: **a matrix is configured by
+its realm**, on baseline `241412ad` (the engine owns its region from format).
+The stock matrix reads its realm to become a workspace or a desktop, the
+nested closure is prebuilt by the installer so a first launch copies nothing,
+and the collector has run live under pressure; the three newest sections at
+the end record the measurements and the open items.
 Saved-state testing is an explicit launch choice. The section before it
 distinguishes current-program four-level verification from failures in
 retained executable snapshots.
@@ -4893,3 +4892,143 @@ creations per level, 1.1 to 1.5 s of provider CPU). Whether that closure
 should be seeded or shared is an owner-level question about what a Nested
 instance owns; measure the copy work and ask before changing it. Bulk program
 reads and the per-hop event-loop cost remain as recorded in the previous entry.
+
+## A matrix configured by its realm (2026-10-22)
+
+Baseline: `241412ad`. The owner's framing, in order: a matrix is a program with
+files beneath it; its configuration is that program with nested copies of the
+programs it expects, so swapping a nested desktop's chrome is swapping a
+program; and the presence or absence of those programs decides what the matrix
+does, with no special path for matrices. This entry builds that shape, then
+takes the live-collection and nested-fixture items left open by the previous
+two entries.
+
+**Realm-decided startup.** [startup.rs](source-rs/distribution/matrix/service/children/startup/startup.rs)
+replaces the launch argument, the `WORKSPACE_ARGUMENT` contract and the runtime
+template preparation (`realm.rs`, deleted). A hosted matrix reads its realm once
+its grant has a width: a `Matrix` configuration makes it a workspace that runs
+the saved CONFIGURE path itself; a `Login` picker beside a `Users` folder makes
+it a desktop that runs that picker over those users; a realm with neither, or
+no binding at all (DENIED or PEER_CLOSED from its parent), leaves it to its
+owner's commands. [service.rs](source-rs/distribution/matrix/service/service.rs)
+starts in `Startup::Realm` when an upstream parent exists and `Startup::Hosted`
+otherwise; the `desktop-host` feature of
+[main.rs](source-rs/distribution/matrix/main.rs) only encodes the funding a
+desktop needs when it is launched into an app slot. An owner's explicit
+CONFIGURE is satisfied by a matrix that already configured itself
+([configuration.rs](source-rs/distribution/matrix/service/children/configuration.rs)),
+so the boot owner's order no longer races the user matrix's own startup. The
+realm selects policy, never authority: every stamp still arrives through the
+storage forwarding chain.
+
+**Root login ordering.** The root adapter admitted the chosen user before the
+picker retired, so the owner's SURFACE_LIMIT for the retiring picker replaced
+the user's grant epoch and its background saw NO_MEMORY on its first placement.
+[children.rs](source-rs/distribution/matrix/service/children/children.rs) now
+recognizes an owner RUN_OBJECT of the realm's `Login` over its `Users` in slot
+zero as the picker, and [launch.rs](source-rs/distribution/matrix/service/children/launch.rs)
+retires it before admitting the user it chooses, so the user's first grant is
+final; the owner keeps that picker's recovery
+([lifetime.rs](source-rs/distribution/matrix/service/children/startup/lifetime.rs)).
+The desktop shell's [login state](source-rs/distribution/desktop/session/shell/login.rs)
+treats a picker PEER_CLOSED with a live user binding as entry instead of placing
+a picker that no longer exists. Surface-create refusals are sampled as
+`surface-create-refused` under tracing.
+
+**Prebuilt closure.** A realm entry in the profile is a program or one of three
+directives: `@folder`, `@matrix-config` and `@copy=PATH`, a breadth-first copy
+of an earlier entry's subtree at revision 1 that numbers siblings before
+descendants. [realm_programs.rs](tools/storage-lab/engines/volume/realm_programs/realm_programs.rs)
+applies them at install, [desktop.rs](tools/storage-lab/engines/volume/desktop.rs)
+models the result independently, `run.py` validates them and
+`database_image.py` fingerprints a directive by its text in the installation
+receipt. [profile.json](source-rs/distribution/profile.json) installs Nested as
+the stock matrix, `Nested/Login`, the `Nested/Users` folder, a `Users/Template`
+holding its chrome, Notes, Colors and `Matrix` configuration, and copies of
+Nested into each template five levels deep; the fifth template holds no Nested,
+so the fourth nested desktop the lab exercises still offers a NESTED tile. A
+first launch copies nothing. Creating a user is one subtree copy: 52 objects
+beneath the new user for the outer template, 42 for the first nested one. The
+plain desktop verifies against the oracle: six base objects, 15 realm entries,
+a 53-object user copy and 919 records.
+
+**Collection under pressure.** The store's lab `pressure` feature
+([Cargo.toml](source-rs/platform/libraries/database-objects/Cargo.toml)),
+reached as `collection-pressure` on the provider and `--collection-pressure` on
+`desktop_test.py --soak`, shrinks the workspace to 2 KiB and collects before
+every mutation. The six-cycle soak under it ran the windowed collector live in
+every cycle: one to three passes, up to 45 windows, no `Workspace` refusal, no
+failure marker, the same saved text and a heap peak of 372,996 of 524,288
+bytes. Saves took 4 to 10 s per cycle there because every write collects; that
+is the feature, not a regression, and the host tests run without it.
+
+**Whole diagnostic lines.** [diagnostics.rs](source-rs/platform/libraries/user-runtime/diagnostics.rs)
+sends a message that fits one write as one call even when it straddles a page
+in its process, copying through a page-aligned buffer. The kernel prefixes each
+call, so the halves of `picker retry exhausted` read as two lines and the
+nested-failures fixture failed its count twice before this.
+
+Measurements, host-observed milliseconds on the fresh boot of
+`desktop_test.py --latency --nested-depth 4 --trace-storage`, the previous
+entry's figures first:
+
+| Step | Observed | Provider CPU | Sectors read/written |
+| --- | --- | --- | --- |
+| create-user (outer, 53 objects) | 350 to 332 | 90 to 124 | 33/105 to 57/201 |
+| enter-user | 1,014 to 1,003 | 514 to 581 | 1,280/16 |
+| depth-1 launch picker | 1,652 to 957 | 1,104 to 560 | 1,192/16 |
+| depth-4 launch picker | 3,249 to 1,785 | 1,493 to 812 | 1,560/16 |
+| depth-1 create-user (now 42 objects) | 377 to 1,079 | 182 to 856 | 129/209 to 977/737 |
+| depth-4 create-user (now 15 objects) | 494 to 840 | 121 to 425 | 73/153 to 449/321 |
+
+Nested picker launches no longer install a template; what remains is reading
+the picker's program. Nested user creation got slower because the template it copies is now the whole
+closure beneath it, and that copy costs far more per object than the outer
+one: the depth-1 copy of 42 objects reads 977 sectors and writes 737 with 856 ms
+of provider CPU, where the outer copy of 53 reads 57, writes 201 and costs
+124 ms. The cold boot reaches the fourth nested desktop with picker launches of
+988 to 1,149 ms and user entries of 1,256 to 2,237 ms; typing stayed at 115 to
+145 ms per key at every depth. Four nested desktops under pointer stress reach
+each level in 5.4 to 8.9 s. The eight-cycle plain soak at depth two ran 4.9 to
+5.9 s per cycle with the heap live between 330 and 343 KB, a peak of 375,180
+bytes, no collection pass and no failure marker.
+
+Verification:
+
+- Host: workspace `cargo test --locked` (261); storage-lab with
+  `--features engines` (39, including the directive install test); harness Python
+  (29); clippy for the stock matrix in default, `trace-storage` and
+  `desktop-host` builds, the provider with `collection-pressure`, the desktop
+  shell and the user runtime; `python tools/source-layout/check.py`;
+  formatting and whitespace checks.
+- Guest, on disposable media: the plain default desktop with oracle
+  verification; four nested desktops under pointer stress with cold reopen
+  (twice); four-level latency on fresh and cold boots; the eight-cycle soak at
+  depth two and the six-cycle soak under collection pressure; the
+  provider-replacement suite (precommit, postcommit, exhausted, readiness-stall,
+  nested, deep) on the plain fixture; nested startup failures (picker, user,
+  background) on the stress fixture; `--matrix-storage-test`, `--matrix-test`
+  and `--matrix-desktop-test`.
+- Logs `build/suite6-*.log`, `build/suite7-*.log`, `build/suite8-*.log`.
+  Artifacts: latency `build/boot-harness-rs/desktop/20261022T052816562717Z`,
+  soak `20261022T051017179655Z`, pressure soak `20261022T051837283716Z`,
+  nested failures `build/boot-harness-rs/nested-failures/20261023T004212925180Z`.
+
+Next, in order:
+
+1. Attribute the nested user copy. Forty-two objects at depth one cost seven
+   times the IO of fifty-three at the root. Candidates: the cache is cold after
+   the picker's 1.2k-sector program read, or each copied object re-proves its
+   scope through the nested stamps. The `provider-begin`, `provider-end` and
+   `ata-io` samples in the latency serial logs hold the answer; add a copy
+   label if they do not.
+2. Bulk program reads: 1.2k to 1.6k sectors per picker launch, unchanged, as
+   recorded two entries ago.
+3. Each Nested level is still two matrix hops; the per-hop event-loop cost
+   stands as recorded.
+4. The clean-close LOSS timeout did not reproduce in these runs either.
+5. The soak samples the provider heap only; kernel task-slot, frame and grant
+   accounting per cycle remain to be added.
+6. Launching one program over one realm twice is now an owner question in
+   [OWNER_QUESTIONS.md](OWNER_QUESTIONS.md). The Nested tile launches the single
+   installed matrix, and no lab fixture launches it twice.

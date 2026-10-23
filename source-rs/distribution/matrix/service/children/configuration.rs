@@ -12,6 +12,11 @@ impl Children {
         world: &mut World,
         server: &mut Server,
     ) -> Result<(), Error> {
+        // A matrix that already read its arrangement from its realm is what
+        // an owner's CONFIGURE asks for; the request is satisfied either way.
+        if self.desktop {
+            return Ok(());
+        }
         if self.slots.iter().any(Option::is_some) || parent.storing() {
             return Err(Error(abi::BUSY as i64));
         }
