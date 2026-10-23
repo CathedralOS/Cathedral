@@ -331,7 +331,17 @@ is about 290 µs net of tracing under TCG and within the trace line's own noise
 on hardware; a depth-4 user entry spends about 85 ms of its 520 in hops under
 TCG and almost nothing on hardware. Sparing the task's half needs PCID, which
 the lab refuses, or the kernel executing in the task's root, which is this
-boundary. The lab leaves the roots as they are until the boundary is chosen.
+boundary. PCID itself lies within the boundary, and the lab host can run it:
+WHPX exposes `pcid` and `invpcid` on the i9-12900K without complaint. It
+cannot run under TCG at all: QEMU's `helper_write_crN` sends a long-mode CR3
+write with the no-flush bit set down its reserved-bits path, and its TLB
+flushes whole on every root switch regardless (`target/i386/tcg/system/misc_helper.c`,
+`target/i386/helper.c`, current master). A PCID kernel path would therefore
+run, and be validated, only under the hypervisor, never in the emulator the
+suites and the F5 flow use, and its TLB coherence across user roots, which
+TCG would hide, is the kind of error only hardware shows. Whether a kernel
+path validated only under WHPX is acceptable is the owner's call beside the
+boundary. The lab leaves the roots as they are until that is chosen.
 
 ### Writable row spans and component admission
 

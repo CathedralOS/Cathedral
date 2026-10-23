@@ -5691,8 +5691,12 @@ Next, in order:
 
 1. The switch path has nothing left to take without a boundary decision: the
    kernel's translations survive every trap, the task's would need PCID or the
-   kernel in the task's root. Both live under the isolation-boundary question
-   in OWNER_QUESTIONS.md with the TCG and WHPX figures.
+   kernel in the task's root. PCID is possible on this host under WHPX
+   (`-cpu qemu64,+pcid,+invpcid` is accepted) and impossible under TCG, whose
+   CR3 write rejects the no-flush bit and whose TLB flushes whole regardless
+   (QEMU source), so it would be a hypervisor-only kernel path with
+   hypervisor-only validation. Both live under the isolation-boundary question
+   in OWNER_QUESTIONS.md with the TCG and WHPX figures, as the owner's call.
 2. Under TCG the startup chain is hop-bound, and the one lever left inside it
    was the four scope proofs: each the first request's proof, at the matrix
    that cannot add a third stamp, that the innermost scope lies within the
