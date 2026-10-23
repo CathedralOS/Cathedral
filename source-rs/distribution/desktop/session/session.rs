@@ -29,6 +29,11 @@ pub(crate) fn run() -> u64 {
         feature = "management-revoke-probe"
     ))]
     let mut recovery_probed = false;
+    // Under storage tracing the shell samples its own account about once a
+    // second of idle polling: pages and frames the kernel charges it and the
+    // launch slots free, so a soak can hold the owner's account steady too.
+    #[cfg(feature = "trace-storage")]
+    let mut idle_polls = 0u32;
     loop {
         persistence::startup::progress(&mut session);
         // The chooser launches a user matrix into the workspace slot; the
@@ -83,7 +88,26 @@ pub(crate) fn run() -> u64 {
             .1
             .receive_until(&mut [0; 64], time::after(10).unwrap())
         {
-            Err(Error(code)) if code == abi::TIMED_OUT as i64 => (),
+            Err(Error(code)) if code == abi::TIMED_OUT as i64 => {
+                #[cfg(feature = "trace-storage")]
+                {
+                    idle_polls += 1;
+                    if idle_polls.is_multiple_of(10)
+                        && let Ok(budget) = cathedral_user_runtime::resources::budget()
+                        && let Ok(physical) = cathedral_user_runtime::resources::physical_budget()
+                    {
+                        cathedral_user_runtime::time::storage_sample(
+                            "shell-account",
+                            &[
+                                budget.used.private_pages,
+                                budget.used.reader_pages,
+                                physical.charged,
+                                cathedral_user_runtime::task::available_slots().unwrap_or(0),
+                            ],
+                        );
+                    }
+                }
+            }
             result => panic!(
                 "desktop idle {result:?}; root {:?}",
                 session.root.wait_until(time::now().unwrap())

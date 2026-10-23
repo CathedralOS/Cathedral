@@ -5419,13 +5419,17 @@ suite takes 42 s here, so the default boot timeout is now 120 s instead of 30)
 puts
 the kernel's own work far below the hop: a trap averages 5 µs and a syscall
 2 µs across 190,000 of each, and a task whose registered wait completes is
-selected 8 to 13 µs later with a yielding peer. So the 290 µs is neither trap
-handling nor scheduler latency: it is the address-space switch under TCG,
-where a reloaded page table flushes the emulator's translation cache and the
-woken task refills it page by page before it reaches its stamp. Real hardware
-pays a few microseconds for the same switch. A direct switch to the woken task
-would save the yield's own trap, about 5 µs; the hop count, not the hop, is the
-lab's lever, and that count is now what the realm layout requires.
+selected 8 to 13 µs later with a yielding peer. The IPC lab's echo client now
+times its thirty-two round trips with a clock grant (`ipc-roundtrip`): 3,004
+and 2,957 µs in the two rounds, so a round trip between two small tasks costs
+94 µs and a switch about 45, four syscalls included. The matrix hop's 290 µs is
+therefore neither trap handling, scheduler latency nor the switch itself: it
+is the woken matrix re-touching its working set, static arenas and mapped
+objects alike, through the emulator's translation cache after the page-table
+reload, before it reaches its stamp. Real hardware pays a few microseconds
+for all of it. A direct switch to the woken task would save the yield's own
+trap, about 5 µs; the hop count, not the hop, is the lab's lever, and that
+count is now what the realm layout requires.
 
 **Two older items close.** Bulk program reads are no longer amplified: a user
 entry reads the 220 KB stock matrix in 496 sectors, 1.15 times its size, where
@@ -5463,12 +5467,15 @@ Verification:
 
 Next, in order:
 
-1. The per-hop cost is the address-space switch under TCG, about 290 µs, with
-   the kernel's trap work at 5 µs and selection within 13 µs of completion.
-   Nothing in the matrices or the scheduler is left to shave there; fewer hops
-   would need a different realm layout, and a direct switch to the woken task
-   is an accounting question (whose turn funds the receiver) rather than a
-   latency one, recorded under CPU sponsorship in OWNER_QUESTIONS.md.
+1. The per-hop cost is about 290 µs under TCG: a bare switch between two
+   small tasks measures 45 µs, the kernel's trap work 5 µs and selection
+   within 13 µs of completion, so the rest is the woken matrix re-touching its
+   working set through the emulator's translation cache. Nothing in the
+   scheduler is left to shave; a matrix could touch fewer pages on its receive
+   path, which real hardware would not reward; fewer hops would need a
+   different realm layout; and a direct switch to the woken task is an
+   accounting question (whose turn funds the receiver) rather than a latency
+   one, recorded under CPU sponsorship in OWNER_QUESTIONS.md.
 2. A depth-4 user entry issues 11 sequential requests, and a depth-1 entry
    eight: the background rides the configure listing that already named the
    launcher (`build/suite20-latency-four.log`), and a program the matrix runs
@@ -5495,8 +5502,10 @@ Next, in order:
    the kernel charges it, which include reply pages their readers still hold,
    and the soak holds each cycle's quietest level: 256 pages and 533 frames,
    the two heap objects alone, in every cycle of both boots
-   (`build/soak-custody.log`). The desktop shell is the one account without a
-   per-cycle sample: it takes no part in a cycle's teardown, and its bootstrap
-   already asserts an exact reclamation.
+   (`build/soak-custody.log`). The shell samples its own account about once a
+   second while it idles under storage tracing (`shell-account`), and the soak
+   holds its floor too: no private or reader pages, 46 frames and no free
+   launch slots in every cycle of both boots (`build/soak-shell.log`). Every
+   account in a session now has a per-cycle check.
 5. Launching one program over one realm twice stays an owner question in
    [OWNER_QUESTIONS.md](OWNER_QUESTIONS.md).

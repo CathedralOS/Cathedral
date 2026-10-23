@@ -34,6 +34,12 @@ def reclaimed(log):
                 r'STORAGE_TRACE matrix-reclaimed (\d+) (\d+) (\d+) (\d+) (\d+)', log)]
 
 
+def shell_accounts(log):
+    """The shell's own account, sampled about once a second while it idles."""
+    return [dict(private_pages=int(p), reader_pages=int(r), frames=int(f), free_slots=int(s))
+            for p, r, f, s in re.findall(r'STORAGE_TRACE shell-account (\d+) (\d+) (\d+) (\d+)', log)]
+
+
 def heap_reports(log):
     """The provider's reports: its allocator, and the private pages and frames
     the kernel charges it, which include reply pages their readers still hold."""
@@ -99,6 +105,7 @@ def exercise(output, click, key, scan, width, height, reboot, cycles, pointer_st
             log = stream.read().decode(errors='replace')
         heaps = heap_reports(log)
         accounts = reclaimed(log)
+        shell = shell_accounts(log)
         failures = {marker: log.count(marker) for marker in FAILURES if marker in log}
         record = dict(cycle=cycle, token=token, seconds=elapsed, phases=phases,
                       windows=max((int(w) for w in re.findall(r'STORAGE_TRACE collect-pass \d+ \d+ \d+ \d+ (\d+) \d+', log)), default=0),
@@ -107,6 +114,7 @@ def exercise(output, click, key, scan, width, height, reboot, cycles, pointer_st
                       heap_capacity=heaps[-1]['capacity'] if heaps else None,
                       provider_pages_low=min((h['pages'] for h in heaps), default=None),
                       provider_frames_low=min((h['frames'] for h in heaps), default=None),
+                      shell_low=None if not shell else (min(a['private_pages'] for a in shell), min(a['reader_pages'] for a in shell), min(a['frames'] for a in shell), max(a['free_slots'] for a in shell)),
                       provider_requests=log.count('STORAGE_TRACE provider-begin'),
                       collection_passes=log.count('STORAGE_TRACE collect-pass'),
                       account=accounts[-1] if accounts else None,
@@ -128,6 +136,9 @@ def exercise(output, click, key, scan, width, height, reboot, cycles, pointer_st
         # releases would raise this floor from one cycle to the next.
         assert (record['provider_pages_low'], record['provider_frames_low']) == (records[0]['provider_pages_low'], records[0]['provider_frames_low']), \
             f"cycle {cycle} provider custody drifted: pages {records[0]['provider_pages_low']} -> {record['provider_pages_low']}, frames {records[0]['provider_frames_low']} -> {record['provider_frames_low']}"
+        # The owner's own account at its quietest in the cycle must not grow either.
+        assert shell, f'cycle {cycle} recorded no shell account sample; logs: {output}'
+        assert record['shell_low'] == records[0]['shell_low'], f"cycle {cycle} shell account drifted: {records[0]['shell_low']} -> {record['shell_low']}"
         assert all(h['failures'] == 0 for h in heaps), f'provider allocation failed in cycle {cycle}: {heaps}'
         assert all(h['capacity'] - h['peak'] >= HEAP_HEADROOM for h in heaps), f'provider heap headroom lost in cycle {cycle}: {heaps}'
         if collection_pressure:
@@ -170,6 +181,7 @@ def report(output):
                   f"requests {c['provider_requests']} collections {c['collection_passes']} (windows up to {c.get('windows', 0)}) "
                   f"root after teardown: pages {account.get('private_pages')}/{account.get('reader_pages')} frames {account.get('frames')} free slots {account.get('free_slots')}; "
                   f"provider floor pages {c.get('provider_pages_low')} frames {c.get('provider_frames_low')}; "
+                  f"shell floor {c.get('shell_low')}; "
                   f"failures {c['failures'] or 'none'}; {phases}")
         times = [c['seconds'] for c in data['cycles']]
         if len(times) >= 4:

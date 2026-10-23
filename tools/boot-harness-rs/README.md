@@ -3,7 +3,10 @@
 Run `python tools/boot-harness-rs/run.py --smoke` from the repository root.
 This builds the separate `source-rs/` Cargo workspace and exercises its UEFI
 handoff under QEMU/OVMF; the full suite takes about 40 s on the reference host
-against a 120 s default timeout. Host-side Python only; no extra Python packages.
+against a 120 s default timeout. Its serial log carries the kernel's phase
+report and, from the IPC echo client, `STORAGE_TRACE ipc-roundtrip 32 <us>`:
+thirty-two round trips between two small tasks, the switch cost every
+forwarding hop pays. Host-side Python only; no extra Python packages.
 
 For the OS desktop in VS Code, open the repository root and press **F5** with
 **Cathedral: Build & Run in QEMU** selected. It runs the same default composition as:
@@ -464,7 +467,9 @@ nobody releases would raise it), provider request and collection counts, and
 every matrix's account after it reclaimed a child (`matrix-reclaimed`: pages
 and frames the kernel still charges it and the launch slots free again), the
 nested desktop's after closing Notes and then the root's after the teardown,
-which must match the first cycle's exactly and in order. It fails on a
+which must match the first cycle's exactly and in order, and the shell's own
+account (`shell-account`, sampled about once a second while it idles), whose
+quietest level per cycle must hold as well. It fails on a
 provider replacement,
 offline storage, a matrix exit, a workspace exhaustion, a refused bulk reply, an
 allocation failure, less than 32 KiB of provider heap headroom or drifting

@@ -20,7 +20,9 @@ fn delivery(memory: &mut PreparedMemory, console: &mut SerialPort) {
     for round in 0..2 {
         let programs = [0, 1].map(|role| program(role, 0));
         let endpoints = [endpoint(1, 0, None), endpoint(0, 1, None)];
-        let reports = run(memory, &programs, &endpoints);
+        // The client holds a clock so it can time its exchanges: thirty-two
+        // round trips between two tasks measure the kernel switch itself.
+        let reports = run_with_clock(memory, &programs, &endpoints, &[1]);
         assert_eq!(reports[0].exit, Some(Exit::Returned(0)));
         assert_eq!(reports[1].exit, Some(Exit::Returned(0)));
         assert!(
@@ -92,6 +94,14 @@ fn run(
     programs: &[Program<'_>],
     endpoints: &[EndpointSpec],
 ) -> alloc::vec::Vec<user_tasks::Report> {
+    run_with_clock(memory, programs, endpoints, &[])
+}
+fn run_with_clock(
+    memory: &mut PreparedMemory,
+    programs: &[Program<'_>],
+    endpoints: &[EndpointSpec],
+    clock_readers: &[usize],
+) -> alloc::vec::Vec<user_tasks::Report> {
     // SAFETY: Sole CPU, IRQs off, initialized entry paths/heap and owned memory.
     unsafe {
         user_tasks::run_configured(
@@ -110,7 +120,7 @@ fn run(
                 memory: &[],
                 channel_limits: &[],
                 cpu_limits: &[],
-                clock_readers: &[],
+                clock_readers,
             },
         )
     }

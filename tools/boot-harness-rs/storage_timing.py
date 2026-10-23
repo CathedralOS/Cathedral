@@ -79,7 +79,7 @@ def summarize(output, serial, boot):
         if label in ('collect-pass', 'bulk-reply-refused'):
             assert len(values) == 6
             continue
-        if label in ('surface-create-refused', 'surface-replay-failed'):
+        if label in ('surface-create-refused', 'surface-replay-failed', 'shell-account', 'ipc-roundtrip'):
             continue
         if label == 'ata-io':
             assert len(values) == 7

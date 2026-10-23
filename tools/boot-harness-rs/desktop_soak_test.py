@@ -3,7 +3,7 @@ import json
 from pathlib import Path
 import tempfile
 import unittest
-from desktop_soak import cycles_before, heap_reports, last_token, reclaimed
+from desktop_soak import cycles_before, heap_reports, last_token, reclaimed, shell_accounts
 
 
 class SoakTests(unittest.TestCase):
@@ -22,6 +22,12 @@ class SoakTests(unittest.TestCase):
         self.assertEqual(reclaimed(log), [
             dict(slot=3, private_pages=40, reader_pages=96, frames=612, free_slots=20),
             dict(slot=1, private_pages=24, reader_pages=64, frames=420, free_slots=26)])
+
+    def test_shell_account_samples_keep_pages_frames_and_free_slots(self):
+        log = 'Cathedral Rust lab: STORAGE_TRACE shell-account 12 40 300 26' + chr(10) + 'STORAGE_TRACE shell-account 12 41 301 25' + chr(10)
+        self.assertEqual(shell_accounts(log), [
+            dict(private_pages=12, reader_pages=40, frames=300, free_slots=26),
+            dict(private_pages=12, reader_pages=41, frames=301, free_slots=25)])
 
     def test_cold_boot_continues_the_fresh_boot_numbering(self):
         with tempfile.TemporaryDirectory() as directory:
