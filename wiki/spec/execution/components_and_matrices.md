@@ -90,7 +90,9 @@ The program determines whether it supports concurrent use or rejects another
 instance. Sharing a realm does not serialize the programs' operations or their
 private state. This acceptance does not specify an exclusive-instance claim,
 lock lifetime, discovery or activation protocol; those mechanisms remain to be
-designed. An independent copy remains an explicit storage operation.
+designed in detail. The accepted [coordination service](../communication/ipc.md)
+supplies scoped introductions and app-controlled acceptance or refusal; its Rust
+integration is outstanding. An independent copy remains an explicit storage operation.
 
 ## Scoped application bootstrap
 

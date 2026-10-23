@@ -7,6 +7,12 @@ then [retained endpoint custody](../../libraries/user-runtime/services/offer.rs)
 The stock provider authenticates requests in
 [children/services.rs](../../../distribution/matrix/service/children/services.rs).
 
+The accepted [coordination and IPC contract](../../../../wiki/spec/communication/ipc.md)
+adds a supported coordination service for the shipped OS/default matrix and
+protocol-controlled shared memory. This Rust broker still implements only
+interaction and storage; coordination identifiers, matching, introductions and
+shared writable mailbox custody have not been implemented here.
+
 ## Contract
 
 A program declares required and optional imports. Its owner resolves them against

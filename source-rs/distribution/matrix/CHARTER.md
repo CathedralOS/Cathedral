@@ -270,6 +270,11 @@ The [multiple-instance contract](../../../wiki/spec/execution/components_and_mat
 accepts this for matrices too. A program may reject concurrent use; the stock
 matrix does not yet implement an exclusive-instance claim. Launch does not
 implicitly clone the realm.
+The [accepted coordination service](../../../wiki/spec/communication/ipc.md)
+provides the intended app-controlled introduction/rejection route, with independent
+executable, path and secret constraints. Supplying this common platform service
+is a requirement for the shipped default matrix; this executable does not yet
+implement it. Protocol-controlled shared buffers likewise remain future work.
 
 Three apps fit the current desktop policy, subject to subtree funding. Split consumes
 more task/channel capacity than a leaf and may be refused while other subtrees run.

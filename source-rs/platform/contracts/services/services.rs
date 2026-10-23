@@ -1,5 +1,7 @@
 // Scoped service acquisition. The authenticated endpoint selects the grant ceiling.
 // Version 1 reuses the broker pair for interaction and transfers other endpoints.
+// Coordination is accepted in wiki/spec/communication/ipc.md, but has no wire
+// operations in this version. These constants do not implement its protocol.
 use crate::{imports, matrix::Packet};
 pub const ACQUIRE: u64 = 0x53525601;
 pub const VERSION: u64 = 1;

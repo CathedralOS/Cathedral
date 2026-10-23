@@ -32,6 +32,7 @@ subject. A current specification may precede implementation.
 | Initial root extent | [Initial root extent](resources/root_extent.md) | Partial | Partial |
 | Realms and objects: copies, paths and hierarchy metadata | [Realms and objects](storage/realms_and_objects.md) | Partial | Partial |
 | Components and matrices: policy ownership and supplied authority | [Components and matrices](execution/components_and_matrices.md) | Partial | Partial |
+| Scoped coordination and checked shared-memory IPC | [Coordination and IPC](communication/ipc.md) | Partial | Partial |
 
 ## Owned but unwritten subjects
 
@@ -43,7 +44,6 @@ plus the active hardware frontier.
 | Subject | Intended specification owner | Current design owner | Implementation state |
 | --- | --- | --- | --- |
 | Capability meaning, delegation, attenuation, redemption, and revocation | `spec/authority/capabilities.md` | [Capability model](../design/part_1_authority/00_capability_model.md) and [lifecycle](../design/part_1_authority/01_capability_lifecycle.md) | Not started |
-| IPC endpoints, shared regions, protocols, and transfer | `spec/communication/ipc.md` | [IPC and service invocation](../design/part_3_communication/00_ipc_and_service_invocation.md) | Not started |
 | Package closure and component manifest | `spec/packages/package_and_manifest.md` | [Package system](../design/part_5_lifecycle/00_package_system.md) | Not started |
 | Compositor and seat contract | `spec/human_surface/compositor_and_seat.md` | [Windowing and compositor](../design/part_6_human_surface/00_windowing_and_compositor.md); [pointer lease proposal](../proposals/0001_input_and_pointer_leases.md) | [Rust session lab](../../source-rs/distribution/lab/compositor/SESSION.md): pointer routing/capture, attenuated focus and hosted child scopes; production seats and recursive pointer leases absent |
 | Rendering scenes, resource custody and presentation | `spec/human_surface/rendering.md` | [Media and graphics](../design/part_6_human_surface/02_media_and_graphics.md); [candidate proposal](../proposals/0000_rendering_and_composition.md) | Rust bounded three-client retained compositor, cross-process clipping and shared-page experiments; production scenes and GPU presentation absent |

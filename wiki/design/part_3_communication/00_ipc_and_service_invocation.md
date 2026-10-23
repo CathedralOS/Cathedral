@@ -1,5 +1,12 @@
 # Chapter 00: IPC & Service Invocation
 
+The current [coordination and IPC specification](../../spec/communication/ipc.md)
+accepts scoped introductions and protocol-controlled shared memory. This design
+chapter's stronger claim of one exclusive transport, and general pending-operation
+revocation policy, are not ratified by that partial contract. Opaque boundary data
+requires checked protocol or admitted-provider evidence before it can establish
+stable shared access.
+
 > One IPC primitive: a capability-scoped shared memory region. Every named pattern (pipes, sockets, queues, pub/sub, RPC) is a library over it. Notification and blocking belong to the scheduler; protocol semantics are a library layer, while placed-access safety is mandatory.
 
 ## The Legacy Model

@@ -456,8 +456,11 @@ on next use. An empty blocking receive may have no completion unless the contrac
 defines when redemption commits it and how cancellation or peer death intervenes.
 
 **Contracts checked.** The [specification index](wiki/spec/README.md) assigns
-authority and IPC semantics to the unwritten `spec/authority/capabilities.md`
-and `spec/communication/ipc.md`. The new
+authority semantics to the unwritten `spec/authority/capabilities.md`.
+The accepted [coordination and IPC contract](wiki/spec/communication/ipc.md)
+(2026-10-23) now establishes scoped introductions and protocol-controlled shared
+memory as supported shipped operations. It does not select an exclusive transport
+or settle pending-delivery and accepted-mapping revocation. The
 [Rust syscall constants](source-rs/kernel/contracts/user.rs) and
 [transport model](source-rs/kernel/core/ipc/ipc.rs) explicitly define only lab
 behavior. No accepted contract settles transport selection or pending-operation
