@@ -5466,11 +5466,24 @@ Next, in order:
 2. A depth-4 user entry issues 12 sequential requests: the background now
    rides the configure listing that already named the launcher, which cost
    nothing in coupling (`build/suite20-latency-four.log`). The one request
-   that could still go, a launcher receiving its arrangement with its launch,
-   is worth about 1 percent of the entry at a 6 ms round trip and would couple
-   the chooser to its launch argument; not worth it on this evidence. The
-   entry's remaining 400 ms is admission, placement and drawing.
-3. The clean-close LOSS timeout did not reproduce in these runs either.
+   that could still go is the launcher's read of the configuration to learn
+   its own name. A launcher could learn its object instead, but the kernel
+   fills a child's first entry argument from the executable's own record
+   ([spawn.rs](source-rs/kernel/core/user_tasks/lifecycle/spawn.rs)) and the
+   second is the picker's mode word, so that needs either a kernel image
+   argument or a packed argument contract across shell, matrix and chooser.
+   For about 6 ms at depth four, not worth it. The entry's remaining 400 ms
+   is admission, placement and drawing.
+3. The clean-close LOSS timeout: the mechanism is in
+   [control.rs](source-rs/distribution/matrix/service/children/control.rs). A
+   close's answer is left queued while this matrix's storage is busy, and the
+   deadline used to keep running meanwhile, so the first poll after a long
+   busy window could refuse a sibling that had answered cleanly as timed out.
+   The pending deadline is now held at least the outcome grace ahead of now
+   for as long as the matrix is busy, so only the sibling's own silence can
+   time a close out. It left no trace in this session's runs before or after;
+   `build/suite21-*.log` covers the fix on the close, failure, provider and
+   soak suites.
 4. The soak now holds every matrix's reclamation sample steady across cycles,
    in order: the nested desktop's after closing Notes and the root's after the
    teardown. The provider's and the desktop's own accounts are not sampled:

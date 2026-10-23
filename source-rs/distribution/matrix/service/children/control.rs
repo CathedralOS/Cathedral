@@ -135,6 +135,16 @@ impl Children {
         // turn a clean answer into a spurious refusal. wait() excludes this
         // receiver meanwhile so a ready reply cannot cause a busy loop.
         if matches!(purpose, Purpose::Close) && (parent.upstream_busy() || parent.storing()) {
+            // The sibling may already have answered; nobody is looking. Its
+            // deadline must not run out while this matrix is the one that is
+            // busy, or the first poll afterwards would refuse a clean answer
+            // as a timeout. Keep at least the outcome grace ahead of now.
+            let grace = time::now()?.wrapping_add(OUTCOME_GRACE_TICKS);
+            if let Some(pending) = &mut self.pending[slot]
+                && time::reached(grace, pending.1)
+            {
+                pending.1 = grace;
+            }
             return Ok(false);
         }
         let mut retired = false;

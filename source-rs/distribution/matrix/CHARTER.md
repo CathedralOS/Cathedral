@@ -120,6 +120,9 @@ authenticate a human click or provide a protected global escape surface.
 Active storage/publication exchanges and loss surveys must finish before a stop
 can run; BUSY requires another explicit request. Ordinary CLOSE still requires
 a clean LOSS reply and a launch receipt alone conveys no management authority.
+A sibling's answer to a close waits unpolled while this matrix's storage is
+busy, and its deadline is held ahead of that busy window, so only the sibling's
+own silence can time a close out.
 
 ## Configured launcher recovery
 
