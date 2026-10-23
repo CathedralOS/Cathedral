@@ -95,6 +95,14 @@ Keep timing and scene/focus questions separate rather than silently choosing the
 in an input transport patch. This ratification changed docs/comments only and
 added no runtime verification evidence.
 
+Owner direction 2026-10-23: retain the current recursive input forwarding chain
+for now. Revisit transport if measured latency warrants it, separating router
+scheduling and request/reply costs from event copying and per-hop bookkeeping.
+Bounded batches, shared queues and explicitly authorized direct delegation are
+candidates, not selected changes. Shared memory does not remove a filtering
+router's need to execute or permit exposing unrelated ancestor input. No runtime
+changes or new performance measurements accompany this direction.
+
 Next implementation slice: add funded coordination acquisition to the existing
 broker and prove simultaneous first registration, rejected identity spoofing,
 constraint combinations, accepted/refused introductions and dead-holder cleanup.
