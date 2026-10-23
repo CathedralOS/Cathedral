@@ -36,6 +36,11 @@ either a root grant or the upstream matrix endpoint into the same `Grant`.
 
 ## Child boundary
 
+The shared [matrix lifetime contract](../../../wiki/spec/execution/components_and_matrices.md#matrix-failure-and-subtree-lifetime)
+requires teardown of the entire owned subtree when a matrix exits or crashes.
+Recovery starts new instances; descendants are not retained as adoptable orphans.
+This containment rule applies beyond the stock distribution's recovery policy.
+
 The [shared protocol](../../platform/contracts/matrix.rs) admits `VIEW`, `NEXT` and
 clipped `PAINT`/`ERASE` surface commands on child connections. Authentication comes from the accepted IPC endpoint.
 Children supply no task, world, ancestor or sibling selector. Their replies

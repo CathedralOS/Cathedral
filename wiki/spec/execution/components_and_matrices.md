@@ -33,6 +33,34 @@ provider may enforce a delegated grant directly; an interposing matrix is an
 implementation choice when its behavior requires mediation. Enforcement must
 remain effective regardless of which path carries the request.
 
+## Matrix failure and subtree lifetime
+
+The owner accepted on 2026-10-23 that a matrix is a lifetime boundary: when it
+crashes or terminates, its owned children and all their descendants are torn down.
+No descendant survives as an orphan for a replacement matrix to adopt. The
+enclosing system must enforce this without relying on the failed matrix or on
+cooperative child shutdown. This is a containment rule, not just a desktop policy.
+
+Restart creates a new matrix and new child instances within newly admitted
+authority. Durable state may be reopened through authorized storage; saved task
+identifiers, handles or registrations do not resurrect the old subtree or confer
+control over another live process. Persisted activation registrations describe
+what to start, not surviving descendants to reclaim.
+
+A service owned outside the failed matrix may continue running. Supplying its
+interface to the matrix does not make that provider a descendant, and a child
+cannot escape its lifetime boundary by opening IPC or registering with an
+external service. Coordination's first participant is not a lifetime owner merely
+because it accepts connections. There is no implicit promotion or adoption on
+failure; this contract introduces no operation for moving a live descendant out
+of its matrix.
+
+Subtree death does not roll back completed external work or destroy backing still
+owed to an authorized surviving reader. Resource reclamation must preserve those
+obligations while preventing further execution of the dead subtree. Exact budget
+refund routing and outstanding external-operation outcomes remain separate
+accounting and service contracts.
+
 ## Policy ownership and persistence
 
 The enclosing owner controls the matrix's granted capabilities and resource
@@ -133,6 +161,12 @@ retain their existing design/specification owners.
 
 ## Implementation evidence
 
+- The Rust [supervision model](../../../source-rs/kernel/core/user_tasks/lifecycle/supervision/supervision.rs)
+  cancels owned children on supervisor exit or fault without running user
+  destructors. It does not implement orphan adoption or production cooperative
+  cancellation. The [recursive admission lab](../../../source-rs/distribution/lab/channels/README.md#recursive-child-admission)
+  exercises subtree reclamation and returns lent budgets to the nearest surviving
+  lender; that refund route is lab evidence, not an accepted general sponsorship rule.
 - [Declared service imports](../../../source-rs/platform/contracts/imports/README.md)
   implement bounded required/optional binding and owner withholding. The record
   and endpoint bundle are experiments, not a frozen component manifest.

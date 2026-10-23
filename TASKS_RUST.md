@@ -19,6 +19,15 @@ peer mappings or independent rights. See the
 Connection closure must preserve live memory-view obligations. Exact queued-message,
 pending-transfer and blocked-wait outcomes still need transport contracts.
 
+Owner clarification 2026-10-23: a failed or terminated matrix takes down its
+entire owned subtree. No surviving descendant adoption; restart admits new
+instances and may reopen authorized durable state. Independently owned external
+providers are outside that subtree. See the
+[matrix lifetime contract](wiki/spec/execution/components_and_matrices.md#matrix-failure-and-subtree-lifetime).
+The Rust lab already cancels owned children on supervisor exit/fault; this
+documentation ratification does not add runtime behavior or fresh QEMU evidence.
+Budget refund routing and external-operation lifetimes remain separate contracts.
+
 Next implementation slice: add funded coordination acquisition to the existing
 broker and prove simultaneous first registration, rejected identity spoofing,
 constraint combinations, accepted/refused introductions and dead-holder cleanup.

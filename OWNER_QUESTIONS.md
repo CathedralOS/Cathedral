@@ -528,48 +528,6 @@ acceptance/transfer, or a defined teardown protocol. It must not silently erase
 charges or revoke accepted readers as a side effect of accounting. Static launch
 reservations do not settle hierarchical subdivision, CPU budgets or timing isolation.
 
-### Child lifetime when a supervisor fails
-
-**Requirement and tension.** Userspace supervision needs to determine whether a
-child survives the loss of its supervisor and who may subsequently control it.
-The [component design](wiki/design/part_2_components/00_component_model.md)
-requires structured tasks that cannot outlive their owning scope, while leaving
-the relationship between component and child restart open. The
-[activation design](wiki/design/part_2_components/06_service_activation.md)
-anticipates surviving instances and orphans being reattached after an activator
-crashes. The [capability lifecycle](wiki/design/part_1_authority/01_capability_lifecycle.md)
-revokes delegated authority on parent death and requires explicit transfer to
-remove that lifetime coupling. These can coexist, but the surviving child's
-owner and authority graph are unspecified; component supervision and task-scope
-ownership cannot simply be assumed identical.
-
-**Contracts checked.** The [specification index](wiki/spec/README.md) leaves
-component lifecycle/admission and capability contracts unwritten. The
-[Rust launch model](source-rs/kernel/core/user_tasks/lifecycle/supervision/supervision.rs) and
-[userspace wrappers](source-rs/platform/libraries/user-runtime/task/task.rs) are lab
-contracts only. This blocks promising independent service survival or reattachment,
-not implementing bounded restart experiments.
-
-**Owner choice.** Bind every supervised child to the supervisor's lifetime,
-or distinguish a lifetime owner from the component currently supervising it.
-The former guarantees teardown but makes supervisor failure a subtree outage.
-The latter permits continuity, but requires an explicit persistent owner,
-authority transfer and a checked adoption protocol; rediscovering a PID or
-saved handle must not silently grant control or resurrect revoked authority.
-
-**Recommendation (unaccepted).** Keep task scopes structured. Require explicit
-lifetime ownership and transfer before an independently owned service can
-survive and be adopted by a replacement supervisor. Specify component ownership
-separately from task scheduling. The Rust lab currently cancels its owned
-children on supervisor exit/fault, without running user destructors; it implements
-neither surviving orphans nor production cooperative cancellation. The bounded
-[recursive admission experiment](source-rs/distribution/lab/channels/README.md#recursive-child-admission)
-lends idle launch/peer budgets at child startup and returns them, with fresh
-names, to the nearest surviving lender after subtree reclamation. This tests
-structured lifetime ownership; it does not settle production sponsorship,
-persistent service ownership or adoption. Whether returned budgets should follow
-this automatic lender chain remains part of that owner decision.
-
 ### CPU sponsorship across service calls
 
 **Requirement and tension.** The [scheduler design](wiki/design/part_2_components/01_scheduler_and_resources.md)
