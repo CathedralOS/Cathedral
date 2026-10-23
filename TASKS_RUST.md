@@ -5,9 +5,10 @@ spends its time**, on baseline `44b11710` (a realm named in one listing; the
 stock matrix size-optimized). Storage traces carry the kernel's microsecond
 clock, `hop_latency.py` attributes each hop of a request chain net of the trace
 line's own cost, and matrices yield right after forwarding or answering: a hop
-is about 290 µs of kernel switch under TCG against 30 µs of matrix work, and a
-depth-4 user entry takes 519 ms; the newest section at the end records the
-measurements and the open items.
+is about 290 µs of address-space switch under TCG against 30 µs of matrix
+work, and a depth-4 user entry takes eleven requests and about 520 to 560 ms
+(from twenty-nine and 1,178 at the start of the day); the newest section at
+the end records the measurements and the open items.
 Saved-state testing is an explicit launch choice. The section before it
 distinguishes current-program four-level verification from failures in
 retained executable snapshots.
@@ -5453,7 +5454,12 @@ Verification:
   and the two input-traced matrix suites. `build/soak-accounts.log` is the
   three-cycle soak with every reclamation sample compared: each cycle, in both
   boots, reports the two picker retirements, the nested desktop's Notes close
-  and the root's teardown with identical pages, frames and free slots.
+  and the root's teardown with identical pages, frames and free slots. The
+  later changes in this section each ran the same suites again:
+  `build/suite20-*.log` (background in the configure listing),
+  `build/suite21-*.log` (held close deadline), `build/suite22-*.log` (launch
+  argument) and `build/soak-custody.log` (provider custody floor); a soak
+  cycle now issues 32 provider requests, from 85 at the start of the day.
 
 Next, in order:
 
