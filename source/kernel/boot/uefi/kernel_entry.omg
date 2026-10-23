@@ -13,6 +13,7 @@ use paging_handoff;
 use firmware_tables;
 use mapping_exercise;
 use mapping_activation;
+use mapping_region;
 
 data KernelState {
     entered: bool;
@@ -848,7 +849,7 @@ crashes Abort
         // the independently retained source page supplies that separately.
         // Neither this address's geometry nor reserve below proves issuance.
         let reservation: Extent in Granted = ExtentRootProvider::grant(
-            Extent { base: 0x40000000 as addr, length: 4096 }
+            Extent { base: 0x40000000 as addr, length: MAPPING_BYTE_COUNT }
         );
         let destination: Extent in Granted & BootVirtualDestination = BootVirtualReservation::reserve(reservation);
         let attempt: MappingAttempt = MappingExercise::run(tables, destination, &inventory, context.firmware_root);

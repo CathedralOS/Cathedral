@@ -184,17 +184,17 @@ data MappingCloneResult {
 }
 
 machine MappingHandoff::clone(inventory: &FirmwareTableInventory, firmware_root: u64,
-                              new_root: u64, target: u64, virtual_address: u64)
+                              new_root: u64, target: u64, virtual_address: u64, length: u64)
     -> MappingCloneResult
 requires addr::Bound == 18446744073709551616
 reaches ResourceProfileSupply
 {
     transition x86_decompose_bootstrap_virtual_address(virtual_address) {
-        X86BootstrapVirtualAddressCheck::Canonical { indices } -> observe(inventory, firmware_root, new_root, target, indices)
+            X86BootstrapVirtualAddressCheck::Canonical { indices } -> observe(inventory, firmware_root, new_root, target, length, indices)
         _ -> MappingCloneResult::Unavailable
     }
     state observe(inventory: &FirmwareTableInventory, firmware_root: u64,
-                  new_root: u64, target: u64, indices: X86BootstrapVirtualAddressIndices)
+                  new_root: u64, target: u64, length: u64, indices: X86BootstrapVirtualAddressIndices)
         -> MappingCloneResult
     requires addr::Bound == 18446744073709551616
     {
@@ -206,7 +206,7 @@ reaches ResourceProfileSupply
         source.pd = MappingHandoff::child(inventory, directory_pointer, 3);
         let directory: u64 = source.pd.entries[indices.pd_index];
         source.pt = MappingHandoff::child(inventory, directory, 2);
-        transition X86PageTableClone::prepare(&source, new_root, target, indices.address) {
+        transition X86PageTableClone::prepare_range(&source, new_root, target, indices.address, length) {
             X86PageTableCloneResult::Ready { tables } -> (MappingCloneResult::Ready { tables: tables })
             _ -> MappingCloneResult::Unavailable
         }

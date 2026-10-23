@@ -2,12 +2,12 @@ use omega::language::core::assembly;
 use omega::language::core::extent;
 use omega::language::core::layout;
 use core::paging_profile;
-use page_frame;
+use mapping_region;
 use mapping_handoff;
 
 // A virtual reservation is independent of physical source authority. This
-// exact admitted boot occurrence reserves [1GiB, 1GiB+4096) in the continuing
-// kernel's virtual namespace. Firmware's old identity translation there is
+// exact admitted boot occurrence reserves the configured page range at 1GiB
+// in the continuing kernel's virtual namespace. Firmware's old identity translation there is
 // not ownership of that namespace. Admission asserts no live image, stack,
 // firmware callback or other claimant uses it. Geometry cannot prove freshness.
 domain Extent::BootVirtualDestination established by BootVirtualReservation::reserve;
@@ -43,7 +43,7 @@ BootstrapVirtualReservationProvider satisfies BootVirtualReservation {
 // MTRR/platform contributions. Granted and ConventionalMemory do not prove
 // that premise. Activation checks PAT[0] itself, not those external conditions.
 data BootMapping {
-    source: Extent in Granted & Resident<KernelPagePlacement, KernelPage>;
+    source: Extent in Granted & Resident<MappingRegionPlacement, MappingRegion>;
     destination: Extent in Granted & BootVirtualDestination;
     tables: Extent in Granted & Vacant;
     firmware_root: u64;
@@ -102,8 +102,8 @@ crashes Abort
         transition supported && write_back &&
             (control3 & 0x000FFFFFFFFFF000) == mapping.firmware_root &&
             mapping.tables.length == 16384 && root % 4096 == 0 &&
-            root <= 0x000FFFFFFFFFC000 && mapping.source.length == 4096 &&
-            mapping.destination.length == 4096 {
+            root <= 0x000FFFFFFFFFC000 && mapping.source.length == MAPPING_BYTE_COUNT &&
+            mapping.destination.length == MAPPING_BYTE_COUNT {
             true -> install(mapping, control3)
             _ -> wrong()
         }
@@ -137,15 +137,16 @@ crashes Abort
         state wrong() -> bool { crash Abort; }
 }
 
-public data MappedPageMemory {}
-public boundary trait MappedPageSupply: ResourceProfileSupply<MappedPageMemory> {}
-public data MappedPagePlacement {}
+public data MappedRegionMemory {}
+public boundary trait MappedRegionSupply: ResourceProfileSupply<MappedRegionMemory> {}
+public data MappedRegionPlacement {}
 
-// Admitted only for this transaction's exact reserved virtual page after the
+// Admitted only for this transaction's exact reserved virtual range after the
 // selected activation occurrence and before retirement. Its backing is the
-// physical page retained in the exclusively borrowed carrier. No physical Stable view is
-// live across this alias, and every mapped view ends before the CR3 restore.
-MappedPageProfileProvider satisfies MappedPageSupply {
+// complete physical region retained in the exclusively borrowed carrier. No
+// physical Stable view is live across these aliases, and every mapped view
+// ends before the CR3 restore.
+MappedRegionProfileProvider satisfies MappedRegionSupply {
     machine profile(storage: &Extent in Granted) -> ResourceProfile {
         let services: [u64; 32];
         let mut transfers: [TransferRule; 16];
@@ -166,13 +167,13 @@ MappedPageProfileProvider satisfies MappedPageSupply {
     }
 }
 
-machine MappedPagePlacement::plan(schema: Schema) -> PlacementPlan {
+machine MappedRegionPlacement::plan(schema: Schema) -> PlacementPlan {
     let mut fields: [FieldEntry; 64];
     fields[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
     let services: [u64; 32];
     PlacementPlan {
         layout: Plan {
-            entries: fields, entry_count: 1, size_fixed: 4096, size_is_dynamic: false, align: 4096,
+            entries: fields, entry_count: 1, size_fixed: schema.fields[0].size, size_is_dynamic: false, align: 4096,
         },
         access: AccessPlan::with(AccessPlan::inaccessible(&schema), schema.fields[0].key,
             FieldAccess::External { read: ExternalRead::Read, write: true, exposure: Exposure::Exported }),
@@ -189,25 +190,40 @@ requires destination in BootVirtualDestination
 ensures destination in BootVirtualDestination
 reaches ResourceProfileSupply
 {
-    transition Placed::view_extent_mut<MappedPagePlacement, KernelPage, MappedPageMemory>(
+    transition Placed::view_extent_mut<MappedRegionPlacement, MappingRegion, MappedRegionMemory>(
         destination
     ) {
-        PlacementOutcome::Ready { view } -> observe(view)
+        PlacementOutcome::Ready { view } -> page(view, 0)
         PlacementOutcome::Rejected { returned, reason } -> false
     }
-    state observe(view: &mut Placed<MappedPagePlacement, KernelPage>) -> bool {
-        let first: u64 = placed_read(&view.words[0]);
-        let last: u64 = placed_read(&view.words[511]);
+    state page(view: &mut Placed<MappedRegionPlacement, MappingRegion>, next: u64) -> bool
+    requires next <= MAPPING_PAGE_COUNT
+    {
+        transition next < MAPPING_PAGE_COUNT {
+            true -> observe(view, next)
+            _ -> true
+        }
+    }
+    state observe(view: &mut Placed<MappedRegionPlacement, MappingRegion>, next: u64) -> bool
+    requires next < MAPPING_PAGE_COUNT
+    {
+        let first: u64 = placed_read(&view.words[next * 512]);
+        let last: u64 = placed_read(&view.words[next * 512 + 511]);
         transition first == 0 && last == 0 {
-            true -> write(view)
+            true -> write(view, next)
             _ -> false
         }
     }
-    state write(view: &mut Placed<MappedPagePlacement, KernelPage>) -> bool {
-        placed_write(&mut view.words[0], 73u64);
-        placed_write(&mut view.words[511], 97u64);
-        let first: u64 = placed_read(&view.words[0]);
-        let last: u64 = placed_read(&view.words[511]);
-        first == 73 && last == 97
+    state write(view: &mut Placed<MappedRegionPlacement, MappingRegion>, next: u64) -> bool
+    requires next < MAPPING_PAGE_COUNT
+    {
+        placed_write(&mut view.words[next * 512], 73 + next);
+        placed_write(&mut view.words[next * 512 + 511], 97 + next);
+        let first: u64 = placed_read(&view.words[next * 512]);
+        let last: u64 = placed_read(&view.words[next * 512 + 511]);
+        transition first == 73 + next && last == 97 + next {
+            true -> page(view, next + 1)
+            _ -> false
+        }
     }
 }

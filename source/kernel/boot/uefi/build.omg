@@ -24,8 +24,8 @@ machine build(builder: &mut Build) {
     Build::select_provider<FirmwareMemorySupply, FirmwareMemoryProfileProvider>(builder);
     Build::accept_boundary<HardwareTableSupply>(builder);
     Build::select_provider<HardwareTableSupply, HardwareTableProfileProvider>(builder);
-    Build::accept_boundary<MappedPageSupply>(builder);
-    Build::select_provider<MappedPageSupply, MappedPageProfileProvider>(builder);
+    Build::accept_boundary<MappedRegionSupply>(builder);
+    Build::select_provider<MappedRegionSupply, MappedRegionProfileProvider>(builder);
     Build::accept_boundary<BootVirtualReservation>(builder);
     Build::select_provider<BootVirtualReservation, BootstrapVirtualReservationProvider>(builder);
     Build::accept_boundary<BootTranslation>(builder);

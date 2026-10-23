@@ -1,0 +1,75 @@
+use omega::language::core::extent;
+use omega::language::core::layout;
+use boot_memory;
+
+// The boot composition chooses one bounded region. Allocation, leaf
+// installation and access iterate this same geometry; no per-count compiler
+// path or extra backing grant is involved.
+public const MAPPING_PAGE_COUNT: u64 = 3;
+public const MAPPING_WORD_COUNT: u64 = MAPPING_PAGE_COUNT * 512;
+public const MAPPING_BYTE_COUNT: u64 = MAPPING_PAGE_COUNT * 4096;
+
+public data MappingRegion { words: [u64; MAPPING_WORD_COUNT]; }
+public data MappingRegionPlacement {}
+
+data MappingRegionPreparation {
+    case Ready(storage: Extent in Granted & Resident<MappingRegionPlacement, MappingRegion>);
+    case Rejected(storage: Extent in Granted & Vacant);
+}
+
+machine MappingRegionPlacement::plan(schema: Schema) -> PlacementPlan {
+    let mut entries: [FieldEntry; 64];
+    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    let services: [u64; 32];
+    PlacementPlan {
+        layout: Plan {
+            entries: entries, entry_count: 1, size_fixed: schema.fields[0].size,
+            size_is_dynamic: false, align: 4096,
+        },
+        access: AccessPlan::with(AccessPlan::inaccessible(&schema), schema.fields[0].key,
+            FieldAccess::Stable { read: true, write: true, exposure: Exposure::Exported }),
+        reach: BoundaryReach { services: services, service_count: 0 },
+    }
+}
+
+// Initialize the complete physical region before any virtual alias exists.
+// Rejection returns the exact allocation; it cannot be silently merged back
+// into an unrelated formal tail or abandoned.
+machine prepare_mapping_region(storage: Extent in Granted & Vacant) -> MappingRegionPreparation
+reaches ResourceProfileSupply
+{
+    let words: [u64; MAPPING_WORD_COUNT];
+    transition NativePlacement<MappingRegionPlacement, MappingRegion, BootMemory>::initialize(
+        storage, MappingRegion { words: words }
+    ) {
+        PlacementOutcome::Ready { view } -> (MappingRegionPreparation::Ready { storage: view })
+        PlacementOutcome::Rejected { returned, reason } -> (MappingRegionPreparation::Rejected { storage: returned.source })
+    }
+}
+
+// Only called after the scoped provider restored and checked the old CR3.
+// Each page's distinct endpoints catch repeated/swapped physical frames;
+// checking just one page or a shared value would not establish the range.
+machine check_mapping_region(storage: &mut Extent in Granted & Resident<MappingRegionPlacement, MappingRegion>) -> bool {
+    let view: &mut Placed<MappingRegionPlacement, MappingRegion> =
+        Placed::view_resident_mut<MappingRegionPlacement, MappingRegion>(storage);
+    transition { _ -> page(view, 0) }
+    state page(view: &Placed<MappingRegionPlacement, MappingRegion>, next: u64) -> bool
+    requires next <= MAPPING_PAGE_COUNT
+    {
+        transition next < MAPPING_PAGE_COUNT {
+            true -> observe(view, next)
+            _ -> true
+        }
+    }
+    state observe(view: &Placed<MappingRegionPlacement, MappingRegion>, next: u64) -> bool
+    requires next < MAPPING_PAGE_COUNT
+    {
+        let first: u64 = placed_read(&view.words[next * 512]);
+        let last: u64 = placed_read(&view.words[next * 512 + 511]);
+        transition first == 73 + next && last == 97 + next {
+            true -> page(view, next + 1)
+            _ -> false
+        }
+    }
+}

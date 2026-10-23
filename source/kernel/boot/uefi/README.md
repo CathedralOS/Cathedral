@@ -356,17 +356,19 @@ addresses.
 ## Closed mapping activation and retirement
 
 After table retention, `mapping_handoff.omg` snapshots the firmware path to the
-reserved virtual page and `core::page_table_clone` copies only that path into
+reserved virtual range and `core::page_table_clone` copies only that path into
 the four owned table pages. Off-path translations remain intact, including
 image and private-stack mappings. Splitting large leaves preserves their PAT
 encoding. Making a selected parent writable first pushes its previous read-only
 ceiling into every copied child; supervisor/user and NX ceilings stay on the
 new pointer. Hosted native/Terminal controls exercise these numeric rules.
 
-The root grant beside `Kernel::mapping` explicitly admits a fresh virtual-space
-claim at 1 GiB; it is not a physical-memory grant inferred from an address.
-`BootVirtualReservation` qualifies that already granted claim. The physical
-source page, replacement table allocation and complete firmware inventory stay
+The root grant beside `Kernel::mapping` explicitly admits a fresh 12-KiB
+virtual-space claim at 1 GiB; it is not a physical-memory grant inferred from an
+address. `BootVirtualReservation` qualifies that already granted claim.
+`mapping_region.omg` initializes a distinct three-page physical allocation
+from the retained vacant tail before any alias exists. The original one-page
+construction witness, new physical region, replacement tables and inventory stay
 independently owned. Neither numeric layout nor a copied table word grants
 backing, freshness or authority.
 
@@ -382,24 +384,28 @@ does not establish that premise.
 disables interrupts and rechecks the live CR0/CR3/CR4/EFER/PAT profile immediately
 before installation. The supported uniprocessor regime excludes PGE, PCID,
 five-level paging, CET and PKS. MOV CR3 publishes the new root and flushes its
-non-global translations. A temporary External view reads the mapped page,
-writes 73 and 97 to its endpoints, and reads them back. That view ends before
+non-global translations. A temporary External view checks zero endpoints on
+each mapped page, writes the distinct pairs (73,97), (74,98) and (75,99), and
+reads them back. That view ends before
 restoring the exact original CR3 and checking it again. No physical Stable view
 is live across the alias or activation window.
 
 Only a returned, retired transaction and an independent root observation permit
 `Mapping retired`. Physical resident readback after restoration must then find
-73 and 97 before `Mapping checked`. A failed probe must still retire; it cannot
+each page's own endpoint pair before `Mapping checked`. A failed probe must still retire; it cannot
 announce mapped success. All storage descendants and the firmware hierarchy
 remain retained on every normal return. An unrecoverable activation failure
 aborts without returning storage for reuse.
 
-A fresh image produced by Omega's checked interrupt-control realization repair
-reaches all fifteen ordered milestones under QEMU/OVMF. This is one synchronous,
-single-page boot transaction, not a general address-space API, multi-page
-mapping/shootdown protocol, independent backing proof or enabled interrupts.
-The full build's payload-history CPU and memory cost remains a measured compiler
-iteration issue; guest boot time and compiler build time are separate.
+The shared numeric cloner installs any contiguous range of 1–512 pages that
+fits the selected leaf-table suffix, rather than having a separate path for
+each count. It refuses cross-table requests or physical-frame exhaustion;
+late refusal discards only candidate bytes, never the borrowed old snapshot.
+This boot composition selects three pages and retains every split descendant
+on allocation, clone and programming refusal. The scope remains one synchronous
+uniprocessor transaction, not a general escaping address-space API, demand-grown
+cross-table mapping, remote shootdown, independent backing proof or enabled
+interrupts. Guest boot time and compiler build time are separate measurements.
 Use an Omega compiler containing `8d202634513c` or later for checked CLI/STI
 native realization; source recognition alone did not support this activation.
 

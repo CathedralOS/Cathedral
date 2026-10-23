@@ -98,13 +98,16 @@ Every failure retains the incomplete inventory without emitting that marker.
 The backing, identity mapping and quiescent-topology premises are explicit
 boundary admissions, not facts established by descriptor bytes. This marker
 does not mean the replacement hierarchy is active.
-`Mapping retired` follows a closed temporary CR3 installation, mapped-page probe
+`Mapping retired` follows a closed temporary CR3 installation, mapped-region probe
 and exact restoration, with an independent root readback by the caller.
-`Mapping checked` additionally requires successful mapped writes of 73 and 97
-and physical resident readback after retirement. Firmware translations and every
+`Mapping checked` additionally requires successful mapped writes of distinct
+endpoint pairs (73,97), (74,98) and (75,99) across three contiguous pages,
+followed by every page's physical resident readback after retirement.
+Firmware translations and every
 storage descendant remain retained. The live CPU profile is rechecked with
-interrupts disabled. This is a synchronous uniprocessor single-page transaction,
-not a multi-page or remote-TLB completion protocol. Virtual-namespace issuance,
+interrupts disabled. This is a synchronous uniprocessor region transaction
+within one leaf table, not an escaping mapping API or remote-TLB completion
+protocol. Virtual-namespace issuance,
 effective cache compatibility and backing remain explicit provider admissions.
 All storage descendants remain retained. A split-only, single-resident, or
 paired-allocation-only or page-only boot does not satisfy this acceptance. Missing, truncated or
@@ -191,7 +194,11 @@ the UEFI boot separately acquires and retains each reached physical frame.
 `table-clone/main.omg` exercises the actual `core::page_table_clone` operation:
 absent paths, 4-KiB/2-MiB/1-GiB paths, large-leaf PAT conversion, read-only
 parent ceilings, NX and supervisor/user preservation, unchanged off-path words,
-and malformed geometry or supplied-child links. This is numeric policy, not a
+and malformed geometry or supplied-child links. The shared range operation also
+checks every output leaf of a three-page request, a complete 512-page table,
+the final table suffix and final representable physical frame. Zero, unaligned,
+oversized, cross-table and physical-frame-overflow requests refuse without
+changing the borrowed snapshot. This is numeric policy, not a
 root grant or hardware activation.
 
 ```text
@@ -201,9 +208,11 @@ omega run --both tools/boot-harness/table-clone/main.omg
 
 Both engines must exit 0. For the source-level retirement control, copy the
 authored source tree to an isolated scratch project, change only the final
-mapped-probe expectation in `mapping_activation.omg` from `first == 73` to
-`first == 74`, complete ordinary package review, then build and boot a fresh
-image. The writes and retirement code stay unchanged. The guest must reach
+mapped-probe expectation in `mapping_activation.omg` from
+`last == 97 + next` to `last == 97 + next + next / 2`, complete ordinary package
+review, then build and boot a fresh image. For the configured three pages,
+the first two expectations stay 97 and 98; only the last changes from 99 to
+100. The writes and retirement code stay unchanged. The guest must reach
 `Mapping retired` but never `Mapping checked`; the normal smoke oracle must
 reject that stream for the missing mapped-write/physical-readback marker.
 An old image, an early boot failure or a timeout without retirement does not
