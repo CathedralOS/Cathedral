@@ -5670,15 +5670,17 @@ Next, in order:
    kernel in the task's root. Both live under the isolation-boundary question
    in OWNER_QUESTIONS.md with the TCG and WHPX figures.
 2. Under TCG the startup chain is hop-bound, and the one lever left inside it
-   is the four scope proofs: each matrix's first-request proof that a new
-   binding's scope lies within its own, answered one after another in the
-   first 83 ms of a depth-4 startup. Proving when the binding is granted
-   instead would overlap them with program loading, a scheduling choice
-   inside the trust model worth about 70 ms under TCG and nothing on
-   hardware; not taken.
+   is the four scope proofs: each the first request's proof, at the matrix
+   that cannot add a third stamp, that the innermost scope lies within the
+   other two, answered one after another in the first 83 ms of a depth-4
+   startup. Taking them off the path means the granting matrix sends a
+   request on the child's binding before the child asks, which is a
+   trust-path choice: recorded in OWNER_QUESTIONS.md (a parent exercising a
+   child's binding) with the stakes, about 70 ms under TCG with traces, 20 to
+   30 without, nothing on hardware.
 3. Timing taken under one accelerator compares only with timing under the
    same one. The TCG figures in the sections before this one stand; a figure
    for hardware is a WHPX run of the same command.
 4. The owner questions this work raised remain open: launching one program
    over one realm twice, CPU sponsorship across service calls, the isolation
-   boundary.
+   boundary, and a parent warming its child's proofs.

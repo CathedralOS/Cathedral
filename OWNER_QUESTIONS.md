@@ -685,3 +685,43 @@ clone an explicit gesture: copy the entry, then launch the copy. No program
 becomes special, and the copy is the same subtree copy the installer and the
 user picker already use. The lab never launches a matrix twice; the first
 fixture that needs to should settle this first.
+
+### A parent exercising a child's binding to warm the chain's proofs
+
+**Requirement and tension.** A storage request carries two scope stamps and no
+more. The matrix that would add a third proves instead, once per binding and
+pair of scopes, that the innermost scope lies within the other two: a HEAD on
+that scope stamped with both, answered by the provider and memoized under the
+binding until a revoke, a regrant, an upstream revision change or provider
+retirement discards it
+([storage.rs](source-rs/platform/libraries/matrix/world/storage/storage.rs)).
+Each proof is raised by the first request that needs it, so a depth-4 matrix's
+first request waits for four such chains one after another: 83 ms of its
+315 ms startup under TCG with traces, roughly 20 to 30 ms without, and within
+the trace line's own noise on hardware (TASKS_RUST.md, the hop on hardware).
+The only way to take them off the startup's path is for the granting matrix to
+send a request on the child's binding at grant time, before the child asks
+anything, so the ancestors prove the new scope while the child's program loads.
+
+**Contracts checked.** The [matrix charter](source-rs/distribution/matrix/CHARTER.md)
+has a parent act on a child's storage only to grant, revoke and forward; a
+parent's own reads use its own binding
+([pending.rs](source-rs/distribution/matrix/service/parent/storage/pending.rs)).
+The scope machinery folds a request only after a confirmed proof under the
+exact binding; it does not say who may raise one. Nothing forbids a parent
+reading through a child's binding and nothing permits it: today no request
+travels under a binding unless the bound child sent it.
+
+**Owner choice.** May a matrix exercise a child's binding without the child
+asking, for a read whose only effect is the proof caches along the chain? If
+yes, the stock matrix warms every grant it makes with a HEAD on the granted
+scope through the child's slot, and the chain's proofs are in place before the
+child's first request. If no, the proofs stay lazy and the first request
+through a new binding pays for them: a few hops on hardware, tens of
+milliseconds under TCG.
+
+**Recommendation (unaccepted).** Leave the proofs lazy. A request the child did
+not send is a new kind of traffic on the trust path, seen by every ancestor as
+the child's, for a saving the harness cannot resolve on hardware and that only
+emulation makes visible. If the chain should be warm, the child's own first
+request is the cleaner gesture, and it is what happens now.
