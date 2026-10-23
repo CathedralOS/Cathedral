@@ -1,5 +1,11 @@
 # Chapter 01: Scheduler & Resource Governance
 
+The accepted [execution-budget contract](../../spec/resources/execution_budgets.md)
+charges program execution to the executing program and its enclosing ownership
+ceilings. Services and matrices are ordinary programs; request admission is their
+policy. Caller-funded CPU execution is deferred. The broader resource and timing
+mechanisms below are not all accepted by that partial contract.
+
 > Every finite resource is authority. CPU, memory, IO, energy, and the rest are budgeted capabilities, declared by intent and enforced by the OS.
 
 ## The Legacy Model

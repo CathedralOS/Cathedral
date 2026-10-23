@@ -28,6 +28,17 @@ The Rust lab already cancels owned children on supervisor exit/fault; this
 documentation ratification does not add runtime behavior or fresh QEMU evidence.
 Budget refund routing and external-operation lifetimes remain separate contracts.
 
+Owner clarification 2026-10-23: execution spends the executing program's budget
+within its ancestor ceilings, including when it serves another program. Services
+and matrices have no special scheduling status; request quotas and backpressure
+belong to their own policies. The
+[execution-budget contract](wiki/spec/resources/execution_budgets.md) closes CPU
+sponsorship as an owner blocker. Caller-funded execution is deferred pending a
+concrete need, not a required coordination milestone. Historical entries calling
+that baseline unresolved are superseded; other resource sponsorship is unchanged.
+This is a documentation ratification of the current lab direction, not a new
+runtime implementation or fresh scheduling verification.
+
 Next implementation slice: add funded coordination acquisition to the existing
 broker and prove simultaneous first registration, rejected identity spoofing,
 constraint combinations, accepted/refused introductions and dead-holder cleanup.
@@ -5764,3 +5775,94 @@ Next, in order:
 4. The owner questions this work raised remain open: launching one program
    over one realm twice, CPU sponsorship across service calls, the isolation
    boundary, and a parent warming its child's proofs.
+
+
+## CPU budget decision: archived lab evidence (2026-10-23)
+
+The owner has accepted [executing-program CPU charging](wiki/spec/resources/execution_budgets.md). The following evidence was moved from the closed owner question to retain its measurements and implementation links. Its historical references to unresolved CPU sponsorship are superseded by that contract; caller-funded execution is deferred. Other memory, capability and accounting limitations remain limitations. No tests were rerun for this documentation change.
+
+**Rust experiment (not resolution).** [Hierarchical turns](source-rs/kernel/core/scheduler/README.md)
+now follow current launch ownership. Descendants divide their owner's outer turns;
+loans reattach dormant scheduling accounts, and reclamation returns them without
+resetting rotation. A provider still runs within its own launch tree even when
+serving another tree. The QEMU proof compares one versus three spinning descendants
+against an outside account. The measured-budget extension now charges elapsed
+execution, spawn attempts, page operations and reclamation through the ancestor
+chain. Boot-selected burst/refill ceilings retain overrun debt through restart
+and loan transfer; QEMU checks spinners, yields, repeated replacement and idle
+refill. IRQ handling while a process is selected is charged to that process;
+general boot/idle housekeeping has no application sponsor. These are provisional
+attribution choices and ceilings, not guaranteed CPU-time reservations. The
+periodic timer, unpreemptible kernel work and lab clock do not establish hard
+response bounds. Shared-provider request funding remains the unresolved choice
+above; merely registering a provider confers no extra scheduling authority.
+
+
+**Forwarding-hop lab evidence (2026-10-22, not a scheduling decision).** With
+a microsecond clock in the storage traces, one hop of a nested storage request
+from a matrix to its parent costs about 290 µs under TCG net of tracing, while
+the matrix's own work on the request is about 30 µs; a depth-4 request crosses
+sixteen to eighteen hops. The scheduler gives a woken receiver its turn only
+when the running task blocks, yields or the timer fires, so matrices now yield
+right after forwarding or answering, which shortens the downward hops but
+leaves the upward hop near 290 µs. The kernel's trap work is 5 µs, a woken task
+is selected within 13 µs of its completion, and a bare round trip between two
+small tasks measures 94 µs in the IPC lab, so the rest is the woken matrix
+re-touching its working set through the emulator's translation cache after the
+page-table reload; on hardware (the Windows hypervisor on the lab host) the
+same 32 round trips take about 118 to 144 µs and the hop sits inside the
+trace line's own noise. A direct switch to the task an IPC wakes would therefore
+save only the yield's trap, and what it decides is whose turn funds the
+receiver's work, which is this question; the lab keeps the yield and leaves the
+switch policy open.
+
+**Resource-subdivision lab evidence (not a production sponsorship decision).**
+[The Rust resource coordinator](source-rs/kernel/core/user_tasks/resources/README.md) now
+conserves runtime page/reader/channel allowances across owner-to-child assignment.
+Only owned idle launch accounts can be resized, and every family validates before
+commit. Accepted pages now retain the original backing sponsor after producer
+death; restart cannot buy replacement capacity while a reader pins it. Explicit
+withdrawal fails rather than revoking the reader. The same applies to channels.
+This extends the persistent-sponsor experiment above. It does not settle funding
+transfer or active-child rebudgeting. The bounded physical-memory experiment
+below now includes ELF, page-table and stack admission costs.
+
+
+**Executable-admission lab evidence (not a stable delegation contract).**
+[Dynamic admission](source-rs/kernel/core/user_tasks/admission/pool/README.md) now separates
+code authority from a bounded process pool. Exporting an owned plain launch
+creates a distinct code grant; dynamic admission explicitly supplies that code
+grant to its child for funded recursive launch. Device-granted launches cannot
+be exported. Creator death uses the existing nearest-surviving-lender policy for
+new accounts too, while retained backing can pin returned reservations. Production
+semantics still need to decide general executable-capability transfer/revocation
+and whether code grants should be retained independently of launch ownership.
+The current lab grants permission to execute again; it does not infer that right
+from arbitrary readable bytes or service registration.
+
+
+**Matrix integration experiment.** Code-only boot catalogue grants no longer
+consume dormant process accounts. An owner may explicitly stage copied executable
+authority into an idle child; admission publishes fresh local names after load.
+The matrix desktop uses this path recursively. This adopts copying for the lab,
+not a production revocation contract: changing the launch's staging does not revoke
+an independently installed grant, and selected dynamic code remains executable
+by descendants within supplied process/resource budgets. General IPC transfer,
+revocation and production sponsorship remain the choices above. Idle-child
+CPU ceiling assignment preserves ancestor enforcement and debt; it confers no
+priority or permission to charge an unrelated service's work to a caller.
+
+**Physical-memory funding experiment (not a production sponsorship decision).**
+The [Rust frame bank](source-rs/kernel/core/user_tasks/resources/physical/README.md) now backs
+conserved allowances with real reserved RAM. Executable pages, stacks, private
+page tables and runtime buffers charge the same account. Retained readers keep
+the original producer's physical charge after process death; final release refunds
+it. Kernel heap/IPC arenas and boot/device reservations remain separate bounded
+costs. Nested exhaustion cannot spend a sibling's reservation.
+
+Bootstrap sizing is provisionally 256 frames per bound account plus private-page
+quota, and another 256 per unbound process slot initially held by the root. This
+eager, fixed session bank is lab policy, not the eventual manifest contract.
+Production still needs the already-open choice between persistent sponsors,
+explicit funded adoption, and revocation, plus a policy for growing/reclaiming
+active memory envelopes. No new answer is needed to continue this bounded lab.

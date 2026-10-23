@@ -1,5 +1,11 @@
 # Hierarchical CPU turns and measured ceilings
 
+The accepted [execution-budget contract](../../../../wiki/spec/resources/execution_budgets.md)
+charges execution to the executing program within its enclosing ceilings. Serving
+another program does not transfer its budget or confer scheduling privilege.
+Provider request admission remains userspace policy; caller-funded CPU execution
+is deferred. The concrete accounting and scheduling choices below remain lab policy.
+
 [Scheduler entrance](scheduler.rs) owns task state: wake sleepers, park the current
 process, select a turn, mark it running. [shares entrance](shares/shares.rs) selects within the
 ownership tree without knowing about contexts, IPC protocols or matrices.
