@@ -1,5 +1,12 @@
 # Rust reference OS: tasks and handoff
 
+Owner update 2026-10-23: repeated launches of the same program over one realm
+are accepted; concurrency or refusal is the app's policy. See the
+[accepted contract](wiki/spec/execution/components_and_matrices.md#multiple-instances-over-one-realm).
+The question is removed from OWNER_QUESTIONS.md. No exclusive-instance mechanism
+has been selected or implemented; older entries calling this decision blocked
+are superseded. A scoped atomic claim tied to a live holder is a proposal only.
+
 Updated 2026-10-22 (local date). Current milestone: **the hop on hardware, and
 global shared leaves**, on baseline `f8bab679` (where a forwarded request
 spends its time). The harness runs the guest under the Windows hypervisor with

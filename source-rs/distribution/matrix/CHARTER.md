@@ -266,6 +266,10 @@ over the platform's owner-controlled visibility mechanism. It is not process
 suspension, per-instance storage cloning, or a universal window-manager protocol.
 Multiple instances of one program share its persistent realm; their private drafts
 are independent and existing revision checks govern conflicting saves.
+The [multiple-instance contract](../../../wiki/spec/execution/components_and_matrices.md#multiple-instances-over-one-realm)
+accepts this for matrices too. A program may reject concurrent use; the stock
+matrix does not yet implement an exclusive-instance claim. Launch does not
+implicitly clone the realm.
 
 Three apps fit the current desktop policy, subject to subtree funding. Split consumes
 more task/channel capacity than a leaf and may be refused while other subtrees run.

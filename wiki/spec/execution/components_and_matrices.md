@@ -5,7 +5,7 @@
 | Contract status | Current |
 | Specification coverage | Partial |
 | Implementation coverage | Partial |
-| Last reviewed | 2026-10-18 |
+| Last reviewed | 2026-10-23 |
 
 ## Scope
 
@@ -78,6 +78,19 @@ not a claim that every trusted implementation can operate without key material
 in software, or that an authorized operation cannot be abused within its limits.
 Unlocking a realm supplies authorized access to its contents; it does not imply
 delivery of its encryption key to the matrix program.
+
+## Multiple instances over one realm
+
+The same program may be launched more than once with access to the same realm,
+subject to the usual authority and resource admission. A second launch does not
+implicitly clone the realm or become invalid merely because an instance exists.
+This rule applies to matrices as ordinary programs as well as to leaf apps.
+
+The program determines whether it supports concurrent use or rejects another
+instance. Sharing a realm does not serialize the programs' operations or their
+private state. This acceptance does not specify an exclusive-instance claim,
+lock lifetime, discovery or activation protocol; those mechanisms remain to be
+designed. An independent copy remains an explicit storage operation.
 
 ## Scoped application bootstrap
 

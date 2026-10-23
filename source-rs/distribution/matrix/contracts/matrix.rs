@@ -68,6 +68,9 @@ pub fn route(mut words: Packet, child: usize) -> Option<Packet> {
 /// reply names the slot and local observation receipt. Configured desktops accept
 /// this only from chrome. CLOSE: [CLOSE, 0..] asks to stop the selected app,
 /// which it does only after a LOSS probe answers with nothing it would lose.
+/// Repeated authorized launches may share a realm; no implicit clone or
+/// singleton rule. A program's exclusive-instance protocol is not defined here.
+/// See wiki/spec/execution/components_and_matrices.md#multiple-instances-over-one-realm.
 pub const LAUNCH: u64 = 14;
 /// Loading code, growing delegated funding and binding storage are sequential
 /// operations. The caller must outwait their bounded work before retiring its
