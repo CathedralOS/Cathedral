@@ -5413,8 +5413,9 @@ a property of the lab's single CPU under TCG far more than of the design, and
 the right fix, if one is wanted, is in the kernel's switch path rather than in
 any matrix.
 
-**Kernel phases.** The smoke session's report (`run.py --smoke --release
---timeout 240`; the suite needs more than the default 30 s on this host) puts
+**Kernel phases.** The smoke session's report (`run.py --smoke --release`; the
+suite takes 42 s here, so the default boot timeout is now 120 s instead of 30)
+puts
 the kernel's own work far below the hop: a trap averages 5 µs and a syscall
 2 µs across 190,000 of each, and a task whose registered wait completes is
 selected 8 to 13 µs later with a yielding peer. So the 290 µs is neither trap

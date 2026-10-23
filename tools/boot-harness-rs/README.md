@@ -2,7 +2,8 @@
 
 Run `python tools/boot-harness-rs/run.py --smoke` from the repository root.
 This builds the separate `source-rs/` Cargo workspace and exercises its UEFI
-handoff under QEMU/OVMF. Host-side Python only; no extra Python packages.
+handoff under QEMU/OVMF; the full suite takes about 40 s on the reference host
+against a 120 s default timeout. Host-side Python only; no extra Python packages.
 
 For the OS desktop in VS Code, open the repository root and press **F5** with
 **Cathedral: Build & Run in QEMU** selected. It runs the same default composition as:

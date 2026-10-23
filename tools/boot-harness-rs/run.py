@@ -237,7 +237,7 @@ def main():
     parser.add_argument("--profile", type=Path, default=WORKSPACE / "distribution/profile.json", help="Host composition profile")
     parser.add_argument("--window", action="store_true", help="Show QEMU's display during an ordinary interactive boot")
     parser.add_argument("--fresh", action="store_true", help="Back up the desktop disk and install a freshly seeded lab disk")
-    parser.add_argument("--timeout", type=float, default=30, help="Smoke boot timeout in seconds (default: 30)")
+    parser.add_argument("--timeout", type=float, default=120, help="Smoke boot timeout in seconds (default: 120; the full suite takes about 40 s on the reference host)")
     parser.add_argument("--memory", type=int, default=128, help="Guest RAM in MiB (default: 128)")
     args = parser.parse_args()
     fixture_profiles = [Path(__file__).parent / f'profiles/{name}.json' for name in ('volume', 'database', 'objects', 'objects-retention', 'matrix-database-recovery', 'notes-recovery')]
