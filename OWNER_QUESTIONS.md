@@ -116,89 +116,33 @@ metadata transactions, initially allowing coarse serialization in the lab.
 Specify bounded transaction sizes and retry outcomes before optimizing concurrency.
 Do not equate copy-on-write, snapshot reads and serializability.
 
-### Pointer leases, seats and action authority
+### Recursive cursor presentation and attribution
 
-**Requirement and tension.** Matrices should be able to lease attributed cursors
-to apps, agents and remote participants without handing each one the operator's
-pointer or keyboard. The [windowing design](wiki/design/part_6_human_surface/00_windowing_and_compositor.md#seats)
-defines a seat as cursor plus key focus, and the
-[agent design](wiki/design/part_1_authority/06_agents_as_principals.md) equates an
-agent's labeled cursor with a virtual seat. This leaves unclear whether a
-lightweight or visual-only pointer necessarily creates a full focus context.
+**Requirement and tension.** Nested matrices may supply cursor programs and
+visual markers independently of input routing. A production handoff needs to
+specify which authorized renderer presents an actionable pointer at each boundary,
+whether owner and child visuals can coexist, and what happens when a renderer
+fails or declines presentation. Input registration alone cannot answer this.
 
-**Settled input boundary (2026-10-23).** The accepted
-[input contract](wiki/spec/human_surface/input.md) separates source/control identity,
-observation, injection and keyboard authority; visible cursor pixels confer none
-of them. It permits scoped mapping/forwarding and does not require a complete seat
-for a visual marker. This resolves that part of the original question. The final
-relationship between acting pointers, seats and independent focus remains open.
+**Contracts checked.** The accepted [focus contract](wiki/spec/human_surface/focus_routes.md)
+settles exclusive group control, channel associations, recursive local selection
+and interrupted-stream cancellation. It does not select cursor presentation or
+trusted attribution. The [desktop contract](wiki/spec/human_surface/compositor_and_seat.md)
+protects outer recovery, not every cursor indicator. The
+[pointer proposal](wiki/proposals/0001_input_and_pointer_leases.md) explores the
+remaining presentation choices. General transport commit/closure rules remain
+in the [IPC question](#endpoint-transport-and-revocation-of-pending-ipc).
 
-The subsequent [input-channel contract](wiki/spec/human_surface/input_channels.md)
-accepts a general number of independently routed channels, one application acceptance
-interface and application-owned channel-to-role assignment. A human/agent pair is
-not a special class system. Channel discovery and source continuity are specified
-separately from focus, and do not require an app-created view per participant.
+**Owner choice.** Define cursor presentation handoff and any required attribution
+or fallback independently of focus control. Decide when an owner may retain its
+own cursor, delegate presentation, or accept no child cursor. Specify which
+indicators, if any, must survive a faulty or deceptive child renderer.
 
-**Contracts checked.** The [compositor/seat contract](wiki/spec/human_surface/compositor_and_seat.md)
-is partial and does not yet define that relationship. The
-[source contracts charter](source/contracts/CHARTER.md) supplies no pointer or
-seat protocol. The [Rust input transport](source-rs/platform/contracts/input.rs) carries
-key events only. The separate [Rust pointer experiment](source-rs/distribution/lab/compositor/POINTERS.md)
-adds bounded pointer identities, a boot-approved mouse source and an app-scoped
-synthetic lease. The [session experiment](source-rs/distribution/lab/compositor/SESSION.md)
-adds attenuated keyboard-focus grants and a separate hosted child. Neither lab
-settles seats, principal attribution or general recursive delegation, so this
-owner choice remains open.
-
-**Remaining owner choice.** Define how actionable pointers associate with
-independent keyboard-focus contexts and which granted channels may change each
-selection. Applications own controller contention/role assignment; the remaining
-system question is routing and selection authority, not a universal player model.
-The accepted separation of input authority does not settle that topology or the recursive
-cursor-presentation handoff. Visual presence alone grants no action authority.
-
-**Remaining recommendation (unaccepted).** Build on the accepted separation of
-input authority with explicit seat/context association, rather than inferring
-keyboard focus from a cursor. Specify how selection and concurrent controllers
-work before freezing the seat protocol. The
-[pointer proposal](wiki/proposals/0001_input_and_pointer_leases.md) develops this
-model while leaving the final focus topology and compatibility adapter open.
-
-### Focus changes and undelivered key events
-
-**Requirement and tension.** A held key must not become a fresh action in a new
-target after focus changes, source loss or host revocation. The
-[focus design](wiki/design/part_6_human_surface/00_windowing_and_compositor.md#focus)
-says already-queued events drain and describes a one-event risk window. A bounded
-queue can hold several events; draining a queued press can activate the old
-target after revocation, while discarding only its release can leave held state.
-The same section describes focus as a capability minted and revoked on focus
-changes, without separating standing routing/delegation authority from the
-currently selected recipient.
-
-**Contracts checked.** The [input contract](wiki/spec/human_surface/input.md) requires
-defined ordering, target lifetime and observable loss/cancellation, but explicitly
-leaves the focus-switch commit policy open. Compositor/seat coverage remains partial
-and general capability semantics remain unwritten. The
-[Rust interaction contract](source-rs/platform/contracts/display/interaction.rs) and
-[session lab](source-rs/distribution/lab/compositor/SESSION.md) are experimental.
-The owner has affirmed that keyboard focus attenuates like other delegated
-authority; that does not yet settle event commitment or held-key transfer.
-
-**Owner choice.** Drain accepted events to the former target, or replace
-undelivered events with an explicit cancellation barrier and suppress held keys
-until release. Define whether commitment occurs in the compositor's queue or
-when its reply enters IPC; messages already delivered cannot be retroactively
-undone. Also distinguish a standing subtree/key-mask grant from its active focus
-selection, or specify how an ephemeral focus capability preserves host delegation.
-
-**Recommendation (unaccepted).** Keep standing attenuated routing grants and
-explicit active selection. Cancel events still owned by the router, publish a
-focus-lost barrier, and require release before a held key can act on a new target.
-The lab implements this rule, including on overflow and source loss. Events
-already published into IPC may still be consumed. Reconcile the design prose and
-the [pending IPC question](#endpoint-transport-and-revocation-of-pending-ipc)
-before freezing production semantics.
+**Recommendation (unaccepted).** Keep visual delegation explicit and bounded;
+never infer input authority from pixels. Preserve outer supervisory selection
+and recovery even when a child declines to render a cursor. Ratify visual
+handoff and attribution with the scene/view contract rather than inventing a
+mandatory global cursor or a seat for every visual marker.
 
 ### Exclusive audio and the reserved system channel
 

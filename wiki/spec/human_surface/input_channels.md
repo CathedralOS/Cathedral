@@ -60,6 +60,10 @@ itself and cannot bypass the outer recovery path or upstream provenance rules.
 
 ## Acceptance and application roles
 
+The [focus contract](focus_routes.md) defines privately controlled groups that
+associate permitted channels and compose local selections into recursive routes.
+Channel registration alone grants no control over another group's selection.
+
 An application may publish one acceptance description and receive channel-tagged
 events through it. It need not create a bespoke interface, view or context for
 every new participant. Modalities describe accepted forms of input; channel count

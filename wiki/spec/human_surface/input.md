@@ -119,8 +119,9 @@ repetition of side effects.
 
 Removing a target, source or connection must resolve active held/captured input
 through defined lifecycle handling rather than stranding it. Cancellation does
-not undo already executed work. This does not select the still-open focus-switch
-delivery/commit policy.
+not undo already executed work. The [focus transition contract](focus_routes.md#selection-changes-and-outstanding-input)
+defines router-owned cancellation and held-input suppression; concrete transport
+publication/closure semantics remain separate.
 
 ## Mappings, actions and recursive policy
 
@@ -180,7 +181,8 @@ not conformance to all timing, semantic and lifecycle requirements above.
 
 ## Boundaries not selected here
 
-This acceptance does not settle focus topology, seat-to-pointer relationships,
+The separate [focus contract](focus_routes.md) defines group associations and
+recursive local selection. This input foundation does not settle
 multi-controller application arbitration, application views, multi-size rendering,
 scene/hit-test presentation commits, capture masks, or cursor rendering handoff.
 The shared interaction description is not a decision on those representations.

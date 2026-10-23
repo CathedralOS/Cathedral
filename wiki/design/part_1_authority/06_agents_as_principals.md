@@ -1,5 +1,11 @@
 # Chapter 06: Agents as Principals
 
+The accepted [input channels](../../spec/human_surface/input_channels.md) and
+[focus routes](../../spec/human_surface/focus_routes.md) supersede any mandatory
+agent-seat coupling below. An agent may register its own authorized focus group;
+a labeled cursor alone grants no input or selection authority. Cursor attribution
+and presentation details remain design proposals.
+
 > Autonomous software that acts for the user is a principal like any other: it holds a scoped, leased, revocable bundle of capabilities, and every action it takes is in the authority graph. The OS owns none of the AI; it governs the authority.
 
 ## The Legacy Model

@@ -85,9 +85,8 @@ or principal attribution.
 On a focus change, undelivered old key events become a cancellation barrier.
 Held keys cannot activate the next target until released. Source loss and queue
 overflow also cancel input state. An event already published into IPC may still
-be consumed; completed effects are not undone. This differs from the old design's
-queue-draining prose, recorded in
-[the owner queue](../../../../OWNER_QUESTIONS.md#focus-changes-and-undelivered-key-events).
+be consumed; completed effects are not undone. This is partial evidence for
+[the accepted focus contract](../../../../wiki/spec/human_surface/focus_routes.md#selection-changes-and-outstanding-input).
 Routing grants remain installed while inactive; switching focus changes the
 active recipient rather than minting a new grant on every click.
 

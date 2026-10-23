@@ -9,7 +9,8 @@ they are not all ratified by this partial contract.
 
 The accepted [input foundation](../../spec/human_surface/input.md) separately owns
 buffered delivery, representations, target registration and recursive mappings.
-Focus, views and rendering details below are not ratified by that acceptance.
+The accepted [focus contract](../../spec/human_surface/focus_routes.md) now owns
+local selection and transitions. Views and rendering details remain design work.
 
 > The compositor owns window arrangement, input routing, and the trusted path that lets a human know which app they are talking to.
 
@@ -111,9 +112,9 @@ The split is at the bottom. A Cathedral-native guest is intercepted at the Omega
 
 The [input and pointer proposal](../../proposals/0001_input_and_pointer_leases.md)
 separates physical and virtual sources from logical pointers and their cursor
-visuals. It explores Matrix-scoped leases and source multiplexing. Its proposed
-separation of pointer rights from seat keyboard focus is not an accepted contract;
-the seat coupling below remains an unresolved design choice.
+visuals. It explores Matrix-scoped leases and source multiplexing. The accepted
+[focus contract](../../spec/human_surface/focus_routes.md) supersedes seat coupling;
+cursor presentation and attribution remain design choices.
 
 Input has two layers that stay separated. At the bottom, an input device driver ([[driver_model]]) holds the device's transport capability and translates raw device reports into a normalized, typed event vocabulary: ordinary numbered records under a selected codec for key, relative pointer, absolute pointer, axis, button, touch contact, pressure, and the like. Every device quirk is absorbed at that boundary. Above it, the compositor consumes only typed events and never sees the raw device, so routing is device-agnostic.
 
@@ -121,9 +122,22 @@ This standardizes at the event-vocabulary level even though devices do not stand
 
 ### Focus
 
-Routing is capability work. Focus is a permission: a per-surface capability the compositor mints and revokes, so a surface receives input because focus was delegated to it. The capability is free by virtue of being focused and gone the moment it is not. Focus cannot be stolen. An app may request focus or self-raise, and the request is silently deniable: it no-ops with a success shape, which is the ZII answer, and OS cooldowns apply to repeat offenders. Within a hosted subtree the host assigns focus freely among its children, because routing focus inside your own subtree is what being a host is. Automation that needs to drive focus therefore hosts the things it automates rather than stealing from siblings.
+The [accepted focus contract](../../spec/human_surface/focus_routes.md) separates
+standing routing authority from local selection. A registered group has one
+controlling owner, associates permitted channels and selects a direct child.
+Keyboard and pointer handlers may request changes through that owner. Selection
+alone grants no restore, raise or visibility authority.
 
-Focus revocation meets in-flight events through a per-surface input queue. An event's destination is fixed at enqueue time, so a focus change only redirects subsequent events. The target's already-queued events drain, because dropping them mid-stream would leave a key-down with no key-up. The window of risk is one event, and the security-critical path never enters app routing at all: secure entry is a modality routing straight to the OS.
+Routes compose through matrices without exposing their complete ancestry.
+Stopping upstream forwarding does not clear a child's local selection or make
+its whole environment inactive. Independent sources can continue to operate.
+
+A switch cancels affected router-owned events, orders cancellation to the old
+recipient and suppresses held controls until release before they can activate a
+new target. Published IPC events may still be consumed; there is no one-event
+risk bound. Stream cleanup does not erase the child's remembered selection.
+Pointer capture is separate and survives keyboard selection changes only while
+its own grant, target and forwarding path remain valid.
 
 ### Global capture and hotkeys
 
@@ -160,7 +174,13 @@ A fake cursor drawn inside an app's own surface only fools clicks on that app. I
 
 ### Seats
 
-"The user" is whoever holds the input. A **seat** is an input routing (cursor plus key focus) bound to a principal, and it is the primitive from the start, so multi-cursor is designed in rather than bolted on late. Physical devices feed seats, and so does virtual input, indistinguishable to the consuming surface yet attributed to the observer, since each seat is labeled by its principal. Feeding a world a seat drives, tests, records, or replays it, the input arm of the synthetic-world model. The OS alone knows which seat the physical devices feed, so a human-only gate is "input from the OS-attested physical seat," verifiable by the OS even though no app can tell. Agents are seated principals (a labeled cursor is a virtual seat), so an agent driving is concurrent and visible, not a hidden takeover. The OS-key escape acts on the binding from physical devices to seat, snapping real input back to the operator's seat, which is the one input a software agent cannot supply ([[identity_and_principals]], [[agents_as_principals]]).
+A conventional seat is a policy arrangement over channels, focus groups and
+pointer visuals, not a mandatory primitive coupling a cursor to one keyboard.
+The [focus contract](../../spec/human_surface/focus_routes.md) permits independent
+groups and several pointers sharing selection. Apps receive scoped channels and
+choose their own roles; a visual marker need not have any input authority.
+Physical provenance and the outer recovery gesture remain separately enforced.
+Trusted labels and recursive cursor presentation remain proposed design work.
 
 ## Legibility and observation
 

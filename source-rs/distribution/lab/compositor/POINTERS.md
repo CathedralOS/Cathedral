@@ -115,5 +115,5 @@ prompts. Provider reconnect after compositor failure remains the base lab's
 pre-input probe; this interactive profile supervises app and mouse-provider loss,
 not live compositor replacement. Source health and live compositor replacement
 are exercised by the separate session profile. The [pointer proposal](../../../../wiki/proposals/0001_input_and_pointer_leases.md)
-and [owner question](../../../../OWNER_QUESTIONS.md#pointer-leases-seats-and-action-authority)
+and [owner question](../../../../OWNER_QUESTIONS.md#recursive-cursor-presentation-and-attribution)
 retain those production choices.

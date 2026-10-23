@@ -1,16 +1,12 @@
 # Input sources and scoped pointer leases
 
-The owner has accepted the separate [input foundation](../spec/human_surface/input.md):
-scoped delivery, distinct representations, interaction registration and mappings.
-That partial acceptance supersedes conflicting delivery/mapping assumptions here;
-it does not ratify this proposal's seat topology, cursor presentation or rendering
-choices. Those remain candidates.
-
-The accepted [input-channel refinement](../spec/human_surface/input_channels.md)
-also separates sources, logical channels and application roles. Multiple channels
-may share one event stream and one application acceptance interface; no per-agent
-app-created context or view is required. Seat/focus and presentation policy below
-remain proposals rather than consequences of channel identity.
+The accepted [input foundation](../spec/human_surface/input.md),
+[channel contract](../spec/human_surface/input_channels.md) and
+[focus contract](../spec/human_surface/focus_routes.md) own delivery, registration,
+exclusive group control, channel association and recursive local selection.
+They supersede conflicting seat or focus assumptions below. This proposal now
+explores remaining cursor presentation, attribution and scene coupling choices;
+those choices are not accepted by the focus contract.
 
 The platform should route input through logical pointers that can be driven by
 authorized sources. A hardware mouse is one source. A Matrix can delegate a
@@ -38,7 +34,7 @@ permission to act.
 | Logical pointer | Tracks identity, position, button state and capture within an authorized coordinate space |
 | Cursor visual | Presents the pointer's sprite, hotspot, visibility and attribution |
 | Pointer lease | Delegates specified control or observation rights within a Matrix subtree and lifetime |
-| Seat | Associates an acting principal with an input-routing and focus context; its relationship to multiple pointers remains an owner choice |
+| Focus group | Accepted local association of channels and selection; see the [focus contract](../spec/human_surface/focus_routes.md) |
 
 A pointer's identifier is not a capability. Knowing it does not grant motion,
 button injection, observation or capture. A visual-only collaboration marker
@@ -152,21 +148,15 @@ capture transitions need ordered delivery or an explicit reset protocol. Reserve
 enough platform capacity for operator recovery under a flooding source. Exact
 ceilings and fair scheduling are implementation choices within that guarantee.
 
-## Alternatives and open authority choice
+## Accepted topology and remaining presentation choices
 
-| Model | Consequence |
-| --- | --- |
-| Every pointer is a complete seat | Uniform principal and focus bundle, but even a lightweight cursor introduces another keyboard-focus context |
-| Pointers are separately leased within an explicit seat context | Supports multiple cursors without multiplying keyboard focus; requires rules for pointer-to-seat association and focus changes |
-| App draws all extra cursors as ordinary content | Sufficient for decoration; lacks platform-attributed interaction and common capture/lifetime handling |
-
-The proposed direction is separately leased pointers with explicit seat
-association. The [owner question](../../OWNER_QUESTIONS.md#pointer-leases-seats-and-action-authority)
-records the conflict with the current seat wording. It also leaves open whether
-an app receives distinct pointer streams or opts into an adapter for one active
-pointer. Such an adapter must retain principal boundaries and define arbitration;
-silently merging independent actors into one apparent human is not acceptable
-under this proposal.
+The [focus contract](../spec/human_surface/focus_routes.md) replaces the earlier
+mandatory-seat alternatives with explicit channel association and privately
+controlled groups. The [channel contract](../spec/human_surface/input_channels.md)
+already defines channel-tagged delivery and application-owned role assignment.
+Cursor handoff and attribution remain in the
+[owner question](../../OWNER_QUESTIONS.md#recursive-cursor-presentation-and-attribution).
+Compatibility adapters must preserve the accepted authority and channel boundaries.
 
 ## Acceptance evidence
 
@@ -196,8 +186,8 @@ The [session lab](../../source-rs/distribution/lab/compositor/SESSION.md) adds
 separate host/child processes, explicit input regions, event waits and attenuated
 keyboard-focus grants. Its child receives only Enter; synthetic clicks cannot
 acquire keyboard focus, and parent loss revokes descendant input. Focus-change
-queue cancellation is a provisional rule recorded in the
-[owner queue](../../OWNER_QUESTIONS.md#focus-changes-and-undelivered-key-events),
-not acceptance of production seat semantics.
+queue cancellation supplies partial evidence for the accepted
+[focus transitions](../spec/human_surface/focus_routes.md#selection-changes-and-outstanding-input),
+not a general multi-group implementation.
 The list above remains the acceptance bar. Acceptance updates the compositor/seat specification,
 affected source contracts and the conflicting seat and agent design prose.

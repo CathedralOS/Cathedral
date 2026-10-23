@@ -111,6 +111,21 @@ alternatives, not a selected surface ABI. Input forwarding remains unchanged;
 focus/views, scene commits, masks and production rendering choices remain open.
 Documentation checks only; no new runtime or performance evidence.
 
+Owner ratification 2026-10-23: [focus groups and routes](wiki/spec/human_surface/focus_routes.md)
+now specify one controlling owner per registered group, authorized channel
+association, recursive local selection and separate pointer capture/presentation.
+An ancestor stopping forwarding does not clear a nested matrix's selection;
+interrupted streams still require scoped cancellation and held-input cleanup.
+Select-only versus select-and-deliver is local policy. Router-owned events are
+cancelled on interruption; published IPC events are not assumed retractable.
+The old topology and queued-focus questions are superseded; cursor presentation
+handoff and general IPC commit/closure remain open in OWNER_QUESTIONS.md.
+Follow-up evidence should cover independent groups, denied cross-group control,
+click recursion, held-input switches, capture independence, stopped upstream
+forwarding with independent local input, and safe route retirement. This is a
+documentation acceptance: no general multi-group implementation or new runtime
+testing is claimed; the current forwarding chain remains unchanged.
+
 Next implementation slice: add funded coordination acquisition to the existing
 broker and prove simultaneous first registration, rejected identity spoofing,
 constraint combinations, accepted/refused introductions and dead-holder cleanup.

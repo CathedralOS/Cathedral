@@ -57,8 +57,9 @@ system regardless of inner configuration.
 ## Evidence and limits
 
 The separate [input contract](input.md) establishes delivery, representations,
-accepted interaction targets and mappings. It does not settle focus topology,
-views, rendering or the scene/hit-test commit relationship.
+accepted interaction targets and mappings. The [focus contract](focus_routes.md)
+defines exclusive group control, recursive local selection and input transitions.
+Views, rendering and the scene/hit-test commit relationship remain separate.
 
 The [Rust distribution](../../../source-rs/distribution/README.md) runs separate
 chrome and background programs and recursively hosted desktops. Its current

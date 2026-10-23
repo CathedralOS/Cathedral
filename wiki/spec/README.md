@@ -38,6 +38,7 @@ subject. A current specification may precede implementation.
 | Replaceable desktop programs and protected outer recovery chrome | [Compositor and seat](human_surface/compositor_and_seat.md) | Partial | Partial |
 | Scoped input delivery, representations, interaction targets and mappings | [Input delivery and interaction](human_surface/input.md) | Partial | Partial |
 | Logical input channels, stable identity and scoped discovery | [Input channels and discovery](human_surface/input_channels.md) | Partial | None |
+| Exclusive focus-group control, recursive local selection and input transitions | [Focus groups and routes](human_surface/focus_routes.md) | Partial | Partial |
 
 ## Owned but unwritten subjects
 
