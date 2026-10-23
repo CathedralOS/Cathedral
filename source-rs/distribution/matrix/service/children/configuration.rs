@@ -238,26 +238,20 @@ fn rect([x, y, width, height]: [u64; 4]) -> Rect {
         height,
     }
 }
+/// Read a realm object whole in one request. `expected` is the exact length
+/// a fixed record must have; a longer or shorter object is refused.
 pub(super) fn read(
     scope: &mut Scope,
     id: u64,
     expected: Option<usize>,
 ) -> Result<cathedral_user_runtime::memory::Object, Error> {
-    let head = scope
-        .call(storage::Request::new(storage::HEAD, id, 0, 0, 0))
+    let len = expected.map_or(0, |n| n as u64);
+    let (reply, object) = scope
+        .request(storage::Request::new(storage::BULK, id, 0, 0, len), None)
         .map_err(|c| Error(c as i64))?;
-    if head.length == 0
-        || head.length > storage::MAX_BYTES as u64
-        || expected.is_some_and(|n| head.length != n as u64)
-    {
+    let reply = storage::Reply::decode(&reply).map_err(|c| Error(c as i64))?;
+    if expected.is_some_and(|n| reply.length != n as u64) {
         return Err(Error(abi::INVALID_ARGUMENT as i64));
     }
-    let (reply, object) = scope
-        .request(
-            storage::Request::new(storage::BULK, id, head.revision, 0, head.length),
-            None,
-        )
-        .map_err(|c| Error(c as i64))?;
-    storage::Reply::decode(&reply).map_err(|c| Error(c as i64))?;
     object.ok_or(Error(abi::IO_ERROR as i64))
 }

@@ -25,20 +25,34 @@ pub fn reply(
     server.reply(request, &bytes).unwrap();
 }
 /// The argument word is the byte offset for BULK and the pin slot for BULK_PIN.
+/// A BULK with no length reads the whole object from its offset: the length
+/// comes from the head, so a launcher spends no round trip on HEAD first.
 fn prepare(
     store: &Store<'_>,
     root: u8,
     r: wire::Request,
     reply: &mut [u8; 64],
 ) -> Result<Object, u64> {
-    if r.expected == 0 || r.len == 0 || r.len > wire::MAX_BYTES as u64 {
+    if r.len > wire::MAX_BYTES as u64 {
         return Err(abi::INVALID_ARGUMENT);
     }
-    if r.op == wire::BULK_PIN && r.argument >= wire::PIN_SLOTS {
+    if r.op == wire::BULK_PIN && (r.expected == 0 || r.len == 0 || r.argument >= wire::PIN_SLOTS) {
         return Err(abi::INVALID_ARGUMENT);
     }
     let offset = usize::try_from(r.argument).map_err(|_| abi::INVALID_ARGUMENT)?;
-    let count = (r.len as usize).div_ceil(4096);
+    let len = if r.op == wire::BULK && r.len == 0 {
+        let head = store.head(root, r.object).map_err(super::service::status)?;
+        if r.expected != 0 && head.revision != r.expected {
+            return Err(abi::WOULD_BLOCK);
+        }
+        head.len.checked_sub(offset).ok_or(abi::INVALID_ARGUMENT)?
+    } else {
+        r.len as usize
+    };
+    if len == 0 || len > wire::MAX_BYTES {
+        return Err(abi::INVALID_ARGUMENT);
+    }
+    let count = len.div_ceil(4096);
     let mut pages = Private::allocate(count).map_err(|error| {
         // Diagnosable in every build: the pages behind earlier replies stay
         // charged here until their last reader releases them.
@@ -57,7 +71,7 @@ fn prepare(
         );
         error.0 as u64
     })?;
-    let out = &mut pages.bytes_mut()[..r.len as usize];
+    let out = &mut pages.bytes_mut()[..len];
     let head = if r.op == wire::BULK_PIN {
         store.read_pinned(root, r.argument as u8, r.object, r.expected, 0, out)
     } else {
@@ -68,7 +82,7 @@ fn prepare(
         object: r.object,
         revision: head.revision,
         length: head.len as u64,
-        extra: r.len,
+        extra: len as u64,
     }
     .encode();
     pages.freeze().map_err(|error| error.0 as u64)

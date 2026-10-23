@@ -2,7 +2,7 @@
 //! matrix holds a forwarded attachment only until the next hop has accepted it.
 //! A child's request is authorized by its binding and stamped with its scope.
 //! The matrix's own reads, which fetch a program it was asked to run, take the
-//! same path on the matrix's own binding: HEAD the object, then BULK it.
+//! same path on the matrix's own binding: one BULK of the whole object.
 //! A nested matrix learns its upstream binding once, before its first
 //! exchange, and again only after the parent refuses a stamped revision; it
 //! does not ask before every request, because each refresh would itself be
@@ -43,8 +43,6 @@ enum Step {
     /// Learn the upstream binding revision: before this matrix's first
     /// exchange, or once more after the parent refuses a stamped revision.
     Refresh,
-    /// Learn the program's revision and length.
-    Head,
     /// Prove a full scope packet's intersection before forwarding its mutation.
     Validate,
     /// The request itself: a child's, or the program's bulk read.
@@ -117,9 +115,9 @@ impl Pending {
             denied: None,
         })
     }
-    /// Read a program on this matrix's own binding: a head and a bulk read,
-    /// behind a refresh when nested and not yet bound, each bounded like a
-    /// forwarded request.
+    /// Read a program on this matrix's own binding: one bulk read of the whole
+    /// object at its current revision, behind a refresh when nested and not
+    /// yet bound, bounded like a forwarded request.
     pub(super) fn launch(
         request: Option<Request>,
         plan: LaunchRequest,
@@ -129,7 +127,7 @@ impl Pending {
         Ok(Self {
             request,
             words: [
-                wire::STORAGE_BASE + protocol::HEAD,
+                wire::STORAGE_BASE + protocol::BULK,
                 plan.object,
                 0,
                 0,
@@ -143,7 +141,7 @@ impl Pending {
             step: if upstream && !bound {
                 Step::Refresh
             } else {
-                Step::Head
+                Step::Forward
             },
             source: 0,
             deadline: time::after(
@@ -216,31 +214,7 @@ impl Parent {
                         if let Some(denied) = p.denied.take() {
                             reply = Some((denied, None));
                         } else {
-                            p.step = p.resume.take().unwrap_or(if p.launch.is_some() {
-                                Step::Head
-                            } else {
-                                Step::Forward
-                            });
-                            p.receive = None;
-                        }
-                    }
-                    Step::Head => {
-                        drop(object);
-                        if words[0] != 0 {
-                            reply = Some((words, None));
-                        } else {
-                            // Fetch exactly the revision just seen, whole.
-                            p.words = [
-                                wire::STORAGE_BASE + protocol::BULK,
-                                words[1],
-                                words[2],
-                                0,
-                                words[3],
-                                0,
-                                0,
-                                0,
-                            ];
-                            p.step = Step::Forward;
+                            p.step = p.resume.take().unwrap_or(Step::Forward);
                             p.receive = None;
                         }
                     }

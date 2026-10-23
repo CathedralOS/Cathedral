@@ -137,24 +137,33 @@ impl Scope {
         drop(extra);
         storage::Reply::decode(&reply)
     }
+    /// Both metadata fields, two round trips; refused if a rename lands between them.
     pub fn metadata(&mut self, object: u64) -> Result<storage::metadata::Metadata, u64> {
         let mut bytes = [0; 64];
-        let mut revision = 0;
-        for field in 0..2 {
-            let (reply, extra) = self.request(
-                storage::Request::new(storage::METADATA, object, 0, field, 0),
-                None,
-            )?;
-            drop(extra);
-            storage::Reply::decode(&reply)?;
-            let observed = storage::word(&reply, 1);
-            if field != 0 && observed != revision {
-                return Err(abi::WOULD_BLOCK);
-            }
-            revision = observed;
-            bytes[field as usize * 32..field as usize * 32 + 32].copy_from_slice(&reply[32..]);
+        let (revision, name) = self.field(object, 0)?;
+        let (observed, media_type) = self.field(object, 1)?;
+        if observed != revision {
+            return Err(abi::WOULD_BLOCK);
         }
+        bytes[..32].copy_from_slice(&name);
+        bytes[32..].copy_from_slice(&media_type);
         storage::metadata::Metadata::decode(&bytes).ok_or(abi::IO_ERROR)
+    }
+    /// The name alone, one round trip: for a caller that already knows the
+    /// type, such as a launcher listing the executables a filter returned.
+    pub fn name(&mut self, object: u64) -> Result<[u8; 32], u64> {
+        self.field(object, 0).map(|(_, name)| name)
+    }
+    fn field(&mut self, object: u64, index: u64) -> Result<(u64, [u8; 32]), u64> {
+        let (reply, extra) = self.request(
+            storage::Request::new(storage::METADATA, object, 0, index, 0),
+            None,
+        )?;
+        drop(extra);
+        storage::Reply::decode(&reply)?;
+        let mut field = [0; 32];
+        field.copy_from_slice(&reply[32..]);
+        Ok((storage::word(&reply, 1), field))
     }
     pub fn filter(&mut self, media_type: &[u8], after: u64, out: &mut [u64]) -> Result<usize, u64> {
         let reply = self.attached(

@@ -1,11 +1,12 @@
 # Rust reference OS: tasks and handoff
 
-Updated 2026-10-22 (local date). Current milestone: **one-page chunks and a
-two-object provider heap**, on baseline `65d7528b` (a matrix is configured by
-its realm). A content chunk fills one engine page, the desktop's provider runs
-a 1 MiB heap with a 768 KiB cache across two private objects, and the kernel's
-mapped-backing ceiling covers every private slot; the newest section at the
-end records the measurements and the open items.
+Updated 2026-10-22 (local date). Current milestone: **fewer round trips per
+nested level**, on baseline `96d0e23c` (one-page chunks, a two-object provider
+heap and steady kernel accounting across soak cycles). A program is read in one
+request and a tile's name alone, so a depth-4 user entry takes 22 sequential
+requests instead of 29 and 820 ms instead of 1,178 on a fresh boot and 2,880 on
+a cold one; the newest section at the end records the measurements and the
+open items.
 Saved-state testing is an explicit launch choice. The section before it
 distinguishes current-program four-level verification from failures in
 retained executable snapshots.
@@ -5151,4 +5152,83 @@ Next, in order:
    nested matrices' samples are recorded but not yet compared, and nothing
    samples the provider's or the desktop's own accounts.
 5. Launching one program over one realm twice stays an owner question in
+   [OWNER_QUESTIONS.md](OWNER_QUESTIONS.md).
+
+## Fewer round trips per nested level (2026-10-22)
+
+Baseline: `96d0e23c`. With the engine cache no longer thrashing, the cold boot's
+depth-4 user entry still took 2,880 ms with 158 ms of provider CPU and 40
+sectors. The tick-stamped trace shows why: a request from depth four crosses
+eight matrices each way and costs 6 to 7 ticks, and a user entry issued about
+36 of them in sequence, each waiting for the last. Two sources were cheap to
+remove.
+
+**One request per program.** A program launch read HEAD for the revision and
+length, then BULK for the bytes. [BULK](source-rs/platform/contracts/storage.rs)
+now accepts an expected revision of zero, the current one, and a length of
+zero, the whole object from the offset; [bulk.rs](source-rs/platform/services/storage/bulk.rs)
+takes the length from the head inside the one request and the reply states the
+revision and length it read. The matrix's [program read](source-rs/distribution/matrix/service/parent/storage/pending.rs)
+and its [configuration and launcher reads](source-rs/distribution/matrix/service/children/configuration.rs)
+issue that single request; the HEAD step is gone. Partial reads and BULK_PIN
+keep their explicit arguments.
+
+**One request per tile.** The chooser listed executables with FILTER, then read
+both metadata fields of each, two round trips per tile, to learn names whose
+type the filter had already proved. [storage.rs](source-rs/platform/libraries/user-runtime/storage.rs)
+gains `name`, one METADATA round trip, and the [chooser](source-rs/distribution/applications/chooser/session/realm.rs)
+uses it; `metadata` still reads both fields and refuses a rename that lands
+between them.
+
+Measurements, host-observed milliseconds and provider request spans on
+`desktop_test.py --latency --nested-depth 4 --trace-storage`, the previous
+entry's figures first:
+
+| Step | Observed | Provider requests |
+| --- | --- | --- |
+| enter-user (fresh) | 460 to 441 | 27 to 19 |
+| depth-1 launch picker (fresh) | 374 to 359 | 11 to 9 |
+| depth-4 launch picker (fresh) | 949 to 629 | 18 to 16 |
+| depth-4 enter-user (fresh) | 1,178 to 820 | 29 to 22 |
+| depth-4 enter-user (cold) | 2,880 to 821 | 29 to 22 |
+| create-user, any depth | 278 to 377, now 278 to 363 | 7 to 6 |
+
+Seven requests left each user entry and one left each user creation, and the
+cold boot's depth-4 entry now matches the fresh boot's. Typing stayed at 105 to
+118 ms per key. One cold-boot cluster at depth two (picker 1,570 ms, entry
+2,388 ms, Notes 2,314 ms) ran with 8 to 24 sectors and under 90 ms of provider
+CPU per step and no refusal, retry or stale-reply marker in either boot; the
+other three depths were ordinary, so it reads as host variance rather than a
+guest wait, and the next run should say.
+
+Verification:
+
+- Host: workspace `cargo test --locked` (262); `cargo check-userspace`;
+  formatting and whitespace checks. No host test covers the provider's bulk
+  path; the guest suites do.
+- Guest, on disposable media (`build/suite13-*.log`): four-level latency on
+  fresh and cold boots; the plain default desktop with oracle verification;
+  four nested desktops under pointer stress with cold reopen; nested startup
+  failures (picker, user, background); the provider-replacement suite on the
+  plain fixture; `--matrix-storage-test`, `--matrix-test` and
+  `--matrix-desktop-test`; `objects_test.py` plain and `--retention`;
+  `matrix_database_test.py --recovery`; the three-cycle soak at depth two,
+  whose cycles issue 64 provider requests instead of 85 with the root's
+  accounting steady at 0 private and 38 reader pages, 104 frames and 22 free
+  slots.
+
+Next, in order:
+
+1. A depth-4 user entry still issues 22 requests in sequence, each a 6 to 7
+   tick round trip through eight matrices: the realm shape takes three
+   LOOKUPs and the configuration a fourth for the same `Matrix` object, the
+   chrome lists executables then names each tile. A realm read that answers
+   several names at once, or a shape lookup carried into configure, would cut
+   the sequence further; the per-hop cost itself is now 0.04 ticks of dispatch
+   plus the turn.
+2. The clean-close LOSS timeout did not reproduce in these runs either.
+3. The soak holds the root's kernel accounting steady across cycles; nested
+   matrices' samples are recorded but not yet compared, and nothing samples the
+   provider's or the desktop's own accounts.
+4. Launching one program over one realm twice stays an owner question in
    [OWNER_QUESTIONS.md](OWNER_QUESTIONS.md).

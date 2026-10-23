@@ -39,7 +39,10 @@ pub const COPY: u64 = 4;
 pub const DELETE: u64 = 5;
 /// `parent, 0, after` → status, count, then up to LIST_IDS ascending children.
 pub const LIST: u64 = 6;
-/// `object, expected revision, offset, 1..=MAX_BYTES` → sealed attachment.
+/// `object, expected revision or 0 for the current one, offset, len` → sealed
+/// attachment of `len` bytes, at most MAX_BYTES. A `len` of zero reads the
+/// whole object from `offset`, so a launcher needs no HEAD first; the reply's
+/// revision and length say what was read.
 pub const BULK: u64 = 7;
 /// `object, revision, slot` retains that revision in a root-owned pin slot.
 pub const PIN: u64 = 8;

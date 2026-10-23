@@ -73,8 +73,9 @@ impl Realm {
                 {
                     return Ok(());
                 }
-                let meta = self.scope.metadata(id)?;
-                let name = store::metadata::text(&meta.name);
+                // The filter already proved the type; only the name is needed.
+                let name = self.scope.name(id)?;
+                let name = store::metadata::text(&name);
                 let mut label = [0; 13];
                 for (to, from) in label.iter_mut().zip(name) {
                     *to = from.to_ascii_uppercase();

@@ -6,8 +6,10 @@ funds the heap, opens the guarded volume and recovers the engine, then
 [service.rs](service.rs) accepts connections and dispatches the
 [object protocol](../../contracts/storage.rs): one 64-byte packet each way, a
 sealed attachment for publications and, through [bulk.rs](bulk.rs), a sealed
-attachment for bulk reads. The private control connection answers health and
-the supervisor's close; it conveys no object access.
+attachment for bulk reads. A bulk read with no length fetches the whole object
+at its current revision, so a launcher reads a program in one request without
+a HEAD first. The private control connection answers health and the
+supervisor's close; it conveys no object access.
 
 Readiness is the exact `ready` reply to HEALTH after the engine and store open.
 The [desktop startup controller](../../../distribution/desktop/session/persistence/startup.rs)
