@@ -4,9 +4,11 @@ Run `python tools/boot-harness-rs/run.py --smoke` from the repository root.
 This builds the separate `source-rs/` Cargo workspace and exercises its UEFI
 handoff under QEMU/OVMF; the full suite takes about 40 s on the reference host
 against a 120 s default timeout. Its serial log carries the kernel's phase
-report and, from the IPC echo client, `STORAGE_TRACE ipc-roundtrip 32 <us>`:
-thirty-two round trips between two small tasks, the switch cost every
-forwarding hop pays. Host-side Python only; no extra Python packages.
+report and, from the IPC echo client, `STORAGE_TRACE ipc-roundtrip 32 <fastest us> <total us>`:
+eight bursts of 32 round trips between two small tasks, the fastest burst and
+the whole exchange. The fastest burst is the switch cost every forwarding hop
+pays with no timer tick or host preemption inside it. Host-side Python only; no
+extra Python packages.
 
 For the OS desktop in VS Code, open the repository root and press **F5** with
 **Cathedral: Build & Run in QEMU** selected. It runs the same default composition as:
@@ -523,3 +525,16 @@ startup, and the report shows every stage net of that gap, which is what a
 trace line itself costs, beside the raw figures. It reads the log in serial
 order, so it describes one chain at a time, which startup is; overlapping
 chains dilute its figures. Normal F5 builds omit these trace features.
+
+Every run emulates the CPU with TCG unless `run.py` or `desktop_test.py` is
+given `--accel whpx`, which runs the guest under the Windows hypervisor. Paging
+and the TLB are then the host CPU's, so a figure such as the hop between two
+matrices shows what the kernel's address-space switches cost on hardware. TCG
+rebuilds its software TLB whole on every root switch, global pages or not, so
+under TCG that hop measures the emulator as much as the kernel. Compare timing
+only with timing taken under the same accelerator. The guest cannot see QEMU's
+VM port under WHPX, so the desktop runs there with `--relative-pointer`, which
+the latency and soak workloads accept (the pointer steps then time paced
+relative moves rather than one absolute position); every serial byte is a
+hypervisor exit there as well, so a trace line costs about 0.9 ms against
+0.25 ms under TCG and the net figures matter more than the raw ones.

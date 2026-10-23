@@ -8,7 +8,7 @@ import shutil
 import capture
 
 
-def exercise(stream, output, click, scan, width, height, reboot, timings, nested_depth=3):
+def exercise(stream, output, click, point, scan, width, height, reboot, timings, nested_depth=3):
     font = bytes.fromhex((Path(__file__).resolve().parents[2] / 'source-rs/platform/libraries/bitmap-font/font.hex').read_text())
 
     def pixel(w, data, x, y):
@@ -58,9 +58,8 @@ def exercise(stream, output, click, scan, width, height, reboot, timings, nested
         for offset in (240, 280):
             px, py = x+offset, y+160
             with timings.step(f'depth-{depth}-pointer-{offset}'):
-                capture.command(stream, 'input-send-event', {'events': [
-                    {'type': 'abs', 'data': {'axis': 'x', 'value': round(px*32767/(width-1))}},
-                    {'type': 'abs', 'data': {'axis': 'y', 'value': round(py*32767/(height-1))}}]})
+                # One absolute position, or the paced relative steps there under PS/2.
+                point(px, py)
                 scan(lambda sw, d: pixel(sw, d, px, py) == b'\xff\xff\xff', 'root pointer tip')
         # Reproduce the same edits after a cold reopen, including a durable save.
         if reboot:

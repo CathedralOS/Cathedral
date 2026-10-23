@@ -40,12 +40,13 @@ def desktop(stream, output, serial, reboot, expected_absolute=True, fill_users=F
     mice = capture.command(stream, 'query-mice')
     assert any(m['current'] and m['absolute'] == absolute for m in mice), mice
 
-    def move(x, y):
+    def point(x, y):
+        # The pointer events that reach (x, y) on the current transport: one absolute
+        # position, or paced relative steps; no settling pause.
         if absolute:
             send([{'type': 'abs', 'data': {'axis': 'x', 'value': round(x * 32767 / (width-1))}},
                   {'type': 'abs', 'data': {'axis': 'y', 'value': round(y * 32767 / (height-1))}}])
             position[:] = [x,y]
-            time.sleep(0.05)
             return
         while position != [x, y]:
             dx = max(-70, min(70, x - position[0]))
@@ -55,6 +56,11 @@ def desktop(stream, output, serial, reboot, expected_absolute=True, fill_users=F
             position[0] += dx
             position[1] += dy
             time.sleep(0.04)
+
+    def move(x, y):
+        point(x, y)
+        if absolute:
+            time.sleep(0.05)
 
     def click(x, y):
         move(x, y)
@@ -250,7 +256,7 @@ def desktop(stream, output, serial, reboot, expected_absolute=True, fill_users=F
     shutil.copyfile(output / 'display.png', output / 'user-workspace.png')
     if latency:
         import desktop_latency
-        desktop_latency.exercise(stream, output, click, scan, width, height, reboot, timings, nested_depth)
+        desktop_latency.exercise(stream, output, click, point, scan, width, height, reboot, timings, nested_depth)
         return
     if user_check is not None:
         user_check(output, click, key, scan, width, height, reboot)
@@ -387,7 +393,7 @@ def desktop(stream, output, serial, reboot, expected_absolute=True, fill_users=F
     print('PASS: user tiles, absolute/relative clicks, app tiles, save/discard/cancel and persistent replacement')
 
 
-def run(timeout, trace_storage=False, relative_pointer=False, service_imports=None, nested=False, deep=False, nested_desktop=False, trace_input=False, latency=False, pointer_stress=False, interaction_delay=False, nested_depth=3, soak=0, collection_pressure=False):
+def run(timeout, trace_storage=False, relative_pointer=False, service_imports=None, nested=False, deep=False, nested_desktop=False, trace_input=False, latency=False, pointer_stress=False, interaction_delay=False, nested_depth=3, soak=0, collection_pressure=False, accel='tcg'):
     output = harness.BUILD / 'desktop' / datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S%fZ')
     output.mkdir(parents=True)
     # Exact default composition, with a separate build output so a regression
@@ -441,7 +447,7 @@ def run(timeout, trace_storage=False, relative_pointer=False, service_imports=No
     migration = ROOT / 'source-rs/distribution/migrations/readable-labels.txt'
     database_image.prepare(path, programs, migration, app_close=True, realm_programs=harness.realm_programs(profile, True))
     qemu = harness.find_qemu()
-    command = [qemu, '-machine', 'q35,vmport=off' if relative_pointer else 'q35', '-cpu', 'qemu64', '-accel', 'tcg', '-smp', '1', '-m', '128']
+    command = [qemu, '-machine', 'q35,vmport=off' if relative_pointer else 'q35', '-cpu', 'qemu64', '-accel', accel, '-smp', '1', '-m', '128']
     command += harness.firmware_args(qemu, output)
     command += ['-drive', 'format=raw,file=fat:rw:esp', '-nic', 'none', '-monitor', 'none', '-no-reboot', '-display', 'none']
     command += disk_image.arguments(path)
@@ -491,6 +497,7 @@ def run(timeout, trace_storage=False, relative_pointer=False, service_imports=No
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--timeout', type=float, default=180)
+    parser.add_argument('--accel', choices=('tcg', 'whpx'), default='tcg', help='QEMU accelerator: tcg emulates the CPU; whpx runs the guest under the Windows hypervisor, with hardware paging and timing (default: tcg)')
     parser.add_argument('--relative-pointer', action='store_true', help='disable VM port and verify PS/2 fallback')
     parser.add_argument('--service-imports', choices=('undeclared', 'incompatible'), help='exercise absent optional storage in the ordinary desktop using a disposable manifest variant')
     parser.add_argument('--nested-desktop', action='store_true', help='exercise the installed nested login and desktop')
@@ -507,18 +514,18 @@ if __name__ == '__main__':
     args = parser.parse_args()
     if args.timeout <= 0:
         parser.error('timeout must be positive')
-    if args.latency and (args.relative_pointer or args.service_imports or args.nested or args.deep or args.nested_desktop):
-        parser.error('--latency uses the ordinary absolute-pointer desktop without other workload variants')
+    if args.latency and (args.service_imports or args.nested or args.deep or args.nested_desktop):
+        parser.error('--latency uses the ordinary desktop without other workload variants')
     if args.nested_depth != 3 and not (args.nested_desktop or args.latency or args.soak):
         parser.error('--nested-depth requires --nested-desktop, --latency or --soak')
     if (args.nested_desktop or args.latency) and args.nested_depth not in (3, 4):
         parser.error('--nested-desktop and --latency run at depth 3 or 4')
-    if args.soak and (args.soak < 1 or args.latency or args.nested_desktop or args.nested or args.deep or args.relative_pointer or args.service_imports or args.interaction_delay):
-        parser.error('--soak takes a positive cycle count and runs alone, optionally with --pointer-stress and traces')
+    if args.soak and (args.soak < 1 or args.latency or args.nested_desktop or args.nested or args.deep or args.service_imports or args.interaction_delay):
+        parser.error('--soak takes a positive cycle count and runs alone, optionally with --pointer-stress, --relative-pointer and traces')
     if args.interaction_delay and not args.nested_desktop:
         parser.error('--interaction-delay requires --nested-desktop')
     if args.collection_pressure and not (args.soak and args.trace_storage):
         parser.error('--collection-pressure requires --soak with --trace-storage')
     if args.pointer_stress and (not (args.nested_desktop or args.soak) or args.relative_pointer):
         parser.error('--pointer-stress requires --nested-desktop or --soak with absolute input')
-    run(args.timeout, args.trace_storage, args.relative_pointer, args.service_imports, args.nested or args.deep, args.deep, args.nested_desktop, args.trace_input, args.latency, args.pointer_stress, args.interaction_delay, args.nested_depth, args.soak, args.collection_pressure)
+    run(args.timeout, args.trace_storage, args.relative_pointer, args.service_imports, args.nested or args.deep, args.deep, args.nested_desktop, args.trace_input, args.latency, args.pointer_stress, args.interaction_delay, args.nested_depth, args.soak, args.collection_pressure, accel=args.accel)

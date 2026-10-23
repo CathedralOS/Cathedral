@@ -4,7 +4,9 @@
 entry, syscall operations, results and admission limits; [memory.rs](memory.rs)
 defines page-object grants and mapping vocabulary; [framebuffer.rs](framebuffer.rs)
 defines the framebuffer aperture, geometry, native pixel formats and DISPLAY_INFO
-record. These are experimental lab interfaces, not a frozen Cathedral ABI.
+record; [lab.rs](lab.rs) holds what the kernel's lab sessions and the lab
+programs they run agree on, such as the echo exchange's round count. These are
+experimental lab interfaces, not a frozen Cathedral ABI.
 
 This independently built no_std package imports no kernel implementation or
 platform service protocol. Both the kernel and userspace clients depend on these

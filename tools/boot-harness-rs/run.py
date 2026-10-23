@@ -63,8 +63,8 @@ MARKERS = (
     "Cathedral Rust lab: ELF instances exited [17, 29]",
     "Cathedral Rust lab: ELF instances exited [18, 30]",
     "Cathedral Rust lab: ELF rejection and",
-    "Cathedral Rust lab: IPC echo round=0 32 exchanges; bound rights and stale handles passed",
-    "Cathedral Rust lab: IPC echo round=1 32 exchanges; bound rights and stale handles passed",
+    "Cathedral Rust lab: IPC echo round=0 256 exchanges; bound rights and stale handles passed",
+    "Cathedral Rust lab: IPC echo round=1 256 exchanges; bound rights and stale handles passed",
     "Cathedral Rust lab: IPC peer exit woke blocked receiver and reclaimed all memory",
     "Cathedral Rust lab: IPC peer fault woke blocked receiver and reclaimed all memory",
     "Cathedral Rust lab: IPC revocation woke blocked receiver and reclaimed all memory",
@@ -239,6 +239,7 @@ def main():
     parser.add_argument("--fresh", action="store_true", help="Back up the desktop disk and install a freshly seeded lab disk")
     parser.add_argument("--timeout", type=float, default=120, help="Smoke boot timeout in seconds (default: 120; the full suite takes about 40 s on the reference host)")
     parser.add_argument("--memory", type=int, default=128, help="Guest RAM in MiB (default: 128)")
+    parser.add_argument("--accel", choices=("tcg", "whpx"), default="tcg", help="QEMU accelerator: tcg emulates the CPU; whpx runs the guest under the Windows hypervisor, with hardware paging and timing (default: tcg)")
     args = parser.parse_args()
     fixture_profiles = [Path(__file__).parent / f'profiles/{name}.json' for name in ('volume', 'database', 'objects', 'objects-retention', 'matrix-database-recovery', 'notes-recovery')]
     if args.profile.resolve() in [p.resolve() for p in fixture_profiles] and not args.build_only:
@@ -422,7 +423,7 @@ def main():
         return 0
 
     qemu = find_qemu()
-    command = [qemu, "-machine", "q35", "-cpu", "qemu64", "-accel", "tcg", "-smp", "1", "-m", str(args.memory)]
+    command = [qemu, "-machine", "q35", "-cpu", "qemu64", "-accel", args.accel, "-smp", "1", "-m", str(args.memory)]
     command += firmware_args(qemu, output)
     command += ["-drive", "format=raw,file=fat:rw:esp", "-nic", "none",
                 "-monitor", "none", "-no-reboot"]

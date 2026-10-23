@@ -20,8 +20,8 @@ fn delivery(memory: &mut PreparedMemory, console: &mut SerialPort) {
     for round in 0..2 {
         let programs = [0, 1].map(|role| program(role, 0));
         let endpoints = [endpoint(1, 0, None), endpoint(0, 1, None)];
-        // The client holds a clock so it can time its exchanges: thirty-two
-        // round trips between two tasks measure the kernel switch itself.
+        // The client holds a clock so it can time its exchanges: its round
+        // trips between two tasks measure the kernel switch itself.
         let reports = run_with_clock(memory, &programs, &endpoints, &[1]);
         assert_eq!(reports[0].exit, Some(Exit::Returned(0)));
         assert_eq!(reports[1].exit, Some(Exit::Returned(0)));
@@ -32,13 +32,15 @@ fn delivery(memory: &mut PreparedMemory, console: &mut SerialPort) {
                 .sum::<usize>()
                 > 0
         );
+        let exchanges = cathedral_kernel_contracts::lab::ECHO_ROUNDS
+            * cathedral_kernel_contracts::lab::ECHO_BURSTS;
         for report in &reports {
-            assert_eq!(report.ipc_sent, 32);
-            assert_eq!(report.ipc_received, 32);
+            assert_eq!(report.ipc_sent, exchanges);
+            assert_eq!(report.ipc_received, exchanges);
         }
         drop(reports);
         reclaimed(memory, baseline, heap);
-        writeln!(console, "Cathedral Rust lab: IPC echo round={round} 32 exchanges; bound rights and stale handles passed").ok();
+        writeln!(console, "Cathedral Rust lab: IPC echo round={round} {exchanges} exchanges; bound rights and stale handles passed").ok();
     }
     for (name, roles, specs, fault) in [
         ("peer exit", [2, 3], [endpoint(1, 0, None)], false),
