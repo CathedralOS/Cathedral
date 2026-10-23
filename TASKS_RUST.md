@@ -5413,6 +5413,27 @@ a property of the lab's single CPU under TCG far more than of the design, and
 the right fix, if one is wanted, is in the kernel's switch path rather than in
 any matrix.
 
+**Kernel phases.** The smoke session's report (`run.py --smoke --release
+--timeout 240`; the suite needs more than the default 30 s on this host) puts
+the kernel's own work far below the hop: a trap averages 5 µs and a syscall
+2 µs across 190,000 of each, and a task whose registered wait completes is
+selected 8 to 13 µs later with a yielding peer. So the 290 µs is neither trap
+handling nor scheduler latency: it is the address-space switch under TCG,
+where a reloaded page table flushes the emulator's translation cache and the
+woken task refills it page by page before it reaches its stamp. Real hardware
+pays a few microseconds for the same switch. A direct switch to the woken task
+would save the yield's own trap, about 5 µs; the hop count, not the hop, is the
+lab's lever, and that count is now what the realm layout requires.
+
+**Two older items close.** Bulk program reads are no longer amplified: a user
+entry reads the 220 KB stock matrix in 496 sectors, 1.15 times its size, where
+it read 1,280 for 257 KB before the one-page chunks. The clean-close LOSS
+timeout left no trace in this session's 310 desktop runs: no stale control
+reply, the three storage retirements are the provider panics of the two
+refused listing builds, and the 23 close refusals all report a sibling that
+answered with unsaved work, which is the protected-close check the tests
+exercise on purpose.
+
 Verification:
 
 - Host: workspace `cargo test --locked` (262); `cargo check-uefi` and the
@@ -5435,13 +5456,12 @@ Verification:
 
 Next, in order:
 
-1. The per-hop cost is now the kernel switch, about 290 µs under TCG with
-   about 30 µs of matrix work beside it. A direct switch to the task an IPC
-   wakes would remove the yield syscalls and the bounce through the boot
-   context, but it decides whose turn funds the receiver's work, which is the
-   open CPU sponsorship question; measure the switch path's own phases (the
-   `KERNEL_PHASE` timing report) on a run that ends its session before
-   choosing.
+1. The per-hop cost is the address-space switch under TCG, about 290 µs, with
+   the kernel's trap work at 5 µs and selection within 13 µs of completion.
+   Nothing in the matrices or the scheduler is left to shave there; fewer hops
+   would need a different realm layout, and a direct switch to the woken task
+   is an accounting question (whose turn funds the receiver) rather than a
+   latency one, recorded under CPU sponsorship in OWNER_QUESTIONS.md.
 2. A depth-4 user entry issues 13 sequential requests. With a round trip now
    about 6 ms at that depth, the two requests that could still go (the
    background's lookup riding the matrix's listing, a launcher receiving its

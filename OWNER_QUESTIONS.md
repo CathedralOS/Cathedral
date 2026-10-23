@@ -580,8 +580,11 @@ the matrix's own work on the request is about 30 µs; a depth-4 request crosses
 sixteen to eighteen hops. The scheduler gives a woken receiver its turn only
 when the running task blocks, yields or the timer fires, so matrices now yield
 right after forwarding or answering, which shortens the downward hops but
-leaves the upward hop at the kernel's switch cost. A direct switch to the task
-an IPC wakes would cut that further, but it decides whose turn funds the
+leaves the upward hop at the address-space switch itself: the kernel's trap
+work is 5 µs and a woken task is selected within 13 µs of its completion in the
+smoke report, so the rest is the emulator refilling its translation cache after
+the page-table reload. A direct switch to the task an IPC wakes would therefore
+save only the yield's trap, and what it decides is whose turn funds the
 receiver's work, which is this question; the lab keeps the yield and leaves the
 switch policy open.
 
