@@ -458,7 +458,9 @@ text the previous cycle saved, replaces it with a cycle token, saves, closes the
 app and tears the whole subtree down from the outer taskbar, then the next cycle
 re-enters. A cold boot checks the last token and runs two more cycles. Every
 cycle records its host-observed seconds, the provider's heap live/peak/capacity
-from its own allocator reports, provider request and collection counts, and
+from its own allocator reports together with the private pages and frames the
+kernel charges it (whose quietest level per cycle must hold, since a reply page
+nobody releases would raise it), provider request and collection counts, and
 every matrix's account after it reclaimed a child (`matrix-reclaimed`: pages
 and frames the kernel still charges it and the launch slots free again), the
 nested desktop's after closing Notes and then the root's after the teardown,

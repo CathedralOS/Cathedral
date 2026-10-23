@@ -5486,9 +5486,12 @@ Next, in order:
    soak suites.
 4. The soak now holds every matrix's reclamation sample steady across cycles,
    in order: the nested desktop's after closing Notes and the root's after the
-   teardown. The provider's and the desktop's own accounts are not sampled:
-   the provider's pages are its heap and reply pages, both already reported,
-   and the shell takes no part in a cycle's teardown, so it has no natural
-   point to sample at; its bootstrap already asserts an exact reclamation.
+   teardown. The provider's heap report carries the private pages and frames
+   the kernel charges it, which include reply pages their readers still hold,
+   and the soak holds each cycle's quietest level: 256 pages and 533 frames,
+   the two heap objects alone, in every cycle of both boots
+   (`build/soak-custody.log`). The desktop shell is the one account without a
+   per-cycle sample: it takes no part in a cycle's teardown, and its bootstrap
+   already asserts an exact reclamation.
 5. Launching one program over one realm twice stays an owner question in
    [OWNER_QUESTIONS.md](OWNER_QUESTIONS.md).

@@ -35,9 +35,12 @@ def reclaimed(log):
 
 
 def heap_reports(log):
-    return [dict(phase=phase, live=int(live), peak=int(peak), failures=int(failures), capacity=int(capacity))
-            for phase, live, peak, failures, capacity in re.findall(
-                r'Cathedral objects heap: (\w+) live=(\d+) peak=(\d+) largest=\d+ failures=(\d+) capacity=(\d+)', log)]
+    """The provider's reports: its allocator, and the private pages and frames
+    the kernel charges it, which include reply pages their readers still hold."""
+    return [dict(phase=phase, live=int(live), peak=int(peak), failures=int(failures), capacity=int(capacity),
+                 pages=int(pages), frames=int(frames))
+            for phase, live, peak, failures, capacity, pages, frames in re.findall(
+                r'Cathedral objects heap: (\w+) live=(\d+) peak=(\d+) largest=\d+ failures=(\d+) capacity=(\d+) pages=(\d+) frames=(\d+)', log)]
 
 
 def exercise(output, click, key, scan, width, height, reboot, cycles, pointer_stress=False, nested_depth=2, collection_pressure=False):
@@ -102,6 +105,8 @@ def exercise(output, click, key, scan, width, height, reboot, cycles, pointer_st
                       heap_live_end=heaps[-1]['live'] if heaps else None,
                       heap_peak=max((h['peak'] for h in heaps), default=None),
                       heap_capacity=heaps[-1]['capacity'] if heaps else None,
+                      provider_pages_low=min((h['pages'] for h in heaps), default=None),
+                      provider_frames_low=min((h['frames'] for h in heaps), default=None),
                       provider_requests=log.count('STORAGE_TRACE provider-begin'),
                       collection_passes=log.count('STORAGE_TRACE collect-pass'),
                       account=accounts[-1] if accounts else None,
@@ -118,6 +123,11 @@ def exercise(output, click, key, scan, width, height, reboot, cycles, pointer_st
         # the first cycle, in the same order.
         assert accounts, f'cycle {cycle} recorded no reclamation sample; logs: {output}'
         assert record['accounts'] == records[0]['accounts'], f"cycle {cycle} kernel accounting drifted: {records[0]['accounts']} -> {record['accounts']}"
+        # The provider's quiescent charge: its heap objects plus whatever reply
+        # pages readers still held at its quietest report. A reply nobody
+        # releases would raise this floor from one cycle to the next.
+        assert (record['provider_pages_low'], record['provider_frames_low']) == (records[0]['provider_pages_low'], records[0]['provider_frames_low']), \
+            f"cycle {cycle} provider custody drifted: pages {records[0]['provider_pages_low']} -> {record['provider_pages_low']}, frames {records[0]['provider_frames_low']} -> {record['provider_frames_low']}"
         assert all(h['failures'] == 0 for h in heaps), f'provider allocation failed in cycle {cycle}: {heaps}'
         assert all(h['capacity'] - h['peak'] >= HEAP_HEADROOM for h in heaps), f'provider heap headroom lost in cycle {cycle}: {heaps}'
         if collection_pressure:
@@ -159,6 +169,7 @@ def report(output):
             print(f"  cycle {c['cycle']:3} {c['seconds']:7.2f}s heap live {c['heap_live_end']} peak {c['heap_peak']} / {c['heap_capacity']} "
                   f"requests {c['provider_requests']} collections {c['collection_passes']} (windows up to {c.get('windows', 0)}) "
                   f"root after teardown: pages {account.get('private_pages')}/{account.get('reader_pages')} frames {account.get('frames')} free slots {account.get('free_slots')}; "
+                  f"provider floor pages {c.get('provider_pages_low')} frames {c.get('provider_frames_low')}; "
                   f"failures {c['failures'] or 'none'}; {phases}")
         times = [c['seconds'] for c in data['cycles']]
         if len(times) >= 4:

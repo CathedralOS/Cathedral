@@ -100,7 +100,9 @@ as `Error::Workspace`; this provider then skips that maintenance turn, records
 refuse the write. Nothing is removed on that path, and pins are untouched.
 An explicit COLLECT answers it with NO_MEMORY. `trace-storage` reports heap use
 before collection, before hierarchy writes and after them, including the
-allocator's lifetime peak, failed allocation count and capacity, and samples
+allocator's lifetime peak, failed allocation count and capacity, beside the
+private pages and frames the kernel charges the provider, where a reply page
+its reader never released would show, and samples
 each automatic pass as `collect-pass` with its removals, ledger, windows and
 largest marked set.
 

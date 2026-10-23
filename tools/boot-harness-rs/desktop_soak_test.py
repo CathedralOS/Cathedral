@@ -8,12 +8,12 @@ from desktop_soak import cycles_before, heap_reports, last_token, reclaimed
 
 class SoakTests(unittest.TestCase):
     def test_heap_reports_keep_phase_live_peak_failures_and_capacity(self):
-        log = ('Cathedral Rust lab: Cathedral objects heap: recovered live=66720 peak=66796 largest=9432 failures=0 capacity=229376\n'
-               'noise\nCathedral objects heap: committed live=134408 peak=160332 largest=9432 failures=1 capacity=229376\n'
-               'Cathedral objects heap: prepared live=1 peak=2 largest=3 failures=0\n')
+        log = ('Cathedral Rust lab: Cathedral objects heap: recovered live=66720 peak=66796 largest=9432 failures=0 capacity=229376 pages=256 frames=532\n'
+               'noise\nCathedral objects heap: committed live=134408 peak=160332 largest=9432 failures=1 capacity=229376 pages=276 frames=552\n'
+               'Cathedral objects heap: prepared live=1 peak=2 largest=3 failures=0 capacity=4\n')
         reports = heap_reports(log)
         self.assertEqual([r['phase'] for r in reports], ['recovered', 'committed'])
-        self.assertEqual(reports[1], dict(phase='committed', live=134408, peak=160332, failures=1, capacity=229376))
+        self.assertEqual(reports[1], dict(phase='committed', live=134408, peak=160332, failures=1, capacity=229376, pages=276, frames=552))
 
     def test_reclamation_samples_keep_slot_pages_frames_and_free_slots(self):
         log = ('Cathedral Rust lab: STORAGE_TRACE matrix-reclaimed 3 40 96 612 20\n'
