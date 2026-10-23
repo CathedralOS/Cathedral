@@ -286,62 +286,22 @@ subsystem's boundary before implementing it, and update its specification,
 contracts, charter and TCB entry together. Track kernel size and total trusted
 code separately; do not adopt a 12,000-line target as an architectural constraint.
 
-### Default isolation boundary for proved OS components
+### Validation scope for an optional PCID optimization
 
-**Requirement and tension.** The Rust lab now exercises hardware-contained
-tasks as a prerequisite to services outside the kernel. The
-[kernel architecture design](wiki/design/part_5_lifecycle/04_kernel_architecture.md)
-already places unproved apps and drivers behind hardware boundaries; this
-milestone is consistent with that direction. For OS components, however, the
-chapter describes proof-based isolation in one address space as the model,
-then favors MMU isolation by default with proof-based sharing as an aspirational
-option. The [component design](wiki/design/part_2_components/00_component_model.md)
-leaves the per-component boundary open. This affects future platform-service
-placement and failure containment, not whether the current lab can run ring-3
-payloads.
+**Resolved boundary.** The owner accepted [hardware-separated programs](wiki/spec/execution/isolation.md)
+on 2026-10-23 and removed PCC-based single-address-space isolation from the
+current roadmap. This replaces the former default-isolation question. PCID does
+not require merging program address spaces; its test coverage is a separate choice.
 
-**Contracts checked.** The [specification index](wiki/spec/README.md) assigns
-component, capability, IPC and admission semantics to unwritten subjects.
-The [Rust boot memory inventory](source-rs/kernel/core/memory/inventory.rs) covers the firmware-neutral
-memory inventory, not admission into a shared protection domain. ADR 0002
-explicitly makes no userspace-isolation claim for its source grouping.
+**Requirement and choice (deferred).** The lab evidence below reports that the
+current emulator path cannot exercise the proposed PCID optimization, while WHPX
+can. Before enabling such a path, decide whether hardware/hypervisor-only coverage
+is acceptable with a retained non-PCID fallback, or require broader target coverage
+first. This does not block current hardware-separated execution or coordination.
 
-**Owner choice.** Should proved OS services share a protection domain by default,
-use hardware isolation by default, or select a domain through explicit admission
-policy? Sharing requires a defined proof/checker assurance threshold and fault
-model; MMU separation requires service-call and shared-memory boundaries; a
-mixed policy must identify which guarantees each admitted placement provides.
-None can infer containment merely from a package name or the language used.
-
-**Recommendation (unaccepted).** Use hardware separation as the initial service
-baseline; require an explicit admission contract before sharing a protection
-domain. Keep the current Rust syscall ABI experimental. Settle the production
-policy before treating the lab's task model as Cathedral's component model.
-
-**Trap-path lab evidence (2026-10-22, not a boundary decision).** The Rust lab
-keeps the kernel in its own page-table root: every trap switches roots on entry
-and back on return. The seven supervisor ranges every root shares (image,
-stacks, context heap) are global, so the kernel's translations survive the
-switches; the task's are dropped by each one. 32 bare round trips between two
-tiny tasks cost about 3,140 to 4,824 µs under TCG, where the emulator rebuilds its
-whole TLB on every root switch whatever the guest marks global, and about
-118 to 144 µs under the Windows hypervisor on the lab host, 15 percent less
-than before the global leaves. A storage hop between matrices
-is about 290 µs net of tracing under TCG and within the trace line's own noise
-on hardware; a depth-4 user entry spends about 85 ms of its 520 in hops under
-TCG and almost nothing on hardware. Sparing the task's half needs PCID, which
-the lab refuses, or the kernel executing in the task's root, which is this
-boundary. PCID itself lies within the boundary, and the lab host can run it:
-WHPX exposes `pcid` and `invpcid` on the i9-12900K without complaint. It
-cannot run under TCG at all: QEMU's `helper_write_crN` sends a long-mode CR3
-write with the no-flush bit set down its reserved-bits path, and its TLB
-flushes whole on every root switch regardless (`target/i386/tcg/system/misc_helper.c`,
-`target/i386/helper.c`, current master). A PCID kernel path would therefore
-run, and be validated, only under the hypervisor, never in the emulator the
-suites and the F5 flow use, and its TLB coherence across user roots, which
-TCG would hide, is the kind of error only hardware shows. Whether a kernel
-path validated only under WHPX is acceptable is the owner's call beside the
-boundary. The lab leaves the roots as they are until that is chosen.
+**Recommendation (unaccepted).** Leave the optimization disabled until there is a
+concrete implementation and validation plan. Do not infer approval of a different
+kernel page-table layout or weaker isolation from the accepted program boundary.
 
 ### Writable row spans and component admission
 
@@ -354,7 +314,8 @@ also remove the final composition copy, but the QEMU probe demonstrates that an
 arbitrary native store can cross an advertised row span within its writable page.
 Crossing the mapped page boundary faults. These are different authority guarantees.
 
-**Contracts checked.** The isolation question above remains unresolved. The lab's
+**Contracts checked.** The accepted [isolation contract](wiki/spec/execution/isolation.md)
+requires hardware separation and excludes PCC-based shared-domain admission. The lab's
 [page contract](source-rs/kernel/contracts/memory.rs) defines whole-page private writers
 and sealed readers; it supplies no writable byte-range delegation or production
 surface contract. The row wrapper relies on cooperating safe Rust and is not a
@@ -372,7 +333,8 @@ and when a span can safely be reassigned after cancellation.
 storage. Continue measuring flattened page-isolated leaves and checked direct
 rows as distinct paths. Require an explicit admission and failure model before
 promising exact sub-page containment or leasing visible scanout to independent
-writers. This does not select owned surfaces or rule out verified direct leases.
+writers. This does not select owned surfaces; direct leases must respect the accepted
+hardware boundary and cannot rely on the removed PCC-based SAS proposal.
 
 The [rendering proposal](wiki/proposals/0000_rendering_and_composition.md)
 keeps row borrows as a possible renderer implementation detail and evaluates

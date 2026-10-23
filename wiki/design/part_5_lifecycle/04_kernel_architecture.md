@@ -1,5 +1,10 @@
 # Chapter 04: Kernel Architecture
 
+The accepted [program isolation contract](../../spec/execution/isolation.md)
+supersedes the earlier SAS/PCC direction. Programs use hardware-separated address
+spaces on current targets. PCC-based sharing is off the roadmap; reconsideration
+requires future CHERI support and a separately specified compartment model.
+
 > The privileged core is the smallest trusted substrate that can carry Cathedral's component, capability, and update story.
 
 ## The Legacy Model
@@ -8,17 +13,32 @@ Monolithic kernels fuse everything privileged (drivers, filesystems, network sta
 
 ## The Cathedral Model
 
-The privileged core is the smallest substrate that supports the component, capability, and update story, not the cleanest-sounding diagram. The architecture is not chosen by aesthetics ("microkernel sounds clean"). It is chosen by asking, for each piece of the system: what must be trusted, what can be restarted, what can be upgraded, what can be proven, and what can crash without killing the system? The answer follows from Omega's isolation guarantees, not from x86 ring boundaries.
+The privileged core is the smallest substrate that supports the component, capability, and update story, not the cleanest-sounding diagram. The architecture is not chosen by aesthetics ("microkernel sounds clean"). It is chosen by asking, for each piece of the system: what must be trusted, what can be restarted, what can be upgraded, what can be proven, and what can crash without killing the system? The current isolation answer is hardware separation, supported by explicit authority and lifetime contracts.
 
-### The wall sits between OS code and app code
+### The wall separates independent programs
 
-The boundary is OS code versus app code. The OS is written in Omega and is proof-carrying, so its own components isolate from one another by the type system rather than the MMU. That is what makes a Theseus-style single address space and frictionless hot swap ([[updates_and_hot_swap]]) possible for the OS. App code is the other side. A user app can be written in anything, C++ included, so the OS cannot trust its instruction stream. It isolates the app with hardware (separate address space, MMU, instruction trapping) while the capability model confines its system access. Language isolation is the OS's internal mechanism. Hardware isolation is the wall between the OS and untrusted apps. That is the normal case, not just legacy boxes, and where the wall sits is the architectural decision.
+Applications, matrices and platform providers use hardware-separated address spaces.
+Being OS-supplied or written in Omega does not exempt a program. Explicit shared
+mappings provide IPC without merging protection domains. The kernel implements
+those boundaries and remains trusted; its internal modules are not independent
+userspace programs merely because the source tree separates them.
 
 ### The core is trusted, not contained
 
-The core itself is the one thing on neither side of that wall. It is trusted, not contained, the exact inverse of a driver, which is contained, not trusted. You cannot cage the core, because the core is what builds the cages. It programs the IOMMU, the MMIO maps, and the device resets, so there is nothing above it to confine it. Its assurance comes from proof and TCB minimization, not a wall. The whole system therefore reduces to a dichotomy. Every part is either **caged** (untrusted and hardware-confined: apps, drivers) or **proved** (the trusted core, kept as small as possible), with only a thin, hand-audited hardware seam left trusted and unproven. This also fixes the test for what can ever be required of a component: only what the cage, meaning hardware plus core, enforces over the component's head. Anything asked of an untrusted component is best-effort, safe to rely on only with a hardware backstop.
+The privileged core constructs the protection boundaries and remains part of the
+trusted base. Keep that substrate small and auditable, with verification where
+supported and explicit hardware assumptions. Independently running apps, matrices,
+providers and drivers do not gain trust by package origin or language choice.
+Neither this design nor the accepted isolation contract claims that the current
+core has a complete machine-checked proof.
 
-## Concerns & Design Space
+## Historical design space
+
+The following records earlier reasoning, not current admission policy. In
+particular, PCC-based SAS, the aspirational proof-sharing ceiling, and claims
+that OS components rely on language isolation are superseded by the accepted
+contract. CHERI performance and assurance claims here are design hypotheses,
+not an implemented or accepted compartment contract.
 
 - **The important axis.** Trust, restartability, upgradability, provability, and crash isolation are evaluated per subsystem (drivers, FS, net, scheduler) rather than as one global verdict.
 - **Single address space plus language isolation.** Zero-copy IPC and frictionless hot swap, conditioned on proved Omega. The boundary-provider set becomes much of the TCB ([[omega_substrate]]).
@@ -58,13 +78,13 @@ The core itself is the one thing on neither side of that wall. It is trusted, no
 ## Key Questions
 
 - What is the irreducible privileged core, the set whose compromise is fatal, and how small can it be made?
-- Where is the line drawn between language-isolated OS code (proved Omega, single address space) and hardware-isolated app code (untrusted, any language)?
+- The isolation baseline is settled by the accepted program isolation contract; a future CHERI compartment design remains separate work.
 - How much of the classic kernel can become restartable components without losing the performance the target workload needs?
 - Is a hypervisor-first base worth it for running a legacy box ([[compatibility_and_legacy]]) safely alongside the native system?
 
 ## Omega Leverage
 
-- **Language-level isolation** is the substrate's premise: ownership, borrowing, and effect/authority checking provide isolation that the MMU otherwise provides, per [Omega Chapter 19: Capabilities, Reach, And Boundaries](https://github.com/CathedralOS/Omega/blob/main/wiki/language_guide/chapter_19_capabilities_effects_boundaries.md).
+- **Language checking** supports internal correctness but does not replace the current hardware isolation boundary. Earlier language-isolation reasoning described: ownership, borrowing, and effect/authority checking provide isolation that the MMU otherwise provides, per [Omega Chapter 19: Capabilities, Reach, And Boundaries](https://github.com/CathedralOS/Omega/blob/main/wiki/language_guide/chapter_19_capabilities_effects_boundaries.md).
 - **The boundary-provider set is much of the TCB.** Omega's boundary registry makes the trusted base enumerable. The registered providers are what must be trusted, and the build report lists them.
 - **`reaches` + authority-flow ceilings** let even privileged components be bounded and audited, so "privileged" is not synonymous with "unbounded."
 - **The hardware foundation** separates inert addresses, extent authority, layout/access plans, checked instructions, entry roots, and external loans, so low-level code does not regain C's "number equals power" escape ([[hardware_foundation_profile]]).

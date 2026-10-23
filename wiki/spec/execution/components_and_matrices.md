@@ -21,6 +21,9 @@ determines the authority available to it; the matrix determines what it supplies
 to its children within that authority. Hosting a matrix uses the same authority
 boundary as hosting another program.
 
+The [program isolation contract](isolation.md) requires hardware separation on
+current targets; platform providers and matrices have no proof-based exemption.
+
 The matrix may implement its policy in compiled code, configuration, or both.
 Custom matrices need not implement the distribution desktop's settings schema.
 They may deny a requested service, delegate an authorized restricted operation,

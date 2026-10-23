@@ -39,6 +39,14 @@ that baseline unresolved are superseded; other resource sponsorship is unchanged
 This is a documentation ratification of the current lab direction, not a new
 runtime implementation or fresh scheduling verification.
 
+Owner clarification 2026-10-23: [hardware-separated programs](wiki/spec/execution/isolation.md)
+are the current isolation architecture for apps, matrices and platform providers.
+PCC-based single-address-space isolation is off the roadmap, not a future proof
+threshold to implement. Reconsideration requires CHERI support and a separate
+contract. Explicit shared IPC mappings remain supported. The old default-isolation
+question is closed; optional PCID validation coverage remains separate and deferred.
+This documentation decision introduces no runtime changes or fresh QEMU evidence.
+
 Next implementation slice: add funded coordination acquisition to the existing
 broker and prove simultaneous first registration, rejected identity spoofing,
 constraint combinations, accepted/refused introductions and dead-holder cleanup.
@@ -5866,3 +5874,36 @@ eager, fixed session bank is lab policy, not the eventual manifest contract.
 Production still needs the already-open choice between persistent sponsors,
 explicit funded adoption, and revocation, plus a policy for growing/reclaiming
 active memory envelopes. No new answer is needed to continue this bounded lab.
+
+
+## Isolation decision: archived trap-path evidence (2026-10-23)
+
+The isolation decision is settled by the contract linked above. The following
+historical measurements are retained from the closed question; its discussion
+of the isolation boundary as undecided is superseded. PCID validation coverage
+remains a separate deferred choice, and these results were not rerun here.
+
+**Trap-path lab evidence (2026-10-22, not a boundary decision).** The Rust lab
+keeps the kernel in its own page-table root: every trap switches roots on entry
+and back on return. The seven supervisor ranges every root shares (image,
+stacks, context heap) are global, so the kernel's translations survive the
+switches; the task's are dropped by each one. 32 bare round trips between two
+tiny tasks cost about 3,140 to 4,824 µs under TCG, where the emulator rebuilds its
+whole TLB on every root switch whatever the guest marks global, and about
+118 to 144 µs under the Windows hypervisor on the lab host, 15 percent less
+than before the global leaves. A storage hop between matrices
+is about 290 µs net of tracing under TCG and within the trace line's own noise
+on hardware; a depth-4 user entry spends about 85 ms of its 520 in hops under
+TCG and almost nothing on hardware. Sparing the task's half needs PCID, which
+the lab refuses, or the kernel executing in the task's root, which is this
+boundary. PCID itself lies within the boundary, and the lab host can run it:
+WHPX exposes `pcid` and `invpcid` on the i9-12900K without complaint. It
+cannot run under TCG at all: QEMU's `helper_write_crN` sends a long-mode CR3
+write with the no-flush bit set down its reserved-bits path, and its TLB
+flushes whole on every root switch regardless (`target/i386/tcg/system/misc_helper.c`,
+`target/i386/helper.c`, current master). A PCID kernel path would therefore
+run, and be validated, only under the hypervisor, never in the emulator the
+suites and the F5 flow use, and its TLB coherence across user roots, which
+TCG would hide, is the kind of error only hardware shows. Whether a kernel
+path validated only under WHPX is acceptable is the owner's call beside the
+boundary. The lab leaves the roots as they are until that is chosen.

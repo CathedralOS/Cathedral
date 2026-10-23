@@ -4,6 +4,11 @@ The accepted [matrix policy ownership and supplied-authority contract](../../spe
 is normative for that boundary. Broader design material below is not promoted
 to a complete specification by that decision.
 
+The accepted [program isolation contract](../../spec/execution/isolation.md)
+also supersedes this chapter's SAS/PCC assumptions. Current programs use separate
+hardware protection domains; a shared-address-space design would require future
+CHERI support and its own contract.
+
 > The unit Cathedral runs, isolates, restarts, and upgrades is not one unit. It is a family of overlapping ones, and each concern picks its own.
 
 ## The Legacy Model

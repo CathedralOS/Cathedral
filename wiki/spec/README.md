@@ -33,6 +33,7 @@ subject. A current specification may precede implementation.
 | Execution budgets and service work | [Execution budgets](resources/execution_budgets.md) | Partial | Partial |
 | Realms and objects: copies, paths and hierarchy metadata | [Realms and objects](storage/realms_and_objects.md) | Partial | Partial |
 | Components and matrices: policy ownership and supplied authority | [Components and matrices](execution/components_and_matrices.md) | Partial | Partial |
+| Hardware separation and exclusion of PCC-based single address space | [Program isolation](execution/isolation.md) | Partial | Partial |
 | Scoped coordination and checked shared-memory IPC | [Coordination and IPC](communication/ipc.md) | Partial | Partial |
 
 ## Owned but unwritten subjects

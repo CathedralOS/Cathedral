@@ -1,5 +1,11 @@
 # Kernel machine boundary
 
+The accepted [program isolation contract](../../../wiki/spec/execution/isolation.md)
+keeps independently isolated programs in hardware-separated address spaces.
+PCC-based single-address-space admission is off the current roadmap; future CHERI
+support would require a separate design. Translation optimizations do not alter
+this boundary or remove their own validation requirements.
+
 [lib.rs](lib.rs) lists the public machine interface explicitly.
 [isa/isa.rs](isa/isa.rs) selects its CPU implementation at compile time. Core calls that
 implementation directly; saved register layouts and entry assembly remain
