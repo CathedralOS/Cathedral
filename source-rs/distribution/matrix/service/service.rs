@@ -85,6 +85,12 @@ pub fn run(environment: Environment) -> Result<(), Error> {
             ],
         );
     }
+    // Two stamps back to back: their gap is what one trace line itself costs,
+    // which hop_latency.py subtracts from every stage it reports.
+    #[cfg(feature = "trace-storage")]
+    for _ in 0..2 {
+        cathedral_user_runtime::time::storage_trace("trace-calibrate", 0, 0);
+    }
     let mut children = children::Children::default();
     children.separate_storage = parent.separate_storage;
     static mut DEFERRED: deferred::Deferred = deferred::Deferred::empty();

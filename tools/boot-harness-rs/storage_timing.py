@@ -28,13 +28,16 @@ def provider_samples(serial):
             continue
         label, numbers = match.groups()
         values = [int(value) for value in numbers.split()]
-        if label in begins and len(values) == 4:
-            pending[begins[label]] = (values, {})
+        # Stage lines carry scope, opcode, tick and account CPU, then the
+        # microsecond clock; only the first four matter here.
+        if label in begins and len(values) in (4, 5):
+            pending[begins[label]] = (values[:4], {})
         elif label == 'ata-io' and len(values) == 7 and 'provider' in pending:
             start, extra = pending['provider']
             if values[:2] == start[:2]:
                 extra.update(zip(('read_sectors', 'written_sectors', 'flushes', 'wait_ticks', 'polls'), values[2:]))
-        elif label in ends and len(values) == 4:
+        elif label in ends and len(values) in (4, 5):
+            values = values[:4]
             phase = ends[label]
             entry = pending.pop(phase, None)
             if entry is None:
@@ -82,8 +85,8 @@ def summarize(output, serial, boot):
             assert len(values) == 7
             io.append(values)
             continue
-        assert len(values) == 4
-        scope, opcode, ticks, cpu = values
+        assert len(values) in (4, 5), (label, values)
+        scope, opcode, ticks, cpu = values[:4]
         if label in PAIRS:
             begin, stage = PAIRS[label]
             previous = pending.pop((begin, scope, opcode), None)

@@ -36,7 +36,8 @@ the runtime exposes no global scheduling tree or authority to widen that share.
 handle limit/charge, including hidden incoming escrow. Channel charges belong to
 the original persistent launch account until final closure; replacement receives
 the remaining allowance. This query changes no authority or funding.
-`time` reads the boot-granted monotonic clock; it grants no authority
+`time` reads the boot-granted monotonic clock, in ticks or with the kernel's
+microsecond clock beside them for traces; it grants no authority
 and chooses no deadline policy. Restart decisions
 belong to the caller, not this library. The runtime has no unwinding. Its optional `heap` feature installs an explicitly
 funded process-lifetime allocator; see [user-heap](../user-heap/CHARTER.md).

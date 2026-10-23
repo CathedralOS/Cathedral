@@ -1,12 +1,13 @@
 # Rust reference OS: tasks and handoff
 
-Updated 2026-10-22 (local date). Current milestone: **a realm named in one
-listing**, on baseline `9b073f4d` (a program read in one request and a tile's
-name alone). ENTRIES answers a parent's children with their names in one sealed
-page, so a depth-4 user entry takes 13 sequential requests instead of 29 and
-617 ms instead of 1,178 two entries ago; a program larger than one object is
-refused at install; the newest section at the end records the measurements and
-the open items.
+Updated 2026-10-22 (local date). Current milestone: **where a forwarded request
+spends its time**, on baseline `44b11710` (a realm named in one listing; the
+stock matrix size-optimized). Storage traces carry the kernel's microsecond
+clock, `hop_latency.py` attributes each hop of a request chain net of the trace
+line's own cost, and matrices yield right after forwarding or answering: a hop
+is about 290 µs of kernel switch under TCG against 30 µs of matrix work, and a
+depth-4 user entry takes 519 ms; the newest section at the end records the
+measurements and the open items.
 Saved-state testing is an explicit launch choice. The section before it
 distinguishes current-program four-level verification from failures in
 retained executable snapshots.
@@ -5312,9 +5313,10 @@ listing and the configuration read.
 
 Verification:
 
-- Host: workspace `cargo test --locked` (263, with the entries test);
-  storage-lab with `--features engines` (40, with the oversized-program
-  refusal); `cargo check-userspace`; formatting, layout and whitespace checks.
+- Host: workspace `cargo test --locked` (262); the store's host tests with
+  `--features host` (22, with the entries test); storage-lab with
+  `--features engines` (40, with the oversized-program refusal);
+  `cargo check-userspace`; formatting, layout and whitespace checks.
   The stock matrix trims to 257,568 bytes and the chooser to 78,008.
 - Guest, on disposable media (`build/suite16-*.log`): four-level latency on
   fresh and cold boots; the plain default desktop with oracle verification;
@@ -5341,6 +5343,105 @@ Next, in order:
    every build prints the margin. If it grows past that, the limit would have to
    grow with the provider's reply pages, which is a budget decision across the
    provider, the matrices' reader allowances and the kernel's backing ceiling.
+3. The clean-close LOSS timeout did not reproduce in these runs either.
+4. The soak holds the root's kernel accounting steady across cycles; nested
+   matrices' samples are recorded but not yet compared, and nothing samples the
+   provider's or the desktop's own accounts.
+5. Launching one program over one realm twice stays an owner question in
+   [OWNER_QUESTIONS.md](OWNER_QUESTIONS.md).
+
+## Where a forwarded request spends its time (2026-10-22)
+
+Baseline: `44b11710`. With the request count per nested level cut, the hop
+itself is what remains, and ticks were too coarse to see inside one. This entry
+adds the clock to see it and reports what it shows.
+
+**A microsecond clock in every stage trace.** [CLOCK_READ](source-rs/kernel/contracts/user.rs)
+with a 24-byte record writes the tick, the kernel's microsecond clock behind it
+(the TSC-derived clock the scheduler already accounts with) and this task's
+measured execution, in one read; [time.rs](source-rs/platform/libraries/user-runtime/time.rs)
+uses it for `storage_trace`, so every stage line carries the microsecond clock
+as its fifth value and costs two syscalls and a write instead of five and a
+write. The timing parsers accept the fifth value. Each matrix writes two
+`trace-calibrate` stamps back to back at startup, so the cost of a trace line
+itself is in the log beside what it measures.
+
+**hop_latency.py.** [The tool](tools/boot-harness-rs/hop_latency.py) pairs
+consecutive stages of a request chain in serial order and reports each
+transition's count, total, mean, median, median net of the calibration and p90:
+a send to the next receive is the hop (kernel delivery plus the receiving
+matrix's wake), receive to admit and admit to send are that matrix's own turn,
+and the provider's begin to end is its work. A unit test covers the pairing,
+a backwards clock and the calibration.
+
+Measurements, microseconds from the fresh boot of
+`desktop_test.py --latency --nested-depth 4 --trace-storage`
+(`build/latency-stamp.log`), medians with the trace line's own 231 µs
+subtracted, then raw p90:
+
+| Transition | Count | Net median | Raw p90 |
+| --- | --- | --- | --- |
+| hop up, matrix to matrix | 301 | 293 | 782 |
+| hop down, matrix to matrix | 334 | 406 | 1,351 |
+| hop up, root to provider | 133 | 322 | 673 |
+| hop down, provider to root | 72 | 267 | 781 |
+| matrix dispatch (receive to admit) | 425 | 22 | 378 |
+| matrix forward (admit to send) | 437 | 8 | 338 |
+| root dispatch and forward | 233 | 10 and 2 | 324 and 280 |
+| provider work | 88 | 406 | 27,719 |
+
+The cold boot reads the same within 30 µs on every row. So a hop costs 300 to
+400 µs under TCG, where the matrix's own work on a request is about 30 µs: the
+time is kernel delivery plus the receiving matrix's wake and switch, not matrix
+code. A depth-4 request crosses eight or nine hops each way, sixteen to
+eighteen in all, for about 6 ms, and the thirteen requests of a user entry
+about 85 ms of its 581; the rest is admission, placement and drawing. The downward hop costs more than the upward
+one because a matrix does more after answering than after forwarding before it
+reaches its wait.
+
+**Yield after forward and reply.** The scheduler gives a woken task its turn
+when the running one blocks, yields or the timer fires, so a matrix's loop tail
+sat between every hop. [pending.rs](source-rs/distribution/matrix/service/parent/storage/pending.rs)
+now yields right after forwarding a request upstream and right after answering
+a child (`build/latency-yield.log`): the hop down from the root to a matrix fell
+from 222 to 54 µs net and matrix to matrix from 406 to 368, the depth-4 user
+entry from 581 to 519 ms and the depth-1 picker launch from 354 to 280. The hop
+up stayed at about 290 µs net, so what remains is the kernel's switch itself
+under emulation: two syscall transitions and a page-table switch, with the
+yield's return through the boot context when deferred work is pending. That is
+a property of the lab's single CPU under TCG far more than of the design, and
+the right fix, if one is wanted, is in the kernel's switch path rather than in
+any matrix.
+
+Verification:
+
+- Host: workspace `cargo test --locked` (262); `cargo check-uefi` and the
+  kernel's host tests (144) for the clock read; `cargo check-userspace`; harness
+  Python (31, with the hop tool's test); formatting, layout and whitespace
+  checks.
+- Guest, on disposable media: four-level latency on fresh and cold boots three
+  times (`build/latency-micros.log`, `build/latency-stamp.log`,
+  `build/latency-yield.log`); then with the yield (`build/suite19-*.log`) the
+  plain default desktop with oracle verification, four nested desktops under
+  pointer stress with cold reopen, nested startup failures, the
+  provider-replacement suite, `--matrix-storage-test`, `--matrix-test` and
+  `--matrix-desktop-test`, and the three-cycle soak at depth two with the root's
+  accounting steady at 0 private and 38 reader pages, 95 frames and 22 free
+  slots; `build/suite18-*.log` covers the clock read alone on the plain desktop
+  and the two input-traced matrix suites.
+
+Next, in order:
+
+1. The per-hop cost is now the kernel switch, about 290 µs under TCG with
+   about 30 µs of matrix work beside it. A direct switch to the task an IPC
+   wakes would remove the yield syscalls and the bounce through the boot
+   context, but it decides whose turn funds the receiver's work, which is the
+   open CPU sponsorship question; measure the switch path's own phases (the
+   `KERNEL_PHASE` timing report) on a run that ends its session before
+   choosing.
+2. A depth-4 user entry issues 13 sequential requests; the background's lookup
+   could ride the listing the matrix already read, and a launcher could receive
+   its arrangement with its launch instead of reading it.
 3. The clean-close LOSS timeout did not reproduce in these runs either.
 4. The soak holds the root's kernel accounting steady across cycles; nested
    matrices' samples are recorded but not yet compared, and nothing samples the

@@ -5,18 +5,33 @@ use crate::{Error, abi, arch};
 pub fn now() -> Result<u64, Error> {
     read(abi::CLOCK_READ)
 }
+/// A trace stamp in one read: the tick, the kernel's microsecond clock behind
+/// it and this account's measured execution microseconds.
+pub fn stamp() -> Result<[u64; 3], Error> {
+    let grant = arch::call(abi::CLOCK_HANDLE, 0, 0);
+    if (grant as i64) < 0 {
+        return Err(Error(grant as i64));
+    }
+    let mut record = [0u64; 3];
+    let status = arch::call3(abi::CLOCK_READ, grant, record.as_mut_ptr() as u64, 24);
+    if (status as i64) < 0 {
+        Err(Error(status as i64))
+    } else {
+        Ok(record)
+    }
+}
 /// Measured execution of this persistent account, including its kernel work.
 /// Requires the existing clock grant; exposes no other account or machine total.
 pub fn cpu_us() -> Result<u64, Error> {
     read(abi::CPU_READ)
 }
-/// Opt-in storage diagnostics: local scope, opcode, monotonic ticks, account CPU.
-/// Scope values are local to each producer, never caller authentication or global IDs.
+/// Opt-in storage diagnostics: local scope, opcode, monotonic ticks, account
+/// CPU and the kernel's microsecond clock, which lines events from different
+/// tasks up finer than a tick. Scope values are local to each producer, never
+/// caller authentication or global IDs.
 pub fn storage_trace(label: &str, scope: u64, opcode: u64) {
-    storage_sample(
-        label,
-        &[scope, opcode, now().unwrap_or(0), cpu_us().unwrap_or(0)],
-    );
+    let [ticks, micros, cpu] = stamp().unwrap_or([0; 3]);
+    storage_sample(label, &[scope, opcode, ticks, cpu, micros]);
 }
 /// Bounded numeric diagnostic record. Callers compile this out in ordinary builds.
 pub fn storage_sample(label: &str, values: &[u64]) {

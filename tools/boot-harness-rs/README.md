@@ -502,4 +502,14 @@ rasterization. Compositor samples cover redraw through framebuffer output. They
 exclude app bitmap generation, matrix IPC and scheduling. Trace logging perturbs
 execution; absent spans mean no measurement, not proof of zero work. CPU values
 are compared only within the same producer; no scheduler time is inferred by
-subtracting unrelated clocks. Normal F5 builds omit these trace features.
+subtracting unrelated clocks. Every stage line also carries the kernel's
+microsecond clock as its fifth value, one clock for every task, and
+`python tools/boot-harness-rs/hop_latency.py SERIAL_LOG` pairs consecutive
+stages of a request chain by it: the hop from a send to the next receive is
+kernel delivery plus the wake of the receiving matrix, receive to admit and
+admit to send are that matrix's own turn, and the provider's begin to end is
+its work. Each matrix writes two `trace-calibrate` stamps back to back at
+startup, and the report shows every stage net of that gap, which is what a
+trace line itself costs, beside the raw figures. It reads the log in serial
+order, so it describes one chain at a time, which startup is; overlapping
+chains dilute its figures. Normal F5 builds omit these trace features.

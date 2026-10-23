@@ -573,6 +573,18 @@ response bounds. Shared-provider request funding remains the unresolved choice
 above; merely registering a provider confers no extra scheduling authority.
 
 
+**Forwarding-hop lab evidence (2026-10-22, not a scheduling decision).** With
+a microsecond clock in the storage traces, one hop of a nested storage request
+from a matrix to its parent costs about 290 µs under TCG net of tracing, while
+the matrix's own work on the request is about 30 µs; a depth-4 request crosses
+sixteen to eighteen hops. The scheduler gives a woken receiver its turn only
+when the running task blocks, yields or the timer fires, so matrices now yield
+right after forwarding or answering, which shortens the downward hops but
+leaves the upward hop at the kernel's switch cost. A direct switch to the task
+an IPC wakes would cut that further, but it decides whose turn funds the
+receiver's work, which is this question; the lab keeps the yield and leaves the
+switch policy open.
+
 **Resource-subdivision lab evidence (not a production sponsorship decision).**
 [The Rust resource coordinator](source-rs/kernel/core/user_tasks/resources/README.md) now
 conserves runtime page/reader/channel allowances across owner-to-child assignment.

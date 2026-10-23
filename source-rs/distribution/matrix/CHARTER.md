@@ -175,7 +175,9 @@ The visible desktop admits children with separate interaction and catalog pairs,
 plus a wake receiver. [Shared admission](../../platform/libraries/user-runtime/matrix/admission/admission.rs)
 owns channel construction, endpoint transfer and rollback; the [runtime bundle](../../platform/libraries/user-runtime/matrix/matrix.rs)
 names the child-visible roles. Child storage forwarding resumes from the service
-loop without occupying the upstream interaction pair. Root provider failures
+loop without occupying the upstream interaction pair, and the matrix yields its
+turn right after forwarding upstream or answering a child, since the scheduler
+would otherwise run the rest of its turn before the woken next hop. Root provider failures
 retire the affected storage binding. A separate parent catalog transport failure
 retires only catalog authority; legacy shared parent failures retire the matrix. Revocation/death aborts staged work; replacement requires fresh grants. Both the
 headless storage fixture and visible desktop exercise this boundary.

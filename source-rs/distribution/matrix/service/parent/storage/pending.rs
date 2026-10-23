@@ -261,7 +261,12 @@ impl Parent {
                         Ok(receive)
                     });
                 match result {
-                    Ok(receive) => p.receive = Some(receive),
+                    Ok(receive) => {
+                        p.receive = Some(receive);
+                        // The next hop is runnable now; the rest of this turn
+                        // can wait for it rather than the other way round.
+                        cathedral_user_runtime::task::yield_now();
+                    }
                     Err(error) => self.retire_after(&p, error, &mut reply)?,
                 }
             } else {
@@ -312,6 +317,8 @@ impl Parent {
             }
             None => server.reply(&request, &wire::encode(words))?,
         }
+        // The answered child is runnable now; let it take the turn.
+        cathedral_user_runtime::task::yield_now();
         Ok(None)
     }
     /// A separate catalog stream can retire without losing input. Legacy shared

@@ -1,6 +1,7 @@
 """Timing reports must not invent durations from incomplete or mismatched traces."""
 import unittest
 from desktop_timing import storage_samples, redraw_samples, input_samples
+from hop_latency import intervals, summarize
 
 
 class StorageTimingTests(unittest.TestCase):
@@ -14,12 +15,12 @@ INPUT_TRACE notes-key 13 50''')
         self.assertEqual([s['account_cpu_us'] for s in samples], [5000, 100, 9000, 50])
 
     def test_collection_is_nested_in_provider_and_io_belongs_to_matching_request(self):
-        samples = storage_samples('''Cathedral Rust lab: STORAGE_TRACE provider-begin 0 3 10 100
-STORAGE_TRACE nested-send 0 259 11 900
-STORAGE_TRACE collect-begin 0 3 12 200
-STORAGE_TRACE publish-begin 0 3 15 500
+        samples = storage_samples('''Cathedral Rust lab: STORAGE_TRACE provider-begin 0 3 10 100 1000500
+STORAGE_TRACE nested-send 0 259 11 900 1010000
+STORAGE_TRACE collect-begin 0 3 12 200 1020000
+STORAGE_TRACE publish-begin 0 3 15 500 1050000
 STORAGE_TRACE ata-io 0 3 4 9 3 2 18
-STORAGE_TRACE provider-end 0 3 17 800''')
+STORAGE_TRACE provider-end 0 3 17 800 1070000''')
         self.assertEqual([s['phase'] for s in samples], ['collection', 'provider'])
         self.assertEqual(samples[0]['cpu_us'], 300)
         self.assertEqual(samples[1]['guest_ticks'], 7)
@@ -42,6 +43,35 @@ INPUT_TRACE compositor-redraw-end 11 250
 INPUT_TRACE compositor-redraw-begin 12 300''')
         self.assertEqual(samples, [dict(guest_ticks=1, cpu_us=150)])
 
+
+class HopLatencyTests(unittest.TestCase):
+    def test_consecutive_stages_pair_into_named_intervals_in_serial_order(self):
+        groups = intervals("""STORAGE_TRACE trace-calibrate 0 0 9 50 4000
+STORAGE_TRACE trace-calibrate 0 0 9 60 4100
+STORAGE_TRACE nested-send 2 257 10 100 5000
+STORAGE_TRACE root-receive 7 257 10 300 5400
+STORAGE_TRACE root-admit 7 257 10 350 5450
+STORAGE_TRACE root-send 0 1 10 400 5600
+STORAGE_TRACE provider-begin 0 1 10 900 5900
+STORAGE_TRACE ata-io 0 1 0 0 0 0 0
+STORAGE_TRACE provider-end 0 1 11 1900 7900
+STORAGE_TRACE root-reply 7 257 11 500 8200
+STORAGE_TRACE nested-reply 2 257 11 200 8600
+STORAGE_TRACE nested-send 2 1 11 250 4000""")
+        self.assertEqual(groups['hop up: matrix to root'], [400])
+        self.assertEqual(groups['root dispatch'], [50])
+        self.assertEqual(groups['root forward'], [150])
+        self.assertEqual(groups['hop up: root to provider'], [300])
+        self.assertEqual(groups['provider work'], [2000])
+        self.assertEqual(groups['hop down: provider to root'], [300])
+        self.assertEqual(groups['hop down: root to matrix'], [400])
+        # A clock that runs backwards between two lines is not an interval.
+        self.assertNotIn('hop up: matrix to matrix', groups)
+        self.assertEqual(groups['trace line itself'], [100])
+        rows = summarize(groups)
+        self.assertEqual(rows[0]['stage'], 'provider work')
+        self.assertEqual((rows[0]['count'], rows[0]['median_us'], rows[0]['net_median_us']), (1, 2000, 1900))
+        self.assertEqual(next(r for r in rows if r['stage'] == 'root dispatch')['net_median_us'], 0)
 
 if __name__ == '__main__':
     unittest.main()
