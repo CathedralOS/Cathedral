@@ -32,6 +32,11 @@ can receive multiple channels through one acceptance interface without creating
 an interface or view per participant. References below to interaction contexts
 describe scoped routing/interpretation state, not mandatory app-created sessions.
 
+An input compositor/router owns the channel registry and admits authorized
+producer registrations. Receiving apps publish acceptance descriptions, not the
+channels they receive. Nested routers may provide independent registries; their
+clients receive the supplied service rather than ambient access to an outer one.
+
 ## Preserve distinct meanings
 
 The common vocabulary must distinguish:

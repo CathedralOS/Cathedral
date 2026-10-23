@@ -28,6 +28,36 @@ absent or zero-initialized bindings confer no implicit operator input authority.
 Authenticated physical origin, where required, comes from the trusted source
 path and is not inferred from a channel's name, identity or default designation.
 
+## Producer registration and registry ownership
+
+The input compositor/router owns its channel registry. Authorized producers
+register channels with that service through IPC and receive scoped authority to
+submit input for the admitted channels. A keyboard driver, gamepad driver, agent
+or another input router may be a producer. Registration and event submission are
+capability-gated and resource-bounded; publishing descriptor bytes or claiming a
+channel identity does not confer either authority.
+
+Receiving applications do not publish the channels they consume. Their acceptance
+description says what input they can handle; producer registration establishes
+the supplied channels. An ordinary program can hold both roles if separately
+granted both. Registration, submission, directory observation and event consumption
+are distinct rights, even when bundled in one service connection.
+
+Registry mutation remains owned by the service. It can grant consumers read-only
+shared registry views for cheap lookup while handling registration and updates
+through its protocol. A mapped view must contain only metadata the recipient may
+observe; mapping a global table and merely asking readers to ignore other rows
+does not provide isolation. No fixed single-page capacity or shared writable
+registry is implied.
+
+The outer hardware-owning environment supplies physical drivers with registration
+authority to its input compositor as appropriate. There is no ambient or privileged
+lookup of a universally "real" input compositor. A nested matrix can run its own
+input compositor with independent registrations, synthetic producers and authorized
+forwarding from its parent. It may run its own drivers against delegated physical
+devices or virtual interfaces. Input registration grants no hardware access by
+itself and cannot bypass the outer recovery path or upstream provenance rules.
+
 ## Acceptance and application roles
 
 An application may publish one acceptance description and receive channel-tagged
@@ -41,7 +71,7 @@ application to provide independent UI state or unlimited concurrent control.
 Capacity and contention must have defined outcomes. An app can use the same
 behavior for all admitted channels or retain per-channel state when needed.
 
-The routing owner establishes channels and source bindings within its grants;
+The routing owner admits producer registrations and source bindings within its grants;
 applications assign their own roles. Knowing or writing a channel ID into event
 bytes does not authorize driving it. The receiving boundary authenticates the
 sender's permitted channels. This does not require an inner app to see upstream

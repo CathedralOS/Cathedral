@@ -77,6 +77,15 @@ not an implemented transport. Source continuity is explicit owner policy; port
 changes or matching names do not confer control. Focus/views/rendering remain open.
 No runtime changes or new runtime verification accompany this documentation update.
 
+Owner clarification 2026-10-23: producers register channels with their supplied
+input compositor/router under explicit authority. Receiving apps describe accepted
+input but do not publish received channels. The service owns registry mutation and
+may expose scoped read-only shared views; unrelated registry rows must not leak
+through those mappings. Nested input compositors can maintain their own registries
+and driver/agent/forwarded sources. Hardware access remains a separate grant; no
+ambient lookup bypasses a matrix to reach a "real" outer compositor. See the
+[registration boundary](wiki/spec/human_surface/input_channels.md#producer-registration-and-registry-ownership).
+
 Input follow-up: design the stream/snapshot boundary and exercise press/release
 during a stalled consumer, overflow/resynchronization, disconnect while held,
 remapping while held, multiple source contributions and nested forwarding. Include
