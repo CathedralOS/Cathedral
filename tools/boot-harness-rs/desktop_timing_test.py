@@ -2,6 +2,7 @@
 import unittest
 from desktop_timing import storage_samples, redraw_samples, input_samples
 from hop_latency import intervals, summarize
+import startup_timeline
 
 
 class StorageTimingTests(unittest.TestCase):
@@ -72,6 +73,43 @@ STORAGE_TRACE nested-send 2 1 11 250 4000""")
         self.assertEqual(rows[0]['stage'], 'provider work')
         self.assertEqual((rows[0]['count'], rows[0]['median_us'], rows[0]['net_median_us']), (1, 2000, 1900))
         self.assertEqual(next(r for r in rows if r['stage'] == 'root dispatch')['net_median_us'], 0)
+
+class StartupTimelineTests(unittest.TestCase):
+    LOG = '''Cathedral Rust lab: STORAGE_TRACE trace-calibrate 0 0 5 100 1000000
+Cathedral Rust lab: STORAGE_TRACE trace-calibrate 0 0 5 300 1000400
+Cathedral Rust lab: STORAGE_TRACE nested-send 1 275 5 400 1001000
+Cathedral Rust lab: STORAGE_TRACE root-send 1 257 5 500 1010000
+Cathedral Rust lab: STORAGE_TRACE provider-begin 0 1 5 600 1011000
+Cathedral Rust lab: STORAGE_TRACE provider-end 0 1 5 700 1012000
+Cathedral Rust lab: Cathedral matrix: configured from realm paths
+Cathedral Rust lab: STORAGE_TRACE root-send 1 275 5 800 1020000
+Cathedral Rust lab: STORAGE_TRACE provider-end 0 19 5 900 1025000
+Cathedral Rust lab: STORAGE_TRACE root-send 1 263 5 950 1400000
+'''
+
+    def test_startup_runs_from_the_calibration_to_the_launcher_naming_its_tiles(self):
+        rows = startup_timeline.timeline(self.LOG)
+        self.assertEqual(rows, [
+            (10.0, 'root-send', 'HEAD'), (12.0, 'provider-end', 'HEAD'),
+            (None, 'console', 'Cathedral matrix: configured from realm paths'),
+            (20.0, 'root-send', 'ENTRIES'), (25.0, 'provider-end', 'ENTRIES')])
+        self.assertEqual(startup_timeline.summarize(rows),
+                         '2 requests reached the provider; the last was answered 25.0 ms after the matrix started')
+
+    def test_an_earlier_matrix_is_chosen_by_index_and_a_log_without_stamps_is_empty(self):
+        earlier = '''Cathedral Rust lab: STORAGE_TRACE trace-calibrate 0 0 4 100 500000
+Cathedral Rust lab: STORAGE_TRACE trace-calibrate 0 0 4 300 500400
+Cathedral Rust lab: Cathedral matrix: configured from realm paths
+Cathedral Rust lab: STORAGE_TRACE root-send 1 275 4 800 505000
+Cathedral Rust lab: STORAGE_TRACE provider-end 0 19 4 900 509000
+'''
+        self.assertEqual(startup_timeline.timeline(earlier + self.LOG, 0), [
+            (None, 'console', 'Cathedral matrix: configured from realm paths'),
+            (5.0, 'root-send', 'ENTRIES'), (9.0, 'provider-end', 'ENTRIES')])
+        self.assertEqual(startup_timeline.timeline(earlier + self.LOG)[0], (10.0, 'root-send', 'HEAD'))
+        self.assertEqual(startup_timeline.timeline('Cathedral Rust lab: nothing traced'), [])
+        self.assertEqual(startup_timeline.summarize([]), 'no request of this startup reached the provider')
+
 
 if __name__ == '__main__':
     unittest.main()

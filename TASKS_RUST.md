@@ -5621,6 +5621,25 @@ half still needs PCID or the kernel executing in the task's root, which is the
 isolation boundary the owner has left open; both evidence paragraphs in
 OWNER_QUESTIONS.md carry the hardware figures now.
 
+**Where the rest of the entry goes.** [startup_timeline.py](tools/boot-harness-rs/startup_timeline.py)
+lists one matrix startup from its calibration stamps: every request of its
+chain that reached the provider, in milliseconds after it started, until its
+launcher names the tiles. For the depth-4 matrix of today's traced TCG run
+(`build/boot-harness-rs/desktop/20261023T063541759172Z`, boot 1) the four
+scope proofs are answered by 83 ms, the realm's shape at 86, the configuration
+at 117, the launcher's and background's names at 161, their programs at 195 and
+252, the background is admitted and the matrix configured by about 280, and the
+launcher's tiles are named at 315; the next request, at 701 ms, is the Notes
+launch the harness clicks afterwards. So the matrix's startup is about 315 ms
+of the 828 ms step and the launcher's admission about 28 of them; the rest is
+the launcher drawing, the compositor, and the harness itself, whose every
+clicked step carries 210 ms of input spacing and a 50 ms pause between
+screendumps, which is why the record calls its figures upper bounds. Under
+WHPX the same chain reads 538 ms traced, nearly all of it the chain's own five
+hundred trace lines at 1.15 ms each; untraced, the whole step is 329 to 431 ms
+with the pointer's walk inside it, so on hardware the entry sits at the
+harness's floor.
+
 **The exchange in bursts.** 256 round trips under TCG cost 150 µs each against
 93 for 32, because ten-millisecond ticks land inside a 38 ms exchange. The echo
 client now runs eight bursts of 32, times each, and reports the fastest burst
@@ -5634,7 +5653,8 @@ Verification:
 
 - Host: workspace `cargo test --locked` (263); `cargo check-uefi` and the
   arch crate's host tests (13, with the shared-leaves test); `cargo
-  check-userspace`; harness Python (10); formatting and layout checks.
+  check-userspace`; harness Python (12, with the startup timeline's);
+  formatting and layout checks.
 - Guest: the smoke suite under TCG and WHPX twice each on the final tree
   (`build/final-smoke-*.log`); the interleaved A/B (`build/ab-*.log`); the
   depth-4 latency workload with traces under WHPX before and after the global
@@ -5649,9 +5669,16 @@ Next, in order:
    kernel's translations survive every trap, the task's would need PCID or the
    kernel in the task's root. Both live under the isolation-boundary question
    in OWNER_QUESTIONS.md with the TCG and WHPX figures.
-2. Timing taken under one accelerator compares only with timing under the
+2. Under TCG the startup chain is hop-bound, and the one lever left inside it
+   is the four scope proofs: each matrix's first-request proof that a new
+   binding's scope lies within its own, answered one after another in the
+   first 83 ms of a depth-4 startup. Proving when the binding is granted
+   instead would overlap them with program loading, a scheduling choice
+   inside the trust model worth about 70 ms under TCG and nothing on
+   hardware; not taken.
+3. Timing taken under one accelerator compares only with timing under the
    same one. The TCG figures in the sections before this one stand; a figure
    for hardware is a WHPX run of the same command.
-3. The owner questions this work raised remain open: launching one program
+4. The owner questions this work raised remain open: launching one program
    over one realm twice, CPU sponsorship across service calls, the isolation
    boundary.

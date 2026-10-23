@@ -526,6 +526,14 @@ trace line itself costs, beside the raw figures. It reads the log in serial
 order, so it describes one chain at a time, which startup is; overlapping
 chains dilute its figures. Normal F5 builds omit these trace features.
 
+`python tools/boot-harness-rs/startup_timeline.py SERIAL_LOG [INDEX]` reads the
+same stamps for one matrix startup. From its calibration stamps (the last
+matrix's by default, the deepest of a nested entry; INDEX picks another) it
+lists every request of the matrix's chain that reached the provider, in
+milliseconds after the start, with the console lines between, and stops once
+the launcher has named its tiles after the matrix's configured line: that is
+where the startup ends and the user's next action begins.
+
 Every run emulates the CPU with TCG unless `run.py` or `desktop_test.py` is
 given `--accel whpx`, which runs the guest under the Windows hypervisor. Paging
 and the TLB are then the host CPU's, so a figure such as the hop between two
