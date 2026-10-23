@@ -5486,16 +5486,22 @@ Next, in order:
    different realm layout, and a direct switch to the woken task is an
    accounting question (whose turn funds the receiver) rather than a latency
    one, recorded under CPU sponsorship in OWNER_QUESTIONS.md.
-2. A depth-4 user entry issues 11 sequential requests, and a depth-1 entry
-   eight: the background rides the configure listing that already named the
-   launcher (`build/suite20-latency-four.log`), and a program the matrix runs
-   from its realm now receives its own object above a role byte in its launch
-   argument ([matrix.rs](source-rs/distribution/matrix/contracts/matrix.rs)),
-   so the launcher hides itself without reading the configuration
-   (`build/suite22-latency-four.log`). That convention carries no authority
-   and spares a kernel image argument. Nothing in the sequence is left that
-   another request could absorb; the entry's remaining time is admission,
-   placement and drawing.
+2. A depth-4 user entry issues 11 sequential requests, each with its reason
+   (`build/latency-poll3.log`): one BULK reading the user matrix's program;
+   four HEADs, one per nesting level, each matrix's first-time proof that the
+   new binding's scope lies within the one it was granted, which the shared
+   scope machinery then retains for every later request; one ENTRIES for the
+   realm's shape; one BULK for the configuration; one ENTRIES naming the
+   launcher and the background; two BULKs for their programs; and the
+   launcher's own ENTRIES for its tiles. The root entry is the same without
+   the proofs, seven requests, and a depth-1 entry eight. The background rides
+   the configure listing (`build/suite20-latency-four.log`) and a program the
+   matrix runs from its realm receives its own object above a role byte in
+   its launch argument ([matrix.rs](source-rs/distribution/matrix/contracts/matrix.rs)),
+   so the launcher hides itself without a read (`build/suite22-latency-four.log`).
+   The proofs are the trust model, one per matrix that forwards; the rest is
+   the realm's content. The entry's remaining time is admission, placement and
+   drawing.
 3. The clean-close LOSS timeout: the mechanism is in
    [control.rs](source-rs/distribution/matrix/service/children/control.rs). A
    close's answer is left queued while this matrix's storage is busy, and the
