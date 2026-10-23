@@ -5481,11 +5481,21 @@ Next, in order:
    ([polling.rs](source-rs/platform/libraries/user-runtime/server/polling.rs)),
    which removes a receive per quiet client per wake but leaves the hop at
    294 µs net (`build/latency-poll3.log`) against 287 to 293 before. The
-   per-turn stamp itself cost 250 µs a turn and was retired. So the hop is
-   the switch and the refill, not the server's scan; fewer hops would need a
-   different realm layout, and a direct switch to the woken task is an
-   accounting question (whose turn funds the receiver) rather than a latency
-   one, recorded under CPU sponsorship in OWNER_QUESTIONS.md.
+   per-turn stamp itself cost 250 µs a turn and was retired. The refill's
+   origin is in [entry.S](source-rs/kernel/arch/isa/x86_64/interrupts/entry.S):
+   every trap switches to the kernel's own root on entry and back to the
+   task's root on return, and no mapping is global
+   ([inherited.rs](source-rs/kernel/arch/isa/x86_64/memory/inherited.rs)
+   strips the flag, [creation.rs](source-rs/kernel/arch/isa/x86_64/user/memory/creation.rs)
+   masks it), so every syscall drops both the kernel's and the task's
+   translations and the emulator re-walks them: 45 µs for a tiny task, far
+   more for a matrix. Global supervisor leaves (the seven identical ranges and
+   the slot-unique task stacks) would spare the kernel's half; keeping the
+   task's half needs PCID or the kernel running in the task's root, which is
+   the isolation boundary the owner has left open. Both are recorded under
+   that question in OWNER_QUESTIONS.md with this evidence; a direct switch to
+   the woken task is the CPU sponsorship question there. Nothing in the
+   matrices or the server is left to shave.
 2. A depth-4 user entry issues 11 sequential requests, each with its reason
    (`build/latency-poll3.log`): one BULK reading the user matrix's program;
    four HEADs, one per nesting level, each matrix's first-time proof that the

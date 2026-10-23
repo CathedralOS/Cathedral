@@ -318,6 +318,18 @@ baseline; require an explicit admission contract before sharing a protection
 domain. Keep the current Rust syscall ABI experimental. Settle the production
 policy before treating the lab's task model as Cathedral's component model.
 
+**Trap-path lab evidence (2026-10-22, not a boundary decision).** The Rust lab
+keeps the kernel in its own page-table root: every trap switches roots on entry
+and back on return, and no mapping is global, so each syscall drops both the
+kernel's and the task's translations. Under TCG that is the cost of a storage
+hop between matrices, about 290 µs net of tracing against 45 µs for a bare
+round trip between two tiny tasks and 5 µs of kernel work; a depth-4 user entry
+spends about 85 ms of its 520 there. Global supervisor leaves would spare the
+kernel's half at no isolation cost; sparing the task's half needs PCID, which
+the lab refuses, or the kernel executing in the task's root, which is this
+boundary. Real hardware pays microseconds for the same switches. The lab leaves
+the roots as they are until the boundary is chosen.
+
 ### Writable row spans and component admission
 
 **Requirement and evidence.** Direct rendering into delegated spans of a common
