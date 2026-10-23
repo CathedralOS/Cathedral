@@ -58,6 +58,10 @@ pub(super) struct Children {
     allowed_images: [u64; CHILDREN],
     pending: [Option<(Request, u64, Purpose)>; CHILDREN],
     retiring: [Option<i64>; CHILDREN],
+    /// Test-only: a close whose LOSS waits for the storage hold to end, so the
+    /// sibling's clean answer lands after the busy window (delay_probe).
+    #[cfg(feature = "interaction-delay")]
+    held_loss: [bool; CHILDREN],
     loss: Option<loss::Survey>,
     launcher: Option<recovery::Launcher>,
     fallback: Option<recovery::Fallback>,

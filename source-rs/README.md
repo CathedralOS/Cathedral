@@ -257,12 +257,12 @@ through QMP and checks its scanout; it uses only Python's standard library.
 Add `--nested-desktop --pointer-stress --interaction-delay --timeout 240` to
 exercise three nested desktops with continuous pointer movement and five-second
 upstream poll, image and publication stalls on fresh and cold boots, and a
-two-second stall of the deepest matrix's storage exchange under which an app
-beside it answers its close. The test also injects a mismatched poll reply and requires
-local child polling during the stall, draft survival, clean close (the answer
-given under the storage stall must wait for it, not be refused as late) and
-repeated subtree reclamation. Its `interaction-delay` feature is absent from
-normal F5 builds.
+two-second stall of the root's storage during which a root app is closed, its
+answer landing only after the stall. The test also injects a mismatched poll
+reply and requires local child polling during the stall, draft survival, clean
+close (the answer that lands after the storage stall, inside its grace, must
+be accepted, not refused as late) and repeated subtree reclamation. Its
+`interaction-delay` feature is absent from normal F5 builds.
 `--release` selects an optimized build. `--memory 256` selects guest RAM in MiB.
 Smoke mode has a 30-second boot deadline, requires ordered serial milestones,
 and checks the QEMU debug-exit status. A panic, missing milestone, reset or hang

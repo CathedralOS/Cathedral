@@ -162,6 +162,12 @@ impl Parent {
             .and_then(|p| p.receive.map(|h| (h, p.deadline)))
     }
     pub(in crate::service) fn storing(&self) -> bool {
+        #[cfg(feature = "interaction-delay")]
+        if self.hold_storage_active {
+            // The test-only probe holds this matrix's storage as a slow
+            // provider would, exchange or none.
+            return true;
+        }
         self.storage_pending.is_some()
     }
     /// The requesting child, if any; owner launches and local recovery have none.

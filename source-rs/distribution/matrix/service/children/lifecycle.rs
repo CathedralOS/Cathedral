@@ -202,6 +202,20 @@ impl Children {
         let Some(control) = child.control else {
             return server.reply(&request, &wire::encode(wire::error(abi::BUSY)));
         };
+        #[cfg(feature = "interaction-delay")]
+        if core::mem::take(&mut parent.hold_storage_armed) {
+            // Test-only: this close counts the matrix's storage as busy for
+            // two seconds, longer than its answer's deadline, and the sibling
+            // learns of it only when that ends, so the clean answer lands
+            // after the busy window, inside the grace the held deadline keeps.
+            parent.hold_storage_until = Some(time::after(200)?);
+            parent.hold_storage_active = true;
+            self.held_loss[target] = true;
+            time::storage_sample("interaction-delay-held", &[wire::LOSS]);
+            self.pending[target] = Some((request, time::after(100)?, Purpose::Close));
+            self.retiring[target] = None;
+            return Ok(());
+        }
         if control
             .0
             .send(&wire::encode([wire::LOSS, 0, 0, 0, 0, 0, 0, 0]))
@@ -219,5 +233,22 @@ impl Children {
         time::storage_trace("matrix-close-send", request.incarnation, target as u64);
         self.retiring[target] = None;
         Ok(())
+    }
+    /// Test-only: send the LOSS a close held back while the storage hold was
+    /// active. Its answer's deadline has been running since the close itself.
+    #[cfg(feature = "interaction-delay")]
+    pub(in crate::service) fn release_held_loss(&mut self) {
+        for slot in 0..CHILDREN {
+            if !core::mem::take(&mut self.held_loss[slot]) {
+                continue;
+            }
+            if let Some(control) = self.slots[slot].as_ref().and_then(|child| child.control) {
+                // A failed send leaves the pending close to time out as it would.
+                control
+                    .0
+                    .send(&wire::encode([wire::LOSS, 0, 0, 0, 0, 0, 0, 0]))
+                    .ok();
+            }
+        }
     }
 }

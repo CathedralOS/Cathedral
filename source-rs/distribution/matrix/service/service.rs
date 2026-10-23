@@ -102,14 +102,29 @@ pub fn run(environment: Environment) -> Result<(), Error> {
     let mut delay = delay_probe::Gate::default();
     loop {
         parent.progress_refresh(world)?;
-        // The test-only probe can hold this matrix's storage exchange where a
-        // slow provider would, so a close answered meanwhile is seen to wait.
+        // The test-only probe can count this matrix's storage as busy, as a
+        // slow provider would, around a close, so its answer is seen to wait.
         #[cfg(feature = "interaction-delay")]
-        if core::mem::take(&mut parent.hold_storage_requested) {
-            delay.arm_storage()?;
-        }
-        #[cfg(feature = "interaction-delay")]
-        let hold_storage = delay.holds_storage(parent.storing())?;
+        let hold_storage = {
+            if core::mem::take(&mut parent.hold_storage_requested) {
+                parent.hold_storage_armed = true;
+                cathedral_user_runtime::time::storage_sample(
+                    "interaction-delay-armed",
+                    &[wire::STORAGE_BASE],
+                );
+            }
+            let now = cathedral_user_runtime::time::now()?;
+            let holding = parent
+                .hold_storage_until
+                .is_some_and(|until| !cathedral_user_runtime::time::reached(now, until));
+            if parent.hold_storage_active && !holding {
+                parent.hold_storage_until = None;
+                cathedral_user_runtime::time::storage_sample("interaction-delay-released", &[]);
+                children.release_held_loss();
+            }
+            parent.hold_storage_active = holding;
+            holding
+        };
         #[cfg(not(feature = "interaction-delay"))]
         let hold_storage = false;
         if !hold_storage && let Some(launched) = parent.progress_storage(&mut server)? {
@@ -178,7 +193,7 @@ pub fn run(environment: Environment) -> Result<(), Error> {
             deadline = Some(cathedral_user_runtime::time::now()?);
         }
         #[cfg(feature = "interaction-delay")]
-        if let Some(until) = delay.deadline() {
+        for until in delay.deadline().into_iter().chain(parent.hold_storage_until) {
             deadline = Some(deadline.map_or(until, |d| {
                 if cathedral_user_runtime::time::reached(d, until) {
                     until

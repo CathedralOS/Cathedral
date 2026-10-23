@@ -28,10 +28,17 @@ pub(super) struct Parent {
     pub wake: Option<Handle>,
     /// MORE from the last snapshot; drain it on another service turn.
     pub refresh_due: bool,
-    /// Test-only: F4 arrived from upstream, so this matrix holds its next
-    /// storage exchange (delay_probe).
+    /// Test-only (delay_probe): F4 arrived from upstream; the next close then
+    /// counts this matrix's storage as busy, exchange or none; until when it
+    /// does; whether it does this turn.
     #[cfg(feature = "interaction-delay")]
     pub hold_storage_requested: bool,
+    #[cfg(feature = "interaction-delay")]
+    pub hold_storage_armed: bool,
+    #[cfg(feature = "interaction-delay")]
+    pub hold_storage_until: Option<u64>,
+    #[cfg(feature = "interaction-delay")]
+    pub hold_storage_active: bool,
     polling: Option<polling::Pending>,
     next_poll: u32,
 }
@@ -97,6 +104,12 @@ impl Parent {
             refresh_due: false,
             #[cfg(feature = "interaction-delay")]
             hold_storage_requested: false,
+            #[cfg(feature = "interaction-delay")]
+            hold_storage_armed: false,
+            #[cfg(feature = "interaction-delay")]
+            hold_storage_until: None,
+            #[cfg(feature = "interaction-delay")]
+            hold_storage_active: false,
             polling: None,
             next_poll: 0,
         }

@@ -5640,27 +5640,34 @@ hundred trace lines at 1.15 ms each; untraced, the whole step is 329 to 431 ms
 with the pointer's walk inside it, so on hardware the entry sits at the
 harness's floor.
 
-**A close under a held storage exchange.** The test-only
-[delay probe](source-rs/distribution/matrix/service/delay_probe.rs) now also
-holds a matrix's next storage exchange for two seconds on F4, longer than a
-close answer's 100-tick deadline and shorter than the shell's 300-tick wait;
-the root lets that key travel on and every matrix on the focused chain arms
-itself when the key reaches it in a poll reply. The interaction-delay suite
-opens Colors at the deepest desktop, arms the hold, launches Notes there (its
-program read is the held exchange) and closes Colors meanwhile: the answer
-waits behind the exchange and the close completes once it ends
-(`build/hold-fixed.log`). It does not pin the held-deadline fix in
-[control.rs](source-rs/distribution/matrix/service/children/control.rs): the
-suite passes with the extension removed too (`build/hold-unfixed.log`),
-because a matrix polls a close's control channel without blocking, so an
-answer already queued is read however late the poll, and the deadline only
-decides when the answer itself lands after the busy window and inside the
-50-tick grace. A root-level version was tried first and cannot work either:
-the root admits nothing beside a live three-deep subtree (NO_MEMORY at
-admission), so its only exchanges, launches, never overlap a close there.
-Pinning the fix needs a probe that delays the sibling's answer on its control
-channel into that window; the fix itself stands on the mechanism and on the
-suites that have run since.
+**The held close deadline, pinned.** The clean-close fix in
+[control.rs](source-rs/distribution/matrix/service/children/control.rs), which
+keeps a close answer's deadline at least the outcome grace ahead while this
+matrix's storage is busy, had only non-reproduction behind it. The test-only
+[delay probe](source-rs/distribution/matrix/service/delay_probe.rs) lets F4
+travel on from the root, and the matrix on the focused chain that receives it
+from its parent arms its next close to count its storage as busy for two
+seconds, exchange or none, longer than the answer's 100-tick deadline and
+shorter than the chrome's 600-tick wait for the close; that close keeps its
+deadline from the moment it was asked but sends its LOSS only when the window
+ends ([lifecycle.rs](source-rs/distribution/matrix/service/children/lifecycle.rs)),
+so the sibling's clean answer lands after the busy window and inside the
+grace, which is the only timing the fix decides: a matrix polls a close's
+control channel without blocking, so an answer already queued is read however
+late the poll. The interaction-delay suite closes Notes in the outer desktop
+from the taskbar under that window (a window's own control is the app leaving
+by itself, no close at all; and that desktop is the user matrix under the
+storage root, which is why the root cannot arm for it): the answer is accepted
+and the close completes
+(`build/hold-fixed.log`); with the extension removed the same step fails
+(the late answer is refused as timed out, Notes stays, and the desktop never reports closed and collected; `build/hold-unfixed.log`), so the scenario detects the bug it
+pins. Two earlier shapes could not: a busy window armed before the close
+never sees one, because a matrix defers its children's requests while its
+storage is busy, so the chrome's close waited for the window to end; and an
+unrelated exchange at the root would have been a launch, which the root
+refuses at admission beside a live three-deep subtree. Counting the storage as
+busy from the close itself, with nothing in flight, is what makes the timing
+reachable.
 
 **The exchange in bursts.** 256 round trips under TCG cost 150 µs each against
 93 for 32, because ten-millisecond ticks land inside a 38 ms exchange. The echo
@@ -5677,9 +5684,10 @@ Verification:
   arch crate's host tests (13, with the shared-leaves test); `cargo
   check-userspace`; harness Python (12, with the startup timeline's);
   formatting and layout checks.
-- Guest: the interaction-delay suite with the storage stall, with the held
-  deadline and with it removed (`build/hold-fixed.log`, `build/hold-unfixed.log`,
-  both passing); the smoke suite under TCG and WHPX twice each on the final tree
+- Guest: the interaction-delay suite with the storage stall, passing with the
+  held deadline and failing with it removed (`build/hold-fixed.log`,
+  `build/hold-unfixed.log`); the smoke suite under TCG and WHPX twice each on
+  the final tree
   (`build/final-smoke-*.log`); the interleaved A/B (`build/ab-*.log`); the
   depth-4 latency workload with traces under WHPX before and after the global
   leaves (`build/boot-harness-rs/desktop/20261023T060538222615Z`, `build/boot-harness-rs/desktop/20261023T060759118274Z`)
