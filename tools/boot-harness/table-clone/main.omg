@@ -154,7 +154,67 @@ machine restricted_parents() crashes Trap {
     state wrong() { crash Trap; }
 }
 
+machine accepted(result: X86PageTableCloneResult) -> bool {
+    transition result {
+        X86PageTableCloneResult::Ready { tables } -> true
+        _ -> false
+    }
+}
+
+machine check_range() crashes Trap {
+    let before: X86PagingPathSnapshot = source(3, true);
+    transition X86PageTableClone::prepare_range(&before, 0x10000, 0x80000, 0x40005000, 12288) {
+        X86PageTableCloneResult::Ready { tables } -> inspect(before, tables)
+        _ -> wrong()
+    }
+    state inspect(before: X86PagingPathSnapshot, tables: X86ClonedPageTables) {
+        require(tables.pml4[0] == 0x11003 && tables.pdpt[1] == 0x12003 && tables.pd[0] == 0x13003);
+        range_words(&before, &tables, 0);
+    }
+    state wrong() { crash Trap; }
+}
+
+// Exactly the requested three leaves change; every other leaf remains the
+// inherited translation. This checks the operation, not only a success tag.
+machine range_words(before: &X86PagingPathSnapshot, after: &X86ClonedPageTables, next: u64)
+requires next <= 512
+crashes Trap
+{
+    transition next < 512 {
+        true -> compare(before, after, next)
+        _ -> done()
+    }
+    state compare(before: &X86PagingPathSnapshot, after: &X86ClonedPageTables, next: u64)
+    requires next < 512
+    {
+        let expected: u64 = match next >= 5 && next < 8 {
+            true -> ((0x80000 + (next - 5) * 4096) | 0x8000000000000003),
+            _ -> before.pt.entries[next],
+        };
+        require(after.pt[next] == expected);
+        transition { _ -> range_words(before, after, next + 1) }
+    }
+    state done() {}
+}
+
+machine range_boundaries() crashes Trap {
+    let original: X86PagingPathSnapshot = source(3, true);
+    require(accepted(X86PageTableClone::prepare_range(&original, 0x10000, 0x80000, 0x40000000, 2097152)));
+    require(accepted(X86PageTableClone::prepare_range(&original, 0x10000, 0x80000, 0x401FE000, 8192)));
+    require(accepted(X86PageTableClone::prepare_range(&original, 0x10000, 0x000FFFFFFFFFF000, 0x401FF000, 4096)));
+    rejected(X86PageTableClone::prepare_range(&original, 0x10000, 0x80000, 0x40000000, 0));
+    rejected(X86PageTableClone::prepare_range(&original, 0x10000, 0x80000, 0x40000000, 4097));
+    rejected(X86PageTableClone::prepare_range(&original, 0x10000, 0x80000, 0x40000000, 2101248));
+    rejected(X86PageTableClone::prepare_range(&original, 0x10000, 0x80000, 0x401FF000, 8192));
+    rejected(X86PageTableClone::prepare_range(&original, 0x10000, 0x000FFFFFFFFFF000, 0x40000000, 8192));
+    // No failure may mutate the shared input, including a refusal after
+    // constructing and updating a private candidate's first leaf.
+    require(original.pt.entries[0] == 0 && original.pt.entries[1] == 0x12345083);
+}
+
 machine main() crashes Trap {
+    check_range();
+    range_boundaries();
     restricted_parents();
     check(0, true, 0, 0);
     check(1, true, 0x40001083, 0x40201083);
