@@ -102,7 +102,17 @@ pub fn run(environment: Environment) -> Result<(), Error> {
     let mut delay = delay_probe::Gate::default();
     loop {
         parent.progress_refresh(world)?;
-        if let Some(launched) = parent.progress_storage(&mut server)? {
+        // The test-only probe can hold this matrix's storage exchange where a
+        // slow provider would, so a close answered meanwhile is seen to wait.
+        #[cfg(feature = "interaction-delay")]
+        if core::mem::take(&mut parent.hold_storage_requested) {
+            delay.arm_storage()?;
+        }
+        #[cfg(feature = "interaction-delay")]
+        let hold_storage = delay.holds_storage(parent.storing())?;
+        #[cfg(not(feature = "interaction-delay"))]
+        let hold_storage = false;
+        if !hold_storage && let Some(launched) = parent.progress_storage(&mut server)? {
             assert!(ready_launch.is_none());
             ready_launch = Some(launched);
         }
@@ -139,7 +149,7 @@ pub fn run(environment: Environment) -> Result<(), Error> {
         if parent.upstream_busy() || parent.storing() {
             deadline = None;
         }
-        if let Some((receive, until)) = parent.storage_wait() {
+        if !hold_storage && let Some((receive, until)) = parent.storage_wait() {
             extra[count] = receive;
             count += 1;
             deadline = Some(until);

@@ -147,6 +147,20 @@ def exercise(output, click, key, scan, width, height, reboot, pointer_stress=Fal
         task_close(0); background(0)
         for depth in range(1,nested_depth+1): enter(depth,False)
         launch(nested_depth,0); note(nested_depth,'deep'); app_close(nested_depth); background(nested_depth)
+    if interaction_delay:
+        # The deepest matrix holds its next storage exchange for two seconds,
+        # past a close answer's deadline: with Colors open there, F4 arms every
+        # matrix on the focused chain, Notes is launched (its program read is
+        # the held exchange) and Colors is closed meanwhile. Its clean answer
+        # must wait for the stream rather than be refused as late.
+        launch(nested_depth,1)
+        x,y,w,h = n.viewport(nested_depth)
+        scan(lambda sw,d: n.pixel(sw,d,x+13,y+18)==bytes.fromhex('315ca8'), 'Colors at the deepest desktop')
+        offset = len((output/'serial.log').read_text(errors='replace'))
+        delayed('f4', lambda: (launch(nested_depth,0), app_close(nested_depth)), ('interaction-delay-held',))
+        note(nested_depth,'deep')
+        app_close(nested_depth); background(nested_depth)
+        assert 'matrix-close-refused' not in (output/'serial.log').read_text(errors='replace')[offset:], 'a clean close was refused under the storage hold'
     task_close(0); background(0)
     launch(0,0); note(0,'') # Inner saved content never leaks to the outer realm.
     app_close(0); background(0)

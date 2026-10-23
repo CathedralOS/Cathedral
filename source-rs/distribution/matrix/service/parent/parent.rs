@@ -28,6 +28,10 @@ pub(super) struct Parent {
     pub wake: Option<Handle>,
     /// MORE from the last snapshot; drain it on another service turn.
     pub refresh_due: bool,
+    /// Test-only: F4 arrived from upstream, so this matrix holds its next
+    /// storage exchange (delay_probe).
+    #[cfg(feature = "interaction-delay")]
+    pub hold_storage_requested: bool,
     polling: Option<polling::Pending>,
     next_poll: u32,
 }
@@ -91,6 +95,8 @@ impl Parent {
             display: None,
             wake: None,
             refresh_due: false,
+            #[cfg(feature = "interaction-delay")]
+            hold_storage_requested: false,
             polling: None,
             next_poll: 0,
         }
@@ -161,6 +167,16 @@ impl Parent {
             && wire::poll_event(reply)[4] != cathedral_platform_contracts::input::RELEASE as u64
         {
             time::trace("matrix-key");
+        }
+        #[cfg(feature = "interaction-delay")]
+        {
+            let event = wire::poll_event(reply);
+            if event[2] == wire::KEY
+                && event[3] == cathedral_platform_contracts::input::F4 as u64
+                && event[4] == cathedral_platform_contracts::input::PRESS as u64
+            {
+                self.hold_storage_requested = true;
+            }
         }
         self.grant = world.inherit_poll(reply);
         self.refresh_due = self.grant.valid() && reply[5] & wire::MORE != 0;
