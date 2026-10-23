@@ -5463,17 +5463,16 @@ Next, in order:
    would need a different realm layout, and a direct switch to the woken task
    is an accounting question (whose turn funds the receiver) rather than a
    latency one, recorded under CPU sponsorship in OWNER_QUESTIONS.md.
-2. A depth-4 user entry issues 12 sequential requests: the background now
-   rides the configure listing that already named the launcher, which cost
-   nothing in coupling (`build/suite20-latency-four.log`). The one request
-   that could still go is the launcher's read of the configuration to learn
-   its own name. A launcher could learn its object instead, but the kernel
-   fills a child's first entry argument from the executable's own record
-   ([spawn.rs](source-rs/kernel/core/user_tasks/lifecycle/spawn.rs)) and the
-   second is the picker's mode word, so that needs either a kernel image
-   argument or a packed argument contract across shell, matrix and chooser.
-   For about 6 ms at depth four, not worth it. The entry's remaining 400 ms
-   is admission, placement and drawing.
+2. A depth-4 user entry issues 11 sequential requests, and a depth-1 entry
+   eight: the background rides the configure listing that already named the
+   launcher (`build/suite20-latency-four.log`), and a program the matrix runs
+   from its realm now receives its own object above a role byte in its launch
+   argument ([matrix.rs](source-rs/distribution/matrix/contracts/matrix.rs)),
+   so the launcher hides itself without reading the configuration
+   (`build/suite22-latency-four.log`). That convention carries no authority
+   and spares a kernel image argument. Nothing in the sequence is left that
+   another request could absorb; the entry's remaining time is admission,
+   placement and drawing.
 3. The clean-close LOSS timeout: the mechanism is in
    [control.rs](source-rs/distribution/matrix/service/children/control.rs). A
    close's answer is left queued while this matrix's storage is busy, and the

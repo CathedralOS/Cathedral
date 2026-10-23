@@ -7,6 +7,22 @@ pub mod config;
 /// time while naming tiles or users, and nothing else.
 pub const CHOOSER_READERS: u64 = 2;
 
+/// The entry argument a stock matrix gives a program it runs from its realm:
+/// the program's own object number above a role byte, so the program knows
+/// which entry it is without reading anything. Roles: 0 an ordinary program or
+/// the configured launcher, 1 the user picker, 2 the picker after a failed
+/// selection. The argument carries no authority; the realm grant does.
+pub const LAUNCH_ROLE_BITS: u32 = 8;
+pub const fn launch_argument(role: u64, object: u64) -> u64 {
+    (object << LAUNCH_ROLE_BITS) | (role & 0xff)
+}
+pub const fn launch_role(argument: u64) -> u64 {
+    argument & 0xff
+}
+pub const fn launch_object(argument: u64) -> u64 {
+    argument >> LAUNCH_ROLE_BITS
+}
+
 /// Child interaction request: [APPLY_LAYOUT, current epoch, margin, strip width,
 /// gap, 0, 0, 0]. Only the launcher explicitly selected by stock CONFIGURE may
 /// request this. Changes geometry, never budgets, services, keys or executable

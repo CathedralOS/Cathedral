@@ -286,7 +286,9 @@ the user's first grant is final; the owner keeps that picker's recovery. An
 owner's explicit CONFIGURE is satisfied by a matrix that already configured
 itself from its realm, so either order works. Provider/root adapter selection
 depends exclusively on supplied endpoints, at every depth; the realm selects
-policy, never authority.
+policy, never authority. A program the matrix runs from its realm receives its
+own object number above a role byte as its launch argument, so a launcher knows
+which tile it is without a read; the argument conveys no authority either.
 
 Desktop app declarations may request explicit funding via `CTHIMP04`; insufficient
 offers refuse before spawn. A failed reservation releases provisional geometry.

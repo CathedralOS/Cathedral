@@ -1,5 +1,6 @@
-//! Query executable entries in the supplied realm, resolve the hidden template
-//! or launcher by path, and copy the template to create a named user.
+//! List the supplied realm's executables, hide the template (by name) or this
+//! launcher itself (by the object its launch argument named), and copy the
+//! template to create a named user.
 use super::*;
 use cathedral_platform_contracts::storage as store;
 use cathedral_user_runtime::storage::Scope;
@@ -9,28 +10,30 @@ pub struct Realm {
     pub labels: [[u8; 13]; ENTRIES],
     pub count: usize,
     pub(super) user_picker: bool,
+    /// This program's own object, from its launch argument.
+    own: u64,
 }
 impl Realm {
-    pub fn new(pair: Pair, user_picker: bool) -> Self {
+    pub fn new(pair: Pair, user_picker: bool, own: u64) -> Self {
         Self {
             scope: Scope::new(pair),
             ids: [0; ENTRIES],
             labels: [[0; 13]; ENTRIES],
             count: 0,
             user_picker,
+            own,
         }
     }
     /// One listing names the realm: tiles are its executables in number order,
-    /// the hidden template or launcher and the background are known by name,
-    /// never by listing position. The launcher's name lives in the matrix
-    /// configuration, read once that entry is found. Row zero is presentation
-    /// only.
+    /// the hidden template and the background are known by name, never by
+    /// listing position, and a launcher hides the object its launch argument
+    /// named as itself. Row zero is presentation only.
     pub fn reload(&mut self) -> Result<(), u64> {
         self.scope.bind()?;
         let realm = self.scope.realm();
         let mut executables = [(0, [0; store::metadata::FIELD]); store::ENTRIES_PER_PAGE];
         let mut found = 0;
-        let (mut template, mut background, mut config) = (None, None, None);
+        let (mut template, mut background) = (None, None);
         let mut after = 0;
         loop {
             let mut listing = self.scope.entries(realm, after)?;
@@ -39,9 +42,6 @@ impl Realm {
                 match store::metadata::text(&row.metadata.name) {
                     b"Template" => template = Some(row.object),
                     b"Background" => background = Some(row.object),
-                    name if name == cathedral_desktop_matrix_contracts::matrix::config::NAME => {
-                        config = Some((row.object, row.revision))
-                    }
                     _ => (),
                 }
                 if store::metadata::text(&row.metadata.media_type) == store::metadata::EXECUTABLE
@@ -58,20 +58,12 @@ impl Realm {
         }
         let hidden = if self.user_picker {
             template.ok_or(store::MISSING)?
+        } else if executables[..found].iter().any(|(id, _)| *id == self.own) {
+            self.own
         } else {
-            let (object, revision) = config.ok_or(store::MISSING)?;
-            let (reply, extra) = self.scope.request(
-                store::Request::new(store::READ, object, revision, 8, 32),
-                None,
-            )?;
-            drop(extra);
-            store::Reply::decode(&reply)?;
-            let launcher: [u8; 32] = reply[32..].try_into().unwrap();
-            executables[..found]
-                .iter()
-                .find(|(_, name)| *name == launcher)
-                .map(|(id, _)| *id)
-                .ok_or(store::MISSING)?
+            // A launcher must be one of the realm's executables; an owner that
+            // named no object, or another one, has not configured a launcher.
+            return Err(store::MISSING);
         };
         let limit = if self.user_picker {
             USER_ENTRIES

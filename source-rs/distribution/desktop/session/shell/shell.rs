@@ -48,7 +48,10 @@ fn chooser(login: &mut Login, matrix: Pair, extent: [u64; 2], failed: bool) -> R
             0,
             chooser,
             users,
-            if failed { 2 } else { 1 },
+            cathedral_desktop_matrix_contracts::matrix::launch_argument(
+                if failed { 2 } else { 1 },
+                chooser,
+            ),
             0,
             0,
             0,

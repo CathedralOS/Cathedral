@@ -19,11 +19,18 @@ const SETTINGS: usize = NEW + 1;
 const END_APP: usize = SETTINGS + 1;
 const RETRY_SAVES: usize = END_APP + 1;
 
-pub fn run(environment: Environment, user_picker: bool, initial_status: &'static str) -> u64 {
+/// `own` is this program's object in its realm, from its launch argument; the
+/// launcher hides that tile instead of reading which entry it is.
+pub fn run(
+    environment: Environment,
+    user_picker: bool,
+    initial_status: &'static str,
+    own: u64,
+) -> u64 {
     let connections = cathedral_user_runtime::matrix::Connections::load(&environment).unwrap();
     let parent = connections.interaction;
     let control = (Handle::bootstrap(0).unwrap(), Handle::bootstrap(1).unwrap());
-    let mut realm = realm::Realm::new(connections.storage, user_picker);
+    let mut realm = realm::Realm::new(connections.storage, user_picker, own);
     let mut status = match realm.reload() {
         Ok(()) => initial_status,
         Err(_) => "CANNOT OPEN",

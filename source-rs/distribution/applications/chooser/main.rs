@@ -6,10 +6,13 @@
 mod session;
 cathedral_user_runtime::service_imports!(&cathedral_platform_contracts::imports::REQUIRED);
 cathedral_user_runtime::entry_with_environment!(main);
-fn main(_: u64, role: u64, environment: cathedral_user_runtime::task::Environment) -> u64 {
+fn main(_: u64, argument: u64, environment: cathedral_user_runtime::task::Environment) -> u64 {
+    use cathedral_desktop_matrix_contracts::matrix::{launch_object, launch_role};
+    let role = launch_role(argument);
     session::run(
         environment,
         matches!(role, 1 | 2),
         if role == 2 { "CANNOT OPEN" } else { "" },
+        launch_object(argument),
     )
 }

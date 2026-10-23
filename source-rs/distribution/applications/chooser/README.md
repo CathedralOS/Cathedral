@@ -63,7 +63,8 @@ service declarations or attenuation from the platform protocol.
 
 [labels.rs](session/labels.rs) constructs the bounded default user name. Visible
 labels use hierarchy metadata, not executable footers: one listing of the realm
-names every tile, the hidden entry and the background. The host's explicit
+names every tile, the hidden template and the background, and a launcher hides
+the object its launch argument named as itself. The host's explicit
 [stock-program upgrade](../../migrations/README.md) refreshes recognized existing
 user launchers, retaining their child data and customized programs.
 

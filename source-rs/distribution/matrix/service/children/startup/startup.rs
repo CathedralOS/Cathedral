@@ -93,11 +93,14 @@ impl Children {
                 slot: 0,
                 object: picker,
                 scope: users,
-                argument: if self.startup_recovery.selection_failed {
-                    2
-                } else {
-                    1
-                },
+                argument: cathedral_desktop_matrix_contracts::matrix::launch_argument(
+                    if self.startup_recovery.selection_failed {
+                        2
+                    } else {
+                        1
+                    },
+                    picker,
+                ),
                 channels: 0,
                 descendants: 0,
                 cpu: 0,
