@@ -194,6 +194,8 @@ pub fn run(environment: Environment) -> Result<(), Error> {
             Some(event) => event,
             None => match server.next_event_or(&extra[..count], deadline)? {
                 Some(event) => event,
+                // An upstream reply or a child's wake made an extra handle
+                // ready; the next turn's progress steps take it from there.
                 None => continue,
             },
         };

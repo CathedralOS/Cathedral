@@ -9,6 +9,9 @@ use crate::{
 impl Server {
     pub(super) fn poll(&mut self) -> Result<Option<Event>, Error> {
         // Rotate across control and data so a flooding client cannot monopolize dispatch.
+        // One clock read serves the whole scan; a wake has already pointed the
+        // cursor at the channel the kernel reported ready.
+        let now = if self.memory { 0 } else { time::now()? };
         for offset in 0..=self.count {
             let channel = (self.cursor + offset) % (self.count + 1);
             if self.paused & (1 << channel) != 0 {
@@ -25,9 +28,7 @@ impl Server {
             let received = if self.memory {
                 pair.0.try_receive_memory(&mut bytes)
             } else {
-                pair.0
-                    .receive_until(&mut bytes, time::now()?)
-                    .map(|len| (len, None))
+                pair.0.receive_until(&mut bytes, now).map(|len| (len, None))
             };
             match received {
                 Ok((len, object)) => {
@@ -60,11 +61,15 @@ impl Server {
         Ok(None)
     }
 
-    /// True hands an extra-channel/deadline wake back to the caller without consuming it.
-    pub(super) fn wait(&self, extra: &[Handle], deadline: Option<u64>) -> Result<bool, Error> {
+    /// True hands an extra-channel/deadline wake back to the caller without
+    /// consuming it. A wake on a client channel points the poll cursor at that
+    /// channel, so the next scan finds it first instead of asking every quiet
+    /// client again.
+    pub(super) fn wait(&mut self, extra: &[Handle], deadline: Option<u64>) -> Result<bool, Error> {
         // Watch every live channel together. The bounded maintenance timeout
         // retries absent links; quiet connected clients generate no poll traffic.
         let mut handles = [self.control.0; abi::MAX_WAIT_HANDLES];
+        let mut channels = [0; abi::MAX_WAIT_HANDLES];
         let mut count = 0;
         if self.paused & 1 == 0 {
             count = 1;
@@ -74,6 +79,7 @@ impl Server {
                 && let Some(pair) = self.clients[index]
             {
                 handles[count] = pair.0;
+                channels[count] = index + 1;
                 count += 1;
             }
         }
@@ -87,7 +93,7 @@ impl Server {
         }
         match ipc::wait_many(&handles[..count + extra.len()], until) {
             Ok(index) if index >= count => return Ok(true),
-            Ok(_) => (),
+            Ok(index) => self.cursor = channels[index],
             Err(Error(code)) if code == abi::TIMED_OUT as i64 && deadline.is_some() => {
                 return Ok(true);
             }

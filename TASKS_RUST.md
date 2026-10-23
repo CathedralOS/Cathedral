@@ -5472,10 +5472,18 @@ Next, in order:
 1. The per-hop cost is about 290 µs under TCG: a bare switch between two
    small tasks measures 45 µs, the kernel's trap work 5 µs and selection
    within 13 µs of completion, so the rest is the woken matrix re-touching its
-   working set through the emulator's translation cache. Nothing in the
-   scheduler is left to shave; a matrix could touch fewer pages on its receive
-   path, which real hardware would not reward; fewer hops would need a
-   different realm layout; and a direct switch to the woken task is an
+   working set through the emulator's translation cache. The receive path was
+   tried as a lever: a stamp at the moment the wait returned
+   (`build/latency-wake.log`, `build/latency-wake2.log`) put the whole up hop
+   before the wake and none of it in the matrix's turn, and showed the server
+   rescanning every client after a wake; the wait now points the poll at the
+   channel the kernel reported ready and a scan reads the clock once
+   ([polling.rs](source-rs/platform/libraries/user-runtime/server/polling.rs)),
+   which removes a receive per quiet client per wake but leaves the hop at
+   294 µs net (`build/latency-poll3.log`) against 287 to 293 before. The
+   per-turn stamp itself cost 250 µs a turn and was retired. So the hop is
+   the switch and the refill, not the server's scan; fewer hops would need a
+   different realm layout, and a direct switch to the woken task is an
    accounting question (whose turn funds the receiver) rather than a latency
    one, recorded under CPU sponsorship in OWNER_QUESTIONS.md.
 2. A depth-4 user entry issues 11 sequential requests, and a depth-1 entry
