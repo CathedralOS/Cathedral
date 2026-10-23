@@ -5463,12 +5463,13 @@ Next, in order:
    would need a different realm layout, and a direct switch to the woken task
    is an accounting question (whose turn funds the receiver) rather than a
    latency one, recorded under CPU sponsorship in OWNER_QUESTIONS.md.
-2. A depth-4 user entry issues 13 sequential requests. With a round trip now
-   about 6 ms at that depth, the two requests that could still go (the
-   background's lookup riding the matrix's listing, a launcher receiving its
-   arrangement with its launch) are worth about 1 percent of the entry each
-   and would couple the chooser to the launch argument; not worth it on this
-   evidence. The entry's remaining 400 ms is admission, placement and drawing.
+2. A depth-4 user entry issues 12 sequential requests: the background now
+   rides the configure listing that already named the launcher, which cost
+   nothing in coupling (`build/suite20-latency-four.log`). The one request
+   that could still go, a launcher receiving its arrangement with its launch,
+   is worth about 1 percent of the entry at a 6 ms round trip and would couple
+   the chooser to its launch argument; not worth it on this evidence. The
+   entry's remaining 400 ms is admission, placement and drawing.
 3. The clean-close LOSS timeout did not reproduce in these runs either.
 4. The soak now holds every matrix's reclamation sample steady across cycles,
    in order: the nested desktop's after closing Notes and the root's after the

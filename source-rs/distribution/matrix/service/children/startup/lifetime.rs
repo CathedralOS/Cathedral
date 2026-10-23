@@ -59,7 +59,7 @@ impl Children {
         if self.startup_recovery.background_pending {
             self.startup_recovery.background_pending = false;
             self.startup_recovery.background_retried = true;
-            if let Err(error) = self.background(parent, world, server) {
+            if let Err(error) = self.background(None, parent, world, server) {
                 time::storage_sample("background-retry-refused", &[error.0 as u64]);
             }
             cathedral_user_runtime::write(b"Cathedral matrix: background retry consumed\n")?;

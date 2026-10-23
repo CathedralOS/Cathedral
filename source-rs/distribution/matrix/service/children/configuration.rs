@@ -37,7 +37,7 @@ impl Children {
             panic!("deliberate matrix startup failure");
         }
         parent.refresh(world)?;
-        let (saved, launcher, mut code) = parent.local_storage(|scope| {
+        let (saved, launcher, background, mut code) = parent.local_storage(|scope| {
             scope.bind().map_err(|c| Error(c as i64))?;
             let object = match config {
                 Some(object) => object,
@@ -47,11 +47,17 @@ impl Children {
             let saved = config::Config::decode(&bytes.map()?[..config::SIZE])
                 .ok_or(Error(abi::INVALID_ARGUMENT as i64))?;
             drop(bytes);
-            let launcher = scope
-                .lookup(storage::metadata::text(&saved.launcher))
+            // One listing names the launcher and the background together.
+            let mut ids = [None; 2];
+            scope
+                .named(
+                    &[storage::metadata::text(&saved.launcher), b"Background"],
+                    &mut ids,
+                )
                 .map_err(|c| Error(c as i64))?;
+            let launcher = ids[0].ok_or(Error(storage::MISSING as i64))?;
             let code = read(scope, launcher, None)?;
-            Ok((saved, launcher, code))
+            Ok((saved, launcher, ids[1], code))
         })?;
         if saved.keys & !parent.grant.keys != 0 {
             return Err(Error(abi::DENIED as i64));
@@ -107,7 +113,7 @@ impl Children {
             surface_limit(world, 1, 0).map_err(|c| Error(c as i64))?;
             return Err(Error(code as i64));
         }
-        if let Err(error) = self.background(parent, world, server) {
+        if let Err(error) = self.background(background, parent, world, server) {
             time::storage_sample("background-start-refused", &[error.0 as u64]);
             self.startup_recovery.background_pending = true;
         }
@@ -128,15 +134,21 @@ impl Children {
     }
     /// Background is a separately installed role at a realm-local path. Replacing
     /// its executable replaces the background; it receives interaction only.
+    /// `known` is the entry the configure listing already named; a recovery
+    /// relaunch passes None and looks the path up afresh.
     pub(super) fn background(
         &mut self,
+        known: Option<u64>,
         parent: &mut Parent,
         world: &mut World,
         server: &mut Server,
     ) -> Result<(), Error> {
         let (object, mut code) = parent.local_storage(|scope| {
             scope.bind().map_err(|c| Error(c as i64))?;
-            let object = scope.lookup(b"Background").map_err(|c| Error(c as i64))?;
+            let object = match known {
+                Some(object) => object,
+                None => scope.lookup(b"Background").map_err(|c| Error(c as i64))?,
+            };
             Ok((object, read(scope, object, None)?))
         })?;
         let plan = parent::LaunchRequest {
