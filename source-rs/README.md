@@ -257,8 +257,8 @@ through QMP and checks its scanout; it uses only Python's standard library.
 Add `--nested-desktop --pointer-stress --interaction-delay --timeout 240` to
 exercise three nested desktops with continuous pointer movement and five-second
 upstream poll, image and publication stalls on fresh and cold boots, and a
-two-second stall of the root's storage during which a root app is closed, its
-answer landing only after the stall. The test also injects a mismatched poll
+two-second stall of the outer desktop's storage during which an app there is
+closed, its answer landing only after the stall. The test also injects a mismatched poll
 reply and requires local child polling during the stall, draft survival, clean
 close (the answer that lands after the storage stall, inside its grace, must
 be accepted, not refused as late) and repeated subtree reclamation. Its

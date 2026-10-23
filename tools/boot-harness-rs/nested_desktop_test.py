@@ -150,11 +150,12 @@ def exercise(output, click, key, scan, width, height, reboot, pointer_stress=Fal
     task_close(0); background(0)
     launch(0,0); note(0,'') # Inner saved content never leaks to the outer realm.
     if interaction_delay:
-        # F4 arms the root: the close that follows, Notes from the taskbar (a
-        # window's own control is the app leaving by itself), counts the root's
-        # storage as busy for two seconds, past the answer's deadline, and Notes
-        # learns of it only when that ends and answers at once, inside the grace
-        # the held deadline keeps. That answer must be accepted, not refused.
+        # F4 travels past the root and arms the outer desktop's matrix: the
+        # close that follows, Notes from the taskbar (a window's own control is
+        # the app leaving by itself), counts that matrix's storage as busy for
+        # two seconds, past the answer's deadline, and Notes learns of it only
+        # when that ends and answers at once, inside the grace the held deadline
+        # keeps. That answer must be accepted, not refused.
         offset = len((output/'serial.log').read_text(errors='replace'))
         delayed('f4', lambda: task_close(0), ('interaction-delay-held',))
         background(0)
