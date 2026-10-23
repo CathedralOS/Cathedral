@@ -5472,6 +5472,9 @@ Next, in order:
 3. The clean-close LOSS timeout did not reproduce in these runs either.
 4. The soak now holds every matrix's reclamation sample steady across cycles,
    in order: the nested desktop's after closing Notes and the root's after the
-   teardown. Nothing samples the provider's or the desktop's own accounts.
+   teardown. The provider's and the desktop's own accounts are not sampled:
+   the provider's pages are its heap and reply pages, both already reported,
+   and the shell takes no part in a cycle's teardown, so it has no natural
+   point to sample at; its bootstrap already asserts an exact reclamation.
 5. Launching one program over one realm twice stays an owner question in
    [OWNER_QUESTIONS.md](OWNER_QUESTIONS.md).
