@@ -2,6 +2,8 @@
 //! part of this transport. NEXT yields one event or IDLE; RESET clears held-key state.
 //! The accepted direction is wiki/spec/human_surface/input.md. These lab constants
 //! are not its production encoding and do not implement its full delivery contract.
+//! Logical channel identity/discovery is specified in input_channels.md beside it;
+//! this small physical-key transport does not yet implement that interface.
 pub const NEXT: [u8; 1] = [1];
 pub const HEALTH: [u8; 1] = [2];
 pub const F3: u8 = 9;

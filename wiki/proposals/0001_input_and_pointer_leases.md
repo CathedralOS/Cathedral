@@ -6,6 +6,12 @@ That partial acceptance supersedes conflicting delivery/mapping assumptions here
 it does not ratify this proposal's seat topology, cursor presentation or rendering
 choices. Those remain candidates.
 
+The accepted [input-channel refinement](../spec/human_surface/input_channels.md)
+also separates sources, logical channels and application roles. Multiple channels
+may share one event stream and one application acceptance interface; no per-agent
+app-created context or view is required. Seat/focus and presentation policy below
+remain proposals rather than consequences of channel identity.
+
 The platform should route input through logical pointers that can be driven by
 authorized sources. A hardware mouse is one source. A Matrix can delegate a
 pointer within its own subtree without handing an app the operator's mouse or

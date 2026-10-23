@@ -67,9 +67,21 @@ is required. Focus topology, views, rendering and scene/input commits remain ope
 The Rust key ABI and sixteen-event matrix queues are partial evidence only; no
 production wire encoding, text stack or shared input ring has landed here.
 
+Owner ratification 2026-10-23: [logical input channels](wiki/spec/human_surface/input_channels.md)
+now identify independently routed streams, with no special human/agent/default
+classes. Apps can publish one acceptance interface and assign incoming channels
+to their own roles. Stable identities are distinct from compact event references;
+scoped channel discovery carries metadata outside the event hot path. An explicitly
+mapped read-only directory beside a multiplexed ring is a supported direction,
+not an implemented transport. Source continuity is explicit owner policy; port
+changes or matching names do not confer control. Focus/views/rendering remain open.
+No runtime changes or new runtime verification accompany this documentation update.
+
 Input follow-up: design the stream/snapshot boundary and exercise press/release
 during a stalled consumer, overflow/resynchronization, disconnect while held,
-remapping while held, multiple source contributions and nested forwarding.
+remapping while held, multiple source contributions and nested forwarding. Include
+two identical controllers, directory enumeration racing a change, source rebinding,
+retirement with unread events, safe compact-reference reuse and slow metadata readers.
 Keep timing and scene/focus questions separate rather than silently choosing them
 in an input transport patch. This ratification changed docs/comments only and
 added no runtime verification evidence.

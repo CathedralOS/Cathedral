@@ -133,6 +133,12 @@ of them. It permits scoped mapping/forwarding and does not require a complete se
 for a visual marker. This resolves that part of the original question. The final
 relationship between acting pointers, seats and independent focus remains open.
 
+The subsequent [input-channel contract](wiki/spec/human_surface/input_channels.md)
+accepts a general number of independently routed channels, one application acceptance
+interface and application-owned channel-to-role assignment. A human/agent pair is
+not a special class system. Channel discovery and source continuity are specified
+separately from focus, and do not require an app-created view per participant.
+
 **Contracts checked.** The [compositor/seat contract](wiki/spec/human_surface/compositor_and_seat.md)
 is partial and does not yet define that relationship. The
 [source contracts charter](source/contracts/CHARTER.md) supplies no pointer or
@@ -145,9 +151,10 @@ settles seats, principal attribution or general recursive delegation, so this
 owner choice remains open.
 
 **Remaining owner choice.** Define how actionable pointers associate with
-independent keyboard-focus contexts, which participants may change each context's
-selection, and how applications arbitrate simultaneous controllers. The accepted
-separation of input authority does not settle that topology or the recursive
+independent keyboard-focus contexts and which granted channels may change each
+selection. Applications own controller contention/role assignment; the remaining
+system question is routing and selection authority, not a universal player model.
+The accepted separation of input authority does not settle that topology or the recursive
 cursor-presentation handoff. Visual presence alone grants no action authority.
 
 **Remaining recommendation (unaccepted).** Build on the accepted separation of

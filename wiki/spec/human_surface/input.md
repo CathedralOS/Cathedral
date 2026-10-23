@@ -26,6 +26,12 @@ transformed or synthesized input. A child cannot bypass its owner to obtain an
 upstream stream. Identifiers are local to supplied authority and do not reveal
 global devices, participants or sibling state merely to support input handling.
 
+The [input channel contract](input_channels.md) defines independently routed logical
+streams, stable identities, scoped discovery and compact references. Applications
+can receive multiple channels through one acceptance interface without creating
+an interface or view per participant. References below to interaction contexts
+describe scoped routing/interpretation state, not mandatory app-created sessions.
+
 ## Preserve distinct meanings
 
 The common vocabulary must distinguish:
