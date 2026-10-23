@@ -5670,14 +5670,20 @@ Next, in order:
    kernel in the task's root. Both live under the isolation-boundary question
    in OWNER_QUESTIONS.md with the TCG and WHPX figures.
 2. Under TCG the startup chain is hop-bound, and the one lever left inside it
-   is the four scope proofs: each the first request's proof, at the matrix
+   was the four scope proofs: each the first request's proof, at the matrix
    that cannot add a third stamp, that the innermost scope lies within the
    other two, answered one after another in the first 83 ms of a depth-4
-   startup. Taking them off the path means the granting matrix sends a
-   request on the child's binding before the child asks, which is a
-   trust-path choice: recorded in OWNER_QUESTIONS.md (a parent exercising a
-   child's binding) with the stakes, about 70 ms under TCG with traces, 20 to
-   30 without, nothing on hardware.
+   startup. Warming them was tried (2026-10-23): the granting matrix sent a
+   HEAD on the new scope through the child's binding right after the grant,
+   before the child asked anything. On the lab's one CPU that chain runs
+   ahead of the child's deferred first request instead of beside it, and adds
+   a request of its own: the depth-4 chain measured 357 to 385 ms with
+   eleven provider requests against 312 to 365 with ten in alternating runs
+   (`build/warm-*.log`), and no entry step moved, so the code is gone again.
+   OWNER_QUESTIONS.md keeps the trust question (a parent exercising a
+   child's binding) with these figures; only a host where the chain could
+   overlap the child's start would change them, and there a hop costs
+   microseconds.
 3. Timing taken under one accelerator compares only with timing under the
    same one. The TCG figures in the sections before this one stand; a figure
    for hardware is a WHPX run of the same command.

@@ -725,3 +725,15 @@ not send is a new kind of traffic on the trust path, seen by every ancestor as
 the child's, for a saving the harness cannot resolve on hardware and that only
 emulation makes visible. If the chain should be warm, the child's own first
 request is the cleaner gesture, and it is what happens now.
+
+**Lab evidence (2026-10-23).** Tried as an experiment: the granting matrix sent
+a HEAD on the new scope through the child's binding right after the grant, as
+its own exchange with nothing to answer, and the child's first request waited
+behind it as every request waits behind the one exchange a matrix has in
+flight. On the lab's single CPU the proofs then ran before the child's request
+instead of beside it, plus the warm request itself: the depth-4 startup chain
+measured 357 to 385 ms with eleven provider requests against 312 to 365 ms with
+ten in alternating runs (`build/warm-*.log`), and no entry step improved. The
+code is not in the tree. The choice above matters only on a host where the
+chain could overlap the child's own start, and there the hops it would save
+cost microseconds.
