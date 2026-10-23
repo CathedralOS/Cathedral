@@ -11,6 +11,14 @@ independent executable/path/secret constraints, app-controlled refusal and
 protocol-enforced payload custody. The wire protocol and implementations remain
 outstanding. This supersedes the earlier standalone named-lock proposal.
 
+Owner clarification 2026-10-23: coordination controls introductions, not ongoing
+authority over established peers. Services enforce ongoing permission/cancellation
+in their own protocols; the first participant gains no implicit power to revoke
+peer mappings or independent rights. See the
+[accepted boundary](wiki/spec/communication/ipc.md#established-connections-and-service-authority).
+Connection closure must preserve live memory-view obligations. Exact queued-message,
+pending-transfer and blocked-wait outcomes still need transport contracts.
+
 Next implementation slice: add funded coordination acquisition to the existing
 broker and prove simultaneous first registration, rejected identity spoofing,
 constraint combinations, accepted/refused introductions and dead-holder cleanup.
@@ -18,8 +26,8 @@ Exercise duplicate Nested launches through F5 while unrelated apps keep running.
 Build on existing endpoint transfer first; reusable shared-memory mailbox access
 needs its checked/admitted provider and lifecycle before exposing stable leases.
 Do not label the present Rust copied channels or sealed attachments as that
-complete implementation. Path rename semantics and general revocation choices
-remain explicitly outside the accepted partial contract.
+complete implementation. Path rename semantics, transport commit/closure rules
+and general capability revocation remain outside the accepted partial contract.
 
 Updated 2026-10-22 (local date). Current milestone: **the hop on hardware, and
 global shared leaves**, on baseline `f8bab679` (where a forwarded request

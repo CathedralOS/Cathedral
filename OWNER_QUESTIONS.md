@@ -460,7 +460,12 @@ authority semantics to the unwritten `spec/authority/capabilities.md`.
 The accepted [coordination and IPC contract](wiki/spec/communication/ipc.md)
 (2026-10-23) now establishes scoped introductions and protocol-controlled shared
 memory as supported shipped operations. It does not select an exclusive transport
-or settle pending-delivery and accepted-mapping revocation. The
+or settle pending-delivery transport outcomes. The subsequent owner clarification
+accepts that coordination only controls introductions: established service
+permission and cancellation belong to application protocols. The first participant
+gains no implicit authority over peer mappings or independent rights, and closing
+communication cannot silently invalidate live safe-language views. That ownership
+boundary is resolved; exact transport closure and commit rules remain open. The
 [Rust syscall constants](source-rs/kernel/contracts/user.rs) and
 [transport model](source-rs/kernel/core/ipc/ipc.rs) explicitly define only lab
 behavior. No accepted contract settles transport selection or pending-operation
@@ -492,11 +497,12 @@ if the producer dies. Unaccepted offers disappear on producer death, and peer
 replacement cannot inherit them. A live accepted reader is never remotely
 unmapped; release or reader death ends its lease. QEMU exercises this lifetime,
 hardware permissions, resource bounds and full reclamation. The visible display
-demo uses this path for pixels. This sharpens the owner question: does revocation
-prevent future acceptance, or can it withdraw already accepted mappings? The
-latter would need a protocol that cannot invalidate live safe-language borrows.
-Neither this experiment nor its Rust wrappers settles production revocation or
-whether copied control messages remain a supported transport.
+demo uses this path for pixels. The accepted coordination boundary now rules out
+implicit removal of those views by a group's first participant or by withdrawing
+discovery access. Any separately authorized mapping teardown must still preserve
+live safe-language borrows. Neither this experiment nor its Rust wrappers settles
+general capability revocation or whether copied control messages remain a
+supported transport.
 
 **Further IPC evidence.** The [ordinary channel lab](source-rs/distribution/lab/channels/README.md)
 now implements explicit moves of dynamic endpoints. Successful send removes the

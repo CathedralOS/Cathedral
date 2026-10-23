@@ -7,6 +7,11 @@ revocation policy, are not ratified by that partial contract. Opaque boundary da
 requires checked protocol or admitted-provider evidence before it can establish
 stable shared access.
 
+The accepted contract also assigns ongoing service permission and cancellation
+to userspace protocols. Coordination controls introductions; it does not gain
+authority to revoke established peers' independent rights or live memory views.
+Exact transport closure and pending-delivery outcomes remain unspecified.
+
 > One IPC primitive: a capability-scoped shared memory region. Every named pattern (pipes, sockets, queues, pub/sub, RPC) is a library over it. Notification and blocking belong to the scheduler; protocol semantics are a library layer, while placed-access safety is mandatory.
 
 ## The Legacy Model

@@ -82,6 +82,41 @@ and admit a competing first participant while its previous holder remains active
 Coordination across separate hosts requires an explicitly shared authority;
 independent parent-local registries do not imply global exclusivity.
 
+## Established connections and service authority
+
+The owner accepted this boundary on 2026-10-23: coordination controls
+introductions; it does not acquire continuing authority over the work or resources
+of established peers. Withdrawing discovery or joining permission does not by
+itself revoke previously established connections or independently held rights.
+Already performed work cannot be undone by withdrawing communication permission.
+
+The first participant is an application accepting connections, not a privileged
+supervisor of later participants. It may refuse introductions, reject further
+requests, stop serving a peer or close its own endpoints. That role alone grants
+no authority to terminate peers, remove their mappings or revoke their independent
+capabilities. Any such authority must come from a separate explicit grant.
+
+Ongoing service permission and cancellation are userspace protocol responsibilities.
+A service retaining a resource can check permission on each request and stop
+performing operations for a peer. Handing out independent resource access changes
+that boundary: stopping service does not retrieve the access already granted.
+Protocols must define any cancellation, draining or cooperative release they need;
+coordination does not supply a universal revocation mechanism for their effects.
+
+Callers are authenticated through established communication rights, not a sender
+number written in a payload. Unrestricted mutually untrusted writers cannot use
+separate slots in one shared writable page as an isolation boundary. Direct mapped
+paths need separate backing at the hardware protection granularity, or the checked
+access discipline described below. Kernel-mediated authenticated endpoints need
+not allocate a shared page per participant. The kernel still enforces isolation,
+rights, resource accounting and safe mapping lifetime beneath these protocols.
+
+Closing a connection does not silently invalidate a live safe-language memory
+view. Existing custody and backing obligations must be discharged by release or
+safe teardown. This acceptance does not choose the exact transport outcome for
+queued messages, pending capability transfers or blocked operations on closure;
+those require explicit commit and wakeup rules before their APIs are frozen.
+
 ## Shared regions and capacity
 
 Peers may establish a shared region through an authorized mapping provider. Each
@@ -144,5 +179,5 @@ implementation, shared-buffer layout and Omega provider implementations remain
 engineering work. The precise path-identity behavior needs specification before
 its implementation is frozen. This contract does not select shared memory as the
 only production transport, ratify the copied-message syscall ABI, or settle
-general revocation semantics for pending delivery and accepted mappings. Those
+transport closure/commit semantics and general capability revocation. Those
 remaining choices are tracked in [owner questions](../../../OWNER_QUESTIONS.md).
