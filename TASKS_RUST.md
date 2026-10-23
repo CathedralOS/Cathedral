@@ -5462,8 +5462,10 @@ Verification:
   later changes in this section each ran the same suites again:
   `build/suite20-*.log` (background in the configure listing),
   `build/suite21-*.log` (held close deadline), `build/suite22-*.log` (launch
-  argument) and `build/soak-custody.log` (provider custody floor); a soak
-  cycle now issues 32 provider requests, from 85 at the start of the day.
+  argument), `build/soak-custody.log` (provider custody floor) and
+  `build/soak-shell.log` (shell account floor); `build/smoke-roundtrip.log` is
+  the smoke suite with the timed echo exchange. A soak cycle now issues 32
+  provider requests, from 85 at the start of the day.
 
 Next, in order:
 
