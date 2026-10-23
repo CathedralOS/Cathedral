@@ -40,6 +40,30 @@ The current Rust framebuffer path copies into the firmware-provided GOP target.
 It has no production back-buffer swap or direct-scanout protocol. Its row lab is
 an offscreen computation test, not a safe lease of visible scanout.
 
+### Whole-page leases versus pixel rectangles
+
+The accepted [IPC mapping boundary](../../spec/communication/ipc.md#shared-regions-and-capacity)
+permits disjoint whole-page mappings within a larger allocation. The compositor
+could see the full allocation while each writer sees only its authorized pages.
+This is a candidate rendering mechanism, not an accepted surface ABI.
+
+For example, with 4 KiB pages, a page-aligned linear image of 1,024 four-byte
+pixels per row and no row padding has one page per row. Exclusive whole-row
+leases fit that layout; independent left/right half-row leases do not. Ordinary
+rectangles can share pages with unrelated pixels. Guard pages do not solve that
+sub-page boundary. Padding or page-sized tiles may help ownership, but their
+layout must also suit the renderer and display provider or require conversion.
+
+Separate page-isolated surfaces can instead be forwarded as authorized references
+with placement and clipping, without materializing an image at every ancestor.
+This remains a candidate: some effects require intermediate targets, and sharing
+backing avoids transport copies without eliminating final composition work.
+
+Spatial ownership and temporal custody are independent. Double buffering alone
+does not stop a hostile producer modifying a submitted image. Stable presentation
+requires enforceable publication and reuse rules covering all writable aliases
+and device access. The page-lease route is not implemented by the current row lab.
+
 ## GPU execution
 
 Drawing descriptions can feed a GPU backend without exposing GPU command buffers

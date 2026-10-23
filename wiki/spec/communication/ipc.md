@@ -131,6 +131,15 @@ A different requested size does not silently select a different group. Resizing
 requires explicit funding and a protocol that preserves existing accesses.
 Backing cannot be reclaimed while a live permitted view still depends on it.
 
+Mapping rights apply at the hardware protection granularity. Distinct programs
+may receive disjoint whole-page portions of one larger allocation; separate
+allocations are not required merely to establish that separation. Every byte
+exposed by a mapping must be authorized, including padding. Guard pages and
+different virtual aliases cannot enforce a byte boundary within the same physical
+page. No readable or writable alias may bypass the intended restriction.
+Spatial isolation alone does not establish publication stability or completion;
+the custody obligations below still apply.
+
 ## Checked protocol access
 
 The supported Omega path exposes protocol operations and custody-bearing values

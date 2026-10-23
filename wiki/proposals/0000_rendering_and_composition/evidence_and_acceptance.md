@@ -36,7 +36,9 @@ with that fixture so this proposal does not become a second benchmark ledger.
 | Heavy GPU service is optional and contained; trusted output remains available | Accelerating the common renderer changes the output trust/recovery dependencies | [Execution and presentation](execution_and_presentation.md#presentation-and-protected-output); device-profile evidence below |
 
 These links identify questions, not exemptions from existing authority rules.
-The proposal does not settle the separate [replaceable chrome question](../../../OWNER_QUESTIONS.md#replaceable-distribution-versus-permanent-os-chrome).
+Replaceable chrome and protected outer recovery are now governed by the accepted
+[compositor and seat contract](../../spec/human_surface/compositor_and_seat.md).
+That acceptance does not settle the rendering or focus choices in this proposal.
 
 ## Acceptance evidence
 

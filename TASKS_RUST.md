@@ -103,6 +103,14 @@ candidates, not selected changes. Shared memory does not remove a filtering
 router's need to execute or permit exposing unrelated ancestor input. No runtime
 changes or new performance measurements accompany this direction.
 
+Documentation audit 2026-10-23: the accepted IPC contract now makes whole-page
+partitioning within one allocation explicit, including alias/padding authority
+and the separate publication-stability obligation. The rendering proposal records
+page-aligned leases versus arbitrary rectangles and reference forwarding as
+alternatives, not a selected surface ABI. Input forwarding remains unchanged;
+focus/views, scene commits, masks and production rendering choices remain open.
+Documentation checks only; no new runtime or performance evidence.
+
 Next implementation slice: add funded coordination acquisition to the existing
 broker and prove simultaneous first registration, rejected identity spoofing,
 constraint combinations, accepted/refused introductions and dead-holder cleanup.
