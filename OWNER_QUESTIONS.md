@@ -116,43 +116,6 @@ metadata transactions, initially allowing coarse serialization in the lab.
 Specify bounded transaction sizes and retry outcomes before optimizing concurrency.
 Do not equate copy-on-write, snapshot reads and serializability.
 
-### Replaceable distribution versus permanent OS chrome
-
-**Requirement and conflict.** A fork must be able to replace the single
-`distribution/`, including its desktop, as accepted in
-[ADR 0002](wiki/decisions/0002-kernel-platform-distribution.md). The
-[windowing design](wiki/design/part_6_human_surface/00_windowing_and_compositor.md)
-still calls the entire stock OS chrome permanent, always resident and never
-replaceable, including the panel, launcher, file browser and wallpaper. Its
-new ownership note does not settle what must remain available when a
-replacement shell fails. This blocks defining the shell/recovery contract,
-not the already accepted folder split.
-
-**Contracts checked.** The
-[specification index](wiki/spec/README.md) assigns compositor and seat semantics
-to the unwritten `spec/human_surface/compositor_and_seat.md`. Neither the
-[Omega distribution profile](source/distribution/profile.json) nor the
-[Rust profile](source-rs/distribution/profile.json) defines a shell or recovery
-interface. The Rust profile composes a startup owner, display/input/storage
-providers, root and user matrices, and separate picker/launcher/app processes.
-Bounded startup and launcher recovery, the owner-supplied launcher fallback,
-and explicitly delegated END APP provide ordinary distribution recovery. None provides a
-protected prompt, trusted indicator or guaranteed operator escape if the
-distribution or its matrix/input path is broken. They do not resolve this choice.
-
-**Owner choice.** Must the platform retain a complete fallback desktop, or only
-a minimal trusted interaction and recovery surface? A complete fallback would
-require an independently maintained shell outside the replaceable distribution.
-A minimal surface permits replacement of the entire everyday desktop, but must
-still provide trusted prompts, observation indicators and operator escape/revoke
-behavior when the distribution is absent or broken. The eventual contract must
-define what replacement shells may draw over, capture or intercept.
-
-**Recommendation (unaccepted).** Require the minimal platform-owned trusted
-surface and recovery path; keep the everyday desktop entirely in
-`distribution/`. Specify those guarantees before implementing shell integration,
-then reconcile the older permanent-chrome prose with the accepted contract.
-
 ### Pointer leases, seats and action authority
 
 **Requirement and tension.** Matrices should be able to lease attributed cursors

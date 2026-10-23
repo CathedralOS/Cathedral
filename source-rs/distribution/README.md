@@ -1,5 +1,10 @@
 # Follow the running distribution
 
+The accepted [desktop and recovery contract](../../wiki/spec/human_surface/compositor_and_seat.md)
+keeps chrome/background programs replaceable while retaining protected outer
+recovery chrome. The OS-key long-press escape is not implemented in this lab;
+ordinary launcher restart and child close do not yet supply that guarantee.
+
 Press **F5** at the repository root, or run:
 
 ```powershell

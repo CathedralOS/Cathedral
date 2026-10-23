@@ -1,11 +1,11 @@
 # Chapter 00: Windowing & Compositor
 
-Source ownership update (2026-10-09): [ADR 0002](../../decisions/0002-kernel-platform-distribution.md)
-places Cathedral's stock desktop experience in the single `distribution/`, and
-common compositor/input/capture mechanisms in `platform/`. References below to
-OS chrome describe the shipped experience; a fork may replace its implementation.
-The trusted prompt, observation and operator-recovery guarantees remain platform
-requirements rather than replaceable distribution policy.
+The accepted [compositor and seat contract](../../spec/human_surface/compositor_and_seat.md)
+settles replaceable desktop programs and protected outer recovery chrome.
+[ADR 0002](../../decisions/0002-kernel-platform-distribution.md) keeps shipped
+programs in `distribution/` and common authority mechanisms in `platform/`.
+The broader trusted-prompt, capture and seat proposals below remain design work;
+they are not all ratified by this partial contract.
 
 > The compositor owns window arrangement, input routing, and the trusted path that lets a human know which app they are talking to.
 
@@ -33,22 +33,37 @@ The display powers, in one chart:
 | Surface power | Who holds it | Notes |
 |---|---|---|
 | Draw into your own window | Every app | Comes with having a window; all an app ever owns |
-| OS chrome (wallpaper included) | OS | Permanent, always resident, never replaceable |
-| Custom chrome | Apps holding the be-the-shell grant | Hides the OS chrome, never disables it; OS key long-press always returns it |
+| Everyday chrome and background | Authorized selected programs | Separate replaceable roles; system realm supplies defaults |
+| Outer recovery chrome | Enclosing system | Protected OS-key long press restores it; not required inside nested matrices |
+| Custom chrome | Authorized selected program | May hide recovery chrome, never disable the outer recovery gesture |
 | Host other apps' windows in your scene | Sandboxes, virtual desktops, custom chromes | The hosted app can't tell; its file/network authority is untouched |
 | System prompts | OS only | Above everything, including a fullscreen custom chrome |
 
-## OS chrome and custom chromes
+## Default programs, overrides and recovery chrome
 
-There are two chromes, the OS chrome and custom chromes, and no finer modularity than that.
+The system realm supplies default desktop programs. Users may select custom
+chrome, background and other programs through authorized configuration. A
+background is an independent role, not necessarily a feature of the chrome.
+Override slots in standard locations are a possible representation; no slot
+schema or lookup precedence has been accepted yet.
 
-The **OS chrome** is the OS-owned shell: panel, launcher, the stock home and file browsing surface, and the wallpaper, static or animated, as a chrome feature fed by content rather than an app slot. It is permanent, always resident, and never replaceable. It holds the capability to the Desktop location in the user realm ([[filesystem_as_database]]), so showing and launching what lives there is chrome functionality. There is no separately grantable "background layer" and no third-party wallpaper-app class. A live wallpaper is content the chrome renders, budgeted and occlusion-gated like everything else ([[scheduler_and_resources]]).
+The outer system retains a protected recovery chrome. A custom desktop may hide
+it, but cannot remove it or intercept the physical OS-key long press that brings
+it back. That input and presentation route must remain outside the custom
+chrome's failure scope, including when its matrix crashes. Recovery is not a
+promise that a failed kernel or every failed hardware provider can be bypassed.
+The exact controls and process residency strategy remain implementation work.
 
-A **custom chrome** is one grant: be the shell. An app holding it makes the OS chrome dormant and owns the screen: launcher, desktop, wallpaper, compositing other apps into its own scene, up to a game running as the entire desktop. The OS chrome is dormant, not gone. It stays resident, occlusion-gated to zero frames, and the OS key long-press always wakes it, regardless of configuration, for when the custom chrome is broken. No capability can take that gesture and the custom chrome never receives it. One physical key splits by gesture: short-press goes to the active chrome, so a custom launcher opens like a native one, and long-press goes to the OS. A crashed or hung custom chrome is a supervised component, so the long-press reaches a live OS chrome anyway. This is the live, no-reboot escape, distinct from firmware recovery ([[boot_and_trust_chain]]). The grant is held, visible, and revocable, so "what may hide my OS chrome" is an authority-graph query, and revoking it wakes the chrome at once.
+Inner matrices need not contain recovery chrome. A parent may supply a scoped
+system-realm copy with default programs; each child can select its own overrides
+within its authority. That copy does not grant physical-input authority or access
+to the outer recovery route. The distribution's default programs remain
+replaceable by a fork; platform mechanisms enforce the protected boundary rather
+than prescribing a second complete desktop.
 
-All of this is safe only because the security model never lived in the chrome. A custom chrome is an ordinary app holding shell-tier capabilities and nothing more. Two things stay OS-owned no matter what is installed: the capability core, and the system-prompt layer. Login, unlock, and grant prompts are OS-drawn over even a fullscreen custom chrome and cannot be forged. The zero state is the stock desktop: with no shell grant held, the OS chrome is active and owns the OS key ([[omega_substrate]] ZII).
-
-Under the two-chrome model, drag-and-drop onto the desktop is chrome functionality rather than a separate drop-target role. The cross-app drop contract, where a drop delegates a capability to the dropped object by the same mint as the picker, keeps its home in [[human_permission_ux]].
+Drag-and-drop and permission-grant interfaces remain separate contracts under
+[[human_permission_ux]]. The recovery decision does not freeze those protocols or
+the broader secure-prompt layer proposed above.
 
 ## Recursive composition
 

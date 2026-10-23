@@ -47,6 +47,16 @@ contract. Explicit shared IPC mappings remain supported. The old default-isolati
 question is closed; optional PCID validation coverage remains separate and deferred.
 This documentation decision introduces no runtime changes or fresh QEMU evidence.
 
+Owner clarification 2026-10-23: default chrome/background programs come from the
+system realm and everyday selections are replaceable. The outer system retains
+protected recovery chrome: a physical OS-key long press brings it back even when
+custom chrome or its matrix fails. Inner matrices need not include this escape
+hatch; they may receive a system-realm copy and choose their own overrides.
+See the [accepted surface contract](wiki/spec/human_surface/compositor_and_seat.md).
+Override slot format and recovery implementation are not frozen. The Rust lab
+does not yet implement the protected long-press path; current child close and
+launcher restart are not that guarantee. No runtime behavior changed here.
+
 Next implementation slice: add funded coordination acquisition to the existing
 broker and prove simultaneous first registration, rejected identity spoofing,
 constraint combinations, accepted/refused introductions and dead-holder cleanup.

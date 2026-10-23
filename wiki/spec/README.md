@@ -35,6 +35,7 @@ subject. A current specification may precede implementation.
 | Components and matrices: policy ownership and supplied authority | [Components and matrices](execution/components_and_matrices.md) | Partial | Partial |
 | Hardware separation and exclusion of PCC-based single address space | [Program isolation](execution/isolation.md) | Partial | Partial |
 | Scoped coordination and checked shared-memory IPC | [Coordination and IPC](communication/ipc.md) | Partial | Partial |
+| Replaceable desktop programs and protected outer recovery chrome | [Compositor and seat](human_surface/compositor_and_seat.md) | Partial | Partial |
 
 ## Owned but unwritten subjects
 
@@ -47,7 +48,6 @@ plus the active hardware frontier.
 | --- | --- | --- | --- |
 | Capability meaning, delegation, attenuation, redemption, and revocation | `spec/authority/capabilities.md` | [Capability model](../design/part_1_authority/00_capability_model.md) and [lifecycle](../design/part_1_authority/01_capability_lifecycle.md) | Not started |
 | Package closure and component manifest | `spec/packages/package_and_manifest.md` | [Package system](../design/part_5_lifecycle/00_package_system.md) | Not started |
-| Compositor and seat contract | `spec/human_surface/compositor_and_seat.md` | [Windowing and compositor](../design/part_6_human_surface/00_windowing_and_compositor.md); [pointer lease proposal](../proposals/0001_input_and_pointer_leases.md) | [Rust session lab](../../source-rs/distribution/lab/compositor/SESSION.md): pointer routing/capture, attenuated focus and hosted child scopes; production seats and recursive pointer leases absent |
 | Rendering scenes, resource custody and presentation | `spec/human_surface/rendering.md` | [Media and graphics](../design/part_6_human_surface/02_media_and_graphics.md); [candidate proposal](../proposals/0000_rendering_and_composition.md) | Rust bounded three-client retained compositor, cross-process clipping and shared-page experiments; production scenes and GPU presentation absent |
 | Driver contract | `spec/devices/drivers.md` | [Driver model](../design/part_5_lifecycle/02_driver_model.md) | Hardware fact packages only |
 | Checker and installation admission | `spec/admission/checker.md` | [Kernel architecture](../design/part_5_lifecycle/04_kernel_architecture.md) | Partial Omega admission path |
