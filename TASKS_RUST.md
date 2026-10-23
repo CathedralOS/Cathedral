@@ -1,12 +1,12 @@
 # Rust reference OS: tasks and handoff
 
-Updated 2026-10-22 (local date). Current milestone: **fewer round trips per
-nested level**, on baseline `96d0e23c` (one-page chunks, a two-object provider
-heap and steady kernel accounting across soak cycles). A program is read in one
-request and a tile's name alone, so a depth-4 user entry takes 22 sequential
-requests instead of 29 and 820 ms instead of 1,178 on a fresh boot and 2,880 on
-a cold one; the newest section at the end records the measurements and the
-open items.
+Updated 2026-10-22 (local date). Current milestone: **a realm named in one
+listing**, on baseline `9b073f4d` (a program read in one request and a tile's
+name alone). ENTRIES answers a parent's children with their names in one sealed
+page, so a depth-4 user entry takes 13 sequential requests instead of 29 and
+617 ms instead of 1,178 two entries ago; a program larger than one object is
+refused at install; the newest section at the end records the measurements and
+the open items.
 Saved-state testing is an explicit launch choice. The section before it
 distinguishes current-program four-level verification from failures in
 retained executable snapshots.
@@ -5231,4 +5231,107 @@ Next, in order:
    matrices' samples are recorded but not yet compared, and nothing samples the
    provider's or the desktop's own accounts.
 4. Launching one program over one realm twice stays an owner question in
+   [OWNER_QUESTIONS.md](OWNER_QUESTIONS.md).
+
+## A realm named in one listing (2026-10-22)
+
+Baseline: `9b073f4d`. The previous entry left 22 sequential requests in a
+depth-4 user entry, most of them the chooser naming its tiles one METADATA at a
+time and the matrix looking its realm up one name at a time.
+
+**ENTRIES.** [storage.rs](source-rs/platform/contracts/storage.rs) gains a
+nineteenth operation: `parent, 0, after, 0` answers the direct children after
+the cursor, in number order, as one sealed page of `Entry` rows (number,
+revision, Metadata; 51 per page), with the count and the last listed number in
+the packet and no page for an empty listing. It is a read like LIST and FILTER,
+so a scope admits it when it admits the parent, and the matrices forward its
+reply page as they forward a bulk read's. [objects.rs](source-rs/platform/libraries/database-objects/objects.rs)
+gathers the rows in one transaction and a host test checks order, cursors,
+bounded output, an empty parent and a missing one; [listing.rs](source-rs/platform/services/storage/listing.rs)
+fills the page beside the bulk reply path.
+
+**One listing per reader.** [storage.rs](source-rs/platform/libraries/user-runtime/storage.rs)
+reads a page of entries and resolves several names from one listing. The
+[chooser](source-rs/distribution/applications/chooser/session/realm.rs) builds
+its tiles from the realm's executables, finds the template or the background by
+name and the launcher by the name the configuration record carries, all from
+one listing plus one READ: two requests where a six-tile launcher spent
+fourteen. The matrix's [realm shape](source-rs/distribution/matrix/service/children/startup/startup.rs)
+is one listing instead of three LOOKUPs, and it carries the configuration it
+found into [configure](source-rs/distribution/matrix/service/children/configuration.rs)
+instead of looking it up again.
+
+**A program must fit one object.** The first guest run of the listing panicked
+the provider with `Corrupt` on its first ENTRIES. The store had never been
+asked for the hidden `Template` entry's head before, and that head's length was
+269,856 bytes: the first reader of the listing carried page-sized `Entry`
+arrays and a per-row decode loop that grew the stock matrix by 14 KB of code,
+past the 256 KiB object limit, and the installer had written the oversized head
+without complaint. The reader now decodes rows on demand from the sealed page
+(`Listing`), which puts the matrix back at 257,568 bytes, and the installer's
+[seed.rs](tools/storage-lab/engines/volume/seed.rs) refuses any program over
+`MAX_BYTES` with its size in the message, covered by a lab test, so the next
+such growth fails at install rather than as a corrupt head on first read.
+
+**A chooser is lent two reader pages.** The second guest run refused the first
+listing's page at the root matrix with DENIED: pickers and launchers had always
+been funded with zero reader pages, since nothing they read came back as an
+attachment. [matrix.rs](source-rs/distribution/matrix/contracts/matrix.rs) names
+`CHOOSER_READERS`, two pages, and the shell's root picker, the nested picker and
+the configured launcher are lent that beside their private pages.
+
+Measurements, host-observed milliseconds and provider request spans on
+`desktop_test.py --latency --nested-depth 4 --trace-storage`, the previous
+entry's figures first:
+
+| Step | Observed | Provider requests |
+| --- | --- | --- |
+| enter-user (fresh) | 441 to 365 | 19 to 9 |
+| depth-1 launch picker (fresh) | 359 to 354 | 9 to 5 |
+| depth-4 launch picker (fresh) | 629 to 510 | 16 to 12 |
+| depth-4 enter-user (fresh) | 820 to 617 | 22 to 13 |
+| depth-4 enter-user (cold) | 821 to 645 | 22 to 13 |
+| create-user, any depth | 278 to 363, now 283 to 295 | 6 to 3 |
+
+A user entry at depth four now issues thirteen requests where the entry two
+steps back issued twenty-nine, and takes 617 ms where it took 1,178 on a fresh
+boot and 2,880 on a cold one. A user creation is three requests: the copy, the
+listing and the configuration read.
+
+Verification:
+
+- Host: workspace `cargo test --locked` (263, with the entries test);
+  storage-lab with `--features engines` (40, with the oversized-program
+  refusal); `cargo check-userspace`; formatting, layout and whitespace checks.
+  The stock matrix trims to 257,568 bytes and the chooser to 78,008.
+- Guest, on disposable media (`build/suite16-*.log`): four-level latency on
+  fresh and cold boots; the plain default desktop with oracle verification;
+  four nested desktops under pointer stress with cold reopen; nested startup
+  failures (picker, user, background); the provider-replacement suite on the
+  plain fixture; `--matrix-storage-test`, `--matrix-test` and
+  `--matrix-desktop-test`; `objects_test.py` plain and `--retention`;
+  `matrix_database_test.py --recovery`; the three-cycle soak at depth two,
+  whose cycles issue 36 provider requests instead of 64 and run 3.2 to 3.5 s
+  with the root's accounting steady at 0 private and 38 reader pages, 105
+  frames and 22 free slots. The two refused runs are `build/suite14-*.log` (the
+  oversized matrix) and `build/suite15-*.log` (no reader pages).
+
+Next, in order:
+
+1. A depth-4 user entry still issues 13 sequential requests, each a 6 to 7
+   tick round trip through eight matrices: the matrix's listing, two bulk
+   reads for the configuration and the launcher, the background's lookup and
+   read, the launcher's listing and configuration read, and the picker
+   retirement around them. The background's lookup could ride the listing the
+   matrix already read, and a launcher could receive its arrangement with its
+   launch instead of reading it; beyond that the hop count itself is the cost.
+2. The stock matrix is 257,568 bytes against a 262,144-byte object limit, under
+   two percent of headroom; the chooser is 78,008. Either the matrix sheds code
+   or the limit grows with the provider's reply pages, and the harness should
+   report trimmed sizes against the limit so the margin is visible per build.
+3. The clean-close LOSS timeout did not reproduce in these runs either.
+4. The soak holds the root's kernel accounting steady across cycles; nested
+   matrices' samples are recorded but not yet compared, and nothing samples the
+   provider's or the desktop's own accounts.
+5. Launching one program over one realm twice stays an owner question in
    [OWNER_QUESTIONS.md](OWNER_QUESTIONS.md).

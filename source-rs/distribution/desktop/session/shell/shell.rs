@@ -28,7 +28,19 @@ fn chooser(login: &mut Login, matrix: Pair, extent: [u64; 2], failed: bool) -> R
     // Keep an existing recovery screen visible through the path reads.
     stop(matrix, 0)?;
     *login = Login::Stopped;
-    request(matrix, [wire::RUN_PAGES, 0, CHOOSER_PAGES, 0, 0, 0, 0, 0])?;
+    request(
+        matrix,
+        [
+            wire::RUN_PAGES,
+            0,
+            CHOOSER_PAGES,
+            cathedral_desktop_matrix_contracts::matrix::CHOOSER_READERS,
+            0,
+            0,
+            0,
+            0,
+        ],
+    )?;
     request(
         matrix,
         [

@@ -214,8 +214,23 @@ pub fn load(args: &[String]) -> Result<Vec<Program>> {
         .map(|pair| {
             Ok(Program {
                 parent: pair[0].parse()?,
-                bytes: std::fs::read(&pair[1])?,
+                bytes: program_bytes(&pair[1])?,
             })
         })
         .collect()
+}
+/// A program's bytes, refused here when they exceed one object: the store
+/// would otherwise refuse the installed head as corrupt on first read.
+pub(super) fn program_bytes(path: impl AsRef<std::path::Path>) -> Result<Vec<u8>> {
+    let bytes = std::fs::read(path.as_ref())?;
+    if bytes.len() > cathedral_database_objects::MAX_BYTES {
+        return Err(format!(
+            "{} is {} bytes; a program must fit one object of {} bytes",
+            path.as_ref().display(),
+            bytes.len(),
+            cathedral_database_objects::MAX_BYTES
+        )
+        .into());
+    }
+    Ok(bytes)
 }

@@ -57,7 +57,9 @@ preparation. Realm entries in the profile's `realm_programs` list are placed
 under each recognized stock user by path: a program (built from its package), a
 `folder`, a stock `matrix_config`, or a `copy` of an earlier entry's subtree,
 which the installer enumerates before writing so it may land inside its own
-origin; that is how the nested desktops are prebuilt five levels deep.
+origin; that is how the nested desktops are prebuilt five levels deep. A
+program larger than one object (256 KiB) is refused at install with its size,
+since the store would otherwise refuse its head as corrupt on first read.
 Program publication, stock-copy refresh and named additions run on a
 private larger host scratch disk. The resulting database is compacted, checked
 against the assigned extent and cold-compared before publication to the locked

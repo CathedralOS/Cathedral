@@ -52,7 +52,14 @@ fn resolve(expected: &Records, base: u64, path: &str) -> Result<u64> {
     Ok(parent)
 }
 /// A new object with its own content: a program or an empty folder.
-fn place(expected: &mut Records, id: u64, parent: u64, bytes: &[u8], name: &[u8], kind: &[u8]) -> Result<()> {
+fn place(
+    expected: &mut Records,
+    id: u64,
+    parent: u64,
+    bytes: &[u8],
+    name: &[u8],
+    kind: &[u8],
+) -> Result<()> {
     let mut store = Store::new(Policy {
         chunk_bytes: cathedral_database_objects::CHUNK_BYTES,
         inline_limit: 128,
@@ -101,7 +108,8 @@ fn copy_tree(
     for &node in &order {
         let source_head = expected[&key(b'h', &node.to_be_bytes())].clone();
         let source_parent = u64::from_le_bytes(source_head[48..].try_into()?);
-        let entry = Metadata::decode(&expected[&edge(source_parent, node)]).ok_or("source metadata")?;
+        let entry =
+            Metadata::decode(&expected[&edge(source_parent, node)]).ok_or("source metadata")?;
         let new_parent = if node == source {
             parent
         } else {
@@ -193,7 +201,14 @@ pub fn verify(
             }
             file => {
                 let bytes = std::fs::read(file)?;
-                place(&mut expected, next, parent, &bytes, name.as_bytes(), metadata::EXECUTABLE)?;
+                place(
+                    &mut expected,
+                    next,
+                    parent,
+                    &bytes,
+                    name.as_bytes(),
+                    metadata::EXECUTABLE,
+                )?;
                 next += 1;
             }
         }

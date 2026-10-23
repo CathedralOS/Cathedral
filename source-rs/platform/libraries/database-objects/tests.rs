@@ -624,3 +624,54 @@ fn a_chunk_record_fills_one_engine_page() {
         stats.fragmented_bytes()
     );
 }
+
+#[test]
+fn entries_name_children_with_revisions_in_one_pass_and_continue_after_a_cursor() {
+    use cathedral_platform_contracts::storage::{ENTRIES_PER_PAGE, Entry, metadata};
+    let db = database();
+    let store = Store::open(&db).unwrap();
+    let parent = store.publish(0, 0, 0, b"parent", 0).unwrap().id;
+    let notes = store
+        .create_named(
+            0,
+            parent,
+            Metadata::new(b"Notes", metadata::TEXT).unwrap(),
+            b"",
+        )
+        .unwrap();
+    let colors = store
+        .create_named(
+            0,
+            parent,
+            Metadata::new(b"Colors", metadata::EXECUTABLE).unwrap(),
+            b"",
+        )
+        .unwrap();
+    let mut rows = [Entry::default(); ENTRIES_PER_PAGE];
+    assert_eq!(store.entries(0, parent, 0, &mut rows).unwrap(), 2);
+    assert_eq!(
+        rows[..2],
+        [
+            Entry {
+                object: notes.id,
+                revision: 1,
+                metadata: Metadata::new(b"Notes", metadata::TEXT).unwrap(),
+            },
+            Entry {
+                object: colors.id,
+                revision: 1,
+                metadata: Metadata::new(b"Colors", metadata::EXECUTABLE).unwrap(),
+            },
+        ]
+    );
+    assert_eq!(store.entries(0, parent, notes.id, &mut rows).unwrap(), 1);
+    assert_eq!(rows[0].object, colors.id);
+    assert_eq!(store.entries(0, parent, colors.id, &mut rows).unwrap(), 0);
+    assert_eq!(store.entries(0, notes.id, 0, &mut rows).unwrap(), 0);
+    let mut one = [Entry::default(); 1];
+    assert_eq!(store.entries(0, parent, 0, &mut one).unwrap(), 1);
+    assert_eq!(one[0].object, notes.id);
+    assert_eq!(store.entries(0, 99, 0, &mut rows), Err(Error::Missing));
+    let row = rows[0];
+    assert_eq!(Entry::decode(&row.encode()), Some(row));
+}

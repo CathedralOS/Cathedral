@@ -148,6 +148,31 @@ impl Store<'_> {
         check_parent(&table, root, parent)?;
         children(&table, root, parent, after, out)
     }
+    /// Direct children after `after` with their current revision and metadata,
+    /// in one transaction, so a realm is named once rather than once per child.
+    pub fn entries(
+        &self,
+        root: u8,
+        parent: u64,
+        after: u64,
+        out: &mut [cathedral_platform_contracts::storage::Entry],
+    ) -> Result<usize> {
+        let tx = engine(self.db.begin_read())?;
+        let table = engine(tx.open_table(TABLE))?;
+        check_parent(&table, root, parent)?;
+        let mut ids = [0; cathedral_platform_contracts::storage::ENTRIES_PER_PAGE];
+        let limit = out.len().min(ids.len());
+        let count = children(&table, root, parent, after, &mut ids[..limit])?;
+        for (slot, &id) in out.iter_mut().zip(&ids[..count]) {
+            let head = head_of(&table, root, id)?;
+            *slot = cathedral_platform_contracts::storage::Entry {
+                object: id,
+                revision: head.revision,
+                metadata: hierarchy::entry(&table, root, id, head)?,
+            };
+        }
+        Ok(count)
+    }
     pub fn within(&self, root: u8, object: u64, scope: u64) -> Result<bool> {
         let tx = engine(self.db.begin_read())?;
         let table = engine(tx.open_table(TABLE))?;

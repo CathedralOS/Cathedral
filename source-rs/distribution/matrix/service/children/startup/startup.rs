@@ -9,7 +9,7 @@ use super::*;
 use cathedral_desktop_matrix_contracts::matrix::config;
 /// What the realm asks this matrix to become.
 enum Shape {
-    Workspace,
+    Workspace { config: u64 },
     Picker { login: u64, users: u64 },
     Hosted,
 }
@@ -27,7 +27,9 @@ impl Children {
                 return Ok(());
             }
             match self.realm_shape(parent)? {
-                Shape::Workspace => self.configure(parent, world, server)?,
+                Shape::Workspace { config } => {
+                    self.configure_object(Some(config), parent, world, server)?;
+                }
                 Shape::Picker { login, users } => {
                     self.start_picker(parent, world, server, login, users)?;
                 }
@@ -40,20 +42,23 @@ impl Children {
         // children/launch.rs, before that user's first placement is published.
         Ok(())
     }
-    /// Read the realm's shape through this matrix's own binding. No binding,
-    /// or a realm with none of the stock names, means an owner-driven matrix.
+    /// Read the realm's shape through this matrix's own binding, from one
+    /// listing of its entries. No binding, or a realm with none of the stock
+    /// names, means an owner-driven matrix.
     fn realm_shape(&self, parent: &mut Parent) -> Result<Shape, Error> {
         let inspected = parent.local_storage(|scope| {
             if scope.bind().is_err() {
                 return Ok(Shape::Hosted);
             }
-            if scope.lookup(config::NAME).is_ok() {
-                return Ok(Shape::Workspace);
-            }
-            match (scope.lookup(b"Login"), scope.lookup(b"Users")) {
-                (Ok(login), Ok(users)) => Ok(Shape::Picker { login, users }),
-                _ => Ok(Shape::Hosted),
-            }
+            let mut ids = [None; 3];
+            scope
+                .named(&[config::NAME, b"Login", b"Users"], &mut ids)
+                .map_err(|c| Error(c as i64))?;
+            Ok(match ids {
+                [Some(config), _, _] => Shape::Workspace { config },
+                [None, Some(login), Some(users)] => Shape::Picker { login, users },
+                _ => Shape::Hosted,
+            })
         });
         match inspected {
             Ok(shape) => Ok(shape),
@@ -96,7 +101,7 @@ impl Children {
                 channels: 0,
                 descendants: 0,
                 cpu: 0,
-                pages: Some([48, 0]),
+                pages: Some([48, cathedral_desktop_matrix_contracts::matrix::CHOOSER_READERS]),
                 stamp: 0,
                 imports: cathedral_platform_contracts::imports::ALL,
             },

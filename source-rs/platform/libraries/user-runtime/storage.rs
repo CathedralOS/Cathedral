@@ -181,6 +181,52 @@ impl Scope {
         out[..count].copy_from_slice(&words[2..2 + count]);
         Ok(count)
     }
+    /// One page naming the direct children after `after`: their numbers,
+    /// revisions and metadata, decoded row by row from the sealed page.
+    pub fn entries(&mut self, parent: u64, after: u64) -> Result<Listing, u64> {
+        let (reply, page) = self.request(
+            storage::Request::new(storage::ENTRIES, parent, 0, after, 0),
+            None,
+        )?;
+        let words = storage::unpack(&reply).ok_or(abi::IO_ERROR)?;
+        if words[0] != 0 {
+            drop(page);
+            return Err(words[0]);
+        }
+        let count = (words[1] as usize).min(storage::ENTRIES_PER_PAGE);
+        if count != 0 && page.is_none() {
+            return Err(abi::IO_ERROR);
+        }
+        Ok(Listing {
+            page,
+            count,
+            last: words[2],
+        })
+    }
+    /// The numbers of the realm's direct children carrying these names: one
+    /// listing per page of children instead of one LOOKUP per name. A name
+    /// nobody carries stays None.
+    pub fn named(&mut self, names: &[&[u8]], out: &mut [Option<u64>]) -> Result<(), u64> {
+        out.fill(None);
+        let realm = self.realm;
+        let mut after = 0;
+        loop {
+            let mut listing = self.entries(realm, after)?;
+            for index in 0..listing.len() {
+                let row = listing.row(index)?;
+                let name = storage::metadata::text(&row.metadata.name);
+                for (slot, wanted) in out.iter_mut().zip(names) {
+                    if name == *wanted {
+                        *slot = Some(row.object);
+                    }
+                }
+            }
+            after = listing.last;
+            if !listing.is_full() || out.iter().all(Option::is_some) {
+                return Ok(());
+            }
+        }
+    }
     fn exchange(
         &mut self,
         words: [u64; 8],
@@ -215,5 +261,33 @@ impl Scope {
                 Err(error.0 as u64)
             }
         }
+    }
+}
+/// One page of an ENTRIES reply. Rows decode on demand, so a reader keeps no
+/// page-sized copy of its own; `last` is the number to continue after.
+pub struct Listing {
+    page: Option<Object>,
+    count: usize,
+    pub last: u64,
+}
+impl Listing {
+    pub fn len(&self) -> usize {
+        self.count
+    }
+    pub fn is_empty(&self) -> bool {
+        self.count == 0
+    }
+    /// A full page may be followed by more children after `last`.
+    pub fn is_full(&self) -> bool {
+        self.count == storage::ENTRIES_PER_PAGE
+    }
+    pub fn row(&mut self, index: usize) -> Result<storage::Entry, u64> {
+        if index >= self.count {
+            return Err(abi::INVALID_ARGUMENT);
+        }
+        let page = self.page.as_mut().ok_or(abi::IO_ERROR)?;
+        let bytes = page.map().map_err(|e| e.0 as u64)?;
+        let start = index * storage::ENTRY_BYTES;
+        storage::Entry::decode(&bytes[start..start + storage::ENTRY_BYTES]).ok_or(abi::IO_ERROR)
     }
 }

@@ -3,6 +3,10 @@ pub use cathedral_platform_contracts::matrix::*;
 #[path = "config.rs"]
 pub mod config;
 
+/// Reader pages a chooser is lent: it maps one listing page of its realm at a
+/// time while naming tiles or users, and nothing else.
+pub const CHOOSER_READERS: u64 = 2;
+
 /// Child interaction request: [APPLY_LAYOUT, current epoch, margin, strip width,
 /// gap, 0, 0, 0]. Only the launcher explicitly selected by stock CONFIGURE may
 /// request this. Changes geometry, never budgets, services, keys or executable

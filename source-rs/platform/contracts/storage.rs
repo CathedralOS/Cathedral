@@ -74,8 +74,14 @@ pub const FILTER: u64 = 17;
 /// A lost reply requires LOOKUP/HEAD reconciliation, never blind replacement.
 /// Total payload is at most MAX_BYTES (initial content at most MAX_BYTES - 64).
 pub const CREATE_NAMED: u64 = 18;
+/// `parent, 0, after, 0` → status, count, last listed number, then one sealed
+/// page of `count` `Entry` rows: the direct children after `after` in
+/// ascending order with their revisions and metadata, at most
+/// ENTRIES_PER_PAGE. A count of zero carries no page. One request names a
+/// realm; LOOKUP, FILTER and METADATA remain for single answers.
+pub const ENTRIES: u64 = 19;
 /// Highest operation a delegated child may issue.
-pub const LAST: u64 = CREATE_NAMED;
+pub const LAST: u64 = ENTRIES;
 #[path = "storage_metadata.rs"]
 pub mod metadata;
 /// Largest object on the wire: 64 pages, so a program or a bulk reply fits in
@@ -83,6 +89,35 @@ pub mod metadata;
 pub const MAX_BYTES: usize = 256 * 1024;
 pub const READ_BYTES: usize = 32;
 pub const LIST_IDS: usize = 6;
+/// One row of an ENTRIES page: number and revision, little-endian, then the
+/// child's Metadata.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct Entry {
+    pub object: u64,
+    pub revision: u64,
+    pub metadata: metadata::Metadata,
+}
+pub const ENTRY_BYTES: usize = 16 + metadata::BYTES;
+pub const ENTRIES_PER_PAGE: usize = 4096 / ENTRY_BYTES;
+impl Entry {
+    pub fn encode(self) -> [u8; ENTRY_BYTES] {
+        let mut bytes = [0; ENTRY_BYTES];
+        bytes[..8].copy_from_slice(&self.object.to_le_bytes());
+        bytes[8..16].copy_from_slice(&self.revision.to_le_bytes());
+        bytes[16..].copy_from_slice(&self.metadata.encode());
+        bytes
+    }
+    pub fn decode(bytes: &[u8]) -> Option<Self> {
+        if bytes.len() != ENTRY_BYTES {
+            return None;
+        }
+        Some(Self {
+            object: u64::from_le_bytes(bytes[..8].try_into().ok()?),
+            revision: u64::from_le_bytes(bytes[8..16].try_into().ok()?),
+            metadata: metadata::Metadata::decode(&bytes[16..])?,
+        })
+    }
+}
 pub const PIN_SLOTS: u64 = 2;
 pub const SCOPES: usize = 2;
 /// End-to-end forwarding bound. Matrices preserve an earlier supplied deadline;

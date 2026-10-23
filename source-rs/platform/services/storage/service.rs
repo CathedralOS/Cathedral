@@ -79,6 +79,8 @@ pub fn serve(
             server.reply(&request, &wire::error(code)).unwrap();
         } else if matches!(r.op, wire::BULK | wire::BULK_PIN) && attachment.is_none() {
             super::bulk::reply(&store, root, r, &mut server, &request);
+        } else if r.op == wire::ENTRIES && attachment.is_none() {
+            super::listing::reply(&store, root, r, &mut server, &request);
         } else {
             let mut response = [0; 64];
             let result = dispatch(&store, root, r, attachment.as_mut(), &mut response);

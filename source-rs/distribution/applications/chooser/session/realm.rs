@@ -20,70 +20,82 @@ impl Realm {
             user_picker,
         }
     }
-    /// Query executable entries; the hidden template/launcher is identified by
-    /// its path, never its listing position. Row zero is presentation only.
+    /// One listing names the realm: tiles are its executables in number order,
+    /// the hidden template or launcher and the background are known by name,
+    /// never by listing position. The launcher's name lives in the matrix
+    /// configuration, read once that entry is found. Row zero is presentation
+    /// only.
     pub fn reload(&mut self) -> Result<(), u64> {
         self.scope.bind()?;
+        let realm = self.scope.realm();
+        let mut executables = [(0, [0; store::metadata::FIELD]); store::ENTRIES_PER_PAGE];
+        let mut found = 0;
+        let (mut template, mut background, mut config) = (None, None, None);
+        let mut after = 0;
+        loop {
+            let mut listing = self.scope.entries(realm, after)?;
+            for index in 0..listing.len() {
+                let row = listing.row(index)?;
+                match store::metadata::text(&row.metadata.name) {
+                    b"Template" => template = Some(row.object),
+                    b"Background" => background = Some(row.object),
+                    name if name == cathedral_desktop_matrix_contracts::matrix::config::NAME => {
+                        config = Some((row.object, row.revision))
+                    }
+                    _ => (),
+                }
+                if store::metadata::text(&row.metadata.media_type) == store::metadata::EXECUTABLE
+                    && found < executables.len()
+                {
+                    executables[found] = (row.object, row.metadata.name);
+                    found += 1;
+                }
+            }
+            after = listing.last;
+            if !listing.is_full() {
+                break;
+            }
+        }
         let hidden = if self.user_picker {
-            self.scope.lookup(b"Template")?
+            template.ok_or(store::MISSING)?
         } else {
-            let config = self
-                .scope
-                .lookup(cathedral_desktop_matrix_contracts::matrix::config::NAME)?;
-            let head = self
-                .scope
-                .call(store::Request::new(store::HEAD, config, 0, 0, 0))?;
+            let (object, revision) = config.ok_or(store::MISSING)?;
             let (reply, extra) = self.scope.request(
-                store::Request::new(store::READ, config, head.revision, 8, 32),
+                store::Request::new(store::READ, object, revision, 8, 32),
                 None,
             )?;
             drop(extra);
             store::Reply::decode(&reply)?;
-            let name: [u8; 32] = reply[32..].try_into().unwrap();
-            self.scope.lookup(store::metadata::text(&name))?
+            let launcher: [u8; 32] = reply[32..].try_into().unwrap();
+            executables[..found]
+                .iter()
+                .find(|(_, name)| *name == launcher)
+                .map(|(id, _)| *id)
+                .ok_or(store::MISSING)?
         };
-        let background = if self.user_picker {
-            None
+        let limit = if self.user_picker {
+            USER_ENTRIES
         } else {
-            self.scope.lookup(b"Background").ok()
+            ENTRIES
         };
         self.ids = [0; ENTRIES];
+        self.labels = [[0; 13]; ENTRIES];
         self.ids[0] = hidden;
         self.count = 1;
-        let mut after = 0;
-        loop {
-            let mut found = [0; store::LIST_IDS];
-            let count = self
-                .scope
-                .filter(store::metadata::EXECUTABLE, after, &mut found)?;
-            if count == 0 {
+        for (id, name) in &executables[..found] {
+            if *id == hidden || Some(*id) == background {
+                continue;
+            }
+            if self.count == limit {
                 break;
             }
-            for &id in &found[..count] {
-                after = id;
-                if id == hidden || Some(id) == background {
-                    continue;
-                }
-                if self.count
-                    == if self.user_picker {
-                        USER_ENTRIES
-                    } else {
-                        ENTRIES
-                    }
-                {
-                    return Ok(());
-                }
-                // The filter already proved the type; only the name is needed.
-                let name = self.scope.name(id)?;
-                let name = store::metadata::text(&name);
-                let mut label = [0; 13];
-                for (to, from) in label.iter_mut().zip(name) {
-                    *to = from.to_ascii_uppercase();
-                }
-                self.ids[self.count] = id;
-                self.labels[self.count] = label;
-                self.count += 1;
+            let mut label = [0; 13];
+            for (to, from) in label.iter_mut().zip(store::metadata::text(name)) {
+                *to = from.to_ascii_uppercase();
             }
+            self.ids[self.count] = *id;
+            self.labels[self.count] = label;
+            self.count += 1;
         }
         Ok(())
     }

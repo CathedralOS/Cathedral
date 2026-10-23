@@ -6,8 +6,20 @@ use cathedral_platform_contracts::storage;
 use cathedral_user_runtime::storage::Scope;
 
 impl Children {
+    /// An owner's CONFIGURE: the arrangement is found in the realm by name.
     pub(super) fn configure(
         &mut self,
+        parent: &mut Parent,
+        world: &mut World,
+        server: &mut Server,
+    ) -> Result<(), Error> {
+        self.configure_object(None, parent, world, server)
+    }
+    /// Apply the arrangement in `config`, or the realm's `Matrix` entry when
+    /// the caller has not already found it.
+    pub(super) fn configure_object(
+        &mut self,
+        config: Option<u64>,
         parent: &mut Parent,
         world: &mut World,
         server: &mut Server,
@@ -27,7 +39,10 @@ impl Children {
         parent.refresh(world)?;
         let (saved, launcher, mut code) = parent.local_storage(|scope| {
             scope.bind().map_err(|c| Error(c as i64))?;
-            let object = scope.lookup(config::NAME).map_err(|c| Error(c as i64))?;
+            let object = match config {
+                Some(object) => object,
+                None => scope.lookup(config::NAME).map_err(|c| Error(c as i64))?,
+            };
             let mut bytes = read(scope, object, Some(config::SIZE))?;
             let saved = config::Config::decode(&bytes.map()?[..config::SIZE])
                 .ok_or(Error(abi::INVALID_ARGUMENT as i64))?;
@@ -52,7 +67,10 @@ impl Children {
             channels: 0,
             descendants: 0,
             cpu: 0,
-            pages: Some([saved.launcher_pages, 0]),
+            pages: Some([
+                saved.launcher_pages,
+                cathedral_desktop_matrix_contracts::matrix::CHOOSER_READERS,
+            ]),
             stamp: 0,
             imports: cathedral_platform_contracts::imports::ALL,
         };

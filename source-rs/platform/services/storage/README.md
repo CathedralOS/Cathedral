@@ -8,8 +8,11 @@ funds the heap, opens the guarded volume and recovers the engine, then
 sealed attachment for publications and, through [bulk.rs](bulk.rs), a sealed
 attachment for bulk reads. A bulk read with no length fetches the whole object
 at its current revision, so a launcher reads a program in one request without
-a HEAD first. The private control connection answers health and the
-supervisor's close; it conveys no object access.
+a HEAD first, and ENTRIES ([listing.rs](listing.rs)) answers a parent's direct
+children with their numbers, revisions and metadata in one sealed page, so a
+realm is named in one request rather than one LOOKUP or METADATA per child.
+The private control connection answers health and the supervisor's close; it
+conveys no object access.
 
 Readiness is the exact `ready` reply to HEALTH after the engine and store open.
 The [desktop startup controller](../../../distribution/desktop/session/persistence/startup.rs)

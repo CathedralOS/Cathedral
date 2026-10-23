@@ -7,6 +7,7 @@ mod database;
 #[cfg(feature = "recovery-lab")]
 mod gate;
 mod hierarchy;
+mod listing;
 mod metrics;
 mod service;
 #[cfg(feature = "startup-probes")]

@@ -226,23 +226,63 @@ fn directives_add_folders_configurations_and_numbered_subtree_copies_once() {
     // single objects interleave; a copy takes its numbers in one run per root.
     for (root, first, copy_first) in [(3u64, 11u64, 23u64), (8, 12, 29)] {
         assert_eq!(resolve(&rows, root, "Nested").unwrap(), Some(first));
-        assert_eq!(resolve(&rows, root, "Nested/Login").unwrap(), Some(first + 2));
-        assert_eq!(resolve(&rows, root, "Nested/Users").unwrap(), Some(first + 4));
-        assert_eq!(resolve(&rows, root, "Nested/Users/Template").unwrap(), Some(first + 6));
-        assert_eq!(resolve(&rows, root, "Nested/Users/Template/Notes").unwrap(), Some(first + 8));
-        assert_eq!(resolve(&rows, root, "Nested/Users/Template/Matrix").unwrap(), Some(first + 10));
+        assert_eq!(
+            resolve(&rows, root, "Nested/Login").unwrap(),
+            Some(first + 2)
+        );
+        assert_eq!(
+            resolve(&rows, root, "Nested/Users").unwrap(),
+            Some(first + 4)
+        );
+        assert_eq!(
+            resolve(&rows, root, "Nested/Users/Template").unwrap(),
+            Some(first + 6)
+        );
+        assert_eq!(
+            resolve(&rows, root, "Nested/Users/Template/Notes").unwrap(),
+            Some(first + 8)
+        );
+        assert_eq!(
+            resolve(&rows, root, "Nested/Users/Template/Matrix").unwrap(),
+            Some(first + 10)
+        );
         // The copy numbers siblings before descendants and shares every manifest.
-        let copy = resolve(&rows, root, "Nested/Users/Template/Nested").unwrap().unwrap();
+        let copy = resolve(&rows, root, "Nested/Users/Template/Nested")
+            .unwrap()
+            .unwrap();
         assert_eq!(copy, copy_first);
-        assert_eq!(resolve(&rows, root, "Nested/Users/Template/Nested/Login").unwrap(), Some(copy + 1));
-        assert_eq!(resolve(&rows, root, "Nested/Users/Template/Nested/Users/Template").unwrap(), Some(copy + 3));
-        assert_eq!(resolve(&rows, root, "Nested/Users/Template/Nested/Users/Template/Matrix").unwrap(), Some(copy + 5));
+        assert_eq!(
+            resolve(&rows, root, "Nested/Users/Template/Nested/Login").unwrap(),
+            Some(copy + 1)
+        );
+        assert_eq!(
+            resolve(&rows, root, "Nested/Users/Template/Nested/Users/Template").unwrap(),
+            Some(copy + 3)
+        );
+        assert_eq!(
+            resolve(
+                &rows,
+                root,
+                "Nested/Users/Template/Nested/Users/Template/Matrix"
+            )
+            .unwrap(),
+            Some(copy + 5)
+        );
         for (path, source) in [
             ("Nested/Users/Template/Nested/Login", "Nested/Login"),
             ("Nested/Users/Template/Nested/Users", "Nested/Users"),
-            ("Nested/Users/Template/Nested/Users/Template", "Nested/Users/Template"),
-            ("Nested/Users/Template/Nested/Users/Template/Notes", "Nested/Users/Template/Notes"),
-            ("Nested/Users/Template/Nested/Users/Template/Matrix", "Nested/Users/Template/Matrix"),
+            (
+                "Nested/Users/Template/Nested/Users/Template",
+                "Nested/Users/Template",
+            ),
+            (
+                "Nested/Users/Template/Nested/Users/Template/Notes",
+                "Nested/Users/Template/Notes",
+            ),
+            (
+                "Nested/Users/Template/Nested/Users/Template/Matrix",
+                "Nested/Users/Template/Matrix",
+            ),
         ] {
             let copied = resolve(&rows, root, path).unwrap().unwrap();
             let original = resolve(&rows, root, source).unwrap().unwrap();
@@ -251,17 +291,56 @@ fn directives_add_folders_configurations_and_numbered_subtree_copies_once() {
             assert_eq!(copied_head[8..48], original_head[8..48], "{path} content");
             assert_eq!(copied_head[..8], 1u64.to_le_bytes(), "{path} revision");
         }
-        assert_eq!(resolve(&rows, root, "Nested/Users/Template/Nested/Users/Template/Nested").unwrap(), None);
+        assert_eq!(
+            resolve(
+                &rows,
+                root,
+                "Nested/Users/Template/Nested/Users/Template/Nested"
+            )
+            .unwrap(),
+            None
+        );
         let folder = rows[&seed::key(b'h', &(first + 4).to_be_bytes())].clone();
-        assert_eq!(u64::from_le_bytes(folder[40..48].try_into().unwrap()), 0, "folder is empty");
+        assert_eq!(
+            u64::from_le_bytes(folder[40..48].try_into().unwrap()),
+            0,
+            "folder is empty"
+        );
         let config = &rows[&seed::key(b'h', &(first + 10).to_be_bytes())];
         let manifest = &rows[&seed::key(b'm', &config[8..40])];
-        assert!(Config::decode(&manifest[17..]).is_some(), "stock configuration");
+        assert!(
+            Config::decode(&manifest[17..]).is_some(),
+            "stock configuration"
+        );
     }
     // Directives are applied once; a second install changes nothing.
     let once = rows.clone();
     install(&mut rows, &args).unwrap();
     assert_eq!(rows, once);
-    assert!(install(&mut base(), &["Nested".into(), "@copy=Missing".into(), "-".into()]).is_err());
-    assert!(install(&mut base(), &["Nested".into(), "@unknown".into(), "-".into()]).is_err());
+    assert!(
+        install(
+            &mut base(),
+            &["Nested".into(), "@copy=Missing".into(), "-".into()]
+        )
+        .is_err()
+    );
+    assert!(
+        install(
+            &mut base(),
+            &["Nested".into(), "@unknown".into(), "-".into()]
+        )
+        .is_err()
+    );
+}
+#[test]
+fn a_program_larger_than_one_object_is_refused_at_install() {
+    let mut bytes = b"ELF".to_vec();
+    bytes.resize(cathedral_database_objects::MAX_BYTES + 1, 1);
+    let big = File::new(&bytes);
+    let args = vec!["Big".to_string(), big.path(), "-".into()];
+    let mut rows = base();
+    let before = rows.clone();
+    let error = install(&mut rows, &args).unwrap_err().to_string();
+    assert!(error.contains("fit one object"), "{error}");
+    assert_eq!(rows, before);
 }

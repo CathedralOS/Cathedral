@@ -62,8 +62,8 @@ offers. Removing the storage test toggle does not remove required/optional
 service declarations or attenuation from the platform protocol.
 
 [labels.rs](session/labels.rs) constructs the bounded default user name. Visible
-labels use hierarchy metadata, not executable footers: one name read per tile,
-since the executable filter already proved each tile's type. The host's explicit
+labels use hierarchy metadata, not executable footers: one listing of the realm
+names every tile, the hidden entry and the background. The host's explicit
 [stock-program upgrade](../../migrations/README.md) refreshes recognized existing
 user launchers, retaining their child data and customized programs.
 

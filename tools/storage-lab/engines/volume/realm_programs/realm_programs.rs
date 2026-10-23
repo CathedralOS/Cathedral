@@ -29,7 +29,7 @@ impl Source {
                 return Err(format!("unknown realm directive {directive}").into());
             }
             file => {
-                let data = std::fs::read(file)?;
+                let data = seed::program_bytes(file)?;
                 if !data.starts_with(b"\x7fELF") {
                     return Err("realm addition is not a program".into());
                 }
