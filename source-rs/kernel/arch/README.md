@@ -104,7 +104,8 @@ Root allocation and supervisor mapping preparation are separate operations.
 Core chooses a work allowance and retains the private space across steps;
 `UserMappings::prepare_kernel` completes the CPU-specific entry mappings. On
 x86, [creation](isa/x86_64/user/memory/creation.rs) copies a bounded number of
-leaves from the permanent boot tree, storing only owned ranges/cursor values.
+leaves from the permanent boot tree, global like their originals, storing only
+owned ranges/cursor values.
 The root cannot be selected until that cursor finishes. ARM64 borrows its
 supervisor branch at creation and has no per-leaf preparation work. Every owned
 table frame, including a partial batch, remains in core's rollback ledger.

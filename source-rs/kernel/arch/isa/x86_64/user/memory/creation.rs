@@ -91,7 +91,10 @@ impl UserMappings {
                     return Err(MemoryError::MapFailed);
                 };
                 let physical = frame.start_address().as_u64() + offset;
-                let flags = flags & (Flags::PRESENT | Flags::WRITABLE | Flags::NO_EXECUTE);
+                // The same leaf as the kernel root's, global like it (memory::shared):
+                // its translation is right under either root and outlives the switch.
+                let flags = (flags & (Flags::PRESENT | Flags::WRITABLE | Flags::NO_EXECUTE))
+                    | Flags::GLOBAL;
                 map(&mut target, address, physical, flags, &mut source)?;
             }
         }

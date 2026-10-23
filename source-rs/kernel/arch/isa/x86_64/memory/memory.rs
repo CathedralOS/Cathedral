@@ -1,5 +1,6 @@
 // Own the firmware mapping topology, replacing its execution permissions.
-// New stack/heap mappings are 4-KiB, writable and NX, with unmapped guards.
+// New stack/heap mappings are 4-KiB, writable and NX, with unmapped guards, and
+// global like the image: every user root shares them (shared.rs).
 
 use ::x86_64::{
     PhysAddr, VirtAddr,
@@ -82,7 +83,8 @@ impl BootLayout {
             let cr4 = Cr4::read();
             Cr4::write(cr4 & !Cr4Flags::PAGE_GLOBAL);
             Cr3::write(self.root, Cr3::read().1);
-            Cr4::write(cr4);
+            // From here the only global translations are the ranges every root shares.
+            Cr4::write(cr4 | Cr4Flags::PAGE_GLOBAL);
         }
     }
 }
@@ -142,6 +144,10 @@ pub unsafe fn prepare_memory(
     }
     // SAFETY: All copied table pages are exclusively owned and identity mapped.
     let mut mapper = unsafe { OffsetPageTable::new(table, VirtAddr::zero()) };
+    // SAFETY: The root is inactive and owned here; inherited::copy split its image leaves.
+    unsafe {
+        shared::share_image(&mut mapper, image)?;
+    }
     let stack_bottom = STACK_BASE + PAGE_SIZE;
     let stack_top = stack_bottom + STACK_PAGES * PAGE_SIZE;
     // SAFETY: New virtual ranges are vacant and backing comes from unique frames.
@@ -199,7 +205,10 @@ unsafe fn map_range<F: FnMut() -> Option<u64>>(
         }
         let page =
             Page::<Size4KiB>::from_start_address(VirtAddr::new(base + index * PAGE_SIZE)).unwrap();
-        let flags = PageTableFlags::PRESENT | PageTableFlags::WRITABLE | PageTableFlags::NO_EXECUTE;
+        let flags = PageTableFlags::PRESENT
+            | PageTableFlags::WRITABLE
+            | PageTableFlags::NO_EXECUTE
+            | PageTableFlags::GLOBAL;
         // SAFETY: Unique backing and previously unmapped virtual range. This
         // hierarchy is not active yet, so no current TLB entry requires flushing.
         unsafe { mapper.map_to(page, frame, flags, frames) }

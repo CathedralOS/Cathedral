@@ -157,6 +157,7 @@ unsafe fn retire(
             &mut tables,
         );
     }
+    // Task stacks are never global, so a root reload retires their translations.
     tlb::flush_all();
     for address in &tables.addresses[..tables.len] {
         // SAFETY: Empty tables are detached and paging-structure caches flushed.

@@ -76,6 +76,8 @@ unsafe fn install<F: FnMut() -> Option<u64>>(
         }
         entry.set_addr(child.start_address(), parents(flags) & !Flags::HUGE_PAGE);
     } else {
+        // Firmware's choice of global pages is not ours: shared.rs marks the
+        // image's identity leaves afterwards, and nothing else inherited is.
         let mut flags = flags & !(Flags::USER_ACCESSIBLE | Flags::GLOBAL);
         flags.insert(Flags::NO_EXECUTE);
         if let Some(permissions) = image.permissions(physical) {

@@ -1,6 +1,8 @@
 // Single-CPU address-space transitions for the Rust containment experiment.
 // Entry assembly switches to the kernel root before calling Rust. Only the
-// image, entry stacks and context-storage heap are mapped in both roots.
+// image, entry stacks and context-storage heap are mapped in both roots, and
+// those are the kernel's only global translations (memory::shared), so a
+// restricted root inherits no translation from the TLB that it does not map.
 
 use ::x86_64::registers::control::{Cr3, Cr4, Cr4Flags};
 use core::sync::atomic::{AtomicU64, Ordering};
@@ -13,11 +15,9 @@ pub(super) static RETURN_ROOT: AtomicU64 = AtomicU64::new(0);
 /// code/tables, emergency stacks and heap contexts supervisor-only.
 pub unsafe fn begin_user_session() {
     assert_eq!(ENTRY_ROOT.load(Ordering::Acquire), 0);
-    // SAFETY: PCID was rejected during boot. Disable global translations so no
-    // inherited firmware translation survives a switch to a restricted root.
-    unsafe {
-        Cr4::update(|flags| flags.remove(Cr4Flags::PAGE_GLOBAL));
-    }
+    // PCID was rejected during boot; activating the kernel root retired the
+    // firmware's global translations and enabled the kernel's own.
+    assert!(Cr4::read().contains(Cr4Flags::PAGE_GLOBAL));
     let root = Cr3::read().0.start_address().as_u64();
     ENTRY_ROOT.store(root, Ordering::Release);
     RETURN_ROOT.store(root, Ordering::Release);

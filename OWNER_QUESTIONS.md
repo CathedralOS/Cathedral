@@ -320,15 +320,18 @@ policy before treating the lab's task model as Cathedral's component model.
 
 **Trap-path lab evidence (2026-10-22, not a boundary decision).** The Rust lab
 keeps the kernel in its own page-table root: every trap switches roots on entry
-and back on return, and no mapping is global, so each syscall drops both the
-kernel's and the task's translations. Under TCG that is the cost of a storage
-hop between matrices, about 290 µs net of tracing against 45 µs for a bare
-round trip between two tiny tasks and 5 µs of kernel work; a depth-4 user entry
-spends about 85 ms of its 520 there. Global supervisor leaves would spare the
-kernel's half at no isolation cost; sparing the task's half needs PCID, which
+and back on return. The seven supervisor ranges every root shares (image,
+stacks, context heap) are global, so the kernel's translations survive the
+switches; the task's are dropped by each one. 32 bare round trips between two
+tiny tasks cost about 3,140 to 4,824 µs under TCG, where the emulator rebuilds its
+whole TLB on every root switch whatever the guest marks global, and about
+118 to 144 µs under the Windows hypervisor on the lab host, 15 percent less
+than before the global leaves. A storage hop between matrices
+is about 290 µs net of tracing under TCG and within the trace line's own noise
+on hardware; a depth-4 user entry spends about 85 ms of its 520 in hops under
+TCG and almost nothing on hardware. Sparing the task's half needs PCID, which
 the lab refuses, or the kernel executing in the task's root, which is this
-boundary. Real hardware pays microseconds for the same switches. The lab leaves
-the roots as they are until the boundary is chosen.
+boundary. The lab leaves the roots as they are until the boundary is chosen.
 
 ### Writable row spans and component admission
 
@@ -596,7 +599,9 @@ leaves the upward hop near 290 µs. The kernel's trap work is 5 µs, a woken tas
 is selected within 13 µs of its completion, and a bare round trip between two
 small tasks measures 94 µs in the IPC lab, so the rest is the woken matrix
 re-touching its working set through the emulator's translation cache after the
-page-table reload. A direct switch to the task an IPC wakes would therefore
+page-table reload; on hardware (the Windows hypervisor on the lab host) the
+same 32 round trips take about 118 to 144 µs and the hop sits inside the
+trace line's own noise. A direct switch to the task an IPC wakes would therefore
 save only the yield's trap, and what it decides is whose turn funds the
 receiver's work, which is this question; the lab keeps the yield and leaves the
 switch policy open.

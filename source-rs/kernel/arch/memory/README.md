@@ -23,9 +23,14 @@ On [x86-64](../isa/x86_64/memory/memory.rs), `inherited.rs` retains firmware map
 topology and leaf cache attributes, owns every table, and imposes permissions by
 physical backing. Every alias of an image page gets its section permissions.
 Large leaves overlapping the image split down to 4-KiB pages, preserving PAT
-encoding. Other leaves become supervisor-only/NX. Activation enables CR0.WP and
-EFER.NXE and flushes inherited global translations, not only non-global entries.
-User roots copy these protected image permissions.
+encoding. Other leaves become supervisor-only/NX. `shared.rs` then marks the
+image's identity leaves global, as the new stack, emergency-stack and heap leaves
+are: those seven ranges are exactly what every user root copies, so their
+translations survive the two root switches of a trap, while the firmware's
+aliases of image frames and the per-slot task stacks stay per root and are
+retired by each switch. Activation enables CR0.WP and EFER.NXE, flushes the
+firmware's global translations and enables the kernel's own. User roots copy
+these protected image permissions and the global flag with them.
 
 On [ARM64](../isa/aarch64/memory/memory.rs), `identity.rs` maps board windows NX
 and splits image-containing 2-MiB blocks into 4-KiB pages. Only image code permits

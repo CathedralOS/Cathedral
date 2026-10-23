@@ -1,14 +1,15 @@
 # Rust reference OS: tasks and handoff
 
-Updated 2026-10-22 (local date). Current milestone: **where a forwarded request
-spends its time**, on baseline `44b11710` (a realm named in one listing; the
-stock matrix size-optimized). Storage traces carry the kernel's microsecond
-clock, `hop_latency.py` attributes each hop of a request chain net of the trace
-line's own cost, and matrices yield right after forwarding or answering: a hop
-is about 290 µs of address-space switch under TCG against 30 µs of matrix
-work, and a depth-4 user entry takes eleven requests and about 520 to 560 ms
-(from twenty-nine and 1,178 at the start of the day); the newest section at
-the end records the measurements and the open items.
+Updated 2026-10-22 (local date). Current milestone: **the hop on hardware, and
+global shared leaves**, on baseline `f8bab679` (where a forwarded request
+spends its time). The harness runs the guest under the Windows hypervisor with
+`--accel whpx` as well as under TCG: 32 bare round trips between two tasks cost
+118 to 144 µs there against 3,140 to 4,824 under TCG, and the hop between
+matrices sits inside the trace line's own noise. The seven supervisor ranges
+every root shares are global now, so the kernel's translations survive the two
+root switches of a trap: 15 percent off the round trip on hardware, nothing
+under TCG, whose emulator flushes everything on every root switch. The newest
+section at the end records the measurements and the open items.
 Saved-state testing is an explicit launch choice. The section before it
 distinguishes current-program four-level verification from failures in
 retained executable snapshots.
@@ -5535,3 +5536,122 @@ Next, in order:
    account in a session now has a per-cycle check.
 5. Launching one program over one realm twice stays an owner question in
    [OWNER_QUESTIONS.md](OWNER_QUESTIONS.md).
+
+## The hop on hardware, and global shared leaves (2026-10-22)
+
+Baseline: `f8bab679`. The section before this one attributed the per-hop cost
+under TCG to the two root switches of every trap and named global supervisor
+leaves as the one lever that needs no boundary decision. This entry measures
+the hop where paging is the host CPU's, takes that lever, and leaves the lab
+able to time either way.
+
+**TCG cannot show global pages.** QEMU's `cpu_x86_update_cr3` flushes the whole
+software TLB on every CR3 write while paging is on, `cpu_x86_update_cr4`
+flushes again only when PGE itself changes, and the x86 page walker never reads
+the global bit (v9.2.0 and current master alike). Under TCG a global leaf
+therefore costs nothing and saves nothing, and the 45 µs a bare switch costs
+there is the emulator rebuilding its own TLB, not the guest's. The lab's QEMU
+(11.0.50) also carries WHPX, the Windows hypervisor accelerator, under which
+the guest's page tables and TLB run on the host CPU. [run.py](tools/boot-harness-rs/run.py)
+and [desktop_test.py](tools/boot-harness-rs/desktop_test.py) take `--accel whpx`.
+The guest cannot see QEMU's VM port under WHPX, so the desktop runs there with
+`--relative-pointer`, which the latency and soak workloads now accept, and the
+latency workload's pointer steps go through the transport-aware `point` helper
+instead of sending absolute positions themselves. The smoke suite and the
+depth-4 latency workload pass under WHPX
+(`build/whpx-smoke.log`, `build/boot-harness-rs/desktop/20261023T060538222615Z`).
+
+**What hardware pays.** Every serial byte is a hypervisor exit under WHPX, so a
+trace line costs about 1,150 µs there against 231 under TCG, and the hop figures
+net of it sit inside its own noise: 0 to 140 µs for the hop up between matrices
+and 39 to 224 down over two boots, against 290 and 370 under TCG. A traced
+workload is therefore bound by its own tracing under WHPX, and the untraced
+entry is the end-to-end figure. All TCG figures here are today's: by the
+afternoon the host ran TCG about 1.6 times slower than in the morning's runs,
+the trace line itself at 434 to 649 µs against 231, on the unchanged kernel as
+well (820 to 959 ms for the traced depth-4 entry before the global
+leaves, `build/boot-harness-rs/desktop/20261023T063432217407Z`), so a figure compares only with one taken
+beside it.
+
+| Figure, 32 round trips or one depth-4 step | TCG | WHPX |
+| --- | --- | --- |
+| bare round trip between two tasks, fastest burst | 3,140 to 4,824 µs | 118 to 144 µs |
+| the whole exchange, eight bursts | 36,977 to 44,346 µs | 1,094 to 1,217 µs |
+| trace line itself | 434 to 649 µs (231 in the morning) | about 1,150 µs |
+| hop up between matrices, net median | 332 to 512 µs (290 in the morning) | within trace noise |
+| depth-4 user entry, traced | 828 to 851 ms | 787 to 989 ms |
+| depth-4 user entry, untraced | 620 to 629 ms | 329 to 431 ms |
+| depth-4 picker launch, untraced | 460 to 533 ms | 777 to 785 ms |
+
+(`build/final*-smoke-*.log`, `build/boot-harness-rs/desktop/20261023T063541759172Z`, `build/boot-harness-rs/desktop/20261023T060759118274Z`, `build/boot-harness-rs/desktop/20261023T063026021739Z`,
+`build/boot-harness-rs/desktop/20261023T062823481668Z`.) Two emulation costs shape the WHPX column. Every word
+of an ATA PIO transfer is a port-I/O exit, so the steps that read programs from
+disk are slower there: the root entry's 496 sectors take 1,655 ms against 553,
+the depth-1 picker launch's 296 take 1,362 against 464, while the depth-4 steps
+read 16 sectors or none and show the kernel and the matrices instead. And the
+desktop runs on the relative pointer there, so a step that clicks carries the
+pointer's paced walk, about 40 ms per 70 pixels, which the TCG run on the
+absolute pointer does not pay; the depth-4 picker launch is mostly that walk.
+What the kernel and the matrices add on hardware is small beside both.
+
+**Global shared leaves.** [shared.rs](source-rs/kernel/arch/isa/x86_64/memory/shared.rs)
+names the supervisor ranges every root maps identically, the image, the boot
+and emergency stacks and the context heap, and marks the image's identity
+leaves global in the kernel root after [inherited.rs](source-rs/kernel/arch/isa/x86_64/memory/inherited.rs)
+has copied the firmware's tables; the stack and heap leaves are mapped global,
+and [creation.rs](source-rs/kernel/arch/isa/x86_64/user/memory/creation.rs)
+copies the flag into every user root with the leaf. Activation retires the
+firmware's global translations and sets CR4.PGE; the user session asserts it
+instead of clearing it. Nothing else is global: the firmware's aliases of
+image frames and the per-slot task stacks stay per root and are retired by
+each switch, so a restricted root inherits no translation from the TLB that it
+does not map, and no flush site changes, since the shared ranges never change
+after boot. A host test walks a copied tree and checks the identity leaves are
+global, the alias of the same frames is not and the neighbours are untouched.
+Measured as an interleaved A/B, three smoke runs each way under each
+accelerator with a 256-round exchange: under WHPX 1,310 to 1,359 µs without
+the global leaves and 1,128 to 1,175 with (one run 3,508 with a host
+preemption inside), about 15 percent less per round trip, 5.2 to 4.5 µs; under
+TCG 38.4 to 38.5 ms without and 36.9 to 42.0 with, unchanged within noise, as
+QEMU's source says it must be; on the desktop workload under TCG, run beside
+each other, the traced depth-4 entry took 820 to 959 ms without and
+828 to 851 with. Kept: correct by construction, no isolation
+cost, and the kernel's half of every switch spared on hardware. The task's
+half still needs PCID or the kernel executing in the task's root, which is the
+isolation boundary the owner has left open; both evidence paragraphs in
+OWNER_QUESTIONS.md carry the hardware figures now.
+
+**The exchange in bursts.** 256 round trips under TCG cost 150 µs each against
+93 for 32, because ten-millisecond ticks land inside a 38 ms exchange. The echo
+client now runs eight bursts of 32, times each, and reports the fastest burst
+beside the whole exchange (`ipc-roundtrip 32 <fastest> <total>`); the fastest
+burst is the switch cost with no tick or host preemption inside it.
+[lab.rs](source-rs/kernel/contracts/lab.rs) holds the counts for the kernel's
+lab and the program alike, so the lab's accounting check and the program agree
+by construction.
+
+Verification:
+
+- Host: workspace `cargo test --locked` (263); `cargo check-uefi` and the
+  arch crate's host tests (13, with the shared-leaves test); `cargo
+  check-userspace`; harness Python (10); formatting and layout checks.
+- Guest: the smoke suite under TCG and WHPX twice each on the final tree
+  (`build/final-smoke-*.log`); the interleaved A/B (`build/ab-*.log`); the
+  depth-4 latency workload with traces under WHPX before and after the global
+  leaves (`build/boot-harness-rs/desktop/20261023T060538222615Z`, `build/boot-harness-rs/desktop/20261023T060759118274Z`)
+  and under TCG before and after (`build/boot-harness-rs/desktop/20261023T063432217407Z`, `build/boot-harness-rs/desktop/20261023T063541759172Z`); the
+  untraced depth-4 workload under both (`build/boot-harness-rs/desktop/20261023T062823481668Z`,
+  `build/boot-harness-rs/desktop/20261023T063026021739Z`).
+
+Next, in order:
+
+1. The switch path has nothing left to take without a boundary decision: the
+   kernel's translations survive every trap, the task's would need PCID or the
+   kernel in the task's root. Both live under the isolation-boundary question
+   in OWNER_QUESTIONS.md with the TCG and WHPX figures.
+2. Timing taken under one accelerator compares only with timing under the
+   same one. The TCG figures in the sections before this one stand; a figure
+   for hardware is a WHPX run of the same command.
+3. The owner questions this work raised remain open: launching one program
+   over one realm twice, CPU sponsorship across service calls, the isolation
+   boundary.
