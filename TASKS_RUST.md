@@ -5428,7 +5428,10 @@ Verification:
   `--matrix-desktop-test`, and the three-cycle soak at depth two with the root's
   accounting steady at 0 private and 38 reader pages, 95 frames and 22 free
   slots; `build/suite18-*.log` covers the clock read alone on the plain desktop
-  and the two input-traced matrix suites.
+  and the two input-traced matrix suites. `build/soak-accounts.log` is the
+  three-cycle soak with every reclamation sample compared: each cycle, in both
+  boots, reports the two picker retirements, the nested desktop's Notes close
+  and the root's teardown with identical pages, frames and free slots.
 
 Next, in order:
 
@@ -5446,8 +5449,8 @@ Next, in order:
    and would couple the chooser to the launch argument; not worth it on this
    evidence. The entry's remaining 400 ms is admission, placement and drawing.
 3. The clean-close LOSS timeout did not reproduce in these runs either.
-4. The soak holds the root's kernel accounting steady across cycles; nested
-   matrices' samples are recorded but not yet compared, and nothing samples the
-   provider's or the desktop's own accounts.
+4. The soak now holds every matrix's reclamation sample steady across cycles,
+   in order: the nested desktop's after closing Notes and the root's after the
+   teardown. Nothing samples the provider's or the desktop's own accounts.
 5. Launching one program over one realm twice stays an owner question in
    [OWNER_QUESTIONS.md](OWNER_QUESTIONS.md).

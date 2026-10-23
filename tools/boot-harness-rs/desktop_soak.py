@@ -105,16 +105,19 @@ def exercise(output, click, key, scan, width, height, reboot, cycles, pointer_st
                       provider_requests=log.count('STORAGE_TRACE provider-begin'),
                       collection_passes=log.count('STORAGE_TRACE collect-pass'),
                       account=accounts[-1] if accounts else None,
+                      accounts=accounts,
                       failures=failures)
         records.append(record)
         path.write_text(json.dumps(dict(nested_depth=nested_depth, reboot=reboot, cycles=records), indent=2))
         print(f"Soak cycle {cycle}: {elapsed}s; heap live {record['heap_live_end']} peak {record['heap_peak']} of {record['heap_capacity']}; "
               f"provider requests {record['provider_requests']}", flush=True)
         assert not failures, f'cycle {cycle} saw {failures}; logs: {output}'
-        # The root matrix reclaimed the Nested subtree last. What the kernel still
-        # charges it, and the slots it can launch into, must match cycle to cycle.
+        # Every cycle does the same work, so every matrix that reclaimed a child
+        # (the nested desktop closing Notes, then the root tearing the Nested
+        # subtree down) must report the same pages, frames and free slots as in
+        # the first cycle, in the same order.
         assert accounts, f'cycle {cycle} recorded no reclamation sample; logs: {output}'
-        assert record['account'] == records[0]['account'], f"cycle {cycle} kernel accounting drifted: {records[0]['account']} -> {record['account']}"
+        assert record['accounts'] == records[0]['accounts'], f"cycle {cycle} kernel accounting drifted: {records[0]['accounts']} -> {record['accounts']}"
         assert all(h['failures'] == 0 for h in heaps), f'provider allocation failed in cycle {cycle}: {heaps}'
         assert all(h['capacity'] - h['peak'] >= HEAP_HEADROOM for h in heaps), f'provider heap headroom lost in cycle {cycle}: {heaps}'
         if collection_pressure:
