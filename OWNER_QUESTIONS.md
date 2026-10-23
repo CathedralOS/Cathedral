@@ -126,8 +126,15 @@ defines a seat as cursor plus key focus, and the
 agent's labeled cursor with a virtual seat. This leaves unclear whether a
 lightweight or visual-only pointer necessarily creates a full focus context.
 
-**Contracts checked.** The [specification index](wiki/spec/README.md) assigns
-compositor and seat semantics to an unwritten subject. The
+**Settled input boundary (2026-10-23).** The accepted
+[input contract](wiki/spec/human_surface/input.md) separates source/control identity,
+observation, injection and keyboard authority; visible cursor pixels confer none
+of them. It permits scoped mapping/forwarding and does not require a complete seat
+for a visual marker. This resolves that part of the original question. The final
+relationship between acting pointers, seats and independent focus remains open.
+
+**Contracts checked.** The [compositor/seat contract](wiki/spec/human_surface/compositor_and_seat.md)
+is partial and does not yet define that relationship. The
 [source contracts charter](source/contracts/CHARTER.md) supplies no pointer or
 seat protocol. The [Rust input transport](source-rs/platform/contracts/input.rs) carries
 key events only. The separate [Rust pointer experiment](source-rs/distribution/lab/compositor/POINTERS.md)
@@ -137,17 +144,16 @@ adds attenuated keyboard-focus grants and a separate hosted child. Neither lab
 settles seats, principal attribution or general recursive delegation, so this
 owner choice remains open.
 
-**Owner choice.** Require every logical pointer to be a complete seat, or permit
-separately leased pointers associated with an explicit seat context. The former
-ties cursor creation to independent keyboard-focus state. The latter supports
-lightweight pointers but needs rules for principal association, permitted button
-actions and focus changes. In either model, visual presence alone must not grant
-input authority or establish physical origin.
+**Remaining owner choice.** Define how actionable pointers associate with
+independent keyboard-focus contexts, which participants may change each context's
+selection, and how applications arbitrate simultaneous controllers. The accepted
+separation of input authority does not settle that topology or the recursive
+cursor-presentation handoff. Visual presence alone grants no action authority.
 
-**Recommendation (unaccepted).** Separate input sources, logical pointers and
-cursor visuals. Delegate motion, action and observation rights within a Matrix's
-authority; do not imply keyboard control. Keep seat association explicit and
-retain trusted source provenance when multiplexing. The
+**Remaining recommendation (unaccepted).** Build on the accepted separation of
+input authority with explicit seat/context association, rather than inferring
+keyboard focus from a cursor. Specify how selection and concurrent controllers
+work before freezing the seat protocol. The
 [pointer proposal](wiki/proposals/0001_input_and_pointer_leases.md) develops this
 model while leaving the final focus topology and compatibility adapter open.
 
@@ -163,8 +169,10 @@ The same section describes focus as a capability minted and revoked on focus
 changes, without separating standing routing/delegation authority from the
 currently selected recipient.
 
-**Contracts checked.** The [specification index](wiki/spec/README.md) leaves
-compositor/seat and capability semantics unwritten. The
+**Contracts checked.** The [input contract](wiki/spec/human_surface/input.md) requires
+defined ordering, target lifetime and observable loss/cancellation, but explicitly
+leaves the focus-switch commit policy open. Compositor/seat coverage remains partial
+and general capability semantics remain unwritten. The
 [Rust interaction contract](source-rs/platform/contracts/display/interaction.rs) and
 [session lab](source-rs/distribution/lab/compositor/SESSION.md) are experimental.
 The owner has affirmed that keyboard focus attenuates like other delegated

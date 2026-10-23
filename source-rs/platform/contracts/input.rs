@@ -1,5 +1,7 @@
 //! Experimental physical-key events. Text, layout, focus and shortcuts are not
 //! part of this transport. NEXT yields one event or IDLE; RESET clears held-key state.
+//! The accepted direction is wiki/spec/human_surface/input.md. These lab constants
+//! are not its production encoding and do not implement its full delivery contract.
 pub const NEXT: [u8; 1] = [1];
 pub const HEALTH: [u8; 1] = [2];
 pub const F3: u8 = 9;

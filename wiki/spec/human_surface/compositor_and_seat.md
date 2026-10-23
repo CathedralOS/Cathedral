@@ -56,6 +56,10 @@ system regardless of inner configuration.
 
 ## Evidence and limits
 
+The separate [input contract](input.md) establishes delivery, representations,
+accepted interaction targets and mappings. It does not settle focus topology,
+views, rendering or the scene/hit-test commit relationship.
+
 The [Rust distribution](../../../source-rs/distribution/README.md) runs separate
 chrome and background programs and recursively hosted desktops. Its current
 launcher recovery and owner-mediated close are partial mechanism evidence; the

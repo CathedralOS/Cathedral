@@ -57,6 +57,23 @@ Override slot format and recovery implementation are not frozen. The Rust lab
 does not yet implement the protected long-press path; current child close and
 launcher restart are not that guarantee. No runtime behavior changed here.
 
+Owner ratification 2026-10-23: the [input foundation](wiki/spec/human_surface/input.md)
+now specifies scoped buffered delivery, explicit loss/resynchronization, distinct
+physical/symbol/text/action representations, accepted interaction targets and
+matrix-controlled mappings. Latest interaction descriptions do not replace event
+history. Raw canvas/controller subscriptions remain valid; rich semantics are a
+separate quality claim. No per-frame advertisement or universal revision counter
+is required. Focus topology, views, rendering and scene/input commits remain open.
+The Rust key ABI and sixteen-event matrix queues are partial evidence only; no
+production wire encoding, text stack or shared input ring has landed here.
+
+Input follow-up: design the stream/snapshot boundary and exercise press/release
+during a stalled consumer, overflow/resynchronization, disconnect while held,
+remapping while held, multiple source contributions and nested forwarding.
+Keep timing and scene/focus questions separate rather than silently choosing them
+in an input transport patch. This ratification changed docs/comments only and
+added no runtime verification evidence.
+
 Next implementation slice: add funded coordination acquisition to the existing
 broker and prove simultaneous first registration, rejected identity spoofing,
 constraint combinations, accepted/refused introductions and dead-holder cleanup.

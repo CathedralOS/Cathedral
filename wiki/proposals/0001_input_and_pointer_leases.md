@@ -1,5 +1,11 @@
 # Input sources and scoped pointer leases
 
+The owner has accepted the separate [input foundation](../spec/human_surface/input.md):
+scoped delivery, distinct representations, interaction registration and mappings.
+That partial acceptance supersedes conflicting delivery/mapping assumptions here;
+it does not ratify this proposal's seat topology, cursor presentation or rendering
+choices. Those remain candidates.
+
 The platform should route input through logical pointers that can be driven by
 authorized sources. A hardware mouse is one source. A Matrix can delegate a
 pointer within its own subtree without handing an app the operator's mouse or
@@ -8,7 +14,7 @@ keyboard focus.
 | Status | Scope |
 | --- | --- |
 | Proposed | Candidate architecture, not an accepted Cathedral contract |
-| Specification owner | Unwritten `spec/human_surface/compositor_and_seat.md`; see the [coverage map](../spec/README.md) |
+| Specification owners | Partial [input](../spec/human_surface/input.md) and [compositor/seat](../spec/human_surface/compositor_and_seat.md) contracts; this proposal's remaining choices are not accepted |
 | Implementation evidence | [Rust pointer lab](../../source-rs/distribution/lab/compositor/POINTERS.md) exercises one physical and one scoped synthetic pointer; production seats, multiplexing and recursive leases are absent |
 
 ## Separate the objects
@@ -103,8 +109,8 @@ An app may supply a cursor asset and request a hotspot, style or descriptive tag
 The compositor renders the accepted visual and derives trusted attribution from
 the acting principal. An app-supplied name cannot replace that identity or claim
 to be an operator or system prompt. Distribution styling must preserve the
-eventual trusted-indicator contract, whose boundary is still an
-[owner question](../../OWNER_QUESTIONS.md#replaceable-distribution-versus-permanent-os-chrome).
+eventual trusted-indicator contract, which is not established by the accepted
+[desktop recovery contract](../spec/human_surface/compositor_and_seat.md).
 
 Cursor assets use the same bounded resource registration and read-lease model
 as the [rendering proposal](0000_rendering_and_composition.md). Moving a cursor

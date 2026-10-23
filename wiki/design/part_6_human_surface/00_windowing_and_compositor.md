@@ -7,6 +7,10 @@ programs in `distribution/` and common authority mechanisms in `platform/`.
 The broader trusted-prompt, capture and seat proposals below remain design work;
 they are not all ratified by this partial contract.
 
+The accepted [input foundation](../../spec/human_surface/input.md) separately owns
+buffered delivery, representations, target registration and recursive mappings.
+Focus, views and rendering details below are not ratified by that acceptance.
+
 > The compositor owns window arrangement, input routing, and the trusted path that lets a human know which app they are talking to.
 
 ## The Legacy Model
