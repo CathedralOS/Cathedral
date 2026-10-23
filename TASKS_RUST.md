@@ -5439,9 +5439,12 @@ Next, in order:
    open CPU sponsorship question; measure the switch path's own phases (the
    `KERNEL_PHASE` timing report) on a run that ends its session before
    choosing.
-2. A depth-4 user entry issues 13 sequential requests; the background's lookup
-   could ride the listing the matrix already read, and a launcher could receive
-   its arrangement with its launch instead of reading it.
+2. A depth-4 user entry issues 13 sequential requests. With a round trip now
+   about 6 ms at that depth, the two requests that could still go (the
+   background's lookup riding the matrix's listing, a launcher receiving its
+   arrangement with its launch) are worth about 1 percent of the entry each
+   and would couple the chooser to the launch argument; not worth it on this
+   evidence. The entry's remaining 400 ms is admission, placement and drawing.
 3. The clean-close LOSS timeout did not reproduce in these runs either.
 4. The soak holds the root's kernel accounting steady across cycles; nested
    matrices' samples are recorded but not yet compared, and nothing samples the
