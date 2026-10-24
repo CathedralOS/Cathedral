@@ -7,6 +7,9 @@ Status: proposed behavior under [rendering and composition](../0000_rendering_an
 The accepted [presentation contract](../../spec/human_surface/rendering.md) owns
 placement authority and the ability to forward without ancestor pixel buffers;
 this page's scene vocabulary, revision scheme and text placement remain proposed.
+Its accepted hit-test baseline does not wait for a matching displayed frame.
+The revision scheme below must not be read as requiring cross-matrix atomic
+display/input commits or guaranteed screenshot-to-click matching.
 This page owns submission and nesting. Resource lifetime belongs to
 [resource custody](resource_custody.md); target execution belongs to
 [execution and presentation](execution_and_presentation.md).

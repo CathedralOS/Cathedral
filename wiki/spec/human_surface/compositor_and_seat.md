@@ -61,7 +61,9 @@ accepted interaction targets and mappings. The [focus contract](focus_routes.md)
 defines exclusive group control, recursive local selection and input transitions.
 The [presentation contract](rendering.md) establishes placement ownership,
 rendering demand and scoped fullscreen. Concrete view APIs and the scene/hit-test
-commit relationship remain separate.
+commit wire mechanisms remain separate. Its accepted baseline uses coherent
+accepted-layout hit-testing rather than exact matching to displayed frames;
+capture serves masked output and cursor preference follows each pointer's target.
 
 The [Rust distribution](../../../source-rs/distribution/README.md) runs separate
 chrome and background programs and recursively hosted desktops. Its current

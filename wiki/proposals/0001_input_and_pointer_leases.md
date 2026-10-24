@@ -5,8 +5,9 @@ The accepted [input foundation](../spec/human_surface/input.md),
 [focus contract](../spec/human_surface/focus_routes.md) own delivery, registration,
 exclusive group control, channel association and recursive local selection.
 They supersede conflicting seat or focus assumptions below. This proposal now
-explores remaining cursor presentation, attribution and scene coupling choices;
-those choices are not accepted by the focus contract.
+explores remaining attribution, protected indicators and protocol details.
+The [presentation contract](../spec/human_surface/rendering.md) now also owns
+accepted-layout hit-testing and pointer-target cursor preference/suppression.
 
 The platform should route input through logical pointers that can be driven by
 authorized sources. A hardware mouse is one source. A Matrix can delegate a
@@ -23,9 +24,8 @@ keyboard focus.
 
 The [windowing design](../design/part_6_human_surface/00_windowing_and_compositor.md)
 already anticipates multiple labeled cursors, agents and remote collaboration.
-It describes each seat as a cursor plus keyboard focus. Lightweight pointers
-inside a Matrix need a clearer separation between motion, visual presence and
-permission to act.
+The accepted contracts separate motion, visual presence, keyboard selection
+and permission to act; a cursor does not require a mandatory full seat.
 
 | Object | Responsibility |
 | --- | --- |
@@ -90,10 +90,10 @@ requires authority that the child lease does not supply.
 
 Each hosting level applies its transforms and routing restrictions. Flattening
 the scene for drawing does not bypass input interception, clipping or occlusion.
-Input routing and rendering need a defined scene revision relationship so the
-visible target and the hit-tested target agree under movement and reparenting.
-Choosing accepted versus presented state, including the treatment of queued
-events, remains specification work.
+The [accepted-layout rule](../spec/human_surface/rendering.md#hit-testing-and-displayed-state)
+permits displayed pixels to lag hit-testing. Each local decision uses coherent
+geometry and keeps its target fixed; exact presented-frame matching and strict
+screenshot-context rejection are not required.
 
 Capture belongs to a particular pointer, target and grant. A pointer lease alone
 does not hide the operator's cursor, capture another pointer or transfer keyboard
@@ -105,26 +105,22 @@ one agent pointer. A participant might receive a visual marker only, while the
 agent receives bounded motion and activation within the document. The local
 operator keeps an independent pointer and the reserved escape path.
 
-## Rendering cursors and names
+## Cursor attribution and indicators
 
-An app may supply a cursor asset and request a hotspot, style or descriptive tag.
-The compositor renders the accepted visual and derives trusted attribution from
-the acting principal. An app-supplied name cannot replace that identity or claim
-to be an operator or system prompt. Distribution styling must preserve the
-eventual trusted-indicator contract, which is not established by the accepted
-[desktop recovery contract](../spec/human_surface/compositor_and_seat.md).
+The [presentation contract](../spec/human_surface/rendering.md#cursor-presentations)
+now owns bounded cursor surfaces, per-pointer target preferences, no-cursor
+requests and recursive owner-controlled handoff. Hiding does not imply pointer
+lock or capture, and keyboard selection does not determine cursor preference.
 
-Cursor assets use the same bounded resource registration and read-lease model
-as the [rendering proposal](0000_rendering_and_composition.md). Moving a cursor
-updates position; it does not require uploading its bitmap again or rasterizing
-every ancestor Matrix. Resource loss needs a platform-controlled fallback so an
-actionable pointer cannot lose required attribution because an app stopped
-serving its asset.
+A possible additional policy is an owner-authenticated participant label or
+activity indicator. App-supplied text cannot itself establish authenticated
+identity. Whether such indicators are required, which identity they expose,
+and what appears for hidden targets remain in the
+[owner question](../../OWNER_QUESTIONS.md#recursive-cursor-presentation-and-attribution).
+A mandatory protected fallback is a proposal, not implied by ordinary cursors.
 
-An app may also draw decorative pointers into its own content. Those pixels
-confer no input authority and cannot replace the protected cursor over a trusted
-prompt. This distinction permits custom visuals while retaining the windowing
-design's rule that the compositor owns the real cursor.
+Cursor assets follow the accepted [resource lifetime](../spec/human_surface/rendering_resources.md).
+Decorative pixels confer no input authority or right to cover protected output.
 
 ## Lifetime and bounded work
 

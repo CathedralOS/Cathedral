@@ -140,5 +140,6 @@ Current recursive event forwarding remains an implementation baseline, not a
 mandated production transport. This acceptance adds no new runtime evidence.
 Wire schemas, group limits and transition acknowledgements remain work.
 [Placement and rendering demand](rendering.md) have a separate partial contract.
-Masks, atomic scene/hit-test publication, cursor presentation handoff and
-protected-prompt protocols are not selected here.
+That contract also defines accepted-layout hit-testing and pointer-target cursor
+preferences independently of keyboard selection. Exact mask publication,
+protected indicators and protected-prompt protocols are not selected here.

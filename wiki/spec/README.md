@@ -40,6 +40,7 @@ subject. A current specification may precede implementation.
 | Logical input channels, stable identity and scoped discovery | [Input channels and discovery](human_surface/input_channels.md) | Partial | None |
 | Exclusive focus-group control, recursive local selection and input transitions | [Focus groups and routes](human_surface/focus_routes.md) | Partial | Partial |
 | Owner-managed placement, rendering demand, scoped fullscreen and backend boundaries | [Rendering and presentation](human_surface/rendering.md) | Partial | Partial |
+| Authorized image versions, local/remote backing and safe reclamation | [Rendering resources](human_surface/rendering_resources.md) | Partial | Partial |
 
 ## Owned but unwritten subjects
 

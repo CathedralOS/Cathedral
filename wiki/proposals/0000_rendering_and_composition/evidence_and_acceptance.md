@@ -30,7 +30,7 @@ with that fixture so this proposal does not become a second benchmark ledger.
 | --- | --- | --- |
 | Media chapter puts all glyph rasterization in app libraries and says the compositor never sees glyphs | Optional platform glyph/path execution moves part of rendering across that boundary | [Platform drawing and text placement](../../../OWNER_QUESTIONS.md#platform-drawing-and-text-placement) |
 | Recursive compositor receives frames and presents a result upward | Forwarding scenes/resources needs delegated authority and host interception without mandatory intermediate images | [Scene submission](scene_submission.md#authority-through-the-host-chain); protocol acceptance evidence below |
-| OS components may share a proved domain or use default MMU isolation | Direct target access changes fault and confidentiality boundaries | [Default isolation](../../../OWNER_QUESTIONS.md#default-isolation-boundary-for-proved-os-components), [writable spans](../../../OWNER_QUESTIONS.md#writable-row-spans-and-component-admission) |
+| Hardware-separated programs are the accepted baseline; PCC-based shared-domain admission is excluded | Direct target writes must respect that boundary | [Accepted isolation](../../spec/execution/isolation.md), [writable spans](../../../OWNER_QUESTIONS.md#writable-row-spans-and-component-admission) |
 | Revocation wording allows redeemed operations to finish | Accepted mappings and queued GPU work can outlive a producer or a request to stop | [Endpoint and accepted-lease lifetime](../../../OWNER_QUESTIONS.md#endpoint-transport-and-revocation-of-pending-ipc) |
 | Resource costs are bounded but image/cache sponsorship is unspecified | App-funded storage can remain pinned by other principals after producer failure | [Residency and sponsor liability](../../../OWNER_QUESTIONS.md#render-resource-residency-and-sponsor-liability) |
 | Heavy GPU service is optional and contained; trusted output remains available | Accelerating the common renderer changes the output trust/recovery dependencies | [Execution and presentation](execution_and_presentation.md#presentation-and-protected-output); device-profile evidence below |
@@ -38,7 +38,10 @@ with that fixture so this proposal does not become a second benchmark ledger.
 These links identify questions, not exemptions from existing authority rules.
 Replaceable chrome and protected outer recovery are now governed by the accepted
 [compositor and seat contract](../../spec/human_surface/compositor_and_seat.md).
-That acceptance does not settle the rendering or focus choices in this proposal.
+The separate [focus](../../spec/human_surface/focus_routes.md),
+[presentation](../../spec/human_surface/rendering.md) and
+[resource](../../spec/human_surface/rendering_resources.md) contracts now own
+their accepted boundaries. Detailed drawing, cache and device choices remain proposed.
 
 ## Acceptance evidence
 

@@ -1,5 +1,26 @@
 # Rust reference OS: tasks and handoff
 
+Specification sweep 2026-10-23: the current [presentation contract](wiki/spec/human_surface/rendering.md)
+uses coherent accepted-layout hit-testing without exact displayed-frame matching
+or a one-frame lag guarantee. Capture explicitly serves authorized, already-masked
+output. Cursor preference follows per-pointer hover/capture targets recursively,
+including no-cursor requests; hiding grants neither capture nor pointer lock.
+The new [resource contract](wiki/spec/human_surface/rendering_resources.md) separates
+image authority/version from backing location: local shared import, conversion
+and remote upload are supported routes. Producer death retires live registrations;
+physical reclamation waits for actual users. Remote silence is not confirmed death,
+and copied resources follow destination/session lifetime and authority.
+
+Older entries below that leave all focus, cursor handoff, scene/input selection
+or capture-mask boundaries open are superseded by these partial specifications.
+Drawing/text vocabulary, protected cursor indicators, precise scene/mask and IPC
+publication, cache sponsorship/residency and remote outage appearance remain open.
+Documentation only: relative-link/anchor and whitespace checks; no runtime changes,
+GPU/remote implementation, performance measurements or new QEMU verification.
+Follow-up evidence should test consistent local targeting during layout changes,
+scoped cursor suppression/restoration, masked capture without original-buffer access,
+producer death with retained readers, destination capacity and remote disconnect.
+
 Owner update 2026-10-23: repeated launches of the same program over one realm
 are accepted; concurrency or refusal is the app's policy. See the
 [accepted contract](wiki/spec/execution/components_and_matrices.md#multiple-instances-over-one-realm).

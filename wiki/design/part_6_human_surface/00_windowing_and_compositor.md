@@ -165,15 +165,15 @@ The costs are real. The capability registry needs an open but curated namespace 
 
 ## Cursor
 
-The cursor belongs to the compositor outright: position, sprite, visibility. Apps never draw the real one. What apps get is decomposed:
+The accepted [cursor contract](../../spec/human_surface/rendering.md#cursor-presentations)
+uses each pointer's hover/capture target independently of keyboard focus. Apps
+can request a style or no cursor. Matrices resolve their internal target and
+propagate the request under owner policy; target loss restores that policy.
 
-- **Shape is a request.** An app asks for an I-beam or a hand over its own surface, honored while the pointer hovers it. It is a courtesy, not a power.
-- **Position is private.** Pointer events arrive at the hovered or focused surface in that surface's own local coordinates. "Where is the mouse, globally, right now" is an observation grant like any other. Legacy OSes hand it to every process ambiently, leaking what the user is doing machine-wide.
-- **Capture is a grant.** Hide-confine-relative (pointer lock for games and 3D) is per-surface, with a reserved OS gesture that always frees the pointer: the cursor's long-press.
-- **Warping is bounded.** An app may reposition the pointer inside its own capture, and never outside its own surface, so warp-to-misdirect is gone as a class.
-- **Agents are embodied.** Agent-driven input gets its own cursor, visually distinct, rendered and labeled by the compositor with the acting principal's identity. The human keeps their pointer, watches the agent work in real time, and can interrupt at any moment. "Who is doing this" is answered by the trusted renderer, not by the app or the agent. Multi-cursor also covers remote collaboration. Two details are open: whether a named dispatch animates the agent cursor to its target (likely yes, so every act is visible), and whether per-cursor event streams stay separate or merge for apps that do not care.
-
-A fake cursor drawn inside an app's own surface only fools clicks on that app. It cannot extend over the system-prompt layer, and the real cursor over a grant prompt is OS-rendered, so the offset-cursor consent attack needs two things it cannot get.
+Cursor programs contribute bounded surfaces rather than writing the whole output.
+Hiding is separate from capture, confinement or relative-motion locking. Children
+cannot hide unrelated pointers or protected outer UI. Mandatory agent attribution,
+hidden-target indicators and precise pointer-lock APIs remain design choices.
 
 ### Seats
 
@@ -201,7 +201,16 @@ Observation follows the hosting tree. A host observes what it hosts by construct
 
 ### Dispatch
 
-Acting on a surface is always click-equivalent. Dispatch is a routed click addressed in the target surface's own local coordinates. There is no global coordinate space; each hosting level applies the same parent-to-child transform real input crosses. If a dialog covers the button, the dispatched click hits the dialog, exactly as a finger would, so ghost clicks are impossible by construction and the app's own guards run unchanged. Where a surface opted into the structure tier, dispatch can address a node id instead of a coordinate, the same stable-handle idea as an HTML element id or a UIA AutomationId. The id resolves to the node's current region at delivery time, so an agent never clicks coordinates that went stale between looking and acting. Without the structure tier the name layer does not exist, and dispatch is routed clicks at coordinates, like a finger. A **dry-run query** ("what would a click here land on?") answers at the surface level only: which window receives it, or what covers it, because that is what routing owns. What the click means inside the app, which control and whether it is enabled, is the app's input handler, answerable only through the structure tier or by being the app. Anything that wants to drive an app without the screen is an ordinary service API with ordinary capabilities ([[ipc_and_service_invocation]]). The hybrid, RPC dressed as clicking that bypasses the interaction guards a developer built visually, cannot exist because dispatch has no non-routed form.
+Coordinate input follows the latest coherently accepted hit-test layout, which
+may lead displayed pixels. Each hosting level applies its local bounds and
+transforms. Targets cannot silently change after routing; exact screenshot/frame
+matching is not guaranteed, and apps validate actions against current state.
+
+The accepted [input contract](../../spec/human_surface/input.md) also permits
+advertised semantic operations and standing subscriptions. Stable interaction
+identities avoid coordinate guessing but do not freeze availability or app state.
+A strict captured-layout action or a dry-run query can be explored separately;
+neither promises that the world stays unchanged until a later action arrives.
 
 ### Emission
 
@@ -210,6 +219,11 @@ Emission is voluntary and stays voluntary. The default text stack emits out of t
 Whether read-structure is viewport-scoped by default is open. A full model tree can expose content never rendered, such as list items scrolled out of view, which is stronger than capture over the same subtree, so full-model access may be a separate step up.
 
 ## Capture and per-stream compositing
+
+The accepted [capture boundary](../../spec/human_surface/rendering.md#capture)
+requires an explicit capability to served, appropriately masked output. It grants
+no access to the unmasked original. Detailed mask/indicator policies below remain
+design proposals; they do not change the accepted hit-testing or resource rules.
 
 Reading pixels is a grant over a node of the hosting tree. Your own windows are free, since they are your output. One window comes via the share picker, where picking it is the grant ([[human_permission_ux]]). A subtree or the whole screen needs an audited grant. System prompts are never capturable, for anyone: capture composites a hole where the password dialog is.
 

@@ -74,24 +74,63 @@ visibility does not establish image completion or custody. The compositor may
 bound or decline unwanted submissions; a hint cannot stop a program spending
 its own execution budget.
 
-## Capture and cursor presentations
+## Hit-testing and displayed state
+
+The owner accepted using the latest coherently accepted hit-test layout rather
+than requiring exact agreement with the displayed frame. Each routing decision
+uses a consistent local layout, including its transforms, bounds and applicable
+hit regions. Once targeted, an event cannot silently move to a replacement
+target. Apps validate actions against their current state.
+
+Displayed pixels may lag accepted routing state. This is not guaranteed to be
+only one frame under load or queued rendering. No display-frame barrier or
+cross-matrix atomic scene commit is required by this baseline. Tying a screenshot
+action to its captured layout and rejecting stale actions remains an optional
+future facility, not an ordinary coordinate-input guarantee.
+
+## Capture
 
 An authorized consumer may request fresh pixels without inherently restoring,
 raising or relocating a presentation. This creates bounded rendering demand,
-subject to provider support and grants, not immediate completion. Capture remains
-within authorized output. Capture-mask and privacy protocols are not selected here.
+subject to provider support and grants, not immediate completion. Capture is an
+explicit capability to the supplied compositor, which serves a buffer containing
+only authorized output with applicable masks already applied. A consumer must
+not receive the unmasked original and instructions to ignore protected pixels.
+The contract does not prescribe copying when backing can safely provide the same
+guarantee. Mask format, publication and detailed privacy policy remain unspecified.
 
 Agents may use accepted semantic operations or supplied input routes. Ordinary
 visible pointer hit-testing still respects occlusion; screenshot access does not
-grant permission to click through another app. Coordinate actions need a defined
-relationship to layout state; exact stale-layout handling remains open.
+grant permission to click through another app. Coordinate targeting follows the
+accepted-layout rule above, not a guarantee that a prior screenshot is current.
+
+Input acceptance metadata describes permitted interactions; it need not contain
+passwords or document contents. Apps and their libraries must not publish values
+they intend to keep private through that interface. Pixel masking does not erase
+data an app independently exposes. This does not require a second general-purpose
+confidentiality system for ordinary interaction descriptions.
+
+## Cursor presentations
 
 Cursor renderers can contribute bounded surfaces/assets, positions and hotspots
 through scoped compositor interfaces. Drawing a cursor does not require writable
 access to the entire output or confer input authority. Placement, clipping and
 stacking remain enforced by the owner; overlays above unrelated presentations
-need authority. Recursive visual handoff, attribution and hidden-target indicators
-remain separate choices.
+need authority.
+
+Cursor preference follows a particular pointer's hover/capture target, not the
+keyboard focus route. That target can request an asset/style or no cursor. A
+nested matrix resolves its internal target and propagates the resulting request
+through its owner-controlled presentation interface. This is a composed pointer
+target path, not a requirement for a separately registered cursor focus group.
+Ancestors need not each render an additional cursor.
+
+Requests are scoped to the relevant pointer and target lifetime. Leaving the
+target, ending capture or losing the target restores the applicable owner policy;
+stale suppression cannot hide unrelated pointers or protected outer UI. No-cursor
+requests affect visual presentation only. Relative-motion locking, movement
+confinement and drag capture require their own granted operations. Mandatory
+attribution, protected indicators and hidden-target styling remain open.
 
 ## Scoped fullscreen
 
@@ -132,6 +171,10 @@ Backing remains alive until readers and device users finish. A status flag or
 cooperative fence promise cannot contain a hostile writer. Spatial isolation,
 including whole-page leases, does not establish temporal custody.
 
+The [resource contract](rendering_resources.md) owns authorized image versions,
+leaf-funded local sharing, remote upload and retirement/reclamation boundaries.
+An image reference does not require the renderer to map producer memory directly.
+
 ## Evidence and limits
 
 The [Rust session experiment](../../../source-rs/distribution/lab/compositor/SESSION.md)
@@ -141,6 +184,6 @@ compares flattened leaves and ancestor copies. These are partial evidence, not
 general views, demand negotiation, capture, fullscreen propagation or GPU support.
 
 This acceptance adds no runtime changes or measurements. Drawing/text placement,
-resource residency/sponsorship, direct-writer admission, scene commits, capture
-masks, exact view APIs and device-failure recovery remain outside this contract.
+detailed cache residency/sponsorship, direct-writer admission, exact scene/mask
+publication, view APIs and device-failure recovery remain outside this contract.
 Alternatives remain in the [rendering proposal](../../proposals/0000_rendering_and_composition.md).

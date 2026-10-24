@@ -1,93 +1,24 @@
-# Resource backing, leases and accounting
+# Derived rendering resources and residency policy
 
-The compositor can retain a resource's identity and read authority without
-owning a duplicate of its backing. Storage, accounting and active use need
-separate lifetimes.
+The accepted [resource contract](../../spec/human_surface/rendering_resources.md)
+owns image identity/access, local sharing, remote uploads, retirement and safe
+reclamation. The [presentation contract](../../spec/human_surface/rendering.md)
+owns demand and backend boundaries. This proposal now owns the remaining cache,
+acquisition and sponsorship alternatives; it does not replace those accepted rules.
 
-Status: proposed behavior under [rendering and composition](../0000_rendering_and_composition.md).
-This page owns resource identity, acquisition, release and charging. Scene
-revision semantics belong to [scene submission](scene_submission.md).
+## Demand acquisition alternatives
 
-## What ownership means
+A registered resource need not immediately decode or pin every byte. A renderer
+could asynchronously acquire a supported version, region, tile or resolution
+through its supplied provider. A compatible local provider could supply a backing
+lease; another could upload a representation. Exact acquisition/residency promises
+remain to be chosen.
 
-| Concept | Proposed responsibility |
-| --- | --- |
-| Resource identity | Opaque identity plus incarnation/version, kind and validated metadata |
-| Access capability | Which principal may publish, import, read or delegate this resource |
-| Backing custody | Shared allocation object or provider keeps actual storage alive |
-| Account | App, Matrix sponsor or platform budget pays for backing and work |
-| Read lease | Renderer holds access to a specific stable version until completion |
-| Derived representation | Decoder/renderer owns an evictable representation with an identified payer |
-
-An app's persistent realm may contain an encoded image or font. Its decoded RAM
-allocation and GPU representation are distinct resources. Referring to all three
-as "app storage" hides the decode, upload and residency costs.
-
-App-funded backing should be a shareable allocation object with a lifetime
-independent of a raw pointer into the app's heap. The kernel or resource provider
-maintains its custody while readers remain. The compositor obtains only the
-necessary read/import rights. A content hash can name immutable data, but knowing
-the hash is not permission to read a private resource.
-
-## Registration and demand acquisition
-
-Registration advertises a resource version and enough metadata to validate its
-use. It does not require immediate decoding or pinning of all registered bytes.
-The receiver bounds registration metadata even when no backing is resident.
-
-A ready resource can be offered with a read capability at submission. For a
-nonresident resource, the renderer can asynchronously request the required
-version, visible region or resolution through a granted provider endpoint.
-That request grants no access to unrelated app storage. The provider can respond
-with a shared backing lease rather than sending all pixel bytes in the reply.
-
-The proposal keeps resource waits outside the final drawing pass. A slow or dead
-provider must not block unrelated presentation. Exact fallback policy is an owner
-choice: preserve a prior complete frame where still authorized, omit content, or
-show a host-selected placeholder. A hide, lock or revoked presentation grant
-cannot be ignored merely because old pixels are available.
-
-Large resources may be acquired by tile or mip level when their provider supports
-it. A large memory grant does not imply that an entire document, animation or
-image pyramid must be resident. Prefetch and reuse are scheduling decisions.
-
-## Version and lease lifetime
-
-The candidate lifecycle separates publication from release:
-
-| Phase | Consequence |
-| --- | --- |
-| Produce | Writer owns mutable backing; no reader consumes incomplete content |
-| Publish | A specific stable version becomes available under an access grant |
-| Acquire | Renderer obtains a lease and reserves its pin/import budget |
-| Use | CPU reads or queued GPU work reference that version |
-| Complete | All accesses represented by this lease have finished |
-| Release | Read authority and pin reservation end; reclamation can proceed when other owners/users are gone |
-
-A producer updates content by publishing another version or by regaining
-exclusive write ownership after readers finish. A readiness signal alone does
-not enforce immutability against a hostile CPU writer. Enforcement needs sealed
-pages, validated access, ownership transfer or another admitted mechanism.
-The GPU route additionally needs the completion/custody obligations in
-[execution and presentation](execution_and_presentation.md).
-
-Replacing a scene reference does not release a resource still used by an older
-in-flight frame. Dropping an app-side handle does not reclaim backing held by an
-accepted reader. Process exit does not imply GPU completion. Retained scene
-references, active read leases and cache references need separate accounting.
-
-Revocation stops future access according to the eventual authority contract.
-Withdrawing a live mapping while safe-language references or device work still
-use it is not a valid implementation of cancellation. The existing owner question
-on [accepted-lease revocation](../../../OWNER_QUESTIONS.md#endpoint-transport-and-revocation-of-pending-ipc)
-must settle the production rule. This proposal does not turn the Rust lab's
-reader-pinning behavior into that rule.
-
-The release ledger must survive an app's failure. Renderer failure also needs
-recovery custody for in-flight device references. Final reclamation follows
-completion or an established device-stop/reset guarantee, not merely loss of a
-userspace process. Persistent storage objects follow their storage contract;
-dropping a rendering lease does not delete the app's original asset.
+Resource waits should stay outside final drawing so a slow provider does not block
+unrelated output. Missing-resource policy may preserve an authorized prior image,
+omit content or show a placeholder. No fallback can extend revoked presentation
+or capture authority. These policies remain proposed, including remote outages;
+silence is not confirmed producer death.
 
 ## Representations and text
 

@@ -118,31 +118,30 @@ Do not equate copy-on-write, snapshot reads and serializability.
 
 ### Recursive cursor presentation and attribution
 
-**Requirement and tension.** Nested matrices may supply cursor programs and
-visual markers independently of input routing. A production handoff needs to
-specify which authorized renderer presents an actionable pointer at each boundary,
-whether owner and child visuals can coexist, and what happens when a renderer
-fails or declines presentation. Input registration alone cannot answer this.
+**Settled boundary.** The [presentation contract](wiki/spec/human_surface/rendering.md#cursor-presentations)
+now selects per-pointer hover/capture targeting, recursive cursor preferences
+including no-cursor, and owner-controlled restoration when the target changes or
+dies. Hiding is separate from capture, confinement and relative-motion lock.
+This is not keyboard-focus-based and does not require another registered focus group.
 
-**Contracts checked.** The accepted [focus contract](wiki/spec/human_surface/focus_routes.md)
-settles exclusive group control, channel associations, recursive local selection
-and interrupted-stream cancellation. It does not select cursor presentation or
-trusted attribution. The [desktop contract](wiki/spec/human_surface/compositor_and_seat.md)
+**Remaining requirement.** The design proposes trustworthy attribution for agents
+and remote participants. It has not specified which indicators are mandatory or
+must survive a child renderer that hides its ordinary cursor.
+
+**Contracts checked.** The presentation contract permits bounded cursor surfaces
+and scoped suppression; the [desktop contract](wiki/spec/human_surface/compositor_and_seat.md)
 protects outer recovery, not every cursor indicator. The
-[pointer proposal](wiki/proposals/0001_input_and_pointer_leases.md) explores the
-remaining presentation choices. General transport commit/closure rules remain
-in the [IPC question](#endpoint-transport-and-revocation-of-pending-ipc).
+[pointer proposal](wiki/proposals/0001_input_and_pointer_leases.md) retains
+attribution and hidden-target presentation alternatives.
 
-**Owner choice.** Define cursor presentation handoff and any required attribution
-or fallback independently of focus control. Decide when an owner may retain its
-own cursor, delegate presentation, or accept no child cursor. Specify which
-indicators, if any, must survive a faulty or deceptive child renderer.
+**Owner choice.** Define any mandatory agent/remote activity attribution and
+protected fallback separately from ordinary cursor preference. Decide whether
+hidden-target activity needs an owner indicator, optional preview, or no mandated
+visual, and which identities the observer is authorized to see.
 
-**Recommendation (unaccepted).** Keep visual delegation explicit and bounded;
-never infer input authority from pixels. Preserve outer supervisory selection
-and recovery even when a child declines to render a cursor. Ratify visual
-handoff and attribution with the scene/view contract rather than inventing a
-mandatory global cursor or a seat for every visual marker.
+**Recommendation (unaccepted).** Keep ordinary cursor suppression local while
+allowing separately authorized owner indicators. Do not label every decorative
+cursor as authenticated or expose hidden participant identities by default.
 
 ### Exclusive audio and the reserved system channel
 
@@ -296,34 +295,34 @@ that route. Glyph drawing must not implicitly grant accessibility or text captur
 
 ### Render-resource residency and sponsor liability
 
-**Requirement and tension.** Retained scenes should support large app-funded
-images without forcing every registered bitmap into compositor-owned storage.
-Asynchronous acquisition and derived caches need a rule for unavailable content
-and for storage that outlives the producing app. Without it, retained handles can
-either pin unbounded memory or promise content the renderer cannot supply.
+**Settled boundary.** The [resource contract](wiki/spec/human_surface/rendering_resources.md)
+accepts leaf-funded local backing, authorized image versions, destination-side
+uploads/conversions and safe deferred reclamation. Confirmed leaf death retires
+live registrations, not memory still in use or independently held copies.
+Accounting survives producer death until actual reclamation. Remote silence is
+not proof of death. Registration alone is no blanket permanent-residency promise.
 
-**Contracts checked.** Rendering, component and IPC subjects in the
-[specification index](wiki/spec/README.md) do not define this resource promise.
-The [scheduler design](wiki/design/part_2_components/01_scheduler_and_resources.md)
-requires bounded resource use, while the [Rust page contract](source-rs/kernel/contracts/memory.rs)
-only supplies fixed runtime page grants and pinned accepted readers. Neither
-settles production cache charges, sponsor lifetime or presentation under a miss.
+**Remaining requirement.** Derived caches and remote destinations need explicit
+funding and missing-resource behavior before promising production availability.
+Local source funding does not fund unlimited destination storage or descriptors.
 
-**Owner choice.** Does accepting a retained resource promise residency until
-explicit release, or can the platform evict/reacquire it with defined presentation
-fallback? Which account remains responsible for active leases and derived caches
-when the producer exits or its grant shrinks? Resident guarantees simplify redraw
-but require reserved budgets. Demand acquisition permits larger working sets but
-requires deadlines, visible failure behavior and a surviving sponsor or teardown.
+**Contracts checked.** The accepted resource and presentation contracts leave
+cache residency, exact sponsor selection and outage/miss presentation policy
+open. The [Rust page contract](source-rs/kernel/contracts/memory.rs) exercises
+fixed local grants and pinned readers, not a general remote resource service.
 
-**Recommendation (unaccepted).** Separate registration from bounded residency and
-active-use guarantees. Charge backing to an identified app or Matrix sponsor,
-reserve consumer pin allowances, and account for derived caches separately.
-Keep those charges until the corresponding storage/use ends. Permit asynchronous
-acquisition with an explicit fallback policy; never retain visible content after
-its presentation authority ends just to hide a resource failure. The
+**Owner choice.** Select residency guarantees for particular accepted acquisitions,
+cache eviction/reacquisition policy and the paying account for derived or remote
+storage. Choose whether missing content retains authorized last pixels, shows a
+placeholder or removes the contribution. These are not choices about whether
+live readers may access reclaimed memory; that is already disallowed.
+
+**Recommendation (unaccepted).** Negotiate bounded acquisitions separately from
+registrations, account for derived/destination storage explicitly, and select a
+miss/outage policy per service session. Keep source-independent copied resources
+subject to their own authority and lifetime. The
 [resource proposal](wiki/proposals/0000_rendering_and_composition/resource_custody.md)
-develops this candidate model without assigning final ceilings or failure policy.
+retains the alternatives; no current remote/GPU implementation is implied.
 
 ### Endpoint transport and revocation of pending IPC
 

@@ -182,9 +182,10 @@ not conformance to all timing, semantic and lifecycle requirements above.
 ## Boundaries not selected here
 
 The separate [focus contract](focus_routes.md) defines group associations and
-recursive local selection. This input foundation does not settle
-multi-controller application arbitration, application views, multi-size rendering,
-scene/hit-test presentation commits, capture masks, or cursor rendering handoff.
+recursive local selection. The [presentation contract](rendering.md) defines
+accepted-layout hit-testing, served masked capture and pointer-target cursor
+preferences. This input foundation does not settle multi-controller application
+arbitration, multi-size rendering or exact scene/mask publication protocols.
 The shared interaction description is not a decision on those representations.
 Wire encodings, key/control registries, timestamp clocks, queue limits, snapshot
 protocols, action schemas and text-input protocols remain to be specified and

@@ -13,7 +13,10 @@ descriptions, resource backing, execution and presentation.
 The accepted presentation contract now owns placement, rendering demand, scoped
 fullscreen and backend-independent forwarding/custody boundaries. It supersedes
 conflicting assumptions here without selecting the proposed drawing vocabulary,
-resource residency policy or GPU mechanisms. Read those accepted rules first.
+resource residency policy or GPU mechanisms. The accepted
+[resource contract](../spec/human_surface/rendering_resources.md) owns local/remote
+backing and reclamation. Read those accepted rules first; remaining proposal
+sections are rationale and candidate mechanisms within those boundaries.
 
 ## Read by responsibility
 
