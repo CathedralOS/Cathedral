@@ -48,7 +48,9 @@ instructions. Nothing is automatically accepted.
 Compiler selection is explicit `--compiler` / `OMEGA_BIN`, then a checkout
 at `--omega-repo` / `OMEGA_REPO` (default sibling `../Omega`), then an
 installed `omega`. The checkout route uses Cargo package `omega`, not the
-retired `omega-cli` name. An explicit optimized binary is preferable for
+retired `omega-cli` name. Cargo runs from the Omega checkout so Rustup selects
+its pinned toolchain and Cargo reads its local configuration; Cathedral's host
+toolchain is not used to build Omega. An explicit optimized binary is preferable for
 repeated iterations. In isolated worktrees, supply the checkout or binary
 explicitly.
 

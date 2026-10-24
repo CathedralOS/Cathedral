@@ -19,7 +19,8 @@ class BootHarnessTests(unittest.TestCase):
             first = boot.create_run_directory(parent)
             second = boot.create_run_directory(parent)
             self.assertNotEqual(first, second)
-            def compile_image(command):
+            def compile_image(command, *, cwd):
+                self.assertEqual(cwd, boot.ROOT)
                 output = Path(command[command.index('--build-dir') + 1])
                 (output / 'omega-program.exe').write_bytes(output.parent.name.encode())
             with patch.object(boot, 'run_checked', side_effect=compile_image):
@@ -78,8 +79,39 @@ class BootHarnessTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary:
             repository = Path(temporary)
             (repository / 'Cargo.toml').touch()
-            command = boot.compiler_command(None, repository)
+            command, directory = boot.compiler_command(None, repository)
             self.assertEqual(command[-3:], ['-p', 'omega', '--'])
+            self.assertEqual(directory, repository)
+
+    def test_prepare_and_build_use_producer_checkout_for_toolchain_selection(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            repository = Path(temporary).resolve() / 'Omega checkout'
+            repository.mkdir()
+            (repository / 'Cargo.toml').touch()
+            calls = []
+
+            def run_compiler(command, *, cwd=boot.ROOT):
+                self.assertEqual(cwd, repository)
+                self.assertEqual(command[0], 'cargo')
+                calls.append(command)
+                if '--build-dir' in command:
+                    output = Path(command[command.index('--build-dir') + 1])
+                    (output / 'omega-program.exe').write_bytes(b'fresh')
+
+            with patch.dict(boot.os.environ, {}, clear=True), \
+                    patch.object(boot, 'run_checked', side_effect=run_compiler):
+                result = boot.main(['--omega-repo', str(repository), '--prepare',
+                                    '--build-only', '--build-dir', str(Path(temporary) / 'output')])
+            self.assertEqual(result, 0)
+            self.assertEqual(len(calls), 2)
+            self.assertIn('update', calls[0])
+            self.assertIn('--build-dir', calls[1])
+
+    def test_installed_binary_keeps_cathedral_working_directory(self):
+        with patch.object(boot.shutil, 'which', return_value='/installed/omega'):
+            command, directory = boot.compiler_command(None, Path('absent'))
+        self.assertEqual(command, ['/installed/omega'])
+        self.assertEqual(directory, boot.ROOT)
 
     def test_single_resident_or_invalid_pair_report_cannot_satisfy_smoke(self):
         prefix = b'Hello from Omega\r\nOwned 128 MiB\r\nBoot map ready\r\nKernel entered\r\nMemory split\r\nMemory checked\r\n'
@@ -91,8 +123,9 @@ class BootHarnessTests(unittest.TestCase):
                     boot.check_boot_milestones(output)
 
     def test_explicit_binary_wins(self):
-        command = boot.compiler_command('selected-omega', Path('absent'))
+        command, directory = boot.compiler_command('selected-omega', Path('absent'))
         self.assertEqual(command, [str(Path('selected-omega').resolve())])
+        self.assertEqual(directory, boot.ROOT)
 
     def test_pair_only_or_invalid_page_report_cannot_satisfy_smoke(self):
         prefix = b'Hello from Omega\r\nOwned 128 MiB\r\nBoot map ready\r\nKernel entered\r\nMemory split\r\nMemory checked\r\nMemory paired\r\n'
@@ -161,7 +194,8 @@ class BootHarnessTests(unittest.TestCase):
     def test_publishes_only_fresh_product(self):
         with tempfile.TemporaryDirectory() as temporary:
             directory = Path(temporary)
-            def compile_image(command):
+            def compile_image(command, *, cwd):
+                self.assertEqual(cwd, boot.ROOT)
                 output = Path(command[command.index('--build-dir') + 1])
                 (output / 'omega-program.exe').write_bytes(b'new')
             with patch.object(boot, 'run_checked', side_effect=compile_image):

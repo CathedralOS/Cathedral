@@ -16,14 +16,16 @@ ROOT = Path(__file__).resolve().parents[2]
 
 def compiler_command(binary, repository):
     if binary:
-        return [str(Path(binary).resolve())]
+        return [str(Path(binary).resolve())], ROOT
     # A checkout is deliberately preferred to a possibly stale installed release.
     if (repository / 'Cargo.toml').is_file():
-        return ['cargo', 'run', '--locked', '--manifest-path',
-                str(repository / 'Cargo.toml'), '-p', 'omega', '--']
+        # Rustup and Cargo discover toolchain/configuration from cwd, not
+        # --manifest-path. Build with the producer checkout's own policy.
+        return (['cargo', 'run', '--locked', '--manifest-path',
+                 str(repository / 'Cargo.toml'), '-p', 'omega', '--'], repository)
     installed = shutil.which('omega')
     if installed:
-        return [installed]
+        return [installed], ROOT
     raise ValueError('No Omega compiler: set OMEGA_BIN or OMEGA_REPO.')
 
 
@@ -39,13 +41,14 @@ def create_run_directory(parent):
     return Path(tempfile.mkdtemp(prefix='run-', dir=parent))
 
 
-def build_image(command, entry, target, directory):
+def build_image(command, entry, target, directory, *, compiler_directory=ROOT):
     # A fresh directory prevents a successful check-only invocation or a failed
     # build from accidentally booting an image left by an earlier compiler.
     directory.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix='compile-', dir=directory) as temporary:
         output = Path(temporary)
-        run_checked(command + ['--build-dir', str(output), '--target', target, str(entry)])
+        run_checked(command + ['--build-dir', str(output), '--target', target, str(entry)],
+                    cwd=compiler_directory)
         image = output / 'omega-program.exe'
         if not image.is_file():
             raise ValueError('Omega returned success without publishing omega-program.exe.')
@@ -156,12 +159,14 @@ def main(arguments=None):
         profile = json.loads((ROOT / 'source/distribution/profile.json').read_text())
         entry = (ROOT / 'source' / profile['boot_entry']).resolve()
         target = profile['target']
-        command = compiler_command(options.compiler, options.omega_repo.resolve())
+        command, compiler_directory = compiler_command(options.compiler, options.omega_repo.resolve())
         if options.prepare:
-            run_checked(command + ['update', '--project', str(entry.parent), '--target', target])
+            run_checked(command + ['update', '--project', str(entry.parent), '--target', target],
+                        cwd=compiler_directory)
         directory = create_run_directory(options.build_dir.resolve())
         print(f'Run directory: {directory}', flush=True)
-        image = build_image(command, entry, target, directory)
+        image = build_image(command, entry, target, directory,
+                            compiler_directory=compiler_directory)
         print(f'Fresh image: {image}', flush=True)
         if options.build_only:
             return 0
