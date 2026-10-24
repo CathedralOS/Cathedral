@@ -183,7 +183,14 @@ pixel buffers. The [rendering investigation](../../../source-rs/distribution/lab
 compares flattened leaves and ancestor copies. These are partial evidence, not
 general views, demand negotiation, capture, fullscreen propagation or GPU support.
 
-This acceptance adds no runtime changes or measurements. Drawing/text placement,
+The Rust [owned-surface path](../../../source-rs/platform/libraries/matrix/world/surface/README.md#bounded-cursor-presentation)
+also has an experimental bounded cursor primitive. It preserves recursive
+clipping, normal subtree stacking, visibility and retirement without a full-screen
+cursor buffer. This is presentation evidence, not a complete cursor service:
+producer integration, target-dependent suppression, assets and authenticated
+attribution remain separate work.
+
+The accepted policy does not freeze that lab encoding. Drawing/text placement,
 detailed cache residency/sponsorship, direct-writer admission, exact scene/mask
 publication, view APIs and device-failure recovery remain outside this contract.
 Alternatives remain in the [rendering proposal](../../proposals/0000_rendering_and_composition.md).

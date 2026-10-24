@@ -155,8 +155,11 @@ impl<const N: usize> World<N> {
             return Ok([wire::ERASE, self.parent.epoch, upstream, 0, 0, 0, 0, 0]);
         }
         let [op, _, _, x, y, w, h, color] = words;
-        if !matches!(op, wire::PAINT | wire::SURFACE_IMAGE)
-            || (op == wire::PAINT && color > 0xffffff)
+        if !matches!(op, wire::PAINT | wire::SURFACE_IMAGE | wire::SURFACE_CURSOR)
+            || (op != wire::SURFACE_IMAGE && color > 0xffffff)
+            || (op == wire::SURFACE_CURSOR
+                && (w > cathedral_platform_contracts::display::composition::CURSOR_WIDTH
+                    || h > cathedral_platform_contracts::display::composition::CURSOR_HEIGHT))
             || (op == wire::SURFACE_IMAGE
                 && (color == 0 || w > color || color > wire::MAX_EXTENT || h > wire::MAX_EXTENT))
             || x.checked_add(w).is_none()

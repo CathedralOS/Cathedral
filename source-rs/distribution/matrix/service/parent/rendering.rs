@@ -31,7 +31,11 @@ impl Parent {
             self.display_call([composition::MATRIX_RECT | ((key - 1) << 16), 0, 0, 0, 0, 0])?
         } else {
             self.display_call([
-                composition::MATRIX_RECT | ((key - 1) << 16),
+                (if op == wire::SURFACE_CURSOR {
+                    composition::MATRIX_CURSOR
+                } else {
+                    composition::MATRIX_RECT
+                }) | ((key - 1) << 16),
                 x,
                 y,
                 w,

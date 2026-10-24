@@ -25,6 +25,12 @@ restores upstream capacity. Explicit manifest/owner offers now permit separate
 producer endpoint acquisition, with interrupted handoff and disconnect cleanup.
 Default app offers remain unchanged; a visible synthetic producer remains pending.
 
+The [surface path](platform/libraries/matrix/world/surface/README.md#bounded-cursor-presentation)
+now supports a bounded transparent arrow through ordinary local surface authority,
+recursive clipping, stacking and atomic publication. It needs no full-screen
+buffer. This presentation primitive has pixel/host proofs; it does not yet connect
+a synthetic participant to the default desktop or implement cursor preferences.
+
 ## Default desktop
 
 F5 and `python tools/boot-harness-rs/run.py --release --window` share

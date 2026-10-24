@@ -47,7 +47,37 @@ pub(super) fn exercise(matrix: Pair) {
     cathedral_user_runtime::write(b"Cathedral matrix desktop: sealed bitmap forwarding, clipping, replay and subtree reclamation passed\n").unwrap();
     surfaces(matrix);
     presentation(matrix);
+    cursor(matrix);
     cathedral_user_runtime::write(b"Cathedral matrix desktop: quiet apps below 20ms CPU per second; retained move without app repaint\n").unwrap();
+}
+
+fn cursor(matrix: Pair) {
+    let app = |op| wire::route(wire::route([op, 0, 0, 0, 0, 0, 0, 0], 0).unwrap(), 0).unwrap();
+    assert_eq!(call(matrix, app(14))[0], 0);
+    pixel(matrix, 170, 225, 0xe5e7eb); // Staging has not changed the scene.
+    assert_eq!(call(matrix, app(4))[0], 0);
+    pixel(matrix, 164, 220, 0xffd166);
+    pixel(matrix, 170, 225, app::LEFT); // Transparent cursor pixels preserve the app.
+    owner(
+        matrix,
+        [wire::PLACE, 0, 160, 140, 280, 220, wire::KEY_MASK, 0],
+    );
+    pixel(matrix, 214, 220, 0xffd166); // Retained move without child repaint.
+    pixel(matrix, 164, 220, BACKGROUND);
+    owner(
+        matrix,
+        [wire::PLACE, 0, 110, 140, 280, 220, wire::KEY_MASK, 0],
+    );
+    assert_eq!(call(matrix, app(15))[0], 0);
+    pixel(matrix, 164, 220, 0xffd166);
+    assert_eq!(call(matrix, app(4))[0], 0);
+    pixel(matrix, 332, 180, 0xffd166);
+    pixel(matrix, 333, 182, 0xffd166);
+    pixel(matrix, 334, 182, BACKGROUND); // No escape past the leaf's right edge.
+    assert_eq!(call(matrix, app(6))[0], 0);
+    pixel(matrix, 332, 180, app::LEFT);
+    pixel(matrix, 170, 225, 0xe5e7eb);
+    cathedral_user_runtime::write(b"Cathedral matrix desktop: scoped cursor clipping, transparency, retained move and atomic publication passed\n").unwrap();
 }
 
 fn presentation(matrix: Pair) {

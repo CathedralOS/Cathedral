@@ -1,5 +1,55 @@
 # Rust reference OS: tasks and handoff
 
+Implementation update 2026-10-24: **scoped cursor presentation**, over `1d396617`.
+The [owned-surface path](source-rs/platform/libraries/matrix/world/surface/README.md#bounded-cursor-presentation)
+now carries a fixed 7-by-12 arrow with transparent empty pixels. SURFACE_CURSOR
+uses an existing caller-local surface and its conserving allowance. Each matrix
+validates/clips/translates it normally; the root compositor retains a small
+primitive, with no full-screen cursor buffer or bitmap allocation. Ancestor
+stacking and visibility still apply. Same-extent movement replays the cursor;
+revocation/disconnect retires it. Staged publication includes cursor updates.
+This is an experimental bounded shape, not an authenticated participant badge,
+input grant, global overlay or complete cursor-assets/suppression API.
+
+Stock and Split surface dispatch forward this primitive. The integrated desktop
+fixture verifies real pixels through two matrix hops: transparency, unpublished
+staging, commit, retained movement and right-edge clipping. Host proofs cover
+recursive clipping, invalid/stale requests, visibility, retirement, damage and
+occlusion. Default F5 still uses its physical cursor; no synthetic app is installed
+yet. Input producer acquisition remains the preceding verified baseline.
+
+Next: install a launchable multi-participant matrix in the normal F5 catalogue,
+with ordinary app children and an explicitly admitted producer child. Its matrix
+can grant production locally and fund a cursor surface from its own allowance,
+without granting injection to every desktop app or borrowing the root's cursor.
+Demonstrate independent physical/synthetic selection and nested containment. Keep
+view invalidation/revocation explicit; do not silently renew a cached producer
+grant. General target-dependent cursor preferences, independent group controllers,
+reassociation, descriptor discovery and retirement backpressure remain outstanding.
+Rendering demand/masked capture and coordination acquisition remain queued.
+No new owner decision blocks this work.
+
+Verification: workspace host tests (81 matrix / 22 display-library tests),
+userspace clippy, host matrix/display library+test clippy, layout, format and
+Python syntax. `build/boot-harness-rs/matrix-desktop-test` passes cursor pixel
+checks, the existing admission/storage/presentation/provider-recovery proof,
+physical input and cold persisted colors. Its first run exposed a stale recovery
+fixture assertion that input-source loss erases focus. Accepted cancellation
+semantics preserve route selection; the corrected fixture verifies that a fresh
+explicitly authorized owner press reaches that remembered target and leaves the
+sibling unchanged. The host counts subsequent physical-input events relative to
+startup evidence, excluding intentional recovery injections. No production routing
+semantics changed to satisfy that fixture. A host --all-targets clippy invocation
+incorrectly tried to build the guest-only display binary for Windows; library/test
+clippy and guest-target checks are the applicable checks.
+The normal four-level desktop also passes repeated subtree cleanup, protected
+close, isolated saved data and cold reopen:
+`build/boot-harness-rs/desktop/20261024T160554291577Z`. The earlier attempted
+regression left only its generated profile and no completed result; it is not
+counted as evidence. The traced stock matrix remains 254,608 bytes (97% of the
+256 KiB stored-object cap). No new ARM64, pressure-variant or GPU result is claimed.
+
+
 Implementation update 2026-10-24: **explicit producer service acquisition**, over
 `ab0d76f8`. The [service contract](source-rs/platform/contracts/services/README.md)
 now recognizes INPUT_PRODUCER only when the sealed manifest declares it and its

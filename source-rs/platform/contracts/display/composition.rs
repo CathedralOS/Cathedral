@@ -66,6 +66,11 @@ pub const MATRIX_IMAGE: u64 = 23;
 pub const MATRIX_BEGIN: u64 = 24;
 pub const MATRIX_COMMIT: u64 = 25;
 pub const MATRIX_ABORT: u64 = 26;
+/// Root control only: retained tile, x,y,clipped width,height,rgb. Uses the same
+/// authority, rank, transaction and removal rules as other matrix tiles.
+pub const MATRIX_CURSOR: u64 = 27;
+pub const CURSOR_WIDTH: u64 = 7;
+pub const CURSOR_HEIGHT: u64 = 12;
 
 /// Packed RGBX pixels, bounded to 4096 per dimension, preserving source stride.
 pub fn valid_image(width: u64, height: u64, stride: u64, bytes: usize) -> bool {

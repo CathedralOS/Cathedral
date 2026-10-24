@@ -39,6 +39,11 @@ pub(crate) fn command(op: u64, p: &mut app::Probe<'_>) -> Option<u64> {
         }
         // Readiness/failure probe; never mutates state.
         13 => status = p.state.as_ref().map_or(abi::BUSY, |s| s.error),
+        14 | 15 => p
+            .scene
+            .as_mut()
+            .unwrap()
+            .cursor_probe(p.parent, p.view, op == 15),
         _ => (),
     }
     Some(status)

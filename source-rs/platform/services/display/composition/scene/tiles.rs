@@ -1,9 +1,15 @@
 //! Small retained matrix surfaces. Clipping/authority live in the matrix provider;
 //! the compositor retains flattened primitives and uses its ordinary scanout.
 use super::Rect;
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum Paint {
+    Solid(u32),
+    Image(u64),
+    Cursor(u32),
+}
 pub struct Tiles {
-    entries: [Option<(Rect, Option<u32>, u64)>;
-        cathedral_platform_contracts::display::composition::MATRIX_TILES],
+    entries:
+        [Option<(Rect, Paint)>; cathedral_platform_contracts::display::composition::MATRIX_TILES],
 }
 impl Tiles {
     pub const fn empty() -> Self {
@@ -12,20 +18,23 @@ impl Tiles {
         }
     }
     pub fn set(&mut self, index: usize, rect: Rect, color: u32) -> Rect {
-        self.replace(index, rect, Some(color), 0)
+        self.replace(index, rect, Paint::Solid(color))
+    }
+    pub fn cursor(&mut self, index: usize, rect: Rect, color: u32) -> Rect {
+        self.replace(index, rect, Paint::Cursor(color))
     }
     pub fn image(&mut self, index: usize, rect: Rect, stride: u64) -> Rect {
         // A new backing may have different pixels despite identical geometry.
-        let old = self.entries[index].map_or(Rect::default(), |(r, _, _)| r);
-        self.replace(index, rect, None, stride);
+        let old = self.entries[index].map_or(Rect::default(), |(r, _)| r);
+        self.replace(index, rect, Paint::Image(stride));
         old.union(rect)
     }
-    fn replace(&mut self, index: usize, rect: Rect, color: Option<u32>, stride: u64) -> Rect {
-        let next = rect.valid().then_some((rect, color, stride));
+    fn replace(&mut self, index: usize, rect: Rect, paint: Paint) -> Rect {
+        let next = rect.valid().then_some((rect, paint));
         if self.entries[index] == next {
             return Rect::default();
         }
-        let before = self.entries[index].map_or(Rect::default(), |(r, _, _)| r);
+        let before = self.entries[index].map_or(Rect::default(), |(r, _)| r);
         self.entries[index] = next;
         before.union(rect)
     }
@@ -46,10 +55,10 @@ impl Tiles {
     ) {
         // Matrices reserve disjoint contiguous stacking ranges for subtrees.
         for (index, entry) in self.entries.iter().enumerate() {
-            let Some((rect, color, stride)) = *entry else {
+            let Some((rect, paint)) = *entry else {
                 continue;
             };
-            if color.is_none()
+            if let Paint::Image(stride) = paint
                 && !cathedral_platform_contracts::display::composition::valid_image(
                     rect.w,
                     rect.h,
@@ -63,13 +72,23 @@ impl Tiles {
                 continue;
             }
             for px in x.max(rect.x)..x.saturating_add(row.len() as u64).min(rect.x + rect.w) {
-                if let Some(color) = color {
-                    row[(px - x) as usize] = color;
-                } else {
-                    let at = ((y - rect.y) * stride + px - rect.x) as usize * 4;
-                    if let Some(bytes) = images[index].get(at..at + 4) {
-                        row[(px - x) as usize] =
-                            u32::from_le_bytes(bytes.try_into().unwrap()) & 0xffffff;
+                match paint {
+                    Paint::Solid(color) => row[(px - x) as usize] = color,
+                    Paint::Cursor(color) => {
+                        let (dx, dy) = (px - rect.x, y - rect.y);
+                        // Fixed arrow: clipping never rescales or shifts its origin.
+                        if (dy < 9 && dx <= dy / 2)
+                            || ((9..12).contains(&dy) && (2..4).contains(&dx))
+                        {
+                            row[(px - x) as usize] = color;
+                        }
+                    }
+                    Paint::Image(stride) => {
+                        let at = ((y - rect.y) * stride + px - rect.x) as usize * 4;
+                        if let Some(bytes) = images[index].get(at..at + 4) {
+                            row[(px - x) as usize] =
+                                u32::from_le_bytes(bytes.try_into().unwrap()) & 0xffffff;
+                        }
                     }
                 }
             }
@@ -77,9 +96,56 @@ impl Tiles {
     }
 }
 
+impl Default for Tiles {
+    fn default() -> Self {
+        Self::empty()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn cursor_transparency_clipping_damage_and_occlusion() {
+        let mut tiles = Tiles::empty();
+        let full = Rect {
+            x: 0,
+            y: 0,
+            w: 20,
+            h: 20,
+        };
+        let cursor = Rect {
+            x: 2,
+            y: 3,
+            w: 7,
+            h: 12,
+        };
+        tiles.set(0, full, 9);
+        assert_eq!(tiles.cursor(1, cursor, 4), cursor);
+        assert_eq!(tiles.cursor(1, cursor, 4), Rect::default());
+        let mut row = [0; 12];
+        tiles.paint_row(0, 3, &mut row);
+        assert_eq!(row, [9, 9, 4, 9, 9, 9, 9, 9, 9, 9, 9, 9]);
+        tiles.paint_row(0, 11, &mut row);
+        assert_eq!(row, [9, 9, 4, 4, 4, 4, 4, 9, 9, 9, 9, 9]);
+        let clipped = Rect {
+            w: 2,
+            h: 3,
+            ..cursor
+        };
+        assert_eq!(tiles.cursor(1, clipped, 4), cursor);
+        tiles.paint_row(0, 5, &mut row);
+        assert_eq!(row, [9, 9, 4, 4, 9, 9, 9, 9, 9, 9, 9, 9]);
+        tiles.paint_row(0, 6, &mut row);
+        assert_eq!(row, [9; 12]);
+        tiles.set(2, clipped, 7);
+        tiles.paint_row(0, 3, &mut row);
+        assert_eq!(row, [9, 9, 7, 7, 9, 9, 9, 9, 9, 9, 9, 9]);
+        tiles.set(2, Rect::default(), 0);
+        assert_eq!(tiles.cursor(1, Rect::default(), 0), clipped);
+        tiles.paint_row(0, 3, &mut row);
+        assert_eq!(row, [9; 12]);
+    }
     #[test]
     fn image_stride_clipping_z_order_and_invalid_backing() {
         let mut tiles = Tiles::default();
@@ -139,13 +205,5 @@ mod tests {
         assert_eq!(tiles.set(8, Rect::default(), 0), rect);
         tiles.paint_row(0, 3, &mut row);
         assert_eq!(row, [0, 0, 1, 1, 1, 1, 0, 0]);
-    }
-}
-
-impl Default for Tiles {
-    fn default() -> Self {
-        Self {
-            entries: [None; cathedral_platform_contracts::display::composition::MATRIX_TILES],
-        }
     }
 }

@@ -34,7 +34,10 @@ impl Compositor {
             }
             return self.presentation_request(words);
         }
-        if matches!(words[0] & 0xffff, wire::MATRIX_RECT | wire::MATRIX_POINTER) {
+        if matches!(
+            words[0] & 0xffff,
+            wire::MATRIX_RECT | wire::MATRIX_POINTER | wire::MATRIX_CURSOR
+        ) {
             if !request.control {
                 return Err(abi::DENIED);
             }

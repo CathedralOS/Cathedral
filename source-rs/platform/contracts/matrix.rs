@@ -50,7 +50,7 @@ pub const MORE: u64 = 1 << 16;
 /// GROUP_RETIRED follows the retirement of every channel in that group. Reclaim
 /// receiver state on these boundaries, not by reinterpreting an old name.
 /// This partial encoding has owner registration and explicit per-child producer
-/// quotas, but no producer service acquisition or channel directory yet.
+/// quotas and explicitly offered service acquisition, but no channel directory yet.
 pub const INPUT_STREAMS: usize = 4;
 pub const INPUT_GROUPS: usize = 4;
 /// Existing authenticated single-source adapter; no ambient child authority.
@@ -183,9 +183,13 @@ pub const SURFACE_BITS: u32 = 56;
 /// Same surface geometry as PAINT; word seven is pixel stride, plus one sealed attachment.
 /// RGBX little-endian u32 pixels; clipping retains the original row stride.
 pub const SURFACE_IMAGE: u64 = 8;
+/// Bounded built-in arrow on an owned surface: epoch,name,x,y,w,h,rgb.
+/// Dimensions clip the fixed cursor shape; they do not scale it. Ordinary
+/// surface stacking/visibility apply. This grants no input or authenticated identity.
+pub const SURFACE_CURSOR: u64 = 45;
 
 /// [op, view epoch, nonzero revision, 0..]. Stage at most MAX_SURFACES distinct existing
-/// surfaces with PAINT/ERASE/SURFACE_IMAGE; no publication until COMMIT succeeds.
+/// surfaces with PAINT/ERASE/SURFACE_IMAGE/SURFACE_CURSOR; no publication until COMMIT succeeds.
 /// A rejected stage poisons the batch. ABORT releases its readers. Repeating the
 /// latest successful COMMIT is idempotent within this connection and view epoch.
 pub const PRESENT_BEGIN: u64 = 9;

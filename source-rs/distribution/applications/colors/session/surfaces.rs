@@ -122,6 +122,26 @@ impl Scene {
         let packet = wire::rectangles(self.epoch, self.revision, &[valid, foreign]).unwrap();
         assert_eq!(call(parent, packet), wire::error(abi::BAD_HANDLE));
     }
+    pub fn cursor_probe(&mut self, parent: Pair, view: wire::Packet, clipped: bool) {
+        self.begin(parent);
+        let (x, y) = if clipped { (view[2] - 2, 0) } else { (30, 40) };
+        assert_eq!(
+            call(
+                parent,
+                [
+                    wire::SURFACE_CURSOR,
+                    self.epoch,
+                    self.accent.unwrap(),
+                    x,
+                    y,
+                    7,
+                    12,
+                    0xffd166
+                ]
+            ),
+            [0; 8]
+        );
+    }
     fn begin(&mut self, parent: Pair) {
         self.revision += 1;
         assert_eq!(

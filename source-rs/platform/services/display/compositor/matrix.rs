@@ -18,9 +18,11 @@ impl Compositor {
                 self.composition.clients,
             );
             self.redraw_cursors(before);
-        } else if op & 0xffff == wire::MATRIX_RECT
+        } else if matches!(op & 0xffff, wire::MATRIX_RECT | wire::MATRIX_CURSOR)
             && (op >> 16) < wire::MATRIX_TILES as u64
             && color <= 0xffffff
+            && (op & 0xffff != wire::MATRIX_CURSOR
+                || (w <= wire::CURSOR_WIDTH && h <= wire::CURSOR_HEIGHT))
         {
             let rect = if w == 0 && h == 0 {
                 Rect::default()
@@ -33,6 +35,7 @@ impl Compositor {
                 index: (op >> 16) as usize,
                 rect,
                 value: color,
+                cursor: op & 0xffff == wire::MATRIX_CURSOR,
                 object: None,
             })?;
         } else {
@@ -90,6 +93,7 @@ impl Compositor {
             index,
             rect,
             value: stride,
+            cursor: false,
             object: Some(object),
         })?;
         Ok([0; 6])

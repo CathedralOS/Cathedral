@@ -1,5 +1,63 @@
 use super::*;
 #[test]
+fn cursor_surface_is_clipped_retained_and_confined_like_other_surfaces() {
+    let mut outer = world();
+    place(&mut outer, 0, 100, 100);
+    let parent = view(&mut outer, 0);
+    let mut inner = World::<2>::default();
+    inner.inherit(Grant {
+        epoch: parent[1],
+        width: parent[2],
+        height: parent[3],
+        keys: parent[4],
+    });
+    inner.surface_capacity(4);
+    inner.surface_limit(0, 4).unwrap();
+    place(&mut inner, 0, 10, 20);
+    let leaf = view(&mut inner, 0);
+    let proxy = surface(&mut outer, 0, 0, 9);
+    let name = surface(&mut inner, 0, 0, proxy);
+    let cursor = [
+        wire::SURFACE_CURSOR,
+        leaf[1],
+        name,
+        leaf[2] - 2,
+        leaf[3] - 3,
+        7,
+        12,
+        0xffd166,
+    ];
+    let forwarded = inner.surface(0, 7, cursor).unwrap();
+    assert_eq!(&forwarded[5..7], &[2, 3]);
+    let root = outer.surface(0, 7, forwarded).unwrap();
+    assert_eq!(root, [wire::SURFACE_CURSOR, 1, 9, 198, 177, 2, 3, 0xffd166]);
+    for (at, value) in [
+        (1, leaf[1] + 1),
+        (3, u64::MAX),
+        (5, 8),
+        (6, 13),
+        (7, 0x1000000),
+    ] {
+        let mut bad = cursor;
+        bad[at] = value;
+        assert_eq!(inner.surface(0, 7, bad), Err(abi::DENIED));
+    }
+    assert!(inner.surface(1, 7, cursor).is_err());
+    assert_eq!(inner.replay(0, 0), Some(forwarded));
+    outer.visible(0, false).unwrap();
+    assert_eq!(&outer.replay(0, 0).unwrap()[5..7], &[0, 0]);
+    outer.visible(0, true).unwrap();
+    place(&mut outer, 0, 200, 200);
+    let moved = outer.replay(0, 0).unwrap();
+    assert_eq!(&moved[3..7], &[298, 277, 2, 3]);
+    outer.disconnected(0);
+    assert_eq!(
+        outer.take_retired_surface().unwrap()[..3],
+        [wire::ERASE, 1, 9]
+    );
+    assert_eq!(outer.surface(0, 7, forwarded), Err(abi::DENIED));
+}
+#[test]
 fn retained_geometry_moves_without_child_traffic_and_revocation_erases_it() {
     let mut w = world();
     place(&mut w, 0, 10, 20);

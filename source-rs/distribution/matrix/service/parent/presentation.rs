@@ -238,6 +238,8 @@ impl Parent {
                 }
                 let op = if object.is_some() {
                     composition::MATRIX_IMAGE
+                } else if words[0] == wire::SURFACE_CURSOR {
+                    composition::MATRIX_CURSOR
                 } else {
                     composition::MATRIX_RECT
                 };

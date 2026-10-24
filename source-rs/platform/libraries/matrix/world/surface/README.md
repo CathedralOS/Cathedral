@@ -78,6 +78,31 @@ both retained rights and an in-flight replacement need capacity. The desktop
 uses one-page images and headroom for replacement; general image eviction,
 streaming and active quota changes are not implemented.
 
+## Bounded cursor presentation
+
+`SURFACE_CURSOR(epoch, handle, x, y, width, height, rgb)` draws a built-in arrow
+through an already-owned surface. Width/height clip its fixed 7-by-12 shape;
+they cannot scale it into an arbitrary image. The empty pixels leave underlying
+surfaces visible. Each matrix applies the same clipping, local handle validation
+and translation as for a rectangle. The root retains a small primitive, without
+allocating a bitmap or a full-screen cursor buffer. Changed position damages the
+old and new bounds; unchanged content needs no repaint.
+
+This is a presentation primitive, not an input grant or authenticated participant
+badge. It neither selects a focus group nor bypasses ancestor stacking/visibility.
+A routing owner must still authorize, fund and place its cursor presenter. Multiple
+cursor surfaces consume the same conserving allowance as other content. A hidden
+subtree hides its cursor surfaces, and disconnect/revocation retires them.
+Same-extent movement replays retained cursor geometry without a child repaint.
+The staged presentation protocol can atomically replace or move cursor surfaces;
+the compact rectangle-only packet cannot encode one.
+
+Host proofs check recursive clipping, rejected stale/oversized requests,
+transparency, occlusion, damage and teardown. The integrated matrix desktop probe
+checks actual pixels through two matrix hops, staging/commit, retained movement
+and edge clipping. Default F5 still uses the existing physical cursor; a visible
+synthetic participant and per-pointer cursor suppression/attribution remain work.
+
 ## Evidence and limits
 
 [Host tests](tests.rs) cover conservation, exhaustion, independent name sequences,
@@ -89,7 +114,7 @@ check real pixels after removing one surface, restoring it, moving a retained
 subtree, and overlapping it with an outside sibling. The same checks run under
 CPU pressure and after repeated dynamic subtree replacement.
 
-This is a bounded rectangle/immutable-image lab, not a complete compositor API.
+This is a bounded rectangle/immutable-image/cursor lab, not a complete compositor API.
 The stock executable has five direct child slots (chrome, three apps, background);
 the shared `World<N>` selects its capacity independently. The lab has 64 root
 primitives and 31 process accounts. Rich text, streaming image updates, active quota redistribution
@@ -113,6 +138,6 @@ remain full-width caller-local handles; coordinates use checked u16 fields and R
 uses checked 24-bit color. Every hop clips and remaps names normally. The entire
 packet is checked before staging; an invalid second rectangle cannot publish the
 first. It shares the connection/view revision history with ordinary transactions.
-Compact rejection leaves no active transaction. Sealed images, erases and up to
-four-surface batches continue using the original staged protocol. Owner placement
+Compact rejection leaves no active transaction. Sealed images, cursors, erases
+and up to four-surface batches continue using the original staged protocol. Owner placement
 replay is still individual updates, and scene atomicity does not promise vblank.

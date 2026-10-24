@@ -55,7 +55,10 @@ pub fn dispatch(
                 Some([wire::HEALTH, 0, 0, 0, 0, 0, 0, 0]) if request.control => [0; 8],
                 _ if request.control => wire::error(abi::DENIED),
                 Some(words)
-                    if matches!(words[0], wire::SURFACE_CREATE | wire::PAINT | wire::ERASE) =>
+                    if matches!(
+                        words[0],
+                        wire::SURFACE_CREATE | wire::PAINT | wire::ERASE | wire::SURFACE_CURSOR
+                    ) =>
                 {
                     output.surface(world, &request, words)?
                 }

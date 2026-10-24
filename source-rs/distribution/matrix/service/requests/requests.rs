@@ -175,7 +175,11 @@ pub(super) fn dispatch(
         Some(words)
             if matches!(
                 words[0],
-                wire::SURFACE_CREATE | wire::PAINT | wire::ERASE | wire::SURFACE_IMAGE
+                wire::SURFACE_CREATE
+                    | wire::PAINT
+                    | wire::ERASE
+                    | wire::SURFACE_IMAGE
+                    | wire::SURFACE_CURSOR
             ) =>
         {
             surfaces::dispatch(parent, world, &request, words)?

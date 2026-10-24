@@ -1,4 +1,5 @@
-//! Distribution recovery policy: lost input cancels focus; lost display retires
+//! Distribution recovery policy: lost input interrupts holds, preserving route
+//! selection; lost display retires
 //! the root. Rebuild adapters/tree explicitly, restoring only committed app data.
 use super::*;
 fn app(matrix: Pair, nested: bool, op: u64) -> wire::Packet {
@@ -44,8 +45,9 @@ pub(super) fn exercise(mut session: admission::Session) -> admission::Session {
             let input = session.input.unwrap();
             input.cancel().unwrap();
             input.wait().unwrap();
-            // Drain the source disconnect before probing focus. The display and
-            // both app processes remain alive after the physical decoder dies.
+            // Allow source disconnect processing before injecting a fresh press
+            // through the explicitly trusted owner adapter. Cancellation retains
+            // route selection; it does not make this owner endpoint unauthorized.
             let _ = matrix
                 .1
                 .receive_until(&mut [0; 64], time::after(10).unwrap());
@@ -64,8 +66,12 @@ pub(super) fn exercise(mut session: admission::Session) -> admission::Session {
                     ],
                 );
             }
-            assert_eq!(app(matrix, true, wire::HEALTH)[4], 1);
+            pixel(matrix, 140, 190, app::LEFT);
+            assert_eq!(app(matrix, true, wire::HEALTH)[4], 0);
             assert_eq!(app(matrix, false, wire::HEALTH)[4], 1);
+            // Restore the persisted value for the subsequent whole-tree recovery.
+            assert_eq!(app(matrix, true, 8)[0], 0);
+            pixel(matrix, 140, 190, 0xd18b35);
         }
         session.stop();
         session = setup(false);
@@ -75,6 +81,6 @@ pub(super) fn exercise(mut session: admission::Session) -> admission::Session {
     for nested in [true, false] {
         assert_eq!(app(session.matrix, nested, 8)[0], 0);
     }
-    cathedral_user_runtime::write(b"Cathedral matrix desktop: input loss cancelled focus; display loss retired root; explicit tree recovery restored persisted apps\n").unwrap();
+    cathedral_user_runtime::write(b"Cathedral matrix desktop: input loss preserved route selection; display loss retired root; explicit tree recovery restored persisted apps\n").unwrap();
     session
 }

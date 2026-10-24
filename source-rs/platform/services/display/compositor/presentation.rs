@@ -6,6 +6,7 @@ pub(super) struct Update {
     pub index: usize,
     pub rect: Rect,
     pub value: u64,
+    pub cursor: bool,
     pub object: Option<Object>,
 }
 pub(super) struct Presentation {
@@ -60,6 +61,10 @@ impl Compositor {
             self.composition
                 .tiles
                 .image(update.index, update.rect, update.value)
+        } else if update.cursor {
+            self.composition
+                .tiles
+                .cursor(update.index, update.rect, update.value as u32)
         } else {
             self.composition
                 .tiles

@@ -16,6 +16,8 @@ def verify(stream, output, serial, pressure=False):
         raise RuntimeError("Missing input/display provider recovery proof")
     if "atomic presentation, rejection and commit retry passed" not in serial:
         raise RuntimeError("Missing recursive atomic presentation proof")
+    if "scoped cursor clipping, transparency, retained move and atomic publication passed" not in serial:
+        raise RuntimeError("Missing recursive cursor presentation proof")
     if "subtree replacement cleared pixels and preserved sibling" not in serial:
         raise RuntimeError("Missing matrix-owned subtree recovery evidence")
     if "retained move without app repaint" not in serial:
@@ -87,7 +89,9 @@ def verify(stream, output, serial, pressure=False):
     enter()
     pixels("d18b35", "d18b35")
     text = (output / "serial.log").read_text(encoding="utf-8", errors="replace").replace("Cathedral Rust lab: ", "")
-    if "user panic:" in text or text.count("matrix app: nested key") != 1 or text.count("matrix app: sibling key") != 1:
+    if ("user panic:" in text
+            or text.count("matrix app: nested key") - serial.count("matrix app: nested key") != 1
+            or text.count("matrix app: sibling key") - serial.count("matrix app: sibling key") != 1):
         raise RuntimeError(f"Matrix input confinement failed: {text}")
     pending = None
     for stage, ticks, cpu in re.findall(r"INPUT_TRACE (app-key|app-painted) (\d+) (\d+)", text):
