@@ -91,15 +91,25 @@ A failed build or an old
 
 ## Reproduce
 
-Current replay blocker (2026-10-24): Cathedral `06373017` with a fresh,
-optimized (`opt_level=1`) Omega `09e378cb433` build passes Rust compilation
-using Omega's pinned `nightly-2026-09-04`, but `--prepare --smoke` stops during
-package candidate checking. `cathedral_core`'s `page_tables.omg:89` call to
-`initialize` reports: "selected executable carrier differs from its exact
-public application". No fresh image is produced and QEMU is not started.
+Current replay blocker (2026-10-24): Omega `608f8f583b1` repairs the selected-map
+carrier correspondence that rejected `page_tables.omg:89`'s `initialize` call.
+The final optimized producer (`opt_level=1`, `nightly-2026-09-04`, SHA256
+`f3473204f17767823c27ac875195dec7bbc687459af44e4506123c017490aee6`)
+ran `--prepare --smoke` against Cathedral `1687e07b`. It passes that call and
+stops in package candidate checking with 18 domain-evidence diagnostics:
+retaining `Granted` on initial storage after `BootHandoff::publish`, forwarding
+qualified variant payloads in `Kernel::enter::admit_firmware_root`, and retaining
+the table grant after `MappingHandoff::program`. No fresh image is produced and
+QEMU is not started. Subsequent Cathedral main `4f163da2` changes the Rust
+desktop and distribution UI library, not these boot sources or harness inputs.
 The successful boot observations below remain historical evidence; they do not
-establish a current-main boot. The next repair is the compiler's exact call
-argument/carrier correspondence, followed by this same fresh-image smoke run.
+establish a current-main boot. The next repair is preservation of the exact
+domain evidence through placed-content writes and nested field transport,
+followed by this same fresh-image smoke run. Omega's existing
+`pass/layouts/extent_view_external_write` fixture independently reproduces the
+lost `Granted` qualification on both the pre-repair and repaired compilers;
+adding an explicit handback guarantee still fails its proof. Neither removing
+the required domains nor replaying an older image satisfies acceptance.
 
 Use an optimized current Omega checkout or pass its exact binary:
 
