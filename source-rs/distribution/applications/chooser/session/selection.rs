@@ -19,57 +19,17 @@ impl Selection {
         managed: bool,
         retry_saves: bool,
     ) -> (bool, bool) {
-        match event[2] {
-            wire::POINTER => {
-                let controls = !picker && event[3] >= extent[2].saturating_sub(184);
-                let hit = if controls && event[4] >= extent[3].saturating_sub(32) {
-                    Some(SETTINGS)
-                } else if controls
-                    && retry_saves
-                    && (extent[3].saturating_sub(48)..extent[3].saturating_sub(32))
-                        .contains(&event[4])
-                {
-                    Some(RETRY_SAVES)
-                } else if controls
-                    && managed
-                    && (extent[3].saturating_sub(72)..extent[3].saturating_sub(48))
-                        .contains(&event[4])
-                {
-                    Some(END_APP)
-                } else {
-                    layout::hit(extent, count, picker, event[3], event[4])
-                };
-                let choose = clicked && hit.is_some();
-                if choose {
-                    self.index = hit.unwrap();
-                }
-                (choose, choose)
-            }
-            wire::KEY if event[4] == input::PRESS as u64 => match event[3] as u8 {
-                input::UP | input::LEFT => {
-                    self.index = layout::step(self.index, count, picker, false);
-                    (true, false)
-                }
-                input::DOWN | input::RIGHT => {
-                    self.index = layout::step(self.index, count, picker, true);
-                    (true, false)
-                }
-                input::ENTER => (true, true),
-                input::F2 if !picker => {
-                    self.index = SETTINGS;
-                    (true, true)
-                }
-                input::F4 if retry_saves => {
-                    self.index = RETRY_SAVES;
-                    (true, true)
-                }
-                input::F3 if managed => {
-                    self.index = END_APP;
-                    (true, true)
-                }
-                _ => (false, false),
-            },
-            _ => (false, false),
-        }
+        let (selected, changed, activate) = policy::selection(
+            self.index,
+            event,
+            extent,
+            clicked,
+            count,
+            picker,
+            managed,
+            retry_saves,
+        );
+        self.index = selected;
+        (changed, activate)
     }
 }

@@ -1,0 +1,4 @@
+use policy::main;
+machine main() reaches Chooser {
+    let mut p: [u64; 128]; let result: u64 = Chooser::decide(&mut p);
+}

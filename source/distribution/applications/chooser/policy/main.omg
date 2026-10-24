@@ -1,0 +1,33 @@
+// Chooser decisions over scoped facts. No services, pointers or process IDs cross
+// this temporary in-process boundary. The Rust shell executes returned intents.
+use catalogue::catalogue;
+use catalogue::metadata;
+use interaction::interaction;
+use layout;
+use outcomes;
+
+public boundary trait Chooser { machine decide(p: &mut [u64; 128]) -> u64; }
+public ChooserProvider satisfies Chooser {
+    machine decide(p: &mut [u64; 128]) -> u64 {
+        transition p[0] {
+            0u64 -> describe(p)
+            1u64 -> classify(p)
+            2u64 -> catalogue(p)
+            3u64 -> geometry(p)
+            4u64 -> selection(p)
+            5u64 -> action(p)
+            6u64 -> outcome(p)
+            7u64 -> task_click(p)
+            8u64 -> after_select(p)
+            9u64 -> observation(p)
+            10u64 -> user_name(p)
+            _ -> (0u64)
+        }
+    }
+}
+machine describe(p: &mut [u64; 128]) -> u64 {
+    p[1] = 128u64; p[2] = 6u64; p[3] = 4u64; p[4] = 51u64; 1u64
+}
+public machine component_entry() reaches Chooser invokes Chooser; {
+    let mut p: [u64; 128]; let result: u64 = Chooser::decide(&mut p);
+}

@@ -4,6 +4,10 @@ version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 publish.workspace = true
+autotests = false
+
+[lib]
+path = "lib.rs"
 
 [[bin]]
 name = "cathedral-chooser"

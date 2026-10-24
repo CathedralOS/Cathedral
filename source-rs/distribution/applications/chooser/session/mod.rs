@@ -1,5 +1,4 @@
 //! Rust plumbing; start at session.rs.
-mod labels;
 mod layout;
 mod management;
 mod realm;

@@ -1,0 +1,44 @@
+// Metadata names roles; type selects executables. Stable local object IDs are
+// supplied by the realm connection. Neither filenames nor ordinals grant access.
+public machine catalogue(p: &mut [u64; 128]) -> u64 {
+    p[80] = 0u64;
+    transition p[5] <= 51u64 { true -> hidden(p) _ -> (0u64) }
+    state hidden(p: &mut [u64; 128]) -> u64 {
+        transition p[1] != 0u64 { true -> template(p) _ -> find_own(p, 0u64) }
+    }
+    state template(p: &mut [u64; 128]) -> u64 {
+        transition p[3] != 0u64 { true -> start(p, p[3]) _ -> (0u64) }
+    }
+    state find_own(p: &mut [u64; 128], i: u64) -> u64 {
+        transition i < p[5] && i < 51u64 { true -> own(p, i) _ -> (0u64) }
+    }
+    state own(p: &mut [u64; 128], i: u64) -> u64 requires i < 51u64 {
+        transition p[16u64 + i] == p[2] && p[2] != 0u64 { true -> start(p, p[2]) _ -> find_own(p, i + 1u64) }
+    }
+    state start(p: &mut [u64; 128], hidden: u64) -> u64 {
+        p[80] = 1u64; p[81] = hidden;
+        transition { _ -> scan(p, hidden, 0u64, 1u64) }
+    }
+    state scan(p: &mut [u64; 128], hidden: u64, i: u64, count: u64) -> u64 {
+        transition i < p[5] && i < 51u64 && count < 6u64 && (p[1] == 0u64 || count < 4u64) {
+            true -> candidate(p, hidden, i, count) _ -> (1u64)
+        }
+    }
+    state candidate(p: &mut [u64; 128], hidden: u64, i: u64, count: u64) -> u64 requires i < 51u64 {
+        let id: u64 = p[16u64 + i];
+        transition id != hidden && id != p[4] { true -> add(p, hidden, i, count, id) _ -> scan(p, hidden, i + 1u64, count) }
+    }
+    state add(p: &mut [u64; 128], hidden: u64, i: u64, count: u64, id: u64) -> u64 {
+        transition count < 6u64 && i < 51u64 { true -> put(p, hidden, i, count, id) _ -> (0u64) }
+    }
+    state put(p: &mut [u64; 128], hidden: u64, i: u64, count: u64, id: u64) -> u64 requires count < 6u64 && i < 51u64 {
+        p[81u64 + count] = id; p[80] = count + 1u64;
+        transition { _ -> scan(p, hidden, i + 1u64, count + 1u64) }
+    }
+}
+public machine user_name(p: &mut [u64; 128]) -> u64 {
+    transition p[1] > 0u64 && p[1] < 4u64 { true -> name(p) _ -> (0u64) }
+    state name(p: &mut [u64; 128]) -> u64 requires p[1] < 4u64 {
+        let digit: u64 = 48u64 + p[1]; p[80] = 85u64; p[81] = 115u64; p[82] = 101u64; p[83] = 114u64; p[84] = 32u64; p[85] = digit; 1u64
+    }
+}

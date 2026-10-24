@@ -1,5 +1,61 @@
 # Rust reference OS: tasks and handoff
 
+Implementation update 2026-10-24: **chooser decisions moved into Omega**,
+over `4f7c7f04`. The installed login picker and desktop taskbar call the same
+[Omega chooser policy](source/distribution/applications/chooser/README.md).
+It owns executable/name classification, bounded catalogue selection, shared
+paint/hit geometry, pointer/keyboard selection, user-copy and launch intents,
+exact-ticket selection before ordinary close, and refusal/receipt interpretation.
+The migrated Rust decision implementations have been removed.
+
+This is a smaller migration boundary than Notes/Colors: Rust still owns the
+chooser session, scoped service transport, rendering, settings reconciliation,
+force-stop confirmation and pointer edge bookkeeping. The new component is a
+pure synchronous decision export over a 1-KiB packet, with no retained pointers,
+service handles, process IDs, extra IPC hop or private-page reservation. It uses
+the existing component packager; its packet is distribution-local, separate from
+`omega-app` transport ABI 1. The component is 25,344 bytes. No kernel, platform
+protocol, matrix supervision or resource grant changed.
+
+Nine Windows conformance tests execute the actual export, including metadata
+exactness, hidden-role resolution, catalogue bounds, click/paint agreement,
+keyboard/control boundaries, failed launches/copies, stale task selection,
+close refusal and packet canaries. Chooser is now in `cargo test --locked`'s
+default member set. The full default host suite, all-userspace Clippy, default/all-feature chooser
+guest Clippy, packaging tests and source-layout checks pass. Notes/Colors native
+conformance and transport tests also pass after adding the consumed key/status
+constants to the Omega reference protocol subset. Host checks used
+`--target-dir ../build/chooser-checks` to avoid an editor background-build lock;
+logs are in `build/omega-component/chooser-host-checks.log`.
+
+Guest evidence under `build/boot-harness-rs/`:
+
+- Default F5 login, three independent Notes instances, taskbar switch/close,
+  bounded refusal, Colors persistence and the cold-boot storage oracle:
+  `desktop/20261024T221020280266Z`.
+- Settings cancel/save/live geometry, dirty Notes retention, post-resize input,
+  later placement, cold persistence and independent user defaults:
+  `settings/20261024T221623251990Z`.
+- Four recursive desktops, protected close, deep Notes/Colors persistence,
+  repeated subtree reclamation/isolation and cold reopen:
+  `desktop/20261024T221824771089Z`.
+
+The first desktop replay predates replacing literal key/status values with
+named reference-protocol constants; settings uses the final component. Native
+conformance was rerun after that cleanup. Logs are `chooser-desktop.log`,
+`chooser-settings.log`, `chooser-nested.log`, `chooser-final-checks.log` and
+`chooser-shared-contract-checks.log` in `build/omega-component/`. Full kernel,
+ARM64 and every recovery/fault fixture were not rerun for this decision port.
+
+**Next:** finish the chooser session port using the existing common app host.
+The concrete transport gap is incoming `ENTRIES` attachments (bounded count,
+80-byte rows, pagination cursor and reader custody), inventoried in the chooser
+guide. Move settings/reconciliation, recovery confirmation and presentation in
+reviewable slices, then replace the Rust session and remove this app-local
+marshalling. Keep these policies in distribution and attachment custody in
+platform. No owner decision blocks this. The full chooser is not yet an Omega
+app running entirely through `omega-app`.
+
 Implementation update 2026-10-24: **installed Notes behavior moved to Omega**,
 over `442da2eb` (including the prior Colors migration `9e6785ff`). Normal F5,
 Split and nested desktops now run

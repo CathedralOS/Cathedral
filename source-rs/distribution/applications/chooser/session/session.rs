@@ -11,13 +11,8 @@ use cathedral_user_runtime::{
     time,
 };
 pub type Pair = (Handle, Handle);
-/// Bounded realm listing; presentation hides the template/chrome at index zero.
-pub const ENTRIES: usize = wire::config::LAUNCHER_SURFACES - 2;
-pub const USER_ENTRIES: usize = 4;
-pub const NEW: usize = ENTRIES;
-const SETTINGS: usize = NEW + 1;
-const END_APP: usize = SETTINGS + 1;
-const RETRY_SAVES: usize = END_APP + 1;
+use cathedral_chooser::policy::{self, Action, Operation};
+pub use policy::{ENTRIES, NEW, USER_ENTRIES};
 
 /// `own` is this program's object in its realm, from its launch argument; the
 /// launcher hides that tile instead of reading which entry it is.
@@ -27,6 +22,7 @@ pub fn run(
     initial_status: &'static str,
     own: u64,
 ) -> u64 {
+    policy::verify();
     let connections = cathedral_user_runtime::matrix::Connections::load(&environment).unwrap();
     let parent = connections.interaction;
     let control = (Handle::bootstrap(0).unwrap(), Handle::bootstrap(1).unwrap());
@@ -61,13 +57,10 @@ pub fn run(
         }
         if let Some(receipt) = launched {
             let reply = call(parent, [wire::LAUNCH_STATUS, receipt, 0, 0, 0, 0, 0, 0]);
-            if reply[0] != 0 || reply[1] != wire::LAUNCH_RUNNING {
+            let (running, message) = policy::observation(reply);
+            if !running {
                 launched = None;
-                status = if reply[0] == 0 && reply[1] == wire::LAUNCH_FAILED {
-                    "APP STOPPED"
-                } else {
-                    ""
-                };
+                status = message;
                 repaint = true;
             }
         }
@@ -138,27 +131,27 @@ pub fn run(
                 choose = activate;
             }
             if choose {
-                if selection.index == RETRY_SAVES && saves == wire::SAVES_OFFLINE {
-                    let reply = call(parent, [wire::RETRY_SAVES, 0, 0, 0, 0, 0, 0, 0]);
-                    status = if reply[0] == 0 { "" } else { "TRY AGAIN" };
-                } else if selection.index == END_APP && !user_picker {
-                    management.begin();
-                } else if selection.index == SETTINGS && !user_picker {
-                    match settings::Editor::open(&mut realm.scope) {
+                let action = policy::action(
+                    user_picker,
+                    realm.count,
+                    selection.index,
+                    &realm.ids,
+                    saves == wire::SAVES_OFFLINE,
+                );
+                match action {
+                    Action::Retry => {
+                        let reply = call(parent, [wire::RETRY_SAVES, 0, 0, 0, 0, 0, 0, 0]);
+                        status = policy::outcome(Operation::Retry, reply).0;
+                    }
+                    Action::Manage => management.begin(),
+                    Action::Settings => match settings::Editor::open(&mut realm.scope) {
                         Ok(edit) => {
                             editor = Some(edit);
                             status = "";
                         }
                         Err(_) => status = "CANNOT OPEN",
-                    }
-                } else {
-                    status = act(
-                        &mut realm,
-                        parent,
-                        selection.index,
-                        user_picker,
-                        &mut launched,
-                    );
+                    },
+                    other => status = act(&mut realm, parent, other, &mut launched),
                 }
                 if status.is_empty() && selection.index == NEW {
                     selection.index = realm.count.saturating_sub(1);
@@ -251,36 +244,27 @@ pub fn run(
         }
     }
 }
-/// Launch a visible app/user, or copy the hidden user template.
+/// Execute an Omega intent only through this child's already supplied services.
 fn act(
     realm: &mut realm::Realm,
     parent: Pair,
-    selected: usize,
-    user_picker: bool,
+    action: Action,
     launched: &mut Option<u64>,
 ) -> &'static str {
-    if user_picker && selected == NEW && realm.count < USER_ENTRIES {
-        return match realm.copy_first() {
-            Ok(()) => "",
-            Err(abi::NO_MEMORY) => "NO ROOM",
-            Err(_) => "TRY AGAIN",
-        };
-    }
-    if selected == 0 || selected >= realm.count {
-        return "";
-    }
-    let reply = call(
-        parent,
-        [wire::LAUNCH, realm.ids[selected], 0, 0, 0, 0, 0, 0],
-    );
-    match reply[0] {
-        0 => {
-            *launched = Some(reply[2]);
-            ""
+    match action {
+        Action::Copy(template) => {
+            let status = realm.copy_template(template).err().unwrap_or(0);
+            policy::outcome(Operation::Copy, [status, 0, 0, 0, 0, 0, 0, 0]).0
         }
-        abi::BUSY => "TRY AGAIN",
-        abi::NO_MEMORY => "NO ROOM",
-        _ => "CANNOT OPEN",
+        Action::Launch(object) => {
+            let reply = call(parent, [wire::LAUNCH, object, 0, 0, 0, 0, 0, 0]);
+            let (message, receipt) = policy::outcome(Operation::Launch, reply);
+            if let Some(receipt) = receipt {
+                *launched = Some(receipt);
+            }
+            message
+        }
+        _ => "",
     }
 }
 fn call(pair: Pair, words: wire::Packet) -> wire::Packet {

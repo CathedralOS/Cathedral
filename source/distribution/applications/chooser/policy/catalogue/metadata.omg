@@ -1,0 +1,31 @@
+// Input bytes are widened into words at the native seam; output is a bounded
+// display label. Metadata validation and attachment custody remain transport work.
+public machine classify(p: &mut [u64; 128]) -> u64 {
+    let template: bool = p[16] == 84u64 && p[17] == 101u64 && p[18] == 109u64 && p[19] == 112u64 && p[20] == 108u64 && p[21] == 97u64 && p[22] == 116u64 && p[23] == 101u64 && p[24] == 0u64;
+    let background: bool = p[16] == 66u64 && p[17] == 97u64 && p[18] == 99u64 && p[19] == 107u64 && p[20] == 103u64 && p[21] == 114u64 && p[22] == 111u64 && p[23] == 117u64 && p[24] == 110u64 && p[25] == 100u64 && p[26] == 0u64;
+    let executable: bool = executable(p);
+    p[1] = executable as u64 | ((template as u64) << 1u64) | ((background as u64) << 2u64);
+    transition { _ -> label(p, 0u64) }
+    state label(p: &mut [u64; 128], i: u64) -> u64 {
+        transition i < 13u64 { true -> character(p, i) _ -> (1u64) }
+    }
+    state character(p: &mut [u64; 128], i: u64) -> u64 requires i < 13u64 {
+        let byte: u64 = p[16u64 + i]; p[80u64 + i] = upper(byte);
+        transition { _ -> label(p, i + 1u64) }
+    }
+}
+machine upper(byte: u64) -> u64 {
+    transition byte >= 97u64 && byte <= 122u64 { true -> letter(byte) _ -> (byte) }
+    state letter(byte: u64) -> u64 requires byte >= 97u64 { byte - 32u64 }
+}
+machine executable(p: &[u64; 128]) -> bool {
+    // Exact "application/x-executable", including its terminator.
+    let expected: [u64; 23] = [97u64,112u64,112u64,108u64,105u64,99u64,97u64,116u64,105u64,111u64,110u64,47u64,120u64,45u64,101u64,120u64,101u64,99u64,117u64,116u64,97u64,98u64,108u64];
+    transition { _ -> scan(p, &expected, 0u64) }
+    state scan(p: &[u64; 128], expected: &[u64; 23], i: u64) -> bool {
+        transition i < 23u64 { true -> compare(p, expected, i) _ -> (p[71] == 101u64 && p[72] == 0u64) }
+    }
+    state compare(p: &[u64; 128], expected: &[u64; 23], i: u64) -> bool requires i < 23u64 {
+        transition p[48u64 + i] == expected[i] { true -> scan(p, expected, i + 1u64) _ -> (false) }
+    }
+}

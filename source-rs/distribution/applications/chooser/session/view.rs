@@ -50,7 +50,7 @@ impl Scene {
                 &realm.labels[index]
             };
             let pixels = tiles::paint(index, picker, selected == index, title);
-            let (x, y) = layout::origin(extent, n, picker, i);
+            let (x, y) = layout::origin(extent, realm.count, picker, i);
             let (width, height) = layout::dimensions(picker);
             self.image(
                 parent,

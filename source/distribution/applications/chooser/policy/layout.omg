@@ -1,0 +1,51 @@
+// One geometry model drives both published tiles and input hit testing.
+public machine tile_count(count: u64, picker: bool) -> u64 {
+    let bounded: u64 = limit(count);
+    let visible: u64 = ((bounded as u64 in Saturating) - 1) as u64;
+    transition picker && bounded < 4u64 { true -> (plus(visible, 1u64)) _ -> (visible) }
+}
+public machine tile_id(count: u64, picker: bool, tile: u64) -> u64 {
+    let next: u64 = ((tile as u64 in Saturating) + 1) as u64;
+    transition picker && next >= count { true -> (6u64) _ -> (next) }
+}
+public machine tile_width(picker: bool) -> u64 { transition picker { true -> (128u64) _ -> (48u64) } }
+public machine tile_height(picker: bool) -> u64 { transition picker { true -> (96u64) _ -> (48u64) } }
+public machine tile_left(width: u64, n: u64, picker: bool, tile: u64) -> u64 {
+    transition picker { true -> centered(width, n, tile) _ -> (plus(8u64, times(limit(tile), 56u64))) }
+    state centered(width: u64, n: u64, tile: u64) -> u64 {
+        let total: u64 = minus(times(limit(n), 152u64), 24u64);
+        let left: u64 = minus(width, total) / 2u64;
+        plus(left, times(limit(tile), 152u64))
+    }
+}
+public machine tile_top(height: u64, picker: bool) -> u64 {
+    let h: u64 = tile_height(picker);
+    minus(height, h) / 2u64
+}
+public machine tasks_left(count: u64) -> u64 {
+    let n: u64 = ((limit(count) as u64 in Saturating) - 1) as u64;
+    plus(16u64, times(n, 56u64))
+}
+public machine inside(value: u64, start: u64, length: u64) -> bool {
+    transition value >= start { true -> distance(value, start, length) _ -> (false) }
+    state distance(value: u64, start: u64, length: u64) -> bool requires value >= start { value - start < length }
+}
+public machine geometry(p: &mut [u64; 128]) -> u64 {
+    let n: u64 = tile_count(p[2], p[1] != 0u64);
+    p[80] = n; p[81] = tile_width(p[1] != 0u64); p[82] = tile_height(p[1] != 0u64);
+    p[83] = tile_left(p[3], n, p[1] != 0u64, p[5]); p[84] = tile_top(p[4], p[1] != 0u64);
+    p[85] = tasks_left(p[2]);
+    transition { _ -> items(p, 0u64, n) }
+    state items(p: &mut [u64; 128], i: u64, n: u64) -> u64 {
+        transition i < n && i < 6u64 { true -> item(p, i, n) _ -> (1u64) }
+    }
+    state item(p: &mut [u64; 128], i: u64, n: u64) -> u64 requires i < 6u64 {
+        p[86u64 + i] = tile_id(p[2], p[1] != 0u64, i);
+        transition { _ -> items(p, i + 1u64, n) }
+    }
+}
+
+machine limit(n: u64) -> u64 { transition n < 6u64 { true -> (n) _ -> (6u64) } }
+machine plus(a: u64, b: u64) -> u64 { ((a as u64 in Saturating) + (b as u64 in Saturating)) as u64 }
+machine minus(a: u64, b: u64) -> u64 { ((a as u64 in Saturating) - (b as u64 in Saturating)) as u64 }
+machine times(a: u64, b: u64) -> u64 { ((a as u64 in Saturating) * (b as u64 in Saturating)) as u64 }

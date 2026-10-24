@@ -32,28 +32,17 @@ impl Tasks {
         clicked: bool,
         left: u64,
     ) -> Option<&'static str> {
-        if event[2] != wire::POINTER
-            || !clicked
-            || !(top(view)..top(view) + ROW).contains(&event[4])
-            || !(left..left + WIDTH as u64).contains(&event[3])
-        {
-            return None;
-        }
-        let index = ((event[3] - left) / CELL as u64) as usize;
-        let entry = self.entries[index];
-        if entry[0] != 0 || entry[1] == 0 {
+        let (ticket, close) = policy::task_click(&self.entries, view, event, clicked, left)?;
+        if ticket == 0 {
             return Some("");
         }
-        let reply = call(parent, [wire::SELECT_APP, entry[1], 0, 0, 0, 0, 0, 0]);
-        if reply[0] != 0 {
-            return Some("TRY AGAIN");
+        let reply = call(parent, [wire::SELECT_APP, ticket, 0, 0, 0, 0, 0, 0]);
+        let (close, status) = policy::after_select(reply[0], close);
+        if !close {
+            return Some(status);
         }
-        let left = left + index as u64 * CELL as u64;
-        if event[3] >= left + 124 {
-            let reply = call(parent, [wire::CLOSE, 0, 0, 0, 0, 0, 0, 0]);
-            return Some(if reply[0] == 0 { "" } else { "UNSAVED WORK" });
-        }
-        Some("")
+        let reply = call(parent, [wire::CLOSE, 0, 0, 0, 0, 0, 0, 0]);
+        Some(policy::outcome(Operation::Close, reply).0)
     }
     pub fn paint(&self, realm: &realm::Realm) -> cathedral_user_runtime::memory::Private {
         let mut pixels = cathedral_user_runtime::memory::Private::allocate(

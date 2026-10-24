@@ -1,5 +1,11 @@
 # User picker and app launcher
 
+Catalogue, tile geometry, input selection and ordinary launch/close decisions
+now live in [Omega](../../../../source/distribution/applications/chooser/README.md).
+The [native adapter](policy/policy.rs) passes scoped facts to that component;
+this Rust session still owns IPC, rendering, settings and force-stop confirmation.
+The nine compiled-export tests run with the default Rust host test set.
+
 F5 opens a full-screen user picker. Existing users appear as a horizontal row
 of avatar tiles; **NEW USER** copies the hidden template. Click a user to enter
 its workspace. Root stops and collects this picker before loading the user's
@@ -53,7 +59,7 @@ storage binding and copies the template with COPY_TREE. [layout.rs](session/layo
 shares tile positions between hit testing and rendering. [view.rs](session/view.rs)
 orders background, visible tiles and failure text; [tiles.rs](session/tiles.rs)
 rasterizes small avatars and app icons. Rust mod.rs contains only plumbing.
-Local input selection lives in [selection.rs](session/selection.rs); the session
+Local input selection enters Omega through [selection.rs](session/selection.rs); the session
 routes input to either tiles or the settings editor before publishing the scene.
 
 The chooser is an ordinary matrix child. LAUNCH names only an object reachable
@@ -61,7 +67,7 @@ through its binding; its owner supplies the launch policy, placement and service
 offers. Removing the storage test toggle does not remove required/optional
 service declarations or attenuation from the platform protocol.
 
-[labels.rs](session/labels.rs) constructs the bounded default user name. Visible
+The Omega catalogue constructs the bounded default user name. Visible
 labels use hierarchy metadata, not executable footers: one listing of the realm
 names every tile, the hidden template and the background, and a launcher hides
 the object its launch argument named as itself. The host's explicit
