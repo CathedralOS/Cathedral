@@ -393,7 +393,7 @@ def desktop(stream, output, serial, reboot, expected_absolute=True, fill_users=F
     print('PASS: user tiles, absolute/relative clicks, app tiles, save/discard/cancel and persistent replacement')
 
 
-def run(timeout, trace_storage=False, relative_pointer=False, service_imports=None, nested=False, deep=False, nested_desktop=False, trace_input=False, latency=False, pointer_stress=False, interaction_delay=False, nested_depth=3, soak=0, collection_pressure=False, accel='tcg', input_producer=None, participants=False, participant_fault=None, render_demand=False, masked_capture=False, capture_case=None):
+def run(timeout, trace_storage=False, relative_pointer=False, service_imports=None, nested=False, deep=False, nested_desktop=False, trace_input=False, latency=False, pointer_stress=False, interaction_delay=False, nested_depth=3, soak=0, collection_pressure=False, accel='tcg', input_producer=None, participants=False, participant_fault=None, render_demand=False, masked_capture=False, capture_case=None, cursor_preferences=False, cursor_producer=False):
     output = harness.BUILD / 'desktop' / datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S%fZ')
     output.mkdir(parents=True)
     # Exact default composition, with a separate build output so a regression
@@ -412,6 +412,10 @@ def run(timeout, trace_storage=False, relative_pointer=False, service_imports=No
                 entry.setdefault('features', []).append('capture-source-exit' if capture_case == 'source' else 'capture-source-stall')
             if entry.get('path') == 'Split/Capture' and capture_case != 'source':
                 entry.setdefault('features', []).append('capture-recipient-exit' if capture_case == 'recipient' else 'capture-timeout')
+    if cursor_producer:
+        for entry in composition['startup']['realm_programs']:
+            if entry.get('path') == 'Split/Producer':
+                entry.setdefault('features', []).append('cursor-probe')
     if participant_fault:
         for entry in composition['startup']['realm_programs']:
             if entry.get('package') == 'cathedral-input-demo':
@@ -486,6 +490,10 @@ def run(timeout, trace_storage=False, relative_pointer=False, service_imports=No
         import render_demand_test
         from functools import partial
         user_check = partial(render_demand_test.exercise, capture=masked_capture)
+    if cursor_preferences or cursor_producer:
+        import cursor_preferences_test
+        from functools import partial
+        user_check = partial(cursor_preferences_test.exercise, synthetic=cursor_producer)
     if participants:
         import participants_test
         user_check = participants_test.exercise
@@ -515,6 +523,10 @@ def run(timeout, trace_storage=False, relative_pointer=False, service_imports=No
         contents = path.read_bytes()
         database_image.prepare(path, programs, migration, app_close=True, realm_programs=harness.realm_programs(profile, True))
         assert contents == path.read_bytes(), 'relaunch must not reformat storage or reinstall unchanged programs'
+    if cursor_preferences or cursor_producer:
+        label = 'independent producer cursor suppression' if cursor_producer else 'recursive cursor preferences and target retirement'
+        print(f'PASS: {label} and cold reopen; artifacts: {output}')
+        return
     if capture_case:
         print(f'PASS: capture {capture_case}, repeated teardown and cold reopen; artifacts: {output}')
         return
@@ -576,6 +588,8 @@ if __name__ == '__main__':
     parser.add_argument('--latency', action='store_true', help='measure launch, typing and save through the selected nested depth on fresh/cold boots')
     parser.add_argument('--participant-fault', choices=('hold', 'disconnect', 'pressure'), help='disposable producer/receiver faults through Split AUTO')
     parser.add_argument('--capture-case', choices=('ordinary', 'source', 'recipient', 'timeout'), help='uninstrumented capture or disposable source/recipient/expiry lifecycle checks')
+    parser.add_argument('--cursor-producer', action='store_true', help='disposable AUTO participant hides its own pointer through ordinary Notes F6')
+    parser.add_argument('--cursor-preferences', action='store_true', help='exercise per-pointer cursor suppression, independent producer and nested target retirement')
     parser.add_argument('--capture', action='store_true', help='capture hidden Notes through an explicit service, inspect masked backing and present it in an independent consumer')
     parser.add_argument('--render-demand', action='store_true', help='hide a live Notes presentation while AUTO edits it, then restore and cold reopen')
     parser.add_argument('--participants', action='store_true', help='exercise Split AUTO with independent physical and synthetic input')
@@ -604,8 +618,8 @@ if __name__ == '__main__':
         parser.error('--pointer-stress requires --nested-desktop or --soak with absolute input')
     if args.input_producer and (args.service_imports or args.nested or args.deep or args.nested_desktop or args.latency or args.soak or args.interaction_delay):
         parser.error('--input-producer requires the ordinary desktop workflow')
-    if (args.participants or args.participant_fault or args.render_demand or args.capture or args.capture_case) and (args.service_imports or args.nested or args.deep or args.nested_desktop or args.latency or args.soak or args.input_producer or args.interaction_delay):
+    if (args.participants or args.participant_fault or args.render_demand or args.capture or args.capture_case or args.cursor_preferences or args.cursor_producer) and (args.service_imports or args.nested or args.deep or args.nested_desktop or args.latency or args.soak or args.input_producer or args.interaction_delay):
         parser.error('participant and rendering-demand checks run their own default-desktop workflows')
-    if sum(bool(v) for v in (args.participant_fault, args.participants, args.render_demand, args.capture, args.capture_case)) > 1:
+    if sum(bool(v) for v in (args.participant_fault, args.participants, args.render_demand, args.capture, args.capture_case, args.cursor_preferences, args.cursor_producer)) > 1:
         parser.error('choose one participant, rendering-demand or capture workflow')
-    run(args.timeout, args.trace_storage, args.relative_pointer, args.service_imports, args.nested or args.deep, args.deep, args.nested_desktop, args.trace_input, args.latency, args.pointer_stress, args.interaction_delay, args.nested_depth, args.soak, args.collection_pressure, accel=args.accel, input_producer=args.input_producer, participants=args.participants, participant_fault=args.participant_fault, render_demand=args.render_demand, masked_capture=args.capture, capture_case=args.capture_case)
+    run(args.timeout, args.trace_storage, args.relative_pointer, args.service_imports, args.nested or args.deep, args.deep, args.nested_desktop, args.trace_input, args.latency, args.pointer_stress, args.interaction_delay, args.nested_depth, args.soak, args.collection_pressure, accel=args.accel, input_producer=args.input_producer, participants=args.participants, participant_fault=args.participant_fault, render_demand=args.render_demand, masked_capture=args.capture, capture_case=args.capture_case, cursor_preferences=args.cursor_preferences, cursor_producer=args.cursor_producer)

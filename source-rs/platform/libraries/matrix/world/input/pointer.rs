@@ -33,6 +33,9 @@ impl<const N: usize> World<N> {
         self.reap_input();
         let index = self.input.admit(channel)?;
         let route = &mut self.input.streams[index];
+        if route.cursor_cycle == 0 {
+            return Err(abi::NO_MEMORY);
+        }
         if route.blocked {
             if buttons == 0 {
                 route.blocked = false;
@@ -41,20 +44,8 @@ impl<const N: usize> World<N> {
         }
         let x = x.min(self.parent.width - 1);
         let y = y.min(self.parent.height - 1);
-        let hit = self
-            .children
-            .iter()
-            .enumerate()
-            .filter(|(_, c)| {
-                c.visible
-                    && c.grant.valid()
-                    && c.rect.is_some_and(|r| {
-                        x >= r.x && y >= r.y && x - r.x < c.grant.width && y - r.y < c.grant.height
-                    })
-            })
-            // Follow the owner's surface stacking; input-only equal ranges use slot order.
-            .max_by_key(|(slot, c)| (c.surface_base, *slot))
-            .map(|(slot, _)| slot);
+        let hit = self.hit_pointer(x, y);
+        let route = &mut self.input.streams[index];
         let target = if route.buttons != 0 {
             route.capture
         } else {
@@ -73,6 +64,7 @@ impl<const N: usize> World<N> {
         }
         let route = &mut self.input.streams[index];
         route.buttons = buttons;
+        route.point = Some((x, y));
         if let Some(slot) = target {
             let child = &mut self.children[slot];
             if child.grant.valid() {

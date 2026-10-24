@@ -1,6 +1,10 @@
 //! Root-owned cursor pixels and bounded damage, independent of app drawing.
 use super::*;
 impl Router {
+    /// Root compositor adapter policy, never a child-facing pointer grant.
+    pub fn hide_physical_cursor(&mut self, hidden: bool) {
+        self.physical_hidden = hidden;
+    }
     pub fn cursor_bounds(&self) -> [Rect; 2] {
         self.pointers.map(|p| Rect {
             x: p.x,
@@ -15,6 +19,9 @@ impl Router {
         }
         let mut color = None;
         for (id, p) in self.pointers.iter().enumerate() {
+            if id == 0 && self.physical_hidden {
+                continue;
+            }
             if id == 1
                 && !self.lease.is_some_and(|l| {
                     clients[l.client].visible

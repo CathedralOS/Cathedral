@@ -62,30 +62,16 @@ impl Producer {
                     if let Some(words) = words.filter(|w| wire::producer_operation(w[0])) {
                         let reply = world.request(SLOT, child.data.0.raw(), words);
                         if reply[0] == 0 && words[0] == wire::PRODUCER_POINTER {
-                            let (epoch, cursor) = self.cursor.unwrap();
-                            let rendered = upstream::call(
-                                output.pair,
-                                [
-                                    wire::SURFACE_CURSOR,
-                                    epoch,
-                                    cursor,
-                                    words[3],
-                                    words[4],
-                                    7,
-                                    12,
-                                    0xffd166,
-                                ],
-                            )?;
-                            if matches!(rendered[0], abi::DENIED | abi::BAD_HANDLE) {
-                                // Placement can change upstream before its wake
-                                // reaches us. End this run; do not crash siblings
-                                // or silently recreate authority for the producer.
-                                server.reply(&request, &wire::encode(wire::error(abi::DENIED)))?;
-                                self.stop(output, world, server)?;
-                                return Ok(());
-                            }
-                            if rendered[0] != 0 {
-                                return Err(Error(rendered[0] as i64));
+                            self.point = Some(((words[2] - 1) as usize, words[3], words[4]));
+                            if let Err(error) = self.render_cursor(output, world) {
+                                if matches!(error.0 as u64, abi::DENIED | abi::BAD_HANDLE) {
+                                    // Placement may retire before its wake arrives.
+                                    server
+                                        .reply(&request, &wire::encode(wire::error(abi::DENIED)))?;
+                                    self.stop(output, world, server)?;
+                                    return Ok(());
+                                }
+                                return Err(error);
                             }
                         }
                         return server.reply(&request, &wire::encode(reply));

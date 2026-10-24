@@ -102,6 +102,7 @@ pub fn run(mut services: Services) -> Result<(), Error> {
         }
         producer.maintain(&mut output, world, &mut server)?;
         capture.progress(&mut output, world, &mut server)?;
+        output.cursors(world)?;
         output.flush(world)?;
         children.notify(world)?;
         if let Some(s) = &mut survey

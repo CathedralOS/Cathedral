@@ -104,6 +104,13 @@ for the fixed mask and current limits. `python tools/boot-harness-rs/desktop_tes
 --capture` verifies actual delivered pixels; `--capture-case ordinary|source|recipient|timeout`
 selects normal delivery or disposable lifecycle faults, each on fresh/cold boots.
 
+Notes **F6** toggles the cursor preference for pointers in that keyboard's group.
+`python tools/boot-harness-rs/desktop_test.py --cursor-preferences --trace-storage`
+checks input while hidden, independent AUTO, restoration on target exit and the
+same behavior through Split-in-Split. `--cursor-producer --trace-storage` installs
+a disposable AUTO that invokes F6 on its own group and verifies that physical
+input remains usable. Both workflows run on fresh and cold boots.
+
 ## Start reading
 
 For ongoing work or an agent handoff, read [TASKS_RUST.md](../TASKS_RUST.md) first.

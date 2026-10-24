@@ -121,10 +121,10 @@ debug = 2
 [profile.release.package.redb]
 opt-level = "s"
 # The stock matrix is installed as one storage object of at most 256 KiB and
-# sat within two percent of that; size optimization leaves 16 percent, and the
-# four-level latency run measured no change in its per-hop CPU.
+# needs size optimization. Pixel rasterization lives in the display service;
+# this policy/IPC executable is optimized for size independently.
 [profile.release.package.cathedral-stock-matrix]
-opt-level = "s"
+opt-level = "z"
 
 [profile.release.package.cathedral-database-worker]
 opt-level = "s"

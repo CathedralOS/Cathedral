@@ -149,11 +149,13 @@ impl<const N: usize> World<N> {
         let group = self.input.streams[index].group;
         let description = self.input.streams[index].description;
         let description_locked = self.input.streams[index].description_locked;
+        let cursor_cycle = self.input.streams[index].cursor_cycle;
         self.input.streams[index] = Stream {
             id,
             group,
             description,
             description_locked,
+            cursor_cycle,
             ..Stream::empty()
         };
         Ok(())

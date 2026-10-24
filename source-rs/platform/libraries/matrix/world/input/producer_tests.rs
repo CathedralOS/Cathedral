@@ -5,6 +5,39 @@ use cathedral_platform_contracts::input as keys;
 fn connect(w: &mut World<2>, slot: usize) {
     assert_eq!(w.request(slot, 1, [wire::VIEW, 0, 0, 0, 0, 0, 0, 0])[0], 0);
 }
+#[test]
+fn producer_cursor_resolves_only_its_live_channel_and_target_preference() {
+    let mut w = world();
+    connect(&mut w, 0);
+    connect(&mut w, 1);
+    w.grant_input_producer(0, 1, 0, 0, 0).unwrap();
+    let generation = info(&mut w, 0)[1];
+    assert!(w.producer_cursor(0, 0).is_none());
+    assert_eq!(pointer(&mut w, 0, generation, 220)[0], 0);
+    let event = next(&mut w, 1);
+    assert_eq!(
+        w.request(
+            1,
+            1,
+            [
+                wire::CURSOR_PREFERENCE,
+                event[1],
+                event[6],
+                wire::CURSOR_HIDDEN,
+                0,
+                0,
+                0,
+                0
+            ]
+        )[0],
+        0
+    );
+    assert_eq!(w.producer_cursor(0, 0).unwrap().mode, wire::CURSOR_HIDDEN);
+    assert!(w.producer_cursor(0, 1).is_none());
+    assert!(w.producer_cursor(1, 0).is_none());
+    w.revoke_input_producer(0);
+    assert!(w.producer_cursor(0, 0).is_none());
+}
 fn info(w: &mut World<2>, slot: usize) -> wire::Packet {
     w.request(slot, 1, [wire::PRODUCER_INFO, 0, 0, 0, 0, 0, 0, 0])
 }

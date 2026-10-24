@@ -51,6 +51,13 @@ pub const FRAME_DEMAND: u64 = 49;
 /// is cooperative freshness, not proof that an untrusted app did new work, a
 /// display fence or permission to share unmasked backing. Stale tickets refuse.
 pub const FRAME_READY: u64 = 50;
+/// Receiver preference: [op, view epoch, receiver-local pointer channel, mode, 0..].
+/// Applies only when this view is that pointer's hover/drag target. It does not
+/// select focus, capture input, confine motion or hide another target's cursor.
+/// Cached for this view/channel lifetime; cancellation/rebinding clears it.
+pub const CURSOR_PREFERENCE: u64 = 51;
+pub const CURSOR_DEFAULT: u64 = 0;
+pub const CURSOR_HIDDEN: u64 = 1;
 
 pub fn poll_frames(reply: Packet) -> bool {
     reply[0] == 0 && reply[1] != 0 && reply[2] != 0 && reply[3] != 0 && reply[4] & NO_FRAMES == 0

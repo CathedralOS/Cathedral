@@ -15,6 +15,7 @@ bench = false
 hold-probe = []
 disconnect-probe = ["hold-probe"]
 pressure-probe = []
+cursor-probe = []
 
 [dependencies]
 cathedral-kernel-contracts.workspace = true

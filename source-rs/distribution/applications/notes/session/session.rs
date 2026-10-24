@@ -107,6 +107,7 @@ pub fn run(style: u64, mut services: Services) {
     let mut scene: Option<view::Scene> = None;
     let mut repaint = true;
     let mut closing = closing::Controls::default();
+    let mut cursors = cursors::Cursors::default();
     #[cfg(feature = "input-receiver-probe")]
     let mut input_probe = input_probe::Receiver::default();
     #[cfg(feature = "render-demand-probe")]
@@ -158,6 +159,7 @@ pub fn run(style: u64, mut services: Services) {
                 }
             }
             let event = wire::poll_event(snapshot);
+            cursors.observe(parent, event);
             #[cfg(feature = "input-receiver-probe")]
             input_probe.observe(parent, event);
             #[cfg(feature = "trace-input")]

@@ -36,7 +36,10 @@ impl Compositor {
         }
         if matches!(
             words[0] & 0xffff,
-            wire::MATRIX_RECT | wire::MATRIX_POINTER | wire::MATRIX_CURSOR
+            wire::MATRIX_RECT
+                | wire::MATRIX_POINTER
+                | wire::MATRIX_CURSOR
+                | wire::MATRIX_POINTER_STYLE
         ) {
             if !request.control {
                 return Err(abi::DENIED);

@@ -169,6 +169,9 @@ impl<const N: usize> World<N> {
             return self.producer_request(slot, incarnation, words);
         }
         match words {
+            [wire::CURSOR_PREFERENCE, epoch, channel, mode, 0, 0, 0, 0] => {
+                child.cursor_preference(epoch, channel, mode)
+            }
             [wire::FRAME_DEMAND, epoch, 0, 0, 0, 0, 0, 0]
                 if child.grant.valid() && epoch == child.grant.epoch =>
             {

@@ -3,7 +3,11 @@ use super::*;
 impl Compositor {
     pub(super) fn matrix_request(&mut self, words: [u64; 6]) -> Result<[u64; 6], u64> {
         let [op, x, y, w, h, color] = words;
-        if op == wire::MATRIX_POINTER
+        if op == wire::MATRIX_POINTER_STYLE && x <= 1 && [y, w, h, color] == [0; 4] {
+            let before = self.composition.pointers.cursor_bounds();
+            self.composition.pointers.hide_physical_cursor(x != 0);
+            self.redraw_cursors(before);
+        } else if op == wire::MATRIX_POINTER
             && [w, h, color] == [0; 3]
             && x < self.output.width
             && y < self.output.height

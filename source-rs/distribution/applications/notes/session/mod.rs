@@ -1,5 +1,6 @@
 //! Rust plumbing; start at session.rs.
 mod closing;
+mod cursors;
 #[cfg(feature = "input-receiver-probe")]
 mod input_probe;
 #[cfg(feature = "management-probes")]

@@ -1,7 +1,7 @@
 //! The explicitly installed source endpoint supplies two logical channels in one
 //! focus group. These are this adapter's local names, not global input roles.
 use super::*;
-const POINTER: u32 = 1;
+pub(in crate::service) const POINTER: u32 = 1;
 const KEYBOARD: u32 = 2;
 const GROUP: u32 = 1;
 

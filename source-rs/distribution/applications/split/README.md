@@ -55,6 +55,10 @@ notifications, survey loss asynchronously, and dispatch authenticated requests.
   separate broker/producer endpoints; the producer cannot draw or access storage.
   Two channels and a private group use the same platform routing policy as physical
   input. The third world slot is a non-rendering participant; Notes occupy two.
+  [Cursor rendering](session/producer/rendering.rs) resolves that producer's own
+  hover/capture target. [Inherited preferences](session/rendering/cursors.rs)
+  propagate separately, so hiding one pointer does not hide another or withdraw
+  its input. Notes F6 toggles preferences for its keyboard's local group.
 - [Capture lifecycle](session/capture/capture.rs) admits an explicitly offered
   viewer in the fourth slot, funds one pending output, requests a source frame,
   and releases demand on completion or failure. Its

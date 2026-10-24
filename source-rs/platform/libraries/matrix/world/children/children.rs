@@ -23,6 +23,7 @@ pub(super) struct Child {
     pub visible: bool,
     frames: bool,
     pub frame: super::demand::Frame,
+    pub cursor: [Option<bool>; wire::INPUT_STREAMS],
     pub rect: Option<Rect>,
     pub keys: u64,
     pub grant: Grant,
@@ -51,6 +52,7 @@ impl Child {
             visible: true,
             frames: true,
             frame: super::demand::Frame::empty(),
+            cursor: [None; wire::INPUT_STREAMS],
             rect: None,
             keys: 0,
             grant: Grant {
@@ -94,6 +96,7 @@ impl Child {
             return;
         }
         self.frame.pending = None;
+        self.cursor.fill(None);
         self.queues = [const { events::Events::empty() }; wire::INPUT_STREAMS];
         self.next_stream = 0;
         self.next_input_name = 0;
@@ -169,6 +172,9 @@ impl Child {
                 != cathedral_platform_contracts::input::description::Description::UNKNOWN;
         }
         debug_assert_eq!(queue.source, channel);
+        if event[0] == wire::POINTER {
+            self.cursor[index].get_or_insert(false);
+        }
         let coalesce = queue.last_order() == Some(self.group_last_event[group]);
         self.group_last_event[group] = self.next_event;
         let delivered = queue.push(event, self.next_event, coalesce);
@@ -211,6 +217,7 @@ impl Child {
     pub fn cancel_stream(&mut self, index: usize, channel: Name) {
         let queue = &mut self.queues[index];
         if queue.source == channel {
+            self.cursor[index] = None;
             self.next_event = self.next_event.checked_add(1).expect("input event order");
             queue.cancel(self.next_event);
             // Cancellation is an ordering barrier even if another channel is
@@ -224,6 +231,7 @@ impl Child {
     }
     pub fn retire_stream(&mut self, index: usize, channel: Name) {
         if self.queues[index].source == channel {
+            self.cursor[index] = None;
             self.next_event = self.next_event.checked_add(1).expect("input event order");
             let changed = !self.queues[index].retiring();
             self.queues[index].retire(self.next_event);
@@ -244,6 +252,7 @@ impl Child {
         self.group_sources[index] == group && self.group_retired[index]
     }
     pub fn cancel(&mut self) {
+        self.cursor.fill(None);
         for queue in &mut self.queues {
             self.next_event = self.next_event.checked_add(1).expect("input event order");
             queue.cancel(self.next_event);

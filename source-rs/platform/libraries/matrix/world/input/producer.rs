@@ -13,6 +13,9 @@ pub(in crate::world) struct Producer {
     rights: u64,
 }
 impl Producer {
+    pub(in crate::world::input) fn cursor_channel(&self, ordinal: usize) -> Option<u32> {
+        (self.generation != 0 && ordinal < self.count).then(|| self.channels[ordinal])
+    }
     pub const fn empty() -> Self {
         Self {
             incarnation: 0,

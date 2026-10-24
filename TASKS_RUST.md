@@ -1,5 +1,58 @@
 # Rust reference OS: tasks and handoff
 
+Implementation update 2026-10-24: **recursive pointer-target cursor preferences**,
+over `4b734b83`. F5 -> user -> Notes (or Split) -> click a note -> **F6**. Notes
+requests default/hidden for pointer aliases in that keyboard's local group;
+input keeps working. Leaving the target restores the next target's policy.
+Returning to the same live view can reuse its preference. Closing the target
+restores owner policy without another motion event. Split and stock matrices
+compose preferences recursively; hiding the physical pointer does not hide AUTO,
+and AUTO can independently request suppression through its own Notes input group.
+
+Start at the platform [cursor policy](source-rs/platform/libraries/matrix/world/input/cursor/cursor.rs):
+current hover/drag target -> delivered child alias -> preference. The
+[receiver](source-rs/platform/libraries/matrix/world/children/cursor.rs) rejects
+unknown/key-only aliases, stale view epochs and invalid modes. Cancellation,
+retirement and rebind clear preferences; keyboard-focus cancellation does not.
+Stored coordinates allow geometry/death recomputation without fresh motion.
+The runtime [forwarder](source-rs/platform/libraries/user-runtime/matrix/upstream/cursors.rs)
+sends only changes, keyed by view, channel and cancellation cycle. Counter
+exhaustion stays invalid rather than reviving after another cancellation.
+Only the root adapter has the display control operation. No new syscall, device
+grant, general cursor assets, relative lock, confinement or attribution promise.
+
+Verified fresh/cold QEMU evidence:
+
+- Ordinary F6, continued typing/saving, independent AUTO, target death and
+  Split-in-Split: `build/boot-harness-rs/desktop/20261024T185604001729Z`
+  (`--cursor-preferences --trace-storage`).
+- Disposable AUTO invokes F6 on its own group; its cursor hides while physical
+  pointer/typing remain usable: `build/boot-harness-rs/desktop/20261024T185747833985Z`
+  (`--cursor-producer --trace-storage`). The feature uses ordinary producer keys,
+  not a privileged cursor test operation.
+- Four stock nested desktops, editing/saving/closing and exact cold-open data:
+  `build/boot-harness-rs/desktop/20261024T185832793508Z`
+  (`--latency --nested-depth 4 --trace-storage`). These are host upper bounds,
+  including input pacing/QMP/screenshot polling, not stage latency or an A/B
+  performance claim. No input/redraw traces were requested in this run.
+
+Workspace host tests pass; the final focused suites contain 111 matrix and 23
+display tests. Ordinary userspace and cursor-probe clippy pass. The traced stock
+matrix initially exceeded the executable object's 262,144-byte cap. Compact
+boolean preference state helps; switching that policy executable from `s` to `z`
+optimization brings it to 259,792 bytes. Rasterizer optimization is unchanged.
+This is very little remaining headroom, not a long-term executable storage model.
+No kernel limits changed and no new ARM64/GPU evidence is claimed.
+
+Next: measure actual input/routing/app/presentation stages through nesting before
+changing forwarding or scheduling. Existing end-to-end timings alone cannot
+separate intentional harness waits from guest delay. Address the near-exhausted
+single-object executable bound deliberately before adding substantial stock-matrix
+features; avoid repeatedly depending on optimization settings to fit. Then build
+a small app interaction-description/semantic-action proof using the accepted
+input authority model. Further broad specification is unnecessary for these
+steps. Mandatory agent attribution remains an independent unresolved policy.
+
 Current integration 2026-10-24: **reusable Omega UI library**, over `ab0d76f8`.
 `cathedral-omega-ui` exposes caller-authored frames, independent field values,
 stable control IDs and checked instance/build-local nodes. Applications compose

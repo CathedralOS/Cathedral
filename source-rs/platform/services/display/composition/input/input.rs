@@ -23,6 +23,7 @@ struct Lease {
 }
 pub struct Router {
     enabled: bool,
+    physical_hidden: bool,
     width: u64,
     height: u64,
     pointers: [Pointer; 2],
@@ -35,6 +36,7 @@ impl Router {
         assert!(width > 0 && height > 0 && width <= i64::MAX as u64 && height <= i64::MAX as u64);
         Self {
             enabled: false,
+            physical_hidden: false,
             width,
             height,
             pointers: [Pointer {
@@ -52,6 +54,7 @@ impl Router {
         self.cancel(1, clients);
         self.lease = None;
         self.enabled = enabled;
+        self.physical_hidden = false;
     }
     pub fn lease(&mut self, client: usize, grant: bool, clients: &[Client; 3]) -> Result<u64, u64> {
         if client >= 3

@@ -19,6 +19,7 @@ mod surface;
 mod tests;
 mod upstream;
 pub use children::Rect;
+pub use input::cursor::Cursor;
 pub use layout::Placement;
 
 include!("world.rs");

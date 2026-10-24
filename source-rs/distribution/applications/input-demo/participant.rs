@@ -81,6 +81,27 @@ fn demonstrate(mut server: Server, pair: Pair, info: wire::Packet) -> Result<(),
         }
         // Each letter is a captured press and release, independent of the
         // physical keyboard's current selection. After three letters, idle motion.
+        #[cfg(feature = "cursor-probe")]
+        if step == 3 {
+            for state in [input::PRESS, input::RELEASE] {
+                send(
+                    pair,
+                    [
+                        wire::PRODUCER_KEY,
+                        generation,
+                        2,
+                        input::F6 as u64,
+                        state as u64,
+                        0,
+                        0,
+                        0,
+                    ],
+                )?;
+            }
+            cathedral_user_runtime::write(
+                b"Cathedral participant: requested own cursor suppression\n",
+            )?;
+        }
         if let Some(letter) = b"bot".get(step) {
             let key = u64::from(input::A + *letter - b'a');
             for state in [input::PRESS, input::RELEASE] {

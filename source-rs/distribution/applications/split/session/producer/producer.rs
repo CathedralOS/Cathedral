@@ -13,6 +13,8 @@ pub struct Producer {
     child: Option<Admitted>,
     launch: Option<Launch>,
     cursor: Option<(u64, u64)>,
+    point: Option<(usize, u64, u64)>,
+    painted: Option<(u64, u64, bool)>,
     limited: Option<[usize; 2]>,
 }
 impl Producer {
@@ -21,6 +23,8 @@ impl Producer {
             child: None,
             launch: None,
             cursor: None,
+            point: None,
+            painted: None,
             limited: None,
         }
     }
@@ -47,6 +51,8 @@ impl Producer {
         server: &mut Server,
     ) -> Result<(), Error> {
         world.disconnected(SLOT);
+        self.point = None;
+        self.painted = None;
         server.remove(BROKER);
         server.remove(INPUT);
         if let Some(child) = self.child.take() {
@@ -114,6 +120,14 @@ impl Producer {
             }
             if self.limited == Some([wire::INPUT_STREAMS, wire::INPUT_GROUPS]) {
                 self.limited = None;
+            }
+        }
+        if let Err(error) = self.render_cursor(output, world) {
+            if matches!(error.0 as u64, abi::DENIED | abi::BAD_HANDLE) {
+                self.stop(output, world, server)?;
+                output.header(false)?;
+            } else {
+                return Err(error);
             }
         }
         Ok(())

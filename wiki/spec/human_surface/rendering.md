@@ -188,8 +188,14 @@ also has an experimental bounded cursor primitive. It preserves recursive
 clipping, normal subtree stacking, visibility and retirement without a full-screen
 cursor buffer. This is presentation evidence, not a complete cursor service:
 the installed Split matrix demonstrates a scoped producer and owner-funded
-cursor, while target-dependent suppression, assets and authenticated attribution
-remain separate work.
+cursor. The [pointer-target policy](../../../source-rs/platform/libraries/matrix/world/input/cursor/cursor.rs)
+now accepts default/hidden preferences on delivered local pointer aliases.
+Stock and Split hosts compose the effective preference up their supplied
+interaction connections, independently of keyboard focus. Notes F6 demonstrates
+this in the ordinary desktop. The desktop fixtures cover target exit without
+further motion, nesting and independent physical/producer suppression; host tests
+cover drag targeting, cancellation, geometry changes and stale bindings. Assets,
+authenticated attribution, relative lock and confinement remain separate work.
 
 The Rust [demand mechanism](../../../source-rs/platform/libraries/matrix/world/demand.rs)
 now carries a child-local no-frames hint through `POLL`, composed across matrices

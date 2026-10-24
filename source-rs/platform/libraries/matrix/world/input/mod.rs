@@ -2,6 +2,7 @@
 mod capacity;
 #[cfg(test)]
 mod capacity_tests;
+pub(super) mod cursor;
 #[cfg(test)]
 mod description_tests;
 mod descriptions;

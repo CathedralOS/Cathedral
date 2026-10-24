@@ -28,6 +28,13 @@ F1 deliberately saves any remaining difference. **F2** reloads and discards the
 draft only after a successful read. A failed read never erases it. Duplicate and
 switch act only on a clean, saved note.
 
+**F6** demonstrates scoped cursor preference: toggle hiding for pointers already
+received in that keyboard's local input group. Input remains active. Leaving the
+note restores the next target's policy; returning can reuse the live note's
+preference. Cancellation or view replacement resets it. The
+[cursor client](session/cursors.rs) uses only supplied local aliases, including
+when Notes runs beneath nested matrices.
+
 Below the text, a bar shows the notes in this realm: a dim segment per note and a
 bright one on the current note. A realm holds up to eight notes.
 

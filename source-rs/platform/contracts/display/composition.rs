@@ -16,6 +16,8 @@ pub const STATUS: u64 = 20;
 /// remaining words are x,y,width,height,rgb. Zero dimensions remove the tile.
 pub const MATRIX_RECT: u64 = 21;
 pub const MATRIX_POINTER: u64 = 22; // control-only absolute x,y,0,0,0
+/// Root adapter only: [op, 0 default / 1 hidden, 0,0,0,0]. No input effect.
+pub const MATRIX_POINTER_STYLE: u64 = 28;
 pub const MATRIX_TILES: usize = 64;
 pub const MAX_CLIENTS: usize = 3;
 pub const MAX_NODES: usize = 16;

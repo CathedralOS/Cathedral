@@ -159,3 +159,21 @@ is a second visible consumer. Its two-column policy uses the shared
 [parent snapshot handler](world/upstream.rs), runtime admission, service offers
 and [retained image custody](../user-runtime/matrix/upstream/README.md). The
 ordinary desktop test separately checks the stock transaction/persistence path.
+
+The [cursor policy](world/input/cursor/cursor.rs) resolves each pointer's current
+hover or drag target against current placement, independently of keyboard focus.
+`CURSOR_PREFERENCE(view_epoch, receiver_channel, mode)` accepts default/hidden only
+for a pointer alias actually delivered to that live view. Preferences are cached
+for that view/channel, applied only while it is the target, and cleared by stream
+cancellation, retirement or view replacement. Late requests from a former target
+cannot affect the current target. Geometry changes and death recompute policy
+without requiring fresh motion. This is visual preference, not pointer capture,
+confinement, relative-motion authority or authenticated participant attribution.
+
+Owners inspect bounded `Cursor` rows; these are not an app-visible global registry.
+Nested adapters use the runtime's
+[change-only forwarder](../user-runtime/matrix/upstream/cursors.rs) on their supplied
+interaction pair. Its cache includes view, alias and cancellation cycle, so a
+same-alias cancellation followed by fresh input cannot reuse a previous request.
+Only the stock root translates its explicitly installed physical pointer into
+the display service's control-only `MATRIX_POINTER_STYLE` operation.

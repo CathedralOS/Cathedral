@@ -48,6 +48,28 @@ fn router(clients: &[Client; 3]) -> Router {
     router
 }
 #[test]
+fn hiding_physical_cursor_changes_pixels_without_revoking_input_or_other_cursor() {
+    let clients = clients();
+    let mut r = router(&clients);
+    r.device(110, 110, 0, false, &clients);
+    let p = r.state(0);
+    assert_eq!(r.pixel(p[1], p[2], &clients), Some(0xffffff));
+    let lease = r.lease(1, true, &clients).unwrap();
+    r.drive(1, lease, 40, 40, 0, &clients).unwrap();
+    let other = r.state(1);
+    r.hide_physical_cursor(true);
+    assert_eq!(r.pixel(p[1], p[2], &clients), None);
+    assert_eq!(r.pixel(other[1], other[2], &clients), Some(0xffd166));
+    while r.next(0).kind != wire::NONE {}
+    r.device(0, 0, 1, false, &clients);
+    assert_eq!(r.next(0).kind, wire::BUTTONS);
+    r.hide_physical_cursor(false);
+    assert_eq!(r.pixel(p[1], p[2], &clients), Some(0xffffff));
+    r.hide_physical_cursor(true);
+    r.enable(true, &clients);
+    assert_eq!(r.pixel(p[1], p[2], &clients), Some(0xffffff));
+}
+#[test]
 fn overlap_capture_clamps_coordinates_and_releases() {
     let clients = clients();
     let mut r = router(&clients);
