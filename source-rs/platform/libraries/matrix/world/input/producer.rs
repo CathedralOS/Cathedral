@@ -196,6 +196,14 @@ impl<const N: usize> World<N> {
         };
         let name = Name::local(producer.channels[index as usize]);
         let result = match words {
+            [wire::PRODUCER_DESCRIBE, _, _, a, b, controls, 0, 0] => {
+                match cathedral_platform_contracts::input::description::Description::from_words([
+                    a, b, controls,
+                ]) {
+                    Some(description) => self.describe_input(name, description),
+                    None => Err(abi::INVALID_ARGUMENT),
+                }
+            }
             [wire::PRODUCER_POINTER, _, _, x, y, buttons, 0, 0]
                 if x < self.parent.width && y < self.parent.height =>
             {

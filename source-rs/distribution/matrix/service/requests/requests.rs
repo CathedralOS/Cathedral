@@ -113,7 +113,7 @@ pub(super) fn dispatch(
             return server.reply(&request, &wire::encode(wire::error(abi::DENIED)));
         }
         Some(words)
-            if (wire::PRODUCER_INFO..=wire::PRODUCER_RELEASE).contains(&words[0])
+            if wire::producer_operation(words[0])
                 && request
                     .client
                     .is_some_and(|slot| children.separate_producer(slot)) =>

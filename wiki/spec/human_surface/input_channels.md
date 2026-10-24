@@ -147,7 +147,7 @@ Directory storage, retained records and event capacity remain funded resources.
 
 ## Implementation boundary
 
-The Rust lab's [physical-key transport](../../../source-rs/platform/contracts/input.rs)
+The Rust lab's [physical-key transport](../../../source-rs/platform/contracts/input/input.rs)
 and [matrix queues](../../../source-rs/platform/libraries/matrix/world/children/children.rs)
 implement a bounded routed-binding directory, not the general descriptor registry
 or shared-table/ring interface.
@@ -190,9 +190,20 @@ boundary drains, and reading does not consume input. View replacement invalidate
 old snapshots. Host tests cover sibling isolation, nested renaming, stale reads,
 retirement and exhaustion; the disposable Notes observer checks directory/event
 agreement over ordinary desktop IPC. This does not expose a global registry,
-register channels on behalf of the receiver or grant production. Friendly names,
-control descriptions, separately delegated discovery, shared tables and live
-channel reassociation remain unimplemented.
+register channels on behalf of the receiver or grant production. The lab now carries an immutable UTF-8 label of up to sixteen bytes and advisory
+pointer/key control categories. A producer can publish only for its own granted
+channel ordinal and before delivery. A retained DESCRIBED boundary precedes that
+channel's first event on each receiving edge, so forwarding does not require a
+lookup on every event or extra strings in ordinary events. Cancellation and
+queue overflow preserve the description. Unrouted registrations remain private;
+retiring receiver entries retain metadata until their boundary drains. The stock
+adapter publishes generic Pointer/Keyboard labels and AUTO publishes its own
+virtual descriptions. The observer validates them against revision-checked
+directory reads, including descriptions inherited through nested matrices.
+These labels are not authenticated origin and the categories do not grant or
+restrict input authority. General control/axis vocabularies, mutable descriptions,
+separately delegated discovery, shared tables and live channel reassociation
+remain unimplemented.
 F5 supplies a pointer channel
 and a keyboard channel in one group. Shared app-side reception tracks pointer
 edges separately; this does not impose separate document/player state on apps.

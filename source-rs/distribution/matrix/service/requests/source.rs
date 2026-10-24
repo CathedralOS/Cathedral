@@ -7,7 +7,16 @@ const GROUP: u32 = 1;
 
 pub(super) fn bind(world: &mut World) -> Result<(), u64> {
     world.bind_input_stream(POINTER, GROUP)?;
-    world.bind_input_stream(KEYBOARD, GROUP)
+    world.bind_input_stream(KEYBOARD, GROUP)?;
+    use cathedral_platform_contracts::input::description::{self, Description};
+    world.describe_input_stream(
+        POINTER,
+        Description::new(description::POINTER, "Pointer").unwrap(),
+    )?;
+    world.describe_input_stream(
+        KEYBOARD,
+        Description::new(description::KEYS, "Keyboard").unwrap(),
+    )
 }
 pub(in crate::service) fn cancel(world: &mut World) {
     if bind(world).is_ok() {

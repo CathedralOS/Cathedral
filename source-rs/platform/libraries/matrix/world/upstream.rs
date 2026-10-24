@@ -34,6 +34,14 @@ impl<const N: usize> World<N> {
             }
             let result = match event[2] {
                 wire::NONE => Ok(()),
+                wire::DESCRIBED => {
+                    match cathedral_platform_contracts::input::description::Description::from_words(
+                        [event[3], event[4], event[5]],
+                    ) {
+                        Some(description) => self.describe_input(channel, description),
+                        None => Err(abi::INVALID_ARGUMENT),
+                    }
+                }
                 wire::POINTER => self.pointer_named(channel, event[3], event[4], event[5]),
                 wire::KEY => self.key_named(channel, event[3], event[4]),
                 wire::CANCEL => self.inherit_stream_cancel(channel),

@@ -147,9 +147,13 @@ impl<const N: usize> World<N> {
         let index = self.input.admit(id)?;
         self.cancel_stream_index(index);
         let group = self.input.streams[index].group;
+        let description = self.input.streams[index].description;
+        let description_locked = self.input.streams[index].description_locked;
         self.input.streams[index] = Stream {
             id,
             group,
+            description,
+            description_locked,
             ..Stream::empty()
         };
         Ok(())

@@ -160,7 +160,7 @@ impl<const N: usize> World<N> {
         }
         let child = &mut self.children[slot];
         child.incarnation = incarnation;
-        if (wire::PRODUCER_INFO..=wire::PRODUCER_RELEASE).contains(&words[0]) {
+        if wire::producer_operation(words[0]) {
             return self.producer_request(slot, incarnation, words);
         }
         match words {
@@ -177,6 +177,9 @@ impl<const N: usize> World<N> {
             }
             [wire::INPUT_DIRECTORY, epoch, revision, after, 0, 0, 0, 0] => {
                 child.directory(epoch, revision, after)
+            }
+            [wire::INPUT_DESCRIPTION, epoch, revision, name, 0, 0, 0, 0] => {
+                child.description(epoch, revision, name)
             }
             [wire::VIEW, 0, 0, 0, 0, 0, 0, 0] => child.view(),
             [wire::POLL, 0, 0, 0, 0, 0, 0, 0] if child.grant.valid() => child.poll(),

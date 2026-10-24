@@ -59,9 +59,7 @@ impl Producer {
                     if !child.services.as_ref().unwrap().producer_ready() {
                         return Ok(());
                     }
-                    if let Some(words) = words
-                        .filter(|w| (wire::PRODUCER_INFO..=wire::PRODUCER_RELEASE).contains(&w[0]))
-                    {
+                    if let Some(words) = words.filter(|w| wire::producer_operation(w[0])) {
                         let reply = world.request(SLOT, child.data.0.raw(), words);
                         if reply[0] == 0 && words[0] == wire::PRODUCER_POINTER {
                             let (epoch, cursor) = self.cursor.unwrap();

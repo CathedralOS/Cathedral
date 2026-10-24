@@ -3,6 +3,9 @@ mod capacity;
 #[cfg(test)]
 mod capacity_tests;
 #[cfg(test)]
+mod description_tests;
+mod descriptions;
+#[cfg(test)]
 mod group_tests;
 mod groups;
 mod keys;

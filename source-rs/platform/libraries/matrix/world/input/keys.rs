@@ -37,6 +37,7 @@ impl<const N: usize> World<N> {
             && self.children[slot].grant.keys & bit != 0
         {
             self.children[slot].can_push(index, route.group, self.input.groups[route.group].id)?;
+            route.description_locked = true;
         }
         if state == keys::RELEASE as u64 {
             route.held &= !bit;
@@ -58,6 +59,7 @@ impl<const N: usize> World<N> {
                     channel,
                     route.group,
                     self.input.groups[route.group].id,
+                    route.description,
                     [wire::KEY, key, state, 0],
                 )?
             {

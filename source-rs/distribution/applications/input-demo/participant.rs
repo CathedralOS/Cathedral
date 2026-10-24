@@ -20,6 +20,26 @@ pub fn run(mut services: Services) -> Result<(), Error> {
     let server = Server::open()?;
     let pair = services.input_producer(1, 1)?;
     let info = send(pair, [wire::PRODUCER_INFO, 0, 0, 0, 0, 0, 0, 0])?;
+    use cathedral_platform_contracts::input::description::{self, Description};
+    for (ordinal, controls, label) in [
+        (1, description::POINTER, "AUTO pointer"),
+        (2, description::KEYS, "AUTO keys"),
+    ] {
+        let [a, b, controls] = Description::new(controls, label).unwrap().words();
+        send(
+            pair,
+            [
+                wire::PRODUCER_DESCRIBE,
+                info[1],
+                ordinal,
+                a,
+                b,
+                controls,
+                0,
+                0,
+            ],
+        )?;
+    }
     #[cfg(any(feature = "hold-probe", feature = "pressure-probe"))]
     {
         crate::probes::run(server, pair, info)

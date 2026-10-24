@@ -50,7 +50,7 @@ pub const MORE: u64 = 1 << 16;
 /// GROUP_RETIRED follows the retirement of every channel in that group. Reclaim
 /// receiver state on these boundaries, not by reinterpreting an old name.
 /// This partial encoding has owner registration and explicit per-child producer
-/// quotas and explicitly offered service acquisition, but no channel directory yet.
+/// quotas, explicitly offered service acquisition and a scoped binding directory.
 pub const INPUT_STREAMS: usize = 4;
 pub const INPUT_GROUPS: usize = 4;
 /// Existing authenticated single-source adapter; no ambient child authority.
@@ -89,6 +89,12 @@ pub const RETIRED: u64 = 5;
 /// Ends a focus-group identity after all its channels have retired. Channel is
 /// zero; the group field names the retired group. A replacement gets a fresh name.
 pub const GROUP_RETIRED: u64 = 6;
+/// Once before a described channel's first event on this edge: x/y contain two
+/// little-endian label words, value contains controls (input::description).
+/// Metadata is retained separately from ordinary queue pressure, and never
+/// repeated on every event. It is not input, physical provenance or a credential.
+/// Undescribed channels remain valid and have UNKNOWN directory descriptions.
+pub const DESCRIBED: u64 = 7;
 pub const KEY_MASK: u64 = 0x1f; // Existing navigation-only grants.
 pub const VALID_KEY_MASK: u64 = crate::input::KEY_MASK;
 // Owner connection only. Child requests using these opcodes are uniformly denied.
@@ -144,12 +150,24 @@ pub const INPUT_CAPACITY: u64 = 44;
 /// rows persist until the boundary drains; immutable old snapshots confer no
 /// authority. View replacement resets the directory. Revision exhaustion makes
 /// observation unavailable (NO_MEMORY) until a new view, never wraps an identity.
-/// This initial binding directory has no friendly names/control descriptions.
+/// INPUT_DESCRIPTION reads the bounded immutable description at this revision.
 /// Keys is the receiver's view-wide ceiling, not a source descriptor or promise
 /// that this channel supplies those keys. Directory rows do not grant injection.
 pub const INPUT_DIRECTORY: u64 = 46;
 pub const CHANNEL_LIVE: u64 = 1;
 pub const CHANNEL_RETIRING: u64 = 2;
+/// Producer: generation, own channel ordinal, label word 0, label word 1,
+/// controls,0,0. Set before any receiver binding exists; identical repeats are
+/// harmless, changes or late first publication return BUSY. Labels grant nothing.
+pub const PRODUCER_DESCRIBE: u64 = 47;
+/// Receiver: view epoch, exact nonzero directory revision, local name,0.. .
+/// Reply: status,epoch,revision,name,label word 0,label word 1,controls,0.
+/// BUSY restarts the entire snapshot. A missing name is DENIED. Unknown is zero.
+/// Retiring entries keep their description until RETIRED drains.
+pub const INPUT_DESCRIPTION: u64 = 48;
+pub fn producer_operation(op: u64) -> bool {
+    (PRODUCER_INFO..=PRODUCER_RELEASE).contains(&op) || op == PRODUCER_DESCRIBE
+}
 pub const SPAWN: u64 = 106; // local child slot, current launch index, loan bitmask, argument
 pub const STOP: u64 = 107; // local child slot; return after complete subtree reclamation
 /// Host to child over its control link before a lifecycle decision: [LOSS, 0..].

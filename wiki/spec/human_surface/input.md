@@ -170,7 +170,7 @@ the [IPC contract](../communication/ipc.md). Notifications may wake a consumer
 without carrying every event. Unrestricted writers sharing a page are not made
 safe merely by agreeing which bytes each owns.
 
-The [Rust physical-key transport](../../../source-rs/platform/contracts/input.rs)
+The [Rust physical-key transport](../../../source-rs/platform/contracts/input/input.rs)
 is a small experimental key-event ABI without the complete text/layout model.
 The [matrix child queues](../../../source-rs/platform/libraries/matrix/world/children/children.rs)
 buffer sixteen ordinary events per stream for four bounded streams, with one

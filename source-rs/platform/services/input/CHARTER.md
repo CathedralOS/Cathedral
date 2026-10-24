@@ -33,7 +33,7 @@ accepted only on the private control channel in test builds.
 ## Entrances and ownership
 
 [main.rs](main.rs) selects [keyboard entrance](keyboard/keyboard.rs) for the ordinary
-[key-event protocol](../../contracts/input.rs), or [pointer.rs](pointer.rs)
+[key-event protocol](../../contracts/input/input.rs), or [pointer.rs](pointer.rs)
 for the compositor's combined physical pointer/key source. Each service owns
 its request loop and uses [controller.rs](controller.rs) for shared PS/2
 configuration. Keyboard recovery hooks live under `keyboard/`.

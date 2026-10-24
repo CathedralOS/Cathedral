@@ -125,6 +125,7 @@ impl Child {
         channel: Name,
         group: usize,
         group_name: Name,
+        description: cathedral_platform_contracts::input::description::Description,
         event: [u64; 4],
     ) -> Result<bool, u64> {
         if !self.grant.valid() {
@@ -151,6 +152,9 @@ impl Child {
             queue.channel = next_channel;
             queue.source = channel;
             queue.group = self.group_names[group];
+            queue.description = description;
+            queue.description_pending = description
+                != cathedral_platform_contracts::input::description::Description::UNKNOWN;
         }
         debug_assert_eq!(queue.source, channel);
         let coalesce = queue.last_order() == Some(self.group_last_event[group]);
@@ -343,6 +347,7 @@ mod tests {
                     Name::local(1),
                     0,
                     Name::local(1),
+                    cathedral_platform_contracts::input::description::Description::UNKNOWN,
                     [wire::POINTER, 1, 1, 1]
                 ),
                 Err(abi::NO_MEMORY)

@@ -31,8 +31,7 @@ impl Children {
         }
         let response = match words {
             Some(words)
-                if (wire::PRODUCER_INFO..=wire::PRODUCER_RELEASE).contains(&words[0])
-                    && child.producer_started == Some(true) =>
+                if wire::producer_operation(words[0]) && child.producer_started == Some(true) =>
             {
                 world.request(slot, child.data.0.raw(), words)
             }

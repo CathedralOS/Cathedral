@@ -62,6 +62,7 @@ impl<const N: usize> World<N> {
         };
         if let Some(slot) = target {
             self.children[slot].can_push(index, route.group, self.input.groups[route.group].id)?;
+            route.description_locked = true;
         }
         if route.buttons == 0 && buttons != 0 {
             let group = route.group;
@@ -83,6 +84,7 @@ impl<const N: usize> World<N> {
                     channel,
                     route.group,
                     self.input.groups[route.group].id,
+                    route.description,
                     [wire::POINTER, x, y, buttons],
                 )? {
                     // This source may hold keys in a different child from the

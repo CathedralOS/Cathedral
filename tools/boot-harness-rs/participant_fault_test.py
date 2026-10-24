@@ -55,6 +55,9 @@ def exercise(output, click, key, scan, width, height, resumed, mode):
         assert any(r[2] in (1,2) and r[5]>0 for r in directory),directory
         assert {r[3] for r in directory if r[2]==5}=={r[2] for r in retired},directory
         assert any(r[2]==6 for r in directory),directory
+        descriptions=[list(map(int,m.split())) for m in re.findall(r'STORAGE_TRACE receiver-description ([0-9 ]+)\n',evidence)]
+        labels={(r[1].to_bytes(8,'little')+r[2].to_bytes(8,'little')).rstrip(b'\0'):r[3] for r in descriptions}
+        assert labels.get(b'AUTO pointer')==1 and labels.get(b'AUTO keys')==2,labels
         if mode!='pressure':
             assert sorted(r[4] for r in retired)==[0,1<<(15-1)],retired
             assert sorted(r[5] for r in retired)==[0,1],retired
@@ -64,6 +67,9 @@ def exercise(output, click, key, scan, width, height, resumed, mode):
         note(0,left);note(1,right)
     generations=list(map(int,re.findall(r'STORAGE_TRACE producer-generation (\d+)',log())))
     assert len(generations)==2 and generations[1]>generations[0],generations
+    descriptions=[list(map(int,m.split())) for m in re.findall(r'STORAGE_TRACE receiver-description ([0-9 ]+)\n',log())]
+    labels={(r[1].to_bytes(8,'little')+r[2].to_bytes(8,'little')).rstrip(b'\0'):r[3] for r in descriptions}
+    assert labels.get(b'Pointer')==1 and labels.get(b'Keyboard')==2,labels
     click(width-22,18)
     scan(lambda w,d:pixel(w,d,13,18)==bytes.fromhex('101827'),'matrix subtree collected')
     print(f'PASS: {mode}, real receiver boundaries, unaffected input, fresh identities and durable edits')

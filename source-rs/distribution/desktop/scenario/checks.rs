@@ -32,6 +32,7 @@ impl Fixture {
             wire::PRODUCER_POINTER,
             wire::PRODUCER_KEY,
             wire::PRODUCER_RELEASE,
+            wire::PRODUCER_DESCRIBE,
             wire::HEALTH,
             wire::SPAWN,
             wire::STOP,

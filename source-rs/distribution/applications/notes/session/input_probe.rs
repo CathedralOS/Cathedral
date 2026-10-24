@@ -87,6 +87,7 @@ impl Receiver {
             ],
         );
         match kind {
+            wire::DESCRIBED => (),
             wire::POINTER => channel.buttons = buttons,
             wire::KEY => {
                 let bit = 1 << (key - 1);
@@ -127,7 +128,7 @@ impl Receiver {
 
     fn directory(parent: Pair, packet: wire::Packet) {
         use cathedral_user_runtime::matrix::input::Directory;
-        let [_, epoch, kind, _, _, _, name, group] = packet;
+        let [_, epoch, kind, a, b, controls, name, group] = packet;
         let snapshot = match Directory::read(parent, epoch) {
             Ok(snapshot) => snapshot,
             // Membership or the view may change between the bounded reads.
@@ -145,6 +146,16 @@ impl Receiver {
                     .find(|c| c.name as u64 == name)
                     .expect("delivered input missing from scoped directory");
                 assert_eq!(channel.group as u64, group);
+                if kind == wire::DESCRIBED {
+                    assert_eq!(channel.description.words(), [a, b, controls]);
+                }
+                // A second channel can change membership during the first
+                // descriptor's lookup. A later successful ordinary-event read
+                // still proves the retained metadata without a retry loop.
+                if channel.description.controls() != 0 {
+                    let [a, b, controls] = channel.description.words();
+                    time::storage_sample("receiver-description", &[name, a, b, controls]);
+                }
             }
         }
         time::storage_sample(

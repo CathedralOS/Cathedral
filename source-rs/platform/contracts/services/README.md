@@ -106,7 +106,9 @@ existing channels to make room.
 
 The [producer receiver](../../../distribution/matrix/service/children/producer.rs)
 authenticates the installed endpoint incarnation and admits only `PRODUCER_INFO`,
-`PRODUCER_POINTER`, `PRODUCER_KEY` and `PRODUCER_RELEASE`. Interaction, storage,
+`PRODUCER_POINTER`, `PRODUCER_KEY`, `PRODUCER_DESCRIBE` and `PRODUCER_RELEASE`.
+Descriptions are immutable bounded hints for the caller's own channel ordinals,
+published before delivery; they grant no extra input or observation authority. Interaction, storage,
 registration and owner commands on that pair are denied; production on the app's
 ordinary interaction pair is denied when it has this separate service. Before
 both endpoints have transferred, early producer traffic is discarded without a

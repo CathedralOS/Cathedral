@@ -31,8 +31,11 @@ per-channel overflow isolation, fresh input afterward and replacement identities
 through that installed IPC path, including cold persisted edits. A scoped input
 binding directory now exposes only channels already routed to the receiver, with
 revision-checked snapshots and retained retirement rows. The runtime client and
-Notes fault observer exercise it over the ordinary interaction pair. General
-friendly descriptors and shared read-only registry mappings remain unimplemented.
+Notes fault observer exercise it over the ordinary interaction pair. Bounded friendly labels and advisory pointer/key categories now travel once per
+receiving edge before first input, survive interruption and remain queryable under
+the directory revision. They are virtual descriptions, not authenticated device
+identities. General control vocabularies, mutable descriptions and shared read-only
+registry mappings remain unimplemented.
 
 The [surface path](platform/libraries/matrix/world/surface/README.md#bounded-cursor-presentation)
 now supports a bounded transparent arrow through ordinary local surface authority,

@@ -1,7 +1,10 @@
 //! Read a bounded revision-consistent directory from the supplied interaction
 //! pair. BUSY means discard this attempt; the caller chooses when to retry.
+//! At most INPUT_STREAMS rows and their descriptions plus one terminal read;
+//! ordinary input events never require these lookup exchanges.
 use super::upstream::{self, Pair};
 use crate::{Error, abi};
+use cathedral_platform_contracts::input::description::Description;
 use cathedral_platform_contracts::matrix as wire;
 #[derive(Clone, Copy, Default, Debug, PartialEq, Eq)]
 pub struct Channel {
@@ -10,6 +13,7 @@ pub struct Channel {
     pub retiring: bool,
     /// Receiver view-wide key ceiling, not this source's physical capabilities.
     pub keys: u64,
+    pub description: Description,
 }
 pub struct Directory {
     pub epoch: u64,
@@ -71,10 +75,24 @@ impl Directory {
                 group: reply[4] as u16,
                 retiring: reply[5] == wire::CHANNEL_RETIRING,
                 keys: reply[6],
+                description: Self::describe(pair, epoch, snapshot.revision, reply[3])?,
             };
             snapshot.len += 1;
             after = reply[3];
         }
         Err(Error(abi::IO_ERROR as i64))
+    }
+    fn describe(pair: Pair, epoch: u64, revision: u64, name: u64) -> Result<Description, Error> {
+        let reply = upstream::call(
+            pair,
+            [wire::INPUT_DESCRIPTION, epoch, revision, name, 0, 0, 0, 0],
+        )?;
+        if reply[0] != 0 {
+            return Err(Error(reply[0] as i64));
+        }
+        if reply[1..4] != [epoch, revision, name] || reply[7] != 0 {
+            return Err(Error(abi::IO_ERROR as i64));
+        }
+        Description::from_words([reply[4], reply[5], reply[6]]).ok_or(Error(abi::IO_ERROR as i64))
     }
 }

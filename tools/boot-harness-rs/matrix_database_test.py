@@ -142,7 +142,7 @@ def run(args):
                *(ROOT / 'source-rs/platform/libraries/matrix/world').rglob('*.rs'),
                *(ROOT / 'source-rs/platform/services/input/decoder').rglob('*.rs'),
                ROOT / 'source-rs/platform/services/input/matrix.rs',
-               ROOT / 'source-rs/platform/contracts/input.rs', ROOT / 'source-rs/platform/contracts/matrix.rs',
+               *(ROOT / 'source-rs/platform/contracts/input').glob('*.rs'), ROOT / 'source-rs/platform/contracts/matrix.rs',
                *(ROOT / 'source-rs/platform/libraries/database-objects').glob('*.rs'),
                *(ROOT / 'source-rs/platform/services/storage').glob('*.rs'),
                ROOT / 'tools/storage-lab/engines/volume/colors.rs', ROOT / 'tools/storage-lab/engines/volume/notes.rs']

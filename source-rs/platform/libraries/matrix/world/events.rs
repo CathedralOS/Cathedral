@@ -6,6 +6,8 @@ pub(super) struct Events {
     pub channel: u32,
     pub source: Name,
     pub group: u16,
+    pub description: cathedral_platform_contracts::input::description::Description,
+    pub description_pending: bool,
     // Sixteen ordinary events plus a reserved keyboard-cancellation boundary.
     queue: [[u64; 5]; 17],
     len: usize,
@@ -16,6 +18,8 @@ impl Events {
             channel: 0,
             source: Name::EMPTY,
             group: 0,
+            description: cathedral_platform_contracts::input::description::Description::UNKNOWN,
+            description_pending: false,
             queue: [[0; 5]; 17],
             len: 0,
         }
@@ -69,6 +73,20 @@ impl Events {
         }
     }
     pub fn next(&mut self, epoch: u64) -> wire::Packet {
+        if self.description_pending {
+            self.description_pending = false;
+            let [a, b, controls] = self.description.words();
+            return [
+                0,
+                epoch,
+                wire::DESCRIBED,
+                a,
+                b,
+                controls,
+                self.channel as u64,
+                self.group as u64,
+            ];
+        }
         debug_assert!(self.pending());
         let [kind, x, y, value, _order] = self.queue[0];
         self.queue.copy_within(1..self.len, 0);

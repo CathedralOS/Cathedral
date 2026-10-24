@@ -2,6 +2,20 @@
 //! consume input or reveal the routing owner's source IDs or sibling bindings.
 use super::*;
 impl Child {
+    pub fn description(&self, epoch: u64, revision: u64, name: u64) -> wire::Packet {
+        if revision == 0 || name == 0 || name > u32::MAX as u64 {
+            return wire::error(abi::DENIED);
+        }
+        let check = self.directory(epoch, revision, 0);
+        if check[0] != 0 {
+            return check;
+        }
+        let Some(queue) = self.queues.iter().find(|q| q.channel as u64 == name) else {
+            return wire::error(abi::DENIED);
+        };
+        let [a, b, controls] = queue.description.words();
+        [0, epoch, revision, name, a, b, controls, 0]
+    }
     pub(super) fn directory_changed(&mut self) {
         if self.directory_revision != 0 {
             self.directory_revision = self.directory_revision.checked_add(1).unwrap_or(0);

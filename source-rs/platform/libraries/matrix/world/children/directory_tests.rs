@@ -27,6 +27,7 @@ fn push(child: &mut Child, index: usize, source: u32) {
             Name::local(source),
             0,
             Name::local(99),
+            cathedral_platform_contracts::input::description::Description::UNKNOWN,
             [wire::POINTER, 1, 1, 0],
         )
         .unwrap();

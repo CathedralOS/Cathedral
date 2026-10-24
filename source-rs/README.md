@@ -155,7 +155,7 @@ The entrance explains this level without exposing every detail below it.
 | `platform/services/storage/` | Private object provider: the disk grant, engine recovery, two private roots and sealed attachments |
 | `platform/libraries/storage-volume/`, `distribution/lab/volume/` | Shared envelope and byte/sector adapter; separate transport and guest engine proofs |
 | `platform/libraries/database-objects/` | Numbered objects over immutable content: shared chunks, cheap copies, pins and collection |
-| `platform/contracts/input.rs` | Experimental physical-key events, independent of scan codes or UI policy |
+| `platform/contracts/input/input.rs` | Experimental physical-key events, independent of scan codes or UI policy |
 | `platform/contracts/display/pointer.rs` | Experimental logical pointers, source updates, capture and scoped synthetic leases |
 | `platform/contracts/display/interaction.rs` | Experimental attenuated keyboard focus and cross-process child placement |
 | `kernel/core/memory/memory.rs` | Bootstrap frame accounting and reclaiming bitmap over usable RAM, corresponding to the resource work in `source/kernel/core/` |
@@ -1155,7 +1155,8 @@ cursor, repeated stop/start, resize revocation and cold persisted documents.
 The participant fault workflows also query the scoped input binding directory
 through the ordinary interaction pair. The receiver checks that delivered events
 match its directory and that consumed retirement boundaries remove those entries;
-the host requires successful snapshot evidence as well as saved text. No registry
+the host requires successful snapshot evidence, AUTO descriptions and inherited
+Pointer/Keyboard descriptions as well as saved text. No registry
 access or injection permission is added to ordinary Notes.
 
 

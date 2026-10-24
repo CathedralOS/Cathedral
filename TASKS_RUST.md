@@ -1,5 +1,55 @@
 # Rust reference OS: tasks and handoff
 
+Implementation update 2026-10-24: **bounded channel descriptions through nesting**,
+over `e00916ce`. A producer can describe only its own granted channel ordinals,
+using a UTF-8 label of up to sixteen bytes and advisory pointer/key categories.
+The [description boundary](source-rs/platform/contracts/input/description.rs)
+validates encoding; the [router](source-rs/platform/libraries/matrix/world/input/descriptions.rs)
+rejects changes and late first publication after delivery, even if former
+receivers have since gone away. Identical repeats are harmless. Unknown channels
+remain supported. Labels are virtual hints, not authenticated origin or authority;
+the categories do not impose an event filter.
+
+A separately retained DESCRIBED boundary precedes first input on each receiving
+edge. It survives queue overflow, cancellation and retirement, and nested routers
+retain it before forwarding ordinary events. No descriptor lookup is added to the
+routing hot path, and ordinary events carry no extra strings. Only channels
+actually routed to a receiver become visible there. Directory reads include the
+immutable descriptions under the same snapshot revision; the runtime bounds one
+attempt to four rows, four descriptions and the terminal read. The stock adapter
+publishes Pointer/Keyboard; installed AUTO publishes AUTO pointer/AUTO keys.
+No kernel or default app authority changed.
+
+Host tests cover canonical UTF-8, source/ordinal/generation authorization,
+immutable descriptions, late-publication refusal, sibling privacy, nested local
+names, interruption and retirement. Workspace host tests pass (90 matrix / 18
+platform-contract tests), as do userspace and relevant host/receiver/desktop
+clippy, layout, format and Python checks. QEMU evidence:
+
+- Held input / STOP / descriptions / cold reopen: `build/boot-harness-rs/desktop/20261024T170712750540Z`.
+- Overflow / retained descriptions / fresh input / cold reopen: `build/boot-harness-rs/desktop/20261024T170837064536Z`.
+- Ordinary uninstrumented AUTO / STOP / resize / cold reopen: `build/boot-harness-rs/desktop/20261024T171308221692Z`.
+- Recursive IPC locality, recovery, registration and producer checks: `build/boot-harness-rs/matrix-test`.
+- Four nested desktops, repeated cleanup, isolation and cold saved data: `build/boot-harness-rs/desktop/20261024T171418714927Z`.
+
+An initial observer run correctly encountered BUSY when another channel arrived
+mid-snapshot; its test now accepts retained metadata from a later successful read
+instead of requiring a log on that one attempt. The recursive fixture now checks
+metadata boundaries and allows bounded progress before concluding a leaf queue is
+empty: NEXT never guaranteed completion of input forwarding through ancestors.
+Neither adjustment changes production routing. The traced stock matrix remains
+255,224 bytes, within the 256 KiB object cap. These bounded proofs do not establish
+a latency bound, full control vocabulary or new ARM64/GPU behavior.
+
+Next: rendering demand and masked capture through the ordinary desktop. Hide an
+app's presentation without suspending execution or withdrawing input; let an
+authorized capture request pixels without moving/raising it; preserve masking and
+release retained resources on participant death. General control/axis descriptions,
+mutable descriptors, shared registry pages, separately delegated discovery,
+cursor preferences, reassociation, independent group controllers and coordination
+acquisition remain queued. No new owner question blocks that work.
+
+
 Implementation update 2026-10-24: **scoped input binding directory**, over
 `92b2f832`. The ordinary interaction protocol can enumerate only channel/group
 aliases already routed into its receiver's view. Reads neither consume input nor

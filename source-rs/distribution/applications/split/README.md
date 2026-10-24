@@ -109,3 +109,9 @@ in the same matrix, check non-reuse of retired identities and cold-open saved ed
 The harness requires logged flood/stall ordering; it does not infer overflow from
 elapsed time alone. These are bounded QEMU proofs, not a latency guarantee or
 exhaustive fault coverage. The ordinary F5 images do not contain these probes.
+
+AUTO describes its channels as `AUTO pointer` and `AUTO keys`. Descriptions travel
+once before input on each receiving edge, while ordinary events retain compact
+channel tags. The receiver probes query the scoped directory and require both
+those labels and the inherited generic `Pointer`/`Keyboard` descriptions. These
+are virtual input hints, not authenticated participant identities or badges.

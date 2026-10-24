@@ -32,9 +32,17 @@ use this machinery with the existing runtime IPC server.
   coherent snapshot or BUSY; the existing wake hint signals changes. Retiring
   rows remain until their boundary drains. Reading neither consumes input nor
   grants injection. The [runtime reader](../user-runtime/matrix/input.rs) bounds
-  one attempt and leaves retry timing to its caller. Friendly descriptions,
-  independently delegated registry access and shared read-only tables remain
-  future work; the current key field is only the receiver's view-wide ceiling.
+  one attempt and leaves retry timing to its caller. Descriptions carry a bounded
+  UTF-8 label and advisory pointer/key categories. Producers publish only for
+  their own channel ordinals before delivery; the [description owner](world/input/descriptions.rs)
+  refuses changes to a live description or a late first publication. A separate
+  retained DESCRIBED boundary precedes the first ordinary event per receiving
+  edge and survives overflow/retirement; nested routers retain it without another
+  lookup or per-event payload. Channels never routed to a child remain private.
+  Directory reads include these immutable descriptions under the same revision.
+  General control vocabularies, mutable descriptions, independently delegated
+  registry access and shared read-only tables remain future work; the directory's
+  key field is only the receiver's view-wide ceiling. Labels are not credentials.
 - [Reception](reception.rs) tracks app-side pointer edges per scoped channel.
   Consume an event once before dispatching it to widgets. Cancellation clears
   only the named pointer; keyboard cancellation leaves pointer holds intact.
