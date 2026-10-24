@@ -3,7 +3,7 @@
 This is Cathedral's canonical, checked-in component library. The Rust app API is
 in `source-rs/distribution/libraries/omega-ui`; see the
 [Cathedral build and usage guide](../../../../tools/omega-ui/README.md).
-The commands below run from this directory and also support the Windows gallery.
+Run the commands below from the Cathedral repository root.
 
 A native, immediate-mode UI library written in Omega. The package provides a
 bounded box tree, two-pass layout, input handling, controls, text storage, themes,
@@ -15,47 +15,39 @@ animation, typography, themes, docking, and a command palette. The headless
 application checks the reusable library without opening a window.
 
 The canonical library is `src/`, and the gallery source is `examples/gallery/`.
-Run the built Windows UI from `build/gallery/omega-program.exe`. Older UI source
+Run the built Windows UI from `build/omega-ui/gallery/omega-program.exe`. Older UI source
 copies and gallery builds are not retained.
 
 ## Build and test
 
-Install Python 3 and the Rust toolchain pinned by your Omega compiler checkout.
-Set `OMEGA_REPO` to that checkout, or pass `--omega-repo <path>` to the helper.
-The helper uses `mbx` when available and Cargo otherwise.
+Use the supported compiler setup in the [Cathedral UI guide](../../../../tools/omega-ui/README.md#build).
+The component builder and development tools share compiler selection: explicit
+`--compiler`, `OMEGA_BIN`, the prepared checkout-local compiler, then PATH.
+The helpers verify the optimization profile and record the selected binary's
+hash in `build/omega-ui/compiler.json`; they do not build a second compiler.
 
-This project targets the development compiler. `build/compiler.json` records the
-exact producer, local repairs, optimization profile and executable digest used
-for validation. Compatibility with a released compiler has not been established.
-
-```powershell
-$env:OMEGA_REPO = '../Omega'
-python tools/dev.py review --project headless_test
-python tools/dev.py test
-python tools/dev.py review --project gallery
-python tools/dev.py gallery
-python tools/dev.py snapshots
+```text
+python tools/omega-ui/dev.py review --project headless_test
+python tools/omega-ui/dev.py test
+python tools/omega-ui/dev.py review --project gallery
+python tools/omega-ui/dev.py gallery
+python tools/omega-ui/dev.py snapshots
 ```
 
-On macOS/Linux, set `OMEGA_REPO` with `export` and use the same Python commands
-for the headless suite. The gallery and its capture host require Windows.
-
-Each command builds an optimized compiler and records its revision, build
-profile, working-tree status, and binary digest in `build/compiler.json`.
-`--compiler-target-dir <path>` or `OMEGA_COMPILER_TARGET_DIR` reuses a compiler
-build directory. `--compiler-profile dev` selects the optimized development
-profile instead of the default release profile.
+The headless suite works on supported Windows/macOS/Linux hosts. The gallery and
+its bitmap replay require Windows. All gallery artifacts and captures live in
+`build/omega-ui/gallery/`, outside the distribution source.
 
 The `review` action refreshes package inputs. If it reports pending decisions,
 inspect its generated review and source diff, edit only the pending decisions,
-then run `python tools/dev.py resume --project <headless_test|gallery>`.
+then run `python tools/omega-ui/dev.py resume --project <headless_test|gallery>`.
 Generated `omega.lock` files bind local source paths and stay out of Git.
 
 `test` runs the headless program with `omega run --both`, comparing Terminal Psi
-and native execution. `gallery` produces `build/gallery/omega-program.exe` and
+and native execution. `gallery` produces `build/omega-ui/gallery/omega-program.exe` and
 deploys its font assets. `snapshots` runs that image's `OMEGA_HEADLESS` route,
 checking input, keyboard focus, redraw invalidation, task layouts, and filtering
-before writing captures to `build/gallery/`. The native route also alternates
+before writing captures to `build/omega-ui/gallery/`. The native route also alternates
 1440-by-945 and 3840-by-2160 slider frames between partial bitmap updates and full
 row uploads, reporting `FRAME_US` records. The helper checks 48 RGB capture pairs and launcher background occlusion,
 including partial/full repainting, checkbox animation, prepared/uncached dot
@@ -146,11 +138,8 @@ tests/
     headless/              executable library checks
     native_component/      independent freestanding layout/frame consumers
     native_host/           Windows adapter checks
-    tools/                 Python development-tool checks
 support/standard_library/  retained platform source
-assets/fonts/inter/        gallery fonts and their notice
-tools/dev.py               build, review, test, and capture commands
-build/                     ignored compiler output and validation records
+assets/fonts/inter/        gallery fonts
 ```
 
 `src/main.omg` explains the frame lifecycle; `context.omg` owns layout and input,
@@ -163,15 +152,15 @@ The standard-library snapshot is source, not generated output. The gallery and
 headless suite use it through the same relative dependency, independently of the
 compiler checkout. `--project headless_test` selects `tests/headless/`.
 
-The [freestanding first surface](platform/native/README.md) uses the same core
-inside Cathedral, with a button, slider and bounded editable text field. Its
-host adapter receives scoped input and publishes software images. The Windows
+The [freestanding backend](platform/native/README.md) uses the same core inside
+Cathedral. Apps describe their own controls; the host adapter receives scoped
+input and publishes software images. The Windows
 gallery remains the canonical full component showcase.
 
 Run the Python tool checks with:
 
 ```sh
-python -m unittest discover -s tests/tools
+python -m unittest discover -s tools/omega-ui -p "test_*.py"
 ```
 
 ## Current limits

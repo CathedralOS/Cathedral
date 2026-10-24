@@ -1,5 +1,9 @@
 # Refresh-rate rendering
 
+Run current checks from the Cathedral root with `python tools/omega-ui/dev.py
+snapshots`; captures live in `build/omega-ui/gallery/`. Dated records below retain
+the original run locations.
+
 Target: complete drag work inside the active monitor's refresh period, then
 verify actual presentation. The primary Windows display queried on 2026-10-22
 (America/Los_Angeles) reports 3840 x 2160 at 240 Hz: 4.167 ms per frame.
@@ -597,7 +601,7 @@ Native rebuild/publication took 596.599 seconds, including 186.953 seconds of
 source checking and 300.588 seconds of Terminal production
 (`refresh-final-gallery-compile.json` and its log).
 
-The canonical `build/gallery/omega-program.exe` is byte-for-byte identical to
+The recorded `build/gallery/omega-program.exe` is byte-for-byte identical to
 the previously verified renderer (`4f55ed03...`), produced by the same optimized
 compiler (`ca193b07...`) from the same recorded source bytes. Its existing
 138-pair and timing observations therefore apply without repeating that batch.
@@ -623,8 +627,8 @@ repairs cleanly. Release compiler `434b70cf...` built in 288.145 seconds at opt-
 3. The synthesizer now derives native title/value placement from the same header
 rectangle used for its icon. Its redundant hard-coded 60 Hz caption is removed.
 
-The real pane-corner oracle is `python tools/check_outline_snapshots.py
-build/gallery`. Before the change, cached and uncached frame-20 captures at both
+The real pane-corner oracle is `python tools/omega-ui/check_outline_snapshots.py
+build/omega-ui/gallery`. Before the change, cached and uncached frame-20 captures at both
 1440x945 and 3840x2160 differ from one fill/stroke composite by 10 channel levels
 (allowed 3), while straight strokes match. The old pane paints a rounded body,
 rounded header and border separately. The candidate paints each row's fill and

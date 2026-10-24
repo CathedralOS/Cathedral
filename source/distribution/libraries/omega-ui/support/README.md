@@ -8,6 +8,6 @@ the performance counter and animation preference, waits for input while idle,
 and synchronizes live presents with the compositor. Keeping this source separate from generated `build/`
 output lets a checkout reproduce those bindings.
 
-The compiler is selected separately through `tools/dev.py`. Refresh package
+The compiler is selected through Cathedral's `tools/omega-ui/dev.py`. Refresh package
 inputs after editing this snapshot; do not replace it with whichever library
 happens to accompany a compiler binary.

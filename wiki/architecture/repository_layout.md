@@ -76,6 +76,8 @@ Its `libraries/omega-ui/` contains the checked-in Omega component source and
 native backend; the Rust mirror owns the reusable app-facing adapter. UI builds
 use this source directly, rather than a sibling repository or platform-to-distribution
 dependency.
+UI development, font generation and capture tools live in `tools/omega-ui/`;
+their host artifacts belong in the ignored `build/omega-ui/` tree.
 The installed Colors program now lives in `source/distribution/applications/colors`.
 Its Rust executable only supplies startup and the common
 `platform/libraries/omega-app` host. That host performs requested scoped IPC and

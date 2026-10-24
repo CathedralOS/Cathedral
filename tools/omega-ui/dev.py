@@ -1,9 +1,7 @@
-"""Build the compiler, verify its profile, then run one Omega UI development action.
+"""Run Cathedral's UI library tests and Windows gallery with the selected compiler.
 
-We retain compiler output under build/ and propagate failed builds or package
-reviews. The compiler checkout is supplied by the caller; no developer path is
-part of the package. OMEGA_COMPILER_TARGET_DIR can reuse an existing build while
-still checking that it matches the selected compiler source.
+Source stays in the distribution library; host artifacts stay in build/omega-ui.
+Compiler selection is shared with the native component builder.
 """
 
 import argparse
@@ -18,10 +16,10 @@ import struct
 import sys
 
 
-ROOT = Path(__file__).resolve().parents[1]
+from build import LIBRARY, ROOT, select_compiler
 PROJECTS = {
-    "gallery": ROOT / "examples" / "gallery",
-    "headless_test": ROOT / "tests" / "headless",
+    "gallery": LIBRARY / "examples" / "gallery",
+    "headless_test": LIBRARY / "tests" / "headless",
 }
 
 
@@ -118,53 +116,22 @@ def verify_snapshots(directory):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("action", choices=("review", "resume", "test", "gallery", "snapshots"))
-    parser.add_argument("--omega-repo", type=Path, default=os.environ.get("OMEGA_REPO"),
-                        help="Omega source checkout (or set OMEGA_REPO)")
-    parser.add_argument("--compiler-profile", choices=("release", "dev"), default="release",
-                        help="compiler build profile (default: release)")
-    parser.add_argument("--compiler-target-dir", type=Path,
-                        default=os.environ.get("OMEGA_COMPILER_TARGET_DIR"),
-                        help="reuse an Omega build directory; the compiler is rebuilt before use")
+    parser.add_argument("--compiler", type=Path, help="optimized Omega compiler; defaults to the Cathedral build selection")
     parser.add_argument("--project", choices=("headless_test", "gallery"), default="gallery",
                         help="project for review/resume")
     arguments = parser.parse_args()
     if arguments.action in ("gallery", "snapshots") and os.name != "nt":
         parser.error("the gallery host requires Windows; use 'test' for the headless library suite")
-    if arguments.omega_repo is None:
-        parser.error("--omega-repo or OMEGA_REPO must name the compiler source checkout")
-    repository = arguments.omega_repo.resolve()
-    if not (repository / "omega-rust" / "omega" / "application" / "cli").is_dir():
-        parser.error(f"not an Omega source checkout: {repository}")
-
-    output = ROOT / "build"
-    output.mkdir(exist_ok=True)
-    build_directory = (arguments.compiler_target_dir or output / "compiler").resolve()
-    build_log = output / "compiler-build.log"
-    try:
-        with build_log.open("w", encoding="utf-8") as log:
-            command = [shutil.which("mbx") or "cargo", "build", "-p", "omega",
-                       "--target-dir", build_directory]
-            if arguments.compiler_profile == "release":
-                command.append("--release")
-            run(command, cwd=repository, stdout=log, stderr=subprocess.STDOUT)
-    except subprocess.CalledProcessError:
-        print(build_log.read_text(encoding="utf-8", errors="replace")[-8000:], file=sys.stderr)
-        raise
-    executable_name = "omega.exe" if os.name == "nt" else "omega"
-    profile_directory = "release" if arguments.compiler_profile == "release" else "debug"
-    compiler = build_directory / profile_directory / executable_name
+    output = ROOT / "build" / "omega-ui"
+    output.mkdir(parents=True, exist_ok=True)
+    compiler = select_compiler(arguments.compiler)
     profile = json.loads(run([compiler, "--build-profile"], capture_output=True, text=True, encoding="utf-8", errors="replace").stdout)
     if profile.get("schema") != "omega-compiler-build-profile-v1" or profile.get("opt_level") not in ("1", "2", "3", "s", "z"):
         raise RuntimeError(f"compiler does not report an optimized build: {profile}")
-    revision = run(["git", "rev-parse", "HEAD"], cwd=repository,
-                   capture_output=True, text=True, encoding="utf-8", errors="replace").stdout.strip()
-    dirty = run(["git", "status", "--porcelain"], cwd=repository,
-                capture_output=True, text=True, encoding="utf-8", errors="replace").stdout
     receipt = {"compiler": str(compiler), "sha256": hashlib.sha256(compiler.read_bytes()).hexdigest(),
-               "profile": profile, "cargo_profile": arguments.compiler_profile, "revision": revision, "working_tree_status": dirty,
-               "built_at_utc": datetime.now(timezone.utc).isoformat()}
+               "profile": profile, "built_at_utc": datetime.now(timezone.utc).isoformat()}
     (output / "compiler.json").write_text(json.dumps(receipt, indent=2) + "\n", encoding="utf-8")
-    print(f"Omega {revision[:12]}, opt-level {profile['opt_level']}, sha256 {receipt['sha256']}", flush=True)
+    print(f"Omega opt-level {profile['opt_level']}, sha256 {receipt['sha256']}", flush=True)
 
     project = PROJECTS["headless_test" if arguments.action == "test" else arguments.project]
     if arguments.action in ("review", "resume"):
@@ -186,7 +153,7 @@ def main():
         project = PROJECTS["gallery"]
         destination = output / "gallery"
         run([compiler, "--timings", "--build-dir", destination, "main.omg"], cwd=project)
-        shutil.copytree(ROOT / "assets" / "fonts" / "inter", destination / "fonts", dirs_exist_ok=True)
+        shutil.copytree(LIBRARY / "assets" / "fonts" / "inter", destination / "fonts", dirs_exist_ok=True)
         if arguments.action == "snapshots":
             environment = dict(os.environ, OMEGA_HEADLESS="1")
             # A Windows GUI image needs explicit inherited output handles even
@@ -211,3 +178,5 @@ if __name__ == "__main__":
         main()
     except subprocess.CalledProcessError as error:
         sys.exit(error.returncode)
+    except (OSError, ValueError, RuntimeError) as error:
+        sys.exit(f"Omega UI development command failed: {error}")

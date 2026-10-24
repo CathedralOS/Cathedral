@@ -26,7 +26,8 @@ editor or fixed field slots.
 
 Text uses grayscale coverage baked from bundled Inter fonts. Measurement, pointer
 caret placement and painting use the same advances. Regenerate the checked-in
-atlas with `python tools/bake_native_font.py` using Pillow; ordinary builds need
+atlas from the Cathedral root with `python tools/omega-ui/bake_native_font.py`
+using Pillow; ordinary builds need
 no font runtime. Font digests/settings are in `font_atlas.json`.
 
 The limits are explicit: 128 nodes including the root, eight nesting slots

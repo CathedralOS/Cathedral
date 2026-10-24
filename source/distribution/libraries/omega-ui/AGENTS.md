@@ -10,5 +10,6 @@ The canonical library core is `src/`; its Windows adapter is `platform/windows/`
 The freestanding component-command backend is `platform/native/`, with its exact
 independent-export consumers in `tests/native_component/`.
 The canonical gallery is `examples/gallery/`.
-Build the runnable gallery only into `build/gallery/`. Do not retain duplicate
-UI source trees, old gallery builds, or UI archives in this repository.
+Host tools live in Cathedral's `tools/omega-ui/`; run them from the repository root.
+Build the runnable gallery only into `build/omega-ui/gallery/`. Do not retain
+duplicate UI source trees, old gallery builds, or UI archives in this repository.

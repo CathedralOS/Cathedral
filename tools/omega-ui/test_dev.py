@@ -1,9 +1,13 @@
 """Reject incorrect pixels and unavailable reference execution."""
+import json
 import struct
 import tempfile
 import unittest
 from pathlib import Path
-from tools.dev import verify_bitmap_pair, verify_overlay_background, verify_reference_execution
+from types import SimpleNamespace
+from unittest.mock import patch
+import dev
+from dev import verify_bitmap_pair, verify_overlay_background, verify_reference_execution
 
 
 def bitmap(pixels, bits=32, width=2, height=1):
@@ -16,6 +20,21 @@ def bitmap(pixels, bits=32, width=2, height=1):
 
 
 class DevelopmentOracleTests(unittest.TestCase):
+    def test_review_uses_the_shared_compiler_and_checked_in_project(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            compiler = root / 'omega'
+            compiler.write_bytes(b'compiler')
+            profile = {'schema': 'omega-compiler-build-profile-v1', 'opt_level': '3'}
+            with patch('dev.ROOT', root), patch('dev.select_compiler', return_value=compiler) as select, \
+                    patch('dev.run', return_value=SimpleNamespace(stdout=json.dumps(profile))) as run, \
+                    patch('sys.argv', ['dev.py', 'review', '--project', 'headless_test']):
+                dev.main()
+            select.assert_called_once_with(None)
+            self.assertEqual(dev.PROJECTS['headless_test'], dev.LIBRARY / 'tests/headless')
+            run.assert_any_call([compiler, 'update', '--offline'], cwd=dev.PROJECTS['headless_test'])
+            self.assertTrue((root / 'build/omega-ui/compiler.json').is_file())
+
     def test_reference_decline_cannot_pass_as_dual_execution(self):
         verify_reference_execution("PASS: library\nnative exit 0\ninterp exit: 0\n")
         for output in ("native exit 0\ninterp: DECLINED (fuel allowance)\n", "native exit 0\n"):

@@ -49,6 +49,27 @@ The pure-image validator refuses imports, unresolved symbols, runtime relocation
 TLS and implicit mutable storage. Components are statically linked into the app's
 normal ELF; this is not dynamic component admission or a proof verdict for the OS.
 
+## Source and development tools
+
+The Cathedral distribution is the single source of truth for Omega UI. Keep
+changes in `source/distribution/libraries/omega-ui` and the matching Rust package;
+do not recreate a standalone UI repository. Host tooling lives here in
+`tools/omega-ui`, and host artifacts stay under `build/omega-ui`. Per-package
+review state and build caches remain ignored beside their source manifests.
+
+```text
+python tools/omega-ui/dev.py review --project headless_test
+python tools/omega-ui/dev.py test
+python tools/omega-ui/dev.py review --project gallery
+python tools/omega-ui/dev.py gallery
+python tools/omega-ui/dev.py snapshots
+```
+
+These commands use the same compiler selection as the component builder.
+`gallery` and `snapshots` require Windows; the executable and captures are in
+`build/omega-ui/gallery`. Regenerate the font atlas only when changing fonts with
+`python tools/omega-ui/bake_native_font.py` (Pillow required for regeneration).
+
 ## App lifecycle
 
 1. Acquire a scoped interaction binding through the normal startup services.
