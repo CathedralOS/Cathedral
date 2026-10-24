@@ -6,6 +6,29 @@ fn database() -> Database {
         .create_with_backend(InMemoryBackend::new())
         .unwrap()
 }
+#[test]
+fn maximal_native_program_payload_round_trips_and_oversize_preserves_the_head() {
+    let db = database();
+    let store = Store::open(&db).unwrap();
+    let bytes: Vec<u8> = (0..MAX_BYTES).map(|index| (index % 251) as u8).collect();
+    let object = store.publish(0, 0, 0, &bytes, 0).unwrap();
+    let mut actual = vec![0; MAX_BYTES];
+    store
+        .read(0, object.id, object.head.revision, 0, &mut actual)
+        .unwrap();
+    assert_eq!(actual, bytes);
+    assert_eq!(
+        store.publish(
+            0,
+            object.id,
+            object.head.revision,
+            &vec![0; MAX_BYTES + 1],
+            0
+        ),
+        Err(Error::TooLarge)
+    );
+    assert_eq!(store.head(0, object.id).unwrap(), object.head);
+}
 pub(super) fn snapshot(db: &Database) -> Vec<(Vec<u8>, Vec<u8>)> {
     let tx = db.begin_read().unwrap();
     tx.open_table(TABLE)
@@ -67,10 +90,11 @@ fn automatic_collection_defers_history_until_pressure_and_preserves_pins() {
     let before = snapshot(&db);
     assert!(store.collect_under_pressure(0).unwrap().is_none());
     assert_eq!(snapshot(&db), before);
-    // Accumulate distinct obsolete content; admission still counts every byte.
+    // Keep this pressure workload tied to the root budget, independently of the
+    // largest single-object limit. Admission still counts every retained byte.
     let mut seed = 1u64;
     for _ in 0..6 {
-        let bytes: Vec<u8> = (0..MAX_BYTES)
+        let bytes: Vec<u8> = (0..ROOT_QUOTA as usize / 8)
             .map(|_| {
                 seed ^= seed << 13;
                 seed ^= seed >> 7;

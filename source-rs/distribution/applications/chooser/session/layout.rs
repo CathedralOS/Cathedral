@@ -4,6 +4,9 @@ pub const WIDTH: usize = 128;
 pub const HEIGHT: usize = 96;
 pub const GAP: u64 = 24;
 pub const ICON: usize = 48;
+pub fn tasks_left(count: usize) -> u64 {
+    16 + count.saturating_sub(1) as u64 * 56
+}
 pub fn dimensions(picker: bool) -> (usize, usize) {
     if picker {
         (WIDTH, HEIGHT)

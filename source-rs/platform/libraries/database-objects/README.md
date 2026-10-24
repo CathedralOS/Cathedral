@@ -88,9 +88,9 @@ or the complete named content/index set, with an exact quota ledger. A retry aft
 an unobserved committed result collides without allocating another object.
 
 History is retained until collection. Before mutations, the provider calls
-`collect_under_pressure`: below a 1.5 MiB ledger it performs no writer/scan, and
-otherwise runs one bounded pass. This leaves 512 KiB of the 2 MiB allowance as
-publication headroom; exact quota admission still happens inside every writer.
+`collect_under_pressure`: below half the 2 MiB root quota it performs no
+writer/scan, and otherwise runs one bounded pass. This watermark is independent
+of the maximum object size; exact quota admission still happens inside every writer.
 Explicit `collect` is unconditional. Unpinned history has no retention guarantee;
 the fixed logical quota can still refuse new publications before a backlog is
 drained. Two persistent root-owned pin slots preserve selected

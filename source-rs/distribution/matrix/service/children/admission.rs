@@ -126,8 +126,7 @@ impl Children {
             .checked_add(1)
             .ok_or(Error(abi::INVALID_ARGUMENT as i64))?;
         let physical = frames.unwrap_or(
-            slots
-                .checked_mul(256)
+            cathedral_matrix::funding::initial_frames(256, pages[0], descendants)
                 .ok_or(Error(abi::INVALID_ARGUMENT as i64))?,
         );
         // The control pair belongs to the reserved process slot. Only the
@@ -185,7 +184,7 @@ impl Children {
                 plan.slot,
                 executable,
                 pages,
-                frames,
+                Some(physical),
                 [
                     plan.argument,
                     channels,
@@ -230,10 +229,9 @@ impl Children {
         server: &mut Server,
         world: &mut World,
     ) -> Result<(), Error> {
-        let default_frames = descendants
-            .checked_add(1)
-            .and_then(|n| n.checked_mul(256))
-            .ok_or(Error(abi::INVALID_ARGUMENT as i64))?;
+        let default_frames =
+            cathedral_matrix::funding::initial_frames(256, private_pages, descendants)
+                .ok_or(Error(abi::INVALID_ARGUMENT as i64))?;
         let target = executable
             .reserve_funded(
                 Limits {

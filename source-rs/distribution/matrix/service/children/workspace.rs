@@ -97,7 +97,10 @@ impl Children {
         slot: usize,
         count: usize,
     ) -> Result<(), u64> {
-        for base in 1..world.backed_surfaces().saturating_sub(7) {
+        for base in 1..world
+            .backed_surfaces()
+            .saturating_sub(wire::config::LAUNCHER_SURFACES)
+        {
             if world.surface_range(slot, base, count).is_ok() {
                 return Ok(());
             }

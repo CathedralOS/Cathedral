@@ -1,0 +1,2 @@
+# The font indexes fixed-width rows in these included bytes on every host.
+source-rs/platform/libraries/bitmap-font/font.hex text eol=lf

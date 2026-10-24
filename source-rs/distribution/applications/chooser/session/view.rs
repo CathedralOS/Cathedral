@@ -3,14 +3,19 @@ use super::*;
 use cathedral_user_runtime::memory::Private;
 pub struct Scene {
     pub epoch: u64,
-    names: [u64; 7],
+    names: [u64; ENTRIES + 2],
+    message: usize,
 }
 impl Scene {
     pub fn new(parent: Pair, epoch: u64, picker: bool) -> Result<Self, u64> {
-        let mut names = [0; 7];
+        let mut names = [0; ENTRIES + 2];
         for (rank, name) in names
             .iter_mut()
-            .take(if picker { 6 } else { 7 })
+            .take(if picker {
+                USER_ENTRIES + 2
+            } else {
+                ENTRIES + 2
+            })
             .enumerate()
         {
             let reply = call(
@@ -20,7 +25,11 @@ impl Scene {
             accepted(reply[0])?;
             *name = reply[1];
         }
-        Ok(Self { epoch, names })
+        Ok(Self {
+            epoch,
+            names,
+            message: if picker { USER_ENTRIES + 1 } else { ENTRIES },
+        })
     }
     pub fn paint(
         &self,
@@ -50,7 +59,7 @@ impl Scene {
                 [x, y, width as u64, height as u64],
             )?;
         }
-        for i in n..ENTRIES - 1 {
+        for i in n..self.message - 1 {
             accepted(
                 call(
                     parent,
@@ -85,10 +94,10 @@ impl Scene {
     ) -> Result<(), u64> {
         self.image(
             parent,
-            self.names[6],
+            self.names[ENTRIES + 1],
             tasks.paint(realm),
             [
-                tasks::LEFT,
+                layout::tasks_left(realm.count),
                 tasks::top(extent),
                 tasks::WIDTH as u64,
                 tasks::ROW,
@@ -102,7 +111,7 @@ impl Scene {
         controls: &management::Controls,
     ) -> Result<(), u64> {
         self.background(parent, extent)?;
-        for index in [4, 6] {
+        for index in (4..ENTRIES).chain(core::iter::once(ENTRIES + 1)) {
             if self.names[index] == 0 {
                 continue;
             }
@@ -136,7 +145,7 @@ impl Scene {
         editor: &settings::Editor,
     ) -> Result<(), u64> {
         self.background(parent, extent)?;
-        for index in [4, 6] {
+        for index in (4..ENTRIES).chain(core::iter::once(ENTRIES + 1)) {
             if self.names[index] == 0 {
                 continue;
             }
@@ -186,7 +195,7 @@ impl Scene {
                 [
                     wire::PAINT,
                     self.epoch,
-                    self.names[5],
+                    self.names[self.message],
                     0,
                     0,
                     1,
@@ -229,7 +238,7 @@ impl Scene {
             };
             self.image(
                 parent,
-                self.names[5],
+                self.names[self.message],
                 pixels,
                 [x, y, 180, 40 + offset as u64],
             )?;

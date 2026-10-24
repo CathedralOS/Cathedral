@@ -104,7 +104,13 @@ impl Children {
             });
         }
         let placement = world
-            .surface_range(0, world.backed_surfaces().saturating_sub(7), 7)
+            .surface_range(
+                0,
+                world
+                    .backed_surfaces()
+                    .saturating_sub(config::LAUNCHER_SURFACES),
+                config::LAUNCHER_SURFACES,
+            )
             .and_then(|()| world.place(0, rect(rects[0]), saved.keys));
         if let Err(code) = placement {
             self.desktop = false;

@@ -19,9 +19,26 @@ impl Grant {
 pub fn shortfall(available: [u64; 5], needed: [u64; 5]) -> [u64; 5] {
     core::array::from_fn(|i| needed[i].saturating_sub(available[i]))
 }
+/// Physical backing covers the current load plus its private objects, while
+/// retaining the existing per-process allowance for a declared subtree.
+pub fn initial_frames(admission_frames: u64, private_pages: u64, descendants: u64) -> Option<u64> {
+    Some(
+        admission_frames
+            .checked_add(private_pages)?
+            .max(descendants.checked_add(1)?.checked_mul(admission_frames)?),
+    )
+}
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn initial_backing_covers_load_and_drawings_and_checks_overflow() {
+        assert_eq!(initial_frames(256, 128, 0), Some(384));
+        assert_eq!(initial_frames(256, 384, 5), Some(1536));
+        assert_eq!(initial_frames(256, 0, 0), Some(256));
+        assert_eq!(initial_frames(256, u64::MAX, 0), None);
+        assert_eq!(initial_frames(256, 0, u64::MAX), None);
+    }
     #[test]
     fn ceiling_refuses_all_dimensions_and_overflow_without_mutation() {
         let grant = Grant {

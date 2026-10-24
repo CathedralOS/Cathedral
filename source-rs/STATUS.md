@@ -1,5 +1,19 @@
 # Rust implementation map
 
+[Omega UI](../tools/omega-ui/README.md) is a reusable userspace library. Apps
+compose their own rows, columns and controls through a checked frame API; native
+Omega code owns widget behavior, editing, motion, layout and pixels. Independent
+fields/instances retain their own state, and stale nodes or invalid frames refuse.
+The scoped presenter atomically creates, updates and retires app-selected regions.
+The installed demo owns its model/view in Rust and uses the same public API.
+Cargo prepares the components for every consumer without a demo-specific rule.
+
+The initial backend is x86-64 with grayscale Inter and ASCII input. Program
+objects permit 1 MiB while aggregate private/reader caps and root quotas remain
+unchanged. Physical funding/admission still gate allocations; the image ledger
+records funded translation tables without imposing a duplicate admission ceiling.
+Storage shares its funded private pages between cache and outstanding replies.
+
 Notes and Colors now acquire interaction/storage through a
 [scoped startup broker](platform/contracts/services/README.md). Sealed imports
 select the broker format; existing programs retain legacy startup. Both the stock

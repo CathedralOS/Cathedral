@@ -38,10 +38,10 @@ hands them to two bare clients instead.
 
 Every write is one engine transaction. Before a publication, metadata update or
 copy (including subtree copy), the provider checks the durable retained-byte
-ledger. Below 1.5 MiB it skips collection. At or above that watermark it performs
-**one** collection pass, removing at most eight records. The 512 KiB reserve
-allows room for a maximum publication and its record/index overhead; it is a
-maintenance trigger, not admission. Every mutation still checks exact quota.
+ledger. Below half the 2 MiB quota it skips collection. At or above that
+watermark it performs **one** collection pass, removing at most eight records.
+This maintenance trigger stays independent of the maximum object size. Every
+mutation still checks exact quota, including publication/index overhead.
 This avoids scanning all installed programs on every tiny save or seed copy.
 Old unpinned revisions remain eligible for collection, with no retention promise.
 Explicit COLLECT always performs a pass, independent of the watermark. Later
@@ -68,12 +68,12 @@ split on real records. Ordinary builds contain none of these.
 The provider's reader pages receive publication attachments; its private pages
 hold the heap and the pages behind bulk replies, which stay charged to it until
 the last reader releases them. Profiles fund both explicitly. [main.rs](main.rs)
-keeps 64 pages for one maximal reply and eight for headroom outside the
-allocator and gives every other funded private page to the heap, never less
-than the 56 pages the engine has always run in and never more than two private
-objects, 256 pages, so one of the task's four object slots stays free for the
-pages behind a bulk reply. The lab fixtures fund 64 private pages and keep that
-smallest heap; the desktop funds 328, so its heap is the full 1 MiB. A reply
+splits funded private pages between the engine/cache and outstanding replies,
+after eight pages of headroom. The heap stays between its tested 56-page minimum
+and two private objects, leaving object slots available for replies. The lab's
+64-page grant keeps the smallest heap; the desktop's 328 pages provide a 160-page
+(640 KiB) heap and enough remaining backing for the reusable UI program. A maximum
+protocol payload still requires sufficient actual provider funding. A reply
 whose pages cannot be allocated is recorded as `bulk-reply-refused` in every
 build, with the page count, the error and the provider's page and frame budgets;
 the kernel's per-task mapped-backing ceiling covers every private slot plus two
@@ -84,7 +84,7 @@ is reserved for engine state, the writer and the collection workspace, and the
 rest is cache, never less than 32 KiB. The smallest heap therefore keeps its
 32 KiB cache, which holds only eight pages, so after one bulk program read every
 metadata lookup went back to the disk and scope-ancestry checks grew with depth.
-The desktop's 1 MiB heap gives the engine 768 KiB of cache, 192 pages, which
+The desktop's 640 KiB heap gives the engine 384 KiB of cache, 96 pages, which
 holds the metadata working set beside the stock programs every nested level
 reads. A content chunk fills one engine page, so a program read moves its own
 bytes and no more through that cache; with 4 KiB chunks every chunk was a

@@ -13,9 +13,16 @@ pub(super) unsafe fn exercise(
     let mut regions = [0; OBJECTS];
     let mut survivor = 0;
     frames.remaining = usize::MAX;
+    let large_objects = ((wire::MAX_PRIVATE_PAGES - OBJECTS) / wire::MAX_PAGES).min(5);
+    assert!(large_objects >= 2);
     for (index, region) in regions.iter_mut().enumerate() {
-        // Cross the bitmap word boundary, then retain several maximum-size objects.
-        let pages = if index < 65 { 1 } else { wire::MAX_PAGES };
+        // Cross the bitmap word boundary, then retain several maximal objects
+        // without increasing the account's unchanged aggregate funding.
+        let pages = if index < OBJECTS - large_objects {
+            1
+        } else {
+            wire::MAX_PAGES
+        };
         // SAFETY: Fixture owns this prepared inactive root and every physical frame.
         let handle = unsafe { allocation::allocate(session, frames, 0, pages) }.unwrap();
         *region = session.memory.model.access(0, handle).unwrap();

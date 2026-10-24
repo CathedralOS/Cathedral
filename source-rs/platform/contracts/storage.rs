@@ -84,9 +84,10 @@ pub const ENTRIES: u64 = 19;
 pub const LAST: u64 = ENTRIES;
 #[path = "storage_metadata.rs"]
 pub mod metadata;
-/// Largest object on the wire: 64 pages, so a program or a bulk reply fits in
-/// half a task's page allowance. The store's own bound must agree.
-pub const MAX_BYTES: usize = 256 * 1024;
+/// One bounded shared object, including a reusable UI application's native code.
+/// Larger object geometry does not increase per-task funding or root quota.
+pub const MAX_BYTES: usize =
+    cathedral_kernel_contracts::memory::MAX_PAGES * cathedral_kernel_contracts::memory::PAGE_BYTES;
 pub const READ_BYTES: usize = 32;
 pub const LIST_IDS: usize = 6;
 /// One row of an ENTRIES page: number and revision, little-endian, then the

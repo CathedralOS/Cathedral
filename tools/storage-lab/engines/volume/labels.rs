@@ -246,7 +246,7 @@ fn plan(
                 named.extend_from_slice(&title(label));
                 named
             };
-            if new.len() > 256 * 1024 {
+            if new.len() > cathedral_database_objects::MAX_BYTES {
                 return Err("titled program exceeds guest object limit".into());
             }
             if old != new {
@@ -277,7 +277,7 @@ fn title(text: &[u8]) -> [u8; 32] {
 
 fn content(records: &Records, head: &[u8]) -> Result<Vec<u8>> {
     let length = usize::try_from(u64::from_le_bytes(head[40..48].try_into()?))?;
-    if length > 256 * 1024 {
+    if length > cathedral_database_objects::MAX_BYTES {
         return Err("oversized program".into());
     }
     let manifest = records

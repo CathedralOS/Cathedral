@@ -1,5 +1,54 @@
 # Rust reference OS: tasks and handoff
 
+Current integration 2026-10-24: **reusable Omega UI library**, over `ab0d76f8`.
+`cathedral-omega-ui` exposes caller-authored frames, independent field values,
+stable control IDs and checked instance/build-local nodes. Applications compose
+rows, columns, cards, text, four button variants, toggles, checkboxes, sliders,
+progress and fields. Native Omega owns control behavior, editing, motion, layout
+and pixels. The demo now owns its model/view in Rust and uses only this public
+API; changing app layout does not require changing the native exports. Its volume
+switch removes/restores a region, exercising atomic surface retirement/recreation.
+
+Omega UI `c793592089e8` contains ABI 2; its published branch remains one squashed
+root. An app's Cargo dependency prepares the same checked component automatically,
+without a demo-name rule in the boot harness. The [integration guide](tools/omega-ui/README.md)
+contains the lifecycle, typed example, build inputs and current bounds. Independent
+host views, multiple fields/instances, malformed packets, invalid frames, motion,
+and buffer reuse/stale tokens are covered through the actual compiled exports.
+
+The producer remains optimized Omega `16a35ba7f429`; exact source, producer and
+export hashes are in `build/omega-ui/component/receipt.json`. Generic component
+code is 531,360 bytes and state is 44,584 bytes. Native program objects permit
+256 pages (1 MiB); private/reader caps remain 1024/4096 and root quota remains
+2 MiB. Ordinary apps retain their 128-private-page grant. Physical funding and
+caller admission ceilings still gate allocation; the image ledger records extra
+funded translation tables without applying a second fixed admission ceiling.
+The maximum-object retirement fixture keeps its bitmap/reference/custody coverage
+inside the unchanged aggregate account budget. Storage splits funding between
+cache and outstanding replies; reserving the protocol maximum unconditionally
+had reduced its cache and regressed user creation to 6.2 seconds. The balanced
+policy restores the observed upper bound to approximately 283 ms under TCG.
+Maintenance remains at half the root quota, independently of object size.
+
+Verification: 275 focused Rust tests and the library's typechecked example;
+Omega UI's library suite passes native and interpreted execution. Packaging,
+source-layout (40 Omega / 133 Rust edges), host and guest clippy checks pass.
+Fresh/cold physical input, dynamic region removal/restoration, text editing,
+clear/reset and explicit presenter retirement/close/reopen pass at
+`build/boot-harness-rs/omega-ui/20261024T181256060582Z`. The ordinary desktop,
+protected drafts, capacity refusal, slot reuse, persistent Notes/Colors and cold
+read-back pass at `build/boot-harness-rs/desktop/20261024T175140408246Z` with the
+independent storage oracle. The full kernel smoke suite passes at
+`build/omega-ui/reusable-full-smoke.log`, including maximal page-object mapping,
+sealing, retirement, admission refusal and reclamation. Later source-only comment
+and indentation changes are checked by comparing regenerated component bytes.
+
+The backend is x86-64 with grayscale Inter and bounded ASCII editing. App code
+still supplies scoped input, animation scheduling, persistence and model policy.
+Unicode/IME, clipboard/modifier delivery in this demo, ARM64 and monitor-refresh
+performance remain outside this result. The existing input-acquisition frontier
+below remains open.
+
 Implementation update 2026-10-23: **negotiated recursive input capacity**, over
 `d76d0808`. The child-only `INPUT_CAPACITY` operation sets channel/group ceilings
 for its current connection. It validates the view epoch and refuses reductions
