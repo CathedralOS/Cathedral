@@ -91,6 +91,16 @@ A failed build or an old
 
 ## Reproduce
 
+Current replay blocker (2026-10-24): Cathedral `06373017` with a fresh,
+optimized (`opt_level=1`) Omega `09e378cb433` build passes Rust compilation
+using Omega's pinned `nightly-2026-09-04`, but `--prepare --smoke` stops during
+package candidate checking. `cathedral_core`'s `page_tables.omg:89` call to
+`initialize` reports: "selected executable carrier differs from its exact
+public application". No fresh image is produced and QEMU is not started.
+The successful boot observations below remain historical evidence; they do not
+establish a current-main boot. The next repair is the compiler's exact call
+argument/carrier correspondence, followed by this same fresh-image smoke run.
+
 Use an optimized current Omega checkout or pass its exact binary:
 
 ```text
