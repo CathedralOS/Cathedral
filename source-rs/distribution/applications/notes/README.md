@@ -1,10 +1,11 @@
 # Private notes
 
-An ordinary application of the matrix and object storage APIs. [main.rs](main.rs)
-receives a scoped `Services` interface; [session/session.rs](session/session.rs)
-acquires interaction and optional storage before entering the editor loop.
-The [bootstrap contract](../../../platform/contracts/services/README.md) keeps
-manifest requests distinct from matrix-approved connections.
+The installed editor now lives in [Omega Notes](../../../../source/distribution/applications/notes/README.md).
+[main.rs](main.rs) declares the existing scoped imports and invokes the shared
+[platform host](../../../platform/libraries/omega-app/README.md). Omega owns
+editor behavior; Rust supplies runtime transport and buffer custody.
+The Rust session below remains only for explicitly selected `rust-probes`
+fault/admission/producer/render fixtures.
 
  Press **F5**,
 choose a user, click **Notes** in its chrome, then click the note to focus it.
@@ -32,7 +33,7 @@ switch act only on a clean, saved note.
 received in that keyboard's local input group. Input remains active. Leaving the
 note restores the next target's policy; returning can reuse the live note's
 preference. Cancellation or view replacement resets it. The
-[cursor client](session/cursors.rs) uses only supplied local aliases, including
+[cursor client](../../../../source/distribution/applications/notes/app/session/cursors.omg) uses only supplied local aliases, including
 when Notes runs beneath nested matrices.
 
 Below the text, a bar shows the notes in this realm: a dim segment per note and a
@@ -69,16 +70,15 @@ diagnostic font is uppercase-shaped.
 
 ## Follow execution
 
-[main.rs](main.rs) declares required interaction and optional storage imports, then enters [session/session.rs](session/session.rs): load supplied
-connections, read confirmed state, process local input, save/reconcile, present.
-[document.rs](document.rs) owns bounded edits and the `NTS1` encoding.
-[closing.rs](session/closing.rs) owns close-button and dialog hit testing.
-[storage.rs](session/storage.rs) lists the realm, reads the current note through a
-sealed bulk reply, publishes the whole encoded document as one attachment, and
-asks the store to copy. It never silently retries an uncertain commit. A lost
-transport remains retired; app replacement is required because replies lack
-correlation identities. The owner may retire the app's control link; the app
-keeps serving its world without it.
+Start at [Omega main](../../../../source/distribution/applications/notes/app/main.omg),
+then its named session, document, storage and rendering entrances. The app receives
+only matrix-supplied services and validates document data before replacing a draft.
+The host can retire the optional control link while wake/input remain usable;
+kernel parent-death teardown still applies to the entire subtree.
+
+The retained [Rust session](session/session.rs), [document](document.rs),
+[closing](session/closing.rs), [storage](session/storage.rs) and
+[view](session/view.rs) implement the old fixture, not the ordinary installed app.
 
 Storage IPC enters the parent's
 [storage coordinator](../../../distribution/matrix/service/parent/storage/storage.rs),
@@ -89,18 +89,14 @@ binding and optimistic revision. Another app's replacement grant does not revive
 this app's cached binding: the first refused save preserves its draft, then F1
 reconciles the new binding.
 
-[view.rs](session/view.rs) publishes one sealed 180x64 text bitmap through the
-existing surface chain and draws the note bar as a small retained bitmap. The close
-dialog reuses that bitmap; the X occupies one additional small surface. The app
-holds 32 private pages: the retained bitmap, its replacement, and one page per
-publication. Its four reader pages receive bulk replies. Matrix and display reader
-budgets are explicitly funded by the profile; every hop holds the old and new
-bitmap during replacement. Unchanged background, close button and tab indicators
-stay retained: an ordinary subsequent character edit sends just its new text
-bitmap. Successful decoration updates are remembered only within the current
-scene; geometry invalidation recreates the scene and all surfaces. The
-`trace-input` feature marks key receipt and paint begin/end; paint time includes
-synchronous matrix IPC. No kernel, device or storage policy is added for this app.
+The Omega renderer publishes the same sealed 180x64 text image and three retained
+decorations. The app-host reserves nine private pages for opaque state/packet and
+stages the 12-page text object through two chunks, under existing app budgets.
+Bulk reads are bounded before mapping and released after copying into the packet.
+Matrix/display reader budgets still fund retained images at every hop.
+Unchanged background, close and tab indicators stay retained; ordinary editing
+replaces only the text bitmap. Detailed `trace-input` editor markers currently
+remain with the Rust fixture; native transport still supports `trace-storage`.
 
 ## Proofs
 
@@ -122,8 +118,8 @@ recovery profile stalls after the first commit but before its reply; ordinary
 supervision restores grants and F1 reconciles without an extra revision while the
 sibling keeps its own unsaved draft through binding replacement.
 
-The default desktop disk is `build/boot-harness-rs/cathedral-storage.raw`, created
-only when absent and never auto-reformatted. The notes fixture retains its own
+Normal F5 requests a fresh lab disk. A CLI launch without `--fresh` retains
+`build/boot-harness-rs/cathedral-storage.raw`. The notes fixture retains its own
 `notes-storage.raw`. QEMU termination does not emulate physical device-cache loss.
 
 Live layout changes retire old drawing handles. The session keeps the document,
@@ -134,7 +130,7 @@ Input press tracking resets at rebinding. The chooser and Colors follow the same
 rule. Normal Colors setup no longer runs the adversarial surface probes; those
 remain in its lab build.
 
-The `render-probes` feature enables two Notes-only yield gates in
+The `render-probes` feature selects the Rust fixture and enables two Notes-only yield gates in
 [render_probe.rs](session/render_probe.rs). The settings harness's `--render-race`
 mode observes each gate before resizing, proving both partial surface creation
 and interrupted bitmap publication recover without reloading the document.

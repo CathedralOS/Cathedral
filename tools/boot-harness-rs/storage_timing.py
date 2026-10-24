@@ -8,6 +8,7 @@ PAIRS = {
     'nested-admit': ('nested-receive', 'nested dispatch'),
     'provider-begin': ('root-send', 'provider queue'),
     'app-reply': ('app-send', 'app roundtrip'),
+    'omega-reply': ('omega-send', 'app roundtrip'),
     'root-reply': ('root-admit', 'root service'),
     'nested-reply': ('nested-admit', 'nested service'),
     'provider-end': ('provider-begin', 'provider request'),
@@ -79,7 +80,7 @@ def summarize(output, serial, boot):
         if label in ('collect-pass', 'bulk-reply-refused'):
             assert len(values) == 6
             continue
-        if label in ('surface-create-refused', 'surface-replay-failed', 'shell-account', 'ipc-roundtrip'):
+        if label in ('surface-create-refused', 'surface-replay-failed', 'shell-account', 'ipc-roundtrip', 'omega-host-error'):
             continue
         if label == 'ata-io':
             assert len(values) == 7

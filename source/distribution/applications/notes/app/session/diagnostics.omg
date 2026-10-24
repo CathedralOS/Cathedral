@@ -1,0 +1,24 @@
+// Startup observations used by the existing guest recovery harness.
+use host::main;
+use state;
+public machine loaded(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+    s.phase = LOAD_REPORTED; s.loaded = true;
+    message(p, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64);
+    transition s.temporary { true -> temporary(p) _ -> durable(p) }
+    state temporary(p: &mut [u64; 4096]) -> u64 {
+        p[16] = 7021785155730956611u64;
+        p[17] = 4211821627279548524u64;
+        p[18] = 7021797297686410272u64;
+        p[19] = 8295753032394307954u64;
+        p[20] = 7286935691776388980u64;
+        p[21] = 753348436797973614u64;
+        p[8] = 48u64; WRITE
+    }
+    state durable(p: &mut [u64; 4096]) -> u64 {
+        p[16] = 7021785155730956611u64;
+        p[17] = 4211821627279548524u64;
+        p[18] = 8028842149463158304u64;
+        p[19] = 44634039393u64;
+        p[8] = 29u64; WRITE
+    }
+}

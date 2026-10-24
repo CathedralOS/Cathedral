@@ -4,6 +4,8 @@
 mod component;
 #[cfg(target_os = "none")]
 mod host;
+#[cfg(any(target_os = "none", test))]
+mod transfer;
 pub use component::{Instance, Step};
 #[cfg(target_os = "none")]
 pub use host::run;

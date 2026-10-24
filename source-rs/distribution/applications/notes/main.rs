@@ -1,6 +1,9 @@
 #![no_std]
 #![no_main]
 //! An ordinary matrix child: supplied connections, local input, private note.
+#[cfg(not(feature = "rust-probes"))]
+mod native;
+#[cfg(feature = "rust-probes")]
 mod session;
 #[cfg(not(feature = "input-producer-probe"))]
 cathedral_user_runtime::service_bootstrap!(
@@ -22,7 +25,7 @@ cathedral_user_runtime::service_bootstrap!(&[
     ),
 ]);
 cathedral_user_runtime::entry_with_services!(main);
-fn main(_: u64, style: u64, services: cathedral_user_runtime::services::Services) -> u64 {
+fn main(_: u64, _style: u64, services: cathedral_user_runtime::services::Services) -> u64 {
     #[cfg(feature = "startup-fault")]
     if !cathedral_user_runtime::task::Environment::load()
         .unwrap()
@@ -30,6 +33,14 @@ fn main(_: u64, style: u64, services: cathedral_user_runtime::services::Services
     {
         panic!("deliberate Notes startup failure");
     }
-    session::run(style, services);
-    0
+    #[cfg(feature = "rust-probes")]
+    {
+        session::run(_style, services);
+        0
+    }
+    #[cfg(not(feature = "rust-probes"))]
+    {
+        // SAFETY: The checked export is linked for this task's lifetime.
+        unsafe { cathedral_omega_app::run(native::step(), services) }.expect("Omega Notes host")
+    }
 }

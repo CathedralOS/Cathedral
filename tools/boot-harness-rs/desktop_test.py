@@ -298,7 +298,7 @@ def desktop(stream, output, serial, reboot, expected_absolute=True, fill_users=F
             key('ret')
             color('d18b35')
         log = (output / 'serial.log').read_text(errors='replace')
-        assert log.count('Cathedral Notes: temporary; no storage endpoint; interaction storage denied') >= 2
+        assert log.count('Cathedral Notes: temporary; no storage endpoint') >= 2
         print(f'PASS: {service_imports} Notes storage stays absent, dirty-close works, Colors retains its own binding')
         return
     note('hello cathedral' if reboot else '')

@@ -1,14 +1,14 @@
 // The probe desktop: the same admission and apps as F5, laid out as a nested
 // matrix holding one app beside an outside sibling. Features select
 // destructive proofs; the ordinary window boot of this composition runs none.
-/// Page budgets for one app: Notes retains two bitmaps and publishes through a
-/// third page, reading bulk replies through reader pages; the color app keeps
+/// Notes funds its nine-page Omega host, old/new 12-page text objects, retained
+/// decorations and storage publication; bulk replies use reader pages. Colors keeps
 /// one bitmap and publishes through one page.
-pub(super) const APP_PAGES: u64 = if cfg!(feature = "notes") { 32 } else { 2 };
+pub(super) const APP_PAGES: u64 = if cfg!(feature = "notes") { 40 } else { 2 };
 pub(super) const APP_READERS: u64 = if cfg!(feature = "notes") { 4 } else { 0 };
 /// A nested matrix holds old and new child bitmaps during replacement and
 /// lends its child's reader pages from the same allowance.
-const MATRIX_PAGES: u64 = if cfg!(feature = "notes") { 40 } else { 4 };
+const MATRIX_PAGES: u64 = if cfg!(feature = "notes") { 48 } else { 4 };
 const MATRIX_READERS: u64 = if cfg!(feature = "notes") { 40 } else { 4 };
 /// Notes draws a base, a text bitmap and three note-bar rectangles; the color
 /// app draws a base and an accent plus its quota probes.

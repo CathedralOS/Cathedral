@@ -1,0 +1,24 @@
+// The keyboard toggles only known pointers in its scoped input group.
+use host::main;
+use protocol::main;
+use state;
+use session::session;
+public machine cursor_next(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+    transition { _ -> scan(s, p) }
+    state scan(s: &mut State, p: &mut [u64; 4096]) -> u64 { transition s.cursor_index < 4u64 { true -> pointer(s, p) _ -> after_input(s, p) } }
+    state pointer(s: &mut State, p: &mut [u64; 4096]) -> u64 requires s.cursor_index < 4u64 {
+        transition s.channels[s.cursor_index] != 0u64 && s.groups[s.cursor_index] == ((s.snapshot[5] >> 17u64) & 32767u64) { true -> request(s, p) _ -> next(s, p) }
+    }
+    state request(s: &mut State, p: &mut [u64; 4096]) -> u64 requires s.cursor_index < 4u64 {
+        s.phase = CURSOR_CHANGED;
+        message(p, CURSOR_PREFERENCE, s.epoch, s.channels[s.cursor_index], (!s.hidden[s.cursor_index]) as u64, 0u64, 0u64, 0u64, 0u64); EXCHANGE
+    }
+    state next(s: &mut State, p: &mut [u64; 4096]) -> u64 requires s.cursor_index < 4u64 { s.cursor_index = s.cursor_index + 1u64; transition { _ -> scan(s, p) } }
+}
+public machine cursor_reply(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+    transition p[9] != 0u64 { true -> (EXIT) _ -> valid(s, p) }
+    state valid(s: &mut State, p: &mut [u64; 4096]) -> u64 { transition s.cursor_index < 4u64 { true -> response(s, p) _ -> (EXIT) } }
+    state response(s: &mut State, p: &mut [u64; 4096]) -> u64 requires s.cursor_index < 4u64 { transition p[0] == 0u64 { true -> toggle(s, p) _ -> next(s, p) } }
+    state toggle(s: &mut State, p: &mut [u64; 4096]) -> u64 requires s.cursor_index < 4u64 { s.hidden[s.cursor_index] = !s.hidden[s.cursor_index]; transition { _ -> next(s, p) } }
+    state next(s: &mut State, p: &mut [u64; 4096]) -> u64 requires s.cursor_index < 4u64 { s.cursor_index = s.cursor_index + 1u64; cursor_next(s, p) }
+}

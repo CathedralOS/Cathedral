@@ -1,5 +1,5 @@
 //! One request outstanding. Sealed outgoing backing is retained until completion;
-//! incoming backing is currently unsupported and explicitly refused.
+//! incoming BULK backing is bounded, copied and released before app resumption.
 use super::Host;
 use crate::{PACKET_WORDS, PAYLOAD_BYTES, PAYLOAD_WORD};
 use cathedral_kernel_contracts::user as abi;
@@ -19,7 +19,7 @@ pub(super) fn payload(packet: &[u64; PACKET_WORDS]) -> Result<&[u8], Error> {
     // immutable packet borrow. The native ABI is little-endian x86-64.
     Ok(unsafe { core::slice::from_raw_parts(packet[PAYLOAD_WORD..].as_ptr().cast(), length) })
 }
-fn attachment(packet: &[u64; PACKET_WORDS]) -> Result<Option<Object>, Error> {
+pub(super) fn attachment(packet: &[u64; PACKET_WORDS]) -> Result<Option<Object>, Error> {
     let bytes = payload(packet)?;
     if bytes.is_empty() {
         return Ok(None);
@@ -36,8 +36,15 @@ pub(super) fn exchange(
     packet: &mut [u64; PACKET_WORDS],
 ) -> Result<(), Error> {
     let words: wire::Packet = packet[..8].try_into().unwrap();
-    let object = attachment(packet)?;
+    let object = super::attachments::take(&mut host.staged, packet)?;
+    let receive_limit = packet[11];
     packet[8] = 0;
+    packet[11] = 0;
+    if receive_limit > PAYLOAD_BYTES as u64
+        || (receive_limit != 0 && (operation != 4 || words[0] != storage::BULK))
+    {
+        return Err(Error(abi::INVALID_ARGUMENT as i64));
+    }
     let reply = if operation == 5 {
         let pair = host
             .interaction
@@ -50,17 +57,35 @@ pub(super) fn exchange(
         let request = storage::Request::decode(&wire::encode(words))
             .ok_or(Error(abi::INVALID_ARGUMENT as i64))?;
         #[cfg(feature = "trace-storage")]
-        cathedral_user_runtime::time::storage_trace("omega-send", 0, request.op);
+        let trace_scope = scope.realm();
+        #[cfg(feature = "trace-storage")]
+        cathedral_user_runtime::time::storage_trace("omega-send", trace_scope, request.op);
         let result = scope.request(request, object.as_ref());
         #[cfg(feature = "trace-storage")]
-        cathedral_user_runtime::time::storage_trace("omega-reply", 0, request.op);
+        cathedral_user_runtime::time::storage_trace("omega-reply", trace_scope, request.op);
         let (bytes, incoming) = result.map_err(|status| Error(status as i64))?;
-        if incoming.is_some() {
-            // This first binding has no incoming-object operation. Refuse rather
-            // than silently dropping a successful reply's attachment contract.
-            return Err(Error(abi::INVALID_ARGUMENT as i64));
+        let reply = wire::decode(&bytes).ok_or(Error(abi::IO_ERROR as i64))?;
+        if let Some(mut incoming) = incoming {
+            if request.op != storage::BULK || reply[0] != 0 {
+                return Err(Error(abi::INVALID_ARGUMENT as i64));
+            }
+            let length =
+                crate::transfer::received(receive_limit, words[4], reply[4], incoming.len())
+                    .ok_or(Error(abi::INVALID_ARGUMENT as i64))?;
+            let bytes = incoming.map()?;
+            // SAFETY: The validated length fits the exclusively borrowed packet.
+            let destination = unsafe {
+                core::slice::from_raw_parts_mut(
+                    packet[PAYLOAD_WORD..].as_mut_ptr().cast::<u8>(),
+                    length,
+                )
+            };
+            destination.copy_from_slice(&bytes[..length]);
+            packet[8] = length as u64;
+        } else if request.op == storage::BULK && reply[0] == 0 && reply[4] != 0 {
+            return Err(Error(abi::IO_ERROR as i64));
         }
-        wire::decode(&bytes).ok_or(Error(abi::IO_ERROR as i64))?
+        reply
     };
     packet[..8].copy_from_slice(&reply);
     Ok(())

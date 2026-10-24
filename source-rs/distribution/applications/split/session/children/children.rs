@@ -36,7 +36,9 @@ impl Children {
         for slot in 0..2 {
             let launch = Executable::from_object(&code, 0)?.reserve(
                 Limits {
-                    private_pages: 32,
+                    // Omega host (9) + old/new text (24) + small retained
+                    // decorations and storage publication, all app-charged.
+                    private_pages: 40,
                     reader_pages: 4,
                     channels: 0,
                 },

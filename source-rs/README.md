@@ -16,8 +16,9 @@ The desktop builds its UI from checked-in
 Build the supported Omega compiler in `build/omega-ui/compiler`, set `OMEGA_BIN`
 to it elsewhere, or put it on PATH. The
 [UI build guide](../tools/omega-ui/README.md#build) includes the producer and build commands.
-The installed [Colors app](../source/distribution/applications/colors/README.md)
-also owns its behavior in Omega. A reusable
+The installed [Colors](../source/distribution/applications/colors/README.md) and
+[Notes](../source/distribution/applications/notes/README.md) apps own their behavior
+in Omega. A reusable
 [platform host](platform/libraries/omega-app/README.md) supplies its existing
 scoped service transport. The kernel and remaining desktop applications are
 still Rust; this is an incremental application migration.
@@ -130,7 +131,7 @@ It records the current default boot, recent changes, priorities and test evidenc
 Follow [boot main](kernel/boot/uefi/main.rs) for machine startup,
 [the user-task session](kernel/core/user_tasks/user_tasks.rs) for kernel execution,
 [desktop policy](distribution/desktop/session/shell/shell.rs) for distribution startup, or
-[the Notes workflow](distribution/applications/notes/session/session.rs) for
+[the Notes workflow](../source/distribution/applications/notes/app/session/session.omg) for
 input, persistence and drawing. The [composition map](distribution/README.md)
 bridges executable and IPC boundaries. The [discoverability convention](../wiki/architecture/discoverability.md)
 explains how to preserve these routes as the lab grows.
@@ -464,7 +465,7 @@ The CPU profile is qemu64, with no claim to optional virtualization exception
 semantics or physical-hardware coverage. Unsafe wrappers are boot-only lab
 mechanisms, not application APIs.
 
-The runtime supports a configurable limit of 1ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“64 trusted kernel tasks on one
+The runtime supports a configurable limit of 1ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œ64 trusted kernel tasks on one
 CPU (default 8), plus an optional frame budget for stacks and their tables.
 `kernel_tasks::spawn(fn())` returns a `TaskId` or an admission error. IDs contain slot
 generations and are scoped to a session; reused slots do not revive old IDs.
@@ -546,7 +547,7 @@ initial FP state is clean and I/O privilege is zero.
 | 30: Memory seal | Region handle, link token | Irreversibly remove WRITE and offer to that live service |
 | 31: Memory map | Producer-local offer, service link | Accept authorized RO/NX lease and return a fresh local reader handle |
 | 32: Memory pages | Region handle | Caller-owned or accepted region page count |
-| 33: IPC wait many | Pointer to 1ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“8 LE u64 receive tickets, count, absolute deadline | Ready index or error; validates the copied array and all receive rights, consumes no data, requires clock |
+| 33: IPC wait many | Pointer to 1ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œ8 LE u64 receive tickets, count, absolute deadline | Ready index or error; validates the copied array and all receive rights, consumes no data, requires clock |
 | 34: IPC create | 16-byte writable destination, 0, 0 | 0 after installing local send/receive handles; `NO_MEMORY` at quota |
 | 35: IPC close | Local handle, 0, 0 | 0 after dropping the grant; copied handles become stale |
 | 36: IPC send capability | Destination handle, 80-byte packet, 0 | Payload length after atomic one-endpoint move into the queue |

@@ -1,0 +1,86 @@
+// Bind -> list -> revision-pinned bulk read. Failed writes require a read before
+// another mutation; reconciliation updates confirmed data without losing draft.
+use host::main;
+use protocol::main;
+use state;
+use document::document;
+use document::encoding;
+use session::session;
+use session::diagnostics;
+public machine load(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+    s.phase = STORAGE_BOUND; message(p, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64); BIND
+}
+machine list(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+    s.phase = LISTED; message(p, STORE_LIST, s.realm, 0u64, s.after, 0u64, 0u64, 0u64, 0u64); STORE
+}
+public machine head(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+    transition s.current < s.count && s.current < 8u64 { true -> request(s, p) _ -> failed(s, p, IO_ERROR) }
+    state request(s: &mut State, p: &mut [u64; 4096]) -> u64 requires s.current < 8u64 {
+        s.phase = HEADED; message(p, STORE_HEAD, s.ids[s.current], 0u64, 0u64, 0u64, 0u64, 0u64, 0u64); STORE
+    }
+}
+public machine save(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+    transition s.count == 0u64 { true -> create(s, p) _ -> existing(s, p) }
+    state create(s: &mut State, p: &mut [u64; 4096]) -> u64 { message(p, STORE_PUBLISH, 0u64, 0u64, s.realm, 0u64, 0u64, 0u64, 0u64); transition { _ -> bytes(s, p) } }
+    state existing(s: &mut State, p: &mut [u64; 4096]) -> u64 { transition s.current < 8u64 { true -> replace(s, p) _ -> failed(s, p, IO_ERROR) } }
+    state replace(s: &mut State, p: &mut [u64; 4096]) -> u64 requires s.current < 8u64 { message(p, STORE_PUBLISH, s.ids[s.current], s.revision, 0u64, 0u64, 0u64, 0u64, 0u64); transition { _ -> bytes(s, p) } }
+    state bytes(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+        encode(s, p); p[4] = ((s.length as u64 in Saturating) + 4) as u64; p[8] = p[4]; s.phase = SAVED; STORE
+    }
+}
+public machine duplicate(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+    transition s.count > 0u64 && s.count < 8u64 && s.current < 8u64 { true -> request(s, p) _ -> failed(s, p, IO_ERROR) }
+    state request(s: &mut State, p: &mut [u64; 4096]) -> u64 requires s.current < 8u64 { s.phase = COPIED; message(p, STORE_COPY, s.ids[s.current], s.revision, s.realm, 0u64, 0u64, 0u64, 0u64); STORE }
+}
+public machine persistence(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+    transition p[9] != 0u64 { true -> transport(s, p) _ -> provider(s, p) }
+    state transport(s: &mut State, p: &mut [u64; 4096]) -> u64 { let status: u64 = p[9]; failed(s, p, status) }
+    state provider(s: &mut State, p: &mut [u64; 4096]) -> u64 { transition p[0] != 0u64 { true -> refusal(s, p) _ -> dispatch(s, p) } }
+    state refusal(s: &mut State, p: &mut [u64; 4096]) -> u64 { let status: u64 = p[0]; failed(s, p, status) }
+    state dispatch(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+        transition s.phase { STORAGE_BOUND -> bound(s, p) LISTED -> listed(s, p) HEADED -> headed(s, p) READ -> read(s, p) SAVED -> saved(s, p) COPIED -> copied(s, p) _ -> (EXIT) }
+    }
+    state bound(s: &mut State, p: &mut [u64; 4096]) -> u64 { s.realm = p[1]; s.count = 0u64; s.after = 0u64; list(s, p) }
+    state listed(s: &mut State, p: &mut [u64; 4096]) -> u64 { transition p[1] <= 6u64 { true -> entries(s, p, 0u64) _ -> failed(s, p, IO_ERROR) } }
+    state entries(s: &mut State, p: &mut [u64; 4096], i: u64) -> u64 { transition i < p[1] && i < 6u64 && s.count < 8u64 { true -> item(s, p, i) _ -> listed_all(s, p) } }
+    state item(s: &mut State, p: &mut [u64; 4096], i: u64) -> u64 requires i < 6u64 && s.count < 8u64 {
+        transition p[2u64 + i] > s.after { true -> retain(s, p, i) _ -> failed(s, p, IO_ERROR) }
+    }
+    state retain(s: &mut State, p: &mut [u64; 4096], i: u64) -> u64 requires i < 6u64 && s.count < 8u64 {
+        s.ids[s.count] = p[2u64 + i]; s.after = p[2u64 + i]; s.count = ((s.count as u64 in Saturating) + 1) as u64;
+        transition { _ -> entries(s, p, i + 1u64) }
+    }
+    state listed_all(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+        transition p[1] == 6u64 && s.count < 8u64 { true -> list(s, p) _ -> selected(s, p) }
+    }
+    state selected(s: &mut State, p: &mut [u64; 4096]) -> u64 { transition s.count == 0u64 { true -> empty(s, p) _ -> select(s, p) } }
+    state empty(s: &mut State, p: &mut [u64; 4096]) -> u64 { s.current = 0u64; s.revision = 0u64; p[8] = 4u64; p[16] = 827544654u64; decode(s, p); complete(s, p) }
+    state select(s: &mut State, p: &mut [u64; 4096]) -> u64 { transition s.current < s.count { true -> head(s, p) _ -> last(s, p) } }
+    state last(s: &mut State, p: &mut [u64; 4096]) -> u64 { s.current = ((s.count as u64 in Saturating) - 1) as u64; head(s, p) }
+    state headed(s: &mut State, p: &mut [u64; 4096]) -> u64 { transition p[3] >= 4u64 && p[3] <= 244u64 && p[2] != 0u64 && s.current < 8u64 { true -> bulk(s, p) _ -> failed(s, p, IO_ERROR) } }
+    state bulk(s: &mut State, p: &mut [u64; 4096]) -> u64 requires s.current < 8u64 {
+        s.read_length = p[3]; s.read_revision = p[2]; s.phase = READ;
+        message(p, STORE_BULK, s.ids[s.current], s.read_revision, 0u64, s.read_length, 0u64, 0u64, 0u64); p[11] = 244u64; STORE
+    }
+    state read(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+        transition valid(p) && p[8] == s.read_length && p[2] == s.read_revision && p[4] == p[8] { true -> decoded(s, p) _ -> failed(s, p, IO_ERROR) }
+    }
+    state decoded(s: &mut State, p: &mut [u64; 4096]) -> u64 { decode(s, p); s.revision = p[2]; complete(s, p) }
+    state saved(s: &mut State, p: &mut [u64; 4096]) -> u64 { transition s.count == 0u64 { true -> created(s, p) _ -> confirmed(s, p) } }
+    state created(s: &mut State, p: &mut [u64; 4096]) -> u64 { s.count = 1u64; s.current = 0u64; s.ids[0] = p[1]; transition { _ -> confirmed(s, p) } }
+    state confirmed(s: &mut State, p: &mut [u64; 4096]) -> u64 { s.revision = p[2]; confirm(s); complete(s, p) }
+    state copied(s: &mut State, p: &mut [u64; 4096]) -> u64 { transition s.count < 8u64 { true -> appended(s, p) _ -> failed(s, p, IO_ERROR) } }
+    state appended(s: &mut State, p: &mut [u64; 4096]) -> u64 requires s.count < 8u64 { s.ids[s.count] = p[1]; s.current = s.count; s.count = ((s.count as u64 in Saturating) + 1) as u64; s.loading = 1u64; head(s, p) }
+}
+machine complete(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+    s.error = 0u64; s.dirty = true;
+    transition s.close_after && !changed(s) { true -> (EXIT) _ -> resume(s, p) }
+}
+public machine failed(s: &mut State, p: &mut [u64; 4096], status: u64) -> u64 { s.error = status; s.dirty = true; resume(s, p) }
+machine resume(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+    s.close_after = false;
+    transition !s.loaded { true -> loaded(s, p) _ -> resumed(s, p) }
+}
+public machine resumed(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+    transition s.epoch == 0u64 { true -> poll(s, p) _ -> after_input(s, p) }
+}

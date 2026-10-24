@@ -1,0 +1,44 @@
+use state;
+public machine payload_byte(p: &[u64; 4096], i: u64) -> u64 {
+    transition i < 32640u64 { true -> byte(p, i) _ -> (0u64) }
+    state byte(p: &[u64; 4096], i: u64) -> u64 requires i < 32640u64 { (p[16u64 + i / 8u64] >> ((i % 8u64) * 8u64)) & 255u64 }
+}
+public machine encode(s: &State, p: &mut [u64; 4096]) {
+    transition { _ -> clear(s, p, 0u64) }
+    state clear(s: &State, p: &mut [u64; 4096], i: u64) {
+        transition i < 31u64 { true -> zero(s, p, i) _ -> tag(s, p) }
+    }
+    state zero(s: &State, p: &mut [u64; 4096], i: u64) requires i < 31u64 { p[16u64 + i] = 0u64; transition { _ -> clear(s, p, i + 1u64) } }
+    state tag(s: &State, p: &mut [u64; 4096]) { p[16] = 827544654u64; transition { _ -> copy(s, p, 0u64) } }
+    state copy(s: &State, p: &mut [u64; 4096], i: u64) { transition i < s.length && i < 240u64 { true -> byte(s, p, i) _ -> done() } }
+    state byte(s: &State, p: &mut [u64; 4096], i: u64) requires i < 240u64 {
+        let at: u64 = 16u64 + (i + 4u64) / 8u64;
+        p[at] = p[at] | ((s.draft[i] as u64) << (((i + 4u64) % 8u64) * 8u64));
+        transition { _ -> copy(s, p, i + 1u64) }
+    }
+    state done() {}
+}
+public machine valid(p: &[u64; 4096]) -> bool {
+    transition p[8] >= 4u64 && p[8] <= 244u64 && (p[16] & 4294967295u64) == 827544654u64 { true -> scan(p, 4u64) _ -> (false) }
+    state scan(p: &[u64; 4096], i: u64) -> bool { transition i < p[8] && i < 244u64 { true -> byte(p, i) _ -> (true) } }
+    state byte(p: &[u64; 4096], i: u64) -> bool requires i < 244u64 {
+        let b: u64 = payload_byte(p, i);
+        transition (b >= 97u64 && b <= 122u64) || (b >= 48u64 && b <= 57u64) || b == 32u64 || b == 10u64 { true -> scan(p, i + 1u64) _ -> (false) }
+    }
+}
+public machine decode(s: &mut State, p: &[u64; 4096]) {
+    transition p[8] >= 4u64 && p[8] <= 244u64 { true -> start(s, p) _ -> done() }
+    state start(s: &mut State, p: &[u64; 4096]) requires p[8] >= 4u64 && p[8] <= 244u64 {
+        s.saved_length = p[8] - 4u64;
+        transition s.loading == 1u64 { true -> draft(s, p) _ -> copy(s, p, 0u64) }
+    }
+    state draft(s: &mut State, p: &[u64; 4096]) { s.length = s.saved_length; s.cursor = s.length; transition { _ -> copy(s, p, 0u64) } }
+    state copy(s: &mut State, p: &[u64; 4096], i: u64) { transition i < 240u64 { true -> byte(s, p, i) _ -> done() } }
+    state byte(s: &mut State, p: &[u64; 4096], i: u64) requires i < 240u64 { transition i < s.saved_length { true -> write(s, p, i, payload_byte(p, i + 4u64)) _ -> write(s, p, i, 0u64) } }
+    state write(s: &mut State, p: &[u64; 4096], i: u64, b: u64) requires i < 240u64 {
+        s.confirmed[i] = (b & 255u64) as u8;
+        transition s.loading == 1u64 { true -> both(s, p, i, b) _ -> copy(s, p, i + 1u64) }
+    }
+    state both(s: &mut State, p: &[u64; 4096], i: u64, b: u64) requires i < 240u64 { s.draft[i] = (b & 255u64) as u8; transition { _ -> copy(s, p, i + 1u64) } }
+    state done() {}
+}

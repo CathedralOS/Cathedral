@@ -1,0 +1,22 @@
+// Installed Notes: acquire scoped services -> load -> receive -> act -> present.
+// Each yield requests one operation from the temporary native host. Subsystems
+// own their continuations; the host never interprets app state or storage bytes.
+use host::main;
+use protocol::main;
+use state;
+use session::session;
+
+public boundary trait Notes { machine step(s: &mut State, p: &mut [u64; 4096]) -> u64; }
+public NotesProvider satisfies Notes {
+    machine step(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+        transition p[15] {
+            1u64 -> (size_of<State>())
+            2u64 -> (align_of<State>())
+            3u64 -> (1u64)
+            _ -> session(s, p)
+        }
+    }
+}
+public machine component_entry() reaches Notes invokes Notes; {
+    let mut s: State; let mut p: [u64; 4096]; let result: u64 = Notes::step(&mut s, &mut p);
+}

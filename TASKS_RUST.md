@@ -1,5 +1,87 @@
 # Rust reference OS: tasks and handoff
 
+Implementation update 2026-10-24: **installed Notes behavior moved to Omega**,
+over `442da2eb` (including the prior Colors migration `9e6785ff`). Normal F5,
+Split and nested desktops now run
+[Omega Notes](source/distribution/applications/notes/README.md), alongside Omega
+Colors. Its Rust entry declares imports and enters the shared platform host.
+Omega owns bounded document edits, `NTS1` validation, save/reload/copy and uncertain
+write reconciliation, close/loss decisions, per-group cursor preference, retained
+surfaces and frame-demand acknowledgment. No kernel mechanism changed.
+
+The [host](source-rs/platform/libraries/omega-app/README.md) now accepts explicitly
+bounded storage BULK attachments and stages one outgoing object up to 64 KiB.
+Incoming byte counts are checked before mapping; returned padding is never copied.
+Outgoing chunks must form a complete contiguous prefix before freezing and sending;
+errors/exit release custody. Notes sends its 46,080-byte text image in two chunks,
+retaining unchanged decorations. Its opaque state/packet still use nine private
+pages. The component is about 52 KiB; its installed ELF is about 85 KiB. This is
+still a synchronous x86-64 bridge, not the final Omega app ABI.
+
+Guest testing caught two migration regressions and fixed them:
+
+- Split's 32-page Notes reservation could not hold the nine-page host beside old
+  and replacement text images plus decorations. Notes now gets 40 pages there
+  and in the Notes lab. The inner Split receives 112 pages; the desktop caps
+  ordinary programs requesting descendants at 144 private pages, still bounded
+  by the owner offer. Ordinary leaves retain their 128-page ceiling. These are
+  distribution grants, not enlarged kernel limits.
+- Binding storage before placement raced the lab owner's realm assignment. Notes
+  now waits for a valid view before initial binding, preserving the first input
+  across loading. A compiled-export regression covers delayed placement.
+
+The coexistence replay also exposed an existing surface-funding problem: an
+ordinary Split consumed all spare surfaces merely because it requested descendant
+capacity, preventing a sibling Notes launch. Ordinary descendant hosts now receive
+at most sixteen surfaces, including spare room for producer/capture children.
+Expansion to the full configured ceiling requires an explicit surface profile;
+the declared stock nested desktop retains its existing policy.
+
+Ten Windows-hosted tests execute the actual Notes export; the original Rust
+schema test remains independent. Three host boundary tests cover transfer bounds;
+all eleven compiled Colors tests still pass. Default Rust host tests, userspace
+Clippy, Notes all-feature guest Clippy, Python packaging tests and source-layout
+checks pass. Guest evidence under `build/boot-harness-rs/`:
+
+- Default F5, three Notes instances, close choices, save/copy/cold-open and the
+  exact storage oracle: `desktop/20261024T212429957429Z`.
+- Four nested desktops, deepest Notes/Colors persistence and repeated teardown:
+  `desktop/20261024T212530428453Z`.
+- Capture of hidden Notes, sibling input, repeated grants/teardown and cold-open:
+  `desktop/20261024T214205821134Z` (final sixteen-surface policy).
+- Optional storage withheld, draft protection and independent Colors persistence:
+  `desktop/20261024T212947413622Z`.
+- Lost committed reply, draft-preserving reconciliation, long/middle edits,
+  glyphs and exact durable history/quota through cold boot:
+  `matrix-database/20261024T213540707866Z`.
+- Split alongside ordinary Notes/Colors, resize, same-code inner Split,
+  bounded further refusal, recursive close and cold reopen:
+  `desktop/20261024T214241174330Z` (final sixteen-surface policy).
+
+The default, four-level and optional-service runs precede the final delayed-
+placement fix; recovery, capture and nested Split exercise it. Native checks
+were rerun on the final source. Logs live in `build/omega-component/` under
+`notes-final-checks.log`, `notes-review-checks.log`, `notes-final-guest-0.log`
+and `notes-verified-{capture,split}.log`.
+The commit was rebased over the concurrent Omega UI tooling consolidation;
+the combined tree passes all eleven UI tooling tests, five component packaging
+tests and the layout checker. That upstream change relocates tooling/docs and
+changes only a comment in native font source.
+
+The explicit Notes fault/admission/producer/render feature sets now select
+`rust-probes`; those fixtures retain the old Rust session and do not prove the
+Omega editor. Native startup preserves `note-loaded`; detailed Rust editor timing
+markers have not been ported. Storage tracing uses generic host spans keyed by
+supplied realm; the timing summarizer accepts both implementations. Full kernel,
+ARM64 and every fault fixture were not rerun for this userspace change.
+
+**Next:** migrate the chooser/user-picker's model, selection and launch/close
+policy into Omega, using the same scoped host. First inventory its incoming realm
+entry attachments and layout/launch replies; extend only the transport it needs.
+Keep matrix supervision and service mechanisms in Rust until a concrete Omega
+consumer needs them. This is a stronger next test than writing more Rust UX or
+attempting to port the whole matrix at once.
+
 Implementation update 2026-10-24: **installed Colors behavior moved to Omega**,
 over `c2f1421b`. Normal F5 and nested desktops install the same Colors executable;
 its app logic now starts at
@@ -41,7 +123,7 @@ run exercises that code. No kernel mechanisms changed; full kernel/ARM64 and all
 fault fixtures were not rerun. Native tests are Windows-hosted; guest execution
 is x86-64. Build logs and receipts live in `build/omega-component/`.
 
-**Immediate follow-up:** migrate Notes behavior using the same host. First add
+**Follow-up at that baseline (completed above):** migrate Notes using the same host. First add
 a bounded incoming-object interface for its bulk reads; keep transport/custody
 in platform and document schema/draft/close decisions in distribution Omega.
 Then evaluate the launcher/matrix migration against what Omega can actually

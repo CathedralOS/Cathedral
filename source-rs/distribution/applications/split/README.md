@@ -98,7 +98,9 @@ not one transaction; it is kept private until admission. Reopening Split starts
 its normal two notes; DEEPER reopens the saved nested workspace. Copies are
 snapshots, not enrollment in managed code updates.
 
-The wrapper grants nine surfaces and a bounded two-child budget to its nested
+The desktop lends Split at most sixteen surfaces, leaving room for ordinary
+sibling apps while funding its optional producer and capture viewer.
+Split grants nine surfaces and a bounded two-child budget to its nested
 matrix. Its inner DEEPER refuses with **NO ROOM** while preserving live notes.
 Split declares twenty channels and four descendants: its two Notes use ten
 channels, the optional producer uses five, and the optional capture viewer five.
@@ -108,9 +110,12 @@ requests any missing physical backing through its owner's `FUND` protocol. It
 retains a process-load allowance plus its private-page budget for its own work;
 owner refusal leaves the existing applications running and shows CANNOT CAPTURE.
 The inner Split receives
-96 private pages, 64 readers and ten channels; it has no room for AUTO alongside
-its two Notes. The private grant covers both 32-page Notes reservations and
-two 14-page header versions during replacement. Root/user budgets come from the current distribution composition
+112 private pages, 64 readers and ten channels; it has no room for AUTO alongside
+its two Notes. The private grant covers both 40-page Omega Notes reservations and
+two 14-page header versions during replacement. The enclosing desktop's ordinary
+app share is capped at 144 private pages, covering that loan and its own header
+replacement for programs requesting descendant capacity (ordinary leaves retain
+their 128-page ceiling). Root/user budgets come from the current distribution composition
 and owner admission policy. No child acquires devices or
 ambient code/storage authority. Ordinary Notes still creates no channels.
 

@@ -1,4 +1,5 @@
 [package]
+autotests = false
 name = "cathedral-notes"
 version.workspace = true
 edition.workspace = true
@@ -15,20 +16,22 @@ test = false
 bench = false
 
 [features]
-capture-source-exit = []
-capture-source-stall = []
-render-demand-probe = []
+rust-probes = []
+capture-source-exit = ["rust-probes"]
+capture-source-stall = ["rust-probes"]
+render-demand-probe = ["rust-probes"]
 trace-input = []
-trace-storage = []
-render-probes = []
-startup-fault = []
-admitted-fault = []
-management-probes = []
-input-receiver-probe = []
-input-producer-probe = []
+trace-storage = ["cathedral-omega-app/trace-storage"]
+render-probes = ["rust-probes"]
+startup-fault = ["rust-probes"]
+admitted-fault = ["rust-probes"]
+management-probes = ["rust-probes"]
+input-receiver-probe = ["rust-probes"]
+input-producer-probe = ["rust-probes"]
 input-producer-partial = ["input-producer-probe"]
 
 [dependencies]
+cathedral-omega-app.workspace = true
 cathedral-desktop-matrix-contracts.workspace = true
 cathedral-platform-contracts.workspace = true
 

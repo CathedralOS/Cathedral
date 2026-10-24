@@ -65,10 +65,10 @@ impl Children {
         let (code, granted) = image::read(&mut scope, root)?;
         let launch = Executable::from_object(&code, 0)?.reserve(
             Limits {
-                // Two 32-page Notes grants plus two 14-page header versions
-                // during replacement. The enclosing 128-page grant still funds
+                // Two 40-page Notes grants plus two 14-page header versions
+                // during replacement. The enclosing 144-page grant still funds
                 // its own retained/replacement headers alongside this loan.
-                private_pages: 96,
+                private_pages: 112,
                 reader_pages: 64,
                 channels: 10,
             },

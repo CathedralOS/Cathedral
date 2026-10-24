@@ -26,7 +26,7 @@ Cathedral/
       profile.json         Boot composition consumed by the host harness
       shell/               Desktop experience (planned)
       settings/            User-facing configuration (planned)
-      applications/        Bundled apps; Colors runs on the Rust reference host
+      applications/        Bundled apps; Colors/Notes run on the Rust reference host
       libraries/           Distribution UI components, native backend and fonts
   source-rs/               Rust lab with the same ownership boundaries
   tools/                   Host builds, image assembly, checks and simulators

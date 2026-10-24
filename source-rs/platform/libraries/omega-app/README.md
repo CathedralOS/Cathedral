@@ -3,13 +3,16 @@
 Start at [host/host.rs](host/host.rs): obtain the app's requested scoped
 connections, dispatch one operation, and resume the Omega app with its result.
 [exchange.rs](host/exchange.rs) owns request serialization and frozen attachment
-custody. [component.rs](component.rs) checks the native layout and borrows the
+custody; [attachments.rs](host/attachments.rs) stages larger outgoing objects.
+[transfer.rs](transfer.rs) checks byte extents before allocation/mapping.
+[component.rs](component.rs) checks the native layout and borrows the
 opaque state. There is no Colors state, app schema, rendering policy or input
 decision in this package.
 
 The producer-side helpers live at
 [app-host/main.omg](../../../../source/platform/libraries/app-host/main.omg).
-The first consumer is [Omega Colors](../../../../source/distribution/applications/colors/README.md).
+Consumers are [Omega Colors](../../../../source/distribution/applications/colors/README.md)
+and [Omega Notes](../../../../source/distribution/applications/notes/README.md).
 This is deliberately a temporary, synchronous x86-64 native bridge. A future
 Omega runtime can replace it while retaining the app's protocol behavior.
 
@@ -23,10 +26,12 @@ borrows its buffers and retains no pointer after returning. The packet and state
 use nine private pages charged to the app, outside its bounded stack.
 
 During a step, the app returns the operation below. Words 0–7 hold a 64-byte
-platform request or response; word 8 is the outgoing attachment byte count;
+platform request or response; word 8 is the outgoing/returned attachment byte count;
 words 16 onward hold at most 32,640 payload bytes. Word 9 returns transport
 status (zero succeeds), separate from the provider status in word 0. Words
-11–14 are reserved. No wire identifiers grant authority by themselves.
+11 supplies the receive limit for a storage BULK request; 12–14 are reserved.
+The host clears the receive limit before resuming the app. No wire identifiers
+grant authority by themselves.
 
 | Operation | Host work |
 | --- | --- |
@@ -39,10 +44,26 @@ status (zero succeeds), separate from the provider status in word 0. Words
 | 6 | Wait for wake or owner control; word 9 is 0 for wake, 1 for control, otherwise a transport error; control bytes occupy 0–7, own CPU time occupies word 10 |
 | 7 | Reply to the owner control message with words 0–7 |
 | 8 | Write payload bytes to the app's existing diagnostic output |
+| 9 | Append a payload chunk to a staged object; words 0/1 are total bytes and sequential byte offset |
+| 10 | Discard the staged object, whether partial or ready |
 
-This first host supports outgoing attachments and inline replies. An incoming
-attachment is released and reported as unsupported, never silently accepted.
-Notes' bulk reads will require an explicit bounded incoming-object binding.
+Storage BULK receives require an explicit nonzero limit no larger than the packet
+payload. Before mapping, the host checks the returned byte count against that
+limit, the request length and the received object's size. It copies exactly those
+bytes into the packet, returns their count in word 8 and releases its reader
+custody. Page padding is never exposed. Unexpected attachments, malformed counts
+and successful nonempty BULK replies without backing fail explicitly. Other
+incoming-object operations remain unsupported. The app still validates its schema
+and expected revision; the host does not interpret document contents.
+
+Larger outgoing images use one staged object of at most 64 KiB, allocated from
+the app's private budget. Chunks must be nonempty, contiguous and within the fixed
+total; overlapping, skipped or oversized chunks discard the transfer. Completion
+freezes/unmaps the object. The next storage or interaction exchange consumes it
+with word 8 zero. Partial publication and simultaneous inline/staged payloads
+are refused and released. Allocation, freeze or exchange failures also release
+custody; task exit releases any pending object. Notes' 46,080-byte text bitmap
+uses two chunks without enlarging every app's permanent packet.
 
 The host never chooses a service globally or supplies raw endpoint names to
 Omega. Existing `Services` and `Scope` enforce supplied connections, version
@@ -54,5 +75,7 @@ releases its producer custody. Providers retain only their own accepted rights.
 
 Owner control is checked before wake hints to prevent an input stream from
 starving lifecycle questions. The app still decides its batching and when to
-wait. This API does not promise hard real-time scheduling or memory safety for
+wait. Retiring the optional owner control link leaves wake/input service active;
+it does not change the kernel's parent-death subtree teardown. This API does not
+promise hard real-time scheduling or memory safety for
 arbitrary native code. The ordinary process sandbox remains the trust boundary.

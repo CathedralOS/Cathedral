@@ -115,7 +115,14 @@ impl Children {
             pages = [private, readers];
             self.requested_surfaces[plan.slot] = Some(surfaces);
         } else if self.desktop && (1..BACKGROUND).contains(&plan.slot) {
-            pages = [pages[0].min(128), pages[1].min(128)];
+            // A bounded child-matrix share covers a 112-page nested workspace
+            // beside its owner's old/new 14-page headers. Owner offers still cap it.
+            let private = if resources.is_some_and(|(_, descendants)| descendants > 0) {
+                144
+            } else {
+                128
+            };
+            pages = [pages[0].min(private), pages[1].min(128)];
             self.requested_surfaces[plan.slot] = Some(10);
         }
         let (channels, descendants) = resources
@@ -145,9 +152,11 @@ impl Children {
         let connected_channels = channels
             .checked_add(connection_channels)
             .ok_or(Error(abi::INVALID_ARGUMENT as i64))?;
-        // Reserve the declared minimum before spawning. Descendant hosts may
-        // receive spare surface capacity within this owner's explicit ceiling;
-        // that capacity is still confined to a disjoint range in our own grant.
+        // Reserve the minimum before spawning. Undeclared descendant hosts get
+        // bounded spare room for auxiliary children (e.g. a capture viewer),
+        // rather than consuming every surface and preventing sibling admission.
+        // An explicit profile may use the owner's full configured ceiling.
+        // All allocations remain disjoint ranges within our own grant.
         if self.desktop
             && let Some(count) = self.requested_surfaces[plan.slot]
         {
@@ -157,6 +166,11 @@ impl Children {
                 return Err(Error(abi::NO_MEMORY as i64));
             }
             let preferred = if descendants != 0 {
+                let ceiling = if profile.is_some() {
+                    ceiling
+                } else {
+                    ceiling.min(16)
+                };
                 ceiling.min(
                     world
                         .backed_surfaces()

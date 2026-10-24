@@ -1,0 +1,107 @@
+// Acquire -> load -> receive -> act -> present, one host operation at a time.
+use host::main;
+use protocol::main;
+use state;
+use storage::storage;
+use rendering::rendering;
+use session::input;
+use session::cursors;
+use document::document;
+use session::diagnostics;
+
+public machine session(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+    transition s.phase {
+        START -> acquire_interaction(s, p)
+        INTERACTION_READY -> acquire_storage(s, p)
+        STORAGE_READY -> start(s, p)
+        POLLED -> observed(s, p)
+        AWAKENED -> awakened(s, p)
+        CONTROL_REPLIED -> wait(s, p)
+        CURSOR_CHANGED -> cursor_reply(s, p)
+        LOAD_REPORTED -> input(s, p)
+        _ -> subsystem(s, p)
+    }
+    state acquire_interaction(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+        s.phase = INTERACTION_READY; message(p, 1u64, 1u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64); INTERACTION
+    }
+    state acquire_storage(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+        transition p[9] == 0u64 {
+            true -> storage(s, p) _ -> (EXIT)
+        }
+    }
+    state storage(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+        s.phase = STORAGE_READY; message(p, 1u64, 1u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64); STORAGE
+    }
+    state start(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+        s.loading = 1u64;
+        transition p[9] { 0u64 -> poll(s, p) UNAVAILABLE -> temporary(s, p) _ -> (EXIT) }
+    }
+    state temporary(s: &mut State, p: &mut [u64; 4096]) -> u64 { s.temporary = true; s.dirty = true; poll(s, p) }
+    state subsystem(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+        transition s.phase >= STORAGE_BOUND && s.phase <= COPIED {
+            true -> persistence(s, p) _ -> presentation(s, p)
+        }
+    }
+}
+public machine poll(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+    s.phase = POLLED; message(p, MATRIX_POLL, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64); EXCHANGE
+}
+machine observed(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+    transition p[9] != 0u64 { true -> (EXIT) _ -> view(s, p) }
+    state view(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+        transition p[0] == 0u64 && p[1] != 0u64 && p[2] != 0u64 && p[3] != 0u64 && p[2] < 65536u64 && p[3] < 65536u64 {
+            true -> accept(s, p) _ -> hidden(s, p)
+        }
+    }
+    state hidden(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+        s.scene = false; s.dirty = true; wait(s, p)
+    }
+    state accept(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+        transition s.epoch != p[1] { true -> rebound(s, p) _ -> geometry(s, p) }
+    }
+    state rebound(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+        reset_channels(s); s.scene = false; s.dirty = true; s.epoch = p[1];
+        transition { _ -> geometry(s, p) }
+    }
+    state geometry(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+        s.dirty = s.dirty || s.width != p[2] || s.height != p[3];
+        s.width = p[2]; s.height = p[3];
+        s.frames = (p[4] & NO_FRAMES) == 0u64;
+        s.more = (p[5] & MORE) != 0u64;
+        s.snapshot[0] = p[0]; s.snapshot[1] = p[1]; s.snapshot[2] = p[2]; s.snapshot[3] = p[3];
+        s.snapshot[4] = p[4]; s.snapshot[5] = p[5]; s.snapshot[6] = p[6]; s.snapshot[7] = p[7];
+        s.drained = ((s.drained as u64 in Saturating) + 1) as u64;
+        transition s.loaded { true -> input(s, p) _ -> first(s, p) }
+    }
+    state first(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+        transition s.temporary { true -> loaded(s, p) _ -> load(s, p) }
+    }
+}
+public machine after_input(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+    transition s.more && s.drained < 8u64 { true -> poll(s, p) _ -> render(s, p) }
+}
+public machine wait(s: &mut State, p: &mut [u64; 4096]) -> u64 { s.drained = 0u64; s.phase = AWAKENED; WAIT }
+machine awakened(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+    transition p[9] {
+        0u64 -> wake(s, p)
+        1u64 -> control(s, p)
+        _ -> (EXIT)
+    }
+    state wake(s: &mut State, p: &mut [u64; 4096]) -> u64 { poll(s, p) }
+    state control(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+        transition p[0] == LOSS { true -> loss(s, p) _ -> report(s, p) }
+    }
+    state loss(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+        let loss: u64 = changed(s) as u64;
+        message(p, 0u64, loss, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64);
+        s.phase = CONTROL_REPLIED; CONTROL
+    }
+    state report(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+        let dirty: u64 = changed(s) as u64;
+        let selected: u64 = selection(s);
+        message(p, 0u64, s.revision, s.length, s.error, dirty, s.count, selected, 0u64);
+        s.phase = CONTROL_REPLIED; CONTROL
+    }
+}
+
+machine selection(s: &State) -> u64 { transition s.count == 0u64 { true -> (0u64) _ -> (((s.current as u64 in Saturating) + 1) as u64) } }
