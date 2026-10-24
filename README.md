@@ -79,6 +79,12 @@ One technique here shares ground with [Theseus](https://www.theseus-os.com/): a 
 
 ## Repository layout
 
+To boot the Omega kernel, select **Cathedral (Omega): Build & Boot in QEMU**
+in VS Code's Run and Debug menu and press **F5**. This opens QEMU and reports
+kernel bring-up progress in the editor terminal; it is not yet a desktop.
+See the [Omega launch setup](tools/boot-harness/README.md#f5-in-vs-code) for
+compiler, Python and firmware prerequisites.
+
 The [Rust lab](source-rs/README.md) mirrors the Omega ownership layers under
 `source-rs/` for executable OS bring-up experiments. Press **F5**, or run
 `python tools/boot-harness-rs/run.py --release --window`, to open the desktop and

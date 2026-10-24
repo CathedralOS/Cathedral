@@ -5,6 +5,31 @@ image under QEMU/OVMF. See the [boot frontier](../../source/kernel/boot/uefi/REA
 for the required compiler support and remaining kernel work. The Rust lab has its
 own harness and is not evidence that the Omega source works.
 
+## F5 in VS Code
+
+Open the Cathedral repository folder, select **Cathedral (Omega): Build & Boot
+in QEMU** in Run and Debug, then press **F5**. The existing Rust desktop launch
+entries remain available. This entry uses the same fresh-image harness below;
+it does not attach an Omega source debugger.
+
+Install Python 3.10+, QEMU and OVMF as described below. The launch uses `python`
+on Windows and `python3` on macOS/Linux. By default, it builds the compiler from
+the sibling `../Omega` checkout (requiring its Rust toolchain). Alternatively,
+set `OMEGA_BIN` to an optimized compiler binary, or `OMEGA_REPO` to the Omega
+checkout, in the environment inherited by VS Code. Isolated Cathedral worktrees
+need one of these overrides when Omega is not their sibling.
+
+For a new checkout, run `python tools/boot-harness/run.py --prepare --build-only`
+first (use `python3` on macOS/Linux), completing any package review requested by
+the compiler. F5 does not bypass dependency review. Each launch recompiles the
+Omega kernel before opening QEMU; a failed build never boots an old image.
+
+QEMU opens a firmware display window. Kernel progress is currently reported
+over serial in the VS Code terminal, from `Hello from Omega` through the
+memory and mapping checks described below. The kernel then idles; there is no
+Omega desktop yet. Close the QEMU window to end the run. Use `--smoke` from a
+terminal for the automated, headless milestone check.
+
 ## Run
 
 Python 3.10+ is required on every host. Bash and PowerShell wrappers call the
