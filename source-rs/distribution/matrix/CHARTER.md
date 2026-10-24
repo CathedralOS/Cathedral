@@ -68,7 +68,15 @@ retired channel slots remain reserved until every recipient consumes the boundar
 or loses its binding. Groups retire separately so channel replacement preserves
 selection. The [recursive fixture](../desktop/scenario/registration.rs) exercises
 repeated lifetimes and denies these operations to ordinary child endpoints.
-Restricted producer acquisition and quotas remain unimplemented. Stock and Split
+The [producer grant](../../platform/libraries/matrix/world/input/producer.rs)
+now reserves a quota for an authenticated child, with separate click-to-focus
+permission and disconnect retirement. Its grant-local channel ordinals cannot
+select other producers' channels. Only an explicitly granted producer can query
+its authorized input extent. The stock root reserves its fixed source slots
+before granting; nested stock hosts refuse local producer grants until upstream
+channel allowances are negotiated. Root producers still forward through nested
+routers. Manifest-based acquisition and a visible producer app remain pending.
+Stock and Split
 pause upstream polling while descendant retirement drains, continuing local
 dispatch. This can delay unrelated upstream input behind a slow recipient; it
 does not establish an input latency or denial-of-service isolation guarantee.

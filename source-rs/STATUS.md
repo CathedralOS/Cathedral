@@ -18,8 +18,11 @@ and pointer channels in one group; nested matrices preserve group association
 and event order. Pointer capture and app button edges remain channel-local.
 The owner control connection can register and retire channels/groups; table slots
 are reclaimed after explicit retirement events drain. Local and inherited names
-are separate. Restricted producer acquisition, per-producer quotas/disconnect
-cleanup, delegated group control and a visible synthetic producer remain pending.
+are separate. Explicit child producer grants now reserve channel quotas, isolate
+group control and retire on disconnect. The root can grant them; nested stock
+hosts need negotiated upstream capacity before admitting additional local
+producers. Manifest-based producer acquisition and a visible synthetic producer
+remain pending.
 
 ## Default desktop
 

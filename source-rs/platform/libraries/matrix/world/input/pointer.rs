@@ -17,6 +17,16 @@ impl<const N: usize> World<N> {
         y: u64,
         buttons: u64,
     ) -> Result<(), u64> {
+        self.pointer_routed(channel, x, y, buttons, true)
+    }
+    pub(super) fn pointer_routed(
+        &mut self,
+        channel: Name,
+        x: u64,
+        y: u64,
+        buttons: u64,
+        select: bool,
+    ) -> Result<(), u64> {
         if !self.parent.valid() || buttons > 7 {
             return Err(abi::DENIED);
         }
@@ -47,7 +57,9 @@ impl<const N: usize> World<N> {
             .map(|(slot, _)| slot);
         if route.buttons == 0 && buttons != 0 {
             let group = route.group;
-            self.select_input_group_index(group, hit);
+            if select {
+                self.select_input_group_index(group, hit);
+            }
             self.input.streams[index].capture = hit;
         }
         let route = &mut self.input.streams[index];

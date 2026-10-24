@@ -1,5 +1,6 @@
 // Admit upstream stream names, then route or cancel only that stream.
-// Caller authentication belongs to the service; no child-facing injection exists.
+// Caller authentication belongs to the service; producer.rs checks explicitly
+// granted child connections before translating their private channel ordinals.
 use super::*;
 
 pub(super) struct Input {

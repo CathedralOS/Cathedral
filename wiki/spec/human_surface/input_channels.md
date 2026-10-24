@@ -161,7 +161,11 @@ have separate internal namespaces. Host and IPC proofs cover repeated retirement
 receiver cleanup and retained group selection between channel replacements.
 Upstream polling pauses while descendant retirement boundaries drain; this
 introduces backpressure on that shared path, not a production latency guarantee.
-Restricted app producer acquisition, per-producer quotas/disconnect cleanup,
+Explicit owner-granted child producers now have reserved quotas, connection/view
+checks, per-child generations, private channel ordinals and disconnect retirement.
+The stock root can grant this; nested stock hosts refuse local producers until
+their upstream channel ceiling is negotiated. Root-produced events still recurse.
+Manifest-based producer acquisition, recursive allowance negotiation,
 discovery and reassociation of an existing stream remain unimplemented. F5 supplies a pointer channel
 and a keyboard channel in one group. Shared app-side reception tracks pointer
 edges separately; this does not impose separate document/player state on apps.

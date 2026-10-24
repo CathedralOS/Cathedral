@@ -10,6 +10,32 @@ impl<const N: usize> World<N> {
             return self.input_owner_command(words);
         }
         let result = match words {
+            [
+                wire::INPUT_PRODUCER_GRANT,
+                slot,
+                count,
+                rights,
+                channels,
+                groups,
+                0,
+                0,
+            ] if slot < N as u64
+                && count <= wire::INPUT_STREAMS as u64
+                && channels <= wire::INPUT_STREAMS as u64
+                && groups <= wire::INPUT_GROUPS as u64 =>
+            {
+                self.grant_input_producer(
+                    slot as usize,
+                    count as usize,
+                    rights,
+                    channels as usize,
+                    groups as usize,
+                )
+            }
+            [wire::INPUT_PRODUCER_REVOKE, slot, 0, 0, 0, 0, 0, 0] if slot < N as u64 => {
+                self.revoke_input_producer(slot as usize);
+                Ok(())
+            }
             [wire::PLACE, child, x, y, width, height, keys, 0] if child < N as u64 => self.place(
                 child as usize,
                 Rect {

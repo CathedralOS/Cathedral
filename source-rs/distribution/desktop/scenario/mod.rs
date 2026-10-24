@@ -2,6 +2,7 @@
 
 mod checks;
 mod loss;
+mod producers;
 mod recovery;
 mod registration;
 

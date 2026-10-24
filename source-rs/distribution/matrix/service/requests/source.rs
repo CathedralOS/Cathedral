@@ -5,7 +5,7 @@ const POINTER: u32 = 1;
 const KEYBOARD: u32 = 2;
 const GROUP: u32 = 1;
 
-fn bind(world: &mut World) -> Result<(), u64> {
+pub(super) fn bind(world: &mut World) -> Result<(), u64> {
     world.bind_input_stream(POINTER, GROUP)?;
     world.bind_input_stream(KEYBOARD, GROUP)
 }

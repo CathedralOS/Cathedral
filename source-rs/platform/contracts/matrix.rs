@@ -1,5 +1,7 @@
 //! Experimental local-world protocol. Children can address only their own binding.
-//! No ancestor coordinates, global IDs, sibling enumeration or depth on the wire.
+//! Ordinary interaction exposes no ancestor coordinates, global IDs, sibling
+//! enumeration or depth. An explicit producer grant additionally exposes its
+//! authorized input extent; it never makes the connection an owner endpoint.
 pub type Packet = [u64; 8];
 /// Child interaction request: five incremental amounts (private pages, reader
 /// pages, channels, descendant slots, physical frames), then two zero words.
@@ -47,8 +49,8 @@ pub const MORE: u64 = 1 << 16;
 /// view epoch resets every stream binding. RETIRED ends one channel permanently;
 /// GROUP_RETIRED follows the retirement of every channel in that group. Reclaim
 /// receiver state on these boundaries, not by reinterpreting an old name.
-/// This partial encoding has owner-only registration but no app producer service
-/// acquisition, per-producer quotas or channel directory yet.
+/// This partial encoding has owner registration and explicit per-child producer
+/// quotas, but no producer service acquisition or channel directory yet.
 pub const INPUT_STREAMS: usize = 4;
 pub const INPUT_GROUPS: usize = 4;
 /// Existing authenticated single-source adapter; no ambient child authority.
@@ -106,6 +108,23 @@ pub const INPUT_CHANNEL_RETIRE: u64 = 133; // channel,0..; ends held/queued inpu
 pub const INPUT_POINTER: u64 = 134; // registered channel,x,y,buttons,0..
 pub const INPUT_KEY: u64 = 135; // registered channel,key,state,0..
 pub const INPUT_SELECT: u64 = 136; // local group, child slot + 1 (zero clears),0..
+/// Explicit owner grant to an already connected child: slot, channel quota,
+/// rights, reserved inherited channels, reserved inherited groups, 0, 0.
+/// Reserves the quota immediately and supplies one private focus group. This is
+/// a bounded delegation primitive, not manifest-based service acquisition.
+pub const INPUT_PRODUCER_GRANT: u64 = 137;
+pub const INPUT_PRODUCER_REVOKE: u64 = 138; // slot,0..
+/// Allows this producer's pointer presses to select within its private group.
+/// It grants no control of other groups, stacking, or sibling enumeration.
+pub const PRODUCER_FOCUS: u64 = 1;
+/// Granted child connection only. INFO returns status, grant generation,
+/// permitted input width,height,key mask,channel quota,rights,0. Channel numbers
+/// are 1..quota within that grant, unrelated to owner/recipient channel names.
+/// Regrant changes the generation; geometry/revoke/disconnect ends this grant.
+pub const PRODUCER_INFO: u64 = 40; // all zero
+pub const PRODUCER_POINTER: u64 = 41; // generation,channel,x,y,buttons,0,0
+pub const PRODUCER_KEY: u64 = 42; // generation,channel,key,state,0,0,0
+pub const PRODUCER_RELEASE: u64 = 43; // generation,0..
 pub const SPAWN: u64 = 106; // local child slot, current launch index, loan bitmask, argument
 pub const STOP: u64 = 107; // local child slot; return after complete subtree reclamation
 /// Host to child over its control link before a lifecycle decision: [LOSS, 0..].

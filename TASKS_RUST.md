@@ -1,5 +1,55 @@
 # Rust reference OS: tasks and handoff
 
+Implementation update 2026-10-23: **explicit child producer grants**, over
+`7d170864`. The [producer entrance](source-rs/platform/libraries/matrix/world/input/producer.rs)
+reserves a channel quota and private focus group for an already authenticated
+child connection. Grant-local ordinals never select another producer's channels;
+per-child generations reject stale submissions without exposing sibling grant
+counters. Click-to-focus is a separate right from pointer delivery. Only an
+explicitly granted producer can query its authorized input extent. Ordinary
+interaction endpoints still deny all owner registration/control operations.
+
+Release, owner revoke, connection loss, changed child view or changed upstream
+grant ends production and retires held input. Retirement storage remains charged
+until recipients drain it; the group then retires automatically. This is a
+delegation mechanism over the existing authenticated child connection, not yet
+manifest-based service acquisition or a separately acquired producer endpoint.
+No import was added to `imports::ALL`, and no F5 app gains production implicitly.
+
+The stock root reserves fixed keyboard/pointer channels at BIND, before dynamic
+admission. The [IPC fixture](source-rs/distribution/desktop/scenario/producers.rs)
+grants an ordinary sibling two producer channels, routes its pointer/key through
+another matrix, rejects wrong/excess/stale grants and verifies release and process
+death retirement. A host proof separately tests delivery without focus permission.
+
+**Next capacity gap:** a nested matrix may legally receive all four upstream
+channels. Assuming only two will arrive overpromises space if another producer
+appears above it. Nested stock hosts therefore refuse new local producer grants
+until the protocol negotiates an upstream channel/group ceiling. Root producers
+still forward recursively. Implement that allowance exchange and its retirement
+rules before enabling local producer acquisition at arbitrary depths; do not
+paper over it by treating physical input as the only possible ancestor input.
+The shared library accepts owner-selected reserved inherited capacity, but does
+not negotiate that agreement. Its caller must reserve the actual agreed maximum.
+
+Then connect manifest-based producer acquisition, show physical/synthetic groups
+with separate cursors and focus in F5, and test overflow/stalls/latency. The
+existing retirement backpressure limitation remains. General independent group
+controllers, live reassociation and descriptor discovery remain outstanding.
+Rendering demand/masked capture and coordination acquisition remain queued.
+No new owner decision blocks this engineering work.
+
+Verification: full workspace host tests (73 matrix tests), matrix/contracts host
+clippy, userspace clippy, format, layout (40 Omega / 125 Rust edges) and whitespace
+checks. `build/boot-harness-rs/matrix-test` covers actual producer IPC and the
+existing recursive confinement/lifetime proof. Nested Split with focus, resize,
+dirty-close, persistence and cold reboot passed at
+`build/boot-harness-rs/desktop/20261024T062631594481Z`. That desktop run preceded
+the final explicit nested-producer refusal; it does not request producer grants.
+The stored desktop matrix ELF in that run is 245,640 bytes (about 94% of 256 KiB).
+No new four-level desktop, recovery/management, GPU/remote or ARM64 result is
+implied; earlier evidence remains under its recorded baseline.
+
 Implementation update 2026-10-23: **input registration and explicit retirement**,
 over `d6af9dc8`. The [registration entrance](source-rs/platform/libraries/matrix/world/input/registration.rs)
 allocates owner-controlled channels and focus groups. Local and inherited names

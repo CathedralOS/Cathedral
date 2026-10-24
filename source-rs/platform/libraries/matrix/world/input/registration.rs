@@ -149,6 +149,7 @@ impl<const N: usize> World<N> {
         Ok(())
     }
     pub(in crate::world) fn reap_input(&mut self) {
+        self.reap_producers();
         for (index, stream) in self.input.streams.iter_mut().enumerate() {
             if stream.retiring
                 && self

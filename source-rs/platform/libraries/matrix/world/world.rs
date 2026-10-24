@@ -28,6 +28,8 @@ pub struct World<const N: usize = 2> {
     children: [Child; N],
     layout_controller: Option<(usize, u64)>,
     input: input::Input,
+    producers: [input::Producer; N],
+    next_producer: [u64; N],
 }
 impl<const N: usize> World<N> {
     pub fn binding_matches(&self, slot: usize, incarnation: u64, epoch: u64) -> bool {
@@ -50,6 +52,8 @@ impl<const N: usize> World<N> {
             children: [const { Child::empty() }; N],
             layout_controller: None,
             input: input::Input::empty(),
+            producers: [input::Producer::empty(); N],
+            next_producer: [0; N],
         }
     }
 
@@ -61,6 +65,9 @@ impl<const N: usize> World<N> {
         };
         if self.parent == grant {
             return;
+        }
+        for slot in 0..N {
+            self.revoke_input_producer(slot);
         }
         self.authority = self.authority.checked_add(1).expect("authority generation");
         let replaced = self.parent.epoch != grant.epoch;
@@ -103,6 +110,7 @@ impl<const N: usize> World<N> {
         child.keys = keys;
         child.refresh(self.parent, false);
         if child.grant != previous {
+            self.revoke_input_producer(slot);
             self.retire_surfaces(slot);
             self.input.forget(slot);
         }
@@ -112,6 +120,7 @@ impl<const N: usize> World<N> {
         if slot >= self.children.len() {
             return Err(abi::DENIED);
         }
+        self.revoke_input_producer(slot);
         if self
             .layout_controller
             .is_some_and(|(controller, _)| controller == slot)
@@ -150,6 +159,9 @@ impl<const N: usize> World<N> {
         }
         let child = &mut self.children[slot];
         child.incarnation = incarnation;
+        if (wire::PRODUCER_INFO..=wire::PRODUCER_RELEASE).contains(&words[0]) {
+            return self.producer_request(slot, incarnation, words);
+        }
         match words {
             [wire::VIEW, 0, 0, 0, 0, 0, 0, 0] => child.view(),
             [wire::POLL, 0, 0, 0, 0, 0, 0, 0] if child.grant.valid() => child.poll(),

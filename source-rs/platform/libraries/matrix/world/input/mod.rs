@@ -5,6 +5,9 @@ mod groups;
 mod keys;
 mod names;
 mod pointer;
+mod producer;
+#[cfg(test)]
+mod producer_tests;
 mod registration;
 #[cfg(test)]
 mod registration_tests;
@@ -13,5 +16,6 @@ mod streams;
 mod tests;
 use groups::Group;
 pub(super) use names::Name;
+pub(super) use producer::Producer;
 use streams::Stream;
 include!("input.rs");

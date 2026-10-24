@@ -87,10 +87,25 @@ waits. This bounds intermediate tables but introduces head-of-line backpressure
 on that shared upstream input path; it is not a latency/isolation guarantee for
 arbitrarily slow recipients. A consumer must keep draining lifecycle events.
 
-This is still a transport foundation: restricted app producer acquisition,
-per-producer admission quotas and disconnect cleanup, delegated group control,
-dynamic reassociation, descriptor discovery and multiple desktop cursors are
-not implemented. Do not lend an owner control endpoint to an app as a shortcut. The [F5 source adapter](../../../distribution/matrix/service/requests/source.rs)
+The [producer entrance](world/input/producer.rs) now reserves an explicit channel
+quota and one private group for an authenticated child connection. Requests use
+grant-local channel ordinals and a per-child generation; neither identifies an
+owner channel or lets one producer act for another. Click-to-focus is a separate
+right. Disconnect, view invalidation, release or owner revocation retires its
+channels and eventually its group. Regrant cannot bypass pending retirement.
+Only this explicit grant reveals the input extent authorized to that producer.
+
+The stock root reserves its fixed source channels at BIND before dynamic grants.
+Nested stock hosts currently refuse local producer grants: their parent can send
+all four channels, and no negotiated lower ceiling exists yet. Root producers
+can still forward through them. Other compositions must reserve the maximum
+inherited channels/groups they have actually agreed to accept; the library's
+reservation arguments do not negotiate that agreement with another process.
+
+This remains a transport foundation: manifest-based producer acquisition,
+negotiated recursive input allowances, independent group-controller delegation,
+dynamic reassociation, descriptor discovery and multiple desktop cursors remain
+pending. Do not lend an owner control endpoint to an app as a shortcut. The [F5 source adapter](../../../distribution/matrix/service/requests/source.rs)
 supplies separate pointer and keyboard channels in one group;
 no child receives injection authority from an ID in a request.
 The independent program additionally exercises real IPC, malformed requests,

@@ -143,8 +143,10 @@ The normal desktop uses distinct pointer and keyboard channels in one group.
 The owner control endpoint can now create/release groups, register/retire channels
 and select a local target. Group retirement follows channel retirement; replacing
 the last channel alone preserves remembered selection through nested routers.
-Ordinary child connections cannot invoke these operations. General delegated
-control grants, app producer acquisition, live reassociation and all capture
+Ordinary child connections cannot invoke these owner operations. Explicit producer
+grants now supply a private group, with click-to-focus permission independent of
+pointer delivery. General independent controller delegation, manifest-based
+producer acquisition, live reassociation and all capture
 semantics in this contract remain unimplemented.
 
 Current recursive event forwarding remains an implementation baseline, not a
