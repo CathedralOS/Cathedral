@@ -70,6 +70,9 @@ impl Children {
         if child.storage.is_some() {
             server.remove(slot + STORAGE_BASE);
         }
+        if child.producer.is_some() {
+            server.remove(slot + PRODUCER_BASE);
+        }
         world.disconnected(slot);
         // Release retained upstream image readers before returning descendant funding.
         crate::service::requests::flush(parent, world)?;
@@ -120,6 +123,10 @@ impl Children {
         child.data.1.close()?;
         child.notify.close()?;
         if let Some((input, output)) = child.storage {
+            input.close()?;
+            output.close()?;
+        }
+        if let Some((input, output)) = child.producer {
             input.close()?;
             output.close()?;
         }

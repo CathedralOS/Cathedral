@@ -18,6 +18,12 @@ pub(super) fn resolve(object: &mut Object, offered: u64) -> Result<Bound, Error>
     let required = declaration
         .as_ref()
         .map_or(imports::REQUIRED.as_slice(), |d| d.entries());
+    let brokered = declaration.as_ref().is_some_and(|d| d.brokered);
+    let offered = if brokered {
+        offered
+    } else {
+        offered & !imports::INPUT_PRODUCER
+    };
     let bound = imports::bind(required, offered).map_err(status)?;
     // This host is an interactive matrix. Programs with other startup shapes
     // need a host for that shape rather than being handed undeclared endpoints.
@@ -27,7 +33,7 @@ pub(super) fn resolve(object: &mut Object, offered: u64) -> Result<Bound, Error>
     Ok(Bound {
         binding: bound,
         profile: declaration.as_ref().and_then(|d| d.profile),
-        brokered: declaration.as_ref().is_some_and(|d| d.brokered),
+        brokered,
         resources: declaration.as_ref().and_then(|d| d.resources),
     })
 }

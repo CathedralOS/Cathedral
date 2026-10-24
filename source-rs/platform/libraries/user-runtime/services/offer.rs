@@ -3,7 +3,7 @@ use super::*;
 use crate::server::{Request, Server};
 pub struct Offer {
     granted: u64,
-    endpoints: [Option<Handle>; 3],
+    endpoints: [Option<Handle>; 5],
 }
 impl Offer {
     /// Keep notification state pending until its receiver has left the broker.
@@ -11,8 +11,24 @@ impl Offer {
     pub fn interaction_ready(&self) -> bool {
         self.endpoints[0].is_none()
     }
-    pub(crate) fn new(granted: u64, endpoints: [Option<Handle>; 3]) -> Self {
+    pub(crate) fn new(granted: u64, endpoints: [Option<Handle>; 5]) -> Self {
         Self { granted, endpoints }
+    }
+    pub fn select(&self, words: matrix::Packet) -> Result<usize, u64> {
+        wire::select(self.granted, words)
+    }
+    pub fn producer_ready(&self) -> bool {
+        self.granted & imports::INPUT_PRODUCER != 0
+            && self.endpoints[3..].iter().all(Option::is_none)
+    }
+    pub fn close_producer(&mut self) -> Result<(), Error> {
+        self.granted &= !imports::INPUT_PRODUCER;
+        for endpoint in &mut self.endpoints[3..] {
+            if let Some(endpoint) = endpoint.take() {
+                endpoint.close()?;
+            }
+        }
+        Ok(())
     }
     /// Caller authenticates the child and incarnation before selecting this offer.
     pub fn reply(

@@ -170,8 +170,12 @@ focus/capture/held state. Explicit producers see refusal. Already-consumed devic
 or upstream samples interrupt only that stream and suppress residual holds,
 preserving the adapter and parent grant. This is a bounded lab protocol, not
 end-to-end delivery acknowledgement or an input latency guarantee.
-Manifest-based producer acquisition,
-discovery and reassociation of an existing stream remain unimplemented. F5 supplies a pointer channel
+The stock broker now implements explicitly opted-in manifest acquisition on a
+separate producer pair, with bounded admission and disconnect retirement. The
+[Rust service contract](../../../source-rs/platform/contracts/services/README.md)
+records its limits and disposable desktop proofs. No default app receives
+production. Discovery and reassociation of an existing stream remain unimplemented.
+F5 supplies a pointer channel
 and a keyboard channel in one group. Shared app-side reception tracks pointer
 edges separately; this does not impose separate document/player state on apps.
 The [pointer lab](../../../source-rs/distribution/lab/compositor/POINTERS.md) is

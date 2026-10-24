@@ -9,6 +9,7 @@ mod launch;
 mod lifecycle;
 mod loss;
 mod management;
+mod producer;
 mod recovery;
 mod services;
 mod startup;

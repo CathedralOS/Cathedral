@@ -35,7 +35,7 @@ impl Children {
             Some(abi::BUSY)
         } else if !self.observations.available(requester) || self.next_ticket == u64::MAX {
             Some(abi::NO_MEMORY)
-        } else if object == 0 || withhold & !cathedral_platform_contracts::imports::ALL != 0 {
+        } else if object == 0 || withhold & !cathedral_platform_contracts::imports::SUPPORTED != 0 {
             Some(abi::INVALID_ARGUMENT)
         } else {
             None

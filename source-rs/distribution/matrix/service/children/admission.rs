@@ -131,12 +131,18 @@ impl Children {
                 .ok_or(Error(abi::INVALID_ARGUMENT as i64))?,
         );
         // The control pair belongs to the reserved process slot. Only the
-        // interaction/wake/storage channels are charged to this creator.
+        // interaction/wake/storage/producer channels are charged to this creator.
         let connection_channels = if storage && self.separate_storage {
             5
         } else {
             3
         };
+        let connection_channels = connection_channels
+            + if binding & cathedral_platform_contracts::imports::INPUT_PRODUCER != 0 {
+                2
+            } else {
+                0
+            };
         let connected_channels = channels
             .checked_add(connection_channels)
             .ok_or(Error(abi::INVALID_ARGUMENT as i64))?;
@@ -307,6 +313,11 @@ impl Children {
         if separate_storage && !server.available(slot + STORAGE_BASE) {
             return Err(Error(abi::BUSY as i64));
         }
+        if services.is_some_and(|g| g & cathedral_platform_contracts::imports::INPUT_PRODUCER != 0)
+            && !server.available(slot + PRODUCER_BASE)
+        {
+            return Err(Error(abi::BUSY as i64));
+        }
         use cathedral_user_runtime::matrix::admission;
         let admitted = match services {
             Some(granted) => admission::spawn_brokered(target, argument, loans, granted)?,
@@ -322,6 +333,11 @@ impl Children {
                 .install(slot + STORAGE_BASE, pair)
                 .expect("child catalog slot changed");
         }
+        if let Some(pair) = admitted.producer {
+            server
+                .install(slot + PRODUCER_BASE, pair)
+                .expect("validated producer slot changed");
+        }
         self.slots[slot] = Some(Owned {
             funding: None,
             services: admitted.services,
@@ -333,6 +349,8 @@ impl Children {
             stale: 0,
             data: admitted.data,
             storage,
+            producer: admitted.producer,
+            producer_started: admitted.producer.map(|_| false),
             notify: admitted.notify,
         });
         if slot == 0 {

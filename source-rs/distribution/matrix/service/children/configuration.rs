@@ -94,6 +94,10 @@ impl Children {
         // This conveys no executable, storage or device authority by itself.
         self.desktop = true;
         for slot in 1..BACKGROUND {
+            #[cfg(feature = "input-producer-probe")]
+            {
+                self.allowed_imports[slot] = Some(cathedral_platform_contracts::imports::SUPPORTED);
+            }
             self.standing[slot] = Some(Standing {
                 pages: [saved.app_pages, saved.app_readers],
                 channels: 40,

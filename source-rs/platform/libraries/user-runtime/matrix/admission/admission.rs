@@ -15,6 +15,7 @@ pub struct Admitted {
     pub data: Pair,
     pub notify: Handle,
     pub storage: Option<Pair>,
+    pub producer: Option<Pair>,
     pub services: Option<crate::services::Offer>,
 }
 
@@ -34,7 +35,7 @@ pub fn spawn_brokered(
     granted: u64,
 ) -> Result<Admitted, Error> {
     use cathedral_platform_contracts::imports;
-    if granted & !imports::ALL != 0 || granted & imports::INTERACTION == 0 {
+    if granted & !imports::SUPPORTED != 0 || granted & imports::INTERACTION == 0 {
         return Err(Error(crate::abi::INVALID_ARGUMENT as i64));
     }
     spawn_mode(
@@ -53,7 +54,9 @@ fn spawn_mode(
     granted: Option<u64>,
 ) -> Result<Admitted, Error> {
     let port = target.port()?;
-    let connections = connections::Connections::create(storage)?;
+    let producer =
+        granted.is_some_and(|g| g & cathedral_platform_contracts::imports::INPUT_PRODUCER != 0);
+    let connections = connections::Connections::create(storage, producer)?;
     let child = match target.spawn_tree(
         argument,
         if granted.is_some() {
@@ -89,6 +92,7 @@ fn spawn_mode(
         data: connections.data,
         notify: connections.notify,
         storage: connections.storage,
+        producer: connections.producer,
     })
 }
 
@@ -109,6 +113,10 @@ impl Admitted {
             endpoint.close()?;
         }
         if let Some((input, output)) = self.storage {
+            input.close()?;
+            output.close()?;
+        }
+        if let Some((input, output)) = self.producer {
             input.close()?;
             output.close()?;
         }

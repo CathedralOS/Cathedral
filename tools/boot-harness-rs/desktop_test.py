@@ -393,13 +393,24 @@ def desktop(stream, output, serial, reboot, expected_absolute=True, fill_users=F
     print('PASS: user tiles, absolute/relative clicks, app tiles, save/discard/cancel and persistent replacement')
 
 
-def run(timeout, trace_storage=False, relative_pointer=False, service_imports=None, nested=False, deep=False, nested_desktop=False, trace_input=False, latency=False, pointer_stress=False, interaction_delay=False, nested_depth=3, soak=0, collection_pressure=False, accel='tcg'):
+def run(timeout, trace_storage=False, relative_pointer=False, service_imports=None, nested=False, deep=False, nested_desktop=False, trace_input=False, latency=False, pointer_stress=False, interaction_delay=False, nested_depth=3, soak=0, collection_pressure=False, accel='tcg', input_producer=None):
     output = harness.BUILD / 'desktop' / datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S%fZ')
     output.mkdir(parents=True)
     # Exact default composition, with a separate build output so a regression
     # run does not replace the ESP of an already-running interactive guest.
     profile = output / f'desktop-check-{output.name}.json'
     composition = json.loads((ROOT / 'source-rs/distribution/profile.json').read_text())
+    if input_producer:
+        def producer_variant(value):
+            if isinstance(value, dict):
+                if value.get('package') == 'cathedral-notes':
+                    value.setdefault('features', []).append('input-producer-partial' if input_producer == 'partial' else 'input-producer-probe')
+                if value.get('package') == 'cathedral-stock-matrix' and input_producer != 'denied':
+                    value.setdefault('features', []).append('input-producer-probe')
+                for child in value.values(): producer_variant(child)
+            elif isinstance(value, list):
+                for child in value: producer_variant(child)
+        producer_variant(composition)
     if interaction_delay:
         def enable(value):
             if isinstance(value, dict):
@@ -455,6 +466,16 @@ def run(timeout, trace_storage=False, relative_pointer=False, service_imports=No
     for boot in (1, 2):
         capture.run(command, output, timeout, flags, ready_marker='Cathedral desktop: ready; choose a user',
                     verify=lambda stream, output, serial: desktop(stream, output, serial, boot == 2, not relative_pointer, service_imports=service_imports, nested=nested, nested_saved=boot == 2, deep=deep, nested_desktop=nested_desktop, latency=latency, pointer_stress=pointer_stress, interaction_delay=interaction_delay, nested_depth=nested_depth, soak=soak, collection_pressure=collection_pressure))
+        if input_producer:
+            expected = {'complete': 'acquired isolated connection and closed',
+                        'partial': 'partial acquisition retained',
+                        'denied': 'undelegated acquisition refused'}[input_producer]
+            producer_log = (output / 'serial.log').read_text(errors='replace')
+            # Both boots close and relaunch Notes. A lone successful startup
+            # cannot prove that interrupted handoffs return their allocation.
+            assert producer_log.count(f'Cathedral producer: {expected}') >= 2
+            if input_producer == 'partial' and boot == 1:
+                assert 'Cathedral producer: capacity refused; broker retained' in producer_log
         for name in ('serial.log', 'qemu.log', 'display.png', 'boot-timing.json'):
             shutil.copyfile(output / name, output / f'boot-{boot}-{name}')
         contents = path.read_bytes()
@@ -499,6 +520,7 @@ if __name__ == '__main__':
     parser.add_argument('--timeout', type=float, default=180)
     parser.add_argument('--accel', choices=('tcg', 'whpx'), default='tcg', help='QEMU accelerator: tcg emulates the CPU; whpx runs the guest under the Windows hypervisor, with hardware paging and timing (default: tcg)')
     parser.add_argument('--relative-pointer', action='store_true', help='disable VM port and verify PS/2 fallback')
+    parser.add_argument('--input-producer', choices=('complete', 'partial', 'denied'), help='disposable Notes producer acquisition/custody variant')
     parser.add_argument('--service-imports', choices=('undeclared', 'incompatible'), help='exercise absent optional storage in the ordinary desktop using a disposable manifest variant')
     parser.add_argument('--nested-desktop', action='store_true', help='exercise the installed nested login and desktop')
     parser.add_argument('--nested-depth', type=int, choices=(1, 2, 3, 4), default=3, help='nested desktops below the outer user; 3 or 4 for --nested-desktop/--latency, any for --soak')
@@ -528,4 +550,6 @@ if __name__ == '__main__':
         parser.error('--collection-pressure requires --soak with --trace-storage')
     if args.pointer_stress and (not (args.nested_desktop or args.soak) or args.relative_pointer):
         parser.error('--pointer-stress requires --nested-desktop or --soak with absolute input')
-    run(args.timeout, args.trace_storage, args.relative_pointer, args.service_imports, args.nested or args.deep, args.deep, args.nested_desktop, args.trace_input, args.latency, args.pointer_stress, args.interaction_delay, args.nested_depth, args.soak, args.collection_pressure, accel=args.accel)
+    if args.input_producer and (args.service_imports or args.nested or args.deep or args.nested_desktop or args.latency or args.soak or args.interaction_delay):
+        parser.error('--input-producer requires the ordinary desktop workflow')
+    run(args.timeout, args.trace_storage, args.relative_pointer, args.service_imports, args.nested or args.deep, args.deep, args.nested_desktop, args.trace_input, args.latency, args.pointer_stress, args.interaction_delay, args.nested_depth, args.soak, args.collection_pressure, accel=args.accel, input_producer=args.input_producer)

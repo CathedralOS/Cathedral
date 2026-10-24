@@ -21,6 +21,8 @@ render-probes = []
 startup-fault = []
 admitted-fault = []
 management-probes = []
+input-producer-probe = []
+input-producer-partial = ["input-producer-probe"]
 
 [dependencies]
 cathedral-desktop-matrix-contracts.workspace = true

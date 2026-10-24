@@ -2,6 +2,8 @@
 mod closing;
 #[cfg(feature = "management-probes")]
 mod management_probe;
+#[cfg(feature = "input-producer-probe")]
+mod producer_probe;
 #[cfg(feature = "render-probes")]
 mod render_probe;
 mod storage;

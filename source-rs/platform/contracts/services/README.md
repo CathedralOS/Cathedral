@@ -9,8 +9,8 @@ The stock provider authenticates requests in
 
 The accepted [coordination and IPC contract](../../../../wiki/spec/communication/ipc.md)
 adds a supported coordination service for the shipped OS/default matrix and
-protocol-controlled shared memory. This Rust broker still implements only
-interaction and storage; coordination identifiers, matching, introductions and
+protocol-controlled shared memory. This Rust broker implements interaction,
+storage and explicitly offered input production; coordination identifiers, matching, introductions and
 shared writable mailbox custody have not been implemented here.
 
 ## Contract
@@ -43,8 +43,9 @@ processes that establish brokers still require explicit kernel-supplied grants.
 
 ## Rust version 1
 
-`service_bootstrap!` emits the import record `CTHIMP02`. Its declarations have the
-same format as `CTHIMP01`; the marker selects broker startup instead of the old
+`service_bootstrap!` emits the import record `CTHIMP03`, including resource
+ceilings. `CTHIMP02` also selects broker startup; both use the declarations
+documented in [imports](../imports/README.md), instead of the old
 three/five-endpoint bundle. The sealed image determines this choice. Old records
 and undeclared legacy images keep their documented startup behavior. Kernel
 admission never interprets either platform record.
@@ -66,9 +67,10 @@ malformed shapes return INVALID. An already-transferred part returns TAKEN.
 Neither rejection nor repeated requests allocate channels. The kernel reserves
 recipient custody before committing each endpoint transfer.
 
-The current services are interaction and storage, both version 1. Interaction
+The current services are interaction, storage and input production, all version 1. Interaction
 part 0 transfers its wake receiver; its ordinary RPCs reuse the broker pair.
-Storage parts 0 and 1 transfer its request sender and reply receiver. All service
+Storage and input-production parts 0 and 1 each transfer a separate request sender
+and reply receiver. All service
 channels are preallocated from the owner's budget at admission. This slice delays
 handoff, not allocation or provider startup. It does not implement arbitrary
 service enumeration, dynamic grants or new permission prompts.
@@ -86,15 +88,47 @@ remaining stock configuration and recovery choices are distribution policy.
 Other bootstrap shapes can be introduced without making the kernel understand
 service names.
 
+## Explicit input production
+
+`INPUT_PRODUCER` requires both a sealed manifest declaration and an explicit owner
+offer. `imports::ALL` remains the ordinary interaction/storage default;
+`SUPPORTED` names the recognized mask, not a recommended grant. Legacy positional
+startup cannot supply this service: a required declaration refuses launch and an
+optional declaration remains absent.
+
+The stock broker attempts a grant at first acquisition: two channel slots, one
+private focus group and click-to-focus permission. This is stock distribution
+policy; the platform mechanism supports separately selected quotas and rights.
+Nested hosts negotiate upstream capacity before committing the grant. BUSY or
+NO_MEMORY refuses acquisition without transferring an endpoint; declaring even
+a required service does not guarantee runtime capacity. No grant silently evicts
+existing channels to make room.
+
+The [producer receiver](../../../distribution/matrix/service/children/producer.rs)
+authenticates the installed endpoint incarnation and admits only `PRODUCER_INFO`,
+`PRODUCER_POINTER`, `PRODUCER_KEY` and `PRODUCER_RELEASE`. Interaction, storage,
+registration and owner commands on that pair are denied; production on the app's
+ordinary interaction pair is denied when it has this separate service. Before
+both endpoints have transferred, early producer traffic is discarded without a
+reply or input mutation, keeping the retained reply receiver empty for transfer.
+
+Closing the producer connection retires its grant and closes any still-retained
+partner without stopping the app. App teardown also reclaims interrupted
+acquisitions. View invalidation, release and owner revoke end the grant; the current
+broker does not automatically regrant or recreate an acquired pair. Cached
+connections therefore do not promise continued authority after a resize/rebind.
+
 ## Client discipline and proof
 
 Acquisition is synchronous and must be serialized with interaction RPCs because
 they share a reply stream. Current apps acquire during startup. The runtime caches
-successful bindings and absent storage. It closes an ambiguously failed broker
+successful bindings and absent storage/production. A complete refusal, including
+capacity refusal, leaves the broker usable. It closes an ambiguously failed broker
 connection rather than consuming a late endpoint reply as an interaction reply.
 The cache does not revive closed/revoked handles; callers still handle operation
 errors. Storage transfer has two wire steps; failure after the first closes that
 received endpoint and teardown reclaims whatever remains at the broker.
+Input-production transfer follows the same two-step custody rule.
 
 [The independent matrix proof](../../../distribution/lab/matrix-composition/README.md)
 exercises acquisition, refusal, repeat requests, replacement and interrupted
@@ -104,3 +138,10 @@ Colors use the actual broker and scoped persistent storage in F5.
 use disposable Notes manifest variants: Notes remains editable without storage,
 dirty-close protection works, and Colors retains independent persistence across
 cold reboot. No saved interactive media or compiled source image is modified.
+
+`desktop_test.py --input-producer complete`, `partial` and `denied` use disposable
+Notes and stock-policy feature builds. They exercise isolated operations and
+closure, interrupted acquisition with concurrent capacity refusal, or an absent
+owner offer. Normal editing, repeated close/relaunch and cold persistence continue
+through the same desktop workflow. These probes do not add a visible synthetic
+cursor or grant production to any default installed app.

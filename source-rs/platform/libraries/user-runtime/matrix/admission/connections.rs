@@ -5,14 +5,16 @@ pub(super) struct Connections {
     pub data: Pair,
     pub notify: Handle,
     pub storage: Option<Pair>,
-    initial: [Handle; 5],
+    pub producer: Option<Pair>,
+    initial: [Handle; 7],
     count: usize,
 }
 impl Connections {
-    pub fn create(separate_storage: bool) -> Result<Self, Error> {
-        let count = if separate_storage { 5 } else { 3 };
+    pub fn create(separate_storage: bool, producer: bool) -> Result<Self, Error> {
+        let producer_at = if separate_storage { 5 } else { 3 };
+        let count = producer_at + if producer { 2 } else { 0 };
         let empty = Handle::from_raw(0);
-        let mut channels = [(empty, empty); 5];
+        let mut channels = [(empty, empty); 7];
         for index in 0..count {
             match ipc::channel() {
                 Ok(pair) => channels[index] = pair,
@@ -25,17 +27,21 @@ impl Connections {
                 }
             }
         }
+        let mut initial = [empty; 7];
+        initial[..3].copy_from_slice(&[channels[0].0, channels[1].1, channels[2].1]);
+        if separate_storage {
+            initial[3..5].copy_from_slice(&[channels[3].0, channels[4].1]);
+        }
+        if producer {
+            initial[producer_at..producer_at + 2]
+                .copy_from_slice(&[channels[producer_at].0, channels[producer_at + 1].1]);
+        }
         Ok(Self {
             data: (channels[0].1, channels[1].0),
             notify: channels[2].0,
             storage: separate_storage.then_some((channels[3].1, channels[4].0)),
-            initial: [
-                channels[0].0,
-                channels[1].1,
-                channels[2].1,
-                channels[3].0,
-                channels[4].1,
-            ],
+            producer: producer.then_some((channels[producer_at].1, channels[producer_at + 1].0)),
+            initial,
             count,
         })
     }
@@ -45,11 +51,13 @@ impl Connections {
     pub fn broker_initial(&self) -> &[Handle] {
         &self.initial[..2]
     }
-    pub fn deferred(&self) -> [Option<Handle>; 3] {
+    pub fn deferred(&self) -> [Option<Handle>; 5] {
         [
             Some(self.initial[2]),
-            (self.count == 5).then_some(self.initial[3]),
-            (self.count == 5).then_some(self.initial[4]),
+            self.storage.map(|_| self.initial[3]),
+            self.storage.map(|_| self.initial[4]),
+            self.producer.map(|_| self.initial[self.count - 2]),
+            self.producer.map(|_| self.initial[self.count - 1]),
         ]
     }
     pub fn close_deferred(&self) -> Result<(), Error> {
@@ -71,6 +79,10 @@ impl Connections {
             endpoint.close()?;
         }
         if let Some((input, output)) = self.storage {
+            input.close()?;
+            output.close()?;
+        }
+        if let Some((input, output)) = self.producer {
             input.close()?;
             output.close()?;
         }

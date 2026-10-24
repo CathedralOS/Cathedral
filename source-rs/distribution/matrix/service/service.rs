@@ -5,7 +5,8 @@ const CHILDREN: usize = 5;
 const LAST_CHILD: u64 = CHILDREN as u64 - 1;
 const SOURCE: usize = CHILDREN;
 const STORAGE_BASE: usize = CHILDREN + 1;
-const STREAMS: usize = 2 * CHILDREN + 2;
+const PRODUCER_BASE: usize = STORAGE_BASE + CHILDREN;
+const STREAMS: usize = PRODUCER_BASE + CHILDREN + 1;
 const BACKGROUND: usize = 4;
 type World = cathedral_matrix::world::World<CHILDREN>;
 use cathedral_desktop_matrix_contracts::matrix as wire;
@@ -55,14 +56,7 @@ pub fn run(environment: Environment) -> Result<(), Error> {
     // SAFETY: Single-threaded executable enters this service exactly once. This
     // process-owned arena has no aliases and never occupies the guarded user stack.
     let world = unsafe { &mut *world_address };
-    let mut server = Server::open_clients_from(
-        if storage_root { 2 } else { 0 },
-        if parent.separate_storage {
-            STREAMS - 1
-        } else {
-            CHILDREN + 1
-        },
-    )?;
+    let mut server = Server::open_clients_from(if storage_root { 2 } else { 0 }, STREAMS - 1)?;
     server.enable_memory();
     if environment.len() == 4 {
         server.install(
@@ -292,17 +286,30 @@ pub fn run(environment: Environment) -> Result<(), Error> {
             parent.refresh(world)?;
         }
         match event {
-            Event::Disconnected { client, .. } => {
+            Event::Disconnected {
+                client,
+                incarnation,
+            } => {
                 if client < CHILDREN {
                     children.disconnected(client, &mut server, world, parent)?;
                 } else if client == SOURCE {
                     requests::source::cancel(world);
+                } else if client >= PRODUCER_BASE {
+                    children.producer_disconnected(
+                        client - PRODUCER_BASE,
+                        incarnation,
+                        world,
+                        &mut server,
+                    )?;
                 } else {
                     parent.storage_close(parent.storage_slot(client))?;
                 }
             }
             Event::Memory(request, object) => {
-                if request
+                if request.client.is_some_and(|client| client >= PRODUCER_BASE) {
+                    drop(object);
+                    children.producer_request(&request, None, world, &mut server)?;
+                } else if request
                     .client
                     .is_some_and(|client| parent.storage_stream(client))
                 {

@@ -18,6 +18,8 @@ pub struct Services {
     interaction: Option<Interaction>,
     storage: Option<Pair>,
     storage_absent: bool,
+    producer: Option<Pair>,
+    producer_absent: bool,
     failed: bool,
     brokered: bool,
 }
@@ -32,6 +34,8 @@ impl Services {
                 interaction: None,
                 storage: None,
                 storage_absent: false,
+                producer: None,
+                producer_absent: false,
                 failed: false,
                 brokered: true,
             });
@@ -46,6 +50,8 @@ impl Services {
             }),
             storage: old.storage,
             storage_absent: old.storage.is_none(),
+            producer: None,
+            producer_absent: true,
             failed: false,
             brokered: false,
         })
@@ -92,6 +98,34 @@ impl Services {
         self.storage = Some((send, receive));
         Ok((send, receive))
     }
+    /// Acquire the explicitly offered producer pair, distinct from interaction.
+    /// The provider authenticates this endpoint and its bounded production grant.
+    pub fn input_producer(&mut self, minimum: u64, maximum: u64) -> Result<Pair, Error> {
+        version(minimum, maximum)?;
+        if self.producer_absent {
+            return Err(Error(wire::UNAVAILABLE as i64));
+        }
+        if let Some(pair) = self.producer {
+            return Ok(pair);
+        }
+        let send = match self.acquire(imports::INPUT_PRODUCER, minimum, maximum, 0) {
+            Ok(send) => send,
+            Err(Error(code)) if code == wire::UNAVAILABLE as i64 => {
+                self.producer_absent = true;
+                return Err(Error(code));
+            }
+            Err(error) => return Err(error),
+        };
+        let receive = match self.acquire(imports::INPUT_PRODUCER, minimum, maximum, 1) {
+            Ok(receive) => receive,
+            Err(error) => {
+                send.close()?;
+                return Err(error);
+            }
+        };
+        self.producer = Some((send, receive));
+        Ok((send, receive))
+    }
     fn acquire(
         &mut self,
         contract: u64,
@@ -102,6 +136,7 @@ impl Services {
         if self.failed {
             return Err(Error(abi::PEER_CLOSED as i64));
         }
+        let mut refused = false;
         let result = (|| {
             self.broker.0.send(&matrix::encode(wire::request(
                 contract, minimum, maximum, part,
@@ -119,7 +154,10 @@ impl Services {
             let (len, endpoint) = self.broker.1.receive_with(&mut bytes)?;
             match (matrix::decode(&bytes[..len]), endpoint) {
                 (Some([0, 1, 0, 0, 0, 0, 0, 0]), Some(endpoint)) => Ok(endpoint),
-                (Some([code, 0, 0, 0, 0, 0, 0, 0]), None) if code != 0 => Err(Error(code as i64)),
+                (Some([code, 0, 0, 0, 0, 0, 0, 0]), None) if code != 0 => {
+                    refused = true;
+                    Err(Error(code as i64))
+                }
                 (_, endpoint) => {
                     if let Some(endpoint) = endpoint {
                         endpoint.close()?;
@@ -130,9 +168,7 @@ impl Services {
         })();
         // A late reply cannot be mistaken for a later acquisition. Terminal/ambiguous
         // transport failure poisons this binding rather than silently retrying it.
-        if let Err(Error(code)) = result
-            && !matches!(code, c if c == wire::UNAVAILABLE as i64 || c == wire::INCOMPATIBLE as i64)
-        {
+        if result.is_err() && !refused {
             self.failed = true;
             // Interaction shares this reply stream. Closing it prevents a late
             // endpoint reply from being consumed as an ordinary interaction reply.

@@ -17,6 +17,11 @@ struct Owned {
     stale: u8,
     data: Pair,
     storage: Option<Pair>,
+    producer: Option<Pair>,
+    // None: legacy connection. Some(false): offered but not activated.
+    // Some(true): activated once, even if subsequently closed/revoked. Preserve
+    // this state so interaction cannot become a fallback production endpoint.
+    producer_started: Option<bool>,
     notify: Handle,
 }
 /// What the owner lets a child's launch put into a slot: the child's pages,
@@ -300,7 +305,7 @@ impl Children {
                     0,
                     0,
                     0,
-                ] if offered & !cathedral_platform_contracts::imports::ALL == 0 => {
+                ] if offered & !cathedral_platform_contracts::imports::SUPPORTED == 0 => {
                     self.allowed_imports[slot as usize] = Some(offered);
                     Ok(())
                 }

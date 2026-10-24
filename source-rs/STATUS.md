@@ -21,8 +21,9 @@ are reclaimed after explicit retirement events drain. Local and inherited names
 are separate. Explicit child producer grants now reserve channel quotas, isolate
 group control and retire on disconnect. Nested stock hosts now negotiate incoming
 channel/group ceilings before reserving additional local producers; retirement
-restores upstream capacity. Manifest-based producer acquisition and a visible synthetic producer
-remain pending.
+restores upstream capacity. Explicit manifest/owner offers now permit separate
+producer endpoint acquisition, with interrupted handoff and disconnect cleanup.
+Default app offers remain unchanged; a visible synthetic producer remains pending.
 
 ## Default desktop
 

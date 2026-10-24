@@ -50,6 +50,8 @@ pub fn run(style: u64, mut services: Services) {
         storage,
     };
     let parent = connections.interaction;
+    #[cfg(feature = "input-producer-probe")]
+    producer_probe::run(&mut services, parent);
     #[cfg(feature = "management-probes")]
     management_probe::denied(&connections);
     assert_eq!(

@@ -11,7 +11,8 @@ child names are invalid in the parent; a control-connect failure cancels and
 collects the child before closing only the retained parent ends.
 
 Success returns `Admitted`, carrying the task, control pair, interaction pair,
-wake sender and optional storage pair. The child reads the corresponding three-
+wake sender, optional storage and optional producer pairs. Legacy admission has
+no producer pair. The child reads the corresponding three-
 or five-endpoint environment through [matrix.rs](../matrix.rs). The caller must
 install the retained endpoints and explicitly grant local view/storage authority.
 No placement, storage scope or management right is conferred by this helper.
@@ -35,3 +36,7 @@ stay in the returned `services::Offer` until acquired or reclaimed. Callers
 must delay wake sends until `Offer::interaction_ready`; otherwise queued hints
 prevent receive-endpoint transfer. `close_connections` also releases retained
 untransferred endpoints. See [the bootstrap contract](../../../../contracts/services/README.md).
+An explicitly offered input producer adds two channels, retained separately from
+interaction and storage. Its provider must install that pair, grant bounded
+production and keep its reply queue empty until both parts have transferred.
+Allocation, spawn rollback and teardown include both sides of these channels.

@@ -145,8 +145,9 @@ and select a local target. Group retirement follows channel retirement; replacin
 the last channel alone preserves remembered selection through nested routers.
 Ordinary child connections cannot invoke these owner operations. Explicit producer
 grants now supply a private group, with click-to-focus permission independent of
-pointer delivery. General independent controller delegation, manifest-based
-producer acquisition, live reassociation and all capture
+pointer delivery. Explicit manifest/broker acquisition now uses a separate producer
+connection with bounded stock grants; default apps receive no production authority.
+General independent controller delegation, live reassociation and all capture
 semantics in this contract remain unimplemented.
 
 Current recursive event forwarding remains an implementation baseline, not a

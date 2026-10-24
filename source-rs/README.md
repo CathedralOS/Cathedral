@@ -1135,6 +1135,18 @@ The latter variants change only a disposable Notes import declaration. They chec
 that absent optional storage stays absent, dirty-close protection still works,
 and the sibling Colors program persists its own state across cold reboot.
 
+Producer acquisition uses disposable feature builds through the same desktop:
+
+```powershell
+python tools/boot-harness-rs/desktop_test.py --input-producer complete
+python tools/boot-harness-rs/desktop_test.py --input-producer partial
+python tools/boot-harness-rs/desktop_test.py --input-producer denied
+```
+
+These check the separate producer endpoint, interrupted handoff/capacity refusal,
+and absent owner permission respectively, followed by normal app use and cold
+persistence. They do not enable production in default Notes or add another cursor.
+
 
 ### Nested desktop in the normal installation
 

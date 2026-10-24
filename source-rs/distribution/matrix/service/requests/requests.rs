@@ -8,11 +8,19 @@ pub(super) fn dispatch(
     children: &mut children::Children,
     server: &mut Server,
 ) -> Result<(), Error> {
+    if request.client.is_some_and(|client| client >= PRODUCER_BASE) {
+        return children.producer_request(
+            &request,
+            wire::decode(&request.bytes[..request.len]),
+            world,
+            server,
+        );
+    }
     if !request.control
         && let Some(words) = wire::decode(&request.bytes[..request.len])
         && words[0] == cathedral_platform_contracts::services::ACQUIRE
     {
-        return children.acquire(&request, words, server);
+        return children.acquire(&request, words, parent, world, server);
     }
     let response = match wire::decode(&request.bytes[..request.len]) {
         Some(words) if request.control => {
@@ -103,6 +111,14 @@ pub(super) fn dispatch(
         _ if request.client.is_some_and(|client| client >= STORAGE_BASE) => {
             // A catalog endpoint confers no interaction or source authority.
             return server.reply(&request, &wire::encode(wire::error(abi::DENIED)));
+        }
+        Some(words)
+            if (wire::PRODUCER_INFO..=wire::PRODUCER_RELEASE).contains(&words[0])
+                && request
+                    .client
+                    .is_some_and(|slot| children.separate_producer(slot)) =>
+        {
+            wire::error(abi::DENIED)
         }
         // A child asks for a sibling, or for its sibling to go; both are
         // answered later, from launch_object or the forwarded loss query.

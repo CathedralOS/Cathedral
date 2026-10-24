@@ -2,7 +2,10 @@
 // This describes connections, never grants authority or authenticates a provider.
 pub const INTERACTION: u64 = 1;
 pub const STORAGE: u64 = 2;
+pub const INPUT_PRODUCER: u64 = 4;
+/// Existing ordinary launch offer. New authority is never added implicitly.
 pub const ALL: u64 = INTERACTION | STORAGE;
+pub const SUPPORTED: u64 = ALL | INPUT_PRODUCER;
 pub const MAX_IMPORTS: usize = 4;
 pub const RECORD_BYTES: usize = 16 + MAX_IMPORTS * 32;
 pub const PROFILE_MAGIC: u64 = u64::from_le_bytes(*b"CTHIMP04");
@@ -45,7 +48,7 @@ pub enum Refusal {
 /// Known providers currently implement version 1. Unknown optional imports
 /// remain absent; unknown required imports refuse admission. Order has no meaning.
 pub fn bind(imports: &[Import], offered: u64) -> Result<u64, Refusal> {
-    if imports.len() > MAX_IMPORTS || offered & !ALL != 0 {
+    if imports.len() > MAX_IMPORTS || offered & !SUPPORTED != 0 {
         return Err(Refusal::Malformed);
     }
     let mut bound = 0;
@@ -59,7 +62,7 @@ pub fn bind(imports: &[Import], offered: u64) -> Result<u64, Refusal> {
         {
             return Err(Refusal::Malformed);
         }
-        let known = matches!(import.contract, INTERACTION | STORAGE);
+        let known = matches!(import.contract, INTERACTION | STORAGE | INPUT_PRODUCER);
         if !known || offered & import.contract == 0 {
             if import.required {
                 return Err(Refusal::Missing(import.contract));

@@ -112,8 +112,10 @@ receive the refusal; already-consumed device/upstream samples instead interrupt
 that stream and suppress residual holds without killing the adapter or parent
 grant. Retirement and cancellation still reach existing recipients.
 
-This remains a transport foundation: manifest-based producer acquisition,
-independent group-controller delegation,
+The stock broker now supplies [explicit producer acquisition](../../contracts/services/README.md)
+on a separate pair, with manifest/owner checks and disconnect retirement. No
+default app receives production; disposable desktop variants exercise acquisition.
+This remains a transport foundation: independent group-controller delegation,
 dynamic reassociation, descriptor discovery and multiple desktop cursors remain
 pending. Do not lend an owner control endpoint to an app as a shortcut. The [F5 source adapter](../../../distribution/matrix/service/requests/source.rs)
 supplies separate pointer and keyboard channels in one group;

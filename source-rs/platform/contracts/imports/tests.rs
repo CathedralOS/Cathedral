@@ -1,6 +1,19 @@
 use super::*;
 
 #[test]
+fn producer_requires_declaration_and_explicit_offer() {
+    let required = [
+        Import::v1(INTERACTION, true),
+        Import::v1(INPUT_PRODUCER, true),
+    ];
+    assert_eq!(ALL & INPUT_PRODUCER, 0);
+    assert_eq!(bind(&required, ALL), Err(Refusal::Missing(INPUT_PRODUCER)));
+    assert_eq!(bind(&[Import::v1(INPUT_PRODUCER, false)], ALL), Ok(0));
+    assert_eq!(bind(&required, SUPPORTED), Ok(INTERACTION | INPUT_PRODUCER));
+    assert_eq!(bind(&REQUIRED, SUPPORTED), Ok(ALL));
+}
+
+#[test]
 fn required_optional_and_unrequested_services_have_distinct_bindings() {
     assert_eq!(bind(&REQUIRED, ALL), Ok(ALL));
     assert_eq!(bind(&REQUIRED, INTERACTION), Err(Refusal::Missing(STORAGE)));

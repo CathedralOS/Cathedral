@@ -1,5 +1,60 @@
 # Rust reference OS: tasks and handoff
 
+Implementation update 2026-10-24: **explicit producer service acquisition**, over
+`ab0d76f8`. The [service contract](source-rs/platform/contracts/services/README.md)
+now recognizes INPUT_PRODUCER only when the sealed manifest declares it and its
+owner explicitly offers it. Ordinary `imports::ALL` remains interaction/storage;
+SUPPORTED identifies recognized contracts without granting them. Legacy positional
+startup cannot supply production. No default installed app gains the new service.
+
+The stock broker preallocates a separate producer pair at admission and attempts
+its bounded grant at first acquisition: two channels, one private focus group and
+click-to-focus permission. Nested hosts negotiate inherited capacity first.
+The [receiver](source-rs/distribution/matrix/service/children/producer.rs) checks
+endpoint incarnation and accepts only producer operations. That child's ordinary
+interaction pair cannot substitute for it. Both halves must leave broker custody
+before production; early traffic is discarded without filling the retained reply
+queue. Disconnect retires the grant without stopping the app; teardown collects
+untransferred rights. Complete acquisition refusals leave the shared broker usable;
+ambiguous transport failures still close it to prevent misattributing late replies.
+
+This is not automatic grant renewal: view invalidation, release and owner revoke
+end production even if the cached endpoint remains. The broker does not recreate
+pairs or silently regrant. Existing retirement backpressure remains. Independent
+group controllers, reassociation, descriptor discovery and visible synthetic
+cursor/focus integration remain outstanding. Next: connect an explicit producer
+app to the ordinary desktop, handle grant/view lifetime, show independent control
+through nested matrices and measure latency/stalls. Rendering demand/masked capture
+and coordination acquisition follow. No new owner decision blocks that work.
+
+Verification: workspace host tests (80 matrix / 17 platform-contract tests),
+userspace clippy, host matrix/contracts clippy, producer probe/partial feature
+clippy, layout (40 Omega / 125 Rust edges), format, Python syntax and whitespace.
+Disposable desktop acquisition variants preserve normal editing, repeated
+close/relaunch and cold persistence:
+
+- Complete connection, denied unrelated operations, closure with app survival:
+  `build/boot-harness-rs/desktop/20261024T152129374950Z`.
+- Interrupted handoff, early traffic, concurrent capacity refusal with usable
+  broker, and replacement: `build/boot-harness-rs/desktop/20261024T152437127786Z`.
+- Manifest requests production but owner withholds it:
+  `build/boot-harness-rs/desktop/20261024T152607943161Z`.
+- Independent admission/acquisition, rollback and subtree reclamation:
+  `build/boot-harness-rs/matrix-composition/20261024T152753195453Z`.
+- Recursive matrix IPC, producer grants, capacity and locality:
+  `build/boot-harness-rs/matrix-test`.
+- Four nested default desktops, protected close, isolated saved data, repeated
+  subtree reclamation and cold reopen (no producer probe features):
+  `build/boot-harness-rs/desktop/20261024T152918865723Z`.
+
+The first partial run exposed a fixture assumption that refusal must be NO_MEMORY;
+retained bindings can also legitimately return BUSY. The corrected fixture checks
+both without weakening its broker-survival and repeated-reclamation assertions.
+The matrix ELF is 250,512 bytes, or 254,608 with storage tracing (95%/97% of the
+256 KiB stored-object cap). No visible
+second cursor, general producer registry, GPU/remote or ARM64 result is claimed.
+
+
 Implementation update 2026-10-23: **negotiated recursive input capacity**, over
 `d76d0808`. The child-only `INPUT_CAPACITY` operation sets channel/group ceilings
 for its current connection. It validates the view epoch and refuses reductions

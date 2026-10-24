@@ -1,4 +1,27 @@
 use super::*;
+
+#[test]
+fn producer_parts_are_scoped_and_never_added_to_ordinary_offers() {
+    for (part, index) in [(0, 3), (1, 4)] {
+        let words = request(imports::INPUT_PRODUCER, 1, 1, part);
+        assert_eq!(select(imports::ALL, words), Err(UNAVAILABLE));
+        assert_eq!(select(imports::SUPPORTED, words), Ok(index));
+    }
+    assert_eq!(
+        select(
+            imports::SUPPORTED,
+            request(imports::INPUT_PRODUCER, 1, 1, 2)
+        ),
+        Err(INVALID)
+    );
+    assert_eq!(
+        select(
+            imports::SUPPORTED,
+            request(imports::INPUT_PRODUCER, 2, 2, 0)
+        ),
+        Err(INCOMPATIBLE)
+    );
+}
 #[test]
 fn acquisition_cannot_widen_the_resolved_manifest() {
     let grants = imports::bind(
