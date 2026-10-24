@@ -130,14 +130,18 @@ asserting that delivered work can be undone.
 
 ## Evidence and limits
 
-The Rust [local router](../../../source-rs/platform/libraries/matrix/world/input.rs)
+The Rust [local router](../../../source-rs/platform/libraries/matrix/world/input/input.rs)
 and [child queues](../../../source-rs/platform/libraries/matrix/world/children.rs)
-exercise targeting, cancellation and held-key suppression with one local
-focus/capture arrangement. They do not implement general group registration,
-independent multi-group routes or all capture semantics in this contract.
+now exercise separate targeting, cancellation and held-key suppression for four
+bounded upstream streams. Host proofs cover independent selection, scoped overflow,
+fair draining and recursive cancellation without losing the next fresh press.
+Each stream currently has one route state. General group registration, channel
+association, control grants and all capture semantics in this contract are not
+implemented; the normal desktop still supplies one physical stream.
 
 Current recursive event forwarding remains an implementation baseline, not a
-mandated production transport. This acceptance adds no new runtime evidence.
+mandated production transport. The host routing proofs do not establish a complete
+multi-group desktop or producer registration service.
 Wire schemas, group limits and transition acknowledgements remain work.
 [Placement and rendering demand](rendering.md) have a separate partial contract.
 That contract also defines accepted-layout hit-testing and pointer-target cursor

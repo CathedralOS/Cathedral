@@ -1,5 +1,56 @@
 # Rust reference OS: tasks and handoff
 
+Implementation update 2026-10-23: **independent input routing foundation**, over
+`1f4c81e5`. The [matrix input entrance](source-rs/platform/libraries/matrix/world/input/input.rs)
+now owns four bounded upstream streams with separate focus, capture, held keys
+and cancellation. Each child has sixteen queued events per stream and fair drain;
+its compact names are local to that view binding. NEXT word six and POLL word
+five's high 32 bits carry the name. Rebuild current programs together; this is an
+experimental wire change, not a production ABI or saved-program compatibility promise.
+
+Overflow cancels only that stream across its recipients, including a hovered
+child different from its keyboard target. Cancellation remembers local selection.
+Inherited cancellation clears held state because the sender suppresses the old
+release; waiting again would lose the next fresh press. Revoking capture also
+clears the old button state while suppressing the residual hold. Nine new host
+tests exercise these boundaries, independent typing, fair drain, source limits,
+denied child injection, child-local names and nested forwarding.
+
+This is not the complete focus-group/channel service. One stream currently owns
+one route state. There is no producer registration, independent channel/group
+association, directory, dynamic stream retirement or multi-cursor desktop yet.
+F5 still supplies one physical stream. All stream names must fit the four-name
+binding limit; a malformed/over-capacity inherited packet invalidates that parent
+grant. Future registration must refuse admission before forwarding such traffic.
+
+Current direction: finish two independent input groups in the ordinary F5 desktop,
+with endpoint-derived producer authority, scoped registration/retirement, separate
+focus-group association and app consumers that track button state per channel.
+Then add a visible synthetic producer alongside physical input, recurse into an
+installed nested matrix, and exercise isolation, disconnect and overflow there.
+Do not introduce a human/agent default class or equate the final channel identity
+with its group. Follow with rendering-demand/masked-capture evidence. Coordination
+acquisition below remains queued; no new owner decision blocks this input work.
+
+Verification: workspace host tests, 50 matrix host tests, matrix/contracts
+host clippy, `cargo check-userspace`, stock matrix trace/delay feature clippy,
+layout/format/whitespace checks. The ordinary F5 desktop test passed TCG absolute
+input and cold persistence (`build/boot-harness-rs/desktop/20261024T050904504038Z`).
+Four nested desktops, saved inner data, repeated teardown/isolation and cold reopen
+passed WHPX with explicit relative input
+(`build/boot-harness-rs/desktop/20261024T050640988167Z`). These desktop runs precede
+the final capture-release bookkeeping fix, which has its own host regression.
+The final `--matrix-test --release --timeout 90` passes recursive input, revoke,
+resize and replacement through real IPC (`build/boot-harness-rs/matrix-test`).
+The independent three-peer matrix passes scoped acquisition, interrupted handoff,
+rollback and subtree reclamation
+(`build/boot-harness-rs/matrix-composition/20261024T051206394187Z`).
+WHPX without `--relative-pointer` failed the harness's absolute-transport assertion:
+no absolute-pointer-ready marker was emitted. Do not claim WHPX absolute support.
+The blanket host `clippy --all-targets` command is unsuitable for guest binaries;
+use the target-specific alias and scoped host checks. Minor formatting and host
+test lint corrections accompany this slice.
+
 Specification sweep 2026-10-23: the current [presentation contract](wiki/spec/human_surface/rendering.md)
 uses coherent accepted-layout hit-testing without exact displayed-frame matching
 or a one-frame lag guarantee. Capture explicitly serves authorized, already-masked
@@ -162,7 +213,7 @@ versus propagated fullscreen, independent input and placement, and backing reuse
 only after consumers finish. Drawing/text, scene commits, masks, resource policy
 and cursor visual handoff remain open. Docs only; existing runtime is unchanged.
 
-Next implementation slice: add funded coordination acquisition to the existing
+Queued coordination slice after the current input milestone: add funded coordination acquisition to the existing
 broker and prove simultaneous first registration, rejected identity spoofing,
 constraint combinations, accepted/refused introductions and dead-holder cleanup.
 Exercise duplicate Nested launches through F5 while unrelated apps keep running.

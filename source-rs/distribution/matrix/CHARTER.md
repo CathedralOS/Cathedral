@@ -32,7 +32,7 @@ either a root grant or the upstream matrix endpoint into the same `Grant`.
 [fallback.rs](service/children/recovery/fallback.rs) admits explicitly supplied recovery code.
 [world entrance](../../platform/libraries/matrix/world/world.rs) owns grant changes and child dispatch; descend into
 [children.rs](../../platform/libraries/matrix/world/children.rs) for views/epochs/queues and
-[input.rs](../../platform/libraries/matrix/world/input.rs) for focus, capture and key attenuation.
+[input.rs](../../platform/libraries/matrix/world/input/input.rs) for focus, capture and key attenuation.
 
 ## Child boundary
 

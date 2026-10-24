@@ -193,7 +193,11 @@ pub fn run(environment: Environment) -> Result<(), Error> {
             deadline = Some(cathedral_user_runtime::time::now()?);
         }
         #[cfg(feature = "interaction-delay")]
-        for until in delay.deadline().into_iter().chain(parent.hold_storage_until) {
+        for until in delay
+            .deadline()
+            .into_iter()
+            .chain(parent.hold_storage_until)
+        {
             deadline = Some(deadline.map_or(until, |d| {
                 if cathedral_user_runtime::time::reached(d, until) {
                     until

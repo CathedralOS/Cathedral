@@ -150,6 +150,11 @@ Directory storage, retained records and event capacity remain funded resources.
 The Rust lab's [physical-key transport](../../../source-rs/platform/contracts/input.rs)
 and [matrix queues](../../../source-rs/platform/libraries/matrix/world/children.rs)
 do not implement this general channel directory or shared-table/ring interface.
+The matrix transport can now multiplex four bounded streams with child-local
+names and independent queues; its host tests exercise isolation, overflow,
+cancellation and nested forwarding. Names are not reused within a view binding.
+This foundation does not yet expose producer registration, retirement, discovery
+or independent group association, and the F5 source remains a single stream.
 The [pointer lab](../../../source-rs/distribution/lab/compositor/POINTERS.md) is
 earlier bounded routing evidence, not conformance to this channel contract.
 

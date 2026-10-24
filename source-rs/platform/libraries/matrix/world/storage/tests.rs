@@ -189,7 +189,7 @@ fn proofs_require_success_and_die_with_the_binding_or_source() {
     scopes.grant(1, 8, 1, 10, 2).unwrap();
     scopes.grant(2, 9, 0, 10, 2).unwrap();
     let words = [
-        wire::STORAGE_BASE + protocol::PUBLISH | (1 << wire::STORAGE_SCOPE_BITS),
+        (wire::STORAGE_BASE + protocol::PUBLISH) | (1 << wire::STORAGE_SCOPE_BITS),
         90,
         1,
         0,
@@ -245,7 +245,7 @@ fn proofs_require_success_and_die_with_the_binding_or_source() {
     assert_eq!(scopes.confirm(proof), Err(abi::DENIED));
     assert!(matches!(scopes.prepare(0, 7, words, 1), Err(abi::DENIED)));
     let mut fresh = words;
-    fresh[0] = wire::STORAGE_BASE + protocol::PUBLISH | (2 << wire::STORAGE_SCOPE_BITS);
+    fresh[0] = (wire::STORAGE_BASE + protocol::PUBLISH) | (2 << wire::STORAGE_SCOPE_BITS);
     assert!(matches!(
         scopes.prepare(0, 7, fresh, 1),
         Ok(Prepared::Validate { .. })
@@ -259,7 +259,7 @@ fn proof_eviction_rechecks_instead_of_broadening_the_binding() {
     let mut scopes = Scopes::<1>::empty();
     scopes.grant(0, 1, 0, 10, 1).unwrap();
     let mut words = [
-        wire::STORAGE_BASE + protocol::HEAD | (1 << wire::STORAGE_SCOPE_BITS),
+        (wire::STORAGE_BASE + protocol::HEAD) | (1 << wire::STORAGE_SCOPE_BITS),
         90,
         0,
         0,

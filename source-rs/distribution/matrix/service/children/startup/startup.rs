@@ -104,7 +104,10 @@ impl Children {
                 channels: 0,
                 descendants: 0,
                 cpu: 0,
-                pages: Some([48, cathedral_desktop_matrix_contracts::matrix::CHOOSER_READERS]),
+                pages: Some([
+                    48,
+                    cathedral_desktop_matrix_contracts::matrix::CHOOSER_READERS,
+                ]),
                 stamp: 0,
                 imports: cathedral_platform_contracts::imports::ALL,
             },

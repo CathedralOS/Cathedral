@@ -31,6 +31,19 @@ pub fn untag_poll(mut reply: Packet, id: u32) -> Option<Packet> {
     Some(reply)
 }
 pub const MORE: u64 = 1 << 16;
+/// Experimental multiplexed input: nonzero u32 names scoped to the supplying
+/// interaction connection/view binding, not process IDs or injection authority.
+/// Each event has its stream in NEXT word six / POLL word five's high 32 bits.
+/// A stream name must not be reused within a binding. NONE has stream zero.
+/// Four streams with sixteen queued events each are the current lab limits.
+/// FIFO is per stream; no cross-stream event ordering is promised. CANCEL clears
+/// that receiver stream's held state. The sender suppresses residual holds until
+/// release, so the receiver must not wait for a release after CANCEL. A changed
+/// view epoch resets every stream binding. This partial encoding has neither a
+/// channel directory nor independently associated focus groups yet.
+pub const INPUT_STREAMS: usize = 4;
+/// Existing authenticated single-source adapter; no ambient child authority.
+pub const SINGLE_INPUT_STREAM: u32 = 1;
 pub fn poll_event(reply: Packet) -> Packet {
     [
         reply[0],
@@ -39,7 +52,7 @@ pub fn poll_event(reply: Packet) -> Packet {
         reply[6],
         reply[7],
         (reply[5] >> 8) & 7,
-        0,
+        reply[5] >> 32,
         0,
     ]
 }
@@ -283,6 +296,20 @@ pub const LAUNCH_IMPORTS: u64 = 121;
 /// not a commit latency estimate.
 pub const STORAGE_DEADLINE_TICKS: u64 = 1200;
 
+/// Restore the storage grants this matrix recorded for its own children.
+pub const RESTORE_STORAGE: u64 = 123;
+
+/// Owner-only lookup: words 1..5 contain a zero-padded relative path (32 bytes).
+pub const RESOLVE_PATH: u64 = 124;
+/// Owner-only: [MANAGEMENT_GRANT, manager slot, target slot + 1, 0..]. Zero target
+/// revokes. Requires a live manager and a different target slot. The grant is
+/// tied to that connection incarnation; reconnecting does not inherit it.
+pub const MANAGEMENT_GRANT: u64 = 125;
+/// Owner-only: [LAUNCH_IMAGES, slot, executable mask, 0..]. Explicit executable
+/// grants for future store-based admissions in this slot; default none. This
+/// never grants code authority to a running child or changes its realm.
+pub const LAUNCH_IMAGES: u64 = 126;
+
 #[cfg(test)]
 mod rectangle_tests {
     use super::*;
@@ -307,17 +334,3 @@ mod rectangle_tests {
         assert!(rectangle_updates(bad).is_none());
     }
 }
-
-/// Restore the storage grants this matrix recorded for its own children.
-pub const RESTORE_STORAGE: u64 = 123;
-
-/// Owner-only lookup: words 1..5 contain a zero-padded relative path (32 bytes).
-pub const RESOLVE_PATH: u64 = 124;
-/// Owner-only: [MANAGEMENT_GRANT, manager slot, target slot + 1, 0..]. Zero target
-/// revokes. Requires a live manager and a different target slot. The grant is
-/// tied to that connection incarnation; reconnecting does not inherit it.
-pub const MANAGEMENT_GRANT: u64 = 125;
-/// Owner-only: [LAUNCH_IMAGES, slot, executable mask, 0..]. Explicit executable
-/// grants for future store-based admissions in this slot; default none. This
-/// never grants code authority to a running child or changes its realm.
-pub const LAUNCH_IMAGES: u64 = 126;

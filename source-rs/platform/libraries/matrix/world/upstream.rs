@@ -20,15 +20,17 @@ impl<const N: usize> World<N> {
         });
         if grant.valid() {
             let event = wire::poll_event(reply);
-            match event[2] {
-                wire::NONE => (),
-                wire::POINTER => self.pointer(event[3], event[4], event[5]),
-                wire::KEY => self.key(event[3], event[4]),
-                wire::CANCEL => self.cancel(),
-                _ => {
-                    self.inherit(Grant::default());
-                    return Grant::default();
-                }
+            let channel = u32::try_from(event[6]).unwrap_or(0);
+            let result = match event[2] {
+                wire::NONE => Ok(()),
+                wire::POINTER => self.pointer_stream(channel, event[3], event[4], event[5]),
+                wire::KEY => self.key_stream(channel, event[3], event[4]),
+                wire::CANCEL => self.inherit_stream_cancel(channel),
+                _ => Err(abi::INVALID_ARGUMENT),
+            };
+            if result.is_err() {
+                self.inherit(Grant::default());
+                return Grant::default();
             }
         }
         grant

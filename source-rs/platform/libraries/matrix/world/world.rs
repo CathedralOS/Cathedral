@@ -27,12 +27,7 @@ pub struct World<const N: usize = 2> {
     retired: [Option<wire::Packet>; wire::MAX_SURFACES],
     children: [Child; N],
     layout_controller: Option<(usize, u64)>,
-    focus: Option<usize>,
-    capture: Option<usize>,
-    buttons: u64,
-    blocked: bool,
-    held: u64,
-    suppressed: u64,
+    input: input::Input,
 }
 impl<const N: usize> World<N> {
     pub fn binding_matches(&self, slot: usize, incarnation: u64, epoch: u64) -> bool {
@@ -54,12 +49,7 @@ impl<const N: usize> World<N> {
             retired: [None; wire::MAX_SURFACES],
             children: [const { Child::empty() }; N],
             layout_controller: None,
-            focus: None,
-            capture: None,
-            buttons: 0,
-            blocked: false,
-            held: 0,
-            suppressed: 0,
+            input: input::Input::empty(),
         }
     }
 
@@ -76,15 +66,7 @@ impl<const N: usize> World<N> {
         let replaced = self.parent.epoch != grant.epoch;
         if replaced {
             self.layout_controller = None;
-            self.cancel();
-            if grant.valid() {
-                // A newly accepted binding is a fresh scoped stream. Its parent
-                // suppresses old physical holds before publishing new events.
-                self.buttons = 0;
-                self.blocked = false;
-                self.held = 0;
-                self.suppressed = 0;
-            }
+            self.input = input::Input::empty();
         }
         if self.parent.valid() && (replaced || !grant.valid()) {
             // Losing the parent's authority cannot be repaired by silently reviving
@@ -102,13 +84,7 @@ impl<const N: usize> World<N> {
             child.refresh(grant, replaced);
             if child.grant != previous {
                 changed[slot] = true;
-                if self.focus == Some(slot) {
-                    self.focus = None;
-                    self.suppressed |= self.held;
-                }
-                if self.capture == Some(slot) {
-                    self.capture = None;
-                }
+                self.input.forget(slot);
             }
         }
         for (slot, changed) in changed.into_iter().enumerate() {
@@ -128,13 +104,7 @@ impl<const N: usize> World<N> {
         child.refresh(self.parent, false);
         if child.grant != previous {
             self.retire_surfaces(slot);
-            if self.focus == Some(slot) {
-                self.focus = None;
-                self.suppressed |= self.held;
-            }
-            if self.capture == Some(slot) {
-                self.capture = None;
-            }
+            self.input.forget(slot);
         }
         Ok(())
     }
@@ -148,13 +118,7 @@ impl<const N: usize> World<N> {
         {
             self.layout_controller = None;
         }
-        if self.focus == Some(slot) {
-            self.focus = None;
-            self.suppressed |= self.held;
-        }
-        if self.capture == Some(slot) {
-            self.capture = None;
-        }
+        self.input.forget(slot);
         self.children[slot].rect = None;
         self.retire_surfaces(slot);
         self.children[slot].surface_limit = 0;

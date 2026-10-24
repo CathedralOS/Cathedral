@@ -59,6 +59,8 @@ fn identity_image_leaves_are_global_and_aliases_stay_per_root() {
     root[0].set_addr(level3.start_address(), Flags::PRESENT | Flags::WRITABLE);
     // SAFETY: Host tables addressed by their own pointers behave as identity mapped.
     let mut mapper = unsafe { OffsetPageTable::new(&mut root, VirtAddr::zero()) };
+    // SAFETY: This mapper owns inactive test tables; their boxed backing and
+    // every image leaf remain live throughout the permission update.
     unsafe { shared::share_image(&mut mapper, &image) }.unwrap();
     for offset in (0..0x4000).step_by(4096) {
         let (identity, alias) = (0x200000 + offset, (1 << 30) + 0x200000 + offset);

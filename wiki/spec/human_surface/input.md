@@ -173,10 +173,11 @@ safe merely by agreeing which bytes each owns.
 The [Rust physical-key transport](../../../source-rs/platform/contracts/input.rs)
 is a small experimental key-event ABI without the complete text/layout model.
 The [matrix child queues](../../../source-rs/platform/libraries/matrix/world/children.rs)
-buffer sixteen events, preserve button edges during motion coalescing and emit
-cancellation on overflow. They retrieve events through IPC replies, not a reusable
-cross-process event ring. [Input routing](../../../source-rs/platform/libraries/matrix/world/input.rs)
-exercises local targeting and held-state suppression. These are partial evidence,
+buffer sixteen events per stream for four bounded streams, preserve button edges
+during motion coalescing and emit scoped cancellation on overflow. They retrieve
+events through IPC replies, not a reusable cross-process event ring.
+[Input routing](../../../source-rs/platform/libraries/matrix/world/input/input.rs)
+exercises independent local targeting and held-state suppression. These are partial evidence,
 not conformance to all timing, semantic and lifecycle requirements above.
 
 ## Boundaries not selected here

@@ -38,18 +38,18 @@ impl Fixture {
     pub(super) fn input(&self) {
         let epoch = self.view(2)[1];
         self.pointer(115, 127, 1);
-        assert_eq!(&self.next(2, epoch)[2..], &[wire::POINTER, 5, 7, 1, 0, 0]);
+        assert_eq!(&self.next(2, epoch)[2..], &[wire::POINTER, 5, 7, 1, 1, 0]);
         self.pointer(799, 599, 1);
-        assert_eq!(&self.next(2, epoch)[2..], &[wire::POINTER, 59, 39, 1, 0, 0]);
+        assert_eq!(&self.next(2, epoch)[2..], &[wire::POINTER, 59, 39, 1, 1, 0]);
         self.pointer(799, 599, 0);
-        assert_eq!(&self.next(2, epoch)[2..], &[wire::POINTER, 59, 39, 0, 0, 0]);
+        assert_eq!(&self.next(2, epoch)[2..], &[wire::POINTER, 59, 39, 0, 1, 0]);
         self.key(input::UP, input::PRESS);
         self.key(input::UP, input::RELEASE);
         assert_eq!(self.next(2, epoch)[2], wire::NONE);
         self.key(input::ENTER, input::PRESS);
         assert_eq!(
             &self.next(2, epoch)[2..],
-            &[wire::KEY, input::ENTER as u64, input::PRESS as u64, 0, 0, 0]
+            &[wire::KEY, input::ENTER as u64, input::PRESS as u64, 0, 1, 0]
         );
         self.key(input::ENTER, input::RELEASE);
         assert_eq!(self.next(2, epoch)[2], wire::KEY);

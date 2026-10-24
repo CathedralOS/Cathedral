@@ -118,14 +118,7 @@ impl<const N: usize> World<N> {
         child.visible = visible;
         if !visible {
             child.cancel();
-            if self.focus == Some(slot) {
-                self.focus = None;
-                self.suppressed |= self.held;
-            }
-            if self.capture == Some(slot) {
-                self.capture = None;
-                self.blocked |= self.buttons != 0;
-            }
+            self.input.forget(slot);
         }
         Ok(())
     }

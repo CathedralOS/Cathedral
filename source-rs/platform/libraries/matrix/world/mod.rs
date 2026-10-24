@@ -4,6 +4,7 @@
 mod arrangements;
 mod children;
 mod commands;
+mod events;
 mod input;
 pub mod launches;
 mod layout;

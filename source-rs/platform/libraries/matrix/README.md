@@ -11,12 +11,17 @@ dispatcher and cannot select these operations. Both the stock matrix and the
 [independent three-peer program](../../../distribution/lab/matrix-composition/README.md)
 use this machinery with the existing runtime IPC server.
 
-- [Input](world/input.rs) confines focus, capture, coordinates and keys to grants.
-  Pointer hit testing follows the owner's surface ranges; equal ranges use slot
-  order for input-only children. The bounded [child queue](world/children.rs)
-  coalesces trailing motion within one button state, retaining its first report
-  and newest coordinates. It never coalesces across button transitions, keys or
-  cancellation. Non-coalescible overflow still cancels that child's input.
+- [Input](world/input/input.rs) admits up to four authenticated upstream streams,
+  each with separate selection, capture and held-input state. Pointer hit testing
+  follows the owner's surface ranges; equal ranges use slot order for input-only
+  children. [Children](world/children.rs) assign names local to their view binding
+  and drain streams fairly. Each stream has a sixteen-event [FIFO](world/events.rs).
+  Trailing motion coalesces only within that stream and button state, retaining
+  its first report and newest coordinates. Overflow cancels that stream across
+  its recipients without deleting another stream's events. Cancellation preserves
+  local selection; revoking the selected child forgets it. An inherited CANCEL
+  resets held state because its sender suppresses residual holds until release.
+  Local source interruption performs that suppression here instead.
 - [Surfaces](world/surface/surface.rs) conserves allowances, assigns disjoint rank
   ranges (explicit owner placement or free-space allocation), and clips/translates
   retained drawing. Changing one child's allowance
@@ -48,6 +53,13 @@ authorized controller, stable surface ranges through sibling allowance changes,
 and four-child headless scope/management ledgers. Those are mechanism proofs,
 not claims of a runnable phone or embedded distribution. The fixed surface and
 input limits in the experimental protocol remain explicit resource bounds.
+Host input proofs additionally cover independent selection/typing, scoped
+cancellation and overflow, child-local names, fair drain, recursive forwarding
+and fresh presses after cancellation. This is a transport foundation: one stream
+currently has one route state. General channel-to-focus-group association,
+producer registration/retirement, descriptor discovery and multiple desktop
+cursors are not implemented. The F5 adapter still supplies one physical stream;
+no child receives injection authority from an ID in a request.
 The independent program additionally exercises real IPC, malformed requests,
 revocation and peer replacement in QEMU. It has no stock distribution dependency;
 it now owns child admission through the shared runtime's
