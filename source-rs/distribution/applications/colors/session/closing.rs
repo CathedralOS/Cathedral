@@ -4,22 +4,17 @@ use cathedral_user_runtime::memory::Private;
 #[derive(Default)]
 pub(super) struct Button {
     pub confirm: bool,
-    pressed: bool,
+    pointers: cathedral_matrix::reception::Pointers,
 }
 impl Button {
     pub fn rebind(&mut self) {
-        self.pressed = false;
+        self.pointers.reset();
     }
     pub fn close(&mut self, event: wire::Packet, width: u64, uncertain: bool) -> bool {
-        if event[2] == wire::CANCEL {
-            self.pressed = false;
-        }
-        if event[2] != wire::POINTER {
-            return false;
-        }
-        let down = event[5] & 1 != 0;
-        let clicked = down && !self.pressed;
-        self.pressed = down;
+        let clicked = self
+            .pointers
+            .update(event)
+            .is_some_and(|b| b.left_pressed());
         if !clicked {
             return false;
         }

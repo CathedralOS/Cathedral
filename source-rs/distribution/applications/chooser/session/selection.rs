@@ -2,14 +2,10 @@
 use super::*;
 pub struct Selection {
     pub index: usize,
-    pub pressed: bool,
 }
 impl Selection {
     pub fn new() -> Self {
-        Self {
-            index: 1,
-            pressed: false,
-        }
+        Self { index: 1 }
     }
     /// Return repaint/activate; hovering alone does not repaint retained tiles.
     #[allow(clippy::too_many_arguments)]
@@ -17,6 +13,7 @@ impl Selection {
         &mut self,
         event: wire::Packet,
         extent: wire::Packet,
+        clicked: bool,
         count: usize,
         picker: bool,
         managed: bool,
@@ -24,7 +21,6 @@ impl Selection {
     ) -> (bool, bool) {
         match event[2] {
             wire::POINTER => {
-                let down = event[5] & 1 != 0;
                 let controls = !picker && event[3] >= extent[2].saturating_sub(184);
                 let hit = if controls && event[4] >= extent[3].saturating_sub(32) {
                     Some(SETTINGS)
@@ -43,16 +39,11 @@ impl Selection {
                 } else {
                     layout::hit(extent, count, picker, event[3], event[4])
                 };
-                let choose = down && !self.pressed && hit.is_some();
-                self.pressed = down;
+                let choose = clicked && hit.is_some();
                 if choose {
                     self.index = hit.unwrap();
                 }
                 (choose, choose)
-            }
-            wire::CANCEL => {
-                self.pressed = false;
-                (false, false)
             }
             wire::KEY if event[4] == input::PRESS as u64 => match event[3] as u8 {
                 input::UP | input::LEFT => {

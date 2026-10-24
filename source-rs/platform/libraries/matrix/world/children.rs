@@ -32,6 +32,10 @@ pub(super) struct Child {
     queues: [events::Events; wire::INPUT_STREAMS],
     next_stream: usize,
     next_input_name: u32,
+    group_names: [u16; wire::INPUT_GROUPS],
+    next_group_name: u16,
+    next_event: u64,
+    group_last_event: [u64; wire::INPUT_GROUPS],
 }
 impl Child {
     pub const fn empty() -> Self {
@@ -55,6 +59,10 @@ impl Child {
             queues: [const { events::Events::empty() }; wire::INPUT_STREAMS],
             next_stream: 0,
             next_input_name: 0,
+            group_names: [0; wire::INPUT_GROUPS],
+            next_group_name: 0,
+            next_event: 0,
+            group_last_event: [0; wire::INPUT_GROUPS],
         }
     }
 
@@ -74,6 +82,10 @@ impl Child {
         self.queues = [const { events::Events::empty() }; wire::INPUT_STREAMS];
         self.next_stream = 0;
         self.next_input_name = 0;
+        self.group_names = [0; wire::INPUT_GROUPS];
+        self.next_group_name = 0;
+        self.next_event = 0;
+        self.group_last_event = [0; wire::INPUT_GROUPS];
         self.notify = true;
         let Some(epoch) = self.epoch.checked_add(1) else {
             self.grant = Grant::default();
@@ -94,59 +106,82 @@ impl Child {
         }
         [0, g.epoch, g.width, g.height, g.keys, 0, 0, 0]
     }
-    pub fn push(
-        &mut self,
-        index: usize,
-        channel: u32,
-        kind: u64,
-        x: u64,
-        y: u64,
-        value: u64,
-    ) -> bool {
+    pub fn push(&mut self, index: usize, channel: u32, group: usize, event: [u64; 4]) -> bool {
         if !self.grant.valid() {
             return true;
         }
         self.notify = true;
+        self.next_event = self.next_event.checked_add(1).expect("input event order");
         let queue = &mut self.queues[index];
         if queue.source == 0 {
             // Child-local names reveal neither ancestor IDs nor sibling traffic.
             self.next_input_name += 1; // At most INPUT_STREAMS names per view binding.
             queue.channel = self.next_input_name;
             queue.source = channel;
+            if self.group_names[group] == 0 {
+                self.next_group_name += 1;
+                self.group_names[group] = self.next_group_name;
+            }
+            queue.group = self.group_names[group];
         }
         debug_assert_eq!(queue.source, channel);
-        queue.push(kind, x, y, value)
+        let coalesce = queue.last_order() == Some(self.group_last_event[group]);
+        self.group_last_event[group] = self.next_event;
+        queue.push(event, self.next_event, coalesce)
     }
     pub fn cancel_stream(&mut self, index: usize, channel: u32) {
         let queue = &mut self.queues[index];
         if queue.source == channel {
-            queue.cancel();
+            self.next_event = self.next_event.checked_add(1).expect("input event order");
+            queue.cancel(self.next_event);
+            // Cancellation is an ordering barrier even if another channel is
+            // the next one to publish to this group.
+            self.group_last_event.fill(0);
             self.notify = true;
         }
     }
     pub fn cancel(&mut self) {
         for queue in &mut self.queues {
-            queue.cancel();
+            self.next_event = self.next_event.checked_add(1).expect("input event order");
+            queue.cancel(self.next_event);
         }
+        self.group_last_event.fill(0);
         self.notify = true;
     }
     pub fn next(&mut self) -> wire::Packet {
-        // Round-robin across streams, preserving FIFO within each. A flooding
-        // producer cannot consume another stream's queue or prevent its drain.
+        // Only a group's earliest event is eligible. Round-robin chooses among
+        // eligible streams, so independent groups progress without reordering
+        // a selecting pointer and a subsequent key in the same group.
         for offset in 0..wire::INPUT_STREAMS {
             let index = (self.next_stream + offset) % wire::INPUT_STREAMS;
-            if self.queues[index].pending() {
+            let candidate = &self.queues[index];
+            if let Some(order) = candidate.first_order()
+                && !self.queues.iter().any(|q| {
+                    q.group == candidate.group
+                        && q.first_order().is_some_and(|earlier| earlier < order)
+                })
+            {
                 self.next_stream = (index + 1) % wire::INPUT_STREAMS;
                 return self.queues[index].next(self.grant.epoch);
             }
         }
         [0, self.grant.epoch, wire::NONE, 0, 0, 0, 0, 0]
     }
+    pub fn cancel_keys(&mut self, index: usize, channel: u32) {
+        let queue = &mut self.queues[index];
+        if queue.source == channel {
+            self.next_event = self.next_event.checked_add(1).expect("input event order");
+            queue.cancel_keys(self.next_event);
+            self.group_last_event.fill(0);
+            self.notify = true;
+        }
+    }
     pub fn poll(&mut self) -> wire::Packet {
         let event = self.next();
         let mut reply = self.view();
         reply[4] |= (self.surface_limit as u64) << wire::SURFACE_BITS;
         reply[5] = event[2]
+            | (event[7] << 17)
             | (event[5] << 8)
             | (event[6] << 32)
             | if self.queues.iter().any(events::Events::pending) {

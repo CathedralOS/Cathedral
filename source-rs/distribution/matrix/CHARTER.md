@@ -25,7 +25,9 @@ Start at [main.rs](main.rs), which selects startup intent, then
 dispatch an owner or child request, reply. [parent entrance](service/parent/parent.rs) adapts
 either a root grant or the upstream matrix endpoint into the same `Grant`.
 [requests entrance](service/requests/requests.rs) authenticates owner/source/child requests;
-[owner.rs](service/requests/owner.rs) handles local layout, while
+[owner.rs](service/requests/owner.rs) handles local layout.
+[source.rs](service/requests/source.rs) turns its explicitly supplied source
+endpoint into separate keyboard/pointer channels sharing one local focus group.
 [children entrance](service/children/children.rs) owns admission, pending control replies and teardown.
 [lifecycle.rs](service/children/lifecycle.rs) collects exact task outcomes;
 [recovery.rs](service/children/recovery/recovery.rs) reloads a failed configured launcher;
@@ -52,10 +54,13 @@ fields receive the same empty `DENIED` response.
 Each child has its own revision counter. Moving its parent or changing a sibling
 does not advance it. Capture keeps delivering but clamps coordinates to the
 child's viewport; cancellation has zero coordinates. Keys intersect the upstream
-mask. Changing focus cancels undelivered old input and suppresses held-key
-transfer. Each child's bounded queue holds sixteen compact events, reconstructing
-the wire reply on dequeue. Overflow cancels the affected child without notifying
-its siblings.
+mask. Changing group selection cancels undelivered keys and suppresses held-key
+transfer while preserving independent pointer capture. Each child has four bounded
+stream queues of sixteen ordinary events plus a reserved keyboard-cancel boundary.
+Dequeue preserves ordering across channels in the same group and fairly services
+independent groups. Overflow cancels that stream across its prior recipients;
+unrelated streams and children that never received it remain unaffected. Channel
+and group names are local to the child's binding and confer no injection authority.
 
 Admitted children receive an empty coalesced wake hint over a separate endpoint.
 The service starts at most one identified upstream snapshot per turn through
@@ -144,8 +149,11 @@ configuration. The sibling app retains its task, surfaces, geometry epoch, focus
 and draft. Changed ancestor display/storage authority, explicit owner changes
 to the launcher policy, or a separately admitted slot occupant cancel recovery.
 Old deferred events drain before replacement. The retry is consumed even when
-reading/admission fails. If the owner supplied a `LAUNCHER_FALLBACK` before
-CONFIGURE, exhaustion admits that executable into the retired launcher's view
+reading/admission fails. An owner's first nonzero `LAUNCHER_FALLBACK` may arrive
+before CONFIGURE or after realm startup has configured a running launcher; it
+preserves that launcher's existing retry allowance. Replacement, revocation or
+installation during pending recovery cancels the saved context. With a supplied
+fallback, exhaustion admits that executable into the retired launcher's view
 and budget. Otherwise the app remains alive without its strip. The fallback
 gets local interaction, a control link and a single-use `RETRY_LAUNCHER` request
 bound to its exact task/connection. It receives no storage, layout, management,
@@ -208,8 +216,9 @@ or tear-free scanout. Transport timeouts retire the matrix; retries do not cross
 provider death. The desktop fixture checks old pixels before commit, complete
 publication, rejected batches, repeated commits and bitmap forwarding.
 
-This is a protocol and input experiment: two local child slots, five navigation
-keys, sixteen queued events per child and extents up to 4096. The
+The headless protocol fixture uses two child slots and five navigation keys;
+the stock desktop has five slots and a broader physical-key vocabulary. Input
+queues are bounded per stream, as described above, with extents up to 4096. The
 [distribution fixture](../desktop/README.md) runs two
 identical service executables with separate state. Each owns and admits its own
 children using inherited launch loans and dynamic parent endpoints. Distribution

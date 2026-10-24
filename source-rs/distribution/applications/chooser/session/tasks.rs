@@ -30,11 +30,10 @@ impl Tasks {
         parent: Pair,
         view: wire::Packet,
         event: wire::Packet,
-        pressed: bool,
+        clicked: bool,
     ) -> Option<&'static str> {
         if event[2] != wire::POINTER
-            || event[5] & 1 == 0
-            || pressed
+            || !clicked
             || !(top(view)..top(view) + ROW).contains(&event[4])
             || !(LEFT..LEFT + WIDTH as u64).contains(&event[3])
         {

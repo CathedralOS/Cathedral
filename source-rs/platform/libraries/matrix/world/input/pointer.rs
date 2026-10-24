@@ -36,15 +36,11 @@ impl<const N: usize> World<N> {
             .max_by_key(|(slot, c)| (c.surface_base, *slot))
             .map(|(slot, _)| slot);
         if route.buttons == 0 && buttons != 0 {
-            if route.focus != hit {
-                if let Some(old) = route.focus {
-                    self.children[old].cancel_stream(index, channel);
-                }
-                route.suppressed |= route.held;
-                route.focus = hit;
-            }
-            route.capture = hit;
+            let group = route.group;
+            self.select_input_group_index(group, hit);
+            self.input.streams[index].capture = hit;
         }
+        let route = &mut self.input.streams[index];
         let target = if route.buttons != 0 {
             route.capture
         } else {
@@ -57,7 +53,7 @@ impl<const N: usize> World<N> {
                 let r = child.rect.unwrap();
                 let x = x.saturating_sub(r.x).min(child.grant.width - 1);
                 let y = y.saturating_sub(r.y).min(child.grant.height - 1);
-                if !child.push(index, channel, wire::POINTER, x, y, buttons) {
+                if !child.push(index, channel, route.group, [wire::POINTER, x, y, buttons]) {
                     // This source may hold keys in a different child from the
                     // hovered pointer target. Interrupt every recipient.
                     self.cancel_stream_index(index);

@@ -12,16 +12,26 @@ dispatcher and cannot select these operations. Both the stock matrix and the
 use this machinery with the existing runtime IPC server.
 
 - [Input](world/input/input.rs) admits up to four authenticated upstream streams,
-  each with separate selection, capture and held-input state. Pointer hit testing
+  each with separate capture and held-input state. Explicit
+  [group associations](world/input/groups.rs) let several channels share selection.
+  Pointer hit testing
   follows the owner's surface ranges; equal ranges use slot order for input-only
   children. [Children](world/children.rs) assign names local to their view binding
-  and drain streams fairly. Each stream has a sixteen-event [FIFO](world/events.rs).
+  and drain independent groups fairly, preserving order across channels within
+  one group. Each stream has a sixteen-event [FIFO](world/events.rs), plus one
+  reserved keyboard-cancellation boundary.
   Trailing motion coalesces only within that stream and button state, retaining
-  its first report and newest coordinates. Overflow cancels that stream across
+  its first report and newest coordinates; another channel's event in the same
+  group prevents coalescing across it. Overflow cancels that stream across
   its recipients without deleting another stream's events. Cancellation preserves
   local selection; revoking the selected child forgets it. An inherited CANCEL
   resets held state because its sender suppresses residual holds until release.
   Local source interruption performs that suppression here instead.
+- [Reception](reception.rs) tracks app-side pointer edges per scoped channel.
+  Consume an event once before dispatching it to widgets. Cancellation clears
+  only the named pointer; keyboard cancellation leaves pointer holds intact.
+  Notes, Colors, the chooser, Split and recovery use this helper. Their document,
+  selection and dialog state remains each app's deliberate shared policy.
 - [Surfaces](world/surface/surface.rs) conserves allowances, assigns disjoint rank
   ranges (explicit owner placement or free-space allocation), and clips/translates
   retained drawing. Changing one child's allowance
@@ -55,10 +65,13 @@ not claims of a runnable phone or embedded distribution. The fixed surface and
 input limits in the experimental protocol remain explicit resource bounds.
 Host input proofs additionally cover independent selection/typing, scoped
 cancellation and overflow, child-local names, fair drain, recursive forwarding
-and fresh presses after cancellation. This is a transport foundation: one stream
-currently has one route state. General channel-to-focus-group association,
-producer registration/retirement, descriptor discovery and multiple desktop
-cursors are not implemented. The F5 adapter still supplies one physical stream;
+and fresh presses after cancellation. Group proofs cover a keyboard and two
+pointers sharing selection without sharing capture, nested click-before-key
+ordering, keyboard-only cancellation and refusal to silently change associations.
+This is a transport foundation: producer registration/retirement, control grants,
+dynamic rebinding, descriptor discovery and multiple desktop cursors are not
+implemented. The [F5 source adapter](../../../distribution/matrix/service/requests/source.rs)
+supplies separate pointer and keyboard channels in one group;
 no child receives injection authority from an ID in a request.
 The independent program additionally exercises real IPC, malformed requests,
 revocation and peer replacement in QEMU. It has no stock distribution dependency;

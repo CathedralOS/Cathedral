@@ -21,6 +21,7 @@ cathedral-desktop-matrix-contracts.workspace = true
 cathedral-platform-contracts.workspace = true
 
 [target.'cfg(target_os = "none")'.dependencies]
+cathedral-matrix.workspace = true
 cathedral-kernel-contracts.workspace = true
 cathedral-user-runtime.workspace = true
 cathedral-bitmap-font.workspace = true

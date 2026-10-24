@@ -1,7 +1,7 @@
 use super::*;
 use cathedral_platform_contracts::input as keys;
 
-fn world() -> World<2> {
+pub(super) fn world() -> World<2> {
     let mut w = World::empty();
     w.inherit(Grant {
         epoch: 1,
@@ -24,14 +24,14 @@ fn world() -> World<2> {
     }
     w
 }
-fn click(w: &mut World<2>, channel: u32, x: u64) {
+pub(super) fn click(w: &mut World<2>, channel: u32, x: u64) {
     w.pointer_stream(channel, x, 20, 1).unwrap();
     w.pointer_stream(channel, x, 20, 0).unwrap();
 }
-fn next(w: &mut World<2>, slot: usize) -> wire::Packet {
+pub(super) fn next(w: &mut World<2>, slot: usize) -> wire::Packet {
     wire::poll_event(w.request(slot, 1, [wire::POLL, 0, 0, 0, 0, 0, 0, 0]))
 }
-fn drain(w: &mut World<2>, slot: usize) -> std::vec::Vec<wire::Packet> {
+pub(super) fn drain(w: &mut World<2>, slot: usize) -> std::vec::Vec<wire::Packet> {
     let mut events = std::vec::Vec::new();
     loop {
         let event = next(w, slot);
@@ -220,7 +220,7 @@ fn nested_forwarding_preserves_streams_and_remembered_selection() {
     assert_eq!(next(&mut inner, 0)[3], keys::A as u64);
     assert_eq!(next(&mut inner, 1)[3], keys::Z as u64);
 }
-fn forward(outer: &mut World<2>, inner: &mut World<2>) {
+pub(super) fn forward(outer: &mut World<2>, inner: &mut World<2>) {
     loop {
         let reply = outer.request(0, 1, [wire::POLL, 0, 0, 0, 0, 0, 0, 0]);
         assert!(inner.inherit_poll(reply).valid());

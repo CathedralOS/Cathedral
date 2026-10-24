@@ -45,13 +45,15 @@ pub(crate) fn run(environment: Environment, argument: u64) -> u64 {
     }
     let control = (Handle::bootstrap(0).unwrap(), Handle::bootstrap(1).unwrap());
     let mut epoch = 0;
-    let mut pressed = false;
+    let mut pointers = cathedral_matrix::reception::Pointers::default();
     let mut retry = false;
     let mut painted = None;
     let mut surface = 0;
     loop {
         let snapshot = call(parent, [wire::POLL, 0, 0, 0, 0, 0, 0, 0]);
         let view = wire::poll_view(snapshot);
+        let event = wire::poll_event(snapshot);
+        let clicked = pointers.update(event).is_some_and(|b| b.left_pressed());
         if view[0] == 0 {
             if epoch != view[1] {
                 let reply = call(parent, [wire::SURFACE_CREATE, view[1], 0, 0, 0, 0, 0, 0]);
@@ -72,7 +74,6 @@ pub(crate) fn run(environment: Environment, argument: u64) -> u64 {
                 })
                 .unwrap();
             }
-            let event = wire::poll_event(snapshot);
             #[cfg(feature = "fallback-probes")]
             if launcher && event[2] == wire::KEY && event[4] == input::PRESS as u64 {
                 match event[3] as u8 {
@@ -82,18 +83,10 @@ pub(crate) fn run(environment: Environment, argument: u64) -> u64 {
                 }
             }
             match event[2] {
-                // Cancellation clears the old lease, not the physical button.
-                // Keep the last observed button state across presentation
-                // phases: a held press cannot become a new retry, and an
-                // already released button needs only one fresh click.
-                wire::CANCEL => (),
                 wire::POINTER => {
-                    let down = event[5] & 1 != 0;
                     retry |= failed
-                        && down
-                        && !pressed
+                        && clicked
                         && crate::screen::button(view, event[3], event[4], launcher);
-                    pressed = down;
                 }
                 wire::KEY => {
                     retry |=
@@ -125,8 +118,9 @@ pub(crate) fn run(environment: Environment, argument: u64) -> u64 {
                     crate::protocol::STATUS if request[1] <= crate::protocol::FAILED => {
                         failed = request[1] != crate::protocol::STARTING;
                         retry = false;
-                        // Owner revokes queued input before STATUS. Preserve
-                        // button state until a new local pointer report arrives.
+                        // Owner revokes queued input before STATUS. The next
+                        // binding/cancellation packet resets receiver holds;
+                        // residual physical holds are suppressed by the router.
                         [0; 8]
                     }
                     wire::HEALTH => {

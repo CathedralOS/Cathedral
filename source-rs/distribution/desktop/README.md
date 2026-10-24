@@ -124,7 +124,9 @@ RUN requests select and fund descendants using the same provider at each level.
 The shell runs the chooser with RUN_OBJECT and opens slots with LAUNCH_POLICY,
 so everyday programs come from the supplied realm. It explicitly lends one
 boot recovery executable to the user matrix with LAUNCH_IMAGES, then selects it
-as LAUNCHER_FALLBACK before CONFIGURE. On exhausted launcher recovery this program
+as LAUNCHER_FALLBACK before requesting CONFIGURE. The user matrix may already
+have configured itself from its realm; that first fallback supply preserves
+the running launcher's existing retry allowance. On exhausted recovery this program
 runs only in the retired strip, with no storage or child-task capacity; a local
 click requests another attempt. Ordinary apps inherit no catalogue grants.
 The test checks rollback, exhausted frame funding and repeated subtree replacement.

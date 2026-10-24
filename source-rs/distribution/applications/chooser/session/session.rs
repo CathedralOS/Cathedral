@@ -36,6 +36,7 @@ pub fn run(
         Err(_) => "CANNOT OPEN",
     };
     let mut selection = selection::Selection::new();
+    let mut pointers = cathedral_matrix::reception::Pointers::default();
     let mut scene: Option<view::Scene> = None;
     let mut repaint = true;
     let mut editor: Option<settings::Editor> = None;
@@ -72,6 +73,8 @@ pub fn run(
         }
         let snapshot = call(parent, [wire::POLL, 0, 0, 0, 0, 0, 0, 0]);
         let extent = wire::poll_view(snapshot);
+        let event = wire::poll_event(snapshot);
+        let clicked = pointers.update(event).is_some_and(|b| b.left_pressed());
         if extent[0] == 0 {
             #[cfg(feature = "picker-startup-fault")]
             if user_picker {
@@ -81,10 +84,6 @@ pub fn run(
             if !user_picker {
                 panic!("deliberate launcher startup failure");
             }
-            if scene.as_ref().is_some_and(|s| s.epoch != extent[1]) {
-                selection.pressed = false;
-            }
-            let event = wire::poll_event(snapshot);
             #[cfg(feature = "recovery-probes")]
             if !user_picker {
                 management_probe.event(parent, event);
@@ -99,15 +98,10 @@ pub fn run(
             }
             let mut choose = false;
             if management.open() {
-                repaint |= management.event(event, extent, &mut selection.pressed, parent);
+                repaint |= management.event(event, extent, clicked, parent);
             } else if let Some(edit) = &mut editor {
-                let (changed, closed) = edit.event(
-                    event,
-                    extent,
-                    &mut selection.pressed,
-                    &mut realm.scope,
-                    parent,
-                );
+                let (changed, closed) =
+                    edit.event(event, extent, clicked, &mut realm.scope, parent);
                 repaint |= changed;
                 if closed {
                     editor = None;
@@ -119,16 +113,16 @@ pub fn run(
                     continue;
                 }
             } else if !user_picker
-                && let Some(message) = tasks.click(parent, extent, event, selection.pressed)
+                && let Some(message) = tasks.click(parent, extent, event, clicked)
             {
                 status = message;
-                selection.pressed = true;
                 tasks.refresh(parent, true);
                 repaint = true;
             } else {
                 let (changed, activate) = selection.event(
                     event,
                     extent,
+                    clicked,
                     realm.count,
                     user_picker,
                     management.available(),
@@ -212,7 +206,7 @@ pub fn run(
                     "chooser drawing refused: {status}"
                 );
                 scene = None;
-                selection.pressed = false;
+                pointers.reset();
                 repaint = true;
                 continue;
             }

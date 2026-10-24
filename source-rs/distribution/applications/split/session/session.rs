@@ -27,7 +27,7 @@ pub fn run(mut services: Services) -> Result<(), Error> {
     let mut storage = children.start(storage, &mut server)?;
     let mut survey: Option<loss::Survey> = None;
     let mut deepen = false;
-    let mut button = false;
+    let mut pointers = cathedral_matrix::reception::Pointers::default();
     let mut refresh = true;
     loop {
         storage.progress(&mut server)?;
@@ -46,18 +46,16 @@ pub fn run(mut services: Services) -> Result<(), Error> {
             let grant = world.inherit_poll(snapshot);
             output.arrange(grant, world)?;
             let event = wire::poll_event(snapshot);
+            let clicked = pointers.update(event).is_some_and(|b| b.left_pressed());
             if event[2] == wire::POINTER {
-                let pressed = event[5] & 1 != 0;
-                if pressed
-                    && !button
+                if clicked
                     && event[4] < 28
                     && event[3] >= grant.width.saturating_sub(28)
                     && survey.is_none()
                 {
                     deepen = false;
                     survey = Some(loss::Survey::start(None, &mut children)?);
-                } else if pressed
-                    && !button
+                } else if clicked
                     && survey.is_none()
                     && storage.idle_pair().is_some()
                     && output.deepen_hit(event[3], event[4])
@@ -72,9 +70,6 @@ pub fn run(mut services: Services) -> Result<(), Error> {
                         output.header(false)?;
                     }
                 }
-                button = pressed;
-            } else if event[2] == wire::CANCEL {
-                button = false;
             }
             refresh = snapshot[5] & wire::MORE != 0;
         }

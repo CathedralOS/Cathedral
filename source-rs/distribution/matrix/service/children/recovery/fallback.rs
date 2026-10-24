@@ -7,6 +7,7 @@ impl Children {
         image: u64,
         argument: u64,
     ) -> Result<(), Error> {
+        let initial = self.fallback.is_none() && image != 0;
         self.fallback = if image == 0 {
             None
         } else {
@@ -15,8 +16,18 @@ impl Children {
                 argument,
             })
         };
-        // Revocation cannot be undone by a queued fallback request.
-        self.launcher = None;
+        // Realm startup may configure the launcher before its owner supplies
+        // the first fallback. That initial supply does not revoke the running
+        // launcher's retry policy. Replacement/revocation still invalidates the
+        // saved context, and cannot be undone by a queued fallback request.
+        if !initial
+            || self
+                .launcher
+                .as_ref()
+                .is_some_and(|l| !matches!(l.phase, Phase::Running { .. }))
+        {
+            self.launcher = None;
+        }
         Ok(())
     }
     pub(in crate::service) fn retry_launcher(&mut self, request: &Request) -> wire::Packet {

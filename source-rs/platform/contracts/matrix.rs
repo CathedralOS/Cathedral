@@ -35,13 +35,18 @@ pub const MORE: u64 = 1 << 16;
 /// interaction connection/view binding, not process IDs or injection authority.
 /// Each event has its stream in NEXT word six / POLL word five's high 32 bits.
 /// A stream name must not be reused within a binding. NONE has stream zero.
-/// Four streams with sixteen queued events each are the current lab limits.
-/// FIFO is per stream; no cross-stream event ordering is promised. CANCEL clears
+/// Four streams with sixteen ordinary queued events each are the current lab
+/// limits; one extra slot reserves a keyboard-cancellation boundary.
+/// NEXT word seven / POLL tag bits 17..31 carry the child-local focus group.
+/// Channels may share a group while keeping independent buttons and capture.
+/// Delivery preserves order within a group across its streams; independent
+/// groups are fairly drained without a cross-group ordering promise. CANCEL clears
 /// that receiver stream's held state. The sender suppresses residual holds until
 /// release, so the receiver must not wait for a release after CANCEL. A changed
-/// view epoch resets every stream binding. This partial encoding has neither a
-/// channel directory nor independently associated focus groups yet.
+/// view epoch resets every stream binding. This partial encoding has no channel
+/// directory or producer registration yet.
 pub const INPUT_STREAMS: usize = 4;
+pub const INPUT_GROUPS: usize = 4;
 /// Existing authenticated single-source adapter; no ambient child authority.
 pub const SINGLE_INPUT_STREAM: u32 = 1;
 pub fn poll_event(reply: Packet) -> Packet {
@@ -53,7 +58,7 @@ pub fn poll_event(reply: Packet) -> Packet {
         reply[7],
         (reply[5] >> 8) & 7,
         reply[5] >> 32,
-        0,
+        (reply[5] >> 17) & 0x7fff,
     ]
 }
 pub fn poll_view(mut reply: Packet) -> Packet {
@@ -69,6 +74,8 @@ pub const NONE: u64 = 0;
 pub const POINTER: u64 = 1;
 pub const KEY: u64 = 2;
 pub const CANCEL: u64 = 3;
+/// End only this stream's keyboard interaction; pointer hold/capture survives.
+pub const CANCEL_KEYS: u64 = 4;
 pub const KEY_MASK: u64 = 0x1f; // Existing navigation-only grants.
 pub const VALID_KEY_MASK: u64 = crate::input::KEY_MASK;
 // Owner connection only. Child requests using these opcodes are uniformly denied.

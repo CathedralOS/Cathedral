@@ -4,7 +4,7 @@ use super::wire;
 #[derive(Default)]
 pub struct Controls {
     pub open: bool,
-    pressed: bool,
+    pointers: cathedral_matrix::reception::Pointers,
 }
 pub enum Action {
     None,
@@ -15,18 +15,13 @@ pub enum Action {
 }
 impl Controls {
     pub fn rebind(&mut self) {
-        self.pressed = false;
+        self.pointers.reset();
     }
     pub fn action(&mut self, event: wire::Packet, width: u64, temporary: bool) -> Action {
-        if event[2] == wire::CANCEL {
-            self.pressed = false;
-        }
-        if event[2] != wire::POINTER {
-            return Action::None;
-        }
-        let down = event[5] & 1 != 0;
-        let clicked = down && !self.pressed;
-        self.pressed = down;
+        let clicked = self
+            .pointers
+            .update(event)
+            .is_some_and(|b| b.left_pressed());
         if !clicked {
             return Action::None;
         }

@@ -98,6 +98,10 @@ impl Children {
             );
         }
         self.startup_retired(slot, state == wire::LAUNCH_FAILED);
+        #[cfg(feature = "trace-storage")]
+        if slot == 0 && self.launcher.is_some() {
+            time::storage_sample("launcher-retired", &[state]);
+        }
         if slot == 0
             && self
                 .launcher

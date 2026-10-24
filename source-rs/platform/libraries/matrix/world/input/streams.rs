@@ -2,7 +2,7 @@
 #[derive(Clone, Copy)]
 pub(super) struct Stream {
     pub id: u32,
-    pub focus: Option<usize>,
+    pub group: usize,
     pub capture: Option<usize>,
     pub buttons: u64,
     pub blocked: bool,
@@ -13,7 +13,7 @@ impl Stream {
     pub const fn empty() -> Self {
         Self {
             id: 0,
-            focus: None,
+            group: 0,
             capture: None,
             buttons: 0,
             blocked: false,
@@ -29,10 +29,6 @@ impl Stream {
         self.buttons = 0;
     }
     pub fn forget(&mut self, child: usize) {
-        if self.focus == Some(child) {
-            self.focus = None;
-            self.suppressed |= self.held;
-        }
         if self.capture == Some(child) {
             self.capture = None;
             self.blocked |= self.buttons != 0;

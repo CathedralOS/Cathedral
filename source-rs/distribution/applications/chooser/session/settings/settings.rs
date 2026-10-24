@@ -34,24 +34,17 @@ impl Editor {
         &mut self,
         event: wire::Packet,
         extent: wire::Packet,
-        pressed: &mut bool,
+        clicked: bool,
         scope: &mut Scope,
         parent: Pair,
     ) -> (bool, bool) {
         let action = match event[2] {
             wire::POINTER => {
-                let down = event[5] & 1 != 0;
-                let action = if down && !*pressed {
+                if clicked {
                     view::hit(extent, event[3], event[4])
                 } else {
                     None
-                };
-                *pressed = down;
-                action
-            }
-            wire::CANCEL => {
-                *pressed = false;
-                None
+                }
             }
             wire::KEY if event[4] == input::PRESS as u64 => match event[3] as u8 {
                 input::UP | input::LEFT => {

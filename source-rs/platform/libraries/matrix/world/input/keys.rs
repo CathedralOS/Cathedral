@@ -35,9 +35,10 @@ impl<const N: usize> World<N> {
                 return Ok(());
             }
         }
-        if let Some(slot) = route.focus {
+        if let Some(slot) = self.input.groups[route.group].focus {
             let child = &mut self.children[slot];
-            if child.grant.keys & bit != 0 && !child.push(index, channel, wire::KEY, key, state, 0)
+            if child.grant.keys & bit != 0
+                && !child.push(index, channel, route.group, [wire::KEY, key, state, 0])
             {
                 self.cancel_stream_index(index);
             }

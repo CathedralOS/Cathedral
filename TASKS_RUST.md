@@ -1,5 +1,75 @@
 # Rust reference OS: tasks and handoff
 
+Implementation update 2026-10-23: **channels sharing focus groups**, over
+`418ef6ad`. The [input entrance](source-rs/platform/libraries/matrix/world/input/input.rs)
+now separates bounded channel state from group selection. F5's authenticated
+[source adapter](source-rs/distribution/matrix/service/requests/source.rs) supplies
+keyboard and pointer as separate channels in one group. Child-local aliases
+preserve association through nested matrices without exposing ancestor names.
+Events within a group remain ordered across channels; independent groups drain
+fairly. Motion coalescing cannot cross another channel's event in that group.
+Keyboard-only cancellation preserves pointer capture, with one reserved queue
+slot so a focus change cannot discard a full queue of pointer edges.
+
+[App reception](source-rs/platform/libraries/matrix/reception.rs) tracks pointer
+edges per channel and view binding. Chooser controls, Notes, Colors, Split and
+recovery use it. This isolates holds, not documents/dialogs: application state
+remains intentionally shared unless that application chooses otherwise. Nine
+new host tests cover reception, shared selection, independent captures, nested
+event ordering, inherited keyboard cancellation and bounded group association.
+
+The recovery fixture exposed an existing startup race: a user matrix can
+configure itself before the outer desktop supplies LAUNCHER_FALLBACK. That first
+supply used to discard its already-armed recovery. Initial supply now preserves
+a running launcher's remaining retry allowance; replacement/revocation and
+supply during pending recovery still invalidate the saved context. CONFIGURE
+on an already configured desktop remains idempotent, without rearming retries.
+
+This remains a partial service implementation. Four channels/groups and sixteen
+ordinary events per channel (plus the keyboard-cancel boundary) are lab bounds.
+General producer registration/retirement, control grants, rebinding, descriptor
+discovery and a visible synthetic producer are not implemented. NEXT word seven
+and POLL tag bits 17..31 now carry the group; rebuild programs together. Earlier
+entries saying one stream equals one route or that F5 supplies one combined
+stream are superseded.
+
+Next: explicitly granted producer registration and lifetime, including namespacing
+upstream versus local sources and safe retirement with unread events. Do not
+silently grant production to every app through `imports::ALL`. Then demonstrate
+physical and synthetic groups, separate cursors and focus, and nested forwarding
+in ordinary F5. Rendering demand/masked capture follow; coordination acquisition
+remains queued. No owner answer blocks this work.
+
+Verification: full workspace host tests (59 matrix tests), matrix/contracts host
+clippy, `cargo check-userspace`, stock matrix trace/delay feature clippy, layout
+(40 Omega / 125 Rust package edges), format and whitespace checks. Documentation
+relative targets checked. QEMU artifacts under `build/boot-harness-rs/`:
+
+- `desktop/20261024T052905822760Z`: ordinary F5 apps, draft isolation, close choices,
+  persistence and cold reboot.
+- `desktop/20261024T052548991673Z`: four nested desktops with TCG absolute input,
+  saved inner data, repeated teardown/isolation and cold reopening.
+- `desktop/20261024T052753935286Z`: alternative Split within Split, focus, resize,
+  dirty-close and funded refusal, with cold persistence.
+- `launcher-recovery/20261024T054041211303Z`: all seven modes, including automatic
+  and explicit retry, startup failure, clean exit, owner stop/revoke, fallback
+  failure/exit, retained dirty Notes and cold persistence. Input work initially
+  failed this test; the startup race above was diagnosed and fixed before this run.
+- `settings/20261024T054516922878Z`: Cancel, live/saved arrangement, running apps,
+  three boots and independent new-user defaults.
+- `management/20261024T054557452216Z`: hung app termination, both Cancel choices,
+  stale/ungranted authority, launcher recovery, replacement apps and cold persistence.
+- `matrix-test`: final `--matrix-test --release --timeout 90` passed recursive
+  input, confinement, revoke/resize and subtree replacement over actual IPC.
+
+The first three desktop runs precede the subsequent fallback-policy correction;
+the recovery/settings/management fixtures include it. No producer-registration,
+GPU, remote-rendering or performance guarantee is implied. The stock matrix ELF
+is 236,816 bytes, 90% of the current 256 KiB stored-object limit. The independent
+three-peer composition passed scoped acquisition, interrupted handoffs, rollback
+and subtree reclamation at
+`matrix-composition/20261024T054757404596Z`.
+
 Implementation update 2026-10-23: **independent input routing foundation**, over
 `1f4c81e5`. The [matrix input entrance](source-rs/platform/libraries/matrix/world/input/input.rs)
 now owns four bounded upstream streams with separate focus, capture, held keys

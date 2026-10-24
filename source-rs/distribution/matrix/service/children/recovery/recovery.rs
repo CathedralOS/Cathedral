@@ -16,6 +16,8 @@ impl Children {
         if self.slots[0].as_ref().map(|child| child.task.raw()) != Some(launcher.task)
             || self.saved_storage[0] != Some((0, 0))
         {
+            #[cfg(feature = "trace-storage")]
+            time::storage_sample("launcher-recovery-identity", &[]);
             self.launcher = None;
             return;
         }
@@ -24,7 +26,11 @@ impl Children {
             parent.storage_identity(),
         ) {
             (Some(placement), Some(binding)) => launcher.snapshot = Some((placement, binding)),
-            _ => self.launcher = None,
+            _ => {
+                #[cfg(feature = "trace-storage")]
+                time::storage_sample("launcher-recovery-no-authority", &[]);
+                self.launcher = None;
+            }
         }
     }
     pub(in crate::service) fn recovery_owner_changed(&mut self, words: wire::Packet) {
@@ -75,6 +81,8 @@ impl Children {
         let launcher = self.launcher.as_ref().unwrap();
         let (placement, binding) = launcher.snapshot.expect("captured before retirement");
         if !world.parent_matches(placement) || parent.storage_identity() != Some(binding) {
+            #[cfg(feature = "trace-storage")]
+            time::storage_sample("launcher-recovery-parent-changed", &[]);
             self.launcher = None;
             return Ok(false);
         }
@@ -89,6 +97,8 @@ impl Children {
             return Ok(true);
         }
         if self.slots[0].is_some() || !server.available(0) {
+            #[cfg(feature = "trace-storage")]
+            time::storage_sample("launcher-recovery-slot-replaced", &[]);
             self.launcher = None;
             return Ok(false);
         }

@@ -22,7 +22,7 @@ impl Fixture {
         self.pointer(115, 127, 1);
         assert_eq!(
             &self.next(2, resized[1])[2..],
-            &[wire::POINTER, 5, 7, 1, 1, 0]
+            &[wire::POINTER, 5, 7, 1, 1, 1]
         );
         self.pointer(115, 127, 0);
         assert_eq!(self.next(2, resized[1])[2], wire::POINTER);

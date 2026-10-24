@@ -293,7 +293,7 @@ pub fn run(environment: Environment) -> Result<(), Error> {
                 if client < CHILDREN {
                     children.disconnected(client, &mut server, world, parent)?;
                 } else if client == SOURCE {
-                    world.cancel();
+                    requests::source::cancel(world);
                 } else {
                     parent.storage_close(parent.storage_slot(client))?;
                 }

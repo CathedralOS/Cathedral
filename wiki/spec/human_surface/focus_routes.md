@@ -135,9 +135,13 @@ and [child queues](../../../source-rs/platform/libraries/matrix/world/children.r
 now exercise separate targeting, cancellation and held-key suppression for four
 bounded upstream streams. Host proofs cover independent selection, scoped overflow,
 fair draining and recursive cancellation without losing the next fresh press.
-Each stream currently has one route state. General group registration, channel
-association, control grants and all capture semantics in this contract are not
-implemented; the normal desktop still supplies one physical stream.
+Explicit associations now allow several channels to share a group's selection
+while keeping independent capture. Group-local delivery order survives recursive
+forwarding; keyboard-only cancellation does not end a pointer's drag. Host proofs
+cover those transitions and refusal to silently reassociate an existing stream.
+The normal desktop uses distinct pointer and keyboard channels in one group.
+General group registration, control grants, retirement/rebinding and all capture
+semantics in this contract are not implemented.
 
 Current recursive event forwarding remains an implementation baseline, not a
 mandated production transport. The host routing proofs do not establish a complete

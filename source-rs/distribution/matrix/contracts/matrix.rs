@@ -35,15 +35,18 @@ pub const APPLY_LAYOUT: u64 = 16;
 /// No automatic retry is replenished; app state and placement remain intact.
 pub const RETRY_LAUNCHER: u64 = 20;
 
-/// Ask this stock matrix to load its own Matrix configuration; refuses if running.
+/// Ask this stock matrix to load its own Matrix configuration. Already configured
+/// returns success without rearming recovery; other occupied arrangements refuse.
 /// Arms one local retry of a faulted/nonzero-exit launcher under unchanged
 /// authority. Explicit stop/owner policy changes cancel it; app state survives.
 pub const CONFIGURE: u64 = 122;
 
 /// Owner-only: [LAUNCHER_FALLBACK, executable index + 1, argument, 0..]. Zero
-/// removes the policy. Set before CONFIGURE; changing it cancels any previously
-/// configured recovery, including queued retries. CONFIGURE may use this code
-/// after launcher retry exhaustion. The fallback has local interaction and retry authority;
+/// removes the policy. The first nonzero supply can precede CONFIGURE or follow
+/// realm startup while the launcher is running, preserving its retry allowance.
+/// Replacement/revocation cancels configured recovery, including queued retries.
+/// An initial supply during pending recovery also cancels that context. After
+/// launcher retry exhaustion, the fallback has local interaction and retry authority;
 /// no storage, layout, task-management or descendant capacity. Template
 /// admission retains its own code grant, with no additional executable grants.
 pub const LAUNCHER_FALLBACK: u64 = 127;

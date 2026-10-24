@@ -102,6 +102,7 @@ dependencies = [
  "cathedral-bitmap-font",
  "cathedral-desktop-matrix-contracts",
  "cathedral-kernel-contracts",
+ "cathedral-matrix",
  "cathedral-platform-contracts",
  "cathedral-user-runtime",
 ]
@@ -113,6 +114,7 @@ dependencies = [
  "cathedral-bitmap-font",
  "cathedral-desktop-matrix-contracts",
  "cathedral-kernel-contracts",
+ "cathedral-matrix",
  "cathedral-platform-contracts",
  "cathedral-user-runtime",
 ]
@@ -275,6 +277,7 @@ dependencies = [
  "cathedral-bitmap-font",
  "cathedral-desktop-matrix-contracts",
  "cathedral-kernel-contracts",
+ "cathedral-matrix",
  "cathedral-platform-contracts",
  "cathedral-user-runtime",
 ]
@@ -337,6 +340,7 @@ dependencies = [
  "cathedral-bitmap-font",
  "cathedral-desktop-matrix-contracts",
  "cathedral-kernel-contracts",
+ "cathedral-matrix",
  "cathedral-platform-contracts",
  "cathedral-user-runtime",
 ]

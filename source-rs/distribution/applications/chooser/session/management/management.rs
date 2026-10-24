@@ -34,23 +34,17 @@ impl Controls {
         &mut self,
         event: wire::Packet,
         extent: wire::Packet,
-        pressed: &mut bool,
+        clicked: bool,
         parent: Pair,
     ) -> bool {
         let activate = match event[2] {
             wire::POINTER => {
-                let down = event[5] & 1 != 0;
                 let hit = view::hit(extent, event[3], event[4]);
-                let activate = down && !*pressed && hit.is_some();
-                *pressed = down;
+                let activate = clicked && hit.is_some();
                 if activate {
                     self.cancel = hit.unwrap();
                 }
                 activate
-            }
-            wire::CANCEL => {
-                *pressed = false;
-                false
             }
             wire::KEY if event[4] == input::PRESS as u64 => match event[3] as u8 {
                 input::UP | input::DOWN | input::LEFT | input::RIGHT => {

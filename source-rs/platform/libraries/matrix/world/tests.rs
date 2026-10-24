@@ -246,7 +246,10 @@ fn focus_cancellation_does_not_transfer_a_held_key_to_a_sibling() {
     w.key(input::ENTER as u64, input::PRESS as u64);
     w.pointer(210, 10, 1);
     w.pointer(210, 10, 0);
-    assert_eq!(next(&mut w, 0, a)[2], wire::CANCEL);
+    // Selecting another child cancels keyboard work, but retains pointer edges.
+    assert_eq!(next(&mut w, 0, a)[2], wire::POINTER);
+    assert_eq!(next(&mut w, 0, a)[2], wire::POINTER);
+    assert_eq!(next(&mut w, 0, a)[2], wire::CANCEL_KEYS);
     assert_eq!(next(&mut w, 0, a)[2], wire::NONE);
     assert_eq!(next(&mut w, 1, b)[2], wire::POINTER);
     assert_eq!(next(&mut w, 1, b)[2], wire::POINTER);
