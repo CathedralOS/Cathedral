@@ -256,7 +256,21 @@ pub fn run(style: u64, mut services: Services) {
             } else {
                 0
             };
+            #[cfg(feature = "capture-source-exit")]
+            if frame_ticket != 0 {
+                cathedral_user_runtime::write(
+                    b"Cathedral capture: source exits before acknowledgment\n",
+                )
+                .unwrap();
+                return;
+            }
             let painted = (|| -> Result<(), u64> {
+                #[cfg(feature = "capture-source-stall")]
+                if frame_ticket != 0 {
+                    // The disposable source stays alive and services input/control,
+                    // but never acknowledges this capture. Owner timeout must release it.
+                    return Ok(());
+                }
                 if !wire::poll_frames(snapshot) {
                     return Ok(());
                 }
@@ -299,7 +313,10 @@ pub fn run(style: u64, mut services: Services) {
                 repaint = true;
                 continue;
             }
-            if frame_ticket != 0 && wire::poll_frames(snapshot) {
+            if frame_ticket != 0
+                && wire::poll_frames(snapshot)
+                && !cfg!(feature = "capture-source-stall")
+            {
                 let _ = call(
                     parent,
                     [wire::FRAME_READY, extent[1], frame_ticket, 0, 0, 0, 0, 0],

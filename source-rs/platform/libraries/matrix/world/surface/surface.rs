@@ -191,6 +191,32 @@ impl<const N: usize> World<N> {
             color,
         ])
     }
+    /// Owner-only capture snapshot in source-local coordinates, independent of
+    /// display visibility. The returned backing key stays within the provider.
+    /// Caller pins readers before dispatching any later publication.
+    pub fn capture_surface(
+        &self,
+        slot: usize,
+        incarnation: u64,
+        epoch: u64,
+        rank: usize,
+    ) -> Result<Option<wire::Packet>, u64> {
+        if !self.binding_matches(slot, incarnation, epoch) {
+            return Err(abi::DENIED);
+        }
+        let child = &self.children[slot];
+        let Some(surface) = child.surfaces.get(rank).ok_or(abi::DENIED)? else {
+            return Ok(None);
+        };
+        let Some(mut words) = surface.draw else {
+            return Ok(None);
+        };
+        words[1] = epoch;
+        words[2] = surface.upstream;
+        words[5] = words[5].min(child.grant.width.saturating_sub(words[3]));
+        words[6] = words[6].min(child.grant.height.saturating_sub(words[4]));
+        Ok((words[5] != 0 && words[6] != 0).then_some(words))
+    }
     /// Replay one object at a time: no full-scene temporaries on the user stack.
     pub fn replay(&mut self, slot: usize, rank: usize) -> Option<wire::Packet> {
         let child = &self.children[slot];

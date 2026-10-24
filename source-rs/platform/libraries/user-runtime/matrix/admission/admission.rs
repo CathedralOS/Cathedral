@@ -16,6 +16,7 @@ pub struct Admitted {
     pub notify: Handle,
     pub storage: Option<Pair>,
     pub producer: Option<Pair>,
+    pub capture: Option<Pair>,
     pub services: Option<crate::services::Offer>,
 }
 
@@ -56,7 +57,8 @@ fn spawn_mode(
     let port = target.port()?;
     let producer =
         granted.is_some_and(|g| g & cathedral_platform_contracts::imports::INPUT_PRODUCER != 0);
-    let connections = connections::Connections::create(storage, producer)?;
+    let capture = granted.is_some_and(|g| g & cathedral_platform_contracts::imports::CAPTURE != 0);
+    let connections = connections::Connections::create(storage, producer, capture)?;
     let child = match target.spawn_tree(
         argument,
         if granted.is_some() {
@@ -93,6 +95,7 @@ fn spawn_mode(
         notify: connections.notify,
         storage: connections.storage,
         producer: connections.producer,
+        capture: connections.capture,
     })
 }
 
@@ -117,6 +120,10 @@ impl Admitted {
             output.close()?;
         }
         if let Some((input, output)) = self.producer {
+            input.close()?;
+            output.close()?;
+        }
+        if let Some((input, output)) = self.capture {
             input.close()?;
             output.close()?;
         }

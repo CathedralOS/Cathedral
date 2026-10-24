@@ -20,6 +20,8 @@ pub struct Services {
     storage_absent: bool,
     producer: Option<Pair>,
     producer_absent: bool,
+    capture: Option<Pair>,
+    capture_absent: bool,
     failed: bool,
     brokered: bool,
 }
@@ -36,6 +38,8 @@ impl Services {
                 storage_absent: false,
                 producer: None,
                 producer_absent: false,
+                capture: None,
+                capture_absent: false,
                 failed: false,
                 brokered: true,
             });
@@ -52,6 +56,8 @@ impl Services {
             storage_absent: old.storage.is_none(),
             producer: None,
             producer_absent: true,
+            capture: None,
+            capture_absent: true,
             failed: false,
             brokered: false,
         })
@@ -124,6 +130,33 @@ impl Services {
             }
         };
         self.producer = Some((send, receive));
+        Ok((send, receive))
+    }
+    /// Acquire only the explicitly offered capture connection.
+    pub fn capture(&mut self, minimum: u64, maximum: u64) -> Result<Pair, Error> {
+        version(minimum, maximum)?;
+        if self.capture_absent {
+            return Err(Error(wire::UNAVAILABLE as i64));
+        }
+        if let Some(pair) = self.capture {
+            return Ok(pair);
+        }
+        let send = match self.acquire(imports::CAPTURE, minimum, maximum, 0) {
+            Ok(send) => send,
+            Err(Error(code)) if code == wire::UNAVAILABLE as i64 => {
+                self.capture_absent = true;
+                return Err(Error(code));
+            }
+            Err(error) => return Err(error),
+        };
+        let receive = match self.acquire(imports::CAPTURE, minimum, maximum, 1) {
+            Ok(receive) => receive,
+            Err(error) => {
+                send.close()?;
+                return Err(error);
+            }
+        };
+        self.capture = Some((send, receive));
         Ok((send, receive))
     }
     fn acquire(

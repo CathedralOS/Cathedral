@@ -3,7 +3,7 @@ from pathlib import Path
 import shutil
 
 
-def exercise(output, click, key, scan, width, height, resumed):
+def exercise(output, click, key, scan, width, height, resumed, capture=False):
     font = bytes.fromhex((Path(__file__).resolve().parents[2] / 'source-rs/platform/libraries/bitmap-font/font.hex').read_text())
     def pixel(w, d, x, y): return d[(y*w+x)*3:(y*w+x+1)*3]
     def text(w, d, x, y, value):
@@ -42,6 +42,20 @@ def exercise(output, click, key, scan, width, height, resumed):
         click(13,160); key('h'); left += 'h'; note(0,left,True)
         assert 'STORAGE_TRACE split-publication 1 ' not in log()[start:].split('STORAGE_TRACE note-demand 0',1)[1]
         shutil.copyfile(output/'display.png',output/f'demand-hidden-{round}.png')
+        if capture:
+            received=log().count('Cathedral capture: masked result received and presented')
+            click(width-8-512+60,18)
+            scan(lambda w,d: log().count('Cathedral capture: masked result received and presented')>received
+                 and pixel(w,d,21,169)==bytes.fromhex('9b7028')
+                 and pixel(w,d,31,189)==bytes(3), 'separate consumer displays fresh masked capture')
+            assert log().count('Cathedral capture: recipient verified redaction, padding and single delivery')==round+1
+            # Capturing has not revealed the source, and demand stops afterward.
+            scan(lambda w,d: pixel(w,d,positions[1][0]+5,50)==bytes.fromhex('101827')
+                 and log()[start:].count('STORAGE_TRACE note-demand 0')>=2, 'capture releases demand without revealing source')
+            shutil.copyfile(output/'display.png',output/f'capture-{round}.png')
+            click(width-8-512+60,18)
+            scan(lambda w,d: log().count('Cathedral capture: consumer and retained result retired')==round+1, 'consumer and image retired')
+
         right += 'bot'
         click(width-8-384+60,18)
         note(1,right,True)

@@ -97,6 +97,13 @@ Run these commands from the repository root.
 over real IPC, with no stock matrix/desktop contract or storage disk. The ordinary
 F5 matrix shares its local grant and input command implementation.
 
+The installed Split matrix also has a bounded masked capture demonstration:
+F5 -> user -> Split -> CAPTURE. HIDE RIGHT can remove the source presentation
+without preventing authorized capture. See [Split's guide](distribution/applications/split/README.md)
+for the fixed mask and current limits. `python tools/boot-harness-rs/desktop_test.py
+--capture` verifies actual delivered pixels; `--capture-case ordinary|source|recipient|timeout`
+selects normal delivery or disposable lifecycle faults, each on fresh/cold boots.
+
 ## Start reading
 
 For ongoing work or an agent handoff, read [TASKS_RUST.md](../TASKS_RUST.md) first.

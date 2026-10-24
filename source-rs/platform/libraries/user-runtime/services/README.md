@@ -1,7 +1,8 @@
 # Service acquisition runtime
 
 Start at [services.rs](services.rs): load startup bindings, request an interaction
-or storage connection, cache the result, and preserve transport failure state.
+or explicitly offered storage/producer/capture connection, cache the result, and
+preserve transport failure state.
 [offer.rs](offer.rs) is the provider half: select an endpoint from the approved
 ceiling, transfer it once, and retain failures for later teardown. The
 [platform contract](../../../contracts/services/README.md) defines the wire and

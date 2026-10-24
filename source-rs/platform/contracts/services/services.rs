@@ -11,7 +11,7 @@ pub const INVALID: u64 = 0x53520003;
 pub const TAKEN: u64 = 0x53520004;
 
 /// Select a preallocated endpoint: interaction wake, storage send/receive,
-/// input-producer send/receive. Selection never grants production by itself.
+/// input-producer send/receive, capture send/receive. Selection grants no scope.
 /// No caller identity or desired scope comes from the request bytes.
 pub fn select(granted: u64, words: Packet) -> Result<usize, u64> {
     let [ACQUIRE, version, contract, minimum, maximum, part, 0, 0] = words else {
@@ -25,7 +25,7 @@ pub fn select(granted: u64, words: Packet) -> Result<usize, u64> {
     }
     if !matches!(
         contract,
-        imports::INTERACTION | imports::STORAGE | imports::INPUT_PRODUCER
+        imports::INTERACTION | imports::STORAGE | imports::INPUT_PRODUCER | imports::CAPTURE
     ) || granted & contract == 0
     {
         return Err(UNAVAILABLE);
@@ -39,6 +39,8 @@ pub fn select(granted: u64, words: Packet) -> Result<usize, u64> {
         (imports::STORAGE, 1) => Ok(2),
         (imports::INPUT_PRODUCER, 0) => Ok(3),
         (imports::INPUT_PRODUCER, 1) => Ok(4),
+        (imports::CAPTURE, 0) => Ok(5),
+        (imports::CAPTURE, 1) => Ok(6),
         _ => Err(INVALID),
     }
 }

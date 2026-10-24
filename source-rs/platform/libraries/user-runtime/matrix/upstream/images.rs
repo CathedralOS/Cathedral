@@ -1,4 +1,5 @@
-//! Keep read authority for replay without ever mapping a child's pixels.
+//! Retain sealed readers for replay; ordinary forwarding does not map pixels.
+//! A capture/raster owner can explicitly map them for one bounded operation.
 use super::*;
 pub struct Images([Option<(u64, Object)>; wire::MAX_SURFACES]);
 impl Default for Images {
@@ -17,6 +18,31 @@ impl Images {
             .find(|(k, _)| *k == key)
             .map(|(_, image)| image)
             .ok_or(Error(abi::BAD_HANDLE as i64))
+    }
+    /// A compositor/capture provider may map retained sealed readers while
+    /// rasterizing. Ordinary recursive forwarding continues to use get unmapped.
+    pub fn map(&mut self, key: u64) -> Result<(), Error> {
+        self.0
+            .iter_mut()
+            .flatten()
+            .find(|(k, _)| *k == key)
+            .ok_or(Error(abi::BAD_HANDLE as i64))?
+            .1
+            .map()?;
+        Ok(())
+    }
+    pub fn unmap(&mut self, key: u64) -> Result<(), Error> {
+        let object = &mut self
+            .0
+            .iter_mut()
+            .flatten()
+            .find(|(k, _)| *k == key)
+            .ok_or(Error(abi::BAD_HANDLE as i64))?
+            .1;
+        if object.bytes().is_some() {
+            object.unmap()?;
+        }
+        Ok(())
     }
     pub fn room(&self, key: u64) -> Result<(), Error> {
         if self

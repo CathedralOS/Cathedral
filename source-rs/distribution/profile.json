@@ -201,6 +201,12 @@
         "display_title": "PARTICIPANT"
       },
       {
+        "path": "Split/Capture",
+        "package": "cathedral-capture-demo",
+        "entry": "distribution/applications/capture-demo/main.rs",
+        "target": "x86_64-unknown-none"
+      },
+      {
         "path": "Nested",
         "package": "cathedral-stock-matrix",
         "entry": "distribution/matrix/main.rs",

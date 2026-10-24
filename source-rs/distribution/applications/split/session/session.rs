@@ -2,7 +2,7 @@
 // Children receive interaction and separate scoped storage connections.
 use cathedral_kernel_contracts::user as abi;
 use cathedral_matrix::world::{Grant, Rect};
-type World = cathedral_matrix::world::World<3>;
+type World = cathedral_matrix::world::World<4>;
 use cathedral_platform_contracts::{imports, matrix as wire, services};
 use cathedral_user_runtime::{
     Error,
@@ -17,7 +17,7 @@ use rendering::Output;
 pub fn run(mut services: Services) -> Result<(), Error> {
     let interaction = services.interaction(1, 1)?;
     let storage = services.storage(1, 1)?;
-    let mut server = Server::open_clients(6)?;
+    let mut server = Server::open_clients(8)?;
     server.enable_memory();
     static mut WORLD: World = World::empty();
     let arena = &raw mut WORLD;
@@ -26,6 +26,7 @@ pub fn run(mut services: Services) -> Result<(), Error> {
     let mut output = Output::new(interaction.pair);
     let mut children = Children::empty();
     let mut producer = producer::Producer::empty();
+    let mut capture = capture::Capture::empty();
     let mut storage = children.start(storage, &mut server)?;
     let mut survey: Option<loss::Survey> = None;
     let mut deepen = false;
@@ -58,6 +59,16 @@ pub fn run(mut services: Services) -> Result<(), Error> {
                 {
                     deepen = false;
                     survey = Some(loss::Survey::start(None, &mut children)?);
+                } else if clicked && survey.is_none() && output.capture_hit(event[3], event[4]) {
+                    if capture.running() {
+                        capture.stop(&mut output, world, &mut server)?;
+                    } else if let Some(pair) = storage.idle_pair()
+                        && let Err(error) = capture.start(pair, &mut output, world, &mut server)
+                    {
+                        time::storage_sample("split-capture-refused", &[error.0 as u64]);
+                        output.failure = Some(b"CANNOT CAPTURE");
+                    }
+                    output.header(false)?;
                 } else if clicked && survey.is_none() && output.visibility_hit(event[3], event[4]) {
                     output.toggle_right(world)?;
                 } else if clicked && survey.is_none() && output.automatic_hit(event[3], event[4]) {
@@ -90,6 +101,7 @@ pub fn run(mut services: Services) -> Result<(), Error> {
             refresh = snapshot[5] & wire::MORE != 0;
         }
         producer.maintain(&mut output, world, &mut server)?;
+        capture.progress(&mut output, world, &mut server)?;
         output.flush(world)?;
         children.notify(world)?;
         if let Some(s) = &mut survey
@@ -104,6 +116,7 @@ pub fn run(mut services: Services) -> Result<(), Error> {
                 // Descendants answered clean; collect their grants and images
                 // before lending the same conserved funding to the new matrix.
                 if let Some(pair) = storage.idle_pair() {
+                    capture.stop(&mut output, world, &mut server)?;
                     producer.stop(&mut output, world, &mut server)?;
                     for slot in 0..2 {
                         storage.revoke(slot);
@@ -128,6 +141,7 @@ pub fn run(mut services: Services) -> Result<(), Error> {
                 }
                 deepen = false;
             } else if clean {
+                capture.stop(&mut output, world, &mut server)?;
                 producer.stop(&mut output, world, &mut server)?;
                 return Ok(());
             } else {
@@ -168,6 +182,10 @@ pub fn run(mut services: Services) -> Result<(), Error> {
             (Some(a), Some(b)) => Some(a.min(b)),
             (a, b) => a.or(b),
         };
+        let deadline = match (deadline, capture.deadline()) {
+            (Some(a), Some(b)) => Some(a.min(b)),
+            (a, b) => a.or(b),
+        };
         let Some(event) = server.next_event_or(&wake[..count], deadline)? else {
             continue;
         };
@@ -175,6 +193,10 @@ pub fn run(mut services: Services) -> Result<(), Error> {
             Event::Request(r) | Event::Memory(r, _) => r.client,
             Event::Disconnected { client, .. } => Some(*client),
         };
+        if client.is_some_and(|c| c >= capture::BROKER) {
+            capture.dispatch(event, &mut output, world, &mut server)?;
+            continue;
+        }
         if client.is_some_and(|c| c >= producer::BROKER) {
             producer.dispatch(event, &mut output, world, &mut server)?;
             continue;
@@ -188,5 +210,7 @@ pub fn run(mut services: Services) -> Result<(), Error> {
             &mut survey,
             &mut storage,
         )?;
+        // Pin/render a source frame before dispatching any later publication.
+        capture.progress(&mut output, world, &mut server)?;
     }
 }

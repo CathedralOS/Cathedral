@@ -5,7 +5,7 @@ impl Output {
         if self.header == 0 {
             return Ok(());
         }
-        let width = (self.grant.width as usize).min(384);
+        let width = (self.grant.width as usize).min(512);
         let mut pixels = Private::allocate((width * 28 * 4).div_ceil(4096))?;
         for p in pixels.bytes_mut()[..width * 28 * 4].chunks_exact_mut(4) {
             p.copy_from_slice(&0x202d43u32.to_le_bytes());
@@ -14,6 +14,18 @@ impl Output {
         for (left, text) in [
             (
                 8,
+                if width >= 512 && !self.nested && self.failure.is_none() && !dirty {
+                    if self.capturing {
+                        b"CLEAR".as_slice()
+                    } else {
+                        b"CAPTURE".as_slice()
+                    }
+                } else {
+                    b""
+                },
+            ),
+            (
+                width.saturating_sub(384) + 8,
                 if width >= 384 && !self.nested && self.failure.is_none() && !dirty {
                     if self.hidden_right {
                         b"SHOW RIGHT".as_slice()

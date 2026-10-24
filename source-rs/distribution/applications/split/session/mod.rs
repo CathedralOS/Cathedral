@@ -1,4 +1,5 @@
 //! Rust plumbing. Start at `session.rs`.
+mod capture;
 mod children;
 mod loss;
 mod producer;

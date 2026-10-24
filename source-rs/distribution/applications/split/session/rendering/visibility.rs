@@ -3,6 +3,15 @@
 //! transition through every parent: each surface is forwarded independently.
 use super::*;
 impl Output {
+    pub fn capture_hit(&self, x: u64, y: u64) -> bool {
+        let left = self.grant.width.saturating_sub(512);
+        self.grant.width >= 512
+            && !self.nested
+            && self.failure.is_none()
+            && y < 28
+            && (left..left + 128).contains(&x)
+    }
+
     pub fn visibility_hit(&self, x: u64, y: u64) -> bool {
         let left = self.grant.width.saturating_sub(384);
         self.grant.width >= 384

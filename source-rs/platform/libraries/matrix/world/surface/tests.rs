@@ -326,3 +326,40 @@ fn owner_can_hide_scene_and_separately_deactivate_input() {
     assert_eq!(&w.replay(0, 0).unwrap()[5..], &[70, 50, 456]);
     assert_eq!(view(&mut w, 0), original);
 }
+
+#[test]
+fn capture_reads_only_an_authorized_local_scene_even_when_hidden() {
+    let mut w = world();
+    place(&mut w, 0, 10, 20);
+    let view = view(&mut w, 0);
+    let epoch = view[1];
+    // Existing helpers bind incarnation 7.
+    let incarnation = 7;
+    let rank = w.prepare_surface(0, incarnation, epoch, 0).unwrap();
+    let name = w.create_surface(0, rank as usize, 99);
+    let words = [wire::PAINT, epoch, name, 2, 3, 8, 9, 0x112233];
+    w.surface(0, incarnation, words).unwrap();
+    w.visible(0, false).unwrap();
+    let local = w
+        .capture_surface(0, incarnation, epoch, 0)
+        .unwrap()
+        .unwrap();
+    assert_eq!(local, [wire::PAINT, epoch, 99, 2, 3, 8, 9, 0x112233]);
+    assert_eq!(
+        w.capture_surface(0, incarnation + 1, epoch, 0),
+        Err(abi::DENIED)
+    );
+    assert_eq!(
+        w.capture_surface(1, incarnation, epoch, 0),
+        Err(abi::DENIED)
+    );
+    assert_eq!(
+        w.capture_surface(0, incarnation, epoch + 1, 0),
+        Err(abi::DENIED)
+    );
+    w.disconnected(0);
+    assert_eq!(
+        w.capture_surface(0, incarnation, epoch, 0),
+        Err(abi::DENIED)
+    );
+}

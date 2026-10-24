@@ -10,6 +10,9 @@ pub(super) struct Bound {
     pub resources: Option<(u64, u64)>,
 }
 pub(super) fn resolve(object: &mut Object, offered: u64) -> Result<Bound, Error> {
+    // This host serves interaction, storage and input production. Capture is
+    // implemented by Split; recognizing its manifest bit cannot create a provider.
+    let offered = offered & (imports::ALL | imports::INPUT_PRODUCER);
     let declaration = imports::from_elf(object.map()?).map_err(status);
     object.unmap()?;
     let declaration = declaration?;
@@ -22,7 +25,9 @@ pub(super) fn resolve(object: &mut Object, offered: u64) -> Result<Bound, Error>
     let offered = if brokered {
         offered
     } else {
-        offered & !imports::INPUT_PRODUCER
+        // The positional bundle can represent only interaction and storage.
+        // Future broker services must not appear bound without a transport.
+        offered & imports::ALL
     };
     let bound = imports::bind(required, offered).map_err(status)?;
     // This host is an interactive matrix. Programs with other startup shapes

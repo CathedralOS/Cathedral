@@ -70,3 +70,27 @@ fn version_shape_and_endpoint_selection_are_independent() {
         Err(INVALID)
     );
 }
+
+#[test]
+fn capture_is_explicit_and_distinct_from_production_and_storage() {
+    for (part, index) in [(0, 5), (1, 6)] {
+        let words = request(imports::CAPTURE, 1, 1, part);
+        assert_eq!(
+            select(imports::ALL | imports::INPUT_PRODUCER, words),
+            Err(UNAVAILABLE)
+        );
+        assert_eq!(select(imports::SUPPORTED, words), Ok(index));
+    }
+    assert_eq!(
+        select(imports::SUPPORTED, request(imports::CAPTURE, 1, 1, 2)),
+        Err(INVALID)
+    );
+    assert_eq!(
+        imports::bind(&[imports::Import::v1(imports::CAPTURE, true)], imports::ALL),
+        Err(imports::Refusal::Missing(imports::CAPTURE))
+    );
+    assert_eq!(
+        imports::bind(&imports::REQUIRED, imports::SUPPORTED),
+        Ok(imports::ALL)
+    );
+}

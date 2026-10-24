@@ -198,7 +198,15 @@ continuing state work. The installed [Split demonstration](../../../source-rs/di
 can hide its right note while an independent input participant edits it, then
 restore its updated content. The desktop fixture checks actual hidden edits,
 absence of child drawing submissions and cold-open saved data. This is bounded
-display demand, not rate negotiation or capture-generated demand.
+display demand, not rate negotiation.
+
+The installed Split capture provider separately adds bounded frame demand to its
+Notes source, including while hidden. A supplied recipient requests one fixed
+owner-masked crop, receives sealed output and presents it in its own rectangle.
+The [capture integration](../../../source-rs/distribution/applications/split/session/capture/capture.rs)
+uses the [platform lease/raster mechanisms](../../../source-rs/platform/libraries/matrix/capture/README.md).
+This is leaf-source software evidence: it does not implement app-published masks,
+recursive source readiness, arbitrary views, remote capture or GPU synchronization.
 
 The accepted policy does not freeze that lab encoding. Drawing/text placement,
 detailed cache residency/sponsorship, direct-writer admission, exact scene/mask

@@ -6,10 +6,14 @@ and retains that result until transfer succeeds or the lease is retired.
 [Geometry](geometry.rs) validates an immutable crop/mask plan.
 [Rasterization](raster.rs) produces packed RGBX output from stable source layers.
 
-These are provider mechanisms, **not a shipped capture service**. There is no
-capture import, recipient IPC adapter or F5 capture control yet. The ordinary
-Notes app understands the frame-demand handshake; no default matrix requests it.
-No existing app receives new read or injection authority.
+These provider mechanisms are exercised by the installed
+[Split provider](../../../../distribution/applications/split/session/capture/capture.rs)
+and a separate [capture viewer](../../../../distribution/applications/capture-demo/main.rs).
+The [capture protocol](../../../contracts/capture.rs) and
+[recipient client](../../user-runtime/capture.rs) define their IPC boundary.
+Only Split explicitly offers this service; ordinary app offers remain unchanged.
+The demo uses a fixed owner-selected crop/mask over Notes, not general app-published
+privacy metadata or recursive source readiness.
 
 ## Provider obligations and sequence
 
@@ -66,7 +70,8 @@ makes no latency or GPU claim.
 Host tests exercise sibling/endpoint refusal, view replacement, stale ticket
 cleanup, clock wrap/expiry, counter exhaustion, destination bounds, stride and
 crop handling, mask overlap, cursor transparency, zeroed padding, retained-result
-lifetime, and the composed hidden-frame/result/release sequence. They do not prove
-kernel attachment delivery or an installed capture UI. The next work is the
-separately supplied capture endpoint, funded IPC provider/consumer, coherent
-scene pinning, and a desktop mask/demand/death workflow.
+lifetime, and the composed hidden-frame/result/release sequence. Installed IPC
+checks live in `tools/boot-harness-rs/desktop_test.py --capture`: a separate
+recipient inspects actual redaction/padding bytes and publishes only the masked
+image while the source remains hidden. Lifecycle variants use `--capture-case`;
+see [the current handoff](../../../../../TASKS_RUST.md) for verified runs and limits.

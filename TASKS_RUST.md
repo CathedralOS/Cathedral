@@ -1,5 +1,73 @@
 # Rust reference OS: tasks and handoff
 
+Implementation update 2026-10-24: **authorized masked capture through F5**, over
+`e6f3fa48`. Enter a user -> Split -> CAPTURE. A separately admitted viewer
+receives a fresh 200 by 104 pixel crop of the right Notes, with its known text
+rectangle blacked out before transfer. HIDE RIGHT can remove that source from
+the display while capture independently requests a frame. CLEAR retires the
+viewer and its presentation. AUTO can continue editing the hidden note through
+its private route. This is fixed demonstration policy, not general app-published
+privacy masks or a screen recording UI.
+
+The platform adds a separately declared/offered CAPTURE service, bounded
+BEGIN/TAKE/CANCEL wire, recipient client and optional admission connections.
+Ordinary `ALL` offers are unchanged. The stock matrix filters offers to services
+it actually implements; only Split supplies capture. Positional legacy startup
+cannot falsely bind a broker-only service. Shared admission retains partial
+transfers for cleanup. No new kernel syscall or device authority was added.
+
+Start at [Split capture](source-rs/distribution/applications/split/session/capture/capture.rs):
+owner-selected endpoint/view identities -> funded private destination -> source
+frame request -> acknowledged local scene -> masked raster -> sealed transfer.
+Source readers are pinned during one dispatch, temporarily mapped and then
+unmapped. The viewer can publish only in its own rectangle and has no storage,
+input-production or private-pixel allocation grant. A pending frame expires after
+300 ticks; expiry releases demand without killing the source. Source/recipient
+loss or parent geometry change retires the demo. Already transferred readers
+follow ordinary kernel custody rather than being revoked underneath a process.
+
+Split now declares 20 channels/four descendants: two Notes, optional producer
+and optional viewer. Its initial viewer reservation unnecessarily held 16 private
+pages and starved provider output; actual IPC returned NO_MEMORY. The viewer now
+reserves zero private pages and 32 readers, and errors are logged instead of
+silently exiting. The output stays charged to the provider while retained. The widened header also
+exposed an 80-page inner Split budget that could not cover two Notes reservations
+plus old/replacement headers. Its local grant is now 96 pages (64 + 28, rounded),
+within the enclosing 128-page account. No kernel budget limit changed.
+
+Verified fresh/cold desktop runs:
+
+- Actual recipient redaction/RGBX/page-padding inspection, hidden edits, repeated
+  capture, release and saved state: `build/boot-harness-rs/desktop/20261024T181758330628Z` (`--capture`).
+- Source exit before acknowledgment, sibling survival and repeated subtree reuse:
+  `build/boot-harness-rs/desktop/20261024T182042104787Z` (`--capture-case source`).
+- Recipient exit with pending work, three attempts in the same live provider:
+  `build/boot-harness-rs/desktop/20261024T182219641612Z` (`--capture-case recipient`).
+- Explicit timeout, source survival/restoration and repeated requests:
+  `build/boot-harness-rs/desktop/20261024T182450709002Z` (`--capture-case timeout`).
+- Ordinary viewer/source without observer/fault features, repeated delivery and
+  cold saved documents with storage traces:
+  `build/boot-harness-rs/desktop/20261024T182707033719Z` (`--capture-case ordinary --trace-storage`).
+
+Split-in-Split regression with dirty close, resize, funded refusal and cold saved
+state: `build/boot-harness-rs/desktop/20261024T183222489138Z`.
+Four recursive stock desktops, repeated subtree reclamation/isolation and cold
+saved data: `build/boot-harness-rs/desktop/20261024T183345130924Z`.
+
+Workspace host tests pass (105 matrix / 19 platform-contract tests), as do ordinary
+userspace clippy and capture/source observer-feature clippy. Layout passes with
+40 Omega / 131 Rust edges. The traced stock matrix remains 259,448 bytes, near the
+262,144-byte executable-object cap. The scalar capture path has no latency bound,
+GPU/remote claim or new ARM64 evidence. Recursive source readiness, dynamic mask
+publication, capture rate negotiation and general view APIs remain unimplemented.
+
+Next: recursive pointer-target cursor preferences (including no-cursor), with
+owner restoration on target change/death, through the ordinary desktop. The
+accepted presentation contract permits that work; mandatory agent attribution
+is a separate unresolved owner policy. Measure nested input/rendering costs
+before changing forwarding or scheduling architecture. Keep this bounded capture
+proof available while developing those next interfaces.
+
 Implementation update 2026-10-24: **bounded capture policy and frame handshake**,
 over `bcc02186`. This is capture implementation groundwork, **not a working F5
 capture service**. The platform [capture entrance](source-rs/platform/libraries/matrix/capture/capture.rs)

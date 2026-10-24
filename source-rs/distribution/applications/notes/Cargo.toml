@@ -15,6 +15,8 @@ test = false
 bench = false
 
 [features]
+capture-source-exit = []
+capture-source-stall = []
 render-demand-probe = []
 trace-input = []
 trace-storage = []

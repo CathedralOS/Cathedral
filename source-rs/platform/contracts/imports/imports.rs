@@ -3,9 +3,10 @@
 pub const INTERACTION: u64 = 1;
 pub const STORAGE: u64 = 2;
 pub const INPUT_PRODUCER: u64 = 4;
+pub const CAPTURE: u64 = 8;
 /// Existing ordinary launch offer. New authority is never added implicitly.
 pub const ALL: u64 = INTERACTION | STORAGE;
-pub const SUPPORTED: u64 = ALL | INPUT_PRODUCER;
+pub const SUPPORTED: u64 = ALL | INPUT_PRODUCER | CAPTURE;
 pub const MAX_IMPORTS: usize = 4;
 pub const RECORD_BYTES: usize = 16 + MAX_IMPORTS * 32;
 pub const PROFILE_MAGIC: u64 = u64::from_le_bytes(*b"CTHIMP04");
@@ -62,7 +63,10 @@ pub fn bind(imports: &[Import], offered: u64) -> Result<u64, Refusal> {
         {
             return Err(Refusal::Malformed);
         }
-        let known = matches!(import.contract, INTERACTION | STORAGE | INPUT_PRODUCER);
+        let known = matches!(
+            import.contract,
+            INTERACTION | STORAGE | INPUT_PRODUCER | CAPTURE
+        );
         if !known || offered & import.contract == 0 {
             if import.required {
                 return Err(Refusal::Missing(import.contract));

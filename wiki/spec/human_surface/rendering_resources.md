@@ -88,9 +88,14 @@ general image-provider service, remote upload or GPU completion contract above.
 
 The Rust [capture mechanisms](../../../source-rs/platform/libraries/matrix/capture/README.md)
 now have host-tested bounded lease/result lifetime and masked software output.
-The producer frame-demand handshake is implemented in the matrix policy and
-Notes, but an installed capture provider/consumer and sealed IPC result delivery
-remain outstanding. These tests do not establish those integration properties.
+The installed Split provider now connects source frame acknowledgment to funded
+private raster output and sealed IPC delivery to a separate viewer. The viewer
+checks actual redaction and padding under a disposable probe feature. Retained
+source images stay sealed and are mapped only during the provider's bounded
+raster dispatch. Source/recipient failure tests and ordinary delivery are recorded
+in [the handoff](../../../TASKS_RUST.md). Fixed owner-selected masks and one Notes
+source do not establish a general privacy metadata protocol, recursive capture
+readiness, remote transfer or GPU lifetime behavior.
 Derived image/font caches, fallback appearance, negotiated capacities and precise
 publication/transfer schemas remain engineering and policy work. The
 [resource proposal](../../proposals/0000_rendering_and_composition/resource_custody.md)

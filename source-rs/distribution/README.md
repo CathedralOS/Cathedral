@@ -97,6 +97,13 @@ it only when missing and reinstalling only programs whose bytes changed. Earlier
 state nests under its own object, and a user is a subtree copy of the template,
 so a new user costs a few records until its notes diverge.
 
+The installed [Split](applications/split/README.md) also supplies an explicit
+[capture viewer](applications/capture-demo/main.rs). Follow Split's
+[capture entrance](applications/split/session/capture/capture.rs) through the
+[platform protocol](../platform/contracts/capture.rs) to the viewer's
+[client loop](applications/capture-demo/preview.rs). This is a fixed masked-crop
+demonstration; ordinary applications are not granted capture.
+
 ## Executable route
 
 Start at [desktop/main.rs](desktop/main.rs), then the

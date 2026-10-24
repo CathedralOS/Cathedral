@@ -22,6 +22,13 @@ The control appears when the grant is wide enough (384 pixels). It neither stops
 the app nor changes its local dimensions. The stock desktop separately chooses
 to deactivate input when switching apps.
 
+**CAPTURE / CLEAR** starts/stops a separate viewer of the right Notes. It can
+request a fresh frame while that note is hidden, without raising it or changing
+its input route. The owner supplies a 200 by 104 pixel crop, with the known text
+area blacked out before any image reaches the viewer. The preview appears over
+the left column. This fixed demonstration mask is not a general privacy editor.
+The control requires a 512-pixel-wide view and sufficient granted capacity.
+
 Start at [main.rs](main.rs), then [session/session.rs](session/session.rs): acquire
 the supplied interaction/storage services, load children, consume upstream
 notifications, survey loss asynchronously, and dispatch authenticated requests.
@@ -38,15 +45,24 @@ notifications, survey loss asynchronously, and dispatch authenticated requests.
   travel unmapped. A changed upstream binding invalidates old child revisions;
   Split restores its standing grants only if the newly authorized realm is the
   same one. A transport timeout retires the stream, never reuses a late reply.
-- [Rendering](session/rendering/rendering.rs) chooses two columns. Platform `World<3>` owns
+- [Rendering](session/rendering/rendering.rs) chooses two columns. Platform `World<4>` owns
   clipping, local names, focus and grant invalidation. Shared image custody keeps
-  sealed readers without mapping child pixels. There is no intermediate pixel copy.
+  sealed readers without mapping child pixels during ordinary forwarding. Capture
+  temporarily maps the source readers and rasterizes one bounded masked output.
 - [Producer lifecycle](session/producer/producer.rs) negotiates incoming capacity,
   admits the sealed [Producer program](../input-demo/main.rs) with an explicit input offer, and owns its
   cursor surface. Its [receiver](session/producer/requests.rs) authenticates the
   separate broker/producer endpoints; the producer cannot draw or access storage.
   Two channels and a private group use the same platform routing policy as physical
   input. The third world slot is a non-rendering participant; Notes occupy two.
+- [Capture lifecycle](session/capture/capture.rs) admits an explicitly offered
+  viewer in the fourth slot, funds one pending output, requests a source frame,
+  and releases demand on completion or failure. Its
+  [request dispatcher](session/capture/requests.rs) authenticates separate broker
+  and capture endpoints. [Raster integration](session/rendering/capture.rs) pins
+  the accepted local scene for one dispatch, masks it, then freezes output before
+  transfer. The viewer has no storage, input-production or private-pixel allocation
+  grant. Source/recipient loss or parent geometry changes retire the demo.
 - [Requests](session/requests.rs) distinguishes owner control from installed child
   streams. [Loss](session/loss.rs) keeps serving children during the survey. Missing
   or malformed replies prevent close; a timed-out control stream stays uncertain
@@ -80,10 +96,13 @@ snapshots, not enrollment in managed code updates.
 
 The wrapper grants nine surfaces and a bounded two-child budget to its nested
 matrix. Its inner DEEPER refuses with **NO ROOM** while preserving live notes.
-Split declares fifteen channels and three descendants: its two Notes use ten
-channels, and the optional producer uses five more. The inner Split receives
-80 private pages, 64 readers and ten channels; it has no room for AUTO alongside
-its two Notes. Root/user budgets come from the current distribution composition
+Split declares twenty channels and four descendants: its two Notes use ten
+channels, the optional producer uses five, and the optional capture viewer five.
+The viewer reserves zero private pages and 32 reader pages; capture output stays
+funded by Split until all readers release it. The inner Split receives
+96 private pages, 64 readers and ten channels; it has no room for AUTO alongside
+its two Notes. The private grant covers both 32-page Notes reservations and
+two 14-page header versions during replacement. Root/user budgets come from the current distribution composition
 and owner admission policy. No child acquires devices or
 ambient code/storage authority. Ordinary Notes still creates no channels.
 

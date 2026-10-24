@@ -30,10 +30,10 @@ headers preserves it. It remains inside the sealed code object used for admissio
 The kernel independently validates the ELF; it never interprets this record.
 
 The implemented contracts are INTERACTION (1: local input, surfaces and wake),
-STORAGE (2: scoped object operations) and INPUT_PRODUCER (4: explicitly granted
-input production), all at wire version 1. Their offer/withholding mask uses those
+STORAGE (2: scoped object operations), INPUT_PRODUCER (4: explicitly granted
+input production) and CAPTURE (8: explicitly granted masked output), all at wire version 1. Their offer/withholding mask uses those
 bits. `ALL` preserves the ordinary interaction/storage offer; `SUPPORTED` includes
-production without granting it by default. Production requires brokered startup
+production/capture without granting either by default. Both require brokered startup
 and an explicit owner offer as well as a declaration. Unknown optional contracts are ignored;
 unknown required ones refuse. This is not yet an arbitrary extensible endpoint
 table or the final installed component manifest.

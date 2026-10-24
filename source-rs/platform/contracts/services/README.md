@@ -10,7 +10,7 @@ The stock provider authenticates requests in
 The accepted [coordination and IPC contract](../../../../wiki/spec/communication/ipc.md)
 adds a supported coordination service for the shipped OS/default matrix and
 protocol-controlled shared memory. This Rust broker implements interaction,
-storage and explicitly offered input production; coordination identifiers, matching, introductions and
+storage, explicitly offered input production and capture; coordination identifiers, matching, introductions and
 shared writable mailbox custody have not been implemented here.
 
 ## Contract
@@ -67,9 +67,9 @@ malformed shapes return INVALID. An already-transferred part returns TAKEN.
 Neither rejection nor repeated requests allocate channels. The kernel reserves
 recipient custody before committing each endpoint transfer.
 
-The current services are interaction, storage and input production, all version 1. Interaction
+The current services are interaction, storage, input production and capture, all version 1. Interaction
 part 0 transfers its wake receiver; its ordinary RPCs reuse the broker pair.
-Storage and input-production parts 0 and 1 each transfer a separate request sender
+Storage, input-production and capture parts 0 and 1 each transfer a separate request sender
 and reply receiver. All service
 channels are preallocated from the owner's budget at admission. This slice delays
 handoff, not allocation or provider startup. It does not implement arbitrary
@@ -147,3 +147,20 @@ closure, interrupted acquisition with concurrent capacity refusal, or an absent
 owner offer. Normal editing, repeated close/relaunch and cold persistence continue
 through the same desktop workflow. These probes do not add a visible synthetic
 cursor or grant production to any default installed app.
+
+## Explicit capture
+
+`CAPTURE` is separately declared and offered; `ALL` does not include it. Its two
+parts transfer a request sender and reply receiver. This grants access to the
+owner-selected capture scope, not a way to name arbitrary processes or images.
+The [capture wire](../capture.rs) defines INFO, BEGIN, TAKE and CANCEL. A successful
+TAKE transfers only sealed, already-masked backing. Pending/expired/refused replies
+have no attachment. A successful transfer consumes the result; queue pressure
+retains the same funded image. The source, crop and masks are provider policy and
+cannot be replaced through request fields.
+
+The installed [Split provider](../../../distribution/applications/split/session/capture/capture.rs)
+selects one Notes leaf and fixed mask. Its [viewer](../../../distribution/applications/capture-demo/main.rs)
+uses [runtime capture](../../libraries/user-runtime/capture.rs) after acquisition.
+This is a bounded experimental service; recursive source readiness, app-published
+mask metadata, remote capture and GPU completion are not implemented here.

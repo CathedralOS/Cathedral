@@ -96,7 +96,10 @@ impl Children {
         for slot in 1..BACKGROUND {
             #[cfg(feature = "input-producer-probe")]
             {
-                self.allowed_imports[slot] = Some(cathedral_platform_contracts::imports::SUPPORTED);
+                self.allowed_imports[slot] = Some(
+                    cathedral_platform_contracts::imports::ALL
+                        | cathedral_platform_contracts::imports::INPUT_PRODUCER,
+                );
             }
             self.standing[slot] = Some(Standing {
                 pages: [saved.app_pages, saved.app_readers],
