@@ -1,4 +1,4 @@
 //! Rust plumbing. Start at children.rs.
-mod image;
+pub(super) mod image;
 mod nesting;
 include!("children.rs");

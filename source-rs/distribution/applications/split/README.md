@@ -5,7 +5,14 @@ side by side. Click one to type. Each Notes window owns its X and dirty-close
 dialog. Split's top-right X asks both children about unsaved work; **UNSAVED
 NOTES** keeps the workspace open until the drafts are saved, discarded or children close. F1 saves either note;
 its saved text survives closing Split and rebooting.
-The outer desktop's Settings can resize it without restarting its children.
+The outer desktop's Settings can resize it without restarting its Notes children.
+
+**AUTO** starts a separate input participant. A yellow cursor appears over the
+right document and the participant types `bot`, then keeps moving its pointer.
+You can click and type in the left document simultaneously: each input group keeps
+its own selection. **STOP** ends that participant and removes its cursor. Resizing
+ends the run too; AUTO explicitly starts a fresh grant. F1 still saves each note.
+This is a fixed demonstration script, not a general automation interface.
 
 Start at [main.rs](main.rs), then [session/session.rs](session/session.rs): acquire
 the supplied interaction/storage services, load children, consume upstream
@@ -23,9 +30,15 @@ notifications, survey loss asynchronously, and dispatch authenticated requests.
   travel unmapped. A changed upstream binding invalidates old child revisions;
   Split restores its standing grants only if the newly authorized realm is the
   same one. A transport timeout retires the stream, never reuses a late reply.
-- [Rendering](session/rendering.rs) chooses two columns. Platform `World<2>` owns
+- [Rendering](session/rendering.rs) chooses two columns. Platform `World<3>` owns
   clipping, local names, focus and grant invalidation. Shared image custody keeps
   sealed readers without mapping child pixels. There is no intermediate pixel copy.
+- [Producer lifecycle](session/producer/producer.rs) negotiates incoming capacity,
+  admits the sealed [Producer program](../input-demo/main.rs) with an explicit input offer, and owns its
+  cursor surface. Its [receiver](session/producer/requests.rs) authenticates the
+  separate broker/producer endpoints; the producer cannot draw or access storage.
+  Two channels and a private group use the same platform routing policy as physical
+  input. The third world slot is a non-rendering participant; Notes occupy two.
 - [Requests](session/requests.rs) distinguishes owner control from installed child
   streams. [Loss](session/loss.rs) keeps serving children during the survey. Missing
   or malformed replies prevent close; a timed-out control stream stays uncertain
@@ -59,10 +72,11 @@ snapshots, not enrollment in managed code updates.
 
 The wrapper grants nine surfaces and a bounded two-child budget to its nested
 matrix. Its inner DEEPER refuses with **NO ROOM** while preserving live notes.
-The F5 distribution funds root/user/app channels at 36/25/15, from a 40-channel
-backing pool. User/app private pages are 208/128 and reader pages 256/128; the
-inner Split receives 80 private pages, 64 readers and ten channels. Seven dynamic
-slots cover login overlap and the deeper subtree. No child acquires devices or
+Split declares fifteen channels and three descendants: its two Notes use ten
+channels, and the optional producer uses five more. The inner Split receives
+80 private pages, 64 readers and ten channels; it has no room for AUTO alongside
+its two Notes. Root/user budgets come from the current distribution composition
+and owner admission policy. No child acquires devices or
 ambient code/storage authority. Ordinary Notes still creates no channels.
 
 Scope restrictions are folded only after upstream containment checks; a shared
@@ -77,3 +91,10 @@ uncertain transport aborts setup and the next launch reconciles by lookup.
 `python tools/boot-harness-rs/desktop_test.py --deep --trace-storage` adds actual
 same-code nesting, independent edits, dirty-close propagation, capacity refusal,
 repeated collection and cold reboot to the usual visible Split checks.
+
+`python tools/boot-harness-rs/desktop_test.py --participants --trace-storage`
+checks the default installed AUTO participant, independent physical/synthetic
+selection, confined visible cursor, repeated stop/start in the same matrix,
+resize revocation with surviving Notes, saved edits and cold reopen. Cursor assets,
+target-dependent suppression, arbitrary participant discovery and more than the
+bounded four input channels remain outside this demo.

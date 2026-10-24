@@ -1,5 +1,58 @@
 # Rust reference OS: tasks and handoff
 
+Implementation update 2026-10-24: **installed independent input participant**, over
+`24c60002`. F5 -> user -> Split -> **AUTO** now admits a separate
+[participant program](source-rs/distribution/applications/input-demo/main.rs).
+It selects the right Notes document, types `bot`, then moves a yellow cursor.
+Physical input can select/edit the left document independently. **STOP** retires
+its grant, process and cursor; AUTO starts a fresh run. F1 saves either note.
+This uses the installed default composition, not a disposable probe variant.
+
+Split owns [admission, lifetime and endpoint dispatch](source-rs/distribution/applications/split/session/producer/producer.rs).
+It validates the sealed service declaration, negotiates inherited input capacity,
+reserves two channels and a private focus group, and allocates one cursor surface
+from its existing range. The producer has no storage, framebuffer, global input
+or drawing grant. Its broker cannot inject; its producer pair cannot acquire
+services or perform other interaction operations. Early requests/attachments do
+not fill a reply queue whose receiver has not transferred. Existing matrix policy
+validates generation, permitted keys and owner-local geometry. Ordinary Notes
+and other stock app offers are unchanged; kernel/platform authority is unchanged.
+
+STOP, endpoint loss and view invalidation terminate the run. A stale upstream
+cursor publication retires the participant rather than killing its Notes siblings.
+Capacity widens only as unread channel/group retirements permit; cached service
+acquisition never silently recreates a grant. The same matrix can explicitly
+admit another participant after retirement. Split's existing fifteen-channel,
+three-descendant budget covers two Notes and this third process. Its more tightly
+funded DEEPER matrix cannot also run AUTO. This is a fixed distribution demo,
+not a general producer registry, cursor preference service or automation API.
+
+Verification: workspace host tests, userspace clippy, layout (40 Omega / 128 Rust
+edges), format, Python syntax, documentation links and whitespace. The participants
+workflow checks exact document text, independent selection, confined yellow pixels,
+STOP, repeated admission within one matrix, resize revocation with usable siblings,
+saves and cold reopen. Traced proof:
+`build/boot-harness-rs/desktop/20261024T162105813807Z`.
+The final untraced default build passes the same fresh/cold workflow:
+`build/boot-harness-rs/desktop/20261024T162344973198Z`. Split is 154,416 bytes;
+the participant is 32,952 bytes; the ordinary stock matrix remains 250,512 bytes
+(254,608 with storage tracing), within the 256 KiB stored-object cap.
+Existing Split/DEEPER regression also passes dirty close, resize, simultaneous
+ordinary apps, same-code recursion, capacity refusal, repeated collection and cold
+reopen: `build/boot-harness-rs/desktop/20261024T162204726167Z`.
+An earlier expanded run passed live resize but its cold text comparison assumed
+one line; the screenshot showed the correct wrapped text. The helper now handles
+15-column wrapping and checks a following blank glyph. No runtime change was
+needed for that failure. No new ARM64, GPU or broad scheduler/driver result is claimed.
+
+Next: exercise producer interruption with held input and queue pressure through
+this installed workflow, then add scoped channel description/discovery so apps
+can identify participants without exposing ancestor registries. General cursor
+suppression/attribution, independent group controllers and reassociation remain
+outstanding. Rendering demand/masked capture and coordination acquisition remain
+queued. No new owner decision blocks this work.
+
+
 Implementation update 2026-10-24: **scoped cursor presentation**, over `1d396617`.
 The [owned-surface path](source-rs/platform/libraries/matrix/world/surface/README.md#bounded-cursor-presentation)
 now carries a fixed 7-by-12 arrow with transparent empty pixels. SURFACE_CURSOR

@@ -23,13 +23,15 @@ group control and retire on disconnect. Nested stock hosts now negotiate incomin
 channel/group ceilings before reserving additional local producers; retirement
 restores upstream capacity. Explicit manifest/owner offers now permit separate
 producer endpoint acquisition, with interrupted handoff and disconnect cleanup.
-Default app offers remain unchanged; a visible synthetic producer remains pending.
+Ordinary app offers remain unchanged. The installed [Split matrix](distribution/applications/split/README.md)
+now explicitly admits a producer through AUTO, with independent focus and a scoped
+cursor. STOP or view invalidation ends the run; restarting is explicit.
 
 The [surface path](platform/libraries/matrix/world/surface/README.md#bounded-cursor-presentation)
 now supports a bounded transparent arrow through ordinary local surface authority,
 recursive clipping, stacking and atomic publication. It needs no full-screen
-buffer. This presentation primitive has pixel/host proofs; it does not yet connect
-a synthetic participant to the default desktop or implement cursor preferences.
+buffer. Split uses it for its synthetic participant. General cursor preferences,
+suppression and authenticated attribution remain unimplemented.
 
 ## Default desktop
 

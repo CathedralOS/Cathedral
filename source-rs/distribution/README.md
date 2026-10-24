@@ -210,12 +210,15 @@ matrix, storage and provider-recovery proofs. `--smoke` selects the profile's
 `user_programs` for exhaustive kernel exercises.
 
 The [implementation map](../STATUS.md) tracks remaining restrictions. In
-particular this is one chooser over a folder and one app per user at a time,
+particular this is a bounded desktop with up to three ordinary app instances,
 not a package installer, general desktop window manager or production filesystem.
 
 [Split](applications/split/README.md) is also installed in the ordinary bottom taskbar.
-It demonstrates a different matrix program: two temporary Notes instances, its
-own arrangement and close policy, and no storage offered to its children. The
+It demonstrates a different matrix program: two persistent Notes instances with
+separate storage realms, its own arrangement and close policy. AUTO admits a
+separate participant with a private input group and an owner-funded yellow cursor;
+STOP retires it. The participant types in the right note while physical input can
+edit the left. The
 stock desktop still owns user selection, its launcher and saved outer layout.
 
 The app tiles launch new instances. Rows below them switch running instances; each

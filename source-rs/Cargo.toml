@@ -32,6 +32,7 @@ members = [
     "distribution/applications/background",
     "distribution/applications/notes",
     "distribution/applications/split",
+    "distribution/applications/input-demo",
     "distribution/lab/display",
     "distribution/lab/compositor",
     "distribution/desktop",

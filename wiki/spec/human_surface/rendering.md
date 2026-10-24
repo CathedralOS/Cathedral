@@ -187,8 +187,9 @@ The Rust [owned-surface path](../../../source-rs/platform/libraries/matrix/world
 also has an experimental bounded cursor primitive. It preserves recursive
 clipping, normal subtree stacking, visibility and retirement without a full-screen
 cursor buffer. This is presentation evidence, not a complete cursor service:
-producer integration, target-dependent suppression, assets and authenticated
-attribution remain separate work.
+the installed Split matrix demonstrates a scoped producer and owner-funded
+cursor, while target-dependent suppression, assets and authenticated attribution
+remain separate work.
 
 The accepted policy does not freeze that lab encoding. Drawing/text placement,
 detailed cache residency/sponsorship, direct-writer admission, exact scene/mask

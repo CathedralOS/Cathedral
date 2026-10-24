@@ -225,6 +225,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "cathedral-input-demo"
+version = "0.0.0"
+dependencies = [
+ "cathedral-kernel-contracts",
+ "cathedral-platform-contracts",
+ "cathedral-user-runtime",
+]
+
+[[package]]
 name = "cathedral-input-service"
 version = "0.0.0"
 dependencies = [

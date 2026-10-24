@@ -100,8 +100,9 @@ the compact rectangle-only packet cannot encode one.
 Host proofs check recursive clipping, rejected stale/oversized requests,
 transparency, occlusion, damage and teardown. The integrated matrix desktop probe
 checks actual pixels through two matrix hops, staging/commit, retained movement
-and edge clipping. Default F5 still uses the existing physical cursor; a visible
-synthetic participant and per-pointer cursor suppression/attribution remain work.
+and edge clipping. The installed [Split matrix](../../../../../distribution/applications/split/README.md)
+uses an owner-funded surface for its AUTO participant beside the physical cursor.
+Per-pointer cursor suppression/attribution remain work.
 
 ## Evidence and limits
 

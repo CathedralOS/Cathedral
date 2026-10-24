@@ -7,11 +7,12 @@ use cathedral_user_runtime::{
     server::Request,
 };
 pub struct Output {
-    pair: Pair,
-    grant: Grant,
+    pub(super) pair: Pair,
+    pub(super) grant: Grant,
     images: Images,
     header: u64,
-    capacity: usize,
+    pub(super) capacity: usize,
+    pub automatic: bool,
     pub nested: bool,
     pub failure: Option<&'static [u8]>,
 }
@@ -23,6 +24,7 @@ impl Output {
             images: Images::empty(),
             header: 0,
             capacity: 0,
+            automatic: false,
             nested: false,
             failure: None,
         }
@@ -116,6 +118,18 @@ impl Output {
                     b""
                 },
             ),
+            (
+                180,
+                if !self.nested && self.failure.is_none() {
+                    if self.automatic {
+                        b"STOP".as_slice()
+                    } else {
+                        b"AUTO".as_slice()
+                    }
+                } else {
+                    b""
+                },
+            ),
             (width.saturating_sub(20), b"X"),
         ] {
             for (i, ch) in text.iter().enumerate() {
@@ -162,6 +176,10 @@ impl Output {
     pub fn deepen_hit(&self, x: u64, y: u64) -> bool {
         let left = self.grant.width.saturating_sub(256) + 100;
         !self.nested && self.failure.is_none() && y < 28 && (left..left + 80).contains(&x)
+    }
+    pub fn automatic_hit(&self, x: u64, y: u64) -> bool {
+        let left = self.grant.width.saturating_sub(256) + 180;
+        !self.nested && self.failure.is_none() && y < 28 && (left..left + 48).contains(&x)
     }
     pub fn can_deepen(&self) -> bool {
         self.capacity >= 10
