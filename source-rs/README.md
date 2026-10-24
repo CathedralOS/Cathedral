@@ -14,7 +14,7 @@ core on a second CPU architecture; the integrated desktop remains x86-64.
 Press **F5** at the repository root, or run
 `python tools/boot-harness-rs/run.py --release --window --fresh`. One desktop boots to a
 chooser over the folder of users: NEW copies the template user, clicking a user
-runs it, and its bottom taskbar launches Notes, Colors, Split or Nested instances;
+runs it, and its bottom taskbar launches Notes, Colors, Split, Nested or Omega UI instances;
 use the running-app buttons to switch, click a program to focus it
 and its upper-right X to close it with draft protection. Notes uses F1 to save/check and
 F2 to reload; Colors uses Enter.

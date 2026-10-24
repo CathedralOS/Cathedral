@@ -30,7 +30,7 @@ PAGE_LIMITS = (("private_pages", 1024), ("shared_pages", 4096))
 # The store's largest object (its MAX_BYTES): an installed program must fit one.
 # The installer refuses a larger one; reporting the margin here shows how close
 # each build sits before that happens.
-OBJECT_BYTES = 256 * 1024
+OBJECT_BYTES = 1024 * 1024
 
 
 def report_program(trimmed):
@@ -367,7 +367,7 @@ def main():
             user_features.append("desktop-probes")
         if args.matrix_desktop_test and user["package"] == "cathedral-storage-service":
             user_features.append("recovery-lab")
-        if args.trace_input and user["package"] in ("cathedral-stock-matrix", "cathedral-input-service", "cathedral-display-service", "cathedral-desktop", "cathedral-colors", "cathedral-notes"):
+        if args.trace_input and user["package"] in ("cathedral-stock-matrix", "cathedral-input-service", "cathedral-display-service", "cathedral-desktop", "cathedral-colors", "cathedral-notes", "cathedral-omega-ui-demo"):
             user_features.append("trace-input")
         if args.trace_storage and user["package"] in ("cathedral-stock-matrix", "cathedral-desktop", "cathedral-storage-service", "cathedral-notes", "cathedral-colors"):
             user_features.append("trace-storage")

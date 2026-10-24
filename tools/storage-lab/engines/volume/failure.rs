@@ -5,7 +5,7 @@ use crate::chunks::{Layout, Policy, Store};
 use cathedral_platform_contracts::storage::metadata;
 
 pub fn prepare(path: &Path, offset: u64, bytes: u64, target: &str, content: &[u8]) -> Result<()> {
-    if content.len() > 256 * 1024 {
+    if content.len() > cathedral_database_objects::MAX_BYTES {
         return Err("fixture program too large".into());
     }
     let db = open(Region::new(Arc::new(Image::open(path)?), offset, bytes)?)?;

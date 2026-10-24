@@ -277,6 +277,13 @@
       {
         "path": "Nested/Users/Template/Nested/Users/Template/Nested/Users/Template/Nested/Users/Template/Nested",
         "copy": "Nested/Users/Template/Nested/Users/Template/Nested/Users/Template/Nested"
+      },
+      {
+        "package": "cathedral-omega-ui-demo",
+        "entry": "distribution/applications/omega-ui/main.rs",
+        "target": "x86_64-unknown-none",
+        "display_title": "OMEGA UI",
+        "path": "Omega UI"
       }
     ]
   }

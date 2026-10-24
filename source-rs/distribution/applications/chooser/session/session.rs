@@ -12,7 +12,7 @@ use cathedral_user_runtime::{
 };
 pub type Pair = (Handle, Handle);
 /// Bounded realm listing; presentation hides the template/chrome at index zero.
-pub const ENTRIES: usize = 5;
+pub const ENTRIES: usize = wire::config::LAUNCHER_SURFACES - 2;
 pub const USER_ENTRIES: usize = 4;
 pub const NEW: usize = ENTRIES;
 const SETTINGS: usize = NEW + 1;
@@ -113,7 +113,7 @@ pub fn run(
                     continue;
                 }
             } else if !user_picker
-                && let Some(message) = tasks.click(parent, extent, event, clicked)
+                && let Some(message) = tasks.click(parent, extent, event, clicked, layout::tasks_left(realm.count))
             {
                 status = message;
                 tasks.refresh(parent, true);

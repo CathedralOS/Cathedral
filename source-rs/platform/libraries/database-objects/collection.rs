@@ -119,8 +119,8 @@ pub struct Collection {
 }
 
 impl Store<'_> {
-    /// Automatic maintenance is pressure-driven. Reserve twice the largest
-    /// content publication for its records/indexes and the next bounded copy.
+    /// Automatic maintenance starts at half the root quota, independently of
+    /// the maximum object size. Larger publications still check exact quota.
     /// Below this watermark, read only the durable ledger: opening a writer
     /// and walking every live revision on every small save is unnecessary.
     /// This is a trigger, not admission; each mutation still checks exact quota.
@@ -135,7 +135,7 @@ impl Store<'_> {
             return Err(Error::Corrupt);
         }
         // Under the lab pressure feature every mutation collects, as a full root would.
-        if !cfg!(feature = "pressure") && charged < ROOT_QUOTA - 2 * MAX_BYTES as u64 {
+        if !cfg!(feature = "pressure") && charged < ROOT_QUOTA / 2 {
             return Ok(None);
         }
         self.collect(root).map(Some)

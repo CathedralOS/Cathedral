@@ -26,15 +26,16 @@
 //! reused. These are lab semantics, not Cathedral's stable ABI.
 pub const PAGE_BYTES: usize = 4096;
 /// Maximum pages in one object.
-pub const MAX_PAGES: usize = 128;
+pub const MAX_PAGES: usize = 256;
+// Object geometry does not grant larger task accounts.
 /// A subtree owner may fund several objects and descendant accounts.
-pub const MAX_PRIVATE_PAGES: usize = 8 * MAX_PAGES;
+pub const MAX_PRIVATE_PAGES: usize = 1024;
 /// Maximum per-task reader page budget. Reader pages pin other tasks' backing
 /// rather than funding frames, and a matrix hub needs far more of them than
 /// any one object: it retains every image its subtree shows, holds old and new
 /// during each replacement, and lends the same kind of budget to each nested
 /// matrix below it.
-pub const MAX_READER_PAGES: usize = 32 * MAX_PAGES;
+pub const MAX_READER_PAGES: usize = 4096;
 /// Separate metadata limits: larger page grants must not buy every global slot.
 /// A matrix or the compositor retains one sealed image per surface it shows
 /// and holds its replacement beside it, including images below nested matrices.
@@ -61,3 +62,18 @@ pub struct Grant {
 /// IPC retirement uses a word array sized to this arena.
 /// The global pool is independent of each task's local slot allowance.
 pub const MAX_READ_HANDLES: usize = 512;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn larger_objects_preserve_account_caps_and_mapping_guards() {
+        assert_eq!(MAX_PAGES * PAGE_BYTES, 1024 * 1024);
+        assert_eq!(MAX_PRIVATE_PAGES, 1024);
+        assert_eq!(MAX_READER_PAGES, 4096);
+        assert_eq!(
+            address(1) - address(0),
+            ((MAX_PAGES + 1) * PAGE_BYTES) as u64
+        );
+    }
+}

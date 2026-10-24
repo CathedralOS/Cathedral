@@ -1,0 +1,30 @@
+[package]
+name = "cathedral-omega-ui-demo"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[lib]
+path = "lib.rs"
+
+[[bin]]
+name = "cathedral-omega-ui-demo"
+path = "main.rs"
+test = false
+bench = false
+
+[features]
+trace-input = []
+
+[dependencies]
+cathedral-omega-ui.workspace = true
+cathedral-platform-contracts.workspace = true
+
+[target.'cfg(target_os = "none")'.dependencies]
+cathedral-matrix.workspace = true
+cathedral-kernel-contracts.workspace = true
+cathedral-user-runtime.workspace = true
+
+[lints]
+workspace = true

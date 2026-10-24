@@ -14,14 +14,14 @@ def exercise(launch, click, key, note, focus, close, dialog, choose_close, color
     note('three', dirty=True)
     for index, word in enumerate(('one', 'two', 'three')):
         with timings.step('switch-notes'):
-            click(320 + index * 144, 720)
+            click(376 + index * 144, 720)
             note(word, dirty=True)
     # Chrome's close requests LOSS, and cannot silently discard a draft.
-    click(376, 720)
+    click(432, 720)
     note('one', dirty=True)
     # App-owned close can explicitly discard. Survivors retain their own state.
     for index, word in enumerate(('one', 'two', 'three')):
-        click(320 + index * 144, 720)
+        click(376 + index * 144, 720)
         note(word, dirty=True)
         close()
         dialog(0, 'UNSAVED NOTE')

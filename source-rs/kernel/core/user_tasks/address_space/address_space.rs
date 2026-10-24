@@ -19,9 +19,6 @@ const MAX_BACKING: usize = MAX_IMAGE_PAGES
     + USER_STACK_PAGES
     + (cathedral_kernel_contracts::memory::MAX_PRIVATE_REGIONS + 2)
         * cathedral_kernel_contracts::memory::MAX_PAGES;
-// Owned image/stack frames and translation tables; page objects retain their own ledger.
-// This bounds bookkeeping, not funding: every allocation still charges its account.
-const MAX_FRAMES: usize = cathedral_kernel_contracts::user::MAX_ADMISSION_FRAMES;
 
 #[derive(Clone, Copy, Default)]
 struct Backing {

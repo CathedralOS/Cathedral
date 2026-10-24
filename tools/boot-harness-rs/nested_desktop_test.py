@@ -40,7 +40,7 @@ class Nested:
 
     def task_close(self, depth, index=0):
         x,y,w,h = self.viewport(depth)
-        self.click(x+376+144*index, y+h-48)
+        self.click(x+376+(56 if depth == 0 else 0)+144*index, y+h-48)
 
     def app_close(self, depth):
         x,y,w,h = self.viewport(depth)
@@ -92,7 +92,7 @@ class Nested:
         # has the same color, so it cannot prove that a subtree was stopped.
         # Wait for the owner's first running-task cell to become empty as well.
         self.scan(lambda sw,d: self.pixel(sw,d,x+13,y+18)==bytes.fromhex('101827')
-                  and self.pixel(sw,d,x+249,y+h-60)==bytes.fromhex('101827'),f'depth {depth} closed and collected')
+                  and self.pixel(sw,d,x+249+(56 if depth == 0 else 0),y+h-60)==bytes.fromhex('101827'),f'depth {depth} closed and collected')
 
 
 def exercise(output, click, key, scan, width, height, reboot, pointer_stress=False, interaction_delay=False, nested_depth=3):

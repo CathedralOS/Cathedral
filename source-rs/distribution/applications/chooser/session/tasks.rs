@@ -1,6 +1,5 @@
 //! Chrome-local running instances. Tickets are scoped to this matrix, never PIDs.
 use super::*;
-pub const LEFT: u64 = 240;
 pub const CELL: usize = 144;
 pub const WIDTH: usize = CELL * 3;
 pub const ROW: u64 = 32;
@@ -31,15 +30,16 @@ impl Tasks {
         view: wire::Packet,
         event: wire::Packet,
         clicked: bool,
+        left: u64,
     ) -> Option<&'static str> {
         if event[2] != wire::POINTER
             || !clicked
             || !(top(view)..top(view) + ROW).contains(&event[4])
-            || !(LEFT..LEFT + WIDTH as u64).contains(&event[3])
+            || !(left..left + WIDTH as u64).contains(&event[3])
         {
             return None;
         }
-        let index = ((event[3] - LEFT) / CELL as u64) as usize;
+        let index = ((event[3] - left) / CELL as u64) as usize;
         let entry = self.entries[index];
         if entry[0] != 0 || entry[1] == 0 {
             return Some("");
@@ -48,7 +48,7 @@ impl Tasks {
         if reply[0] != 0 {
             return Some("TRY AGAIN");
         }
-        let left = LEFT + index as u64 * CELL as u64;
+        let left = left + index as u64 * CELL as u64;
         if event[3] >= left + 124 {
             let reply = call(parent, [wire::CLOSE, 0, 0, 0, 0, 0, 0, 0]);
             return Some(if reply[0] == 0 { "" } else { "UNSAVED WORK" });

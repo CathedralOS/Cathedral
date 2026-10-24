@@ -20,9 +20,9 @@ pub use collection::{
 };
 pub use records::{Head, Object};
 
-/// Largest object: 64 pages, so a program or a bulk reply fits in half a
-/// task's page allowance while the other half holds what it already retains.
-pub const MAX_BYTES: usize = 256 * 1024;
+/// One native program or bulk payload fits the kernel's bounded shared object.
+/// Root quota and the caller's actual funding remain independent admission gates.
+pub const MAX_BYTES: usize = cathedral_platform_contracts::storage::MAX_BYTES;
 /// Bytes per content chunk. A chunk record is this many value bytes, its
 /// 34-byte key and 12 bytes of leaf bookkeeping (a page header and two
 /// lengths), which fill one 4 KiB engine page; a 4 KiB chunk was a

@@ -8,5 +8,8 @@ publish.workspace = true
 path = "lib.rs"
 [dependencies]
 blake3 = { version = "1.8.7", default-features = false }
+[target.'cfg(all(target_os = "none", target_arch = "x86_64"))'.dependencies]
+# Rust SIMD avoids assembling ELF objects with a Windows host C toolchain.
+blake3 = { version = "1.8.7", default-features = false, features = ["pure"] }
 [lints]
 workspace = true
