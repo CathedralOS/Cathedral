@@ -13,8 +13,9 @@ core on a second CPU architecture; the integrated desktop remains x86-64.
 
 The desktop builds its UI from checked-in
 [`source/distribution/libraries/omega-ui`](../source/distribution/libraries/omega-ui/README.md).
-Set `OMEGA_BIN` to a supported optimized Omega compiler, or put it on PATH;
-the [UI build guide](../tools/omega-ui/README.md#build) includes the producer and build commands.
+Build the supported Omega compiler in `build/omega-ui/compiler`, set `OMEGA_BIN`
+to it elsewhere, or put it on PATH. The
+[UI build guide](../tools/omega-ui/README.md#build) includes the producer and build commands.
 
 Press **F5** at the repository root, or run
 `python tools/boot-harness-rs/run.py --release --window --fresh`. One desktop boots to a

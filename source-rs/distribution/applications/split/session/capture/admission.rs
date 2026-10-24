@@ -41,6 +41,7 @@ impl Capture {
             }],
         )
         .map_err(|_| Error(abi::INVALID_ARGUMENT as i64))?;
+        self.fund(output)?;
         let mut scope = Scope::new(pair);
         scope.bind().map_err(|c| Error(c as i64))?;
         let id = scope.lookup(b"Capture").map_err(|c| Error(c as i64))?;
@@ -97,6 +98,30 @@ impl Capture {
         self.parent = output.grant;
         output.capturing = true;
         cathedral_user_runtime::write(b"Cathedral capture: explicit crop grant admitted\n")?;
+        Ok(())
+    }
+
+    /// The fourth child must not consume this provider's own load and image
+    /// backing. Logical page grants alone do not reserve physical frames.
+    /// Ask the immediate owner through the ordinary, policy-checked protocol;
+    /// refusal leaves admission untouched and the existing desktop running.
+    fn fund(&self, output: &Output) -> Result<(), Error> {
+        let budget = cathedral_user_runtime::resources::budget()?;
+        let physical = cathedral_user_runtime::resources::physical_budget()?;
+        let owner = (abi::MAX_ADMISSION_FRAMES as u64)
+            .checked_add(budget.limits.private_pages)
+            .ok_or(Error(abi::INVALID_ARGUMENT as i64))?;
+        let needed = owner
+            .checked_add(abi::MAX_ADMISSION_FRAMES as u64)
+            .ok_or(Error(abi::INVALID_ARGUMENT as i64))?;
+        let extra = needed.saturating_sub(physical.reserved);
+        if extra == 0 {
+            return Ok(());
+        }
+        let reply = upstream::call(output.pair, [wire::FUND, 0, 0, 0, 0, extra, 0, 0])?;
+        if reply[0] != 0 {
+            return Err(Error(reply[0] as i64));
+        }
         Ok(())
     }
 }

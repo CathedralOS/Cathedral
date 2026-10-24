@@ -85,7 +85,7 @@ impl Children {
             configuration::read(scope, picker, None)
         })?;
         let capacity = world.backed_surfaces();
-        if capacity < 24 {
+        if capacity < wire::config::HOST_SURFACES {
             return Err(Error(abi::NO_MEMORY as i64));
         }
         self.run_object(

@@ -157,9 +157,12 @@ impl Children {
                 return Err(Error(abi::NO_MEMORY as i64));
             }
             let preferred = if descendants != 0 {
-                ceiling
-                    .min(count + 24)
-                    .min(world.backed_surfaces().saturating_sub(8) as u64)
+                ceiling.min(
+                    world
+                        .backed_surfaces()
+                        .saturating_sub(wire::config::LAUNCHER_SURFACES + 1)
+                        as u64,
+                )
             } else {
                 count
             };

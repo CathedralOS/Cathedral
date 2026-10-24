@@ -22,17 +22,22 @@ external Cargo dependency is needed. `OMEGA_UI_COMPONENT_DIR` explicitly selects
 already-prepared artifacts instead.
 
 The default Rust F5 profile includes the UI demo and needs this compiler too.
-Install/build it with the Rust toolchain pinned in the compiler repository:
+For a checkout-local compiler, run these commands from the Cathedral root. Cargo
+uses the Rust toolchain pinned in the compiler repository:
 
 ```text
-git clone --branch codex/omega-ui-compiler https://github.com/CathedralOS/Omega.git
-cd Omega
-cargo build --release -p omega
+git clone --branch codex/omega-ui-compiler https://github.com/CathedralOS/Omega.git build/omega-ui/compiler
+cd build/omega-ui/compiler
+git checkout 16a35ba7f429c0b0dc219c735c9d8f702b48ad95
+cargo build --locked --release -p omega
 ```
 
-Set `OMEGA_BIN` to the absolute path of the resulting `target/release/omega.exe`
-(Windows) or `target/release/omega` (macOS/Linux), then build Cathedral normally.
-If a compatible `omega` is already on PATH, no environment setting is needed.
+Return to Cathedral and use F5 normally. The build selects an explicit `--compiler`,
+then `OMEGA_BIN`, then `build/omega-ui/compiler/target/release/omega.exe` (Windows)
+or `omega` (macOS/Linux), then `omega` on PATH. A selected compiler's failure is
+reported rather than silently trying another one. For a compiler built elsewhere,
+set `OMEGA_BIN` to its absolute executable path. The local compiler checkout is
+ignored build tooling; the UI library itself remains tracked distribution source.
 Generated package locks and component images stay in ignored build output;
 all UI source and font inputs are in this repository.
 

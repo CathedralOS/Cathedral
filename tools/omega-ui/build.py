@@ -11,6 +11,17 @@ from elf import Elf, component
 ROOT = Path(__file__).resolve().parents[2]
 LIBRARY = ROOT / 'source/distribution/libraries/omega-ui'
 OUTPUT = ROOT / 'build/omega-ui/component'
+LOCAL_COMPILER = ROOT / 'build/omega-ui/compiler/target/release' / ('omega.exe' if os.name == 'nt' else 'omega')
+
+
+def select_compiler(explicit=None):
+    selected = explicit or os.environ.get('OMEGA_BIN')
+    if not selected:
+        selected = LOCAL_COMPILER if LOCAL_COMPILER.is_file() else shutil.which('omega')
+    if not selected:
+        raise ValueError('Omega compiler not found; build the supported compiler as described '
+                         'in tools/omega-ui/README.md#build or set OMEGA_BIN')
+    return Path(selected).resolve()
 
 
 def digest(path):
@@ -37,9 +48,13 @@ def prepare(compiler=None):
         raise ValueError(f'Cathedral checkout is missing Omega UI source at {library}; '
                          f'missing: {", ".join(missing)}. Restore the checked-in distribution '
                          'library. See tools/omega-ui/README.md.')
-    compiler = compiler or os.environ.get('OMEGA_BIN')
-    compiler = Path(compiler or shutil.which('omega') or 'omega').resolve()
-    profile = json.loads(subprocess.check_output([str(compiler), '--build-profile'], text=True))
+    compiler = select_compiler(compiler)
+    try:
+        profile = json.loads(subprocess.check_output([str(compiler), '--build-profile'], text=True,
+                                                    stderr=subprocess.PIPE))
+    except (OSError, ValueError, subprocess.CalledProcessError) as error:
+        raise ValueError(f'cannot read build profile from Omega compiler {compiler}; '
+                         'use the supported compiler in tools/omega-ui/README.md#build') from error
     if profile.get('opt_level') not in ('1', '2', '3', 's', 'z'):
         raise ValueError('an optimized Omega compiler is required')
     inputs = fingerprint(library, compiler)

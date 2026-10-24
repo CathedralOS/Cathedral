@@ -103,7 +103,11 @@ matrix. Its inner DEEPER refuses with **NO ROOM** while preserving live notes.
 Split declares twenty channels and four descendants: its two Notes use ten
 channels, the optional producer uses five, and the optional capture viewer five.
 The viewer reserves zero private pages and 32 reader pages; capture output stays
-funded by Split until all readers release it. The inner Split receives
+funded by Split until all readers release it. Before admitting the viewer, Split
+requests any missing physical backing through its owner's `FUND` protocol. It
+retains a process-load allowance plus its private-page budget for its own work;
+owner refusal leaves the existing applications running and shows CANNOT CAPTURE.
+The inner Split receives
 96 private pages, 64 readers and ten channels; it has no room for AUTO alongside
 its two Notes. The private grant covers both 32-page Notes reservations and
 two 14-page header versions during replacement. Root/user budgets come from the current distribution composition

@@ -81,4 +81,5 @@ def exercise(stream, output, click, point, scan, width, height, reboot, timings,
         with timings.step(f'depth-{depth}-close-notes'):
             click(x+w-22, y+18)
             scan(lambda sw, d: pixel(sw, d, x+13, y+18) == bytes.fromhex('101827')
-                 and pixel(sw, d, x+249, y+h-60) == bytes.fromhex('101827'), 'closed and collected Notes')
+                 and pixel(sw, d, x+249+(56 if depth == 0 else 0), y+h-60) == bytes.fromhex('101827'),
+                 'closed and collected Notes')

@@ -5,6 +5,9 @@ pub const NAME: &[u8] = b"Matrix";
 pub const SIZE: usize = 104;
 /// Stock launcher: background, five program icons, message and running tasks.
 pub const LAUNCHER_SURFACES: usize = 8;
+/// Enough for login, then chrome/background and an ordinary ten-surface app.
+/// Extra capacity is lent separately; it is not a prerequisite for booting.
+pub const HOST_SURFACES: usize = 24;
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Config {
     pub launcher: [u8; 32],

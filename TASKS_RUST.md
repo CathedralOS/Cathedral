@@ -1,5 +1,48 @@
 # Rust reference OS: tasks and handoff
 
+Implementation update 2026-10-24: **local Omega UI build and combined desktop replay**,
+over `4f163da2`. The supported Omega `16a35ba7f429` compiler is built in the ignored
+`build/omega-ui/compiler` checkout. UI preparation selects `--compiler`, then
+`OMEGA_BIN`, then that local optimized binary, then PATH. Ordinary F5 therefore
+uses the prepared local compiler without changing the global Omega installation.
+The [build guide](tools/omega-ui/README.md#build) gives reproducible setup commands;
+the checked-in UI remains distribution source, not a sibling dependency.
+
+Combined replay exposed and repaired two resource regressions:
+
+- Split's fourth child left only 128 physical frames for its owner, with 117
+  already charged; replacing a 14-page header failed. Capture admission now asks
+  its owner for physical headroom through the existing `FUND` protocol, preserving
+  its own load/private backing. Refusal follows the existing CANNOT CAPTURE path.
+  Kernel limits and general subtree reservation defaults are unchanged.
+- Eight launcher surfaces plus the background left 28 surfaces at the fourth
+  nesting boundary, below the host's former 32-surface declaration. Stock startup
+  and its manifest now share the actual 24-surface minimum. Extra surfaces are
+  lent within the owner's ceiling and disjoint free range, independently of that
+  minimum. The latency harness also checks the running-task area after the new
+  fifth launcher icon instead of mistaking that icon for an uncollected task.
+
+Verified on this Windows checkout: `cargo test --locked`, `cargo check-userspace`,
+eight native UI tests and the usage example, nine Python packaging/setup tests,
+source layout (52 Omega / 139 Rust edges), Rust formatting and diff checks.
+The default F5 composition builds without an environment override
+(`build/omega-ui/final-f5-build.log`). Native exports were rebuilt from checked-in source; the frame is 531,360 bytes.
+Fresh/cold QEMU evidence under `build/boot-harness-rs/`:
+
+- UI buttons, editing, dynamic region retirement/restoration and close/reopen:
+  `omega-ui/20261024T201430679125Z`.
+- Recursive pointer preferences: `desktop/20261024T200106102735Z`;
+  independent AUTO suppression: `desktop/20261024T200200137927Z`.
+- Masked capture, recipient bytes, hidden editing and saved state:
+  `desktop/20261024T201506069107Z` (final tree).
+- Four nested desktops, input, durable saves and exact cold-open content:
+  `desktop/20261024T201312796565Z`, with the final `s` matrix optimization.
+
+The cursor runs precede the later capture/surface-admission fixes; their unchanged
+routing implementation was exercised in the combined UI tree. Full kernel smoke,
+ARM64 and every fault fixture were not rerun for these distribution/build changes.
+Timing numbers remain host-observed upper bounds, not guest-stage measurements.
+
 Implementation update 2026-10-24: **self-contained Omega UI source**. The complete
 library, native backend, fonts, examples and tests are checked in under
 `source/distribution/libraries/omega-ui`; the Rust API is in
@@ -76,10 +119,9 @@ tree restores the stock matrix's existing `s` optimization. No extra limit incre
 belongs to the cursor work. The pre-integration latency run is not evidence about
 the final combined binary or compiler-setting performance. No new ARM64/GPU claim.
 
-Next: obtain the UI library checkout/prepared artifacts, complete combined-tree
-userspace checks and rerun cursor, independent-producer, masked-capture and four-level
-desktop tests with the restored `s` build. Then measure actual input/routing/app/
-presentation stages before changing forwarding or scheduling. Existing end-to-end
+Next: measure actual input/routing/app/presentation stages before changing
+forwarding or scheduling. The missing-source and combined-tree replay work is
+closed by the entry above. Existing end-to-end
 timings alone cannot separate harness waits from guest delay. A small app
 interaction-description/semantic-action proof can follow using the accepted input
 authority model. Further broad specification is unnecessary for these steps.

@@ -1,8 +1,39 @@
 import tempfile
+import subprocess
 from pathlib import Path
 import unittest
 from unittest.mock import patch
-from build import LIBRARY, ROOT, fingerprint, prepare
+from build import LIBRARY, ROOT, fingerprint, prepare, select_compiler
+
+
+class CompilerTests(unittest.TestCase):
+    def test_explicit_environment_local_and_path_precedence(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            local = root / 'local'
+            with patch('build.LOCAL_COMPILER', local), patch.dict('os.environ', {}, clear=True), \
+                    patch('build.shutil.which', return_value=str(root / 'installed')):
+                self.assertEqual(select_compiler(), root / 'installed')
+                local.write_bytes(b'compiler')
+                self.assertEqual(select_compiler(), local)
+                with patch.dict('os.environ', {'OMEGA_BIN': str(root / 'configured')}):
+                    self.assertEqual(select_compiler(), root / 'configured')
+                    self.assertEqual(select_compiler(root / 'explicit'), root / 'explicit')
+
+    def test_missing_compiler_points_to_setup_instructions(self):
+        with patch('build.LOCAL_COMPILER') as local, patch.dict('os.environ', {}, clear=True), \
+                patch('build.shutil.which', return_value=None):
+            local.is_file.return_value = False
+            with self.assertRaisesRegex(ValueError, 'tools/omega-ui/README.md#build'):
+                select_compiler()
+
+    def test_incompatible_selected_compiler_reports_setup_without_fallback(self):
+        with patch('build.select_compiler', return_value=Path('selected-omega')), \
+                patch('build.subprocess.check_output', side_effect=subprocess.CalledProcessError(
+                    2, ['selected-omega', '--build-profile'])) as invoke:
+            with self.assertRaisesRegex(ValueError, 'selected-omega.*supported compiler'):
+                prepare()
+            invoke.assert_called_once()
 
 
 class FingerprintTests(unittest.TestCase):
