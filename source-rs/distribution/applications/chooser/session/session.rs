@@ -113,7 +113,13 @@ pub fn run(
                     continue;
                 }
             } else if !user_picker
-                && let Some(message) = tasks.click(parent, extent, event, clicked, layout::tasks_left(realm.count))
+                && let Some(message) = tasks.click(
+                    parent,
+                    extent,
+                    event,
+                    clicked,
+                    layout::tasks_left(realm.count),
+                )
             {
                 status = message;
                 tasks.refresh(parent, true);

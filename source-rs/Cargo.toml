@@ -120,11 +120,11 @@ debug = 2
 
 [profile.release.package.redb]
 opt-level = "s"
-# The stock matrix is installed as one storage object of at most 256 KiB and
-# needs size optimization. Pixel rasterization lives in the display service;
-# this policy/IPC executable is optimized for size independently.
+# Size-optimize the stock policy/IPC executable independently of the rasterizer.
+# Program objects now permit 1 MiB; keep ordinary optimization rather than
+# tightening it to work around the former 256 KiB storage bound.
 [profile.release.package.cathedral-stock-matrix]
-opt-level = "z"
+opt-level = "s"
 
 [profile.release.package.cathedral-database-worker]
 opt-level = "s"

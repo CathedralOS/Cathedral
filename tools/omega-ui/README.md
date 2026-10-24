@@ -17,6 +17,13 @@ Python 3 is required by the existing Cathedral build tools. No font runtime or n
 external Cargo dependency is needed. `OMEGA_UI_COMPONENT_DIR` explicitly selects
 already-prepared artifacts instead.
 
+The default Rust F5 profile now includes the UI demo, so these inputs are required
+to build that desktop too. A checkout lacking the two `tests/native_component`
+entry points is refused before invoking a compiler. The installed `omega` command
+may be older than the required compiler; use `OMEGA_BIN` explicitly in that case.
+The library's repository/branch acquisition instructions still need to be supplied
+by its publisher; a source hash alone does not make a fresh checkout reproducible.
+
 The build records source/compiler/export hashes in
 `build/omega-ui/component/receipt.json` and registers those inputs with Cargo.
 Changes in the library, compiler, packaging or selected input paths rebuild the

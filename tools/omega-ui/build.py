@@ -29,6 +29,14 @@ def fingerprint(library, compiler):
 
 def prepare(library=None, compiler=None):
     library = Path(library or os.environ.get('OMEGA_UI_REPO', ROOT.parent / 'omega-ui')).resolve()
+    required = ('src', 'platform/native', 'tests/native_component/layout/main.omg',
+                'tests/native_component/frame/main.omg')
+    missing = [name for name in required if not (library / name).exists()]
+    if missing:
+        raise ValueError(f'Omega UI source checkout is missing or incomplete at {library}; '
+                         f'missing: {", ".join(missing)}. Set OMEGA_UI_REPO to the library '
+                         'checkout, or OMEGA_UI_COMPONENT_DIR to prepared component artifacts '
+                         'when building with Cargo. See tools/omega-ui/README.md.')
     compiler = compiler or os.environ.get('OMEGA_BIN')
     if not compiler and (library / 'build/compiler.json').exists():
         compiler = json.loads((library / 'build/compiler.json').read_text())['compiler']
@@ -95,7 +103,10 @@ if __name__ == '__main__':
     parser.add_argument('--compiler', type=Path)
     parser.add_argument('--cargo', action='store_true', help='emit exact Cargo rebuild inputs before the output directory')
     arguments = parser.parse_args()
-    directory = prepare(arguments.library, arguments.compiler)
+    try:
+        directory = prepare(arguments.library, arguments.compiler)
+    except (OSError, ValueError, RuntimeError, subprocess.CalledProcessError) as error:
+        parser.exit(1, f'Omega UI preparation failed: {error}\n')
     if arguments.cargo:
         receipt = json.loads((directory / 'receipt.json').read_text())
         library = Path(receipt['library'])

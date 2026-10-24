@@ -1,7 +1,8 @@
 # Rust reference OS: tasks and handoff
 
 Implementation update 2026-10-24: **recursive pointer-target cursor preferences**,
-over `4b734b83`. F5 -> user -> Notes (or Split) -> click a note -> **F6**. Notes
+integrated with `1687e07b` (including reusable Omega UI). F5 -> user -> Notes
+(or Split) -> click a note -> **F6**. Notes
 requests default/hidden for pointer aliases in that keyboard's local group;
 input keeps working. Leaving the target restores the next target's policy.
 Returning to the same live view can reuse its preference. Closing the target
@@ -21,7 +22,7 @@ exhaustion stays invalid rather than reviving after another cancellation.
 Only the root adapter has the display control operation. No new syscall, device
 grant, general cursor assets, relative lock, confinement or attribution promise.
 
-Verified fresh/cold QEMU evidence:
+Verified fresh/cold QEMU evidence before the concurrent Omega UI integration:
 
 - Ordinary F6, continued typing/saving, independent AUTO, target death and
   Split-in-Split: `build/boot-harness-rs/desktop/20261024T185604001729Z`
@@ -36,22 +37,43 @@ Verified fresh/cold QEMU evidence:
   including input pacing/QMP/screenshot polling, not stage latency or an A/B
   performance claim. No input/redraw traces were requested in this run.
 
-Workspace host tests pass; the final focused suites contain 111 matrix and 23
-display tests. Ordinary userspace and cursor-probe clippy pass. The traced stock
-matrix initially exceeded the executable object's 262,144-byte cap. Compact
-boolean preference state helps; switching that policy executable from `s` to `z`
-optimization brings it to 259,792 bytes. Rasterizer optimization is unchanged.
-This is very little remaining headroom, not a long-term executable storage model.
-No kernel limits changed and no new ARM64/GPU evidence is claimed.
+- Existing AUTO repeat/resize/retirement regression:
+  `build/boot-harness-rs/desktop/20261024T185950798382Z` (`--participants --trace-storage`).
+- Masked capture recipient byte inspection, hidden editing and cold state:
+  `build/boot-harness-rs/desktop/20261024T190049500362Z` (`--capture`).
 
-Next: measure actual input/routing/app/presentation stages through nesting before
-changing forwarding or scheduling. Existing end-to-end timings alone cannot
-separate intentional harness waits from guest delay. Address the near-exhausted
-single-object executable bound deliberately before adding substantial stock-matrix
-features; avoid repeatedly depending on optimization settings to fit. Then build
-a small app interaction-description/semantic-action proof using the accepted
-input authority model. Further broad specification is unnecessary for these
-steps. Mandatory agent attribution remains an independent unresolved policy.
+**Combined-tree verification and current build gap.** After integration,
+`cargo test --locked` passes (default workspace members; 111 matrix / 23 display
+policy tests). Explicit cursor-related guest clippy passes for matrix, stock
+matrix, Split, Notes, display and the cursor-probe participant. Layout reports
+40 Omega / 139 Rust edges. The incoming chooser formatting was corrected.
+These checks do not establish that the combined F5 desktop boots.
+
+The full rebuild stopped preparing `cathedral-omega-ui`: this machine has neither
+`C:/Projects/omega-ui` nor `build/omega-ui/component`. Its publisher's repository
+and branch are absent from the handoff. An asynchronous question asks for that
+location. The installed Omega also predates `--build-profile`; the local optimized
+`C:/Projects/Omega/target/release/omega.exe` supports it, so use `OMEGA_BIN` when the
+source is supplied. The build now reports missing library inputs before attempting
+an unrelated installed compiler. Its missing-source regression passes. Do not
+remove the UI app from the default profile to disguise this integration gap.
+No post-integration QEMU evidence or full userspace clippy claim yet.
+
+The cursor build initially exceeded the former 262,144-byte executable-object
+cap. A temporary `z` build permitted the pre-integration runs above. Incoming
+Omega UI support independently raises funded object geometry to 1 MiB; the final
+tree restores the stock matrix's existing `s` optimization. No extra limit increase
+belongs to the cursor work. The pre-integration latency run is not evidence about
+the final combined binary or compiler-setting performance. No new ARM64/GPU claim.
+
+Next: obtain the UI library checkout/prepared artifacts, complete combined-tree
+userspace checks and rerun cursor, independent-producer, masked-capture and four-level
+desktop tests with the restored `s` build. Then measure actual input/routing/app/
+presentation stages before changing forwarding or scheduling. Existing end-to-end
+timings alone cannot separate harness waits from guest delay. A small app
+interaction-description/semantic-action proof can follow using the accepted input
+authority model. Further broad specification is unnecessary for these steps.
+Mandatory agent attribution remains an independent unresolved policy.
 
 Current integration 2026-10-24: **reusable Omega UI library**, over `ab0d76f8`.
 `cathedral-omega-ui` exposes caller-authored frames, independent field values,
