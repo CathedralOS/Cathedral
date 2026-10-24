@@ -11,7 +11,7 @@ members = [
     "platform/drivers/ata-pio",
     "platform/drivers/uart_16550",
     "platform/libraries/bitmap-font",
-    "platform/libraries/omega-ui",
+    "distribution/libraries/omega-ui",
     "platform/libraries/block-device",
     "platform/libraries/content-layout",
     "platform/libraries/database-objects",
@@ -64,7 +64,7 @@ rust-version = "1.94"
 publish = false
 
 [workspace.dependencies]
-cathedral-omega-ui = { path = "platform/libraries/omega-ui" }
+cathedral-omega-ui = { path = "distribution/libraries/omega-ui" }
 cathedral-matrix = { path = "platform/libraries/matrix" }
 cathedral-desktop-matrix-contracts = { path = "distribution/matrix/contracts" }
 cathedral-colors = { path = "distribution/applications/colors" }

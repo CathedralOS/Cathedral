@@ -1,0 +1,59 @@
+// std::clock — the portable `Clock` pacing boundary.
+//
+// The corpus's time-facing canaries and the `samples/cli` pacing samples each
+// declare a package-local `pub boundary trait Clock { machine
+// sleep(milliseconds: u32); }` — the Win32 `Sleep` / POSIX `nanosleep` seam —
+// and then require a selected provider for their own nominal trait. Provider
+// selection is nominal (owning package + trait name), so bundled library code
+// can never satisfy a consumer-declared trait. This module is the canonical
+// `omega_language_std` `Clock` those consumers can select instead; migrating
+// a local `Clock` is a one-line `use omega_language_std::clock;`.
+//
+// Surface: `sleep(milliseconds)` only — the sole operation every one of those
+// declarations shares. Monotonic and wall-clock reads stay on `Time`
+// (`time.omg` over the canonical toolchain-settled `TimeHost` seam), so this
+// boundary carries no clock-read constants it cannot honor.
+//
+// Each selected target contributes its provider closure and its provider
+// default; target filtering keeps exactly one implementation closure:
+//
+// * `windows_x86_64` binds kernel32 `Sleep`, whose signature is the
+//   requirement's, as the leaf itself.
+// * `macos_arm64` has no kernel millisecond sleep with the requirement's
+//   shape. Its `ClockNativeProvider::sleep` is an ordinary checked adapter
+//   over a std-private `poll` requirement that reaches `Clock`, realized by
+//   the libSystem `poll` import (see its `clock_impl.omg`).
+// * `linux_x86_64` uses a checked adapter over the integer-only kernel poll
+//   wait, preserving the full u32 duration by splitting signed-safe waits.
+// * `linux_arm64` constructs a checked seconds/nanoseconds request and lends
+//   its storage to kernel nanosleep, rather than passing milliseconds as an
+//   address. Both Linux adapters build through native artifact admission;
+//   waiting behavior still requires validation on a Linux runner.
+//
+// `macos_x86_64` is bundled but unadmitted (console's family has no
+// implementation for it either), and freestanding `uefi_x86_64` has no hosted
+// clock at all. The provider family therefore covers exactly the targets the
+// std console family covers, and `main.omg` lists this module on the ordinary
+// portable surface. Consumers still name it with `use omega_language_std::clock;`.
+use targets::linux_x86_64::clock_impl;
+use targets::linux_arm64::clock_impl;
+use targets::macos_arm64::clock_impl;
+use targets::windows_x86_64::clock_impl;
+
+public boundary trait Clock {
+    // Block the caller for `milliseconds`.
+    machine sleep(milliseconds: u32) reaches Clock;
+}
+
+// Nominal owner of the selected Clock provider closure. Realization leaves
+// attach to this type so provider selection never assembles the row from
+// unrelated implementations.
+public data ClockNativeProvider { }
+
+// Select the explicit whole-trait map. The inline member preserves the exact
+// target body's checked wait and raw-provider closure.
+public NativeClock satisfies Clock {
+    machine sleep(milliseconds: u32) reaches Clock {
+        ClockNativeProvider::sleep(milliseconds);
+    }
+}

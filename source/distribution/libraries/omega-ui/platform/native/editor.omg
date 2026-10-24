@@ -1,0 +1,96 @@
+// Field values remain caller-owned; the canonical editor supplies all editing.
+use omega_ui::types;
+use omega_ui::context;
+use omega_ui::widgets;
+use omega_ui::edit;
+use omega_ui::text_field;
+use native_state;
+use font;
+public machine edit_field(surface: &mut NativeUiState, packet: &mut [i32; 4096]) -> u64 {
+    let mut editor: UiLineEdit;
+    editor.length = packet[4040]; editor.caret = packet[4041]; editor.anchor = packet[4042];
+    transition editor.length >= 0 && editor.length <= 128 && editor.caret >= 0 && editor.caret <= editor.length && editor.anchor >= 0 && editor.anchor <= editor.length {
+        true -> read(surface, packet, &mut editor, 0) _ -> (5u64)
+    }
+    state read(surface: &mut NativeUiState, packet: &mut [i32; 4096], editor: &mut UiLineEdit, index: i32) -> u64 {
+        transition index >= 0 && index < editor.length && index < 128 { true -> character(surface, packet, editor, index) _ -> input(surface, packet, editor) }
+    }
+    state character(surface: &mut NativeUiState, packet: &mut [i32; 4096], editor: &mut UiLineEdit, index: i32) -> u64 requires index >= 0 && index < 128 {
+        let value: i32 = packet[index];
+        transition value >= 32 && value <= 126 { true -> store(surface, packet, editor, index, value) _ -> (5u64) }
+    }
+    state store(surface: &mut NativeUiState, packet: &mut [i32; 4096], editor: &mut UiLineEdit, index: i32, value: i32) -> u64
+    requires index >= 0 && index < 128 && value >= 32 && value <= 126 {
+        editor.bytes[index] = value as u8;
+        transition { _ -> read(surface, packet, editor, index + 1) }
+    }
+    state input(surface: &mut NativeUiState, packet: &mut [i32; 4096], editor: &mut UiLineEdit) -> u64 {
+        let rectangle: Rect = UiContext::previous_rect(&surface.context, packet[4081]);
+        transition surface.context.mouse_pressed && Rect::contains(&rectangle, surface.context.mouse_x, surface.context.mouse_y) {
+            true -> caret(surface, packet, editor, rectangle) _ -> key(surface, packet, editor)
+        }
+    }
+    state caret(surface: &mut NativeUiState, packet: &mut [i32; 4096], editor: &mut UiLineEdit, rectangle: Rect) -> u64 {
+        editor.caret = NativeUiFont::hit(editor, add_i32(sub_i32(sub_i32(surface.context.mouse_x, rectangle.x as i32), 12), packet[4043]));
+        editor.anchor = editor.caret;
+        transition { _ -> key(surface, packet, editor) }
+    }
+    state key(surface: &mut NativeUiState, packet: &mut [i32; 4096], editor: &mut UiLineEdit) -> u64 {
+        transition surface.context.focus == packet[4081] {
+            true -> edit(surface, packet, editor) _ -> build(surface, packet, editor)
+        }
+    }
+    state edit(surface: &mut NativeUiState, packet: &mut [i32; 4096], editor: &mut UiLineEdit) -> u64 {
+        let changed: bool = UiLineEdit::key(editor, surface.context.key_code, surface.character, surface.control, surface.shift);
+        surface.context.changed = surface.context.changed || changed;
+        packet[4061] = select_i32(changed, 2, 0);
+        transition { _ -> build(surface, packet, editor) }
+    }
+    state build(surface: &mut NativeUiState, packet: &mut [i32; 4096], editor: &UiLineEdit) -> u64 {
+        transition editor.length >= 0 && editor.length <= 128 { true -> view(surface, packet, editor) _ -> (5u64) }
+    }
+    state view(surface: &mut NativeUiState, packet: &mut [i32; 4096], editor: &UiLineEdit) -> u64 requires editor.length >= 0 && editor.length <= 128 {
+        let width: i32 = clamp_i32(packet[4083], 80, 3840);
+        let field: i32 = Ui::text_field(&mut surface.context, packet[4081], &editor.bytes[0..(editor.length as u64)], width);
+        let label: i32 = sub_i32(surface.context.node_count, 1);
+        packet[4060] = field;
+        transition label > 0 && label < 128 { true -> metadata(surface, packet, editor, field, label, width) _ -> (5u64) }
+    }
+    state metadata(surface: &mut NativeUiState, packet: &mut [i32; 4096], editor: &UiLineEdit, field: i32, label: i32, width: i32) -> u64 requires label > 0 && label < 128 {
+        let caret: i32 = NativeUiFont::prefix(editor, editor.caret);
+        let extent: i32 = NativeUiFont::prefix(editor, editor.length);
+        let available: i32 = max_i32(sub_i32(width, 25), 1);
+        let scroll: i32 = clamp_i32(packet[4043], max_i32(sub_i32(caret, available), 0), min_i32(caret, max_i32(sub_i32(extent, available), 0)));
+        surface.text_paint[label] = NativeTextPaint { field: field, scroll: scroll,
+            left: sub_i32(NativeUiFont::prefix(editor, editor.anchor), scroll), right: sub_i32(caret, scroll), caret: sub_i32(caret, scroll) };
+        packet[4040] = editor.length; packet[4041] = editor.caret; packet[4042] = editor.anchor; packet[4043] = scroll;
+        transition { _ -> write(surface, packet, editor, 0) }
+    }
+    state write(surface: &NativeUiState, packet: &mut [i32; 4096], editor: &UiLineEdit, index: i32) -> u64 {
+        transition index >= 0 && index < editor.length && index < 128 { true -> byte(surface, packet, editor, index) _ -> (native_report(surface, packet)) }
+    }
+    state byte(surface: &NativeUiState, packet: &mut [i32; 4096], editor: &UiLineEdit, index: i32) -> u64 requires index >= 0 && index < 128 {
+        packet[index] = editor.bytes[index] as i32;
+        transition { _ -> write(surface, packet, editor, index + 1) }
+    }
+}
+public machine paint_selections(surface: &NativeUiState, pixels: &mut [i32; 4096], row: i32, index: i32) {
+    transition { _ -> scan(surface, pixels, row, index) }
+    state scan(surface: &NativeUiState, pixels: &mut [i32; 4096], row: i32, index: i32) {
+        transition index > 0 && index < surface.context.node_count && index < 128 { true -> node(surface, pixels, row, index) _ -> done() }
+    }
+    state node(surface: &NativeUiState, pixels: &mut [i32; 4096], row: i32, index: i32) requires index > 0 && index < 128 {
+        let field: i32 = surface.text_paint[index].field;
+        transition field > 0 && field < 128 { true -> paint(surface, pixels, row, index, field) _ -> next(surface, pixels, row, index) }
+    }
+    state paint(surface: &NativeUiState, pixels: &mut [i32; 4096], row: i32, index: i32, field: i32) requires index > 0 && index < 128 && field > 0 && field < 128 {
+        let rectangle: Rect = UiContext::node_rect(&surface.context, field);
+        UiTextFieldView::paint_selection(pixels, row, &surface.context,
+            Rect { x: rectangle.x + (12 as i32 in Saturating), y: rectangle.y + (10 as i32 in Saturating), w: rectangle.w - (24 as i32 in Saturating), h: 20 },
+            UiTextSelection { left: surface.text_paint[index].left, right: surface.text_paint[index].right, caret: surface.text_paint[index].caret,
+                focused: surface.context.focus == surface.context.nodes[field].id });
+        transition { _ -> next(surface, pixels, row, index) }
+    }
+    state next(surface: &NativeUiState, pixels: &mut [i32; 4096], row: i32, index: i32) { transition { _ -> scan(surface, pixels, row, index + 1) } }
+    state done() {}
+}

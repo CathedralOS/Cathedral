@@ -1,0 +1,119 @@
+/* Uniform rows let the native memory copier fill opaque spans without a pixel loop. */
+use omega_language_std::windows_gui_host;
+use omega_ui::types;
+use omega_ui::raster;
+
+public data WindowsFillStyle [copy] { color: i32; valid: bool; used: bool; }
+public data WindowsFillCache {
+    styles: [WindowsFillStyle; 24];
+    bitmap: u64;
+    pixels: u64;
+    ready: bool;
+    reads: u64 in Saturating;
+}
+public machine WindowsFillCache::init(cache: &mut WindowsFillCache, device: u64) reaches WindowsGuiHost invokes WindowsGuiHost; {
+    let mut info: [i32; 11];
+    info[0] = 40; info[1] = 3840; info[2] = -24; info[3] = 2097153;
+    let mut address: u64;
+    cache.bitmap = WindowsGuiHost::create_dib_section(device, &info[0], 0, &mut address, 0, 0);
+    cache.pixels = address;
+    cache.ready = cache.bitmap > 0 && address > 0;
+    transition { _ -> clear(cache, 0) }
+    state clear(cache: &mut WindowsFillCache, index: i32) {
+        transition index >= 0 && index < 24 { true -> invalidate(cache, index) _ -> done() }
+    }
+    state invalidate(cache: &mut WindowsFillCache, index: i32) requires index >= 0 && index < 24 {
+        cache.styles[index].valid = false;
+        cache.styles[index].used = false;
+        transition { _ -> clear(cache, index + 1) }
+    }
+    state done() {}
+}
+
+public machine WindowsFillCache::verify(cache: &mut WindowsFillCache, pixels: &mut [i32; 4096]) -> bool reaches WindowsGuiHost invokes WindowsGuiHost; {
+    pixels[4090] = -271828; pixels[4091] = 20; pixels[4092] = 44;
+    pixels[4093] = 0; pixels[4094] = 1440; pixels[4095] = 945;
+    let slot: i32 = WindowsFillCache::style(cache, pixels, 0x123456);
+    let metadata: bool = pixels[4090] == -271828 && pixels[4091] == 20 && pixels[4092] == 44 && pixels[4093] == 0 && pixels[4094] == 1440 && pixels[4095] == 945;
+    pixels[19] = 7; pixels[20] = 7; pixels[43] = 7; pixels[44] = 7;
+    WindowsFillCache::fill_span(cache, pixels, 0, 20, 44, 0x123456, slot);
+    let native: bool = cache.ready && slot >= 0 && cache.reads > (0u64 as u64 in Saturating) && pixels[19] == 7 && pixels[20] == 0x123456 && pixels[43] == 0x123456 && pixels[44] == 7;
+    WindowsFillCache::fill_span(cache, pixels, 0, 20, 44, 0x654321, slot);
+    let fallback: bool = pixels[19] == 7 && pixels[20] == 0x654321 && pixels[43] == 0x654321 && pixels[44] == 7;
+    WindowsFillCache::fill_span(cache, pixels, 0, 44, 20, 0, slot);
+    metadata && native && fallback && pixels[20] == 0x654321 && pixels[44] == 7
+}
+public machine WindowsFillCache::close(cache: &mut WindowsFillCache) reaches WindowsGuiHost invokes WindowsGuiHost; {
+    let bitmap: u64 = cache.bitmap;
+    cache.bitmap = 0; cache.pixels = 0; cache.ready = false;
+    transition bitmap > 0 { true -> release(bitmap) _ -> done() }
+    state release(bitmap: u64) { let deleted: i32 = WindowsGuiHost::delete_object(bitmap); }
+    state done() {}
+}
+public machine WindowsFillCache::begin_frame(cache: &mut WindowsFillCache) {
+    transition { _ -> scan(cache, 0) }
+    state scan(cache: &mut WindowsFillCache, index: i32) {
+        transition index >= 0 && index < 24 { true -> unpin(cache, index) _ -> done() }
+    }
+    state unpin(cache: &mut WindowsFillCache, index: i32) requires index >= 0 && index < 24 {
+        cache.styles[index].used = false;
+        transition { _ -> scan(cache, index + 1) }
+    }
+    state done() {}
+}
+public machine WindowsFillCache::style(cache: &mut WindowsFillCache, pixels: &mut [i32; 4096], color: i32) -> i32 reaches WindowsGuiHost invokes WindowsGuiHost; {
+    transition cache.ready && color >= 0 { true -> scan(cache, pixels, color, 0, -1) _ -> (-1) }
+    state scan(cache: &mut WindowsFillCache, pixels: &mut [i32; 4096], color: i32, index: i32, available: i32) -> i32 {
+        transition index >= 0 && index < 24 { true -> entry(cache, pixels, color, index, available) _ -> choose(cache, pixels, color, available) }
+    }
+    state entry(cache: &mut WindowsFillCache, pixels: &mut [i32; 4096], color: i32, index: i32, available: i32) -> i32 requires index >= 0 && index < 24 {
+        let style: WindowsFillStyle = cache.styles[index];
+        let next: i32 = select_i32(!style.used && available < 0, index, available);
+        transition style.valid && style.color == color { true -> hit(cache, index) _ -> scan(cache, pixels, color, index + 1, next) }
+    }
+    state hit(cache: &mut WindowsFillCache, index: i32) -> i32 requires index >= 0 && index < 24 {
+        cache.styles[index].used = true;
+        index
+    }
+    state choose(cache: &mut WindowsFillCache, pixels: &mut [i32; 4096], color: i32, slot: i32) -> i32 {
+        transition slot >= 0 && slot < 24 { true -> bake(cache, pixels, color, slot) _ -> (-1) }
+    }
+    state bake(cache: &mut WindowsFillCache, pixels: &mut [i32; 4096], color: i32, slot: i32) -> i32 requires slot >= 0 && slot < 24 {
+        let marker: i32 = pixels[4090];
+        let width: i32 = pixels[4094];
+        pixels[4090] = 0; pixels[4094] = 3840;
+        Raster::clear_band_buffer(pixels, 0, color);
+        let address: u64 = cache.pixels;
+        let copied: bool = WindowsGuiHost::copy_bitmap_row(address, 3840, 24, slot, 3840, pixels);
+        pixels[4090] = marker; pixels[4094] = width;
+        transition copied { true -> complete(cache, color, slot) _ -> (-1) }
+    }
+    state complete(cache: &mut WindowsFillCache, color: i32, slot: i32) -> i32 requires slot >= 0 && slot < 24 {
+        cache.styles[slot] = WindowsFillStyle { color: color, valid: true, used: true };
+        slot
+    }
+}
+
+// The caller intersects the span with the current scanline clip before this copy.
+public machine WindowsFillCache::fill_span(cache: &mut WindowsFillCache, pixels: &mut [i32; 4096], row: i32, left: i32 in Saturating, right: i32 in Saturating, color: i32, slot: i32) reaches WindowsGuiHost invokes WindowsGuiHost; {
+    transition color >= 0 && right > left { true -> choose(cache, pixels, row, left, right, color, slot) _ -> done() }
+    state choose(cache: &mut WindowsFillCache, pixels: &mut [i32; 4096], row: i32, left: i32 in Saturating, right: i32 in Saturating, color: i32, slot: i32) {
+        transition cache.ready && row >= 0 && left >= 0 && right <= 3840 && slot >= 0 && slot < 24 { true -> validate(cache, pixels, row, left, right, color, slot) _ -> scalar(pixels, row, left, right, color) }
+    }
+    state validate(cache: &mut WindowsFillCache, pixels: &mut [i32; 4096], row: i32, left: i32 in Saturating, right: i32 in Saturating, color: i32, slot: i32) requires slot >= 0 && slot < 24 {
+        transition cache.styles[slot].valid && cache.styles[slot].color == color && left >= 0 && right > left && right <= 3840 {
+            true -> copy(cache, pixels, row, left as i32, right as i32, color, slot)
+            _ -> scalar(pixels, row, left, right, color)
+        }
+    }
+    state copy(cache: &mut WindowsFillCache, pixels: &mut [i32; 4096], row: i32, left: i32, right: i32, color: i32, slot: i32) requires left >= 0 && right > left && right <= 3840 {
+        let address: u64 = cache.pixels;
+        let copied: bool = WindowsGuiHost::read_bitmap_span(address, 3840, 24, slot, 0, sub_i32(right, left), &mut pixels[left..right]);
+        transition copied { true -> counted(cache) _ -> scalar(pixels, row, left as i32 in Saturating, right as i32 in Saturating, color) }
+    }
+    state counted(cache: &mut WindowsFillCache) { cache.reads = cache.reads + (1u64 as u64 in Saturating); }
+    state scalar(pixels: &mut [i32; 4096], row: i32, left: i32 in Saturating, right: i32 in Saturating, color: i32) {
+        Raster::hline_raw(pixels, row, row as i32 in Saturating, left, right, color);
+    }
+    state done() {}
+}

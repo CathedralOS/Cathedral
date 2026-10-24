@@ -1,0 +1,57 @@
+/* Paint text once through the exact union of the CPU-written regions. */
+use omega_language_std::windows_gui_host;
+
+public data GalleryTextClip { region: u64; ready: bool; }
+
+public machine GalleryTextClip::begin(clip: &mut GalleryTextClip) reaches WindowsGuiHost invokes WindowsGuiHost; {
+    GalleryTextClip::close(clip);
+    clip.region = WindowsGuiHost::create_rectangle_region(0, 0, 0, 0);
+    clip.ready = clip.region > 0;
+}
+public machine GalleryTextClip::include(clip: &mut GalleryTextClip, left: i32, top: i32, right: i32, bottom: i32) reaches WindowsGuiHost invokes WindowsGuiHost; {
+    transition clip.ready && left < right && top < bottom {
+        true -> rectangle(clip, left, top, right, bottom)
+        _ -> done()
+    }
+    state rectangle(clip: &mut GalleryTextClip, left: i32, top: i32, right: i32, bottom: i32) {
+        let region: u64 = WindowsGuiHost::create_rectangle_region(left, top, right, bottom);
+        transition region > 0 { true -> combine(clip, region) _ -> failed(clip) }
+    }
+    state combine(clip: &mut GalleryTextClip, region: u64) {
+        let destination: u64 = clip.region;
+        let combined: i32 = WindowsGuiHost::combine_regions(destination, destination, region, 2);
+        let deleted: i32 = WindowsGuiHost::delete_object(region);
+        clip.ready = combined > 0;
+    }
+    state failed(clip: &mut GalleryTextClip) { clip.ready = false; }
+    state done() {}
+}
+public machine GalleryTextClip::select(clip: &mut GalleryTextClip, device: u64) -> bool reaches WindowsGuiHost invokes WindowsGuiHost; {
+    transition clip.ready && clip.region > 0 { true -> apply_region(clip, device) _ -> (false) }
+    state apply_region(clip: &mut GalleryTextClip, device: u64) -> bool {
+        let region: u64 = clip.region;
+        let selected: i32 = WindowsGuiHost::select_clip_region(device, region);
+        clip.ready = selected > 0;
+        clip.ready
+    }
+}
+public machine GalleryTextClip::restore(clip: &GalleryTextClip, device: u64, left: i32, top: i32, right: i32, bottom: i32) reaches WindowsGuiHost invokes WindowsGuiHost; {
+    transition clip.ready && clip.region > 0 {
+        true -> combined(clip, device)
+        _ -> rectangle(device, left, top, right, bottom)
+    }
+    state combined(clip: &GalleryTextClip, device: u64) {
+        let selected: i32 = WindowsGuiHost::select_clip_region(device, clip.region);
+    }
+    state rectangle(device: u64, left: i32, top: i32, right: i32, bottom: i32) {
+        let reset: i32 = WindowsGuiHost::select_clip_region(device, 0);
+        let selected: i32 = WindowsGuiHost::intersect_clip_rectangle(device, left, top, right, bottom);
+    }
+}
+public machine GalleryTextClip::close(clip: &mut GalleryTextClip) reaches WindowsGuiHost invokes WindowsGuiHost; {
+    let region: u64 = clip.region;
+    clip.region = 0; clip.ready = false;
+    transition region > 0 { true -> release(region) _ -> done() }
+    state release(region: u64) { let deleted: i32 = WindowsGuiHost::delete_object(region); }
+    state done() {}
+}

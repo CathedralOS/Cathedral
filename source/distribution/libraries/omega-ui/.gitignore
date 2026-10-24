@@ -1,0 +1,9 @@
+/build/
+**/build/
+**/omega.lock
+__pycache__/
+*.py[cod]
+*.exe
+snapshot*.bmp
+.DS_Store
+Thumbs.db

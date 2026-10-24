@@ -1,0 +1,22 @@
+// Private instance state and bounded results shared by native command modules.
+use omega_ui::types;
+use omega_ui::context;
+use omega_ui::scene;
+use omega_ui::frame;
+public data NativeTextPaint { field: i32; scroll: i32; left: i32; right: i32; caret: i32; }
+public data NativeUiState {
+    context: UiContext; scene: UiScene; frame: UiFrame;
+    text_paint: [NativeTextPaint; 128];
+    character: i32; control: bool; shift: bool;
+    ready: bool; building: bool; prepared: bool;
+    revision: i32 in Saturating;
+}
+public machine native_report(surface: &NativeUiState, packet: &mut [i32; 4096]) -> u64 {
+    packet[4068] = 2; packet[4069] = select_i32(surface.context.motion.animating, 1, 0);
+    packet[4070] = select_i32(surface.context.changed, 1, 0);
+    packet[4072] = surface.context.focus; packet[4073] = surface.revision as i32;
+    packet[4074] = surface.context.frame_error; packet[4075] = surface.context.theme.background;
+    packet[4076] = surface.context.width as i32; packet[4077] = surface.context.height as i32;
+    packet[4078] = surface.context.node_count;
+    (surface.context.frame_error & 255) as u64
+}

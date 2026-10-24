@@ -1,0 +1,160 @@
+// The native backend consumes bounded grayscale glyphs baked from the bundled
+// typeface. Measurement, hit testing and painting use the same advances.
+use omega_ui::types;
+use omega_ui::context;
+use omega_ui::text;
+use omega_ui::edit;
+use omega_ui::raster;
+use font_atlas;
+use native_state;
+
+public data NativeUiFont {}
+public machine NativeUiFont::advance(character: i32, large: bool) -> i32 {
+    NativeFontAtlas::advance(character, large)
+}
+public machine NativeUiFont::width(text: &[u8], count: u64, large: bool) -> i32 {
+    transition { _ -> scan(text, count, large, 0u64, 0) }
+    state scan(text: &[u8], count: u64, large: bool, index: u64, width: i32) -> i32 {
+        transition index < text.len && index < count && index < 8192u64 {
+            true -> step(text, count, large, index, width, text[index] as i32)
+            _ -> (width)
+        }
+    }
+    state step(text: &[u8], count: u64, large: bool, index: u64, width: i32, character: i32) -> i32 requires index < 8192u64 {
+        transition { _ -> scan(text, count, large, index + 1u64, add_i32(width, NativeUiFont::advance(character, large))) }
+    }
+}
+public machine NativeUiFont::prefix(editor: &UiLineEdit, end: i32) -> i32 {
+    transition end >= 0 && end <= 128 {
+        true -> (NativeUiFont::width(&editor.bytes[0..(end as u64)], end as u64, false))
+        _ -> (0)
+    }
+}
+public machine NativeUiFont::hit(editor: &UiLineEdit, x: i32) -> i32 {
+    transition { _ -> scan(editor, x, 0, 0) }
+    state scan(editor: &UiLineEdit, x: i32, index: i32, width: i32) -> i32 {
+        transition index >= 0 && index < editor.length && index < 128 {
+            true -> character(editor, x, index, width, editor.bytes[index] as i32)
+            _ -> (index)
+        }
+    }
+    state character(editor: &UiLineEdit, x: i32, index: i32, width: i32, character: i32) -> i32 requires index >= 0 && index < 128 {
+        let advance: i32 = NativeUiFont::advance(character, false);
+        transition x < add_i32(width, advance / 2) {
+            true -> (index)
+            _ -> scan(editor, x, index + 1, add_i32(width, advance))
+        }
+    }
+}
+public machine NativeUiFont::measure(context: &mut UiContext) {
+    transition { _ -> scan(context, 1) }
+    state scan(context: &mut UiContext, index: i32) {
+        transition index > 0 && index < context.node_count && index < 128 { true -> node(context, index) _ -> done() }
+    }
+    state node(context: &mut UiContext, index: i32) requires index > 0 && index < 128 {
+        let large: bool = context.nodes[index].content_value >= 600 && context.nodes[index].style.height_px >= 28;
+        let text: &[u8] = UiTextStore::view(&context.text_store, context.nodes[index].text);
+        let width: i32 = NativeUiFont::width(text, text.len, large);
+        UiContext::set_text_metrics(context, index, width, select_i32(large, 32, 20));
+        transition { _ -> scan(context, index + 1) }
+    }
+    state done() {}
+}
+public machine NativeUiFont::paint(context: &UiContext, pixels: &mut [i32; 4096], row: i32, text_paint: &[NativeTextPaint; 128]) {
+    transition { _ -> scan(context, pixels, row, text_paint, 1) }
+    state scan(context: &UiContext, pixels: &mut [i32; 4096], row: i32, text_paint: &[NativeTextPaint; 128], index: i32) {
+        transition index > 0 && index < context.node_count && index < 128 { true -> node(context, pixels, row, text_paint, index) _ -> done() }
+    }
+    state node(context: &UiContext, pixels: &mut [i32; 4096], row: i32, text_paint: &[NativeTextPaint; 128], index: i32) requires index > 0 && index < 128 {
+        let rectangle: Rect = UiContext::paint_rect(context, index);
+        let large: bool = context.nodes[index].content_value >= 600 && context.nodes[index].style.height_px >= 28;
+        let text: &[u8] = UiTextStore::view(&context.text_store, context.nodes[index].text);
+        let height: i32 = select_i32(large, 32, 20);
+        let y: i32 = add_i32(rectangle.y as i32, max_i32(sub_i32(rectangle.h as i32, height) / 2, 0));
+        let centered: i32 = select_i32(context.nodes[index].text_align == 1, max_i32(sub_i32(rectangle.w as i32, context.nodes[index].intrinsic.w as i32) / 2, 0), 0);
+        let clip: Rect = text_clip(context, text_paint[index].field);
+        let x: i32 = sub_i32(add_i32(rectangle.x as i32, centered), text_paint[index].scroll);
+        let clip_left: i32 = clip.x as i32;
+        let clip_right: i32 = (clip.x + clip.w) as i32;
+        transition row >= y && row < add_i32(y, height) && text.len > 0u64 {
+            true -> label(context, pixels, row, text_paint, index, text, large, x, y, clip_left, clip_right, 0u64)
+            _ -> scan(context, pixels, row, text_paint, index + 1)
+        }
+    }
+    state label(context: &UiContext, pixels: &mut [i32; 4096], row: i32, text_paint: &[NativeTextPaint; 128], index: i32, text: &[u8], large: bool, x: i32, y: i32, clip_left: i32, clip_right: i32, character: u64)
+    requires index > 0 && index < 128 {
+        transition character < text.len && character < 8192u64 {
+            true -> glyph(context, pixels, row, text_paint, index, text, large, x, y, clip_left, clip_right, character, text[character] as i32)
+            _ -> scan(context, pixels, row, text_paint, index + 1)
+        }
+    }
+    state glyph(context: &UiContext, pixels: &mut [i32; 4096], row: i32, text_paint: &[NativeTextPaint; 128], index: i32, text: &[u8], large: bool, x: i32, y: i32, clip_left: i32, clip_right: i32, character: u64, byte: i32)
+    requires index > 0 && index < 128 && character < 8192u64 {
+        NativeFontAtlas::paint(byte, large, pixels, row, x, sub_i32(row, y), context.nodes[index].content_color, clip_left, clip_right);
+        transition { _ -> label(context, pixels, row, text_paint, index, text, large, add_i32(x, NativeUiFont::advance(byte, large)), y, clip_left, clip_right, character + 1u64) }
+    }
+    state done() {}
+}
+public machine NativeUiFont::glyph_row(pixels: &mut [i32; 4096], row: i32, glyph: &[u8], x: i32, local_y: i32, color: i32, clip_left: i32, clip_right: i32) {
+    transition glyph.len >= 5u64 {
+        true -> metrics(pixels, row, glyph, x, local_y, color, clip_left, clip_right)
+        _ -> done()
+    }
+    state metrics(pixels: &mut [i32; 4096], row: i32, glyph: &[u8], x: i32, local_y: i32, color: i32, clip_left: i32, clip_right: i32) requires glyph.len >= 5u64 {
+        let width: i32 = sub_i32(glyph[3] as i32, 64);
+        let height: i32 = sub_i32(glyph[4] as i32, 64);
+        let glyph_y: i32 = sub_i32(local_y, sub_i32(glyph[2] as i32, 64));
+        transition glyph_y >= 0 && glyph_y < height && glyph_y < 32 && width > 0 {
+            true -> offset(pixels, row, glyph, add_i32(x, sub_i32(glyph[1] as i32, 64)), glyph_y, height, width, color, clip_left, clip_right)
+            _ -> done()
+        }
+    }
+    state offset(pixels: &mut [i32; 4096], row: i32, glyph: &[u8], x: i32, glyph_y: i32, height: i32, width: i32, color: i32, clip_left: i32, clip_right: i32) requires glyph_y >= 0 && glyph_y < 32 {
+        let at: u64 = 5u64 + (glyph_y as u64) * 2u64;
+        transition at < glyph.len && at + 1u64 < glyph.len {
+            true -> located(pixels, row, glyph, x, height, width, color, clip_left, clip_right, at)
+            _ -> done()
+        }
+    }
+    state located(pixels: &mut [i32; 4096], row: i32, glyph: &[u8], x: i32, height: i32, width: i32, color: i32, clip_left: i32, clip_right: i32, at: u64) requires at < glyph.len && at + 1u64 < glyph.len {
+        let offset: i32 = add_i32(mul_i32(sub_i32(glyph[at] as i32, 33), 90), sub_i32(glyph[at + 1u64] as i32, 33));
+        let start: i32 = add_i32(add_i32(5, mul_i32(height, 2)), offset);
+        transition start >= 0 { true -> runs(pixels, row, glyph, x, width, color, clip_left, clip_right, start as u64, 0) _ -> done() }
+    }
+    state runs(pixels: &mut [i32; 4096], row: i32, glyph: &[u8], x: i32, width: i32, color: i32, clip_left: i32, clip_right: i32, at: u64, column: i32) {
+        transition column < width && at < 65534u64 && at + 1u64 < glyph.len {
+            true -> run(pixels, row, glyph, x, width, color, clip_left, clip_right, at, column)
+            _ -> done()
+        }
+    }
+    state run(pixels: &mut [i32; 4096], row: i32, glyph: &[u8], x: i32, width: i32, color: i32, clip_left: i32, clip_right: i32, at: u64, column: i32)
+    requires at < 65534u64 && at + 1u64 < glyph.len {
+        let count: i32 = clamp_i32(sub_i32(glyph[at] as i32, 64), 1, 26);
+        let alpha: i32 = mul_i32(clamp_i32(sub_i32(glyph[at + 1u64] as i32, 97), 0, 15), 100) / 15;
+        NativeUiFont::span(pixels, row, add_i32(x, column), min_i32(count, sub_i32(width, column)), color, alpha, clip_left, clip_right);
+        transition { _ -> runs(pixels, row, glyph, x, width, color, clip_left, clip_right, at + 2u64, add_i32(column, count)) }
+    }
+    state done() {}
+}
+public machine NativeUiFont::span(pixels: &mut [i32; 4096], row: i32, x: i32, count: i32, color: i32, alpha: i32, clip_left: i32, clip_right: i32) {
+    transition alpha > 0 && count > 0 {
+        true -> paint(pixels, row, max_i32(x, clip_left), min_i32(add_i32(x, count), clip_right), color, alpha)
+        _ -> done()
+    }
+    state paint(pixels: &mut [i32; 4096], row: i32, x: i32, end: i32, color: i32, alpha: i32) {
+        transition x < end { true -> pixel(pixels, row, x, end, color, alpha) _ -> done() }
+    }
+    state pixel(pixels: &mut [i32; 4096], row: i32, x: i32, end: i32, color: i32, alpha: i32) {
+        Raster::blend_px_raw(pixels, row, x as i32 in Saturating, row as i32 in Saturating, color, alpha);
+        transition { _ -> paint(pixels, row, add_i32(x, 1), end, color, alpha) }
+    }
+    state done() {}
+}
+
+machine text_clip(context: &UiContext, field: i32) -> Rect {
+    transition field > 0 && field < 128 { true -> field_rectangle(context, field) _ -> (Rect { x: 0, y: 0, w: context.width, h: context.height }) }
+    state field_rectangle(context: &UiContext, field: i32) -> Rect requires field > 0 && field < 128 {
+        let rectangle: Rect = UiContext::node_rect(context, field);
+        Rect { x: rectangle.x + (12 as i32 in Saturating), y: rectangle.y, w: rectangle.w - (24 as i32 in Saturating), h: rectangle.h }
+    }
+}

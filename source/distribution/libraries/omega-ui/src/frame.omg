@@ -1,0 +1,43 @@
+/*
+A frame may rebuild after a control changes the model, but input edges are
+consumed once and the public frame counter advances once. Hosts build the view,
+supply actual font measurements for text nodes, then call next_pass. A true
+result starts another build; false publishes the arranged tree for painting.
+Four passes bound an unstable view. This protocol is shared by native hosts
+and offscreen tests, without making layout depend on an operating system.
+*/
+use types;
+use context;
+
+public data UiFrame {
+    passes: i32;
+    changed: bool;
+    frame_number: i32 in Saturating;
+}
+
+public machine UiFrame::begin(context: &mut UiContext) -> UiFrame {
+    let frame: UiFrame = UiFrame { passes: 0, changed: false, frame_number: context.frame };
+    UiContext::begin_frame(context);
+    frame
+}
+
+public machine UiFrame::next_pass(frame: &mut UiFrame, context: &mut UiContext) -> bool {
+    UiContext::end_frame(context);
+    frame.passes = add_i32(frame.passes, 1);
+    frame.changed = frame.changed || context.changed;
+    context.frame = frame.frame_number + (1 as i32 in Saturating);
+    transition context.frame_error == 0 && context.changed && frame.passes < 4 {
+        true -> rebuild(frame, context)
+        _ -> finish(frame, context)
+    }
+    state rebuild(frame: &mut UiFrame, context: &mut UiContext) -> bool {
+        UiContext::begin_frame(context);
+        true
+    }
+    state finish(frame: &UiFrame, context: &mut UiContext) -> bool {
+        let unsettled: bool = context.changed;
+        context.changed = frame.changed;
+        context.frame_error = select_i32(context.frame_error == 0 && unsettled && frame.passes >= 4, 6, context.frame_error);
+        false
+    }
+}

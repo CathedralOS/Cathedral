@@ -19,6 +19,11 @@ Cathedral supports update-in-place, removing the need for the vast majority of "
 [Work index](TASKS.md) ·
 [Rust implementation handoff](TASKS_RUST.md)
 
+The [Omega UI component source](source/distribution/libraries/omega-ui/README.md)
+and [Rust app API](source-rs/distribution/libraries/omega-ui/lib.rs) are included
+in this checkout. See the [UI build guide](tools/omega-ui/README.md) for compiler
+setup and composing an app's own interface.
+
 ## Solved problems
 
 | Legacy OS | Cathedral | How |

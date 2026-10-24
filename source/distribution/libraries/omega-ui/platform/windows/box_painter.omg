@@ -1,0 +1,160 @@
+/*
+The Windows CPU backend consumes the library's ordered box list. It shares
+corner coverage and fill rows with the scalar renderer, validates bitmap spans,
+and reports copy failure so the host can repaint through its fallback path.
+*/
+use omega_ui::types;
+use omega_ui::context;
+use omega_ui::raster;
+use omega_ui::paint_boxes;
+use omega_language_std::windows_gui_host;
+use corner_cache;
+use fill_cache;
+public data WindowsBoxPainter {}
+
+public machine WindowsBoxPainter::render(paint: &UiBoxList, cache: &mut WindowsCornerCache, pixels: &mut [i32; 4096], row: i32) reaches WindowsGuiHost invokes WindowsGuiHost; {
+    let left: i32 in Saturating = Raster::clip_left(pixels, row);
+    let right: i32 in Saturating = Raster::clip_right(pixels, row);
+    transition paint.height > 0 { true -> start(paint, cache, pixels, row, paint.height, left, right) _ -> done() }
+    state start(paint: &UiBoxList, cache: &mut WindowsCornerCache, pixels: &mut [i32; 4096], row: i32, height: i32, left: i32 in Saturating, right: i32 in Saturating) requires height > 0 {
+        let logical_row: i32 in Saturating = (mul_i32(row, paint.logical_height) as i32 in Saturating) / (height as i32 in Saturating);
+        transition logical_row >= 140 && logical_row <= 666 { true -> scan(paint, cache, pixels, row, 0, left, right) _ -> done() }
+    }
+    state scan(paint: &UiBoxList, cache: &mut WindowsCornerCache, pixels: &mut [i32; 4096], row: i32, index: i32, left: i32 in Saturating, right: i32 in Saturating) {
+        transition index >= 0 && index < paint.count && index < 64 { true -> box(paint, cache, pixels, row, index, left, right) _ -> done() }
+    }
+    state box(paint: &UiBoxList, cache: &mut WindowsCornerCache, pixels: &mut [i32; 4096], row: i32, index: i32, left: i32 in Saturating, right: i32 in Saturating) requires index >= 0 && index < 64 {
+        let command: &UiBoxCommand = &paint.boxes[index];
+        let rectangle: Rect = UiBoxCommand::rectangle(command);
+        let overlaps: bool = row >= command.top && (row as i32 in Saturating) >= rectangle.y && row < command.bottom && (row as i32 in Saturating) < rectangle.y + rectangle.h && rectangle.x < right && rectangle.x + rectangle.w > left;
+        transition overlaps { true -> draw(paint, cache, pixels, row, index, command, left, right) _ -> scan(paint, cache, pixels, row, index + 1, left, right) }
+    }
+    state draw(paint: &UiBoxList, cache: &mut WindowsCornerCache, pixels: &mut [i32; 4096], row: i32, index: i32, command: &UiBoxCommand, left: i32 in Saturating, right: i32 in Saturating) {
+        WindowsCornerCache::draw(cache, pixels, row, UiBoxCommand::rectangle(command), command.radius, command.background, command.border, command.has_border, command.corner_slot, command.fill_slot, left, right);
+        transition { _ -> scan(paint, cache, pixels, row, index + 1, left, right) }
+    }
+    state done() {}
+}
+
+public machine WindowsBoxPainter::mark(paint: &mut UiBoxList, top: i32, bottom: i32) {
+    transition { _ -> row(paint, clamp_i32(top, 0, 2160), clamp_i32(bottom, 0, 2160)) }
+    state row(paint: &mut UiBoxList, index: i32, bottom: i32) {
+        transition index >= 0 && index < bottom && index < 2160 { true -> store(paint, index, bottom) _ -> done() }
+    }
+    state store(paint: &mut UiBoxList, index: i32, bottom: i32) requires index >= 0 && index < 2160 {
+        let word: i32 = index / 64;
+        transition word >= 0 && word < 34 { true -> bit(paint, index, bottom, word) _ -> done() }
+    }
+    state bit(paint: &mut UiBoxList, index: i32, bottom: i32, word: i32) requires index >= 0 && index < 2160 && word >= 0 && word < 34 {
+        let mask: u64 in Wrapping = (1u64 as u64 in Wrapping) << ((index as u64) % 64u64);
+        paint.varying_rows[word] = paint.varying_rows[word] | (mask as u64);
+        transition { _ -> row(paint, index + 1, bottom) }
+    }
+    state done() {}
+}
+public machine WindowsBoxPainter::mark_box(paint: &mut UiBoxList, rectangle: Rect, radius: i32 in Saturating, bottom: i32) {
+    WindowsBoxPainter::mark(paint, sub_i32(rectangle.y as i32, 1), add_i32(add_i32(rectangle.y as i32, radius as i32), 2));
+    WindowsBoxPainter::mark(paint, sub_i32(sub_i32(bottom, radius as i32), 2), add_i32(bottom, 1));
+}
+public machine WindowsBoxPainter::varying(paint: &UiBoxList, row: i32) -> bool {
+    let word: i32 = row / 64;
+    transition row >= 0 && row < 2160 && word >= 0 && word < 34 { true -> bit(paint, row, word) _ -> (true) }
+    state bit(paint: &UiBoxList, row: i32, word: i32) -> bool requires word >= 0 && word < 34 {
+        let mask: u64 in Wrapping = (1u64 as u64 in Wrapping) << ((row as u64) % 64u64);
+        (paint.varying_rows[word] & (mask as u64)) != 0
+    }
+}
+
+public machine WindowsBoxPainter::flat_end(paint: &UiBoxList, row: i32, bottom: i32) -> i32 {
+    transition { _ -> scan(paint, row, min_i32(bottom, 2160)) }
+    state scan(paint: &UiBoxList, row: i32, bottom: i32) -> i32 {
+        transition row >= 0 && row < bottom && row < 2160 { true -> check(paint, row, bottom) _ -> (row) }
+    }
+    state check(paint: &UiBoxList, row: i32, bottom: i32) -> i32 {
+        transition WindowsBoxPainter::varying(paint, row) { true -> (row) _ -> scan(paint, add_i32(row, 1), bottom) }
+    }
+}
+
+public machine WindowsBoxPainter::prepare_styles(paint: &mut UiBoxList, cache: &mut WindowsCornerCache, pixels: &mut [i32; 4096]) reaches WindowsGuiHost invokes WindowsGuiHost; {
+    WindowsCornerCache::begin_frame(cache);
+    transition { _ -> scan(paint, cache, pixels, 0) }
+    state scan(paint: &mut UiBoxList, cache: &mut WindowsCornerCache, pixels: &mut [i32; 4096], index: i32) {
+        transition index >= 0 && index < paint.count && index < 64 { true -> style(paint, cache, pixels, index) _ -> done() }
+    }
+    state style(paint: &mut UiBoxList, cache: &mut WindowsCornerCache, pixels: &mut [i32; 4096], index: i32) requires index >= 0 && index < 64 {
+        let command: UiBoxCommand = paint.boxes[index];
+        let slot: i32 = WindowsCornerCache::style(cache, pixels, command.radius, command.background, command.border, command.has_border);
+        let fill_slot: i32 = WindowsFillCache::style(&mut cache.fills, pixels, command.background);
+        paint.boxes[index].corner_slot = slot;
+        paint.boxes[index].fill_slot = fill_slot;
+        transition { _ -> scan(paint, cache, pixels, index + 1) }
+    }
+    state done() {}
+}
+
+// One damage rectangle in the host-owned DIB, after its GDI work has completed.
+public data WindowsBitmapTarget {
+    pixels: u64;
+    stride: i32;
+    height: i32;
+    left: i32;
+    top: i32;
+    right: i32;
+    bottom: i32;
+}
+
+public machine WindowsBoxPainter::render_bitmap(paint: &UiBoxList, cache: &mut WindowsCornerCache, pixels: &mut [i32; 4096], target: &WindowsBitmapTarget, background: i32, fill_slot: i32) -> bool reaches WindowsGuiHost invokes WindowsGuiHost; {
+    transition background >= 0 && target.pixels > 0 && target.stride == paint.width && target.height == paint.height && target.stride > 0 && target.stride <= 3840 && target.height > 0 && target.height <= 2160
+        && target.left >= 0 && target.right > target.left && target.right <= target.stride && target.top >= 0 && target.bottom > target.top && target.bottom <= target.height {
+        true -> clear(paint, cache, pixels, target, background, fill_slot)
+        _ -> (false)
+    }
+    state clear(paint: &UiBoxList, cache: &mut WindowsCornerCache, pixels: &mut [i32; 4096], target: &WindowsBitmapTarget, background: i32, fill_slot: i32) -> bool {
+        WindowsFillCache::fill_span(&mut cache.fills, pixels, target.top, target.left as i32 in Saturating, target.right as i32 in Saturating, background, fill_slot);
+        let copied: bool = WindowsGuiHost::copy_bitmap_rows(target.pixels, target.stride, target.height, target.top, target.left, sub_i32(target.right, target.left), sub_i32(target.bottom, target.top), pixels);
+        transition copied { true -> command(paint, cache, pixels, target, 0) _ -> (false) }
+    }
+    state command(paint: &UiBoxList, cache: &mut WindowsCornerCache, pixels: &mut [i32; 4096], target: &WindowsBitmapTarget, index: i32) -> bool {
+        transition index >= 0 && index < paint.count && index < 64 { true -> draw(paint, cache, pixels, target, index) _ -> (true) }
+    }
+    state draw(paint: &UiBoxList, cache: &mut WindowsCornerCache, pixels: &mut [i32; 4096], target: &WindowsBitmapTarget, index: i32) -> bool requires index >= 0 && index < 64 {
+        let copied: bool = paint_bitmap_box(cache, pixels, target, &paint.boxes[index]);
+        transition copied { true -> command(paint, cache, pixels, target, index + 1) _ -> (false) }
+    }
+}
+
+// Preserve painter order; only an opaque straight interior can repeat a row.
+machine paint_bitmap_box(cache: &mut WindowsCornerCache, pixels: &mut [i32; 4096], target: &WindowsBitmapTarget, command: &UiBoxCommand) -> bool reaches WindowsGuiHost invokes WindowsGuiHost; {
+    let left: i32 = max_i32(target.left, command.x as i32);
+    let right: i32 = min_i32(target.right, (command.x + command.width) as i32);
+    let top: i32 = max_i32(target.top, max_i32(command.top, command.y as i32));
+    let bottom: i32 = min_i32(target.bottom, min_i32(command.bottom, (command.y + command.height) as i32));
+    transition left >= 0 && right > left && right <= 3840 && top >= 0 && bottom > top && bottom <= 2160 {
+        true -> row(cache, pixels, target, command, left, right, top, bottom)
+        _ -> (true)
+    }
+    state row(cache: &mut WindowsCornerCache, pixels: &mut [i32; 4096], target: &WindowsBitmapTarget, command: &UiBoxCommand, left: i32, right: i32, y: i32, bottom: i32) -> bool
+    requires left >= 0 && right > left && right <= 3840 {
+        transition y < bottom { true -> choose(cache, pixels, target, command, left, right, y, bottom) _ -> (true) }
+    }
+    state choose(cache: &mut WindowsCornerCache, pixels: &mut [i32; 4096], target: &WindowsBitmapTarget, command: &UiBoxCommand, left: i32, right: i32, y: i32, bottom: i32) -> bool
+    requires left >= 0 && right > left && right <= 3840 {
+        let margin: i32 in Saturating = max_sat(command.radius, 1);
+        let interior_bottom: i32 = (command.y + command.height - margin) as i32;
+        transition command.background >= 0 && y >= ((command.y + margin) as i32) && y < interior_bottom {
+            true -> paint(cache, pixels, target, command, left, right, y, bottom, min_i32(bottom, interior_bottom))
+            _ -> read(cache, pixels, target, command, left, right, y, bottom)
+        }
+    }
+    state read(cache: &mut WindowsCornerCache, pixels: &mut [i32; 4096], target: &WindowsBitmapTarget, command: &UiBoxCommand, left: i32, right: i32, y: i32, bottom: i32) -> bool
+    requires left >= 0 && right > left && right <= 3840 {
+        let copied: bool = WindowsGuiHost::read_bitmap_span(target.pixels, target.stride, target.height, y, left, sub_i32(right, left), &mut pixels[left..right]);
+        transition copied { true -> paint(cache, pixels, target, command, left, right, y, bottom, add_i32(y, 1)) _ -> (false) }
+    }
+    state paint(cache: &mut WindowsCornerCache, pixels: &mut [i32; 4096], target: &WindowsBitmapTarget, command: &UiBoxCommand, left: i32, right: i32, y: i32, bottom: i32, end: i32) -> bool
+    requires left >= 0 && right > left && right <= 3840 {
+        WindowsCornerCache::draw(cache, pixels, y, UiBoxCommand::rectangle(command), command.radius, command.background, command.border, command.has_border, command.corner_slot, command.fill_slot, left as i32 in Saturating, right as i32 in Saturating);
+        let copied: bool = WindowsGuiHost::copy_bitmap_rows(target.pixels, target.stride, target.height, y, left, sub_i32(right, left), sub_i32(end, y), pixels);
+        transition copied { true -> row(cache, pixels, target, command, left, right, end, bottom) _ -> (false) }
+    }
+}

@@ -1,5 +1,24 @@
 # Rust reference OS: tasks and handoff
 
+Implementation update 2026-10-24: **self-contained Omega UI source**. The complete
+library, native backend, fonts, examples and tests are checked in under
+`source/distribution/libraries/omega-ui`; the Rust API is in
+`source-rs/distribution/libraries/omega-ui`. Cargo uses that source directly;
+there is no sibling UI checkout, submodule or source-path override. The
+[build guide](tools/omega-ui/README.md#build) links the remotely available compiler
+producer and documents `OMEGA_BIN`/PATH setup.
+
+Verification starts from an archive of Git-tracked files, with no build output,
+prepared components or sibling UI directory. Both native exports compile there;
+the 531,360-byte frame matches the previously tested component exactly. Eight
+Rust unit tests plus the usage example, six packaging tests, four library helper
+tests and layout (52 Omega / 139 Rust edges) pass. Fresh/cold QEMU physical input,
+region removal/restoration, editing and close/reopen pass from that checkout.
+Replay paths and exact input/output hashes are retained in
+`build/omega-ui/source-checkout.json` and `checked-in-source-*.log`.
+This closes the missing-source F5 build gap described below. Backend bounds and
+unverified ARM64, Unicode/IME and monitor-refresh behavior remain unchanged.
+
 Implementation update 2026-10-24: **recursive pointer-target cursor preferences**,
 integrated with `1687e07b` (including reusable Omega UI). F5 -> user -> Notes
 (or Split) -> click a note -> **F6**. Notes
@@ -42,22 +61,13 @@ Verified fresh/cold QEMU evidence before the concurrent Omega UI integration:
 - Masked capture recipient byte inspection, hidden editing and cold state:
   `build/boot-harness-rs/desktop/20261024T190049500362Z` (`--capture`).
 
-**Combined-tree verification and current build gap.** After integration,
-`cargo test --locked` passes (default workspace members; 111 matrix / 23 display
-policy tests). Explicit cursor-related guest clippy passes for matrix, stock
-matrix, Split, Notes, display and the cursor-probe participant. Layout reports
-40 Omega / 139 Rust edges. The incoming chooser formatting was corrected.
-These checks do not establish that the combined F5 desktop boots.
-
-The full rebuild stopped preparing `cathedral-omega-ui`: this machine has neither
-`C:/Projects/omega-ui` nor `build/omega-ui/component`. Its publisher's repository
-and branch are absent from the handoff. An asynchronous question asks for that
-location. The installed Omega also predates `--build-profile`; the local optimized
-`C:/Projects/Omega/target/release/omega.exe` supports it, so use `OMEGA_BIN` when the
-source is supplied. The build now reports missing library inputs before attempting
-an unrelated installed compiler. Its missing-source regression passes. Do not
-remove the UI app from the default profile to disguise this integration gap.
-No post-integration QEMU evidence or full userspace clippy claim yet.
+**Combined-tree verification.** The original integration omitted its Omega source,
+so a fresh checkout could not build the F5 desktop. The source now lives in
+`source/distribution/libraries/omega-ui`; the Rust API lives in the matching
+`source-rs/distribution/libraries/omega-ui` package. Cargo builds the checked-in
+source, with no sibling UI checkout or source override. The
+[build guide](tools/omega-ui/README.md#build) documents the supported Omega compiler.
+Current source-only and guest verification is recorded in the entry above.
 
 The cursor build initially exceeded the former 262,144-byte executable-object
 cap. A temporary `z` build permitted the pre-integration runs above. Incoming
@@ -84,8 +94,8 @@ and pixels. The demo now owns its model/view in Rust and uses only this public
 API; changing app layout does not require changing the native exports. Its volume
 switch removes/restores a region, exercising atomic surface retirement/recreation.
 
-Omega UI `c793592089e8` contains ABI 2; its published branch remains one squashed
-root. An app's Cargo dependency prepares the same checked component automatically,
+The checked-in distribution library contains ABI 2. An app's Cargo dependency
+prepares the same checked component automatically,
 without a demo-name rule in the boot harness. The [integration guide](tools/omega-ui/README.md)
 contains the lifecycle, typed example, build inputs and current bounds. Independent
 host views, multiple fields/instances, malformed packets, invalid frames, motion,

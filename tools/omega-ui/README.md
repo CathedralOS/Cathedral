@@ -1,7 +1,9 @@
 # Omega UI for Cathedral applications
 
 `cathedral-omega-ui` is the reusable userspace library in
-`source-rs/platform/libraries/omega-ui`. Rust apps describe their own component
+`source-rs/distribution/libraries/omega-ui`. Its complete Omega implementation,
+native backend, fonts, examples and tests are checked in at
+`source/distribution/libraries/omega-ui`. Rust apps describe their own component
 trees; compiled Omega code handles control behavior, editing, motion, layout and
 pixels. The demo's entire model and view now live in
 `source-rs/distribution/applications/omega-ui/view.rs`.
@@ -10,19 +12,29 @@ pixels. The demo's entire model and view now live in
 
 Add `cathedral-omega-ui.workspace = true` to an app's Cargo dependencies. Its build
 script prepares the same native exports automatically; the boot harness contains
-no special preparation rule for the demo. Keep an Omega UI checkout beside
-Cathedral or set `OMEGA_UI_REPO`. Set `OMEGA_BIN` to an optimized compiler
-containing `16a35ba7f429`, or use Omega UI's local `build/compiler.json` receipt.
+no special preparation rule for the demo. The build always uses Cathedral's
+checked-in distribution source; no sibling checkout, submodule or download is needed.
+Set `OMEGA_BIN` to an optimized Omega compiler supporting pure native component
+exports. The verified producer is `16a35ba7f429`, available on
+[Omega's UI compiler branch](https://github.com/CathedralOS/Omega/tree/codex/omega-ui-compiler).
 Python 3 is required by the existing Cathedral build tools. No font runtime or new
 external Cargo dependency is needed. `OMEGA_UI_COMPONENT_DIR` explicitly selects
 already-prepared artifacts instead.
 
-The default Rust F5 profile now includes the UI demo, so these inputs are required
-to build that desktop too. A checkout lacking the two `tests/native_component`
-entry points is refused before invoking a compiler. The installed `omega` command
-may be older than the required compiler; use `OMEGA_BIN` explicitly in that case.
-The library's repository/branch acquisition instructions still need to be supplied
-by its publisher; a source hash alone does not make a fresh checkout reproducible.
+The default Rust F5 profile includes the UI demo and needs this compiler too.
+Install/build it with the Rust toolchain pinned in the compiler repository:
+
+```text
+git clone --branch codex/omega-ui-compiler https://github.com/CathedralOS/Omega.git
+cd Omega
+cargo build --release -p omega
+```
+
+Set `OMEGA_BIN` to the absolute path of the resulting `target/release/omega.exe`
+(Windows) or `target/release/omega` (macOS/Linux), then build Cathedral normally.
+If a compatible `omega` is already on PATH, no environment setting is needed.
+Generated package locks and component images stay in ignored build output;
+all UI source and font inputs are in this repository.
 
 The build records source/compiler/export hashes in
 `build/omega-ui/component/receipt.json` and registers those inputs with Cargo.

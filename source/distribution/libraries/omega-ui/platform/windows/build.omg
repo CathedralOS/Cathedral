@@ -1,0 +1,5 @@
+machine build(builder: &mut Build) {
+    Build::package(builder, "omega_ui_windows");
+    Build::depend(builder, Source::Path { location: "../../src" });
+    Build::depend(builder, Source::Path { location: "../../support/standard_library" });
+}

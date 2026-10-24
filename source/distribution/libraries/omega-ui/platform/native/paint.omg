@@ -1,0 +1,59 @@
+// Backgrounds and control geometry use the shared scene/raster. This surface
+// selects only the foreground primitives its installed controls need.
+use omega_ui::types;
+use omega_ui::context;
+use omega_ui::scene;
+use omega_ui::raster;
+
+public data NativeUiRaster {}
+public machine NativeUiRaster::paint(scene: &UiScene, context: &UiContext, pixels: &mut [i32; 4096], row: i32) {
+    UiScene::begin_band(scene, context, pixels, row);
+    let mut cursor: i32 = 0;
+    transition { _ -> next(scene, context, pixels, row, &mut cursor) }
+    state next(scene: &UiScene, context: &UiContext, pixels: &mut [i32; 4096], row: i32, cursor: &mut i32) {
+        let index: i32 = UiScene::next(scene, context, pixels, row, cursor);
+        transition index >= 0 && index < 128 { true -> content(scene, context, pixels, row, cursor, index) _ -> done() }
+    }
+    state content(scene: &UiScene, context: &UiContext, pixels: &mut [i32; 4096], row: i32, cursor: &mut i32, index: i32)
+    requires index >= 0 && index < 128 {
+        transition context.nodes[index].content_kind {
+            4 -> slider(scene, context, pixels, row, cursor, index)
+            5 -> toggle(scene, context, pixels, row, cursor, index)
+            6 -> checkbox(scene, context, pixels, row, cursor, index)
+            _ -> next(scene, context, pixels, row, cursor)
+        }
+    }
+    state slider(scene: &UiScene, context: &UiContext, pixels: &mut [i32; 4096], row: i32, cursor: &mut i32, index: i32)
+    requires index >= 0 && index < 128 {
+        transition context.nodes[index].interactive {
+            true -> slider_control(scene, context, pixels, row, cursor, index)
+            _ -> progress(scene, context, pixels, row, cursor, index)
+        }
+    }
+    state progress(scene: &UiScene, context: &UiContext, pixels: &mut [i32; 4096], row: i32, cursor: &mut i32, index: i32)
+    requires index >= 0 && index < 128 {
+        let rectangle: Rect = UiContext::paint_rect(context, index);
+        Raster::draw_progress_fill(pixels, row, context, &rectangle, context.nodes[index].content_value as i32, context.nodes[index].content_color, context.nodes[index].style.radius);
+        transition { _ -> next(scene, context, pixels, row, cursor) }
+    }
+    state slider_control(scene: &UiScene, context: &UiContext, pixels: &mut [i32; 4096], row: i32, cursor: &mut i32, index: i32)
+    requires index >= 0 && index < 128 {
+        let rectangle: Rect = UiContext::paint_rect(context, index);
+        Raster::draw_slider_step(pixels, row, context, rectangle.x, rectangle.y + rectangle.h / (2 as i32 in Saturating) - (8 as i32 in Saturating),
+            rectangle.w, context.nodes[index].content_value as i32, context.nodes[index].content_color, context.nodes[index].aux_value as i32);
+        transition { _ -> next(scene, context, pixels, row, cursor) }
+    }
+    state toggle(scene: &UiScene, context: &UiContext, pixels: &mut [i32; 4096], row: i32, cursor: &mut i32, index: i32)
+    requires index >= 0 && index < 128 {
+        let rectangle: Rect = UiContext::paint_rect(context, index);
+        Raster::draw_toggle_knob(pixels, row, rectangle, context.nodes[index].aux_value as i32, context.nodes[index].content_color);
+        transition { _ -> next(scene, context, pixels, row, cursor) }
+    }
+    state done() {}
+    state checkbox(scene: &UiScene, context: &UiContext, pixels: &mut [i32; 4096], row: i32, cursor: &mut i32, index: i32)
+    requires index >= 0 && index < 128 {
+        let rectangle: Rect = UiContext::paint_rect(context, index);
+        Raster::draw_checkmark(pixels, row, rectangle, context.nodes[index].content_color, context.nodes[index].aux_value as i32);
+        transition { _ -> next(scene, context, pixels, row, cursor) }
+    }
+}

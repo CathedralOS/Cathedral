@@ -27,6 +27,7 @@ Cathedral/
       shell/               Desktop experience (planned)
       settings/            User-facing configuration (planned)
       applications/        Bundled applications (planned)
+      libraries/           Distribution UI components, native backend and fonts
   source-rs/               Rust lab with the same ownership boundaries
   tools/                   Host builds, image assembly, checks and simulators
   wiki/                    Contracts, architecture, rationale and decisions
@@ -71,6 +72,10 @@ implementations and conformance tests belong here. A desktop profile can require
 a common set of interfaces independently of its shell.
 
 `distribution/` owns presentation, interaction design, defaults and bundled apps.
+Its `libraries/omega-ui/` contains the checked-in Omega component source and
+native backend; the Rust mirror owns the reusable app-facing adapter. UI builds
+use this source directly, rather than a sibling repository or platform-to-distribution
+dependency.
 The Rust stock matrix is also a distribution program: `distribution/matrix/`
 owns its launcher/app roles, saved desktop configuration, two-child control
 router and recovery choices. Its extension contract lives beside it in

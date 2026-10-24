@@ -1,0 +1,247 @@
+use omega::language::core::extent;
+use calling;
+use entry_shapes;
+
+// Apple's dyld calls appMain(argc, argv, envp, apple) and receives an int:
+// https://github.com/apple-oss-distributions/dyld/blob/main/dyld/dyldMain.cpp
+// The System V AMD64 realization supplies argc in edi, argv in rsi, envp in
+// rdx, apple in rcx, and the completion status back in eax. These raw
+// physical addresses introduce neither storage roots nor access authority.
+// ProgramStorageEntry remains the separate semantic root crossing; its two
+// Extents are internal bridge inputs, not hosted application arguments.
+// This calling contract supplies no bridge, loader admission, receiver, or
+// numeric stack guarantee. ProviderSelected requires independent backing.
+boundary trait MacosX64PhysicalEntry {
+    machine enter(argc: i32, argv: addr, envp: addr, apple: addr) -> i32;
+}
+
+data MacosX64 {}
+MacosX64CallingPolicy satisfies CallingPolicy {
+    CallingPolicy::plan = MacosX64::plan;
+}
+
+machine MacosX64::plan(signature: BoundarySignature) -> BoundaryPlanResult
+    satisfies CallingPolicy::plan
+{
+    transition signature.parameter_count {
+        4 -> physical(signature)
+        2 -> semantic(signature)
+        _ -> reject()
+    }
+
+    state physical(signature: BoundarySignature) -> BoundaryPlanResult {
+        transition signature.has_result {
+            true -> physical_indices(signature, signature.parameters[0],
+                signature.parameters[1], signature.parameters[2],
+                signature.parameters[3], signature.result)
+            _ -> reject()
+        }
+    }
+
+    state physical_indices(signature: BoundarySignature, argc: u64,
+        argv: u64, envp: u64, apple: u64, result: u64) -> BoundaryPlanResult
+    {
+        transition argc < 256 && argv < 256 && envp < 256 && apple < 256
+            && result < 256 && argc < signature.shape_count
+            && argv < signature.shape_count && envp < signature.shape_count
+            && apple < signature.shape_count && result < signature.shape_count
+        {
+            true -> physical_shapes(signature.shapes[argc], signature.shapes[argv],
+                signature.shapes[envp], signature.shapes[apple], signature.shapes[result])
+            _ -> reject()
+        }
+    }
+
+    state physical_shapes(argc: ValueShape, argv: ValueShape, envp: ValueShape,
+        apple: ValueShape, result: ValueShape) -> BoundaryPlanResult
+    {
+        transition HostedEntryShapes::integer_shape(&argc, 4)
+            && HostedEntryShapes::integer_shape(&argv, 8)
+            && HostedEntryShapes::integer_shape(&envp, 8)
+            && HostedEntryShapes::integer_shape(&apple, 8)
+            && HostedEntryShapes::integer_shape(&result, 4)
+        {
+            true -> build_physical()
+            _ -> reject()
+        }
+    }
+
+    state build_physical() -> BoundaryPlanResult {
+        let mut output: BoundaryEntryPlan;
+        output.call.parameter_count = 4;
+        // System V AMD64 integer argument order: edi, rsi, rdx, rcx.
+        output.call.parameters[0] = HostedEntryShapes::named_word(4,
+            MachineRegister::X86Rdi);
+        output.call.parameters[1] = HostedEntryShapes::named_word(8,
+            MachineRegister::X86Rsi);
+        output.call.parameters[2] = HostedEntryShapes::named_word(8,
+            MachineRegister::X86Rdx);
+        output.call.parameters[3] = HostedEntryShapes::named_word(8,
+            MachineRegister::X86Rcx);
+        output.call.has_result = true;
+        output.call.result = HostedEntryShapes::named_word(4, MachineRegister::X86Rax);
+        transition { _ -> finish(output) }
+    }
+
+    state semantic(signature: BoundarySignature) -> BoundaryPlanResult {
+        transition signature.has_result {
+            false -> semantic_indices(signature, signature.parameters[0], signature.parameters[1])
+            _ -> reject()
+        }
+    }
+
+    state semantic_indices(signature: BoundarySignature, image: u64,
+        storage: u64) -> BoundaryPlanResult
+    {
+        transition image < 256 && storage < 256
+            && image < signature.shape_count && storage < signature.shape_count
+        {
+            true -> semantic_shapes(signature.shapes[image], signature.shapes[storage], signature)
+            _ -> reject()
+        }
+    }
+
+    state semantic_shapes(image: ValueShape, storage: ValueShape, signature: BoundarySignature) -> BoundaryPlanResult {
+        transition MacosX64::extent_shape(image, &signature) && MacosX64::extent_shape(storage, &signature) {
+            true -> build_semantic()
+            _ -> reject()
+        }
+    }
+
+    state build_semantic() -> BoundaryPlanResult {
+        let mut output: BoundaryEntryPlan;
+        output.call.parameter_count = 2;
+        // The generated bridge passes the image and initial-storage roots in
+        // the first four System V integer registers.
+        output.call.parameters[0] = HostedEntryShapes::register_extent_value(
+            MachineRegister::X86Rdi, MachineRegister::X86Rsi);
+        output.call.parameters[1] = HostedEntryShapes::register_extent_value(
+            MachineRegister::X86Rdx, MachineRegister::X86Rcx);
+        transition { _ -> finish(output) }
+    }
+
+    state finish(output: BoundaryEntryPlan) -> BoundaryPlanResult {
+        let mut plan: BoundaryEntryPlan = output;
+        plan.call.convention = CallingConvention::SystemVAMD64;
+        plan.call.stack_alignment = 16;
+        plan.call.entry_control = EntryControl::CallReturn;
+        transition { _ -> seal(plan) }
+    }
+
+    state seal(plan: BoundaryEntryPlan) -> BoundaryPlanResult {
+        let mut output: BoundaryEntryPlan = plan;
+        // System V AMD64 caller-saved banks.
+        output.call.ordinary_clobbers.register_count = 25;
+        output.call.ordinary_clobbers.registers[0] = MachineRegister::X86Rax;
+        output.call.ordinary_clobbers.registers[1] = MachineRegister::X86Rcx;
+        output.call.ordinary_clobbers.registers[2] = MachineRegister::X86Rdx;
+        output.call.ordinary_clobbers.registers[3] = MachineRegister::X86Rsi;
+        output.call.ordinary_clobbers.registers[4] = MachineRegister::X86Rdi;
+        output.call.ordinary_clobbers.registers[5] = MachineRegister::X86R8;
+        output.call.ordinary_clobbers.registers[6] = MachineRegister::X86R9;
+        output.call.ordinary_clobbers.registers[7] = MachineRegister::X86R10;
+        output.call.ordinary_clobbers.registers[8] = MachineRegister::X86R11;
+        output.call.ordinary_clobbers.registers[9] = MachineRegister::X86Xmm {
+            index: 0
+        };
+        output.call.ordinary_clobbers.registers[10] = MachineRegister::X86Xmm {
+            index: 1
+        };
+        output.call.ordinary_clobbers.registers[11] = MachineRegister::X86Xmm {
+            index: 2
+        };
+        output.call.ordinary_clobbers.registers[12] = MachineRegister::X86Xmm {
+            index: 3
+        };
+        output.call.ordinary_clobbers.registers[13] = MachineRegister::X86Xmm {
+            index: 4
+        };
+        output.call.ordinary_clobbers.registers[14] = MachineRegister::X86Xmm {
+            index: 5
+        };
+        output.call.ordinary_clobbers.registers[15] = MachineRegister::X86Xmm {
+            index: 6
+        };
+        output.call.ordinary_clobbers.registers[16] = MachineRegister::X86Xmm {
+            index: 7
+        };
+        output.call.ordinary_clobbers.registers[17] = MachineRegister::X86Xmm {
+            index: 8
+        };
+        output.call.ordinary_clobbers.registers[18] = MachineRegister::X86Xmm {
+            index: 9
+        };
+        output.call.ordinary_clobbers.registers[19] = MachineRegister::X86Xmm {
+            index: 10
+        };
+        output.call.ordinary_clobbers.registers[20] = MachineRegister::X86Xmm {
+            index: 11
+        };
+        output.call.ordinary_clobbers.registers[21] = MachineRegister::X86Xmm {
+            index: 12
+        };
+        output.call.ordinary_clobbers.registers[22] = MachineRegister::X86Xmm {
+            index: 13
+        };
+        output.call.ordinary_clobbers.registers[23] = MachineRegister::X86Xmm {
+            index: 14
+        };
+        output.call.ordinary_clobbers.registers[24] = MachineRegister::X86Xmm {
+            index: 15
+        };
+        output.state.initial_regime = MachineRegime::X86Long64;
+        output.state.permitted_transitive_use.general_registers = true;
+        output.state.permitted_transitive_use.vector_registers = true;
+        output.state.permitted_transitive_use.flags = true;
+        output.state.stack = EntryStack::ProviderSelected;
+        output.state.preemption = Preemption::NotApplicable;
+        BoundaryPlanResult::Accepted { plan: output }
+    }
+
+    state reject() -> BoundaryPlanResult {
+        BoundaryPlanResult::Rejected {
+            reason: CallingPolicyRejection {
+                reason: "MacosX64Application requires exact physical or program-storage entry shapes",
+            },
+        }
+    }
+}
+
+machine MacosX64::extent_shape(shape: ValueShape, signature: &BoundarySignature) -> bool {
+    transition shape.class {
+        ValueClass::Record { first_field, field_count } -> record(shape, first_field, field_count, signature)
+        _ -> no()
+    }
+    state record(shape: ValueShape, first_field: u64, field_count: u64, signature: &BoundarySignature) -> bool {
+        transition shape.byte_size == 16 && shape.alignment == 8
+            && field_count == 2 && first_field < 255
+        {
+            true -> field_range(signature, first_field)
+            _ -> no()
+        }
+    }
+    state field_range(signature: &BoundarySignature, first_field: u64) -> bool
+    requires first_field <= 254
+    {
+        let second_field: u64 = first_field + 1;
+        transition second_field < signature.field_count {
+            true -> fields(signature, &signature.fields[first_field], &signature.fields[second_field])
+            _ -> no()
+        }
+    }
+    state fields(signature: &BoundarySignature, base: &ValueField, length: &ValueField) -> bool {
+        transition base.byte_offset == 0 && length.byte_offset == 8
+            && base.shape < 256 && length.shape < 256
+            && base.shape < signature.shape_count && length.shape < signature.shape_count
+        {
+            true -> words(&signature.shapes[base.shape], &signature.shapes[length.shape])
+            _ -> no()
+        }
+    }
+    state words(base: &ValueShape, length: &ValueShape) -> bool {
+        HostedEntryShapes::integer_shape(base, 8) && HostedEntryShapes::integer_shape(length, 8)
+    }
+    state no() -> bool { false }
+}
+
+boundary trait MacosX64Application: ProgramStorageEntry + MacosX64PhysicalEntry + Calling<MacosX64CallingPolicy> {}

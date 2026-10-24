@@ -1,0 +1,104 @@
+/*
+The single-line editor owns bounded ASCII text, a caret and a selection anchor.
+Hosts translate their key/text events; editing never reads a global keyboard or
+clipboard. Replacing a selection first closes its gap, then inserts at the caret.
+The 128-byte budget fails insertion without losing existing text.
+shortcut: ASCII cells match the initial diagnostic font; use shaped grapheme
+boundaries when the native text/input backend supports Unicode composition.
+*/
+use types;
+
+public data UiLineEdit {
+    bytes: [u8; 128];
+    length: i32;
+    caret: i32;
+    anchor: i32;
+}
+
+public machine UiLineEdit::key(editor: &mut UiLineEdit, key: i32, character: i32, control: bool, shift: bool) -> bool {
+    transition editor.length >= 0 && editor.length <= 128 && editor.caret >= 0 && editor.caret <= editor.length
+        && editor.anchor >= 0 && editor.anchor <= editor.length {
+        true -> command(editor, key, character, control, shift)
+        _ -> (false)
+    }
+    state command(editor: &mut UiLineEdit, key: i32, character: i32, control: bool, shift: bool) -> bool {
+        transition control && key == 65 {
+            true -> select_all(editor)
+            _ -> navigation(editor, key, character, shift)
+        }
+    }
+    state select_all(editor: &mut UiLineEdit) -> bool {
+        editor.anchor = 0; editor.caret = editor.length; true
+    }
+    state navigation(editor: &mut UiLineEdit, key: i32, character: i32, shift: bool) -> bool {
+        let first: i32 = min_i32(editor.anchor, editor.caret);
+        let last: i32 = max_i32(editor.anchor, editor.caret);
+        let left: i32 = select_i32(!shift && first != last, first, max_i32(sub_i32(editor.caret, 1), 0));
+        let right: i32 = select_i32(!shift && first != last, last, min_i32(add_i32(editor.caret, 1), editor.length));
+        transition key == 37 || key == 39 || key == 36 || key == 35 {
+            true -> move_caret(editor, select_i32(key == 37, left, select_i32(key == 39, right, select_i32(key == 36, 0, editor.length))), shift)
+            _ -> replace(editor, key, character, first, last)
+        }
+    }
+    state move_caret(editor: &mut UiLineEdit, position: i32, shift: bool) -> bool {
+        editor.caret = position; editor.anchor = select_i32(shift, editor.anchor, position); true
+    }
+    state replace(editor: &mut UiLineEdit, key: i32, character: i32, first: i32, last: i32) -> bool {
+        let insert: bool = character >= 32 && character <= 126;
+        let begin: i32 = select_i32(first == last && key == 8, max_i32(sub_i32(first, 1), 0), first);
+        let end: i32 = select_i32(first == last && key == 46, min_i32(add_i32(last, 1), editor.length), last);
+        transition insert || key == 8 || key == 46 {
+            true -> erase(editor, character, begin, end, end, insert)
+            _ -> (false)
+        }
+    }
+    state erase(editor: &mut UiLineEdit, character: i32, begin: i32, end: i32, source: i32, insert: bool) -> bool {
+        transition source >= 0 && source < editor.length && source < 128 {
+            true -> copy_left(editor, character, begin, end, source, insert, add_i32(begin, sub_i32(source, end)))
+            _ -> erased(editor, character, begin, end, insert)
+        }
+    }
+    state copy_left(editor: &mut UiLineEdit, character: i32, begin: i32, end: i32, source: i32, insert: bool, destination: i32) -> bool
+    requires source >= 0 && source < 128 {
+        transition destination >= 0 && destination < 128 {
+            true -> copied_left(editor, character, begin, end, source, insert, destination)
+            _ -> (false)
+        }
+    }
+    state copied_left(editor: &mut UiLineEdit, character: i32, begin: i32, end: i32, source: i32, insert: bool, destination: i32) -> bool
+    requires source >= 0 && source < 128 && destination >= 0 && destination < 128 {
+        editor.bytes[destination] = editor.bytes[source];
+        transition { _ -> erase(editor, character, begin, end, add_i32(source, 1), insert) }
+    }
+    state erased(editor: &mut UiLineEdit, character: i32, begin: i32, end: i32, insert: bool) -> bool {
+        editor.length = sub_i32(editor.length, sub_i32(end, begin));
+        editor.caret = begin; editor.anchor = begin;
+        transition insert && editor.length < 128 {
+            true -> shift_right(editor, character, editor.length)
+            _ -> (end != begin)
+        }
+    }
+    state shift_right(editor: &mut UiLineEdit, character: i32, destination: i32) -> bool {
+        transition destination > editor.caret && destination > 0 && destination < 128 {
+            true -> copied_right(editor, character, destination)
+            _ -> inserted(editor, character, editor.caret)
+        }
+    }
+    state copied_right(editor: &mut UiLineEdit, character: i32, destination: i32) -> bool
+    requires destination > 0 && destination < 128 {
+        editor.bytes[destination] = editor.bytes[destination - 1];
+        transition { _ -> shift_right(editor, character, destination - 1) }
+    }
+    state inserted(editor: &mut UiLineEdit, character: i32, destination: i32) -> bool {
+        transition destination >= 0 && destination < 128 && character >= 32 && character <= 126 {
+            true -> store(editor, character, destination)
+            _ -> (false)
+        }
+    }
+    state store(editor: &mut UiLineEdit, character: i32, destination: i32) -> bool
+    requires destination >= 0 && destination < 128 && character >= 32 && character <= 126 {
+        editor.bytes[destination] = character as u8;
+        editor.length = add_i32(editor.length, 1); editor.caret = destination + 1; editor.anchor = editor.caret;
+        true
+    }
+}

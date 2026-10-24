@@ -1,0 +1,134 @@
+// Expected exit: 0. Exercise the real Windows edit adapter without the gallery.
+use omega_language_std::console;
+use omega_language_std::windows_gui_host;
+use omega_ui_windows::text_field;
+
+machine main() reaches Console + WindowsGuiHost {
+    let pixels: bool = verify_bitmap_span();
+    let editor: bool = verify_library_editor();
+    transition pixels && editor { true -> create_editor() _ -> failed() }
+    state create_editor() {
+        let window: u64 = WindowsGuiHost::edit_create();
+        transition window > 0 { true -> edit(window) _ -> failed() }
+    }
+    state edit(window: u64) {
+        let first: u64 = WindowsGuiHost::edit_message(window, 258, 84, 0);
+        let second: u64 = WindowsGuiHost::edit_message(window, 258, 97, 0);
+        let third: u64 = WindowsGuiHost::edit_message(window, 258, 115, 0);
+        let fourth: u64 = WindowsGuiHost::edit_message(window, 258, 107, 0);
+        let mut text: [u16; 256];
+        let initial_length: u32 = WindowsGuiHost::edit_read(window, &mut text);
+        let initial: bool = initial_length == 4 && text[0] == 84 && text[1] == 97 && text[2] == 115 && text[3] == 107;
+        let selected: u64 = WindowsGuiHost::edit_message(window, 177, 0, 65535);
+        let inserted: u64 = WindowsGuiHost::edit_message(window, 258, 83, 0);
+        let replaced_length: u32 = WindowsGuiHost::edit_read(window, &mut text);
+        let replaced: bool = replaced_length == 1 && text[0] == 83;
+        let undone: u64 = WindowsGuiHost::edit_message(window, 772, 0, 0);
+        let restored_length: u32 = WindowsGuiHost::edit_read(window, &mut text);
+        let restored: bool = restored_length == 4 && text[0] == 84;
+        let destroyed: bool = WindowsGuiHost::window_destroy(window);
+        transition initial && replaced && restored && destroyed { true -> passed() _ -> failed() }
+    }
+    state passed() {
+        Console::write_line("PASS: library text editor, native Unicode edit host and bounded bitmap spans");
+        Console::exit_process(0);
+    }
+    state failed() {
+        Console::write_line("FAIL: native edit host or bitmap bounds");
+        Console::exit_process(1);
+    }
+}
+
+machine verify_library_editor() -> bool reaches WindowsGuiHost {
+    let window: u64 = WindowsGuiHost::edit_create();
+    transition window > 0 { true -> edit(window) _ -> (false) }
+    state edit(window: u64) -> bool {
+        let mut field: WindowsTextField = WindowsTextField::new(window);
+        WindowsTextField::character(&mut field, 84);
+        WindowsTextField::character(&mut field, 97);
+        WindowsTextField::character(&mut field, 115);
+        WindowsTextField::character(&mut field, 107);
+        let typed: bool = field.length == 4 && field.text[0] == 84 && field.caret_index == 4;
+        WindowsTextField::key(&mut field, 65, true, false);
+        let selected: bool = field.selection_start == 0 && field.selection_end == 4 && field.caret_index == 4;
+        WindowsTextField::character(&mut field, 83);
+        let replaced: bool = field.length == 1 && field.text[0] == 83 && field.caret_index == 1;
+        WindowsTextField::key(&mut field, 90, true, false);
+        let restored: bool = field.length == 4 && field.text[0] == 84;
+        WindowsTextField::clear(&mut field);
+        let empty: bool = field.length == 0 && field.selection_start == 0 && field.selection_end == 0 && field.caret_index == 0;
+        let destroyed: bool = WindowsGuiHost::window_destroy(window);
+        typed && selected && replaced && restored && empty && destroyed
+    }
+}
+
+machine verify_bitmap_span() -> bool reaches WindowsGuiHost {
+    let device: u64 = WindowsGuiHost::create_compatible_dc(0);
+    let mut info: [i32; 11];
+    info[0] = 40; info[1] = 8; info[2] = -8; info[3] = 2097153;
+    let mut pixels: u64;
+    let bitmap: u64 = WindowsGuiHost::create_dib_section(device, &info[0], 0, &mut pixels, 0, 0);
+    let previous: u64 = WindowsGuiHost::select_object(device, bitmap);
+    let flushed: i32 = WindowsGuiHost::flush_gdi();
+    let mut row: [i32; 8];
+    let cleared: bool = WindowsGuiHost::copy_bitmap_row(pixels, 8, 8, 0, 8, &row);
+    let cleared_next: bool = WindowsGuiHost::copy_bitmap_row(pixels, 8, 8, 1, 8, &row);
+    let cleared_last: bool = WindowsGuiHost::copy_bitmap_row(pixels, 8, 8, 7, 8, &row);
+    row[5] = 0x123456; row[6] = 0x64ABCDEF; row[7] = 0x345678;
+    let copied: bool = WindowsGuiHost::copy_bitmap_span(pixels, 8, 8, 0, 5, 3, &row);
+    let overflow: bool = WindowsGuiHost::copy_bitmap_span(pixels, 8, 8, 0, 6, 3, &row);
+    let outside: bool = WindowsGuiHost::copy_bitmap_span(pixels, 8, 8, 8, 0, 1, &row);
+    let empty: bool = WindowsGuiHost::copy_bitmap_span(pixels, 8, 8, 0, 0, 0, &row);
+    let missing: bool = WindowsGuiHost::copy_bitmap_span(0, 8, 8, 0, 0, 1, &row);
+    let mut span: [i32; 3];
+    let sampled: bool = WindowsGuiHost::read_bitmap_span(pixels, 8, 8, 0, 5, 3, &mut span);
+    let short: bool = WindowsGuiHost::read_bitmap_span(pixels, 8, 8, 0, 0, 4, &mut span);
+    let missing_source: bool = WindowsGuiHost::read_bitmap_span(0, 8, 8, 0, 0, 3, &mut span);
+    let invalid_capture: bool = WindowsGuiHost::capture_mouse(0);
+    let invalid_owner: bool = WindowsGuiHost::mouse_captured(0);
+    let sample_valid: bool = sampled && !short && !missing_source && !invalid_capture && !invalid_owner && span[0] == 0x123456 && span[1] == 0x64ABCDEF && span[2] == 0x345678;
+    let repeated: bool = WindowsGuiHost::copy_bitmap_rows(pixels, 8, 8, 2, 5, 3, 3, &row);
+    let invalid_rows: bool = WindowsGuiHost::copy_bitmap_rows(pixels, 8, 8, 7, 5, 3, 2, &row);
+    let empty_rows: bool = WindowsGuiHost::copy_bitmap_rows(pixels, 8, 8, 2, 5, 3, 0, &row);
+    let short_rows: bool = WindowsGuiHost::copy_bitmap_rows(pixels, 8, 8, 2, 5, 3, 1, &row[0..6]);
+    let missing_rows: bool = WindowsGuiHost::copy_bitmap_rows(0, 8, 8, 2, 5, 3, 1, &row);
+    let wrapped_rows: bool = WindowsGuiHost::copy_bitmap_rows(18446744073709551615u64, 8, 8, 0, 0, 3, 1, &row);
+    let first_row: bool = WindowsGuiHost::read_bitmap_span(pixels, 8, 8, 2, 5, 3, &mut span);
+    let first_valid: bool = first_row && span[0] == 0x123456 && span[1] == 0x64ABCDEF && span[2] == 0x345678;
+    let last_row: bool = WindowsGuiHost::read_bitmap_span(pixels, 8, 8, 4, 5, 3, &mut span);
+    let last_valid: bool = last_row && span[0] == 0x123456 && span[1] == 0x64ABCDEF && span[2] == 0x345678;
+    let untouched_row: bool = WindowsGuiHost::read_bitmap_span(pixels, 8, 8, 7, 5, 3, &mut span);
+    let untouched: bool = untouched_row && span[0] == 0 && span[1] == 0 && span[2] == 0;
+    let bulk_valid: bool = cleared_next && cleared_last && repeated && !invalid_rows && !empty_rows && !short_rows && !missing_rows && !wrapped_rows && first_valid && last_valid && untouched;
+    let restored: u64 = WindowsGuiHost::select_object(device, previous);
+    // The first memory row is the bitmap's top source scan.
+    let read: i32 = WindowsGuiHost::get_di_bits(device, bitmap, 7, 1, &mut row[0], &info[0], 0);
+    let deleted: i32 = WindowsGuiHost::delete_object(bitmap);
+    let closed: i32 = WindowsGuiHost::delete_dc(device);
+    let regions: bool = verify_clip_union();
+    let valid: bool = device > 0 && bitmap > 0 && previous > 0 && flushed != 0 && cleared && copied && !overflow && !outside && !empty && !missing
+        && sample_valid && bulk_valid && regions && restored > 0 && read == 1 && (row[0] & 0xFFFFFF) == 0 && (row[4] & 0xFFFFFF) == 0 && (row[5] & 0xFFFFFF) == 0x123456 && (row[6] & 0xFFFFFF) == 0xABCDEF && (row[7] & 0xFFFFFF) == 0x345678 && deleted != 0 && closed != 0;
+    valid
+
+}
+
+machine verify_clip_union() -> bool reaches WindowsGuiHost {
+    let device: u64 = WindowsGuiHost::create_compatible_dc(0);
+    let bitmap: u64 = WindowsGuiHost::create_compatible_bitmap(device, 8, 8);
+    let previous: u64 = WindowsGuiHost::select_object(device, bitmap);
+    let first: u64 = WindowsGuiHost::create_rectangle_region(0, 0, 3, 3);
+    let second: u64 = WindowsGuiHost::create_rectangle_region(5, 5, 8, 8);
+    let combined: i32 = WindowsGuiHost::combine_regions(first, first, second, 2);
+    let selected: i32 = WindowsGuiHost::select_clip_region(device, first);
+    let first_deleted: i32 = WindowsGuiHost::delete_object(first);
+    let second_deleted: i32 = WindowsGuiHost::delete_object(second);
+    let inside: WindowsRectangle = WindowsRectangle { left: 1, top: 1, right: 2, bottom: 2 };
+    let gap: WindowsRectangle = WindowsRectangle { left: 3, top: 3, right: 5, bottom: 5 };
+    let visible: i32 = WindowsGuiHost::rectangle_visible(device, &inside);
+    let hidden: i32 = WindowsGuiHost::rectangle_visible(device, &gap);
+    let reset: i32 = WindowsGuiHost::select_clip_region(device, 0);
+    let restored: u64 = WindowsGuiHost::select_object(device, previous);
+    let bitmap_deleted: i32 = WindowsGuiHost::delete_object(bitmap);
+    let closed: i32 = WindowsGuiHost::delete_dc(device);
+    device > 0 && bitmap > 0 && previous > 0 && first > 0 && second > 0 && combined == 3 && selected == 3 && first_deleted != 0 && second_deleted != 0 && visible != 0 && hidden == 0 && reset > 0 && restored > 0 && bitmap_deleted != 0 && closed != 0
+}

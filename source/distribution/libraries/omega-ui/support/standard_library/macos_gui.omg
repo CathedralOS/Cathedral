@@ -1,0 +1,390 @@
+// Explicit application-owned macOS window state and stateless operations.
+// Named provider maps select these machines; selection creates no hidden state.
+// Cocoa calls use the raw Objective-C/Core Graphics seams below. Window owns
+// the persistent handles; each invocation keeps scratch in ordinary locals.
+// The Win32-shaped geometry keeps the samples' existing client-area sizes:
+// create subtracts 16/39 from outer dimensions, while blit stretches 64x64 pixels.
+// Class/style inputs do not select Cocoa classes or grant foreign authority.
+
+use omega::language::core::numeric_conversion;
+use omega::language::core::float_format;
+use omega::language::core::float_operations;
+use targets::macos_arm64::macos_gui_impl;
+
+public domain [u8]::CString(bytes)
+requires
+    no_nul(bytes);
+
+// AppKit must be loaded before looking up Cocoa classes through libobjc.
+// The explicit import owns that dependency; class names do not select libraries.
+public boundary trait AppKit {
+    machine load() -> bool;
+}
+
+// The Objective-C runtime seam (libobjc). Human method names; the `_objc_*`/`_sel_*`
+// symbols live only in the darwin binding table.
+public boundary trait ObjectiveC {
+    machine get_class(name: &u8) -> u64;
+    machine register_selector(name: &u8) -> u64;
+    machine send(recv: u64, sel: u64) -> u64;
+    machine send_scalar(recv: u64, sel: u64, arg: u64) -> u64;
+    machine send_rect(recv: u64, sel: u64, x: f64, y: f64, w: f64, h: f64, a: u64, b: u64, c: u64) -> u64;
+    machine send_image_size(recv: u64, sel: u64, image: u64, w: f64, h: f64) -> u64;
+    machine send_string(recv: u64, sel: u64, text: &u8) -> u64;
+    // RUNTIME byte-buffer string arg (`initWithUTF8String:` over the samples'
+    // title bytes). The callee reads to the first NUL, so the buffer must be
+    // NUL-terminated by construction; tighten to a proven CString domain once
+    // the reference-domain mint lands.
+    machine send_byte_string(recv: u64, sel: u64, text: &u8) -> u64;
+    machine send_scalar4(recv: u64, sel: u64, a: u64, b: u64, c: u64, d: u64) -> u64;
+    // Autorelease-pool scope (objc_autoreleasePoolPush/Pop). The event pump runs
+    // outside any Cocoa-managed pool, so dequeued autoreleased NSEvents would
+    // leak every frame without one. `pool_pop` is a void C call; the u64 result
+    // is scratch.
+    machine pool_push() -> u64;
+    machine pool_pop(pool: u64) -> u64;
+}
+
+// The Core Graphics seam (CoreGraphics framework) for the framebuffer blit.
+public boundary trait CoreGraphics {
+    machine color_space_rgb() -> u64;
+    machine color_space_release(space: u64);
+    // `data` is READ-ONLY here: the framebuffer is snapshotted into the CGImage
+    // (`bitmap_context_image`), never drawn into, so an immutable ref suffices —
+    // and a by-value `pixels` PARAM cannot be borrowed `&mut`. The ABI passes a
+    // plain pointer either way.
+    machine bitmap_context(data: &i32, w: i64, h: i64, bpc: i64, stride: i64, space: u64, info: i64) -> u64;
+    machine bitmap_context_image(ctx: u64) -> u64;
+    // Create-rule drops for the per-frame context + CGImage snapshot (void C
+    // calls; the u64 results are scratch). Without them every blit leaks both.
+    machine context_release(ctx: u64) -> u64;
+    machine image_release(image: u64) -> u64;
+    // `CGEventSourceKeyState(state_id, keycode) -> bool` — is a physical key down?
+    // The macOS backing for `Input.key_state` (see macos_key_state below).
+    machine event_source_key_state(state_id: u64, keycode: u64) -> u64;
+}
+
+// Affine owned handle set. Close consumes it; loans do not transfer ownership.
+public data Window {
+    window: u64;
+    view: u64;
+    app: u64;
+    space: u64;
+    date: u64;
+    mode: u64;
+    psel: u64;
+    mask: u64;
+    evt: u64;
+    relsel: u64;
+    dsel: u64;
+    vsel: u64;
+    ksel: u64;
+    pool: u64;
+}
+// Title borrows the first byte of a live NUL-terminated UTF-8 buffer, matching
+// ObjectiveC::send_byte_string. NSString copies it before this call returns;
+// Window retains no title loan. The buffer length is not a window API limit.
+public macos_arm64 machine macos_window_create(class_name: [u8; 7], title: &u8, style: u32, x: i32, y: i32, width: i32, height: i32) -> Window
+reaches CoreGraphics + ObjectiveC + AppKit
+{
+    let loaded: bool = appkit_load();
+    let rx: f64 = F64::from_i32(x);
+    let ry: f64 = F64::from_i32(y);
+    let mut rw: f64 = F64::from_i32(width);
+    let mut rh: f64 = F64::from_i32(height);
+    rw = rw - 16.0;
+    rh = rh - 39.0;
+    let cbuf1: [u8; 14] = "NSApplication\0";
+    let mut cls: u64 = objc_get_class(&cbuf1[0]);
+    let cbuf2: [u8; 18] = "sharedApplication\0";
+    let mut sel: u64 = objc_register_selector(&cbuf2[0]);
+    let app: u64 = objc_send(cls, sel);
+    let cbuf3: [u8; 21] = "setActivationPolicy:\0";
+    sel = objc_register_selector(&cbuf3[0]);
+    let mut rc: u64 = objc_send_scalar(app, sel, 0);
+    let cbuf4: [u8; 9] = "NSWindow\0";
+    cls = objc_get_class(&cbuf4[0]);
+    let cbuf5: [u8; 6] = "alloc\0";
+    sel = objc_register_selector(&cbuf5[0]);
+    let mut tmp: u64 = objc_send(cls, sel);
+    let cbuf6: [u8; 45] = "initWithContentRect:styleMask:backing:defer:\0";
+    sel = objc_register_selector(&cbuf6[0]);
+    let window: u64 = objc_send_rect(tmp, sel, rx, ry, rw, rh, 15, 2, 0);
+    // Closing hides the window; the explicit owner releases it exactly once.
+    let release_on_close_name: [u8; 23] = "setReleasedWhenClosed:\0";
+    sel = objc_register_selector(&release_on_close_name[0]);
+    rc = objc_send_scalar(window, sel, 0);
+    let cbuf7: [u8; 12] = "NSImageView\0";
+    cls = objc_get_class(&cbuf7[0]);
+    let cbuf8: [u8; 6] = "alloc\0";
+    sel = objc_register_selector(&cbuf8[0]);
+    tmp = objc_send(cls, sel);
+    let cbuf9: [u8; 15] = "initWithFrame:\0";
+    sel = objc_register_selector(&cbuf9[0]);
+    let view: u64 = objc_send_rect(tmp, sel, rx, ry, rw, rh, 0, 0, 0);
+    let cbuf10: [u8; 17] = "setImageScaling:\0";
+    sel = objc_register_selector(&cbuf10[0]);
+    rc = objc_send_scalar(view, sel, 1);
+    let cbuf11: [u8; 16] = "setContentView:\0";
+    sel = objc_register_selector(&cbuf11[0]);
+    rc = objc_send_scalar(window, sel, view);
+    let cbuf12: [u8; 8] = "release\0";
+    let relsel: u64 = objc_register_selector(&cbuf12[0]);
+    let cbuf13: [u8; 9] = "NSString\0";
+    cls = objc_get_class(&cbuf13[0]);
+    let cbuf14: [u8; 6] = "alloc\0";
+    sel = objc_register_selector(&cbuf14[0]);
+    tmp = objc_send(cls, sel);
+    let cbuf15: [u8; 20] = "initWithUTF8String:\0";
+    sel = objc_register_selector(&cbuf15[0]);
+    tmp = objc_send_byte_string(tmp, sel, title);
+    let cbuf16: [u8; 10] = "setTitle:\0";
+    sel = objc_register_selector(&cbuf16[0]);
+    rc = objc_send_scalar(window, sel, tmp);
+    rc = objc_send(tmp, relsel);
+    let cbuf17: [u8; 7] = "center\0";
+    sel = objc_register_selector(&cbuf17[0]);
+    rc = objc_send(window, sel);
+    let cbuf18: [u8; 22] = "makeKeyAndOrderFront:\0";
+    sel = objc_register_selector(&cbuf18[0]);
+    rc = objc_send_scalar(window, sel, 0);
+    let cbuf19: [u8; 27] = "activateIgnoringOtherApps:\0";
+    sel = objc_register_selector(&cbuf19[0]);
+    rc = objc_send_scalar(app, sel, 1);
+    let space: u64 = cg_color_space_rgb();
+    // Pump scratch, once: the distantPast date, the run-loop-mode NSString, the
+    // nextEvent/sendEvent:/isVisible/keyWindow selectors, and the event mask.
+    let cbuf20: [u8; 7] = "NSDate\0";
+    cls = objc_get_class(&cbuf20[0]);
+    let cbuf21: [u8; 12] = "distantPast\0";
+    sel = objc_register_selector(&cbuf21[0]);
+    let date: u64 = objc_send(cls, sel);
+    let cbuf22: [u8; 9] = "NSString\0";
+    cls = objc_get_class(&cbuf22[0]);
+    let cbuf23: [u8; 6] = "alloc\0";
+    sel = objc_register_selector(&cbuf23[0]);
+    tmp = objc_send(cls, sel);
+    let cbuf24: [u8; 20] = "initWithUTF8String:\0";
+    sel = objc_register_selector(&cbuf24[0]);
+    let cbuf25: [u8; 22] = "kCFRunLoopDefaultMode\0";
+    let mode: u64 = objc_send_string(tmp, sel, &cbuf25[0]);
+    let cbuf26: [u8; 48] = "nextEventMatchingMask:untilDate:inMode:dequeue:\0";
+    let psel: u64 = objc_register_selector(&cbuf26[0]);
+    let mask: u64 = 4294967295;
+    let cbuf27: [u8; 11] = "sendEvent:\0";
+    let dsel: u64 = objc_register_selector(&cbuf27[0]);
+    let cbuf28: [u8; 10] = "isVisible\0";
+    let vsel: u64 = objc_register_selector(&cbuf28[0]);
+    let cbuf29: [u8; 10] = "keyWindow\0";
+    let ksel: u64 = objc_register_selector(&cbuf29[0]);
+    // Open the pool carried between explicit event-pump calls.
+    let pool: u64 = objc_pool_push();
+    Window {
+        window: window,
+        view: view,
+        app: app,
+        space: space,
+        date: date,
+        mode: mode,
+        psel: psel,
+        mask: mask,
+        evt: 0,
+        relsel: relsel,
+        dsel: dsel,
+        vsel: vsel,
+        ksel: ksel,
+        pool: pool,
+    }
+}
+public macos_arm64 machine macos_window_destroy(window: Window)
+reaches CoreGraphics + ObjectiveC
+{
+    let close_name: [u8; 6] = "close\0";
+    let close_selector: u64 = objc_register_selector(&close_name[0]);
+    let mut ignored: u64 = objc_send(window.window, close_selector);
+    ignored = objc_send(window.window, window.relsel);
+    ignored = objc_send(window.view, window.relsel);
+    ignored = objc_send(window.mode, window.relsel);
+    cg_color_space_release(window.space);
+    ignored = objc_pool_pop(window.pool);
+}
+public macos_arm64 machine macos_window_get_dc(window_state: &Window, window: u64) -> u64
+{
+    transition { _ -> ret(window) }
+    state ret(window: u64) -> u64 { window }
+}
+public macos_arm64 machine macos_window_msg_peek(window_state: &mut Window, message: [u64; 6]) -> u32
+reaches ObjectiveC
+{
+    // Cycle the rolling autorelease pool opened at window_create: the pop
+    // drains the PREVIOUS peek's autoreleased NSEvent (already dispatched by
+    // then), the push opens the scope this peek's event lands in. The date,
+    // mode string, selector, and mask are window_create-cached — this machine
+    // used to rebuild all four (and leak the NSString) on every single peek.
+    let rc: u64 = objc_pool_pop(window_state.pool);
+    window_state.pool = objc_pool_push();
+    window_state.evt = objc_send_scalar4(window_state.app, window_state.psel, window_state.mask, window_state.date, window_state.mode, 1);
+    // Return whether this pump captured an event for the following dispatch.
+    transition window_state.evt != 0 { true -> got() _ -> ret() }
+    state got() -> u32 { 1 }
+    state ret() -> u32 { 0 }
+}
+public macos_arm64 machine macos_window_msg_translate(window_state: &Window, message: [u64; 6]) -> u32
+{
+    let r32: u32 = 1;
+    r32
+}
+public macos_arm64 machine macos_window_msg_dispatch(window_state: &Window, message: [u64; 6]) -> u64
+reaches ObjectiveC
+{
+    let rc: u64 = objc_send_scalar(window_state.app, window_state.dsel, window_state.evt);
+    rc
+}
+public macos_arm64 machine macos_window_is_window(window_state: &Window, window: u64) -> u32
+reaches ObjectiveC
+{
+    let rc: u64 = objc_send(window, window_state.vsel);
+    let r32: u32 = narrow_u64_to_u32_wrapping(rc);
+    r32
+}
+public macos_arm64 machine macos_window_blit(window_state: &Window, device: u64, dest_width: u32, dest_height: u32, source_width: u32, source_height: u32, pixels: [i32; 4096], info: [i32; 11]) -> u32
+reaches CoreGraphics + ObjectiveC
+{
+    let source_width_wide: i64 = source_width as i64;
+    let source_height_wide: i64 = source_height as i64;
+    let fbw: i64 = source_width_wide;
+    let fbh: i64 = source_height_wide;
+    let stride: i64 = source_width_wide << 2;
+    let fbwf: f64 = F64::from_u32(source_width);
+    let fbhf: f64 = F64::from_u32(source_height);
+    let ctx: u64 = cg_bitmap_context(&pixels[0], fbw, fbh, 8, stride, window_state.space, 8198);
+    let cgimg: u64 = cg_bitmap_context_image(ctx);
+    let cbuf30: [u8; 8] = "NSImage\0";
+    let cls: u64 = objc_get_class(&cbuf30[0]);
+    let cbuf31: [u8; 6] = "alloc\0";
+    let mut sel: u64 = objc_register_selector(&cbuf31[0]);
+    let tmp: u64 = objc_send(cls, sel);
+    let cbuf32: [u8; 22] = "initWithCGImage:size:\0";
+    sel = objc_register_selector(&cbuf32[0]);
+    let nsimg: u64 = objc_send_image_size(tmp, sel, cgimg, fbwf, fbhf);
+    let cbuf33: [u8; 10] = "setImage:\0";
+    sel = objc_register_selector(&cbuf33[0]);
+    let mut rc: u64 = objc_send_scalar(window_state.view, sel, nsimg);
+    // Per-frame lifecycle: the context and CGImage are Create-rule owned, and
+    // setImage: retains the NSImage, so drop our +1 on all three — without
+    // these releases every presented frame leaked ~3 objects at ~60fps.
+    rc = cg_context_release(ctx);
+    rc = cg_image_release(cgimg);
+    rc = objc_send(nsimg, window_state.relsel);
+    // The samples assert `blit == source_height` (every source scanline copied).
+    let r32: u32 = source_height;
+    r32
+}
+
+// Global key polling is meaningful only while this application's window is key.
+public macos_arm64 machine macos_window_foreground_window(window_state: &Window) -> u64
+reaches ObjectiveC
+{
+    let current: u64 = objc_send(window_state.app, window_state.ksel);
+    current
+}
+
+// Win32 virtual-key to macOS ANSI keycode mapping. Unknown keys retain the
+// 65535 sentinel and macos_key_state reports them as not down.
+public macos_arm64 machine macos_map_keycode(virtual_key: u32) -> u64 {
+    transition virtual_key == 8 { true -> k51() _ -> t13(virtual_key) }
+    state t13(virtual_key: u32) -> u64 { transition virtual_key == 13 { true -> k36() _ -> t27(virtual_key) } }
+    state t27(virtual_key: u32) -> u64 { transition virtual_key == 27 { true -> k53() _ -> t37(virtual_key) } }
+    state t37(virtual_key: u32) -> u64 { transition virtual_key == 37 { true -> k123() _ -> t38(virtual_key) } }
+    state t38(virtual_key: u32) -> u64 { transition virtual_key == 38 { true -> k126() _ -> t39(virtual_key) } }
+    state t39(virtual_key: u32) -> u64 { transition virtual_key == 39 { true -> k124() _ -> t40(virtual_key) } }
+    state t40(virtual_key: u32) -> u64 { transition virtual_key == 40 { true -> k125() _ -> t48(virtual_key) } }
+    state t48(virtual_key: u32) -> u64 { transition virtual_key == 48 { true -> k29() _ -> t49(virtual_key) } }
+    state t49(virtual_key: u32) -> u64 { transition virtual_key == 49 { true -> k18() _ -> t50(virtual_key) } }
+    state t50(virtual_key: u32) -> u64 { transition virtual_key == 50 { true -> k19() _ -> t51(virtual_key) } }
+    state t51(virtual_key: u32) -> u64 { transition virtual_key == 51 { true -> k20() _ -> t52(virtual_key) } }
+    state t52(virtual_key: u32) -> u64 { transition virtual_key == 52 { true -> k21() _ -> t53(virtual_key) } }
+    state t53(virtual_key: u32) -> u64 { transition virtual_key == 53 { true -> k23() _ -> t54(virtual_key) } }
+    state t54(virtual_key: u32) -> u64 { transition virtual_key == 54 { true -> k22() _ -> t55(virtual_key) } }
+    state t55(virtual_key: u32) -> u64 { transition virtual_key == 55 { true -> k26() _ -> t56(virtual_key) } }
+    state t56(virtual_key: u32) -> u64 { transition virtual_key == 56 { true -> k28() _ -> t57(virtual_key) } }
+    state t57(virtual_key: u32) -> u64 { transition virtual_key == 57 { true -> k25() _ -> t67(virtual_key) } }
+    state t67(virtual_key: u32) -> u64 { transition virtual_key == 67 { true -> k8() _ -> t77(virtual_key) } }
+    state t77(virtual_key: u32) -> u64 { transition virtual_key == 77 { true -> k46() _ -> t82(virtual_key) } }
+    state t82(virtual_key: u32) -> u64 { transition virtual_key == 82 { true -> k15() _ -> t83(virtual_key) } }
+    state t83(virtual_key: u32) -> u64 { transition virtual_key == 83 { true -> k1() _ -> t106(virtual_key) } }
+    state t106(virtual_key: u32) -> u64 { transition virtual_key == 106 { true -> k67() _ -> t107(virtual_key) } }
+    state t107(virtual_key: u32) -> u64 { transition virtual_key == 107 { true -> k69() _ -> t109(virtual_key) } }
+    state t109(virtual_key: u32) -> u64 { transition virtual_key == 109 { true -> k78() _ -> t111(virtual_key) } }
+    state t111(virtual_key: u32) -> u64 { transition virtual_key == 111 { true -> k75() _ -> t187(virtual_key) } }
+    state t187(virtual_key: u32) -> u64 { transition virtual_key == 187 { true -> k24() _ -> unmapped() } }
+    state k1() -> u64 { 1 }
+    state k8() -> u64 { 8 }
+    state k15() -> u64 { 15 }
+    state k18() -> u64 { 18 }
+    state k19() -> u64 { 19 }
+    state k20() -> u64 { 20 }
+    state k21() -> u64 { 21 }
+    state k22() -> u64 { 22 }
+    state k23() -> u64 { 23 }
+    state k24() -> u64 { 24 }
+    state k25() -> u64 { 25 }
+    state k26() -> u64 { 26 }
+    state k28() -> u64 { 28 }
+    state k29() -> u64 { 29 }
+    state k36() -> u64 { 36 }
+    state k46() -> u64 { 46 }
+    state k51() -> u64 { 51 }
+    state k53() -> u64 { 53 }
+    state k67() -> u64 { 67 }
+    state k69() -> u64 { 69 }
+    state k75() -> u64 { 75 }
+    state k78() -> u64 { 78 }
+    state k123() -> u64 { 123 }
+    state k124() -> u64 { 124 }
+    state k125() -> u64 { 125 }
+    state k126() -> u64 { 126 }
+    state unmapped() -> u64 { 65535 }
+}
+
+public macos_arm64 machine macos_key_state(virtual_key: u32) -> u64
+reaches CoreGraphics
+{
+    let keycode: u64 = macos_map_keycode(virtual_key);
+    let result: u64 = cg_event_source_key_state(1, keycode);
+    transition keycode == 65535 { true -> not_down() _ -> ret(result) }
+    state not_down() -> u64 { 0 }
+    state ret(result: u64) -> u64 { result }
+}
+
+public boundary trait DarwinClock {
+    machine clock_ns(clock_id: u32) -> u64;
+    machine mach_absolute_time() -> u64;
+    machine poll(fds: u64, nfds: u64, timeout_ms: i32) -> i32;
+}
+
+// Millisecond pacing through poll(NULL, 0, timeout). The conversion retains
+// the former u32-to-i32 wrapping contract.
+public macos_arm64 machine macos_sleep(milliseconds: u32)
+reaches DarwinClock
+{
+    let timeout: i32 = narrow_u32_to_i32_wrapping(milliseconds);
+    let result: i32 = darwin_poll(0, 0, timeout);
+}
+
+// CLOCK_MONOTONIC milliseconds since boot, retaining the low 32 bits.
+public macos_arm64 machine macos_get_tick_count() -> u32
+reaches DarwinClock
+{
+    let nanoseconds: u64 = darwin_clock_ns(6);
+    let milliseconds: u64 = nanoseconds / 1000000;
+    narrow_u64_to_u32_wrapping(milliseconds)
+}
+
+public macos_arm64 machine macos_perf_counter() -> u64
+reaches DarwinClock
+{
+    darwin_clock_ns(6)
+}
+
+public macos_arm64 machine macos_perf_frequency() -> u64 { 1000000000 }

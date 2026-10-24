@@ -1,0 +1,159 @@
+/*
+A host advances this store once per frame using elapsed milliseconds. Controls
+retarget stable IDs while rebuilding the view; rebuilding twice never advances
+time. New IDs start settled, and interrupted transitions start at their current
+value. Pointer positions themselves stay immediate. Reduced motion snaps values.
+
+The store holds 64 retained channels without allocation. Values are normalized
+0..1000. Channels unseen for 120 frames can be reused. If all 64 channels are
+still live, capacity overflow returns the target rather than losing input.
+The cubic easing is a bounded transition, not a physical spring simulation.
+*/
+use types;
+
+public data MotionValue {
+    identifier: i32;
+    start: i32;
+    target: i32;
+    current: i32;
+    elapsed: i32;
+    duration: i32;
+    unseen_frames: i32;
+}
+public data UiMotion {
+    values: [MotionValue; 64];
+    count: i32;
+    animating: bool;
+    reduced: bool;
+}
+
+public machine UiMotion::target(motion: &mut UiMotion, identifier: i32, target: i32, duration: i32) -> i32 {
+    let bounded: i32 = clamp_i32(target, 0, 1000);
+    transition { _ -> find(motion, identifier, bounded, clamp_i32(duration, 1, 1000), 0) }
+    state find(motion: &mut UiMotion, identifier: i32, target: i32, duration: i32, index: i32) -> i32 {
+        transition index >= 0 && index < motion.count && index < 64 {
+            true -> compare(motion, identifier, target, duration, index)
+            _ -> append(motion, identifier, target, duration)
+        }
+    }
+    state compare(motion: &mut UiMotion, identifier: i32, target: i32, duration: i32, index: i32) -> i32
+    requires index >= 0 && index < 64 {
+        transition motion.values[index].identifier == identifier {
+            true -> retarget(motion, target, duration, index)
+            _ -> find(motion, identifier, target, duration, index + 1)
+        }
+    }
+    state retarget(motion: &mut UiMotion, target: i32, duration: i32, index: i32) -> i32
+    requires index >= 0 && index < 64 {
+        let identifier: i32 = motion.values[index].identifier;
+        transition motion.values[index].unseen_frames > 120 {
+            true -> store(motion, identifier, target, duration, index)
+            _ -> seen(motion, target, duration, index)
+        }
+    }
+    state seen(motion: &mut UiMotion, target: i32, duration: i32, index: i32) -> i32
+    requires index >= 0 && index < 64 {
+        motion.values[index].unseen_frames = 0;
+        transition motion.reduced {
+            true -> snap(motion, target, duration, index)
+            _ -> update(motion, target, duration, index)
+        }
+    }
+    state snap(motion: &mut UiMotion, target: i32, duration: i32, index: i32) -> i32
+    requires index >= 0 && index < 64 {
+        motion.values[index] = MotionValue { identifier: motion.values[index].identifier, start: target, target: target, current: target, elapsed: duration, duration: duration, unseen_frames: 0 };
+        target
+    }
+    state update(motion: &mut UiMotion, target: i32, duration: i32, index: i32) -> i32
+    requires index >= 0 && index < 64 {
+        transition motion.values[index].target != target {
+            true -> changed(motion, target, duration, index)
+            _ -> (motion.values[index].current)
+        }
+    }
+    state changed(motion: &mut UiMotion, target: i32, duration: i32, index: i32) -> i32
+    requires index >= 0 && index < 64 {
+        motion.values[index].start = motion.values[index].current;
+        motion.values[index].target = target;
+        motion.values[index].elapsed = 0;
+        motion.values[index].duration = duration;
+        motion.animating = true;
+        motion.values[index].current
+    }
+    state append(motion: &mut UiMotion, identifier: i32, target: i32, duration: i32) -> i32 {
+        let index: i32 = motion.count;
+        transition index >= 0 && index < 64 {
+            true -> store(motion, identifier, target, duration, index)
+            _ -> recycle(motion, identifier, target, duration, 0)
+        }
+    }
+    state store(motion: &mut UiMotion, identifier: i32, target: i32, duration: i32, index: i32) -> i32
+    requires index >= 0 && index < 64 {
+        motion.values[index] = MotionValue { identifier: identifier, start: target, target: target, current: target, elapsed: duration, duration: duration, unseen_frames: 0 };
+        motion.count = max_i32(motion.count, index + 1);
+        target
+    }
+    state recycle(motion: &mut UiMotion, identifier: i32, target: i32, duration: i32, index: i32) -> i32 {
+        transition index >= 0 && index < 64 {
+            true -> retired(motion, identifier, target, duration, index)
+            _ -> (target)
+        }
+    }
+    state retired(motion: &mut UiMotion, identifier: i32, target: i32, duration: i32, index: i32) -> i32
+    requires index >= 0 && index < 64 {
+        transition motion.values[index].unseen_frames > 120 {
+            true -> store(motion, identifier, target, duration, index)
+            _ -> recycle(motion, identifier, target, duration, index + 1)
+        }
+    }
+}
+
+public machine UiMotion::advance(motion: &mut UiMotion, elapsed_ms: i32) -> bool {
+    motion.animating = false;
+    transition { _ -> next(motion, clamp_i32(elapsed_ms, 0, 1000), 0, false) }
+    state next(motion: &mut UiMotion, elapsed_ms: i32, index: i32, changed: bool) -> bool {
+        transition index >= 0 && index < motion.count && index < 64 {
+            true -> step(motion, elapsed_ms, index, changed)
+            _ -> (changed)
+        }
+    }
+    state step(motion: &mut UiMotion, elapsed_ms: i32, index: i32, changed: bool) -> bool
+    requires index >= 0 && index < 64 {
+        motion.values[index].unseen_frames = min_i32(add_i32(motion.values[index].unseen_frames, 1), 121);
+        let duration: i32 = clamp_i32(motion.values[index].duration, 1, 1000);
+        let elapsed: i32 = min_i32(add_i32(motion.values[index].elapsed, elapsed_ms), duration);
+        transition duration > 0 {
+            true -> interpolate(motion, elapsed_ms, index, changed, duration, elapsed)
+            _ -> next(motion, elapsed_ms, index + 1, changed)
+        }
+    }
+    state interpolate(motion: &mut UiMotion, elapsed_ms: i32, index: i32, changed: bool, duration: i32, elapsed: i32) -> bool
+    requires index >= 0 && index < 64 && duration > 0 {
+        let remaining: i32 = mul_i32(sub_i32(duration, elapsed), 1000) / duration;
+        let eased: i32 = sub_i32(1000, mul_i32(mul_i32(remaining, remaining), remaining) / 1000000);
+        let old: i32 = motion.values[index].current;
+        let current: i32 = select_i32(motion.reduced || elapsed == duration, motion.values[index].target,
+            add_i32(motion.values[index].start, mul_i32(sub_i32(motion.values[index].target, motion.values[index].start), eased) / 1000));
+        motion.values[index].current = current;
+        motion.values[index].elapsed = elapsed;
+        motion.animating = motion.animating || current != motion.values[index].target;
+        transition { _ -> next(motion, elapsed_ms, index + 1, changed || current != old) }
+    }
+}
+
+public machine UiMotion::read(motion: &UiMotion, identifier: i32, fallback: i32) -> i32 {
+    transition { _ -> find(motion, identifier, fallback, 0) }
+    state find(motion: &UiMotion, identifier: i32, fallback: i32, index: i32) -> i32 {
+        transition index >= 0 && index < motion.count && index < 64 {
+            true -> compare(motion, identifier, fallback, index)
+            _ -> (fallback)
+        }
+    }
+    state compare(motion: &UiMotion, identifier: i32, fallback: i32, index: i32) -> i32
+    requires index >= 0 && index < 64 {
+        transition motion.values[index].identifier == identifier {
+            true -> (motion.values[index].current)
+            _ -> find(motion, identifier, fallback, index + 1)
+        }
+    }
+}

@@ -1,0 +1,640 @@
+// Resolves two theme modes and eight accents into runtime color roles.
+
+use types;
+
+public data ThemePalette {
+    background: i32;
+    surface: i32;
+    surface_raised: i32;
+    surface_muted: i32;
+    foreground: i32;
+    text_secondary: i32;
+    text_muted: i32;
+    border: i32;
+    border_subtle: i32;
+    border_strong: i32;
+    accent: i32;
+    accent_strong: i32;
+    accent_subtle: i32;
+    accent_foreground: i32;
+    control_on: i32;
+    control_glyph: i32;
+    control_track: i32;
+    control_track_hover: i32;
+    control_thumb: i32;
+    control_thumb_on: i32;
+    control_fill: i32;
+    success: i32;
+    warning: i32;
+    danger: i32;
+    series_1: i32;
+    series_2: i32;
+    series_3: i32;
+    series_4: i32;
+    accent_subtle_alpha: i32;
+}
+
+public machine ThemePalette::resolve(dark: bool, accent: i32) -> ThemePalette {
+    transition dark { true -> (dark_palette(accent)) _ -> (light_palette(accent)) }
+}
+
+machine light_palette(accent: i32) -> ThemePalette {
+    transition accent {
+        1 -> (light_violet())
+        2 -> (light_blue())
+        3 -> (light_green())
+        4 -> (light_amber())
+        5 -> (light_orange())
+        6 -> (light_coral())
+        7 -> (light_rose())
+        _ -> (light_neutral())
+    }
+}
+
+machine light_neutral() -> ThemePalette {
+    ThemePalette {
+        background: 0xFFFFFF,
+        surface: 0xFFFFFF,
+        surface_raised: 0xFFFFFF,
+        surface_muted: 0xF8F8F8,
+        foreground: 0x0B0B0B,
+        text_secondary: 0x585858,
+        text_muted: 0x7D7D7D,
+        border: 0xE9E9E9,
+        border_subtle: 0xF3F3F3,
+        border_strong: 0xC4C4C4,
+        accent: 0x353535,
+        accent_strong: 0x1F1F1F,
+        accent_subtle: 0x313131,
+        accent_foreground: 0xFFFFFF,
+        control_on: 0x1D1D1D,
+        control_glyph: 0xFFFFFF,
+        control_track: 0xDCDCDC,
+        control_track_hover: 0xD1D1D1,
+        control_thumb: 0xFFFFFF,
+        control_thumb_on: 0xFFFFFF,
+        control_fill: 0x1D1D1D,
+        success: 0x007B12,
+        warning: 0xB66400,
+        danger: 0xCD1526,
+        series_1: 0x1F7DCF,
+        series_2: 0x7128A5,
+        series_3: 0xE58F00,
+        series_4: 0x009E84,
+        accent_subtle_alpha: 26
+    }
+}
+
+machine light_violet() -> ThemePalette {
+    ThemePalette {
+        background: 0xFFFFFF,
+        surface: 0xFFFFFF,
+        surface_raised: 0xFFFFFF,
+        surface_muted: 0xF8F8F8,
+        foreground: 0x0B0B0B,
+        text_secondary: 0x585858,
+        text_muted: 0x7D7D7D,
+        border: 0xE9E9E9,
+        border_subtle: 0xF3F3F3,
+        border_strong: 0xC4C4C4,
+        accent: 0x7747FF,
+        accent_strong: 0x5528CE,
+        accent_subtle: 0x7446FF,
+        accent_foreground: 0xFFFFFF,
+        control_on: 0x7747FF,
+        control_glyph: 0xFFFFFF,
+        control_track: 0xDCDCDC,
+        control_track_hover: 0xD1D1D1,
+        control_thumb: 0xFFFFFF,
+        control_thumb_on: 0xFFFFFF,
+        control_fill: 0x7747FF,
+        success: 0x007B12,
+        warning: 0xB66400,
+        danger: 0xCD1526,
+        series_1: 0x7747FF,
+        series_2: 0x96036E,
+        series_3: 0xA6A900,
+        series_4: 0x008CC9,
+        accent_subtle_alpha: 33
+    }
+}
+
+machine light_blue() -> ThemePalette {
+    ThemePalette {
+        background: 0xFFFFFF,
+        surface: 0xFFFFFF,
+        surface_raised: 0xFFFFFF,
+        surface_muted: 0xF8F8F8,
+        foreground: 0x0B0B0B,
+        text_secondary: 0x585858,
+        text_muted: 0x7D7D7D,
+        border: 0xE9E9E9,
+        border_subtle: 0xF3F3F3,
+        border_strong: 0xC4C4C4,
+        accent: 0x0562EF,
+        accent_strong: 0x074DB7,
+        accent_subtle: 0x0863EF,
+        accent_foreground: 0xFFFFFF,
+        control_on: 0x0562EF,
+        control_glyph: 0xFFFFFF,
+        control_track: 0xDCDCDC,
+        control_track_hover: 0xD1D1D1,
+        control_thumb: 0xFFFFFF,
+        control_thumb_on: 0xFFFFFF,
+        control_fill: 0x0562EF,
+        success: 0x007B12,
+        warning: 0xB66400,
+        danger: 0xCD1526,
+        series_1: 0x0562EF,
+        series_2: 0x7E2098,
+        series_3: 0xCC8C00,
+        series_4: 0x009090,
+        accent_subtle_alpha: 31
+    }
+}
+
+machine light_green() -> ThemePalette {
+    ThemePalette {
+        background: 0xFFFFFF,
+        surface: 0xFFFFFF,
+        surface_raised: 0xFFFFFF,
+        surface_muted: 0xF8F8F8,
+        foreground: 0x0B0B0B,
+        text_secondary: 0x585858,
+        text_muted: 0x7D7D7D,
+        border: 0xE9E9E9,
+        border_subtle: 0xF3F3F3,
+        border_strong: 0xC4C4C4,
+        accent: 0x0DB879,
+        accent_strong: 0x087C54,
+        accent_subtle: 0x0FB97C,
+        accent_foreground: 0x102016,
+        control_on: 0x10A870,
+        control_glyph: 0xFFFFFF,
+        control_track: 0xDCDCDC,
+        control_track_hover: 0xD1D1D1,
+        control_thumb: 0xFFFFFF,
+        control_thumb_on: 0xFFFFFF,
+        control_fill: 0x10A870,
+        success: 0x007B12,
+        warning: 0xB66400,
+        danger: 0xCD1526,
+        series_1: 0x0DB879,
+        series_2: 0x006898,
+        series_3: 0xFD7DCD,
+        series_4: 0xCB9200,
+        accent_subtle_alpha: 33
+    }
+}
+
+machine light_amber() -> ThemePalette {
+    ThemePalette {
+        background: 0xFFFFFF,
+        surface: 0xFFFFFF,
+        surface_raised: 0xFFFFFF,
+        surface_muted: 0xF8F8F8,
+        foreground: 0x0B0B0B,
+        text_secondary: 0x585858,
+        text_muted: 0x7D7D7D,
+        border: 0xE9E9E9,
+        border_subtle: 0xF3F3F3,
+        border_strong: 0xC4C4C4,
+        accent: 0xF3AD20,
+        accent_strong: 0x9C6300,
+        accent_subtle: 0xF3AE1F,
+        accent_foreground: 0x20190D,
+        control_on: 0xEDA11A,
+        control_glyph: 0x2A1C03,
+        control_track: 0xDCDCDC,
+        control_track_hover: 0xD1D1D1,
+        control_thumb: 0xFFFFFF,
+        control_thumb_on: 0xFFFFFF,
+        control_fill: 0xEDA11A,
+        success: 0x007B12,
+        warning: 0xB66400,
+        danger: 0xCD1526,
+        series_1: 0xF3AD20,
+        series_2: 0x358500,
+        series_3: 0x70ADFF,
+        series_4: 0xFF6B92,
+        accent_subtle_alpha: 41
+    }
+}
+
+machine light_orange() -> ThemePalette {
+    ThemePalette {
+        background: 0xFFFFFF,
+        surface: 0xFFFFFF,
+        surface_raised: 0xFFFFFF,
+        surface_muted: 0xF8F8F8,
+        foreground: 0x0B0B0B,
+        text_secondary: 0x585858,
+        text_muted: 0x7D7D7D,
+        border: 0xE9E9E9,
+        border_subtle: 0xF3F3F3,
+        border_strong: 0xC4C4C4,
+        accent: 0xF48120,
+        accent_strong: 0xAA4700,
+        accent_subtle: 0xF7831F,
+        accent_foreground: 0x17130F,
+        control_on: 0xF07818,
+        control_glyph: 0xFFFFFF,
+        control_track: 0xDCDCDC,
+        control_track_hover: 0xD1D1D1,
+        control_thumb: 0xFFFFFF,
+        control_thumb_on: 0xFFFFFF,
+        control_fill: 0xF07818,
+        success: 0x007B12,
+        warning: 0xB66400,
+        danger: 0xCD1526,
+        series_1: 0xF48120,
+        series_2: 0x636000,
+        series_3: 0x00BEFF,
+        series_4: 0xFB62C0,
+        accent_subtle_alpha: 33
+    }
+}
+
+machine light_coral() -> ThemePalette {
+    ThemePalette {
+        background: 0xFFFFFF,
+        surface: 0xFFFFFF,
+        surface_raised: 0xFFFFFF,
+        surface_muted: 0xF8F8F8,
+        foreground: 0x0B0B0B,
+        text_secondary: 0x585858,
+        text_muted: 0x7D7D7D,
+        border: 0xE9E9E9,
+        border_subtle: 0xF3F3F3,
+        border_strong: 0xC4C4C4,
+        accent: 0xF15F55,
+        accent_strong: 0xB92C27,
+        accent_subtle: 0xF15C55,
+        accent_foreground: 0x21110F,
+        control_on: 0xEC564B,
+        control_glyph: 0xFFFFFF,
+        control_track: 0xDCDCDC,
+        control_track_hover: 0xD1D1D1,
+        control_thumb: 0xFFFFFF,
+        control_thumb_on: 0xFFFFFF,
+        control_fill: 0xEC564B,
+        success: 0x007B12,
+        warning: 0xB66400,
+        danger: 0xCD1526,
+        series_1: 0xF15F55,
+        series_2: 0x854300,
+        series_3: 0x00CDF1,
+        series_4: 0xCB61E6,
+        accent_subtle_alpha: 36
+    }
+}
+
+machine light_rose() -> ThemePalette {
+    ThemePalette {
+        background: 0xFFFFFF,
+        surface: 0xFFFFFF,
+        surface_raised: 0xFFFFFF,
+        surface_muted: 0xF8F8F8,
+        foreground: 0x0B0B0B,
+        text_secondary: 0x585858,
+        text_muted: 0x7D7D7D,
+        border: 0xE9E9E9,
+        border_subtle: 0xF3F3F3,
+        border_strong: 0xC4C4C4,
+        accent: 0xED4E9D,
+        accent_strong: 0xAE2570,
+        accent_subtle: 0xEA4E9C,
+        accent_foreground: 0x250F1B,
+        control_on: 0xE64494,
+        control_glyph: 0xFFFFFF,
+        control_track: 0xDCDCDC,
+        control_track_hover: 0xD1D1D1,
+        control_thumb: 0xFFFFFF,
+        control_thumb_on: 0xFFFFFF,
+        control_fill: 0xE64494,
+        success: 0x007B12,
+        warning: 0xB66400,
+        danger: 0xCD1526,
+        series_1: 0xED4E9D,
+        series_2: 0xA01B00,
+        series_3: 0x00D4B0,
+        series_4: 0x8D77FF,
+        accent_subtle_alpha: 36
+    }
+}
+
+machine dark_palette(accent: i32) -> ThemePalette {
+    transition accent {
+        1 -> (dark_violet())
+        2 -> (dark_blue())
+        3 -> (dark_green())
+        4 -> (dark_amber())
+        5 -> (dark_orange())
+        6 -> (dark_coral())
+        7 -> (dark_rose())
+        _ -> (dark_neutral())
+    }
+}
+
+machine dark_neutral() -> ThemePalette {
+    ThemePalette {
+        background: 0x141414,
+        surface: 0x191919,
+        surface_raised: 0x1F1F1F,
+        surface_muted: 0x242424,
+        foreground: 0xF2F2F2,
+        text_secondary: 0xB4B4B4,
+        text_muted: 0x8C8C8C,
+        border: 0x2B2B2B,
+        border_subtle: 0x222222,
+        border_strong: 0x484848,
+        accent: 0xBDBEBE,
+        accent_strong: 0xE1E1E1,
+        accent_subtle: 0xB9C1C1,
+        accent_foreground: 0x141414,
+        control_on: 0xE8E8E8,
+        control_glyph: 0x141414,
+        control_track: 0x353535,
+        control_track_hover: 0x404040,
+        control_thumb: 0xF5F5F5,
+        control_thumb_on: 0x141414,
+        control_fill: 0x868686,
+        success: 0x4CD676,
+        warning: 0xFFB90E,
+        danger: 0xFF736D,
+        series_1: 0x55ADFF,
+        series_2: 0x9C37BE,
+        series_3: 0xE66E00,
+        series_4: 0x00A861,
+        accent_subtle_alpha: 33
+    }
+}
+
+machine dark_violet() -> ThemePalette {
+    ThemePalette {
+        background: 0x141414,
+        surface: 0x191919,
+        surface_raised: 0x1F1F1F,
+        surface_muted: 0x242424,
+        foreground: 0xF2F2F2,
+        text_secondary: 0xB4B4B4,
+        text_muted: 0x8C8C8C,
+        border: 0x2B2B2B,
+        border_subtle: 0x222222,
+        border_strong: 0x484848,
+        accent: 0xA78BFF,
+        accent_strong: 0xC7B7FF,
+        accent_subtle: 0x7649FF,
+        accent_foreground: 0x141414,
+        control_on: 0x8A66FF,
+        control_glyph: 0xFFFFFF,
+        control_track: 0x353535,
+        control_track_hover: 0x404040,
+        control_thumb: 0xF5F5F5,
+        control_thumb_on: 0xFFFFFF,
+        control_fill: 0x8A66FF,
+        success: 0x4CD676,
+        warning: 0xFFB90E,
+        danger: 0xFF736D,
+        series_1: 0xA78BFF,
+        series_2: 0xBE0567,
+        series_3: 0xA39900,
+        series_4: 0x009FB3,
+        accent_subtle_alpha: 56
+    }
+}
+
+machine dark_blue() -> ThemePalette {
+    ThemePalette {
+        background: 0x141414,
+        surface: 0x191919,
+        surface_raised: 0x1F1F1F,
+        surface_muted: 0x242424,
+        foreground: 0xF2F2F2,
+        text_secondary: 0xB4B4B4,
+        text_muted: 0x8C8C8C,
+        border: 0x2B2B2B,
+        border_subtle: 0x222222,
+        border_strong: 0x484848,
+        accent: 0x6BA3FF,
+        accent_strong: 0xA4C7FF,
+        accent_subtle: 0x0564ED,
+        accent_foreground: 0x141414,
+        control_on: 0x3B82F6,
+        control_glyph: 0xFFFFFF,
+        control_track: 0x353535,
+        control_track_hover: 0x404040,
+        control_thumb: 0xF5F5F5,
+        control_thumb_on: 0xFFFFFF,
+        control_fill: 0x3B82F6,
+        success: 0x4CD676,
+        warning: 0xFFB90E,
+        danger: 0xFF736D,
+        series_1: 0x6BA3FF,
+        series_2: 0xA42BAA,
+        series_3: 0xDB7800,
+        series_4: 0x00A574,
+        accent_subtle_alpha: 56
+    }
+}
+
+machine dark_green() -> ThemePalette {
+    ThemePalette {
+        background: 0x141414,
+        surface: 0x191919,
+        surface_raised: 0x1F1F1F,
+        surface_muted: 0x242424,
+        foreground: 0xF2F2F2,
+        text_secondary: 0xB4B4B4,
+        text_muted: 0x8C8C8C,
+        border: 0x2B2B2B,
+        border_subtle: 0x222222,
+        border_strong: 0x484848,
+        accent: 0x53DCA6,
+        accent_strong: 0x93EFD0,
+        accent_subtle: 0x0FB978,
+        accent_foreground: 0x102016,
+        control_on: 0x1FAE78,
+        control_glyph: 0xFFFFFF,
+        control_track: 0x353535,
+        control_track_hover: 0x404040,
+        control_thumb: 0xF5F5F5,
+        control_thumb_on: 0xFFFFFF,
+        control_fill: 0x1FAE78,
+        success: 0x4CD676,
+        warning: 0xFFB90E,
+        danger: 0xFF736D,
+        series_1: 0x53DCA6,
+        series_2: 0x0095E8,
+        series_3: 0xE153BE,
+        series_4: 0xD37D00,
+        accent_subtle_alpha: 51
+    }
+}
+
+machine dark_amber() -> ThemePalette {
+    ThemePalette {
+        background: 0x141414,
+        surface: 0x191919,
+        surface_raised: 0x1F1F1F,
+        surface_muted: 0x242424,
+        foreground: 0xF2F2F2,
+        text_secondary: 0xB4B4B4,
+        text_muted: 0x8C8C8C,
+        border: 0x2B2B2B,
+        border_subtle: 0x222222,
+        border_strong: 0x484848,
+        accent: 0xFFCB62,
+        accent_strong: 0xFFE0A1,
+        accent_subtle: 0xF5AF1E,
+        accent_foreground: 0x20190D,
+        control_on: 0xE8A52A,
+        control_glyph: 0x241803,
+        control_track: 0x353535,
+        control_track_hover: 0x404040,
+        control_thumb: 0xF5F5F5,
+        control_thumb_on: 0xFFFFFF,
+        control_fill: 0xE8A52A,
+        success: 0x4CD676,
+        warning: 0xFFB90E,
+        danger: 0xFF736D,
+        series_1: 0xFFCB62,
+        series_2: 0x00B43F,
+        series_3: 0x308FFF,
+        series_4: 0xE35C9E,
+        accent_subtle_alpha: 51
+    }
+}
+
+machine dark_orange() -> ThemePalette {
+    ThemePalette {
+        background: 0x141414,
+        surface: 0x191919,
+        surface_raised: 0x1F1F1F,
+        surface_muted: 0x242424,
+        foreground: 0xF2F2F2,
+        text_secondary: 0xB4B4B4,
+        text_muted: 0x8C8C8C,
+        border: 0x2B2B2B,
+        border_subtle: 0x222222,
+        border_strong: 0x484848,
+        accent: 0xFFAD5E,
+        accent_strong: 0xFFD0A0,
+        accent_subtle: 0xF5821E,
+        accent_foreground: 0x17130F,
+        control_on: 0xEF873A,
+        control_glyph: 0xFFFFFF,
+        control_track: 0x353535,
+        control_track_hover: 0x404040,
+        control_thumb: 0xF5F5F5,
+        control_thumb_on: 0xFFFFFF,
+        control_fill: 0xEF873A,
+        success: 0x4CD676,
+        warning: 0xFFB90E,
+        danger: 0xFF736D,
+        series_1: 0xFFAD5E,
+        series_2: 0x5E9C00,
+        series_3: 0x009FFF,
+        series_4: 0xD163C3,
+        accent_subtle_alpha: 51
+    }
+}
+
+machine dark_coral() -> ThemePalette {
+    ThemePalette {
+        background: 0x141414,
+        surface: 0x191919,
+        surface_raised: 0x1F1F1F,
+        surface_muted: 0x242424,
+        foreground: 0xF2F2F2,
+        text_secondary: 0xB4B4B4,
+        text_muted: 0x8C8C8C,
+        border: 0x2B2B2B,
+        border_subtle: 0x222222,
+        border_strong: 0x484848,
+        accent: 0xFF9386,
+        accent_strong: 0xFFC1BA,
+        accent_subtle: 0xF05F55,
+        accent_foreground: 0x21110F,
+        control_on: 0xEC6A60,
+        control_glyph: 0xFFFFFF,
+        control_track: 0x353535,
+        control_track_hover: 0x404040,
+        control_thumb: 0xF5F5F5,
+        control_thumb_on: 0xFFFFFF,
+        control_fill: 0xEC6A60,
+        success: 0x4CD676,
+        warning: 0xFFB90E,
+        danger: 0xFF736D,
+        series_1: 0xFF9386,
+        series_2: 0xA57300,
+        series_3: 0x00B4CC,
+        series_4: 0xA276F2,
+        accent_subtle_alpha: 51
+    }
+}
+
+machine dark_rose() -> ThemePalette {
+    ThemePalette {
+        background: 0x141414,
+        surface: 0x191919,
+        surface_raised: 0x1F1F1F,
+        surface_muted: 0x242424,
+        foreground: 0xF2F2F2,
+        text_secondary: 0xB4B4B4,
+        text_muted: 0x8C8C8C,
+        border: 0x2B2B2B,
+        border_subtle: 0x222222,
+        border_strong: 0x484848,
+        accent: 0xFF8BC5,
+        accent_strong: 0xFFC0DF,
+        accent_subtle: 0xEB509B,
+        accent_foreground: 0x250F1B,
+        control_on: 0xE457A0,
+        control_glyph: 0xFFFFFF,
+        control_track: 0x353535,
+        control_track_hover: 0x404040,
+        control_thumb: 0xF5F5F5,
+        control_thumb_on: 0xFFFFFF,
+        control_fill: 0xE457A0,
+        success: 0x4CD676,
+        warning: 0xFFB90E,
+        danger: 0xFF736D,
+        series_1: 0xFF8BC5,
+        series_2: 0xD44B00,
+        series_3: 0x00B972,
+        series_4: 0x4D90FF,
+        accent_subtle_alpha: 51
+    }
+}
+
+public machine ThemePalette::to_theme(palette: &ThemePalette, dark: bool) -> Theme {
+    Theme {
+        is_dark: dark,
+        background: palette.background,
+        sidebar_bg: palette.background,
+        surface: palette.surface,
+        surface_hover: palette.surface_muted,
+        control_on: palette.control_on,
+        control_glyph: palette.control_glyph,
+        well: palette.surface_muted,
+        empty: palette.control_track,
+        border: palette.border_subtle,
+        text: palette.foreground,
+        text_muted: palette.text_secondary,
+        tertiary: palette.text_muted,
+        accent: palette.accent,
+        accent_hover: palette.accent_strong,
+        accent_text: palette.accent_foreground,
+        danger: palette.danger,
+        success: palette.success,
+        orange: palette.warning,
+        teal: palette.series_4,
+        purple: palette.series_2,
+        blue: palette.series_1,
+        track: palette.control_track,
+        knob: palette.control_thumb,
+        knob_on: palette.control_thumb_on,
+        shadow: 0x000000
+    }
+}

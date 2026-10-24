@@ -1,0 +1,873 @@
+/*
+We exercise the reusable library without native windows. Each view rebuilds the
+same fixed-capacity context that an interactive host would retain. Pointer tests
+stage input against previous-frame rectangles; held input must not repeat a click.
+We also check layout, software pixels, bounded stepping, focus, palette values,
+text retirement, and UTF-8 rejection before reporting a single process result.
+
+Expected exit: 0. Run with omega run --both to compare interpreted and native
+execution; either engine returning the failure branch leaves this test red.
+*/
+
+use omega_language_std::console;
+use omega_ui::types;
+use omega_ui::motion;
+use omega_ui::palette;
+use omega_ui::text;
+use omega_ui::utf16;
+use omega_ui::context;
+use omega_ui::widgets;
+use omega_ui::raster;
+use omega_ui::tester;
+use architecture;
+use editor;
+
+data GalleryState {
+    page: i32;
+    clicks: i32 in Saturating;
+    notifications: bool;
+    dark_mode: bool;
+    volume: i32;
+}
+
+data Main {
+    context: UiContext;
+    state_model: GalleryState;
+    pixels: [i32; 4096];
+    reference_pixels: [i32; 4096];
+}
+
+// The immediate-mode view function: a pure function of `GalleryState` and `UiContext`.
+// Widget IDs:
+//   10 = Controls tab, 11 = Counter tab, 12 = Theme toggle button
+//   20 = Primary button (+1), 21 = Secondary button (+1), 22 = Danger reset button (0)
+//   30 = Notifications toggle, 31 = Dark mode checkbox, 40 = Volume slider
+machine build_view(context: &mut UiContext, model: &mut GalleryState) {
+    UiContext::set_theme(context, model.dark_mode);
+    UiContext::begin_frame(context);
+
+    // Left sidebar (width 16, gap 2, pad 2)
+    Ui::sidebar(context, 16, 2, 2);
+    let tab0: bool = Ui::nav_item(context, 10, model.page == 0, 4);
+    let tab1: bool = Ui::nav_item(context, 11, model.page == 1, 5);
+    Ui::spacer(context);
+    let theme_btn: Interaction = Ui::icon_button(context, 12, 2, 12, 9, 7);
+    Ui::end(context);
+
+    // Main content column (gap 2, pad 2, fill width & height)
+    Ui::column(context, 2, 2, true, true);
+
+    // Card 1: Buttons + Click Badge
+    let col_accent: i32 = context.theme.accent;
+    let col_success: i32 = context.theme.success;
+    Ui::card(context, 2, 2, true);
+    Ui::row(context, 2, 0, true, true);
+    let b_prim: Interaction = Ui::icon_button(context, 20, 0, 10, 9, 1);
+    let b_sec: Interaction = Ui::icon_button(context, 21, 1, 10, 9, 1);
+    let b_rst: Interaction = Ui::icon_button(context, 22, 3, 9, 9, 3);
+    Ui::badge(context, 23, model.clicks as i32, col_accent);
+    Ui::end(context);
+    Ui::end(context);
+
+    // Card 2: Toggle + Checkbox + Number Readout
+    Ui::card(context, 2, 2, true);
+    Ui::row(context, 3, 0, true, true);
+    let tog_changed: bool = Ui::toggle(context, 30, &mut model.notifications);
+    let chk_changed: bool = Ui::checkbox(context, 31, &mut model.dark_mode);
+    Ui::number_box(context, 32, model.volume, 15, 9);
+    Ui::end(context);
+    Ui::end(context);
+
+    // Card 3: Interactive Slider + Progress Bar
+    Ui::card(context, 2, 2, true);
+    let sld_changed: bool = Ui::slider(context, 40, &mut model.volume, 38);
+    Ui::progress(context, 41, model.volume, 38, col_success);
+    Ui::end(context);
+
+    Ui::end(context);
+    UiContext::end_frame(context);
+
+    transition tab0 {
+        true -> set_p0(model, tab1, theme_btn.clicked, b_prim.clicked, b_sec.clicked, b_rst.clicked)
+        _ -> check_p1(model, tab1, theme_btn.clicked, b_prim.clicked, b_sec.clicked, b_rst.clicked)
+    }
+    state set_p0(model: &mut GalleryState, tab1: bool, th_click: bool, p_click: bool, s_click: bool, r_click: bool) {
+        model.page = 0;
+        transition { _ -> check_p1(model, tab1, th_click, p_click, s_click, r_click) }
+    }
+    state check_p1(model: &mut GalleryState, tab1: bool, th_click: bool, p_click: bool, s_click: bool, r_click: bool) {
+        transition tab1 {
+            true -> set_p1(model, th_click, p_click, s_click, r_click)
+            _ -> check_th(model, th_click, p_click, s_click, r_click)
+        }
+    }
+    state set_p1(model: &mut GalleryState, th_click: bool, p_click: bool, s_click: bool, r_click: bool) {
+        model.page = 1;
+        transition { _ -> check_th(model, th_click, p_click, s_click, r_click) }
+    }
+    state check_th(model: &mut GalleryState, th_click: bool, p_click: bool, s_click: bool, r_click: bool) {
+        transition th_click {
+            true -> flip_th(model, p_click, s_click, r_click)
+            _ -> check_prim(model, p_click, s_click, r_click)
+        }
+    }
+    state flip_th(model: &mut GalleryState, p_click: bool, s_click: bool, r_click: bool) {
+        model.dark_mode = !model.dark_mode;
+        transition { _ -> check_prim(model, p_click, s_click, r_click) }
+    }
+    state check_prim(model: &mut GalleryState, p_click: bool, s_click: bool, r_click: bool) {
+        transition p_click {
+            true -> inc_prim(model, s_click, r_click)
+            _ -> check_sec(model, s_click, r_click)
+        }
+    }
+    state inc_prim(model: &mut GalleryState, s_click: bool, r_click: bool) {
+        model.clicks = model.clicks + (1 as i32 in Saturating);
+        transition { _ -> check_sec(model, s_click, r_click) }
+    }
+    state check_sec(model: &mut GalleryState, s_click: bool, r_click: bool) {
+        transition s_click {
+            true -> inc_sec(model, r_click)
+            _ -> check_rst(model, r_click)
+        }
+    }
+    state inc_sec(model: &mut GalleryState, r_click: bool) {
+        model.clicks = model.clicks + (1 as i32 in Saturating);
+        transition { _ -> check_rst(model, r_click) }
+    }
+    state check_rst(model: &mut GalleryState, r_click: bool) {
+        transition r_click {
+            true -> do_rst(model)
+            _ -> done()
+        }
+    }
+    state do_rst(model: &mut GalleryState) {
+        model.clicks = 0;
+    }
+    state done() {}
+}
+
+machine verify_layout_and_raster(main: &mut Main) -> bool {
+    main.state_model = GalleryState {
+        page: 0,
+        clicks: 0,
+        notifications: true,
+        dark_mode: false,
+        volume: 40
+    };
+    UiContext::setup(&mut main.context, 64, 64, false);
+
+    // Frame 1: initial layout pass populates hit rectangles.
+    build_view(&mut main.context, &mut main.state_model);
+
+    // Frame 2: click Primary button (id 20) via Tester -> clicks becomes 1.
+    let c1: bool = Tester::stage_click_id(&mut main.context, 20);
+    build_view(&mut main.context, &mut main.state_model);
+
+    // Frame 3: click Secondary button (id 21) via Tester -> clicks becomes 2.
+    let c2: bool = Tester::stage_click_id(&mut main.context, 21);
+    build_view(&mut main.context, &mut main.state_model);
+
+    // Frame 4: click Notifications toggle (id 30) -> notifications becomes false.
+    let c3: bool = Tester::stage_click_id(&mut main.context, 30);
+    build_view(&mut main.context, &mut main.state_model);
+
+    // Frame 5: click Dark Mode checkbox (id 31) -> dark_mode becomes true.
+    let c4: bool = Tester::stage_click_id(&mut main.context, 31);
+    build_view(&mut main.context, &mut main.state_model);
+
+    // Frame 6: drag Volume slider (id 40) to 75%.
+    let c5: bool = Tester::stage_slider_pct(&mut main.context, 40, 75);
+    build_view(&mut main.context, &mut main.state_model);
+
+    // Frame 7: render the dark-themed UI frame into the 64x64 software framebuffer.
+    Raster::render(&main.context, &mut main.pixels);
+
+    c1 && c2 && c3 && c4 && c5
+        && main.state_model.clicks == 2
+        && !main.state_model.notifications
+        && main.state_model.dark_mode
+        && main.state_model.volume >= 70
+        && main.pixels[0] == main.context.theme.border
+        && main.pixels[67] == main.context.theme.sidebar_bg
+}
+
+// A comfortably sized view keeps pointer tests independent of the tiny raster
+// fixture. Every hit is resolved by begin_frame against actual layout geometry.
+machine build_pointer_view(context: &mut UiContext, model: &mut GalleryState) {
+    UiContext::begin_frame(context);
+    Ui::column(context, 8, 12, true, true);
+    let button: Interaction = Ui::icon_button(context, 20, 0, 120, 32, 1);
+    let toggled: bool = Ui::toggle(context, 30, &mut model.notifications);
+    let checked: bool = Ui::checkbox(context, 31, &mut model.dark_mode);
+    let dragged: bool = Ui::slider(context, 40, &mut model.volume, 200);
+    Ui::end(context);
+    UiContext::end_frame(context);
+    transition button.clicked {
+        true -> count_click(model)
+        _ -> done()
+    }
+    state count_click(model: &mut GalleryState) {
+        model.clicks = model.clicks + (1 as i32 in Saturating);
+    }
+    state done() {}
+}
+
+machine verify_press_and_hold(context: &mut UiContext, model: &mut GalleryState) -> bool {
+    let staged: bool = Tester::stage_click_id(context, 20);
+    let unassigned: bool = context.active == 0 && context.focus == 0;
+    build_pointer_view(context, model);
+    let pressed: bool = model.clicks == 1 && context.active == 20 && context.focus == 20;
+    build_pointer_view(context, model);
+    let held: bool = model.clicks == 1 && context.active == 20;
+    Tester::pointer_up(context);
+    build_pointer_view(context, model);
+    staged && unassigned && pressed && held && model.clicks == 1 && context.active == 0
+}
+
+machine verify_outside_press(context: &mut UiContext, model: &mut GalleryState) -> bool {
+    Tester::pointer_down_at(context, -10, -10);
+    build_pointer_view(context, model);
+    let outside: bool = model.clicks == 1 && context.active == 0 && context.focus == 0;
+    let rectangle: Rect = UiContext::previous_rect(context, 20);
+    Tester::move_to(context, add_i32(rectangle.x as i32, 4), add_i32(rectangle.y as i32, 4));
+    build_pointer_view(context, model);
+    let entered: bool = context.hot == 20 && context.active == 0 && model.clicks == 1;
+    Tester::pointer_up(context);
+    build_pointer_view(context, model);
+    outside && entered && model.clicks == 1 && context.active == 0
+}
+
+machine verify_toggle_edges(context: &mut UiContext, model: &mut GalleryState) -> bool {
+    let staged: bool = Tester::stage_click_id(context, 30);
+    build_pointer_view(context, model);
+    let pressed: bool = !model.notifications;
+    build_pointer_view(context, model);
+    let held: bool = !model.notifications;
+    Tester::pointer_up(context);
+    build_pointer_view(context, model);
+    staged && pressed && held && !model.notifications && context.active == 0
+}
+
+machine verify_checkbox_edges(context: &mut UiContext, model: &mut GalleryState) -> bool {
+    let staged: bool = Tester::stage_click_id(context, 31);
+    build_pointer_view(context, model);
+    let pressed: bool = model.dark_mode;
+    build_pointer_view(context, model);
+    let held: bool = model.dark_mode;
+    Tester::pointer_up(context);
+    build_pointer_view(context, model);
+    staged && pressed && held && model.dark_mode && context.active == 0
+}
+
+machine verify_slider_capture(context: &mut UiContext, model: &mut GalleryState) -> bool {
+    let staged: bool = Tester::stage_slider_pct(context, 40, 75);
+    build_pointer_view(context, model);
+    let pressed: bool = model.volume == 75 && context.active == 40;
+    let rectangle: Rect = UiContext::previous_rect(context, 40);
+    Tester::move_to(context, add_i32(add_i32(rectangle.x as i32, rectangle.w as i32), 20), rectangle.y as i32);
+    build_pointer_view(context, model);
+    let high: bool = model.volume == 100 && context.active == 40 && context.hot != 40;
+    Tester::move_to(context, sub_i32(rectangle.x as i32, 20), rectangle.y as i32);
+    build_pointer_view(context, model);
+    let low: bool = model.volume == 0 && context.active == 40 && context.hot != 40;
+    Tester::pointer_up(context);
+    build_pointer_view(context, model);
+    staged && pressed && high && low && context.active == 0
+}
+
+machine verify_slider_endpoints(context: &mut UiContext, model: &mut GalleryState) -> bool {
+    let high_staged: bool = Tester::stage_slider_pct(context, 40, 150);
+    build_pointer_view(context, model);
+    let high: bool = model.volume >= 99 && context.active == 40;
+    Tester::pointer_up(context);
+    build_pointer_view(context, model);
+    let low_staged: bool = Tester::stage_slider_pct(context, 40, -50);
+    build_pointer_view(context, model);
+    let low: bool = model.volume == 0 && context.active == 40;
+    Tester::pointer_up(context);
+    build_pointer_view(context, model);
+    let missing: bool = Tester::stage_click_id(context, 999);
+    high_staged && high && low_staged && low && !missing && context.active == 0
+}
+
+machine verify_pointer_input(main: &mut Main) -> bool {
+    UiContext::setup(&mut main.context, 320, 240, false);
+    main.state_model.clicks = 0;
+    main.state_model.notifications = true;
+    main.state_model.dark_mode = false;
+    build_pointer_view(&mut main.context, &mut main.state_model);
+    let buttons: bool = verify_press_and_hold(&mut main.context, &mut main.state_model);
+    let outside: bool = verify_outside_press(&mut main.context, &mut main.state_model);
+    let toggles: bool = verify_toggle_edges(&mut main.context, &mut main.state_model);
+    let checkboxes: bool = verify_checkbox_edges(&mut main.context, &mut main.state_model);
+    let sliders: bool = verify_slider_capture(&mut main.context, &mut main.state_model);
+    let endpoints: bool = verify_slider_endpoints(&mut main.context, &mut main.state_model);
+    buttons && outside && toggles && checkboxes && sliders && endpoints
+}
+
+machine build_number_field(context: &mut UiContext, value: &mut i32) -> bool {
+    UiContext::begin_frame(context);
+    let changed: bool = Ui::number_field(context, 50, value, 1, 10, 3, 168);
+    UiContext::end_frame(context);
+    changed
+}
+
+machine press_number_field(context: &mut UiContext, value: &mut i32, increment: bool) -> bool {
+    let rectangle: Rect = UiContext::previous_rect(context, 50);
+    let offset: i32 = select_i32(increment, sub_i32(rectangle.w as i32, 12), 12);
+    Tester::pointer_down_at(context, add_i32(rectangle.x as i32, offset), add_i32(rectangle.y as i32, 18));
+    build_number_field(context, value)
+}
+
+machine verify_number_field(main: &mut Main) -> bool {
+    UiContext::setup(&mut main.context, 320, 80, true);
+    main.state_model.volume = 1;
+    let initial: bool = build_number_field(&mut main.context, &mut main.state_model.volume);
+    let disabled_minus: bool = press_number_field(&mut main.context, &mut main.state_model.volume, false);
+    let lower: bool = !initial && !disabled_minus && !main.context.changed && main.state_model.volume == 1;
+    Tester::pointer_up(&mut main.context);
+    let released: bool = build_number_field(&mut main.context, &mut main.state_model.volume);
+    let incremented: bool = press_number_field(&mut main.context, &mut main.state_model.volume, true);
+    let step: bool = incremented && main.context.changed && main.state_model.volume == 4;
+    let held_change: bool = build_number_field(&mut main.context, &mut main.state_model.volume);
+    let held: bool = !held_change && !main.context.changed && main.state_model.volume == 4;
+    Tester::pointer_up(&mut main.context);
+    let after_hold: bool = build_number_field(&mut main.context, &mut main.state_model.volume);
+
+    main.context.key_code = 35;
+    let end_changed: bool = build_number_field(&mut main.context, &mut main.state_model.volume);
+    let upper: bool = end_changed && main.state_model.volume == 10 && main.context.key_code == 0;
+    let disabled_plus: bool = press_number_field(&mut main.context, &mut main.state_model.volume, true);
+    let upper_disabled: bool = !disabled_plus && !main.context.changed && main.state_model.volume == 10;
+    Tester::pointer_up(&mut main.context);
+    let before_minus: bool = build_number_field(&mut main.context, &mut main.state_model.volume);
+    let decremented: bool = press_number_field(&mut main.context, &mut main.state_model.volume, false);
+    let minus: bool = decremented && main.state_model.volume == 7;
+    Tester::pointer_up(&mut main.context);
+    let before_keys: bool = build_number_field(&mut main.context, &mut main.state_model.volume);
+    main.context.key_code = 40;
+    let down_changed: bool = build_number_field(&mut main.context, &mut main.state_model.volume);
+    let down: bool = down_changed && main.state_model.volume == 4;
+    main.context.key_code = 38;
+    let up_changed: bool = build_number_field(&mut main.context, &mut main.state_model.volume);
+    let up: bool = up_changed && main.state_model.volume == 7;
+    main.context.key_code = 36;
+    let home_changed: bool = build_number_field(&mut main.context, &mut main.state_model.volume);
+    let home: bool = home_changed && main.state_model.volume == 1;
+
+    main.state_model.volume = 9;
+    let before_clamp: bool = build_number_field(&mut main.context, &mut main.state_model.volume);
+    let clamped_change: bool = press_number_field(&mut main.context, &mut main.state_model.volume, true);
+    let clamped: bool = clamped_change && main.state_model.volume == 10;
+    Tester::pointer_up(&mut main.context);
+    let before_center: bool = build_number_field(&mut main.context, &mut main.state_model.volume);
+    let center_staged: bool = Tester::stage_click_id(&mut main.context, 50);
+    let center_changed: bool = build_number_field(&mut main.context, &mut main.state_model.volume);
+    let center: bool = center_staged && !center_changed && !main.context.changed && main.state_model.volume == 10;
+    Tester::pointer_up(&mut main.context);
+    let before_outside: bool = build_number_field(&mut main.context, &mut main.state_model.volume);
+    Tester::pointer_down_at(&mut main.context, 200, 60);
+    main.context.key_code = 36;
+    let outside_change: bool = build_number_field(&mut main.context, &mut main.state_model.volume);
+    let outside: bool = !outside_change && main.state_model.volume == 10 && main.context.focus == 0;
+    Raster::render(&main.context, &mut main.pixels);
+    let raster: bool = main.pixels[0] == main.context.theme.background && main.pixels[20] == main.context.theme.border;
+    lower && step && held && upper && upper_disabled && minus && down && up && home && clamped && center && outside && raster
+}
+
+machine verify_keyboard_input(main: &mut Main) -> bool {
+    UiContext::setup(&mut main.context, 320, 240, false);
+    main.state_model.clicks = 0;
+    main.state_model.notifications = true;
+    main.state_model.dark_mode = false;
+    build_pointer_view(&mut main.context, &mut main.state_model);
+    UiContext::focus_next(&mut main.context, false);
+    let first: bool = main.context.focus == 20 && main.context.focus_visible;
+    main.context.key_code = 13;
+    build_pointer_view(&mut main.context, &mut main.state_model);
+    let activated: bool = main.state_model.clicks == 1;
+    build_pointer_view(&mut main.context, &mut main.state_model);
+    let consumed: bool = main.state_model.clicks == 1 && main.context.key_code == 0;
+    UiContext::focus_next(&mut main.context, false);
+    main.context.key_code = 32;
+    build_pointer_view(&mut main.context, &mut main.state_model);
+    let toggle: bool = main.context.focus == 30 && !main.state_model.notifications;
+    UiContext::focus_next(&mut main.context, false);
+    main.context.key_code = 32;
+    build_pointer_view(&mut main.context, &mut main.state_model);
+    let checkbox: bool = main.context.focus == 31 && main.state_model.dark_mode;
+    UiContext::focus_next(&mut main.context, false);
+    let last: bool = main.context.focus == 40;
+    UiContext::focus_next(&mut main.context, false);
+    let forward_wrap: bool = main.context.focus == 20;
+    UiContext::focus_next(&mut main.context, true);
+    let backward_wrap: bool = main.context.focus == 40;
+    main.context.focus = 999;
+    UiContext::focus_next(&mut main.context, false);
+    let removed: bool = main.context.focus == 20;
+    Tester::pointer_down_at(&mut main.context, -1, -1);
+    build_pointer_view(&mut main.context, &mut main.state_model);
+    let pointer: bool = main.context.focus == 0 && !main.context.focus_visible;
+    main.context.hit_count = 0;
+    UiContext::focus_next(&mut main.context, false);
+    let empty: bool = main.context.focus == 0 && !main.context.focus_visible;
+    first && activated && consumed && toggle && checkbox && last && forward_wrap && backward_wrap && removed && pointer && empty
+}
+
+machine verify_theme_palettes() -> bool {
+    let light: ThemePalette = ThemePalette::resolve(false, 0);
+    let dark: ThemePalette = ThemePalette::resolve(true, 0);
+    let violet: ThemePalette = ThemePalette::resolve(false, 1);
+    let blue: ThemePalette = ThemePalette::resolve(false, 2);
+    let green: ThemePalette = ThemePalette::resolve(false, 3);
+    let amber: ThemePalette = ThemePalette::resolve(false, 4);
+    let orange: ThemePalette = ThemePalette::resolve(true, 5);
+    let coral: ThemePalette = ThemePalette::resolve(true, 6);
+    let rose: ThemePalette = ThemePalette::resolve(true, 7);
+    let dark_theme: Theme = ThemePalette::to_theme(&dark, true);
+    let amber_theme: Theme = ThemePalette::to_theme(&amber, false);
+    dark_theme.knob_on == dark.control_thumb_on && dark_theme.knob_on != dark_theme.knob
+        && amber_theme.knob_on == amber.control_thumb_on && amber_theme.knob_on != amber_theme.control_glyph
+        && light.background == 0xFFFFFF && light.foreground == 0x0B0B0B
+        && dark.background == 0x141414 && dark.surface == 0x191919
+        && dark.foreground == 0xF2F2F2 && dark.control_thumb_on == 0x141414
+        && violet.accent == 0x7747FF && blue.accent == 0x0562EF
+        && green.accent == 0x0DB879 && green.accent_foreground == 0x102016
+        && amber.control_glyph == 0x2A1C03 && orange.accent == 0xFFAD5E
+        && coral.accent == 0xFF9386 && rose.accent == 0xFF8BC5
+}
+
+machine verify_text() -> bool {
+    let mut store: UiTextStore = UiTextStore::new();
+    let first: UiTextSpan = UiTextStore::append(&mut store, "One");
+    let second: UiTextSpan = UiTextStore::append(&mut store, "Omega");
+    let first_view: &[u8] = UiTextStore::view(&store, first);
+    let second_view: &[u8] = UiTextStore::view(&store, second);
+    let stored: bool = first_view.len == 3u64 && second_view.len == 5u64;
+    UiTextStore::begin_frame(&mut store);
+    let stale: &[u8] = UiTextStore::view(&store, first);
+    let retired: bool = stale.len == 0u64;
+    let mut text_block: [u8; 8192];
+    let full: UiTextSpan = UiTextStore::append(&mut store, &text_block);
+    let rejected: UiTextSpan = UiTextStore::append(&mut store, "x");
+    let capacity: bool = full.length == 8192u64 && rejected.generation == 0 && store.used == 8192u64 && store.overflow;
+    UiTextStore::begin_frame(&mut store);
+    let reset: bool = store.used == 0u64 && !store.overflow;
+
+    let mut output: UiUtf16Text;
+    let valid: bool = UiUtf16Text::decode(&mut output, "aΩ한😄");
+    let unicode: bool = valid && output.length == 5u64 && output.units[0] == 97u16 && output.units[1] == 937u16
+        && output.units[2] == 54620u16 && output.units[3] == 55357u16 && output.units[4] == 56836u16;
+    let overlong: [u8; 2] = [192u8, 175u8];
+    let surrogate: [u8; 3] = [237u8, 160u8, 128u8];
+    let beyond: [u8; 4] = [244u8, 144u8, 128u8, 128u8];
+    let truncated: [u8; 2] = [226u8, 130u8];
+    let continuation: [u8; 1] = [128u8];
+    let invalid_a: bool = UiUtf16Text::decode(&mut output, &overlong);
+    let invalid_b: bool = UiUtf16Text::decode(&mut output, &surrogate);
+    let invalid_c: bool = UiUtf16Text::decode(&mut output, &beyond);
+    let invalid_d: bool = UiUtf16Text::decode(&mut output, &truncated);
+    let invalid_e: bool = UiUtf16Text::decode(&mut output, &continuation);
+    let cleared: bool = output.length == 0u64;
+    let empty: bool = UiUtf16Text::decode(&mut output, "");
+    stored && retired && capacity && reset && unicode && !invalid_a && !invalid_b && !invalid_c && !invalid_d && !invalid_e && cleared && empty && output.length == 0u64
+}
+
+machine report_failed_check(passed: bool, label: &[u8]) reaches Console {
+    transition passed {
+        true -> done()
+        _ -> report(label)
+    }
+    state report(label: &[u8]) { Console::write_line(label); }
+    state done() {}
+}
+
+machine verify_motion() -> bool {
+    let mut first: UiMotion;
+    let mut second: UiMotion;
+    let initial: i32 = UiMotion::target(&mut first, 99, 0, 160);
+    let next: i32 = UiMotion::target(&mut first, 99, 1000, 160);
+    let changed: bool = UiMotion::advance(&mut first, 40);
+    let between: i32 = UiMotion::read(&first, 99, 0);
+    let moved: bool = UiMotion::advance(&mut first, 40);
+    let same_initial: i32 = UiMotion::target(&mut second, 99, 0, 160);
+    let same_target: i32 = UiMotion::target(&mut second, 99, 1000, 160);
+    let same_elapsed: bool = UiMotion::advance(&mut second, 80);
+    let partitioned: bool = UiMotion::read(&first, 99, 0) == UiMotion::read(&second, 99, 0);
+    let before_reverse: i32 = UiMotion::read(&first, 99, 0);
+    let reversed: i32 = UiMotion::target(&mut first, 99, 0, 160);
+    let settled: bool = UiMotion::advance(&mut first, 160);
+    let finished: bool = UiMotion::read(&first, 99, 1) == 0 && !first.animating;
+    first.reduced = true;
+    let reduced: i32 = UiMotion::target(&mut first, 99, 1000, 160);
+    initial == 0 && next == 0 && changed && between > 0 && between < 1000
+        && partitioned && before_reverse == reversed && settled && finished && reduced == 1000
+}
+
+machine verify_checkmark(main: &mut Main) -> bool {
+    Raster::clear_buffer(&mut main.pixels, 0xFFFFFF);
+    let rectangle: Rect = Rect { x: 10, y: 10, w: 18, h: 18 };
+    Raster::draw_icon_band(&mut main.pixels, -1, rectangle, 9, 0);
+    transition { _ -> count(main, 0, 0, 0) }
+    state count(main: &Main, index: i32, soft: i32, solid: i32) -> bool {
+        transition index >= 0 && index < 4096 {
+            true -> pixel(main, index, soft, solid)
+            _ -> (soft > 8 && solid > 8)
+        }
+    }
+    state pixel(main: &Main, index: i32, soft: i32, solid: i32) -> bool
+    requires index >= 0 && index < 4096 {
+        let value: i32 = main.pixels[index];
+        let next_soft: i32 = add_i32(soft, select_i32(value != 0 && value != 0xFFFFFF, 1, 0));
+        let next_solid: i32 = add_i32(solid, select_i32(value == 0, 1, 0));
+        transition { _ -> count(main, index + 1, next_soft, next_solid) }
+    }
+}
+
+machine Main::main(main: &mut Main) reaches Console {
+    let allocation: bool = verify_allocation_failure(&mut main.context);
+    report_failed_check(allocation, "FAIL: allocation overflow aliases an interactive root");
+    let architecture: bool = verify_nesting_failure(&mut main.context) && verify_frame_and_intrinsics(&mut main.context)
+        && verify_list_ranges() && verify_motion_retirement() && verify_frame_rebuild(&mut main.context)
+        && verify_scene_and_viewport(&mut main.context, &mut main.pixels);
+    report_failed_check(architecture, "FAIL: frame lifecycle, intrinsic text, list bounds or motion retirement");
+    let layout: bool = verify_layout_and_raster(main);
+    let pointer: bool = verify_pointer_input(main);
+    let number_field: bool = verify_number_field(main);
+    let keyboard: bool = verify_keyboard_input(main);
+    let palettes: bool = verify_theme_palettes();
+    UiContext::set_accent(&mut main.context, 7);
+    let rose: ThemePalette = ThemePalette::resolve(main.context.theme.is_dark, 7);
+    let selected: bool = main.context.theme.accent == rose.accent;
+    let text: bool = verify_text() && verify_line_editor();
+    let motion: bool = verify_motion();
+    let checkmark: bool = verify_checkmark(main);
+    let corners: bool = verify_corner_rows(main);
+    let border_width: bool = verify_border_width(main);
+    let border_alignment: bool = verify_border_alignment(main);
+    let clipped: bool = verify_clipped_scanline(main) && verify_band_dimensions(main);
+    let physical: bool = verify_physical_boxes(main);
+    report_failed_check(physical, "FAIL: scaled box geometry differs from coordinate conversion");
+    report_failed_check(clipped, "FAIL: clipped scanline writes outside damage");
+    let slider_thumb: bool = verify_slider_thumb(main);
+    report_failed_check(slider_thumb, "FAIL: slider thumb center and continuous growth");
+    report_failed_check(layout, "FAIL: layout and raster");
+    report_failed_check(pointer, "FAIL: pointer input");
+    report_failed_check(number_field, "FAIL: number field");
+    report_failed_check(keyboard, "FAIL: keyboard input");
+    report_failed_check(palettes, "FAIL: theme palettes");
+    report_failed_check(selected, "FAIL: accent selection");
+    report_failed_check(text, "FAIL: text storage and Unicode");
+
+
+    report_failed_check(motion, "FAIL: elapsed motion, interruption or reduced motion");
+    report_failed_check(border_alignment, "FAIL: corner hairline must match straight-edge coverage without a halo");
+    report_failed_check(border_width, "FAIL: rounded hairline must retain one-pixel stroke area");
+    report_failed_check(corners, "FAIL: mirrored rounded-corner coverage");
+    report_failed_check(checkmark, "FAIL: antialiased checkmark coverage");
+    transition allocation && architecture && layout && pointer && number_field && keyboard && palettes && selected && text && motion && checkmark && corners && border_width && border_alignment && slider_thumb && clipped && physical {
+        true -> pass()
+        _ -> fail()
+    }
+    state pass() {
+        Console::write_line("PASS: omega_ui layout, raster, pointer controls, keyboard focus/activation, theme palettes, UTF-8 storage, UTF-16 decoding, elapsed motion and antialiased checkmarks (exit 0)");
+        Console::exit_process(0);
+    }
+    state fail() {
+        Console::write_line("FAIL: omega_ui headless verification failed (exit 1)");
+        Console::exit_process(1);
+    }
+}
+
+// Compare mirrored coverage against the original independent pixel renderer.
+machine verify_corner_rows(main: &mut Main) -> bool {
+    transition { _ -> radius(main, 1, 0, 1) }
+    state radius(main: &mut Main, radius: i32, mode: i32, vertical: i32) -> bool {
+        transition radius > 0 && radius <= 48 {
+            true -> prepare(main, radius, mode, vertical)
+            _ -> (true)
+        }
+    }
+    state prepare(main: &mut Main, radius: i32, mode: i32, vertical: i32) -> bool {
+        main.pixels[4088] = 1024; main.pixels[4089] = 672; main.pixels[4094] = 320;
+        main.pixels[4095] = 240;
+        main.reference_pixels[4088] = 1024; main.reference_pixels[4089] = 672; main.reference_pixels[4094] = 320;
+        main.reference_pixels[4095] = 240;
+        Raster::clear_band_buffer(&mut main.pixels, 0, 0x171B25);
+        Raster::clear_band_buffer(&mut main.reference_pixels, 0, 0x171B25);
+        Raster::hline_raw(&mut main.pixels, 0, 0, 70, 128, 0xC1AF98);
+        Raster::hline_raw(&mut main.reference_pixels, 0, 0, 70, 128, 0xC1AF98);
+        let background: i32 = select_i32(mode == 2, -1, 0x4C6782);
+        let rectangle: Rect = Rect { x: 6, y: 0, w: 116, h: 116 };
+        Raster::sdf_corner_row(&mut main.pixels, 0, rectangle, 0, vertical as i32 in Saturating, radius as i32 in Saturating, background, 0xAABBCD, mode != 0);
+        transition { _ -> scalar(main, radius, mode, vertical, 0, background) }
+    }
+    state scalar(main: &mut Main, radius: i32, mode: i32, vertical: i32, offset: i32, background: i32) -> bool {
+        transition offset >= 0 && offset < radius && offset < 48 {
+            true -> pixel(main, radius, mode, vertical, offset, background)
+            _ -> compare(main, radius, mode, vertical, 0)
+        }
+    }
+    state pixel(main: &mut Main, radius: i32, mode: i32, vertical: i32, offset: i32, background: i32) -> bool {
+        let dx: i32 in Saturating = sub_i32(radius, offset) as i32 in Saturating;
+        Raster::sdf_corner_px(&mut main.reference_pixels, 0, add_i32(6, offset) as i32 in Saturating, 0, dx, vertical as i32 in Saturating, radius as i32 in Saturating, background, 0xAABBCD, mode != 0);
+        Raster::sdf_corner_px(&mut main.reference_pixels, 0, sub_i32(121, offset) as i32 in Saturating, 0, dx, vertical as i32 in Saturating, radius as i32 in Saturating, background, 0xAABBCD, mode != 0);
+        transition { _ -> scalar(main, radius, mode, vertical, add_i32(offset, 1), background) }
+    }
+    state compare(main: &mut Main, radius: i32, mode: i32, vertical: i32, index: i32) -> bool {
+        transition index >= 0 && index < 128 {
+            true -> check(main, radius, mode, vertical, index)
+            _ -> next(main, radius, mode, vertical)
+        }
+    }
+    state check(main: &mut Main, radius: i32, mode: i32, vertical: i32, index: i32) -> bool requires index >= 0 && index < 128 {
+        transition main.pixels[index] == main.reference_pixels[index] {
+            true -> compare(main, radius, mode, vertical, index + 1)
+            _ -> (false)
+        }
+    }
+    state next(main: &mut Main, radius: i32, mode: i32, vertical: i32) -> bool {
+        transition vertical < radius {
+            true -> prepare(main, radius, mode, min_i32(radius, add_i32(vertical, max_i32(radius / 2, 1))))
+            _ -> mode(main, radius, mode)
+        }
+    }
+    state mode(main: &mut Main, radius: i32, mode: i32) -> bool {
+        transition mode < 2 {
+            true -> prepare(main, radius, add_i32(mode, 1), 1)
+            _ -> radius(main, select_i32(radius < 3, 3, select_i32(radius < 8, 8, select_i32(radius < 16, 16, select_i32(radius < 32, 32, select_i32(radius < 48, 48, 49))))), 0, 1)
+        }
+    }
+}
+
+machine verify_border_alignment(main: &mut Main) -> bool {
+    main.pixels[4088] = 1024; main.pixels[4089] = 672; main.pixels[4094] = 320;
+    main.pixels[4095] = 240;
+    Raster::clear_band_buffer(&mut main.pixels, 0, 0xFFFFFF);
+    Raster::sdf_corner_px(&mut main.pixels, 0, 0, 0, 1, 16, 16, -1, 0, true);
+    Raster::sdf_corner_px(&mut main.pixels, 0, 1, 0, 1, 15, 16, -1, 0, true);
+    Raster::sdf_corner_px(&mut main.pixels, 0, 2, 0, 16, 1, 16, -1, 0, true);
+    Raster::sdf_corner_px(&mut main.pixels, 0, 3, 0, 15, 1, 16, -1, 0, true);
+    Raster::hline_raw(&mut main.pixels, 0, 0, 4, 5, 0);
+    main.pixels[0] == main.pixels[4] && main.pixels[2] == main.pixels[4]
+        && main.pixels[1] == main.pixels[5] && main.pixels[3] == main.pixels[5]
+}
+
+// A one-pixel quarter annulus at radius 16 has area pi*(16^2-15^2)/4
+// = 24.35 pixels. Count actual black-on-white coverage; the former 1.25px
+// corner stroke covered about 30 pixels and must fail this independent oracle.
+machine verify_border_width(main: &mut Main) -> bool {
+    main.pixels[4088] = 1024; main.pixels[4089] = 672; main.pixels[4094] = 320;
+    main.pixels[4095] = 240;
+    transition { _ -> row(main, 1, 0) }
+    state row(main: &mut Main, vertical: i32, total: i32) -> bool {
+        transition vertical > 0 && vertical <= 16 {
+            true -> paint(main, vertical, total)
+            _ -> (total >= 6000 && total <= 6500)
+        }
+    }
+    state paint(main: &mut Main, vertical: i32, total: i32) -> bool {
+        Raster::clear_band_buffer(&mut main.pixels, 0, 0xFFFFFF);
+        let rectangle: Rect = Rect { x: 0, y: 0, w: 40, h: 40 };
+        Raster::sdf_corner_row(&mut main.pixels, 0, rectangle, 0, vertical as i32 in Saturating, 16, -1, 0, true);
+        transition { _ -> column(main, vertical, total, 0) }
+    }
+    state column(main: &mut Main, vertical: i32, total: i32, index: i32) -> bool {
+        transition index >= 0 && index < 16 {
+            true -> count(main, vertical, total, index)
+            _ -> row(main, add_i32(vertical, 1), total)
+        }
+    }
+    state count(main: &mut Main, vertical: i32, total: i32, index: i32) -> bool requires index >= 0 && index < 16 {
+        let coverage: i32 = sub_i32(255, main.pixels[index] & 255);
+        transition { _ -> column(main, vertical, add_i32(total, coverage), index + 1) }
+    }
+}
+
+// Sample the painted thumb, not a second copy of its geometry formula. Quarter-
+// pixel radius changes must add coverage without moving its track-centered axis.
+machine verify_slider_thumb(main: &mut Main) -> bool {
+    UiContext::setup(&mut main.context, 64, 64, false);
+    main.context.theme.track = 0;
+    main.context.theme.shadow = 0;
+    main.context.theme.surface = 0;
+    main.context.theme.knob = 0xFFFFFF;
+    transition { _ -> frame(main, 0, 0) }
+    state frame(main: &mut Main, index: i32, previous: i32) -> bool {
+        transition index >= 0 && index < 4 {
+            true -> paint(main, index, previous)
+            _ -> (true)
+        }
+    }
+    state paint(main: &mut Main, index: i32, previous: i32) -> bool {
+        Raster::clear_band_buffer(&mut main.pixels, -1, 0);
+        Raster::draw_slider_step(&mut main.pixels, -1, &main.context, 8, 20, 48, 50, 0, mul_i32(index, 125));
+        transition { _ -> sample(main, index, previous, 0, 0) }
+    }
+    state sample(main: &mut Main, index: i32, previous: i32, offset: i32, coverage: i32) -> bool {
+        transition offset >= 0 && offset < 16 {
+            true -> pair(main, index, previous, offset, coverage)
+            _ -> next(main, index, previous, coverage)
+        }
+    }
+    state pair(main: &mut Main, index: i32, previous: i32, offset: i32, coverage: i32) -> bool requires offset >= 0 && offset < 16 {
+        let above: i32 = main.pixels[(27 - offset) * 64 + 32] & 255;
+        let below: i32 = main.pixels[(28 + offset) * 64 + 32] & 255;
+        transition above == below {
+            true -> sample(main, index, previous, offset + 1, add_i32(coverage, add_i32(above, below)))
+            _ -> (false)
+        }
+    }
+    state next(main: &mut Main, index: i32, previous: i32, coverage: i32) -> bool {
+        transition index == 0 || coverage > previous {
+            true -> frame(main, add_i32(index, 1), coverage)
+            _ -> (false)
+        }
+    }
+}
+
+machine verify_clipped_scanline(main: &mut Main) -> bool {
+    main.pixels[4093] = 0;
+    main.pixels[4090] = 0;
+    main.pixels[4088] = 1024; main.pixels[4089] = 672; main.pixels[4094] = 320;
+    main.pixels[4095] = 240;
+    main.pixels[4091] = 0;
+    main.pixels[4092] = 0;
+    Raster::clear_band_buffer(&mut main.pixels, 0, 0);
+    main.pixels[4091] = 20;
+    main.pixels[4092] = 40;
+    Raster::hline_raw(&mut main.pixels, 0, 0, 0, 320, 0x010203);
+    let legacy: bool = main.pixels[19] == 0x010203 && main.pixels[40] == 0x010203;
+    main.pixels[4090] = -271828;
+    Raster::clear_band_buffer(&mut main.pixels, 0, 0x112233);
+    Raster::hline_raw(&mut main.pixels, 0, 0, 0, 320, 0x445566);
+    Raster::put_px_raw(&mut main.pixels, 0, 19, 0, 0xFFFFFF);
+    Raster::blend_px_raw(&mut main.pixels, 0, 40, 0, 0xFFFFFF, 100);
+    let preserved: bool = main.pixels[19] == 0x010203 && main.pixels[40] == 0x010203 && main.pixels[20] == 0x445566 && main.pixels[39] == 0x445566;
+    Raster::draw_box_fill(&mut main.pixels, 0, Rect { x: 64, y: 0, w: 1, h: 1 }, 0xABCDEF, 0);
+    let narrow: bool = main.pixels[20] == 0xABCDEF && main.pixels[21] == 0x445566;
+    let small: bool = Raster::clip_left(&main.pixels, -1) == 0 && Raster::clip_right(&main.pixels, -1) == 64;
+    main.pixels[4091] = 0;
+    main.pixels[4092] = 0;
+    main.pixels[4090] = 0;
+    legacy && preserved && narrow && small
+}
+
+machine verify_band_dimensions(main: &mut Main) -> bool {
+    transition { _ -> sample(main, 0) }
+    state sample(main: &mut Main, index: i32) -> bool {
+        transition index >= 0 && index < 6 { true -> check(main, index) _ -> (true) }
+    }
+    state check(main: &mut Main, index: i32) -> bool requires index >= 0 && index < 6 {
+        let widths: [i32; 6] = [-1, 319, 320, 3840, 4000, 1440];
+        let heights: [i32; 6] = [-1, 239, 240, 2160, 3000, 945];
+        let expected_widths: [i32; 6] = [64, 319, 320, 3840, 3840, 1440];
+        let expected_heights: [i32; 6] = [64, 239, 240, 2160, 2160, 945];
+        main.pixels[4088] = 1024; main.pixels[4089] = 672; main.pixels[4094] = widths[index]; main.pixels[4095] = heights[index];
+        let valid: bool = (Raster::band_width(&main.pixels, 0) as i32) == expected_widths[index] && (Raster::band_height(&main.pixels, 0) as i32) == expected_heights[index]
+            && Raster::band_width(&main.pixels, -1) == 64 && Raster::band_height(&main.pixels, -1) == 64;
+        transition valid { true -> sample(main, index + 1) _ -> (false) }
+    }
+}
+
+data PhysicalBoxCase [copy] { x: i32; y: i32; width: i32; height: i32; radius: i32; background: i32; border: bool; }
+
+machine physical_box_case(index: i32) -> PhysicalBoxCase {
+    let cases: [PhysicalBoxCase; 4] = [
+        PhysicalBoxCase { x: 64, y: 32, width: 1, height: 1, radius: 0, background: 0x405060, border: true },
+        PhysicalBoxCase { x: -4, y: -3, width: 24, height: 26, radius: 5, background: 0x405060, border: false },
+        PhysicalBoxCase { x: 276, y: 140, width: 720, height: 420, radius: 48, background: -1, border: true },
+        PhysicalBoxCase { x: -1025, y: -673, width: 2049, height: 1345, radius: 49, background: 0x405060, border: true }
+    ];
+    transition index >= 0 && index < 4 { true -> read(cases, index) _ -> read(cases, 0) }
+    state read(cases: [PhysicalBoxCase; 4], index: i32) -> PhysicalBoxCase requires index >= 0 && index < 4 { cases[index] }
+}
+
+// Compare scaled geometry against the independent public coordinate conversion.
+machine verify_physical_boxes(main: &mut Main) -> bool {
+    transition { _ -> sample(main, 0) }
+    state sample(main: &mut Main, index: i32) -> bool {
+        transition index >= 0 && index < 192 { true -> indices(main, index) _ -> done(main) }
+    }
+    state indices(main: &mut Main, index: i32) -> bool requires index >= 0 && index < 192 {
+        let geometry: i32 = index / 48;
+        let scale: i32 = (index / 16) % 3;
+        let position: i32 = index % 8;
+        transition geometry >= 0 && geometry < 4 && scale >= 0 && scale < 3 && position >= 0 && position < 8 {
+            true -> dimensions(main, index, geometry, scale, position, ((index / 8) % 2) == 1)
+            _ -> (false)
+        }
+    }
+    state dimensions(main: &mut Main, index: i32, geometry: i32, scale: i32, position: i32, clipped: bool) -> bool requires scale >= 0 && scale < 3 {
+        let widths: [i32; 3] = [320, 1440, 3840];
+        let heights: [i32; 3] = [240, 945, 2160];
+        let width: i32 = widths[scale];
+        let height: i32 = heights[scale];
+        let shape: PhysicalBoxCase = physical_box_case(geometry);
+        transition width >= 320 && width <= 3840 && height > 0 && height <= 2160 && position >= 0 && position < 8 {
+            true -> paint(main, index, shape, width, height, position, clipped)
+            _ -> (false)
+        }
+    }
+    state paint(main: &mut Main, index: i32, shape: PhysicalBoxCase, width: i32, height: i32, position: i32, clipped: bool) -> bool requires height > 0 && position >= 0 && position < 8 {
+        let logical: Rect = Rect { x: shape.x as i32 in Saturating, y: shape.y as i32 in Saturating, w: shape.width as i32 in Saturating, h: shape.height as i32 in Saturating };
+        let physical: Rect = Raster::to_physical_rect(Rect::copy(&logical), width as i32 in Saturating, height as i32 in Saturating, false, 1024, 672);
+        let radius: i32 in Saturating = clamp_sat(((shape.radius as i32 in Saturating) * (height as i32 in Saturating) + (336 as i32 in Saturating)) / (672 as i32 in Saturating), 0, min_sat(48, min_sat(physical.w, physical.h) / (2 as i32 in Saturating)));
+        let top: i32 = physical.y as i32;
+        let bottom: i32 = (physical.y + physical.h) as i32;
+        let left: i32 = physical.x as i32;
+        let right: i32 = (physical.x + physical.w) as i32;
+        let rows: [i32; 8] = [max_i32(sub_i32(top, 1), 0), max_i32(top, 0), max_i32(sub_i32(add_i32(top, radius as i32), 1), 0), max_i32(add_i32(top, radius as i32), 0), max_i32(add_i32(top, bottom) / 2, 0), max_i32(sub_i32(sub_i32(bottom, radius as i32), 1), 0), max_i32(sub_i32(bottom, 1), 0), max_i32(bottom, 0)];
+        let row: i32 = rows[position];
+        main.pixels[4088] = 1024; main.pixels[4089] = 672; main.pixels[4094] = width; main.reference_pixels[4088] = 1024; main.reference_pixels[4089] = 672; main.reference_pixels[4094] = width;
+        main.pixels[4095] = height; main.reference_pixels[4095] = height;
+        main.pixels[4090] = 0; main.reference_pixels[4090] = 0;
+        let logical_row: i32 = (((row as i32 in Saturating) * (672 as i32 in Saturating)) / (height as i32 in Saturating)) as i32;
+        main.pixels[4093] = logical_row; main.reference_pixels[4093] = logical_row;
+        main.pixels[4091] = width / 3; main.reference_pixels[4091] = width / 3;
+        main.pixels[4092] = mul_i32(width, 2) / 3; main.reference_pixels[4092] = mul_i32(width, 2) / 3;
+        main.pixels[4090] = select_i32(clipped, -271828, 0); main.reference_pixels[4090] = select_i32(clipped, -271828, 0);
+        let seeded: bool = verify_physical_columns(main, width, left, right, radius as i32, true);
+        Raster::draw_box_band(&mut main.pixels, row, logical, shape.background, 0xAABBCC, select_i32(shape.border, 1, 0) as i32 in Saturating, shape.radius as i32 in Saturating);
+        transition row >= top && row < bottom {
+            true -> reference(main, index, width, row, physical, radius, shape.background, shape.border)
+            _ -> compare(main, index, width, left, right, radius as i32)
+        }
+    }
+    state reference(main: &mut Main, index: i32, width: i32, row: i32, rectangle: Rect, radius: i32 in Saturating, background: i32, border: bool) -> bool {
+        let left: i32 = rectangle.x as i32;
+        let right: i32 = (rectangle.x + rectangle.w) as i32;
+        Raster::sdf_box_scanline(&mut main.reference_pixels, row, rectangle, row as i32 in Saturating, radius, background, 0xAABBCC, border);
+        transition { _ -> compare(main, index, width, left, right, radius as i32) }
+    }
+    state compare(main: &mut Main, index: i32, width: i32, left: i32, right: i32, radius: i32) -> bool {
+        let matches: bool = verify_physical_columns(main, width, left, right, radius, false);
+        transition matches { true -> sample(main, add_i32(index, 1)) _ -> (false) }
+    }
+    state done(main: &mut Main) -> bool { main.pixels[4090] = 0; main.reference_pixels[4090] = 0; true }
+}
+
+// Corner coverage already has an exhaustive oracle; sample placement boundaries
+// here instead of spending interpreter fuel on repeated uniform interior pixels.
+machine verify_physical_columns(main: &mut Main, width: i32, left: i32, right: i32, radius: i32, seed: bool) -> bool {
+    let columns: [i32; 17] = [0, sub_i32(width, 1), sub_i32(left, 1), left, add_i32(left, 1), sub_i32(add_i32(left, radius), 1), add_i32(left, radius), add_i32(left, right) / 2, sub_i32(sub_i32(right, radius), 1), sub_i32(right, radius), sub_i32(right, 2), sub_i32(right, 1), right, sub_i32(main.pixels[4091], 1), main.pixels[4091], sub_i32(main.pixels[4092], 1), main.pixels[4092]];
+    transition { _ -> column(main, width, &columns, 0, seed) }
+    state column(main: &mut Main, width: i32, columns: &[i32; 17], index: i32, seed: bool) -> bool {
+        transition index >= 0 && index < 17 { true -> choose(main, width, columns, index, seed) _ -> (true) }
+    }
+    state choose(main: &mut Main, width: i32, columns: &[i32; 17], index: i32, seed: bool) -> bool requires index >= 0 && index < 17 {
+        let pixel: i32 = columns[index];
+        transition pixel >= 0 && pixel < width && pixel < 4096 { true -> access(main, width, columns, index, pixel, seed) _ -> column(main, width, columns, index + 1, seed) }
+    }
+    state access(main: &mut Main, width: i32, columns: &[i32; 17], index: i32, pixel: i32, seed: bool) -> bool requires pixel >= 0 && pixel < 4096 {
+        transition seed { true -> initialize(main, width, columns, index, pixel) _ -> pair(main, width, columns, index, pixel) }
+    }
+    state initialize(main: &mut Main, width: i32, columns: &[i32; 17], index: i32, pixel: i32) -> bool requires pixel >= 0 && pixel < 4096 {
+        main.pixels[pixel] = 0x112233; main.reference_pixels[pixel] = 0x112233;
+        transition { _ -> column(main, width, columns, add_i32(index, 1), true) }
+    }
+    state pair(main: &mut Main, width: i32, columns: &[i32; 17], index: i32, pixel: i32) -> bool requires pixel >= 0 && pixel < 4096 {
+        transition main.pixels[pixel] == main.reference_pixels[pixel] { true -> column(main, width, columns, add_i32(index, 1), false) _ -> (false) }
+    }
+}

@@ -1,0 +1,145 @@
+use omega::language::core::layout;
+use calling;
+
+public boundary trait WindowProcedure {
+    machine call(message: u64) -> u64;
+}
+
+public boundary trait UnusedProcedure {
+    machine call(message: u64) -> u64;
+}
+
+data Spread {}
+
+WndClassWindowProcedureSlot satisfies PrivateCallbackSlot<
+    Spread,
+    WindowProcedure::call
+> { }
+
+SecondaryWndClassWindowProcedureSlot satisfies PrivateCallbackSlot<
+    Spread,
+    WindowProcedure::call
+> { }
+
+UnusedWindowProcedureSlot satisfies PrivateCallbackSlot<
+    Spread,
+    UnusedProcedure::call
+> { }
+
+machine Spread::plan(schema: Schema) -> Plan {
+    let mut owned_entries: [FieldEntry; 64];
+    owned_entries[0] = FieldEntry {
+        key: schema.fields[0].key,
+        placement: FieldPlan::At { offset: 0 },
+    };
+    let plan: Plan = Plan {
+        entries: owned_entries,
+        entry_count: 1,
+        size_fixed: 24,
+        size_is_dynamic: false,
+        align: 8,
+    };
+    let placed: Plan =
+        Plan::place_private<WndClassWindowProcedureSlot>(plan, 8);
+    Plan::place_private<SecondaryWndClassWindowProcedureSlot>(placed, 16)
+}
+
+data ForeignRecord {
+    payload: u64;
+}
+
+public data RegistrarPolicy { }
+public RegistrarPolicyCallingPolicy satisfies CallingPolicy {
+    CallingPolicy::plan = RegistrarPolicy::plan;
+}
+
+machine RegistrarPolicy::plan(signature: BoundarySignature) -> BoundaryPlanResult
+    satisfies CallingPolicy::plan
+{
+    transition signature.parameter_count == 1 {
+        true -> select_catalog(signature)
+        _ -> reject()
+    }
+
+    state select_catalog(signature: BoundarySignature) -> BoundaryPlanResult {
+        transition signature.callback_demand_count == 0 {
+            true -> check_root(signature, signature.parameters[0])
+            _ -> select_two_demands(signature)
+        }
+    }
+
+    state select_two_demands(signature: BoundarySignature) -> BoundaryPlanResult {
+        transition signature.callback_demand_count == 2 {
+            true -> check_root(signature, signature.parameters[0])
+            _ -> reject()
+        }
+    }
+
+    state check_root(signature: BoundarySignature, root: u64) -> BoundaryPlanResult {
+        transition root < 256 {
+            true -> build(signature, root)
+            _ -> reject()
+        }
+    }
+
+    state build(signature: BoundarySignature, root: u64) -> BoundaryPlanResult {
+        let mut output: BoundaryEntryPlan;
+        output.call.convention = CallingConvention::MicrosoftX64;
+        output.call.parameter_count = 1;
+        output.call.parameters[0].shape.class = AbiValueClass::Integer;
+        output.call.parameters[0].shape.byte_size = signature.shapes[root].byte_size;
+        output.call.parameters[0].shape.alignment = signature.shapes[root].alignment;
+        output.call.parameters[0].location_count = 1;
+        output.call.parameters[0].locations[0] = ValueLocation::Register {
+            register: MachineRegister::X86Rcx,
+            value_byte_offset: 0,
+            byte_size: signature.shapes[root].byte_size,
+        };
+        output.call.stack_alignment = 16;
+        output.call.shadow_bytes = 32;
+        output.call.entry_control = EntryControl::CallReturn;
+        output.state.initial_regime = MachineRegime::X86Long64;
+        output.state.stack = EntryStack::ProviderSelected;
+        output.state.preemption = Preemption::NotApplicable;
+        output.call.callback_materialization_count = signature.callback_demand_count;
+        transition signature.callback_demand_count == 2 {
+            true -> bind_callback(signature, output)
+            _ -> accept(output)
+        }
+    }
+
+    state bind_callback(
+        signature: BoundarySignature,
+        output: BoundaryEntryPlan
+    ) -> BoundaryPlanResult {
+        let mut bound: BoundaryEntryPlan = output;
+        bound.call.callback_materializations[0].binder = signature.callback_binders[0].binder;
+        bound.call.callback_materializations[0].destination =
+            signature.callback_demands[0].destination;
+        bound.call.callback_materializations[1].binder = signature.callback_binders[1].binder;
+        bound.call.callback_materializations[1].destination =
+            signature.callback_demands[1].destination;
+        BoundaryPlanResult::Accepted { plan: bound }
+    }
+
+    state accept(output: BoundaryEntryPlan) -> BoundaryPlanResult {
+        BoundaryPlanResult::Accepted { plan: output }
+    }
+
+    state reject() -> BoundaryPlanResult {
+        BoundaryPlanResult::Rejected {
+            reason: CallingPolicyRejection { reason: "invalid callback catalog" },
+        }
+    }
+}
+
+public boundary trait WindowRegistrar: Calling<RegistrarPolicyCallingPolicy> {
+    machine register<machine Selected, machine SecondarySelected>(
+        specification: &Spread<ForeignRecord>
+    )
+    where machine Selected satisfies WindowProcedure::call;
+    where machine SecondarySelected satisfies WindowProcedure::call;
+}
+
+data Main { }
+machine Main::main(main: &mut Main) { }

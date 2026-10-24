@@ -1,12 +1,7 @@
 // Every consumer builds the same checked component, independently of app names.
 use std::{env, path::PathBuf, process::Command};
 fn main() {
-    for name in [
-        "OMEGA_UI_COMPONENT_DIR",
-        "OMEGA_UI_REPO",
-        "OMEGA_BIN",
-        "PYTHON",
-    ] {
+    for name in ["OMEGA_UI_COMPONENT_DIR", "OMEGA_BIN", "PYTHON"] {
         println!("cargo:rerun-if-env-changed={name}");
     }
     let root = PathBuf::from(env::var_os("CARGO_MANIFEST_DIR").expect("Cargo manifest directory"));

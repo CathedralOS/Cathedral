@@ -7,6 +7,9 @@ fields/instances retain their own state, and stale nodes or invalid frames refus
 The scoped presenter atomically creates, updates and retires app-selected regions.
 The installed demo owns its model/view in Rust and uses the same public API.
 Cargo prepares the components for every consumer without a demo-specific rule.
+The complete Omega library lives in `source/distribution/libraries/omega-ui`,
+with this lab's Rust API in `source-rs/distribution/libraries/omega-ui`.
+Both ship in the Cathedral checkout; no separate UI repository is required.
 
 The initial backend is x86-64 with grayscale Inter and ASCII input. Program
 objects permit 1 MiB while aggregate private/reader caps and root quotas remain

@@ -1,0 +1,6 @@
+machine build(builder: &mut Build) {
+    Build::application(builder, "omega_ui_native_host_test");
+    Build::depend(builder, Source::Path { location: "../../platform/windows" });
+    Build::depend(builder, Source::Path { location: "../../support/standard_library" });
+    Build::bind(builder, windows_x86_64::ProgramEntry, main);
+}

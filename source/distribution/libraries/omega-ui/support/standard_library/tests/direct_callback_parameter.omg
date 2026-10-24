@@ -1,0 +1,182 @@
+
+use omega::language::std::calling;
+
+data HookProcedurePolicy { }
+public HookProcedurePolicyCallingPolicy satisfies CallingPolicy {
+    CallingPolicy::plan = HookProcedurePolicy::plan;
+}
+
+machine HookProcedurePolicy::plan(signature: BoundarySignature) -> BoundaryPlanResult
+    satisfies CallingPolicy::plan
+{
+    transition signature.parameter_count == 1 && signature.has_result {
+        true -> accept(signature, signature.parameters[0], signature.result)
+        _ -> reject()
+    }
+
+    state accept(
+        signature: BoundarySignature,
+        message: u64,
+        result: u64
+    ) -> BoundaryPlanResult {
+        transition message < 256 && result < 256 {
+            true -> build(signature, message, result)
+            _ -> reject()
+        }
+    }
+
+    state build(
+        signature: BoundarySignature,
+        message: u64,
+        result: u64
+    ) -> BoundaryPlanResult {
+        let mut output: BoundaryEntryPlan;
+        output.call.convention = CallingConvention::MicrosoftX64;
+        output.call.parameter_count = 1;
+        output.call.parameters[0].shape.class = AbiValueClass::Integer;
+        output.call.parameters[0].shape.byte_size = signature.shapes[message].byte_size;
+        output.call.parameters[0].shape.alignment = signature.shapes[message].alignment;
+        output.call.parameters[0].location_count = 1;
+        output.call.parameters[0].locations[0] = ValueLocation::Register {
+            register: MachineRegister::X86Rcx,
+            value_byte_offset: 0,
+            byte_size: signature.shapes[message].byte_size,
+        };
+        output.call.has_result = true;
+        output.call.result.shape.class = AbiValueClass::Integer;
+        output.call.result.shape.byte_size = signature.shapes[result].byte_size;
+        output.call.result.shape.alignment = signature.shapes[result].alignment;
+        output.call.result.location_count = 1;
+        output.call.result.locations[0] = ValueLocation::Register {
+            register: MachineRegister::X86Rax,
+            value_byte_offset: 0,
+            byte_size: signature.shapes[result].byte_size,
+        };
+        output.call.stack_alignment = 16;
+        output.call.shadow_bytes = 32;
+        output.call.entry_control = EntryControl::CallReturn;
+        output.state.initial_regime = MachineRegime::X86Long64;
+        output.state.stack = EntryStack::ProviderSelected;
+        output.state.preemption = Preemption::NotApplicable;
+        BoundaryPlanResult::Accepted { plan: output }
+    }
+
+    state reject() -> BoundaryPlanResult {
+        BoundaryPlanResult::Rejected {
+            reason: CallingPolicyRejection { reason: "invalid callback procedure telescope" },
+        }
+    }
+}
+
+boundary trait HookProcedure: Calling<HookProcedurePolicyCallingPolicy> {
+    machine call(message: u64) -> u64;
+}
+
+data RegistrarPolicy { }
+public RegistrarPolicyCallingPolicy satisfies CallingPolicy {
+    CallingPolicy::plan = RegistrarPolicy::plan;
+}
+
+machine BoundaryEntryPlan::write_integer_register_parameter(
+    output: &mut BoundaryEntryPlan,
+    index: u64,
+    register: MachineRegister
+)
+requires index <= 31
+{
+    output.call.parameters[index].shape.class = AbiValueClass::Integer;
+    output.call.parameters[index].shape.byte_size = 8;
+    output.call.parameters[index].shape.alignment = 8;
+    output.call.parameters[index].location_count = 1;
+    output.call.parameters[index].locations[0] = ValueLocation::Register {
+        register: register,
+        value_byte_offset: 0,
+        byte_size: 8,
+    };
+}
+
+machine RegistrarPolicy::plan(signature: BoundarySignature) -> BoundaryPlanResult
+    satisfies CallingPolicy::plan
+{
+    transition signature.parameter_count == 2 {
+        true -> select_native_count(signature)
+        _ -> reject()
+    }
+
+    state select_native_count(signature: BoundarySignature) -> BoundaryPlanResult {
+        transition signature.native_parameter_count == 2 {
+            true -> build_two(signature)
+            _ -> select_closed(signature)
+        }
+    }
+
+    state select_closed(signature: BoundarySignature) -> BoundaryPlanResult {
+        transition signature.native_parameter_count == 3 {
+            true -> build_three(signature)
+            _ -> reject()
+        }
+    }
+
+    state build_two(signature: BoundarySignature) -> BoundaryPlanResult {
+        let mut output: BoundaryEntryPlan;
+        output.call.convention = CallingConvention::MicrosoftX64;
+        output.call.parameter_count = 2;
+        BoundaryEntryPlan::write_integer_register_parameter(&mut output, 0, MachineRegister::X86Rcx);
+        BoundaryEntryPlan::write_integer_register_parameter(&mut output, 1, MachineRegister::X86Rdx);
+        output.call.stack_alignment = 16;
+        output.call.shadow_bytes = 32;
+        output.call.entry_control = EntryControl::CallReturn;
+        output.state.initial_regime = MachineRegime::X86Long64;
+        output.state.stack = EntryStack::ProviderSelected;
+        output.state.preemption = Preemption::NotApplicable;
+        BoundaryPlanResult::Accepted { plan: output }
+    }
+
+    state build_three(signature: BoundarySignature) -> BoundaryPlanResult {
+        let mut output: BoundaryEntryPlan;
+        output.call.convention = CallingConvention::MicrosoftX64;
+        output.call.parameter_count = 3;
+        BoundaryEntryPlan::write_integer_register_parameter(&mut output, 0, MachineRegister::X86Rcx);
+        BoundaryEntryPlan::write_integer_register_parameter(&mut output, 1, MachineRegister::X86Rdx);
+        BoundaryEntryPlan::write_integer_register_parameter(&mut output, 2, MachineRegister::X86R8);
+        output.call.callback_materialization_count = 1;
+        output.call.callback_materializations[0].binder =
+            signature.callback_binders[0].binder;
+        output.call.callback_materializations[0].destination =
+            signature.callback_demands[0].destination;
+        output.call.stack_alignment = 16;
+        output.call.shadow_bytes = 32;
+        output.call.entry_control = EntryControl::CallReturn;
+        output.state.initial_regime = MachineRegime::X86Long64;
+        output.state.stack = EntryStack::ProviderSelected;
+        output.state.preemption = Preemption::NotApplicable;
+        BoundaryPlanResult::Accepted { plan: output }
+    }
+
+    state reject() -> BoundaryPlanResult {
+        BoundaryPlanResult::Rejected {
+            reason: CallingPolicyRejection { reason: "invalid direct callback telescope" },
+        }
+    }
+}
+
+boundary trait HookRegistrar: Calling<RegistrarPolicyCallingPolicy> {
+    machine install<machine Handler>(
+        kind: u64,
+        native callback procedure from Handler,
+        module: u64
+    )
+    where machine Handler satisfies HookProcedure::call;
+}
+
+data HookProvider { }
+
+machine HookProvider::call(message: u64) -> u64
+satisfies HookProcedure::call
+{
+    message
+}
+
+machine main() reaches HookRegistrar {
+    HookRegistrar::install<HookProvider::call>(1u64, 2u64);
+}

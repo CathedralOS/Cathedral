@@ -1,0 +1,189 @@
+use omega::language::core::extent;
+use calling;
+use entry_shapes;
+
+// The Windows loader enters a PE32+ executable at its AddressOfEntryPoint
+// under the Microsoft x64 calling convention: the integer argument registers
+// carry no contractual input at process arrival, the stack is 16-byte aligned
+// with thirty-two bytes of shadow space, and the loader maps the value the
+// entry returns in eax to the process exit code. This surface introduces
+// neither storage roots nor access authority. ProgramStorageEntry remains the
+// separate semantic root crossing; its two Extents are internal bridge inputs,
+// not hosted application arguments. This calling contract supplies no bridge,
+// loader admission, receiver, or numeric stack guarantee. ProviderSelected
+// requires independent backing.
+boundary trait WindowsProcessEntry {
+    machine enter() -> u32;
+}
+
+data WindowsX86_64 {}
+WindowsX86_64CallingPolicy satisfies CallingPolicy {
+    CallingPolicy::plan = WindowsX86_64::plan;
+}
+
+machine WindowsX86_64::plan(signature: BoundarySignature) -> BoundaryPlanResult
+    satisfies CallingPolicy::plan
+{
+    transition signature.parameter_count {
+        0 -> physical(signature)
+        2 -> semantic(signature)
+        _ -> reject()
+    }
+
+    state physical(signature: BoundarySignature) -> BoundaryPlanResult {
+        transition signature.has_result {
+            true -> physical_index(signature, signature.result)
+            _ -> reject()
+        }
+    }
+
+    state physical_index(signature: BoundarySignature, result: u64)
+        -> BoundaryPlanResult
+    {
+        transition result < 256 && result < signature.shape_count {
+            true -> physical_shape(signature.shapes[result])
+            _ -> reject()
+        }
+    }
+
+    state physical_shape(result: ValueShape) -> BoundaryPlanResult {
+        transition HostedEntryShapes::integer_shape(&result, 4) {
+            true -> build_physical()
+            _ -> reject()
+        }
+    }
+
+    state build_physical() -> BoundaryPlanResult {
+        let mut output: BoundaryEntryPlan;
+        output.call.parameter_count = 0;
+        output.call.has_result = true;
+        // Process completion status returns in eax; the loader maps it to the
+        // process exit code.
+        output.call.result = HostedEntryShapes::named_word(4,
+            MachineRegister::X86Rax);
+        transition { _ -> finish(output) }
+    }
+
+    state semantic(signature: BoundarySignature) -> BoundaryPlanResult {
+        transition signature.has_result {
+            false -> semantic_indices(signature, signature.parameters[0],
+                signature.parameters[1])
+            _ -> reject()
+        }
+    }
+
+    state semantic_indices(signature: BoundarySignature, image: u64,
+        storage: u64) -> BoundaryPlanResult
+    {
+        transition image < 256 && storage < 256
+            && image < signature.shape_count && storage < signature.shape_count
+        {
+            true -> semantic_shapes(signature.shapes[image],
+                signature.shapes[storage], signature)
+            _ -> reject()
+        }
+    }
+
+    state semantic_shapes(image: ValueShape, storage: ValueShape,
+        signature: BoundarySignature) -> BoundaryPlanResult
+    {
+        transition HostedEntryShapes::extent_shape(image, &signature)
+            && HostedEntryShapes::extent_shape(storage, &signature)
+        {
+            true -> build_semantic()
+            _ -> reject()
+        }
+    }
+
+    state build_semantic() -> BoundaryPlanResult {
+        let mut output: BoundaryEntryPlan;
+        output.call.parameter_count = 2;
+        // The generated bridge passes the image and initial-storage roots as
+        // Microsoft x64 indirect aggregates: their pointers arrive in rcx and
+        // rdx, with caller-owned copies at stack offsets 32 and 48.
+        output.call.parameters[0] = WindowsX86_64::extent_reference(
+            MachineRegister::X86Rcx, 32);
+        output.call.parameters[1] = WindowsX86_64::extent_reference(
+            MachineRegister::X86Rdx, 48);
+        transition { _ -> finish(output) }
+    }
+
+    state finish(output: BoundaryEntryPlan) -> BoundaryPlanResult {
+        let mut plan: BoundaryEntryPlan = output;
+        plan.call.convention = CallingConvention::MicrosoftX64;
+        plan.call.stack_alignment = 16;
+        plan.call.shadow_bytes = 32;
+        plan.call.entry_control = EntryControl::CallReturn;
+        transition { _ -> seal(plan) }
+    }
+
+    state seal(plan: BoundaryEntryPlan) -> BoundaryPlanResult {
+        let mut output: BoundaryEntryPlan = plan;
+        // Microsoft x64 caller-saved banks.
+        output.call.ordinary_clobbers.register_count = 13;
+        output.call.ordinary_clobbers.registers[0] = MachineRegister::X86Rax;
+        output.call.ordinary_clobbers.registers[1] = MachineRegister::X86Rcx;
+        output.call.ordinary_clobbers.registers[2] = MachineRegister::X86Rdx;
+        output.call.ordinary_clobbers.registers[3] = MachineRegister::X86R8;
+        output.call.ordinary_clobbers.registers[4] = MachineRegister::X86R9;
+        output.call.ordinary_clobbers.registers[5] = MachineRegister::X86R10;
+        output.call.ordinary_clobbers.registers[6] = MachineRegister::X86R11;
+        output.call.ordinary_clobbers.registers[7] = MachineRegister::X86Xmm {
+            index: 0
+        };
+        output.call.ordinary_clobbers.registers[8] = MachineRegister::X86Xmm {
+            index: 1
+        };
+        output.call.ordinary_clobbers.registers[9] = MachineRegister::X86Xmm {
+            index: 2
+        };
+        output.call.ordinary_clobbers.registers[10] = MachineRegister::X86Xmm {
+            index: 3
+        };
+        output.call.ordinary_clobbers.registers[11] = MachineRegister::X86Xmm {
+            index: 4
+        };
+        output.call.ordinary_clobbers.registers[12] = MachineRegister::X86Xmm {
+            index: 5
+        };
+        output.state.initial_regime = MachineRegime::X86Long64;
+        output.state.permitted_transitive_use.general_registers = true;
+        output.state.permitted_transitive_use.vector_registers = true;
+        output.state.permitted_transitive_use.flags = true;
+        output.state.stack = EntryStack::ProviderSelected;
+        output.state.preemption = Preemption::NotApplicable;
+        BoundaryPlanResult::Accepted { plan: output }
+    }
+
+    state reject() -> BoundaryPlanResult {
+        BoundaryPlanResult::Rejected {
+            reason: CallingPolicyRejection {
+                reason: "WindowsX86_64Application requires exact physical or program-storage entry shapes",
+            },
+        }
+    }
+}
+
+machine WindowsX86_64::extent_reference(register: MachineRegister,
+    copy_stack_byte_offset: u64) -> ValuePlacement
+{
+    // Integer fragments describe ABI placement only. The source application
+    // retains the core Extent record, qualifications, and requirement identity.
+    let mut value: ValuePlacement;
+    value.shape.class = AbiValueClass::Integer;
+    value.shape.byte_size = 16;
+    value.shape.alignment = 8;
+    value.location_count = 1;
+    value.locations[0] = ValueLocation::Indirect {
+        pointer: IndirectPointerLocation::Register {
+            register: register,
+        },
+        has_copy: true,
+        copy_stack_byte_offset: copy_stack_byte_offset,
+        byte_size: 16,
+        alignment: 8,
+    };
+    value
+}
+
+boundary trait WindowsX86_64Application: ProgramStorageEntry + WindowsProcessEntry + Calling<WindowsX86_64CallingPolicy> {}

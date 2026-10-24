@@ -1,0 +1,113 @@
+/*
+The host's invisible Unicode edit supplies Windows text semantics, including
+word navigation, selection, clipboard and undo. This record is only its bounded
+paint/filter snapshot; the visible menu uses our own surfaces and typography.
+The query belongs to the launcher, independently of the controls-page demo.
+*/
+use omega_language_std::windows_gui_host;
+use omega_ui::types;
+use omega_ui_windows::text_field;
+
+public data GallerySearch {
+    field: WindowsTextField;
+    results: [i32; 6];
+    count: i32;
+}
+
+public data GalleryCommand where length <= 16u64 {
+    label: [u8; 16];
+    length: u64;
+}
+
+public machine GallerySearch::title(command: i32) -> GalleryCommand {
+    transition command {
+        0 -> (GalleryCommand { label: "Controls        ", length: 8 })
+        1 -> (GalleryCommand { label: "Tasks           ", length: 5 })
+        2 -> (GalleryCommand { label: "Synthesizer     ", length: 11 })
+        3 -> (GalleryCommand { label: "Appearance      ", length: 10 })
+        4 -> (GalleryCommand { label: "Panels          ", length: 6 })
+        _ -> (GalleryCommand { label: "Toggle theme    ", length: 12 })
+    }
+}
+
+public machine GallerySearch::matches(search: &GallerySearch, title: &[u8]) -> bool {
+    transition search.field.length == 0 {
+        true -> (true)
+        _ -> start(search, title, 0u64)
+    }
+    state start(search: &GallerySearch, title: &[u8], offset: u64) -> bool {
+        transition offset < title.len && offset < 128u64 {
+            true -> character(search, title, offset, 0u64)
+            _ -> (false)
+        }
+    }
+    state character(search: &GallerySearch, title: &[u8], offset: u64, query: u64) -> bool
+    requires offset < 128u64 && query <= 256u64 {
+        let index: u64 = offset + query;
+        transition query < 256u64 && (query as i32) < search.field.length && index < title.len {
+            true -> compare(search, title, offset, query, index)
+            _ -> ((query as i32) == search.field.length)
+        }
+    }
+    state compare(search: &GallerySearch, title: &[u8], offset: u64, query: u64, index: u64) -> bool
+    requires offset < 128u64 && query < 256u64 && index < title.len {
+        let typed: i32 = search.field.text[query] as i32;
+        let letter: i32 = title[index] as i32;
+        let a: i32 = select_i32(typed >= 65 && typed <= 90, add_i32(typed, 32), typed);
+        let b: i32 = select_i32(letter >= 65 && letter <= 90, add_i32(letter, 32), letter);
+        transition a == b {
+            true -> character(search, title, offset, query + 1u64)
+            _ -> start(search, title, offset + 1u64)
+        }
+    }
+}
+
+public machine GallerySearch::refresh(search: &mut GallerySearch) reaches WindowsGuiHost invokes WindowsGuiHost; {
+    WindowsTextField::refresh(&mut search.field);
+    GallerySearch::update_results(search);
+}
+
+public machine GallerySearch::update_results(search: &mut GallerySearch) {
+    search.count = 0;
+    transition { _ -> command(search, 0) }
+    state command(search: &mut GallerySearch, identifier: i32) {
+        transition identifier >= 0 && identifier < 6 {
+            true -> filter(search, identifier)
+            _ -> done()
+        }
+    }
+    state filter(search: &mut GallerySearch, identifier: i32) requires identifier >= 0 && identifier < 6 {
+        let title: GalleryCommand = GallerySearch::title(identifier);
+        let matches: bool = GallerySearch::matches(search, &title.label[0..title.length]);
+        let count: i32 = search.count;
+        transition matches && count >= 0 && count < 6 {
+            true -> include(search, identifier, count)
+            _ -> command(search, identifier + 1)
+        }
+    }
+    state include(search: &mut GallerySearch, identifier: i32, count: i32) requires count >= 0 && count < 6 && identifier >= 0 && identifier < 6 {
+        search.results[count] = identifier;
+        search.count = count + 1;
+        transition { _ -> command(search, identifier + 1) }
+    }
+    state done() {}
+}
+
+public machine GallerySearch::clear(search: &mut GallerySearch) reaches WindowsGuiHost invokes WindowsGuiHost; {
+    WindowsTextField::clear(&mut search.field);
+    GallerySearch::update_results(search);
+}
+public machine GallerySearch::key(search: &mut GallerySearch, key: i32, control: bool, shift: bool) reaches WindowsGuiHost invokes WindowsGuiHost; {
+    WindowsTextField::key(&mut search.field, key, control, shift);
+    GallerySearch::update_results(search);
+}
+public machine GallerySearch::character(search: &mut GallerySearch, character: u64) reaches WindowsGuiHost invokes WindowsGuiHost; {
+    WindowsTextField::character(&mut search.field, character);
+    GallerySearch::update_results(search);
+}
+public machine GallerySearch::new(window: u64) -> GallerySearch {
+    GallerySearch { field: WindowsTextField::new(window), results: [0, 1, 2, 3, 4, 5], count: 6 }
+}
+public machine GallerySearch::boundary(search: &GallerySearch, index: i32) -> bool {
+    WindowsTextField::boundary(&search.field, index)
+}

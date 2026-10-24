@@ -1,0 +1,5 @@
+// Declares the Omega UI package; platform services belong to its consumers.
+
+machine build(builder: &mut Build) {
+    Build::package(builder, "omega_ui");
+}

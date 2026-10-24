@@ -1,0 +1,306 @@
+// Defines geometry, arithmetic helpers, styles, and resolved runtime theme roles.
+
+public machine select_i32(condition: bool, when_true: i32, when_false: i32) -> i32 {
+    transition condition {
+        true -> (when_true)
+        _ -> (when_false)
+    }
+}
+
+public machine select_sat(condition: bool, when_true: i32 in Saturating, when_false: i32 in Saturating) -> i32 in Saturating {
+    transition condition {
+        true -> (when_true)
+        _ -> (when_false)
+    }
+}
+
+public machine add_i32(a: i32, b: i32) -> i32 {
+    ((a as i32 in Saturating) + (b as i32 in Saturating)) as i32
+}
+
+public machine sub_i32(a: i32, b: i32) -> i32 {
+    ((a as i32 in Saturating) - (b as i32 in Saturating)) as i32
+}
+
+public machine mul_i32(a: i32, b: i32) -> i32 {
+    ((a as i32 in Saturating) * (b as i32 in Saturating)) as i32
+}
+
+public machine min_i32(a: i32, b: i32) -> i32 {
+    transition a < b {
+        true -> (a)
+        _ -> (b)
+    }
+}
+
+public machine max_i32(a: i32, b: i32) -> i32 {
+    transition a > b {
+        true -> (a)
+        _ -> (b)
+    }
+}
+
+public machine clamp_i32(v: i32, lo: i32, hi: i32) -> i32 {
+    transition v < lo {
+        true -> (lo)
+        _ -> check_hi(v, hi)
+    }
+    state check_hi(v: i32, hi: i32) -> i32 {
+        transition v > hi {
+            true -> (hi)
+            _ -> (v)
+        }
+    }
+}
+
+public machine max_sat(a: i32 in Saturating, b: i32 in Saturating) -> i32 in Saturating {
+    transition a > b {
+        true -> (a)
+        _ -> (b)
+    }
+}
+
+public machine min_sat(a: i32 in Saturating, b: i32 in Saturating) -> i32 in Saturating {
+    transition a < b {
+        true -> (a)
+        _ -> (b)
+    }
+}
+
+public machine clamp_sat(v: i32 in Saturating, lo: i32 in Saturating, hi: i32 in Saturating) -> i32 in Saturating {
+    transition v < lo {
+        true -> (lo)
+        _ -> check_hi(v, hi)
+    }
+    state check_hi(v: i32 in Saturating, hi: i32 in Saturating) -> i32 in Saturating {
+        transition v > hi {
+            true -> (hi)
+            _ -> (v)
+        }
+    }
+}
+
+public data Point {
+    x: i32 in Saturating;
+    y: i32 in Saturating;
+}
+
+public data Size {
+    w: i32 in Saturating;
+    h: i32 in Saturating;
+}
+
+public data Edges {
+    top: i32 in Saturating;
+    right: i32 in Saturating;
+    bottom: i32 in Saturating;
+    left: i32 in Saturating;
+}
+
+public machine Edges::all(v: i32) -> Edges {
+    let vs: i32 in Saturating = v as i32 in Saturating;
+    Edges { top: vs, right: vs, bottom: vs, left: vs }
+}
+
+public machine Edges::xy(x: i32, y: i32) -> Edges {
+    let xs: i32 in Saturating = x as i32 in Saturating;
+    let ys: i32 in Saturating = y as i32 in Saturating;
+    Edges { top: ys, right: xs, bottom: ys, left: xs }
+}
+
+public data Rect {
+    x: i32 in Saturating;
+    y: i32 in Saturating;
+    w: i32 in Saturating;
+    h: i32 in Saturating;
+}
+
+public machine select_rect(condition: bool, when_true: Rect, when_false: Rect) -> Rect {
+    transition condition {
+        true -> (when_true)
+        _ -> (when_false)
+    }
+}
+
+public machine Rect::zero() -> Rect {
+    Rect { x: 0, y: 0, w: 0, h: 0 }
+}
+
+public machine Rect::copy(rectangle: &Rect) -> Rect {
+    Rect { x: rectangle.x, y: rectangle.y, w: rectangle.w, h: rectangle.h }
+}
+
+public machine Rect::contains(rectangle: &Rect, px: i32, py: i32) -> bool {
+    let pxs: i32 in Saturating = px as i32 in Saturating;
+    let pys: i32 in Saturating = py as i32 in Saturating;
+    let x_end: i32 in Saturating = rectangle.x + rectangle.w;
+    let y_end: i32 in Saturating = rectangle.y + rectangle.h;
+    pxs >= rectangle.x && pxs < x_end && pys >= rectangle.y && pys < y_end
+}
+
+public machine Rect::inset(rectangle: &Rect, insets: Edges) -> Rect {
+    let nx: i32 in Saturating = rectangle.x + insets.left;
+    let ny: i32 in Saturating = rectangle.y + insets.top;
+    let pad_w: i32 in Saturating = insets.left + insets.right;
+    let pad_h: i32 in Saturating = insets.top + insets.bottom;
+    let nw: i32 in Saturating = max_sat(rectangle.w - pad_w, 0);
+    let nh: i32 in Saturating = max_sat(rectangle.h - pad_h, 0);
+    Rect { x: nx, y: ny, w: nw, h: nh }
+}
+
+public machine color_mix(background: i32, foreground: i32, blend_percent: i32) -> i32 {
+    let clamped_percent: i32 in Saturating = clamp_i32(blend_percent, 0, 100) as i32 in Saturating;
+    let inverse_percent: i32 in Saturating = (100 as i32 in Saturating) - clamped_percent;
+    let background_rgb: i32 in Saturating = max_i32(background, 0) as i32 in Saturating;
+    let foreground_rgb: i32 in Saturating = max_i32(foreground, 0) as i32 in Saturating;
+
+    let background_red: i32 in Saturating = (background_rgb / (65536 as i32 in Saturating)) % (256 as i32 in Saturating);
+    let background_green: i32 in Saturating = (background_rgb / (256 as i32 in Saturating)) % (256 as i32 in Saturating);
+    let background_blue: i32 in Saturating = background_rgb % (256 as i32 in Saturating);
+
+    let foreground_red: i32 in Saturating = (foreground_rgb / (65536 as i32 in Saturating)) % (256 as i32 in Saturating);
+    let foreground_green: i32 in Saturating = (foreground_rgb / (256 as i32 in Saturating)) % (256 as i32 in Saturating);
+    let foreground_blue: i32 in Saturating = foreground_rgb % (256 as i32 in Saturating);
+
+    let red: i32 in Saturating = (background_red * inverse_percent + foreground_red * clamped_percent) / (100 as i32 in Saturating);
+    let green: i32 in Saturating = (background_green * inverse_percent + foreground_green * clamped_percent) / (100 as i32 in Saturating);
+    let blue: i32 in Saturating = (background_blue * inverse_percent + foreground_blue * clamped_percent) / (100 as i32 in Saturating);
+
+    (red * (65536 as i32 in Saturating) + green * (256 as i32 in Saturating) + blue) as i32
+}
+
+public data Theme {
+    is_dark: bool;
+    background: i32;
+    sidebar_bg: i32;
+    surface: i32;
+    surface_hover: i32;
+    control_on: i32;
+    control_glyph: i32;
+    well: i32;
+    empty: i32;
+    border: i32;
+    text: i32;
+    text_muted: i32;
+    tertiary: i32;
+    accent: i32;
+    accent_hover: i32;
+    accent_text: i32;
+    danger: i32;
+    success: i32;
+    orange: i32;
+    teal: i32;
+    purple: i32;
+    blue: i32;
+    track: i32;
+    knob: i32;
+    knob_on: i32;
+    shadow: i32;
+}
+
+// Layout options are closed choices; renderer tags remain an internal encoding.
+public data UiAxis [copy] { case Column; case Row; }
+public data UiSizing [copy] { case Fit; case Fixed; case Fill; }
+public data UiAlignment [copy] { case Start; case Center; case End; case Stretch; }
+public data UiJustify [copy] { case Start; case Center; case End; case SpaceBetween; }
+public machine UiAxis::is_column(value: UiAxis) -> bool {
+    transition value { UiAxis::Column -> (true) _ -> (false) }
+}
+public machine UiAxis::is_row(value: UiAxis) -> bool {
+    transition value { UiAxis::Row -> (true) _ -> (false) }
+}
+public machine UiSizing::is_fit(value: UiSizing) -> bool {
+    transition value { UiSizing::Fit -> (true) _ -> (false) }
+}
+public machine UiSizing::is_fixed(value: UiSizing) -> bool {
+    transition value { UiSizing::Fixed -> (true) _ -> (false) }
+}
+public machine UiSizing::is_fill(value: UiSizing) -> bool {
+    transition value { UiSizing::Fill -> (true) _ -> (false) }
+}
+public machine UiAlignment::is_start(value: UiAlignment) -> bool {
+    transition value { UiAlignment::Start -> (true) _ -> (false) }
+}
+public machine UiAlignment::is_center(value: UiAlignment) -> bool {
+    transition value { UiAlignment::Center -> (true) _ -> (false) }
+}
+public machine UiAlignment::is_end(value: UiAlignment) -> bool {
+    transition value { UiAlignment::End -> (true) _ -> (false) }
+}
+public machine UiAlignment::is_stretch(value: UiAlignment) -> bool {
+    transition value { UiAlignment::Stretch -> (true) _ -> (false) }
+}
+public machine UiJustify::is_start(value: UiJustify) -> bool {
+    transition value { UiJustify::Start -> (true) _ -> (false) }
+}
+public machine UiJustify::is_center(value: UiJustify) -> bool {
+    transition value { UiJustify::Center -> (true) _ -> (false) }
+}
+public machine UiJustify::is_end(value: UiJustify) -> bool {
+    transition value { UiJustify::End -> (true) _ -> (false) }
+}
+public machine UiJustify::is_space_between(value: UiJustify) -> bool {
+    transition value { UiJustify::SpaceBetween -> (true) _ -> (false) }
+}
+public machine UiSizing::select(condition: bool, when_true: UiSizing, when_false: UiSizing) -> UiSizing {
+    transition condition { true -> (when_true) _ -> (when_false) }
+}
+public machine UiAlignment::select(condition: bool, when_true: UiAlignment, when_false: UiAlignment) -> UiAlignment {
+    transition condition { true -> (when_true) _ -> (when_false) }
+}
+
+public data UiContentKind [copy] {
+    case Box; case Icon; case Badge; case Number; case Slider;
+    case Toggle; case Checkbox; case NumberField; case Text;
+    case Extension(tag: i32);
+}
+public machine UiContentKind::code(content: UiContentKind) -> i32 {
+    transition content {
+        UiContentKind::Box -> (0)
+        UiContentKind::Icon -> (1)
+        UiContentKind::Badge -> (2)
+        UiContentKind::Number -> (3)
+        UiContentKind::Slider -> (4)
+        UiContentKind::Toggle -> (5)
+        UiContentKind::Checkbox -> (6)
+        UiContentKind::NumberField -> (18)
+        UiContentKind::Text -> (19)
+        UiContentKind::Extension { tag } -> (select_i32(tag >= 7 && tag != 18 && tag != 19, tag, -1))
+    }
+}
+
+public data Style {
+    direction: UiAxis;
+    gap: i32 in Saturating;
+    padding: Edges;
+    width_mode: UiSizing;
+    width_px: i32 in Saturating;
+    height_mode: UiSizing;
+    height_px: i32 in Saturating;
+    grow: i32 in Saturating;
+    align_items: UiAlignment;
+    justify: UiJustify;
+    background: i32;
+    border: i32;
+    border_width: i32 in Saturating;
+    radius: i32 in Saturating;
+}
+
+public machine Style::default_box() -> Style {
+    Style {
+        direction: UiAxis::Column,
+        gap: 0,
+        padding: Edges::all(0),
+        width_mode: UiSizing::Fit,
+        width_px: 0,
+        height_mode: UiSizing::Fit,
+        height_px: 0,
+        grow: 0,
+        align_items: UiAlignment::Start,
+        justify: UiJustify::Start,
+        background: -1,
+        border: -1,
+        border_width: 0,
+        radius: 0
+    }
+}

@@ -1,0 +1,3 @@
+use native::main;
+use native::native_state;
+machine main() reaches UiNativeFrame { let mut surface: NativeUiState; let mut packet: [i32; 4096]; packet[4081] = 480; packet[4082] = 300; let result: u64 = UiNativeFrame::apply(&mut surface, &mut packet); }

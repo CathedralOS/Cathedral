@@ -1,0 +1,1585 @@
+// Rasterizes geometry and basic controls into caller-owned scanline or 64-by-64 buffers.
+
+use types;
+use context;
+use viewport;
+use scene;
+
+public data Raster { }
+
+// Query active physical band width (`64` in 64x64 mode, or `cw` in `pixels[4094]`).
+public machine Raster::band_width(pixels: &[i32; 4096], band_y: i32) -> i32 in Saturating {
+    transition band_y < 0 { true -> (64) _ -> physical(pixels[4094] as i32 in Saturating) }
+    state physical(width: i32 in Saturating) -> i32 in Saturating {
+        transition width >= 1 { true -> bounded(width) _ -> (64) }
+    }
+    state bounded(width: i32 in Saturating) -> i32 in Saturating {
+        transition width <= 3840 { true -> (width) _ -> (3840) }
+    }
+}
+
+// Scanline hosts supply the physical canvas height; 64x64 ignores metadata.
+public machine Raster::band_height(pixels: &[i32; 4096], band_y: i32) -> i32 in Saturating {
+    transition band_y < 0 { true -> (64) _ -> physical(pixels[4095] as i32 in Saturating) }
+    state physical(height: i32 in Saturating) -> i32 in Saturating {
+        transition height >= 1 { true -> bounded(height) _ -> (64) }
+    }
+    state bounded(height: i32 in Saturating) -> i32 in Saturating {
+        transition height <= 2160 { true -> (height) _ -> (2160) }
+    }
+}
+
+// Metadata occupies the tail outside the maximum 3840-pixel physical row.
+// Small 64x64 images use all 4096 cells and ignore this metadata entirely.
+public machine Raster::configure(pixels: &mut [i32; 4096], viewport: UiViewport) {
+    pixels[4094] = clamp_i32(viewport.physical_width, 1, 3840);
+    pixels[4095] = clamp_i32(viewport.physical_height, 1, 2160);
+    pixels[4088] = max_i32(viewport.logical_width, 1);
+    pixels[4089] = max_i32(viewport.logical_height, 1);
+}
+public machine Raster::logical_width(pixels: &[i32; 4096], band_y: i32) -> i32 in Saturating {
+    max_i32(select_i32(band_y < 0, 64, pixels[4088]), 1) as i32 in Saturating
+}
+public machine Raster::logical_height(pixels: &[i32; 4096], band_y: i32) -> i32 in Saturating {
+    max_i32(select_i32(band_y < 0, 64, pixels[4089]), 1) as i32 in Saturating
+}
+public machine Raster::to_physical_x(lx: i32 in Saturating, cw: i32 in Saturating, is_64: bool, logical_width: i32 in Saturating) -> i32 in Saturating {
+    select_sat(is_64, lx, UiViewport::map(lx, cw, logical_width))
+}
+public machine Raster::to_physical_y(ly: i32 in Saturating, ch: i32 in Saturating, is_64: bool, logical_height: i32 in Saturating) -> i32 in Saturating {
+    select_sat(is_64, ly, UiViewport::map(ly, ch, logical_height))
+}
+public machine Raster::to_physical_rect(rectangle: Rect, cw: i32 in Saturating, ch: i32 in Saturating, is_64: bool, logical_width: i32 in Saturating, logical_height: i32 in Saturating) -> Rect {
+    let x0: i32 in Saturating = Raster::to_physical_x(rectangle.x, cw, is_64, logical_width);
+    let y0: i32 in Saturating = Raster::to_physical_y(rectangle.y, ch, is_64, logical_height);
+    let x1: i32 in Saturating = Raster::to_physical_x(rectangle.x + rectangle.w, cw, is_64, logical_width);
+    let y1: i32 in Saturating = Raster::to_physical_y(rectangle.y + rectangle.h, ch, is_64, logical_height);
+    let pw: i32 in Saturating = select_sat(rectangle.w > 0, max_sat(x1 - x0, 1), 0);
+    let ph: i32 in Saturating = select_sat(rectangle.h > 0, max_sat(y1 - y0, 1), 0);
+    Rect { x: x0, y: y0, w: pw, h: ph }
+}
+
+// Physical scanline hosts opt in with [4090] = -271828 and bounds [4091,4092).
+// Otherwise old callers retain full-row writes. Invalid metadata
+// means the full row; 64x64 callers keep all 4096 pixels as image storage.
+public machine Raster::clip_left(pixels: &[i32; 4096], band_y: i32) -> i32 in Saturating {
+    let width: i32 in Saturating = Raster::band_width(pixels, band_y);
+    transition band_y >= 0 && pixels[4090] == -271828 && pixels[4091] >= 0 && pixels[4091] < pixels[4092] && (pixels[4092] as i32 in Saturating) <= width {
+        true -> (pixels[4091] as i32 in Saturating)
+        _ -> (0)
+    }
+}
+public machine Raster::clip_right(pixels: &[i32; 4096], band_y: i32) -> i32 in Saturating {
+    let width: i32 in Saturating = Raster::band_width(pixels, band_y);
+    transition band_y >= 0 && pixels[4090] == -271828 && pixels[4091] >= 0 && pixels[4091] < pixels[4092] && (pixels[4092] as i32 in Saturating) <= width {
+        true -> (pixels[4092] as i32 in Saturating)
+        _ -> (width)
+    }
+}
+
+// Write a single physical pixel at `(x, y)` into the active band buffer.
+public machine Raster::put_px_raw(pixels: &mut [i32; 4096], band_y: i32, x: i32 in Saturating, y: i32 in Saturating, color: i32) {
+    let is_64: bool = band_y < 0;
+    let by: i32 in Saturating = select_sat(is_64, 0, band_y as i32 in Saturating);
+    let bw: i32 in Saturating = Raster::band_width(pixels, band_y);
+    let bh: i32 in Saturating = select_sat(is_64, 64, 1);
+    let ly: i32 in Saturating = y - by;
+    let clipped: bool = !is_64 && pixels[4090] == -271828 && pixels[4091] >= 0 && pixels[4091] < pixels[4092] && (pixels[4092] as i32 in Saturating) <= bw;
+    let inside: bool = !clipped || ((x as i32) >= pixels[4091] && (x as i32) < pixels[4092]);
+    transition x >= 0 && x < bw && inside && ly >= 0 && ly < bh && color >= 0 {
+        true -> calc_idx(pixels, (ly * bw + x) as i32, color)
+        _ -> done()
+    }
+    state calc_idx(pixels: &mut [i32; 4096], node_index: i32, color: i32) {
+        transition node_index >= 0 && node_index < 4094 {
+            true -> store(pixels, node_index, color)
+            _ -> done()
+        }
+    }
+    state store(pixels: &mut [i32; 4096], node_index: i32, color: i32)
+    requires node_index >= 0 && node_index < 4094 {
+        pixels[node_index] = color;
+    }
+    state done() {}
+}
+
+// Write a single logical pixel at `(x, y)` into the active band buffer.
+public machine Raster::put_px_band(pixels: &mut [i32; 4096], band_y: i32, x: i32 in Saturating, y: i32 in Saturating, color: i32) {
+    let is_64: bool = band_y < 0;
+    let cw: i32 in Saturating = Raster::band_width(pixels, band_y);
+    let ch: i32 in Saturating = Raster::band_height(pixels, band_y);
+    let px: i32 in Saturating = Raster::to_physical_x(x, cw, is_64, Raster::logical_width(pixels, band_y));
+    let py: i32 in Saturating = Raster::to_physical_y(y, ch, is_64, Raster::logical_height(pixels, band_y));
+    Raster::put_px_raw(pixels, band_y, px, py, color);
+}
+
+// Alpha-blend `color` (`alpha` in `0..100`) over the physical pixel at `(x, y)`.
+public machine Raster::blend_px_raw(pixels: &mut [i32; 4096], band_y: i32, x: i32 in Saturating, y: i32 in Saturating, color: i32, alpha: i32) {
+    let is_64: bool = band_y < 0;
+    let by: i32 in Saturating = select_sat(is_64, 0, band_y as i32 in Saturating);
+    let bw: i32 in Saturating = Raster::band_width(pixels, band_y);
+    let bh: i32 in Saturating = select_sat(is_64, 64, 1);
+    let ly: i32 in Saturating = y - by;
+    let clipped: bool = !is_64 && pixels[4090] == -271828 && pixels[4091] >= 0 && pixels[4091] < pixels[4092] && (pixels[4092] as i32 in Saturating) <= bw;
+    let inside: bool = !clipped || ((x as i32) >= pixels[4091] && (x as i32) < pixels[4092]);
+    transition x >= 0 && x < bw && inside && ly >= 0 && ly < bh && color >= 0 && alpha > 0 {
+        true -> calc_idx(pixels, (ly * bw + x) as i32, color, alpha)
+        _ -> done()
+    }
+    state calc_idx(pixels: &mut [i32; 4096], node_index: i32, color: i32, alpha: i32) {
+        transition node_index >= 0 && node_index < 4094 {
+            true -> blend_store(pixels, node_index, color, alpha)
+            _ -> done()
+        }
+    }
+    state blend_store(pixels: &mut [i32; 4096], node_index: i32, color: i32, alpha: i32)
+    requires node_index >= 0 && node_index < 4094 {
+        transition alpha >= 100 {
+            true -> opaque(pixels, node_index, color)
+            _ -> translucent(pixels, node_index, color, alpha)
+        }
+    }
+    state opaque(pixels: &mut [i32; 4096], node_index: i32, color: i32) requires node_index >= 0 && node_index < 4094 {
+        pixels[node_index] = color;
+    }
+    state translucent(pixels: &mut [i32; 4096], node_index: i32, color: i32, alpha: i32) requires node_index >= 0 && node_index < 4094 {
+        pixels[node_index] = color_mix(pixels[node_index], color, alpha);
+    }
+    state done() {}
+}
+
+public machine Raster::blend_px_band(pixels: &mut [i32; 4096], band_y: i32, x: i32 in Saturating, y: i32 in Saturating, color: i32, alpha: i32) {
+    let is_64: bool = band_y < 0;
+    let cw: i32 in Saturating = Raster::band_width(pixels, band_y);
+    let ch: i32 in Saturating = Raster::band_height(pixels, band_y);
+    let px: i32 in Saturating = Raster::to_physical_x(x, cw, is_64, Raster::logical_width(pixels, band_y));
+    let py: i32 in Saturating = Raster::to_physical_y(y, ch, is_64, Raster::logical_height(pixels, band_y));
+    Raster::blend_px_raw(pixels, band_y, px, py, color, alpha);
+}
+
+public machine Raster::put_px(pixels: &mut [i32; 4096], x: i32, y: i32, color: i32) {
+    Raster::put_px_raw(pixels, -1, x as i32 in Saturating, y as i32 in Saturating, color);
+}
+
+// Clear the active band (`0..4096` for 64x64 mode, or `0..cw` for physical scanline mode, preserving `pixels[4093..4095]`).
+public machine Raster::clear_band_buffer(pixels: &mut [i32; 4096], band_y: i32, bg_color: i32) {
+    let cw: i32 = Raster::band_width(pixels, band_y) as i32;
+    let lim: i32 = select_i32(band_y < 0, 4096, clamp_i32(cw, 320, 3840));
+    let start: i32 = select_i32(band_y < 0, 0, Raster::clip_left(pixels, band_y) as i32);
+    let end: i32 = select_i32(band_y < 0, lim, Raster::clip_right(pixels, band_y) as i32);
+    transition { _ -> clear_loop16(pixels, bg_color, start, end) }
+    state clear_loop16(pixels: &mut [i32; 4096], bg_color: i32, node_index: i32, lim: i32) {
+        transition node_index >= 0 && node_index < 4080 && (node_index + 15) < lim {
+            true -> clear_step16(pixels, bg_color, node_index, lim)
+            _ -> clear_tail(pixels, bg_color, node_index, lim)
+        }
+    }
+    state clear_step16(pixels: &mut [i32; 4096], bg_color: i32, node_index: i32, lim: i32)
+    requires node_index >= 0 && node_index < 4080 {
+        pixels[node_index] = bg_color;
+        pixels[node_index + 1] = bg_color;
+        pixels[node_index + 2] = bg_color;
+        pixels[node_index + 3] = bg_color;
+        pixels[node_index + 4] = bg_color;
+        pixels[node_index + 5] = bg_color;
+        pixels[node_index + 6] = bg_color;
+        pixels[node_index + 7] = bg_color;
+        pixels[node_index + 8] = bg_color;
+        pixels[node_index + 9] = bg_color;
+        pixels[node_index + 10] = bg_color;
+        pixels[node_index + 11] = bg_color;
+        pixels[node_index + 12] = bg_color;
+        pixels[node_index + 13] = bg_color;
+        pixels[node_index + 14] = bg_color;
+        pixels[node_index + 15] = bg_color;
+        transition { _ -> clear_loop16(pixels, bg_color, node_index + 16, lim) }
+    }
+    state clear_tail(pixels: &mut [i32; 4096], bg_color: i32, node_index: i32, lim: i32) {
+        transition node_index >= 0 && node_index < lim && node_index < 4096 {
+            true -> clear_step1(pixels, bg_color, node_index, lim)
+            _ -> done()
+        }
+    }
+    state clear_step1(pixels: &mut [i32; 4096], bg_color: i32, node_index: i32, lim: i32)
+    requires node_index >= 0 && node_index < 4096 {
+        pixels[node_index] = bg_color;
+        transition { _ -> clear_tail(pixels, bg_color, node_index + 1, lim) }
+    }
+    state done() {}
+}
+
+public machine Raster::clear_buffer(pixels: &mut [i32; 4096], bg_color: i32) {
+    Raster::clear_band_buffer(pixels, -1, bg_color);
+}
+
+// Fast 16x-unrolled direct-indexed physical horizontal span fill `[x0, x1)` on physical scanline `py`.
+public machine Raster::hline_raw(pixels: &mut [i32; 4096], band_y: i32, py: i32 in Saturating, x0: i32 in Saturating, x1: i32 in Saturating, color: i32) {
+    transition color >= 0 { true -> prepare(pixels, band_y, py, x0, x1, color) _ -> done() }
+    state prepare(pixels: &mut [i32; 4096], band_y: i32, py: i32 in Saturating, x0: i32 in Saturating, x1: i32 in Saturating, color: i32) {
+        let small: bool = band_y < 0;
+        let by: i32 in Saturating = select_sat(small, 0, band_y as i32 in Saturating);
+        let width: i32 in Saturating = Raster::band_width(pixels, band_y);
+        let height: i32 in Saturating = select_sat(small, 64, 1);
+        let row: i32 in Saturating = py - by;
+        let clipped: bool = !small && pixels[4090] == -271828 && pixels[4091] >= 0 && pixels[4091] < pixels[4092] && (pixels[4092] as i32 in Saturating) <= width;
+        transition row >= 0 && row < height { true -> bounds(pixels, width, row * width, x0, x1, color, clipped) _ -> done() }
+    }
+    state bounds(pixels: &mut [i32; 4096], width: i32 in Saturating, base: i32 in Saturating, x0: i32 in Saturating, x1: i32 in Saturating, color: i32, clipped: bool) {
+        transition clipped { true -> restricted(pixels, base, x0, x1, color) _ -> whole(pixels, width, base, x0, x1, color) }
+    }
+    state restricted(pixels: &mut [i32; 4096], base: i32 in Saturating, x0: i32 in Saturating, x1: i32 in Saturating, color: i32) {
+        let left: i32 in Saturating = max_sat(x0, pixels[4091] as i32 in Saturating);
+        let right: i32 in Saturating = min_sat(x1, pixels[4092] as i32 in Saturating);
+        transition left < right { true -> start_span16(pixels, (base + left) as i32, (base + right) as i32, color) _ -> done() }
+    }
+    state whole(pixels: &mut [i32; 4096], width: i32 in Saturating, base: i32 in Saturating, x0: i32 in Saturating, x1: i32 in Saturating, color: i32) {
+        let left: i32 in Saturating = max_sat(x0, 0);
+        let right: i32 in Saturating = min_sat(x1, width);
+        transition left < right { true -> start_span16(pixels, (base + left) as i32, (base + right) as i32, color) _ -> done() }
+    }
+    state start_span16(pixels: &mut [i32; 4096], node_index: i32, end_idx: i32, color: i32) {
+        transition node_index >= 0 && node_index < 4077 && (node_index + 15) < end_idx {
+            true -> step_span16(pixels, node_index, end_idx, color)
+            _ -> tail_span(pixels, node_index, end_idx, color)
+        }
+    }
+    state step_span16(pixels: &mut [i32; 4096], node_index: i32, end_idx: i32, color: i32)
+    requires node_index >= 0 && node_index < 4077 {
+        pixels[node_index] = color;
+        pixels[node_index + 1] = color;
+        pixels[node_index + 2] = color;
+        pixels[node_index + 3] = color;
+        pixels[node_index + 4] = color;
+        pixels[node_index + 5] = color;
+        pixels[node_index + 6] = color;
+        pixels[node_index + 7] = color;
+        pixels[node_index + 8] = color;
+        pixels[node_index + 9] = color;
+        pixels[node_index + 10] = color;
+        pixels[node_index + 11] = color;
+        pixels[node_index + 12] = color;
+        pixels[node_index + 13] = color;
+        pixels[node_index + 14] = color;
+        pixels[node_index + 15] = color;
+        transition { _ -> start_span16(pixels, node_index + 16, end_idx, color) }
+    }
+    state tail_span(pixels: &mut [i32; 4096], node_index: i32, end_idx: i32, color: i32) {
+        transition node_index >= 0 && node_index < end_idx && node_index < 4093 {
+            true -> step_span1(pixels, node_index, end_idx, color)
+            _ -> done()
+        }
+    }
+    state step_span1(pixels: &mut [i32; 4096], node_index: i32, end_idx: i32, color: i32)
+    requires node_index >= 0 && node_index < 4093 {
+        pixels[node_index] = color;
+        transition { _ -> tail_span(pixels, node_index + 1, end_idx, color) }
+    }
+    state done() {}
+}
+
+// Logical horizontal span fill `[x0, x1)` on logical scanline `py` with O(1) logical-Y pre-cull.
+public machine Raster::draw_hline(pixels: &mut [i32; 4096], band_y: i32, py: i32 in Saturating, x0: i32 in Saturating, x1: i32 in Saturating, color: i32) {
+    let is_64: bool = band_y < 0;
+    let ly: i32 in Saturating = pixels[4093] as i32 in Saturating;
+    let near_y: bool = is_64 || (ly >= (py - (2 as i32 in Saturating)) && ly <= (py + (2 as i32 in Saturating)));
+    transition near_y && color >= 0 && x0 < x1 {
+        true -> check_py(pixels, band_y, py, x0, x1, color, is_64)
+        _ -> done()
+    }
+    state check_py(pixels: &mut [i32; 4096], band_y: i32, py: i32 in Saturating, x0: i32 in Saturating, x1: i32 in Saturating, color: i32, is_64: bool) {
+        let ch: i32 in Saturating = Raster::band_height(pixels, band_y);
+        let p_py: i32 in Saturating = Raster::to_physical_y(py, ch, is_64, Raster::logical_height(pixels, band_y));
+        transition is_64 || p_py == (band_y as i32 in Saturating) {
+            true -> emit_hline(pixels, band_y, p_py, x0, x1, color, is_64)
+            _ -> done()
+        }
+    }
+    state emit_hline(pixels: &mut [i32; 4096], band_y: i32, p_py: i32 in Saturating, x0: i32 in Saturating, x1: i32 in Saturating, color: i32, is_64: bool) {
+        let cw: i32 in Saturating = Raster::band_width(pixels, band_y);
+        let p_x0: i32 in Saturating = Raster::to_physical_x(x0, cw, is_64, Raster::logical_width(pixels, band_y));
+        let p_x1: i32 in Saturating = Raster::to_physical_x(x1, cw, is_64, Raster::logical_width(pixels, band_y));
+        Raster::hline_raw(pixels, band_y, p_py, p_x0, p_x1, color);
+    }
+    state done() {}
+}
+
+// using octagonal seed + 1-step Newton-Raphson refinement (`< 0.007%` error, zero octagonal kinks).
+public machine Raster::sdf_dist16(dx: i32 in Saturating, dy: i32 in Saturating, r_eff: i32 in Saturating) -> i32 in Saturating {
+    let one: i32 in Saturating = 1;
+    let two: i32 in Saturating = 2;
+    let rx2: i32 in Saturating = max_sat(dx * two - one, 0);
+    let ry2: i32 in Saturating = max_sat(dy * two - one, 0);
+    let m_hi: i32 in Saturating = max_sat(rx2, ry2);
+    let m_lo: i32 in Saturating = min_sat(rx2, ry2);
+    let h1: i32 in Saturating = m_hi * (8 as i32 in Saturating) + m_lo + (m_lo / two);
+    let h2: i32 in Saturating = m_hi * (7 as i32 in Saturating) + m_lo * (4 as i32 in Saturating);
+    let h3: i32 in Saturating = m_hi * (6 as i32 in Saturating) + m_lo * (5 as i32 in Saturating) + ((m_hi + m_lo) / (4 as i32 in Saturating));
+    let g_seed: i32 in Saturating = max_sat(h1, max_sat(h2, h3));
+    let sq: i32 in Saturating = ((rx2 * rx2) + (ry2 * ry2)) * (64 as i32 in Saturating);
+    transition g_seed > 0 {
+        true -> nr_step(g_seed, sq, r_eff)
+        _ -> zero_seed(r_eff)
+    }
+    state nr_step(g_seed: i32 in Saturating, sq: i32 in Saturating, r_eff: i32 in Saturating) -> i32 in Saturating
+    requires g_seed > 0 {
+        let dist16: i32 in Saturating = (g_seed + (sq / g_seed)) / (2 as i32 in Saturating);
+        dist16 - (r_eff * (16 as i32 in Saturating))
+    }
+    state zero_seed(r_eff: i32 in Saturating) -> i32 in Saturating {
+        (0 as i32 in Saturating) - (r_eff * (16 as i32 in Saturating))
+    }
+}
+
+// Hermite smoothstep coverage (`0..100`%) over `[-0.625px, +0.625px]` (`sd16` in `-10..+10`).
+public machine Raster::sdf_smooth16(sd16: i32 in Saturating) -> i32 {
+    let t: i32 in Saturating = clamp_sat((10 as i32 in Saturating) - sd16, 0, 20);
+    let num: i32 in Saturating = t * t * ((60 as i32 in Saturating) - ((2 as i32 in Saturating) * t)) * (100 as i32 in Saturating);
+    (num / (8000 as i32 in Saturating)) as i32
+}
+
+// Match the one-pixel filter of the pixel-aligned straight edges.
+machine box_coverage16(distance: i32 in Saturating) -> i32 {
+    let covered: i32 in Saturating = clamp_sat((8 as i32 in Saturating) - distance, 0, 16);
+    (covered * (100 as i32 in Saturating) / (16 as i32 in Saturating)) as i32
+}
+
+// Render a single physical pixel in a rounded corner using exact Euclidean SDF fill+border.
+public machine Raster::sdf_corner_px(pixels: &mut [i32; 4096], band_y: i32, px: i32 in Saturating, py: i32 in Saturating, dx: i32 in Saturating, dy: i32 in Saturating, r_eff: i32 in Saturating, bg: i32, border: i32, has_border: bool) {
+    let sd16: i32 in Saturating = Raster::sdf_dist16(dx, dy, r_eff);
+    let cov_out: i32 = box_coverage16(sd16);
+    let cov_in: i32 = box_coverage16(sd16 + (16 as i32 in Saturating));
+    let has_bg: bool = bg >= 0;
+    let ring_alpha: i32 = clamp_i32(sub_i32(cov_out, cov_in), 0, 100);
+    let mixed_col: i32 = select_i32(has_border, select_i32(has_bg, color_mix(border, bg, corner_fill_percentage(cov_out, cov_in)), border), bg);
+    let final_alpha: i32 = select_i32(has_bg, cov_out, select_i32(has_border, ring_alpha, 0));
+    Raster::blend_px_raw(pixels, band_y, px, py, mixed_col, final_alpha);
+}
+
+// Loop across the `r_eff` physical corner columns on the left and right ends of scanline `py`.
+public machine Raster::sdf_corner_row(pixels: &mut [i32; 4096], band_y: i32, rectangle: Rect, py: i32 in Saturating, dy: i32 in Saturating, r_eff: i32 in Saturating, bg: i32, border: i32, has_border: bool) {
+    transition { _ -> loop_corner_pixels(pixels, band_y, rectangle, py, dy, r_eff, bg, border, has_border, 0) }
+    state loop_corner_pixels(pixels: &mut [i32; 4096], band_y: i32, rectangle: Rect, py: i32 in Saturating, dy: i32 in Saturating, r_eff: i32 in Saturating, bg: i32, border: i32, has_border: bool, corner_pixel_index: i32) {
+        let corner_pixel_offset: i32 in Saturating = corner_pixel_index as i32 in Saturating;
+        transition corner_pixel_index >= 0 && corner_pixel_index < 48 && corner_pixel_offset < r_eff {
+            true -> paint_corner_pixel(pixels, band_y, rectangle, py, dy, r_eff, bg, border, has_border, corner_pixel_index, corner_pixel_offset)
+            _ -> done()
+        }
+    }
+    state paint_corner_pixel(pixels: &mut [i32; 4096], band_y: i32, rectangle: Rect, py: i32 in Saturating, dy: i32 in Saturating, r_eff: i32 in Saturating, bg: i32, border: i32, has_border: bool, corner_pixel_index: i32, corner_pixel_offset: i32 in Saturating) {
+        let dx: i32 in Saturating = r_eff - corner_pixel_offset;
+        let sd16: i32 in Saturating = Raster::sdf_dist16(dx, dy, r_eff);
+        transition sd16 >= 10 {
+            true -> loop_corner_pixels(pixels, band_y, rectangle, py, dy, r_eff, bg, border, has_border, corner_pixel_index + 1)
+            _ -> coverage(pixels, band_y, rectangle, py, dy, r_eff, bg, border, has_border, corner_pixel_index, sd16)
+        }
+    }
+    state coverage(pixels: &mut [i32; 4096], band_y: i32, rectangle: Rect, py: i32 in Saturating, dy: i32 in Saturating, r_eff: i32 in Saturating, bg: i32, border: i32, has_border: bool, corner_pixel_index: i32, sd16: i32 in Saturating) {
+        // Inside the inner contour both coverages are exactly opaque.
+        transition sd16 <= -26 && bg >= 0 {
+            true -> pair(pixels, band_y, rectangle, py, dy, r_eff, bg, border, has_border, corner_pixel_index, bg, 100)
+            _ -> edge(pixels, band_y, rectangle, py, dy, r_eff, bg, border, has_border, corner_pixel_index, sd16)
+        }
+    }
+    state edge(pixels: &mut [i32; 4096], band_y: i32, rectangle: Rect, py: i32 in Saturating, dy: i32 in Saturating, r_eff: i32 in Saturating, bg: i32, border: i32, has_border: bool, corner_pixel_index: i32, sd16: i32 in Saturating) {
+        let outer: i32 = box_coverage16(sd16);
+        let inner: i32 = box_coverage16(sd16 + (16 as i32 in Saturating));
+        let color: i32 = select_i32(has_border, select_i32(bg >= 0, color_mix(border, bg, corner_fill_percentage(outer, inner)), border), bg);
+        let alpha: i32 = select_i32(bg >= 0, outer, select_i32(has_border, clamp_i32(sub_i32(outer, inner), 0, 100), 0));
+        transition { _ -> pair(pixels, band_y, rectangle, py, dy, r_eff, bg, border, has_border, corner_pixel_index, color, alpha) }
+    }
+    state pair(pixels: &mut [i32; 4096], band_y: i32, rectangle: Rect, py: i32 in Saturating, dy: i32 in Saturating, r_eff: i32 in Saturating, bg: i32, border: i32, has_border: bool, corner_pixel_index: i32, color: i32, alpha: i32) {
+        let offset: i32 in Saturating = corner_pixel_index as i32 in Saturating;
+        let lx: i32 in Saturating = rectangle.x + offset;
+        let rx: i32 in Saturating = rectangle.x + rectangle.w - (1 as i32 in Saturating) - offset;
+        Raster::blend_px_raw(pixels, band_y, lx, py, color, alpha);
+        transition rx > lx {
+            true -> paint_right_corner(pixels, band_y, rectangle, py, dy, r_eff, bg, border, has_border, corner_pixel_index, rx, color, alpha)
+            _ -> loop_corner_pixels(pixels, band_y, rectangle, py, dy, r_eff, bg, border, has_border, corner_pixel_index + 1)
+        }
+    }
+    state paint_right_corner(pixels: &mut [i32; 4096], band_y: i32, rectangle: Rect, py: i32 in Saturating, dy: i32 in Saturating, r_eff: i32 in Saturating, bg: i32, border: i32, has_border: bool, corner_pixel_index: i32, rx: i32 in Saturating, color: i32, alpha: i32) {
+        Raster::blend_px_raw(pixels, band_y, rx, py, color, alpha);
+        transition { _ -> loop_corner_pixels(pixels, band_y, rectangle, py, dy, r_eff, bg, border, has_border, corner_pixel_index + 1) }
+    }
+    state done() {}
+}
+
+// Render one physical scanline `py` of an SDF rounded box (`bg`, `border`, `r_eff`).
+public machine Raster::sdf_box_scanline(pixels: &mut [i32; 4096], band_y: i32, rectangle: Rect, py: i32 in Saturating, r_eff: i32 in Saturating, bg: i32, border: i32, has_border: bool) {
+    let bounded: bool = rectangle.x >= -16384 && rectangle.x <= 16384 && rectangle.y >= -16384 && rectangle.y <= 16384 && rectangle.w >= 0 && rectangle.w <= 16384 && rectangle.h >= 0 && rectangle.h <= 16384 && py >= -16384 && py <= 16384 && r_eff >= 0 && r_eff <= 48;
+    transition bounded {
+        true -> bounded(pixels, band_y, rectangle, py, r_eff, bg, border, has_border)
+        _ -> general(pixels, band_y, rectangle, py, r_eff, bg, border, has_border)
+    }
+    state bounded(pixels: &mut [i32; 4096], band_y: i32, rectangle: Rect, py: i32 in Saturating, r_eff: i32 in Saturating, bg: i32, border: i32, has_border: bool) {
+        Raster::bounded_box_scanline(pixels, band_y, rectangle, py, r_eff, bg, border, has_border);
+    }
+    state general(pixels: &mut [i32; 4096], band_y: i32, rectangle: Rect, py: i32 in Saturating, r_eff: i32 in Saturating, bg: i32, border: i32, has_border: bool) {
+        Raster::general_box_scanline(pixels, band_y, rectangle, py, r_eff, bg, border, has_border);
+    }
+}
+
+// The entry guard bounds every sum by 65536, so wrapping cannot change a result.
+machine Raster::bounded_box_scanline(pixels: &mut [i32; 4096], band_y: i32, rectangle: Rect, py: i32 in Saturating, r_eff: i32 in Saturating, bg: i32, border: i32, has_border: bool) {
+    let x: i32 in Wrapping = rectangle.x as i32 in Wrapping;
+    let y: i32 in Wrapping = rectangle.y as i32 in Wrapping;
+    let width: i32 in Wrapping = rectangle.w as i32 in Wrapping;
+    let height: i32 in Wrapping = rectangle.h as i32 in Wrapping;
+    let row: i32 in Wrapping = py as i32 in Wrapping;
+    let radius: i32 in Wrapping = r_eff as i32 in Wrapping;
+    let bottom: i32 in Wrapping = y + height - (1 as i32 in Wrapping);
+    let dy: i32 = max_i32((radius - (row - y)) as i32, max_i32((row - (bottom - radius)) as i32, 0));
+    let cap: bool = row == y || row == bottom;
+    let margin: i32 in Wrapping = select_i32(dy > 0, r_eff as i32, 0) as i32 in Wrapping;
+    Raster::hline_raw(pixels, band_y, py, (x + margin) as i32 in Saturating, (x + width - margin) as i32 in Saturating, select_i32(cap && has_border, border, bg));
+    transition r_eff > 0 && dy > 0 {
+        true -> corners(pixels, band_y, rectangle, py, dy as i32 in Saturating, r_eff, bg, border, has_border)
+        _ -> sides(pixels, band_y, rectangle, py, border, has_border && !cap)
+    }
+    state corners(pixels: &mut [i32; 4096], band_y: i32, rectangle: Rect, py: i32 in Saturating, dy: i32 in Saturating, radius: i32 in Saturating, bg: i32, border: i32, has_border: bool) {
+        Raster::sdf_corner_row(pixels, band_y, rectangle, py, dy, radius, bg, border, has_border);
+    }
+    state sides(pixels: &mut [i32; 4096], band_y: i32, rectangle: Rect, py: i32 in Saturating, border: i32, draw: bool) {
+        transition draw { true -> paint_sides(pixels, band_y, rectangle, py, border) _ -> done() }
+    }
+    state paint_sides(pixels: &mut [i32; 4096], band_y: i32, rectangle: Rect, py: i32 in Saturating, border: i32) {
+        let last: i32 in Wrapping = (rectangle.x as i32 in Wrapping) + (rectangle.w as i32 in Wrapping) - (1 as i32 in Wrapping);
+        Raster::put_px_raw(pixels, band_y, rectangle.x, py, border);
+        Raster::put_px_raw(pixels, band_y, last as i32 in Saturating, py, border);
+    }
+    state done() {}
+}
+
+machine Raster::general_box_scanline(pixels: &mut [i32; 4096], band_y: i32, rectangle: Rect, py: i32 in Saturating, r_eff: i32 in Saturating, bg: i32, border: i32, has_border: bool) {
+    let one: i32 in Saturating = 1;
+    let top_d: i32 in Saturating = r_eff - (py - rectangle.y);
+    let bot_d: i32 in Saturating = py - (rectangle.y + rectangle.h - one - r_eff);
+    let dy: i32 in Saturating = max_sat(top_d, max_sat(bot_d, 0));
+    let is_cap: bool = py == rectangle.y || py == (rectangle.y + rectangle.h - one);
+    let mid_col: i32 = select_i32(is_cap && has_border, border, bg);
+    Raster::hline_raw(pixels, band_y, py, rectangle.x + select_sat(dy > 0, r_eff, 0), rectangle.x + rectangle.w - select_sat(dy > 0, r_eff, 0), mid_col);
+    transition r_eff > 0 && dy > 0 {
+        true -> corners(pixels, band_y, rectangle, py, dy, r_eff, bg, border, has_border)
+        _ -> sides(pixels, band_y, rectangle, py, border, has_border && !is_cap)
+    }
+    state corners(pixels: &mut [i32; 4096], band_y: i32, rectangle: Rect, py: i32 in Saturating, dy: i32 in Saturating, r_eff: i32 in Saturating, bg: i32, border: i32, has_border: bool) {
+        Raster::sdf_corner_row(pixels, band_y, rectangle, py, dy, r_eff, bg, border, has_border);
+    }
+    state sides(pixels: &mut [i32; 4096], band_y: i32, rectangle: Rect, py: i32 in Saturating, border: i32, draw_lr: bool) {
+        transition draw_lr { true -> paint_sides(pixels, band_y, rectangle, py, border) _ -> done() }
+    }
+    state paint_sides(pixels: &mut [i32; 4096], band_y: i32, rectangle: Rect, py: i32 in Saturating, border: i32) {
+        Raster::put_px_raw(pixels, band_y, rectangle.x, py, border);
+        Raster::put_px_raw(pixels, band_y, rectangle.x + rectangle.w - (1 as i32 in Saturating), py, border);
+    }
+    state done() {}
+}
+
+// Native 1:1 physical-resolution SDF rounded box + border (`bg >= 0` for fill, `border >= 0 && border_w > 0` for 1px hairline border).
+public machine Raster::draw_box_band(pixels: &mut [i32; 4096], band_y: i32, rectangle: Rect, bg: i32, border: i32, border_w: i32 in Saturating, rad: i32 in Saturating) {
+    let bounded: bool = band_y >= 0 && Raster::logical_width(pixels, band_y) == 1024 && Raster::logical_height(pixels, band_y) == 672 && rectangle.x >= -1024 && rectangle.x <= 2048 && rectangle.y >= -672 && rectangle.y <= 1344 && rectangle.w > 0 && rectangle.w <= 2048 && rectangle.h > 0 && rectangle.h <= 1344 && rad >= 0 && rad <= 48;
+    transition bounded {
+        true -> physical(pixels, band_y, rectangle, bg, border, border_w, rad)
+        _ -> general(pixels, band_y, rectangle, bg, border, border_w, rad)
+    }
+    state physical(pixels: &mut [i32; 4096], band_y: i32, rectangle: Rect, bg: i32, border: i32, border_w: i32 in Saturating, rad: i32 in Saturating) {
+        Raster::physical_box_band(pixels, band_y, rectangle, bg, border, border_w, rad);
+    }
+    state general(pixels: &mut [i32; 4096], band_y: i32, rectangle: Rect, bg: i32, border: i32, border_w: i32 in Saturating, rad: i32 in Saturating) {
+        Raster::general_box_band(pixels, band_y, rectangle, bg, border, border_w, rad);
+    }
+}
+
+// Bounded logical coordinates and the capped canvas keep products below 16 million.
+machine Raster::physical_box_band(pixels: &mut [i32; 4096], band_y: i32, rectangle: Rect, bg: i32, border: i32, border_w: i32 in Saturating, rad: i32 in Saturating) {
+    let y: i32 in Wrapping = rectangle.y as i32 in Wrapping;
+    let height: i32 in Wrapping = rectangle.h as i32 in Wrapping;
+    let logical_row: i32 = pixels[4093];
+    let near: bool = logical_row >= ((y - (2 as i32 in Wrapping)) as i32) && logical_row <= ((y + height + (2 as i32 in Wrapping)) as i32);
+    let has_border: bool = border >= 0 && border_w > 0;
+    transition near && (bg >= 0 || has_border) {
+        true -> vertical(pixels, band_y, rectangle, bg, border, has_border, rad)
+        _ -> done()
+    }
+    state vertical(pixels: &mut [i32; 4096], band_y: i32, rectangle: Rect, bg: i32, border: i32, has_border: bool, rad: i32 in Saturating) {
+        let canvas: i32 in Wrapping = Raster::band_height(pixels, band_y) as i32 in Wrapping;
+        let y: i32 in Wrapping = rectangle.y as i32 in Wrapping;
+        let height: i32 in Wrapping = rectangle.h as i32 in Wrapping;
+        let top: i32 in Wrapping = (y * canvas + (336 as i32 in Wrapping)) / (672 as i32 in Wrapping);
+        let bottom: i32 = max_i32((((y + height) * canvas + (336 as i32 in Wrapping)) / (672 as i32 in Wrapping)) as i32, (top + (1 as i32 in Wrapping)) as i32);
+        transition band_y >= (top as i32) && band_y < bottom {
+            true -> horizontal(pixels, band_y, rectangle, bg, border, has_border, rad, top, bottom as i32 in Wrapping, canvas)
+            _ -> done()
+        }
+    }
+    state horizontal(pixels: &mut [i32; 4096], band_y: i32, rectangle: Rect, bg: i32, border: i32, has_border: bool, rad: i32 in Saturating, top: i32 in Wrapping, bottom: i32 in Wrapping, canvas_height: i32 in Wrapping) {
+        let canvas_width: i32 in Wrapping = Raster::band_width(pixels, band_y) as i32 in Wrapping;
+        let x: i32 in Wrapping = rectangle.x as i32 in Wrapping;
+        let width: i32 in Wrapping = rectangle.w as i32 in Wrapping;
+        let left: i32 in Wrapping = (x * canvas_width + (512 as i32 in Wrapping)) / (1024 as i32 in Wrapping);
+        let right: i32 in Wrapping = max_i32((((x + width) * canvas_width + (512 as i32 in Wrapping)) / (1024 as i32 in Wrapping)) as i32, (left + (1 as i32 in Wrapping)) as i32) as i32 in Wrapping;
+        let clipped: bool = pixels[4090] == -271828 && pixels[4091] >= 0 && pixels[4091] < pixels[4092] && pixels[4092] <= (canvas_width as i32);
+        transition !clipped || ((left as i32) < pixels[4092] && (right as i32) > pixels[4091]) {
+            true -> paint(pixels, band_y, left, top, right, bottom, canvas_height, rad, bg, border, has_border)
+            _ -> done()
+        }
+    }
+    state paint(pixels: &mut [i32; 4096], band_y: i32, left: i32 in Wrapping, top: i32 in Wrapping, right: i32 in Wrapping, bottom: i32 in Wrapping, canvas_height: i32 in Wrapping, rad: i32 in Saturating, bg: i32, border: i32, has_border: bool) {
+        let width: i32 in Wrapping = right - left;
+        let height: i32 in Wrapping = bottom - top;
+        let radius: i32 = (((rad as i32 in Wrapping) * canvas_height + (336 as i32 in Wrapping)) / (672 as i32 in Wrapping)) as i32;
+        let maximum: i32 = min_i32(48, min_i32((width / (2 as i32 in Wrapping)) as i32, (height / (2 as i32 in Wrapping)) as i32));
+        let rectangle: Rect = Rect { x: left as i32 in Saturating, y: top as i32 in Saturating, w: width as i32 in Saturating, h: height as i32 in Saturating };
+        Raster::sdf_box_scanline(pixels, band_y, rectangle, band_y as i32 in Saturating, clamp_i32(radius, 0, maximum) as i32 in Saturating, bg, border, has_border);
+    }
+    state done() {}
+}
+
+machine Raster::general_box_band(pixels: &mut [i32; 4096], band_y: i32, rectangle: Rect, bg: i32, border: i32, border_w: i32 in Saturating, rad: i32 in Saturating) {
+    let is_64: bool = band_y < 0;
+    let ly: i32 in Saturating = pixels[4093] as i32 in Saturating;
+    let has_border: bool = border >= 0 && border_w > 0;
+    let near_y: bool = is_64 || (ly >= (rectangle.y - (2 as i32 in Saturating)) && ly <= (rectangle.y + rectangle.h + (2 as i32 in Saturating)));
+    transition near_y && rectangle.w > 0 && rectangle.h > 0 && (bg >= 0 || has_border) {
+        true -> check_exact_y(pixels, band_y, rectangle, bg, border, has_border, rad, is_64)
+        _ -> done()
+    }
+    state check_exact_y(pixels: &mut [i32; 4096], band_y: i32, rectangle: Rect, bg: i32, border: i32, has_border: bool, rad: i32 in Saturating, is_64: bool) {
+        let ch: i32 in Saturating = Raster::band_height(pixels, band_y);
+        let py0: i32 in Saturating = Raster::to_physical_y(rectangle.y, ch, is_64, Raster::logical_height(pixels, band_y));
+        let py1: i32 in Saturating = max_sat(Raster::to_physical_y(rectangle.y + rectangle.h, ch, is_64, Raster::logical_height(pixels, band_y)), py0 + (1 as i32 in Saturating));
+        let by_s: i32 in Saturating = select_sat(is_64, 0, band_y as i32 in Saturating);
+        let bh_s: i32 in Saturating = select_sat(is_64, 64, 1);
+        let y0: i32 in Saturating = max_sat(py0, by_s);
+        let y1: i32 in Saturating = min_sat(py1, by_s + bh_s);
+        let cw: i32 in Saturating = Raster::band_width(pixels, band_y);
+        let clipped: bool = !is_64 && pixels[4090] == -271828 && pixels[4091] >= 0 && pixels[4091] < pixels[4092] && (pixels[4092] as i32 in Saturating) <= cw;
+        let near_x: bool = !clipped || (Raster::to_physical_x(rectangle.x, cw, false, Raster::logical_width(pixels, band_y)) < (pixels[4092] as i32 in Saturating) && max_sat(Raster::to_physical_x(rectangle.x + rectangle.w, cw, false, Raster::logical_width(pixels, band_y)), Raster::to_physical_x(rectangle.x, cw, false, Raster::logical_width(pixels, band_y)) + (1 as i32 in Saturating)) > (pixels[4091] as i32 in Saturating));
+        transition y0 < y1 && near_x {
+            true -> prep_box(pixels, band_y, rectangle, py0, py1 - py0, rad, ch, is_64, bg, border, has_border, y0, y1)
+            _ -> done()
+        }
+    }
+    state prep_box(pixels: &mut [i32; 4096], band_y: i32, rectangle: Rect, py0: i32 in Saturating, ph: i32 in Saturating, rad: i32 in Saturating, ch: i32 in Saturating, is_64: bool, bg: i32, border: i32, has_border: bool, y0: i32 in Saturating, y1: i32 in Saturating) {
+        let cw: i32 in Saturating = Raster::band_width(pixels, band_y);
+        let px0: i32 in Saturating = Raster::to_physical_x(rectangle.x, cw, is_64, Raster::logical_width(pixels, band_y));
+        let px1: i32 in Saturating = max_sat(Raster::to_physical_x(rectangle.x + rectangle.w, cw, is_64, Raster::logical_width(pixels, band_y)), px0 + (1 as i32 in Saturating));
+        let pr: Rect = Rect { x: px0, y: py0, w: px1 - px0, h: ph };
+        let two: i32 in Saturating = 2;
+        let p_rad: i32 in Saturating = select_sat(is_64, rad, UiViewport::map(rad, ch, Raster::logical_height(pixels, band_y)));
+        let max_r: i32 in Saturating = min_sat(pr.w / two, pr.h / two);
+        let r_eff: i32 in Saturating = clamp_sat(p_rad, 0, min_sat(max_r, 48));
+        transition is_64 {
+            true -> loop_y(pixels, band_y, pr, r_eff, bg, border, has_border, y0, y1)
+            _ -> single_y(pixels, band_y, pr, r_eff, bg, border, has_border, y0)
+        }
+    }
+    state single_y(pixels: &mut [i32; 4096], band_y: i32, pr: Rect, r_eff: i32 in Saturating, bg: i32, border: i32, has_border: bool, py: i32 in Saturating) {
+        Raster::sdf_box_scanline(pixels, band_y, pr, py, r_eff, bg, border, has_border);
+    }
+    state loop_y(pixels: &mut [i32; 4096], band_y: i32, pr: Rect, r_eff: i32 in Saturating, bg: i32, border: i32, has_border: bool, py: i32 in Saturating, y1: i32 in Saturating) {
+        let py_i: i32 = py as i32;
+        transition py_i >= 0 && py_i < 2160 && py < y1 {
+            true -> step_y(pixels, band_y, pr, r_eff, bg, border, has_border, py, y1, py_i)
+            _ -> done()
+        }
+    }
+    state step_y(pixels: &mut [i32; 4096], band_y: i32, pr: Rect, r_eff: i32 in Saturating, bg: i32, border: i32, has_border: bool, py: i32 in Saturating, y1: i32 in Saturating, py_i: i32)
+    requires py_i >= 0 && py_i < 2160 {
+        let r_line: Rect = Rect { x: pr.x, y: pr.y, w: pr.w, h: pr.h };
+        Raster::sdf_box_scanline(pixels, band_y, r_line, py, r_eff, bg, border, has_border);
+        let next_py: i32 in Saturating = (py_i + 1) as i32 in Saturating;
+        transition { _ -> loop_y(pixels, band_y, pr, r_eff, bg, border, has_border, next_py, y1) }
+    }
+    state done() {}
+}
+
+public machine Raster::draw_box_fill(pixels: &mut [i32; 4096], band_y: i32, rectangle: Rect, bg: i32, rad: i32 in Saturating) {
+    Raster::draw_box_band(pixels, band_y, rectangle, bg, -1, 0, rad);
+}
+
+public machine Raster::draw_box_border(pixels: &mut [i32; 4096], band_y: i32, rectangle: Rect, border: i32, rad: i32 in Saturating) {
+    Raster::draw_box_band(pixels, band_y, rectangle, -1, border, 1, rad);
+}
+
+// Native 1px-Stem Proportional Anti-Aliased Font (30-bit 5x6 packed per char)
+
+public machine Raster::glyph_mask(ch: i32) -> i32 {
+    transition ch >= 48 && ch <= 57 {
+        true -> digit_lookup(ch - 48)
+        _ -> check_upper(ch)
+    }
+    state digit_lookup(node_index: i32) -> i32
+    requires node_index >= 0 && node_index < 10 {
+        let digits: [i32; 10] = [
+            488232750, 146935950, 487627039, 487627310, 73759810,
+            1057519678, 487094830, 1041305864, 488159790, 488160302
+        ];
+        digits[node_index]
+    }
+    state check_upper(ch: i32) -> i32 {
+        transition ch >= 65 && ch <= 90 {
+            true -> upper_lookup(ch - 65)
+            _ -> check_lower(ch)
+        }
+    }
+    state upper_lookup(node_index: i32) -> i32
+    requires node_index >= 0 && node_index < 26 {
+        let upper: [i32; 26] = [
+            488177201, 1025047102, 520634895, 1025033790, 1057520159,
+            1057520144, 520637999, 588840497, 474091662, 237046348,
+            589980306, 554189343, 599442993, 597347889, 488162862,
+            1025047056, 488162893, 1025047121, 520632382, 1044516996,
+            588826158, 588825924, 588830577, 588583249, 588583044,
+            1041305887
+        ];
+        upper[node_index]
+    }
+    state check_lower(ch: i32) -> i32 {
+        transition ch >= 97 && ch <= 122 {
+            true -> lower_lookup(ch - 97)
+            _ -> sym_low(ch)
+        }
+    }
+    state lower_lookup(node_index: i32) -> i32
+    requires node_index >= 0 && node_index < 26 {
+        let lower: [i32; 26] = [
+            14728751, 568903230, 16269839, 49858095, 15269391,
+            210008328, 16301102, 568903217, 134353036, 67177036,
+            556425874, 406982796, 27973297, 32032305, 15255086,
+            32045584, 16301089, 23609872, 16267326, 300163334,
+            18400815, 18400580, 18405233, 18157905, 18398254,
+            32575775
+        ];
+        lower[node_index]
+    }
+    state sym_low(ch: i32) -> i32 {
+        transition ch <= 47 {
+            true -> sym_l1(ch)
+            _ -> sym_high(ch)
+        }
+    }
+    state sym_l1(ch: i32) -> i32 {
+        let s0: i32 = select_i32(ch == 37, 866263411, select_i32(ch == 40, 209985798, 0));
+        let s1: i32 = select_i32(ch == 41, 404817996, select_i32(ch == 43, 4357252, s0));
+        let s2: i32 = select_i32(ch == 44, 136, select_i32(ch == 45, 31744, s1));
+        select_i32(ch == 46, 396, select_i32(ch == 47, 35791360, s2))
+    }
+    state sym_high(ch: i32) -> i32 {
+        let s0: i32 = select_i32(ch == 58, 12976524, select_i32(ch == 61, 32537600, 0));
+        let s1: i32 = select_i32(ch == 62, 272699648, select_i32(ch == 64, 488331790, s0));
+        let s2: i32 = select_i32(ch == 91, 478421262, select_i32(ch == 93, 471926862, s1));
+        select_i32(ch == 94, 145260544, select_i32(ch == 95, 31, select_i32(ch == 124, 138547332, s2)))
+    }
+}
+
+public machine Raster::extract_row5(word30: i32, sub_row: i32) -> i32 {
+    transition sub_row >= 0 && sub_row < 8 {
+        true -> idx_row(word30, sub_row)
+        _ -> (0)
+    }
+    state idx_row(word30: i32, sub_row: i32)
+    requires sub_row >= 0 && sub_row < 8 {
+        let shifts: [i32; 8] = [33554432, 1048576, 32768, 32768, 1024, 32, 32, 1];
+        let div: i32 = shifts[sub_row];
+        transition div > 0 {
+            true -> ((word30 / div) % 32)
+            _ -> (0)
+        }
+    }
+}
+
+public machine Raster::glyph_advance(ch: i32) -> i32 in Saturating {
+    let narrow: bool = ch == 32 || ch == 46 || ch == 58 || ch == 105 || ch == 108 || ch == 124;
+    select_sat(narrow, 4, 6)
+}
+
+public machine Raster::plot_row5_px(pixels: &mut [i32; 4096], band_y: i32, px: i32 in Saturating, py: i32 in Saturating, on: bool, next_on: bool, color: i32, sub_aa: i32) {
+    transition on {
+        true -> draw_on(pixels, band_y, px, py, next_on, color, sub_aa)
+        _ -> done()
+    }
+    state draw_on(pixels: &mut [i32; 4096], band_y: i32, px: i32 in Saturating, py: i32 in Saturating, next_on: bool, color: i32, sub_aa: i32) {
+        Raster::put_px_band(pixels, band_y, px, py, color);
+        let aa: i32 = select_i32(next_on, 0, sub_aa);
+        Raster::blend_px_band(pixels, band_y, px + (1 as i32 in Saturating), py, color, aa);
+    }
+    state done() {}
+}
+
+public machine Raster::plot_row5(pixels: &mut [i32; 4096], band_y: i32, ox: i32 in Saturating, py: i32 in Saturating, rb: i32, color: i32, sub_aa: i32) {
+    let b0: bool = ((rb / 16) % 2) == 1;
+    let b1: bool = ((rb / 8) % 2) == 1;
+    let b2: bool = ((rb / 4) % 2) == 1;
+    let b3: bool = ((rb / 2) % 2) == 1;
+    let b4: bool = (rb % 2) == 1;
+    Raster::plot_row5_px(pixels, band_y, ox, py, b0, b1, color, sub_aa);
+    Raster::plot_row5_px(pixels, band_y, ox + (1 as i32 in Saturating), py, b1, b2, color, sub_aa);
+    Raster::plot_row5_px(pixels, band_y, ox + (2 as i32 in Saturating), py, b2, b3, color, sub_aa);
+    Raster::plot_row5_px(pixels, band_y, ox + (3 as i32 in Saturating), py, b3, b4, color, sub_aa);
+    Raster::plot_row5_px(pixels, band_y, ox + (4 as i32 in Saturating), py, b4, false, color, sub_aa);
+}
+
+// Render one character at native `5x8` UI resolution (`1px` horizontal bars and stems, `sub_aa` ClearType smoothing).
+public machine Raster::draw_char_weight(pixels: &mut [i32; 4096], band_y: i32, ox: i32 in Saturating, oy: i32 in Saturating, ch: i32, color: i32, sub_aa: i32) {
+    let is_64: bool = band_y < 0;
+    let by_s: i32 in Saturating = select_sat(is_64, 0, band_y as i32 in Saturating);
+    let bh_s: i32 in Saturating = select_sat(is_64, 64, 4);
+    let y0: i32 in Saturating = max_sat(oy, by_s);
+    let y1: i32 in Saturating = min_sat(oy + (8 as i32 in Saturating), by_s + bh_s);
+    transition ch > 32 && y0 < y1 {
+        true -> start_char(pixels, band_y, ox, oy, Raster::glyph_mask(ch), color, sub_aa, y0, y1)
+        _ -> done()
+    }
+    state start_char(pixels: &mut [i32; 4096], band_y: i32, ox: i32 in Saturating, oy: i32 in Saturating, mask: i32, color: i32, sub_aa: i32, y0: i32 in Saturating, y1: i32 in Saturating) {
+        transition mask > 0 {
+            true -> loop_py(pixels, band_y, ox, oy, mask, color, sub_aa, y0, y1)
+            _ -> done()
+        }
+    }
+    state loop_py(pixels: &mut [i32; 4096], band_y: i32, ox: i32 in Saturating, oy: i32 in Saturating, mask: i32, color: i32, sub_aa: i32, py: i32 in Saturating, y1: i32 in Saturating) {
+        let py_i: i32 = py as i32;
+        transition py_i >= 0 && py_i < 672 && py < y1 {
+            true -> step_py(pixels, band_y, ox, oy, mask, color, sub_aa, py, y1, py_i)
+            _ -> done()
+        }
+    }
+    state step_py(pixels: &mut [i32; 4096], band_y: i32, ox: i32 in Saturating, oy: i32 in Saturating, mask: i32, color: i32, sub_aa: i32, py: i32 in Saturating, y1: i32 in Saturating, py_i: i32)
+    requires py_i >= 0 && py_i < 672 {
+        let gy: i32 = clamp_i32((py - oy) as i32, 0, 7);
+        let rb: i32 = Raster::extract_row5(mask, gy);
+        Raster::plot_row5(pixels, band_y, ox, py, rb, color, sub_aa);
+        let next_py: i32 in Saturating = (py_i + 1) as i32 in Saturating;
+        transition { _ -> loop_py(pixels, band_y, ox, oy, mask, color, sub_aa, next_py, y1) }
+    }
+    state done() {}
+}
+
+public machine Raster::draw_char1(pixels: &mut [i32; 4096], band_y: i32, ox: i32 in Saturating, oy: i32 in Saturating, ch: i32, color: i32) {
+    transition band_y < 0 {
+        true -> run(pixels, band_y, ox, oy, ch, color)
+        _ -> done()
+    }
+    state run(pixels: &mut [i32; 4096], band_y: i32, ox: i32 in Saturating, oy: i32 in Saturating, ch: i32, color: i32) {
+        Raster::draw_char_weight(pixels, band_y, ox, oy, ch, color, 28);
+    }
+    state done() {}
+}
+
+public machine Raster::plot_row5_px2(pixels: &mut [i32; 4096], band_y: i32, px: i32 in Saturating, py: i32 in Saturating, on: bool, next_on: bool, color: i32) {
+    transition on {
+        true -> draw_on(pixels, band_y, px, py, next_on, color)
+        _ -> done()
+    }
+    state draw_on(pixels: &mut [i32; 4096], band_y: i32, px: i32 in Saturating, py: i32 in Saturating, next_on: bool, color: i32) {
+        Raster::draw_hline(pixels, band_y, py, px, px + (2 as i32 in Saturating), color);
+        let aa: i32 = select_i32(next_on, 0, 45);
+        Raster::blend_px_band(pixels, band_y, px + (2 as i32 in Saturating), py, color, aa);
+    }
+    state done() {}
+}
+
+public machine Raster::plot_row5_2x(pixels: &mut [i32; 4096], band_y: i32, ox: i32 in Saturating, py: i32 in Saturating, rb: i32, color: i32) {
+    let b0: bool = ((rb / 16) % 2) == 1;
+    let b1: bool = ((rb / 8) % 2) == 1;
+    let b2: bool = ((rb / 4) % 2) == 1;
+    let b3: bool = ((rb / 2) % 2) == 1;
+    let b4: bool = (rb % 2) == 1;
+    Raster::plot_row5_px2(pixels, band_y, ox, py, b0, b1, color);
+    Raster::plot_row5_px2(pixels, band_y, ox + (2 as i32 in Saturating), py, b1, b2, color);
+    Raster::plot_row5_px2(pixels, band_y, ox + (4 as i32 in Saturating), py, b2, b3, color);
+    Raster::plot_row5_px2(pixels, band_y, ox + (6 as i32 in Saturating), py, b3, b4, color);
+    Raster::plot_row5_px2(pixels, band_y, ox + (8 as i32 in Saturating), py, b4, false, color);
+}
+
+// Sleek `10x16` hero figure renderer (64x64 headless mode; 1024x672 window uses ClearType).
+public machine Raster::draw_char2(pixels: &mut [i32; 4096], band_y: i32, ox: i32 in Saturating, oy: i32 in Saturating, ch: i32, color: i32) {
+    let is_64: bool = band_y < 0;
+    let by_s: i32 in Saturating = select_sat(is_64, 0, band_y as i32 in Saturating);
+    let bh_s: i32 in Saturating = select_sat(is_64, 64, 4);
+    let y0: i32 in Saturating = max_sat(oy, by_s);
+    let y1: i32 in Saturating = min_sat(oy + (16 as i32 in Saturating), by_s + bh_s);
+    transition is_64 && ch > 32 && y0 < y1 {
+        true -> loop_py(pixels, band_y, ox, oy, Raster::glyph_mask(ch), color, y0, y1)
+        _ -> done()
+    }
+    state loop_py(pixels: &mut [i32; 4096], band_y: i32, ox: i32 in Saturating, oy: i32 in Saturating, mask: i32, color: i32, py: i32 in Saturating, y1: i32 in Saturating) {
+        let py_i: i32 = py as i32;
+        transition py_i >= 0 && py_i < 672 && py < y1 {
+            true -> step_py(pixels, band_y, ox, oy, mask, color, py, y1, py_i)
+            _ -> done()
+        }
+    }
+    state step_py(pixels: &mut [i32; 4096], band_y: i32, ox: i32 in Saturating, oy: i32 in Saturating, mask: i32, color: i32, py: i32 in Saturating, y1: i32 in Saturating, py_i: i32)
+    requires py_i >= 0 && py_i < 672 {
+        let gy: i32 = clamp_i32(((py - oy) / (2 as i32 in Saturating)) as i32, 0, 7);
+        let rb: i32 = Raster::extract_row5(mask, gy);
+        Raster::plot_row5_2x(pixels, band_y, ox, py, rb, color);
+        let next_py: i32 in Saturating = (py_i + 1) as i32 in Saturating;
+        transition { _ -> loop_py(pixels, band_y, ox, oy, mask, color, next_py, y1) }
+    }
+    state done() {}
+}
+
+public machine Raster::draw_str_loop(pixels: &mut [i32; 4096], band_y: i32, x: i32 in Saturating, y: i32 in Saturating, bytes: &[u8], color: i32, sub_aa: i32)
+terminates by bytes -> Slice::Length;
+{
+    transition bytes.len > 0 {
+        true -> emit(pixels, band_y, x, y, bytes[0], bytes[1..], color, sub_aa)
+        false -> done()
+    }
+    state emit(pixels: &mut [i32; 4096], band_y: i32, cx: i32 in Saturating, y: i32 in Saturating, byte: u8, bytes: &[u8], color: i32, sub_aa: i32) {
+        let mut b: u8 = byte;
+        let ch: i32 = b as i32;
+        Raster::draw_char_weight(pixels, band_y, cx, y, ch, color, sub_aa);
+        let next_x: i32 in Saturating = cx + Raster::glyph_advance(ch);
+        transition bytes.len > 0 {
+            true -> emit(pixels, band_y, next_x, y, bytes[0], bytes[1..], color, sub_aa)
+            false -> done()
+        }
+    }
+    state done() {}
+}
+
+// Render ASCII string in 64x64 headless mode; 1024x672 window uses native ClearType Segoe UI.
+public machine Raster::draw_str(pixels: &mut [i32; 4096], band_y: i32, x: i32 in Saturating, y: i32 in Saturating, bytes: &[u8], color: i32) {
+    let is_64: bool = band_y < 0;
+    let by_s: i32 in Saturating = select_sat(is_64, 0, band_y as i32 in Saturating);
+    let bh_s: i32 in Saturating = select_sat(is_64, 64, 4);
+    let vis: bool = (y + (9 as i32 in Saturating)) > by_s && y < (by_s + bh_s);
+    transition is_64 && vis {
+        true -> run(pixels, band_y, x, y, bytes, color)
+        _ -> done()
+    }
+    state run(pixels: &mut [i32; 4096], band_y: i32, x: i32 in Saturating, y: i32 in Saturating, bytes: &[u8], color: i32) {
+        Raster::draw_str_loop(pixels, band_y, x, y, bytes, color, 28);
+    }
+    state done() {}
+}
+
+// Render bold string in 64x64 headless mode; 1024x672 window uses native ClearType Segoe UI Semibold.
+public machine Raster::draw_str_bold(pixels: &mut [i32; 4096], band_y: i32, x: i32 in Saturating, y: i32 in Saturating, bytes: &[u8], color: i32) {
+    let is_64: bool = band_y < 0;
+    let by_s: i32 in Saturating = select_sat(is_64, 0, band_y as i32 in Saturating);
+    let bh_s: i32 in Saturating = select_sat(is_64, 64, 4);
+    let vis: bool = (y + (9 as i32 in Saturating)) > by_s && y < (by_s + bh_s);
+    transition is_64 && vis {
+        true -> run(pixels, band_y, x, y, bytes, color)
+        _ -> done()
+    }
+    state run(pixels: &mut [i32; 4096], band_y: i32, x: i32 in Saturating, y: i32 in Saturating, bytes: &[u8], color: i32) {
+        Raster::draw_str_loop(pixels, band_y, x, y, bytes, color, 58);
+    }
+    state done() {}
+}
+
+// Render an inline rounded monospace code pill (`#1C2029` fill + `1px` `#262B36` SDF border).
+public machine Raster::draw_code_pill(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, x: i32 in Saturating, y: i32 in Saturating, w: i32 in Saturating, text: &[u8], fg: i32) {
+    let pill_r: Rect = Rect {
+        x: x,
+        y: y - (3 as i32 in Saturating),
+        w: w,
+        h: 20
+    };
+    Raster::draw_box_band(pixels, band_y, pill_r, context.theme.well, context.theme.border, 1, 5);
+}
+
+
+// Draw a 2-digit percentage (`75%` or `8%`) using native `5x11` glyphs (64x64 mode only).
+public machine Raster::draw_percentage(pixels: &mut [i32; 4096], band_y: i32, x: i32 in Saturating, y: i32 in Saturating, value: i32, color: i32) {
+    transition band_y < 0 {
+        true -> check_tens(pixels, band_y, x, y, value, color)
+        _ -> done()
+    }
+    state check_tens(pixels: &mut [i32; 4096], band_y: i32, x: i32 in Saturating, y: i32 in Saturating, value: i32, color: i32) {
+        let v: i32 = clamp_i32(value, 0, 99);
+        let tens: i32 = (v / 10) % 10;
+        let ones: i32 = v % 10;
+        let s1: i32 in Saturating = 6;
+        let s2: i32 in Saturating = 12;
+        transition tens > 0 {
+            true -> both(pixels, band_y, x, y, add_i32(48, tens), add_i32(48, ones), color, s1, s2)
+            _ -> single(pixels, band_y, x + s1, y, add_i32(48, ones), color, s1)
+        }
+    }
+    state both(pixels: &mut [i32; 4096], band_y: i32, x: i32 in Saturating, y: i32 in Saturating, c_ten: i32, c_one: i32, color: i32, s1: i32 in Saturating, s2: i32 in Saturating) {
+        Raster::draw_char1(pixels, band_y, x, y, c_ten, color);
+        Raster::draw_char1(pixels, band_y, x + s1, y, c_one, color);
+        Raster::draw_char1(pixels, band_y, x + s2, y, 37, color);
+    }
+    state single(pixels: &mut [i32; 4096], band_y: i32, x: i32 in Saturating, y: i32 in Saturating, c_one: i32, color: i32, s1: i32 in Saturating) {
+        Raster::draw_char1(pixels, band_y, x, y, c_one, color);
+        Raster::draw_char1(pixels, band_y, x + s1, y, 37, color);
+    }
+    state done() {}
+}
+
+// Draw a sleek 2x hero 2-digit percentage (`75%`) using `10x18` glyphs (64x64 mode only).
+public machine Raster::draw_large_percentage(pixels: &mut [i32; 4096], band_y: i32, x: i32 in Saturating, y: i32 in Saturating, value: i32, color: i32) {
+    transition band_y < 0 {
+        true -> run(pixels, band_y, x, y, value, color)
+        _ -> done()
+    }
+    state run(pixels: &mut [i32; 4096], band_y: i32, x: i32 in Saturating, y: i32 in Saturating, value: i32, color: i32) {
+        let v: i32 = clamp_i32(value, 0, 99);
+        let tens: i32 = (v / 10) % 10;
+        let ones: i32 = v % 10;
+        Raster::draw_char2(pixels, band_y, x, y, add_i32(48, tens), color);
+        Raster::draw_char2(pixels, band_y, x + (12 as i32 in Saturating), y, add_i32(48, ones), color);
+        Raster::draw_char1(pixels, band_y, x + (26 as i32 in Saturating), y + (6 as i32 in Saturating), 37, color);
+    }
+    state done() {}
+}
+
+// Coverage of one round-ended segment, in sixteenths of a physical pixel.
+public machine Raster::segment_coverage(x: i32 in Saturating, y: i32 in Saturating, ax: i32 in Saturating, ay: i32 in Saturating, bx: i32 in Saturating, by: i32 in Saturating, radius: i32 in Saturating) -> i32 {
+    let dx: i32 in Saturating = bx - ax;
+    let dy: i32 in Saturating = by - ay;
+    let length_squared: i32 in Saturating = dx * dx + dy * dy;
+    transition length_squared > 0 {
+        true -> project(x, y, ax, ay, dx, dy, length_squared, radius)
+        _ -> (0)
+    }
+    state project(x: i32 in Saturating, y: i32 in Saturating, ax: i32 in Saturating, ay: i32 in Saturating, dx: i32 in Saturating, dy: i32 in Saturating, length_squared: i32 in Saturating, radius: i32 in Saturating) -> i32
+    requires length_squared > 0 {
+        let along: i32 in Saturating = clamp_sat((((x - ax) * dx + (y - ay) * dy) * (1000 as i32 in Saturating)) / length_squared, 0, 1000);
+        let ex: i32 in Saturating = x - ax - dx * along / (1000 as i32 in Saturating);
+        let ey: i32 in Saturating = y - ay - dy * along / (1000 as i32 in Saturating);
+        let outer: i32 in Saturating = radius + (8 as i32 in Saturating);
+        let inner: i32 in Saturating = max_sat(radius - (8 as i32 in Saturating), 0);
+        let span: i32 in Saturating = outer * outer - inner * inner;
+        transition span > 0 {
+            true -> coverage(outer * outer - ex * ex - ey * ey, span)
+            _ -> (0)
+        }
+    }
+    state coverage(numerator: i32 in Saturating, span: i32 in Saturating) -> i32 requires span > 0 {
+        clamp_sat(numerator * (100 as i32 in Saturating) / span, 0, 100) as i32
+    }
+}
+
+public machine Raster::draw_checkmark(pixels: &mut [i32; 4096], band_y: i32, rectangle: Rect, color: i32, progress: i32) {
+    let small: bool = band_y < 0;
+    let width: i32 in Saturating = Raster::band_width(pixels, band_y);
+    let height: i32 in Saturating = Raster::band_height(pixels, band_y);
+    let physical: Rect = Raster::to_physical_rect(rectangle, width, height, small, Raster::logical_width(pixels, band_y), Raster::logical_height(pixels, band_y));
+    let top: i32 in Saturating = max_sat(physical.y, select_sat(small, 0, band_y as i32 in Saturating));
+    let bottom: i32 in Saturating = min_sat(physical.y + physical.h, select_sat(small, 64, (band_y as i32 in Saturating) + (1 as i32 in Saturating)));
+    transition progress > 0 && top < bottom {
+        true -> row(pixels, band_y, physical, color, clamp_i32(progress, 0, 1000), top, bottom)
+        _ -> done()
+    }
+    state row(pixels: &mut [i32; 4096], band_y: i32, rectangle: Rect, color: i32, progress: i32, y: i32 in Saturating, bottom: i32 in Saturating) {
+        transition y < bottom {
+            true -> start_column(pixels, band_y, rectangle, color, progress, y, bottom)
+            _ -> done()
+        }
+    }
+    state start_column(pixels: &mut [i32; 4096], band_y: i32, rectangle: Rect, color: i32, progress: i32, y: i32 in Saturating, bottom: i32 in Saturating) {
+        let start: i32 in Saturating = rectangle.x;
+        transition { _ -> column(pixels, band_y, rectangle, color, progress, y, bottom, start) }
+    }
+    state column(pixels: &mut [i32; 4096], band_y: i32, rectangle: Rect, color: i32, progress: i32, y: i32 in Saturating, bottom: i32 in Saturating, x: i32 in Saturating) {
+        transition x < rectangle.x + rectangle.w {
+            true -> pixel(pixels, band_y, rectangle, color, progress, y, bottom, x)
+            _ -> row(pixels, band_y, rectangle, color, progress, y + (1 as i32 in Saturating), bottom)
+        }
+    }
+    state pixel(pixels: &mut [i32; 4096], band_y: i32, rectangle: Rect, color: i32, progress: i32, y: i32 in Saturating, bottom: i32 in Saturating, x: i32 in Saturating) {
+        let sixteen: i32 in Saturating = 16;
+        let divisor: i32 in Saturating = 72;
+        let first: i32 in Saturating = min_sat((progress as i32 in Saturating) * (3 as i32 in Saturating), 1000);
+        let second: i32 in Saturating = clamp_sat(((progress as i32 in Saturating) - (333 as i32 in Saturating)) * (1000 as i32 in Saturating) / (667 as i32 in Saturating), 0, 1000);
+        let ax: i32 in Saturating = rectangle.w * sixteen * (17 as i32 in Saturating) / divisor;
+        let ay: i32 in Saturating = rectangle.h * sixteen * (37 as i32 in Saturating) / divisor;
+        let bx: i32 in Saturating = rectangle.w * sixteen * (29 as i32 in Saturating) / divisor;
+        let by: i32 in Saturating = rectangle.h * sixteen * (49 as i32 in Saturating) / divisor;
+        let cx: i32 in Saturating = rectangle.w * sixteen * (55 as i32 in Saturating) / divisor;
+        let cy: i32 in Saturating = rectangle.h * sixteen * (23 as i32 in Saturating) / divisor;
+        let px: i32 in Saturating = (x - rectangle.x) * sixteen + (8 as i32 in Saturating);
+        let py: i32 in Saturating = (y - rectangle.y) * sixteen + (8 as i32 in Saturating);
+        let radius: i32 in Saturating = max_sat(rectangle.h * (7 as i32 in Saturating) * sixteen / (144 as i32 in Saturating), 8);
+        let short: i32 = Raster::segment_coverage(px, py, ax, ay, ax + (bx - ax) * first / (1000 as i32 in Saturating), ay + (by - ay) * first / (1000 as i32 in Saturating), radius);
+        let long: i32 = Raster::segment_coverage(px, py, bx, by, bx + (cx - bx) * second / (1000 as i32 in Saturating), by + (cy - by) * second / (1000 as i32 in Saturating), radius);
+        Raster::blend_px_raw(pixels, band_y, x, y, color, max_i32(short, select_i32(progress > 333, long, 0)));
+        transition { _ -> column(pixels, band_y, rectangle, color, progress, y, bottom, x + (1 as i32 in Saturating)) }
+    }
+    state done() {}
+}
+
+// Geometric control icons
+public machine Raster::draw_icon_band(pixels: &mut [i32; 4096], band_y: i32, rectangle: Rect, icon_id: i32, color: i32) {
+    let cx: i32 in Saturating = rectangle.x + (rectangle.w / (2 as i32 in Saturating)) - (5 as i32 in Saturating);
+    let cy: i32 in Saturating = rectangle.y + (rectangle.h / (2 as i32 in Saturating)) - (5 as i32 in Saturating);
+    let is_64: bool = band_y < 0;
+    let ly: i32 in Saturating = pixels[4093] as i32 in Saturating;
+    let near_y: bool = is_64 || (ly >= (cy - (3 as i32 in Saturating)) && ly <= (cy + (13 as i32 in Saturating)));
+    transition near_y {
+        true -> dispatch_ico(pixels, band_y, cx, cy, icon_id, color)
+        _ -> done()
+    }
+    state dispatch_ico(pixels: &mut [i32; 4096], band_y: i32, cx: i32 in Saturating, cy: i32 in Saturating, icon_id: i32, color: i32) {
+        transition icon_id <= 3 {
+            true -> ico_123(pixels, band_y, cx, cy, icon_id, color)
+            _ -> ico_45678(pixels, band_y, cx, cy, icon_id, color)
+        }
+    }
+    state ico_123(pixels: &mut [i32; 4096], band_y: i32, cx: i32 in Saturating, cy: i32 in Saturating, icon_id: i32, color: i32) {
+        transition icon_id == 1 {
+            true -> ico_plus(pixels, band_y, cx, cy, color)
+            _ -> ico_23(pixels, band_y, cx, cy, icon_id, color)
+        }
+    }
+    state ico_plus(pixels: &mut [i32; 4096], band_y: i32, cx: i32 in Saturating, cy: i32 in Saturating, color: i32) {
+        let h_bar: Rect = Rect { x: cx + (1 as i32 in Saturating), y: cy + (4 as i32 in Saturating), w: 8, h: 2 };
+        let v_bar: Rect = Rect { x: cx + (4 as i32 in Saturating), y: cy + (1 as i32 in Saturating), w: 2, h: 8 };
+        Raster::draw_box_fill(pixels, band_y, h_bar, color, 0);
+        Raster::draw_box_fill(pixels, band_y, v_bar, color, 0);
+    }
+    state ico_23(pixels: &mut [i32; 4096], band_y: i32, cx: i32 in Saturating, cy: i32 in Saturating, icon_id: i32, color: i32) {
+        transition icon_id == 2 {
+            true -> ico_grid(pixels, band_y, cx, cy, color)
+            _ -> ico_clock(pixels, band_y, cx, cy, color)
+        }
+    }
+    state ico_grid(pixels: &mut [i32; 4096], band_y: i32, cx: i32 in Saturating, cy: i32 in Saturating, color: i32) {
+        let q0: Rect = Rect { x: cx, y: cy, w: 4, h: 4 };
+        let q1: Rect = Rect { x: cx + (6 as i32 in Saturating), y: cy, w: 4, h: 4 };
+        let q2: Rect = Rect { x: cx, y: cy + (6 as i32 in Saturating), w: 4, h: 4 };
+        let q3: Rect = Rect { x: cx + (6 as i32 in Saturating), y: cy + (6 as i32 in Saturating), w: 4, h: 4 };
+        Raster::draw_box_border(pixels, band_y, q0, color, 1);
+        Raster::draw_box_border(pixels, band_y, q1, color, 1);
+        Raster::draw_box_border(pixels, band_y, q2, color, 1);
+        Raster::draw_box_border(pixels, band_y, q3, color, 1);
+    }
+    state ico_clock(pixels: &mut [i32; 4096], band_y: i32, cx: i32 in Saturating, cy: i32 in Saturating, color: i32) {
+        let ring: Rect = Rect { x: cx, y: cy, w: 10, h: 10 };
+        let hand: Rect = Rect { x: cx + (4 as i32 in Saturating), y: cy + (2 as i32 in Saturating), w: 2, h: 5 };
+        Raster::draw_box_border(pixels, band_y, ring, color, 5);
+        Raster::draw_box_fill(pixels, band_y, hand, color, 0);
+    }
+    state ico_45678(pixels: &mut [i32; 4096], band_y: i32, cx: i32 in Saturating, cy: i32 in Saturating, icon_id: i32, color: i32) {
+        transition icon_id == 4 {
+            true -> ico_folder(pixels, band_y, cx, cy, color)
+            _ -> ico_5678(pixels, band_y, cx, cy, icon_id, color)
+        }
+    }
+    state ico_folder(pixels: &mut [i32; 4096], band_y: i32, cx: i32 in Saturating, cy: i32 in Saturating, color: i32) {
+        let tab: Rect = Rect { x: cx, y: cy + (1 as i32 in Saturating), w: 5, h: 2 };
+        let body: Rect = Rect { x: cx, y: cy + (2 as i32 in Saturating), w: 10, h: 7 };
+        Raster::draw_box_fill(pixels, band_y, tab, color, 1);
+        Raster::draw_box_border(pixels, band_y, body, color, 2);
+    }
+    state ico_5678(pixels: &mut [i32; 4096], band_y: i32, cx: i32 in Saturating, cy: i32 in Saturating, icon_id: i32, color: i32) {
+        transition icon_id == 5 {
+            true -> ico_cpu(pixels, band_y, cx, cy, color)
+            _ -> ico_678(pixels, band_y, cx, cy, icon_id, color)
+        }
+    }
+    state ico_cpu(pixels: &mut [i32; 4096], band_y: i32, cx: i32 in Saturating, cy: i32 in Saturating, color: i32) {
+        let outer: Rect = Rect { x: cx, y: cy, w: 10, h: 10 };
+        let inner: Rect = Rect { x: cx + (3 as i32 in Saturating), y: cy + (3 as i32 in Saturating), w: 4, h: 4 };
+        Raster::draw_box_border(pixels, band_y, outer, color, 2);
+        Raster::draw_box_fill(pixels, band_y, inner, color, 1);
+    }
+    state ico_678(pixels: &mut [i32; 4096], band_y: i32, cx: i32 in Saturating, cy: i32 in Saturating, icon_id: i32, color: i32) {
+        transition icon_id == 6 {
+            true -> ico_layers(pixels, band_y, cx, cy, color)
+            _ -> ico_89(pixels, band_y, cx, cy, icon_id, color)
+        }
+    }
+    state ico_89(pixels: &mut [i32; 4096], band_y: i32, cx: i32 in Saturating, cy: i32 in Saturating, icon_id: i32, color: i32) {
+        transition icon_id == 9 {
+            true -> ico_check(pixels, band_y, cx, cy, color)
+            _ -> ico_arrow(pixels, band_y, cx, cy, color)
+        }
+    }
+    state ico_check(pixels: &mut [i32; 4096], band_y: i32, cx: i32 in Saturating, cy: i32 in Saturating, color: i32) {
+        let rectangle: Rect = Rect { x: cx - (4 as i32 in Saturating), y: cy - (4 as i32 in Saturating), w: 18, h: 18 };
+        Raster::draw_checkmark(pixels, band_y, rectangle, color, 1000);
+    }
+    state ico_layers(pixels: &mut [i32; 4096], band_y: i32, cx: i32 in Saturating, cy: i32 in Saturating, color: i32) {
+        let b0: Rect = Rect { x: cx, y: cy + (1 as i32 in Saturating), w: 10, h: 2 };
+        let b1: Rect = Rect { x: cx, y: cy + (4 as i32 in Saturating), w: 10, h: 2 };
+        let b2: Rect = Rect { x: cx, y: cy + (7 as i32 in Saturating), w: 10, h: 2 };
+        Raster::draw_box_fill(pixels, band_y, b0, color, 1);
+        Raster::draw_box_fill(pixels, band_y, b1, color, 1);
+        Raster::draw_box_fill(pixels, band_y, b2, color, 1);
+    }
+    state ico_arrow(pixels: &mut [i32; 4096], band_y: i32, cx: i32 in Saturating, cy: i32 in Saturating, color: i32) {
+        let stem: Rect = Rect { x: cx + (4 as i32 in Saturating), y: cy + (2 as i32 in Saturating), w: 2, h: 7 };
+        let tip1: Rect = Rect { x: cx + (3 as i32 in Saturating), y: cy + (2 as i32 in Saturating), w: 4, h: 2 };
+        let tip2: Rect = Rect { x: cx + (2 as i32 in Saturating), y: cy + (3 as i32 in Saturating), w: 6, h: 2 };
+        Raster::draw_box_fill(pixels, band_y, stem, color, 0);
+        Raster::draw_box_fill(pixels, band_y, tip1, color, 0);
+        Raster::draw_box_fill(pixels, band_y, tip2, color, 0);
+    }
+    state done() {}
+}
+
+// Convert a height/width `h_px` into an aspect-compensated logical width so square
+// checkboxes, circular thumbs, and icon chips stay 1:1 square on any window shape.
+public machine Raster::isotropic_width(context: &UiContext, h_px: i32) -> i32 in Saturating {
+    let ap: i32 = clamp_i32(context.aspect_pct, 600, 1400);
+    max_i32(add_i32(mul_i32(h_px, ap), 500) / 1000, 2) as i32 in Saturating
+}
+
+public machine Raster::draw_chip(pixels: &mut [i32; 4096], band_y: i32, x: i32 in Saturating, y: i32 in Saturating, size: i32 in Saturating, icon_id: i32, base_bg: i32, color: i32, solid: bool) {
+    let chip_bg: i32 = select_i32(solid, color, color_mix(base_bg, color, 18));
+    let icon_fg: i32 = select_i32(solid, base_bg, color);
+    let r_box: Rect = Rect { x: x, y: y, w: size, h: size };
+    let r_ico: Rect = Rect { x: x, y: y, w: size, h: size };
+    Raster::draw_box_fill(pixels, band_y, r_box, chip_bg, 6);
+    Raster::draw_icon_band(pixels, band_y, r_ico, icon_id, icon_fg);
+}
+
+public machine Raster::draw_inline_bar(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, x: i32 in Saturating, y: i32 in Saturating, w: i32 in Saturating, h: i32 in Saturating, pct: i32, color: i32) {
+    let rad: i32 in Saturating = h / (2 as i32 in Saturating);
+    let track_r: Rect = Rect { x: x, y: y, w: w, h: h };
+    Raster::draw_box_fill(pixels, band_y, track_r, context.theme.well, rad);
+    let clamped: i32 in Saturating = clamp_i32(pct, 0, 100) as i32 in Saturating;
+    let fill_w: i32 in Saturating = (w * clamped) / (100 as i32 in Saturating);
+    let fill_r: Rect = Rect { x: x, y: y, w: fill_w, h: h };
+    Raster::draw_box_fill(pixels, band_y, fill_r, color, rad);
+}
+
+
+// Render basic control widgets (`content_kind` 1..=6) at 1024x672 HiDPI.
+public machine Raster::draw_basic_widget(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, node_index: i32, content_kind: i32)
+requires node_index >= 0 && node_index < 128 {
+    let rectangle: Rect = UiContext::paint_rect(context, node_index);
+    let value: i32 in Saturating = context.nodes[node_index].content_value;
+    let color: i32 = context.nodes[node_index].content_color;
+    transition content_kind == 1 {
+        true -> do_k1(pixels, band_y, rectangle, value as i32, color)
+        _ -> check_k23(pixels, band_y, context, node_index, rectangle, content_kind, value, color)
+    }
+    state do_k1(pixels: &mut [i32; 4096], band_y: i32, rectangle: Rect, icon_id: i32, color: i32) {
+        Raster::draw_icon_band(pixels, band_y, rectangle, icon_id, color);
+    }
+    state check_k23(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, node_index: i32, rectangle: Rect, content_kind: i32, value: i32 in Saturating, color: i32)
+    requires node_index >= 0 && node_index < 128 {
+        transition content_kind == 2 || content_kind == 3 {
+            true -> do_num(pixels, band_y, rectangle, content_kind, value as i32, color)
+            _ -> check_k456(pixels, band_y, context, node_index, rectangle, content_kind, value, color)
+        }
+    }
+    state do_num(pixels: &mut [i32; 4096], band_y: i32, rectangle: Rect, content_kind: i32, value: i32, color: i32) {
+        let v: i32 = clamp_i32(value, 0, 999);
+        let hunds: i32 = (v / 100) % 10;
+        let tens: i32 = (v / 10) % 10;
+        let ones: i32 = v % 10;
+        let s1: i32 in Saturating = 6;
+        let s2: i32 in Saturating = 12;
+        let ox: i32 in Saturating = rectangle.x + ((rectangle.w - (18 as i32 in Saturating)) / (2 as i32 in Saturating));
+        let oy: i32 in Saturating = rectangle.y + ((rectangle.h - (11 as i32 in Saturating)) / (2 as i32 in Saturating));
+        transition band_y < 0 {
+            true -> do_num_64(pixels, band_y, ox, oy, content_kind, hunds, tens, ones, color, s1, s2)
+            _ -> done_num()
+        }
+    }
+    state done_num() {}
+    state do_num_64(pixels: &mut [i32; 4096], band_y: i32, ox: i32 in Saturating, oy: i32 in Saturating, content_kind: i32, hunds: i32, tens: i32, ones: i32, color: i32, s1: i32 in Saturating, s2: i32 in Saturating) {
+        transition content_kind == 3 {
+            true -> draw3(pixels, band_y, ox, oy, add_i32(48, hunds), add_i32(48, tens), add_i32(48, ones), color, s1, s2)
+            _ -> draw2(pixels, band_y, ox + (3 as i32 in Saturating), oy, add_i32(48, tens), add_i32(48, ones), color, s1)
+        }
+    }
+    state draw3(pixels: &mut [i32; 4096], band_y: i32, ox: i32 in Saturating, oy: i32 in Saturating, c0: i32, c1: i32, c2: i32, color: i32, s1: i32 in Saturating, s2: i32 in Saturating) {
+        Raster::draw_char1(pixels, band_y, ox, oy, c0, color);
+        Raster::draw_char1(pixels, band_y, ox + s1, oy, c1, color);
+        Raster::draw_char1(pixels, band_y, ox + s2, oy, c2, color);
+    }
+    state draw2(pixels: &mut [i32; 4096], band_y: i32, ox: i32 in Saturating, oy: i32 in Saturating, c1: i32, c2: i32, color: i32, s1: i32 in Saturating) {
+        Raster::draw_char1(pixels, band_y, ox, oy, c1, color);
+        Raster::draw_char1(pixels, band_y, ox + s1, oy, c2, color);
+    }
+    state check_k456(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, node_index: i32, rectangle: Rect, content_kind: i32, value: i32 in Saturating, color: i32)
+    requires node_index >= 0 && node_index < 128 {
+        transition content_kind == 4 {
+            true -> do_k4(pixels, band_y, context, node_index, rectangle, value, color)
+            _ -> check_k56(pixels, band_y, rectangle, content_kind, value, color, context.nodes[node_index].aux_value as i32)
+        }
+    }
+    state do_k4(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, node_index: i32, rectangle: Rect, value: i32 in Saturating, color: i32)
+    requires node_index >= 0 && node_index < 128 {
+        transition context.nodes[node_index].interactive {
+            true -> control_slider(pixels, band_y, context, node_index, rectangle, value, color)
+            _ -> progress_bar(pixels, band_y, context, node_index, rectangle, value, color)
+        }
+    }
+    state control_slider(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, node_index: i32, rectangle: Rect, value: i32 in Saturating, color: i32)
+    requires node_index >= 0 && node_index < 128 {
+        Raster::draw_slider_step(pixels, band_y, context, rectangle.x, rectangle.y + rectangle.h / (2 as i32 in Saturating) - (8 as i32 in Saturating), rectangle.w, value as i32, color, context.nodes[node_index].aux_value as i32);
+    }
+    state progress_bar(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, node_index: i32, rectangle: Rect, value: i32 in Saturating, color: i32)
+    requires node_index >= 0 && node_index < 128 {
+        Raster::draw_progress_fill(pixels, band_y, context, &rectangle, value as i32, color, context.nodes[node_index].style.radius);
+        let fill_w: i32 in Saturating = (clamp_sat(rectangle.w, 0, context.width) * clamp_sat(value, 0, 100)) / (100 as i32 in Saturating);
+        transition context.nodes[node_index].interactive {
+            true -> do_knob(pixels, band_y, context, rectangle, fill_w)
+            _ -> done()
+        }
+    }
+    state do_knob(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect, fill_w: i32 in Saturating) {
+        let kw: i32 in Saturating = select_sat(band_y < 0, 5, 12);
+        let max_kx: i32 in Saturating = max_sat(rectangle.w - kw, 0);
+        let raw_kx: i32 in Saturating = clamp_sat(fill_w - (kw / (2 as i32 in Saturating)), 0, max_kx);
+        let knob_rect: Rect = Rect { x: rectangle.x + raw_kx, y: rectangle.y, w: kw, h: rectangle.h };
+        Raster::draw_box_band(pixels, band_y, knob_rect, context.theme.knob, context.theme.border, 1, 5);
+    }
+    state check_k56(pixels: &mut [i32; 4096], band_y: i32, rectangle: Rect, content_kind: i32, value: i32 in Saturating, color: i32, progress: i32) {
+        transition content_kind == 5 {
+            true -> do_k5(pixels, band_y, rectangle, progress, color)
+            _ -> do_k6(pixels, band_y, rectangle, progress, color)
+        }
+    }
+    state do_k5(pixels: &mut [i32; 4096], band_y: i32, rectangle: Rect, progress: i32, color: i32) {
+        Raster::draw_toggle_knob(pixels, band_y, rectangle, progress, color);
+    }
+    state do_k6(pixels: &mut [i32; 4096], band_y: i32, rectangle: Rect, progress: i32, color: i32) {
+        Raster::draw_checkmark(pixels, band_y, rectangle, color, progress);
+    }
+    state done() {}
+}
+
+// Shared with native hosts so the switch uses its widget's actual track geometry.
+public machine Raster::draw_toggle_knob(pixels: &mut [i32; 4096], band_y: i32, rectangle: Rect, progress: i32, color: i32) {
+    let pad: i32 in Saturating = select_sat(band_y < 0, 2, 3);
+    let kw: i32 in Saturating = max_sat(rectangle.h - (pad * (2 as i32 in Saturating)), 4);
+    let kx: i32 in Saturating = rectangle.x + pad + (rectangle.w - kw - pad * (2 as i32 in Saturating)) * (progress as i32 in Saturating) / (1000 as i32 in Saturating);
+    let knob_rect: Rect = Rect { x: kx, y: rectangle.y + pad, w: kw, h: kw };
+    Raster::draw_box_fill(pixels, band_y, knob_rect, color, kw / (2 as i32 in Saturating));
+}
+
+public machine Raster::draw_progress_fill(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: &Rect, value: i32, color: i32, radius: i32 in Saturating) {
+    let width: i32 in Saturating = clamp_sat(rectangle.w, 0, context.width) * (clamp_i32(value, 0, 100) as i32 in Saturating) / (100 as i32 in Saturating);
+    Raster::draw_box_fill(pixels, band_y, Rect { x: rectangle.x, y: rectangle.y, w: width, h: rectangle.h }, color, radius);
+}
+
+// Interactive Playground Card Renderers (`content_kind = 17`)
+
+// The legacy ten-step entrypoint forwards to continuous 0..1000 motion.
+public machine Raster::draw_toggle_pill_step(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, x: i32 in Saturating, y: i32 in Saturating, step10: i32) {
+    Raster::draw_toggle_progress(pixels, band_y, context, x, y, mul_i32(clamp_i32(step10, 0, 10), 100));
+}
+public machine Raster::draw_toggle_progress(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, x: i32 in Saturating, y: i32 in Saturating, progress: i32) {
+    let position: i32 in Saturating = clamp_i32(progress, 0, 1000) as i32 in Saturating;
+    let width: i32 in Saturating = Raster::isotropic_width(context, 46);
+    let track: Rect = Rect { x: x, y: y, w: width, h: 24 };
+    let color: i32 = color_mix(context.theme.track, context.theme.control_on, (position / (10 as i32 in Saturating)) as i32);
+    Raster::draw_box_fill(pixels, band_y, track, color, 12);
+    let knob_width: i32 in Saturating = Raster::isotropic_width(context, 18);
+    let pad: i32 in Saturating = Raster::isotropic_width(context, 3);
+    let travel: i32 in Saturating = max_sat(width - knob_width - pad * (2 as i32 in Saturating), 0);
+    let knob: Rect = Rect { x: x + pad + travel * position / (1000 as i32 in Saturating), y: y + (3 as i32 in Saturating), w: knob_width, h: 18 };
+    Raster::draw_box_fill(pixels, band_y, knob, color_mix(context.theme.knob, context.theme.knob_on, (position / (10 as i32 in Saturating)) as i32), 9);
+}
+public machine Raster::draw_toggle_pill(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, x: i32 in Saturating, y: i32 in Saturating, on: bool) {
+    Raster::draw_toggle_progress(pixels, band_y, context, x, y, select_i32(on, 1000, 0));
+}
+
+public machine Raster::draw_checkbox_pill(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, x: i32 in Saturating, y: i32 in Saturating, on: bool) {
+    Raster::draw_checkbox_step(pixels, band_y, context, x, y, select_i32(on, 1000, 0));
+}
+public machine Raster::draw_checkbox_step(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, x: i32 in Saturating, y: i32 in Saturating, progress: i32) {
+    let rectangle: Rect = Rect { x: x, y: y, w: Raster::isotropic_width(context, 18), h: 18 };
+    let opacity: i32 = clamp_i32(progress / 10, 0, 100);
+    let fill: i32 = color_mix(context.theme.well, context.theme.control_on, opacity);
+    let border: i32 = color_mix(context.theme.border, context.theme.control_on, opacity);
+    let visual: Rect = Rect { x: rectangle.x, y: rectangle.y, w: rectangle.w, h: rectangle.h };
+    Raster::draw_box_band(pixels, band_y, visual, fill, border, 1, 5);
+    Raster::draw_checkmark(pixels, band_y, rectangle, context.theme.control_glyph, progress);
+}
+
+public machine Raster::draw_slider_bar(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, x: i32 in Saturating, y: i32 in Saturating, w: i32 in Saturating, pct: i32, color: i32) {
+    Raster::draw_slider_step(pixels, band_y, context, x, y, w, pct, color, 0);
+}
+
+public machine Raster::draw_slider_step(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, x: i32 in Saturating, y: i32 in Saturating, w: i32 in Saturating, pct: i32, color: i32, emphasis: i32) {
+    let logical_row: i32 in Saturating = pixels[4093] as i32 in Saturating;
+    transition band_y < 0 || (logical_row >= y - (12 as i32 in Saturating) && logical_row <= y + (30 as i32 in Saturating)) {
+        true -> paint(pixels, band_y, context, x, y, w, pct, color, emphasis)
+        _ -> done()
+    }
+    state paint(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, x: i32 in Saturating, y: i32 in Saturating, w: i32 in Saturating, pct: i32, color: i32, emphasis: i32) {
+        let tr_y: i32 in Saturating = y + (5 as i32 in Saturating);
+        let track: Rect = Rect { x: x, y: tr_y, w: w, h: 6 };
+        Raster::draw_box_fill(pixels, band_y, track, context.theme.track, 3);
+        let cl: i32 in Saturating = clamp_i32(pct, 0, 100) as i32 in Saturating;
+        let fill_width: i32 in Saturating = w * cl / (100 as i32 in Saturating);
+        let fill: Rect = Rect { x: x, y: tr_y, w: fill_width, h: 6 };
+        Raster::draw_box_fill(pixels, band_y, fill, color, 3);
+        // Keep the center on the painted track; rounding a growing logical box
+        // moves odd diameters by half a pixel and reduces motion to five sizes.
+        let small: bool = band_y < 0;
+        let width: i32 in Saturating = Raster::band_width(pixels, band_y);
+        let height: i32 in Saturating = Raster::band_height(pixels, band_y);
+        let physical_track: Rect = Raster::to_physical_rect(Rect { x: x, y: tr_y, w: w, h: 6 }, width, height, small, Raster::logical_width(pixels, band_y), Raster::logical_height(pixels, band_y));
+        let center_x16: i32 in Saturating = Raster::to_physical_x(x + fill_width, width, small, Raster::logical_width(pixels, band_y)) * (16 as i32 in Saturating);
+        let center_y16: i32 in Saturating = physical_track.y * (16 as i32 in Saturating) + physical_track.h * (8 as i32 in Saturating);
+        let size: i32 in Saturating = (22000 as i32 in Saturating) + (clamp_i32(emphasis, 0, 1000) as i32 in Saturating) * (4 as i32 in Saturating);
+        let radius16: i32 in Saturating = select_sat(small, size * (8 as i32 in Saturating) / (1000 as i32 in Saturating), UiViewport::divide(size * height * (8 as i32 in Saturating), Raster::logical_height(pixels, band_y) * (1000 as i32 in Saturating)));
+        Raster::draw_slider_circle(pixels, band_y, center_x16, center_y16 + (8 as i32 in Saturating), radius16 + (8 as i32 in Saturating), color_mix(context.theme.surface, context.theme.shadow, 18));
+        Raster::draw_slider_circle(pixels, band_y, center_x16, center_y16, radius16, context.theme.knob);
+    }
+    state done() {}
+}
+
+// Sixteenths of a physical pixel preserve continuous size and a fixed center.
+// Only the slider thumb needs this path; ordinary boxes retain scanline spans.
+machine Raster::draw_slider_circle(pixels: &mut [i32; 4096], band_y: i32, center_x16: i32 in Saturating, center_y16: i32 in Saturating, radius16: i32 in Saturating, color: i32) {
+    let small: bool = band_y < 0;
+    let first: i32 in Saturating = select_sat(small, 0, band_y as i32 in Saturating);
+    let last: i32 in Saturating = select_sat(small, 64, first + (1 as i32 in Saturating));
+    let top: i32 in Saturating = max_sat(first, (center_y16 - radius16 - (16 as i32 in Saturating)) / (16 as i32 in Saturating));
+    let bottom: i32 in Saturating = min_sat(last, (center_y16 + radius16 + (31 as i32 in Saturating)) / (16 as i32 in Saturating));
+    transition top < bottom {
+        true -> rows(pixels, band_y, center_x16, center_y16, radius16, color, top, bottom)
+        _ -> done()
+    }
+    state rows(pixels: &mut [i32; 4096], band_y: i32, center_x16: i32 in Saturating, center_y16: i32 in Saturating, radius16: i32 in Saturating, color: i32, row: i32 in Saturating, bottom: i32 in Saturating) {
+        transition row < bottom {
+            true -> span(pixels, band_y, center_x16, center_y16, radius16, color, row, bottom)
+            _ -> done()
+        }
+    }
+    state span(pixels: &mut [i32; 4096], band_y: i32, center_x16: i32 in Saturating, center_y16: i32 in Saturating, radius16: i32 in Saturating, color: i32, row: i32 in Saturating, bottom: i32 in Saturating) {
+        let left: i32 in Saturating = max_sat(Raster::clip_left(pixels, band_y), (center_x16 - radius16 - (16 as i32 in Saturating)) / (16 as i32 in Saturating));
+        let right: i32 in Saturating = min_sat(Raster::clip_right(pixels, band_y), (center_x16 + radius16 + (31 as i32 in Saturating)) / (16 as i32 in Saturating));
+        let vertical: i32 in Saturating = max_sat(row * (16 as i32 in Saturating) + (8 as i32 in Saturating) - center_y16, center_y16 - row * (16 as i32 in Saturating) - (8 as i32 in Saturating));
+        let interior: i32 in Saturating = radius16 - (26 as i32 in Saturating) - vertical;
+        let inner_left: i32 in Saturating = max_sat(left, (center_x16 - interior + (31 as i32 in Saturating)) / (16 as i32 in Saturating));
+        let inner_right: i32 in Saturating = min_sat(right, (center_x16 + interior - (16 as i32 in Saturating)) / (16 as i32 in Saturating));
+        transition interior > 0 && inner_left < inner_right {
+            true -> opaque(pixels, band_y, center_x16, center_y16, radius16, color, row, bottom, left, right, inner_left, inner_right)
+            _ -> edge(pixels, band_y, center_x16, center_y16, radius16, color, row, bottom, left, right)
+        }
+    }
+    state opaque(pixels: &mut [i32; 4096], band_y: i32, center_x16: i32 in Saturating, center_y16: i32 in Saturating, radius16: i32 in Saturating, color: i32, row: i32 in Saturating, bottom: i32 in Saturating, left: i32 in Saturating, right: i32 in Saturating, inner_left: i32 in Saturating, inner_right: i32 in Saturating) {
+        // The distance estimate is at most |x| + |y|; this diamond is opaque.
+        Raster::hline_raw(pixels, band_y, row, inner_left, inner_right, color);
+        draw_slider_edge(pixels, band_y, center_x16, center_y16, radius16, color, row, left, inner_left);
+        draw_slider_edge(pixels, band_y, center_x16, center_y16, radius16, color, row, inner_right, right);
+        transition { _ -> rows(pixels, band_y, center_x16, center_y16, radius16, color, row + (1 as i32 in Saturating), bottom) }
+    }
+    state edge(pixels: &mut [i32; 4096], band_y: i32, center_x16: i32 in Saturating, center_y16: i32 in Saturating, radius16: i32 in Saturating, color: i32, row: i32 in Saturating, bottom: i32 in Saturating, left: i32 in Saturating, right: i32 in Saturating) {
+        draw_slider_edge(pixels, band_y, center_x16, center_y16, radius16, color, row, left, right);
+        transition { _ -> rows(pixels, band_y, center_x16, center_y16, radius16, color, row + (1 as i32 in Saturating), bottom) }
+    }
+    state done() {}
+}
+
+machine draw_slider_edge(pixels: &mut [i32; 4096], band_y: i32, center_x16: i32 in Saturating, center_y16: i32 in Saturating, radius16: i32 in Saturating, color: i32, row: i32 in Saturating, left: i32 in Saturating, right: i32 in Saturating) {
+    transition { _ -> column(pixels, band_y, center_x16, center_y16, radius16, color, row, left, right) }
+    state column(pixels: &mut [i32; 4096], band_y: i32, center_x16: i32 in Saturating, center_y16: i32 in Saturating, radius16: i32 in Saturating, color: i32, row: i32 in Saturating, x: i32 in Saturating, right: i32 in Saturating) {
+        transition x < right { true -> pixel(pixels, band_y, center_x16, center_y16, radius16, color, row, x, right) _ -> done() }
+    }
+    state pixel(pixels: &mut [i32; 4096], band_y: i32, center_x16: i32 in Saturating, center_y16: i32 in Saturating, radius16: i32 in Saturating, color: i32, row: i32 in Saturating, x: i32 in Saturating, right: i32 in Saturating) {
+        let horizontal: i32 in Saturating = max_sat(x * (16 as i32 in Saturating) + (8 as i32 in Saturating) - center_x16, center_x16 - x * (16 as i32 in Saturating) - (8 as i32 in Saturating));
+        let vertical: i32 in Saturating = max_sat(row * (16 as i32 in Saturating) + (8 as i32 in Saturating) - center_y16, center_y16 - row * (16 as i32 in Saturating) - (8 as i32 in Saturating));
+        let distance: i32 in Saturating = slider_distance16(horizontal, vertical);
+        Raster::blend_px_raw(pixels, band_y, x, row, color, Raster::sdf_smooth16(distance - radius16));
+        transition { _ -> column(pixels, band_y, center_x16, center_y16, radius16, color, row, x + (1 as i32 in Saturating), right) }
+    }
+    state done() {}
+}
+
+machine slider_distance16(horizontal: i32 in Saturating, vertical: i32 in Saturating) -> i32 in Saturating {
+    let high: i32 in Saturating = max_sat(horizontal, vertical);
+    let low: i32 in Saturating = min_sat(horizontal, vertical);
+    let first: i32 in Saturating = high + low * (3 as i32 in Saturating) / (16 as i32 in Saturating);
+    let second: i32 in Saturating = high * (7 as i32 in Saturating) / (8 as i32 in Saturating) + low / (2 as i32 in Saturating);
+    let third: i32 in Saturating = high * (3 as i32 in Saturating) / (4 as i32 in Saturating) + low * (5 as i32 in Saturating) / (8 as i32 in Saturating) + (high + low) / (32 as i32 in Saturating);
+    let seed: i32 in Saturating = max_sat(first, max_sat(second, third));
+    transition seed > 0 {
+        true -> refine(horizontal, vertical, seed)
+        _ -> (0 as i32 in Saturating)
+    }
+    state refine(horizontal: i32 in Saturating, vertical: i32 in Saturating, seed: i32 in Saturating) -> i32 in Saturating requires seed > 0 {
+        (seed + (horizontal * horizontal + vertical * vertical) / seed) / (2 as i32 in Saturating)
+    }
+}
+
+public machine Raster::draw_diamond(pixels: &mut [i32; 4096], band_y: i32, rectangle: Rect, fill_col: i32, edge_col: i32) {
+    let is_64: bool = band_y < 0;
+    let ly: i32 in Saturating = pixels[4093] as i32 in Saturating;
+    let near_y: bool = is_64 || (ly >= (rectangle.y - (2 as i32 in Saturating)) && ly <= (rectangle.y + rectangle.h + (2 as i32 in Saturating)));
+    transition !is_64 && near_y && rectangle.w > 4 && rectangle.h > 4 {
+        true -> check_py(pixels, band_y, rectangle, fill_col, edge_col)
+        _ -> done()
+    }
+    state check_py(pixels: &mut [i32; 4096], band_y: i32, rectangle: Rect, fill_col: i32, edge_col: i32) {
+        let cw: i32 in Saturating = Raster::band_width(pixels, band_y);
+        let ch: i32 in Saturating = Raster::band_height(pixels, band_y);
+        let py0: i32 in Saturating = Raster::to_physical_y(rectangle.y, ch, false, Raster::logical_height(pixels, band_y));
+        let py1: i32 in Saturating = Raster::to_physical_y(rectangle.y + rectangle.h, ch, false, Raster::logical_height(pixels, band_y));
+        let ph: i32 in Saturating = max_sat(py1 - py0, 2);
+        let py: i32 in Saturating = band_y as i32 in Saturating;
+        transition py >= py0 && py < py1 && ph > 0 {
+            true -> draw_strip(pixels, band_y, rectangle, cw, py, py0, ph, fill_col, edge_col)
+            _ -> done()
+        }
+    }
+    state draw_strip(pixels: &mut [i32; 4096], band_y: i32, rectangle: Rect, cw: i32 in Saturating, py: i32 in Saturating, py0: i32 in Saturating, ph: i32 in Saturating, fill_col: i32, edge_col: i32)
+    requires ph > 0 {
+        let px0: i32 in Saturating = Raster::to_physical_x(rectangle.x, cw, false, Raster::logical_width(pixels, band_y));
+        let px1: i32 in Saturating = Raster::to_physical_x(rectangle.x + rectangle.w, cw, false, Raster::logical_width(pixels, band_y));
+        let pw: i32 in Saturating = max_sat(px1 - px0, 4);
+        let cx: i32 in Saturating = px0 + (pw / (2 as i32 in Saturating));
+        let half_h: i32 in Saturating = max_sat(ph / (2 as i32 in Saturating), 1);
+        let rel_y: i32 in Saturating = py - py0;
+        let dist_mid: i32 in Saturating = select_sat(rel_y >= half_h, rel_y - half_h, half_h - rel_y);
+        let span_num: i32 in Saturating = max_sat(half_h - dist_mid, 0) * (pw / (2 as i32 in Saturating));
+        transition half_h > 0 {
+            true -> emit_strip(pixels, band_y, py, cx, span_num / half_h, fill_col, edge_col)
+            _ -> done()
+        }
+    }
+    state emit_strip(pixels: &mut [i32; 4096], band_y: i32, py: i32 in Saturating, cx: i32 in Saturating, hw: i32 in Saturating, fill_col: i32, edge_col: i32) {
+        let bd: i32 in Saturating = 3;
+        Raster::hline_raw(pixels, band_y, py, cx - hw - bd, cx + hw + bd, edge_col);
+        transition hw > 1 {
+            true -> emit_inner(pixels, band_y, py, cx, hw - (1 as i32 in Saturating), fill_col)
+            _ -> done()
+        }
+    }
+    state emit_inner(pixels: &mut [i32; 4096], band_y: i32, py: i32 in Saturating, cx: i32 in Saturating, ihw: i32 in Saturating, fill_col: i32) {
+        Raster::hline_raw(pixels, band_y, py, cx - ihw, cx + ihw, fill_col);
+    }
+    state done() {}
+}
+
+
+// The stepper's geometry uses the same edge widths as its hit testing.
+public machine Raster::draw_number_field(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, index: i32)
+requires index >= 0 && index < 128 {
+    let rectangle: Rect = UiContext::paint_rect(context, index);
+    let button_width: i32 in Saturating = min_sat(36, rectangle.w / (3 as i32 in Saturating));
+    let enabled: i32 = context.nodes[index].aux_value as i32;
+    let minus_enabled: bool = enabled % 2 == 1;
+    let plus_enabled: bool = enabled >= 2;
+    let hovered: bool = context.hot == context.nodes[index].id;
+    let relative_x: i32 in Saturating = (context.mouse_x as i32 in Saturating) - rectangle.x;
+    let minus_hover: bool = hovered && minus_enabled && relative_x < button_width;
+    let plus_hover: bool = hovered && plus_enabled && relative_x >= rectangle.w - button_width;
+    let pressed: bool = context.active == context.nodes[index].id && context.mouse_down;
+    let hover_color: i32 = select_i32(pressed, context.theme.surface_hover, context.theme.surface_hover);
+    let minus_background: i32 = select_i32(minus_hover, hover_color, context.theme.well);
+    let plus_background: i32 = select_i32(plus_hover, hover_color, context.theme.well);
+    let minus_color: i32 = select_i32(minus_enabled, context.theme.text, context.theme.tertiary);
+    let plus_color: i32 = select_i32(plus_enabled, context.theme.text, context.theme.tertiary);
+    let minus_rect: Rect = Rect { x: rectangle.x + (3 as i32 in Saturating), y: rectangle.y + (3 as i32 in Saturating), w: button_width - (6 as i32 in Saturating), h: rectangle.h - (6 as i32 in Saturating) };
+    let plus_rect: Rect = Rect { x: rectangle.x + rectangle.w - button_width + (3 as i32 in Saturating), y: rectangle.y + (3 as i32 in Saturating), w: button_width - (6 as i32 in Saturating), h: rectangle.h - (6 as i32 in Saturating) };
+    Raster::draw_box_fill(pixels, band_y, minus_rect, minus_background, 7);
+    Raster::draw_box_fill(pixels, band_y, Rect::copy(&plus_rect), plus_background, 7);
+    let minus_bar: Rect = Rect { x: rectangle.x + button_width / (2 as i32 in Saturating) - (4 as i32 in Saturating), y: rectangle.y + rectangle.h / (2 as i32 in Saturating) - (1 as i32 in Saturating), w: 8, h: 2 };
+    Raster::draw_box_fill(pixels, band_y, minus_bar, minus_color, 0);
+    Raster::draw_icon_band(pixels, band_y, plus_rect, 1, plus_color);
+    Raster::draw_basic_widget(pixels, band_y, context, index, 3);
+}
+
+public machine Raster::draw_node_content(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, node_index: i32)
+requires node_index >= 0 && node_index < 128 {
+    let kind: i32 = context.nodes[node_index].content_kind;
+    transition kind {
+        18 -> draw_number_field(pixels, band_y, context, node_index)
+        _ -> basic(pixels, band_y, context, node_index, kind)
+    }
+    state draw_number_field(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, node_index: i32)
+    requires node_index >= 0 && node_index < 128 {
+        Raster::draw_number_field(pixels, band_y, context, node_index);
+    }
+    state basic(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, node_index: i32, kind: i32)
+    requires node_index >= 0 && node_index < 128 {
+        transition kind >= 1 && kind <= 6 {
+            true -> draw(pixels, band_y, context, node_index, kind)
+            _ -> done()
+        }
+    }
+    state draw(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, node_index: i32, kind: i32)
+    requires node_index >= 0 && node_index < 128 {
+        Raster::draw_basic_widget(pixels, band_y, context, node_index, kind);
+    }
+    state done() {}
+}
+
+
+// Render one physical scanline (`band_y >= 0`) or full 64x64 (`band_y == -1`).
+public machine Raster::render_region(context: &UiContext, pixels: &mut [i32; 4096], band_y: i32) {
+    let mut scene: UiScene;
+    UiScene::prepare(&mut scene, context);
+    Raster::render_scene(&scene, context, pixels, band_y);
+}
+
+public machine Raster::render_scene(scene: &UiScene, context: &UiContext, pixels: &mut [i32; 4096], band_y: i32) {
+    UiScene::begin_band(scene, context, pixels, band_y);
+    let mut cursor: i32 = 0;
+    transition { _ -> next(scene, context, pixels, band_y, &mut cursor) }
+    state next(scene: &UiScene, context: &UiContext, pixels: &mut [i32; 4096], band_y: i32, cursor: &mut i32) {
+        let index: i32 = UiScene::next(scene, context, pixels, band_y, cursor);
+        transition index >= 0 && index < 128 { true -> content(scene, context, pixels, band_y, cursor, index) _ -> done() }
+    }
+    state content(scene: &UiScene, context: &UiContext, pixels: &mut [i32; 4096], band_y: i32, cursor: &mut i32, index: i32)
+    requires index >= 0 && index < 128 {
+        Raster::draw_node_content(pixels, band_y, context, index);
+        transition { _ -> next(scene, context, pixels, band_y, cursor) }
+    }
+    state done() {}
+}
+
+public machine Raster::render_band(context: &UiContext, pixels: &mut [i32; 4096], band_y: i32) {
+    Raster::render_region(context, pixels, band_y);
+}
+
+public machine Raster::render(context: &UiContext, pixels: &mut [i32; 4096]) {
+    Raster::render_region(context, pixels, -1);
+}
+public machine Raster::draw_button(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect, variant: i32, feedback: i32) {
+    let hover: i32 = clamp_i32(feedback / 4, 0, 100);
+    let press: bool = feedback > 400;
+    let primary: i32 = color_mix(context.theme.accent, context.theme.surface, select_i32(press, 16, mul_i32(hover, 9) / 100));
+    let surface: i32 = color_mix(context.theme.surface, context.theme.surface_hover, hover);
+    let fill: i32 = select_i32(variant == 0, primary, select_i32(variant == 2 && feedback == 0, -1, surface));
+    let border: i32 = select_i32(variant == 1, context.theme.border, select_i32(variant == 3, color_mix(context.theme.border, context.theme.danger, hover), -1));
+    let painted: Rect = UiContext::pressed_rect(rectangle, feedback);
+    Raster::draw_box_band(pixels, band_y, painted, fill, border, 1, 18);
+}
+
+// Coverage is premultiplied by the outer contour only once. The inner contour
+// is inset by exactly 16/16 physical pixels, matching the straight hairline.
+machine corner_fill_percentage(outer: i32, inner: i32) -> i32 {
+    transition outer > 0 {
+        true -> (mul_i32(inner, 100) / outer)
+        _ -> (0)
+    }
+}
+
+// RGB plus 0..100 coverage in bits 24..30; matches the scalar corner painter.
+public machine Raster::corner_sample(dx: i32 in Saturating, dy: i32 in Saturating, radius: i32 in Saturating, background: i32, border: i32, has_border: bool) -> i32 {
+    let distance: i32 in Saturating = Raster::sdf_dist16(dx, dy, radius);
+    transition distance >= 10 { true -> (0) _ -> inside(distance, background, border, has_border) }
+    state inside(distance: i32 in Saturating, background: i32, border: i32, has_border: bool) -> i32 {
+        transition distance <= -26 && background >= 0 { true -> pack(background, 100) _ -> edge(distance, background, border, has_border) }
+    }
+    state edge(distance: i32 in Saturating, background: i32, border: i32, has_border: bool) -> i32 {
+        let outer: i32 = box_coverage16(distance);
+        let inner: i32 = box_coverage16(distance + (16 as i32 in Saturating));
+        let color: i32 = select_i32(has_border, select_i32(background >= 0, color_mix(border, background, corner_fill_percentage(outer, inner)), border), background);
+        let alpha: i32 = select_i32(background >= 0, outer, select_i32(has_border, clamp_i32(sub_i32(outer, inner), 0, 100), 0));
+        transition { _ -> pack(color, alpha) }
+    }
+    state pack(color: i32, alpha: i32) -> i32 { add_i32(color & 0xFFFFFF, mul_i32(alpha, 16777216)) }
+}
+
+public machine Raster::configure_for_context(context: &UiContext, pixels: &mut [i32; 4096], band_y: i32) {
+    transition band_y >= 0 {
+        true -> configure(context, pixels)
+        _ -> done()
+    }
+    state configure(context: &UiContext, pixels: &mut [i32; 4096]) {
+        pixels[4088] = max_i32(context.width as i32, 1);
+        pixels[4089] = max_i32(context.height as i32, 1);
+    }
+    state done() {}
+}

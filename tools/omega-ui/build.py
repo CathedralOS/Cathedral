@@ -1,4 +1,4 @@
-"""Build the pinned local Omega UI source, then package its pure native exports."""
+"""Build Cathedral's checked-in Omega UI, then package its pure native exports."""
 import argparse
 import hashlib
 import json
@@ -9,6 +9,7 @@ import subprocess
 from elf import Elf, component
 
 ROOT = Path(__file__).resolve().parents[2]
+LIBRARY = ROOT / 'source/distribution/libraries/omega-ui'
 OUTPUT = ROOT / 'build/omega-ui/component'
 
 
@@ -27,19 +28,16 @@ def fingerprint(library, compiler):
     return inputs
 
 
-def prepare(library=None, compiler=None):
-    library = Path(library or os.environ.get('OMEGA_UI_REPO', ROOT.parent / 'omega-ui')).resolve()
+def prepare(compiler=None):
+    library = LIBRARY.resolve()
     required = ('src', 'platform/native', 'tests/native_component/layout/main.omg',
                 'tests/native_component/frame/main.omg')
     missing = [name for name in required if not (library / name).exists()]
     if missing:
-        raise ValueError(f'Omega UI source checkout is missing or incomplete at {library}; '
-                         f'missing: {", ".join(missing)}. Set OMEGA_UI_REPO to the library '
-                         'checkout, or OMEGA_UI_COMPONENT_DIR to prepared component artifacts '
-                         'when building with Cargo. See tools/omega-ui/README.md.')
+        raise ValueError(f'Cathedral checkout is missing Omega UI source at {library}; '
+                         f'missing: {", ".join(missing)}. Restore the checked-in distribution '
+                         'library. See tools/omega-ui/README.md.')
     compiler = compiler or os.environ.get('OMEGA_BIN')
-    if not compiler and (library / 'build/compiler.json').exists():
-        compiler = json.loads((library / 'build/compiler.json').read_text())['compiler']
     compiler = Path(compiler or shutil.which('omega') or 'omega').resolve()
     profile = json.loads(subprocess.check_output([str(compiler), '--build-profile'], text=True))
     if profile.get('opt_level') not in ('1', '2', '3', 's', 'z'):
@@ -48,7 +46,7 @@ def prepare(library=None, compiler=None):
     receipt = OUTPUT / 'receipt.json'
     if receipt.exists():
         saved = json.loads(receipt.read_text())
-        if saved['inputs'] == inputs and all((OUTPUT / name).exists() and digest(OUTPUT / name) == value for name, value in saved['outputs'].items()):
+        if saved['library'] == str(library) and saved['inputs'] == inputs and all((OUTPUT / name).exists() and digest(OUTPUT / name) == value for name, value in saved['outputs'].items()):
             return OUTPUT
     OUTPUT.mkdir(parents=True, exist_ok=True)
     manifest = {'inputs': inputs, 'library': str(library), 'compiler': str(compiler), 'profile': profile, 'exports': {}, 'outputs': {}}
@@ -99,19 +97,18 @@ def prepare(library=None, compiler=None):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--library', type=Path)
     parser.add_argument('--compiler', type=Path)
     parser.add_argument('--cargo', action='store_true', help='emit exact Cargo rebuild inputs before the output directory')
     arguments = parser.parse_args()
     try:
-        directory = prepare(arguments.library, arguments.compiler)
+        directory = prepare(arguments.compiler)
     except (OSError, ValueError, RuntimeError, subprocess.CalledProcessError) as error:
         parser.exit(1, f'Omega UI preparation failed: {error}\n')
     if arguments.cargo:
         receipt = json.loads((directory / 'receipt.json').read_text())
         library = Path(receipt['library'])
-        paths = [Path(receipt['compiler']), library / 'build/compiler.json',
-                 library / 'src', library / 'platform/native']
+        paths = [Path(receipt['compiler']), library / 'src', library / 'platform/native',
+                 library / 'tests/native_component']
         paths += [Path(__file__).parent / name.removeprefix('adapter/') if name.startswith('adapter/') else library / name
                   for name in receipt['inputs'] if name != 'compiler']
         for path in paths:

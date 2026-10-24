@@ -1,0 +1,4 @@
+
+machine build(builder: &mut Build) {
+    Build::package(builder, "omega_language_std");
+}

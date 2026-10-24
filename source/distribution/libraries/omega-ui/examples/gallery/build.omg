@@ -1,0 +1,16 @@
+// omega_ui Gallery: an interactive native windowed desktop application
+// showcasing omega_ui's immediate-mode Flexbox layout, cards, buttons,
+// toggles, checkboxes, sliders, progress bars, and light/dark themes.
+machine build(builder: &mut Build) {
+    Build::application(builder, "omega_ui_gallery");
+    Build::depend(builder, Source::Path { location: "../../platform/windows" });
+    builder.identifier = "com.omega.ui-gallery";
+    Build::depend(builder, Source::Path {
+        location: "../../src"
+    });
+    Build::depend(builder, Source::Path {
+        location: "../../support/standard_library"
+    });
+    Build::bind(builder, windows_x86_64::ProgramEntry, Main::main);
+    builder.subsystem = Subsystem::Gui;
+}

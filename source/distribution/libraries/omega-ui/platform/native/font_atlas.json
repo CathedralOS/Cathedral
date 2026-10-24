@@ -1,0 +1,24 @@
+{
+  "pillow": "12.3.0",
+  "coverage_levels": 16,
+  "fonts": [
+    {
+      "font": "assets/fonts/inter/Inter-Regular.ttf",
+      "sha256": "40d692fce188e4471e2b3cba937be967878f631ad3ebbbdcd587687c7ebe0c82",
+      "size": 16,
+      "line_height": 20,
+      "baseline": 16,
+      "glyphs": 95,
+      "encoded_bytes": 15445
+    },
+    {
+      "font": "assets/fonts/inter/Inter-SemiBold.ttf",
+      "sha256": "78a843fade9d4612a5567302fb595b56976eb5fcebf4fea5a5912d638bafcde3",
+      "size": 24,
+      "line_height": 32,
+      "baseline": 25,
+      "glyphs": 95,
+      "encoded_bytes": 25713
+    }
+  ]
+}

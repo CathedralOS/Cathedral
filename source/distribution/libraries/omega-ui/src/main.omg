@@ -1,0 +1,65 @@
+/*
+We build a frame by appending controls to a flat box tree, then measuring children
+bottom-up and arranging parents top-down. Stable, nonzero control IDs connect the
+new tree to the preceding frame's hit rectangles. A host supplies pointer and
+keyboard input, paints the arranged tree, and schedules another frame when input
+or animation changes the model.
+
+The context holds 128 nodes, eight nested containers, and 8192 label bytes. We keep
+these stores inside the context so a frame needs no heap allocation. Text spans
+carry a generation: rebuilding the frame retires every earlier label. Overflow
+is explicit; this package is intended for bounded views rather than an unbounded
+document tree. Docking uses a separate twelve-slot tree and has no renderer.
+*/
+
+/*
+The package owns layout, controls, text storage, color roles, and software drawing.
+Its host owns native windows, event pumping, and repaint policy. The Windows
+adapter supplies actual font measurement, text editing, and cached bitmap painting.
+Gallery-specific panels live in examples/gallery; reusable controls do not know
+the gallery's page numbers, demonstration labels, or packed panel state.
+Hosts call UiMotion::advance once per frame with elapsed milliseconds, then keep
+scheduling while context.motion.animating is true. Set motion.reduced to snap
+transitions. Rebuilding the view never advances animation time.
+
+tests/headless/main.omg exercises layout, input, themes, text lifetimes,
+Unicode validation, and raster output. @Incomplete: native accessibility and
+editable numeric text are not implemented by the current number field.
+*/
+
+use types;
+use motion;
+use palette;
+use text;
+use utf16;
+use context;
+use dock;
+use widgets;
+use raster;
+use tester;
+use frame;
+use scene;
+use viewport;
+use list;
+use text_field;
+use edit;
+use paint_boxes;
+
+// We retain the context between frames so stable IDs can find earlier hit boxes.
+machine example_frame_lifecycle(label_width: i32, label_height: i32)
+requires label_width >= 0 && label_height > 0 {
+    let mut context: UiContext = UiContext::new(64, 64);
+    UiContext::setup(&mut context, 64, 64, true);
+    let mut frame: UiFrame = UiFrame::begin(&mut context);
+    Ui::column(&mut context, 2, 2, true, true);
+    let button_interaction: Interaction = Ui::button(&mut context, 1, "Apply",
+        ButtonOptions { variant: ButtonVariant::Primary, width: 48, height: 24 });
+    UiContext::set_text_metrics(&mut context, 2, label_width, label_height);
+    Ui::end(&mut context);
+    let rebuild: bool = UiFrame::next_pass(&mut frame, &mut context);
+    let mut pixels: [i32; 4096];
+    Raster::render(&context, &mut pixels);
+    // The next begin_frame retires text and rebuilds nodes; no resource release is needed.
+    UiContext::begin_frame(&mut context);
+    UiContext::end_frame(&mut context);
+}

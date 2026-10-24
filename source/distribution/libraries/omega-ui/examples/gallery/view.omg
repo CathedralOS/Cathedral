@@ -1,0 +1,273 @@
+// Builds the gallery shell and packed demo panels on the shared box tree.
+
+use omega_ui::types;
+use omega_ui::motion;
+use omega_ui::context;
+
+public data GalleryUi {}
+
+public machine GalleryUi::card_header(rectangle: &Rect) -> Rect {
+    Rect { x: rectangle.x + (12 as i32 in Saturating), y: rectangle.y + (12 as i32 in Saturating), w: max_sat(rectangle.w - (24 as i32 in Saturating), 0), h: 24 }
+}
+
+// Builds navigation items with selected and hover state.
+public machine GalleryUi::sidebar_item(context: &mut UiContext, id: i32, selected: bool, icon_id: i32, label_id: i32, chip_color: i32) -> bool {
+    let mut style: Style = Style::default_box();
+    style.width_mode = UiSizing::Fill;
+    style.height_mode = UiSizing::Fixed;
+    style.height_px = 36;
+    style.radius = 10;
+    let node_index: i32 = UiContext::add_node(context, id, style, UiContentKind::Extension { tag: 7 }, 0, chip_color, true, false);
+    let sel_flag: i32 = select_i32(selected, add_i32(100, icon_id), icon_id);
+    UiContext::set_node_meta(context, node_index, sel_flag, chip_color, label_id);
+    let interaction: Interaction = UiContext::activate(context, node_index, id);
+    let hover_progress: i32 = UiMotion::target(&mut context.motion, id, select_i32(interaction.hovered, 1000, 0), 160);
+    let hover_bg: i32 = select_i32(hover_progress > 0, color_mix(context.theme.sidebar_bg, context.theme.surface_hover, hover_progress / 10), -1);
+    let background_color: i32 = select_i32(selected, context.theme.surface_hover, hover_bg);
+    let border_c: i32 = -1;
+    transition node_index >= 0 && node_index < 128 {
+        true -> apply_side(context, node_index, background_color, border_c, interaction.clicked)
+        _ -> (interaction.clicked)
+    }
+    state apply_side(context: &mut UiContext, node_index: i32, background_color: i32, border_c: i32, clicked: bool) -> bool
+    requires node_index >= 0 && node_index < 128 {
+        context.nodes[node_index].style.background = background_color;
+        context.nodes[node_index].style.border = border_c;
+        context.nodes[node_index].style.border_width = select_sat(border_c >= 0, 1, 0);
+        transition clicked {
+            true -> mark_side(context)
+            _ -> (false)
+        }
+    }
+    state mark_side(context: &mut UiContext) -> bool {
+        context.changed = true;
+        true
+    }
+}
+
+// kind_mode:
+//   1 = Nav items + "Workspaces" section header + "Omega" folder root
+//   2 = Lower workspace folders (".dsh", "Default workspace", "No sessions")
+//   3 = Interactive "+ New Session" full-width button
+//   4 = Interactive "... More" + Theme switcher footer
+public machine GalleryUi::sidebar_label(context: &mut UiContext, kind_mode: i32, label_id: i32, height_px: i32) {
+    let mut style: Style = Style::default_box();
+    style.width_mode = UiSizing::Fill;
+    style.height_mode = UiSizing::Fixed;
+    style.height_px = height_px as i32 in Saturating;
+    let col: i32 = select_i32(kind_mode == 0, context.theme.text, select_i32(kind_mode == 1, context.theme.tertiary, context.theme.text_muted));
+    let succ_col: i32 = context.theme.success;
+    let node_index: i32 = UiContext::add_node(context, 0, style, UiContentKind::Extension { tag: 12 }, kind_mode, col, false, false);
+    UiContext::set_node_meta(context, node_index, 0, succ_col, label_id);
+}
+
+public machine GalleryUi::sidebar_action(context: &mut UiContext, id: i32, kind_mode: i32, height_px: i32) -> bool {
+    let mut style: Style = Style::default_box();
+    style.width_mode = UiSizing::Fill;
+    style.height_mode = UiSizing::Fixed;
+    style.height_px = height_px as i32 in Saturating;
+    style.radius = 10;
+    let is_btn: bool = kind_mode == 3;
+    let base_bg: i32 = select_i32(is_btn, context.theme.surface_hover, -1);
+    let base_bd: i32 = select_i32(is_btn, context.theme.border, -1);
+    style.background = base_bg;
+    style.border = base_bd;
+    style.border_width = select_sat(is_btn, 1, 0);
+    let text_color: i32 = context.theme.text;
+    let accent_color: i32 = context.theme.accent;
+    let node_index: i32 = UiContext::add_node(context, id, style, UiContentKind::Extension { tag: 12 }, kind_mode, text_color, true, false);
+    UiContext::set_node_meta(context, node_index, 0, accent_color, kind_mode);
+    let interaction: Interaction = UiContext::activate(context, node_index, id);
+    let hover_bg: i32 = select_i32(is_btn, color_mix(context.theme.surface_hover, context.theme.accent, 18), context.theme.surface_hover);
+    let final_bg: i32 = select_i32(interaction.hovered, hover_bg, base_bg);
+    transition node_index >= 0 && node_index < 128 {
+        true -> apply_act(context, node_index, final_bg, interaction.clicked)
+        _ -> (interaction.clicked)
+    }
+    state apply_act(context: &mut UiContext, node_index: i32, final_bg: i32, clicked: bool) -> bool
+    requires node_index >= 0 && node_index < 128 {
+        context.nodes[node_index].style.background = final_bg;
+        transition clicked {
+            true -> mark_act(context)
+            _ -> (false)
+        }
+    }
+    state mark_act(context: &mut UiContext) -> bool {
+        context.changed = true;
+        true
+    }
+}
+
+public machine GalleryUi::header_bar(context: &mut UiContext, id: i32, title_label_id: i32, page: &mut i32, range_mode: &mut i32, paused: &mut bool) {
+    let mut style: Style = Style::default_box();
+    style.width_mode = UiSizing::Fill;
+    style.height_mode = UiSizing::Fixed;
+    style.height_px = 58;
+    let packed_state: i32 = add_i32(mul_i32(clamp_i32(range_mode, 0, 2), 10), select_i32(paused, 1, 0));
+    let text_color: i32 = context.theme.text;
+    let accent_color: i32 = context.theme.accent;
+    let cur_page: i32 = clamp_i32(page, 0, 4);
+    let node_index: i32 = UiContext::add_node(context, id, style, UiContentKind::Extension { tag: 8 }, packed_state, text_color, true, false);
+    let highlight: i32 = UiMotion::target(&mut context.motion, 91500, mul_i32(cur_page, 250), 420);
+    UiContext::set_node_meta(context, node_index, highlight, accent_color, title_label_id);
+    let interaction: Interaction = UiContext::interact(context, node_index, id);
+    transition interaction.clicked && interaction.rectangle_width > 120 {
+        true -> handle_header_click(context, node_index, page, range_mode, paused, interaction.relative_x, (context.mouse_y as i32 in Saturating) - UiContext::previous_rect(context, id).y, interaction.rectangle_width)
+        _ -> done()
+    }
+    state handle_header_click(context: &mut UiContext, node_index: i32, page: &mut i32, range_mode: &mut i32, paused: &mut bool, relative_x: i32 in Saturating, relative_y: i32 in Saturating, rw: i32 in Saturating) {
+        let pause_x: i32 in Saturating = rw - (48 as i32 in Saturating);
+        let seg_x: i32 in Saturating = rw - (210 as i32 in Saturating);
+        transition relative_x < 448 && relative_y >= 26 && relative_y < 58 {
+            true -> switch_tab(context, node_index, page, relative_x)
+            _ -> check_right(context, node_index, range_mode, paused, relative_x, seg_x, pause_x)
+        }
+    }
+    state switch_tab(context: &mut UiContext, node_index: i32, page: &mut i32, relative_x: i32 in Saturating) {
+        let next_p: i32 = clamp_i32((relative_x as i32) / 88, 0, 4);
+        page = next_p;
+        context.changed = true;
+        transition node_index >= 0 && node_index < 128 {
+            true -> update_tab(context, node_index, next_p)
+            _ -> done()
+        }
+    }
+    state update_tab(context: &mut UiContext, node_index: i32, next_p: i32)
+    requires node_index >= 0 && node_index < 128 {
+        let highlight: i32 = UiMotion::target(&mut context.motion, 91500, mul_i32(next_p, 250), 420);
+        context.nodes[node_index].aux_value = highlight as i32 in Saturating;
+    }
+    state check_right(context: &mut UiContext, node_index: i32, range_mode: &mut i32, paused: &mut bool, relative_x: i32 in Saturating, seg_x: i32 in Saturating, pause_x: i32 in Saturating) {
+        transition relative_x >= pause_x {
+            true -> toggle_pause(context, node_index, range_mode, paused)
+            _ -> check_seg(context, node_index, range_mode, paused, relative_x, seg_x)
+        }
+    }
+    state toggle_pause(context: &mut UiContext, node_index: i32, range_mode: &i32, paused: &mut bool) {
+        paused = !paused;
+        context.changed = true;
+        let next_packed: i32 = add_i32(mul_i32(clamp_i32(range_mode, 0, 2), 10), select_i32(paused, 1, 0));
+        transition node_index >= 0 && node_index < 128 {
+            true -> update_hdr(context, node_index, next_packed)
+            _ -> done()
+        }
+    }
+    state check_seg(context: &mut UiContext, node_index: i32, range_mode: &mut i32, paused: &bool, relative_x: i32 in Saturating, seg_x: i32 in Saturating) {
+        transition relative_x >= seg_x {
+            true -> cycle_range(context, node_index, range_mode, paused)
+            _ -> done()
+        }
+    }
+    state cycle_range(context: &mut UiContext, node_index: i32, range_mode: &mut i32, paused: &bool) {
+        let picked: i32 = add_i32(clamp_i32(range_mode, 0, 2), 1) % 3;
+        range_mode = picked;
+        context.changed = true;
+        let next_packed: i32 = add_i32(mul_i32(picked, 10), select_i32(paused, 1, 0));
+        transition node_index >= 0 && node_index < 128 {
+            true -> update_hdr(context, node_index, next_packed)
+            _ -> done()
+        }
+    }
+    state update_hdr(context: &mut UiContext, node_index: i32, next_packed: i32)
+    requires node_index >= 0 && node_index < 128 {
+        context.nodes[node_index].content_value = next_packed as i32 in Saturating;
+    }
+    state done() {}
+}
+
+// Clickable Trajectory Telemetry tile (`content_kind = 13`):
+public machine GalleryUi::metric_tile(context: &mut UiContext, id: i32, width_px: i32, height_px: i32, icon_id: i32, label_id: i32, series_color: i32, aux_color: i32, primary_val: i32, sub_val: i32, phase: i32) -> bool {
+    let mut style: Style = Style::default_box();
+    style.width_mode = UiSizing::Fixed;
+    style.width_px = width_px as i32 in Saturating;
+    style.height_mode = UiSizing::Fixed;
+    style.height_px = height_px as i32 in Saturating;
+    style.background = context.theme.surface;
+    style.border = context.theme.border;
+    style.border_width = 1;
+    style.radius = 8;
+    let packed_val: i32 = add_i32(clamp_i32(primary_val, 0, 999), mul_i32(clamp_i32(icon_id, 0, 15), 1000));
+    let packed_aux: i32 = add_i32(clamp_i32(sub_val, 0, 99), mul_i32(phase % 64, 100));
+    let node_index: i32 = UiContext::add_node(context, id, style, UiContentKind::Extension { tag: 13 }, packed_val, series_color, true, false);
+    UiContext::set_node_meta(context, node_index, packed_aux, aux_color, label_id);
+    let interaction: Interaction = UiContext::interact(context, node_index, id);
+    let border_color: i32 = context.theme.border;
+    let bg_col: i32 = select_i32(interaction.hovered, color_mix(context.theme.surface, context.theme.surface_hover, 45), context.theme.surface);
+    transition node_index >= 0 && node_index < 128 {
+        true -> apply_tile(context, node_index, bg_col, border_color, interaction.clicked)
+        _ -> (interaction.clicked)
+    }
+    state apply_tile(context: &mut UiContext, node_index: i32, bg_col: i32, border_color: i32, clicked: bool) -> bool
+    requires node_index >= 0 && node_index < 128 {
+        context.nodes[node_index].style.background = bg_col;
+        context.nodes[node_index].style.border = border_color;
+        transition clicked {
+            true -> mark_tile(context)
+            _ -> (false)
+        }
+    }
+    state mark_tile(context: &mut UiContext) -> bool {
+        context.changed = true;
+        true
+    }
+}
+
+// Renders structured agent findings with inline rounded monospace code pills and action bar.
+public machine GalleryUi::dot_graph_card(context: &mut UiContext, id: i32, width_px: i32, height_px: i32, icon_id: i32, label_id: i32, series_color: i32, aux_color: i32, primary_val: i32, sub_val: i32, phase: i32) {
+    let mut style: Style = Style::default_box();
+    style.width_mode = UiSizing::Fixed;
+    style.width_px = width_px as i32 in Saturating;
+    style.height_mode = UiSizing::Fixed;
+    style.height_px = height_px as i32 in Saturating;
+    style.background = -1;
+    style.border = -1;
+    style.border_width = 0;
+    style.radius = 8;
+    let packed_val: i32 = add_i32(clamp_i32(primary_val, 0, 999), mul_i32(clamp_i32(icon_id, 0, 15), 1000));
+    let packed_aux: i32 = add_i32(clamp_i32(sub_val, 0, 99), mul_i32(phase % 64, 100));
+    let node_index: i32 = UiContext::add_node(context, id, style, UiContentKind::Extension { tag: 14 }, packed_val, series_color, true, false);
+    UiContext::set_node_meta(context, node_index, packed_aux, aux_color, label_id);
+    let interaction: Interaction = UiContext::interact(context, node_index, id);
+}
+
+// Interactive Playground Panel (`content_kind = 17`):
+// Renders a styled card (`width_px` x `height_px`) with internal sub-controls and returns
+// the `Interaction` so the caller can dispatch clicks/drags via `it.rel_x` and `it.rect_w`.
+public machine GalleryUi::playground_card(context: &mut UiContext, id: i32, width_px: i32, height_px: i32, panel_kind: i32, val1: i32, val2: i32, aux_col: i32) -> Interaction {
+    let mut style: Style = Style::default_box();
+    style.width_mode = UiSizing::Fixed;
+    style.width_px = width_px as i32 in Saturating;
+    style.height_mode = UiSizing::Fixed;
+    style.height_px = height_px as i32 in Saturating;
+    style.background = select_i32(panel_kind == 5 || panel_kind == 6, -1, context.theme.surface);
+    style.border = context.theme.border;
+    style.border_width = select_sat(panel_kind == 5 || panel_kind == 6, 0, 1);
+    style.radius = 26;
+    let accent_color: i32 = context.theme.accent;
+    let node_index: i32 = UiContext::add_node(context, id, style, UiContentKind::Extension { tag: 17 }, val1, accent_color, true, false);
+    UiContext::set_node_meta(context, node_index, val2, aux_col, panel_kind);
+    let interaction: Interaction = UiContext::interact(context, node_index, id);
+    GalleryUi::animate_task_row(context, node_index, panel_kind, val1);
+    transition interaction.clicked {
+        true -> mark_pg(context, interaction)
+        _ -> (interaction)
+    }
+    state mark_pg(context: &mut UiContext, interaction: Interaction) -> Interaction {
+        context.changed = true;
+        interaction
+    }
+}
+
+machine GalleryUi::animate_task_row(context: &mut UiContext, index: i32, panel_kind: i32, completed: i32) {
+    transition panel_kind == 6 && index >= 0 && index < 128 {
+        true -> animate(context, index, completed)
+        _ -> done()
+    }
+    state animate(context: &mut UiContext, index: i32, completed: i32)
+    requires index >= 0 && index < 128 {
+        let progress: i32 = UiMotion::target(&mut context.motion, context.nodes[index].id, select_i32(completed > 0, 1000, 0), 260);
+        // Preserve the committed state even before its animated stroke advances.
+        context.nodes[index].content_value = add_i32(progress, select_i32(completed > 0, 1024, 0)) as i32 in Saturating;
+    }
+    state done() {}
+}

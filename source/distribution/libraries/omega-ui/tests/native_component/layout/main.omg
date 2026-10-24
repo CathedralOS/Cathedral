@@ -1,0 +1,2 @@
+use native::main;
+machine main() reaches UiNativeLayout { let size: u64 = UiNativeLayout::query(0); let alignment: u64 = UiNativeLayout::query(1); }

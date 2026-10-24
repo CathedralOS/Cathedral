@@ -1,0 +1,90 @@
+// Validates UTF-8 and writes complete UTF-16 scalar sequences for native text hosts.
+
+public data UiUtf16Text {
+    units: [u16; 8192];
+    length: u64;
+}
+
+public machine UiUtf16Text::decode(output: &mut UiUtf16Text, text: &[u8]) -> bool {
+    output.length = 0;
+    transition text.len <= 8192u64 {
+        true -> scan(output, text, 0)
+        _ -> invalid(output)
+    }
+    state scan(output: &mut UiUtf16Text, text: &[u8], index: u64) -> bool
+    requires text.len <= 8192u64 && index <= 8192u64 {
+        transition index < text.len {
+            true -> leading(output, text, index)
+            _ -> (true)
+        }
+    }
+    state leading(output: &mut UiUtf16Text, text: &[u8], index: u64) -> bool
+    requires text.len <= 8192u64 && index < text.len {
+        let first: u32 = text[index] as u32;
+        transition {
+            first < 128u32 -> emit(output, text, index + 1u64, first)
+            first >= 194u32 && first <= 223u32 && index + 2u64 <= text.len -> two(output, text, index, first)
+            first >= 224u32 && first <= 239u32 && index + 3u64 <= text.len -> three(output, text, index, first)
+            first >= 240u32 && first <= 244u32 && index + 4u64 <= text.len -> four(output, text, index, first)
+            _ -> invalid(output)
+        }
+    }
+    state two(output: &mut UiUtf16Text, text: &[u8], index: u64, first: u32) -> bool
+    requires text.len <= 8192u64 && index <= 8192u64 && index + 2u64 <= text.len {
+        let second: u32 = text[index + 1u64] as u32;
+        let value: u32 = (first % 32u32) * 64u32 + second % 64u32;
+        transition second >= 128u32 && second <= 191u32 {
+            true -> emit(output, text, index + 2u64, value)
+            _ -> invalid(output)
+        }
+    }
+    state three(output: &mut UiUtf16Text, text: &[u8], index: u64, first: u32) -> bool
+    requires text.len <= 8192u64 && index <= 8192u64 && index + 3u64 <= text.len {
+        let second: u32 = text[index + 1u64] as u32;
+        let third: u32 = text[index + 2u64] as u32;
+        let value: u32 = (first % 16u32) * 4096u32 + (second % 64u32) * 64u32 + third % 64u32;
+        transition second >= 128u32 && second <= 191u32 && third >= 128u32 && third <= 191u32 && value >= 2048u32 {
+            true -> emit(output, text, index + 3u64, value)
+            _ -> invalid(output)
+        }
+    }
+    state four(output: &mut UiUtf16Text, text: &[u8], index: u64, first: u32) -> bool
+    requires text.len <= 8192u64 && index <= 8192u64 && index + 4u64 <= text.len {
+        let second: u32 = text[index + 1u64] as u32;
+        let third: u32 = text[index + 2u64] as u32;
+        let fourth: u32 = text[index + 3u64] as u32;
+        let value: u32 = (first % 8u32) * 262144u32 + (second % 64u32) * 4096u32 + (third % 64u32) * 64u32 + fourth % 64u32;
+        transition second >= 128u32 && second <= 191u32 && third >= 128u32 && third <= 191u32 && fourth >= 128u32 && fourth <= 191u32 && value >= 65536u32 {
+            true -> emit(output, text, index + 4u64, value)
+            _ -> invalid(output)
+        }
+    }
+    state emit(output: &mut UiUtf16Text, text: &[u8], next: u64, value: u32) -> bool
+    requires text.len <= 8192u64 && next <= 8192u64 {
+        transition {
+            value <= 65535u32 && (value < 55296u32 || value > 57343u32) && output.length < 8192u64 -> single(output, text, next, value)
+            value >= 65536u32 && value <= 1114111u32 && output.length <= 8190u64 -> pair(output, text, next, value)
+            _ -> invalid(output)
+        }
+    }
+    state single(output: &mut UiUtf16Text, text: &[u8], next: u64, value: u32) -> bool
+    requires text.len <= 8192u64 && next <= 8192u64 && value <= 65535u32 && output.length < 8192u64 {
+        output.units[output.length] = value as u16;
+        output.length = output.length + 1u64;
+        transition { _ -> scan(output, text, next) }
+    }
+    state pair(output: &mut UiUtf16Text, text: &[u8], next: u64, value: u32) -> bool
+    requires text.len <= 8192u64 && next <= 8192u64 && value >= 65536u32 && value <= 1114111u32 && output.length <= 8190u64 {
+        let adjusted: u32 = value - 65536u32;
+        let high: u32 = 55296u32 + adjusted / 1024u32;
+        let low: u32 = 56320u32 + adjusted % 1024u32;
+        output.units[output.length] = high as u16;
+        output.units[output.length + 1u64] = low as u16;
+        output.length = output.length + 2u64;
+        transition { _ -> scan(output, text, next) }
+    }
+    state invalid(output: &mut UiUtf16Text) -> bool {
+        output.length = 0;
+        false
+    }
+}
