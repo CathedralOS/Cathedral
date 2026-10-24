@@ -60,10 +60,10 @@ impl<const N: usize> World<N> {
     pub fn source_command(&mut self, words: wire::Packet) -> wire::Packet {
         let result = match words {
             [wire::POINTER_SOURCE, x, y, buttons @ 0..=7, 0, 0, 0, 0] => {
-                self.pointer_stream(wire::SINGLE_INPUT_STREAM, x, y, buttons)
+                self.source_sample(wire::SINGLE_INPUT_STREAM, [wire::POINTER, x, y, buttons])
             }
             [wire::KEY_SOURCE, key, state, 0, 0, 0, 0, 0] => {
-                self.key_stream(wire::SINGLE_INPUT_STREAM, key, state)
+                self.source_sample(wire::SINGLE_INPUT_STREAM, [wire::KEY, key, state, 0])
             }
             _ => return wire::error(abi::DENIED),
         };

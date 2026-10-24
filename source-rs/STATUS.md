@@ -19,9 +19,9 @@ and event order. Pointer capture and app button edges remain channel-local.
 The owner control connection can register and retire channels/groups; table slots
 are reclaimed after explicit retirement events drain. Local and inherited names
 are separate. Explicit child producer grants now reserve channel quotas, isolate
-group control and retire on disconnect. The root can grant them; nested stock
-hosts need negotiated upstream capacity before admitting additional local
-producers. Manifest-based producer acquisition and a visible synthetic producer
+group control and retire on disconnect. Nested stock hosts now negotiate incoming
+channel/group ceilings before reserving additional local producers; retirement
+restores upstream capacity. Manifest-based producer acquisition and a visible synthetic producer
 remain pending.
 
 ## Default desktop

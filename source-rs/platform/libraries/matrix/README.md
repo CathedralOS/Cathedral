@@ -96,14 +96,24 @@ channels and eventually its group. Regrant cannot bypass pending retirement.
 Only this explicit grant reveals the input extent authorized to that producer.
 
 The stock root reserves its fixed source channels at BIND before dynamic grants.
-Nested stock hosts currently refuse local producer grants: their parent can send
-all four channels, and no negotiated lower ceiling exists yet. Root producers
-can still forward through them. Other compositions must reserve the maximum
-inherited channels/groups they have actually agreed to accept; the library's
-reservation arguments do not negotiate that agreement with another process.
+Nested stock hosts now negotiate an incoming channel/group ceiling before admitting
+local producers. The [capacity calculation](world/input/capacity.rs) counts live
+and retiring local allocations; the [stock adapter](../../../distribution/matrix/service/parent/input.rs)
+obtains the parent's acknowledgement before committing the local grant, and widens
+the ceiling again after retirement. Other compositions must perform that exchange
+themselves; the library's reservation arguments do not negotiate it automatically.
+
+`INPUT_CAPACITY` applies to the requesting connection and requires its current
+view epoch. It survives view changes on that connection. Reducing below retained
+channel/group aliases returns BUSY with the old limits intact. An empty event
+queue does not make its channel identity free. New deliveries exceeding the
+ceiling refuse before changing focus, capture or held state. Explicit producers
+receive the refusal; already-consumed device/upstream samples instead interrupt
+that stream and suppress residual holds without killing the adapter or parent
+grant. Retirement and cancellation still reach existing recipients.
 
 This remains a transport foundation: manifest-based producer acquisition,
-negotiated recursive input allowances, independent group-controller delegation,
+independent group-controller delegation,
 dynamic reassociation, descriptor discovery and multiple desktop cursors remain
 pending. Do not lend an owner control endpoint to an app as a shortcut. The [F5 source adapter](../../../distribution/matrix/service/requests/source.rs)
 supplies separate pointer and keyboard channels in one group;

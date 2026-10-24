@@ -138,6 +138,7 @@ impl<const N: usize> World<N> {
         let _ = self.revoke(slot);
         if let Some(child) = self.children.get_mut(slot) {
             child.incarnation = 0;
+            child.input_capacity = [wire::INPUT_STREAMS, wire::INPUT_GROUPS];
         }
     }
     /// Coalesced wake hint; clients re-read only their local view and events.
@@ -163,6 +164,17 @@ impl<const N: usize> World<N> {
             return self.producer_request(slot, incarnation, words);
         }
         match words {
+            [wire::INPUT_CAPACITY, epoch, channels, groups, 0, 0, 0, 0]
+                if child.grant.valid()
+                    && child.grant.epoch == epoch
+                    && channels <= wire::INPUT_STREAMS as u64
+                    && groups <= wire::INPUT_GROUPS as u64 =>
+            {
+                match child.limit_input(channels as usize, groups as usize) {
+                    Ok(()) => [0, epoch, channels, groups, 0, 0, 0, 0],
+                    Err(code) => wire::error(code),
+                }
+            }
             [wire::VIEW, 0, 0, 0, 0, 0, 0, 0] => child.view(),
             [wire::POLL, 0, 0, 0, 0, 0, 0, 0] if child.grant.valid() => child.poll(),
             [wire::POLL_TAGGED, id @ 1..=0xffff_ffff, 0, 0, 0, 0, 0, 0] => wire::tag_poll(

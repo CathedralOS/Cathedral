@@ -39,6 +39,7 @@ pub(super) struct Child {
     next_group_name: u16,
     next_event: u64,
     group_last_event: [u64; wire::INPUT_GROUPS],
+    pub input_capacity: [usize; 2],
 }
 impl Child {
     pub const fn empty() -> Self {
@@ -68,6 +69,7 @@ impl Child {
             next_group_name: 0,
             next_event: 0,
             group_last_event: [0; wire::INPUT_GROUPS],
+            input_capacity: [wire::INPUT_STREAMS, wire::INPUT_GROUPS],
         }
     }
 
@@ -124,6 +126,7 @@ impl Child {
         if !self.grant.valid() {
             return Ok(true);
         }
+        self.can_push(index, group, group_name)?;
         self.notify = true;
         self.next_event = self.next_event.checked_add(1).expect("input event order");
         let queue = &mut self.queues[index];
@@ -148,6 +151,37 @@ impl Child {
         let coalesce = queue.last_order() == Some(self.group_last_event[group]);
         self.group_last_event[group] = self.next_event;
         Ok(queue.push(event, self.next_event, coalesce))
+    }
+    /// Preflight before routing changes focus, capture or held state. Retained
+    /// names still consume capacity even when their event queue is empty.
+    pub fn can_push(&self, index: usize, group: usize, name: Name) -> Result<(), u64> {
+        if self.queues[index].source.valid() {
+            return Ok(());
+        }
+        if self.queues.iter().filter(|q| q.source.valid()).count() >= self.input_capacity[0]
+            || self.next_input_name == u32::MAX
+        {
+            return Err(abi::NO_MEMORY);
+        }
+        if self.group_sources[group] != name
+            && (self.group_sources.iter().filter(|g| g.valid()).count() >= self.input_capacity[1]
+                || self.next_group_name == 0x7fff)
+        {
+            return Err(abi::NO_MEMORY);
+        }
+        Ok(())
+    }
+    pub fn limit_input(&mut self, channels: usize, groups: usize) -> Result<(), u64> {
+        if channels > wire::INPUT_STREAMS || groups > wire::INPUT_GROUPS {
+            return Err(abi::DENIED);
+        }
+        if self.queues.iter().filter(|q| q.source.valid()).count() > channels
+            || self.group_sources.iter().filter(|g| g.valid()).count() > groups
+        {
+            return Err(abi::BUSY);
+        }
+        self.input_capacity = [channels, groups];
+        Ok(())
     }
     pub fn cancel_stream(&mut self, index: usize, channel: Name) {
         let queue = &mut self.queues[index];

@@ -15,12 +15,26 @@ pub(super) fn dispatch(
             groups,
             0,
             0,
-        ] => {
-            // Upstream may legally supply all four channels/groups. Until the
-            // parent protocol negotiates a lower ceiling, a nested stock host
-            // cannot promise spare capacity for another local producer.
+        ] if slot < CHILDREN as u64
+            && count > 0
+            && count <= wire::INPUT_STREAMS as u64
+            && rights & !wire::PRODUCER_FOCUS == 0
+            && channels <= wire::INPUT_STREAMS as u64
+            && groups <= wire::INPUT_GROUPS as u64 =>
+        {
             if parent.upstream {
-                return wire::error(abi::NO_MEMORY);
+                return wire::error(
+                    parent
+                        .grant_input_producer(
+                            world,
+                            slot as usize,
+                            count as usize,
+                            rights,
+                            [channels as usize, groups as usize],
+                        )
+                        .err()
+                        .map_or(0, |e| e.0 as u64),
+                );
             }
             if let Err(code) = source::bind(world) {
                 return wire::error(code);

@@ -41,6 +41,7 @@ pub(super) struct Parent {
     pub hold_storage_active: bool,
     polling: Option<polling::Pending>,
     next_poll: u32,
+    input_capacity: [usize; 2],
 }
 impl Parent {
     pub(in crate::service) fn request_funding(&mut self, delta: [u64; 5]) -> Result<(), Error> {
@@ -112,6 +113,7 @@ impl Parent {
             hold_storage_active: false,
             polling: None,
             next_poll: 0,
+            input_capacity: [wire::INPUT_STREAMS, wire::INPUT_GROUPS],
         }
     }
     pub fn initialize(

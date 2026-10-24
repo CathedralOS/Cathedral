@@ -4,12 +4,7 @@ use super::*;
 impl Fixture {
     pub(super) fn producers(&self) {
         let epoch = self.view(2)[1];
-        // Nested stock hosts have no negotiated upstream channel ceiling yet.
-        // Refuse a local producer rather than overpromise their bounded table.
-        assert_eq!(
-            self.query(1, [wire::INPUT_PRODUCER_GRANT, 0, 1, 0, 0, 0, 0, 0])[0],
-            abi::NO_MEMORY
-        );
+        self.nested_producer();
         self.view(3); // Establish the outside sibling's current connection.
         assert_eq!(
             self.query(3, [wire::PRODUCER_INFO, 0, 0, 0, 0, 0, 0, 0])[0],

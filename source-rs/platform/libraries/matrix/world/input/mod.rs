@@ -1,4 +1,7 @@
 //! Rust plumbing. Start at `input.rs`.
+mod capacity;
+#[cfg(test)]
+mod capacity_tests;
 #[cfg(test)]
 mod group_tests;
 mod groups;

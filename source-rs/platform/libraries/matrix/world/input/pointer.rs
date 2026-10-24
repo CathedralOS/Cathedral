@@ -55,6 +55,14 @@ impl<const N: usize> World<N> {
             // Follow the owner's surface stacking; input-only equal ranges use slot order.
             .max_by_key(|(slot, c)| (c.surface_base, *slot))
             .map(|(slot, _)| slot);
+        let target = if route.buttons != 0 {
+            route.capture
+        } else {
+            hit
+        };
+        if let Some(slot) = target {
+            self.children[slot].can_push(index, route.group, self.input.groups[route.group].id)?;
+        }
         if route.buttons == 0 && buttons != 0 {
             let group = route.group;
             if select {
@@ -63,11 +71,6 @@ impl<const N: usize> World<N> {
             self.input.streams[index].capture = hit;
         }
         let route = &mut self.input.streams[index];
-        let target = if route.buttons != 0 {
-            route.capture
-        } else {
-            hit
-        };
         route.buttons = buttons;
         if let Some(slot) = target {
             let child = &mut self.children[slot];

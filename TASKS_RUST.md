@@ -1,5 +1,57 @@
 # Rust reference OS: tasks and handoff
 
+Implementation update 2026-10-23: **negotiated recursive input capacity**, over
+`d76d0808`. The child-only `INPUT_CAPACITY` operation sets channel/group ceilings
+for its current connection. It validates the view epoch and refuses reductions
+below retained aliases, including unread retirement boundaries. Empty event
+queues do not free channel identities. Limits survive view changes on the same
+connection; disconnect resets them. Delivery preflight refuses extra names before
+mutating focus, capture or held-key state.
+
+The [stock parent adapter](source-rs/distribution/matrix/service/parent/input.rs)
+now negotiates an incoming ceiling before granting local producer capacity.
+[Headroom](source-rs/platform/libraries/matrix/world/input/capacity.rs) includes
+retiring local allocations. Once those retire, the service widens upstream
+capacity automatically. This supersedes the prior blanket refusal of nested
+local producers. Reductions can still return BUSY while previously admitted
+upstream names remain live. No existing binding is silently evicted to fit one.
+
+Explicit producer submissions receive a capacity refusal. An already-consumed
+hardware or upstream sample instead interrupts only its stream and suppresses
+residual holds, preserving the adapter and parent grant. The physical adapter
+must keep servicing input even if a child has opted out of new bindings. This
+is not end-to-end input acknowledgement or guaranteed delivery under pressure.
+The existing retirement backpressure limitation remains.
+
+The [IPC scenario](source-rs/distribution/desktop/scenario/input_capacity.rs)
+admits a nested local producer alongside inherited input, refuses excess parent
+input without breaking the view, drains retirement, then verifies restored
+upstream capacity in the subsequent two-channel producer test. The first run
+exposed a fixture assumption about a hardware channel surviving earlier subtree
+replacement; the test now explicitly establishes that channel before negotiation.
+Seven host regressions cover retained names, group versus channel limits,
+connection/view lifetime, refusal atomicity, inherited loss and hardware sampling.
+
+Next: explicitly opted-in manifest/broker acquisition using these producer grants,
+then a visible synthetic cursor and independent focus in ordinary F5. Do not add
+production implicitly through `imports::ALL` or lend owner endpoints. The stock
+producer grant still uses the existing authenticated child interaction connection;
+independently acquired endpoints and their custody remain to be implemented.
+Independent group controllers, reassociation and descriptors remain outstanding.
+Rendering demand/masked capture and coordination acquisition remain queued.
+No owner decision blocks this work. The latest desktop matrix ELF is 249,832
+bytes (95% of the 256 KiB stored-object cap); account for that remaining headroom.
+
+Verification: full workspace host tests (80 matrix tests), matrix/contracts host
+clippy, userspace clippy, layout (40 Omega / 125 Rust edges), format and whitespace
+checks. Final `build/boot-harness-rs/matrix-test` passes the nested capacity,
+producer lifecycle and existing recursive confinement proof. Four nested desktops,
+protected close, saved inner data, repeated subtree reclamation/isolation and
+cold reopen pass at `build/boot-harness-rs/desktop/20261024T063955617025Z`
+with TCG absolute input. Earlier
+recovery/management, independent composition, GPU/remote and ARM64 evidence is
+unchanged and is not a new result for this slice.
+
 Implementation update 2026-10-23: **explicit child producer grants**, over
 `7d170864`. The [producer entrance](source-rs/platform/libraries/matrix/world/input/producer.rs)
 reserves a channel quota and private focus group for an already authenticated

@@ -32,6 +32,12 @@ impl<const N: usize> World<N> {
         if state != keys::PRESS as u64 && route.held & bit == 0 {
             return Ok(());
         }
+        if route.suppressed & bit == 0
+            && let Some(slot) = self.input.groups[route.group].focus
+            && self.children[slot].grant.keys & bit != 0
+        {
+            self.children[slot].can_push(index, route.group, self.input.groups[route.group].id)?;
+        }
         if state == keys::RELEASE as u64 {
             route.held &= !bit;
             if route.suppressed & bit != 0 {

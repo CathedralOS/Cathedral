@@ -28,14 +28,14 @@ pub(super) fn dispatch(
             if x < parent.grant.width && y < parent.grant.height =>
         {
             parent.pointer(x, y)?;
-            world.pointer_stream(POINTER, x, y, buttons)
+            world.source_sample(POINTER, [wire::POINTER, x, y, buttons])
         }
         [wire::KEY_SOURCE, key, state, 0, 0, 0, 0, 0] => {
             if key == cathedral_platform_contracts::input::RESET as u64 {
                 cancel(world);
                 Ok(())
             } else {
-                world.key_stream(KEYBOARD, key, state)
+                world.source_sample(KEYBOARD, [wire::KEY, key, state, 0])
             }
         }
         _ => Err(abi::DENIED),

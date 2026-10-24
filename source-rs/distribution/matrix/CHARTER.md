@@ -73,9 +73,12 @@ now reserves a quota for an authenticated child, with separate click-to-focus
 permission and disconnect retirement. Its grant-local channel ordinals cannot
 select other producers' channels. Only an explicitly granted producer can query
 its authorized input extent. The stock root reserves its fixed source slots
-before granting; nested stock hosts refuse local producer grants until upstream
-channel allowances are negotiated. Root producers still forward through nested
-routers. Manifest-based acquisition and a visible producer app remain pending.
+before granting; nested stock hosts use the [parent input adapter](service/parent/input.rs)
+to negotiate a lower incoming channel/group ceiling before reserving local
+producer capacity. Retained names can refuse a reduction; retirement automatically
+restores available upstream capacity. The [recursive fixture](../desktop/scenario/input_capacity.rs)
+checks local and inherited producers together, excess input refusal and restored
+capacity after release. Manifest-based acquisition and a visible producer app remain pending.
 Stock and Split
 pause upstream polling while descendant retirement drains, continuing local
 dispatch. This can delay unrelated upstream input behind a slow recipient; it

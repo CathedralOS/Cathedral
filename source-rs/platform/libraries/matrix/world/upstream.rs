@@ -42,7 +42,9 @@ impl<const N: usize> World<N> {
                 wire::GROUP_RETIRED if !channel.valid() => self.retire_group_named(group),
                 _ => Err(abi::INVALID_ARGUMENT),
             };
-            if result.is_err() {
+            if result == Err(abi::NO_MEMORY) {
+                self.inherited_capacity_loss(channel, event);
+            } else if result.is_err() {
                 self.inherit(Grant::default());
                 return Grant::default();
             }

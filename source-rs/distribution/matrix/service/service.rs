@@ -142,6 +142,7 @@ pub fn run(environment: Environment) -> Result<(), Error> {
         children.finish(&mut server, world, parent)?;
         if !parent.upstream_busy() {
             requests::flush(parent, world)?;
+            parent.restore_input_capacity(world)?;
         }
         if deferred.is_empty() && children.recover(parent, world, &mut server)? {
             continue;

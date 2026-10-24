@@ -163,9 +163,14 @@ Upstream polling pauses while descendant retirement boundaries drain; this
 introduces backpressure on that shared path, not a production latency guarantee.
 Explicit owner-granted child producers now have reserved quotas, connection/view
 checks, per-child generations, private channel ordinals and disconnect retirement.
-The stock root can grant this; nested stock hosts refuse local producers until
-their upstream channel ceiling is negotiated. Root-produced events still recurse.
-Manifest-based producer acquisition, recursive allowance negotiation,
+Nested stock hosts now negotiate an incoming channel/group ceiling before
+admitting local producers, restoring capacity after retirement. Reductions below
+retained aliases refuse; new deliveries exceeding the ceiling cannot change
+focus/capture/held state. Explicit producers see refusal. Already-consumed device
+or upstream samples interrupt only that stream and suppress residual holds,
+preserving the adapter and parent grant. This is a bounded lab protocol, not
+end-to-end delivery acknowledgement or an input latency guarantee.
+Manifest-based producer acquisition,
 discovery and reassociation of an existing stream remain unimplemented. F5 supplies a pointer channel
 and a keyboard channel in one group. Shared app-side reception tracks pointer
 edges separately; this does not impose separate document/player state on apps.

@@ -125,6 +125,13 @@ pub const PRODUCER_INFO: u64 = 40; // all zero
 pub const PRODUCER_POINTER: u64 = 41; // generation,channel,x,y,buttons,0,0
 pub const PRODUCER_KEY: u64 = 42; // generation,channel,key,state,0,0,0
 pub const PRODUCER_RELEASE: u64 = 43; // generation,0..
+/// Child sets its connection's maximum live input channel/group bindings:
+/// [INPUT_CAPACITY, current view epoch, channels, groups, 0..]. Success echoes
+/// status,epoch,channels,groups,0..; BUSY leaves the old limits when retained
+/// aliases (including unread retirement boundaries) exceed the request.
+/// Limits survive view changes on this connection, but not connection replacement.
+/// New deliveries exceeding them refuse without mutating focus/held state.
+pub const INPUT_CAPACITY: u64 = 44;
 pub const SPAWN: u64 = 106; // local child slot, current launch index, loan bitmask, argument
 pub const STOP: u64 = 107; // local child slot; return after complete subtree reclamation
 /// Host to child over its control link before a lifecycle decision: [LOSS, 0..].
