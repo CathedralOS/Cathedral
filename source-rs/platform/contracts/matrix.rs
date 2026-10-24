@@ -39,6 +39,19 @@ pub const MORE: u64 = 1 << 16;
 /// identity or global fullscreen state is exposed. The ordinary wake hints at
 /// changes; re-read POLL. View epochs and surface grants do not change for this.
 pub const NO_FRAMES: u64 = 1 << 55;
+/// POLL word four bit 54: an owner-requested frame needs acknowledgment. Query
+/// FRAME_DEMAND for its ticket, publish current content, then FRAME_READY. This
+/// is a producer handshake, not authority to capture any other presentation.
+pub const FRAME_REQUESTED: u64 = 1 << 54;
+/// [FRAME_DEMAND, view epoch, 0..] -> [0, epoch, pending ticket or zero, 0..].
+pub const FRAME_DEMAND: u64 = 49;
+/// [FRAME_READY, view epoch, ticket, 0..]. After all preceding publication replies
+/// succeed, the source acknowledges its current accepted scene. The provider
+/// captures/pins that scene before dispatching a later publication. Acknowledgment
+/// is cooperative freshness, not proof that an untrusted app did new work, a
+/// display fence or permission to share unmasked backing. Stale tickets refuse.
+pub const FRAME_READY: u64 = 50;
+
 pub fn poll_frames(reply: Packet) -> bool {
     reply[0] == 0 && reply[1] != 0 && reply[2] != 0 && reply[3] != 0 && reply[4] & NO_FRAMES == 0
 }

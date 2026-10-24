@@ -22,6 +22,7 @@ impl Rect {
 pub(super) struct Child {
     pub visible: bool,
     frames: bool,
+    pub frame: super::demand::Frame,
     pub rect: Option<Rect>,
     pub keys: u64,
     pub grant: Grant,
@@ -49,6 +50,7 @@ impl Child {
         Self {
             visible: true,
             frames: true,
+            frame: super::demand::Frame::empty(),
             rect: None,
             keys: 0,
             grant: Grant {
@@ -91,6 +93,7 @@ impl Child {
         {
             return;
         }
+        self.frame.pending = None;
         self.queues = [const { events::Events::empty() }; wire::INPUT_STREAMS];
         self.next_stream = 0;
         self.next_input_name = 0;
@@ -122,6 +125,7 @@ impl Child {
         [0, g.epoch, g.width, g.height, g.keys, 0, 0, 0]
     }
     pub fn demand(&mut self, frames: bool) {
+        let frames = frames || self.frame.pending.is_some();
         if self.frames != frames {
             self.frames = frames;
             self.notify = true;
@@ -302,6 +306,9 @@ impl Child {
         let event = self.next();
         let mut reply = self.view();
         reply[4] |= (self.surface_limit as u64) << wire::SURFACE_BITS;
+        if self.frame.pending.is_some_and(|(_, ready)| !ready) {
+            reply[4] |= wire::FRAME_REQUESTED;
+        }
         if !self.frames {
             reply[4] |= wire::NO_FRAMES;
         }

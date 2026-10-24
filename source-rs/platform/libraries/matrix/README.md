@@ -61,8 +61,13 @@ use this machinery with the existing runtime IPC server.
   that child without replacing its view, dimensions, surfaces or input binding.
   Hiding excludes fresh pointer hits but retains selected keyboard routes and
   existing pointer capture. `deactivate_input` is a separate owner policy.
-  Current demand is display-only; capture consumers will require additional
-  accounting. A cooperative hint does not enforce CPU use or prohibit submission.
+  An owner-requested frame adds independent demand until acknowledged and
+  released; source view/surface replacement invalidates it. A cooperative hint
+  does not enforce CPU use or prohibit submission.
+- [Capture mechanisms](capture/README.md) provide a bounded endpoint/view-bound
+  lease and cropped/masked software rasterization. They are host-tested provider
+  building blocks; capture service acquisition, scene pinning and the desktop
+  consumer are still outstanding.
 - [Storage scopes](world/storage/storage.rs), [management](world/management.rs)
   and [launch observations](world/launches.rs) use independently selected child
   capacities. They work without display state. `Scopes::prepare` is the shared

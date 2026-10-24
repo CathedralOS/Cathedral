@@ -57,8 +57,14 @@ and pointer capture survive hiding; fresh pointer hits cannot enter hidden
 content. Owners can separately call `deactivate_input` to cancel and forget those
 routes. Stock taskbar switching uses that explicit policy. Notes and Colors defer
 drawing while continuing input/storage and repaint dirty state when requested.
-This is a display-only baseline, not capture-consumer accounting or enforcement
-against an app spending its own execution budget.
+The owner can add one independent frame request per source using `request_frame`.
+POLL bit 54 (`FRAME_REQUESTED`) asks the source to query FRAME_DEMAND, finish
+publication and acknowledge FRAME_READY with the returned ticket. Demand remains
+until owner release; stale cleanup cannot cancel a replacement ticket. View or
+surface-allowance replacement invalidates outstanding requests. Notes supports
+this handshake, but default matrices do not yet request capture. See the
+[capture provider obligations](../../capture/README.md) before using it. This is
+not enforcement against an app spending its own execution budget.
 
 ## Placement and lifetime
 

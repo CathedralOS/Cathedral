@@ -1,6 +1,7 @@
 #![no_std]
 #![forbid(unsafe_code)]
 //! A local world: receive a parent grant, place children, route attenuated input.
+pub mod capture;
 pub mod funding;
 pub mod reception;
 pub mod world;

@@ -5,7 +5,7 @@
 | Contract status | Current |
 | Specification coverage | Partial |
 | Implementation coverage | Partial |
-| Last reviewed | 2026-10-23 |
+| Last reviewed | 2026-10-24 |
 
 ## Identity, authority and backing
 
@@ -86,7 +86,11 @@ The [Rust page contract](../../../source-rs/kernel/contracts/memory.rs) and
 writes, sealed transferable reads and reader lifetime. They do not implement the
 general image-provider service, remote upload or GPU completion contract above.
 
-This documentation acceptance adds no runtime behavior or new measurements.
+The Rust [capture mechanisms](../../../source-rs/platform/libraries/matrix/capture/README.md)
+now have host-tested bounded lease/result lifetime and masked software output.
+The producer frame-demand handshake is implemented in the matrix policy and
+Notes, but an installed capture provider/consumer and sealed IPC result delivery
+remain outstanding. These tests do not establish those integration properties.
 Derived image/font caches, fallback appearance, negotiated capacities and precise
 publication/transfer schemas remain engineering and policy work. The
 [resource proposal](../../proposals/0000_rendering_and_composition/resource_custody.md)

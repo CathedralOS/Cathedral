@@ -1,5 +1,58 @@
 # Rust reference OS: tasks and handoff
 
+Implementation update 2026-10-24: **bounded capture policy and frame handshake**,
+over `bcc02186`. This is capture implementation groundwork, **not a working F5
+capture service**. The platform [capture entrance](source-rs/platform/libraries/matrix/capture/capture.rs)
+now owns one endpoint/view-bound lease: authenticate, request, expire, retain a
+completed result through delivery backpressure, and retire it on binding loss.
+Its [geometry/raster helpers](source-rs/platform/libraries/matrix/capture/README.md)
+validate crops/masks, render stable solid/image/cursor layers, redact before
+sampling, clear RGBX/page padding, and refuse malformed backing without partial
+publication. The concrete lab limits are eight masks, 64 layers and 32,768 output
+pixels. These are bounded software mechanisms, not a frozen GPU or capture ABI.
+
+`World::request_frame` adds independent demand for one source. POLL bit 54 asks
+that source to query FRAME_DEMAND and acknowledge FRAME_READY with the returned
+ticket after successful scene publication. Notes now supports the handshake;
+default matrices do not yet request it. View/endpoint/surface-allowance changes
+invalidate pending requests, and old acknowledgment/cleanup cannot affect a
+replacement. Owner release removes this demand without changing visibility or
+input. This is cooperative source readiness, not a display fence or proof that
+a hostile app performed fresh work.
+
+Host tests cover exact endpoint/source matching, stale requests, timeout/wrap,
+regrant, counter exhaustion, retained payload drops, mask/crop/stride/padding,
+cursor transparency and the composed hidden-frame/result/release flow. Workspace
+host tests pass; final matrix suite has 104 tests. Ordinary userspace clippy,
+matrix library/test clippy, layout, formatting and whitespace checks pass.
+Existing hidden-edit/teardown/cold-reopen QEMU regression with storage tracing:
+`build/boot-harness-rs/desktop/20261024T175232564736Z`. That run verifies unchanged
+installed behavior; it **does not exercise a capture recipient or source frame
+request over IPC**. The traced stock matrix is 259,448 bytes, still close to the
+262,144-byte executable-object cap. No new kernel, ARM64 or GPU claim.
+
+Next remains **end-to-end authorized masked capture in the desktop**:
+
+- Add a separately declared/offered capture service, with an authenticated
+  recipient endpoint. Existing ordinary app offers must not gain capture.
+- Connect the lease to actual funded source readers/output pages, the source
+  frame handshake and coherent retained-scene pinning. Lease request IDs and
+  World frame tickets are distinct and must be associated by the provider.
+- Freeze the successful masked output before transfer. Delivery backpressure
+  retains one charged result. Reconcile participant loss before dispatch and
+  release source frame demand on success, refusal, timeout or recipient loss.
+- Install a real consumer/demo through F5; prove masked bytes reach that separate
+  process while the source remains hidden, without focus/placement changes.
+  Exercise source/recipient death and cold reopen. Recursive source readiness
+  requires descendant coordination; current matrices do not implement that.
+
+[Provider obligations](source-rs/platform/libraries/matrix/capture/README.md)
+record the precise sequence and remaining boundaries. Caller-supplied identities,
+plans and clocks are trusted provider inputs, not claims an IPC client may supply
+as authority. A `Lease<T>` alone does not enforce kernel custody or fund storage;
+those are required integration work. No owner question blocks the next step.
+
+
 Implementation update 2026-10-24: **display demand without input revocation**,
 over `fa202b62`. The platform [demand owner](source-rs/platform/libraries/matrix/world/demand.rs)
 composes inherited display demand with local visibility and publishes a scoped

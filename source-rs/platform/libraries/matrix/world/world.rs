@@ -91,6 +91,7 @@ impl<const N: usize> World<N> {
         for (slot, child) in self.children.iter_mut().enumerate() {
             let previous = child.grant;
             child.refresh(grant, replaced);
+            child.demand(self.frames && child.visible);
             if child.grant != previous {
                 changed[slot] = true;
                 self.input.forget(slot);
@@ -111,6 +112,7 @@ impl<const N: usize> World<N> {
         child.rect = Some(rect);
         child.keys = keys;
         child.refresh(self.parent, false);
+        child.demand(self.frames && child.visible);
         if child.grant != previous {
             self.revoke_input_producer(slot);
             self.retire_surfaces(slot);
@@ -134,6 +136,7 @@ impl<const N: usize> World<N> {
         self.retire_surfaces(slot);
         self.children[slot].surface_limit = 0;
         self.children[slot].refresh(self.parent, false);
+        self.children[slot].demand(self.frames && self.children[slot].visible);
         Ok(())
     }
     pub fn disconnected(&mut self, slot: usize) {
@@ -166,6 +169,28 @@ impl<const N: usize> World<N> {
             return self.producer_request(slot, incarnation, words);
         }
         match words {
+            [wire::FRAME_DEMAND, epoch, 0, 0, 0, 0, 0, 0]
+                if child.grant.valid() && epoch == child.grant.epoch =>
+            {
+                [
+                    0,
+                    epoch,
+                    child.frame.pending.map_or(0, |(ticket, _)| ticket),
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                ]
+            }
+            [wire::FRAME_READY, epoch, ticket, 0, 0, 0, 0, 0]
+                if child.grant.valid()
+                    && epoch == child.grant.epoch
+                    && child.frame.pending.is_some_and(|(t, _)| t == ticket) =>
+            {
+                child.frame.pending = Some((ticket, true));
+                [0; 8]
+            }
             [wire::INPUT_CAPACITY, epoch, channels, groups, 0, 0, 0, 0]
                 if child.grant.valid()
                     && child.grant.epoch == epoch

@@ -122,3 +122,98 @@ fn explicit_input_deactivation_is_independent_of_rendering_demand() {
     assert_eq!(wire::NO_FRAMES & wire::VALID_KEY_MASK, 0);
     assert_eq!(wire::NO_FRAMES >> wire::SURFACE_BITS, 0);
 }
+
+#[test]
+fn capture_frame_demand_does_not_reveal_or_rebind_hidden_content() {
+    let mut w = world();
+    let epoch = poll(&mut w, 0)[1];
+    w.visible(0, false).unwrap();
+    w.render_demand(false);
+    w.take_notification(0);
+    let ticket = w.request_frame(0, 1, epoch).unwrap();
+    assert!(w.take_notification(0));
+    let p = poll(&mut w, 0);
+    assert_eq!(p[1], epoch);
+    assert!(wire::poll_frames(p));
+    assert_ne!(p[4] & wire::FRAME_REQUESTED, 0);
+    assert!(!wire::poll_frames(poll(&mut w, 1)));
+    assert_eq!(w.request_frame(0, 1, epoch), Err(abi::BUSY));
+    w.pointer_stream(1, 20, 20, 1).unwrap();
+    assert_eq!(wire::poll_event(poll(&mut w, 0))[2], wire::NONE);
+    assert_eq!(
+        w.request(0, 1, [wire::FRAME_DEMAND, epoch, 0, 0, 0, 0, 0, 0]),
+        [0, epoch, ticket, 0, 0, 0, 0, 0]
+    );
+    assert_eq!(
+        w.request(0, 1, [wire::FRAME_READY, epoch, ticket + 1, 0, 0, 0, 0, 0]),
+        wire::error(abi::DENIED)
+    );
+    assert_eq!(
+        w.request(0, 1, [wire::FRAME_READY, epoch, ticket, 0, 0, 0, 0, 0]),
+        [0; 8]
+    );
+    assert!(w.frame_ready(0, 1, epoch, ticket));
+    let p = poll(&mut w, 0);
+    assert!(wire::poll_frames(p));
+    assert_eq!(p[4] & wire::FRAME_REQUESTED, 0);
+    // Capture demand persists until the provider pins/renders or cancels work.
+    w.release_frame(0, 1, epoch, ticket).unwrap();
+    assert!(!wire::poll_frames(poll(&mut w, 0)));
+    let next = w.request_frame(0, 1, epoch).unwrap();
+    assert!(next > ticket);
+    assert_eq!(w.release_frame(0, 1, epoch, ticket), Err(abi::DENIED));
+    assert!(!w.frame_ready(0, 1, epoch, next));
+    assert_eq!(
+        wire::FRAME_REQUESTED & (wire::VALID_KEY_MASK | wire::NO_FRAMES),
+        0
+    );
+    assert_eq!(wire::FRAME_REQUESTED >> wire::SURFACE_BITS, 0);
+}
+#[test]
+fn frame_requests_end_on_binding_replacement_and_cannot_acknowledge_a_new_child() {
+    let mut w = world();
+    let epoch = poll(&mut w, 0)[1];
+    let old = w.request_frame(0, 1, epoch).unwrap();
+    w.visible(0, false).unwrap();
+    w.place(
+        0,
+        Rect {
+            x: 0,
+            y: 0,
+            width: 100,
+            height: 100,
+        },
+        wire::VALID_KEY_MASK,
+    )
+    .unwrap();
+    let changed = poll(&mut w, 0);
+    assert_ne!(changed[1], epoch);
+    assert!(!wire::poll_frames(changed));
+    assert!(!w.frame_ready(0, 1, epoch, old));
+    assert_eq!(w.release_frame(0, 1, epoch, old), Err(abi::DENIED));
+    let next = w.request_frame(0, 1, changed[1]).unwrap();
+    assert!(next > old);
+    w.disconnected(0);
+    assert!(!w.frame_ready(0, 1, changed[1], next));
+    assert_eq!(w.request_frame(0, 1, changed[1]), Err(abi::DENIED));
+    assert_eq!(w.request_frame(usize::MAX, 1, changed[1]), Err(abi::DENIED));
+}
+
+#[test]
+fn changed_surface_allowance_invalidates_pending_frame_without_unhiding() {
+    let mut w = world();
+    let epoch = poll(&mut w, 0)[1];
+    w.visible(0, false).unwrap();
+    let ticket = w.request_frame(0, 1, epoch).unwrap();
+    w.surface_capacity(7);
+    assert_eq!(
+        w.request(0, 1, [wire::FRAME_READY, epoch, ticket, 0, 0, 0, 0, 0]),
+        wire::error(abi::DENIED)
+    );
+    assert!(!wire::poll_frames(poll(&mut w, 0)));
+    w.surface_limit(0, 2).unwrap();
+    let next = w.request_frame(0, 1, epoch).unwrap();
+    w.surface_limit(0, 1).unwrap();
+    assert!(!w.frame_ready(0, 1, epoch, next));
+    assert!(!wire::poll_frames(poll(&mut w, 0)));
+}

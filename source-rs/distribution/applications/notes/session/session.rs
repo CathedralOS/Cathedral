@@ -250,6 +250,12 @@ pub fn run(style: u64, mut services: Services) {
                     }
                 }
             }
+            let frame_ticket = if snapshot[4] & wire::FRAME_REQUESTED != 0 {
+                let demand = call(parent, [wire::FRAME_DEMAND, extent[1], 0, 0, 0, 0, 0, 0]);
+                if demand[0] == 0 { demand[2] } else { 0 }
+            } else {
+                0
+            };
             let painted = (|| -> Result<(), u64> {
                 if !wire::poll_frames(snapshot) {
                     return Ok(());
@@ -292,6 +298,12 @@ pub fn run(style: u64, mut services: Services) {
                 closing.rebind();
                 repaint = true;
                 continue;
+            }
+            if frame_ticket != 0 && wire::poll_frames(snapshot) {
+                let _ = call(
+                    parent,
+                    [wire::FRAME_READY, extent[1], frame_ticket, 0, 0, 0, 0, 0],
+                );
             }
         } else {
             scene = None;

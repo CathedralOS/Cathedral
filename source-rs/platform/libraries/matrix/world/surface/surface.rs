@@ -17,6 +17,8 @@ impl<const N: usize> World<N> {
         for slot in 0..N {
             self.retire_surfaces(slot);
             self.children[slot].surface_limit = 0;
+            self.children[slot].frame.pending = None;
+            self.children[slot].demand(self.frames && self.children[slot].visible);
             self.children[slot].notify = true;
         }
         self.capacity = capacity;
@@ -71,6 +73,8 @@ impl<const N: usize> World<N> {
         }
         child.surface_base = base;
         child.surface_limit = count;
+        child.frame.pending = None;
+        child.demand(self.frames && child.visible);
         child.notify = true;
         Ok(())
     }
