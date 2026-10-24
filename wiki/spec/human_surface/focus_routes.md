@@ -95,7 +95,8 @@ rather than stranded or transferred to a new target.
 
 Selection does not grant restore, raise, stacking, visibility or capture rights.
 Stock chrome may combine separately authorized presentation and selection changes.
-Eligibility of hidden/minimized presentations remains outside this contract.
+The [presentation contract](rendering.md) separates rendering demand from input
+authority; precise hidden-target and scene/hit-test rules remain separate.
 
 An app may be selected by several groups simultaneously. Selection notifications,
 where exposed, identify the relevant scoped association rather than only a single
@@ -137,6 +138,7 @@ independent multi-group routes or all capture semantics in this contract.
 
 Current recursive event forwarding remains an implementation baseline, not a
 mandated production transport. This acceptance adds no new runtime evidence.
-Wire schemas, group limits and transition acknowledgements remain work. Views,
-minimization, masks, atomic scene/hit-test publication, cursor presentation
-handoff and protected-prompt protocols are not selected here.
+Wire schemas, group limits and transition acknowledgements remain work.
+[Placement and rendering demand](rendering.md) have a separate partial contract.
+Masks, atomic scene/hit-test publication, cursor presentation handoff and
+protected-prompt protocols are not selected here.

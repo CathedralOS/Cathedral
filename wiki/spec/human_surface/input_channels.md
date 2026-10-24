@@ -22,6 +22,13 @@ channels, combine keyboard and mouse into one, or authorize a source to drive
 several channels. Multiple-source bindings must preserve contribution state as
 required by the input foundation.
 
+A matrix may present several authorized upstream sources as one downstream
+channel or switch the source driving a stable channel. The child sees the
+supplied virtual stream, not necessarily the physical devices or participants.
+This cannot forge upstream authority or authenticated physical origin. Source
+switching and merging retain held-state, ordering and cancellation obligations;
+sharing an identity does not create independent app interaction state.
+
 All channels follow the same authority rules. There is no privileged default
 channel. Startup policy may establish a channel driven by physical devices;
 absent or zero-initialized bindings confer no implicit operator input authority.

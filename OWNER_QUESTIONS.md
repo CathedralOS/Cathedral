@@ -273,8 +273,8 @@ compositor never sees a glyph. Its font-parser containment argument depends on
 that placement. This blocks choosing the production drawing boundary, not further
 measurement of either route.
 
-**Contracts checked.** The [specification index](wiki/spec/README.md) identifies
-compositor/seat and rendering contracts as unwritten.
+**Contracts checked.** The [presentation contract](wiki/spec/human_surface/rendering.md)
+settles placement, demand and backend boundaries but leaves drawing/text placement open.
 [Source contracts](source/contracts/CHARTER.md) contain no accepted glyph or scene
 protocol. The [Rust display contract](source-rs/platform/contracts/display/display.rs) has fixed
 ASCII text, rectangle and sealed-pixel requests, all experimental. It does not

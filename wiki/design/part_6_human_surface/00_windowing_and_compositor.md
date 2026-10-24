@@ -10,7 +10,10 @@ they are not all ratified by this partial contract.
 The accepted [input foundation](../../spec/human_surface/input.md) separately owns
 buffered delivery, representations, target registration and recursive mappings.
 The accepted [focus contract](../../spec/human_surface/focus_routes.md) now owns
-local selection and transitions. Views and rendering details remain design work.
+local selection and transitions. The [presentation contract](../../spec/human_surface/rendering.md)
+owns placement, demand and scoped fullscreen; detailed view/rendering protocols
+below remain design work. Its separation of execution from presentation supersedes
+any automatic subtree suspension implied by occlusion or stopped frame requests.
 
 > The compositor owns window arrangement, input routing, and the trusted path that lets a human know which app they are talking to.
 

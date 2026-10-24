@@ -1,5 +1,10 @@
 # Chapter 02: Media & Graphics
 
+The accepted [presentation contract](../../spec/human_surface/rendering.md)
+owns placement, rendering demand, scoped fullscreen and backend-independent image
+forwarding/completion boundaries. Concrete GPU, drawing/text and resource-policy
+choices below remain design work, not implemented or accepted device guarantees.
+
 > The low-level pipeline beneath the window manager: display server, GPU, decode, and audio. Each is capability-gated and kept narrow, because graphics stacks are historically a major source of OS complexity and instability.
 
 ## The Legacy Model

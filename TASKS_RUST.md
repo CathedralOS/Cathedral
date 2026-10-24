@@ -126,6 +126,21 @@ forwarding with independent local input, and safe route retirement. This is a
 documentation acceptance: no general multi-group implementation or new runtime
 testing is claimed; the current forwarding chain remains unchanged.
 
+Owner ratification 2026-10-23: [rendering and presentation](wiki/spec/human_surface/rendering.md)
+now separates owner-managed placement, rendering demand, input selection and
+execution. Minimize/restore are matrix UX; virtual placement and bounded capture
+need not relocate shared presentations. Fullscreen propagates only through
+agreeing owners, with scoped demand status rather than a global fullscreen PID.
+Cursor surfaces require bounded presentation authority, not whole-output writes.
+Image references and completion dependencies must permit avoiding mandatory
+ancestor images/CPU waits; no GPU, direct-scanout or zero-copy guarantee is claimed.
+The channel spec also records authorized source merging/switching into one virtual
+channel without forged physical provenance or independent app state. Follow-up
+experiments should cover scoped demand, capture without placement changes, local
+versus propagated fullscreen, independent input and placement, and backing reuse
+only after consumers finish. Drawing/text, scene commits, masks, resource policy
+and cursor visual handoff remain open. Docs only; existing runtime is unchanged.
+
 Next implementation slice: add funded coordination acquisition to the existing
 broker and prove simultaneous first registration, rejected identity spoofing,
 constraint combinations, accepted/refused introductions and dead-holder cleanup.

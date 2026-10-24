@@ -7,8 +7,13 @@ descriptions, resource backing, execution and presentation.
 | Status | Scope |
 | --- | --- |
 | Proposed | Candidate architecture, not an accepted Cathedral contract |
-| Specification coverage | Unwritten; ownership is recorded in the [specification index](../spec/README.md) |
+| Specification coverage | Partial [presentation contract](../spec/human_surface/rendering.md); drawing vocabulary and resource-policy alternatives remain proposed |
 | Implementation evidence | Bounded Rust drawing, shared pages and a two-client retained compositor experiment; no production scene contract or GPU backend |
+
+The accepted presentation contract now owns placement, rendering demand, scoped
+fullscreen and backend-independent forwarding/custody boundaries. It supersedes
+conflicting assumptions here without selecting the proposed drawing vocabulary,
+resource residency policy or GPU mechanisms. Read those accepted rules first.
 
 ## Read by responsibility
 
@@ -95,11 +100,11 @@ all apps use a platform toolkit, adopts full SVG, or guarantees zero copies.
 
 ## Contract ownership and acceptance
 
-The intended rendering contract owner is `spec/human_surface/rendering.md`.
+The partial [rendering contract](../spec/human_surface/rendering.md) owns accepted rules.
 Compositor/seat authority remains at `spec/human_surface/compositor_and_seat.md`.
-Shared-resource and revocation semantics also depend on the intended authority,
-IPC and component specifications listed in the index. No empty specification
-pages or production wire schemas are introduced by this proposal.
+Shared-resource and revocation semantics also depend on the authority, IPC and
+component specifications listed in the index. This proposal introduces no
+production wire schema.
 
 Owner choices live in [OWNER_QUESTIONS.md](../../OWNER_QUESTIONS.md), particularly
 platform drawing placement, writable spans, and accepted-lease revocation. The

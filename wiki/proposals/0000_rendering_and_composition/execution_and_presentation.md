@@ -4,7 +4,10 @@ Rendering computes pixels. Presentation selects which completed images reach an
 output. The scene contract should preserve that separation across software and
 GPU backends.
 
-Status: proposed behavior under [rendering and composition](../0000_rendering_and_composition.md).
+The accepted [presentation contract](../../spec/human_surface/rendering.md) now
+owns backend-independent forwarding, completion and fullscreen boundaries.
+The concrete mechanisms below remain alternatives under
+[rendering and composition](../0000_rendering_and_composition.md).
 This page owns backend and presentation choices. Resource accounting and release
 are owned by [resource custody](resource_custody.md).
 

@@ -4,6 +4,9 @@ A retained scene describes drawing work and references resources. It does not
 require a private pixel image for each scene node or Matrix.
 
 Status: proposed behavior under [rendering and composition](../0000_rendering_and_composition.md).
+The accepted [presentation contract](../../spec/human_surface/rendering.md) owns
+placement authority and the ability to forward without ancestor pixel buffers;
+this page's scene vocabulary, revision scheme and text placement remain proposed.
 This page owns submission and nesting. Resource lifetime belongs to
 [resource custody](resource_custody.md); target execution belongs to
 [execution and presentation](execution_and_presentation.md).
