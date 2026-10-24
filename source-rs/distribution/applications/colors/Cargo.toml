@@ -16,7 +16,10 @@ bench = false
 
 [features]
 trace-input = []
-trace-storage = []
+trace-storage = ["cathedral-omega-app/trace-storage"]
+
+[dependencies]
+cathedral-omega-app.workspace = true
 
 [target.'cfg(target_os = "none")'.dependencies]
 cathedral-matrix.workspace = true
@@ -24,6 +27,10 @@ cathedral-desktop-matrix-contracts.workspace = true
 cathedral-kernel-contracts.workspace = true
 cathedral-platform-contracts.workspace = true
 cathedral-user-runtime.workspace = true
+cathedral-bitmap-font.workspace = true
+
+[dev-dependencies]
+cathedral-platform-contracts.workspace = true
 cathedral-bitmap-font.workspace = true
 
 [lints]

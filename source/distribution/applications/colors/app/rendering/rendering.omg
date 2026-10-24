@@ -1,0 +1,89 @@
+// Local surface handles only. Immutable image custody belongs to the host until
+// the exchange completes, then to the accepting compositor. No framebuffer grant.
+use host::main;
+use protocol::main;
+use state;
+use session::session;
+use session::input;
+use rendering::pixels;
+public machine render(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+    transition s.frames && s.dirty { true -> scene(s, p) _ -> wait(s, p) }
+    state scene(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+        transition s.scene { true -> rectangles(s, p) _ -> allocate(s, p) }
+    }
+    state allocate(s: &mut State, p: &mut [u64; 4096]) -> u64 { s.rank = 0u64; create(s, p) }
+}
+machine create(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+    s.phase = SURFACE_CREATED; message(p, SURFACE_CREATE, s.epoch, s.rank, 0u64, 0u64, 0u64, 0u64, 0u64); EXCHANGE
+}
+public machine presentation(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+    transition p[9] != 0u64 { true -> (EXIT) _ -> response(s, p) }
+    state response(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+        transition s.phase == VIEW_RECHECKED { true -> recheck(s, p) _ -> status(s, p) }
+    }
+    state status(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+        transition p[0] == 0u64 { true -> dispatch(s, p) _ -> changed(s, p) }
+    }
+    state changed(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+        s.phase = VIEW_RECHECKED; message(p, MATRIX_VIEW, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64); EXCHANGE
+    }
+    state recheck(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+        transition p[0] != 0u64 || p[1] != s.epoch { true -> rebound(s, p) _ -> (EXIT) }
+    }
+    state rebound(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+        reset_channels(s); s.scene = false; s.dirty = true; poll(s, p)
+    }
+    state dispatch(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+        transition s.phase {
+            SURFACE_CREATED -> created(s, p)
+            CHECKER_READY -> checker_ready(s, p)
+            RECTANGLES_READY -> close_button(s, p)
+            CLOSE_READY -> painted(s, p)
+            _ -> (EXIT)
+        }
+    }
+    state created(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+        transition s.rank < 4u64 { true -> retain(s, p) _ -> (EXIT) }
+    }
+    state retain(s: &mut State, p: &mut [u64; 4096]) -> u64 requires s.rank < 4u64 {
+        s.surfaces[s.rank] = p[1]; s.rank = s.rank + 1u64;
+        transition s.rank < 4u64 { true -> create(s, p) _ -> checker(s, p) }
+    }
+    state checker(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+        s.phase = CHECKER_READY;
+        message(p, SURFACE_IMAGE, s.epoch, s.surfaces[2], 180u64, 110u64, 32u64, 32u64, 32u64);
+        checker_pixels(p); p[8] = 4096u64; EXCHANGE
+    }
+    state checker_ready(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+        s.scene = true; rectangles(s, p)
+    }
+    state painted(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+        s.dirty = false; s.paints = ((s.paints as u64 in Saturating) + 1) as u64; wait(s, p)
+    }
+}
+machine rectangles(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+    transition s.paint_revision < 18446744073709551615u64 { true -> color(s, p) _ -> (EXIT) }
+    state color(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+    transition s.alternate == 0u64 { true -> accent(s, p, 0x315ca8u64) _ -> accent(s, p, 0xd18b35u64) }
+    }
+    state accent(s: &mut State, p: &mut [u64; 4096], color: u64) -> u64 {
+        transition s.error == 0u64 { true -> packed(s, p, color, 0xe5e7ebu64) _ -> packed(s, p, color, 0xe96f6fu64) }
+    }
+    state packed(s: &mut State, p: &mut [u64; 4096], color: u64, accent: u64) -> u64 {
+        s.paint_revision = ((s.paint_revision as u64 in Saturating) + 1) as u64; s.phase = RECTANGLES_READY;
+        message(p, PRESENT_RECTS, s.epoch, s.paint_revision, s.surfaces[0],
+            ((s.width & 65535u64) << 32u64) | ((s.height & 65535u64) << 48u64),
+            color | ((s.surfaces[1] & 4294967295u64) << 32u64),
+            (s.surfaces[1] >> 32u64) | (30u64 << 32u64) | (40u64 << 48u64),
+            40u64 | (18u64 << 16u64) | ((accent & 4294967295u64) << 32u64)); EXCHANGE
+    }
+}
+machine close_button(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+    transition s.confirm { true -> image(s, p, 156u64) _ -> image(s, p, 20u64) }
+    state image(s: &mut State, p: &mut [u64; 4096], width: u64) -> u64 {
+        s.phase = CLOSE_READY;
+        let x: u64 in Saturating = (s.width as u64 in Saturating) - ((width as u64 in Saturating) + 4);
+        message(p, SURFACE_IMAGE, s.epoch, s.surfaces[3], x as u64, 2u64, width, 16u64, width);
+        close_pixels(p, width); p[8] = ((width as u64 in Saturating) * 64) as u64; EXCHANGE
+    }
+}

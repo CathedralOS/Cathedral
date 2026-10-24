@@ -1,18 +1,17 @@
 # Colors
 
-Start at [main.rs](main.rs), then [session/session.rs](session/session.rs).
-The installed application acquires local interaction and storage through its
-[scoped startup broker](../../../platform/contracts/services/README.md),
-paints its scene, persists its color on Enter and handles its own close button.
-The session delegates document state, retained surfaces and close interaction to
-named siblings. It has no provider startup or desktop-owner responsibilities.
+Start at [main.rs](main.rs), then the
+[Omega app](../../../../source/distribution/applications/colors/README.md).
+The installed application owns its behavior in Omega, using the common
+[native host](../../../platform/libraries/omega-app/README.md) for scoped
+service acquisition, transport and buffer custody. The startup import record
+and executable adapter remain Rust. Normal F5 builds the checked-in source.
 
-The library also supplies the same event loop to the
+The retained Rust [session/session.rs](session/session.rs) supplies probes to the
 [recursive desktop lab](../../desktop/lab/desktop.rs). That composition selects
-`run::<true>` and supplies its control-command handler; the installed executable
-selects `run_services::<false>`, so probe dispatch and adversarial scenes are eliminated
-from its build. The lab owns proof commands, while Colors owns the application
-state and rendering exercised by those proofs.
+`run::<true>` and supplies its control-command handler. It is not the installed
+app's implementation. The ordinary desktop and native component tests exercise
+the Omega implementation; kernel labs retain their existing proof commands.
 
 The [distribution profile](../../profile.json) installs this executable as the
 template's Colors program. Existing stock copies are refreshed through the

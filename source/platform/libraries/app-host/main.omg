@@ -1,0 +1,14 @@
+// Temporary native-component boundary into the Rust reference runtime.
+// See source-rs/platform/libraries/omega-app/README.md for custody and replies.
+public const EXIT: u64 = 0u64;
+public const INTERACTION: u64 = 1u64;
+public const STORAGE: u64 = 2u64;
+public const BIND: u64 = 3u64;
+public const STORE: u64 = 4u64;
+public const EXCHANGE: u64 = 5u64;
+public const WAIT: u64 = 6u64;
+public const CONTROL: u64 = 7u64;
+public const WRITE: u64 = 8u64;
+public machine message(p: &mut [u64; 4096], op: u64, a: u64, b: u64, c: u64, d: u64, e: u64, f: u64, g: u64) {
+    p[0] = op; p[1] = a; p[2] = b; p[3] = c; p[4] = d; p[5] = e; p[6] = f; p[7] = g; p[8] = 0u64;
+}

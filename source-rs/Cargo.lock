@@ -124,6 +124,7 @@ dependencies = [
  "cathedral-desktop-matrix-contracts",
  "cathedral-kernel-contracts",
  "cathedral-matrix",
+ "cathedral-omega-app",
  "cathedral-platform-contracts",
  "cathedral-user-runtime",
 ]
@@ -302,6 +303,15 @@ dependencies = [
 
 [[package]]
 name = "cathedral-objects-lab"
+version = "0.0.0"
+dependencies = [
+ "cathedral-kernel-contracts",
+ "cathedral-platform-contracts",
+ "cathedral-user-runtime",
+]
+
+[[package]]
+name = "cathedral-omega-app"
 version = "0.0.0"
 dependencies = [
  "cathedral-kernel-contracts",

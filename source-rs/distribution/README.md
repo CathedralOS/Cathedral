@@ -35,6 +35,8 @@ authentication, encryption or hardware virtualization.
 Notes holds up to eight notes of 240 characters: **F1** saves or reconciles,
 **F2** reloads, **F3** duplicates the saved note, **F4** switches notes. Colors
 changes on **Enter**. Arrows and Enter also navigate a focused picker/launcher.
+The installed [Colors behavior is authored in Omega](../../source/distribution/applications/colors/README.md);
+its ordinary controls and scoped storage remain the same.
 There is no logout yet; restart QEMU to select another user. The picker handles
 up to three users without scrolling and hides New User at its limit.
 

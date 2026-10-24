@@ -1,5 +1,54 @@
 # Rust reference OS: tasks and handoff
 
+Implementation update 2026-10-24: **installed Colors behavior moved to Omega**,
+over `c2f1421b`. Normal F5 and nested desktops install the same Colors executable;
+its app logic now starts at
+[Omega Colors](source/distribution/applications/colors/README.md). Omega owns
+service requests, input decisions, `MC01` persistence/reconciliation, local
+surface publication and close/loss policy. Rust retains the import record,
+executable entry and a reusable
+[platform transport host](source-rs/platform/libraries/omega-app/README.md).
+The old Rust Colors library remains only for mechanism-lab probes.
+
+The native export is 17,504 bytes in a roughly 45 KiB installed ELF. Its opaque
+state/packet use nine private pages charged to the app; outgoing images have
+separate bounded custody. Existing scoped services, kernel ABI, quotas and
+launcher/profile selection remain in use. The host is x86-64 and synchronous;
+incoming object attachments are explicitly unsupported. This is a transitional
+binding, not the final Omega app ABI or standalone Omega OS boot.
+
+[Native packaging](tools/omega-component/README.md) checks the component, hashes
+source/compiler/artifacts, and serializes concurrent Cargo/editor builds. UI and
+app packaging share the ELF validator. The app entrance descends into named
+session, storage and rendering folders. Confirmation text now fits its bitmap;
+input batches are bounded and owner control precedes wake hints.
+
+Verified: eleven tests execute the actual Omega export against controlled peers;
+they cover scoped requests, cold reads, uncertain writes/creation, malformed
+records, close confirmation, pointer cancellation/rebind, hidden rendering and
+input batching. Default Rust host tests, userspace Clippy, Python packaging tests
+and source-layout checks pass. Guest evidence under `build/boot-harness-rs/`:
+
+- Ordinary F5 desktop, save and cold-open with the host storage oracle:
+  `desktop/20261024T204804258337Z`.
+- Four nested desktops, deepest Omega Colors save/cold-open, independent outer
+  color and repeated subtree teardown: `desktop/20261024T205111666166Z`.
+- Lost committed storage reply, explicit reconciliation, close/reopen and cold
+  boot on a retained-disk copy: `colors/20261024T205246324412Z`.
+
+The first two runs precede the final named-continuation cleanup; the recovery
+run exercises that code. No kernel mechanisms changed; full kernel/ARM64 and all
+fault fixtures were not rerun. Native tests are Windows-hosted; guest execution
+is x86-64. Build logs and receipts live in `build/omega-component/`.
+
+**Immediate follow-up:** migrate Notes behavior using the same host. First add
+a bounded incoming-object interface for its bulk reads; keep transport/custody
+in platform and document schema/draft/close decisions in distribution Omega.
+Then evaluate the launcher/matrix migration against what Omega can actually
+compile. Keep Rust work focused on missing mechanisms and conformance evidence,
+rather than building a second long-lived application stack. The longer queues
+below remain useful context, not a requirement to finish more Rust UX first.
+
 Implementation update 2026-10-24: **local Omega UI build and combined desktop replay**,
 over `4f163da2`. The supported Omega `16a35ba7f429` compiler is built in the ignored
 `build/omega-ui/compiler` checkout. UI preparation selects `--compiler`, then

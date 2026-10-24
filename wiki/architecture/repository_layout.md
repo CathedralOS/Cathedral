@@ -26,7 +26,7 @@ Cathedral/
       profile.json         Boot composition consumed by the host harness
       shell/               Desktop experience (planned)
       settings/            User-facing configuration (planned)
-      applications/        Bundled applications (planned)
+      applications/        Bundled apps; Colors runs on the Rust reference host
       libraries/           Distribution UI components, native backend and fonts
   source-rs/               Rust lab with the same ownership boundaries
   tools/                   Host builds, image assembly, checks and simulators
@@ -76,6 +76,12 @@ Its `libraries/omega-ui/` contains the checked-in Omega component source and
 native backend; the Rust mirror owns the reusable app-facing adapter. UI builds
 use this source directly, rather than a sibling repository or platform-to-distribution
 dependency.
+The installed Colors program now lives in `source/distribution/applications/colors`.
+Its Rust executable only supplies startup and the common
+`platform/libraries/omega-app` host. That host performs requested scoped IPC and
+buffer custody; app state, input decisions, storage schema and presentation stay
+in distribution-owned Omega. This temporary native bridge is not the final
+Omega application ABI. The Rust Colors library remains a mechanism-lab probe.
 The Rust stock matrix is also a distribution program: `distribution/matrix/`
 owns its launcher/app roles, saved desktop configuration, two-child control
 router and recovery choices. Its extension contract lives beside it in

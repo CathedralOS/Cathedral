@@ -1,0 +1,21 @@
+// The subset exercised by the first Omega app on the Rust reference OS.
+// Wire ownership: source-rs/platform/contracts/{matrix,storage,input}.rs.
+// These are experimental lab encodings, not the final OS specification ABI.
+public const MATRIX_VIEW: u64 = 1u64;
+public const MATRIX_POLL: u64 = 5u64;
+public const SURFACE_CREATE: u64 = 6u64;
+public const SURFACE_IMAGE: u64 = 8u64;
+public const PRESENT_RECTS: u64 = 13u64;
+public const LOSS: u64 = 121u64;
+public const NO_FRAMES: u64 = 36028797018963968u64;
+public const MORE: u64 = 65536u64;
+public const POINTER: u64 = 1u64;
+public const KEY: u64 = 2u64;
+public const CANCEL: u64 = 3u64;
+public const RETIRED: u64 = 5u64;
+public const ENTER: u64 = 5u64;
+public const PRESS: u64 = 1u64;
+public const STORE_READ: u64 = 2u64;
+public const STORE_PUBLISH: u64 = 3u64;
+public const STORE_LIST: u64 = 6u64;
+public const IO_ERROR: u64 = 18446744073709551611u64;

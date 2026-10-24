@@ -86,6 +86,11 @@ class Nested:
         x,y,w,h = self.viewport(depth)
         self.scan(lambda sw,d: self.pixel(sw,d,x+13,y+18)==bytes.fromhex('9b7028' if dirty else '27664a') and self.text(sw,d,x+18,y+28,value),f'depth {depth} Notes {value!r}')
 
+    def color(self, depth, saved):
+        x,y,w,h = self.viewport(depth)
+        self.scan(lambda sw,d: self.pixel(sw,d,x+13,y+18)==bytes.fromhex('d18b35' if saved else '315ca8')
+                  and self.pixel(sw,d,x+40,y+50)==bytes.fromhex('e5e7eb'), f'depth {depth} Colors saved={saved}')
+
     def background(self, depth):
         x,y,w,h = self.viewport(depth)
         # Clearing a surface precedes child collection. Every nested background
@@ -138,9 +143,15 @@ def exercise(output, click, key, scan, width, height, reboot, pointer_stress=Fal
     app_close(nested_depth); background(nested_depth)
     if interaction_delay:
         delayed('f6', lambda: launch(nested_depth,1), ('matrix-present-delayed', 'matrix-present-resumed'))
+    else:
+        launch(nested_depth,1)
+    # This is the installed Omega app, through the same recursive services as
+    # Notes. Prove its durable bytes survive teardown and cold-open at this scope.
+    n.color(nested_depth, reboot)
+    if not reboot:
         x,y,w,h = n.viewport(nested_depth)
-        scan(lambda sw,d: n.pixel(sw,d,x+13,y+18)==bytes.fromhex('315ca8'), 'delayed Colors publication')
-        app_close(nested_depth); background(nested_depth)
+        click(x+13,y+70); key('ret'); n.color(nested_depth, True)
+    app_close(nested_depth); background(nested_depth)
     # Collapse each level, then re-enter the subtree. Old child accounts, image
     # readers and endpoints must be reusable without rebooting the outer desktop.
     for _ in range(2):
@@ -162,4 +173,5 @@ def exercise(output, click, key, scan, width, height, reboot, pointer_stress=Fal
         assert 'matrix-close-refused' not in (output/'serial.log').read_text(errors='replace')[offset:], 'a clean close answered after the storage hold was refused'
     else:
         app_close(0); background(0)
-    print(f'PASS: {nested_depth} recursive desktops, protected close, saved inner data, repeated subtree reclamation and isolation')
+    launch(0,1); n.color(0, False); app_close(0); background(0)
+    print(f'PASS: {nested_depth} recursive desktops, protected close, saved Notes/Omega Colors, repeated subtree reclamation and isolation')

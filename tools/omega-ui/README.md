@@ -103,6 +103,7 @@ cd source-rs
 cargo test --locked -p cathedral-omega-ui -p cathedral-omega-ui-demo
 cd ..
 python -m unittest discover -s tools/omega-ui -p "test_*.py"
+python -m unittest discover -s tools/omega-component -p "test_*.py"
 python tools/omega-ui/test_guest.py
 ```
 

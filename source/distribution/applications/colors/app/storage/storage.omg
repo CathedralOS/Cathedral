@@ -1,0 +1,82 @@
+// MC01 is Colors' six-byte record, not a platform storage type. Confirm before
+// displaying a toggle. After uncertainty, read; never blindly replay a write.
+use host::main;
+use protocol::main;
+use state;
+use session::session;
+public machine load(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+    s.phase = STORAGE_BOUND; s.loading = true; BIND
+}
+public machine toggle(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+    s.phase = SAVED;
+    message(p, STORE_PUBLISH, s.object, s.revision, 0u64, 6u64, 0u64, 0u64, 0u64);
+    p[8] = 6u64; p[16] = 0x3130434du64 | (((s.alternate ^ 1u64) & 1u64) << 40u64); STORE
+}
+public machine persistence(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+    let transport_status: u64 = p[9];
+    transition transport_status != 0u64 { true -> failed(s, p, transport_status) _ -> response(s, p) }
+    state response(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+        transition s.phase == CREATED { true -> created(s, p) _ -> checked(s, p) }
+    }
+    state checked(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+        let status: u64 = p[0];
+        transition status != 0u64 { true -> failed(s, p, status) _ -> dispatch(s, p) }
+    }
+    state dispatch(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+        transition s.phase {
+            STORAGE_BOUND -> bound(s, p)
+            LISTED -> listed(s, p)
+            RELISTED -> relisted(s, p)
+            READ -> read(s, p)
+            SAVED -> saved(s, p)
+            _ -> (EXIT)
+        }
+    }
+    state bound(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+        s.realm = p[1]; s.phase = LISTED; listing(s, p)
+    }
+    state listed(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+        transition p[1] == 0u64 { true -> create(s, p) _ -> reading(s, p) }
+    }
+    state create(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+        s.phase = CREATED; message(p, STORE_PUBLISH, 0u64, 0u64, s.realm, 6u64, 0u64, 0u64, 0u64);
+        p[8] = 6u64; p[16] = 0x3130434du64; STORE
+    }
+    state created(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+        s.creation_error = p[0]; s.phase = RELISTED; listing(s, p)
+    }
+    state relisted(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+        transition p[1] == 0u64 { true -> empty(s, p) _ -> reading(s, p) }
+    }
+    state empty(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+        let status: u64 = s.creation_error;
+        transition status == 0u64 {
+            true -> failed(s, p, IO_ERROR) _ -> failed(s, p, status)
+        }
+    }
+    state reading(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+        s.object = p[2]; s.phase = READ;
+        message(p, STORE_READ, s.object, 0u64, 0u64, 6u64, 0u64, 0u64, 0u64); STORE
+    }
+    state read(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+        transition p[3] == 6u64 && ((p[4] & 0xffffffffffffu64) == 0x3130434du64 || (p[4] & 0xffffffffffffu64) == 0x1003130434du64) {
+            true -> loaded(s, p) _ -> failed(s, p, IO_ERROR)
+        }
+    }
+    state loaded(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+        s.revision = p[2]; s.alternate = (p[4] >> 40u64) & 255u64;
+        s.error = 0u64; s.dirty = true; s.loading = false; poll(s, p)
+    }
+    state saved(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+        s.object = p[1]; s.revision = p[2]; s.alternate = (s.alternate ^ 1u64) & 1u64;
+        s.error = 0u64; s.dirty = true; after_input(s, p)
+    }
+}
+machine listing(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+    message(p, STORE_LIST, s.realm, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64); STORE
+}
+machine failed(s: &mut State, p: &mut [u64; 4096], status: u64) -> u64 {
+    s.error = status; s.dirty = true;
+    transition s.loading { true -> resume(s, p) _ -> after_input(s, p) }
+    state resume(s: &mut State, p: &mut [u64; 4096]) -> u64 { s.loading = false; poll(s, p) }
+}

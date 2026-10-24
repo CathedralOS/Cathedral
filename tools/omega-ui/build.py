@@ -6,6 +6,8 @@ import os
 from pathlib import Path
 import shutil
 import subprocess
+import sys
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'omega-component'))
 from elf import Elf, component
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -30,8 +32,8 @@ def digest(path):
 
 def fingerprint(library, compiler):
     inputs = {'compiler': digest(compiler)}
-    for name in ('build.py', 'elf.py'):
-        inputs['adapter/' + name] = digest(Path(__file__).parent / name)
+    inputs['adapter/build.py'] = digest(Path(__file__))
+    inputs['adapter/../omega-component/elf.py'] = digest(Path(__file__).parent.parent / 'omega-component/elf.py')
     for folder in ('src', 'platform/native', 'tests/native_component'):
         for path in sorted((library / folder).rglob('*.omg')):
             if 'build' not in path.relative_to(library / folder).parts[:-1]:

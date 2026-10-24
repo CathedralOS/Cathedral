@@ -1,0 +1,30 @@
+// App-owned state. Rust neither mirrors this layout nor interprets its fields.
+public data State {
+    phase: u64;
+    realm: u64; object: u64; revision: u64; alternate: u64; error: u64;
+    creation_error: u64; loading: bool;
+    epoch: u64; width: u64; height: u64; frames: bool; more: bool;
+    snapshot: [u64; 8]; surfaces: [u64; 4]; rank: u64;
+    dirty: bool; scene: bool; confirm: bool; paint_revision: u64;
+    channels: [u64; 4]; buttons: [u64; 4];
+    drained: u64; paints: u64; wakes: u64; pointers: u64;
+}
+
+// App continuations after one requested host operation completes.
+public const START: u64 = 0u64;
+public const INTERACTION_READY: u64 = 1u64;
+public const STORAGE_READY: u64 = 2u64;
+public const POLLED: u64 = 10u64;
+public const AWAKENED: u64 = 11u64;
+public const CONTROL_REPLIED: u64 = 12u64;
+public const STORAGE_BOUND: u64 = 20u64;
+public const LISTED: u64 = 21u64;
+public const CREATED: u64 = 22u64;
+public const RELISTED: u64 = 23u64;
+public const READ: u64 = 24u64;
+public const SAVED: u64 = 25u64;
+public const SURFACE_CREATED: u64 = 30u64;
+public const CHECKER_READY: u64 = 31u64;
+public const RECTANGLES_READY: u64 = 32u64;
+public const CLOSE_READY: u64 = 33u64;
+public const VIEW_RECHECKED: u64 = 34u64;

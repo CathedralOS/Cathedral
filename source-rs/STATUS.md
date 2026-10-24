@@ -1,5 +1,13 @@
 # Rust implementation map
 
+The installed [Colors app](../source/distribution/applications/colors/README.md)
+now owns its input, persistence, close policy and presentation in Omega. Its
+Rust executable delegates to a reusable
+[platform host](platform/libraries/omega-app/README.md), retaining service
+transport and buffer custody. F5 and nested desktops run this same program;
+the old Rust library remains only for mechanism probes. This is the first
+whole-app behavior migration, with an x86-64 native bridge still required.
+
 [Omega UI](../tools/omega-ui/README.md) is a reusable userspace library. Apps
 compose their own rows, columns and controls through a checked frame API; native
 Omega code owns widget behavior, editing, motion, layout and pixels. Independent

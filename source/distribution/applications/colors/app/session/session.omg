@@ -1,0 +1,93 @@
+// Acquire -> load -> receive -> act -> present, one host operation at a time.
+use host::main;
+use protocol::main;
+use state;
+use storage::storage;
+use rendering::rendering;
+use session::input;
+
+public machine session(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+    transition s.phase {
+        START -> acquire_interaction(s, p)
+        INTERACTION_READY -> acquire_storage(s, p)
+        STORAGE_READY -> start(s, p)
+        POLLED -> observed(s, p)
+        AWAKENED -> awakened(s, p)
+        CONTROL_REPLIED -> wait(s, p)
+        _ -> subsystem(s, p)
+    }
+    state acquire_interaction(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+        s.phase = INTERACTION_READY; message(p, 1u64, 1u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64); INTERACTION
+    }
+    state acquire_storage(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+        transition p[9] == 0u64 {
+            true -> storage(s, p) _ -> (EXIT)
+        }
+    }
+    state storage(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+        s.phase = STORAGE_READY; message(p, 1u64, 1u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64); STORAGE
+    }
+    state start(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+        transition p[9] == 0u64 { true -> load(s, p) _ -> (EXIT) }
+    }
+    state subsystem(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+        transition s.phase >= STORAGE_BOUND && s.phase <= SAVED {
+            true -> persistence(s, p) _ -> presentation(s, p)
+        }
+    }
+}
+public machine poll(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+    s.phase = POLLED; message(p, MATRIX_POLL, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64); EXCHANGE
+}
+machine observed(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+    transition p[9] != 0u64 { true -> (EXIT) _ -> view(s, p) }
+    state view(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+        transition p[0] == 0u64 && p[1] != 0u64 && p[2] != 0u64 && p[3] != 0u64 && p[2] < 65536u64 && p[3] < 65536u64 {
+            true -> accept(s, p) _ -> hidden(s, p)
+        }
+    }
+    state hidden(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+        s.scene = false; s.dirty = true; wait(s, p)
+    }
+    state accept(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+        transition s.epoch != p[1] { true -> rebound(s, p) _ -> geometry(s, p) }
+    }
+    state rebound(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+        reset_channels(s); s.scene = false; s.dirty = true; s.epoch = p[1];
+        transition { _ -> geometry(s, p) }
+    }
+    state geometry(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+        s.dirty = s.dirty || s.width != p[2] || s.height != p[3];
+        s.width = p[2]; s.height = p[3];
+        s.frames = (p[4] & NO_FRAMES) == 0u64;
+        s.more = (p[5] & MORE) != 0u64;
+        s.snapshot[0] = p[0]; s.snapshot[1] = p[1]; s.snapshot[2] = p[2]; s.snapshot[3] = p[3];
+        s.snapshot[4] = p[4]; s.snapshot[5] = p[5]; s.snapshot[6] = p[6]; s.snapshot[7] = p[7];
+        s.drained = ((s.drained as u64 in Saturating) + 1) as u64;
+        input(s, p)
+    }
+}
+public machine after_input(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+    transition s.more && s.drained < 8u64 { true -> poll(s, p) _ -> render(s, p) }
+}
+public machine wait(s: &mut State, p: &mut [u64; 4096]) -> u64 { s.drained = 0u64; s.phase = AWAKENED; WAIT }
+machine awakened(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+    transition p[9] {
+        0u64 -> wake(s, p)
+        1u64 -> control(s, p)
+        _ -> (EXIT)
+    }
+    state wake(s: &mut State, p: &mut [u64; 4096]) -> u64 { s.wakes = ((s.wakes as u64 in Saturating) + 1) as u64; poll(s, p) }
+    state control(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+        transition p[0] == LOSS { true -> loss(s, p) _ -> report(s, p) }
+    }
+    state loss(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+        message(p, 0u64, s.error, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64);
+        s.phase = CONTROL_REPLIED; CONTROL
+    }
+    state report(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+        let cpu: u64 = p[10];
+        message(p, 0u64, s.paints, s.wakes, cpu, s.alternate, s.error, s.pointers, s.revision);
+        s.phase = CONTROL_REPLIED; CONTROL
+    }
+}

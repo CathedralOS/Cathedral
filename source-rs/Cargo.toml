@@ -18,6 +18,7 @@ members = [
     "platform/libraries/storage-volume",
     "platform/libraries/storage-volume/engine",
     "platform/libraries/user-runtime",
+    "platform/libraries/omega-app",
     "platform/libraries/user-heap",
     "platform/services/display",
     "platform/services/input",
@@ -64,6 +65,7 @@ rust-version = "1.94"
 publish = false
 
 [workspace.dependencies]
+cathedral-omega-app = { path = "platform/libraries/omega-app" }
 cathedral-omega-ui = { path = "distribution/libraries/omega-ui" }
 cathedral-matrix = { path = "platform/libraries/matrix" }
 cathedral-desktop-matrix-contracts = { path = "distribution/matrix/contracts" }
