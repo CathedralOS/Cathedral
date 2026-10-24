@@ -1,5 +1,57 @@
 # Rust reference OS: tasks and handoff
 
+Implementation update 2026-10-24: **display demand without input revocation**,
+over `fa202b62`. The platform [demand owner](source-rs/platform/libraries/matrix/world/demand.rs)
+composes inherited display demand with local visibility and publishes a scoped
+`NO_FRAMES` hint in `POLL`. Demand changes wake the child without changing its
+view epoch, dimensions, input binding or surface allowance. Hiding excludes new
+pointer hits but retains already-selected keyboard routes and pointer capture.
+Input deactivation is a separate owner operation; the stock taskbar explicitly
+uses it for the previous app after a successful switch. No kernel or default
+app authority changed.
+
+Notes and Colors keep processing state while deferring drawing. F5 -> user ->
+Split now offers **HIDE RIGHT / SHOW RIGHT** alongside AUTO. Start AUTO, hide the
+right note while it types, then show the updated document. Split forwards retained
+sealed images to hide/show, without mapping child pixels. Its rendering entrance
+now descends into header and visibility responsibilities; `mod.rs` is plumbing.
+The control appears at widths of at least 384 pixels. Replay is per surface, not
+a new atomic scene guarantee. Current demand is display-only, not capture demand
+or a mechanism for forcibly stopping an app's own CPU spending.
+
+Verification: workspace host tests (93 matrix / 18 platform-contract tests),
+ordinary userspace clippy, demand observer features, matrix library/test clippy,
+layout (40 Omega / 128 Rust edges), formatting, Python syntax and local doc links.
+The new `--render-demand` desktop fixture requires actual hidden edits and no
+right-child drawing submissions after acknowledgment; it checks fresh-hit
+exclusion, usable sibling input, restored text, repeated AUTO, hidden-child
+teardown, same-session slot reuse and exact cold-open text. Observer features
+compile out of ordinary F5 and add no test authority. QEMU evidence:
+
+- Hidden editing, no publication, teardown/reopen and cold saved data: `build/boot-harness-rs/desktop/20261024T173504057414Z`.
+- Ordinary AUTO/STOP/resize and cold saved data: `build/boot-harness-rs/desktop/20261024T173355266040Z`; final policy with storage tracing: `build/boot-harness-rs/desktop/20261024T173701517937Z`.
+- Four recursive desktops, repeated teardown, isolation and cold saved data: `build/boot-harness-rs/desktop/20261024T173552370947Z`.
+
+The first demand observer attempt missed the kernel's serial prefix while
+matching lines; the guest already logged all three hidden edits. The parser was
+corrected, then the complete workflow passed, and the expanded teardown workflow
+passed on fresh and cold boots. These are bounded lab proofs, not a latency bound,
+a complete capture implementation or new ARM64/GPU evidence. The stock matrix
+with storage tracing is 259,328 bytes, close to the 262,144-byte executable-object
+cap; account for that lab limit before adding the capture provider.
+
+Next: **authorized masked capture**, using this display-demand baseline. Define
+its concrete bounded request/result and image/mask publication contract before
+implementation: a separate supplied capability, only authorized output, masks
+applied before delivery, coherent image/mask pairing, explicit pending/refusal
+outcomes and funded retained backing. Capture demand must be counted separately
+from display visibility, and participant loss must release it. Exercise a hidden
+app from the ordinary desktop without raising it or stealing focus. The accepted
+spec permits this work; no new owner decision blocks it. General device/control
+vocabularies, mutable descriptors/shared registry pages, cursor preferences and
+coordination acquisition remain queued.
+
+
 Implementation update 2026-10-24: **bounded channel descriptions through nesting**,
 over `e00916ce`. A producer can describe only its own granted channel ordinals,
 using a UTF-8 label of up to sixteen bytes and advisory pointer/key categories.

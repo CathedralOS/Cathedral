@@ -56,6 +56,13 @@ use this machinery with the existing runtime IPC server.
 - [Layout](world/layout.rs) accepts owner-computed rectangles and an explicitly
   delegated controller. It validates the whole arrangement before applying it;
   there is no strip width, margin, launcher path or configuration schema here.
+- [Rendering demand](world/demand.rs) composes the owner's display demand with
+  each child's visibility and publishes a child-local `POLL` hint. A change wakes
+  that child without replacing its view, dimensions, surfaces or input binding.
+  Hiding excludes fresh pointer hits but retains selected keyboard routes and
+  existing pointer capture. `deactivate_input` is a separate owner policy.
+  Current demand is display-only; capture consumers will require additional
+  accounting. A cooperative hint does not enforce CPU use or prohibit submission.
 - [Storage scopes](world/storage/storage.rs), [management](world/management.rs)
   and [launch observations](world/launches.rs) use independently selected child
   capacities. They work without display state. `Scopes::prepare` is the shared

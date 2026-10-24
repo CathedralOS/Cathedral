@@ -21,6 +21,7 @@ impl Rect {
 }
 pub(super) struct Child {
     pub visible: bool,
+    frames: bool,
     pub rect: Option<Rect>,
     pub keys: u64,
     pub grant: Grant,
@@ -47,6 +48,7 @@ impl Child {
     pub const fn empty() -> Self {
         Self {
             visible: true,
+            frames: true,
             rect: None,
             keys: 0,
             grant: Grant {
@@ -118,6 +120,12 @@ impl Child {
             return wire::error(abi::DENIED);
         }
         [0, g.epoch, g.width, g.height, g.keys, 0, 0, 0]
+    }
+    pub fn demand(&mut self, frames: bool) {
+        if self.frames != frames {
+            self.frames = frames;
+            self.notify = true;
+        }
     }
     pub fn push(
         &mut self,
@@ -294,6 +302,9 @@ impl Child {
         let event = self.next();
         let mut reply = self.view();
         reply[4] |= (self.surface_limit as u64) << wire::SURFACE_BITS;
+        if !self.frames {
+            reply[4] |= wire::NO_FRAMES;
+        }
         reply[5] = event[2]
             | (event[7] << 17)
             | (event[5] << 8)

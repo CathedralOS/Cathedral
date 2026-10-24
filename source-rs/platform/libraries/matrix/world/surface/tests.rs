@@ -294,7 +294,7 @@ fn image_preview_preserves_old_state_and_replay_retains_source_stride() {
 }
 
 #[test]
-fn hidden_scene_keeps_local_authority_but_cannot_draw_or_receive_input() {
+fn owner_can_hide_scene_and_separately_deactivate_input() {
     let mut w = world();
     place(&mut w, 0, 10, 20);
     let original = view(&mut w, 0);
@@ -304,6 +304,7 @@ fn hidden_scene_keeps_local_authority_but_cannot_draw_or_receive_input() {
     w.pointer(20, 30, 1);
     w.pointer(20, 30, 0);
     w.visible(0, false).unwrap();
+    w.deactivate_input(0).unwrap();
     assert_eq!(&w.replay(0, 0).unwrap()[5..7], &[0, 0]);
     assert_eq!(view(&mut w, 0), original);
     assert_eq!(

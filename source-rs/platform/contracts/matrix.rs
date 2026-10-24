@@ -33,6 +33,15 @@ pub fn untag_poll(mut reply: Packet, id: u32) -> Option<Packet> {
     Some(reply)
 }
 pub const MORE: u64 = 1 << 16;
+/// POLL word four bit 55: the owner currently requests no new frames. This is
+/// cooperative production demand, not suspension, input revocation, visibility
+/// authority or a promise that future submissions will be shown. No sibling
+/// identity or global fullscreen state is exposed. The ordinary wake hints at
+/// changes; re-read POLL. View epochs and surface grants do not change for this.
+pub const NO_FRAMES: u64 = 1 << 55;
+pub fn poll_frames(reply: Packet) -> bool {
+    reply[0] == 0 && reply[1] != 0 && reply[2] != 0 && reply[3] != 0 && reply[4] & NO_FRAMES == 0
+}
 /// Experimental multiplexed input: nonzero u32 names scoped to the supplying
 /// interaction connection/view binding, not process IDs or injection authority.
 /// Each event has its stream in NEXT word six / POLL word five's high 32 bits.

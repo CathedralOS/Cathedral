@@ -14,6 +14,14 @@ its own selection. **STOP** ends that participant and removes its cursor. Resizi
 ends the run too; AUTO explicitly starts a fresh grant. F1 still saves each note.
 This is a fixed demonstration script, not a general automation interface.
 
+**HIDE RIGHT / SHOW RIGHT** removes/restores the right Notes presentation. Start
+AUTO, then hide the right note while it types: it keeps editing but defers drawing.
+Showing it presents the updated document. Hidden content cannot receive new
+pointer hits; AUTO's already-selected private keyboard route remains authorized.
+The control appears when the grant is wide enough (384 pixels). It neither stops
+the app nor changes its local dimensions. The stock desktop separately chooses
+to deactivate input when switching apps.
+
 Start at [main.rs](main.rs), then [session/session.rs](session/session.rs): acquire
 the supplied interaction/storage services, load children, consume upstream
 notifications, survey loss asynchronously, and dispatch authenticated requests.
@@ -30,7 +38,7 @@ notifications, survey loss asynchronously, and dispatch authenticated requests.
   travel unmapped. A changed upstream binding invalidates old child revisions;
   Split restores its standing grants only if the newly authorized realm is the
   same one. A transport timeout retires the stream, never reuses a late reply.
-- [Rendering](session/rendering.rs) chooses two columns. Platform `World<3>` owns
+- [Rendering](session/rendering/rendering.rs) chooses two columns. Platform `World<3>` owns
   clipping, local names, focus and grant invalidation. Shared image custody keeps
   sealed readers without mapping child pixels. There is no intermediate pixel copy.
 - [Producer lifecycle](session/producer/producer.rs) negotiates incoming capacity,
@@ -115,3 +123,12 @@ once before input on each receiving edge, while ordinary events retain compact
 channel tags. The receiver probes query the scoped directory and require both
 those labels and the inherited generic `Pointer`/`Keyboard` descriptions. These
 are virtual input hints, not authenticated participant identities or badges.
+
+`python tools/boot-harness-rs/desktop_test.py --render-demand` exercises those
+installed controls with disposable observer features. It requires actual edits
+while Notes acknowledges no frame demand, no right-child surface publications
+in that interval, independent sibling editing, no fresh hits into the hidden
+area, correct restored content, repeated admission and exact cold-open text.
+The observers add no authority and compile out of ordinary F5. Visibility replay
+is per surface; this demo does not promise an atomic multi-surface transition.
+Capture-generated demand and masks are not implemented by this workflow.

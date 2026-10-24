@@ -22,6 +22,7 @@ impl Grant {
 }
 pub struct World<const N: usize = 2> {
     parent: Grant,
+    frames: bool,
     capacity: usize,
     authority: u64,
     retired: [Option<wire::Packet>; wire::MAX_SURFACES],
@@ -46,6 +47,7 @@ impl<const N: usize> World<N> {
                 height: 0,
                 keys: 0,
             },
+            frames: true,
             capacity: 0,
             authority: 0,
             retired: [None; wire::MAX_SURFACES],

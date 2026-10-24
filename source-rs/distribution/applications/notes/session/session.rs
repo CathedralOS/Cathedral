@@ -109,8 +109,15 @@ pub fn run(style: u64, mut services: Services) {
     let mut closing = closing::Controls::default();
     #[cfg(feature = "input-receiver-probe")]
     let mut input_probe = input_probe::Receiver::default();
+    #[cfg(feature = "render-demand-probe")]
+    let mut previous_demand = None;
     loop {
         let snapshot = call(parent, [wire::POLL, 0, 0, 0, 0, 0, 0, 0]);
+        #[cfg(feature = "render-demand-probe")]
+        if previous_demand != Some(wire::poll_frames(snapshot)) {
+            previous_demand = Some(wire::poll_frames(snapshot));
+            time::storage_sample("note-demand", &[u64::from(wire::poll_frames(snapshot))]);
+        }
         let extent = wire::poll_view(snapshot);
         if extent[0] == 0 {
             if scene.as_ref().is_some_and(|s| s.epoch != extent[1]) {
@@ -235,10 +242,18 @@ pub fn run(style: u64, mut services: Services) {
                     error = outcome.err().unwrap_or(0);
                     repaint = true;
                 } else if !function {
-                    repaint |= draft.edit(&mut cursor, key);
+                    let edited = draft.edit(&mut cursor, key);
+                    repaint |= edited;
+                    #[cfg(feature = "render-demand-probe")]
+                    if edited && !wire::poll_frames(snapshot) {
+                        time::storage_sample("note-hidden-edit", &[key as u64, draft.len as u64]);
+                    }
                 }
             }
             let painted = (|| -> Result<(), u64> {
+                if !wire::poll_frames(snapshot) {
+                    return Ok(());
+                }
                 if scene.as_ref().is_none_or(|s| s.epoch != extent[1]) {
                     scene = Some(view::Scene::new(parent, extent[1])?);
                     repaint = true;

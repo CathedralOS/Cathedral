@@ -108,18 +108,17 @@ impl<const N: usize> World<N> {
 
 impl<const N: usize> World<N> {
     /// Owner-selected visibility preserves the child's local scene and extent.
-    /// The owner replays retained surfaces after changing it. Hidden children
-    /// receive no input and cannot make their output visible through publication.
+    /// The owner replays retained surfaces after changing it. Hiding excludes new
+    /// pointer hits and removes display demand; existing routes/capture remain.
+    /// Use deactivate_input explicitly when the owner's policy calls for that.
+    /// Hidden children cannot make output visible through publication.
     pub fn visible(&mut self, slot: usize, visible: bool) -> Result<(), u64> {
         let child = self.children.get_mut(slot).ok_or(abi::DENIED)?;
         if child.visible == visible {
             return Ok(());
         }
         child.visible = visible;
-        if !visible {
-            child.cancel();
-            self.input.forget(slot);
-        }
+        child.demand(self.frames && visible);
         Ok(())
     }
 }

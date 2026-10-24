@@ -158,7 +158,7 @@ pub fn run_services<const PROBES: bool>(
             }
             let color = state.as_ref().unwrap().color();
             let error = state.as_ref().unwrap().error;
-            if painted != Some((view, color, error)) {
+            if wire::poll_frames(snapshot) && painted != Some((view, color, error)) {
                 let rendered = (|| -> Result<(), u64> {
                     if scene.as_ref().is_none_or(|s| s.epoch != view[1]) {
                         scene = Some(surfaces::Scene::new::<PROBES>(parent, view)?);

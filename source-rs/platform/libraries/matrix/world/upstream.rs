@@ -16,6 +16,7 @@ impl<const N: usize> World<N> {
             Grant::default()
         };
         self.inherit(grant);
+        self.render_demand(wire::poll_frames(reply));
         self.reap_input();
         self.surface_capacity(if grant.valid() {
             (reply[4] >> wire::SURFACE_BITS) as usize

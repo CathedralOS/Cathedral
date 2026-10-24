@@ -42,6 +42,24 @@ repeat within a child slot, including connection replacement. Old handles cannot
 address the next object reusing a rank. Upstream handles and rank offsets are
 never returned to the child.
 
+## Rendering demand
+
+Visibility, input routing and frame production are separate. `World::visible`
+changes clipping and display demand; the owner replays retained images to update
+the enclosing scene. `POLL` word four bit 55 (`NO_FRAMES`) tells the producer no
+new frames are currently requested; `poll_frames` decodes it without confusing
+key masks or the upper surface-allowance bits. The existing wake is a hint to
+reread state, not the state itself. Views, grants and local dimensions are retained.
+
+`World::inherit_poll` propagates demand through nesting and respects locally
+hidden children when parent demand returns. Existing selected keyboard routes
+and pointer capture survive hiding; fresh pointer hits cannot enter hidden
+content. Owners can separately call `deactivate_input` to cancel and forget those
+routes. Stock taskbar switching uses that explicit policy. Notes and Colors defer
+drawing while continuing input/storage and repaint dirty state when requested.
+This is a display-only baseline, not capture-consumer accounting or enforcement
+against an app spending its own execution budget.
+
 ## Placement and lifetime
 
 A same-extent move replays retained local geometry without asking the app to repaint.

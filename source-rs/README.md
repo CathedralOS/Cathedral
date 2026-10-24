@@ -1142,6 +1142,7 @@ python tools/boot-harness-rs/desktop_test.py --input-producer complete
 python tools/boot-harness-rs/desktop_test.py --input-producer partial
 python tools/boot-harness-rs/desktop_test.py --input-producer denied
 python tools/boot-harness-rs/desktop_test.py --participants --trace-storage
+python tools/boot-harness-rs/desktop_test.py --render-demand
 python tools/boot-harness-rs/desktop_test.py --participant-fault hold
 python tools/boot-harness-rs/desktop_test.py --participant-fault disconnect
 python tools/boot-harness-rs/desktop_test.py --participant-fault pressure

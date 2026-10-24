@@ -79,6 +79,13 @@ impl Children {
             }
             return Ok(status);
         }
+        // This desktop's app-switch policy deactivates the former app's routes.
+        // Visibility itself is neutral: other matrices may keep hidden control.
+        if let Some(previous) = self.active {
+            world
+                .deactivate_input(previous)
+                .map_err(|c| Error(c as i64))?;
+        }
         self.active = Some(slot);
         if let Some(incarnation) = server.incarnation(0) {
             self.management

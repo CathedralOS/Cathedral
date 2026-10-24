@@ -5,7 +5,7 @@
 | Contract status | Current |
 | Specification coverage | Partial |
 | Implementation coverage | Partial |
-| Last reviewed | 2026-10-23 |
+| Last reviewed | 2026-10-24 |
 
 ## Scope and ownership
 
@@ -190,6 +190,15 @@ cursor buffer. This is presentation evidence, not a complete cursor service:
 the installed Split matrix demonstrates a scoped producer and owner-funded
 cursor, while target-dependent suppression, assets and authenticated attribution
 remain separate work.
+
+The Rust [demand mechanism](../../../source-rs/platform/libraries/matrix/world/demand.rs)
+now carries a child-local no-frames hint through `POLL`, composed across matrices
+without replacing input or surface grants. Notes and Colors defer drawing while
+continuing state work. The installed [Split demonstration](../../../source-rs/distribution/applications/split/README.md)
+can hide its right note while an independent input participant edits it, then
+restore its updated content. The desktop fixture checks actual hidden edits,
+absence of child drawing submissions and cold-open saved data. This is bounded
+display demand, not rate negotiation or capture-generated demand.
 
 The accepted policy does not freeze that lab encoding. Drawing/text placement,
 detailed cache residency/sponsorship, direct-writer admission, exact scene/mask

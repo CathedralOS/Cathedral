@@ -393,13 +393,17 @@ def desktop(stream, output, serial, reboot, expected_absolute=True, fill_users=F
     print('PASS: user tiles, absolute/relative clicks, app tiles, save/discard/cancel and persistent replacement')
 
 
-def run(timeout, trace_storage=False, relative_pointer=False, service_imports=None, nested=False, deep=False, nested_desktop=False, trace_input=False, latency=False, pointer_stress=False, interaction_delay=False, nested_depth=3, soak=0, collection_pressure=False, accel='tcg', input_producer=None, participants=False, participant_fault=None):
+def run(timeout, trace_storage=False, relative_pointer=False, service_imports=None, nested=False, deep=False, nested_desktop=False, trace_input=False, latency=False, pointer_stress=False, interaction_delay=False, nested_depth=3, soak=0, collection_pressure=False, accel='tcg', input_producer=None, participants=False, participant_fault=None, render_demand=False):
     output = harness.BUILD / 'desktop' / datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S%fZ')
     output.mkdir(parents=True)
     # Exact default composition, with a separate build output so a regression
     # run does not replace the ESP of an already-running interactive guest.
     profile = output / f'desktop-check-{output.name}.json'
     composition = json.loads((ROOT / 'source-rs/distribution/profile.json').read_text())
+    if render_demand:
+        for entry in composition['startup']['realm_programs']:
+            if entry.get('path') in ('Split', 'Split/Notes'):
+                entry.setdefault('features', []).append('render-demand-probe')
     if participant_fault:
         for entry in composition['startup']['realm_programs']:
             if entry.get('package') == 'cathedral-input-demo':
@@ -470,6 +474,9 @@ def run(timeout, trace_storage=False, relative_pointer=False, service_imports=No
     command += disk_image.arguments(path)
     flags = subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0
     user_check = None
+    if render_demand:
+        import render_demand_test
+        user_check = render_demand_test.exercise
     if participants:
         import participants_test
         user_check = participants_test.exercise
@@ -495,6 +502,9 @@ def run(timeout, trace_storage=False, relative_pointer=False, service_imports=No
         contents = path.read_bytes()
         database_image.prepare(path, programs, migration, app_close=True, realm_programs=harness.realm_programs(profile, True))
         assert contents == path.read_bytes(), 'relaunch must not reformat storage or reinstall unchanged programs'
+    if render_demand:
+        print(f'PASS: hidden input, deferred painting, restored content and cold reopen; artifacts: {output}')
+        return
     if participant_fault:
         print(f'PASS: participant {participant_fault} interruption, replacement and cold reopen; artifacts: {output}')
         return
@@ -548,6 +558,7 @@ if __name__ == '__main__':
     parser.add_argument('--collection-pressure', action='store_true', help='with --soak and --trace-storage: build the provider to collect before every write inside a tiny workspace, and require live collection passes in every cycle')
     parser.add_argument('--latency', action='store_true', help='measure launch, typing and save through the selected nested depth on fresh/cold boots')
     parser.add_argument('--participant-fault', choices=('hold', 'disconnect', 'pressure'), help='disposable producer/receiver faults through Split AUTO')
+    parser.add_argument('--render-demand', action='store_true', help='hide a live Notes presentation while AUTO edits it, then restore and cold reopen')
     parser.add_argument('--participants', action='store_true', help='exercise Split AUTO with independent physical and synthetic input')
     parser.add_argument('--nested', action='store_true', help='exercise the installed alternative Split matrix')
     parser.add_argument('--deep', action='store_true', help='also enter Split inside Split and check bounded admission')
@@ -574,8 +585,8 @@ if __name__ == '__main__':
         parser.error('--pointer-stress requires --nested-desktop or --soak with absolute input')
     if args.input_producer and (args.service_imports or args.nested or args.deep or args.nested_desktop or args.latency or args.soak or args.interaction_delay):
         parser.error('--input-producer requires the ordinary desktop workflow')
-    if (args.participants or args.participant_fault) and (args.service_imports or args.nested or args.deep or args.nested_desktop or args.latency or args.soak or args.input_producer or args.interaction_delay):
-        parser.error('--participants runs its own default-desktop workflow')
-    if args.participant_fault and args.participants:
-        parser.error('--participant-fault replaces the ordinary --participants workflow')
-    run(args.timeout, args.trace_storage, args.relative_pointer, args.service_imports, args.nested or args.deep, args.deep, args.nested_desktop, args.trace_input, args.latency, args.pointer_stress, args.interaction_delay, args.nested_depth, args.soak, args.collection_pressure, accel=args.accel, input_producer=args.input_producer, participants=args.participants, participant_fault=args.participant_fault)
+    if (args.participants or args.participant_fault or args.render_demand) and (args.service_imports or args.nested or args.deep or args.nested_desktop or args.latency or args.soak or args.input_producer or args.interaction_delay):
+        parser.error('participant and rendering-demand checks run their own default-desktop workflows')
+    if sum(bool(v) for v in (args.participant_fault, args.participants, args.render_demand)) > 1:
+        parser.error('choose only one of --participants, --participant-fault or --render-demand')
+    run(args.timeout, args.trace_storage, args.relative_pointer, args.service_imports, args.nested or args.deep, args.deep, args.nested_desktop, args.trace_input, args.latency, args.pointer_stress, args.interaction_delay, args.nested_depth, args.soak, args.collection_pressure, accel=args.accel, input_producer=args.input_producer, participants=args.participants, participant_fault=args.participant_fault, render_demand=args.render_demand)

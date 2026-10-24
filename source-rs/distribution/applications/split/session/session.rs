@@ -58,6 +58,8 @@ pub fn run(mut services: Services) -> Result<(), Error> {
                 {
                     deepen = false;
                     survey = Some(loss::Survey::start(None, &mut children)?);
+                } else if clicked && survey.is_none() && output.visibility_hit(event[3], event[4]) {
+                    output.toggle_right(world)?;
                 } else if clicked && survey.is_none() && output.automatic_hit(event[3], event[4]) {
                     if producer.running() {
                         producer.stop(&mut output, world, &mut server)?;

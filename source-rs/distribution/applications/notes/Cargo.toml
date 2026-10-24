@@ -15,6 +15,7 @@ test = false
 bench = false
 
 [features]
+render-demand-probe = []
 trace-input = []
 trace-storage = []
 render-probes = []

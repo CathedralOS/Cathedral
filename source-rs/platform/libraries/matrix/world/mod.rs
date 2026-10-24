@@ -4,6 +4,9 @@
 mod arrangements;
 mod children;
 mod commands;
+mod demand;
+#[cfg(test)]
+mod demand_tests;
 mod events;
 mod input;
 pub mod launches;
