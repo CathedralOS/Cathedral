@@ -1,5 +1,58 @@
 # Rust reference OS: tasks and handoff
 
+Implementation update 2026-10-23: **input registration and explicit retirement**,
+over `d6af9dc8`. The [registration entrance](source-rs/platform/libraries/matrix/world/input/registration.rs)
+allocates owner-controlled channels and focus groups. Local and inherited names
+have separate namespaces. Retiring a channel discards its pending events, clears
+holds and queues an explicit boundary for every recipient. Its slot is reusable
+only after those boundaries drain or the recipients lose their bindings.
+Groups have a separate retirement boundary: replacing the last channel preserves
+the group's remembered selection. Child aliases increase within a view binding;
+exhaustion refuses instead of wrapping. App reception frees retired pointer state.
+
+The [recursive IPC fixture](source-rs/distribution/desktop/scenario/registration.rs)
+churns channels and groups beyond table capacity without resetting geometry,
+checks local/inherited name collisions, and rejects stale submissions. The seven
+owner-only operations remain denied on ordinary child interaction endpoints.
+This does not yet provide app producer acquisition, admission quotas, delegated
+group control or disconnect cleanup for producer grants. Never lend an owner
+endpoint as a shortcut to those permissions.
+
+Stock and Split routers let descendant retirement notifications drain before
+polling another upstream snapshot. Local requests continue. This bounds tables
+but can delay unrelated upstream input behind a slow descendant; it is an explicit
+lab limitation, not a latency or denial-of-service isolation guarantee. Earlier
+entries saying registration/retirement are entirely absent are superseded.
+
+Next: add explicitly opted-in producer acquisition with endpoint/incarnation and
+view-generation checks, quotas, disconnect retirement and separate group-control
+rights. Reserve fixed source/inherited capacity before dynamic admission; F5's
+current adapter still lazily binds local channels 1/2 in group 1. Do not extend
+`imports::ALL` into an implicit grant to every app. Then show physical and synthetic
+groups, separate cursors/focus and nested forwarding in ordinary F5, measuring
+latency and testing stalls/overflow. Rendering demand/masked capture and
+coordination acquisition remain queued. No owner answer blocks this work.
+
+Verification: full workspace host tests (68 matrix tests), matrix/contracts host
+clippy, `cargo check-userspace`, stock matrix trace/delay feature clippy, layout
+(40 Omega / 125 Rust package edges), format and whitespace checks. QEMU evidence:
+
+- `build/boot-harness-rs/matrix-test`: final recursive IPC run includes eight
+  repeated channel replacements and eight distinct group lifetimes, namespace
+  isolation and denied child injection, followed by the existing confinement proof.
+- `build/boot-harness-rs/desktop/20261024T061011356969Z`: four nested desktops with
+  TCG absolute input, protected close, saved inner data, repeated subtree
+  reclamation/isolation and cold reopening.
+- `build/boot-harness-rs/desktop/20261024T061213681896Z`: Split within Split,
+  independent focus, resize, dirty close, funded refusal and cold persistence.
+- `build/boot-harness-rs/matrix-composition/20261024T061629926144Z`: independent
+  three-peer acquisition, interrupted handoffs, rollback and subtree reclamation.
+
+The desktop stock matrix ELF is 245,280 bytes, about 94% of the current 256 KiB
+stored-object limit. Account for that headroom before adding the producer service.
+No fresh GPU/remote, ARM64 or latency guarantee is implied; recovery/settings and
+management evidence below belongs to the preceding baseline.
+
 Implementation update 2026-10-23: **channels sharing focus groups**, over
 `418ef6ad`. The [input entrance](source-rs/platform/libraries/matrix/world/input/input.rs)
 now separates bounded channel state from group selection. F5's authenticated

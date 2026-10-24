@@ -3,12 +3,19 @@ use super::*;
 
 #[derive(Clone, Copy)]
 pub(super) struct Group {
-    pub id: u32,
+    pub id: Name,
     pub focus: Option<usize>,
+    pub retained: bool,
+    pub retiring: bool,
 }
 impl Group {
     pub const fn empty() -> Self {
-        Self { id: 0, focus: None }
+        Self {
+            id: Name::EMPTY,
+            focus: None,
+            retained: false,
+            retiring: false,
+        }
     }
 }
 
@@ -25,7 +32,7 @@ impl<const N: usize> World<N> {
             .input
             .groups
             .iter()
-            .position(|g| g.id != 0 && g.id == id)
+            .position(|g| g.id.valid() && !g.retiring && g.id == Name::local(id))
             .ok_or(abi::DENIED)?;
         self.select_input_group_index(group, child);
         Ok(())
@@ -36,7 +43,7 @@ impl<const N: usize> World<N> {
             return;
         }
         for (index, stream) in self.input.streams.iter_mut().enumerate() {
-            if stream.id == 0 || stream.group != group {
+            if !stream.id.valid() || stream.retiring || stream.group != group {
                 continue;
             }
             if let Some(old) = selection.focus {

@@ -140,8 +140,12 @@ while keeping independent capture. Group-local delivery order survives recursive
 forwarding; keyboard-only cancellation does not end a pointer's drag. Host proofs
 cover those transitions and refusal to silently reassociate an existing stream.
 The normal desktop uses distinct pointer and keyboard channels in one group.
-General group registration, control grants, retirement/rebinding and all capture
-semantics in this contract are not implemented.
+The owner control endpoint can now create/release groups, register/retire channels
+and select a local target. Group retirement follows channel retirement; replacing
+the last channel alone preserves remembered selection through nested routers.
+Ordinary child connections cannot invoke these operations. General delegated
+control grants, app producer acquisition, live reassociation and all capture
+semantics in this contract remain unimplemented.
 
 Current recursive event forwarding remains an implementation baseline, not a
 mandated production transport. The host routing proofs do not establish a complete

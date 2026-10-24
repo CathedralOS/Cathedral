@@ -151,7 +151,6 @@ impl Parent {
         Ok(())
     }
     pub fn refresh(&mut self, world: &mut World) -> Result<(), Error> {
-        self.refresh_due = false;
         if !self.upstream {
             world.inherit(self.grant);
             return Ok(());
@@ -160,6 +159,10 @@ impl Parent {
             world.inherit(Grant::default());
             return Ok(());
         }
+        if !world.input_ready() {
+            return Ok(());
+        }
+        self.refresh_due = false;
         // Consume one event per service turn so input cannot monopolize dispatch.
         // MORE keeps the next turn runnable without waiting for another hint.
         let reply = match self.call([wire::POLL, 0, 0, 0, 0, 0, 0, 0]) {

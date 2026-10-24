@@ -5,46 +5,73 @@ use super::*;
 pub(super) struct Input {
     streams: [Stream; wire::INPUT_STREAMS],
     groups: [Group; wire::INPUT_GROUPS],
+    last_local_stream: u32,
+    last_local_group: u32,
 }
 impl Input {
     pub const fn empty() -> Self {
         Self {
             streams: [Stream::empty(); wire::INPUT_STREAMS],
             groups: [Group::empty(); wire::INPUT_GROUPS],
+            last_local_stream: 0,
+            last_local_group: 0,
         }
     }
-    fn admit(&mut self, id: u32) -> Result<usize, u64> {
-        if id == 0 {
+    fn admit(&mut self, id: Name) -> Result<usize, u64> {
+        if !id.valid() {
             return Err(abi::INVALID_ARGUMENT);
         }
         if let Some(slot) = self.streams.iter().position(|s| s.id == id) {
-            return Ok(slot);
+            return if self.streams[slot].retiring {
+                Err(abi::PEER_CLOSED)
+            } else {
+                Ok(slot)
+            };
         }
         self.bind(id, id)
     }
-    fn bind(&mut self, id: u32, group: u32) -> Result<usize, u64> {
-        if id == 0 || group == 0 {
+    pub(super) fn bind(&mut self, id: Name, group: Name) -> Result<usize, u64> {
+        if !id.valid() || !group.valid() {
             return Err(abi::INVALID_ARGUMENT);
         }
         if let Some(slot) = self.streams.iter().position(|s| s.id == id) {
-            return if self.groups[self.streams[slot].group].id == group {
+            return if self.streams[slot].retiring {
+                Err(abi::PEER_CLOSED)
+            } else if self.groups[self.streams[slot].group].id == group {
                 Ok(slot)
             } else {
                 Err(abi::BUSY)
             };
         }
+        // Local admission allocates monotonically, so a stale producer name
+        // cannot recreate a retired channel without an unbounded tombstone set.
+        if !id.inherited && id.value <= self.last_local_stream {
+            return Err(abi::PEER_CLOSED);
+        }
         let slot = self
             .streams
             .iter()
-            .position(|s| s.id == 0)
+            .position(|s| !s.id.valid())
             .ok_or(abi::NO_MEMORY)?;
         let group_slot = self
             .groups
             .iter()
             .position(|g| g.id == group)
-            .or_else(|| self.groups.iter().position(|g| g.id == 0))
+            .or_else(|| self.groups.iter().position(|g| !g.id.valid()))
             .ok_or(abi::NO_MEMORY)?;
+        if self.groups[group_slot].retiring {
+            return Err(abi::PEER_CLOSED);
+        }
         self.groups[group_slot].id = group;
+        // Only an explicit upstream group retirement ends an inherited route.
+        // Losing its last channel does not erase the remembered local selection.
+        self.groups[group_slot].retained |= group.inherited;
+        if !id.inherited {
+            self.last_local_stream = id.value;
+        }
+        if !group.inherited {
+            self.last_local_group = self.last_local_group.max(group.value);
+        }
         self.streams[slot] = Stream {
             id,
             group: group_slot,
@@ -72,18 +99,23 @@ impl Input {
 impl<const N: usize> World<N> {
     /// Associate a newly supplied stream before forwarding its first event.
     /// IDs are names within authenticated authority, not capabilities by themselves.
-    /// Repeating the same binding is harmless; changing it requires a future
-    /// explicit retirement/rebinding protocol, not silent reassignment.
+    /// Trusted local adapters supply monotonically increasing fresh names;
+    /// repeating a live binding is harmless. Retired names cannot be recreated.
+    /// Dynamic providers should use registration to allocate those names.
+    /// Reassociation of a live channel is not implemented.
     pub fn bind_input_stream(&mut self, id: u32, group: u32) -> Result<(), u64> {
         if !self.parent.valid() {
             return Err(abi::DENIED);
         }
-        self.input.bind(id, group).map(|_| ())
+        self.reap_input();
+        self.input
+            .bind(Name::local(id), Name::local(group))
+            .map(|_| ())
     }
     /// Entire upstream binding is interrupted; preserve local selections.
     pub fn cancel(&mut self) {
         for index in 0..wire::INPUT_STREAMS {
-            if self.input.streams[index].id != 0 {
+            if self.input.streams[index].id.valid() && !self.input.streams[index].retiring {
                 self.cancel_stream_index(index);
             }
         }
@@ -100,14 +132,14 @@ impl<const N: usize> World<N> {
         if !self.parent.valid() {
             return Err(abi::DENIED);
         }
-        let index = self.input.admit(id)?;
+        let index = self.input.admit(Name::local(id))?;
         self.cancel_stream_index(index);
         Ok(())
     }
     /// A delivered CANCEL already terminates the upstream stream's held state.
     /// Its sender suppresses residual hardware holds until release. Waiting for
     /// those releases here would suppress the first fresh press after recovery.
-    pub(super) fn inherit_stream_cancel(&mut self, id: u32) -> Result<(), u64> {
+    pub(super) fn inherit_stream_cancel(&mut self, id: Name) -> Result<(), u64> {
         if !self.parent.valid() {
             return Err(abi::DENIED);
         }
@@ -121,7 +153,7 @@ impl<const N: usize> World<N> {
         };
         Ok(())
     }
-    pub(super) fn inherit_key_cancel(&mut self, id: u32) -> Result<(), u64> {
+    pub(super) fn inherit_key_cancel(&mut self, id: Name) -> Result<(), u64> {
         let index = self.input.admit(id)?;
         for child in &mut self.children {
             child.cancel_keys(index, id);

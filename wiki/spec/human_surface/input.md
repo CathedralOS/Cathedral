@@ -180,6 +180,10 @@ events through IPC replies, not a reusable cross-process event ring.
 [Input routing](../../../source-rs/platform/libraries/matrix/world/input/input.rs)
 exercises independent local targeting and held-state suppression. These are partial evidence,
 not conformance to all timing, semantic and lifecycle requirements above.
+Owner-only registration now has explicit channel/group retirement notifications;
+retirement drains before reusing table storage. Nested routers pause upstream
+input polling during that drain while continuing local dispatch. Restricted app
+producer grants, discovery and per-producer quotas remain outstanding.
 
 ## Boundaries not selected here
 

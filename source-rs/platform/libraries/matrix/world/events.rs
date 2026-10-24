@@ -1,9 +1,10 @@
 //! Bounded FIFO for one supplied input stream. Overflow cannot erase another stream.
+use super::input::Name;
 use super::wire;
 
 pub(super) struct Events {
     pub channel: u32,
-    pub source: u32,
+    pub source: Name,
     pub group: u16,
     // Sixteen ordinary events plus a reserved keyboard-cancellation boundary.
     queue: [[u64; 5]; 17],
@@ -13,7 +14,7 @@ impl Events {
     pub const fn empty() -> Self {
         Self {
             channel: 0,
-            source: 0,
+            source: Name::EMPTY,
             group: 0,
             queue: [[0; 5]; 17],
             len: 0,
@@ -29,7 +30,7 @@ impl Events {
         self.len.checked_sub(1).map(|i| self.queue[i][4])
     }
     pub fn push(&mut self, [kind, x, y, value]: [u64; 4], order: u64, coalesce: bool) -> bool {
-        debug_assert!(self.channel != 0 && self.source != 0);
+        debug_assert!(self.channel != 0 && self.source.valid());
         if coalesce && kind == wire::POINTER && self.len >= 2 {
             let tail = self.queue[self.len - 1];
             let before = self.queue[self.len - 2];
@@ -53,8 +54,17 @@ impl Events {
         true
     }
     pub fn cancel(&mut self, order: u64) {
-        if self.channel != 0 {
+        if self.channel != 0 && !self.retiring() {
             self.queue[0] = [wire::CANCEL, 0, 0, 0, order];
+            self.len = 1;
+        }
+    }
+    fn retiring(&self) -> bool {
+        self.len == 1 && self.queue[0][0] == wire::RETIRED
+    }
+    pub fn retire(&mut self, order: u64) {
+        if self.channel != 0 {
+            self.queue[0] = [wire::RETIRED, 0, 0, 0, order];
             self.len = 1;
         }
     }
@@ -63,7 +73,7 @@ impl Events {
         let [kind, x, y, value, _order] = self.queue[0];
         self.queue.copy_within(1..self.len, 0);
         self.len -= 1;
-        [
+        let packet = [
             0,
             epoch,
             kind,
@@ -72,10 +82,14 @@ impl Events {
             value,
             self.channel as u64,
             self.group as u64,
-        ]
+        ];
+        if kind == wire::RETIRED {
+            *self = Self::empty();
+        }
+        packet
     }
     pub fn cancel_keys(&mut self, order: u64) {
-        if self.channel == 0 {
+        if self.channel == 0 || self.retiring() {
             return;
         }
         let mut keep = 0;

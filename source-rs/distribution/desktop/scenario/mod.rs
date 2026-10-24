@@ -3,5 +3,6 @@
 mod checks;
 mod loss;
 mod recovery;
+mod registration;
 
 include!("scenario.rs");

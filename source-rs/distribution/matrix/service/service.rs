@@ -152,7 +152,7 @@ pub fn run(environment: Environment) -> Result<(), Error> {
         // Ready mutations get their turn before another poll. A queue waiting
         // on independent storage must not prevent consuming interaction wakes.
         if !parent.upstream_busy() && !deferred.has_ready(parent) {
-            parent.refresh_notified()?;
+            parent.refresh_notified(world)?;
         }
         let (handles, mut deadline) = children.wait(
             parent.upstream_busy() || parent.storing(),
@@ -189,7 +189,8 @@ pub fn run(environment: Environment) -> Result<(), Error> {
             extra[count] = handle;
             count += 1;
         }
-        if !parent.upstream_busy() && parent.refresh_due {
+        let input_ready = world.input_ready();
+        if !parent.upstream_busy() && parent.refresh_due && input_ready {
             deadline = Some(cathedral_user_runtime::time::now()?);
         }
         #[cfg(feature = "interaction-delay")]
@@ -207,6 +208,7 @@ pub fn run(environment: Environment) -> Result<(), Error> {
             }));
         }
         if !parent.upstream_busy()
+            && input_ready
             && let Some(wake) = parent.wake
         {
             extra[count] = wake;

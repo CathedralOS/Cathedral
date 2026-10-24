@@ -35,6 +35,7 @@ pub fn run() -> u64 {
     fixture.input();
     fixture.recovery();
     fixture.loss();
+    fixture.registration();
     cathedral_user_runtime::write(b"Cathedral matrix: two identical worlds, local-only views, attenuated input and recovery passed\n").unwrap();
     loop {
         assert_eq!(

@@ -62,6 +62,17 @@ independent groups. Overflow cancels that stream across its prior recipients;
 unrelated streams and children that never received it remain unaffected. Channel
 and group names are local to the child's binding and confer no injection authority.
 
+[Registration](../../platform/libraries/matrix/world/input/registration.rs) is
+currently owner-only. Local and inherited channels have separate namespaces;
+retired channel slots remain reserved until every recipient consumes the boundary
+or loses its binding. Groups retire separately so channel replacement preserves
+selection. The [recursive fixture](../desktop/scenario/registration.rs) exercises
+repeated lifetimes and denies these operations to ordinary child endpoints.
+Restricted producer acquisition and quotas remain unimplemented. Stock and Split
+pause upstream polling while descendant retirement drains, continuing local
+dispatch. This can delay unrelated upstream input behind a slow recipient; it
+does not establish an input latency or denial-of-service isolation guarantee.
+
 Admitted children receive an empty coalesced wake hint over a separate endpoint.
 The service starts at most one identified upstream snapshot per turn through
 [polling.rs](service/parent/polling.rs), then continues dispatching local work.

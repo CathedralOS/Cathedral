@@ -8,9 +8,19 @@ impl<const N: usize> World<N> {
         y: u64,
         buttons: u64,
     ) -> Result<(), u64> {
+        self.pointer_named(Name::local(channel), x, y, buttons)
+    }
+    pub(in crate::world) fn pointer_named(
+        &mut self,
+        channel: Name,
+        x: u64,
+        y: u64,
+        buttons: u64,
+    ) -> Result<(), u64> {
         if !self.parent.valid() || buttons > 7 {
             return Err(abi::DENIED);
         }
+        self.reap_input();
         let index = self.input.admit(channel)?;
         let route = &mut self.input.streams[index];
         if route.blocked {
@@ -53,7 +63,13 @@ impl<const N: usize> World<N> {
                 let r = child.rect.unwrap();
                 let x = x.saturating_sub(r.x).min(child.grant.width - 1);
                 let y = y.saturating_sub(r.y).min(child.grant.height - 1);
-                if !child.push(index, channel, route.group, [wire::POINTER, x, y, buttons]) {
+                if !child.push(
+                    index,
+                    channel,
+                    route.group,
+                    self.input.groups[route.group].id,
+                    [wire::POINTER, x, y, buttons],
+                )? {
                     // This source may hold keys in a different child from the
                     // hovered pointer target. Interrupt every recipient.
                     self.cancel_stream_index(index);

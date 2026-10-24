@@ -19,8 +19,8 @@ impl Parent {
             .as_ref()
             .map(|p| (self.pair.unwrap().1, (!p.late).then_some(p.deadline)))
     }
-    pub fn refresh_notified(&mut self) -> Result<(), Error> {
-        if !self.upstream || self.wake.is_none() || self.pair.is_none() {
+    pub fn refresh_notified(&mut self, world: &mut World) -> Result<(), Error> {
+        if !self.upstream || self.wake.is_none() || self.pair.is_none() || !world.input_ready() {
             return Ok(());
         }
         assert!(!self.upstream_busy());

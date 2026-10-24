@@ -1,4 +1,5 @@
 //! Child-local extents, epochs and queues. Sibling changes cannot advance an epoch.
+use super::input::Name;
 use super::*;
 #[derive(Clone, Copy, Default)]
 pub struct Rect {
@@ -33,6 +34,8 @@ pub(super) struct Child {
     next_stream: usize,
     next_input_name: u32,
     group_names: [u16; wire::INPUT_GROUPS],
+    group_sources: [Name; wire::INPUT_GROUPS],
+    group_retired: [bool; wire::INPUT_GROUPS],
     next_group_name: u16,
     next_event: u64,
     group_last_event: [u64; wire::INPUT_GROUPS],
@@ -60,6 +63,8 @@ impl Child {
             next_stream: 0,
             next_input_name: 0,
             group_names: [0; wire::INPUT_GROUPS],
+            group_sources: [Name::EMPTY; wire::INPUT_GROUPS],
+            group_retired: [false; wire::INPUT_GROUPS],
             next_group_name: 0,
             next_event: 0,
             group_last_event: [0; wire::INPUT_GROUPS],
@@ -83,6 +88,8 @@ impl Child {
         self.next_stream = 0;
         self.next_input_name = 0;
         self.group_names = [0; wire::INPUT_GROUPS];
+        self.group_sources = [Name::EMPTY; wire::INPUT_GROUPS];
+        self.group_retired = [false; wire::INPUT_GROUPS];
         self.next_group_name = 0;
         self.next_event = 0;
         self.group_last_event = [0; wire::INPUT_GROUPS];
@@ -106,30 +113,43 @@ impl Child {
         }
         [0, g.epoch, g.width, g.height, g.keys, 0, 0, 0]
     }
-    pub fn push(&mut self, index: usize, channel: u32, group: usize, event: [u64; 4]) -> bool {
+    pub fn push(
+        &mut self,
+        index: usize,
+        channel: Name,
+        group: usize,
+        group_name: Name,
+        event: [u64; 4],
+    ) -> Result<bool, u64> {
         if !self.grant.valid() {
-            return true;
+            return Ok(true);
         }
         self.notify = true;
         self.next_event = self.next_event.checked_add(1).expect("input event order");
         let queue = &mut self.queues[index];
-        if queue.source == 0 {
+        if !queue.source.valid() {
             // Child-local names reveal neither ancestor IDs nor sibling traffic.
-            self.next_input_name += 1; // At most INPUT_STREAMS names per view binding.
-            queue.channel = self.next_input_name;
-            queue.source = channel;
-            if self.group_names[group] == 0 {
-                self.next_group_name += 1;
+            let next_channel = self.next_input_name.checked_add(1).ok_or(abi::NO_MEMORY)?;
+            if self.group_sources[group] != group_name {
+                self.next_group_name = self
+                    .next_group_name
+                    .checked_add(1)
+                    .filter(|name| *name <= 0x7fff)
+                    .ok_or(abi::NO_MEMORY)?;
                 self.group_names[group] = self.next_group_name;
+                self.group_sources[group] = group_name;
             }
+            self.next_input_name = next_channel;
+            queue.channel = next_channel;
+            queue.source = channel;
             queue.group = self.group_names[group];
         }
         debug_assert_eq!(queue.source, channel);
         let coalesce = queue.last_order() == Some(self.group_last_event[group]);
         self.group_last_event[group] = self.next_event;
-        queue.push(event, self.next_event, coalesce)
+        Ok(queue.push(event, self.next_event, coalesce))
     }
-    pub fn cancel_stream(&mut self, index: usize, channel: u32) {
+    pub fn cancel_stream(&mut self, index: usize, channel: Name) {
         let queue = &mut self.queues[index];
         if queue.source == channel {
             self.next_event = self.next_event.checked_add(1).expect("input event order");
@@ -140,6 +160,26 @@ impl Child {
             self.notify = true;
         }
     }
+    pub fn retains_input(&self, index: usize, channel: Name) -> bool {
+        self.queues[index].source == channel
+    }
+    pub fn retire_stream(&mut self, index: usize, channel: Name) {
+        if self.queues[index].source == channel {
+            self.next_event = self.next_event.checked_add(1).expect("input event order");
+            self.queues[index].retire(self.next_event);
+            self.group_last_event.fill(0);
+            self.notify = true;
+        }
+    }
+    pub fn retire_input_group(&mut self, index: usize, group: Name) {
+        if self.group_sources[index] == group {
+            self.group_retired[index] = true;
+            self.notify = true;
+        }
+    }
+    pub fn retains_input_group(&self, index: usize, group: Name) -> bool {
+        self.group_sources[index] == group && self.group_retired[index]
+    }
     pub fn cancel(&mut self) {
         for queue in &mut self.queues {
             self.next_event = self.next_event.checked_add(1).expect("input event order");
@@ -149,6 +189,25 @@ impl Child {
         self.notify = true;
     }
     pub fn next(&mut self) -> wire::Packet {
+        // Group retirement is admitted only after all its channel queues drain.
+        // Up to INPUT_GROUPS control boundaries precede independent group input.
+        if let Some(index) = self.group_retired.iter().position(|ended| *ended) {
+            let group = self.group_names[index];
+            self.group_retired[index] = false;
+            self.group_names[index] = 0;
+            self.group_sources[index] = Name::EMPTY;
+            self.group_last_event[index] = 0;
+            return [
+                0,
+                self.grant.epoch,
+                wire::GROUP_RETIRED,
+                0,
+                0,
+                0,
+                0,
+                group as u64,
+            ];
+        }
         // Only a group's earliest event is eligible. Round-robin chooses among
         // eligible streams, so independent groups progress without reordering
         // a selecting pointer and a subsequent key in the same group.
@@ -167,7 +226,7 @@ impl Child {
         }
         [0, self.grant.epoch, wire::NONE, 0, 0, 0, 0, 0]
     }
-    pub fn cancel_keys(&mut self, index: usize, channel: u32) {
+    pub fn cancel_keys(&mut self, index: usize, channel: Name) {
         let queue = &mut self.queues[index];
         if queue.source == channel {
             self.next_event = self.next_event.checked_add(1).expect("input event order");
@@ -184,7 +243,9 @@ impl Child {
             | (event[7] << 17)
             | (event[5] << 8)
             | (event[6] << 32)
-            | if self.queues.iter().any(events::Events::pending) {
+            | if self.queues.iter().any(events::Events::pending)
+                || self.group_retired.iter().any(|ended| *ended)
+            {
                 wire::MORE
             } else {
                 0
@@ -198,5 +259,45 @@ impl Child {
 impl Default for Child {
     fn default() -> Self {
         Self::empty()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn exhausted_compact_names_refuse_instead_of_wrapping_or_publishing() {
+        let mut child = Child::empty();
+        child.rect = Some(Rect {
+            x: 0,
+            y: 0,
+            width: 20,
+            height: 20,
+        });
+        child.refresh(
+            Grant {
+                epoch: 1,
+                width: 20,
+                height: 20,
+                keys: 0,
+            },
+            false,
+        );
+        for (channel, group) in [(u32::MAX, 0), (0, 0x7fff)] {
+            child.next_input_name = channel;
+            child.next_group_name = group;
+            assert_eq!(
+                child.push(
+                    0,
+                    Name::local(1),
+                    0,
+                    Name::local(1),
+                    [wire::POINTER, 1, 1, 1]
+                ),
+                Err(abi::NO_MEMORY)
+            );
+            assert!(!child.queues[0].source.valid());
+            assert_eq!(child.next()[2], wire::NONE);
+        }
     }
 }

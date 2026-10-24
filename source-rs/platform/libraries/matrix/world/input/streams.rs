@@ -1,8 +1,10 @@
 //! One independently routed stream. IDs are scoped to the supplying connection.
+use super::Name;
 #[derive(Clone, Copy)]
 pub(super) struct Stream {
-    pub id: u32,
+    pub id: Name,
     pub group: usize,
+    pub retiring: bool,
     pub capture: Option<usize>,
     pub buttons: u64,
     pub blocked: bool,
@@ -12,8 +14,9 @@ pub(super) struct Stream {
 impl Stream {
     pub const fn empty() -> Self {
         Self {
-            id: 0,
+            id: Name::EMPTY,
             group: 0,
+            retiring: false,
             capture: None,
             buttons: 0,
             blocked: false,

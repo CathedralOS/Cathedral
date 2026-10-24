@@ -11,7 +11,7 @@ dispatcher and cannot select these operations. Both the stock matrix and the
 [independent three-peer program](../../../distribution/lab/matrix-composition/README.md)
 use this machinery with the existing runtime IPC server.
 
-- [Input](world/input/input.rs) admits up to four authenticated upstream streams,
+- [Input](world/input/input.rs) admits up to four local or inherited streams,
   each with separate capture and held-input state. Explicit
   [group associations](world/input/groups.rs) let several channels share selection.
   Pointer hit testing
@@ -68,9 +68,29 @@ cancellation and overflow, child-local names, fair drain, recursive forwarding
 and fresh presses after cancellation. Group proofs cover a keyboard and two
 pointers sharing selection without sharing capture, nested click-before-key
 ordering, keyboard-only cancellation and refusal to silently change associations.
-This is a transport foundation: producer registration/retirement, control grants,
-dynamic rebinding, descriptor discovery and multiple desktop cursors are not
-implemented. The [F5 source adapter](../../../distribution/matrix/service/requests/source.rs)
+[Registration](world/input/registration.rs) now allocates local channels/groups
+through the authenticated owner control connection. Ordinary child interaction
+connections cannot register, select or inject by naming them. The internal
+[name](world/input/names.rs) includes local versus inherited origin; identical
+compact names on those boundaries do not share capture, held state or selection.
+`RETIRED` discards one channel's pending input and ends its holds. Its slot remains
+reserved until every receiving child consumes that boundary or loses its binding.
+`GROUP_RETIRED` separately ends a group after its channels have drained; merely
+replacing the last channel preserves remembered selection. Fresh identities
+increase monotonically within a view binding; compact-name exhaustion refuses.
+App reception frees retired pointer entries. Tests churn channels and groups
+beyond the live-table capacity without rebinding geometry.
+
+Stock and Split routers call `input_ready` before polling upstream. While a
+retirement drains, local requests continue and another upstream input snapshot
+waits. This bounds intermediate tables but introduces head-of-line backpressure
+on that shared upstream input path; it is not a latency/isolation guarantee for
+arbitrarily slow recipients. A consumer must keep draining lifecycle events.
+
+This is still a transport foundation: restricted app producer acquisition,
+per-producer admission quotas and disconnect cleanup, delegated group control,
+dynamic reassociation, descriptor discovery and multiple desktop cursors are
+not implemented. Do not lend an owner control endpoint to an app as a shortcut. The [F5 source adapter](../../../distribution/matrix/service/requests/source.rs)
 supplies separate pointer and keyboard channels in one group;
 no child receives injection authority from an ID in a request.
 The independent program additionally exercises real IPC, malformed requests,

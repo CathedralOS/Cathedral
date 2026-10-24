@@ -1,6 +1,9 @@
 //! Apply one parent snapshot before routing its local input into this world.
 use super::*;
 impl<const N: usize> World<N> {
+    /// Call input_ready before issuing another upstream poll. While retirement
+    /// drains, continue servicing local children; do not discard their boundaries
+    /// or fetch a replacement channel that cannot yet fit in the bounded table.
     pub fn inherit_poll(&mut self, reply: wire::Packet) -> Grant {
         let grant = if reply[0] == 0 {
             Grant {
@@ -13,6 +16,7 @@ impl<const N: usize> World<N> {
             Grant::default()
         };
         self.inherit(grant);
+        self.reap_input();
         self.surface_capacity(if grant.valid() {
             (reply[4] >> wire::SURFACE_BITS) as usize
         } else {
@@ -20,17 +24,22 @@ impl<const N: usize> World<N> {
         });
         if grant.valid() {
             let event = wire::poll_event(reply);
-            let channel = u32::try_from(event[6]).unwrap_or(0);
-            if event[2] != wire::NONE && self.bind_input_stream(channel, event[7] as u32).is_err() {
+            let channel = input::Name::upstream(u32::try_from(event[6]).unwrap_or(0));
+            let group = input::Name::upstream(event[7] as u32);
+            if !matches!(event[2], wire::NONE | wire::GROUP_RETIRED)
+                && self.input.bind(channel, group).is_err()
+            {
                 self.inherit(Grant::default());
                 return Grant::default();
             }
             let result = match event[2] {
                 wire::NONE => Ok(()),
-                wire::POINTER => self.pointer_stream(channel, event[3], event[4], event[5]),
-                wire::KEY => self.key_stream(channel, event[3], event[4]),
+                wire::POINTER => self.pointer_named(channel, event[3], event[4], event[5]),
+                wire::KEY => self.key_named(channel, event[3], event[4]),
                 wire::CANCEL => self.inherit_stream_cancel(channel),
                 wire::CANCEL_KEYS => self.inherit_key_cancel(channel),
+                wire::RETIRED => self.retire_named(channel),
+                wire::GROUP_RETIRED if !channel.valid() => self.retire_group_named(group),
                 _ => Err(abi::INVALID_ARGUMENT),
             };
             if result.is_err() {

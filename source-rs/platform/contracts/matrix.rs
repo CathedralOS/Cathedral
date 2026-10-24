@@ -34,7 +34,8 @@ pub const MORE: u64 = 1 << 16;
 /// Experimental multiplexed input: nonzero u32 names scoped to the supplying
 /// interaction connection/view binding, not process IDs or injection authority.
 /// Each event has its stream in NEXT word six / POLL word five's high 32 bits.
-/// A stream name must not be reused within a binding. NONE has stream zero.
+/// A stream name must not be reused within a binding. NONE and GROUP_RETIRED
+/// have stream zero; GROUP_RETIRED still carries its former group name.
 /// Four streams with sixteen ordinary queued events each are the current lab
 /// limits; one extra slot reserves a keyboard-cancellation boundary.
 /// NEXT word seven / POLL tag bits 17..31 carry the child-local focus group.
@@ -43,8 +44,11 @@ pub const MORE: u64 = 1 << 16;
 /// groups are fairly drained without a cross-group ordering promise. CANCEL clears
 /// that receiver stream's held state. The sender suppresses residual holds until
 /// release, so the receiver must not wait for a release after CANCEL. A changed
-/// view epoch resets every stream binding. This partial encoding has no channel
-/// directory or producer registration yet.
+/// view epoch resets every stream binding. RETIRED ends one channel permanently;
+/// GROUP_RETIRED follows the retirement of every channel in that group. Reclaim
+/// receiver state on these boundaries, not by reinterpreting an old name.
+/// This partial encoding has owner-only registration but no app producer service
+/// acquisition, per-producer quotas or channel directory yet.
 pub const INPUT_STREAMS: usize = 4;
 pub const INPUT_GROUPS: usize = 4;
 /// Existing authenticated single-source adapter; no ambient child authority.
@@ -76,6 +80,13 @@ pub const KEY: u64 = 2;
 pub const CANCEL: u64 = 3;
 /// End only this stream's keyboard interaction; pointer hold/capture survives.
 pub const CANCEL_KEYS: u64 = 4;
+/// Permanently ends this channel binding, including held keys/buttons. Pending
+/// events for it are discarded. Receivers drop its local state, and must not
+/// interpret a later channel as this one. Names remain non-reusable in a view.
+pub const RETIRED: u64 = 5;
+/// Ends a focus-group identity after all its channels have retired. Channel is
+/// zero; the group field names the retired group. A replacement gets a fresh name.
+pub const GROUP_RETIRED: u64 = 6;
 pub const KEY_MASK: u64 = 0x1f; // Existing navigation-only grants.
 pub const VALID_KEY_MASK: u64 = crate::input::KEY_MASK;
 // Owner connection only. Child requests using these opcodes are uniformly denied.
@@ -85,6 +96,16 @@ pub const REVOKE: u64 = 102; // local child slot
 pub const POINTER_SOURCE: u64 = 103; // x,y,buttons; physical/root adapter only
 pub const KEY_SOURCE: u64 = 104; // key,state; physical/root adapter only
 pub const HEALTH: u64 = 105;
+/// Provider-owner input lifecycle. These commands require the existing owner
+/// control connection; ordinary interaction/broker connections cannot use them.
+/// CREATE replies [0, fresh local name, 0..]. Names never grant authority.
+pub const INPUT_GROUP_CREATE: u64 = 130; // all zero
+pub const INPUT_GROUP_RELEASE: u64 = 131; // group,0..; BUSY while channels retain it
+pub const INPUT_CHANNEL_CREATE: u64 = 132; // retained group,0..
+pub const INPUT_CHANNEL_RETIRE: u64 = 133; // channel,0..; ends held/queued input
+pub const INPUT_POINTER: u64 = 134; // registered channel,x,y,buttons,0..
+pub const INPUT_KEY: u64 = 135; // registered channel,key,state,0..
+pub const INPUT_SELECT: u64 = 136; // local group, child slot + 1 (zero clears),0..
 pub const SPAWN: u64 = 106; // local child slot, current launch index, loan bitmask, argument
 pub const STOP: u64 = 107; // local child slot; return after complete subtree reclamation
 /// Host to child over its control link before a lifecycle decision: [LOSS, 0..].

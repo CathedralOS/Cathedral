@@ -42,11 +42,17 @@ impl Pointers {
             self.reset();
             self.epoch = event[1];
         }
-        if !matches!(event[2], wire::POINTER | wire::CANCEL) {
+        if !matches!(event[2], wire::POINTER | wire::CANCEL | wire::RETIRED) {
             return None;
         }
         let name = u32::try_from(event[6]).ok().filter(|&name| name != 0)?;
         let existing = self.streams.iter().position(|p| p.name == name);
+        if event[2] == wire::RETIRED {
+            if let Some(index) = existing {
+                self.streams[index] = Pointer::default();
+            }
+            return None;
+        }
         if event[2] == wire::CANCEL {
             if let Some(index) = existing {
                 self.streams[index].buttons = 0;

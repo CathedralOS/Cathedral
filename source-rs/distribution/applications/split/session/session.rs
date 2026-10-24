@@ -39,7 +39,7 @@ pub fn run(mut services: Services) -> Result<(), Error> {
             Err(e) => return Err(e),
         }
         for _ in 0..8 {
-            if !refresh {
+            if !refresh || !world.input_ready() {
                 break;
             }
             let snapshot = upstream::call(interaction.pair, [wire::POLL, 0, 0, 0, 0, 0, 0, 0])?;
@@ -116,7 +116,7 @@ pub fn run(mut services: Services) -> Result<(), Error> {
             }
             survey = None;
         }
-        if refresh {
+        if refresh && world.input_ready() {
             continue;
         }
         let mut wake = [interaction.wake; 4];

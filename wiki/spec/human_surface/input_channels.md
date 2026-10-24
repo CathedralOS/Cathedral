@@ -4,7 +4,7 @@
 | --- | --- |
 | Contract status | Current |
 | Specification coverage | Partial |
-| Implementation coverage | None |
+| Implementation coverage | Partial |
 | Last reviewed | 2026-10-23 |
 
 ## Channel model
@@ -155,8 +155,14 @@ channel and group names. Channels may share selection while keeping independent
 capture/held state. Queues preserve ordering across channels in one group and
 fairly serve independent groups. Its host tests exercise isolation, overflow,
 selective cancellation and nested forwarding. Names are not reused within a view
-binding. This foundation does not yet expose producer registration, retirement,
-discovery or reassociation of an existing stream. F5 supplies a pointer channel
+binding. Owner-authorized registration and explicit channel/group retirement now
+reclaim bounded table slots without reusing identities. Local and inherited names
+have separate internal namespaces. Host and IPC proofs cover repeated retirement,
+receiver cleanup and retained group selection between channel replacements.
+Upstream polling pauses while descendant retirement boundaries drain; this
+introduces backpressure on that shared path, not a production latency guarantee.
+Restricted app producer acquisition, per-producer quotas/disconnect cleanup,
+discovery and reassociation of an existing stream remain unimplemented. F5 supplies a pointer channel
 and a keyboard channel in one group. Shared app-side reception tracks pointer
 edges separately; this does not impose separate document/player state on apps.
 The [pointer lab](../../../source-rs/distribution/lab/compositor/POINTERS.md) is

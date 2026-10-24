@@ -3,6 +3,14 @@ use super::*;
 use cathedral_platform_contracts::input as keys;
 impl<const N: usize> World<N> {
     pub fn key_stream(&mut self, channel: u32, key: u64, state: u64) -> Result<(), u64> {
+        self.key_named(Name::local(channel), key, state)
+    }
+    pub(in crate::world) fn key_named(
+        &mut self,
+        channel: Name,
+        key: u64,
+        state: u64,
+    ) -> Result<(), u64> {
         if !self.parent.valid() {
             return Err(abi::DENIED);
         }
@@ -17,6 +25,7 @@ impl<const N: usize> World<N> {
         {
             return Err(abi::INVALID_ARGUMENT);
         }
+        self.reap_input();
         let index = self.input.admit(channel)?;
         let route = &mut self.input.streams[index];
         let bit = 1 << (key - 1);
@@ -38,7 +47,13 @@ impl<const N: usize> World<N> {
         if let Some(slot) = self.input.groups[route.group].focus {
             let child = &mut self.children[slot];
             if child.grant.keys & bit != 0
-                && !child.push(index, channel, route.group, [wire::KEY, key, state, 0])
+                && !child.push(
+                    index,
+                    channel,
+                    route.group,
+                    self.input.groups[route.group].id,
+                    [wire::KEY, key, state, 0],
+                )?
             {
                 self.cancel_stream_index(index);
             }

@@ -16,8 +16,10 @@ The [matrix input entrance](platform/libraries/matrix/world/input/input.rs) now
 separates four bounded channels from their focus groups. F5 supplies keyboard
 and pointer channels in one group; nested matrices preserve group association
 and event order. Pointer capture and app button edges remain channel-local.
-This is a routing foundation: producer registration, channel retirement,
-group-control grants and a visible independent synthetic producer remain pending.
+The owner control connection can register and retire channels/groups; table slots
+are reclaimed after explicit retirement events drain. Local and inherited names
+are separate. Restricted producer acquisition, per-producer quotas/disconnect
+cleanup, delegated group control and a visible synthetic producer remain pending.
 
 ## Default desktop
 
@@ -529,7 +531,7 @@ These profiles are engineering proofs, not the default OS boot.
 | [Recursive launch loans](kernel/core/user_tasks/lifecycle/supervision/delegation.rs) | Matrices own direct children, lend budgets further, reclaim subtrees | `--ipc-test` plus matrix replacement tests | Static launch loans plus executable-authorized process pools; fixed account arena |
 | [Executable-authorized admission](kernel/core/user_tasks/admission/pool/README.md) | Apps and the matrix desktop construct descendants from code authority and a process pool; the shell admits code from sealed objects read out of the store | `--admission-test`: recursive launch, exhaustion, load rollback, retained funding, sibling survival; `--matrix-storage-test` and `desktop_test.py` admit programs from the realm | Boot catalogue or a sealed object, admitted once per reservation; twelve accounts; device grants remain static |
 | [Matrix lifecycle](distribution/matrix/service/children/children.rs) | Same provider above apps and another matrix | `--matrix-test`: replacement preserves an outside sibling | Stock desktop has five direct slots; headless fixture uses two; distribution owns policy |
-| [Local viewport, focus and capture](platform/libraries/matrix/world/world.rs) | Nested and sibling visible apps | Host policy tests; `--matrix-test`; `--matrix-desktop-test` physical focus | Four channels/groups, bounded physical keys and per-stream queues; tagged asynchronous upstream polling; no producer registration yet |
+| [Local viewport, focus and capture](platform/libraries/matrix/world/world.rs) | Nested and sibling visible apps | Host policy tests; `--matrix-test`; `--matrix-desktop-test` physical focus | Four channels/groups, bounded physical keys and per-stream queues; tagged asynchronous upstream polling; owner-only registration; restricted producer service pending |
 | [Owned surfaces](platform/libraries/matrix/world/surface/README.md) | App rectangles cross actual matrix boundaries to the existing compositor | Host quota/name/clipping/stacking tests; scanout removal and teardown checks | Sixteen surfaces; bounded immutable RGBX images; no text surfaces or vblank guarantees |
 | [Retained compositor and hardware input](platform/services/display/compositor/compositor.rs) | Root adapter uses existing scanout/cursor and shared input decoders | `--matrix-desktop-test`; `--session-test --pressure` | Existing richer scenes/hosting remain in the earlier session fixture |
 | [Private/shared page lifetime](kernel/core/user_tasks/memory/README.md) | Matrix bitmaps and existing rendering/storage labs | Host transactions; both CPU boot proofs; matrix desktop | Four shared-region slots per task, grants capped at 64 pages; sealed objects only; original sponsor retained |

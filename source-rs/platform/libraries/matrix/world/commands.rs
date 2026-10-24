@@ -6,6 +6,9 @@ impl<const N: usize> World<N> {
     /// Placement and revocation within already supplied authority. Binding,
     /// stacking allocation and launch/recovery policy remain the owner's choices.
     pub fn owner_command(&mut self, words: wire::Packet) -> wire::Packet {
+        if (wire::INPUT_GROUP_CREATE..=wire::INPUT_SELECT).contains(&words[0]) {
+            return self.input_owner_command(words);
+        }
         let result = match words {
             [wire::PLACE, child, x, y, width, height, keys, 0] if child < N as u64 => self.place(
                 child as usize,
@@ -29,13 +32,15 @@ impl<const N: usize> World<N> {
     /// Input injected by a trusted upstream source, not necessarily hardware.
     /// Coordinates are clamped by this world's input rules; no child may call this.
     pub fn source_command(&mut self, words: wire::Packet) -> wire::Packet {
-        match words {
+        let result = match words {
             [wire::POINTER_SOURCE, x, y, buttons @ 0..=7, 0, 0, 0, 0] => {
-                self.pointer(x, y, buttons)
+                self.pointer_stream(wire::SINGLE_INPUT_STREAM, x, y, buttons)
             }
-            [wire::KEY_SOURCE, key, state, 0, 0, 0, 0, 0] => self.key(key, state),
+            [wire::KEY_SOURCE, key, state, 0, 0, 0, 0, 0] => {
+                self.key_stream(wire::SINGLE_INPUT_STREAM, key, state)
+            }
             _ => return wire::error(abi::DENIED),
-        }
-        [0; 8]
+        };
+        wire::error(result.err().unwrap_or(0))
     }
 }
