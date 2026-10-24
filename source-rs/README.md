@@ -16,9 +16,10 @@ The desktop builds its UI from checked-in
 Build the supported Omega compiler in `build/omega-ui/compiler`, set `OMEGA_BIN`
 to it elsewhere, or put it on PATH. The
 [UI build guide](../tools/omega-ui/README.md#build) includes the producer and build commands.
-The installed [Colors](../source/distribution/applications/colors/README.md) and
-[Notes](../source/distribution/applications/notes/README.md) apps own their behavior
-in Omega. A reusable
+The installed [Colors](../source/distribution/applications/colors/README.md),
+[Notes](../source/distribution/applications/notes/README.md) and
+[chooser](../source/distribution/applications/chooser/README.md) apps own their
+sessions, input, storage behavior and presentation in Omega. A reusable
 [platform host](platform/libraries/omega-app/README.md) supplies its existing
 scoped service transport. The kernel and remaining desktop applications are
 still Rust; this is an incremental application migration.

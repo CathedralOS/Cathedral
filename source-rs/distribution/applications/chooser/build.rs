@@ -3,12 +3,19 @@ fn main() {
     for key in ["OMEGA_BIN", "PYTHON"] {
         println!("cargo:rerun-if-env-changed={key}");
     }
+    prepare("native", "OMEGA_APP");
+    prepare("session-native", "OMEGA_CHOOSER_APP");
+}
+fn prepare(package: &str, prefix: &str) {
     let root = PathBuf::from(env::var_os("CARGO_MANIFEST_DIR").unwrap()).join("../../../..");
     let script = root.join("tools/omega-component/build.py");
     println!("cargo:rerun-if-changed={}", script.display());
     let output = Command::new(env::var_os("PYTHON").unwrap_or_else(|| "python".into()))
         .arg(script)
-        .arg(root.join("source/distribution/applications/chooser/native"))
+        .arg(
+            root.join("source/distribution/applications/chooser")
+                .join(package),
+        )
         .arg("--cargo")
         .env("PYTHONIOENCODING", "utf-8")
         .output()
@@ -28,11 +35,11 @@ fn main() {
         println!("cargo:rerun-if-changed={}", directory.join(name).display());
     }
     println!(
-        "cargo:rustc-env=OMEGA_APP_ASSEMBLY={}",
+        "cargo:rustc-env={prefix}_ASSEMBLY={}",
         directory.join("component.S").display()
     );
     println!(
-        "cargo:rustc-env=OMEGA_APP_CONSTANTS={}",
+        "cargo:rustc-env={prefix}_CONSTANTS={}",
         directory.join("component.rs").display()
     );
 }

@@ -16,11 +16,14 @@ test = false
 bench = false
 
 [features]
-recovery-probes = []
-launcher-startup-fault = []
-picker-startup-fault = []
+rust-probes = []
+recovery-probes = ["rust-probes"]
+launcher-startup-fault = ["rust-probes"]
+picker-startup-fault = ["rust-probes"]
+trace-storage = ["cathedral-omega-app/trace-storage"]
 
 [dependencies]
+cathedral-omega-app.workspace = true
 cathedral-desktop-matrix-contracts.workspace = true
 cathedral-platform-contracts.workspace = true
 

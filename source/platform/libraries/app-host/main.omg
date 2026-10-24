@@ -11,6 +11,7 @@ public const CONTROL: u64 = 7u64;
 public const WRITE: u64 = 8u64;
 public const STAGE: u64 = 9u64;
 public const DISCARD: u64 = 10u64;
+public const CLOCK: u64 = 11u64;
 public machine message(p: &mut [u64; 4096], op: u64, a: u64, b: u64, c: u64, d: u64, e: u64, f: u64, g: u64) {
     p[0] = op; p[1] = a; p[2] = b; p[3] = c; p[4] = d; p[5] = e; p[6] = f; p[7] = g; p[8] = 0u64; p[11] = 0u64;
 }

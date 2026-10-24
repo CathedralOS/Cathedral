@@ -1,0 +1,74 @@
+// Each image is staged in bounded chunks before a single presentation request.
+use host::main;
+use protocol::main;
+use state;
+use transport;
+use rendering::rendering;
+use rendering::pixels;
+public machine tile_image(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+    transition s.rank < 6u64 { true -> tile(s, p) _ -> (EXIT) }
+    state tile(s: &mut State, p: &mut [u64; 4096]) -> u64 requires s.rank < 6u64 {
+        s.image_kind = 2u64 - (s.picker as u64); s.image_index = s.q[86u64 + s.rank];
+        s.image_surface = s.surfaces[s.rank + 1u64]; s.rank = add(s.rank, 1u64);
+        s.image_x = s.q[83]; s.image_y = s.q[84]; s.image_width = s.q[81]; s.image_height = s.q[82]; begin_image(s, p)
+    }
+}
+public machine settings_image(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+    transition s.rank < 3u64 { true -> panel(s, p) _ -> (EXIT) }
+    state panel(s: &mut State, p: &mut [u64; 4096]) -> u64 requires s.rank < 3u64 {
+        let row: u64 = s.rank; s.image_kind = 3u64; s.image_index = row; s.image_surface = s.surfaces[row + 1u64];
+        s.image_x = add(subtract(s.width, 512u64) / 2u64, row * 176u64); s.image_y = 8u64;
+        s.image_width = 160u64; s.image_height = 64u64; s.rank = row + 1u64; begin_image(s, p)
+    }
+}
+public machine management_image(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+    transition s.rank < 3u64 { true -> panel(s, p) _ -> (EXIT) }
+    state panel(s: &mut State, p: &mut [u64; 4096]) -> u64 requires s.rank < 3u64 {
+        let row: u64 = s.rank; s.image_kind = 4u64; s.image_index = row; s.image_surface = s.surfaces[row + 1u64];
+        s.image_x = add(subtract(s.width, 572u64) / 2u64, row * 196u64); s.image_y = 16u64;
+        s.image_width = 180u64; s.image_height = management_height(row); s.rank = row + 1u64; begin_image(s, p)
+    }
+}
+machine management_height(row: u64) -> u64 { transition row == 0u64 { true -> (48u64) _ -> (32u64) } }
+public machine footer_image(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+    let offset: u64 = (footer_managed(s) as u64) * 24u64;
+    s.image_kind = 5u64; s.image_index = 0u64; s.image_width = 180u64; s.image_height = 40u64 + offset;
+    transition s.picker { true -> picker(s, p) _ -> chrome(s, p, offset) }
+    state picker(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+        s.image_surface = s.surfaces[5]; s.image_x = subtract(s.width, 180u64) / 2u64; s.image_y = add(s.height / 2u64, 88u64); begin_image(s, p)
+    }
+    state chrome(s: &mut State, p: &mut [u64; 4096], offset: u64) -> u64 {
+        s.image_surface = s.surfaces[6]; s.image_x = subtract(s.width, 184u64); s.image_y = subtract(s.height, add(48u64, offset)); begin_image(s, p)
+    }
+}
+public machine tasks_image(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+    geometry(s); s.image_kind = 6u64; s.image_index = 0u64; s.image_surface = s.surfaces[7];
+    s.image_x = s.q[85]; s.image_y = subtract(s.height, 32u64) / 2u64; s.image_width = 432u64; s.image_height = 32u64; begin_image(s, p)
+}
+machine begin_image(s: &mut State, p: &mut [u64; 4096]) -> u64 { s.image_offset = 0u64; stage(s, p) }
+machine stage(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+    transition s.image_width > 0u64 && s.image_width <= 432u64 && s.image_height <= 96u64 { true -> bounded(s, p) _ -> (EXIT) }
+    state bounded(s: &mut State, p: &mut [u64; 4096]) -> u64 requires s.image_width <= 432u64 && s.image_height <= 96u64 {
+        let total: u64 = s.image_width * s.image_height * 4u64;
+        transition total <= 65536u64 && s.image_offset < total { true -> chunk(s, p, total) _ -> (EXIT) }
+    }
+    state chunk(s: &mut State, p: &mut [u64; 4096], total: u64) -> u64 requires s.image_offset < total {
+        let count: u64 = chunk_size(total - s.image_offset);
+        pixels(s, p, count / 8u64); p[0] = total; p[1] = s.image_offset; p[8] = count;
+        s.image_offset = add(s.image_offset, count); s.phase = STAGED; STAGE
+    }
+}
+machine chunk_size(remaining: u64) -> u64 { transition remaining > 32640u64 { true -> (32640u64) _ -> (remaining) } }
+public machine staged(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+    transition p[9] != 0u64 { true -> (EXIT) _ -> progress(s, p) }
+    state progress(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+        transition s.image_width <= 432u64 && s.image_height <= 96u64 { true -> extent(s, p) _ -> (EXIT) }
+    }
+    state extent(s: &mut State, p: &mut [u64; 4096]) -> u64 requires s.image_width <= 432u64 && s.image_height <= 96u64 {
+        transition s.image_offset < s.image_width * s.image_height * 4u64 { true -> stage(s, p) _ -> submit(s, p) }
+    }
+    state submit(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+        let epoch: u64 = s.epoch; let surface: u64 = s.image_surface; let x: u64 = s.image_x; let y: u64 = s.image_y;
+        let w: u64 = s.image_width; let h: u64 = s.image_height; interaction(s, p, IMAGE, SURFACE_IMAGE, epoch, surface, x, y, w, h, w)
+    }
+}

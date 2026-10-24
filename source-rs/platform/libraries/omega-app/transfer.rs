@@ -1,5 +1,6 @@
 //! Checked extents shared by the native host and its host-side boundary tests.
 use crate::PAYLOAD_BYTES;
+use cathedral_platform_contracts::storage;
 
 pub(crate) const MAX_STAGED_BYTES: usize = 64 * 1024;
 
@@ -38,9 +39,88 @@ pub(crate) fn received(limit: u64, requested: u64, returned: u64, backing: usize
         .then_some(returned)
 }
 
+/// ENTRIES has a row count, not BULK's byte-count field. Empty replies carry no
+/// backing; a nonempty cursor must advance. Decode rows only after this envelope.
+pub(crate) fn entries(
+    limit: u64,
+    after: u64,
+    count: u64,
+    last: u64,
+    backing: Option<usize>,
+) -> Option<usize> {
+    if limit == 0 || limit > PAYLOAD_BYTES as u64 || count > storage::ENTRIES_PER_PAGE as u64 {
+        return None;
+    }
+    if count == 0 {
+        return backing.is_none().then_some(0);
+    }
+    if last <= after {
+        return None;
+    }
+    let bytes = count.checked_mul(storage::ENTRY_BYTES as u64)?;
+    received(limit, 4096, bytes, backing?)
+}
+
+/// Canonical metadata and strict cursor ordering are part of the wire contract.
+pub(crate) fn entry_rows(bytes: &[u8], after: u64, last: u64) -> Option<()> {
+    if bytes.is_empty() || !bytes.len().is_multiple_of(storage::ENTRY_BYTES) {
+        return None;
+    }
+    let mut previous = after;
+    for row in bytes.chunks_exact(storage::ENTRY_BYTES) {
+        let row = storage::Entry::decode(row)?;
+        if row.object <= previous {
+            return None;
+        }
+        previous = row.object;
+    }
+    (previous == last).then_some(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn entries_reject_stale_ids_and_noncanonical_metadata() {
+        let mut bytes = [0u8; 2 * storage::ENTRY_BYTES];
+        for (index, row) in bytes.chunks_exact_mut(storage::ENTRY_BYTES).enumerate() {
+            row.copy_from_slice(
+                &storage::Entry {
+                    object: 5 + index as u64,
+                    ..Default::default()
+                }
+                .encode(),
+            );
+        }
+        assert_eq!(entry_rows(&bytes, 4, 6), Some(()));
+        assert_eq!(entry_rows(&bytes, 5, 6), None);
+        assert_eq!(entry_rows(&bytes, 4, 7), None);
+        bytes[storage::ENTRY_BYTES..storage::ENTRY_BYTES + 8].copy_from_slice(&5u64.to_le_bytes());
+        assert_eq!(entry_rows(&bytes, 4, 5), None);
+        bytes[17] = b'x'; // Nonzero data after an empty name's terminator.
+        assert_eq!(entry_rows(&bytes[..storage::ENTRY_BYTES], 4, 5), None);
+    }
+
+    #[test]
+    fn entry_pages_bound_rows_padding_and_cursor_progress() {
+        assert_eq!(entries(4080, 4, 51, 55, Some(4096)), Some(4080));
+        assert_eq!(entries(4080, 55, 0, 55, None), Some(0));
+        for (limit, after, count, last, backing) in [
+            (0, 0, 1, 1, Some(4096)),
+            (79, 0, 1, 1, Some(4096)),
+            (4080, 0, 52, 52, Some(8192)),
+            (4080, 0, u64::MAX, 1, Some(4096)),
+            (4080, 3, 1, 3, Some(4096)),
+            (4080, 4, 1, 3, Some(4096)),
+            (4080, 0, 1, 1, Some(79)),
+            (4080, 0, 1, 1, None),
+            (4080, 0, 0, 0, Some(4096)),
+            (u64::MAX, 0, 1, 1, Some(4096)),
+        ] {
+            assert_eq!(entries(limit, after, count, last, backing), None);
+        }
+    }
 
     #[test]
     fn a_large_bitmap_requires_complete_ordered_chunks() {

@@ -12,7 +12,8 @@ decision in this package.
 The producer-side helpers live at
 [app-host/main.omg](../../../../source/platform/libraries/app-host/main.omg).
 Consumers are [Omega Colors](../../../../source/distribution/applications/colors/README.md)
-and [Omega Notes](../../../../source/distribution/applications/notes/README.md).
+and [Omega Notes](../../../../source/distribution/applications/notes/README.md),
+plus the [Omega chooser](../../../../source/distribution/applications/chooser/README.md).
 This is deliberately a temporary, synchronous x86-64 native bridge. A future
 Omega runtime can replace it while retaining the app's protocol behavior.
 
@@ -29,7 +30,9 @@ During a step, the app returns the operation below. Words 0–7 hold a 64-byte
 platform request or response; word 8 is the outgoing/returned attachment byte count;
 words 16 onward hold at most 32,640 payload bytes. Word 9 returns transport
 status (zero succeeds), separate from the provider status in word 0. Words
-11 supplies the receive limit for a storage BULK request; 12–14 are reserved.
+11 supplies the receive limit for a storage BULK or ENTRIES request. Word 12
+contains the ordinary task argument on the first step. Word 13 optionally bounds
+WAIT in monotonic ticks (zero waits indefinitely); word 14 is reserved.
 The host clears the receive limit before resuming the app. No wire identifiers
 grant authority by themselves.
 
@@ -41,19 +44,24 @@ grant authority by themselves.
 | 3 | Bind the granted storage scope; return `[0, realm, 0…]` |
 | 4 | Storage request through `Scope`; retain its binding/deadline rules |
 | 5 | Interaction exchange through the acquired pair |
-| 6 | Wait for wake or owner control; word 9 is 0 for wake, 1 for control, otherwise a transport error; control bytes occupy 0–7, own CPU time occupies word 10 |
+| 6 | Wait for wake, owner control or the optional word-13 refresh deadline; word 9 is 0 for wake/refresh, 1 for control, otherwise a transport error; control bytes occupy 0–7, own CPU time occupies word 10 |
 | 7 | Reply to the owner control message with words 0–7 |
 | 8 | Write payload bytes to the app's existing diagnostic output |
 | 9 | Append a payload chunk to a staged object; words 0/1 are total bytes and sequential byte offset |
 | 10 | Discard the staged object, whether partial or ready |
+| 11 | Read this task's existing monotonic clock; return ticks in word 0 |
 
 Storage BULK receives require an explicit nonzero limit no larger than the packet
 payload. Before mapping, the host checks the returned byte count against that
 limit, the request length and the received object's size. It copies exactly those
 bytes into the packet, returns their count in word 8 and releases its reader
 custody. Page padding is never exposed. Unexpected attachments, malformed counts
-and successful nonempty BULK replies without backing fail explicitly. Other
-incoming-object operations remain unsupported. The app still validates its schema
+and successful nonempty BULK replies without backing fail explicitly.
+ENTRIES uses its count of 80-byte rows instead: at most 51, with canonical metadata,
+strictly ascending object numbers after the requested cursor and the final number
+matching the reply cursor. An empty listing carries no attachment. Only the
+declared rows are copied; page padding is excluded. Other incoming-object
+operations remain unsupported. The app still validates its schema
 and expected revision; the host does not interpret document contents.
 
 Larger outgoing images use one staged object of at most 64 KiB, allocated from
@@ -75,7 +83,9 @@ releases its producer custody. Providers retain only their own accepted rights.
 
 Owner control is checked before wake hints to prevent an input stream from
 starving lifecycle questions. The app still decides its batching and when to
-wait. Retiring the optional owner control link leaves wake/input service active;
+wait. The host consumes word 13 on entry; a refresh timeout returns an empty wake,
+not an input event. The chooser uses it to observe asynchronous task collection
+even after the last surface notification. Retiring the optional owner control link leaves wake/input service active;
 it does not change the kernel's parent-death subtree teardown. This API does not
 promise hard real-time scheduling or memory safety for
 arbitrary native code. The ordinary process sandbox remains the trust boundary.

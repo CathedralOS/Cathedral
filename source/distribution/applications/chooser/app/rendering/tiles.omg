@@ -1,0 +1,60 @@
+use state;
+use transport;
+use rendering::text;
+public machine avatar(s: &State, x: u64, y: u64) -> u64 {
+    transition s.image_index == s.selected && (x < 2u64 || x >= 126u64 || y < 2u64 || y >= 94u64) { true -> (0x66ccffu64) _ -> title(s, x, y) }
+    state title(s: &State, x: u64, y: u64) -> u64 {
+        transition avatar_title(s, x, y) { true -> (0xffffffu64) _ -> shape(s, x, y) }
+    }
+    state shape(s: &State, x: u64, y: u64) -> u64 { transition s.image_index == 6u64 { true -> plus(s, x, y) _ -> person(s, x, y) } }
+    state plus(s: &State, x: u64, y: u64) -> u64 {
+        transition (x >= 61u64 && x < 67u64 && y >= 24u64 && y < 68u64) || (x >= 42u64 && x < 86u64 && y >= 43u64 && y < 49u64) { true -> (0x91a8c8u64) _ -> card(s) }
+    }
+    state person(s: &State, x: u64, y: u64) -> u64 {
+        transition circle(x, y, 64u64, 36u64, 196u64) || (y >= 52u64 && y < 76u64 && circle(x, y, 64u64, 76u64, 899u64)) { true -> tint(s.image_index) _ -> card(s) }
+    }
+}
+machine avatar_title(s: &State, x: u64, y: u64) -> bool {
+    transition s.image_index == 6u64 { true -> centered_label(20u64, 128u64, x, y, 76u64) _ -> name(s, x, y) }
+    state name(s: &State, x: u64, y: u64) -> bool {
+        let len: u64 = name_length(s, s.image_index, 10u64);
+        name_pixel(s, s.image_index, 10u64, x, y, subtract(128u64, ((len as u64 in Saturating) * 12) as u64) / 2u64, 76u64)
+    }
+}
+machine card(s: &State) -> u64 { 0x202d43u64 }
+machine tint(index: u64) -> u64 { transition subtract(index, 1u64) % 3u64 { 0u64 -> (0x66ccffu64) 1u64 -> (0xc7a2edu64) _ -> (0x84d4adu64) } }
+public machine icon(s: &State, x: u64, y: u64) -> u64 {
+    transition s.image_index == s.selected && y >= 45u64 { true -> (0x66ccffu64) _ -> kind(s, x, y) }
+    state kind(s: &State, x: u64, y: u64) -> u64 {
+        transition icon_kind(s) { 1u64 -> notes(x, y) 2u64 -> nested(x, y) 3u64 -> split(x, y) _ -> palette(x, y) }
+    }
+    state notes(x: u64, y: u64) -> u64 { transition x >= 14u64 && x < 34u64 && y >= 8u64 && y < 36u64 { true -> paper(x, y) _ -> (0x202d43u64) } }
+    state paper(x: u64, y: u64) -> u64 { transition x >= 18u64 && x < 30u64 && (y == 16u64 || y == 22u64 || y == 28u64) { true -> (0x53718au64) _ -> (0xd6e5efu64) } }
+    state nested(x: u64, y: u64) -> u64 { transition x >= 17u64 && x < 33u64 && y >= 18u64 && y < 28u64 { true -> (0xc7a2edu64) _ -> inset(x, y) } }
+    state inset(x: u64, y: u64) -> u64 { transition x >= 11u64 && x < 37u64 && y >= 13u64 && y < 31u64 { true -> (0x202d43u64) _ -> frame(x, y) } }
+    state frame(x: u64, y: u64) -> u64 { transition x >= 8u64 && x < 40u64 && y >= 10u64 && y < 34u64 { true -> (0x66ccffu64) _ -> (0x202d43u64) } }
+    state split(x: u64, y: u64) -> u64 { transition x >= 12u64 && x < 23u64 && y >= 10u64 && y < 35u64 { true -> (0x84d4adu64) _ -> right(x, y) } }
+    state right(x: u64, y: u64) -> u64 { transition x >= 26u64 && x < 37u64 && y >= 10u64 && y < 35u64 { true -> (0xc7a2edu64) _ -> (0x202d43u64) } }
+    state palette(x: u64, y: u64) -> u64 { transition circle(x, y, 18u64, 17u64, 36u64) { true -> (0x66ccffu64) _ -> purple(x, y) } }
+    state purple(x: u64, y: u64) -> u64 { transition circle(x, y, 30u64, 17u64, 36u64) { true -> (0xc7a2edu64) _ -> green(x, y) } }
+    state green(x: u64, y: u64) -> u64 { transition circle(x, y, 18u64, 29u64, 36u64) { true -> (0x84d4adu64) _ -> gold(x, y) } }
+    state gold(x: u64, y: u64) -> u64 { transition circle(x, y, 30u64, 29u64, 36u64) { true -> (0xeeb46au64) _ -> (0x202d43u64) } }
+}
+machine icon_kind(s: &State) -> u64 {
+    transition s.image_index < 6u64 { true -> name(s) _ -> (0u64) }
+    state name(s: &State) -> u64 requires s.image_index < 6u64 {
+        let name: &[u8; 13] = &s.names[s.image_index];
+        transition name[0] == 78u8 && name[1] == 79u8 && name[2] == 84u8 && name[3] == 69u8 && name[4] == 83u8 { true -> (1u64) _ -> nested(name) }
+    }
+    state nested(name: &[u8; 13]) -> u64 {
+        transition name[0] == 78u8 && name[1] == 69u8 && name[2] == 83u8 && name[3] == 84u8 && name[4] == 69u8 && name[5] == 68u8 { true -> (2u64) _ -> split(name) }
+    }
+    state split(name: &[u8; 13]) -> u64 {
+        transition name[0] == 83u8 && name[1] == 80u8 && name[2] == 76u8 && name[3] == 73u8 && name[4] == 84u8 { true -> (3u64) _ -> (0u64) }
+    }
+}
+machine circle(x: u64, y: u64, cx: u64, cy: u64, radius_squared: u64) -> bool {
+    let dx: u64 = distance(x, cx); let dy: u64 = distance(y, cy);
+    (((dx as u64 in Saturating) * (dx as u64 in Saturating)) + ((dy as u64 in Saturating) * (dy as u64 in Saturating))) <= (radius_squared as u64 in Saturating)
+}
+machine distance(a: u64, b: u64) -> u64 { transition a >= b { true -> (a - b) _ -> (b - a) } }

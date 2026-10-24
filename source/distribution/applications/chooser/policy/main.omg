@@ -9,6 +9,10 @@ use outcomes;
 public boundary trait Chooser { machine decide(p: &mut [u64; 128]) -> u64; }
 public ChooserProvider satisfies Chooser {
     machine decide(p: &mut [u64; 128]) -> u64 {
+        decision(p)
+    }
+}
+public machine decision(p: &mut [u64; 128]) -> u64 {
         transition p[0] {
             0u64 -> describe(p)
             1u64 -> classify(p)
@@ -23,7 +27,6 @@ public ChooserProvider satisfies Chooser {
             10u64 -> user_name(p)
             _ -> (0u64)
         }
-    }
 }
 machine describe(p: &mut [u64; 128]) -> u64 {
     p[1] = 128u64; p[2] = 6u64; p[3] = 4u64; p[4] = 51u64; 1u64

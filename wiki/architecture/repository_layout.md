@@ -26,7 +26,7 @@ Cathedral/
       profile.json         Boot composition consumed by the host harness
       shell/               Desktop experience (planned)
       settings/            User-facing configuration (planned)
-      applications/        Bundled apps; Colors/Notes and chooser decisions run in Rust OS
+      applications/        Bundled apps; Colors, Notes and chooser run in Rust OS
       libraries/           Distribution UI components, native backend and fonts
   source-rs/               Rust lab with the same ownership boundaries
   tools/                   Host builds, image assembly, checks and simulators
@@ -84,10 +84,10 @@ Its Rust executable only supplies startup and the common
 buffer custody; app state, input decisions, storage schema and presentation stay
 in distribution-owned Omega. This temporary native bridge is not the final
 Omega application ABI. The Rust Colors library remains a mechanism-lab probe.
-The chooser uses an incremental port: its distribution-owned Omega component
-decides catalogue, selection and ordinary launch/close behavior over scoped facts.
-Rust still hosts its session, settings and painting. The app-local native packet
-adds no service or global locator; see the
+Notes and the chooser use the same host. Their sessions, settings, input and
+painting live in distribution-owned Omega. The chooser's separate pure policy
+export remains only for decision tests and explicit Rust fault probes; ordinary
+F5 calls that policy directly from Omega. See the
 [chooser boundary](../../source/distribution/applications/chooser/README.md).
 The Rust stock matrix is also a distribution program: `distribution/matrix/`
 owns its launcher/app roles, saved desktop configuration, two-child control

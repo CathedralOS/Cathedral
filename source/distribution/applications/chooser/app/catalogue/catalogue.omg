@@ -1,0 +1,92 @@
+// Stream scoped entry pages, resolve presentation roles, then publish one model.
+use host::main;
+use protocol::main;
+use decisions::main;
+use state;
+use transport;
+use session::session;
+public machine reload(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+    s.phase = BOUND; s.found = 0u64; s.template = 0u64; s.background = 0u64; s.after = 0u64; BIND
+}
+public machine bound(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+    transition failed(p) { true -> unavailable(s, p) _ -> ready(s, p) }
+    state ready(s: &mut State, p: &mut [u64; 4096]) -> u64 { s.realm = p[1]; page(s, p) }
+}
+machine page(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+    let realm: u64 = s.realm; let after: u64 = s.after;
+    let op: u64 = storage(s, p, LISTED, 19u64, realm, 0u64, after, 0u64); p[11] = 4080u64; op
+}
+public machine listed(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+    transition failed(p) || p[1] > 51u64 || p[8] != p[1] * 80u64 { true -> unavailable(s, p) _ -> scan(s, p, 0u64) }
+    state scan(s: &mut State, p: &mut [u64; 4096], i: u64) -> u64 {
+        transition i < p[1] && i < 51u64 { true -> row(s, p, i) _ -> complete(s, p) }
+    }
+    state row(s: &mut State, p: &mut [u64; 4096], i: u64) -> u64 requires i < 51u64 {
+        s.q[0] = 1u64; transition { _ -> metadata(s, p, i, 0u64) }
+    }
+    state metadata(s: &mut State, p: &mut [u64; 4096], i: u64, j: u64) -> u64 {
+        transition i < 51u64 && j < 64u64 { true -> field(s, p, i, j) _ -> classify_row(s, p, i) }
+    }
+    state field(s: &mut State, p: &mut [u64; 4096], i: u64, j: u64) -> u64 requires i < 51u64 && j < 64u64 {
+        s.q[16u64 + j] = byte(p, i * 80u64 + 16u64 + j) as u64;
+        transition { _ -> metadata(s, p, i, j + 1u64) }
+    }
+    state classify_row(s: &mut State, p: &mut [u64; 4096], i: u64) -> u64 {
+        let ok: u64 = decision(&mut s.q);
+        transition i < 51u64 { true -> roles(s, p, i) _ -> unavailable(s, p) }
+    }
+    state roles(s: &mut State, p: &mut [u64; 4096], i: u64) -> u64 requires i < 51u64 {
+        let id: u64 = p[16u64 + i * 10u64];
+        transition s.q[1] & 2u64 != 0u64 { true -> template(s, p, i, id) _ -> background(s, p, i, id) }
+    }
+    state template(s: &mut State, p: &mut [u64; 4096], i: u64, id: u64) -> u64 { s.template = id; transition { _ -> background(s, p, i, id) } }
+    state background(s: &mut State, p: &mut [u64; 4096], i: u64, id: u64) -> u64 {
+        transition s.q[1] & 4u64 != 0u64 { true -> mark_background(s, p, i, id) _ -> executable(s, p, i, id) }
+    }
+    state mark_background(s: &mut State, p: &mut [u64; 4096], i: u64, id: u64) -> u64 { s.background = id; transition { _ -> executable(s, p, i, id) } }
+    state executable(s: &mut State, p: &mut [u64; 4096], i: u64, id: u64) -> u64 {
+        transition s.q[1] & 1u64 != 0u64 && s.found < 51u64 { true -> append(s, p, i, id) _ -> next(s, p, i) }
+    }
+    state append(s: &mut State, p: &mut [u64; 4096], i: u64, id: u64) -> u64 requires s.found < 51u64 {
+        s.candidates[s.found] = id; transition { _ -> label(s, p, i, 0u64) }
+    }
+    state label(s: &mut State, p: &mut [u64; 4096], i: u64, j: u64) -> u64 {
+        transition j < 13u64 && s.found < 51u64 { true -> letter(s, p, i, j) _ -> appended(s, p, i) }
+    }
+    state letter(s: &mut State, p: &mut [u64; 4096], i: u64, j: u64) -> u64 requires j < 13u64 && s.found < 51u64 {
+        s.candidate_names[s.found][j] = (s.q[80u64 + j] & 255u64) as u8; transition { _ -> label(s, p, i, j + 1u64) }
+    }
+    state appended(s: &mut State, p: &mut [u64; 4096], i: u64) -> u64 { s.found = add(s.found, 1u64); transition { _ -> next(s, p, i) } }
+    state next(s: &mut State, p: &mut [u64; 4096], i: u64) -> u64 requires i < 51u64 { transition { _ -> scan(s, p, i + 1u64) } }
+    state complete(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+        s.after = p[2]; transition p[1] == 51u64 { true -> page(s, p) _ -> resolve(s, p) }
+    }
+}
+machine resolve(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+    s.q[0] = 2u64; s.q[1] = s.picker as u64; s.q[2] = s.own; s.q[3] = s.template; s.q[4] = s.background; s.q[5] = s.found;
+    transition { _ -> candidates(s, p, 0u64) }
+    state candidates(s: &mut State, p: &mut [u64; 4096], i: u64) -> u64 {
+        transition i < 51u64 { true -> candidate(s, p, i) _ -> select(s, p) }
+    }
+    state candidate(s: &mut State, p: &mut [u64; 4096], i: u64) -> u64 requires i < 51u64 { s.q[16u64 + i] = s.candidates[i]; transition { _ -> candidates(s, p, i + 1u64) } }
+    state select(s: &mut State, p: &mut [u64; 4096]) -> u64 { let ok: u64 = decision(&mut s.q); transition ok == 1u64 { true -> publish(s, p) _ -> unavailable(s, p) } }
+    state publish(s: &mut State, p: &mut [u64; 4096]) -> u64 { s.count = s.q[80]; transition { _ -> ids(s, p, 0u64) } }
+    state ids(s: &mut State, p: &mut [u64; 4096], i: u64) -> u64 { transition i < 6u64 { true -> id(s, p, i) _ -> finished(s, p) } }
+    state id(s: &mut State, p: &mut [u64; 4096], i: u64) -> u64 requires i < 6u64 { s.ids[i] = s.q[81u64 + i]; transition { _ -> name(s, p, i, 0u64) } }
+    state name(s: &mut State, p: &mut [u64; 4096], i: u64, j: u64) -> u64 {
+        transition i < 6u64 && j < s.found && j < 51u64 { true -> match_name(s, p, i, j) _ -> advance(s, p, i) }
+    }
+    state match_name(s: &mut State, p: &mut [u64; 4096], i: u64, j: u64) -> u64 requires i < 6u64 && j < 51u64 {
+        transition s.ids[i] == s.candidates[j] { true -> copy_name(s, p, i, j, 0u64) _ -> name(s, p, i, j + 1u64) }
+    }
+    state copy_name(s: &mut State, p: &mut [u64; 4096], i: u64, j: u64, k: u64) -> u64 {
+        transition i < 6u64 && j < 51u64 && k < 13u64 { true -> copy_letter(s, p, i, j, k) _ -> advance(s, p, i) }
+    }
+    state copy_letter(s: &mut State, p: &mut [u64; 4096], i: u64, j: u64, k: u64) -> u64 requires i < 6u64 && j < 51u64 && k < 13u64 {
+        s.names[i][k] = s.candidate_names[j][k]; transition { _ -> copy_name(s, p, i, j, k + 1u64) }
+    }
+    state advance(s: &mut State, p: &mut [u64; 4096], i: u64) -> u64 requires i < 6u64 { transition { _ -> ids(s, p, i + 1u64) } }
+    state finished(s: &mut State, p: &mut [u64; 4096]) -> u64 { s.dirty = true; transition s.selected == 6u64 { true -> choose_new(s, p) _ -> cycle(s, p) } }
+    state choose_new(s: &mut State, p: &mut [u64; 4096]) -> u64 { s.selected = subtract(s.count, 1u64); cycle(s, p) }
+}
+public machine unavailable(s: &mut State, p: &mut [u64; 4096]) -> u64 { s.status = 1u64; s.dirty = true; cycle(s, p) }

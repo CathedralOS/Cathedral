@@ -22,6 +22,18 @@ pub(super) struct Host {
 /// # Safety
 /// The export must satisfy `Instance::new` for the complete task lifetime.
 pub unsafe fn run(step: Step, services: Services) -> Result<u64, Error> {
+    // SAFETY: Same export lifetime and layout contract as this entry.
+    unsafe { run_with_argument(step, services, 0) }
+}
+/// The ordinary task argument is startup data, never authority. It occupies
+/// packet word 12 on the first step; subsequent operations may reuse that word.
+/// # Safety
+/// The export must satisfy `Instance::new` for the complete task lifetime.
+pub unsafe fn run_with_argument(
+    step: Step,
+    services: Services,
+    argument: u64,
+) -> Result<u64, Error> {
     // Keep buffers off the bounded task stack. Nine private pages, charged to
     // this app; temporary immutable attachments are separately charged.
     let mut backing = Private::allocate(9)?;
@@ -37,6 +49,7 @@ pub unsafe fn run(step: Step, services: Services) -> Result<u64, Error> {
     // SAFETY: Forwarded caller contract; the two disjoint buffers remain live.
     let mut app =
         unsafe { Instance::new(step, state, packet) }.ok_or(Error(abi::INVALID_ARGUMENT as i64))?;
+    app.packet[12] = argument;
     let mut host = Host {
         services,
         interaction: None,
@@ -77,12 +90,19 @@ impl Host {
             }
             4 | 5 => exchange::exchange(self, operation, packet)?,
             6 => self.wait(packet)?,
-            7 => self.control.as_ref().ok_or(Error(abi::DENIED as i64))?
+            7 => self
+                .control
+                .as_ref()
+                .ok_or(Error(abi::DENIED as i64))?
                 .1
                 .send(&wire::encode(packet[..8].try_into().unwrap()))?,
             8 => cathedral_user_runtime::write(exchange::payload(packet)?)?,
             9 => attachments::append(&mut self.staged, packet)?,
             10 => self.staged = None,
+            11 => {
+                packet[..8].fill(0);
+                packet[0] = time::now()?;
+            }
             _ => return Err(Error(abi::INVALID_ARGUMENT as i64)),
         }
         Ok(())
@@ -93,19 +113,43 @@ impl Host {
             .as_ref()
             .ok_or(Error(abi::DENIED as i64))?
             .wake;
+        // Optional caller-selected refresh deadline. Zero preserves an indefinite
+        // event wait; a timeout is an empty wake, never an invented input event.
+        let refresh = packet[13];
+        packet[13] = 0;
+        let deadline = if refresh == 0 {
+            None
+        } else {
+            Some(time::after(refresh)?)
+        };
         loop {
             // A continuous wake stream must not starve owner lifecycle questions.
             let handles = [self.control.as_ref().map_or(wake, |pair| pair.0), wake];
-            let active = if self.control.is_some() { &handles[..] } else { &handles[..1] };
-            let ready = match ipc::wait_many(active, time::after(100)?) {
-                Err(Error(code)) if code == abi::TIMED_OUT as i64 => continue,
+            let active = if self.control.is_some() {
+                &handles[..]
+            } else {
+                &handles[..1]
+            };
+            let ready = match ipc::wait_many(active, deadline.unwrap_or(time::after(100)?)) {
+                Err(Error(code)) if code == abi::TIMED_OUT as i64 => {
+                    if deadline.is_none() {
+                        continue;
+                    }
+                    packet[..8].fill(0);
+                    packet[9] = 0;
+                    packet[10] = time::cpu_us().unwrap_or(0);
+                    return Ok(());
+                }
                 result => result?,
             };
             let mut bytes = [0; 64];
             let is_control = ready == 0 && self.control.is_some();
             let len = match active[ready].receive(&mut bytes) {
                 Ok(len) => len,
-                Err(_) if is_control => { self.control = None; continue; }
+                Err(_) if is_control => {
+                    self.control = None;
+                    continue;
+                }
                 Err(error) => return Err(error),
             };
             packet[..8].fill(0);

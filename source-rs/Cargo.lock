@@ -112,6 +112,7 @@ dependencies = [
  "cathedral-desktop-matrix-contracts",
  "cathedral-kernel-contracts",
  "cathedral-matrix",
+ "cathedral-omega-app",
  "cathedral-platform-contracts",
  "cathedral-user-runtime",
 ]

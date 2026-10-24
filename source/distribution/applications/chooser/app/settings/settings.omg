@@ -1,0 +1,37 @@
+// Draft layout edits belong to the launcher; applying them is a separate grant.
+use host::main;
+use protocol::main;
+use state;
+use transport;
+use session::session;
+use settings::persistence;
+use settings::encoding;
+public machine settings_dirty(s: &State) -> bool { s.uncertain || !equal(&s.saved, &s.draft) }
+public machine settings_input(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+    transition s.snapshot[5] & 255u64 { POINTER -> pointer(s, p) KEY -> keyboard(s, p) _ -> after_input(s, p) }
+    state pointer(s: &mut State, p: &mut [u64; 4096]) -> u64 { transition s.clicked { true -> hit(s, p, 0u64) _ -> after_input(s, p) } }
+    state hit(s: &mut State, p: &mut [u64; 4096], row: u64) -> u64 { transition row < 3u64 { true -> panel(s, p, row) _ -> after_input(s, p) } }
+    state panel(s: &mut State, p: &mut [u64; 4096], row: u64) -> u64 requires row < 3u64 {
+        let left: u64 = add(subtract(s.width, 512u64) / 2u64, row * 176u64);
+        transition s.snapshot[6] >= left && s.snapshot[6] < add(left, 160u64) && s.snapshot[7] >= 48u64 && s.snapshot[7] < 72u64 {
+            true -> choose(s, p, row * 2u64 + (s.snapshot[6] >= add(left, 80u64)) as u64) _ -> hit(s, p, row + 1u64)
+        }
+    }
+    state keyboard(s: &mut State, p: &mut [u64; 4096]) -> u64 { transition s.snapshot[7] == PRESS { true -> key(s, p) _ -> after_input(s, p) } }
+    state key(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+        transition s.snapshot[6] { UP -> move(s, p, 5u64) LEFT -> move(s, p, 5u64) DOWN -> move(s, p, 1u64) RIGHT -> move(s, p, 1u64) ENTER -> choose(s, p, s.setting_selected) _ -> after_input(s, p) }
+    }
+    state move(s: &mut State, p: &mut [u64; 4096], delta: u64) -> u64 { s.setting_selected = add(s.setting_selected, delta) % 6u64; s.dirty = true; cycle(s, p) }
+    state choose(s: &mut State, p: &mut [u64; 4096], action: u64) -> u64 {
+        s.setting_selected = action; s.dirty = true;
+        transition action { 0u64 -> height(s, p, false) 1u64 -> height(s, p, true) 2u64 -> margin(s, p, false) 3u64 -> margin(s, p, true) 4u64 -> save_settings(s, p) 5u64 -> cancel(s, p) _ -> after_input(s, p) }
+    }
+    state height(s: &mut State, p: &mut [u64; 4096], increase: bool) -> u64 { let value: u64 = adjusted(word(&s.draft, 72u64), increase, 80u64, 128u64); set_word(&mut s.draft, 72u64, value); s.setting_status = 15u64; cycle(s, p) }
+    state margin(s: &mut State, p: &mut [u64; 4096], increase: bool) -> u64 { let value: u64 = adjusted(word(&s.draft, 64u64), increase, 8u64, 40u64); set_word(&mut s.draft, 64u64, value); s.setting_status = 15u64; cycle(s, p) }
+    state cancel(s: &mut State, p: &mut [u64; 4096]) -> u64 { s.editing = false; s.status = 0u64; cycle(s, p) }
+}
+machine adjusted(value: u64, increase: bool, low: u64, high: u64) -> u64 {
+    transition increase { true -> clamp(add(value, 16u64), low, high) _ -> clamp(subtract(value, 16u64), low, high) }
+    state clamp(value: u64, low: u64, high: u64) -> u64 { transition value < low { true -> (low) _ -> upper(value, high) } }
+    state upper(value: u64, high: u64) -> u64 { transition value > high { true -> (high) _ -> (value) } }
+}

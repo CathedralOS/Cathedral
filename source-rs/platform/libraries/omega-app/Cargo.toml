@@ -11,6 +11,9 @@ path = "lib.rs"
 [features]
 trace-storage = []
 
+[dev-dependencies]
+cathedral-platform-contracts.workspace = true
+
 [target.'cfg(target_os = "none")'.dependencies]
 cathedral-kernel-contracts.workspace = true
 cathedral-platform-contracts.workspace = true

@@ -1,5 +1,5 @@
 //! One request outstanding. Sealed outgoing backing is retained until completion;
-//! incoming BULK backing is bounded, copied and released before app resumption.
+//! incoming backing is bounded, copied and released before app resumption.
 use super::Host;
 use crate::{PACKET_WORDS, PAYLOAD_BYTES, PAYLOAD_WORD};
 use cathedral_kernel_contracts::user as abi;
@@ -41,7 +41,8 @@ pub(super) fn exchange(
     packet[8] = 0;
     packet[11] = 0;
     if receive_limit > PAYLOAD_BYTES as u64
-        || (receive_limit != 0 && (operation != 4 || words[0] != storage::BULK))
+        || (receive_limit != 0
+            && (operation != 4 || !matches!(words[0], storage::BULK | storage::ENTRIES)))
     {
         return Err(Error(abi::INVALID_ARGUMENT as i64));
     }
@@ -65,14 +66,36 @@ pub(super) fn exchange(
         cathedral_user_runtime::time::storage_trace("omega-reply", trace_scope, request.op);
         let (bytes, incoming) = result.map_err(|status| Error(status as i64))?;
         let reply = wire::decode(&bytes).ok_or(Error(abi::IO_ERROR as i64))?;
+        let entry_length = if request.op == storage::ENTRIES && reply[0] == 0 {
+            Some(
+                crate::transfer::entries(
+                    receive_limit,
+                    words[3],
+                    reply[1],
+                    reply[2],
+                    incoming.as_ref().map(Object::len),
+                )
+                .ok_or(Error(abi::INVALID_ARGUMENT as i64))?,
+            )
+        } else {
+            None
+        };
         if let Some(mut incoming) = incoming {
-            if request.op != storage::BULK || reply[0] != 0 {
+            if !matches!(request.op, storage::BULK | storage::ENTRIES) || reply[0] != 0 {
                 return Err(Error(abi::INVALID_ARGUMENT as i64));
             }
-            let length =
-                crate::transfer::received(receive_limit, words[4], reply[4], incoming.len())
-                    .ok_or(Error(abi::INVALID_ARGUMENT as i64))?;
+            let length = match entry_length {
+                Some(length) => length,
+                None => {
+                    crate::transfer::received(receive_limit, words[4], reply[4], incoming.len())
+                        .ok_or(Error(abi::INVALID_ARGUMENT as i64))?
+                }
+            };
             let bytes = incoming.map()?;
+            if entry_length.is_some() {
+                crate::transfer::entry_rows(&bytes[..length], words[3], reply[2])
+                    .ok_or(Error(abi::INVALID_ARGUMENT as i64))?;
+            }
             // SAFETY: The validated length fits the exclusively borrowed packet.
             let destination = unsafe {
                 core::slice::from_raw_parts_mut(

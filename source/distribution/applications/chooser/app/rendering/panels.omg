@@ -1,0 +1,49 @@
+use state;
+use transport;
+use settings::encoding;
+use rendering::rendering;
+use rendering::text;
+public machine settings_pixel(s: &State, x: u64, y: u64) -> u64 {
+    let row: u64 = s.image_index;
+    transition label_pixel(add(10u64, row), x, y, 4u64, 2u64) { true -> (0xffffffu64) _ -> content(s, x, y, row) }
+    state content(s: &State, x: u64, y: u64, row: u64) -> u64 { transition row < 2u64 { true -> numeric(s, x, y, row) _ -> save(s, x, y) } }
+    state numeric(s: &State, x: u64, y: u64, row: u64) -> u64 {
+        transition number_pixel(setting_value(s, row), x, y) || (y >= 50u64 && y < 52u64 && ((x >= 34u64 && x < 46u64) || (x >= 114u64 && x < 126u64))) || (x >= 118u64 && x < 120u64 && y >= 46u64 && y < 58u64) { true -> (0xffffffu64) _ -> setting_background(s, x, y) }
+    }
+    state save(s: &State, x: u64, y: u64) -> u64 { transition label_pixel(13u64, x, y, 10u64, 44u64) || label_pixel(14u64, x, y, 84u64, 44u64) { true -> (0xffffffu64) _ -> setting_background(s, x, y) } }
+}
+machine setting_value(s: &State, row: u64) -> u64 { transition row == 0u64 { true -> word(&s.draft, 72u64) _ -> word(&s.draft, 64u64) } }
+machine setting_background(s: &State, x: u64, y: u64) -> u64 {
+    let action: u64 = add(((s.image_index as u64 in Saturating) * 2) as u64, (x >= 80u64) as u64);
+    transition y >= 40u64 && s.setting_selected == action { true -> (0x53718au64) _ -> (0x202d43u64) }
+}
+public machine management_pixel(s: &State, x: u64, y: u64) -> u64 {
+    transition s.image_index == 0u64 { true -> warning(x, y) _ -> button(s, x, y) }
+    state warning(x: u64, y: u64) -> u64 { transition label_pixel(4u64, x, y, 18u64, 4u64) || label_pixel(21u64, x, y, 24u64, 26u64) { true -> (0xffffffu64) _ -> (0x202d43u64) } }
+    state button(s: &State, x: u64, y: u64) -> u64 { transition centered_label(management_label(s), 180u64, x, y, 8u64) { true -> (0xffffffu64) _ -> background(s) } }
+    state background(s: &State) -> u64 { transition (s.image_index == 2u64) == s.cancel { true -> (0x53718au64) _ -> (0x202d43u64) } }
+}
+machine management_label(s: &State) -> u64 { transition s.image_index == 1u64 { true -> (9u64) _ -> (14u64) } }
+public machine footer_pixel(s: &State, x: u64, y: u64) -> u64 {
+    let offset: u64 = (footer_managed(s) as u64) * 24u64;
+    transition (footer_managed(s) && label_pixel(9u64, x, y, 48u64, 0u64)) || label_pixel(footer_status(s), x, y, 0u64, offset) || (normal_chrome(s) && label_pixel(8u64, x, y, 42u64, offset + 24u64)) { true -> (0xffffffu64) _ -> (0x101827u64) }
+}
+public machine task_pixel(s: &State, x: u64, y: u64) -> u64 {
+    transition x / 144u64 < 3u64 { true -> task(s, x / 144u64, x % 144u64, y) _ -> (0x101827u64) }
+    state task(s: &State, index: u64, x: u64, y: u64) -> u64 requires index < 3u64 {
+        transition s.tasks[index][0] == 0u64 && s.tasks[index][1] != 0u64 { true -> active(s, index, x, y) _ -> (0x101827u64) }
+    }
+    state active(s: &State, index: u64, x: u64, y: u64) -> u64 requires index < 3u64 {
+        transition task_title(s, s.tasks[index][2], x, y) || number(index, x, y) || label_pixel(23u64, x, y, 128u64, 8u64) { true -> (0xffffffu64) _ -> background(s, index) }
+    }
+    state background(s: &State, index: u64) -> u64 requires index < 3u64 { transition s.tasks[index][3] != 0u64 { true -> (0x31506cu64) _ -> (0x202d43u64) } }
+}
+machine number(index: u64, x: u64, y: u64) -> bool {
+    transition x >= 108u64 && y >= 8u64 && index < 3u64 { true -> at(index, x - 108u64, y - 8u64) _ -> (false) }
+    state at(index: u64, x: u64, y: u64) -> bool requires index < 3u64 { letter(49u64 + index, x / 2u64, y / 2u64) }
+}
+machine task_title(s: &State, object: u64, x: u64, y: u64) -> bool {
+    transition { _ -> scan(s, object, x, y, 0u64) }
+    state scan(s: &State, object: u64, x: u64, y: u64, i: u64) -> bool { transition i < s.count && i < 6u64 { true -> match_id(s, object, x, y, i) _ -> label_pixel(22u64, x, y, 4u64, 8u64) } }
+    state match_id(s: &State, object: u64, x: u64, y: u64, i: u64) -> bool requires i < 6u64 { transition s.ids[i] == object { true -> name_pixel(s, i, 8u64, x, y, 4u64, 8u64) _ -> scan(s, object, x, y, i + 1u64) } }
+}

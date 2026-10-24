@@ -8,7 +8,7 @@ mod host;
 mod transfer;
 pub use component::{Instance, Step};
 #[cfg(target_os = "none")]
-pub use host::run;
+pub use host::{run, run_with_argument};
 pub const STATE_WORDS: usize = 512;
 pub const PACKET_WORDS: usize = 4096;
 pub const PAYLOAD_WORD: usize = 16;
