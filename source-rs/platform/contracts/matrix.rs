@@ -132,6 +132,24 @@ pub const PRODUCER_RELEASE: u64 = 43; // generation,0..
 /// Limits survive view changes on this connection, but not connection replacement.
 /// New deliveries exceeding them refuse without mutating focus/held state.
 pub const INPUT_CAPACITY: u64 = 44;
+/// Read the caller's admitted input bindings, in increasing local-name order:
+/// [INPUT_DIRECTORY, view epoch, revision or 0 to start, after name, 0..].
+/// Start requires after=0. Reply: status,epoch,revision,name,group,state,keys,0.
+/// Name=0 ends enumeration; its trailing fields are zero. A changed revision
+/// returns BUSY: discard the partial snapshot and restart. Reading neither
+/// consumes input nor registers/submits it. Associated metadata exposes only
+/// channels already routed into this child's scope, never a global registry.
+/// Revisions change on admission, retirement and consumption of RETIRED, with
+/// the existing coalesced wake hint. CANCEL does not retire a channel. RETIRING
+/// rows persist until the boundary drains; immutable old snapshots confer no
+/// authority. View replacement resets the directory. Revision exhaustion makes
+/// observation unavailable (NO_MEMORY) until a new view, never wraps an identity.
+/// This initial binding directory has no friendly names/control descriptions.
+/// Keys is the receiver's view-wide ceiling, not a source descriptor or promise
+/// that this channel supplies those keys. Directory rows do not grant injection.
+pub const INPUT_DIRECTORY: u64 = 46;
+pub const CHANNEL_LIVE: u64 = 1;
+pub const CHANNEL_RETIRING: u64 = 2;
 pub const SPAWN: u64 = 106; // local child slot, current launch index, loan bitmask, argument
 pub const STOP: u64 = 107; // local child slot; return after complete subtree reclamation
 /// Host to child over its control link before a lifecycle decision: [LOSS, 0..].

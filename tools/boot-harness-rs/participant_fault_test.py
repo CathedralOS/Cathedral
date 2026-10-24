@@ -49,6 +49,12 @@ def exercise(output, click, key, scan, width, height, resumed, mode):
         scan(lambda w,d: len([r for r in rows(log()[start:]) if r[1]==5])==2 and 'receiver-group-retired' in log()[start:], 'both channel retirements followed by group retirement')
         evidence=log()[start:]
         retired=[r for r in rows(evidence) if r[1]==5]
+        directory=[list(map(int,m.split())) for m in re.findall(r'STORAGE_TRACE receiver-directory ([0-9 ]+)\n',evidence)]
+        # These markers follow a complete revision-checked read over the ordinary
+        # interaction pair, with the receiver validating event/name membership.
+        assert any(r[2] in (1,2) and r[5]>0 for r in directory),directory
+        assert {r[3] for r in directory if r[2]==5}=={r[2] for r in retired},directory
+        assert any(r[2]==6 for r in directory),directory
         if mode!='pressure':
             assert sorted(r[4] for r in retired)==[0,1<<(15-1)],retired
             assert sorted(r[5] for r in retired)==[0,1],retired

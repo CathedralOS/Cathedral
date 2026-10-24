@@ -1152,6 +1152,11 @@ and absent owner permission respectively, followed by normal app use and cold
 persistence. The acquisition probes do not enable production in default Notes. The participants
 workflow exercises the installed Split AUTO participant, independent focus, visible
 cursor, repeated stop/start, resize revocation and cold persisted documents.
+The participant fault workflows also query the scoped input binding directory
+through the ordinary interaction pair. The receiver checks that delivered events
+match its directory and that consumed retirement boundaries remove those entries;
+the host requires successful snapshot evidence as well as saved text. No registry
+access or injection permission is added to ordinary Notes.
 
 
 ### Nested desktop in the normal installation

@@ -152,7 +152,7 @@ pub fn run(style: u64, mut services: Services) {
             }
             let event = wire::poll_event(snapshot);
             #[cfg(feature = "input-receiver-probe")]
-            input_probe.observe(event);
+            input_probe.observe(parent, event);
             #[cfg(feature = "trace-input")]
             if event[2] == wire::KEY && event[4] == input::PRESS as u64 {
                 time::trace("notes-key");

@@ -148,8 +148,9 @@ Directory storage, retained records and event capacity remain funded resources.
 ## Implementation boundary
 
 The Rust lab's [physical-key transport](../../../source-rs/platform/contracts/input.rs)
-and [matrix queues](../../../source-rs/platform/libraries/matrix/world/children.rs)
-do not implement this general channel directory or shared-table/ring interface.
+and [matrix queues](../../../source-rs/platform/libraries/matrix/world/children/children.rs)
+implement a bounded routed-binding directory, not the general descriptor registry
+or shared-table/ring interface.
 The matrix transport can now multiplex four bounded streams with child-local
 channel and group names. Channels may share selection while keeping independent
 capture/held state. Queues preserve ordering across channels in one group and
@@ -180,14 +181,25 @@ cursor. Its disposable fault variants exercise held-input retirement, endpoint
 loss and per-channel overflow through real IPC; an unaffected channel targeting
 the same stalled consumer survives, and fresh input works after cancellation.
 Repeated admission checks retired identity non-reuse. These are bounded proofs;
-discovery and reassociation of an existing stream remain unimplemented.
+the [binding directory](../../../source-rs/platform/libraries/matrix/world/children/directory.rs)
+now exposes channel/group aliases, retirement state and the receiver's key ceiling
+for input already routed into that child. Enumeration is revision-checked and
+bounded; concurrent membership changes return BUSY rather than mixing snapshots.
+The existing coalesced wake hints at changes. Retiring rows remain until their
+boundary drains, and reading does not consume input. View replacement invalidates
+old snapshots. Host tests cover sibling isolation, nested renaming, stale reads,
+retirement and exhaustion; the disposable Notes observer checks directory/event
+agreement over ordinary desktop IPC. This does not expose a global registry,
+register channels on behalf of the receiver or grant production. Friendly names,
+control descriptions, separately delegated discovery, shared tables and live
+channel reassociation remain unimplemented.
 F5 supplies a pointer channel
 and a keyboard channel in one group. Shared app-side reception tracks pointer
 edges separately; this does not impose separate document/player state on apps.
 The [pointer lab](../../../source-rs/distribution/lab/compositor/POINTERS.md) is
 earlier bounded routing evidence, not conformance to this channel contract.
 
-Exact encodings, table publication, reclamation and resynchronization algorithms
-remain to be implemented and tested. This acceptance does not select focus topology,
+The broader descriptor encodings, shared-table publication, reclamation and
+resynchronization algorithms remain to be implemented and tested. This acceptance does not select focus topology,
 per-channel view arrangements, minimization behavior or rendering policy. Those
 remain separate contracts; general channels do not imply automatic app-created views.

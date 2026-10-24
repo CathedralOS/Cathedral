@@ -16,7 +16,7 @@ pub struct Receiver {
     channels: [Channel; wire::INPUT_STREAMS],
 }
 impl Receiver {
-    pub fn observe(&mut self, packet: wire::Packet) {
+    pub fn observe(&mut self, parent: Pair, packet: wire::Packet) {
         let [status, epoch, kind, key, state, buttons, name, group] = packet;
         if status != 0 || epoch == 0 {
             return;
@@ -26,6 +26,9 @@ impl Receiver {
                 epoch,
                 ..Self::default()
             };
+        }
+        if kind != wire::NONE {
+            Self::directory(parent, packet);
         }
         if kind == wire::GROUP_RETIRED {
             assert!(
@@ -120,5 +123,40 @@ impl Receiver {
             );
             cathedral_user_runtime::write(b"Cathedral receiver probe: resumed\n").unwrap();
         }
+    }
+
+    fn directory(parent: Pair, packet: wire::Packet) {
+        use cathedral_user_runtime::matrix::input::Directory;
+        let [_, epoch, kind, _, _, _, name, group] = packet;
+        let snapshot = match Directory::read(parent, epoch) {
+            Ok(snapshot) => snapshot,
+            // Membership or the view may change between the bounded reads.
+            // Discard this attempt; never spin against a changing provider.
+            Err(Error(code)) if code == abi::BUSY as i64 || code == abi::DENIED as i64 => return,
+            Err(error) => panic!("input directory: {:?}", error),
+        };
+        let entries = snapshot.entries();
+        match kind {
+            wire::RETIRED => assert!(entries.iter().all(|c| c.name as u64 != name)),
+            wire::GROUP_RETIRED => assert!(entries.iter().all(|c| c.group as u64 != group)),
+            _ => {
+                let channel = entries
+                    .iter()
+                    .find(|c| c.name as u64 == name)
+                    .expect("delivered input missing from scoped directory");
+                assert_eq!(channel.group as u64, group);
+            }
+        }
+        time::storage_sample(
+            "receiver-directory",
+            &[
+                epoch,
+                snapshot.revision,
+                kind,
+                name,
+                group,
+                entries.len() as u64,
+            ],
+        );
     }
 }

@@ -16,7 +16,7 @@ use this machinery with the existing runtime IPC server.
   [group associations](world/input/groups.rs) let several channels share selection.
   Pointer hit testing
   follows the owner's surface ranges; equal ranges use slot order for input-only
-  children. [Children](world/children.rs) assign names local to their view binding
+  children. [Children](world/children/children.rs) assign names local to their view binding
   and drain independent groups fairly, preserving order across channels within
   one group. Each stream has a sixteen-event [FIFO](world/events.rs), plus one
   reserved keyboard-cancellation boundary.
@@ -27,6 +27,14 @@ use this machinery with the existing runtime IPC server.
   local selection; revoking the selected child forgets it. An inherited CANCEL
   resets held state because its sender suppresses residual holds until release.
   Local source interruption performs that suppression here instead.
+- [Input directory](world/children/directory.rs) enumerates only channels already
+  routed into the requesting child's view. Revision-checked reads produce a
+  coherent snapshot or BUSY; the existing wake hint signals changes. Retiring
+  rows remain until their boundary drains. Reading neither consumes input nor
+  grants injection. The [runtime reader](../user-runtime/matrix/input.rs) bounds
+  one attempt and leaves retry timing to its caller. Friendly descriptions,
+  independently delegated registry access and shared read-only tables remain
+  future work; the current key field is only the receiver's view-wide ceiling.
 - [Reception](reception.rs) tracks app-side pointer edges per scoped channel.
   Consume an event once before dispatching it to widgets. Cancellation clears
   only the named pointer; keyboard cancellation leaves pointer holds intact.

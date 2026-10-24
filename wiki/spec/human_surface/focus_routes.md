@@ -131,7 +131,7 @@ asserting that delivered work can be undone.
 ## Evidence and limits
 
 The Rust [local router](../../../source-rs/platform/libraries/matrix/world/input/input.rs)
-and [child queues](../../../source-rs/platform/libraries/matrix/world/children.rs)
+and [child queues](../../../source-rs/platform/libraries/matrix/world/children/children.rs)
 now exercise separate targeting, cancellation and held-key suppression for four
 bounded upstream streams. Host proofs cover independent selection, scoped overflow,
 fair draining and recursive cancellation without losing the next fresh press.

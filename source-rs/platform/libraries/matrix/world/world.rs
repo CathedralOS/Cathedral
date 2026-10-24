@@ -175,6 +175,9 @@ impl<const N: usize> World<N> {
                     Err(code) => wire::error(code),
                 }
             }
+            [wire::INPUT_DIRECTORY, epoch, revision, after, 0, 0, 0, 0] => {
+                child.directory(epoch, revision, after)
+            }
             [wire::VIEW, 0, 0, 0, 0, 0, 0, 0] => child.view(),
             [wire::POLL, 0, 0, 0, 0, 0, 0, 0] if child.grant.valid() => child.poll(),
             [wire::POLL_TAGGED, id @ 1..=0xffff_ffff, 0, 0, 0, 0, 0, 0] => wire::tag_poll(

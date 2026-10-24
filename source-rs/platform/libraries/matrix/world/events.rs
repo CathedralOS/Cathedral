@@ -59,7 +59,7 @@ impl Events {
             self.len = 1;
         }
     }
-    fn retiring(&self) -> bool {
+    pub(super) fn retiring(&self) -> bool {
         self.len == 1 && self.queue[0][0] == wire::RETIRED
     }
     pub fn retire(&mut self, order: u64) {

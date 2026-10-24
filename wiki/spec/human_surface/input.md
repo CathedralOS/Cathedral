@@ -172,7 +172,7 @@ safe merely by agreeing which bytes each owns.
 
 The [Rust physical-key transport](../../../source-rs/platform/contracts/input.rs)
 is a small experimental key-event ABI without the complete text/layout model.
-The [matrix child queues](../../../source-rs/platform/libraries/matrix/world/children.rs)
+The [matrix child queues](../../../source-rs/platform/libraries/matrix/world/children/children.rs)
 buffer sixteen ordinary events per stream for four bounded streams, with one
 reserved keyboard-cancellation boundary. They preserve button edges and group-local
 ordering during motion coalescing and emit scoped cancellation on overflow. They retrieve

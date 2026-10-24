@@ -1,4 +1,5 @@
-//! Child-local extents, epochs and queues. Sibling changes cannot advance an epoch.
+// Child-local extents, epochs and queues. Sibling changes cannot advance an epoch.
+// Directory observation is in directory.rs; input delivery changes its revision.
 use super::input::Name;
 use super::*;
 #[derive(Clone, Copy, Default)]
@@ -33,6 +34,7 @@ pub(super) struct Child {
     queues: [events::Events; wire::INPUT_STREAMS],
     next_stream: usize,
     next_input_name: u32,
+    directory_revision: u64,
     group_names: [u16; wire::INPUT_GROUPS],
     group_sources: [Name; wire::INPUT_GROUPS],
     group_retired: [bool; wire::INPUT_GROUPS],
@@ -63,6 +65,7 @@ impl Child {
             queues: [const { events::Events::empty() }; wire::INPUT_STREAMS],
             next_stream: 0,
             next_input_name: 0,
+            directory_revision: 1,
             group_names: [0; wire::INPUT_GROUPS],
             group_sources: [Name::EMPTY; wire::INPUT_GROUPS],
             group_retired: [false; wire::INPUT_GROUPS],
@@ -89,6 +92,7 @@ impl Child {
         self.queues = [const { events::Events::empty() }; wire::INPUT_STREAMS];
         self.next_stream = 0;
         self.next_input_name = 0;
+        self.directory_revision = 1;
         self.group_names = [0; wire::INPUT_GROUPS];
         self.group_sources = [Name::EMPTY; wire::INPUT_GROUPS];
         self.group_retired = [false; wire::INPUT_GROUPS];
@@ -130,7 +134,8 @@ impl Child {
         self.notify = true;
         self.next_event = self.next_event.checked_add(1).expect("input event order");
         let queue = &mut self.queues[index];
-        if !queue.source.valid() {
+        let created = !queue.source.valid();
+        if created {
             // Child-local names reveal neither ancestor IDs nor sibling traffic.
             let next_channel = self.next_input_name.checked_add(1).ok_or(abi::NO_MEMORY)?;
             if self.group_sources[group] != group_name {
@@ -150,7 +155,11 @@ impl Child {
         debug_assert_eq!(queue.source, channel);
         let coalesce = queue.last_order() == Some(self.group_last_event[group]);
         self.group_last_event[group] = self.next_event;
-        Ok(queue.push(event, self.next_event, coalesce))
+        let delivered = queue.push(event, self.next_event, coalesce);
+        if created {
+            self.directory_changed();
+        }
+        Ok(delivered)
     }
     /// Preflight before routing changes focus, capture or held state. Retained
     /// names still consume capacity even when their event queue is empty.
@@ -200,7 +209,11 @@ impl Child {
     pub fn retire_stream(&mut self, index: usize, channel: Name) {
         if self.queues[index].source == channel {
             self.next_event = self.next_event.checked_add(1).expect("input event order");
+            let changed = !self.queues[index].retiring();
             self.queues[index].retire(self.next_event);
+            if changed {
+                self.directory_changed();
+            }
             self.group_last_event.fill(0);
             self.notify = true;
         }
@@ -255,7 +268,11 @@ impl Child {
                 })
             {
                 self.next_stream = (index + 1) % wire::INPUT_STREAMS;
-                return self.queues[index].next(self.grant.epoch);
+                let event = self.queues[index].next(self.grant.epoch);
+                if event[2] == wire::RETIRED {
+                    self.directory_changed();
+                }
+                return event;
             }
         }
         [0, self.grant.epoch, wire::NONE, 0, 0, 0, 0, 0]

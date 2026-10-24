@@ -1,5 +1,51 @@
 # Rust reference OS: tasks and handoff
 
+Implementation update 2026-10-24: **scoped input binding directory**, over
+`92b2f832`. The ordinary interaction protocol can enumerate only channel/group
+aliases already routed into its receiver's view. Reads neither consume input nor
+create bindings. A bounded runtime reader returns a coherent revision snapshot
+or BUSY when membership changes; the existing coalesced wake hint signals changes.
+Cancellation preserves the binding. Retirement marks its row until the receiver
+consumes RETIRED; replacement channels receive fresh names. View replacement
+invalidates old snapshots, and revision exhaustion fails observation closed.
+Sibling activity does not change the directory; nested names remain local.
+
+The [child entrance](source-rs/platform/libraries/matrix/world/children/children.rs)
+now owns a sibling directory implementation and lifetime tests; mod.rs remains
+plumbing. The [runtime reader](source-rs/platform/libraries/user-runtime/matrix/input.rs)
+validates bounded ordered replies and leaves retry timing to the caller. No kernel
+or default app authority changed. This is a binding directory, not the complete
+producer descriptor registry: the key field is the receiver's view-wide ceiling,
+not a hardware description. Friendly names/control descriptions, separately
+delegated discovery and shared read-only tables remain outstanding.
+
+Verification: workspace host tests (86 matrix), ordinary userspace clippy,
+receiver-probe clippy, matrix library/test clippy, layout (40 Omega / 128 Rust
+edges), format, Python syntax, documentation links and whitespace. The disposable
+Notes observer reads through ordinary IPC and validates event membership and
+post-consumption retirement removal. The host requires successful snapshots as
+well as existing interruption, independent-input and exact saved-text evidence.
+Fresh/cold QEMU proofs:
+
+- Held input / STOP / replacement: `build/boot-harness-rs/desktop/20261024T165242365461Z`.
+- Receiver stall / overflow / fresh input: `build/boot-harness-rs/desktop/20261024T165432758549Z`.
+- Ordinary uninstrumented AUTO / STOP / resize / persistence: `build/boot-harness-rs/desktop/20261024T165547984154Z`.
+
+The traced stock matrix is 254,648 bytes, still within the 256 KiB object cap.
+These are bounded lab proofs, not general registry delegation, all concurrent
+interleavings, a latency bound or a new ARM64/GPU result. The initial host test
+used decreasing owner source names and correctly hit existing anti-reuse refusal;
+its fixture now uses fresh increasing names. No routing policy changed for it.
+
+Next: attach scoped friendly/control descriptions to the established binding
+lifetime, preserving source/receiver separation and bounded discovery. Then work
+through rendering demand and masked capture in the ordinary desktop: hidden apps
+can remain interactive, authorized capture requests pixels without moving the
+app, and participant death releases retained resources. General cursor preferences,
+reassociation, independent group controllers and coordination acquisition remain
+queued. No new owner decision blocks this sequence.
+
+
 Implementation update 2026-10-24: **input interruption over desktop IPC**, over
 `21052cfc`. The installed Split admission path now has disposable fault fixtures;
 normal F5/AUTO behavior and routing policy are unchanged. Producer variants hold
