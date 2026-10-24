@@ -1,15 +1,15 @@
 //! Acquire one owner-selected producer, select the right-hand document, then
 //! type once and move a pointer. No storage, global input or framebuffer access.
-use cathedral_kernel_contracts::user as abi;
-use cathedral_platform_contracts::{input, matrix as wire};
+#[cfg(not(any(feature = "hold-probe", feature = "pressure-probe")))]
+use cathedral_platform_contracts::input;
+use cathedral_platform_contracts::matrix as wire;
 use cathedral_user_runtime::{
     Error,
     matrix::upstream::{self, Pair},
     server::Server,
     services::Services,
-    time,
 };
-fn send(pair: Pair, packet: wire::Packet) -> Result<wire::Packet, Error> {
+pub(super) fn send(pair: Pair, packet: wire::Packet) -> Result<wire::Packet, Error> {
     let reply = upstream::call(pair, packet)?;
     if reply[0] != 0 {
         return Err(Error(reply[0] as i64));
@@ -17,9 +17,22 @@ fn send(pair: Pair, packet: wire::Packet) -> Result<wire::Packet, Error> {
     Ok(reply)
 }
 pub fn run(mut services: Services) -> Result<(), Error> {
-    let mut server = Server::open()?;
+    let server = Server::open()?;
     let pair = services.input_producer(1, 1)?;
     let info = send(pair, [wire::PRODUCER_INFO, 0, 0, 0, 0, 0, 0, 0])?;
+    #[cfg(any(feature = "hold-probe", feature = "pressure-probe"))]
+    {
+        crate::probes::run(server, pair, info)
+    }
+    #[cfg(not(any(feature = "hold-probe", feature = "pressure-probe")))]
+    {
+        demonstrate(server, pair, info)
+    }
+}
+#[cfg(not(any(feature = "hold-probe", feature = "pressure-probe")))]
+fn demonstrate(mut server: Server, pair: Pair, info: wire::Packet) -> Result<(), Error> {
+    use cathedral_kernel_contracts::user as abi;
+    use cathedral_user_runtime::time;
     let generation = info[1];
     if info[2] < 80 || info[3] < 80 {
         return Err(Error(abi::DENIED as i64));

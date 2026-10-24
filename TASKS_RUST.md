@@ -1,5 +1,47 @@
 # Rust reference OS: tasks and handoff
 
+Implementation update 2026-10-24: **input interruption over desktop IPC**, over
+`21052cfc`. The installed Split admission path now has disposable fault fixtures;
+normal F5/AUTO behavior and routing policy are unchanged. Producer variants hold
+pointer/key input until STOP, close their producer endpoint while holding, or
+flood one channel during a deliberate Notes receiver stall. The receiver observer
+checks holds, orphan releases/repeats, channel/group retirement ordering and
+non-reuse of retired identities within the view binding. No test authority or
+special dispatch was added to Split or the platform.
+
+The pressure proof requires the flood to occur inside the observed stall. It sees
+one channel cancellation, preserves a physical key queued to the same stalled
+app, keeps the other Notes usable and verifies fresh producer input after the
+interruption. Hold/disconnect proofs observe both held channels retire before
+the group, then exercise physical input and a new producer generation. Each
+workflow repeats in the same matrix, saves exact text and cold-opens it.
+No routing bug was found by these cases; this closes an integrated evidence gap.
+
+Verification: workspace host tests, ordinary userspace clippy, all three producer
+probe feature checks, receiver-probe clippy, layout, formatting and Python syntax.
+Fresh/cold QEMU proofs:
+
+- Held input and explicit STOP: `build/boot-harness-rs/desktop/20261024T163424046472Z`.
+- Producer endpoint loss while held: `build/boot-harness-rs/desktop/20261024T163625497753Z`.
+- Receiver stall/overflow and fresh input: `build/boot-harness-rs/desktop/20261024T163737002217Z`.
+- Ordinary uninstrumented AUTO, STOP, resize and persistence: `build/boot-harness-rs/desktop/20261024T163845515726Z`.
+
+These are bounded nominal-QEMU fault proofs, not a latency bound, proof of every
+scheduling interleaving, arbitrary device reconnect or an ARM64/GPU result. The
+observer's bounded retirement history is test-only. Group-fair delivery does not
+promise global ordering between independent groups; identity checks
+track retirement, not an assumed increasing arrival order.
+
+Next: implement scoped channel descriptions/discovery under
+[the accepted channel contract](wiki/spec/human_surface/input_channels.md).
+Receiving metadata for granted input must not enumerate ancestor registries or
+grant injection. Preserve coherent snapshot/change observation and retirement
+while testing the mechanism through the installed participant demo. General
+cursor preferences, reassociation, independent group controllers, rendering demand/
+masked capture and coordination acquisition remain queued. No new owner decision
+blocks that work.
+
+
 Implementation update 2026-10-24: **installed independent input participant**, over
 `24c60002`. F5 -> user -> Split -> **AUTO** now admits a separate
 [participant program](source-rs/distribution/applications/input-demo/main.rs).
@@ -610,7 +652,7 @@ Updated 2026-10-22 (local date). Current milestone: **the hop on hardware, and
 global shared leaves**, on baseline `f8bab679` (where a forwarded request
 spends its time). The harness runs the guest under the Windows hypervisor with
 `--accel whpx` as well as under TCG: 32 bare round trips between two tasks cost
-118 to 144 µs there against 3,140 to 4,824 under TCG, and the hop between
+118 to 144 Ã‚Âµs there against 3,140 to 4,824 under TCG, and the hop between
 matrices sits inside the trace line's own noise. The seven supervisor ranges
 every root shares are global now, so the kernel's translations survive the two
 root switches of a trap: 15 percent off the round trip on hardware, nothing
@@ -1624,7 +1666,7 @@ ATA timeout and quiet fault-gate occurrence remain recorded above, unresolved.
 ## Saved layout editor and reliable profile switching (2026-10-18)
 
 The normal user launcher now has SETTINGS, also reachable with F2 when it has
-focus. It edits strip width (192ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“320 pixels) and outer spacing (8ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“40 pixels).
+focus. It edits strip width (192ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¦ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“320 pixels) and outer spacing (8ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¦ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“40 pixels).
 Save writes that user's `Matrix` configuration; Cancel discards local edits and
 returns to app tiles. The current app keeps running in the same position.
 Restart QEMU and select the user to apply the saved layout. This is a bounded
@@ -3552,14 +3594,14 @@ an existing template, without replacing its programs or data.
 
 Measured third-level observations (seconds, traced QEMU/TCG):
 
-| Phase | Before | After | Provider calls before → after |
+| Phase | Before | After | Provider calls before Ã¢â€ â€™ after |
 | --- | ---: | ---: | ---: |
-| Fresh picker launch | 41.62 | 21.41 | 449 → 60 |
-| Fresh user entry | 27.40 | 7.91 | 312 → 27 |
-| Cold picker launch | 26.23 | 6.34 | 283 → 28 |
-| Cold user entry | 40.22 | 7.83 | 312 → 27 |
-| Cold Notes launch | 13.43 | 3.36 | 89 → 9 |
-| Cold Notes save | 5.20 | 3.00 | 21 → 1 |
+| Fresh picker launch | 41.62 | 21.41 | 449 Ã¢â€ â€™ 60 |
+| Fresh user entry | 27.40 | 7.91 | 312 Ã¢â€ â€™ 27 |
+| Cold picker launch | 26.23 | 6.34 | 283 Ã¢â€ â€™ 28 |
+| Cold user entry | 40.22 | 7.83 | 312 Ã¢â€ â€™ 27 |
+| Cold Notes launch | 13.43 | 3.36 | 89 Ã¢â€ â€™ 9 |
+| Cold Notes save | 5.20 | 3.00 | 21 Ã¢â€ â€™ 1 |
 
 Baseline artifacts: `desktop/20261020T054908071290Z`; revised artifacts:
 `desktop/20261020T055706461711Z`, both beneath `build/boot-harness-rs/`.
@@ -3572,9 +3614,9 @@ adds work. These are observations, not timing promises; operation counts show
 the eliminated work independently of host scheduling.
 
 This does **not** establish an input latency improvement. Revised third-level
-typing observations span 187–335 ms across both boots; root pointer observations
-span 40–136 ms there. The compositor CPU for the three cold typed characters was
-about 2–6 ms each, measured on its own clock. Do not subtract it from host time
+typing observations span 187Ã¢â‚¬â€œ335 ms across both boots; root pointer observations
+span 40Ã¢â‚¬â€œ136 ms there. The compositor CPU for the three cold typed characters was
+about 2Ã¢â‚¬â€œ6 ms each, measured on its own clock. Do not subtract it from host time
 and label the remainder scheduler or IPC cost.
 
 Next measured targets: first-time seed creation still takes 21 seconds at depth
@@ -3665,9 +3707,9 @@ Host load and trace overhead vary; counts and eliminated work are stronger
 evidence than a timing ratio. Cold user entry still took 8.3 seconds and fresh
 entry 11.5 seconds in the revised run; these phases were not fixed.
 
-Deep typing observed 209–240 ms fresh and 114–118 ms cold, so responsiveness is
+Deep typing observed 209Ã¢â‚¬â€œ240 ms fresh and 114Ã¢â‚¬â€œ118 ms cold, so responsiveness is
 still uneven. Source-to-Notes delivery crossed seven matrix processes and took
-5–8 nominal 100-Hz guest ticks in the revised samples. For one cold character,
+5Ã¢â‚¬â€œ8 nominal 100-Hz guest ticks in the revised samples. For one cold character,
 delivery took six ticks, Notes paint took five ticks including IPC, Notes charged
 about 1.8 ms CPU during that paint, and compositor redraw about 0.9 ms. These
 separate clocks are not a decomposition of host elapsed time. The useful next
@@ -5215,9 +5257,9 @@ Evidence before the storage fix:
   dirty-close protection, deepest persistence and repeated whole-subtree teardown:
   `build/nested-four-focused.log`.
 - Four-level latency/cold reopen passed: `build/nested-four-latency.log`. Fresh
-  deepest typing observations were 120–133 ms and save 412 ms; user entry was
+  deepest typing observations were 120Ã¢â‚¬â€œ133 ms and save 412 ms; user entry was
   5.2 s. Host injection/capture and tracing perturb these upper bounds. Earlier
-  isolated key tracing saw 1–4 guest ticks from source to Notes. This does not
+  isolated key tracing saw 1Ã¢â‚¬â€œ4 guest ticks from source to Notes. This does not
   isolate scheduler delay or claim a host-independent performance threshold.
 - Five-second delayed interaction fixtures at four levels passed with pointer
   stress and cold reopen: `build/nested-four-delayed.log`.
@@ -5984,7 +6026,7 @@ a backwards clock and the calibration.
 
 Measurements, microseconds from the fresh boot of
 `desktop_test.py --latency --nested-depth 4 --trace-storage`
-(`build/latency-stamp.log`), medians with the trace line's own 231 µs
+(`build/latency-stamp.log`), medians with the trace line's own 231 Ã‚Âµs
 subtracted, then raw p90:
 
 | Transition | Count | Net median | Raw p90 |
@@ -5998,8 +6040,8 @@ subtracted, then raw p90:
 | root dispatch and forward | 233 | 10 and 2 | 324 and 280 |
 | provider work | 88 | 406 | 27,719 |
 
-The cold boot reads the same within 30 µs on every row. So a hop costs 300 to
-400 µs under TCG, where the matrix's own work on a request is about 30 µs: the
+The cold boot reads the same within 30 Ã‚Âµs on every row. So a hop costs 300 to
+400 Ã‚Âµs under TCG, where the matrix's own work on a request is about 30 Ã‚Âµs: the
 time is kernel delivery plus the receiving matrix's wake and switch, not matrix
 code. A depth-4 request crosses eight or nine hops each way, sixteen to
 eighteen in all, for about 6 ms, and the thirteen requests of a user entry
@@ -6012,9 +6054,9 @@ when the running one blocks, yields or the timer fires, so a matrix's loop tail
 sat between every hop. [pending.rs](source-rs/distribution/matrix/service/parent/storage/pending.rs)
 now yields right after forwarding a request upstream and right after answering
 a child (`build/latency-yield.log`): the hop down from the root to a matrix fell
-from 222 to 54 µs net and matrix to matrix from 406 to 368, the depth-4 user
+from 222 to 54 Ã‚Âµs net and matrix to matrix from 406 to 368, the depth-4 user
 entry from 581 to 519 ms and the depth-1 picker launch from 354 to 280. The hop
-up stayed at about 290 µs net, so what remains is the kernel's switch itself
+up stayed at about 290 Ã‚Âµs net, so what remains is the kernel's switch itself
 under emulation: two syscall transitions and a page-table switch, with the
 yield's return through the boot context when deferred work is pending. That is
 a property of the lab's single CPU under TCG far more than of the design, and
@@ -6024,18 +6066,18 @@ any matrix.
 **Kernel phases.** The smoke session's report (`run.py --smoke --release`; the
 suite takes 42 s here, so the default boot timeout is now 120 s instead of 30)
 puts
-the kernel's own work far below the hop: a trap averages 5 µs and a syscall
-2 µs across 190,000 of each, and a task whose registered wait completes is
-selected 8 to 13 µs later with a yielding peer. The IPC lab's echo client now
+the kernel's own work far below the hop: a trap averages 5 Ã‚Âµs and a syscall
+2 Ã‚Âµs across 190,000 of each, and a task whose registered wait completes is
+selected 8 to 13 Ã‚Âµs later with a yielding peer. The IPC lab's echo client now
 times its thirty-two round trips with a clock grant (`ipc-roundtrip`): 3,004
-and 2,957 µs in the two rounds, so a round trip between two small tasks costs
-94 µs and a switch about 45, four syscalls included. The matrix hop's 290 µs is
+and 2,957 Ã‚Âµs in the two rounds, so a round trip between two small tasks costs
+94 Ã‚Âµs and a switch about 45, four syscalls included. The matrix hop's 290 Ã‚Âµs is
 therefore neither trap handling, scheduler latency nor the switch itself: it
 is the woken matrix re-touching its working set, static arenas and mapped
 objects alike, through the emulator's translation cache after the page-table
 reload, before it reaches its stamp. Real hardware pays a few microseconds
 for all of it. A direct switch to the woken task would save the yield's own
-trap, about 5 µs; the hop count, not the hop, is the lab's lever, and that
+trap, about 5 Ã‚Âµs; the hop count, not the hop, is the lab's lever, and that
 count is now what the realm layout requires.
 
 **Two older items close.** Bulk program reads are no longer amplified: a user
@@ -6076,9 +6118,9 @@ Verification:
 
 Next, in order:
 
-1. The per-hop cost is about 290 µs under TCG: a bare switch between two
-   small tasks measures 45 µs, the kernel's trap work 5 µs and selection
-   within 13 µs of completion, so the rest is the woken matrix re-touching its
+1. The per-hop cost is about 290 Ã‚Âµs under TCG: a bare switch between two
+   small tasks measures 45 Ã‚Âµs, the kernel's trap work 5 Ã‚Âµs and selection
+   within 13 Ã‚Âµs of completion, so the rest is the woken matrix re-touching its
    working set through the emulator's translation cache. The receive path was
    tried as a lever: a stamp at the moment the wait returned
    (`build/latency-wake.log`, `build/latency-wake2.log`) put the whole up hop
@@ -6087,15 +6129,15 @@ Next, in order:
    channel the kernel reported ready and a scan reads the clock once
    ([polling.rs](source-rs/platform/libraries/user-runtime/server/polling.rs)),
    which removes a receive per quiet client per wake but leaves the hop at
-   294 µs net (`build/latency-poll3.log`) against 287 to 293 before. The
-   per-turn stamp itself cost 250 µs a turn and was retired. The refill's
+   294 Ã‚Âµs net (`build/latency-poll3.log`) against 287 to 293 before. The
+   per-turn stamp itself cost 250 Ã‚Âµs a turn and was retired. The refill's
    origin is in [entry.S](source-rs/kernel/arch/isa/x86_64/interrupts/entry.S):
    every trap switches to the kernel's own root on entry and back to the
    task's root on return, and no mapping is global
    ([inherited.rs](source-rs/kernel/arch/isa/x86_64/memory/inherited.rs)
    strips the flag, [creation.rs](source-rs/kernel/arch/isa/x86_64/user/memory/creation.rs)
    masks it), so every syscall drops both the kernel's and the task's
-   translations and the emulator re-walks them: 45 µs for a tiny task, far
+   translations and the emulator re-walks them: 45 Ã‚Âµs for a tiny task, far
    more for a matrix. Global supervisor leaves (the seven identical ranges and
    the slot-unique task stacks) would spare the kernel's half; keeping the
    task's half needs PCID or the kernel running in the task's root, which is
@@ -6155,7 +6197,7 @@ able to time either way.
 software TLB on every CR3 write while paging is on, `cpu_x86_update_cr4`
 flushes again only when PGE itself changes, and the x86 page walker never reads
 the global bit (v9.2.0 and current master alike). Under TCG a global leaf
-therefore costs nothing and saves nothing, and the 45 µs a bare switch costs
+therefore costs nothing and saves nothing, and the 45 Ã‚Âµs a bare switch costs
 there is the emulator rebuilding its own TLB, not the guest's. The lab's QEMU
 (11.0.50) also carries WHPX, the Windows hypervisor accelerator, under which
 the guest's page tables and TLB run on the host CPU. [run.py](tools/boot-harness-rs/run.py)
@@ -6168,23 +6210,23 @@ depth-4 latency workload pass under WHPX
 (`build/whpx-smoke.log`, `build/boot-harness-rs/desktop/20261023T060538222615Z`).
 
 **What hardware pays.** Every serial byte is a hypervisor exit under WHPX, so a
-trace line costs about 1,150 µs there against 231 under TCG, and the hop figures
-net of it sit inside its own noise: 0 to 140 µs for the hop up between matrices
+trace line costs about 1,150 Ã‚Âµs there against 231 under TCG, and the hop figures
+net of it sit inside its own noise: 0 to 140 Ã‚Âµs for the hop up between matrices
 and 39 to 224 down over two boots, against 290 and 370 under TCG. A traced
 workload is therefore bound by its own tracing under WHPX, and the untraced
 entry is the end-to-end figure. All TCG figures here are today's: by the
 afternoon the host ran TCG about 1.6 times slower than in the morning's runs,
-the trace line itself at 434 to 649 µs against 231, on the unchanged kernel as
+the trace line itself at 434 to 649 Ã‚Âµs against 231, on the unchanged kernel as
 well (820 to 959 ms for the traced depth-4 entry before the global
 leaves, `build/boot-harness-rs/desktop/20261023T063432217407Z`), so a figure compares only with one taken
 beside it.
 
 | Figure, 32 round trips or one depth-4 step | TCG | WHPX |
 | --- | --- | --- |
-| bare round trip between two tasks, fastest burst | 3,140 to 4,824 µs | 118 to 144 µs |
-| the whole exchange, eight bursts | 36,977 to 44,346 µs | 1,094 to 1,217 µs |
-| trace line itself | 434 to 649 µs (231 in the morning) | about 1,150 µs |
-| hop up between matrices, net median | 332 to 512 µs (290 in the morning) | within trace noise |
+| bare round trip between two tasks, fastest burst | 3,140 to 4,824 Ã‚Âµs | 118 to 144 Ã‚Âµs |
+| the whole exchange, eight bursts | 36,977 to 44,346 Ã‚Âµs | 1,094 to 1,217 Ã‚Âµs |
+| trace line itself | 434 to 649 Ã‚Âµs (231 in the morning) | about 1,150 Ã‚Âµs |
+| hop up between matrices, net median | 332 to 512 Ã‚Âµs (290 in the morning) | within trace noise |
 | depth-4 user entry, traced | 828 to 851 ms | 787 to 989 ms |
 | depth-4 user entry, untraced | 620 to 629 ms | 329 to 431 ms |
 | depth-4 picker launch, untraced | 460 to 533 ms | 777 to 785 ms |
@@ -6215,9 +6257,9 @@ does not map, and no flush site changes, since the shared ranges never change
 after boot. A host test walks a copied tree and checks the identity leaves are
 global, the alias of the same frames is not and the neighbours are untouched.
 Measured as an interleaved A/B, three smoke runs each way under each
-accelerator with a 256-round exchange: under WHPX 1,310 to 1,359 µs without
+accelerator with a 256-round exchange: under WHPX 1,310 to 1,359 Ã‚Âµs without
 the global leaves and 1,128 to 1,175 with (one run 3,508 with a host
-preemption inside), about 15 percent less per round trip, 5.2 to 4.5 µs; under
+preemption inside), about 15 percent less per round trip, 5.2 to 4.5 Ã‚Âµs; under
 TCG 38.4 to 38.5 ms without and 36.9 to 42.0 with, unchanged within noise, as
 QEMU's source says it must be; on the desktop workload under TCG, run beside
 each other, the traced depth-4 entry took 820 to 959 ms without and
@@ -6275,7 +6317,7 @@ refuses at admission beside a live three-deep subtree. Counting the storage as
 busy from the close itself, with nothing in flight, is what makes the timing
 reachable.
 
-**The exchange in bursts.** 256 round trips under TCG cost 150 µs each against
+**The exchange in bursts.** 256 round trips under TCG cost 150 Ã‚Âµs each against
 93 for 32, because ten-millisecond ticks land inside a 38 ms exchange. The echo
 client now runs eight bursts of 32, times each, and reports the fastest burst
 beside the whole exchange (`ipc-roundtrip 32 <fastest> <total>`); the fastest
@@ -6357,17 +6399,17 @@ above; merely registering a provider confers no extra scheduling authority.
 
 **Forwarding-hop lab evidence (2026-10-22, not a scheduling decision).** With
 a microsecond clock in the storage traces, one hop of a nested storage request
-from a matrix to its parent costs about 290 µs under TCG net of tracing, while
-the matrix's own work on the request is about 30 µs; a depth-4 request crosses
+from a matrix to its parent costs about 290 Ã‚Âµs under TCG net of tracing, while
+the matrix's own work on the request is about 30 Ã‚Âµs; a depth-4 request crosses
 sixteen to eighteen hops. The scheduler gives a woken receiver its turn only
 when the running task blocks, yields or the timer fires, so matrices now yield
 right after forwarding or answering, which shortens the downward hops but
-leaves the upward hop near 290 µs. The kernel's trap work is 5 µs, a woken task
-is selected within 13 µs of its completion, and a bare round trip between two
-small tasks measures 94 µs in the IPC lab, so the rest is the woken matrix
+leaves the upward hop near 290 Ã‚Âµs. The kernel's trap work is 5 Ã‚Âµs, a woken task
+is selected within 13 Ã‚Âµs of its completion, and a bare round trip between two
+small tasks measures 94 Ã‚Âµs in the IPC lab, so the rest is the woken matrix
 re-touching its working set through the emulator's translation cache after the
 page-table reload; on hardware (the Windows hypervisor on the lab host) the
-same 32 round trips take about 118 to 144 µs and the hop sits inside the
+same 32 round trips take about 118 to 144 Ã‚Âµs and the hop sits inside the
 trace line's own noise. A direct switch to the task an IPC wakes would therefore
 save only the yield's trap, and what it decides is whose turn funds the
 receiver's work, which is this question; the lab keeps the yield and leaves the
@@ -6437,11 +6479,11 @@ keeps the kernel in its own page-table root: every trap switches roots on entry
 and back on return. The seven supervisor ranges every root shares (image,
 stacks, context heap) are global, so the kernel's translations survive the
 switches; the task's are dropped by each one. 32 bare round trips between two
-tiny tasks cost about 3,140 to 4,824 µs under TCG, where the emulator rebuilds its
+tiny tasks cost about 3,140 to 4,824 Ã‚Âµs under TCG, where the emulator rebuilds its
 whole TLB on every root switch whatever the guest marks global, and about
-118 to 144 µs under the Windows hypervisor on the lab host, 15 percent less
+118 to 144 Ã‚Âµs under the Windows hypervisor on the lab host, 15 percent less
 than before the global leaves. A storage hop between matrices
-is about 290 µs net of tracing under TCG and within the trace line's own noise
+is about 290 Ã‚Âµs net of tracing under TCG and within the trace line's own noise
 on hardware; a depth-4 user entry spends about 85 ms of its 520 in hops under
 TCG and almost nothing on hardware. Sparing the task's half needs PCID, which
 the lab refuses, or the kernel executing in the task's root, which is this

@@ -2,6 +2,8 @@
 #![no_main]
 //! A deliberately simple input participant. Its owner chooses its whole world.
 mod participant;
+#[cfg(any(feature = "hold-probe", feature = "pressure-probe"))]
+mod probes;
 cathedral_user_runtime::service_bootstrap!(&[
     cathedral_platform_contracts::imports::Import::v1(
         cathedral_platform_contracts::imports::INTERACTION,

@@ -11,6 +11,11 @@ path = "main.rs"
 test = false
 bench = false
 
+[features]
+hold-probe = []
+disconnect-probe = ["hold-probe"]
+pressure-probe = []
+
 [dependencies]
 cathedral-kernel-contracts.workspace = true
 cathedral-platform-contracts.workspace = true

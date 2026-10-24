@@ -98,3 +98,14 @@ selection, confined visible cursor, repeated stop/start in the same matrix,
 resize revocation with surviving Notes, saved edits and cold reopen. Cursor assets,
 target-dependent suppression, arbitrary participant discovery and more than the
 bounded four input channels remain outside this demo.
+
+The disposable `--participant-fault hold`, `disconnect` and `pressure` workflows
+use that same admission/IPC path with instrumented participant/Notes images.
+They observe real receiver channel/group retirement while input is held, endpoint
+loss, and overflow during a three-second receiver stall. The pressure case checks
+that another channel queued to the same app survives, that the left app remains
+usable, and that fresh input works after cancellation. All three repeat admission
+in the same matrix, check non-reuse of retired identities and cold-open saved edits.
+The harness requires logged flood/stall ordering; it does not infer overflow from
+elapsed time alone. These are bounded QEMU proofs, not a latency guarantee or
+exhaustive fault coverage. The ordinary F5 images do not contain these probes.

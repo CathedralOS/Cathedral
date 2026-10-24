@@ -107,6 +107,8 @@ pub fn run(style: u64, mut services: Services) {
     let mut scene: Option<view::Scene> = None;
     let mut repaint = true;
     let mut closing = closing::Controls::default();
+    #[cfg(feature = "input-receiver-probe")]
+    let mut input_probe = input_probe::Receiver::default();
     loop {
         let snapshot = call(parent, [wire::POLL, 0, 0, 0, 0, 0, 0, 0]);
         let extent = wire::poll_view(snapshot);
@@ -149,6 +151,8 @@ pub fn run(style: u64, mut services: Services) {
                 }
             }
             let event = wire::poll_event(snapshot);
+            #[cfg(feature = "input-receiver-probe")]
+            input_probe.observe(event);
             #[cfg(feature = "trace-input")]
             if event[2] == wire::KEY && event[4] == input::PRESS as u64 {
                 time::trace("notes-key");

@@ -393,13 +393,19 @@ def desktop(stream, output, serial, reboot, expected_absolute=True, fill_users=F
     print('PASS: user tiles, absolute/relative clicks, app tiles, save/discard/cancel and persistent replacement')
 
 
-def run(timeout, trace_storage=False, relative_pointer=False, service_imports=None, nested=False, deep=False, nested_desktop=False, trace_input=False, latency=False, pointer_stress=False, interaction_delay=False, nested_depth=3, soak=0, collection_pressure=False, accel='tcg', input_producer=None, participants=False):
+def run(timeout, trace_storage=False, relative_pointer=False, service_imports=None, nested=False, deep=False, nested_desktop=False, trace_input=False, latency=False, pointer_stress=False, interaction_delay=False, nested_depth=3, soak=0, collection_pressure=False, accel='tcg', input_producer=None, participants=False, participant_fault=None):
     output = harness.BUILD / 'desktop' / datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S%fZ')
     output.mkdir(parents=True)
     # Exact default composition, with a separate build output so a regression
     # run does not replace the ESP of an already-running interactive guest.
     profile = output / f'desktop-check-{output.name}.json'
     composition = json.loads((ROOT / 'source-rs/distribution/profile.json').read_text())
+    if participant_fault:
+        for entry in composition['startup']['realm_programs']:
+            if entry.get('package') == 'cathedral-input-demo':
+                entry.setdefault('features', []).append(participant_fault + '-probe')
+            if entry.get('path') == 'Split/Notes':
+                entry.setdefault('features', []).append('input-receiver-probe')
     if input_producer:
         def producer_variant(value):
             if isinstance(value, dict):
@@ -467,6 +473,10 @@ def run(timeout, trace_storage=False, relative_pointer=False, service_imports=No
     if participants:
         import participants_test
         user_check = participants_test.exercise
+    if participant_fault:
+        import participant_fault_test
+        from functools import partial
+        user_check = partial(participant_fault_test.exercise, mode=participant_fault)
     for boot in (1, 2):
         capture.run(command, output, timeout, flags, ready_marker='Cathedral desktop: ready; choose a user',
                     verify=lambda stream, output, serial: desktop(stream, output, serial, boot == 2, not relative_pointer, service_imports=service_imports, nested=nested, nested_saved=boot == 2, deep=deep, nested_desktop=nested_desktop, latency=latency, pointer_stress=pointer_stress, interaction_delay=interaction_delay, nested_depth=nested_depth, soak=soak, collection_pressure=collection_pressure, user_check=user_check))
@@ -485,6 +495,9 @@ def run(timeout, trace_storage=False, relative_pointer=False, service_imports=No
         contents = path.read_bytes()
         database_image.prepare(path, programs, migration, app_close=True, realm_programs=harness.realm_programs(profile, True))
         assert contents == path.read_bytes(), 'relaunch must not reformat storage or reinstall unchanged programs'
+    if participant_fault:
+        print(f'PASS: participant {participant_fault} interruption, replacement and cold reopen; artifacts: {output}')
+        return
     if participants:
         print(f'PASS: independent participants, cursor retirement, repeated grants and cold reopen; artifacts: {output}')
         return
@@ -534,6 +547,7 @@ if __name__ == '__main__':
     parser.add_argument('--soak', type=int, default=0, metavar='CYCLES', help='repeat enter/edit/save/teardown through the nested depth this many times in one session, then two more after a cold boot')
     parser.add_argument('--collection-pressure', action='store_true', help='with --soak and --trace-storage: build the provider to collect before every write inside a tiny workspace, and require live collection passes in every cycle')
     parser.add_argument('--latency', action='store_true', help='measure launch, typing and save through the selected nested depth on fresh/cold boots')
+    parser.add_argument('--participant-fault', choices=('hold', 'disconnect', 'pressure'), help='disposable producer/receiver faults through Split AUTO')
     parser.add_argument('--participants', action='store_true', help='exercise Split AUTO with independent physical and synthetic input')
     parser.add_argument('--nested', action='store_true', help='exercise the installed alternative Split matrix')
     parser.add_argument('--deep', action='store_true', help='also enter Split inside Split and check bounded admission')
@@ -560,6 +574,8 @@ if __name__ == '__main__':
         parser.error('--pointer-stress requires --nested-desktop or --soak with absolute input')
     if args.input_producer and (args.service_imports or args.nested or args.deep or args.nested_desktop or args.latency or args.soak or args.interaction_delay):
         parser.error('--input-producer requires the ordinary desktop workflow')
-    if args.participants and (args.service_imports or args.nested or args.deep or args.nested_desktop or args.latency or args.soak or args.input_producer or args.interaction_delay):
+    if (args.participants or args.participant_fault) and (args.service_imports or args.nested or args.deep or args.nested_desktop or args.latency or args.soak or args.input_producer or args.interaction_delay):
         parser.error('--participants runs its own default-desktop workflow')
-    run(args.timeout, args.trace_storage, args.relative_pointer, args.service_imports, args.nested or args.deep, args.deep, args.nested_desktop, args.trace_input, args.latency, args.pointer_stress, args.interaction_delay, args.nested_depth, args.soak, args.collection_pressure, accel=args.accel, input_producer=args.input_producer, participants=args.participants)
+    if args.participant_fault and args.participants:
+        parser.error('--participant-fault replaces the ordinary --participants workflow')
+    run(args.timeout, args.trace_storage, args.relative_pointer, args.service_imports, args.nested or args.deep, args.deep, args.nested_desktop, args.trace_input, args.latency, args.pointer_stress, args.interaction_delay, args.nested_depth, args.soak, args.collection_pressure, accel=args.accel, input_producer=args.input_producer, participants=args.participants, participant_fault=args.participant_fault)

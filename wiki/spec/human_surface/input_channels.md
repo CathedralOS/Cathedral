@@ -5,7 +5,7 @@
 | Contract status | Current |
 | Specification coverage | Partial |
 | Implementation coverage | Partial |
-| Last reviewed | 2026-10-23 |
+| Last reviewed | 2026-10-24 |
 
 ## Channel model
 
@@ -173,8 +173,14 @@ end-to-end delivery acknowledgement or an input latency guarantee.
 The stock broker now implements explicitly opted-in manifest acquisition on a
 separate producer pair, with bounded admission and disconnect retirement. The
 [Rust service contract](../../../source-rs/platform/contracts/services/README.md)
-records its limits and disposable desktop proofs. No default app receives
-production. Discovery and reassociation of an existing stream remain unimplemented.
+records its limits and disposable desktop proofs. Ordinary stock app offers do
+not include production. The installed [Split matrix](../../../source-rs/distribution/applications/split/README.md)
+explicitly admits a separate AUTO participant with independent focus and a scoped
+cursor. Its disposable fault variants exercise held-input retirement, endpoint
+loss and per-channel overflow through real IPC; an unaffected channel targeting
+the same stalled consumer survives, and fresh input works after cancellation.
+Repeated admission checks retired identity non-reuse. These are bounded proofs;
+discovery and reassociation of an existing stream remain unimplemented.
 F5 supplies a pointer channel
 and a keyboard channel in one group. Shared app-side reception tracks pointer
 edges separately; this does not impose separate document/player state on apps.

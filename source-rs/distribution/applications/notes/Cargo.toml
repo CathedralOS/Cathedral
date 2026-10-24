@@ -21,6 +21,7 @@ render-probes = []
 startup-fault = []
 admitted-fault = []
 management-probes = []
+input-receiver-probe = []
 input-producer-probe = []
 input-producer-partial = ["input-producer-probe"]
 

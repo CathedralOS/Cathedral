@@ -26,6 +26,9 @@ producer endpoint acquisition, with interrupted handoff and disconnect cleanup.
 Ordinary app offers remain unchanged. The installed [Split matrix](distribution/applications/split/README.md)
 now explicitly admits a producer through AUTO, with independent focus and a scoped
 cursor. STOP or view invalidation ends the run; restarting is explicit.
+Disposable receiver/producer variants verify held-input retirement, producer loss,
+per-channel overflow isolation, fresh input afterward and replacement identities
+through that installed IPC path, including cold persisted edits.
 
 The [surface path](platform/libraries/matrix/world/surface/README.md#bounded-cursor-presentation)
 now supports a bounded transparent arrow through ordinary local surface authority,
