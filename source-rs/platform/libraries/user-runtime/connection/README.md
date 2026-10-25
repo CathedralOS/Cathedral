@@ -13,7 +13,10 @@ and encoding; neither the kernel nor the contract imports this implementation.
 ## Setup and custody
 
 An owner explicitly installs the server's incoming/outgoing endpoint pair and
-calls `enable_shared(client)`. The client takes ownership of its corresponding
+calls `enable_shared(client)`, or explicitly upgrades its owner control stream with
+`enable_shared_control()`. Control requests retain control authority; an ordinary
+client cannot claim it in its frame. Replacing the control pair retires the old
+shared state before adopting the new incarnation. The client takes ownership of its corresponding
 send/receive pair, including on failed setup. No global locator, claimed PID or
 payload identity can select another caller's authority.
 
@@ -54,6 +57,21 @@ Dropping the connection closes its local notification, releases backing/views an
 signal grants, and closes the lifetime endpoints. This is not universal revocation
 of a peer's independently retained mappings.
 
+## Yielding clients
+
+`begin` publishes one request and returns without waiting for its reply. `poll`
+consumes only its correlated response; a second begin returns BUSY without
+replacing the first. `interests` exposes both the lifetime endpoint and notification
+for the caller's event loop. `transfer_deadline` adds the incomplete-attachment
+bound once a half has arrived. `Server::next_event_for` accepts those interests
+alongside its own bounded client set. Readiness is not a completion; poll again.
+
+The synchronous call helpers use this same state machine. A caller choosing an
+application deadline must retire the connection on expiry, without replaying a
+possibly performed operation. Slow presentations use no operation health timeout;
+their existing delayed-response diagnostics do not cancel them. Setup and partial
+grant/frame custody retain their separate bounded deadlines.
+
 ## Immutable attachments
 
 `call_memory` permits one immutable object in either direction; `reply_memory`
@@ -80,14 +98,25 @@ dropping partial ingress releases queued/installed custody; independently held
 objects remain valid through sender death until their recipients release them.
 Plain Client calls reject unexpected attachments instead of silently losing them.
 
-## First ordinary consumer and evidence
+## Ordinary consumers and evidence
 
 [Physical input](../../../services/input/matrix.rs) uses this Client to publish
 pointer/key packets to the [root matrix service](../../../../distribution/matrix/service/service.rs).
 Slow replies retain the request rather than killing a busy matrix. The normal
 fresh/cold desktop fixture requires the shared-source marker as well as visible
-pointer, typing, launch and storage behavior. Nested forwarding still uses the
-existing transport, as do other desktop service connections and Omega bindings.
+pointer, typing, launch and storage behavior.
+
+The [root display adapter](../../../../distribution/matrix/service/parent/display.rs)
+now uses the same connection for display commands and immutable image attachments.
+Presentation and scene transactions submit/poll one step at a time, with notification
+and lifetime interests in the matrix loop. Existing synchronous image, cursor and
+cleanup operations also use this connection. The display provider upgrades its
+explicitly supplied control pair; initial boot probes/labels precede the handoff
+and upgrade. Ordinary F5 requires both shared-connection markers and rendered output.
+
+Nested matrix forwarding, storage and Omega-facing adapters retain their existing
+transport. This is a root/display migration, not a claim that every recursive hop
+or all startup payloads have migrated.
 
 [The guest connection proof](../../../../distribution/lab/channels/connection/connection.rs)
 checks repeated requests, wrong reply IDs, mixed-wait validation, deadline retirement,
@@ -99,14 +128,14 @@ retained stale attachment replies, sender-death lifetime, mismatched correlation
 and incomplete pairs in both directions. The
 [adversarial sender](../../../../distribution/lab/channels/connection/adversarial.rs)
 checks that ordinary control requests progress while a service awaits a missing half.
-ARM64 exercises mixed
-notification/IPC readiness with the existing shared mailbox, not this full desktop
+[Control cases](../../../../distribution/lab/channels/connection/control.rs) exercise
+yielding calls, immutable replies, owner replacement and abandoned control setup.
+ARM64 exercises mixed notification/IPC readiness with the existing shared mailbox, not this full desktop
 connection. All current guest evidence is single-CPU.
 
 This first integration supports one explicitly enabled shared stream per Server,
 reserving an extra readiness interest. Immutable attachment custody is exercised
-through the common transport, but ordinary display/storage attachments still use
-the old path. Their migration needs a yielding client and mixed readiness in the
-owner's event loop. Expanding multiplexing, endpoint custody and Omega-facing
-migration remain work; no performance
-improvement or final production wire ABI is claimed here.
+through the common transport and the ordinary root/display path. Expanding
+multiplexing, storage and nested consumers, endpoint custody and Omega-facing
+migration remain work. No performance improvement or final production wire ABI
+is claimed here.

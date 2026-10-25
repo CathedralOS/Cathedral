@@ -7,6 +7,9 @@ use cathedral_user_runtime::{
 };
 pub(crate) fn run(mode: u64, env: Environment) -> u64 {
     let pair = (env.endpoint(0).unwrap(), env.endpoint(1).unwrap());
+    if mode >= 68 {
+        return super::control::worker(mode, pair);
+    }
     if mode == 55 || (60..=64).contains(&mode) {
         return wrong_reply(pair, mode);
     }

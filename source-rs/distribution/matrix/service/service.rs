@@ -12,6 +12,7 @@ type World = cathedral_matrix::world::World<CHILDREN>;
 use cathedral_desktop_matrix_contracts::matrix as wire;
 use cathedral_user_runtime::{
     Error,
+    event::Interest,
     server::{Event, Server},
     task::Environment,
 };
@@ -176,13 +177,14 @@ pub fn run(environment: Environment) -> Result<(), Error> {
             cathedral_user_runtime::time::now()?,
         );
         children.notify(world)?;
-        let mut extra = [cathedral_user_runtime::ipc::Handle::from_raw(0); CHILDREN + 3];
+        let mut extra =
+            [Interest::Ipc(cathedral_user_runtime::ipc::Handle::from_raw(0)); CHILDREN + 4];
         let mut count = 0;
         if parent.upstream_busy() || parent.storing() {
             deadline = None;
         }
         if !hold_storage && let Some((receive, until)) = parent.storage_wait() {
-            extra[count] = receive;
+            extra[count] = Interest::Ipc(receive);
             count += 1;
             deadline = Some(until);
         }
@@ -215,8 +217,11 @@ pub fn run(environment: Environment) -> Result<(), Error> {
         .flatten()
         {
             // Both exchanges may wait on the same interaction receiver.
-            if !extra[..count].iter().any(|h| h.raw() == receive.raw()) {
-                extra[count] = receive;
+            if !extra[..count]
+                .iter()
+                .any(|h| matches!(h,Interest::Ipc(old) if old.raw()==receive.raw()))
+            {
+                extra[count] = Interest::Ipc(receive);
                 count += 1;
             }
             if let Some(until) = until {
@@ -229,6 +234,19 @@ pub fn run(environment: Environment) -> Result<(), Error> {
                 }));
             }
         }
+        if let Some(interest) = parent.display_wake()? {
+            extra[count] = interest;
+            count += 1;
+        }
+        if let Some(until) = parent.display_deadline() {
+            deadline = Some(deadline.map_or(until, |d| {
+                if cathedral_user_runtime::time::reached(d, until) {
+                    until
+                } else {
+                    d
+                }
+            }));
+        }
         if let Some(until) = parent.poll_retry {
             deadline = Some(deadline.map_or(until, |d| {
                 if cathedral_user_runtime::time::reached(d, until) {
@@ -239,7 +257,7 @@ pub fn run(environment: Environment) -> Result<(), Error> {
             }));
         }
         for handle in handles.into_iter().flatten() {
-            extra[count] = handle;
+            extra[count] = Interest::Ipc(handle);
             count += 1;
         }
         let input_ready = world.input_ready();
@@ -264,7 +282,7 @@ pub fn run(environment: Environment) -> Result<(), Error> {
             && input_ready
             && let Some(wake) = parent.wake
         {
-            extra[count] = wake;
+            extra[count] = Interest::Ipc(wake);
             count += 1;
         }
         #[cfg(not(feature = "interaction-delay"))]
@@ -276,7 +294,7 @@ pub fn run(environment: Environment) -> Result<(), Error> {
         let from_queue = queued.is_some();
         let event = match queued {
             Some(event) => event,
-            None => match server.next_event_or(&extra[..count], deadline)? {
+            None => match server.next_event_for(&extra[..count], deadline)? {
                 Some(event) => event,
                 // An upstream reply or a child's wake made an extra handle
                 // ready; the next turn's progress steps take it from there.

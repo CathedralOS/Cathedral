@@ -13,63 +13,77 @@ enum State {
     Ready(Peer),
 }
 pub(super) struct Shared {
-    pub client: usize,
+    /// Server dispatch index: control is zero, client n is n+1.
+    pub channel: usize,
     state: State,
     last: u64,
     pending: u64,
 }
 impl Server {
-    /// First migration supports one explicitly installed stream per server.
-    /// Other streams retain their existing transport. No service name or PID lookup.
+    /// One explicitly selected shared stream per server; no global lookup.
     pub fn enable_shared(&mut self, client: usize) -> Result<(), Error> {
-        if self.shared.is_some()
-            || self.count + 2 > abi::MAX_WAIT_HANDLES
-            || client >= self.count
-            || self.clients[client].is_none()
-            || self.links[client].is_some()
-        {
+        if client >= self.count || self.clients[client].is_none() || self.links[client].is_some() {
+            return Err(Error(abi::INVALID_ARGUMENT as i64));
+        }
+        self.arm_shared(client + 1)
+    }
+    /// Upgrade the owner's supplied control stream, preserving control authority.
+    pub fn enable_shared_control(&mut self) -> Result<(), Error> {
+        self.arm_shared(0)
+    }
+    fn arm_shared(&mut self, channel: usize) -> Result<(), Error> {
+        if self.shared.is_some() || self.count + 2 > abi::MAX_WAIT_HANDLES {
             return Err(Error(abi::INVALID_ARGUMENT as i64));
         }
         self.shared = Some(Shared {
-            client,
+            channel,
             state: State::Armed,
             last: 0,
             pending: 0,
         });
         Ok(())
     }
-    pub(super) fn shared_active(&self, client: usize) -> bool {
+    fn retire_shared(&mut self, channel: usize) -> Result<(), Error> {
+        if channel == 0 {
+            self.shared = None;
+            Err(Error(abi::PEER_CLOSED as i64))
+        } else {
+            self.disconnect(channel - 1);
+            Ok(())
+        }
+    }
+    pub(super) fn shared_active(&self, channel: usize) -> bool {
         self.shared
             .as_ref()
-            .is_some_and(|s| s.client == client && !matches!(s.state, State::Armed))
+            .is_some_and(|s| s.channel == channel && !matches!(s.state, State::Armed))
     }
     pub(super) fn shared_open(
         &mut self,
-        client: usize,
+        channel: usize,
         pair: (Handle, Handle),
         bytes: &[u8],
-    ) -> bool {
+    ) -> Result<bool, Error> {
         if !self
             .shared
             .as_ref()
-            .is_some_and(|s| s.client == client && matches!(s.state, State::Armed))
+            .is_some_and(|s| s.channel == channel && matches!(s.state, State::Armed))
             || bytes != wire::OPEN
         {
-            return false;
+            return Ok(false);
         }
         match time::after(300).and_then(|d| Accept::start((pair.1, pair.0), d)) {
             Ok(accept) => self.shared.as_mut().unwrap().state = State::Opening(accept),
-            Err(_) => self.disconnect(client),
+            Err(_) => self.retire_shared(channel)?,
         }
-        true
+        Ok(true)
     }
     pub(super) fn shared_poll(
         &mut self,
-        client: usize,
+        channel: usize,
         pair: (Handle, Handle),
     ) -> Result<Option<Event>, Error> {
         let shared = self.shared.as_mut().unwrap();
-        assert_eq!(shared.client, client);
+        assert_eq!(shared.channel, channel);
         match &mut shared.state {
             State::Armed => unreachable!(),
             State::Opening(accept) => {
@@ -99,8 +113,8 @@ impl Server {
                 let request = Request {
                     bytes,
                     len,
-                    control: false,
-                    client: Some(client),
+                    control: channel == 0,
+                    client: channel.checked_sub(1),
                     incarnation: pair.0.raw(),
                     reply: pair.1,
                     shared_id: id,
@@ -121,16 +135,23 @@ impl Server {
         if bytes.len() > 64 {
             return Err(Error(abi::INVALID_ARGUMENT as i64));
         }
-        let Some(client) = request.client else {
-            return Err(Error(abi::DENIED as i64));
+        let channel = if request.control {
+            0
+        } else {
+            request.client.ok_or(Error(abi::DENIED as i64))? + 1
         };
-        if self.incarnation(client) != Some(request.incarnation) {
+        let current = if channel == 0 {
+            Some(self.control.0.raw())
+        } else {
+            self.incarnation(channel - 1)
+        };
+        if current != Some(request.incarnation) {
             return Ok(());
         }
         let Some(shared) = self
             .shared
             .as_mut()
-            .filter(|s| s.client == client && s.pending == request.shared_id)
+            .filter(|s| s.channel == channel && s.pending == request.shared_id)
         else {
             return Ok(());
         };
@@ -143,7 +164,7 @@ impl Server {
             // object and may send a plain refusal on this exact request.
             Err(failure) if object.is_some() && !failure.exposed => return Err(failure.error),
             Err(failure) => {
-                self.disconnect(client);
+                self.retire_shared(channel)?;
                 if object.is_some() {
                     return Err(failure.error);
                 }
@@ -154,7 +175,7 @@ impl Server {
     pub(super) fn shared_wake(&self) -> Option<(usize, Notification)> {
         let shared = self.shared.as_ref()?;
         match &shared.state {
-            State::Ready(peer) if shared.pending == 0 => Some((shared.client, peer.wake())),
+            State::Ready(peer) if shared.pending == 0 => Some((shared.channel, peer.wake())),
             _ => None,
         }
     }
@@ -169,8 +190,8 @@ impl Server {
         if let Some(deadline) = self.shared_deadline()
             && time::reached(time::now()?, deadline)
         {
-            let client = self.shared.as_ref().unwrap().client;
-            self.disconnect(client);
+            let channel = self.shared.as_ref().unwrap().channel;
+            self.retire_shared(channel)?;
         }
         Ok(())
     }

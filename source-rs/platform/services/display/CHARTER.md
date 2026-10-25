@@ -49,3 +49,21 @@ remain host-testable without device access or IPC. The runtime handlers under
 Distribution clients choose content and request presentation; the provider
 validates authority, placement and clipping. This retained lab mode is still an
 experimental protocol, not the complete compositor design.
+
+## Root matrix connection
+
+When supplied an explicit control pair in its environment, the compositor permits
+that owner to upgrade to the [shared service connection](../../libraries/user-runtime/connection/README.md).
+Boot dimensions/labels are exchanged before the root receives those endpoints.
+The [root adapter](../../../distribution/matrix/service/parent/display.rs) then
+upgrades once; steady-state commands use shared frames and notifications, and
+images use correlated typed immutable grants. The control bit comes from the
+installed connection, never a caller-supplied frame field. Pixel validation,
+clipping, retained-image lifetime and presentation commit remain with the display
+provider. Losing the owner retires this connection and ends the provider normally.
+
+Presentation and selection scene updates yield through the matrix's event loop.
+The provider has one additional private page, reader page and notification allowance;
+small root profiles reserve matching client capacity. Direct-mode smoke and older
+composition fixtures retain their existing protocol; nested matrix hops are a
+separate migration. This does not imply faster software rasterization or GPU support.

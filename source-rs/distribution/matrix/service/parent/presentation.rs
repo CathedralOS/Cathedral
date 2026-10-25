@@ -2,7 +2,6 @@
 //! visual exchange. Tagged input shares the receiver through interaction.rs.
 //! Slow replies retain ownership and never trigger a replay.
 use super::*;
-use cathedral_platform_contracts::display;
 use cathedral_user_runtime::server::Request;
 
 pub(super) struct Pending {
@@ -25,7 +24,7 @@ impl Parent {
     pub(in super::super) fn presentation_wait(&self) -> Option<(Handle, Option<u64>)> {
         self.pending.as_ref().map(|p| {
             (
-                self.output().unwrap().1,
+                self.output_receiver().unwrap(),
                 p.retry.or_else(|| (!p.late).then_some(p.deadline)),
             )
         })
@@ -105,14 +104,7 @@ impl Parent {
         let status = if self.upstream {
             self.pending.as_mut().unwrap().reply.take()
         } else {
-            let mut bytes = [0; 64];
-            match self.output()?.1.receive_until(&mut bytes, now) {
-                Ok(len) => {
-                    Some(display::decode(&bytes[..len]).ok_or(Error(abi::IO_ERROR as i64))?[0])
-                }
-                Err(Error(code)) if code == abi::TIMED_OUT as i64 => None,
-                Err(error) => return Err(error),
-            }
+            self.output_status()?
         };
         let Some(status) = status else {
             let p = self.pending.as_mut().unwrap();
@@ -197,8 +189,8 @@ impl Parent {
     fn send_presentation(&self, world: &mut World) -> Result<(), Error> {
         let p = self.pending.as_ref().unwrap();
         let batch = &self.batches[p.request.client.unwrap()];
-        let (send, _) = self.output()?;
         if p.compact {
+            let send = self.pair.ok_or(Error(abi::DENIED as i64))?.0;
             let mut updates = [[0; 8]; 2];
             let mut count = 0;
             for (i, update) in updates.iter_mut().enumerate() {

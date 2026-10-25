@@ -53,7 +53,21 @@ pub(super) fn run() {
             if mode == 50 {
                 for i in 0..64 {
                     let bytes = [i; 64];
-                    let (got, n) = if i % 2 == 0 {
+                    let (got, n) = if i % 3 == 0 {
+                        client.begin(&bytes, None).unwrap();
+                        assert!(client.pending());
+                        assert_eq!(client.begin(b"second", None), Err(Error(abi::BUSY as i64)));
+                        let (got, n, object) = loop {
+                            if let Some(reply) = client.poll().unwrap() {
+                                break reply;
+                            }
+                            event::wait(&client.interests().unwrap(), time::after(300).unwrap())
+                                .unwrap();
+                        };
+                        assert!(!client.pending());
+                        assert!(object.is_none());
+                        (got, n)
+                    } else if i % 2 == 0 {
                         client.call_retained(&bytes).unwrap()
                     } else {
                         client.call(&bytes, time::after(300).unwrap()).unwrap()
@@ -90,6 +104,7 @@ pub(super) fn run() {
         );
     }
     attachments::run(launch);
+    control::run(launch);
     resources::assign(
         launch,
         Limits {

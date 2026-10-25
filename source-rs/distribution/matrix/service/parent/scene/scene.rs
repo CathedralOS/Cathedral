@@ -43,7 +43,7 @@ impl Parent {
             let until = p.retry.or_else(|| (!p.late).then_some(p.deadline));
             #[cfg(feature = "scene-delay")]
             let until = p.hold.filter(|until| *until != 0).or(until);
-            (self.output().unwrap().1, until)
+            (self.output_receiver().unwrap(), until)
         })
     }
     pub(in crate::service) fn begin_scene(
@@ -55,7 +55,7 @@ impl Parent {
         _probe: bool,
     ) -> Result<(), Error> {
         assert!(!self.publishing());
-        self.output()?;
+        self.output_receiver()?;
         let mut count = 0;
         for slot in 1..BACKGROUND {
             if Some(slot) != previous && Some(slot) != next {
@@ -108,15 +108,7 @@ impl Parent {
         let status = if self.upstream || self.scene.as_ref().unwrap().reply.is_some() {
             self.scene.as_mut().unwrap().reply.take()
         } else {
-            let mut bytes = [0; 64];
-            match self.output()?.1.receive_until(&mut bytes, time::now()?) {
-                Ok(len) => Some(
-                    cathedral_platform_contracts::display::decode(&bytes[..len])
-                        .ok_or(Error(abi::IO_ERROR as i64))?[0],
-                ),
-                Err(Error(code)) if code == abi::TIMED_OUT as i64 => None,
-                Err(e) => return Err(e),
-            }
+            self.output_status()?
         };
         let p = self.scene.as_mut().unwrap();
         let Some(status) = status else {

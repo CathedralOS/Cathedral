@@ -1,8 +1,10 @@
 //! One outstanding call, exact correlation, retirement after ambiguous failure.
 use super::*;
+pub type Response = ([u8; 64], usize, Option<Object>);
 pub struct Client {
     peer: Option<Peer>,
     next: u64,
+    pending: Option<u64>,
 }
 impl Client {
     /// Takes ownership of the supplied send/receive pair, including on failure.
@@ -33,6 +35,7 @@ impl Client {
                 incoming: Incoming::default(),
             }),
             next: 1,
+            pending: None,
         })
     }
     /// Any error after submission retires this connection; caller must reconcile
@@ -63,28 +66,84 @@ impl Client {
         }
         Ok((bytes, n))
     }
-    fn exchange(
-        &mut self,
-        bytes: &[u8],
-        object: Option<&Object>,
-        deadline: Option<u64>,
-    ) -> Result<([u8; 64], usize, Option<Object>), Error> {
+    /// Publish one request without waiting for the service. BUSY leaves the
+    /// original request intact; a transport failure retires without replay.
+    pub fn begin(&mut self, bytes: &[u8], object: Option<&Object>) -> Result<(), Error> {
+        if self.pending.is_some() {
+            return Err(Error(abi::BUSY as i64));
+        }
         if bytes.len() > 64 {
             return Err(Error(abi::INVALID_ARGUMENT as i64));
         }
         let id = self.next;
         let result = (|| {
             self.next = id.checked_add(1).ok_or(Error(abi::IO_ERROR as i64))?;
+            self.peer
+                .as_mut()
+                .ok_or(Error(abi::PEER_CLOSED as i64))?
+                .send(id, bytes, object)
+                .map_err(|e| e.error)?;
+            self.pending = Some(id);
+            Ok(())
+        })();
+        if result.is_err() {
+            self.retire();
+        }
+        result
+    }
+    /// Consume only the exact outstanding reply. None leaves its custody intact.
+    pub fn poll(&mut self) -> Result<Option<Response>, Error> {
+        let id = self.pending.ok_or(Error(abi::INVALID_ARGUMENT as i64))?;
+        let result = (|| {
             let peer = self.peer.as_mut().ok_or(Error(abi::PEER_CLOSED as i64))?;
-            peer.send(id, bytes, object)
-                .map_err(|failure| failure.error)?;
+            let Some(reply) = peer.receive()? else {
+                return Ok(None);
+            };
+            if reply.id != id {
+                return Err(Error(abi::IO_ERROR as i64));
+            }
+            self.pending = None;
+            Ok(Some((reply.bytes, reply.len, reply.object)))
+        })();
+        if result.is_err() {
+            self.retire();
+        }
+        result
+    }
+    /// Include both interests in the caller's service loop. Readiness consumes
+    /// nothing; poll remains responsible for correlation and completion.
+    pub fn interests(&self) -> Result<[Interest; 2], Error> {
+        let peer = self.peer.as_ref().ok_or(Error(abi::PEER_CLOSED as i64))?;
+        Ok([
+            Interest::Ipc(peer.lease.0.1),
+            Interest::Notification(peer.wake()),
+        ])
+    }
+    pub fn pending(&self) -> bool {
+        self.pending.is_some()
+    }
+    pub fn transfer_deadline(&self) -> Option<u64> {
+        self.peer.as_ref().and_then(Peer::deadline)
+    }
+    pub fn call_retained_memory(
+        &mut self,
+        bytes: &[u8],
+        object: Option<&Object>,
+    ) -> Result<Response, Error> {
+        self.exchange(bytes, object, None)
+    }
+    fn exchange(
+        &mut self,
+        bytes: &[u8],
+        object: Option<&Object>,
+        deadline: Option<u64>,
+    ) -> Result<Response, Error> {
+        self.begin(bytes, object)?;
+        let result = (|| {
             let mut wake_error = None;
             loop {
-                if let Some(reply) = peer.receive()? {
-                    if reply.id != id {
-                        return Err(Error(abi::IO_ERROR as i64));
-                    }
-                    return Ok((reply.bytes, reply.len, reply.object));
+                if let Some(reply) = self.poll()? {
+                    return Ok(reply);
                 }
                 if let Some(error) = wake_error {
                     return Err(error);
@@ -97,7 +156,7 @@ impl Client {
                     Some(d) => d,
                     None => time::after(100)?,
                 };
-                wake_error = match peer.wait(until) {
+                wake_error = match self.peer.as_ref().unwrap().wait(until) {
                     Err(Error(c)) if deadline.is_none() && c == abi::TIMED_OUT as i64 => None,
                     result => result.err(),
                 };
@@ -110,5 +169,6 @@ impl Client {
     }
     pub fn retire(&mut self) {
         self.peer = None;
+        self.pending = None;
     }
 }

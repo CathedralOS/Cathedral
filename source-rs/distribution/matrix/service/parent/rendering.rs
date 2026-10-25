@@ -70,11 +70,9 @@ impl Parent {
         Ok([reply[0], reply[1], 0, 0, 0, 0, 0, 0])
     }
     pub(super) fn display_call(&self, words: [u64; 6]) -> Result<[u64; 6], Error> {
-        let (send, recv) = self.display.unwrap();
-        send.send(&display::encode(words))?;
-        let mut bytes = [0; 64];
-        let len =
-            cathedral_user_runtime::matrix::upstream::receive(recv, &mut bytes, words[0], 100)?;
-        display::decode(&bytes[..len]).ok_or(Error(abi::IO_ERROR as i64))
+        self.display
+            .as_ref()
+            .ok_or(Error(abi::DENIED as i64))?
+            .call(&display::encode(words), None)
     }
 }

@@ -23,7 +23,9 @@
         "clock": true,
         "argument": 1129270608,
         "framebuffer": true,
-        "shared_pages": 4
+        "shared_pages": 5,
+        "private_pages": 1,
+        "ipc_channels": 1
       },
       {
         "package": "cathedral-input-service",
@@ -42,9 +44,9 @@
         "target": "x86_64-unknown-none",
         "clock": true,
         "argument": 0,
-        "ipc_channels": 21,
-        "private_pages": 17,
-        "shared_pages": 9,
+        "ipc_channels": 22,
+        "private_pages": 18,
+        "shared_pages": 10,
         "features": [
           "trace-storage"
         ]

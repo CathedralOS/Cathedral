@@ -50,3 +50,18 @@ physical-source dispatch, image calls, lifecycle-driven fallback selection and
 launch teardown/compensation retain synchronous work. An atomic scene
 still serializes visual commits. This is not a claim of end-to-end latency bounds
 or that sibling pixels can commit into another app's open scene transaction.
+
+## Root display boundary
+
+[display.rs](../service/parent/display.rs) now owns a shared service client for
+root-to-display commands and immutable image grants. `output.rs` selects this
+adapter at the root and the existing scoped interaction stream in nested matrices.
+Presentation and owner scene updates submit/poll the same serialized shared client;
+the service loop includes its notification and lifetime endpoint beside child and
+storage interests. A pending request cannot be overwritten by another call.
+
+The adapter's RefCell separates mutable transport bookkeeping from immutable
+borrows of retained images in this single-threaded process. It does not permit
+concurrent calls: Client rejects a second outstanding request. Synchronous cursor,
+image replay and cleanup calls retain their existing scheduling behavior. There
+is no copied-payload fallback after the display connection upgrades.

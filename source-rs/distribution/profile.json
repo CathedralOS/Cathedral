@@ -85,8 +85,9 @@
         "clock": true,
         "argument": 1129270608,
         "framebuffer": true,
-        "shared_pages": 512,
-        "ipc_channels": 0
+        "shared_pages": 513,
+        "ipc_channels": 1,
+        "private_pages": 1
       },
       {
         "package": "cathedral-input-service",

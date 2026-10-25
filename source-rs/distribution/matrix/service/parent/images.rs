@@ -21,7 +21,6 @@ impl Parent {
         words: wire::Packet,
         object: &Object,
     ) -> Result<wire::Packet, Error> {
-        let mut bytes = [0; 64];
         if self.upstream {
             return cathedral_user_runtime::matrix::upstream::exchange(
                 self.pair.unwrap(),
@@ -29,12 +28,12 @@ impl Parent {
                 Some(object),
             );
         }
-        let (send, receive) = self.display.ok_or(Error(abi::DENIED as i64))?;
+        let display = self.display.as_ref().ok_or(Error(abi::DENIED as i64))?;
         let [_, _, key, x, y, w, h, stride] = words;
         if key == 0 || key > composition::MATRIX_TILES as u64 {
             return Ok(wire::error(abi::BAD_HANDLE));
         }
-        send.send_memory(
+        let reply = display.call(
             &display::encode([
                 composition::MATRIX_IMAGE | ((key - 1) << 16),
                 x,
@@ -43,11 +42,8 @@ impl Parent {
                 h,
                 stride,
             ]),
-            object,
+            Some(object),
         )?;
-        let len =
-            cathedral_user_runtime::matrix::upstream::receive(receive, &mut bytes, words[0], 100)?;
-        let reply = display::decode(&bytes[..len]).ok_or(Error(abi::IO_ERROR as i64))?;
         Ok(wire::error(reply[0]))
     }
 }

@@ -31,7 +31,7 @@ pub struct Server {
 }
 impl Server {
     fn control_only(&self) -> bool {
-        if self.reply_paused() != 0 {
+        if self.shared.is_some() || self.reply_paused() != 0 {
             return false;
         }
         for index in 0..self.count {
@@ -64,7 +64,7 @@ impl Server {
     /// Services retaining client-owned state must observe disconnects before reuse.
     pub fn next_event(&mut self) -> Result<Event, Error> {
         loop {
-            if let Some(event) = self.next_event_or(&[], None)? {
+            if let Some(event) = self.next_event_for(&[], None)? {
                 return Ok(event);
             }
         }
@@ -74,6 +74,21 @@ impl Server {
     pub fn next_event_or(
         &mut self,
         extra: &[Handle],
+        deadline: Option<u64>,
+    ) -> Result<Option<Event>, Error> {
+        if extra.len() > abi::MAX_WAIT_HANDLES {
+            return Err(Error(abi::INVALID_ARGUMENT as i64));
+        }
+        let mut interests = [crate::event::Interest::Ipc(self.control.0); abi::MAX_WAIT_HANDLES];
+        for (out, &handle) in interests.iter_mut().zip(extra) {
+            *out = crate::event::Interest::Ipc(handle);
+        }
+        self.next_event_for(&interests[..extra.len()], deadline)
+    }
+    /// Caller-owned IPC/device/notification interests share one bounded wait.
+    pub fn next_event_for(
+        &mut self,
+        extra: &[crate::event::Interest],
         deadline: Option<u64>,
     ) -> Result<Option<Event>, Error> {
         // A control-only service needs no clock grant (for example the display fixture).

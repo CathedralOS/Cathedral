@@ -3,7 +3,6 @@ use super::{Event, Request, Server};
 use crate::{
     Error, abi,
     event::{self, Interest},
-    ipc::Handle,
     time,
 };
 
@@ -25,14 +24,18 @@ impl Server {
             }) else {
                 continue;
             };
-            if channel != 0 && self.shared_active(channel - 1) {
-                match self.shared_poll(channel - 1, pair) {
+            if self.shared_active(channel) {
+                match self.shared_poll(channel, pair) {
                     Ok(Some(event)) => {
                         self.cursor = (channel + 1) % (self.count + 1);
                         return Ok(Some(event));
                     }
                     Ok(None) => continue,
-                    Err(_) => {
+                    Err(error) => {
+                        if channel == 0 {
+                            self.shared = None;
+                            return Err(error);
+                        }
                         self.disconnect(channel - 1);
                         return Ok(self.take_disconnection());
                     }
@@ -47,10 +50,7 @@ impl Server {
             match received {
                 Ok((len, object)) => {
                     self.cursor = (channel + 1) % (self.count + 1);
-                    if channel != 0
-                        && object.is_none()
-                        && self.shared_open(channel - 1, pair, &bytes[..len])
-                    {
+                    if object.is_none() && self.shared_open(channel, pair, &bytes[..len])? {
                         if let Some(event) = self.take_disconnection() {
                             return Ok(Some(event));
                         }
@@ -86,7 +86,11 @@ impl Server {
     /// consuming it. A wake on a client channel points the poll cursor at that
     /// channel, so the next scan finds it first instead of asking every quiet
     /// client again.
-    pub(super) fn wait(&mut self, extra: &[Handle], deadline: Option<u64>) -> Result<bool, Error> {
+    pub(super) fn wait(
+        &mut self,
+        extra: &[Interest],
+        deadline: Option<u64>,
+    ) -> Result<bool, Error> {
         // Watch every live channel together. The bounded maintenance timeout
         // retries absent links; quiet connected clients generate no poll traffic.
         let mut handles = [Interest::Ipc(self.control.0); abi::MAX_WAIT_HANDLES];
@@ -104,21 +108,21 @@ impl Server {
                 count += 1;
             }
         }
-        if let Some((client, wake)) = self.shared_wake()
-            && (self.paused | self.reply_paused()) & (1 << (client + 1)) == 0
+        if let Some((channel, wake)) = self.shared_wake()
+            && (self.paused | self.reply_paused()) & (1 << channel) == 0
         {
             if count == handles.len() {
                 return Err(Error(abi::INVALID_ARGUMENT as i64));
             }
             handles[count] = Interest::Notification(wake);
-            channels[count] = client + 1;
+            channels[count] = channel;
             count += 1;
         }
         if count + extra.len() > handles.len() {
             return Err(Error(abi::INVALID_ARGUMENT as i64));
         }
         for (out, &handle) in handles[count..count + extra.len()].iter_mut().zip(extra) {
-            *out = Interest::Ipc(handle);
+            *out = handle;
         }
         let mut until = deadline.unwrap_or(time::after(100)?);
         if let Some(setup) = self.shared_deadline()

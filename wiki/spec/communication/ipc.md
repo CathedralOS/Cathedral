@@ -209,11 +209,13 @@ or peer progress. Failure and reclamation must preserve outstanding obligations.
   ARM64. It exercises malformed headers, backpressure, mapping protections and
   retained funding. Arbitrary multi-writer mapping is not implemented.
 - The [shared service connection](../../../source-rs/platform/libraries/user-runtime/connection/README.md)
-  now carries normal F5 physical input to the root matrix. It adds explicit setup,
+  now carries normal F5 physical input to the root matrix and root display commands
+  and immutable image grants to the display provider. It adds explicit setup,
   request correlation, mixed notification/lifetime waits and failed-connection
   retirement. Its immutable attachment extension correlates a shared frame with a
   typed grant, bounds incomplete custody and preserves backing through peer death;
-  ordinary display/storage attachment consumers have not migrated yet.
+  display uses a yielding client with mixed readiness. Storage attachment consumers
+  have not migrated yet.
   Nested forwarding, other services and Omega bindings remain to migrate;
   this is not a coordination service or proof of complete desktop migration.
 - [Omega boot](../../../source/kernel/boot/uefi/README.md) exercises early memory

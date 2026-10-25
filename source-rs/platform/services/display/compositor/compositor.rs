@@ -53,6 +53,7 @@ pub fn run(environment: cathedral_user_runtime::task::Environment) -> u64 {
             environment.endpoint(0).unwrap(),
             environment.endpoint(1).unwrap(),
         ));
+        server.enable_shared_control().unwrap();
     } else {
         assert!(environment.is_empty());
     }

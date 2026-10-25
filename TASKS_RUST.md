@@ -17,13 +17,15 @@ reply-dispatch/launch work; its correlation and cancellation rules remain servic
 requirements, not a reason to freeze the copied-channel ABI.
 
 Kernel notifications and a first reusable single-writer shared-memory/mailbox
-slice execute on x86-64 and ARM64. The first real F5 connection now uses them:
-physical input to the root matrix. See the evidence below. Remaining acceptance:
+slice execute on x86-64 and ARM64. Two real F5 connections now use them:
+physical input to the root matrix, and root display commands/images to the display
+provider. See the evidence below. Remaining acceptance:
 
 - Extend the first shared service connection beyond its one explicitly enabled
   stream and 64-byte request/reply frames into attachment-bearing ordinary consumers
-  and broader multiplexing. Immutable attachment custody is now exercised through
-  the shared transport; endpoint custody and consumer migration remain open. Preserve mapping isolation, hostile-writer validation and
+  and broader multiplexing. Immutable attachment custody now executes through the
+  shared transport and ordinary display; endpoint custody, nested forwarding and
+  storage migration remain open. Preserve mapping isolation, hostile-writer validation and
   live-reader lifetime; waking proves none of them.
 - Demonstrate real cross-process ping-pong, including early reply/next-request,
   signal/register races, coalescing, closure/cancel/deadline races, revoked wait
@@ -134,6 +136,61 @@ cross-service distributed commit are not acceptance requirements. No runtime
 implementation is claimed by this ratification.
 
 ## Current implementation evidence
+
+Implementation update 2026-10-25: **yielding shared display and image connection**,
+over `8c9bc356`.
+
+The [root display adapter](source-rs/distribution/matrix/service/parent/display.rs)
+now sends display commands and immutable image grants through the shared connection.
+Presentation and owner scene transactions submit/poll one step at a time; the
+matrix loop waits for both reply notifications and peer lifetime alongside child
+and storage work. Existing synchronous image/cursor/cleanup operations use that
+same connection. Nested matrix interaction and storage still use their old path.
+
+The platform Client exposes begin/poll, pending state, readiness interests and the
+partial-transfer deadline. Synchronous helpers reuse that state machine. A second
+begin cannot replace an outstanding call. The generic Server can explicitly upgrade
+its owner control connection, preserving its existing authority; changing control
+pairs retires old shared state before a new incarnation can receive anything.
+No application frame can claim control authority. Grant/frame correlation and
+failure cleanup remain the transport's existing responsibilities.
+
+The provider and small lab roots now reserve both sides of the display connection.
+F5 boot health/label messages still precede endpoint handoff and shared upgrade;
+there is no copied payload fallback afterward. This does not migrate every boot
+message or recursive hop, eliminate all synchronous service work, or establish a
+performance improvement.
+
+Verification:
+
+- Normal F5 fresh/cold, Notes instances, protected close, Colors and the storage
+  oracle pass: `desktop/20261025T193807695088Z`. The fixture requires both the input
+  and display shared-connection markers plus rendered/input behavior.
+- Three nested desktops with held presentation/delayed interaction pass fresh/cold,
+  including repeated subtree reclamation: `desktop/20261025T194204390047Z`.
+- IPC suite passes async begin/poll and second-request rejection, control object
+  replies, stale control reply rejection and control setup expiry, alongside all
+  previous attachment/mapping/funding checks and exact logical/physical refunds.
+- Delayed-stop app selection passes fresh/cold, including routed input, protected
+  drafts and reclamation: `desktop/20261025T194430597997Z`.
+- Bootstrap input death, root stall and display stall each recover:
+  `bootstrap/20261025T194506239011Z`.
+- The small-profile matrix desktop passes nested clipping, physical focus, subtree
+  recovery and cold-reboot persistence: `build/boot-harness-rs/matrix-desktop-test`.
+- Host tests, workspace userspace Clippy, all-feature channels and matrix Clippy pass.
+  Source-layout checks and their eight policy tests, Rust formatting and whitespace
+  checks pass.
+- Full x86 release smoke passes, including copied-channel compatibility, fault
+  containment, display recovery and memory reclamation. No ARM64 rerun is claimed
+  for this userspace migration.
+
+Logs: `build/omega-component/display-shared-{desktop,nested,selection,bootstrap,
+  matrix,ipc,host,check,channels-clippy,matrix-clippy,smoke}.log`.
+
+**Next:** broaden shared service multiplexing and migrate the storage-facing
+connections, preserving scoped authority, immutable bulk replies, deadlines,
+provider replacement and cancellation. Omega-facing adapters and inner matrix hops
+remain explicit subsequent work; the encompassing shared IPC outcome stays open.
 
 Implementation update 2026-10-25: **immutable attachments on shared requests/replies**,
 over `bf83610f`.

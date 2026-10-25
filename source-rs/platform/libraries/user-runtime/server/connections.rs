@@ -4,6 +4,10 @@ use crate::{Error, abi, ipc::Handle, link::Link};
 
 impl Server {
     pub fn set_control(&mut self, pair: (Handle, Handle)) {
+        // Never attribute the old shared peer's frames to a replacement owner.
+        if self.shared.as_ref().is_some_and(|s| s.channel == 0) {
+            self.shared = None;
+        }
         self.control = pair;
     }
     pub fn open() -> Result<Self, Error> {
@@ -69,7 +73,7 @@ impl Server {
     /// Detach a dynamic client and invalidate its transport state. Active shared
     /// setup/peers own and close their endpoints; copied clients leave that to caller.
     pub fn remove(&mut self, index: usize) {
-        if self.shared.as_ref().is_some_and(|s| s.client == index) {
+        if self.shared.as_ref().is_some_and(|s| s.channel == index + 1) {
             self.shared = None;
         }
         assert!(index < self.count && self.links[index].is_none());
@@ -77,7 +81,11 @@ impl Server {
         self.closed[index] = None;
     }
     pub(super) fn disconnect(&mut self, client: usize) {
-        if self.shared.as_ref().is_some_and(|s| s.client == client) {
+        if self
+            .shared
+            .as_ref()
+            .is_some_and(|s| s.channel == client + 1)
+        {
             self.shared = None;
         }
         if let Some(pair) = self.clients[client].take() {

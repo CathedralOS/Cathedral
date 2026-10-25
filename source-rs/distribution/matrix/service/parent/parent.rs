@@ -33,7 +33,7 @@ pub(super) struct Parent {
     storage_pair: Option<(Handle, Handle)>,
     pub separate_storage: bool,
     pub grant: Grant,
-    display: Option<(Handle, Handle)>,
+    display: Option<display::Display>,
     pub wake: Option<Handle>,
     /// MORE from the last snapshot; drain it on another service turn.
     pub refresh_due: bool,
@@ -158,7 +158,11 @@ impl Parent {
             )
         };
         self.pair = self.upstream.then(pair);
-        self.display = (environment.len() == 4).then(pair);
+        self.display = if environment.len() == 4 {
+            Some(display::Display::connect(pair())?)
+        } else {
+            None
+        };
         self.wake = (environment.len() == 3).then(|| environment.endpoint(2).unwrap());
         if environment.len() == 5 {
             let connections = cathedral_user_runtime::matrix::Connections::load(environment)?;
