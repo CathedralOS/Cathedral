@@ -20,16 +20,19 @@ cathedral_user_runtime::entry!(main);
 const HEADROOM_PAGES: usize = 8;
 /// The smallest heap the engine, writer and collection workspace have run in.
 const MIN_HEAP_PAGES: usize = 56;
-/// Private objects the heap may span, of the four this task may own: one
-/// stays free for the pages behind a bulk reply while it is being published.
+/// Bound heap objects independently of service transport. Leave room for both
+/// root mailbox writers and the pages behind an immutable bulk reply.
 const HEAP_OBJECTS: usize = 2;
-const _: () = assert!(HEAP_OBJECTS < cathedral_kernel_contracts::memory::MAX_PRIVATE_REGIONS);
+const _: () = assert!(
+    HEAP_OBJECTS + cathedral_platform_contracts::storage::ROOTS
+        < cathedral_kernel_contracts::memory::MAX_PRIVATE_REGIONS
+);
 /// Split funding between the engine/cache and outstanding replies. Reserving
 /// the protocol's largest reply unconditionally starves a smaller funded cache.
 /// Replies still check their actual charge; larger payloads need larger grants.
 fn heap_pages(private_pages: u64) -> usize {
     (private_pages as usize)
-        .saturating_sub(HEADROOM_PAGES)
+        .saturating_sub(HEADROOM_PAGES + cathedral_platform_contracts::storage::ROOTS)
         .div_ceil(2)
         .clamp(
             MIN_HEAP_PAGES,

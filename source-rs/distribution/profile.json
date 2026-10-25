@@ -119,9 +119,9 @@
         "target": "x86_64-unknown-none",
         "clock": true,
         "disk": true,
-        "ipc_channels": 0,
-        "private_pages": 328,
-        "shared_pages": 64
+        "ipc_channels": 2,
+        "private_pages": 330,
+        "shared_pages": 66
       }
     ],
     "links": [

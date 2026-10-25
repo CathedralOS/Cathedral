@@ -42,9 +42,9 @@
         "target": "x86_64-unknown-none",
         "clock": true,
         "argument": 0,
-        "ipc_channels": 22,
-        "private_pages": 130,
-        "shared_pages": 130
+        "ipc_channels": 24,
+        "private_pages": 132,
+        "shared_pages": 132
       },
       {
         "package": "cathedral-storage-service",
@@ -52,9 +52,9 @@
         "target": "x86_64-unknown-none",
         "clock": true,
         "disk": true,
-        "ipc_channels": 0,
-        "private_pages": 128,
-        "shared_pages": 64
+        "ipc_channels": 2,
+        "private_pages": 130,
+        "shared_pages": 66
       }
     ],
     "links": [

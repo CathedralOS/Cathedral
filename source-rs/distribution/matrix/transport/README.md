@@ -65,3 +65,19 @@ borrows of retained images in this single-threaded process. It does not permit
 concurrent calls: Client rejects a second outstanding request. Synchronous cursor,
 image replay and cleanup calls retain their existing scheduling behavior. There
 is no copied-payload fallback after the display connection upgrades.
+
+## Root storage boundary
+
+[storage.rs](../service/parent/storage/storage.rs) owns scope/delegation decisions;
+[provider.rs](../service/parent/storage/provider.rs) owns the two root/provider
+shared clients and their replacement. [pending.rs](../service/parent/storage/pending.rs)
+submits and polls forwarded or launch-read work with immutable attachments and
+an absolute deadline. Setup and local Scope calls still wait synchronously.
+The matrix waits on notification plus endpoint lifetime;
+partial attachment expiry is included in that wait. Local storage operations borrow
+the same client via Scope, so a temporary scope cannot reset transport IDs or close
+an otherwise healthy provider connection. Late/ambiguous failures retire it.
+
+Scope stamps, source selection and binding revocation are unchanged. Link slots
+continue to define the provider's private roots. Nested storage hops and Omega
+application bindings have not migrated; copied payloads there are remaining work.

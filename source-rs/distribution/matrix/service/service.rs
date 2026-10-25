@@ -72,7 +72,11 @@ pub fn run(environment: Environment) -> Result<(), Error> {
                 environment.endpoint(3).unwrap(),
             ),
         )?;
-        server.enable_shared(SOURCE)?;
+        static mut SHARED: cathedral_user_runtime::server::SharedSlot =
+            cathedral_user_runtime::server::SharedSlot::empty();
+        let slot = &raw mut SHARED;
+        // SAFETY: Single-entry service owns this connection storage until exit.
+        server.enable_shared(SOURCE, unsafe { &mut *slot })?;
     }
     // Page allowances and use at startup, so a refused attachment is diagnosable.
     if let Ok(budget) = cathedral_user_runtime::resources::budget() {
@@ -178,7 +182,7 @@ pub fn run(environment: Environment) -> Result<(), Error> {
         );
         children.notify(world)?;
         let mut extra =
-            [Interest::Ipc(cathedral_user_runtime::ipc::Handle::from_raw(0)); CHILDREN + 4];
+            [Interest::Ipc(cathedral_user_runtime::ipc::Handle::from_raw(0)); CHILDREN + 5];
         let mut count = 0;
         if parent.upstream_busy() || parent.storing() {
             deadline = None;
@@ -225,6 +229,21 @@ pub fn run(environment: Environment) -> Result<(), Error> {
                 count += 1;
             }
             if let Some(until) = until {
+                deadline = Some(deadline.map_or(until, |d| {
+                    if cathedral_user_runtime::time::reached(d, until) {
+                        until
+                    } else {
+                        d
+                    }
+                }));
+            }
+        }
+        if !hold_storage {
+            if let Some(interest) = parent.storage_wake() {
+                extra[count] = interest;
+                count += 1;
+            }
+            if let Some(until) = parent.storage_transfer_deadline() {
                 deadline = Some(deadline.map_or(until, |d| {
                     if cathedral_user_runtime::time::reached(d, until) {
                         until

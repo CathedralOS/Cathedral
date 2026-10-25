@@ -53,7 +53,10 @@ pub fn run(environment: cathedral_user_runtime::task::Environment) -> u64 {
             environment.endpoint(0).unwrap(),
             environment.endpoint(1).unwrap(),
         ));
-        server.enable_shared_control().unwrap();
+        static mut SHARED: cathedral_user_runtime::server::SharedSlot = cathedral_user_runtime::server::SharedSlot::empty();
+        let slot = &raw mut SHARED;
+        // SAFETY: Single-entry service owns this connection storage until exit.
+        server.enable_shared_control(unsafe { &mut *slot }).unwrap();
     } else {
         assert!(environment.is_empty());
     }

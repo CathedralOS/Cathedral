@@ -1,9 +1,9 @@
 //! Child-local object storage through the parent matrix. STORAGE_INFO supplies
 //! a binding revision that scopes every later request and the realm the
 //! binding is rooted at; the parent substitutes its own upstream scope at each
-//! hop. Replies carry no correlation identity, so one failed exchange retires
-//! the connection rather than risking a late reply being read as the answer to
-//! a newer request.
+//! hop. Nested copied replies carry no correlation identity; the root borrows
+//! its persistent correlated shared provider client. Either path retires on an
+//! ambiguous failure rather than replaying a possibly committed operation.
 use crate::{
     Error, abi,
     ipc::{self, Handle},
@@ -14,28 +14,37 @@ use cathedral_platform_contracts::{matrix, storage};
 /// End-to-end budget, preserved by every matrix. The root caps provider work
 /// more tightly, leaving room for its failure verdict to return to the client.
 const DEADLINE_TICKS: u64 = storage::EXCHANGE_TICKS;
-pub struct Scope {
-    pair: (Handle, Handle),
+enum Transport<'a> {
+    Copied((Handle, Handle)),
+    Shared(&'a mut crate::connection::Client),
+}
+pub struct Scope<'a> {
+    transport: Transport<'a>,
     binding: u64,
     realm: u64,
     alive: bool,
     direct: bool,
 }
-impl Scope {
+impl<'a> Scope<'a> {
     pub fn new(pair: (Handle, Handle)) -> Self {
         Self {
-            pair,
+            transport: Transport::Copied(pair),
             binding: 0,
             realm: 0,
             alive: true,
             direct: false,
         }
     }
-    /// A provider connection explicitly supplied to the storage root adapter.
-    pub fn provider(pair: (Handle, Handle)) -> Self {
-        let mut scope = Self::new(pair);
-        scope.direct = true;
-        scope
+    /// Borrow the root adapter's correlated shared connection. The adapter owns
+    /// its lifetime across local scopes and forwarded child requests.
+    pub fn provider(client: &'a mut crate::connection::Client) -> Self {
+        Self {
+            transport: Transport::Shared(client),
+            binding: 0,
+            realm: 0,
+            alive: true,
+            direct: true,
+        }
     }
     pub fn connected(&self) -> bool {
         self.alive
@@ -237,18 +246,24 @@ impl Scope {
         }
         let result = (|| {
             let bytes = storage::pack(words);
-            match attachment {
-                Some(object) => self.pair.0.send_memory(&bytes, object)?,
-                None => self.pair.0.send(&bytes)?,
-            }
             let deadline = if words[7] == 0 {
                 time::after(DEADLINE_TICKS)?
             } else {
                 words[7]
             };
-            ipc::wait_many(&[self.pair.1], deadline)?;
-            let mut reply = [0; 64];
-            let (len, object) = self.pair.1.try_receive_memory(&mut reply)?;
+            let (reply, len, object) = match &mut self.transport {
+                Transport::Shared(client) => client.call_memory(&bytes, attachment, deadline)?,
+                Transport::Copied(pair) => {
+                    match attachment {
+                        Some(object) => pair.0.send_memory(&bytes, object)?,
+                        None => pair.0.send(&bytes)?,
+                    }
+                    ipc::wait_many(&[pair.1], deadline)?;
+                    let mut reply = [0; 64];
+                    let (len, object) = pair.1.try_receive_memory(&mut reply)?;
+                    (reply, len, object)
+                }
+            };
             if len != 64 {
                 return Err(Error(abi::IO_ERROR as i64));
             }
@@ -258,6 +273,9 @@ impl Scope {
             Ok(reply) => Ok(reply),
             Err(error) => {
                 self.alive = false;
+                if let Transport::Shared(client) = &mut self.transport {
+                    client.retire();
+                }
                 Err(error.0 as u64)
             }
         }

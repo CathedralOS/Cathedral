@@ -105,6 +105,7 @@ pub(super) fn run() {
     }
     attachments::run(launch);
     control::run(launch);
+    multiplex::run(launch);
     resources::assign(
         launch,
         Limits {

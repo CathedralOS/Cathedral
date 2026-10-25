@@ -53,7 +53,11 @@ pub(super) fn run(launch: Launch) {
 pub(super) fn worker(mode: u64, pair: (Handle, Handle)) -> u64 {
     let mut server = Server::open().unwrap();
     server.set_control(pair);
-    server.enable_shared_control().unwrap();
+    static mut SHARED: cathedral_user_runtime::server::SharedSlot =
+        cathedral_user_runtime::server::SharedSlot::empty();
+    let slot = &raw mut SHARED;
+    // SAFETY: Single-entry service owns this connection storage until exit.
+    server.enable_shared_control(unsafe { &mut *slot }).unwrap();
     server.enable_memory();
     let mut held = None;
     loop {
@@ -78,7 +82,6 @@ pub(super) fn worker(mode: u64, pair: (Handle, Handle)) -> u64 {
         let (send, input) = ipc::channel().unwrap();
         let (output, recv) = ipc::channel().unwrap();
         server.set_control((input, output));
-        server.enable_shared_control().unwrap();
         let object = Private::allocate(1).unwrap().freeze().unwrap();
         server.reply_memory(&old, b"late", &object).unwrap();
         assert_eq!(

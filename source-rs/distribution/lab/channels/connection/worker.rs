@@ -7,6 +7,9 @@ use cathedral_user_runtime::{
 };
 pub(crate) fn run(mode: u64, env: Environment) -> u64 {
     let pair = (env.endpoint(0).unwrap(), env.endpoint(1).unwrap());
+    if mode >= 71 {
+        return super::multiplex::worker(mode, env);
+    }
     if mode >= 68 {
         return super::control::worker(mode, pair);
     }
@@ -15,7 +18,11 @@ pub(crate) fn run(mode: u64, env: Environment) -> u64 {
     }
     let mut server = Server::open_clients(1).unwrap();
     server.install(0, pair).unwrap();
-    server.enable_shared(0).unwrap();
+    static mut SHARED: cathedral_user_runtime::server::SharedSlot =
+        cathedral_user_runtime::server::SharedSlot::empty();
+    let slot = &raw mut SHARED;
+    // SAFETY: Single-entry service owns this connection storage until exit.
+    server.enable_shared(0, unsafe { &mut *slot }).unwrap();
     server.enable_memory();
     let mut held_object = None;
     let mut held = None;
@@ -71,7 +78,6 @@ pub(crate) fn run(mode: u64, env: Environment) -> u64 {
                     let (send, input) = ipc::channel().unwrap();
                     let (output, recv) = ipc::channel().unwrap();
                     server.install(0, (input, output)).unwrap();
-                    server.enable_shared(0).unwrap();
                     if let Some(object) = held_object.take() {
                         server.reply_memory(&old, b"late", &object).unwrap();
                     } else {

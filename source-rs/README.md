@@ -989,14 +989,14 @@ copyout, late replies, raw keyboard grants, sibling queues and admission rollbac
 ## Bounded private pages and shared buffers
 
 The [memory contract](kernel/contracts/memory.rs) defines explicit per-task private and
-accepted-reader budgets: up to 128 4 KiB pages of private memory, and up to four
-times that in reader pages, which pin other tasks' sealed objects rather than
-funding frames. An allocation contains one to 128 zeroed pages. Independently, a
-task can own at most four objects and hold at most eight reader rights. The
-session slots cover those limits for all twelve tasks, including readers
+accepted-reader budgets: up to 1024 4 KiB pages of private memory, and up to four
+times that in reader pages, which pin other tasks' backing rather than funding
+frames. An allocation contains one to 256 zeroed pages. Independently, a
+task can own at most eight objects and hold at most 48 reader rights. The
+session slots cover those limits for all 31 tasks, including readers
 retained after producer exit; a larger page grant cannot consume another task's
 metadata capacity. An unmapped guard follows each process-local mapping slot
-(four private plus eight reader slots). Mapping addresses never contain the global backing index. Runtime mappings are non-executable. Task admission reserves their
+(eight private plus 48 reader slots). Mapping addresses never contain the global backing index. Runtime mappings are non-executable. Task admission reserves their
 page tables; allocation and mapping changes execute on the boot stack with the
 kernel root active. The kernel owns physical backing independently of either
 participant's address space.

@@ -33,7 +33,7 @@ impl Server {
                     Ok(None) => continue,
                     Err(error) => {
                         if channel == 0 {
-                            self.shared = None;
+                            self.reset_shared(0);
                             return Err(error);
                         }
                         self.disconnect(channel - 1);
@@ -108,15 +108,17 @@ impl Server {
                 count += 1;
             }
         }
-        if let Some((channel, wake)) = self.shared_wake()
-            && (self.paused | self.reply_paused()) & (1 << channel) == 0
-        {
-            if count == handles.len() {
-                return Err(Error(abi::INVALID_ARGUMENT as i64));
+        for channel in 0..=self.count {
+            if (self.paused | self.reply_paused()) & (1 << channel) == 0
+                && let Some(wake) = self.shared_wake(channel)
+            {
+                if count == handles.len() {
+                    return Err(Error(abi::INVALID_ARGUMENT as i64));
+                }
+                handles[count] = Interest::Notification(wake);
+                channels[count] = channel;
+                count += 1;
             }
-            handles[count] = Interest::Notification(wake);
-            channels[count] = channel;
-            count += 1;
         }
         if count + extra.len() > handles.len() {
             return Err(Error(abi::INVALID_ARGUMENT as i64));

@@ -48,7 +48,10 @@ pub const MAX_READER_PAGES: usize = 4096;
 /// Separate metadata limits: larger page grants must not buy every global slot.
 /// A matrix or the compositor retains one sealed image per surface it shows
 /// and holds its replacement beside it, including images below nested matrices.
-pub const MAX_PRIVATE_REGIONS: usize = 4;
+// A root may own SOURCE, display and two storage mailbox writers together,
+// while still needing transient immutable publications and other local work.
+// This bounds metadata, not page funding; every object still charges its sponsor.
+pub const MAX_PRIVATE_REGIONS: usize = 8;
 pub const MAX_SHARED_REGIONS: usize = 48;
 pub const MAX_MAPPING_SLOTS: usize = MAX_PRIVATE_REGIONS + MAX_SHARED_REGIONS;
 // Every live object has an owner or an accepted reader. This capacity covers

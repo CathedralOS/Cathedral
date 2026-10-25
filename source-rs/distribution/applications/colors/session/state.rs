@@ -6,7 +6,7 @@ use super::*;
 use cathedral_platform_contracts::storage as store;
 use cathedral_user_runtime::{memory::Private, storage::Scope};
 pub struct State {
-    scope: Scope,
+    scope: Scope<'static>,
     object: u64,
     pub revision: u64,
     style: u64,

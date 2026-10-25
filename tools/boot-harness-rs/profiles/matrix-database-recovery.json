@@ -44,9 +44,9 @@
         "target": "x86_64-unknown-none",
         "clock": true,
         "argument": 0,
-        "ipc_channels": 22,
-        "private_pages": 18,
-        "shared_pages": 10,
+        "ipc_channels": 24,
+        "private_pages": 20,
+        "shared_pages": 12,
         "features": [
           "trace-storage"
         ]
@@ -57,13 +57,13 @@
         "target": "x86_64-unknown-none",
         "clock": true,
         "disk": true,
-        "ipc_channels": 0,
+        "ipc_channels": 2,
         "features": [
           "recovery-lab",
           "trace-storage"
         ],
-        "private_pages": 128,
-        "shared_pages": 64
+        "private_pages": 130,
+        "shared_pages": 66
       }
     ],
     "links": [

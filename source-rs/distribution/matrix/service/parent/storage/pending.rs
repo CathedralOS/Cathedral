@@ -202,6 +202,24 @@ impl Parent {
             p.receive.map(|h| (h, p.deadline))
         })
     }
+    pub(in crate::service) fn storage_wake(
+        &self,
+    ) -> Option<cathedral_user_runtime::event::Interest> {
+        if self.upstream || self.storage_wait().is_none() {
+            return None;
+        }
+        self.storage_links[self.storage_pending.as_ref()?.source]
+            .as_ref()?
+            .wake()
+    }
+    pub(in crate::service) fn storage_transfer_deadline(&self) -> Option<u64> {
+        if self.upstream || self.storage_wait().is_none() {
+            return None;
+        }
+        self.storage_links[self.storage_pending.as_ref()?.source]
+            .as_ref()?
+            .deadline()
+    }
     pub(in crate::service) fn storing(&self) -> bool {
         #[cfg(feature = "interaction-delay")]
         if self.hold_storage_active {
@@ -254,7 +272,15 @@ impl Parent {
         }
         let mut reply: Option<(wire::Packet, Option<Object>)> = None;
         if let Some(receive) = p.receive {
-            match cathedral_user_runtime::matrix::upstream::exchange::poll(receive, p.deadline) {
+            let response = if self.upstream {
+                cathedral_user_runtime::matrix::upstream::exchange::poll(receive, p.deadline)
+            } else {
+                self.storage_links[p.source]
+                    .as_mut()
+                    .ok_or(Error(abi::DENIED as i64))?
+                    .poll(p.deadline)
+            };
+            match response {
                 // The parent may have regranted this matrix's binding since it
                 // was learned. Learn the current revision once; a child's
                 // refusal stands (its attachment already travelled), while
@@ -467,16 +493,11 @@ impl Parent {
         }
         words[7] = p.deadline;
         let op = words[0] & 0xffff;
-        let pair = if self.upstream {
+        if self.upstream {
             words[0] = op | (self.storage_epoch << wire::STORAGE_SCOPE_BITS);
-            self.storage_pair.ok_or(Error(abi::PEER_CLOSED as i64))?
         } else {
             words[0] = op - wire::STORAGE_BASE;
-            self.storage_links[p.source]
-                .as_mut()
-                .ok_or(Error(abi::DENIED as i64))?
-                .pair()?
-        };
+        }
         #[cfg(feature = "trace-storage")]
         time::storage_trace(
             if self.upstream {
@@ -496,11 +517,19 @@ impl Parent {
         } else {
             p.attachment.take()
         };
-        match attachment {
-            Some(object) => pair.0.send_memory(&wire::encode(words), &object)?,
-            None => pair.0.send(&wire::encode(words))?,
-        }
-        p.receive = Some(pair.1);
+        p.receive = Some(if self.upstream {
+            let pair = self.storage_pair.ok_or(Error(abi::PEER_CLOSED as i64))?;
+            match attachment {
+                Some(object) => pair.0.send_memory(&wire::encode(words), &object)?,
+                None => pair.0.send(&wire::encode(words))?,
+            }
+            pair.1
+        } else {
+            self.storage_links[p.source]
+                .as_mut()
+                .ok_or(Error(abi::DENIED as i64))?
+                .begin(words, attachment.as_ref(), p.deadline)?
+        });
         Ok(None)
     }
 }

@@ -13,10 +13,15 @@ and encoding; neither the kernel nor the contract imports this implementation.
 ## Setup and custody
 
 An owner explicitly installs the server's incoming/outgoing endpoint pair and
-calls `enable_shared(client)`, or explicitly upgrades its owner control stream with
-`enable_shared_control()`. Control requests retain control authority; an ordinary
+calls `enable_shared(client, slot)`, or explicitly upgrades its owner control stream
+with `enable_shared_control(slot)`. Each selected stream borrows its own
+service-owned `SharedSlot`; the server holds references rather than allocating
+every connection state on each service stack. Control requests retain control authority; an ordinary
 client cannot claim it in its frame. Replacing the control pair retires the old
-shared state before adopting the new incarnation. The client takes ownership of its corresponding
+shared state before adopting the new incarnation. Link reconnection retains the
+slot's transport policy but resets IDs, partial custody and pending replies.
+Removing a dynamic slot or dropping the Server releases its transport custody.
+The client takes ownership of its corresponding
 send/receive pair, including on failed setup. No global locator, claimed PID or
 payload identity can select another caller's authority.
 
@@ -114,9 +119,16 @@ cleanup operations also use this connection. The display provider upgrades its
 explicitly supplied control pair; initial boot probes/labels precede the handoff
 and upgrade. Ordinary F5 requires both shared-connection markers and rendered output.
 
-Nested matrix forwarding, storage and Omega-facing adapters retain their existing
-transport. This is a root/display migration, not a claim that every recursive hop
-or all startup payloads have migrated.
+The [root storage adapter](../../../../distribution/matrix/service/parent/storage/provider.rs)
+uses two independent shared connections to the storage provider's private roots.
+Forwarded requests yield through the matrix loop; local Scope operations borrow
+that same client exclusively. Immutable publication, bulk program reads and listing
+attachments keep their typed custody. The provider still authorizes roots by its
+installed link slot and checks scope stamps, never by a payload's claimed identity.
+Provider replacement requires a new setup; failed writes are not replayed.
+
+Nested matrix forwarding and Omega-facing adapters retain their existing transport.
+This migrates root/provider connections, not every recursive hop or startup payload.
 
 [The guest connection proof](../../../../distribution/lab/channels/connection/connection.rs)
 checks repeated requests, wrong reply IDs, mixed-wait validation, deadline retirement,
@@ -130,12 +142,22 @@ and incomplete pairs in both directions. The
 checks that ordinary control requests progress while a service awaits a missing half.
 [Control cases](../../../../distribution/lab/channels/connection/control.rs) exercise
 yielding calls, immutable replies, owner replacement and abandoned control setup.
+[Multiplexing cases](../../../../distribution/lab/channels/connection/multiplex.rs)
+exercise simultaneous owner/two-client streams with equal IDs and reversed replies,
+setup expiry beside a live peer, full wait-set refusal, four writable mailbox
+objects beside immutable scratch, and the eight-object metadata ceiling. The enclosing
+fixture checks exact logical/physical refunds after peer exit and Server drop.
 ARM64 exercises mixed notification/IPC readiness with the existing shared mailbox, not this full desktop
 connection. All current guest evidence is single-CPU.
 
-This first integration supports one explicitly enabled shared stream per Server,
-reserving an extra readiness interest. Immutable attachment custody is exercised
-through the common transport and the ordinary root/display path. Expanding
-multiplexing, storage and nested consumers, endpoint custody and Omega-facing
-migration remain work. No performance improvement or final production wire ABI
-is claimed here.
+Every selected shared stream reserves an extra readiness interest beside the full
+endpoint set. Caller-owned interests must also fit the bounded wait. Each connection
+separately charges a writer page, accepted reader page and notification allowance;
+registration alone does not bypass these or the object-count limits. Fair scanning
+and earliest partial/setup deadlines cover all selected streams. There is still
+one outstanding request per stream, not a multi-request pipeline.
+
+Nested consumers, endpoint custody and Omega-facing migration remain work. Shared
+mailbox pooling may reduce per-connection backing/metadata costs later; current
+bounds refuse excess setup safely. No performance improvement or final production
+wire ABI is claimed here.

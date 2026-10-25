@@ -27,11 +27,11 @@ pub struct Server {
     closed: [Option<u64>; MAX_CLIENTS],
     paused: u32,
     replies: Option<&'static mut Replies>,
-    shared: Option<shared::Shared>,
+    shared: [Option<&'static mut SharedSlot>; abi::MAX_WAIT_HANDLES],
 }
 impl Server {
     fn control_only(&self) -> bool {
-        if self.shared.is_some() || self.reply_paused() != 0 {
+        if self.shared.iter().any(|s| s.is_some()) || self.reply_paused() != 0 {
             return false;
         }
         for index in 0..self.count {

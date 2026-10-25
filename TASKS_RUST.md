@@ -17,16 +17,16 @@ reply-dispatch/launch work; its correlation and cancellation rules remain servic
 requirements, not a reason to freeze the copied-channel ABI.
 
 Kernel notifications and a first reusable single-writer shared-memory/mailbox
-slice execute on x86-64 and ARM64. Two real F5 connections now use them:
-physical input to the root matrix, and root display commands/images to the display
-provider. See the evidence below. Remaining acceptance:
+slice execute on x86-64 and ARM64. Ordinary F5 now uses them for physical input
+to the root matrix, root display commands/images, and root storage. The scoped
+storage fixture also exercises both private-root provider connections. See the evidence below. Remaining acceptance:
 
-- Extend the first shared service connection beyond its one explicitly enabled
-  stream and 64-byte request/reply frames into attachment-bearing ordinary consumers
-  and broader multiplexing. Immutable attachment custody now executes through the
-  shared transport and ordinary display; endpoint custody, nested forwarding and
-  storage migration remain open. Preserve mapping isolation, hostile-writer validation and
-  live-reader lifetime; waking proves none of them.
+- Continue the shared service migration beyond root/provider connections.
+  Independently selected control/data streams now multiplex; immutable attachments
+  execute through ordinary display and storage. Endpoint custody, nested storage
+  and interaction forwarding, and Omega-facing clients remain open. Preserve
+  mapping isolation, hostile-writer validation and live-reader lifetime; waking
+  proves none of them.
 - Demonstrate real cross-process ping-pong, including early reply/next-request,
   signal/register races, coalescing, closure/cancel/deadline races, revoked wait
   rights, denied foreign handles, stale incarnations and retained funding through
@@ -39,8 +39,8 @@ provider. See the evidence below. Remaining acceptance:
 Done means the normal service path uses shared-memory data plus notifications,
 not only a standalone lab. Pin focused host/race controls and real guest evidence
 for that path and its invalid-authority controls. Shared-payload round trips now
-exercise publication and backpressure. The physical-input/root-matrix migration
-is real ordinary service evidence, not a performance result or complete migration.
+exercise publication and backpressure. Input, display and storage at the root
+provide ordinary service evidence, not a performance result or complete migration.
 
 ## Independent installation and component-owned activation
 
@@ -136,6 +136,79 @@ cross-service distributed commit are not acceptance requirements. No runtime
 implementation is claimed by this ratification.
 
 ## Current implementation evidence
+
+Implementation update 2026-10-25: **multiplexed shared connections and root storage**,
+over `0b1d3d49`.
+
+The [server](source-rs/platform/libraries/user-runtime/server/shared.rs) now borrows
+one explicit `SharedSlot` per selected control/client connection. Each has separate
+request correlation, attachment custody and setup/partial deadlines. Its bounded
+wait includes each notification and lifetime endpoint, rotating dispatch fairly.
+Registration refuses a notification reservation beyond the wait-set capacity.
+Dynamic disconnect and owner-supplied link reconnection reset that slot's transport
+state; old Request incarnations cannot reply into its replacement. Server drop
+releases shared custody. Other services pay for references, not large stack arenas.
+
+Both root/storage links now use that mechanism. Follow
+[storage.rs](source-rs/distribution/matrix/service/parent/storage/storage.rs) for
+scope decisions, [provider.rs](source-rs/distribution/matrix/service/parent/storage/provider.rs)
+for shared connection/lifetime, and `pending.rs` for yielding publication and bulk
+read exchanges. Local `Scope` calls borrow the persistent client, preserving its
+IDs and custody across temporary wrappers. Owner regrant still controls provider
+replacement; failure retires the connection and never automatically replays a write.
+The storage provider selects the private root from its authenticated link slot and
+keeps existing scope checks. Ordinary F5 requires the shared-storage marker as well
+as visible operations and the independent storage oracle.
+
+Profiles reserve two writer pages, reader pages and notification allowances for
+storage. Review found a real composition ceiling: SOURCE, display and two storage
+writers exhausted the old four-owned-object cap, leaving no scratch publication
+slot. The kernel's bounded owned-object limit is eight; page funding and reader
+rights stay independent. A guest exercises four writers plus scratch, metadata
+exhaustion at eight, and final logical/physical refunds. The provider reserves its
+two transport pages before sizing its heap, preserving F5's 160-page engine heap.
+This is still bounded lab capacity, not unlimited connection scalability.
+
+Verification:
+
+- Normal F5 fresh/cold passes, including user copy, three Notes instances, protected
+  close, saved Notes/Colors and exact disk oracle: `desktop/20261025T195516451531Z`.
+- Scoped storage guest passes both roots, recursive attenuation/revocation, bulk
+  programs, launched siblings and provider replacement (`matrix-storage-test`).
+- Provider precommit/postcommit stalls, replacement, live siblings, ambiguous CREATE
+  reconciliation and cold reopen pass: `matrix-database/20261025T195706816045Z`.
+- Notes postcommit recovery preserves the draft and exact text/history/quota across
+  cold reopen: `matrix-database/20261025T195732191173Z`.
+- Three nested desktops with delayed interaction pass fresh/cold, including dirty
+  close, saved Notes/Omega Colors and subtree reclamation:
+  `desktop/20261025T195810554239Z`.
+- Final IPC and full x86 smoke pass with the increased object cap. IPC includes
+  simultaneous control/two-client streams, equal IDs with reversed replies,
+  partial setup expiry beside a healthy peer, wait-set refusal and exact refunds.
+- Host tests, workspace userspace Clippy and all-feature matrix/channels/storage
+  Clippy pass; x86 smoke-feature kernel Clippy passes.
+- After the capacity adjustment, F5 fresh/cold passes again:
+  `desktop/20261025T200215606196Z`. Provider recovery and exact cold state pass again:
+  `matrix-database/20261025T200317902257Z`. ARM64 release portability passes, including
+  shared mailbox round trips, notification readiness, memory protection and rollback.
+  The earlier scoped/Notes/nested artifacts above predate the capacity adjustment.
+- Layout and its eight tests, format, whitespace and changed subsystem navigation
+  checks pass.
+
+Logs: `build/omega-component/shared-storage-{desktop,scopes,recovery,notes,nested,
+  ipc-final,smoke,arm64,desktop-final,recovery-final,host,clippy,feature-clippy,
+  kernel-clippy}.log` and
+`shared-multiplex-ipc.log` in the same directory.
+
+**Next:** migrate recursive matrix storage and the Omega-facing storage client,
+including their endpoint handoff, per-peer backing and combined wait-set budgets.
+Connection setup and local Scope calls still wait synchronously; yielding provider
+reconnect setup is another follow-up before claiming a fully yielding service loop.
+Inner interaction/rendering streams and boot control messages remain copied.
+The current mailbox still carries one outstanding request per stream and at most
+64 application bytes with one immutable attachment; endpoint attachments remain
+unimplemented. The encompassing IPC outcome stays open.
+
 
 Implementation update 2026-10-25: **yielding shared display and image connection**,
 over `8c9bc356`.

@@ -20,6 +20,16 @@ pub fn serve(
 ) -> cathedral_storage_engine::redb::Database {
     let mut server = Server::open_clients(wire::ROOTS).unwrap();
     server.enable_memory();
+    static mut SHARED: [cathedral_user_runtime::server::SharedSlot; wire::ROOTS] =
+        [const { cathedral_user_runtime::server::SharedSlot::empty() }; wire::ROOTS];
+    let slots = &raw mut SHARED;
+    // SAFETY: One service entry owns each disjoint root slot for its whole run.
+    for (index, slot) in unsafe { &mut *slots }.iter_mut().enumerate() {
+        if cathedral_user_runtime::link::Link::at(index as u64).is_ok() {
+            server.enable_shared(index, slot).unwrap();
+        }
+    }
+
     #[cfg(feature = "recovery-lab")]
     let mut gate = super::gate::Gate::default();
     write(b"Cathedral: object storage ready\n").unwrap();

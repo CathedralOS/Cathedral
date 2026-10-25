@@ -20,9 +20,9 @@
         "target": "x86_64-unknown-none",
         "clock": true,
         "argument": 0,
-        "ipc_channels": 9,
-        "shared_pages": 72,
-        "private_pages": 8
+        "ipc_channels": 11,
+        "shared_pages": 74,
+        "private_pages": 10
       },
       {
         "package": "cathedral-stock-matrix",
@@ -61,8 +61,9 @@
         "target": "x86_64-unknown-none",
         "clock": true,
         "disk": true,
-        "private_pages": 128,
-        "shared_pages": 64
+        "private_pages": 130,
+        "shared_pages": 66,
+        "ipc_channels": 2
       }
     ],
     "links": [

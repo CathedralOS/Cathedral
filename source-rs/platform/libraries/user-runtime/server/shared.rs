@@ -12,40 +12,68 @@ enum State {
     Opening(Accept),
     Ready(Peer),
 }
-pub(super) struct Shared {
-    /// Server dispatch index: control is zero, client n is n+1.
-    pub channel: usize,
+/// Service-owned storage for one shared connection. Install once per selected
+/// dispatch slot; disconnect/reconnect clears custody and correlation in place.
+pub struct SharedSlot {
     state: State,
     last: u64,
     pending: u64,
 }
-impl Server {
-    /// One explicitly selected shared stream per server; no global lookup.
-    pub fn enable_shared(&mut self, client: usize) -> Result<(), Error> {
-        if client >= self.count || self.clients[client].is_none() || self.links[client].is_some() {
-            return Err(Error(abi::INVALID_ARGUMENT as i64));
-        }
-        self.arm_shared(client + 1)
-    }
-    /// Upgrade the owner's supplied control stream, preserving control authority.
-    pub fn enable_shared_control(&mut self) -> Result<(), Error> {
-        self.arm_shared(0)
-    }
-    fn arm_shared(&mut self, channel: usize) -> Result<(), Error> {
-        if self.shared.is_some() || self.count + 2 > abi::MAX_WAIT_HANDLES {
-            return Err(Error(abi::INVALID_ARGUMENT as i64));
-        }
-        self.shared = Some(Shared {
-            channel,
+impl SharedSlot {
+    pub const fn empty() -> Self {
+        Self {
             state: State::Armed,
             last: 0,
             pending: 0,
-        });
+        }
+    }
+    fn reset(&mut self) {
+        *self = Self::empty();
+    }
+    fn deadline(&self) -> Option<u64> {
+        match &self.state {
+            State::Opening(accept) => Some(accept.deadline),
+            State::Ready(peer) => peer.deadline(),
+            State::Armed => None,
+        }
+    }
+}
+impl Server {
+    /// Select an explicit client or owner-supplied link. Its slot keeps the same
+    /// transport policy across reconnection, but no old custody or request IDs.
+    pub fn enable_shared(
+        &mut self,
+        client: usize,
+        slot: &'static mut SharedSlot,
+    ) -> Result<(), Error> {
+        if client >= self.count || (self.clients[client].is_none() && self.links[client].is_none())
+        {
+            return Err(Error(abi::INVALID_ARGUMENT as i64));
+        }
+        self.arm_shared(client + 1, slot)
+    }
+    pub fn enable_shared_control(&mut self, slot: &'static mut SharedSlot) -> Result<(), Error> {
+        self.arm_shared(0, slot)
+    }
+    fn arm_shared(&mut self, channel: usize, slot: &'static mut SharedSlot) -> Result<(), Error> {
+        let reserved = self.shared.iter().filter(|s| s.is_some()).count();
+        // Every selected stream may need its own notification beside the full
+        // lifetime endpoint set. Refuse before taking the caller's storage.
+        if self.shared[channel].is_some() || self.count + 2 + reserved > abi::MAX_WAIT_HANDLES {
+            return Err(Error(abi::INVALID_ARGUMENT as i64));
+        }
+        slot.reset();
+        self.shared[channel] = Some(slot);
         Ok(())
+    }
+    pub(super) fn reset_shared(&mut self, channel: usize) {
+        if let Some(slot) = self.shared[channel].as_deref_mut() {
+            slot.reset();
+        }
     }
     fn retire_shared(&mut self, channel: usize) -> Result<(), Error> {
         if channel == 0 {
-            self.shared = None;
+            self.reset_shared(0);
             Err(Error(abi::PEER_CLOSED as i64))
         } else {
             self.disconnect(channel - 1);
@@ -53,9 +81,9 @@ impl Server {
         }
     }
     pub(super) fn shared_active(&self, channel: usize) -> bool {
-        self.shared
+        self.shared[channel]
             .as_ref()
-            .is_some_and(|s| s.channel == channel && !matches!(s.state, State::Armed))
+            .is_some_and(|s| !matches!(s.state, State::Armed))
     }
     pub(super) fn shared_open(
         &mut self,
@@ -63,16 +91,15 @@ impl Server {
         pair: (Handle, Handle),
         bytes: &[u8],
     ) -> Result<bool, Error> {
-        if !self
-            .shared
+        if !self.shared[channel]
             .as_ref()
-            .is_some_and(|s| s.channel == channel && matches!(s.state, State::Armed))
+            .is_some_and(|s| matches!(s.state, State::Armed))
             || bytes != wire::OPEN
         {
             return Ok(false);
         }
         match time::after(300).and_then(|d| Accept::start((pair.1, pair.0), d)) {
-            Ok(accept) => self.shared.as_mut().unwrap().state = State::Opening(accept),
+            Ok(accept) => self.shared[channel].as_mut().unwrap().state = State::Opening(accept),
             Err(_) => self.retire_shared(channel)?,
         }
         Ok(true)
@@ -82,8 +109,7 @@ impl Server {
         channel: usize,
         pair: (Handle, Handle),
     ) -> Result<Option<Event>, Error> {
-        let shared = self.shared.as_mut().unwrap();
-        assert_eq!(shared.channel, channel);
+        let shared = self.shared[channel].as_mut().unwrap();
         match &mut shared.state {
             State::Armed => unreachable!(),
             State::Opening(accept) => {
@@ -148,10 +174,9 @@ impl Server {
         if current != Some(request.incarnation) {
             return Ok(());
         }
-        let Some(shared) = self
-            .shared
+        let Some(shared) = self.shared[channel]
             .as_mut()
-            .filter(|s| s.channel == channel && s.pending == request.shared_id)
+            .filter(|s| s.pending == request.shared_id)
         else {
             return Ok(());
         };
@@ -172,27 +197,43 @@ impl Server {
         }
         Ok(())
     }
-    pub(super) fn shared_wake(&self) -> Option<(usize, Notification)> {
-        let shared = self.shared.as_ref()?;
+    pub(super) fn shared_wake(&self, channel: usize) -> Option<Notification> {
+        let shared = self.shared[channel].as_ref()?;
         match &shared.state {
-            State::Ready(peer) if shared.pending == 0 => Some((shared.channel, peer.wake())),
+            State::Ready(peer) if shared.pending == 0 => Some(peer.wake()),
             _ => None,
         }
     }
     pub(super) fn shared_deadline(&self) -> Option<u64> {
-        match &self.shared.as_ref()?.state {
-            State::Opening(accept) => Some(accept.deadline),
-            State::Ready(peer) => peer.deadline(),
-            State::Armed => None,
-        }
+        self.shared
+            .iter()
+            .flatten()
+            .filter_map(|s| s.deadline())
+            .reduce(|a, b| if time::reached(a, b) { b } else { a })
     }
     pub(super) fn expire_shared(&mut self) -> Result<(), Error> {
-        if let Some(deadline) = self.shared_deadline()
-            && time::reached(time::now()?, deadline)
-        {
-            let channel = self.shared.as_ref().unwrap().channel;
-            self.retire_shared(channel)?;
+        let Some(earliest) = self.shared_deadline() else {
+            return Ok(());
+        };
+        let now = time::now()?;
+        if time::reached(now, earliest) {
+            for channel in 0..=self.count {
+                if self.shared[channel]
+                    .as_ref()
+                    .and_then(|s| s.deadline())
+                    .is_some_and(|d| time::reached(now, d))
+                {
+                    self.retire_shared(channel)?;
+                }
+            }
         }
         Ok(())
+    }
+}
+impl Drop for Server {
+    fn drop(&mut self) {
+        for slot in self.shared.iter_mut().flatten() {
+            slot.reset();
+        }
     }
 }

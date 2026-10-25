@@ -5,5 +5,6 @@ mod polling;
 mod replies;
 mod shared;
 pub use replies::Replies;
+pub use shared::SharedSlot;
 
 include!("server.rs");

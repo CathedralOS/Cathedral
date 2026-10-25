@@ -7,54 +7,10 @@
 use super::*;
 pub(super) use binding::Binding;
 pub(in crate::service) use binding::Bound;
-use cathedral_user_runtime::{link::Link, memory::Object, server::Request};
+use cathedral_user_runtime::{memory::Object, server::Request};
 pub(super) use pending::Pending;
 pub(in crate::service) use pending::{LaunchOrigin, LaunchRequest, Launched};
-/// The root adapter's link to one provider root. A failed exchange retires the
-/// accepted pair; serving that root again needs a fresh provider incarnation.
-pub(super) struct Provider {
-    link: Link,
-    pair: Option<(Handle, Handle)>,
-}
-impl Provider {
-    pub fn at(index: u64) -> Result<Self, Error> {
-        Ok(Self {
-            link: Link::at(index)?,
-            pair: None,
-        })
-    }
-    pub fn pair(&mut self) -> Result<(Handle, Handle), Error> {
-        if let Some(pair) = self.pair {
-            return Ok(pair);
-        }
-        let pair = self.link.connect()?;
-        self.pair = Some(pair);
-        Ok(pair)
-    }
-    /// An owner grant re-establishes the connection: a replaced provider is a
-    /// fresh incarnation and connects, while a still-live accepted link refuses
-    /// with BUSY and the existing pair stays. The owner never names processes;
-    /// the link itself distinguishes the two cases. True means a new provider
-    /// connection, so the caller must invalidate grants/proofs from the old one.
-    pub fn refresh(&mut self) -> Result<bool, Error> {
-        match self.link.connect() {
-            Ok(pair) => {
-                // The superseded endpoints belonged to a provider that is gone;
-                // their names may already be dead, so releasing them is best effort.
-                if let Some((send, receive)) = self.pair.replace(pair) {
-                    let _ = send.close();
-                    let _ = receive.close();
-                }
-                Ok(true)
-            }
-            Err(Error(code)) if code == abi::BUSY as i64 && self.pair.is_some() => Ok(false),
-            Err(error) => Err(error),
-        }
-    }
-    pub fn invalidate(&mut self) {
-        self.pair = None;
-    }
-}
+
 impl Parent {
     /// Retire a failed local exchange just as forwarded requests do: never
     /// reuse a stream whose late reply could be mistaken for the next request.
@@ -62,14 +18,17 @@ impl Parent {
         &mut self,
         operation: impl FnOnce(&mut cathedral_user_runtime::storage::Scope) -> Result<T, Error>,
     ) -> Result<T, Error> {
-        let mut scope = self.own_scope()?;
-        let result = operation(&mut scope);
-        if !scope.connected() {
+        let (result, connected) = {
+            let mut scope = self.own_scope()?;
+            let result = operation(&mut scope);
+            (result, scope.connected())
+        };
+        if !connected {
             self.retire_storage(0)?;
         }
         result
     }
-    fn own_scope(&mut self) -> Result<cathedral_user_runtime::storage::Scope, Error> {
+    fn own_scope(&mut self) -> Result<cathedral_user_runtime::storage::Scope<'_>, Error> {
         if self.storing() {
             return Err(Error(abi::BUSY as i64));
         }
@@ -78,7 +37,7 @@ impl Parent {
                 self.storage_links[0]
                     .as_mut()
                     .ok_or(Error(abi::DENIED as i64))?
-                    .pair()?,
+                    .client(time::after(300)?)?,
             ));
         }
         if !self.separate_storage {
@@ -298,16 +257,12 @@ impl Parent {
             if self.storage_epoch == 0 {
                 return None;
             }
-            self.storage_pair?
+            let pair = self.storage_pair?;
+            [pair.0.raw(), pair.1.raw()]
         } else {
-            self.storage_links[0].as_ref()?.pair?
+            self.storage_links[0].as_ref()?.identity()?
         };
-        Some([
-            pair.0.raw(),
-            pair.1.raw(),
-            self.storage_epoch,
-            self.storage_realm,
-        ])
+        Some([pair[0], pair[1], self.storage_epoch, self.storage_realm])
     }
     /// Every object operation is atomic at the provider, so revoking a binding
     /// leaves nothing staged upstream; the stale scope simply stops authorizing.

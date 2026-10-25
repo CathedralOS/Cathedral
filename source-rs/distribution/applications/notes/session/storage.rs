@@ -10,7 +10,7 @@ use cathedral_platform_contracts::storage as store;
 use cathedral_user_runtime::{memory::Private, storage::Scope};
 pub const MAX_NOTES: usize = 8;
 pub struct Notes {
-    scope: Option<Scope>,
+    scope: Option<Scope<'static>>,
     ids: [u64; MAX_NOTES],
     pub count: usize,
     pub current: usize,

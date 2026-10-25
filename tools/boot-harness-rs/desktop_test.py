@@ -24,6 +24,7 @@ def desktop(stream, output, serial, reboot, expected_absolute=True, fill_users=F
     assert 'Cathedral: object storage ready' in serial
     assert 'Cathedral input: shared source connection ready' in serial
     assert 'Cathedral matrix: shared display connection ready' in serial
+    assert 'Cathedral matrix: shared storage connection ready' in serial
     position = [40, 40]
     motion_step = 0
     timings = desktop_timing.Timings(output, reboot)

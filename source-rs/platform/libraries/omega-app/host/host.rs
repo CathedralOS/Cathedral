@@ -15,7 +15,7 @@ use cathedral_user_runtime::{
 pub(super) struct Host {
     services: Services,
     pub interaction: Option<Interaction>,
-    pub storage: Option<Scope>,
+    pub storage: Option<Scope<'static>>,
     control: Option<(Handle, Handle)>,
     staged: Option<attachments::Staged>,
 }

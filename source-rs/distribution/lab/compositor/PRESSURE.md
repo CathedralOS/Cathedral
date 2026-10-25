@@ -23,7 +23,7 @@ scene, focus, placement or child-lifecycle authority.
 
 Start at [main](main.rs), role four, then [the pressure peer](pressure.rs):
 
-1. Allocate four one-page objects; require a fifth to fail despite spare page
+1. Allocate eight one-page objects; require a ninth to fail despite spare page
    budget. Release them.
 2. Repeatedly allocate a 64-KiB object, check zeroing, fill it, require an extra
    page to fail, then release and repeat.
@@ -48,7 +48,7 @@ eight-handle wait set.
 ## Kernel evidence and limits
 
 [Page-object policy](../../../kernel/core/user_tasks/memory/regions/regions.rs) separately bounds bytes and
-object counts. Each task has at most four owned objects and four accepted reader
+object counts. Each task has at most eight owned objects and 48 accepted reader
 objects; ninety-six global records cover all twelve task slots even after producers
 exit. Accepted readers retain their page and object charges until release/death.
 These bounds reserve metadata capacity, not physical RAM or future CPU time.

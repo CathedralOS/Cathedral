@@ -214,8 +214,10 @@ or peer progress. Failure and reclamation must preserve outstanding obligations.
   request correlation, mixed notification/lifetime waits and failed-connection
   retirement. Its immutable attachment extension correlates a shared frame with a
   typed grant, bounds incomplete custody and preserves backing through peer death;
-  display uses a yielding client with mixed readiness. Storage attachment consumers
-  have not migrated yet.
+  display and both root/storage links use yielding clients with mixed readiness.
+  The server now multiplexes independently enabled control/data streams, including
+  owner-supplied reconnectable links. Scoped storage, immutable bulk replies and
+  provider replacement execute through that boundary.
   Nested forwarding, other services and Omega bindings remain to migrate;
   this is not a coordination service or proof of complete desktop migration.
 - [Omega boot](../../../source/kernel/boot/uefi/README.md) exercises early memory

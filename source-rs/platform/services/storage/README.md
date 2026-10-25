@@ -34,6 +34,15 @@ or damaged envelope. The `startup-probes` feature adds
 [pre-open failure fixtures](startup_probe.rs) for death, silence and a malformed
 reply; ordinary builds contain none of those argument-controlled paths.
 
+The [root adapter](../../../distribution/matrix/service/parent/storage/provider.rs)
+upgrades both data links to [shared service connections](../../libraries/user-runtime/connection/README.md).
+The provider lends one persistent dispatch slot to each link. Commands/replies use
+shared frames and notifications; immutable attachments remain typed kernel-mediated
+grants correlated to those frames. A failed or replaced peer clears only its own
+transport state, while the other root remains serviceable. Initial control/health
+traffic and direct lab clients still use their existing copied endpoints; an upgraded
+data connection has no copied-payload fallback.
+
 Two boot-approved data links bind to private roots 0 and 1 by their
 service-local link position. The kernel isolates principals and grants
 endpoints; the provider enforces root-local object access, and no message
@@ -78,12 +87,13 @@ commit, so proofs can exercise lost acknowledgements and provider replacement.
 split on real records. Ordinary builds contain none of these.
 
 The provider's reader pages receive publication attachments; its private pages
-hold the heap and the pages behind bulk replies, which stay charged to it until
+hold the heap, two mailbox writers and the pages behind bulk replies, which stay charged to it until
 the last reader releases them. Profiles fund both explicitly. [main.rs](main.rs)
 splits funded private pages between the engine/cache and outstanding replies,
-after eight pages of headroom. The heap stays between its tested 56-page minimum
-and two private objects, leaving object slots available for replies. The lab's
-64-page grant keeps the smallest heap; the desktop's 328 pages provide a 160-page
+after eight pages of headroom and two transport pages. The heap stays between its
+tested 56-page minimum and two private objects. The eight-owned-object ceiling
+leaves room for the heap, both writers and a reply. The lab's 64-page grant keeps
+the smallest heap; the desktop's 330 pages provide a 160-page
 (640 KiB) heap and enough remaining backing for the reusable UI program. A maximum
 protocol payload still requires sufficient actual provider funding. A reply
 whose pages cannot be allocated is recorded as `bulk-reply-refused` in every
