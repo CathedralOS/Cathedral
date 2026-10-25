@@ -8,15 +8,17 @@ pub(in crate::user_tasks) enum Kind {
     Receive,
     Readiness,
     Child,
+    Notification,
 }
 
 pub(in crate::user_tasks) struct Registry {
-    pending: [u32; 3],
-    queued: [u32; 3],
-    active: [u32; 3],
+    pending: [u32; 4],
+    queued: [u32; 4],
+    active: [u32; 4],
     children: [u32; abi::MAX_LAUNCHES],
     child_of: [Option<usize>; abi::MAX_TASKS],
     changed_children: u32,
+    notification_changes: u32,
     deadlines: Deadlines,
     last: Option<u64>,
     ticks: u128,
@@ -32,12 +34,13 @@ impl Registry {
     ) -> Result<Self, alloc::collections::TryReserveError> {
         assert!(tasks <= abi::MAX_TASKS);
         Ok(Self {
-            pending: [0; 3],
-            queued: [0; 3],
-            active: [0; 3],
+            pending: [0; 4],
+            queued: [0; 4],
+            active: [0; 4],
             children: [0; abi::MAX_LAUNCHES],
             child_of: [None; abi::MAX_TASKS],
             changed_children: 0,
+            notification_changes: 0,
             deadlines: Deadlines::try_new(tasks)?,
             last: None,
             ticks: 0,
@@ -76,6 +79,10 @@ impl Registry {
         self.changed_children |= self.children[launch];
     }
 
+    pub(in crate::user_tasks) fn notifications_changed(&mut self, tasks: u32) {
+        self.notification_changes |= tasks;
+    }
+
     pub(in crate::user_tasks) fn remove(&mut self, slot: usize) {
         for pending in self.pending.iter_mut().chain(&mut self.queued) {
             *pending &= !(1 << slot);
@@ -88,9 +95,10 @@ impl Registry {
             self.children[launch] &= !(1 << slot);
         }
         self.changed_children &= !(1 << slot);
+        self.notification_changes &= !(1 << slot);
     }
 
-    pub(super) fn candidates(&mut self, now: u64, ipc: u32, devices: u32) -> [u32; 3] {
+    pub(super) fn candidates(&mut self, now: u64, ipc: u32, devices: u32) -> [u32; 4] {
         self.advance(now);
         let mut due = 0;
         while let Some(slot) = self.deadlines.pop_due(self.ticks) {
@@ -100,6 +108,8 @@ impl Registry {
             (ipc | due) & self.active[Kind::Receive as usize],
             (ipc | devices | due) & self.active[Kind::Readiness as usize],
             (core::mem::take(&mut self.changed_children) | due) & self.active[Kind::Child as usize],
+            (core::mem::take(&mut self.notification_changes) | due)
+                & self.active[Kind::Notification as usize],
         ]
     }
 
@@ -112,16 +122,21 @@ impl Registry {
 
     /// Retain a finite wave: later hints cannot repeatedly move ahead of it.
     /// Within a wave, readiness is observed before copied receives consume data.
-    pub(super) fn batch(&mut self, now: u64, ipc: u32, devices: u32) -> [u32; 3] {
+    pub(super) fn batch(&mut self, now: u64, ipc: u32, devices: u32) -> [u32; 4] {
         for (kind, candidates) in self.candidates(now, ipc, devices).into_iter().enumerate() {
             self.queued[kind] |= candidates;
         }
-        if self.pending == [0; 3] {
+        if self.pending == [0; 4] {
             self.pending = core::mem::take(&mut self.queued);
         }
-        let mut batch = [0; 3];
+        let mut batch = [0; 4];
         let mut remaining = super::COMPLETION_BATCH;
-        for kind in [Kind::Readiness, Kind::Receive, Kind::Child] {
+        for kind in [
+            Kind::Readiness,
+            Kind::Receive,
+            Kind::Child,
+            Kind::Notification,
+        ] {
             let kind = kind as usize;
             while remaining != 0 && self.pending[kind] != 0 {
                 let bit = 1 << self.pending[kind].trailing_zeros();

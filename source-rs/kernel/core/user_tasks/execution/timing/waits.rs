@@ -21,7 +21,7 @@ struct Ready {
 
 pub(super) struct Observations {
     ready: Vec<Option<Ready>>,
-    samples: Vec<[Sample; 3]>,
+    samples: Vec<[Sample; 4]>,
 }
 impl Observations {
     pub(super) fn try_new(tasks: usize) -> Result<Self, TryReserveError> {
@@ -30,7 +30,7 @@ impl Observations {
         ready.resize(tasks, None);
         let mut samples = Vec::new();
         samples.try_reserve_exact(tasks)?;
-        samples.resize(tasks, [Sample::default(); 3]);
+        samples.resize(tasks, [Sample::default(); 4]);
         Ok(Self { ready, samples })
     }
     pub(super) fn complete(
@@ -85,7 +85,12 @@ impl Observations {
     pub(super) fn report(&self, output: fn(&[u8]) -> bool) {
         use core::fmt::Write;
         for (slot, samples) in self.samples.iter().enumerate() {
-            for kind in [Kind::Receive, Kind::Readiness, Kind::Child] {
+            for kind in [
+                Kind::Receive,
+                Kind::Readiness,
+                Kind::Child,
+                Kind::Notification,
+            ] {
                 let sample = samples[kind as usize];
                 if sample.completed == 0 {
                     continue;

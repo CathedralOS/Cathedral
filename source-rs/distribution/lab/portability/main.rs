@@ -3,6 +3,7 @@
 //! CPU-portability fixture: exchange capabilities, retain private state, and contain bad accesses.
 mod exchange;
 mod isolation;
+mod notifications;
 mod sharing;
 use cathedral_kernel_contracts::user as abi;
 use cathedral_user_runtime::{Error, ipc::Handle};

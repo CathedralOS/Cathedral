@@ -4,6 +4,7 @@ use crate::{Error, Handle, abi};
 pub(super) fn server() -> u64 {
     let input = Handle::bootstrap(0).unwrap();
     let output = Handle::bootstrap(1).unwrap();
+    crate::notifications::server(input, output);
     let mut buffer = [0; 64];
     for _ in 0..32 {
         assert_eq!(input.receive(&mut buffer).unwrap(), 64);
@@ -21,6 +22,7 @@ pub(super) fn server() -> u64 {
 pub(super) fn client() -> u64 {
     let output = Handle::bootstrap(0).unwrap();
     let input = Handle::bootstrap(1).unwrap();
+    crate::notifications::client(input, output);
     assert_eq!(
         Handle::from_raw(0).send(b"invalid"),
         Err(Error(abi::BAD_HANDLE as i64))

@@ -8,6 +8,7 @@ mod initial;
 mod lifecycle;
 pub mod link;
 mod memory;
+mod notification;
 pub use abi::{MAX_ENDPOINTS, MAX_TASKS};
 #[cfg(test)]
 mod tests;

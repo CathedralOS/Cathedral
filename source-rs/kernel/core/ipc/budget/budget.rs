@@ -24,11 +24,12 @@ pub(super) fn reservations(tasks: usize, limits: &[usize]) -> Result<[usize; MAX
 }
 impl Ipc {
     pub(crate) fn charged_channels(&self, task: usize) -> usize {
-        self.endpoints[MAX_ENDPOINTS..]
-            .iter()
-            .flatten()
-            .filter(|e| e.account == Some(task))
-            .count()
+        self.notifications.charged(task)
+            + self.endpoints[MAX_ENDPOINTS..]
+                .iter()
+                .flatten()
+                .filter(|e| e.account == Some(task))
+                .count()
     }
     pub(crate) fn channel_limit(&self, task: usize) -> usize {
         self.reservations[task]

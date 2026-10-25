@@ -28,6 +28,7 @@ pub mod keyboard;
 pub mod link;
 pub mod matrix;
 pub mod memory;
+pub mod notification;
 pub mod resources;
 pub mod server;
 pub mod services;

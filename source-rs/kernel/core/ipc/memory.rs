@@ -27,6 +27,7 @@ impl Ipc {
             len: bytes.len(),
             attachment: None,
             memory: Some(escrow),
+            notification: None,
         };
         message.bytes[..bytes.len()].copy_from_slice(bytes);
         self.endpoints[index].as_mut().unwrap().message = Some(message);

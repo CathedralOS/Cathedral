@@ -92,6 +92,7 @@ knowledge of a particular distribution.
 
 | Interest | Start here | Descend into |
 | --- | --- | --- |
+| Notification parking | [Notification entrance](../../source-rs/kernel/core/notifications/notifications.rs) | [Local grants](../../source-rs/kernel/core/notifications/grants.rs), [lifetime and control](../../source-rs/kernel/core/notifications/lifetime.rs), [syscall adapter](../../source-rs/kernel/core/user_tasks/syscalls/ipc/notifications.rs), [proof and remaining migration](../../source-rs/kernel/core/notifications/README.md) |
 | CPU turn sharing | [Task scheduling](../../source-rs/kernel/core/scheduler/scheduler.rs) | [Hierarchical selection](../../source-rs/kernel/core/scheduler/shares/shares.rs), [contract and proof route](../../source-rs/kernel/core/scheduler/README.md), [loan reattachment](../../source-rs/kernel/core/user_tasks/lifecycle/delegation.rs) |
 | CPU time ceilings | [Persistent account charging](../../source-rs/kernel/core/scheduler/budget/budget.rs) | [Architecture clock](../../source-rs/kernel/arch/isa/x86_64/cpu_clock.rs), [trap samples](../../source-rs/kernel/core/user_tasks/execution/traps.rs), [measured QEMU proof](../../source-rs/kernel/boot/uefi/lab/supervision/cpu/budget.rs) |
 | Firmware and kernel startup | [boot main](../../source-rs/kernel/boot/uefi/main.rs) | Firmware handoff, memory, interrupts, supplied-program startup |

@@ -28,6 +28,9 @@ impl Ipc {
             self.retired_memory[slot / 64] |= 1u64 << (slot % 64);
             self.retired_memory_pending = true;
         }
+        if let Some(slot) = queued.and_then(|q| q.notification) {
+            self.notifications.drop_grant(slot);
+        }
         if let Some(slot) = queued.and_then(|q| q.attachment) {
             // Queued receives cannot themselves be moved. However the endpoint
             // can receive a message after its receive right entered escrow; thus
@@ -51,6 +54,9 @@ impl Ipc {
                     if let Some(slot) = queued.and_then(|q| q.memory) {
                         self.retired_memory[slot / 64] |= 1u64 << (slot % 64);
                         self.retired_memory_pending = true;
+                    }
+                    if let Some(slot) = queued.and_then(|q| q.notification) {
+                        self.notifications.drop_grant(slot);
                     }
                     pending = queued.and_then(|q| q.attachment);
                 }
@@ -76,6 +82,7 @@ impl Ipc {
                 self.close_grant(slot);
             }
         }
+        self.notifications.close_task(task);
         // Transferred/escrow endpoints survive creator death. Keep their account
         // charge until final closure, including across creator-slot replacement.
     }

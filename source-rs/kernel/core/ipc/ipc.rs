@@ -24,6 +24,7 @@ pub struct Message {
     pub len: usize,
     pub attachment: Option<u64>,
     pub memory: Option<usize>,
+    pub notification: Option<u64>,
 }
 #[derive(Clone, Copy)]
 struct Queued {
@@ -32,6 +33,7 @@ struct Queued {
     // Reserved, inaccessible recipient-local grant. Published only on receive.
     attachment: Option<usize>,
     memory: Option<usize>,
+    notification: Option<usize>,
 }
 #[derive(Clone, Copy)]
 struct Endpoint {
@@ -45,6 +47,7 @@ struct Endpoint {
     account: Option<usize>,
 }
 pub struct Ipc {
+    pub notifications: crate::notifications::Notifications,
     epoch: u64,
     retired_memory: [u64; cathedral_kernel_contracts::memory::MAX_READ_HANDLES.div_ceil(64)],
     retired_memory_pending: bool,
@@ -114,6 +117,7 @@ impl Ipc {
             len: bytes.len(),
             attachment: reserved,
             memory: None,
+            notification: None,
         };
         message.bytes[..bytes.len()].copy_from_slice(bytes);
         self.endpoints[index].as_mut().unwrap().message = Some(message);
@@ -159,6 +163,7 @@ impl Ipc {
             if message.len > capacity
                 || (message.attachment.is_some() && kind != 1)
                 || (message.memory.is_some() && kind != 2)
+                || (message.notification.is_some() && kind != 3)
             {
                 return Err(abi::TOO_SMALL);
             }
@@ -171,6 +176,9 @@ impl Ipc {
                 len: message.len,
                 attachment,
                 memory: message.memory,
+                notification: message
+                    .notification
+                    .map(|slot| self.notifications.publish(caller, slot)),
             }));
         }
         if !endpoint.sender_alive {

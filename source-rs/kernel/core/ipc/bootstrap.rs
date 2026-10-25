@@ -25,6 +25,7 @@ impl Ipc {
             .map_err(|_| abi::NO_MEMORY)?;
         initial.resize(tasks, [0; abi::MAX_INITIAL_ENDPOINTS]);
         let mut ipc = Self {
+            notifications: crate::notifications::Notifications::new(tasks)?,
             epoch,
             retired_memory: [0; cathedral_kernel_contracts::memory::MAX_READ_HANDLES.div_ceil(64)],
             tasks,

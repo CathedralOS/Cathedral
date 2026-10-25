@@ -6,8 +6,8 @@ transport. The accepted [IPC](../../../../wiki/spec/communication/ipc.md) and
 payload protocols in shared-memory libraries and retain kernel authority transfer,
 mapping and parking. The [migration outcome](../../../../TASKS_RUST.md#shared-memory-ipc-and-notification-outcome)
 must preserve the custody/authority evidence below without promoting these copied
-queue syscalls into a second permanent transport. No runtime change is implied by
-this documentation update.
+queue syscalls into a second permanent transport. The notification proof below
+adds the wakeup primitive; shared-memory messages remain the next transport step.
 
 Run from the repository root:
 
@@ -299,3 +299,13 @@ The separate `admission.json` profile enables [dynamic admission](admission/admi
 using the same ordinary userspace program and transport. Its executable grants
 select code independently of five unbound process accounts. See the
 [admission contract](../../../kernel/core/user_tasks/admission/pool/README.md).
+## Notification proof
+
+[notifications/notifications.rs](notifications/notifications.rs) adds ordinary
+cross-process notification tests to the existing IPC suite. Rights are established
+once through checked typed handoff; 64 round trips then use signal-and-wait without
+kernel payload delivery. It also checks two-worker wake-one/all, terminal wait
+outcomes, parked-process death and funding retained through creator replacement.
+See [the kernel boundary and remaining scope](../../../kernel/core/notifications/README.md).
+This is notification evidence, not the still-pending shared-memory message or
+ordinary-desktop migration proof.

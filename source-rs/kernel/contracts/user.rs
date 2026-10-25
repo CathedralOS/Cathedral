@@ -187,3 +187,27 @@ pub const RESOURCE_GROW: u64 = 71;
 pub const TASK_IMAGE_RELEASE: u64 = 72;
 pub const WAIT_IPC: u64 = 0;
 pub const WAIT_DEVICE: u64 = 1;
+
+// Notification facility: typed caller-local rights, independent of payload IPC.
+pub const NOTIFY_CREATE: u64 = 73; // writable [wait, signal, control], zero, zero
+pub const NOTIFY_DROP: u64 = 74; // local grant, zero, zero; not object closure
+pub const NOTIFY_SIGNAL: u64 = 75; // signal grant, broadcast (0/1), zero
+pub const NOTIFY_WAIT: u64 = 76; // wait grant, deadline, timed (0/1)
+// 32-byte [signal grant, wait grant, deadline, timed], zero, zero.
+// Negative result: signal did not commit. Nonnegative: signal committed, wait outcome.
+pub const NOTIFY_SIGNAL_WAIT: u64 = 77;
+pub const NOTIFY_CONTROL: u64 = 78; // control grant, action below, zero
+// Transitional checked grant handoff through existing endpoints, not payload transport.
+// SEND copies one right into recipient escrow, retaining the source; 80-byte packet ABI.
+pub const NOTIFY_SEND: u64 = 79; // send endpoint, packet address, zero
+pub const NOTIFY_RECEIVE: u64 = 80; // receive endpoint, writable packet, zero
+pub const NOTIFY_BUDGET: u64 = 81; // writable [shared object limit, notifications charged, handle limit, handles used]
+pub const NOTIFY_HANDLES: usize = 16;
+pub const NOTIFY_SIGNALED: u64 = 0;
+pub const NOTIFY_TIMED_OUT: u64 = 1;
+pub const NOTIFY_CLOSED: u64 = 2;
+pub const NOTIFY_REVOKED: u64 = 3;
+pub const NOTIFY_CANCELLED: u64 = 4;
+pub const NOTIFY_CLOSE: u64 = 0;
+pub const NOTIFY_WITHDRAW_WAITS: u64 = 1; // revoke all wait grants; cannot be undone
+pub const NOTIFY_CANCEL_WAITS: u64 = 2; // cancel currently registered waits only

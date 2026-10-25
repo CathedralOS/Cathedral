@@ -9,6 +9,7 @@ pub(super) enum ReceiveMode {
     Endpoint,
     Memory,
     TryMemory,
+    Notification,
 }
 #[derive(Clone, Copy)]
 pub(in crate::user_tasks) struct Receive {
@@ -113,7 +114,9 @@ fn receive(session: &mut Session, slot: usize, wait: Receive) -> Result<Option<u
     if !space.writable_range(address, size) {
         return Err(abi::BAD_ADDRESS);
     }
-    let message = if matches!(attachment, ReceiveMode::Memory | ReceiveMode::TryMemory) {
+    let message = if attachment == ReceiveMode::Notification {
+        session.ipc.receive_notification(slot, handle, capacity)?
+    } else if matches!(attachment, ReceiveMode::Memory | ReceiveMode::TryMemory) {
         session.ipc.receive_memory(slot, handle, capacity)?
     } else {
         session
@@ -126,7 +129,8 @@ fn receive(session: &mut Session, slot: usize, wait: Receive) -> Result<Option<u
     let capability = message
         .memory
         .map(|escrow| session.memory.model.publish_read(slot, escrow))
-        .or(message.attachment);
+        .or(message.attachment)
+        .or(message.notification);
     if attachment != ReceiveMode::Bytes {
         let mut packet = [0; abi::IPC_PACKET_BYTES];
         packet[..8].copy_from_slice(&(message.len as u64).to_le_bytes());

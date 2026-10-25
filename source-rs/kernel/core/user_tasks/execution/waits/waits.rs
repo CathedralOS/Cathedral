@@ -11,7 +11,10 @@ pub(in crate::user_tasks) fn wake(session: &mut Session, now: u64) {
     let start = timing::start();
     let ipc = session.ipc.take_changed_receivers();
     let devices = session.devices.take_changed();
-    let [receivers, readiness, children] = session.waits.batch(now, ipc, devices);
+    session
+        .waits
+        .notifications_changed(session.ipc.notifications.take_changed());
+    let [receivers, readiness, children, notifications] = session.waits.batch(now, ipc, devices);
     for slot in slots(readiness) {
         syscalls::ipc::readiness::wake(session, slot, now);
     }
@@ -20,6 +23,9 @@ pub(in crate::user_tasks) fn wake(session: &mut Session, now: u64) {
     }
     for slot in slots(children) {
         syscalls::tasks::wake(session, slot, now);
+    }
+    for slot in slots(notifications) {
+        syscalls::ipc::notifications::wake(session, slot, now);
     }
     session.timing.record(Phase::WaitCompletion, start);
 }

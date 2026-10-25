@@ -17,6 +17,9 @@ pub(super) fn syscall(session: &mut Session, slot: usize, now: u64) -> Event {
         | abi::RESOURCE_ASSIGN
         | abi::PHYSICAL_BUDGET
         | abi::PHYSICAL_ASSIGN => resources::dispatch(session, slot, call),
+        abi::NOTIFY_CREATE..=abi::NOTIFY_BUDGET => {
+            ipc::notifications::dispatch(session, slot, call, now, &mut event)
+        }
         abi::WRITE => diagnostics::write(session, slot, first, second),
         abi::IPC_HANDLE..=abi::IPC_REVOKE
         | abi::LINK_HANDLE

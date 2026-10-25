@@ -16,12 +16,9 @@ Start at `source-rs/kernel/core/ipc/ipc.rs`, the wait entrance
 reply-dispatch/launch work; its correlation and cancellation rules remain service
 requirements, not a reason to freeze the copied-channel ABI.
 
-Remaining acceptance:
+The first kernel notification slice is implemented and exercised on x86-64 and
+ARM64; see the evidence below. Remaining acceptance:
 
-- Implement funded notification objects with separate wait/signal rights,
-  authorized recipient installation, coalescing pending signals, wake-one/all,
-  and signal-and-wait with distinguishable pre/post-signal failures. No PID-based
-  ambient wake, shared-page authorization or kernel-written per-request wake ID.
 - Implement reusable authorized shared backing and platform-owned publication,
   custody and request/reply protocols. Keep mapping isolation, hostile-writer
   validation and live-reader lifetime guarantees; waking proves none of them.
@@ -36,8 +33,8 @@ Remaining acceptance:
 
 Done means the normal service path uses shared-memory data plus notifications,
 not only a standalone lab. Pin focused host/race controls and real guest evidence
-for that path and its invalid-authority controls. The docs ratification runs no
-new OS code and establishes no execution or performance result.
+for that path and its invalid-authority controls. Notification-only round trips
+establish wakeup behavior, not shared-memory message publication or performance.
 
 ## Independent installation and component-owned activation
 
@@ -68,6 +65,59 @@ migration, live kernel replacement and a universal distributed transaction are
 not prerequisites. No runtime evidence is claimed by this docs ratification.
 
 ## Current implementation evidence
+
+Implementation update 2026-10-25: **funded kernel notifications and process proofs**,
+over `2506f024`.
+
+Start at [notifications/notifications.rs](source-rs/kernel/core/notifications/notifications.rs)
+and its [boundary guide](source-rs/kernel/core/notifications/README.md). Separate
+wait, signal and control grants use caller-local monotonic names. The primitive
+remembers coalesced early signals, supports wake-one/all and combined signal/wait,
+and fixes one completion outcome before waking through the bounded wait coordinator.
+Negative combined-call results mean no signal committed; nonnegative outcomes
+describe the subsequent wait. Control supports close, permanent withdrawal of all
+wait rights and cancellation of current waits. None revokes application work.
+
+Objects share the existing admitted transport quota; sixteen notification handles
+per task have a separate bound. Grants, unpublished recipient escrow and pending
+wait completion retain the original account's charge through death and replacement
+until final release. No trap-time allocation or ambient PID wake is introduced.
+The existing copied channel mediates setup grants temporarily; notification rounds
+themselves carry no payload and allocate no per-request identifiers.
+
+The platform [runtime entrance](source-rs/platform/libraries/user-runtime/notification/notification.rs)
+exposes the mechanism. The [ordinary-process proof](source-rs/distribution/lab/channels/notifications/notifications.rs)
+covers bad creation/send/receive pointers, wrong and foreign rights, typed escrow
+preservation, coalescing, 64 combined-call round trips, two-worker wake-one/all,
+cancellation, closure, withdrawal, death while parked and retained funding across
+creator replacement. ARM64 runs 32 notification rounds through SVC alongside its
+copied-message and exact reclamation checks. This is single-CPU evidence, not SMP.
+
+Verification:
+
+- Default host tests pass, including seven notification/IPC model tests and the
+  bounded notification wait-wave test. Core all-feature/test Clippy, guest kernel,
+  runtime and channels-lab Clippy pass. Layout, eight boundary tests, formatting
+  and diff checks pass.
+- IPC guest suite and smoke pass. ARM64 executes the 32 new notification rounds,
+  32 existing echoes, process isolation, deadline parking and exact reclamation.
+- Normal F5 fresh/cold passes independent Notes/Colors and the storage oracle:
+  `desktop/20261025T162540073029Z`.
+- Three nested desktops with `--interaction-delay` pass fresh/cold, including input
+  through seven matrix realms during held presentation, delayed poll/image
+  recovery, persistence and repeated reclamation:
+  `desktop/20261025T162753135949Z`.
+- Selection `late-stop` passes fresh/cold, restoring the selected app and retaining
+  its draft: `desktop/20261025T162926872440Z`.
+- Logs: `build/omega-component/notifications-{host-final,core-clippy,
+  clippy-kernel,clippy-user,ipc-copyout,smoke,arm64-final,desktop,nested,selection}.log`.
+
+**Next:** reusable authorized writable shared backing, followed by platform
+publication/backpressure and real request/reply payloads over it. Preserve mapping
+isolation and live-reader lifetime; do not expose safe Rust slices over memory an
+untrusted peer may mutate. Then migrate ordinary service/Omega consumers and retire
+copied payload consumers. The encompassing outcome remains open; F5 still uses its
+existing service transport. No new owner decision was needed.
 
 Implementation update 2026-10-25: **switching running apps yields through scene
 commit and restoration**, over `e32d3f71`.

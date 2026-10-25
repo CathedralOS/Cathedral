@@ -29,7 +29,7 @@ pub(in super::super) fn send_cap(
     handle: u64,
     address: u64,
     reserved: u64,
-    memory: bool,
+    kind: u8,
 ) -> Result<u64, u64> {
     session.ipc.check(slot, handle, Right::Send)?;
     if reserved != 0 {
@@ -52,7 +52,11 @@ pub(in super::super) fn send_cap(
         return Err(abi::INVALID_ARGUMENT);
     }
     let bytes = &packet[16..16 + length as usize];
-    if memory {
+    if kind == 3 {
+        session
+            .ipc
+            .send_notification(slot, handle, bytes, attachment)?;
+    } else if kind == 2 {
         let receiver = session.ipc.memory_receiver(slot, handle, bytes.len())?;
         let escrow = session
             .memory

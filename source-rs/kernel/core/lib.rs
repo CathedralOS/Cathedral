@@ -11,6 +11,7 @@ pub mod ipc;
 pub mod kernel_tasks;
 pub mod memory;
 pub(crate) mod names;
+pub mod notifications;
 pub mod scheduler;
 #[allow(unsafe_code)]
 pub mod user_tasks;

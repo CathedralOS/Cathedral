@@ -27,7 +27,7 @@ pub(in crate::user_tasks) fn dispatch(
             first,
             second,
             third,
-            number == abi::IPC_SEND_MEMORY,
+            if number == abi::IPC_SEND_MEMORY { 2 } else { 1 },
         ),
         abi::IPC_RECEIVE_CAP | abi::IPC_RECEIVE_MEMORY | abi::IPC_TRY_RECEIVE_MEMORY => {
             if third != 0 {

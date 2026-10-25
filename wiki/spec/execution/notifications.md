@@ -4,8 +4,8 @@
 | --- | --- |
 | Contract status | Current |
 | Specification coverage | Partial |
-| Implementation coverage | None |
-| Last reviewed | 2026-10-24 |
+| Implementation coverage | Partial |
+| Last reviewed | 2026-10-25 |
 
 ## Ownership
 
@@ -139,8 +139,12 @@ is actually released. Funding transfer requires authorized funded acceptance; it
 is not implied by moving a handle. An accepting peer must know the retention
 obligations it accepts. Closing a wait does not release independent backing pins.
 
-The existing Rust copied-channel and wait-registry experiments are starting
-mechanisms, not implementations of this complete contract. The implementation
+The Rust [notification primitive and ordinary-worker proof](../../../source-rs/kernel/core/notifications/README.md)
+implement bounded notification objects, separate rights, checked grant handoff,
+remembered signals, combined calls and completion/lifetime handling. Its live
+round trips exchange notifications; reusable shared payload memory and ordinary
+desktop migration remain open. Existing copied-channel tests are not evidence
+for those missing mechanisms. The complete implementation
 must demonstrate early signal, signal/register races, coalescing, wake-one/all,
 combined-call failure phases, closure/cancellation/deadline races, denied unrelated
 signals, stale handles, authorized cross-process transfer, and charge conservation
