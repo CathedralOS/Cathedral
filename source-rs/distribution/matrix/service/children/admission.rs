@@ -138,9 +138,11 @@ impl Children {
         );
         // The control pair belongs to the reserved process slot. Interaction,
         // wake, storage and producer queues charge this creator. A selected
-        // shared storage slot also needs its own writer, reader and notification;
-        // leave that capacity here instead of lending it all to the child.
-        let transport = u64::from(storage && self.separate_storage);
+        // shared storage/interaction slot needs its own writer, reader and
+        // notification. Retain both transport allowances here before lending
+        // capacity; copied leaf interaction does not allocate its reserved end.
+        let transport =
+            u64::from(storage && self.separate_storage) + u64::from(self.separate_storage);
         let connection_channels = if storage && self.separate_storage {
             5
         } else {

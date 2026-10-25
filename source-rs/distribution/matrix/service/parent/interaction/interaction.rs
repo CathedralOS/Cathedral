@@ -1,5 +1,5 @@
-//! Sole reader while tagged input and asynchronous presentation share a link.
-//! Synchronous operations still wait for both owners to retire.
+// Sole reader while tagged input and asynchronous presentation share a link.
+// Synchronous operations still wait for both owners to retire.
 use super::*;
 use cathedral_stock_matrix::transport::{self, Reply};
 
@@ -35,14 +35,19 @@ impl Parent {
         if poll.is_none() && !presenting {
             return Ok(());
         }
-        let mut bytes = [0; 64];
-        let len = match self.pair.unwrap().1.receive_until(&mut bytes, time::now()?) {
-            Ok(len) => len,
-            Err(Error(code)) if code == abi::TIMED_OUT as i64 => return Ok(()),
-            Err(error) => return Err(error),
+        let Some((lane, words)) = self.interaction.as_ref().unwrap().poll()? else {
+            return Ok(());
         };
-        let words = wire::decode(&bytes[..len]).ok_or(Error(abi::IO_ERROR as i64))?;
-        match transport::classify(words, poll, presenting) {
+        let classified = transport::classify(words, poll, presenting);
+        if let Some(lane) = lane
+            && !matches!(
+                (lane, &classified),
+                (Lane::Poll, Reply::Poll(_)) | (Lane::Visual, Reply::Presentation(_))
+            )
+        {
+            return Err(Error(abi::IO_ERROR as i64));
+        }
+        match classified {
             Reply::Poll(reply) => self.polling.as_mut().unwrap().reply = Some(reply),
             Reply::Presentation(status) => {
                 if let Some(p) = &mut self.pending {

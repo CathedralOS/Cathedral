@@ -8,10 +8,10 @@ pub(super) const APP_PAGES: u64 = if cfg!(feature = "notes") { 41 } else { 2 };
 pub(super) const APP_READERS: u64 = if cfg!(feature = "notes") { 5 } else { 0 };
 const APP_CHANNELS: u64 = if cfg!(feature = "notes") { 1 } else { 0 };
 /// A nested matrix holds old and new child bitmaps during replacement and lends
-/// its child's reader pages from this allowance. Parent storage additionally
-/// reserves a writer, reader and notification.
-const MATRIX_PAGES: u64 = if cfg!(feature = "notes") { 51 } else { 5 };
-const MATRIX_READERS: u64 = if cfg!(feature = "notes") { 43 } else { 5 };
+/// its child's reader pages from this allowance. Parent storage and interaction
+/// each reserve a writer, reader and notification.
+const MATRIX_PAGES: u64 = if cfg!(feature = "notes") { 52 } else { 6 };
+const MATRIX_READERS: u64 = if cfg!(feature = "notes") { 44 } else { 6 };
 /// Notes draws a base, a text bitmap and three note-bar rectangles; the color
 /// app draws a base and an accent plus its quota probes.
 const APP_SURFACES: u64 = if cfg!(feature = "notes") { 6 } else { 4 };
@@ -29,7 +29,7 @@ fn launch_inner(pair: Pair, pressure: bool) {
             0,
             0,
             0,
-            11 + 2 * APP_CHANNELS,
+            12 + 2 * APP_CHANNELS,
             2,
             if pressure { 7 } else { 3 },
             if pressure { 20000 } else { 0 },

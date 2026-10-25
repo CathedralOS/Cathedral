@@ -11,14 +11,20 @@ impl Cursors {
     }
     /// Binding is [view epoch, local cancellation cycle, supplied channel, mode].
     pub fn forward(&mut self, index: usize, pair: Pair, binding: [u64; 4]) -> Result<(), Error> {
+        self.forward_with(index, binding, |words| call(pair, words))
+    }
+    /// The caller retains its chosen transport and request sequence across updates.
+    pub fn forward_with(
+        &mut self,
+        index: usize,
+        binding: [u64; 4],
+        exchange: impl FnOnce(wire::Packet) -> Result<wire::Packet, Error>,
+    ) -> Result<(), Error> {
         if self.0[index] == Some(binding) {
             return Ok(());
         }
         let [epoch, _, channel, mode] = binding;
-        let reply = call(
-            pair,
-            [wire::CURSOR_PREFERENCE, epoch, channel, mode, 0, 0, 0, 0],
-        )?;
+        let reply = exchange([wire::CURSOR_PREFERENCE, epoch, channel, mode, 0, 0, 0, 0])?;
         // A view/channel can retire before its notification arrives. Never
         // recreate authority; the next binding/cycle makes a fresh request.
         if !matches!(reply[0], 0 | abi::DENIED) {

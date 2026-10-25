@@ -22,11 +22,11 @@ impl Parent {
         object: &Object,
     ) -> Result<wire::Packet, Error> {
         if self.upstream {
-            return cathedral_user_runtime::matrix::upstream::exchange(
-                self.pair.unwrap(),
-                words,
-                Some(object),
-            );
+            return self
+                .interaction
+                .as_ref()
+                .ok_or(Error(abi::DENIED as i64))?
+                .call(words, Some(object));
         }
         let display = self.display.as_ref().ok_or(Error(abi::DENIED as i64))?;
         let [_, _, key, x, y, w, h, stride] = words;

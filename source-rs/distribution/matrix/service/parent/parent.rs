@@ -29,7 +29,7 @@ pub(super) struct Parent {
     images: cathedral_user_runtime::matrix::upstream::Images,
     cursors: cathedral_user_runtime::matrix::upstream::Cursors,
     cursor_mode: Option<u64>,
-    pair: Option<(Handle, Handle)>,
+    interaction: Option<interaction::Connection>,
     storage_upstream: Option<storage::Upstream>,
     pub separate_storage: bool,
     pub grant: Grant,
@@ -55,7 +55,7 @@ pub(super) struct Parent {
 }
 impl Parent {
     pub(in crate::service) fn request_funding(&mut self, delta: [u64; 5]) -> Result<(), Error> {
-        if !self.upstream || self.pair.is_none() {
+        if !self.upstream || self.interaction.is_none() {
             return Err(Error(abi::NO_MEMORY as i64));
         }
         let response = match self.call([
@@ -71,10 +71,7 @@ impl Parent {
             Ok(reply) => reply,
             Err(error) => {
                 // A late acknowledgement must never satisfy the next exchange.
-                if let Some((send, receive)) = self.pair.take() {
-                    let _ = send.close();
-                    let _ = receive.close();
-                }
+                self.interaction = None;
                 return Err(error);
             }
         };
@@ -85,7 +82,7 @@ impl Parent {
         }
     }
     pub(in super::super) fn has_output(&self) -> bool {
-        self.pair.is_some() || self.display.is_some()
+        self.interaction.is_some() || self.display.is_some()
     }
     pub const fn empty() -> Self {
         Self {
@@ -109,7 +106,7 @@ impl Parent {
             cursors: cathedral_user_runtime::matrix::upstream::Cursors::empty(),
             cursor_mode: None,
             upstream: false,
-            pair: None,
+            interaction: None,
             storage_upstream: None,
             separate_storage: false,
             grant: Grant {
@@ -157,7 +154,8 @@ impl Parent {
                 environment.endpoint(1).unwrap(),
             )
         };
-        self.pair = self.upstream.then(pair);
+        self.interaction = (self.upstream && environment.len() != 5)
+            .then(|| interaction::Connection::Copied(pair()));
         self.display = if environment.len() == 4 {
             Some(display::Display::connect(pair())?)
         } else {
@@ -166,12 +164,12 @@ impl Parent {
         self.wake = (environment.len() == 3).then(|| environment.endpoint(2).unwrap());
         if environment.len() == 5 {
             let connections = cathedral_user_runtime::matrix::Connections::load(environment)?;
-            self.pair = Some(connections.interaction);
+            self.interaction = Some(interaction::Connection::shared(connections.interaction)?);
             self.storage_upstream = Some(storage::Upstream::connect(connections.storage)?);
             self.wake = Some(connections.wake);
         } else {
-            // Manually assembled headless fixtures retain their original shared stream.
-            self.storage_upstream = self.pair.map(storage::Upstream::Combined);
+            // Manually assembled headless fixtures retain their combined copied stream.
+            self.storage_upstream = self.upstream.then(|| storage::Upstream::Combined(pair()));
         }
         Ok(())
     }
@@ -180,7 +178,7 @@ impl Parent {
             world.inherit(self.grant);
             return Ok(());
         }
-        if self.pair.is_none() {
+        if self.interaction.is_none() {
             world.inherit(Grant::default());
             return Ok(());
         }
@@ -193,7 +191,7 @@ impl Parent {
         let reply = match self.call([wire::POLL, 0, 0, 0, 0, 0, 0, 0]) {
             Ok(reply) => reply,
             Err(Error(code)) if code == abi::PEER_CLOSED as i64 => {
-                self.pair = None;
+                self.interaction = None;
                 world.inherit(Grant::default());
                 return Ok(());
             }
@@ -241,6 +239,9 @@ impl Parent {
         self.refresh_due = self.grant.valid() && reply[5] & wire::MORE != 0;
     }
     fn call(&self, words: wire::Packet) -> Result<wire::Packet, Error> {
-        cathedral_user_runtime::matrix::upstream::call(self.pair.unwrap(), words)
+        self.interaction
+            .as_ref()
+            .ok_or(Error(abi::DENIED as i64))?
+            .call(words, None)
     }
 }

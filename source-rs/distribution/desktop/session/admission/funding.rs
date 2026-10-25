@@ -35,23 +35,23 @@ pub(super) fn limits() -> cathedral_user_runtime::resources::Limits {
         private_pages: if cfg!(feature = "shell") {
             1024
         } else if cfg!(feature = "notes") {
-            138
+            140
         } else {
-            22
+            24
         },
         reader_pages: if cfg!(feature = "shell") {
             4096
         } else if cfg!(feature = "notes") {
-            138
+            140
         } else {
-            14
+            16
         },
         channels: if cfg!(feature = "shell") {
             180
         } else if cfg!(feature = "notes") {
-            30
+            32
         } else {
-            26
+            28
         },
     }
 }

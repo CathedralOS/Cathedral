@@ -190,7 +190,6 @@ impl Parent {
         let p = self.pending.as_ref().unwrap();
         let batch = &self.batches[p.request.client.unwrap()];
         if p.compact {
-            let send = self.pair.ok_or(Error(abi::DENIED as i64))?.0;
             let mut updates = [[0; 8]; 2];
             let mut count = 0;
             for (i, update) in updates.iter_mut().enumerate() {
@@ -203,7 +202,7 @@ impl Parent {
             }
             let packet = wire::rectangles(self.grant.epoch, p.revision, &updates[..count])
                 .expect("validated compact rectangles");
-            return send.send(&wire::encode(packet));
+            return self.send_output(packet, None);
         }
         let op = match p.step {
             0 => wire::PRESENT_BEGIN,

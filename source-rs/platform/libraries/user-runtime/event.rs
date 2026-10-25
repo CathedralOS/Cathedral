@@ -12,8 +12,14 @@ pub fn wait(interests: &[Interest], deadline: u64) -> Result<usize, Error> {
     if interests.len() > abi::MAX_WAIT_HANDLES {
         return Err(Error(abi::INVALID_ARGUMENT as i64));
     }
-    #[repr(align(128))]
+    // The kernel copies a wait record set within one page. Align the entire
+    // maximum-size set so a larger live wait cannot straddle a page boundary.
+    #[repr(align(512))]
     struct Records([u64; abi::MAX_WAIT_HANDLES * 2]);
+    const _: () = assert!(
+        core::mem::size_of::<[u64; abi::MAX_WAIT_HANDLES * 2]>()
+            <= core::mem::align_of::<Records>()
+    );
     let mut records = Records([0; abi::MAX_WAIT_HANDLES * 2]);
     for (interest, words) in interests.iter().zip(records.0.chunks_exact_mut(2)) {
         let (kind, handle) = match *interest {

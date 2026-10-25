@@ -5,20 +5,30 @@ use cathedral_user_runtime::memory::Object;
 impl Parent {
     pub(super) fn output_receiver(&self) -> Result<Handle, Error> {
         if self.upstream {
-            return self.pair.map(|p| p.1).ok_or(Error(abi::DENIED as i64));
+            return self
+                .interaction
+                .as_ref()
+                .ok_or(Error(abi::DENIED as i64))?
+                .receiver();
         }
         self.display
             .as_ref()
             .ok_or(Error(abi::DENIED as i64))?
             .receiver()
     }
-    pub(in crate::service) fn display_wake(
+    pub(in crate::service) fn output_wake(
         &self,
     ) -> Result<Option<cathedral_user_runtime::event::Interest>, Error> {
+        if let Some(link) = &self.interaction {
+            return link.wake();
+        }
         self.display.as_ref().map_or(Ok(None), |d| d.wake())
     }
-    pub(in crate::service) fn display_deadline(&self) -> Option<u64> {
-        self.display.as_ref().and_then(|d| d.deadline())
+    pub(in crate::service) fn output_deadline(&self) -> Option<u64> {
+        self.interaction
+            .as_ref()
+            .and_then(|link| link.deadline())
+            .or_else(|| self.display.as_ref().and_then(|d| d.deadline()))
     }
     pub(super) fn output_status(&self) -> Result<Option<u64>, Error> {
         self.display
@@ -66,11 +76,10 @@ impl Parent {
         }
         let bytes = &bytes[..if self.upstream { 64 } else { 48 }];
         if self.upstream {
-            let send = self.pair.ok_or(Error(abi::DENIED as i64))?.0;
-            match object {
-                Some(object) => send.send_memory(bytes, object),
-                None => send.send(bytes),
-            }
+            self.interaction
+                .as_ref()
+                .ok_or(Error(abi::DENIED as i64))?
+                .begin(interaction::Lane::Visual, words, object)
         } else {
             self.display
                 .as_ref()

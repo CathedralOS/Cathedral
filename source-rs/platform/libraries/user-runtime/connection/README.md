@@ -119,9 +119,12 @@ retires a peer with pending work. The
 also removes a pipeline with published, queued and app-held replies, then verifies
 fresh setup and rejection of the old incarnation's reply.
 
-This prepares recursive interaction migration. No ordinary matrix uses the
-pipelined mode yet; its existing copied tagged-input/presentation dispatcher remains
-active. Ordinary shared storage/display consumers retain `Client` behavior.
+The ordinary stock matrix uses `Pipeline<2>` for its parent interaction stream.
+Its [dispatcher](../../../../distribution/matrix/service/parent/interaction/interaction.rs)
+keeps tagged input and presentation as separate owners; the connection adapter
+binds each owner to the returned transport ID before accepting an application
+reply. Parent servers explicitly select pipeline acceptance for child interaction.
+Ordinary shared storage/root-display consumers retain `Client` behavior.
 
 ## Immutable attachments
 
@@ -220,10 +223,11 @@ keeps six streams live under the thirty-two-handle cap, exhausts the remaining
 handle metadata with separately funded notifications, refuses a further allocation,
 and checks final handle and enclosing budget refunds. Fair scanning
 and earliest partial/setup deadlines cover all selected streams. There is still
-one outstanding request for ordinary consumers; the separately opted-in pipeline
-has the four-call bound described above.
+one outstanding request for ordinary storage/root-display consumers. Stock matrix
+interaction uses two; the opted-in server pipeline has the four-call bound above.
 
-Recursive interaction/rendering and endpoint custody remain migration work. Shared
+Omega leaf and Split interaction/rendering, and endpoint custody, remain migration
+work. Shared
 mailbox pooling may reduce per-connection backing/metadata costs later; current
 bounds refuse excess setup safely. No performance improvement or final production
 wire ABI is claimed here.

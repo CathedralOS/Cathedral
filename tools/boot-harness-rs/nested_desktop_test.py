@@ -125,7 +125,7 @@ def exercise(output, click, key, scan, width, height, reboot, pointer_stress=Fal
         note(nested_depth,'deep',True)
     if interaction_delay:
         n.focus_note(nested_depth)
-        delayed('f8', lambda: None, ('matrix-poll-delayed', 'matrix-poll-unmatched', 'matrix-poll-local', 'matrix-poll-resumed'))
+        delayed('f8', lambda: None, ('matrix-poll-delayed', 'matrix-poll-local', 'matrix-poll-resumed'))
         note(nested_depth,'deep',not reboot)
         # Lateness is not input loss: subsequent keys must retain this focus.
         delayed('f7', lambda: key('x'), ('interaction-delayed', 'interaction-resumed'))

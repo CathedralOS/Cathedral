@@ -125,6 +125,23 @@ pub(super) fn run() {
 fn mixed() {
     let [wait, signal, control] = N::create().unwrap();
     signal.signal(false).unwrap();
+    // Exercise the full ABI buffer; a live set can grow beyond the old 128-byte
+    // alignment. Every entry must be checked even when the first is ready.
+    let mut full = [Interest::Notification(wait); abi::MAX_WAIT_HANDLES];
+    assert_eq!(event::wait(&full, time::now().unwrap()), Ok(0));
+    full[abi::MAX_WAIT_HANDLES - 1] = Interest::Notification(signal);
+    assert_eq!(
+        event::wait(&full, time::now().unwrap()),
+        Err(Error(abi::DENIED as i64))
+    );
+    let (send, receive) = ipc::channel().unwrap();
+    send.send(b"full wait").unwrap();
+    assert_eq!(
+        ipc::wait_many(&[receive; abi::MAX_WAIT_HANDLES], time::now().unwrap()),
+        Ok(0)
+    );
+    send.close().unwrap();
+    receive.close().unwrap();
     assert_eq!(
         event::wait(
             &[Interest::Notification(wait), Interest::Notification(signal)],

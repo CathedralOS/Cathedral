@@ -22,10 +22,23 @@ impl Parent {
         self.polling
             .as_ref()
             .filter(|p| p.reply.is_none())
-            .map(|p| (self.pair.unwrap().1, (!p.late).then_some(p.deadline)))
+            .map(|p| {
+                (
+                    self.interaction
+                        .as_ref()
+                        .unwrap()
+                        .receiver()
+                        .expect("live interaction"),
+                    (!p.late).then_some(p.deadline),
+                )
+            })
     }
     pub fn refresh_notified(&mut self, world: &mut World) -> Result<(), Error> {
-        if !self.upstream || self.wake.is_none() || self.pair.is_none() || !world.input_ready() {
+        if !self.upstream
+            || self.wake.is_none()
+            || self.interaction.is_none()
+            || !world.input_ready()
+        {
             return Ok(());
         }
         assert!(self.can_poll());
@@ -43,16 +56,11 @@ impl Parent {
             .filter(|id| *id <= cathedral_stock_matrix::transport::LAST_POLL)
             .ok_or(Error(abi::NO_MEMORY as i64))?;
         let deadline = time::after(100)?;
-        match self.pair.unwrap().0.send(&wire::encode([
-            wire::POLL_TAGGED,
-            self.next_poll as u64,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-        ])) {
+        match self.interaction.as_ref().unwrap().begin(
+            interaction::Lane::Poll,
+            [wire::POLL_TAGGED, self.next_poll as u64, 0, 0, 0, 0, 0, 0],
+            None,
+        ) {
             Ok(()) => (),
             Err(Error(code)) if code == abi::WOULD_BLOCK as i64 => {
                 self.refresh_due = true;

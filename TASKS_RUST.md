@@ -19,12 +19,12 @@ requirements, not a reason to freeze the copied-channel ABI.
 Kernel notifications and a first reusable single-writer shared-memory/mailbox
 slice execute on x86-64 and ARM64. Ordinary F5 now uses them for physical input
 to the root matrix, root display commands/images, root storage and separate
-parent-storage streams between stock matrices, Omega app storage and independent
-Split storage forwarding. The scoped storage fixture also exercises both
+parent-storage and pipelined interaction streams between stock matrices, Omega app
+storage and independent Split storage forwarding. The scoped storage fixture also exercises both
 private-root provider connections. See the evidence below. Remaining acceptance:
 
-- Continue the shared service migration through recursive interaction/rendering
-  and the remaining service clients. Independently selected control/data streams
+- Continue the shared service migration through Omega leaf and Split
+  interaction/rendering and the remaining service clients. Independently selected control/data streams
   now multiplex; immutable attachments execute through ordinary display and
   storage, including nested stock matrices, Omega leaves and Split. Endpoint
   custody remains open. Preserve
@@ -139,6 +139,82 @@ cross-service distributed commit are not acceptance requirements. No runtime
 implementation is claimed by this ratification.
 
 ## Current implementation evidence
+
+Implementation update 2026-10-25: **recursive stock interaction uses shared IPC**,
+over `d9d91e6c`.
+
+The normal stock matrix's separate parent interaction stream now uses
+[Pipeline<2> through its connection adapter](source-rs/distribution/matrix/service/parent/interaction/connection.rs).
+Its [reply entrance](source-rs/distribution/matrix/service/parent/interaction/interaction.rs)
+keeps the existing tagged-input and visual-operation owners. Each submitted
+transport ID belongs to exactly one of those owners; its response must also match
+the expected application packet. Input can complete while presentation waits.
+Startup, funding and cursor operations still wait for logical owners to retire.
+Late application replies remain live; partial attachment custody keeps its bounded
+deadline. Shared setup failure never retries through copied payloads.
+
+Parent services explicitly enable pipelining on child interaction slots. Stored
+admission reserves both selected server ends before lending resources. The small
+Notes/Colors compositions fund both new interaction ends, including private and
+reader pages and notifications. Shared removal closes exact endpoint incarnations;
+child cleanup tolerates only the already-closed handle result. Root display,
+recursive storage, Omega storage and Split storage retain their one-call clients.
+Omega leaf interaction, Split interaction and explicitly combined-stream fixtures
+remain copied. No distribution policy or service identity moved into the kernel.
+
+The deeper test exposed an existing runtime wait-buffer defect: a larger live
+interest set could straddle a user-page boundary, which the bounded kernel copy
+correctly rejects with BAD_ADDRESS. Mixed waits now align their entire 512-byte
+maximum record set; copied IPC waits align their 256-byte set. Compile-time size
+checks prevent future capacity growth from invalidating this invariant. The guest
+exercises both full-size arrays and refusal of an unauthorized final entry even
+when the first entry is ready. The kernel's copy boundary is unchanged.
+
+The delayed-poll stimulus previously sent an unrelated tag as an early reply and
+then answered the same request again. Shared correlation correctly rejected it.
+The delay fixture now holds the actual request without a provisional reply. Pure
+packet tests retain unmatched copied-tag coverage; shared guest tests retain
+unknown/duplicate/stale transport-ID rejection. This is not permission to accept
+mismatched tags on a shared stream.
+
+Verification:
+
+- Final normal F5 fresh/cold passes the user picker, three Notes instances,
+  independent drafts, capacity refusal, protected close/slot reuse, Notes/Colors
+  saves and exact disk verification (`desktop/20261025T213313046014Z`).
+- Three nested desktops pass fresh and cold boots, five-second held input/image/
+  presentation work, fresh input at every ancestor while presentation waits,
+  saved Notes/Colors, protected close and repeated subtree reclamation
+  (`desktop/20261025T212742038520Z`).
+- IPC guest passes the full-width wait controls and existing shared pipeline,
+  replacement, custody and exact-resource-refund cases (`channels-test`).
+- Small matrix desktop passes nested clipping, physical focus, subtree recovery
+  and both private colors across cold reboot (`matrix-desktop-test`).
+- The combined-stream matrix-storage guest passes scoped roots, recursive
+  delegation, revocation, CoW, stored program admission and replacement.
+- Notes lost-reply recovery passes drafts, exact text/history/quota and cold
+  restoration (`matrix-database/20261025T213037774362Z`).
+- Late launch-target stop and failed existing-app selection pass sibling/routed
+  input, protected drafts, saving, repeated switches, subtree reclamation and
+  cold reopen. See `interaction-scene.log` and `interaction-selection.log`.
+- Independent participants pass input/cursor grants, same-matrix regrant, resize
+  revocation, sibling survival, saved documents and cold reopen
+  (`desktop/20261025T213229991426Z`).
+- Host policy tests, workspace userspace Clippy, all-feature matrix/channels
+  Clippy, ARM64 runtime Clippy, all 37 harness unit tests, layout and its eight
+  tests pass. ARM64 is compile evidence for this slice, not a fresh guest run.
+
+Logs: `build/omega-component/interaction-{nested-fixed,ipc,small,combined,recovery,
+scene,selection,participants,desktop-final,host,check-final,features,arm64-check,
+harness,layout,layout-tests,format-check}.log`. Formatting, whitespace and changed
+Markdown navigation pass. The instrumented recovery provider still occupies
+239/240 image pages; the harness's existing cap check guards this tight limit.
+
+**Next:** migrate Omega leaf interaction/rendering, then independent Split and the
+remaining clients/endpoint custody. Keep those changes behind the existing
+Omega-facing application boundary; new Rust transport exploration does not move
+app behavior back out of Omega. Recursive shared transport is demonstrated here;
+no latency improvement or complete copied-syscall retirement is claimed.
 
 Implementation update 2026-10-25: **bounded independent shared calls**, over
 `8c4a4db7`.
@@ -833,7 +909,7 @@ Implementation update 2026-10-24: **tagged input progresses beside asynchronous
 presentation**, over `73cb81f5`. Artifact directory stamps below are UTC.
 
 Start at [the transport guide](source-rs/distribution/matrix/transport/README.md),
-then [the sole reply reader](source-rs/distribution/matrix/service/parent/interaction.rs).
+then [the sole reply reader](source-rs/distribution/matrix/service/parent/interaction/interaction.rs).
 The stock matrix permits one tagged poll beside one presentation request on its
 existing scoped interaction link. Poll and drawing replies have separate custody;
 unmatched tags cannot complete a presentation. Concurrent poll IDs exclude the

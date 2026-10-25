@@ -248,6 +248,7 @@ def desktop(stream, output, serial, reboot, expected_absolute=True, fill_users=F
     ready = 'Cathedral desktop: user matrix furnished'
     log = (output / 'serial.log').read_text(errors='replace')
     assert stopped in log and ready in log and log.index(stopped) < log.index(ready), log[-2000:]
+    assert 'Cathedral matrix: shared parent interaction ready' in log, log[-2000:]
     assert 'Cathedral matrix: shared parent storage ready' in log, log[-2000:]
     assert 'Cathedral Omega host: shared storage ready' in log, log[-2000:]
     def picker_gone(w,d):

@@ -119,8 +119,14 @@ impl Children {
         if let Some(services) = child.services {
             services.close()?;
         }
-        child.data.0.close()?;
-        child.data.1.close()?;
+        // Shared interaction may have closed this exact incarnation on removal.
+        for endpoint in [child.data.0, child.data.1] {
+            match endpoint.close() {
+                Ok(()) => (),
+                Err(Error(c)) if c == abi::BAD_HANDLE as i64 => (),
+                Err(error) => return Err(error),
+            }
+        }
         child.notify.close()?;
         if let Some((input, output)) = child.storage {
             // Shared setup owns and may already have closed this pair during

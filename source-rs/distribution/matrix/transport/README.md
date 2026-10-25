@@ -5,13 +5,14 @@ one tagged input poll beside one asynchronous presentation exchange. No global
 locator, new child capability, kernel queue size or public packet shape changes.
 
 Follow [the service loop](../service/service.rs) into
-[interaction.rs](../service/parent/interaction.rs), the sole upstream reply reader
+[interaction.rs](../service/parent/interaction/interaction.rs), the sole upstream reply reader
 while these exchanges are active. [transport.rs](transport.rs) distinguishes
 tagged snapshots from canonical untagged presentation status. This concurrent
 client uses poll IDs 1 through `u32::MAX - 1`, never reuses them and reserves the
 high words used by signed status. The public serial poll protocol is unchanged.
-Unmatched poll tags cannot satisfy either pending exchange; malformed status is
-fatal rather than an uncertain success.
+Copied fixture streams ignore unmatched poll tags. Shared streams bind each
+transport ID to its input or visual owner and require the corresponding application
+reply. A mismatched tag or malformed status is fatal rather than uncertain success.
 
 [polling.rs](../service/parent/polling.rs) applies input snapshots;
 [presentation.rs](../service/parent/presentation.rs) retains the scene and advances
@@ -21,21 +22,32 @@ A snapshot replacing the view or surface capacity is retained until publication
 ends, then consumed before parking. Malformed input that invalidates a publishing
 binding fails closed. A slow reply alone neither revokes input nor replays work.
 
-Kernel IPC channels hold one message. The matrix therefore opts into the runtime
-server's [bounded copied-reply retention](../../../platform/libraries/user-runtime/server/replies.rs):
-one kernel reply plus one software reply per client. A full software slot pauses
-request intake for that client. Connection stamps discard stale replies; excessive
-pipelining disconnects that client. The arena belongs to this process and has a
-fixed size. Other servers retain their existing behavior unless they opt in.
-Endpoint/memory transfers still require their caller's explicit custody handling.
-Request sends also tolerate full channels. Idle retry uses a one-tick deadline;
-writable-channel wakeups are not implemented. There is no extra acknowledgement
-round trip in the ordinary path.
+Ordinary separate-stream composition uses
+[the connection adapter](../service/parent/interaction/connection.rs): a persistent
+`Pipeline<2>` owns the parent pair. One logical input request and one logical
+visual request may be outstanding together. A response consumes its exact transport
+ID; its packet must then match the owning logical operation. Synchronous operations
+wait until both owners retire. Late application work remains live, while incomplete
+attachment custody has a bounded deadline. Waits include both notification and
+endpoint lifetime. Immutable image grants keep their existing ownership.
+
+The service preselects pipelining for its five child interaction slots; storage
+uses independent one-call connections. Admission retains a writer page, reader
+page and notification allowance for each selected server end before lending the
+rest to the child. Small fixtures fund both ends explicitly. Slot removal drops
+shared custody before reclaiming the child's remaining connection resources.
+
+Manually composed fixtures with combined interaction/storage streams, Omega leaf
+interaction and Split interaction still use copied packets. Copied replies retain
+the runtime's [bounded reply arena](../../../platform/libraries/user-runtime/server/replies.rs).
+Composition selects this path; failed shared setup never falls back. Unpublished
+mailbox refusal retains the operation for a later turn. Consumption notifications
+can wake a pending peer, and an unsent request also uses a one-tick retry deadline.
 
 `desktop_test.py --nested-desktop --interaction-delay --timeout 240` holds a real
 presentation for five seconds and requires fresh keyboard input in every matrix
 realm on the three-level focused chain before release, on fresh and cold boots.
-It also exercises delayed polls/images, stale tags, protected close, saved Notes
+It also exercises delayed polls/images, protected close, saved Notes
 and Colors, and recursive reclamation. `run.py --ipc-test --release` exercises
 full reply channels, ordering, stale incarnations and queue overflow directly.
 
@@ -93,5 +105,5 @@ Each end reserves a writer page, reader page and notification allowance. The sma
 desktop fixtures explicitly fund both ends without taking the app's existing
 allowance. Stored-program admission also counts the server-side transport cost
 before requesting growth and lending resources to a child. Setup and local reads still wait synchronously. Omega-facing app
-bindings and Split have not migrated. Fixtures combining interaction and storage
+bindings and Split use shared storage too. Fixtures combining interaction and storage
 on one pair retain copied packets; an upgraded pair never falls back to them.

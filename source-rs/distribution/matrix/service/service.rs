@@ -79,6 +79,13 @@ pub fn run(environment: Environment) -> Result<(), Error> {
         server.enable_shared(SOURCE, unsafe { &mut *slot })?;
     }
     if parent.separate_storage {
+        static mut INTERACTION: [cathedral_user_runtime::server::SharedSlot; CHILDREN] =
+            [const { cathedral_user_runtime::server::SharedSlot::empty() }; CHILDREN];
+        let slots = &raw mut INTERACTION;
+        // SAFETY: One service entry owns these disjoint child connection slots.
+        for (index, slot) in unsafe { &mut *slots }.iter_mut().enumerate() {
+            server.enable_pipeline(index, slot)?;
+        }
         static mut STORAGE: [cathedral_user_runtime::server::SharedSlot; CHILDREN] =
             [const { cathedral_user_runtime::server::SharedSlot::empty() }; CHILDREN];
         let slots = &raw mut STORAGE;
@@ -192,7 +199,7 @@ pub fn run(environment: Environment) -> Result<(), Error> {
         );
         children.notify(world)?;
         let mut extra =
-            [Interest::Ipc(cathedral_user_runtime::ipc::Handle::from_raw(0)); CHILDREN + 5];
+            [Interest::Ipc(cathedral_user_runtime::ipc::Handle::from_raw(0)); CHILDREN + 6];
         let mut count = 0;
         if parent.upstream_busy() || parent.storing() {
             deadline = None;
@@ -263,11 +270,11 @@ pub fn run(environment: Environment) -> Result<(), Error> {
                 }));
             }
         }
-        if let Some(interest) = parent.display_wake()? {
+        if let Some(interest) = parent.output_wake()? {
             extra[count] = interest;
             count += 1;
         }
-        if let Some(until) = parent.display_deadline() {
+        if let Some(until) = parent.output_deadline() {
             deadline = Some(deadline.map_or(until, |d| {
                 if cathedral_user_runtime::time::reached(d, until) {
                     until

@@ -4,15 +4,15 @@ use super::*;
 impl Parent {
     pub(in crate::service) fn cursors(&mut self, world: &World) -> Result<(), Error> {
         if self.upstream {
-            let Some(pair) = self.pair.filter(|_| self.grant.valid()) else {
+            let Some(link) = self.interaction.as_ref().filter(|_| self.grant.valid()) else {
                 return Ok(());
             };
             for index in 0..wire::INPUT_STREAMS {
                 if let Some(c) = world.cursor(index).filter(|c| c.inherited) {
-                    self.cursors.forward(
+                    self.cursors.forward_with(
                         index,
-                        pair,
                         [self.grant.epoch, c.cycle, c.channel as u64, c.mode],
+                        |words| link.call(words, None),
                     )?;
                 } else {
                     self.cursors.forget(index);

@@ -77,14 +77,9 @@ impl Gate {
         }
         if self.armed != 0 && words[0] == self.armed && request.client.is_some_and(|c| c < CHILDREN)
         {
-            if self.armed == wire::POLL_TAGGED {
-                // An unrelated refusal must not revoke the live request's view.
-                let other = (words[1] as u32).checked_add(1).unwrap();
-                server.reply(
-                    request,
-                    &wire::encode(wire::tag_poll(wire::error(abi::DENIED), other)),
-                )?;
-            }
+            // Retain this request without replying: shared transport permits one
+            // correlated response, so an unrelated application tag cannot be
+            // injected as a provisional response to the same request ID.
             time::storage_sample("interaction-delay-held", &[self.armed]);
             self.armed = 0;
             self.pending = Some((event, time::after(500)?));

@@ -52,7 +52,11 @@ impl Parent {
         &mut self,
         world: &mut World,
     ) -> Result<(), Error> {
-        if !self.upstream || !self.grant.valid() || self.pair.is_none() || !world.input_ready() {
+        if !self.upstream
+            || !self.grant.valid()
+            || self.interaction.is_none()
+            || !world.input_ready()
+        {
             return Ok(());
         }
         let available = world
