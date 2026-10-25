@@ -11,10 +11,12 @@ import database_image
 import desktop_test
 import disk_image
 import elf_trim
+from nested_desktop_test import Nested
 import run as harness
 
 
 def check(mode, output, click, key, scan, width, height, reboot):
+    nested = Nested(click, key, scan, width, height)
     font = bytes.fromhex((harness.WORKSPACE/'platform/libraries/bitmap-font/font.hex').read_text())
     def pixel(w,d,x,y): return d[(y*w+x)*3:(y*w+x+1)*3].hex()
     def text(w,d,x,y,value):
@@ -46,7 +48,7 @@ def check(mode, output, click, key, scan, width, height, reboot):
                 click(104,height-144)
                 scan(lambda w,d:pixel(w,d,21,26) in ('315ca8','d18b35'),'inner Colors after background failure')
         # Outer owner closes just this subtree; its other child retains a draft.
-        click(520,height-48) # second task's X (slot two)
+        nested.task_close(0, 1)  # Close the outer taskbar's second running task.
         draft()
     assert log().count('note-loaded') <= 1
     print(f'PASS: Nested {mode} failures, bounded local recovery and repeated reclamation; outer draft survives')

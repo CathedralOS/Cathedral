@@ -78,7 +78,7 @@ impl Children {
         picker: u64,
         users: u64,
     ) -> Result<(), Error> {
-        self.startup_recovery.picker_attempts += 1;
+        let picker_mode = self.startup_recovery.policy.picker_started();
         self.startup_recovery.picker = Some((picker, users));
         let mut code = parent.local_storage(|scope| {
             scope.bind().map_err(|c| Error(c as i64))?;
@@ -94,11 +94,7 @@ impl Children {
                 object: picker,
                 scope: users,
                 argument: cathedral_desktop_matrix_contracts::matrix::launch_argument(
-                    if self.startup_recovery.selection_failed {
-                        2
-                    } else {
-                        1
-                    },
+                    picker_mode,
                     picker,
                 ),
                 channels: 0,

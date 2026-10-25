@@ -1,5 +1,68 @@
 # Rust reference OS: tasks and handoff
 
+Implementation update 2026-10-24: **local picker/background startup recovery
+executes in Omega**, over `7e8c585f`. Artifact directory stamps below are UTC.
+
+Start at [the stock Omega matrix guide](source/distribution/matrix/README.md), then
+[startup/main.omg](source/distribution/matrix/startup/main.omg). Omega owns picker
+attempts/pending work, selection-error display and background pending/spent state.
+The Rust lifetime handler now dispatches its decisions. Local picker failures get
+two total attempts; selected-user failure returns to a fresh error-reporting picker;
+background failure gets one retry. Busy child-control/loss work preserves queued
+recovery. Owner-managed root pickers do not acquire a second local recovery loop.
+
+Rust retains verified outcomes, local slot roles, realm object IDs, authentication,
+program reads, admission and teardown. Admission/placement rejection after retiring
+a picker reports selection failure through the same policy. Picker counting now
+saturates at exhaustion instead of risking an overflowing byte if the host repeats
+admission; no ordinary flow or budget changed. This remains a distribution policy
+migration, not an Omega kernel or completed Omega matrix service loop.
+
+The root invalid-Login fixture found an existing ownership gap: admission failure
+queued local picker recovery even with `owner_recovers`, then the missing local
+picker IDs killed the matrix. Selection-failure handling now respects that flag,
+as crash handling already did. Root recovery stays with the enclosing desktop;
+local nested admission failures still reset their own picker budget.
+
+Verification:
+
+- Fresh/cold F5 with three nested desktops, recursive dirty-close protection,
+  Notes/Omega Colors persistence, repeated subtree reclamation and isolation:
+  `desktop/20261025T031736949912Z` (final owner/local handling).
+- Using that new disk (current code at every level), all three injected nested
+  failures pass: picker exhaustion, repeated selected-user failure and background
+  exhaustion with usable inner chrome/Colors. An outer unsaved Notes draft survives
+  every cycle; the source image is unchanged. Artifacts:
+  `nested-failures/20261025T031906920998Z` (final source).
+- The first fault replay exposed an old close-button coordinate in the fixture
+  after the extra Omega UI launcher icon shifted running tasks. Recovery had worked,
+  but the test selected the task instead of closing it. The fixture now uses the
+  shared `Nested.task_close` helper; the complete rerun above passes. Failed attempt:
+  `nested-failures/20261025T031159675499Z`.
+- All five root startup cases pass, including invalid/crashing Login, unchanged
+  saved records and successful manual retry: `startup/20261025T031604708743Z`.
+  The invalid-Login failure that exposed the owner/local bug is recorded at
+  `startup/20261025T031425319152Z/bad-login`.
+- Ordinary F5 fresh/cold desktop, three Notes instances, close protection, Colors
+  and independent storage oracle: `desktop/20261025T031650348460Z`.
+- Default host `cargo test --locked` passes. Stock matrix has seventeen compiled
+  policy tests; five new tests cover all 128 retirement fact/role combinations,
+  attempt exhaustion, busy retention, selection reset, independent budgets and
+  owner-managed admission rejection without a local restart or budget reset.
+- Stock matrix guest all-feature and host-test Clippy, Rust formatting, layout
+  (72 Omega / 150 Rust edges), eight layout boundary tests and diff checks pass.
+  Full kernel/ARM64 and unrelated runtime suites were not rerun.
+- Logs: `build/omega-component/startup-{host-tests,nested,nested-final,failures,
+  failures-recheck,failures-final,root,root-recheck,desktop}.log`.
+
+**Next:** define and prove a small asynchronous host boundary before moving the
+stock matrix's orchestration into Omega. Keep authenticated Rust request custody
+and opaque completion tickets; exercise delayed parent/storage replies while the
+matrix continues serving children. The independent Omega matrix lab still uses a
+synchronous adapter and must not replace the F5 loop as-is. This is a proposed
+migration step, not a new public ABI or owner semantic decision. The earlier
+intermittent partial-key observation remains open.
+
 Implementation update 2026-10-24: **stock launcher recovery decisions execute
 in Omega**, over `029f3a43`. Artifact directory stamps below are UTC.
 

@@ -129,9 +129,9 @@ impl Children {
             )?;
         }
         if status.is_err() && self.login && !self.entered && self.slots[0].is_none() {
-            self.startup_recovery.picker_pending = true;
-            self.startup_recovery.selection_failed = true;
-            self.startup_recovery.picker_attempts = 0;
+            self.startup_recovery
+                .policy
+                .selection_failed(self.startup_recovery.owner_recovers);
         }
         if status.is_ok()
             && request.client.is_some()
@@ -166,9 +166,9 @@ impl Children {
             && self.slots[0].is_none()
         {
             self.entered = false;
-            self.startup_recovery.picker_pending = true;
-            self.startup_recovery.selection_failed = true;
-            self.startup_recovery.picker_attempts = 0;
+            self.startup_recovery
+                .policy
+                .selection_failed(self.startup_recovery.owner_recovers);
         }
         if status.is_ok() && self.desktop && request.client == Some(0) {
             self.next_ticket += 1;

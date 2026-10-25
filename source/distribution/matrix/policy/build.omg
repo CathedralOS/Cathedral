@@ -3,6 +3,7 @@ machine build(builder: &mut Build) {
     Build::depend_as(builder, "configuration", Source::Path { location: "../configuration" });
     Build::depend_as(builder, "lifecycle", Source::Path { location: "../lifecycle" });
     Build::depend_as(builder, "recovery", Source::Path { location: "../recovery" });
+    Build::depend_as(builder, "startup", Source::Path { location: "../startup" });
     Build::select_provider<Policy, PolicyProvider>(builder);
     Build::bind(builder, linux_x86_64::ProgramEntry, policy_entry);
 }

@@ -134,7 +134,7 @@ impl Children {
         }
         if let Err(error) = self.background(background, parent, world, server) {
             time::storage_sample("background-start-refused", &[error.0 as u64]);
-            self.startup_recovery.background_pending = true;
+            self.startup_recovery.policy.background_failed();
         }
         super::super::requests::flush(parent, world)?;
         self.notify(world)?;
