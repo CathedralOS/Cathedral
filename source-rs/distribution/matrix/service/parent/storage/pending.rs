@@ -31,11 +31,16 @@ pub(in crate::service) struct LaunchRequest {
     /// Offered services after owner policy and caller-requested withholding.
     pub imports: u64,
 }
-/// A program read that finished: the external request to answer (none for local
-/// launcher recovery) and the sealed image, or why there is none.
+/// Completion custody: an authenticated caller or the exact local recovery operation.
+#[derive(Clone, Copy)]
+pub(in crate::service) enum LaunchOrigin {
+    Caller(Request),
+    Recovery(cathedral_stock_matrix::policy::recovery::Ticket),
+}
+/// A completed program read, with its origin and sealed image or refusal.
 pub(in crate::service) struct Launched {
     pub plan: LaunchRequest,
-    pub request: Option<Request>,
+    pub origin: LaunchOrigin,
     pub result: Result<Object, u64>,
 }
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -56,7 +61,7 @@ pub(in crate::service::parent) struct Pending {
     step: Step,
     source: usize,
     deadline: u64,
-    launch: Option<LaunchRequest>,
+    launch: Option<(LaunchRequest, LaunchOrigin)>,
     validated: Option<(wire::Packet, Proof)>,
     /// The parent refused this exchange's stamped revision once already; one
     /// refresh follows, never a loop.
@@ -65,6 +70,8 @@ pub(in crate::service::parent) struct Pending {
     resume: Option<Step>,
     /// A child's refusal, answered after the refresh; its attachment is gone.
     denied: Option<wire::Packet>,
+    #[cfg(feature = "recovery-delay")]
+    hold_until: Option<u64>,
 }
 impl Pending {
     /// `bound` says this matrix already holds its upstream binding revision;
@@ -113,19 +120,24 @@ impl Pending {
             refreshed: false,
             resume: None,
             denied: None,
+            #[cfg(feature = "recovery-delay")]
+            hold_until: None,
         })
     }
     /// Read a program on this matrix's own binding: one bulk read of the whole
     /// object at its current revision, behind a refresh when nested and not
     /// yet bound, bounded like a forwarded request.
     pub(super) fn launch(
-        request: Option<Request>,
+        origin: LaunchOrigin,
         plan: LaunchRequest,
         upstream: bool,
         bound: bool,
     ) -> Result<Self, Error> {
         Ok(Self {
-            request,
+            request: match origin {
+                LaunchOrigin::Caller(r) => Some(r),
+                LaunchOrigin::Recovery(_) => None,
+            },
             words: [
                 wire::STORAGE_BASE + protocol::BULK,
                 plan.object,
@@ -147,19 +159,34 @@ impl Pending {
             deadline: time::after(
                 if upstream { 3 } else { 2 } * wire::STORAGE_DEADLINE_TICKS + 100,
             )?,
-            launch: Some(plan),
+            launch: Some((plan, origin)),
             validated: None,
             refreshed: false,
             resume: None,
             denied: None,
+            #[cfg(feature = "recovery-delay")]
+            hold_until: if matches!(origin, LaunchOrigin::Recovery(_)) {
+                time::storage_sample("launcher-read-held", &[]);
+                Some(time::after(300)?)
+            } else {
+                None
+            },
         })
     }
 }
 impl Parent {
+    #[cfg(feature = "recovery-delay")]
+    pub(in crate::service) fn recovery_delay_deadline(&self) -> Option<u64> {
+        self.storage_pending.as_ref().and_then(|p| p.hold_until)
+    }
     pub(in crate::service) fn storage_wait(&self) -> Option<(Handle, u64)> {
-        self.storage_pending
-            .as_ref()
-            .and_then(|p| p.receive.map(|h| (h, p.deadline)))
+        self.storage_pending.as_ref().and_then(|p| {
+            #[cfg(feature = "recovery-delay")]
+            if p.hold_until.is_some() {
+                return None;
+            }
+            p.receive.map(|h| (h, p.deadline))
+        })
     }
     pub(in crate::service) fn storing(&self) -> bool {
         #[cfg(feature = "interaction-delay")]
@@ -190,6 +217,17 @@ impl Parent {
         let Some(mut p) = self.storage_pending.take() else {
             return Ok(None);
         };
+        #[cfg(feature = "recovery-delay")]
+        if p.receive.is_some()
+            && let Some(until) = p.hold_until
+        {
+            if !time::reached(time::now()?, until) {
+                self.storage_pending = Some(p);
+                return Ok(None);
+            }
+            p.hold_until = None;
+            time::storage_sample("launcher-read-released", &[]);
+        }
         let mut reply: Option<(wire::Packet, Option<Object>)> = None;
         if let Some(receive) = p.receive {
             match cathedral_user_runtime::matrix::upstream::exchange::poll(receive, p.deadline) {
@@ -286,7 +324,7 @@ impl Parent {
             self.storage_pending = Some(p);
             return Ok(None);
         };
-        if let Some(plan) = p.launch {
+        if let Some((plan, origin)) = p.launch {
             let result = match (words[0], object) {
                 (0, Some(object)) => Ok(object),
                 (0, None) => Err(abi::IO_ERROR),
@@ -297,7 +335,7 @@ impl Parent {
             };
             return Ok(Some(Launched {
                 plan,
-                request: p.request,
+                origin,
                 result,
             }));
         }
@@ -358,7 +396,7 @@ impl Parent {
             return Ok(Some(wire::error(abi::TIMED_OUT)));
         }
         let mut words = p.words;
-        if let Some(plan) = p.launch {
+        if let Some((plan, _)) = p.launch {
             // The matrix's own read: its upstream binding, or at the root its
             // first provider root. A child's launch is narrowed to that child's
             // realm; the parent stamps this matrix's scope on top.

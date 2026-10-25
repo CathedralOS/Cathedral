@@ -49,8 +49,8 @@ This proves a matrix program in Omega over existing Rust platform mechanisms.
 Its storage grant exercises endpoint custody only; it does not serve a filesystem
 or distinguish persistent realms. It has a virtual input space, no framebuffer
 and no rendering. The stock F5 matrix still owns its
-Rust supervision and forwarding loop; only its configuration/placement policy
-has moved to Omega. The bridge stays private after this second composition;
+Rust supervision and forwarding loop. Its configuration, close/loss, startup and
+[launcher recovery workflow](../../matrix/README.md) execute in Omega. The bridge stays private after this second composition;
 its synchronous upstream exchange is not a reusable desktop service loop.
 
 ## Supplied upstream connection

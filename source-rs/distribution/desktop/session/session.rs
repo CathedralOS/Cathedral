@@ -21,6 +21,11 @@ pub(crate) fn run() -> u64 {
         return 1;
     };
     let matrix = session.matrix;
+    #[cfg(any(
+        feature = "launcher-read-revoke-probe",
+        feature = "launcher-read-stop-probe"
+    ))]
+    let mut read_probe = read_probe::Probe::default();
     persistence::startup::begin(&mut session);
     cathedral_user_runtime::write(b"Cathedral desktop: interactive startup ready\n").unwrap();
     #[cfg(any(
@@ -81,6 +86,13 @@ pub(crate) fn run() -> u64 {
         ))]
         if session.user != 0 && !recovery_probed {
             recovery_probed = recovery_probes::apply(matrix);
+        }
+        #[cfg(any(
+            feature = "launcher-read-revoke-probe",
+            feature = "launcher-read-stop-probe"
+        ))]
+        if session.user != 0 {
+            read_probe.apply(matrix, session.extent[1]);
         }
         // Polling is only how the owner notices; rendering and input wake the
         // programs independently through their matrix connections.

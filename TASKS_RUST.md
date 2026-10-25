@@ -1,5 +1,65 @@
 # Rust reference OS: tasks and handoff
 
+Implementation update 2026-10-24: **launcher recovery is a ticketed asynchronous
+Omega workflow**, over `8394d522`. Artifact directory stamps below are UTC.
+
+Start at [the recovery entrance](source/distribution/matrix/recovery/main.omg)
+and its [host boundary guide](source/distribution/matrix/recovery/README.md).
+Omega emits read/admission commands once, waits for matching completions and
+chooses fallback or cancellation. Rust retains authenticated request custody,
+actual IPC, sealed images, task admission and teardown. The storage exchange now
+carries a typed caller-or-recovery origin instead of delivering an unlabelled
+local result to whichever launcher exists.
+
+Recovery tickets are nonzero, monotonic and shared across launcher replacements
+for the matrix process's lifetime. Exhaustion refuses another read; stale or
+duplicate completions cannot advance replacement work. Rust retains an image only
+for an accepted completion and admission must name that exact ticket. Existing
+one-automatic-attempt and authenticated explicit-retry budgets are unchanged.
+
+Cancellation retains existing deferred owner-command ordering: a request needing
+a busy storage stream waits, and recovery cannot admit ahead of that queued
+request. Processing stop drops recovery even when the already-reclaimed launcher
+makes STOP report `PEER_CLOSED`. Successful revocation drops it too. This does not
+promise immediate interruption of a provider read. Rust still drains/retires the
+wire exchange; admission and fallback remain synchronous host mechanisms. No
+kernel, capability grant, production deadline or public protocol changed.
+
+Verification:
+
+- New full-F5 nested fixture holds a real recovery read while sibling Notes accepts
+  input, keeps its draft, protects close, saves and reopens on cold boot. Recovery
+  occurs exactly once: `desktop/20261025T050147903361Z`.
+- Routed owner revocation during that read prevents admission/fallback, preserving
+  the same sibling checks on fresh/cold boots: `desktop/20261025T050256958458Z`.
+- Routed owner stop likewise passes fresh/cold: `desktop/20261025T050723547764Z`.
+  The first stop fixture expected success from an already-dead task and failed its
+  assertion; it now checks the existing `PEER_CLOSED` reply plus no recovery.
+  Gate/fault/owner probes are enabled only in disposable test profiles.
+- All seven existing launcher modes pass (automatic recovery, clean exit, startup
+  fault, owner stop/revoke and fallback clean/fault), including fresh/cold recovery
+  and repeated explicit retries: `launcher-recovery/20261025T050757988421Z`.
+  The minimal one-user source image is unchanged.
+- Ordinary F5 fresh/cold desktop passes, including three Notes instances,
+  independent drafts, protected close, Colors, persistence and the storage oracle:
+  `desktop/20261025T050959493604Z`.
+- Default host `cargo test --locked` passes. Stock matrix has twenty tests,
+  including compiled command/completion tests for wrong and duplicate tickets,
+  cancellation, replacement, bounded retries, admission/read refusal and a Rust
+  allocator exhaustion test. No mock substitutes for the compiled Omega policy.
+- Stock matrix guest all-feature and host-test Clippy, desktop guest Clippy with
+  both new owner probes, layout (72 Omega / 150 Rust edges), eight layout boundary
+  tests, Rust formatting and diff checks pass. Full kernel/ARM64 and unrelated
+  runtime suites were not rerun.
+- Logs: `build/omega-component/async-{recover,revoke,stop,stop-final,launcher-final,
+  desktop-final,host-tests}.log`.
+
+**Next:** extend the command/completion approach to ordinary stored-program
+launches, preserving the authenticated caller and reply custody in Rust. Keep this
+an incremental migration of real F5 orchestration; do not substitute the separate
+synchronous Omega matrix lab or invent a general public async ABI prematurely.
+The earlier intermittent partial-key observation remains open.
+
 Implementation update 2026-10-24: **local picker/background startup recovery
 executes in Omega**, over `7e8c585f`. Artifact directory stamps below are UTC.
 

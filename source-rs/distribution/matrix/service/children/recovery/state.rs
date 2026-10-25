@@ -13,7 +13,7 @@ pub struct Launcher {
     pub incarnation: u64,
     pub snapshot: Option<(Placement, [u64; 4])>,
     pub policy: cathedral_stock_matrix::policy::recovery::State,
-    pub result: Option<Result<Object, u64>>,
+    pub result: Option<(cathedral_stock_matrix::policy::recovery::Ticket, Object)>,
 }
 impl Launcher {
     pub fn new(plan: parent::LaunchRequest, task: u64, incarnation: u64) -> Self {

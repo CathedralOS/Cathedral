@@ -80,14 +80,15 @@ impl Children {
     ) -> Result<(), Error> {
         let parent::Launched {
             plan,
-            request,
+            origin,
             result,
         } = launched;
-        let Some(request) = request else {
-            if let Some(launcher) = &mut self.launcher {
-                launcher.result = Some(result);
+        let request = match origin {
+            parent::LaunchOrigin::Caller(request) => request,
+            parent::LaunchOrigin::Recovery(ticket) => {
+                self.complete_recovery(ticket, result);
+                return Ok(());
             }
-            return Ok(());
         };
         let mut status = match result {
             Err(code) => Err(code),

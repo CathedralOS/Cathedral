@@ -1,116 +1,188 @@
-//! Run the compiled Omega retry policy; no Rust mirror of its phase encoding.
-use crate::policy::recovery::{Action, State};
-fn reading() -> State {
+//! Compiled workflow tests: command issuance, completion custody and bounded retries.
+use crate::policy::recovery::{Action, State, Ticket, Tickets};
+fn begin(s: &mut State, tickets: &mut Tickets) -> Ticket {
+    assert_eq!(s.action(true, true), Action::Read);
+    assert_eq!(s.action(true, true), Action::Wait);
+    let ticket = tickets.issue().unwrap();
+    s.read_started(ticket);
+    ticket
+}
+fn reading(tickets: &mut Tickets) -> (State, Ticket) {
     let mut s = State::configured();
     assert!(s.retired(true));
-    assert_eq!(s.action(true, true, false), Action::Read);
-    s.read_started();
-    s
+    let ticket = begin(&mut s, tickets);
+    (s, ticket)
 }
-fn fallback() -> State {
-    let mut s = reading();
-    s.read_finished(false);
-    assert_eq!(s.action(true, true, true), Action::Fallback);
+fn admitted(s: &mut State, ticket: Ticket) {
+    assert!(s.read_completed(ticket, true));
+    assert_eq!(s.action(true, true), Action::Admit(ticket));
+    assert_eq!(s.action(true, true), Action::Wait);
+    assert!(s.admission_finished(ticket, true));
+}
+fn fallback(tickets: &mut Tickets) -> State {
+    let (mut s, t) = reading(tickets);
+    assert!(s.read_completed(t, false));
+    assert_eq!(s.action(true, true), Action::Fallback);
     assert!(s.fallback_finished(true));
     s
 }
 #[test]
 fn automatic_retry_is_consumed_and_manual_attempts_never_rearm_it() {
-    let mut s = reading();
-    assert_eq!(s.action(true, true, false), Action::Wait);
-    assert_eq!(s.action(true, true, true), Action::Admit);
-    s.read_finished(true);
+    let mut tickets = Tickets::default();
+    let (mut s, t) = reading(&mut tickets);
+    admitted(&mut s, t);
     assert!(!s.ready(false));
     for _ in 0..16 {
         assert!(s.retired(true));
-        assert_eq!(s.action(true, true, false), Action::Fallback);
+        assert_eq!(s.action(true, true), Action::Fallback);
         assert!(s.fallback_finished(true));
         assert!(!s.request(false));
-        assert!(!s.ready(false));
         assert!(s.request(true));
         assert!(!s.request(true));
         assert!(!s.ready(true));
-        assert_eq!(s.action(true, false, false), Action::RetireFallback);
+        assert_eq!(s.action(true, false), Action::RetireFallback);
         s.explicit_retired();
-        assert_eq!(s.action(true, true, false), Action::Read);
-        s.read_started();
-        s.read_finished(true);
+        let t = begin(&mut s, &mut tickets);
+        admitted(&mut s, t);
     }
 }
 #[test]
+fn commands_wait_for_matching_completions_and_reject_duplicates() {
+    let mut tickets = Tickets::default();
+    let (mut s, t) = reading(&mut tickets);
+    let wrong = tickets.issue().unwrap();
+    for _ in 0..16 {
+        assert_eq!(s.action(true, true), Action::Wait);
+        assert!(!s.read_completed(wrong, true));
+        assert!(!s.admission_finished(t, true));
+    }
+    assert!(s.read_completed(t, true));
+    assert!(!s.read_completed(t, false)); // A duplicate error cannot erase the image.
+    assert_eq!(s.action(true, true), Action::Admit(t));
+    assert!(!s.admission_finished(wrong, true));
+    assert_eq!(s.action(true, true), Action::Wait);
+    assert!(s.admission_finished(t, true));
+    assert!(!s.admission_finished(t, false));
+    assert!(!s.read_completed(t, true));
+}
+#[test]
+fn cancelled_and_replacement_work_cannot_consume_late_images() {
+    let mut tickets = Tickets::default();
+    let (mut old, t1) = reading(&mut tickets);
+    assert_eq!(old.action(false, true), Action::Cancel);
+    assert!(!old.read_completed(t1, true));
+    let (mut new, t2) = reading(&mut tickets);
+    assert_ne!(t1, t2);
+    assert!(!new.read_completed(t1, true));
+    assert!(!new.read_completed(t1, false));
+    assert_eq!(new.action(true, true), Action::Wait);
+    assert!(new.read_completed(t2, true));
+    // A replacement or revocation after completion discards admission too.
+    assert_eq!(new.action(true, false), Action::Cancel);
+    assert!(!new.admission_finished(t2, true));
+    assert_eq!(new.action(true, true), Action::Wait);
+}
+#[test]
 fn clean_exit_stop_and_fallback_failure_do_not_restart() {
-    let mut states = [State::configured(), reading(), fallback()];
+    let mut tickets = Tickets::default();
+    let mut states = [
+        State::configured(),
+        reading(&mut tickets).0,
+        fallback(&mut tickets),
+    ];
     for s in &mut states {
         assert!(!s.retired(false));
         assert!(!s.ready(false));
         assert!(!s.request(true));
-        assert_eq!(s.action(true, true, true), Action::Wait);
+        assert_eq!(s.action(true, true), Action::Wait);
     }
-    let mut s = fallback();
+    let mut s = fallback(&mut tickets);
     assert!(!s.retired(true));
     assert!(!s.ready(false));
-    let mut s = reading();
-    s.read_finished(false);
+    let (mut s, t) = reading(&mut tickets);
+    assert!(s.read_completed(t, false));
     assert!(!s.fallback_finished(false));
     assert!(!s.ready(false));
-    assert!(!s.request(true));
 }
 #[test]
-fn pending_work_waits_for_custody_and_cannot_use_changed_authority_or_slot() {
-    for stage in 0..4 {
-        let mut s = State::configured();
-        assert!(s.retired(true));
-        if stage >= 1 {
-            s.read_started();
-        }
-        if stage >= 2 {
-            s.read_finished(false);
-        }
-        if stage == 3 {
-            assert!(s.fallback_finished(true));
-            assert!(s.request(true));
-        }
-        assert!(s.ready(false));
-        assert!(!s.ready(true));
-        for ready in [false, true] {
-            for vacant in [false, true] {
-                assert_eq!(s.action(false, vacant, ready), Action::Cancel);
+fn pending_work_waits_and_authority_changes_cancel_every_stage() {
+    for stage in 0..6 {
+        for (authority, vacant) in [(false, true), (true, false)] {
+            let mut tickets = Tickets::default();
+            let mut s = State::configured();
+            assert!(s.retired(true));
+            let mut ticket = None;
+            if stage >= 1 {
+                ticket = Some(begin(&mut s, &mut tickets));
+            }
+            if stage == 2 {
+                assert!(s.read_completed(ticket.unwrap(), true));
+            }
+            if stage >= 3 {
+                assert!(s.read_completed(ticket.unwrap(), false));
+            }
+            if stage >= 4 {
+                assert!(s.fallback_finished(true));
+                assert!(s.request(true));
+            }
+            if stage == 5 {
+                s.explicit_retired();
+            }
+            assert!(s.ready(false));
+            assert!(!s.ready(true));
+            assert!(s.ready(false));
+            if stage == 4 && authority {
+                assert_eq!(s.action(authority, vacant), Action::RetireFallback);
+            } else {
+                assert_eq!(s.action(authority, vacant), Action::Cancel);
+                if let Some(t) = ticket {
+                    assert!(!s.read_completed(t, true));
+                }
             }
         }
-        if stage != 3 {
-            assert_eq!(s.action(true, false, true), Action::Cancel);
-        }
-        // Replacement/revocation cancels even an already acknowledged manual request.
-        assert!(!s.fallback_changed(false));
-        assert!(!s.ready(false));
-        assert!(!s.request(true));
     }
 }
 #[test]
 fn initial_fallback_supply_preserves_only_a_running_retry_budget() {
+    let mut tickets = Tickets::default();
     let mut initial = State::configured();
     assert!(initial.fallback_changed(true));
     assert!(initial.retired(true));
-    assert_eq!(initial.action(true, true, false), Action::Read);
-    let mut spent = reading();
-    spent.read_finished(true);
+    let (mut spent, t) = reading(&mut tickets);
+    admitted(&mut spent, t);
     assert!(spent.fallback_changed(true));
     assert!(spent.retired(true));
-    assert_eq!(spent.action(true, true, false), Action::Fallback);
-    for mut pending in [initial, reading(), spent, fallback()] {
+    assert_eq!(spent.action(true, true), Action::Fallback);
+    for mut pending in [
+        initial,
+        reading(&mut tickets).0,
+        spent,
+        fallback(&mut tickets),
+    ] {
         assert!(!pending.fallback_changed(true));
         assert!(!pending.ready(false));
     }
+    let (mut s, t) = reading(&mut tickets);
+    assert!(!s.fallback_changed(false));
+    assert!(!s.read_completed(t, true));
 }
 #[test]
-fn retry_request_requires_current_authenticated_fallback() {
-    let mut configured = State::configured();
-    assert!(!configured.request(true));
-    let mut reading = reading();
-    assert!(!reading.request(true));
-    let mut s = fallback();
+fn unavailable_read_or_failed_admission_goes_to_fallback_once() {
+    let mut s = State::configured();
+    assert!(s.retired(true));
+    assert_eq!(s.action(true, true), Action::Read);
+    s.read_unavailable();
+    assert_eq!(s.action(true, true), Action::Fallback);
+    let mut tickets = Tickets::default();
+    let (mut s, t) = reading(&mut tickets);
+    assert!(s.read_completed(t, true));
+    assert_eq!(s.action(true, true), Action::Admit(t));
+    assert!(s.admission_finished(t, false));
+    assert_eq!(s.action(true, true), Action::Fallback);
+    assert!(s.fallback_finished(true));
     assert!(!s.request(false));
     assert!(s.request(true));
     assert!(!s.request(true));
-    assert_eq!(s.action(false, false, false), Action::Cancel);
+    assert!(!s.fallback_changed(false));
+    assert_eq!(s.action(true, true), Action::Wait);
 }

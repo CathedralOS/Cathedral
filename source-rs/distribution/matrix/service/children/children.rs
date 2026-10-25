@@ -69,6 +69,7 @@ pub(super) struct Children {
     held_loss: [bool; CHILDREN],
     loss: Option<loss::Survey>,
     launcher: Option<recovery::Launcher>,
+    recovery_tickets: cathedral_stock_matrix::policy::recovery::Tickets,
     fallback: Option<recovery::Fallback>,
     pub(in crate::service) observations: cathedral_matrix::world::launches::Launches<CHILDREN>,
     management: cathedral_matrix::world::management::Management<CHILDREN>,

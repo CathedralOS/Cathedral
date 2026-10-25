@@ -7,7 +7,7 @@
 use super::*;
 use cathedral_user_runtime::{link::Link, memory::Object, server::Request};
 pub(super) use pending::Pending;
-pub(in crate::service) use pending::{LaunchRequest, Launched};
+pub(in crate::service) use pending::{LaunchOrigin, LaunchRequest, Launched};
 /// The root adapter's link to one provider root. A failed exchange retires the
 /// accepted pair; serving that root again needs a fresh provider incarnation.
 pub(super) struct Provider {
@@ -255,7 +255,7 @@ impl Parent {
     ) -> Result<(), Error> {
         assert!(self.storage_pending.is_none());
         self.storage_pending = Some(Pending::launch(
-            Some(request),
+            LaunchOrigin::Caller(request),
             plan,
             self.upstream,
             self.storage_epoch != 0,
@@ -264,10 +264,14 @@ impl Parent {
     }
     /// A configured launcher recovery uses our own authority and has no caller
     /// to answer. The child service consumes the sealed result in its event loop.
-    pub(in crate::service) fn storage_recover(&mut self, plan: LaunchRequest) -> Result<(), Error> {
+    pub(in crate::service) fn storage_recover(
+        &mut self,
+        plan: LaunchRequest,
+        ticket: cathedral_stock_matrix::policy::recovery::Ticket,
+    ) -> Result<(), Error> {
         assert!(self.storage_pending.is_none());
         self.storage_pending = Some(Pending::launch(
-            None,
+            LaunchOrigin::Recovery(ticket),
             plan,
             self.upstream,
             self.storage_epoch != 0,

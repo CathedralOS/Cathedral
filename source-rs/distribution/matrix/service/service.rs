@@ -165,6 +165,16 @@ pub fn run(environment: Environment) -> Result<(), Error> {
             count += 1;
             deadline = Some(until);
         }
+        #[cfg(feature = "recovery-delay")]
+        if let Some(until) = parent.recovery_delay_deadline() {
+            deadline = Some(deadline.map_or(until, |d| {
+                if cathedral_user_runtime::time::reached(d, until) {
+                    until
+                } else {
+                    d
+                }
+            }));
+        }
         if let Some((receive, until)) = parent.refresh_wait().or_else(|| parent.presentation_wait())
         {
             extra[count] = receive;

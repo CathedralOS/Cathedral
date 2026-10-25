@@ -8,7 +8,8 @@ these policies through [native/main.omg](native/main.omg), a single compiled exp
 
 Configuration owns saved desktop settings and placement calculations. Lifecycle
 owns loss aggregation and the wait/refuse/stop decisions for ordinary close.
-Recovery owns the bounded automatic attempt, explicit retries and fallback decisions.
+Recovery owns bounded retries and the asynchronous read/wait/admit workflow,
+with ticketed completions and fallback decisions.
 Startup owns local picker/background retry budgets and selection-failure recovery.
 Rust still authenticates callers, serializes IPC, retains exact task/endpoint
 identity, drains late replies, progresses asynchronous parent work and reclaims

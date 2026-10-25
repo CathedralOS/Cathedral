@@ -1,7 +1,25 @@
-//! Stock retry state in Omega; Rust keeps all task, endpoint, placement and image custody.
-//! Policy entrance: source/distribution/matrix/recovery/main.omg.
+//! Omega commands/completions; Rust owns tickets and all IPC/image/task custody.
+//! Workflow entrance: source/distribution/matrix/recovery/main.omg.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Ticket(u64);
+impl Ticket {
+    pub fn raw(self) -> u64 {
+        self.0
+    }
+}
+/// Process-local names are never recycled, including across launcher replacement.
+#[derive(Default)]
+pub struct Tickets {
+    last: u64,
+}
+impl Tickets {
+    pub fn issue(&mut self) -> Option<Ticket> {
+        self.last = self.last.checked_add(1)?;
+        Some(Ticket(self.last))
+    }
+}
 pub struct State {
-    word: u64,
+    words: [u64; 2],
 }
 #[derive(Debug, PartialEq, Eq)]
 pub enum Action {
@@ -9,65 +27,88 @@ pub enum Action {
     Cancel,
     RetireFallback,
     Read,
-    Admit,
+    Admit(Ticket),
     Fallback,
 }
 impl State {
     pub fn configured() -> Self {
-        let mut state = Self { word: 0 };
-        assert!(state.apply(0, false));
+        let mut state = Self { words: [0; 2] };
+        assert_eq!(state.apply(0, [0; 3]).0, 1);
         state
     }
     pub fn retired(&mut self, failed: bool) -> bool {
-        self.apply(1, failed)
+        self.fact(1, failed)
     }
     pub fn ready(&self, blocked: bool) -> bool {
-        decide(self.word, 2, [blocked, false, false]).0 == 1
+        decide(self.words, 2, [blocked.into(), 0, 0]).0 == 1
     }
-    pub fn action(&self, authority_matches: bool, vacant: bool, result_ready: bool) -> Action {
-        match decide(self.word, 3, [authority_matches, vacant, result_ready]).0 {
+    pub fn action(&mut self, authority_matches: bool, vacant: bool) -> Action {
+        let (action, ticket) = self.apply(3, [authority_matches.into(), vacant.into(), 0]);
+        match action {
             0 => Action::Wait,
             1 => Action::Cancel,
             2 => Action::RetireFallback,
             3 => Action::Read,
-            4 => Action::Admit,
+            4 => {
+                assert_ne!(ticket, 0);
+                Action::Admit(Ticket(ticket))
+            }
             5 => Action::Fallback,
-            _ => unreachable!("launcher recovery policy action"),
+            _ => unreachable!("launcher recovery command"),
         }
     }
-    pub fn read_started(&mut self) {
-        assert!(self.apply(4, false));
+    pub fn read_started(&mut self, ticket: Ticket) {
+        assert_eq!(self.apply(4, [0, 0, ticket.0]).0, 1);
     }
-    pub fn read_finished(&mut self, success: bool) {
-        assert!(self.apply(5, success));
+    pub fn read_unavailable(&mut self) {
+        assert!(self.fact(10, false));
+    }
+    /// False means stale/duplicate: the host must release the supplied attachment.
+    pub fn read_completed(&mut self, ticket: Ticket, success: bool) -> bool {
+        self.apply(5, [success.into(), 0, ticket.0]).0 == 1
+    }
+    pub fn admission_finished(&mut self, ticket: Ticket, success: bool) -> bool {
+        self.apply(11, [success.into(), 0, ticket.0]).0 == 1
     }
     pub fn fallback_finished(&mut self, success: bool) -> bool {
-        self.apply(6, success)
+        self.fact(6, success)
     }
     pub fn request(&mut self, authenticated: bool) -> bool {
-        self.apply(7, authenticated)
+        self.fact(7, authenticated)
     }
     pub fn fallback_changed(&mut self, initial: bool) -> bool {
-        self.apply(8, initial)
+        self.fact(8, initial)
     }
     pub fn explicit_retired(&mut self) {
-        assert!(self.apply(9, false));
+        assert!(self.fact(9, false));
     }
-    fn apply(&mut self, event: u64, fact: bool) -> bool {
-        let (result, state) = decide(self.word, event, [fact, false, false]);
-        self.word = state;
-        result == 1
+    fn fact(&mut self, event: u64, fact: bool) -> bool {
+        self.apply(event, [fact.into(), 0, 0]).0 == 1
+    }
+    fn apply(&mut self, event: u64, facts: [u64; 3]) -> (u64, u64) {
+        let (result, words, ticket) = decide(self.words, event, facts);
+        self.words = words;
+        (result, ticket)
     }
 }
 #[inline(never)]
-fn decide(state: u64, event: u64, facts: [bool; 3]) -> (u64, u64) {
+fn decide(state: [u64; 2], event: u64, facts: [u64; 3]) -> (u64, [u64; 2], u64) {
     let mut p = [0; 128];
     p[0] = 9;
     p[1] = event;
-    p[16] = state;
-    for (word, fact) in p[2..5].iter_mut().zip(facts) {
-        *word = u64::from(fact);
-    }
+    p[16..18].copy_from_slice(&state);
+    p[2..5].copy_from_slice(&facts);
     let action = super::native::decide(&mut p);
-    (action, p[16])
+    (action, [p[16], p[17]], p[24])
+}
+#[cfg(test)]
+mod ticket_tests {
+    use super::*;
+    #[test]
+    fn exhausted_ticket_space_never_wraps() {
+        let mut t = Tickets { last: u64::MAX - 1 };
+        assert_eq!(t.issue().unwrap().raw(), u64::MAX);
+        assert!(t.issue().is_none());
+        assert!(t.issue().is_none());
+    }
 }

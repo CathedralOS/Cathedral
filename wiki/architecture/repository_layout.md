@@ -95,7 +95,7 @@ router and recovery choices. Its saved configuration validation and placement
 now execute the shared [Omega configuration](../../source/distribution/matrix/configuration/README.md);
 the chooser calls the same codec directly. Stock close/loss aggregation and
 wait/refuse/stop decisions also execute [Omega lifecycle policy](../../source/distribution/matrix/lifecycle/README.md).
-Bounded launcher retry and fallback decisions execute
+Bounded launcher retries and the ticketed read/wait/admit workflow execute
 [Omega recovery policy](../../source/distribution/matrix/recovery/README.md).
 Local picker/background retry budgets execute
 [Omega startup policy](../../source/distribution/matrix/startup/README.md).

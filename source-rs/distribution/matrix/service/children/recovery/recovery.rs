@@ -78,16 +78,13 @@ impl Children {
             return Ok(false);
         }
         parent.refresh(world)?;
-        let launcher = self.launcher.as_ref().unwrap();
+        let launcher = self.launcher.as_mut().unwrap();
         let (placement, binding) = launcher.snapshot.expect("captured before retirement");
         let authority_matches =
             world.parent_matches(placement) && parent.storage_identity() == Some(binding);
         let vacant = self.slots[0].is_none() && server.available(0);
-        match launcher
-            .policy
-            .action(authority_matches, vacant, launcher.result.is_some())
-        {
-            Action::Wait => return Ok(false),
+        match launcher.policy.action(authority_matches, vacant) {
+            Action::Wait => Ok(false),
             Action::Cancel => {
                 #[cfg(feature = "trace-storage")]
                 time::storage_sample(
@@ -99,7 +96,7 @@ impl Children {
                     &[],
                 );
                 self.launcher = None;
-                return Ok(false);
+                Ok(false)
             }
             Action::RetireFallback => {
                 // The request was acknowledged first. Remove context while stopping
@@ -109,54 +106,23 @@ impl Children {
                 launcher.policy.explicit_retired();
                 self.launcher = Some(launcher);
                 cathedral_user_runtime::write(b"Cathedral matrix: explicit launcher retry\n")?;
-                return Ok(true);
+                Ok(true)
             }
-            Action::Fallback => return self.show_fallback(parent, world, server),
+            Action::Fallback => self.show_fallback(parent, world, server),
             Action::Read => {
-                parent.storage_recover(launcher.plan)?;
-                self.launcher.as_mut().unwrap().policy.read_started();
-                return Ok(true);
-            }
-            Action::Admit => (),
-        }
-        let mut launcher = self.launcher.take().unwrap();
-        let status = match launcher.result.take().unwrap() {
-            Err(code) => Err(code),
-            Ok(mut object) => {
-                let admitted = self.run_object(launcher.plan, &mut object, parent, server, world);
-                drop(object);
-                match admitted {
-                    Err(error) => Err(error.0 as u64),
-                    Ok(false) => Err(abi::DENIED),
-                    Ok(true) => match parent.storage_grant(server, 0, 0, 0)? {
-                        Err(code) => Err(code),
-                        Ok(()) if parent.storage_identity() != Some(binding) => Err(abi::DENIED),
-                        Ok(()) => world.restore(placement, server.incarnation(0).unwrap(), true),
-                    },
+                let Some(ticket) = self.recovery_tickets.issue() else {
+                    launcher.policy.read_unavailable();
+                    time::storage_sample("launcher-recovery-ticket-exhausted", &[]);
+                    return Ok(true);
+                };
+                launcher.policy.read_started(ticket);
+                let plan = launcher.plan;
+                if let Err(error) = parent.storage_recover(plan, ticket) {
+                    self.complete_recovery(ticket, Err(error.0 as u64));
                 }
+                Ok(true)
             }
-        };
-        launcher.policy.read_finished(status.is_ok());
-        if let Err(code) = status {
-            if self.slots[0].is_some() {
-                self.stop(0, server, world, parent)?;
-            }
-            time::storage_sample("launcher-recovery-refused", &[code]);
-        } else {
-            self.saved_storage[0] = Some((0, 0));
-            launcher.task = self.slots[0].as_ref().unwrap().task.raw();
-            launcher.incarnation = server.incarnation(0).unwrap();
-            launcher.snapshot = None;
-            self.management
-                .grant(0, launcher.incarnation, self.active.unwrap_or(1))
-                .map_err(|c| Error(c as i64))?;
-            parent.grant_recovery(0, Some(launcher.incarnation));
-            self.notify(world)?;
-            cathedral_user_runtime::write(
-                b"Cathedral matrix: launcher recovered; retry consumed\n",
-            )?;
+            Action::Admit(ticket) => self.admit_recovery(ticket, parent, world, server),
         }
-        self.launcher = Some(launcher);
-        Ok(true)
     }
 }
