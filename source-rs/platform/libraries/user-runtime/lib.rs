@@ -26,6 +26,7 @@ pub mod heap;
 pub mod ipc;
 pub mod keyboard;
 pub mod link;
+pub mod mailbox;
 pub mod matrix;
 pub mod memory;
 pub mod notification;

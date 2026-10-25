@@ -28,15 +28,40 @@ impl Regions {
         if object.owner != Some(task) || object.owner_name != name {
             return Err(abi::DENIED);
         }
-        if object.sealed {
+        if object.sealed || object.shared_mutable {
             return Err(abi::BUSY);
         }
         object.sealed = true;
         Ok(index)
     }
     pub fn reserve_read(&mut self, task: usize, name: u64, receiver: usize) -> Result<usize, u64> {
+        self.reserve_view(task, name, receiver, false)
+    }
+    pub fn share_mutable(&mut self, task: usize, name: u64) -> Result<usize, u64> {
+        let index = self.access(task, name)?;
+        let object = &mut self.entries[index];
+        if object.owner != Some(task) || object.owner_name != name {
+            return Err(abi::DENIED);
+        }
+        if object.sealed || object.shared_mutable {
+            return Err(abi::BUSY);
+        }
+        object.shared_mutable = true;
+        Ok(index)
+    }
+    pub fn reserve_view(
+        &mut self,
+        task: usize,
+        name: u64,
+        receiver: usize,
+        mutable: bool,
+    ) -> Result<usize, u64> {
         let object = self.access(task, name)?;
-        if !self.entries[object].sealed {
+        if !(if mutable {
+            self.entries[object].shared_mutable
+        } else {
+            self.entries[object].sealed
+        }) {
             return Err(abi::DENIED);
         }
         if receiver >= abi::MAX_TASKS || self.shared[receiver] == 0 {
@@ -109,7 +134,7 @@ impl Regions {
     }
     pub fn prepare_mapping(&self, task: usize, name: u64) -> Result<(usize, usize), u64> {
         let object = self.access(task, name)?;
-        if !self.entries[object].sealed {
+        if !self.entries[object].sealed && !self.entries[object].shared_mutable {
             return Err(abi::DENIED);
         }
         if self.mapped(task, name)?.is_some() {

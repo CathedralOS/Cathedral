@@ -301,6 +301,12 @@ select code independently of five unbound process accounts. See the
 [admission contract](../../../kernel/core/user_tasks/admission/pool/README.md).
 ## Notification proof
 
+The subsequent [shared payload proof](shared/shared.rs) uses two reusable buffers
+and the platform [mailbox](../../../platform/libraries/user-runtime/mailbox.rs).
+It exercises variable-sized request/reply, backpressure, hostile headers, typed
+grant acceptance, RO/NX faults and retained funding after death. It is a transport
+proof, not the ordinary desktop's service path.
+
 [notifications/notifications.rs](notifications/notifications.rs) adds ordinary
 cross-process notification tests to the existing IPC suite. Rights are established
 once through checked typed handoff; 64 round trips then use signal-and-wait without

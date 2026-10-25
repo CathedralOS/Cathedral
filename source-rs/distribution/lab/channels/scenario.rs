@@ -5,6 +5,7 @@ pub fn run() -> u64 {
     delivery::probes::creation();
     delivery::quota();
     notifications::run();
+    shared::run();
     sponsorship::run();
     for _ in 0..32 {
         delivery::exchange();

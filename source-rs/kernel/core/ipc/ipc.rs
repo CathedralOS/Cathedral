@@ -33,6 +33,7 @@ struct Queued {
     // Reserved, inaccessible recipient-local grant. Published only on receive.
     attachment: Option<usize>,
     memory: Option<usize>,
+    mutable_memory: bool,
     notification: Option<usize>,
 }
 #[derive(Clone, Copy)]
@@ -117,6 +118,7 @@ impl Ipc {
             len: bytes.len(),
             attachment: reserved,
             memory: None,
+            mutable_memory: false,
             notification: None,
         };
         message.bytes[..bytes.len()].copy_from_slice(bytes);
@@ -150,6 +152,14 @@ impl Ipc {
     ) -> Result<Option<Message>, u64> {
         self.receive_kind(caller, ticket, capacity, 2)
     }
+    pub fn receive_shared(
+        &mut self,
+        caller: usize,
+        ticket: u64,
+        capacity: usize,
+    ) -> Result<Option<Message>, u64> {
+        self.receive_kind(caller, ticket, capacity, 4)
+    }
     fn receive_kind(
         &mut self,
         caller: usize,
@@ -162,7 +172,7 @@ impl Ipc {
         if let Some(message) = endpoint.message {
             if message.len > capacity
                 || (message.attachment.is_some() && kind != 1)
-                || (message.memory.is_some() && kind != 2)
+                || (message.memory.is_some() && kind != if message.mutable_memory { 4 } else { 2 })
                 || (message.notification.is_some() && kind != 3)
             {
                 return Err(abi::TOO_SMALL);

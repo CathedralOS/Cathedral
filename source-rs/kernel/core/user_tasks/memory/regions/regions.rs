@@ -17,6 +17,8 @@ pub struct Region {
     pub peer: Option<usize>,
     pub accepted: bool,
     pub sealed: bool,
+    /// Live single-writer backing; never immutable or executable.
+    pub shared_mutable: bool,
     pub pages: usize,
     pub owner_name: u64,
     pub reader_name: u64,
@@ -156,7 +158,7 @@ impl Regions {
         {
             return Err(abi::DENIED);
         }
-        if self.entries[index].sealed {
+        if self.entries[index].sealed || self.entries[index].shared_mutable {
             return Err(abi::BUSY);
         }
         self.entries[index].sealed = true;

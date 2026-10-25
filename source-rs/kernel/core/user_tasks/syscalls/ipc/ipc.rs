@@ -21,15 +21,24 @@ pub(in crate::user_tasks) fn dispatch(
                 session.ipc.close(slot, first).map(|()| 0)
             }
         }
-        abi::IPC_SEND_CAP | abi::IPC_SEND_MEMORY => capabilities::send_cap(
+        abi::IPC_SEND_CAP | abi::IPC_SEND_MEMORY | abi::IPC_SEND_SHARED => capabilities::send_cap(
             session,
             slot,
             first,
             second,
             third,
-            if number == abi::IPC_SEND_MEMORY { 2 } else { 1 },
+            if number == abi::IPC_SEND_MEMORY {
+                2
+            } else if number == abi::IPC_SEND_SHARED {
+                4
+            } else {
+                1
+            },
         ),
-        abi::IPC_RECEIVE_CAP | abi::IPC_RECEIVE_MEMORY | abi::IPC_TRY_RECEIVE_MEMORY => {
+        abi::IPC_RECEIVE_CAP
+        | abi::IPC_RECEIVE_MEMORY
+        | abi::IPC_TRY_RECEIVE_MEMORY
+        | abi::IPC_RECEIVE_SHARED => {
             if third != 0 {
                 return Err(abi::INVALID_ARGUMENT);
             }
@@ -40,7 +49,9 @@ pub(in crate::user_tasks) fn dispatch(
                     first,
                     second,
                     abi::MAX_MESSAGE as u64,
-                    if number == abi::IPC_RECEIVE_CAP {
+                    if number == abi::IPC_RECEIVE_SHARED {
+                        ReceiveMode::Shared
+                    } else if number == abi::IPC_RECEIVE_CAP {
                         ReceiveMode::Endpoint
                     } else if number == abi::IPC_TRY_RECEIVE_MEMORY {
                         ReceiveMode::TryMemory

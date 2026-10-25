@@ -1,4 +1,4 @@
-//! Queue custody for sealed-memory grants. Memory owns names, quotas and backing;
+//! Queue custody for frozen or live shared-memory views. Memory owns names, quotas and backing;
 //! IPC carries an opaque escrow slot and reports discarded slots for retirement.
 use super::*;
 impl Ipc {
@@ -18,6 +18,16 @@ impl Ipc {
     }
     /// Caller reserved a recipient grant after memory_receiver; serialized commit.
     pub fn send_memory(&mut self, caller: usize, ticket: u64, bytes: &[u8], escrow: usize) {
+        self.send_memory_kind(caller, ticket, bytes, escrow, false);
+    }
+    pub fn send_memory_kind(
+        &mut self,
+        caller: usize,
+        ticket: u64,
+        bytes: &[u8],
+        escrow: usize,
+        mutable: bool,
+    ) {
         assert!(escrow < cathedral_kernel_contracts::memory::MAX_READ_HANDLES);
         self.memory_receiver(caller, ticket, bytes.len())
             .expect("validated memory send");
@@ -27,6 +37,7 @@ impl Ipc {
             len: bytes.len(),
             attachment: None,
             memory: Some(escrow),
+            mutable_memory: mutable,
             notification: None,
         };
         message.bytes[..bytes.len()].copy_from_slice(bytes);

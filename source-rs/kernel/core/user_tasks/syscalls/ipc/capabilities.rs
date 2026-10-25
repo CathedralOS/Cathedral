@@ -56,13 +56,22 @@ pub(in super::super) fn send_cap(
         session
             .ipc
             .send_notification(slot, handle, bytes, attachment)?;
-    } else if kind == 2 {
+    } else if kind == 2 || kind == 4 {
         let receiver = session.ipc.memory_receiver(slot, handle, bytes.len())?;
-        let escrow = session
-            .memory
-            .model
-            .reserve_read(slot, attachment, receiver)?;
-        session.ipc.send_memory(slot, handle, bytes, escrow);
+        let escrow = if kind == 4 {
+            session
+                .memory
+                .model
+                .reserve_view(slot, attachment, receiver, true)?
+        } else {
+            session
+                .memory
+                .model
+                .reserve_read(slot, attachment, receiver)?
+        };
+        session
+            .ipc
+            .send_memory_kind(slot, handle, bytes, escrow, kind == 4);
     } else {
         session
             .ipc

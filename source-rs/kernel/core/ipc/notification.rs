@@ -25,6 +25,7 @@ impl Ipc {
             len: bytes.len(),
             attachment: None,
             memory: None,
+            mutable_memory: false,
             notification: Some(escrow),
         };
         message.bytes[..bytes.len()].copy_from_slice(bytes);

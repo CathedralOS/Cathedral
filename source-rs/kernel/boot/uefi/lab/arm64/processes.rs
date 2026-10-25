@@ -22,9 +22,9 @@ pub(super) fn exchange(
         let reports = run(memory, &programs, &endpoints, usize::MAX).unwrap();
         for report in &reports {
             assert_eq!(report.exit, Some(Exit::Returned(0)));
-            // Two notification-right introductions precede the 32 copied echoes.
-            assert_eq!(report.ipc_sent, 34);
-            assert_eq!(report.ipc_received, 34);
+            // One shared-view and two notification introductions precede the 32 copied echoes.
+            assert_eq!(report.ipc_sent, 35);
+            assert_eq!(report.ipc_received, 35);
         }
         assert!(reports.iter().any(|r| r.receives_blocked > 0));
         admission = reports.iter().map(|r| r.frames).sum();

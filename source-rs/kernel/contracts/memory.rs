@@ -10,6 +10,15 @@
 //! forward; surviving rights keep backing and its original sponsor charge alive.
 //! The final release/death/discard refunds backing. No live reader is remotely unmapped.
 //!
+//! SHARE_MUTABLE(handle) irreversibly chooses live single-writer sharing instead
+//! of FREEZE. Producer retains RW/NX; IPC_SEND_SHARED delegates only RO/NX views
+//! through typed IPC_RECEIVE_SHARED. MAP_SHARED checks this mode before returning
+//! an address, and remaps writable only for the original producer. UNMAP_OBJECT
+//! and RELEASE keep their local-only meaning. These changing bytes can never
+//! enter immutable-object receives or executable admission. The original sponsor
+//! and accepted views survive producer death until final release. Runtime readers
+//! must copy checked words, not borrow immutable Rust slices from this memory.
+//!
 //! Legacy boot-link compatibility path:
 //!
 //! SEAL(handle, link) irreversibly removes producer WRITE and offers the object

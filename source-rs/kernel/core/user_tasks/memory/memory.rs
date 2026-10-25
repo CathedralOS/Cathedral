@@ -73,7 +73,7 @@ impl Memory {
             .filter(|&&frame| frame != 0)
             .count()
     }
-    /// The frames behind a sealed region, one per page in order.
+    /// Retained backing frames, one per page in order; caller checks object mode.
     pub fn frames_of(&self, region: usize) -> &[u64] {
         &self.backing[region][..self.model.entries[region].pages]
     }
@@ -151,6 +151,9 @@ unsafe fn dispatch(
     [number, first, second]: [u64; 3],
 ) -> Result<u64, u64> {
     match number {
+        abi::MEMORY_SHARE_MUTABLE => session.memory.model.share_mutable(slot, first).map(|_| 0),
+        // SAFETY: Inactive roots and retained backing; only producer gets writes.
+        abi::MEMORY_MAP_SHARED => unsafe { objects::map_kind(session, slot, first, true) },
         // SAFETY: Caller provides exclusive inactive roots and frame custody.
         abi::MEMORY_SEAL => unsafe { sharing::seal(session, slot, first, second) },
         // SAFETY: Caller provides exclusive inactive roots and frame custody.

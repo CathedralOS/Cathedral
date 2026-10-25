@@ -1,4 +1,4 @@
-# Sealed objects and local mappings
+# Page objects and local mappings
 
 Start at [memory.rs](memory.rs): traps defer mapping/allocation work to the boot
 stack. [Regions](regions/regions.rs) own names, quotas and object lifetime;
@@ -7,6 +7,15 @@ stack. [Regions](regions/regions.rs) own names, quotas and object lifetime;
 [retirement](retirement.rs) removes aliases before refunding physical frames.
 [References](references.rs) settle surrendered executable references;
 [escrow](escrow.rs) retains custody of discarded IPC attachments.
+
+`SHARE_MUTABLE` permanently distinguishes live single-writer backing from frozen
+objects. The producer retains RW/NX; typed shared-view transfers install only
+RO/NX rights and cannot be received as immutable images. Both modes reuse the
+same funded lifetime/escrow arena. Map checks the mode before returning even an
+existing mapping; freeze and executable admission reject mutable backing.
+Follow the [runtime and mailbox](../../../../platform/libraries/user-runtime/memory/shared/README.md)
+for publication and hostile-writer rules. This slice does not add multi-writer
+authority or replace ordinary service transport.
 
 [Allocation](allocation.rs) reserves funding once and zeros at most eight pages
 per boot-stack step. The caller stays blocked and the region unmapped until all

@@ -7,6 +7,7 @@ mod notifications;
 mod replies;
 mod resources;
 mod scenario;
+mod shared;
 mod sponsorship;
 mod startup;
 mod syscall;
@@ -19,6 +20,9 @@ use cathedral_user_runtime::{
 };
 cathedral_user_runtime::entry_with_environment!(main);
 fn main(role: u64, mode: u64, environment: cathedral_user_runtime::task::Environment) -> u64 {
+    if role != 0 && (40..=45).contains(&mode) {
+        return shared::worker(mode);
+    }
     if role != 0 && (10..=17).contains(&mode) {
         return notifications::worker(mode);
     }

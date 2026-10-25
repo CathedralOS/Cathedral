@@ -83,7 +83,9 @@ def main():
     if not args.kernel_only:
         milestones += ['session startup heap refusals=', 'exact reclamation passed',
                        'shared objects forwarded without mappings; lifetime and reclamation passed',
-                       'Cathedral ARM64: 32 notification round trips passed', 'ARM64 IPC round=0', 'ARM64 IPC round=1',
+                       'Cathedral ARM64: 32 notification round trips passed',
+                       'Cathedral ARM64: 32 shared mailbox payload round trips passed',
+                       'ARM64 IPC round=0', 'ARM64 IPC round=1',
                        'ARM64 timer preempted both private EL0 peers',
                        'ARM64 sealed pages rejected writes', 'ARM64 admission rollback passed',
                        'ARM64 portability proof passed']

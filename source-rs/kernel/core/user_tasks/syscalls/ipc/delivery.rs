@@ -9,6 +9,7 @@ pub(super) enum ReceiveMode {
     Endpoint,
     Memory,
     TryMemory,
+    Shared,
     Notification,
 }
 #[derive(Clone, Copy)]
@@ -114,7 +115,9 @@ fn receive(session: &mut Session, slot: usize, wait: Receive) -> Result<Option<u
     if !space.writable_range(address, size) {
         return Err(abi::BAD_ADDRESS);
     }
-    let message = if attachment == ReceiveMode::Notification {
+    let message = if attachment == ReceiveMode::Shared {
+        session.ipc.receive_shared(slot, handle, capacity)?
+    } else if attachment == ReceiveMode::Notification {
         session.ipc.receive_notification(slot, handle, capacity)?
     } else if matches!(attachment, ReceiveMode::Memory | ReceiveMode::TryMemory) {
         session.ipc.receive_memory(slot, handle, capacity)?

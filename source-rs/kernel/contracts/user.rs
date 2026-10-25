@@ -211,3 +211,10 @@ pub const NOTIFY_CANCELLED: u64 = 4;
 pub const NOTIFY_CLOSE: u64 = 0;
 pub const NOTIFY_WITHDRAW_WAITS: u64 = 1; // revoke all wait grants; cannot be undone
 pub const NOTIFY_CANCEL_WAITS: u64 = 2; // cancel currently registered waits only
+
+/// Live single-writer sharing is irreversible; accepted views remain RO/NX.
+pub const MEMORY_SHARE_MUTABLE: u64 = 82;
+pub const MEMORY_MAP_SHARED: u64 = 83;
+/// Typed setup handoff; cannot enter immutable-image receive paths.
+pub const IPC_SEND_SHARED: u64 = 84;
+pub const IPC_RECEIVE_SHARED: u64 = 85;

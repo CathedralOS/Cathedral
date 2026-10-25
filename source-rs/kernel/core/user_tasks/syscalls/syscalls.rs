@@ -30,6 +30,8 @@ pub(super) fn syscall(session: &mut Session, slot: usize, now: u64) -> Event {
         | abi::IPC_WAIT_MANY
         | abi::EVENT_WAIT
         | abi::IPC_BUDGET
+        | abi::IPC_SEND_SHARED
+        | abi::IPC_RECEIVE_SHARED
         | abi::IPC_SEND_MEMORY..=abi::IPC_TRY_RECEIVE_MEMORY => {
             ipc::dispatch(session, slot, call, now, &mut event)
         }
@@ -54,6 +56,8 @@ pub(super) fn syscall(session: &mut Session, slot: usize, now: u64) -> Event {
             now,
         ),
         abi::MEMORY_ALLOCATE..=abi::MEMORY_PAGES
+        | abi::MEMORY_SHARE_MUTABLE
+        | abi::MEMORY_MAP_SHARED
         | abi::MEMORY_FREEZE..=abi::MEMORY_UNMAP_OBJECT => {
             memory::syscall(session, slot, call, &mut event)
         }

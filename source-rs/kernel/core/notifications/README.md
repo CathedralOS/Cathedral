@@ -8,9 +8,9 @@ queue layout or memory-publication rule enters this subsystem.
 
 The [accepted contract](../../../../wiki/spec/execution/notifications.md) is broader
 than this implementation slice. The kernel primitive and real userspace wakeup
-tests exist. Reusable shared writable backing, library message publication, and
-ordinary desktop migration do not yet exist. The notification round-trip test
-exchanges wakeups, not shared-memory application messages.
+tests exist. A subsequent [shared-buffer and mailbox slice](../../../platform/libraries/user-runtime/memory/shared/README.md)
+now exchanges real payloads. Ordinary desktop migration remains open; the original
+notification-only test still establishes wakeups, not application completion.
 
 ## Kernel integration
 
@@ -93,9 +93,8 @@ the existing ARM64 runner.
 Old channel/admission tests remain regressions; they are not evidence that shared
 payload memory or desktop migration is complete.
 
-Next: reusable shared backing with authorized mappings and retained lifetime;
-then publication/backpressure protocols over that memory and notifications, with
-real message ping-pong and ordinary desktop/Omega consumers. Preserve the existing
+Next: migrate ordinary desktop/Omega consumers onto the exercised shared backing
+and mailbox, preserving service-specific request, reply and cancellation custody. Preserve the existing
 launch, selection, cancellation and nested input/rendering evidence during that
 migration. Keep the encompassing [implementation outcome](../../../../TASKS_RUST.md#shared-memory-ipc-and-notification-outcome)
 open until those consumers use it.

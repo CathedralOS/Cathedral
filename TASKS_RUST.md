@@ -16,12 +16,12 @@ Start at `source-rs/kernel/core/ipc/ipc.rs`, the wait entrance
 reply-dispatch/launch work; its correlation and cancellation rules remain service
 requirements, not a reason to freeze the copied-channel ABI.
 
-The first kernel notification slice is implemented and exercised on x86-64 and
-ARM64; see the evidence below. Remaining acceptance:
+Kernel notifications and a first reusable single-writer shared-memory/mailbox
+slice execute on x86-64 and ARM64; see the evidence below. Remaining acceptance:
 
-- Implement reusable authorized shared backing and platform-owned publication,
-  custody and request/reply protocols. Keep mapping isolation, hostile-writer
-  validation and live-reader lifetime guarantees; waking proves none of them.
+- Integrate the exercised shared backing and bounded platform mailbox into real
+  service connection/request/reply ownership. Preserve mapping isolation,
+  hostile-writer validation and live-reader lifetime; waking proves none of them.
 - Demonstrate real cross-process ping-pong, including early reply/next-request,
   signal/register races, coalescing, closure/cancel/deadline races, revoked wait
   rights, denied foreign handles, stale incarnations and retained funding through
@@ -33,8 +33,9 @@ ARM64; see the evidence below. Remaining acceptance:
 
 Done means the normal service path uses shared-memory data plus notifications,
 not only a standalone lab. Pin focused host/race controls and real guest evidence
-for that path and its invalid-authority controls. Notification-only round trips
-establish wakeup behavior, not shared-memory message publication or performance.
+for that path and its invalid-authority controls. Shared-payload round trips now
+exercise publication and backpressure; they do not establish ordinary service
+migration or a performance result.
 
 ## Independent installation and component-owned activation
 
@@ -65,6 +66,62 @@ migration, live kernel replacement and a universal distributed transaction are
 not prerequisites. No runtime evidence is claimed by this docs ratification.
 
 ## Current implementation evidence
+
+Implementation update 2026-10-25: **reusable shared buffers and platform mailbox**,
+over `3748fda4`.
+
+Start at the [shared-buffer boundary](source-rs/platform/libraries/user-runtime/memory/shared/README.md),
+then [mailbox.rs](source-rs/platform/libraries/user-runtime/mailbox.rs). The kernel
+extends its existing funded page-object arena with irreversible mutable sharing:
+one original RW/NX producer and transferable RO/NX views. A typed setup handoff
+cannot be received as an immutable object; frozen mapping, legacy sealing and
+executable admission reject live mutable backing. Mapping/unmapping, queued
+discard, creator death and final release reuse existing lifetime/accounting.
+Readers retain backing after producer death, including across sponsor replacement.
+This does not implement arbitrary multi-writer grants or transfer of the writer.
+
+The runtime consumes private ownership before sharing. It never lends a Rust
+reference or slice into peer-mutable bytes: bounded aligned machine accesses copy
+words, with acquire/release operations in its architecture leaf. The platform
+mailbox has two independently owned buffers, one outstanding message per direction,
+a sequence/acknowledgement and up to 256 payload bytes. Full returns WOULD_BLOCK;
+too-small receives do not acknowledge; sequence exhaustion fails. Captured bounds
+remain local even if a hostile peer changes headers. Payload semantics still need
+application validation. Timeout does not acknowledge or cancel an operation.
+
+The [ordinary-process proof](source-rs/distribution/lab/channels/shared/shared.rs)
+exchanges 128 variable-sized payloads without per-message copied IPC, allocation
+or remapping. It includes malformed length/sequence/acknowledgement, backpressure,
+foreign handles, wrong typed receive, bad copyout, exact read-only/execute faults,
+unmap/remap, retained creator funding and abandoned recipient escrow. ARM64 uses
+the same mailbox for 32 full-size exchanges and retains exact session frame/heap
+reclamation. Neither this nor acquire/release code is evidence for an SMP kernel.
+
+Verification:
+
+- Default host tests pass, including three new mutable-sharing authority/lifetime
+  tests. Core all-feature/test Clippy, guest kernel, runtime and channels-lab
+  Clippy pass. x86 IPC and ARM64 payload proofs pass.
+- Normal F5 fresh/cold desktop and storage oracle pass:
+  `desktop/20261025T172055247621Z`.
+- Kernel smoke and final IPC suite, including queued-discard cleanup, pass.
+- Three nested desktops with held presentation/delayed interaction pass fresh/cold,
+  including protected close, persistence and repeated subtree reclamation:
+  `desktop/20261025T172315156744Z`.
+- Selection `late-stop` passes fresh/cold, retaining the draft and restoring the
+  selected app: `desktop/20261025T172511380932Z`.
+- Layout (73 Omega / 150 Rust edges), eight boundary checks, formatting and diff
+  checks pass.
+- Logs: `build/omega-component/shared-{host,core-clippy,kernel-check,
+  userspace-clippy,channels-clippy,ipc-final,arm64,desktop,smoke,nested,selection}.log`.
+
+**Next:** a real service connection using this transport: explicit setup grants,
+request correlation, response/attachment custody, cancellation/death/deadline
+handling and bounded multiplexing. Preserve current launch/selection semantics
+and migrate Omega host bindings with their consumers. F5 still uses copied service
+messages; copied setup/grant handoff remains temporary. Do not call the encompassing
+outcome complete or infer a latency improvement from this lab. No owner decision
+was needed; this exploratory Rust direction is explicitly authorized.
 
 Implementation update 2026-10-25: **funded kernel notifications and process proofs**,
 over `2506f024`.

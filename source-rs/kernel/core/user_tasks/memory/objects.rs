@@ -1,4 +1,4 @@
-//! Deferred mapping edits for sealed objects. A read capability can exist and
+//! Deferred mapping edits for frozen and live shared objects. A read capability can exist and
 //! travel without a virtual mapping; removing a mapping never withdraws peers.
 use super::*;
 pub(super) unsafe fn freeze(session: &mut Session, task: usize, name: u64) -> Result<u64, u64> {
@@ -16,8 +16,22 @@ pub(super) unsafe fn freeze(session: &mut Session, task: usize, name: u64) -> Re
     Ok(0)
 }
 pub(super) unsafe fn map(session: &mut Session, task: usize, name: u64) -> Result<u64, u64> {
+    // SAFETY: Same inactive-root custody; immutable backing only.
+    unsafe { map_kind(session, task, name, false) }
+}
+pub(super) unsafe fn map_kind(
+    session: &mut Session,
+    task: usize,
+    name: u64,
+    mutable: bool,
+) -> Result<u64, u64> {
     let object = session.memory.model.access(task, name)?;
-    if !session.memory.model.entries[object].sealed {
+    let region = session.memory.model.entries[object];
+    if !(if mutable {
+        region.shared_mutable
+    } else {
+        region.sealed
+    }) {
         return Err(abi::DENIED);
     }
     if let Some(mapping) = session.memory.model.mapped(task, name)? {
@@ -25,12 +39,13 @@ pub(super) unsafe fn map(session: &mut Session, task: usize, name: u64) -> Resul
     }
     let (object, mapping) = session.memory.model.prepare_mapping(task, name)?;
     let pages = session.memory.model.entries[object].pages;
-    // SAFETY: Retained sealed backing; root inactive and tables reserved at admission.
+    // SAFETY: Retained backing; inactive root. Only its producer may map writable.
+    // Delegated views remain RO/NX, even while their producer continues writing.
     unsafe {
         session.tasks[task].space.as_mut().unwrap().map_region(
             mapping,
             &session.memory.backing[object][..pages],
-            false,
+            mutable && region.owner == Some(task) && region.owner_name == name,
         )
     }
     .map_err(|_| abi::NO_MEMORY)?;
@@ -41,7 +56,7 @@ pub(super) unsafe fn map(session: &mut Session, task: usize, name: u64) -> Resul
 pub(super) unsafe fn unmap(session: &mut Session, task: usize, name: u64) -> Result<u64, u64> {
     let object = session.memory.model.access(task, name)?;
     let region = session.memory.model.entries[object];
-    if !region.sealed
+    if !(region.sealed || region.shared_mutable)
         || (session.memory.model.read_slot(task, name).is_none() && region.owner != Some(task))
     {
         return Err(abi::DENIED);

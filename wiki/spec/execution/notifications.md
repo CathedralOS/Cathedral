@@ -142,9 +142,10 @@ obligations it accepts. Closing a wait does not release independent backing pins
 The Rust [notification primitive and ordinary-worker proof](../../../source-rs/kernel/core/notifications/README.md)
 implement bounded notification objects, separate rights, checked grant handoff,
 remembered signals, combined calls and completion/lifetime handling. Its live
-round trips exchange notifications; reusable shared payload memory and ordinary
-desktop migration remain open. Existing copied-channel tests are not evidence
-for those missing mechanisms. The complete implementation
+round trips exchange notifications. The subsequent [shared mailbox proof](../../../source-rs/platform/libraries/user-runtime/memory/shared/README.md)
+exchanges actual payloads using those notifications on x86-64 and ARM64; ordinary
+desktop migration remains open. Existing copied-channel tests are not evidence
+for that migration. The complete implementation
 must demonstrate early signal, signal/register races, coalescing, wake-one/all,
 combined-call failure phases, closure/cancellation/deadline races, denied unrelated
 signals, stale handles, authorized cross-process transfer, and charge conservation

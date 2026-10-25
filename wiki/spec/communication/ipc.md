@@ -203,8 +203,12 @@ or peer progress. Failure and reclamation must preserve outstanding obligations.
   Their kernel-copied message queues are migration scaffolding, not the selected
   production transport.
 - [Page objects](../../../source-rs/kernel/contracts/memory.rs) provide private
-  writable storage and sealed, transferable read rights. They do not implement
-  the reusable writable shared-region protocol described above.
+  writable storage, frozen objects, and reusable single-writer backing with typed,
+  transferable read-only views. The [platform mailbox proof](../../../source-rs/platform/libraries/user-runtime/memory/shared/README.md)
+  exchanges bounded payloads over two buffers and notifications on x86-64 and
+  ARM64. It exercises malformed headers, backpressure, mapping protections and
+  retained funding. It is not a coordination service or ordinary desktop transport;
+  arbitrary multi-writer mapping is not implemented.
 - [Omega boot](../../../source/kernel/boot/uefi/README.md) exercises early memory
   ownership and mappings, not this complete cross-process service.
 

@@ -2,6 +2,7 @@
 
 mod object;
 pub mod raw;
+pub mod shared;
 pub use object::Object;
 
 include!("memory.rs");
