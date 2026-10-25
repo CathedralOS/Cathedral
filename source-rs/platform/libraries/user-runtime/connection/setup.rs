@@ -65,6 +65,7 @@ impl Accept {
                     mailbox,
                     bell: self.bell.take().unwrap(),
                     signal: self.signal.take().unwrap(),
+                    incoming: Incoming::default(),
                 }));
             }
         }

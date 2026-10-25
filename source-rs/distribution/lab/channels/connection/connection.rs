@@ -89,6 +89,7 @@ pub(super) fn run() {
             Outcome::Returned(0)
         );
     }
+    attachments::run(launch);
     resources::assign(
         launch,
         Limits {

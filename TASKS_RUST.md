@@ -21,8 +21,9 @@ slice execute on x86-64 and ARM64. The first real F5 connection now uses them:
 physical input to the root matrix. See the evidence below. Remaining acceptance:
 
 - Extend the first shared service connection beyond its one explicitly enabled
-  stream and 64-byte request/reply frames to attachment custody and broader
-  multiplexing. Preserve mapping isolation, hostile-writer validation and
+  stream and 64-byte request/reply frames into attachment-bearing ordinary consumers
+  and broader multiplexing. Immutable attachment custody is now exercised through
+  the shared transport; endpoint custody and consumer migration remain open. Preserve mapping isolation, hostile-writer validation and
   live-reader lifetime; waking proves none of them.
 - Demonstrate real cross-process ping-pong, including early reply/next-request,
   signal/register races, coalescing, closure/cancel/deadline races, revoked wait
@@ -133,6 +134,47 @@ cross-service distributed commit are not acceptance requirements. No runtime
 implementation is claimed by this ratification.
 
 ## Current implementation evidence
+
+Implementation update 2026-10-25: **immutable attachments on shared requests/replies**,
+over `bf83610f`.
+
+The [connection](source-rs/platform/libraries/user-runtime/connection/README.md)
+now joins one shared frame with one kernel-mediated immutable read grant. The
+endpoint transfers only an 8-byte correlation ID and typed authority; application
+bytes remain in the shared mailbox. Both halves must match before dispatch.
+The receiver retains at most one frame and one grant, with an explicit 300-tick
+incomplete-transfer deadline. This deadline does not time out admitted service work.
+The server continues other dispatch while waiting for a missing half.
+
+The provider retains its source Object. Refusal before offering the grant permits
+a plain error reply on the same request; failure after offer/publication retires
+the connection without replay. A stale retained reply cannot offer an object into
+a replacement stream. Peer death preserves already accepted immutable backing;
+partial setup/ingress and queued grants release their exact charges on retirement.
+The experimental framing is v2; this is not a frozen ABI or legacy fallback.
+
+Verification:
+
+- Host tests and userspace checks pass. Shared IPC guest tests pass repeated
+  attached request/reply forwarding, recipient quota refusal followed by a plain
+  reply and later successful transfer, timeout with retained stale object reply,
+  complete final reply across server death, wrong IDs/kinds and orphan expiry.
+  Malformed request senders also prove other-client progress and no premature
+  dispatch. The full fixture restores exact logical and physical baselines.
+- Normal F5 fresh/cold, pointer/typing, independent Notes instances, protected
+  close, Colors and the storage oracle pass: `desktop/20261025T192632887289Z`.
+- Layout (73 Omega / 151 Rust edges), eight boundary checks, formatting and diff
+  checks pass. Entrances retain the frame/grant join and custody owners explicitly.
+- Logs: `build/omega-component/attachment-{host,check,channels-clippy,ipc-final,desktop}.log`.
+  Kernel and ARM64 behavior did not change; their previous evidence is retained,
+  not claimed as fresh attachment-path testing.
+
+**Next:** integrate this attachment path into the ordinary root/display connection.
+First expose yielding begin/poll operations and their notification/lifetime wait
+interests so presentation, scene updates and other service work keep progressing.
+Then migrate image forwarding and preserve delayed-presentation, cancellation,
+bootstrap and nested-desktop evidence. Display and storage attachments still use
+the old path today; this transport milestone does not complete their migration.
 
 Implementation update 2026-10-25: **first shared-payload F5 service connection**,
 over `c2b11a6c`.

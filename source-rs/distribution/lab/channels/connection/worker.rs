@@ -7,12 +7,14 @@ use cathedral_user_runtime::{
 };
 pub(crate) fn run(mode: u64, env: Environment) -> u64 {
     let pair = (env.endpoint(0).unwrap(), env.endpoint(1).unwrap());
-    if mode == 55 {
-        return wrong_reply(pair);
+    if mode == 55 || (60..=64).contains(&mode) {
+        return wrong_reply(pair, mode);
     }
     let mut server = Server::open_clients(1).unwrap();
     server.install(0, pair).unwrap();
     server.enable_shared(0).unwrap();
+    server.enable_memory();
+    let mut held_object = None;
     let mut held = None;
     loop {
         match server.next_event().unwrap() {
@@ -20,7 +22,34 @@ pub(crate) fn run(mode: u64, env: Environment) -> u64 {
                 assert_eq!(&request.bytes[..request.len], b"alive");
                 server.reply(&request, b"alive").unwrap();
             }
+            Event::Memory(request, object) => {
+                if mode == 58 {
+                    held = Some(request);
+                    held_object = Some(object);
+                } else {
+                    assert_eq!(mode, 56);
+                    server
+                        .reply_memory(&request, &request.bytes[..request.len], &object)
+                        .unwrap();
+                }
+            }
             Event::Request(request) => {
+                if mode == 57 || mode == 59 {
+                    let mut page = cathedral_user_runtime::memory::Private::allocate(1).unwrap();
+                    page.bytes_mut().fill(mode as u8);
+                    let object = page.freeze().unwrap();
+                    if let Err(error) =
+                        server.reply_memory(&request, &request.bytes[..request.len], &object)
+                    {
+                        assert_eq!(mode, 57);
+                        assert_eq!(error, Error(abi::NO_MEMORY as i64));
+                        server.reply(&request, b"capacity").unwrap();
+                    }
+                    if mode == 59 {
+                        return 0;
+                    }
+                    continue;
+                }
                 assert_eq!(request.client, Some(0));
                 if mode == 54 {
                     return 0;
@@ -40,7 +69,11 @@ pub(crate) fn run(mode: u64, env: Environment) -> u64 {
                     let (output, recv) = ipc::channel().unwrap();
                     server.install(0, (input, output)).unwrap();
                     server.enable_shared(0).unwrap();
-                    server.reply(&old, b"late").unwrap();
+                    if let Some(object) = held_object.take() {
+                        server.reply_memory(&old, b"late", &object).unwrap();
+                    } else {
+                        server.reply(&old, b"late").unwrap();
+                    }
                     assert_eq!(
                         recv.receive_until(&mut [0; 64], time::now().unwrap()),
                         Err(Error(abi::TIMED_OUT as i64))
@@ -53,11 +86,10 @@ pub(crate) fn run(mode: u64, env: Environment) -> u64 {
                 Handle::bootstrap(1).unwrap().send(b"gone").unwrap();
                 return 0;
             }
-            _ => panic!("unexpected attachment"),
         }
     }
 }
-fn wrong_reply((input, output): (Handle, Handle)) -> u64 {
+fn wrong_reply((input, output): (Handle, Handle), mode: u64) -> u64 {
     let mut bytes = [0; 64];
     let n = input.receive(&mut bytes).unwrap();
     assert_eq!(&bytes[..n], wire::OPEN);
@@ -81,9 +113,35 @@ fn wrong_reply((input, output): (Handle, Handle)) -> u64 {
         }
         assert_eq!(bell[0].wait(None), Ok(Wake::Signaled));
     };
-    let (id, payload) = wire::decode(&frame[..n]).unwrap();
-    let (wrong, n) = wire::encode(id + 1, payload).unwrap();
-    mailbox.try_send(&wrong[..n]).unwrap();
+    let (id, payload, _) = wire::decode(&frame[..n]).unwrap();
+    if mode == 55 {
+        let (wrong, n) = wire::encode(id + 1, payload, false).unwrap();
+        mailbox.try_send(&wrong[..n]).unwrap();
+    } else {
+        if mode != 60 {
+            let object = cathedral_user_runtime::memory::Private::allocate(1)
+                .unwrap()
+                .freeze()
+                .unwrap();
+            output
+                .send_memory(
+                    &(if mode == 62 || mode == 64 { id + 1 } else { id }).to_le_bytes(),
+                    &object,
+                )
+                .unwrap();
+        }
+        if mode != 61 {
+            let (frame, n) =
+                wire::encode(if mode == 64 { id + 1 } else { id }, payload, mode != 63).unwrap();
+            mailbox.try_send(&frame[..n]).unwrap();
+        }
+    }
     signal.signal(false).unwrap();
+    if (60..=64).contains(&mode) {
+        assert_eq!(
+            input.receive(&mut [0; 64]),
+            Err(Error(abi::PEER_CLOSED as i64))
+        );
+    }
     0
 }

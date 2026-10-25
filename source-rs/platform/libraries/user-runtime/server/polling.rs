@@ -27,9 +27,9 @@ impl Server {
             };
             if channel != 0 && self.shared_active(channel - 1) {
                 match self.shared_poll(channel - 1, pair) {
-                    Ok(Some(request)) => {
+                    Ok(Some(event)) => {
                         self.cursor = (channel + 1) % (self.count + 1);
-                        return Ok(Some(Event::Request(request)));
+                        return Ok(Some(event));
                     }
                     Ok(None) => continue,
                     Err(_) => {

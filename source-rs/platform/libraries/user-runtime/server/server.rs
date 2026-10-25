@@ -115,7 +115,7 @@ impl Server {
     }
     pub fn reply(&mut self, request: &Request, bytes: &[u8]) -> Result<(), Error> {
         if request.shared_id != 0 {
-            return self.shared_reply(request, bytes);
+            return self.shared_reply(request, bytes, None);
         }
         if !request.control && self.replies.is_some() {
             return self.retained_reply(request, bytes);
@@ -134,13 +134,13 @@ impl Server {
     /// Typed reply. Failure leaves the source object owned by the caller; the
     /// provider can send a small refusal if receiver funding prevents attachment.
     pub fn reply_memory(
-        &self,
+        &mut self,
         request: &Request,
         bytes: &[u8],
         object: &crate::memory::Object,
     ) -> Result<(), Error> {
         if request.shared_id != 0 {
-            return Err(Error(abi::DENIED as i64));
+            return self.shared_reply(request, bytes, Some(object));
         }
         request.reply.send_memory(bytes, object)
     }

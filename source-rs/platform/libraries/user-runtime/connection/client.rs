@@ -30,6 +30,7 @@ impl Client {
                 mailbox: Mailbox::new(writer, reader)?,
                 bell,
                 signal,
+                incoming: Incoming::default(),
             }),
             next: 1,
         })
@@ -37,18 +38,37 @@ impl Client {
     /// Any error after submission retires this connection; caller must reconcile
     /// possible service effects. A deadline never authorizes mutation replay.
     pub fn call(&mut self, bytes: &[u8], deadline: u64) -> Result<([u8; 64], usize), Error> {
-        self.exchange(bytes, Some(deadline))
+        self.plain(bytes, Some(deadline))
     }
     /// Retain the same request until a reply or terminal transport failure.
     /// Slow service work does not authorize a retry or disconnect.
     pub fn call_retained(&mut self, bytes: &[u8]) -> Result<([u8; 64], usize), Error> {
-        self.exchange(bytes, None)
+        self.plain(bytes, None)
+    }
+    /// Both directions may carry one immutable object. A successful reply owns
+    /// its installed read grant; dropping it releases that custody.
+    pub fn call_memory(
+        &mut self,
+        bytes: &[u8],
+        object: Option<&Object>,
+        deadline: u64,
+    ) -> Result<([u8; 64], usize, Option<Object>), Error> {
+        self.exchange(bytes, object, Some(deadline))
+    }
+    fn plain(&mut self, bytes: &[u8], deadline: Option<u64>) -> Result<([u8; 64], usize), Error> {
+        let (bytes, n, object) = self.exchange(bytes, None, deadline)?;
+        if object.is_some() {
+            self.retire();
+            return Err(Error(abi::IO_ERROR as i64));
+        }
+        Ok((bytes, n))
     }
     fn exchange(
         &mut self,
         bytes: &[u8],
+        object: Option<&Object>,
         deadline: Option<u64>,
-    ) -> Result<([u8; 64], usize), Error> {
+    ) -> Result<([u8; 64], usize, Option<Object>), Error> {
         if bytes.len() > 64 {
             return Err(Error(abi::INVALID_ARGUMENT as i64));
         }
@@ -56,14 +76,15 @@ impl Client {
         let result = (|| {
             self.next = id.checked_add(1).ok_or(Error(abi::IO_ERROR as i64))?;
             let peer = self.peer.as_mut().ok_or(Error(abi::PEER_CLOSED as i64))?;
-            peer.send(id, bytes)?;
+            peer.send(id, bytes, object)
+                .map_err(|failure| failure.error)?;
             let mut wake_error = None;
             loop {
-                if let Some((reply, bytes, n)) = peer.receive()? {
-                    if reply != id {
+                if let Some(reply) = peer.receive()? {
+                    if reply.id != id {
                         return Err(Error(abi::IO_ERROR as i64));
                     }
-                    return Ok((bytes, n));
+                    return Ok((reply.bytes, reply.len, reply.object));
                 }
                 if let Some(error) = wake_error {
                     return Err(error);

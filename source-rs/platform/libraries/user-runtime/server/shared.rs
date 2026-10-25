@@ -67,7 +67,7 @@ impl Server {
         &mut self,
         client: usize,
         pair: (Handle, Handle),
-    ) -> Result<Option<Request>, Error> {
+    ) -> Result<Option<Event>, Error> {
         let shared = self.shared.as_mut().unwrap();
         assert_eq!(shared.client, client);
         match &mut shared.state {
@@ -83,15 +83,20 @@ impl Server {
                     peer.check()?;
                     return Ok(None);
                 }
-                let Some((id, bytes, len)) = peer.receive()? else {
+                let Some(message) = peer.receive()? else {
                     return Ok(None);
                 };
+                let (id, bytes, len, object) =
+                    (message.id, message.bytes, message.len, message.object);
+                if object.is_some() && !self.memory {
+                    return Err(Error(abi::DENIED as i64));
+                }
                 if shared.last.checked_add(1) != Some(id) {
                     return Err(Error(abi::IO_ERROR as i64));
                 }
                 shared.last = id;
                 shared.pending = id;
-                Ok(Some(Request {
+                let request = Request {
                     bytes,
                     len,
                     control: false,
@@ -99,11 +104,20 @@ impl Server {
                     incarnation: pair.0.raw(),
                     reply: pair.1,
                     shared_id: id,
+                };
+                Ok(Some(match object {
+                    Some(object) => Event::Memory(request, object),
+                    None => Event::Request(request),
                 }))
             }
         }
     }
-    pub(super) fn shared_reply(&mut self, request: &Request, bytes: &[u8]) -> Result<(), Error> {
+    pub(super) fn shared_reply(
+        &mut self,
+        request: &Request,
+        bytes: &[u8],
+        object: Option<&crate::memory::Object>,
+    ) -> Result<(), Error> {
         if bytes.len() > 64 {
             return Err(Error(abi::INVALID_ARGUMENT as i64));
         }
@@ -123,9 +137,17 @@ impl Server {
         let State::Ready(peer) = &mut shared.state else {
             return Ok(());
         };
-        match peer.send(request.shared_id, bytes) {
+        match peer.send(request.shared_id, bytes, object) {
             Ok(()) => shared.pending = 0,
-            Err(_) => self.disconnect(client), // Never replay an ambiguously published reply.
+            // A refused grant published nothing. The provider still owns its
+            // object and may send a plain refusal on this exact request.
+            Err(failure) if object.is_some() && !failure.exposed => return Err(failure.error),
+            Err(failure) => {
+                self.disconnect(client);
+                if object.is_some() {
+                    return Err(failure.error);
+                }
+            }
         }
         Ok(())
     }
@@ -139,7 +161,8 @@ impl Server {
     pub(super) fn shared_deadline(&self) -> Option<u64> {
         match &self.shared.as_ref()?.state {
             State::Opening(accept) => Some(accept.deadline),
-            _ => None,
+            State::Ready(peer) => peer.deadline(),
+            State::Armed => None,
         }
     }
     pub(super) fn expire_shared(&mut self) -> Result<(), Error> {
