@@ -252,10 +252,11 @@ impl Parent {
         &mut self,
         request: Request,
         plan: LaunchRequest,
+        ticket: cathedral_stock_matrix::policy::operation::Ticket,
     ) -> Result<(), Error> {
         assert!(self.storage_pending.is_none());
         self.storage_pending = Some(Pending::launch(
-            LaunchOrigin::Caller(request),
+            LaunchOrigin::Caller(request, ticket),
             plan,
             self.upstream,
             self.storage_epoch != 0,

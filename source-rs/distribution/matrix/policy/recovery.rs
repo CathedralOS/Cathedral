@@ -1,23 +1,6 @@
 //! Omega commands/completions; Rust owns tickets and all IPC/image/task custody.
 //! Workflow entrance: source/distribution/matrix/recovery/main.omg.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub struct Ticket(u64);
-impl Ticket {
-    pub fn raw(self) -> u64 {
-        self.0
-    }
-}
-/// Process-local names are never recycled, including across launcher replacement.
-#[derive(Default)]
-pub struct Tickets {
-    last: u64,
-}
-impl Tickets {
-    pub fn issue(&mut self) -> Option<Ticket> {
-        self.last = self.last.checked_add(1)?;
-        Some(Ticket(self.last))
-    }
-}
+pub use super::operation::{Ticket, Tickets};
 pub struct State {
     words: [u64; 2],
 }
@@ -100,15 +83,4 @@ fn decide(state: [u64; 2], event: u64, facts: [u64; 3]) -> (u64, [u64; 2], u64) 
     p[2..5].copy_from_slice(&facts);
     let action = super::native::decide(&mut p);
     (action, [p[16], p[17]], p[24])
-}
-#[cfg(test)]
-mod ticket_tests {
-    use super::*;
-    #[test]
-    fn exhausted_ticket_space_never_wraps() {
-        let mut t = Tickets { last: u64::MAX - 1 };
-        assert_eq!(t.issue().unwrap().raw(), u64::MAX);
-        assert!(t.issue().is_none());
-        assert!(t.issue().is_none());
-    }
 }

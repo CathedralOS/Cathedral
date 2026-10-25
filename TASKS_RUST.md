@@ -1,5 +1,77 @@
 # Rust reference OS: tasks and handoff
 
+Implementation update 2026-10-24: **ordinary stored-program launch orchestration
+executes in Omega**, over `35537b05`. Artifact directory stamps below are UTC.
+
+Start at [the Omega launch entrance](source/distribution/matrix/launch/main.omg)
+and its [boundary guide](source/distribution/matrix/launch/README.md). The F5 path
+for app/user-matrix launches issues read, retire-picker, admit, bind, place,
+activate, publish and finish commands through Omega. Partial failure issues task
+rollback and, when needed, picker recovery. Rust dispatches those commands from
+[launch/launch.rs](source-rs/distribution/matrix/service/children/launch/launch.rs),
+with separate caller validation, custody and mechanism leaves. `mod.rs` remains
+plumbing. Ordinary child LAUNCH and owner RUN_OBJECT use the same workflow.
+
+The operation allocator is shared with launcher recovery and never recycles IDs.
+Completions must match both ticket and command. Rust retains the exact request,
+caller task/connection, parent storage identity when known, sealed image and
+admitted task. It rechecks authority/liveness before consequential steps. Relevant
+processed owner changes cancel pending work; queued owner commands precede
+admission. Replies/receipts cannot target a replacement caller. Rollback stops only
+the task this operation admitted. Retiring the login picker deliberately transfers
+its accepted selection to matrix custody, preserving the existing login flow.
+
+The read remains asynchronous, with sibling input/presentation progressing.
+Binding, admission, activation and publication still use synchronous Rust host
+mechanisms; explicit completions do not mean every step yields. Failed teardown
+is fatal to the matrix, never acknowledged as successful reclamation. This changes
+no kernel or public ABI and adds no owner semantics decision. One ordinary launch
+is retained per matrix, consistent with its existing serialized storage path.
+
+Verification:
+
+- Full-F5 nested launch fixtures pass fresh/cold: delayed completion
+  `desktop/20261025T053455332112Z`, owner revocation during read
+  `desktop/20261025T053528342571Z`, requester stop during read
+  `desktop/20261025T053602973451Z`, post-admission binding failure
+  `desktop/20261025T053633090462Z` and placement failure
+  `desktop/20261025T053716318014Z`.
+- Each fixture proves sibling Notes accepts input before read release, keeps its
+  draft, protects close, saves and cold-reopens. Cancellation admits no task;
+  injected post-admission failures reclaim it before publication. Revocation and
+  both failure cases then launch successfully in the same slot. All finally close
+  the subtree. Gates/owner probes/failures are disposable-profile features only.
+- Normal F5 fresh/cold desktop and storage oracle pass:
+  `desktop/20261025T053755848922Z`. Three-level nested desktops, recursive dirty
+  close, Notes/Omega Colors persistence and repeated subtree reclamation pass on
+  fresh/cold boots: `desktop/20261025T053839272304Z`.
+- All three nested startup faults (picker, selected user, background) pass using
+  that current-code nested disk, retaining an outer unsaved draft and preserving
+  the source image: `nested-failures/20261025T053938021113Z`.
+- All five root startup cases pass, including invalid/crashing Login and manual
+  retry with saved data intact: `startup/20261025T054007748870Z`. The existing
+  launcher recovery flow passes fresh/cold with repeated explicit retries and
+  preserved sibling drafts: `launcher-recovery/20261025T054042898919Z` (`recover`
+  mode; the other six launcher-specific modes were not rerun this turn).
+- Default host `cargo test --locked` passes. Twenty-three stock matrix tests run
+  the compiled Omega policies, including all role/storage launch combinations,
+  failures at each stage, rollback/picker obligations, wrong/duplicate completions,
+  cancellation and replacement. The first live pass also succeeded in all five
+  modes; final fixtures add explicit admission/publication trace assertions.
+- Stock matrix guest all-feature and host-test Clippy, desktop guest probe Clippy,
+  layout (73 Omega / 150 Rust edges), eight boundary tests, Rust format and diff
+  checks pass. Full kernel/ARM64 and unrelated runtime suites were not rerun.
+- Logs: `build/omega-component/launch-{host-checks,final-complete,final-revoke,
+  final-stop,final-bind,final-place,final-desktop,final-nested,final-nested-failures,
+  final-startup,final-recovery}.log`.
+
+**Next:** use these explicit stages to remove remaining blocking host exchanges
+from ordinary launch (start with storage binding/publication), preserving the same
+command/completion custody and rollback behavior. Then move more service-loop
+orchestration into Omega. Do not replace the live F5 service with the independent
+synchronous matrix lab. The earlier intermittent partial-key observation remains
+open; this work does not claim to resolve it.
+
 Implementation update 2026-10-24: **launcher recovery is a ticketed asynchronous
 Omega workflow**, over `8394d522`. Artifact directory stamps below are UTC.
 

@@ -69,7 +69,10 @@ pub(super) struct Children {
     held_loss: [bool; CHILDREN],
     loss: Option<loss::Survey>,
     launcher: Option<recovery::Launcher>,
-    recovery_tickets: cathedral_stock_matrix::policy::recovery::Tickets,
+    launching: Option<launch::Pending>,
+    #[cfg(any(feature = "launch-bind-failure", feature = "launch-place-failure"))]
+    launch_probe_used: bool,
+    operation_tickets: cathedral_stock_matrix::policy::operation::Tickets,
     fallback: Option<recovery::Fallback>,
     pub(in crate::service) observations: cathedral_matrix::world::launches::Launches<CHILDREN>,
     management: cathedral_matrix::world::management::Management<CHILDREN>,
@@ -169,7 +172,7 @@ impl Children {
             return Ok(true);
         }
         // A program from the realm is read first; the owner is answered when
-        // the child is admitted, from launch_object.
+        // the child is admitted, by the launch workflow.
         if routed == 0
             && let [
                 wire::RUN_OBJECT,
@@ -183,7 +186,11 @@ impl Children {
             ] = words
         {
             let slot = slot as usize;
-            if parent.storing() || self.slots[slot].is_some() || !server.available(slot) {
+            if self.launching.is_some()
+                || parent.storing()
+                || self.slots[slot].is_some()
+                || !server.available(slot)
+            {
                 server.reply(request, &wire::encode(wire::error(abi::BUSY)))?;
             } else if object == 0 {
                 server.reply(request, &wire::encode(wire::error(abi::INVALID_ARGUMENT)))?;
@@ -206,7 +213,7 @@ impl Children {
                         self.startup_recovery.owner_recovers = true;
                     }
                 }
-                parent.storage_launch(
+                self.begin_launch(
                     *request,
                     parent::LaunchRequest {
                         slot,
@@ -221,6 +228,8 @@ impl Children {
                         imports: self.allowed_imports[slot]
                             .unwrap_or(cathedral_platform_contracts::imports::ALL),
                     },
+                    parent,
+                    server,
                 )?;
             }
             return Ok(true);
@@ -420,6 +429,7 @@ impl Children {
                     world,
                 ),
                 [wire::STOP, slot @ 0..=LAST_CHILD, 0, 0, 0, 0, 0, 0] => {
+                    self.launch_owner_changed(words);
                     if slot == 0 {
                         self.launcher = None;
                     }
@@ -430,6 +440,7 @@ impl Children {
         };
         if result.is_ok() {
             self.recovery_owner_changed(words);
+            self.launch_owner_changed(words);
         }
         server.reply(
             request,

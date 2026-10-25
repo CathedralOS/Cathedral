@@ -23,7 +23,9 @@ pub(crate) fn run() -> u64 {
     let matrix = session.matrix;
     #[cfg(any(
         feature = "launcher-read-revoke-probe",
-        feature = "launcher-read-stop-probe"
+        feature = "launcher-read-stop-probe",
+        feature = "launch-read-stop-probe",
+        feature = "launch-read-revoke-probe"
     ))]
     let mut read_probe = read_probe::Probe::default();
     persistence::startup::begin(&mut session);
@@ -89,7 +91,9 @@ pub(crate) fn run() -> u64 {
         }
         #[cfg(any(
             feature = "launcher-read-revoke-probe",
-            feature = "launcher-read-stop-probe"
+            feature = "launcher-read-stop-probe",
+            feature = "launch-read-stop-probe",
+            feature = "launch-read-revoke-probe"
         ))]
         if session.user != 0 {
             read_probe.apply(matrix, session.extent[1]);

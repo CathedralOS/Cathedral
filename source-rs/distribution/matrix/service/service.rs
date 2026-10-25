@@ -130,7 +130,7 @@ pub fn run(environment: Environment) -> Result<(), Error> {
         if !parent.upstream_busy()
             && let Some(launched) = ready_launch.take()
         {
-            children.launch_object(launched, parent, world, &mut server)?;
+            children.complete_launch(launched)?;
         }
         parent.progress_presentation(world, &mut server)?;
         children.finish(&mut server, world, parent)?;
@@ -138,6 +138,9 @@ pub fn run(environment: Environment) -> Result<(), Error> {
             requests::flush(parent, world)?;
             parent.restore_input_capacity(world)?;
             parent.cursors(world)?;
+        }
+        if deferred.is_empty() && children.progress_launch(parent, world, &mut server)? {
+            continue;
         }
         if deferred.is_empty() && children.recover(parent, world, &mut server)? {
             continue;
@@ -165,7 +168,7 @@ pub fn run(environment: Environment) -> Result<(), Error> {
             count += 1;
             deadline = Some(until);
         }
-        #[cfg(feature = "recovery-delay")]
+        #[cfg(any(feature = "recovery-delay", feature = "launch-delay"))]
         if let Some(until) = parent.recovery_delay_deadline() {
             deadline = Some(deadline.map_or(until, |d| {
                 if cathedral_user_runtime::time::reached(d, until) {

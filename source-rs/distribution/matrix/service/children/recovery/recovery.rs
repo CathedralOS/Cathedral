@@ -110,7 +110,7 @@ impl Children {
             }
             Action::Fallback => self.show_fallback(parent, world, server),
             Action::Read => {
-                let Some(ticket) = self.recovery_tickets.issue() else {
+                let Some(ticket) = self.operation_tickets.issue() else {
                     launcher.policy.read_unavailable();
                     time::storage_sample("launcher-recovery-ticket-exhausted", &[]);
                     return Ok(true);

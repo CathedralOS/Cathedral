@@ -290,7 +290,7 @@ preserves customized executable bytes; the current UI does not offer role select
 
 [Workspace](service/children/workspace.rs) authenticates the current chrome endpoint
 before listing or selecting an instance. Tickets are local, monotonic and retired
-on exit. Ordinary apps cannot enumerate siblings. [Launch](service/children/launch.rs)
+on exit. Ordinary apps cannot enumerate siblings. [Launch](service/children/launch/launch.rs)
 chooses a free app slot and reads code through the requester's scoped realm.
 [Lifecycle](service/children/lifecycle.rs) asks LOSS before chrome-requested close,
 reclaims the exact process/subtree and selects a surviving app.

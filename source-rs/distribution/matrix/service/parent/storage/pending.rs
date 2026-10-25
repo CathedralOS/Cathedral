@@ -34,12 +34,11 @@ pub(in crate::service) struct LaunchRequest {
 /// Completion custody: an authenticated caller or the exact local recovery operation.
 #[derive(Clone, Copy)]
 pub(in crate::service) enum LaunchOrigin {
-    Caller(Request),
+    Caller(Request, cathedral_stock_matrix::policy::operation::Ticket),
     Recovery(cathedral_stock_matrix::policy::recovery::Ticket),
 }
 /// A completed program read, with its origin and sealed image or refusal.
 pub(in crate::service) struct Launched {
-    pub plan: LaunchRequest,
     pub origin: LaunchOrigin,
     pub result: Result<Object, u64>,
 }
@@ -70,7 +69,7 @@ pub(in crate::service::parent) struct Pending {
     resume: Option<Step>,
     /// A child's refusal, answered after the refresh; its attachment is gone.
     denied: Option<wire::Packet>,
-    #[cfg(feature = "recovery-delay")]
+    #[cfg(any(feature = "recovery-delay", feature = "launch-delay"))]
     hold_until: Option<u64>,
 }
 impl Pending {
@@ -120,7 +119,7 @@ impl Pending {
             refreshed: false,
             resume: None,
             denied: None,
-            #[cfg(feature = "recovery-delay")]
+            #[cfg(any(feature = "recovery-delay", feature = "launch-delay"))]
             hold_until: None,
         })
     }
@@ -135,7 +134,7 @@ impl Pending {
     ) -> Result<Self, Error> {
         Ok(Self {
             request: match origin {
-                LaunchOrigin::Caller(r) => Some(r),
+                LaunchOrigin::Caller(r, _) => Some(r),
                 LaunchOrigin::Recovery(_) => None,
             },
             words: [
@@ -164,9 +163,21 @@ impl Pending {
             refreshed: false,
             resume: None,
             denied: None,
-            #[cfg(feature = "recovery-delay")]
-            hold_until: if matches!(origin, LaunchOrigin::Recovery(_)) {
-                time::storage_sample("launcher-read-held", &[]);
+            #[cfg(any(feature = "recovery-delay", feature = "launch-delay"))]
+            hold_until: if (cfg!(feature = "recovery-delay")
+                && matches!(origin, LaunchOrigin::Recovery(_)))
+                || (cfg!(feature = "launch-delay")
+                    && matches!(origin, LaunchOrigin::Caller(_, _))
+                    && plan.slot == 2)
+            {
+                time::storage_sample(
+                    if matches!(origin, LaunchOrigin::Recovery(_)) {
+                        "launcher-read-held"
+                    } else {
+                        "launch-read-held"
+                    },
+                    &[],
+                );
                 Some(time::after(300)?)
             } else {
                 None
@@ -175,13 +186,13 @@ impl Pending {
     }
 }
 impl Parent {
-    #[cfg(feature = "recovery-delay")]
+    #[cfg(any(feature = "recovery-delay", feature = "launch-delay"))]
     pub(in crate::service) fn recovery_delay_deadline(&self) -> Option<u64> {
         self.storage_pending.as_ref().and_then(|p| p.hold_until)
     }
     pub(in crate::service) fn storage_wait(&self) -> Option<(Handle, u64)> {
         self.storage_pending.as_ref().and_then(|p| {
-            #[cfg(feature = "recovery-delay")]
+            #[cfg(any(feature = "recovery-delay", feature = "launch-delay"))]
             if p.hold_until.is_some() {
                 return None;
             }
@@ -217,7 +228,7 @@ impl Parent {
         let Some(mut p) = self.storage_pending.take() else {
             return Ok(None);
         };
-        #[cfg(feature = "recovery-delay")]
+        #[cfg(any(feature = "recovery-delay", feature = "launch-delay"))]
         if p.receive.is_some()
             && let Some(until) = p.hold_until
         {
@@ -226,7 +237,14 @@ impl Parent {
                 return Ok(None);
             }
             p.hold_until = None;
-            time::storage_sample("launcher-read-released", &[]);
+            time::storage_sample(
+                if matches!(p.launch, Some((_, LaunchOrigin::Recovery(_)))) {
+                    "launcher-read-released"
+                } else {
+                    "launch-read-released"
+                },
+                &[],
+            );
         }
         let mut reply: Option<(wire::Packet, Option<Object>)> = None;
         if let Some(receive) = p.receive {
@@ -324,7 +342,7 @@ impl Parent {
             self.storage_pending = Some(p);
             return Ok(None);
         };
-        if let Some((plan, origin)) = p.launch {
+        if let Some((_, origin)) = p.launch {
             let result = match (words[0], object) {
                 (0, Some(object)) => Ok(object),
                 (0, None) => Err(abi::IO_ERROR),
@@ -333,11 +351,7 @@ impl Parent {
                     Err(status)
                 }
             };
-            return Ok(Some(Launched {
-                plan,
-                origin,
-                result,
-            }));
+            return Ok(Some(Launched { origin, result }));
         }
         let request = p.request.expect("forwarded storage request");
         #[cfg(feature = "trace-storage")]

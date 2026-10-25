@@ -3,12 +3,13 @@ use configuration::main;
 use lifecycle::main;
 use recovery::main;
 use startup::main;
+use launch::main;
 public boundary trait Policy { machine decide(p: &mut [u64; 128]) -> u64; }
 public PolicyProvider satisfies Policy {
     machine decide(p: &mut [u64; 128]) -> u64 { choose(p) }
 }
 public machine choose(p: &mut [u64; 128]) -> u64 {
-    transition p[0] { 1u64 -> decision(p) 2u64 -> decision(p) 9u64 -> recovery_decision(p) 10u64 -> startup_decision(p) _ -> lifecycle_decision(p) }
+    transition p[0] { 1u64 -> decision(p) 2u64 -> decision(p) 9u64 -> recovery_decision(p) 10u64 -> startup_decision(p) 11u64 -> launch_decision(p) _ -> lifecycle_decision(p) }
 }
 public machine policy_entry() reaches Policy invokes Policy; {
     let mut p: [u64; 128]; let result: u64 = Policy::decide(&mut p);

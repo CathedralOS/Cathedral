@@ -39,7 +39,7 @@ impl Children {
         }
         self.recover_startup(parent, world, server)?;
         // A selected user's admission and picker retirement are sequenced in
-        // children/launch.rs, before that user's first placement is published.
+        // children/launch/launch.rs, before that user's first placement is published.
         Ok(())
     }
     /// Read the realm's shape through this matrix's own binding, from one

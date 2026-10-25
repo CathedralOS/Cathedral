@@ -68,6 +68,7 @@ pub(super) fn dispatch(
             };
             if response[0] == 0 {
                 children.recovery_owner_changed(words);
+                children.launch_owner_changed(words);
                 children.management_owner_changed(words);
                 match words {
                     [wire::REVOKE, slot @ 0..=LAST_CHILD, 0, 0, 0, 0, 0, 0] => {
@@ -121,7 +122,7 @@ pub(super) fn dispatch(
             wire::error(abi::DENIED)
         }
         // A child asks for a sibling, or for its sibling to go; both are
-        // answered later, from launch_object or the forwarded loss query.
+        // answered later, by the launch workflow or the forwarded loss query.
         Some([wire::LAUNCH, object, withhold, 0, 0, 0, 0, 0]) if request.client.is_some() => {
             return children.launch(request, object, withhold, parent, world, server);
         }

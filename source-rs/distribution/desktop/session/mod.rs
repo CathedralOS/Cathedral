@@ -5,7 +5,9 @@ pub(crate) mod admission;
 pub(crate) mod persistence;
 #[cfg(any(
     feature = "launcher-read-revoke-probe",
-    feature = "launcher-read-stop-probe"
+    feature = "launcher-read-stop-probe",
+    feature = "launch-read-stop-probe",
+    feature = "launch-read-revoke-probe"
 ))]
 mod read_probe;
 #[cfg(any(

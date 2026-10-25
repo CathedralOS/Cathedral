@@ -99,6 +99,8 @@ Bounded launcher retries and the ticketed read/wait/admit workflow execute
 [Omega recovery policy](../../source/distribution/matrix/recovery/README.md).
 Local picker/background retry budgets execute
 [Omega startup policy](../../source/distribution/matrix/startup/README.md).
+Ordinary stored-program launch sequencing and rollback execute
+[Omega launch workflow](../../source/distribution/matrix/launch/README.md).
 Authenticated IPC custody, stale reply draining and task reclamation stay in Rust.
 The Rust data representation remains
 for installer/tools and independent conformance checks. Its extension contract lives beside it in

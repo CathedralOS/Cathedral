@@ -1,0 +1,1 @@
+machine build(builder: &mut Build) { Build::package(builder, "cathedral_matrix_launch"); }
