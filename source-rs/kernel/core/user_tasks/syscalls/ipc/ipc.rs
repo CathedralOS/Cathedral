@@ -36,6 +36,7 @@ pub(in crate::user_tasks) fn dispatch(
             },
         ),
         abi::IPC_RECEIVE_CAP
+        | abi::IPC_TRY_RECEIVE_CAP
         | abi::IPC_RECEIVE_MEMORY
         | abi::IPC_TRY_RECEIVE_MEMORY
         | abi::IPC_RECEIVE_SHARED => {
@@ -51,6 +52,8 @@ pub(in crate::user_tasks) fn dispatch(
                     abi::MAX_MESSAGE as u64,
                     if number == abi::IPC_RECEIVE_SHARED {
                         ReceiveMode::Shared
+                    } else if number == abi::IPC_TRY_RECEIVE_CAP {
+                        ReceiveMode::TryEndpoint
                     } else if number == abi::IPC_RECEIVE_CAP {
                         ReceiveMode::Endpoint
                     } else if number == abi::IPC_TRY_RECEIVE_MEMORY {

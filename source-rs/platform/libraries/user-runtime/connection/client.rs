@@ -127,6 +127,16 @@ impl<const WIDTH: usize> Pipeline<WIDTH> {
     }
     /// Replies may complete out of order, but must match an outstanding ID once.
     pub fn poll_reply(&mut self) -> Result<Option<(u64, Response)>, Error> {
+        let Some(reply) = self.poll_message()? else {
+            return Ok(None);
+        };
+        if reply.endpoint.is_some() {
+            self.retire();
+            return Err(Error(abi::IO_ERROR as i64));
+        }
+        Ok(Some((reply.id, (reply.bytes, reply.len, reply.object))))
+    }
+    fn poll_message(&mut self) -> Result<Option<Message>, Error> {
         if !self.pending() {
             return Err(Error(abi::INVALID_ARGUMENT as i64));
         }
@@ -143,7 +153,7 @@ impl<const WIDTH: usize> Pipeline<WIDTH> {
                 .position(|id| *id == reply.id)
                 .ok_or(Error(abi::IO_ERROR as i64))?;
             self.pending[slot] = 0;
-            Ok(Some((reply.id, (reply.bytes, reply.len, reply.object))))
+            Ok(Some(reply))
         })();
         if result.is_err() {
             self.retire();
@@ -178,11 +188,37 @@ impl<const WIDTH: usize> Pipeline<WIDTH> {
         object: Option<&Object>,
         deadline: Option<u64>,
     ) -> Result<Response, Error> {
+        let reply = self.exchange_message(bytes, object, deadline)?;
+        if reply.endpoint.is_some() {
+            self.retire();
+            return Err(Error(abi::IO_ERROR as i64));
+        }
+        Ok((reply.bytes, reply.len, reply.object))
+    }
+    /// Accept endpoint custody explicitly. Application payload stays in shared
+    /// backing; an unclaimed or rejected endpoint is released by its guard.
+    pub fn call_retained_endpoint(
+        &mut self,
+        bytes: &[u8],
+    ) -> Result<([u8; 64], usize, Option<Endpoint>), Error> {
+        let reply = self.exchange_message(bytes, None, None)?;
+        if reply.object.is_some() {
+            self.retire();
+            return Err(Error(abi::IO_ERROR as i64));
+        }
+        Ok((reply.bytes, reply.len, reply.endpoint))
+    }
+    fn exchange_message(
+        &mut self,
+        bytes: &[u8],
+        object: Option<&Object>,
+        deadline: Option<u64>,
+    ) -> Result<Message, Error> {
         self.begin(bytes, object)?;
         let result = (|| {
             let mut wake_error = None;
             loop {
-                if let Some(reply) = self.poll()? {
+                if let Some(reply) = self.poll_message()? {
                     return Ok(reply);
                 }
                 if let Some(error) = wake_error {

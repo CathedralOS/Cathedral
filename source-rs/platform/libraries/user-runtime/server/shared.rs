@@ -186,6 +186,11 @@ impl Server {
                 let Some(message) = peer.receive()? else {
                     return Ok(None);
                 };
+                // This server dispatch API accepts bytes and immutable images.
+                // Endpoint custody is currently an explicit client-reply operation.
+                if message.endpoint.is_some() {
+                    return Err(Error(abi::DENIED as i64));
+                }
                 let (id, bytes, len, object) =
                     (message.id, message.bytes, message.len, message.object);
                 if object.is_some() && !self.memory {
@@ -284,6 +289,52 @@ impl Server {
             }
         }
         Ok(())
+    }
+    /// Err means the endpoint never left the caller. Once grant publication
+    /// commits, even a later transport failure consumes custody and returns Ok.
+    pub(super) fn shared_endpoint(
+        &mut self,
+        request: &Request,
+        bytes: &[u8],
+        endpoint: Handle,
+    ) -> Result<(), Error> {
+        let channel = if request.control {
+            0
+        } else {
+            request.client.ok_or(Error(abi::DENIED as i64))? + 1
+        };
+        let current = if channel == 0 {
+            Some(self.control.0.raw())
+        } else {
+            self.incarnation(channel - 1)
+        };
+        if current != Some(request.incarnation) {
+            return Err(Error(abi::PEER_CLOSED as i64));
+        }
+        let shared = self.shared[channel]
+            .as_mut()
+            .filter(|s| s.pending.contains(&request.shared_id))
+            .ok_or(Error(abi::PEER_CLOSED as i64))?;
+        let State::Ready(peer) = &mut shared.state else {
+            return Err(Error(abi::PEER_CLOSED as i64));
+        };
+        match peer.send_endpoint(request.shared_id, bytes, endpoint) {
+            Ok(()) => {
+                *shared
+                    .pending
+                    .iter_mut()
+                    .find(|id| **id == request.shared_id)
+                    .unwrap() = 0;
+                Ok(())
+            }
+            Err(failure) if !failure.exposed => Err(failure.error),
+            Err(_) => {
+                // Closing the connection releases queued escrow. A receiver may
+                // already have accepted it; transport failure cannot undo that.
+                let _ = self.retire_shared(channel);
+                Ok(())
+            }
+        }
     }
     pub(super) fn shared_wake(&self, channel: usize) -> Option<Notification> {
         let shared = self.shared[channel].as_ref()?;

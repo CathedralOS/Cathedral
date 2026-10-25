@@ -32,9 +32,8 @@ pub(super) fn syscall(session: &mut Session, slot: usize, now: u64) -> Event {
         | abi::IPC_BUDGET
         | abi::IPC_SEND_SHARED
         | abi::IPC_RECEIVE_SHARED
-        | abi::IPC_SEND_MEMORY..=abi::IPC_TRY_RECEIVE_MEMORY => {
-            ipc::dispatch(session, slot, call, now, &mut event)
-        }
+        | abi::IPC_SEND_MEMORY..=abi::IPC_TRY_RECEIVE_MEMORY
+        | abi::IPC_TRY_RECEIVE_CAP => ipc::dispatch(session, slot, call, now, &mut event),
         abi::DEVICE_HANDLE..=abi::DEVICE_RELEASE
         | abi::KEYBOARD_READ
         | abi::INPUT_VIRTUAL_POINTER

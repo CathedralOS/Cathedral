@@ -162,16 +162,17 @@ impl Server {
 }
 
 impl Server {
-    /// Move a retained endpoint in a reply. Unlike copied replies, errors must not
-    /// be swallowed: the caller releases custody only after successful transfer.
+    /// Move a retained endpoint in a reply. Err preserves the caller's right.
+    /// Ok consumes it, including shared failure after the grant was published;
+    /// this is transfer custody, not proof that the receiver used the endpoint.
     pub fn reply_endpoint(
-        &self,
+        &mut self,
         request: &Request,
         bytes: &[u8],
         endpoint: Handle,
     ) -> Result<(), Error> {
         if request.shared_id != 0 {
-            return Err(Error(abi::DENIED as i64));
+            return self.shared_endpoint(request, bytes, endpoint);
         }
         request.reply.send_with(bytes, endpoint)
     }

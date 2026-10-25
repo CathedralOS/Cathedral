@@ -1,4 +1,4 @@
-//! Join one private frame snapshot and one typed immutable grant. Neither half
+//! Join one private frame snapshot and one typed grant. Neither half
 //! alone authorizes dispatch; mismatches fail closed and Drop releases retained custody.
 use super::*;
 pub(crate) struct Message {
@@ -6,17 +6,30 @@ pub(crate) struct Message {
     pub bytes: [u8; 64],
     pub len: usize,
     pub object: Option<Object>,
+    pub endpoint: Option<Endpoint>,
 }
 struct Frame {
     id: u64,
     bytes: [u8; 64],
     len: usize,
-    memory: bool,
+    attachment: wire::Attachment,
+}
+enum Grant {
+    Memory(Object),
+    Endpoint(Endpoint),
+}
+impl Grant {
+    fn kind(&self) -> wire::Attachment {
+        match self {
+            Self::Memory(_) => wire::Attachment::Memory,
+            Self::Endpoint(_) => wire::Attachment::Endpoint,
+        }
+    }
 }
 #[derive(Default)]
 pub(super) struct Incoming {
     frame: Option<Frame>,
-    grant: Option<(u64, Object)>,
+    grant: Option<(u64, Grant)>,
     pub deadline: Option<u64>,
 }
 impl Incoming {
@@ -36,14 +49,21 @@ impl Incoming {
     }
     pub fn transfer(&mut self, input: Handle) -> Result<(), Error> {
         let mut bytes = [0; 64];
-        match input.try_receive_memory(&mut bytes) {
-            Ok((n, object)) => {
-                let object = object.ok_or(Error(abi::IO_ERROR as i64))?;
+        let received = match input.try_receive_memory(&mut bytes) {
+            Ok((n, object)) => Ok((n, object.map(Grant::Memory))),
+            Err(Error(c)) if c == abi::TOO_SMALL as i64 => input
+                .try_receive_with(&mut bytes)
+                .map(|(n, endpoint)| (n, endpoint.map(|h| Grant::Endpoint(Endpoint::received(h))))),
+            Err(error) => Err(error),
+        };
+        match received {
+            Ok((n, grant)) => {
+                let grant = grant.ok_or(Error(abi::IO_ERROR as i64))?;
                 let id = wire::grant_id(&bytes[..n]).ok_or(Error(abi::IO_ERROR as i64))?;
                 if self.grant.is_some() {
                     return Err(Error(abi::IO_ERROR as i64));
                 }
-                self.grant = Some((id, object));
+                self.grant = Some((id, grant));
                 self.arm()?;
                 Ok(())
             }
@@ -61,7 +81,7 @@ impl Incoming {
         if self.frame.is_none() {
             let mut frame = [0; wire::FRAME_BYTES];
             if let Some(n) = mailbox.try_receive(&mut frame)? {
-                let (id, payload, memory) =
+                let (id, payload, attachment) =
                     wire::decode(&frame[..n]).ok_or(Error(abi::IO_ERROR as i64))?;
                 let mut bytes = [0; 64];
                 bytes[..payload.len()].copy_from_slice(payload);
@@ -69,7 +89,7 @@ impl Incoming {
                     id,
                     bytes,
                     len: payload.len(),
-                    memory,
+                    attachment,
                 });
                 self.arm()?;
             }
@@ -78,19 +98,24 @@ impl Incoming {
             if self
                 .grant
                 .as_ref()
-                .is_some_and(|(id, _)| !frame.memory || *id != frame.id)
+                .is_some_and(|(id, grant)| grant.kind() != frame.attachment || *id != frame.id)
             {
                 return Err(Error(abi::IO_ERROR as i64));
             }
-            if !frame.memory || self.grant.is_some() {
+            if frame.attachment == wire::Attachment::None || self.grant.is_some() {
                 let frame = self.frame.take().unwrap();
-                let object = self.grant.take().map(|(_, o)| o);
+                let (object, endpoint) = match self.grant.take() {
+                    None => (None, None),
+                    Some((_, Grant::Memory(object))) => (Some(object), None),
+                    Some((_, Grant::Endpoint(endpoint))) => (None, Some(endpoint)),
+                };
                 self.deadline = None;
                 return Ok(Some(Message {
                     id: frame.id,
                     bytes: frame.bytes,
                     len: frame.len,
                     object,
+                    endpoint,
                 }));
             }
         }

@@ -26,8 +26,8 @@ private-root provider connections. See the evidence below. Remaining acceptance:
 - Continue the shared service migration through Omega leaf and Split
   interaction/rendering and the remaining service clients. Independently selected control/data streams
   now multiplex; immutable attachments execute through ordinary display and
-  storage, including nested stock matrices, Omega leaves and Split. Endpoint
-  custody remains open. Preserve
+  storage, including nested stock matrices, Omega leaves and Split. Shared endpoint
+  replies now retain custody; migration into the service broker remains open. Preserve
   mapping isolation, hostile-writer validation and live-reader lifetime; waking
   proves none of them.
 - Demonstrate real cross-process ping-pong, including early reply/next-request,
@@ -168,6 +168,70 @@ the refusal control or assume realm encryption already implements it. No encrypt
 implementation is claimed by this docs change.
 
 ## Current implementation evidence
+
+Implementation update 2026-10-25: **shared endpoint-reply custody**, over `ab24fa34`.
+
+The next consumer migration exposed a dependency: the service broker and app
+interaction use the same connection, and lazy acquisition transfers endpoint
+rights. Replacing drawing calls alone would break later storage/producer/capture
+acquisition. The prerequisite now exists in the shared transport; Omega app and
+Split interaction have not switched yet.
+
+The [v3 frame](source-rs/platform/contracts/connection.rs) declares its exact
+attachment kind. The [incoming join](source-rs/platform/libraries/user-runtime/connection/incoming.rs)
+requires matching frame/grant IDs and kinds, retains one half of each, and expires
+incomplete custody. New `IPC_TRY_RECEIVE_CAP` exposes the existing kernel endpoint
+validation/installation path without parking. It does not add a service registry,
+change endpoint authority, or move distribution policy into the kernel.
+
+`Client::call_retained_endpoint` returns an owned guard; unclaimed/rejected rights
+close on Drop. Explicit `into_handle` transfers custody to app code. Memory/plain
+client operations reject endpoints. Service request dispatch still accepts only
+bytes/immutable memory; moved endpoint requests are rejected and released.
+`Server::reply_endpoint` now supports shared requests. Err guarantees the right
+never left its source. Once handoff publishes, even a later signal/publication
+failure consumes custody; Ok means that move committed, not delivery or use.
+An already accepted right is not revoked by later connection closure. Stale
+requests cannot consume a fresh endpoint. The server never silently queues borrowed
+endpoints. See the [transport contract/evidence](source-rs/platform/libraries/user-runtime/connection/README.md#moved-endpoint-replies).
+
+Verification:
+
+- The x86-64 IPC guest passes 16 repeated move/use/drop rounds, plain replies,
+  stale/duplicate reply refusal preserving a fresh right, unknown grant IDs,
+  wrong attachment kinds, orphan expiry, frame-first arrival, plain-client
+  rejection, peer death and exact final logical/physical refunds.
+- A full response mailbox refuses an endpoint before handoff; the sender then
+  uses and closes that same right and queues a plain refusal. A closed notification
+  target forces failure after handoff; the sender's old handle is invalid and the
+  receiver can still accept and use the committed right. Both cases refund fully.
+  Bad output addresses/reserved syscall fields preserve the queued grant.
+- ARM64 release portability passes the nonblocking endpoint probe through SVC,
+  wrong-direction denial, incompatible receive preservation, moved-right use and
+  exact final accounting. Its report now includes the two extra client messages;
+  the first run reached the probe but failed the obsolete 35-message expectation.
+- Normal F5 fresh/cold passes three Notes, draft protection, save/close/reuse,
+  Notes/Colors persistence and the exact disk oracle
+  (`desktop/20261025T214445035554Z`).
+- Notes lost-reply recovery passes exact text/history/quota and cold restoration
+  (`matrix-database/20261025T214553575274Z`). The instrumented provider still fits
+  at 239/240 image pages; no cap increase was needed.
+- Three nested desktops pass held input/images/presentation, input before held
+  rendering completes, protected close, isolated saves, repeated collection and
+  cold reopening (`desktop/20261025T214632641396Z`).
+- Host policy tests, userspace and all-feature matrix/channels Clippy, UEFI/core
+  Clippy, source-layout, formatting, whitespace and changed Markdown links pass.
+
+Logs: `build/omega-component/custody-{ipc-final,arm64-final,desktop,recovery,nested,
+host,check-final,features,kernel-final,layout,format-check}.log`. The shared endpoint
+protocol tests are x86-64 evidence; ARM64 exercises the new kernel/runtime syscall
+and its existing portability suite, not the complete endpoint-reply protocol.
+
+**Next:** put service acquisition and interaction on one retained shared broker
+client, preserving lazy optional services and endpoint failure semantics. Then
+migrate Omega app exchanges and independent Split through that owner. Funding,
+ordinary F5, nested interaction, cancellation and persistent state remain required
+consumer evidence; these transport cases do not substitute for it.
 
 Implementation update 2026-10-25: **recursive stock interaction uses shared IPC**,
 over `d9d91e6c`.

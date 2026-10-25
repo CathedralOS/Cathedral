@@ -1,5 +1,22 @@
 //! Owned setup/connection resources release in ordinary failure and Drop paths.
 use super::*;
+/// An installed endpoint held until the caller accepts custody explicitly.
+pub struct Endpoint(Option<Handle>);
+impl Endpoint {
+    pub(crate) fn received(handle: Handle) -> Self {
+        Self(Some(handle))
+    }
+    pub fn into_handle(mut self) -> Handle {
+        self.0.take().unwrap()
+    }
+}
+impl Drop for Endpoint {
+    fn drop(&mut self) {
+        if let Some(handle) = self.0.take() {
+            let _ = handle.close();
+        }
+    }
+}
 pub(super) struct Lease(pub Pair);
 impl Drop for Lease {
     fn drop(&mut self) {

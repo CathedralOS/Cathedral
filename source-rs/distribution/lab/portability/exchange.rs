@@ -23,6 +23,7 @@ pub(super) fn client() -> u64 {
     let output = Handle::bootstrap(0).unwrap();
     let input = Handle::bootstrap(1).unwrap();
     crate::notifications::client(input, output);
+    endpoint_probe();
     assert_eq!(
         Handle::from_raw(0).send(b"invalid"),
         Err(Error(abi::BAD_HANDLE as i64))
@@ -41,4 +42,29 @@ pub(super) fn client() -> u64 {
     output.close().unwrap();
     assert_eq!(output.send(b"stale"), Err(Error(abi::BAD_HANDLE as i64)));
     0
+}
+
+// Exercise nonblocking endpoint reception through the architecture's syscall
+// entry, including typed refusal without consuming the offered capability.
+fn endpoint_probe() {
+    use cathedral_user_runtime::ipc;
+    let (send, receive) = ipc::channel().unwrap();
+    let (offered, peer) = ipc::channel().unwrap();
+    assert!(
+        matches!(receive.try_receive_with(&mut [0;64]), Err(Error(c)) if c == abi::WOULD_BLOCK as i64)
+    );
+    assert!(matches!(send.try_receive_with(&mut [0;64]), Err(Error(c)) if c == abi::DENIED as i64));
+    send.send_with(b"endpoint", offered).unwrap();
+    assert!(
+        matches!(receive.try_receive_memory(&mut [0;64]), Err(Error(c)) if c == abi::TOO_SMALL as i64)
+    );
+    let (_, endpoint) = receive.try_receive_with(&mut [0; 64]).unwrap();
+    let endpoint = endpoint.unwrap();
+    endpoint.send(b"proof").unwrap();
+    assert_eq!(peer.receive(&mut [0; 64]).unwrap(), 5);
+    for handle in [send, receive, endpoint, peer] {
+        handle.close().unwrap();
+    }
+    cathedral_user_runtime::write(b"Cathedral ARM64: nonblocking endpoint custody passed\n")
+        .unwrap();
 }

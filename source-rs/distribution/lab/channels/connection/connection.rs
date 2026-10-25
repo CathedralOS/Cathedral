@@ -109,6 +109,7 @@ pub(super) fn run() {
     replacement::run(launch);
     pipeline::run(launch);
     capacity::run(launch);
+    endpoints::run(launch);
     resources::assign(
         launch,
         Limits {

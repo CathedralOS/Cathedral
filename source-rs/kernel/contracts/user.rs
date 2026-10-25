@@ -222,3 +222,6 @@ pub const MEMORY_MAP_SHARED: u64 = 83;
 /// Typed setup handoff; cannot enter immutable-image receive paths.
 pub const IPC_SEND_SHARED: u64 = 84;
 pub const IPC_RECEIVE_SHARED: u64 = 85;
+
+/// Nonblocking typed endpoint receive; same packet ABI and validation as RECEIVE_CAP.
+pub const IPC_TRY_RECEIVE_CAP: u64 = 86;

@@ -7,6 +7,7 @@ use cathedral_kernel_contracts::user as abi;
 pub(super) enum ReceiveMode {
     Bytes,
     Endpoint,
+    TryEndpoint,
     Memory,
     TryMemory,
     Shared,
@@ -49,7 +50,10 @@ pub(super) fn receive_call(
     if let Some(length) = receive(session, slot, wait)? {
         return Ok(length);
     }
-    if attachment == ReceiveMode::TryMemory {
+    if matches!(
+        attachment,
+        ReceiveMode::TryMemory | ReceiveMode::TryEndpoint
+    ) {
         return Err(abi::WOULD_BLOCK);
     }
     if crate::user_tasks::time::timed_out(now, deadline, false) {
@@ -122,9 +126,12 @@ fn receive(session: &mut Session, slot: usize, wait: Receive) -> Result<Option<u
     } else if matches!(attachment, ReceiveMode::Memory | ReceiveMode::TryMemory) {
         session.ipc.receive_memory(slot, handle, capacity)?
     } else {
-        session
-            .ipc
-            .receive_cap(slot, handle, capacity, attachment == ReceiveMode::Endpoint)?
+        session.ipc.receive_cap(
+            slot,
+            handle,
+            capacity,
+            matches!(attachment, ReceiveMode::Endpoint | ReceiveMode::TryEndpoint),
+        )?
     };
     let Some(message) = message else {
         return Ok(None);

@@ -20,11 +20,13 @@ pub(super) fn exchange(
     for round in 0..2 {
         let programs = [program(0, 0), program(1, 0)];
         let reports = run(memory, &programs, &endpoints, usize::MAX).unwrap();
-        for report in &reports {
+        for (index, report) in reports.iter().enumerate() {
             assert_eq!(report.exit, Some(Exit::Returned(0)));
-            // One shared-view and two notification introductions precede the 32 copied echoes.
-            assert_eq!(report.ipc_sent, 35);
-            assert_eq!(report.ipc_received, 35);
+            // One shared-view and two notification introductions precede the
+            // 32 echoes. The client also moves a local endpoint and uses it once.
+            let messages = if index == 1 { 37 } else { 35 };
+            assert_eq!(report.ipc_sent, messages);
+            assert_eq!(report.ipc_received, messages);
         }
         assert!(reports.iter().any(|r| r.receives_blocked > 0));
         admission = reports.iter().map(|r| r.frames).sum();

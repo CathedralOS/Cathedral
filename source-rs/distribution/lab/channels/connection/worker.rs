@@ -7,6 +7,15 @@ use cathedral_user_runtime::{
 };
 pub(crate) fn run(mode: u64, env: Environment) -> u64 {
     let pair = (env.endpoint(0).unwrap(), env.endpoint(1).unwrap());
+    if mode >= 87 {
+        return super::endpoints::worker(mode, env);
+    }
+    if mode >= 80 {
+        return wrong_reply(pair, mode);
+    }
+    if mode == 79 {
+        return super::endpoints::worker(mode, env);
+    }
     if mode == 78 {
         return super::replacement::worker(mode, env);
     }
@@ -135,8 +144,53 @@ fn wrong_reply((input, output): (Handle, Handle), mode: u64) -> u64 {
         assert_eq!(bell[0].wait(None), Ok(Wake::Signaled));
     };
     let (id, payload, _) = wire::decode(&frame[..n]).unwrap();
+    if mode >= 80 {
+        let (send, recv) = ipc::channel().unwrap();
+        let kind = if mode == 83 {
+            wire::Attachment::Memory
+        } else {
+            wire::Attachment::Endpoint
+        };
+        let (frame, n) = wire::encode(id, payload, kind).unwrap();
+        if mode == 85 {
+            mailbox.try_send(&frame[..n]).unwrap();
+            signal.signal(false).unwrap();
+            assert_eq!(
+                event::wait(&[], time::after(2).unwrap()),
+                Err(Error(abi::TIMED_OUT as i64))
+            );
+        }
+        if mode != 82 {
+            output
+                .send_with(&(if mode == 80 { id + 1 } else { id }).to_le_bytes(), send)
+                .unwrap();
+        }
+        if mode == 86 {
+            return 0;
+        }
+        if !matches!(mode, 81 | 85) {
+            mailbox.try_send(&frame[..n]).unwrap();
+        }
+        signal.signal(false).unwrap();
+        if mode == 85 {
+            let n = recv.receive(&mut bytes).unwrap();
+            assert_eq!(&bytes[..n], b"proof");
+        }
+        assert_eq!(
+            input.receive(&mut bytes),
+            Err(Error(abi::PEER_CLOSED as i64))
+        );
+        if mode == 82 {
+            send.close().unwrap();
+        }
+        assert_eq!(
+            recv.receive(&mut bytes),
+            Err(Error(abi::PEER_CLOSED as i64))
+        );
+        return 0;
+    }
     if mode == 55 {
-        let (wrong, n) = wire::encode(id + 1, payload, false).unwrap();
+        let (wrong, n) = wire::encode(id + 1, payload, wire::Attachment::None).unwrap();
         mailbox.try_send(&wrong[..n]).unwrap();
     } else {
         if mode != 60 {
@@ -152,8 +206,16 @@ fn wrong_reply((input, output): (Handle, Handle), mode: u64) -> u64 {
                 .unwrap();
         }
         if mode != 61 {
-            let (frame, n) =
-                wire::encode(if mode == 64 { id + 1 } else { id }, payload, mode != 63).unwrap();
+            let (frame, n) = wire::encode(
+                if mode == 64 { id + 1 } else { id },
+                payload,
+                if mode != 63 {
+                    wire::Attachment::Memory
+                } else {
+                    wire::Attachment::None
+                },
+            )
+            .unwrap();
             mailbox.try_send(&frame[..n]).unwrap();
         }
     }

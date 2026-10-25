@@ -2,6 +2,8 @@ mod adversarial;
 mod attachments;
 mod capacity;
 mod control;
+mod endpoint_faults;
+mod endpoints;
 mod multiplex;
 mod pipeline;
 mod replacement;

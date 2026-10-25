@@ -3,7 +3,10 @@
 This backend runs on one QEMU `virt` Cortex-A57 with GICv2, 128 MiB RAM and
 EDK2's AArch64 UEFI firmware. It proves that firmware handoff, frame/heap policy,
 ELF admission, scheduling, IPC, supervision and page-object lifetime can share
-the existing core. It is not an ARM desktop or a general ARM board port.
+the existing core. Its exchange fixture also exercises nonblocking endpoint
+reception through SVC: empty queue, denied direction, incompatible typed receive
+without dequeue, moved-right use and final reclamation. It is not an ARM desktop
+or a general ARM board port.
 
 From the repository root:
 

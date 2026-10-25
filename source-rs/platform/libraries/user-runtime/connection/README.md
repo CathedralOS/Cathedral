@@ -48,8 +48,9 @@ Each frame contains a nonzero, monotonically increasing request ID and at most
 `Pipeline<N>` retains up to four, with exact reply correlation;
 IDs do not confer authority. The server retains the original connection incarnation
 in `Request`, so a delayed reply cannot target its replacement. Duplicate, skipped
-or exhausted IDs retire the stream. The experimental v2 frame also declares whether
-one immutable object accompanies it. Endpoint attachments are not implemented.
+or exhausted IDs retire the stream. The experimental v3 frame declares no grant,
+one immutable object, or one moved endpoint. Setup uses matching v3 identifiers;
+there is no implicit negotiation with an older frame format.
 
 Publish before signalling. Drain the old hint before inspecting the mailbox, then
 park on both notification readiness and the incoming endpoint's lifetime. Recheck
@@ -152,6 +153,44 @@ dropping partial ingress releases queued/installed custody; independently held
 objects remain valid through sender death until their recipients release them.
 Plain Client calls reject unexpected attachments instead of silently losing them.
 
+## Moved endpoint replies
+
+`Client::call_retained_endpoint` explicitly accepts one endpoint or a plain reply.
+The returned [Endpoint guard](custody.rs) owns the installed local right. Dropping
+it closes that right; `into_handle` explicitly hands custody to the application.
+Plain/memory client operations reject endpoint responses and close unclaimed
+rights. `Server` currently accepts bytes/immutable objects in requests, not moved
+endpoint requests; such incoming grants are rejected and released.
+
+`Server::reply_endpoint` uses the same request ID, connection incarnation and
+private-frame/typed-grant join as immutable attachments. The kernel copies only
+the eight-byte correlation ID alongside a moved endpoint; application payload
+stays in the shared mailbox. The nonblocking `IPC_TRY_RECEIVE_CAP` syscall uses
+the existing typed-receive validation/installation path and returns WOULD_BLOCK
+before parking. An incompatible typed receive leaves its message untouched.
+
+Unlike memory grants, endpoint handoff consumes the sender's right. An error
+from `reply_endpoint` means no endpoint transfer occurred: full mailbox, invalid
+request, closed peer or rejected offer leaves custody with the caller. After the
+grant publishes, a failed frame publication or notification retires the connection
+and returns success **for custody transfer only**. The sender must no longer use
+or close the old handle. This does not prove delivery or revoke a right already
+accepted by the receiver. The service never queues borrowed endpoints for retry.
+
+The [endpoint guest](../../../../distribution/lab/channels/connection/endpoints.rs)
+exercises repeated usable moves, dropped guards, unchanged source rights after
+stale/duplicate replies, wrong IDs/kinds, incomplete pairs, frame-first arrival,
+unexpected endpoints on plain calls, and peer death. Its
+[failure boundary cases](../../../../distribution/lab/channels/connection/endpoint_faults.rs)
+force refusal before handoff with a full mailbox, and notification failure after
+handoff. They verify which side owns the right and exact final logical/physical
+refunds. ARM64 separately exercises the nonblocking typed syscall and incompatible
+receive preservation; the shared endpoint protocol cases execute on x86-64.
+
+This is the prerequisite for migrating the service broker: acquisition and
+interaction currently share its pair, and acquisition transfers endpoint rights.
+Service consumers have not yet switched that broker to shared transport.
+
 ## Ordinary consumers and evidence
 
 [Physical input](../../../services/input/matrix.rs) uses this Client to publish
@@ -226,8 +265,9 @@ and earliest partial/setup deadlines cover all selected streams. There is still
 one outstanding request for ordinary storage/root-display consumers. Stock matrix
 interaction uses two; the opted-in server pipeline has the four-call bound above.
 
-Omega leaf and Split interaction/rendering, and endpoint custody, remain migration
-work. Shared
+Omega leaf and Split interaction/rendering, including shared service acquisition,
+remain migration work. Endpoint reply custody exists; moving it into the broker
+and retiring copied consumers is still required. Shared
 mailbox pooling may reduce per-connection backing/metadata costs later; current
 bounds refuse excess setup safely. No performance improvement or final production
 wire ABI is claimed here.

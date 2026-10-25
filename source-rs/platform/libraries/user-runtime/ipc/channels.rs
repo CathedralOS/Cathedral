@@ -41,9 +41,23 @@ impl Handle {
         self,
         bytes: &mut [u8; abi::MAX_MESSAGE],
     ) -> Result<(usize, Option<Handle>), Error> {
+        self.endpoint_packet(bytes, abi::IPC_RECEIVE_CAP)
+    }
+    /// Nonblocking typed receive; no message or authority is consumed on refusal.
+    pub fn try_receive_with(
+        self,
+        bytes: &mut [u8; abi::MAX_MESSAGE],
+    ) -> Result<(usize, Option<Handle>), Error> {
+        self.endpoint_packet(bytes, abi::IPC_TRY_RECEIVE_CAP)
+    }
+    fn endpoint_packet(
+        self,
+        bytes: &mut [u8; abi::MAX_MESSAGE],
+        operation: u64,
+    ) -> Result<(usize, Option<Handle>), Error> {
         let mut packet = Packet([0; abi::IPC_PACKET_BYTES]);
         let len = result(arch::call3(
-            abi::IPC_RECEIVE_CAP,
+            operation,
             self.raw(),
             packet.0.as_mut_ptr() as u64,
             0,

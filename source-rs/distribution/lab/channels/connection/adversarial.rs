@@ -38,7 +38,7 @@ pub(super) fn run(launch: Launch) {
             .unwrap();
         }
         if mode != 65 {
-            let (frame, n) = wire::encode(1, b"never dispatch", true).unwrap();
+            let (frame, n) = wire::encode(1, b"never dispatch", wire::Attachment::Memory).unwrap();
             mailbox.try_send(&frame[..n]).unwrap();
         }
         signal.signal(false).unwrap();

@@ -25,6 +25,11 @@ pub(crate) struct Peer {
     incoming: Incoming,
     pipelined: bool,
 }
+enum Outbound<'a> {
+    None,
+    Memory(&'a Object),
+    Endpoint(Handle),
+}
 impl Peer {
     pub(crate) fn wake(&self) -> N {
         self.bell.wait
@@ -72,7 +77,29 @@ impl Peer {
         bytes: &[u8],
         object: Option<&Object>,
     ) -> Result<(), SendFailure> {
-        let (frame, n) = wire::encode(id, bytes, object.is_some()).ok_or(SendFailure {
+        self.publish(id, bytes, object.map_or(Outbound::None, Outbound::Memory))
+    }
+    pub(crate) fn send_endpoint(
+        &mut self,
+        id: u64,
+        bytes: &[u8],
+        endpoint: Handle,
+    ) -> Result<(), SendFailure> {
+        self.publish(id, bytes, Outbound::Endpoint(endpoint))
+    }
+    #[inline(never)]
+    fn publish(
+        &mut self,
+        id: u64,
+        bytes: &[u8],
+        attachment: Outbound<'_>,
+    ) -> Result<(), SendFailure> {
+        let kind = match attachment {
+            Outbound::None => wire::Attachment::None,
+            Outbound::Memory(_) => wire::Attachment::Memory,
+            Outbound::Endpoint(_) => wire::Attachment::Endpoint,
+        };
+        let (frame, n) = wire::encode(id, bytes, kind).ok_or(SendFailure {
             error: Error(abi::INVALID_ARGUMENT as i64),
             exposed: false,
         })?;
@@ -80,21 +107,20 @@ impl Peer {
             error,
             exposed: false,
         })?;
-        if let Some(object) = object {
-            self.lease
-                .0
-                .0
-                .send_memory(&id.to_le_bytes(), object)
-                .map_err(|error| SendFailure {
-                    error,
-                    exposed: false,
-                })?;
-        }
+        let grant = match attachment {
+            Outbound::None => Ok(()),
+            Outbound::Memory(object) => self.lease.0.0.send_memory(&id.to_le_bytes(), object),
+            Outbound::Endpoint(endpoint) => self.lease.0.0.send_with(&id.to_le_bytes(), endpoint),
+        };
+        grant.map_err(|error| SendFailure {
+            error,
+            exposed: false,
+        })?;
         self.mailbox
             .try_send(&frame[..n])
             .map_err(|error| SendFailure {
                 error,
-                exposed: object.is_some(),
+                exposed: kind != wire::Attachment::None,
             })?;
         self.signal.0.signal(false).map_err(|error| SendFailure {
             error,
