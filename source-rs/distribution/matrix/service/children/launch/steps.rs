@@ -72,7 +72,13 @@ impl Children {
                     .active
                     .and_then(|s| self.slots[s].as_ref())
                     .map(|c| c.task.raw());
-                parent.begin_scene(l.ticket, world, self.active, slot)?;
+                parent.begin_scene(
+                    l.ticket,
+                    world,
+                    self.active,
+                    Some(slot),
+                    slot == 2 && !cfg!(feature = "selection-delay"),
+                )?;
             }
             Command::Publish => {
                 // Admitted-child requests stay held through this command. No

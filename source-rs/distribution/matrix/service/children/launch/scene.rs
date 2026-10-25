@@ -7,7 +7,7 @@ impl Children {
         world: &mut World,
         server: &Server,
     ) -> Result<(), Error> {
-        if !parent.scene_active() {
+        if !parent.scene_active() || self.launching.is_none() {
             return Ok(());
         }
         let mut l = self
@@ -48,7 +48,7 @@ impl Children {
     /// Owner mutation waits for visual custody to end, but its arrival can
     /// cancel an uncommitted launch. Child payloads never gain owner authority.
     pub(in crate::service) fn cancel_scene_event(&mut self, event: &Event, parent: &mut Parent) {
-        if !parent.scene_active() {
+        if !parent.scene_active() || self.launching.is_none() {
             return;
         }
         if let Event::Request(r) = event

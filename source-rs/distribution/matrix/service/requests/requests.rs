@@ -138,7 +138,7 @@ pub(super) fn dispatch(
             children.app_entry(&request, index, world)
         }
         Some([wire::SELECT_APP, ticket, 0, 0, 0, 0, 0, 0]) => {
-            children.select_app(&request, ticket, parent, world, server)?
+            return children.select_app(request, ticket, parent, world, server);
         }
         Some(words) if words[0] == wire::APPLY_LAYOUT => {
             children.apply_layout(&request, words, parent, world)?

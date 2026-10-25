@@ -1,5 +1,5 @@
-// Launch visibility transaction: prepare without mutation, send one step, await
-// its exact stream owner, then commit or abort. blocking.rs handles selection and teardown.
+// Owner visibility transaction: prepare without mutation, send one step, await
+// its exact stream owner, then commit or abort. blocking.rs handles cleanup.
 use super::*;
 use cathedral_stock_matrix::policy::operation::Ticket;
 pub(in crate::service::parent) struct Pending {
@@ -51,17 +51,18 @@ impl Parent {
         ticket: Ticket,
         world: &World,
         previous: Option<usize>,
-        next: usize,
+        next: Option<usize>,
+        _probe: bool,
     ) -> Result<(), Error> {
         assert!(!self.publishing());
         self.output()?;
         let mut count = 0;
         for slot in 1..BACKGROUND {
-            if Some(slot) != previous && slot != next {
+            if Some(slot) != previous && Some(slot) != next {
                 continue;
             }
             for rank in 0..wire::MAX_SURFACES {
-                if let Some(words) = world.preview_replay(slot, rank, slot == next) {
+                if let Some(words) = world.preview_replay(slot, rank, Some(slot) == next) {
                     if count == self.scene_packets.len() {
                         return Err(Error(abi::NO_MEMORY as i64));
                     }
@@ -84,9 +85,11 @@ impl Parent {
             reply: None,
             deadline: time::after(300)?,
             late: false,
-            retry: None,
+            // A scene may be created by completion at the top of the loop.
+            // Schedule its first send before parking on an empty receiver.
+            retry: Some(time::now()?),
             #[cfg(feature = "scene-delay")]
-            hold: if next == 2 && !self.scene_probe_used {
+            hold: if _probe && !self.scene_probe_used {
                 self.scene_probe_used = true;
                 Some(0) // Arm the gate only after staging actually completes.
             } else {

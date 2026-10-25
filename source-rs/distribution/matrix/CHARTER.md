@@ -288,7 +288,7 @@ or descendants. It can see pointer events in uncovered background space. Chrome
 gets its own top surfaces, layout authority and local app management. The installer
 preserves customized executable bytes; the current UI does not offer role selection.
 
-[Workspace](service/children/workspace.rs) authenticates the current chrome endpoint
+[Workspace](service/children/workspace/workspace.rs) authenticates the current chrome endpoint
 before listing or selecting an instance. Tickets are local, monotonic and retired
 on exit. Ordinary apps cannot enumerate siblings. [Launch](service/children/launch/launch.rs)
 chooses a free app slot and reads code through the requester's scoped realm.
@@ -302,6 +302,7 @@ over the platform's owner-controlled visibility mechanism. It is not process
 suspension, per-instance storage cloning, or a universal window-manager protocol.
 Multiple instances of one program share its persistent realm; their private drafts
 are independent and existing revision checks govern conflicting saves.
+
 The [multiple-instance contract](../../../wiki/spec/execution/components_and_matrices.md#multiple-instances-over-one-realm)
 accepts this for matrices too. A program may reject concurrent use; the stock
 matrix does not yet implement an exclusive-instance claim. Launch does not
@@ -311,6 +312,28 @@ provides the intended app-controlled introduction/rejection route, with independ
 executable, path and secret constraints. Supplying this common platform service
 is a requirement for the shipped default matrix; this executable does not yet
 implement it. Protocol-controlled shared buffers likewise remain future work.
+
+[Selection](service/children/workspace/selection.rs) retains the chrome request and
+exact task identities while the prepared scene yields through begin/update/commit.
+The old local visibility and input routes remain in force until success; input
+continues through the shared reply dispatcher while visual mutations wait. Before
+COMMIT and at completion, the matrix rechecks the caller and both task identities.
+An observed owner mutation or relevant disconnect cancels selection. A staged
+transaction aborts; an already accepted commit is followed by a yielding restoring
+transaction before releasing the old request. Neither outcome stops an app by
+itself. Actual owner mutations run after visual custody ends. Failed restoration
+is fatal rather than reporting a false successful rollback. LOSS answers BUSY
+throughout switching and restoration. Lifecycle-driven fallback selection still
+uses the synchronous cleanup helper.
+
+`desktop_test.py --selection-async MODE --timeout 120` exercises `complete`,
+`failure`, `stop` and `late-stop` on the ordinary nested desktop, fresh/cold. A
+three-second visual gate requires new input to reach the matrix before release;
+the draft must contain it afterward. Failure preserves both processes; owner STOP
+reclaims only its target; late STOP requires restoration. Repeated switching,
+protected close, saved drafts and subtree reclamation remain part of every case.
+The gate and owner probe are absent from normal F5. An app blocked in its own
+drawing call may consume queued input only after that call completes.
 
 Three apps fit the current desktop policy, subject to subtree funding. Split consumes
 more task/channel capacity than a leaf and may be refused while other subtrees run.

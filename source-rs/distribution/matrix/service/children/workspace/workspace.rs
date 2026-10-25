@@ -1,5 +1,8 @@
-//! Chrome sees only this matrix's admitted app instances. Local tickets survive
-//! focus changes, never task replacement. Background has no workspace authority.
+// Chrome sees only this matrix's admitted app instances. Local tickets survive
+// focus changes, never task replacement. Background has no workspace authority.
+// SELECT_APP enters selection.rs; custody.rs checks its exact tasks and caller.
+// activate below remains the synchronous cleanup helper; commit_activation is
+// the shared local handoff after either visual path succeeds.
 use super::*;
 impl Children {
     pub(super) fn chrome(&self, request: &Request, world: &World) -> bool {
@@ -33,27 +36,6 @@ impl Children {
             ],
             None => [0; 8],
         }
-    }
-    pub(in crate::service) fn select_app(
-        &mut self,
-        request: &Request,
-        ticket: u64,
-        parent: &mut Parent,
-        world: &mut World,
-        server: &Server,
-    ) -> Result<wire::Packet, Error> {
-        if !self.chrome(request, world) {
-            return Ok(wire::error(abi::DENIED));
-        }
-        let Some(slot) =
-            (1..BACKGROUND).find(|s| self.running[*s].is_some_and(|(t, _)| t == ticket))
-        else {
-            return Ok(wire::error(abi::DENIED));
-        };
-        if parent.storing() || parent.upstream_busy() || self.loss.is_some() {
-            return Ok(wire::error(abi::BUSY));
-        }
-        Ok(wire::error(self.activate(slot, parent, world, server)?))
     }
     pub(super) fn activate(
         &mut self,

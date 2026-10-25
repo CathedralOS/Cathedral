@@ -97,8 +97,11 @@ Publication is now a local handoff. Admitted-child requests remain held until
 Finish, so the child cannot yet own drawn surfaces; there is nothing to flush or
 replay for it. Publication notifies the matrix's children and records login state;
 Finish releases startup and returns the launch receipt. Kernel admission,
-retiring/reclaiming tasks, selecting an already-running app, compensation and some
-startup/recovery helpers still contain synchronous work. No claim is made of
+retiring/reclaiming tasks, lifecycle-driven fallback selection, launch compensation
+and some startup/recovery helpers still contain synchronous work. Chrome-requested
+switching and its restoration now yield through
+[workspace/selection.rs](../../../../source-rs/distribution/matrix/service/children/workspace/selection.rs).
+No claim is made of
 concurrent pixel commits or a fully nonblocking matrix.
 
 ## Verification

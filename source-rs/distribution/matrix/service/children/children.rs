@@ -52,6 +52,7 @@ pub(super) struct Children {
     entered: bool,
     startup_recovery: startup::Recovery,
     active: Option<usize>,
+    selecting: Option<workspace::selection::Pending>,
     running: [Option<(u64, u64)>; CHILDREN], // local ticket, program object
     next_ticket: u64,
     slots: [Option<Owned>; CHILDREN],

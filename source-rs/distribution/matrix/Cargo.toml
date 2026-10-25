@@ -42,6 +42,7 @@ launch-bind-failure = []
 launch-place-failure = []
 input-producer-probe = []
 
+selection-delay = ["scene-delay"]
 scene-delay = []
 scene-failure = ["scene-delay"]
 scene-commit-hold = ["scene-delay"]

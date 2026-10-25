@@ -41,6 +41,66 @@ new OS code and establishes no execution or performance result.
 
 ## Current implementation evidence
 
+Implementation update 2026-10-25: **switching running apps yields through scene
+commit and restoration**, over `e32d3f71`.
+
+Start at [workspace/workspace.rs](source-rs/distribution/matrix/service/children/workspace/workspace.rs),
+then [selection.rs](source-rs/distribution/matrix/service/children/workspace/selection.rs)
+for retained SELECT_APP requests and completion, and `custody.rs` for exact
+caller/task checks and authenticated cancellation. The same bounded parent scene
+owner now stages both existing apps without changing their live local visibility,
+input routes or cached content. Only successful commit installs the new selection.
+The chrome request is answered afterward, through its original connection only.
+
+Relevant owner mutations/disconnects cancel selection; caller and task liveness
+are checked before commit and again at completion. Before commit, cancellation
+aborts. After accepted commit, a second yielding transaction restores the previous
+scene before replying or processing deferred mutations. Selection itself never
+stops either app. LOSS reports BUSY through switch/restoration. Failure to restore
+fails closed. An accepted scene can briefly appear before compensation.
+
+The late-owner-stop test found a scheduling bug: a restoring scene created during
+top-of-loop completion could park before its first send, delaying the owner reply
+until timeout. Newly prepared scenes now schedule their first send immediately.
+An earlier test failure was a harness coordinate hitting the task's close button;
+the selection workload now clicks inside the task label.
+
+Verification:
+
+- `desktop_test.py --selection-async MODE --timeout 120` passes fresh/cold for
+  `complete` (`desktop/20261025T152313117577Z`), `failure`
+  (`desktop/20261025T152403241169Z`), `stop`
+  (`desktop/20261025T152440070400Z`) and `late-stop`
+  (`desktop/20261025T152557631006Z`). New B-key input must reach the nested matrix
+  during the three-second hold and appear in the preserved draft afterward.
+  Failure keeps both tasks; owner STOP reclaims its exact target; late STOP must
+  restore. Repeated switches, protected close, save/cold reopen and subtree
+  reclamation pass. These gates/probes are absent from normal F5.
+- Normal F5 fresh/cold, three independent Notes instances, repeated switching,
+  capacity refusal, protected close, Colors and the storage oracle pass:
+  `desktop/20261025T152634259145Z`.
+- Ordinary launch's late-owner-stop regression passes fresh/cold, retaining its
+  draft and restoring after the admitted task is reclaimed:
+  `desktop/20261025T152718550187Z`.
+- Three nested desktops with `--interaction-delay` pass fresh/cold: input through
+  seven matrix realms during a held presentation, delayed poll/image recovery,
+  protected close, persistence and repeated subtree reclamation:
+  `desktop/20261025T152754807755Z`.
+- Default host tests, guest all-feature matrix Clippy and desktop owner-probe
+  Clippy pass. Layout (73 Omega / 150 Rust edges), eight boundary checks,
+  formatting and diff checks pass. Full kernel/ARM64 suites were not rerun.
+- Logs: `build/omega-component/selection-{complete2,failure,stop,late-stop2,
+  desktop,launch-regression,nested,host}.log`. Earlier failed experiments remain
+  alongside them as described above.
+
+**Next:** the accepted shared-memory IPC/notification outcome above is the broader
+implementation frontier. Preserve the launch/selection custody and cancellation
+evidence while replacing transport. Remaining synchronous paths include
+lifecycle-driven fallback selection, launch compensation, admission/retirement,
+root physical-source dispatch and some image/startup/recovery helpers. This does
+not establish a latency bound, concurrent pixel commits or a fix for the earlier
+intermittent partial-key observation. No new owner decision was needed.
+
 Implementation update 2026-10-25: **ordinary launch activation yields and
 publication is local**, over `4a191eff`. Artifact directory stamps below are UTC.
 
