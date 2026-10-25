@@ -115,14 +115,16 @@ impl Children {
             pages = [private, readers];
             self.requested_surfaces[plan.slot] = Some(surfaces);
         } else if self.desktop && (1..BACKGROUND).contains(&plan.slot) {
-            // A bounded child-matrix share covers a 112-page nested workspace
+            // A bounded child-matrix share covers a 117-page nested workspace
             // beside its owner's old/new 14-page headers. Owner offers still cap it.
-            let private = if resources.is_some_and(|(_, descendants)| descendants > 0) {
-                144
+            let (private, readers) = if resources.is_some_and(|(_, descendants)| descendants > 0) {
+                // The nested loan includes five additional reader pages; the
+                // owner also retains its own and the child's shared mailboxes.
+                (152, 136)
             } else {
-                128
+                (128, 128)
             };
-            pages = [pages[0].min(private), pages[1].min(128)];
+            pages = [pages[0].min(private), pages[1].min(readers)];
             self.requested_surfaces[plan.slot] = Some(10);
         }
         let (channels, descendants) = resources

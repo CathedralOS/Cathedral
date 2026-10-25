@@ -21,8 +21,10 @@ Storage acquisition creates one shared-memory connection owned by the host.
 Subsequent storage operations retain its request sequence and immutable attachment
 custody. A failed or ambiguous exchange retires it without replay. The app's
 manifest and owner grant must fund the notification, private mailbox page and
-accepted reader page; optional storage remains optional. Interaction and lifecycle
-traffic still use their existing copied connections. See the
+accepted reader page; optional storage remains optional. The host selects shared
+broker transport before entering the app. Service acquisition and interaction use
+one persistent `Services` client, including moved endpoint replies and immutable
+images. Lifecycle controls and input wake hints remain copied. See the
 [transport boundary](../user-runtime/connection/README.md).
 
 ## ABI 1

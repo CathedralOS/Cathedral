@@ -92,8 +92,7 @@ impl Output {
         }
         let mut object = pixels.freeze()?;
         object.unmap()?;
-        let reply = upstream::exchange(
-            self.pair,
+        let reply = self.services.request_interaction(
             [
                 wire::SURFACE_IMAGE,
                 self.grant.epoch,

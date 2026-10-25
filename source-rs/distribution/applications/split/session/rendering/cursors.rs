@@ -7,10 +7,11 @@ impl Output {
         }
         for index in 0..wire::INPUT_STREAMS {
             if let Some(c) = world.cursor(index).filter(|c| c.inherited) {
-                self.cursors.forward(
+                let services = &mut self.services;
+                self.cursors.forward_with(
                     index,
-                    self.pair,
                     [self.grant.epoch, c.cycle, c.channel as u64, c.mode],
+                    |words| services.request_interaction(words, None),
                 )?;
             } else {
                 self.cursors.forget(index);

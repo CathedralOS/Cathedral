@@ -7,7 +7,7 @@ use cathedral_user_runtime::{
     server::Request,
 };
 pub struct Output {
-    pub(super) pair: Pair,
+    pub(super) services: Services,
     pub(super) grant: Grant,
     images: Images,
     cursors: upstream::Cursors,
@@ -20,9 +20,9 @@ pub struct Output {
     pub failure: Option<&'static [u8]>,
 }
 impl Output {
-    pub fn new(pair: Pair) -> Self {
+    pub fn new(services: Services) -> Self {
         Self {
-            pair,
+            services,
             grant: Grant::default(),
             images: Images::empty(),
             cursors: upstream::Cursors::empty(),
@@ -75,8 +75,7 @@ impl Output {
                 )
                 .map_err(|c| Error(c as i64))?;
         }
-        let reply = upstream::call(
-            self.pair,
+        let reply = self.services.request_interaction(
             [
                 wire::SURFACE_CREATE,
                 grant.epoch,
@@ -87,6 +86,7 @@ impl Output {
                 0,
                 0,
             ],
+            None,
         )?;
         if reply[0] != 0 {
             return Err(Error(reply[0] as i64));
@@ -110,9 +110,9 @@ impl Output {
         let grant = self.grant;
         // Retire our former header; child surfaces were already retired.
         if self.header != 0 {
-            upstream::call(
-                self.pair,
+            self.services.request_interaction(
                 [wire::ERASE, grant.epoch, self.header, 0, 0, 0, 0, 0],
+                None,
             )?;
         }
         self.capacity = 0;
@@ -120,7 +120,7 @@ impl Output {
     }
     pub fn flush(&mut self, world: &mut World) -> Result<(), Error> {
         while let Some(words) = world.take_retired_surface() {
-            let reply = upstream::call(self.pair, words)?;
+            let reply = self.services.request_interaction(words, None)?;
             if !matches!(reply[0], 0 | abi::DENIED | abi::BAD_HANDLE) {
                 return Err(Error(reply[0] as i64));
             }
@@ -145,9 +145,9 @@ impl Output {
                 Ok(r) => r,
                 Err(c) => return Ok(wire::error(c)),
             };
-            let reply = upstream::call(
-                self.pair,
+            let reply = self.services.request_interaction(
                 [wire::SURFACE_CREATE, self.grant.epoch, rank, 0, 0, 0, 0, 0],
+                None,
             )?;
             if reply[0] != 0 {
                 return Ok(wire::error(reply[0]));
@@ -167,7 +167,7 @@ impl Output {
             Ok(p) => p,
             Err(c) => return Ok(wire::error(c)),
         };
-        let reply = upstream::call(self.pair, prepared)?;
+        let reply = self.services.request_interaction(prepared, None)?;
         if reply[0] == 0 {
             world.surface(slot, request.incarnation, words).unwrap();
             self.images.commit(prepared[2], None);
@@ -202,7 +202,7 @@ impl Output {
             Err(c) => return Ok(wire::error(c)),
         };
         self.images.room(prepared[2])?;
-        let reply = upstream::exchange(self.pair, prepared, Some(&object))?;
+        let reply = self.services.request_interaction(prepared, Some(&object))?;
         if reply[0] == 0 {
             world.surface(slot, request.incarnation, words).unwrap();
             self.images.commit(prepared[2], Some(object));

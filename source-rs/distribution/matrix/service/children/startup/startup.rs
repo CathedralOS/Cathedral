@@ -97,7 +97,7 @@ impl Children {
                     picker_mode,
                     picker,
                 ),
-                channels: 1,
+                channels: 2,
                 descendants: 0,
                 cpu: 0,
                 pages: Some([

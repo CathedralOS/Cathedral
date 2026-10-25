@@ -10,7 +10,7 @@
       "clock": true,
       "ipc_channels": 21,
       "cpu_budget_us": 50000,
-      "private_pages": 16,
+      "private_pages": 24,
       "shared_pages": 16
     },
     "launches": [

@@ -872,7 +872,7 @@ RAM allocation, even if firmware labels it conventional memory.
 
 Boot may bind that aperture to exactly one supervised child's launch grant. No syscall
 accepts an arbitrary physical address, and initial tasks receive no display grant.
-The x86-64 backend maps it at `0x0000_0080_0400_0000`, writable, user-accessible and
+The x86-64 backend maps it at `0x0000_0080_0800_0000`, writable, user-accessible and
 non-executable, with unmapped adjacent pages. It requires PAT support and an
 uncacheable entry at index 3, then uses PCD/PWT leaves. No write-combining setup or
 hardware GPU driver is implemented; inherited firmware aliases remain unused.

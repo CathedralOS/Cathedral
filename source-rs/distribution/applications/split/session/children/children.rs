@@ -43,9 +43,9 @@ impl Children {
                 Limits {
                     // Omega host (9) + old/new text (24) + small retained
                     // decorations and storage publication, all app-charged.
-                    private_pages: 40,
-                    reader_pages: 5,
-                    channels: 1,
+                    private_pages: 41,
+                    reader_pages: 6,
+                    channels: 2,
                 },
                 0,
                 abi::MAX_ADMISSION_FRAMES as u64,

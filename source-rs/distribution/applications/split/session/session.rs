@@ -16,10 +16,19 @@ use children::Children;
 use rendering::Output;
 
 pub fn run(mut services: Services) -> Result<(), Error> {
+    services.enable_shared()?;
+    cathedral_user_runtime::write(b"Cathedral Split: shared interaction broker ready\n")?;
     let interaction = services.interaction(1, 1)?;
     let storage = services.storage(1, 1)?;
     let mut server = Server::open_clients(8)?;
     server.enable_memory();
+    static mut INTERACTION: [cathedral_user_runtime::server::SharedSlot; 2] =
+        [const { cathedral_user_runtime::server::SharedSlot::empty() }; 2];
+    let slots = &raw mut INTERACTION;
+    // SAFETY: One process entry owns these disjoint child interaction slots.
+    for (index, slot) in unsafe { &mut *slots }.iter_mut().enumerate() {
+        server.enable_shared(index, slot)?;
+    }
     static mut STORAGE: [cathedral_user_runtime::server::SharedSlot; 2] =
         [const { cathedral_user_runtime::server::SharedSlot::empty() }; 2];
     let slots = &raw mut STORAGE;
@@ -31,7 +40,7 @@ pub fn run(mut services: Services) -> Result<(), Error> {
     let arena = &raw mut WORLD;
     // SAFETY: Single-threaded process entry exclusively owns this arena.
     let world = unsafe { &mut *arena };
-    let mut output = Output::new(interaction.pair);
+    let mut output = Output::new(services);
     let mut children = Children::empty();
     let mut producer = producer::Producer::empty();
     let mut capture = capture::Capture::empty();
@@ -53,7 +62,9 @@ pub fn run(mut services: Services) -> Result<(), Error> {
             if !refresh || !world.input_ready() {
                 break;
             }
-            let snapshot = upstream::call(interaction.pair, [wire::POLL, 0, 0, 0, 0, 0, 0, 0])?;
+            let snapshot = output
+                .services
+                .request_interaction([wire::POLL, 0, 0, 0, 0, 0, 0, 0], None)?;
             let grant = world.inherit_poll(snapshot);
             output.arrange(grant, world)?;
             producer.maintain(&mut output, world, &mut server)?;
@@ -98,7 +109,9 @@ pub fn run(mut services: Services) -> Result<(), Error> {
                     && output.deepen_hit(event[3], event[4])
                 {
                     if output.can_deepen()
-                        && cathedral_user_runtime::resources::budget()?.limits.channels >= 22
+                        // The current limit excludes the four notification
+                        // allowances lent to Notes; collection returns them.
+                        && cathedral_user_runtime::resources::budget()?.limits.channels >= 26
                     {
                         deepen = true;
                         survey = Some(loss::Survey::start(None, &mut children)?);

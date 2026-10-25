@@ -23,7 +23,7 @@ fn main(_: u64, argument: u64, environment: cathedral_user_runtime::task::Enviro
     )
 }
 #[cfg(not(feature = "rust-probes"))]
-cathedral_user_runtime::service_bootstrap!(&cathedral_platform_contracts::imports::REQUIRED, 1, 0);
+cathedral_user_runtime::service_bootstrap!(&cathedral_platform_contracts::imports::REQUIRED, 2, 0);
 #[cfg(not(feature = "rust-probes"))]
 cathedral_user_runtime::entry_with_services!(main);
 #[cfg(not(feature = "rust-probes"))]

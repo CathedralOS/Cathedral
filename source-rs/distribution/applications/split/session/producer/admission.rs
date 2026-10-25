@@ -27,8 +27,7 @@ impl Producer {
             return Err(Error(abi::NO_MEMORY as i64));
         }
         let grant = output.grant;
-        let reply = upstream::call(
-            output.pair,
+        let reply = output.services.request_interaction(
             [
                 wire::INPUT_CAPACITY,
                 grant.epoch,
@@ -39,15 +38,15 @@ impl Producer {
                 0,
                 0,
             ],
+            None,
         )?;
         if reply[0] != 0 {
             return Err(Error(reply[0] as i64));
         }
         self.limited = Some(capacity);
-        let reply = upstream::call(
-            output.pair,
-            [wire::SURFACE_CREATE, grant.epoch, 9, 0, 0, 0, 0, 0],
-        )?;
+        let reply = output
+            .services
+            .request_interaction([wire::SURFACE_CREATE, grant.epoch, 9, 0, 0, 0, 0, 0], None)?;
         if reply[0] != 0 {
             return Err(Error(reply[0] as i64));
         }

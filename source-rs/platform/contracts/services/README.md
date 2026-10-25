@@ -123,8 +123,14 @@ connections therefore do not promise continued authority after a resize/rebind.
 ## Client discipline and proof
 
 Acquisition is synchronous and must be serialized with interaction RPCs because
-they share a reply stream. Current apps acquire during startup. The runtime caches
-successful bindings and absent storage/production. A complete refusal, including
+they share a reply stream. Omega hosts and Split select shared transport through
+[Services](../../libraries/user-runtime/services/services.rs); its
+[transport owner](../../libraries/user-runtime/services/transport.rs) retains the
+same request sequence across both operation kinds. Acquiring optional storage
+later does not create a second client over that pair. Moved endpoint replies are
+explicitly accepted; interaction replies reject unexpected rights. Remaining
+copied consumers opt in separately; failure never switches transports.
+The runtime caches successful bindings and absent storage/production. A complete refusal, including
 capacity refusal, leaves the broker usable. It closes an ambiguously failed broker
 connection rather than consuming a late endpoint reply as an interaction reply.
 The cache does not revive closed/revoked handles; callers still handle operation

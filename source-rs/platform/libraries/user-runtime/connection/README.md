@@ -78,8 +78,9 @@ alongside its own bounded client set. Readiness is not a completion; poll again.
 The synchronous call helpers use this same state machine. A caller choosing an
 application deadline must retire the connection on expiry, without replaying a
 possibly performed operation. Slow presentations use no operation health timeout;
-their existing delayed-response diagnostics do not cancel them. Setup and partial
-grant/frame custody retain their separate bounded deadlines.
+the retained helpers report `shared-call-delayed`/`shared-call-resumed` with the
+transport ID after 100 ticks, without canceling or replaying the request. Setup and
+partial grant/frame custody retain their separate bounded deadlines.
 
 ## Independent outstanding requests
 
@@ -126,6 +127,14 @@ keeps tagged input and presentation as separate owners; the connection adapter
 binds each owner to the returned transport ID before accepting an application
 reply. Parent servers explicitly select pipeline acceptance for child interaction.
 Ordinary shared storage/root-display consumers retain `Client` behavior.
+Omega app hosts and independent Split now use one
+[Services transport owner](../services/transport.rs) for broker acquisition and
+interaction. It keeps correlation across lazy acquisitions, accepts moved endpoints
+only for acquisition, and routes immutable drawing objects through the same shared
+connection. Split selects shared interaction and storage for its Notes/nested
+children. Control links, wake hints, producer/capture clients and explicitly copied
+fixtures remain to migrate. These app adapters remain synchronous; this change
+alone does not make an app process input while its drawing call is pending.
 
 ## Immutable attachments
 
@@ -224,8 +233,9 @@ The [Omega host](../../omega-app/host/host.rs) owns a shared storage connection
 without changing the app step ABI. [Split](../../../../distribution/applications/split/session/session.rs)
 accepts shared child storage and keeps one persistent upstream client for both
 local reads and asynchronous forwarding. App manifests and owner grants fund each
-end's writer, reader and notification. Recursive interaction/rendering retain
-their existing transport. Older fixtures combining interaction and storage stay copied;
+end's writer, reader and notification. Their interaction and acquisition use the
+shared Services owner described above. Older fixtures combining interaction and
+storage stay copied;
 this is an explicit composition choice, never fallback after an upgrade.
 
 [The guest connection proof](../../../../distribution/lab/channels/connection/connection.rs)
@@ -243,7 +253,7 @@ yielding calls, immutable replies, owner replacement and abandoned control setup
 [Multiplexing cases](../../../../distribution/lab/channels/connection/multiplex.rs)
 exercise simultaneous owner/two-client streams with equal IDs and reversed replies,
 setup expiry beside a live peer, full wait-set refusal, four writable mailbox
-objects beside immutable scratch, and the eight-object metadata ceiling. The enclosing
+objects beside immutable scratch, and the sixteen-object metadata ceiling. The enclosing
 fixture checks exact logical/physical refunds after peer exit and Server drop.
 [Replacement](../../../../distribution/lab/channels/connection/replacement.rs)
 preselects an empty slot, removes and reinstalls its child, then rejects an old
@@ -265,9 +275,11 @@ and earliest partial/setup deadlines cover all selected streams. There is still
 one outstanding request for ordinary storage/root-display consumers. Stock matrix
 interaction uses two; the opted-in server pipeline has the four-call bound above.
 
-Omega leaf and Split interaction/rendering, including shared service acquisition,
-remain migration work. Endpoint reply custody exists; moving it into the broker
-and retiring copied consumers is still required. Shared
-mailbox pooling may reduce per-connection backing/metadata costs later; current
+Omega leaf and Split interaction/rendering and service acquisition use the shared
+owner described above. Background, the separate Omega UI demo, control/wake,
+producer/capture and explicitly copied fixtures remain to migrate. The ordinary
+user matrix keeps ten connections (thirty notification handles) with its upstream,
+chrome and three app pairs; another client requires an explicit capacity review.
+Shared mailbox pooling may reduce per-connection backing/metadata costs later; current
 bounds refuse excess setup safely. No performance improvement or final production
 wire ABI is claimed here.

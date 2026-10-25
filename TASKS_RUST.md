@@ -20,14 +20,14 @@ Kernel notifications and a first reusable single-writer shared-memory/mailbox
 slice execute on x86-64 and ARM64. Ordinary F5 now uses them for physical input
 to the root matrix, root display commands/images, root storage and separate
 parent-storage and pipelined interaction streams between stock matrices, Omega app
-storage and independent Split storage forwarding. The scoped storage fixture also exercises both
+broker/interaction/storage and independent Split interaction/storage forwarding. The scoped storage fixture also exercises both
 private-root provider connections. See the evidence below. Remaining acceptance:
 
-- Continue the shared service migration through Omega leaf and Split
-  interaction/rendering and the remaining service clients. Independently selected control/data streams
+- Continue the shared service migration through the remaining ordinary service
+  clients, control/wake streams and producer/capture. Independently selected control/data streams
   now multiplex; immutable attachments execute through ordinary display and
   storage, including nested stock matrices, Omega leaves and Split. Shared endpoint
-  replies now retain custody; migration into the service broker remains open. Preserve
+  replies now retain custody through the Omega/Split service broker. Preserve
   mapping isolation, hostile-writer validation and live-reader lifetime; waking
   proves none of them.
 - Demonstrate real cross-process ping-pong, including early reply/next-request,
@@ -220,6 +220,101 @@ not perfect timing indistinguishability or mandatory agent badges. Existing
 default/hidden cursor evidence remains valid for its scope, not the full asset API.
 
 ## Current implementation evidence
+
+Implementation update 2026-10-25: **shared app broker and interaction**, over
+`c28fb499` (including the incoming deletion/erasure documentation).
+
+Omega Notes, Colors and chooser hosts select shared transport before entering the
+app. One [Services owner](source-rs/platform/libraries/user-runtime/services/services.rs)
+keeps acquisition and interaction on the same connection; its
+[transport adapter](source-rs/platform/libraries/user-runtime/services/transport.rs)
+retains IDs across moved-endpoint acquisitions and immutable drawing requests.
+Optional service refusals leave the broker usable; ambiguous transport failures
+retire it without replay or copied fallback. Successful cached acquisitions do
+not rebuild the client. The Omega app ABI and authored behavior are unchanged.
+
+Independent Split owns the same adapter in its output coordinator and selects
+shared interaction as well as storage for its children. Notes and a recursively
+admitted Split use those slots. Ordinary input wake hints, lifecycle control,
+producer/capture streams, Background, the separate Omega UI demo and explicitly
+copied fixtures remain to migrate. Leaf/Split interaction is still synchronous;
+this does not make a leaf consume input while waiting for its drawing reply.
+The stock matrix's independent input/presentation pipeline remains in place.
+
+Funding is explicit at both ends. Ordinary Omega apps declare two notifications;
+Split declares thirty allowances and retains its own transport before lending to
+children. The nested Split gets 117 private/69 reader pages and twenty channel
+allowances. Its owner needs up to 152 private/136 reader pages to retain images
+beside that loan. Shared Server removal may already close the exact child data
+handles; subsequent admission cleanup tolerates only BAD_HANDLE for those names.
+
+Actual failures caught and corrected:
+
+- The third ordinary Notes exhausted the matrix's eight private mapping slots,
+  despite available page funding. The metadata cap is now sixteen. The compile-time
+  aperture assertion caught the resulting overlap, so the framebuffer aperture
+  moved to `0x0000_0080_0800_0000`. Page funding/permissions remain enforced; this is
+  a bounded metadata capacity change, not a grant of RAM or framebuffer authority.
+- Split's preflight must inspect the remaining channel limit after lending four
+  notification allowances to its two Notes. Its nested loan also needs extra
+  reader funding while the owner retains images. Missing that owner headroom
+  admitted both inner Notes, then failed an immutable image handoff.
+- The small Notes recovery profile must match its root admission's increased
+  channel and reader grants; the initial run rejected root admission before use.
+- The undeclared-storage fixture had overwritten the packed manifest header,
+  clearing notification funding alongside the import count. It now changes only
+  the count bits, preserving the executable's declared resource request.
+
+Shared retained calls now report delayed/resumed transport IDs without expiring
+application work. Incomplete grant/frame custody still has its separate deadline.
+A setup refusal records its channel and status; interaction failure retains the
+operation diagnostic. These diagnostics do not authorize replay.
+
+Verification:
+
+- Normal F5 fresh/cold passes three Notes, independent drafts, slot reuse and the
+  exact persistent-state oracle (`desktop/20261025T215901844549Z`).
+- Independent Split passes recursive same-code nesting, resize, protected close,
+  repeated reclamation, bounded refusal and cold reopen
+  (`desktop/20261025T220529093841Z`).
+- Notes lost-reply recovery passes exact text/history/quota and cold restoration
+  (`matrix-database/20261025T220709436628Z`). The instrumented provider remains
+  at 239/240 load pages.
+- Three nested desktops pass held polls/images/presentation, fresh input before
+  the held presentation completes, recursive close, isolated saves, repeated
+  collection and cold reopen (`desktop/20261025T220748599963Z`).
+- Undeclared/incompatible optional storage both leave Notes editable with dirty
+  close protection; Colors retains persistence, including cold reopen
+  (`desktop/20261025T221041696596Z`, `desktop/20261025T221102160620Z`).
+- Independent producer/regrant/resize and masked capture/hidden rendering pass
+  fresh/cold (`desktop/20261025T221121985989Z`, `desktop/20261025T221202983624Z`).
+- ARM64 portability, host policy tests, userspace/kernel and all-feature
+  matrix/Split/Notes/channels Clippy, source layout and format checks pass.
+- Cursor preferences pass inherited/producer suppression, target death and cold
+  reopening (`desktop/20261025T221245015743Z`).
+- Late target-stop during staged launch and failed existing-app selection pass
+  continued routed input, protected drafts, reclamation and cold reopen
+  (`desktop/20261025T221330901106Z`, `desktop/20261025T221406910614Z`).
+- The complete x86 IPC guest passes custody, stale/partial replies, setup failure,
+  metadata exhaustion and final logical/physical refunds. Its parent now funds
+  24 pages: the sixteen-object test must retain spare page capacity after its
+  worker loan, and asserts that distinction before the expected refusal. The
+  first run still funded sixteen total and hit page exhaustion too early.
+- Formatting, whitespace and changed Markdown links pass.
+
+Logs: `build/omega-component/broker-{desktop-final,split-final,recovery,nested,
+imports-undeclared,imports-incompatible,participants,capture,cursors,scene,
+selection,ipc,arm64,host-final,check-final,features-final,kernel,layout,format-check}.log`.
+The resource/diagnostic failures described above were corrected before the passing
+runs. Guest evidence is single-CPU; shared payloads are not a measured latency gain.
+
+**Next:** migrate the remaining ordinary copied consumers through the same owner,
+then control/wake and producer/capture streams. Recalculate finite notification,
+wait-set and mapping capacity before expanding the live connection set: the
+ordinary user matrix already approaches its 32 notification-handle limit. Keep
+asynchronous launch cancellation and input/presentation ownership intact. App
+updates, object watches and public atomic batches remain separate open outcomes.
+
 
 Implementation update 2026-10-25: **shared endpoint-reply custody**, over `ab24fa34`.
 

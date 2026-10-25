@@ -37,8 +37,10 @@ page and notification allowance for each selected server end before lending the
 rest to the child. Small fixtures fund both ends explicitly. Slot removal drops
 shared custody before reclaiming the child's remaining connection resources.
 
-Manually composed fixtures with combined interaction/storage streams, Omega leaf
-interaction and Split interaction still use copied packets. Copied replies retain
+Omega leaf and Split broker/interaction use the runtime's persistent
+[Services transport](../../../platform/libraries/user-runtime/services/transport.rs).
+Manually composed fixtures with combined interaction/storage streams still use
+copied packets. Copied replies retain
 the runtime's [bounded reply arena](../../../platform/libraries/user-runtime/server/replies.rs).
 Composition selects this path; failed shared setup never falls back. Unpublished
 mailbox refusal retains the operation for a later turn. Consumption notifications

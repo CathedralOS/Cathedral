@@ -52,7 +52,7 @@ fn chooser(login: &mut Login, matrix: Pair, extent: [u64; 2], failed: bool) -> R
                 if failed { 2 } else { 1 },
                 chooser,
             ),
-            1,
+            2,
             0,
             0,
         ],

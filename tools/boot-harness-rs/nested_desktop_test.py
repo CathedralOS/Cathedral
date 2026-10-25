@@ -128,7 +128,7 @@ def exercise(output, click, key, scan, width, height, reboot, pointer_stress=Fal
         delayed('f8', lambda: None, ('matrix-poll-delayed', 'matrix-poll-local', 'matrix-poll-resumed'))
         note(nested_depth,'deep',not reboot)
         # Lateness is not input loss: subsequent keys must retain this focus.
-        delayed('f7', lambda: key('x'), ('interaction-delayed', 'interaction-resumed'))
+        delayed('f7', lambda: key('x'), ('shared-call-delayed', 'shared-call-resumed'))
         note(nested_depth,'deepx',True)
         # On cold open, deleting the added x restores the confirmed document.
         # On the fresh boot, deep itself has not been saved yet.

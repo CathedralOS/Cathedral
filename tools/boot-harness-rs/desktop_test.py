@@ -251,6 +251,7 @@ def desktop(stream, output, serial, reboot, expected_absolute=True, fill_users=F
     assert 'Cathedral matrix: shared parent interaction ready' in log, log[-2000:]
     assert 'Cathedral matrix: shared parent storage ready' in log, log[-2000:]
     assert 'Cathedral Omega host: shared storage ready' in log, log[-2000:]
+    assert 'Cathedral Omega host: shared interaction broker ready' in log, log[-2000:]
     def picker_gone(w,d):
         return all(rgb(w,d,x,y)==bytes.fromhex('101827')
                    for y in range((height-96)//2,(height+96)//2)
@@ -487,7 +488,10 @@ def run(timeout, trace_storage=False, relative_pointer=False, service_imports=No
                 at = data.index(b'CTHIMP03')
                 assert int.from_bytes(data[at+48:at+56], 'little') == 2
                 if service_imports == 'undeclared':
-                    data[at+8:at+16] = (1).to_bytes(8, 'little')
+                    # Count shares the header with channel/descendant requests.
+                    # Removing storage must not erase the broker's own funding.
+                    header = int.from_bytes(data[at+8:at+16], 'little')
+                    data[at+8:at+16] = ((header & ~0xff) | 1).to_bytes(8, 'little')
                     data[at+48:at+144] = bytes(96)
                 else:
                     data[at+56:at+64] = (2).to_bytes(8, 'little')

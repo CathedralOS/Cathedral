@@ -217,14 +217,23 @@ impl<const WIDTH: usize> Pipeline<WIDTH> {
         self.begin(bytes, object)?;
         let result = (|| {
             let mut wake_error = None;
+            let diagnostic = time::after(100)?;
+            let mut delayed = false;
             loop {
                 if let Some(reply) = self.poll_message()? {
+                    if delayed {
+                        time::storage_sample("shared-call-resumed", &[reply.id]);
+                    }
                     return Ok(reply);
                 }
                 if let Some(error) = wake_error {
                     return Err(error);
                 }
                 let now = time::now()?;
+                if deadline.is_none() && !delayed && time::reached(now, diagnostic) {
+                    time::storage_sample("shared-call-delayed", &[self.next - 1]);
+                    delayed = true;
+                }
                 if deadline.is_some_and(|d| time::reached(now, d)) {
                     return Err(Error(abi::TIMED_OUT as i64));
                 }

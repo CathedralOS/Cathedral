@@ -11,6 +11,10 @@ pub(super) fn run(launch: Launch) {
         let scratch = Private::allocate(1).unwrap().freeze().unwrap();
         let remaining: [_; cathedral_kernel_contracts::memory::MAX_PRIVATE_REGIONS - 5] =
             core::array::from_fn(|_| Private::allocate(1).unwrap());
+        // Refusal must be the object-count bound, not exhausted page funding
+        // after the parent has lent four pages to its worker.
+        let budget = resources::budget().unwrap();
+        assert!(budget.used.private_pages < budget.limits.private_pages);
         assert!(matches!(Private::allocate(1),Err(Error(c)) if c == abi::NO_MEMORY as i64));
         drop((writers, scratch, remaining));
     }

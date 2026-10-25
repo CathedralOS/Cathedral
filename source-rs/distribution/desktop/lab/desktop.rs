@@ -4,14 +4,14 @@
 /// Notes funds its nine-page Omega host, old/new 12-page text objects, retained
 /// decorations and storage publication; bulk replies use reader pages. Colors keeps
 /// one bitmap and publishes through one page.
-pub(super) const APP_PAGES: u64 = if cfg!(feature = "notes") { 41 } else { 2 };
-pub(super) const APP_READERS: u64 = if cfg!(feature = "notes") { 5 } else { 0 };
-const APP_CHANNELS: u64 = if cfg!(feature = "notes") { 1 } else { 0 };
+pub(super) const APP_PAGES: u64 = if cfg!(feature = "notes") { 42 } else { 2 };
+pub(super) const APP_READERS: u64 = if cfg!(feature = "notes") { 6 } else { 0 };
+const APP_CHANNELS: u64 = if cfg!(feature = "notes") { 2 } else { 0 };
 /// A nested matrix holds old and new child bitmaps during replacement and lends
 /// its child's reader pages from this allowance. Parent storage and interaction
 /// each reserve a writer, reader and notification.
-const MATRIX_PAGES: u64 = if cfg!(feature = "notes") { 52 } else { 6 };
-const MATRIX_READERS: u64 = if cfg!(feature = "notes") { 44 } else { 6 };
+const MATRIX_PAGES: u64 = if cfg!(feature = "notes") { 54 } else { 6 };
+const MATRIX_READERS: u64 = if cfg!(feature = "notes") { 46 } else { 6 };
 /// Notes draws a base, a text bitmap and three note-bar rectangles; the color
 /// app draws a base and an accent plus its quota probes.
 const APP_SURFACES: u64 = if cfg!(feature = "notes") { 6 } else { 4 };

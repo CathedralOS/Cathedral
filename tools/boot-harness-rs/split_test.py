@@ -75,6 +75,7 @@ def exercise(output, click, key, scan, width, height, resumed=False, deep=False)
     log=(output/'serial.log').read_text(errors='replace')
     assert log.count('Cathedral Split: two Notes admitted with separate persistent realms')==3,log[-3000:]
     assert log.count('Cathedral Split: shared parent storage ready')==3,log[-3000:]
+    assert log.count('Cathedral Split: shared interaction broker ready')==3,log[-3000:]
     assert 'Cathedral Notes: temporary' not in log,log[-3000:]
     print('PASS: independent Split layout, focus, isolated persistence, dirty-close, resize and three reclaimed subtrees')
     if not deep:

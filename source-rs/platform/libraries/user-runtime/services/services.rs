@@ -1,5 +1,6 @@
 // Load one scoped broker, acquire approved connections, then call providers directly.
-// Receiver: the owning matrix selects its per-child Offer using server identity.
+// transport.rs owns acquisition/interaction correlation; offer.rs owns the
+// receiver custody selected by the matrix using authenticated server identity.
 use crate::{
     Error, abi,
     ipc::{self, Handle},
@@ -15,6 +16,7 @@ pub struct Interaction {
 }
 pub struct Services {
     broker: Pair,
+    shared: Option<crate::connection::Client>,
     interaction: Option<Interaction>,
     storage: Option<Pair>,
     storage_absent: bool,
@@ -33,6 +35,7 @@ impl Services {
                     environment.endpoint(0).unwrap(),
                     environment.endpoint(1).unwrap(),
                 ),
+                shared: None,
                 interaction: None,
                 storage: None,
                 storage_absent: false,
@@ -48,6 +51,7 @@ impl Services {
         let old = crate::matrix::OptionalConnections::load(environment)?;
         Ok(Self {
             broker: old.interaction,
+            shared: None,
             interaction: Some(Interaction {
                 pair: old.interaction,
                 wake: old.wake,
@@ -158,57 +162,6 @@ impl Services {
         };
         self.capture = Some((send, receive));
         Ok((send, receive))
-    }
-    fn acquire(
-        &mut self,
-        contract: u64,
-        minimum: u64,
-        maximum: u64,
-        part: u64,
-    ) -> Result<Handle, Error> {
-        if self.failed {
-            return Err(Error(abi::PEER_CLOSED as i64));
-        }
-        let mut refused = false;
-        let result = (|| {
-            self.broker.0.send(&matrix::encode(wire::request(
-                contract, minimum, maximum, part,
-            )))?;
-            match ipc::wait_many(&[self.broker.1], time::after(300)?) {
-                Err(Error(code)) if code == abi::TIMED_OUT as i64 => {
-                    // This request still owns the reply stream. A late endpoint
-                    // belongs to this acquisition, not a new request or process.
-                    time::storage_sample("service-acquire-delayed", &[contract, part]);
-                }
-                Err(error) => return Err(error),
-                Ok(_) => (),
-            }
-            let mut bytes = [0; 64];
-            let (len, endpoint) = self.broker.1.receive_with(&mut bytes)?;
-            match (matrix::decode(&bytes[..len]), endpoint) {
-                (Some([0, 1, 0, 0, 0, 0, 0, 0]), Some(endpoint)) => Ok(endpoint),
-                (Some([code, 0, 0, 0, 0, 0, 0, 0]), None) if code != 0 => {
-                    refused = true;
-                    Err(Error(code as i64))
-                }
-                (_, endpoint) => {
-                    if let Some(endpoint) = endpoint {
-                        endpoint.close()?;
-                    }
-                    Err(Error(abi::IO_ERROR as i64))
-                }
-            }
-        })();
-        // A late reply cannot be mistaken for a later acquisition. Terminal/ambiguous
-        // transport failure poisons this binding rather than silently retrying it.
-        if result.is_err() && !refused {
-            self.failed = true;
-            // Interaction shares this reply stream. Closing it prevents a late
-            // endpoint reply from being consumed as an ordinary interaction reply.
-            let _ = self.broker.0.close();
-            let _ = self.broker.1.close();
-        }
-        result
     }
 }
 fn version(minimum: u64, maximum: u64) -> Result<(), Error> {

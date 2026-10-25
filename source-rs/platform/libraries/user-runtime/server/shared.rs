@@ -137,7 +137,10 @@ impl Server {
             if pipelined { wire::MAX_IN_FLIGHT } else { 1 };
         match time::after(300).and_then(|d| Accept::start((pair.1, pair.0), d, pipelined)) {
             Ok(accept) => self.shared[channel].as_mut().unwrap().state = State::Opening(accept),
-            Err(_) => self.retire_shared(channel)?,
+            Err(error) => {
+                time::storage_sample("shared-open-refused", &[channel as u64, error.0 as u64]);
+                self.retire_shared(channel)?;
+            }
         }
         Ok(true)
     }

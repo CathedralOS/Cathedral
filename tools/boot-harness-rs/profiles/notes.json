@@ -42,9 +42,9 @@
         "target": "x86_64-unknown-none",
         "clock": true,
         "argument": 0,
-        "ipc_channels": 32,
-        "private_pages": 140,
-        "shared_pages": 140
+        "ipc_channels": 36,
+        "private_pages": 144,
+        "shared_pages": 144
       },
       {
         "package": "cathedral-storage-service",

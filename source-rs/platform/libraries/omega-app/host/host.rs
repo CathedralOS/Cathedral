@@ -31,7 +31,7 @@ pub unsafe fn run(step: Step, services: Services) -> Result<u64, Error> {
 /// The export must satisfy `Instance::new` for the complete task lifetime.
 pub unsafe fn run_with_argument(
     step: Step,
-    services: Services,
+    mut services: Services,
     argument: u64,
 ) -> Result<u64, Error> {
     // Keep buffers off the bounded task stack. Nine private pages, charged to
@@ -50,6 +50,8 @@ pub unsafe fn run_with_argument(
     let mut app =
         unsafe { Instance::new(step, state, packet) }.ok_or(Error(abi::INVALID_ARGUMENT as i64))?;
     app.packet[12] = argument;
+    services.enable_shared()?;
+    cathedral_user_runtime::write(b"Cathedral Omega host: shared interaction broker ready\n")?;
     let mut host = Host {
         services,
         interaction: None,

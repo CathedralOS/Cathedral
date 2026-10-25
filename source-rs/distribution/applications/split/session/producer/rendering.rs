@@ -2,7 +2,11 @@
 //! inherited pointers. Preference changes can repaint without another motion.
 use super::*;
 impl Producer {
-    pub(super) fn render_cursor(&mut self, output: &Output, world: &World) -> Result<(), Error> {
+    pub(super) fn render_cursor(
+        &mut self,
+        output: &mut Output,
+        world: &World,
+    ) -> Result<(), Error> {
         let Some((ordinal, x, y)) = self.point else {
             return Ok(());
         };
@@ -17,8 +21,7 @@ impl Producer {
             return Ok(());
         }
         let (width, height) = if hidden { (0, 0) } else { (7, 12) };
-        let reply = upstream::call(
-            output.pair,
+        let reply = output.services.request_interaction(
             [
                 wire::SURFACE_CURSOR,
                 epoch,
@@ -29,6 +32,7 @@ impl Producer {
                 height,
                 0xffd166,
             ],
+            None,
         )?;
         if reply[0] != 0 {
             return Err(Error(reply[0] as i64));

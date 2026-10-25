@@ -64,7 +64,9 @@ impl Producer {
             launch.release()?;
         }
         if let Some((epoch, cursor)) = self.cursor.take() {
-            let reply = upstream::call(output.pair, [wire::ERASE, epoch, cursor, 0, 0, 0, 0, 0])?;
+            let reply = output
+                .services
+                .request_interaction([wire::ERASE, epoch, cursor, 0, 0, 0, 0, 0], None)?;
             if !matches!(reply[0], 0 | abi::DENIED | abi::BAD_HANDLE) {
                 return Err(Error(reply[0] as i64));
             }
@@ -99,8 +101,7 @@ impl Producer {
                 .inherited_input_headroom(0, 0)
                 .map_err(|c| Error(c as i64))?;
             if self.limited != Some(capacity) {
-                let reply = upstream::call(
-                    output.pair,
+                let reply = output.services.request_interaction(
                     [
                         wire::INPUT_CAPACITY,
                         output.grant.epoch,
@@ -111,6 +112,7 @@ impl Producer {
                         0,
                         0,
                     ],
+                    None,
                 )?;
                 if reply[0] == 0 {
                     self.limited = Some(capacity);

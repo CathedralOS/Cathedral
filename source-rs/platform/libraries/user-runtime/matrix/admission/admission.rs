@@ -106,14 +106,16 @@ impl Admitted {
         if let Some(services) = self.services {
             services.close()?;
         }
-        for endpoint in [
-            self.control.0,
-            self.control.1,
-            self.data.0,
-            self.data.1,
-            self.notify,
-        ] {
+        for endpoint in [self.control.0, self.control.1, self.notify] {
             endpoint.close()?;
+        }
+        // Selected shared interaction slots may already close these exact names.
+        for endpoint in [self.data.0, self.data.1] {
+            match endpoint.close() {
+                Ok(()) => (),
+                Err(Error(code)) if code == abi::BAD_HANDLE as i64 => (),
+                Err(error) => return Err(error),
+            }
         }
         if let Some((input, output)) = self.storage {
             // A selected shared Server slot may already have retired these local

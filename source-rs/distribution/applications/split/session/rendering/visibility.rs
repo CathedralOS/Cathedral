@@ -34,7 +34,7 @@ impl Output {
             } else {
                 None
             };
-            let reply = upstream::exchange(self.pair, words, image)?;
+            let reply = self.services.request_interaction(words, image)?;
             if reply[0] != 0 {
                 return Err(Error(reply[0] as i64));
             }

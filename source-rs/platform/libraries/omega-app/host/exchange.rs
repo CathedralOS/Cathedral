@@ -6,7 +6,6 @@ use cathedral_kernel_contracts::user as abi;
 use cathedral_platform_contracts::{matrix as wire, storage};
 use cathedral_user_runtime::{
     Error,
-    matrix::upstream,
     memory::{Object, Private},
 };
 
@@ -47,12 +46,10 @@ pub(super) fn exchange(
         return Err(Error(abi::INVALID_ARGUMENT as i64));
     }
     let reply = if operation == 5 {
-        let pair = host
-            .interaction
-            .as_ref()
-            .ok_or(Error(abi::DENIED as i64))?
-            .pair;
-        upstream::exchange(pair, words, object.as_ref())?
+        if host.interaction.is_none() {
+            return Err(Error(abi::DENIED as i64));
+        }
+        host.services.request_interaction(words, object.as_ref())?
     } else {
         let scope = host.storage.as_mut().ok_or(Error(abi::DENIED as i64))?;
         let request = storage::Request::decode(&wire::encode(words))

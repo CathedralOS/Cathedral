@@ -104,7 +104,7 @@ impl Capture {
     /// backing. Logical page grants alone do not reserve physical frames.
     /// Ask the immediate owner through the ordinary, policy-checked protocol;
     /// refusal leaves admission untouched and the existing desktop running.
-    fn fund(&self, output: &Output) -> Result<(), Error> {
+    fn fund(&self, output: &mut Output) -> Result<(), Error> {
         let budget = cathedral_user_runtime::resources::budget()?;
         let physical = cathedral_user_runtime::resources::physical_budget()?;
         let owner = (abi::MAX_ADMISSION_FRAMES as u64)
@@ -117,7 +117,9 @@ impl Capture {
         if extra == 0 {
             return Ok(());
         }
-        let reply = upstream::call(output.pair, [wire::FUND, 0, 0, 0, 0, extra, 0, 0])?;
+        let reply = output
+            .services
+            .request_interaction([wire::FUND, 0, 0, 0, 0, extra, 0, 0], None)?;
         if reply[0] != 0 {
             return Err(Error(reply[0] as i64));
         }
