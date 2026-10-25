@@ -8,12 +8,22 @@ public machine session(s: &mut State, p: &mut [u64; 4096]) -> u64 {
     transition s.phase {
         0u64 -> boot(s, p) 1u64 -> start(s, p) 2u64 -> admitted(s, p)
         3u64 -> place(s, p) 4u64 -> placed(s, p) 5u64 -> wait(s, p)
-        6u64 -> dispatch(s, p) 7u64 -> reply(s, p) _ -> (0u64)
+        6u64 -> dispatch(s, p) 7u64 -> reply(s, p) 8u64 -> initialized(s, p)
+        9u64 -> dispatch_ready(s, p) _ -> (0u64)
     }
 }
 machine boot(s: &mut State, p: &mut [u64; 4096]) -> u64 {
     packet(p, 1u64, 300u64, 600u64, 31u64, 0u64, 0u64, 0u64, 0u64);
-    s.phase = 1u64; INITIALIZE
+    s.parent = p[14]; s.phase = 8u64; INITIALIZE
+}
+machine initialized(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+    transition p[9] == 0u64 && p[0] != 0u64 && p[1] > 0u64 && p[1] <= 4096u64 && p[2] >= 3u64 && p[2] <= 4096u64 {
+        true -> dimensions(s, p) _ -> (0u64)
+    }
+    state dimensions(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+        s.width = p[1]; s.height = p[2] / 3u64; s.keys = p[3];
+        transition { _ -> start(s, p) }
+    }
 }
 machine start(s: &mut State, p: &mut [u64; 4096]) -> u64 {
     transition p[9] == 0u64 && s.slot < 3u64 { true -> spawn(s, p) _ -> (0u64) }
@@ -30,7 +40,11 @@ machine admitted(s: &mut State, p: &mut [u64; 4096]) -> u64 {
 machine place(s: &mut State, p: &mut [u64; 4096]) -> u64 {
     transition p[9] == 0u64 && s.slot < 3u64 { true -> position(s, p) _ -> (0u64) }
     state position(s: &mut State, p: &mut [u64; 4096]) -> u64 requires s.slot < 3u64 {
-        let slot: u64 = s.slot; packet(p, 101u64, slot, 0u64, slot * 200u64, 300u64, 200u64, 31u64, 0u64);
+        let slot: u64 = s.slot; let height: u64 = s.height;
+        transition height <= 4096u64 { true -> bounded(s, p, slot, height) _ -> (0u64) }
+    }
+    state bounded(s: &mut State, p: &mut [u64; 4096], slot: u64, height: u64) -> u64 requires slot < 3u64 && height <= 4096u64 {
+        packet(p, 101u64, slot, 0u64, slot * height, s.width, height, s.keys, 0u64);
         s.phase = 4u64; OWNER_COMMAND
     }
 }

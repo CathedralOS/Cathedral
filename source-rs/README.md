@@ -108,7 +108,10 @@ Run these commands from the repository root.
 `python tools/boot-harness-rs/matrix_composition_test.py` checks an
 [independent three-peer matrix](distribution/lab/matrix-composition/README.md)
 over real IPC, with no stock matrix/desktop contract or storage disk. The ordinary
-F5 matrix shares its local grant and input command implementation.
+F5 matrix shares its local grant and input command implementation. Add `--omega`
+to run the independent Omega implementation, or `--upstream` to run it under a
+real parent with nested input/view attenuation and live-subtree reclamation.
+These are headless boundary proofs, not additional F5 desktops.
 
 The installed Split matrix also has a bounded masked capture demonstration:
 F5 -> user -> Split -> CAPTURE. HIDE RIGHT can remove the source presentation

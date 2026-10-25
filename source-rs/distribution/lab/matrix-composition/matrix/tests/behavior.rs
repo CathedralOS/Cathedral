@@ -15,8 +15,14 @@ fn run(test: impl FnOnce(&mut Instance<'_>)) {
     test(&mut app);
 }
 fn boot(app: &mut Instance<'_>) {
+    boot_with(app, None);
+}
+fn boot_with(app: &mut Instance<'_>, grant: Option<[u64; 4]>) {
+    app.packet[14] = u64::from(grant.is_some());
     assert_eq!(app.advance(), 13);
     assert_eq!(&app.packet[..4], &[1, 300, 600, wire::KEY_MASK]);
+    let grant = grant.unwrap_or([1, 300, 600, wire::KEY_MASK]);
+    app.packet[..4].copy_from_slice(&grant);
     for slot in 0..3 {
         assert_eq!(app.advance(), 11);
         assert_eq!(
@@ -43,10 +49,10 @@ fn boot(app: &mut Instance<'_>) {
                 wire::PLACE,
                 slot,
                 0,
-                slot * 200,
-                300,
-                200,
-                wire::KEY_MASK,
+                slot * (grant[2] / 3),
+                grant[1],
+                grant[2] / 3,
+                grant[3],
                 0
             ]
         );
@@ -146,4 +152,40 @@ fn malformed_requests_and_memory_cannot_launch_children() {
         assert_eq!(a.packet[0], 1);
         assert_eq!(a.advance(), 10);
     });
+}
+
+#[test]
+fn supplied_parent_dimensions_and_refresh_preserve_authenticated_request() {
+    run(|a| {
+        boot_with(a, Some([19, 240, 450, 16]));
+        request(a, 2, [wire::PLACE, 0, 0, 0, 800, 800, 31, 0]);
+        a.packet[14] = 0; // Later packet contents cannot switch to root mode.
+        let facts: [u64; 14] = a.packet[..14].try_into().unwrap();
+        assert_eq!(a.advance(), 21);
+        assert_eq!(&a.packet[..14], &facts);
+        assert_eq!(a.advance(), 15); // Still the authenticated child's request.
+        a.packet[..8].copy_from_slice(&wire::error(abi::DENIED));
+        assert_eq!(a.advance(), 16);
+        assert_eq!(a.advance(), 10);
+        request(a, 3, [wire::SPAWN, 0, 0, 0, 0, 0, 0, 0]);
+        assert_eq!(a.advance(), 21);
+        a.packet[9] = abi::PEER_CLOSED;
+        assert_eq!(a.advance(), 0); // No mutation after losing the parent transport.
+    });
+}
+#[test]
+fn refused_or_unusable_parent_never_admits_children() {
+    for grant in [
+        [0, 240, 450, 16],
+        [1, 0, 450, 16],
+        [1, 240, 2, 16],
+        [1, wire::MAX_EXTENT + 1, 450, 16],
+    ] {
+        run(|a| {
+            a.packet[14] = 1;
+            assert_eq!(a.advance(), 13);
+            a.packet[..4].copy_from_slice(&grant);
+            assert_eq!(a.advance(), 0);
+        });
+    }
 }

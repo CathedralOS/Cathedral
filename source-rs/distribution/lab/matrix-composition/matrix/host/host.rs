@@ -19,8 +19,9 @@ struct Host {
     children: Children,
     request: Option<Request>,
     pending: Option<Pending>,
+    parent: Option<cathedral_user_runtime::services::Services>,
 }
-pub fn run() -> Result<(), Error> {
+pub fn run(environment: cathedral_user_runtime::task::Environment) -> Result<(), Error> {
     static mut WORLD: World<3> = World::empty();
     let address = &raw mut WORLD;
     // SAFETY: One single-threaded entry, with no other reference to this arena.
@@ -33,6 +34,13 @@ pub fn run() -> Result<(), Error> {
         children: Children([None, None, None]),
         request: None,
         pending: None,
+        parent: match environment.len() {
+            0 => None,
+            2 => Some(cathedral_user_runtime::services::Services::load(
+                &environment,
+            )?),
+            _ => return Err(Error(abi::INVALID_ARGUMENT as i64)),
+        },
     };
     let mut backing = Private::allocate(9)?;
     let (state, packet) = backing.bytes_mut().split_at_mut(STATE_WORDS * 8);
@@ -49,6 +57,7 @@ pub fn run() -> Result<(), Error> {
     // SAFETY: The packager checks this linked export; buffers outlive every step.
     let mut app = unsafe { Instance::new(omega_app_step, state, packet) }
         .ok_or(Error(abi::INVALID_ARGUMENT as i64))?;
+    app.packet[14] = u64::from(host.parent.is_some());
     loop {
         let operation = app.advance();
         if operation == 0 {
@@ -83,12 +92,10 @@ impl Host {
                     .stop(p[0] as usize, &mut self.server, self.world)?;
                 p[..8].fill(0);
             }
-            13 => self.world.inherit(Grant {
-                epoch: p[0],
-                width: p[1],
-                height: p[2],
-                keys: p[3],
-            }),
+            13 => self.initialize(p)?,
+            21 => {
+                self.refresh()?;
+            }
             14 => p[..8].copy_from_slice(&self.world.owner_command(words)),
             15 => {
                 let request = self.current()?;

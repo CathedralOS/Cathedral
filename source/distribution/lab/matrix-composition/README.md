@@ -1,7 +1,7 @@
 # Independent Omega matrix
 
 Start at [matrix/main.omg](matrix/main.omg). [session.omg](matrix/session.omg)
-chooses the virtual arrangement, admits three children with different supplied
+divides its granted area into three regions, admits children with different supplied
 services and places them. [requests.omg](matrix/requests.omg) chooses owner,
 child, service-acquisition and disconnection handling. No stock desktop,
 launcher, configuration object, taskbar or filesystem is required.
@@ -31,22 +31,55 @@ Run the same live IPC proof against both implementations:
 ```powershell
 python tools/boot-harness-rs/matrix_composition_test.py
 python tools/boot-harness-rs/matrix_composition_test.py --omega
+python tools/boot-harness-rs/matrix_composition_test.py --upstream
 cd source-rs
 cargo test --locked -p cathedral-three-peer-matrix --lib --features omega
 ```
 
 The Omega profile grants nine private pages for the component's state/packet.
-The original Rust proof remains the comparison path. Four compiled policy tests
+The original Rust proof remains the comparison path. Six compiled policy tests
 cover startup refusal, caller separation, service-grant choice on replacement,
-malformed requests, disconnection and admission errors. The guest proof checks
+malformed requests, disconnection, admission errors and parent refresh without
+losing authenticated request custody. The guest proof checks
 actual service transfers, forged/forbidden requests, sibling isolation, stale
 views, repeated replacement, interrupted transfers, failed-admission rollback
 and whole-subtree reclamation.
 
 This proves a matrix program in Omega over existing Rust platform mechanisms.
 Its storage grant exercises endpoint custody only; it does not serve a filesystem
-or distinguish persistent realms. It has a virtual input space, no framebuffer,
-no upstream matrix adapter and no rendering. The stock F5 matrix still owns its
+or distinguish persistent realms. It has a virtual input space, no framebuffer
+and no rendering. The stock F5 matrix still owns its
 Rust supervision and forwarding loop; only its configuration/placement policy
-has moved to Omega. Next growth should prove an actual upstream/child path
-before promoting this proof's bridge into platform infrastructure.
+has moved to Omega. The bridge stays private after this second composition;
+its synchronous upstream exchange is not a reusable desktop service loop.
+
+## Supplied upstream connection
+
+The same program runs under a real Rust fixture parent with `--upstream`.
+[The nested proof](../../../../source-rs/distribution/lab/matrix-composition/nested/nested.rs)
+admits that parent, which lends the Omega matrix its three leaf launch grants.
+The matrix receives only a scoped broker pair in its environment. Startup word
+14 reports whether that binding exists; Omega saves that fact before processing
+untrusted requests. An empty environment selects the original top-level proof.
+An invalid or refused supplied parent never falls back to a synthetic grant.
+
+[host/parent.rs](../../../../source-rs/distribution/lab/matrix-composition/matrix/host/parent.rs)
+acquires the supplied interaction service once and applies atomic POLL snapshots
+through the shared World. INITIALIZE returns the actual epoch, width, height and
+key grant; Omega chooses three equal placements inside it. REFRESH preserves the
+local request and caller metadata. A changed parent epoch invalidates descendant
+placements, including on resize. Explicit placement must establish fresh grants;
+restoring a revoked parent does not resurrect old placements or queued input.
+
+The live fixture checks two coordinate translations, sibling isolation, queued
+press/release ordering, key attenuation, forged owner operations, resize clipping
+after explicit placement, stale epochs and revoke/regrant. It cancels and restarts
+the matrix three times per parent while checking resource counters. The parent
+then returns with the matrix and peers alive; the supervisor starts the complete
+tree again with the returned loans and unchanged charges.
+
+Limits: snapshots are requested before local dispatch, with the existing
+retirement backpressure. This proof does not consume notification wakes or run a
+frame loop, and a slow parent can delay local dispatch. The stock desktop's
+asynchronous parent handling must be preserved when moving a lifecycle branch
+to Omega. Neither rendering latency nor wake-driven input delivery is measured.

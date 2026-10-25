@@ -52,8 +52,9 @@ python tools/boot-harness-rs/matrix_composition_test.py
 The harness uses separate firmware/ESP files and no storage disk. This is a
 headless architecture check, not another user-facing desktop. F5 still runs the
 normal desktop. This now proves matrix-owned template admission with runtime
-connection rollback. It does not prove nested upstream adaptation, drawing,
-storage forwarding or alternative dynamic-reservation policy. Those paths remain in
+connection rollback. The separate Omega upstream profile below adds nested
+input/view adaptation. Drawing, storage forwarding and alternative
+dynamic-reservation policy remain outside this proof. Those paths remain in
 the stock program and are candidates for extraction when another consumer needs
 them. Shared mechanisms should grow from those actual requirements.
 
@@ -73,3 +74,25 @@ is deliberately local to this lab, including its probe relay and rollback check;
 those operations do not enter the common app host or claim to be a final runtime.
 Storage is still only a custody proof, not persistent realm forwarding. F5's
 stock matrix is not yet running this event loop.
+
+## Parent-backed Omega proof
+
+`matrix_composition_test.py --upstream` selects a separate profile and the
+`upstream-proof` fixture feature. Start at [nested/nested.rs](nested/nested.rs):
+it runs a real [parent provider](nested/parent.rs), which admits the Omega matrix
+and lends three leaf launches. [behavior.rs](nested/behavior.rs) exercises both
+IPC edges. The fixture parent uses the platform World, but never directly changes
+the inner World or simulates a leaf reply.
+
+The supplied region is offset (100,80), size 240x450 and Enter-only. Omega derives
+three 240x150 regions. The proof checks translation, queued key edges, withheld
+keys, forbidden child commands, shrink/revoke/regrant and old-epoch rejection.
+It repeatedly kills the matrix with its leaves alive and checks resource recovery.
+The parent finally exits with a live subtree; the root supervisor restarts that
+entire composition using the returned launch loans.
+
+The [parent adapter](matrix/host/parent.rs) is deliberately synchronous and
+request-driven. It preserves World retirement backpressure and serialized reply
+custody; it does not demonstrate desktop latency or asynchronous notification
+handling. See the [Omega guide](../../../../source/distribution/lab/matrix-composition/README.md)
+for the private bridge and current limits.

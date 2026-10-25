@@ -1,5 +1,60 @@
 # Rust reference OS: tasks and handoff
 
+Implementation update 2026-10-25: **Omega matrix accepts a real upstream grant
+and attenuates it to nested children**, over `eb28b007`.
+
+The same independent Omega program now accepts an optional supplied broker in
+its entry environment. It acquires interaction once, derives its three initial
+placements from the actual parent dimensions/key mask, and refreshes parent
+snapshots before dispatch without losing the retained local request or caller
+identity. Invalid/refused bootstrap cannot fall back to the synthetic root grant.
+The bridge remains private to the lab; no kernel or common app-host API changed.
+
+`python tools/boot-harness-rs/matrix_composition_test.py --upstream` boots a real
+Rust parent provider, the Omega matrix and three ordinary peer processes. The
+[parent fixture](source-rs/distribution/lab/matrix-composition/nested/parent.rs)
+uses platform World/server/admission and never modifies the inner World directly.
+[Behavior checks](source-rs/distribution/lab/matrix-composition/nested/behavior.rs)
+cover two coordinate translations, sibling isolation, queued press/release order,
+withheld keys, forged owner operations, resize/clipping, stale epochs and
+revoke/regrant without replay or automatic descendant revival. Existing semantics
+invalidate child placements when the parent's view epoch changes, including on
+resize; the first fixture incorrectly expected automatic clipping and was corrected
+to require explicit placement. Restart fixtures also reset held pointer state.
+
+Each parent cancels/restarts the matrix with live peers three times and checks
+resource counters. It then returns with the matrix and peers still alive; the
+supervisor verifies subtree reclamation by restarting the complete composition
+with the same loans and unchanged charges. The matrix retains its previous
+13-channel and nine-private-page grants. The new parent fixture has three channels
+for its supplied broker/interaction connection; no desktop budget changed.
+
+Verification:
+
+- Nested QEMU proof: `omega-matrix-upstream/20261025T003303886919Z` (final,
+  includes queued input before revocation and exit with live descendants).
+- Original Omega proof: `omega-matrix/20261025T002944651380Z`.
+- Original Rust comparison: `matrix-composition/20261025T003044894303Z`.
+- Six compiled Omega policy tests pass, including supplied parent geometry,
+  request/caller preservation across refresh, parent transport loss and refusal
+  before admission. Command: `cargo test --locked -p cathedral-three-peer-matrix
+  --lib --features omega`.
+- Default host `cargo test --locked` passes; log:
+  `build/omega-component/upstream-host-tests.log`. Affected guest Clippy with
+  `omega,upstream-proof` passes. Layout (68 Omega / 150 Rust edges), Rust formatting
+  and diff checks pass.
+- No F5 desktop, full kernel runtime or ARM64 QEMU rerun: this change is confined
+  to the independent lab, its profile and documentation.
+
+**Next:** move a bounded stock matrix lifecycle decision into Omega, with a real
+F5 regression test. Preserve the stock asynchronous upstream loop: this proof's
+adapter serializes parent POLL with local requests and honors existing input
+retirement backpressure, but does not consume wake notifications or measure
+latency. A slow parent can delay local dispatch; this is not a production runtime
+extraction. Rendering and storage forwarding remain outside this proof. The
+previous intermittent partial-key observation is still open. No new owner choice
+blocks the engineering work.
+
 Implementation update 2026-10-25: **diagnostic boot repaired; shared matrix
 configuration/placement and an independent matrix execute in Omega**, over `aa84ff7c`.
 
@@ -66,9 +121,8 @@ custody only, not actual filesystem scopes or storage forwarding.
 - Artifacts/logs: `build/omega-component/{matrix-*,omega-matrix-*.log,rust-matrix-proof.log}`.
   Kernel/ARM64 runtime suites and every specialized fault fixture were not rerun.
 
-**Next:** the independent Omega matrix should accept a real upstream connection
-and attenuate one nested child's view/input through it. Keep the current lab
-bridge private until that second composition proves reusable operations. Then
+**Follow-up (completed in the newer entry above):** prove the supplied upstream
+connection and nested attenuation while keeping the lab bridge private. Then
 move a bounded stock lifecycle branch to Omega using those operations; the
 stock matrix's supervision/rendering/storage loop remains Rust. The partial-key
 observation is still open, with source/nested/native-delivery traces now available.

@@ -109,7 +109,10 @@ over a private lab bridge to those mechanisms. It chooses admission, service
 grants, placement and lifecycle; the bridge retains authenticated request custody.
 The common app host has not acquired matrix-specific operations.
 This verifies that subset over actual IPC; it does
-not yet share the stock program's rendering or upstream adapters. Child connection
+not yet share the stock program's rendering or asynchronous upstream adapters.
+The Omega proof also accepts a real parent-supplied broker and attenuates its
+view/input to three peers; its private synchronous adapter is a boundary proof,
+not the stock desktop event loop. Child connection
 construction, spawn and failure rollback are shared through
 `platform/libraries/user-runtime/matrix/admission/`; each program retains code,
 budget, placement and recovery policy. Scoped service acquisition also lives in
