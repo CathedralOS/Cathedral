@@ -27,20 +27,25 @@ impl Children {
         storage: Pair,
         server: &mut Server,
     ) -> Result<super::storage::Storage, Error> {
-        let mut scope = Scope::new(storage);
+        let mut client =
+            cathedral_user_runtime::connection::Client::connect(storage, time::after(300)?)?;
+        cathedral_user_runtime::write(b"Cathedral Split: shared parent storage ready\n")?;
+        let mut scope = Scope::shared(&mut client);
         scope.bind().map_err(|c| Error(c as i64))?;
         let roots = super::storage::open(&mut scope)?;
-        let mut forwarding = super::storage::Storage::new(storage, scope.realm(), roots);
+        let realm = scope.realm();
         let id = scope.lookup(b"Notes").map_err(|c| Error(c as i64))?;
         let (code, granted) = image::read(&mut scope, id)?;
+        drop(scope);
+        let mut forwarding = super::storage::Storage::new(client, realm, roots);
         for slot in 0..2 {
             let launch = Executable::from_object(&code, 0)?.reserve(
                 Limits {
                     // Omega host (9) + old/new text (24) + small retained
                     // decorations and storage publication, all app-charged.
                     private_pages: 40,
-                    reader_pages: 4,
-                    channels: 0,
+                    reader_pages: 5,
+                    channels: 1,
                 },
                 0,
                 abi::MAX_ADMISSION_FRAMES as u64,

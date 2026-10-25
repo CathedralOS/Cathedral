@@ -17,6 +17,14 @@ plus the [Omega chooser](../../../../source/distribution/applications/chooser/RE
 This is deliberately a temporary, synchronous x86-64 native bridge. A future
 Omega runtime can replace it while retaining the app's protocol behavior.
 
+Storage acquisition creates one shared-memory connection owned by the host.
+Subsequent storage operations retain its request sequence and immutable attachment
+custody. A failed or ambiguous exchange retires it without replay. The app's
+manifest and owner grant must fund the notification, private mailbox page and
+accepted reader page; optional storage remains optional. Interaction and lifecycle
+traffic still use their existing copied connections. See the
+[transport boundary](../user-runtime/connection/README.md).
+
 ## ABI 1
 
 One System V export accepts pointers to zeroed opaque state and a 4,096-word

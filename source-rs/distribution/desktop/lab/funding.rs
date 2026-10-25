@@ -8,14 +8,14 @@ pub(super) fn exercise(matrix: Pair, pressure: bool) {
     for _ in 0..2 {
         owner(matrix, nested([wire::RUN_MEMORY, 0, 1, 0, 0, 0, 0, 0]));
         assert_eq!(
-            call(matrix, nested([wire::RUN, 0, 1, 0, 0, 0, 0, 0])),
+            call(matrix, nested([wire::RUN, 0, 1, 0, APP_CHANNELS, 0, 0, 0])),
             wire::error(abi::NO_MEMORY)
         );
     }
     // The inner service's own image, stack and tables already occupy part of 256.
     // Giving its child all 256 would withdraw live funding, so admission is denied.
     assert_eq!(
-        call(matrix, nested([wire::RUN, 0, 1, 0, 0, 0, 0, 0])),
+        call(matrix, nested([wire::RUN, 0, 1, 0, APP_CHANNELS, 0, 0, 0])),
         wire::error(abi::BUSY)
     );
     // Exercise real app IPC and new scanout while the other branch cannot admit.

@@ -134,8 +134,12 @@ uses a persistent shared Client on each stock matrix's separate parent storage
 stream. Forwarding and binding refreshes yield on its lifetime and notification
 interests. Local Scope calls borrow it without resetting IDs. Child storage slots
 are preselected before admission and survive replacement with fresh custody.
-Omega-facing leaf clients, Split and recursive interaction/rendering retain their
-existing transport. Older fixtures combining interaction and storage stay copied;
+The [Omega host](../../omega-app/host/host.rs) owns a shared storage connection
+without changing the app step ABI. [Split](../../../../distribution/applications/split/session/session.rs)
+accepts shared child storage and keeps one persistent upstream client for both
+local reads and asynchronous forwarding. App manifests and owner grants fund each
+end's writer, reader and notification. Recursive interaction/rendering retain
+their existing transport. Older fixtures combining interaction and storage stay copied;
 this is an explicit composition choice, never fallback after an upgrade.
 
 [The guest connection proof](../../../../distribution/lab/channels/connection/connection.rs)
@@ -168,12 +172,13 @@ registration alone does not bypass these or the object-count limits. After
 delegating its notification signal right, each side releases its setup-only copy.
 A live connection retains three local notification handles: wait, close/control
 and the peer's signal right. The [capacity proof](../../../../distribution/lab/channels/connection/capacity.rs)
-keeps five streams live under the unchanged sixteen-handle cap, refuses a further
-notification allocation, and checks final handle and enclosing budget refunds. Fair scanning
+keeps six streams live under the thirty-two-handle cap, exhausts the remaining
+handle metadata with separately funded notifications, refuses a further allocation,
+and checks final handle and enclosing budget refunds. Fair scanning
 and earliest partial/setup deadlines cover all selected streams. There is still
 one outstanding request per stream, not a multi-request pipeline.
 
-Other recursive consumers, endpoint custody and Omega-facing migration remain work. Shared
+Recursive interaction/rendering and endpoint custody remain migration work. Shared
 mailbox pooling may reduce per-connection backing/metadata costs later; current
 bounds refuse excess setup safely. No performance improvement or final production
 wire ABI is claimed here.

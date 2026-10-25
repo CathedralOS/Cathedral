@@ -5,7 +5,7 @@ use cathedral_user_runtime::{resources::Limits, storage::Scope, task::Executable
 impl Producer {
     pub(super) fn admit(
         &mut self,
-        pair: Pair,
+        scope: &mut Scope<'_>,
         output: &mut Output,
         world: &mut World,
         server: &mut Server,
@@ -13,11 +13,10 @@ impl Producer {
         if self.running() || output.nested || output.capacity < 10 || !world.input_ready() {
             return Err(Error(abi::NO_MEMORY as i64));
         }
-        let mut scope = Scope::new(pair);
         scope.bind().map_err(|c| Error(c as i64))?;
         let id = scope.lookup(b"Producer").map_err(|c| Error(c as i64))?;
         let (code, offered) = children::image::read_offered(
-            &mut scope,
+            scope,
             id,
             imports::INTERACTION | imports::INPUT_PRODUCER,
         )?;

@@ -6,6 +6,7 @@ type World = cathedral_matrix::world::World<4>;
 use cathedral_platform_contracts::{imports, matrix as wire, services};
 use cathedral_user_runtime::{
     Error,
+    event::Interest,
     matrix::upstream::{self, Pair},
     server::{Event, Server},
     services::Services,
@@ -19,6 +20,13 @@ pub fn run(mut services: Services) -> Result<(), Error> {
     let storage = services.storage(1, 1)?;
     let mut server = Server::open_clients(8)?;
     server.enable_memory();
+    static mut STORAGE: [cathedral_user_runtime::server::SharedSlot; 2] =
+        [const { cathedral_user_runtime::server::SharedSlot::empty() }; 2];
+    let slots = &raw mut STORAGE;
+    // SAFETY: One process entry lends disjoint persistent child storage slots.
+    for (index, slot) in unsafe { &mut *slots }.iter_mut().enumerate() {
+        server.enable_shared(index + 2, slot)?;
+    }
     static mut WORLD: World = World::empty();
     let arena = &raw mut WORLD;
     // SAFETY: Single-threaded process entry exclusively owns this arena.
@@ -62,8 +70,9 @@ pub fn run(mut services: Services) -> Result<(), Error> {
                 } else if clicked && survey.is_none() && output.capture_hit(event[3], event[4]) {
                     if capture.running() {
                         capture.stop(&mut output, world, &mut server)?;
-                    } else if let Some(pair) = storage.idle_pair()
-                        && let Err(error) = capture.start(pair, &mut output, world, &mut server)
+                    } else if let Some(mut scope) = storage.idle_scope()
+                        && let Err(error) =
+                            capture.start(&mut scope, &mut output, world, &mut server)
                     {
                         time::storage_sample("split-capture-refused", &[error.0 as u64]);
                         output.failure = Some(b"CANNOT CAPTURE");
@@ -75,8 +84,9 @@ pub fn run(mut services: Services) -> Result<(), Error> {
                     if producer.running() {
                         producer.stop(&mut output, world, &mut server)?;
                         output.header(false)?;
-                    } else if let Some(pair) = storage.idle_pair()
-                        && let Err(error) = producer.start(pair, &mut output, world, &mut server)
+                    } else if let Some(mut scope) = storage.idle_scope()
+                        && let Err(error) =
+                            producer.start(&mut scope, &mut output, world, &mut server)
                     {
                         time::storage_sample("split-producer-refused", &[error.0 as u64]);
                         output.failure = Some(b"NO ROOM");
@@ -84,11 +94,11 @@ pub fn run(mut services: Services) -> Result<(), Error> {
                     }
                 } else if clicked
                     && survey.is_none()
-                    && storage.idle_pair().is_some()
+                    && storage.idle()
                     && output.deepen_hit(event[3], event[4])
                 {
                     if output.can_deepen()
-                        && cathedral_user_runtime::resources::budget()?.limits.channels >= 15
+                        && cathedral_user_runtime::resources::budget()?.limits.channels >= 22
                     {
                         deepen = true;
                         survey = Some(loss::Survey::start(None, &mut children)?);
@@ -116,7 +126,7 @@ pub fn run(mut services: Services) -> Result<(), Error> {
             } else if clean && deepen {
                 // Descendants answered clean; collect their grants and images
                 // before lending the same conserved funding to the new matrix.
-                if let Some(pair) = storage.idle_pair() {
+                if storage.idle() {
                     capture.stop(&mut output, world, &mut server)?;
                     producer.stop(&mut output, world, &mut server)?;
                     for slot in 0..2 {
@@ -125,9 +135,8 @@ pub fn run(mut services: Services) -> Result<(), Error> {
                         output.flush(world)?;
                         children.stop(slot, &mut server)?;
                     }
-                    match children.deepen(pair, &mut server) {
-                        Ok(next) => {
-                            storage = next;
+                    match children.deepen(&mut storage, &mut server) {
+                        Ok(()) => {
                             output.nested_layout(world)?;
                         }
                         Err(error) => {
@@ -153,19 +162,23 @@ pub fn run(mut services: Services) -> Result<(), Error> {
         if refresh && world.input_ready() {
             continue;
         }
-        let mut wake = [interaction.wake; 4];
+        let mut wake = [Interest::Ipc(interaction.wake); 5];
         let mut count = 1;
         if let Some(s) = &survey {
             for slot in 0..2 {
                 if s.waiting & (1 << slot) != 0 {
-                    wake[count] = children.slots[slot].as_ref().unwrap().control.1;
+                    wake[count] = Interest::Ipc(children.slots[slot].as_ref().unwrap().control.1);
                     count += 1;
                 }
             }
         }
         let storage_wait = storage.wait();
         if let Some((handle, _)) = storage_wait {
-            wake[count] = handle;
+            wake[count] = Interest::Ipc(handle);
+            count += 1;
+        }
+        if let Some(interest) = storage.wake() {
+            wake[count] = interest;
             count += 1;
         }
         server.pause(
@@ -187,7 +200,11 @@ pub fn run(mut services: Services) -> Result<(), Error> {
             (Some(a), Some(b)) => Some(a.min(b)),
             (a, b) => a.or(b),
         };
-        let Some(event) = server.next_event_or(&wake[..count], deadline)? else {
+        let deadline = match (deadline, storage.transfer_deadline()) {
+            (Some(a), Some(b)) => Some(a.min(b)),
+            (a, b) => a.or(b),
+        };
+        let Some(event) = server.next_event_for(&wake[..count], deadline)? else {
             continue;
         };
         let client = match &event {

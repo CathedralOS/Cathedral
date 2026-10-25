@@ -1,9 +1,9 @@
 //! Child-local object storage through the parent matrix. STORAGE_INFO supplies
 //! a binding revision that scopes every later request and the realm the
 //! binding is rooted at; the parent substitutes its own upstream scope at each
-//! hop. Stock matrices borrow their persistent correlated shared client; remaining
-//! copied leaf clients carry no transport correlation identity. Either path retires on an
-//! ambiguous failure rather than replaying a possibly committed operation.
+//! hop. Matrices borrow their persistent correlated shared client; Omega app hosts
+//! own one. Older combined-stream fixtures retain copied transport. Each path
+//! retires on ambiguous failure rather than replaying a possibly committed operation.
 use crate::{
     Error, abi,
     ipc::{self, Handle},
@@ -14,9 +14,12 @@ use cathedral_platform_contracts::{matrix, storage};
 /// End-to-end budget, preserved by every matrix. The root caps provider work
 /// more tightly, leaving room for its failure verdict to return to the client.
 const DEADLINE_TICKS: u64 = storage::EXCHANGE_TICKS;
+// Owned app connections stay inline; borrowed matrix scopes use the same protocol.
+#[allow(clippy::large_enum_variant)]
 enum Transport<'a> {
     Copied((Handle, Handle)),
     Shared(&'a mut crate::connection::Client),
+    Owned(crate::connection::Client),
 }
 pub struct Scope<'a> {
     transport: Transport<'a>,
@@ -26,6 +29,19 @@ pub struct Scope<'a> {
     direct: bool,
 }
 impl<'a> Scope<'a> {
+    /// Own a shared parent connection. Failure closes the supplied endpoints;
+    /// there is no copied-payload fallback or automatic mutation replay.
+    pub fn connect(pair: (Handle, Handle)) -> Result<Self, Error> {
+        let client = crate::connection::Client::connect(pair, time::after(300)?)?;
+        Ok(Self {
+            transport: Transport::Owned(client),
+            binding: 0,
+            realm: 0,
+            alive: true,
+            direct: false,
+        })
+    }
+
     pub fn new(pair: (Handle, Handle)) -> Self {
         Self {
             transport: Transport::Copied(pair),
@@ -260,6 +276,7 @@ impl<'a> Scope<'a> {
             };
             let (reply, len, object) = match &mut self.transport {
                 Transport::Shared(client) => client.call_memory(&bytes, attachment, deadline)?,
+                Transport::Owned(client) => client.call_memory(&bytes, attachment, deadline)?,
                 Transport::Copied(pair) => {
                     match attachment {
                         Some(object) => pair.0.send_memory(&bytes, object)?,
@@ -280,8 +297,10 @@ impl<'a> Scope<'a> {
             Ok(reply) => Ok(reply),
             Err(error) => {
                 self.alive = false;
-                if let Transport::Shared(client) = &mut self.transport {
-                    client.retire();
+                match &mut self.transport {
+                    Transport::Shared(client) => client.retire(),
+                    Transport::Owned(client) => client.retire(),
+                    Transport::Copied(_) => (),
                 }
                 Err(error.0 as u64)
             }

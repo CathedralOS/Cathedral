@@ -314,10 +314,12 @@ outcomes, parked-process death and funding retained through creator replacement.
 See [the kernel boundary and remaining scope](../../../kernel/core/notifications/README.md).
 The [service connection proof](connection/connection.rs) exercises shared payloads,
 immutable grants and connection replacement through the reusable runtime. Its
-[capacity case](connection/capacity.rs) keeps five streams live, verifies release
+[capacity case](connection/capacity.rs) keeps six streams live, verifies release
 of setup-only notification rights, rejects excess allocation and refunds all
-custody. The channel profile funds thirteen owner channels: eight endpoint queues
-plus five notifications; its worker funds its own five notifications. The ordinary
+custody. The channel profile funds twenty-one owner channels: ten endpoint queues,
+six connection notifications, four extra notifications and one unused allowance.
+This reaches the handle ceiling while object funding remains. Its worker funds
+its own six notifications. The ordinary
 queue exhaustion probe derives its allowance from that profile instead of assuming
 eight. [Replacement](connection/replacement.rs) checks a preselected empty slot,
 remove/reinstall and a late old-incarnation object reply.

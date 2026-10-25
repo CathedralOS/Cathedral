@@ -7,23 +7,29 @@ mod native;
 mod session;
 #[cfg(not(feature = "input-producer-probe"))]
 cathedral_user_runtime::service_bootstrap!(
-    &cathedral_platform_contracts::imports::OPTIONAL_STORAGE
+    &cathedral_platform_contracts::imports::OPTIONAL_STORAGE,
+    1,
+    0
 );
 #[cfg(feature = "input-producer-probe")]
-cathedral_user_runtime::service_bootstrap!(&[
-    cathedral_platform_contracts::imports::Import::v1(
-        cathedral_platform_contracts::imports::INTERACTION,
-        true
-    ),
-    cathedral_platform_contracts::imports::Import::v1(
-        cathedral_platform_contracts::imports::STORAGE,
-        false
-    ),
-    cathedral_platform_contracts::imports::Import::v1(
-        cathedral_platform_contracts::imports::INPUT_PRODUCER,
-        false
-    ),
-]);
+cathedral_user_runtime::service_bootstrap!(
+    &[
+        cathedral_platform_contracts::imports::Import::v1(
+            cathedral_platform_contracts::imports::INTERACTION,
+            true
+        ),
+        cathedral_platform_contracts::imports::Import::v1(
+            cathedral_platform_contracts::imports::STORAGE,
+            false
+        ),
+        cathedral_platform_contracts::imports::Import::v1(
+            cathedral_platform_contracts::imports::INPUT_PRODUCER,
+            false
+        ),
+    ],
+    1,
+    0
+);
 cathedral_user_runtime::entry_with_services!(main);
 fn main(_: u64, _style: u64, services: cathedral_user_runtime::services::Services) -> u64 {
     #[cfg(feature = "startup-fault")]

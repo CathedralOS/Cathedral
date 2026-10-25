@@ -76,7 +76,7 @@ impl Children {
             object: launcher,
             scope: 0,
             argument: cathedral_desktop_matrix_contracts::matrix::launch_argument(0, launcher),
-            channels: 0,
+            channels: 1,
             descendants: 0,
             cpu: 0,
             pages: Some([

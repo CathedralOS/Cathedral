@@ -1,7 +1,7 @@
 // Create a matrix startup bundle, move it into a child, then accept its control port.
 // The caller supplies code/funding and installs local authority only after success.
 use crate::{
-    Error,
+    Error, abi,
     ipc::Handle,
     task::{Child, Launch},
 };
@@ -116,8 +116,15 @@ impl Admitted {
             endpoint.close()?;
         }
         if let Some((input, output)) = self.storage {
-            input.close()?;
-            output.close()?;
+            // A selected shared Server slot may already have retired these local
+            // names. Names are never reused; only that exact absence is harmless.
+            for endpoint in [input, output] {
+                match endpoint.close() {
+                    Ok(()) => (),
+                    Err(Error(code)) if code == abi::BAD_HANDLE as i64 => (),
+                    Err(error) => return Err(error),
+                }
+            }
         }
         if let Some((input, output)) = self.producer {
             input.close()?;

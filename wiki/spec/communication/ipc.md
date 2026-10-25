@@ -221,8 +221,9 @@ or peer progress. Failure and reclamation must preserve outstanding obligations.
   shared connections for separate parent storage streams, including nested binding
   refresh and bulk forwarding. Dynamic slot replacement rejects old incarnations;
   setup-only notification rights are released after delegation.
-  Recursive interaction/rendering, other services and Omega leaf bindings remain
-  to migrate;
+  Omega-facing app storage and the independent Split host now use this same
+  boundary, with persistent request sequences and explicitly funded notifications.
+  Recursive interaction/rendering and other services remain to migrate;
   this is not a coordination service or proof of complete desktop migration.
 - [Omega boot](../../../source/kernel/boot/uefi/README.md) exercises early memory
   ownership and mappings, not this complete cross-process service.

@@ -79,7 +79,8 @@ impl Host {
             2 => {
                 let pair = self.services.storage(packet[0], packet[1])?;
                 if self.storage.is_none() {
-                    self.storage = Some(Scope::new(pair));
+                    self.storage = Some(Scope::connect(pair)?);
+                    cathedral_user_runtime::write(b"Cathedral Omega host: shared storage ready\n")?;
                 }
             }
             3 => {

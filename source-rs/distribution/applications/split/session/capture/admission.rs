@@ -4,7 +4,7 @@ use cathedral_user_runtime::{resources::Limits, storage::Scope, task::Executable
 impl Capture {
     pub(super) fn admit(
         &mut self,
-        pair: Pair,
+        scope: &mut Scope<'_>,
         output: &mut Output,
         world: &mut World,
         server: &mut Server,
@@ -42,11 +42,10 @@ impl Capture {
         )
         .map_err(|_| Error(abi::INVALID_ARGUMENT as i64))?;
         self.fund(output)?;
-        let mut scope = Scope::new(pair);
         scope.bind().map_err(|c| Error(c as i64))?;
         let id = scope.lookup(b"Capture").map_err(|c| Error(c as i64))?;
         let (code, granted) =
-            children::image::read_offered(&mut scope, id, imports::INTERACTION | imports::CAPTURE)?;
+            children::image::read_offered(scope, id, imports::INTERACTION | imports::CAPTURE)?;
         let launch = Executable::from_object(&code, 0)?.reserve(
             Limits {
                 // The viewer retains a sealed reader and allocates no private pixels.

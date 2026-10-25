@@ -33,12 +33,12 @@ impl Producer {
     }
     pub fn start(
         &mut self,
-        pair: Pair,
+        scope: &mut cathedral_user_runtime::storage::Scope<'_>,
         output: &mut Output,
         world: &mut World,
         server: &mut Server,
     ) -> Result<(), Error> {
-        let result = self.admit(pair, output, world, server);
+        let result = self.admit(scope, output, world, server);
         if result.is_err() {
             self.stop(output, world, server)?;
         }

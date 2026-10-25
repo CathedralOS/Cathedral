@@ -5,10 +5,10 @@ impl Children {
     /// executable lookup: the readable realm root is our supplied code object.
     pub fn deepen(
         &mut self,
-        pair: Pair,
+        storage: &mut crate::session::storage::Storage,
         server: &mut Server,
-    ) -> Result<crate::session::storage::Storage, Error> {
-        let mut scope = Scope::new(pair);
+    ) -> Result<(), Error> {
+        let mut scope = storage.idle_scope().ok_or(Error(abi::BUSY as i64))?;
         scope.bind().map_err(|c| Error(c as i64))?;
         let root = match scope.lookup(b"Nested") {
             Ok(id) => id,
@@ -70,7 +70,7 @@ impl Children {
                 // its own retained/replacement headers alongside this loan.
                 private_pages: 112,
                 reader_pages: 64,
-                channels: 10,
+                channels: 15,
             },
             2,
             abi::MAX_ADMISSION_FRAMES as u64,
@@ -87,11 +87,13 @@ impl Children {
         self.launches[0] = Some(launch);
         self.slots[0] = Some(child);
         self.uncertain = [false; 2];
-        let mut forwarding = crate::session::storage::Storage::new(pair, scope.realm(), [root, 0]);
-        forwarding.install(0, server.incarnation(2).unwrap());
+        let realm = scope.realm();
+        drop(scope);
+        storage.reset_roots(realm, [root, 0]);
+        storage.install(0, server.incarnation(2).unwrap());
         cathedral_user_runtime::write(
             b"Cathedral Split: nested matrix admitted in separate realm\n",
         )?;
-        Ok(forwarding)
+        Ok(())
     }
 }

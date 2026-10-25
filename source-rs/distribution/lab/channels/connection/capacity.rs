@@ -1,17 +1,17 @@
-//! Five live streams fit the unchanged handle cap by releasing setup-only rights.
+//! Six live streams retain close authority and still obey the metadata ceiling.
 use super::*;
 use cathedral_user_runtime::server::{Event, Server, SharedSlot};
 pub(super) fn run(launch: Launch) {
     resources::assign(
         launch,
         Limits {
-            private_pages: 5,
-            reader_pages: 5,
+            private_pages: 6,
+            reader_pages: 6,
             channels: 8,
         },
     )
     .unwrap();
-    let pairs: [_; 4] = core::array::from_fn(|_| {
+    let pairs: [_; 5] = core::array::from_fn(|_| {
         let (send, input) = ipc::channel().unwrap();
         let (output, receive) = ipc::channel().unwrap();
         ((send, receive), (input, output))
@@ -31,10 +31,25 @@ pub(super) fn run(launch: Launch) {
     let mut control = Client::connect(control_pair, time::after(300).unwrap()).unwrap();
     assert_eq!(
         cathedral_user_runtime::notification::budget().unwrap()[3],
-        15
+        18
     );
-    // Fifteen retained rights leave one slot, insufficient to create another trio.
+    // Exhaust grant metadata while the account still has object funding. Refusal
+    // must not corrupt the six service streams or leave partial create grants.
+    let mut extra = [None; abi::NOTIFY_HANDLES / 3];
+    let count = (abi::NOTIFY_HANDLES - 18) / 3;
+    for slot in &mut extra[..count] {
+        *slot = Some(N::create().unwrap());
+    }
+    let budget = cathedral_user_runtime::notification::budget().unwrap();
+    assert!(budget[0] > budget[1]);
+    assert_eq!(budget[3], (18 + count * 3) as u64);
     assert_eq!(N::create(), Err(Error(abi::NO_MEMORY as i64)));
+    for handles in extra.into_iter().flatten() {
+        handles[2].close_object().unwrap();
+        for handle in handles {
+            handle.release().unwrap();
+        }
+    }
     for round in 0..3u8 {
         for (index, client) in clients.iter_mut().enumerate() {
             let bytes = [index as u8, round];
@@ -58,16 +73,16 @@ pub(super) fn run(launch: Launch) {
         cathedral_user_runtime::notification::budget().unwrap()[3],
         0
     );
-    cathedral_user_runtime::write(b"Cathedral shared capacity: five streams, setup-right release, bounded refusal and final handle refunds passed\n").unwrap();
+    cathedral_user_runtime::write(b"Cathedral shared capacity: six streams, setup-right release, bounded refusal and final handle refunds passed\n").unwrap();
 }
 pub(super) fn worker(env: Environment) -> u64 {
-    let mut server = Server::open_clients(4).unwrap();
-    static mut SLOTS: [SharedSlot; 5] = [const { SharedSlot::empty() }; 5];
+    let mut server = Server::open_clients(5).unwrap();
+    static mut SLOTS: [SharedSlot; 6] = [const { SharedSlot::empty() }; 6];
     let slots = &raw mut SLOTS;
     // SAFETY: Single-entry process lends each disjoint persistent slot once.
-    let [control, a, b, c, d] = unsafe { &mut *slots };
+    let [control, a, b, c, d, e] = unsafe { &mut *slots };
     server.enable_shared_control(control).unwrap();
-    for (index, slot) in [a, b, c, d].into_iter().enumerate() {
+    for (index, slot) in [a, b, c, d, e].into_iter().enumerate() {
         let pair = if index == 0 {
             (env.endpoint(0).unwrap(), env.endpoint(1).unwrap())
         } else {
@@ -90,7 +105,7 @@ pub(super) fn worker(env: Environment) -> u64 {
         };
         assert_eq!(
             cathedral_user_runtime::notification::budget().unwrap()[3],
-            15
+            18
         );
         server
             .reply(&request, &request.bytes[..request.len])

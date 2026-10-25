@@ -99,7 +99,10 @@ pub(super) fn replace_writer(session: &admission::Session) {
         )[0],
         0
     );
-    assert_eq!(inner(matrix, [wire::RUN, 0, 1, 0, 0, 0, 0, 0])[0], 0);
+    assert_eq!(
+        inner(matrix, [wire::RUN, 0, 1, 0, APP_CHANNELS, 0, 0, 0])[0],
+        0
+    );
     assert_eq!(
         inner(matrix, [wire::STORAGE_GRANT, 0, 0, 0, 0, 0, 0, 0])[0],
         0

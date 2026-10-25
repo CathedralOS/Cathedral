@@ -19,14 +19,15 @@ requirements, not a reason to freeze the copied-channel ABI.
 Kernel notifications and a first reusable single-writer shared-memory/mailbox
 slice execute on x86-64 and ARM64. Ordinary F5 now uses them for physical input
 to the root matrix, root display commands/images, root storage and separate
-parent-storage streams between stock matrices. The scoped storage fixture also
-exercises both private-root provider connections. See the evidence below. Remaining acceptance:
+parent-storage streams between stock matrices, Omega app storage and independent
+Split storage forwarding. The scoped storage fixture also exercises both
+private-root provider connections. See the evidence below. Remaining acceptance:
 
-- Continue the shared service migration beyond stock-matrix storage connections.
-  Independently selected control/data streams now multiplex; immutable attachments
-  execute through ordinary display and storage, including nested stock matrices.
-  Endpoint custody, recursive interaction/rendering and Omega-facing leaf clients
-  remain open. Preserve
+- Continue the shared service migration through recursive interaction/rendering
+  and the remaining service clients. Independently selected control/data streams
+  now multiplex; immutable attachments execute through ordinary display and
+  storage, including nested stock matrices, Omega leaves and Split. Endpoint
+  custody remains open. Preserve
   mapping isolation, hostile-writer validation and live-reader lifetime; waking
   proves none of them.
 - Demonstrate real cross-process ping-pong, including early reply/next-request,
@@ -138,6 +139,75 @@ cross-service distributed commit are not acceptance requirements. No runtime
 implementation is claimed by this ratification.
 
 ## Current implementation evidence
+
+Implementation update 2026-10-25: **shared storage reaches Omega apps and Split**,
+over `47801f88`.
+
+The [Omega host](source-rs/platform/libraries/omega-app/host/host.rs) now owns its
+storage connection through `Scope::connect`. App storage operations keep their
+existing step ABI, scoped authority and immutable attachments. Failed exchanges
+retire the connection without replay. The chooser, Notes and Colors declare one
+notification allowance, and both root and nested launcher/picker admission fund
+it. The first desktop check caught a missed root-picker grant; that path now
+matches the nested picker. No Omega application behavior moved into Rust.
+
+[Split's entrance](source-rs/distribution/applications/split/session/session.rs)
+selects shared child storage before admission. Its storage coordinator retains
+one upstream Client across setup reads, helper admission and asynchronous child
+forwarding. Local scopes borrow that client; deepening changes the child roots
+without restarting its request sequence. The loop waits on both connection
+lifetime and notification interests, with original storage and partial-transfer
+deadlines. The input producer and capture viewer use that same storage client to
+load their programs, while retaining their existing interaction protocols.
+
+Funding is explicit at each end. Split's two Notes gain a notification and reader
+page each; Split reserves its own connection backings and notifications. Its
+ordinary declaration is 25 channel/notification allowances, and the nested Split
+receives 15. The small Notes/recovery compositions fund both ends of both leaf
+connections. Their root now carries six shared streams, exceeding the old
+16-notification-handle ceiling. The kernel's bounded metadata allowance is 32;
+object funding and close/control rights remain separate. The six-stream guest
+case fills the remaining handle slots while funding remains, checks refusal,
+continues round trips and verifies final handle/resource refunds. No kernel
+service identity or distribution-specific scheduling rule was added.
+
+Verification:
+
+- F5 fresh/cold: user picker, three Notes instances, draft protection, saved
+  Notes/Colors and exact disk oracle (`desktop/20261025T204720893380Z`).
+- Split fresh/cold: repeated collection, same-code nesting, isolated durable
+  edits, recursive dirty-close and deeper capacity refusal
+  (`desktop/20261025T204815675250Z`).
+- Independent participants fresh/cold: cursor/input grants, revocation, sibling
+  survival and saved documents (`desktop/20261025T204927166151Z`).
+- Masked capture fresh/cold: recipient byte inspection, hidden editing, restored
+  content and persisted state (`desktop/20261025T205107187271Z`).
+- Three recursive desktops with delayed interaction pass protected close,
+  repeated subtree reclamation, isolated persistence and cold reopen
+  (`desktop/20261025T205208183246Z`).
+- Undeclared optional storage stays absent while Notes keeps dirty-close behavior
+  and Colors retains its own binding (`desktop/20261025T205226214866Z`).
+- Notes lost-reply recovery and cold restore preserve exact text/history/quota
+  (`matrix-database/20261025T204940482103Z`).
+- IPC passes six-stream capacity, malformed/grant/replacement controls and exact
+  reclamation. Full x86-64 smoke and ARM64 portability guests pass.
+- Host policy tests, workspace userspace Clippy, all-feature stock matrix/Split/
+  channels Clippy and the Notes-recovery desktop feature check pass. The desktop's
+  unrelated combined `--all-features` configuration produces an existing unused
+  `database_fresh` warning; real shell and Notes-probe compositions were checked
+  separately. Kernel Clippy, formatting, whitespace and changed Markdown navigation
+  pass. Layout and its eight tests pass (73 Omega / 151 Rust package edges).
+
+Logs: `build/omega-component/omega-storage-{desktop,split,participants,capture,
+nested,optional,recovery,ipc,smoke,arm64,host,clippy,feature-clippy,desktop-clippy,
+kernel-clippy,format-check}.log`.
+
+**Next:** migrate recursive interaction/rendering, then the remaining service
+and endpoint-custody consumers. Connection setup and local Scope operations are
+still synchronous; there is one outstanding request per stream. Finite per-task
+handle/backing caps and single-CPU guest evidence remain limitations. This slice
+makes ordinary storage use the shared transport; it does not establish a latency
+improvement or complete the IPC outcome.
 
 Implementation update 2026-10-25: **recursive shared storage and transport custody**,
 over `fb0c1752`.

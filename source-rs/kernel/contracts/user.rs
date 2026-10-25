@@ -204,7 +204,9 @@ pub const NOTIFY_CONTROL: u64 = 78; // control grant, action below, zero
 pub const NOTIFY_SEND: u64 = 79; // send endpoint, packet address, zero
 pub const NOTIFY_RECEIVE: u64 = 80; // receive endpoint, writable packet, zero
 pub const NOTIFY_BUDGET: u64 = 81; // writable [shared object limit, notifications charged, handle limit, handles used]
-pub const NOTIFY_HANDLES: usize = 16;
+// Shared service streams retain wait/control/peer-signal rights independently.
+// Page/channel funding remains separate from this per-task metadata ceiling.
+pub const NOTIFY_HANDLES: usize = 32;
 pub const NOTIFY_SIGNALED: u64 = 0;
 pub const NOTIFY_TIMED_OUT: u64 = 1;
 pub const NOTIFY_CLOSED: u64 = 2;

@@ -1,9 +1,12 @@
 // One asynchronous exchange lets interaction continue while storage is busy.
-// Platform Scopes authenticates/stamps; Split chooses two distinct child roots.
+// Platform Scopes authenticates and stamps; Split chooses two distinct child roots.
 // An upstream regrant only restores these standing grants in the same realm.
 use super::*;
 use cathedral_matrix::world::storage::{Prepared, Proof, Scopes};
-use cathedral_user_runtime::{ipc::Handle, memory::Object, server::Request};
+use cathedral_user_runtime::{
+    connection::Client, event::Interest, ipc::Handle, memory::Object, server::Request,
+    storage::Scope,
+};
 struct Pending {
     request: Request,
     words: wire::Packet,
@@ -14,7 +17,7 @@ struct Pending {
     folded: Option<(wire::Packet, Proof)>,
 }
 pub struct Storage {
-    pair: Option<Pair>,
+    client: Option<Client>,
     realm: u64,
     epoch: u64,
     roots: [u64; 2],
@@ -23,16 +26,18 @@ pub struct Storage {
     pending: Option<Pending>,
 }
 impl Storage {
-    pub fn idle_pair(&self) -> Option<Pair> {
-        if self.pending.is_none() {
-            self.pair
-        } else {
-            None
-        }
+    pub fn idle(&self) -> bool {
+        self.pending.is_none() && self.client.is_some()
     }
-    pub fn new(pair: Pair, realm: u64, roots: [u64; 2]) -> Self {
+    pub fn idle_scope(&mut self) -> Option<Scope<'_>> {
+        if self.pending.is_some() {
+            return None;
+        }
+        self.client.as_mut().map(Scope::shared)
+    }
+    pub fn new(client: Client, realm: u64, roots: [u64; 2]) -> Self {
         Self {
-            pair: Some(pair),
+            client: Some(client),
             realm,
             epoch: 0,
             roots,
@@ -40,6 +45,14 @@ impl Storage {
             scopes: Scopes::empty(),
             pending: None,
         }
+    }
+    pub fn reset_roots(&mut self, realm: u64, roots: [u64; 2]) {
+        assert!(self.idle());
+        self.realm = realm;
+        self.roots = roots;
+        self.epoch = 0;
+        self.incarnations = [None; 2];
+        self.scopes.clear();
     }
     pub fn install(&mut self, slot: usize, incarnation: u64) {
         self.incarnations[slot] = Some(incarnation);
@@ -49,9 +62,22 @@ impl Storage {
         self.scopes.revoke(slot);
     }
     pub fn wait(&self) -> Option<(Handle, u64)> {
-        self.pending
-            .as_ref()
-            .map(|p| (self.pair.unwrap().1, p.deadline))
+        self.pending.as_ref().map(|p| {
+            (
+                match self.client.as_ref().unwrap().interests().unwrap()[0] {
+                    Interest::Ipc(h) => h,
+                    _ => unreachable!(),
+                },
+                p.deadline,
+            )
+        })
+    }
+    pub fn wake(&self) -> Option<Interest> {
+        self.pending.as_ref()?;
+        self.client.as_ref()?.interests().ok().map(|i| i[1])
+    }
+    pub fn transfer_deadline(&self) -> Option<u64> {
+        self.client.as_ref()?.transfer_deadline()
     }
     pub fn start(
         &mut self,
@@ -63,7 +89,7 @@ impl Storage {
             return server.reply(&request, &wire::encode(wire::error(abi::INVALID_ARGUMENT)));
         };
         let slot = request.client.unwrap() - 2;
-        if self.incarnations[slot] != Some(request.incarnation) || self.pair.is_none() {
+        if self.incarnations[slot] != Some(request.incarnation) || self.client.is_none() {
             return server.reply(&request, &wire::encode(wire::error(abi::DENIED)));
         }
         let Some(deadline) = cathedral_platform_contracts::storage::deadline(
@@ -86,25 +112,30 @@ impl Storage {
             validating: false,
             folded: None,
         });
-        match self.pair.unwrap().0.send(&wire::encode([
-            wire::STORAGE_INFO,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            deadline,
-        ])) {
+        match self.client.as_mut().unwrap().begin(
+            &wire::encode([wire::STORAGE_INFO, 0, 0, 0, 0, 0, 0, deadline]),
+            None,
+        ) {
             Ok(()) => Ok(()),
             Err(e) => self.retire(e, server),
         }
     }
     pub fn progress(&mut self, server: &mut Server) -> Result<(), Error> {
-        let Some((receive, deadline)) = self.wait() else {
+        let Some((_, deadline)) = self.wait() else {
             return Ok(());
         };
-        let (reply, object) = match upstream::exchange::poll(receive, deadline) {
+        let response = (|| {
+            if let Some((bytes, n, object)) = self.client.as_mut().unwrap().poll()? {
+                return wire::decode(&bytes[..n])
+                    .map(|w| Some((w, object)))
+                    .ok_or(Error(abi::IO_ERROR as i64));
+            }
+            if time::reached(time::now()?, deadline) {
+                return Err(Error(abi::TIMED_OUT as i64));
+            }
+            Ok(None)
+        })();
+        let (reply, object) = match response {
             Ok(Some(reply)) => reply,
             Ok(None) => return Ok(()),
             Err(e) => return self.retire(e, server),
@@ -175,16 +206,16 @@ impl Storage {
         }
         words[0] = words[0] & 0xffff | self.epoch << wire::STORAGE_SCOPE_BITS;
         words[7] = pending.deadline;
-        let send = self.pair.unwrap().0;
         let object = if pending.validating {
             None
         } else {
             pending.object.take()
         };
-        let result = match object {
-            Some(object) => send.send_memory(&wire::encode(words), &object),
-            None => send.send(&wire::encode(words)),
-        };
+        let result = self
+            .client
+            .as_mut()
+            .unwrap()
+            .begin(&wire::encode(words), object.as_ref());
         match result {
             Ok(()) => Ok(()),
             Err(e) => self.retire(e, server),
@@ -192,10 +223,7 @@ impl Storage {
     }
     fn retire(&mut self, error: Error, server: &mut Server) -> Result<(), Error> {
         // Never consume a late reply as the answer to a subsequent request.
-        if let Some((send, receive)) = self.pair.take() {
-            let _ = send.close();
-            let _ = receive.close();
-        }
+        self.client = None;
         self.scopes.clear();
         self.epoch = 0;
         self.finish(wire::error(error.0 as u64), None, server)
