@@ -90,6 +90,8 @@ def main():
                        'shared objects forwarded without mappings; lifetime and reclamation passed',
                        'Cathedral ARM64: 32 notification round trips passed',
                        'Cathedral ARM64: 32 shared mailbox payload round trips passed',
+                       'Cathedral ARM64: nonblocking endpoint custody passed',
+                       'Cathedral ARM64: nonblocking notification custody passed',
                        'ARM64 IPC round=0', 'ARM64 IPC round=1',
                        'ARM64 timer preempted both private EL0 peers',
                        'ARM64 sealed pages rejected writes', 'ARM64 admission rollback passed',

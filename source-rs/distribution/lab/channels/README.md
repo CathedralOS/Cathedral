@@ -316,8 +316,9 @@ The [service connection proof](connection/connection.rs) exercises shared payloa
 immutable grants and connection replacement through the reusable runtime. Its
 [capacity case](connection/capacity.rs) keeps six streams live, verifies release
 of setup-only notification rights, rejects excess allocation and refunds all
-custody. The channel profile funds twenty-one owner channels: ten endpoint queues,
-six connection notifications, four extra notifications and one unused allowance.
+custody. The channel profile funds thirty-two owner channel/notification allowances: ten
+endpoint queues, six connection notifications, ten extra notifications and six
+unused allowances.
 This reaches the handle ceiling while object funding remains. Its worker funds
 its own six notifications. The ordinary
 queue exhaustion probe derives its allowance from that profile instead of assuming
@@ -330,3 +331,13 @@ separation, attachment custody, peer death and refusal by an unselected service.
 These are focused guest controls. Follow the runtime's
 [ordinary consumers and evidence](../../../platform/libraries/user-runtime/connection/README.md#ordinary-consumers-and-evidence)
 for desktop migration and its remaining scope.
+
+[Notification grants](connection/notification_grants.rs) exercise shared typed
+replies, a wait-only grant whose pending hint survives unrelated reply handling,
+coalescing, guard release, wrong API kinds, receiver-metadata refusal and reuse.
+[Malformed notification peers](connection/notification_faults.rs) supply wrong IDs,
+wrong kinds and incomplete halves, delay the grant after the frame, and force
+signal failure after delegation/frame publication. Provider source rights survive;
+only receiver custody transfers. All cases require exact resource refunds. The
+nonblocking syscall probe also checks wrong receive authority, bad copyout and
+reserved fields without consuming escrow, and incompatible typed preservation.

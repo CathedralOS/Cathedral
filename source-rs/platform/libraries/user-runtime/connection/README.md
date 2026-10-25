@@ -48,8 +48,9 @@ Each frame contains a nonzero, monotonically increasing request ID and at most
 `Pipeline<N>` retains up to four, with exact reply correlation;
 IDs do not confer authority. The server retains the original connection incarnation
 in `Request`, so a delayed reply cannot target its replacement. Duplicate, skipped
-or exhausted IDs retire the stream. The experimental v3 frame declares no grant,
-one immutable object, or one moved endpoint. Setup uses matching v3 identifiers;
+or exhausted IDs retire the stream. The experimental v4 frame declares no grant,
+one immutable object, one moved endpoint, or one delegated notification right.
+Setup uses matching v4 identifiers;
 there is no implicit negotiation with an older frame format.
 
 Publish before signalling. Drain the old hint before inspecting the mailbox, then
@@ -197,9 +198,47 @@ handoff. They verify which side owns the right and exact final logical/physical
 refunds. ARM64 separately exercises the nonblocking typed syscall and incompatible
 receive preservation; the shared endpoint protocol cases execute on x86-64.
 
-This is the prerequisite for migrating the service broker: acquisition and
-interaction currently share its pair, and acquisition transfers endpoint rights.
-Service consumers have not yet switched that broker to shared transport.
+The ordinary service broker now uses these endpoint replies for lazy acquisition
+on its shared interaction connection. Control/wake migration remains open.
+
+## Delegated notification replies
+
+`Client::call_retained_notification` accepts a notification grant or a plain reply.
+Its [NotificationGrant guard](custody.rs) releases an unclaimed local right;
+`into_handle` explicitly hands ownership to the application. Plain, memory and
+endpoint operations reject notification replies. The Server dispatch API rejects
+notification requests; it does not silently turn a grant into application data.
+The private frame snapshot and typed grant must agree on kind and exact request
+ID; stale IDs, mismatches and incomplete pairs retire the connection and release
+custody. Kernel handoff carries only the eight-byte ID, not application payload.
+
+`Server::reply_notification` delegates the supplied right without consuming it.
+The provider retains its source right on both success and error; the receiver gets
+an independently installed name with the same authority. A wait-only right cannot
+signal or control the object. Err means no delegation published. Ok after later
+publication/signal failure means escrow committed, not that application delivery
+completed. Do not replay that delegation. Stale/duplicate replies cannot offer a
+new grant, and no borrowed notification is queued for automatic retry.
+
+`NOTIFY_TRY_RECEIVE` validates the complete destination and receive authority before
+acceptance. It preserves incompatible queued grants and returns WOULD_BLOCK without
+parking. Notification escrow reserves receiver metadata before publication; capacity
+refusal leaves the source usable and permits a plain refusal on the same request.
+
+The [notification grant guest](../../../../distribution/lab/channels/connection/notification_grants.rs)
+checks distinct pending hints across reply traffic, coalescing, wait-only authority,
+unclaimed guard release, wrong reply types and exhausted receiver metadata. Its
+[hostile peers](../../../../distribution/lab/channels/connection/notification_faults.rs)
+check wrong correlation, mismatched kinds, incomplete halves, frame-first delivery
+and signal failure after committed delegation. Every case checks final logical,
+physical and notification-handle refunds. ARM64 checks nonblocking typed acceptance
+and actual wait-only use through SVC; the full shared reply cases run on x86-64.
+
+This is the handoff needed to replace an app's copied input-wake endpoint with a
+separate wait right. Ordinary desktop wake hints still use copied channels; the
+new handoff does not by itself migrate acquisition, startup or wake consumers.
+Keeping input hints separate from reply hints prevents an unrelated retained call
+from consuming the app's only pending indication that input needs polling.
 
 ## Ordinary consumers and evidence
 

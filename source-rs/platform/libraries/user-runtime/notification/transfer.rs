@@ -22,9 +22,22 @@ impl Notification {
         endpoint: Handle,
         bytes: &mut [u8; abi::MAX_MESSAGE],
     ) -> Result<(usize, Option<Self>), Error> {
+        Self::receive(endpoint, bytes, abi::NOTIFY_RECEIVE)
+    }
+    pub fn try_accept(
+        endpoint: Handle,
+        bytes: &mut [u8; abi::MAX_MESSAGE],
+    ) -> Result<(usize, Option<Self>), Error> {
+        Self::receive(endpoint, bytes, abi::NOTIFY_TRY_RECEIVE)
+    }
+    fn receive(
+        endpoint: Handle,
+        bytes: &mut [u8; abi::MAX_MESSAGE],
+        operation: u64,
+    ) -> Result<(usize, Option<Self>), Error> {
         let mut packet = Record([0; abi::IPC_PACKET_BYTES]);
         let length = result(arch::call3(
-            abi::NOTIFY_RECEIVE,
+            operation,
             endpoint.raw(),
             packet.0.as_mut_ptr() as u64,
             0,

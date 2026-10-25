@@ -7,6 +7,7 @@ pub(crate) struct Message {
     pub len: usize,
     pub object: Option<Object>,
     pub endpoint: Option<Endpoint>,
+    pub notification: Option<NotificationGrant>,
 }
 struct Frame {
     id: u64,
@@ -17,12 +18,14 @@ struct Frame {
 enum Grant {
     Memory(Object),
     Endpoint(Endpoint),
+    Notification(NotificationGrant),
 }
 impl Grant {
     fn kind(&self) -> wire::Attachment {
         match self {
             Self::Memory(_) => wire::Attachment::Memory,
             Self::Endpoint(_) => wire::Attachment::Endpoint,
+            Self::Notification(_) => wire::Attachment::Notification,
         }
     }
 }
@@ -53,7 +56,19 @@ impl Incoming {
             Ok((n, object)) => Ok((n, object.map(Grant::Memory))),
             Err(Error(c)) if c == abi::TOO_SMALL as i64 => input
                 .try_receive_with(&mut bytes)
-                .map(|(n, endpoint)| (n, endpoint.map(|h| Grant::Endpoint(Endpoint::received(h))))),
+                .map(|(n, endpoint)| (n, endpoint.map(|h| Grant::Endpoint(Endpoint::received(h)))))
+                .or_else(|error| {
+                    if error.0 != abi::TOO_SMALL as i64 {
+                        return Err(error);
+                    }
+                    N::try_accept(input, &mut bytes).map(|(n, notification)| {
+                        (
+                            n,
+                            notification
+                                .map(|h| Grant::Notification(NotificationGrant::received(h))),
+                        )
+                    })
+                }),
             Err(error) => Err(error),
         };
         match received {
@@ -104,10 +119,13 @@ impl Incoming {
             }
             if frame.attachment == wire::Attachment::None || self.grant.is_some() {
                 let frame = self.frame.take().unwrap();
-                let (object, endpoint) = match self.grant.take() {
-                    None => (None, None),
-                    Some((_, Grant::Memory(object))) => (Some(object), None),
-                    Some((_, Grant::Endpoint(endpoint))) => (None, Some(endpoint)),
+                let (object, endpoint, notification) = match self.grant.take() {
+                    None => (None, None, None),
+                    Some((_, Grant::Memory(object))) => (Some(object), None, None),
+                    Some((_, Grant::Endpoint(endpoint))) => (None, Some(endpoint), None),
+                    Some((_, Grant::Notification(notification))) => {
+                        (None, None, Some(notification))
+                    }
                 };
                 self.deadline = None;
                 return Ok(Some(Message {
@@ -116,6 +134,7 @@ impl Incoming {
                     len: frame.len,
                     object,
                     endpoint,
+                    notification,
                 }));
             }
         }

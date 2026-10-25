@@ -21,7 +21,7 @@ use cathedral_user_runtime::{
 };
 cathedral_user_runtime::entry_with_environment!(main);
 fn main(role: u64, mode: u64, environment: cathedral_user_runtime::task::Environment) -> u64 {
-    if role != 0 && (50..=88).contains(&mode) {
+    if role != 0 && (50..=100).contains(&mode) {
         return connection::worker(mode, environment);
     }
     if role != 0 && (40..=45).contains(&mode) {

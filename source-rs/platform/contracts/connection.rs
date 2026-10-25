@@ -1,10 +1,10 @@
 //! Experimental local shared request/reply transport. Connection authority comes
 //! from supplied endpoints; these bytes neither locate nor authenticate a peer.
-pub const OPEN: &[u8] = b"cathedral.shared.v3";
+pub const OPEN: &[u8] = b"cathedral.shared.v4";
 /// Opt in to bounded independent requests and consumption notifications.
-pub const OPEN_PIPELINE: &[u8] = b"cathedral.shared.pipeline.v3";
-pub const ACK: &[u8] = b"shared.ready.v3";
-pub const COMMIT: &[u8] = b"shared.commit.v3";
+pub const OPEN_PIPELINE: &[u8] = b"cathedral.shared.pipeline.v4";
+pub const ACK: &[u8] = b"shared.ready.v4";
+pub const COMMIT: &[u8] = b"shared.commit.v4";
 /// Bounded requests retained by one service connection, independent of mailbox capacity.
 pub const MAX_IN_FLIGHT: usize = 4;
 pub const MAX_PAYLOAD: usize = 64;
@@ -20,6 +20,7 @@ pub enum Attachment {
     None = 0,
     Memory = 1,
     Endpoint = 2,
+    Notification = 3,
 }
 pub fn encode(
     id: u64,
@@ -44,6 +45,7 @@ pub fn decode(frame: &[u8]) -> Option<(u64, &[u8], Attachment)> {
         0 => Attachment::None,
         1 => Attachment::Memory,
         2 => Attachment::Endpoint,
+        3 => Attachment::Notification,
         _ => return None,
     };
     (id != 0).then_some((id, &frame[16..], attachment))
@@ -53,7 +55,12 @@ mod tests {
     use super::*;
     #[test]
     fn frames_bind_exact_id_extent_and_attachment_kind() {
-        for memory in [Attachment::None, Attachment::Memory, Attachment::Endpoint] {
+        for memory in [
+            Attachment::None,
+            Attachment::Memory,
+            Attachment::Endpoint,
+            Attachment::Notification,
+        ] {
             for n in 0..=MAX_PAYLOAD {
                 let (f, len) = encode(u64::MAX, &[7; MAX_PAYLOAD][..n], memory).unwrap();
                 assert_eq!(
@@ -68,7 +75,7 @@ mod tests {
         assert!(decode(&[1; 15]).is_none());
         assert!(decode(&[1; 81]).is_none());
         let (mut frame, n) = encode(1, b"x", Attachment::None).unwrap();
-        frame[8] = 3;
+        frame[8] = 4;
         assert!(decode(&frame[..n]).is_none());
         assert_eq!(grant_id(&1u64.to_le_bytes()), Some(1));
         assert_eq!(grant_id(&[0; 8]), None);

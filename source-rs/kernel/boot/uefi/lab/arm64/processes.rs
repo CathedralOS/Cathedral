@@ -23,8 +23,9 @@ pub(super) fn exchange(
         for (index, report) in reports.iter().enumerate() {
             assert_eq!(report.exit, Some(Exit::Returned(0)));
             // One shared-view and two notification introductions precede the
-            // 32 echoes. The client also moves a local endpoint and uses it once.
-            let messages = if index == 1 { 37 } else { 35 };
+            // 32 echoes. The client moves/uses a local endpoint (two messages)
+            // and separately delegates/accepts a notification (one message).
+            let messages = if index == 1 { 38 } else { 35 };
             assert_eq!(report.ipc_sent, messages);
             assert_eq!(report.ipc_received, messages);
         }

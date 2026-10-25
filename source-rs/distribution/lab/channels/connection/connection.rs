@@ -110,6 +110,7 @@ pub(super) fn run() {
     pipeline::run(launch);
     capacity::run(launch);
     endpoints::run(launch);
+    notification_grants::run(launch);
     resources::assign(
         launch,
         Limits {

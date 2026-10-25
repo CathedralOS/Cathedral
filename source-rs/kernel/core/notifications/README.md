@@ -84,6 +84,13 @@ Abandoned queue/recipient teardown releases escrow. The recipient receives its
 own monotonic name; source handle bytes alone confer no authority. Closed or
 withdrawn objects cannot be revived through an earlier offer.
 
+`NOTIFY_TRY_RECEIVE` uses the same validation and typed installation path, returning
+WOULD_BLOCK before registration when empty. The shared connection protocol uses
+it to join a notification grant with its exact request ID without blocking its
+service loop. Recipient metadata is reserved by delegation before publication;
+acceptance exposes that reserved name. Invalid output or an incompatible receive
+leaves the queued escrow intact.
+
 This copied setup path is temporary grant mediation, not the intended steady-state
 message transport. Notification signals/waits themselves carry no payload and
 require no new grant or identifier on each turn. The

@@ -22,6 +22,10 @@ pub struct SharedSlot {
     pending: [u64; wire::MAX_IN_FLIGHT],
     outgoing: [Option<Reply>; wire::MAX_IN_FLIGHT],
 }
+enum ReplyGrant {
+    Endpoint(Handle),
+    Notification(Notification),
+}
 struct Reply {
     id: u64,
     bytes: [u8; 64],
@@ -190,8 +194,8 @@ impl Server {
                     return Ok(None);
                 };
                 // This server dispatch API accepts bytes and immutable images.
-                // Endpoint custody is currently an explicit client-reply operation.
-                if message.endpoint.is_some() {
+                // Endpoint/notification custody is an explicit client-reply operation.
+                if message.endpoint.is_some() || message.notification.is_some() {
                     return Err(Error(abi::DENIED as i64));
                 }
                 let (id, bytes, len, object) =
@@ -301,6 +305,22 @@ impl Server {
         bytes: &[u8],
         endpoint: Handle,
     ) -> Result<(), Error> {
+        self.shared_grant(request, bytes, ReplyGrant::Endpoint(endpoint))
+    }
+    pub(super) fn shared_notification(
+        &mut self,
+        request: &Request,
+        bytes: &[u8],
+        notification: Notification,
+    ) -> Result<(), Error> {
+        self.shared_grant(request, bytes, ReplyGrant::Notification(notification))
+    }
+    fn shared_grant(
+        &mut self,
+        request: &Request,
+        bytes: &[u8],
+        grant: ReplyGrant,
+    ) -> Result<(), Error> {
         let channel = if request.control {
             0
         } else {
@@ -321,7 +341,15 @@ impl Server {
         let State::Ready(peer) = &mut shared.state else {
             return Err(Error(abi::PEER_CLOSED as i64));
         };
-        match peer.send_endpoint(request.shared_id, bytes, endpoint) {
+        let result = match grant {
+            ReplyGrant::Endpoint(endpoint) => {
+                peer.send_endpoint(request.shared_id, bytes, endpoint)
+            }
+            ReplyGrant::Notification(notification) => {
+                peer.send_notification(request.shared_id, bytes, notification)
+            }
+        };
+        match result {
             Ok(()) => {
                 *shared
                     .pending

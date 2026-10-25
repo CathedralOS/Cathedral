@@ -177,3 +177,20 @@ impl Server {
         request.reply.send_with(bytes, endpoint)
     }
 }
+
+impl Server {
+    /// Delegate a notification right. Err publishes no new grant; Ok may mean
+    /// committed escrow followed by transport retirement. The source right stays
+    /// owned by the caller in either case; never replay an exposed delegation.
+    pub fn reply_notification(
+        &mut self,
+        request: &Request,
+        bytes: &[u8],
+        notification: crate::notification::Notification,
+    ) -> Result<(), Error> {
+        if request.shared_id != 0 {
+            return self.shared_notification(request, bytes, notification);
+        }
+        notification.delegate(request.reply, bytes)
+    }
+}

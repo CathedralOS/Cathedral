@@ -29,6 +29,7 @@ enum Outbound<'a> {
     None,
     Memory(&'a Object),
     Endpoint(Handle),
+    Notification(N),
 }
 impl Peer {
     pub(crate) fn wake(&self) -> N {
@@ -87,6 +88,14 @@ impl Peer {
     ) -> Result<(), SendFailure> {
         self.publish(id, bytes, Outbound::Endpoint(endpoint))
     }
+    pub(crate) fn send_notification(
+        &mut self,
+        id: u64,
+        bytes: &[u8],
+        notification: N,
+    ) -> Result<(), SendFailure> {
+        self.publish(id, bytes, Outbound::Notification(notification))
+    }
     #[inline(never)]
     fn publish(
         &mut self,
@@ -98,6 +107,7 @@ impl Peer {
             Outbound::None => wire::Attachment::None,
             Outbound::Memory(_) => wire::Attachment::Memory,
             Outbound::Endpoint(_) => wire::Attachment::Endpoint,
+            Outbound::Notification(_) => wire::Attachment::Notification,
         };
         let (frame, n) = wire::encode(id, bytes, kind).ok_or(SendFailure {
             error: Error(abi::INVALID_ARGUMENT as i64),
@@ -111,6 +121,9 @@ impl Peer {
             Outbound::None => Ok(()),
             Outbound::Memory(object) => self.lease.0.0.send_memory(&id.to_le_bytes(), object),
             Outbound::Endpoint(endpoint) => self.lease.0.0.send_with(&id.to_le_bytes(), endpoint),
+            Outbound::Notification(notification) => {
+                notification.delegate(self.lease.0.0, &id.to_le_bytes())
+            }
         };
         grant.map_err(|error| SendFailure {
             error,

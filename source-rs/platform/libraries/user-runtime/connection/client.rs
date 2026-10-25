@@ -130,7 +130,7 @@ impl<const WIDTH: usize> Pipeline<WIDTH> {
         let Some(reply) = self.poll_message()? else {
             return Ok(None);
         };
-        if reply.endpoint.is_some() {
+        if reply.endpoint.is_some() || reply.notification.is_some() {
             self.retire();
             return Err(Error(abi::IO_ERROR as i64));
         }
@@ -189,7 +189,7 @@ impl<const WIDTH: usize> Pipeline<WIDTH> {
         deadline: Option<u64>,
     ) -> Result<Response, Error> {
         let reply = self.exchange_message(bytes, object, deadline)?;
-        if reply.endpoint.is_some() {
+        if reply.endpoint.is_some() || reply.notification.is_some() {
             self.retire();
             return Err(Error(abi::IO_ERROR as i64));
         }
@@ -202,11 +202,25 @@ impl<const WIDTH: usize> Pipeline<WIDTH> {
         bytes: &[u8],
     ) -> Result<([u8; 64], usize, Option<Endpoint>), Error> {
         let reply = self.exchange_message(bytes, None, None)?;
-        if reply.object.is_some() {
+        if reply.object.is_some() || reply.notification.is_some() {
             self.retire();
             return Err(Error(abi::IO_ERROR as i64));
         }
         Ok((reply.bytes, reply.len, reply.endpoint))
+    }
+    /// Accept only notification custody (or a plain refusal) on this call.
+    /// The provider retains its source right; the received guard owns an
+    /// independently installed grant with the same authority and object lifetime.
+    pub fn call_retained_notification(
+        &mut self,
+        bytes: &[u8],
+    ) -> Result<([u8; 64], usize, Option<NotificationGrant>), Error> {
+        let reply = self.exchange_message(bytes, None, None)?;
+        if reply.object.is_some() || reply.endpoint.is_some() {
+            self.retire();
+            return Err(Error(abi::IO_ERROR as i64));
+        }
+        Ok((reply.bytes, reply.len, reply.notification))
     }
     fn exchange_message(
         &mut self,

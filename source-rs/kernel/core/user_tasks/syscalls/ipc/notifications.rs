@@ -111,14 +111,18 @@ pub(in crate::user_tasks) fn dispatch(
             Ok(0)
         }
         abi::NOTIFY_SEND => capabilities::send_cap(session, slot, a, b, c, 3),
-        abi::NOTIFY_RECEIVE => delivery::receive_call(
+        abi::NOTIFY_RECEIVE | abi::NOTIFY_TRY_RECEIVE => delivery::receive_call(
             session,
             slot,
             (
                 a,
                 b,
                 abi::MAX_MESSAGE as u64,
-                delivery::ReceiveMode::Notification,
+                if number == abi::NOTIFY_TRY_RECEIVE {
+                    delivery::ReceiveMode::TryNotification
+                } else {
+                    delivery::ReceiveMode::Notification
+                },
             ),
             None,
             now,

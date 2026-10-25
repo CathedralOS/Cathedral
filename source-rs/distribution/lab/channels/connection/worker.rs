@@ -7,6 +7,12 @@ use cathedral_user_runtime::{
 };
 pub(crate) fn run(mode: u64, env: Environment) -> u64 {
     let pair = (env.endpoint(0).unwrap(), env.endpoint(1).unwrap());
+    if (94..=98).contains(&mode) {
+        return super::notification_faults::worker(mode, env);
+    }
+    if mode >= 89 {
+        return super::notification_grants::worker(mode, env);
+    }
     if mode >= 87 {
         return super::endpoints::worker(mode, env);
     }

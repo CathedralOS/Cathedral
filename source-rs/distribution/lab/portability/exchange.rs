@@ -24,6 +24,7 @@ pub(super) fn client() -> u64 {
     let input = Handle::bootstrap(1).unwrap();
     crate::notifications::client(input, output);
     endpoint_probe();
+    notification_probe();
     assert_eq!(
         Handle::from_raw(0).send(b"invalid"),
         Err(Error(abi::BAD_HANDLE as i64))
@@ -66,5 +67,47 @@ fn endpoint_probe() {
         handle.close().unwrap();
     }
     cathedral_user_runtime::write(b"Cathedral ARM64: nonblocking endpoint custody passed\n")
+        .unwrap();
+}
+
+// Exercise notification escrow through SVC without blocking or accepting another kind.
+fn notification_probe() {
+    use cathedral_user_runtime::{
+        ipc,
+        notification::{self, Notification as N, Outcome},
+        time,
+    };
+    let baseline = notification::budget().unwrap();
+    let (send, receive) = ipc::channel().unwrap();
+    let [wait, signal, control] = N::create().unwrap();
+    assert_eq!(
+        N::try_accept(receive, &mut [0; 64]),
+        Err(Error(abi::WOULD_BLOCK as i64))
+    );
+    assert_eq!(
+        N::try_accept(send, &mut [0; 64]),
+        Err(Error(abi::DENIED as i64))
+    );
+    wait.delegate(send, b"wait").unwrap();
+    assert!(
+        matches!(receive.try_receive_with(&mut [0; 64]), Err(Error(c)) if c == abi::TOO_SMALL as i64)
+    );
+    let (len, received) = N::try_accept(receive, &mut [0; 64]).unwrap();
+    assert_eq!(len, 4);
+    let received = received.unwrap();
+    assert_eq!(received.signal(false), Err(Error(abi::DENIED as i64)));
+    signal.signal(false).unwrap();
+    assert_eq!(
+        received.wait(Some(time::now().unwrap())),
+        Ok(Outcome::Signaled)
+    );
+    control.close_object().unwrap();
+    for right in [wait, signal, control, received] {
+        right.release().unwrap();
+    }
+    send.close().unwrap();
+    receive.close().unwrap();
+    assert_eq!(notification::budget().unwrap(), baseline);
+    cathedral_user_runtime::write(b"Cathedral ARM64: nonblocking notification custody passed\n")
         .unwrap();
 }

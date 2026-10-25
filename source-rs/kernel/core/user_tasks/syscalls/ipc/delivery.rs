@@ -12,6 +12,7 @@ pub(super) enum ReceiveMode {
     TryMemory,
     Shared,
     Notification,
+    TryNotification,
 }
 #[derive(Clone, Copy)]
 pub(in crate::user_tasks) struct Receive {
@@ -52,7 +53,7 @@ pub(super) fn receive_call(
     }
     if matches!(
         attachment,
-        ReceiveMode::TryMemory | ReceiveMode::TryEndpoint
+        ReceiveMode::TryMemory | ReceiveMode::TryEndpoint | ReceiveMode::TryNotification
     ) {
         return Err(abi::WOULD_BLOCK);
     }
@@ -121,7 +122,10 @@ fn receive(session: &mut Session, slot: usize, wait: Receive) -> Result<Option<u
     }
     let message = if attachment == ReceiveMode::Shared {
         session.ipc.receive_shared(slot, handle, capacity)?
-    } else if attachment == ReceiveMode::Notification {
+    } else if matches!(
+        attachment,
+        ReceiveMode::Notification | ReceiveMode::TryNotification
+    ) {
         session.ipc.receive_notification(slot, handle, capacity)?
     } else if matches!(attachment, ReceiveMode::Memory | ReceiveMode::TryMemory) {
         session.ipc.receive_memory(slot, handle, capacity)?

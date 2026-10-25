@@ -17,6 +17,24 @@ impl Drop for Endpoint {
         }
     }
 }
+/// An installed notification grant. Dropping unclaimed custody releases this
+/// right only; it does not close or withdraw the provider's notification object.
+pub struct NotificationGrant(Option<N>);
+impl NotificationGrant {
+    pub(crate) fn received(handle: N) -> Self {
+        Self(Some(handle))
+    }
+    pub fn into_handle(mut self) -> N {
+        self.0.take().unwrap()
+    }
+}
+impl Drop for NotificationGrant {
+    fn drop(&mut self) {
+        if let Some(handle) = self.0.take() {
+            let _ = handle.release();
+        }
+    }
+}
 pub(super) struct Lease(pub Pair);
 impl Drop for Lease {
     fn drop(&mut self) {

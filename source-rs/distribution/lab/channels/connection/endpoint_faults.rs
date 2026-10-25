@@ -41,6 +41,9 @@ pub(super) fn run(launch: Launch) {
             let (n, endpoint) = recv.receive_with(&mut [0; 64]).unwrap();
             assert_eq!(n, 8);
             let endpoint = endpoint.unwrap();
+            // Acceptance may precede frame publication. Failed signalling retires
+            // the stream only after publishing, so wait for that boundary.
+            ipc::wait_many(&[recv], time::after(300).unwrap()).unwrap();
             let mut frame = [0; wire::FRAME_BYTES];
             let n = mailbox.try_receive(&mut frame).unwrap().unwrap();
             assert_eq!(

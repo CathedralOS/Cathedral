@@ -256,6 +256,58 @@ default/hidden cursor evidence remains valid for its scope, not the full asset A
 
 ## Current implementation evidence
 
+Implementation update 2026-10-25: **correlated notification-right replies**, over
+`cbbacfa8`.
+
+The next input-wake migration needs a separate wait right, not reuse of the
+connection's reply notification: consuming a reply hint must not consume the
+app's only pending input hint. The [shared connection](source-rs/platform/libraries/user-runtime/connection/connection.rs)
+now supports that handoff. Its experimental v4 frame/setup names add a notification
+attachment; all callers rebuild together, without old-format negotiation. Kernel
+grant mediation still copies only the eight-byte request ID. The new generic
+`NOTIFY_TRY_RECEIVE` (87) uses existing checked notification installation without
+parking, preserving incompatible messages and validating output before acceptance.
+
+`Client::call_retained_notification` returns an owning NotificationGrant guard;
+unclaimed/rejected grants release their local right. Plain, memory and endpoint
+calls reject notification replies, and Server rejects notification requests.
+`Server::reply_notification` delegates the supplied authority while retaining the
+provider's source right. Err means no delegation published; Ok after exposed
+failure means receiver escrow committed, not successful app delivery. No replay
+or borrowed-grant queue is introduced. Endpoint and notification replies share
+incarnation/pending-ID validation but retain their different custody semantics.
+
+Verification:
+
+- The full IPC guest exercises usable wait-only replies, a distinct hint surviving
+  unrelated reply traffic, coalescing, repeated unclaimed guard cleanup, wrong
+  reply API kinds, wrong IDs/kinds, orphan-half expiry, frame-first arrival,
+  stale/duplicate replies and receiver notification-metadata exhaustion followed
+  by successful reuse. Final logical, physical and notification-handle refunds
+  are exact. The failure-after-publication test keeps the accepted grant usable
+  after transport retirement while the provider still owns its source right.
+- Nonblocking typed receive checks empty/wrong-authority calls, invalid output and
+  reserved fields, and incompatible queued grants without consumption. ARM64
+  executes the syscall through SVC, uses the accepted wait-only right and checks
+  refunds. Its exact message-count assertion now includes the new introduction;
+  the runner requires both endpoint and notification custody markers.
+- Normal F5 passes three Notes, slot reuse and cold saved-state restoration
+  (`desktop/20261025T225146749198Z`). Notes recovery passes both boots with drafts
+  and post-commit reconciliation. Its provider remains 239/240 load pages.
+- Host tests, userspace checks, all-feature channel-lab Clippy, source layout and
+  formatting pass. Logs: `build/omega-component/notification-grants-*.log`.
+
+**Next:** use this handoff in Services/Offer and brokered child admission, replacing
+copied wake queues with an owner-held signal/control and child-held wait right.
+Migrate Omega host, Background, Split, UI and Rust probe waits together, preserving
+consume-before-poll and control fairness. Review notification-handle capacity and
+refunds even where an old queue's object allowance can fund its replacement.
+Positional stock-matrix startup and explicit copied fixtures also need migration;
+ordinary desktop wakes/control still use copied channels at this checkpoint.
+Do not report the overall shared-service outcome complete. Lifecycle control
+migration remains after these independent hints; its lazy setup must yield while
+children make upstream service calls, rather than deadlocking inside admission.
+
 Implementation update 2026-10-25: **shared input-producer and masked-capture connections**,
 over `8d67be75`.
 
