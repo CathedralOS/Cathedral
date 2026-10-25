@@ -31,8 +31,10 @@ An implementation may initially share immutable hierarchy records beneath
 independent roots and replace records along changed paths. It need not eagerly
 duplicate all backing. This is not a constant-time cloning guarantee: authority,
 accounting, identity representation and durable publication have their own costs.
-The physical sharing permitted here grants no new authority and does not
-authorize deduplication across trust or encryption domains.
+The physical sharing permitted here grants no new authority. The
+[deletion contract](deletion_and_erasure.md) keeps backing hidden and preserves
+independent references. Sharing must honor encryption and retention obligations;
+the contract does not select a cross-realm cryptographic scheme.
 
 ## Names and media types are hierarchy metadata
 

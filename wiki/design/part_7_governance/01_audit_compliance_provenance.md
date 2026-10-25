@@ -45,7 +45,7 @@ Retention is a policy knob. A personal machine keeps a modest, auto-compacting r
 ### The two mechanisms with real content
 
 - **Tamper-evidence: hash-chain locally, anchor externally against the operator.** The append-only hash chain ([[observability_and_introspection]]) makes silent edits detectable. But a fully sovereign machine owner controls their own machine, and auditing against the operator is the point of third-party evidence. So the chain head is periodically anchored to an external witness the operator does not control, such as a transparency log or notary, and a rewrite-and-re-hash diverges from the anchor.
-- **Secure deletion under replication: crypto-erase the key.** You do not hunt down every copy. The data was encrypted, so deletion is destroying the key (`wipe`, [[secrets_and_keys]]), and every replica, wherever it lives, becomes unrecoverable ciphertext. The provenance graph enumerates reachable copies for physical removal, and crypto-erase covers the unreachable ones. The proof of deletion is the key-destruction event. **Legal hold** is a capability that fences the wipe. It suspends deletion verifiably and reversibly, so the hold and delete obligations coexist.
+- **Scoped cryptographic erasure under replication.** The [deletion contract](../../spec/storage/deletion_and_erasure.md) requires actual destruction of the declared cryptographic access/recovery paths. An audit event records an outcome; it does not alone prove all covered key copies, cached keys or recovery material are unusable. Independent owners' copies are outside the operation's authority. Retention/legal-hold obligations that the caller cannot remove require refusal of a conflicting erasure guarantee, not destruction of held data.
 
 ### The rest composes
 
@@ -71,7 +71,7 @@ Build reports distinguish replay from a recorded dependency artifact graph from 
 
 - What structure makes the record tamper-evident, and against whom? The append-only hash-chained log, anchored to an external witness the operator does not control, so even the owner's tampering is detectable.
 - Which compliance facts derive mechanically and which need a human? Graph facts derive by query or PCC proof, and intent needs human attestation.
-- How is secure deletion proven when data is replicated? Crypto-erase the key. The key-destruction event is the proof, and legal hold is the capability that fences the wipe.
+- Erasure evidence must cover the declared key/recovery scope under the [deletion contract](../../spec/storage/deletion_and_erasure.md); a key-destruction event alone is not proof about arbitrary replicas.
 - Who may run a compliance query? A holder of a host-chain-scoped `Observe`-family capability, or an external auditor with a scoped, time-boxed one.
 
 ## Omega Leverage

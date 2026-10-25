@@ -19,8 +19,10 @@ Live watches and durable capture are now governed by the accepted
 [change-watch contract](../../spec/storage/change_watches.md). Historical file-byte
 retention is separate. [Atomic batches](../../spec/storage/atomic_batches.md) settle
 explicit revision prerequisites and all-or-nothing mutations; general query-aware
-isolation is deferred, not a prerequisite for that API. Unresolved
-deduplication/erasure choices remain in [owner questions](../../../OWNER_QUESTIONS.md).
+isolation is deferred, not a prerequisite for that API.
+[Deletion and erasure](../../spec/storage/deletion_and_erasure.md) now establishes
+reference-scoped retention policies and explicit cryptographic guarantees.
+Physical sharing remains hidden; a cross-realm key scheme is not selected.
 
 ## The Legacy Model
 
@@ -95,19 +97,33 @@ In this candidate model, copy duplicates identity and alias shares it. A snapsho
 
 ### Version history and retention
 
-Version history retains references to older committed state. Reclamation must respect current roots, retained history, active readers and in-flight publication. Copy-on-write makes sharing possible but does not itself establish safe collection or a retention guarantee. The following historical-content retention vocabulary remains proposed, particularly its interaction with quotas and shared encrypted content. It does not govern the separately ratified change-event retention contract: replaying a content-changed record does not require retaining that content's old bytes.
+Version history retains references to older committed state. Reclamation respects
+current roots, retained history, active readers and in-flight publication.
+Copy-on-write permits sharing but does not itself establish collection safety or
+a retention guarantee.
 
-Retention is an attribute on the commit, not the file:
+The accepted [deletion contract](../../spec/storage/deletion_and_erasure.md) uses
+one storage-service operation with a retention policy. Ordinary deletion honors
+applicable history; deletion without history also removes covered managed recovery
+paths; cryptographic erasure additionally requires real destruction of the covered
+cryptographic paths or explicit refusal. Independently owned copies survive.
+These promises are not interchangeable, and none requires overwriting another
+owner's shared backing.
 
-- **`retain`** is the default. The superseded version is kept as history.
-- **`transient`** drops it. The bytes are reclaimed lazily by pressure-driven compaction and may physically linger.
-- **`wipe`** requests erasure subject to the encryption, sharing and remaining-reference contract; it cannot promise to destroy another authorized copy.
-
-When a commit does not specify, the realm or type policy supplies the default: a dense-recent to sparse-old thinning schedule, Time-Machine-style, overridden by storage pressure. Nothing is kept forever by default.
+The older `retain`/`transient`/`wipe` labels are candidate commit-policy spellings,
+not a separate accepted API. Default history duration, thinning and append-stream
+retention remain policy/design work. No universal Time-Machine schedule or
+automatic per-version cryptographic key is established here. Change-event retention
+is separate: replaying a content-changed record need not retain old file bytes.
 
 Recovery is a backstop to invariants, not a substitute for them. `ensures` and transactional invariants prevent the structural corruption they can express. Rollback recovers only what they categorically cannot: semantic wrongness (any text is a valid document), user error, and bad migrations.
 
-Two commit modes depart from the default. Secrets use `wipe`, which is secure deletion: crypto-erase the version's key, since flash cannot reliably overwrite. That is valid only on unreferenced, non-deduped bytes ([[secrets_and_keys]], [[audit_compliance_provenance]]). A high-rate append stream such as video capture uses `transient` commits, so the OS does not retain the 5s/10s/15s growing tips as versions, with prefix-consistency on crash (recover to the last committed batch). The stream opts out of the transactional/versioned default while growing and seals to a normal `retain` object when done.
+Realm sealing alone does not provide per-reference cryptographic erasure. A provider
+must preserve other owners' independent access while making the erased path
+unrecoverable within its declared scope. Shared backing is not by itself a reason
+to refuse logical deletion, nor proof that cryptographic erasure is achievable.
+High-rate append streams may use different history policies without weakening
+atomic publication or the accepted capture contract.
 
 A large range patch can replace touched chunks and affected manifest/index paths while reusing unchanged content. Its cost includes chunk rounding, metadata updates and the engine's journal or copy-on-write work; it is not literally O(changed bytes) independent of layout. Atomic publication requires a crash-consistent commit protocol, not merely an assumed atomic root-pointer write.
 

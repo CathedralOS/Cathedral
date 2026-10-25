@@ -1,5 +1,11 @@
 # Object storage provider
 
+The accepted [deletion contract](../../../../wiki/spec/storage/deletion_and_erasure.md)
+requires reference-scoped retention policies and explicit refusal of unsupported
+cryptographic guarantees. Existing deletion/collection does not implement encrypted
+realms or cryptographic erasure; follow the
+[deletion outcome](../../../../TASKS_RUST.md#reference-deletion-and-scoped-erasure).
+
 The accepted [change-watch contract](../../../../wiki/spec/storage/change_watches.md)
 adds object-rooted live delivery and transaction-coupled durable capture to this
 service's responsibilities. It is not implemented by the current request protocol;

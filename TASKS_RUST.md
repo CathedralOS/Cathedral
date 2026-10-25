@@ -138,6 +138,35 @@ engine test. Query/predicate tracking, automatic read-set capture, CRDT merging 
 cross-service distributed commit are not acceptance requirements. No runtime
 implementation is claimed by this ratification.
 
+## Reference deletion and scoped erasure
+
+**Open; service contract ratified.** Carry the
+[deletion contract](wiki/spec/storage/deletion_and_erasure.md) into the existing
+storage protocol, provider and client API. Start at
+`source-rs/platform/contracts/storage.rs`,
+`source-rs/platform/services/storage/service.rs` and
+`source-rs/platform/libraries/database-objects/`. Do not create a kernel erase
+syscall or expose physical sharing as caller-owned bookkeeping.
+
+- Exercise deletion of one independent CoW reference while another remains usable,
+  with retained-reader custody and funded reclamation. Unauthorized references
+  must reject, and shared content must not broaden authority.
+- Expose the applicable ordinary-history policy and explicit no-history scope;
+  prove covered recovery paths are removed without destroying independently held
+  copies or mandatory retained state. Preserve required deletion audit events.
+- Request cryptographic erasure through that same boundary. Providers lacking the
+  required key machinery must refuse before mutation, never report ordinary
+  deletion as cryptographic success. Carry lost-reply reconciliation and precise
+  completion outcomes through the real service path.
+
+The first usable slice is policy-aware deletion with honest unsupported
+cryptographic-policy refusal and focused positive/invalid service evidence. Actual
+cryptographic erasure remains unimplemented until a provider demonstrates covered
+key/recovery-path destruction across restart, retained snapshots/backups/caches,
+and independent copies. Track that remaining acceptance here; do not close it on
+the refusal control or assume realm encryption already implements it. No encryption
+implementation is claimed by this docs change.
+
 ## Current implementation evidence
 
 Implementation update 2026-10-25: **recursive stock interaction uses shared IPC**,

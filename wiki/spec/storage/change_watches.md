@@ -182,7 +182,9 @@ Remaining acceptance is tracked in the
 Wire spelling, queue layout, physical log segmentation and indexing remain
 engineering work. [Explicit atomic batches](atomic_batches.md) settle revision
 prerequisites and all-or-nothing mutations in one service transaction domain, not
-general query-aware isolation. Aliases, cross-domain
-deduplication and historical-content erasure are not settled here. Surface new
+general query-aware isolation. [Deletion and erasure](deletion_and_erasure.md)
+separately governs reference-scoped retention policies; it does not waive audit
+retention. Aliases and cross-realm cryptographic key design remain outside this
+contract. Surface new
 semantic or trust gaps through [owner questions](../../../OWNER_QUESTIONS.md), not
 by silently weakening this contract.

@@ -24,7 +24,15 @@ Isolation is structural, not a runtime tag. A Matrix cannot name another's objec
 
 Shared services isolate per caller in userspace, not through OS machinery. One printer or one network stack serving many tenants is a userspace provider that each tenant reaches through its own capability. The service exposes a **per-caller view capability**: tenant A cannot see B's queue because the service attenuates per caller, and the OS guarantees only that capabilities do not cross ambiently. Shared-service-without-leak is service design plus capability attenuation. The residual contention and timing channel is minor and is the service's concern. The OS-level shared-resource side-channel is the hardware-contention kind, `SteeringSlot` in [[networking]], not a print queue.
 
-Remote wipe is crypto-erase of the realm key plus revocation of the capability subtree. "Wipe the work tenant" destroys the Matrix's sealed-realm key (the `wipe` crypto-erase from [[filesystem_as_database]], which is instant, with no block scrubbing) and revokes its capability subtree (a generation bump and lazy chain-walk, [[capability_lifecycle]]). It is exact and complete because the boundary was clean from the start: no work data leaked into the personal realm. Shares resolve cleanly. A copy shared into personal belongs to personal, as an independent content-addressed cell, and survives. A live capability into the work realm dies with it.
+Remote wipe combines an authorized realm-scoped erasure request with revocation
+of the realm's access grants. The [deletion contract](../../spec/storage/deletion_and_erasure.md)
+defines the promise: covered key and recovery paths must actually become unusable,
+or the service refuses cryptographic success. This is not automatically instantaneous
+or established by a single key-deletion record. Independently owned personal copies
+survive even when backing is shared; an operation on the work realm has no authority
+to destroy them. Cached plaintext or copies already outside the declared scope
+cannot be recalled. Realm sealing and reference-scoped erasure need compatible
+key machinery; the current realm design does not prove that machinery exists.
 
 Org control is a scoped ceiling capability, and policy is the ceiling intersection. The chain org → device → tenant → app is a most-restrictive-wins meet of ceilings ([[security_policy_and_sandboxing]], [[configuration_and_policy]]). Everyone tightens, and only the owner loosens. The org holds the capability over the work Matrix's ceiling, scoped to that Matrix, which structurally cannot reach the personal Matrix, a sibling the org holds no capability over. "Govern the work tenant without seeing the personal one" holds by construction.
 

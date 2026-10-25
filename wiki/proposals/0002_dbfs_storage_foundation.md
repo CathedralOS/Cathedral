@@ -274,10 +274,13 @@ mutations. The historical candidate discussion here does not reopen that ruling.
 [Atomic batches](../spec/storage/atomic_batches.md) settle explicit revision
 prerequisites and all-or-nothing mutation within one service transaction domain.
 General query-aware isolation is deferred pending a concrete customer, not required
-to implement batches. [Owner questions](../../OWNER_QUESTIONS.md) retain unresolved
-deduplication/erasure decisions. Aliases and general historical-content
-retention remain outside the watch contract. Chunk sizes, fanout, benchmark
-fixtures and engine comparisons are engineering work, not owner decisions.
+to implement batches. [Deletion and erasure](../spec/storage/deletion_and_erasure.md)
+settles reference-scoped policy and hidden backing: independently retained copies
+survive, and unsupported cryptographic guarantees refuse rather than downgrade.
+Key hierarchy and physical sharing must honor those obligations; no cross-realm
+cryptographic scheme is selected. Aliases and general historical-content retention
+schedules remain outside these contracts. Chunk sizes, fanout, benchmark fixtures
+and engine comparisons are engineering work, not owner decisions.
 
 Changes to identity or alias semantics affect persisted references. Changes to
 history guarantees affect backups and watcher replay. Cross-domain deduplication

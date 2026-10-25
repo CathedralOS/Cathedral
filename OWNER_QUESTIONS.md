@@ -32,31 +32,6 @@ standard.
 
 ## Open questions
 
-### DBFS deduplication domains and erasure
-
-**Requirement and tension.** The filesystem design combines cross-realm content
-deduplication, per-subtree sealing and a `wipe` retention mode. A shared backing
-cannot be physically erased for one realm while another still requires it;
-deduplication success, timing and accounting can also reveal content equality.
-This blocks a production promise of global deduplication or secure erasure.
-
-**Contracts checked.** The [filesystem design](wiki/design/part_4_storage/00_filesystem_as_database.md)
-and [memory/persistence design](wiki/design/part_2_components/02_memory_and_persistence.md)
-describe the intent; the [specification index](wiki/spec/README.md) and
-[object protocol](source-rs/platform/contracts/storage.rs) define no encryption domain,
-physical sponsorship, deduplication disclosure or erasure contract.
-
-**Owner choice.** Deduplicate only within an encryption/trust/accounting domain,
-or allow broader sharing with a specified confidentiality and key-lifetime model.
-Define whether `wipe` means withdrawing this principal's access, destroying an
-exclusive encryption key, or proving all managed copies unusable. These promises
-are different, especially with replicas, snapshots and external copies.
-
-**Recommendation (unaccepted).** Begin within one explicitly authorized domain;
-keep hash existence and placement private. Do not promise global sharing or
-immediate physical erasure. Charge retained backing to an identified sponsor and
-define key/reference lifetime before enabling cross-domain deduplication.
-
 ### Recursive cursor presentation and attribution
 
 **Settled boundary.** The [presentation contract](wiki/spec/human_surface/rendering.md#cursor-presentations)

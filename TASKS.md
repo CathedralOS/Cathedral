@@ -9,6 +9,7 @@ specification or a claim that every design ambition is implemented.
 | Shared-memory service transport and capability-controlled parking | [IPC and notification outcome](TASKS_RUST.md#shared-memory-ipc-and-notification-outcome) | Kernel mechanisms, platform protocols and ordinary desktop consumers |
 | Object-rooted watches and durable capture | [Watch outcome](TASKS_RUST.md#object-rooted-watches-and-durable-capture) | Platform storage service, caller-funded delivery and transactional history |
 | Explicit atomic storage batches | [Batch outcome](TASKS_RUST.md#explicit-atomic-storage-batches) | Platform storage service, revision checks and recoverable commit outcomes |
+| Reference deletion and scoped erasure | [Deletion outcome](TASKS_RUST.md#reference-deletion-and-scoped-erasure) | Storage retention policy, independent copies and explicit guarantee refusal |
 | Independent installation and component-owned activation | [App update outcome](TASKS_RUST.md#independent-installation-and-component-owned-activation) | Platform updater, scoped lifecycle owners and immutable executable backing |
 | Moving distribution behavior to Omega | [Current migration and next matrix step](TASKS_RUST.md) | `source/distribution/applications/`, `source/distribution/matrix/`, [independent matrix proof](source/distribution/lab/matrix-composition/README.md) |
 | Omega kernel boot | [Current boot frontier](source/kernel/boot/uefi/README.md) | `source/kernel/` |

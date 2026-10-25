@@ -24,6 +24,14 @@ A sealed realm is encrypted once under a single random data key, and each way to
 
 ### Recovery is pre-provisioned escrow, not a backdoor
 
+The accepted [storage deletion contract](../../spec/storage/deletion_and_erasure.md)
+separates realm unlocking from scoped reference erasure. One realm data key with
+several wrapped unlock methods does not supply independently erasable file keys.
+Deletion with ordinary history is not cryptographic erasure; a requested
+cryptographic policy must destroy the covered access/recovery paths or refuse the
+guarantee. Independently owned copies remain valid even if their backing is shared.
+The key hierarchy needed for that stronger policy is not selected by this chapter.
+
 Strong sealing is on by default, so a stolen device reveals nothing. We do not use the weak-gatekeeper model. Recovery is pre-provisioned unlock methods, not a backdoor. The default credential set includes a disclosed, user-or-host-held escrow: your other devices, chosen guardians, or, opt-in, a cloud or organization credential whose support path can recover you. The high-security realm opts out of escrow. Lose the factor and the data is gone, as in iOS Advanced Data Protection. Cathedral's one constraint over the normal default is that escrow is disclosed and user-or-host-held, never a covert vendor key.
 
 ## Concerns & Design Space
