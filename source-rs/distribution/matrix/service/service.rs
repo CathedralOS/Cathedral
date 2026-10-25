@@ -78,6 +78,16 @@ pub fn run(environment: Environment) -> Result<(), Error> {
         // SAFETY: Single-entry service owns this connection storage until exit.
         server.enable_shared(SOURCE, unsafe { &mut *slot })?;
     }
+    if parent.separate_storage {
+        static mut STORAGE: [cathedral_user_runtime::server::SharedSlot; CHILDREN] =
+            [const { cathedral_user_runtime::server::SharedSlot::empty() }; CHILDREN];
+        let slots = &raw mut STORAGE;
+        // SAFETY: One service entry lends disjoint persistent slots once. Removing
+        // a child resets custody; the replacement keeps this protocol selection.
+        for (index, slot) in unsafe { &mut *slots }.iter_mut().enumerate() {
+            server.enable_shared(STORAGE_BASE + index, slot)?;
+        }
+    }
     // Page allowances and use at startup, so a refused attachment is diagnosable.
     if let Ok(budget) = cathedral_user_runtime::resources::budget() {
         cathedral_user_runtime::time::storage_sample(

@@ -49,7 +49,7 @@ impl Accept {
             }
             2 => {
                 ack(pair.1, now)?;
-                self.bell.as_ref().unwrap().0[1].delegate(pair.0, b"")?;
+                self.bell.as_mut().unwrap().delegate(pair.0)?;
             }
             _ => {
                 let mut bytes = [0; 64];

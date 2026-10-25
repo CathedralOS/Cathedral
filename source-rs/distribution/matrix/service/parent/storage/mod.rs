@@ -2,5 +2,7 @@
 mod binding;
 mod pending;
 mod provider;
+mod upstream;
 pub(super) use provider::Provider;
+pub(super) use upstream::Upstream;
 include!("storage.rs");

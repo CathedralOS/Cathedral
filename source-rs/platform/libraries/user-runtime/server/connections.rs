@@ -68,12 +68,12 @@ impl Server {
         self.clients[index] = Some(pair);
         Ok(())
     }
-    /// Detach a dynamic client and invalidate its transport state. Active shared
-    /// setup/peers own and close their endpoints; copied clients leave that to caller.
+    /// Detach a dynamic client and clear transport custody, preserving the slot's
+    /// explicitly selected protocol for the next occupant. Shared setup/peers close
+    /// their endpoints; copied clients leave endpoint closure to the caller.
     pub fn remove(&mut self, index: usize) {
         assert!(index < self.count && self.links[index].is_none());
         self.reset_shared(index + 1);
-        self.shared[index + 1] = None;
         self.clients[index] = None;
         self.closed[index] = None;
     }

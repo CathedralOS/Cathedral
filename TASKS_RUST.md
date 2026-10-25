@@ -18,13 +18,15 @@ requirements, not a reason to freeze the copied-channel ABI.
 
 Kernel notifications and a first reusable single-writer shared-memory/mailbox
 slice execute on x86-64 and ARM64. Ordinary F5 now uses them for physical input
-to the root matrix, root display commands/images, and root storage. The scoped
-storage fixture also exercises both private-root provider connections. See the evidence below. Remaining acceptance:
+to the root matrix, root display commands/images, root storage and separate
+parent-storage streams between stock matrices. The scoped storage fixture also
+exercises both private-root provider connections. See the evidence below. Remaining acceptance:
 
-- Continue the shared service migration beyond root/provider connections.
+- Continue the shared service migration beyond stock-matrix storage connections.
   Independently selected control/data streams now multiplex; immutable attachments
-  execute through ordinary display and storage. Endpoint custody, nested storage
-  and interaction forwarding, and Omega-facing clients remain open. Preserve
+  execute through ordinary display and storage, including nested stock matrices.
+  Endpoint custody, recursive interaction/rendering and Omega-facing leaf clients
+  remain open. Preserve
   mapping isolation, hostile-writer validation and live-reader lifetime; waking
   proves none of them.
 - Demonstrate real cross-process ping-pong, including early reply/next-request,
@@ -136,6 +138,86 @@ cross-service distributed commit are not acceptance requirements. No runtime
 implementation is claimed by this ratification.
 
 ## Current implementation evidence
+
+Implementation update 2026-10-25: **recursive shared storage and transport custody**,
+over `fb0c1752`.
+
+Stock matrices now retain one shared Client for their separate parent-storage
+stream. [upstream.rs](source-rs/distribution/matrix/service/parent/storage/upstream.rs)
+selects that connection or the combined copied stream used by older headless
+fixtures. Local Scope calls borrow the persistent client; forwarded requests and
+binding refreshes yield through notification/lifetime interests and include the
+partial-attachment deadline. Scope stamps, authority and no-replay failure rules
+remain unchanged. Ordinary desktop verification now requires the nested shared
+storage marker after entering a user.
+
+The generic Server permits selection of an empty local dispatch slot. Removal
+releases transport custody but preserves the explicitly selected protocol for a
+replacement; old request incarnations cannot deliver late replies into it. Stock
+matrices preselect their child storage slots, and cleanup tolerates endpoints that
+shared transport already closed. [Replacement proof](source-rs/distribution/lab/channels/connection/replacement.rs)
+checks empty selection, remove/reinstall, restarted request IDs and rejected late
+object delivery.
+
+Capacity checks surfaced real composition issues in the integrated desktop. The new
+nested connection needs a writer page, reader page and notification allowance
+at each end; profiles and child subdivision now fund these explicitly. Dynamic
+nested admission also retains the server's transport allowance before lending
+capacity to the new child; otherwise a successful growth request could leave no
+room to accept that child's connection. Separately,
+four live connections retained all sixteen local notification handles, so starting
+input as the fifth failed. Setup now releases its redundant local signal right
+after delegation. Each live connection retains three handles, with no kernel cap
+increase. The [five-stream proof](source-rs/distribution/lab/channels/connection/capacity.rs)
+checks live round trips, bounded exhaustion and final handle/budget refunds. Its
+profile funds eight endpoint queues plus five notifications; queue exhaustion is
+still tested against the actual grant.
+
+The instrumented recovery provider briefly grew to 241 image pages, above the
+240-page lab admission cap. Keeping notification teardown out of line removes
+duplicated failure-path code and restores 240 pages without widening that cap.
+This provider remains close to the image-size ceiling; future growth should be
+diagnosed at build time rather than presenting only BAD_EXECUTABLE during boot.
+
+Verification:
+
+- Normal F5 fresh/cold passes user copy, three Notes instances, protected close,
+  saved Notes/Colors and the independent disk oracle:
+  `desktop/20261025T203525652943Z`.
+- Three nested desktops with delayed interaction pass fresh/cold, repeated subtree
+  reclamation, protected drafts and isolated persistence:
+  `desktop/20261025T202833814753Z`.
+- Nested binding timeout and revocation, plus stop during an ordinary launch read,
+  pass sibling input, protected drafts and cold reopen:
+  `desktop/20261025T203008733039Z`, `20261025T203043445469Z`,
+  `20261025T203124401114Z`.
+- Small integrated desktop passes clipping, physical input, provider/subtree
+  recovery and cold persistence (`matrix-desktop-test`). Scoped storage also
+  passes its combined-stream compatibility, private roots, recursive attenuation,
+  revocation, programs and provider replacement (`matrix-storage-test`).
+- Provider recovery passes pre/postcommit faults and exact cold state:
+  `matrix-database/20261025T203409398718Z`. Notes recovery passes draft retention
+  and exact text/history/quota: `matrix-database/20261025T203434694657Z`.
+- IPC passes replacement and five-stream capacity controls, existing malformed
+  frames/grants, abandoned setup, peer death and exact logical/physical refunds.
+- Host tests, workspace userspace Clippy and all-feature matrix/channels Clippy
+  pass. The user runtime compiles for ARM64; no new ARM64 guest or kernel smoke
+  claim is made for this slice. Layout, its eight tests, formatting, whitespace
+  and changed Markdown navigation pass.
+
+Logs: `build/omega-component/recursive-storage-{desktop-final,nested,
+  binding-timeout,binding-revoke,launch-stop,small,recovery,notes,scopes,
+  ipc-final,host,clippy,feature-clippy,arm64-check}.log`.
+The deep/fault desktop artifacts precede the final out-of-line cleanup adjustment;
+final F5, recovery, scoped storage and IPC checks cover that adjustment.
+
+**Next:** migrate the Omega-facing storage client and independent Split host as a
+coherent slice, including explicit per-app notification funding and manifests.
+Omega app logic itself is unchanged here. Recursive interaction/rendering, endpoint
+attachments and startup control messages remain copied. Connection setup and local
+Scope calls still wait synchronously. One outstanding request per shared stream,
+finite handle/object caps and single-CPU evidence remain limitations; this is not
+a latency claim or completion of the shared-IPC outcome.
 
 Implementation update 2026-10-25: **multiplexed shared connections and root storage**,
 over `0b1d3d49`.

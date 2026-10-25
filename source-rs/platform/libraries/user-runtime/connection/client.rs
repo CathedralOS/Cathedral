@@ -11,12 +11,12 @@ impl Client {
     pub fn connect(pair: Pair, deadline: u64) -> Result<Self, Error> {
         let lease = Lease(pair);
         let writer = Writer::allocate(1)?;
-        let bell = Bell::new()?;
+        let mut bell = Bell::new()?;
         pair.0.send(wire::OPEN)?;
         ack(pair.1, deadline)?;
         writer.delegate(pair.0)?;
         ack(pair.1, deadline)?;
-        bell.0[1].delegate(pair.0, b"")?;
+        bell.delegate(pair.0)?;
         ready(pair.1, deadline)?;
         let reader = Reader::accept(pair.1)?;
         pair.0.send(wire::ACK)?;

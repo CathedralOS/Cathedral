@@ -48,20 +48,11 @@ impl Parent {
             p.ready = Some(Ok(self.storage_links.len()));
         } else {
             let sent = self
-                .storage_pair
+                .storage_upstream
+                .as_mut()
                 .ok_or(Error(abi::PEER_CLOSED as i64))
-                .and_then(|(send, receive)| {
-                    send.send(&wire::encode([
-                        wire::STORAGE_INFO,
-                        0,
-                        0,
-                        0,
-                        0,
-                        0,
-                        0,
-                        deadline,
-                    ]))?;
-                    Ok(receive)
+                .and_then(|connection| {
+                    connection.begin([wire::STORAGE_INFO, 0, 0, 0, 0, 0, 0, deadline], None)
                 });
             match sent {
                 Ok(receive) => p.receive = Some(receive),
@@ -88,10 +79,24 @@ impl Parent {
             time::storage_sample("launch-bind-released", &[]);
         }
         if p.ready.is_none() {
-            let response = cathedral_user_runtime::matrix::upstream::exchange::poll(
-                p.receive.unwrap(),
-                p.deadline,
-            );
+            #[cfg(feature = "binding-drop-reply")]
+            let discarded = p.dropped;
+            #[cfg(not(feature = "binding-drop-reply"))]
+            let discarded = false;
+            // The fixture discards a completed transport reply, so it must wait
+            // at the application boundary instead of polling a completed ID again.
+            let response = if discarded {
+                if time::reached(time::now()?, p.deadline) {
+                    Err(Error(abi::TIMED_OUT as i64))
+                } else {
+                    Ok(None)
+                }
+            } else {
+                self.storage_upstream
+                    .as_mut()
+                    .ok_or(Error(abi::PEER_CLOSED as i64))?
+                    .poll(p.deadline)
+            };
             match response {
                 Ok(None) => {
                     self.binding_pending = Some(p);

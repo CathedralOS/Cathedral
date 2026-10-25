@@ -123,8 +123,15 @@ impl Children {
         child.data.1.close()?;
         child.notify.close()?;
         if let Some((input, output)) = child.storage {
-            input.close()?;
-            output.close()?;
+            // Shared setup owns and may already have closed this pair during
+            // disconnect/removal. Never reinterpret a retired local handle.
+            for endpoint in [input, output] {
+                match endpoint.close() {
+                    Ok(()) => (),
+                    Err(Error(c)) if c == abi::BAD_HANDLE as i64 => (),
+                    Err(error) => return Err(error),
+                }
+            }
         }
         if let Some((input, output)) = child.producer {
             input.close()?;

@@ -26,7 +26,7 @@ pub(crate) struct Peer {
 }
 impl Peer {
     pub(crate) fn wake(&self) -> N {
-        self.bell.0[0]
+        self.bell.wait
     }
     pub(crate) fn receive(&mut self) -> Result<Option<Message>, Error> {
         // Drain before checking publication. A complete final frame/grant pair

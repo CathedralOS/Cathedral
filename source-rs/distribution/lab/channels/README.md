@@ -1,13 +1,12 @@
 # Ordinary application channels
 
-This page records the **existing copied-channel lab**, not the selected production
-transport. The accepted [IPC](../../../../wiki/spec/communication/ipc.md) and
+This page records the copied-channel controls and shared-service guest proofs. The accepted [IPC](../../../../wiki/spec/communication/ipc.md) and
 [notification](../../../../wiki/spec/execution/notifications.md) contracts put
 payload protocols in shared-memory libraries and retain kernel authority transfer,
 mapping and parking. The [migration outcome](../../../../TASKS_RUST.md#shared-memory-ipc-and-notification-outcome)
 must preserve the custody/authority evidence below without promoting these copied
-queue syscalls into a second permanent transport. The notification proof below
-adds the wakeup primitive; shared-memory messages remain the next transport step.
+queue syscalls into a second permanent transport. The notification and connection
+proofs below exercise wakeups, shared payloads and exact grant custody.
 
 Run from the repository root:
 
@@ -173,7 +172,7 @@ precede the lent slot, giving cancellation a bounded acyclic order. IPC channel
 reservations belong to persistent launch accounts: loans and replacement do not
 renew their allowance. Shared mappings and moved endpoints can outlive their
 creator under their existing contracts. The viewport/input matrix service now uses these loans to admit its own
-children; its [integrated proof](../matrix/README.md) combines lifecycle with
+children; its [integrated proof](../../matrix/CHARTER.md) combines lifecycle with
 local input and primitive rendering. Lifetime ownership and loan return policy
 remain provisional under [the owner question](../../../../OWNER_QUESTIONS.md).
 
@@ -313,5 +312,16 @@ once through checked typed handoff; 64 round trips then use signal-and-wait with
 kernel payload delivery. It also checks two-worker wake-one/all, terminal wait
 outcomes, parked-process death and funding retained through creator replacement.
 See [the kernel boundary and remaining scope](../../../kernel/core/notifications/README.md).
-This is notification evidence, not the still-pending shared-memory message or
-ordinary-desktop migration proof.
+The [service connection proof](connection/connection.rs) exercises shared payloads,
+immutable grants and connection replacement through the reusable runtime. Its
+[capacity case](connection/capacity.rs) keeps five streams live, verifies release
+of setup-only notification rights, rejects excess allocation and refunds all
+custody. The channel profile funds thirteen owner channels: eight endpoint queues
+plus five notifications; its worker funds its own five notifications. The ordinary
+queue exhaustion probe derives its allowance from that profile instead of assuming
+eight. [Replacement](connection/replacement.rs) checks a preselected empty slot,
+remove/reinstall and a late old-incarnation object reply.
+
+These are focused guest controls. Follow the runtime's
+[ordinary consumers and evidence](../../../platform/libraries/user-runtime/connection/README.md#ordinary-consumers-and-evidence)
+for desktop migration and its remaining scope.

@@ -39,15 +39,15 @@ impl SharedSlot {
     }
 }
 impl Server {
-    /// Select an explicit client or owner-supplied link. Its slot keeps the same
-    /// transport policy across reconnection, but no old custody or request IDs.
+    /// Select a local dispatch slot before or after installing its endpoints.
+    /// An empty selected slot grants no authority. Its transport policy survives
+    /// client replacement, but no old custody or request IDs survive.
     pub fn enable_shared(
         &mut self,
         client: usize,
         slot: &'static mut SharedSlot,
     ) -> Result<(), Error> {
-        if client >= self.count || (self.clients[client].is_none() && self.links[client].is_none())
-        {
+        if client >= self.count {
             return Err(Error(abi::INVALID_ARGUMENT as i64));
         }
         self.arm_shared(client + 1, slot)

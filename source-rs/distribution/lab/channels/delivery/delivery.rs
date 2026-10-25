@@ -54,14 +54,19 @@ pub(super) fn abandoned() {
     recv.close().unwrap();
 }
 pub(super) fn quota() {
-    let channels: [_; 8] = core::array::from_fn(|_| ipc::channel().unwrap());
+    let limit = ipc::budget().unwrap().channel_limit as usize;
+    let mut channels = [None; abi::MAX_DYNAMIC_HANDLES / 2];
+    assert!(limit <= channels.len());
+    for slot in &mut channels[..limit] {
+        *slot = Some(ipc::channel().unwrap());
+    }
     assert!(matches!(ipc::channel(), Err(Error(code)) if code == abi::NO_MEMORY as i64));
-    let (send, recv) = channels[0];
+    let (send, recv) = channels[0].unwrap();
     send.send(b"held").unwrap();
     assert_eq!(send.send(b"full"), Err(Error(abi::WOULD_BLOCK as i64)));
     assert_eq!(recv.receive(&mut [0; 1]), Err(Error(abi::TOO_SMALL as i64)));
     assert_eq!(recv.receive(&mut [0; 64]).unwrap(), 4);
-    for (send, recv) in channels {
+    for (send, recv) in channels.into_iter().flatten() {
         send.close().unwrap();
         recv.close().unwrap();
     }

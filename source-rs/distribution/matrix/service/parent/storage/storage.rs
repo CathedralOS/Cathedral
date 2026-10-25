@@ -43,9 +43,11 @@ impl Parent {
         if !self.separate_storage {
             return Err(Error(abi::DENIED as i64));
         }
-        Ok(cathedral_user_runtime::storage::Scope::new(
-            self.storage_pair.ok_or(Error(abi::PEER_CLOSED as i64))?,
-        ))
+        Ok(self
+            .storage_upstream
+            .as_mut()
+            .ok_or(Error(abi::PEER_CLOSED as i64))?
+            .scope())
     }
 
     pub(in crate::service) fn storage_client(&self, slot: usize) -> usize {
@@ -70,12 +72,11 @@ impl Parent {
         }
     }
     fn storage_exchange(&mut self, words: wire::Packet) -> Result<wire::Packet, Error> {
-        let (send, receive) = self.storage_pair.ok_or(Error(abi::PEER_CLOSED as i64))?;
-        let mut bytes = [0; 64];
-        let result = send
-            .send(&wire::encode(words))
-            .and_then(|()| receive.receive_until(&mut bytes, time::after(100)?))
-            .and_then(|len| wire::decode(&bytes[..len]).ok_or(Error(abi::IO_ERROR as i64)));
+        let result = self
+            .storage_upstream
+            .as_mut()
+            .ok_or(Error(abi::PEER_CLOSED as i64))?
+            .call(words);
         if result.is_err() && self.separate_storage {
             self.retire_storage(0)?;
         }
@@ -100,7 +101,7 @@ impl Parent {
         if !self.upstream {
             return Ok(self.storage_links.len());
         }
-        if self.storage_pair.is_none() {
+        if self.storage_upstream.is_none() {
             self.scopes.clear();
             self.storage_epoch = 0;
             self.storage_realm = 0;
@@ -257,8 +258,7 @@ impl Parent {
             if self.storage_epoch == 0 {
                 return None;
             }
-            let pair = self.storage_pair?;
-            [pair.0.raw(), pair.1.raw()]
+            [self.storage_upstream.as_ref()?.receiver().ok()?.raw(), 0]
         } else {
             self.storage_links[0].as_ref()?.identity()?
         };
@@ -290,9 +290,8 @@ impl Parent {
     }
     fn retire_storage(&mut self, source: usize) -> Result<(), Error> {
         if self.upstream {
-            if let Some((send, receive)) = self.storage_pair.take() {
-                send.close()?;
-                receive.close()?;
+            if let Some(connection) = self.storage_upstream.take() {
+                connection.close()?;
             }
             self.storage_epoch = 0;
             self.storage_realm = 0;

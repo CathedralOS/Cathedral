@@ -66,7 +66,7 @@ concurrent calls: Client rejects a second outstanding request. Synchronous curso
 image replay and cleanup calls retain their existing scheduling behavior. There
 is no copied-payload fallback after the display connection upgrades.
 
-## Root storage boundary
+## Storage boundaries
 
 [storage.rs](../service/parent/storage/storage.rs) owns scope/delegation decisions;
 [provider.rs](../service/parent/storage/provider.rs) owns the two root/provider
@@ -79,5 +79,19 @@ the same client via Scope, so a temporary scope cannot reset transport IDs or cl
 an otherwise healthy provider connection. Late/ambiguous failures retire it.
 
 Scope stamps, source selection and binding revocation are unchanged. Link slots
-continue to define the provider's private roots. Nested storage hops and Omega
-application bindings have not migrated; copied payloads there are remaining work.
+continue to define the provider's private roots.
+
+[upstream.rs](../service/parent/storage/upstream.rs) owns the persistent shared
+Client for a nested stock matrix's separate storage stream. Its local Scope,
+forwarded requests and binding refreshes all use that connection. Parent servers
+preselect the five child storage slots before admission; remove/reinstall resets
+custody and correlation without requiring another static-slot borrow. Cleanup
+tolerates endpoints already closed by shared transport. Late replies retain the
+old incarnation and cannot reach the replacement child.
+
+Each end reserves a writer page, reader page and notification allowance. The small
+desktop fixtures explicitly fund both ends without taking the app's existing
+allowance. Stored-program admission also counts the server-side transport cost
+before requesting growth and lending resources to a child. Setup and local reads still wait synchronously. Omega-facing app
+bindings and Split have not migrated. Fixtures combining interaction and storage
+on one pair retain copied packets; an upgraded pair never falls back to them.

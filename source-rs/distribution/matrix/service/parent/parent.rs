@@ -30,7 +30,7 @@ pub(super) struct Parent {
     cursors: cathedral_user_runtime::matrix::upstream::Cursors,
     cursor_mode: Option<u64>,
     pair: Option<(Handle, Handle)>,
-    storage_pair: Option<(Handle, Handle)>,
+    storage_upstream: Option<storage::Upstream>,
     pub separate_storage: bool,
     pub grant: Grant,
     display: Option<display::Display>,
@@ -110,7 +110,7 @@ impl Parent {
             cursor_mode: None,
             upstream: false,
             pair: None,
-            storage_pair: None,
+            storage_upstream: None,
             separate_storage: false,
             grant: Grant {
                 epoch: 0,
@@ -167,11 +167,11 @@ impl Parent {
         if environment.len() == 5 {
             let connections = cathedral_user_runtime::matrix::Connections::load(environment)?;
             self.pair = Some(connections.interaction);
-            self.storage_pair = Some(connections.storage);
+            self.storage_upstream = Some(storage::Upstream::connect(connections.storage)?);
             self.wake = Some(connections.wake);
         } else {
             // Manually assembled headless fixtures retain their original shared stream.
-            self.storage_pair = self.pair;
+            self.storage_upstream = self.pair.map(storage::Upstream::Combined);
         }
         Ok(())
     }

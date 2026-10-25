@@ -18,8 +18,10 @@ with `enable_shared_control(slot)`. Each selected stream borrows its own
 service-owned `SharedSlot`; the server holds references rather than allocating
 every connection state on each service stack. Control requests retain control authority; an ordinary
 client cannot claim it in its frame. Replacing the control pair retires the old
-shared state before adopting the new incarnation. Link reconnection retains the
-slot's transport policy but resets IDs, partial custody and pending replies.
+shared state before adopting the new incarnation. Selection may precede endpoint
+installation; an empty slot grants no authority. Link reconnection and dynamic
+remove/reinstall retain the slot's selected protocol, resetting IDs, partial custody
+and pending replies. The service lends each static slot only once.
 Removing a dynamic slot or dropping the Server releases its transport custody.
 The client takes ownership of its corresponding
 send/receive pair, including on failed setup. No global locator, claimed PID or
@@ -127,8 +129,14 @@ attachments keep their typed custody. The provider still authorizes roots by its
 installed link slot and checks scope stamps, never by a payload's claimed identity.
 Provider replacement requires a new setup; failed writes are not replayed.
 
-Nested matrix forwarding and Omega-facing adapters retain their existing transport.
-This migrates root/provider connections, not every recursive hop or startup payload.
+The [nested storage adapter](../../../../distribution/matrix/service/parent/storage/upstream.rs)
+uses a persistent shared Client on each stock matrix's separate parent storage
+stream. Forwarding and binding refreshes yield on its lifetime and notification
+interests. Local Scope calls borrow it without resetting IDs. Child storage slots
+are preselected before admission and survive replacement with fresh custody.
+Omega-facing leaf clients, Split and recursive interaction/rendering retain their
+existing transport. Older fixtures combining interaction and storage stay copied;
+this is an explicit composition choice, never fallback after an upgrade.
 
 [The guest connection proof](../../../../distribution/lab/channels/connection/connection.rs)
 checks repeated requests, wrong reply IDs, mixed-wait validation, deadline retirement,
@@ -147,17 +155,25 @@ exercise simultaneous owner/two-client streams with equal IDs and reversed repli
 setup expiry beside a live peer, full wait-set refusal, four writable mailbox
 objects beside immutable scratch, and the eight-object metadata ceiling. The enclosing
 fixture checks exact logical/physical refunds after peer exit and Server drop.
+[Replacement](../../../../distribution/lab/channels/connection/replacement.rs)
+preselects an empty slot, removes and reinstalls its child, then rejects an old
+request's late object reply even when the replacement restarts its request IDs.
 ARM64 exercises mixed notification/IPC readiness with the existing shared mailbox, not this full desktop
 connection. All current guest evidence is single-CPU.
 
 Every selected shared stream reserves an extra readiness interest beside the full
 endpoint set. Caller-owned interests must also fit the bounded wait. Each connection
 separately charges a writer page, accepted reader page and notification allowance;
-registration alone does not bypass these or the object-count limits. Fair scanning
+registration alone does not bypass these or the object-count limits. After
+delegating its notification signal right, each side releases its setup-only copy.
+A live connection retains three local notification handles: wait, close/control
+and the peer's signal right. The [capacity proof](../../../../distribution/lab/channels/connection/capacity.rs)
+keeps five streams live under the unchanged sixteen-handle cap, refuses a further
+notification allocation, and checks final handle and enclosing budget refunds. Fair scanning
 and earliest partial/setup deadlines cover all selected streams. There is still
 one outstanding request per stream, not a multi-request pipeline.
 
-Nested consumers, endpoint custody and Omega-facing migration remain work. Shared
+Other recursive consumers, endpoint custody and Omega-facing migration remain work. Shared
 mailbox pooling may reduce per-connection backing/metadata costs later; current
 bounds refuse excess setup safely. No performance improvement or final production
 wire ABI is claimed here.

@@ -7,17 +7,39 @@ impl Drop for Lease {
         self.0.1.close().ok();
     }
 }
-pub(super) struct Bell(pub [N; 3]);
+pub(super) struct Bell {
+    pub wait: N,
+    signal: Option<N>,
+    control: N,
+}
 impl Bell {
     pub fn new() -> Result<Self, Error> {
-        N::create().map(Self)
+        let [wait, signal, control] = N::create()?;
+        Ok(Self {
+            wait,
+            signal: Some(signal),
+            control,
+        })
+    }
+    pub fn delegate(&mut self, endpoint: Handle) -> Result<(), Error> {
+        let signal = self.signal.ok_or(Error(abi::INVALID_ARGUMENT as i64))?;
+        signal.delegate(endpoint, b"")?;
+        // The queued grant owns an independent right. Retain only our wait and
+        // close authority; the setup-only signal must not consume a live slot.
+        signal.release()?;
+        self.signal = None;
+        Ok(())
     }
 }
+// Teardown is a cold custody boundary, shared by client and accept failure paths.
 impl Drop for Bell {
+    #[inline(never)]
     fn drop(&mut self) {
-        self.0[2].close_object().ok();
-        for h in self.0 {
-            h.release().ok();
+        self.control.close_object().ok();
+        self.wait.release().ok();
+        self.control.release().ok();
+        if let Some(signal) = self.signal {
+            signal.release().ok();
         }
     }
 }

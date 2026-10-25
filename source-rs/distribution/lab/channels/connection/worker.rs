@@ -7,6 +7,12 @@ use cathedral_user_runtime::{
 };
 pub(crate) fn run(mode: u64, env: Environment) -> u64 {
     let pair = (env.endpoint(0).unwrap(), env.endpoint(1).unwrap());
+    if mode == 74 {
+        return super::capacity::worker(env);
+    }
+    if mode == 73 {
+        return super::replacement::worker(env);
+    }
     if mode >= 71 {
         return super::multiplex::worker(mode, env);
     }

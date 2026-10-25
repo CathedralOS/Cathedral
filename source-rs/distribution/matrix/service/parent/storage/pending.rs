@@ -205,16 +205,18 @@ impl Parent {
     pub(in crate::service) fn storage_wake(
         &self,
     ) -> Option<cathedral_user_runtime::event::Interest> {
-        if self.upstream || self.storage_wait().is_none() {
-            return None;
+        self.storage_wait()?;
+        if self.upstream {
+            return self.storage_upstream.as_ref()?.wake();
         }
         self.storage_links[self.storage_pending.as_ref()?.source]
             .as_ref()?
             .wake()
     }
     pub(in crate::service) fn storage_transfer_deadline(&self) -> Option<u64> {
-        if self.upstream || self.storage_wait().is_none() {
-            return None;
+        self.storage_wait()?;
+        if self.upstream {
+            return self.storage_upstream.as_ref()?.deadline();
         }
         self.storage_links[self.storage_pending.as_ref()?.source]
             .as_ref()?
@@ -271,9 +273,12 @@ impl Parent {
             );
         }
         let mut reply: Option<(wire::Packet, Option<Object>)> = None;
-        if let Some(receive) = p.receive {
+        if p.receive.is_some() {
             let response = if self.upstream {
-                cathedral_user_runtime::matrix::upstream::exchange::poll(receive, p.deadline)
+                self.storage_upstream
+                    .as_mut()
+                    .ok_or(Error(abi::PEER_CLOSED as i64))?
+                    .poll(p.deadline)
             } else {
                 self.storage_links[p.source]
                     .as_mut()
@@ -339,20 +344,11 @@ impl Parent {
         if reply.is_none() && p.receive.is_none() {
             if p.step == Step::Refresh {
                 let result = self
-                    .storage_pair
+                    .storage_upstream
+                    .as_mut()
                     .ok_or(Error(abi::PEER_CLOSED as i64))
-                    .and_then(|(send, receive)| {
-                        send.send(&wire::encode([
-                            wire::STORAGE_INFO,
-                            0,
-                            0,
-                            0,
-                            0,
-                            0,
-                            0,
-                            p.deadline,
-                        ]))?;
-                        Ok(receive)
+                    .and_then(|connection| {
+                        connection.begin([wire::STORAGE_INFO, 0, 0, 0, 0, 0, 0, p.deadline], None)
                     });
                 match result {
                     Ok(receive) => {
@@ -518,12 +514,10 @@ impl Parent {
             p.attachment.take()
         };
         p.receive = Some(if self.upstream {
-            let pair = self.storage_pair.ok_or(Error(abi::PEER_CLOSED as i64))?;
-            match attachment {
-                Some(object) => pair.0.send_memory(&wire::encode(words), &object)?,
-                None => pair.0.send(&wire::encode(words))?,
-            }
-            pair.1
+            self.storage_upstream
+                .as_mut()
+                .ok_or(Error(abi::PEER_CLOSED as i64))?
+                .begin(words, attachment.as_ref())?
         } else {
             self.storage_links[p.source]
                 .as_mut()

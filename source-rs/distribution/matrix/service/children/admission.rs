@@ -136,8 +136,11 @@ impl Children {
             cathedral_matrix::funding::initial_frames(256, pages[0], descendants)
                 .ok_or(Error(abi::INVALID_ARGUMENT as i64))?,
         );
-        // The control pair belongs to the reserved process slot. Only the
-        // interaction/wake/storage/producer channels are charged to this creator.
+        // The control pair belongs to the reserved process slot. Interaction,
+        // wake, storage and producer queues charge this creator. A selected
+        // shared storage slot also needs its own writer, reader and notification;
+        // leave that capacity here instead of lending it all to the child.
+        let transport = u64::from(storage && self.separate_storage);
         let connection_channels = if storage && self.separate_storage {
             5
         } else {
@@ -150,7 +153,7 @@ impl Children {
                 0
             };
         let connected_channels = channels
-            .checked_add(connection_channels)
+            .checked_add(connection_channels + transport)
             .ok_or(Error(abi::INVALID_ARGUMENT as i64))?;
         // Reserve the minimum before spawning. Undeclared descendant hosts get
         // bounded spare room for auxiliary children (e.g. a capture viewer),
@@ -198,7 +201,19 @@ impl Children {
         let admitted = (|| {
             funding::ensure(
                 parent,
-                [pages[0], pages[1], connected_channels, slots, physical],
+                [
+                    pages[0]
+                        .checked_add(transport)
+                        .ok_or(Error(abi::INVALID_ARGUMENT as i64))?,
+                    pages[1]
+                        .checked_add(transport)
+                        .ok_or(Error(abi::INVALID_ARGUMENT as i64))?,
+                    connected_channels,
+                    slots,
+                    physical
+                        .checked_add(transport)
+                        .ok_or(Error(abi::INVALID_ARGUMENT as i64))?,
+                ],
             )?;
             let executable = Executable::from_object(object, 0).inspect_err(|error| {
                 refused("matrix-image-refused", plan.slot, error, [0; 3]);

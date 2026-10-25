@@ -1,8 +1,8 @@
 //! Child-local object storage through the parent matrix. STORAGE_INFO supplies
 //! a binding revision that scopes every later request and the realm the
 //! binding is rooted at; the parent substitutes its own upstream scope at each
-//! hop. Nested copied replies carry no correlation identity; the root borrows
-//! its persistent correlated shared provider client. Either path retires on an
+//! hop. Stock matrices borrow their persistent correlated shared client; remaining
+//! copied leaf clients carry no transport correlation identity. Either path retires on an
 //! ambiguous failure rather than replaying a possibly committed operation.
 use crate::{
     Error, abi,
@@ -45,6 +45,13 @@ impl<'a> Scope<'a> {
             alive: true,
             direct: true,
         }
+    }
+    /// Borrow a persistent connection to the enclosing matrix, retaining normal
+    /// binding discovery and attenuation. Transport correlation is not authority.
+    pub fn shared(client: &'a mut crate::connection::Client) -> Self {
+        let mut scope = Self::provider(client);
+        scope.direct = false;
+        scope
     }
     pub fn connected(&self) -> bool {
         self.alive
