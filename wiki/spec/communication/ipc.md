@@ -223,7 +223,9 @@ or peer progress. Failure and reclamation must preserve outstanding obligations.
   setup-only notification rights are released after delegation.
   Omega-facing app storage and the independent Split host now use this same
   boundary, with persistent request sequences and explicitly funded notifications.
-  Recursive interaction/rendering and other services remain to migrate;
+  An explicitly service-selected four-call pipeline now exercises independent
+  out-of-order replies and bounded backpressure; ordinary consumers still use
+  one outstanding call. Recursive interaction/rendering and other services remain to migrate;
   this is not a coordination service or proof of complete desktop migration.
 - [Omega boot](../../../source/kernel/boot/uefi/README.md) exercises early memory
   ownership and mappings, not this complete cross-process service.

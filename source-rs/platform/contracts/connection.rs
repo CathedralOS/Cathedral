@@ -1,8 +1,12 @@
 //! Experimental local shared request/reply transport. Connection authority comes
 //! from supplied endpoints; these bytes neither locate nor authenticate a peer.
 pub const OPEN: &[u8] = b"cathedral.shared.v2";
+/// Opt in to bounded independent requests and consumption notifications.
+pub const OPEN_PIPELINE: &[u8] = b"cathedral.shared.pipeline.v2";
 pub const ACK: &[u8] = b"shared.ready.v2";
 pub const COMMIT: &[u8] = b"shared.commit.v2";
+/// Bounded requests retained by one service connection, independent of mailbox capacity.
+pub const MAX_IN_FLIGHT: usize = 4;
 pub const MAX_PAYLOAD: usize = 64;
 pub const FRAME_BYTES: usize = 16 + MAX_PAYLOAD;
 /// A typed grant carries only this correlation ID, never the application payload.

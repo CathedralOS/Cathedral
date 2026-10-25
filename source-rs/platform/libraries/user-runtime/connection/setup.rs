@@ -7,11 +7,12 @@ pub(crate) struct Accept {
     bell: Option<Bell>,
     signal: Option<Signal>,
     phase: u8,
+    pipelined: bool,
     pub deadline: u64,
 }
 impl Accept {
     // Called only after OPEN was read from the explicitly enabled endpoint.
-    pub(crate) fn start(pair: Pair, deadline: u64) -> Result<Self, Error> {
+    pub(crate) fn start(pair: Pair, deadline: u64, pipelined: bool) -> Result<Self, Error> {
         let lease = Lease(pair);
         let writer = Writer::allocate(1)?;
         let bell = Bell::new()?;
@@ -23,6 +24,7 @@ impl Accept {
             bell: Some(bell),
             signal: None,
             phase: 0,
+            pipelined,
             deadline,
         })
     }
@@ -66,6 +68,7 @@ impl Accept {
                     bell: self.bell.take().unwrap(),
                     signal: self.signal.take().unwrap(),
                     incoming: Incoming::default(),
+                    pipelined: self.pipelined,
                 }));
             }
         }

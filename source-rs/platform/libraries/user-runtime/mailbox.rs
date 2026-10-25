@@ -36,13 +36,7 @@ impl Mailbox {
         if bytes.len() > MAX_BYTES {
             return Err(Error(abi::INVALID_ARGUMENT as i64));
         }
-        let acknowledged = self.input.load(1)?;
-        if acknowledged > self.sent {
-            return Err(Error(abi::IO_ERROR as i64));
-        }
-        if acknowledged != self.sent {
-            return Err(Error(abi::WOULD_BLOCK as i64));
-        }
+        self.send_ready()?;
         let next = self
             .sent
             .checked_add(1)
@@ -55,6 +49,18 @@ impl Mailbox {
         self.output.store(2, bytes.len() as u64)?;
         self.output.store(0, next)?; // Release publication follows complete payload.
         self.sent = next;
+        Ok(())
+    }
+    /// Check backpressure before transferring an attachment. The sole writer
+    /// owns `sent`; a compliant peer can only advance its acknowledgement.
+    pub(crate) fn send_ready(&self) -> Result<(), Error> {
+        let acknowledged = self.input.load(1)?;
+        if acknowledged > self.sent {
+            return Err(Error(abi::IO_ERROR as i64));
+        }
+        if acknowledged != self.sent {
+            return Err(Error(abi::WOULD_BLOCK as i64));
+        }
         Ok(())
     }
     /// Insufficient output space does not acknowledge or consume the message.

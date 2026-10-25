@@ -1,18 +1,28 @@
-//! One outstanding call, exact correlation, retirement after ambiguous failure.
+//! Bounded outstanding calls, exact correlation and retirement after ambiguous failure.
 use super::*;
 pub type Response = ([u8; 64], usize, Option<Object>);
-pub struct Client {
+pub type Client = Pipeline<1>;
+/// Explicitly bounded independent calls over one connection. Poll replies by
+/// transport ID; application payloads do not select the recipient of a reply.
+pub struct Pipeline<const WIDTH: usize> {
     peer: Option<Peer>,
     next: u64,
-    pending: Option<u64>,
+    pending: [u64; WIDTH],
 }
-impl Client {
+impl<const WIDTH: usize> Pipeline<WIDTH> {
     /// Takes ownership of the supplied send/receive pair, including on failure.
     pub fn connect(pair: Pair, deadline: u64) -> Result<Self, Error> {
         let lease = Lease(pair);
+        if WIDTH == 0 || WIDTH > wire::MAX_IN_FLIGHT {
+            return Err(Error(abi::INVALID_ARGUMENT as i64));
+        }
         let writer = Writer::allocate(1)?;
         let mut bell = Bell::new()?;
-        pair.0.send(wire::OPEN)?;
+        pair.0.send(if WIDTH > 1 {
+            wire::OPEN_PIPELINE
+        } else {
+            wire::OPEN
+        })?;
         ack(pair.1, deadline)?;
         writer.delegate(pair.0)?;
         ack(pair.1, deadline)?;
@@ -33,9 +43,10 @@ impl Client {
                 bell,
                 signal,
                 incoming: Incoming::default(),
+                pipelined: WIDTH > 1,
             }),
             next: 1,
-            pending: None,
+            pending: [0; WIDTH],
         })
     }
     /// Any error after submission retires this connection; caller must reconcile
@@ -69,41 +80,70 @@ impl Client {
     /// Publish one request without waiting for the service. BUSY leaves the
     /// original request intact; a transport failure retires without replay.
     pub fn begin(&mut self, bytes: &[u8], object: Option<&Object>) -> Result<(), Error> {
-        if self.pending.is_some() {
+        if self.pending() {
             return Err(Error(abi::BUSY as i64));
         }
+        self.submit(bytes, object).map(|_| ())
+    }
+    /// Submit independently of older application replies. BUSY means the local
+    /// in-flight window is full; WOULD_BLOCK means the peer has not consumed the
+    /// previous frame. Neither publishes, consumes an ID, nor retires prior work.
+    pub fn submit(&mut self, bytes: &[u8], object: Option<&Object>) -> Result<u64, Error> {
         if bytes.len() > 64 {
             return Err(Error(abi::INVALID_ARGUMENT as i64));
         }
+        let slot = self
+            .pending
+            .iter()
+            .position(|id| *id == 0)
+            .ok_or(Error(abi::BUSY as i64))?;
         let id = self.next;
-        let result = (|| {
-            self.next = id.checked_add(1).ok_or(Error(abi::IO_ERROR as i64))?;
-            self.peer
-                .as_mut()
-                .ok_or(Error(abi::PEER_CLOSED as i64))?
-                .send(id, bytes, object)
-                .map_err(|e| e.error)?;
-            self.pending = Some(id);
-            Ok(())
-        })();
-        if result.is_err() {
+        let Some(next) = id.checked_add(1) else {
             self.retire();
+            return Err(Error(abi::IO_ERROR as i64));
+        };
+        let peer = self.peer.as_mut().ok_or(Error(abi::PEER_CLOSED as i64))?;
+        match peer.send(id, bytes, object) {
+            Ok(()) => {
+                self.next = next;
+                self.pending[slot] = id;
+                Ok(id)
+            }
+            Err(failure) => {
+                if failure.exposed || failure.error.0 != abi::WOULD_BLOCK as i64 {
+                    self.retire();
+                }
+                Err(failure.error)
+            }
         }
-        result
     }
-    /// Consume only the exact outstanding reply. None leaves its custody intact.
+    /// Legacy single-call convenience. Multiple outstanding calls require poll_reply.
     pub fn poll(&mut self) -> Result<Option<Response>, Error> {
-        let id = self.pending.ok_or(Error(abi::INVALID_ARGUMENT as i64))?;
+        if self.pending.iter().filter(|id| **id != 0).count() != 1 {
+            return Err(Error(abi::INVALID_ARGUMENT as i64));
+        }
+        self.poll_reply()
+            .map(|reply| reply.map(|(_, response)| response))
+    }
+    /// Replies may complete out of order, but must match an outstanding ID once.
+    pub fn poll_reply(&mut self) -> Result<Option<(u64, Response)>, Error> {
+        if !self.pending() {
+            return Err(Error(abi::INVALID_ARGUMENT as i64));
+        }
         let result = (|| {
             let peer = self.peer.as_mut().ok_or(Error(abi::PEER_CLOSED as i64))?;
-            let Some(reply) = peer.receive()? else {
+            let received = peer.receive()?;
+            peer.incoming.validate_replies(&self.pending)?;
+            let Some(reply) = received else {
                 return Ok(None);
             };
-            if reply.id != id {
-                return Err(Error(abi::IO_ERROR as i64));
-            }
-            self.pending = None;
-            Ok(Some((reply.bytes, reply.len, reply.object)))
+            let slot = self
+                .pending
+                .iter()
+                .position(|id| *id == reply.id)
+                .ok_or(Error(abi::IO_ERROR as i64))?;
+            self.pending[slot] = 0;
+            Ok(Some((reply.id, (reply.bytes, reply.len, reply.object))))
         })();
         if result.is_err() {
             self.retire();
@@ -120,7 +160,7 @@ impl Client {
         ])
     }
     pub fn pending(&self) -> bool {
-        self.pending.is_some()
+        self.pending.iter().any(|id| *id != 0)
     }
     pub fn transfer_deadline(&self) -> Option<u64> {
         self.peer.as_ref().and_then(Peer::deadline)
@@ -169,6 +209,6 @@ impl Client {
     }
     pub fn retire(&mut self) {
         self.peer = None;
-        self.pending = None;
+        self.pending.fill(0);
     }
 }

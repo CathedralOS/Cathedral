@@ -107,6 +107,7 @@ pub(super) fn run() {
     control::run(launch);
     multiplex::run(launch);
     replacement::run(launch);
+    pipeline::run(launch);
     capacity::run(launch);
     resources::assign(
         launch,

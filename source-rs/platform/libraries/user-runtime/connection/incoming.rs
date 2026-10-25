@@ -20,6 +20,20 @@ pub(super) struct Incoming {
     pub deadline: Option<u64>,
 }
 impl Incoming {
+    pub fn validate_replies(&self, pending: &[u64]) -> Result<(), Error> {
+        if self
+            .grant
+            .as_ref()
+            .is_some_and(|(id, _)| !pending.contains(id))
+            || self
+                .frame
+                .as_ref()
+                .is_some_and(|frame| !pending.contains(&frame.id))
+        {
+            return Err(Error(abi::IO_ERROR as i64));
+        }
+        Ok(())
+    }
     pub fn transfer(&mut self, input: Handle) -> Result<(), Error> {
         let mut bytes = [0; 64];
         match input.try_receive_memory(&mut bytes) {

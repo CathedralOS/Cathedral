@@ -140,6 +140,75 @@ implementation is claimed by this ratification.
 
 ## Current implementation evidence
 
+Implementation update 2026-10-25: **bounded independent shared calls**, over
+`8c4a4db7`.
+
+Tracing the next migration exposed a requirement: the stock matrix keeps tagged
+input polling alive while a presentation reply is delayed. Directly substituting
+the one-call shared Client would serialize those requests and regress that work.
+The transport prerequisite now exists; recursive interaction is not migrated yet.
+
+[Pipeline](source-rs/platform/libraries/user-runtime/connection/client.rs) supports
+one to four independently outstanding requests and returns each transport ID on
+completion. Ordinary `Client` remains the one-call alias. A full local window
+returns BUSY; an unconsumed mailbox returns WOULD_BLOCK before offering an object
+or consuming the request ID. Neither refusal replays or retires older work.
+Unknown, duplicated or retired reply IDs fail closed. Actual transport failure
+retires all outstanding work; cancellation cannot undo earlier service effects.
+
+The [server adapter](source-rs/platform/libraries/user-runtime/server/shared.rs)
+requires explicit `enable_pipeline` selection; ordinary shared slots reject the
+pipeline setup. It bounds app-held requests plus queued plain replies to four.
+Consumption notifications let another request or queued reply progress without
+waiting for an earlier application response. Ordinary one-call connections do not
+add these notifications. Immutable reply objects retain caller-owned retry/refusal
+semantics; the server does not silently queue borrowed object references. Slot
+removal preserves the selected policy while dropping old queued replies, custody
+and request IDs. No kernel syscall or application authority was added.
+
+The instrumented recovery provider crossed the existing 240-page image cap.
+Shared-runtime release builds now use size optimization, matching its existing
+dev-profile choice; publication and teardown stay explicit out-of-line boundaries.
+The provider fits at 239 pages. This remains tight. Both harness runners now check
+compiled user images with [elf_limits.py](tools/boot-harness-rs/elf_limits.py)
+before bundling. It reads the current kernel cap, rounds each PT_LOAD memory
+extent separately and includes BSS. It reports the image name and required pages;
+it does not replace the kernel's ELF/permission validation or raise its limits.
+
+Verification:
+
+- IPC guest passes 16 four-call rounds, unpublished mailbox refusal with an
+  attachment, window saturation, attached and queued plain replies, exact IDs,
+  input completion beside a held render-like request, peer death, and refusal by
+  a service that did not select pipelining. Existing malformed grant/frame,
+  incomplete custody, timeout and conservation controls also pass.
+- Replacement exercises both one-call and pipeline connections. The latter is
+  removed with published, queued and app-held replies; fresh setup restarts IDs
+  without reviving the old reply or object-transfer authority. Final logical and
+  physical budgets return to the enclosing fixture baseline.
+- Final ordinary F5 fresh/cold passes three Notes instances, protected drafts,
+  saved Notes/Colors and exact disk verification (`desktop/20261025T211103513135Z`).
+- Final Notes lost-reply recovery passes drafts, exact text/history/quota and cold
+  restoration (`matrix-database/20261025T211038448594Z`).
+- Three nested desktops with delayed interaction pass protected close, isolated
+  persistence and repeated subtree reclamation (`desktop/20261025T210422335233Z`).
+  This deeper artifact predates the final compact runtime build; final F5 and
+  recovery above cover that build.
+- Host policy tests, workspace userspace Clippy and final all-feature matrix/
+  channels Clippy pass. ARM64 runtime compilation and the existing portability
+  guest pass (the new pipeline controls are x86-64 guest evidence). All 37 harness unit
+  tests pass, including image-cap/BSS/boundary rejection; layout, its eight tests,
+  formatting, whitespace and changed Markdown navigation pass.
+
+Logs: `build/omega-component/pipeline-{ipc-final,desktop,desktop-final,
+recovery-final,host,check,features-final,harness,arm64,arm64-check,format-check}.log`.
+
+**Next:** put the matrix's asynchronous tagged-input/presentation dispatcher on
+`Pipeline<2>`, preserving its separate logical reply ownership, retained late
+operations, immutable-image lifetime and scene rollback. Then migrate leaf
+interaction/rendering and endpoint-custody consumers. The four-call proof is a
+prerequisite, not ordinary recursive shared rendering or a performance claim.
+
 Implementation update 2026-10-25: **shared storage reaches Omega apps and Split**,
 over `47801f88`.
 

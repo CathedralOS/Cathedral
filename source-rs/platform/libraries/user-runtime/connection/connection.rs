@@ -23,6 +23,7 @@ pub(crate) struct Peer {
     bell: Bell,
     signal: Signal,
     incoming: Incoming,
+    pipelined: bool,
 }
 impl Peer {
     pub(crate) fn wake(&self) -> N {
@@ -39,6 +40,11 @@ impl Peer {
             return Err(Error(error.0));
         }
         if let Some(message) = self.incoming.receive(&mut self.mailbox)? {
+            // Consumption frees the peer's publication slot even when this
+            // request's application reply is deliberately deferred.
+            if self.pipelined {
+                let _ = self.signal.0.signal(false);
+            }
             return Ok(Some(message));
         }
         transfer?;
@@ -58,6 +64,8 @@ impl Peer {
     pub(crate) fn deadline(&self) -> Option<u64> {
         self.incoming.deadline
     }
+    // One publication boundary also bounds code growth across client/server paths.
+    #[inline(never)]
     pub(crate) fn send(
         &mut self,
         id: u64,
@@ -66,6 +74,10 @@ impl Peer {
     ) -> Result<(), SendFailure> {
         let (frame, n) = wire::encode(id, bytes, object.is_some()).ok_or(SendFailure {
             error: Error(abi::INVALID_ARGUMENT as i64),
+            exposed: false,
+        })?;
+        self.mailbox.send_ready().map_err(|error| SendFailure {
+            error,
             exposed: false,
         })?;
         if let Some(object) = object {

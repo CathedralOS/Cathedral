@@ -2,7 +2,7 @@
 
 Start at [connection.rs](connection.rs): retained backing, notification and
 endpoint lifetime, frame publication, and wake/recheck ordering. [client.rs](client.rs)
-sequences setup and a single outstanding call; [setup.rs](setup.rs) advances server
+sequences setup and bounded outstanding calls; [setup.rs](setup.rs) advances server
 acceptance one grant or acknowledgement at a time. [incoming.rs](incoming.rs) joins
 frame snapshots with typed object grants; [custody.rs](custody.rs) releases owned
 endpoints and notification rights on every exit. The server integration is
@@ -44,7 +44,8 @@ to the physical input process. Only that explicitly enabled stream recognizes OP
 ## Calls and failure
 
 Each frame contains a nonzero, monotonically increasing request ID and at most
-64 payload bytes. There is one outstanding request, with exact reply correlation;
+64 payload bytes. `Client` retains one outstanding request; an explicitly selected
+`Pipeline<N>` retains up to four, with exact reply correlation;
 IDs do not confer authority. The server retains the original connection incarnation
 in `Request`, so a delayed reply cannot target its replacement. Duplicate, skipped
 or exhausted IDs retire the stream. The experimental v2 frame also declares whether
@@ -78,6 +79,49 @@ application deadline must retire the connection on expiry, without replaying a
 possibly performed operation. Slow presentations use no operation health timeout;
 their existing delayed-response diagnostics do not cancel them. Setup and partial
 grant/frame custody retain their separate bounded deadlines.
+
+## Independent outstanding requests
+
+`Pipeline<N>` uses the same backing, notification and attachment format. Its
+`OPEN_PIPELINE` setup is accepted only by a service slot selected with
+`Server::enable_pipeline`. Ordinary shared slots reject it, so clients cannot
+increase a service's deferred-work capacity themselves. Selection survives slot
+removal; pending IDs, queued replies and custody do not.
+
+`submit` returns a transport ID. `poll_reply` returns that ID with its validated
+response; completion may be out of order. The client rejects unknown, duplicate
+or retired IDs. `BUSY` means its in-flight window is full. `WOULD_BLOCK` means the
+single-frame mailbox has not been consumed; neither refusal publishes a request
+or consumes its ID. The caller retains the operation and waits on the connection's
+interests before retrying. Application response deadlines remain caller-owned.
+
+Only pipelined connections signal consumption separately from response
+publication. A service may therefore hold a render request while consuming and
+answering a later input request. This is transport concurrency, not parallel CPU
+execution or authority to reorder a service's stateful operations. Services still
+choose what work can run together and may pause a stream.
+
+The server bounds retained requests plus queued plain replies to four. If a reply
+cannot enter the mailbox, it is retained and flushed after consumption wakes the
+server; it is never silently dropped. Immutable reply attachments keep the
+existing explicit ownership rule: unpublished refusal returns to the provider,
+which retains the object and may retry or return a plain failure. The mailbox
+checks capacity before offering a grant, and checks it again at publication. An
+untrusted acknowledgement changing after the grant still retires the connection
+as an exposed failure, never a safe replay.
+
+The [pipeline guest](../../../../distribution/lab/channels/connection/pipeline.rs)
+holds a render-like request while answering input, fills the four-call window,
+forces mailbox backpressure before an attachment, completes replies out of order,
+queues replies without a reading client, checks both attachment directions, and
+retires a peer with pending work. The
+[replacement guest](../../../../distribution/lab/channels/connection/replacement.rs)
+also removes a pipeline with published, queued and app-held replies, then verifies
+fresh setup and rejection of the old incarnation's reply.
+
+This prepares recursive interaction migration. No ordinary matrix uses the
+pipelined mode yet; its existing copied tagged-input/presentation dispatcher remains
+active. Ordinary shared storage/display consumers retain `Client` behavior.
 
 ## Immutable attachments
 
@@ -176,7 +220,8 @@ keeps six streams live under the thirty-two-handle cap, exhausts the remaining
 handle metadata with separately funded notifications, refuses a further allocation,
 and checks final handle and enclosing budget refunds. Fair scanning
 and earliest partial/setup deadlines cover all selected streams. There is still
-one outstanding request per stream, not a multi-request pipeline.
+one outstanding request for ordinary consumers; the separately opted-in pipeline
+has the four-call bound described above.
 
 Recursive interaction/rendering and endpoint custody remain migration work. Shared
 mailbox pooling may reduce per-connection backing/metadata costs later; current

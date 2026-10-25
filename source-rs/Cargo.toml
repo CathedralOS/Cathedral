@@ -167,3 +167,7 @@ opt-level = "s"
 [profile.dev.package.cathedral-user-runtime]
 opt-level = "s"
 
+
+# Keep shared transport/teardown code compact in independently linked services.
+[profile.release.package.cathedral-user-runtime]
+opt-level = "s"

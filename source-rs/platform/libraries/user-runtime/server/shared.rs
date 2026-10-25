@@ -17,18 +17,34 @@ enum State {
 pub struct SharedSlot {
     state: State,
     last: u64,
-    pending: u64,
+    limit: usize,
+    capacity: usize,
+    pending: [u64; wire::MAX_IN_FLIGHT],
+    outgoing: [Option<Reply>; wire::MAX_IN_FLIGHT],
 }
+struct Reply {
+    id: u64,
+    bytes: [u8; 64],
+    len: usize,
+}
+
 impl SharedSlot {
     pub const fn empty() -> Self {
         Self {
             state: State::Armed,
             last: 0,
-            pending: 0,
+            limit: 1,
+            capacity: 1,
+            pending: [0; wire::MAX_IN_FLIGHT],
+            outgoing: [const { None }; wire::MAX_IN_FLIGHT],
         }
     }
+    // Keep complete custody teardown out of repeated setup/removal call sites.
+    #[inline(never)]
     fn reset(&mut self) {
+        let capacity = self.capacity;
         *self = Self::empty();
+        self.capacity = capacity;
     }
     fn deadline(&self) -> Option<u64> {
         match &self.state {
@@ -52,6 +68,19 @@ impl Server {
         }
         self.arm_shared(client + 1, slot)
     }
+    /// Explicitly admit independently outstanding requests. The service must
+    /// own each delivered Request until replying, pausing or removing its slot.
+    /// Ordinary enable_shared slots reject this setup rather than expanding
+    /// their application's deferred-work allowance on a caller's demand.
+    pub fn enable_pipeline(
+        &mut self,
+        client: usize,
+        slot: &'static mut SharedSlot,
+    ) -> Result<(), Error> {
+        self.enable_shared(client, slot)?;
+        self.shared[client + 1].as_mut().unwrap().capacity = wire::MAX_IN_FLIGHT;
+        Ok(())
+    }
     pub fn enable_shared_control(&mut self, slot: &'static mut SharedSlot) -> Result<(), Error> {
         self.arm_shared(0, slot)
     }
@@ -63,6 +92,7 @@ impl Server {
             return Err(Error(abi::INVALID_ARGUMENT as i64));
         }
         slot.reset();
+        slot.capacity = 1;
         self.shared[channel] = Some(slot);
         Ok(())
     }
@@ -94,11 +124,18 @@ impl Server {
         if !self.shared[channel]
             .as_ref()
             .is_some_and(|s| matches!(s.state, State::Armed))
-            || bytes != wire::OPEN
+            || (bytes != wire::OPEN && bytes != wire::OPEN_PIPELINE)
         {
             return Ok(false);
         }
-        match time::after(300).and_then(|d| Accept::start((pair.1, pair.0), d)) {
+        let pipelined = bytes == wire::OPEN_PIPELINE;
+        if pipelined && self.shared[channel].as_ref().unwrap().capacity == 1 {
+            self.retire_shared(channel)?;
+            return Ok(true);
+        }
+        self.shared[channel].as_mut().unwrap().limit =
+            if pipelined { wire::MAX_IN_FLIGHT } else { 1 };
+        match time::after(300).and_then(|d| Accept::start((pair.1, pair.0), d, pipelined)) {
             Ok(accept) => self.shared[channel].as_mut().unwrap().state = State::Opening(accept),
             Err(_) => self.retire_shared(channel)?,
         }
@@ -119,10 +156,33 @@ impl Server {
                 Ok(None)
             }
             State::Ready(peer) => {
-                if shared.pending != 0 {
+                // Drain queued plain replies before accepting more work. A
+                // peer acknowledgement wakes this loop without an app reply.
+                for slot in &mut shared.outgoing {
+                    let Some(reply) = slot else {
+                        continue;
+                    };
+                    match peer.send(reply.id, &reply.bytes[..reply.len], None) {
+                        Ok(()) => *slot = None,
+                        Err(failure)
+                            if !failure.exposed && failure.error.0 == abi::WOULD_BLOCK as i64 =>
+                        {
+                            break;
+                        }
+                        Err(failure) => return Err(failure.error),
+                    }
+                }
+                if shared.pending.iter().filter(|id| **id != 0).count()
+                    + shared.outgoing.iter().filter(|slot| slot.is_some()).count()
+                    >= shared.limit
+                {
                     peer.check()?;
                     return Ok(None);
                 }
+                let Some(pending) = shared.pending.iter_mut().find(|id| **id == 0) else {
+                    peer.check()?;
+                    return Ok(None);
+                };
                 let Some(message) = peer.receive()? else {
                     return Ok(None);
                 };
@@ -135,7 +195,7 @@ impl Server {
                     return Err(Error(abi::IO_ERROR as i64));
                 }
                 shared.last = id;
-                shared.pending = id;
+                *pending = id;
                 let request = Request {
                     bytes,
                     len,
@@ -176,7 +236,7 @@ impl Server {
         }
         let Some(shared) = self.shared[channel]
             .as_mut()
-            .filter(|s| s.pending == request.shared_id)
+            .filter(|s| s.pending.contains(&request.shared_id))
         else {
             return Ok(());
         };
@@ -184,7 +244,35 @@ impl Server {
             return Ok(());
         };
         match peer.send(request.shared_id, bytes, object) {
-            Ok(()) => shared.pending = 0,
+            Ok(()) => {
+                *shared
+                    .pending
+                    .iter_mut()
+                    .find(|id| **id == request.shared_id)
+                    .unwrap() = 0;
+            }
+            Err(failure)
+                if object.is_none()
+                    && !failure.exposed
+                    && failure.error.0 == abi::WOULD_BLOCK as i64 =>
+            {
+                let Some(slot) = shared.outgoing.iter_mut().find(|slot| slot.is_none()) else {
+                    // Bounded dispatch must stop before this is possible.
+                    return Err(Error(abi::BUSY as i64));
+                };
+                let mut payload = [0; 64];
+                payload[..bytes.len()].copy_from_slice(bytes);
+                *slot = Some(Reply {
+                    id: request.shared_id,
+                    bytes: payload,
+                    len: bytes.len(),
+                });
+                *shared
+                    .pending
+                    .iter_mut()
+                    .find(|id| **id == request.shared_id)
+                    .unwrap() = 0;
+            }
             // A refused grant published nothing. The provider still owns its
             // object and may send a plain refusal on this exact request.
             Err(failure) if object.is_some() && !failure.exposed => return Err(failure.error),
@@ -200,7 +288,12 @@ impl Server {
     pub(super) fn shared_wake(&self, channel: usize) -> Option<Notification> {
         let shared = self.shared[channel].as_ref()?;
         match &shared.state {
-            State::Ready(peer) if shared.pending == 0 => Some(peer.wake()),
+            State::Ready(peer)
+                if shared.pending.iter().filter(|id| **id != 0).count() < shared.limit
+                    || shared.outgoing.iter().any(Option::is_some) =>
+            {
+                Some(peer.wake())
+            }
             _ => None,
         }
     }

@@ -8,6 +8,12 @@ Omega's proof or authority guarantees.
 
 See the [implementation map](STATUS.md) for the integrated matrix desktop,
 mechanism-to-test coverage, restrictions and next kernel boundaries.
+The harness reports each compiled user ELF's load-page demand before bundling.
+[The check](../tools/boot-harness-rs/elf_limits.py) includes zero-filled memory and
+reads the kernel's current image-page cap; it does not replace kernel admission
+validation. An oversized instrumented provider fails the build with its file name
+and page demand instead of reaching QEMU as a generic BAD_EXECUTABLE refusal.
+
 The [ARM64 portability proof](kernel/arch/isa/aarch64/README.md) exercises the shared
 core on a second CPU architecture; the integrated desktop remains x86-64.
 

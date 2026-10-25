@@ -5,8 +5,11 @@ import os
 from pathlib import Path
 import shutil
 import subprocess
+import sys
 
 ROOT = Path(__file__).resolve().parents[3]
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+import elf_limits
 
 
 def main():
@@ -36,6 +39,8 @@ def main():
                         '--target', 'aarch64-unknown-none', *profile], cwd=source, check=True)
         env['CATHEDRAL_ARM64_ELF'] = str(source / 'target/aarch64-unknown-none' /
                                        mode / 'cathedral-portability-lab')
+        elf_limits.check(env['CATHEDRAL_SHARED_MEMORY_ELF'])
+        elf_limits.check(env['CATHEDRAL_ARM64_ELF'])
         features += ',bundled-user'
     subprocess.run(['cargo', 'build', '--locked', '-p', 'cathedral-boot-uefi',
                     '--target', 'aarch64-unknown-uefi', '--features', features, *profile],

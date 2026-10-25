@@ -3,6 +3,7 @@
 
 import argparse
 import artifacts
+import elf_limits
 import json
 import os
 from pathlib import Path
@@ -379,6 +380,7 @@ def main():
             user_cargo.append("--release")
         subprocess.run(user_cargo, cwd=WORKSPACE, check=True)
         user_elf = BUILD / "cargo" / user['target'] / profile / user['package']
+        elf_limits.check(user_elf)
         captured[name] = artifacts.capture(user_elf, BUILD / 'artifacts')
         environment[f'CATHEDRAL_{name.upper()}_ELF'] = str(captured[name])
 

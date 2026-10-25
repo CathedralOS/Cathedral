@@ -322,7 +322,10 @@ This reaches the handle ceiling while object funding remains. Its worker funds
 its own six notifications. The ordinary
 queue exhaustion probe derives its allowance from that profile instead of assuming
 eight. [Replacement](connection/replacement.rs) checks a preselected empty slot,
-remove/reinstall and a late old-incarnation object reply.
+remove/reinstall and a late old-incarnation object reply, including a pipeline
+with queued replies. [Pipeline](connection/pipeline.rs) checks four independent
+requests, unpublished backpressure, out-of-order replies, delayed-render/input
+separation, attachment custody, peer death and refusal by an unselected service.
 
 These are focused guest controls. Follow the runtime's
 [ordinary consumers and evidence](../../../platform/libraries/user-runtime/connection/README.md#ordinary-consumers-and-evidence)
