@@ -13,6 +13,8 @@ Recovery owns bounded retries and the asynchronous read/wait/admit workflow,
 with ticketed completions and fallback decisions.
 Startup owns local picker/background retry budgets and selection-failure recovery.
 Launch owns read/admit/bind/place/publish sequencing and partial-failure rollback.
+Ordinary reads and storage binding yield; admission/publication still use
+synchronous host mechanisms.
 Rust still authenticates callers, serializes IPC, retains exact task/endpoint
 identity, drains late replies, progresses asynchronous parent work and reclaims
 tasks/resources. The matrix service remains Rust; these are bounded migrations

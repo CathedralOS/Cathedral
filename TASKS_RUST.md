@@ -1,5 +1,75 @@
 # Rust reference OS: tasks and handoff
 
+Implementation update 2026-10-24: **ordinary launch storage binding yields to
+the service loop**, over `4c884a94`. Artifact directory stamps below are UTC.
+
+Start at [the launch boundary guide](source/distribution/matrix/launch/README.md),
+then [launch/binding.rs](source-rs/distribution/matrix/service/children/launch/binding.rs)
+and [storage/binding.rs](source-rs/distribution/matrix/service/parent/storage/binding.rs).
+Omega's existing Bind command now starts a nonblocking upstream refresh. Rust
+retains its result until queued owner mutations run, rechecks task/caller/scope
+custody, and only then installs the grant and reports completion. A new private
+Omega query accepts a result only while its exact ticket/command is outstanding.
+
+Yielding exposed a startup-order obligation: requests from the admitted child must
+wait until publication or rollback. The hold covers only that child's interaction
+and storage requests; siblings continue input and rendering. The launch progresses
+past its held requests while ready owner mutations retain priority. Stale queued
+requests/attachments and replacement-connection disconnects are discarded. Loss
+surveys remain BUSY for the full pending launch, including completion-to-commit.
+
+Storage revocation is now local: cleanup no longer waits for a service to withdraw
+its own authority. Future operations still validate stamped upstream bindings.
+Malformed replies, channel failure and the existing 100-tick binding timeout
+retire the untagged storage stream. The actual timeout code survives retirement,
+rather than being obscured by the resulting authority loss. Existing apps and
+input survive a separate storage failure; their live drafts are not automatically
+saved and storage requires re-establishment. Legacy shared streams remain fatal.
+Manual owner grants, launcher recovery and startup still use the synchronous grant
+helper. Kernel, public protocol and ordinary F5 composition are unchanged.
+
+Verification:
+
+- Normal F5 fresh/cold desktop, independent Notes instances, Colors and storage
+  oracle pass: `desktop/20261025T055833899294Z`.
+- Held ordinary binding with visibly responsive Notes, protected draft, save and
+  cold reopen passes: `desktop/20261025T060116729387Z`.
+- Real routed owner revoke and requester stop during held binding pass fresh/cold,
+  with no grant commit/publication, exact task reclamation and surviving sibling
+  draft/save. Both first query LOSS and require BUSY:
+  `desktop/20261025T060959598123Z` and `desktop/20261025T061039417128Z`.
+- Missing reply fixture drops one real binding reply, then uses the normal
+  empty-channel deadline and stream retirement. Both boots preserve the live
+  draft and protected close, explicitly discard it for cleanup and reopen empty:
+  `desktop/20261025T060923825529Z`. This final run checks exact TIMED_OUT reporting;
+  it does not claim successful saving or automatic reconnection after retirement.
+- Existing post-admission placement failure and successful same-slot retry pass:
+  `desktop/20261025T060500745146Z`. Existing read revocation also passes.
+- Three-level nested desktop fresh/cold, recursive dirty close, Notes/Omega Colors
+  persistence and repeated subtree reclamation pass:
+  `desktop/20261025T060630158753Z`.
+- Existing launcher recovery (fresh/cold, explicit retries) and owner revocation
+  pass with the minimal one-user source image unchanged:
+  `launcher-recovery/20261025T061107001836Z` (`recover`, `owner-revoke`; other
+  launcher modes and root/nested startup-fault suites were not rerun this turn).
+- Default host `cargo test --locked` passes; twenty-four stock matrix tests execute
+  compiled Omega, including pending Bind acceptance, stale/wrong completions and
+  cancellation after task admission. Guest all-feature and host-test matrix Clippy,
+  desktop probe Clippy, layout (73 Omega / 150 Rust edges), eight boundary tests,
+  Rust formatting and diff checks pass. Full kernel/ARM64 and unrelated runtime
+  suites were not rerun.
+- Logs: `build/omega-component/binding-{desktop,complete,revoke,stop,timeout,
+  timeout-final,revoke-final,stop-final,place,read-revoke,nested,recovery,host}.log`.
+
+**Next:** activation and publication still share the upstream interaction reply
+stream with input polling. `upstream_busy()` deliberately prevents polling while
+presentation owns it; making only scene waits nonblocking would not deliver fresh
+input. Separate scoped input/presentation transport or implement safe concurrent
+reply dispatch before moving those steps, preserving atomic commit/abort and
+cancellation. This is the concrete remaining transport frontier, not an owner
+semantic blocker or a claim that visual launch is fully asynchronous. The earlier
+intermittent partial-key observation remains open.
+
 Implementation update 2026-10-24: **ordinary stored-program launch orchestration
 executes in Omega**, over `35537b05`. Artifact directory stamps below are UTC.
 

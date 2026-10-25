@@ -8,6 +8,26 @@ pub(super) struct Deferred {
 }
 impl Deferred {
     /// Retire old incarnation events before installing a replacement connection.
+    pub fn prune(&mut self, server: &Server) {
+        for event in &mut self.events {
+            let stale = match event {
+                Some(Event::Request(r) | Event::Memory(r, _)) => r
+                    .client
+                    .is_some_and(|slot| server.incarnation(slot) != Some(r.incarnation)),
+                Some(Event::Disconnected {
+                    client,
+                    incarnation,
+                }) => server
+                    .incarnation(*client)
+                    .is_some_and(|current| current != *incarnation),
+                None => false,
+            };
+            if stale {
+                *event = None;
+            }
+        }
+    }
+
     pub fn is_empty(&self) -> bool {
         self.events.iter().all(Option::is_none)
     }
@@ -18,6 +38,15 @@ impl Deferred {
             .any(|event| !Self::blocks(event, parent))
     }
     pub fn blocks(event: &Event, parent: &Parent) -> bool {
+        if let Some(slot) = parent.admitting {
+            let client = match event {
+                Event::Request(r) | Event::Memory(r, _) => r.client,
+                Event::Disconnected { client, .. } => Some(*client),
+            };
+            if client == Some(slot) || client == Some(parent.storage_client(slot)) {
+                return true;
+            }
+        }
         if parent.separate_storage
             && let Event::Request(r) | Event::Memory(r, _) = event
             && r.client.is_some_and(|client| parent.storage_stream(client))

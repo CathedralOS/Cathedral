@@ -2,11 +2,14 @@
 // A lost/invalid upstream grant empties the world before any child can query it.
 use super::*;
 use cathedral_user_runtime::{ipc::Handle, task::Environment, time};
-pub(in crate::service) use storage::{LaunchOrigin, LaunchRequest, Launched};
+pub(in crate::service) use storage::{Bound, LaunchOrigin, LaunchRequest, Launched};
 pub(super) struct Parent {
     recovery: recovery::Recovery,
     pending: Option<presentation::Pending>,
     storage_pending: Option<storage::Pending>,
+    binding_pending: Option<storage::Binding>,
+    /// Requests from an admitted task wait until its launch is published or rolled back.
+    pub admitting: Option<usize>,
     scopes: cathedral_matrix::world::storage::Scopes<CHILDREN>,
     storage_links: [Option<storage::Provider>; 2],
     storage_epoch: u64,
@@ -84,6 +87,8 @@ impl Parent {
             recovery: recovery::Recovery::empty(),
             pending: None,
             storage_pending: None,
+            binding_pending: None,
+            admitting: None,
             scopes: cathedral_matrix::world::storage::Scopes::empty(),
             storage_links: [None, None],
             storage_epoch: 0,

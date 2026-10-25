@@ -132,6 +132,9 @@ pub fn run(environment: Environment) -> Result<(), Error> {
         {
             children.complete_launch(launched)?;
         }
+        if let Some(bound) = parent.progress_binding()? {
+            children.complete_binding(bound);
+        }
         parent.progress_presentation(world, &mut server)?;
         children.finish(&mut server, world, parent)?;
         if !parent.upstream_busy() {
@@ -139,7 +142,8 @@ pub fn run(environment: Environment) -> Result<(), Error> {
             parent.restore_input_capacity(world)?;
             parent.cursors(world)?;
         }
-        if deferred.is_empty() && children.progress_launch(parent, world, &mut server)? {
+        deferred.prune(&server);
+        if !deferred.has_ready(parent) && children.progress_launch(parent, world, &mut server)? {
             continue;
         }
         if deferred.is_empty() && children.recover(parent, world, &mut server)? {
@@ -170,6 +174,16 @@ pub fn run(environment: Environment) -> Result<(), Error> {
         }
         #[cfg(any(feature = "recovery-delay", feature = "launch-delay"))]
         if let Some(until) = parent.recovery_delay_deadline() {
+            deadline = Some(deadline.map_or(until, |d| {
+                if cathedral_user_runtime::time::reached(d, until) {
+                    until
+                } else {
+                    d
+                }
+            }));
+        }
+        #[cfg(feature = "binding-delay")]
+        if let Some(until) = parent.binding_delay_deadline() {
             deadline = Some(deadline.map_or(until, |d| {
                 if cathedral_user_runtime::time::reached(d, until) {
                     until
@@ -280,7 +294,7 @@ pub fn run(environment: Environment) -> Result<(), Error> {
             {
                 cathedral_user_runtime::time::storage_sample("matrix-poll-local", &[]);
             }
-            let mut blocked = 0;
+            let mut blocked = parent.admitting.map_or(0, |slot| 1 << slot);
             if parent.publishing() {
                 blocked |= 1 << parent.publishing_client();
             }
@@ -304,6 +318,13 @@ pub fn run(environment: Environment) -> Result<(), Error> {
                 client,
                 incarnation,
             } => {
+                // A delayed disconnect must not tear down a replacement connection.
+                if server
+                    .incarnation(client)
+                    .is_some_and(|current| current != incarnation)
+                {
+                    continue;
+                }
                 if client < CHILDREN {
                     children.disconnected(client, &mut server, world, parent)?;
                 } else if client == SOURCE {

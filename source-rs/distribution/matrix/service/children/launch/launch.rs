@@ -16,6 +16,7 @@ pub(super) struct Pending {
     caller_task: Option<u64>,
     selection: bool,
     binding: Option<[u64; 4]>,
+    bound: Option<Result<usize, u64>>,
     #[cfg(any(feature = "launch-bind-failure", feature = "launch-place-failure"))]
     probe: bool,
 }
@@ -55,6 +56,7 @@ impl Children {
             task: None,
             selection,
             binding: parent.storage_identity(),
+            bound: None,
             #[cfg(any(feature = "launch-bind-failure", feature = "launch-place-failure"))]
             probe,
         });
@@ -98,8 +100,8 @@ impl Children {
         let Some(mut l) = self.launching.take() else {
             return Ok(false);
         };
-        // All host steps except the read currently finish in this turn. They never
-        // dispatch another inbound owner request behind the workflow's back.
+        self.finish_binding(&mut l, parent, server)?;
+        // Read and binding yield. Other steps currently use synchronous host mechanisms.
         while let Some(command) = l.policy.command() {
             if !matches!(
                 command,
@@ -123,6 +125,7 @@ impl Children {
                 }
             }
             if command == Command::Finish {
+                parent.admitting = None;
                 self.finish_launch(&mut l, server)?;
                 assert!(l.policy.complete(l.ticket, command, 0, false));
                 return Ok(true);
@@ -134,6 +137,10 @@ impl Children {
                 Command::RetirePicker | Command::Rollback | Command::RestorePicker
             ) {
                 result.as_ref().map_err(|e| Error(e.0))?;
+            }
+            if command == Command::Bind && result.is_ok() {
+                self.launching = Some(l);
+                return Ok(true);
             }
             let (status, storage) = match result {
                 Ok(storage) => (0, storage),

@@ -28,6 +28,16 @@ impl Probe {
         if !time::reached(now, observed.wrapping_add(if ordinary { 275 } else { 225 })) {
             return;
         }
+        #[cfg(feature = "launch-pending-loss-probe")]
+        {
+            let mut loss = [wire::LOSS, 0, 0, 0, 0, 0, 0, 0];
+            for _ in 0..3 {
+                loss = wire::route(loss, 1).unwrap();
+            }
+            assert_eq!(call(matrix, loss), wire::error(abi::BUSY));
+            cathedral_user_runtime::write(b"Cathedral desktop: pending launch loss busy\n")
+                .unwrap();
+        }
         let op = if cfg!(any(
             feature = "launcher-read-stop-probe",
             feature = "launch-read-stop-probe"

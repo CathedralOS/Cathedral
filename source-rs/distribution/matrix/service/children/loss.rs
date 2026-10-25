@@ -44,7 +44,7 @@ impl Children {
         let Some(policy) = decisions::Survey::begin([
             self.loss.is_some(),
             self.pending.iter().any(Option::is_some),
-            parent.storing(),
+            parent.storing() || self.launching.is_some(),
             self.recovery_pending(),
         ]) else {
             time::storage_sample("matrix-loss-busy", &[]);

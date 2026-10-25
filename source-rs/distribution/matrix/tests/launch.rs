@@ -102,3 +102,23 @@ fn cancelled_read_cannot_complete_or_be_reinterpreted_by_replacement() {
     step(&mut b, new, C::Finish, false);
     assert_eq!(b.status(), 66);
 }
+
+#[test]
+fn pending_binding_accepts_only_its_live_completion_and_cancel_requires_rollback() {
+    let (mut s, t, wrong) = start(false, true, true);
+    step(&mut s, t, C::Read, false);
+    step(&mut s, t, C::Admit, true);
+    assert!(!s.accepts(t, C::Bind));
+    assert_eq!(s.command(), Some(C::Bind));
+    for _ in 0..8 {
+        assert!(s.accepts(t, C::Bind));
+        assert!(!s.accepts(wrong, C::Bind));
+        assert!(!s.accepts(t, C::Read));
+        assert_eq!(s.command(), None);
+    }
+    s.cancel(44);
+    assert!(!s.accepts(t, C::Bind));
+    assert!(!s.complete(t, C::Bind, 0, false));
+    step(&mut s, t, C::Rollback, false);
+    step(&mut s, t, C::Finish, false);
+}

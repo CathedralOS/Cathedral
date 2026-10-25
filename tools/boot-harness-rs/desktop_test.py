@@ -393,7 +393,7 @@ def desktop(stream, output, serial, reboot, expected_absolute=True, fill_users=F
     print('PASS: user tiles, absolute/relative clicks, app tiles, save/discard/cancel and persistent replacement')
 
 
-def run(timeout, trace_storage=False, relative_pointer=False, service_imports=None, nested=False, deep=False, nested_desktop=False, trace_input=False, latency=False, pointer_stress=False, interaction_delay=False, nested_depth=3, soak=0, collection_pressure=False, accel='tcg', input_producer=None, participants=False, participant_fault=None, render_demand=False, masked_capture=False, capture_case=None, cursor_preferences=False, cursor_producer=False, launcher_async=None, launch_async=None):
+def run(timeout, trace_storage=False, relative_pointer=False, service_imports=None, nested=False, deep=False, nested_desktop=False, trace_input=False, latency=False, pointer_stress=False, interaction_delay=False, nested_depth=3, soak=0, collection_pressure=False, accel='tcg', input_producer=None, participants=False, participant_fault=None, render_demand=False, masked_capture=False, capture_case=None, cursor_preferences=False, cursor_producer=False, launcher_async=None, launch_async=None, binding_async=None):
     output = harness.BUILD / 'desktop' / datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S%fZ')
     output.mkdir(parents=True)
     # Exact default composition, with a separate build output so a regression
@@ -406,6 +406,9 @@ def run(timeout, trace_storage=False, relative_pointer=False, service_imports=No
     if launch_async:
         import stored_launch_test
         stored_launch_test.configure(composition, launch_async)
+    if binding_async:
+        import stored_launch_test
+        stored_launch_test.configure(composition, binding_async, stage='bind')
     if render_demand or masked_capture:
         for entry in composition['startup']['realm_programs']:
             if entry.get('path') in ('Split', 'Split/Notes'):
@@ -519,6 +522,10 @@ def run(timeout, trace_storage=False, relative_pointer=False, service_imports=No
         import stored_launch_test
         from functools import partial
         user_check = partial(stored_launch_test.exercise, mode=launch_async)
+    if binding_async:
+        import stored_launch_test
+        from functools import partial
+        user_check = partial(stored_launch_test.exercise, mode=binding_async, stage='bind')
     for boot in (1, 2):
         capture.run(command, output, timeout, flags, ready_marker='Cathedral desktop: ready; choose a user',
                     verify=lambda stream, output, serial: desktop(stream, output, serial, boot == 2, not relative_pointer, service_imports=service_imports, nested=nested, nested_saved=boot == 2, deep=deep, nested_desktop=nested_desktop, latency=latency, pointer_stress=pointer_stress, interaction_delay=interaction_delay, nested_depth=nested_depth, soak=soak, collection_pressure=collection_pressure, user_check=user_check, allowed_panics=("deliberate launcher failure",) if launcher_async else ()))
@@ -537,6 +544,9 @@ def run(timeout, trace_storage=False, relative_pointer=False, service_imports=No
         contents = path.read_bytes()
         database_image.prepare(path, programs, migration, app_close=True, realm_programs=harness.realm_programs(profile, True))
         assert contents == path.read_bytes(), 'relaunch must not reformat storage or reinstall unchanged programs'
+    if binding_async:
+        print(f'PASS: nested asynchronous binding {binding_async}, sibling input and cold reopen; artifacts: {output}')
+        return
     if launch_async:
         print(f'PASS: nested ordinary launch {launch_async}, sibling input and cold reopen; artifacts: {output}')
         return
@@ -596,6 +606,7 @@ def run(timeout, trace_storage=False, relative_pointer=False, service_imports=No
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--binding-async', choices=('complete', 'revoke', 'stop', 'timeout'), help='nested asynchronous launch binding, input and rollback fixture')
     parser.add_argument('--launch-async', choices=('complete', 'revoke', 'stop', 'bind', 'place'), help='ordinary nested launch delay, cancellation and rollback fixture')
     parser.add_argument('--launcher-async', choices=('recover', 'revoke', 'stop'), help='nested ticketed launcher read, input and cancellation fixture')
     parser.add_argument('--timeout', type=float, default=180)
@@ -640,8 +651,8 @@ if __name__ == '__main__':
         parser.error('--pointer-stress requires --nested-desktop or --soak with absolute input')
     if args.input_producer and (args.service_imports or args.nested or args.deep or args.nested_desktop or args.latency or args.soak or args.interaction_delay):
         parser.error('--input-producer requires the ordinary desktop workflow')
-    if (args.participants or args.participant_fault or args.render_demand or args.capture or args.capture_case or args.cursor_preferences or args.cursor_producer or args.launcher_async or args.launch_async) and (args.service_imports or args.nested or args.deep or args.nested_desktop or args.latency or args.soak or args.input_producer or args.interaction_delay):
+    if (args.participants or args.participant_fault or args.render_demand or args.capture or args.capture_case or args.cursor_preferences or args.cursor_producer or args.launcher_async or args.launch_async or args.binding_async) and (args.service_imports or args.nested or args.deep or args.nested_desktop or args.latency or args.soak or args.input_producer or args.interaction_delay):
         parser.error('participant and rendering-demand checks run their own default-desktop workflows')
-    if sum(bool(v) for v in (args.participant_fault, args.participants, args.render_demand, args.capture, args.capture_case, args.cursor_preferences, args.cursor_producer, args.launcher_async, args.launch_async)) > 1:
+    if sum(bool(v) for v in (args.participant_fault, args.participants, args.render_demand, args.capture, args.capture_case, args.cursor_preferences, args.cursor_producer, args.launcher_async, args.launch_async, args.binding_async)) > 1:
         parser.error('choose one participant, rendering-demand or capture workflow')
-    run(args.timeout, args.trace_storage, args.relative_pointer, args.service_imports, args.nested or args.deep, args.deep, args.nested_desktop, args.trace_input, args.latency, args.pointer_stress, args.interaction_delay, args.nested_depth, args.soak, args.collection_pressure, accel=args.accel, input_producer=args.input_producer, participants=args.participants, participant_fault=args.participant_fault, render_demand=args.render_demand, masked_capture=args.capture, capture_case=args.capture_case, cursor_preferences=args.cursor_preferences, cursor_producer=args.cursor_producer, launcher_async=args.launcher_async, launch_async=args.launch_async)
+    run(args.timeout, args.trace_storage, args.relative_pointer, args.service_imports, args.nested or args.deep, args.deep, args.nested_desktop, args.trace_input, args.latency, args.pointer_stress, args.interaction_delay, args.nested_depth, args.soak, args.collection_pressure, accel=args.accel, input_producer=args.input_producer, participants=args.participants, participant_fault=args.participant_fault, render_demand=args.render_demand, masked_capture=args.capture, capture_case=args.capture_case, cursor_preferences=args.cursor_preferences, cursor_producer=args.cursor_producer, launcher_async=args.launcher_async, launch_async=args.launch_async, binding_async=args.binding_async)

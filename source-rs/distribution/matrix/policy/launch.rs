@@ -63,6 +63,9 @@ impl State {
         assert_ne!(code, 0);
         self.apply(3, [code, 0, 0, 0]);
     }
+    pub fn accepts(&mut self, ticket: Ticket, command: Command) -> bool {
+        self.apply(4, [ticket.raw(), command as u64, 0, 0]) == 1
+    }
     pub fn status(&self) -> u64 {
         self.words[3]
     }

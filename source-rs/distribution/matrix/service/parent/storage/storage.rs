@@ -2,9 +2,11 @@
 // sealed attachments travelling up (publish) and down (bulk reads) unchanged
 // and the child's granted scope stamped on the way. Owner grants/revokes act
 // here; child requests and the matrix's own program reads resume in
-// pending.rs. Only the root adapter names provider links and retires them
+// pending.rs; binding.rs resumes ordinary launch binding refreshes. Only the root adapter names provider links and retires them
 // independently.
 use super::*;
+pub(super) use binding::Binding;
+pub(in crate::service) use binding::Bound;
 use cathedral_user_runtime::{link::Link, memory::Object, server::Request};
 pub(super) use pending::Pending;
 pub(in crate::service) use pending::{LaunchOrigin, LaunchRequest, Launched};
@@ -216,8 +218,19 @@ impl Parent {
         scope: u64,
     ) -> Result<Result<(), u64>, Error> {
         let available = self.storage_refresh()?;
+        Ok(self.install_storage_binding(server, slot, source, scope, available))
+    }
+    /// Local commit, after the caller has validated the asynchronous refresh result.
+    pub(in crate::service) fn install_storage_binding(
+        &mut self,
+        server: &Server,
+        slot: usize,
+        source: usize,
+        scope: u64,
+        available: usize,
+    ) -> Result<(), u64> {
         let Some(incarnation) = server.incarnation(self.storage_client(slot)) else {
-            return Ok(Err(abi::DENIED));
+            return Err(abi::DENIED);
         };
         if !self.upstream && source < available {
             let result = self.storage_links[source]
@@ -227,15 +240,14 @@ impl Parent {
             match result {
                 Ok(true) => self.scopes.revoke_source(source),
                 Ok(false) => (),
-                Err(error) => return Ok(Err(error.0 as u64)),
+                Err(error) => return Err(error.0 as u64),
             }
         }
-        Ok(self
-            .scopes
+        self.scopes
             .grant(slot, incarnation, source, scope, available)
             .map(|()| {
                 self.storage_failed &= !(1 << source);
-            }))
+            })
     }
     /// A child's live storage binding: its source and the scope it was granted.
     pub(in crate::service) fn storage_binding(
@@ -300,7 +312,8 @@ impl Parent {
     /// Every object operation is atomic at the provider, so revoking a binding
     /// leaves nothing staged upstream; the stale scope simply stops authorizing.
     pub(in crate::service) fn storage_close(&mut self, slot: usize) -> Result<(), Error> {
-        self.storage_refresh()?;
+        // Revocation is local. Never wait on the provider to withdraw authority;
+        // subsequent operations still validate their stamped upstream binding.
         self.scopes.revoke(slot);
         Ok(())
     }

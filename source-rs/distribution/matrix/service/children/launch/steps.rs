@@ -35,6 +35,7 @@ impl Children {
                 match result {
                     Ok(storage) => {
                         l.task = self.slots[slot].as_ref().map(|c| c.task.raw());
+                        parent.admitting = Some(slot);
                         #[cfg(feature = "trace-storage")]
                         time::storage_sample(
                             "stored-launch-admitted",
@@ -45,12 +46,7 @@ impl Children {
                     Err(e) => return Err(e),
                 }
             }
-            Command::Bind => {
-                parent
-                    .storage_grant(server, slot, 0, l.plan.scope)?
-                    .map_err(|c| Error(c as i64))?;
-                self.saved_storage[slot] = Some((0, l.plan.scope));
-            }
+            Command::Bind => parent.begin_storage_binding(l.ticket, slot)?,
             Command::Place => {
                 if let Some(standing) = self.standing[slot] {
                     let range = if self.desktop {

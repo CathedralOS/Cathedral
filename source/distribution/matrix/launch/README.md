@@ -11,7 +11,8 @@ picker recovery if the old picker was deliberately retired.
 [The Rust entrance](../../../../source-rs/distribution/matrix/service/children/launch/launch.rs)
 dispatches these commands. Its siblings own caller validation (`request.rs`),
 resource mechanisms (`steps.rs`) and identity/cancellation/reply custody
-(`custody.rs`). `mod.rs` is plumbing only. The private native adapter is
+(`custody.rs`). Asynchronous storage completion and grant commit live in
+`binding.rs` beside that entrance. `mod.rs` is plumbing only. The private native adapter is
 [policy/launch.rs](../../../../source-rs/distribution/matrix/policy/launch.rs).
 
 A matrix issues a non-reused operation ticket shared with launcher recovery.
@@ -41,11 +42,40 @@ error and task/picker obligations. Facts 2..5 carry the ticket/command/status an
 whether admission supplied storage. No endpoint, task ID or object enters this
 packet. This is distribution implementation detail, not a public app ABI.
 
-The read is asynchronous and the service continues handling independent input.
-Admission, binding, placement, activation and publication currently call the
-existing synchronous Rust mechanisms in the same service turn. Their explicit
-completions make the remaining blocking calls visible; this change does not claim
-that every launch stage yields or that the matrix event loop is already Omega.
+Ordinary program reads and storage binding now yield to the service loop. The
+[storage binding exchange](../../../../source-rs/distribution/matrix/service/parent/storage/binding.rs)
+owns the storage reply stream until completion or retirement. Its refresh result
+is retained without granting authority until queued owner mutations run and the
+launch owner rechecks the exact task, caller and scope. A completion may be held
+only while Omega still expects that ticket and command (private event 4).
+
+The newly admitted task's requests wait until publication or rollback, so its
+startup broker cannot observe a half-configured environment. This hold affects
+only that task; loss surveys remain BUSY throughout the pending launch, including
+the interval between reply arrival and grant commit. Other apps still receive
+input and present over the independent
+interaction stream. The launch can progress past these held requests, while ready
+owner mutations still take priority. Stale queued requests, attachments and
+replacement-connection disconnects are discarded rather than applied to a reused
+slot. Local storage revocation no longer refreshes upstream: withdrawing a grant
+or reclaiming a task does not depend on the service being withdrawn. Future
+forwarded operations still validate their stamped upstream binding.
+
+The production binding deadline remains 100 ticks, as in the synchronous path.
+Malformed replies, channel failure or timeout retire the untagged storage stream
+so a late reply cannot answer subsequent work. A separate storage-stream failure
+leaves input and existing processes alive, but their storage is unavailable until
+re-established; an unsaved draft is not thereby persisted. Legacy fixtures sharing
+one interaction/storage stream retain fatal failure handling. Existing manual
+owner grants, recovery and startup paths still use the synchronous grant helper.
+
+Admission, placement, activation and publication remain synchronous host steps.
+Activation/publication currently share the upstream request/reply channel with
+input polling. `upstream_busy()` excludes polling while presentation owns it;
+changing only the waits would not let new input through. The next step must
+separate input/presentation transport or safely dispatch concurrent replies, and
+preserve atomic scene commit/abort and cancellation before migrating these steps.
+This is an implementation frontier, not a new owner semantic decision.
 
 ## Verification
 
@@ -62,3 +92,13 @@ reclamation before a successful retry in the same slot. Every mode protects,
 saves and cold-reopens the sibling draft and finally closes the nested subtree.
 The gate, owner probes and failure injections are disposable profile features;
 normal F5 enables none of them.
+
+`python tools/boot-harness-rs/desktop_test.py --binding-async MODE --timeout 240`
+checks `complete`, `revoke`, `stop` and `timeout` on fresh/cold nested desktops.
+Sibling Notes must visibly consume a key before the binding gate releases. Real
+owner cancellation must prevent grant commit and publication, reclaim the admitted
+task and preserve the draft; revocation then permits a fresh successful launch.
+The timeout fixture drops one real reply, then exercises the ordinary empty-channel
+deadline and stream retirement. It preserves the live draft and close protection,
+then explicitly discards it for subtree cleanup; cold reopen stays empty. It does
+not claim automatic storage reconnection or a successful save after retirement.

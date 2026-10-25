@@ -191,6 +191,9 @@ impl Parent {
         self.storage_pending.as_ref().and_then(|p| p.hold_until)
     }
     pub(in crate::service) fn storage_wait(&self) -> Option<(Handle, u64)> {
+        if self.binding_pending.is_some() {
+            return self.binding_wait();
+        }
         self.storage_pending.as_ref().and_then(|p| {
             #[cfg(any(feature = "recovery-delay", feature = "launch-delay"))]
             if p.hold_until.is_some() {
@@ -206,10 +209,13 @@ impl Parent {
             // provider would, exchange or none.
             return true;
         }
-        self.storage_pending.is_some()
+        self.storage_pending.is_some() || self.binding_pending.is_some()
     }
     /// The requesting child, if any; owner launches and local recovery have none.
     pub(in crate::service) fn storing_client(&self) -> Option<usize> {
+        if self.binding_pending.is_some() {
+            return self.binding_client();
+        }
         self.storage_pending
             .as_ref()
             .and_then(|p| p.request.and_then(|r| r.client))
