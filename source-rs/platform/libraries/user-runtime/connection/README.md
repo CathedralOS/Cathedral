@@ -2,8 +2,9 @@
 
 Start at [connection.rs](connection.rs): retained backing, notification and
 endpoint lifetime, frame publication, and wake/recheck ordering. [client.rs](client.rs)
-sequences setup and bounded outstanding calls; [setup.rs](setup.rs) advances server
-acceptance one grant or acknowledgement at a time. [incoming.rs](incoming.rs) joins
+sequences bounded outstanding calls; [opening.rs](opening.rs) advances client setup
+and [setup.rs](setup.rs) advances server acceptance one handoff at a time.
+[incoming.rs](incoming.rs) joins
 frame snapshots with typed object grants; [custody.rs](custody.rs) releases owned
 endpoints and notification rights on every exit. The server integration is
 [server/shared.rs](../server/shared.rs), reached from its ordinary fair dispatch.
@@ -34,6 +35,26 @@ COMMIT and the final acceptance. The server advances without blocking its other
 clients and expires incomplete setup after 300 clock ticks. Dropping partial
 setup releases its grants, mappings and endpoints. Funding for accepted peer
 views remains until those views actually disappear.
+
+`Client::begin_connect` (or `Pipeline<N>::begin_connect`) returns a `Connecting<N>`
+without parking for the peer. `poll` processes at most one incoming handshake step,
+returning None while unfinished and the owned pipeline once complete. Its `interest`
+and absolute `deadline` belong in the caller's event loop beside the services it
+must keep answering. Any poll error immediately retires local setup custody; later
+polls cannot resume it. Dropping the connector abandons setup, but does not recall
+already exposed shared backing. The deadline also bounds an otherwise ready but
+expired handshake. `connect` is the synchronous convenience loop over this same
+implementation; there is no second handshake implementation.
+
+The [opening guest](../../../../distribution/lab/channels/connection/opening.rs)
+has a child call its parent before accepting the parent's shared control link,
+then call upstream during eight control requests. The parent serves those calls
+while advancing setup and replies. It also checks abandonment, malformed input,
+expiry and peer closure at every partial phase, a wrong notification right,
+completion consumed once, accepted/queued backing surviving abandonment, and exact
+logical, physical and notification refunds. The ordinary F5 callers use the same
+setup through `connect`; ordinary lifecycle-control migration still needs its
+event-loop integration and explicit funding.
 
 Original endpoints remain the setup, typed-grant and lifetime/abort connection. After COMMIT,
 ordinary payloads travel only through the shared mailbox, never by copied-message

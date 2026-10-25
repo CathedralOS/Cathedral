@@ -7,6 +7,7 @@ mod endpoints;
 mod multiplex;
 mod notification_faults;
 mod notification_grants;
+mod opening;
 mod pipeline;
 mod replacement;
 mod worker;

@@ -258,6 +258,54 @@ default/hidden cursor evidence remains valid for its scope, not the full asset A
 
 ## Current implementation evidence
 
+Implementation update 2026-10-25: **client connection setup yields to upstream
+work**, over `067750c8`.
+
+[Connecting](source-rs/platform/libraries/user-runtime/connection/opening.rs)
+owns partial setup and advances one incoming handoff per poll. Its readiness
+interest and absolute deadline can join the caller's existing event loop.
+Completion transfers the connection once; errors immediately release local
+custody, even if the caller retains the failed connector. Published backing keeps
+its peer/queued-grant lifetime: abandoning setup cannot recall exposed memory.
+The ordinary synchronous `connect` now drives this same implementation. No wire
+version, kernel ABI, authority rule or resource ceiling changes.
+
+The [opening guest](source-rs/distribution/lab/channels/connection/opening.rs)
+exercises the actual owner control port: a child requests an upstream service
+before accepting control setup, then requests upstream work during eight control
+calls. The parent keeps answering while opening and polling the control link.
+This would deadlock with blocking setup in that parent loop. Fault cases cover
+every partial phase with abandonment, malformed replies, expiry and peer closure,
+plus a wait right offered in place of signal authority. Accepted and still-queued
+backing survive local abandonment; all enclosing logical/physical/notification
+budgets return exactly after final release.
+
+Verification:
+
+- Full IPC guest suite passes, including the new opening/custody cases.
+- Normal F5 passes independent apps, protected close/slot reuse, persistence and
+  cold reboot (`desktop/20261025T233319449334Z`).
+- Three nested desktops with delayed interaction pass upstream progress, repeated
+  subtree reclamation, protected close, persistence and cold reopen
+  (`desktop/20261025T233414338101Z`).
+- Notes recovery passes both boots with exact text/history/quota
+  (`matrix-database/20261025T233614827602Z`); the recovery provider remains
+  239/240 load pages.
+- ARM64 portability suite passes; it does not run the new x86 control-opening
+  fixture. Host tests, userspace checks, all-feature channels/stock-matrix Clippy,
+  layout, formatting, whitespace and changed-document local links pass.
+- Logs: `build/omega-component/opening-*.log`. No failing guest run in this slice.
+
+**Next:** ordinary lifecycle/control messages still use copied queues. Integrate
+opening/ready/retired states into stock and independent Split owners and their
+leaf control receivers. Preserve exact request correlation, delayed LOSS/HEALTH
+answers, cancellation and actual process outcomes; a slow reply is not a dead
+process. Fund each end's writer/reader page and notification metadata explicitly:
+the populated stock user matrix already uses 44 of 48 notification handles, so
+enabling every extra stream without a capacity plan would fail. Keep control
+authority separate from the supplied service provider. This slice supplies and
+proves the setup prerequisite; it does not complete that lifecycle migration.
+
 Implementation update 2026-10-25: **installed stock matrices acquire their startup
 services**, over `54254685`.
 

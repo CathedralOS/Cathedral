@@ -30,6 +30,11 @@ Logs go to `build/boot-harness-rs/channels-test/serial.log`.
 [main.rs](main.rs) selects a fixture role. The parent [suite](scenario.rs) orders
 resource, [delivery](delivery/delivery.rs), sponsorship, startup and recursive-tree checks.
 Each scenario owns its boundary probes; delivery also owns its [worker](delivery/worker.rs).
+The [shared connection suite](connection/connection.rs) includes
+[yielding client setup](connection/opening.rs): a child must call its parent before
+accepting control, so the parent must keep serving while opening that connection.
+Partial-phase failures and abandoned handoffs check exact custody refunds and the
+continued lifetime of already published backing.
 The parent launches the approved worker, creates two one-way channels, and sends
 the worker its request receiver and reply sender over their bootstrap connection.
 The worker processes a request and replies directly on those new channels.

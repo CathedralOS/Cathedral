@@ -1,6 +1,6 @@
 // Retained connection custody. Setup transfers grants; ordinary frames live only
 // in the mailbox. Endpoints mediate typed grants and lifetime, never payload fallback.
-// client.rs sequences calls; setup.rs advances server acceptance between dispatches.
+// opening.rs yields client setup; setup.rs yields acceptance; client.rs sequences calls.
 use crate::{
     Error, abi,
     event::{self, Interest},

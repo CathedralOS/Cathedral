@@ -6,6 +6,9 @@ use cathedral_user_runtime::{
     server::{Event, Server},
 };
 pub(crate) fn run(mode: u64, env: Environment) -> u64 {
+    if mode == 101 {
+        return super::opening::worker(env);
+    }
     let pair = (env.endpoint(0).unwrap(), env.endpoint(1).unwrap());
     if (94..=98).contains(&mode) {
         return super::notification_faults::worker(mode, env);

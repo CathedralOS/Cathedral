@@ -1,8 +1,10 @@
 mod client;
 mod custody;
 mod incoming;
+mod opening;
 mod setup;
 pub use client::{Client, Pipeline, Response};
 pub use custody::{Endpoint, NotificationGrant};
+pub use opening::Connecting;
 pub(crate) use setup::Accept;
 include!("connection.rs");

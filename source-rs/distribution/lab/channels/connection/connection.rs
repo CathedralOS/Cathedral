@@ -111,6 +111,7 @@ pub(super) fn run() {
     capacity::run(launch);
     endpoints::run(launch);
     notification_grants::run(launch);
+    opening::run(launch);
     resources::assign(
         launch,
         Limits {

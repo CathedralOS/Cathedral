@@ -10,44 +10,28 @@ pub struct Pipeline<const WIDTH: usize> {
     pending: [u64; WIDTH],
 }
 impl<const WIDTH: usize> Pipeline<WIDTH> {
-    /// Takes ownership of the supplied send/receive pair, including on failure.
+    /// Begin setup without parking for the peer. Owns the supplied pair even on
+    /// failure; the connector may be dropped at any point to abandon setup.
+    pub fn begin_connect(pair: Pair, deadline: u64) -> Result<Connecting<WIDTH>, Error> {
+        Connecting::start(pair, deadline)
+    }
+    /// Synchronous convenience over the same yielding setup state machine.
+    /// Owners serving the prospective peer must drive begin_connect/poll instead.
     pub fn connect(pair: Pair, deadline: u64) -> Result<Self, Error> {
-        let lease = Lease(pair);
-        if WIDTH == 0 || WIDTH > wire::MAX_IN_FLIGHT {
-            return Err(Error(abi::INVALID_ARGUMENT as i64));
+        let mut opening = Self::begin_connect(pair, deadline)?;
+        loop {
+            if let Some(client) = opening.poll()? {
+                return Ok(client);
+            }
+            event::wait(&[opening.interest()?], opening.deadline())?;
         }
-        let writer = Writer::allocate(1)?;
-        let mut bell = Bell::new()?;
-        pair.0.send(if WIDTH > 1 {
-            wire::OPEN_PIPELINE
-        } else {
-            wire::OPEN
-        })?;
-        ack(pair.1, deadline)?;
-        writer.delegate(pair.0)?;
-        ack(pair.1, deadline)?;
-        bell.delegate(pair.0)?;
-        ready(pair.1, deadline)?;
-        let reader = Reader::accept(pair.1)?;
-        pair.0.send(wire::ACK)?;
-        ready(pair.1, deadline)?;
-        let (_, signal) = N::accept(pair.1, &mut [0; 64])?;
-        let signal = Signal(signal.ok_or(Error(abi::IO_ERROR as i64))?);
-        signal.0.signal(false)?; // Validate installed signal authority; harmless early hint.
-        pair.0.send(wire::COMMIT)?;
-        ack(pair.1, deadline)?;
-        Ok(Self {
-            peer: Some(Peer {
-                lease,
-                mailbox: Mailbox::new(writer, reader)?,
-                bell,
-                signal,
-                incoming: Incoming::default(),
-                pipelined: WIDTH > 1,
-            }),
+    }
+    pub(super) fn from_peer(peer: Peer) -> Self {
+        Self {
+            peer: Some(peer),
             next: 1,
             pending: [0; WIDTH],
-        })
+        }
     }
     /// Any error after submission retires this connection; caller must reconcile
     /// possible service effects. A deadline never authorizes mutation replay.
