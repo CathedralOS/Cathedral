@@ -142,7 +142,18 @@ def exercise(output, click, key, scan, width, height, reboot, pointer_stress=Fal
         n.focus_note(nested_depth); key('f1'); note(nested_depth,'deep')
     app_close(nested_depth); background(nested_depth)
     if interaction_delay:
-        delayed('f6', lambda: launch(nested_depth,1), ('matrix-present-delayed', 'matrix-present-resumed'))
+        offset = len((output/'serial.log').read_text(errors='replace'))
+        def during_commit():
+            launch(nested_depth,1)
+            scan(lambda _w,_d: 'interaction-delay-held' in (output/'serial.log').read_text(errors='replace')[offset:], 'held presentation')
+            key('a')
+            def input_arrived(_w, _d):
+                log = (output/'serial.log').read_text(errors='replace')[offset:]
+                assert 'interaction-delay-released' not in log, 'input did not progress until presentation released'
+                realms = {line.split('matrix-input-during-present ')[1].split()[0] for line in log.splitlines() if 'matrix-input-during-present ' in line}
+                return len(realms) >= 2*nested_depth+1
+            scan(input_arrived, 'fresh input delivered while presentation is held')
+        delayed('f6', during_commit, ('matrix-present-delayed', 'matrix-present-resumed'))
     else:
         launch(nested_depth,1)
     # This is the installed Omega app, through the same recursive services as

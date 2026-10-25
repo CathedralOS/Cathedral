@@ -1,5 +1,72 @@
 # Rust reference OS: tasks and handoff
 
+Implementation update 2026-10-24: **tagged input progresses beside asynchronous
+presentation**, over `73cb81f5`. Artifact directory stamps below are UTC.
+
+Start at [the transport guide](source-rs/distribution/matrix/transport/README.md),
+then [the sole reply reader](source-rs/distribution/matrix/service/parent/interaction.rs).
+The stock matrix permits one tagged poll beside one presentation request on its
+existing scoped interaction link. Poll and drawing replies have separate custody;
+unmatched tags cannot complete a presentation. Concurrent poll IDs exclude the
+negative-status high word and never wrap. The public contract documents this
+bounded overlap; packet shapes, startup capabilities and kernel IPC are unchanged.
+
+Input queries remain serviceable from a publishing child. A snapshot changing
+view authority or surface capacity waits for commit/abort, then is consumed before
+parking. Geometry-changing work and admitted-child startup requests remain held.
+This proves input delivery through matrix routers, not processing by an app that
+is itself blocked in a synchronous drawing call, nor concurrent visual commits.
+Root physical-source dispatch, image calls and ordinary launch activation/publication
+still contain synchronous work.
+
+The real channels exposed another requirement: one kernel message slot cannot
+hold both replies. The matrix opts into the runtime server's caller-owned fixed
+reply arena, retaining one additional copied reply per client and pausing that
+client's request intake while full. Stale incarnations are discarded; excessive
+pipelining disconnects only that client. Full request channels also retry safely.
+Idle backpressure retries use one-tick deadlines until writable-channel wakes
+exist. Other servers retain their existing behavior unless they opt in; memory
+and endpoint transfers keep explicit custody/retry handling.
+
+Two failures found by the live tests are fixed: the last-client disconnect now
+precedes the server's control-only wait, and a close's grace extends when the matrix
+resumes after being busy, rather than expiring during a long idle busy interval.
+No new owner decision or kernel change was needed.
+
+Verification:
+
+- Normal F5 fresh/cold desktop, independent Notes, Colors and storage oracle:
+  `desktop/20261025T064002435158Z`.
+- Three nested desktops, fresh/cold: a five-second presentation hold requires
+  fresh keyboard input in all seven distinct matrix realms before release.
+  Delayed poll/image recovery, stale-tag rejection, protected close, Notes/Colors
+  persistence and repeated subtree reclamation also pass:
+  `desktop/20261025T063809492128Z`.
+- Real owner revocation during ordinary launch binding preserves the sibling
+  draft/save, prevents grant/publication, reclaims the admitted task and permits
+  same-slot retry on both boots: `desktop/20261025T064128081883Z`.
+- `run.py --ipc-test --release --timeout 60` passes, including the new worker
+  filling real kernel channels, ordered retained replies, intake backpressure,
+  stale-connection replacement and excess pipelining. Existing admission,
+  sponsorship, recursive lifetime and channel reclamation checks still pass.
+- Default host `cargo test --locked` passes, including 26 stock matrix tests
+  (24 compiled Omega policy cases and two reply classification cases) and the new
+  view/capacity compatibility test. Guest all-feature matrix/channels Clippy,
+  host matrix Clippy, layout (73 Omega / 150 Rust edges), eight boundary checks,
+  formatting and diff checks pass. Full kernel/ARM64 suites and the other launch
+  failure modes were not rerun.
+- Logs: `build/omega-component/input-present-{final-nested,desktop,revoke,
+  final-ipc,final-host}.log`. Earlier experimental runs remain alongside them;
+  the initial channel-full failure and idle-close failure are resolved above.
+
+**Next:** move launch scene activation/publication to yielding host mechanisms
+under the existing Omega workflow, retaining prepared geometry and atomic
+commit/abort, cancellation custody, and a coherent scene/focus visibility boundary.
+The transport prerequisite is now in place; those launch steps themselves are
+still synchronous. The earlier intermittent partial-key observation remains open;
+this milestone is not a latency-bound or complete input-loss fix.
+
+
 Implementation update 2026-10-24: **ordinary launch storage binding yields to
 the service loop**, over `4c884a94`. Artifact directory stamps below are UTC.
 

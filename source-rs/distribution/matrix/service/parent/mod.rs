@@ -3,6 +3,7 @@
 mod cursors;
 mod images;
 mod input;
+mod interaction;
 mod polling;
 mod presentation;
 mod recovery;

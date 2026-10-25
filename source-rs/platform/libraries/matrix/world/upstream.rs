@@ -1,6 +1,20 @@
 //! Apply one parent snapshot before routing its local input into this world.
 use super::*;
 impl<const N: usize> World<N> {
+    /// Input may progress during publication only if the snapshot preserves
+    /// the view and surface arena used to prepare that publication.
+    pub fn poll_preserves_view(&self, reply: wire::Packet) -> bool {
+        reply[0] == 0
+            && self.parent
+                == (Grant {
+                    epoch: reply[1],
+                    width: reply[2],
+                    height: reply[3],
+                    keys: reply[4] & wire::VALID_KEY_MASK,
+                })
+            && self.capacity == ((reply[4] >> wire::SURFACE_BITS) as usize).min(wire::MAX_SURFACES)
+    }
+
     /// Call input_ready before issuing another upstream poll. While retirement
     /// drains, continue servicing local children; do not discard their boundaries
     /// or fetch a replacement channel that cannot yet fit in the bounded table.
@@ -65,6 +79,36 @@ impl<const N: usize> World<N> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn concurrent_input_preserves_scene_until_view_or_capacity_changes() {
+        let mut world = World::<2>::empty();
+        let snapshot = [
+            0,
+            1,
+            300,
+            200,
+            wire::KEY_MASK | (8 << wire::SURFACE_BITS),
+            0,
+            0,
+            0,
+        ];
+        world.inherit_poll(snapshot);
+        assert!(world.poll_preserves_view(snapshot));
+        let mut demand = snapshot;
+        demand[4] |= wire::NO_FRAMES | wire::FRAME_REQUESTED;
+        demand[5] |= wire::MORE;
+        assert!(world.poll_preserves_view(demand));
+        for index in 1..=4 {
+            let mut changed = snapshot;
+            changed[index] ^= 1;
+            assert!(!world.poll_preserves_view(changed));
+        }
+        let mut capacity = snapshot;
+        capacity[4] += 1 << wire::SURFACE_BITS;
+        assert!(!world.poll_preserves_view(capacity));
+        assert!(!world.poll_preserves_view(wire::error(abi::DENIED)));
+    }
+
     #[test]
     fn revoked_parent_cannot_replay_input_or_revive_child_authority() {
         let mut world = World::<2>::empty();

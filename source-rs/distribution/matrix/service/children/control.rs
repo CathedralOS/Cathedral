@@ -105,7 +105,8 @@ impl Children {
         world: &mut World,
         parent: &mut Parent,
     ) -> Result<bool, Error> {
-        let Some((request, deadline, purpose)) = self.pending[slot] else {
+        let Some((request, mut deadline, purpose)) = self.pending[slot] else {
+            self.close_paused[slot] = false;
             // A disconnect observed while a reply was pending must not be lost
             // when that reply (including a LOSS survey) completes.
             if self.slots[slot]
@@ -139,17 +140,17 @@ impl Children {
             matches!(purpose, Purpose::Close),
             parent.upstream_busy() || parent.storing(),
         ) {
-            // The sibling may already have answered; nobody is looking. Its
-            // deadline must not run out while this matrix is the one that is
-            // busy, or the first poll afterwards would refuse a clean answer
-            // as a timeout. Keep at least the outcome grace ahead of now.
-            let grace = time::now()?.wrapping_add(OUTCOME_GRACE_TICKS);
-            if let Some(pending) = &mut self.pending[slot]
-                && time::reached(grace, pending.1)
-            {
-                pending.1 = grace;
-            }
+            self.close_paused[slot] = true;
             return Ok(false);
+        }
+        if core::mem::take(&mut self.close_paused[slot]) {
+            // Extend on resumption, not on the last visit before sleeping.
+            // An idle busy interval can be longer than the original deadline.
+            let grace = time::now()?.wrapping_add(OUTCOME_GRACE_TICKS);
+            if time::reached(grace, deadline) {
+                deadline = grace;
+                self.pending[slot].as_mut().unwrap().1 = grace;
+            }
         }
         let mut retired = false;
         let now = time::now()?;

@@ -20,6 +20,10 @@ pub const POLL: u64 = 5;
 /// Reply retains POLL's payload. Word zero packs id in its high 32 bits and
 /// signed i32 status in its low 32 bits. IDs are local to one connection,
 /// never authority, and must not wrap or be reused on that connection.
+/// Matrix clients may overlap one tagged poll with one presentation request.
+/// Such clients reserve u32::MAX (negative untagged status uses that high word).
+/// Providers retain both copied replies under channel backpressure; all other
+/// untagged exchanges remain serialized. Serial clients may still use u32::MAX.
 pub const POLL_TAGGED: u64 = 26;
 pub fn tag_poll(mut reply: Packet, id: u32) -> Packet {
     reply[0] = ((id as u64) << 32) | (reply[0] as u32 as u64);

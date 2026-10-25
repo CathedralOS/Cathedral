@@ -46,6 +46,7 @@ pub(super) struct Parent {
     pub hold_storage_active: bool,
     polling: Option<polling::Pending>,
     next_poll: u32,
+    pub poll_retry: Option<u64>,
     input_capacity: [usize; 2],
 }
 impl Parent {
@@ -122,6 +123,7 @@ impl Parent {
             hold_storage_active: false,
             polling: None,
             next_poll: 0,
+            poll_retry: None,
             input_capacity: [wire::INPUT_STREAMS, wire::INPUT_GROUPS],
         }
     }

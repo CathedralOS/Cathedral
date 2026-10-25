@@ -25,11 +25,18 @@ pub struct Server {
     memory: bool,
     closed: [Option<u64>; MAX_CLIENTS],
     paused: u32,
+    replies: Option<&'static mut Replies>,
 }
 impl Server {
     fn control_only(&self) -> bool {
+        if self.reply_paused() != 0 {
+            return false;
+        }
         for index in 0..self.count {
-            if self.links[index].is_some() || self.clients[index].is_some() {
+            if self.links[index].is_some()
+                || self.clients[index].is_some()
+                || self.closed[index].is_some()
+            {
                 return false;
             }
         }
@@ -89,6 +96,7 @@ impl Server {
             }));
         }
         loop {
+            self.flush_replies();
             if let Some(event) = self.take_disconnection() {
                 return Ok(Some(event));
             }
@@ -102,6 +110,9 @@ impl Server {
         }
     }
     pub fn reply(&mut self, request: &Request, bytes: &[u8]) -> Result<(), Error> {
+        if !request.control && self.replies.is_some() {
+            return self.retained_reply(request, bytes);
+        }
         match request.reply.send(bytes) {
             // A full client response queue loses only that reply. The service and other
             // client stay live; synchronous clients reconcile ambiguous commits.

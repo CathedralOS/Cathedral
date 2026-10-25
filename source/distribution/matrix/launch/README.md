@@ -70,12 +70,14 @@ one interaction/storage stream retain fatal failure handling. Existing manual
 owner grants, recovery and startup paths still use the synchronous grant helper.
 
 Admission, placement, activation and publication remain synchronous host steps.
-Activation/publication currently share the upstream request/reply channel with
-input polling. `upstream_busy()` excludes polling while presentation owns it;
-changing only the waits would not let new input through. The next step must
-separate input/presentation transport or safely dispatch concurrent replies, and
-preserve atomic scene commit/abort and cancellation before migrating these steps.
-This is an implementation frontier, not a new owner semantic decision.
+The existing asynchronous child-presentation path now shares its upstream link
+safely with tagged input polls. Follow the [transport guide](../../../../source-rs/distribution/matrix/transport/README.md)
+for the single reply reader, bounded backpressure and view-change hold. Ordinary
+launch activation/publication still use synchronous host calls and do not gain
+that concurrency automatically. Their next step is a yielding scene workflow
+that retains prepared geometry and atomic commit/abort, rechecks cancellation,
+and exposes the new scene/focus only at a coherent boundary. This remains an
+implementation frontier, not a new owner semantic decision.
 
 ## Verification
 

@@ -1,32 +1,35 @@
 //! Resume publication after each upstream reply. One in-flight batch owns the
-//! stream. Slow replies retain that ownership and never trigger a replay.
+//! visual exchange. Tagged input shares the receiver through interaction.rs.
+//! Slow replies retain ownership and never trigger a replay.
 use super::*;
 use cathedral_platform_contracts::display;
 use cathedral_platform_contracts::display::composition;
 use cathedral_user_runtime::server::Request;
 
 pub(super) struct Pending {
-    request: Request,
+    pub(super) request: Request,
     revision: u64,
     local_revision: u64,
     step: usize, // 0 begin, 1..=LIMIT updates, LIMIT+1 commit, LIMIT+2 abort.
     status: u64,
     compact: bool,
-    waiting: bool,
+    pub(super) waiting: bool,
+    pub(super) reply: Option<u64>,
     deadline: u64,
     late: bool,
+    retry: Option<u64>,
 }
 impl Parent {
-    pub(in super::super) fn publishing_client(&self) -> usize {
-        self.pending.as_ref().unwrap().request.client.unwrap()
-    }
     pub(in super::super) fn publishing(&self) -> bool {
         self.pending.is_some()
     }
     pub(in super::super) fn presentation_wait(&self) -> Option<(Handle, Option<u64>)> {
-        self.pending
-            .as_ref()
-            .map(|p| (self.output().unwrap().1, (!p.late).then_some(p.deadline)))
+        self.pending.as_ref().map(|p| {
+            (
+                self.output().unwrap().1,
+                p.retry.or_else(|| (!p.late).then_some(p.deadline)),
+            )
+        })
     }
     pub(in super::super) fn prune_batches(&mut self, world: &World) {
         for (slot, batch) in self.batches.iter_mut().enumerate() {
@@ -54,8 +57,10 @@ impl Parent {
             status: 0,
             compact: false,
             waiting: false,
+            reply: None,
             deadline: time::after(300)?,
             late: false,
+            retry: None,
         });
         #[cfg(feature = "trace-input")]
         time::trace("present-start");
@@ -84,27 +89,39 @@ impl Parent {
             return Ok(());
         };
         if !p.waiting {
-            self.send_presentation(world)?;
-            self.pending.as_mut().unwrap().waiting = true;
+            match self.send_presentation(world) {
+                Ok(()) => {
+                    let p = self.pending.as_mut().unwrap();
+                    p.waiting = true;
+                    p.retry = None;
+                }
+                Err(Error(code)) if code == abi::WOULD_BLOCK as i64 => {
+                    self.pending.as_mut().unwrap().retry = Some(time::after(1)?);
+                }
+                Err(error) => return Err(error),
+            }
             return Ok(());
         }
         let now = time::now()?;
-        let mut bytes = [0; 64];
-        let len = match self.output()?.1.receive_until(&mut bytes, now) {
-            Ok(len) => len,
-            Err(Error(code)) if code == abi::TIMED_OUT as i64 => {
-                if !p.late && time::reached(now, p.deadline) {
-                    time::storage_sample("matrix-present-delayed", &[p.revision]);
-                    self.pending.as_mut().unwrap().late = true;
-                }
-                return Ok(());
-            }
-            Err(error) => return Err(error),
-        };
         let status = if self.upstream {
-            wire::decode(&bytes[..len]).ok_or(Error(abi::IO_ERROR as i64))?[0]
+            self.pending.as_mut().unwrap().reply.take()
         } else {
-            display::decode(&bytes[..len]).ok_or(Error(abi::IO_ERROR as i64))?[0]
+            let mut bytes = [0; 64];
+            match self.output()?.1.receive_until(&mut bytes, now) {
+                Ok(len) => {
+                    Some(display::decode(&bytes[..len]).ok_or(Error(abi::IO_ERROR as i64))?[0])
+                }
+                Err(Error(code)) if code == abi::TIMED_OUT as i64 => None,
+                Err(error) => return Err(error),
+            }
+        };
+        let Some(status) = status else {
+            let p = self.pending.as_mut().unwrap();
+            if !p.late && time::reached(now, p.deadline) {
+                time::storage_sample("matrix-present-delayed", &[p.revision]);
+                p.late = true;
+            }
+            return Ok(());
         };
         if status != 0 {
             let p = self.pending.as_ref().unwrap();
@@ -139,7 +156,9 @@ impl Parent {
             false
         };
         if !done {
-            return self.send_presentation(world);
+            self.pending.as_mut().unwrap().waiting = false;
+            // Continue without parking before the next step has been sent.
+            return self.progress_presentation(world, server);
         }
         let p = self.pending.take().unwrap();
         if p.late {

@@ -14,7 +14,7 @@ impl Server {
         let now = if self.memory { 0 } else { time::now()? };
         for offset in 0..=self.count {
             let channel = (self.cursor + offset) % (self.count + 1);
-            if self.paused & (1 << channel) != 0 {
+            if (self.paused | self.reply_paused()) & (1 << channel) != 0 {
                 continue;
             }
             let Some(pair) = (if channel == 0 {
@@ -75,7 +75,7 @@ impl Server {
             count = 1;
         }
         for index in 0..self.count {
-            if self.paused & (1 << (index + 1)) == 0
+            if (self.paused | self.reply_paused()) & (1 << (index + 1)) == 0
                 && let Some(pair) = self.clients[index]
             {
                 handles[count] = pair.0;
@@ -87,7 +87,13 @@ impl Server {
             return Err(Error(abi::INVALID_ARGUMENT as i64));
         }
         handles[count..count + extra.len()].copy_from_slice(extra);
-        let until = deadline.unwrap_or(time::after(100)?);
+        let mut until = deadline.unwrap_or(time::after(100)?);
+        if self.reply_paused() != 0 {
+            let retry = time::after(1)?;
+            if time::reached(until, retry) {
+                until = retry;
+            }
+        }
         if count + extra.len() == 0 {
             return Err(Error(abi::INVALID_ARGUMENT as i64));
         }

@@ -2,5 +2,7 @@
 
 mod connections;
 mod polling;
+mod replies;
+pub use replies::Replies;
 
 include!("server.rs");

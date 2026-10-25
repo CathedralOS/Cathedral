@@ -44,6 +44,7 @@ impl Server {
             memory: false,
             closed: [None; MAX_CLIENTS],
             paused: 0,
+            replies: None,
         })
     }
     /// Whether a local slot can accept an explicitly supplied connection.

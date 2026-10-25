@@ -58,6 +58,11 @@ pub fn run(environment: Environment) -> Result<(), Error> {
     let world = unsafe { &mut *world_address };
     let mut server = Server::open_clients_from(if storage_root { 2 } else { 0 }, STREAMS - 1)?;
     server.enable_memory();
+    static mut REPLIES: cathedral_user_runtime::server::Replies =
+        cathedral_user_runtime::server::Replies::empty();
+    let replies_address = &raw mut REPLIES;
+    // SAFETY: This single-entry service owns the static bounded reply arena.
+    server.retain_replies(unsafe { &mut *replies_address });
     if environment.len() == 4 {
         server.install(
             SOURCE,
@@ -95,6 +100,7 @@ pub fn run(environment: Environment) -> Result<(), Error> {
     #[cfg(feature = "interaction-delay")]
     let mut delay = delay_probe::Gate::default();
     loop {
+        parent.progress_interaction()?;
         parent.progress_refresh(world)?;
         // The test-only probe can count this matrix's storage as busy, as a
         // slow provider would, around a close, so its answer is seen to wait.
@@ -136,6 +142,11 @@ pub fn run(environment: Environment) -> Result<(), Error> {
             children.complete_binding(bound);
         }
         parent.progress_presentation(world, &mut server)?;
+        // A replacement snapshot retained behind publication is already in
+        // memory: consume it now, rather than parking on an empty receiver.
+        if parent.refresh_ready() && !parent.publishing() {
+            parent.progress_refresh(world)?;
+        }
         children.finish(&mut server, world, parent)?;
         if !parent.upstream_busy() {
             requests::flush(parent, world)?;
@@ -154,7 +165,7 @@ pub fn run(environment: Environment) -> Result<(), Error> {
         }
         // Ready mutations get their turn before another poll. A queue waiting
         // on independent storage must not prevent consuming interaction wakes.
-        if !parent.upstream_busy() && !deferred.has_ready(parent) {
+        if parent.can_poll() && !deferred.has_ready(parent) {
             parent.refresh_notified(world)?;
         }
         let (handles, mut deadline) = children.wait(
@@ -192,12 +203,15 @@ pub fn run(environment: Environment) -> Result<(), Error> {
                 }
             }));
         }
-        if let Some((receive, until)) = parent.refresh_wait().or_else(|| parent.presentation_wait())
+        for (receive, until) in [parent.refresh_wait(), parent.presentation_wait()]
+            .into_iter()
+            .flatten()
         {
-            extra[count] = receive;
-            count += 1;
-            // Ready owner replies still progress. Deferred teardown must not
-            // spin on its expired deadline while publication owns the stream.
+            // Both exchanges may wait on the same interaction receiver.
+            if !extra[..count].iter().any(|h| h.raw() == receive.raw()) {
+                extra[count] = receive;
+                count += 1;
+            }
             if let Some(until) = until {
                 deadline = Some(deadline.map_or(until, |d| {
                     if cathedral_user_runtime::time::reached(d, until) {
@@ -208,12 +222,21 @@ pub fn run(environment: Environment) -> Result<(), Error> {
                 }));
             }
         }
+        if let Some(until) = parent.poll_retry {
+            deadline = Some(deadline.map_or(until, |d| {
+                if cathedral_user_runtime::time::reached(d, until) {
+                    until
+                } else {
+                    d
+                }
+            }));
+        }
         for handle in handles.into_iter().flatten() {
             extra[count] = handle;
             count += 1;
         }
         let input_ready = world.input_ready();
-        if !parent.upstream_busy() && parent.refresh_due && input_ready {
+        if parent.can_poll() && parent.refresh_due && input_ready {
             deadline = Some(cathedral_user_runtime::time::now()?);
         }
         #[cfg(feature = "interaction-delay")]
@@ -230,7 +253,7 @@ pub fn run(environment: Environment) -> Result<(), Error> {
                 }
             }));
         }
-        if !parent.upstream_busy()
+        if parent.can_poll()
             && input_ready
             && let Some(wake) = parent.wake
         {
@@ -295,9 +318,6 @@ pub fn run(environment: Environment) -> Result<(), Error> {
                 cathedral_user_runtime::time::storage_sample("matrix-poll-local", &[]);
             }
             let mut blocked = parent.admitting.map_or(0, |slot| 1 << slot);
-            if parent.publishing() {
-                blocked |= 1 << parent.publishing_client();
-            }
             if parent.storing()
                 && let Some(client) = parent.storing_client()
             {

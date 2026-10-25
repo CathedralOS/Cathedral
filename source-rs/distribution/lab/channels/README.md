@@ -29,6 +29,12 @@ The [startup scenario](startup/startup.rs) then repeats the exchange with the co
 already installed when the child enters `main`; no introduction messages are needed.
 The [tree scenario](tree/tree.rs) then lends launch grants through three instances of
 the same [recursive supervisor](tree/node.rs).
+The [reply-retention worker](replies.rs) fills real kernel response channels,
+checks ordered delivery and request backpressure, replaces a connection with an
+old reply retained, and exceeds the two-request bound. Stale replies cannot reach
+or disconnect the replacement; excess pipelining disconnects only that client.
+The server must report its final client disconnect before entering control-only
+wait. The final quota check also verifies that these channels were reclaimed.
 
 The public operations are in [user-runtime IPC](../../../platform/libraries/user-runtime/ipc/ipc.rs)
 and its [channel operations](../../../platform/libraries/user-runtime/ipc/channels.rs).
