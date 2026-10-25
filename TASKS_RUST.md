@@ -195,6 +195,30 @@ controls, not a ring-buffer lab. Exclusive output, raw device handoff, microphon
 capture and a general DSP graph are not prerequisites. No runtime implementation
 or real-time performance result is claimed by this docs ratification.
 
+## Cursor presentation without upstream disclosure
+
+**Open; presentation and information boundaries settled.** Complete the existing
+[cursor presentation path](wiki/spec/human_surface/rendering.md#cursor-presentations)
+under the [input provenance rule](wiki/spec/human_surface/input.md#upstream-provenance-is-not-input-metadata).
+Start at `source-rs/platform/libraries/matrix/world/input/cursor/cursor.rs`,
+the scoped channel directory and the existing bounded surface/cursor path.
+
+- Carry a leaf-selected shared asset/hotspot through nested owner policy to final
+  rendering, with hide and restoration on hover/capture-target loss or death.
+  Updating position must not require the app to redraw every motion or every
+  ancestor to copy pixels. Measure latency rather than infer it from the topology.
+- Exercise equivalent supplied input from different upstream producer types.
+  Ordinary events, directory data and cursor interfaces must expose no automatic
+  real/synthetic/AI/remote flag or provenance query. Local channel identity and
+  control interpretation still work. Descriptive labels are not origin credentials.
+- Preserve the outer recovery gesture and owner-side UI authority without exposing
+  private enforcement provenance to children. Pin denied observation, stale asset
+  custody and teardown controls through the ordinary service path.
+
+Done is scoped asset/hide behavior plus interface-level non-disclosure evidence,
+not perfect timing indistinguishability or mandatory agent badges. Existing
+default/hidden cursor evidence remains valid for its scope, not the full asset API.
+
 ## Current implementation evidence
 
 Implementation update 2026-10-25: **shared endpoint-reply custody**, over `ab24fa34`.
@@ -1931,7 +1955,8 @@ closed by the entry above. Existing end-to-end
 timings alone cannot separate harness waits from guest delay. A small app
 interaction-description/semantic-action proof can follow using the accepted input
 authority model. Further broad specification is unnecessary for these steps.
-Mandatory agent attribution remains an independent unresolved policy.
+The later accepted input contract excludes mandatory agent attribution from child
+input/cursor APIs; owner-side session UI remains separately authorized.
 
 Current integration 2026-10-24: **reusable Omega UI library**, over `ab0d76f8`.
 `cathedral-omega-ui` exposes caller-authored frames, independent field values,
@@ -2045,8 +2070,8 @@ publication, capture rate negotiation and general view APIs remain unimplemented
 
 Next: recursive pointer-target cursor preferences (including no-cursor), with
 owner restoration on target change/death, through the ordinary desktop. The
-accepted presentation contract permits that work; mandatory agent attribution
-is a separate unresolved owner policy. Measure nested input/rendering costs
+accepted presentation contract permits that work; it now excludes automatic
+upstream attribution from child cursor interfaces. Measure nested input/rendering costs
 before changing forwarding or scheduling architecture. Keep this bounded capture
 proof available while developing those next interfaces.
 
@@ -2340,8 +2365,8 @@ needed for that failure. No new ARM64, GPU or broad scheduler/driver result is c
 
 Next: exercise producer interruption with held input and queue pressure through
 this installed workflow, then add scoped channel description/discovery so apps
-can identify participants without exposing ancestor registries. General cursor
-suppression/attribution, independent group controllers and reassociation remain
+can distinguish supplied channels without exposing ancestor registries or origins.
+General cursor assets, independent group controllers and reassociation remain
 outstanding. Rendering demand/masked capture and coordination acquisition remain
 queued. No new owner decision blocks this work.
 

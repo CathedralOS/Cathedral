@@ -5,7 +5,7 @@
 | Contract status | Current |
 | Specification coverage | Partial |
 | Implementation coverage | Partial |
-| Last reviewed | 2026-10-24 |
+| Last reviewed | 2026-10-25 |
 
 ## Scope and ownership
 
@@ -125,12 +125,26 @@ through its owner-controlled presentation interface. This is a composed pointer
 target path, not a requirement for a separately registered cursor focus group.
 Ancestors need not each render an additional cursor.
 
+The effective leaf target chooses presentation subject to the Matrix chain's
+delegation and policy. An app uses its supplied cursor interface to register
+bounded assets/backing and hotspots; it need not redraw the cursor or answer on
+every pointer movement. An authorized final renderer can track position using the
+selected asset without per-ancestor pixel copies. Actual latency still requires
+measurement. Shared asset custody follows the rendering-resource contract.
+
 Requests are scoped to the relevant pointer and target lifetime. Leaving the
 target, ending capture or losing the target restores the applicable owner policy;
 stale suppression cannot hide unrelated pointers or protected outer UI. No-cursor
 requests affect visual presentation only. Relative-motion locking, movement
-confinement and drag capture require their own granted operations. Mandatory
-attribution, protected indicators and hidden-target styling remain open.
+confinement and drag capture require their own granted operations. A game may
+request hiding and draw its own cursor in its ordinary frames instead.
+
+There is no mandatory agent/remote badge or authenticated source label attached
+to a cursor. Cursor services do not reveal upstream source classes; see
+[input provenance](input.md#upstream-provenance-is-not-input-metadata). An enclosing
+owner's separately authorized session-status UI is not the child's cursor and
+is not suppressed by a child cursor request. This selects no mandatory owner-side
+indicator policy and grants no additional capture or observation rights.
 
 ## Scoped fullscreen
 
@@ -195,7 +209,8 @@ interaction connections, independently of keyboard focus. Notes F6 demonstrates
 this in the ordinary desktop. The desktop fixtures cover target exit without
 further motion, nesting and independent physical/producer suppression; host tests
 cover drag targeting, cancellation, geometry changes and stale bindings. Assets,
-authenticated attribution, relative lock and confinement remain separate work.
+relative lock and confinement remain separate work. Upstream attribution is not
+an ordinary cursor feature; owner-side status UI is separately authorized.
 
 The Rust [demand mechanism](../../../source-rs/platform/libraries/matrix/world/demand.rs)
 now carries a child-local no-frames hint through `POLL`, composed across matrices

@@ -4,8 +4,11 @@ The accepted [input foundation](../spec/human_surface/input.md),
 [channel contract](../spec/human_surface/input_channels.md) and
 [focus contract](../spec/human_surface/focus_routes.md) own delivery, registration,
 exclusive group control, channel association and recursive local selection.
-They supersede conflicting seat or focus assumptions below. This proposal now
-explores remaining attribution, protected indicators and protocol details.
+They supersede conflicting seat or focus assumptions below. The accepted
+[input provenance rule](../spec/human_surface/input.md#upstream-provenance-is-not-input-metadata)
+also supersedes the earlier mandatory-attribution proposal: upstream source details
+are private unless explicitly disclosed. Remaining material explores protocol
+details, not an app-visible physical/synthetic distinction.
 The [presentation contract](../spec/human_surface/rendering.md) now also owns
 accepted-layout hit-testing and pointer-target cursor preference/suppression.
 
@@ -30,9 +33,9 @@ and permission to act; a cursor does not require a mandatory full seat.
 | Object | Responsibility |
 | --- | --- |
 | Input source | Produces normalized events from a device, agent, remote participant or replay |
-| Source binding | Grants a source permission to drive a particular logical pointer; retains trusted provenance |
+| Source binding | Grants source control over a logical pointer; keeps enforcement evidence private to authorized owners |
 | Logical pointer | Tracks identity, position, button state and capture within an authorized coordinate space |
-| Cursor visual | Presents the pointer's sprite, hotspot, visibility and attribution |
+| Cursor visual | Presents the pointer's sprite, hotspot and visibility; no automatic upstream attribution |
 | Pointer lease | Delegates specified control or observation rights within a Matrix subtree and lifetime |
 | Focus group | Accepted local association of channels and selection; see the [focus contract](../spec/human_surface/focus_routes.md) |
 
@@ -48,11 +51,11 @@ flowchart LR
     bindings --> pointer[Logical pointer state]
     pointer --> routing[Scoped input routing]
     routing --> app[Authorized Matrix or app]
-    pointer --> visual[Compositor cursor and attribution]
+    pointer --> visual[Authorized cursor renderer]
     assets[App cursor resource] --> visual
 ```
 
-The platform owns binding, routing and attribution rules. A distribution supplies
+The platform owns binding, routing and disclosure enforcement. A distribution supplies
 the default device profile and presentation choices within those rules. The
 kernel supplies isolation, device access and IPC mechanisms; it need not know
 cursor names, pointer acceleration or which child is under a cursor.
@@ -74,12 +77,11 @@ a pointer, one source releasing a button must not erase the other source's held
 state. Device removal must retire that source's contribution. The contract must
 choose an aggregation or exclusive-control policy and define event ordering.
 
-Hardware origin is a property established by the trusted input path. An app
-cannot manufacture it by naming a pointer "operator" or feeding a pointer that
-also has a physical binding. Human-only confirmation and the reserved operator
-escape must consult trusted origin and binding state, not just pointer identity.
-This preserves the existing design's physical-input backstop without assuming
-that every event on a mixed pointer was physically generated.
+Hardware origin may be retained privately by the owner enforcing a protected
+physical recovery path. A child cannot manufacture that authority by naming a
+pointer "operator". This does not create an app-visible physical-origin flag or
+query: authorized logical input is consumed without learning whether its upstream
+source is human, software, remote or supplied by an analysis environment.
 
 ## Delegation inside a Matrix
 
@@ -112,12 +114,11 @@ now owns bounded cursor surfaces, per-pointer target preferences, no-cursor
 requests and recursive owner-controlled handoff. Hiding does not imply pointer
 lock or capture, and keyboard selection does not determine cursor preference.
 
-A possible additional policy is an owner-authenticated participant label or
-activity indicator. App-supplied text cannot itself establish authenticated
-identity. Whether such indicators are required, which identity they expose,
-and what appears for hidden targets remain in the
-[owner question](../../OWNER_QUESTIONS.md#recursive-cursor-presentation-and-attribution).
-A mandatory protected fallback is a proposal, not implied by ordinary cursors.
+An enclosing owner may display session information it is authorized to know in its
+own UI. That is separate from child cursor presentation and confers no observation
+right on the child. No mandatory agent label, remote badge or hidden-target
+attribution fallback is required. Apps can request custom assets or hiding without
+knowing how the pointer is driven; app-supplied text is not authenticated identity.
 
 Cursor assets follow the accepted [resource lifetime](../spec/human_surface/rendering_resources.md).
 Decorative pixels confer no input authority or right to cover protected output.
@@ -150,8 +151,9 @@ The [focus contract](../spec/human_surface/focus_routes.md) replaces the earlier
 mandatory-seat alternatives with explicit channel association and privately
 controlled groups. The [channel contract](../spec/human_surface/input_channels.md)
 already defines channel-tagged delivery and application-owned role assignment.
-Cursor handoff and attribution remain in the
-[owner question](../../OWNER_QUESTIONS.md#recursive-cursor-presentation-and-attribution).
+Cursor handoff is settled by the [presentation contract](../spec/human_surface/rendering.md#cursor-presentations);
+upstream disclosure is settled by the
+[input provenance rule](../spec/human_surface/input.md#upstream-provenance-is-not-input-metadata).
 Compatibility adapters must preserve the accepted authority and channel boundaries.
 
 ## Acceptance evidence
@@ -166,10 +168,11 @@ Before promoting this proposal to a contract, establish:
   cursor position and routed targets.
 - Capture cancellation, source/target/host death and stale queued events without
   stuck state, inherited authority or a click on a replacement target.
-- App-provided cursor assets with platform attribution, bounded resources and a
-  failure fallback that retains the required identity cue.
-- Synthetic input on a pointer with a physical binding that cannot pass a
-  physical-origin gate or suppress operator recovery.
+- App-provided shared cursor assets, bounded resources and owner restoration on
+  target loss, without mandatory origin labels or per-ancestor redraws.
+- Equivalent supplied input from physical, remote and software sources exposes
+  no automatic origin flag to the child; it still cannot forge the upstream
+  physical recovery gesture or gain unrelated observation rights.
 - Explicit seat/focus and compatibility-adapter rules, with budgets that keep
   an abusive source from monopolizing routing and cursor updates.
 

@@ -5,7 +5,7 @@
 | Contract status | Current |
 | Specification coverage | Partial |
 | Implementation coverage | Partial |
-| Last reviewed | 2026-10-24 |
+| Last reviewed | 2026-10-25 |
 
 ## Channel model
 
@@ -32,8 +32,11 @@ sharing an identity does not create independent app interaction state.
 All channels follow the same authority rules. There is no privileged default
 channel. Startup policy may establish a channel driven by physical devices;
 absent or zero-initialized bindings confer no implicit operator input authority.
-Authenticated physical origin, where required, comes from the trusted source
-path and is not inferred from a channel's name, identity or default designation.
+Physical origin needed for an upstream owner's enforcement remains private to
+that authorized path; it is not inferred from a channel's name, identity or
+default designation. It is not automatically published to channel consumers.
+The [provenance rule](input.md#upstream-provenance-is-not-input-metadata) excludes
+automatic source-class flags and ambient origin queries.
 
 ## Producer registration and registry ownership
 
@@ -117,7 +120,9 @@ claim to reveal the underlying physical hardware. Names are not credentials.
 
 Metadata needed to interpret already granted input can accompany that authority;
 it need not require separate permission or a round trip per event. Listing
-unrelated devices or private source details requires separate authority.
+unrelated devices or private source details requires separate authority. A channel
+can supply the same control vocabulary whether driven physically, remotely or by
+software; disclosure of which one is not a prerequisite for using it.
 
 Initial enumeration and ongoing notifications must compose without missing a
 change. Overflow/reconnection recovery must reestablish channel bindings and

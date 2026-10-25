@@ -5,7 +5,7 @@
 | Contract status | Current |
 | Specification coverage | Partial |
 | Implementation coverage | Partial |
-| Last reviewed | 2026-10-23 |
+| Last reviewed | 2026-10-25 |
 
 ## Scope
 
@@ -39,6 +39,24 @@ Delegation does not require every ancestor to forward every invocation. A
 provider may enforce a delegated grant directly; an interposing matrix is an
 implementation choice when its behavior requires mediation. Enforcement must
 remain effective regardless of which path carries the request.
+
+## Supplied interfaces do not reveal upstream construction
+
+A child receives the observations and operations its supplied interfaces authorize,
+not an implicit account of how the enclosing environment was constructed. Service
+access does not grant inspection of upstream providers, host topology, hidden
+participants or whether the environment is physical, virtual or synthesized.
+Additional disclosure requires explicit authority; there is no ambient bypass for
+anti-cheat, automation detection or sandbox detection.
+
+This applies equally to an ordinary desktop, remote session, accessibility setup
+or malware-analysis environment. Providers must honor their declared interface
+semantics, but need not reveal the machinery behind them. The rule does not promise
+perfect indistinguishability against timing or other authorized observations.
+Owners may retain private enforcement information and present their own authorized
+UI without thereby disclosing it to children. The
+[input provenance rule](../human_surface/input.md#upstream-provenance-is-not-input-metadata)
+is one application of this boundary.
 
 ## Matrix failure and subtree lifetime
 

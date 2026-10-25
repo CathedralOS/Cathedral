@@ -5,7 +5,7 @@
 | Contract status | Current |
 | Specification coverage | Partial |
 | Implementation coverage | Partial |
-| Last reviewed | 2026-10-23 |
+| Last reviewed | 2026-10-25 |
 
 ## Scope and ownership
 
@@ -36,6 +36,32 @@ An input compositor/router owns the channel registry and admits authorized
 producer registrations. Receiving apps publish acceptance descriptions, not the
 channels they receive. Nested routers may provide independent registries; their
 clients receive the supplied service rather than ambient access to an outer one.
+
+## Upstream provenance is not input metadata
+
+Receiving input grants interaction through the supplied stream, not inspection of
+its upstream origin. Ordinary events, discovery, cursor services and channel
+identifiers must not automatically disclose physical versus synthetic input, AI,
+remote-control, accessibility or sandbox status. No mandatory origin flag, hidden
+provenance query or anti-cheat exception bypasses the supplied environment.
+
+Local pointer/channel identities and control descriptions remain available where
+needed to interpret and distinguish authorized input. They describe that interface,
+not the real-world producer behind it. An explicitly shared descriptive label is
+not authenticated provenance, and descriptor schemas must not require disclosure
+of an upstream source class to use the stream.
+
+The owner enforcing an upstream physical-only recovery gesture may retain private
+source evidence. A child's synthesized input cannot trigger that upstream power;
+this enforcement does not grant the child a physical-origin oracle. Likewise an
+owner may show its own remote-session controls or status in owner-controlled UI.
+No such indicator is required by the cursor contract or implicitly exposed to the
+child, including through capture interfaces outside its granted scope.
+
+Cursor selection and hiding have the same semantics regardless of the source
+driving the pointer. The [matrix information boundary](../execution/components_and_matrices.md#supplied-interfaces-do-not-reveal-upstream-construction)
+also applies outside input. This is deliberate non-disclosure, not a guarantee
+that every timing pattern or observable behavior is indistinguishable.
 
 ## Preserve distinct meanings
 

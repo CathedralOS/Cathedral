@@ -32,33 +32,6 @@ standard.
 
 ## Open questions
 
-### Recursive cursor presentation and attribution
-
-**Settled boundary.** The [presentation contract](wiki/spec/human_surface/rendering.md#cursor-presentations)
-now selects per-pointer hover/capture targeting, recursive cursor preferences
-including no-cursor, and owner-controlled restoration when the target changes or
-dies. Hiding is separate from capture, confinement and relative-motion lock.
-This is not keyboard-focus-based and does not require another registered focus group.
-
-**Remaining requirement.** The design proposes trustworthy attribution for agents
-and remote participants. It has not specified which indicators are mandatory or
-must survive a child renderer that hides its ordinary cursor.
-
-**Contracts checked.** The presentation contract permits bounded cursor surfaces
-and scoped suppression; the [desktop contract](wiki/spec/human_surface/compositor_and_seat.md)
-protects outer recovery, not every cursor indicator. The
-[pointer proposal](wiki/proposals/0001_input_and_pointer_leases.md) retains
-attribution and hidden-target presentation alternatives.
-
-**Owner choice.** Define any mandatory agent/remote activity attribution and
-protected fallback separately from ordinary cursor preference. Decide whether
-hidden-target activity needs an owner indicator, optional preview, or no mandated
-visual, and which identities the observer is authorized to see.
-
-**Recommendation (unaccepted).** Keep ordinary cursor suppression local while
-allowing separately authorized owner indicators. Do not label every decorative
-cursor as authenticated or expose hidden participant identities by default.
-
 ### Exclusive audio and the reserved system channel
 
 **Deferred; does not block shared playback.** The owner ratified the

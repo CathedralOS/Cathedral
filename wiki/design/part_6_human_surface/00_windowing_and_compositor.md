@@ -117,7 +117,14 @@ The [input and pointer proposal](../../proposals/0001_input_and_pointer_leases.m
 separates physical and virtual sources from logical pointers and their cursor
 visuals. It explores Matrix-scoped leases and source multiplexing. The accepted
 [focus contract](../../spec/human_surface/focus_routes.md) supersedes seat coupling;
-cursor presentation and attribution remain design choices.
+the [presentation contract](../../spec/human_surface/rendering.md#cursor-presentations)
+settles leaf-target cursor selection under owner policy. An app registers shared
+cursor assets through its supplied service; the final authorized renderer can
+track motion without per-ancestor redraws. Games may request hiding and render
+their own pixels. [Upstream provenance](../../spec/human_surface/input.md#upstream-provenance-is-not-input-metadata)
+is not automatically disclosed: physical, AI, remote and analysis-environment
+sources obey the same child-facing input/cursor contract. Any owner-side session
+indicator is separate UI, not mandatory cursor attribution or an anti-cheat API.
 
 Input has two layers that stay separated. At the bottom, an input device driver ([[driver_model]]) holds the device's transport capability and translates raw device reports into a normalized, typed event vocabulary: ordinary numbered records under a selected codec for key, relative pointer, absolute pointer, axis, button, touch contact, pressure, and the like. Every device quirk is absorbed at that boundary. Above it, the compositor consumes only typed events and never sees the raw device, so routing is device-agnostic.
 
@@ -172,8 +179,10 @@ propagate the request under owner policy; target loss restores that policy.
 
 Cursor programs contribute bounded surfaces rather than writing the whole output.
 Hiding is separate from capture, confinement or relative-motion locking. Children
-cannot hide unrelated pointers or protected outer UI. Mandatory agent attribution,
-hidden-target indicators and precise pointer-lock APIs remain design choices.
+cannot hide unrelated pointers or protected outer UI. There is no mandatory agent
+attribution or origin-dependent cursor behavior. An owner's separately authorized
+status UI is outside the child's cursor contract. Precise pointer-lock APIs remain
+separate design work.
 
 ### Seats
 

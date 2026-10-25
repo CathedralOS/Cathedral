@@ -8,6 +8,7 @@ specification or a claim that every design ambition is implemented.
 | Runnable Rust reference OS | [Rust tasks and handoff](TASKS_RUST.md) | `source-rs/` |
 | Shared-memory service transport and capability-controlled parking | [IPC and notification outcome](TASKS_RUST.md#shared-memory-ipc-and-notification-outcome) | Kernel mechanisms, platform protocols and ordinary desktop consumers |
 | Shared-buffer audio playback | [Audio outcome](TASKS_RUST.md#shared-buffer-audio-playback) | Platform mixer, funded sample backing and audio driver |
+| Scoped cursor assets without origin disclosure | [Cursor outcome](TASKS_RUST.md#cursor-presentation-without-upstream-disclosure) | Supplied input/cursor interfaces and authorized final rendering |
 | Object-rooted watches and durable capture | [Watch outcome](TASKS_RUST.md#object-rooted-watches-and-durable-capture) | Platform storage service, caller-funded delivery and transactional history |
 | Explicit atomic storage batches | [Batch outcome](TASKS_RUST.md#explicit-atomic-storage-batches) | Platform storage service, revision checks and recoverable commit outcomes |
 | Reference deletion and scoped erasure | [Deletion outcome](TASKS_RUST.md#reference-deletion-and-scoped-erasure) | Storage retention policy, independent copies and explicit guarantee refusal |
