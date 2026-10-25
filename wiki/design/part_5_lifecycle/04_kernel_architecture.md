@@ -7,6 +7,14 @@ requires future CHERI support and a separately specified compartment model.
 
 > The privileged core is the smallest trusted substrate that can carry Cathedral's component, capability, and update story.
 
+The accepted [enforcement/orchestration boundary](../../spec/execution/updates.md#enforcement-and-orchestration)
+puts update, loader, transaction-recovery and reporting orchestration in platform
+services or component owners. Kernel mechanisms enforce admission, execution,
+mapping, authority and authentic observations. Installing a replacement does not
+require live kernel adoption; the kernel may defer activation to a later boot.
+This boundary supersedes broad charter assignments of entire update or transaction
+subsystems to the kernel. Moving a service does not by itself remove it from the TCB.
+
 ## The Legacy Model
 
 Monolithic kernels fuse everything privileged (drivers, filesystems, network stacks, schedulers) into one address space where any bug is a total compromise. Microkernels split that out into servers but pay in IPC overhead and complexity, and in practice still grow a fat trusted base. Hybrids inherit both sets of problems. Across all of them the privileged boundary is drawn by hardware rings and address spaces, and the question "what must actually be trusted, and what can crash or be replaced without killing the system?" is answered by accident of history rather than by design.

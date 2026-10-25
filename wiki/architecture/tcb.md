@@ -78,8 +78,11 @@ The deepest trust bottoms out in `{seed, checker, specs, hardware}`:
 
 ## 3. `source/kernel/core/`: the proved kernel, trusted in full
 
-`source/kernel/core/` is the proved single-address-space core. It is small enough to
-audit in its entirety, and its proofs live beside it. Members:
+`source/kernel/core/` owns privileged enforcement. The accepted
+[ownership boundary](../spec/execution/updates.md#enforcement-and-orchestration)
+separates these mechanisms from platform orchestration; proofs belong beside the
+mechanisms they cover. This inventory is not an implementation-completeness claim.
+Members:
 
 - Capability grant arena, the live authority graph.
 - Scheduler.
@@ -87,10 +90,12 @@ audit in its entirety, and its proofs live beside it. Members:
 - IPC region & lease manager.
 - Tickless timer subsystem.
 - Trusted-time keeper.
-- Trusted spawn / component loader.
-- Hot-swap / replacement engine.
-- Transaction commit coordinator.
-- Attestation reporter.
+- Executable admission, authorized mappings and task creation.
+- Execution/entry and mapping-lifetime enforcement used by component replacement.
+- Atomic authority transitions required by declared kernel operations, not a
+  general storage/application transaction coordinator.
+- Authoritative kernel observations and protected measurement mechanisms, not
+  the entire attestation reporting workflow.
 - Hardware-access broker (IOMMU / MMIO gatekeeper).
 - Generic interrupt stub.
 - Boundary-provider registry (only registered providers may mint host/hardware
@@ -123,6 +128,14 @@ shrinks several of these.
 | Storage / realm service | Mints realm roots and runs the `unseal` primitive; the origin of storage authority. |
 | Warden (root) | Holds the secure-element device capability; the root key-manager. Non-root Wardens are contained. |
 | Admission gate | The install-time re-check (manifest-vs-policy, re-verified proof certificates); held by the machine owner. |
+| Authorized updater / launch-reference owner | Can select code for the scope it is authorized to update; installation power does not imply control of every running instance. |
+| Attestation reporting service | Assembles authoritative observations under protected reporting/key authority; its claims remain part of the relying party's trust boundary. |
+
+Component lifecycle owners coordinate replacement; storage services coordinate
+transactions and recovery; loader services prepare candidates. Their trust scope
+depends on actual authority and accepted claims. Moving this work outside the
+kernel does not erase trust, and a service's assertion cannot replace kernel
+enforcement. No universal update-convergence controller is part of this inventory.
 
 *Source: `part_1_authority/07_sessions_and_login` (the distributed origin of
 authority), `part_3_communication/01_networking`,

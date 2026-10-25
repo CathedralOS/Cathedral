@@ -1,10 +1,18 @@
 # CHARTER — `source/kernel/core/`
 
-**Scope.** The proved kernel — the trusted computing base, and nothing more: the
-capability arena, scheduler, memory/address-space manager, IPC, timers, trusted
-time, spawn/loader, hot-swap engine, transaction coordinator, attestation, and
-the proof checker. Small enough to audit in full. Proofs live **here**, beside
-the code they cover — never in a sibling that can lag.
+**Scope.** Privileged enforcement: the capability arena, scheduler,
+memory/address-space manager, IPC mapping and notification mechanisms, timers,
+trusted time, executable admission and task creation, and required trusted
+validation. Proofs live **here**, beside the mechanisms they cover.
+
+Update, loading and recovery orchestration belongs to platform services and
+component owners. There is no universal kernel hot-swap engine or application
+transaction coordinator. The kernel supplies actual execution, mapping, grant
+and measurement enforcement; it does not infer application readiness or migrate
+application arenas. Follow the accepted
+[ownership contract](../../../wiki/spec/execution/updates.md#enforcement-and-orchestration).
+Privileged platform services may also belong to the TCB; kernel placement is not
+the definition of trust, and no numeric size target substitutes for this boundary.
 
 **Depends on.** Shared `foundation/` and `contracts/`, kernel architecture
 mechanisms as implemented, and pure `platform/drivers/facts`. Userspace never

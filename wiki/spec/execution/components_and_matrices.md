@@ -14,6 +14,10 @@ following the owner's 2026-10-18 clarification. It does not specify a universal
 matrix configuration format, the complete component lifecycle, or realm
 encryption and locking protocols.
 
+The [installation and activation contract](updates.md) separates installing new
+executables from replacing live instances. Matrices own their children's update
+policy within supplied authority; installation grants no new lifecycle power.
+
 ## A matrix is an ordinary program
 
 A matrix is a program acting as a host and attenuator for children. Its parent

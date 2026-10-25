@@ -19,4 +19,11 @@ implementations (those live in `core/`, `services/`, `drivers/`). Contracts are
 **Evolution.** Changes only by the versioned-interface discipline (additive +
 migrated, never redefined in place). A change here redefines the platform.
 
+The [update contract](../../wiki/spec/execution/updates.md) separates installation
+from activation. Update-control requests use ordinary supplied IPC/notification
+rights, not a new privileged update signal. Their eventual wire format must
+distinguish notification submission, component readiness and kernel lifecycle
+observations without requiring universal live-adoption acknowledgements. Kernel
+contracts expose enforcement; service contracts own orchestration and its failures.
+
 **Status (2026-07-02).** In-progress: `uefi/` (the milestone-1 boot hand-off ABI).

@@ -5,6 +5,14 @@
 > ownership/liveness facts, and admitted boundary operations; it has no
 > replacement keyword or component manager.
 
+The accepted [installation and activation contract](../../spec/execution/updates.md)
+separates publishing new executable versions from live adoption. The updater
+installs, changes launch/boot references and submits authorized notifications;
+it does not coordinate every running instance or wait for readiness reports.
+Applications and component owners may defer, restart or use supported live
+replacement. The mechanisms below apply to an owner that elects live replacement,
+not to every package installation, and are not a claim of current implementation.
+
 ## Terms
 
 A **package** is source organization and dependency reach. A **requirement** is
@@ -46,6 +54,12 @@ Cathedral owns:
 - device quiescence and authority transfer; and
 - loader mappings and reclamation of lifetime cohorts.
 
+Within Cathedral, platform services and component owners orchestrate that work.
+The kernel enforces the necessary admission, execution, mapping and authority
+transitions. The kernel does not own all the listed policy merely because it can
+observe processes. Module completion and restored application readiness belong
+to the component's protocol; an updater-wide report of live adoption is not required.
+
 `boundary` remains a trust, ABI, or externally supplied entry marker. It is not
 a replacement marker.
 
@@ -79,7 +93,7 @@ current custodian. Only checked transfer to a named receiver, a boundary
 receipt, or preservation under moves changes custody. Replacement reports name
 retention paths rather than merely saying "not quiescent."
 
-Cathedral supports three capability tiers:
+A component's live-replacement implementation may support these capability tiers:
 
 1. **drain/coexist.** New calls route to the new era while old sessions finish
    or keep their old provider alive.
@@ -94,7 +108,7 @@ sessions.
 
 ## Replacement protocol
 
-Replacement is a checked Cathedral state machine over admitted providers:
+Live replacement is a component-owned state machine over admitted providers:
 
 ```text
 validate candidate
@@ -249,10 +263,11 @@ replacement also accounts for:
 - mapping invalidation and cross-core completion; and
 - reset scope, including collateral devices where reset is not isolated.
 
-The driver may drain, reset/restart, coexist, or defer replacement. Cathedral
-must report which policy blocked reclamation.
+The driver may drain, reset/restart, coexist, or defer replacement. Its lifecycle
+owner retains the reason and obligations when reclamation cannot complete. This
+does not delay installation or require an updater-wide live-adoption report.
 
-## Still open
+## Remaining implementation work
 
 - concrete era-acquisition implementation;
 - replacement-plan, migration, and disposition receipt schemas;
@@ -262,9 +277,11 @@ must report which policy blocked reclamation.
 - crash recovery across a committed replacement; and
 - device-specific quiescence protocols.
 
-These are Cathedral runtime/design questions. They do not justify Omega
-replacement syntax, a package-equals-component rule, or compiler-owned OS
-lifecycle types.
+These belong to the component/runtime that needs the mechanism, not a universal
+updater or blanket owner blocker. Concrete unresolved trust or externally visible
+semantic choices still require specification before use. They do not justify
+Omega replacement syntax, a package-equals-component rule, or compiler-owned OS
+lifecycle types. Ordinary installation does not wait for this entire list.
 
 ## Related
 

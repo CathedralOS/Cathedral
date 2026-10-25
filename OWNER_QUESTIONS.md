@@ -168,45 +168,6 @@ exception or an independently enforced output path. Measure reclaim behavior
 before promising a bound. The [audio notes](wiki/drafts/audio_graph_notes.md)
 leave this decision open until the device and interaction requirements are known.
 
-### Kernel mechanisms versus platform orchestration
-
-**Requirement and tension.** The kernel/platform split needs a defensible trust
-boundary as the boot lab grows. The
-[kernel charter](source/kernel/core/CHARTER.md) and
-[TCB inventory](wiki/architecture/tcb.md) assign hot-swap, transaction
-coordination, trusted loading and attestation to a kernel described as small
-enough to audit in full. Those assignments do not distinguish enforcement
-primitives from service orchestration. This is an unresolved scope decision,
-not evidence that those features are impossible or that a particular line
-count is required. The
-[kernel architecture design](wiki/design/part_5_lifecycle/04_kernel_architecture.md)
-also describes a narrower privileged substrate and restartable services, so the
-charter and inventory need an explicit reconciliation with that direction.
-
-**Contracts checked.** ADR 0002 establishes placement and dependency direction,
-but does not decide this split. The specification index lists component lifecycle
-and admission as unwritten subjects; its current boot and root-extent contracts
-do not define these service boundaries. The
-[contracts charter](source/contracts/CHARTER.md) names future interfaces without
-settling their enforcement/orchestration split. The Rust lab now places its
-private-object engine and recovery in a platform service over a boot-granted
-PIO transport. That experiment covers disk-only atomic replacement; it does
-not define a transaction that atomically changes persistent objects and kernel
-authority, nor recovery of such a cross-boundary change. The broader transaction
-coordination assignment remains unresolved.
-
-**Owner choice.** Keep the listed subsystems wholly in the trusted kernel, or
-place orchestration in platform services over narrowly defined kernel
-mechanisms. The former expands the kernel audit surface. The latter requires
-explicit authority, atomicity and failure/recovery contracts across the boundary;
-moving code alone neither isolates it nor removes it from the TCB.
-
-**Recommendation (unaccepted).** Default to platform orchestration, retaining
-kernel mechanisms wherever required to enforce system invariants. Decide each
-subsystem's boundary before implementing it, and update its specification,
-contracts, charter and TCB entry together. Track kernel size and total trusted
-code separately; do not adopt a 12,000-line target as an architectural constraint.
-
 ### Validation scope for an optional PCID optimization
 
 **Resolved boundary.** The owner accepted [hardware-separated programs](wiki/spec/execution/isolation.md)

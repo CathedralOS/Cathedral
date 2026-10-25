@@ -39,6 +39,34 @@ not only a standalone lab. Pin focused host/race controls and real guest evidenc
 for that path and its invalid-authority controls. The docs ratification runs no
 new OS code and establishes no execution or performance result.
 
+## Independent installation and component-owned activation
+
+**Open; owner boundary settled.** Implement the ordinary app update path from
+[installation and activation](wiki/spec/execution/updates.md), reusing executable
+admission, storage publication, scoped service connections and notifications.
+Begin with a real installed app, not a kernel hot-swap framework.
+
+- Install immutable v2 and publish its future-launch reference while v1 is
+  running. Prove v1 remains usable and a new launch uses exact v2; retain old
+  backing until its actual users release it. Failed candidate admission or
+  reference publication must not select an incomplete image.
+- Route an update request through the instance owner's explicitly authorized
+  control connection. Notification submission/failure is the updater's boundary;
+  no acknowledgement, a deferred app or an unresponsive app must not hold
+  installation open. Reject signalling/control attempts without the right.
+- Exercise one independent instance deferring and another saving/restarting under
+  its owner. Readiness replies, if used locally, bind to the correct request and
+  process incarnation. Compatible old/new service traffic and persistent state
+  must remain usable; stopping a matrix still retires its subtree.
+- Keep install/load/recovery orchestration in platform services and lifecycle
+  owners. Kernel changes expose only the enforcement needed by this path. Preserve
+  custody through notification failure, process death and eventual reclamation.
+
+Done is an ordinary app update exercised through the distribution with the above
+positive and rejection evidence. Global live-adoption metrics, mandatory module
+migration, live kernel replacement and a universal distributed transaction are
+not prerequisites. No runtime evidence is claimed by this docs ratification.
+
 ## Current implementation evidence
 
 Implementation update 2026-10-25: **switching running apps yields through scene

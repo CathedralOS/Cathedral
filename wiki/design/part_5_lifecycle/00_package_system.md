@@ -2,6 +2,12 @@
 
 > A package is a proof-carrying object, not a tarball plus scripts. Installing it is a declarative, checked state transition, never code execution.
 
+The accepted [installation and activation contract](../../spec/execution/updates.md)
+governs update completion. Installation publishes new immutable versions and
+future-launch references; live instances adopt them under their own owners.
+The more detailed packaging mechanisms below are design direction, not evidence
+of a shipped updater.
+
 ## The Legacy Model
 
 Linux packaging is the clearest example of the problem. A package is an archive plus a set of imperative hooks (`preinst`, `postinst`, `%post`, `pkg_postinst`) that run as root with full ambient authority. Install is arbitrary code execution. Around that core sit dependency solvers, dynamic-linker search paths, signature schemes, trust databases, and per-distro policy, and none of them can constrain the one thing that matters: what the postinstall script actually does. The system cannot answer "what authority does this package require, what state does it own, is this upgrade compatible, and can I revoke it?" because none of that was ever declared. It was buried in a shell script.
@@ -10,7 +16,7 @@ Linux packaging is the clearest example of the problem. A package is an archive 
 
 Installation is a **declarative state transition**, not a program. A package is an Omega artifact that declares everything the system needs to admit it, and the compiler and loader check the declaration before anything is written. There is no install-script escape hatch. The manifest is the only way in.
 
-A package declares exports and imports; capabilities required, stored, and delegated; protocols spoken; persistent state schemas and migration functions; candidate resource demands and optional fixed policy budgets; upgrade-compatibility facts; security invariants; and the test and proof artifacts that back them. Runtime opaque values additionally publish their normalized carrier class, introduction contracts, backing and provider requirements, and reachable authority. Build provenance is signed and carries an input-reproducibility classification. Dependencies are pinned by content identity. Because all of this is structured, installation reduces to verifying provenance, checking policy, validating state migration and component representations, provisioning the selected realization, and committing or refusing. No ambient install script runs.
+A package declares exports and imports; capabilities required, stored, and delegated; protocols spoken; persistent state schemas and migration functions; candidate resource demands and optional fixed policy budgets; upgrade-compatibility facts; security invariants; and the test and proof artifacts that back them. Runtime opaque values additionally publish their normalized carrier class, introduction contracts, backing and provider requirements, and reachable authority. Build provenance is signed and carries an input-reproducibility classification. Dependencies are pinned by content identity. Because all of this is structured, installation reduces to verifying provenance, checking policy, validating the candidate's representations and the compatibility of its intended publication, and committing or refusing. Migration and live-instance provisioning belong to activation, not an obligatory phase of every install. No ambient install script runs.
 
 This is the core divergence. Every other OS treats the package as an opaque payload whose effects are discovered only by running it. Cathedral treats it as a checkable contract whose blast radius is computed in advance.
 
@@ -30,7 +36,7 @@ The manifest is the authority-flow report (accepts, uses, stores, derives, acqui
 
 Admission of authority evidence is split between the two sides. Omega validates public data shape, checked claim transformations, and boundary-domain evidence. Cathedral admits the final artifact's transitive trust and authority expansion. Policy selects who may receive authority and never substitutes for the contract constraining its later use.
 
-The store records every published version's schemas, so admission refuses a schema-breaking update. Durable and wire-selected formats are the strict case, because data outlives its writers.
+Schema knowledge constrains which versions may safely communicate or share durable data. Installing an immutable candidate does not itself migrate a live database. Publishing or activating an incompatible selection requires an explicit compatibility or coordinated-migration path; it cannot silently break still-supported readers.
 
 ### The update pipeline and its gates
 
@@ -40,27 +46,51 @@ An update stages additively and then passes checked gates before any commit. New
 - **Attestation and proof re-check.** The closure signature verifies and the local checker re-verifies the proof certs. You never trust the publisher's "it's proven", so a forged proof dies here (Thompson-resistance).
 - **Manifest delta.** A widened ceiling, meaning authority the old version did not declare, requires fresh consent. It cannot land silently.
 - **Opaque-representation delta.** Inline/handle changes, new introduction contracts, mutable carrier access, admitted backing, generation/revocation, and their transitive authority consequences are compared from normalized manifests. New privileged reach requires policy approval.
-- **Migration totality.** A state-schema change ships a migration proven total. Absent that, the swap is refused and the old state is left intact.
+- **Publication compatibility.** Selecting a candidate must preserve the contracts of the supported mixed-version population. A required state migration is checked and performed by its state owner at activation; storing a candidate does not run that migration or mutate live state.
 
 A refusal at any gate leaves you on the working old version with nothing half-installed.
 
-### Live-patch versus reboot is proof-gated, with reboot as the safe fallback
+### Installation finishes without live adoption
 
-Whether a component, or the core, can be updated in place is proven, not guessed. You prove live-patchability or you reboot. There are three checkable gates:
+The updater reports installed artifacts, changed launch/boot references and
+authorized notification submission or failure. It does not track every process
+until it adopts the new code. A notification is neither readiness nor proof that
+a replacement occurred.
 
-1. **Quiescence.** No entrant can reach the retiring era, and every existing activation is drained, validly cancelled, migrated, or retained. A promise of bounded drain requires a declared semantic safe point plus bounded work and finite wait ceilings on every path. Architectural timer preemption alone does not establish quiescence ([[scheduler_and_resources]], [[updates_and_hot_swap]]).
-2. **Total migration.** The new version's state migration is proven total over the old committed state.
-3. **Containment.** The change touches only the component's own code and `data`, not a foundational representation every live thing embodies. A normal component cannot change the substrate it is built on, so its updates are contained by construction. The reboot class is a change to a core foundational primitive whose in-memory layout changed: the memory model (MMU/SAS/CHERI), the capability-arena format, the task/stack representation, the IPC region layout, the trap-vector model. The gate detects whether a foundational layout changed, as opposed to only code or policy.
+Existing instances retain their admitted executable backing. New launches use
+the new selection. A running instance's owner may defer until natural exit,
+request save-and-restart, prompt the user, or use a component-supported module
+replacement. The control connection uses ordinary notification rights, with no
+kernel-specific update signal. Applications that do not service that connection
+cannot prevent installation from completing.
 
-If all three pass, the update is a live hot-swap. If any fails or is absent, the update is a staged reboot. A staged reboot is always correct, so an unsure classification defaults to reboot safely. Changing the memory model fails gate 3 by inspection, since its purpose is to re-lay-out what all live state embodies ([[kernel_architecture]]).
+### Live replacement is optional; reboot is a separate activation path
 
-### A/B applies on the next natural reboot, never forced
+A component choosing live replacement owes the entry, migration, custody and
+reclamation obligations in [[updates_and_hot_swap]]. Quiescence cannot be inferred
+from timer preemption or a standby buffer. If preparation fails before cutover,
+the old execution remains usable; after an irreversible step, its explicit
+recovery contract applies.
 
-Most updates are services and drivers, which live hot-swap with zero reboot ([[updates_and_hot_swap]]). A small core fix can publish a new binding era once entrants are redirected and every member of the old population has a disposition. It is not authorized merely because the timer can stop execution. Only a wholesale core replacement, meaning a foundational-layout change, needs the A/B path. Even then it stages into the inactive slot and applies on the next reboot the user takes anyway, with automatic fallback to the old slot if the new one fails to boot-measure-good ([[boot_and_trust_chain]]). There is no forced reboot, at most a nudge for a critical security fix. Reboots are rare, only for deep core rewrites, and never imposed.
+Kernel modules and the kernel image follow the same installation boundary.
+A supported live mechanism may adopt the new version, or activation can wait for
+a later boot. No claim that most services hot-swap, that only foundational-layout
+changes require reboot, or that reboot automatically makes a migration safe is
+part of this contract. A/B boot selection and boot-health fallback are possible
+boot/recovery implementations, not live-adoption guarantees from the updater.
 
-### Many components update independently, with no OS-wide two-phase commit
+### Independent updates require compatible contracts
 
-Each replacement publishes a new requirement-binding era and then drains or retains the old era. Publication and reclamation are separate completion states. Across components, updates proceed independently when their versioned interfaces permit a mixed-version state. A coupled breaking change is made compatible across one step, or uses a coordinated commit scoped to the coupled set. There is never an OS-wide two-phase commit. A multi-component feature that must appear atomically is deployed incrementally and enabled by a final configuration transition.
+Apps, distribution services and platform services must normally permit
+independent activation through compatible versioned interfaces. Wire encoding
+alone is insufficient: shared persistent formats and resource relationships also
+have to support the allowed mixed-version population.
+
+A breaking coupled change uses an explicit bridge, compatible coexistence or a
+coordinated migration/restart scoped to those participants, possibly on reboot.
+Ordinary updates do not impose global quiescence or an OS-wide live-convergence
+transaction. A full matrix restart still retires its owned subtree; installing
+a new matrix executable does not restart it or silently adopt its children.
 
 ### The setup-transition: a confined computation, not a script
 
@@ -95,7 +125,7 @@ The package manager rejects opaque native execution by default. A legacy package
 - Who admits authority evidence? Omega validates the evidence shape and transformations; Cathedral admits the final artifact's transitive authority expansion.
 - How does a declarative install express legitimate side effects? Registrations are declarative and the activator performs them; computational setup is a confined setup machine that maps a fresh realm plus granted inputs to an initial-state value.
 - What is the dependency model? Content-addressed, chunked, and pinned, with versions coexisting by hash and fetch as a chunk-level delta.
-- How is ABI stability enforced? The store records every published schema, and admission refuses a schema-breaking update.
+- How is compatibility enforced? Candidate publication and activation respect the supported mixed-version wire and persistent-state contracts; a breaking change requires an explicit compatibility or coordinated migration path.
 
 ## Omega Leverage
 
