@@ -1,5 +1,11 @@
 # Object storage provider
 
+The accepted [change-watch contract](../../../../wiki/spec/storage/change_watches.md)
+adds object-rooted live delivery and transaction-coupled durable capture to this
+service's responsibilities. It is not implemented by the current request protocol;
+see the [watch outcome](../../../../TASKS_RUST.md#object-rooted-watches-and-durable-capture).
+The kernel supplies mapping and notifications, not storage-event history.
+
 A separate user task owns the exclusive boot-granted disk controller and the
 [object store](../../libraries/database-objects/README.md). [main.rs](main.rs)
 funds the heap, opens the guarded volume and recovers the engine, then

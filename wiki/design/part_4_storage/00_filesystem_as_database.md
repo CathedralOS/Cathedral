@@ -15,8 +15,10 @@ or on-disk specification. The [storage foundation proposal](../../proposals/0002
 separates current direction, experimental choices and evidence still required.
 The Rust private catalog proves a bounded transaction/recovery path; the host
 chunk-layout lab measures representation costs. Neither implements this chapter.
-Unresolved authority, retention and isolation choices are tracked in
-[owner questions](../../../OWNER_QUESTIONS.md).
+Live watches and durable capture are now governed by the accepted
+[change-watch contract](../../spec/storage/change_watches.md). Historical file-byte
+retention is separate. Unresolved deduplication/erasure and isolation choices remain
+in [owner questions](../../../OWNER_QUESTIONS.md).
 
 ## The Legacy Model
 
@@ -28,7 +30,15 @@ The second failure is the API. Unix gives you `open`, `read`, `write`, `rename`,
 
 ## The Cathedral Model
 
-The Cathedral filesystem is intended to be a durable object graph with transactional updates, typed metadata, indexes and capability-scoped access. Committed changes should be observable through a durable change stream, with snapshots and retained history supporting recovery, backup and synchronization. This does not require event sourcing as the sole source of truth: materialized records plus transactionally published change records are a candidate. Replay guarantees depend on retention, subscriber budgets and expiry behavior; finite storage cannot promise unlimited history to every disconnected watcher.
+The Cathedral filesystem is intended to be a durable object graph with transactional
+updates, typed metadata, indexes and capability-scoped access. The accepted
+[change-watch contract](../../spec/storage/change_watches.md) distinguishes live
+delivery into caller-funded shared buffers from optional durable capture committed
+with the mutation. Persistent administrator policy can require capture before any
+covered write is admitted. This is storage-service work, not a kernel event log or
+an Omega primitive. Neither event capture nor replay implies retaining old file
+bytes. Finite funded storage requires explicit overflow or authorized backpressure,
+not unlimited history for disconnected watchers.
 
 The other half of the redesign is that there is no global root.
 
@@ -83,7 +93,7 @@ In this candidate model, copy duplicates identity and alias shares it. A snapsho
 
 ### Version history and retention
 
-Version history retains references to older committed state. Reclamation must respect current roots, retained history, active readers and in-flight publication. Copy-on-write makes sharing possible but does not itself establish safe collection or a retention guarantee. The following retention vocabulary remains proposed, particularly its interaction with quotas, shared encrypted content and durable subscribers.
+Version history retains references to older committed state. Reclamation must respect current roots, retained history, active readers and in-flight publication. Copy-on-write makes sharing possible but does not itself establish safe collection or a retention guarantee. The following historical-content retention vocabulary remains proposed, particularly its interaction with quotas and shared encrypted content. It does not govern the separately ratified change-event retention contract: replaying a content-changed record does not require retaining that content's old bytes.
 
 Retention is an attribute on the commit, not the file:
 
@@ -191,7 +201,7 @@ There are three limits. Porting a legacy database wholesale still works but is w
 - **No special folders; meaning is type and query.** The OS blesses no path. There is no canonical Photos, Documents, or fonts location. Those are queries over typed objects (`type: image`, `type: font`), and a folder is optional human organization the system attaches no meaning to. A default save destination is a user-configurable binding rather than a sacred path, and per-user config is typed records owned per principal rather than a magic directory ([[configuration_and_policy]]). A legacy app that hardcodes `~/Documents` or `~/.fonts` gets those names bound to a view or query in its resolution environment ([[compatibility_and_legacy]]), so the special folder is faked at the realm boundary and nothing native depends on one.
 - **Committed change stream.** Durable change records may be published alongside materialized state. Their API need not expose the physical recovery journal or require event sourcing. Snapshot identity, log partitioning and retention remain to be specified ([[transactions_and_consistency]]).
 - **Version history and reclamation.** Retention policies remain proposed; current roots, active readers and explicit pins constrain reclamation. Storage pressure needs a defined refusal, expiry or thinning policy rather than silently breaking those promises ([[secrets_and_keys]], [[audit_compliance_provenance]]).
-- **Durable subscriptions (proposed).** A resumable cursor observes authorized committed changes within a funded retention window. Expired cursors need explicit failure/resynchronization semantics; bounded storage cannot promise infinite offline replay. See the retention owner question.
+- **Change watches and durable capture.** [Ratified contract](../../spec/storage/change_watches.md): object-rooted live delivery, explicit overflow, transaction-coupled persistent capture, funded retention and recoverable cursors. Collector acknowledgements do not override mandatory audit retention; summaries belong to consumers.
 - **Atomic multi-object change.** A rename, a config write, and a content update commit as one transaction. The primitive lives in [[transactions_and_consistency]], and this chapter is its first heavy consumer.
 - **Content addressing and dedup.** Object bodies keyed by content hash give cheap dedup, integrity, and snapshot sharing across realms. Names are mutable references into it.
 - **Integrity by construction.** Because the content hash is also a checksum, every read is self-verifying. Bit rot or tampering is caught on read instead of being served silently. Where a subtree keeps replicas (a mirrored placement class above), the bad copy is repaired from a healthy one, and a background scrub can verify proactively rather than waiting for a read.
@@ -221,7 +231,7 @@ There are three limits. Porting a legacy database wholesale still works but is w
 
 - What is the unit of a "record" (a whole file, a sub-object, or a typed fragment), and how does that interact with huge opaque blobs (video, disk images) that resist structure?
 - What is the right realm granularity: one realm per app, or coarser, and who is allowed to mint a realm before it becomes fragmentation ([[governance_and_extension_boundaries]])?
-- Is the log global, per-realm, or per-subtree, and how is ordering defined across objects that commit together versus independently?
+- Physical event-log partitioning is an implementation choice under the [change-watch contract](../../spec/storage/change_watches.md); it must preserve commit grouping and must not leak unrelated realm activity.
 - Can mutable object identity be shared across realms, and what authorizes each traversal? Sharing immutable content alone does not imply shared identity or authority.
 - What is the exact thinning schedule for retained history, and how is per-realm history cost accounted?
 - Is there a write rate above which live relocation cannot converge, leaving a hot subtree pinned to its device until it cools, and how is that surfaced to the user who asked to move it?
@@ -233,12 +243,12 @@ There are three limits. Porting a legacy database wholesale still works but is w
 - **Immutable historical `data` shapes plus checked conversions** give file records a path for on-disk schema evolution and help make the system realm rollback-able. See Omega [Historical Data And Component Replacement](https://github.com/CathedralOS/Omega/blob/main/wiki/language_guide/chapter_14_traits.md#versioned-data).
 - **Ordinary numbered schemas plus selected codecs** give at-rest and on-the-wire record and log encodings declared compatibility, so old log entries stay decodable. See Omega [Wire Protocols](https://github.com/CathedralOS/Omega/blob/main/wiki/language_guide/chapter_14_traits.md#wire-protocols).
 - **Domains** express object permission shades and validity classes (`Object::Readable`, `Object::Committed`, `Snapshot::Sealed`) on one handle type. See Omega [Domains](https://github.com/CathedralOS/Omega/blob/main/wiki/language_guide/chapter_8_domains.md).
-- Omega does not yet define a durable-log/subscription-cursor primitive. Whether that is a runtime service or a language-level abstraction is open.
+- **Ordinary boundary services and libraries** implement [change watches](../../spec/storage/change_watches.md). No language-level durable-log or cursor primitive is needed; the storage service owns capture and retention, consumers own summaries.
 
 ## Open Questions
 
 - Can the log be the only source of truth (event-sourced) at OS scale, or is a materialized object store required for performance, with the log as a journal?
-- How are durable subscriptions garbage-collected when a subscriber dies without unsubscribing: lease-based cursors ([[capability_lifecycle]])?
+- Durable collector disconnect does not cancel capture. [Subscription funding and retention](../../spec/storage/change_watches.md#durable-capture-and-recovery) govern reclamation; mandatory policy survives collector and service restarts.
 - Which engine/recovery protocol ensures committed references always have durable backing, while retaining old backing until all required readers and versions release it?
 - How does a persisted cross-realm reference stay valid across a system-realm upgrade that relocates the target?
 - How is an open handle re-pointed across a relocation atomically, with no window where a read sees neither the old backing nor the new one?

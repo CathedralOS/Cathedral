@@ -74,12 +74,21 @@ operations and kernel capability state remains unresolved. The Rust catalog's
 connection-bound staging and root-revision checks are lab behavior, not the final
 persistent authority protocol.
 
-A candidate durable watcher records changes in the same transaction as the state
-and resumes from a committed sequence cursor. This does not require a CRDT or
-exposing the physical WAL. Replay needs explicit retention, authorization filtering,
-expiry/resynchronization and duplicate-delivery rules. CRDTs concern convergence
-of independently writable replicas, a separate decision with type-specific merge
-semantics. Neither a change log nor a content hash supplies those semantics.
+The accepted [change-watch contract](../../spec/storage/change_watches.md) requires
+durable capture to commit required event information with the state mutation.
+Reserve capture capacity before commit, recover registration and acknowledged
+positions, and deliver committed records asynchronously. A crash before delivery
+does not lose committed changes; aborted writes are not completed-change events.
+Stable identities permit duplicate delivery without promising exactly-once
+application processing. RAM delivery capacity, disk retention and historical
+content pins are distinct obligations. Live-only watches instead deliver directly
+into caller-funded buffers and expose overflow explicitly.
+
+This reuses the storage engine's transaction/recovery mechanisms; it neither
+requires exposing the WAL nor makes the kernel a history owner. CRDTs concern
+convergence of independently writable replicas, a separate decision with
+type-specific merge semantics. Neither a change log nor a content hash supplies
+those semantics.
 
 Irreversible effects happen outside the storage transaction. A transactional
 outbox records an intent with state, then emits after commit using an idempotency

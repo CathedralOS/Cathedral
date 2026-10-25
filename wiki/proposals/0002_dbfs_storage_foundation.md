@@ -266,11 +266,14 @@ cannot remove serialization already imposed by those semantics.
 
 ## Owner choices and compatibility
 
-[Owner questions](../../OWNER_QUESTIONS.md) track object aliases and realm
-authority, deduplication/encryption boundaries, retention/subscriber promises,
-and cross-record isolation. Existing kernel/storage authority questions still
-apply. Chunk sizes, fanout, benchmark fixtures and engine comparisons are ordinary
-engineering experiments, not requests for owner approval.
+The [change-watch contract](../spec/storage/change_watches.md) now settles live
+delivery, durable capture and subscriber funding: platform storage owns capture,
+caller-funded memory carries live events, and required durable records commit with
+mutations. The historical candidate discussion here does not reopen that ruling.
+[Owner questions](../../OWNER_QUESTIONS.md) retain unresolved deduplication/erasure
+and cross-record isolation decisions. Aliases and general historical-content
+retention remain outside the watch contract. Chunk sizes, fanout, benchmark
+fixtures and engine comparisons are engineering work, not owner decisions.
 
 Changes to identity or alias semantics affect persisted references. Changes to
 history guarantees affect backups and watcher replay. Cross-domain deduplication

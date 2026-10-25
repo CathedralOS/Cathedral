@@ -65,6 +65,43 @@ positive and rejection evidence. Global live-adoption metrics, mandatory module
 migration, live kernel replacement and a universal distributed transaction are
 not prerequisites. No runtime evidence is claimed by this docs ratification.
 
+## Object-rooted watches and durable capture
+
+**Open; architecture ratified, not an owner blocker.** Implement
+[change watches](wiki/spec/storage/change_watches.md) through the ordinary storage
+service, reusing the transaction engine and shared-memory/notification mechanisms.
+Start at `source-rs/platform/services/storage/service.rs`,
+`source-rs/platform/contracts/storage.rs` and the
+[object library](source-rs/platform/libraries/database-objects/README.md).
+Existing notifications and shared buffers are prerequisites available for reuse,
+not evidence of watch delivery. No global kernel event log or Omega feature is
+required.
+
+Remaining acceptance:
+
+- Exercise one real consumer watching an authorized object recursively, including
+  parent/child watches, content and metadata edits, independent CoW copies,
+  before/after reparenting, root movement invisibility and subtree arrival/removal.
+  Pair consistent enumeration with a starting change position; neither hidden
+  ancestry nor outside destinations may leak.
+- Deliver self-contained committed records into funded shared buffers; demonstrate
+  adversarial counters, exact backing custody, revocation and close/death races.
+  Full live buffers stop capture with observable overflow, never silent loss.
+  Mere observation authority cannot impose writer backpressure.
+- Carry a durable subscription through mutation commit, crash before delivery,
+  reconnect, duplicate delivery and acknowledgement. Prove recovery keeps events
+  for committed mutations and excludes aborted ones. Disk retention and RAM
+  delivery have separate funding; full rings do not lose durable events.
+- Recover mandatory capture policy before covered writes, with no collector-start
+  race. Exercise capacity exhaustion, authorized refusal/backpressure, retention
+  beyond collector acknowledgement, policy changes and nonrecursive audit upkeep.
+  A missing required policy must not silently disable capture.
+
+Done means the ordinary service and consumer demonstrate live observation and
+durable recovery under these controls, not only a log/queue lab. Summarization is
+library work; historical file-byte retention and replica merging are not required
+for this outcome. This docs ratification claims no runtime implementation.
+
 ## Current implementation evidence
 
 Implementation update 2026-10-25: **reusable shared buffers and platform mailbox**,

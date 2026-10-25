@@ -57,36 +57,6 @@ keep hash existence and placement private. Do not promise global sharing or
 immediate physical erasure. Charge retained backing to an identified sponsor and
 define key/reference lifetime before enabling cross-domain deduplication.
 
-### DBFS history and durable subscriber limits
-
-**Requirement and conflict.** The filesystem design wants watchers that never
-miss events and pressure-thinned history. An indefinitely offline subscriber
-cannot have unlimited replay on bounded storage without eventually blocking
-writes or increasing its funded allowance. This blocks a durable subscription
-and retained-version API, not the current finite host experiment.
-
-**Contracts checked.** The [filesystem](wiki/design/part_4_storage/00_filesystem_as_database.md)
-and [transaction](wiki/design/part_4_storage/01_transactions_and_consistency.md)
-chapters describe durable observation, but the
-[specification index](wiki/spec/README.md) and
-[Rust object protocol](source-rs/platform/contracts/storage.rs) have no cursor, retention,
-expiry or subscriber-sponsorship contract.
-
-**New evidence.** The [host engine stress lab](tools/storage-lab/engines/stress/README.md#reader-pressure-and-reclamation)
-shows a long-lived reader retaining engine backing despite deletion of old records.
-Releasing it permits repeated replacement under the same cap. This supports
-explicit pin accounting; it does not decide expiry, sponsorship or reader denial.
-
-**Owner choice.** Reserve replay/history storage and reject or block further
-writes when exhausted, or permit bounded retention and require explicit cursor
-expiry/resynchronization. Active-reader pins and explicitly retained versions
-need a separate promise; silently removing backing from a live reader is invalid.
-
-**Recommendation (unaccepted).** Offer bounded funded retention, report expiry
-explicitly and support authorized resnapshot plus replay. Require explicit funded
-pins for stronger history guarantees. Publish change records atomically with
-state and specify duplicate delivery and revocation independently of CRDTs.
-
 ### DBFS isolation for cross-record invariants
 
 **Requirement and tension.** The transaction design proposes snapshot reads and

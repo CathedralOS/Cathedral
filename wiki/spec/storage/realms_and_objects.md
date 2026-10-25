@@ -5,7 +5,7 @@
 | Contract status | Current |
 | Specification coverage | Partial |
 | Implementation coverage | Partial |
-| Last reviewed | 2026-10-18 |
+| Last reviewed | 2026-10-25 |
 
 ## Scope
 
@@ -82,6 +82,13 @@ renaming its target may break a saved reference; the owner or application must
 update the path if it wants to follow the move. A later lookup at the same path
 resolves the entry currently there, subject to access and operation validation.
 This does not require an already-open handle to retarget when a path changes.
+
+A granted realm exposes no enclosing parent or universal root. The service may
+keep private reverse hierarchy links without exposing them through that view.
+[Change watches](change_watches.md) bind to the authorized object instance rather
+than a path. Moving that watched root alone is invisible within its rooted view;
+its old and new parents observe only relationships they are authorized to see.
+Independent copies remain independent watch subjects despite shared backing.
 
 Stable persisted IDs or GUIDs that follow moved objects are deferred. They are
 not needed to implement this path model. Internal object numbers and transient

@@ -32,6 +32,7 @@ subject. A current specification may precede implementation.
 | Initial root extent | [Initial root extent](resources/root_extent.md) | Partial | Partial |
 | Execution budgets and service work | [Execution budgets](resources/execution_budgets.md) | Partial | Partial |
 | Realms and objects: copies, paths and hierarchy metadata | [Realms and objects](storage/realms_and_objects.md) | Partial | Partial |
+| Object-rooted live watches and transaction-coupled durable capture | [Change watches](storage/change_watches.md) | Partial | None |
 | Components and matrices: policy ownership and supplied authority | [Components and matrices](execution/components_and_matrices.md) | Partial | Partial |
 | Independent installation, notification and component-owned activation | [Installation and activation](execution/updates.md) | Partial | None |
 | Hardware separation and exclusion of PCC-based single address space | [Program isolation](execution/isolation.md) | Partial | Partial |
